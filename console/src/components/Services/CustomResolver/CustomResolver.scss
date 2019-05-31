@@ -260,17 +260,22 @@
       display: inline-block;
     }
 
-    .instructionsWrapper {
+    .instructionsWrapper, .instructionsWrapperPos {
       margin-top: 20px;
       border-top: 1px solid #DEDEDE;
-      position: relative;
-
       .instructions {
         padding: 12px 0;
       }
     }
-
-    .instructionsWrapper:hover {
+    .instructionsWrapper
+    {
+      position: relative;
+    }
+    .instructionsWrapperPos
+    {
+      position: static;
+    }
+    .instructionsWrapper:hover, .instructionsWrapperPos:hover {
       .instructions {
         color: #505050
       }

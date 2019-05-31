@@ -43,7 +43,7 @@ Execute the following command. For the endpoint referred here, let's say you've
 deployed the GraphQL engine on Heroku, then this endpoint is:
 ``https://my-graphql.herokuapp.com``. In case you've deployed this using Docker,
 the URL might be ``http://xx.xx.xx.xx:8080``. This endpoint should not contain
-the ``v1alpha1/graphql`` API path. It should just be the hostname and any
+the ``v1/graphql`` API path. It should just be the hostname and any
 sub-path if it is configured that way. 
 
 .. code-block:: bash
@@ -71,12 +71,14 @@ metadata from server:
 
 .. code-block:: bash
 
+   # (available after version v1.0.0-alpha45)
    # create migration files (note that this will only export public schema from postgres)
    hasura migrate create "init" --from-server
 
    # note down the version
    # mark the migration as applied on this server
    hasura migrate apply --version "<version>" --skip-execution
+
 
 This command will create a new "migration" under the ``migrations`` directory
 with the file name as ``<timestamp(version)>_init.up.yaml``. This file will

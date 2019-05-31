@@ -1,5 +1,6 @@
 import auth0 from "auth0-js";
 import { AUTH_CONFIG } from "./auth0-variables";
+import { isReactNative } from '../ApiExplorer/utils';
 
 export default class Auth {
   auth0 = new auth0.WebAuth({
@@ -47,6 +48,12 @@ export default class Auth {
   }
 
   logout() {
+    if (isReactNative()) {
+      window.localStorage.removeItem('@learn.hasura.io:graphiql-react-native-token');
+      window.localStorage.removeItem('@learn.hasura.io:graphiql-react-native-exp');
+      window.location.replace("/graphql/graphiql?tutorial=react-native");
+      return;
+    }
     // Clear access token and ID token from local storage
     localStorage.removeItem("auth0:access_token");
     localStorage.removeItem("auth0:id_token");
@@ -60,7 +67,18 @@ export default class Auth {
   isAuthenticated() {
     // Check whether the current time is past the
     // access token's expiry time
-    let expiresAt = JSON.parse(localStorage.getItem("auth0:expires_at"));
-    return new Date().getTime() < expiresAt;
+    if (!isReactNative()) {
+      let expiresAt = JSON.parse(localStorage.getItem("auth0:expires_at"));
+      return new Date().getTime() < expiresAt;
+    } else {
+      const token = window.localStorage.getItem('@learn.hasura.io:graphiql-react-native-token');
+      const exp = window.localStorage.getItem('@learn.hasura.io:graphiql-react-native-exp');
+      if (!exp || !token) {
+        return false;
+      }
+      var currentTime = Math.floor(new Date().getTime() / 1000);
+      return currentTime < exp;
+    }
+    return false;
   }
 }

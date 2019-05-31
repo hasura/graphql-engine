@@ -1,5 +1,5 @@
 descriptions: Select aggregations on article table along with it's nodes where id > 1
-url: /v1alpha1/graphql
+url: /v1/graphql
 status: 200
 response:
   data:

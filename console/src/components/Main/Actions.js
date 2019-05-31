@@ -1,15 +1,15 @@
 import { push } from 'react-router-redux';
 import globals from 'Globals';
 import defaultState from './State';
-import Endpoints from '../../Endpoints';
 import requestAction from '../../utils/requestAction';
 import requestActionPlain from '../../utils/requestActionPlain';
-import { globalCookiePolicy } from '../../Endpoints';
+import Endpoints, { globalCookiePolicy } from '../../Endpoints';
 import { saveAdminSecretState } from '../AppState';
 import {
   ADMIN_SECRET_ERROR,
   UPDATE_DATA_HEADERS,
 } from '../Services/Data/DataActions';
+import { getFeaturesCompatibility } from '../../helpers/versionUtils';
 import { changeRequestHeader } from '../Services/ApiExplorer/Actions';
 
 const SET_MIGRATION_STATUS_SUCCESS = 'Main/SET_MIGRATION_STATUS_SUCCESS';
@@ -35,6 +35,24 @@ const FETCHING_SERVER_CONFIG = 'Main/FETCHING_SERVER_CONFIG';
 const SERVER_CONFIG_FETCH_SUCCESS = 'Main/SERVER_CONFIG_FETCH_SUCCESS';
 const SERVER_CONFIG_FETCH_FAIL = 'Main/SERVER_CONFIG_FETCH_FAIL';
 /* End */
+const SET_FEATURES_COMPATIBILITY = 'Main/SET_FEATURES_COMPATIBILITY';
+const setFeaturesCompatibility = data => ({
+  type: SET_FEATURES_COMPATIBILITY,
+  data,
+});
+
+const featureCompatibilityInit = () => {
+  return (dispatch, getState) => {
+    const { serverVersion } = getState().main;
+    if (!serverVersion) {
+      return;
+    }
+
+    const featuresCompatibility = getFeaturesCompatibility(serverVersion);
+
+    return dispatch(setFeaturesCompatibility(featuresCompatibility));
+  };
+};
 
 const loadMigrationStatus = () => dispatch => {
   const url = Endpoints.hasuractlMigrateSettings;
@@ -106,7 +124,7 @@ const fetchServerConfig = () => (dispatch, getState) => {
   );
 };
 
-const checkServerUpdates = () => (dispatch, getState) => {
+const loadLatestServerVersion = () => (dispatch, getState) => {
   const url =
     Endpoints.updateCheck +
     '?agent=console&version=' +
@@ -269,7 +287,6 @@ const mainReducer = (state = defaultState, action) => {
         ...state,
         serverVersion: null,
       };
-
     case SET_LATEST_SERVER_VERSION_SUCCESS:
       return {
         ...state,
@@ -345,6 +362,11 @@ const mainReducer = (state = defaultState, action) => {
           isFetching: false,
         },
       };
+    case SET_FEATURES_COMPATIBILITY:
+      return {
+        ...state,
+        featuresCompatibility: { ...action.data },
+      };
     default:
       return state;
   }
@@ -363,6 +385,7 @@ export {
   LOGIN_ERROR,
   validateLogin,
   loadServerVersion,
-  checkServerUpdates,
   fetchServerConfig,
+  loadLatestServerVersion,
+  featureCompatibilityInit,
 };

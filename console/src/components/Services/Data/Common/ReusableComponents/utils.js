@@ -1,3 +1,14 @@
+import React from 'react';
+
+export const getUkeyPkeyConfig = columns => {
+  const colLength = columns.length;
+  if (!colLength) return null;
+  if (colLength === 1) {
+    return columns[0];
+  }
+  return `( ${columns.join(', ')} )`;
+};
+
 export const getForeignKeyConfig = (foreignKey, orderedColumns) => {
   const { refTableName, colMappings } = foreignKey;
   const filteredColMap = {};
@@ -33,6 +44,7 @@ export const getExistingFKConstraints = (tableSchema, orderedColumns) => {
   return tableSchema.foreign_key_constraints.map(fkc => {
     const fk = {};
     fk.refTableName = fkc.ref_table;
+    fk.refSchemaName = fkc.ref_table_table_schema;
     fk.onUpdate = pgConfTypes[fkc.on_update];
     fk.onDelete = pgConfTypes[fkc.on_delete];
     fk.constraintName = fkc.constraint_name;
@@ -77,4 +89,26 @@ export const generateFKConstraintName = (
     return expectedNamePrefix;
   }
   return `${expectedNamePrefix}${suffix + 1}`;
+};
+
+export const getUniqueConstraintName = (tableName, columns) => {
+  return `${tableName}_${columns.join('_')}_key`;
+};
+
+export const getKeyDef = (config, constraintName) => {
+  if (!config) {
+    return null;
+  }
+  if (constraintName) {
+    return (
+      <div>
+        <b>{config}</b> - <i>{constraintName}</i>
+      </div>
+    );
+  }
+  return (
+    <div>
+      <b>{config}</b>
+    </div>
+  );
 };

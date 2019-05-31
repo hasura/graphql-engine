@@ -6,6 +6,7 @@ import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
+import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCache
 import           Hasura.SQL.Types
@@ -14,7 +15,7 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
-import qualified Data.HashMap.Strict            as HM
+import qualified Data.HashMap.Strict              as HM
 
 data CatalogTable
   = CatalogTable
@@ -81,13 +82,14 @@ instance Hashable CatalogFKey
 
 data CatalogMetadata
   = CatalogMetadata
-  { _cmTables         :: ![CatalogTable]
-  , _cmRelations      :: ![CatalogRelation]
-  , _cmPermissions    :: ![CatalogPermission]
-  , _cmQueryTemplates :: ![CatalogQueryTemplate]
-  , _cmEventTriggers  :: ![CatalogEventTrigger]
-  , _cmRemoteSchemas  :: ![AddRemoteSchemaQuery]
-  , _cmFunctions      :: ![CatalogFunction]
-  , _cmForeignKeys    :: ![CatalogFKey]
+  { _cmTables               :: ![CatalogTable]
+  , _cmRelations            :: ![CatalogRelation]
+  , _cmPermissions          :: ![CatalogPermission]
+  , _cmQueryTemplates       :: ![CatalogQueryTemplate]
+  , _cmEventTriggers        :: ![CatalogEventTrigger]
+  , _cmRemoteSchemas        :: ![AddRemoteSchemaQuery]
+  , _cmFunctions            :: ![CatalogFunction]
+  , _cmForeignKeys          :: ![CatalogFKey]
+  , _cmAllowlistCollections :: ![CollectionDef]
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogMetadata)

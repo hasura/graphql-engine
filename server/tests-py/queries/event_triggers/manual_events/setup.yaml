@@ -1,0 +1,41 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      create table hge_tests.test_t1(
+          c1 int,
+          c2 text
+      );
+- type: track_table
+  args:
+    schema: hge_tests
+    name: test_t1
+- type: create_event_trigger
+  args:
+    name: t1_enabled
+    table:
+      schema: hge_tests
+      name: test_t1
+    insert:
+      columns: "*"
+    update:
+      columns: "*"
+    delete:
+      columns: "*"
+    enable_manual: true
+    webhook: http://127.0.0.1:5592
+- type: create_event_trigger
+  args:
+    name: t1_disabled
+    table:
+      schema: hge_tests
+      name: test_t1
+    insert:
+      columns: "*"
+    update:
+      columns: "*"
+    delete:
+      columns: "*"
+    enable_manual: false
+    webhook: http://127.0.0.1:5592

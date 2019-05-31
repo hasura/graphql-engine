@@ -1,7 +1,6 @@
 import defaultState from './State';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import {
-  // loadSchema,
   handleMigrationErrors,
   fetchTrackedFunctions,
   fetchDataInit,
@@ -17,8 +16,6 @@ import {
 import { parseCreateSQL } from './utils';
 import dataHeaders from '../Common/Headers';
 import returnMigrateUrl from '../Common/getMigrateUrl';
-
-import semverCheck from '../../../../helpers/semver';
 
 const MAKING_REQUEST = 'RawSQL/MAKING_REQUEST';
 const SET_SQL = 'RawSQL/SET_SQL';
@@ -39,12 +36,7 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
   dispatch(showSuccessNotification('Executing the Query...'));
 
   const sql = getState().rawSQL.sql;
-  const serverVersion = getState().main.serverVersion;
   const currMigrationMode = getState().main.migrationMode;
-
-  const handleFunc = semverCheck('customFunctionSection', serverVersion)
-    ? true
-    : false;
 
   const migrateUrl = returnMigrateUrl(currMigrationMode);
   const isCascadeChecked = getState().rawSQL.isCascadeChecked;
@@ -59,7 +51,7 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
   // check if track view enabled
 
   if (getState().rawSQL.isTableTrackChecked) {
-    const objects = parseCreateSQL(sql, handleFunc);
+    const objects = parseCreateSQL(sql);
 
     objects.forEach(object => {
       const trackQuery = {

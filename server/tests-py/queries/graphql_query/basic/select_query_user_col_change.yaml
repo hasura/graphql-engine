@@ -8,7 +8,7 @@
         ALTER TABLE "user" ALTER COLUMN id set data type integer;
 
 - description: Query data from user table
-  url: /v1alpha1/graphql
+  url: /v1/graphql
   status: 200
   response:
     data:
@@ -39,7 +39,7 @@
         ALTER TABLE "user" ALTER COLUMN id set data type bigint;
 
 - description: Query data from user table
-  url: /v1alpha1/graphql
+  url: /v1/graphql
   status: 200
   response:
     data:

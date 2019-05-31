@@ -18,7 +18,10 @@ import {
   EDIT_COLUMN,
   SET_PRIMARY_KEYS,
   SET_FOREIGN_KEYS,
+  FETCH_COLUMN_TYPE_CASTS,
+  FETCH_COLUMN_TYPE_CASTS_FAIL,
   RESET,
+  SET_UNIQUE_KEYS,
 } from '../TableModify/ModifyActions';
 
 // TABLE RELATIONSHIPS
@@ -34,7 +37,6 @@ import {
   REL_ADD_NEW_CLICKED,
   REL_SET_MANUAL_COLUMNS,
   REL_ADD_MANUAL_CLICKED,
-  UPDATE_MANUAL_REL_TABLE_LIST,
 } from '../TableRelationships/Actions';
 
 // TABLE PERMISSIONS
@@ -135,7 +137,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         ...modifyState,
         relAdd: {
           ...modifyState.relAdd,
-          name: relName,
+          relName: relName,
         },
       };
     case REL_SELECTION_CHANGED:
@@ -144,11 +146,13 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         ...modifyState,
         relAdd: {
           ...modifyState.relAdd,
-          name: '',
-          tableName: selectedRel.tableName,
+          relName: '',
+          lTable: selectedRel.lTable,
+          lSchema: selectedRel.lSchema,
           isObjRel: selectedRel.isObjRel,
           lcol: selectedRel.lcol,
           rTable: selectedRel.rTable,
+          rSchema: selectedRel.rSchema,
           rcol: selectedRel.rcol,
         },
       };
@@ -248,8 +252,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       const permState = getBasePermissionsState(
         action.tableSchema,
         action.role,
-        action.query,
-        action.insertPermColumnRestriction
+        action.query
       );
       return {
         ...modifyState,
@@ -553,18 +556,25 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         fkModify: action.fks,
       };
 
-    case UPDATE_MANUAL_REL_TABLE_LIST:
+    case FETCH_COLUMN_TYPE_CASTS:
       return {
         ...modifyState,
-        relAdd: {
-          ...modifyState.relAdd,
-          manualRelInfo: {
-            ...modifyState.relAdd.manualRelInfo,
-            tables: action.data,
-          },
-        },
+        alterColumnOptions: action.data,
+        alterColumnOptionsFetchErr: null,
       };
 
+    case FETCH_COLUMN_TYPE_CASTS_FAIL:
+      return {
+        ...modifyState,
+        alterColumnOptions: [],
+        alterColumnOptionsFetchErr: action.data,
+      };
+
+    case SET_UNIQUE_KEYS:
+      return {
+        ...modifyState,
+        uniqueKeyModify: action.keys,
+      };
     default:
       return modifyState;
   }
