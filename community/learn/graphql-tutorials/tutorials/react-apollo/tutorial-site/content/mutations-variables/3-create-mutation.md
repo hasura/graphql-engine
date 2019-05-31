@@ -1,11 +1,14 @@
 ---
 title: "Run mutation, update cache"
+metaTitle: "Apollo Mutation Component | GraphQL React Apollo Tutorial"
+metaDescription: "We will use the Apollo Client Mutation component from react-apollo as an example to insert new data and update cache locally using readQuery and writeQuery."
 ---
 
 import YoutubeEmbed from "../../src/YoutubeEmbed.js";
 
 <YoutubeEmbed link="https://www.youtube.com/embed/ZgMblvlIg28" />
 
+### Apollo React Mutation Component
 Now let's do the integration part. Open `src/components/Todo/TodoInput.js` and add the following code below the other imports:
 
 ```javscript
@@ -112,6 +115,7 @@ The mutate function's first argument would be the mutation query's options, such
 
 The mutation has been integrated and the new todos will be inserted into the database. But the UI doesn't know that a new todo has been added. We need a way to tell Apollo Client to update the query for the list of todos.
 
+### Apollo React Mutation Update
 The `update` function comes in handy to update the cache for this mutation. It comes with utility functions such as `readQuery` and `writeQuery` that helps in reading from and writing to the cache.
 
 Let's implement `update` for the above mutation.
@@ -169,6 +173,8 @@ Our goals were simple:
 
 The update function is used to update the cache after a mutation occurs.
 It receives the result of the mutation (data) and the current cache (store) as arguments. You will then use these arguments to manage your cache so that the UI will be up to date.
+
+### readQuery and writeQuery
 
 cache.readQuery
 ---------------

@@ -1,5 +1,7 @@
 ---
 title: "Mutation and update cache"
+metaTitle: "Apollo client.mutate for GraphQL mutation update | GraphQL React Apollo Tutorial"
+metaDescription: "We will use the Apollo client.mutate from withApollo HOC from react-apollo as an example to modify existing data and update cache locally using readQuery and writeQuery."
 ---
 
 import GithubLink from "../../src/GithubLink.js";
@@ -43,6 +45,7 @@ export default TodoItem;
 
 ```
 
+### Apollo client.mutate
 We need to call `client.mutate` to make the mutation. To make sure we have access to `client`, we wrap our TodoItem component with `withApollo` like below:
 
 ```javascript

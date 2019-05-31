@@ -1,5 +1,7 @@
 ---
 title: "Tutorial & boilerplate setup"
+metaTitle: "Todo app boilerplate setup | GraphQL React Apollo Tutorial"
+metaDescription: "The GraphQL backend is already ready. The task is to convert the static UI into a working realtime app"
 ---
 
 import YoutubeEmbed from "../src/YoutubeEmbed.js";
@@ -10,8 +12,6 @@ For this tutorial, the GraphQL backend and the basic app UI is already ready.
 Our task will be to convert the "static" UI into a working realtime app.
 
 ### Download and run the boilerplate
-
-<!-- FIXME: Add the zip URL here -->
 
 1. Download the boilerplate from https://learn.hasura.io/graphql/react/boilerplate.zip
 2. Unzip and make sure you're in the `app-boilerplate` directory
