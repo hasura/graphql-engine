@@ -155,7 +155,6 @@ const defaultState = {
   postgresFunctions: [],
   nonTrackablePostgresFunctions: [],
   trackedFunctions: [],
-  listedFunctions: [],
   listingSchemas: [],
   untrackedRelations: [],
   schemaList: ['public'],
