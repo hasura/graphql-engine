@@ -136,7 +136,7 @@
     "clean-webpack-plugin": "^0.1.17",
     "concurrently": "^3.5.0",
     "css-loader": "^0.28.11",
-    "cypress": "^3.1.5",
+    "cypress": "^3.2.0",
     "dotenv": "^5.0.1",
     "eslint": "^4.19.1",
     "eslint-config-airbnb": "16.1.0",
