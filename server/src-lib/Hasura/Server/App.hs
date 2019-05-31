@@ -108,19 +108,6 @@ withSCUpdate scr logger action = do
 
 data ServerCtx
   = ServerCtx
-<<<<<<< HEAD
-  { scPGExecCtx   :: PGExecCtx
-  , scConnInfo    :: Q.ConnInfo
-  , scLogger      :: L.Logger
-  , scCacheRef    :: SchemaCacheRef
-  , scAuthMode    :: AuthMode
-  , scManager     :: HTTP.Manager
-  , scSQLGenCtx   :: SQLGenCtx
-  , scEnabledAPIs :: S.HashSet API
-  , scInstanceId  :: InstanceId
-  , scPlanCache   :: E.PlanCache
-  , scLQState     :: EL.LiveQueriesState
-=======
   { scPGExecCtx       :: !PGExecCtx
   , scConnInfo        :: !Q.ConnInfo
   , scLogger          :: !L.Logger
@@ -133,7 +120,6 @@ data ServerCtx
   , scPlanCache       :: !E.PlanCache
   , scLQState         :: !EL.LiveQueriesState
   , scEnableAllowlist :: !Bool
->>>>>>> main/master
   }
 
 data HandlerCtx
@@ -166,6 +152,9 @@ isGraphQLEnabled sc = S.member GRAPHQL $ scEnabledAPIs sc
 
 isPGDumpEnabled :: ServerCtx -> Bool
 isPGDumpEnabled sc = S.member PGDUMP $ scEnabledAPIs sc
+
+isConfigEnabled :: ServerCtx -> Bool
+isConfigEnabled sc = S.member CONFIG $ scEnabledAPIs sc
 
 isDeveloperAPIEnabled :: ServerCtx -> Bool
 isDeveloperAPIEnabled sc = S.member DEVELOPER $ scEnabledAPIs sc
@@ -488,10 +477,11 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
         query <- parseBody
         v1Alpha1PGDumpHandler query
 
-    get "v1alpha1/config" $ mkSpockAction encodeQErr serverCtx $
-      mkAPIRespHandler $ do
-        onlyAdmin
-        return $ encJFromJValue $ runGetConfig (scAuthMode serverCtx)
+    when enableConfig $
+      get "v1alpha1/config" $ mkSpockAction encodeQErr id serverCtx $
+        mkAPIRespHandler $ do
+          onlyAdmin
+          return $ encJFromJValue $ runGetConfig (scAuthMode serverCtx)
 
     when enableGraphQL $ do
       post "v1alpha1/graphql/explain" gqlExplainAction
@@ -542,6 +532,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
     enableGraphQL = isGraphQLEnabled serverCtx
     enableMetadata = isMetadataEnabled serverCtx
     enablePGDump = isPGDumpEnabled serverCtx
+    enableConfig = isConfigEnabled serverCtx
     tmpltGetOrDeleteH tmpltName = do
       tmpltArgs <- tmpltArgsFromQueryParams
       mkSpockAction encodeQErr id serverCtx $ mkAPIRespHandler $

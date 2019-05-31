@@ -165,10 +165,7 @@ library
                      , Hasura.Server.Telemetry
                      , Hasura.Server.SchemaUpdate
                      , Hasura.Server.PGDump
-<<<<<<< HEAD
                      , Hasura.Server.Config
-=======
->>>>>>> main/master
 
                      , Hasura.RQL.Types
                      , Hasura.RQL.Instances
