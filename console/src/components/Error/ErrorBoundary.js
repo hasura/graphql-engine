@@ -22,7 +22,7 @@ class ErrorBoundary extends React.Component {
     dispatch(loadInconsistentObjects(true)).then(() => {
       if (this.props.metadata.inconsistentObjects.length > 0) {
         if (!window.location.pathname.includes('/metadata/status')) {
-          this.setState({ hasError: false, info: null, error: null });
+          this.resetState();
           this.props.dispatch(redirectToMetadataStatus());
         }
       } else {
@@ -31,10 +31,18 @@ class ErrorBoundary extends React.Component {
     });
   }
 
+  resetState = () => {
+    console.log('inside resetState');
+    this.setState({ hasError: false, info: null, error: null }, () => {
+      console.log(this.state);
+    });
+  };
+
   render() {
     const errorImage = require('./error-logo.png');
     const styles = require('./ErrorPage.scss');
     const { metadata } = this.props;
+
     if (this.state.hasError && metadata.ongoingRequest) {
       return (
         <div>
@@ -55,7 +63,9 @@ class ErrorBoundary extends React.Component {
                 <br />
                 <div>
                   Something went wrong. Head back{' '}
-                  <Link onClick={() => window.location.replace('/')}>Home</Link>
+                  <Link to="/" onClick={this.resetState}>
+                    Home
+                  </Link>
                   .
                 </div>
                 <br />
