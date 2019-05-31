@@ -182,7 +182,7 @@ commonResponseHeadersIgnored =
   , "Access-Control-Allow-Credentials"
   , "Access-Control-Allow-Methods"
   , "Access-Control-Allow-Origin"
-  , "Content-Type"
+  , "Content-Type", "Content-Length"
   ]
 
 

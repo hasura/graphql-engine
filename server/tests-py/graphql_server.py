@@ -189,6 +189,7 @@ class SampleAuthGraphQL(RequestHandler):
         res = hello_schema.execute(request.json['query'])
         resp = mkJSONResp(res)
         resp.headers['Set-Cookie'] = 'abcd'
+        resp.headers['Custom-Header'] = 'custom-value'
         return resp
 
 

@@ -372,7 +372,7 @@ class TestRemoteSchemaResponseHeaders():
         if hge_ctx.hge_key:
             headers = {'x-hasura-admin-secret': hge_ctx.hge_key}
         q = {'query': 'query { hello (arg: "me") }'}
-        resp = hge_ctx.http.post(hge_ctx.hge_url + '/v1alpha1/graphql', json=q,
+        resp = hge_ctx.http.post(hge_ctx.hge_url + '/v1/graphql', json=q,
                                  headers=headers)
         assert resp.status_code == 200
         print(resp.headers)
