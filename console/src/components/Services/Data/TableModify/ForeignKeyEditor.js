@@ -11,7 +11,7 @@ import {
 } from '../Common/ReusableComponents/utils';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import ForeignKeySelector from '../Common/ReusableComponents/ForeignKeySelector';
-import { loadSchema } from '../DataActions';
+import { updateSchemaInfo } from '../DataActions';
 
 const ForeignKeyEditor = ({
   tableSchema,
@@ -46,7 +46,7 @@ const ForeignKeyEditor = ({
   });
   useEffect(() => {
     dispatch(setForeignKeys(existingForeignKeys));
-    dispatch(loadSchema({ schemas: Object.keys(schemasToBeFetched) }));
+    dispatch(updateSchemaInfo({ schemas: Object.keys(schemasToBeFetched) }));
   }, []);
 
   const numFks = fkModify.length;
