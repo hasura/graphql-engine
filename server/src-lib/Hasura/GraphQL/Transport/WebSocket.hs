@@ -121,13 +121,19 @@ $(J.deriveToJSON
                    }
   ''WSEvent)
 
+data WsConnInfo
+  = WsConnInfo
+  { _wsciWebsocketId :: !WS.WSId
+  , _wsciJwtExpiry   :: !(Maybe TC.UTCTime)
+  , _wsciMsg         :: !(Maybe Text)
+  } deriving (Show, Eq)
+$(J.deriveToJSON (J.aesonDrop 5 J.snakeCase) ''WsConnInfo)
+
 data WSLog
   = WSLog
-  { _wslWebsocketId :: !WS.WSId
-  , _wslUser        :: !(Maybe UserVars)
-  , _wslJwtExpiry   :: !(Maybe TC.UTCTime)
-  , _wslEvent       :: !WSEvent
-  , _wslMsg         :: !(Maybe Text)
+  { _wslUserVars       :: !(Maybe UserVars)
+  , _wslConnectionInfo :: !WsConnInfo
+  , _wslEvent          :: !WSEvent
   } deriving (Show, Eq)
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''WSLog)
 
@@ -176,7 +182,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
       threadDelay $ diffTimeToMicro $ TC.diffUTCTime expTime currTime
 
     accept hdrs errType = do
-      logger $ WSLog wsId Nothing Nothing EAccepted Nothing
+      logger $ WSLog Nothing (WsConnInfo wsId Nothing Nothing) EAccepted
       connData <- WSConnData
                   <$> STM.newTVarIO (CSNotInitialised hdrs)
                   <*> STMMap.newIO
@@ -187,7 +193,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
                        (Just keepAliveAction) (Just jwtExpiryHandler)
 
     reject qErr = do
-      logger $ WSLog wsId Nothing Nothing (ERejected qErr) Nothing
+      logger $ WSLog Nothing (WsConnInfo wsId Nothing Nothing) (ERejected qErr)
       return $ Left $ WS.RejectRequest
         (H.statusCode $ qeStatus qErr)
         (H.statusMessage $ qeStatus qErr) []
@@ -209,7 +215,8 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
         if readCookie
         then return reqHdrs
         else do
-          liftIO $ logger $ WSLog wsId Nothing Nothing EAccepted (Just corsNote)
+          liftIO $ logger $
+            WSLog Nothing (WsConnInfo wsId Nothing (Just corsNote)) EAccepted
           return $ filter (\h -> fst h /= "Cookie") reqHdrs
       CCAllowedOrigins ds
         -- if the origin is in our cors domains, no error
@@ -291,7 +298,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
         mkQueryLog reqId query genSql
       resp <- liftIO $ runExceptT action
       either (postExecErr reqId) sendSuccResp resp
-      sendCompleted
+      sendCompleted (Just reqId)
 
     runRemoteGQ :: E.ExecutionCtx -> RequestId -> UserInfo -> [H.Header]
                 -> G.TypedOperationDefinition -> RemoteSchemaInfo
@@ -312,7 +319,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       resp <- runExceptT $ flip runReaderT execCtx $
               E.execRemoteGQ reqId userInfo reqHdrs q payload rsi opDef
       either (postExecErr reqId) (sendRemoteResp reqId) resp
-      sendCompleted
+      sendCompleted (Just reqId)
 
     sendRemoteResp reqId resp =
       case J.eitherDecodeStrict (encJToBS resp) of
@@ -344,9 +351,9 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
         err400 StartFailed e
       logOpEv (ODProtoErr e) Nothing
 
-    sendCompleted = do
+    sendCompleted reqId = do
       sendMsg wsConn $ SMComplete $ CompletionMsg opId
-      logOpEv ODCompleted Nothing
+      logOpEv ODCompleted reqId
 
     postExecErr reqId qErr = do
       let errFn = getErrFn errRespTy
@@ -370,7 +377,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
     withComplete :: ExceptT () IO () -> ExceptT () IO a
     withComplete action = do
       action
-      sendCompleted
+      sendCompleted Nothing
       throwError ()
 
     -- on change, send message on the websocket
@@ -428,7 +435,7 @@ logWSEvent (L.Logger logger) wsConn wsEv = do
                                          , jwtM
                                          )
         _                             -> (Nothing, Nothing)
-  liftIO $ logger $ WSLog wsId userVarsM jwtExpM wsEv Nothing
+  liftIO $ logger $ WSLog userVarsM (WsConnInfo wsId jwtExpM Nothing) wsEv
   where
     WSConnData userInfoR _ _ = WS.getData wsConn
     wsId = WS.getWSId wsConn

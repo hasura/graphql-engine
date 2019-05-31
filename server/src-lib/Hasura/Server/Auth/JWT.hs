@@ -338,7 +338,7 @@ verifyJwt ctx (RawJWT rawJWT) = do
 instance A.ToJSON JWTConfig where
   toJSON (JWTConfig ty keyOrUrl claimNs aud claimsFmt) =
     case keyOrUrl of
-         Left _    -> mkObj ("key" A..= A.String "** JWK **")
+         Left _    -> mkObj ("key" A..= A.String "<JWK REDACTED>")
          Right url -> mkObj ("jwk_url" A..= url)
     where
       mkObj item = A.object [ "type" A..= ty
