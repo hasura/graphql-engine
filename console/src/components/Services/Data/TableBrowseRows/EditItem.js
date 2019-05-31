@@ -17,6 +17,8 @@ import {
   UUID,
   TIMESTAMP,
   TIMETZ,
+  JSONB,
+  JSONDTYPE,
 } from '../utils';
 // import RichTextEditor from 'react-rte';
 import { replace } from 'react-router-redux';
@@ -166,7 +168,7 @@ class EditItem extends Component {
             data-test={`typed-input-${i}`}
           />
         );
-      } else if (colType === 'json' || colType === 'jsonb') {
+      } else if (colType === JSONDTYPE || colType === JSONB) {
         const standardEditProps = {
           className: `form-control ${styles.insertBox}`,
           onClick: clicker,
@@ -178,20 +180,16 @@ class EditItem extends Component {
         typedInput = (
           <JsonInput
             standardProps={standardEditProps}
-            placeholderProp={'{"name": "foo"} or [12, "asdf"]'}
+            placeholderProp={getPlaceholder(colType)}
           />
         );
       } else if (colType === BOOLEAN) {
         typedInput = (
           <select
-            className="form-control"
+            className={'form-control ' + styles.insertBox}
             onClick={clicker}
             ref={inputRef}
             defaultValue={JSON.stringify(oldItem[colName])}
-            onClick={e => {
-              e.target.parentNode.parentNode.click();
-              e.target.focus();
-            }}
             data-test={`typed-input-${i}`}
           >
             <option value="true">True</option>

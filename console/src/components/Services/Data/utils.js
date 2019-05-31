@@ -30,7 +30,7 @@ export const getPlaceholder = type => {
       return `${time}Z or ${time}+05:30`;
     case UUID:
       return 'UUID';
-    case JSON:
+    case JSONDTYPE:
       return '{"name": "foo"} or [12, "bar"]';
     case JSONB:
       return '{"name": "foo"} or [12, "bar"]';
