@@ -348,7 +348,7 @@ const addTableReducer = (state = defaultState, action) => {
             return (pkiValue - 1).toString();
           }
         })
-        .filter(pki => Boolean(pki));
+        .filter(pki => pki !== undefined);
 
       const uniqueKeys = state.uniqueKeys
         .map(uk => {
@@ -357,7 +357,7 @@ const addTableReducer = (state = defaultState, action) => {
               if (c > action.index) return c - 1;
               if (c < action.index) return c;
             })
-            .filter(c => Boolean(c));
+            .filter(c => c !== undefined);
           return [...newUniqueKey];
         })
         .filter(uk => uk.length !== 0);
