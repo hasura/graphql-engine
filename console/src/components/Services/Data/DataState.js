@@ -134,6 +134,8 @@ const defaultModifyState = {
 const defaultState = {
   columnDataTypes: [], // To store list of column types supported by postgres
   columnDataTypeFetchErr: null,
+  columnDefaultFunctions: {},
+  columnDefaultFunctionsErr: null,
   currentTable: null,
   view: { ...defaultViewState },
   modify: { ...defaultModifyState },

@@ -577,3 +577,19 @@ WHERE (t.typrelid = 0 OR (SELECT c.relkind = 'c' FROM pg_catalog.pg_class c WHER
   AND t.typname != 'unknown'
   AND t.typcategory != 'P'
 GROUP BY t.typcategory;`;
+
+export const fetchColumnDefaultFunctions = `
+Select string_agg(pgp.proname, ','),
+  t.typname as "Type"
+from pg_proc pgp
+JOIN pg_type t
+ON pgp.prorettype = t.oid
+WHERE (t.typrelid = 0 OR (SELECT c.relkind = 'c' FROM pg_catalog.pg_class c WHERE c.oid = t.typrelid))
+  AND NOT EXISTS(SELECT 1 FROM pg_catalog.pg_type el WHERE el.oid = t.typelem AND el.typarray = t.oid)
+  AND pg_catalog.pg_type_is_visible(t.oid)
+  AND t.typname != 'unknown'
+  AND t.typcategory != 'P'
+  AND (array_length(pgp.proargtypes, 1) = 0)
+GROUP BY t.typname
+ORDER BY t.typname ASC;
+`;

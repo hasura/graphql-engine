@@ -29,7 +29,11 @@ import {
   setUniqueKeys,
 } from './AddActions';
 
-import { fetchColumnTypes, RESET_COLUMN_TYPE_LIST } from '../DataActions';
+import {
+  fetchColumnTypes,
+  RESET_COLUMN_TYPE_LIST,
+  fetchColumnDefaultTypes,
+} from '../DataActions';
 import { setDefaults, setPk, createTableSql } from './AddActions';
 import { validationError, resetValidation } from './AddActions';
 
@@ -72,6 +76,7 @@ class AddTable extends Component {
   }
   componentDidMount() {
     this.props.dispatch(fetchColumnTypes());
+    this.props.dispatch(fetchColumnDefaultTypes());
   }
   componentWillUnmount() {
     this.props.dispatch(setDefaults());
@@ -435,6 +440,7 @@ const mapStateToProps = state => ({
   allSchemas: state.tables.allSchemas,
   currentSchema: state.tables.currentSchema,
   dataTypes: state.tables.columnDataTypes,
+  columnDefaultFunctions: state.tables.columnDefaultFunctions,
   columnDataTypeFetchErr: state.tables.columnDataTypeFetchErr,
   schemaList: state.tables.schemaList,
 });

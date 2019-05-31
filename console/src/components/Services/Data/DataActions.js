@@ -29,7 +29,7 @@ import {
   fetchTrackedTableListQuery,
   mergeLoadSchemaData,
 } from './utils';
-import { fetchColumnTypesQuery } from './utils';
+import { fetchColumnTypesQuery, fetchColumnDefaultFunctions } from './utils';
 
 import { SERVER_CONSOLE_MODE } from '../../../constants';
 
@@ -51,6 +51,13 @@ const SET_CONSISTENT_FUNCTIONS = 'Data/SET_CONSISTENT_FUNCTIONS';
 const FETCH_COLUMN_TYPE_LIST = 'Data/FETCH_COLUMN_TYPE_LIST';
 const FETCH_COLUMN_TYPE_LIST_FAIL = 'Data/FETCH_COLUMN_TYPE_LIST_FAIL';
 const RESET_COLUMN_TYPE_LIST = 'Data/RESET_COLUMN_TYPE_LIST';
+
+const FETCH_COLUMN_DEFAULT_FUNCTIONS_LIST =
+  'Data/FETCH_COLUMN_DEFAULT_FUNCTIONS_LIST';
+const FETCH_COLUMN_DEFAULT_FUNCTIONS_FAIL =
+  'Data/FETCH_COLUMN_DEFAULT_FUNCTIONS_FAIL';
+const RESET_COLUMN_DEFAULT_FUNCTIONS_LIST =
+  'Data/RESET_COLUMN_DEFAULT_FUNCTIONS_LIST';
 
 const MAKE_REQUEST = 'ModifyTable/MAKE_REQUEST';
 const REQUEST_SUCCESS = 'ModifyTable/REQUEST_SUCCESS';
@@ -574,6 +581,53 @@ const fetchColumnTypes = () => {
   };
 };
 
+const fetchColumnDefaultTypes = () => {
+  return (dispatch, getState) => {
+    const url = Endpoints.getSchema;
+    const reqQuery = {
+      type: 'run_sql',
+      args: {
+        sql: fetchColumnDefaultFunctions,
+      },
+    };
+    const options = {
+      credentials: globalCookiePolicy,
+      method: 'POST',
+      headers: dataHeaders(getState),
+      body: JSON.stringify(reqQuery),
+    };
+    return dispatch(requestAction(url, options)).then(
+      data => {
+        const resultData = data.result.slice(1);
+        const typeFuncsMap = {};
+
+        resultData.forEach(r => {
+          typeFuncsMap[r[1]] = r[0].split(',');
+        });
+
+        return dispatch({
+          type: FETCH_COLUMN_DEFAULT_FUNCTIONS_LIST,
+          data: typeFuncsMap,
+        });
+      },
+      error => {
+        dispatch(
+          showErrorNotification(
+            'Error fetching column types',
+            'Kindly reach out to us in case you face this issue again',
+            error,
+            error
+          )
+        );
+        return dispatch({
+          type: FETCH_COLUMN_TYPE_LIST_FAIL,
+          data: error,
+        });
+      }
+    );
+  };
+};
+
 /* ******************************************************* */
 const dataReducer = (state = defaultState, action) => {
   // eslint-disable-line no-unused-vars
@@ -692,11 +746,29 @@ const dataReducer = (state = defaultState, action) => {
           },
         },
       };
+    case FETCH_COLUMN_DEFAULT_FUNCTIONS_LIST:
+      return {
+        ...state,
+        columnDefaultFunctions: action.data,
+        columnDefaultFunctionsErr: null,
+      };
+    case FETCH_COLUMN_DEFAULT_FUNCTIONS_FAIL:
+      return {
+        ...state,
+        columnDefaultFunctions: {},
+        columnDefaultFunctionsErr: action.data,
+      };
+    case RESET_COLUMN_DEFAULT_FUNCTIONS_LIST:
+      return {
+        ...state,
+        columnDefaultFunctions: { ...defaultState.columnDefaultFunctions },
+        columnDefaultFunctionsErr: defaultState.columnDefaultFunctionsErr,
+      };
     case FETCH_COLUMN_TYPE_LIST:
       return {
         ...state,
         columnDataTypes: action.data,
-        columnDataTypeFetchErr: 'Error fetching data',
+        columnDataTypeFetchErr: null,
       };
 
     case FETCH_COLUMN_TYPE_LIST_FAIL:
@@ -709,7 +781,7 @@ const dataReducer = (state = defaultState, action) => {
       return {
         ...state,
         columnDataTypes: [...defaultState.columnDataTypes],
-        columnDataTypeFetchErr: defaultState.columnDataTypes,
+        columnDataTypeFetchErr: defaultState.columnDataTypeFetchErr,
       };
     default:
       return state;
@@ -743,4 +815,5 @@ export {
   fetchColumnTypes,
   RESET_COLUMN_TYPE_LIST,
   setUntrackedRelations,
+  fetchColumnDefaultTypes,
 };
