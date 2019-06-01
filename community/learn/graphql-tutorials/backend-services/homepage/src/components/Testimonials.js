@@ -44,6 +44,32 @@ class Testimonials extends React.Component {
                             </div>
                           </div>
                       </div>
+                      <div className={'col-md-6 col-sm-6 col-xs-12 visible-xs'}>
+                        <div className={styles.indivRectBox}>
+                          <div className={styles.quotes}>
+                            <img className={'img-responsive'} src={twitter} alt={'twitter'} />
+                          </div>
+                          <div className={styles.pageDescription}>
+                            <a href="https://twitter.com/themccallister/status/1127987752434376706" target="_blank" rel="noopener noreferrer">Jason M, Software Engineer</a>
+                          </div>
+                          <div className={styles.pageDescriptionSmall}>
+                          Great introduction to <a href="https://twitter.com/hashtag/GraphQL?src=hash" target="_blank" rel="noopener noreferrer">#GraphQL</a> and covers <a href="https://twitter.com/HasuraHQ" target="_blank" rel="noopener noreferrer">@HasuraHQ</a>. If you’re new to either it’s a good read.
+                          </div>
+                        </div>
+                      </div>
+                      <div className={'col-md-6 col-sm-6 col-xs-12 visible-xs'}>
+                          <div className={styles.indivRectBox}>
+                            <div className={styles.quotes}>
+                              <img className={'img-responsive'} src={twitter} alt={'twitter'} />
+                            </div>
+                            <div className={styles.pageDescription}>
+                              <a href="https://twitter.com/kevinsimper/status/1129757964812869632" target="_blank" rel="noopener noreferrer">Kevin Simper, CopenhagenJS Organiser</a>
+                            </div>
+                            <div className={styles.pageDescriptionSmall}>
+                              Use <a href="https://twitter.com/HasuraHQ" target="_blank" rel="noopener noreferrer">@hasurahq</a> to get a production ready self hosted graphql api for a postgres db, see their video course
+                            </div>
+                          </div>
+                      </div>
                     </div>
                     <div className={'item ' + styles.carouselInnerItems}>
                       <div className={'col-md-6 col-sm-6 col-xs-12'}>

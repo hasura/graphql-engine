@@ -1,6 +1,6 @@
 /* Testimonial section start here */
 .Testimonials {
-  background-color: #303b4e;
+  background-color: #f7f7f7;
 }
 .TestimonialsSection {
   padding: 75px 0;
@@ -21,7 +21,7 @@
   .pageSubHeader
   {
     text-align: center;
-    color: #fff;
+    color: #2b0785;
     padding-bottom: 40px;
   }
   .testimonialsCarouselWrapper
@@ -35,15 +35,16 @@
         margin: 0 auto;
         .carouselInnerItems
         {
+          margin-bottom: 5px;
           padding: 0 20px;
           width: 100%;
           float: left;
           // min-height: 618px;
           .indivRectBox
           {
-            border-radius: 10px;
-            background-color: #4b5971;
-            border: solid 1px #7989a6;
+            background-color: #fff;
+            border-radius: 2px;
+            box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.16);
             padding: 15px;
             position: relative;
             // margin-top: 30px;
@@ -71,7 +72,7 @@
               padding-bottom: 0px;
               line-height: 1.8;
               font-weight: 300;
-              color: #fff;
+              color: #292822;
               text-align: left;
               a
               {
