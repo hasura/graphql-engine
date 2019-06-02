@@ -171,3 +171,15 @@ diffTimeToMicro diff =
   (floor (realToFrac diff :: Double) - 10) * aSecond
   where
     aSecond = 1000 * 1000
+
+isRunningOnCI :: IO Bool
+isRunningOnCI = do
+  isCI <- lookupEnv "CI"
+  isTFBuild <- lookupEnv "TF_BUILD"
+  return (isTrue isCI || isTrue isTFBuild)
+  where
+    isTrue :: Maybe String -> Bool
+    isTrue = \case
+      Just "true" -> True
+      Just "True" -> True
+      _           -> False

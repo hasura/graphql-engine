@@ -5,7 +5,6 @@ module Hasura.Server.CheckUpdates
 import           Control.Exception     (try)
 import           Control.Lens
 import           Control.Monad         (forever)
-import           System.Environment    (lookupEnv)
 
 import qualified Control.Concurrent    as C
 import qualified Data.Aeson            as A
@@ -19,6 +18,7 @@ import qualified System.Log.FastLogger as FL
 import           Hasura.HTTP
 import           Hasura.Logging        (LoggerCtx (..))
 import           Hasura.Prelude
+import           Hasura.Server.Utils   (isRunningOnCI)
 import           Hasura.Server.Version (currentVersion)
 
 
@@ -51,10 +51,8 @@ checkForUpdates (LoggerCtx loggerSet _ _) manager = do
                        <> a
                        <> "&version="
                        <> currentVersion
-      isCI <- lookupEnv "CI"
-      case isCI of
-        Just "true" -> return $ buildUrl "server-ci"
-        _           -> return $ buildUrl "server"
+      isCI <- isRunningOnCI
+      return $ buildUrl $ bool "server" "server-ci" isCI
 
     aDay = 86400 * 1000 * 1000
 
