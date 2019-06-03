@@ -396,7 +396,10 @@ class Main extends React.Component {
               <div className={styles.logoParent}>
                 <div className={styles.logo}>
                   <Link to="/">
-                    <img className="img img-responsive" src={logo} />
+                    <img
+                      className="img img-responsive uniqueClassByImran"
+                      src={logo}
+                    />
                   </Link>
                 </div>
                 <Link to="/">
@@ -410,15 +413,17 @@ class Main extends React.Component {
                   <li>
                     <Link
                       className={
-                        currentActiveBlock === 'api-explorer' ||
+                        'secondUniqueClassByImran' +
+                        ' ' +
+                        (currentActiveBlock === 'api-explorer' ||
                         currentActiveBlock === ''
                           ? styles.navSideBarActive
-                          : ''
+                          : '')
                       }
                       to={appPrefix + '/api-explorer'}
                     >
                       <div
-                        className={styles.iconCenter}
+                        className={styles.iconCenter0}
                         data-test="api-explorer"
                       >
                         <i
@@ -435,9 +440,11 @@ class Main extends React.Component {
                   <li>
                     <Link
                       className={
-                        currentActiveBlock === 'data'
+                        (currentActiveBlock === 'data'
                           ? styles.navSideBarActive
-                          : ''
+                          : '') +
+                        ' ' +
+                        'thirdUniqueClassByImran'
                       }
                       to={appPrefix + '/data/schema/' + currentSchema}
                     >

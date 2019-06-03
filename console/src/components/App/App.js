@@ -12,8 +12,35 @@ import 'brace/mode/json';
 import ErrorBoundary from '../Error/ErrorBoundary';
 import { telemetryNotificationShown } from '../../telemetry/Actions';
 import { showTelemetryNotification } from '../../telemetry/Notifications';
+import Tour from 'reactour';
+
+const steps = [
+  {
+    selector: '.uniqueClassByImran',
+    content: 'Welcome to Hasura',
+  },
+  {
+    selector: '.secondUniqueClassByImran',
+    content: 'Click here!',
+  },
+  {
+    selector: '.queryWrap',
+    content: 'Execute GraphQl Queries',
+  },
+  {
+    selector: '.thirdUniqueClassByImran',
+    content: 'CRUD on tables',
+  },
+  {
+    selector: '',
+    content: 'End Tour',
+  },
+];
 
 class App extends Component {
+  state = {
+    isTourOpen: true,
+  };
   componentDidMount() {
     // Hide the loader once the react component is ready.
     // NOTE: This will execute only onces (since this is parent component for all other component).
@@ -26,6 +53,12 @@ class App extends Component {
     this.props.dispatch({ type: NOTIF_EXPANDED, data: false });
   };
 
+  closeTour = () => {
+    console.log('close tour');
+    this.setState({
+      isTourOpen: false,
+    });
+  };
   render() {
     const styles = require('./progress-bar.scss');
     const {
@@ -135,6 +168,20 @@ class App extends Component {
               </div>
             </Modal.Body>
           </Modal>
+          <Tour
+            steps={steps}
+            isOpen={this.state.isTourOpen}
+            onRequestClose={this.closeTour}
+            getCurrentStep={curr => {
+              console.log(`33333333The current step is ${curr + 1}`);
+              window.localStorage.setItem('tour step', curr + 1);
+              if (window.localStorage.getItem('tour step') === '5') {
+                this.setState({
+                  isTourOpen: false,
+                });
+              }
+            }}
+          />
         </div>
       </ErrorBoundary>
     );

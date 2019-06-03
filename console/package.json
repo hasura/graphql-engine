@@ -93,11 +93,13 @@
     "react-table": "^6.8.6",
     "react-tabs": "^2.1.0",
     "react-toggle": "^4.0.2",
+    "reactour": "^1.15.0",
     "redux": "^4.0.0",
     "redux-logger": "^3.0.6",
     "redux-thunk": "^2.2.0",
     "sanitize-filename": "^1.6.1",
     "semver": "5.5.1",
+    "styled-components": "^4.2.1",
     "subscriptions-transport-ws": "^0.9.12",
     "uuid": "^3.0.1",
     "valid-url": "^1.0.9"
