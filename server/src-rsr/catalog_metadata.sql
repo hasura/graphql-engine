@@ -179,6 +179,7 @@ from
               'schema', f.ref_table_table_schema,
               'name', f.ref_table
             ),
+            'oid', f.constraint_oid,
             'constraint', f.constraint_name,
             'column_mapping', f.column_mapping
           ) as info

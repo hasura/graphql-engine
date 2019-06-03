@@ -23,7 +23,6 @@ import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Permission         (purgePerm)
 import           Hasura.RQL.DDL.Relationship.Types
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Catalog
 import           Hasura.SQL.Types
 
 import           Data.Aeson.Types
@@ -106,7 +105,7 @@ createObjRelP1 (WithTable qt rd) = do
 
 objRelP2Setup
   :: (QErrM m, CacheRWM m)
-  => QualifiedTable -> HS.HashSet CatalogFKey -> RelDef ObjRelUsing -> m ()
+  => QualifiedTable -> HS.HashSet ForeignKey -> RelDef ObjRelUsing -> m ()
 objRelP2Setup qt fkeys (RelDef rn ru _) = do
   (relInfo, deps) <- case ru of
     RUManual (ObjRelManualConfig rm) -> do
@@ -117,8 +116,8 @@ objRelP2Setup qt fkeys (RelDef rn ru _) = do
       return (RelInfo rn ObjRel (zip lCols rCols) refqt True, deps)
     RUFKeyOn cn -> do
       -- TODO: validation should account for this too
-      CatalogFKey _ refqt consName colMap <-
-        getRequiredFkey cn fkeys $ \fk -> _cfkTable fk == qt
+      ForeignKey _ refqt _ consName colMap <-
+        getRequiredFkey cn fkeys $ \fk -> _fkTable fk == qt
 
       let deps = [ SchemaDependency (SOTableObj qt $ TOCons consName) "fkey"
                  , SchemaDependency (SOTableObj qt $ TOCol cn) "using_col"
@@ -181,7 +180,7 @@ validateArrRel qt (RelDef rn ru _) = do
 
 arrRelP2Setup
   :: (QErrM m, CacheRWM m)
-  => QualifiedTable -> HS.HashSet CatalogFKey -> ArrRelDef -> m ()
+  => QualifiedTable -> HS.HashSet ForeignKey -> ArrRelDef -> m ()
 arrRelP2Setup qt fkeys (RelDef rn ru _) = do
   (relInfo, deps) <- case ru of
     RUManual (ArrRelManualConfig rm) -> do
@@ -192,8 +191,8 @@ arrRelP2Setup qt fkeys (RelDef rn ru _) = do
       return (RelInfo rn ArrRel (zip lCols rCols) refqt True, deps)
     RUFKeyOn (ArrRelUsingFKeyOn refqt refCol) -> do
       -- TODO: validation should account for this too
-      CatalogFKey _ _ consName colMap <- getRequiredFkey refCol fkeys $
-        \fk -> _cfkTable fk == refqt && _cfkRefTable fk == qt
+      ForeignKey _ _ _ consName colMap <- getRequiredFkey refCol fkeys $
+        \fk -> _fkTable fk == refqt && _fkRefTable fk == qt
       let deps = [ SchemaDependency (SOTableObj refqt $ TOCons consName) "remote_fkey"
                  , SchemaDependency (SOTableObj refqt $ TOCol refCol) "using_col"
                  -- we don't need to necessarily track the remote table like we did in
@@ -312,9 +311,9 @@ setRelComment (SetRelComment (QualifiedObject sn tn) rn comment) =
 getRequiredFkey
   :: (QErrM m)
   => PGCol
-  -> HS.HashSet CatalogFKey
-  -> (CatalogFKey -> Bool)
-  -> m CatalogFKey
+  -> HS.HashSet ForeignKey
+  -> (ForeignKey -> Bool)
+  -> m ForeignKey
 getRequiredFkey col fkeySet preCondition =
   case filterFkeys of
     []  -> throw400 ConstraintError
@@ -324,32 +323,34 @@ getRequiredFkey col fkeySet preCondition =
            "more than one foreign key constraint exists on the given column"
   where
     filterFkeys = HS.toList $ HS.filter filterFn fkeySet
-    filterFn k = preCondition k && HM.keys (_cfkColumnMapping k) == [col]
+    filterFn k = preCondition k && HM.keys (_fkColumnMapping k) == [col]
 
-fetchTableFkeys :: QualifiedTable -> Q.TxE QErr (HS.HashSet CatalogFKey)
+fetchTableFkeys :: QualifiedTable -> Q.TxE QErr (HS.HashSet ForeignKey)
 fetchTableFkeys qt@(QualifiedObject sn tn) = do
   r <- Q.listQE defaultTxErrorHandler [Q.sql|
           SELECT f.constraint_name,
                  f.ref_table_table_schema,
                  f.ref_table,
+                 f.constraint_oid,
                  f.column_mapping
             FROM hdb_catalog.hdb_foreign_key_constraint f
            WHERE f.table_schema = $1 AND f.table_name = $2
           |] (sn, tn) True
   fmap HS.fromList $
-    forM r $ \(constr, refsn, reftn, Q.AltJ colMapping) ->
-    return $ CatalogFKey qt (QualifiedObject refsn reftn) constr colMapping
+    forM r $ \(constr, refsn, reftn, oid, Q.AltJ colMapping) ->
+    return $ ForeignKey qt (QualifiedObject refsn reftn) oid constr colMapping
 
-fetchFkeysAsRemoteTable :: QualifiedTable -> Q.TxE QErr (HS.HashSet CatalogFKey)
+fetchFkeysAsRemoteTable :: QualifiedTable -> Q.TxE QErr (HS.HashSet ForeignKey)
 fetchFkeysAsRemoteTable rqt@(QualifiedObject rsn rtn) = do
   r <- Q.listQE defaultTxErrorHandler [Q.sql|
           SELECT f.table_schema,
                  f.table_name,
                  f.constraint_name,
+                 f.constraint_oid,
                  f.column_mapping
             FROM hdb_catalog.hdb_foreign_key_constraint f
            WHERE f.ref_table_table_schema = $1 AND f.ref_table = $2
           |] (rsn, rtn) True
   fmap HS.fromList $
-    forM r $ \(sn, tn, constr, Q.AltJ colMapping) ->
-    return $ CatalogFKey (QualifiedObject sn tn) rqt constr colMapping
+    forM r $ \(sn, tn, constr, oid, Q.AltJ colMapping) ->
+    return $ ForeignKey (QualifiedObject sn tn) rqt oid constr colMapping
