@@ -4,7 +4,7 @@
 
 -- | Validate input queries against remote schemas.
 
-module Hasura.GraphQL.Remote.Validate
+module Hasura.RQL.DDL.Remote.Validate
   ( getCreateRemoteRelationshipValidation
   , validateRelationship
   , validateRemoteArguments
@@ -18,12 +18,12 @@ import           Data.List.NonEmpty (NonEmpty(..))
 import           Data.Validation
 import           Debug.Trace
 import qualified Hasura.GraphQL.Context as GC
-import           Hasura.GraphQL.Remote.Input
 import qualified Hasura.GraphQL.Schema as GS
 import           Hasura.GraphQL.Validate.Types
 import qualified Hasura.GraphQL.Validate.Types as VT
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Relationship.Types
+import           Hasura.RQL.DDL.Remote.Input
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import qualified Language.GraphQL.Draft.Syntax as G

@@ -202,6 +202,8 @@ library
                      , Hasura.RQL.DDL.Headers
                      , Hasura.RQL.DDL.RemoteSchema
                      , Hasura.RQL.DDL.QueryCollection
+                     , Hasura.RQL.DDL.Remote.Input
+                     , Hasura.RQL.DDL.Remote.Validate
                      , Hasura.RQL.DML.Delete
                      , Hasura.RQL.DML.Internal
                      , Hasura.RQL.DML.Insert
@@ -268,9 +270,6 @@ library
                      , Network.URI.Extended
                      , Ops
                      , Migrate
-
-                     , Hasura.GraphQL.Remote.Input
-                     , Hasura.GraphQL.Remote.Validate
 
   other-modules:       Hasura.Server.Auth.JWT.Internal
                      , Hasura.Server.Auth.JWT.Logging

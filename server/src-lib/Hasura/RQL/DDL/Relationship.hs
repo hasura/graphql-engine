@@ -17,7 +17,7 @@ module Hasura.RQL.DDL.Relationship
 where
 
 import qualified Database.PG.Query as Q
-import           Hasura.GraphQL.Remote.Validate
+import           Hasura.RQL.DDL.Remote.Validate
 
 import           Hasura.EncJSON
 import           Hasura.Prelude

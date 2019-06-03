@@ -3,7 +3,7 @@
 
 -- | Input object types.
 
-module Hasura.GraphQL.Remote.Input
+module Hasura.RQL.DDL.Remote.Input
   ( substituteVariables
   , remoteArgumentsToMap
   , SubstituteError(..)

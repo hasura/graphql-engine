@@ -1,7 +1,7 @@
 module Hasura.RQL.DDL.Relationship.Types where
 
 import           Data.Set (Set)
-import           Hasura.GraphQL.Remote.Input
+import           Hasura.RQL.DDL.Remote.Input
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
