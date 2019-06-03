@@ -1,5 +1,6 @@
 module Hasura.RQL.Types.Permission
        ( RoleName(..)
+       , roleNameToTxt
 
        , SessVar
        , SessVarVal
@@ -49,6 +50,9 @@ newtype RoleName
 instance DQuote RoleName where
   dquoteTxt (RoleName r) = unNEText r
 
+roleNameToTxt :: RoleName -> Text
+roleNameToTxt = unNEText . getRoleTxt
+
 adminRole :: RoleName
 adminRole = RoleName adminText
 
@@ -92,7 +96,7 @@ data UserInfo
 
 mkUserInfo :: RoleName -> UserVars -> UserInfo
 mkUserInfo rn (UserVars v) =
-  UserInfo rn $ UserVars $ Map.insert userRoleHeader (unNEText $ getRoleTxt rn) $
+  UserInfo rn $ UserVars $ Map.insert userRoleHeader (roleNameToTxt rn) $
   foldl (flip Map.delete) v [adminSecretHeader, deprecatedAccessKeyHeader]
 
 instance Hashable UserInfo
@@ -104,7 +108,7 @@ instance Hashable UserInfo
 userInfoToList :: UserInfo -> [(Text, Text)]
 userInfoToList userInfo =
   let vars = Map.toList $ unUserVars . userVars $ userInfo
-      rn = unNEText . getRoleTxt . userRole $ userInfo
+      rn = roleNameToTxt . userRole $ userInfo
   in (userRoleHeader, rn) : vars
 
 adminUserInfo :: UserInfo
@@ -164,7 +168,7 @@ instance Show PermId where
     show $ mconcat
     [ getTableTxt tn
     , "."
-    , unNEText $ getRoleTxt rn
+    , roleNameToTxt rn
     , "."
     , T.pack $ show pType
     ]

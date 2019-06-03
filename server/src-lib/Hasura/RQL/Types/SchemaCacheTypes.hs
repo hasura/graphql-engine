@@ -44,10 +44,10 @@ reportSchemaObj (SOTableObj tn (TORel cn)) =
 reportSchemaObj (SOTableObj tn (TOCons cn)) =
   "constraint " <> qualObjectToText tn <> "." <> getConstraintTxt cn
 reportSchemaObj (SOTableObj tn (TOPerm rn pt)) =
-  "permission " <> qualObjectToText tn <> "." <> unNEText (getRoleTxt rn)
+  "permission " <> qualObjectToText tn <> "." <> roleNameToTxt rn
   <> "." <> permTypeToCode pt
 reportSchemaObj (SOTableObj tn (TOTrigger trn )) =
-  "event-trigger " <> qualObjectToText tn <> "." <> unNEText (unTriggerName trn)
+  "event-trigger " <> qualObjectToText tn <> "." <> triggerNameToTxt trn
 
 instance Show SchemaObjId where
   show soi = T.unpack $ reportSchemaObj soi

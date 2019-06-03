@@ -143,7 +143,7 @@ fromPGCol :: PGCol -> FieldName
 fromPGCol (PGCol c) = FieldName c
 
 fromRel :: RelName -> FieldName
-fromRel rn = FieldName $ relNameToTxt rn
+fromRel = FieldName . relNameToTxt
 
 newtype TQueryName
   = TQueryName { getTQueryName :: NEText }

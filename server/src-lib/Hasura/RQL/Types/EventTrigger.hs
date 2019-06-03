@@ -3,6 +3,7 @@ module Hasura.RQL.Types.EventTrigger
   , SubscribeOpSpec(..)
   , SubscribeColumns(..)
   , TriggerName(..)
+  , triggerNameToTxt
   , Ops(..)
   , EventId
   , TriggerOpsDef(..)
@@ -38,6 +39,9 @@ import qualified Text.Regex.TDFA            as TDFA
 
 newtype TriggerName = TriggerName { unTriggerName :: NEText }
   deriving (Show, Eq, Hashable, Lift, FromJSON, ToJSON, ToJSONKey, Q.FromCol, Q.ToPrepArg)
+
+triggerNameToTxt :: TriggerName -> Text
+triggerNameToTxt = unNEText . unTriggerName
 
 type EventId = T.Text
 
