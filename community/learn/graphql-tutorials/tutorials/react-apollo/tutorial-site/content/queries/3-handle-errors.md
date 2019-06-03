@@ -1,7 +1,7 @@
 ---
 title: "Handle loading/errors"
 metaTitle: "Apollo Query Component Error Handling | GraphQL React Apollo Tutorial"
-metaDescription: "We will handle the GraphQL loading and error states using the Apollo Query Component render props - loading and error "
+metaDescription: "We will handle the GraphQL loading and error states in React app using the Apollo Query Component render props - loading and error "
 ---
 
 As we saw in the previous step, Apollo injected props into the component’s render prop function. Among them `loading` and `error` are common ones that you will need to handle in your app.
