@@ -1,5 +1,7 @@
 ---
-title: 'Tutorial & boilerplate setup'
+title: "Tutorial & boilerplate setup"
+metaTitle: "Todo app Android boilerplate setup | GraphQL Android Apollo Tutorial"
+metaDescription: "The GraphQL backend is already ready. The task is to convert the static UI into a working realtime app in Android"
 ---
 
 For this tutorial, the GraphQL backend and the basic app UI is already ready.

@@ -1,5 +1,7 @@
 ---
-title: 'Course introduction'
+title: "Course introduction"
+metaTitle: "Course Introduction | GraphQL Android Apollo Tutorial"
+metaDescription: "A powerful and concise tutorial that will introduce you to GraphQL and integrating GraphQL into your Android app with Apollo and Kotlin, in the shortest amount of time possible."
 ---
 
 This course is a concise and powerful introduction to GraphQL for android developers.
