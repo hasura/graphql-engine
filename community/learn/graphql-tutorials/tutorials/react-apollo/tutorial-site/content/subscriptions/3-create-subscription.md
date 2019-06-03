@@ -1,7 +1,7 @@
 ---
 title: "Create Subscription and Render Result"
 metaTitle: "Apollo Subscription Component | GraphQL React Apollo Tutorial"
-metaDescription: "Integrate React Apollo Subscription Component to watch for changes in realtime data. We use GraphQL subscriptions as an example to get live data"
+metaDescription: "Integrate React Apollo Subscription Component to watch for changes in realtime data. We use GraphQL subscriptions as an example to get live data in the React app"
 ---
 
 import GithubLink from "../../src/GithubLink.js";

@@ -1,7 +1,7 @@
 ---
 title: "Tutorial & boilerplate setup"
-metaTitle: "Todo app boilerplate setup | GraphQL React Apollo Tutorial"
-metaDescription: "The GraphQL backend is already ready. The task is to convert the static UI into a working realtime app"
+metaTitle: "Todo app react boilerplate setup | GraphQL React Apollo Tutorial"
+metaDescription: "The GraphQL backend is already ready. The task is to convert the static UI into a working realtime app in React.js"
 ---
 
 import YoutubeEmbed from "../src/YoutubeEmbed.js";

@@ -1,7 +1,7 @@
 ---
 title: "Set up a GraphQL client with Apollo"
 metaTitle: "Apollo Client GraphQL Setup | GraphQL React Apollo Tutorial"
-metaDescription: "You will learn how to configure Apollo Client in React by installing dependencies like react-apollo, apollo-link-http, apollo-cache-inmemory"
+metaDescription: "You will learn how to configure Apollo Client in React by installing dependencies like react-apollo, apollo-client, apollo-link-http, apollo-cache-inmemory"
 ---
 
 import GithubLink from "../src/GithubLink.js";
@@ -18,6 +18,7 @@ Let's get started by installing apollo client & peer graphql dependencies:
 $ npm install --save apollo-client react-apollo apollo-cache-inmemory apollo-link-http graphql graphql-tag
 ```
 
+### Create Apollo Client Instance
 Open `src/components/App.js` and add the following imports at the top:
 
 <GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo/app-final/src/components/App.js" text="src/components/App.js" />

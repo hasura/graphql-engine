@@ -1,7 +1,7 @@
 ---
 title: "Course introduction"
 metaTitle: "Course Introduction | GraphQL React Apollo Tutorial"
-metaDescription: "We put together a powerful and concise tutorial that will introduce you to GraphQL and integrating GraphQL into your React stack with Apollo, in the shortest amount of time possible."
+metaDescription: "We put together a powerful and concise tutorial that will introduce you to GraphQL and integrating GraphQL into your React app with Apollo, in the shortest amount of time possible."
 ---
 
 GraphQL is becoming the new way to use APIs in modern web and mobile apps.

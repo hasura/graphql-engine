@@ -1,5 +1,7 @@
 ---
 title: "Smart Query"
+metaTitle: "Vue Apollo Smart Query | GraphQL Vue Apollo Tutorial"
+metaDescription: "We will use the Smart Query from vue-apollo. Each query in apollo object becomes a smart query and it will be executed automatically when the component is mounted."
 ---
 
 import GithubLink from "../../src/GithubLink.js";
