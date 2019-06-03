@@ -1,10 +1,11 @@
 module Hasura.Server.Auth.JWT
-  ( processJwt
+  ( processJwtOrUnauthRole
   , RawJWT
   , JWTConfig (..)
   , JWTCtx (..)
   , JWKSet (..)
   , JWTClaimsFormat (..)
+  , JWTHeader(..)
   , updateJwkRef
   , jwkRefreshCtrl
   ) where
@@ -29,7 +30,7 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
 import           Hasura.Server.Utils             (bsToTxt, diffTimeToMicro,
-                                                  userRoleHeader)
+                                                  txtToBs, userRoleHeader)
 
 import qualified Control.Concurrent              as C
 import qualified Data.Aeson                      as A
@@ -45,6 +46,7 @@ import qualified Data.Text.Encoding              as T
 import qualified Network.HTTP.Client             as HTTP
 import qualified Network.HTTP.Types              as HTTP
 import qualified Network.Wreq                    as Wreq
+import qualified Web.Spock.Internal.Cookies      as Spock
 
 
 newtype RawJWT = RawJWT BL.ByteString
@@ -58,6 +60,20 @@ $(A.deriveJSON A.defaultOptions { A.sumEncoding = A.ObjectWithSingleField
                                 , A.constructorTagModifier = A.snakeCase . drop 3
                                 } ''JWTClaimsFormat)
 
+data JWTHeader
+  = JHAuthorization
+  | JHCookie Text -- cookie name
+  -- | JHCustomHeader Text -- custom header name
+  deriving (Show, Eq)
+
+instance A.FromJSON JWTHeader where
+  parseJSON = A.withObject "JWTHeader" $ \o -> do
+    hdrType <- o A..: "type"
+    case (hdrType :: Text) of
+      "Authorization" -> return JHAuthorization
+      "Cookie"        -> JHCookie <$> o A..: "name"
+      _ -> fail "expected 'type' is 'Authorization' or 'Cookie'"
+
 data JWTConfig
   = JWTConfig
   { jcType         :: !T.Text
@@ -65,6 +81,7 @@ data JWTConfig
   , jcClaimNs      :: !(Maybe T.Text)
   , jcAudience     :: !(Maybe T.Text)
   , jcClaimsFormat :: !(Maybe JWTClaimsFormat)
+  , jcHeader       :: !(Maybe JWTHeader)
   -- , jcIssuer   :: !(Maybe T.Text)
   } deriving (Show, Eq)
 
@@ -74,11 +91,12 @@ data JWTCtx
   , jcxClaimNs      :: !(Maybe T.Text)
   , jcxAudience     :: !(Maybe T.Text)
   , jcxClaimsFormat :: !JWTClaimsFormat
+  , jcxHeader       :: !JWTHeader
   } deriving (Eq)
 
 instance Show JWTCtx where
-  show (JWTCtx _ nsM audM cf) =
-    show ["<IORef JWKSet>", show nsM, show audM, show cf]
+  show (JWTCtx _ nsM audM cf hdrs) =
+    show ["<IORef JWKSet>", show nsM, show audM, show cf, show hdrs]
 
 data HasuraClaims
   = HasuraClaims
@@ -166,20 +184,26 @@ updateJwkRef (Logger logger) manager url jwkRef = do
 
 
 -- | Process the request headers to verify the JWT and extract UserInfo from it
-processJwt
+processJwtOrUnauthRole
   :: ( MonadIO m
      , MonadError QErr m)
   => JWTCtx
   -> HTTP.RequestHeaders
   -> Maybe RoleName
   -> m (UserInfo, Maybe UTCTime)
-processJwt jwtCtx headers mUnAuthRole =
+processJwtOrUnauthRole jwtCtx headers mUnAuthRole =
   maybe withoutAuthZHeader withAuthZHeader mAuthZHeader
-  where
-    mAuthZHeader = find (\h -> fst h == CI.mk "Authorization") headers
 
-    withAuthZHeader (_, authzHeader) =
-      processAuthZHeader jwtCtx headers $ BL.fromStrict authzHeader
+  where
+    getHeader name = find (\h -> fst h == CI.mk name)
+
+    mAuthZHeader =
+      case jcxHeader jwtCtx of
+        JHAuthorization -> snd <$> getHeader "Authorization" headers
+        JHCookie _      -> snd <$> getHeader "Cookie" headers
+
+    withAuthZHeader authzHeader =
+      processJwt jwtCtx headers $ BL.fromStrict authzHeader
 
     withoutAuthZHeader = do
       unAuthRole <- maybe missingAuthzHeader return mUnAuthRole
@@ -187,18 +211,24 @@ processJwt jwtCtx headers mUnAuthRole =
         mkUserInfo unAuthRole $ mkUserVars $ hdrsToText headers
 
     missingAuthzHeader =
-      throw400 InvalidHeaders "Missing Authorization header in JWT authentication mode"
+      case jcxHeader jwtCtx of
+        JHAuthorization ->
+          throw400 InvalidHeaders "Missing 'Authorization' header in JWT authorization mode"
+        JHCookie _ ->
+          throw400 InvalidHeaders "Missing 'Cookie' header in JWT authorization mode"
 
-processAuthZHeader
+processJwt
   :: ( MonadIO m
      , MonadError QErr m)
   => JWTCtx
   -> HTTP.RequestHeaders
   -> BLC.ByteString
   -> m (UserInfo, Maybe UTCTime)
-processAuthZHeader jwtCtx headers authzHeader = do
-  -- try to parse JWT token from Authorization header
-  jwt <- parseAuthzHeader
+processJwt jwtCtx headers authzHeader = do
+  -- try to parse JWT token from Authorization or Cookie header
+  jwt <- case jcxHeader jwtCtx of
+    JHAuthorization -> parseAuthzHeader
+    JHCookie cName  -> parseCookieHeader cName
 
   -- verify the JWT
   claims <- liftJWTError invalidJWTError $ verifyJwt jwtCtx $ RawJWT jwt
@@ -238,6 +268,13 @@ processAuthZHeader jwtCtx headers authzHeader = do
         ["Bearer", jwt] -> return jwt
         _               -> malformedAuthzHeader
 
+    parseCookieHeader cName = do
+      let cookies = Spock.parseCookies $ BL.toStrict authzHeader
+          mJwtCookie = snd <$> find (\(hn, _) -> hn == cName) cookies
+      case mJwtCookie of
+        Nothing        -> malformedCookieHeader cName
+        Just jwtCookie -> return $ BL.fromStrict $ txtToBs jwtCookie
+
     parseObjectFromString claimsFmt jVal =
       case (claimsFmt, jVal) of
         (JCFStringifiedJson, A.String v) ->
@@ -275,6 +312,8 @@ processAuthZHeader jwtCtx headers authzHeader = do
 
     malformedAuthzHeader =
       throw400 InvalidHeaders "Malformed Authorization header"
+    malformedCookieHeader c =
+      throw400 InvalidHeaders $ "Did not find '" <> c <> "' in Cookie header"
     currRoleNotAllowed =
       throw400 AccessDenied "Your current role is not in allowed roles"
     claimsNotFound = do
@@ -345,15 +384,16 @@ instance A.FromJSON JWTConfig where
     aud     <- o A..:? "audience"
     jwkUrl  <- o A..:? "jwk_url"
     isStrngfd <- o A..:? "claims_format"
+    jwtHdr  <- o A..:? "header"
 
     case (mRawKey, jwkUrl) of
       (Nothing, Nothing) -> fail "key and jwk_url both cannot be empty"
       (Just _, Just _)   -> fail "key, jwk_url both cannot be present"
       (Just rawKey, Nothing) -> do
         key <- parseKey keyType rawKey
-        return $ JWTConfig keyType (Left key) claimNs aud isStrngfd
+        return $ JWTConfig keyType (Left key) claimNs aud isStrngfd jwtHdr
       (Nothing, Just url) ->
-        return $ JWTConfig keyType (Right url) claimNs aud isStrngfd
+        return $ JWTConfig keyType (Right url) claimNs aud isStrngfd jwtHdr
 
     where
       parseKey keyType rawKey =
