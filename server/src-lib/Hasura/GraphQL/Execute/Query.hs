@@ -190,8 +190,11 @@ prepareWithPlan = \case
   R.UVSessVar colTy sessVar ->
     return $ S.withTyAnn colTy $ withGeoVal colTy $
       S.SEOpApp (S.SQLOp "->>")
-      [S.SEPrep 1, S.SELit $ T.toLower sessVar]
+      [sessionExp, S.SELit $ T.toLower sessVar]
+  R.UVSession -> return sessionExp
   R.UVSQL sqlExp -> return sqlExp
+  where
+    sessionExp = S.withTyAnn PGJSON $ S.SEPrep 1
 
 queryRootName :: Text
 queryRootName = "query_root"

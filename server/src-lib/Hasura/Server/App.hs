@@ -347,11 +347,11 @@ newtype QueryParser
 queryParsers :: M.HashMap T.Text QueryParser
 queryParsers =
   M.fromList
-  [ ("select", mkQueryParser RQSelect)
-  , ("insert", mkQueryParser RQInsert)
-  , ("update", mkQueryParser RQUpdate)
-  , ("delete", mkQueryParser RQDelete)
-  , ("count", mkQueryParser RQCount)
+  [ ("select", mkQueryParser (RQV1 . RQSelect))
+  , ("insert", mkQueryParser (RQV1 . RQInsert))
+  , ("update", mkQueryParser (RQV1 . RQUpdate))
+  , ("delete", mkQueryParser (RQV1 . RQDelete))
+  , ("count", mkQueryParser (RQV1 . RQCount))
   ]
   where
     mkQueryParser f =
@@ -539,7 +539,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
         TemplateParam *** String
 
     mkQTemplateAction tmpltName tmpltArgs =
-      v1QueryHandler $ RQExecuteQueryTemplate $
+      v1QueryHandler $ RQV1 . RQExecuteQueryTemplate $
       ExecQueryTemplate (TQueryName tmpltName) tmpltArgs
 
     serveApiConsole = do

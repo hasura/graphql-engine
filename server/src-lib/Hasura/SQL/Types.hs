@@ -391,6 +391,10 @@ isJSONBType :: PGColType -> Bool
 isJSONBType PGJSONB = True
 isJSONBType _       = False
 
+isJSONType :: PGColType -> Bool
+isJSONType PGJSON = True
+isJSONType _      = False
+
 isComparableType :: PGColType -> Bool
 isComparableType PGJSON        = False
 isComparableType PGJSONB       = False

@@ -151,6 +151,7 @@ from
               'schema', hf.function_schema,
               'name', hf.function_name
             ),
+            'session_argument', hf.session_argument,
             'info', function_info
           ) as info
         from

@@ -5,9 +5,5 @@ args:
   args:
     cascade: true
     sql: |
-      drop table article cascade
-- type: run_sql
-  args:
-    cascade: true
-    sql: |
-      drop table author
+      DROP TABLE article cascade;
+      DROP TABLE author;

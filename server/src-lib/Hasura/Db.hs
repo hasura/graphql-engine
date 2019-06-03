@@ -8,6 +8,7 @@ module Hasura.Db
   , runLazyTx
   , runLazyTx'
   , withUserInfo
+  , sessInfoJsonExp
 
   , RespTx
   , LazyRespTx
@@ -22,6 +23,8 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Permission
 import           Hasura.SQL.Types
+
+import qualified Hasura.SQL.DML              as S
 
 data PGExecCtx
   = PGExecCtx
@@ -72,8 +75,10 @@ setHeadersTx uVars =
   Q.unitQE defaultTxErrorHandler setSess () False
   where
     setSess = Q.fromText $
-      "SET LOCAL \"hasura.user\" = " <>
-      pgFmtLit (J.encodeToStrictText uVars)
+      "SET LOCAL \"hasura.user\" = " <> toSQLTxt (sessInfoJsonExp uVars)
+
+sessInfoJsonExp :: UserVars -> S.SQLExp
+sessInfoJsonExp = S.SELit . J.encodeToStrictText
 
 defaultTxErrorHandler :: Q.PGTxErr -> QErr
 defaultTxErrorHandler txe =

@@ -64,6 +64,8 @@ resolveVal userInfo = \case
     sessVarVal <- getSessVarVal userInfo sessVar
     return $ S.withTyAnn colTy $ withGeoVal colTy $
       S.SELit sessVarVal
+  RS.UVSession -> return $ S.withTyAnn PGJSON $
+                  sessInfoJsonExp $ userVars userInfo
   RS.UVSQL sqlExp -> return sqlExp
 
 getSessVarVal

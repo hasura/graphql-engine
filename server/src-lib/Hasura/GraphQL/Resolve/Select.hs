@@ -408,14 +408,17 @@ convertAggSelect opCtx fld =
 
 parseFunctionArgs
   ::( MonadError QErr m)
-  => FuncArgSeq -> AnnInpVal -> m [AnnPGVal]
+  => FuncArgSeq -> AnnInpVal -> m [UnresolvedVal]
 parseFunctionArgs argSeq val =
   flip withObject val $ \nTy obj ->
-    fmap toList $ forM argSeq $ \(FuncArgItem argName) -> do
-      argVal <- onNothing (OMap.lookup argName obj) $ throw500 $
-                "argument " <> showName argName <> " required in input type "
-                <> showNamedTy nTy
-      asPGColVal argVal
+    fmap toList $ forM argSeq $ \(FuncArgItem argName argTy) ->
+      case argTy of
+        FATSession -> return UVSession
+        FATInput -> do
+          argVal <- onNothing (OMap.lookup argName obj) $
+            throw500 $ "argument " <> showName argName
+            <> " required in input type " <> showNamedTy nTy
+          UVPG <$> asPGColVal argVal
 
 fromFuncQueryField
   :: (MonadError QErr m)
@@ -425,7 +428,7 @@ fromFuncQueryField
   -> m (RS.AnnFnSelG s UnresolvedVal)
 fromFuncQueryField fn qf argSeq fld = fieldAsPath fld $ do
   funcArgsM <- withArgM (_fArguments fld) "args" $ parseFunctionArgs argSeq
-  let funcArgs = maybe [] (map UVPG) funcArgsM
+  let funcArgs = fromMaybe []  funcArgsM
   RS.AnnFnSel qf funcArgs <$> fn fld
 
 convertFuncQuerySimple

@@ -23,7 +23,8 @@ import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.Introspect
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.Prelude
-import           Hasura.RQL.DML.Internal           (sessVarFromCurrentSetting)
+import           Hasura.RQL.DML.Internal           (currentSession,
+                                                    sessVarFromCurrentSetting)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -86,6 +87,7 @@ queryFldToSQL fn fld = do
     UVPG annPGVal -> fn annPGVal
     UVSQL sqlExp  -> return sqlExp
     UVSessVar colTy sessVar -> sessVarFromCurrentSetting colTy sessVar
+    UVSession -> return currentSession
   return $ RS.toPGQuery resolvedAST
 
 mutFldToTx

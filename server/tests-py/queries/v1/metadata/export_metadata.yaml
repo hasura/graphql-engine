@@ -34,7 +34,9 @@ response:
   query_collections: []
   allowlist: []
   functions:
-  - search_articles
+  - function: search_articles
+    session_variable_argument: null
+  version: 2
 
 query:
   type: export_metadata

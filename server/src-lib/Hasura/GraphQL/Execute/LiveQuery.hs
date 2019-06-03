@@ -171,12 +171,12 @@ toMultiplexedQueryVar = \case
   -- TODO: check the logic around colTy and session variable's type
   GR.UVSessVar colTy sessVar ->
     return $ fromResVars colTy [ "user", T.toLower sessVar]
+  GR.UVSession -> return $ fromResVars PGJSON $ pure "user"
   GR.UVSQL sqlExp -> return sqlExp
   where
     fromResVars colTy jPath =
       S.withTyAnn colTy $ S.SEOpApp (S.SQLOp "#>>")
-      [ S.SEQIden $ S.QIden (S.QualIden $ Iden "_subs")
-        (Iden "result_vars")
+      [ S.SEQIden $ S.mkQIden (Iden "_subs") (Iden "result_vars")
       , S.SEArray $ map S.SELit jPath
       ]
 

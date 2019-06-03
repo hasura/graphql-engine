@@ -18,8 +18,8 @@ import qualified Hasura.RQL.DML.Delete             as RD
 import qualified Hasura.RQL.DML.Returning          as RR
 import qualified Hasura.RQL.DML.Update             as RU
 
-import qualified Hasura.SQL.DML                    as S
 import qualified Hasura.RQL.DML.Select             as RS
+import qualified Hasura.SQL.DML                    as S
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
@@ -59,6 +59,7 @@ convertMutResp ty selSet =
     convertUnresolvedVal = \case
       UVPG annPGVal -> UVSQL <$> txtConverter annPGVal
       UVSessVar colTy sessVar -> pure $ UVSessVar colTy sessVar
+      UVSession -> pure UVSession
       UVSQL sqlExp -> pure $ UVSQL sqlExp
 
 convertRowObj

@@ -31,7 +31,7 @@ import           Hasura.Server.Utils
 
 import qualified Database.PG.Query                  as Q
 
-data RQLQuery
+data RQLQueryV1
   = RQAddExistingTableOrView !TrackTable
   | RQTrackTable !TrackTable
   | RQUntrackTable !UntrackTable
@@ -98,11 +98,48 @@ data RQLQuery
   | RQDumpInternalState !DumpInternalState
   deriving (Show, Eq, Lift)
 
-$(deriveJSON
+data RQLQueryV2
+  = RQV2TrackFunction !TrackFunctionV2
+  deriving (Show, Eq, Lift)
+
+instance FromJSON RQLQueryV2 where
+  parseJSON = withObject "Object" $ \o -> do
+    qType :: String <- o .: "type"
+    argsV <- o .: "args"
+    case qType of
+      "track_function" -> RQV2TrackFunction <$> parseJSON argsV
+      t                -> fail $
+        "expected only \"track_function\" for \"type\", but encountered " ++ t
+
+data RQLQuery
+  = RQV1 !RQLQueryV1
+  | RQV2 !RQLQueryV2
+  deriving (Show, Eq, Lift)
+
+instance FromJSON RQLQuery where
+  parseJSON = withObject "Object" $ \o -> do
+    mVersion <- o .:? "version"
+    let version = fromMaybe VIVersion1 mVersion
+        val = Object o
+    case version of
+      VIVersion1 -> RQV1 <$> parseJSON val
+      VIVersion2 -> RQV2 <$> parseJSON val
+
+$(deriveFromJSON
   defaultOptions { constructorTagModifier = snakeCase . drop 2
                  , sumEncoding = TaggedObject "type" "args"
                  }
-  ''RQLQuery)
+  ''RQLQueryV1
+ )
+
+-- Can't use following template haskell to derive FromJSON
+-- for RQLQueryV2 since it has only one constructor
+-- $(deriveFromJSON
+--   defaultOptions { constructorTagModifier = snakeCase . drop 4
+--                  , sumEncoding = TaggedObject "type" "args"
+--                  }
+--   ''RQLQueryV2
+--  )
 
 newtype Run a
   = Run {unRun :: StateT SchemaCache (ReaderT (UserInfo, HTTP.Manager, SQLGenCtx) (LazyTx QErr)) a}
@@ -179,7 +216,7 @@ runQuery pgExecCtx instanceId userInfo sc hMgr sqlGenCtx query = do
       return r
 
 queryNeedsReload :: RQLQuery -> Bool
-queryNeedsReload qi = case qi of
+queryNeedsReload (RQV1 qi) = case qi of
   RQAddExistingTableOrView _      -> True
   RQTrackTable _                  -> True
   RQUntrackTable _                -> True
@@ -242,14 +279,26 @@ queryNeedsReload qi = case qi of
   RQDumpInternalState _           -> False
 
   RQBulk qs                       -> any queryNeedsReload qs
+queryNeedsReload (RQV2 qi)  = case qi of
+  RQV2TrackFunction _             -> True
 
 runQueryM
-  :: ( QErrM m, CacheRWM m, UserInfoM m, MonadTx m
+  :: ( CacheRWM m, UserInfoM m, MonadTx m
      , MonadIO m, HasHttpManager m, HasSQLGenCtx m
      )
   => RQLQuery
   -> m EncJSON
-runQueryM rq = withPathK "args" $ case rq of
+runQueryM = withPathK "args" . \case
+  RQV1 q -> runQueryV1M q
+  RQV2 q -> runQueryV2M q
+
+runQueryV1M
+  :: ( CacheRWM m, UserInfoM m, MonadTx m
+     , MonadIO m, HasHttpManager m, HasSQLGenCtx m
+     )
+  => RQLQueryV1
+  -> m EncJSON
+runQueryV1M = \case
   RQAddExistingTableOrView q   -> runTrackTableQ q
   RQTrackTable q               -> runTrackTableQ q
   RQUntrackTable q             -> runUntrackTableQ q
@@ -313,3 +362,9 @@ runQueryM rq = withPathK "args" $ case rq of
   RQRunSql q                   -> runRunSQL q
 
   RQBulk qs                    -> encJFromList <$> indexedMapM runQueryM qs
+
+runQueryV2M
+  :: ( CacheRWM m, UserInfoM m, MonadTx m)
+  => RQLQueryV2
+  -> m EncJSON
+runQueryV2M (RQV2TrackFunction q) = runTrackFuncV2 q

@@ -565,18 +565,19 @@ input function_args {
 
 procFuncArgs
   :: Seq.Seq FunctionArg
-  -> (PGColType -> Text -> a) -> [a]
+  -> (PGColType -> Text -> FunctionArgType -> a)
+  -> [a]
 procFuncArgs argSeq f =
   fst $ foldl mkItem ([], 1::Int) argSeq
   where
-    mkItem (items, argNo) (FunctionArg nameM ty) =
+    mkItem (items, argNo) (FunctionArg nameM ty argTy) =
       case nameM of
         Just argName ->
           let argT = getFuncArgNameTxt argName
-          in (items <> pure (f ty argT), argNo)
+          in (items <> pure (f ty argT argTy), argNo)
         Nothing ->
           let argT = "arg_" <> T.pack (show argNo)
-          in (items <> pure (f ty argT), argNo + 1)
+          in (items <> pure (f ty argT argTy), argNo + 1)
 
 mkFuncArgsInp :: FunctionInfo -> Maybe InpObjTyInfo
 mkFuncArgsInp funcInfo =
@@ -589,9 +590,11 @@ mkFuncArgsInp funcInfo =
     inpObj = mkHsraInpTyInfo Nothing funcArgsTy $
              fromInpValL argInps
 
-    argInps = procFuncArgs funcArgs mkInpVal
+    funcInpArgs = onlyInpArgs funcArgs
 
-    mkInpVal ty t =
+    argInps = procFuncArgs funcInpArgs mkInpVal
+
+    mkInpVal ty t _ =
       InpValInfo Nothing (G.Name t) Nothing $ G.toGT $
       G.toNT $ mkScalarTy ty
 
@@ -1326,7 +1329,7 @@ mkGCtxRole' tn insPermM selPermM updColsM
     funcArgInpObjs = mapMaybe mkFuncArgsInp funcs
     -- funcArgCtx = Map.unions funcArgCtxs
     funcArgScalarSet = Set.fromList $
-                       concatMap (map faType . toList . fiInputArgs) funcs
+                       concatMap (map faColType . toList . fiInputArgs) funcs
 
     -- helper
     mkFldMap ty = Map.fromList . concatMap (mkFld ty)

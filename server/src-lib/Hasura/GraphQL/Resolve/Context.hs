@@ -59,7 +59,8 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-import           Hasura.RQL.DML.Internal             (sessVarFromCurrentSetting)
+import           Hasura.RQL.DML.Internal             (currentSession,
+                                                      sessVarFromCurrentSetting)
 
 import qualified Hasura.SQL.DML                      as S
 
@@ -90,6 +91,8 @@ partialSQLExpToUnresolvedVal = \case
 data UnresolvedVal
   -- From a session variable
   = UVSessVar !PGColType !SessVar
+  -- All session variables json object
+  | UVSession
   -- This is postgres
   | UVPG !AnnPGVal
   -- This is a full resolved sql expression
@@ -172,12 +175,14 @@ resolveValPrep
 resolveValPrep = \case
   UVPG annPGVal -> prepare annPGVal
   UVSessVar colTy sessVar -> sessVarFromCurrentSetting colTy sessVar
+  UVSession -> return currentSession
   UVSQL sqlExp -> return sqlExp
 
 resolveValTxt :: (Applicative f) => UnresolvedVal -> f S.SQLExp
 resolveValTxt = \case
   UVPG annPGVal -> txtConverter annPGVal
   UVSessVar colTy sessVar -> sessVarFromCurrentSetting colTy sessVar
+  UVSession -> pure currentSession
   UVSQL sqlExp -> pure sqlExp
 
 withPrepArgs :: StateT PrepArgs m a -> m (a, PrepArgs)

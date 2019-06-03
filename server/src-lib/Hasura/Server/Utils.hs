@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeApplications #-}
 module Hasura.Server.Utils where
 
 import qualified Database.PG.Query.Connection as Q
@@ -5,6 +6,7 @@ import qualified Database.PG.Query.Connection as Q
 import           Data.Aeson
 import           Data.List.Split
 import           Data.Time.Clock
+import           Language.Haskell.TH.Syntax   (Lift)
 import           Network.URI
 import           System.Environment
 import           System.Exit
@@ -171,3 +173,21 @@ diffTimeToMicro diff =
   (floor (realToFrac diff :: Double) - 10) * aSecond
   where
     aSecond = 1000 * 1000
+
+-- type for version integer
+data VersionInt
+  = VIVersion1
+  | VIVersion2
+  deriving (Show, Eq, Lift)
+
+instance ToJSON VersionInt where
+  toJSON VIVersion1 = toJSON @Int 1
+  toJSON VIVersion2 = toJSON @Int 2
+
+instance FromJSON VersionInt where
+  parseJSON v = do
+    verInt :: Int <- parseJSON v
+    case verInt of
+      1 -> return VIVersion1
+      2 -> return VIVersion2
+      i -> fail $ "expected 1 or 2, encountered " ++ show i

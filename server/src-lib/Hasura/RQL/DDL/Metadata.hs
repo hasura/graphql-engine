@@ -38,6 +38,7 @@ import qualified Data.Text                          as T
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import           Hasura.Server.Utils
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query                  as Q
@@ -144,9 +145,10 @@ runClearMetadata _ = do
 
 data ReplaceMetadata
   = ReplaceMetadata
-  { aqTables           :: ![TableMeta]
+  { aqVersion          :: !(Maybe VersionInt)
+  , aqTables           :: ![TableMeta]
   , aqQueryTemplates   :: ![DQ.CreateQueryTemplate]
-  , aqFunctions        :: !(Maybe [QualifiedFunction])
+  , aqFunctions        :: !(Maybe [Value])
   , aqRemoteSchemas    :: !(Maybe [TRS.AddRemoteSchemaQuery])
   , aqQueryCollections :: !(Maybe [DQC.CreateCollection])
   , aqAllowlist        :: !(Maybe [DQC.CollectionReq])
@@ -157,7 +159,9 @@ $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ReplaceMetadata)
 applyQP1
   :: (QErrM m, UserInfoM m)
   => ReplaceMetadata -> m ()
-applyQP1 (ReplaceMetadata tables templates mFunctions mSchemas mCollections mAllowlist) = do
+applyQP1 ( ReplaceMetadata _ tables templates mFunctions
+           mSchemas mCollections mAllowlist
+         ) = do
 
   adminOnly
 
@@ -224,7 +228,9 @@ applyQP2
      )
   => ReplaceMetadata
   -> m EncJSON
-applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas mCollections mAllowlist) = do
+applyQP2 ( ReplaceMetadata mVersion tables templates mFunctions
+           mSchemas mCollections mAllowlist
+         ) = do
 
   liftTx clearMetadata
   DT.buildSchemaCacheStrict
@@ -270,7 +276,7 @@ applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas mCollections mAll
 
   -- sql functions
   withPathK "functions" $
-    indexedMapM_ (void . DF.trackFunctionP2) functions
+    indexedMapM_ processFunc functions
 
   -- query collections
   withPathK "query_collections" $
@@ -309,6 +315,15 @@ applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas mCollections mAll
       indexedForM_ perms $ \permDef -> do
         permInfo <- DP.addPermP1 tabInfo permDef
         DP.addPermP2 (tiName tabInfo) permDef permInfo
+
+    version = fromMaybe VIVersion1 mVersion
+    processFunc v = void $ case version of
+      VIVersion1 -> do
+        qf <- decodeValue v
+        DF.trackFunctionP2 qf Nothing
+      VIVersion2 -> do
+        DF.TrackFunctionV2 qf mSessArg <- decodeValue v
+        DF.trackFunctionP2 qf mSessArg
 
 runReplaceMetadata
   :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
@@ -370,8 +385,7 @@ fetchMetadata = do
         modMetaMap tmEventTriggers triggerMetaDefs
 
   -- fetch all functions
-  functions <- map (uncurry QualifiedObject) <$>
-    Q.catchE defaultTxErrorHandler fetchFunctions
+  functions <- map toJSON <$> liftTx DF.fetchFunctions
 
   -- fetch all custom resolvers
   schemas <- DRS.fetchRemoteSchemas
@@ -382,8 +396,9 @@ fetchMetadata = do
   -- fetch allow list
   allowlist <- map DQC.CollectionReq <$> DQC.fetchAllowlist
 
-  return $ ReplaceMetadata (M.elems postRelMap) qTmpltDefs (Just functions)
-                           (Just schemas) (Just collections) (Just allowlist)
+  return $ ReplaceMetadata (Just VIVersion2)
+            (M.elems postRelMap) qTmpltDefs (Just functions)
+            (Just schemas) (Just collections) (Just allowlist)
 
   where
 
@@ -440,12 +455,6 @@ fetchMetadata = do
               SELECT e.schema_name, e.table_name, e.configuration::json
                FROM hdb_catalog.event_triggers e
               |] () False
-    fetchFunctions =
-      Q.listQ [Q.sql|
-                SELECT function_schema, function_name
-                FROM hdb_catalog.hdb_function
-                WHERE is_system_defined = 'false'
-                    |] () False
 
 runExportMetadata
   :: (QErrM m, UserInfoM m, MonadTx m)

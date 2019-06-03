@@ -16,6 +16,11 @@ module Hasura.RQL.Types.Common
        , WithTable(..)
        , ColVals
        , MutateResp(..)
+
+       , FunctionArgName(..)
+       , FunctionArgType(..)
+       , FunctionArg(..)
+       , isInputType
        ) where
 
 import           Hasura.Prelude
@@ -147,3 +152,27 @@ data MutateResp
   , _mrReturningColumns :: ![ColVals]
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''MutateResp)
+
+data FunctionArgType
+  -- Needs input from user
+  = FATInput
+  -- Needs 'hasura.user' session info
+  | FATSession
+  deriving (Show, Eq)
+$(deriveJSON defaultOptions{constructorTagModifier = drop 2} ''FunctionArgType)
+
+isInputType :: FunctionArgType -> Bool
+isInputType FATInput   = True
+isInputType FATSession = False
+
+newtype FunctionArgName =
+  FunctionArgName { getFuncArgNameTxt :: T.Text}
+  deriving (Show, Eq, ToJSON, FromJSON, Lift, DQuote, Q.ToPrepArg)
+
+data FunctionArg
+  = FunctionArg
+  { faName    :: !(Maybe FunctionArgName)
+  , faColType :: !PGColType
+  , faArgType :: !FunctionArgType
+  } deriving(Show, Eq)
+$(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionArg)

@@ -90,10 +90,12 @@ module Hasura.RQL.Types.SchemaCache
 
        , FunctionType(..)
        , FunctionArg(..)
+       , FunctionArgType(..)
        , FunctionArgName(..)
        , FunctionName(..)
        , FunctionInfo(..)
        , FunctionCache
+       , onlyInpArgs
        , getFuncsOfTable
        , addFunctionToCache
        , askFunctionInfo
@@ -103,6 +105,7 @@ module Hasura.RQL.Types.SchemaCache
        ) where
 
 import qualified Hasura.GraphQL.Context            as GC
+
 import           Hasura.Prelude
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Common
@@ -383,17 +386,8 @@ funcTypToTxt FTSTABLE    = "STABLE"
 instance Show FunctionType where
   show = T.unpack . funcTypToTxt
 
-newtype FunctionArgName =
-  FunctionArgName { getFuncArgNameTxt :: T.Text}
-  deriving (Show, Eq, ToJSON)
-
-data FunctionArg
-  = FunctionArg
-  { faName :: !(Maybe FunctionArgName)
-  , faType :: !PGColType
-  } deriving(Show, Eq)
-
-$(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionArg)
+onlyInpArgs :: Seq.Seq FunctionArg -> Seq.Seq FunctionArg
+onlyInpArgs = Seq.fromList . filter (isInputType . faArgType) . toList
 
 data FunctionInfo
   = FunctionInfo
