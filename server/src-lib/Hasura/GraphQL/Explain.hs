@@ -117,7 +117,7 @@ explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw)= 
   (gCtx, rootSelSet) <- case execPlan of
     E.GExPHasura (gCtx, rootSelSet, _) ->
       return (gCtx, rootSelSet)
-    E.GExPRemote _ _  ->
+    E.GExPRemote {}  ->
       throw400 InvalidParams "only hasura queries can be explained"
   case rootSelSet of
     GV.RQuery selSet -> do

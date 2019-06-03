@@ -36,7 +36,7 @@ newtype GQLExecDoc
   deriving (Ord, Show, Eq, Hashable)
 
 instance J.FromJSON GQLExecDoc where
-  parseJSON v = (GQLExecDoc . G.getExecutableDefinitions) <$> J.parseJSON v
+  parseJSON v = GQLExecDoc . G.getExecutableDefinitions <$> J.parseJSON v
 
 instance J.ToJSON GQLExecDoc where
   toJSON = J.toJSON . G.ExecutableDocument . unGQLExecDoc
@@ -120,6 +120,7 @@ encodeRemoteGqlResp (RemoteGqlResp d e ex) =
 data GraphqlResponse
   = GRHasura !GQResp
   | GRRemote !RemoteGqlResp
+  deriving (Show)
 
 encodeGraphqlResponse :: GraphqlResponse -> EncJSON
 encodeGraphqlResponse = \case

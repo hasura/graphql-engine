@@ -1,12 +1,10 @@
-#!/usr/bin/env python3
-
+import json
 import string
 import random
+
 import yaml
-import json
 import queue
 import requests
-
 import pytest
 
 from validate import check_query_f, check_query

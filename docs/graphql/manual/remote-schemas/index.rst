@@ -126,7 +126,6 @@ Current limitations
 
 - Nodes from different GraphQL servers cannot be used in the same query/mutation. All top-level fields have to be
   from the same GraphQL server.
-- Subscriptions on remote GraphQL servers are not supported.
 
 These limitations will be addressed in upcoming versions.
 

@@ -228,41 +228,41 @@ class HGECtxGQLServer:
 class HGECtx:
 
     def __init__(self, hge_url, pg_url, hge_key, hge_webhook, webhook_insecure,
-                 hge_jwt_key_file, hge_jwt_conf, metadata_disabled, ws_read_cookie, hge_scale_url):
+                 hge_jwt_key_file, hge_jwt_conf, metadata_disabled,
+                 ws_read_cookie, hge_scale_url, test_remote):
 
         self.http = requests.Session()
         self.hge_key = hge_key
         self.hge_url = hge_url
         self.pg_url = pg_url
         self.hge_webhook = hge_webhook
-        if hge_jwt_key_file is None:
-            self.hge_jwt_key = None
-        else:
+        self.hge_jwt_key = None
+        if hge_jwt_key_file is not None:
             with open(hge_jwt_key_file) as f:
                 self.hge_jwt_key = f.read()
         self.hge_jwt_conf = hge_jwt_conf
         self.webhook_insecure = webhook_insecure
         self.metadata_disabled = metadata_disabled
-        self.may_skip_test_teardown = False
+        self.ws_read_cookie = ws_read_cookie
+        self.hge_scale_url = hge_scale_url
+        # test hasura graphql-engine as a remote schema
+        self.test_remote_hge = test_remote
 
+        self.may_skip_test_teardown = False
         self.engine = create_engine(self.pg_url)
         self.meta = MetaData()
-
-        self.ws_read_cookie = ws_read_cookie
-
-        self.hge_scale_url = hge_scale_url
-
         self.ws_client = GQLWsClient(self, '/v1/graphql')
 
-        result = subprocess.run(['../../scripts/get-version.sh'], shell=False, stdout=subprocess.PIPE, check=True)
+        result = subprocess.run(['../../scripts/get-version.sh'], shell=False,
+                                stdout=subprocess.PIPE, check=True)
         self.version = result.stdout.decode('utf-8').strip()
         if not self.metadata_disabled:
-          try:
-              st_code, resp = self.v1q_f('queries/clear_db.yaml')
-          except requests.exceptions.RequestException as e:
-              self.teardown()
-              raise HGECtxError(repr(e))
-          assert st_code == 200, resp
+            try:
+                st_code, resp = self.v1q_f('queries/clear_db.yaml')
+            except requests.exceptions.RequestException as e:
+                self.teardown()
+                raise HGECtxError(repr(e))
+            assert st_code == 200, resp
 
     def reflect_tables(self):
         self.meta.reflect(bind=self.engine)

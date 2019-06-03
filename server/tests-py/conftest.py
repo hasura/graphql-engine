@@ -45,6 +45,13 @@ def pytest_addoption(parser):
     )
 
     parser.addoption(
+        "--test-remote-subs",
+        metavar="<url>",
+        required=False,
+        help="Run testcases for remote schema subscriptions"
+    )
+
+    parser.addoption(
         "--test-ws-init-cookie",
         metavar="read|noread",
         required=False,
@@ -129,6 +136,8 @@ def hge_ctx(request):
     ws_read_cookie = config.getoption('--test-ws-init-cookie')
     metadata_disabled = config.getoption('--test-metadata-disabled')
     hge_scale_url = config.getoption('--test-hge-scale-url')
+    test_remote = request.config.getoption('--test-remote-subs')
+
     try:
         hge_ctx = HGECtx(
             hge_url=hge_url,
@@ -140,6 +149,7 @@ def hge_ctx(request):
             hge_jwt_conf=hge_jwt_conf,
             ws_read_cookie=ws_read_cookie,
             metadata_disabled=metadata_disabled,
+            test_remote=test_remote,
             hge_scale_url=hge_scale_url
         )
     except HGECtxError as e:

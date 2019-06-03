@@ -34,7 +34,7 @@ runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer
   case execPlan of
     E.GExPHasura resolvedOp ->
       runHasuraGQ pgExecCtx userInfo resolvedOp
-    E.GExPRemote rsi opDef  ->
+    E.GExPRemote _ rsi opDef  ->
       E.execRemoteGQ manager userInfo reqHdrs rawReq rsi opDef
 
 runHasuraGQ

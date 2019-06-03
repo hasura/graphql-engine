@@ -3,7 +3,7 @@
 module Hasura.GraphQL.Transport.WebSocket.Server
   ( WSId(..)
 
-  , WSConn
+  , WSConn(..)
   , getData
   , getWSId
   , closeConn

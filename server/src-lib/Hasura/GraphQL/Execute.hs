@@ -51,6 +51,7 @@ import qualified Hasura.GraphQL.Resolve                 as GR
 import qualified Hasura.GraphQL.Validate                as VQ
 import qualified Hasura.GraphQL.Validate.Types          as VT
 
+
 -- The current execution plan of a graphql operation, it is
 -- currently, either local pg execution or a remote execution
 --
@@ -58,7 +59,7 @@ import qualified Hasura.GraphQL.Validate.Types          as VT
 -- intermediate passes
 data GQExecPlan a
   = GExPHasura !a
-  | GExPRemote !RemoteSchemaInfo !G.TypedOperationDefinition
+  | GExPRemote !RemoteSchemaName !RemoteSchemaInfo !G.TypedOperationDefinition
   deriving (Functor, Foldable, Traversable)
 
 -- Enforces the current limitation
@@ -126,8 +127,8 @@ getExecPlanPartial userInfo sc enableAL req = do
       rootSelSet <- runReaderT (VQ.validateGQ queryParts) gCtx
       let varDefs = G._todVariableDefinitions $ VQ.qpOpDef queryParts
       return $ GExPHasura (gCtx, rootSelSet, varDefs)
-    VT.RemoteType _ rsi ->
-      return $ GExPRemote rsi opDef
+    VT.RemoteType rn rsi ->
+      return $ GExPRemote rn rsi opDef
   where
     role = userRole userInfo
     gCtxRoleMap = scGCtxMap sc
