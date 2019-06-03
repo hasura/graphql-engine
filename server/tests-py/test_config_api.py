@@ -31,3 +31,9 @@ class TestConfigAPI():
             assert body['jwt']['claims_format'] == claims_format
         else:
             assert body['jwt'] == None
+
+        # test if the request fails without auth headers if admin secret is set
+        if admin_secret is not None:
+            resp = hge_ctx.http.get(hge_ctx.hge_url + '/v1alpha1/config')
+            body = resp.json()
+            assert resp.status_code == 401
