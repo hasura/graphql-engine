@@ -11,8 +11,8 @@ module Hasura.GraphQL.Remote.Input
   ) where
 
 import           Data.Aeson (FromJSON(..),ToJSON(..))
-import qualified Data.Aeson as Aeson
-import qualified Data.Aeson.Types as Aeson
+import qualified Data.Aeson as A
+import qualified Data.Aeson.Types as A
 import           Data.Foldable
 import           Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HM
@@ -22,7 +22,7 @@ import           Data.Scientific (floatingOrInteger)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Validation
-import qualified Language.GraphQL.Draft.Syntax as GraphQL
+import qualified Language.GraphQL.Draft.Syntax as G
 import           Language.Haskell.TH.Syntax (Lift)
 import           Prelude
 
@@ -31,7 +31,7 @@ import           Prelude
 
 newtype RemoteArguments =
   RemoteArguments
-    { getRemoteArguments :: [GraphQL.ObjectFieldG GraphQL.Value]
+    { getRemoteArguments :: [G.ObjectFieldG G.Value]
     } deriving (Show, Eq, Lift)
 
 instance ToJSON RemoteArguments where
@@ -42,7 +42,7 @@ instance FromJSON RemoteArguments where
 
 -- | An error substituting variables into the argument list.
 data SubstituteError
-  = ValueNotProvided !GraphQL.Variable
+  = ValueNotProvided !G.Variable
   deriving (Show, Eq)
 
 --------------------------------------------------------------------------------
@@ -50,88 +50,88 @@ data SubstituteError
 
 -- | Substitute values in the argument list.
 substituteVariables ::
-     Map GraphQL.Variable GraphQL.ValueConst
+     Map G.Variable G.ValueConst
   -- ^ Values to use.
-  -> [GraphQL.ObjectFieldG GraphQL.Value]
+  -> [G.ObjectFieldG G.Value]
   -- ^ A template.
-  -> Validation [SubstituteError] [GraphQL.ObjectFieldG GraphQL.ValueConst]
+  -> Validation [SubstituteError] [G.ObjectFieldG G.ValueConst]
 substituteVariables values = traverse (traverse go)
   where
     go =
       \case
-        GraphQL.VVariable variable ->
+        G.VVariable variable ->
           case M.lookup variable values of
             Nothing -> Failure [ValueNotProvided variable]
             Just valueConst -> pure valueConst
-        GraphQL.VInt int32 -> pure (GraphQL.VCInt int32)
-        GraphQL.VFloat double -> pure (GraphQL.VCFloat double)
-        GraphQL.VString stringValue -> pure (GraphQL.VCString stringValue)
-        GraphQL.VBoolean bool -> pure (GraphQL.VCBoolean bool)
-        GraphQL.VNull -> pure GraphQL.VCNull
-        GraphQL.VEnum enumValue -> pure (GraphQL.VCEnum enumValue)
-        GraphQL.VList (GraphQL.ListValueG listValue) ->
-          fmap (GraphQL.VCList . GraphQL.ListValueG) (traverse go listValue)
-        GraphQL.VObject (GraphQL.ObjectValueG objectValue) ->
-          fmap (GraphQL.VCObject . GraphQL.ObjectValueG) (traverse (traverse go) objectValue)
+        G.VInt int32 -> pure (G.VCInt int32)
+        G.VFloat double -> pure (G.VCFloat double)
+        G.VString stringValue -> pure (G.VCString stringValue)
+        G.VBoolean bool -> pure (G.VCBoolean bool)
+        G.VNull -> pure G.VCNull
+        G.VEnum enumValue -> pure (G.VCEnum enumValue)
+        G.VList (G.ListValueG listValue) ->
+          fmap (G.VCList . G.ListValueG) (traverse go listValue)
+        G.VObject (G.ObjectValueG objectValue) ->
+          fmap (G.VCObject . G.ObjectValueG) (traverse (traverse go) objectValue)
 
 -- | Make a map out of remote arguments.
-remoteArgumentsToMap :: RemoteArguments -> HashMap GraphQL.Name GraphQL.Value
+remoteArgumentsToMap :: RemoteArguments -> HashMap G.Name G.Value
 remoteArgumentsToMap =
   HM.fromList .
-  map (\field -> (GraphQL._ofName field, GraphQL._ofValue field)) .
+  map (\field -> (G._ofName field, G._ofValue field)) .
   getRemoteArguments
 
 --------------------------------------------------------------------------------
 -- Parsing GraphQL input arguments from JSON
 
-parseRemoteArguments :: Aeson.Value -> Aeson.Parser RemoteArguments
+parseRemoteArguments :: A.Value -> A.Parser RemoteArguments
 parseRemoteArguments j =
   case j of
-    Aeson.Object hashMap -> fmap RemoteArguments (parseObjectFields hashMap)
+    A.Object hashMap -> fmap RemoteArguments (parseObjectFields hashMap)
     _ -> fail "Remote arguments should be an object of keys."
 
-parseObjectFields :: HashMap Text Aeson.Value -> Aeson.Parser [GraphQL.ObjectFieldG GraphQL.Value]
+parseObjectFields :: HashMap Text A.Value -> A.Parser [G.ObjectFieldG G.Value]
 parseObjectFields hashMap =
   traverse
     (\(key, value) -> do
-       name <- parseJSON (Aeson.String key)
+       name <- parseJSON (A.String key)
        parsedValue <- parseValue value
-       pure GraphQL.ObjectFieldG {_ofName = name, _ofValue = parsedValue})
+       pure G.ObjectFieldG {_ofName = name, _ofValue = parsedValue})
     (HM.toList hashMap)
 
-parseValue :: Aeson.Value -> Aeson.Parser GraphQL.Value
+parseValue :: A.Value -> A.Parser G.Value
 parseValue =
   \case
-    Aeson.Object object ->
-      fmap (GraphQL.VObject . GraphQL.ObjectValueG) (parseObjectFields object)
-    Aeson.Array array ->
-      fmap (GraphQL.VList . GraphQL.ListValueG . toList) (traverse parseValue array)
-    Aeson.String text ->
+    A.Object object ->
+      fmap (G.VObject . G.ObjectValueG) (parseObjectFields object)
+    A.Array array ->
+      fmap (G.VList . G.ListValueG . toList) (traverse parseValue array)
+    A.String text ->
       case T.uncons text of
         Just ('$', rest)
           | T.null rest -> fail "Invalid variable name."
-          | otherwise -> pure (GraphQL.VVariable (GraphQL.Variable (GraphQL.Name rest)))
-        _ -> pure (GraphQL.VString (GraphQL.StringValue text))
-    Aeson.Number !scientific ->
-      pure (either GraphQL.VFloat GraphQL.VInt (floatingOrInteger scientific))
-    Aeson.Bool !bool -> pure (GraphQL.VBoolean bool)
-    Aeson.Null -> pure GraphQL.VNull
+          | otherwise -> pure (G.VVariable (G.Variable (G.Name rest)))
+        _ -> pure (G.VString (G.StringValue text))
+    A.Number !scientific ->
+      pure (either G.VFloat G.VInt (floatingOrInteger scientific))
+    A.Bool !bool -> pure (G.VBoolean bool)
+    A.Null -> pure G.VNull
 
-fieldsToObject :: [GraphQL.ObjectFieldG GraphQL.Value] -> Aeson.Value
+fieldsToObject :: [G.ObjectFieldG G.Value] -> A.Value
 fieldsToObject =
-  Aeson.Object .
+  A.Object .
   HM.fromList .
-  map (\(GraphQL.ObjectFieldG {_ofName=GraphQL.Name name, _ofValue}) -> (name, valueToValue _ofValue))
+  map (\(G.ObjectFieldG {_ofName=G.Name name, _ofValue}) -> (name, gValueToValue _ofValue))
 
-valueToValue :: GraphQL.Value -> Aeson.Value
-valueToValue =
+gValueToValue :: G.Value -> A.Value
+gValueToValue =
   \case
-    (GraphQL.VVariable (GraphQL.Variable v)) -> toJSON ("$" <> v)
-    (GraphQL.VInt i) -> toJSON i
-    (GraphQL.VFloat f) -> toJSON f
-    (GraphQL.VString (GraphQL.StringValue s)) -> toJSON s
-    (GraphQL.VBoolean b) -> toJSON b
-    GraphQL.VNull -> Aeson.Null
-    (GraphQL.VEnum s) -> toJSON s
-    (GraphQL.VList (GraphQL.ListValueG list)) -> toJSON (map valueToValue list)
-    (GraphQL.VObject (GraphQL.ObjectValueG xs)) -> fieldsToObject xs
+    (G.VVariable (G.Variable v)) -> toJSON ("$" <> v)
+    (G.VInt i) -> toJSON i
+    (G.VFloat f) -> toJSON f
+    (G.VString (G.StringValue s)) -> toJSON s
+    (G.VBoolean b) -> toJSON b
+    G.VNull -> A.Null
+    (G.VEnum s) -> toJSON s
+    (G.VList (G.ListValueG list)) -> toJSON (map gValueToValue list)
+    (G.VObject (G.ObjectValueG xs)) -> fieldsToObject xs
