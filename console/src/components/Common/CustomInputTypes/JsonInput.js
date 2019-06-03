@@ -108,7 +108,7 @@ const JsonInput = props => {
       <input
         key="input_json_editor"
         {...allProps}
-        placeholder={`${placeholderProp} (Ctrl + Space to toggle)`}
+        placeholder={placeholderProp}
         value={data}
         onChange={handleInputChangeAndPropagate}
         onKeyUp={handleKeyUpEvent}
@@ -130,6 +130,9 @@ const JsonInput = props => {
           (editorType === JSONKEY ? ' fa-compress' : ' fa-expand')
         }
         onClick={() => updateState(toggleEditorType)}
+        title={
+          (editorType === JSONKEY ? 'Collapse' : 'Expand') + '(Ctrl + Space)'
+        }
       />
     </span>
   );

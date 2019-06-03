@@ -162,14 +162,15 @@ class ViewTable extends Component {
     } = this.props; // eslint-disable-line no-unused-vars
 
     // check if table exists
-    const currentTable = schemas.find(s => s.table_name === tableName);
+    const currentTable = schemas.find(
+      s => s.table_name === tableName && s.table_schema === currentSchema
+    );
     if (!currentTable) {
       // dispatch a 404 route
       dispatch(replace('/404'));
     }
     // Is this a view
-    const isView =
-      schemas.find(s => s.table_name === tableName).table_type !== 'BASE TABLE';
+    const isView = currentTable.table_type !== 'BASE TABLE';
 
     // Are there any expanded columns
     const viewRows = (

@@ -582,6 +582,7 @@ const dataReducer = (state = defaultState, action) => {
       ...state,
       view: viewReducer(
         state.currentTable,
+        state.currentSchema,
         state.allSchemas,
         state.view,
         action
