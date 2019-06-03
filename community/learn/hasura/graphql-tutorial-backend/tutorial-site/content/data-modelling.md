@@ -1,5 +1,7 @@
 ---
 title: "Basic Data Modelling"
+metaTitle: "Basic Data Modelling with Hasura | Hasura GraphQL Tutorial"
+metaDescription: "This tutorial covers how to do basic data modelling in Postgres and create tables using Hasura console"
 ---
 
 import YoutubeEmbed from "../src/YoutubeEmbed.js";

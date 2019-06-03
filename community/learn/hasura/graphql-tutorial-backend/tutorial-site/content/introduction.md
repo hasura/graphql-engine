@@ -1,5 +1,7 @@
 ---
 title: "Course introduction"
+metaTitle: "Course Introduction | Hasura GraphQL Tutorial"
+metaDescription: "A powerful and concise tutorial that will introduce you to setting up a GraphQL backend with Hasura GraphQL Engine in the shortest amount of time possible."
 ---
 
 This course is a super fast introduction to setting up a GraphQL backend with Hasura.

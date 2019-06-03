@@ -1,5 +1,7 @@
 ---
 title: "Relationships"
+metaTitle: "Relationships with Hasura | Hasura GraphQL Tutorial"
+metaDescription: "This part of the tutorial covers how to make nested object queries by using object relationships and array relationships"
 ---
 
 import YoutubeEmbed from "../src/YoutubeEmbed.js";
