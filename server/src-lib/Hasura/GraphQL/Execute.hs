@@ -43,8 +43,7 @@ import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.Server.Context
 import           Hasura.Server.Utils                    (bsToTxt,
-                                                         filterRequestHeaders,
-                                                         filterResponseHeaders)
+                                                         filterRequestHeaders)
 
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Plan            as EP
@@ -376,5 +375,4 @@ execRemoteGQ manager userInfo reqHdrs q rsi opDef = do
     getCookieHdr = maybe [] (\h -> [("Set-Cookie", h)])
 
     mkRespHeaders hdrs =
-      map (\(k, v) -> Header (bsToTxt $ CI.original k, bsToTxt v)) $
-      filterResponseHeaders hdrs
+      map (\(k, v) -> Header (bsToTxt $ CI.original k, bsToTxt v)) hdrs
