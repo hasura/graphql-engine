@@ -16,6 +16,7 @@ module Hasura.RQL.Types.Common
        , WithTable(..)
        , ColVals
        , MutateResp(..)
+       , ForeignKey(..)
        ) where
 
 import           Hasura.Prelude
@@ -147,3 +148,17 @@ data MutateResp
   , _mrReturningColumns :: ![ColVals]
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''MutateResp)
+
+type ColMapping = HM.HashMap PGCol PGCol
+
+data ForeignKey
+  = ForeignKey
+  { _fkTable         :: !QualifiedTable
+  , _fkRefTable      :: !QualifiedTable
+  , _fkOid           :: !Int
+  , _fkConstraint    :: !ConstraintName
+  , _fkColumnMapping :: !ColMapping
+  } deriving (Show, Eq, Generic)
+$(deriveJSON (aesonDrop 3 snakeCase) ''ForeignKey)
+
+instance Hashable ForeignKey
