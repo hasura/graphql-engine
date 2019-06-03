@@ -42,6 +42,7 @@ data RQLQuery
   | RQCreateObjectRelationship !CreateObjRel
   | RQCreateArrayRelationship !CreateArrRel
   | RQDropRelationship !DropRel
+  | RQCreateRemoteRelationship !CreateRemoteRelationship
   | RQSetRelationshipComment !SetRelComment
   | RQRenameRelationship !RenameRel
 
@@ -180,6 +181,7 @@ runQuery pgExecCtx instanceId userInfo sc hMgr sqlGenCtx query = do
 
 queryNeedsReload :: RQLQuery -> Bool
 queryNeedsReload qi = case qi of
+  RQCreateRemoteRelationship {}   -> True
   RQAddExistingTableOrView _      -> True
   RQTrackTable _                  -> True
   RQUntrackTable _                -> True
@@ -250,6 +252,7 @@ runQueryM
   => RQLQuery
   -> m EncJSON
 runQueryM rq = withPathK "args" $ case rq of
+  RQCreateRemoteRelationship q -> runCreateRemoteRelationship q
   RQAddExistingTableOrView q   -> runTrackTableQ q
   RQTrackTable q               -> runTrackTableQ q
   RQUntrackTable q             -> runUntrackTableQ q

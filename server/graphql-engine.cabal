@@ -32,6 +32,10 @@ library
                      , src-exec
   default-language:    Haskell2010
   build-depends:       base
+                     , these
+                     , bifunctors
+                     , witherable
+                     , validation
                      , pg-client
                      , text
                      , text-builder >= 0.6
@@ -264,6 +268,9 @@ library
                      , Network.URI.Extended
                      , Ops
                      , Migrate
+
+                     , Hasura.GraphQL.Remote.Input
+                     , Hasura.GraphQL.Remote.Validate
 
   other-modules:       Hasura.Server.Auth.JWT.Internal
                      , Hasura.Server.Auth.JWT.Logging
