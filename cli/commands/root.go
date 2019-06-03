@@ -64,6 +64,7 @@ func init() {
 		NewDocsCmd(ec),
 		NewCompletionCmd(ec),
 		NewUpdateCLICmd(ec),
+		NewSettingsCmd(ec),
 	)
 	rootCmd.SetHelpCommand(NewHelpCmd(ec))
 	f := rootCmd.PersistentFlags()
