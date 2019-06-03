@@ -70,7 +70,7 @@ instance J.ToJSON ClientMsg where
                              , "id" J..= _smId m
                              , "payload" J..= _smPayload m
                              ]
-    CMStop m     -> J.object [ "type" J..= ("start" :: Text)
+    CMStop m     -> J.object [ "type" J..= ("stop" :: Text)
                              , "id" J..= _stId m
                              ]
     CMConnTerm   -> J.object [ "type" J..= ("connection_terminate" :: Text) ]

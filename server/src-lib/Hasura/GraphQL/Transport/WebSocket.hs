@@ -45,14 +45,6 @@ import qualified Hasura.GraphQL.Transport.WebSocket.Client     as WS
 import qualified Hasura.GraphQL.Transport.WebSocket.Server     as WS
 import qualified Hasura.Logging                                as L
 
-type OperationMap
-  = STMMap.Map OperationId SubscriptionOperation --(LQ.LiveQueryId, Maybe OperationName)
-
-data SubscriptionOperation
-  = SOHasura !(LQ.LiveQueryId, Maybe OperationName)
-  | SORemote !RemoteOperation
-  --deriving (Show, Eq)
-
 data WSConnData
   = WSConnData
   -- the role and headers are set only on connection_init message
@@ -111,7 +103,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
         case connState of
           CSNotInitialised _         -> STM.retry
           CSInitError _              -> STM.retry
-          CSInitialised (ConnInitState _ _ _ expTimeM) ->
+          CSInitialised (ConnInitState _ expTimeM _) ->
             maybe STM.retry return expTimeM
       currTime <- TC.getCurrentTime
       threadDelay $ diffTimeToMicro $ TC.diffUTCTime expTime currTime
@@ -187,8 +179,8 @@ onStart serverEnv wsConn msg@(StartMsg opId q) = catchAndIgnore $ do
 
   userInfoM <- liftIO $ STM.readTVarIO userInfoR
   (userInfo, reqHdrs, _) <- case userInfoM of
-    CSInitialised (ConnInitState userInfo reqHdrs st _) ->
-      return (userInfo, reqHdrs, st)
+    CSInitialised (ConnInitState userInfo jwtExpM reqHdrs) ->
+      return (userInfo, reqHdrs, jwtExpM)
     CSInitError initErr -> do
       let e = "cannot start as connection_init failed with : " <> initErr
       withComplete $ sendStartErr e
@@ -236,10 +228,10 @@ onStart serverEnv wsConn msg@(StartMsg opId q) = catchAndIgnore $ do
       case G._todType opDef of
         -- TODO: this should go into execRemoteGQ?
         G.OperationTypeSubscription -> do
-          let connParams =
-                bool (Just $ hdrsToConnParams reqHdrs) Nothing $ null reqHdrs
+          let connParams = bool (Just $ hdrsToConnParams reqHdrs) Nothing $
+                           null reqHdrs
           res <- liftIO $ runExceptT $ WS.runGqlClient logger (rsUrl rsi)
-                 wsConn userInfoR rn opId connParams msg
+                 wsConn opMap rn opId connParams msg
           onLeft res $ \e -> do
             logOpEv $ ODQueryErr $ err500 Unexpected $ T.pack $ show e
             withComplete $ preExecErr e
@@ -253,28 +245,6 @@ onStart serverEnv wsConn msg@(StartMsg opId q) = catchAndIgnore $ do
                   rsi opDef
           either postExecErr sendRemoteResp resp
           sendCompleted
--- =======
---     runRemoteGQ :: UserInfo -> [H.Header]
---                 -> G.TypedOperationDefinition -> RemoteSchemaInfo
---                 -> ExceptT () IO ()
---     runRemoteGQ userInfo reqHdrs opDef rsi = do
---       when (G._todType opDef == G.OperationTypeSubscription) $
---         withComplete $ preExecErr $
---         err400 NotSupported "subscription to remote server is not supported"
-
---       -- if it's not a subscription, use HTTP to execute the query on the remote
---       -- server
---       -- try to parse the (apollo protocol) websocket frame and get only the
---       -- payload
---       sockPayload <- onLeft (J.eitherDecode msgRaw) $
---         const $ withComplete $ preExecErr $
---         err500 Unexpected "invalid websocket payload"
---       let payload = J.encode $ _wpPayload sockPayload
---       resp <- runExceptT $ E.execRemoteGQ httpMgr userInfo reqHdrs
---               payload rsi opDef
---       either postExecErr sendRemoteResp resp
---       sendCompleted
--- >>>>>>> 17b5dc0e9c54a639b6a7391c4c6e0f614c6c156d
 
     sendRemoteResp resp =
       case J.eitherDecodeStrict (encJToBS resp) of
@@ -371,19 +341,15 @@ onStop serverEnv wsConn (StopMsg opId) = do
     logger = _wseLogger serverEnv
     lqMap  = _wseLiveQMap serverEnv
     opMap  = _wscOpMap $ WS.getData wsConn
-    wsId   = WS.getWSId wsConn
-    stateR = _wscState $ WS.getData wsConn
 
     stopOperation op = case op of
       SOHasura (lqId, opNameM) -> do
         logWSEvent logger wsConn $ EOperation opId opNameM ODStopped
         LQ.removeLiveQuery lqMap lqId
       SORemote remOp -> do
-        connState <- liftIO $ STM.readTVarIO stateR
-        let stData = getStateData connState
-        onJust stData $ \(ConnInitState _ _ connMap _) ->
-          onJust (findOperationId connMap (wsId, opId)) $ \(rn, _) ->
-            WS.stopRemote logger stateR remOp rn opId
+        -- TODO: get the operation name
+        logWSEvent logger wsConn $ EOperation opId Nothing ODStopped
+        WS.stopRemote logger opMap opId remOp
 
 logWSEvent
   :: (MonadIO m)
@@ -391,7 +357,7 @@ logWSEvent
 logWSEvent (L.Logger logger) wsConn wsEv = do
   userInfoME <- liftIO $ STM.readTVarIO userInfoR
   let (userVarsM, jwtExpM) = case userInfoME of
-        CSInitialised (ConnInitState userInfo _ _ jwtM) ->
+        CSInitialised (ConnInitState userInfo jwtM _) ->
           ( Just $ userVars userInfo
           , jwtM
           )
@@ -416,8 +382,7 @@ onConnInit logger manager wsConn authMode connParamsM = do
       sendMsg wsConn $ SMConnErr connErr
     Right (userInfo, expTimeM) -> do
       liftIO $ STM.atomically $ STM.writeTVar (_wscState $ WS.getData wsConn) $
-        --CSInitialised userInfo expTimeM paramHeaders
-        CSInitialised (ConnInitState userInfo headers Map.empty expTimeM)
+        CSInitialised (ConnInitState userInfo expTimeM headers)
       sendMsg wsConn SMConnAck
       -- TODO: send it periodically? Why doesn't apollo's protocol use
       -- ping/pong frames of websocket spec?
@@ -446,8 +411,7 @@ onClose logger lqMap wsConn = do
   void $ A.forConcurrently operations $ \(_, op) ->
     case op of
       SOHasura (lqId, _) -> LQ.removeLiveQuery lqMap lqId
-      SORemote _ ->
-        WS.closeRemote logger (_wscState $ WS._wcExtraData wsConn) wsId
+      SORemote remoteOp  -> WS.closeRemote logger wsId remoteOp
   where
     opMap = _wscOpMap $ WS.getData wsConn
     wsId  = WS.getWSId wsConn

@@ -17,23 +17,23 @@ import           Hasura.RQL.Types
 import qualified Data.Aeson                                  as J
 import qualified Data.Aeson.Casing                           as J
 import qualified Data.Aeson.TH                               as J
-import qualified Data.HashMap.Strict                         as Map
 import qualified Data.Time.Clock                             as TC
 import qualified Hasura.Logging                              as L
 import qualified Network.HTTP.Types                          as HTTP
 import qualified Network.WebSockets                          as WS
+import qualified StmContainers.Map                           as STMMap
 
+import qualified Hasura.GraphQL.Execute.LiveQuery            as LQ
 
 -- uniquely identifies an operation
 type GOperationId = (WSId, OperationId)
 
 data ConnInitState
   = ConnInitState
-  { _cisUserInfo   :: !UserInfo
+  { _cisUserInfo  :: !UserInfo
+  , _cisJwtExpiry :: !(Maybe TC.UTCTime)
   -- headers from the client (in conn params) to forward to the remote schema
-  , _cisHeaders    :: ![HTTP.Header]
-  , _cisRemoteConn :: !RemoteConnState
-  , _cisJwtExpiry  :: !(Maybe TC.UTCTime)
+  , _cisHeaders   :: ![HTTP.Header]
   } deriving (Show)
 
 newtype WsHeaders
@@ -47,43 +47,29 @@ data WSConnState
   | CSInitialised ConnInitState
   deriving (Show)
 
-type RemoteConnState
-  = Map.HashMap RemoteSchemaName RemoteOperation
+type OperationMap
+  = STMMap.Map OperationId SubscriptionOperation
+
+data SubscriptionOperation
+  = SOHasura !(LQ.LiveQueryId, Maybe OperationName)
+  | SORemote !RemoteOperation
 
 data RemoteOperation
   = RemoteOperation
-  { _wpsRunClientThread :: !ThreadId
-  , _wpsRemoteConn      :: !WS.Connection
-  , _wpsOperations      :: ![GOperationId]
+  { _ropRunClientThread :: !ThreadId
+  , _ropRemoteConn      :: !WS.Connection
+  , _ropRemoteName      :: !RemoteSchemaName
+  , _ropClientWsId      :: !WSId
   }
 
 instance Show RemoteOperation where
-  show (RemoteOperation thrdId _ ops) =
+  show (RemoteOperation thrdId _ rn wsId) =
     "WebsocketProxyState { "
-    ++ "_wpsRunClientThread = " ++ show thrdId
-    ++ ", _wpsRemoteConn = <WebsocketConn>"
-    ++ ", _wpsOperations = " ++ show ops
+    ++ "_ropRunClientThread = " ++ show thrdId
+    ++ ", _ropRemoteConn = <WebsocketConn>"
+    ++ ", _ropRemoteName = " ++ show rn
+    ++ ", _ropClientWsId = " ++ show wsId
     ++ " }"
-
-findRemoteName :: RemoteConnState -> RemoteSchemaName -> Maybe RemoteOperation
-findRemoteName connMap rn = snd <$> find ((==) rn . fst) (Map.toList connMap)
-
-findOperationId
-  :: RemoteConnState -> GOperationId
-  -> Maybe (RemoteSchemaName, RemoteOperation)
-findOperationId connMap opId =
-  find (elem opId . _wpsOperations . snd) $ Map.toList connMap
-
-findWebsocketId
-  :: RemoteConnState -> WSId
-  -> Maybe (RemoteSchemaName, RemoteOperation)
-findWebsocketId connMap wsId =
-  find (elem wsId . map fst . _wpsOperations . snd) $ Map.toList connMap
-
-getStateData :: WSConnState -> Maybe ConnInitState
-getStateData = \case
-  CSInitialised d -> Just d
-  _               -> Nothing
 
 
 data OpDetail
