@@ -2,16 +2,6 @@
 
 export const PGTypes = {
   boolean: ['boolean'],
-  uuid: ['uuid'],
-  numeric: [
-    'smallint',
-    'integer',
-    'bigint',
-    'decimal',
-    'numeric',
-    'real',
-    'double precision',
-  ],
   character: ['character', 'character varying', 'text'],
   dateTime: [
     'timestamp',
@@ -21,100 +11,224 @@ export const PGTypes = {
     'time with time zone',
     'interval',
   ],
-  json: ['json', 'jsonb'],
   geometry: ['geometry'],
   geography: ['geography'],
+  json: ['json', 'jsonb'],
+  numeric: [
+    'smallint',
+    'integer',
+    'bigint',
+    'decimal',
+    'numeric',
+    'real',
+    'double precision',
+  ],
+  uuid: ['uuid'],
 };
 
-export const notBoolOperators = ['_not'];
+const boolOperatorsInfo = {
+  _and: {
+    type: 'array',
+  },
+  _or: {
+    type: 'array',
+  },
+  _not: {
+    type: 'object',
+  },
+};
 
-export const andOrBoolOperators = ['_and', '_or'];
+const columnOperatorsInfo = {
+  _eq: {
+    type: 'object',
+    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+  },
+  _ne: {
+    type: 'object',
+    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+  },
+  _in: {
+    type: 'array',
+    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+  },
+  _nin: {
+    type: 'array',
+    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+  },
+  _gt: {
+    type: 'object',
+    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+  },
+  _lt: {
+    type: 'object',
+    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+  },
+  _gte: {
+    type: 'object',
+    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+  },
+  _lte: {
+    type: 'object',
+    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+  },
+  _is_null: {
+    type: 'object',
+    inputType: 'boolean',
+    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+  },
+  _like: {
+    type: 'object',
+    PGTypes: ['character'],
+  },
+  _nlike: {
+    type: 'object',
+    PGTypes: ['character'],
+  },
+  _ilike: {
+    type: 'object',
+    PGTypes: ['character'],
+  },
+  _nilike: {
+    type: 'object',
+    PGTypes: ['character'],
+  },
+  _similar: {
+    type: 'object',
+    PGTypes: ['character'],
+  },
+  _nsimilar: {
+    type: 'object',
+    PGTypes: ['character'],
+  },
+  _contains: {
+    type: 'object',
+    PGTypes: ['json'],
+  },
+  _contained_in: {
+    type: 'object',
+    PGTypes: ['json'],
+  },
+  _has_key: {
+    type: 'object',
+    inputType: 'character',
+    PGTypes: ['json'],
+  },
+  // _has_key_any: {
+  //   type: 'array',
+  //   inputType: 'character',
+  //   PGTypes: ['json']
+  // },
+  // _has_key_all: {
+  //   type: 'array',
+  //   inputType: 'character',
+  //   PGTypes: ['json']
+  // },
+  _st_contains: {
+    type: 'object',
+    PGTypes: ['geometry'],
+  },
+  _st_crosses: {
+    type: 'object',
+    inputType: 'json',
+    PGTypes: ['geometry'],
+  },
+  _st_equals: {
+    type: 'object',
+    inputType: 'json',
+    PGTypes: ['geometry'],
+  },
+  _st_overlaps: {
+    type: 'object',
+    inputType: 'json',
+    PGTypes: ['geometry'],
+  },
+  _st_touches: {
+    type: 'object',
+    inputType: 'json',
+    PGTypes: ['geometry'],
+  },
+  _st_within: {
+    type: 'object',
+    inputType: 'json',
+    PGTypes: ['geometry'],
+  },
+  _st_d_within: {
+    type: 'object',
+    inputType: 'json',
+    PGTypes: ['geometry', 'geography'],
+  },
+  _st_intersects: {
+    type: 'object',
+    inputType: 'json',
+    PGTypes: ['geometry', 'geography'],
+  },
+};
 
-export const genericSimpleColumnOperators = [
-  '_eq',
-  '_ne',
-  '_in',
-  '_nin',
-  '_gt',
-  '_lt',
-  '_gte',
-  '_lte',
-];
+const getPGTypesOperators = () => {
+  const _PGTypesOperators = {};
 
-export const genericArrayColumnOperators = ['_in', '_nin'];
+  Object.keys(columnOperatorsInfo).forEach(op => {
+    columnOperatorsInfo[op].PGTypes.forEach(type => {
+      _PGTypesOperators[type] = _PGTypesOperators[type] || [];
+      _PGTypesOperators[type].push(op);
+    });
+  });
 
-export const genericBoolColumnOperators = ['_is_null'];
+  return _PGTypesOperators;
+};
 
-export const textOnlyColumnOperators = [
-  '_like',
-  '_nlike',
-  '_ilike',
-  '_nilike',
-  '_similar',
-  '_nsimilar',
-];
+export const PGTypesOperators = getPGTypesOperators();
 
-export const jsonColumnOperators = ['_contains', '_contained_in'];
+export const boolOperators = Object.keys(boolOperatorsInfo);
 
-export const geometryOnlyColumnOperators = [
-  '_st_contains',
-  '_st_crosses',
-  '_st_equals',
-  '_st_overlaps',
-  '_st_touches',
-  '_st_within',
-];
-
-export const geographyColumnOperators = ['_st_d_within', '_st_intersects'];
-
-export const boolOperators = notBoolOperators.concat(andOrBoolOperators);
-
-export const geometryColumnOperators = geographyColumnOperators.concat(
-  geometryOnlyColumnOperators
-);
-
-export const columnOperators = genericSimpleColumnOperators
-  .concat(genericArrayColumnOperators)
-  .concat(genericBoolColumnOperators)
-  .concat(textOnlyColumnOperators)
-  .concat(jsonColumnOperators)
-  .concat(geometryColumnOperators);
-
-export const genericOperators = genericSimpleColumnOperators
-  .concat(genericArrayColumnOperators)
-  .concat(genericBoolColumnOperators);
-
-export const textColumnOperators = genericOperators.concat(
-  textOnlyColumnOperators
-);
+const columnOperators = Object.keys(columnOperatorsInfo);
 
 export const allOperators = boolOperators.concat(columnOperators);
 
 /* Util functions */
 
-export function isNotOperator(value) {
-  return notBoolOperators.includes(value);
-}
+export const isBoolOperator = operator => {
+  return boolOperators.includes(operator);
+};
 
-export function isAndOrOperator(value) {
-  return andOrBoolOperators.includes(value);
-}
+export const isArrayBoolOperator = operator => {
+  const arrayBoolOperators = Object.keys(boolOperatorsInfo).filter(
+    op => boolOperatorsInfo[op].type === 'array'
+  );
 
-export function isArrayTypeColumnOperator(value) {
-  return genericArrayColumnOperators.includes(value);
-}
+  return arrayBoolOperators.includes(operator);
+};
 
-export function isBoolTypeColumnOperator(value) {
-  return genericBoolColumnOperators.includes(value);
-}
+export const isColumnOperator = operator => {
+  return columnOperators.includes(operator);
+};
 
-export function isJsonTypeColumnOperator(value) {
-  return jsonColumnOperators.concat(geometryColumnOperators).includes(value);
-}
+export const isArrayColumnOperator = operator => {
+  const arrayColumnOperators = Object.keys(columnOperatorsInfo).filter(
+    op => columnOperatorsInfo[op].type === 'array'
+  );
 
-export function isColumnOperator(value) {
-  return columnOperators.includes(value);
-}
+  return arrayColumnOperators.includes(operator);
+};
+
+export const getOperatorInputType = operator => {
+  return columnOperatorsInfo[operator]
+    ? columnOperatorsInfo[operator].inputType
+    : null;
+};
+
+export const getRootPGType = type => {
+  let rootType;
+
+  for (const rType of Object.keys(PGTypes)) {
+    if (PGTypes[rType].includes(type)) {
+      rootType = rType;
+      break;
+    }
+  }
+
+  return rootType;
+};
 
 export function getLegacyOperator(operator) {
   return operator.replace('_', '$');

@@ -1,6 +1,6 @@
 # The inserts are ignored on conflict
 description: Upserts article data via GraphQL mutation
-url: /v1alpha1/graphql
+url: /v1/graphql
 status: 200
 response: 
   data:

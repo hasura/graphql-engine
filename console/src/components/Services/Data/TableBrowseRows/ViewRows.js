@@ -1,8 +1,11 @@
 import React from 'react';
-import { Link } from 'react-router';
 import 'react-table/react-table.css';
 import '../../../Common/TableCommon/ReactTableOverrides.css';
 import DragFoldTable from '../../../Common/TableCommon/DragFoldTable';
+
+import Dropdown from '../../../Common/Dropdown/Dropdown';
+
+import InvokeManualTrigger from '../../EventTrigger/Common/InvokeManualTrigger/InvokeManualTrigger';
 
 import {
   vExpandRel,
@@ -51,8 +54,24 @@ const ViewRows = ({
   isView,
   count,
   expandedRow,
+  manualTriggers = [],
+  updateInvocationRow,
+  updateInvocationFunction,
+  triggeredRow,
+  triggeredFunction,
 }) => {
   const styles = require('../../../Common/TableCommon/Table.scss');
+
+  // Invoke manual trigger status
+  const invokeTrigger = (trigger, row) => {
+    updateInvocationRow(row);
+    updateInvocationFunction(trigger);
+  };
+
+  const onCloseInvokeTrigger = () => {
+    updateInvocationRow(-1);
+    updateInvocationFunction(null);
+  };
 
   const checkIfSingleRow = _curRelName => {
     let _isSingleRow = false;
@@ -169,18 +188,31 @@ const ViewRows = ({
         let cloneButton;
         let deleteButton;
         let expandButton;
+        let manualTriggersButton;
 
-        const getActionButton = (type, icon, title, handleClick) => {
+        const getActionButton = (
+          type,
+          icon,
+          title,
+          handleClick,
+          requirePK = false
+        ) => {
+          const disabled = requirePK && !_hasPrimaryKey;
+
+          const disabledOnClick = e => {
+            e.preventDefault();
+            e.stopPropagation();
+          };
+
           return (
             <Button
-              className={
-                styles.tableActionBtn + ' ' + styles.add_mar_right_small
-              }
+              className={styles.add_mar_right_small}
               color="white"
               size="xs"
-              onClick={handleClick}
-              title={title}
+              onClick={disabled ? disabledOnClick : handleClick}
+              title={disabled ? 'No primary key to identify row' : title}
               data-test={`row-${type}-button-${rowIndex}`}
+              disabled={disabled}
             >
               {icon}
             </Button>
@@ -222,7 +254,13 @@ const ViewRows = ({
 
           const editTitle = 'Edit row';
 
-          return getActionButton('edit', editIcon, editTitle, handleEditClick);
+          return getActionButton(
+            'edit',
+            editIcon,
+            editTitle,
+            handleEditClick,
+            true
+          );
         };
 
         const getDeleteButton = pkClause => {
@@ -238,7 +276,8 @@ const ViewRows = ({
             'delete',
             deleteIcon,
             deleteTitle,
-            handleDeleteClick
+            handleDeleteClick,
+            true
           );
         };
 
@@ -258,13 +297,66 @@ const ViewRows = ({
             'clone',
             cloneIcon,
             cloneTitle,
-            handleCloneClick
+            handleCloneClick,
+            true
           );
         };
 
-        const allowModify = !_isSingleRow && !isView && _hasPrimaryKey;
+        const getManualTriggersButton = () => {
+          if (!manualTriggers.length) {
+            return;
+          }
 
-        if (allowModify) {
+          const triggerOptions = manualTriggers.map(m => {
+            return {
+              callbackArguments: [m.name, rowIndex],
+              buttonText: 'Invoke',
+              displayText: m.name,
+              testId: m.name,
+              onClick: invokeTrigger,
+            };
+          });
+
+          const triggerIcon = <i className="fa fa-caret-square-o-right" />;
+          const triggerTitle = 'Invoke event trigger';
+
+          const triggerBtn = getActionButton(
+            'trigger',
+            triggerIcon,
+            triggerTitle,
+            () => {}
+          );
+
+          const invokeManualTrigger = r =>
+            triggeredRow === rowIndex && (
+              <InvokeManualTrigger
+                args={r}
+                name={`${triggeredFunction}`}
+                onClose={onCloseInvokeTrigger}
+                key={`invoke_function_${triggeredFunction}`}
+                identifier={`invoke_function_${triggeredFunction}`}
+              />
+            );
+
+          return (
+            <div className={styles.display_inline}>
+              <Dropdown
+                testId={`data_browse_rows_trigger_${rowIndex}`}
+                options={triggerOptions}
+                position="right"
+                key={`invoke_data_dropdown_${rowIndex}`}
+                keyPrefix={`invoke_data_dropdown_${rowIndex}`}
+              >
+                {triggerBtn}
+              </Dropdown>
+              {invokeManualTrigger(row)}
+            </div>
+          );
+        };
+
+        const showActionBtns = !_isSingleRow && !isView;
+
+        if (showActionBtns) {
           const pkClause = getPKClause();
 
           editButton = getEditButton(pkClause);
@@ -274,13 +366,16 @@ const ViewRows = ({
 
         // eslint-disable-next-line prefer-const
         expandButton = getExpandButton();
+        // eslint-disable-next-line prefer-const
+        manualTriggersButton = getManualTriggersButton();
 
         return (
-          <div className={styles.tableCellCenterAligned}>
+          <div key={rowIndex} className={styles.tableCellCenterAligned}>
             {cloneButton}
             {editButton}
             {deleteButton}
             {expandButton}
+            {manualTriggersButton}
           </div>
         );
       };
@@ -291,6 +386,20 @@ const ViewRows = ({
       // Insert column cells
       _tableSchema.columns.forEach(col => {
         const columnName = col.column_name;
+
+        /* Row is a JSON object with `key` as the column name in the db
+         * and `value` as corresponding column value of the column in the database,
+         * Ex: author table with the following schema:
+         *  id int Primary key,
+         *  name text,
+         *  address json
+         *  `row`:
+         *    {
+         *      id: 1,
+         *      name: "Hasura",
+         *      address: {Hello: "World", Foo: "Bar"}
+         *    }
+         * */
 
         const getColCellContent = () => {
           const rowColumnValue = row[columnName];
@@ -308,6 +417,9 @@ const ViewRows = ({
             cellValue = JSON.stringify(rowColumnValue);
             cellTitle = cellValue;
           } else {
+            /*
+             * This will render [object Object] if the state is not common data types
+             * */
             cellValue = rowColumnValue.toString();
             cellTitle = cellValue;
           }
@@ -387,7 +499,9 @@ const ViewRows = ({
   };
 
   const curRelName = curPath.length > 0 ? curPath.slice(-1)[0] : null;
-  const tableSchema = schemas.find(x => x.table_name === curTableName);
+  const tableSchema = schemas.find(
+    x => x.table_name === curTableName && x.table_schema === currentSchema
+  );
 
   const tableColumnsSorted = tableSchema.columns.sort(ordinalColSort);
   const tableRelationships = tableSchema.relationships;
@@ -436,28 +550,6 @@ const ViewRows = ({
     }
 
     return _filterQuery;
-  };
-
-  // If no primary key
-  const getPrimaryKeyMsg = () => {
-    const _primaryKeyMsg = [];
-
-    if (!hasPrimaryKey) {
-      if (!isView) {
-        _primaryKeyMsg.push(
-          <div key="primaryKeyMsg" className="row">
-            <div className="col-xs-12">
-              <div className="alert alert-warning" role="alert">
-                There is no unique identifier (primary Key) for a row. You need
-                at-least one primary key to allow editing, Please use{' '}
-                <Link to="/data/sql">Raw SQL</Link> to make one or more column
-                as primary key.
-              </div>
-            </div>
-          </div>
-        );
-      }
-    }
   };
 
   // If query object has expanded columns
@@ -680,7 +772,6 @@ const ViewRows = ({
     <div className={isVisible ? '' : 'hide '}>
       {getFilterQuery()}
       <hr />
-      {getPrimaryKeyMsg()}
       <div className="row">
         <div className="col-xs-12">
           <div className={styles.tableContainer}>{renderTableBody()}</div>

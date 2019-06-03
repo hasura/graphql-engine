@@ -47,6 +47,11 @@
   margin-right: 10px;
 }
 
+.column_type_select {
+  width: 200px;
+  font-size: 12px;
+}
+
 .modifyMinWidth {
   min-width: 735px;
 }
@@ -155,7 +160,6 @@ hr {
 
 .permissionsTable {
   width: 85%;
-  font-size: 14px;
 
   td, th {
     text-align: center;
@@ -251,7 +255,7 @@ hr {
   background: #fff;
   border: 1px solid #ccc;
   margin-bottom: 15px;
-  overflow: auto;
+  // overflow: auto;
 
   .editPermsHeading {
     font-weight: bold;

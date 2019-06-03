@@ -1,0 +1,80 @@
+# Setup
+setup:
+  type: bulk
+  args:
+  # tables
+  - type: run_sql
+    args:
+      sql: |
+        create table author(
+            id serial primary key, 
+            name text unique
+        );
+        create table article(
+            id serial primary key,
+            title text not null,
+            content text,
+            author_id integer not null references author(id)
+        );
+  - type: track_table
+    args:
+      schema: public
+      name: author
+  - type: track_table
+    args:
+      schema: public
+      name: article
+  
+  #Object relationship
+  - type: create_object_relationship
+    args:
+      table: article
+      name: author
+      using:
+        foreign_key_constraint_on: author_id
+  
+  #Array relationship
+  - type: create_array_relationship
+    args:
+      table: author
+      name: articles
+      using:
+        foreign_key_constraint_on:
+          table: article
+          column: author_id
+
+#SQL to cause inconsistentancy
+sql: drop table article;
+# Inconsistent objects to be returned
+inconsistent_objects:
+- definition:
+    using:
+      foreign_key_constraint_on:
+        column: author_id
+        table: article
+    name: articles
+    comment: 
+    table: author
+  reason: table "article" does not exist
+  type: array_relation
+- definition:
+    using:
+      foreign_key_constraint_on: author_id
+    name: author
+    comment: 
+    table: article
+  reason: table "article" does not exist
+  type: object_relation
+- definition: article
+  reason: 'no such table/view exists in postgres : "article"'
+  type: table
+
+# Teardown 
+teardown:
+  type: bulk
+  args:
+  - type: run_sql
+    args:
+      sql: |
+        drop table author
+

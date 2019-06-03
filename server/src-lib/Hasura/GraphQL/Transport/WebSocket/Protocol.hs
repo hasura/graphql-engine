@@ -29,7 +29,7 @@ newtype OperationId
 data StartMsg
   = StartMsg
   { _smId      :: !OperationId
-  , _smPayload :: !GraphQLRequest
+  , _smPayload :: !GQLReqUnparsed
   } deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''StartMsg)
 
@@ -67,7 +67,7 @@ instance J.FromJSON ClientMsg where
 data DataMsg
   = DataMsg
   { _dmId      :: !OperationId
-  , _dmPayload :: !GQResp
+  , _dmPayload :: !GraphqlResponse
   }
 
 data ErrorMsg
@@ -131,7 +131,7 @@ encodeServerMsg msg =
   SMData (DataMsg opId payload) ->
     [ encTy SMT_GQL_DATA
     , ("id", encJFromJValue opId)
-    , ("payload", encodeGQResp payload)
+    , ("payload", encodeGraphqlResponse payload)
     ]
 
   SMErr (ErrorMsg opId payload) ->

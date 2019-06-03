@@ -1,3 +1,14 @@
+import React from 'react';
+
+export const getUkeyPkeyConfig = columns => {
+  const colLength = columns.length;
+  if (!colLength) return null;
+  if (colLength === 1) {
+    return columns[0];
+  }
+  return `( ${columns.join(', ')} )`;
+};
+
 export const getForeignKeyConfig = (foreignKey, orderedColumns) => {
   const { refTableName, colMappings } = foreignKey;
   const filteredColMap = {};
@@ -25,7 +36,7 @@ export const pgConfTypes = {
   a: 'no action',
   r: 'restrict',
   c: 'cascade',
-  n: 'null',
+  n: 'set null',
   d: 'set default',
 };
 
@@ -33,6 +44,7 @@ export const getExistingFKConstraints = (tableSchema, orderedColumns) => {
   return tableSchema.foreign_key_constraints.map(fkc => {
     const fk = {};
     fk.refTableName = fkc.ref_table;
+    fk.refSchemaName = fkc.ref_table_table_schema;
     fk.onUpdate = pgConfTypes[fkc.on_update];
     fk.onDelete = pgConfTypes[fkc.on_delete];
     fk.constraintName = fkc.constraint_name;
@@ -48,33 +60,60 @@ export const getExistingFKConstraints = (tableSchema, orderedColumns) => {
 export const generateFKConstraintName = (
   tableName,
   lCols,
-  existingConstraints
+  existingConstraints,
+  ignoreConstraints = []
 ) => {
-  const expectedNamePrefix = `${tableName}_${lCols
+  const expectedName = `${tableName}_${lCols
     .map(lc => lc.replace(/"/g, ''))
     .join('_')}_fkey`.substring(0, 60);
-  const prefixLength = expectedNamePrefix.length;
-  let suffix;
+
+  let maxSuffix;
   for (let i = existingConstraints.length - 1; i >= 0; i--) {
     const existingConstraintName = existingConstraints[i].constraint_name;
-    if (existingConstraintName.indexOf(expectedNamePrefix) === 0) {
-      if (existingConstraintName === expectedNamePrefix) {
-        if (!suffix) {
-          suffix = 1;
-          continue;
-        }
+
+    if (ignoreConstraints.includes(existingConstraintName)) {
+      continue;
+    }
+
+    if (existingConstraintName.startsWith(expectedName)) {
+      let currSuffix;
+
+      if (existingConstraintName === expectedName) {
+        currSuffix = 1;
+      } else {
+        const prefixLength = expectedName.length;
+        currSuffix = parseInt(existingConstraintName.slice(prefixLength), 10);
       }
-      const intSuffix = parseInt(
-        existingConstraintName.slice(prefixLength),
-        10
-      );
-      if (!isNaN(intSuffix) && (!suffix || (suffix && intSuffix >= suffix))) {
-        suffix = intSuffix;
+
+      if (!isNaN(currSuffix) && (!maxSuffix || currSuffix >= maxSuffix)) {
+        maxSuffix = currSuffix;
       }
     }
   }
-  if (suffix === undefined) {
-    return expectedNamePrefix;
+
+  return maxSuffix === undefined
+    ? expectedName
+    : `${expectedName}${maxSuffix + 1}`;
+};
+
+export const getUniqueConstraintName = (tableName, columns) => {
+  return `${tableName}_${columns.join('_')}_key`;
+};
+
+export const getKeyDef = (config, constraintName) => {
+  if (!config) {
+    return null;
   }
-  return `${expectedNamePrefix}${suffix + 1}`;
+  if (constraintName) {
+    return (
+      <div>
+        <b>{config}</b> - <i>{constraintName}</i>
+      </div>
+    );
+  }
+  return (
+    <div>
+      <b>{config}</b>
+    </div>
+  );
 };

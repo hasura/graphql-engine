@@ -27,7 +27,7 @@ EOF
 for svg in *.svg; do
   if [[ "$svg" == *"white"* ]]; then
     BG='style="background-color: black;"'
-  elif [[ "$svg" == *"black"* ]]; then
+  elif [[ "$svg" == *"black"* ]] || [[ "$svg" == *"blue"* ]]; then
     BG='style="background-color: white;"'
   else
     continue
@@ -40,7 +40,7 @@ EOF
 done
 
 for svg in *.svg; do
-  if [[ "$svg" == *"white"* ]] || [[ "$svg" == *"black"* ]]; then
+  if [[ "$svg" == *"white"* ]] || [[ "$svg" == *"black"* ]] || [[ "$svg" == *"blue"* ]]; then
     continue
   fi
   README_CONTENT="$(cat <<EOF

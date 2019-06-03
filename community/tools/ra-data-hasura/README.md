@@ -10,14 +10,16 @@ $ npm install --save ra-data-hasura
 
 ## Usage
 
-The `ra-data-hasura` provider accepts two arguments:
+The `ra-data-hasura` provider accepts three arguments:
 
-- `serverEndpoint` - The URL at which Hasura GraphQL Engine is running. (for example: http://localhost:8080). This is required.
+- `serverEndpoint` - The URL at which Hasura GraphQL Engine is running. (for example: http://localhost:8080). This is required. It should also expose `/v1/query` endpoint.
 
 - `headers` - An optional argument. Pass your auth headers here.
 
+- `config` - An optional argument. Pass your config here.
+
 ```
-hasuraDataProvider(serverEndpoint, headers)
+hasuraDataProvider(serverEndpoint, headers, config)
 ```
 
 In the following example, we import `hasuraDataProvider` from `ra-data-hasura` and give it the hasura server endpoint (assumed to be running at http://localhost:8080) and an optional headers object.
@@ -59,6 +61,29 @@ export default App;
 ```
 
 In case the server is configured with admin secret or auth, configure the appropriate headers and pass it to the provider.
+
+### Multiple schemas
+
+To query schemas other than `public`, you can pass schema to resource in the format
+ `<Resource name="schema.table" />`.
+
+For example to fetch data from schema `test` and table `author`, use the following snippet:
+
+```
+  <Resource name="test.author" list={list} />
+```
+
+### Different Primary Keys
+
+Sometimes the table you are querying might have a primary key other than `id`. `react-admin` enforces `id` to be returned in the response by the DataProvider. But you can configure a different primary key column for specific tables using the config object as below:
+
+```
+const config = { 
+  'primaryKey': { 
+      'tableName': 'primaryKeyColumn', 'tableName2': 'primaryKeyColumn' 
+  } 
+};
+```
 
 ## Known Issues
 

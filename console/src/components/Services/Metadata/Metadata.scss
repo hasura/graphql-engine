@@ -1,0 +1,68 @@
+@import "../../Common/Common.scss";
+
+.metadata_wrapper {
+  h4 {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .margin_bottom_header {
+    margin-bottom: 10px;
+  }
+
+  .intro_note {
+    .intro_note_heading {
+      margin-bottom: 10px;
+    }
+    margin-bottom: 20px;
+    margin-top: 20px;
+  }
+
+  .content_width {
+    margin-top: 10px;
+    width: 60%;
+  }
+}
+
+.metadata_h4 {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.margin_right {
+  margin-right: 30px;
+}
+
+.export_metadata_wrapper {
+}
+.metadataStatusTable
+{
+  margin-top: 20px;
+  thead, tbody
+  {
+    tr
+    {
+      th
+      {
+        padding: 8px;
+        border-left: 1px solid #ccc;
+        border-top: 1px solid #ccc;
+        border-bottom: 1px solid #ccc;
+      }
+      th:last-child
+      {
+        border-right: 1px solid #ccc;
+      }
+      td
+      {
+        padding: 8px;
+        border-left: 1px solid #ccc;
+        border-bottom: 1px solid #ccc;
+      }
+      td:last-child
+      {
+        border-right: 1px solid #ccc;
+      }
+    }
+  }
+}

@@ -1,0 +1,37 @@
+@import "./Common.scss";
+button.control {
+  width: 100%;
+}
+
+.subTopic {
+  font-weight: bold;
+}
+
+.readyIcon {
+  color: green;
+}
+
+.failIcon {
+  color: red;
+}
+
+.eventContainer {
+  overflow: auto;
+}
+
+.logContainer {
+  overflow: auto;
+}
+
+table td.longOne {
+  max-width: 500px;
+}
+
+.endpoint {
+	padding-right: 5px;
+}
+
+.floatRight {
+	float: right;
+	margin-right: 20px;
+}

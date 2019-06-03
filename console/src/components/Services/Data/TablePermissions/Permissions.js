@@ -20,7 +20,7 @@ import {
   permCloseEdit,
   permSetRoleName,
   permChangePermissions,
-  permToggleAllowUpsert,
+  // permToggleAllowUpsert,
   permToggleAllowAggregation,
   permToggleModifyLimit,
   permCustomChecked,
@@ -42,10 +42,9 @@ import ViewHeader from '../TableBrowseRows/ViewHeader';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 import EnhancedInput from '../../../Common/InputChecker/InputChecker';
 
-import { setTable, fetchViewInfoFromInformationSchema } from '../DataActions';
+import { setTable } from '../DataActions';
 import { getIngForm, getEdForm, escapeRegExp } from '../utils';
 import { allOperators, getLegacyOperator } from './PermissionBuilder/utils';
-import semverCheck from '../../../../helpers/semver';
 import Button from '../../../Common/Button/Button';
 import { defaultPresetsState } from '../DataState';
 
@@ -53,64 +52,31 @@ class Permissions extends Component {
   constructor() {
     super();
 
-    this.state = {};
-    this.state.viewInfo = {};
-    this.state.showAggregation = false;
-    this.state.showIshowInsertPresets = false;
-    this.state.showUpdatePresets = false;
-    this.state.presetsInfo = {
-      insert: {
-        columnTypeMap: {},
-      },
-      update: {
-        columnTypeMap: {},
+    this.state = {
+      presetsInfo: {
+        insert: {
+          columnTypeMap: {},
+        },
+        update: {
+          columnTypeMap: {},
+        },
       },
     };
   }
 
   componentDidMount() {
-    if (this.props.serverVersion) {
-      this.checkSemVer(this.props.serverVersion);
-    }
     this.props.dispatch({ type: RESET });
-    const currentSchema = this.props.allSchemas.find(
-      t => t.table_name === this.props.tableName
+    const currentTableSchema = this.props.allSchemas.find(
+      t =>
+        t.table_name === this.props.tableName &&
+        t.table_schema === this.props.currentSchema
     );
 
-    if (!currentSchema) {
-      alert('Invalid schema');
+    if (!currentTableSchema) {
       return;
     }
 
     this.props.dispatch(setTable(this.props.tableName));
-    this.props
-      .dispatch(
-        fetchViewInfoFromInformationSchema(
-          currentSchema.table_schema,
-          this.props.tableName
-        )
-      )
-      .then(r => {
-        if (r.length > 0) {
-          this.setState({ viewInfo: r[0] });
-        }
-      });
-  }
-
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.serverVersion !== this.props.serverVersion) {
-      this.checkSemVer(nextProps.serverVersion);
-    }
-  }
-
-  checkSemVer(version) {
-    this.setState({
-      showAggregation: semverCheck('aggregationPerm', version),
-      showUpsertSection: !semverCheck('permHideUpsertSection', version),
-      showInsertPresets: semverCheck('insertPrefix', version),
-      showUpdatePresets: semverCheck('permUpdatePresets', version),
-      allowInsertPermColumns: semverCheck('insertPermRestrictColumns', version),
-    });
   }
 
   render() {
@@ -219,7 +185,7 @@ class Permissions extends Component {
         );
       };
 
-      const isView = tableSchema.detail.table_type !== 'BASE TABLE';
+      const isView = tableSchema.view_info;
 
       return isView ? getViewHeader() : getTableHeader();
     };
@@ -265,27 +231,22 @@ class Permissions extends Component {
       const getViewPermissionNote = () => {
         let note;
 
-        let showNote = false;
+        let hasPermissions = true;
         if (
           tableType === 'view' &&
           !(
-            this.state.viewInfo &&
-            'is_insertable_into' in this.state.viewInfo &&
-            this.state.viewInfo.is_insertable_into === 'YES'
-          ) &&
-          !(
-            this.state.viewInfo &&
-            'is_updatable' in this.state.viewInfo &&
-            this.state.viewInfo.is_updatable === 'YES'
+            tableSchema.view_info &&
+            tableSchema.view_info.is_insertable_into === 'YES' &&
+            tableSchema.view_info.is_updatable === 'YES'
           )
         ) {
-          showNote = true;
+          hasPermissions = false;
         }
 
-        if (showNote) {
+        if (!hasPermissions) {
           note = (
             <div className={styles.permissionsLegend}>
-              <i className="fa fa-question-circle" aria-hidden="true" />
+              <i className="fa fa-info-circle" aria-hidden="true" />
               &nbsp; You cannot insert/update into this view
             </div>
           );
@@ -315,22 +276,13 @@ class Permissions extends Component {
         const _permissionsRowsHtml = [];
 
         const getPermissionsTableRow = (role, newPermRow = null) => {
-          const { allowInsertPermColumns } = this.state;
-
           const dispatchOpenEdit = queryType => () => {
             if (newPermRow && permissionsState.newRole !== '') {
               dispatch(
                 permOpenEdit(tableSchema, permissionsState.newRole, queryType)
               );
             } else if (role !== '') {
-              dispatch(
-                permOpenEdit(
-                  tableSchema,
-                  role,
-                  queryType,
-                  allowInsertPermColumns
-                )
-              );
+              dispatch(permOpenEdit(tableSchema, role, queryType));
             } else {
               document.getElementById('newRoleInput').focus();
             }
@@ -582,13 +534,6 @@ class Permissions extends Component {
       const dispatchCloseEdit = () => {
         dispatch(permCloseEdit());
       };
-
-      const {
-        showAggregation,
-        showUpsertSection,
-        showInsertPresets,
-        showUpdatePresets,
-      } = this.state;
 
       const query = permissionsState.query;
 
@@ -911,7 +856,7 @@ class Permissions extends Component {
               rowPermissionTooltip,
               rowSectionStatus
             )}
-            defaultTitle
+            useDefaultTitleStyle
             testId={'toggle-row-permission'}
             isOpen={noAccess}
           >
@@ -930,16 +875,6 @@ class Permissions extends Component {
       };
 
       const getColumnSection = () => {
-        const { allowInsertPermColumns } = this.state;
-
-        const getQueriesWithPermColumns = allowInsert => {
-          const queries = ['select', 'update'];
-          if (allowInsert) {
-            queries.push('insert');
-          }
-          return queries;
-        };
-
         const getColumnList = () => {
           const _columnList = [];
 
@@ -950,9 +885,17 @@ class Permissions extends Component {
 
           tableSchema.columns.forEach((colObj, i) => {
             const column = colObj.column_name;
-            const checked = permissionsState[query]
-              ? permissionsState[query].columns.includes(column)
-              : false;
+
+            let checked;
+            if (permissionsState[query]) {
+              if (permissionsState[query].columns === '*') {
+                checked = true;
+              } else {
+                checked = permissionsState[query].columns.includes(column);
+              }
+            } else {
+              checked = false;
+            }
 
             _columnList.push(
               <div key={i} className={styles.columnListElement}>
@@ -1019,9 +962,7 @@ class Permissions extends Component {
 
         let _columnSection = '';
 
-        const queriesWithPermColumns = getQueriesWithPermColumns(
-          allowInsertPermColumns
-        );
+        const queriesWithPermColumns = ['select', 'update', 'insert'];
 
         if (queriesWithPermColumns.includes(query)) {
           const getAccessText = () => {
@@ -1051,8 +992,9 @@ class Permissions extends Component {
           ) {
             colSectionStatus = 'no columns';
           } else if (
+            permissionsState[query].columns === '*' ||
             permissionsState[query].columns.length ===
-            tableSchema.columns.length
+              tableSchema.columns.length
           ) {
             colSectionStatus = 'all columns';
           } else {
@@ -1066,7 +1008,7 @@ class Permissions extends Component {
                 colPermissionTooltip,
                 colSectionStatus
               )}
-              defaultTitle
+              useDefaultTitleStyle
               testId={'toggle-col-permission'}
             >
               <div
@@ -1093,59 +1035,59 @@ class Permissions extends Component {
         return _columnSection;
       };
 
-      const getUpsertSection = () => {
-        if (query !== 'insert') {
-          return;
-        }
-
-        const dispatchToggleAllowUpsert = checked => {
-          dispatch(permToggleAllowUpsert(checked));
-        };
-
-        const upsertAllowed = permissionsState.insert
-          ? permissionsState.insert.allow_upsert
-          : false;
-
-        const upsertToolTip = (
-          <Tooltip id="tooltip-upsert">
-            Allow upsert queries. Upsert lets you update a row if it already
-            exists, otherwise insert it
-          </Tooltip>
-        );
-
-        const upsertStatus = upsertAllowed ? 'enabled' : 'disabled';
-
-        return (
-          <CollapsibleToggle
-            title={getSectionHeader(
-              'Upsert queries permissions',
-              upsertToolTip,
-              upsertStatus
-            )}
-            defaultTitle
-            testId={'toggle-upsert-permission'}
-          >
-            <div
-              className={sectionClasses}
-              title={noPermissions ? noPermissionsMsg : ''}
-            >
-              <div className="checkbox">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={upsertAllowed}
-                    value="toggle_upsert"
-                    onChange={e => dispatchToggleAllowUpsert(e.target.checked)}
-                    disabled={noPermissions}
-                  />
-                  Allow role <b>{permissionsState.role}</b> to make upsert
-                  queries
-                </label>
-              </div>
-            </div>
-          </CollapsibleToggle>
-        );
-      };
+      // const getUpsertSection = () => {
+      //   if (query !== 'insert') {
+      //     return;
+      //   }
+      //
+      //   const dispatchToggleAllowUpsert = checked => {
+      //     dispatch(permToggleAllowUpsert(checked));
+      //   };
+      //
+      //   const upsertAllowed = permissionsState.insert
+      //     ? permissionsState.insert.allow_upsert
+      //     : false;
+      //
+      //   const upsertToolTip = (
+      //     <Tooltip id="tooltip-upsert">
+      //       Allow upsert queries. Upsert lets you update a row if it already
+      //       exists, otherwise insert it
+      //     </Tooltip>
+      //   );
+      //
+      //   const upsertStatus = upsertAllowed ? 'enabled' : 'disabled';
+      //
+      //   return (
+      //     <CollapsibleToggle
+      //       title={getSectionHeader(
+      //         'Upsert queries permissions',
+      //         upsertToolTip,
+      //         upsertStatus
+      //       )}
+      //       useDefaultTitleStyle
+      //       testId={'toggle-upsert-permission'}
+      //     >
+      //       <div
+      //         className={sectionClasses}
+      //         title={noPermissions ? noPermissionsMsg : ''}
+      //       >
+      //         <div className="checkbox">
+      //           <label>
+      //             <input
+      //               type="checkbox"
+      //               checked={upsertAllowed}
+      //               value="toggle_upsert"
+      //               onChange={e => dispatchToggleAllowUpsert(e.target.checked)}
+      //               disabled={noPermissions}
+      //             />
+      //             Allow role <b>{permissionsState.role}</b> to make upsert
+      //             queries
+      //           </label>
+      //         </div>
+      //       </div>
+      //     </CollapsibleToggle>
+      //   );
+      // };
 
       const getPresetsSection = action => {
         if (query !== action) {
@@ -1481,7 +1423,7 @@ class Permissions extends Component {
               presetTooltip,
               presetStatus
             )}
-            defaultTitle
+            useDefaultTitleStyle
             testId={'toggle-presets-permission'}
           >
             <div
@@ -1527,7 +1469,7 @@ class Permissions extends Component {
               aggregationToolTip,
               aggregationStatus
             )}
-            defaultTitle
+            useDefaultTitleStyle
             testId={'toggle-agg-permission'}
           >
             <div
@@ -1665,7 +1607,7 @@ class Permissions extends Component {
               <hr />
               <CollapsibleToggle
                 title={getSectionHeader('Clone permissions', cloneToolTip)}
-                defaultTitle
+                useDefaultTitleStyle
                 testId={'toggle-clone-permission'}
               >
                 <div
@@ -1793,10 +1735,10 @@ class Permissions extends Component {
           <div>
             {getRowSection()}
             {getColumnSection()}
-            {showAggregation && getAggregationSection()}
-            {showUpsertSection && getUpsertSection()}
-            {showInsertPresets && getPresetsSection('insert')}
-            {showUpdatePresets && getPresetsSection('update')}
+            {getAggregationSection()}
+            {/*{getUpsertSection()}*/}
+            {getPresetsSection('insert')}
+            {getPresetsSection('update')}
             {getButtonsSection()}
             {getClonePermsSection()}
           </div>
@@ -1806,33 +1748,34 @@ class Permissions extends Component {
 
     /********************/
 
+    const tSchema = allSchemas.find(
+      t => t.table_name === tableName && t.table_schema === currentSchema
+    );
+
+    if (!tSchema) {
+      return null;
+    }
+
     let qTypes;
     if (tableType === 'table') {
       qTypes = ['insert', 'select', 'update', 'delete'];
     } else if (tableType === 'view') {
       qTypes = [];
-      // Add insert/update permission if it is insertable/updatable as returned by pg
-      if (
-        this.state.viewInfo &&
-        'is_insertable_into' in this.state.viewInfo &&
-        this.state.viewInfo.is_insertable_into === 'YES'
-      ) {
-        qTypes.push('insert');
-      }
 
       qTypes.push('select');
 
-      if (
-        this.state.viewInfo &&
-        'is_updatable' in this.state.viewInfo &&
-        this.state.viewInfo.is_updatable === 'YES'
-      ) {
-        qTypes.push('update');
-        qTypes.push('delete');
+      // Add insert/update permission if it is insertable/updatable as returned by pg
+      if (tSchema.view_info) {
+        if (tSchema.view_info.is_insertable_into === 'YES') {
+          qTypes.push('insert');
+        }
+
+        if (tSchema.view_info.is_updatable === 'YES') {
+          qTypes.push('update');
+          qTypes.push('delete');
+        }
       }
     }
-
-    const tSchema = allSchemas.find(t => t.table_name === tableName);
 
     const allRolesList = getAllRoles(allSchemas);
 

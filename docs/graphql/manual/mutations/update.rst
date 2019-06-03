@@ -31,6 +31,7 @@ As you can see from the schema:
 
 - ``where`` argument is compulsory to filter rows to be updated. See :doc:`Filter queries <../queries/query-filters>`
   for filtering options. Objects can be updated based on filters on their own fields or those in their nested objects.
+  The ``{}`` expression can be used to update all rows.
 - You can return the number of affected rows and the affected objects (with nested objects) in the response.
 
 See the :ref:`update mutation API reference <update_syntax>` for the full specifications
@@ -85,9 +86,7 @@ Update based on an object's fields
       }
     }
 
-Update based on an object's fields (using variables)
-----------------------------------------------------
-**Example:** Update the ``title``, ``content`` and ``rating`` of the article with a given ``id``:
+Using variables:
 
 .. graphiql::
   :view_only:
@@ -181,7 +180,7 @@ OR
 
 Update based on a nested object's fields
 ----------------------------------------
-**Example:** Update the ``rating`` of all articles authored by "Sidney":
+**Example:** Reset the ``rating`` of all articles authored by "Sidney":
 
 .. graphiql::
   :view_only:
@@ -189,7 +188,7 @@ Update based on a nested object's fields
     mutation update_ratings {
       update_article(
         where: {author: {name: {_eq: "Sidney"}}},
-        _set: {rating: 1}
+        _set: {rating: null}
       ) {
         affected_rows
       }
@@ -202,6 +201,35 @@ Update based on a nested object's fields
         }
       }
     }
+
+Update all objects
+------------------
+
+You can update all objects in a table using the ``{}`` expression as the ``where`` argument. ``{}`` basically
+evaluates to ``true`` for all objects
+
+**Example:** Reset rating of all articles:
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation reset_rating {
+      update_article (
+        where: {}
+        _set: { rating: null }
+      ) {
+        affected_rows
+      }
+    }
+  :response:
+    {
+      "data": {
+        "update_article": {
+          "affected_rows": 20
+        }
+      }
+    }
+
 
 Increment **int** columns
 -------------------------

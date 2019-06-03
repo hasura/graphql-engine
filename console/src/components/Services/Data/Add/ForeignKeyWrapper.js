@@ -4,14 +4,14 @@ import ForeignKeySelector from '../Common/ReusableComponents/ForeignKeySelector'
 import { getForeignKeyConfig } from '../Common/ReusableComponents/utils';
 import { setForeignKeys, toggleFk, clearFkToggle } from './AddActions';
 
-import styles from '../../../Common/TableCommon/Table.scss';
-
 const ForeignKeyWrapper = ({
   foreignKeys,
   allSchemas,
+  currentSchema,
   columns,
   dispatch,
   fkToggled,
+  schemaList,
 }) => {
   // columns in the right order with their indices
   const orderedColumns = columns
@@ -22,14 +22,6 @@ const ForeignKeyWrapper = ({
       index: i,
     }));
 
-  // Generate a list of reference tables and their columns
-  const refTables = {};
-  allSchemas.forEach(tableSchema => {
-    refTables[tableSchema.table_name] = tableSchema.columns.map(
-      c => c.column_name
-    );
-  });
-
   const numFks = foreignKeys.length;
 
   // TODO check out match full
@@ -38,6 +30,20 @@ const ForeignKeyWrapper = ({
   return foreignKeys.map((fk, i) => {
     const fkConfig = getForeignKeyConfig(fk, orderedColumns);
     const isLast = i + 1 === numFks;
+
+    fk.refSchemaName = fk.refSchemaName || currentSchema;
+
+    // Generate a list of reference tables and their columns
+    const refTables = {};
+    allSchemas.forEach(tableSchema => {
+      if (fk.refSchemaName === tableSchema.table_schema) {
+        refTables[tableSchema.table_name] = tableSchema.columns.map(
+          c => c.column_name
+        );
+      }
+    });
+
+    const orderedSchemaList = schemaList.map(s => s.schema_name).sort();
 
     // The content when the editor is expanded
     const expandedContent = () => (
@@ -50,6 +56,7 @@ const ForeignKeyWrapper = ({
         orderedColumns={orderedColumns}
         dispatch={dispatch}
         setForeignKeys={setForeignKeys}
+        schemaList={orderedSchemaList}
       />
     );
     // TODO handle ongoing request
@@ -70,33 +77,18 @@ const ForeignKeyWrapper = ({
     // Label to show next to the 'Edit' button (the FK configuration)
     let collapsedLabelText;
     if (fkConfig) {
-      collapsedLabelText = (
-        <b>{fkConfig}</b>
-      );
+      collapsedLabelText = <b>{fkConfig}</b>;
     } else if (isLast && numFks === 1) {
-      collapsedLabelText = (
-        <i>(You can add foreign keys later as well)</i>
-      );
+      collapsedLabelText = <i>(You can add foreign keys later as well)</i>;
     }
 
-    const collapsedLabel = () => (
-      <div>
-        <div className="container-fluid">
-          <div className="row">
-            <h5 className={styles.padd_bottom}>
-              {collapsedLabelText}
-              &nbsp;
-            </h5>
-          </div>
-        </div>
-      </div>
-    );
+    const collapsedLabel = () => <div>{collapsedLabelText}</div>;
 
     const expandedLabel = () => {
       return (
-        <h5 className={styles.padd_bottom}>
+        <div>
           <b>{fkConfig}</b>
-        </h5>
+        </div>
       );
     };
 
@@ -119,7 +111,7 @@ const ForeignKeyWrapper = ({
 
     // Wrap the collapsed and expanded content in the reusable editor
     return (
-      <div key={`${i}`}>
+      <div key={`foreign-key-${i}`}>
         <ExpandableEditor
           editorExpanded={expandedContent}
           expandedLabel={expandedLabel}

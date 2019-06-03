@@ -6,7 +6,7 @@ import {
   setWebhookUrlType,
   showValidationError,
 } from './Actions';
-import Tooltip from './Tooltip';
+import Tooltip from '../../../Common/Tooltip/Tooltip';
 
 class WebhookEditor extends React.Component {
   setValues = () => {
@@ -39,7 +39,14 @@ class WebhookEditor extends React.Component {
   };
 
   render() {
-    const { webhook, modifyTrigger, env, dispatch, styles } = this.props;
+    const {
+      webhook,
+      modifyTrigger,
+      env,
+      dispatch,
+      styles,
+      save: saveWebhook,
+    } = this.props;
     const collapsed = () => (
       <div className={styles.modifyProperty}>
         <p>
@@ -74,6 +81,11 @@ class WebhookEditor extends React.Component {
           }
           testId="webhook"
         />
+        <br />
+        <small>
+          Note: Specifying the webhook URL via an environmental variable is
+          recommended if you have different URLs for multiple environments.
+        </small>
       </div>
     );
 
@@ -91,6 +103,7 @@ class WebhookEditor extends React.Component {
             service="modify-trigger"
             ongoingRequest={modifyTrigger.ongoingRequest}
             styles={styles}
+            saveFunc={saveWebhook}
           />
         </div>
       </div>

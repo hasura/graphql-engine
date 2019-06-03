@@ -137,7 +137,7 @@ You can also configure the server in JWKS mode and set `HASURA_GRAPHQL_JWT_SECRE
 { "type": "RS256", "jwk_url": "hostname:port/jwks" }
 ```
 
-More information in the [Hasura documentation](https://docs.hasura.io/1.0/graphql/manual/auth/jwt.html).
+More information in the [Hasura documentation](https://docs.hasura.io/1.0/graphql/manual/auth/authentication/jwt.html).
 
 ## Usage
 
@@ -188,7 +188,7 @@ curl -H "Content-Type: application/json" \
 - There is no user and role management except to create a single user with no specific role. I myself do this part with a frontend app that access the database through a Hasura GraphQL endpoint.
 - This server is designed to work with one RSA key only, and does not handle its regular rotation.
 - No handling of JWT expiration and key turnover.
-- This server is not (yet?) designed to handle authentication through other services such as Google, Github... It would be nice to do so, but to keep this server as a proxy that would add the Hasura claims in querying the database about the roles of the user. Comments or any contribution are welcome as well on this one.
+- This server is not (yet?) designed to handle authentication through other services such as Google, GitHub... It would be nice to do so, but to keep this server as a proxy that would add the Hasura claims in querying the database about the roles of the user. Comments or any contribution are welcome as well on this one.
 - No automated tests.
 - another cool feature to be would be to expose the endpoints through hasura remote schema, and not directly to the client
 

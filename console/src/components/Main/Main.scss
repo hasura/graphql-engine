@@ -1,5 +1,4 @@
 @import "~bootstrap-sass/assets/stylesheets/bootstrap/variables";
-@import url('https://fonts.googleapis.com/css?family=Press+Start+2P');
 @import "../Common/Common.scss";
 
 @font-face {
@@ -1181,4 +1180,22 @@
   position: fixed;
   bottom: 50px;
   right: 0px;
+}
+
+.overlappingExclamation {
+  position: relative;
+  font-size: 12px;
+  bottom: 5px;
+  right: 2px;
+  color: #d9534f;
+}
+
+.iconWhiteBackground {
+  width: 5px;
+  background-color: #dedede;
+  height: 7px;
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  z-index: -1;
 }

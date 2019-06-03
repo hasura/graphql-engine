@@ -14,19 +14,15 @@ import {
   getColumnType,
   isJsonString,
   getAllJsonPaths,
-  isNotOperator,
-  isAndOrOperator,
+  isArrayBoolOperator,
+  isBoolOperator,
+  isArrayColumnOperator,
   isColumnOperator,
-  isBoolTypeColumnOperator,
-  isArrayTypeColumnOperator,
-  isJsonTypeColumnOperator,
+  getRootPGType,
+  getOperatorInputType,
   boolOperators,
-  genericOperators,
-  textColumnOperators,
-  jsonColumnOperators,
-  geometryColumnOperators,
-  geographyColumnOperators,
   PGTypes,
+  PGTypesOperators,
 } from './utils';
 
 import QueryBuilderJson from '../../../../Common/QueryBuilderJson/QueryBuilderJson';
@@ -73,10 +69,10 @@ class PermissionBuilder extends React.Component {
 
       const operator = pathSplit[0];
 
-      if (isAndOrOperator(operator)) {
+      if (isArrayBoolOperator(operator)) {
         const newPath = pathSplit.slice(2).join('.');
         _missingSchemas = findMissingSchemas(newPath, currTable);
-      } else if (isNotOperator(operator)) {
+      } else if (isBoolOperator(operator)) {
         const newPath = pathSplit.slice(1).join('.');
         _missingSchemas = findMissingSchemas(newPath, currTable);
       } else if (isColumnOperator(operator)) {
@@ -142,7 +138,7 @@ class PermissionBuilder extends React.Component {
     const getFilter = (conditions, prefix, value = '') => {
       let _where = {};
 
-      const getAndOrOperatorFilter = (
+      const getArrayBoolOperatorFilter = (
         operator,
         opValue,
         opConditions,
@@ -173,7 +169,7 @@ class PermissionBuilder extends React.Component {
         return _filter;
       };
 
-      const getNotOperatorFilter = (
+      const getBoolOperatorFilter = (
         operator,
         opValue,
         opConditions,
@@ -254,23 +250,23 @@ class PermissionBuilder extends React.Component {
 
       if (operator === '') {
         // blank where
-      } else if (isAndOrOperator(operator)) {
-        _where = getAndOrOperatorFilter(
+      } else if (isArrayBoolOperator(operator)) {
+        _where = getArrayBoolOperatorFilter(
           operator,
           value,
           opConditions,
           newPrefix,
           isLast
         );
-      } else if (isNotOperator(operator)) {
-        _where = getNotOperatorFilter(
+      } else if (isBoolOperator(operator)) {
+        _where = getBoolOperatorFilter(
           operator,
           value,
           opConditions,
           newPrefix,
           isLast
         );
-      } else if (isArrayTypeColumnOperator(operator)) {
+      } else if (isArrayColumnOperator(operator)) {
         _where = getArrayColumnOperatorFilter(
           operator,
           value,
@@ -423,12 +419,7 @@ class PermissionBuilder extends React.Component {
             val.substr(-1) !== '.'
           ) {
             _val = Number(val);
-          } else if (
-            (PGTypes.json.includes(valueType) ||
-              PGTypes.geometry.includes(valueType) ||
-              PGTypes.geography.includes(valueType)) &&
-            isJsonString(val)
-          ) {
+          } else if (PGTypes.json.includes(valueType) && isJsonString(val)) {
             _val = JSON.parse(val);
           }
         }
@@ -453,11 +444,7 @@ class PermissionBuilder extends React.Component {
 
       if (PGTypes.boolean.includes(valueType)) {
         input = renderBoolSelect(dispatchInput, value);
-      } else if (
-        PGTypes.json.includes(valueType) ||
-        PGTypes.geometry.includes(valueType) ||
-        PGTypes.geography.includes(valueType)
-      ) {
+      } else if (PGTypes.json.includes(valueType)) {
         input = inputBox();
         suggestion = jsonSuggestion();
       } else {
@@ -499,26 +486,17 @@ class PermissionBuilder extends React.Component {
         dispatchFunc({ prefix: val });
       };
 
-      // let _expression = expression;
-      // if (typeof _expression === 'string') {
-      //   _expression = { $eq: _expression };
-      // }
-
-      const operator = Object.keys(expression)[0];
-      const operationValue = expression[operator];
-
-      let operators;
-      if (PGTypes.character.includes(valueType)) {
-        operators = textColumnOperators;
-      } else if (PGTypes.json.includes(valueType)) {
-        operators = jsonColumnOperators;
-      } else if (PGTypes.geometry.includes(valueType)) {
-        operators = geometryColumnOperators;
-      } else if (PGTypes.geography.includes(valueType)) {
-        operators = geographyColumnOperators;
-      } else {
-        operators = genericOperators;
+      // handle shorthand notation for eq
+      let _expression = expression;
+      if (typeof _expression !== 'object') {
+        _expression = { _eq: _expression };
       }
+
+      const operator = Object.keys(_expression)[0];
+      const operationValue = _expression[operator];
+
+      const rootValueType = getRootPGType(valueType);
+      const operators = PGTypesOperators[rootValueType];
 
       const _operatorSelect = renderSelect(
         dispatchColumnOperatorSelect,
@@ -529,34 +507,21 @@ class PermissionBuilder extends React.Component {
 
       let _valueInput = '';
       if (operator) {
-        if (isArrayTypeColumnOperator(operator)) {
+        const operatorInputType = getOperatorInputType(operator) || valueType;
+
+        if (isArrayColumnOperator(operator)) {
           _valueInput = renderValueArray(
             dispatchFunc,
             operationValue,
             addToPrefix(prefix, operator),
-            valueType
-          );
-        } else if (isBoolTypeColumnOperator(operator)) {
-          _valueInput = renderValue(
-            dispatchFunc,
-            operationValue,
-            addToPrefix(prefix, operator),
-            'boolean'
-          );
-        } else if (isJsonTypeColumnOperator(operator)) {
-          _valueInput = renderValue(
-            dispatchFunc,
-            operationValue,
-            addToPrefix(prefix, operator),
-            'jsonb'
+            operatorInputType
           );
         } else {
-          // normal column operator
           _valueInput = renderValue(
             dispatchFunc,
             operationValue,
             addToPrefix(prefix, operator),
-            valueType
+            operatorInputType
           );
         }
       }
@@ -673,9 +638,9 @@ class PermissionBuilder extends React.Component {
 
       const columnOptions = tableColumns.concat(tableRelationships);
 
-      const operatorOptions = columnOptions
+      const operatorOptions = boolOperators
         .concat(['---'])
-        .concat(boolOperators);
+        .concat(columnOptions);
 
       const _boolExpKey = renderSelect(
         dispatchOperationSelect,
@@ -688,7 +653,7 @@ class PermissionBuilder extends React.Component {
       let _boolExpValue = null;
       if (operation) {
         const newPrefix = addToPrefix(prefix, operation);
-        if (isAndOrOperator(operation)) {
+        if (isArrayBoolOperator(operation)) {
           _boolExpValue = renderBoolExpArray(
             dispatchFunc,
             expression[operation],
@@ -696,7 +661,7 @@ class PermissionBuilder extends React.Component {
             tableSchemas,
             newPrefix
           );
-        } else if (isNotOperator(operation)) {
+        } else if (isBoolOperator(operation)) {
           _boolExpValue = renderBoolExp(
             dispatchFunc,
             expression[operation],

@@ -1,5 +1,5 @@
 // import GraphiQL parts
-import GraphiQLWrapper from './src/components/ApiExplorer/GraphiQLWrapper';
+import GraphiQLWrapper from './src/components/Services/ApiExplorer/GraphiQLWrapper/GraphiQLWrapper';
 
 // import Data Tab parts
 import dataRouter from './src/components/Services/Data/DataRouter';
@@ -8,8 +8,7 @@ import dataHeaders from './src/components/Services/Data/Common/Headers';
 import { handleMigrationErrors } from './src/components/Services/Data/TableModify/ModifyActions';
 import {
   fetchSchemaList,
-  loadSchema,
-  loadUntrackedSchema,
+  updateSchemaInfo,
   UPDATE_CURRENT_SCHEMA,
   UPDATE_DATA_HEADERS,
   ACCESS_KEY_ERROR,
@@ -28,7 +27,7 @@ import routes from './src/routes';
 import globals from './src/Globals';
 import endpoints from './src/Endpoints';
 import mainState from './src/components/Main/State';
-import { changeRequestHeader } from './src/components/ApiExplorer/Actions';
+import { changeRequestHeader } from './src/components/Services/ApiExplorer/Actions';
 import { validateLogin } from './src/components/Main/Actions';
 
 const filterQueryScss = require('./src/components/Common/FilterQuery/FilterQuery.scss');
@@ -39,7 +38,7 @@ export { GraphiQLWrapper };
 
 // export Data Tab parts
 export { dataRouter, dataReducer };
-export { fetchSchemaList, loadSchema, loadUntrackedSchema };
+export { fetchSchemaList, updateSchemaInfo };
 export { UPDATE_CURRENT_SCHEMA, UPDATE_DATA_HEADERS, ACCESS_KEY_ERROR };
 export { dataHeaders };
 

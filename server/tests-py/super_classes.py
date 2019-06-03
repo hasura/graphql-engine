@@ -51,8 +51,9 @@ class DefaultTestMutations(ABC):
         pass
 
 
-
-class DefaultTestSelectQueries(ABC):
+# Any test which has a setup and a teardown
+# Ideally, DefaultTestSelectQueries should just be this
+class GraphQLEngineTest(ABC):
 
     @pytest.fixture(scope='class')
     def transact(self, request, hge_ctx):
@@ -69,3 +70,6 @@ class DefaultTestSelectQueries(ABC):
     @abstractmethod
     def dir(self):
         pass
+
+class DefaultTestSelectQueries(GraphQLEngineTest):
+    pass

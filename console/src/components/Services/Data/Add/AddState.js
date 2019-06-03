@@ -5,6 +5,7 @@ const defaultState = {
   primaryKeys: [''],
   foreignKeys: [
     {
+      refSchemaName: '',
       refTableName: '',
       colMappings: [
         {
@@ -16,6 +17,7 @@ const defaultState = {
       onDelete: 'restrict',
     },
   ],
+  uniqueKeys: [[]],
   fkToggled: null,
   ongoingRequest: false,
   lastError: null,

@@ -1,57 +1,44 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import TableHeader from '../TableCommon/TableHeader';
+
+import { getAllDataTypeMap } from '../Common/utils';
+
 import {
   deleteTableSql,
   untrackTableSql,
   RESET,
+  fetchColumnCasts,
+  setUniqueKeys,
 } from '../TableModify/ModifyActions';
-import { setTable, fetchTableComment } from '../DataActions';
+import {
+  setTable,
+  fetchColumnTypes,
+  RESET_COLUMN_TYPE_LIST,
+} from '../DataActions';
 import Button from '../../../Common/Button/Button';
 import ColumnEditorList from './ColumnEditorList';
 import ColumnCreator from './ColumnCreator';
 import PrimaryKeyEditor from './PrimaryKeyEditor';
 import TableCommentEditor from './TableCommentEditor';
 import ForeignKeyEditor from './ForeignKeyEditor';
-import semverCheck from '../../../../helpers/semver';
+import UniqueKeyEditor from './UniqueKeyEditor';
 import styles from './ModifyTable.scss';
+import { replace } from 'react-router-redux';
 
 class ModifyTable extends React.Component {
-  state = {
-    supportTableColumnRename: false,
-  };
-
   componentDidMount() {
-    const { dispatch, serverVersion } = this.props;
+    const { dispatch } = this.props;
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
-    dispatch(fetchTableComment(this.props.tableName));
-    if (serverVersion) {
-      this.checkTableColumnRenameSupport(serverVersion);
-    }
+    dispatch(fetchColumnTypes());
+    dispatch(fetchColumnCasts());
   }
-
-  componentWillReceiveProps(nextProps) {
-    if (
-      nextProps.serverVersion &&
-      nextProps.serverVersion !== this.props.serverVersion
-    ) {
-      this.checkTableColumnRenameSupport(nextProps.serverVersion);
-    }
+  componentWillUnmount() {
+    this.props.dispatch({
+      type: RESET_COLUMN_TYPE_LIST,
+    });
   }
-
-  checkTableColumnRenameSupport = serverVersion => {
-    try {
-      if (semverCheck('tableColumnRename', serverVersion)) {
-        this.setState({
-          supportTableColumnRename: true,
-        });
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
   render() {
     const {
       tableName,
@@ -59,14 +46,26 @@ class ModifyTable extends React.Component {
       dispatch,
       migrationMode,
       currentSchema,
-      tableComment,
-      columnComments,
       tableCommentEdit,
       columnEdit,
       pkModify,
       fkModify,
+      dataTypes,
+      validTypeCasts,
+      uniqueKeyModify,
+      schemaList,
     } = this.props;
-    const tableSchema = allSchemas.find(t => t.table_name === tableName);
+
+    const dataTypeIndexMap = getAllDataTypeMap(dataTypes);
+
+    const tableSchema = allSchemas.find(
+      t => t.table_name === tableName && t.table_schema === currentSchema
+    );
+    if (!tableSchema) {
+      dispatch(replace('/404'));
+      return null;
+    }
+    const tableComment = tableSchema.comment;
 
     const untrackBtn = (
       <Button
@@ -103,6 +102,7 @@ class ModifyTable extends React.Component {
       </Button>
     );
 
+    // if (tableSchema.primary_key.columns > 0) {}
     return (
       <div className={`${styles.container} container-fluid`}>
         <TableHeader
@@ -111,7 +111,6 @@ class ModifyTable extends React.Component {
           tabName="modify"
           migrationMode={migrationMode}
           currentSchema={currentSchema}
-          allowRename={this.state.supportTableColumnRename}
         />
         <br />
         <div className={`container-fluid ${styles.padd_left_remove}`}>
@@ -125,20 +124,25 @@ class ModifyTable extends React.Component {
             <TableCommentEditor
               tableComment={tableComment}
               tableCommentEdit={tableCommentEdit}
+              isTable
               dispatch={dispatch}
             />
             <h4 className={styles.subheading_text}>Columns</h4>
             <ColumnEditorList
+              validTypeCasts={validTypeCasts}
+              dataTypeIndexMap={dataTypeIndexMap}
               tableSchema={tableSchema}
               columnEdit={columnEdit}
-              allowRename={this.state.supportTableColumnRename}
-              columnComments={columnComments}
               dispatch={dispatch}
               currentSchema={currentSchema}
             />
             <hr />
             <h4 className={styles.subheading_text}>Add a new column</h4>
-            <ColumnCreator dispatch={dispatch} tableName={tableName} />
+            <ColumnCreator
+              dispatch={dispatch}
+              tableName={tableName}
+              dataTypes={dataTypes}
+            />
             <hr />
             <h4 className={styles.subheading_text}>Primary Key</h4>
             <PrimaryKeyEditor
@@ -153,8 +157,19 @@ class ModifyTable extends React.Component {
               tableSchema={tableSchema}
               currentSchema={currentSchema}
               allSchemas={allSchemas}
+              schemaList={schemaList}
               dispatch={dispatch}
               fkModify={fkModify}
+            />
+            <hr />
+            <h4 className={styles.subheading_text}>Unique Keys</h4>
+            <UniqueKeyEditor
+              tableSchema={tableSchema}
+              currentSchema={currentSchema}
+              allSchemas={allSchemas}
+              dispatch={dispatch}
+              uniqueKeys={uniqueKeyModify}
+              setUniqueKeys={setUniqueKeys}
             />
             <hr />
             {untrackBtn}
@@ -173,8 +188,6 @@ ModifyTable.propTypes = {
   currentSchema: PropTypes.string.isRequired,
   allSchemas: PropTypes.array.isRequired,
   migrationMode: PropTypes.bool.isRequired,
-  tableComment: PropTypes.string.isRequired,
-  columnComments: PropTypes.string.isRequired,
   activeEdit: PropTypes.object.isRequired,
   fkAdd: PropTypes.object.isRequired,
   relAdd: PropTypes.object.isRequired,
@@ -195,11 +208,13 @@ const mapStateToProps = (state, ownProps) => ({
   migrationMode: state.main.migrationMode,
   serverVersion: state.main.serverVersion,
   currentSchema: state.tables.currentSchema,
-  tableComment: state.tables.tableComment,
-  columnComments: state.tables.columnComments,
   columnEdit: state.tables.modify.columnEdit,
   pkModify: state.tables.modify.pkModify,
   fkModify: state.tables.modify.fkModify,
+  dataTypes: state.tables.columnDataTypes,
+  validTypeCasts: state.tables.modify.alterColumnOptions,
+  columnDataTypeFetchErr: state.tables.columnDataTypeFetchErr,
+  schemaList: state.tables.schemaList,
   ...state.tables.modify,
 });
 

@@ -4,6 +4,7 @@
 
 .ReactTable .rt-tbody {
   min-height: 40px;
+  overflow: unset;
 }
 
 .ReactTable .rt-noData {
@@ -53,7 +54,7 @@
 .ReactTable .rt-table .rt-thead .rt-td {
   padding-left: 20px !important;
   padding-right: 20px !important;
-  border-right: 1px solid rgba(0,0,0,0.1);
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .ReactTable .rt-table .rt-thead .rt-th.collapsed,
@@ -65,10 +66,13 @@
 .ReactTable .rt-tbody .rt-th,
 .ReactTable .rt-tbody .rt-td {
   padding: 8px;
-  border-right: 1px solid rgba(0,0,0,0.1);
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
   word-wrap: break-word;
 }
-
+.ReactTable .rt-th,
+.ReactTable .rt-td {
+  overflow: unset !important;
+}
 .ReactTable .rt-th .ellipsis,
 .ReactTable .rt-td > div {
   overflow: hidden;
@@ -85,23 +89,25 @@
 
 .ReactTable .rt-table .rt-thead .rt-tr .rt-th:first-child {
   flex: 24 0 auto !important;
-  min-width: 150px;
+  min-width: 170px;
 }
 
 .ReactTable .rt-table .rt-tbody .rt-tr-group .rt-tr.-odd .rt-td:first-child {
   flex: 24 0 auto !important;
-  min-width: 150px;
+  min-width: 170px;
 }
 
 .ReactTable .rt-table .rt-tbody .rt-tr-group .rt-tr.-even .rt-td:first-child {
   flex: 24 0 auto !important;
-  min-width: 150px;
+  min-width: 170px;
 }
 
 .ReactTable .rt-table .rt-tbody .rt-tr-group .rt-tr.-odd:hover {
   background-color: #ebf7de;
 }
-
+.ReactTable .rt-table {
+  overflow: unset;
+}
 .ReactTable .rt-table .rt-tbody {
   margin-bottom: 10px;
   border: solid 1px rgba(0, 0, 0, 0.05);
@@ -127,7 +133,7 @@
 }
 
 .ReactTable .rt-table .rt-tbody {
-  overflow-x: hidden !important;
+  overflow-x: unset !important;
   min-width: fit-content !important;
 }
 

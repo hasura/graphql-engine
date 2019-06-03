@@ -60,6 +60,9 @@ Query
      - JSON Value
      - The arguments to the query
 
+Request types
+-------------
+
 The various types of queries are listed in the following table:
 
 .. list-table::
@@ -153,8 +156,12 @@ The various types of queries are listed in the following table:
      - :ref:`delete_event_trigger_args <delete_event_trigger_syntax>`
      - Delete existing event trigger
 
+   * - :ref:`invoke_event_trigger`
+     - :ref:`invoke_event_trigger_args <invoke_event_trigger_syntax>`
+     - Invoke trigger manually
+
    * - :ref:`export_metadata`
-     - ``{}``
+     - :ref:`Empty Object`
      - Export the current metadata
 
    * - :ref:`replace_metadata`
@@ -162,12 +169,44 @@ The various types of queries are listed in the following table:
      - Import and replace existing metadata
 
    * - :ref:`reload_metadata`
-     - ``{}``
+     - :ref:`Empty Object`
      - Reload changes to the underlying Postgres DB
 
    * - :ref:`clear_metadata`
-     - ``{}``
+     - :ref:`Empty Object`
      - Clear/wipe-out the current metadata state form server
+
+   * - :ref:`get_inconsistent_metadata`
+     - :ref:`Empty Object`
+     - List all inconsistent metadata objects
+
+   * - :ref:`drop_inconsistent_metadata`
+     - :ref:`Empty Object`
+     - Drop all inconsistent metadata objects
+
+   * - :ref:`create_query_collection`
+     - :ref:`create_query_collection_args <create_query_collection_syntax>`
+     - Create a query collection
+
+   * - :ref:`drop_query_collection`
+     - :ref:`drop_query_collection_args <drop_query_collection_syntax>`
+     - Drop a query collection
+
+   * - :ref:`add_query_to_collection`
+     - :ref:`add_query_to_collection_args <add_query_to_collection_syntax>`
+     - Add a query to given collection
+
+   * - :ref:`drop_query_from_collection`
+     - :ref:`drop_query_from_collection_args <drop_query_from_collection_syntax>`
+     - Drop a query from given collection
+
+   * - :ref:`add_collection_to_allowlist`
+     - :ref:`add_collection_to_allowlist_args <add_collection_to_allowlist_syntax>`
+     - Add a collection to allow-list
+
+   * - :ref:`drop_collection_from_allowlist`
+     - :ref:`drop_collection_from_allowlist_args <drop_collection_from_allowlist_syntax>`
+     - Drop a collection from allow-list
 
 **See:**
 
@@ -177,6 +216,7 @@ The various types of queries are listed in the following table:
 - :doc:`Relationships <relationship>`
 - :doc:`Permissions <permission>`
 - :doc:`Event Triggers <event-triggers>`
+- :doc:`Query Collections <query-collections>`
 - :doc:`Manage Metadata <manage-metadata>`
 
 Response structure
@@ -230,6 +270,24 @@ Error codes
    :widths: 10, 20, 70
    :header-rows: 1
 
+Disabling Schema/Metadata API
+-----------------------------
+
+Since this API can be used to make changes to the GraphQL schema, it can be
+disabled, especially in production deployments.
+
+The ``enabled-apis`` flag or the ``HASURA_GRAPHQL_ENABLED_APIS`` env var can be used to
+enable/disable this API. By default, The schema/metadata API is enabled. To disable it, you need
+to explicitly state that this API is not enabled. i.e. remove it from the list of enabled APIs.
+
+.. code-block:: bash
+
+   # enable only graphql api, disable metadata and pgdump
+   --enabled-apis="graphql"
+   HASURA_GRAPHQL_ENABLED_APIS="graphql"
+
+See :doc:`../../deployment/graphql-engine-flags/reference` for info on setting the above flag/env var
+
 .. toctree::
   :maxdepth: 1
   :hidden:
@@ -240,6 +298,6 @@ Error codes
   Relationships <relationship>
   Permissions <permission>
   Event Triggers <event-triggers>
+  Query Collections <query-collections>
   Manage Metadata <manage-metadata>
   Syntax definitions <syntax-defs>
-

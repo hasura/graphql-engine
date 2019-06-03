@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
-import { showErrorNotification } from '../Notification';
+import { showErrorNotification } from '../../Common/Notification';
 import gqlPattern, { gqlColumnErrorNotif } from '../Common/GraphQLValidation';
-import dataTypes from '../Common/DataTypes';
+import { commonDataTypes } from '../utils';
+
+import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
+
+import { getDataOptions } from '../Common/utils';
+
 import Button from '../../../Common/Button/Button';
 import { addColSql } from '../TableModify/ModifyActions';
 
@@ -67,8 +72,8 @@ const useColumnEditor = (dispatch, tableName) => {
     },
     colType: {
       value: colType,
-      onChange: e => {
-        setColumnState({ ...columnState, colType: e.target.value });
+      onChange: selected => {
+        setColumnState({ ...columnState, colType: selected.value });
       },
     },
     colNull: {
@@ -93,13 +98,7 @@ const useColumnEditor = (dispatch, tableName) => {
   };
 };
 
-const alterTypeOptions = dataTypes.map((datatype, index) => (
-  <option value={datatype.value} key={index} title={datatype.description}>
-    {datatype.name}
-  </option>
-));
-
-const ColumnCreator = ({ dispatch, tableName }) => {
+const ColumnCreator = ({ dispatch, tableName, dataTypes: restTypes = [] }) => {
   const {
     colName,
     colType,
@@ -108,6 +107,30 @@ const ColumnCreator = ({ dispatch, tableName }) => {
     colDefault,
     onSubmit,
   } = useColumnEditor(dispatch, tableName);
+
+  const { columnDataTypes, columnTypeValueMap } = getDataOptions(
+    commonDataTypes,
+    restTypes,
+    0
+  );
+
+  const customSelectBoxStyles = {
+    container: {
+      width: '186px',
+    },
+    dropdownIndicator: {
+      padding: '5px',
+    },
+    placeholder: {
+      top: '44%',
+      fontSize: '12px',
+    },
+    singleValue: {
+      fontSize: '12px',
+      top: '44%',
+      color: '#555555',
+    },
+  };
 
   return (
     <div className={styles.activeEdit}>
@@ -122,17 +145,15 @@ const ColumnCreator = ({ dispatch, tableName }) => {
           data-test="column-name"
           {...colName}
         />
-        <select
-          className={`${styles.select} input-sm form-control`}
-          data-test="data-type"
-          {...colType}
-        >
-          <option disabled value="">
-            -- type --
-          </option>
-          {alterTypeOptions}
-        </select>
-
+        <span className={`${styles.select}`} data-test="col-type-0">
+          <SearchableSelectBox
+            options={columnDataTypes}
+            onChange={colType.onChange}
+            value={colType.value && columnTypeValueMap[colType.value]}
+            bsClass={`col-type-${0} modify_select`}
+            styleOverrides={customSelectBoxStyles}
+          />
+        </span>
         <input
           type="checkbox"
           className={`${styles.input} ${styles.nullable} input-sm form-control`}

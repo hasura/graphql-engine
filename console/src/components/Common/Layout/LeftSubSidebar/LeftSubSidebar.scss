@@ -22,11 +22,6 @@
   line-height: 26px;
 }
 
-.changeSchema {
-  margin-left: 10px;
-  width: auto;
-}
-
 .sidebar {
   height: calc(100vh - 26px);
   overflow: auto;
@@ -176,11 +171,6 @@
   li:first-child {
     padding-top: 15px !important;
   }
-}
-
-.heading_tooltip {
-  display: inline-block;
-  padding-right: 10px;
 }
 
 .activeTable {

@@ -1,5 +1,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import {
+  loadInconsistentObjects,
+  redirectToMetadataStatus,
+  isMetadataStatusPage,
+} from '../Services/Metadata/Actions';
+import Spinner from '../Common/Spinner/Spinner';
 
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
@@ -7,17 +13,46 @@ import Helmet from 'react-helmet';
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
+
     this.state = { hasError: false, info: null, error: null };
   }
 
+  resetState = () => {
+    this.setState({ hasError: false, info: null, error: null });
+  };
+
   componentDidCatch(error, info) {
     this.setState({ hasError: true, info: info, error: error });
+
     // TODO logErrorToMyService(error, info);
+
+    const { dispatch } = this.props;
+
+    dispatch(loadInconsistentObjects(true)).then(() => {
+      if (this.props.metadata.inconsistentObjects.length > 0) {
+        if (!isMetadataStatusPage()) {
+          this.resetState();
+          this.props.dispatch(redirectToMetadataStatus());
+        }
+      } else {
+        console.error(error);
+      }
+    });
   }
 
   render() {
     const errorImage = require('./error-logo.png');
     const styles = require('./ErrorPage.scss');
+    const { metadata } = this.props;
+
+    if (this.state.hasError && metadata.ongoingRequest) {
+      return (
+        <div>
+          {' '}
+          <Spinner />{' '}
+        </div>
+      );
+    }
 
     if (this.state.hasError) {
       return (
@@ -29,13 +64,17 @@ class ErrorBoundary extends React.Component {
                 <h1>Error</h1>
                 <br />
                 <div>
-                  Something went wrong. Head back <Link to="/">Home</Link>.
+                  Something went wrong. Head back{' '}
+                  <Link to="/" onClick={this.resetState}>
+                    Home
+                  </Link>
+                  .
                 </div>
                 <br />
                 <div>
                   You can report this issue on our{' '}
                   <a href="https://github.com/hasura/graphql-engine/issues">
-                    Github
+                    GitHub
                   </a>{' '}
                   or chat with us on{' '}
                   <a href="http://discord.gg/hasura">Discord</a>

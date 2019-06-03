@@ -15,12 +15,11 @@ module Hasura.RQL.Types.Common
        , ToAesonPairs(..)
        , WithTable(..)
        , ColVals
-       , PreSetCols
        , MutateResp(..)
+       , ForeignKey(..)
        ) where
 
 import           Hasura.Prelude
-import qualified Hasura.SQL.DML             as S
 import           Hasura.SQL.Types
 
 import           Data.Aeson
@@ -59,7 +58,9 @@ relTypeToTxt ArrRel = "array"
 data RelType
   = ObjRel
   | ArrRel
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
+
+instance Hashable RelType
 
 instance ToJSON RelType where
   toJSON = String . relTypeToTxt
@@ -140,7 +141,6 @@ instance (ToAesonPairs a) => ToJSON (WithTable a) where
     object $ ("table" .= tn):toAesonPairs rel
 
 type ColVals = HM.HashMap PGCol Value
-type PreSetCols = HM.HashMap PGCol S.SQLExp
 
 data MutateResp
   = MutateResp
@@ -148,3 +148,17 @@ data MutateResp
   , _mrReturningColumns :: ![ColVals]
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''MutateResp)
+
+type ColMapping = HM.HashMap PGCol PGCol
+
+data ForeignKey
+  = ForeignKey
+  { _fkTable         :: !QualifiedTable
+  , _fkRefTable      :: !QualifiedTable
+  , _fkOid           :: !Int
+  , _fkConstraint    :: !ConstraintName
+  , _fkColumnMapping :: !ColMapping
+  } deriving (Show, Eq, Generic)
+$(deriveJSON (aesonDrop 3 snakeCase) ''ForeignKey)
+
+instance Hashable ForeignKey

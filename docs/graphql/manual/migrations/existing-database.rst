@@ -43,7 +43,7 @@ Execute the following command. For the endpoint referred here, let's say you've
 deployed the GraphQL engine on Heroku, then this endpoint is:
 ``https://my-graphql.herokuapp.com``. In case you've deployed this using Docker,
 the URL might be ``http://xx.xx.xx.xx:8080``. This endpoint should not contain
-the ``v1alpha1/graphql`` API path. It should just be the hostname and any
+the ``v1/graphql`` API path. It should just be the hostname and any
 sub-path if it is configured that way. 
 
 .. code-block:: bash
@@ -66,60 +66,26 @@ Hasura migrations. You can commit this directory to version control.
 Step 3: Initialize the migrations as per your current state
 -----------------------------------------------------------
 
-- Use ``pg_dump`` to export the database schema:
+Create a migration called ``init`` by exporting the current Postgres schema and
+metadata from server:
 
-  If Postgres is running in docker, we can use the ``pg_dump``
-  command bundled within the ``postgres`` docker container. If you have
-  ``pg_dump`` installed on your machine, you could use that as well.
+.. code-block:: bash
 
-  .. code-block:: bash
+   # (available after version v1.0.0-alpha45)
+   # create migration files (note that this will only export public schema from postgres)
+   hasura migrate create "init" --from-server
 
-     # get the container id for postgres
-     docker ps
+   # note down the version
+   # mark the migration as applied on this server
+   hasura migrate apply --version "<version>" --skip-execution
 
-     # dump the public schema into public-schema.sql (repeat for other schemas)
-     docker exec <postgres-container-id> pg_dump -O -x -U postgres --schema-only --schema public > public-schema.sql
 
-  If Postgres is on Heroku or elsewhere, install ``pg_dump`` on your machine and
-  use it. It comes with a standard Postgres installation which you can download
-  and install from `here <https://www.postgresql.org/download/>`__.
-
-  .. code-block:: bash
-
-     # Get the DATABASE_URL from Heroku Dashbaord -> Settings -> Reveal Config Vars
-     # dump the public schema into public-schema.sql (repeat for other schemas)
-     pg_dump -O -x "<DATABASE_URL>" --schema-only --schema public > public-schema.sql
-
-  This command will create ``public-schema.sql`` which contains the SQL
-  definitions for the public schema.
-
-- Clean up the SQL file to remove some un-necessary statements:
-
-  .. code-block:: bash
-
-     # POST the SQL to a serverless function and save the response
-     curl --data-binary @public-schema.sql https://hasura-edit-pg-dump.now.sh > public-schema-edited.sql
-
-  (The source code for this function can be found on `GitHub <https://github.com/hasura/graphql-engine/tree/master/scripts/edit-pg-dump>`__ along with a bash script if you'd prefer that.)
-
-- Create a migration called ``init`` using this SQL file and the metadata that
-  is on the server right now:
-
-  .. code-block:: bash
-
-     # create migration files
-     hasura migrate create "init" --sql-from-file "public-schema-edited.sql" --metadata-from-server
-
-     # note down the version
-     # mark the migration as applied on this server
-     hasura migrate apply --version "<version>" --skip-execution
-
-  This command will create a new "migration" under the ``migrations`` directory
-  with the file name as ``<timestamp(version)>_init.up.yaml``. This file will
-  contain the required information to reproduce the current state of the server
-  including the Postgres schema and Hasura metadata. The apply command will mark
-  this migration as "applied" on the server. If you'd like to read more about
-  the format of migration files, check out the :ref:`migration_file_format`.
+This command will create a new "migration" under the ``migrations`` directory
+with the file name as ``<timestamp(version)>_init.up.yaml``. This file will
+contain the required information to reproduce the current state of the server
+including the Postgres (public) schema and Hasura metadata. The apply command
+will mark this migration as "applied" on the server. If you'd like to read more
+about the format of migration files, check out the :ref:`migration_file_format`.
 
 .. note::
 

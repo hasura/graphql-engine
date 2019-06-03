@@ -11,8 +11,12 @@ import { loadMigrationStatus } from '../../Main/Actions';
 import returnMigrateUrl from './Common/getMigrateUrl';
 import globals from '../../../Globals';
 import push from './push';
-import { initQueries } from '../Data/DataActions';
+import {
+  filterInconsistentMetadata,
+  loadInconsistentObjects,
+} from '../Metadata/Actions';
 import { replace } from 'react-router-redux';
+import { getEventTriggersQuery } from './utils';
 
 import { SERVER_CONSOLE_MODE } from '../../../constants';
 import { REQUEST_COMPLETE, REQUEST_ONGOING } from './Modify/Actions';
@@ -26,7 +30,6 @@ const ADMIN_SECRET_ERROR = 'Event/ADMIN_SECRET_ERROR';
 const UPDATE_DATA_HEADERS = 'Event/UPDATE_DATA_HEADERS';
 const LISTING_TRIGGER = 'Event/LISTING_TRIGGER';
 const LOAD_EVENT_LOGS = 'Event/LOAD_EVENT_LOGS';
-const LOAD_EVENT_TABLE_SCHEMA = 'Event/LOAD_EVENT_TABLE_SCHEMA';
 const MODAL_OPEN = 'Event/MODAL_OPEN';
 const SET_REDELIVER_EVENT = 'Event/SET_REDELIVER_EVENT';
 const LOAD_EVENT_INVOCATIONS = 'Event/LOAD_EVENT_INVOCATIONS';
@@ -38,34 +41,9 @@ const REQUEST_SUCCESS = 'Event/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'Event/REQUEST_ERROR';
 
 /* ************ action creators *********************** */
-const loadTriggers = () => (dispatch, getState) => {
+const loadTriggers = triggerNames => (dispatch, getState) => {
   const url = Endpoints.getSchema;
-  const body = {
-    type: 'bulk',
-    args: [
-      {
-        type: 'select',
-        args: {
-          table: {
-            name: 'event_triggers',
-            schema: 'hdb_catalog',
-          },
-          columns: ['*'],
-          order_by: {
-            column: 'name',
-            type: 'asc',
-            nulls: 'last',
-          },
-        },
-      },
-      initQueries.loadSchema,
-    ],
-  };
-  body.args[1].args.where = {
-    table_schema: {
-      $nin: ['information_schema', 'pg_catalog', 'hdb_catalog', 'hdb_views'],
-    },
-  };
+  const body = getEventTriggersQuery(triggerNames);
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
@@ -74,49 +52,35 @@ const loadTriggers = () => (dispatch, getState) => {
   };
   return dispatch(requestAction(url, options)).then(
     data => {
-      dispatch({ type: LOAD_EVENT_TABLE_SCHEMA, data: data[1] });
-      dispatch({ type: LOAD_TRIGGER_LIST, triggerList: data[0] });
-    },
-    error => {
-      console.error('Failed to load triggers' + JSON.stringify(error));
-    }
-  );
-};
-
-const loadProcessedEvents = () => (dispatch, getState) => {
-  const url = Endpoints.getSchema;
-  const options = {
-    credentials: globalCookiePolicy,
-    method: 'POST',
-    headers: dataHeaders(getState),
-    body: JSON.stringify({
-      type: 'select',
-      args: {
-        table: {
-          name: 'event_triggers',
-          schema: 'hdb_catalog',
-        },
-        columns: [
-          '*',
-          {
-            name: 'events',
-            columns: [
-              '*',
-              { name: 'logs', columns: ['*'], order_by: ['-created_at'] },
-            ],
-            where: {
-              $or: [{ delivered: { $eq: true } }, { error: { $eq: true } }],
-            },
-            order_by: ['-created_at'],
-            limit: 10,
-          },
-        ],
-      },
-    }),
-  };
-  return dispatch(requestAction(url, options)).then(
-    data => {
-      dispatch({ type: LOAD_PROCESSED_EVENTS, data: data });
+      if (data.result_type !== 'TuplesOk') {
+        console.error('Failed to event trigger info' + JSON.stringify(data[1]));
+        return;
+      }
+      let triggerData = JSON.parse(data.result[1]);
+      if (triggerNames.length !== 0) {
+        // getExisting state
+        const existingTriggers = getState().triggers.triggerList.filter(
+          trigger => triggerNames.some(item => item !== trigger.name)
+        );
+        const triggerLists = existingTriggers.concat(triggerData);
+        triggerData = triggerLists.sort((a, b) => {
+          return a.name === b.name ? 0 : +(a.name > b.name) || -1;
+        });
+      }
+      const { inconsistentObjects } = getState().metadata;
+      let consistentTriggers;
+      if (inconsistentObjects.length > 1) {
+        consistentTriggers = filterInconsistentMetadata(
+          triggerData,
+          inconsistentObjects,
+          'events'
+        );
+      }
+      dispatch({
+        type: LOAD_TRIGGER_LIST,
+        triggerList: consistentTriggers || triggerData,
+      });
+      dispatch(loadInconsistentObjects(false));
     },
     error => {
       console.error('Failed to load triggers' + JSON.stringify(error));
@@ -319,7 +283,7 @@ const redeliverEvent = eventId => (dispatch, getState) => {
     method: 'POST',
     headers: dataHeaders(getState),
     body: JSON.stringify({
-      type: 'deliver_event',
+      type: 'redeliver_event',
       args: {
         event_id: eventId,
       },
@@ -433,7 +397,6 @@ const makeMigrationCall = (
     if (globals.consoleMode === 'cli') {
       dispatch(loadMigrationStatus()); // don't call for server mode
     }
-    dispatch(loadTriggers());
     customOnSuccess();
     if (successMsg) {
       dispatch(showSuccessNotification(successMsg));
@@ -473,7 +436,7 @@ const deleteTrigger = triggerName => {
         name: triggerName,
         table: {
           name: currentTriggerInfo.table_name,
-          schema: currentTriggerInfo.schema_name,
+          schema: currentTriggerInfo.table_schema,
         },
         retry_conf: { ...currentTriggerInfo.configuration.retry_conf },
         ...currentTriggerInfo.configuration.definition,
@@ -506,7 +469,15 @@ const deleteTrigger = triggerName => {
       // dispatch({ type: REQUEST_SUCCESS });
       dispatch({ type: REQUEST_COMPLETE }); // modify trigger action
       dispatch(showSuccessNotification('Trigger Deleted'));
-      dispatch(push('/manage/triggers')).then(() => dispatch(loadTriggers()));
+      // remove this trigger from state
+      const existingTriggers = getState().triggers.triggerList.filter(
+        trigger => trigger.name !== triggerName
+      );
+      dispatch({
+        type: LOAD_TRIGGER_LIST,
+        triggerList: existingTriggers,
+      });
+      dispatch(push('/manage/triggers'));
       return;
     };
     const customOnError = () => {
@@ -528,7 +499,8 @@ const deleteTrigger = triggerName => {
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
+      errorMsg,
+      true
     );
   };
 };
@@ -612,11 +584,6 @@ const eventReducer = (state = defaultState, action) => {
         ...state,
         log: { ...state.log, rows: action.data, count: action.data.length },
       };
-    case LOAD_EVENT_TABLE_SCHEMA:
-      return {
-        ...state,
-        tableSchemas: action.data,
-      };
     case SET_TRIGGER:
       return { ...state, currentTrigger: action.triggerName };
     case ADMIN_SECRET_ERROR:
@@ -658,7 +625,6 @@ export {
   setTrigger,
   loadTriggers,
   deleteTrigger,
-  loadProcessedEvents,
   loadPendingEvents,
   loadRunningEvents,
   loadEventLogs,

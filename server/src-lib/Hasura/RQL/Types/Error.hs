@@ -10,11 +10,13 @@ module Hasura.RQL.Types.Error
        , err404
        , err401
        , err500
+       , internalError
 
        , QErrM
        , throw400
        , throw404
        , throw500
+       , throw500WithDetail
        , throw401
 
          -- Aeson helpers
@@ -24,6 +26,7 @@ module Hasura.RQL.Types.Error
          -- Modify error messages
        , modifyErr
        , modifyErrAndSet500
+       , modifyQErr
 
          -- Attach context
        , withPathK
@@ -38,12 +41,12 @@ module Hasura.RQL.Types.Error
 import           Data.Aeson
 import           Data.Aeson.Internal
 import           Data.Aeson.Types
-import qualified Database.PG.Query    as Q
+import qualified Database.PG.Query   as Q
 import           Hasura.Prelude
-import           Text.Show            (Show (..))
+import           Text.Show           (Show (..))
 
-import qualified Data.Text            as T
-import qualified Network.HTTP.Types   as N
+import qualified Data.Text           as T
+import qualified Network.HTTP.Types  as N
 
 data Code
   = PermissionDenied
@@ -81,6 +84,8 @@ data Code
   -- Remote schemas
   | RemoteSchemaError
   | RemoteSchemaConflicts
+  -- Websocket/Subscription errors
+  | StartFailed
   deriving (Eq)
 
 instance Show Code where
@@ -117,6 +122,7 @@ instance Show Code where
     JWTInvalidKey         -> "invalid-jwt-key"
     RemoteSchemaError     -> "remote-schema-error"
     RemoteSchemaConflicts -> "remote-schema-conflicts"
+    StartFailed           -> "start-failed"
 
 data QErr
   = QErr
@@ -214,7 +220,14 @@ throw401 :: (QErrM m) => T.Text -> m a
 throw401 t = throwError $ err401 AccessDenied t
 
 throw500 :: (QErrM m) => T.Text -> m a
-throw500 t = throwError $ err500 Unexpected t
+throw500 t = throwError $ internalError t
+
+internalError :: Text -> QErr
+internalError = err500 Unexpected
+
+throw500WithDetail :: (QErrM m) => T.Text -> Value -> m a
+throw500WithDetail t detail =
+  throwError $ (err500 Unexpected t) {qeInternal = Just detail}
 
 modifyQErr :: (QErrM m)
            => (QErr -> QErr) -> m a -> m a

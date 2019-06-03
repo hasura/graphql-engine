@@ -1,4 +1,8 @@
-import { baseUrl, getElementFromAlias } from '../../../helpers/dataHelpers';
+import {
+  baseUrl,
+  getElementFromAlias,
+  tableColumnTypeSelector,
+} from '../../../helpers/dataHelpers';
 
 import {
   setMetaData,
@@ -28,7 +32,11 @@ export const Createtable = (name, fields) => {
   for (const key in fields) {
     if (fields.hasOwnProperty(key)) {
       cy.get(getElementFromAlias(`column-${i}`)).type(key);
-      cy.get(getElementFromAlias(`col-type-${i}`)).select(fields[key]);
+      tableColumnTypeSelector(`col-type-${i}`);
+      cy.get(getElementFromAlias(`data_test_column_type_value_${fields[key]}`))
+        .first()
+        .click();
+      // cy.get(getElementFromAlias(`col-type-${i}`)).select(fields[key]);
       i++;
     }
   }
@@ -75,19 +83,19 @@ export const Createtable = (name, fields) => {
 };
 
 export const passRTCreateTables = () => {
-  Createtable('author', { id: 'Integer', name: 'Text' });
+  Createtable('author', { id: 'integer', name: 'text' });
   Createtable('article', {
-    id: 'Integer',
-    title: 'Text',
-    Content: 'Text',
-    author_id: 'Integer',
-    rating: 'Integer',
+    id: 'integer',
+    title: 'text',
+    Content: 'text',
+    author_id: 'integer',
+    rating: 'integer',
   });
   Createtable('comment', {
-    id: 'Integer',
-    user_id: 'Integer',
-    article_id: 'Integer',
-    comment: 'Text',
+    id: 'integer',
+    user_id: 'integer',
+    article_id: 'integer',
+    comment: 'text',
   });
 };
 

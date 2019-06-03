@@ -4,6 +4,8 @@ module Hasura.RQL.DDL.Schema.Diff
   , ConstraintMeta(..)
   , fetchTableMeta
 
+  , getDifference
+
   , TableDiff(..)
   , getTableDiff
   , getTableChangeDeps
@@ -59,64 +61,15 @@ data TableMeta
   , tmTable       :: !QualifiedTable
   , tmColumns     :: ![PGColMeta]
   , tmConstraints :: ![ConstraintMeta]
+  , tmForeignKeys :: ![ForeignKey]
   } deriving (Show, Eq)
 
 fetchTableMeta :: Q.Tx [TableMeta]
 fetchTableMeta = do
-  res <- Q.listQ [Q.sql|
-    SELECT
-        t.table_schema,
-        t.table_name,
-        t.table_oid,
-        coalesce(c.columns, '[]') as columns,
-        coalesce(f.constraints, '[]') as constraints
-    FROM
-        (SELECT
-             c.oid as table_oid,
-             c.relname as table_name,
-             n.nspname as table_schema
-         FROM
-             pg_catalog.pg_class c
-         JOIN
-             pg_catalog.pg_namespace as n
-           ON
-             c.relnamespace = n.oid
-        ) t
-        LEFT OUTER JOIN
-        (SELECT
-             table_schema,
-             table_name,
-             json_agg((SELECT r FROM (SELECT column_name, udt_name AS data_type, ordinal_position, is_nullable::boolean) r)) as columns
-         FROM
-             information_schema.columns
-         GROUP BY
-             table_schema, table_name) c
-        ON (t.table_schema = c.table_schema AND t.table_name = c.table_name)
-        LEFT OUTER JOIN
-        (SELECT
-             tc.table_schema,
-             tc.table_name,
-             json_agg(
-              json_build_object(
-                  'name', tc.constraint_name,
-                  'oid', r.oid::integer,
-                  'type', tc.constraint_type
-                  )
-             ) as constraints
-         FROM
-             information_schema.table_constraints tc
-             JOIN pg_catalog.pg_constraint r
-             ON tc.constraint_name = r.conname
-         GROUP BY
-             table_schema, table_name) f
-        ON (t.table_schema = f.table_schema AND t.table_name = f.table_name)
-    WHERE
-        t.table_schema NOT LIKE 'pg_%'
-        AND t.table_schema <> 'information_schema'
-        AND t.table_schema <> 'hdb_catalog'
-                |] () False
-  forM res $ \(ts, tn, toid, cols, constrnts) ->
-    return $ TableMeta toid (QualifiedObject ts tn) (Q.getAltJ cols) (Q.getAltJ constrnts)
+  res <- Q.listQ $(Q.sqlFromFile "src-rsr/table_meta.sql") () False
+  forM res $ \(ts, tn, toid, cols, constrnts, fkeys) ->
+    return $ TableMeta toid (QualifiedObject ts tn) (Q.getAltJ cols)
+             (Q.getAltJ constrnts) (Q.getAltJ fkeys)
 
 getOverlap :: (Eq k, Hashable k) => (v -> k) -> [v] -> [v] -> [(v, v)]
 getOverlap getKey left right =
@@ -169,9 +122,18 @@ getTableDiff oldtm newtm =
     alteredCols =
       flip map (filter (uncurry (/=)) existingCols) $ pcmToPci *** pcmToPci
 
-    droppedFKeyConstraints = map cmName $
-      filter (isForeignKey . cmType) $ getDifference cmOid
-      (tmConstraints oldtm) (tmConstraints newtm)
+    -- foreign keys are considered dropped only if their oid
+    -- and (ref-table, column mapping) are changed
+    droppedFKeyConstraints = map _fkConstraint $ HS.toList $
+      droppedFKeysWithOid `HS.intersection` droppedFKeysWithUniq
+
+    droppedFKeysWithOid = HS.fromList $
+      getDifference _fkOid (tmForeignKeys oldtm) (tmForeignKeys newtm)
+
+    droppedFKeysWithUniq = HS.fromList $
+      getDifference mkFKeyUniqId (tmForeignKeys oldtm) (tmForeignKeys newtm)
+
+    mkFKeyUniqId (ForeignKey _ reftn _ _ colMap) = (reftn, colMap)
 
 getTableChangeDeps
   :: (QErrM m, CacheRWM m)
