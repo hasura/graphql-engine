@@ -55,7 +55,6 @@ func (o *helpOptions) run() {
 			Commands: []*cobra.Command{
 				NewCompletionCmd(o.EC),
 				NewVersionCmd(o.EC),
-				NewSettingsCmd(o.EC),
 			},
 		},
 	}
