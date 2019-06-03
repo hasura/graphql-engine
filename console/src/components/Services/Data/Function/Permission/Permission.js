@@ -14,7 +14,7 @@ const prefixUrl = globals.urlPrefix + appPrefix;
 
 import { fetchCustomFunction } from '../customFunctionReducer';
 import {
-  loadUntrackedRelations,
+  updateSchemaInfo,
   UPDATE_CURRENT_SCHEMA,
   fetchFunctionInit,
   setTable,
@@ -66,7 +66,7 @@ class Permission extends React.Component {
             type: UPDATE_CURRENT_SCHEMA,
             currentSchema: setOffTableSchema,
           }),
-          dispatch(loadUntrackedRelations()),
+          dispatch(updateSchemaInfo()),
           dispatch(fetchFunctionInit()),
           dispatch(setTable(setOffTable)),
         ]);

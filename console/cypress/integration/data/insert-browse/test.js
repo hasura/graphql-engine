@@ -8,7 +8,6 @@ import {
   deleteBITestTable,
   checkInsertRoute,
   failBIWrongDataType,
-  failBINullKeys,
   failBIUniqueKeys,
   passBIInsert20Rows,
   checkBrowseRoute,
