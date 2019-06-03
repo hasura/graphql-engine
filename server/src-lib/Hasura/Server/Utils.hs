@@ -176,7 +176,8 @@ isRunningOnCI :: IO Bool
 isRunningOnCI = do
   isCI <- lookupEnv "CI"
   isTFBuild <- lookupEnv "TF_BUILD"
-  return (isTrue isCI || isTrue isTFBuild)
+  isDrone <- lookupEnv "DRONE"
+  return (isTrue isCI || isTrue isTFBuild || isTrue isDrone)
   where
     isTrue :: Maybe String -> Bool
     isTrue = \case
