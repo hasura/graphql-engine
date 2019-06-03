@@ -16,7 +16,6 @@ import           Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HM
 import           Data.List.NonEmpty (NonEmpty(..))
 import           Data.Validation
-import           Debug.Trace
 import qualified Hasura.GraphQL.Context as GC
 import qualified Hasura.GraphQL.Schema as GS
 import           Hasura.GraphQL.Validate.Types
@@ -88,17 +87,15 @@ validateRelationship createRemoteRelationship gctx tables = do
                (FieldNotFoundInRemoteSchema
                   (createRemoteRelationshipRemoteField createRemoteRelationship)))
         RemoteType {} ->
-          trace
-            (show objFldInfo)
-            (toEither
-               (validateRemoteArguments
-                  tables
-                  (VT._fiParams objFldInfo)
-                  (remoteArgumentsToMap
-                     (createRemoteRelationshipRemoteArguments
-                        createRemoteRelationship))
-                  (HM.fromList
-                     (map (first fieldNameToVariable) (HM.toList fieldInfos)))))
+          toEither
+            (validateRemoteArguments
+               tables
+               (VT._fiParams objFldInfo)
+               (remoteArgumentsToMap
+                  (createRemoteRelationshipRemoteArguments
+                     createRemoteRelationship))
+               (HM.fromList
+                  (map (first fieldNameToVariable) (HM.toList fieldInfos))))
   where
     tableName = createRemoteRelationshipTable createRemoteRelationship
 
