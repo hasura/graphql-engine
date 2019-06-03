@@ -14,6 +14,7 @@ import qualified Data.Aeson.TH                               as J
 import qualified Data.ByteString.Lazy                        as BL
 import qualified Data.CaseInsensitive                        as CI
 import qualified Data.HashMap.Strict                         as Map
+import qualified Data.IORef                                  as IORef
 import qualified Data.Text                                   as T
 import qualified Data.Text.Encoding                          as TE
 import qualified Data.Time.Clock                             as TC
@@ -26,7 +27,6 @@ import qualified StmContainers.Map                           as STMMap
 
 import           Control.Concurrent                          (threadDelay)
 import           Data.ByteString                             (ByteString)
-import qualified Data.IORef                                  as IORef
 
 import           Hasura.EncJSON
 import qualified Hasura.GraphQL.Execute                      as E
@@ -285,8 +285,16 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       let payload = J.encode $ _wpPayload sockPayload
       resp <- runExceptT $ E.execRemoteGQ httpMgr userInfo reqHdrs
               payload rsi opDef
-      either postExecErr sendSuccResp resp
+      either postExecErr sendRemoteResp resp
       sendCompleted
+
+    sendRemoteResp resp =
+      case J.eitherDecodeStrict (encJToBS resp) of
+        Left e    -> postExecErr $ invalidGqlErr $ T.pack e
+        Right res -> sendMsg wsConn $ SMData $ DataMsg opId (GRRemote res)
+
+    invalidGqlErr err = err500 Unexpected $
+      "Failed parsing GraphQL response from remote: " <> err
 
     WSServerEnv logger pgExecCtx lqMap gCtxMapRef httpMgr  _
       sqlGenCtx planCache _ enableAL = serverEnv
@@ -315,7 +323,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       let errFn = getErrFn errRespTy
       logOpEv $ ODQueryErr qErr
       sendMsg wsConn $ SMData $ DataMsg opId $
-        GQExecError $ pure $ errFn False qErr
+        GRHasura $ GQExecError $ pure $ errFn False qErr
 
     -- why wouldn't pre exec error use graphql response?
     preExecErr qErr = do
@@ -327,7 +335,8 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       sendMsg wsConn $ SMErr $ ErrorMsg opId err
 
     sendSuccResp encJson =
-      sendMsg wsConn $ SMData $ DataMsg opId $ GQSuccess $ encJToLBS encJson
+      sendMsg wsConn $ SMData $ DataMsg opId $
+        GRHasura $ GQSuccess $ encJToLBS encJson
 
     withComplete :: ExceptT () IO () -> ExceptT () IO a
     withComplete action = do
@@ -337,7 +346,8 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
 
     -- on change, send message on the websocket
     liveQOnChange resp =
-      WS.sendMsg wsConn $ encodeServerMsg $ SMData $ DataMsg opId resp
+      WS.sendMsg wsConn $ encodeServerMsg $ SMData $
+        DataMsg opId (GRHasura resp)
 
     catchAndIgnore :: ExceptT () IO () -> IO ()
     catchAndIgnore m = void $ runExceptT m
