@@ -36,4 +36,4 @@ class TestConfigAPI():
         if admin_secret is not None:
             resp = hge_ctx.http.get(hge_ctx.hge_url + '/v1alpha1/config')
             body = resp.json()
-            assert ((resp.status_code == 401) || (resp.status_code == 400))
+            assert ((resp.status_code == 401) or (resp.status_code == 400))
