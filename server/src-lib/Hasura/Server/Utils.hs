@@ -16,6 +16,7 @@ import qualified Data.Text.Encoding           as TE
 import qualified Data.Text.Encoding.Error     as TE
 import qualified Data.Text.IO                 as TI
 import qualified Language.Haskell.TH.Syntax   as TH
+import qualified Network.HTTP.Client          as HC
 import qualified Text.Ginger                  as TG
 import qualified Text.Regex.TDFA              as TDFA
 import qualified Text.Regex.TDFA.ByteString   as TDFA
@@ -171,3 +172,21 @@ diffTimeToMicro diff =
   (floor (realToFrac diff :: Double) - 10) * aSecond
   where
     aSecond = 1000 * 1000
+
+safeHttpExceptToJSON :: HC.HttpException -> Value
+safeHttpExceptToJSON e = case e of
+  HC.HttpExceptionRequest x c ->
+      let reqObj = object
+            [ "host" .= show (HC.host x)
+            , "port" .= show (HC.port x)
+            , "secure" .= show (HC.secure x)
+            , "path" .= show (HC.path x)
+            , "method" .= show (HC.method x)
+            , "proxy" .= show (HC.proxy x)
+            , "redirectCount" .= show (HC.redirectCount x)
+            , "responseTimeout" .= show (HC.responseTimeout x)
+            , "requestVersion" .= show (HC.requestVersion x)
+            ]
+          msg = show c
+      in object ["request" .= reqObj, "message" .= msg]
+  _        -> toJSON $ show e

@@ -22,6 +22,7 @@ import qualified Network.Wreq                  as Wreq
 import           Hasura.HTTP                   (wreqOptions)
 import           Hasura.RQL.DDL.Headers        (getHeadersFromConf)
 import           Hasura.RQL.Types
+import           Hasura.Server.Utils           (safeHttpExceptToJSON)
 
 import qualified Hasura.GraphQL.Context        as GC
 import qualified Hasura.GraphQL.Schema         as GS
@@ -38,17 +39,18 @@ fetchRemoteSchema
   -> m GC.RemoteGCtx
 fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _) = do
   headers <- getHeadersFromConf headerConf
-  let hdrs = map (\(hn, hv) -> (CI.mk . T.encodeUtf8 $ hn, T.encodeUtf8 hv)) headers
+  let hdrs = flip map headers $
+             \(hn, hv) -> (CI.mk . T.encodeUtf8 $ hn, T.encodeUtf8 hv)
       options = wreqOptions manager hdrs
   res  <- liftIO $ try $ Wreq.postWith options (show url) introspectionQuery
   resp <- either throwHttpErr return res
 
   let respData = resp ^. Wreq.responseBody
       statusCode = resp ^. Wreq.responseStatus . Wreq.statusCode
-  when (statusCode /= 200) $ schemaErr $ show respData
+  when (statusCode /= 200) $ throwNon200 statusCode respData
 
   introspectRes :: (FromIntrospection IntrospectionResult) <-
-    either schemaErr return $ J.eitherDecode respData
+    either (remoteSchemaErr . T.pack) return $ J.eitherDecode respData
   let (sDoc, qRootN, mRootN, sRootN) =
         fromIntrospection introspectRes
   typMap <- either remoteSchemaErr return $ VT.fromSchemaDoc sDoc $
@@ -68,11 +70,24 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _) = do
     remoteSchemaErr :: (MonadError QErr m) => T.Text -> m a
     remoteSchemaErr = throw400 RemoteSchemaError
 
-    schemaErr err = remoteSchemaErr (T.pack err)
-
     throwHttpErr :: (MonadError QErr m) => HTTP.HttpException -> m a
-    throwHttpErr _ = schemaErr $
+    throwHttpErr = throwWithInternal httpExceptMsg . safeHttpExceptToJSON
+
+    throwNon200 st = throwWithInternal (non200Msg st) . decodeNon200Resp
+
+    throwWithInternal msg v =
+      let err = err400 RemoteSchemaError $ T.pack msg
+      in throwError err{qeInternal = Just $ J.toJSON v}
+
+    httpExceptMsg =
       "HTTP exception occurred while sending the request to " <> show url
+
+    non200Msg st = "Introspection query to " <> show url
+                   <> " has responded with " <> show st <> " status code"
+
+    decodeNon200Resp bs = case J.eitherDecode bs of
+      Right a -> J.object ["response" J..= (a :: J.Value)]
+      Left _  -> J.object ["raw_body" J..= show bs]
 
 mergeSchemas
   :: (MonadError QErr m)
