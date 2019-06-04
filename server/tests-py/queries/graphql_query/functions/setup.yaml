@@ -95,4 +95,5 @@ args:
     function:
       schema: public
       name: get_session_var
-    session_variable_argument: hasura_session
+    config:
+      session_variable_argument: hasura_session

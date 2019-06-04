@@ -332,7 +332,7 @@ from17To18 =
   liftTx $ Q.catchE defaultTxErrorHandler $
   Q.multiQ [Q.sql|
             ALTER TABLE hdb_catalog.hdb_function
-              ADD COLUMN session_argument TEXT
+              ADD COLUMN config JSON
            |]
 
 migrateCatalog

@@ -35,7 +35,7 @@ response:
   allowlist: []
   functions:
   - function: search_articles
-    session_variable_argument: null
+    config: null
   version: 2
 
 query:

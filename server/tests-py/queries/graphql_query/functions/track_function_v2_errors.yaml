@@ -14,7 +14,7 @@
   url: /v1/query
   status: 400
   response:
-    path: "$.args.session_variable_argument"
+    path: "$.args.config.session_variable_argument"
     error: function argument with name "random" not found
     code: not-found
   query:
@@ -22,13 +22,14 @@
     type: track_function
     args:
       function: get_session_var_value
-      session_variable_argument: random
+      config:
+        session_variable_argument: random
 
 - description: Track function v2 with non json session variable argument
   url: /v1/query
   status: 400
   response:
-    path: "$.args.session_variable_argument"
+    path: "$.args.config.session_variable_argument"
     error: session variable argument should be of type JSON
     code: not-supported
   query:
@@ -36,7 +37,8 @@
     type: track_function
     args:
       function: get_session_var_value
-      session_variable_argument: session_var
+      config:
+        session_variable_argument: session_var
 
 - description: teardown function
   url: /v1/query

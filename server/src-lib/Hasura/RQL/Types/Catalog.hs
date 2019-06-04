@@ -62,9 +62,9 @@ $(deriveJSON (aesonDrop 4 snakeCase) ''CatalogEventTrigger)
 
 data CatalogFunction
   = CatalogFunction
-  { _cfFunction        :: !QualifiedFunction
-  , _cfSessionArgument :: !(Maybe FunctionArgName)
-  , _cfInfo            :: !(Maybe RawFuncInfo)
+  { _cfFunction :: !QualifiedFunction
+  , _cfConfig   :: !(Maybe FunctionConfig)
+  , _cfInfo     :: !(Maybe RawFuncInfo)
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogFunction)
 

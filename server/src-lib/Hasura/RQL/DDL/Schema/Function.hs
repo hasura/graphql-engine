@@ -69,7 +69,8 @@ validateFuncArgs args =
 validateSessionArg
   :: QErrM m
   => [FunctionArg] -> FunctionArgName -> m [FunctionArg]
-validateSessionArg funcArgs sessArg = do
+validateSessionArg funcArgs sessArg =
+  withPathK "session_variable_argument" $ do
 
   (modFuncArgs, isModified) <- foldlM go ([], False) funcArgs
 
@@ -81,7 +82,7 @@ validateSessionArg funcArgs sessArg = do
     go (argList, isMod) arg =
       if faName arg == Just sessArg then do
         when (not $ isJSONType $ faColType arg) $
-          throw400 NotSupported $
+          throw400 NotSupported
           "session variable argument should be of type JSON"
         return (argList <> pure arg{faArgType = FATSession}, isMod || True)
       else return (argList <> pure arg, isMod || False)
@@ -89,10 +90,10 @@ validateSessionArg funcArgs sessArg = do
 mkFunctionInfo
   :: QErrM m
   => QualifiedFunction
-  -> Maybe FunctionArgName
+  -> Maybe FunctionConfig
   -> RawFuncInfo
   -> m FunctionInfo
-mkFunctionInfo qf mSessArg rawFuncInfo = do
+mkFunctionInfo qf mConfig rawFuncInfo = do
   -- throw error if function has variadic arguments
   when hasVariadic $ throw400 NotSupported "function with \"VARIADIC\" parameters are not supported"
   -- throw error if return type is not composite type
@@ -108,30 +109,31 @@ mkFunctionInfo qf mSessArg rawFuncInfo = do
   validateFuncArgs funcInpArgs
 
   -- modify argument type of session argument with validation
-  mFuncArgs <- withPathK "session_variable_argument" $
-               forM mSessArg $ validateSessionArg funcInpArgs
+  mFuncArgs <- withPathK "config" $
+                 forM mSessArg $ validateSessionArg funcInpArgs
 
   let funcArgsSeq = Seq.fromList $ fromMaybe funcInpArgs mFuncArgs
       dep = SchemaDependency (SOTable retTable) "table"
       retTable = QualifiedObject retSn (TableName retN)
   return $ FunctionInfo qf False funTy funcArgsSeq retTable [dep]
   where
+    mSessArg = _fcSessionVariableArgument <$> mConfig
     RawFuncInfo hasVariadic funTy retSn retN retTyTyp
                 retSet inpArgTyps inpArgNames returnsTab
                 = rawFuncInfo
 
 saveFunctionToCatalog
   :: QualifiedFunction
-  -> Maybe FunctionArgName
+  -> Maybe FunctionConfig
   -> Bool
   -> Q.TxE QErr ()
-saveFunctionToCatalog (QualifiedObject sn fn) mSessArg isSystemDefined =
+saveFunctionToCatalog (QualifiedObject sn fn) mConfig isSystemDefined =
   Q.unitQE defaultTxErrorHandler [Q.sql|
          INSERT INTO "hdb_catalog"."hdb_function"
            (function_schema, function_name,
-            session_argument, is_system_defined
+            config, is_system_defined
            ) VALUES ($1, $2, $3, $4)
-        |] (sn, fn, mSessArg, isSystemDefined) True
+        |] (sn, fn, (Q.AltJ . toJSON) <$> mConfig , isSystemDefined) True
 
 delFunctionFromCatalog :: QualifiedFunction -> Q.TxE QErr ()
 delFunctionFromCatalog (QualifiedObject sn fn) =
@@ -146,10 +148,15 @@ newtype TrackFunction
   { tfName :: QualifiedFunction}
   deriving (Show, Eq, FromJSON, ToJSON, Lift)
 
+newtype FunctionConfig
+  = FunctionConfig { _fcSessionVariableArgument :: FunctionArgName}
+  deriving (Show, Eq, Lift)
+$(deriveJSON (aesonDrop 3 snakeCase) ''FunctionConfig)
+
 data TrackFunctionV2
   = TrackFunctionV2
-  { tfv2Function                :: !QualifiedFunction
-  , tfv2SessionVariableArgument :: !(Maybe FunctionArgName)
+  { tfv2Function :: !QualifiedFunction
+  , tfv2Config   :: !(Maybe FunctionConfig)
   } deriving (Show, Eq, Lift)
 $(deriveJSON (aesonDrop 4 snakeCase) ''TrackFunctionV2)
 
@@ -164,10 +171,10 @@ trackFunctionP1 qf = do
 trackFunctionP2Setup
   :: (QErrM m, CacheRWM m, MonadTx m)
   => QualifiedFunction
-  -> Maybe FunctionArgName
+  -> Maybe FunctionConfig
   -> RawFuncInfo -> m ()
-trackFunctionP2Setup qf mSessArg rawfi = do
-  fi <- mkFunctionInfo qf mSessArg rawfi
+trackFunctionP2Setup qf mConfig rawfi = do
+  fi <- mkFunctionInfo qf mConfig rawfi
   let retTable = fiReturnType fi
       err = err400 NotExists $ "table " <> retTable <<> " is not tracked"
   sc <- askSchemaCache
@@ -175,8 +182,8 @@ trackFunctionP2Setup qf mSessArg rawfi = do
   addFunctionToCache fi
 
 trackFunctionP2 :: (QErrM m, CacheRWM m, MonadTx m)
-                => QualifiedFunction -> Maybe FunctionArgName -> m EncJSON
-trackFunctionP2 qf mSessArg = do
+                => QualifiedFunction -> Maybe FunctionConfig -> m EncJSON
+trackFunctionP2 qf mConfig = do
   sc <- askSchemaCache
   let defGCtx = scDefaultRemoteGCtx sc
       funcNameGQL = GS.qualObjectToName qf
@@ -195,8 +202,8 @@ trackFunctionP2 qf mSessArg = do
     _       ->
       throw400 NotSupported $ "function "
       <> qf <<> " is overloaded. Overloaded functions are not supported"
-  trackFunctionP2Setup qf mSessArg rawfi
-  liftTx $ saveFunctionToCatalog qf mSessArg False
+  trackFunctionP2Setup qf mConfig rawfi
+  liftTx $ saveFunctionToCatalog qf mConfig False
   return successMsg
   where
     QualifiedObject sn fn = qf
@@ -221,17 +228,17 @@ runTrackFuncV2
      , UserInfoM m
      )
   => TrackFunctionV2 -> m EncJSON
-runTrackFuncV2 (TrackFunctionV2 qf mSessArg) =
-  runTrackFuncG qf mSessArg
+runTrackFuncV2 (TrackFunctionV2 qf mConfig) =
+  runTrackFuncG qf mConfig
 
 runTrackFuncG
   :: ( QErrM m, CacheRWM m, MonadTx m
      , UserInfoM m
      )
-  => QualifiedFunction -> Maybe FunctionArgName -> m EncJSON
-runTrackFuncG qf mSessArg = do
+  => QualifiedFunction -> Maybe FunctionConfig -> m EncJSON
+runTrackFuncG qf mConfig = do
   trackFunctionP1 qf
-  trackFunctionP2 qf mSessArg
+  trackFunctionP2 qf mConfig
 
 newtype UnTrackFunction
   = UnTrackFunction
@@ -251,7 +258,7 @@ runUntrackFunc (UnTrackFunction qf) = do
   return successMsg
 
 fetchFunctions :: Q.TxE QErr [TrackFunctionV2]
-fetchFunctions = do
+fetchFunctions =
   map (Q.getAltJ . runIdentity)
     <$> Q.listQE defaultTxErrorHandler
       [Q.sql|
@@ -262,7 +269,7 @@ fetchFunctions = do
                'schema', hf.function_schema,
                'name', hf.function_name
              ),
-             'session_variable_argument', hf.session_argument
+             'config', hf.config
            ) as function
          FROM hdb_catalog.hdb_function hf
       |] () True
