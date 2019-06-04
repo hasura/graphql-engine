@@ -37,6 +37,31 @@ def mk_claims(conf, claims):
     else:
         return claims
 
+def get_header_fmt(raw_conf):
+    conf = json.loads(raw_conf)
+    try:
+        hdr_fmt = conf['header']['type']
+        if hdr_fmt == 'Authorization':
+            return (hdr_fmt, None)
+        elif hdr_fmt == 'Cookie':
+            return (hdr_fmt, conf['header']['name'])
+        else:
+            raise Exception('Invalid JWT header format')
+    except KeyError:
+        print('header conf not found in JWT conf, defaulting to Authorization')
+        hdr_fmt = ('Authorization', None)
+        return hdr_fmt
+
+def mk_authz_header(conf, token):
+    (header, name) = get_header_fmt(conf)
+    if header == 'Authorization':
+        return {'Authorization': 'Bearer ' + token}
+    elif header == 'Cookie':
+        return {'Cookie': name + '=' + token}
+    else:
+        raise Exception('Invalid JWT header format')
+
+
 @pytest.mark.parametrize('endpoint', ['/v1/graphql', '/v1alpha1/graphql'])
 class TestJWTBasic():
 
@@ -47,7 +72,9 @@ class TestJWTBasic():
             'x-hasura-default-role': 'user'
         })
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
-        self.conf['headers']['Authorization'] = 'Bearer ' + token
+        # self.conf['headers']['Authorization'] = 'Bearer ' + token
+        authz_header = mk_authz_header(hge_ctx.hge_jwt_conf, token)
+        self.conf['headers'].update(authz_header)
         self.conf['url'] = endpoint
         self.conf['status'] = 200
         check_query(hge_ctx, self.conf, add_auth=False)
@@ -59,7 +86,9 @@ class TestJWTBasic():
             'x-hasura-default-role': 'contractor'
         })
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
-        self.conf['headers']['Authorization'] = 'Bearer ' + token
+        # self.conf['headers']['Authorization'] = 'Bearer ' + token
+        authz_header = mk_authz_header(hge_ctx.hge_jwt_conf, token)
+        self.conf['headers'].update(authz_header)
         self.conf['response'] = {
             'errors': [{
                 'extensions': {
@@ -82,7 +111,9 @@ class TestJWTBasic():
             'x-hasura-default-role': 'user'
         })
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
-        self.conf['headers']['Authorization'] = 'Bearer ' + token
+        # self.conf['headers']['Authorization'] = 'Bearer ' + token
+        authz_header = mk_authz_header(hge_ctx.hge_jwt_conf, token)
+        self.conf['headers'].update(authz_header)
         self.conf['response'] = {
             'errors': [{
                 'extensions': {
@@ -106,7 +137,9 @@ class TestJWTBasic():
             'x-hasura-default-role': 'user'
         })
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
-        self.conf['headers']['Authorization'] = 'Bearer ' + token
+        #self.conf['headers']['Authorization'] = 'Bearer ' + token
+        authz_header = mk_authz_header(hge_ctx.hge_jwt_conf, token)
+        self.conf['headers'].update(authz_header)
         self.conf['response'] = {
             'errors': [{
                 'extensions': {
@@ -129,7 +162,9 @@ class TestJWTBasic():
             'x-hasura-allowed-roles': ['user'],
         })
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
-        self.conf['headers']['Authorization'] = 'Bearer ' + token
+        #self.conf['headers']['Authorization'] = 'Bearer ' + token
+        authz_header = mk_authz_header(hge_ctx.hge_jwt_conf, token)
+        self.conf['headers'].update(authz_header)
         self.conf['response'] = {
             'errors': [{
                 'extensions': {
@@ -156,7 +191,9 @@ class TestJWTBasic():
         self.claims['exp'] = round(exp.timestamp())
 
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
-        self.conf['headers']['Authorization'] = 'Bearer ' + token
+        #self.conf['headers']['Authorization'] = 'Bearer ' + token
+        authz_header = mk_authz_header(hge_ctx.hge_jwt_conf, token)
+        self.conf['headers'].update(authz_header)
         self.conf['response'] = {
             'errors': [{
                 'extensions': {
@@ -182,7 +219,9 @@ class TestJWTBasic():
 
         wrong_key = gen_rsa_key()
         token = jwt.encode(self.claims, wrong_key, algorithm='HS256').decode('utf-8')
-        self.conf['headers']['Authorization'] = 'Bearer ' + token
+        #self.conf['headers']['Authorization'] = 'Bearer ' + token
+        authz_header = mk_authz_header(hge_ctx.hge_jwt_conf, token)
+        self.conf['headers'].update(authz_header)
         self.conf['response'] = {
             'errors': [{
                 'extensions': {
@@ -253,11 +292,10 @@ class TestSubscriptionJwtExpiry(object):
         exp = curr_time + timedelta(seconds=5)
         self.claims['exp'] = round(exp.timestamp())
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
-        payload = {
-            'headers': {
-                'Authorization': 'Bearer ' + token
-            }
-        }
+        authz_header = mk_authz_header(hge_ctx.hge_jwt_conf, token)
+        payload = {'headers': authz_header}
+            #     'Authorization': 'Bearer ' + token
+            # }
         init_ws_conn(hge_ctx, ws_client, payload)
         time.sleep(5)
-        assert ws_client.remote_closed == True, ws_client.remote_closed
+        assert ws_client.remote_closed
