@@ -1,5 +1,7 @@
 ---
 title: '.graphql file'
+metaTitle: "Querying using apolloClient.query  | GraphQL Android Apollo Tutorial"
+metaDescription: "We will dine the GraphQL query in .graphql file and use the apolloClient.query from android apollo. It will give a callback with onResponse to handle data state"
 ---
 
 import GithubLink from '../../src/GithubLink.js'

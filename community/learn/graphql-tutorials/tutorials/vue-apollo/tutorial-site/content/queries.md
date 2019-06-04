@@ -1,5 +1,7 @@
 ---
 title: "Queries"
+metaTitle: "Integrate Queries | GraphQL Vue Apollo Tutorial"
+metaDescription: "Integrate GraphQL Queries in Vue app to fetch personal todo data and handle loading or error state."
 ---
 
 Let's integrate a GraphQL query to show the user their personal task list.

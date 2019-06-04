@@ -2,7 +2,7 @@ import inflection from 'inflection';
 
 import {
   makeMigrationCall,
-  loadUntrackedRelations,
+  updateSchemaInfo,
   RESET_MANUAL_REL_TABLE_LIST,
 } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
@@ -204,7 +204,7 @@ const deleteRelMigrate = relMeta => (dispatch, getState) => {
   const errorMsg = 'Deleting relationship failed';
 
   const customOnSuccess = () => {
-    dispatch(loadUntrackedRelations());
+    dispatch(updateSchemaInfo());
   };
   const customOnError = () => {};
 
@@ -250,7 +250,7 @@ const addRelNewFromStateMigrate = () => (dispatch, getState) => {
 
   const customOnSuccess = () => {
     dispatch(
-      loadUntrackedRelations({
+      updateSchemaInfo({
         tables: [
           {
             table_schema: state.lSchema,
@@ -522,7 +522,7 @@ const autoTrackRelations = autoTrackData => (dispatch, getState) => {
   const successMsg = 'Relationship created';
   const errorMsg = 'Creating relationship failed';
   const customOnSuccess = () => {
-    dispatch(loadUntrackedRelations());
+    dispatch(updateSchemaInfo());
   };
   const customOnError = () => {};
 
@@ -558,7 +558,7 @@ const autoAddRelName = obj => (dispatch, getState) => {
   const errorMsg = 'Creating relationship failed';
 
   const customOnSuccess = () => {
-    Promise.all([dispatch(loadUntrackedRelations())]);
+    Promise.all([dispatch(updateSchemaInfo())]);
   };
   const customOnError = () => {};
 

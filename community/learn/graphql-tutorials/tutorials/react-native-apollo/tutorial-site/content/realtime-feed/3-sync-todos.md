@@ -1,5 +1,7 @@
 ---
 title: "Sync new todos"
+metaTitle: "Sync new todos in public feed | GraphQL React Native Apollo Tutorial"
+metaDescription: "You will learn how to sync new todos added by other people in the public feed by fetching older and newer data using GraphQL Queries"
 ---
 
 import GithubLink from "../../src/GithubLink.js";

@@ -1,5 +1,7 @@
 ---
 title: "<Query> component"
+metaTitle: "Apollo Query Component | GraphQL React Apollo Tutorial"
+metaDescription: "We will use the Apollo Client Query component from react-apollo. It is a render prop API to fetch data and handle data, loading and error props"
 ---
 
 import GithubLink from "../../src/GithubLink.js";
@@ -13,6 +15,7 @@ With Apollo Client, you can send queries in 2 different ways.
 1. Using the `query` method directly and then process the response.
 2. New Render Prop API with React. (Recommended)
 
+### Apollo Query Component
 The recommended method is to use the render prop method, where you will just pass your GraphQL query as prop and `<Query />` component will fetch the data automatically and will present it in the component's render prop function.
 
 Great! Now let's define the graphql query to be used:
