@@ -178,6 +178,8 @@ Assuming the ``property`` table is being tracked, you can use the custom functio
       }
     }
 
+.. _custom_functions_postgis:
+
 Example: PostGIS functions
 **************************
 
@@ -213,7 +215,6 @@ doesn't exist, let's first create this table and then create our location search
   .. code-block:: sql
 
       -- SETOF table
-
       CREATE TABLE user_landmarks (
         user_id INTEGER,
         location GEOGRAPHY(Point),
@@ -225,9 +226,8 @@ doesn't exist, let's first create this table and then create our location search
   .. code-block:: plpgsql
 
       -- function returns a list of landmarks near a user based on the
-      -- input arguments distance_kms (default: 2) and userid
-
-      CREATE FUNCTION search_landmarks_near_user(userid integer, distance_kms integer default 2)
+      -- input arguments distance_kms and userid
+      CREATE FUNCTION search_landmarks_near_user(userid integer, distance_kms integer)
       RETURNS SETOF user_landmarks AS $$
         SELECT  A.user_id, A.location,
         (SELECT json_agg(row_to_json(B)) FROM landmark B
@@ -294,13 +294,61 @@ function in our GraphQL API as follows:
       }
     }
 
-.. note::
+Aggregations on custom functions
+********************************
 
-   If you Omit an argument in ``args`` input field then server executes SQL function without the argument.
-   Hence, the function uses default value of that argument.
+You can query aggregations on a function result using ``<function-name>_aggregate`` field.
 
-Search nearby landmarks with ``distance_kms`` default value which is 2 kms.
+**For example**, count the number of articles returned by the function defined in the text-search example above:
 
+.. code-block:: graphql
+
+      query {
+        search_articles_aggregate(
+          args: {search: "hasura"}
+        ){
+          aggregate {
+            count
+          }
+        }
+      }
+
+Using arguments with custom functions
+*************************************
+
+As with tables, arguments like ``where``, ``limit``, ``order_by``, ``offset``, etc. are also available for use with
+function-based queries.
+
+**For example**, limit the number of articles returned by the function defined in the text-search example above:
+
+.. code-block:: graphql
+
+    query {
+      search_articles(
+        args: {search: "hasura"},
+        limit: 5
+      ){
+        id
+        title
+        content
+      }
+    }
+
+Using argument default values for custom functions
+**************************************************
+
+If you omit an argument in ``args`` input field then GraphQL Engine executes the SQL function without the argument.
+Hence, the function will use the default value of that argument set in its definition.
+
+**For example:** In the above :ref:`PostGIS functions example <custom_functions_postgis>`, the function
+definition can be updated as follows:
+
+.. code-block:: plpgsql
+
+      -- input arguments distance_kms (default: 2) and userid
+      CREATE FUNCTION search_landmarks_near_user(userid integer, distance_kms integer default 2)
+
+Search nearby landmarks with ``distance_kms`` default value which is 2 kms:
 
 .. graphiql::
   :view_only:
@@ -346,45 +394,6 @@ Search nearby landmarks with ``distance_kms`` default value which is 2 kms.
       }
     }
 
-Aggregations on custom functions
-********************************
-
-You can query aggregations on a function result using ``<function-name>_aggregate`` field.
-
-**For example**, count the number of articles returned by the function defined in the text-search example above:
-
-.. code-block:: graphql
-
-      query {
-        search_articles_aggregate(
-          args: {search: "hasura"}
-        ){
-          aggregate {
-            count
-          }
-        }
-      }
-
-Using arguments with custom functions
-*************************************
-
-As with tables, arguments like ``where``, ``limit``, ``order_by``, ``offset``, etc. are also available for use with
-function-based queries.
-
-**For example**, limit the number of articles returned by the function defined in the text-search example above:
-
-.. code-block:: graphql
-
-    query {
-      search_articles(
-        args: {search: "hasura"},
-        limit: 5
-      ){
-        id
-        title
-        content
-      }
-    }
 
 Permissions for custom function queries
 ---------------------------------------
