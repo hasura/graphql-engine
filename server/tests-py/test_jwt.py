@@ -46,7 +46,7 @@ def get_header_fmt(raw_conf):
         elif hdr_fmt == 'Cookie':
             return (hdr_fmt, conf['header']['name'])
         else:
-            raise Exception('Invalid JWT header format')
+            raise Exception('Invalid JWT header format: %s' % conf)
     except KeyError:
         print('header conf not found in JWT conf, defaulting to Authorization')
         hdr_fmt = ('Authorization', None)
