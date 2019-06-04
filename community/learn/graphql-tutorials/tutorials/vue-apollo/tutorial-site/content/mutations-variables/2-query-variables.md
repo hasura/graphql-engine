@@ -1,5 +1,7 @@
 ---
 title: "Query Variables"
+metaTitle: "Passing GraphQL Variables in Queries | GraphQL Vue Apollo Tutorial"
+metaDescription: "An Example of passing variables in GraphQL context and usage of Vue Apollo GraphQL Mutation variables."
 ---
 
 import GithubLink from "../../src/GithubLink.js";

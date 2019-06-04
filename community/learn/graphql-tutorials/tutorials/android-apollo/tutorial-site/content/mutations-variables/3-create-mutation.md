@@ -1,5 +1,7 @@
 ---
-title: 'Run mutation, update cache'
+title: "Run mutation, update cache"
+metaTitle: "Apollo Mutation Integration | GraphQL Android Apollo Tutorial"
+metaDescription: "We will use the Apollo Mutation using apolloClient.mutate in Android app as an example to insert new data and update cache locally using apolloStore().read and apolloStore().write"
 ---
 
 Now let's do the integration part. Add the following code below to remove the log and add the actual implementation:
@@ -25,7 +27,7 @@ Now let's do the integration part. Add the following code below to remove the lo
             }
 ```
 
-We are upadting our local cache with this `apolloClient.apolloStore().write` function. You can also check the data in your local store which will be in the same shape as you have defined for your queries. This enables you to make fetch calls to the server or just the local cache as your need be. Plus, there are optimistic updates that you can do to your UI that we will learn later.
+We are updating our local cache with this `apolloClient.apolloStore().write` function. You can also check the data in your local store which will be in the same shape as you have defined for your queries. This enables you to make fetch calls to the server or just the local cache as your need be. Plus, there are optimistic updates that you can do to your UI that we will learn later.
 
 Let's also add the implementation of getting the todos from local cache, so we can update our views
 

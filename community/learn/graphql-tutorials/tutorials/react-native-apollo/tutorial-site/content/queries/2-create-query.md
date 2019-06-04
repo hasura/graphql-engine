@@ -1,5 +1,7 @@
 ---
 title: "<Query> component"
+metaTitle: "Apollo Query Component | GraphQL React Native Apollo Tutorial"
+metaDescription: "We will use the Apollo Client Query component from react-apollo. It is a render prop API to fetch data and handle data, loading and error props"
 ---
 
 import GithubLink from "../../src/GithubLink.js";

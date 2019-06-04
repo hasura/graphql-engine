@@ -13,7 +13,7 @@ We use [dotenv](https://github.com/motdotla/dotenv) for setting environment vari
 ```
 PORT=3000
 NODE_ENV=development
-GRAPHQL_ENDPOINT=http://localhost:8090/v1alpha1/graphql
+GRAPHQL_ENDPOINT=http://localhost:8090/v1/graphql
 HEADER_STRING='{}'
 VARIABLE_STRING='{}'
 QUERY_STRING='query { test_table { id } }'
