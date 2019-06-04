@@ -75,29 +75,29 @@ validateRelationship createRemoteRelationship gctx tables = do
                     Left (pure (TableFieldNonexistent tableName fieldName))
                   Just fieldInfo -> pure (fieldName, fieldInfo))
              (toList
-                (createRemoteRelationshipHasuraFields createRemoteRelationship)))
+                (ccrHasuraFields createRemoteRelationship)))
       objFldInfo <-
         lookupField
-          (createRemoteRelationshipRemoteField createRemoteRelationship)
+          (ccrRemoteField createRemoteRelationship)
           (GS._gQueryRoot gctx)
       case VT._fiLoc objFldInfo of
         HasuraType ->
           Left
             (pure
                (FieldNotFoundInRemoteSchema
-                  (createRemoteRelationshipRemoteField createRemoteRelationship)))
+                  (ccrRemoteField createRemoteRelationship)))
         RemoteType {} ->
           toEither
             (validateRemoteArguments
                tables
                (VT._fiParams objFldInfo)
                (remoteArgumentsToMap
-                  (createRemoteRelationshipRemoteArguments
+                  (ccrRemoteArguments
                      createRemoteRelationship))
                (HM.fromList
                   (map (first fieldNameToVariable) (HM.toList fieldInfos))))
   where
-    tableName = createRemoteRelationshipTable createRemoteRelationship
+    tableName = ccrTable createRemoteRelationship
 
 -- | Convert a field name to a variable name.
 fieldNameToVariable :: FieldName -> G.Variable

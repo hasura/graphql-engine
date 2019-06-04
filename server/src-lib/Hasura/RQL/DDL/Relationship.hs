@@ -165,7 +165,7 @@ runCreateRemoteRelationshipP1 ::
 runCreateRemoteRelationshipP1 createRemoteRelationship = do
   sc <- askSchemaCache
   case HM.lookup
-         (createRemoteRelationshipRemoteSchema createRemoteRelationship)
+         (ccrRemoteSchema createRemoteRelationship)
          (scRemoteResolvers sc) of
     Just {} -> do
       validation <-
@@ -189,14 +189,14 @@ persistCreateRemoteRelationship createRemoteRelationship =
   (name, table_schema, table_name, remote_schema, remote_field, hasura_fields, remote_arguments)
   VALUES ($1, $2, $3, $4, $5, $6 :: jsonb, $7 :: jsonb)
   |]
-  (let QualifiedObject schema_name table_name = createRemoteRelationshipTable createRemoteRelationship
-   in (createRemoteRelationshipName createRemoteRelationship
+  (let QualifiedObject schema_name table_name = ccrTable createRemoteRelationship
+   in (ccrName createRemoteRelationship
       ,schema_name
       ,table_name
-      ,createRemoteRelationshipRemoteSchema createRemoteRelationship
-      ,G.unName (createRemoteRelationshipRemoteField createRemoteRelationship)
-      ,Q.JSONB (toJSON (createRemoteRelationshipHasuraFields createRemoteRelationship))
-      ,Q.JSONB (toJSON (createRemoteRelationshipRemoteArguments createRemoteRelationship))))
+      ,ccrRemoteSchema createRemoteRelationship
+      ,G.unName (ccrRemoteField createRemoteRelationship)
+      ,Q.JSONB (toJSON (ccrHasuraFields createRemoteRelationship))
+      ,Q.JSONB (toJSON (ccrRemoteArguments createRemoteRelationship))))
   True
 
 runCreateObjRel

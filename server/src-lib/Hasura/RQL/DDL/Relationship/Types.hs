@@ -107,16 +107,16 @@ type CreateObjRel = WithTable ObjRelDef
 
 data CreateRemoteRelationship =
   CreateRemoteRelationship
-    { createRemoteRelationshipName :: RemoteRelationshipName
-    , createRemoteRelationshipTable :: QualifiedTable
-    , createRemoteRelationshipRemoteSchema :: RemoteSchemaName
-    , createRemoteRelationshipRemoteField :: G.Name
-    , createRemoteRelationshipHasuraFields :: Set FieldName
-    , createRemoteRelationshipRemoteArguments :: RemoteArguments
+    { ccrName :: RemoteRelationshipName
+    , ccrTable :: QualifiedTable
+    , ccrRemoteSchema :: RemoteSchemaName
+    , ccrRemoteField :: G.Name
+    , ccrHasuraFields :: Set FieldName
+    , ccrRemoteArguments :: RemoteArguments
     }
   deriving (Show, Eq, Lift)
 
-$(deriveJSON (aesonDrop 24 snakeCase) ''CreateRemoteRelationship)
+$(deriveJSON (aesonDrop 3 snakeCase) ''CreateRemoteRelationship)
 
 data DropRel
   = DropRel
