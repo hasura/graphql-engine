@@ -79,6 +79,8 @@ const defaultQueryPermissions = {
   },
 };
 
+const defaultManualRelColMappings = { column: '', refColumn: '' };
+
 const defaultModifyState = {
   activeEdit: {
     column: '',
@@ -113,11 +115,14 @@ const defaultModifyState = {
     rTable: null,
     rSchema: null,
     rcol: [],
-    manualColumns: [],
-    isManualExpanded: false,
-    manualRelInfo: {
-      remoteSchema: '',
-    },
+  },
+  manualRelAdd: {
+    relName: '',
+    relType: '',
+    rSchema: '',
+    rTable: '',
+    colMappings: [defaultManualRelColMappings],
+    isToggled: false,
   },
   permissionsState: { ...defaultPermissionsState },
   prevPermissionState: { ...defaultPermissionsState },

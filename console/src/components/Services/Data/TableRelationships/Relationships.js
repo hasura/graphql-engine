@@ -8,7 +8,6 @@ import {
   relSelectionChanged,
   relNameChanged,
   resetRelationshipForm,
-  relManualAddClicked,
   formRelName,
   getExistingFieldsMap,
 } from './Actions';
@@ -320,6 +319,7 @@ class Relationships extends Component {
       lastSuccess,
       dispatch,
       relAdd,
+      manualRelAdd,
       currentSchema,
       migrationMode,
       schemaList,
@@ -416,7 +416,6 @@ class Relationships extends Component {
       );
     }
 
-    // if (tableSchema.primary_key.columns > 0) {}
     return (
       <div className={`${styles.container} container-fluid`}>
         <TableHeader
@@ -456,38 +455,13 @@ class Relationships extends Component {
               </Button>
             )}
             <hr />
-            {relAdd.isManualExpanded ? (
-              <div className={styles.activeEdit}>
-                <AddManualRelationship
-                  tableName={tableName}
-                  isObjRel={relAdd.isObjRel}
-                  rTable={relAdd.rTable}
-                  dispatch={dispatch}
-                  lcol={relAdd.lcol}
-                  rcol={relAdd.rcol}
-                  allSchemas={allSchemas}
-                  schemaList={schemaList}
-                  manualColumns={relAdd.manualColumns}
-                  manualRelInfo={relAdd.manualRelInfo}
-                  titleInfo={'Add a relationship manually'}
-                  currentSchema={currentSchema}
-                  showClose
-                  dataTestVal={'table-add-manual-relationship'}
-                />
-              </div>
-            ) : (
-              <Button
-                type="submit"
-                color="white"
-                size="sm"
-                onClick={() => {
-                  dispatch(relManualAddClicked());
-                }}
-                data-test="add-manual-relationship"
-              >
-                + Add a relationship manually
-              </Button>
-            )}
+            <AddManualRelationship
+              tableSchema={tableSchema}
+              allSchemas={allSchemas}
+              schemaList={schemaList}
+              relAdd={manualRelAdd}
+              dispatch={dispatch}
+            />
             <hr />
           </div>
         </div>
@@ -504,6 +478,7 @@ Relationships.propTypes = {
   activeEdit: PropTypes.object.isRequired,
   fkAdd: PropTypes.object.isRequired,
   relAdd: PropTypes.object.isRequired,
+  manualRelAdd: PropTypes.object.isRequired,
   migrationMode: PropTypes.bool.isRequired,
   ongoingRequest: PropTypes.bool.isRequired,
   lastError: PropTypes.object,
