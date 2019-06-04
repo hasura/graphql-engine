@@ -155,13 +155,13 @@ createObjRelP2 (WithTable qt rd) = do
   return successMsg
 
 runCreateRemoteRelationship ::
-     (MonadTx f, CacheRM f) => CreateRemoteRelationship -> f EncJSON
+     (MonadTx m, CacheRM m) => CreateRemoteRelationship -> m EncJSON
 runCreateRemoteRelationship createRemoteRelationship = do
   runCreateRemoteRelationshipP1 createRemoteRelationship
   runCreateRemoteRelationshipP2 createRemoteRelationship
 
 runCreateRemoteRelationshipP1 ::
-     (MonadTx f, CacheRM f) => CreateRemoteRelationship -> f ()
+     (MonadTx m, CacheRM m) => CreateRemoteRelationship -> m ()
 runCreateRemoteRelationshipP1 createRemoteRelationship = do
   sc <- askSchemaCache
   case HM.lookup
@@ -176,7 +176,7 @@ runCreateRemoteRelationshipP1 createRemoteRelationship = do
     Nothing -> throw400 RemoteSchemaError "No such remote schema"
 
 runCreateRemoteRelationshipP2 ::
-     (MonadTx f) => CreateRemoteRelationship -> f EncJSON
+     (MonadTx m) => CreateRemoteRelationship -> m EncJSON
 runCreateRemoteRelationshipP2 createRemoteRelationship = do
   liftTx (persistCreateRemoteRelationship createRemoteRelationship)
   pure successMsg
