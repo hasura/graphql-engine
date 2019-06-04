@@ -1,9 +1,7 @@
 module Hasura.Server.Utils where
 
 import           Data.Aeson
-import           Data.List.Split
 import           Data.Time.Clock
-import           Network.URI
 import           System.Environment
 import           System.Exit
 import           System.Process
