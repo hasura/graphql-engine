@@ -4,7 +4,8 @@ args:
 - type: run_sql
   args:
     sql: |
-      DROP TABLE post cascade;
-      DROP TABLE test cascade;
-      DROP TABLE text_result cascade;
+      DROP TABLE post CASCADE;
+      DROP TABLE test CASCADE;
+      DROP TABLE integer_column CASCADE;
+      DROP TABLE text_result CASCADE;
     cascade: true

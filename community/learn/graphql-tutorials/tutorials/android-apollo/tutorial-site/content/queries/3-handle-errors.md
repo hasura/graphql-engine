@@ -1,5 +1,7 @@
 ---
-title: 'Handle errors'
+title: "Handle errors"
+metaTitle: "Apollo Query Error Handling | GraphQL Android Apollo Tutorial"
+metaDescription: "We will handle the GraphQL loading and error states in Android app using the Apollo onFailure and onResponse callbacks"
 ---
 
 As we saw in the previous step, Apollo had `onFailure` and `onResponse` callback methods.

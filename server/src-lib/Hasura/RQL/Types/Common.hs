@@ -17,6 +17,8 @@ module Hasura.RQL.Types.Common
        , ColVals
        , MutateResp(..)
 
+       , ForeignKey(..)
+
        , FunctionArgName(..)
        , FunctionArgType(..)
        , FunctionArg(..)
@@ -152,6 +154,20 @@ data MutateResp
   , _mrReturningColumns :: ![ColVals]
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''MutateResp)
+
+type ColMapping = HM.HashMap PGCol PGCol
+
+data ForeignKey
+  = ForeignKey
+  { _fkTable         :: !QualifiedTable
+  , _fkRefTable      :: !QualifiedTable
+  , _fkOid           :: !Int
+  , _fkConstraint    :: !ConstraintName
+  , _fkColumnMapping :: !ColMapping
+  } deriving (Show, Eq, Generic)
+$(deriveJSON (aesonDrop 3 snakeCase) ''ForeignKey)
+
+instance Hashable ForeignKey
 
 data FunctionArgType
   -- Needs input from user

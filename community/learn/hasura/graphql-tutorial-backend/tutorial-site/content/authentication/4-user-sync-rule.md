@@ -1,5 +1,7 @@
 ---
 title: "Sync Users with Rules"
+metaTitle: "Sync Auth0 Users with Rules | Hasura GraphQL Tutorial"
+metaDescription: "In this part, you will learn to set up a rule in Auth0 which allows the users of Auth0 to be in sync with the users in our database"
 ---
 
 import YoutubeEmbed from "../../src/YoutubeEmbed.js";
@@ -14,7 +16,7 @@ function (user, context, callback) {
   const nickname = user.nickname;
   
   const admin_secret = "xxxx";
-  const url = "https://learn-hasura-backend.herokuapp.com/v1alpha1/graphql";
+  const url = "https://learn-hasura-backend.herokuapp.com/v1/graphql";
 
   request.post({
       headers: {'content-type' : 'application/json', 'x-hasura-admin-secret': admin_secret},

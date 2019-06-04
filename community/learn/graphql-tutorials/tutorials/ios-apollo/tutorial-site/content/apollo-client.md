@@ -1,10 +1,14 @@
 ---
-title: 'Set up a GraphQL client with Apollo'
+title: "Set up a GraphQL client with Apollo"
+metaTitle: "Apollo Client GraphQL Setup | GraphQL iOS Apollo Tutorial"
+metaDescription: "You will learn how to configure Apollo Client in iOS by installing dependencies like apollo-ios in Cartfile"
 ---
 
 import GithubLink from '../src/GithubLink.js'
 
 Apollo gives a neat abstraction layer and an interface to your GraphQL server. You don't need to worry about constructing your queries with request body, headers and options, that you might have done with `AFNetworking` or `NWConnection` say. You can directly write queries and mutations in GraphQL and they will automatically be sent to your server via your apollo client instance.
+
+## iOS Apollo Installation
 
 Let's get started by installing apollo client framework & peer graphql dependencies:
 

@@ -1,5 +1,7 @@
 ---
 title: "Subscription"
+metaTitle: "Set up GraphQL Subscriptions using Apollo Client | GraphQL iOS Apollo Tutorial"
+metaDescription: "You will learn how to configure GraphQL Subscriptions using iOS Apollo Client by installing dependencies like apollowebsocket.framework, starscream.framework. This will also have authorization token setup"
 ---
 
 import GithubLink from '../../src/GithubLink.js'

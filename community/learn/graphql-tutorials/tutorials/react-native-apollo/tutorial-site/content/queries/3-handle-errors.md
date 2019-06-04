@@ -1,5 +1,7 @@
 ---
 title: "Handle loading/errorrs"
+metaTitle: "Apollo Query Component Error Handling | GraphQL React Native Apollo Tutorial"
+metaDescription: "We will handle the GraphQL loading and error states in React Native app using the Apollo Query Component render props - loading and error "
 ---
 
 import GithubLink from "../../src/GithubLink.js";
