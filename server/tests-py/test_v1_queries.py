@@ -17,6 +17,9 @@ class TestV1General(DefaultTestQueries):
     def test_query_args_as_string_err(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/query_args_as_string_err.yaml')
 
+    def test_query_v2_invalid_version(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_v2_invalid_version.yaml')
+
     @classmethod
     def dir(cls):
         return "queries/v1/basic"
