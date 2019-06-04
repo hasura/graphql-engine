@@ -204,6 +204,10 @@ export const dropInconsistentObjects = () => {
   };
 };
 
+export const isMetadataStatusPage = () => {
+  return window.location.pathname.includes('/metadata/status');
+};
+
 export const redirectToMetadataStatus = () => {
   return dispatch => {
     return dispatch(
@@ -522,7 +526,7 @@ export const metadataReducer = (state = defaultState, action) => {
         ...state,
         allowedQueries: [
           ...state.allowedQueries.map(q =>
-            (q.name === action.data.queryName ? action.data.newQuery : q)
+            q.name === action.data.queryName ? action.data.newQuery : q
           ),
         ],
       };

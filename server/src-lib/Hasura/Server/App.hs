@@ -47,6 +47,7 @@ import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                     (AuthMode (..),
                                                          getUserInfo)
+import           Hasura.Server.Context
 import           Hasura.Server.Cors
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
@@ -130,15 +131,15 @@ data HandlerCtx
 type Handler = ExceptT QErr (ReaderT HandlerCtx IO)
 
 data APIResp
-  = JSONResp !EncJSON
-  | RawResp ![(Text,Text)] !BL.ByteString -- headers, body
+  = JSONResp !(HttpResponse EncJSON)
+  | RawResp !(HttpResponse BL.ByteString) -- headers, body
 
 apiRespToLBS :: APIResp -> BL.ByteString
 apiRespToLBS = \case
-  JSONResp j  -> encJToLBS j
-  RawResp _ b -> b
+  JSONResp (HttpResponse j _) -> encJToLBS j
+  RawResp (HttpResponse b _)  -> b
 
-mkAPIRespHandler :: Handler EncJSON -> Handler APIResp
+mkAPIRespHandler :: Handler (HttpResponse EncJSON) -> Handler APIResp
 mkAPIRespHandler = fmap JSONResp
 
 isMetadataEnabled :: ServerCtx -> Bool
@@ -190,6 +191,7 @@ logError
 logError userInfoM req reqBody logger qErr =
   logResult userInfoM req reqBody logger (Left qErr) Nothing
 
+
 mkSpockAction
   :: (MonadIO m)
   => (Bool -> QErr -> Value)
@@ -217,7 +219,8 @@ mkSpockAction qErrEncoder qErrModifier serverCtx handler = do
   let modResult = fmapL qErrModifier result
 
   -- log result
-  logResult (Just userInfo) req reqBody logger (apiRespToLBS <$> modResult) $ Just (t1, t2)
+  logResult (Just userInfo) req reqBody logger (apiRespToLBS <$> modResult) $
+    Just (t1, t2)
   either (qErrToResp $ userRole userInfo == adminRole) resToResp modResult
 
   where
@@ -233,19 +236,21 @@ mkSpockAction qErrEncoder qErrModifier serverCtx handler = do
       qErrToResp includeInternal qErr
 
     resToResp = \case
-      JSONResp j -> do
+      JSONResp (HttpResponse j h) -> do
         uncurry setHeader jsonHeader
+        mapM_ (mapM_ (uncurry setHeader . unHeader)) h
         lazyBytes $ encJToLBS j
-      RawResp h b -> do
-        mapM_ (uncurry setHeader) h
+      RawResp (HttpResponse b h) -> do
+        mapM_ (mapM_ (uncurry setHeader . unHeader)) h
         lazyBytes b
 
-v1QueryHandler :: RQLQuery -> Handler EncJSON
+v1QueryHandler :: RQLQuery -> Handler (HttpResponse EncJSON)
 v1QueryHandler query = do
   scRef <- scCacheRef . hcServerCtx <$> ask
   logger <- scLogger . hcServerCtx <$> ask
-  bool (fst <$> dbAction) (withSCUpdate scRef logger dbAction) $
-    queryNeedsReload query
+  res <- bool (fst <$> dbAction) (withSCUpdate scRef logger dbAction) $
+         queryNeedsReload query
+  return $ HttpResponse res Nothing
   where
     -- Hit postgres
     dbAction = do
@@ -258,7 +263,7 @@ v1QueryHandler query = do
       instanceId <- scInstanceId . hcServerCtx <$> ask
       runQuery pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx query
 
-v1Alpha1GQHandler :: GH.GQLReqUnparsed -> Handler EncJSON
+v1Alpha1GQHandler :: GH.GQLReqUnparsed -> Handler (HttpResponse EncJSON)
 v1Alpha1GQHandler query = do
   userInfo <- asks hcUser
   reqBody <- asks hcReqBody
@@ -273,10 +278,10 @@ v1Alpha1GQHandler query = do
   GH.runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache
     sc scVer manager reqHeaders query reqBody
 
-v1GQHandler :: GH.GQLReqUnparsed -> Handler EncJSON
+v1GQHandler :: GH.GQLReqUnparsed -> Handler (HttpResponse EncJSON)
 v1GQHandler = v1Alpha1GQHandler
 
-gqlExplainHandler :: GE.GQLExplain -> Handler EncJSON
+gqlExplainHandler :: GE.GQLExplain -> Handler (HttpResponse EncJSON)
 gqlExplainHandler query = do
   onlyAdmin
   scRef <- scCacheRef . hcServerCtx <$> ask
@@ -284,14 +289,15 @@ gqlExplainHandler query = do
   pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
   sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
   enableAL <- scEnableAllowlist . hcServerCtx <$> ask
-  GE.explainGQLQuery pgExecCtx sc sqlGenCtx enableAL query
+  res <- GE.explainGQLQuery pgExecCtx sc sqlGenCtx enableAL query
+  return $ HttpResponse res Nothing
 
 v1Alpha1PGDumpHandler :: PGD.PGDumpReqBody -> Handler APIResp
 v1Alpha1PGDumpHandler b = do
   onlyAdmin
   ci <- scConnInfo . hcServerCtx <$> ask
   output <- PGD.execPGDump b ci
-  return $ RawResp [sqlHeader] output
+  return $ RawResp $ HttpResponse output (Just [Header sqlHeader])
 
 consoleAssetsHandler :: L.Logger -> Text -> FilePath -> ActionT IO ()
 consoleAssetsHandler logger dir path = do
@@ -351,7 +357,7 @@ queryParsers =
       q <- decodeValue val
       return $ f q
 
-legacyQueryHandler :: TableName -> T.Text -> Handler EncJSON
+legacyQueryHandler :: TableName -> T.Text -> Handler (HttpResponse EncJSON)
 legacyQueryHandler tn queryType =
   case M.lookup queryType queryParsers of
     Just queryParser -> getQueryParser queryParser qt >>= v1QueryHandler
@@ -482,17 +488,17 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
         mkAPIRespHandler $ do
           onlyAdmin
           respJ <- liftIO $ E.dumpPlanCache $ scPlanCache serverCtx
-          return $ encJFromJValue respJ
+          return $ HttpResponse (encJFromJValue respJ) Nothing
       get "dev/subscriptions" $ mkSpockAction encodeQErr id serverCtx $
         mkAPIRespHandler $ do
           onlyAdmin
           respJ <- liftIO $ EL.dumpLiveQueriesState False $ scLQState serverCtx
-          return $ encJFromJValue respJ
+          return $ HttpResponse (encJFromJValue respJ) Nothing
       get "dev/subscriptions/extended" $ mkSpockAction encodeQErr id serverCtx $
         mkAPIRespHandler $ do
           onlyAdmin
           respJ <- liftIO $ EL.dumpLiveQueriesState True $ scLQState serverCtx
-          return $ encJFromJValue respJ
+          return $ HttpResponse (encJFromJValue respJ) Nothing
 
     forM_ [GET,POST] $ \m -> hookAny m $ \_ -> do
       let qErr = err404 NotFound "resource does not exist"

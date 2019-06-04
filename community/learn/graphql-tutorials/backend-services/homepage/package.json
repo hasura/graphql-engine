@@ -3,7 +3,7 @@
   "description": "Gatsby simple source hasura graphql cms",
   "license": "MIT",
   "scripts": {
-    "develop": "gatsby develop",
+    "start": "gatsby develop",
     "build": "gatsby build",
     "serve": "gatsby serve"
   },
@@ -15,9 +15,9 @@
     "gatsby-plugin-gtag": "^1.0.10",
     "gatsby-plugin-react-helmet": "^3.0.0",
     "gatsby-plugin-robots-txt": "^1.4.0",
-    "gatsby-plugin-sass": "^2.0.1",
+    "gatsby-plugin-sass": "^2.0.11",
     "gatsby-source-graphql": "^2.0.2",
-    "node-sass": "^4.9.3",
+    "node-sass": "^4.12.0",
     "react": "^16.5.2",
     "react-dom": "^16.5.2",
     "react-helmet": "^5.2.0",

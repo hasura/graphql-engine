@@ -1,5 +1,7 @@
 ---
 title: "Custom Business Logic"
+metaTitle: "Custom Business Logic | Hasura GraphQL Tutorial"
+metaDescription: "Custom business logic can be handled in two ways using Hasura. One is by writing custom GraphQL resolvers and adding it as remote schema and another is to trigger a webhook asynchronously after a mutation."
 ---
 
 import YoutubeEmbed from "../src/YoutubeEmbed.js";

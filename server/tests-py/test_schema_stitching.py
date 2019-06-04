@@ -321,11 +321,34 @@ class TestRemoteSchemaQueriesOverWebsocket:
         }
         """
         query_id = ws_client.gen_id()
-        resp = ws_client.send_query({'query': query},query_id = query_id,timeout=5)
+        resp = ws_client.send_query({'query': query}, query_id=query_id,
+                                    timeout=5)
         try:
             ev = next(resp)
             assert ev['type'] == 'data' and ev['id'] == query_id, ev
-            assert ev['payload']['data']['data']['user']['username'] == 'john'
+            assert ev['payload']['data']['user']['username'] == 'john'
+        finally:
+            ws_client.stop(query_id)
+
+    def test_remote_query_error(self, ws_client):
+        query = """
+        query {
+          user(id: 2) {
+            blah
+            username
+          }
+        }
+        """
+        query_id = ws_client.gen_id()
+        resp = ws_client.send_query({'query': query}, query_id=query_id,
+                                    timeout=5)
+        try:
+            ev = next(resp)
+            print(ev)
+            assert ev['type'] == 'data' and ev['id'] == query_id, ev
+            assert 'errors' in ev['payload']
+            assert ev['payload']['errors'][0]['message'] == \
+                'Cannot query field "blah" on type "User".'
         finally:
             ws_client.stop(query_id)
 
@@ -341,14 +364,42 @@ class TestRemoteSchemaQueriesOverWebsocket:
         }
         """
         query_id = ws_client.gen_id()
-        resp = ws_client.send_query({'query': query},query_id = query_id,timeout=5)
+        resp = ws_client.send_query({'query': query}, query_id=query_id,
+                                    timeout=5)
         try:
             ev = next(resp)
             assert ev['type'] == 'data' and ev['id'] == query_id, ev
-            assert ev['payload']['data']['data']['createUser']['user']['id'] == 42
-            assert ev['payload']['data']['data']['createUser']['user']['username'] == 'foobar'
+            assert ev['payload']['data']['createUser']['user']['id'] == 42
+            assert ev['payload']['data']['createUser']['user']['username'] == 'foobar'
         finally:
             ws_client.stop(query_id)
+
+
+class TestRemoteSchemaResponseHeaders():
+    teardown = {"type": "clear_metadata", "args": {}}
+    dir = 'queries/remote_schemas'
+
+    @pytest.fixture(autouse=True)
+    def transact(self, hge_ctx):
+        q = mk_add_remote_q('sample-auth', 'http://localhost:5000/auth-graphql')
+        st_code, resp = hge_ctx.v1q(q)
+        assert st_code == 200, resp
+        yield
+        hge_ctx.v1q(self.teardown)
+
+    def test_response_headers_from_remote(self, hge_ctx):
+        headers = {}
+        if hge_ctx.hge_key:
+            headers = {'x-hasura-admin-secret': hge_ctx.hge_key}
+        q = {'query': 'query { hello (arg: "me") }'}
+        resp = hge_ctx.http.post(hge_ctx.hge_url + '/v1/graphql', json=q,
+                                 headers=headers)
+        assert resp.status_code == 200
+        print(resp.headers)
+        assert ('Set-Cookie' in resp.headers and
+                resp.headers['Set-Cookie'] == 'abcd')
+        res = resp.json()
+        assert res['data']['hello'] == "Hello me"
 
 
 class TestAddRemoteSchemaCompareRootQueryFields:

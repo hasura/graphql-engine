@@ -1,5 +1,7 @@
 ---
 title: "Create Subscription and Render Result"
+metaTitle: "Vue Apollo Subscription Example | GraphQL Vue Apollo Tutorial"
+metaDescription: "Integrate Vue Apollo Smart Subscription to watch for changes in realtime data. We use GraphQL subscriptions as an example to get live data in the Vue app"
 ---
 
 import GithubLink from "../../src/GithubLink.js";

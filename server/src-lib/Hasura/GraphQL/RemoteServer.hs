@@ -22,7 +22,7 @@ import qualified Network.Wreq                  as Wreq
 import           Hasura.HTTP                   (wreqOptions)
 import           Hasura.RQL.DDL.Headers        (getHeadersFromConf)
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils           (safeHttpExceptToJSON)
+import           Hasura.Server.Utils           (httpExceptToJSON)
 
 import qualified Hasura.GraphQL.Context        as GC
 import qualified Hasura.GraphQL.Schema         as GS
@@ -71,7 +71,7 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _) = do
     remoteSchemaErr = throw400 RemoteSchemaError
 
     throwHttpErr :: (MonadError QErr m) => HTTP.HttpException -> m a
-    throwHttpErr = throwWithInternal httpExceptMsg . safeHttpExceptToJSON
+    throwHttpErr = throwWithInternal httpExceptMsg . httpExceptToJSON
 
     throwNon200 st = throwWithInternal (non200Msg st) . decodeNon200Resp
 

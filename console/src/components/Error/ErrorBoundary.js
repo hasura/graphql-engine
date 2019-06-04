@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import {
   loadInconsistentObjects,
   redirectToMetadataStatus,
+  isMetadataStatusPage,
 } from '../Services/Metadata/Actions';
 import Spinner from '../Common/Spinner/Spinner';
 
@@ -12,17 +13,25 @@ import Helmet from 'react-helmet';
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
+
     this.state = { hasError: false, info: null, error: null };
   }
 
+  resetState = () => {
+    this.setState({ hasError: false, info: null, error: null });
+  };
+
   componentDidCatch(error, info) {
     this.setState({ hasError: true, info: info, error: error });
+
     // TODO logErrorToMyService(error, info);
+
     const { dispatch } = this.props;
+
     dispatch(loadInconsistentObjects(true)).then(() => {
       if (this.props.metadata.inconsistentObjects.length > 0) {
-        if (!window.location.pathname.includes('/metadata/status')) {
-          this.setState({ hasError: false, info: null, error: null });
+        if (!isMetadataStatusPage()) {
+          this.resetState();
           this.props.dispatch(redirectToMetadataStatus());
         }
       } else {
@@ -35,6 +44,7 @@ class ErrorBoundary extends React.Component {
     const errorImage = require('./error-logo.png');
     const styles = require('./ErrorPage.scss');
     const { metadata } = this.props;
+
     if (this.state.hasError && metadata.ongoingRequest) {
       return (
         <div>
@@ -54,7 +64,11 @@ class ErrorBoundary extends React.Component {
                 <h1>Error</h1>
                 <br />
                 <div>
-                  Something went wrong. Head back <Link to="/">Home</Link>.
+                  Something went wrong. Head back{' '}
+                  <Link to="/" onClick={this.resetState}>
+                    Home
+                  </Link>
+                  .
                 </div>
                 <br />
                 <div>
