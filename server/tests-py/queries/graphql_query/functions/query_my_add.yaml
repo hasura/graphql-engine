@@ -23,7 +23,7 @@ query:
       ){
         result
       }
-      # vomiting 'second' parameter to consider
+      # omiting 'second' parameter to consider
       # it's default value in postgres
       my_add_default: my_add(
         args: {first: 2}
