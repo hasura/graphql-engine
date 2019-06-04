@@ -1,5 +1,7 @@
 ---
-title: 'Optimistic UI updates after mutations'
+title: "Optimistic UI updates after mutations"
+metaTitle: "Optimistic UI updates after mutations | GraphQL Android Apollo Tutorial"
+metaDescription: "We will use the Apollo Client Optimistic Response to perform UI updates after a GraphQL mutation in the Android app"
 ---
 
 We can notice that there is a lag when users create a todo.

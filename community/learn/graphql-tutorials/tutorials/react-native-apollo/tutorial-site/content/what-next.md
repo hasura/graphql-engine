@@ -1,5 +1,6 @@
 ---
 title: "What next?"
+metaTitle: "What next? | GraphQL React Native Apollo Tutorial"
 ---
 
 import TwitterShare from './twitter-share';
@@ -7,6 +8,9 @@ import TwitterShare from './twitter-share';
 Congratulations! You have successfully completed the course.
 
 In case you are wondering what to do next, you have the following options:
+
+## Take the Hasura backend course
+We have an [Introduction to Hasura](https://learn.hasura.io/graphql/hasura) backend course to build the backend that you just used for your react native app.
 
 ## Join Discord for Support
 We have a Discord Channel for those who are new to GraphQL. Please post your queries or feedback regarding this course. It is a pretty active channel.

@@ -7,11 +7,13 @@ import           System.Exit
 import           System.Process
 
 import qualified Data.ByteString            as B
+import qualified Data.HashSet               as Set
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
 import qualified Data.Text.Encoding.Error   as TE
 import qualified Data.Text.IO               as TI
 import qualified Language.Haskell.TH.Syntax as TH
+import qualified Network.HTTP.Types         as HTTP
 import qualified Text.Ginger                as TG
 import qualified Text.Regex.TDFA            as TDFA
 import qualified Text.Regex.TDFA.ByteString as TDFA
@@ -44,14 +46,6 @@ userIdHeader = "x-hasura-user-id"
 
 bsToTxt :: B.ByteString -> T.Text
 bsToTxt = TE.decodeUtf8With TE.lenientDecode
-
-commonClientHeadersIgnored :: (IsString a) => [a]
-commonClientHeadersIgnored =
-  [ "Content-Length", "Content-MD5", "User-Agent", "Host"
-  , "Origin", "Referer" , "Accept", "Accept-Encoding"
-  , "Accept-Language", "Accept-Datetime"
-  , "Cache-Control", "Connection", "DNT", "Content-Type"
-  ]
 
 -- Get an env var during compile time
 getValFromEnvOrScript :: String -> String -> TH.Q TH.Exp
@@ -126,3 +120,35 @@ diffTimeToMicro diff =
   (floor (realToFrac diff :: Double) - 10) * aSecond
   where
     aSecond = 1000 * 1000
+
+-- ignore the following request headers from the client
+
+commonClientHeadersIgnored :: (IsString a) => [a]
+commonClientHeadersIgnored =
+  [ "Content-Length", "Content-MD5", "User-Agent", "Host"
+  , "Origin", "Referer" , "Accept", "Accept-Encoding"
+  , "Accept-Language", "Accept-Datetime"
+  , "Cache-Control", "Connection", "DNT", "Content-Type"
+  ]
+
+commonResponseHeadersIgnored :: (IsString a) => [a]
+commonResponseHeadersIgnored =
+  [ "Server", "Transfer-Encoding", "Cache-Control"
+  , "Access-Control-Allow-Credentials"
+  , "Access-Control-Allow-Methods"
+  , "Access-Control-Allow-Origin"
+  , "Content-Type", "Content-Length"
+  ]
+
+
+filterRequestHeaders :: [HTTP.Header] -> [HTTP.Header]
+filterRequestHeaders =
+  filterHeaders $ Set.fromList commonClientHeadersIgnored
+
+-- ignore the following response headers from remote
+filterResponseHeaders :: [HTTP.Header] -> [HTTP.Header]
+filterResponseHeaders =
+  filterHeaders $ Set.fromList commonResponseHeadersIgnored
+
+filterHeaders :: Set.HashSet HTTP.HeaderName -> [HTTP.Header] -> [HTTP.Header]
+filterHeaders list = filter (\(n, _) -> not $ n `Set.member` list)
