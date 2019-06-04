@@ -128,12 +128,15 @@ validateRemoteArguments expectedArguments providedArguments permittedVariables =
         Just expectedType ->
           validateType permittedVariables providedValue (_iviType expectedType)
     validateExpected (expectedKey, expectedInpValInfo) =
-      case _iviDefVal expectedInpValInfo of
-        Just {} -> pure ()
-        Nothing ->
-          case HM.lookup expectedKey providedArguments of
-            Nothing -> Failure (pure (MissingRequiredArgument expectedKey))
-            Just {} -> pure ()
+      if G.isNullable (_iviType expectedInpValInfo)
+        then pure ()
+        else case _iviDefVal expectedInpValInfo of
+               Just {} -> pure ()
+               Nothing ->
+                 case HM.lookup expectedKey providedArguments of
+                   Nothing ->
+                     Failure (pure (MissingRequiredArgument expectedKey))
+                   Just {} -> pure ()
 
 -- | Validate a value against a type.
 validateType ::
