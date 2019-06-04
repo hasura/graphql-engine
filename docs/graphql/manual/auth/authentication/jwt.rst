@@ -123,7 +123,8 @@ JSON object:
      "key": "<optional-key-as-string>",
      "jwk_url": "<optional-url-to-refresh-jwks>",
      "claims_namespace": "<optional-key-name-in-claims>",
-     "claims_format": "json|stringified_json"
+     "claims_format": "json|stringified_json",
+     "header": <optional-key-to-indicate-cookie-or-authorization-header>
    }
 
 ``key`` or ``jwk_url``, **one of them has to be present**.
@@ -226,6 +227,38 @@ If ``claims_format`` is ``stringified_json`` then JWT claims should look like:
     "iat": 1516239022,
     "https://hasura.io/jwt/claims": "{\"x-hasura-allowed-roles\":[\"editor\",\"user\",\"mod\"],\"x-hasura-default-role\":\"user\",\"x-hasura-user-id\":\"1234567890\",\"x-hasura-org-id\":\"123\",\"x-hasura-custom\":\"custom-value\"}"
   }
+
+``header``
+^^^^^^^^^^
+This is an optional field, which indicates which request header to read the JWT
+from. This field is an object.
+
+Following are the possible values:
+
+- ``{"type": "Authorization"}``
+- ``{"type": "Cookie", "name": "cookie_name" }``
+
+Default is ``{"type": "Authorization"}``.
+
+In the default mode, Hasura expects an ``Authorization`` header with a ``Bearer`` token.
+
+In the cookie mode, Hasura will try to parse the cookie header with the given
+cookie name. The value of the cookie should be the exact JWT.
+
+Example:-
+
+If ``header`` is ``{"type": "Authorization"}`` then JWT header should look like:
+
+.. code-block:: http
+
+   Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWI...
+
+If ``header`` is ``{"type": "Cookie", "name": "cookie_name" }`` then JWT header should look like:
+
+
+.. code-block:: http
+
+   Cookie: cookie_name=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWI...
 
 
 Examples
