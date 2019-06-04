@@ -136,7 +136,7 @@ mkFunctionInfo qf config rawFuncInfo = do
           Nothing -> MV.refute $ pure $ FunctionInvalidSessionVariableArgument argName
           Just (arg, index) -> do
             let ty = faType arg
-            when (not $ isJSONType ty) $ throwValidateError $ FunctionSessionVariableArgumentNotJSON argName
+            when (ty /= PGJSON) $ throwValidateError $ FunctionSessionVariableArgumentNotJSON argName
             pure $ SessionVariableArgument argName index
 
     showErrors allErrors =
@@ -153,7 +153,7 @@ mkFunctionInfo qf config rawFuncInfo = do
       FunctionReturnNotSetofTable -> "the function does not return a SETOF table"
       FunctionVolatile -> "function of type \"VOLATILE\" is not supported now"
       FunctionSessionVariableArgumentNotJSON argName ->
-        "given session variable argument " <> argName <<> " is not json/jsonb type"
+        "given session variable argument " <> argName <<> " is not of type json"
       FunctionInvalidSessionVariableArgument argName ->
         "given session variable argument " <> argName <<> " not the input argument of the function"
       FunctionInvalidArgumentNames args ->
