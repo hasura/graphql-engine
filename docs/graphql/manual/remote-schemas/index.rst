@@ -171,10 +171,10 @@ will selected.
 
 Cookie header from your remote GraphQL servers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Only ``Set-Cookie`` header from your remote schema servers are sent back to the
-client over HTTP transport. **Over websocket transport, the response headers are
-not sent.** If you require the response headers from remote servers, use the
-HTTP transport.
+``Set-Cookie`` headers from your remote schema servers are sent back to the
+client over HTTP transport. **Over websocket transport there exists no means 
+to send headers after a query/mutation and hence ``Set-Cookie`` headers are 
+not sent to the client.** Use HTTP transport if your remote servers set cookies. 
 
 
 Bypassing Hasura's authorization system for remote schema queries
