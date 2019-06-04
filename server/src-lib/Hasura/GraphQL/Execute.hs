@@ -41,7 +41,9 @@ import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils                    (bsToTxt, commonClientHeadersIgnored)
+import           Hasura.Server.Context
+import           Hasura.Server.Utils                    (bsToTxt,
+                                                         filterRequestHeaders)
 
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Plan            as EP
@@ -333,7 +335,7 @@ execRemoteGQ
   -- ^ the raw request string
   -> RemoteSchemaInfo
   -> G.TypedOperationDefinition
-  -> m EncJSON
+  -> m (HttpResponse EncJSON)
 execRemoteGQ manager userInfo reqHdrs q rsi opDef = do
   let opTy = G._todType opDef
   when (opTy == G.OperationTypeSubscription) $
@@ -352,7 +354,9 @@ execRemoteGQ manager userInfo reqHdrs q rsi opDef = do
 
   res  <- liftIO $ try $ Wreq.postWith options (show url) q
   resp <- either httpThrow return res
-  return $ encJFromLBS $ resp ^. Wreq.responseBody
+  let cookieHdr = getCookieHdr (resp ^? Wreq.responseHeader "Set-Cookie")
+      respHdrs  = Just $ mkRespHeaders cookieHdr
+  return $ HttpResponse (encJFromLBS $ resp ^. Wreq.responseBody) respHdrs
 
   where
     RemoteSchemaInfo url hdrConf fwdClientHdrs = rsi
@@ -361,10 +365,14 @@ execRemoteGQ manager userInfo reqHdrs q rsi opDef = do
 
     userInfoToHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
                      userInfoToList userInfo
-    filteredHeaders = filterUserVars $ flip filter reqHdrs $ \(n, _) ->
-      n `notElem` commonClientHeadersIgnored
+    filteredHeaders = filterUserVars $ filterRequestHeaders reqHdrs
 
     filterUserVars hdrs =
       let txHdrs = map (\(n, v) -> (bsToTxt $ CI.original n, bsToTxt v)) hdrs
       in map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
          filter (not . isUserVar . fst) txHdrs
+
+    getCookieHdr = maybe [] (\h -> [("Set-Cookie", h)])
+
+    mkRespHeaders hdrs =
+      map (\(k, v) -> Header (bsToTxt $ CI.original k, bsToTxt v)) hdrs
