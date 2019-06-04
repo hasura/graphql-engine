@@ -35,7 +35,6 @@ import qualified Data.Map.Strict as M
 import qualified Data.Text as T
 import           Data.Tuple (swap)
 import           Instances.TH.Lift ()
-import qualified Language.GraphQL.Draft.Syntax as G
 
 validateManualConfig
   :: (QErrM m, CacheRM m)
@@ -186,17 +185,15 @@ persistCreateRemoteRelationship
 persistCreateRemoteRelationship createRemoteRelationship =
   Q.unitQE defaultTxErrorHandler [Q.sql|
   INSERT INTO hdb_catalog.hdb_remote_relationship
-  (name, table_schema, table_name, remote_schema, remote_field, hasura_fields, remote_arguments)
-  VALUES ($1, $2, $3, $4, $5, $6 :: jsonb, $7 :: jsonb)
+  (name, table_schema, table_name, remote_schema, configuration)
+  VALUES ($1, $2, $3, $4, $5 :: jsonb)
   |]
   (let QualifiedObject schema_name table_name = ccrTable createRemoteRelationship
    in (ccrName createRemoteRelationship
       ,schema_name
       ,table_name
       ,ccrRemoteSchema createRemoteRelationship
-      ,G.unName (ccrRemoteField createRemoteRelationship)
-      ,Q.JSONB (toJSON (ccrHasuraFields createRemoteRelationship))
-      ,Q.JSONB (toJSON (ccrRemoteArguments createRemoteRelationship))))
+      ,Q.JSONB (toJSON (createRemoteRelationship))))
   True
 
 runCreateObjRel

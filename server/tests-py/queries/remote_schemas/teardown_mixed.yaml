@@ -3,6 +3,7 @@ args:
 - type: run_sql
   args:
     sql: |
+      delete from hdb_catalog.hdb_remote_relationship where name = 'message' and table_name = 'profiles';
       drop table profiles
 - type: remove_remote_schema
   args:

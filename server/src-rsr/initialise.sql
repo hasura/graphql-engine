@@ -54,9 +54,9 @@ CREATE TABLE hdb_catalog.hdb_remote_relationship
    table_schema TEXT NOT NULL,
    table_name TEXT NOT NULL,
    remote_schema TEXT NOT NULL,
-   remote_field TEXT NOT NULL,
-   hasura_fields JSONB NOT NULL, -- I wanted a text[], but ToPrepArg doesn't have a [a] instance.
-   remote_arguments JSONB NOT NULL
+   configuration JSONB NOT NULL,
+   PRIMARY KEY (name, table_schema, table_name),
+   FOREIGN KEY (table_schema, table_name) REFERENCES hdb_catalog.hdb_table(table_schema, table_name) ON UPDATE CASCADE
 );
 
 CREATE TABLE hdb_catalog.hdb_permission
