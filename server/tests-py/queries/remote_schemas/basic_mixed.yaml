@@ -1,0 +1,29 @@
+description: Simple Mixed GraphQL query
+url: /v1/graphql
+status: 200
+response:
+  data:
+    profiles:
+      - id: 1
+      - id: 2
+    # messages:
+    #   - id: 1
+    #     msg: You win!
+    #   - id: 2
+    #     msg: You lose!
+query:
+  query: |
+    query {
+
+      profiles {
+        id
+      }
+
+    }
+
+# Add later for testing mixed queries:
+#
+# messages {
+#   id
+#   msg
+# }

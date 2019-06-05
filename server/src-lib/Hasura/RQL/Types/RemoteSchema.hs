@@ -22,6 +22,11 @@ newtype RemoteSchemaName
   { unRemoteSchemaName :: Text}
   deriving (Show, Eq, Lift, Hashable, J.ToJSON, J.ToJSONKey, J.FromJSON, Q.ToPrepArg, Q.FromCol)
 
+newtype RemoteRelationshipName
+  = RemoteRelationshipName
+  { unRemoteRelationshipName :: Text}
+  deriving (Show, Eq, Lift, Hashable, J.ToJSON, J.ToJSONKey, J.FromJSON, Q.ToPrepArg, Q.FromCol)
+
 data RemoteSchemaInfo
   = RemoteSchemaInfo
   { rsUrl              :: !N.URI

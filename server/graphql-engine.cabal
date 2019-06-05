@@ -32,6 +32,10 @@ library
                      , src-exec
   default-language:    Haskell2010
   build-depends:       base
+                     , these
+                     , bifunctors
+                     , witherable
+                     , validation
                      , pg-client
                      , text
                      , text-builder >= 0.6
@@ -199,6 +203,8 @@ library
                      , Hasura.RQL.DDL.Headers
                      , Hasura.RQL.DDL.RemoteSchema
                      , Hasura.RQL.DDL.QueryCollection
+                     , Hasura.RQL.DDL.Remote.Input
+                     , Hasura.RQL.DDL.Remote.Validate
                      , Hasura.RQL.DML.Delete
                      , Hasura.RQL.DML.Internal
                      , Hasura.RQL.DML.Insert

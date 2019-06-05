@@ -11,27 +11,29 @@ module Hasura.RQL.DDL.Relationship
   , runCreateArrRel
   , runDropRel
   , runSetRelComment
+  , runCreateRemoteRelationship
   , module Hasura.RQL.DDL.Relationship.Types
   )
 where
 
-import qualified Database.PG.Query                 as Q
+import qualified Database.PG.Query as Q
+import           Hasura.RQL.DDL.Remote.Validate
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Deps
-import           Hasura.RQL.DDL.Permission         (purgePerm)
+import           Hasura.RQL.DDL.Permission (purgePerm)
 import           Hasura.RQL.DDL.Relationship.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 import           Data.Aeson.Types
-import qualified Data.HashMap.Strict               as HM
-import qualified Data.HashSet                      as HS
-import qualified Data.Map.Strict                   as M
-import qualified Data.Text                         as T
-import           Data.Tuple                        (swap)
-import           Instances.TH.Lift                 ()
+import qualified Data.HashMap.Strict as HM
+import qualified Data.HashSet as HS
+import qualified Data.Map.Strict as M
+import qualified Data.Text as T
+import           Data.Tuple (swap)
+import           Instances.TH.Lift ()
 
 validateManualConfig
   :: (QErrM m, CacheRM m)
@@ -149,6 +151,49 @@ createObjRelP2
 createObjRelP2 (WithTable qt rd) = do
   objRelP2 qt rd
   return successMsg
+
+runCreateRemoteRelationship ::
+     (MonadTx m, CacheRM m) => CreateRemoteRelationship -> m EncJSON
+runCreateRemoteRelationship createRemoteRelationship = do
+  runCreateRemoteRelationshipP1 createRemoteRelationship
+  runCreateRemoteRelationshipP2 createRemoteRelationship
+
+runCreateRemoteRelationshipP1 ::
+     (MonadTx m, CacheRM m) => CreateRemoteRelationship -> m ()
+runCreateRemoteRelationshipP1 createRemoteRelationship = do
+  sc <- askSchemaCache
+  case HM.lookup
+         (ccrRemoteSchema createRemoteRelationship)
+         (scRemoteResolvers sc) of
+    Just {} -> do
+      validation <-
+        getCreateRemoteRelationshipValidation createRemoteRelationship
+      case validation of
+        Left err -> throw400 RemoteSchemaError (T.pack (show err))
+        Right {} -> pure ()
+    Nothing -> throw400 RemoteSchemaError "No such remote schema"
+
+runCreateRemoteRelationshipP2 ::
+     (MonadTx m) => CreateRemoteRelationship -> m EncJSON
+runCreateRemoteRelationshipP2 createRemoteRelationship = do
+  liftTx (persistCreateRemoteRelationship createRemoteRelationship)
+  pure successMsg
+
+persistCreateRemoteRelationship
+  :: CreateRemoteRelationship -> Q.TxE QErr ()
+persistCreateRemoteRelationship createRemoteRelationship =
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+  INSERT INTO hdb_catalog.hdb_remote_relationship
+  (name, table_schema, table_name, remote_schema, configuration)
+  VALUES ($1, $2, $3, $4, $5 :: jsonb)
+  |]
+  (let QualifiedObject schema_name table_name = ccrTable createRemoteRelationship
+   in (ccrName createRemoteRelationship
+      ,schema_name
+      ,table_name
+      ,ccrRemoteSchema createRemoteRelationship
+      ,Q.JSONB (toJSON (createRemoteRelationship))))
+  True
 
 runCreateObjRel
   :: (QErrM m, CacheRWM m, MonadTx m , UserInfoM m)
