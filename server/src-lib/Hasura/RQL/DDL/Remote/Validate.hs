@@ -39,6 +39,7 @@ data ValidationError
   | InvalidVariable G.Variable (HashMap G.Variable FieldInfo)
   | NullNotAllowedHere
   | ForeignRelationshipsNotAllowedInRemoteVariable !RelInfo
+  | UnsupportedArgumentType G.Value
   deriving (Show, Eq)
 
 -- | Get a validation for the remote relationship proposal.
@@ -166,9 +167,12 @@ valueType permittedVariables =
     G.VBoolean {} -> pure (Left (mkScalarTy PGBoolean))
     G.VNull -> Failure (pure NullNotAllowedHere)
     G.VString {} -> pure (Left (mkScalarTy PGText))
-    (G.VEnum _) -> error "TODO: G.VEnum: What do we do here?"
-    (G.VList _) -> error "TODO: G.VList: What do we do here?"
-    (G.VObject _) -> error "TODO: G.VObject: What do we do here?"
+    -- TODO: Implement these:
+    -- <https://github.com/tirumaraiselvan/graphql-engine/issues/9>
+    -- Remove the UnsupportedArgumentType constructor when done.
+    value@(G.VEnum _) -> Failure (pure (UnsupportedArgumentType value))
+    value@(G.VList _) -> Failure (pure (UnsupportedArgumentType value))
+    value@(G.VObject _) -> Failure (pure (UnsupportedArgumentType value))
 
 -- | Convert a field info to a named type, if possible.
 fieldInfoToNamedType ::
