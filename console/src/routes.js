@@ -27,6 +27,7 @@ import metadataContainer from './components/Services/Metadata/Container';
 import metadataOptionsContainer from './components/Services/Metadata/MetadataOptions/MetadataOptions';
 import metadataStatusContainer from './components/Services/Metadata/MetadataStatus/MetadataStatus';
 import allowedQueriesContainer from './components/Services/Metadata/AllowedQueries/AllowedQueries';
+import about from './components/Services/Metadata/About/About';
 
 const routes = store => {
   // load hasuractl migration status
@@ -104,6 +105,7 @@ const routes = store => {
               path="allowed-queries"
               component={allowedQueriesContainer(connect)}
             />
+            <Route path="about" component={about(connect)} />
           </Route>
           {dataRouter}
           {eventRouter}
