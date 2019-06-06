@@ -431,7 +431,7 @@ mkFuncArgs funInfo =
   fromInpValL $ funcInpArgs <> mkSelArgs retTable
   where
     funcName = fiName funInfo
-    funcArgs = fiInputArgs funInfo
+    funcArgs = onlyInpArgs $ fiInputArgs funInfo
     retTable = fiReturnType funInfo
 
     funcArgDesc = G.Description $ "input parameters for function " <>> funcName
@@ -584,15 +584,13 @@ mkFuncArgsInp funcInfo =
   bool (Just inpObj) Nothing $ null funcArgs
   where
     funcName = fiName funcInfo
-    funcArgs = fiInputArgs funcInfo
+    funcArgs = onlyInpArgs $ fiInputArgs funcInfo
     funcArgsTy = mkFuncArgsTy funcName
 
     inpObj = mkHsraInpTyInfo Nothing funcArgsTy $
              fromInpValL argInps
 
-    funcInpArgs = onlyInpArgs funcArgs
-
-    argInps = procFuncArgs funcInpArgs mkInpVal
+    argInps = procFuncArgs funcArgs mkInpVal
 
     mkInpVal ty t _ =
       InpValInfo Nothing (G.Name t) Nothing $
