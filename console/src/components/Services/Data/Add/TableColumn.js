@@ -3,11 +3,9 @@ import PropTypes from 'prop-types';
 
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
 import { commonDataTypes } from '../utils';
-import {
-  getDataOptions,
-  getPlaceholder,
-  getDefaultValue,
-} from '../Common/utils';
+import { getDataOptions } from '../Common/utils';
+
+import TableDefault from './TableDefault';
 
 /* Custom style object for searchable select box */
 const customSelectBoxStyles = {
@@ -16,6 +14,9 @@ const customSelectBoxStyles = {
   },
   singleValue: {
     color: '#555555',
+  },
+  valueContainer: {
+    padding: '0px 12px',
   },
 };
 
@@ -32,6 +33,7 @@ const TableColumn = props => {
     onColNullableChange,
     onColUniqueChange,
     dataTypes: restTypes,
+    columnDefaultFunctions,
     uniqueKeys,
   } = props;
 
@@ -71,6 +73,11 @@ const TableColumn = props => {
     return removeIcon;
   };
 
+  const defaultFunctions =
+    column.type in columnDefaultFunctions
+      ? columnDefaultFunctions[column.type]
+      : [];
+
   return (
     <div key={i} className={`${styles.display_flex} form-group`}>
       <input
@@ -93,6 +100,19 @@ const TableColumn = props => {
           styleOverrides={customSelectBoxStyles}
         />
       </span>
+      <span
+        className={`${styles.inputDefault} ${styles.defaultWidth}`}
+        data-test={`col-type-${i}`}
+      >
+        <TableDefault
+          onChange={setColDefaultValue}
+          colIndex={i}
+          testId={`col-default-${i}`}
+          column={column}
+          colDefaultFunctions={defaultFunctions}
+        />
+      </span>
+      {/*
       <input
         placeholder={getPlaceholder(column)}
         type="text"
@@ -106,7 +126,8 @@ const TableColumn = props => {
           column.nullable || false
         )}
         data-test={`col-default-${i}`}
-      />{' '}
+      />
+      */}{' '}
       <input
         className={`${styles.inputCheckbox} form-control `}
         checked={column.nullable}

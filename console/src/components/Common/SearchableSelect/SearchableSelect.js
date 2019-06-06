@@ -30,6 +30,7 @@ const SearchableSelectBox = ({
   value,
   bsClass,
   styleOverrides,
+  defaultPlaceholder = 'column_type',
 }) => {
   /* Select element style customization */
 
@@ -50,7 +51,7 @@ const SearchableSelectBox = ({
       isSearchable
       components={{ Option: CustomOption }}
       classNamePrefix={`${bsClass}`}
-      placeholder="column_type"
+      placeholder={defaultPlaceholder}
       options={options}
       onChange={onChange}
       value={value}

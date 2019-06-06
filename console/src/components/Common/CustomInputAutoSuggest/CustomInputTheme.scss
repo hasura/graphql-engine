@@ -1,0 +1,58 @@
+$suggestion-width: 280px;
+$set-top: 34px;
+$suggestion-padding: 6px 12px;
+
+.container { 
+  position: relative;
+}
+.input { 
+  border: 1px solid #aaa;
+  border-radius: 4px;
+}
+
+.inputFocussed {
+  outline: none;
+}
+
+.inputOpen {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.suggestionsContainer {
+  display: none;
+}
+
+.suggestionsContainerOpen {
+  display: block;
+  position: absolute;
+  top: $set-top;
+  min-width: 100%;
+  width: $suggestion-width;
+  border: 1px solid #aaa;
+  background-color: #fff;
+  border-radius: 4px;
+  z-index: 4;
+}
+
+.suggestionsList {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+
+.suggestion {
+  cursor: pointer;
+  padding: $suggestion-padding;
+}
+
+.suggestionHighlighted {
+  background-color: #ddd;
+}
+
+
+/*
+.suggestionsContainer { ... }
+.suggestion { ... }
+.suggestionHighlighted { ... }
+*/

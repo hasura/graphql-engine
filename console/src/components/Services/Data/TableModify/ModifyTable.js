@@ -13,8 +13,8 @@ import {
 } from '../TableModify/ModifyActions';
 import {
   setTable,
-  fetchColumnTypes,
-  RESET_COLUMN_TYPE_LIST,
+  fetchColumnTypeInfo,
+  RESET_COLUMN_TYPE_INFO,
 } from '../DataActions';
 import Button from '../../../Common/Button/Button';
 import ColumnEditorList from './ColumnEditorList';
@@ -31,12 +31,12 @@ class ModifyTable extends React.Component {
     const { dispatch } = this.props;
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
-    dispatch(fetchColumnTypes());
+    dispatch(fetchColumnTypeInfo());
     dispatch(fetchColumnCasts());
   }
   componentWillUnmount() {
     this.props.dispatch({
-      type: RESET_COLUMN_TYPE_LIST,
+      type: RESET_COLUMN_TYPE_INFO,
     });
   }
   render() {
@@ -53,6 +53,7 @@ class ModifyTable extends React.Component {
       dataTypes,
       validTypeCasts,
       uniqueKeyModify,
+      columnDefaultFunctions,
       schemaList,
     } = this.props;
 
@@ -135,6 +136,7 @@ class ModifyTable extends React.Component {
               columnEdit={columnEdit}
               dispatch={dispatch}
               currentSchema={currentSchema}
+              columnDefaultFunctions={columnDefaultFunctions}
             />
             <hr />
             <h4 className={styles.subheading_text}>Add a new column</h4>
@@ -142,6 +144,7 @@ class ModifyTable extends React.Component {
               dispatch={dispatch}
               tableName={tableName}
               dataTypes={dataTypes}
+              columnDefaultFunctions={columnDefaultFunctions}
             />
             <hr />
             <h4 className={styles.subheading_text}>Primary Key</h4>
@@ -212,6 +215,7 @@ const mapStateToProps = (state, ownProps) => ({
   pkModify: state.tables.modify.pkModify,
   fkModify: state.tables.modify.fkModify,
   dataTypes: state.tables.columnDataTypes,
+  columnDefaultFunctions: state.tables.columnDefaultFunctions,
   validTypeCasts: state.tables.modify.alterColumnOptions,
   columnDataTypeFetchErr: state.tables.columnDataTypeFetchErr,
   schemaList: state.tables.schemaList,

@@ -12,6 +12,8 @@ import {
 import { ordinalColSort } from '../utils';
 import { defaultDataTypeToCast } from '../constants';
 
+import { getDefaultFunctionsOptions } from '../Common/utils';
+
 import styles from './ModifyTable.scss';
 
 const ColumnEditorList = ({
@@ -21,6 +23,7 @@ const ColumnEditorList = ({
   dispatch,
   validTypeCasts,
   dataTypeIndexMap,
+  columnDefaultFunctions,
 }) => {
   const tableName = tableSchema.table_name;
 
@@ -142,10 +145,22 @@ const ColumnEditorList = ({
       ];
     };
 
+    const getValidDefaultTypes = udtName => {
+      const lowerUdtName = udtName.toLowerCase();
+      if (lowerUdtName in columnDefaultFunctions) {
+        const { defaultValues } = getDefaultFunctionsOptions(
+          columnDefaultFunctions[lowerUdtName]
+        );
+        return defaultValues;
+      }
+      return [];
+    };
+
     const colEditorExpanded = () => {
       return (
         <ColumnEditor
           alterTypeOptions={getValidTypeCasts(col.udt_name)}
+          defaultOptions={getValidDefaultTypes(col.udt_name)}
           column={col}
           onSubmit={onSubmit}
           onDelete={safeOnDelete}

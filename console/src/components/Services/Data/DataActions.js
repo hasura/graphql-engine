@@ -48,16 +48,9 @@ const UPDATE_REMOTE_SCHEMA_MANUAL_REL = 'Data/UPDATE_SCHEMA_MANUAL_REL';
 const SET_CONSISTENT_SCHEMA = 'Data/SET_CONSISTENT_SCHEMA';
 const SET_CONSISTENT_FUNCTIONS = 'Data/SET_CONSISTENT_FUNCTIONS';
 
-const FETCH_COLUMN_TYPE_LIST = 'Data/FETCH_COLUMN_TYPE_LIST';
-const FETCH_COLUMN_TYPE_LIST_FAIL = 'Data/FETCH_COLUMN_TYPE_LIST_FAIL';
-const RESET_COLUMN_TYPE_LIST = 'Data/RESET_COLUMN_TYPE_LIST';
-
-const FETCH_COLUMN_DEFAULT_FUNCTIONS_LIST =
-  'Data/FETCH_COLUMN_DEFAULT_FUNCTIONS_LIST';
-const FETCH_COLUMN_DEFAULT_FUNCTIONS_FAIL =
-  'Data/FETCH_COLUMN_DEFAULT_FUNCTIONS_FAIL';
-const RESET_COLUMN_DEFAULT_FUNCTIONS_LIST =
-  'Data/RESET_COLUMN_DEFAULT_FUNCTIONS_LIST';
+const FETCH_COLUMN_TYPE_INFO = 'Data/FETCH_COLUMN_TYPE_INFO';
+const FETCH_COLUMN_TYPE_INFO_FAIL = 'Data/FETCH_COLUMN_TYPE_INFO_FAIL';
+const RESET_COLUMN_TYPE_INFO = 'Data/RESET_COLUMN_TYPE_INFO';
 
 const MAKE_REQUEST = 'ModifyTable/MAKE_REQUEST';
 const REQUEST_SUCCESS = 'ModifyTable/REQUEST_SUCCESS';
@@ -541,55 +534,32 @@ const makeMigrationCall = (
   );
 };
 
-const fetchColumnTypes = () => {
-  return (dispatch, getState) => {
-    const url = Endpoints.getSchema;
-    const reqQuery = {
-      type: 'run_sql',
-      args: {
-        sql: fetchColumnTypesQuery,
-      },
-    };
-    const options = {
-      credentials: globalCookiePolicy,
-      method: 'POST',
-      headers: dataHeaders(getState),
-      body: JSON.stringify(reqQuery),
-    };
-    return dispatch(requestAction(url, options)).then(
-      data => {
-        return dispatch({
-          type: FETCH_COLUMN_TYPE_LIST,
-          data: data.result.slice(1),
-        });
-      },
-      error => {
-        dispatch(
-          showErrorNotification(
-            'Error fetching column types',
-            'Kindly reach out to us in case you face this issue again',
-            error,
-            error
-          )
-        );
-        return dispatch({
-          type: FETCH_COLUMN_TYPE_LIST_FAIL,
-          data: error,
-        });
-      }
-    );
+const getBulkColumnInfoFetchQuery = schema => {
+  const fetchColumnTypes = {
+    type: 'run_sql',
+    args: {
+      sql: fetchColumnTypesQuery,
+    },
+  };
+  const fetchTypeDefaultValues = {
+    type: 'run_sql',
+    args: {
+      sql: fetchColumnDefaultFunctions(schema),
+    },
+  };
+
+  return {
+    type: 'bulk',
+    args: [fetchColumnTypes, fetchTypeDefaultValues],
   };
 };
 
-const fetchColumnDefaultTypes = () => {
+const fetchColumnTypeInfo = () => {
   return (dispatch, getState) => {
     const url = Endpoints.getSchema;
-    const reqQuery = {
-      type: 'run_sql',
-      args: {
-        sql: fetchColumnDefaultFunctions,
-      },
-    };
+    const currState = getState();
+    const { currentSchema } = currState.tables;
+    const reqQuery = getBulkColumnInfoFetchQuery(currentSchema);
     const options = {
       credentials: globalCookiePolicy,
       method: 'POST',
@@ -598,16 +568,19 @@ const fetchColumnDefaultTypes = () => {
     };
     return dispatch(requestAction(url, options)).then(
       data => {
-        const resultData = data.result.slice(1);
+        const resultData = data[1].result.slice(1);
         const typeFuncsMap = {};
 
         resultData.forEach(r => {
           typeFuncsMap[r[1]] = r[0].split(',');
         });
-
+        const columnDataTypeInfo = {
+          columnDataTypes: data[0].result.slice(1),
+          columnTypeDefaultValues: typeFuncsMap,
+        };
         return dispatch({
-          type: FETCH_COLUMN_DEFAULT_FUNCTIONS_LIST,
-          data: typeFuncsMap,
+          type: FETCH_COLUMN_TYPE_INFO,
+          data: columnDataTypeInfo,
         });
       },
       error => {
@@ -620,7 +593,7 @@ const fetchColumnDefaultTypes = () => {
           )
         );
         return dispatch({
-          type: FETCH_COLUMN_TYPE_LIST_FAIL,
+          type: FETCH_COLUMN_TYPE_INFO_FAIL,
           data: error,
         });
       }
@@ -746,42 +719,27 @@ const dataReducer = (state = defaultState, action) => {
           },
         },
       };
-    case FETCH_COLUMN_DEFAULT_FUNCTIONS_LIST:
+    case FETCH_COLUMN_TYPE_INFO:
       return {
         ...state,
-        columnDefaultFunctions: action.data,
-        columnDefaultFunctionsErr: null,
-      };
-    case FETCH_COLUMN_DEFAULT_FUNCTIONS_FAIL:
-      return {
-        ...state,
-        columnDefaultFunctions: {},
-        columnDefaultFunctionsErr: action.data,
-      };
-    case RESET_COLUMN_DEFAULT_FUNCTIONS_LIST:
-      return {
-        ...state,
-        columnDefaultFunctions: { ...defaultState.columnDefaultFunctions },
-        columnDefaultFunctionsErr: defaultState.columnDefaultFunctionsErr,
-      };
-    case FETCH_COLUMN_TYPE_LIST:
-      return {
-        ...state,
-        columnDataTypes: action.data,
-        columnDataTypeFetchErr: null,
+        columnDataTypes: action.data.columnDataTypes,
+        columnDefaultFunctions: action.data.columnTypeDefaultValues,
+        columnDataTypeInfoErr: null,
       };
 
-    case FETCH_COLUMN_TYPE_LIST_FAIL:
+    case FETCH_COLUMN_TYPE_INFO_FAIL:
       return {
         ...state,
         columnDataTypes: [],
-        columnDataTypeFetchErr: action.data,
+        columnDefaultFunctions: {},
+        columnDataTypeInfoErr: action.data,
       };
-    case RESET_COLUMN_TYPE_LIST:
+    case RESET_COLUMN_TYPE_INFO:
       return {
         ...state,
         columnDataTypes: [...defaultState.columnDataTypes],
-        columnDataTypeFetchErr: defaultState.columnDataTypeFetchErr,
+        columnDefaultFunctions: { ...defaultState.columnDefaultFunctions },
+        columnDataTypeInfoErr: defaultState.columnDataTypeInfoErr,
       };
     default:
       return state;
@@ -812,8 +770,7 @@ export {
   LOAD_SCHEMA,
   setConsistentSchema,
   setConsistentFunctions,
-  fetchColumnTypes,
-  RESET_COLUMN_TYPE_LIST,
+  fetchColumnTypeInfo,
+  RESET_COLUMN_TYPE_INFO,
   setUntrackedRelations,
-  fetchColumnDefaultTypes,
 };

@@ -9,6 +9,8 @@ import {
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { setTable } from '../DataActions.js';
 
+import { isPostgresFunction } from '../utils';
+
 const SET_DEFAULTS = 'AddTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddTable/SET_TABLENAME';
 const SET_TABLECOMMENT = 'AddTable/SET_TABLECOMMENT';
@@ -121,7 +123,14 @@ const createTableSql = () => {
       ) {
         if (currentCols[i].type === 'text') {
           // if a column type is text and if it has a default value, add a single quote by default
-          tableColumns += " DEFAULT '" + currentCols[i].default.value + "'";
+          const checkIfFunctionFormat = isPostgresFunction(
+            currentCols[i].default.value
+          );
+          if (!checkIfFunctionFormat) {
+            tableColumns += " DEFAULT '" + currentCols[i].default.value + "'";
+          } else {
+            tableColumns += ' DEFAULT ' + currentCols[i].default.value;
+          }
         } else {
           if (currentCols[i].type === 'uuid') {
             isUUIDDefault = true;

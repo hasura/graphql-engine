@@ -4,8 +4,9 @@ import gqlPattern, { gqlColumnErrorNotif } from '../Common/GraphQLValidation';
 import { commonDataTypes } from '../utils';
 
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
+import CustomInputAutoSuggest from '../../../Common/CustomInputAutoSuggest/CustomInputAutoSuggest';
 
-import { getDataOptions } from '../Common/utils';
+import { getDataOptions, getDefaultFunctionsOptions } from '../Common/utils';
 
 import Button from '../../../Common/Button/Button';
 import { addColSql } from '../TableModify/ModifyActions';
@@ -90,15 +91,21 @@ const useColumnEditor = (dispatch, tableName) => {
     },
     colDefault: {
       value: colDefault,
-      onChange: e => {
-        setColumnState({ ...columnState, colDefault: e.target.value });
+      onChange: (e, data) => {
+        const { newValue } = data;
+        setColumnState({ ...columnState, colDefault: newValue });
       },
     },
     onSubmit,
   };
 };
 
-const ColumnCreator = ({ dispatch, tableName, dataTypes: restTypes = [] }) => {
+const ColumnCreator = ({
+  dispatch,
+  tableName,
+  dataTypes: restTypes = [],
+  columnDefaultFunctions,
+}) => {
   const {
     colName,
     colType,
@@ -107,6 +114,32 @@ const ColumnCreator = ({ dispatch, tableName, dataTypes: restTypes = [] }) => {
     colDefault,
     onSubmit,
   } = useColumnEditor(dispatch, tableName);
+
+  const defaultInputTheme = require('../../../Common/CustomInputAutoSuggest/CustomInputAddColumnTheme.scss');
+
+  let defaultOptions = [];
+
+  const colDefaultFunctions = columnDefaultFunctions[colType.value];
+
+  if (colDefaultFunctions && colDefaultFunctions.length > 0) {
+    defaultOptions = getDefaultFunctionsOptions(colDefaultFunctions, 0)
+      .defaultValues;
+  }
+
+  const getDefaultInput = () => {
+    return (
+      <CustomInputAutoSuggest
+        placeholder="default value"
+        options={defaultOptions}
+        className={`${styles.input}
+          ${styles.defaultInput}
+          input-sm form-control`}
+        {...colDefault}
+        data-test="default-value"
+        theme={defaultInputTheme}
+      />
+    );
+  };
 
   const { columnDataTypes, columnTypeValueMap } = getDataOptions(
     commonDataTypes,
@@ -169,7 +202,8 @@ const ColumnCreator = ({ dispatch, tableName, dataTypes: restTypes = [] }) => {
           data-test="unique-checkbox"
         />
         <label className={styles.nullLabel}>Unique</label>
-
+        {getDefaultInput()}
+        {/*
         <input
           placeholder="default value"
           type="text"
@@ -179,6 +213,7 @@ const ColumnCreator = ({ dispatch, tableName, dataTypes: restTypes = [] }) => {
           {...colDefault}
           data-test="default-value"
         />
+        */}
 
         <Button
           type="submit"

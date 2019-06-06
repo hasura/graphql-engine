@@ -1,5 +1,9 @@
 import { aggCategory, pgCategoryCode } from './PgInfo';
 
+const getParanthesized = name => {
+  return `${name}()`;
+};
+
 const splitDbRow = row => {
   /* Splits comma seperated type names
    * Splits comma seperated type display names
@@ -53,6 +57,26 @@ const getDataTypeInfo = (row, categoryInfo, colId) => {
     return optObj;
   });
   return { typInfo: currTypeObj, typValueMap: columnTypeValueMap };
+};
+
+const getDefaultFunctionsOptions = (funcs, identifier) => {
+  const valueMap = {};
+  const defaultValues = funcs.map((f, i) => {
+    const funcVal = getParanthesized(f);
+    const optObj = {
+      value: funcVal,
+      label: funcVal,
+      description: funcVal,
+      key: i,
+      colIdentifier: identifier,
+    };
+    valueMap[f] = optObj;
+    return optObj;
+  });
+  return {
+    defaultValues: defaultValues,
+    defaultValueMap: valueMap,
+  };
 };
 
 /*
@@ -137,4 +161,5 @@ export {
   getDefaultValue,
   getDataTypeInfo,
   getAllDataTypeMap,
+  getDefaultFunctionsOptions,
 };
