@@ -30,14 +30,14 @@ class CommonNavBar extends React.Component {
                 if(!item.comingSoon) {
                   return (
                     <a href={item.url} target={'_blank'}>
-                      <li key={this.props.id + key} className={item.bgClassName}>
+                      <li key={item.url} className={item.bgClassName}>
                           {item.name}
                       </li>
                     </a>
                   );
                 } else {
                   return (
-                    <li key={this.props.id + key} className={item.disableBgClassName + ' displayFlex comingSoonHover'}>
+                    <li key={item.url} className={item.disableBgClassName + ' displayFlex comingSoonHover'}>
                       {item.name} <div className={'circle'}></div> <span>Coming soon</span>
                     </li>
                   );

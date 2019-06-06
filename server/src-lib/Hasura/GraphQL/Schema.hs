@@ -592,8 +592,8 @@ mkFuncArgsInp funcInfo =
     argInps = procFuncArgs funcArgs mkInpVal
 
     mkInpVal ty t =
-      InpValInfo Nothing (G.Name t) Nothing $ G.toGT $
-      G.toNT $ mkScalarTy ty
+      InpValInfo Nothing (G.Name t) Nothing $
+      G.toGT $ mkScalarTy ty
 
 -- table_set_input
 mkUpdSetTy :: QualifiedTable -> G.NamedType
