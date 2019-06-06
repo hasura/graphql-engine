@@ -144,7 +144,8 @@ class StreamingLogs extends Component {
       const newRow = {};
 
       const status =
-        r.status === 200 ? (
+        // 2xx is success
+        /^2/.test(r.status.toString()) ? (
           <i className={styles.invocationSuccess + ' fa fa-check'} />
         ) : (
           <i className={styles.invocationFailure + ' fa fa-times'} />
@@ -293,7 +294,7 @@ class StreamingLogs extends Component {
                   {finalResponse.status_code
                     ? [
                       'Status Code: ',
-                      finalResponse.status_code === 200 ? (
+                      /^2/.test(finalResponse.status_code.toString()) ? (
                         <i
                           className={
                             styles.invocationSuccess + ' fa fa-check'

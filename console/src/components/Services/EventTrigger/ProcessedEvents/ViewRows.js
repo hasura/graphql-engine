@@ -275,12 +275,11 @@ const ViewRows = ({
           const responseData = [];
           currentRow.logs.map((r, rowIndex) => {
             const newRow = {};
-            const status =
-              r.status === 200 ? (
-                <i className={styles.invocationSuccess + ' fa fa-check'} />
-              ) : (
-                <i className={styles.invocationFailure + ' fa fa-times'} />
-              );
+            const status = /^2/.test(r.status.toString()) ? (
+              <i className={styles.invocationSuccess + ' fa fa-check'} />
+            ) : (
+              <i className={styles.invocationFailure + ' fa fa-times'} />
+            );
 
             requestData.push(parseRowData(r, 'request'));
             responseData.push(parseRowData(r, 'response'));
@@ -430,21 +429,23 @@ const ViewRows = ({
                                   {finalResponse.status_code
                                     ? [
                                       'Status Code: ',
-                                      finalResponse.status_code === 200 ? (
+                                      /^2/.test(
+                                        finalResponse.status_code.toString()
+                                      ) ? (
                                         <i
-                                          className={
-                                            styles.invocationSuccess +
-                                              ' fa fa-check'
-                                          }
-                                        />
-                                      ) : (
-                                        <i
-                                          className={
-                                            styles.invocationFailure +
+                                            className={
+                                              styles.invocationSuccess +
+                                              'fa fa-check'
+                                            }
+                                          />
+                                        ) : (
+                                          <i
+                                            className={
+                                              styles.invocationFailure +
                                               ' fa fa-times'
-                                          }
-                                        />
-                                      ),
+                                            }
+                                          />
+                                        ),
                                       finalResponse.status_code,
                                       ' ',
                                       <OverlayTrigger

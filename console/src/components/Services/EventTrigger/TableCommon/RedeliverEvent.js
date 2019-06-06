@@ -89,22 +89,21 @@ class RedeliverEvent extends Component {
       const invocationRowsData = [];
       log.eventInvocations.map(r => {
         const newRow = {};
-        const status =
-          r.status === 200 ? (
-            <i
-              className={
-                styles.invocationSuccess +
-                ' fa fa-check invocationsSuccess ' +
-                styles.tabletdCenter
-              }
-            />
-          ) : (
-            <i
-              className={
-                styles.invocationFailure + ' fa fa-times invocationsFailure'
-              }
-            />
-          );
+        const status = /^2/.test(r.status.toString()) ? (
+          <i
+            className={
+              styles.invocationSuccess +
+              ' fa fa-check invocationsSuccess ' +
+              styles.tabletdCenter
+            }
+          />
+        ) : (
+          <i
+            className={
+              styles.invocationFailure + ' fa fa-times invocationsFailure'
+            }
+          />
+        );
 
         // Insert cells corresponding to all rows
         invocationColumns.forEach(col => {
