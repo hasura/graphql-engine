@@ -1,11 +1,14 @@
 ---
-title: 'Set up a GraphQL client with Apollo'
+title: "Set up a GraphQL client with Apollo"
+metaTitle: "Apollo Client GraphQL Setup | GraphQL Android Apollo Tutorial"
+metaDescription: "You will learn how to configure Apollo Client in Android by installing dependencies like apollo-gradle-plugin and creating apollo client with code generation logic"
 ---
 
 import GithubLink from '../src/GithubLink.js'
 
 Apollo gives a neat abstraction layer and an interface to your GraphQL server. You don't need to worry about constructing your queries with request body, headers and options, that you might have done with `OkHttp` or `Retrofit` say. You can directly write queries and mutations in GraphQL and they will automatically be sent to your server via your apollo client instance.
 
+### Android Apollo Installation
 Let's get started by adding apollo client & peer graphql dependenices to the project:
 
 - The latest gradle plugin version is [ ![Download](https://api.bintray.com/packages/apollographql/android/apollo-gradle-plugin/images/download.svg) ](https://bintray.com/apollographql/android/apollo-gradle-plugin/_latestVersion). We will use the latest snapshot.

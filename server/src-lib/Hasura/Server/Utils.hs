@@ -12,8 +12,8 @@ import           System.Exit
 import           System.Process
 
 import qualified Data.ByteString              as B
-import qualified Data.ByteString.Lazy         as BL
 import qualified Data.CaseInsensitive         as CI
+import qualified Data.HashSet                 as Set
 import qualified Data.Text                    as T
 import qualified Data.Text.Encoding           as TE
 import qualified Data.Text.IO                 as TI
@@ -75,14 +75,6 @@ getRequestId headers =
   case getRequestHeader (txtToBs requestIdHeader) headers  of
     Nothing    -> RequestId <$> liftIO generateFingerprint
     Just reqId -> return $ RequestId $ bsToTxt reqId
-
-commonClientHeadersIgnored :: (IsString a) => [a]
-commonClientHeadersIgnored =
-  [ "Content-Length", "Content-MD5", "User-Agent", "Host"
-  , "Origin", "Referer" , "Accept", "Accept-Encoding"
-  , "Accept-Language", "Accept-Datetime"
-  , "Cache-Control", "Connection", "DNT", "Content-Type"
-  ]
 
 -- Parsing postgres database url
 -- from: https://github.com/futurice/postgresql-simple-url/
@@ -198,3 +190,35 @@ diffTimeToMicro diff =
 
 generateFingerprint :: IO Text
 generateFingerprint = UUID.toText <$> UUID.nextRandom
+
+-- ignore the following request headers from the client
+
+commonClientHeadersIgnored :: (IsString a) => [a]
+commonClientHeadersIgnored =
+  [ "Content-Length", "Content-MD5", "User-Agent", "Host"
+  , "Origin", "Referer" , "Accept", "Accept-Encoding"
+  , "Accept-Language", "Accept-Datetime"
+  , "Cache-Control", "Connection", "DNT", "Content-Type"
+  ]
+
+commonResponseHeadersIgnored :: (IsString a) => [a]
+commonResponseHeadersIgnored =
+  [ "Server", "Transfer-Encoding", "Cache-Control"
+  , "Access-Control-Allow-Credentials"
+  , "Access-Control-Allow-Methods"
+  , "Access-Control-Allow-Origin"
+  , "Content-Type", "Content-Length"
+  ]
+
+
+filterRequestHeaders :: [HTTP.Header] -> [HTTP.Header]
+filterRequestHeaders =
+  filterHeaders $ Set.fromList commonClientHeadersIgnored
+
+-- ignore the following response headers from remote
+filterResponseHeaders :: [HTTP.Header] -> [HTTP.Header]
+filterResponseHeaders =
+  filterHeaders $ Set.fromList commonResponseHeadersIgnored
+
+filterHeaders :: Set.HashSet HTTP.HeaderName -> [HTTP.Header] -> [HTTP.Header]
+filterHeaders list = filter (\(n, _) -> not $ n `Set.member` list)

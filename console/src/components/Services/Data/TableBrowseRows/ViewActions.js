@@ -412,18 +412,22 @@ const addQueryOptsActivePath = (query, queryStuff, activePath) => {
   return newQuery;
 };
 /* ****************** reducer ******************/
-const viewReducer = (tableName, schemas, viewState, action) => {
+const viewReducer = (tableName, currentSchema, schemas, viewState, action) => {
   if (action.type.indexOf('ViewTable/FilterQuery/') === 0) {
     return {
       ...viewState,
       curFilter: filterReducer(viewState.curFilter, action),
     };
   }
-  const tableSchema = schemas.find(x => x.table_name === tableName);
+  const tableSchema = schemas.find(
+    x => x.table_name === tableName && x.table_schema === currentSchema
+  );
   switch (action.type) {
     case V_SET_DEFAULTS:
       // check if table exists and then process.
-      const currentTable = schemas.find(t => t.table_name === tableName);
+      const currentTable = schemas.find(
+        t => t.table_name === tableName && t.table_schema === currentSchema
+      );
       let currentColumns = [];
       if (currentTable) {
         currentColumns = currentTable.columns.map(c => c.column_name);
@@ -431,7 +435,6 @@ const viewReducer = (tableName, schemas, viewState, action) => {
       return {
         ...defaultViewState,
         query: {
-          // columns: schemas.find(t => t.table_name === tableName).columns.map(c => c.column_name),
           columns: currentColumns,
           limit: 10,
         },

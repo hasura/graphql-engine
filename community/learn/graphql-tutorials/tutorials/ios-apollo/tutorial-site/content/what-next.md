@@ -1,5 +1,6 @@
 ---
 title: "What next?"
+metaTitle: "What next? | GraphQL iOS Apollo Tutorial"
 ---
 
 import TwitterShare from "./twitter-share";

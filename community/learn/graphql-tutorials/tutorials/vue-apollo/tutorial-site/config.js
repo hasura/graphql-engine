@@ -42,9 +42,9 @@ const config = {
 	"siteMetadata": {
 		"title": "2 hour GraphQL course for Vue developers | Hasura",
 		"description": "A concise and powerful tutorial that covers fundamental concepts of both GraphQL and using GraphQL in Vue",
-		"ogImage": "https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/assets/twitter-card-vue.png",
+		"ogImage": "https://graphql-engine-cdn.hasura.io/learn-hasura/assets/social-media/twitter-card-vue.png",
 		"docsLocation": "https://github.com/hasura/graphql-engine/tree/master/community/learn/graphql-tutorials/tutorials/vue-apollo/tutorial-site/content",
-		"favicon": "https://upload.wikimedia.org/wikipedia/commons/f/f1/Vue.png"
+		"favicon": "https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-vue/vue-favicon.png"
 	},
 };
 
