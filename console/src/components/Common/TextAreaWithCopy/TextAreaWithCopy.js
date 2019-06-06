@@ -1,5 +1,3 @@
-/* eslint react/no-danger: 0 */ // Disabling no-danger rule to use dangerouslySetInnerHTML
-
 import React from 'react';
 
 import PropTypes from 'prop-types';
@@ -7,24 +5,31 @@ import PropTypes from 'prop-types';
 class TextAreaWithCopy extends React.Component {
   copyToClip(id, e) {
     e.preventDefault();
-    const { copyText, textLanguage } = this.props;
+
+    const { copyText, textLanguage, containerId } = this.props;
+
     let text = '';
-    if (this.props.copyText.length > 0) {
-      text =
-        window.sqlFormatter &&
-        textLanguage &&
-        textLanguage.toLowerCase() === 'sql'
-          ? window.sqlFormatter.format(copyText, { language: textLanguage })
-          : copyText;
+    if (copyText.length > 0) {
+      switch (textLanguage) {
+        case 'sql':
+          text = window.sqlFormatter
+            ? window.sqlFormatter.format(copyText, { language: textLanguage })
+            : copyText;
+          break;
+        default:
+          text = copyText;
+      }
     }
-    const { containerId } = this.props;
 
     const textArea = document.createElement('textarea');
+    textArea.value = text;
+
     const appendLoc = containerId
       ? document.getElementById(containerId)
       : document.body;
-    textArea.value = text;
+
     appendLoc.appendChild(textArea);
+
     textArea.focus();
     textArea.select();
 
@@ -41,6 +46,7 @@ class TextAreaWithCopy extends React.Component {
     } catch (err) {
       alert('Oops, unable to copy - ' + err);
     }
+
     appendLoc.removeChild(textArea);
   }
 
@@ -51,7 +57,15 @@ class TextAreaWithCopy extends React.Component {
 
   render() {
     const style = require('./TextAreaWithCopy.scss');
-    const { copyText, toolTipClass, id, containerId } = this.props;
+
+    const {
+      copyText,
+      toolTipClass,
+      id,
+      containerId,
+      textLanguage,
+    } = this.props;
+
     const renderSimpleValue = () => {
       return (
         <pre className={style.schemaPreWrapper}>
@@ -61,6 +75,10 @@ class TextAreaWithCopy extends React.Component {
     };
 
     const renderSQLValue = () => {
+      if (!window || !window.hljs || !window.sqlFormatter) {
+        return renderSimpleValue();
+      }
+
       return (
         <pre>
           <code
@@ -68,16 +86,19 @@ class TextAreaWithCopy extends React.Component {
             dangerouslySetInnerHTML={{
               __html: window.hljs.highlight(
                 'sql',
-                window.sqlFormatter.format(copyText, {
-                  language: this.props.textLanguage,
-                })
+                window.sqlFormatter.format(copyText, { language: textLanguage })
               ).value,
             }}
           />
         </pre>
       );
     };
+
     const renderJSONValue = () => {
+      if (!window || !window.hljs) {
+        return renderSimpleValue();
+      }
+
       return (
         <pre>
           <code
@@ -92,47 +113,42 @@ class TextAreaWithCopy extends React.Component {
         </pre>
       );
     };
-    const typeRenderer = {
-      sql: renderSQLValue,
-      json: renderJSONValue,
+
+    const getTypeRenderer = type => {
+      let typeRenderer;
+
+      switch (type) {
+        case 'sql':
+          typeRenderer = renderSQLValue;
+          break;
+        case 'json':
+          typeRenderer = renderJSONValue;
+          break;
+        default:
+          typeRenderer = renderSimpleValue;
+      }
+
+      return typeRenderer;
     };
-    const useFormattedValue =
-      window &&
-      window.sqlFormatter &&
-      window.hljs &&
-      this.props.textLanguage &&
-      ['sql', 'json'].indexOf(this.props.textLanguage.toLowerCase() !== -1); //=== 'sql';
 
     return (
-      <div className={`${style.codeBlockCustom}`} id={`${containerId}`}>
-        <div className={`${style.copyGenerated}`}>
-          <div className={`${style.copyTooltip}`}>
+      <div className={style.codeBlockCustom} id={containerId}>
+        <div className={style.copyGenerated}>
+          <div className={style.copyTooltip}>
             <span
               className={toolTipClass ? toolTipClass : style.tooltiptext}
-              id={`${id || 'copyCustomFunctionSQL'}`}
+              id={id}
             >
               Copy
             </span>
             <i
               className={'fa fa-copy'}
-              onClick={this.copyToClip.bind(
-                this,
-                id || 'copyCustomFunctionSQL'
-              )}
-              onMouseLeave={this.resetCopy.bind(
-                this,
-                id || 'copyCustomFunctionSQL'
-              )}
+              onClick={this.copyToClip.bind(this, id)}
+              onMouseLeave={this.resetCopy.bind(this, id)}
             />
-            {/*
-              onClick={this.copyToClip.bind(this, 'plan', 'copyPlan')}
-              onMouseLeave={this.resetCopy.bind(this, 'copyPlan')}
-            */}
           </div>
         </div>
-        {useFormattedValue
-          ? typeRenderer[this.props.textLanguage.toLowerCase()]()
-          : renderSimpleValue()}
+        {getTypeRenderer(textLanguage)()}
       </div>
     );
   }
@@ -141,7 +157,7 @@ class TextAreaWithCopy extends React.Component {
 TextAreaWithCopy.propTypes = {
   copyText: PropTypes.string.isRequired,
   textLanguage: PropTypes.string,
-  id: PropTypes.string,
+  id: PropTypes.string.isRequired,
   containerId: PropTypes.string,
 };
 
