@@ -2,6 +2,8 @@ import React, { useEffect } from 'react';
 
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
 
+import { getPgFilter } from '../utils';
+
 /*
 import {
   INTEGER,
@@ -113,6 +115,7 @@ const ColumnEditor = ({
               value={columnTypePG && alterOptionsValueMap[columnTypePG]}
               bsClass={`col-type-${0} modify_select`}
               styleOverrides={customSelectBoxStyles}
+              filterOption={getPgFilter()}
             />
           </div>
         </div>

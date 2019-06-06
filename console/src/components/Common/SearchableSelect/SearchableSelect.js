@@ -30,6 +30,7 @@ const SearchableSelectBox = ({
   value,
   bsClass,
   styleOverrides,
+  filterOption,
 }) => {
   /* Select element style customization */
 
@@ -55,6 +56,7 @@ const SearchableSelectBox = ({
       onChange={onChange}
       value={value}
       styles={customStyles}
+      filterOption={filterOption ? filterOption : {}}
     />
   );
 };
@@ -65,6 +67,7 @@ SearchableSelectBox.propTypes = {
   options: PropTypes.array.isRequired,
   bsClass: PropTypes.string,
   customStyle: PropTypes.object,
+  filterOption: PropTypes.object,
 };
 
 export default SearchableSelectBox;

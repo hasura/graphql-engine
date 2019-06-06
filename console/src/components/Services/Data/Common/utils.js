@@ -6,9 +6,9 @@ const splitDbRow = row => {
    * Splits comma seperated type descriptions
    * */
   return {
-    typInfo: row[0].split(','),
-    typDisplayName: row[1].split(','),
-    typDescription: row[2].split(':'),
+    typInfo: row[0] ? row[0].split(',') : '',
+    typDisplayName: row[1] ? row[1].split(',') : '',
+    typDescription: row[2] ? row[2].split(':') : '',
   };
 };
 

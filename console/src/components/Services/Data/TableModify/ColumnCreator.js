@@ -5,6 +5,8 @@ import { commonDataTypes } from '../utils';
 
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
 
+import { getPgFilter } from '../utils';
+
 import { getDataOptions } from '../Common/utils';
 
 import Button from '../../../Common/Button/Button';
@@ -152,6 +154,7 @@ const ColumnCreator = ({ dispatch, tableName, dataTypes: restTypes = [] }) => {
             value={colType.value && columnTypeValueMap[colType.value]}
             bsClass={`col-type-${0} modify_select`}
             styleOverrides={customSelectBoxStyles}
+            filterOption={getPgFilter()}
           />
         </span>
         <input

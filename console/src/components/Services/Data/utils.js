@@ -1,3 +1,5 @@
+import { createFilter } from 'react-select';
+
 export const INTEGER = 'integer';
 export const SERIAL = 'serial';
 export const BIGINT = 'bigint';
@@ -569,17 +571,27 @@ export const commonDataTypes = [
   },
 ];
 
+/*
+ * Fetch non-composite types, primitive types like text, varchar etc,
+ * Filter types whose typename is unknown and type category is not 'Pseudo' and it is valid and available to be used
+ * */
 export const fetchColumnTypesQuery = `
 SELECT 
   string_agg(t.typname, ',') as "Type Name",
   string_agg(pg_catalog.format_type(t.oid, NULL), ',') as "Display Name",
-  string_agg(pg_catalog.obj_description(t.oid, 'pg_type'), ':') as "Descriptions",
+  string_agg(coalesce(pg_catalog.obj_description(t.oid, 'pg_type'), ''), ':') as "Descriptions",
   t.typcategory
 FROM pg_catalog.pg_type t
      LEFT JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
-WHERE (t.typrelid = 0 OR (SELECT c.relkind = 'c' FROM pg_catalog.pg_class c WHERE c.oid = t.typrelid))                                              
-  AND NOT EXISTS(SELECT 1 FROM pg_catalog.pg_type el WHERE el.oid = t.typelem AND el.typarray = t.oid)                                              
+WHERE (t.typrelid = 0 OR (SELECT c.relkind = 'c' FROM pg_catalog.pg_class c WHERE c.oid = t.typrelid))
+  AND NOT EXISTS(SELECT 1 FROM pg_catalog.pg_type el WHERE el.oid = t.typelem AND el.typarray = t.oid)
   AND pg_catalog.pg_type_is_visible(t.oid)
   AND t.typname != 'unknown'
   AND t.typcategory != 'P'
 GROUP BY t.typcategory;`;
+
+const pgTypeSearchOptions = {
+  matchFrom: 'start',
+};
+
+export const getPgFilter = () => createFilter(pgTypeSearchOptions);
