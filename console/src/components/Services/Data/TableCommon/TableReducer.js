@@ -28,6 +28,7 @@ import {
 
 import {
   MANUAL_REL_SET_TYPE,
+  MANUAL_REL_SET_RSCHEMA,
   MANUAL_REL_SET_RTABLE,
   MANUAL_REL_NAME_CHANGED,
   SET_MANUAL_REL_ADD,
@@ -176,12 +177,23 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           relType: action.relType,
         },
       };
+    case MANUAL_REL_SET_RSCHEMA:
+      return {
+        ...modifyState,
+        manualRelAdd: {
+          ...modifyState.manualRelAdd,
+          rSchema: action.rSchema,
+          rTable: '',
+          colMappings: [...defaultModifyState.manualRelAdd.colMappings],
+        },
+      };
     case MANUAL_REL_SET_RTABLE:
       return {
         ...modifyState,
         manualRelAdd: {
           ...modifyState.manualRelAdd,
           rTable: action.rTable,
+          colMappings: [...defaultModifyState.manualRelAdd.colMappings],
         },
       };
     case SET_MANUAL_REL_ADD:

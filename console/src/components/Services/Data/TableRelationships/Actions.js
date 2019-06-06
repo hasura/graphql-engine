@@ -7,6 +7,7 @@ import suggestedRelationshipsRaw from './autoRelations';
 
 export const SET_MANUAL_REL_ADD = 'ModifyTable/SET_MANUAL_REL_ADD';
 export const MANUAL_REL_SET_TYPE = 'ModifyTable/MANUAL_REL_SET_TYPE';
+export const MANUAL_REL_SET_RSCHEMA = 'ModifyTable/MANUAL_REL_SET_RSCHEMA';
 export const MANUAL_REL_SET_RTABLE = 'ModifyTable/MANUAL_REL_SET_RTABLE';
 export const MANUAL_REL_RESET = 'ModifyTable/MANUAL_REL_RESET';
 export const REL_RESET = 'ModifyTable/REL_RESET';
@@ -33,6 +34,10 @@ const manualRelNameChanged = relName => ({
 const manualRelTypeChanged = relType => ({
   type: MANUAL_REL_SET_TYPE,
   relType,
+});
+const manualRelRSchemaChanged = rSchema => ({
+  type: MANUAL_REL_SET_RSCHEMA,
+  rSchema,
 });
 
 const saveRenameRelationship = (oldName, newName, tableName, callback) => {
@@ -590,6 +595,7 @@ export {
   deleteRelMigrate,
   addNewRelClicked,
   manualRelTypeChanged,
+  manualRelRSchemaChanged,
   addRelViewMigrate,
   manualRelRTableChanged,
   setManualRelAdd,

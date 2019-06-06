@@ -8,6 +8,7 @@ import {
   manualRelNameChanged,
   addRelViewMigrate,
   resetManualRelationshipForm,
+  manualRelRSchemaChanged,
 } from './Actions';
 import { updateSchemaInfo } from '../DataActions';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
@@ -75,13 +76,7 @@ const ManualRelationshipSelector = ({
 
   const refSchemaSelect = () => {
     const dispatchSetRefSchema = event => {
-      const newRelAdd = JSON.parse(JSON.stringify(relAdd));
-      // set rSchema to new value
-      newRelAdd.rSchema = event.target.value;
-      // set default values for rTable and colMappings
-      newRelAdd.rTable = '';
-      newRelAdd.colMappings = [{ column: '', refColumn: '' }];
-      dispatch(setManualRelAdd(newRelAdd));
+      dispatch(manualRelRSchemaChanged(event.target.value));
       if (tableSchema.table_schema !== event.target.value) {
         dispatch(updateSchemaInfo({ schemas: [event.target.value] }));
       }
@@ -100,17 +95,17 @@ const ManualRelationshipSelector = ({
           disabled={!relAdd.relType || !relAdd.relName}
         >
           {// default unselected option
-            relAdd.rSchema === '' && (
-              <option value={''} disabled>
-                {'-- reference schema --'}
-              </option>
-            )}
+          relAdd.rSchema === '' && (
+            <option value={''} disabled>
+              {'-- reference schema --'}
+            </option>
+          )}
           {// all reference schema options
-            schemaList.map((rs, j) => (
-              <option key={j} value={rs}>
-                {rs}
-              </option>
-            ))}
+          schemaList.map((rs, j) => (
+            <option key={j} value={rs}>
+              {rs}
+            </option>
+          ))}
         </select>
       </div>
     );
