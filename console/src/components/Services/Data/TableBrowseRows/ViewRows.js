@@ -499,7 +499,9 @@ const ViewRows = ({
   };
 
   const curRelName = curPath.length > 0 ? curPath.slice(-1)[0] : null;
-  const tableSchema = schemas.find(x => x.table_name === curTableName);
+  const tableSchema = schemas.find(
+    x => x.table_name === curTableName && x.table_schema === currentSchema
+  );
 
   const tableColumnsSorted = tableSchema.columns.sort(ordinalColSort);
   const tableRelationships = tableSchema.relationships;

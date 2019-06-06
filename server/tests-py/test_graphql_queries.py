@@ -46,6 +46,10 @@ class TestGraphQLQueryBasic(DefaultTestSelectQueries):
     def test_select_query_user_col_change(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/select_query_user_col_change.yaml")
 
+    def test_nested_select_with_foreign_key_alter(self, hge_ctx, transport):
+        transport = 'http'
+        check_query_f(hge_ctx, self.dir() + "/nested_select_with_foreign_key_alter.yaml", transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/basic'
@@ -378,6 +382,9 @@ class TestGraphQLQueryFunctions(DefaultTestSelectQueries):
 
     def test_query_get_test_uuid(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/query_get_test_uuid.yaml')
+
+    def test_query_my_add(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_my_add.yaml')
 
     @classmethod
     def dir(cls):

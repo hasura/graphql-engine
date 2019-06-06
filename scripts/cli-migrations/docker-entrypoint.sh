@@ -16,12 +16,16 @@ if [ -z ${HASURA_GRAPHQL_SERVER_PORT+x} ]; then
     log "port env var is not set, defaulting to 8080"
     HASURA_GRAPHQL_SERVER_PORT=8080
 fi
+if [ -z ${HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT+x} ]; then
+    log "server timeout is not set defaulting to 30 seconds"
+    HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT=30
+fi
 
 # wait for a port to be ready
 wait_for_port() {
     local PORT=$1
-    log "waiting 30s for $PORT to be ready"
-    for i in `seq 1 30`;
+    log "waiting $HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT for $PORT to be ready"
+    for i in `seq 1 $HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT`;
     do
         nc localhost $PORT > /dev/null 2>&1 && log "port $PORT is ready" && return
         sleep 1

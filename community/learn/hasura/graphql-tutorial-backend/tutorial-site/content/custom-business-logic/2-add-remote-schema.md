@@ -1,5 +1,7 @@
 ---
 title: "Add Remote Schema"
+metaTitle: "Add Remote Schema | Hasura GraphQL Tutorial"
+metaDescription: "In this part, we will look at how to add a remote schema in Hasura GraphQL Engine using the console"
 ---
 
 import YoutubeEmbed from "../../src/YoutubeEmbed.js";
