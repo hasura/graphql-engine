@@ -111,7 +111,7 @@ const generateRelationshipsQuery = relMeta => {
       lcol: column,
       rcol: relMeta.rcol[index],
     }));
-    if (columnMaps.length === 1) {
+    if (columnMaps.length === 1 && !relMeta.isUnique) {
       upQuery.args.using = {
         foreign_key_constraint_on: relMeta.lcol[0],
       };
@@ -235,6 +235,7 @@ const addRelNewFromStateMigrate = () => (dispatch, getState) => {
     rcol: state.rcol,
     rTable: state.rTable,
     rSchema: state.rSchema,
+    isUnique: state.isUnique,
   });
   const relChangesUp = [upQuery];
   const relChangesDown = [downQuery];

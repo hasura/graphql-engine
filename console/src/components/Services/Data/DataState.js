@@ -115,6 +115,7 @@ const defaultModifyState = {
     rcol: [],
     manualColumns: [],
     isManualExpanded: false,
+    isUnique: false,
     manualRelInfo: {
       remoteSchema: '',
     },

@@ -55,6 +55,7 @@ const suggestedRelationshipsRaw = (tableName, allSchemas, currentSchema) => {
         rcol: lcol.map(column => fk_obj.column_mapping[column]),
         rTable: fk_obj.ref_table,
         rSchema: fk_obj.ref_table_table_schema,
+        isUnique: false,
       });
     }
   });
@@ -64,40 +65,76 @@ const suggestedRelationshipsRaw = (tableName, allSchemas, currentSchema) => {
       return;
     }
     const rcol = Object.keys(o_fk_obj.column_mapping);
+    const lcol = Object.values(o_fk_obj.column_mapping);
     const rTable = o_fk_obj.table_name;
-    let isExistingArrayRel = false;
-    for (let k = 0; k < currentArrRels.length; k++) {
-      // check if this is already an existing relationship
-      const relDef = currentArrRels[k].rel_def;
-      let currTable = null;
-      let currRCol = null;
+    if (o_fk_obj.is_unique) {
+      let isExistingObjRel = false;
+      for (let k = 0; k < currentObjRels.length; k++) {
+        if (currentObjRels[k].rel_def.manual_configuration) {
+          // check if this is already an existing relationship
+          if (
+            Object.keys(
+              currentObjRels[k].rel_def.manual_configuration.column_mapping
+            )
+              .sort()
+              .join(',') === lcol.sort().join(',')
+          ) {
+            // existing relationship
+            isExistingObjRel = true;
+            break;
+          }
+        }
+      }
+      if (!isExistingObjRel) {
+        objRels.push({
+          lTable: o_fk_obj.ref_table,
+          lSchema: o_fk_obj.ref_table_table_schema,
+          isObjRel: true,
+          name: null,
+          rcol: rcol,
+          lcol: rcol.map(column => o_fk_obj.column_mapping[column]),
+          rTable: rTable,
+          rSchema: o_fk_obj.table_schema,
+          isUnique: true,
+        });
+      }
+    } else {
+      let isExistingArrayRel = false;
+      for (let k = 0; k < currentArrRels.length; k++) {
+        // check if this is already an existing relationship
+        const relDef = currentArrRels[k].rel_def;
+        let currTable = null;
+        let currRCol = null;
 
-      if (relDef.foreign_key_constraint_on) {
-        currTable = relDef.foreign_key_constraint_on.table;
-        currRCol = [relDef.foreign_key_constraint_on.column];
-      } else {
-        currTable = relDef.manual_configuration.remote_table;
-        currRCol = Object.values(relDef.manual_configuration.column_mapping);
+        if (relDef.foreign_key_constraint_on) {
+          currTable = relDef.foreign_key_constraint_on.table;
+          currRCol = [relDef.foreign_key_constraint_on.column];
+        } else {
+          currTable = relDef.manual_configuration.remote_table;
+          currRCol = Object.values(relDef.manual_configuration.column_mapping);
+        }
+        if (
+          currRCol.sort().join(',') === rcol.sort().join(',') &&
+          getTableName(currTable) === o_fk_obj.table_name
+        ) {
+          // existing relationship
+          isExistingArrayRel = true;
+          break;
+        }
       }
-      if (
-        currRCol.sort().join(',') === rcol.sort().join(',') &&
-        getTableName(currTable) === o_fk_obj.table_name
-      ) {
-        // existing relationship
-        isExistingArrayRel = true;
+      if (!isExistingArrayRel) {
+        arrRels.push({
+          lTable: o_fk_obj.ref_table,
+          lSchema: o_fk_obj.ref_table_table_schema,
+          isObjRel: false,
+          name: null,
+          rcol: rcol,
+          lcol: rcol.map(column => o_fk_obj.column_mapping[column]),
+          rTable: rTable,
+          rSchema: o_fk_obj.table_schema,
+          isUnique: false,
+        });
       }
-    }
-    if (!isExistingArrayRel) {
-      arrRels.push({
-        lTable: o_fk_obj.ref_table,
-        lSchema: o_fk_obj.ref_table_table_schema,
-        isObjRel: false,
-        name: null,
-        rcol: rcol,
-        lcol: rcol.map(column => o_fk_obj.column_mapping[column]),
-        rTable: rTable,
-        rSchema: o_fk_obj.table_schema,
-      });
     }
   });
 

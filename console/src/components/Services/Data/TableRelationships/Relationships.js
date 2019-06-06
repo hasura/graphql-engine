@@ -416,7 +416,6 @@ class Relationships extends Component {
       );
     }
 
-    // if (tableSchema.primary_key.columns > 0) {}
     return (
       <div className={`${styles.container} container-fluid`}>
         <TableHeader
