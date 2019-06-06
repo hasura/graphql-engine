@@ -5,6 +5,8 @@ import { connect } from 'react-redux';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
 
+export class NotFoundError extends Error {}
+
 class PageNotFound extends Component {
   render() {
     const errorImage = require('./error-logo.png');
