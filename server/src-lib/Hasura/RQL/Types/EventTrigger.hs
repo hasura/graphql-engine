@@ -142,7 +142,7 @@ instance FromJSON CreateEventTriggerQuery where
     replace        <- o .:? "replace" .!= False
     let regex = "^[A-Za-z]+[A-Za-z0-9_\\-]*$" :: LBS.ByteString
         compiledRegex = TDFA.makeRegex regex :: TDFA.Regex
-        isMatch = TDFA.match compiledRegex . T.unpack . unNEText $ unTriggerName name
+        isMatch = TDFA.match compiledRegex . T.unpack $ triggerNameToTxt name
     if isMatch then return ()
       else fail "only alphanumeric and underscore and hyphens allowed for name"
     if any isJust [insert, update, delete] || enableManual then
