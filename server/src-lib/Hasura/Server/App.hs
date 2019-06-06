@@ -487,7 +487,9 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       get "v1alpha1/config" $ mkSpockAction encodeQErr id serverCtx $
         mkAPIRespHandler $ do
           onlyAdmin
-          return $ encJFromJValue $ runGetConfig (scAuthMode serverCtx)
+          return $ HttpResponse
+            (encJFromJValue $ runGetConfig (scAuthMode serverCtx))
+            Nothing
 
     when enableGraphQL $ do
       post "v1alpha1/graphql/explain" gqlExplainAction
