@@ -108,11 +108,12 @@ getReusablePlan (QueryPlan vars fldPlans) =
     varTypes = Map.unions $ map (varTypesOfPlan . snd) fldPlans
 
 withPlan
-  :: UserVars -> PGPlan -> GV.AnnPGVarVals -> RespTx
+  :: (MonadError QErr m)
+  => UserVars -> PGPlan -> GV.AnnPGVarVals -> m (Q.Query, [Q.PrepArg])
 withPlan usrVars (PGPlan q reqVars prepMap) annVars = do
   prepMap' <- foldM getVar prepMap (Map.toList reqVars)
   let args = withUserVars usrVars $ IntMap.elems prepMap'
-  asSingleRowJsonResp q args
+  return (q, args)
   where
     getVar accum (var, (prepNo, _)) = do
       let varName = G.unName $ G.unVariable var
@@ -123,47 +124,21 @@ withPlan usrVars (PGPlan q reqVars prepMap) annVars = do
 
 -- turn the current plan into a transaction
 mkCurPlanTx
-  :: UserVars
+  :: (MonadError QErr m)
+  => UserVars
   -> QueryPlan
-  -> LazyRespTx
-mkCurPlanTx usrVars (QueryPlan _ fldPlans) =
-  fmap encJFromAssocList $ forM fldPlans $ \(alias, fldPlan) -> do
+  -> m (LazyRespTx, GeneratedSql)
+mkCurPlanTx usrVars (QueryPlan _ fldPlans) = do
+  -- generate the SQL and prepared vars or the bytestring
+  resolved <- forM fldPlans $ \(alias, fldPlan) -> do
     fldResp <- case fldPlan of
-      RFPRaw resp        -> return $ encJFromBS resp
-      RFPPostgres pgPlan -> liftTx $ planTx pgPlan
-    return (G.unName $ G.unAlias alias, fldResp)
-  where
-    planTx (PGPlan q _ prepMap) =
-      asSingleRowJsonResp q $ withUserVars usrVars $ IntMap.elems prepMap
+      RFPRaw resp                      -> return $ RRRaw resp
+      RFPPostgres (PGPlan q _ prepMap) -> do
+        let args = withUserVars usrVars $ IntMap.elems prepMap
+        return $ RRSql (q, args)
+    return (alias, fldResp)
 
-
-type GeneratedSql =
-  [(G.Alias, Maybe (Q.Query, [Q.PrepArg]))]
-
-encodeSql :: GeneratedSql -> J.Value
-encodeSql sql =
-  jValFromAssocList $
-    map (\(a, q) -> (alName a, fmap encP q)) sql
-  where
-    alName = G.unName . G.unAlias
-    encP (q, prepArgs) =
-      J.object [ "query" J..= Q.getQueryText q
-               , "prepared_arguments" J..= fmap prepArgsJVal prepArgs
-               ]
-    jValFromAssocList xs = J.object $ map (uncurry (J..=)) xs
-    prepArgsJVal (_, arg) = fmap (bsToTxt . fst) arg
-
-
--- turn the list of `RootFieldPlan` into a list of aliases and `Q.Query`s
-mkRootFldPlanToSql :: UserVars -> [(G.Alias, RootFieldPlan)] -> GeneratedSql
-mkRootFldPlanToSql usrVars fldPlans =
- flip map fldPlans $ \(alias, fldPlan) ->
-    (,) alias $ case fldPlan of
-          RFPRaw _                         -> Nothing
-          RFPPostgres (PGPlan q _ prepMap) -> Just (q, prepArgs prepMap)
-  where
-    prepArgs argMap = withUserVars usrVars $ IntMap.elems argMap
-
+  return (mkLazyRespTx resolved, mkGeneratedSql resolved)
 
 withUserVars :: UserVars -> [Q.PrepArg] -> [Q.PrepArg]
 withUserVars usrVars l =
@@ -256,8 +231,8 @@ convertQuerySelSet varDefs fields = do
     return (V._fAlias fld, fldPlan)
   let queryPlan     = QueryPlan varDefs fldPlans
       reusablePlanM = getReusablePlan queryPlan
-  let sql = mkRootFldPlanToSql usrVars fldPlans
-  return (mkCurPlanTx usrVars queryPlan, reusablePlanM, sql)
+  (tx, sql) <- mkCurPlanTx usrVars queryPlan
+  return (tx, reusablePlanM, sql)
 
 -- use the existing plan and new variables to create a pg query
 queryOpFromPlan
@@ -268,10 +243,52 @@ queryOpFromPlan
   -> m (LazyRespTx, GeneratedSql)
 queryOpFromPlan usrVars varValsM (ReusableQueryPlan varTypes fldPlans) = do
   validatedVars <- GV.getAnnPGVarVals varTypes varValsM
-  let tx = fmap encJFromAssocList $ forM fldPlans $ \(alias, fldPlan) -> do
-        fldResp <- case fldPlan of
-          RFPRaw resp        -> return $ encJFromBS resp
-          RFPPostgres pgPlan -> liftTx $ withPlan usrVars pgPlan validatedVars
-        return (G.unName $ G.unAlias alias, fldResp)
-  let sql = mkRootFldPlanToSql usrVars fldPlans
-  return (tx, sql)
+  -- generate the SQL and prepared vars or the bytestring
+  resolved <- forM fldPlans $ \(alias, fldPlan) -> do
+    fldResp <- case fldPlan of
+      RFPRaw resp        -> return $ RRRaw resp
+      RFPPostgres pgPlan -> do
+        res <- withPlan usrVars pgPlan validatedVars
+        return $ RRSql res
+    return (alias, fldResp)
+
+  return (mkLazyRespTx resolved, mkGeneratedSql resolved)
+
+
+-- TODO: give better names
+data ResolvedResp
+  = RRRaw !B.ByteString
+  | RRSql !(Q.Query, [Q.PrepArg])
+
+-- TODO: give better names
+type GeneratedSql =
+  [(G.Alias, Maybe (Q.Query, [Q.PrepArg]))]
+
+mkLazyRespTx :: [(G.Alias, ResolvedResp)] -> LazyRespTx
+mkLazyRespTx resolved =
+  fmap encJFromAssocList $ forM resolved $ \(alias, node) -> do
+    resp <- case node of
+      RRRaw bs        -> return $ encJFromBS bs
+      RRSql (q, args) -> liftTx $ asSingleRowJsonResp q args
+    return (G.unName $ G.unAlias alias, resp)
+
+mkGeneratedSql :: [(G.Alias, ResolvedResp)] -> GeneratedSql
+mkGeneratedSql resolved =
+  flip map resolved $ \(alias, node) ->
+    let res = case node of
+                RRRaw _         -> Nothing
+                RRSql (q, args) -> Just (q, args)
+    in (alias, res)
+
+encodeSql :: GeneratedSql -> J.Value
+encodeSql sql =
+  jValFromAssocList $
+    map (\(a, q) -> (alName a, fmap encP q)) sql
+  where
+    alName = G.unName . G.unAlias
+    encP (q, prepArgs) =
+      J.object [ "query" J..= Q.getQueryText q
+               , "prepared_arguments" J..= fmap prepArgsJVal prepArgs
+               ]
+    jValFromAssocList xs = J.object $ map (uncurry (J..=)) xs
+    prepArgsJVal (_, arg) = fmap (bsToTxt . fst) arg
