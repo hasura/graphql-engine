@@ -12,7 +12,8 @@ import { setTable } from '../DataActions';
 import TableHeader from '../TableCommon/TableHeader';
 import ViewHeader from './ViewHeader';
 import ViewRows from './ViewRows';
-import { replace } from 'react-router-redux';
+
+import NotFoundError from '../../../../NotFoundError';
 
 const genHeadings = headings => {
   if (headings.length === 0) {
@@ -166,8 +167,8 @@ class ViewTable extends Component {
       s => s.table_name === tableName && s.table_schema === currentSchema
     );
     if (!currentTable) {
-      // dispatch a 404 route
-      dispatch(replace('/404'));
+      // throw a 404 exception
+      throw new NotFoundError('404 Not Found');
     }
     // Is this a view
     const isView = currentTable.table_type !== 'BASE TABLE';
