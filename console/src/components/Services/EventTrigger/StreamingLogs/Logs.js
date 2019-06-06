@@ -28,6 +28,7 @@ import * as tooltip from '../Common/Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import { convertDateTimeToLocale } from '../utils';
 import Button from '../../../Common/Button/Button';
+import { NotFoundError } from '../../../Error/PageNotFound';
 
 class StreamingLogs extends Component {
   constructor(props) {
@@ -117,7 +118,12 @@ class StreamingLogs extends Component {
 
     const styles = require('../TableCommon/EventTable.scss');
 
+    // check if trigger exists
     const currentTrigger = triggerList.find(s => s.name === triggerName);
+    if (!currentTrigger) {
+      // throw a 404 exception
+      throw new NotFoundError('404 Not Found');
+    }
 
     const invocationColumns = [
       'redeliver',
