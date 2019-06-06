@@ -126,8 +126,8 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
     case REL_NAME_CHANGED:
       return {
         ...modifyState,
-        manualRelAdd: {
-          ...modifyState.manualRelAdd,
+        relAdd: {
+          ...modifyState.relAdd,
           relName: action.relName,
         },
       };
