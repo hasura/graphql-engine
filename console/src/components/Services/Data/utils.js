@@ -499,7 +499,7 @@ export const mergeLoadSchemaData = (
 export const commonDataTypes = [
   {
     name: 'Integer',
-    value: 'int4',
+    value: 'integer',
     description: 'signed four-byte integer',
     hasuraDatatype: 'integer',
   },
@@ -559,7 +559,7 @@ export const commonDataTypes = [
   },
   {
     name: 'Big Integer',
-    value: 'int8',
+    value: 'bigint',
     description: 'signed eight-byte integer',
     hasuraDatatype: 'bigint',
   },
