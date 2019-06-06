@@ -51,6 +51,7 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.Endpoint, "endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.StringVar(&opts.AdminSecret, "admin-secret", "", "admin secret for Hasura GraphQL Engine")
 	f.StringVar(&opts.AdminSecret, "access-key", "", "access key for Hasura GraphQL Engine")
+	f.BoolVar(&opts.Docker, "docker", false, "download the docker-compose.yaml for the project")
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
 
 	return initCmd
@@ -62,6 +63,7 @@ type initOptions struct {
 	Endpoint    string
 	AdminSecret string
 	InitDir     string
+	Docker      bool
 }
 
 func (o *initOptions) run() error {
