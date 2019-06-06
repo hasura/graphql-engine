@@ -1,6 +1,6 @@
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE ApplicativeDo         #-}
 {-# LANGUAGE PartialTypeSignatures #-}
-{-# LANGUAGE ApplicativeDo #-}
+{-# LANGUAGE ViewPatterns          #-}
 
 -- | Validate input queries against remote schemas.
 
@@ -12,31 +12,34 @@ module Hasura.RQL.DDL.Remote.Validate
   ) where
 
 import           Data.Bifunctor
-import           Data.HashMap.Strict (HashMap)
-import qualified Data.HashMap.Strict as HM
-import           Data.List.NonEmpty (NonEmpty(..))
+import           Data.Foldable
+import           Data.List.NonEmpty                (NonEmpty (..))
 import           Data.Validation
-import qualified Hasura.GraphQL.Context as GC
-import qualified Hasura.GraphQL.Schema as GS
 import           Hasura.GraphQL.Validate.Types
-import qualified Hasura.GraphQL.Validate.Types as VT
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Relationship.Types
 import           Hasura.RQL.DDL.Remote.Input
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import qualified Language.GraphQL.Draft.Syntax as G
+
+import qualified Data.HashMap.Strict               as HM
+import qualified Data.Text                         as T
+import qualified Hasura.GraphQL.Context            as GC
+import qualified Hasura.GraphQL.Schema             as GS
+import qualified Language.GraphQL.Draft.Syntax     as G
 
 -- | An error validating the remote relationship.
 data ValidationError
-  = CouldntFindRemoteField G.Name VT.ObjTyInfo
+  = CouldntFindRemoteField G.Name ObjTyInfo
   | FieldNotFoundInRemoteSchema G.Name
   | NoSuchArgumentForRemote G.Name
   | MissingRequiredArgument G.Name
+  | TypeNotFound G.NamedType
   | TableNotFound !QualifiedTable
   | TableFieldNonexistent !QualifiedTable !FieldName
-  | InvalidType
-  | InvalidVariable G.Variable (HashMap G.Variable FieldInfo)
+  | ExpectedTypeButGot !G.NamedType !G.NamedType
+  | InvalidType !G.NamedType !T.Text
+  | InvalidVariable G.Variable (HM.HashMap G.Variable FieldInfo)
   | NullNotAllowedHere
   | ForeignRelationshipsNotAllowedInRemoteVariable !RelInfo
   | UnsupportedArgumentType G.Value
@@ -59,7 +62,7 @@ getCreateRemoteRelationshipValidation createRemoteRelationship = do
 validateRelationship ::
      CreateRemoteRelationship
   -> GC.GCtx
-  -> HashMap QualifiedTable TableInfo
+  -> HM.HashMap QualifiedTable TableInfo
   -> Either (NonEmpty ValidationError) ()
 validateRelationship createRemoteRelationship gctx tables = do
   case HM.lookup tableName tables of
@@ -79,7 +82,7 @@ validateRelationship createRemoteRelationship gctx tables = do
         lookupField
           (ccrRemoteField createRemoteRelationship)
           (GS._gQueryRoot gctx)
-      case VT._fiLoc objFldInfo of
+      case _fiLoc objFldInfo of
         HasuraType ->
           Left
             (pure
@@ -88,11 +91,13 @@ validateRelationship createRemoteRelationship gctx tables = do
         RemoteType {} ->
           toEither
             (validateRemoteArguments
-               (VT._fiParams objFldInfo)
+               (_fiParams objFldInfo)
                (remoteArgumentsToMap
                   (ccrRemoteArguments createRemoteRelationship))
                (HM.fromList
-                  (map (first fieldNameToVariable) (HM.toList fieldInfos))))
+                  (map (first fieldNameToVariable) (HM.toList fieldInfos)))
+               (GS._gTypes gctx)
+            )
   where
     tableName = ccrTable createRemoteRelationship
 
@@ -103,31 +108,32 @@ fieldNameToVariable = G.Variable . G.Name . getFieldNameTxt
 -- | Lookup the field in the schema.
 lookupField ::
      G.Name
-  -> VT.ObjTyInfo
-  -> Either (NonEmpty ValidationError) VT.ObjFldInfo
+  -> ObjTyInfo
+  -> Either (NonEmpty ValidationError) ObjFldInfo
 lookupField name objFldInfo = viaObject objFldInfo
   where
     viaObject =
       maybe (Left (pure (CouldntFindRemoteField name objFldInfo))) pure .
       HM.lookup name .
-      VT._otiFields
+      _otiFields
 
 -- | Validate remote input arguments against the remote schema.
 validateRemoteArguments ::
-     HashMap G.Name InpValInfo
-  -> HashMap G.Name G.Value
-  -> HashMap G.Variable FieldInfo
+     HM.HashMap G.Name InpValInfo
+  -> HM.HashMap G.Name G.Value
+  -> HM.HashMap G.Variable FieldInfo
+  -> HM.HashMap G.NamedType TypeInfo
   -> Validation (NonEmpty ValidationError) ()
-validateRemoteArguments expectedArguments providedArguments permittedVariables = do
+validateRemoteArguments expectedArguments providedArguments permittedVariables types = do
   traverse validateProvided (HM.toList providedArguments)
   traverse validateExpected (HM.toList expectedArguments)
   pure ()
   where
-    validateProvided (providedKey, providedValue) =
-      case HM.lookup providedKey expectedArguments of
-        Nothing -> Failure (pure (NoSuchArgumentForRemote providedKey))
-        Just expectedType ->
-          validateType permittedVariables providedValue (_iviType expectedType)
+    validateProvided (providedName, providedValue) =
+      case HM.lookup providedName expectedArguments of
+        Nothing -> Failure (pure (NoSuchArgumentForRemote providedName))
+        Just (_iviType -> expectedType) ->
+          validateType permittedVariables providedValue expectedType types
     validateExpected (expectedKey, expectedInpValInfo) =
       if G.isNullable (_iviType expectedInpValInfo)
         then pure ()
@@ -139,40 +145,55 @@ validateRemoteArguments expectedArguments providedArguments permittedVariables =
                      Failure (pure (MissingRequiredArgument expectedKey))
                    Just {} -> pure ()
 
+
 -- | Validate a value against a type.
 validateType ::
-     HashMap G.Variable FieldInfo
+     HM.HashMap G.Variable FieldInfo
   -> G.Value
   -> G.GType
+  -> HM.HashMap G.NamedType TypeInfo
   -> Validation (NonEmpty ValidationError) ()
-validateType permittedVariables value (gtypeToEither -> expectedType) =
-  bindValidation
-    (valueType permittedVariables value)
-    (\actualType ->
-       when (actualType /= expectedType) (Failure (pure InvalidType)))
-
--- | Produce the type of a value.
-valueType ::
-     HashMap G.Variable FieldInfo
-  -> G.Value
-  -> Validation (NonEmpty ValidationError) (Either G.NamedType G.ListType)
-valueType permittedVariables =
-  \case
+validateType permittedVariables value gType@(getBaseTy -> expectedNamedType) types =
+  case value of
     G.VVariable variable ->
       case HM.lookup variable permittedVariables of
         Nothing -> Failure (pure (InvalidVariable variable permittedVariables))
-        Just fieldInfo -> fmap Left (fieldInfoToNamedType fieldInfo)
-    G.VInt {} -> pure (Left (mkScalarTy PGInteger))
-    G.VFloat {} -> pure (Left (mkScalarTy PGFloat))
-    G.VBoolean {} -> pure (Left (mkScalarTy PGBoolean))
+        Just fieldInfo ->
+          bindValidation
+            (fieldInfoToNamedType fieldInfo)
+            (flip assertType expectedNamedType)
+    G.VInt {} -> assertType (mkScalarTy PGInteger) expectedNamedType
+    G.VFloat {} -> assertType (mkScalarTy PGFloat) expectedNamedType
+    G.VBoolean {} -> assertType (mkScalarTy PGBoolean) expectedNamedType
     G.VNull -> Failure (pure NullNotAllowedHere)
-    G.VString {} -> pure (Left (mkScalarTy PGText))
-    -- TODO: Implement these:
-    -- <https://github.com/tirumaraiselvan/graphql-engine/issues/9>
-    -- Remove the UnsupportedArgumentType constructor when done.
-    value@(G.VEnum _) -> Failure (pure (UnsupportedArgumentType value))
-    value@(G.VList _) -> Failure (pure (UnsupportedArgumentType value))
-    value@(G.VObject _) -> Failure (pure (UnsupportedArgumentType value))
+    G.VString {} -> assertType (mkScalarTy PGText) expectedNamedType
+    v@(G.VEnum _) -> Failure (pure (UnsupportedArgumentType v))
+    G.VList (G.unListValue -> values) ->
+      flip
+        traverse_
+        values
+        (\val -> validateType permittedVariables val gType types)
+    G.VObject (G.unObjectValue -> values) ->
+      flip
+        traverse_
+        values
+        (\(G.ObjectFieldG name val) ->
+           case HM.lookup expectedNamedType types of
+             Nothing -> Failure (pure $ TypeNotFound expectedNamedType)
+             Just typeInfo ->
+               case typeInfo of
+                 TIInpObj inpObjTypeInfo ->
+                   case HM.lookup name (_iotiFields inpObjTypeInfo) of
+                     Nothing -> Failure (pure $ NoSuchArgumentForRemote name)
+                     Just (_iviType -> expectedType) ->
+                       validateType permittedVariables val expectedType types
+                 _ -> Failure (pure $ InvalidType expectedNamedType "not an input object type"))
+
+assertType ::
+     G.NamedType -> G.NamedType -> Validation (NonEmpty ValidationError) ()
+assertType actualType expectedType =
+  (when (actualType /= expectedType)
+    (Failure (pure $ ExpectedTypeButGot expectedType actualType)))
 
 -- | Convert a field info to a named type, if possible.
 fieldInfoToNamedType ::
