@@ -147,9 +147,7 @@ const AddRelationship = ({
     return (
       <div className={`${styles.remove_margin_bottom} form-group`}>
         <label>
-          {' '}
-          You have no new relationships that can be added. Add a foreign key to
-          get suggestions{' '}
+          You have no new relationships that can be added via foreign-keys
         </label>
       </div>
     );
@@ -256,7 +254,7 @@ const AddRelationship = ({
   return (
     <div>
       <div>
-        <label> Add a new relationship </label>
+        <label> Add new relationships via foreign-keys </label>
       </div>
       <div className={tableStyles.tableContainer}>
         <table
@@ -267,8 +265,8 @@ const AddRelationship = ({
           <thead>
             <tr>
               {[
-                'Suggested object relationships',
-                'Suggested Array relationships',
+                'Suggested Object Relationships',
+                'Suggested Array Relationships',
               ].map((s, i) => (
                 <th key={i}>{s}</th>
               ))}
@@ -437,8 +435,15 @@ class Relationships extends Component {
                   tableName={tableName}
                   currentSchema={currentSchema}
                   allSchemas={allSchemas}
-                  currentSchema={currentSchema}
                   cachedRelationshipData={relAdd}
+                  dispatch={dispatch}
+                />
+                <hr />
+                <AddManualRelationship
+                  tableSchema={tableSchema}
+                  allSchemas={allSchemas}
+                  schemaList={schemaList}
+                  relAdd={manualRelAdd}
                   dispatch={dispatch}
                 />
               </div>
@@ -454,15 +459,6 @@ class Relationships extends Component {
                 + Add relationship
               </Button>
             )}
-            <hr />
-            <AddManualRelationship
-              tableSchema={tableSchema}
-              allSchemas={allSchemas}
-              schemaList={schemaList}
-              relAdd={manualRelAdd}
-              dispatch={dispatch}
-            />
-            <hr />
           </div>
         </div>
         <div className={`${styles.fixed} hidden`}>{alert}</div>
