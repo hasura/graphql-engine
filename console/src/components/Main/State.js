@@ -10,6 +10,7 @@ const defaultState = {
   serverVersion: null,
   latestServerVersion: null,
   telemetryEnabled: true,
+  featuresCompatibility: {},
 };
 
 export default defaultState;

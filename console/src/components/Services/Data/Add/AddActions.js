@@ -1,6 +1,7 @@
 import defaultState from './AddState';
+
 import _push from '../push';
-import { loadSchema, makeMigrationCall } from '../DataActions';
+import { updateSchemaInfo, makeMigrationCall } from '../DataActions';
 import {
   showSuccessNotification,
   showErrorNotification,
@@ -30,6 +31,10 @@ const REQUEST_ERROR = 'AddTable/REQUEST_ERROR';
 const VALIDATION_ERROR = 'AddTable/VALIDATION_ERROR';
 const RESET_VALIDATION_ERROR = 'AddTable/RESET_VALIDATION_ERROR';
 
+/*
+ * For any action dispatched, the ability to notify the renderer that something is happening
+ * */
+
 const setDefaults = () => ({ type: SET_DEFAULTS });
 const setTableName = value => ({ type: SET_TABLENAME, value });
 const setTableComment = value => ({ type: SET_TABLECOMMENT, value });
@@ -46,11 +51,10 @@ const setColDefault = (colDefault, index, isNull) => ({
   index,
   isNull,
 });
-const setColType = (coltype, index, isNull) => ({
+const setColType = (coltype, index) => ({
   type: SET_COLTYPE,
   coltype,
   index,
-  isNull,
 });
 const removeColDefault = index => ({ type: REMOVE_COLDEFAULT, index });
 const setColNullable = (isNull, index) => ({
@@ -130,8 +134,6 @@ const createTableSql = () => {
     // add primary key
     if (pKeys.length > 0) {
       tableColumns += ', PRIMARY KEY (';
-      // tableColumns += '"' + pKeys.map((col) => (col)) + '"';
-      // tableColumns += pKeys.join(', ');
       pKeys.map(col => {
         tableColumns += '"' + col + '"' + ',';
       });
@@ -160,7 +162,7 @@ const createTableSql = () => {
         if (lCols.length === 0) return;
         tableColumns = `${tableColumns}, FOREIGN KEY (${lCols.join(
           ', '
-        )}) REFERENCES "${currentSchema}"."${refTableName}"(${rCols.join(
+        )}) REFERENCES "${fk.refSchemaName}"."${refTableName}"(${rCols.join(
           ', '
         )}) ON UPDATE ${onUpdate} ON DELETE ${onDelete}`;
       });
@@ -266,7 +268,7 @@ const createTableSql = () => {
       dispatch({ type: REQUEST_SUCCESS });
       dispatch({ type: SET_DEFAULTS });
       dispatch(setTable(state.tableName.trim()));
-      dispatch(loadSchema()).then(() =>
+      dispatch(updateSchemaInfo()).then(() =>
         dispatch(
           _push(
             '/schema/' +
@@ -295,7 +297,8 @@ const createTableSql = () => {
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
+      errorMsg,
+      true
     );
   };
 };
@@ -345,15 +348,19 @@ const addTableReducer = (state = defaultState, action) => {
             return (pkiValue - 1).toString();
           }
         })
-        .filter(pki => Boolean(pki));
+        .filter(pki => pki !== undefined);
 
-      const uniqueKeys = state.uniqueKeys.map(uk => {
-        const newUniqueKey = uk.map(c => {
-          if (c > action.index) return c - 1;
-          if (c < action.index) return c;
-        });
-        return [...newUniqueKey];
-      });
+      const uniqueKeys = state.uniqueKeys
+        .map(uk => {
+          const newUniqueKey = uk
+            .map(c => {
+              if (c > action.index) return c - 1;
+              if (c < action.index) return c;
+            })
+            .filter(c => c !== undefined);
+          return [...newUniqueKey];
+        })
+        .filter(uk => uk.length !== 0);
 
       return {
         ...state,
@@ -362,7 +369,7 @@ const addTableReducer = (state = defaultState, action) => {
           ...state.columns.slice(action.index + 1),
         ],
         primaryKeys: [...primaryKeys, ''],
-        uniqueKeys: [...uniqueKeys],
+        uniqueKeys: [...uniqueKeys, []],
       };
     case SET_COLNAME:
       const i = action.index;
@@ -383,7 +390,6 @@ const addTableReducer = (state = defaultState, action) => {
           {
             ...state.columns[ij],
             type: action.coltype,
-            nullable: action.isNull,
           },
           ...state.columns.slice(ij + 1),
         ],

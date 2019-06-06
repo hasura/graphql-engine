@@ -1,14 +1,9 @@
 import defaultState from './AddState';
 import _push from '../push';
-import {
-  loadTriggers,
-  makeMigrationCall,
-  setTrigger,
-  loadProcessedEvents,
-} from '../EventActions';
+import { loadTriggers, makeMigrationCall, setTrigger } from '../EventActions';
 import { showSuccessNotification } from '../Notification';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
-import { fetchTableListBySchema } from '../../Data/DataActions';
+import { updateSchemaInfo } from '../../Data/DataActions';
 
 const SET_DEFAULTS = 'AddTrigger/SET_DEFAULTS';
 const SET_TRIGGERNAME = 'AddTrigger/SET_TRIGGERNAME';
@@ -22,7 +17,6 @@ const MAKING_REQUEST = 'AddTrigger/MAKING_REQUEST';
 const REQUEST_SUCCESS = 'AddTrigger/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'AddTrigger/REQUEST_ERROR';
 const VALIDATION_ERROR = 'AddTrigger/VALIDATION_ERROR';
-const UPDATE_TABLE_LIST = 'AddTrigger/UPDATE_TABLE_LIST';
 const TOGGLE_COLUMNS = 'AddTrigger/TOGGLE_COLUMNS';
 const TOGGLE_ALL_COLUMNS = 'AddTrigger/TOGGLE_ALL_COLUMNS';
 const TOGGLE_OPERATION = 'AddTrigger/TOGGLE_OPERATION';
@@ -91,7 +85,6 @@ const createTrigger = () => {
       args: {
         name: triggerName,
         table: { name: tableName, schema: currentSchema },
-        // webhook: webhook,
         ...getWebhookKey(webhookType, webhook),
       },
     };
@@ -163,15 +156,11 @@ const createTrigger = () => {
     const errorMsg = 'Create trigger failed';
 
     const customOnSuccess = () => {
-      // dispatch({ type: REQUEST_SUCCESS });
-
       dispatch(setTrigger(triggerName.trim()));
-      dispatch(loadTriggers()).then(() => {
-        dispatch(loadProcessedEvents()).then(() => {
-          dispatch(
-            _push('/manage/triggers/' + triggerName.trim() + '/processed')
-          );
-        });
+      dispatch(loadTriggers([triggerName])).then(() => {
+        dispatch(
+          _push('/manage/triggers/' + triggerName.trim() + '/processed')
+        );
       });
       return;
     };
@@ -191,14 +180,14 @@ const createTrigger = () => {
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
+      errorMsg,
+      true
     );
   };
 };
 
 const loadTableList = schemaName => {
-  return dispatch =>
-    dispatch(fetchTableListBySchema(schemaName, UPDATE_TABLE_LIST));
+  return dispatch => dispatch(updateSchemaInfo({ schemas: [schemaName] }));
 };
 
 const operationToggleColumn = (column, operation) => {
@@ -352,8 +341,6 @@ const addTriggerReducer = (state = defaultState, action) => {
       return { ...state, tableName: action.value };
     case SET_SCHEMANAME:
       return { ...state, schemaName: action.value };
-    case UPDATE_TABLE_LIST:
-      return { ...state, tableListBySchema: action.data };
     case TOGGLE_COLUMNS:
       const operations = state.operations;
       operations[action.op] = action.cols;

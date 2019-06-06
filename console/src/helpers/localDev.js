@@ -6,6 +6,9 @@ const envObj = `apiHost: '${process.env.API_HOST}',
         nodeEnv: '${process.env.NODE_ENV}',
         urlPrefix: '${process.env.URL_PREFIX}',
         enableTelemetry: ${process.env.ENABLE_TELEMETRY},
+        assetsPath: '${process.env.ASSETS_PATH}',
+        assetsVersion: '${process.env.ASSETS_VERSION}',
+        cdnAssets: ${process.env.CDN_ASSETS},
 `;
 
 let appendObj;

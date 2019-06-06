@@ -20,55 +20,55 @@ export const openRawSQL = () => {
 };
 
 export const passCreateTable = () => {
-  prevStr = 'CREATE TABLE apic_test_table_rsql (id serial PRIMARY KEY);';
+  prevStr = 'CREATE TABLE Apic_test_table_rsql (id serial PRIMARY KEY);';
   cy.get('textarea').type(prevStr, { force: true });
   cy.get(getElementFromAlias('run-sql')).click();
   cy.wait(5000);
-  // validateCT('apic_test_table_rsql', 'success');
+  // validateCT('Apic_test_table_rsql', 'success');
 };
 
 export const passInsertValues = () => {
   for (let i = 0; i < prevStr.length; i++) {
     cy.get('textarea').type('{backspace}', { force: true });
   }
-  prevStr = 'INSERT INTO apic_test_table_rsql VALUES (1);';
+  prevStr = 'INSERT INTO Apic_test_table_rsql VALUES (1);';
   cy.get('textarea').type(prevStr, { force: true });
   cy.get(getElementFromAlias('run-sql')).click();
   cy.wait(5000);
-  // validateCT('apic_test_table_rsql', 'success');
+  // validateCT('Apic_test_table_rsql', 'success');
 };
 
 export const passAlterTable = () => {
   for (let i = 0; i < prevStr.length; i++) {
     cy.get('textarea').type('{backspace}', { force: true });
   }
-  prevStr = 'ALTER TABLE apic_test_table_rsql ADD COLUMN name text;';
+  prevStr = 'ALTER TABLE Apic_test_table_rsql ADD COLUMN name text;';
   cy.get('textarea').type(prevStr, { force: true });
   // Untrack table
   cy.get(getElementFromAlias('raw-sql-track-check')).uncheck();
   cy.get(getElementFromAlias('run-sql')).click();
   cy.wait(5000);
-  // validateCT('apic_test_table_rsql', 'success');
+  // validateCT('Apic_test_table_rsql', 'success');
 };
 
 export const passCreateView = () => {
   for (let i = 0; i < prevStr.length; i++) {
     cy.get('textarea').type('{backspace}', { force: true });
   }
-  prevStr = 'CREATE VIEW abcd AS SELECT * FROM apic_test_table_rsql;';
+  prevStr = 'CREATE VIEW abcd AS SELECT * FROM Apic_test_table_rsql;';
   cy.get('textarea').type(prevStr, { force: true });
   // Track table
   cy.get(getElementFromAlias('raw-sql-track-check')).check();
   cy.get(getElementFromAlias('run-sql')).click();
   cy.wait(5000);
-  // validateCT('apic_test_table_rsql', 'success');
+  // validateCT('Apic_test_table_rsql', 'success');
 };
 
 export const delTestTables = () => {
   for (let i = 0; i < prevStr.length; i++) {
     cy.get('textarea').type('{backspace}', { force: true });
   }
-  prevStr = 'DROP TABLE apic_test_table_rsql CASCADE;';
+  prevStr = 'DROP TABLE Apic_test_table_rsql CASCADE;';
   cy.get('textarea').type(prevStr, { force: true });
   cy.get(getElementFromAlias('raw-sql-migration-check')).uncheck();
   cy.get(getElementFromAlias('run-sql')).click();
@@ -82,9 +82,9 @@ export const delTestTables = () => {
   cy.get(getElementFromAlias('run-sql')).click();
   cy.wait(5000);
   // cy.visit(`${baseUrl}/data/schema/public`);
-  // cy.get(getElementFromAlias('add-track-table-apic_test_table_rsql')).click();
+  // cy.get(getElementFromAlias('add-track-table-Apic_test_table_rsql')).click();
   // cy.get(getElementFromAlias('delete-table')).click();
   // cy.on('window:confirm', () => true);
   // cy.wait(5000);
-  // validateCT('apic_test_table_rsql', 'failure');
+  // validateCT('Apic_test_table_rsql', 'failure');
 };

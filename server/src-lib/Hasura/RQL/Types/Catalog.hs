@@ -15,8 +15,6 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
-import qualified Data.HashMap.Strict              as HM
-
 data CatalogTableG a
   = CatalogTableG
   { _ctTable         :: !QualifiedTable
@@ -69,19 +67,6 @@ data CatalogFunction
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogFunction)
 
-type ColMapping = HM.HashMap PGCol PGCol
-
-data CatalogFKey
-  = CatalogFKey
-  { _cfkTable         :: !QualifiedTable
-  , _cfkRefTable      :: !QualifiedTable
-  , _cfkConstraint    :: !ConstraintName
-  , _cfkColumnMapping :: !ColMapping
-  } deriving (Show, Eq, Generic)
-$(deriveJSON (aesonDrop 4 snakeCase) ''CatalogFKey)
-
-instance Hashable CatalogFKey
-
 data CatalogMetadata
   = CatalogMetadata
   { _cmTables               :: ![CatalogTable]
@@ -91,7 +76,7 @@ data CatalogMetadata
   , _cmEventTriggers        :: ![CatalogEventTrigger]
   , _cmRemoteSchemas        :: ![AddRemoteSchemaQuery]
   , _cmFunctions            :: ![CatalogFunction]
-  , _cmForeignKeys          :: ![CatalogFKey]
+  , _cmForeignKeys          :: ![ForeignKey]
   , _cmAllowlistCollections :: ![CollectionDef]
   , _cmPgTypeInfos          :: ![PGTyInfo]
   } deriving (Show, Eq)

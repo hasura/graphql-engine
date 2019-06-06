@@ -305,7 +305,7 @@ convertSelect
      )
   => SelOpCtx -> Field -> m QueryRootFldUnresolved
 convertSelect opCtx fld =
-  withPathK "selectionSet" $ fmap QRFSimple $
+  withPathK "selectionSet" $ QRFSimple <$>
   fromField qt permFilter permLimit fld
   where
     SelOpCtx qt _ permFilter permLimit = opCtx
@@ -316,7 +316,7 @@ convertSelectByPKey
      )
   => SelPkOpCtx -> Field -> m QueryRootFldUnresolved
 convertSelectByPKey opCtx fld =
-  withPathK "selectionSet" $ fmap QRFPk $
+  withPathK "selectionSet" $ QRFPk <$>
     fromFieldByPKey qt colArgMap permFilter fld
   where
     SelPkOpCtx qt _ permFilter colArgMap = opCtx
@@ -400,7 +400,7 @@ convertAggSelect
      )
   => SelOpCtx -> Field -> m QueryRootFldUnresolved
 convertAggSelect opCtx fld =
-  withPathK "selectionSet" $ fmap QRFAgg $
+  withPathK "selectionSet" $ QRFAgg <$>
   fromAggField qt permFilter permLimit fld
   -- return $ RS.selectAggQuerySQL selData
   where
@@ -408,14 +408,13 @@ convertAggSelect opCtx fld =
 
 parseFunctionArgs
   ::( MonadError QErr m)
-  => FuncArgSeq -> AnnInpVal -> m [AnnPGVal]
-parseFunctionArgs argSeq val =
-  flip withObject val $ \nTy obj ->
-    fmap toList $ forM argSeq $ \(FuncArgItem argName) -> do
-      argVal <- onNothing (OMap.lookup argName obj) $ throw500 $
-                "argument " <> showName argName <> " required in input type "
-                <> showNamedTy nTy
-      asPGColVal argVal
+  => FuncArgSeq -> AnnInpVal -> m [UnresolvedVal]
+parseFunctionArgs argSeq val = fmap catMaybes $
+  flip withObject val $ \_ obj ->
+    fmap toList $ forM argSeq $ \(FuncArgItem argName) ->
+      forM (OMap.lookup argName obj) $ fmap (maybe nullSQL UVPG) . asPGColValM
+  where
+    nullSQL = UVSQL $ S.SEUnsafe "NULL"
 
 fromFuncQueryField
   :: (MonadError QErr m)
@@ -425,7 +424,7 @@ fromFuncQueryField
   -> m (RS.AnnFnSelG s UnresolvedVal)
 fromFuncQueryField fn qf argSeq fld = fieldAsPath fld $ do
   funcArgsM <- withArgM (_fArguments fld) "args" $ parseFunctionArgs argSeq
-  let funcArgs = maybe [] (map UVPG) funcArgsM
+  let funcArgs = fromMaybe [] funcArgsM
   RS.AnnFnSel qf funcArgs <$> fn fld
 
 convertFuncQuerySimple
@@ -437,7 +436,7 @@ convertFuncQuerySimple
      )
   => FuncQOpCtx -> Field -> m QueryRootFldUnresolved
 convertFuncQuerySimple funcOpCtx fld =
-  withPathK "selectionSet" $ fmap QRFFnSimple $
+  withPathK "selectionSet" $ QRFFnSimple <$>
     fromFuncQueryField (fromField qt permFilter permLimit) qf argSeq fld
   where
     FuncQOpCtx qt _ permFilter permLimit qf argSeq = funcOpCtx
@@ -451,7 +450,7 @@ convertFuncQueryAgg
      )
   => FuncQOpCtx -> Field -> m QueryRootFldUnresolved
 convertFuncQueryAgg funcOpCtx fld =
-  withPathK "selectionSet" $ fmap QRFFnAgg $
+  withPathK "selectionSet" $ QRFFnAgg <$>
     fromFuncQueryField (fromAggField qt permFilter permLimit) qf argSeq fld
   where
     FuncQOpCtx qt _ permFilter permLimit qf argSeq = funcOpCtx
