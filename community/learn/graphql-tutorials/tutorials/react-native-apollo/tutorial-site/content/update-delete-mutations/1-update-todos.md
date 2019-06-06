@@ -1,5 +1,7 @@
 ---
 title: "Update todos - mutation"
+metaTitle: "Mutation to update todos | GraphQL React Native Apollo Tutorial"
+metaDescription: "GraphQL Mutation to update existing personal todos. Try the mutation in GraphiQL, passing the Authorization token to mark a todo as completed"
 ---
 
 In this part of the tutorial, you will learn how to mark an existing todo as completed by using GraphQL Mutations.

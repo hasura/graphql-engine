@@ -1,5 +1,7 @@
 ---
 title: "Setup users table permissions"
+metaTitle: "Setup users table permissions | Hasura GraphQL Tutorial"
+metaDescription: "This tutorial covers how to set up permissions for users table for insert, select, update and delete operations using Hasura console"
 ---
 
 import YoutubeEmbed from "../../src/YoutubeEmbed.js";

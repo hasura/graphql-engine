@@ -1,6 +1,7 @@
 ---
-title: 'Architecture'
-order: 1
+title: "Architecture"
+metaTitle: "GraphQL Architecture | GraphQL iOS Apollo Tutorial"
+metaDescription: "Learn about the architecture of GraphQL, GraphQL over HTTP, the client server model with an example of http request to send a graphql query"
 ---
 
 Before going further in understanding GraphQL, it's useful to get a sense of how

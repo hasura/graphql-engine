@@ -1,5 +1,7 @@
 ---
-title: 'Query Variables'
+title: "Query Variables"
+metaTitle: "Passing GraphQL Variables in Queries | GraphQL Android Apollo Tutorial"
+metaDescription: "An Example of passing variables in GraphQL context and usage of Apollo GraphQL Mutation variables in Android app."
 ---
 
 ## What is a variable in GraphQL context?

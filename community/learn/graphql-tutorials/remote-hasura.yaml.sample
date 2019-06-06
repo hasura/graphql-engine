@@ -54,6 +54,11 @@ spec:
       name: ios-apollo
       path: ./community/learn/graphql-tutorials/tutorials/ios-apollo/tutorial-site
     name: ios-apollo
+  - containers:
+    - dockerfile: ./community/learn/graphql-tutorials/tutorials/android-apollo/tutorial-site/Dockerfile
+      name: android-apollo
+      path: ./community/learn/graphql-tutorials/tutorials/android-apollo/tutorial-site
+    name: android-apollo
   manifests:
     helm: {}
     path: ./community/learn/graphql-tutorials/manifests
