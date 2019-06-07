@@ -66,6 +66,7 @@ tables:
   select_permissions: []
   table: test
   update_permissions: []
+version: 2
 `),
 	"empty-metadata": []byte(`allowlist: []
 functions: []
@@ -73,6 +74,7 @@ query_collections: []
 query_templates: []
 remote_schemas: []
 tables: []
+version: 2
 `),
 }
 
