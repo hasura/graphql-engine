@@ -1,5 +1,3 @@
-import { createFilter } from 'react-select';
-
 export const INTEGER = 'integer';
 export const SERIAL = 'serial';
 export const BIGINT = 'bigint';
@@ -589,9 +587,3 @@ WHERE (t.typrelid = 0 OR (SELECT c.relkind = 'c' FROM pg_catalog.pg_class c WHER
   AND t.typname != 'unknown'
   AND t.typcategory != 'P'
 GROUP BY t.typcategory;`;
-
-const pgTypeSearchOptions = {
-  matchFrom: 'start',
-};
-
-export const getPgFilter = () => createFilter(pgTypeSearchOptions);

@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
-import { commonDataTypes, getPgFilter } from '../utils';
+import { commonDataTypes } from '../utils';
 import {
   getDataOptions,
   getPlaceholder,
@@ -91,7 +91,7 @@ const TableColumn = props => {
           value={column.type && columnTypeValueMap[column.type]}
           bsClass={`col-type-${i} add_table_column_selector`}
           styleOverrides={customSelectBoxStyles}
-          filterOption={getPgFilter()}
+          filterOption={'prefix'}
         />
       </span>
       <input
