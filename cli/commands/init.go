@@ -38,6 +38,9 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
   # Create a directory with endpoint and admin secret configured:
   hasura init --directory <my-project> --endpoint https://my-graphql-engine.com --admin-secret adminsecretkey
 
+  # Create a directory and include a docker-compose.yaml:
+  hasura init --directory <my-project> --docker
+
   # See https://docs.hasura.io/1.0/graphql/manual/migrations/index.html for more details`,
 		SilenceUsage: true,
 		PreRun: func(cmd *cobra.Command, args []string) {
