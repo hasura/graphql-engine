@@ -1,0 +1,17 @@
+{
+  "name": "aws-lambda-nodejs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "lambdaCtx.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "apollo-server": "^2.1.0",
+    "graphql": "^0.13.1",
+    "graphql-tag": "^2.10.1"
+  }
+}

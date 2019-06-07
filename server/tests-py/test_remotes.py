@@ -1,18 +1,48 @@
 #!/usr/bin/env python3
 
 import pytest
+import subprocess
+import time
 
 from validate import check_query_f, check_query
+
+class NodeGraphQL():
+
+    def __init__(self, cmd):
+        self.cmd = cmd
+        self.proc = None
+
+    def start(self):
+        proc = subprocess.Popen(self.cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        time.sleep(1)
+        self.proc = proc
+
+    def stop(self):
+        self.proc.terminate()
+
+@pytest.fixture(scope="module")
+def graphql_service():
+    svc = NodeGraphQL(["node", "remote_schemas/nodejs/index.js"])
+    return svc
 
 class TestTopLevelMixedFields:
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):
+    def transact(self, hge_ctx, graphql_service):
         print("In setup method")
+        graphql_service.start()
         st_code, resp = hge_ctx.v1q_f('queries/remote_schemas/setup_mixed.yaml')
         assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f('queries/remote_schemas/teardown_mixed.yaml')
+        assert st_code == 200, resp
+        graphql_service.stop()
 
-        # Check invalid setups
+    def test_create_valid(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f('queries/remote_schemas/setup_remote_relationship.yaml')
+        assert st_code == 200, resp
+
+    def test_create_invalid(self, hge_ctx):
 
         st_code, resp = hge_ctx.v1q_f('queries/remote_schemas/setup_invalid_remote_rel_hasura_field.yaml')
         assert st_code == 400, resp
@@ -34,17 +64,6 @@ class TestTopLevelMixedFields:
 
         st_code, resp = hge_ctx.v1q_f('queries/remote_schemas/setup_invalid_remote_rel_type.yaml')
         assert st_code == 400, resp
-
-        # Valid setup of remote relationship
-        st_code, resp = hge_ctx.v1q_f('queries/remote_schemas/setup_remote_relationship.yaml')
-        assert st_code == 200, resp
-
-        yield
-        st_code, resp = hge_ctx.v1q_f('queries/remote_schemas/teardown_mixed.yaml')
-        assert st_code == 200, resp
-
-    def test_basic(self, hge_ctx):
-        check_query_f(hge_ctx, 'queries/remote_schemas/basic_mixed.yaml')
 
 # class TestRemoteRelationships:
 
