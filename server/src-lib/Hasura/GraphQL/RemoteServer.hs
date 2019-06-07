@@ -25,7 +25,7 @@ import           Hasura.RQL.Types
 
 import qualified Hasura.GraphQL.Schema         as GS
 import qualified Hasura.GraphQL.Validate.Types as VT
-
+import           Hasura.RQL.DDL.Remote.Types (RemoteSchemaName)
 
 
 introspectionQuery :: BL.ByteString

@@ -17,8 +17,8 @@ import           Data.List.NonEmpty                (NonEmpty (..))
 import           Data.Validation
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Relationship.Types
 import           Hasura.RQL.DDL.Remote.Input
+import           Hasura.RQL.DDL.Remote.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 

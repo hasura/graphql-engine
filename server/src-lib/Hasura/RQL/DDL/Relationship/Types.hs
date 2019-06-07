@@ -1,7 +1,5 @@
 module Hasura.RQL.DDL.Relationship.Types where
 
-import           Data.Set (Set)
-import           Hasura.RQL.DDL.Remote.Input
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -13,7 +11,6 @@ import qualified Data.HashMap.Strict as HM
 import qualified Data.Map.Strict as M
 import qualified Data.Text as T
 import           Instances.TH.Lift ()
-import qualified Language.GraphQL.Draft.Syntax as G
 import           Language.Haskell.TH.Syntax (Lift)
 
 data RelDef a
@@ -104,19 +101,6 @@ type ObjRelUsing = RelUsing PGCol ObjRelManualConfig
 type ObjRelDef = RelDef ObjRelUsing
 
 type CreateObjRel = WithTable ObjRelDef
-
-data CreateRemoteRelationship =
-  CreateRemoteRelationship
-    { ccrName :: RemoteRelationshipName
-    , ccrTable :: QualifiedTable
-    , ccrRemoteSchema :: RemoteSchemaName
-    , ccrRemoteField :: G.Name
-    , ccrHasuraFields :: Set FieldName
-    , ccrRemoteArguments :: RemoteArguments
-    }
-  deriving (Show, Eq, Lift)
-
-$(deriveJSON (aesonDrop 3 snakeCase) ''CreateRemoteRelationship)
 
 data DropRel
   = DropRel

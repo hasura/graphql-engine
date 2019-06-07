@@ -18,6 +18,7 @@ where
 
 import qualified Database.PG.Query as Q
 import           Hasura.RQL.DDL.Remote.Validate
+import           Hasura.RQL.DDL.Remote.Types
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
