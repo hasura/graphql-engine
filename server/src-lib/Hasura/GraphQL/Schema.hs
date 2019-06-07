@@ -22,6 +22,8 @@ module Hasura.GraphQL.Schema
 
 import           Data.Has
 import           Data.Maybe                     (maybeToList)
+import           Control.Lens (preview)
+import           Control.Lens.TH (makePrisms)
 
 import qualified Data.HashMap.Strict            as Map
 import qualified Data.HashSet                   as Set
@@ -65,7 +67,14 @@ instance Has TypeMap RemoteGCtx where
   getter = _rgTypes
   modifier f ctx = ctx { _rgTypes = f $ _rgTypes ctx }
 
-type SelField = Either PGColInfo (RelInfo, Bool, AnnBoolExpPartialSQL, Maybe Int, Bool)
+data SelField
+  = SelFldCol PGColInfo
+  | SelFldRel SelFldRelTup
+
+-- TODO: This tuple is bad and should be a record.
+type SelFldRelTup = (RelInfo, Bool, AnnBoolExpPartialSQL, Maybe Int, Bool)
+
+$(makePrisms ''SelField)
 
 qualObjectToName :: (ToTxt a) => QualifiedObject a -> G.Name
 qualObjectToName = G.Name . snakeCaseQualObject
@@ -267,7 +276,12 @@ mkTableObj
 mkTableObj tn allowedFlds =
   mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) HasuraType
   where
-    flds = concatMap (either (pure . mkPGColFld) mkRelFld') allowedFlds
+    flds =
+      concatMap
+        (\case
+            SelFldCol pgColInfo -> pure (mkPGColFld pgColInfo)
+            SelFldRel selFldRel -> mkRelFld' selFldRel)
+        allowedFlds
     mkRelFld' (relInfo, allowAgg, _, _, isNullable) =
       mkRelFld allowAgg relInfo isNullable
     desc = G.Description $ "columns and relationships of " <>> tn
@@ -544,9 +558,9 @@ mkBoolExpInp tn fields =
       ]
 
     mkFldExpInp = \case
-      Left (PGColInfo colName colTy _) ->
+      SelFldCol (PGColInfo colName colTy _) ->
         mk (mkColName colName) (mkCompExpTy colTy)
-      Right (RelInfo relName _ _ remTab _, _, _, _, _) ->
+      SelFldRel (RelInfo relName _ _ remTab _, _, _, _, _) ->
         mk (G.Name $ getRelTxt relName) (mkBoolExpTy remTab)
 
 mkPGColInp :: PGColInfo -> InpValInfo
@@ -1168,8 +1182,8 @@ mkOrdByInpObj tn selFlds = (inpObjTy, ordByCtx)
     desc = G.Description $
       "ordering options when selecting data from " <>> tn
 
-    pgCols = lefts selFlds
-    relFltr ty = flip filter (rights selFlds) $ \(ri, _, _, _, _) ->
+    pgCols = mapMaybe (preview _SelFldCol) selFlds
+    relFltr ty = flip filter (mapMaybe (preview _SelFldRel) selFlds) $ \(ri, _, _, _, _) ->
       riType ri == ty
     objRels = relFltr ObjRel
     arrRels = relFltr ArrRel
@@ -1310,7 +1324,7 @@ mkGCtxRole' tn insPermM selPermM updColsM
     updSetInpObjFldsM = mkColFldMap (mkUpdSetTy tn) <$> updColsM
 
     selFldsM = snd <$> selPermM
-    selColsM = (map pgiName . lefts) <$> selFldsM
+    selColsM = (map pgiName . mapMaybe (preview _SelFldCol)) <$> selFldsM
     selColInpTyM = mkSelColumnTy tn <$> selColsM
     -- boolexp input type
     boolExpInpObjM = case selFldsM of
@@ -1331,8 +1345,8 @@ mkGCtxRole' tn insPermM selPermM updColsM
     -- helper
     mkFldMap ty = Map.fromList . concatMap (mkFld ty)
     mkFld ty = \case
-      Left ci -> [((ty, mkColName $ pgiName ci), Left ci)]
-      Right (ri, allowAgg, perm, lim, _) ->
+      SelFldCol ci -> [((ty, mkColName $ pgiName ci), Left ci)]
+      SelFldRel (ri, allowAgg, perm, lim, _) ->
         let relFld = ( (ty, G.Name $ getRelTxt $ riName ri)
                      , Right (ri, False, perm, lim)
                      )
@@ -1371,8 +1385,8 @@ mkGCtxRole' tn insPermM selPermM updColsM
         in (objs, ordByInps)
       _ -> ([], [])
 
-    getNumCols = onlyNumCols . lefts
-    getCompCols = onlyComparableCols . lefts
+    getNumCols = onlyNumCols . mapMaybe (preview _SelFldCol)
+    getCompCols = onlyComparableCols . mapMaybe (preview _SelFldCol)
     onlyFloat = const $ mkScalarTy PGFloat
 
     mkTypeMaker "sum" = mkScalarTy
@@ -1498,13 +1512,14 @@ getSelPerm
 getSelPerm tableCache fields role selPermInfo = do
   selFlds <- fmap catMaybes $ forM (toValidFieldInfos fields) $ \case
     FIColumn pgColInfo ->
-      return $ fmap Left $ bool Nothing (Just pgColInfo) $
+      return $ fmap SelFldCol $ bool Nothing (Just pgColInfo) $
       Set.member (pgiName pgColInfo) allowedCols
     FIRelationship relInfo -> do
       remTableInfo <- getTabInfo tableCache $ riRTable relInfo
       let remTableSelPermM = getSelPermission remTableInfo role
       return $ flip fmap remTableSelPermM $
-        \rmSelPermM -> Right ( relInfo
+        \rmSelPermM -> SelFldRel
+                             ( relInfo
                              , spiAllowAgg rmSelPermM
                              , spiFilter rmSelPermM
                              , spiLimit rmSelPermM
@@ -1654,8 +1669,8 @@ mkGCtxMapTable tableCache funcCache tabInfo = do
     tabFuncs = filter (isValidObjectName . fiName) $
                getFuncsOfTable tn funcCache
     selFlds = flip map (toValidFieldInfos fields) $ \case
-      FIColumn pgColInfo     -> Left pgColInfo
-      FIRelationship relInfo -> Right (relInfo, True, noFilter, Nothing, isRelNullable fields relInfo)
+      FIColumn pgColInfo     -> SelFldCol pgColInfo
+      FIRelationship relInfo -> SelFldRel (relInfo, True, noFilter, Nothing, isRelNullable fields relInfo)
     adminRootFlds =
       getRootFldsRole' tn pkeyCols validConstraints fields tabFuncs
       (Just ([], True)) (Just (noFilter, Nothing, [], True))
