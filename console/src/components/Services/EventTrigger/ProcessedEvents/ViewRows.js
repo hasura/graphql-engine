@@ -5,9 +5,7 @@ import Tabs from 'react-bootstrap/lib/Tabs';
 import Tab from 'react-bootstrap/lib/Tab';
 import 'brace/mode/json';
 import 'react-table/react-table.css';
-import { deleteItem, vExpandRow, vCollapseRow } from './ViewActions'; // eslint-disable-line no-unused-vars
 import FilterQuery from './FilterQuery';
-import parseRowData from '../StreamingLogs/util';
 import {
   setOrderCol,
   setOrderType,
@@ -17,7 +15,12 @@ import {
   setLimit,
   addOrder,
 } from './FilterActions';
-import { ordinalColSort, convertDateTimeToLocale } from '../utils';
+import {
+  ordinalColSort,
+  convertDateTimeToLocale,
+  verifySuccessStatus,
+  parseRowData,
+} from '../utils';
 import '../TableCommon/EventReactTableOverrides.css';
 import * as tooltip from '../Common/Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
@@ -221,6 +224,14 @@ const ViewRows = ({
     }
   };
 
+  const successIcon = (
+    <i className={styles.invocationSuccess + 'fa fa-check'} />
+  );
+
+  const failureIcon = (
+    <i className={styles.invocationFailure + ' fa fa-times'} />
+  );
+
   const renderTableBody = () => {
     if (newCurRows.length === 0) {
       return <div> No rows found. </div>;
@@ -275,12 +286,9 @@ const ViewRows = ({
           const responseData = [];
           currentRow.logs.map((r, rowIndex) => {
             const newRow = {};
-            const status =
-              r.status === 200 ? (
-                <i className={styles.invocationSuccess + ' fa fa-check'} />
-              ) : (
-                <i className={styles.invocationFailure + ' fa fa-times'} />
-              );
+            const status = verifySuccessStatus(r.status)
+              ? successIcon
+              : failureIcon;
 
             requestData.push(parseRowData(r, 'request'));
             responseData.push(parseRowData(r, 'response'));
@@ -429,36 +437,26 @@ const ViewRows = ({
                                 >
                                   {finalResponse.status_code
                                     ? [
-                                      'Status Code: ',
-                                      finalResponse.status_code === 200 ? (
-                                        <i
-                                          className={
-                                            styles.invocationSuccess +
-                                              ' fa fa-check'
+                                        'Status Code: ',
+                                        verifySuccessStatus(
+                                          finalResponse.status_code
+                                        )
+                                          ? successIcon
+                                          : failureIcon,
+                                        finalResponse.status_code,
+                                        ' ',
+                                        <OverlayTrigger
+                                          placement="top"
+                                          overlay={
+                                            tooltip.statusCodeDescription
                                           }
-                                        />
-                                      ) : (
-                                        <i
-                                          className={
-                                            styles.invocationFailure +
-                                              ' fa fa-times'
-                                          }
-                                        />
-                                      ),
-                                      finalResponse.status_code,
-                                      ' ',
-                                      <OverlayTrigger
-                                        placement="top"
-                                        overlay={
-                                          tooltip.statusCodeDescription
-                                        }
-                                      >
-                                        <i
-                                          className="fa fa-question-circle"
-                                          aria-hidden="true"
-                                        />
-                                      </OverlayTrigger>,
-                                    ]
+                                        >
+                                          <i
+                                            className="fa fa-question-circle"
+                                            aria-hidden="true"
+                                          />
+                                        </OverlayTrigger>,
+                                      ]
                                     : null}
                                 </div>
                                 <AceEditor
