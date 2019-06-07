@@ -24,10 +24,7 @@ import {
   setLoveConsentState,
 } from './loveConsentLocalStorage';
 
-import {
-  versionGT,
-  JWT_ANALYZER_VERSION_CHECK,
-} from '../../helpers/versionUtils';
+import { versionGT, FT_JWT_ANALYZER } from '../../helpers/versionUtils';
 
 class Main extends React.Component {
   constructor(props) {
@@ -42,7 +39,12 @@ class Main extends React.Component {
   }
 
   componentDidMount() {
-    const { dispatch } = this.props;
+    const {
+      dispatch,
+      latestServerVersion,
+      serverVersion,
+      featuresCompatibility,
+    } = this.props;
 
     document
       .querySelector('body')
@@ -60,13 +62,13 @@ class Main extends React.Component {
       dispatch(loadLatestServerVersion()).then(() => {
         try {
           const isClosedBefore = window.localStorage.getItem(
-            this.props.latestServerVersion + '_BANNER_NOTIFICATION_CLOSED'
+            latestServerVersion + '_BANNER_NOTIFICATION_CLOSED'
           );
 
           if (isClosedBefore !== 'true') {
             const isUpdateAvailable = versionGT(
-              this.props.latestServerVersion,
-              this.props.serverVersion
+              latestServerVersion,
+              serverVersion
             );
 
             if (isUpdateAvailable) {
@@ -79,11 +81,8 @@ class Main extends React.Component {
           console.error(e);
         }
       });
-      // if (semverCheck('JWTAnalyzer', this.props.serverVersion)) {
-      if (
-        JWT_ANALYZER_VERSION_CHECK in this.props.featuresCompatibility &&
-        this.props.featuresCompatibility[JWT_ANALYZER_VERSION_CHECK]
-      ) {
+
+      if (featuresCompatibility[FT_JWT_ANALYZER]) {
         this.fetchServerConfig();
       }
     });
@@ -91,6 +90,7 @@ class Main extends React.Component {
 
   fetchServerConfig() {
     const { dispatch } = this.props;
+
     dispatch(fetchServerConfig());
   }
 

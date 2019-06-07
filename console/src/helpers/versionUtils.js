@@ -1,11 +1,11 @@
 const semver = require('semver');
 
-export const JWT_ANALYZER_VERSION_CHECK = 'JWTAnalyzer';
+export const FT_JWT_ANALYZER = 'JWTAnalyzer';
 
 // list of feature launch versions
 const featureLaunchVersions = {
   // feature: 'v1.0.0'
-  [JWT_ANALYZER_VERSION_CHECK]: 'v1.0.0-beta.3',
+  [FT_JWT_ANALYZER]: 'v1.0.0-beta.3',
 };
 
 export const getFeaturesCompatibility = serverVersion => {
