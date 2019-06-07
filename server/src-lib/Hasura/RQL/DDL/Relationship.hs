@@ -154,46 +154,46 @@ createObjRelP2 (WithTable qt rd) = do
   return successMsg
 
 runCreateRemoteRelationship ::
-     (MonadTx m, CacheRM m) => CreateRemoteRelationship -> m EncJSON
-runCreateRemoteRelationship createRemoteRelationship = do
-  runCreateRemoteRelationshipP1 createRemoteRelationship
-  runCreateRemoteRelationshipP2 createRemoteRelationship
+     (MonadTx m, CacheRM m) => RemoteRelationship -> m EncJSON
+runCreateRemoteRelationship remoteRelationship = do
+  runCreateRemoteRelationshipP1 remoteRelationship
+  runCreateRemoteRelationshipP2 remoteRelationship
 
 runCreateRemoteRelationshipP1 ::
-     (MonadTx m, CacheRM m) => CreateRemoteRelationship -> m ()
-runCreateRemoteRelationshipP1 createRemoteRelationship = do
+     (MonadTx m, CacheRM m) => RemoteRelationship -> m ()
+runCreateRemoteRelationshipP1 remoteRelationship = do
   sc <- askSchemaCache
   case HM.lookup
-         (ccrRemoteSchema createRemoteRelationship)
+         (rtrRemoteSchema remoteRelationship)
          (scRemoteResolvers sc) of
     Just {} -> do
       validation <-
-        getCreateRemoteRelationshipValidation createRemoteRelationship
+        getCreateRemoteRelationshipValidation remoteRelationship
       case validation of
         Left err -> throw400 RemoteSchemaError (T.pack (show err))
         Right {} -> pure ()
     Nothing -> throw400 RemoteSchemaError "No such remote schema"
 
 runCreateRemoteRelationshipP2 ::
-     (MonadTx m) => CreateRemoteRelationship -> m EncJSON
-runCreateRemoteRelationshipP2 createRemoteRelationship = do
-  liftTx (persistCreateRemoteRelationship createRemoteRelationship)
+     (MonadTx m) => RemoteRelationship -> m EncJSON
+runCreateRemoteRelationshipP2 remoteRelationship = do
+  liftTx (persistCreateRemoteRelationship remoteRelationship)
   pure successMsg
 
 persistCreateRemoteRelationship
-  :: CreateRemoteRelationship -> Q.TxE QErr ()
-persistCreateRemoteRelationship createRemoteRelationship =
+  :: RemoteRelationship -> Q.TxE QErr ()
+persistCreateRemoteRelationship remoteRelationship =
   Q.unitQE defaultTxErrorHandler [Q.sql|
   INSERT INTO hdb_catalog.hdb_remote_relationship
   (name, table_schema, table_name, remote_schema, configuration)
   VALUES ($1, $2, $3, $4, $5 :: jsonb)
   |]
-  (let QualifiedObject schema_name table_name = ccrTable createRemoteRelationship
-   in (ccrName createRemoteRelationship
+  (let QualifiedObject schema_name table_name = rtrTable remoteRelationship
+   in (rtrName remoteRelationship
       ,schema_name
       ,table_name
-      ,ccrRemoteSchema createRemoteRelationship
-      ,Q.JSONB (toJSON (createRemoteRelationship))))
+      ,rtrRemoteSchema remoteRelationship
+      ,Q.JSONB (toJSON (remoteRelationship))))
   True
 
 runCreateObjRel

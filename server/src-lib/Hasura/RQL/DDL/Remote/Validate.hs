@@ -48,7 +48,7 @@ data ValidationError
 -- | Get a validation for the remote relationship proposal.
 getCreateRemoteRelationshipValidation ::
      (QErrM m, CacheRM m)
-  => CreateRemoteRelationship
+  => RemoteRelationship
   -> m (Either (NonEmpty ValidationError) ())
 getCreateRemoteRelationshipValidation createRemoteRelationship = do
   schemaCache <- askSchemaCache
@@ -60,11 +60,11 @@ getCreateRemoteRelationshipValidation createRemoteRelationship = do
 
 -- | Validate a remote relationship given a context.
 validateRelationship ::
-     CreateRemoteRelationship
+     RemoteRelationship
   -> GC.GCtx
   -> HM.HashMap QualifiedTable TableInfo
   -> Either (NonEmpty ValidationError) ()
-validateRelationship createRemoteRelationship gctx tables = do
+validateRelationship remoteRelationship gctx tables = do
   case HM.lookup tableName tables of
     Nothing -> Left (pure (TableNotFound tableName))
     Just table -> do
@@ -77,29 +77,29 @@ validateRelationship createRemoteRelationship gctx tables = do
                   Nothing ->
                     Left (pure (TableFieldNonexistent tableName fieldName))
                   Just fieldInfo -> pure (fieldName, fieldInfo))
-             (toList (ccrHasuraFields createRemoteRelationship)))
+             (toList (rtrHasuraFields remoteRelationship)))
       objFldInfo <-
         lookupField
-          (ccrRemoteField createRemoteRelationship)
+          (rtrRemoteField remoteRelationship)
           (GS._gQueryRoot gctx)
       case _fiLoc objFldInfo of
         HasuraType ->
           Left
             (pure
                (FieldNotFoundInRemoteSchema
-                  (ccrRemoteField createRemoteRelationship)))
+                  (rtrRemoteField remoteRelationship)))
         RemoteType {} ->
           toEither
             (validateRemoteArguments
                (_fiParams objFldInfo)
                (remoteArgumentsToMap
-                  (ccrRemoteArguments createRemoteRelationship))
+                  (rtrRemoteArguments remoteRelationship))
                (HM.fromList
                   (map (first fieldNameToVariable) (HM.toList fieldInfos)))
                (GS._gTypes gctx)
             )
   where
-    tableName = ccrTable createRemoteRelationship
+    tableName = rtrTable remoteRelationship
 
 -- | Convert a field name to a variable name.
 fieldNameToVariable :: FieldName -> G.Variable

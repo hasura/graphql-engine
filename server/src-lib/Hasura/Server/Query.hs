@@ -43,7 +43,7 @@ data RQLQuery
   | RQCreateObjectRelationship !CreateObjRel
   | RQCreateArrayRelationship !CreateArrRel
   | RQDropRelationship !DropRel
-  | RQCreateRemoteRelationship !CreateRemoteRelationship
+  | RQCreateRemoteRelationship !RemoteRelationship
   | RQSetRelationshipComment !SetRelComment
   | RQRenameRelationship !RenameRel
 

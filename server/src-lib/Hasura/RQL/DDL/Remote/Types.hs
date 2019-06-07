@@ -16,14 +16,14 @@ import           Instances.TH.Lift ()
 import qualified Language.GraphQL.Draft.Syntax as G
 import           Language.Haskell.TH.Syntax (Lift)
 
-data CreateRemoteRelationship =
-  CreateRemoteRelationship
-    { ccrName :: RemoteRelationshipName
-    , ccrTable :: QualifiedTable
-    , ccrRemoteSchema :: RemoteSchemaName
-    , ccrRemoteField :: G.Name
-    , ccrHasuraFields :: Set FieldName
-    , ccrRemoteArguments :: RemoteArguments
+data RemoteRelationship =
+  RemoteRelationship
+    { rtrName :: RemoteRelationshipName
+    , rtrTable :: QualifiedTable
+    , rtrRemoteSchema :: RemoteSchemaName
+    , rtrRemoteField :: G.Name
+    , rtrHasuraFields :: Set FieldName
+    , rtrRemoteArguments :: RemoteArguments
     }
   deriving (Show, Eq, Lift)
 
@@ -37,4 +37,4 @@ newtype RemoteRelationshipName
   { unRemoteRelationshipName :: Text}
   deriving (Show, Eq, Lift, Hashable, ToJSON, ToJSONKey, FromJSON, Q.ToPrepArg, Q.FromCol)
 
-$(deriveJSON (aesonDrop 3 snakeCase) ''CreateRemoteRelationship)
+$(deriveJSON (aesonDrop 3 snakeCase) ''RemoteRelationship)
