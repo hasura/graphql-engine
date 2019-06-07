@@ -19,7 +19,7 @@ import {
 import { ordinalColSort, convertDateTimeToLocale } from '../utils';
 import Spinner from '../../../Common/Spinner/Spinner';
 import '../TableCommon/EventReactTableOverrides.css';
-import { verifySuccessStatus } from '../StreamingLogs/util';
+import { verifySuccessStatus } from '../utils';
 
 const ViewRows = ({
   curTriggerName,

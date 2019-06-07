@@ -18,7 +18,7 @@ import {
 } from './FilterActions';
 import { ordinalColSort, convertDateTimeToLocale } from '../utils';
 import '../TableCommon/EventReactTableOverrides.css';
-import { verifySuccessStatus } from '../StreamingLogs/util';
+import { verifySuccessStatus } from '../utils';
 
 const ViewRows = ({
   curTriggerName,
