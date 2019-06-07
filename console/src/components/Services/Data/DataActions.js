@@ -697,7 +697,7 @@ const dataReducer = (state = defaultState, action) => {
       return {
         ...state,
         columnDataTypes: action.data,
-        columnDataTypeFetchErr: null,
+        columnDataTypeFetchErr: defaultState.columnDataTypeFetchErr,
       };
 
     case FETCH_COLUMN_TYPE_LIST_FAIL:
