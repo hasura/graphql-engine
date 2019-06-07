@@ -54,7 +54,6 @@ class ApiRequestWrapper extends Component {
         {getAPIRequestDetailsSection()}
 
         <ApiRequest
-          serverConfig={this.props.serverConfig}
           bodyType={
             this.props.request.bodyType ? this.props.request.bodyType : ''
           }
@@ -70,6 +69,7 @@ class ApiRequestWrapper extends Component {
           headerFocus={this.props.headerFocus}
           urlParams={this.props.urlParams}
           serverVersion={this.props.serverVersion}
+          serverConfig={this.props.serverConfig}
         />
 
         {getAPIResponseSection()}
