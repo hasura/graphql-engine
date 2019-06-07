@@ -7,10 +7,8 @@ import {
 } from '../Services/Metadata/Actions';
 import Spinner from '../Common/Spinner/Spinner';
 
-import { Link } from 'react-router';
-import Helmet from 'react-helmet';
-
 import PageNotFound, { NotFoundError } from './PageNotFound';
+import RuntimeError from './RuntimeError';
 
 class ErrorBoundary extends React.Component {
   initialState = {
@@ -55,60 +53,22 @@ class ErrorBoundary extends React.Component {
   }
 
   render() {
-    const errorImage = require('./error-logo.png');
-    const styles = require('./ErrorPage.scss');
     const { metadata } = this.props;
+    const { hasError, type } = this.state;
 
-    if (this.state.hasError && metadata.ongoingRequest) {
+    if (hasError && metadata.ongoingRequest) {
       return (
         <div>
-          {' '}
-          <Spinner />{' '}
+          <Spinner />
         </div>
       );
     }
 
-    if (this.state.hasError) {
-      if (this.state.type === '404') {
-        return <PageNotFound />;
-      }
-
-      return (
-        <div className={styles.viewContainer}>
-          <Helmet title="Error | Hasura" />
-          <div className={'container ' + styles.centerContent}>
-            <div className={'row ' + styles.message}>
-              <div className="col-xs-8">
-                <h1>Error</h1>
-                <br />
-                <div>
-                  Something went wrong. Head back{' '}
-                  <Link to="/" onClick={this.resetState}>
-                    Home
-                  </Link>
-                  .
-                </div>
-                <br />
-                <div>
-                  You can report this issue on our{' '}
-                  <a href="https://github.com/hasura/graphql-engine/issues">
-                    GitHub
-                  </a>{' '}
-                  or chat with us on{' '}
-                  <a href="http://discord.gg/hasura">Discord</a>
-                </div>
-              </div>
-              <div className="col-xs-4">
-                <img
-                  src={errorImage}
-                  className="img-responsive"
-                  name="hasura"
-                  title="Something went wrong!"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
+    if (hasError) {
+      return type === '404' ? (
+        <PageNotFound resetCallback={this.resetState} />
+      ) : (
+        <RuntimeError resetCallback={this.resetState} />
       );
     }
 
