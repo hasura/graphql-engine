@@ -9,8 +9,7 @@ Config API Reference
   :local:
 
 The Config API is an admin only endpoint which gives info on the server
-configuration. This API is used by console for analyzing a JSON Web Token (JWT)
-provided as a request header, particularly to extract the Hasura claims.
+configuration.
 
 Endpoint
 --------
@@ -50,7 +49,7 @@ Sample response
    }
 
 Disabling Config API
----------------------
+--------------------
 
 The ``enabled-apis`` flag or the ``HASURA_GRAPHQL_ENABLED_APIS`` env var can be
 used to enable/disable this API. By default, this API is enabled. To disable it,

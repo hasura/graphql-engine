@@ -90,8 +90,7 @@ Config API
 ^^^^^^^^^^
 
 ``v1/config`` is an admin-only endpoint to get the current server
-configuration. This is API is currently used by the console for the purposes of
-JWT Analyzer.
+configuration.
 
 See details at :doc:`config`.
 
