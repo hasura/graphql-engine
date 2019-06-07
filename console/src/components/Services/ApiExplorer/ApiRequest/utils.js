@@ -35,14 +35,17 @@ export const getGraphiQLHeadersFromLocalStorage = () => {
 };
 
 export const parseJWTHeader = header => {
-  let isJWTHeader;
-  let matches = [];
-  const parseBearer = /^(bearer) (.*)/gim;
+  let isJWTHeader = false;
+  let token = null;
+
   if (header.key.toLowerCase() === 'authorization') {
-    matches = parseBearer.exec(header.value);
-    if (matches && matches[1] === 'Bearer') {
+    const parseBearer = /^(Bearer) (.*)/gm;
+    const matches = parseBearer.exec(header.value);
+    if (matches) {
       isJWTHeader = true;
+      token = matches[2];
     }
   }
-  return { isJWTHeader, matches };
+
+  return { isJWTHeader, token };
 };

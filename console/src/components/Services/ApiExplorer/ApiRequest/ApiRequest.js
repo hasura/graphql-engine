@@ -254,9 +254,7 @@ class ApiRequest extends Component {
           /*
            * - Check whether key is Authorization and value starts with Bearer
            * */
-          const { isJWTHeader: showInspector, matches } = parseJWTHeader(
-            header
-          );
+          const { isJWTHeader: showInspector, token } = parseJWTHeader(header);
 
           const inspectorIcon = () => {
             const getAnalyzeIcon = () => {
@@ -269,7 +267,7 @@ class ApiRequest extends Component {
               ) : (
                 <i
                   className={styles.showInspector + ' fa fa-plus-square-o'}
-                  token={matches[2]}
+                  token={token}
                   data-header-index={i}
                   onClick={this.analyzeBearerToken}
                 />
