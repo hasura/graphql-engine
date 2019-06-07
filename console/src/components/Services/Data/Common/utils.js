@@ -34,23 +34,27 @@ const getAllDataTypeMap = allDataTypes => {
   return dTIndex;
 };
 
-const getDataTypeInfo = (row, categoryInfo, colId) => {
+const getDataTypeInfo = (row, categoryInfo, colId, cached = {}) => {
   const columnTypeValueMap = {};
 
   const { typInfo, typDisplayName, typDescription } = splitDbRow(row);
 
   // Create option object for every valid type
-  const currTypeObj = typInfo.map((t, i) => {
-    const optObj = {
-      value: t,
-      label: typDisplayName[i],
-      key: `${categoryInfo}_${i}`,
-      colIdentifier: colId,
-      description: typDescription[i],
-    };
-    // Memoizing option for later use
-    columnTypeValueMap[t] = optObj;
-    return optObj;
+  const currTypeObj = [];
+  typInfo.forEach((t, i) => {
+    /* Don't add types which are part of frequently used types */
+    if (!(t in cached)) {
+      const optObj = {
+        value: t,
+        label: typDisplayName[i],
+        key: `${categoryInfo}_${i}`,
+        colIdentifier: colId,
+        description: typDescription[i],
+      };
+      // Memoizing option for later use
+      columnTypeValueMap[t] = optObj;
+      currTypeObj.push(optObj);
+    }
   });
   return { typInfo: currTypeObj, typValueMap: columnTypeValueMap };
 };
@@ -99,7 +103,8 @@ const getDataOptions = (commonDataTypes, restTypes, identifier) => {
       const { typInfo, typValueMap } = getDataTypeInfo(
         categoryRow[0],
         pgCategoryCode[category],
-        identifier
+        identifier,
+        columnTypeValueMap
       );
       columnTypeValueMap = { ...columnTypeValueMap, ...typValueMap };
       columnDataTypes.push({
