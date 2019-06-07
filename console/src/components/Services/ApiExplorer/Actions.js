@@ -51,28 +51,31 @@ const clearHistory = () => {
 
 // This method adds a new empty header if no empty header is present
 const getChangedHeaders = (headers, changedHeaderDetails) => {
+  const changedHeaderIndex = changedHeaderDetails.index;
+
   const newHeaders = Object.assign([], headers);
-  if (newHeaders[changedHeaderDetails.index].isNewHeader) {
-    newHeaders[changedHeaderDetails.index].isNewHeader = false;
-    newHeaders[changedHeaderDetails.index].isActive = true;
-    newHeaders[changedHeaderDetails.index].isDisabled = false;
+
+  if (newHeaders[changedHeaderIndex].isNewHeader) {
+    newHeaders[changedHeaderIndex].isNewHeader = false;
+    newHeaders[changedHeaderIndex].isActive = true;
+    newHeaders[changedHeaderIndex].isDisabled = false;
   }
+
   if (changedHeaderDetails.keyName === 'isActive') {
-    newHeaders[changedHeaderDetails.index].isActive = !newHeaders[
-      changedHeaderDetails.index
-    ].isActive;
+    newHeaders[changedHeaderIndex].isActive = !newHeaders[changedHeaderIndex]
+      .isActive;
   } else {
-    newHeaders[changedHeaderDetails.index][changedHeaderDetails.keyName] =
+    newHeaders[changedHeaderIndex][changedHeaderDetails.keyName] =
       changedHeaderDetails.newValue;
   }
-  if (changedHeaderDetails.isDisabled === true) {
-    newHeaders[changedHeaderDetails.index].isDisabled = true;
-  } else {
-    newHeaders[changedHeaderDetails.index].isDisabled = false;
-  }
+
+  newHeaders[changedHeaderIndex].isDisabled =
+    changedHeaderDetails.isDisabled === true;
+
   const nonEmptyHeaders = newHeaders.filter(header => {
     return !header.isNewHeader;
   });
+
   nonEmptyHeaders.push({
     key: '',
     value: '',
@@ -80,6 +83,7 @@ const getChangedHeaders = (headers, changedHeaderDetails) => {
     isNewHeader: true,
     isDisabled: false,
   });
+
   return nonEmptyHeaders;
 };
 
@@ -247,20 +251,24 @@ const setInitialHeaderState = headerObj => {
 const changeRequestHeader = (index, key, newValue, isDisabled) => {
   return (dispatch, getState) => {
     const currentState = getState().apiexplorer;
+
     const updatedHeader = {
       index: index,
       keyName: key,
       newValue: newValue,
       isDisabled: isDisabled,
     };
+
     const updatedHeaders = getChangedHeaders(
       currentState.displayedApi.request.headers,
       updatedHeader
     );
+
     dispatch({
       type: REQUEST_HEADER_CHANGED,
       data: updatedHeaders,
     });
+
     return Promise.resolve(updatedHeaders);
   };
 };
@@ -268,15 +276,18 @@ const changeRequestHeader = (index, key, newValue, isDisabled) => {
 const removeRequestHeader = index => {
   return (dispatch, getState) => {
     const currentState = getState().apiexplorer;
+
     const updatedHeaders = currentState.displayedApi.request.headers.filter(
       (header, i) => {
         return !(i === index);
       }
     );
+
     dispatch({
       type: REQUEST_HEADER_REMOVED,
       data: updatedHeaders,
     });
+
     // const { headers } = getState().apiexplorer.displayedApi.request;
     return Promise.resolve(updatedHeaders);
   };
