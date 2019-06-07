@@ -36,7 +36,7 @@ will be a critical portion of our todo app. 😉
 > Head to GraphiQL and on the right, click on the "docs" tab.
 > Type "todo" there and you'll see a list of GraphQL queries and types
 > that use todo. Read through their descriptions and you'll soon
-> find that `insert_todo` is what you need.
+> find that `insert_todos` is what you need.
 
 The mutation to create todos is titled `insert_todos`.
 
