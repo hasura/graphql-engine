@@ -7,7 +7,7 @@ import 'brace/mode/json';
 import 'react-table/react-table.css';
 import { deleteItem, vExpandRow, vCollapseRow } from './ViewActions'; // eslint-disable-line no-unused-vars
 import FilterQuery from './FilterQuery';
-import parseRowData from '../StreamingLogs/util';
+import parseRowData, { verifyStatus } from '../StreamingLogs/util';
 import {
   setOrderCol,
   setOrderType,
@@ -275,7 +275,7 @@ const ViewRows = ({
           const responseData = [];
           currentRow.logs.map((r, rowIndex) => {
             const newRow = {};
-            const status = /^2/.test(r.status.toString()) ? (
+            const status = verifyStatus(r.status) ? (
               <i className={styles.invocationSuccess + ' fa fa-check'} />
             ) : (
               <i className={styles.invocationFailure + ' fa fa-times'} />
@@ -428,11 +428,11 @@ const ViewRows = ({
                                 >
                                   {finalResponse.status_code
                                     ? [
-                                      'Status Code: ',
-                                      /^2/.test(
-                                        finalResponse.status_code.toString()
-                                      ) ? (
-                                        <i
+                                        'Status Code: ',
+                                        verifyStatus(
+                                          finalResponse.status_code
+                                        ) ? (
+                                          <i
                                             className={
                                               styles.invocationSuccess +
                                               'fa fa-check'
@@ -446,20 +446,20 @@ const ViewRows = ({
                                             }
                                           />
                                         ),
-                                      finalResponse.status_code,
-                                      ' ',
-                                      <OverlayTrigger
-                                        placement="top"
-                                        overlay={
-                                          tooltip.statusCodeDescription
-                                        }
-                                      >
-                                        <i
-                                          className="fa fa-question-circle"
-                                          aria-hidden="true"
-                                        />
-                                      </OverlayTrigger>,
-                                    ]
+                                        finalResponse.status_code,
+                                        ' ',
+                                        <OverlayTrigger
+                                          placement="top"
+                                          overlay={
+                                            tooltip.statusCodeDescription
+                                          }
+                                        >
+                                          <i
+                                            className="fa fa-question-circle"
+                                            aria-hidden="true"
+                                          />
+                                        </OverlayTrigger>,
+                                      ]
                                     : null}
                                 </div>
                                 <AceEditor

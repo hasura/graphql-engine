@@ -29,6 +29,8 @@ import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import { convertDateTimeToLocale } from '../utils';
 import Button from '../../../Common/Button/Button';
 
+import { verifyStatus } from './util';
+
 class StreamingLogs extends Component {
   constructor(props) {
     super(props);
@@ -145,7 +147,7 @@ class StreamingLogs extends Component {
 
       const status =
         // 2xx is success
-        /^2/.test(r.status.toString()) ? (
+        verifyStatus(r.status) ? (
           <i className={styles.invocationSuccess + ' fa fa-check'} />
         ) : (
           <i className={styles.invocationFailure + ' fa fa-times'} />
@@ -293,32 +295,32 @@ class StreamingLogs extends Component {
                 >
                   {finalResponse.status_code
                     ? [
-                      'Status Code: ',
-                      /^2/.test(finalResponse.status_code.toString()) ? (
-                        <i
-                          className={
-                            styles.invocationSuccess + ' fa fa-check'
-                          }
-                        />
-                      ) : (
-                        <i
-                          className={
-                            styles.invocationFailure + ' fa fa-times'
-                          }
-                        />
-                      ),
-                      finalResponse.status_code,
-                      ' ',
-                      <OverlayTrigger
-                        placement="top"
-                        overlay={tooltip.statusCodeDescription}
-                      >
-                        <i
-                          className="fa fa-question-circle"
-                          aria-hidden="true"
-                        />
-                      </OverlayTrigger>,
-                    ]
+                        'Status Code: ',
+                        verifyStatus(finalResponse.status_code) ? (
+                          <i
+                            className={
+                              styles.invocationSuccess + ' fa fa-check'
+                            }
+                          />
+                        ) : (
+                          <i
+                            className={
+                              styles.invocationFailure + ' fa fa-times'
+                            }
+                          />
+                        ),
+                        finalResponse.status_code,
+                        ' ',
+                        <OverlayTrigger
+                          placement="top"
+                          overlay={tooltip.statusCodeDescription}
+                        >
+                          <i
+                            className="fa fa-question-circle"
+                            aria-hidden="true"
+                          />
+                        </OverlayTrigger>,
+                      ]
                     : null}
                 </div>
                 <AceEditor

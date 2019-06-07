@@ -1,3 +1,8 @@
+// check 2xx success status codes
+export const verifyStatus = status => {
+  return /^2[0-9][0-9]/.test(status.toString());
+};
+
 const parseRowData = (row, dataType) => {
   switch (dataType) {
     case 'request':
