@@ -7,7 +7,7 @@ import Tabs from 'react-bootstrap/lib/Tabs';
 import Tab from 'react-bootstrap/lib/Tab';
 import RedeliverEvent from '../TableCommon/RedeliverEvent';
 import TableHeader from '../TableCommon/TableHeader';
-import parseRowData from './util';
+import { parseRowData, verifySuccessStatus } from '../utils';
 import {
   loadEventLogs,
   setTrigger,
@@ -144,7 +144,8 @@ class StreamingLogs extends Component {
       const newRow = {};
 
       const status =
-        r.status === 200 ? (
+        // 2xx is success
+        verifySuccessStatus(r.status) ? (
           <i className={styles.invocationSuccess + ' fa fa-check'} />
         ) : (
           <i className={styles.invocationFailure + ' fa fa-times'} />
@@ -293,7 +294,7 @@ class StreamingLogs extends Component {
                   {finalResponse.status_code
                     ? [
                       'Status Code: ',
-                      finalResponse.status_code === 200 ? (
+                      verifySuccessStatus(finalResponse.status_code) ? (
                         <i
                           className={
                             styles.invocationSuccess + ' fa fa-check'
