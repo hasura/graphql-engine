@@ -16,6 +16,13 @@ import           Instances.TH.Lift ()
 import qualified Language.GraphQL.Draft.Syntax as G
 import           Language.Haskell.TH.Syntax (Lift)
 
+data RemoteField =
+  RemoteField
+    { rmfRemoteRelationship :: !RemoteRelationship
+    , rmfGType :: !G.GType
+    }
+  deriving (Show, Eq, Lift)
+
 data RemoteRelationship =
   RemoteRelationship
     { rtrName :: RemoteRelationshipName
