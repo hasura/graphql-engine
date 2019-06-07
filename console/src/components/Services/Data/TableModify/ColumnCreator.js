@@ -198,6 +198,7 @@ const ColumnCreator = ({
             value={colType.value && columnTypeValueMap[colType.value]}
             bsClass={`col-type-${0} modify_select`}
             styleOverrides={customSelectBoxStyles}
+            filterOption={'prefix'}
           />
         </span>
         <input

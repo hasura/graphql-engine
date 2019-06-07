@@ -26,8 +26,6 @@ const TableDefault = ({
       defaultValues,
       // defaultValueMap
     } = getDefaultFunctionsOptions(colDefaultFunctions, i);
-    console.log('Default Values');
-    console.log(defaultValues);
     return (
       <CustomInputAutoSuggest
         options={defaultValues}

@@ -1,5 +1,5 @@
 import React from 'react';
-import Select, { components } from 'react-select';
+import Select, { components, createFilter } from 'react-select';
 import PropTypes from 'prop-types';
 
 /*
@@ -14,6 +14,14 @@ const CustomOption = props => {
       <components.Option {...props} />
     </div>
   );
+};
+
+const getPrefixFilter = () => {
+  const prefixFilterOptions = {
+    matchFrom: 'start',
+  };
+
+  return createFilter(prefixFilterOptions);
 };
 
 /*
@@ -31,6 +39,7 @@ const SearchableSelectBox = ({
   bsClass,
   styleOverrides,
   defaultPlaceholder = 'column_type',
+  filterOption,
 }) => {
   /* Select element style customization */
 
@@ -46,6 +55,15 @@ const SearchableSelectBox = ({
     });
   }
 
+  let customFilter;
+  switch (filterOption) {
+    case 'prefix':
+      customFilter = getPrefixFilter();
+      break;
+    default:
+      customFilter = {};
+  }
+
   return (
     <Select
       isSearchable
@@ -56,6 +74,7 @@ const SearchableSelectBox = ({
       onChange={onChange}
       value={value}
       styles={customStyles}
+      filterOption={customFilter}
     />
   );
 };
@@ -66,6 +85,7 @@ SearchableSelectBox.propTypes = {
   options: PropTypes.array.isRequired,
   bsClass: PropTypes.string,
   customStyle: PropTypes.object,
+  filterOption: PropTypes.object,
 };
 
 export default SearchableSelectBox;

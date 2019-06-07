@@ -3,20 +3,6 @@ import React, { useEffect } from 'react';
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
 import CustomInputAutoSuggest from '../../../Common/CustomInputAutoSuggest/CustomInputAutoSuggest';
 
-/*
-import {
-  INTEGER,
-  SERIAL,
-  BIGINT,
-  BIGSERIAL,
-  UUID,
-  JSONDTYPE,
-  JSONB,
-  TIMESTAMP,
-  TIME,
-} from '../../../../constants';
-*/
-
 import { getValidAlterOptions } from './utils';
 
 const ColumnEditor = ({
@@ -133,6 +119,7 @@ const ColumnEditor = ({
               value={columnTypePG && alterOptionsValueMap[columnTypePG]}
               bsClass={`col-type-${0} modify_select`}
               styleOverrides={customSelectBoxStyles}
+              filterOption={'prefix'}
             />
           </div>
         </div>

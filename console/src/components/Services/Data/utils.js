@@ -30,7 +30,7 @@ export const getPlaceholder = type => {
       return `${time}Z or ${time}+05:30`;
     case UUID:
       return 'UUID';
-    case JSON:
+    case JSONDTYPE:
       return '{"name": "foo"} or [12, "bar"]';
     case JSONB:
       return '{"name": "foo"} or [12, "bar"]';
@@ -69,13 +69,15 @@ const findFKConstraint = (curTable, column) => {
 };
 
 export const findTableFromRel = (schemas, curTable, rel) => {
-  let rtable = null;
+  let rTable = null;
+  let rSchema = 'public';
 
   // for view
   if (rel.rel_def.manual_configuration !== undefined) {
-    rtable = rel.rel_def.manual_configuration.remote_table;
-    if (rtable.schema) {
-      rtable = rtable.name;
+    rTable = rel.rel_def.manual_configuration.remote_table;
+    if (rTable.schema) {
+      rSchema = rTable.schema;
+      rTable = rTable.name;
     }
   }
 
@@ -86,19 +88,23 @@ export const findTableFromRel = (schemas, curTable, rel) => {
       const column = [rel.rel_def.foreign_key_constraint_on];
       const fkc = findFKConstraint(curTable, column);
       if (fkc) {
-        rtable = fkc.ref_table;
+        rTable = fkc.ref_table;
+        rSchema = fkc.ref_table_table_schema;
       }
     }
 
     // for array relationship
     if (rel.rel_type === 'array') {
-      rtable = rel.rel_def.foreign_key_constraint_on.table;
-      if (rtable.schema) {
-        rtable = rtable.name;
+      rTable = rel.rel_def.foreign_key_constraint_on.table;
+      if (rTable.schema) {
+        rSchema = rTable.schema;
+        rTable = rTable.name;
       }
     }
   }
-  return schemas.find(x => x.table_name === rtable);
+  return schemas.find(
+    x => x.table_name === rTable && x.table_schema === rSchema
+  );
 };
 
 export const findAllFromRel = (schemas, curTable, rel) => {
@@ -563,16 +569,20 @@ export const commonDataTypes = [
   },
 ];
 
+/*
+ * Fetch non-composite types, primitive types like text, varchar etc,
+ * Filter types whose typename is unknown and type category is not 'Pseudo' and it is valid and available to be used
+ * */
 export const fetchColumnTypesQuery = `
 SELECT 
   string_agg(t.typname, ',') as "Type Name",
   string_agg(pg_catalog.format_type(t.oid, NULL), ',') as "Display Name",
-  string_agg(pg_catalog.obj_description(t.oid, 'pg_type'), ':') as "Descriptions",
+  string_agg(coalesce(pg_catalog.obj_description(t.oid, 'pg_type'), ''), ':') as "Descriptions",
   t.typcategory
 FROM pg_catalog.pg_type t
      LEFT JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
-WHERE (t.typrelid = 0 OR (SELECT c.relkind = 'c' FROM pg_catalog.pg_class c WHERE c.oid = t.typrelid))                                              
-  AND NOT EXISTS(SELECT 1 FROM pg_catalog.pg_type el WHERE el.oid = t.typelem AND el.typarray = t.oid)                                              
+WHERE (t.typrelid = 0 OR (SELECT c.relkind = 'c' FROM pg_catalog.pg_class c WHERE c.oid = t.typrelid))
+  AND NOT EXISTS(SELECT 1 FROM pg_catalog.pg_type el WHERE el.oid = t.typelem AND el.typarray = t.oid)
   AND pg_catalog.pg_type_is_visible(t.oid)
   AND t.typname != 'unknown'
   AND t.typcategory != 'P'

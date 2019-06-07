@@ -107,12 +107,10 @@ const TableColumn = props => {
           value={column.type && columnTypeValueMap[column.type]}
           bsClass={`col-type-${i} add_table_column_selector`}
           styleOverrides={customSelectBoxStyles}
+          filterOption={'prefix'}
         />
       </span>
-      <span
-        className={`${styles.inputDefault} ${styles.defaultWidth}`}
-        data-test={`col-type-${i}`}
-      >
+      <span className={`${styles.inputDefault} ${styles.defaultWidth}`}>
         <TableDefault
           onChange={setColDefaultValue}
           colIndex={i}
