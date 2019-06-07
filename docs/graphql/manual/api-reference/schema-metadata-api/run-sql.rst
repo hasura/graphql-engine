@@ -55,7 +55,7 @@ cannot drop a column on which any metadata is dependent on (say a permission or
 a relationship). The effects, however, can be cascaded.
 
 For example, if we were to drop 'bio' column from the article table (let's say
-the column is used in some permission), you would see an error. 
+the column is used in some permission), you would see an error.
 
 .. code-block:: http
 
@@ -113,14 +113,16 @@ In general, the SQL operations that will affect Hasura metadata are:
 1. Dropping columns
 2. Dropping tables
 3. Altering types of columns
+4. Dropping foreign keys
+5. Dropping functions
+6. Overloading functions
 
-In case of 1 and 2, the dependent objects (if any) can be dropped using
+In case of 1, 2 and 4 the dependent objects (if any) can be dropped using
 ``cascade``. However, when altering type, if any objects are affected, the
 change cannot be cascaded. So, those dependent objects have to be manually
-dropped before executing the SQL statement.
-
-.. note::
-   Currently, renames of tables and columns are not supported in the SQL statement.
+dropped before executing the SQL statement. Overloading tracked functions
+is not allowed. Set ``check_metadata_consistency`` field to ``false`` to
+force server to not consider metadata dependencies.
 
 .. _run_sql_syntax:
 
@@ -142,6 +144,10 @@ Args syntax
      - false
      - Boolean
      - When set to ``true``, the effect (if possible) is cascaded to any hasuradb dependent objects (relationships, permissions, templates).
+   * - check_metadata_consistency
+     - false
+     - Boolean
+     - When set to ``false``, the sql is executed without checking metadata dependencies.
 
 Response
 ^^^^^^^^
@@ -220,7 +226,8 @@ A query to create a table:
    {
      "type":"run_sql",
      "args": {
-       "sql": "create table item ( id serial,  name text,  category text,  primary key (id))"
+       "sql": "create table item ( id serial,  name text,  category text,  primary key (id))",
+       "check_metadata_consistency": false
      }
    }
 
