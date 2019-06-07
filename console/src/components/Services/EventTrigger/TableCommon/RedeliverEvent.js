@@ -14,7 +14,7 @@ import AceEditor from 'react-ace';
 import 'brace/mode/json';
 import Button from '../../../Common/Button/Button';
 
-import { verifyStatus } from '../StreamingLogs/util';
+import { verifySuccessStatus } from '../StreamingLogs/util';
 
 class RedeliverEvent extends Component {
   constructor(props) {
@@ -91,7 +91,7 @@ class RedeliverEvent extends Component {
       const invocationRowsData = [];
       log.eventInvocations.map(r => {
         const newRow = {};
-        const status = verifyStatus(r.status) ? (
+        const status = verifySuccessStatus(r.status) ? (
           <i
             className={
               styles.invocationSuccess +

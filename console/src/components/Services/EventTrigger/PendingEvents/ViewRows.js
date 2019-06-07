@@ -18,7 +18,7 @@ import {
 } from './FilterActions';
 import { ordinalColSort, convertDateTimeToLocale } from '../utils';
 import '../TableCommon/EventReactTableOverrides.css';
-import { verifyStatus } from '../StreamingLogs/util';
+import { verifySuccessStatus } from '../StreamingLogs/util';
 
 const ViewRows = ({
   curTriggerName,
@@ -257,7 +257,7 @@ const ViewRows = ({
           const invocationRowsData = [];
           currentRow.logs.map((r, rowIndex) => {
             const newRow = {};
-            const status = verifyStatus(r.status) ? (
+            const status = verifySuccessStatus(r.status) ? (
               <i className={styles.invocationSuccess + ' fa fa-check'} />
             ) : (
               <i className={styles.invocationFailure + ' fa fa-times'} />

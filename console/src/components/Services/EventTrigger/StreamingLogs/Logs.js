@@ -29,7 +29,7 @@ import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import { convertDateTimeToLocale } from '../utils';
 import Button from '../../../Common/Button/Button';
 
-import { verifyStatus } from './util';
+import { verifySuccessStatus } from './util';
 
 class StreamingLogs extends Component {
   constructor(props) {
@@ -147,7 +147,7 @@ class StreamingLogs extends Component {
 
       const status =
         // 2xx is success
-        verifyStatus(r.status) ? (
+        verifySuccessStatus(r.status) ? (
           <i className={styles.invocationSuccess + ' fa fa-check'} />
         ) : (
           <i className={styles.invocationFailure + ' fa fa-times'} />
@@ -296,7 +296,7 @@ class StreamingLogs extends Component {
                   {finalResponse.status_code
                     ? [
                         'Status Code: ',
-                        verifyStatus(finalResponse.status_code) ? (
+                        verifySuccessStatus(finalResponse.status_code) ? (
                           <i
                             className={
                               styles.invocationSuccess + ' fa fa-check'

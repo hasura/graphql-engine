@@ -1,5 +1,5 @@
 // check 2xx success status codes
-export const verifyStatus = status => {
+export const verifySuccessStatus = status => {
   return /^2[0-9][0-9]/.test(status.toString());
 };
 

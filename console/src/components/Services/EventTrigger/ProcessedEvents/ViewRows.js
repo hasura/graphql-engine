@@ -7,7 +7,7 @@ import 'brace/mode/json';
 import 'react-table/react-table.css';
 import { deleteItem, vExpandRow, vCollapseRow } from './ViewActions'; // eslint-disable-line no-unused-vars
 import FilterQuery from './FilterQuery';
-import parseRowData, { verifyStatus } from '../StreamingLogs/util';
+import parseRowData, { verifySuccessStatus } from '../StreamingLogs/util';
 import {
   setOrderCol,
   setOrderType,
@@ -275,7 +275,7 @@ const ViewRows = ({
           const responseData = [];
           currentRow.logs.map((r, rowIndex) => {
             const newRow = {};
-            const status = verifyStatus(r.status) ? (
+            const status = verifySuccessStatus(r.status) ? (
               <i className={styles.invocationSuccess + ' fa fa-check'} />
             ) : (
               <i className={styles.invocationFailure + ' fa fa-times'} />
@@ -429,7 +429,7 @@ const ViewRows = ({
                                   {finalResponse.status_code
                                     ? [
                                         'Status Code: ',
-                                        verifyStatus(
+                                        verifySuccessStatus(
                                           finalResponse.status_code
                                         ) ? (
                                           <i
