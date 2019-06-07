@@ -3,6 +3,7 @@ url: /v1/graphql
 status: 200
 headers:
   X-Hasura-Test: test value
+  X-Hasura-Role: admin
 response:
   data:
     get_session_var:
