@@ -31,7 +31,8 @@ module Hasura.RQL.Types.SchemaCache
 
        , FieldInfoMap
        , FieldInfo(..)
-       , fieldInfoToEither
+       , _FIColumn
+       , _FIRelationship
        , partitionFieldInfos
        , partitionFieldInfosWith
        , getCols
@@ -169,33 +170,30 @@ data FieldInfo
   | FIRelationship !RelInfo
   deriving (Show, Eq)
 
+$(makePrisms ''FieldInfo)
+
 $(deriveToJSON
   defaultOptions { constructorTagModifier = snakeCase . drop 2
                  , sumEncoding = TaggedObject "type" "detail"
                  }
   ''FieldInfo)
 
-fieldInfoToEither :: FieldInfo -> Either PGColInfo RelInfo
-fieldInfoToEither (FIColumn l)       = Left l
-fieldInfoToEither (FIRelationship r) = Right r
-
 partitionFieldInfos :: [FieldInfo] -> ([PGColInfo], [RelInfo])
 partitionFieldInfos = partitionFieldInfosWith (id, id)
 
 partitionFieldInfosWith :: (PGColInfo -> a, RelInfo -> b)
                         -> [FieldInfo] -> ([a], [b])
-partitionFieldInfosWith fns =
-  partitionEithers . map (biMapEither fns . fieldInfoToEither)
-  where
-    biMapEither (f1, f2) = either (Left . f1) (Right . f2)
+partitionFieldInfosWith (pgColInfoFun, relInfoFun) fields =
+  ( mapMaybe (fmap pgColInfoFun . preview _FIColumn) fields
+  , mapMaybe (fmap relInfoFun . preview _FIRelationship) fields)
 
 type FieldInfoMap = M.HashMap FieldName FieldInfo
 
 getCols :: FieldInfoMap -> [PGColInfo]
-getCols fim = lefts $ map fieldInfoToEither $ M.elems fim
+getCols fim = mapMaybe (preview _FIColumn) $ M.elems fim
 
 getRels :: FieldInfoMap -> [RelInfo]
-getRels fim = rights $ map fieldInfoToEither $ M.elems fim
+getRels fim = mapMaybe (preview _FIRelationship) $ M.elems fim
 
 isPGColInfo :: FieldInfo -> Bool
 isPGColInfo (FIColumn _) = True
