@@ -49,7 +49,7 @@ data ValidationError
 getCreateRemoteRelationshipValidation ::
      (QErrM m, CacheRM m)
   => RemoteRelationship
-  -> m (Either (NonEmpty ValidationError) ())
+  -> m (Either (NonEmpty ValidationError) RemoteField)
 getCreateRemoteRelationshipValidation createRemoteRelationship = do
   schemaCache <- askSchemaCache
   pure
@@ -63,7 +63,7 @@ validateRelationship ::
      RemoteRelationship
   -> GC.GCtx
   -> HM.HashMap QualifiedTable TableInfo
-  -> Either (NonEmpty ValidationError) ()
+  -> Either (NonEmpty ValidationError) RemoteField
 validateRelationship remoteRelationship gctx tables = do
   case HM.lookup tableName tables of
     Nothing -> Left (pure (TableNotFound tableName))
@@ -79,25 +79,25 @@ validateRelationship remoteRelationship gctx tables = do
                   Just fieldInfo -> pure (fieldName, fieldInfo))
              (toList (rtrHasuraFields remoteRelationship)))
       objFldInfo <-
-        lookupField
-          (rtrRemoteField remoteRelationship)
-          (GS._gQueryRoot gctx)
+        lookupField (rtrRemoteField remoteRelationship) (GS._gQueryRoot gctx)
       case _fiLoc objFldInfo of
         HasuraType ->
           Left
             (pure
-               (FieldNotFoundInRemoteSchema
-                  (rtrRemoteField remoteRelationship)))
-        RemoteType {} ->
+               (FieldNotFoundInRemoteSchema (rtrRemoteField remoteRelationship)))
+        RemoteType {} -> do
           toEither
             (validateRemoteArguments
                (_fiParams objFldInfo)
-               (remoteArgumentsToMap
-                  (rtrRemoteArguments remoteRelationship))
+               (remoteArgumentsToMap (rtrRemoteArguments remoteRelationship))
                (HM.fromList
                   (map (first fieldNameToVariable) (HM.toList fieldInfos)))
-               (GS._gTypes gctx)
-            )
+               (GS._gTypes gctx))
+          pure
+            RemoteField
+              { rmfRemoteRelationship = remoteRelationship
+              , rmfGType = _fiTy objFldInfo
+              }
   where
     tableName = rtrTable remoteRelationship
 
