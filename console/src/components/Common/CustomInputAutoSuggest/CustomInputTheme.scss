@@ -43,16 +43,48 @@ $suggestion-padding: 6px 12px;
 
 .suggestion {
   cursor: pointer;
-  padding: $suggestion-padding;
+  // padding: $suggestion-padding;
+
+  background-color: transparent;
+  color: inherit;
+  cursor: default;
+  display: block;
+  font-size: inherit;
+  padding: 8px 12px;
+  width: 100%;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+  box-sizing: border-box;
+
+  &:hover {
+    background-color: #DEEBFF;
+  }
 }
 
 .suggestionHighlighted {
-  background-color: #ddd;
+  background-color: #DEEBFF;
 }
 
+.sectionTitle {
+  color: #999;
+  cursor: default;
+  display: block;
+  font-size: 75%;
+  font-weight: 500;
+  margin-bottom: 0.25em;
+  padding-left: 12px;
+  padding-right: 12px;
+  text-transform: uppercase;
+  box-sizing: border-box;
+}
 
-/*
-.suggestionsContainer { ... }
-.suggestion { ... }
-.suggestionHighlighted { ... }
-*/
+.sectionContainer {
+  margin-bottom: 5px;
+}
+
+.sectionContainerFirst {
+  margin-top: 10px;
+}

@@ -1,5 +1,4 @@
 import React from 'react';
-// import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
 import CustomInputAutoSuggest from '../../../Common/CustomInputAutoSuggest/CustomInputAutoSuggest';
 import {
   getPlaceholder,
@@ -21,24 +20,27 @@ const TableDefault = ({
     onChange(i, column.nullable || false, newValue);
   };
   const renderDefaultHtml = () => {
-    if (colDefaultFunctions && colDefaultFunctions.length > 0) {
-      const dfVal = getDefaultValue(column);
-      const {
-        defaultValues,
-        // defaultValueMap
-      } = getDefaultFunctionsOptions(colDefaultFunctions, i);
-      return (
-        <CustomInputAutoSuggest
-          options={defaultValues}
-          onChange={handleColDefaultValueChange}
-          value={dfVal}
-          className={`col-default-value-${i} add_table_default_value_selector form-control`}
-          placeholder={getPlaceholder(column)}
-          id={`col-default-value-${i}`}
-          theme={defaultInputTheme}
-        />
-      );
-    }
+    const dfVal = getDefaultValue(column);
+    /* Collect direct default functions and the indirect default functions */
+    const {
+      defaultValues,
+      // defaultValueMap
+    } = getDefaultFunctionsOptions(colDefaultFunctions, i);
+    console.log('Default Values');
+    console.log(defaultValues);
+    return (
+      <CustomInputAutoSuggest
+        options={defaultValues}
+        onChange={handleColDefaultValueChange}
+        value={dfVal}
+        className={`col-default-value-${i} add_table_default_value_selector form-control`}
+        placeholder={getPlaceholder(column)}
+        id={`col-default-value-${i}`}
+        theme={defaultInputTheme}
+        data-test={testId}
+      />
+    );
+    /*
     return (
       <input
         placeholder={getPlaceholder(column)}
@@ -49,6 +51,7 @@ const TableDefault = ({
         data-test={testId}
       />
     );
+    */
   };
   return renderDefaultHtml();
 };

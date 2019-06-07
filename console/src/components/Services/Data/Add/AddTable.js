@@ -286,6 +286,7 @@ class AddTable extends Component {
       dataTypes,
       schemaList,
       columnDefaultFunctions,
+      columnTypeCasts,
     } = this.props;
     const styles = require('../../../Common/TableCommon/Table.scss');
     const getCreateBtnText = () => {
@@ -324,6 +325,7 @@ class AddTable extends Component {
               uniqueKeys={uniqueKeys}
               dataTypes={dataTypes}
               columnDefaultFunctions={columnDefaultFunctions}
+              columnTypeCasts={columnTypeCasts}
               columns={columns}
               onRemoveColumn={this.onRemoveColumn}
               onColumnChange={this.onColumnNameChange}
@@ -438,6 +440,7 @@ const mapStateToProps = state => ({
   currentSchema: state.tables.currentSchema,
   dataTypes: state.tables.columnDataTypes,
   columnDefaultFunctions: state.tables.columnDefaultFunctions,
+  columnTypeCasts: state.tables.columnTypeCasts,
   columnDataTypeFetchErr: state.tables.columnDataTypeFetchErr,
   schemaList: state.tables.schemaList,
 });

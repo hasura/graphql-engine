@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
 import { commonDataTypes } from '../utils';
-import { getDataOptions } from '../Common/utils';
+import { getDataOptions, inferDefaultValues } from '../Common/utils';
 
 import TableDefault from './TableDefault';
 
@@ -34,6 +34,7 @@ const TableColumn = props => {
     onColUniqueChange,
     dataTypes: restTypes,
     columnDefaultFunctions,
+    columnTypeCasts,
     uniqueKeys,
   } = props;
 
@@ -58,6 +59,7 @@ const TableColumn = props => {
     restTypes,
     i
   );
+
   const getRemoveIcon = colLen => {
     let removeIcon;
     if (i + 1 === colLen) {
@@ -73,10 +75,17 @@ const TableColumn = props => {
     return removeIcon;
   };
 
+  /* Collect list of relevant default values if the type doesn't have any default values
+   * */
+  const inferredDefaultValues = inferDefaultValues(
+    columnDefaultFunctions,
+    columnTypeCasts
+  )(column.type);
+
   const defaultFunctions =
     column.type in columnDefaultFunctions
       ? columnDefaultFunctions[column.type]
-      : [];
+      : inferredDefaultValues;
 
   return (
     <div key={i} className={`${styles.display_flex} form-group`}>

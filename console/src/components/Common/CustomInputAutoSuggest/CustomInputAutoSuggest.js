@@ -8,15 +8,20 @@ const CustomInputAutoSuggest = props => {
   const getSuggestions = value => {
     const inputValue = value.trim().toLowerCase();
     const inputLength = inputValue.length;
-
-    return inputLength === 0
-      ? [...options]
-      : options.filter(
-        option =>
-          option.value.toLowerCase().slice(0, inputLength) === inputValue
-      );
+    const filterResults = () => {
+      return options.map(option => {
+        return {
+          title: option.title,
+          suggestions: option.suggestions.filter(
+            op => op.value.toLowerCase().slice(0, inputLength) === inputValue
+          ),
+        };
+      });
+    };
+    return inputLength === 0 ? [...options] : filterResults();
   };
-  const onSuggestionsFetchRequested = ({ value }) => {
+  const onSuggestionsFetchRequested = ob => {
+    const { value } = ob;
     setSuggestions(getSuggestions(value));
   };
   const getSuggestionValue = suggestion => suggestion.value;
@@ -24,6 +29,15 @@ const CustomInputAutoSuggest = props => {
     setSuggestions([]);
   };
   const renderSuggestion = suggestion => <div>{suggestion.value}</div>;
+
+  /* Don't render the section when there are no suggestions in it */
+  const renderSectionTitle = section => {
+    return section.suggestions.length > 0 ? section.title : null;
+  };
+
+  const getSectionSuggestions = section => {
+    return section.suggestions;
+  };
 
   return (
     <Autosuggest
@@ -34,7 +48,10 @@ const CustomInputAutoSuggest = props => {
       renderSuggestion={renderSuggestion}
       inputProps={{ ...props }}
       theme={theme}
+      multiSection
+      renderSectionTitle={renderSectionTitle}
       shouldRenderSuggestions={() => true}
+      getSectionSuggestions={getSectionSuggestions}
     />
   );
 };

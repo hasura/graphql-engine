@@ -6,7 +6,11 @@ import { commonDataTypes } from '../utils';
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
 import CustomInputAutoSuggest from '../../../Common/CustomInputAutoSuggest/CustomInputAutoSuggest';
 
-import { getDataOptions, getDefaultFunctionsOptions } from '../Common/utils';
+import {
+  getDataOptions,
+  getDefaultFunctionsOptions,
+  inferDefaultValues,
+} from '../Common/utils';
 
 import Button from '../../../Common/Button/Button';
 import { addColSql } from '../TableModify/ModifyActions';
@@ -104,6 +108,7 @@ const ColumnCreator = ({
   dispatch,
   tableName,
   dataTypes: restTypes = [],
+  validTypeCasts,
   columnDefaultFunctions,
 }) => {
   const {
@@ -119,7 +124,15 @@ const ColumnCreator = ({
 
   let defaultOptions = [];
 
-  const colDefaultFunctions = columnDefaultFunctions[colType.value];
+  const inferredDefaultValues = inferDefaultValues(
+    columnDefaultFunctions,
+    validTypeCasts
+  )(colType.value);
+
+  const colDefaultFunctions =
+    colType.value in columnDefaultFunctions
+      ? columnDefaultFunctions[colType.value]
+      : inferredDefaultValues;
 
   if (colDefaultFunctions && colDefaultFunctions.length > 0) {
     defaultOptions = getDefaultFunctionsOptions(colDefaultFunctions, 0)

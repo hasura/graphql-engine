@@ -29,7 +29,10 @@ import {
   fetchTrackedTableListQuery,
   mergeLoadSchemaData,
 } from './utils';
+
 import { fetchColumnTypesQuery, fetchColumnDefaultFunctions } from './utils';
+
+import { fetchColumnCastsQuery, convertArrayToJson } from './TableModify/utils';
 
 import { SERVER_CONSOLE_MODE } from '../../../constants';
 
@@ -548,9 +551,16 @@ const getBulkColumnInfoFetchQuery = schema => {
     },
   };
 
+  const fetchValidTypeCasts = {
+    type: 'run_sql',
+    args: {
+      sql: fetchColumnCastsQuery,
+    },
+  };
+
   return {
     type: 'bulk',
-    args: [fetchColumnTypes, fetchTypeDefaultValues],
+    args: [fetchColumnTypes, fetchTypeDefaultValues, fetchValidTypeCasts],
   };
 };
 
@@ -577,6 +587,7 @@ const fetchColumnTypeInfo = () => {
         const columnDataTypeInfo = {
           columnDataTypes: data[0].result.slice(1),
           columnTypeDefaultValues: typeFuncsMap,
+          columnTypeCasts: convertArrayToJson(data[2].result.slice(1)),
         };
         return dispatch({
           type: FETCH_COLUMN_TYPE_INFO,
@@ -725,6 +736,7 @@ const dataReducer = (state = defaultState, action) => {
         columnDataTypes: action.data.columnDataTypes,
         columnDefaultFunctions: action.data.columnTypeDefaultValues,
         columnDataTypeInfoErr: null,
+        columnTypeCasts: action.data.columnTypeCasts,
       };
 
     case FETCH_COLUMN_TYPE_INFO_FAIL:
@@ -732,6 +744,7 @@ const dataReducer = (state = defaultState, action) => {
         ...state,
         columnDataTypes: [],
         columnDefaultFunctions: {},
+        columnTypeCasts: {},
         columnDataTypeInfoErr: action.data,
       };
     case RESET_COLUMN_TYPE_INFO:
@@ -739,6 +752,7 @@ const dataReducer = (state = defaultState, action) => {
         ...state,
         columnDataTypes: [...defaultState.columnDataTypes],
         columnDefaultFunctions: { ...defaultState.columnDefaultFunctions },
+        columnTypeCasts: { ...defaultState.columnTypeCasts },
         columnDataTypeInfoErr: defaultState.columnDataTypeInfoErr,
       };
     default:

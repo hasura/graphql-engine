@@ -12,7 +12,10 @@ import {
 import { ordinalColSort } from '../utils';
 import { defaultDataTypeToCast } from '../constants';
 
-import { getDefaultFunctionsOptions } from '../Common/utils';
+import {
+  getDefaultFunctionsOptions,
+  inferDefaultValues,
+} from '../Common/utils';
 
 import styles from './ModifyTable.scss';
 
@@ -147,13 +150,17 @@ const ColumnEditorList = ({
 
     const getValidDefaultTypes = udtName => {
       const lowerUdtName = udtName.toLowerCase();
+      let defaultOptions = [];
       if (lowerUdtName in columnDefaultFunctions) {
-        const { defaultValues } = getDefaultFunctionsOptions(
-          columnDefaultFunctions[lowerUdtName]
-        );
-        return defaultValues;
+        defaultOptions = columnDefaultFunctions[lowerUdtName];
+      } else {
+        defaultOptions = inferDefaultValues(
+          columnDefaultFunctions,
+          validTypeCasts
+        )(lowerUdtName);
       }
-      return [];
+      const { defaultValues } = getDefaultFunctionsOptions(defaultOptions);
+      return defaultValues;
     };
 
     const colEditorExpanded = () => {

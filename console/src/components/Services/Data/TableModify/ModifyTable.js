@@ -8,7 +8,6 @@ import {
   deleteTableSql,
   untrackTableSql,
   RESET,
-  fetchColumnCasts,
   setUniqueKeys,
 } from '../TableModify/ModifyActions';
 import {
@@ -32,7 +31,6 @@ class ModifyTable extends React.Component {
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
     dispatch(fetchColumnTypeInfo());
-    dispatch(fetchColumnCasts());
   }
   componentWillUnmount() {
     this.props.dispatch({
@@ -144,6 +142,7 @@ class ModifyTable extends React.Component {
               dispatch={dispatch}
               tableName={tableName}
               dataTypes={dataTypes}
+              validTypeCasts={validTypeCasts}
               columnDefaultFunctions={columnDefaultFunctions}
             />
             <hr />
@@ -216,7 +215,7 @@ const mapStateToProps = (state, ownProps) => ({
   fkModify: state.tables.modify.fkModify,
   dataTypes: state.tables.columnDataTypes,
   columnDefaultFunctions: state.tables.columnDefaultFunctions,
-  validTypeCasts: state.tables.modify.alterColumnOptions,
+  validTypeCasts: state.tables.columnTypeCasts,
   columnDataTypeFetchErr: state.tables.columnDataTypeFetchErr,
   schemaList: state.tables.schemaList,
   ...state.tables.modify,
