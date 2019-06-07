@@ -286,11 +286,9 @@ const ViewRows = ({
           const responseData = [];
           currentRow.logs.map((r, rowIndex) => {
             const newRow = {};
-            const status = verifySuccessStatus(r.status) ? (
-              <i className={styles.invocationSuccess + ' fa fa-check'} />
-            ) : (
-              <i className={styles.invocationFailure + ' fa fa-times'} />
-            );
+            const status = verifySuccessStatus(r.status)
+              ? successIcon
+              : failureIcon;
 
             requestData.push(parseRowData(r, 'request'));
             responseData.push(parseRowData(r, 'response'));
@@ -439,26 +437,26 @@ const ViewRows = ({
                                 >
                                   {finalResponse.status_code
                                     ? [
-                                      'Status Code: ',
-                                      verifySuccessStatus(
-                                        finalResponse.status_code
-                                      )
-                                        ? successIcon
-                                        : failureIcon,
-                                      finalResponse.status_code,
-                                      ' ',
-                                      <OverlayTrigger
-                                        placement="top"
-                                        overlay={
-                                          tooltip.statusCodeDescription
-                                        }
-                                      >
-                                        <i
-                                          className="fa fa-question-circle"
-                                          aria-hidden="true"
-                                        />
-                                      </OverlayTrigger>,
-                                    ]
+                                        'Status Code: ',
+                                        verifySuccessStatus(
+                                          finalResponse.status_code
+                                        )
+                                          ? successIcon
+                                          : failureIcon,
+                                        finalResponse.status_code,
+                                        ' ',
+                                        <OverlayTrigger
+                                          placement="top"
+                                          overlay={
+                                            tooltip.statusCodeDescription
+                                          }
+                                        >
+                                          <i
+                                            className="fa fa-question-circle"
+                                            aria-hidden="true"
+                                          />
+                                        </OverlayTrigger>,
+                                      ]
                                     : null}
                                 </div>
                                 <AceEditor
