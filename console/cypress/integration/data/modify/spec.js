@@ -62,6 +62,7 @@ export const passMTRenameTable = () => {
 };
 
 export const passMTRenameColumn = () => {
+  cy.wait(10000);
   cy.get(getElementFromAlias('modify-table-edit-column-0')).click();
   cy.get(getElementFromAlias('edit-col-name'))
     .clear()
