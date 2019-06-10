@@ -3,12 +3,14 @@
 module Hasura.RQL.DDL.Remote.Types where
 
 import           Hasura.Prelude
+import           Hasura.RQL.Instances ()
 import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Types
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.HashMap.Strict (HashMap)
 import           Data.Set (Set)
 import qualified Database.PG.Query as Q
 import           Hasura.RQL.DDL.Remote.Input
@@ -20,6 +22,7 @@ data RemoteField =
   RemoteField
     { rmfRemoteRelationship :: !RemoteRelationship
     , rmfGType :: !G.GType
+    , rmfParamMap :: !(HashMap G.Name InpValInfo)
     }
   deriving (Show, Eq, Lift)
 

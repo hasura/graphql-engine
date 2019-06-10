@@ -97,6 +97,7 @@ validateRelationship remoteRelationship gctx tables = do
             RemoteField
               { rmfRemoteRelationship = remoteRelationship
               , rmfGType = _fiTy objFldInfo
+              , rmfParamMap = _fiParams objFldInfo
               }
   where
     tableName = rtrTable remoteRelationship

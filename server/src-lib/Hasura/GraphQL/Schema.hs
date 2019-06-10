@@ -17,6 +17,7 @@ module Hasura.GraphQL.Schema
   , emptyGCtx
   , mergeMaybeMaps
   , ppGCtx
+  , mkRemoteFld
   ) where
 
 
@@ -35,6 +36,7 @@ import qualified Language.GraphQL.Draft.Syntax  as G
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Validate.Types
+import           Hasura.RQL.DDL.Remote.Types
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal        (mkAdminRolePermInfo)
 import           Hasura.RQL.Types
@@ -285,6 +287,16 @@ mkTableObj tn allowedFlds =
     mkRelFld' (relInfo, allowAgg, _, _, isNullable) =
       mkRelFld allowAgg relInfo isNullable
     desc = G.Description $ "columns and relationships of " <>> tn
+
+mkRemoteFld :: RemoteField -> ObjFldInfo
+mkRemoteFld remoteField = mkHsraObjFldInfo description fieldName paramMap gType
+  where
+    description = Just "Remote relationship field"
+    fieldName =
+      G.Name
+        (unRemoteRelationshipName (rtrName (rmfRemoteRelationship remoteField)))
+    paramMap = rmfParamMap remoteField
+    gType = rmfGType remoteField
 
 {-
 type table_aggregate {
