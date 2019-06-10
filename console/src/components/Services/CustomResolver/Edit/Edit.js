@@ -17,6 +17,8 @@ import Button from '../../../Common/Button/Button';
 
 import { appPrefix, pageTitle } from '../constants';
 
+import { NotFoundError } from '../../../Error/PageNotFound';
+
 import globals from '../../../../Globals';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
@@ -102,6 +104,15 @@ class Edit extends React.Component {
   }
 
   render() {
+    const currentResolver = this.props.allResolvers.find(
+      r => r.name === this.props.params.resolverName
+    );
+
+    if (!currentResolver) {
+      // throw a 404 exception
+      throw new NotFoundError('404 Not Found');
+    }
+
     const styles = require('../CustomResolver.scss');
 
     const { isFetching, isRequesting, editState, migrationMode } = this.props;
@@ -234,6 +245,7 @@ const mapStateToProps = state => {
   return {
     ...state.customResolverData.addData,
     ...state.customResolverData.headerData,
+    allResolvers: state.customResolverData.listData.resolvers,
     migrationMode: state.main.migrationMode,
     dataHeaders: { ...state.tables.dataHeaders },
   };
