@@ -91,6 +91,7 @@ const TableColumn = props => {
           value={column.type && columnTypeValueMap[column.type]}
           bsClass={`col-type-${i} add_table_column_selector`}
           styleOverrides={customSelectBoxStyles}
+          filterOption={'prefix'}
         />
       </span>
       <input
