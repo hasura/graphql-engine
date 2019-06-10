@@ -18,7 +18,7 @@ such as taking data dump etc.
 Endpoint
 --------
 
-All requests are ``POST`` requests to the ``/v1alpha/pg_dump`` endpoint.
+All requests are ``POST`` requests to the ``/v1alpha1/pg_dump`` endpoint.
 
 API Spec
 --------
@@ -28,7 +28,7 @@ Request
 
 .. code-block:: http
 
-   POST /v1alpha/pg_dump HTTP/1.1
+   POST /v1alpha1/pg_dump HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
