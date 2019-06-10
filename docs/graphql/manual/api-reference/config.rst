@@ -14,7 +14,7 @@ configuration.
 Endpoint
 --------
 
-All requests are ``GET`` requests to the ``/v1/config`` endpoint.
+All requests are ``GET`` requests to the ``/v1alpha1/config`` endpoint.
 
 API Spec
 --------
@@ -24,7 +24,7 @@ Request
 
 .. code-block:: http
 
-   GET /v1/config HTTP/1.1
+   GET /v1alpha1/config HTTP/1.1
    X-Hasura-Role: admin
 
 

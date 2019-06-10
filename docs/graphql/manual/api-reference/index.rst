@@ -22,9 +22,9 @@ Available APIs
 +-----------------+----------------------------------------+------------------+
 | Health          | :ref:`/healthz <health_api>`           | Public           |
 +-----------------+----------------------------------------+------------------+
-| PG Dump         | :ref:`/v1/pg_dump <pg_dump_api>`       | Admin only       |
+| PG Dump         | :ref:`/v1alpha/pg_dump <pg_dump_api>`  | Admin only       |
 +-----------------+----------------------------------------+------------------+
-| Config          | :ref:`/v1/config <config_api>`         | Admin only       |
+| Config          | :ref:`/v1alpha1/config <config_api>`   | Admin only       |
 +-----------------+----------------------------------------+------------------+
 
 .. _graphql_api:
@@ -77,7 +77,7 @@ out what the errors are.
 pg_dump API
 ^^^^^^^^^^^
 
-The ``/v1/pg_dump`` is an admin-only endpoint that can be used to execute
+The ``/v1alpha/pg_dump`` is an admin-only endpoint that can be used to execute
 ``pg_dump`` on the Postgres instance connected to Hasura. The ``pg_dump`` CLI
 tool's argument can be passed as POST request body to the API and the response
 is sent back to the client.
@@ -89,7 +89,7 @@ See details at :doc:`pgdump`.
 Config API
 ^^^^^^^^^^
 
-``v1/config`` is an admin-only endpoint to get the current server
+``v1alpha1/config`` is an admin-only endpoint to get the current server
 configuration.
 
 See details at :doc:`config`.
