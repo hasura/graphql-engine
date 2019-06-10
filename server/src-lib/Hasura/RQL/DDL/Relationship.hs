@@ -154,13 +154,13 @@ createObjRelP2 (WithTable qt rd) = do
   return successMsg
 
 runCreateRemoteRelationship ::
-     (MonadTx m, CacheRM m) => RemoteRelationship -> m EncJSON
+     (MonadTx m, CacheRWM m) => RemoteRelationship -> m EncJSON
 runCreateRemoteRelationship remoteRelationship = do
-  runCreateRemoteRelationshipP1 remoteRelationship
-  runCreateRemoteRelationshipP2 remoteRelationship
+  remoteField <- runCreateRemoteRelationshipP1 remoteRelationship
+  runCreateRemoteRelationshipP2 remoteField
 
 runCreateRemoteRelationshipP1 ::
-     (MonadTx m, CacheRM m) => RemoteRelationship -> m ()
+     (MonadTx m, CacheRM m) => RemoteRelationship -> m RemoteField
 runCreateRemoteRelationshipP1 remoteRelationship = do
   sc <- askSchemaCache
   case HM.lookup
@@ -171,14 +171,17 @@ runCreateRemoteRelationshipP1 remoteRelationship = do
         getCreateRemoteRelationshipValidation remoteRelationship
       case validation of
         Left err -> throw400 RemoteSchemaError (T.pack (show err))
-        Right {} -> pure ()
+        Right remoteField -> pure remoteField
     Nothing -> throw400 RemoteSchemaError "No such remote schema"
 
 runCreateRemoteRelationshipP2 ::
-     (MonadTx m) => RemoteRelationship -> m EncJSON
-runCreateRemoteRelationshipP2 remoteRelationship = do
-  liftTx (persistCreateRemoteRelationship remoteRelationship)
+     (MonadTx m, CacheRWM m) => RemoteField -> m EncJSON
+runCreateRemoteRelationshipP2 remoteField = do
+  liftTx (persistCreateRemoteRelationship (rmfRemoteRelationship remoteField))
+  addRemoteFieldToCache remoteField noDependencies
   pure successMsg
+  where
+    noDependencies = mempty
 
 persistCreateRemoteRelationship
   :: RemoteRelationship -> Q.TxE QErr ()

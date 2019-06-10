@@ -45,6 +45,7 @@ module Hasura.RQL.Types.SchemaCache
        -- , addFldToCache
        , addColToCache
        , addRelToCache
+       , addRemoteFieldToCache
 
        , delColFromCache
        , updColInCache
@@ -117,7 +118,6 @@ import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.SQL.Types
-
 import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
@@ -585,6 +585,19 @@ addRelToCache rn ri deps tn = do
   modDepMapInCache (addToDepMap schObjId deps)
   where
     schObjId = SOTableObj tn $ TORel $ riName ri
+
+addRemoteFieldToCache ::
+     (QErrM m, CacheRWM m)
+  => RemoteField
+  -> [SchemaDependency]
+  -> m ()
+addRemoteFieldToCache remoteField deps = do
+  addFldToCache (FieldName (unRemoteRelationshipName rn)) (FIRemote remoteField) qt
+  modDepMapInCache (addToDepMap schObjId deps)
+  where
+    qt = rtrTable (rmfRemoteRelationship remoteField)
+    rn = rtrName (rmfRemoteRelationship remoteField)
+    schObjId = SOTableObj qt $ TORel (RelName (unRemoteRelationshipName rn))
 
 addFldToCache
   :: (QErrM m, CacheRWM m)
