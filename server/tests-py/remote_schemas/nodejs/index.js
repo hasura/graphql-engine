@@ -29,9 +29,14 @@ const typeDefs = gql`
     eq : String
   }
 
+  input IncludeInpObj {
+    id: [Int]
+    name: [String]
+  }
+
   type Query {
     hello:  String
-    messages(where: MessageWhereInpObj): [Message]
+    messages(where: MessageWhereInpObj, includes: IncludeInpObj): [Message]
     message(id: Int!) : Message
   }
 `;
@@ -42,7 +47,7 @@ const resolvers = {
         message: (_, { id }) => {
             return allMessages.find(m => m.id == id);
         },
-        messages: (_, { where }) => {
+        messages: (_, { where, includes }) => {
             var result = allMessages;
             if (where && where.id) {
                 var intExp = where.id;
@@ -74,6 +79,17 @@ const resolvers = {
                     }
                 });
             }
+
+            if (includes && includes.id) {
+                var ids = includes.id;
+                result = result.filter(m => ids.includes(m.id));
+            }
+
+            if (includes && includes.name) {
+                var names = includes.name;
+                result = result.filter(m => names.includes(m.name));
+            }
+
             return result;
         }
     },

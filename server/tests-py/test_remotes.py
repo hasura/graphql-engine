@@ -43,8 +43,15 @@ class TestTopLevelMixedFields:
         graphql_service.stop()
 
     def test_create_valid(self, hge_ctx):
-        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_relationship.yaml')
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
         assert st_code == 200, resp
+
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_nested_args.yaml')
+        assert st_code == 200, resp
+
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_array.yaml')
+        assert st_code == 200, resp
+
 
     def test_create_invalid(self, hge_ctx):
 
@@ -68,6 +75,14 @@ class TestTopLevelMixedFields:
 
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_invalid_remote_rel_type.yaml')
         assert st_code == 400, resp
+
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_invalid_remote_rel_nested_args.yaml')
+        assert st_code == 400, resp
+
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_invalid_remote_rel_array.yaml')
+        assert st_code == 400, resp
+
+
 
 # class TestRemoteRelationships:
 
