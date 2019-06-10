@@ -113,6 +113,7 @@ parseColExp nt n val = do
       relBoolExp <- parseBoolExp val
       return $ AVRel relInfo $ andAnnBoolExps relBoolExp $
         fmapAnnBoolExp partialSQLExpToUnresolvedVal permExp
+    FldRemote _ -> throw500 "Cannot parse remote node"
 
 parseBoolExp
   :: ( MonadError QErr m

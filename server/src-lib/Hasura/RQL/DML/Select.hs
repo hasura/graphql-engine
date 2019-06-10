@@ -258,6 +258,7 @@ partAnnFlds flds =
   FObj o -> Just $ Right $ Left o
   FArr a -> Just $ Right $ Right a
   FExp _ -> Nothing
+  FRemote -> Nothing
 
 getSelectDeps
   :: AnnSimpleSel

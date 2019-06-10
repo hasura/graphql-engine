@@ -87,6 +87,7 @@ fromSelSet fldTy flds =
               return $ case riType relInfo of
                 ObjRel -> RS.FObj annRel
                 ArrRel -> RS.FArr $ RS.ASSimple annRel
+          FldRemote _ -> return RS.FRemote
 
 type TableAggFlds = RS.TableAggFldsG UnresolvedVal
 

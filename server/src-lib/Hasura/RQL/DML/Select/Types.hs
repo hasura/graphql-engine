@@ -125,6 +125,7 @@ data AnnFldG v
   | FObj !(ObjSelG v)
   | FArr !(ArrSelG v)
   | FExp !T.Text
+  | FRemote
   deriving (Show, Eq)
 
 traverseAnnFld
@@ -135,6 +136,7 @@ traverseAnnFld f = \case
   FObj sel -> FObj <$> traverse (traverseAnnSimpleSel f) sel
   FArr sel -> FArr <$> traverseArrSel f sel
   FExp t -> FExp <$> pure t
+  FRemote -> pure FRemote
 
 type AnnFld = AnnFldG S.SQLExp
 

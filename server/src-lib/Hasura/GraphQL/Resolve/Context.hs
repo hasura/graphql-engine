@@ -115,7 +115,7 @@ getPGColInfo nt n = do
   fldInfo <- getFldInfo nt n
   case fldInfo of
     FldCol pgColInfo -> return pgColInfo
-    FldRel _        -> throw500 $
+    _ -> throw500 $
       "found relinfo when expecting pgcolinfo for "
       <> showNamedTy nt <> ":" <> showName n
 

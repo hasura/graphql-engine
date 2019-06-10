@@ -9,11 +9,13 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.DDL.Remote.Types
 import           Hasura.SQL.Types
 
 data TypedField
   = FldCol PGColInfo
   | FldRel (RelInfo, Bool, AnnBoolExpPartialSQL, Maybe Int)
+  | FldRemote RemoteField
   deriving (Show, Eq)
 
 $(makePrisms ''TypedField)
