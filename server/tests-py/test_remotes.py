@@ -27,42 +27,46 @@ def graphql_service():
 
 class TestTopLevelMixedFields:
 
+    @classmethod
+    def dir(cls):
+        return "queries/remote_schemas/remote_relationships/"
+
     @pytest.fixture(autouse=True)
     def transact(self, hge_ctx, graphql_service):
         print("In setup method")
         graphql_service.start()
-        st_code, resp = hge_ctx.v1q_f('queries/remote_schemas/setup_mixed.yaml')
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup.yaml')
         assert st_code == 200, resp
         yield
-        st_code, resp = hge_ctx.v1q_f('queries/remote_schemas/teardown_mixed.yaml')
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'teardown.yaml')
         assert st_code == 200, resp
         graphql_service.stop()
 
     def test_create_valid(self, hge_ctx):
-        st_code, resp = hge_ctx.v1q_f('queries/remote_schemas/setup_remote_relationship.yaml')
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_relationship.yaml')
         assert st_code == 200, resp
 
     def test_create_invalid(self, hge_ctx):
 
-        st_code, resp = hge_ctx.v1q_f('queries/remote_schemas/setup_invalid_remote_rel_hasura_field.yaml')
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_invalid_remote_rel_hasura_field.yaml')
         assert st_code == 400, resp
 
-        st_code, resp = hge_ctx.v1q_f('queries/remote_schemas/setup_invalid_remote_rel_literal.yaml')
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_invalid_remote_rel_literal.yaml')
         assert st_code == 400, resp
 
-        st_code, resp = hge_ctx.v1q_f('queries/remote_schemas/setup_invalid_remote_rel_variable.yaml')
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_invalid_remote_rel_variable.yaml')
         assert st_code == 400, resp
 
-        st_code, resp = hge_ctx.v1q_f('queries/remote_schemas/setup_invalid_remote_rel_remote_args.yaml')
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_invalid_remote_rel_remote_args.yaml')
         assert st_code == 400, resp
 
-        st_code, resp = hge_ctx.v1q_f('queries/remote_schemas/setup_invalid_remote_rel_remote_schema.yaml')
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_invalid_remote_rel_remote_schema.yaml')
         assert st_code == 400, resp
 
-        st_code, resp = hge_ctx.v1q_f('queries/remote_schemas/setup_invalid_remote_rel_remote_field.yaml')
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_invalid_remote_rel_remote_field.yaml')
         assert st_code == 400, resp
 
-        st_code, resp = hge_ctx.v1q_f('queries/remote_schemas/setup_invalid_remote_rel_type.yaml')
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_invalid_remote_rel_type.yaml')
         assert st_code == 400, resp
 
 # class TestRemoteRelationships:
