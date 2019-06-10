@@ -61,7 +61,7 @@ const ManualRelationshipSelector = ({
         </div>
         <input
           onChange={dispatchSetRelName}
-          className="form-control"
+          className={`${styles.select} form-control ${styles.add_pad_left}`}
           placeholder="Enter relationship name"
           disabled={!relAdd.relType}
           data-test="rel-name"
@@ -91,17 +91,17 @@ const ManualRelationshipSelector = ({
           disabled={!relAdd.relType || !relAdd.relName}
         >
           {// default unselected option
-            relAdd.rSchema === '' && (
-              <option value={''} disabled>
-                {'-- reference schema --'}
-              </option>
-            )}
+          relAdd.rSchema === '' && (
+            <option value={''} disabled>
+              {'-- reference schema --'}
+            </option>
+          )}
           {// all reference schema options
-            schemaList.map((rs, j) => (
-              <option key={j} value={rs}>
-                {rs}
-              </option>
-            ))}
+          schemaList.map((rs, j) => (
+            <option key={j} value={rs}>
+              {rs}
+            </option>
+          ))}
         </select>
       </div>
     );
