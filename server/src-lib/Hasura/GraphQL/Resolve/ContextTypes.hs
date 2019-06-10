@@ -1,19 +1,26 @@
 module Hasura.GraphQL.Resolve.ContextTypes where
 
+import           Control.Lens.TH
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.Sequence                 as Seq
+import qualified Data.HashMap.Strict as Map
+import qualified Data.Sequence as Seq
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Types
 
+data TypedField
+  = FldCol PGColInfo
+  | FldRel (RelInfo, Bool, AnnBoolExpPartialSQL, Maybe Int)
+  deriving (Show, Eq)
+
+$(makePrisms ''TypedField)
 
 type FieldMap
   = Map.HashMap (G.NamedType, G.Name)
-    (Either PGColInfo (RelInfo, Bool, AnnBoolExpPartialSQL, Maybe Int))
+    TypedField
 
 -- order by context
 data OrdByItem

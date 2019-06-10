@@ -1,6 +1,7 @@
 module Hasura.GraphQL.Context where
 
 import           Data.Aeson
+import           Control.Lens (preview)
 import           Data.Has
 import           Hasura.Prelude
 
@@ -375,7 +376,7 @@ mkGCtx tyAgg (RootFlds flds) insCtxMap =
   where
     TyAgg tyInfos fldInfos scalars ordByEnums = tyAgg
     colTys    = Set.toList $ Set.fromList $ map pgiType $
-                  lefts $ Map.elems fldInfos
+                  mapMaybe (preview _FldCol) $ Map.elems fldInfos
     mkMutRoot =
       mkHsraObjTyInfo (Just "mutation root") (G.NamedType "mutation_root") Set.empty .
       mapFromL _fiName

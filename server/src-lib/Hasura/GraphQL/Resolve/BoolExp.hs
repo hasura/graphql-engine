@@ -9,6 +9,7 @@ import qualified Data.HashMap.Strict.InsOrd        as OMap
 import qualified Language.GraphQL.Draft.Syntax     as G
 
 import           Hasura.GraphQL.Resolve.Context
+import           Hasura.GraphQL.Resolve.ContextTypes
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
@@ -105,10 +106,10 @@ parseColExp
 parseColExp nt n val = do
   fldInfo <- getFldInfo nt n
   case fldInfo of
-    Left pgColInfo -> do
+    FldCol pgColInfo -> do
       opExps <- parseOpExps (pgiType pgColInfo) val
       return $ AVCol pgColInfo $ map (fmap UVPG) opExps
-    Right (relInfo, _, permExp, _) -> do
+    FldRel (relInfo, _, permExp, _) -> do
       relBoolExp <- parseBoolExp val
       return $ AVRel relInfo $ andAnnBoolExps relBoolExp $
         fmapAnnBoolExp partialSQLExpToUnresolvedVal permExp

@@ -34,6 +34,7 @@ import qualified Data.Text                      as T
 import qualified Language.GraphQL.Draft.Syntax  as G
 
 import           Hasura.GraphQL.Context
+import           Hasura.GraphQL.Resolve.ContextTypes
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.DDL.Remote.Types
@@ -1317,7 +1318,7 @@ mkGCtxRole' tn insPermM selPermM updColsM
 
     -- helper
     mkColFldMap ty cols = Map.fromList $ flip map cols $
-      \c -> ((ty, mkColName $ pgiName c), Left c)
+      \c -> ((ty, mkColName $ pgiName c), FldCol c)
 
     -- insert input type
     insInpObjM = uncurry (mkInsInp tn) <$> insPermM
@@ -1357,13 +1358,13 @@ mkGCtxRole' tn insPermM selPermM updColsM
     -- helper
     mkFldMap ty = Map.fromList . concatMap (mkFld ty)
     mkFld ty = \case
-      SelFldCol ci -> [((ty, mkColName $ pgiName ci), Left ci)]
+      SelFldCol ci -> [((ty, mkColName $ pgiName ci), FldCol ci)]
       SelFldRel (ri, allowAgg, perm, lim, _) ->
         let relFld = ( (ty, G.Name $ getRelTxt $ riName ri)
-                     , Right (ri, False, perm, lim)
+                     , FldRel (ri, False, perm, lim)
                      )
             aggRelFld = ( (ty, mkAggRelName $ riName ri)
-                        , Right (ri, True, perm, lim)
+                        , FldRel (ri, True, perm, lim)
                         )
         in case riType ri of
           ObjRel -> [relFld]
