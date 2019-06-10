@@ -142,10 +142,13 @@ const ColumnEditorList = ({
       if (lowerUdtName in validTypeCasts) {
         return validTypeCasts[lowerUdtName];
       }
-      return [
-        ...dataTypeIndexMap[lowerUdtName],
-        ...dataTypeIndexMap[defaultDataTypeToCast],
-      ];
+      if (dataTypeIndexMap && Object.keys(dataTypeIndexMap).length > 0) {
+        return [
+          ...dataTypeIndexMap[lowerUdtName],
+          ...dataTypeIndexMap[defaultDataTypeToCast],
+        ];
+      }
+      return ['', '', '', 'text', 'text', 'text'];
     };
 
     const getValidDefaultTypes = udtName => {
