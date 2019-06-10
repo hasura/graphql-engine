@@ -33,11 +33,11 @@ import qualified Data.Sequence                  as Seq
 import qualified Data.Text                      as T
 import qualified Language.GraphQL.Draft.Syntax  as G
 
+import           Hasura.RQL.DDL.Remote.Types
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.ContextTypes
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Validate.Types
-import           Hasura.RQL.DDL.Remote.Types
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal        (mkAdminRolePermInfo)
 import           Hasura.RQL.Types
@@ -94,9 +94,15 @@ isValidRel rn rt = isValidName (G.Name $ getRelTxt rn)
                           && isValidObjectName rt
 
 isValidField :: FieldInfo -> Bool
-isValidField = \case
-  FIColumn (PGColInfo col _ _) -> isValidCol col
-  FIRelationship (RelInfo rn _ _ remTab _) -> isValidRel rn remTab
+isValidField =
+  \case
+    FIColumn (PGColInfo col _ _) -> isValidCol col
+    FIRelationship (RelInfo rn _ _ remTab _) -> isValidRel rn remTab
+    FIRemote remoteField ->
+      isValidName
+        (G.Name
+           (unRemoteRelationshipName
+              (rtrName (rmfRemoteRelationship remoteField))))
 
 upsertable :: [ConstraintName] -> Bool -> Bool -> Bool
 upsertable uniqueOrPrimaryCons isUpsertAllowed view =
@@ -1545,6 +1551,7 @@ getSelPerm tableCache fields role selPermInfo = do
                              , spiLimit rmSelPermM
                              , isRelNullable fields relInfo
                              )
+    FIRemote {} -> pure Nothing
   return (spiAllowAgg selPermInfo, selFlds)
   where
     allowedCols = spiCols selPermInfo
@@ -1691,6 +1698,7 @@ mkGCtxMapTable tableCache funcCache tabInfo = do
     selFlds = flip map (toValidFieldInfos fields) $ \case
       FIColumn pgColInfo     -> SelFldCol pgColInfo
       FIRelationship relInfo -> SelFldRel (relInfo, True, noFilter, Nothing, isRelNullable fields relInfo)
+      FIRemote relInfo -> SelFldRemote relInfo
     adminRootFlds =
       getRootFldsRole' tn pkeyCols validConstraints fields tabFuncs
       (Just ([], True)) (Just (noFilter, Nothing, [], True))

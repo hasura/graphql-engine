@@ -42,6 +42,7 @@ data ValidationError
   | InvalidVariable G.Variable (HM.HashMap G.Variable FieldInfo)
   | NullNotAllowedHere
   | ForeignRelationshipsNotAllowedInRemoteVariable !RelInfo
+  | RemoteFieldsNotAllowedInArguments !RemoteField
   | UnsupportedArgumentType G.Value
   deriving (Show, Eq)
 
@@ -228,6 +229,8 @@ fieldInfoToNamedType =
     FIColumn pgColInfo -> pure (mkScalarTy (pgiType pgColInfo))
     FIRelationship relInfo ->
       Failure (pure (ForeignRelationshipsNotAllowedInRemoteVariable relInfo))
+    FIRemote remoteField ->
+      Failure (pure (RemoteFieldsNotAllowedInArguments remoteField))
 
 -- | Reify the constructors to an Either.
 isListType :: G.GType -> Bool

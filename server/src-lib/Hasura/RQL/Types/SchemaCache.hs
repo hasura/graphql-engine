@@ -107,6 +107,7 @@ import qualified Hasura.GraphQL.Context            as GC
 import           Hasura.Prelude
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.DDL.Remote.Types
 import           Hasura.RQL.Types.DML
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
@@ -168,6 +169,7 @@ type WithDeps a = (a, [SchemaDependency])
 data FieldInfo
   = FIColumn !PGColInfo
   | FIRelationship !RelInfo
+  | FIRemote !RemoteField
   deriving (Show, Eq)
 
 $(makePrisms ''FieldInfo)
