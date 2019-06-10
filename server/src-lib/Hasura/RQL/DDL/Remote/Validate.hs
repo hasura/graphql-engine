@@ -38,7 +38,7 @@ data ValidationError
   | TableNotFound !QualifiedTable
   | TableFieldNonexistent !QualifiedTable !FieldName
   | ExpectedTypeButGot !G.NamedType !G.NamedType
-  | InvalidType !G.NamedType !T.Text
+  | InvalidType !G.GType!T.Text
   | InvalidVariable G.Variable (HM.HashMap G.Variable FieldInfo)
   | NullNotAllowedHere
   | ForeignRelationshipsNotAllowedInRemoteVariable !RelInfo
@@ -161,18 +161,21 @@ validateType permittedVariables value gType@(getBaseTy -> expectedNamedType) typ
         Just fieldInfo ->
           bindValidation
             (fieldInfoToNamedType fieldInfo)
-            (flip assertType expectedNamedType)
-    G.VInt {} -> assertType (mkScalarTy PGInteger) expectedNamedType
-    G.VFloat {} -> assertType (mkScalarTy PGFloat) expectedNamedType
-    G.VBoolean {} -> assertType (mkScalarTy PGBoolean) expectedNamedType
+            (flip assertNamedType expectedNamedType)
+    G.VInt {} -> assertNamedType (mkScalarTy PGInteger) expectedNamedType
+    G.VFloat {} -> assertNamedType (mkScalarTy PGFloat) expectedNamedType
+    G.VBoolean {} -> assertNamedType (mkScalarTy PGBoolean) expectedNamedType
     G.VNull -> Failure (pure NullNotAllowedHere)
-    G.VString {} -> assertType (mkScalarTy PGText) expectedNamedType
+    G.VString {} -> assertNamedType (mkScalarTy PGText) expectedNamedType
     v@(G.VEnum _) -> Failure (pure (UnsupportedArgumentType v))
-    G.VList (G.unListValue -> values) ->
-      flip
-        traverse_
-        values
-        (\val -> validateType permittedVariables val gType types)
+    G.VList (G.unListValue -> values) -> do
+      (assertListType gType)
+      (flip
+         traverse_
+         values
+         (\val ->
+            validateType permittedVariables val (G.toGT expectedNamedType) types))
+      pure ()
     G.VObject (G.unObjectValue -> values) ->
       flip
         traverse_
@@ -187,13 +190,25 @@ validateType permittedVariables value gType@(getBaseTy -> expectedNamedType) typ
                      Nothing -> Failure (pure $ NoSuchArgumentForRemote name)
                      Just (_iviType -> expectedType) ->
                        validateType permittedVariables val expectedType types
-                 _ -> Failure (pure $ InvalidType expectedNamedType "not an input object type"))
+                 _ ->
+                   Failure
+                     (pure $
+                      InvalidType
+                        (G.toGT $ G.NamedType name)
+                        "not an input object type"))
 
-assertType ::
+assertNamedType ::
      G.NamedType -> G.NamedType -> Validation (NonEmpty ValidationError) ()
-assertType actualType expectedType =
+assertNamedType actualType expectedType =
   (when (actualType /= expectedType)
     (Failure (pure $ ExpectedTypeButGot expectedType actualType)))
+
+assertListType ::
+     G.GType -> Validation (NonEmpty ValidationError) ()
+assertListType actualType =
+  (when (not $ isListType actualType)
+    (Failure (pure $ InvalidType actualType "expecting list")))
+
 
 -- | Convert a field info to a named type, if possible.
 fieldInfoToNamedType ::
@@ -206,8 +221,8 @@ fieldInfoToNamedType =
       Failure (pure (ForeignRelationshipsNotAllowedInRemoteVariable relInfo))
 
 -- | Reify the constructors to an Either.
-gtypeToEither :: G.GType -> Either G.NamedType G.ListType
-gtypeToEither =
+isListType :: G.GType -> Bool
+isListType =
   \case
-    G.TypeNamed _ namedType -> Left namedType
-    G.TypeList _ listType -> Right listType
+    G.TypeNamed {} -> False
+    G.TypeList {} -> True
