@@ -1,5 +1,7 @@
 ---
 title: "Tutorial & boilerplate setup"
+metaTitle: "Todo app vue boilerplate setup | GraphQL Vue Apollo Tutorial"
+metaDescription: "The GraphQL backend is already ready. The task is to convert the static UI into a working realtime app in Vue.js"
 ---
 
 import YoutubeEmbed from "../src/YoutubeEmbed.js";

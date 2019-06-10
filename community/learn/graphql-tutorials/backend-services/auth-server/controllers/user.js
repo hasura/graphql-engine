@@ -28,7 +28,8 @@ exports.postLogin = async (req, res, next) => {
           "x-hasura-user-id": '' + user.id,
           "x-hasura-default-role": "user",
           "x-hasura-role": "user"
-        }
+        },
+        exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60)
       }
 
       handleResponse(res, 200, {

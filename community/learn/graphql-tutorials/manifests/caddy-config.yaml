@@ -7,27 +7,31 @@ data:
   Caddyfile: |
     learn.hasura.io {
       redir 301 {
-        /graphql/react/boilerplate.zip https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/react-boilerplate/boilerplate.zip
+        /graphql/react/boilerplate.zip https://graphql-engine-cdn.hasura.io/learn-hasura/boilerplates/react/react-boilerplate.zip
       }
 
       redir 301 {
-        /graphql/react-native/boilerplate.zip https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/react-native-boilerplate/boilerplate.zip
+        /graphql/react-native/boilerplate.zip https://graphql-engine-cdn.hasura.io/learn-hasura/boilerplates/react-native/react-native-boilerplate.zip
       }
 
       redir 301 {
-        /graphql/vue/boilerplate.zip https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/vue-boilerplate/boilerplate.zip
+        /graphql/vue/boilerplate.zip https://graphql-engine-cdn.hasura.io/learn-hasura/boilerplates/vue/vue-boilerplate.zip
       }
 
       redir 301 {
-        /graphql/ios/boilerplate.zip https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/ios-boilerplate/boilerplate.zip
+        /graphql/ios/boilerplate.zip https://graphql-engine-cdn.hasura.io/learn-hasura/boilerplates/ios/ios-boilerplate.zip
       }
 
       redir 301 {
-        /graphql/react/ /graphql/react/introduction
+        /graphql/android/boilerplate.zip https://graphql-engine-cdn.hasura.io/learn-hasura/boilerplates/android/android-boilerplate.zip
       }
 
       redir 301 {
         /graphql/react-native/ /graphql/react-native/introduction
+      }
+
+      redir 301 {
+        /graphql/react/ /graphql/react/introduction
       }
 
       redir 301 {
@@ -36,6 +40,10 @@ data:
 
       redir 301 {
         /graphql/ios/ /graphql/ios/introduction
+      }
+
+      redir 301 {
+        /graphql/android/ /graphql/android/introduction
       }
       
       redir 301 {
@@ -61,6 +69,11 @@ data:
         websocket
       }
 
+      proxy /graphql/v1/graphql hasura/v1/graphql {
+        without /graphql/v1/graphql
+        websocket
+      }
+
       proxy /graphql/v1/query hasura/v1/query {
         without /graphql/v1/query
       }
@@ -75,15 +88,17 @@ data:
 
       proxy /graphql/hasura hasura-backend
 
-      proxy /graphql/react react-apollo
-
       proxy /graphql/react-native react-native-apollo
+
+      proxy /graphql/react react-apollo
 
       proxy /graphql/vue vue-apollo
 
       proxy /graphql/ios ios-apollo
+
+      proxy /graphql/android android-apollo
       
-      proxy /graphql hasura/v1alpha1/graphql {
+      proxy /graphql hasura/v1/graphql {
         without /graphql
         websocket
       }

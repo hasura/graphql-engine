@@ -1,17 +1,11 @@
 export const MANUAL_TRIGGER_TEXT = 'Via console';
 export const MANUAL_TRIGGER_VAR = 'enable_manual';
 
-export const getValidQueryTypes = supportManualTriggerInvocations => {
-  const defaultQueryTypes = ['insert', 'update', 'delete'];
-
-  if (supportManualTriggerInvocations) {
-    defaultQueryTypes.push(MANUAL_TRIGGER_TEXT);
-  }
-
-  return defaultQueryTypes;
+export const getTriggerOperations = () => {
+  return ['insert', 'update', 'delete', MANUAL_TRIGGER_TEXT];
 };
 
-export const queryToInternalNameMap = {
+export const triggerOperationMap = {
   insert: 'insert',
   update: 'update',
   delete: 'delete',

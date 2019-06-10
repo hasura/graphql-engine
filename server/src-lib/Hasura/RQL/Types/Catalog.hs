@@ -6,6 +6,7 @@ import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
+import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCache
 import           Hasura.SQL.Types
@@ -13,8 +14,6 @@ import           Hasura.SQL.Types
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-
-import qualified Data.HashMap.Strict            as HM
 
 data CatalogTable
   = CatalogTable
@@ -66,28 +65,16 @@ data CatalogFunction
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogFunction)
 
-type ColMapping = HM.HashMap PGCol PGCol
-
-data CatalogFKey
-  = CatalogFKey
-  { _cfkTable         :: !QualifiedTable
-  , _cfkRefTable      :: !QualifiedTable
-  , _cfkConstraint    :: !ConstraintName
-  , _cfkColumnMapping :: !ColMapping
-  } deriving (Show, Eq, Generic)
-$(deriveJSON (aesonDrop 4 snakeCase) ''CatalogFKey)
-
-instance Hashable CatalogFKey
-
 data CatalogMetadata
   = CatalogMetadata
-  { _cmTables         :: ![CatalogTable]
-  , _cmRelations      :: ![CatalogRelation]
-  , _cmPermissions    :: ![CatalogPermission]
-  , _cmQueryTemplates :: ![CatalogQueryTemplate]
-  , _cmEventTriggers  :: ![CatalogEventTrigger]
-  , _cmRemoteSchemas  :: ![AddRemoteSchemaQuery]
-  , _cmFunctions      :: ![CatalogFunction]
-  , _cmForeignKeys    :: ![CatalogFKey]
+  { _cmTables               :: ![CatalogTable]
+  , _cmRelations            :: ![CatalogRelation]
+  , _cmPermissions          :: ![CatalogPermission]
+  , _cmQueryTemplates       :: ![CatalogQueryTemplate]
+  , _cmEventTriggers        :: ![CatalogEventTrigger]
+  , _cmRemoteSchemas        :: ![AddRemoteSchemaQuery]
+  , _cmFunctions            :: ![CatalogFunction]
+  , _cmForeignKeys          :: ![ForeignKey]
+  , _cmAllowlistCollections :: ![CollectionDef]
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogMetadata)

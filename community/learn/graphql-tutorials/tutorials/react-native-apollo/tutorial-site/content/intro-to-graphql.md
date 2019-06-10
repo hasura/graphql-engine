@@ -1,5 +1,7 @@
 ---
 title: "Intro to GraphQL"
+metaTitle: "Intro to GraphQL | GraphQL React Native Apollo Tutorial"
+metaDescription: "What is GraphQL? GraphQL is a specification for how to talk to an API. This part also covers GraphQL vs REST with an example and takes you over benefits of GraphQL"
 ---
 
 ## What is GraphQL?
@@ -10,11 +12,11 @@ GraphQL is designed for developers of web/mobile apps (HTTP clients) to be able 
 ## GraphQL vs REST: an example
 Let's say you have an API to fetch a user's profile and their address. In a typical REST scenario, this is what the request/response would look like:
 
-![GraphQL API example](./intro-to-graphql/rest-api.png)
+![GraphQL API example](https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-react/rest-api.png)
 
 If your API server was a GraphQL server instead, this is what your API calls would look like:
 
-![GraphQL API example](./intro-to-graphql/graphql-api.gif)
+![GraphQL API example](https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-react/graphql-api.gif)
 
 You can see that the response JSON is different for different "queries" sent by the client.
 
@@ -61,11 +63,11 @@ This is one of the key-reasons that makes GraphQL a joy to work with!
 
 - **Avoid over-fetching**: You avoid fetching more data than you need because you
   can specify the exact **fields** you need.
-- **Prevent multipe API calls**: In case you need more data, you can also avoid
+- **Prevent multiple API calls**: In case you need more data, you can also avoid
   making multiple calls to your API. In the case above, you don't need to make
   2 API calls to fetch `user` and `address` separately.
 - **Lesser communication with API developers**: Sometimes to fetch the exact data
-  you need, especially if you need to fetch more data and want to avoid multipe API
+  you need, especially if you need to fetch more data and want to avoid multiple API
   calls, you will need to ask your API developers to build a new API. With GraphQL,
   your work is *independent* of the API team! This allows you to work faster on your
   app.

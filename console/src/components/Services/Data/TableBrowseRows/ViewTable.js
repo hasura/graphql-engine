@@ -14,8 +14,6 @@ import ViewHeader from './ViewHeader';
 import ViewRows from './ViewRows';
 import { replace } from 'react-router-redux';
 
-import semverCheck from '../../../../helpers/semver';
-
 const genHeadings = headings => {
   if (headings.length === 0) {
     return [];
@@ -78,29 +76,14 @@ class ViewTable extends Component {
     this.state = {
       dispatch: props.dispatch,
       tableName: props.tableName,
-      supportManualTriggers: false,
     };
 
     this.getInitialData(this.props.tableName);
   }
 
-  componentDidMount() {
-    this.checkSupportedFeatures(this.props.serverVersion);
-  }
-
   componentWillReceiveProps(nextProps) {
-    if (nextProps.serverVersion !== this.props.serverVersion) {
-      this.checkSupportedFeatures(nextProps.serverVersion);
-    }
-
     if (nextProps.tableName !== this.props.tableName) {
       this.getInitialData(nextProps.tableName);
-    }
-  }
-
-  checkSupportedFeatures(version) {
-    if (semverCheck('manualTriggers', version)) {
-      this.setState({ supportManualTriggers: true });
     }
   }
 
@@ -110,7 +93,7 @@ class ViewTable extends Component {
       dispatch(setTable(tableName)),
       dispatch(vSetDefaults(tableName)),
       dispatch(vMakeRequest()),
-      this.retrieveManualTriggers(tableName),
+      dispatch(fetchManualTriggers(tableName)),
     ]);
   }
 
@@ -127,11 +110,7 @@ class ViewTable extends Component {
       document.body.offsetHeight - document.body.scrollTop;
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    if (this.state.supportManualTriggers !== prevState.supportManualTriggers) {
-      this.retrieveManualTriggers(this.state.tableName);
-    }
-
+  componentDidUpdate() {
     if (this.shouldScrollBottom) {
       document.body.scrollTop = document.body.offsetHeight - window.innerHeight;
     }
@@ -159,13 +138,6 @@ class ViewTable extends Component {
     });
   };
 
-  retrieveManualTriggers = tableName => {
-    const { dispatch } = this.props;
-    return this.state.supportManualTriggers
-      ? dispatch(fetchManualTriggers(tableName))
-      : Promise.resolve();
-  };
-
   render() {
     const {
       tableName,
@@ -190,15 +162,15 @@ class ViewTable extends Component {
     } = this.props; // eslint-disable-line no-unused-vars
 
     // check if table exists
-    const currentTable = schemas.find(s => s.table_name === tableName);
+    const currentTable = schemas.find(
+      s => s.table_name === tableName && s.table_schema === currentSchema
+    );
     if (!currentTable) {
       // dispatch a 404 route
       dispatch(replace('/404'));
     }
     // Is this a view
-    const isView =
-      schemas.find(s => s.table_name === tableName).detail.table_type !==
-      'BASE TABLE';
+    const isView = currentTable.table_type !== 'BASE TABLE';
 
     // Are there any expanded columns
     const viewRows = (

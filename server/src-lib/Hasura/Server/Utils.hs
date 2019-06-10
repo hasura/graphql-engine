@@ -4,17 +4,20 @@ import qualified Database.PG.Query.Connection as Q
 
 import           Data.Aeson
 import           Data.List.Split
+import           Data.Time.Clock
 import           Network.URI
 import           System.Environment
 import           System.Exit
 import           System.Process
 
 import qualified Data.ByteString              as B
+import qualified Data.HashSet                 as Set
 import qualified Data.Text                    as T
 import qualified Data.Text.Encoding           as TE
 import qualified Data.Text.Encoding.Error     as TE
 import qualified Data.Text.IO                 as TI
 import qualified Language.Haskell.TH.Syntax   as TH
+import qualified Network.HTTP.Types           as HTTP
 import qualified Text.Ginger                  as TG
 import qualified Text.Regex.TDFA              as TDFA
 import qualified Text.Regex.TDFA.ByteString   as TDFA
@@ -23,6 +26,15 @@ import           Hasura.Prelude
 
 jsonHeader :: (T.Text, T.Text)
 jsonHeader = ("Content-Type", "application/json; charset=utf-8")
+
+sqlHeader :: (T.Text, T.Text)
+sqlHeader = ("Content-Type", "application/sql; charset=utf-8")
+
+htmlHeader :: (T.Text, T.Text)
+htmlHeader = ("Content-Type", "text/html; charset=utf-8")
+
+gzipHeader :: (T.Text, T.Text)
+gzipHeader = ("Content-Encoding", "gzip")
 
 userRoleHeader :: T.Text
 userRoleHeader = "x-hasura-role"
@@ -38,6 +50,9 @@ userIdHeader = "x-hasura-user-id"
 
 bsToTxt :: B.ByteString -> T.Text
 bsToTxt = TE.decodeUtf8With TE.lenientDecode
+
+txtToBs :: T.Text -> B.ByteString
+txtToBs = TE.encodeUtf8
 
 -- Parsing postgres database url
 -- from: https://github.com/futurice/postgresql-simple-url/
@@ -143,3 +158,42 @@ matchRegex regex caseSensitive src =
 fmapL :: (a -> a') -> Either a b -> Either a' b
 fmapL fn (Left e) = Left (fn e)
 fmapL _ (Right x) = pure x
+
+-- diff time to micro seconds
+diffTimeToMicro :: NominalDiffTime -> Int
+diffTimeToMicro diff =
+  (floor (realToFrac diff :: Double) - 10) * aSecond
+  where
+    aSecond = 1000 * 1000
+
+-- ignore the following request headers from the client
+
+commonClientHeadersIgnored :: (IsString a) => [a]
+commonClientHeadersIgnored =
+  [ "Content-Length", "Content-MD5", "User-Agent", "Host"
+  , "Origin", "Referer" , "Accept", "Accept-Encoding"
+  , "Accept-Language", "Accept-Datetime"
+  , "Cache-Control", "Connection", "DNT", "Content-Type"
+  ]
+
+commonResponseHeadersIgnored :: (IsString a) => [a]
+commonResponseHeadersIgnored =
+  [ "Server", "Transfer-Encoding", "Cache-Control"
+  , "Access-Control-Allow-Credentials"
+  , "Access-Control-Allow-Methods"
+  , "Access-Control-Allow-Origin"
+  , "Content-Type", "Content-Length"
+  ]
+
+
+filterRequestHeaders :: [HTTP.Header] -> [HTTP.Header]
+filterRequestHeaders =
+  filterHeaders $ Set.fromList commonClientHeadersIgnored
+
+-- ignore the following response headers from remote
+filterResponseHeaders :: [HTTP.Header] -> [HTTP.Header]
+filterResponseHeaders =
+  filterHeaders $ Set.fromList commonResponseHeadersIgnored
+
+filterHeaders :: Set.HashSet HTTP.HeaderName -> [HTTP.Header] -> [HTTP.Header]
+filterHeaders list = filter (\(n, _) -> not $ n `Set.member` list)

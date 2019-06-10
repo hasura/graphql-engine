@@ -10,7 +10,7 @@ Hasura GraphQL engine automatically generates your GraphQL schema and resolvers 
 in Postgres. **You don't need to write a GraphQL schema or resolvers.** See
 :doc:`How Hasura GraphQL engine works <../how-it-works/index>` for more details.
 
-The Hasura console gives you UI tools that speed up your data-modeling process, or working with your existing database.
+The Hasura console gives you UI tools that speed up your data-modelling process, or working with your existing database.
 The console also automatically generates migrations or metadata files that you can edit directly and check into your
 version control.
 
@@ -28,4 +28,5 @@ Postgres constructs.
   Default field values <default-values/index>
   Enum type fields <enums>
   Using an existing database <using-existing-database>
+  Setting up soft deletes <soft-deletes>
   Export GraphQL schema <export-graphql-schema>

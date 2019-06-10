@@ -23,8 +23,9 @@ const editItem = (tableName, colValues) => {
     /* Type all the values correctly */
     const insertObject = {};
     const state = getState();
+    const { currentSchema } = state.tables;
     const columns = state.tables.allSchemas.find(
-      x => x.table_name === tableName
+      t => t.table_name === tableName && t.table_schema === currentSchema
     ).columns;
     let error = false;
     let errorMessage = '';

@@ -9,23 +9,26 @@ import {
   resetColumnEdit,
   editColumn,
 } from '../TableModify/ModifyActions';
-import { fetchColumnComment } from '../DataActions';
 import { ordinalColSort } from '../utils';
+import { defaultDataTypeToCast } from '../constants';
 
 import styles from './ModifyTable.scss';
 
 const ColumnEditorList = ({
   tableSchema,
   currentSchema,
-  allowRename,
   columnEdit,
   dispatch,
-  columnComments,
+  validTypeCasts,
+  dataTypeIndexMap,
 }) => {
   const tableName = tableSchema.table_name;
 
+  let pkLength = 0;
   const columnPKConstraints = {};
   if (tableSchema.primary_key) {
+    pkLength = tableSchema.primary_key.columns.length;
+
     tableSchema.primary_key.columns.forEach(col => {
       columnPKConstraints[col] = tableSchema.primary_key.constraint_name;
     });
@@ -40,6 +43,9 @@ const ColumnEditorList = ({
 
   const columns = tableSchema.columns.sort(ordinalColSort);
 
+  /*
+   * col.udt_name contains internal representation of the data type
+   * */
   return columns.map((col, i) => {
     const colName = col.column_name;
 
@@ -47,16 +53,22 @@ const ColumnEditorList = ({
       name: colName,
       tableName: col.table_name,
       schemaName: col.table_schema,
-      type: col.data_type !== 'USER-DEFINED' ? col.data_type : col.udt_name,
+      display_type_name:
+        col.data_type !== 'USER-DEFINED' ? col.data_type : col.udt_name,
+      type: col.udt_name,
       isNullable: col.is_nullable === 'YES',
       pkConstraint: columnPKConstraints[colName],
-      isUnique: columnUniqueConstraints[colName] ? true : false,
+      isUnique:
+        (columnPKConstraints[colName] && pkLength === 1) ||
+        columnUniqueConstraints[colName]
+          ? true
+          : false,
       // uniqueConstraint: columnUniqueConstraints[colName],
       default: col.column_default || '',
     };
 
     const onSubmit = () => {
-      dispatch(saveColumnChangesSql(colName, col, allowRename));
+      dispatch(saveColumnChangesSql(colName, col));
     };
 
     const onDelete = () => {
@@ -80,7 +92,7 @@ const ColumnEditorList = ({
     const keyProperties = () => {
       const propertiesList = [];
 
-      propertiesList.push(columnProperties.type);
+      propertiesList.push(columnProperties.display_type_name);
 
       if (columnProperties.pkConstraint) {
         propertiesList.push('primary key');
@@ -119,17 +131,28 @@ const ColumnEditorList = ({
       );
     };
 
+    const getValidTypeCasts = udtName => {
+      const lowerUdtName = udtName.toLowerCase();
+      if (lowerUdtName in validTypeCasts) {
+        return validTypeCasts[lowerUdtName];
+      }
+      return [
+        ...dataTypeIndexMap[lowerUdtName],
+        ...dataTypeIndexMap[defaultDataTypeToCast],
+      ];
+    };
+
     const colEditorExpanded = () => {
       return (
         <ColumnEditor
+          alterTypeOptions={getValidTypeCasts(col.udt_name)}
           column={col}
           onSubmit={onSubmit}
           onDelete={safeOnDelete}
           tableName={tableName}
           dispatch={dispatch}
           currentSchema={currentSchema}
-          columnComment={columnComments[col.column_name]}
-          allowRename={allowRename}
+          columnComment={col.comment}
           columnProperties={columnProperties}
           selectedProperties={columnEdit}
           editColumn={editColumn}
@@ -139,7 +162,6 @@ const ColumnEditorList = ({
 
     const editorExpandCallback = () => {
       dispatch(setColumnEdit(columnProperties));
-      dispatch(fetchColumnComment(tableName, colName));
     };
 
     const editorCollapseCallback = () => {

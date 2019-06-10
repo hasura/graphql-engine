@@ -1,5 +1,7 @@
 ---
 title: "Create table todos"
+metaTitle: "Create table todos | Hasura GraphQL Tutorial"
+metaDescription: "Lets create table todos with Hasura console by heading to Data tab and clicking on Create table"
 ---
 
 import YoutubeEmbed from "../../src/YoutubeEmbed.js";

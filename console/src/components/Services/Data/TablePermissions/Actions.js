@@ -51,17 +51,11 @@ const permChangeTypes = {
   delete: 'delete',
 };
 
-const permOpenEdit = (
-  tableSchema,
-  role,
-  query,
-  insertPermColumnRestriction
-) => ({
+const permOpenEdit = (tableSchema, role, query) => ({
   type: PERM_OPEN_EDIT,
   tableSchema,
   role,
   query,
-  insertPermColumnRestriction,
 });
 const permSetFilter = filter => ({ type: PERM_SET_FILTER, filter });
 const permSetFilterSameAs = filter => ({
@@ -120,12 +114,7 @@ const getFilterKey = query => {
   return query === 'insert' ? 'check' : 'filter';
 };
 
-const getBasePermissionsState = (
-  tableSchema,
-  role,
-  query,
-  insertPermColumnRestriction
-) => {
+const getBasePermissionsState = (tableSchema, role, query) => {
   const _permissions = JSON.parse(JSON.stringify(defaultPermissionsState));
 
   _permissions.table = tableSchema.table_name;
@@ -142,12 +131,8 @@ const getBasePermissionsState = (
       // If the query is insert, transform set object if exists to an array
       if (q === 'insert' || q === 'update') {
         // If set is an object
-        if (insertPermColumnRestriction) {
-          if (!_permissions[q].columns) {
-            _permissions[q].columns = tableSchema.columns.map(
-              c => c.column_name
-            );
-          }
+        if (!_permissions[q].columns) {
+          _permissions[q].columns = tableSchema.columns.map(c => c.column_name);
         }
         if ('set' in _permissions[q]) {
           if (
@@ -458,7 +443,9 @@ const applySamePermissionsBulk = tableSchema => {
 
     permApplyToList.map(applyTo => {
       const currTableSchema = allSchemas.find(
-        tSchema => tSchema.table_name === applyTo.table
+        tSchema =>
+          tSchema.table_name === applyTo.table &&
+          tSchema.table_schema === currentSchema
       );
       const currentPermPermission = currTableSchema.permissions.find(el => {
         return el.role_name === applyTo.role;
@@ -569,7 +556,9 @@ const permChangePermissions = changeType => {
     const role = permissionsState.role;
     const query = permissionsState.query;
 
-    const tableSchema = allSchemas.find(t => t.table_name === table);
+    const tableSchema = allSchemas.find(
+      t => t.table_name === table && t.table_schema === currentSchema
+    );
     const currRolePermissions = tableSchema.permissions.find(
       p => p.role_name === role
     );

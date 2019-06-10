@@ -1,5 +1,7 @@
 ---
 title: "Subscription"
+metaTitle: "Set up GraphQL Subscriptions using Apollo Client | GraphQL Vue Apollo Tutorial"
+metaDescription: "You will learn how to configure GraphQL Subscriptions using Vue Apollo Client by installing dependencies like apollo-link-ws, subscriptions-transport-ws. This will also have authorization token setup"
 ---
 
 import GithubLink from "../../src/GithubLink.js";
@@ -7,7 +9,7 @@ import YoutubeEmbed from "../../src/YoutubeEmbed.js";
 
 <YoutubeEmbed link="https://www.youtube.com/embed/ZujdsxSRt48" />
 
-When we had initially set up Apollo, we used Apollo Boost to install the required dependenices. But subscriptions is an advanced use case which Apollo Boost does not support. So we have to install more dependenices to set up subscriptions.
+When we had initially set up Apollo, we used Apollo Boost to install the required dependencies. But subscriptions is an advanced use case which Apollo Boost does not support. So we have to install more dependencies to set up subscriptions.
 
 ```bash
  npm install apollo-link-ws subscriptions-transport-ws --save

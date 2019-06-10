@@ -1,13 +1,13 @@
 ---
-title: 'Tutorial & boilerplate setup'
+title: "Tutorial & boilerplate setup"
+metaTitle: "Todo app iOS boilerplate setup | GraphQL iOS Apollo Tutorial"
+metaDescription: "The GraphQL backend is already ready. The task is to convert the static UI into a working realtime app in iOS"
 ---
 
 For this tutorial, the GraphQL backend and the basic app UI is already ready.
 Our task will be to convert the "static" UI into a working realtime app.
 
 ### Download and run the boilerplate
-
-<!-- FIXME: Add the zip URL here -->
 
 1. Download the boilerplate at: https://learn.hasura.io/graphql/ios/boilerplate.zip
 2. Unzip and make sure you're in the `app-boilerplate` directory

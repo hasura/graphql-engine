@@ -71,12 +71,14 @@ metadata from server:
 
 .. code-block:: bash
 
+   # (available after version v1.0.0-alpha45)
    # create migration files (note that this will only export public schema from postgres)
    hasura migrate create "init" --from-server
 
    # note down the version
    # mark the migration as applied on this server
    hasura migrate apply --version "<version>" --skip-execution
+
 
 This command will create a new "migration" under the ``migrations`` directory
 with the file name as ``<timestamp(version)>_init.up.yaml``. This file will

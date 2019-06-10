@@ -7,7 +7,8 @@ select
     'event_triggers', event_triggers.items,
     'remote_schemas', remote_schemas.items,
     'functions', functions.items,
-    'foreign_keys', foreign_keys.items
+    'foreign_keys', foreign_keys.items,
+    'allowlist_collections', allowlist.item
   )
 from
   (
@@ -178,6 +179,7 @@ from
               'schema', f.ref_table_table_schema,
               'name', f.ref_table
             ),
+            'oid', f.constraint_oid,
             'constraint', f.constraint_name,
             'column_mapping', f.column_mapping
           ) as info
@@ -188,4 +190,12 @@ from
               and ht.table_name = f.table_name
             )
       ) as foreign_key
-  ) as foreign_keys
+  ) as foreign_keys,
+  (
+    select
+      coalesce(json_agg(hqc.collection_defn), '[]') as item
+    from hdb_catalog.hdb_allowlist ha
+    left outer join
+         hdb_catalog.hdb_query_collection hqc
+         on (hqc.collection_name = ha.collection_name)
+  ) as allowlist

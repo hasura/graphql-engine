@@ -144,21 +144,17 @@ const graphQLFetcherFinal = (graphQLParams, url, headers) => {
 };
 
 /* Analyse Fetcher */
-const analyzeFetcher = (url, headers, analyzeApiChange) => {
+const analyzeFetcher = (url, headers) => {
   return query => {
     const editedQuery = {
       query,
     };
-    let user = {};
+
+    const user = {
+      'x-hasura-role': 'admin',
+    };
+
     const reqHeaders = getHeadersAsJSON(headers);
-    if (!analyzeApiChange) {
-      user.role = 'admin';
-      user.headers = reqHeaders;
-    } else {
-      user = {
-        'x-hasura-role': 'admin',
-      };
-    }
 
     // Check if x-hasura-role is available in some form in the headers
     const totalHeaders = Object.keys(reqHeaders);
@@ -176,6 +172,7 @@ const analyzeFetcher = (url, headers, analyzeApiChange) => {
     });
 
     editedQuery.user = user;
+
     return fetch(`${url}/explain`, {
       method: 'post',
       headers: reqHeaders,
@@ -361,7 +358,7 @@ const getStateAfterClearingHistory = state => {
 const getRemoteQueries = (queryUrl, cb) => {
   fetch(queryUrl)
     .then(resp => resp.text().then(cb))
-    .catch(e => console.log('Invalid query file URL: ', e));
+    .catch(e => console.error('Invalid query file URL: ', e));
 };
 
 const apiExplorerReducer = (state = defaultState, action) => {

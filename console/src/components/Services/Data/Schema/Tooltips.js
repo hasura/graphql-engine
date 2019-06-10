@@ -14,12 +14,14 @@ export const untrackedRelTip = (
   </Tooltip>
 );
 
-export const trackableFunctions = (
+export const trackableFunctionsTip = (
   <Tooltip id="tooltip-permission-read">
     Custom functions that are not exposed over the GraphQL API
   </Tooltip>
 );
 
-// export const nonTrackableFunctions = (
-//   <Tooltip id="tooltip-permission-read">WIP</Tooltip>
-// );
+export const nonTrackableFunctionsTip = (
+  <Tooltip id="tooltip-permission-read">
+    Custom functions that do not conform to Hasura requirements
+  </Tooltip>
+);

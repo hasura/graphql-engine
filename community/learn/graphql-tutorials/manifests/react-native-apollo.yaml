@@ -30,7 +30,7 @@ spec:
           protocol: TCP
         readinessProbe:
           httpGet:
-            path: /graphql/react/introduction
+            path: /graphql/react-native/introduction
             port: 8080
 ---
 apiVersion: v1

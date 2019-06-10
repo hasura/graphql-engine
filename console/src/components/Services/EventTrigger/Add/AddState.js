@@ -2,7 +2,6 @@ const defaultState = {
   triggerName: '',
   tableName: '',
   schemaName: 'public',
-  tableListBySchema: [],
   operations: { insert: [], update: [], delete: [] },
   enableManual: false,
   selectedOperations: {

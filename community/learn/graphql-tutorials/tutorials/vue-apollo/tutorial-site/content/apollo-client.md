@@ -1,5 +1,7 @@
 ---
 title: "Set up a GraphQL client with Apollo"
+metaTitle: "Vue Apollo Client GraphQL Setup | GraphQL Vue Apollo Tutorial"
+metaDescription: "You will learn how to configure Apollo Client in Vue by installing dependencies like vue-apollo, apollo-client, apollo-link-http, apollo-cache-inmemory"
 ---
 
 import GithubLink from "../src/GithubLink.js";
@@ -9,14 +11,14 @@ import YoutubeEmbed from "../src/YoutubeEmbed.js";
 
 Apollo gives a neat abstraction layer and an interface to your GraphQL server. You don't need to worry about constructing your queries with request body, headers and options, that you might have done with `axios` or `fetch` say. You can directly write queries and mutations in GraphQL and they will automatically be sent to your server via your apollo client instance.
 
-Let's get started by installing apollo client & peer graphql dependenices:
+### Vue Apollo Installation
+Let's get started by installing apollo client & peer graphql dependencies:
 
 ```bash
 $ npm install --save vue-apollo graphql apollo-client apollo-link-http apollo-cache-inmemory graphql-tag
 ```
 
-## Create Apollo Client Instance
-
+### Create Apollo Client Instance
 Open `src/main.js` and add the following code to create an ApolloClient instance.
 
 <GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/vue-apollo/app-final/src/main.js" text="src/main.js" />
@@ -64,9 +66,9 @@ Open `src/main.js` and add the following code to create an ApolloClient instance
 
 ```
 
-These are the required apollo dependenices to get started. We have also written a simple utility to get token information to construct the headers.
+These are the required apollo dependencies to get started. We have also written a simple utility to get token information to construct the headers.
 
-## Install VueApollo Plugin
+### Install VueApollo Plugin
 
 Now let's install the VueApollo plugin into Vue.
 
@@ -87,7 +89,7 @@ Now let's install the VueApollo plugin into Vue.
 
 ```
 
-## Add the ApolloProvider
+### Add the ApolloProvider
 
 Finally, lets add the ApolloProvider. The provider holds the Apollo client instances that can then be used by all the child components.
 

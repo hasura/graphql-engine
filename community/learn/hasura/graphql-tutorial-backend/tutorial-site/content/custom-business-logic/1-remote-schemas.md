@@ -1,5 +1,7 @@
 ---
 title: "Write custom resolvers"
+metaTitle: "Write custom resolvers | Hasura GraphQL Tutorial"
+metaDescription: "In this part, we will look at how to write custom resolvers and add it as a Remote schema in Hasura GraphQL Engine."
 ---
 
 import YoutubeEmbed from "../../src/YoutubeEmbed.js";
@@ -37,7 +39,7 @@ const typeDefs = gql`
 function getProfileInfo(user_id){
     const headers = {'Authorization': 'Bearer '+process.env.AUTH0_MANAGEMENT_API_TOKEN};
     console.log(headers);
-    return fetch(process.env.AUTH0_DOMAIN + '/api/v2/users/'+user_id,{ headers: headers})
+    return fetch('https://' + process.env.AUTH0_DOMAIN + '/api/v2/users/'+user_id,{ headers: headers})
         .then(response => response.json())
 }
 

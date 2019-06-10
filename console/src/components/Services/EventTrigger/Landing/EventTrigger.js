@@ -19,7 +19,7 @@ class EventTrigger extends Component {
     super(props);
     // Initialize this table
     const dispatch = this.props.dispatch;
-    dispatch(loadTriggers());
+    dispatch(loadTriggers([]));
   }
 
   render() {
@@ -42,7 +42,7 @@ class EventTrigger extends Component {
         <div>
           <TopicDescription
             title="What are Event Triggers?"
-            imgUrl="https://storage.googleapis.com/hasura-graphql-engine/console/assets/event-trigger.png"
+            imgUrl={`${globals.assetsPath}/common/img/event-trigger.png`}
             imgAlt="Event Triggers"
             description="Hasura can be used to create event triggers on tables. An Event Trigger atomically captures events (insert, update, delete) on a specified table and then reliably calls a webhook that can carry out any custom logic."
           />
@@ -122,7 +122,6 @@ class EventTrigger extends Component {
 
 EventTrigger.propTypes = {
   schema: PropTypes.array.isRequired,
-  untracked: PropTypes.array.isRequired,
   untrackedRelations: PropTypes.array.isRequired,
   migrationMode: PropTypes.bool.isRequired,
   currentSchema: PropTypes.string.isRequired,
@@ -132,7 +131,6 @@ EventTrigger.propTypes = {
 const mapStateToProps = state => ({
   schema: state.tables.allSchemas,
   schemaList: state.tables.schemaList,
-  untracked: state.tables.untrackedSchemas,
   migrationMode: state.main.migrationMode,
   untrackedRelations: state.tables.untrackedRelations,
   currentSchema: state.tables.currentSchema,
