@@ -246,10 +246,8 @@ mkSpockAction qErrEncoder qErrModifier serverCtx handler = do
   -- log result
   logResult logger verboseLog (Just userInfo) requestId req (Just q)
     (apiRespToLBS <$> modResult) $ Just (t1, t2)
--- =======
 --   logResult (Just userInfo) req reqBody logger (apiRespToLBS <$> modResult) $
 --     Just (t1, t2)
--- >>>>>>> ba96697abc5e22f2ab10d30b43062ea683618f9c
   either (qErrToResp $ userRole userInfo == adminRole) resToResp modResult
 
   where
