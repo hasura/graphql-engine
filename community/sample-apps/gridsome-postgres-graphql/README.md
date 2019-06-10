@@ -103,7 +103,7 @@ query {
 - Test the app
   Visit [http://localhost:8080](http://localhost:8080) to view the app
 
-  ![Demo app](https://graphql-engine-cdn.hasura.io/assets/gridsome-postgres-graphql/gridsome-postgres-graphql.png)
+  ![Demo app](https://graphql-engine-cdn.hasura.io/assets/gridsome-postgres-graphql/gridsome-homepage.png)
 
 # Contributing
 
