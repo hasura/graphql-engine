@@ -48,6 +48,8 @@ import { allOperators, getLegacyOperator } from './PermissionBuilder/utils';
 import Button from '../../../Common/Button/Button';
 import { defaultPresetsState } from '../DataState';
 
+import { NotFoundError } from '../../../Error/PageNotFound';
+
 class Permissions extends Component {
   constructor() {
     super();
@@ -66,16 +68,6 @@ class Permissions extends Component {
 
   componentDidMount() {
     this.props.dispatch({ type: RESET });
-    const currentTableSchema = this.props.allSchemas.find(
-      t =>
-        t.table_name === this.props.tableName &&
-        t.table_schema === this.props.currentSchema
-    );
-
-    if (!currentTableSchema) {
-      return;
-    }
-
     this.props.dispatch(setTable(this.props.tableName));
   }
 
@@ -93,6 +85,17 @@ class Permissions extends Component {
       migrationMode,
       currentSchema,
     } = this.props;
+
+    const currentTableSchema = this.props.allSchemas.find(
+      t =>
+        t.table_name === this.props.tableName &&
+        t.table_schema === this.props.currentSchema
+    );
+
+    if (!currentTableSchema) {
+      // throw a 404 exception
+      throw new NotFoundError('404 Not Found');
+    }
 
     const styles = require('../TableModify/ModifyTable.scss');
 
