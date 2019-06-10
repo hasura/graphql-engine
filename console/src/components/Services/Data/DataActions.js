@@ -682,7 +682,7 @@ const dataReducer = (state = defaultState, action) => {
       return {
         ...state,
         columnDataTypes: action.data,
-        columnDataTypeFetchErr: 'Error fetching data',
+        columnDataTypeFetchErr: defaultState.columnDataTypeFetchErr,
       };
 
     case FETCH_COLUMN_TYPE_LIST_FAIL:
@@ -695,7 +695,7 @@ const dataReducer = (state = defaultState, action) => {
       return {
         ...state,
         columnDataTypes: [...defaultState.columnDataTypes],
-        columnDataTypeFetchErr: defaultState.columnDataTypes,
+        columnDataTypeFetchErr: defaultState.columnDataTypeFetchErr,
       };
     default:
       return state;
