@@ -73,6 +73,7 @@ instance Has TypeMap RemoteGCtx where
 data SelField
   = SelFldCol PGColInfo
   | SelFldRel SelFldRelTup
+  | SelFldRemote RemoteField
 
 -- TODO: This tuple is bad and should be a record.
 type SelFldRelTup = (RelInfo, Bool, AnnBoolExpPartialSQL, Maybe Int, Bool)
@@ -283,7 +284,9 @@ mkTableObj tn allowedFlds =
       concatMap
         (\case
             SelFldCol pgColInfo -> pure (mkPGColFld pgColInfo)
-            SelFldRel selFldRel -> mkRelFld' selFldRel)
+            SelFldRel selFldRel -> mkRelFld' selFldRel
+            SelFldRemote remoteField ->
+              pure (mkRemoteFld remoteField))
         allowedFlds
     mkRelFld' (relInfo, allowAgg, _, _, isNullable) =
       mkRelFld allowAgg relInfo isNullable
@@ -558,7 +561,7 @@ mkBoolExpInp tn fields =
     boolExpTy = mkBoolExpTy tn
 
     -- all the fields of this input object
-    inpValues = combinators <> map mkFldExpInp fields
+    inpValues = combinators <> mapMaybe mkFldExpInp fields
 
     mk n ty = InpValInfo Nothing n Nothing $ G.toGT ty
 
@@ -571,10 +574,11 @@ mkBoolExpInp tn fields =
       ]
 
     mkFldExpInp = \case
-      SelFldCol (PGColInfo colName colTy _) ->
+      SelFldCol (PGColInfo colName colTy _) -> Just $
         mk (mkColName colName) (mkCompExpTy colTy)
-      SelFldRel (RelInfo relName _ _ remTab _, _, _, _, _) ->
+      SelFldRel (RelInfo relName _ _ remTab _, _, _, _, _) -> Just $
         mk (G.Name $ getRelTxt relName) (mkBoolExpTy remTab)
+      SelFldRemote {} -> Nothing
 
 mkPGColInp :: PGColInfo -> InpValInfo
 mkPGColInp (PGColInfo colName colTy _) =
@@ -1369,6 +1373,9 @@ mkGCtxRole' tn insPermM selPermM updColsM
         in case riType ri of
           ObjRel -> [relFld]
           ArrRel -> bool [relFld] [relFld, aggRelFld] allowAgg
+      SelFldRemote remoteField ->
+        [( (ty, G.Name (unRemoteRelationshipName (rtrName (rmfRemoteRelationship remoteField))))
+         , FldRemote remoteField)]
 
     -- the fields used in bool exp
     boolExpInpObjFldsM = mkFldMap (mkBoolExpTy tn) <$> selFldsM
