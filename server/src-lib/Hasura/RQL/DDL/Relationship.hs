@@ -19,6 +19,7 @@ where
 import qualified Database.PG.Query as Q
 import           Hasura.RQL.DDL.Remote.Validate
 import           Hasura.RQL.DDL.Remote.Types
+import           Hasura.GraphQL.Validate.Types
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
@@ -156,11 +157,12 @@ createObjRelP2 (WithTable qt rd) = do
 runCreateRemoteRelationship ::
      (MonadTx m, CacheRWM m) => RemoteRelationship -> m EncJSON
 runCreateRemoteRelationship remoteRelationship = do
-  remoteField <- runCreateRemoteRelationshipP1 remoteRelationship
-  runCreateRemoteRelationshipP2 remoteField
+  (remoteField, additionalTypesMap) <-
+    runCreateRemoteRelationshipP1 remoteRelationship
+  runCreateRemoteRelationshipP2 remoteField additionalTypesMap
 
 runCreateRemoteRelationshipP1 ::
-     (MonadTx m, CacheRM m) => RemoteRelationship -> m RemoteField
+     (MonadTx m, CacheRM m) => RemoteRelationship -> m (RemoteField, TypeMap)
 runCreateRemoteRelationshipP1 remoteRelationship = do
   sc <- askSchemaCache
   case HM.lookup
@@ -171,12 +173,14 @@ runCreateRemoteRelationshipP1 remoteRelationship = do
         getCreateRemoteRelationshipValidation remoteRelationship
       case validation of
         Left err -> throw400 RemoteSchemaError (T.pack (show err))
-        Right remoteField -> pure remoteField
+        Right (remoteField, additionalTypesMap) ->
+          pure (remoteField, additionalTypesMap)
     Nothing -> throw400 RemoteSchemaError "No such remote schema"
 
 runCreateRemoteRelationshipP2 ::
-     (MonadTx m, CacheRWM m) => RemoteField -> m EncJSON
-runCreateRemoteRelationshipP2 remoteField = do
+     (MonadTx m, CacheRWM m) => RemoteField -> TypeMap -> m EncJSON
+runCreateRemoteRelationshipP2 remoteField additionalTypesMap = do
+  addRelationshipTypes additionalTypesMap
   liftTx (persistCreateRemoteRelationship (rmfRemoteRelationship remoteField))
   addRemoteFieldToCache remoteField noDependencies
   pure successMsg

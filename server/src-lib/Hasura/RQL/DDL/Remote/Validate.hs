@@ -50,7 +50,7 @@ data ValidationError
 getCreateRemoteRelationshipValidation ::
      (QErrM m, CacheRM m)
   => RemoteRelationship
-  -> m (Either (NonEmpty ValidationError) RemoteField)
+  -> m (Either (NonEmpty ValidationError) (RemoteField, TypeMap))
 getCreateRemoteRelationshipValidation createRemoteRelationship = do
   schemaCache <- askSchemaCache
   pure
@@ -64,7 +64,7 @@ validateRelationship ::
      RemoteRelationship
   -> GC.GCtx
   -> HM.HashMap QualifiedTable TableInfo
-  -> Either (NonEmpty ValidationError) RemoteField
+  -> Either (NonEmpty ValidationError) (RemoteField, TypeMap)
 validateRelationship remoteRelationship gctx tables = do
   case HM.lookup tableName tables of
     Nothing -> Left (pure (TableNotFound tableName))
@@ -95,11 +95,12 @@ validateRelationship remoteRelationship gctx tables = do
                   (map (first fieldNameToVariable) (HM.toList fieldInfos)))
                (GS._gTypes gctx))
           pure
-            RemoteField
-              { rmfRemoteRelationship = remoteRelationship
-              , rmfGType = _fiTy objFldInfo
-              , rmfParamMap = _fiParams objFldInfo
-              }
+            ( RemoteField
+                { rmfRemoteRelationship = remoteRelationship
+                , rmfGType = _fiTy objFldInfo
+                , rmfParamMap = _fiParams objFldInfo
+                }
+            , mempty)
   where
     tableName = rtrTable remoteRelationship
 
