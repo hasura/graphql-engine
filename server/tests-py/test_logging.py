@@ -21,7 +21,11 @@ class TestLogging():
         st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
         assert st_code == 200, resp
         q = {'query': 'query { hello {code name} }'}
-        resp = hge_ctx.http.post(hge_ctx.hge_url + '/v1/graphql', json=q)
+        headers = {}
+        if hge_ctx.hge_key:
+            headers['x-hasura-admin-secret'] = hge_ctx.hge_key
+        resp = hge_ctx.http.post(hge_ctx.hge_url + '/v1/graphql', json=q,
+                                 headers=headers)
         assert resp.status_code == 200 and 'data' in resp.json()
         self.logs = self._parse_logs(hge_ctx)
         yield
