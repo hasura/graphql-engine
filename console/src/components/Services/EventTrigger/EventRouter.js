@@ -30,8 +30,7 @@ const makeEventRouter = (
   composeOnEnterHooks,
   requireSchema,
   requirePendingEvents,
-  requireRunningEvents,
-  migrationRedirects
+  requireRunningEvents
 ) => {
   return (
     <Route
@@ -64,12 +63,10 @@ const makeEventRouter = (
       </Route>
       <Route
         path="manage/triggers/add"
-        onEnter={composeOnEnterHooks([migrationRedirects])}
         component={addTriggerConnector(connect)}
       />
       <Route
         path="manage/triggers/:trigger/modify"
-        onEnter={composeOnEnterHooks([migrationRedirects])}
         component={modifyTriggerConnector(connect)}
       />
     </Route>

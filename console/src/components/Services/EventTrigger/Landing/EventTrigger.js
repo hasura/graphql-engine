@@ -23,7 +23,7 @@ class EventTrigger extends Component {
   }
 
   render() {
-    const { migrationMode, dispatch, listingTrigger } = this.props;
+    const { dispatch, listingTrigger } = this.props;
 
     const styles = require('../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
 
@@ -54,25 +54,23 @@ class EventTrigger extends Component {
     const getAddBtn = () => {
       let addBtn = null;
 
-      if (migrationMode) {
-        const handleClick = e => {
-          e.preventDefault();
+      const handleClick = e => {
+        e.preventDefault();
 
-          dispatch(push(`${appPrefix}/manage/triggers/add`));
-        };
+        dispatch(push(`${appPrefix}/manage/triggers/add`));
+      };
 
-        addBtn = (
-          <Button
-            data-test="data-create-trigger"
-            color="yellow"
-            size="sm"
-            className={styles.add_mar_left}
-            onClick={handleClick}
-          >
-            Create
-          </Button>
-        );
-      }
+      addBtn = (
+        <Button
+          data-test="data-create-trigger"
+          color="yellow"
+          size="sm"
+          className={styles.add_mar_left}
+          onClick={handleClick}
+        >
+          Create
+        </Button>
+      );
 
       return addBtn;
     };
