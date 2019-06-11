@@ -6,6 +6,7 @@ import           Control.Exception     (try)
 import           Control.Lens
 import           Control.Monad         (forever)
 
+import qualified CI
 import qualified Control.Concurrent    as C
 import qualified Data.Aeson            as A
 import qualified Data.Aeson.Casing     as A
@@ -18,7 +19,6 @@ import qualified System.Log.FastLogger as FL
 import           Hasura.HTTP
 import           Hasura.Logging        (LoggerCtx (..))
 import           Hasura.Prelude
-import           Hasura.Server.Utils   (isRunningOnCI)
 import           Hasura.Server.Version (currentVersion)
 
 
@@ -47,12 +47,8 @@ checkForUpdates (LoggerCtx loggerSet _ _) manager = do
   where
     updateMsg v = "Update: A new version is available: " <> v
     getUrl = do
-      let buildUrl a = "https://releases.hasura.io/graphql-engine?agent="
-                       <> a
-                       <> "&version="
-                       <> currentVersion
-      isCI <- isRunningOnCI
-      return $ buildUrl $ bool "server" "server-ci" isCI
+      let buildUrl agent = "https://releases.hasura.io/graphql-engine?agent=" <> agent <> "&version=" <> currentVersion
+      buildUrl . bool "server" "server-ci" <$> CI.isCI
 
     aDay = 86400 * 1000 * 1000
 
