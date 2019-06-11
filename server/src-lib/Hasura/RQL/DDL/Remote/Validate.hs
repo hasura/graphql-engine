@@ -37,7 +37,7 @@ data ValidationError
   | TypeNotFound G.NamedType
   | TableNotFound !QualifiedTable
   | TableFieldNonexistent !QualifiedTable !FieldName
-  | ExpectedTypeButGot !G.NamedType !G.NamedType
+  | ExpectedTypeButGot !G.GType !G.GType
   | InvalidType !G.GType!T.Text
   | InvalidVariable G.Variable (HM.HashMap G.Variable FieldInfo)
   | NullNotAllowedHere
@@ -153,7 +153,7 @@ validateType ::
   -> G.GType
   -> HM.HashMap G.NamedType TypeInfo
   -> Validation (NonEmpty ValidationError) ()
-validateType permittedVariables value gType@(getBaseTy -> expectedNamedType) types =
+validateType permittedVariables value expectedGType types =
   case value of
     G.VVariable variable ->
       case HM.lookup variable permittedVariables of
@@ -161,26 +161,28 @@ validateType permittedVariables value gType@(getBaseTy -> expectedNamedType) typ
         Just fieldInfo ->
           bindValidation
             (fieldInfoToNamedType fieldInfo)
-            (flip assertNamedType expectedNamedType)
-    G.VInt {} -> assertNamedType (mkScalarTy PGInteger) expectedNamedType
-    G.VFloat {} -> assertNamedType (mkScalarTy PGFloat) expectedNamedType
-    G.VBoolean {} -> assertNamedType (mkScalarTy PGBoolean) expectedNamedType
+            (\actualNamedType -> assertType (G.toGT actualNamedType) expectedGType)
+    G.VInt {} -> assertType (G.toGT $ mkScalarTy PGInteger) expectedGType
+    G.VFloat {} -> assertType (G.toGT $ mkScalarTy PGFloat) expectedGType
+    G.VBoolean {} -> assertType (G.toGT $ mkScalarTy PGBoolean) expectedGType
     G.VNull -> Failure (pure NullNotAllowedHere)
-    G.VString {} -> assertNamedType (mkScalarTy PGText) expectedNamedType
+    G.VString {} -> assertType (G.toGT $ mkScalarTy PGText) expectedGType
     v@(G.VEnum _) -> Failure (pure (UnsupportedArgumentType v))
     G.VList (G.unListValue -> values) -> do
-      (assertListType gType)
+      (assertListType expectedGType)
       (flip
          traverse_
          values
          (\val ->
-            validateType permittedVariables val (G.toGT expectedNamedType) types))
+            validateType permittedVariables val (unwrapTy expectedGType) types))
       pure ()
     G.VObject (G.unObjectValue -> values) ->
       flip
         traverse_
         values
         (\(G.ObjectFieldG name val) ->
+           let expectedNamedType = getBaseTy expectedGType
+           in
            case HM.lookup expectedNamedType types of
              Nothing -> Failure (pure $ TypeNotFound expectedNamedType)
              Just typeInfo ->
@@ -197,18 +199,24 @@ validateType permittedVariables value gType@(getBaseTy -> expectedNamedType) typ
                         (G.toGT $ G.NamedType name)
                         "not an input object type"))
 
-assertNamedType ::
-     G.NamedType -> G.NamedType -> Validation (NonEmpty ValidationError) ()
-assertNamedType actualType expectedType =
-  (when (actualType /= expectedType)
-    (Failure (pure $ ExpectedTypeButGot expectedType actualType)))
+assertType :: G.GType -> G.GType -> Validation (NonEmpty ValidationError) ()
+assertType actualType expectedType = do
+  -- check if both are list types or both are named types
+  (when
+     (isListType actualType /= isListType expectedType)
+     (Failure (pure $ ExpectedTypeButGot expectedType actualType)))
+  -- if list type then check over unwrapped type, else check base types
+  if isListType actualType
+    then assertType (unwrapTy actualType) (unwrapTy expectedType)
+    else (when
+            (getBaseTy actualType /= getBaseTy expectedType)
+            (Failure (pure $ ExpectedTypeButGot expectedType actualType)))
+  pure ()
 
-assertListType ::
-     G.GType -> Validation (NonEmpty ValidationError) ()
+assertListType :: G.GType -> Validation (NonEmpty ValidationError) ()
 assertListType actualType =
   (when (not $ isListType actualType)
-    (Failure (pure $ InvalidType actualType "expecting list")))
-
+    (Failure (pure $ InvalidType actualType "is not a list type")))
 
 -- | Convert a field info to a named type, if possible.
 fieldInfoToNamedType ::
