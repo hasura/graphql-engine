@@ -68,6 +68,7 @@ const setFreqUsedColumn = column => (dispatch, getState) => {
     name: column.name,
     type: column.type,
     nullable: false,
+    getDependentSql: column.getDependentSql,
   };
   if (column.default) {
     newColumn.default = { __type: 'value', value: column.default };
@@ -84,12 +85,20 @@ const setFreqUsedColumn = column => (dispatch, getState) => {
   ) {
     columns[numExistingCols - 1] = newColumn;
     if (column.primary) {
-      newPks = [...newPks.slice(0, newPks.length - 1), (numExistingCols - 1).toString(), ''];
+      newPks = [
+        ...newPks.slice(0, newPks.length - 1),
+        (numExistingCols - 1).toString(),
+        '',
+      ];
     }
   } else {
     columns.push(newColumn);
     if (column.primary) {
-      newPks = [...newPks.slice(0, newPks.length - 1), numExistingCols.toString(), ''];
+      newPks = [
+        ...newPks.slice(0, newPks.length - 1),
+        numExistingCols.toString(),
+        '',
+      ];
     }
   }
   columns.push({ name: '', type: '', nullable: false });
@@ -144,7 +153,20 @@ const createTableSql = () => {
       .filter(p => p !== '')
       .map(p => state.columns[p].name);
     let isUUIDDefault = false;
+    const columnSpecificSql = [];
     for (let i = 0; i < currentCols.length; i++) {
+      if (currentCols[i].getDependentSql) {
+        columnSpecificSql.push({
+          type: 'run_sql',
+          args: {
+            sql: currentCols[i].getDependentSql(
+              currentSchema,
+              state.tableName,
+              currentCols[i].name
+            ),
+          },
+        });
+      }
       tableColumns +=
         '"' + currentCols[i].name + '"' + ' ' + currentCols[i].type + ' ';
       // check if column is nullable
@@ -277,6 +299,14 @@ const createTableSql = () => {
         schema: currentSchema,
       },
     });
+    if (columnSpecificSql.length) {
+      columnSpecificSql.forEach(csql => {
+        upQueryArgs.push(csql);
+      });
+    }
+
+    console.log(upQueryArgs);
+
     const upQuery = {
       type: 'bulk',
       args: upQueryArgs,
