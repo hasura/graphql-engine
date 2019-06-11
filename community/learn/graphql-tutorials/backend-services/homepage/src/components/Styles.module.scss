@@ -16,7 +16,6 @@
 }
 .TestimonialsWrapper
 {
-  padding-bottom: 40px;
   clear: both;
   .pageSubHeader
   {
@@ -29,10 +28,35 @@
     // padding-top: 20px;
     .testimonialsCarousel
     {
+      .quoteImg
+      {
+        position: absolute;
+        top: -66px;
+      }
+      .quoteLeft
+      {
+        left: -30px;
+      }
+      .quoteright
+      {
+        right: -30px;
+      }
+      .carouselIndicators
+      {
+        bottom: -65px;
+        li
+        {
+          margin: 0 16px;
+          border: 1px solid #2b0785;
+          width: 8px;
+          height: 8px;
+        }
+      }
       .carouselInner
       {
         width: 90%;
         margin: 0 auto;
+        min-height: 188px;
         .carouselInnerItems
         {
           margin-bottom: 5px;
@@ -48,7 +72,7 @@
             padding: 15px;
             position: relative;
             // margin-top: 30px;
-            min-height: 201px;
+            min-height: 180px;
             .pageDescription
             {
               font-weight: 600;
@@ -58,31 +82,31 @@
               font-size: 14px;
               a
               {
-                color: #78b5ea;
+                color: #1f88e5;
               }
               a:hover
               {
                 text-decoration: none;
-                color: #78b5ea !important;
-                border-bottom: 1px solid #78b5ea !important;
+                color: #1f88e5 !important;
+                border-bottom: 1px solid #1f88e5 !important;
               }
             }
             .pageDescriptionSmall
             {
               padding-bottom: 0px;
-              line-height: 1.8;
+              line-height: normal;
               font-weight: 300;
-              color: #292822;
+              color: #505050;
               text-align: left;
               a
               {
-                color: #78b5ea;
+                color: #1f88e5;
                 text-decoration: none;
               }
               a:hover
               {
                 text-decoration: none;
-                border-bottom: 1px solid #78b5ea;
+                border-bottom: 1px solid #1f88e5;
               }
             }
             .pageDescription, .pageDescription1
@@ -116,7 +140,7 @@
         background-image: inherit !important;
         img
         {
-          width: 25px;
+          height: 25px;
           display: inline-block;
         }
       }
@@ -139,7 +163,6 @@
   /* Testimonial section start here */
   .TestimonialsWrapper
   {
-    padding-bottom: 30px;
     // padding-top: 30px;
     .pageSubHeader
     {
@@ -151,9 +174,23 @@
       padding-top: 0;
       .testimonialsCarousel
       {
+        .quoteImg
+        {
+          width: 30px;
+          top: 5px;
+        }
+        .quoteLeft
+        {
+          left: -15px;
+        }
+        .quoteright
+        {
+          right: -15px;
+        }
         .carouselInner
         {
           width: 100%;
+          padding-bottom: 3px;
           .carouselInnerItems
           {
             padding: 0 0px;
@@ -165,6 +202,11 @@
               {
                 font-size: 14px;
                 width: 93%;
+              }
+              .pageDescriptionSmall
+              {
+                word-break: break-word;
+                font-size: 15px;
               }
               .pageDescription1
               {
@@ -194,23 +236,41 @@
   /* Testimonial section start here */
   .TestimonialsWrapper
   {
-    padding-bottom: 40px;
     .testimonialsCarouselWrapper
     {
       .testimonialsCarousel
       {
+        .quoteImg
+        {
+          width: 60px;
+          top: -49px;
+        }
+        .quoteLeft
+        {
+          left: -20px;
+        }
+        .quoteright
+        {
+          right: -20px;
+        }
         .carouselInner
         {
           width: 90%;
+          min-height: 230px;
           .carouselInnerItems
           {
             padding: 0 0px;
             // min-height: 768px;
             .indivRectBox
             {
-              min-height: 274px;
+              min-height: 222px;
               .pageDescription
               {
+                font-size: 15px;
+              }
+              .pageDescriptionSmall
+              {
+                word-break: break-word;
                 font-size: 15px;
               }
               .quotes

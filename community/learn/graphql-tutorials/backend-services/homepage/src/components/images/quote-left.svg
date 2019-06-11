@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80.92" height="78" viewBox="0 0 80.92 78">
+    <defs>
+        <style>
+            .cls-1{fill:url(#linear-gradient)}.cls-2{filter:url(#quote)}
+        </style>
+        <linearGradient id="linear-gradient" x1=".5" x2=".5" y2="1" gradientUnits="objectBoundingBox">
+            <stop offset="0" stop-color="#2a0685"/>
+            <stop offset="1" stop-color="#6a096a"/>
+        </linearGradient>
+        <filter id="quote" width="80.92" height="78" x="0" y="0" filterUnits="userSpaceOnUse">
+            <feOffset dy="3"/>
+            <feGaussianBlur result="blur" stdDeviation="3"/>
+            <feFlood flood-opacity=".161"/>
+            <feComposite in2="blur" operator="in"/>
+            <feComposite in="SourceGraphic"/>
+        </filter>
+    </defs>
+    <g class="cls-2">
+        <path id="quote-2" d="M14.6 32.114v5.065h12.655v27.253H0V32.114c0-10.285 2.96-17.922 8.8-22.7 4.037-3.305 9.148-4.981 15.19-4.981v14.6c-3.284 0-9.39 0-9.39 13.081zm45.052-13.081v-14.6c-6.042 0-11.152 1.676-15.19 4.981-5.836 4.778-8.8 12.415-8.8 22.7v32.318H62.92V37.179H50.266v-5.065c0-13.081 6.106-13.081 9.386-13.081z" class="cls-1" data-name="quote" transform="translate(9 1.57)"/>
+    </g>
+</svg>
