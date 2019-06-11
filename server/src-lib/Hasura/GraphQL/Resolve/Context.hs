@@ -116,7 +116,7 @@ getPGColInfo nt n = do
   case fldInfo of
     FldCol pgColInfo -> return pgColInfo
     _ -> throw500 $
-      "found relinfo when expecting pgcolinfo for "
+      "expecting pgcolinfo for "
       <> showNamedTy nt <> ":" <> showName n
 
 getArg
