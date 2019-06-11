@@ -68,9 +68,8 @@ const getCreatePkSql = ({
   constraintName,
 }) => {
   return `alter table "${schemaName}"."${tableName}"
-    add constraint "${constraintName}" primary key ( ${selectedPkColumns
-    .map(pkc => `"${pkc}"`)
-    .join(', ')} );`;
+    add constraint "${constraintName}" 
+    primary key ( ${selectedPkColumns.map(pkc => `"${pkc}"`).join(', ')} );`;
 };
 
 const getDropPkSql = ({ schemaName, tableName, constraintName }) => {
