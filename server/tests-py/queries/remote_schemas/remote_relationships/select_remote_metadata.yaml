@@ -6,17 +6,31 @@ response:
     __type:
       name: profiles
       fields:
-      - name: id
-      - name: message
-      - name: name
+      - args: []
+        name: id
+      - args:
+         - name: id
+           type:
+             name: null
+           defaultValue: null
+        name: message
+      - args: []
+        name: name
 
 query:
   query: |
     query {
-      __type(name: "profiles" ) {
+      __type(name: "profiles") {
         name
         fields {
           name
+          args {
+            name
+            type {
+              name
+            }
+            defaultValue
+          }
         }
       }
-      }
+    }
