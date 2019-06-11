@@ -69,6 +69,7 @@ class ApiRequestWrapper extends Component {
           headerFocus={this.props.headerFocus}
           urlParams={this.props.urlParams}
           serverVersion={this.props.serverVersion}
+          serverConfig={this.props.serverConfig}
         />
 
         {getAPIResponseSection()}
