@@ -9,6 +9,7 @@ module Hasura.GraphQL.Utils
   , mkMapWith
   , showNames
   , isValidName
+  , unwrapTy
   ) where
 
 import           Hasura.Prelude
@@ -37,6 +38,12 @@ getBaseTy = \case
   G.TypeList _ lt     -> getBaseTyL lt
   where
     getBaseTyL = getBaseTy . G.unListType
+
+unwrapTy :: G.GType -> G.GType
+unwrapTy =
+  \case
+    G.TypeList _ lt -> G.unListType lt
+    nt -> nt
 
 mapFromL :: (Eq k, Hashable k) => (a -> k) -> [a] -> Map.HashMap k a
 mapFromL f l =
