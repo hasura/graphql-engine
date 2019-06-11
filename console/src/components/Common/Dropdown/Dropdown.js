@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
-import { getMeParentNode } from '../../../utils/domFunctions';
+import { getParentNodeByAttribute } from '../../../utils/domFunctions';
 
 const styles = require('./Dropdown.scss');
 
@@ -76,7 +76,7 @@ const Dropdown = ({ keyPrefix, testId, children, options, position }) => {
     /*
      * Update the state only if the element clicked on is not the data dropdown component
      * */
-    const dataElement = getMeParentNode(e.target, 'data-element');
+    const dataElement = getParentNodeByAttribute(e.target, 'data-element');
     if (d) {
       /* If the element has parent whose `nodeId` is same as the current one
        * */

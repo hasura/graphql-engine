@@ -1,19 +1,8 @@
 import React, { useEffect } from 'react';
-import dataTypes from '../Common/DataTypes';
-import { convertListToDictUsingKV } from '../../../../utils/data';
-import {
-  INTEGER,
-  SERIAL,
-  BIGINT,
-  BIGSERIAL,
-  UUID,
-  JSONDTYPE,
-  JSONB,
-  TIMESTAMP,
-  TIME,
-  NUMERIC,
-  TEXT,
-} from '../utils';
+
+import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
+
+import { getValidAlterOptions } from './utils';
 
 const ColumnEditor = ({
   onSubmit,
@@ -22,6 +11,7 @@ const ColumnEditor = ({
   columnProperties,
   selectedProperties,
   editColumn,
+  alterTypeOptions,
 }) => {
   const colName = columnProperties.name;
 
@@ -33,93 +23,44 @@ const ColumnEditor = ({
 
   useEffect(() => {
     if (columnComment) {
-      dispatch(editColumn(colName, 'comment', columnComment[0] || ''));
+      dispatch(editColumn(colName, 'comment', columnComment || ''));
     }
   }, [columnComment]);
 
-  // filter the datatypes where hasuraDatatype === null
-  const typeMap = convertListToDictUsingKV(
-    'hasuraDatatype',
-    'value',
-    dataTypes.filter(dataType => dataType.hasuraDatatype)
-  );
-
-  const getAlternateTypeOptions = columntype => {
-    const generateOptions = datatypeOptions => {
-      const options = [];
-
-      dataTypes.forEach(datatype => {
-        if (datatypeOptions.includes(datatype.value)) {
-          options.push(
-            <option
-              value={datatype.value}
-              key={datatype.name}
-              title={datatype.description}
-            >
-              {datatype.name}
-            </option>
-          );
-        }
-      });
-
-      let finalDefaultValue = typeMap[columnProperties.type];
-      if (!finalDefaultValue) {
-        finalDefaultValue = columnProperties.type;
-        options.push(
-          <option value={finalDefaultValue} key={finalDefaultValue}>
-            {finalDefaultValue}
-          </option>
-        );
-      }
-
-      return options;
-    };
-
-    const integerOptions = [INTEGER, SERIAL, BIGINT, BIGSERIAL, NUMERIC, TEXT];
-    const bigintOptions = [BIGINT, BIGSERIAL, NUMERIC, TEXT];
-    const uuidOptions = [UUID, TEXT];
-    const jsonOptions = [JSON, JSONB, TEXT];
-    const timestampOptions = [TIMESTAMP, TEXT];
-    const timeOptions = [TIME, TEXT];
-
-    switch (columntype) {
-      case INTEGER:
-        return generateOptions(integerOptions);
-
-      case SERIAL:
-        return generateOptions(integerOptions);
-
-      case BIGINT:
-        return generateOptions(bigintOptions);
-
-      case BIGSERIAL:
-        return generateOptions(bigintOptions);
-
-      case UUID:
-        return generateOptions(uuidOptions);
-
-      case JSONDTYPE:
-        return generateOptions(jsonOptions);
-
-      case JSONB:
-        return generateOptions(jsonOptions);
-
-      case TIMESTAMP:
-        return generateOptions(timestampOptions);
-
-      case TIME:
-        return generateOptions(timeOptions);
-
-      default:
-        return generateOptions([columntype, TEXT]);
-    }
+  const getColumnType = () => {
+    return (
+      colName in selectedProperties &&
+      'type' in selectedProperties[colName] &&
+      selectedProperties[colName].type
+    );
   };
+  const columnTypePG = getColumnType();
+
+  const customSelectBoxStyles = {
+    dropdownIndicator: {
+      padding: '5px',
+    },
+    placeholder: {
+      top: '44%',
+      fontSize: '12px',
+    },
+    singleValue: {
+      fontSize: '12px',
+      top: '44%',
+      color: '#555555',
+    },
+  };
+
+  const { alterOptions, alterOptionsValueMap } = getValidAlterOptions(
+    alterTypeOptions,
+    colName
+  );
 
   const updateColumnName = e => {
     dispatch(editColumn(colName, 'name', e.target.value));
   };
-  const updateColumnType = e => {
-    dispatch(editColumn(colName, 'type', e.target.value));
+  const updateColumnType = selected => {
+    dispatch(editColumn(colName, 'type', selected.value));
   };
   const updateColumnDef = e => {
     dispatch(editColumn(colName, 'default', e.target.value));
@@ -152,14 +93,14 @@ const ColumnEditor = ({
         <div className={`${styles.display_flex} form-group`}>
           <label className="col-xs-2">Type</label>
           <div className="col-xs-6">
-            <select
-              value={selectedProperties[colName].type}
+            <SearchableSelectBox
+              options={alterOptions}
               onChange={updateColumnType}
-              className="input-sm form-control"
-              disabled={columnProperties.pkConstraint}
-            >
-              {getAlternateTypeOptions(columnProperties.type)}
-            </select>
+              value={columnTypePG && alterOptionsValueMap[columnTypePG]}
+              bsClass={`col-type-${0} modify_select`}
+              styleOverrides={customSelectBoxStyles}
+              filterOption={'prefix'}
+            />
           </div>
         </div>
         <div className={`${styles.display_flex} form-group`}>

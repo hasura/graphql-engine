@@ -42,7 +42,7 @@ import ViewHeader from '../TableBrowseRows/ViewHeader';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 import EnhancedInput from '../../../Common/InputChecker/InputChecker';
 
-import { setTable, fetchViewInfoFromInformationSchema } from '../DataActions';
+import { setTable } from '../DataActions';
 import { getIngForm, getEdForm, escapeRegExp } from '../utils';
 import { allOperators, getLegacyOperator } from './PermissionBuilder/utils';
 import Button from '../../../Common/Button/Button';
@@ -53,7 +53,6 @@ class Permissions extends Component {
     super();
 
     this.state = {
-      viewInfo: {},
       presetsInfo: {
         insert: {
           columnTypeMap: {},
@@ -67,29 +66,17 @@ class Permissions extends Component {
 
   componentDidMount() {
     this.props.dispatch({ type: RESET });
-
-    const currentSchema = this.props.allSchemas.find(
-      t => t.table_name === this.props.tableName
+    const currentTableSchema = this.props.allSchemas.find(
+      t =>
+        t.table_name === this.props.tableName &&
+        t.table_schema === this.props.currentSchema
     );
 
-    if (!currentSchema) {
-      alert('Invalid schema');
+    if (!currentTableSchema) {
       return;
     }
 
     this.props.dispatch(setTable(this.props.tableName));
-    this.props
-      .dispatch(
-        fetchViewInfoFromInformationSchema(
-          currentSchema.table_schema,
-          this.props.tableName
-        )
-      )
-      .then(r => {
-        if (r.length > 0) {
-          this.setState({ viewInfo: r[0] });
-        }
-      });
   }
 
   render() {
@@ -198,7 +185,7 @@ class Permissions extends Component {
         );
       };
 
-      const isView = tableSchema.detail.table_type !== 'BASE TABLE';
+      const isView = tableSchema.view_info;
 
       return isView ? getViewHeader() : getTableHeader();
     };
@@ -244,27 +231,22 @@ class Permissions extends Component {
       const getViewPermissionNote = () => {
         let note;
 
-        let showNote = false;
+        let hasPermissions = true;
         if (
           tableType === 'view' &&
           !(
-            this.state.viewInfo &&
-            'is_insertable_into' in this.state.viewInfo &&
-            this.state.viewInfo.is_insertable_into === 'YES'
-          ) &&
-          !(
-            this.state.viewInfo &&
-            'is_updatable' in this.state.viewInfo &&
-            this.state.viewInfo.is_updatable === 'YES'
+            tableSchema.view_info &&
+            tableSchema.view_info.is_insertable_into === 'YES' &&
+            tableSchema.view_info.is_updatable === 'YES'
           )
         ) {
-          showNote = true;
+          hasPermissions = false;
         }
 
-        if (showNote) {
+        if (!hasPermissions) {
           note = (
             <div className={styles.permissionsLegend}>
-              <i className="fa fa-question-circle" aria-hidden="true" />
+              <i className="fa fa-info-circle" aria-hidden="true" />
               &nbsp; You cannot insert/update into this view
             </div>
           );
@@ -1766,33 +1748,34 @@ class Permissions extends Component {
 
     /********************/
 
+    const tSchema = allSchemas.find(
+      t => t.table_name === tableName && t.table_schema === currentSchema
+    );
+
+    if (!tSchema) {
+      return null;
+    }
+
     let qTypes;
     if (tableType === 'table') {
       qTypes = ['insert', 'select', 'update', 'delete'];
     } else if (tableType === 'view') {
       qTypes = [];
-      // Add insert/update permission if it is insertable/updatable as returned by pg
-      if (
-        this.state.viewInfo &&
-        'is_insertable_into' in this.state.viewInfo &&
-        this.state.viewInfo.is_insertable_into === 'YES'
-      ) {
-        qTypes.push('insert');
-      }
 
       qTypes.push('select');
 
-      if (
-        this.state.viewInfo &&
-        'is_updatable' in this.state.viewInfo &&
-        this.state.viewInfo.is_updatable === 'YES'
-      ) {
-        qTypes.push('update');
-        qTypes.push('delete');
+      // Add insert/update permission if it is insertable/updatable as returned by pg
+      if (tSchema.view_info) {
+        if (tSchema.view_info.is_insertable_into === 'YES') {
+          qTypes.push('insert');
+        }
+
+        if (tSchema.view_info.is_updatable === 'YES') {
+          qTypes.push('update');
+          qTypes.push('delete');
+        }
       }
     }
-
-    const tSchema = allSchemas.find(t => t.table_name === tableName);
 
     const allRolesList = getAllRoles(allSchemas);
 

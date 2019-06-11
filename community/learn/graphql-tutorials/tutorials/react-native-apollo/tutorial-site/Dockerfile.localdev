@@ -1,5 +1,8 @@
 FROM node:carbon
 
+# update this line when gatsby-gitbook-boilerplate repo changes
+RUN sh -c 'echo -e "Updated at: 2019-06-03 19:00:00 IST"'
+
 # Install global dependencies
 RUN npm -g install gatsby-cli
 

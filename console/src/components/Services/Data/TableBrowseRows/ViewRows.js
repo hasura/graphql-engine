@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router';
 import 'react-table/react-table.css';
 import '../../../Common/TableCommon/ReactTableOverrides.css';
 import DragFoldTable from '../../../Common/TableCommon/DragFoldTable';
@@ -207,13 +206,7 @@ const ViewRows = ({
 
           return (
             <Button
-              className={
-                styles.tableActionBtn +
-                ' ' +
-                styles.add_mar_right_small +
-                ' ' +
-                styles.remove_margin_right
-              }
+              className={styles.add_mar_right_small}
               color="white"
               size="xs"
               onClick={disabled ? disabledOnClick : handleClick}
@@ -516,7 +509,9 @@ const ViewRows = ({
   };
 
   const curRelName = curPath.length > 0 ? curPath.slice(-1)[0] : null;
-  const tableSchema = schemas.find(x => x.table_name === curTableName);
+  const tableSchema = schemas.find(
+    x => x.table_name === curTableName && x.table_schema === currentSchema
+  );
 
   const tableColumnsSorted = tableSchema.columns.sort(ordinalColSort);
   const tableRelationships = tableSchema.relationships;
@@ -565,28 +560,6 @@ const ViewRows = ({
     }
 
     return _filterQuery;
-  };
-
-  // If no primary key
-  const getPrimaryKeyMsg = () => {
-    const _primaryKeyMsg = [];
-
-    if (!hasPrimaryKey) {
-      if (!isView) {
-        _primaryKeyMsg.push(
-          <div key="primaryKeyMsg" className="row">
-            <div className="col-xs-12">
-              <div className="alert alert-warning" role="alert">
-                There is no unique identifier (primary Key) for a row. You need
-                at-least one primary key to allow editing, Please use{' '}
-                <Link to="/data/sql">Raw SQL</Link> to make one or more column
-                as primary key.
-              </div>
-            </div>
-          </div>
-        );
-      }
-    }
   };
 
   // If query object has expanded columns
@@ -809,12 +782,9 @@ const ViewRows = ({
     <div className={isVisible ? '' : 'hide '}>
       {getFilterQuery()}
       <hr />
-      {getPrimaryKeyMsg()}
       <div className="row">
         <div className="col-xs-12">
-          <div className={styles.tableContainerModified}>
-            {renderTableBody()}
-          </div>
+          <div className={styles.tableContainer}>{renderTableBody()}</div>
           <br />
           <br />
           <div>{getChildComponent()}</div>

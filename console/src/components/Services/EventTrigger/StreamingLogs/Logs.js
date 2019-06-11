@@ -7,7 +7,7 @@ import Tabs from 'react-bootstrap/lib/Tabs';
 import Tab from 'react-bootstrap/lib/Tab';
 import RedeliverEvent from '../TableCommon/RedeliverEvent';
 import TableHeader from '../TableCommon/TableHeader';
-import parseRowData from './util';
+import { parseRowData, verifySuccessStatus } from '../utils';
 import {
   loadEventLogs,
   setTrigger,
@@ -110,12 +110,14 @@ class StreamingLogs extends Component {
       triggerName,
       migrationMode,
       log,
-      tableSchemas,
       count,
       dispatch,
+      triggerList,
     } = this.props;
 
     const styles = require('../TableCommon/EventTable.scss');
+
+    const currentTrigger = triggerList.find(s => s.name === triggerName);
 
     const invocationColumns = [
       'redeliver',
@@ -142,7 +144,8 @@ class StreamingLogs extends Component {
       const newRow = {};
 
       const status =
-        r.status === 200 ? (
+        // 2xx is success
+        verifySuccessStatus(r.status) ? (
           <i className={styles.invocationSuccess + ' fa fa-check'} />
         ) : (
           <i className={styles.invocationFailure + ' fa fa-times'} />
@@ -178,13 +181,7 @@ class StreamingLogs extends Component {
           );
         }
         if (col === 'primary_key') {
-          const tableName = requestData[i].data.table.name;
-          const tableSchema = requestData[i].data.table.schema;
-          const tableData = tableSchemas.filter(
-            row =>
-              row.table_name === tableName && row.table_schema === tableSchema
-          );
-          const primaryKey = tableData[0].primary_key.columns; // handle all primary keys
+          const primaryKey = currentTrigger.primary_key.columns; // handle all primary keys
           const pkHtml = [];
           primaryKey.map(pk => {
             const newPrimaryKeyData = requestData[i].data.event.data.new
@@ -297,7 +294,7 @@ class StreamingLogs extends Component {
                   {finalResponse.status_code
                     ? [
                       'Status Code: ',
-                      finalResponse.status_code === 200 ? (
+                      verifySuccessStatus(finalResponse.status_code) ? (
                         <i
                           className={
                             styles.invocationSuccess + ' fa fa-check'
@@ -451,8 +448,8 @@ StreamingLogs.propTypes = {
   log: PropTypes.object,
   currentTableSchema: PropTypes.array.isRequired,
   migrationMode: PropTypes.bool.isRequired,
-  allSchemas: PropTypes.array.isRequired,
   dispatch: PropTypes.func.isRequired,
+  triggerList: PropTypes.array.isRequired,
 };
 
 const mapStateToProps = (state, ownProps) => {
@@ -462,7 +459,7 @@ const mapStateToProps = (state, ownProps) => {
     triggerName: ownProps.params.trigger,
     migrationMode: state.main.migrationMode,
     currentSchema: state.tables.currentSchema,
-    allSchemas: state.tables.allSchemas,
+    triggerList: state.triggers.triggerList,
   };
 };
 

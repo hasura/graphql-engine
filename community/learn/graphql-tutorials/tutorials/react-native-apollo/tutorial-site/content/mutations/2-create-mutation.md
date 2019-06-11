@@ -1,5 +1,7 @@
 ---
 title: "Run mutation, update cache"
+metaTitle: "Apollo Mutation Component | GraphQL React Native Apollo Tutorial"
+metaDescription: "We will use the Apollo Client Mutation component from react-apollo in React Native app as an example to insert new data and update cache locally using readQuery and writeQuery."
 ---
 
 import GithubLink from "../../src/GithubLink.js";

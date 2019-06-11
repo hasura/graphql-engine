@@ -1,5 +1,7 @@
 ---
 title: "Detect new todos"
+metaTitle: "Subscribe to new todos | GraphQL React Native Apollo Tutorial"
+metaDescription: "You will learn how to make use of GraphQL Subscriptions to get notified whenever a new todo comes in React Native app"
 ---
 
 In this section we will capture newly added public todos in the database. This can be done by subscribing to the last todo added in the database. The subscription query looks like:

@@ -18,6 +18,8 @@ import {
   EDIT_COLUMN,
   SET_PRIMARY_KEYS,
   SET_FOREIGN_KEYS,
+  FETCH_COLUMN_TYPE_CASTS,
+  FETCH_COLUMN_TYPE_CASTS_FAIL,
   RESET,
   SET_UNIQUE_KEYS,
 } from '../TableModify/ModifyActions';
@@ -25,17 +27,16 @@ import {
 // TABLE RELATIONSHIPS
 
 import {
-  REL_SET_TYPE,
-  REL_SET_RTABLE,
-  REL_SET_LCOL,
-  REL_SET_RCOL,
-  REL_RESET,
-  REL_SELECTION_CHANGED,
+  MANUAL_REL_SET_TYPE,
+  MANUAL_REL_SET_RSCHEMA,
+  MANUAL_REL_SET_RTABLE,
+  MANUAL_REL_NAME_CHANGED,
+  SET_MANUAL_REL_ADD,
   REL_NAME_CHANGED,
+  REL_RESET,
+  MANUAL_REL_RESET,
+  REL_SELECTION_CHANGED,
   REL_ADD_NEW_CLICKED,
-  REL_SET_MANUAL_COLUMNS,
-  REL_ADD_MANUAL_CLICKED,
-  UPDATE_MANUAL_REL_TABLE_LIST,
 } from '../TableRelationships/Actions';
 
 // TABLE PERMISSIONS
@@ -122,21 +123,20 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           isActive: true,
         },
       };
-    case REL_ADD_MANUAL_CLICKED:
+    case REL_NAME_CHANGED:
       return {
         ...modifyState,
         relAdd: {
           ...modifyState.relAdd,
-          isManualExpanded: !modifyState.relAdd.isManualExpanded,
+          relName: action.relName,
         },
       };
-    case REL_NAME_CHANGED:
-      const relName = action.relName;
+    case MANUAL_REL_NAME_CHANGED:
       return {
         ...modifyState,
-        relAdd: {
-          ...modifyState.relAdd,
-          name: relName,
+        manualRelAdd: {
+          ...modifyState.manualRelAdd,
+          relName: action.relName,
         },
       };
     case REL_SELECTION_CHANGED:
@@ -145,11 +145,13 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         ...modifyState,
         relAdd: {
           ...modifyState.relAdd,
-          name: '',
-          tableName: selectedRel.tableName,
+          relName: '',
+          lTable: selectedRel.lTable,
+          lSchema: selectedRel.lSchema,
           isObjRel: selectedRel.isObjRel,
           lcol: selectedRel.lcol,
           rTable: selectedRel.rTable,
+          rSchema: selectedRel.rSchema,
           rcol: selectedRel.rcol,
         },
       };
@@ -160,45 +162,44 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           ...defaultModifyState.relAdd,
         },
       };
-    case REL_SET_TYPE:
+    case MANUAL_REL_RESET:
       return {
         ...modifyState,
-        relAdd: {
-          ...modifyState.relAdd,
-          isObjRel: action.isObjRel,
+        manualRelAdd: {
+          ...defaultModifyState.manualRelAdd,
         },
       };
-    case REL_SET_RTABLE:
+    case MANUAL_REL_SET_TYPE:
       return {
         ...modifyState,
-        relAdd: {
-          ...modifyState.relAdd,
+        manualRelAdd: {
+          ...modifyState.manualRelAdd,
+          relType: action.relType,
+        },
+      };
+    case MANUAL_REL_SET_RSCHEMA:
+      return {
+        ...modifyState,
+        manualRelAdd: {
+          ...modifyState.manualRelAdd,
+          rSchema: action.rSchema,
+          rTable: '',
+          colMappings: [...defaultModifyState.manualRelAdd.colMappings],
+        },
+      };
+    case MANUAL_REL_SET_RTABLE:
+      return {
+        ...modifyState,
+        manualRelAdd: {
+          ...modifyState.manualRelAdd,
           rTable: action.rTable,
+          colMappings: [...defaultModifyState.manualRelAdd.colMappings],
         },
       };
-    case REL_SET_LCOL:
+    case SET_MANUAL_REL_ADD:
       return {
         ...modifyState,
-        relAdd: {
-          ...modifyState.relAdd,
-          lcol: action.lcol,
-        },
-      };
-    case REL_SET_RCOL:
-      return {
-        ...modifyState,
-        relAdd: {
-          ...modifyState.relAdd,
-          rcol: action.rcol,
-        },
-      };
-    case REL_SET_MANUAL_COLUMNS:
-      return {
-        ...modifyState,
-        relAdd: {
-          ...modifyState.relAdd,
-          manualColumns: action.data,
-        },
+        manualRelAdd: action.manualRelAdd,
       };
     case TABLE_COMMENT_EDIT:
       return {
@@ -552,23 +553,26 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         ...modifyState,
         fkModify: action.fks,
       };
+
+    case FETCH_COLUMN_TYPE_CASTS:
+      return {
+        ...modifyState,
+        alterColumnOptions: action.data,
+        alterColumnOptionsFetchErr: null,
+      };
+
+    case FETCH_COLUMN_TYPE_CASTS_FAIL:
+      return {
+        ...modifyState,
+        alterColumnOptions: [],
+        alterColumnOptionsFetchErr: action.data,
+      };
+
     case SET_UNIQUE_KEYS:
       return {
         ...modifyState,
         uniqueKeyModify: action.keys,
       };
-    case UPDATE_MANUAL_REL_TABLE_LIST:
-      return {
-        ...modifyState,
-        relAdd: {
-          ...modifyState.relAdd,
-          manualRelInfo: {
-            ...modifyState.relAdd.manualRelInfo,
-            tables: action.data,
-          },
-        },
-      };
-
     default:
       return modifyState;
   }

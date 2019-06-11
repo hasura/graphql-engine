@@ -14,6 +14,8 @@ import AceEditor from 'react-ace';
 import 'brace/mode/json';
 import Button from '../../../Common/Button/Button';
 
+import { verifySuccessStatus } from '../utils';
+
 class RedeliverEvent extends Component {
   constructor(props) {
     super(props);
@@ -89,20 +91,21 @@ class RedeliverEvent extends Component {
       const invocationRowsData = [];
       log.eventInvocations.map(r => {
         const newRow = {};
-        const status =
-          r.status === 200 ? (
-            <i
-              className={
-                styles.invocationSuccess + ' fa fa-check invocationsSuccess ' + styles.tabletdCenter
-              }
-            />
-          ) : (
-            <i
-              className={
-                styles.invocationFailure + ' fa fa-times invocationsFailure'
-              }
-            />
-          );
+        const status = verifySuccessStatus(r.status) ? (
+          <i
+            className={
+              styles.invocationSuccess +
+              ' fa fa-check invocationsSuccess ' +
+              styles.tabletdCenter
+            }
+          />
+        ) : (
+          <i
+            className={
+              styles.invocationFailure + ' fa fa-times invocationsFailure'
+            }
+          />
+        );
 
         // Insert cells corresponding to all rows
         invocationColumns.forEach(col => {
@@ -212,7 +215,13 @@ class RedeliverEvent extends Component {
           <Modal.Body>
             <div className="content-fluid">
               <div>
-                <div className={styles.padd_left_remove + ' col-md-12 ' + styles.padd_right_remove} >
+                <div
+                  className={
+                    styles.padd_left_remove +
+                    ' col-md-12 ' +
+                    styles.padd_right_remove
+                  }
+                >
                   <div className={styles.add_mar_bottom}>
                     Event ID - {log.redeliverEventId}
                     <Button

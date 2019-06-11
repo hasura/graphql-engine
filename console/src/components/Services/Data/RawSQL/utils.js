@@ -13,7 +13,7 @@ const getSQLValue = value => {
   return sqlValue.replace(/['"]+/g, '');
 };
 
-const parseCreateSQL = (sql) => {
+const parseCreateSQL = sql => {
   const _objects = [];
 
   const regExp = createSQLRegex;
