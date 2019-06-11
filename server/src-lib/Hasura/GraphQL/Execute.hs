@@ -22,7 +22,6 @@ import           Control.Lens
 import           Data.Has
 
 import qualified Data.Aeson                             as J
-import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.CaseInsensitive                   as CI
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashSet                           as Set
@@ -354,12 +353,10 @@ execRemoteGQ
   -> UserInfo
   -> [N.Header]
   -> GQLReqUnparsed
-  -> BL.ByteString
-  -- ^ the raw request string
   -> RemoteSchemaInfo
   -> G.TypedOperationDefinition
   -> m (HttpResponse EncJSON)
-execRemoteGQ reqId userInfo reqHdrs q req rsi opDef = do
+execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
   ExecutionCtx logger verbose _ _ _ _ _ manager _ <- ask
   let opTy = G._todType opDef
   when (opTy == G.OperationTypeSubscription) $
@@ -378,7 +375,7 @@ execRemoteGQ reqId userInfo reqHdrs q req rsi opDef = do
 
   -- log the graphql query
   liftIO $ logGraphqlQuery logger verbose $ mkQueryLog reqId q Nothing
-  res  <- liftIO $ try $ Wreq.postWith options (show url) req
+  res  <- liftIO $ try $ Wreq.postWith options (show url) (J.toJSON q)
   resp <- either httpThrow return res
   let cookieHdr = getCookieHdr (resp ^? Wreq.responseHeader "Set-Cookie")
       respHdrs  = Just $ mkRespHeaders cookieHdr

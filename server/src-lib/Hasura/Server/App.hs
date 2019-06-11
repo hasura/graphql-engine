@@ -327,7 +327,7 @@ v1Alpha1GQHandler query = do
   requestId <- asks hcRequestId
   let execCtx = E.ExecutionCtx logger verbose sqlGenCtx pgExecCtx planCache
                 sc scVer manager enableAL
-  flip runReaderT execCtx $ GH.runGQ requestId userInfo reqHeaders query undefined
+  flip runReaderT execCtx $ GH.runGQ requestId userInfo reqHeaders query
 
 v1GQHandler
   :: GH.GQLReqUnparsed

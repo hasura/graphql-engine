@@ -2,7 +2,6 @@ module Hasura.GraphQL.Transport.HTTP
   ( runGQ
   ) where
 
-import qualified Data.ByteString.Lazy                   as BL
 import qualified Network.HTTP.Types                     as N
 
 import           Hasura.EncJSON
@@ -24,9 +23,8 @@ runGQ
   -> UserInfo
   -> [N.Header]
   -> GQLReqUnparsed
-  -> BL.ByteString -- this can be removed when we have a pretty-printer
   -> m (HttpResponse EncJSON)
-runGQ reqId userInfo reqHdrs req rawReq = do
+runGQ reqId userInfo reqHdrs req = do
   E.ExecutionCtx _ _ sqlGenCtx pgExecCtx planCache sc scVer _ enableAL <- ask
   execPlan <- E.getResolvedExecPlan pgExecCtx planCache
               userInfo sqlGenCtx enableAL sc scVer req
@@ -34,7 +32,7 @@ runGQ reqId userInfo reqHdrs req rawReq = do
     E.GExPHasura resolvedOp ->
       flip HttpResponse Nothing <$> runHasuraGQ reqId req userInfo resolvedOp
     E.GExPRemote rsi opDef  ->
-      E.execRemoteGQ reqId userInfo reqHdrs req rawReq rsi opDef
+      E.execRemoteGQ reqId userInfo reqHdrs req rsi opDef
 
 runHasuraGQ
   :: ( MonadIO m

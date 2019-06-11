@@ -243,8 +243,8 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
             <> "HASURA_GRAPHQL_WS_READ_COOKIE to force read cookie when CORS is disabled."
 
 
-onStart :: WSServerEnv -> WSConn -> StartMsg -> BL.ByteString -> IO ()
-onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
+onStart :: WSServerEnv -> WSConn -> StartMsg -> IO ()
+onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
   opM <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
 
@@ -310,16 +310,8 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
         err400 NotSupported "subscription to remote server is not supported"
 
       -- if it's not a subscription, use HTTP to execute the query on the remote
-      -- server
-      -- try to parse the (apollo protocol) websocket frame and get only the
-      -- payload
-      sockPayload <- onLeft (J.eitherDecode msgRaw) $
-        const $ withComplete $ preExecErr reqId $
-        err500 Unexpected "invalid websocket payload"
-      let payload = J.encode $ _wpPayload sockPayload
-
       resp <- runExceptT $ flip runReaderT execCtx $
-              E.execRemoteGQ reqId userInfo reqHdrs q payload rsi opDef
+              E.execRemoteGQ reqId userInfo reqHdrs q rsi opDef
       either (postExecErr reqId) (sendRemoteResp reqId . _hrBody) resp
       sendCompleted (Just reqId)
 
@@ -405,7 +397,7 @@ onMessage authMode serverEnv wsConn msgRaw =
       CMConnInit params -> onConnInit (_wseLogger serverEnv)
                            (_wseHManager serverEnv)
                            wsConn authMode params
-      CMStart startMsg  -> onStart serverEnv wsConn startMsg msgRaw
+      CMStart startMsg  -> onStart serverEnv wsConn startMsg
       CMStop stopMsg    -> onStop serverEnv wsConn stopMsg
       CMConnTerm        -> WS.closeConn wsConn "GQL_CONNECTION_TERMINATE received"
   where
@@ -516,18 +508,3 @@ createWSServerApp authMode serverEnv =
       (onConn (_wseLogger serverEnv) (_wseCorsPolicy serverEnv))
       (onMessage authMode serverEnv)
       (onClose (_wseLogger serverEnv) $ _wseLiveQMap serverEnv)
-
-
--- | TODO:
--- | The following ADT is required so that we can parse the incoming websocket
--- | frame, and only pick the payload, for remote schema queries.
--- | Ideally we should use `StartMsg` from Websocket.Protocol, but as
--- | `GraphQLRequest` doesn't have a ToJSON instance we are using our own type to
--- | get only the payload
-data WebsocketPayload
-  = WebsocketPayload
-  { _wpId      :: !Text
-  , _wpType    :: !Text
-  , _wpPayload :: !J.Value
-  } deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''WebsocketPayload)
