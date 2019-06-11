@@ -405,14 +405,14 @@ queryParsers =
   , ("count", mkQueryParser RQCount)
   ]
   where
-    mkQueryParser f  =
+    mkQueryParser f =
       QueryParser $ \qt obj -> do
-      -- obj <- parseBody
       let val = Object $ M.insert "table" (toJSON qt) obj
       q <- decodeValue val
       return $ f q
 
-legacyQueryHandler :: TableName -> T.Text -> Object -> Handler (HttpResponse EncJSON)
+legacyQueryHandler :: TableName -> T.Text -> Object
+                   -> Handler (HttpResponse EncJSON)
 legacyQueryHandler tn queryType req =
   case M.lookup queryType queryParsers of
     Just queryParser -> getQueryParser queryParser qt req >>= v1QueryHandler

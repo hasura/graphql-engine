@@ -3,7 +3,7 @@ module Hasura.GraphQL.Execute.Query
   , queryOpFromPlan
   , ReusableQueryPlan
   , GeneratedSql
-  , encodeSql
+  , PreparedStatement(..)
   ) where
 
 import           Data.Has
@@ -109,11 +109,11 @@ getReusablePlan (QueryPlan vars fldPlans) =
 
 withPlan
   :: (MonadError QErr m)
-  => UserVars -> PGPlan -> GV.AnnPGVarVals -> m (Q.Query, [Q.PrepArg])
+  => UserVars -> PGPlan -> GV.AnnPGVarVals -> m PreparedStatement
 withPlan usrVars (PGPlan q reqVars prepMap) annVars = do
   prepMap' <- foldM getVar prepMap (Map.toList reqVars)
   let args = withUserVars usrVars $ IntMap.elems prepMap'
-  return (q, args)
+  return $ PreparedStatement q args
   where
     getVar accum (var, (prepNo, _)) = do
       let varName = G.unName $ G.unVariable var
@@ -135,7 +135,7 @@ mkCurPlanTx usrVars (QueryPlan _ fldPlans) = do
       RFPRaw resp                      -> return $ RRRaw resp
       RFPPostgres (PGPlan q _ prepMap) -> do
         let args = withUserVars usrVars $ IntMap.elems prepMap
-        return $ RRSql (q, args)
+        return $ RRSql $ PreparedStatement q args
     return (alias, fldResp)
 
   return (mkLazyRespTx resolved, mkGeneratedSql resolved)
@@ -255,40 +255,47 @@ queryOpFromPlan usrVars varValsM (ReusableQueryPlan varTypes fldPlans) = do
   return (mkLazyRespTx resolved, mkGeneratedSql resolved)
 
 
--- TODO: give better names
+data PreparedStatement
+  = PreparedStatement
+  { _psQuery    :: !Q.Query
+  , _psPrepArgs :: ![Q.PrepArg]
+  }
+
+-- | Required to log in `query-log`
+instance J.ToJSON PreparedStatement where
+  toJSON (PreparedStatement q prepArgs) =
+      J.object [ "query" J..= Q.getQueryText q
+               , "prepared_arguments" J..= fmap prepArgsJVal prepArgs
+               ]
+    where
+      prepArgsJVal (_, arg) = fmap (bsToTxt . fst) arg
+
+-- | Intermediate reperesentation of a computed SQL statement and prepared
+-- | arguments, or a raw bytestring (mostly, for introspection responses)
+-- | From this intermediate representation, a `LazyTx` can be generated, or the
+-- | SQL can be logged etc.
+-- TODO: better naming?
 data ResolvedResp
   = RRRaw !B.ByteString
-  | RRSql !(Q.Query, [Q.PrepArg])
+  | RRSql !PreparedStatement
 
--- TODO: give better names
-type GeneratedSql =
-  [(G.Alias, Maybe (Q.Query, [Q.PrepArg]))]
+-- | The computed SQL with alias which can be logged. Nothing here represents no
+-- | SQL for cases like introspection responses
+-- TODO: better naming?
+type GeneratedSql = [(G.Alias, Maybe PreparedStatement)]
 
 mkLazyRespTx :: [(G.Alias, ResolvedResp)] -> LazyRespTx
 mkLazyRespTx resolved =
   fmap encJFromAssocList $ forM resolved $ \(alias, node) -> do
     resp <- case node of
-      RRRaw bs        -> return $ encJFromBS bs
-      RRSql (q, args) -> liftTx $ asSingleRowJsonResp q args
+      RRRaw bs                         -> return $ encJFromBS bs
+      RRSql (PreparedStatement q args) -> liftTx $ asSingleRowJsonResp q args
     return (G.unName $ G.unAlias alias, resp)
 
 mkGeneratedSql :: [(G.Alias, ResolvedResp)] -> GeneratedSql
 mkGeneratedSql resolved =
   flip map resolved $ \(alias, node) ->
     let res = case node of
-                RRRaw _         -> Nothing
-                RRSql (q, args) -> Just (q, args)
+                RRRaw _  -> Nothing
+                RRSql ps -> Just ps
     in (alias, res)
-
-encodeSql :: GeneratedSql -> J.Value
-encodeSql sql =
-  jValFromAssocList $
-    map (\(a, q) -> (alName a, fmap encP q)) sql
-  where
-    alName = G.unName . G.unAlias
-    encP (q, prepArgs) =
-      J.object [ "query" J..= Q.getQueryText q
-               , "prepared_arguments" J..= fmap prepArgsJVal prepArgs
-               ]
-    jValFromAssocList xs = J.object $ map (uncurry (J..=)) xs
-    prepArgsJVal (_, arg) = fmap (bsToTxt . fst) arg

@@ -4,8 +4,7 @@ module Hasura.GraphQL.Logging
   ) where
 
 import qualified Data.Aeson                             as J
-import qualified Data.Aeson.Casing                      as J
-import qualified Data.Aeson.TH                          as J
+import qualified Language.GraphQL.Draft.Syntax          as G
 
 import           Hasura.GraphQL.Transport.HTTP.Protocol (GQLReqUnparsed)
 import           Hasura.Prelude
@@ -23,17 +22,30 @@ logGraphqlQuery
 logGraphqlQuery logger verbose =
   when (L.unVerboseLogging verbose) . liftIO . L.unLogger logger
 
-mkQueryLog :: RequestId -> GQLReqUnparsed -> Maybe EQ.GeneratedSql
-           -> QueryLog
-mkQueryLog reqId req sql = QueryLog (Just req) (EQ.encodeSql <$> sql) reqId
-
 data QueryLog
   = QueryLog
   { _qlQuery        :: !(Maybe GQLReqUnparsed)
-  , _qlGeneratedSql :: !(Maybe J.Value)
+  , _qlGeneratedSql :: !(Maybe EQ.GeneratedSql)
   , _qlRequestId    :: !RequestId
   }
-$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''QueryLog)
+
+instance J.ToJSON QueryLog where
+  toJSON (QueryLog q sql reqId) =
+    J.object [ "query" J..= q
+             , "generated_sql" J..= (encodeSql <$> sql)
+             , "request_id" J..= reqId
+             ]
 
 instance L.ToEngineLog QueryLog where
   toEngineLog ql = (L.LevelInfo, "query-log", J.toJSON ql)
+
+encodeSql :: EQ.GeneratedSql -> J.Value
+encodeSql sql =
+  jValFromAssocList $
+    map (\(a, q) -> (alName a, fmap J.toJSON q)) sql
+  where
+    alName = G.unName . G.unAlias
+    jValFromAssocList xs = J.object $ map (uncurry (J..=)) xs
+
+mkQueryLog :: RequestId -> GQLReqUnparsed -> Maybe EQ.GeneratedSql -> QueryLog
+mkQueryLog reqId req sql = QueryLog (Just req) sql reqId
