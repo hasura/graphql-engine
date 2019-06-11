@@ -9,7 +9,6 @@ module Hasura.Server.Logging
   , WebHookLog(..)
   , WebHookLogger
   , HttpException
-  , ApiMetrics(..)
   ) where
 
 import           Data.Aeson
@@ -157,13 +156,12 @@ instance L.ToEngineLog AccessLog where
     (L.LevelInfo, "http-log", toJSON accessLog)
 
 mkAccessLog
-  :: (ToJSON a)
-  => L.VerboseLogging
+  :: L.VerboseLogging
   -> Maybe UserInfo -- may not have been resolved
   -> RequestId
   -> Wai.Request
   -> Either QErr BL.ByteString
-  -> Maybe (ApiMetrics a)
+  -> Maybe Value
   -> Maybe (UTCTime, UTCTime)
   -> AccessLog
 mkAccessLog _ userInfoM reqId req res extraInfo mTimeT =
@@ -179,7 +177,7 @@ mkAccessLog _ userInfoM reqId req res extraInfo mTimeT =
            , olUserVars     = userVars <$> userInfoM
            , olResponseSize = respSize
            , olQueryExecutionTime = respTime
-           , olQuery = toJSON <$> query
+           , olQuery = query
            , olError = toJSON <$> err
            }
   in AccessLog http op
@@ -188,9 +186,9 @@ mkAccessLog _ userInfoM reqId req res extraInfo mTimeT =
 
 ravenLogGen
   :: Either QErr BL.ByteString
-  -> Maybe (ApiMetrics a)
+  -> Maybe Value
   -> Maybe (UTCTime , UTCTime)
-  -> (Maybe a, N.Status, Maybe QErr, Maybe Double, Maybe Int64)
+  -> (Maybe Value, N.Status, Maybe QErr, Maybe Double, Maybe Int64)
 ravenLogGen res extraInfo mTimeT =
   (query, status, err, diffTime, Just size)
   where
@@ -198,8 +196,7 @@ ravenLogGen res extraInfo mTimeT =
     size = BL.length $ either encode id res
     err = either Just (const Nothing) res
     diffTime = fmap (realToFrac . uncurry (flip diffUTCTime)) mTimeT
-    q = amQuery <$> extraInfo
-    query = either (const q) (const Nothing) res
+    query = either (const extraInfo) (const Nothing) res
 
 getSourceFromSocket :: Wai.Request -> ByteString
 getSourceFromSocket = BS.pack . showSockAddr . Wai.remoteHost

@@ -31,12 +31,6 @@ newtype RequestId
   = RequestId { unRequestId :: Text }
   deriving (Show, Eq, ToJSON, FromJSON)
 
-data ApiMetrics a
-  = ApiMetrics
-  { amQuery        :: !a
-  , amGeneratedSql :: !(Maybe Text)
-  }
-
 jsonHeader :: (T.Text, T.Text)
 jsonHeader = ("Content-Type", "application/json; charset=utf-8")
 

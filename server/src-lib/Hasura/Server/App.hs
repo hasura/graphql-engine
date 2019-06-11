@@ -125,7 +125,6 @@ data ServerCtx
 data HandlerCtx
   = HandlerCtx
   { hcServerCtx  :: !ServerCtx
-  -- , hcReqBody    :: !BL.ByteString
   , hcUser       :: !UserInfo
   , hcReqHeaders :: ![N.Header]
   , hcRequestId  :: !RequestId
@@ -135,16 +134,22 @@ type Handler = ExceptT QErr (ReaderT HandlerCtx IO)
 
 data APIResp
   = JSONResp !(HttpResponse EncJSON)
-  | RawResp !(HttpResponse BL.ByteString) -- headers, body
+  | RawResp  !(HttpResponse BL.ByteString)
 
 apiRespToLBS :: APIResp -> BL.ByteString
 apiRespToLBS = \case
   JSONResp (HttpResponse j _) -> encJToLBS j
   RawResp (HttpResponse b _)  -> b
 
+data APIHandler a
+  = AHGet !(Handler APIResp)
+  | AHPost !(a -> Handler APIResp)
 
-mkApiMetrics :: Maybe a -> Maybe (ApiMetrics a)
-mkApiMetrics = fmap (flip ApiMetrics Nothing)
+mkGetHandler :: Handler APIResp -> APIHandler ()
+mkGetHandler = AHGet
+
+mkPostHandler :: (a -> Handler APIResp) -> APIHandler a
+mkPostHandler = AHPost
 
 mkAPIRespHandler :: (a -> Handler (HttpResponse EncJSON)) -> (a -> Handler APIResp)
 mkAPIRespHandler = (fmap . fmap) JSONResp
@@ -183,40 +188,40 @@ buildQCtx = do
   return $ QCtx userInfo cache sqlGenCtx
 
 logResult
-  :: (MonadIO m, ToJSON a)
+  :: (MonadIO m)
   => L.Logger
   -> L.VerboseLogging
   -> Maybe UserInfo
   -> RequestId
   -> Wai.Request
-  -> Maybe a
+  -> Maybe Value
   -> Either QErr BL.ByteString
   -> Maybe (UTCTime, UTCTime)
   -> m ()
 logResult logger verbose userInfoM reqId httpReq req res qTime =
   liftIO $ L.unLogger logger $
-    mkAccessLog verbose userInfoM reqId httpReq res (mkApiMetrics req) qTime
+    mkAccessLog verbose userInfoM reqId httpReq res req qTime
 
 logError
-  :: (MonadIO m, ToJSON a)
+  :: (MonadIO m)
   => L.Logger
   -> L.VerboseLogging
   -> Maybe UserInfo
   -> RequestId
   -> Wai.Request
-  -> Maybe a
+  -> Maybe Value
   -> QErr -> m ()
 logError logger verbose userInfoM reqId httpReq req qErr =
   logResult logger verbose userInfoM reqId httpReq req (Left qErr) Nothing
 
-
-authorizeRequest
-  :: (MonadIO m)
+mkSpockAction
+  :: (MonadIO m, FromJSON a, ToJSON a)
   => (Bool -> QErr -> Value)
   -> (QErr -> QErr)
   -> ServerCtx
-  -> ActionT m (Wai.Request, RequestId, N.RequestHeaders, UserInfo, BL.ByteString)
-authorizeRequest qErrEncoder qErrModifier serverCtx = do
+  -> APIHandler a
+  -> ActionT m ()
+mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
   req <- request
   reqBody <- liftIO $ strictRequestBody req
   let headers = requestHeaders req
@@ -224,108 +229,61 @@ authorizeRequest qErrEncoder qErrModifier serverCtx = do
       manager = scManager serverCtx
 
   requestId <- getRequestId headers
-
   userInfoE <- liftIO $ runExceptT $ getUserInfo logger manager headers authMode
-  userInfo <- either (logAndThrow requestId req reqBody False . qErrModifier)
-              return userInfoE
-  return (req, requestId, headers, userInfo, reqBody)
+  userInfo  <- either (logAndThrow requestId req reqBody False . qErrModifier)
+               return userInfoE
+
+  let handlerState = HandlerCtx serverCtx userInfo headers requestId
+      curRole = userRole userInfo
+
+  t1 <- liftIO getCurrentTime -- for measuring response time purposes
+
+  (result, q) <- case apiHandler of
+    AHGet handler -> do
+      res <- liftIO $ runReaderT (runExceptT handler) handlerState
+      return (res, Nothing)
+    AHPost handler -> do
+      parsedReqE <- runExceptT $ parseBody reqBody
+      parsedReq  <- either (qErrToResp (isAdmin curRole) . qErrModifier) return parsedReqE
+      res <- liftIO $ runReaderT (runExceptT $ handler parsedReq) handlerState
+      return (res, Just parsedReq)
+
+  t2 <- liftIO getCurrentTime -- for measuring response time purposes
+
+  -- apply the error modifier
+  let modResult = fmapL qErrModifier result
+
+  -- log result
+  logResult logger verboseLog (Just userInfo) requestId req (toJSON <$> q)
+    (apiRespToLBS <$> modResult) $ Just (t1, t2)
+  either (qErrToResp (isAdmin curRole)) resToResp modResult
   where
     logger     = scLogger serverCtx
     verboseLog = scVerboseLogging serverCtx
 
     logAndThrow reqId req reqBody includeInternal qErr = do
-      let reqTxt = bsToTxt $ BL.toStrict reqBody
-      logError logger verboseLog Nothing reqId req (Just reqTxt) qErr
-      qErrToResp qErrEncoder includeInternal qErr
+      let reqTxt = Just $ toJSON $ String $ bsToTxt $ BL.toStrict reqBody
+      logError logger verboseLog Nothing reqId req reqTxt qErr
+      qErrToResp includeInternal qErr
 
+    -- encode error response
+    qErrToResp :: (MonadIO m) => Bool -> QErr -> ActionCtxT ctx m b
+    qErrToResp includeInternal qErr = do
+      setStatus $ qeStatus qErr
+      json $ qErrEncoder includeInternal qErr
 
-mkGetSpockAction
-  :: (MonadIO m)
-  => (Bool -> QErr -> Value)
-  -> (QErr -> QErr)
-  -> ServerCtx
-  -> Handler APIResp
-  -> ActionT m ()
-mkGetSpockAction qErrEncoder qErrModifier serverCtx handler = do
-  (req, requestId, headers, userInfo, _) <-
-    authorizeRequest qErrEncoder qErrModifier serverCtx
-
-  let handlerState = HandlerCtx serverCtx userInfo headers requestId
-
-  t1 <- liftIO getCurrentTime -- for measuring response time purposes
-  result <- liftIO $ runReaderT (runExceptT handler) handlerState
-  t2 <- liftIO getCurrentTime -- for measuring response time purposes
-
-  -- apply the error modifier
-  let modResult = fmapL qErrModifier result
-
-  -- log result
-  logResult logger verboseLog (Just userInfo) requestId req (Nothing :: Maybe Value)
-    (apiRespToLBS <$> modResult) $ Just (t1, t2)
---   logResult (Just userInfo) req reqBody logger (apiRespToLBS <$> modResult) $
---     Just (t1, t2)
-  either (qErrToResp qErrEncoder (userRole userInfo == adminRole)) resToResp modResult
-
-  where
-    logger     = scLogger serverCtx
-    verboseLog = scVerboseLogging serverCtx
-
-mkSpockAction
-  :: (MonadIO m, FromJSON a, ToJSON a)
-  => (Bool -> QErr -> Value)
-  -> (QErr -> QErr)
-  -> ServerCtx
-  -> (a -> Handler APIResp)
-  -> ActionT m ()
-mkSpockAction qErrEncoder qErrModifier serverCtx handler = do
-  (req, requestId, headers, userInfo, reqBody) <-
-    authorizeRequest qErrEncoder qErrModifier serverCtx
-
-  parsedReqE <- runExceptT $ parseBody reqBody
-  parsedReq  <- either (qErrToResp qErrEncoder False . qErrModifier) return parsedReqE
-
-  let handlerState = HandlerCtx serverCtx userInfo headers requestId
-
-  t1 <- liftIO getCurrentTime -- for measuring response time purposes
-  result <- liftIO $ runReaderT (runExceptT $ handler parsedReq) handlerState
-  t2 <- liftIO getCurrentTime -- for measuring response time purposes
-
-  -- apply the error modifier
-  let modResult = fmapL qErrModifier result
-
-  -- log result
-  logResult logger verboseLog (Just userInfo) requestId req (Just parsedReq)
-    (apiRespToLBS <$> modResult) $ Just (t1, t2)
---   logResult (Just userInfo) req reqBody logger (apiRespToLBS <$> modResult) $
---     Just (t1, t2)
-  either (qErrToResp qErrEncoder $ userRole userInfo == adminRole) resToResp modResult
-
-  where
-    logger     = scLogger serverCtx
-    verboseLog = scVerboseLogging serverCtx
-
--- encode error response
-qErrToResp
-  :: (MonadIO m)
-  => (Bool -> QErr -> Value) -> Bool -> QErr -> ActionCtxT ctx m b
-qErrToResp qErrEncoder includeInternal qErr = do
-  setStatus $ qeStatus qErr
-  json $ qErrEncoder includeInternal qErr
-
-resToResp :: (MonadIO m) => APIResp -> ActionCtxT ctx m b
-resToResp = \case
-  JSONResp (HttpResponse j h) -> do
-    uncurry setHeader jsonHeader
-    mapM_ (mapM_ (uncurry setHeader . unHeader)) h
-    lazyBytes $ encJToLBS j
-  RawResp (HttpResponse b h) -> do
-    mapM_ (mapM_ (uncurry setHeader . unHeader)) h
-    lazyBytes b
+    resToResp = \case
+      JSONResp (HttpResponse j h) -> do
+        uncurry setHeader jsonHeader
+        mapM_ (mapM_ (uncurry setHeader . unHeader)) h
+        lazyBytes $ encJToLBS j
+      RawResp (HttpResponse b h) -> do
+        mapM_ (mapM_ (uncurry setHeader . unHeader)) h
+        lazyBytes b
 
 
 v1QueryHandler :: RQLQuery -> Handler (HttpResponse EncJSON)
 v1QueryHandler query = do
-  --St.put (Just query)
   scRef <- scCacheRef . hcServerCtx <$> ask
   logger <- scLogger . hcServerCtx <$> ask
   res <- bool (fst <$> dbAction) (withSCUpdate scRef logger dbActionReload) $
@@ -355,7 +313,6 @@ v1Alpha1GQHandler
   :: GH.GQLReqUnparsed
   -> Handler (HttpResponse EncJSON)
 v1Alpha1GQHandler query = do
-  --St.put (Just query)
   userInfo <- asks hcUser
   reqHeaders <- asks hcReqHeaders
   manager <- scManager . hcServerCtx <$> ask
@@ -555,39 +512,43 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       delete ("v1/template" <//> var) tmpltGetOrDeleteH
 
       post "v1/query" $ mkSpockAction encodeQErr id serverCtx $
-        mkAPIRespHandler v1QueryHandler
+        mkPostHandler $ mkAPIRespHandler v1QueryHandler
 
       post ("api/1/table" <//> var <//> var) $ \tableName queryType ->
-        mkSpockAction encodeQErr id serverCtx $ mkAPIRespHandler $
-        legacyQueryHandler (TableName tableName) queryType
+        mkSpockAction encodeQErr id serverCtx $ mkPostHandler $
+          mkAPIRespHandler $ legacyQueryHandler (TableName tableName) queryType
 
     when enablePGDump $
-      post "v1alpha1/pg_dump" $ mkSpockAction encodeQErr id serverCtx v1Alpha1PGDumpHandler
+      post "v1alpha1/pg_dump" $ mkSpockAction encodeQErr id serverCtx $
+        mkPostHandler v1Alpha1PGDumpHandler
 
     when enableGraphQL $ do
       post "v1alpha1/graphql/explain" gqlExplainAction
 
       post "v1alpha1/graphql" $ mkSpockAction GH.encodeGQErr id serverCtx $
-        mkAPIRespHandler v1Alpha1GQHandler
+        mkPostHandler $ mkAPIRespHandler v1Alpha1GQHandler
 
       post "v1/graphql/explain" gqlExplainAction
 
       post "v1/graphql" $ mkSpockAction GH.encodeGQErr allMod200 serverCtx $
-        mkAPIRespHandler v1GQHandler
+        mkPostHandler $ mkAPIRespHandler v1GQHandler
 
     when (isDeveloperAPIEnabled serverCtx) $ do
-      get "dev/plan_cache" $ mkGetSpockAction encodeQErr id serverCtx $ do
-        onlyAdmin
-        respJ <- liftIO $ E.dumpPlanCache $ scPlanCache serverCtx
-        return $ JSONResp $ HttpResponse (encJFromJValue respJ) Nothing
-      get "dev/subscriptions" $ mkGetSpockAction encodeQErr id serverCtx $ do
-        onlyAdmin
-        respJ <- liftIO $ EL.dumpLiveQueriesState False $ scLQState serverCtx
-        return $ JSONResp $ HttpResponse (encJFromJValue respJ) Nothing
-      get "dev/subscriptions/extended" $ mkGetSpockAction encodeQErr id serverCtx $ do
-        onlyAdmin
-        respJ <- liftIO $ EL.dumpLiveQueriesState True $ scLQState serverCtx
-        return $ JSONResp $ HttpResponse (encJFromJValue respJ) Nothing
+      get "dev/plan_cache" $ mkSpockAction encodeQErr id serverCtx $
+        mkGetHandler $ do
+          onlyAdmin
+          respJ <- liftIO $ E.dumpPlanCache $ scPlanCache serverCtx
+          return $ JSONResp $ HttpResponse (encJFromJValue respJ) Nothing
+      get "dev/subscriptions" $ mkSpockAction encodeQErr id serverCtx $
+        mkGetHandler $ do
+          onlyAdmin
+          respJ <- liftIO $ EL.dumpLiveQueriesState False $ scLQState serverCtx
+          return $ JSONResp $ HttpResponse (encJFromJValue respJ) Nothing
+      get "dev/subscriptions/extended" $ mkSpockAction encodeQErr id serverCtx $
+        mkGetHandler $ do
+          onlyAdmin
+          respJ <- liftIO $ EL.dumpLiveQueriesState True $ scLQState serverCtx
+          return $ JSONResp $ HttpResponse (encJFromJValue respJ) Nothing
 
     forM_ [GET,POST] $ \m -> hookAny m $ \_ -> do
       let qErr = err404 NotFound "resource does not exist"
@@ -601,7 +562,8 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
     allMod200 qe = qe { qeStatus = N.status200 }
 
     gqlExplainAction =
-      mkSpockAction encodeQErr id serverCtx $ mkAPIRespHandler gqlExplainHandler
+      mkSpockAction encodeQErr id serverCtx $ mkPostHandler $
+        mkAPIRespHandler gqlExplainHandler
 
     enableGraphQL = isGraphQLEnabled serverCtx
     enableMetadata = isMetadataEnabled serverCtx
@@ -609,13 +571,14 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
 
     tmpltGetOrDeleteH tmpltName = do
       tmpltArgs <- tmpltArgsFromQueryParams
-      mkGetSpockAction encodeQErr id serverCtx $
+      mkSpockAction encodeQErr id serverCtx $ mkGetHandler $
         JSONResp <$> mkQTemplateAction tmpltName tmpltArgs
 
     tmpltPutOrPostH tmpltName = do
       tmpltArgs <- tmpltArgsFromQueryParams
-      mkSpockAction encodeQErr id serverCtx $ mkAPIRespHandler $ \bodyTmpltArgs ->
-        mkQTemplateAction tmpltName $ M.union bodyTmpltArgs tmpltArgs
+      mkSpockAction encodeQErr id serverCtx $ mkPostHandler $
+        mkAPIRespHandler $ \bodyTmpltArgs ->
+          mkQTemplateAction tmpltName $ M.union bodyTmpltArgs tmpltArgs
 
     tmpltArgsFromQueryParams = do
       qparams <- params
@@ -644,7 +607,7 @@ raiseGenericApiError :: L.Logger -> L.VerboseLogging -> QErr -> ActionT IO ()
 raiseGenericApiError logger verbose qErr = do
   req <- request
   reqBody <- liftIO $ strictRequestBody req
-  let reqTxt = bsToTxt $ BL.toStrict reqBody
+  let reqTxt = toJSON $ String $ bsToTxt $ BL.toStrict reqBody
   reqId <- getRequestId $ requestHeaders req
   logError logger verbose Nothing reqId req (Just reqTxt) qErr
   uncurry setHeader jsonHeader
