@@ -379,7 +379,7 @@ rm -f "$HPCTIXFILE"
 TIX_FILES="$TIX_FILES:$HPCTIXFILE"
 set -x
 export LOGGING_TEST_LOGFILE_PATH="$OUTPUT_FOLDER/graphql-engine-verbose-logging.log"
-"$GRAPHQL_ENGINE" "$@" 2>&1 > "$LOGGING_TEST_LOGFILE_PATH" & HGE_PIDS="$HGE_PIDS $!"
+"$GRAPHQL_ENGINE" serve 2>&1 > "$LOGGING_TEST_LOGFILE_PATH" & HGE_PIDS="$HGE_PIDS $!"
 set +x
 
 wait_for_port 8080
