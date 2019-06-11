@@ -20,14 +20,16 @@ const getValidAlterOptions = (alterTypeOptions, colName) => {
     typValueMap: validOptionsMap,
   } = getDataTypeInfo(alterTypeOptions.slice(3, 6), colName, 0);
 
-  const allInfo = [...currentInfo, ...validOptions];
-  const allOptionsMap = {
+  const _allInfo = [...currentInfo, ...validOptions];
+
+  const _allOptionsMap = {
     ...validOptionsMap,
     ...currentMap,
   };
+
   return {
-    alterOptions: allInfo,
-    alterOptionsValueMap: allOptionsMap,
+    alterOptions: _allInfo,
+    alterOptionsValueMap: _allOptionsMap,
   };
 };
 
@@ -66,9 +68,8 @@ const getCreatePkSql = ({
   constraintName,
 }) => {
   return `alter table "${schemaName}"."${tableName}"
-    add constraint "${constraintName}" primary key ( ${selectedPkColumns
-    .map(pkc => `"${pkc}"`)
-    .join(', ')} );`;
+    add constraint "${constraintName}" 
+    primary key ( ${selectedPkColumns.map(pkc => `"${pkc}"`).join(', ')} );`;
 };
 
 const getDropPkSql = ({ schemaName, tableName, constraintName }) => {

@@ -62,6 +62,7 @@ class ApiExplorer extends Component {
       headerFocus,
       location,
       serverVersion,
+      serverConfig,
     } = this.props;
 
     const styles = require('./ApiExplorer.scss');
@@ -88,6 +89,7 @@ class ApiExplorer extends Component {
             urlParams={location.query}
             serverVersion={serverVersion}
             consoleUrl={consoleUrl}
+            serverConfig={serverConfig}
           />
         </div>
       </div>
