@@ -110,7 +110,7 @@ class Edit extends React.Component {
 
     if (!currentResolver) {
       // throw a 404 exception
-      throw new NotFoundError('404 Not Found');
+      throw new NotFoundError();
     }
 
     const styles = require('../CustomResolver.scss');

@@ -43,7 +43,7 @@ class Modify extends React.Component {
 
     if (!currentTrigger) {
       // throw a 404 exception
-      throw new NotFoundError('404 Not Found');
+      throw new NotFoundError();
     }
 
     const {

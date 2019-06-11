@@ -157,10 +157,9 @@ const fetchCustomFunction = (functionName, schema) => {
           });
           return Promise.resolve();
         }
-        return dispatch(_push('/'));
       },
       error => {
-        console.error('Failed to fetch resolver' + JSON.stringify(error));
+        console.error('Failed to fetch function' + JSON.stringify(error));
         return dispatch({ type: CUSTOM_FUNCTION_FETCH_FAIL, data: error });
       }
     );

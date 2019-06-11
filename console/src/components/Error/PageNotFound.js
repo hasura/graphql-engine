@@ -23,7 +23,7 @@ class PageNotFound extends Component {
               <h1>404</h1>
               <br />
               <div>
-                This page doesn't exist.Head back{' '}
+                This page doesn't exist. Head back{' '}
                 <Link to="/" onClick={resetCallback}>
                   Home
                 </Link>

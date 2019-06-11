@@ -147,7 +147,7 @@ class ViewTable extends Component {
       query,
       curFilter,
       rows,
-      count, // eslint-disable-line no-unused-vars
+      count,
       activePath,
       migrationMode,
       ongoingRequest,
@@ -160,16 +160,18 @@ class ViewTable extends Component {
       manualTriggers = [],
       triggeredRow,
       triggeredFunction,
-    } = this.props; // eslint-disable-line no-unused-vars
+    } = this.props;
 
     // check if table exists
     const currentTable = schemas.find(
       s => s.table_name === tableName && s.table_schema === currentSchema
     );
+
     if (!currentTable) {
       // throw a 404 exception
-      throw new NotFoundError('404 Not Found');
+      throw new NotFoundError();
     }
+
     // Is this a view
     const isView = currentTable.table_type !== 'BASE TABLE';
 

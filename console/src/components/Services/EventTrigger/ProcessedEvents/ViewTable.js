@@ -145,7 +145,7 @@ class ViewTable extends Component {
     const currentTrigger = triggerList.find(s => s.name === triggerName);
     if (!currentTrigger) {
       // throw a 404 exception
-      throw new NotFoundError('404 Not Found');
+      throw new NotFoundError();
     }
     // Is this a view
     const isView = false;

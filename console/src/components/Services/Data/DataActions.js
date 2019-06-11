@@ -396,8 +396,10 @@ const fetchFunctionInit = () => (dispatch, getState) => {
   );
 };
 
-const updateCurrentSchema = schemaName => dispatch => {
-  dispatch(push(`${globals.urlPrefix}/data/schema/${schemaName}`));
+const updateCurrentSchema = (schemaName, redirect = true) => dispatch => {
+  if (redirect) {
+    dispatch(push(`${globals.urlPrefix}/data/schema/${schemaName}`));
+  }
 
   Promise.all([
     dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: schemaName }),

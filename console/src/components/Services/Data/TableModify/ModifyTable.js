@@ -63,7 +63,7 @@ class ModifyTable extends React.Component {
     );
     if (!tableSchema) {
       // throw a 404 exception
-      throw new NotFoundError('404 Not Found');
+      throw new NotFoundError();
     }
     const tableComment = tableSchema.comment;
 
