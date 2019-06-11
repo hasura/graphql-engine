@@ -218,7 +218,7 @@ TEST_TYPE="no-auth"
 
 start_multiple_hge_servers
 
-run_pytest_parallel
+run_pytest_parallel test_logging.py
 
 kill_hge_servers
 
