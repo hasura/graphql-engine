@@ -12,7 +12,7 @@ import {
   loadLatestServerVersion,
   featureCompatibilityInit,
 } from './Actions';
-import { loadConsoleOpts } from '../../telemetry/Actions.js';
+import { loadConsoleTelemetryOpts } from '../../telemetry/Actions.js';
 import './NotificationOverrides.css';
 import {
   loadInconsistentObjects,
@@ -39,12 +39,7 @@ class Main extends React.Component {
   }
 
   componentDidMount() {
-    const {
-      dispatch,
-      latestServerVersion,
-      serverVersion,
-      featuresCompatibility,
-    } = this.props;
+    const { dispatch } = this.props;
 
     document
       .querySelector('body')
@@ -57,35 +52,50 @@ class Main extends React.Component {
         this.handleMetadataRedirect();
       });
 
-      dispatch(loadConsoleOpts());
+      dispatch(loadConsoleTelemetryOpts());
 
       dispatch(loadLatestServerVersion()).then(() => {
-        try {
-          const isClosedBefore = window.localStorage.getItem(
-            latestServerVersion + '_BANNER_NOTIFICATION_CLOSED'
-          );
-
-          if (isClosedBefore !== 'true') {
-            const isUpdateAvailable = versionGT(
-              latestServerVersion,
-              serverVersion
-            );
-
-            if (isUpdateAvailable) {
-              this.setState({
-                showUpdateNotification: true,
-              });
-            }
-          }
-        } catch (e) {
-          console.error(e);
-        }
+        this.setShowUpdateNotification();
       });
-
-      if (featuresCompatibility[FT_JWT_ANALYZER]) {
-        this.fetchServerConfig();
-      }
     });
+  }
+
+  componentWillReceiveProps(nextProps) {
+    const {
+      [FT_JWT_ANALYZER]: currJwtAnalyzerCompatibility,
+    } = this.props.featuresCompatibility;
+    const {
+      [FT_JWT_ANALYZER]: nextJwtAnalyzerCompatibility,
+    } = nextProps.featuresCompatibility;
+
+    if (
+      currJwtAnalyzerCompatibility !== nextJwtAnalyzerCompatibility &&
+      nextJwtAnalyzerCompatibility
+    ) {
+      this.fetchServerConfig();
+    }
+  }
+
+  setShowUpdateNotification() {
+    const { latestServerVersion, serverVersion } = this.props;
+
+    try {
+      const isClosedBefore = window.localStorage.getItem(
+        latestServerVersion + '_BANNER_NOTIFICATION_CLOSED'
+      );
+
+      if (isClosedBefore !== 'true') {
+        const isUpdateAvailable = versionGT(latestServerVersion, serverVersion);
+
+        if (isUpdateAvailable) {
+          this.setState({
+            showUpdateNotification: true,
+          });
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   fetchServerConfig() {

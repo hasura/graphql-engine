@@ -8,7 +8,7 @@ import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
 import ModalWrapper from '../../../Common/ModalWrapper';
 
-import { parseJWTHeader } from './utils';
+import { parseAuthHeader } from './utils';
 
 import {
   changeRequestHeader,
@@ -387,7 +387,7 @@ class ApiRequest extends Component {
 
           const getJWTInspectorIcon = () => {
             // Check whether key is Authorization and value starts with Bearer
-            const { isJWTHeader, token } = parseJWTHeader(header);
+            const { isAuthHeader, token } = parseAuthHeader(header);
 
             let inspectorIcon = null;
 
@@ -416,7 +416,7 @@ class ApiRequest extends Component {
               return analyzeIcon;
             };
 
-            if (isJWTHeader && isJWTSet) {
+            if (isAuthHeader && isJWTSet) {
               inspectorIcon = (
                 <OverlayTrigger placement="top" overlay={inspectJWTTooltip}>
                   {getAnalyzeIcon()}
@@ -617,8 +617,8 @@ class ApiRequest extends Component {
             claimData =
               claimFormat === 'stringified_json'
                 ? generateValidNameSpaceData(
-                    JSON.parse(payload[claimNameSpace])
-                  )
+                  JSON.parse(payload[claimNameSpace])
+                )
                 : generateValidNameSpaceData(payload[claimNameSpace]);
           } catch (e) {
             console.error(e);
