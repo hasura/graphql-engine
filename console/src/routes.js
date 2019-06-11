@@ -3,7 +3,7 @@ import { Route, IndexRoute, IndexRedirect } from 'react-router';
 
 import { connect } from 'react-redux';
 
-import { App, Main, PageNotFound } from 'components';
+import { App, Main, PageNotFound, VoyagerView } from 'components';
 
 import globals from './Globals';
 
@@ -81,6 +81,7 @@ const routes = store => {
 
   return (
     <Route path="/" component={App} onEnter={validateLogin(store)}>
+      <Route path="test-voyager-view(/:root)" component={VoyagerView} />
       <Route path="login" component={generatedLoginConnector(connect)} />
       <Route
         path=""
@@ -89,6 +90,7 @@ const routes = store => {
       >
         <Route path="">
           <IndexRoute component={generatedApiExplorer(connect)} />
+          <Route path="voyager-view(/:root)" component={VoyagerView} />
           <Route
             path="api-explorer"
             component={generatedApiExplorer(connect)}
