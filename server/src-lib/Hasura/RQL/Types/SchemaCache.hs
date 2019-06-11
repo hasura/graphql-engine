@@ -102,6 +102,7 @@ module Hasura.RQL.Types.SchemaCache
        , delFunctionFromCache
 
        , replaceAllowlist
+       , addRelationshipTypes
        ) where
 
 import qualified Hasura.GraphQL.Context            as GC
@@ -117,6 +118,7 @@ import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCacheTypes
+import           Hasura.GraphQL.Validate.Types
 import           Hasura.SQL.Types
 import           Control.Lens
 import           Data.Aeson
@@ -598,6 +600,19 @@ addRemoteFieldToCache remoteField deps = do
     qt = rtrTable (rmfRemoteRelationship remoteField)
     rn = rtrName (rmfRemoteRelationship remoteField)
     schObjId = SOTableObj qt $ TORel (RelName (unRemoteRelationshipName rn))
+
+addRelationshipTypes :: (CacheRWM m) => TypeMap -> m ()
+addRelationshipTypes additionalTypesMap = do
+  schemaCache <- askSchemaCache
+  writeSchemaCache
+    schemaCache
+      { scDefaultRemoteGCtx =
+          mergeTypeWithGCtx additionalTypesMap (scDefaultRemoteGCtx schemaCache)
+      }
+
+mergeTypeWithGCtx :: TypeMap -> GC.GCtx -> GC.GCtx
+mergeTypeWithGCtx typeMap gctx =
+  gctx {GC._gTypes = typeMap <> GC._gTypes gctx }
 
 addFldToCache
   :: (QErrM m, CacheRWM m)
