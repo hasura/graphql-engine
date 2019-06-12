@@ -8,11 +8,7 @@ response:
       fields:
       - args: []
         name: id
-      - args:
-         - name: id
-           type:
-             name: null
-           defaultValue: null
+      - args: []
         name: message
       - args: []
         name: name
