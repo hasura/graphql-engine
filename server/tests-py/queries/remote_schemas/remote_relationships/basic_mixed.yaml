@@ -6,24 +6,19 @@ response:
     profiles:
       - id: 1
       - id: 2
-    # messages:
-    #   - id: 1
-    #     msg: You win!
-    #   - id: 2
-    #     msg: You lose!
-query:
+    messages:
+      - id: 1
+        msg: You win!
+      - id: 2
+        msg: You lose!
+query: 
   query: |
     query {
-
       profiles {
         id
       }
-
+      messages {
+        id
+        msg
+      }
     }
-
-# Add later for testing mixed queries:
-#
-# messages {
-#   id
-#   msg
-# }

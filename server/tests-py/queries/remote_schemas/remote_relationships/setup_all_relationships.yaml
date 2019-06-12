@@ -1,0 +1,64 @@
+type: bulk
+args:
+  - type: create_remote_relationship
+    args:
+      name: messageBasic
+      table: profiles
+      hasura_fields:
+        - id
+      remote_schema: my-remote-schema
+      remote_field: message
+      remote_arguments:
+            id: "$id"
+
+  - type: create_remote_relationship
+    args:
+      name: messagesNestedArgs
+      table: profiles
+      hasura_fields:
+        - id
+      remote_schema: my-remote-schema
+      remote_field: messages
+      remote_arguments:
+        where:
+          id:
+            eq: "$id"
+
+  - type: create_remote_relationship
+    args:
+      name: messagesNestedArr
+      table: profiles
+      hasura_fields:
+        - id
+      remote_schema: my-remote-schema
+      remote_field: messages
+      remote_arguments:
+        includes:
+          id: ["$id"]
+        
+  - type: create_remote_relationship
+    args:
+      name: messagesMultiFields
+      table: profiles
+      hasura_fields:
+        - id
+        - name
+      remote_schema: my-remote-schema
+      remote_field: messages
+      remote_arguments:
+        where:
+          name:
+            eq: "$name"
+        includes:
+          id: ["$id"]
+
+  - type: create_remote_relationship
+    args:
+      name: communicationsInterface
+      table: profiles
+      hasura_fields:
+        - id
+      remote_schema: my-remote-schema
+      remote_field: communications
+      remote_arguments:
+          id: $id

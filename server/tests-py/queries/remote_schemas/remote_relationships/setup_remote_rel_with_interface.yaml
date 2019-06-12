@@ -1,12 +1,10 @@
 type: create_remote_relationship
 args:
-  name: messagesNestedArr
+  name: communicationsInterface
   table: profiles
   hasura_fields:
-    - name
+    - id
   remote_schema: my-remote-schema
-  remote_field: messages
+  remote_field: communications
   remote_arguments:
-    includes:
-      name: ["$name"]
-        
+      id: $id

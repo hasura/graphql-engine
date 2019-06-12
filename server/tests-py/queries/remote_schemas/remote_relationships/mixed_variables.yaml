@@ -1,0 +1,24 @@
+description: Mixed GraphQL query with variables
+url: /v1/graphql
+status: 200
+response:
+  data:
+    profiles:
+      - id: 1
+        name: alice
+    messages:
+      - id: 1
+        msg: You win!
+query: 
+  query: |
+    query ($id: Int) {
+      profile_by_id(id: $id) {
+        id
+      }
+      messages(where: { id: { eq: $id }}) {
+        id
+        msg
+      }
+    }
+  variables:
+    id: 1
