@@ -19,14 +19,15 @@ args:
     sql: |
       create table profiles (
           id serial primary key,
-          name text unique
+          name text
       );
 - type: run_sql
   args:
     sql: |
       insert into profiles (name) values
       ( 'alice' ),
-      ( 'bob' )
+      ( 'bob' ),
+      ( 'alice')
 - type: track_table
   args:
     schema: public

@@ -1,11 +1,11 @@
 type: create_remote_relationship
 args:
-  name: messageBasic
+  name: communicationsInterface
   table: profiles
   hasura_fields:
     - id
   remote_schema: my-remote-schema
   remote_field:
-    message:
+    communications:
       arguments:
-        id: "$id"
+          id: $id

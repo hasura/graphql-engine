@@ -1,0 +1,22 @@
+description: Simple remote relationship GraphQL query
+url: /v1/graphql
+status: 200
+response:
+  data:
+    profiles:
+      - id: 1
+        messageBasic:
+          name: Alice
+      - id: 2
+        messageBasic:
+          name: Bob
+query: 
+  query: |
+    query {
+      profiles {
+        id
+        messageBasic {
+          name
+        }
+      }
+    }

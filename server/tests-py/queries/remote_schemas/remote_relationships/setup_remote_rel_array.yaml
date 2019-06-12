@@ -3,10 +3,10 @@ args:
   name: messagesNestedArr
   table: profiles
   hasura_fields:
-    - id
+    - name
   remote_schema: my-remote-schema
   remote_field:
     messages:
       arguments:
         includes:
-          id: ["$id"]
+          name: ["$name"]
