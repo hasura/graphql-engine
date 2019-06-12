@@ -160,23 +160,24 @@ func (o *initOptions) createFiles() error {
 		return errors.Wrap(err, "cannot write migration directory")
 	}
 
-	if o.Docker != false {
-		composeURL := "https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/docker-compose/docker-compose.yaml"
-
-		resp, err := http.Get(composeURL)
+	if o.Docker {
+		resp, err := http.Get("https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/docker-compose/docker-compose.yaml")
 		if err != nil {
 			return err
 		}
 		defer resp.Body.Close()
 
-		out, err := os.Create(o.EC.ExecutionDirectory)
+		if resp.StatusCode != http.StatusOK {
+			return errors.New("unable to download the docker-compose.yaml file")
+		}
+
+		out, err := os.Create(o.EC.ExecutionDirectory + "/docker-compose.yaml")
 		if err != nil {
 			return err
 		}
 		defer out.Close()
 
 		_, err = io.Copy(out, resp.Body)
-		ioutil.WriteFile("docker-compose.yaml", data, 0644)
 		if err != nil {
 			return errors.Wrap(err, "cannot create the docker-compose.yaml file")
 		}
