@@ -14,6 +14,7 @@ module Hasura.RQL.DDL.Remote.Validate
 import           Data.Bifunctor
 import           Data.Foldable
 import           Data.List.NonEmpty (NonEmpty (..))
+import qualified Data.List.NonEmpty as NE
 import           Data.Validation
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
@@ -81,39 +82,43 @@ validateRelationship remoteRelationship gctx tables = do
                     Left (pure (TableFieldNonexistent tableName fieldName))
                   Just fieldInfo -> pure (fieldName, fieldInfo))
              (toList (rtrHasuraFields remoteRelationship)))
-      objFldInfo <-
-        lookupField (rtrRemoteField remoteRelationship) (GS._gQueryRoot gctx)
-      case _fiLoc objFldInfo of
-        HasuraType ->
-          Left
-            (pure
-               (FieldNotFoundInRemoteSchema (rtrRemoteField remoteRelationship)))
-        RemoteType {} -> do
-          let providedArguments =
-                remoteArgumentsToMap (rtrRemoteArguments remoteRelationship)
-          toEither
-            (validateRemoteArguments
-               (_fiParams objFldInfo)
-               providedArguments
-               (HM.fromList
-                  (map (first fieldNameToVariable) (HM.toList fieldInfos)))
-               (GS._gTypes gctx))
-          (paramMap, typeMap) <-
-            first
-              pure
-              (runStateT
-                 (stripInMap
-                    (GS._gTypes gctx)
-                    (_fiParams objFldInfo)
-                    providedArguments)
-                 mempty)
-          pure
-            ( RemoteField
-                { rmfRemoteRelationship = remoteRelationship
-                , rmfGType = _fiTy objFldInfo
-                , rmfParamMap = paramMap
-                }
-            , typeMap)
+      fieldsAndTypes <-
+        traverse
+          (\fieldCall -> do
+             objFldInfo <- lookupField (fcName fieldCall) (GS._gQueryRoot gctx)
+             case _fiLoc objFldInfo of
+               HasuraType ->
+                 Left (pure (FieldNotFoundInRemoteSchema (fcName fieldCall)))
+               RemoteType {} -> do
+                 let providedArguments =
+                       remoteArgumentsToMap (fcArguments fieldCall)
+                 toEither
+                   (validateRemoteArguments
+                      (_fiParams objFldInfo)
+                      providedArguments
+                      (HM.fromList
+                         (map (first fieldNameToVariable) (HM.toList fieldInfos)))
+                      (GS._gTypes gctx))
+                 (paramMap, typeMap) <-
+                   first
+                     pure
+                     (runStateT
+                        (stripInMap
+                           (GS._gTypes gctx)
+                           (_fiParams objFldInfo)
+                           providedArguments)
+                        mempty)
+                 pure
+                   ( RemoteField
+                       { rmfRemoteRelationship = remoteRelationship
+                       , rmfGType = _fiTy objFldInfo
+                       , rmfParamMap = paramMap
+                       }
+                   , typeMap))
+          (rtrRemoteFields remoteRelationship)
+      pure
+        ( fst (NE.last fieldsAndTypes)
+        , mconcat (fmap snd (toList fieldsAndTypes)))
   where
     tableName = rtrTable remoteRelationship
 
