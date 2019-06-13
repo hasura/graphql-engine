@@ -223,6 +223,7 @@ class ModifyCustomFunction extends React.Component {
           <TextAreaWithCopy
             copyText={functionDefinition}
             textLanguage={'sql'}
+            id={'copyCustomFunctionSQL'}
           />
         </div>
         {migrationMode
