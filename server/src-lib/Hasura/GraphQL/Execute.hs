@@ -155,7 +155,7 @@ data ExecOp
 
 -- The graphql query is resolved into an execution operation
 type ExecPlanResolved
-  = GQExecPlan ExecOp
+  = GQExecPlan [ExecOp]
 
 getResolvedExecPlan
   :: (MonadError QErr m, MonadIO m)
@@ -175,7 +175,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
   let usrVars = userVars userInfo
   case planM of
     -- plans are only for queries and subscriptions
-    Just plan -> GExPHasura <$> case plan of
+    Just plan -> GExPHasura . pure <$> case plan of
       EP.RPQuery queryPlan ->
         ExOpQuery <$> EQ.queryOpFromPlan usrVars queryVars queryPlan
       EP.RPSubs subsPlan ->
@@ -192,17 +192,17 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
       forM partialExecPlan $ \(gCtx, rootSelSet, varDefs) ->
         case rootSelSet of
           VQ.RMutation selSet ->
-            ExOpMutation <$> getMutOp gCtx sqlGenCtx userInfo selSet
+            pure . ExOpMutation <$> getMutOp gCtx sqlGenCtx userInfo selSet
           VQ.RQuery selSet -> do
             (queryTx, planM) <- getQueryOp gCtx sqlGenCtx
                                 userInfo selSet varDefs
             mapM_ (addPlanToCache . EP.RPQuery) planM
-            return $ ExOpQuery queryTx
+            return $ pure $ ExOpQuery queryTx
           VQ.RSubscription fld -> do
             (lqOp, planM) <- getSubsOp pgExecCtx gCtx sqlGenCtx
                              userInfo reqUnparsed varDefs fld
             mapM_ (addPlanToCache . EP.RPSubs) planM
-            return $ ExOpSubs lqOp
+            return $ pure $ ExOpSubs lqOp
 
 -- Monad for resolving a hasura query/mutation
 type E m =

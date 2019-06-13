@@ -33,8 +33,12 @@ runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer
   execPlan <- E.getResolvedExecPlan pgExecCtx planCache
               userInfo sqlGenCtx enableAL sc scVer req
   case execPlan of
-    E.GExPHasura resolvedOp ->
-      flip HttpResponse Nothing <$> runHasuraGQ pgExecCtx userInfo resolvedOp
+    E.GExPHasura resolvedOps -> do
+      results <-
+        traverse
+          (\resolvedOp -> runHasuraGQ pgExecCtx userInfo resolvedOp)
+          resolvedOps
+      pure (HttpResponse (encJFromList results) Nothing)
     E.GExPRemote rsi opDef  ->
       E.execRemoteGQ manager userInfo reqHdrs rawReq rsi opDef
 
