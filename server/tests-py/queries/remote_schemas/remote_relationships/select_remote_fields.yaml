@@ -9,7 +9,7 @@ response:
       - args: []
         name: id
       - args: []
-        name: message
+        name: messageBasic
       - args:
         - name: includes
           type:
@@ -17,7 +17,7 @@ response:
         - name: where
           type:
             name: MessageWhereInpObj_for_remote_relationship
-        name: messages
+        name: messagesNestedArgs
       - args: []
         name: name
 query:

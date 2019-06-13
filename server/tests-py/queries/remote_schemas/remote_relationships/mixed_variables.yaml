@@ -9,10 +9,10 @@ response:
     messages:
       - id: 1
         msg: You win!
-query: 
+query:
   query: |
     query ($id: Int) {
-      profile_by_id(id: $id) {
+      profiles_by_pk(id: $id) {
         id
       }
       messages(where: { id: { eq: $id }}) {
