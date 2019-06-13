@@ -99,7 +99,7 @@ gatherTypeLocs gCtx nodes =
 
 -- This is for when the graphql query is validated
 type ExecPlanPartial
-  = GQExecPlan (GCtx, VQ.RootSelSet, [G.VariableDefinition])
+  = GQExecPlan (GCtx, [VQ.RootSelSet], [G.VariableDefinition])
 
 getExecPlanPartial
   :: (MonadError QErr m)
@@ -128,7 +128,7 @@ getExecPlanPartial userInfo sc enableAL req = do
     VT.HasuraType -> do
       rootSelSet <- runReaderT (VQ.validateGQ queryParts) gCtx
       let varDefs = G._todVariableDefinitions $ VQ.qpOpDef queryParts
-      return $ GExPHasura (gCtx, rootSelSet, varDefs)
+      return $ GExPHasura (gCtx, pure rootSelSet, varDefs)
     VT.RemoteType _ rsi ->
       return $ GExPRemote rsi opDef
   where
@@ -190,7 +190,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
     noExistingPlan = do
       req      <- toParsed reqUnparsed
       partialExecPlan <- getExecPlanPartial userInfo sc enableAL req
-      forM partialExecPlan $ \(gCtx, (:[]) -> rootSelSets, varDefs) ->
+      forM partialExecPlan $ \(gCtx, rootSelSets, varDefs) ->
        forM rootSelSets $ \rootSelSet ->
         case rootSelSet of
           VQ.RMutation selSet ->
