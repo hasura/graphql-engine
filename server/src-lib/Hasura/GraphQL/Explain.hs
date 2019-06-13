@@ -7,6 +7,7 @@ import qualified Data.Aeson                             as J
 import qualified Data.Aeson.Casing                      as J
 import qualified Data.Aeson.TH                          as J
 import qualified Data.HashMap.Strict                    as Map
+import qualified Data.List.NonEmpty                     as NE
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 
@@ -114,20 +115,22 @@ explainGQLQuery
   -> m EncJSON
 explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw)= do
   execPlan <- E.getExecPlanPartial userInfo sc enableAL query
-  (gCtx, rootSelSet) <- case execPlan of
-    E.GExPHasura (gCtx, rootSelSet, _) ->
-      return (gCtx, rootSelSet)
+  (gCtx, rootSelSets) <- case execPlan of
+    E.GExPHasura (gCtx, rootSelSets, _) ->
+      return (gCtx, rootSelSets)
     E.GExPRemote _ _  ->
       throw400 InvalidParams "only hasura queries can be explained"
-  case rootSelSet of
+  plans :: NE.NonEmpty [FieldPlan] <- forM rootSelSets $ \rootSelSet ->
+   case rootSelSet of
     GV.RQuery selSet -> do
       let tx = mapM (explainField userInfo gCtx sqlGenCtx) (toList selSet)
       plans <- liftIO (runExceptT $ runLazyTx pgExecCtx tx) >>= liftEither
-      return $ encJFromJValue plans
+      return $ plans
     GV.RMutation _ ->
       throw400 InvalidParams "only queries can be explained"
     GV.RSubscription _ ->
       throw400 InvalidParams "only queries can be explained"
+  pure (encJFromJValue (foldMap toList plans))
   where
     usrVars = mkUserVars $ maybe [] Map.toList userVarsRaw
     userInfo = mkUserInfo (fromMaybe adminRole $ roleFromVars usrVars) usrVars
