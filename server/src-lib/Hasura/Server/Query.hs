@@ -182,7 +182,6 @@ runQuery pgExecCtx instanceId userInfo sc hMgr sqlGenCtx query = do
 
 queryNeedsReload :: RQLQuery -> Bool
 queryNeedsReload qi = case qi of
-  RQCreateRemoteRelationship {}   -> True
   RQAddExistingTableOrView _      -> True
   RQTrackTable _                  -> True
   RQUntrackTable _                -> True
@@ -194,6 +193,8 @@ queryNeedsReload qi = case qi of
   RQDropRelationship  _           -> True
   RQSetRelationshipComment  _     -> False
   RQRenameRelationship _          -> True
+
+  RQCreateRemoteRelationship {}   -> True
 
   RQCreateInsertPermission _      -> True
   RQCreateSelectPermission _      -> True
