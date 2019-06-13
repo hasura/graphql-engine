@@ -197,8 +197,9 @@ const addResolver = () => {
     const customOnSuccess = data => {
       Promise.all([
         dispatch({ type: RESET }),
-        dispatch(push(`${prefixUrl}/manage/${resolveObj.name}/details`)),
-        dispatch(fetchResolvers()),
+        dispatch(fetchResolvers()).then(() => {
+          dispatch(push(`${prefixUrl}/manage/${resolveObj.name}/details`));
+        }),
         dispatch({ type: getHeaderEvents.RESET_HEADER, data: data }),
       ]);
     };

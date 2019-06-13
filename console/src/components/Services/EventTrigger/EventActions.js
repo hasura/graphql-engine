@@ -469,6 +469,7 @@ const deleteTrigger = triggerName => {
       // dispatch({ type: REQUEST_SUCCESS });
       dispatch({ type: REQUEST_COMPLETE }); // modify trigger action
       dispatch(showSuccessNotification('Trigger Deleted'));
+      dispatch(push('/manage/triggers'));
       // remove this trigger from state
       const existingTriggers = getState().triggers.triggerList.filter(
         trigger => trigger.name !== triggerName
@@ -477,7 +478,6 @@ const deleteTrigger = triggerName => {
         type: LOAD_TRIGGER_LIST,
         triggerList: existingTriggers,
       });
-      dispatch(push('/manage/triggers'));
       return;
     };
     const customOnError = () => {
