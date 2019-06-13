@@ -10,9 +10,16 @@ response:
         name: id
       - args: []
         name: message
+      - args:
+        - name: includes
+          type:
+            name: IncludeInpObj
+        - name: where
+          type:
+            name: MessageWhereInpObj_for_remote_relationship
+        name: messages
       - args: []
         name: name
-
 query:
   query: |
     query {
@@ -25,7 +32,6 @@ query:
             type {
               name
             }
-            defaultValue
           }
         }
       }
