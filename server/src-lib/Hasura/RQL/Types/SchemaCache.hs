@@ -855,7 +855,7 @@ addRemoteRelInputTypes sc = do
   let gCtx = scDefaultRemoteGCtx sc
       gCtxMap = scGCtxMap sc
       remoteRelInputTypes = scRemoteRelInputTypes sc
-      newGCtxMap = M.map (\g -> mergeTypesWithGCtx remoteRelInputTypes g) gCtxMap
+      newGCtxMap = M.map (mergeTypesWithGCtx remoteRelInputTypes) gCtxMap
   return $
     sc
       { scGCtxMap = newGCtxMap
