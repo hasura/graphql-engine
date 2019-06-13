@@ -397,15 +397,10 @@ const modifyResolver = () => {
 
     const customOnSuccess = data => {
       // dispatch({ type: REQUEST_SUCCESS });
-      Promise.all([
-        dispatch({ type: RESET, data: data }),
-        dispatch(fetchResolvers()),
-      ]).then(() => {
-        return Promise.all([
-          dispatch(fetchResolver(schemaName)),
-          dispatch(push(`${prefixUrl}/manage/${trimmedName}/details`)),
-        ]);
-      });
+      dispatch({ type: RESET, data: data });
+      dispatch(push(`${prefixUrl}/manage/${trimmedName}/details`));
+      dispatch(fetchResolvers());
+      dispatch(fetchResolver(schemaName));
     };
     const customOnError = error => {
       Promise.all([dispatch({ type: MODIFY_RESOLVER_FAIL, data: error })]);
