@@ -270,7 +270,10 @@ v1QueryHandler query = do
       (resp, newSc) <- dbAction
       httpMgr <- scManager . hcServerCtx <$> ask
       --FIXME: should we be fetching the remote schema again? if not how do we get the remote schema?
-      newSc' <- GS.updateSCWithGCtx newSc >>= flip resolveRemoteSchemas httpMgr
+      newSc' <- do
+        newScWithDefaultGCtxMap <- GS.updateSCWithGCtx newSc
+        newScDefaultRemoteGCtx <- resolveRemoteSchemas newScWithDefaultGCtxMap httpMgr
+        addRemoteRelInputTypes newScDefaultRemoteGCtx
       return (resp, newSc')
 
 v1Alpha1GQHandler :: GH.GQLReqUnparsed -> Handler (HttpResponse EncJSON)

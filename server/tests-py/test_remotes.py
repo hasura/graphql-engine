@@ -26,7 +26,6 @@ def graphql_service():
     svc = NodeGraphQL(["node", "remote_schemas/nodejs/index.js"])
     return svc
 
-@pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestTopLevelMixedFields:
 
     @classmethod
@@ -44,7 +43,7 @@ class TestTopLevelMixedFields:
         assert st_code == 200, resp
         graphql_service.stop()
 
-    def test_create_valid(self, hge_ctx, transport):
+    def test_create_valid(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
         assert st_code == 200, resp
 
@@ -54,13 +53,7 @@ class TestTopLevelMixedFields:
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_array.yaml')
         assert st_code == 200, resp
 
-    def test_generation(self, hge_ctx, transport):
-        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
-        assert st_code == 200, resp
-        check_query_f(hge_ctx, self.dir() + 'select_remote_metadata.yaml', transport)
-
-    def test_create_invalid(self, hge_ctx, transport):
-
+    def test_create_invalid(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_invalid_remote_rel_hasura_field.yaml')
         assert st_code == 400, resp
 
@@ -87,6 +80,14 @@ class TestTopLevelMixedFields:
 
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_invalid_remote_rel_array.yaml')
         assert st_code == 400, resp
+
+    def test_generation(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
+        assert st_code == 200, resp
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_nested_args.yaml')
+        assert st_code == 200, resp
+
+        check_query_f(hge_ctx, self.dir() + 'select_remote_fields.yaml')
 
 
 

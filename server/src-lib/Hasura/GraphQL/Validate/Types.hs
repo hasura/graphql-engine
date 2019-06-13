@@ -291,6 +291,9 @@ data TypeInfo
   | TIUnion !UnionTyInfo
   deriving (Show, Eq, TH.Lift)
 
+instance (J.ToJSON TypeInfo) where
+  toJSON _ = J.String "TypeInfo"
+
 data AsObjType
   = AOTObj ObjTyInfo
   | AOTIFace IFaceTyInfo

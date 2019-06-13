@@ -180,9 +180,8 @@ runCreateRemoteRelationshipP1 remoteRelationship = do
 runCreateRemoteRelationshipP2 ::
      (MonadTx m, CacheRWM m) => RemoteField -> TypeMap -> m EncJSON
 runCreateRemoteRelationshipP2 remoteField additionalTypesMap = do
-  addRelationshipTypes additionalTypesMap
   liftTx (persistCreateRemoteRelationship (rmfRemoteRelationship remoteField))
-  addRemoteFieldToCache remoteField noDependencies
+  addRemoteFieldToCache remoteField additionalTypesMap noDependencies
   pure successMsg
   where
     noDependencies = mempty
