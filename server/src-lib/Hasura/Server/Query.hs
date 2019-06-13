@@ -16,6 +16,7 @@ import           Hasura.RQL.DDL.QueryCollection
 import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Relationship.Rename
+import           Hasura.RQL.DDL.Remote.Types
 import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Table
@@ -42,7 +43,7 @@ data RQLQuery
   | RQCreateObjectRelationship !CreateObjRel
   | RQCreateArrayRelationship !CreateArrRel
   | RQDropRelationship !DropRel
-  | RQCreateRemoteRelationship !CreateRemoteRelationship
+  | RQCreateRemoteRelationship !RemoteRelationship
   | RQSetRelationshipComment !SetRelComment
   | RQRenameRelationship !RenameRel
 
@@ -181,7 +182,6 @@ runQuery pgExecCtx instanceId userInfo sc hMgr sqlGenCtx query = do
 
 queryNeedsReload :: RQLQuery -> Bool
 queryNeedsReload qi = case qi of
-  RQCreateRemoteRelationship {}   -> True
   RQAddExistingTableOrView _      -> True
   RQTrackTable _                  -> True
   RQUntrackTable _                -> True
@@ -193,6 +193,8 @@ queryNeedsReload qi = case qi of
   RQDropRelationship  _           -> True
   RQSetRelationshipComment  _     -> False
   RQRenameRelationship _          -> True
+
+  RQCreateRemoteRelationship {}   -> True
 
   RQCreateInsertPermission _      -> True
   RQCreateSelectPermission _      -> True

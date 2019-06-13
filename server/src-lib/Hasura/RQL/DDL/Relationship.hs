@@ -18,6 +18,8 @@ where
 
 import qualified Database.PG.Query as Q
 import           Hasura.RQL.DDL.Remote.Validate
+import           Hasura.RQL.DDL.Remote.Types
+import           Hasura.GraphQL.Validate.Types
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
@@ -153,46 +155,51 @@ createObjRelP2 (WithTable qt rd) = do
   return successMsg
 
 runCreateRemoteRelationship ::
-     (MonadTx m, CacheRM m) => CreateRemoteRelationship -> m EncJSON
-runCreateRemoteRelationship createRemoteRelationship = do
-  runCreateRemoteRelationshipP1 createRemoteRelationship
-  runCreateRemoteRelationshipP2 createRemoteRelationship
+     (MonadTx m, CacheRWM m) => RemoteRelationship -> m EncJSON
+runCreateRemoteRelationship remoteRelationship = do
+  (remoteField, additionalTypesMap) <-
+    runCreateRemoteRelationshipP1 remoteRelationship
+  runCreateRemoteRelationshipP2 remoteField additionalTypesMap
 
 runCreateRemoteRelationshipP1 ::
-     (MonadTx m, CacheRM m) => CreateRemoteRelationship -> m ()
-runCreateRemoteRelationshipP1 createRemoteRelationship = do
+     (MonadTx m, CacheRM m) => RemoteRelationship -> m (RemoteField, TypeMap)
+runCreateRemoteRelationshipP1 remoteRelationship = do
   sc <- askSchemaCache
   case HM.lookup
-         (ccrRemoteSchema createRemoteRelationship)
+         (rtrRemoteSchema remoteRelationship)
          (scRemoteResolvers sc) of
     Just {} -> do
       validation <-
-        getCreateRemoteRelationshipValidation createRemoteRelationship
+        getCreateRemoteRelationshipValidation remoteRelationship
       case validation of
         Left err -> throw400 RemoteSchemaError (T.pack (show err))
-        Right {} -> pure ()
+        Right (remoteField, additionalTypesMap) ->
+          pure (remoteField, additionalTypesMap)
     Nothing -> throw400 RemoteSchemaError "No such remote schema"
 
 runCreateRemoteRelationshipP2 ::
-     (MonadTx m) => CreateRemoteRelationship -> m EncJSON
-runCreateRemoteRelationshipP2 createRemoteRelationship = do
-  liftTx (persistCreateRemoteRelationship createRemoteRelationship)
+     (MonadTx m, CacheRWM m) => RemoteField -> TypeMap -> m EncJSON
+runCreateRemoteRelationshipP2 remoteField additionalTypesMap = do
+  liftTx (persistCreateRemoteRelationship (rmfRemoteRelationship remoteField))
+  addRemoteFieldToCache remoteField additionalTypesMap noDependencies
   pure successMsg
+  where
+    noDependencies = mempty
 
 persistCreateRemoteRelationship
-  :: CreateRemoteRelationship -> Q.TxE QErr ()
-persistCreateRemoteRelationship createRemoteRelationship =
+  :: RemoteRelationship -> Q.TxE QErr ()
+persistCreateRemoteRelationship remoteRelationship =
   Q.unitQE defaultTxErrorHandler [Q.sql|
   INSERT INTO hdb_catalog.hdb_remote_relationship
   (name, table_schema, table_name, remote_schema, configuration)
   VALUES ($1, $2, $3, $4, $5 :: jsonb)
   |]
-  (let QualifiedObject schema_name table_name = ccrTable createRemoteRelationship
-   in (ccrName createRemoteRelationship
+  (let QualifiedObject schema_name table_name = rtrTable remoteRelationship
+   in (rtrName remoteRelationship
       ,schema_name
       ,table_name
-      ,ccrRemoteSchema createRemoteRelationship
-      ,Q.JSONB (toJSON (createRemoteRelationship))))
+      ,rtrRemoteSchema remoteRelationship
+      ,Q.JSONB (toJSON (remoteRelationship))))
   True
 
 runCreateObjRel

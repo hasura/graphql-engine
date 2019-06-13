@@ -21,6 +21,7 @@ import qualified Network.HTTP.Client         as HTTP
 
 import           Hasura.GraphQL.RemoteServer
 import           Hasura.RQL.Types
+import           Hasura.RQL.DDL.Remote.Types
 
 import qualified Hasura.GraphQL.Schema       as GS
 

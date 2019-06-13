@@ -17,6 +17,8 @@ module Hasura.RQL.Types.Common
        , ColVals
        , MutateResp(..)
        , ForeignKey(..)
+       , EquatableGType(..)
+       , InpValInfo(..)
        ) where
 
 import           Hasura.Prelude
@@ -31,6 +33,8 @@ import qualified Database.PG.Query          as Q
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 import qualified PostgreSQL.Binary.Decoding as PD
+import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Language.Haskell.TH.Syntax    as TH
 
 data PGColInfo
   = PGColInfo
@@ -162,3 +166,21 @@ data ForeignKey
 $(deriveJSON (aesonDrop 3 snakeCase) ''ForeignKey)
 
 instance Hashable ForeignKey
+
+data InpValInfo
+  = InpValInfo
+  { _iviDesc   :: !(Maybe G.Description)
+  , _iviName   :: !G.Name
+  , _iviDefVal :: !(Maybe G.ValueConst)
+  , _iviType   :: !G.GType
+  } deriving (Show, Eq, TH.Lift)
+
+instance EquatableGType InpValInfo where
+  type EqProps InpValInfo = (G.Name, G.GType)
+  getEqProps ity = (,) (_iviName ity) (_iviType ity)
+
+-- | Typeclass for equating relevant properties of various GraphQL types
+-- | defined below
+class EquatableGType a where
+  type EqProps a
+  getEqProps :: a -> EqProps a

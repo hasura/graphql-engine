@@ -17,11 +17,14 @@ module Hasura.GraphQL.Schema
   , emptyGCtx
   , mergeMaybeMaps
   , ppGCtx
+  , mkRemoteFld
   ) where
 
 
 import           Data.Has
 import           Data.Maybe                     (maybeToList)
+import           Control.Lens (preview)
+import           Control.Lens.TH (makePrisms)
 
 import qualified Data.HashMap.Strict            as Map
 import qualified Data.HashSet                   as Set
@@ -30,7 +33,9 @@ import qualified Data.Sequence                  as Seq
 import qualified Data.Text                      as T
 import qualified Language.GraphQL.Draft.Syntax  as G
 
+import           Hasura.RQL.DDL.Remote.Types
 import           Hasura.GraphQL.Context
+import           Hasura.GraphQL.Resolve.ContextTypes
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
@@ -65,7 +70,15 @@ instance Has TypeMap RemoteGCtx where
   getter = _rgTypes
   modifier f ctx = ctx { _rgTypes = f $ _rgTypes ctx }
 
-type SelField = Either PGColInfo (RelInfo, Bool, AnnBoolExpPartialSQL, Maybe Int, Bool)
+data SelField
+  = SelFldCol PGColInfo
+  | SelFldRel SelFldRelTup
+  | SelFldRemote RemoteField
+
+-- TODO: This tuple is bad and should be a record.
+type SelFldRelTup = (RelInfo, Bool, AnnBoolExpPartialSQL, Maybe Int, Bool)
+
+$(makePrisms ''SelField)
 
 qualObjectToName :: (ToTxt a) => QualifiedObject a -> G.Name
 qualObjectToName = G.Name . snakeCaseQualObject
@@ -81,9 +94,15 @@ isValidRel rn rt = isValidName (G.Name $ getRelTxt rn)
                           && isValidObjectName rt
 
 isValidField :: FieldInfo -> Bool
-isValidField = \case
-  FIColumn (PGColInfo col _ _) -> isValidCol col
-  FIRelationship (RelInfo rn _ _ remTab _) -> isValidRel rn remTab
+isValidField =
+  \case
+    FIColumn (PGColInfo col _ _) -> isValidCol col
+    FIRelationship (RelInfo rn _ _ remTab _) -> isValidRel rn remTab
+    FIRemote remoteField ->
+      isValidName
+        (G.Name
+           (unRemoteRelationshipName
+              (rtrName (rmfRemoteRelationship remoteField))))
 
 upsertable :: [ConstraintName] -> Bool -> Bool -> Bool
 upsertable uniqueOrPrimaryCons isUpsertAllowed view =
@@ -267,10 +286,27 @@ mkTableObj
 mkTableObj tn allowedFlds =
   mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) HasuraType
   where
-    flds = concatMap (either (pure . mkPGColFld) mkRelFld') allowedFlds
+    flds =
+      concatMap
+        (\case
+            SelFldCol pgColInfo -> pure (mkPGColFld pgColInfo)
+            SelFldRel selFldRel -> mkRelFld' selFldRel
+            SelFldRemote remoteField ->
+              pure (mkRemoteFld remoteField))
+        allowedFlds
     mkRelFld' (relInfo, allowAgg, _, _, isNullable) =
       mkRelFld allowAgg relInfo isNullable
     desc = G.Description $ "columns and relationships of " <>> tn
+
+mkRemoteFld :: RemoteField -> ObjFldInfo
+mkRemoteFld remoteField = mkHsraObjFldInfo description fieldName paramMap gType
+  where
+    description = Just "Remote relationship field"
+    fieldName =
+      G.Name
+        (unRemoteRelationshipName (rtrName (rmfRemoteRelationship remoteField)))
+    paramMap = rmfParamMap remoteField
+    gType = rmfGType remoteField
 
 {-
 type table_aggregate {
@@ -531,7 +567,7 @@ mkBoolExpInp tn fields =
     boolExpTy = mkBoolExpTy tn
 
     -- all the fields of this input object
-    inpValues = combinators <> map mkFldExpInp fields
+    inpValues = combinators <> mapMaybe mkFldExpInp fields
 
     mk n ty = InpValInfo Nothing n Nothing $ G.toGT ty
 
@@ -544,10 +580,11 @@ mkBoolExpInp tn fields =
       ]
 
     mkFldExpInp = \case
-      Left (PGColInfo colName colTy _) ->
+      SelFldCol (PGColInfo colName colTy _) -> Just $
         mk (mkColName colName) (mkCompExpTy colTy)
-      Right (RelInfo relName _ _ remTab _, _, _, _, _) ->
+      SelFldRel (RelInfo relName _ _ remTab _, _, _, _, _) -> Just $
         mk (G.Name $ getRelTxt relName) (mkBoolExpTy remTab)
+      SelFldRemote {} -> Nothing
 
 mkPGColInp :: PGColInfo -> InpValInfo
 mkPGColInp (PGColInfo colName colTy _) =
@@ -1168,8 +1205,8 @@ mkOrdByInpObj tn selFlds = (inpObjTy, ordByCtx)
     desc = G.Description $
       "ordering options when selecting data from " <>> tn
 
-    pgCols = lefts selFlds
-    relFltr ty = flip filter (rights selFlds) $ \(ri, _, _, _, _) ->
+    pgCols = mapMaybe (preview _SelFldCol) selFlds
+    relFltr ty = flip filter (mapMaybe (preview _SelFldRel) selFlds) $ \(ri, _, _, _, _) ->
       riType ri == ty
     objRels = relFltr ObjRel
     arrRels = relFltr ArrRel
@@ -1291,7 +1328,7 @@ mkGCtxRole' tn insPermM selPermM updColsM
 
     -- helper
     mkColFldMap ty cols = Map.fromList $ flip map cols $
-      \c -> ((ty, mkColName $ pgiName c), Left c)
+      \c -> ((ty, mkColName $ pgiName c), FldCol c)
 
     -- insert input type
     insInpObjM = uncurry (mkInsInp tn) <$> insPermM
@@ -1310,7 +1347,7 @@ mkGCtxRole' tn insPermM selPermM updColsM
     updSetInpObjFldsM = mkColFldMap (mkUpdSetTy tn) <$> updColsM
 
     selFldsM = snd <$> selPermM
-    selColsM = (map pgiName . lefts) <$> selFldsM
+    selColsM = (map pgiName . mapMaybe (preview _SelFldCol)) <$> selFldsM
     selColInpTyM = mkSelColumnTy tn <$> selColsM
     -- boolexp input type
     boolExpInpObjM = case selFldsM of
@@ -1331,17 +1368,20 @@ mkGCtxRole' tn insPermM selPermM updColsM
     -- helper
     mkFldMap ty = Map.fromList . concatMap (mkFld ty)
     mkFld ty = \case
-      Left ci -> [((ty, mkColName $ pgiName ci), Left ci)]
-      Right (ri, allowAgg, perm, lim, _) ->
+      SelFldCol ci -> [((ty, mkColName $ pgiName ci), FldCol ci)]
+      SelFldRel (ri, allowAgg, perm, lim, _) ->
         let relFld = ( (ty, G.Name $ getRelTxt $ riName ri)
-                     , Right (ri, False, perm, lim)
+                     , FldRel (ri, False, perm, lim)
                      )
             aggRelFld = ( (ty, mkAggRelName $ riName ri)
-                        , Right (ri, True, perm, lim)
+                        , FldRel (ri, True, perm, lim)
                         )
         in case riType ri of
           ObjRel -> [relFld]
           ArrRel -> bool [relFld] [relFld, aggRelFld] allowAgg
+      SelFldRemote remoteField ->
+        [( (ty, G.Name (unRemoteRelationshipName (rtrName (rmfRemoteRelationship remoteField))))
+         , FldRemote remoteField)]
 
     -- the fields used in bool exp
     boolExpInpObjFldsM = mkFldMap (mkBoolExpTy tn) <$> selFldsM
@@ -1371,8 +1411,8 @@ mkGCtxRole' tn insPermM selPermM updColsM
         in (objs, ordByInps)
       _ -> ([], [])
 
-    getNumCols = onlyNumCols . lefts
-    getCompCols = onlyComparableCols . lefts
+    getNumCols = onlyNumCols . mapMaybe (preview _SelFldCol)
+    getCompCols = onlyComparableCols . mapMaybe (preview _SelFldCol)
     onlyFloat = const $ mkScalarTy PGFloat
 
     mkTypeMaker "sum" = mkScalarTy
@@ -1498,18 +1538,20 @@ getSelPerm
 getSelPerm tableCache fields role selPermInfo = do
   selFlds <- fmap catMaybes $ forM (toValidFieldInfos fields) $ \case
     FIColumn pgColInfo ->
-      return $ fmap Left $ bool Nothing (Just pgColInfo) $
+      return $ fmap SelFldCol $ bool Nothing (Just pgColInfo) $
       Set.member (pgiName pgColInfo) allowedCols
     FIRelationship relInfo -> do
       remTableInfo <- getTabInfo tableCache $ riRTable relInfo
       let remTableSelPermM = getSelPermission remTableInfo role
       return $ flip fmap remTableSelPermM $
-        \rmSelPermM -> Right ( relInfo
+        \rmSelPermM -> SelFldRel
+                             ( relInfo
                              , spiAllowAgg rmSelPermM
                              , spiFilter rmSelPermM
                              , spiLimit rmSelPermM
                              , isRelNullable fields relInfo
                              )
+    FIRemote {} -> pure Nothing
   return (spiAllowAgg selPermInfo, selFlds)
   where
     allowedCols = spiCols selPermInfo
@@ -1654,8 +1696,9 @@ mkGCtxMapTable tableCache funcCache tabInfo = do
     tabFuncs = filter (isValidObjectName . fiName) $
                getFuncsOfTable tn funcCache
     selFlds = flip map (toValidFieldInfos fields) $ \case
-      FIColumn pgColInfo     -> Left pgColInfo
-      FIRelationship relInfo -> Right (relInfo, True, noFilter, Nothing, isRelNullable fields relInfo)
+      FIColumn pgColInfo     -> SelFldCol pgColInfo
+      FIRelationship relInfo -> SelFldRel (relInfo, True, noFilter, Nothing, isRelNullable fields relInfo)
+      FIRemote relInfo -> SelFldRemote relInfo
     adminRootFlds =
       getRootFldsRole' tn pkeyCols validConstraints fields tabFuncs
       (Just ([], True)) (Just (noFilter, Nothing, [], True))

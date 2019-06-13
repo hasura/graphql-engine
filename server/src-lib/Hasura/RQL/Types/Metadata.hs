@@ -8,8 +8,8 @@ import qualified Data.Text                     as T
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
-import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Types
+import           Hasura.RQL.DDL.Remote.Types
 
 data MetadataObjType
   = MOTTable

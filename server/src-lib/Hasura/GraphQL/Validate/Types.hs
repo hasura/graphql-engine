@@ -64,14 +64,10 @@ import qualified Language.Haskell.TH.Syntax    as TH
 import           Hasura.GraphQL.Utils
 import           Hasura.RQL.Instances          ()
 import           Hasura.RQL.Types.RemoteSchema
+import           Hasura.RQL.Types.Common
+import           Hasura.RQL.DDL.Remote.Types (RemoteSchemaName)
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-
--- | Typeclass for equating relevant properties of various GraphQL types
--- | defined below
-class EquatableGType a where
-  type EqProps a
-  getEqProps :: a -> EqProps a
 
 typeEq :: (EquatableGType a, Eq (EqProps a)) => a -> a -> Bool
 typeEq a b = getEqProps a == getEqProps b
@@ -105,18 +101,6 @@ fromEnumTyDef (G.EnumTypeDefinition descM n _ valDefs) loc =
   where
     enumVals = Map.fromList
       [(G._evdName valDef, fromEnumValDef valDef) | valDef <- valDefs]
-
-data InpValInfo
-  = InpValInfo
-  { _iviDesc   :: !(Maybe G.Description)
-  , _iviName   :: !G.Name
-  , _iviDefVal :: !(Maybe G.ValueConst)
-  , _iviType   :: !G.GType
-  } deriving (Show, Eq, TH.Lift)
-
-instance EquatableGType InpValInfo where
-  type EqProps InpValInfo = (G.Name, G.GType)
-  getEqProps ity = (,) (_iviName ity) (_iviType ity)
 
 fromInpValDef :: G.InputValueDefinition -> InpValInfo
 fromInpValDef (G.InputValueDefinition descM n ty defM) =
@@ -306,6 +290,9 @@ data TypeInfo
   | TIIFace !IFaceTyInfo
   | TIUnion !UnionTyInfo
   deriving (Show, Eq, TH.Lift)
+
+instance (J.ToJSON TypeInfo) where
+  toJSON _ = J.String "TypeInfo"
 
 data AsObjType
   = AOTObj ObjTyInfo

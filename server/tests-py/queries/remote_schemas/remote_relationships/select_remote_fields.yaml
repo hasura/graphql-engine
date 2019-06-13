@@ -1,0 +1,38 @@
+description: Select metadata on articles for remote
+url: /v1/graphql
+status: 200
+response:
+  data:
+    __type:
+      name: profiles
+      fields:
+      - args: []
+        name: id
+      - args: []
+        name: message
+      - args:
+        - name: includes
+          type:
+            name: IncludeInpObj
+        - name: where
+          type:
+            name: MessageWhereInpObj_for_remote_relationship
+        name: messages
+      - args: []
+        name: name
+query:
+  query: |
+    query {
+      __type(name: "profiles") {
+        name
+        fields {
+          name
+          args {
+            name
+            type {
+              name
+            }
+          }
+        }
+      }
+    }
