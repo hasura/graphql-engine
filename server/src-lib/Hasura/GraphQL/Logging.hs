@@ -1,6 +1,11 @@
+{-|
+This module holds functions and data types used for logging at the GraphQL
+layer. In contrast with, logging at the HTTP server layer.
+-}
+
 module Hasura.GraphQL.Logging
   ( logGraphqlQuery
-  , mkQueryLog
+  , QueryLog(..)
   ) where
 
 import qualified Data.Aeson                             as J
@@ -13,18 +18,12 @@ import           Hasura.Server.Utils                    (RequestId)
 import qualified Hasura.GraphQL.Execute.Query           as EQ
 import qualified Hasura.Logging                         as L
 
-logGraphqlQuery
-  :: (MonadIO m)
-  => L.Logger
-  -> L.VerboseLogging
-  -> QueryLog
-  -> m ()
-logGraphqlQuery logger verbose =
-  when (L.unVerboseLogging verbose) . liftIO . L.unLogger logger
 
+-- | A GraphQL query, optionally generated SQL, and the request id makes up the
+-- | 'QueryLog'
 data QueryLog
   = QueryLog
-  { _qlQuery        :: !(Maybe GQLReqUnparsed)
+  { _qlQuery        :: !GQLReqUnparsed
   , _qlGeneratedSql :: !(Maybe EQ.GeneratedSql)
   , _qlRequestId    :: !RequestId
   }
@@ -39,13 +38,24 @@ instance J.ToJSON QueryLog where
 instance L.ToEngineLog QueryLog where
   toEngineLog ql = (L.LevelInfo, "query-log", J.toJSON ql)
 
+-- | Helper function to convert the list of alias to generated SQL into a
+-- | key-value map to be printed as JSON
 encodeSql :: EQ.GeneratedSql -> J.Value
 encodeSql sql =
-  jValFromAssocList $
-    map (\(a, q) -> (alName a, fmap J.toJSON q)) sql
+  jValFromAssocList $ map (\(a, q) -> (alName a, fmap J.toJSON q)) sql
   where
     alName = G.unName . G.unAlias
     jValFromAssocList xs = J.object $ map (uncurry (J..=)) xs
 
-mkQueryLog :: RequestId -> GQLReqUnparsed -> Maybe EQ.GeneratedSql -> QueryLog
-mkQueryLog reqId req sql = QueryLog (Just req) sql reqId
+{-|
+Function to log a 'QueryLog'. This is meant to be used in execution of a
+GraphQL query to log the GraphQL query and optionally the generated SQL.
+-}
+logGraphqlQuery
+  :: (MonadIO m)
+  => L.Logger
+  -> L.VerboseLogging
+  -> QueryLog
+  -> m ()
+logGraphqlQuery logger verbose =
+  when (L.unVerboseLogging verbose) . liftIO . L.unLogger logger

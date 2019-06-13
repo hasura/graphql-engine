@@ -374,7 +374,7 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
       options    = wreqOptions manager (Map.toList finalHdrs)
 
   -- log the graphql query
-  liftIO $ logGraphqlQuery logger verbose $ mkQueryLog reqId q Nothing
+  liftIO $ logGraphqlQuery logger verbose $ QueryLog q Nothing reqId
   res  <- liftIO $ try $ Wreq.postWith options (show url) (J.toJSON q)
   resp <- either httpThrow return res
   let cookieHdr = getCookieHdr (resp ^? Wreq.responseHeader "Set-Cookie")

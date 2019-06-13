@@ -49,11 +49,11 @@ runHasuraGQ reqId query userInfo resolvedOp = do
   respE <- liftIO $ runExceptT $ case resolvedOp of
     E.ExOpQuery tx genSql  -> do
       -- log the generated SQL and the graphql query
-      liftIO $ logGraphqlQuery logger verbose $ mkQueryLog reqId query genSql
+      liftIO $ logGraphqlQuery logger verbose $ QueryLog query genSql reqId
       runLazyTx' pgExecCtx tx
     E.ExOpMutation tx -> do
       -- log the generated SQL and the graphql query
-      liftIO $ logGraphqlQuery logger verbose $ mkQueryLog reqId query Nothing
+      liftIO $ logGraphqlQuery logger verbose $ QueryLog query Nothing reqId
       runLazyTx pgExecCtx $ withUserInfo userInfo tx
     E.ExOpSubs _ ->
       throw400 UnexpectedPayload

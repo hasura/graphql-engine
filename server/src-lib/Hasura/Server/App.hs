@@ -256,7 +256,8 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
   -- log result
   logResult logger verboseLog (Just userInfo) requestId req (toJSON <$> q)
     (apiRespToLBS <$> modResult) $ Just (t1, t2)
-  either (qErrToResp (isAdmin curRole)) resToResp modResult
+  either (qErrToResp (isAdmin curRole)) (resToResp requestId) modResult
+
   where
     logger     = scLogger serverCtx
     verboseLog = scVerboseLogging serverCtx
@@ -272,12 +273,14 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
       setStatus $ qeStatus qErr
       json $ qErrEncoder includeInternal qErr
 
-    resToResp = \case
+    resToResp reqId = \case
       JSONResp (HttpResponse j h) -> do
         uncurry setHeader jsonHeader
+        uncurry setHeader (requestIdHeader, unRequestId reqId)
         mapM_ (mapM_ (uncurry setHeader . unHeader)) h
         lazyBytes $ encJToLBS j
       RawResp (HttpResponse b h) -> do
+        uncurry setHeader (requestIdHeader, unRequestId reqId)
         mapM_ (mapM_ (uncurry setHeader . unHeader)) h
         lazyBytes b
 

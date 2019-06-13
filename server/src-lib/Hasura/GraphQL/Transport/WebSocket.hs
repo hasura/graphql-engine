@@ -285,8 +285,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           runLazyTx pgExecCtx $ withUserInfo userInfo opTx
       E.ExOpSubs lqOp -> do
         -- log the graphql query
-        liftIO $ logGraphqlQuery logger verboseLog $
-          mkQueryLog reqId query Nothing
+        liftIO $ logGraphqlQuery logger verboseLog $ QueryLog query Nothing reqId
         lqId <- liftIO $ LQ.addLiveQuery lqMap lqOp liveQOnChange
         liftIO $ STM.atomically $
           STMMap.insert (lqId, _grOperationName q) opId opMap
@@ -295,8 +294,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     execQueryOrMut reqId query genSql action = do
       logOpEv ODStarted (Just reqId)
       -- log the generated SQL and the graphql query
-      liftIO $ logGraphqlQuery logger verboseLog $
-        mkQueryLog reqId query genSql
+      liftIO $ logGraphqlQuery logger verboseLog $ QueryLog query genSql reqId
       resp <- liftIO $ runExceptT action
       either (postExecErr reqId) sendSuccResp resp
       sendCompleted (Just reqId)
