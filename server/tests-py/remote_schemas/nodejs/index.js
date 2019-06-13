@@ -8,6 +8,12 @@ const allMessages = [
 ];
 
 const typeDefs = gql`
+
+  type User {
+    user_id: Int
+    messages(where: MessageWhereInpObj, includes: IncludeInpObj): [Message]
+  }
+
   type Message {
     id: Int!
     name: String!
@@ -35,13 +41,63 @@ const typeDefs = gql`
   }
 
   type Query {
-    hello:  String
+    hello: String
     messages(where: MessageWhereInpObj, includes: IncludeInpObj): [Message]
-    message(id: Int!) : Message
+    message(id: Int!): Message
+    user(user_id: Int!): User
   }
 `;
 
 const resolvers = {
+
+    User: {
+        messages: (parent, { where, includes }) => {
+            var result = allMessages.filter(m => m.id == parent.user_id);
+            if (where && where.id) {
+                var intExp = where.id;
+                Object.keys(intExp).forEach(op => {
+                    switch(op) {
+                    case "eq":
+                        result = result.filter(m => m.id == intExp[op]);
+                        break;
+                    case "gt":
+                        result = result.filter(m => m.id > intExp[op]);
+                        break;
+                    case "lt":
+                        result = result.filter(m => m.id < intExp[op]);
+                        break;
+                    default:
+                        throw new ApolloError("invalid argument", "invalid");
+                    }
+                });
+            }
+            if (where && where.name) {
+                var stringExp = where.name;
+                Object.keys(stringExp).forEach(op => {
+                    switch(op) {
+                    case "eq":
+                        result = result.filter(m => m.name == stringExp[op]);
+                        break;
+                    default:
+                        throw new ApolloError("invalid argument", "invalid");
+                    }
+                });
+            }
+
+            if (includes && includes.id) {
+                var ids = includes.id;
+                result = result.filter(m => ids.includes(m.id));
+            }
+
+            if (includes && includes.name) {
+                var names = includes.name;
+                result = result.filter(m => names.includes(m.name));
+            }
+
+            return result;
+        },
+    },
+
     Query: {
         hello: () => "world",
         message: (_, { id }) => {
@@ -91,6 +147,9 @@ const resolvers = {
             }
 
             return result;
+        },
+        user: (_, { user_id }) => {
+            return { "user_id": user_id };
         }
     },
 };
