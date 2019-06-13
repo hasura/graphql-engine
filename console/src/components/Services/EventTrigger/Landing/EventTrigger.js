@@ -52,15 +52,13 @@ class EventTrigger extends Component {
     };
 
     const getAddBtn = () => {
-      let addBtn = null;
-
       const handleClick = e => {
         e.preventDefault();
 
         dispatch(push(`${appPrefix}/manage/triggers/add`));
       };
 
-      addBtn = (
+      return (
         <Button
           data-test="data-create-trigger"
           color="yellow"
@@ -71,8 +69,6 @@ class EventTrigger extends Component {
           Create
         </Button>
       );
-
-      return addBtn;
     };
 
     const footerEvent = (

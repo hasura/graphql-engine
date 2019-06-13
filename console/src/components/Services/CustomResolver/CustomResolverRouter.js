@@ -48,7 +48,6 @@ const leftNavMapStateToProps = state => {
     filtered: [...state.customResolverData.listData.filtered],
     searchQuery: state.customResolverData.listData.searchQuery,
     viewResolver: state.customResolverData.listData.viewResolver,
-    migrationMode: state.main.migrationMode ? state.main.migrationMode : false,
     appPrefix,
   };
 };
