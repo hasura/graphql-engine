@@ -23,7 +23,7 @@ import           Data.Has
 import qualified Data.Aeson                             as J
 import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.CaseInsensitive                   as CI
-import qualified Data.List.NonEmpty                     as NE
+import qualified Data.Sequence                          as Seq
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashSet                           as Set
 import qualified Data.String.Conversions                as CS
@@ -100,7 +100,7 @@ gatherTypeLocs gCtx nodes =
 
 -- This is for when the graphql query is validated
 type ExecPlanPartial
-  = GQExecPlan (GCtx, NE.NonEmpty VQ.TopSelSet, [G.VariableDefinition])
+  = GQExecPlan (GCtx, Seq.Seq VQ.TopSelSet, [G.VariableDefinition])
 
 getExecPlanPartial
   :: (MonadError QErr m)
@@ -157,7 +157,7 @@ data ExecOp
 
 -- The graphql query is resolved into an execution operation
 type ExecPlanResolved
-  = GQExecPlan (NE.NonEmpty ExecOp)
+  = GQExecPlan (Seq.Seq ExecOp)
 
 getResolvedExecPlan
   :: (MonadError QErr m, MonadIO m)

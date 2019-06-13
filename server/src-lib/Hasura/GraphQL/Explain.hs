@@ -7,7 +7,7 @@ import qualified Data.Aeson                             as J
 import qualified Data.Aeson.Casing                      as J
 import qualified Data.Aeson.TH                          as J
 import qualified Data.HashMap.Strict                    as Map
-import qualified Data.List.NonEmpty                     as NE
+import qualified Data.Sequence                          as Seq
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 
@@ -120,7 +120,7 @@ explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw)= 
       return (gCtx, rootSelSets)
     E.GExPRemote _ _  ->
       throw400 InvalidParams "only hasura queries can be explained"
-  plans :: NE.NonEmpty [FieldPlan] <- forM rootSelSets $ \rootSelSet ->
+  plans :: Seq.Seq [FieldPlan] <- forM rootSelSets $ \rootSelSet ->
    case rootSelSet of
     GV.RQuery selSet -> do
       let tx = mapM (explainField userInfo gCtx sqlGenCtx) (toList selSet)

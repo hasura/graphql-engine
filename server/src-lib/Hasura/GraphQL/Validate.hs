@@ -21,7 +21,6 @@ import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashSet                           as HS
-import qualified Data.List.NonEmpty                     as NE
 import qualified Data.Sequence                          as Seq
 import qualified Language.GraphQL.Draft.Syntax          as G
 
@@ -169,7 +168,7 @@ validateGQ
   :: (MonadError QErr m, MonadReader GCtx m)
   -- => GraphQLRequest
   => QueryParts
-  -> m (NE.NonEmpty TopSelSet)
+  -> m (Seq.Seq TopSelSet)
 validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
 
   ctx <- ask
