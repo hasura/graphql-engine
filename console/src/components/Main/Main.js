@@ -8,10 +8,11 @@ import 'react-toggle/style.css';
 import Spinner from '../Common/Spinner/Spinner';
 import {
   loadServerVersion,
+  fetchServerConfig,
   loadLatestServerVersion,
   featureCompatibilityInit,
 } from './Actions';
-import { loadConsoleOpts } from '../../telemetry/Actions.js';
+import { loadConsoleTelemetryOpts } from '../../telemetry/Actions.js';
 import './NotificationOverrides.css';
 import {
   loadInconsistentObjects,
@@ -23,7 +24,7 @@ import {
   setLoveConsentState,
 } from './loveConsentLocalStorage';
 
-import { versionGT } from '../../helpers/versionUtils';
+import { versionGT, FT_JWT_ANALYZER } from '../../helpers/versionUtils';
 
 class Main extends React.Component {
   constructor(props) {
@@ -51,31 +52,56 @@ class Main extends React.Component {
         this.handleMetadataRedirect();
       });
 
-      dispatch(loadConsoleOpts());
+      dispatch(loadConsoleTelemetryOpts());
 
       dispatch(loadLatestServerVersion()).then(() => {
-        try {
-          const isClosedBefore = window.localStorage.getItem(
-            this.props.latestServerVersion + '_BANNER_NOTIFICATION_CLOSED'
-          );
-
-          if (isClosedBefore !== 'true') {
-            const isUpdateAvailable = versionGT(
-              this.props.latestServerVersion,
-              this.props.serverVersion
-            );
-
-            if (isUpdateAvailable) {
-              this.setState({
-                showUpdateNotification: true,
-              });
-            }
-          }
-        } catch (e) {
-          console.error(e);
-        }
+        this.setShowUpdateNotification();
       });
     });
+  }
+
+  componentWillReceiveProps(nextProps) {
+    const {
+      [FT_JWT_ANALYZER]: currJwtAnalyzerCompatibility,
+    } = this.props.featuresCompatibility;
+    const {
+      [FT_JWT_ANALYZER]: nextJwtAnalyzerCompatibility,
+    } = nextProps.featuresCompatibility;
+
+    if (
+      currJwtAnalyzerCompatibility !== nextJwtAnalyzerCompatibility &&
+      nextJwtAnalyzerCompatibility
+    ) {
+      this.fetchServerConfig();
+    }
+  }
+
+  setShowUpdateNotification() {
+    const { latestServerVersion, serverVersion } = this.props;
+
+    try {
+      const isClosedBefore = window.localStorage.getItem(
+        latestServerVersion + '_BANNER_NOTIFICATION_CLOSED'
+      );
+
+      if (isClosedBefore !== 'true') {
+        const isUpdateAvailable = versionGT(latestServerVersion, serverVersion);
+
+        if (isUpdateAvailable) {
+          this.setState({
+            showUpdateNotification: true,
+          });
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  fetchServerConfig() {
+    const { dispatch } = this.props;
+
+    dispatch(fetchServerConfig());
   }
 
   handleBodyClick(e) {
