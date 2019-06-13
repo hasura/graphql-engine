@@ -33,7 +33,6 @@ class Modify extends React.Component {
       modifyTriggerName,
       modifyTrigger,
       triggerList,
-      migrationMode,
       dispatch,
     } = this.props;
 
@@ -60,7 +59,6 @@ class Modify extends React.Component {
           dispatch={dispatch}
           triggerName={modifyTriggerName}
           tabName="modify"
-          migrationMode={migrationMode}
         />
         <br />
         <div className={styles.container}>

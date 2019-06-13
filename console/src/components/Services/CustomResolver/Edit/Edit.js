@@ -115,7 +115,7 @@ class Edit extends React.Component {
 
     const styles = require('../CustomResolver.scss');
 
-    const { isFetching, isRequesting, editState, migrationMode } = this.props;
+    const { isFetching, isRequesting, editState } = this.props;
     const { resolverName } = this.props.params;
 
     const generateMigrateBtns = () => {
@@ -234,7 +234,7 @@ class Edit extends React.Component {
             }}
           >
             <Common {...this.props} />
-            {migrationMode ? generateMigrateBtns() : null}
+            {generateMigrateBtns()}
           </form>
         )}
       </div>
@@ -246,7 +246,6 @@ const mapStateToProps = state => {
     ...state.customResolverData.addData,
     ...state.customResolverData.headerData,
     allResolvers: state.customResolverData.listData.resolvers,
-    migrationMode: state.main.migrationMode,
     dataHeaders: { ...state.tables.dataHeaders },
   };
 };

@@ -122,7 +122,6 @@ class ViewTable extends Component {
       rows,
       count, // eslint-disable-line no-unused-vars
       activePath,
-      migrationMode,
       ongoingRequest,
       lastError,
       lastSuccess,
@@ -169,7 +168,6 @@ class ViewTable extends Component {
         dispatch={dispatch}
         triggerName={triggerName}
         tabName="pending"
-        migrationMode={migrationMode}
       />
     );
 
@@ -188,7 +186,6 @@ ViewTable.propTypes = {
   activePath: PropTypes.array.isRequired,
   query: PropTypes.object.isRequired,
   curFilter: PropTypes.object.isRequired,
-  migrationMode: PropTypes.bool.isRequired,
   ongoingRequest: PropTypes.bool.isRequired,
   rows: PropTypes.array.isRequired,
   expandedRow: PropTypes.string.isRequired,
@@ -202,7 +199,6 @@ const mapStateToProps = (state, ownProps) => {
   return {
     triggerName: ownProps.params.trigger,
     triggerList: state.triggers.pendingEvents,
-    migrationMode: state.main.migrationMode,
     ...state.triggers.view,
   };
 };
