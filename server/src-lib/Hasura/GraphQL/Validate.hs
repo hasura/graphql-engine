@@ -158,8 +158,8 @@ validateFrag (G.FragmentDefinition n onTy dirs selSet) = do
   return $ FragDef n objTyInfo selSet
 
 data TopSelSet
-  = RQuery !SelSet
-  | RMutation !SelSet
+  = RQuery !Field
+  | RMutation !Field
   | RSubscription !Field
   deriving (Show, Eq)
 
@@ -190,8 +190,8 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
             G._todSelectionSet opDef
 
   case G._todType opDef of
-    G.OperationTypeQuery -> return $ pure $ RQuery selSet
-    G.OperationTypeMutation -> return $ pure $ RMutation selSet
+    G.OperationTypeQuery -> return $ fmap RQuery selSet
+    G.OperationTypeMutation -> return $ fmap RMutation selSet
     G.OperationTypeSubscription ->
       case Seq.viewl selSet of
         Seq.EmptyL     -> throw500 "empty selset for subscription"

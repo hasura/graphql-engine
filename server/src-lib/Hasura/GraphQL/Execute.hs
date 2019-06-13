@@ -194,11 +194,11 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
       forM partialExecPlan $ \(gCtx, rootSelSets, varDefs) ->
        forM rootSelSets $ \rootSelSet ->
         case rootSelSet of
-          VQ.RMutation selSet ->
-            ExOpMutation <$> getMutOp gCtx sqlGenCtx userInfo selSet
-          VQ.RQuery selSet -> do
+          VQ.RMutation field ->
+            ExOpMutation <$> getMutOp gCtx sqlGenCtx userInfo (pure field)
+          VQ.RQuery field -> do
             (queryTx, planM) <- getQueryOp gCtx sqlGenCtx
-                                userInfo selSet varDefs
+                                userInfo (pure field) varDefs
             mapM_ (addPlanToCache . EP.RPQuery) planM
             return $ ExOpQuery queryTx
           VQ.RSubscription fld -> do

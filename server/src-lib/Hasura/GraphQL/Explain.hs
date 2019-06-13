@@ -122,8 +122,8 @@ explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw)= 
       throw400 InvalidParams "only hasura queries can be explained"
   plans :: Seq.Seq [FieldPlan] <- forM rootSelSets $ \rootSelSet ->
    case rootSelSet of
-    GV.RQuery selSet -> do
-      let tx = mapM (explainField userInfo gCtx sqlGenCtx) (toList selSet)
+    GV.RQuery field -> do
+      let tx = mapM (explainField userInfo gCtx sqlGenCtx) (pure field)
       plans <- liftIO (runExceptT $ runLazyTx pgExecCtx tx) >>= liftEither
       return $ plans
     GV.RMutation _ ->
