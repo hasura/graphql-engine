@@ -117,7 +117,6 @@ class EventTrigger extends Component {
 EventTrigger.propTypes = {
   schema: PropTypes.array.isRequired,
   untrackedRelations: PropTypes.array.isRequired,
-  migrationMode: PropTypes.bool.isRequired,
   currentSchema: PropTypes.string.isRequired,
   dispatch: PropTypes.func.isRequired,
 };
@@ -125,7 +124,6 @@ EventTrigger.propTypes = {
 const mapStateToProps = state => ({
   schema: state.tables.allSchemas,
   schemaList: state.tables.schemaList,
-  migrationMode: state.main.migrationMode,
   untrackedRelations: state.tables.untrackedRelations,
   currentSchema: state.tables.currentSchema,
   listingTrigger: state.triggers.listingTrigger,

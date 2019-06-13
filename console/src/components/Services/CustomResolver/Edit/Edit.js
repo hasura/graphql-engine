@@ -234,7 +234,6 @@ const mapStateToProps = state => {
   return {
     ...state.customResolverData.addData,
     ...state.customResolverData.headerData,
-    migrationMode: state.main.migrationMode,
     dataHeaders: { ...state.tables.dataHeaders },
   };
 };

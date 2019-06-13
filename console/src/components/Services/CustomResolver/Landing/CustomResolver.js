@@ -95,7 +95,6 @@ class CustomResolver extends React.Component {
 
 const mapStateToProps = state => {
   return {
-    migrationMode: state.main.migrationMode,
     customResolverList: state.customResolverData.listData,
   };
 };
