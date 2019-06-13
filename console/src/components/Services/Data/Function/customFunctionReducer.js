@@ -275,12 +275,9 @@ const unTrackCustomFunction = () => {
     const errorMsg = 'Delete custom function failed';
 
     const customOnSuccess = () => {
-      // dispatch({ type: REQUEST_SUCCESS });
-      Promise.all([
-        dispatch({ type: RESET }),
-        dispatch(_push('/')),
-        dispatch(fetchTrackedFunctions()),
-      ]);
+      dispatch(_push(`/schema/${currentSchema}`));
+      dispatch({ type: RESET });
+      dispatch(fetchTrackedFunctions());
     };
     const customOnError = error => {
       Promise.all([
