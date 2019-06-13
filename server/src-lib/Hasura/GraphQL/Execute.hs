@@ -1,3 +1,4 @@
+{-# LANGUAGE ViewPatterns #-}
 module Hasura.GraphQL.Execute
   ( GQExecPlan(..)
 
@@ -189,20 +190,21 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
     noExistingPlan = do
       req      <- toParsed reqUnparsed
       partialExecPlan <- getExecPlanPartial userInfo sc enableAL req
-      forM partialExecPlan $ \(gCtx, rootSelSet, varDefs) ->
+      forM partialExecPlan $ \(gCtx, (:[]) -> rootSelSets, varDefs) ->
+       forM rootSelSets $ \rootSelSet ->
         case rootSelSet of
           VQ.RMutation selSet ->
-            pure . ExOpMutation <$> getMutOp gCtx sqlGenCtx userInfo selSet
+            ExOpMutation <$> getMutOp gCtx sqlGenCtx userInfo selSet
           VQ.RQuery selSet -> do
             (queryTx, planM) <- getQueryOp gCtx sqlGenCtx
                                 userInfo selSet varDefs
             mapM_ (addPlanToCache . EP.RPQuery) planM
-            return $ pure $ ExOpQuery queryTx
+            return $ ExOpQuery queryTx
           VQ.RSubscription fld -> do
             (lqOp, planM) <- getSubsOp pgExecCtx gCtx sqlGenCtx
                              userInfo reqUnparsed varDefs fld
             mapM_ (addPlanToCache . EP.RPSubs) planM
-            return $ pure $ ExOpSubs lqOp
+            return $ ExOpSubs lqOp
 
 -- Monad for resolving a hasura query/mutation
 type E m =
