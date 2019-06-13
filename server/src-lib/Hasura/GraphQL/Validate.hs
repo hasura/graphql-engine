@@ -21,6 +21,7 @@ import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashSet                           as HS
+import qualified Data.List.NonEmpty                     as NE
 import qualified Data.Sequence                          as Seq
 import qualified Language.GraphQL.Draft.Syntax          as G
 
@@ -168,7 +169,7 @@ validateGQ
   :: (MonadError QErr m, MonadReader GCtx m)
   -- => GraphQLRequest
   => QueryParts
-  -> m RootSelSet
+  -> m (NE.NonEmpty RootSelSet)
 validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
 
   ctx <- ask
@@ -190,15 +191,15 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
             G._todSelectionSet opDef
 
   case G._todType opDef of
-    G.OperationTypeQuery -> return $ RQuery selSet
-    G.OperationTypeMutation -> return $ RMutation selSet
+    G.OperationTypeQuery -> return $ pure $ RQuery selSet
+    G.OperationTypeMutation -> return $ pure $ RMutation selSet
     G.OperationTypeSubscription ->
       case Seq.viewl selSet of
         Seq.EmptyL     -> throw500 "empty selset for subscription"
         fld Seq.:< rst -> do
           unless (null rst) $
             throwVE "subscription must select only one top level field"
-          return $ RSubscription fld
+          return $ pure $ RSubscription fld
 
 isQueryInAllowlist :: GQLExecDoc -> HS.HashSet GQLQuery -> Bool
 isQueryInAllowlist q = HS.member gqlQuery

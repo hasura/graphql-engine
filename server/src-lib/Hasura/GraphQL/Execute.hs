@@ -127,9 +127,9 @@ getExecPlanPartial userInfo sc enableAL req = do
 
   case typeLoc of
     VT.HasuraType -> do
-      rootSelSet <- runReaderT (VQ.validateGQ queryParts) gCtx
+      rootSelSets <- runReaderT (VQ.validateGQ queryParts) gCtx
       let varDefs = G._todVariableDefinitions $ VQ.qpOpDef queryParts
-      return $ GExPHasura (gCtx, pure rootSelSet, varDefs)
+      return $ GExPHasura (gCtx, rootSelSets, varDefs)
     VT.RemoteType _ rsi ->
       return $ GExPRemote rsi opDef
   where
