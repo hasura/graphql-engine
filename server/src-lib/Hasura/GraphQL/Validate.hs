@@ -1,7 +1,7 @@
 module Hasura.GraphQL.Validate
   ( validateGQ
   , showVars
-  , RootSelSet(..)
+  , TopSelSet(..)
   , getTypedOp
   , QueryParts (..)
   , getQueryParts
@@ -158,7 +158,7 @@ validateFrag (G.FragmentDefinition n onTy dirs selSet) = do
     "fragments can only be defined on object types"
   return $ FragDef n objTyInfo selSet
 
-data RootSelSet
+data TopSelSet
   = RQuery !SelSet
   | RMutation !SelSet
   | RSubscription !Field
@@ -169,7 +169,7 @@ validateGQ
   :: (MonadError QErr m, MonadReader GCtx m)
   -- => GraphQLRequest
   => QueryParts
-  -> m (NE.NonEmpty RootSelSet)
+  -> m (NE.NonEmpty TopSelSet)
 validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
 
   ctx <- ask
