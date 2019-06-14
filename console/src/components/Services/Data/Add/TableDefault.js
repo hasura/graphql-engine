@@ -22,10 +22,10 @@ const TableDefault = ({
   const renderDefaultHtml = () => {
     const dfVal = getDefaultValue(column);
     /* Collect direct default functions and the indirect default functions */
-    const {
-      defaultValues,
-      // defaultValueMap
-    } = getDefaultFunctionsOptions(colDefaultFunctions, i);
+    const { defaultValues } = getDefaultFunctionsOptions(
+      colDefaultFunctions,
+      i
+    );
     return (
       <CustomInputAutoSuggest
         options={defaultValues}
@@ -38,18 +38,6 @@ const TableDefault = ({
         data-test={testId}
       />
     );
-    /*
-    return (
-      <input
-        placeholder={getPlaceholder(column)}
-        type="text"
-        value={getDefaultValue(column)}
-        className="form-control"
-        onChange={e => onChange(i, column.nullable || false, e.target.value)}
-        data-test={testId}
-      />
-    );
-    */
   };
   return renderDefaultHtml();
 };

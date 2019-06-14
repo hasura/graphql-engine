@@ -43,6 +43,7 @@ $suggestion-padding: 6px 12px;
 
 .suggestion {
   cursor: pointer;
+  word-break: break-word;
   // padding: $suggestion-padding;
 
   background-color: transparent;

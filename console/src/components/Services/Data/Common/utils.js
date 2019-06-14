@@ -8,7 +8,7 @@ const getParanthesized = name => {
 
 const splitDbRow = row => {
   /* Splits comma seperated type names
-   * Splits comma seperated type display names
+   * Splits comma seperated type user friendly type names
    * Splits comma seperated type descriptions
    * */
   return {
@@ -64,17 +64,6 @@ const getDataTypeInfo = (row, categoryInfo, colId, cached = {}) => {
   });
   return { typInfo: currTypeObj, typValueMap: columnTypeValueMap };
 };
-
-/*
-const orderByCommonlyUsedType = (a, b) => {
-  if (a === b) {
-    return 0;
-  } else if (a) {
-    return 1;
-  }
-  return -1;
-};
-*/
 
 const getDefaultFunctionsOptions = (funcs, identifier) => {
   const defaultValues = [
@@ -188,7 +177,7 @@ const getDefaultValue = column => {
   return ('default' in column && column.default.value) || '';
 };
 
-const getRecommendedTypeCasts = (typeCasts, dataType) => {
+const getRecommendedTypeCasts = (dataType, typeCasts) => {
   return (dataType in typeCasts && typeCasts[dataType][3].split(',')) || [];
 };
 
@@ -202,7 +191,8 @@ const inferDefaultValues = (defaultFuncs, typeCasts) => {
    * */
   const computeDefaultValues = currentType => {
     visitedType[currentType] = true;
-    const validRightCasts = getRecommendedTypeCasts(typeCasts, currentType);
+    /* Retrieve the recommended type casts for the current type */
+    const validRightCasts = getRecommendedTypeCasts(currentType, typeCasts);
     validRightCasts.forEach(v => {
       if (!visitedType[v]) {
         if (v in defaultFuncs) {

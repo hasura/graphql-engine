@@ -137,6 +137,9 @@ const ColumnEditorList = ({
       );
     };
 
+    /* If the dataTypeIndexMap is not loaded, then just load the current type information
+     * */
+
     const getValidTypeCasts = udtName => {
       const lowerUdtName = udtName.toLowerCase();
       if (lowerUdtName in validTypeCasts) {
@@ -148,7 +151,7 @@ const ColumnEditorList = ({
           ...dataTypeIndexMap[defaultDataTypeToCast],
         ];
       }
-      return ['', '', '', 'text', 'text', 'text'];
+      return [lowerUdtName, lowerUdtName, ''];
     };
 
     const getValidDefaultTypes = udtName => {
@@ -165,6 +168,18 @@ const ColumnEditorList = ({
       const { defaultValues } = getDefaultFunctionsOptions(defaultOptions);
       return defaultValues;
     };
+
+    /*
+     * Alter type options contains a list of items and its valid castable types
+     * [
+     *  "Data type",
+     *  "User friendly name of the data type",
+     *  "Description of the data type",
+     *  "Comma seperated castable data types",
+     *  "Comma seperated user friendly names of the castable data types",
+     *  "Colon seperated user friendly description of the castable data types"
+     *  ]
+     * */
 
     const colEditorExpanded = () => {
       return (
