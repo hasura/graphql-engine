@@ -83,9 +83,9 @@ getExecPlanPartial userInfo sc enableAL req = do
   (gCtx, _)  <- flip runStateT sc $ getGCtx role gCtxRoleMap
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
 
-  rootSelSets <- runReaderT (VQ.validateGQ queryParts) gCtx
+  topFields <- runReaderT (VQ.validateGQ queryParts) gCtx
   let varDefs = G._todVariableDefinitions $ VQ.qpOpDef queryParts
-  return $ GExPHasura (gCtx, rootSelSets, varDefs)
+  return $ GExPHasura (gCtx, topFields, varDefs)
 
   where
     role = userRole userInfo
