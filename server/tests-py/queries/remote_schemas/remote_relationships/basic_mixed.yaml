@@ -6,12 +6,15 @@ response:
     profiles:
       - id: 1
       - id: 2
+      - id: 3
     messages:
       - id: 1
         msg: You win!
       - id: 2
         msg: You lose!
-query: 
+      - id: 3
+        msg: Another alice
+query:
   query: |
     query {
       profiles {

@@ -2,8 +2,15 @@ module Hasura.GraphQL.Transport.HTTP
   ( runGQ
   ) where
 
-import qualified Network.HTTP.Client                    as HTTP
-import qualified Network.HTTP.Types                     as N
+import           Data.Aeson
+import qualified Data.ByteString.Lazy as L
+import qualified Data.ByteString.Lazy.Char8 as L8
+import           Data.HashMap.Strict (HashMap)
+import qualified Data.HashMap.Strict as HM
+import           Data.Text (Text)
+import qualified Data.Text as T
+import qualified Network.HTTP.Client as HTTP
+import qualified Network.HTTP.Types as N
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Transport.HTTP.Protocol
@@ -11,7 +18,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Context
 
-import qualified Hasura.GraphQL.Execute                 as E
+import qualified Hasura.GraphQL.Execute as E
 
 runGQ
   :: (MonadIO m, MonadError QErr m)
@@ -37,10 +44,15 @@ runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer
         pure (HttpResponse encJson Nothing)
       E.GExPRemote rsi ->
         E.execRemoteGQ manager userInfo reqHdrs rsi
-  pure
-    (HttpResponse
-       (encJFromList (toList (fmap _hrBody results)))
-       (foldMap _hrHeaders results))
+
+  case mergeResponseData (toList (fmap _hrBody results)) of
+    Right merged -> do
+      liftIO (putStrLn ("Response:\n" ++ L8.unpack (encJToLBS merged)))
+      pure
+        (HttpResponse
+           merged
+           (foldMap _hrHeaders results))
+    Left err -> throw500 ("Invalid response: " <> T.pack err)
 
 runHasuraGQ
   :: (MonadIO m, MonadError QErr m)
@@ -59,3 +71,20 @@ runHasuraGQ pgExecCtx userInfo resolvedOp = do
       "subscriptions are not supported over HTTP, use websockets instead"
   resp <- liftEither respE
   return $ encodeGQResp $ GQSuccess $ encJToLBS resp
+
+-- | Merge the list of objects by the @data@ key.
+-- TODO: Duplicate keys are ignored silently; handle this.
+-- TODO: Original order of keys is not preserved, either.
+mergeResponseData :: [EncJSON] -> Either String EncJSON
+mergeResponseData =
+  fmap (encJFromJValue . Object . HM.singleton "data" . Object . HM.unions) .
+  traverse (parse . encJToLBS)
+  where
+    parse :: L.ByteString -> Either String (HashMap Text Value)
+    parse = eitherDecode >=> getData
+    getData ::
+         HashMap Text (HashMap Text Value) -> Either String (HashMap Text Value)
+    getData hm =
+      case HM.lookup "data" hm of
+        Nothing -> Left "No `data' key in response!"
+        Just data' -> pure data'
