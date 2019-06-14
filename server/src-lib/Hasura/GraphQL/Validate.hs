@@ -201,15 +201,32 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
             G._todSelectionSet opDef
 
   case G._todType opDef of
-    G.OperationTypeQuery -> return $ fmap (HasuraTopField . HasuraTopQuery) selSet
-    G.OperationTypeMutation -> return $ fmap (HasuraTopField . HasuraTopMutation) selSet
+    G.OperationTypeQuery -> mapM makeTopQuery selSet
+    G.OperationTypeMutation -> mapM makeTopMutation selSet
     G.OperationTypeSubscription ->
       case Seq.viewl selSet of
         Seq.EmptyL     -> throw500 "empty selset for subscription"
         fld Seq.:< rst -> do
           unless (null rst) $
             throwVE "subscription must select only one top level field"
-          return $ pure $ HasuraTopField $ HasuraTopSubscription fld
+          fmap pure (makeTopSubscription fld)
+  where
+    makeTopQuery =
+      \case
+         HasuraLocated field ->
+           pure (HasuraTopField (HasuraTopQuery field))
+         RemoteLocated field ->
+           pure (RemoteTopField (RemoteTopQuery field))
+    makeTopMutation =
+      \case
+         HasuraLocated field ->
+           pure (HasuraTopField (HasuraTopMutation field))
+         _ -> throw500 "mutations not valid for remote"
+    makeTopSubscription =
+      \case
+        HasuraLocated field ->
+          pure (HasuraTopField (HasuraTopSubscription field))
+        _ -> throw500 "subscriptions not valid for remote"
 
 isQueryInAllowlist :: GQLExecDoc -> HS.HashSet GQLQuery -> Bool
 isQueryInAllowlist q = HS.member gqlQuery

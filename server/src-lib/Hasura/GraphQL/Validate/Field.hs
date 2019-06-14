@@ -2,6 +2,7 @@ module Hasura.GraphQL.Validate.Field
   ( ArgsMap
   , Field(..)
   , SelSet
+  , Located(..)
   , denormSelSet
   ) where
 
@@ -91,7 +92,7 @@ data FieldGroupSrc
 data FieldGroup
   = FieldGroup
   { _fgSource :: !FieldGroupSrc
-  , _fgFields :: !(Seq.Seq Field)
+  , _fgFields :: !(Seq.Seq (Located Field))
   } deriving (Show, Eq)
 
 -- data GLoc
@@ -150,11 +151,11 @@ denormSel
   => [G.Name] -- visited fragments
   -> ObjTyInfo -- parent type info
   -> G.Selection
-  -> m (Maybe (Either Field FieldGroup))
+  -> m (Maybe (Either (Located Field) FieldGroup))
 denormSel visFrags parObjTyInfo sel = case sel of
   G.SelectionField fld -> withPathK (G.unName $ G._fName fld) $ do
     fldInfo <- getFieldInfo parObjTyInfo $ G._fName fld
-    fmap Left <$> denormFld visFrags fldInfo fld
+    fmap Left . fmap HasuraLocated <$> denormFld visFrags fldInfo fld
   G.SelectionFragmentSpread fragSprd ->
     withPathK (G.unName $ G._fsName fragSprd) $
     fmap Right <$> denormFrag visFrags parTy fragSprd
@@ -233,7 +234,7 @@ denormFld visFrags fldInfo (G.Field aliasM name args dirs selSet) = do
       <> "selection since type " <> G.showGT fldTy <> " has no subfields"
 
   withPathK "directives" $ withDirectives dirs $ return $
-    Field (fromMaybe (G.Alias name) aliasM) name fldBaseTy argMap fields
+    Field (fromMaybe (G.Alias name) aliasM) name fldBaseTy argMap (fmap getLoc fields)
 
 denormInlnFrag
   :: ( MonadReader ValidationCtx m
@@ -253,13 +254,18 @@ denormInlnFrag visFrags fldTyInfo inlnFrag = do
   where
     G.InlineFragment tyM directives selSet = inlnFrag
 
+data Located a
+  = HasuraLocated {getLoc :: a}
+  | RemoteLocated {getLoc :: a}
+   deriving (Functor, Show, Eq, Traversable, Foldable)
+
 denormSelSet
   :: ( MonadReader ValidationCtx m
      , MonadError QErr m)
   => [G.Name] -- visited fragments
   -> ObjTyInfo
   -> G.SelectionSet
-  -> m (Seq.Seq Field)
+  -> m (Seq.Seq (Located Field))
 denormSelSet visFrags fldTyInfo selSet =
   withPathK "selectionSet" $ do
     resFlds <- catMaybes <$> mapM (denormSel visFrags fldTyInfo) selSet
@@ -272,23 +278,23 @@ denormSelSet visFrags fldTyInfo selSet =
 mergeFields
   :: ( MonadReader ValidationCtx m
      , MonadError QErr m)
-  => Seq.Seq Field
-  -> m (Seq.Seq Field)
+  => Seq.Seq (Located Field)
+  -> m (Seq.Seq (Located Field))
 mergeFields flds =
   fmap Seq.fromList $ forM fldGroups $ \fieldGroup -> do
     newFld <- checkMergeability fieldGroup
-    childFields <- mergeFields $ foldl' (\l f -> l Seq.>< _fSelSet f) Seq.empty
+    childFields <- mergeFields $ foldl' (\l f -> l Seq.>< traverse _fSelSet f) Seq.empty
                    $ NE.toSeq fieldGroup
-    return $ newFld {_fSelSet = childFields}
+    return $ fmap (\f -> f {_fSelSet = fmap getLoc childFields}) newFld
   where
-    fldGroups = OMap.elems $ OMap.groupListWith _fAlias flds
+    fldGroups = OMap.elems $ OMap.groupListWith (_fAlias . getLoc) flds
     -- can a group be merged?
     checkMergeability fldGroup = do
       let groupedFlds = toList $ NE.toSeq fldGroup
-          fldNames = L.nub $ map _fName groupedFlds
-          args = L.nub $ map _fArguments groupedFlds
+          fldNames = L.nub $ map (_fName . getLoc) groupedFlds
+          args = L.nub $ map (_fArguments . getLoc) groupedFlds
           fld = NE.head fldGroup
-          fldAl = _fAlias fld
+          fldAl = _fAlias (getLoc fld)
       when (length fldNames > 1) $
         throwVE $ "cannot merge different fields under the same alias ("
         <> showName (G.unAlias fldAl) <> "): "
