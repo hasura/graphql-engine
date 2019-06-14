@@ -60,9 +60,9 @@ import qualified Hasura.GraphQL.Validate.Types          as VT
 --
 -- The 'a' is parameterised so this AST can represent
 -- intermediate passes
-data GQExecPlan a
+data GQExecPlan r a
   = GExPHasura !a
-  | GExPRemote !RemoteSchemaInfo !G.TypedOperationDefinition
+  | GExPRemote !r
   deriving (Functor, Foldable, Traversable)
 
 -- Enforces the current limitation
@@ -100,7 +100,8 @@ gatherTypeLocs gCtx nodes =
 
 -- This is for when the graphql query is validated
 type ExecPlanPartial
-  = GQExecPlan (GCtx, Seq.Seq VQ.TopField, [G.VariableDefinition])
+  = GQExecPlan (RemoteSchemaInfo, G.TypedOperationDefinition)
+               (GCtx, Seq.Seq VQ.TopField, [G.VariableDefinition])
 
 getExecPlanPartial
   :: (MonadError QErr m)
@@ -131,7 +132,7 @@ getExecPlanPartial userInfo sc enableAL req = do
       let varDefs = G._todVariableDefinitions $ VQ.qpOpDef queryParts
       return $ GExPHasura (gCtx, rootSelSets, varDefs)
     VT.RemoteType _ rsi ->
-      return $ GExPRemote rsi opDef
+      return $ GExPRemote (rsi, opDef)
   where
     role = userRole userInfo
     gCtxRoleMap = scGCtxMap sc
@@ -157,7 +158,7 @@ data ExecOp
 
 -- The graphql query is resolved into an execution operation
 type ExecPlanResolved
-  = GQExecPlan (Seq.Seq ExecOp)
+  = GQExecPlan (RemoteSchemaInfo, G.TypedOperationDefinition) (Seq.Seq ExecOp)
 
 getResolvedExecPlan
   :: (MonadError QErr m, MonadIO m)

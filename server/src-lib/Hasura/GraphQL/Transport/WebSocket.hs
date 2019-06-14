@@ -246,7 +246,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
   case execPlan of
     E.GExPHasura resolvedOp ->
       mapM_ (runHasuraGQ userInfo) resolvedOp
-    E.GExPRemote rsi opDef  ->
+    E.GExPRemote (rsi, opDef)  ->
       runRemoteGQ userInfo reqHdrs opDef rsi
   where
     runHasuraGQ :: UserInfo -> E.ExecOp -> ExceptT () IO ()

@@ -39,7 +39,7 @@ runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer
           (\resolvedOp -> runHasuraGQ pgExecCtx userInfo resolvedOp)
           resolvedOps
       pure (HttpResponse (encJFromList (toList results)) Nothing)
-    E.GExPRemote rsi opDef  ->
+    E.GExPRemote (rsi, opDef)  ->
       E.execRemoteGQ manager userInfo reqHdrs rawReq rsi opDef
 
 runHasuraGQ
