@@ -18,20 +18,20 @@ import           Data.Aeson
 import           Hasura.Db
 import           Hasura.RQL.Types.Catalog
 import           Hasura.RQL.Types.SchemaCache
+import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Types
 
 fetchCatalogData :: (MonadTx m) => m CatalogMetadata
 fetchCatalogData = liftTx $ Q.getAltJ . runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
   $(Q.sqlFromFile "src-rsr/catalog_metadata.sql") () True
 
-saveTableToCatalog :: (MonadTx m)
-  => QualifiedTable -> Bool -> TableConfig -> m ()
-saveTableToCatalog (QualifiedObject sn tn) isEnum config = liftTx $
+saveTableToCatalog :: (MonadTx m) => QualifiedTable -> SystemDefined -> Bool -> TableConfig -> m ()
+saveTableToCatalog (QualifiedObject sn tn) systemDefined isEnum config = liftTx $
   Q.unitQE defaultTxErrorHandler [Q.sql|
     INSERT INTO "hdb_catalog"."hdb_table"
-      (table_schema, table_name, is_enum, configuration)
-    VALUES ($1, $2, $3, $4)
-  |] (sn, tn, isEnum, configVal) False
+      (table_schema, table_name, is_system_defined, is_enum, configuration)
+    VALUES ($1, $2, $3, $4, $5)
+  |] (sn, tn, systemDefined, isEnum, configVal) False
   where
     configVal = Q.AltJ $ toJSON config
 

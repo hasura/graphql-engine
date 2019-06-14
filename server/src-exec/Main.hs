@@ -29,7 +29,7 @@ import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
 import           Hasura.RQL.Types           (SQLGenCtx (..), SchemaCache (..),
-                                             adminUserInfo, emptySchemaCache)
+                                             adminUserInfo, emptySchemaCache, SystemDefined(..))
 import           Hasura.Server.App          (HasuraApp (..),
                                              SchemaCacheRef (..), getSCFromRef,
                                              logInconsObjs, mkWaiApp)
@@ -37,7 +37,7 @@ import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates (checkForUpdates)
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
-import           Hasura.Server.Query        (peelRun)
+import           Hasura.Server.Query        (RunCtx (..), peelRun)
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
 import           Hasura.Server.Version      (currentVersion)
@@ -234,8 +234,9 @@ main =  do
       runExceptT $ Q.runTx pool (Q.Serializable, Nothing) tx
 
     runAsAdmin pool sqlGenCtx httpManager m = do
-      res  <- runExceptT $ peelRun emptySchemaCache adminUserInfo
-              httpManager sqlGenCtx (PGExecCtx pool Q.Serializable) m
+      res  <- runExceptT $ peelRun emptySchemaCache
+       (RunCtx adminUserInfo httpManager sqlGenCtx $ SystemDefined True)
+       (PGExecCtx pool Q.Serializable) m
       return $ fmap fst res
 
     procConnInfo rci =

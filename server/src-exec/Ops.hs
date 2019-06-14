@@ -26,6 +26,7 @@ import qualified Database.PG.Query.Connection as Q
 initCatalogSafe
   :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
      , MonadIO m, HasHttpManager m, HasSQLGenCtx m
+     , HasSystemDefined m
      )
   => UTCTime -> m String
 initCatalogSafe initTime =  do
@@ -61,6 +62,7 @@ initCatalogSafe initTime =  do
 initCatalogStrict
   :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
      , MonadIO m, HasHttpManager m, HasSQLGenCtx m
+     , HasSystemDefined m
      )
   => Bool -> UTCTime -> m String
 initCatalogStrict createSchema initTime =  do
@@ -131,8 +133,8 @@ cleanCatalog = liftTx $ Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "DROP SCHEMA hdb_catalog CASCADE" () False
 
 execQuery
-  :: ( MonadTx m, CacheRWM m, MonadIO m
-     , UserInfoM m, HasHttpManager m, HasSQLGenCtx m
+  :: ( MonadTx m, CacheRWM m, MonadIO m, UserInfoM m
+     , HasHttpManager m, HasSQLGenCtx m, HasSystemDefined m
      )
   => BL.ByteString -> m BL.ByteString
 execQuery queryBs = do
