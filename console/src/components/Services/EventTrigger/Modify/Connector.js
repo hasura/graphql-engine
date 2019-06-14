@@ -8,7 +8,6 @@ const mapStateToProps = (state, ownProps) => {
     schemaList: state.tables.schemaList,
     allSchemas: state.tables.allSchemas,
     serverVersion: state.main.serverVersion,
-    migrationMode: state.main.migrationMode,
     currentSchema: state.tables.currentSchema,
   };
 };

@@ -46,7 +46,6 @@ const FETCH_SCHEMA_LIST = 'Data/FETCH_SCHEMA_LIST';
 const UPDATE_CURRENT_SCHEMA = 'Data/UPDATE_CURRENT_SCHEMA';
 const ADMIN_SECRET_ERROR = 'Data/ADMIN_SECRET_ERROR';
 const UPDATE_DATA_HEADERS = 'Data/UPDATE_DATA_HEADERS';
-const RESET_MANUAL_REL_TABLE_LIST = 'Data/RESET_MANUAL_REL_TABLE_LIST';
 const UPDATE_REMOTE_SCHEMA_MANUAL_REL = 'Data/UPDATE_SCHEMA_MANUAL_REL';
 const SET_CONSISTENT_SCHEMA = 'Data/SET_CONSISTENT_SCHEMA';
 const SET_CONSISTENT_FUNCTIONS = 'Data/SET_CONSISTENT_FUNCTIONS';
@@ -711,23 +710,9 @@ const dataReducer = (state = defaultState, action) => {
         ...state,
         modify: {
           ...state.modify,
-          relAdd: {
-            ...state.modify.relAdd,
-            manualRelInfo: {
-              ...state.modify.relAdd.manualRelInfo,
-              remoteSchema: action.data,
-            },
-          },
-        },
-      };
-    case RESET_MANUAL_REL_TABLE_LIST:
-      return {
-        ...state,
-        modify: {
-          ...state.modify,
-          relAdd: {
-            ...state.modify.relAdd,
-            manualRelInfo: { ...defaultState.modify.relAdd.manualRelInfo },
+          manualRelAdd: {
+            ...state.modify.manualRelAdd,
+            rSchema: action.data,
           },
         },
       };
@@ -779,7 +764,6 @@ export {
   ADMIN_SECRET_ERROR,
   UPDATE_DATA_HEADERS,
   UPDATE_REMOTE_SCHEMA_MANUAL_REL,
-  RESET_MANUAL_REL_TABLE_LIST,
   fetchTrackedFunctions,
   initQueries,
   LOAD_SCHEMA,
