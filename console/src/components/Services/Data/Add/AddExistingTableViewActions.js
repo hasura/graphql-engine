@@ -1,7 +1,7 @@
 import defaultState from './AddExistingTableViewState';
 import _push from '../push';
 import {
-  loadUntrackedRelations,
+  updateSchemaInfo,
   fetchTrackedFunctions,
   makeMigrationCall,
 } from '../DataActions';
@@ -58,13 +58,13 @@ const addExistingTableSql = () => {
     const errorMsg = 'Adding existing table/view failed';
     const customOnSuccess = () => {
       dispatch({ type: REQUEST_SUCCESS });
-      dispatch(loadUntrackedRelations()).then(() => {
+      dispatch(updateSchemaInfo()).then(() => {
         const newTable = getState().tables.allSchemas.find(
           t =>
             t.table_name === state.tableName.trim() &&
             t.table_schema === currentSchema
         );
-        const isTable = newTable.detail.table_type === 'BASE TABLE';
+        const isTable = newTable.table_type === 'BASE TABLE';
         if (isTable) {
           dispatch(
             _push(
@@ -213,7 +213,7 @@ const addAllUntrackedTablesSql = tableList => {
     const customOnSuccess = () => {
       dispatch(showSuccessNotification('Existing table/view added!'));
       dispatch({ type: REQUEST_SUCCESS });
-      dispatch(loadUntrackedRelations()).then(() => {
+      dispatch(updateSchemaInfo()).then(() => {
         dispatch(_push('/schema/' + currentSchema));
       });
       return;

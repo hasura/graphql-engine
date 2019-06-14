@@ -63,7 +63,7 @@ export default (serverEndpoint, headers, config) => {
         finalSelectQuery.args.limit = params.pagination.perPage;
         finalSelectQuery.args.offset = (params.pagination.page * params.pagination.perPage) - params.pagination.perPage;
         finalSelectQuery.args.where = params.filter;
-        finalSelectQuery.args.order_by = {column: primaryKey, type: params.sort.order.toLowerCase()};
+        finalSelectQuery.args.order_by = {column: params.sort.field || primaryKey, type: params.sort.order.toLowerCase()};
         finalCountQuery.args.table = {'name': tableName, 'schema': schema};;
         finalCountQuery.args.where = {};
         finalCountQuery.args.where[primaryKey] = { '$ne': null };
@@ -128,7 +128,7 @@ export default (serverEndpoint, headers, config) => {
         finalQuery = cloneQuery(deleteQuery);
         finalQuery.args.table = {'name': tableName, 'schema': schema};
         finalQuery.args.where = {};
-        finalQuery.args.where[primaryKey] = { '$in': params.id };
+        finalQuery.args.where[primaryKey] = { '$in': params.ids };
         finalQuery.args.returning = [primaryKey];
         break;
       case 'GET_MANY':
@@ -147,7 +147,7 @@ export default (serverEndpoint, headers, config) => {
         finalManyQuery.args.limit = params.pagination.perPage;
         finalManyQuery.args.offset = (params.pagination.page * params.pagination.perPage) - params.pagination.perPage;
         finalManyQuery.args.where = { [params.target]: params.id };
-        finalManyQuery.args.order_by = {column: primaryKey, type: params.sort.order.toLowerCase()};
+        finalManyQuery.args.order_by = {column: params.sort.field || primaryKey, type: params.sort.order.toLowerCase()};
         finalManyCountQuery.args.table = {'name': tableName, 'schema': schema};;
         finalManyCountQuery.args.where = {};
         finalManyCountQuery.args.where[primaryKey] = { '$ne': null };

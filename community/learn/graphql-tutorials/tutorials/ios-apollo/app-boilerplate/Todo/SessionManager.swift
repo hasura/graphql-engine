@@ -1,11 +1,3 @@
-//
-//  SessionManager.swift
-//  Todo
-//
-//  Created by Manish Kumar on 04/05/19.
-//  Copyright © 2019 Manish Kumar. All rights reserved.
-//
-
 import Foundation
 import SimpleKeychain
 import Auth0

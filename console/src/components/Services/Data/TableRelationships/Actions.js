@@ -1,28 +1,24 @@
 import inflection from 'inflection';
 
-import {
-  makeMigrationCall,
-  loadUntrackedRelations,
-  RESET_MANUAL_REL_TABLE_LIST,
-} from '../DataActions';
+import { makeMigrationCall, updateSchemaInfo } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 import { showErrorNotification } from '../../Common/Notification';
 import suggestedRelationshipsRaw from './autoRelations';
 
-export const REL_SET_TYPE = 'ModifyTable/REL_SET_TYPE';
-export const REL_SET_RTABLE = 'ModifyTable/REL_SET_RTABLE';
-export const REL_SET_LCOL = 'ModifyTable/REL_SET_LCOL';
-export const REL_SET_RCOL = 'ModifyTable/REL_SET_RCOL';
+export const SET_MANUAL_REL_ADD = 'ModifyTable/SET_MANUAL_REL_ADD';
+export const MANUAL_REL_SET_TYPE = 'ModifyTable/MANUAL_REL_SET_TYPE';
+export const MANUAL_REL_SET_RSCHEMA = 'ModifyTable/MANUAL_REL_SET_RSCHEMA';
+export const MANUAL_REL_SET_RTABLE = 'ModifyTable/MANUAL_REL_SET_RTABLE';
+export const MANUAL_REL_RESET = 'ModifyTable/MANUAL_REL_RESET';
 export const REL_RESET = 'ModifyTable/REL_RESET';
 export const REL_SELECTION_CHANGED = 'ModifyTable/REL_SELECTION_CHANGED';
+export const MANUAL_REL_NAME_CHANGED = 'ModifyTable/MANUAL_REL_NAME_CHANGED';
 export const REL_NAME_CHANGED = 'ModifyTable/REL_NAME_CHANGED';
 export const REL_ADD_NEW_CLICKED = 'ModifyTable/REL_ADD_NEW_CLICKED';
-export const REL_SET_MANUAL_COLUMNS = 'ModifyTable/REL_SET_MANUAL_COLUMNS';
-export const REL_ADD_MANUAL_CLICKED = 'ModifyTable/REL_ADD_MANUAL_CLICKED';
 
 const resetRelationshipForm = () => ({ type: REL_RESET });
+const resetManualRelationshipForm = () => ({ type: MANUAL_REL_RESET });
 const addNewRelClicked = () => ({ type: REL_ADD_NEW_CLICKED });
-const relManualAddClicked = () => ({ type: REL_ADD_MANUAL_CLICKED });
 const relSelectionChanged = selectedRelationship => ({
   type: REL_SELECTION_CHANGED,
   rel: selectedRelationship,
@@ -31,11 +27,18 @@ const relNameChanged = relName => ({
   type: REL_NAME_CHANGED,
   relName,
 });
-const relTypeChange = isObjRel => ({
-  type: REL_SET_TYPE,
-  isObjRel: isObjRel === 'true',
+const manualRelNameChanged = relName => ({
+  type: MANUAL_REL_NAME_CHANGED,
+  relName,
 });
-const relRTableChange = rTable => ({ type: REL_SET_RTABLE, rTable });
+const manualRelTypeChanged = relType => ({
+  type: MANUAL_REL_SET_TYPE,
+  relType,
+});
+const manualRelRSchemaChanged = rSchema => ({
+  type: MANUAL_REL_SET_RSCHEMA,
+  rSchema,
+});
 
 const saveRenameRelationship = (oldName, newName, tableName, callback) => {
   return (dispatch, getState) => {
@@ -204,7 +207,7 @@ const deleteRelMigrate = relMeta => (dispatch, getState) => {
   const errorMsg = 'Deleting relationship failed';
 
   const customOnSuccess = () => {
-    dispatch(loadUntrackedRelations());
+    dispatch(updateSchemaInfo());
   };
   const customOnError = () => {};
 
@@ -250,7 +253,7 @@ const addRelNewFromStateMigrate = () => (dispatch, getState) => {
 
   const customOnSuccess = () => {
     dispatch(
-      loadUntrackedRelations({
+      updateSchemaInfo({
         tables: [
           {
             table_schema: state.lSchema,
@@ -280,46 +283,49 @@ const addRelNewFromStateMigrate = () => (dispatch, getState) => {
   );
 };
 
-const relTableChange = tableName => (dispatch, getState) => {
-  // set table name state
-  dispatch({ type: REL_SET_RTABLE, rTable: tableName });
-  // fetch columns of the selected table
-  const schemaName = getState().tables.modify.relAdd.manualRelInfo.remoteSchema;
-  const tableSchema = getState().tables.allSchemas.find(
-    t => t.table_name === tableName && t.table_schema === schemaName
-  );
-  if (tableSchema) {
-    const tableColumns = tableSchema.columns;
-    dispatch({ type: REL_SET_MANUAL_COLUMNS, data: tableColumns });
-  } else {
-    console.error(`cannot find table: ${tableName}`);
-    dispatch({ type: REL_SET_MANUAL_COLUMNS, data: [] });
-  }
+const setManualRelAdd = manualRelAdd => ({
+  type: SET_MANUAL_REL_ADD,
+  manualRelAdd,
+});
+
+const manualRelRTableChanged = tableName => dispatch => {
+  dispatch({ type: MANUAL_REL_SET_RTABLE, rTable: tableName });
 };
 
-const addRelViewMigrate = tableName => (dispatch, getState) => {
-  const state = getState().tables.modify.relAdd;
-  const currentSchema = getState().tables.currentSchema;
-  const remoteSchema = getState().tables.modify.relAdd.manualRelInfo
-    .remoteSchema;
-  const isObjRel = state.isObjRel;
-  const name = state.relName;
-  const lcol = state.lcol;
-  const rcol = state.rcol;
+const addRelViewMigrate = (tableSchema, toggleEditor) => (
+  dispatch,
+  getState
+) => {
+  const {
+    relType,
+    relName,
+    rSchema,
+    rTable,
+    colMappings,
+  } = getState().tables.modify.manualRelAdd;
+  const currentTableName = tableSchema.table_name;
+  const currentTableSchema = tableSchema.table_schema;
+  const isObjRel = relType === 'object' ? true : false;
   const columnMapping = {};
 
-  columnMapping[lcol] = rcol;
+  colMappings.forEach(colMap => {
+    if (colMap.column === '') {
+      return;
+    }
+    columnMapping[colMap.column] = colMap.refColumn;
+  });
+
   const relChangesUp = [
     {
       type: isObjRel
         ? 'create_object_relationship'
         : 'create_array_relationship',
       args: {
-        name,
-        table: { name: tableName, schema: currentSchema },
+        name: relName,
+        table: { name: currentTableName, schema: currentTableSchema },
         using: {
           manual_configuration: {
-            remote_table: { name: state.rTable, schema: remoteSchema },
+            remote_table: { name: rTable, schema: rSchema },
             column_mapping: columnMapping,
           },
         },
@@ -330,28 +336,37 @@ const addRelViewMigrate = tableName => (dispatch, getState) => {
     {
       type: 'drop_relationship',
       args: {
-        table: { name: tableName, schema: currentSchema },
-        relationship: name,
+        table: { name: currentTableName, schema: currentTableSchema },
+        relationship: relName,
       },
     },
   ];
 
   // Apply migrations
-  const migrationName = `create_relationship_${name}_${currentSchema}_table_${tableName}`;
+  const migrationName = `create_relationship_${relName}_${currentTableSchema}_table_${currentTableName}`;
 
   const requestMsg = 'Adding Relationship...';
   const successMsg = 'Relationship created';
   const errorMsg = 'Creating relationship failed';
 
   const customOnSuccess = () => {
-    /* Adds reset manual relationship state and closes the rel block */
-    dispatch({ type: RESET_MANUAL_REL_TABLE_LIST });
-    dispatch(relManualAddClicked());
+    dispatch(
+      updateSchemaInfo({
+        tables: [
+          {
+            table_schema: currentTableSchema,
+            table_name: currentTableName,
+          },
+        ],
+      })
+    ).then(() => {
+      toggleEditor();
+    });
   };
   const customOnError = () => {};
 
   // perform validations and make call
-  if (!name.trim()) {
+  if (!relName.trim()) {
     dispatch(
       showErrorNotification(
         'Error adding relationship!',
@@ -360,7 +375,7 @@ const addRelViewMigrate = tableName => (dispatch, getState) => {
         { custom: 'Relationship name cannot be empty' }
       )
     );
-  } else if (!gqlPattern.test(name)) {
+  } else if (!gqlPattern.test(relName)) {
     dispatch(
       showErrorNotification(
         gqlRelErrorNotif[0],
@@ -522,7 +537,7 @@ const autoTrackRelations = autoTrackData => (dispatch, getState) => {
   const successMsg = 'Relationship created';
   const errorMsg = 'Creating relationship failed';
   const customOnSuccess = () => {
-    dispatch(loadUntrackedRelations());
+    dispatch(updateSchemaInfo());
   };
   const customOnError = () => {};
 
@@ -558,7 +573,7 @@ const autoAddRelName = obj => (dispatch, getState) => {
   const errorMsg = 'Creating relationship failed';
 
   const customOnSuccess = () => {
-    Promise.all([dispatch(loadUntrackedRelations())]);
+    Promise.all([dispatch(updateSchemaInfo())]);
   };
   const customOnError = () => {};
 
@@ -579,15 +594,17 @@ const autoAddRelName = obj => (dispatch, getState) => {
 export {
   deleteRelMigrate,
   addNewRelClicked,
-  relTypeChange,
-  relRTableChange,
+  manualRelTypeChanged,
+  manualRelRSchemaChanged,
   addRelViewMigrate,
-  relTableChange,
+  manualRelRTableChanged,
+  setManualRelAdd,
   relSelectionChanged,
   addRelNewFromStateMigrate,
+  manualRelNameChanged,
   relNameChanged,
   resetRelationshipForm,
-  relManualAddClicked,
+  resetManualRelationshipForm,
   autoTrackRelations,
   autoAddRelName,
   formRelName,

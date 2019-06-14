@@ -2,7 +2,7 @@ import React from 'react';
 import styles from '../../../../Common/TableCommon/Table.scss';
 import { fkViolationOnUpdate, fkViolationOnDelete } from './Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-import { loadSchema } from '../../DataActions';
+import { updateSchemaInfo } from '../../DataActions';
 
 const violiationActions = [
   'restrict',
@@ -36,7 +36,7 @@ const ForeignKeySelector = ({
       }
       newFks[index].refSchemaName = event.target.value;
       dispatch(setForeignKeys(newFks));
-      dispatch(loadSchema({ schemas: [event.target.value] }));
+      dispatch(updateSchemaInfo({ schemas: [event.target.value] }));
     };
     return (
       <div className={`${styles.add_mar_bottom}`}>

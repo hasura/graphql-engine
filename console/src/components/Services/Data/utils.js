@@ -30,7 +30,7 @@ export const getPlaceholder = type => {
       return `${time}Z or ${time}+05:30`;
     case UUID:
       return 'UUID';
-    case JSON:
+    case JSONDTYPE:
       return '{"name": "foo"} or [12, "bar"]';
     case JSONB:
       return '{"name": "foo"} or [12, "bar"]';
@@ -42,7 +42,7 @@ export const getPlaceholder = type => {
 };
 
 export const tabNameMap = {
-  view: 'Browse Rows',
+  browse: 'Browse Rows',
   insert: 'Insert Row',
   modify: 'Modify',
   relationships: 'Relationships',
@@ -69,13 +69,15 @@ const findFKConstraint = (curTable, column) => {
 };
 
 export const findTableFromRel = (schemas, curTable, rel) => {
-  let rtable = null;
+  let rTable = null;
+  let rSchema = 'public';
 
   // for view
   if (rel.rel_def.manual_configuration !== undefined) {
-    rtable = rel.rel_def.manual_configuration.remote_table;
-    if (rtable.schema) {
-      rtable = rtable.name;
+    rTable = rel.rel_def.manual_configuration.remote_table;
+    if (rTable.schema) {
+      rSchema = rTable.schema;
+      rTable = rTable.name;
     }
   }
 
@@ -86,19 +88,23 @@ export const findTableFromRel = (schemas, curTable, rel) => {
       const column = [rel.rel_def.foreign_key_constraint_on];
       const fkc = findFKConstraint(curTable, column);
       if (fkc) {
-        rtable = fkc.ref_table;
+        rTable = fkc.ref_table;
+        rSchema = fkc.ref_table_table_schema;
       }
     }
 
     // for array relationship
     if (rel.rel_type === 'array') {
-      rtable = rel.rel_def.foreign_key_constraint_on.table;
-      if (rtable.schema) {
-        rtable = rtable.name;
+      rTable = rel.rel_def.foreign_key_constraint_on.table;
+      if (rTable.schema) {
+        rSchema = rTable.schema;
+        rTable = rTable.name;
       }
     }
   }
-  return schemas.find(x => x.table_name === rtable);
+  return schemas.find(
+    x => x.table_name === rTable && x.table_schema === rSchema
+  );
 };
 
 export const findAllFromRel = (schemas, curTable, rel) => {
@@ -196,15 +202,68 @@ export const getTableName = t => {
   return '';
 };
 
-export const getSchemaQuery = options => {
-  let whereQuery = '';
-  const whereCondtions = [];
+export const fetchTrackedTableListQuery = options => {
+  const query = {
+    type: 'select',
+    args: {
+      table: {
+        name: 'hdb_table',
+        schema: 'hdb_catalog',
+      },
+      columns: [
+        'table_schema',
+        'table_name',
+        {
+          name: 'primary_key',
+          columns: ['*'],
+        },
+        {
+          name: 'relationships',
+          columns: ['*'],
+        },
+        {
+          name: 'permissions',
+          columns: ['*'],
+        },
+        {
+          name: 'unique_constraints',
+          columns: ['*'],
+        },
+      ],
+      order_by: [{ column: 'table_name', type: 'asc' }],
+    },
+  };
   if (
     (options.schemas && options.schemas.length !== 0) ||
     (options.tables && options.tables.length !== 0)
   ) {
-    whereQuery = 'where';
+    query.where = {
+      $or: [],
+    };
   }
+  if (options.schemas) {
+    options.schemas.forEach(schemaName => {
+      query.where.$or.push({
+        table_schema: schemaName,
+      });
+    });
+  }
+  if (options.tables) {
+    options.tables.forEach(tableInfo => {
+      query.where.$or.push({
+        table_schema: tableInfo.table_schema,
+        table_name: tableInfo.table_name,
+      });
+    });
+  }
+
+  return query;
+};
+
+const generateWhereClause = options => {
+  let whereClause = '';
+
+  const whereCondtions = [];
   if (options.schemas) {
     options.schemas.forEach(schemaName => {
       whereCondtions.push(`(ist.table_schema='${schemaName}')`);
@@ -219,12 +278,88 @@ export const getSchemaQuery = options => {
       );
     });
   }
+
+  if (whereCondtions.length > 0) {
+    whereClause = 'where';
+  }
+
   whereCondtions.forEach((whereInfo, index) => {
-    whereQuery = whereQuery + ` ${whereInfo}`;
+    whereClause = whereClause + ` ${whereInfo}`;
     if (index + 1 !== whereCondtions.length) {
-      whereQuery = whereQuery + ' or';
+      whereClause = whereClause + ' or';
     }
   });
+
+  return whereClause;
+};
+
+export const fetchTrackedTableFkQuery = options => {
+  const whereQuery = generateWhereClause(options);
+
+  const runSql = `select 
+  COALESCE(
+    json_agg(
+      row_to_json(info)
+    ), 
+    '[]' :: JSON
+  ) AS tables 
+FROM 
+  (
+    select
+      hdb_fkc.*, 
+      fk_ref_table.table_name IS NOT NULL AS is_ref_table_tracked 
+    from 
+      hdb_catalog.hdb_table AS ist 
+      JOIN hdb_catalog.hdb_foreign_key_constraint AS hdb_fkc ON hdb_fkc.table_schema = ist.table_schema 
+      and hdb_fkc.table_name = ist.table_name 
+      LEFT OUTER JOIN hdb_catalog.hdb_table AS fk_ref_table ON fk_ref_table.table_schema = hdb_fkc.ref_table_table_schema 
+      and fk_ref_table.table_name = hdb_fkc.ref_table
+    ${whereQuery}
+  ) as info
+`;
+  return {
+    type: 'run_sql',
+    args: {
+      sql: runSql,
+    },
+  };
+};
+
+export const fetchTrackedTableReferencedFkQuery = options => {
+  const whereQuery = generateWhereClause(options);
+
+  const runSql = `select 
+  COALESCE(
+    json_agg(
+      row_to_json(info)
+    ), 
+    '[]' :: JSON
+  ) AS tables 
+FROM 
+  (
+    select
+      hdb_fkc.*, 
+      fk_ref_table.table_name IS NOT NULL AS is_table_tracked 
+    from 
+      hdb_catalog.hdb_table AS ist 
+      JOIN hdb_catalog.hdb_foreign_key_constraint AS hdb_fkc ON hdb_fkc.ref_table_table_schema = ist.table_schema 
+      and hdb_fkc.ref_table = ist.table_name 
+      LEFT OUTER JOIN hdb_catalog.hdb_table AS fk_ref_table ON fk_ref_table.table_schema = hdb_fkc.table_schema 
+      and fk_ref_table.table_name = hdb_fkc.table_name
+    ${whereQuery}
+  ) as info
+`;
+  return {
+    type: 'run_sql',
+    args: {
+      sql: runSql,
+    },
+  };
+};
+
+export const fetchTableListQuery = options => {
+  const whereQuery = generateWhereClause(options);
+
   const runSql = `select 
   COALESCE(
     json_agg(
@@ -236,139 +371,50 @@ FROM
   (
     select 
       ist.table_schema, 
-      ist.table_name, 
+      ist.table_name,
+      ist.table_type,
       obj_description(
         (
           quote_ident(ist.table_schema) || '.' || quote_ident(ist.table_name)
         ):: regclass, 
         'pg_class'
       ) as comment, 
-      row_to_json(ist.*) as detail, 
-      to_jsonb(
-        array_remove(
-          array_agg(
-            DISTINCT row_to_json(isc) :: JSONB || jsonb_build_object(
-              'comment', 
-              (
+      json_agg(
+        row_to_json(isc) :: JSONB || jsonb_build_object(
+          'comment', 
+          (
+            SELECT 
+              pg_catalog.col_description(
+                c.oid, isc.ordinal_position :: int
+              ) 
+            FROM 
+              pg_catalog.pg_class c 
+            WHERE 
+              c.oid = (
                 SELECT 
-                  pg_catalog.col_description(
-                    c.oid, isc.ordinal_position :: int
-                  ) 
-                FROM 
-                  pg_catalog.pg_class c 
-                WHERE 
-                  c.oid = (
-                    SELECT 
-                      (
-                        (
-                          quote_ident(ist.table_schema) || '.' || quote_ident(ist.table_name)
-                        ):: text
-                      ):: regclass :: oid
-                  ) 
-                  AND c.relname = ist.table_name
-              )
-            )
-          ), 
-          NULL
+                  (
+                    (
+                      quote_ident(ist.table_schema) || '.' || quote_ident(ist.table_name)
+                    ):: text
+                  ):: regclass :: oid
+              ) 
+              AND c.relname = isc.table_name
+          )
         )
-      ) AS columns, 
-      to_jsonb(
-        array_remove(
-          array_agg(
-            DISTINCT hdb_fkc.def :: JSONB
-          ), 
-          NULL
-        )
-      ) AS foreign_key_constraints, 
-      to_jsonb(
-        array_remove(
-          array_agg(
-            DISTINCT row_to_json(hdb_ofkc) :: JSONB || jsonb_build_object(
-              'is_table_tracked', ofk_ref_table.table_name IS NOT NULL
-            )
-          ), 
-          NULL
-        )
-      ) AS opp_foreign_key_constraints, 
-      to_jsonb(
-        array_remove(
-          array_agg(
-            DISTINCT row_to_json(hdb_uc) :: JSONB
-          ), 
-          NULL
-        )
-      ) AS unique_constraints, 
-      row_to_json(hdb_pk.*) :: JSONB AS primary_key, 
-      hdb_table.table_name IS NOT NULL AS is_table_tracked, 
-      to_jsonb(
-        array_remove(
-          array_agg(
-            DISTINCT row_to_json(hdb_rel) :: JSONB
-          ), 
-          NULL
-        )
-      ) AS relationships, 
-      to_jsonb(
-        array_remove(
-          array_agg(
-            DISTINCT row_to_json(hdb_perm) :: JSONB
-          ), 
-          NULL
-        )
-      ) AS permissions,
-      row_to_json(isc_views.*) AS view_info
+      ) AS columns,
+      row_to_json(isc_views) as view_info
     from 
       information_schema.tables AS ist 
       LEFT OUTER JOIN information_schema.columns AS isc ON isc.table_schema = ist.table_schema 
       and isc.table_name = ist.table_name 
-      LEFT OUTER JOIN (
-        select
-          row_to_json(hdb_fkc.*):: JSONB || jsonb_build_object(
-            'is_ref_table_tracked', fk_ref_table.table_name IS NOT NULL
-          ) || jsonb_build_object(
-            'ref_table_columns', 
-            array_agg(
-              row_to_json(fkc_cols)
-            )
-          ) AS def 
-        from 
-          hdb_catalog.hdb_foreign_key_constraint AS hdb_fkc 
-          LEFT OUTER JOIN hdb_catalog.hdb_table AS fk_ref_table ON fk_ref_table.table_schema = hdb_fkc.ref_table_table_schema 
-          and fk_ref_table.table_name = hdb_fkc.ref_table 
-          LEFT OUTER JOIN information_schema.columns AS fkc_cols ON fkc_cols.table_schema = hdb_fkc.ref_table_table_schema 
-          and fkc_cols.table_name = hdb_fkc.ref_table 
-        GROUP BY 
-          hdb_fkc.table_schema, 
-          hdb_fkc.table_name, 
-          row_to_json(hdb_fkc.*):: JSONB, 
-          fk_ref_table.table_name, 
-          fk_ref_table.table_schema
-      ) AS hdb_fkc ON hdb_fkc.def#>>'{table_schema}' = ist.table_schema 
-      and hdb_fkc.def#>>'{table_name}' = ist.table_name 
-      LEFT OUTER JOIN hdb_catalog.hdb_foreign_key_constraint AS hdb_ofkc ON hdb_ofkc.ref_table_table_schema = ist.table_schema 
-      and hdb_ofkc.ref_table = ist.table_name 
-      LEFT OUTER JOIN hdb_catalog.hdb_table AS ofk_ref_table ON ofk_ref_table.table_schema = hdb_ofkc.table_schema 
-      and ofk_ref_table.table_name = hdb_ofkc.table_name 
-      LEFT OUTER JOIN hdb_catalog.hdb_primary_key AS hdb_pk ON hdb_pk.table_schema = ist.table_schema 
-      and hdb_pk.table_name = ist.table_name 
-      LEFT OUTER JOIN hdb_catalog.hdb_unique_constraint AS hdb_uc ON hdb_uc.table_schema = ist.table_schema 
-      and hdb_uc.table_name = ist.table_name 
-      LEFT OUTER JOIN hdb_catalog.hdb_table AS hdb_table ON hdb_table.table_schema = ist.table_schema 
-      and hdb_table.table_name = ist.table_name 
-      LEFT OUTER JOIN hdb_catalog.hdb_relationship AS hdb_rel ON hdb_rel.table_schema = ist.table_schema 
-      and hdb_rel.table_name = ist.table_name 
-      LEFT OUTER JOIN hdb_catalog.hdb_permission_agg AS hdb_perm ON hdb_perm.table_schema = ist.table_schema 
-      and hdb_perm.table_name = ist.table_name
       LEFT OUTER JOIN information_schema.views AS isc_views ON isc_views.table_schema = ist.table_schema
       and isc_views.table_name = ist.table_name
     ${whereQuery} 
     GROUP BY 
       ist.table_schema, 
-      ist.table_name, 
-      ist.*, 
-      isc_views.*,
-      row_to_json(hdb_pk.*):: JSONB, 
-      hdb_table.table_name
+      ist.table_name,
+      ist.table_type,
+      isc_views.*
   ) AS info
 `;
   return {
@@ -377,6 +423,75 @@ FROM
       sql: runSql,
     },
   };
+};
+
+export const mergeLoadSchemaData = (
+  infoSchemaTableData,
+  hdbTableData,
+  fkData,
+  refFkData
+) => {
+  const _mergedTableData = [];
+
+  infoSchemaTableData.forEach(infoSchemaTableInfo => {
+    const _tableSchema = infoSchemaTableInfo.table_schema;
+    const _tableName = infoSchemaTableInfo.table_name;
+
+    const trackedTableInfo = hdbTableData.find(
+      t => t.table_schema === _tableSchema && t.table_name === _tableName
+    );
+
+    const _isTableTracked = trackedTableInfo ? true : false;
+
+    const _columns = infoSchemaTableInfo.columns;
+    const _comment = infoSchemaTableInfo.comment;
+    const _tableType = infoSchemaTableInfo.table_type;
+    const _viewInfo = infoSchemaTableInfo.view_info; // TODO: get from v1/query
+
+    let _primaryKey = null;
+    let _relationships = [];
+    let _permissions = [];
+    let _uniqueConstraints = [];
+    let _fkConstraints = [];
+    let _refFkConstraints = [];
+
+    if (_isTableTracked) {
+      _primaryKey = trackedTableInfo.primary_key;
+      _relationships = trackedTableInfo.relationships;
+      _permissions = trackedTableInfo.permissions;
+      _uniqueConstraints = trackedTableInfo.unique_constraints;
+
+      _fkConstraints = fkData.filter(
+        fk => fk.table_schema === _tableSchema && fk.table_name === _tableName
+      );
+
+      _refFkConstraints = refFkData.filter(
+        fk =>
+          fk.ref_table_table_schema === _tableSchema &&
+          fk.ref_table === _tableName
+      );
+    }
+
+    const _mergedInfo = {
+      table_schema: _tableSchema,
+      table_name: _tableName,
+      table_type: _tableType,
+      is_table_tracked: _isTableTracked,
+      columns: _columns,
+      comment: _comment,
+      primary_key: _primaryKey,
+      relationships: _relationships,
+      permissions: _permissions,
+      unique_constraints: _uniqueConstraints,
+      foreign_key_constraints: _fkConstraints,
+      opp_foreign_key_constraints: _refFkConstraints,
+      view_info: _viewInfo,
+    };
+
+    _mergedTableData.push(_mergedInfo);
+  });
+
+  return _mergedTableData;
 };
 
 export const commonDataTypes = [
@@ -454,16 +569,20 @@ export const commonDataTypes = [
   },
 ];
 
+/*
+ * Fetch non-composite types, primitive types like text, varchar etc,
+ * Filter types whose typename is unknown and type category is not 'Pseudo' and it is valid and available to be used
+ * */
 export const fetchColumnTypesQuery = `
 SELECT 
   string_agg(t.typname, ',') as "Type Name",
   string_agg(pg_catalog.format_type(t.oid, NULL), ',') as "Display Name",
-  string_agg(pg_catalog.obj_description(t.oid, 'pg_type'), ':') as "Descriptions",
+  string_agg(coalesce(pg_catalog.obj_description(t.oid, 'pg_type'), ''), ':') as "Descriptions",
   t.typcategory
 FROM pg_catalog.pg_type t
      LEFT JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
-WHERE (t.typrelid = 0 OR (SELECT c.relkind = 'c' FROM pg_catalog.pg_class c WHERE c.oid = t.typrelid))                                              
-  AND NOT EXISTS(SELECT 1 FROM pg_catalog.pg_type el WHERE el.oid = t.typelem AND el.typarray = t.oid)                                              
+WHERE (t.typrelid = 0 OR (SELECT c.relkind = 'c' FROM pg_catalog.pg_class c WHERE c.oid = t.typrelid))
+  AND NOT EXISTS(SELECT 1 FROM pg_catalog.pg_type el WHERE el.oid = t.typelem AND el.typarray = t.oid)
   AND pg_catalog.pg_type_is_visible(t.oid)
   AND t.typname != 'unknown'
   AND t.typcategory != 'P'

@@ -8,7 +8,7 @@ class LeftSubSidebar extends React.Component {
     const styles = require('./LeftSubSidebar.scss');
 
     const {
-      migrationMode,
+      showAddBtn,
       searchInput,
       heading,
       addLink,
@@ -21,7 +21,7 @@ class LeftSubSidebar extends React.Component {
     const getAddButton = () => {
       let addButton = null;
 
-      if (migrationMode) {
+      if (showAddBtn) {
         addButton = (
           <div
             className={

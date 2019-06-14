@@ -1,5 +1,7 @@
 ---
 title: "Sync new todos"
+metaTitle: "Sync new todos in public feed | GraphQL iOS Apollo Tutorial"
+metaDescription: "You will learn how to sync new todos added by other people in the public feed by fetching older and newer data using GraphQL Queries"
 ---
 
 Once a new todo is entered in a public list, it needs to appear in the UI. Instead of automatically displaying the todo in the UI, we use a Feed like Notification banner which appears whenever a new todo is received.
