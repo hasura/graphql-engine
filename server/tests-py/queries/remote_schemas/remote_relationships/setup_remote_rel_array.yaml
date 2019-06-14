@@ -5,8 +5,8 @@ args:
   hasura_fields:
     - id
   remote_schema: my-remote-schema
-  remote_field: messages
-  remote_arguments:
-    includes:
-      id: ["$id"]
-        
+  remote_field:
+    messages:
+      arguments:
+        includes:
+          id: ["$id"]

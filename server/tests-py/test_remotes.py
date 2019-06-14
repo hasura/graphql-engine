@@ -53,6 +53,9 @@ class TestTopLevelMixedFields:
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_array.yaml')
         assert st_code == 200, resp
 
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_nested_fields.yaml')
+        assert st_code == 200, resp
+
     def test_create_invalid(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_invalid_remote_rel_hasura_field.yaml')
         assert st_code == 400, resp

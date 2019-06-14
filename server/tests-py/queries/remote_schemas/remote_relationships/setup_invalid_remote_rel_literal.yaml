@@ -6,6 +6,7 @@ args:
     - id
     - name
   remote_schema: my-remote-schema
-  remote_field: message
-  remote_arguments:
-    id: "abc"
+  remote_field:
+    message:
+      arguments:
+        id: "abc"

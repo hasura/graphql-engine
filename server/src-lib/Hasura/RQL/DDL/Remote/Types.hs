@@ -11,11 +11,10 @@ import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Types
 
 import           Data.Aeson as A
-import           Data.Aeson.Casing
-import           Data.Aeson.TH
 import           Data.Aeson.Types (Parser)
 import           Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HM
+import           Data.List.NonEmpty (NonEmpty(..))
 import           Data.Scientific
 import           Data.Set (Set)
 import           Data.Text (Text)
@@ -36,12 +35,17 @@ data RemoteRelationship =
   RemoteRelationship
     { rtrName :: RemoteRelationshipName
     , rtrTable :: QualifiedTable
-    , rtrRemoteSchema :: RemoteSchemaName
-    , rtrRemoteField :: G.Name
     , rtrHasuraFields :: Set FieldName
-    , rtrRemoteArguments :: RemoteArguments
+    , rtrRemoteSchema :: RemoteSchemaName
+    , rtrRemoteFields :: NonEmpty FieldCall
+    }  deriving (Show, Eq, Lift)
+
+data FieldCall =
+  FieldCall
+    { fcName :: !G.Name
+    , fcArguments :: !RemoteArguments
     }
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq, Lift, Generic)
 
 newtype RemoteSchemaName
   = RemoteSchemaName
@@ -53,10 +57,69 @@ newtype RemoteRelationshipName
   { unRemoteRelationshipName :: Text}
   deriving (Show, Eq, Lift, Hashable, ToJSON, ToJSONKey, FromJSON, Q.ToPrepArg, Q.FromCol)
 
-$(deriveJSON (aesonDrop 3 snakeCase) ''RemoteRelationship)
-
 --------------------------------------------------------------------------------
 -- Custom JSON roundtrip instances for RemoteField and down
+
+instance ToJSON RemoteRelationship where
+  toJSON RemoteRelationship {..} =
+    object
+      [ "name" .= rtrName
+      , "table" .= rtrTable
+      , "hasura_fields" .= rtrHasuraFields
+      , "remote_schema" .= rtrRemoteSchema
+      , "remote_field" .= remoteFieldsJson rtrRemoteFields
+      ]
+
+instance FromJSON RemoteRelationship where
+  parseJSON value = do
+    o <- parseJSON value
+    rtrName <- o .: "name"
+    rtrTable <- o .: "table"
+    rtrHasuraFields <- o .: "hasura_fields"
+    rtrRemoteSchema <- o .: "remote_schema"
+    rtrRemoteFields <- o .: "remote_field" >>= parseRemoteFields
+    pure RemoteRelationship {..}
+
+parseRemoteFields :: Value -> Parser (NonEmpty FieldCall)
+parseRemoteFields v =
+  case v of
+    Object hashmap ->
+      case HM.toList hashmap of
+        [(fieldNameText, callValue)] -> do
+          fieldName <- parseJSON (A.String fieldNameText)
+          callObject <- parseJSON callValue
+          arguments <- callObject .: "arguments"
+          maybeSubField <- callObject .:? "field"
+          subFields <-
+            case maybeSubField of
+              Nothing -> pure []
+              Just fieldValue -> do
+                remoteFields <- parseRemoteFields fieldValue
+                pure (toList remoteFields)
+          pure
+            (FieldCall {fcName = fieldName, fcArguments = arguments} :|
+             subFields)
+        _ -> fail "Only one field allowed, not multiple."
+    _ ->
+      fail
+        "Remote fields should be an object that starts\
+              \ with the name of a field e.g. person: ..."
+
+remoteFieldsJson :: NonEmpty FieldCall -> Value
+remoteFieldsJson (field :| subfields) =
+  object
+    [ nameText (fcName field) .=
+      object
+        (concat
+           [ ["arguments" .= fcArguments field]
+           , case subfields of
+               [] -> []
+               subfield:subsubfields ->
+                 ["field" .= remoteFieldsJson (subfield :| subsubfields)]
+           ])
+    ]
+  where
+    nameText (G.Name t) = t
 
 instance ToJSON RemoteField where
   toJSON RemoteField {..} =
