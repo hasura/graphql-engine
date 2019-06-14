@@ -52,6 +52,12 @@ export default class HTML extends React.Component {
             $(document).on('click', '.dropdown-menu', function (e) {
               e.stopPropagation();
             });
+            $(document).ready(function(){
+              $('#myCarousel').carousel({
+                interval: 3000,
+                cycle: true
+              });
+            });
             `
           }}
           />

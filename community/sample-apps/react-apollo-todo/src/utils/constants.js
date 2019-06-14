@@ -1,4 +1,4 @@
-const HASURA_GRAPHQL_ENGINE_HOSTNAME = window.location.host;
+const HASURA_GRAPHQL_ENGINE_HOSTNAME = "react-apollo-todo.demo.hasura.app";
 
 const scheme = proto => {
   return window.location.protocol === "https:" ? `${proto}s` : proto;

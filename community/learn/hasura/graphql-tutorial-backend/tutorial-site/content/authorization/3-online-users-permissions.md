@@ -1,5 +1,7 @@
 ---
 title: "Setup online_users view permissions"
+metaTitle: "Setup online_users view permissions | Hasura GraphQL Tutorial"
+metaDescription: "This tutorial covers how to set up permissions for online_users view for select operation using Hasura console"
 ---
 
 import YoutubeEmbed from "../../src/YoutubeEmbed.js";

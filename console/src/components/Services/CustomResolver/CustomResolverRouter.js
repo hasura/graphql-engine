@@ -48,7 +48,6 @@ const leftNavMapStateToProps = state => {
     filtered: [...state.customResolverData.listData.filtered],
     searchQuery: state.customResolverData.listData.searchQuery,
     viewResolver: state.customResolverData.listData.viewResolver,
-    migrationMode: state.main.migrationMode ? state.main.migrationMode : false,
     appPrefix,
   };
 };
@@ -84,15 +83,6 @@ const fetchInitialData = ({ dispatch }) => {
 };
 
 const getCustomResolverRouter = (connect, store, composeOnEnterHooks) => {
-  const migrationRedirects = (nextState, replaceState, cb) => {
-    const state = store.getState();
-    if (!state.main.migrationMode) {
-      replaceState(globals.urlPrefix + appPrefix + '/manage');
-      cb();
-    }
-    cb();
-  };
-
   return (
     <Route
       path="remote-schemas"
@@ -108,11 +98,7 @@ const getCustomResolverRouter = (connect, store, composeOnEnterHooks) => {
       <Route path="manage" component={rightContainerConnector(connect)}>
         <IndexRedirect to="schemas" />
         <Route path="schemas" component={landingConnector(connect)} />
-        <Route
-          path="add"
-          component={addConnector(connect)}
-          onEnter={composeOnEnterHooks([migrationRedirects])}
-        />
+        <Route path="add" component={addConnector(connect)} />
         <Route
           path=":resolverName/details"
           component={viewConnector(connect)}

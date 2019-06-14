@@ -3,7 +3,7 @@ import _push from '../push';
 import { loadTriggers, makeMigrationCall, setTrigger } from '../EventActions';
 import { showSuccessNotification } from '../Notification';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
-import { loadSchema } from '../../Data/DataActions';
+import { updateSchemaInfo } from '../../Data/DataActions';
 
 const SET_DEFAULTS = 'AddTrigger/SET_DEFAULTS';
 const SET_TRIGGERNAME = 'AddTrigger/SET_TRIGGERNAME';
@@ -187,7 +187,7 @@ const createTrigger = () => {
 };
 
 const loadTableList = schemaName => {
-  return dispatch => dispatch(loadSchema({ schemas: [schemaName] }));
+  return dispatch => dispatch(updateSchemaInfo({ schemas: [schemaName] }));
 };
 
 const operationToggleColumn = (column, operation) => {
