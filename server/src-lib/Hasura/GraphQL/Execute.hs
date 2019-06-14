@@ -100,7 +100,7 @@ gatherTypeLocs gCtx nodes =
 
 -- This is for when the graphql query is validated
 type ExecPlanPartial
-  = GQExecPlan (GCtx, Seq.Seq VQ.TopSelSet, [G.VariableDefinition])
+  = GQExecPlan (GCtx, Seq.Seq VQ.TopField, [G.VariableDefinition])
 
 getExecPlanPartial
   :: (MonadError QErr m)
