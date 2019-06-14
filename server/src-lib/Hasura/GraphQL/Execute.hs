@@ -1,4 +1,5 @@
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE DisambiguateRecordFields #-}
 module Hasura.GraphQL.Execute
   ( GQExecPlan(..)
 
@@ -16,27 +17,30 @@ module Hasura.GraphQL.Execute
   , EP.dumpPlanCache
   ) where
 
-import           Control.Exception                      (try)
+import           Control.Exception (try)
 import           Control.Lens
 import           Data.Has
+import           Data.Time
+import           Hasura.SQL.Time
 
-import qualified Data.Aeson                             as J
-import qualified Data.ByteString.Lazy                   as BL
-import qualified Data.CaseInsensitive                   as CI
-import qualified Data.Sequence                          as Seq
-import qualified Data.HashMap.Strict                    as Map
-import qualified Data.String.Conversions                as CS
-import qualified Data.Text                              as T
-import qualified Language.GraphQL.Draft.Syntax          as G
-import qualified Network.HTTP.Client                    as HTTP
-import qualified Network.HTTP.Types                     as N
-import qualified Network.Wreq                           as Wreq
+import qualified Data.HashMap.Strict.InsOrd as OHM
+import qualified Data.Aeson as J
+import qualified Data.CaseInsensitive as CI
+import qualified Data.HashMap.Strict as Map
+import qualified Data.Sequence as Seq
+import qualified Data.String.Conversions as CS
+import qualified Data.Text as T
+import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Network.HTTP.Client as HTTP
+import qualified Network.HTTP.Types as N
+import qualified Network.Wreq as Wreq
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Transport.HTTP.Protocol
+import           Hasura.SQL.Value
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.HTTP
 import           Hasura.Prelude
@@ -46,12 +50,12 @@ import           Hasura.Server.Context
 import           Hasura.Server.Utils                    (bsToTxt,
                                                          filterRequestHeaders)
 
-import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
-import qualified Hasura.GraphQL.Execute.Plan            as EP
-import qualified Hasura.GraphQL.Execute.Query           as EQ
+import qualified Hasura.GraphQL.Execute.LiveQuery as EL
+import qualified Hasura.GraphQL.Execute.Plan as EP
+import qualified Hasura.GraphQL.Execute.Query as EQ
 
-import qualified Hasura.GraphQL.Resolve                 as GR
-import qualified Hasura.GraphQL.Validate                as VQ
+import qualified Hasura.GraphQL.Resolve as GR
+import qualified Hasura.GraphQL.Validate as VQ
 
 -- The current execution plan of a graphql operation, it is
 -- currently, either local pg execution or a remote execution
@@ -65,7 +69,7 @@ data GQExecPlan r a
 
 -- This is for when the graphql query is validated
 type ExecPlanPartial
-  = GQExecPlan RemoteSchemaInfo
+  = GQExecPlan VQ.RemoteTopField
                (GCtx, VQ.HasuraTopField, [G.VariableDefinition])
 
 getExecPlanPartial
@@ -85,13 +89,13 @@ getExecPlanPartial userInfo sc enableAL req = do
 
   topFields <- runReaderT (VQ.validateGQ queryParts) gCtx
   let varDefs = G._todVariableDefinitions $ VQ.qpOpDef queryParts
-  return $ Seq.fromList $
-    mapMaybe
+  return $
+    fmap
       (\case
           VQ.HasuraTopField hasuraTopField ->
-            Just (GExPHasura (gCtx, hasuraTopField, varDefs))
-          VQ.RemoteTopField{} -> Nothing)
-      (toList topFields)
+            (GExPHasura (gCtx, hasuraTopField, varDefs))
+          VQ.RemoteTopField remoteTopField -> GExPRemote remoteTopField)
+      topFields
 
   where
     role = userRole userInfo
@@ -118,7 +122,7 @@ data ExecOp
 
 -- The graphql query is resolved into an execution operation
 type ExecPlanResolved
-  = GQExecPlan RemoteSchemaInfo ExecOp
+  = GQExecPlan VQ.RemoteTopField ExecOp
 
 getResolvedExecPlan
   :: (MonadError QErr m, MonadIO m)
@@ -295,11 +299,9 @@ execRemoteGQ
   => HTTP.Manager
   -> UserInfo
   -> [N.Header]
-  -> BL.ByteString
-  -- ^ the raw request string
-  -> RemoteSchemaInfo
+  -> VQ.RemoteTopField
   -> m (HttpResponse EncJSON)
-execRemoteGQ manager userInfo reqHdrs q rsi = do
+execRemoteGQ manager userInfo reqHdrs remoteTopField = do
   hdrs <- getHeadersFromConf hdrConf
   let confHdrs   = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
       clientHdrs = bool [] filteredHeaders fwdClientHdrs
@@ -312,14 +314,17 @@ execRemoteGQ manager userInfo reqHdrs q rsi = do
       finalHdrs  = foldr Map.union Map.empty hdrMaps
       options    = wreqOptions manager (Map.toList finalHdrs)
 
-  res  <- liftIO $ try $ Wreq.postWith options (show url) q
+  gqlReq <- fieldToRequest field
+  res  <- liftIO $ try $ Wreq.postWith options (show url) (encJToLBS (encJFromJValue gqlReq))
   resp <- either httpThrow return res
   let cookieHdr = getCookieHdr (resp ^? Wreq.responseHeader "Set-Cookie")
       respHdrs  = Just $ mkRespHeaders cookieHdr
   return $ HttpResponse (encJFromLBS $ resp ^. Wreq.responseBody) respHdrs
 
   where
-    RemoteSchemaInfo url hdrConf fwdClientHdrs = rsi
+    VQ.RemoteTopQuery (RemoteSchemaInfo url hdrConf fwdClientHdrs) field =
+      remoteTopField
+
     httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
     httpThrow err = throw500 $ T.pack . show $ err
 
@@ -336,3 +341,93 @@ execRemoteGQ manager userInfo reqHdrs q rsi = do
 
     mkRespHeaders hdrs =
       map (\(k, v) -> Header (bsToTxt $ CI.original k, bsToTxt v)) hdrs
+
+fieldToRequest
+  :: (MonadIO m, MonadError QErr m)
+  => VQ.Field
+  -> m GQLReqParsed
+fieldToRequest field = do
+  case fieldToField field of
+    Right gfield ->
+      pure
+        (GQLReq
+           { _grOperationName = Nothing
+           , _grQuery =
+               GQLExecDoc
+                 [ G.ExecutableDefinitionOperation
+                     (G.OperationDefinitionUnTyped [G.SelectionField gfield])
+                 ]
+           , _grVariables = Nothing -- TODO: Put variables in here?
+           })
+    Left err -> throw500 ("While converting remote field: " <> err)
+
+fieldToField :: VQ.Field -> Either Text G.Field
+fieldToField field = do
+  args <- traverse makeArgument (Map.toList (VQ._fArguments field))
+  selections <- traverse fieldToField (VQ._fSelSet field)
+  pure $ G.Field
+    { _fAlias = Just (VQ._fAlias field)
+    , _fName = VQ._fName field
+    , _fArguments = args
+    , _fDirectives = []
+    , _fSelectionSet = fmap G.SelectionField (toList selections)
+    }
+
+makeArgument :: (G.Name, AnnInpVal) -> Either Text G.Argument
+makeArgument (gname, annInpVal) =
+  do v <- annInpValToValue annInpVal
+     pure $ G.Argument {_aName = gname, _aValue = v}
+
+annInpValToValue :: AnnInpVal -> Either Text G.Value
+annInpValToValue = annGValueToValue . _aivValue
+
+annGValueToValue :: AnnGValue -> Either Text G.Value
+annGValueToValue =
+  \case
+    AGScalar _ty mv ->
+      case mv of
+        Nothing -> pure G.VNull
+        Just pg -> pgcolvalueToGValue pg
+    AGEnum _ mval ->
+      case mval of
+        Nothing -> pure G.VNull
+        Just enumValue -> pure (G.VEnum enumValue)
+    AGObject _ mobj ->
+      case mobj of
+        Nothing -> pure G.VNull
+        Just obj -> do
+          fields <-
+            traverse
+              (\(k, av) -> do
+                 v <- annInpValToValue av
+                 pure (G.ObjectFieldG {_ofName = k, _ofValue = v}))
+              (OHM.toList obj)
+          pure (G.VObject (G.ObjectValueG fields))
+    AGArray _ mvs ->
+      case mvs of
+        Nothing -> pure G.VNull
+        Just vs -> G.VList . G.ListValueG <$> traverse annInpValToValue vs
+
+pgcolvalueToGValue :: PGColValue -> Either Text G.Value
+pgcolvalueToGValue colVal = case colVal of
+  PGValInteger i  -> pure $ G.VInt $ fromIntegral i
+  PGValSmallInt i -> pure $ G.VInt $ fromIntegral i
+  PGValBigInt i   -> pure $ G.VInt $ fromIntegral i
+  PGValFloat f    -> pure $ G.VFloat $ realToFrac f
+  PGValDouble d   -> pure $ G.VFloat $ realToFrac d
+  -- TODO: Scientific is a danger zone; use its safe conv function.
+  PGValNumeric sc -> pure $ G.VFloat $ realToFrac sc
+  PGValBoolean b  -> pure $ G.VBoolean b
+  PGValChar t     -> pure $ G.VString (G.StringValue (T.singleton t))
+  PGValVarchar t  -> pure $ G.VString (G.StringValue t)
+  PGValText t     -> pure $ G.VString (G.StringValue t)
+  PGValDate d     -> pure $ G.VString $ G.StringValue $ T.pack $ showGregorian d
+  PGValTimeStampTZ u -> pure $
+    G.VString $ G.StringValue $   T.pack $ formatTime defaultTimeLocale "%FT%T%QZ" u
+  PGValTimeTZ (ZonedTimeOfDay tod tz) -> pure $
+    G.VString $ G.StringValue $   T.pack (show tod ++ timeZoneOffsetString tz)
+  PGNull _ -> pure G.VNull
+  PGValJSON {}    -> Left "PGValJSON: cannot convert"
+  PGValJSONB {}  -> Left "PGValJSONB: cannot convert"
+  PGValGeo {}    -> Left "PGValGeo: cannot convert"
+  PGValUnknown t -> pure $ G.VString $ G.StringValue t

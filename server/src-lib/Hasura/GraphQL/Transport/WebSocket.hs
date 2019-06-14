@@ -27,6 +27,7 @@ import qualified StmContainers.Map                           as STMMap
 
 import           Control.Concurrent                          (threadDelay)
 
+import qualified Hasura.GraphQL.Validate as VQ
 import           Hasura.EncJSON
 import qualified Hasura.GraphQL.Execute                      as E
 import qualified Hasura.GraphQL.Execute.LiveQuery            as LQ
@@ -269,7 +270,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       sendCompleted
 
     runRemoteGQ :: UserInfo -> [H.Header]
-                -> RemoteSchemaInfo
+                -> VQ.RemoteTopField
                 -> ExceptT () IO ()
     runRemoteGQ userInfo reqHdrs rsi = do
 
@@ -277,12 +278,8 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       -- server
       -- try to parse the (apollo protocol) websocket frame and get only the
       -- payload
-      sockPayload <- onLeft (J.eitherDecode msgRaw) $
-        const $ withComplete $ preExecErr $
-        err500 Unexpected "invalid websocket payload"
-      let payload = J.encode $ _wpPayload sockPayload
       resp <- runExceptT $ E.execRemoteGQ httpMgr userInfo reqHdrs
-              payload rsi
+              rsi
       either postExecErr (sendRemoteResp . _hrBody) resp
       sendCompleted
 

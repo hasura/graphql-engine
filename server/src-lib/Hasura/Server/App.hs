@@ -279,7 +279,6 @@ v1QueryHandler query = do
 v1Alpha1GQHandler :: GH.GQLReqUnparsed -> Handler (HttpResponse EncJSON)
 v1Alpha1GQHandler query = do
   userInfo <- asks hcUser
-  reqBody <- asks hcReqBody
   reqHeaders <- asks hcReqHeaders
   manager <- scManager . hcServerCtx <$> ask
   scRef <- scCacheRef . hcServerCtx <$> ask
@@ -289,7 +288,7 @@ v1Alpha1GQHandler query = do
   planCache <- scPlanCache . hcServerCtx <$> ask
   enableAL <- scEnableAllowlist . hcServerCtx <$> ask
   GH.runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache
-    sc scVer manager reqHeaders query reqBody
+    sc scVer manager reqHeaders query
 
 v1GQHandler :: GH.GQLReqUnparsed -> Handler (HttpResponse EncJSON)
 v1GQHandler = v1Alpha1GQHandler
