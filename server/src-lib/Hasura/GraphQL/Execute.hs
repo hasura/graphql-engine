@@ -66,7 +66,7 @@ data GQExecPlan r a
 -- This is for when the graphql query is validated
 type ExecPlanPartial
   = GQExecPlan (RemoteSchemaInfo, G.TypedOperationDefinition)
-               (GCtx, Seq.Seq VQ.TopField, [G.VariableDefinition])
+               (GCtx, VQ.TopField, [G.VariableDefinition])
 
 getExecPlanPartial
   :: (MonadError QErr m)
@@ -74,7 +74,7 @@ getExecPlanPartial
   -> SchemaCache
   -> Bool
   -> GQLReqParsed
-  -> m ExecPlanPartial
+  -> m (Seq.Seq ExecPlanPartial)
 getExecPlanPartial userInfo sc enableAL req = do
 
   -- check if query is in allowlist
@@ -85,7 +85,10 @@ getExecPlanPartial userInfo sc enableAL req = do
 
   topFields <- runReaderT (VQ.validateGQ queryParts) gCtx
   let varDefs = G._todVariableDefinitions $ VQ.qpOpDef queryParts
-  return $ GExPHasura (gCtx, topFields, varDefs)
+  return $
+    fmap
+      (\topField -> GExPHasura (gCtx, topField, varDefs))
+      topFields
 
   where
     role = userRole userInfo
@@ -112,7 +115,7 @@ data ExecOp
 
 -- The graphql query is resolved into an execution operation
 type ExecPlanResolved
-  = GQExecPlan (RemoteSchemaInfo, G.TypedOperationDefinition) (Seq.Seq ExecOp)
+  = GQExecPlan (RemoteSchemaInfo, G.TypedOperationDefinition) ExecOp
 
 getResolvedExecPlan
   :: (MonadError QErr m, MonadIO m)
@@ -124,7 +127,7 @@ getResolvedExecPlan
   -> SchemaCache
   -> SchemaCacheVer
   -> GQLReqUnparsed
-  -> m ExecPlanResolved
+  -> m (Seq.Seq ExecPlanResolved)
 getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
   enableAL sc scVer reqUnparsed = do
   planM <- liftIO $ EP.getPlan scVer (userRole userInfo)
@@ -132,7 +135,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
   let usrVars = userVars userInfo
   case planM of
     -- plans are only for queries and subscriptions
-    Just plan -> GExPHasura . pure <$> case plan of
+    Just plan -> pure . GExPHasura <$> case plan of
       EP.RPQuery queryPlan ->
         ExOpQuery <$> EQ.queryOpFromPlan usrVars queryVars queryPlan
       EP.RPSubs subsPlan ->
@@ -145,9 +148,9 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
       opNameM queryStr plan planCache
     noExistingPlan = do
       req      <- toParsed reqUnparsed
-      partialExecPlan <- getExecPlanPartial userInfo sc enableAL req
-      forM partialExecPlan $ \(gCtx, rootSelSets, varDefs) ->
-       forM rootSelSets $ \rootSelSet ->
+      partialExecPlans <- getExecPlanPartial userInfo sc enableAL req
+      forM partialExecPlans $ \partialExecPlan ->
+       forM partialExecPlan $ \(gCtx, rootSelSet, varDefs) ->
         case rootSelSet of
           VQ.RMutation field ->
             ExOpMutation <$> getMutOp gCtx sqlGenCtx userInfo (pure field)

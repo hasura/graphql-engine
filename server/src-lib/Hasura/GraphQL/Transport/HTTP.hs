@@ -30,17 +30,19 @@ runGQ
   -> m (HttpResponse EncJSON)
 runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer
   manager reqHdrs req rawReq = do
-  execPlan <- E.getResolvedExecPlan pgExecCtx planCache
+  execPlans <- E.getResolvedExecPlan pgExecCtx planCache
               userInfo sqlGenCtx enableAL sc scVer req
-  case execPlan of
-    E.GExPHasura resolvedOps -> do
-      results <-
-        traverse
-          (\resolvedOp -> runHasuraGQ pgExecCtx userInfo resolvedOp)
-          resolvedOps
-      pure (HttpResponse (encJFromList (toList results)) Nothing)
-    E.GExPRemote (rsi, opDef)  ->
-      E.execRemoteGQ manager userInfo reqHdrs rawReq rsi opDef
+  results <- forM execPlans $ \execPlan ->
+    case execPlan of
+      E.GExPHasura resolvedOp -> do
+        encJson <- runHasuraGQ pgExecCtx userInfo resolvedOp
+        pure (HttpResponse encJson Nothing)
+      E.GExPRemote (rsi, opDef)  ->
+        E.execRemoteGQ manager userInfo reqHdrs rawReq rsi opDef
+  pure
+    (HttpResponse
+       (encJFromList (toList (fmap _hrBody results)))
+       (foldMap _hrHeaders results))
 
 runHasuraGQ
   :: (MonadIO m, MonadError QErr m)

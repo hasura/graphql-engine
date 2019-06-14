@@ -242,12 +242,13 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
   (sc, scVer) <- liftIO $ IORef.readIORef gCtxMapRef
   execPlanE <- runExceptT $ E.getResolvedExecPlan pgExecCtx
                planCache userInfo sqlGenCtx enableAL sc scVer q
-  execPlan <- either (withComplete . preExecErr) return execPlanE
-  case execPlan of
-    E.GExPHasura resolvedOp ->
-      mapM_ (runHasuraGQ userInfo) resolvedOp
-    E.GExPRemote (rsi, opDef)  ->
-      runRemoteGQ userInfo reqHdrs opDef rsi
+  execPlans <- either (withComplete . preExecErr) return execPlanE
+  forM_ execPlans $ \execPlan ->
+    case execPlan of
+      E.GExPHasura resolvedOp ->
+        runHasuraGQ userInfo resolvedOp
+      E.GExPRemote (rsi, opDef)  ->
+        runRemoteGQ userInfo reqHdrs opDef rsi
   where
     runHasuraGQ :: UserInfo -> E.ExecOp -> ExceptT () IO ()
     runHasuraGQ userInfo = \case

@@ -7,7 +7,6 @@ import qualified Data.Aeson                             as J
 import qualified Data.Aeson.Casing                      as J
 import qualified Data.Aeson.TH                          as J
 import qualified Data.HashMap.Strict                    as Map
-import qualified Data.Sequence                          as Seq
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 
@@ -114,23 +113,28 @@ explainGQLQuery
   -> GQLExplain
   -> m EncJSON
 explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw)= do
-  execPlan <- E.getExecPlanPartial userInfo sc enableAL query
-  (gCtx, rootSelSets) <- case execPlan of
-    E.GExPHasura (gCtx, rootSelSets, _) ->
-      return (gCtx, rootSelSets)
-    E.GExPRemote{}  ->
-      throw400 InvalidParams "only hasura queries can be explained"
-  plans :: Seq.Seq [FieldPlan] <- forM rootSelSets $ \rootSelSet ->
-   case rootSelSet of
-    GV.RQuery field -> do
-      let tx = mapM (explainField userInfo gCtx sqlGenCtx) (pure field)
-      plans <- liftIO (runExceptT $ runLazyTx pgExecCtx tx) >>= liftEither
-      return $ plans
-    GV.RMutation _ ->
-      throw400 InvalidParams "only queries can be explained"
-    GV.RSubscription _ ->
-      throw400 InvalidParams "only queries can be explained"
-  pure (encJFromJValue (foldMap toList plans))
+  execPlans <- E.getExecPlanPartial userInfo sc enableAL query
+  mresults <- forM (toList execPlans) $ \execPlan -> do
+    case execPlan of
+      E.GExPHasura (gCtx, rootSelSets, _) ->
+        return (Just (gCtx, rootSelSets))
+      E.GExPRemote{}  ->
+        return Nothing
+  case catMaybes mresults of
+    [] -> throw400 InvalidParams "only hasura queries can be explained"
+    results@((gCtx, _):_) -> do
+     let rootSelSets = map snd results
+     plans :: [[FieldPlan]] <- forM rootSelSets $ \rootSelSet -> do
+      case rootSelSet of
+       GV.RQuery field -> do
+         let tx = mapM (explainField userInfo gCtx sqlGenCtx) (pure field)
+         plans <- liftIO (runExceptT $ runLazyTx pgExecCtx tx) >>= liftEither
+         return $ plans
+       GV.RMutation _ ->
+         throw400 InvalidParams "only queries can be explained"
+       GV.RSubscription _ ->
+         throw400 InvalidParams "only queries can be explained"
+     pure (encJFromJValue (foldMap toList plans))
   where
     usrVars = mkUserVars $ maybe [] Map.toList userVarsRaw
     userInfo = mkUserInfo (fromMaybe adminRole $ roleFromVars usrVars) usrVars
