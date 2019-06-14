@@ -177,7 +177,7 @@ data QualifiedObject a
   = QualifiedObject
   { qSchema :: !SchemaName
   , qName   :: !a
-  } deriving (Show, Eq, Ord, Generic, Lift)
+  } deriving (Show, Eq, Functor, Ord, Generic, Lift)
 
 instance (FromJSON a) => FromJSON (QualifiedObject a) where
   parseJSON v@(String _) =

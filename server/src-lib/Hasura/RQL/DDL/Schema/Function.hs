@@ -115,6 +115,9 @@ trackFunctionP1 (TrackFunction qf) = do
   rawSchemaCache <- askSchemaCache
   when (M.member qf $ scFunctions rawSchemaCache) $
     throw400 AlreadyTracked $ "function already tracked : " <>> qf
+  let qt = fmap (TableName . getFunctionTxt) qf
+  when (M.member qt $ scTables rawSchemaCache) $
+    throw400 NotSupported $ "table with name" <> qf <<> "already exists"
 
 trackFunctionP2Setup :: (QErrM m, CacheRWM m, MonadTx m)
                      => QualifiedFunction -> RawFuncInfo -> m ()

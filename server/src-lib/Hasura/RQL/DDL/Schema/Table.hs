@@ -63,6 +63,9 @@ trackExistingTableOrViewP1 (TrackTable vn) = do
   rawSchemaCache <- askSchemaCache
   when (M.member vn $ scTables rawSchemaCache) $
     throw400 AlreadyTracked $ "view/table already tracked : " <>> vn
+  let qf = fmap (FunctionName . getTableTxt) vn
+  when (M.member qf $ scFunctions rawSchemaCache) $
+    throw400 NotSupported $ "function with name" <> vn <<> "already exists"
 
 trackExistingTableOrViewP2
   :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
