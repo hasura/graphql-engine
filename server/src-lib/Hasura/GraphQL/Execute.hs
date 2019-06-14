@@ -25,7 +25,6 @@ import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.CaseInsensitive                   as CI
 import qualified Data.Sequence                          as Seq
 import qualified Data.HashMap.Strict                    as Map
-import qualified Data.HashSet                           as Set
 import qualified Data.String.Conversions                as CS
 import qualified Data.Text                              as T
 import qualified Language.GraphQL.Draft.Syntax          as G
@@ -53,7 +52,6 @@ import qualified Hasura.GraphQL.Execute.Query           as EQ
 
 import qualified Hasura.GraphQL.Resolve                 as GR
 import qualified Hasura.GraphQL.Validate                as VQ
-import qualified Hasura.GraphQL.Validate.Types          as VT
 
 -- The current execution plan of a graphql operation, it is
 -- currently, either local pg execution or a remote execution
@@ -64,39 +62,6 @@ data GQExecPlan r a
   = GExPHasura !a
   | GExPRemote !r
   deriving (Functor, Foldable, Traversable)
-
--- Enforces the current limitation
-assertSameLocationNodes
-  :: (MonadError QErr m) => [VT.TypeLoc] -> m VT.TypeLoc
-assertSameLocationNodes typeLocs =
-  case Set.toList (Set.fromList typeLocs) of
-    -- this shouldn't happen
-    []    -> return VT.HasuraType
-    [loc] -> return loc
-    _     -> throw400 NotSupported msg
-  where
-    msg = "cannot mix top level fields from two different graphql servers"
-
--- TODO: we should fix this function asap
--- as this will fail when there is a fragment at the top level
-getTopLevelNodes :: G.TypedOperationDefinition -> [G.Name]
-getTopLevelNodes opDef =
-  mapMaybe f $ G._todSelectionSet opDef
-  where
-    f = \case
-      G.SelectionField fld        -> Just $ G._fName fld
-      G.SelectionFragmentSpread _ -> Nothing
-      G.SelectionInlineFragment _ -> Nothing
-
-gatherTypeLocs :: GCtx -> [G.Name] -> [VT.TypeLoc]
-gatherTypeLocs gCtx nodes =
-  catMaybes $ flip map nodes $ \node ->
-    VT._fiLoc <$> Map.lookup node schemaNodes
-  where
-    schemaNodes =
-      let qr = VT._otiFields $ _gQueryRoot gCtx
-          mr = VT._otiFields <$> _gMutRoot gCtx
-      in maybe qr (Map.union qr) mr
 
 -- This is for when the graphql query is validated
 type ExecPlanPartial
@@ -118,21 +83,10 @@ getExecPlanPartial userInfo sc enableAL req = do
   (gCtx, _)  <- flip runStateT sc $ getGCtx role gCtxRoleMap
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
 
-  let opDef = VQ.qpOpDef queryParts
-      topLevelNodes = getTopLevelNodes opDef
-      -- gather TypeLoc of topLevelNodes
-      typeLocs = gatherTypeLocs gCtx topLevelNodes
+  rootSelSets <- runReaderT (VQ.validateGQ queryParts) gCtx
+  let varDefs = G._todVariableDefinitions $ VQ.qpOpDef queryParts
+  return $ GExPHasura (gCtx, rootSelSets, varDefs)
 
-  -- see if they are all the same
-  typeLoc <- assertSameLocationNodes typeLocs
-
-  case typeLoc of
-    VT.HasuraType -> do
-      rootSelSets <- runReaderT (VQ.validateGQ queryParts) gCtx
-      let varDefs = G._todVariableDefinitions $ VQ.qpOpDef queryParts
-      return $ GExPHasura (gCtx, rootSelSets, varDefs)
-    VT.RemoteType _ rsi ->
-      return $ GExPRemote (rsi, opDef)
   where
     role = userRole userInfo
     gCtxRoleMap = scGCtxMap sc
