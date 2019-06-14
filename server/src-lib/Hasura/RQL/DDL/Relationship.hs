@@ -1,3 +1,5 @@
+{-# LANGUAGE ViewPatterns #-}
+
 module Hasura.RQL.DDL.Relationship
   ( validateObjRel
   , objRelP2Setup
@@ -20,6 +22,7 @@ import qualified Database.PG.Query as Q
 import           Hasura.RQL.DDL.Remote.Validate
 import           Hasura.RQL.DDL.Remote.Types
 import           Hasura.GraphQL.Validate.Types
+import           Hasura.RQL.Types.Common
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
@@ -36,6 +39,7 @@ import qualified Data.Map.Strict as M
 import qualified Data.Text as T
 import           Data.Tuple (swap)
 import           Instances.TH.Lift ()
+import qualified Data.Set                          as Set
 
 validateManualConfig
   :: (QErrM m, CacheRM m)
@@ -181,13 +185,26 @@ runCreateRemoteRelationshipP2 ::
      (MonadTx m, CacheRWM m) => RemoteField -> TypeMap -> m EncJSON
 runCreateRemoteRelationshipP2 remoteField additionalTypesMap = do
   liftTx (persistCreateRemoteRelationship (rmfRemoteRelationship remoteField))
-  addRemoteFieldToCache remoteField additionalTypesMap noDependencies
+  addRemoteFieldToCache remoteField additionalTypesMap schemaDependencies
   pure successMsg
   where
-    noDependencies = mempty
+    schemaDependencies =
+      let table = rtrTable $ rmfRemoteRelationship remoteField
+          columns = rtrHasuraFields $ rmfRemoteRelationship remoteField
+          remoteSchemaName = rtrRemoteSchema $ rmfRemoteRelationship remoteField
+          tableDep = SchemaDependency (SOTable table) "hasura table"
+          columnsDep =
+            map
+              (\column ->
+                 SchemaDependency
+                   (SOTableObj table $ TOCol column)
+                   "remote relationship join column") $
+            map (\(getFieldNameTxt -> name) -> PGCol name) (Set.toList columns)
+          remoteSchemaDep =
+            SchemaDependency (SORemoteSchema remoteSchemaName) "remote schema"
+       in (tableDep : remoteSchemaDep : columnsDep)
 
-persistCreateRemoteRelationship
-  :: RemoteRelationship -> Q.TxE QErr ()
+persistCreateRemoteRelationship :: RemoteRelationship -> Q.TxE QErr ()
 persistCreateRemoteRelationship remoteRelationship =
   Q.unitQE defaultTxErrorHandler [Q.sql|
   INSERT INTO hdb_catalog.hdb_remote_relationship

@@ -8,6 +8,7 @@ import           Hasura.Prelude
 
 import qualified Data.Text                     as T
 
+import           Hasura.RQL.DDL.Remote.Types
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
@@ -28,6 +29,7 @@ data SchemaObjId
   | SOQTemplate !TQueryName
   | SOTableObj !QualifiedTable !TableObjId
   | SOFunction !QualifiedFunction
+  | SORemoteSchema !RemoteSchemaName
    deriving (Eq, Generic)
 
 instance Hashable SchemaObjId
@@ -48,6 +50,7 @@ reportSchemaObj (SOTableObj tn (TOPerm rn pt)) =
   <> "." <> permTypeToCode pt
 reportSchemaObj (SOTableObj tn (TOTrigger trn )) =
   "event-trigger " <> qualObjectToText tn <> "." <> trn
+reportSchemaObj (SORemoteSchema remoteSchemaName) = "remote schema " <> unRemoteSchemaName remoteSchemaName
 
 instance Show SchemaObjId where
   show soi = T.unpack $ reportSchemaObj soi

@@ -45,6 +45,7 @@ module Hasura.RQL.Types.SchemaCache
        -- , addFldToCache
        , addColToCache
        , addRelToCache
+       , addRemoteSchemaToCache
        , addRemoteFieldToCache
 
        , addRemoteRelInputTypes
@@ -590,6 +591,17 @@ addRelToCache rn ri deps tn = do
   modDepMapInCache (addToDepMap schObjId deps)
   where
     schObjId = SOTableObj tn $ TORel $ riName ri
+
+addRemoteSchemaToCache
+  :: CacheRWM m
+  => RemoteSchemaName
+  -> RemoteSchemaInfo
+  -> m ()
+addRemoteSchemaToCache name rmDef = do
+  sc <- askSchemaCache
+  let resolvers = scRemoteResolvers sc
+  writeSchemaCache sc
+    {scRemoteResolvers = M.insert name rmDef resolvers}
 
 addRemoteFieldToCache ::
      (QErrM m, CacheRWM m)
