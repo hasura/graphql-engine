@@ -161,7 +161,7 @@ validateFrag (G.FragmentDefinition n onTy dirs selSet) = do
 
 data LocatedTopField
   = HasuraTopField !HasuraTopField
-  | RemoteTopField !RemoteTopField
+  | RemoteTopField !RemoteSchemaInfo !RemoteTopField
   deriving (Show, Eq)
 
 data HasuraTopField
@@ -215,8 +215,8 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
       \case
          HasuraLocated field ->
            pure (HasuraTopField (HasuraTopQuery field))
-         RemoteLocated field ->
-           pure (RemoteTopField (RemoteTopQuery field))
+         RemoteLocated remoteSchemaInfo field ->
+           pure (RemoteTopField remoteSchemaInfo (RemoteTopQuery field))
     makeTopMutation =
       \case
          HasuraLocated field ->

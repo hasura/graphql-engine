@@ -155,7 +155,7 @@ denormSel
 denormSel visFrags parObjTyInfo sel = case sel of
   G.SelectionField fld -> withPathK (G.unName $ G._fName fld) $ do
     fldInfo <- getFieldInfo parObjTyInfo $ G._fName fld
-    fmap Left . fmap HasuraLocated <$> denormFld visFrags fldInfo fld
+    fmap Left . fmap (localize fldInfo) <$> denormFld visFrags fldInfo fld
   G.SelectionFragmentSpread fragSprd ->
     withPathK (G.unName $ G._fsName fragSprd) $
     fmap Right <$> denormFrag visFrags parTy fragSprd
@@ -164,6 +164,10 @@ denormSel visFrags parObjTyInfo sel = case sel of
     fmap Right <$> denormInlnFrag visFrags parObjTyInfo inlnFrag
   where
     parTy = _otiName parObjTyInfo
+    localize fldInfo =
+      case _fiLoc fldInfo of
+        HasuraType -> HasuraLocated
+        RemoteType _ remoteSchemaInfo -> RemoteLocated remoteSchemaInfo
 
 processArgs
   :: ( MonadReader ValidationCtx m
@@ -255,9 +259,13 @@ denormInlnFrag visFrags fldTyInfo inlnFrag = do
     G.InlineFragment tyM directives selSet = inlnFrag
 
 data Located a
-  = HasuraLocated {getLoc :: a}
-  | RemoteLocated {getLoc :: a}
+  = HasuraLocated a
+  | RemoteLocated RemoteSchemaInfo a
    deriving (Functor, Show, Eq, Traversable, Foldable)
+
+getLoc :: Located a -> a
+getLoc (HasuraLocated a) = a
+getLoc (RemoteLocated _ a) = a
 
 denormSelSet
   :: ( MonadReader ValidationCtx m
