@@ -187,9 +187,13 @@ export default (serverEndpoint, headers, config) => {
     const primaryKey = getPrimaryKey(resource);
 
     if (primaryKey !== DEFAULT_PRIMARY_KEY) {
-      response[0].map((res) => {
-        res[DEFAULT_PRIMARY_KEY] = res[primaryKey];
-      });
+      if (Array.isArray(response[0])) {
+        response[0].forEach((res) => {
+          res[DEFAULT_PRIMARY_KEY] = res[primaryKey];
+        })
+      } else {
+        response[0][DEFAULT_PRIMARY_KEY] = response[0][primaryKey];
+      }
     }
     switch (type) {
       case 'GET_LIST':
