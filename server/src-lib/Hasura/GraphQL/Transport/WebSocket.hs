@@ -19,7 +19,6 @@ import qualified Data.IORef                                  as IORef
 import qualified Data.Text                                   as T
 import qualified Data.Text.Encoding                          as TE
 import qualified Data.Time.Clock                             as TC
-import qualified Language.GraphQL.Draft.Syntax               as G
 import qualified ListT
 import qualified Network.HTTP.Client                         as H
 import qualified Network.HTTP.Types                          as H
@@ -247,8 +246,8 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
     case execPlan of
       E.GExPHasura resolvedOp ->
         runHasuraGQ userInfo resolvedOp
-      E.GExPRemote (rsi, opDef)  ->
-        runRemoteGQ userInfo reqHdrs opDef rsi
+      E.GExPRemote rsi  ->
+        runRemoteGQ userInfo reqHdrs rsi
   where
     runHasuraGQ :: UserInfo -> E.ExecOp -> ExceptT () IO ()
     runHasuraGQ userInfo = \case
@@ -270,12 +269,9 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       sendCompleted
 
     runRemoteGQ :: UserInfo -> [H.Header]
-                -> G.TypedOperationDefinition -> RemoteSchemaInfo
+                -> RemoteSchemaInfo
                 -> ExceptT () IO ()
-    runRemoteGQ userInfo reqHdrs opDef rsi = do
-      when (G._todType opDef == G.OperationTypeSubscription) $
-        withComplete $ preExecErr $
-        err400 NotSupported "subscription to remote server is not supported"
+    runRemoteGQ userInfo reqHdrs rsi = do
 
       -- if it's not a subscription, use HTTP to execute the query on the remote
       -- server
@@ -286,7 +282,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
         err500 Unexpected "invalid websocket payload"
       let payload = J.encode $ _wpPayload sockPayload
       resp <- runExceptT $ E.execRemoteGQ httpMgr userInfo reqHdrs
-              payload rsi opDef
+              payload rsi
       either postExecErr (sendRemoteResp . _hrBody) resp
       sendCompleted
 

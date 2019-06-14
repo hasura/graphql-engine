@@ -37,8 +37,8 @@ runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer
       E.GExPHasura resolvedOp -> do
         encJson <- runHasuraGQ pgExecCtx userInfo resolvedOp
         pure (HttpResponse encJson Nothing)
-      E.GExPRemote (rsi, opDef)  ->
-        E.execRemoteGQ manager userInfo reqHdrs rawReq rsi opDef
+      E.GExPRemote rsi ->
+        E.execRemoteGQ manager userInfo reqHdrs rawReq rsi
   pure
     (HttpResponse
        (encJFromList (toList (fmap _hrBody results)))

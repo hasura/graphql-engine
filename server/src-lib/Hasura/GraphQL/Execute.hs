@@ -65,7 +65,7 @@ data GQExecPlan r a
 
 -- This is for when the graphql query is validated
 type ExecPlanPartial
-  = GQExecPlan (RemoteSchemaInfo, G.TypedOperationDefinition)
+  = GQExecPlan RemoteSchemaInfo
                (GCtx, VQ.HasuraTopField, [G.VariableDefinition])
 
 getExecPlanPartial
@@ -118,7 +118,7 @@ data ExecOp
 
 -- The graphql query is resolved into an execution operation
 type ExecPlanResolved
-  = GQExecPlan (RemoteSchemaInfo, G.TypedOperationDefinition) ExecOp
+  = GQExecPlan RemoteSchemaInfo ExecOp
 
 getResolvedExecPlan
   :: (MonadError QErr m, MonadIO m)
@@ -298,12 +298,8 @@ execRemoteGQ
   -> BL.ByteString
   -- ^ the raw request string
   -> RemoteSchemaInfo
-  -> G.TypedOperationDefinition
   -> m (HttpResponse EncJSON)
-execRemoteGQ manager userInfo reqHdrs q rsi opDef = do
-  let opTy = G._todType opDef
-  when (opTy == G.OperationTypeSubscription) $
-    throw400 NotSupported "subscription to remote server is not supported"
+execRemoteGQ manager userInfo reqHdrs q rsi = do
   hdrs <- getHeadersFromConf hdrConf
   let confHdrs   = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
       clientHdrs = bool [] filteredHeaders fwdClientHdrs
