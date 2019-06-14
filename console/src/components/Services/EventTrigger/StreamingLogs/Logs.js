@@ -108,7 +108,6 @@ class StreamingLogs extends Component {
   render() {
     const {
       triggerName,
-      migrationMode,
       log,
       count,
       dispatch,
@@ -346,7 +345,6 @@ class StreamingLogs extends Component {
           dispatch={dispatch}
           triggerName={triggerName}
           tabName="logs"
-          migrationMode={migrationMode}
         />
         <br />
         <div className={'hide'}>
@@ -447,7 +445,6 @@ class StreamingLogs extends Component {
 StreamingLogs.propTypes = {
   log: PropTypes.object,
   currentTableSchema: PropTypes.array.isRequired,
-  migrationMode: PropTypes.bool.isRequired,
   dispatch: PropTypes.func.isRequired,
   triggerList: PropTypes.array.isRequired,
 };
@@ -457,7 +454,6 @@ const mapStateToProps = (state, ownProps) => {
     ...state.triggers,
     serverVersion: state.main.serverVersion,
     triggerName: ownProps.params.trigger,
-    migrationMode: state.main.migrationMode,
     currentSchema: state.tables.currentSchema,
     triggerList: state.triggers.triggerList,
   };
