@@ -66,7 +66,7 @@ data GQExecPlan r a
 -- This is for when the graphql query is validated
 type ExecPlanPartial
   = GQExecPlan (RemoteSchemaInfo, G.TypedOperationDefinition)
-               (GCtx, VQ.TopField, [G.VariableDefinition])
+               (GCtx, VQ.HasuraTopField, [G.VariableDefinition])
 
 getExecPlanPartial
   :: (MonadError QErr m)
@@ -85,10 +85,13 @@ getExecPlanPartial userInfo sc enableAL req = do
 
   topFields <- runReaderT (VQ.validateGQ queryParts) gCtx
   let varDefs = G._todVariableDefinitions $ VQ.qpOpDef queryParts
-  return $
-    fmap
-      (\topField -> GExPHasura (gCtx, topField, varDefs))
-      topFields
+  return $ Seq.fromList $
+    mapMaybe
+      (\case
+          VQ.HasuraTopField hasuraTopField ->
+            Just (GExPHasura (gCtx, hasuraTopField, varDefs))
+          VQ.RemoteTopField{} -> Nothing)
+      (toList topFields)
 
   where
     role = userRole userInfo
@@ -152,14 +155,14 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
       forM partialExecPlans $ \partialExecPlan ->
        forM partialExecPlan $ \(gCtx, rootSelSet, varDefs) ->
         case rootSelSet of
-          VQ.RMutation field ->
+          VQ.HasuraTopMutation field ->
             ExOpMutation <$> getMutOp gCtx sqlGenCtx userInfo (pure field)
-          VQ.RQuery field -> do
+          VQ.HasuraTopQuery field -> do
             (queryTx, planM) <- getQueryOp gCtx sqlGenCtx
                                 userInfo (pure field) varDefs
             mapM_ (addPlanToCache . EP.RPQuery) planM
             return $ ExOpQuery queryTx
-          VQ.RSubscription fld -> do
+          VQ.HasuraTopSubscription fld -> do
             (lqOp, planM) <- getSubsOp pgExecCtx gCtx sqlGenCtx
                              userInfo reqUnparsed varDefs fld
             mapM_ (addPlanToCache . EP.RPSubs) planM

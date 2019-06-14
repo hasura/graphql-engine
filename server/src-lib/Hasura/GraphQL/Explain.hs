@@ -126,13 +126,13 @@ explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw)= 
      let rootSelSets = map snd results
      plans :: [[FieldPlan]] <- forM rootSelSets $ \rootSelSet -> do
       case rootSelSet of
-       GV.RQuery field -> do
+       GV.HasuraTopQuery field -> do
          let tx = mapM (explainField userInfo gCtx sqlGenCtx) (pure field)
          plans <- liftIO (runExceptT $ runLazyTx pgExecCtx tx) >>= liftEither
          return $ plans
-       GV.RMutation _ ->
+       GV.HasuraTopMutation _ ->
          throw400 InvalidParams "only queries can be explained"
-       GV.RSubscription _ ->
+       GV.HasuraTopSubscription _ ->
          throw400 InvalidParams "only queries can be explained"
      pure (encJFromJValue (foldMap toList plans))
   where

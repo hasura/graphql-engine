@@ -1,7 +1,9 @@
 module Hasura.GraphQL.Validate
   ( validateGQ
   , showVars
-  , TopField(..)
+  , LocatedTopField(..)
+  , HasuraTopField(..)
+  , RemoteTopField(..)
   , getTypedOp
   , QueryParts (..)
   , getQueryParts
@@ -157,10 +159,19 @@ validateFrag (G.FragmentDefinition n onTy dirs selSet) = do
     "fragments can only be defined on object types"
   return $ FragDef n objTyInfo selSet
 
-data TopField
-  = RQuery !Field
-  | RMutation !Field
-  | RSubscription !Field
+data LocatedTopField
+  = HasuraTopField !HasuraTopField
+  | RemoteTopField !RemoteTopField
+  deriving (Show, Eq)
+
+data HasuraTopField
+  = HasuraTopQuery !Field
+  | HasuraTopMutation !Field
+  | HasuraTopSubscription !Field
+  deriving (Show, Eq)
+
+data RemoteTopField =
+  RemoteTopQuery !Field
   deriving (Show, Eq)
 
 -- {-# SCC validateGQ #-}
@@ -168,7 +179,7 @@ validateGQ
   :: (MonadError QErr m, MonadReader GCtx m)
   -- => GraphQLRequest
   => QueryParts
-  -> m (Seq.Seq TopField)
+  -> m (Seq.Seq LocatedTopField)
 validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
 
   ctx <- ask
@@ -190,15 +201,15 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
             G._todSelectionSet opDef
 
   case G._todType opDef of
-    G.OperationTypeQuery -> return $ fmap RQuery selSet
-    G.OperationTypeMutation -> return $ fmap RMutation selSet
+    G.OperationTypeQuery -> return $ fmap (HasuraTopField . HasuraTopQuery) selSet
+    G.OperationTypeMutation -> return $ fmap (HasuraTopField . HasuraTopMutation) selSet
     G.OperationTypeSubscription ->
       case Seq.viewl selSet of
         Seq.EmptyL     -> throw500 "empty selset for subscription"
         fld Seq.:< rst -> do
           unless (null rst) $
             throwVE "subscription must select only one top level field"
-          return $ pure $ RSubscription fld
+          return $ pure $ HasuraTopField $ HasuraTopSubscription fld
 
 isQueryInAllowlist :: GQLExecDoc -> HS.HashSet GQLQuery -> Bool
 isQueryInAllowlist q = HS.member gqlQuery
