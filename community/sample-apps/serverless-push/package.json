@@ -1,20 +1,16 @@
 {
-  "name": "static-website-with-hasura",
+  "name": "serverless-push-hasura",
   "version": "1.0.0",
-  "description": "This is a static template with no bundling",
+  "description": "Web notifications using Hasura GraphQL Engine Event Triggers and FCM",
   "main": "index.html",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/codesandbox-app/static-template.git"
+    "url": "https://github.com/hasura/graphql-engine"
   },
   "keywords": [],
-  "author": "Ives van Hoorne",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/codesandbox-app/static-template/issues"
-  },
-  "homepage": "https://github.com/codesandbox-app/static-template#readme"
+  "author": "Praveen",
+  "license": "MIT"
 }
