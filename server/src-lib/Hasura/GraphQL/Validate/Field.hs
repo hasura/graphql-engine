@@ -57,7 +57,7 @@ data Field
   , _fType      :: !G.NamedType
   , _fArguments :: !ArgsMap
   , _fSelSet    :: !SelSet
-  , _fRemoteFld :: !(Maybe RemoteField)
+  , _fRemoteRel :: !(Maybe RemoteField)
   } deriving (Eq, Show)
 
 $(J.deriveToJSON (J.aesonDrop 2 J.camelCase){J.omitNothingFields=True}

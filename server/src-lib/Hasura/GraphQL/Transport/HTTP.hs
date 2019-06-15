@@ -39,10 +39,10 @@ runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer
               userInfo sqlGenCtx enableAL sc scVer req
   results <- forM execPlans $ \execPlan ->
     case execPlan of
-      E.GExPHasura resolvedOp -> do
+      E.ExPHasura resolvedOp -> do
         encJson <- runHasuraGQ pgExecCtx userInfo resolvedOp
         pure (HttpResponse encJson Nothing)
-      E.GExPRemote rsi ->
+      E.ExPRemote rsi ->
         E.execRemoteGQ manager userInfo reqHdrs rsi
 
   case mergeResponseData (toList (fmap _hrBody results)) of

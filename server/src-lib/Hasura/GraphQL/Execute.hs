@@ -1,11 +1,11 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE DisambiguateRecordFields #-}
 module Hasura.GraphQL.Execute
-  ( QExecPlanPartial
+  ( QExecPlanResolved(..)
+  , QExecPlanPartial(..)
   , getExecPlanPartial
 
   , ExecOp(..)
-  , QExecPlanResolved
   , getResolvedExecPlan
   , execRemoteGQ
 
@@ -21,6 +21,8 @@ import           Data.Has
 import           Data.List.NonEmpty (NonEmpty(..))
 import qualified Data.List.NonEmpty as NE
 import           Data.Time
+import           Debug.Trace
+import           Hasura.GraphQL.Validate.Field
 import           Hasura.SQL.Time
 
 import qualified Data.HashMap.Strict.InsOrd as OHM
@@ -49,6 +51,7 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Context
 import           Hasura.Server.Utils                    (bsToTxt,
                                                          filterRequestHeaders)
+import           Hasura.RQL.DDL.Remote.Types
 
 import qualified Hasura.GraphQL.Execute.LiveQuery as EL
 import qualified Hasura.GraphQL.Execute.Plan as EP
@@ -60,7 +63,7 @@ import qualified Hasura.GraphQL.Validate as VQ
 -- The current execution plan of a graphql operation, it is
 -- currently, either local pg execution or a remote execution
 data QExecPlanPartial
-  = ExPHasuraPartial !(GCtx, VQ.HasuraTopField, [G.VariableDefinition], [VQ.RemoteRelField])
+  = ExPHasuraPartial !(GCtx, VQ.HasuraTopField, [G.VariableDefinition])
   | ExPRemotePartial !VQ.RemoteTopField
 
 -- The current execution plan of a graphql operation, it is
@@ -68,7 +71,18 @@ data QExecPlanPartial
 data QExecPlanResolved
   = ExPHasura !ExecOp
   | ExPRemote !VQ.RemoteTopField
-  | ExPMixed !ExecOp (NonEmpty VQ.RemoteRelField)
+  | ExPMixed !ExecOp (NonEmpty RemoteRelField)
+
+data RemoteRelField =
+  RemoteRelField
+    { rrRemoteField :: !RemoteField
+    , rrField :: !Field
+    , rrPath :: !Path
+    }
+  deriving (Show)
+
+newtype Path = Path (Seq.Seq G.Alias)
+  deriving (Show, Monoid, Semigroup)
 
 getExecPlanPartial
   :: (MonadError QErr m)
@@ -91,16 +105,7 @@ getExecPlanPartial userInfo sc enableAL req = do
     fmap
       (\case
           VQ.HasuraTopField hasuraTopField ->
-            let remoteRelationshipFields =
-                  case hasuraTopField of
-                    VQ.HasuraTopQuery field ->
-                      mapMaybe
-                        (\subfield -> do
-                           remoteField <- VQ._fRemoteFld subfield
-                           pure (VQ.RemoteRelField remoteField subfield))
-                        (toList (VQ._fSelSet field))
-                    _ -> mempty
-            in (ExPHasuraPartial (gCtx, hasuraTopField, varDefs, remoteRelationshipFields))
+            ExPHasuraPartial (gCtx, hasuraTopField, varDefs)
           VQ.RemoteTopField remoteTopField -> ExPRemotePartial remoteTopField)
       topFields
 
@@ -138,49 +143,96 @@ getResolvedExecPlan
   -> SchemaCacheVer
   -> GQLReqUnparsed
   -> m (Seq.Seq QExecPlanResolved)
-getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
-  enableAL sc scVer reqUnparsed = do
-  planM <- liftIO $ EP.getPlan scVer (userRole userInfo)
-           opNameM queryStr planCache
+getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer reqUnparsed = do
+  planM <-
+    liftIO $ EP.getPlan scVer (userRole userInfo) opNameM queryStr planCache
   let usrVars = userVars userInfo
-  case planM of
+  case planM
     -- plans are only for queries and subscriptions
-    Just plan -> pure . ExPHasura <$> case plan of
-      EP.RPQuery queryPlan ->
-        ExOpQuery <$> EQ.queryOpFromPlan usrVars queryVars queryPlan
-      EP.RPSubs subsPlan ->
-        ExOpSubs <$> EL.subsOpFromPlan pgExecCtx usrVars queryVars subsPlan
+        of
+    Just plan ->
+      pure . ExPHasura <$>
+      case plan of
+        EP.RPQuery queryPlan ->
+          ExOpQuery <$> EQ.queryOpFromPlan usrVars queryVars queryPlan
+        EP.RPSubs subsPlan ->
+          ExOpSubs <$> EL.subsOpFromPlan pgExecCtx usrVars queryVars subsPlan
     Nothing -> noExistingPlan
   where
     GQLReq opNameM queryStr queryVars = reqUnparsed
     addPlanToCache plan =
-      liftIO $ EP.addPlan scVer (userRole userInfo)
-      opNameM queryStr plan planCache
+      liftIO $
+      EP.addPlan scVer (userRole userInfo) opNameM queryStr plan planCache
     noExistingPlan = do
-      req      <- toParsed reqUnparsed
+      req <- toParsed reqUnparsed
       partialExecPlans <- getExecPlanPartial userInfo sc enableAL req
       forM partialExecPlans $ \partialExecPlan ->
-       case partialExecPlan of
-         ExPRemotePartial r -> pure (ExPRemote r)
-         ExPHasuraPartial (gCtx, rootSelSet, varDefs, remoteRelFields) -> do
-           case rootSelSet of
-            VQ.HasuraTopMutation field ->
-              ExPHasura . ExOpMutation <$> getMutOp gCtx sqlGenCtx userInfo (pure field)
-            VQ.HasuraTopQuery originalField -> do
-              (constructor, alteredField) <-
-                case NE.nonEmpty remoteRelFields of
-                  Nothing -> pure (ExPHasura, originalField)
-                  Just remoteFields ->
-                    pure (flip ExPMixed remoteFields, originalField)
-              (queryTx, planM) <- getQueryOp gCtx sqlGenCtx
-                                  userInfo (pure alteredField) varDefs
-              mapM_ (addPlanToCache . EP.RPQuery) planM
-              return $ constructor $ ExOpQuery queryTx
-            VQ.HasuraTopSubscription fld -> do
-              (lqOp, planM) <- getSubsOp pgExecCtx gCtx sqlGenCtx
-                               userInfo reqUnparsed varDefs fld
-              mapM_ (addPlanToCache . EP.RPSubs) planM
-              return $ ExPHasura $ ExOpSubs lqOp
+        case partialExecPlan of
+          ExPRemotePartial r -> pure (ExPRemote r)
+          ExPHasuraPartial (gCtx, rootSelSet, varDefs) -> do
+            case rootSelSet of
+              VQ.HasuraTopMutation field ->
+                ExPHasura . ExOpMutation <$>
+                getMutOp gCtx sqlGenCtx userInfo (pure field)
+              VQ.HasuraTopQuery originalField -> do
+                let (constructor, alteredField) =
+                      case extractRemoteFields originalField of
+                        Nothing -> (ExPHasura, originalField)
+                        Just (newField, cursors) ->
+                          trace
+                            (unlines
+                               [ "originalField = " ++ show originalField
+                               , "newField = " ++ show newField
+                               , "cursors = " ++ show cursors
+                               ])
+                            (flip ExPMixed cursors, newField)
+                (queryTx, planM) <-
+                  getQueryOp gCtx sqlGenCtx userInfo (pure alteredField) varDefs
+                mapM_ (addPlanToCache . EP.RPQuery) planM
+                return $ constructor $ ExOpQuery queryTx
+              VQ.HasuraTopSubscription fld -> do
+                (lqOp, planM) <-
+                  getSubsOp
+                    pgExecCtx
+                    gCtx
+                    sqlGenCtx
+                    userInfo
+                    reqUnparsed
+                    varDefs
+                    fld
+                mapM_ (addPlanToCache . EP.RPSubs) planM
+                return $ ExPHasura $ ExOpSubs lqOp
+
+-- Rebuild the field with remote relationships removed, and paths that
+-- point back to them.
+extractRemoteFields ::
+     VQ.Field -> Maybe (VQ.Field, NonEmpty RemoteRelField)
+extractRemoteFields = extract . flip runState mempty . rebuild mempty
+  where
+    extract (field, remoteRelFields) =
+      fmap (field, ) (NE.nonEmpty remoteRelFields)
+    rebuild path field0 = do
+      selSet <-
+        traverse
+          (\subfield ->
+             case _fRemoteRel subfield of
+               Nothing ->
+                 fmap
+                   pure
+                   (rebuild (path <> Path (pure (_fAlias field0))) subfield)
+               Just remoteField -> do
+                 modify (remoteRelField :)
+                 pure mempty
+                 where remoteRelField =
+                         RemoteRelField
+                           { rrRemoteField = remoteField
+                           , rrField = subfield
+                           , rrPath = path
+                           }
+                       remoteRelationship = rmfRemoteRelationship remoteField
+                       neededHasuraFields = rtrHasuraFields remoteRelationship)
+          (toList (_fSelSet field0))
+      pure field0 {_fSelSet = mconcat selSet}
 
 -- Monad for resolving a hasura query/mutation
 type E m =

@@ -4,7 +4,6 @@ module Hasura.GraphQL.Validate
   , LocatedTopField(..)
   , HasuraTopField(..)
   , RemoteTopField(..)
-  , RemoteRelField(..)
   , getTypedOp
   , QueryParts (..)
   , getQueryParts
@@ -21,7 +20,7 @@ module Hasura.GraphQL.Validate
 
 import           Data.Has
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Remote.Types
+
 
 import qualified Data.HashMap.Strict as Map
 import qualified Data.HashSet as HS
@@ -174,13 +173,6 @@ data HasuraTopField
 
 data RemoteTopField =
   RemoteTopQuery !RemoteSchemaInfo !Field
-  deriving (Show, Eq)
-
-data RemoteRelField =
-  RemoteRelField
-    { rrRemoteField :: !RemoteField
-    , rrField :: !Field
-    }
   deriving (Show, Eq)
 
 -- {-# SCC validateGQ #-}

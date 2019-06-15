@@ -245,9 +245,9 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
   execPlans <- either (withComplete . preExecErr) return execPlanE
   forM_ execPlans $ \execPlan ->
     case execPlan of
-      E.GExPHasura resolvedOp ->
+      E.ExPHasura resolvedOp ->
         runHasuraGQ userInfo resolvedOp
-      E.GExPRemote rsi  ->
+      E.ExPRemote rsi  ->
         runRemoteGQ userInfo reqHdrs rsi
   where
     runHasuraGQ :: UserInfo -> E.ExecOp -> ExceptT () IO ()

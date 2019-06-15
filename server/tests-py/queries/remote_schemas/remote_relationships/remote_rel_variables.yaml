@@ -24,6 +24,20 @@ query:
           msg
         }
       }
+=>
+      profiles {
+        id
+
+      }
+
+     profiles->account->bio->.
+     messagesNestedArgs(where: { name: { eq: $name } }) {
+          id
+          msg
+     }
+
+
+
     }
   variables:
     name: alice

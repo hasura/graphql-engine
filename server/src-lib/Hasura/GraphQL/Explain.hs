@@ -116,9 +116,9 @@ explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw)= 
   execPlans <- E.getExecPlanPartial userInfo sc enableAL query
   mresults <- forM (toList execPlans) $ \execPlan -> do
     case execPlan of
-      E.GExPHasura (gCtx, rootSelSets, _) ->
+      E.ExPHasuraPartial (gCtx, rootSelSets, _) ->
         return (Just (gCtx, rootSelSets))
-      E.GExPRemote{}  ->
+      E.ExPRemotePartial{}  ->
         return Nothing
   case catMaybes mresults of
     [] -> throw400 InvalidParams "only hasura queries can be explained"
