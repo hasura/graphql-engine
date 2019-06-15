@@ -19,6 +19,7 @@ import qualified Data.Sequence.NonEmpty              as NE
 import qualified Data.Text                           as T
 import qualified Language.GraphQL.Draft.Syntax       as G
 
+import           Hasura.GraphQL.Resolve.ContextTypes
 import           Hasura.GraphQL.Validate.Context
 import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Types
@@ -155,7 +156,7 @@ denormSel
 denormSel visFrags parObjTyInfo sel = case sel of
   G.SelectionField fld -> withPathK (G.unName $ G._fName fld) $ do
     fldInfo <- getFieldInfo parObjTyInfo $ G._fName fld
-    fmap Left . fmap (localize fldInfo) <$> denormFld visFrags fldInfo fld
+    fmap Left . fmap (localize fldInfo) <$> denormFld parObjTyInfo visFrags fldInfo fld
   G.SelectionFragmentSpread fragSprd ->
     withPathK (G.unName $ G._fsName fragSprd) $
     fmap Right <$> denormFrag visFrags parTy fragSprd
@@ -164,10 +165,10 @@ denormSel visFrags parObjTyInfo sel = case sel of
     fmap Right <$> denormInlnFrag visFrags parObjTyInfo inlnFrag
   where
     parTy = _otiName parObjTyInfo
-    localize fldInfo =
+    localize fldInfo (field, _mtypedField) =
       case _fiLoc fldInfo of
-        HasuraType -> HasuraLocated
-        RemoteType _ remoteSchemaInfo -> RemoteLocated remoteSchemaInfo
+        HasuraType -> HasuraLocated field
+        RemoteType _ remoteSchemaInfo -> RemoteLocated remoteSchemaInfo field
 
 processArgs
   :: ( MonadReader ValidationCtx m
@@ -203,11 +204,12 @@ processArgs fldParams argsL = do
 denormFld
   :: ( MonadReader ValidationCtx m
      , MonadError QErr m)
-  => [G.Name] -- visited fragments
+  => ObjTyInfo
+  -> [G.Name] -- visited fragments
   -> ObjFldInfo
   -> G.Field
-  -> m (Maybe Field)
-denormFld visFrags fldInfo (G.Field aliasM name args dirs selSet) = do
+  -> m (Maybe (Field, Maybe TypedField))
+denormFld parObjTyInfo visFrags fldInfo (G.Field aliasM name args dirs selSet) = do
 
   let fldTy = _fiTy fldInfo
       fldBaseTy = getBaseTy fldTy
@@ -237,8 +239,12 @@ denormFld visFrags fldInfo (G.Field aliasM name args dirs selSet) = do
       throwVE $ "field " <> showName name <> " must not have a "
       <> "selection since type " <> G.showGT fldTy <> " has no subfields"
 
+  fldMap <- asks _vcFields
+  let mtypedField = Map.lookup (_otiName parObjTyInfo, name) fldMap
+
   withPathK "directives" $ withDirectives dirs $ return $
-    Field (fromMaybe (G.Alias name) aliasM) name fldBaseTy argMap (fmap getLoc fields)
+    (Field (fromMaybe (G.Alias name) aliasM) name fldBaseTy argMap (fmap getLoc fields)
+    ,mtypedField)
 
 denormInlnFrag
   :: ( MonadReader ValidationCtx m
