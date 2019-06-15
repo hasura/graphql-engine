@@ -195,7 +195,7 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
   annFragDefs <- mapM validateFrag fragDefs
 
   -- build a validation ctx
-  let valCtx = ValidationCtx (_gTypes ctx) annVarVals annFragDefs
+  let valCtx = ValidationCtx (_gTypes ctx) annVarVals annFragDefs (_gFields ctx)
 
   selSet <- flip runReaderT valCtx $ denormSelSet [] opRoot $
             G._todSelectionSet opDef
