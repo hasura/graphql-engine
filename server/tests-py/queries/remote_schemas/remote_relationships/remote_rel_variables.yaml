@@ -14,7 +14,7 @@ response:
         messagesNestedArgs:
           - id: 3
             msg: Another alice
-query: 
+query:
   query: |
     query ($name: String!) {
       profiles {
@@ -24,6 +24,6 @@ query:
           msg
         }
       }
-   }
+    }
   variables:
     name: alice

@@ -3,15 +3,14 @@ url: /v1/graphql
 status: 200
 response:
   data:
-    profiles:
-      - id: 1
-        name: alice
+    profiles_by_pk:
+      id: 1
     messages:
       - id: 1
         msg: You win!
 query:
   query: |
-    query ($id: Int) {
+    query ($id: Int!) {
       profiles_by_pk(id: $id) {
         id
       }
