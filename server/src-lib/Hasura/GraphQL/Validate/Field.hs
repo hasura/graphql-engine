@@ -23,6 +23,7 @@ import           Hasura.GraphQL.Resolve.ContextTypes
 import           Hasura.GraphQL.Validate.Context
 import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Types
+import Hasura.RQL.DDL.Remote.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Value
 
@@ -56,6 +57,7 @@ data Field
   , _fType      :: !G.NamedType
   , _fArguments :: !ArgsMap
   , _fSelSet    :: !SelSet
+  , _fRemoteFld :: !(Maybe RemoteField)
   } deriving (Eq, Show)
 
 $(J.deriveToJSON (J.aesonDrop 2 J.camelCase){J.omitNothingFields=True}
@@ -165,7 +167,7 @@ denormSel visFrags parObjTyInfo sel = case sel of
     fmap Right <$> denormInlnFrag visFrags parObjTyInfo inlnFrag
   where
     parTy = _otiName parObjTyInfo
-    localize fldInfo (field, _mtypedField) =
+    localize fldInfo field =
       case _fiLoc fldInfo of
         HasuraType -> HasuraLocated field
         RemoteType _ remoteSchemaInfo -> RemoteLocated remoteSchemaInfo field
@@ -208,7 +210,7 @@ denormFld
   -> [G.Name] -- visited fragments
   -> ObjFldInfo
   -> G.Field
-  -> m (Maybe (Field, Maybe TypedField))
+  -> m (Maybe Field)
 denormFld parObjTyInfo visFrags fldInfo (G.Field aliasM name args dirs selSet) = do
 
   let fldTy = _fiTy fldInfo
@@ -244,7 +246,9 @@ denormFld parObjTyInfo visFrags fldInfo (G.Field aliasM name args dirs selSet) =
 
   withPathK "directives" $ withDirectives dirs $ return $
     (Field (fromMaybe (G.Alias name) aliasM) name fldBaseTy argMap (fmap getLoc fields)
-    ,mtypedField)
+           (case mtypedField of
+              Just (FldRemote remoteField) -> pure remoteField
+              _ -> Nothing))
 
 denormInlnFrag
   :: ( MonadReader ValidationCtx m
