@@ -20,6 +20,7 @@ module Hasura.GraphQL.Execute
 import           Control.Exception (try)
 import           Control.Lens
 import           Data.Has
+import           Data.List.NonEmpty (NonEmpty(..))
 import           Data.Time
 import           Hasura.SQL.Time
 
@@ -65,12 +66,13 @@ import qualified Hasura.GraphQL.Validate as VQ
 data GQExecPlan r a
   = GExPHasura !a
   | GExPRemote !r
+  | GExPMixed  !a (NonEmpty VQ.RemoteRelField)
   deriving (Functor, Foldable, Traversable)
 
 -- This is for when the graphql query is validated
 type ExecPlanPartial
   = GQExecPlan VQ.RemoteTopField
-               (GCtx, VQ.HasuraTopField, [G.VariableDefinition])
+               (GCtx, VQ.HasuraTopField, [G.VariableDefinition], [VQ.RemoteRelField])
 
 getExecPlanPartial
   :: (MonadError QErr m)
@@ -93,7 +95,7 @@ getExecPlanPartial userInfo sc enableAL req = do
     fmap
       (\case
           VQ.HasuraTopField hasuraTopField ->
-            (GExPHasura (gCtx, hasuraTopField, varDefs))
+            (GExPHasura (gCtx, hasuraTopField, varDefs, []))
           VQ.RemoteTopField remoteTopField -> GExPRemote remoteTopField)
       topFields
 
@@ -157,7 +159,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
       req      <- toParsed reqUnparsed
       partialExecPlans <- getExecPlanPartial userInfo sc enableAL req
       forM partialExecPlans $ \partialExecPlan ->
-       forM partialExecPlan $ \(gCtx, rootSelSet, varDefs) ->
+       forM partialExecPlan $ \(gCtx, rootSelSet, varDefs, _remoteRelFields) ->
         case rootSelSet of
           VQ.HasuraTopMutation field ->
             ExOpMutation <$> getMutOp gCtx sqlGenCtx userInfo (pure field)
