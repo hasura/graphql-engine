@@ -1,13 +1,11 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE DisambiguateRecordFields #-}
 module Hasura.GraphQL.Execute
-  ( GQExecPlan(..)
-
-  , ExecPlanPartial
+  ( QExecPlanPartial
   , getExecPlanPartial
 
   , ExecOp(..)
-  , ExecPlanResolved
+  , QExecPlanResolved
   , getResolvedExecPlan
   , execRemoteGQ
 
@@ -21,6 +19,7 @@ import           Control.Exception (try)
 import           Control.Lens
 import           Data.Has
 import           Data.List.NonEmpty (NonEmpty(..))
+import qualified Data.List.NonEmpty as NE
 import           Data.Time
 import           Hasura.SQL.Time
 
@@ -60,19 +59,16 @@ import qualified Hasura.GraphQL.Validate as VQ
 
 -- The current execution plan of a graphql operation, it is
 -- currently, either local pg execution or a remote execution
---
--- The 'a' is parameterised so this AST can represent
--- intermediate passes
-data GQExecPlan r a
-  = GExPHasura !a
-  | GExPRemote !r
-  | GExPMixed  !a (NonEmpty VQ.RemoteRelField)
-  deriving (Functor, Foldable, Traversable)
+data QExecPlanPartial
+  = ExPHasuraPartial !(GCtx, VQ.HasuraTopField, [G.VariableDefinition], [VQ.RemoteRelField])
+  | ExPRemotePartial !VQ.RemoteTopField
 
--- This is for when the graphql query is validated
-type ExecPlanPartial
-  = GQExecPlan VQ.RemoteTopField
-               (GCtx, VQ.HasuraTopField, [G.VariableDefinition], [VQ.RemoteRelField])
+-- The current execution plan of a graphql operation, it is
+-- currently, either local pg execution or a remote execution
+data QExecPlanResolved
+  = ExPHasura !ExecOp
+  | ExPRemote !VQ.RemoteTopField
+  | ExPMixed !ExecOp (NonEmpty VQ.RemoteRelField)
 
 getExecPlanPartial
   :: (MonadError QErr m)
@@ -80,7 +76,7 @@ getExecPlanPartial
   -> SchemaCache
   -> Bool
   -> GQLReqParsed
-  -> m (Seq.Seq ExecPlanPartial)
+  -> m (Seq.Seq QExecPlanPartial)
 getExecPlanPartial userInfo sc enableAL req = do
 
   -- check if query is in allowlist
@@ -95,8 +91,17 @@ getExecPlanPartial userInfo sc enableAL req = do
     fmap
       (\case
           VQ.HasuraTopField hasuraTopField ->
-            (GExPHasura (gCtx, hasuraTopField, varDefs, []))
-          VQ.RemoteTopField remoteTopField -> GExPRemote remoteTopField)
+            let remoteRelationshipFields =
+                  case hasuraTopField of
+                    VQ.HasuraTopQuery field ->
+                      mapMaybe
+                        (\subfield -> do
+                           remoteField <- VQ._fRemoteFld subfield
+                           pure (VQ.RemoteRelField remoteField subfield))
+                        (toList (VQ._fSelSet field))
+                    _ -> mempty
+            in (ExPHasuraPartial (gCtx, hasuraTopField, varDefs, remoteRelationshipFields))
+          VQ.RemoteTopField remoteTopField -> ExPRemotePartial remoteTopField)
       topFields
 
   where
@@ -122,10 +127,6 @@ data ExecOp
   | ExOpMutation !LazyRespTx
   | ExOpSubs !EL.LiveQueryOp
 
--- The graphql query is resolved into an execution operation
-type ExecPlanResolved
-  = GQExecPlan VQ.RemoteTopField ExecOp
-
 getResolvedExecPlan
   :: (MonadError QErr m, MonadIO m)
   => PGExecCtx
@@ -136,7 +137,7 @@ getResolvedExecPlan
   -> SchemaCache
   -> SchemaCacheVer
   -> GQLReqUnparsed
-  -> m (Seq.Seq ExecPlanResolved)
+  -> m (Seq.Seq QExecPlanResolved)
 getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
   enableAL sc scVer reqUnparsed = do
   planM <- liftIO $ EP.getPlan scVer (userRole userInfo)
@@ -144,7 +145,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
   let usrVars = userVars userInfo
   case planM of
     -- plans are only for queries and subscriptions
-    Just plan -> pure . GExPHasura <$> case plan of
+    Just plan -> pure . ExPHasura <$> case plan of
       EP.RPQuery queryPlan ->
         ExOpQuery <$> EQ.queryOpFromPlan usrVars queryVars queryPlan
       EP.RPSubs subsPlan ->
@@ -159,20 +160,27 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
       req      <- toParsed reqUnparsed
       partialExecPlans <- getExecPlanPartial userInfo sc enableAL req
       forM partialExecPlans $ \partialExecPlan ->
-       forM partialExecPlan $ \(gCtx, rootSelSet, varDefs, _remoteRelFields) ->
-        case rootSelSet of
-          VQ.HasuraTopMutation field ->
-            ExOpMutation <$> getMutOp gCtx sqlGenCtx userInfo (pure field)
-          VQ.HasuraTopQuery field -> do
-            (queryTx, planM) <- getQueryOp gCtx sqlGenCtx
-                                userInfo (pure field) varDefs
-            mapM_ (addPlanToCache . EP.RPQuery) planM
-            return $ ExOpQuery queryTx
-          VQ.HasuraTopSubscription fld -> do
-            (lqOp, planM) <- getSubsOp pgExecCtx gCtx sqlGenCtx
-                             userInfo reqUnparsed varDefs fld
-            mapM_ (addPlanToCache . EP.RPSubs) planM
-            return $ ExOpSubs lqOp
+       case partialExecPlan of
+         ExPRemotePartial r -> pure (ExPRemote r)
+         ExPHasuraPartial (gCtx, rootSelSet, varDefs, remoteRelFields) -> do
+           case rootSelSet of
+            VQ.HasuraTopMutation field ->
+              ExPHasura . ExOpMutation <$> getMutOp gCtx sqlGenCtx userInfo (pure field)
+            VQ.HasuraTopQuery originalField -> do
+              (constructor, alteredField) <-
+                case NE.nonEmpty remoteRelFields of
+                  Nothing -> pure (ExPHasura, originalField)
+                  Just remoteFields ->
+                    pure (flip ExPMixed remoteFields, originalField)
+              (queryTx, planM) <- getQueryOp gCtx sqlGenCtx
+                                  userInfo (pure alteredField) varDefs
+              mapM_ (addPlanToCache . EP.RPQuery) planM
+              return $ constructor $ ExOpQuery queryTx
+            VQ.HasuraTopSubscription fld -> do
+              (lqOp, planM) <- getSubsOp pgExecCtx gCtx sqlGenCtx
+                               userInfo reqUnparsed varDefs fld
+              mapM_ (addPlanToCache . EP.RPSubs) planM
+              return $ ExPHasura $ ExOpSubs lqOp
 
 -- Monad for resolving a hasura query/mutation
 type E m =
