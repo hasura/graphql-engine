@@ -3,7 +3,7 @@ module Hasura.GraphQL.Validate
   , showVars
   , LocatedTopField(..)
   , HasuraTopField(..)
-  , RemoteTopField(..)
+  , RemoteTopQuery(..)
   , getTypedOp
   , QueryParts (..)
   , getQueryParts
@@ -162,7 +162,7 @@ validateFrag (G.FragmentDefinition n onTy dirs selSet) = do
 
 data LocatedTopField
   = HasuraTopField !HasuraTopField
-  | RemoteTopField !RemoteTopField
+  | RemoteTopField !RemoteTopQuery
   deriving (Show, Eq)
 
 data HasuraTopField
@@ -171,8 +171,11 @@ data HasuraTopField
   | HasuraTopSubscription !Field
   deriving (Show, Eq)
 
-data RemoteTopField =
-  RemoteTopQuery !RemoteSchemaInfo !Field
+data RemoteTopQuery =
+  RemoteTopQuery
+    { rtqRemoteSchemaInfo :: !RemoteSchemaInfo
+    , rtqField :: !Field
+    }
   deriving (Show, Eq)
 
 -- {-# SCC validateGQ #-}

@@ -68,13 +68,13 @@ import qualified Hasura.GraphQL.Validate as VQ
 -- currently, either local pg execution or a remote execution
 data QExecPlanPartial
   = ExPHasuraPartial !(GCtx, VQ.HasuraTopField, [G.VariableDefinition])
-  | ExPRemotePartial !VQ.RemoteTopField
+  | ExPRemotePartial !VQ.RemoteTopQuery
 
 -- The current execution plan of a graphql operation, it is
 -- currently, either local pg execution or a remote execution
 data QExecPlanResolved
   = ExPHasura !ExecOp
-  | ExPRemote !VQ.RemoteTopField
+  | ExPRemote !VQ.RemoteTopQuery
   | ExPMixed !ExecOp (NonEmpty RemoteRelField)
 
 newtype RemoteRelKey =
@@ -496,7 +496,7 @@ execRemoteGQ
   => HTTP.Manager
   -> UserInfo
   -> [N.Header]
-  -> VQ.RemoteTopField
+  -> VQ.RemoteTopQuery
   -> m (HttpResponse EncJSON)
 execRemoteGQ manager userInfo reqHdrs remoteTopField = do
   hdrs <- getHeadersFromConf hdrConf

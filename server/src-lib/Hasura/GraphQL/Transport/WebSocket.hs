@@ -270,7 +270,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       sendCompleted
 
     runRemoteGQ :: UserInfo -> [H.Header]
-                -> VQ.RemoteTopField
+                -> VQ.RemoteTopQuery
                 -> ExceptT () IO ()
     runRemoteGQ userInfo reqHdrs rsi = do
 
