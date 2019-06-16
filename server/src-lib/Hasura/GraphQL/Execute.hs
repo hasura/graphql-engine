@@ -279,24 +279,23 @@ extractFromResult keyedRemotes value =
         foldM
           (\result (key, remotes) ->
              case Map.lookup key hashmap of
-               Just subvalue ->
+               Just subvalue -> do
                  let (remoteRelKeys, unfinishedKeyedRemotes) =
                        partitionEithers (toList remotes)
-                  in do case NE.nonEmpty unfinishedKeyedRemotes of
-                          Nothing -> pure ()
-                          Just subRemotes -> do
-                            extractFromResult subRemotes subvalue
-                            pure ()
-                        pure
-                          (foldl'
-                             (\result' remoteRelKey ->
-                                Map.insertWith
-                                  (<>)
-                                  remoteRelKey
-                                  (pure (G.Name key, valueToValueConst subvalue))
-                                  result')
-                             result
-                             remoteRelKeys)
+                 case NE.nonEmpty unfinishedKeyedRemotes of
+                   Nothing -> pure ()
+                   Just subRemotes -> do
+                     extractFromResult subRemotes subvalue
+                 pure
+                   (foldl'
+                      (\result' remoteRelKey ->
+                         Map.insertWith
+                           (<>)
+                           remoteRelKey
+                           (pure (G.Name key, valueToValueConst subvalue))
+                           result')
+                      result
+                      remoteRelKeys)
                Nothing ->
                  lift
                    (Left
