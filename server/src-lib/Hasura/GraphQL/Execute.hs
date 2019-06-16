@@ -19,6 +19,7 @@ module Hasura.GraphQL.Execute
 import           Control.Exception (try)
 import           Control.Lens
 import qualified Data.ByteString.Lazy.Char8 as L8
+import           Data.Scientific
 
 import           Data.Has
 import           Data.List.NonEmpty (NonEmpty(..))
@@ -358,7 +359,7 @@ valueToValueConst =
     J.Array xs -> G.VCList (G.ListValueG (fmap valueToValueConst (toList xs)))
     J.String str -> G.VCString (G.StringValue str)
     -- TODO: Note the danger zone of scientific:
-    J.Number sci -> G.VCFloat (realToFrac sci)
+    J.Number sci -> either G.VCFloat G.VCInt (floatingOrInteger sci)
     J.Null -> G.VCNull
     J.Bool b -> G.VCBoolean b
     J.Object hashmap ->
