@@ -5,6 +5,7 @@ module Hasura.GraphQL.Execute
   , QExecPlanPartial(..)
   , getExecPlanPartial
   , extractRemoteRelArguments
+  , produceBatches
 
   , ExecOp(..)
   , getResolvedExecPlan
@@ -251,13 +252,46 @@ neededHasuraFields remoteField = toList (rtrHasuraFields remoteRelationship)
   where
     remoteRelationship = rmfRemoteRelationship remoteField
 
+-- | Insert at path the value in the larger structure.
+insertRemoteData :: (Path, J.Value) -> J.Value -> J.Value
+insertRemoteData = undefined
+
+-- | Produce the set of remote relationship batch requests.
+produceBatches ::
+     Map.HashMap RemoteRelKey ( RemoteRelField
+                              , RemoteSchemaInfo
+                              , Seq.Seq (Map.HashMap G.Name G.ValueConst))
+  -> Map.HashMap RemoteRelKey (VQ.RemoteTopQuery, Path)
+produceBatches =
+  fmap
+    (\(remoteRelField, remoteSchemaInfo, rows) ->
+       produceBatch remoteSchemaInfo remoteRelField rows)
+
+-- | Produce batch queries for a given remote relationship.
+produceBatch ::
+     RemoteSchemaInfo
+  -> RemoteRelField
+  -> Seq.Seq (Map.HashMap G.Name G.ValueConst)
+  -> (VQ.RemoteTopQuery, Path)
+produceBatch remoteSchemaInfo remoteRelField rows =
+  (remoteTopQuery, path)
+  where
+    remoteTopQuery =
+      VQ.RemoteTopQuery
+        { rtqRemoteSchemaInfo = remoteSchemaInfo
+        , rtqField = rrField remoteRelField
+        }
+    path = rrPath remoteRelField
+
 -- | Extract from the Hasura results the remote relationship arguments.
 extractRemoteRelArguments ::
-     EncJSON
+     RemoteSchemaMap
+  -> EncJSON
   -> NonEmpty RemoteRelField
   -> Either String (Map.HashMap RemoteRelKey ( RemoteRelField
+                                             , RemoteSchemaInfo
                                              , Seq.Seq (Map.HashMap G.Name G.ValueConst)))
-extractRemoteRelArguments encJson rels =
+extractRemoteRelArguments remoteSchemaMap encJson rels =
   case J.eitherDecode (encJToLBS encJson) of
     Left err -> Left err
     Right object ->
@@ -271,7 +305,14 @@ extractRemoteRelArguments encJson rels =
             (\key rows ->
                case Map.lookup key keyedMap of
                  Nothing -> Left "Failed to assicate remote key with remote."
-                 Just remoteRel -> pure (remoteRel, rows))
+                 Just remoteRel ->
+                   case Map.lookup
+                          (rtrRemoteSchema
+                             (rmfRemoteRelationship (rrRemoteField remoteRel)))
+                          remoteSchemaMap of
+                     Just remoteSchemaInfo ->
+                       pure (remoteRel, remoteSchemaInfo, rows)
+                     Nothing -> Left "Couldn't find remote schema info!")
             hash
   where
     keyedRemotes = NE.zip (fmap RemoteRelKey (0 :| [1 ..])) rels

@@ -33,31 +33,43 @@ runGQ
   -> [N.Header]
   -> GQLReqUnparsed
   -> m (HttpResponse EncJSON)
-runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer
-  manager reqHdrs req = do
-  execPlans <- E.getResolvedExecPlan pgExecCtx planCache
-              userInfo sqlGenCtx enableAL sc scVer req
-  results <- forM execPlans $ \execPlan ->
-    case execPlan of
-      E.ExPHasura resolvedOp -> do
-        encJson <- runHasuraGQ pgExecCtx userInfo resolvedOp
-        pure (HttpResponse encJson Nothing)
-      E.ExPRemote rsi ->
-        E.execRemoteGQ manager userInfo reqHdrs rsi
-      E.ExPMixed resolvedOp remoteRels ->
-        do encJson <- runHasuraGQ pgExecCtx userInfo resolvedOp
-           liftIO $ putStrLn ("hasura_JSON = " ++ show encJson)
-           let result = E.extractRemoteRelArguments encJson remoteRels
-           liftIO $ putStrLn ("extractRemoteRelArguments = " ++ show result)
-           pure (HttpResponse encJson Nothing)
-
+runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer manager reqHdrs req = do
+  execPlans <-
+    E.getResolvedExecPlan
+      pgExecCtx
+      planCache
+      userInfo
+      sqlGenCtx
+      enableAL
+      sc
+      scVer
+      req
+  results <-
+    forM execPlans $ \execPlan ->
+      case execPlan of
+        E.ExPHasura resolvedOp -> do
+          encJson <- runHasuraGQ pgExecCtx userInfo resolvedOp
+          pure (HttpResponse encJson Nothing)
+        E.ExPRemote rsi -> E.execRemoteGQ manager userInfo reqHdrs rsi
+        E.ExPMixed resolvedOp remoteRels -> do
+          encJson <- runHasuraGQ pgExecCtx userInfo resolvedOp
+          liftIO $ putStrLn ("hasura_JSON = " ++ show encJson)
+          let result =
+                E.extractRemoteRelArguments
+                  (scRemoteResolvers sc)
+                  encJson
+                  remoteRels
+          liftIO $ putStrLn ("extractRemoteRelArguments = " ++ show result)
+          case result of
+            Left e -> error e
+            Right remotes -> do
+              let batches = E.produceBatches remotes
+              liftIO $ putStrLn ("batches = " ++ show batches)
+          pure (HttpResponse encJson Nothing)
   case mergeResponseData (toList (fmap _hrBody results)) of
     Right merged -> do
       liftIO (putStrLn ("Response:\n" ++ L8.unpack (encJToLBS merged)))
-      pure
-        (HttpResponse
-           merged
-           (foldMap _hrHeaders results))
+      pure (HttpResponse merged (foldMap _hrHeaders results))
     Left err -> throw500 ("Invalid response: " <> T.pack err)
 
 runHasuraGQ
