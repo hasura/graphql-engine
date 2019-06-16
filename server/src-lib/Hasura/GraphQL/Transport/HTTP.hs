@@ -65,6 +65,14 @@ runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer manager reqHdrs r
             Right remotes -> do
               let batches = E.produceBatches remotes
               liftIO $ putStrLn ("batches = " ++ show batches)
+              results <-
+                traverse
+                  (\(remoteTopQuery, path) ->
+                     do HttpResponse result _ <- E.execRemoteGQ manager userInfo reqHdrs remoteTopQuery
+                        liftIO (putStrLn ("remote result = " ++ show result))
+                        pure result)
+                  batches
+              pure ()
           pure (HttpResponse encJson Nothing)
   case mergeResponseData (toList (fmap _hrBody results)) of
     Right merged -> do
