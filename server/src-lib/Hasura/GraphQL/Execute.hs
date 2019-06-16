@@ -228,7 +228,7 @@ rebuildFieldStrippingRemoteRels =
                Nothing -> fmap pure (rebuild thisPath subfield)
                Just remoteField -> do
                  modify (remoteRelField :)
-                 pure mempty
+                 pure mempty -- TODO: Do this.
                  where remoteRelField =
                          RemoteRelField
                            { rrRemoteField = remoteField
