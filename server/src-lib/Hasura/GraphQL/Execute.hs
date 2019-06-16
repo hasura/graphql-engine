@@ -309,7 +309,7 @@ extractFromResult keyedRemotes value =
         (\(remoteRelKey, row) ->
            modify
              (Map.insertWith
-                (<>)
+                (flip (<>))
                 remoteRelKey
                 (pure (Map.fromList (toList row)))))
         (Map.toList remotesRows)
