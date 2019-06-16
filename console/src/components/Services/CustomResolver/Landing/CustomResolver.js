@@ -12,7 +12,7 @@ class CustomResolver extends React.Component {
   render() {
     const styles = require('../CustomResolver.scss');
 
-    const { dispatch, migrationMode, customResolverList } = this.props;
+    const { dispatch, customResolverList } = this.props;
     const showIntroSection = !customResolverList.resolvers.length;
     const getIntroSection = () => {
       if (!showIntroSection) {
@@ -35,25 +35,22 @@ class CustomResolver extends React.Component {
     const getAddBtn = () => {
       let addBtn = null;
 
-      if (migrationMode) {
-        const handleClick = e => {
-          e.preventDefault();
+      const handleClick = e => {
+        e.preventDefault();
+        dispatch(push(`${globals.urlPrefix}${appPrefix}/manage/add`));
+      };
 
-          dispatch(push(`${globals.urlPrefix}${appPrefix}/manage/add`));
-        };
-
-        addBtn = (
-          <Button
-            data-test="data-create-remote-schemas"
-            color="yellow"
-            size="sm"
-            className={styles.add_mar_left}
-            onClick={handleClick}
-          >
-            Add
-          </Button>
-        );
-      }
+      addBtn = (
+        <Button
+          data-test="data-create-remote-schemas"
+          color="yellow"
+          size="sm"
+          className={styles.add_mar_left}
+          onClick={handleClick}
+        >
+          Add
+        </Button>
+      );
 
       return addBtn;
     };
@@ -98,7 +95,6 @@ class CustomResolver extends React.Component {
 
 const mapStateToProps = state => {
   return {
-    migrationMode: state.main.migrationMode,
     customResolverList: state.customResolverData.listData,
   };
 };
