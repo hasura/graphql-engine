@@ -4,6 +4,7 @@ module Hasura.GraphQL.Execute
   ( QExecPlanResolved(..)
   , QExecPlanPartial(..)
   , getExecPlanPartial
+  , extractRemoteRelArguments
 
   , ExecOp(..)
   , getResolvedExecPlan
@@ -17,6 +18,8 @@ module Hasura.GraphQL.Execute
 
 import           Control.Exception (try)
 import           Control.Lens
+import qualified Data.ByteString.Lazy.Char8 as L8
+
 import           Data.Has
 import           Data.List.NonEmpty (NonEmpty(..))
 import qualified Data.List.NonEmpty as NE
@@ -73,6 +76,10 @@ data QExecPlanResolved
   | ExPRemote !VQ.RemoteTopField
   | ExPMixed !ExecOp (NonEmpty RemoteRelField)
 
+newtype RemoteRelKey =
+  RemoteRelKey Int
+  deriving (Eq, Ord, Show, Hashable)
+
 data RemoteRelField =
   RemoteRelField
     { rrRemoteField :: !RemoteField
@@ -82,7 +89,7 @@ data RemoteRelField =
   deriving (Show)
 
 newtype Path = Path (Seq.Seq G.Alias)
-  deriving (Show, Monoid, Semigroup)
+  deriving (Show, Monoid, Semigroup, Eq)
 
 getExecPlanPartial
   :: (MonadError QErr m)
@@ -183,7 +190,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
                             (unlines
                                [ "originalField = " ++ show originalField
                                , "newField = " ++ show newField
-                               , "cursors = " ++ show cursors
+                               , "cursors = " ++ show (fmap rrPath cursors)
                                ])
                             (flip ExPMixed cursors, newField)
                 (queryTx, planM) <-
@@ -207,19 +214,17 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
 -- point back to them.
 rebuildFieldStrippingRemoteRels ::
      VQ.Field -> Maybe (VQ.Field, NonEmpty RemoteRelField)
-rebuildFieldStrippingRemoteRels = extract . flip runState mempty . rebuild mempty
+rebuildFieldStrippingRemoteRels =
+  extract . flip runState mempty . rebuild mempty
   where
     extract (field, remoteRelFields) =
       fmap (field, ) (NE.nonEmpty remoteRelFields)
-    rebuild path field0 = do
+    rebuild parentPath field0 = do
       selSet <-
         traverse
           (\subfield ->
              case _fRemoteRel subfield of
-               Nothing ->
-                 fmap
-                   pure
-                   (rebuild (path <> Path (pure (_fAlias field0))) subfield)
+               Nothing -> fmap pure (rebuild thisPath subfield)
                Just remoteField -> do
                  modify (remoteRelField :)
                  pure mempty
@@ -227,12 +232,142 @@ rebuildFieldStrippingRemoteRels = extract . flip runState mempty . rebuild mempt
                          RemoteRelField
                            { rrRemoteField = remoteField
                            , rrField = subfield
-                           , rrPath = path
-                           }
-                       remoteRelationship = rmfRemoteRelationship remoteField
-                       neededHasuraFields = rtrHasuraFields remoteRelationship)
+                           , rrPath = thisPath
+                           })
           (toList (_fSelSet field0))
       pure field0 {_fSelSet = mconcat selSet}
+      where
+        thisPath = parentPath <> Path (pure (_fAlias field0))
+
+-- | Get a list of fields needed from a hasura result.
+neededHasuraFields
+  :: RemoteField -> [FieldName]
+neededHasuraFields remoteField = toList (rtrHasuraFields remoteRelationship)
+  where
+    remoteRelationship = rmfRemoteRelationship remoteField
+
+-- | Extract from the Hasura results the remote relationship arguments.
+extractRemoteRelArguments ::
+     EncJSON
+  -> NonEmpty RemoteRelField
+  -> Either String (Map.HashMap RemoteRelKey (Seq.Seq (Map.HashMap G.Name G.ValueConst)))
+extractRemoteRelArguments encJson rels =
+  case J.eitherDecode (encJToLBS encJson) of
+    Left err -> Left err
+    Right object ->
+      case Map.lookup ("data" :: Text) object of
+        Nothing -> Left ("Couldn't find `data' payload in " <> L8.unpack (J.encode object))
+        Just value ->
+          flip
+            execStateT
+            mempty
+            (extractFromResult keyedRemotes value)
+  where
+    keyedRemotes = NE.zip (fmap RemoteRelKey (0 :| [1 ..])) rels
+
+-- | Extract from a given result.
+extractFromResult ::
+     NonEmpty (RemoteRelKey, RemoteRelField)
+  -> J.Value
+  -> StateT (Map.HashMap RemoteRelKey (Seq.Seq (Map.HashMap G.Name G.ValueConst))) (Either String) ()
+extractFromResult keyedRemotes value =
+  case value of
+    J.Array values -> mapM_ (extractFromResult keyedRemotes) values
+    J.Object hashmap -> do
+      remotesRows :: Map.HashMap RemoteRelKey (Seq.Seq (G.Name, G.ValueConst)) <-
+        foldM
+          (\result (key, remotes) ->
+             case Map.lookup key hashmap of
+               Just subvalue ->
+                 let (remoteRelKeys, unfinishedKeyedRemotes) =
+                       partitionEithers (toList remotes)
+                  in do case NE.nonEmpty unfinishedKeyedRemotes of
+                          Nothing -> pure ()
+                          Just subRemotes -> do
+                            extractFromResult subRemotes subvalue
+                            pure ()
+                        pure
+                          (foldl'
+                             (\result' remoteRelKey ->
+                                Map.insertWith
+                                  (<>)
+                                  remoteRelKey
+                                  (pure (G.Name key, valueToValueConst subvalue))
+                                  result')
+                             result
+                             remoteRelKeys)
+               Nothing ->
+                 lift
+                   (Left
+                      ("Expected key " <> show key <> " at this position: " <>
+                       L8.unpack (J.encode value))))
+          mempty
+          (Map.toList candidates)
+      mapM_
+        (\(remoteRelKey, row) ->
+           modify
+             (Map.insertWith
+                (<>)
+                remoteRelKey
+                (pure (Map.fromList (toList row)))))
+        (Map.toList remotesRows)
+    _ -> pure ()
+  where
+    candidates ::
+         Map.HashMap Text (NonEmpty (Either RemoteRelKey ( RemoteRelKey
+                                                         , RemoteRelField)))
+    candidates =
+      foldl'
+        (\(!outerHashmap) keys ->
+           foldl'
+             (\(!innerHashmap) (key, remote) ->
+                Map.insertWith (<>) key (pure remote) innerHashmap)
+             outerHashmap
+             keys)
+        mempty
+        (toList (fmap peelRemoteKeys keyedRemotes))
+
+-- | Peel one layer of expected keys from the remote to be looked up
+-- at the current level of the result object.
+peelRemoteKeys ::
+     (RemoteRelKey, RemoteRelField) -> [(Text, Either RemoteRelKey (RemoteRelKey, RemoteRelField))]
+peelRemoteKeys (remoteRelKey, remoteRelField) =
+  map
+    (updatingRelPath . unconsPath)
+    (neededHasuraFields (rrRemoteField remoteRelField))
+  where
+    updatingRelPath ::
+         Either Text (Text, Path)
+      -> (Text, Either RemoteRelKey (RemoteRelKey, RemoteRelField))
+    updatingRelPath result =
+      case result of
+        Right (key, remainingPath) ->
+          ( key
+          , Right (remoteRelKey, remoteRelField {rrPath = remainingPath}))
+        Left key -> (key, Left remoteRelKey)
+    unconsPath :: FieldName -> Either Text (Text, Path)
+    unconsPath fieldName =
+      case rrPath remoteRelField of
+        Path Seq.Empty -> Left (getFieldNameTxt fieldName)
+        Path (G.Alias (G.Name key) Seq.:<| xs) -> Right (key, Path xs)
+
+-- | Convert a JSON value to a GraphQL value.
+valueToValueConst :: J.Value -> G.ValueConst
+valueToValueConst =
+  \case
+    J.Array xs -> G.VCList (G.ListValueG (fmap valueToValueConst (toList xs)))
+    J.String str -> G.VCString (G.StringValue str)
+    -- TODO: Note the danger zone of scientific:
+    J.Number sci -> G.VCFloat (realToFrac sci)
+    J.Null -> G.VCNull
+    J.Bool b -> G.VCBoolean b
+    J.Object hashmap ->
+      G.VCObject
+        (G.ObjectValueG
+           (map
+              (\(key, value) ->
+                 G.ObjectFieldG (G.Name key) (valueToValueConst value))
+              (Map.toList hashmap)))
 
 -- Monad for resolving a hasura query/mutation
 type E m =
@@ -493,3 +628,43 @@ pgcolvalueToGValue colVal = case colVal of
   PGValJSONB {}  -> Left "PGValJSONB: cannot convert"
   PGValGeo {}    -> Left "PGValGeo: cannot convert"
   PGValUnknown t -> pure $ G.VString $ G.StringValue t
+
+demoResult :: J.Value
+demoResult = J.object ["grandparent" J..= J.object ["parent" J..= J.object ["child" J..= (123 :: Int)]]]
+
+-- > demoResult
+-- Object (fromList [("grandparent",Object (fromList [("parent",Object (fromList [("child",Number 123.0)]))]))])
+-- > extractPath (Path (fmap (G.Alias . G.Name) ["grandparent","parent"])) (G.Name "child") demoResult
+-- Right (VCFloat 123.0)
+
+-- | Extract a value from the path.
+extractPath :: Path -> G.Name -> J.Value -> Either String G.ValueConst
+extractPath (Path parents) gname@(G.Name finalKey) value =
+  case parents of
+    G.Alias (G.Name key) Seq.:<| restOfParents ->
+      case value of
+        J.Object hashmap ->
+          case Map.lookup key hashmap of
+            Just subvalue -> extractPath (Path restOfParents) gname subvalue
+            Nothing ->
+              Left
+                ("extractPath: couldn't find key " <> show key <> " from path " <>
+                 show parents <>
+                 " in object " <>
+                 L8.unpack (J.encode value))
+        _ -> Left ("extractPath: initial: expected object but got: " <> show value)
+    Seq.Empty ->
+      case value of
+        J.Object hashmap ->
+          case Map.lookup finalKey hashmap of
+            Just arg ->
+              let !valueConst = valueToValueConst arg
+               in pure valueConst
+            Nothing ->
+              Left
+                ("extractPath: didn't find key " <> show finalKey <>
+                 " from path " <>
+                 show parents <>
+                 " in object " <>
+                 L8.unpack (J.encode value))
+        _ -> Left ("extractPath: final: expected object but got: " <> show value)

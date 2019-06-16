@@ -44,6 +44,12 @@ runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer
         pure (HttpResponse encJson Nothing)
       E.ExPRemote rsi ->
         E.execRemoteGQ manager userInfo reqHdrs rsi
+      E.ExPMixed resolvedOp remoteRels ->
+        do encJson <- runHasuraGQ pgExecCtx userInfo resolvedOp
+           liftIO $ putStrLn ("hasura_JSON = " ++ show encJson)
+           let result = E.extractRemoteRelArguments encJson remoteRels
+           liftIO $ putStrLn ("extractRemoteRelArguments = " ++ show result)
+           pure (HttpResponse encJson Nothing)
 
   case mergeResponseData (toList (fmap _hrBody results)) of
     Right merged -> do
