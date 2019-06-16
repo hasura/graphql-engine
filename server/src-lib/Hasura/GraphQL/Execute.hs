@@ -92,6 +92,10 @@ data RemoteRelField =
 newtype Path = Path (Seq.Seq G.Alias)
   deriving (Show, Monoid, Semigroup, Eq)
 
+newtype InsertPath =
+  InsertPath (Seq.Seq (Either Int G.Alias))
+  deriving (Show, Monoid, Semigroup, Eq)
+
 getExecPlanPartial
   :: (MonadError QErr m)
   => UserInfo
