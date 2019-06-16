@@ -174,7 +174,7 @@ data HasuraTopField
 data RemoteTopQuery =
   RemoteTopQuery
     { rtqRemoteSchemaInfo :: !RemoteSchemaInfo
-    , rtqField :: !Field
+    , rtqFields :: ![Field]
     }
   deriving (Show, Eq)
 
@@ -221,7 +221,7 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
            pure (HasuraTopField (HasuraTopQuery field))
          RemoteLocated remoteSchemaInfo field ->
            -- TODO: Insert variables.
-           pure (RemoteTopField (RemoteTopQuery remoteSchemaInfo field))
+           pure (RemoteTopField (RemoteTopQuery remoteSchemaInfo (pure field)))
     makeTopMutation =
       \case
          HasuraLocated field ->

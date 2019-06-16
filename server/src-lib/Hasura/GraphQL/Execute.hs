@@ -21,6 +21,8 @@ import           Control.Exception (try)
 import           Control.Lens
 import qualified Data.ByteString.Lazy.Char8 as L8
 import           Data.Scientific
+import           Data.Validation
+import           Hasura.SQL.Types
 
 import           Data.Has
 import           Data.List.NonEmpty (NonEmpty(..))
@@ -51,6 +53,7 @@ import           Hasura.SQL.Value
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.HTTP
 import           Hasura.Prelude
+import           Hasura.RQL.DDL.Remote.Input
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.Server.Context
@@ -87,6 +90,7 @@ data RemoteRelField =
     { rrRemoteField :: !RemoteField
     , rrField :: !Field
     , rrPath :: !Path
+    -- , rrAlias :: !G.Alias
     }
   deriving (Show)
 
@@ -260,7 +264,7 @@ insertRemoteData = undefined
 produceBatches ::
      Map.HashMap RemoteRelKey ( RemoteRelField
                               , RemoteSchemaInfo
-                              , Seq.Seq (Map.HashMap G.Name G.ValueConst))
+                              , Seq.Seq (Map.HashMap G.Variable G.ValueConst))
   -> Map.HashMap RemoteRelKey (VQ.RemoteTopQuery, Path)
 produceBatches =
   fmap
@@ -271,17 +275,96 @@ produceBatches =
 produceBatch ::
      RemoteSchemaInfo
   -> RemoteRelField
-  -> Seq.Seq (Map.HashMap G.Name G.ValueConst)
+  -> Seq.Seq (Map.HashMap G.Variable G.ValueConst)
   -> (VQ.RemoteTopQuery, Path)
-produceBatch remoteSchemaInfo remoteRelField rows =
-  (remoteTopQuery, path)
+produceBatch remoteSchemaInfo remoteRelField rows = (remoteTopQuery, path)
   where
     remoteTopQuery =
       VQ.RemoteTopQuery
         { rtqRemoteSchemaInfo = remoteSchemaInfo
-        , rtqField = rrField remoteRelField
+        , rtqFields =
+            fmap
+              (\(i, variables) ->
+                 fieldCallsToField
+                   (G.Alias (G.Name ("result_" <> T.pack (show i))))
+                   (_fArguments originalField)
+                   variables
+                   (_fSelSet originalField)
+                   (rtrRemoteFields remoteRelationship))
+              (zip [0 :: Int ..] (toList rows))
         }
+    remoteRelationship = rmfRemoteRelationship (rrRemoteField remoteRelField)
     path = rrPath remoteRelField
+    originalField = rrField remoteRelField
+
+-- | Produce a field from the nested field calls.
+fieldCallsToField ::
+     G.Alias
+  -> Map.HashMap G.Name AnnInpVal
+  -> Map.HashMap G.Variable G.ValueConst
+  -> SelSet
+  -> NonEmpty FieldCall
+  -> Field
+fieldCallsToField indexedAlias userProvidedArguments variables finalSelSet = nest
+  where
+    nest (fieldCall :| rest) =
+      Field
+        { _fAlias = case NE.nonEmpty rest of
+                      Just{} -> G.Alias (fcName fieldCall)
+                      Nothing -> indexedAlias
+        , _fName = fcName fieldCall
+        , _fType = G.NamedType (G.Name "unknown_type")
+        , _fArguments =
+            let templatedArguments =
+                  createArguments variables (fcArguments fieldCall)
+             in case NE.nonEmpty rest of
+                  Just {} -> templatedArguments
+                  Nothing -> userProvidedArguments <> templatedArguments
+        , _fSelSet =
+            case NE.nonEmpty rest of
+              Nothing -> finalSelSet
+              Just calls -> pure (nest calls)
+        , _fRemoteRel = Nothing
+        }
+
+-- | Create an argument map using the inputs taken from the hasura database.
+createArguments ::
+     Map.HashMap G.Variable G.ValueConst
+  -> RemoteArguments
+  -> Map.HashMap G.Name AnnInpVal
+createArguments variables (RemoteArguments arguments) =
+  either
+    (error . show)
+    (\xs -> Map.fromList (map (\(G.ObjectFieldG key val) -> (key, valueConstToAnnInpVal val)) xs))
+    (toEither (substituteVariables variables arguments))
+
+valueConstToAnnInpVal :: G.ValueConst -> AnnInpVal
+valueConstToAnnInpVal vc =
+  AnnInpVal
+    { _aivType =
+        G.TypeNamed (G.Nullability False) (G.NamedType (G.Name "unknown1"))
+    , _aivVariable = Nothing
+    , _aivValue = toAnnGValue vc
+    }
+
+toAnnGValue :: G.ValueConst -> AnnGValue
+toAnnGValue =
+  \case
+    G.VCInt i -> AGScalar PGBigInt (Just (PGValInteger i))
+    G.VCFloat v -> AGScalar PGFloat (Just (PGValDouble v))
+    G.VCString (G.StringValue v) -> AGScalar PGText (Just (PGValText v))
+    G.VCBoolean v -> AGScalar PGBoolean (Just (PGValBoolean v))
+    G.VCNull -> AGScalar (PGUnknown "null") Nothing
+    G.VCEnum {} -> error "TODO: toAnnGValue"
+    G.VCList {} -> error "TODO: toAnnGValue: list"
+    G.VCObject (G.ObjectValueG keys) ->
+      AGObject
+        (G.NamedType (G.Name "unknown2"))
+        (Just
+           (OHM.fromList
+              (map
+                 (\(G.ObjectFieldG key val) -> (key, valueConstToAnnInpVal val))
+                 keys)))
 
 -- | Extract from the Hasura results the remote relationship arguments.
 extractRemoteRelArguments ::
@@ -290,7 +373,7 @@ extractRemoteRelArguments ::
   -> NonEmpty RemoteRelField
   -> Either String (Map.HashMap RemoteRelKey ( RemoteRelField
                                              , RemoteSchemaInfo
-                                             , Seq.Seq (Map.HashMap G.Name G.ValueConst)))
+                                             , Seq.Seq (Map.HashMap G.Variable G.ValueConst)))
 extractRemoteRelArguments remoteSchemaMap encJson rels =
   case J.eitherDecode (encJToLBS encJson) of
     Left err -> Left err
@@ -322,12 +405,12 @@ extractRemoteRelArguments remoteSchemaMap encJson rels =
 extractFromResult ::
      NonEmpty (RemoteRelKey, RemoteRelField)
   -> J.Value
-  -> StateT (Map.HashMap RemoteRelKey (Seq.Seq (Map.HashMap G.Name G.ValueConst))) (Either String) ()
+  -> StateT (Map.HashMap RemoteRelKey (Seq.Seq (Map.HashMap G.Variable G.ValueConst))) (Either String) ()
 extractFromResult keyedRemotes value =
   case value of
     J.Array values -> mapM_ (extractFromResult keyedRemotes) values
     J.Object hashmap -> do
-      remotesRows :: Map.HashMap RemoteRelKey (Seq.Seq (G.Name, G.ValueConst)) <-
+      remotesRows :: Map.HashMap RemoteRelKey (Seq.Seq (G.Variable, G.ValueConst)) <-
         foldM
           (\result (key, remotes) ->
              case Map.lookup key hashmap of
@@ -344,7 +427,10 @@ extractFromResult keyedRemotes value =
                          Map.insertWith
                            (<>)
                            remoteRelKey
-                           (pure (G.Name key, valueToValueConst subvalue))
+                           (pure
+                              ( G.Variable (G.Name key)
+                                -- TODO: Pay attention to variable naming wrt. aliasing.
+                              , valueToValueConst subvalue))
                            result')
                       result
                       remoteRelKeys)
@@ -563,7 +649,7 @@ execRemoteGQ manager userInfo reqHdrs remoteTopField = do
       finalHdrs  = foldr Map.union Map.empty hdrMaps
       options    = wreqOptions manager (Map.toList finalHdrs)
 
-  gqlReq <- fieldToRequest field
+  gqlReq <- fieldsToRequest field
   res  <- liftIO $ try $ Wreq.postWith options (show url) (encJToLBS (encJFromJValue gqlReq))
   resp <- either httpThrow return res
   let cookieHdr = getCookieHdr (resp ^? Wreq.responseHeader "Set-Cookie")
@@ -591,20 +677,20 @@ execRemoteGQ manager userInfo reqHdrs remoteTopField = do
     mkRespHeaders hdrs =
       map (\(k, v) -> Header (bsToTxt $ CI.original k, bsToTxt v)) hdrs
 
-fieldToRequest
+fieldsToRequest
   :: (MonadIO m, MonadError QErr m)
-  => VQ.Field
+  => [VQ.Field]
   -> m GQLReqParsed
-fieldToRequest field = do
-  case fieldToField field of
-    Right gfield ->
+fieldsToRequest fields = do
+  case traverse fieldToField fields of
+    Right gfields ->
       pure
         (GQLReq
            { _grOperationName = Nothing
            , _grQuery =
                GQLExecDoc
                  [ G.ExecutableDefinitionOperation
-                     (G.OperationDefinitionUnTyped [G.SelectionField gfield])
+                     (G.OperationDefinitionUnTyped (map G.SelectionField gfields))
                  ]
            , _grVariables = Nothing -- TODO: Put variables in here?
            })
