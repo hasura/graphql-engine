@@ -251,8 +251,8 @@ neededHasuraFields remoteField = toList (rtrHasuraFields remoteRelationship)
 extractRemoteRelArguments ::
      EncJSON
   -> NonEmpty RemoteRelField
-  -> Either String ( Map.HashMap RemoteRelKey RemoteRelField
-                   , Map.HashMap RemoteRelKey (Seq.Seq (Map.HashMap G.Name G.ValueConst)))
+  -> Either String (Map.HashMap RemoteRelKey ( RemoteRelField
+                                             , Seq.Seq (Map.HashMap G.Name G.ValueConst)))
 extractRemoteRelArguments encJson rels =
   case J.eitherDecode (encJToLBS encJson) of
     Left err -> Left err
@@ -261,12 +261,17 @@ extractRemoteRelArguments encJson rels =
         Nothing ->
           Left
             ("Couldn't find `data' payload in " <> L8.unpack (J.encode object))
-        Just value ->
-          fmap
-            (Map.fromList (toList keyedRemotes), )
-            (flip execStateT mempty (extractFromResult keyedRemotes value))
+        Just value -> do
+          hash <- flip execStateT mempty (extractFromResult keyedRemotes value)
+          Map.traverseWithKey
+            (\key rows ->
+               case Map.lookup key keyedMap of
+                 Nothing -> Left "Failed to assicate remote key with remote."
+                 Just remoteRel -> pure (remoteRel, rows))
+            hash
   where
     keyedRemotes = NE.zip (fmap RemoteRelKey (0 :| [1 ..])) rels
+    keyedMap = Map.fromList (toList keyedRemotes)
 
 -- | Extract from a given result.
 extractFromResult ::
