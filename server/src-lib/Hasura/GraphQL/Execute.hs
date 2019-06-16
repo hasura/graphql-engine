@@ -176,7 +176,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
                 getMutOp gCtx sqlGenCtx userInfo (pure field)
               VQ.HasuraTopQuery originalField -> do
                 let (constructor, alteredField) =
-                      case extractRemoteFields originalField of
+                      case rebuildFieldStrippingRemoteRels originalField of
                         Nothing -> (ExPHasura, originalField)
                         Just (newField, cursors) ->
                           trace
@@ -205,9 +205,9 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
 
 -- Rebuild the field with remote relationships removed, and paths that
 -- point back to them.
-extractRemoteFields ::
+rebuildFieldStrippingRemoteRels ::
      VQ.Field -> Maybe (VQ.Field, NonEmpty RemoteRelField)
-extractRemoteFields = extract . flip runState mempty . rebuild mempty
+rebuildFieldStrippingRemoteRels = extract . flip runState mempty . rebuild mempty
   where
     extract (field, remoteRelFields) =
       fmap (field, ) (NE.nonEmpty remoteRelFields)
