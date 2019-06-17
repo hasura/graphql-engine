@@ -97,6 +97,13 @@ data RemoteRelField =
 newtype RelFieldPath = RelFieldPath (Seq.Seq G.Alias)
   deriving (Show, Monoid, Semigroup, Eq)
 
+data InsertPath =
+  InsertPath
+    { ipFields :: !(Seq.Seq Text)
+    , ipIndex :: !ResultIdx
+    }
+  deriving (Show, Eq)
+
 newtype ResultIdx =
   ResultIdx Int
   deriving (Show, Eq, Ord)
