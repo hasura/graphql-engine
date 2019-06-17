@@ -5,10 +5,13 @@ import Endpoints from '../../../../Endpoints';
 import Star from '../../../Common/Icons/Star';
 import Spinner from '../../../Common/Spinner/Spinner';
 
+import globals from '../../../../Globals';
+
 class About extends Component {
   state = {
     serverVersion: null,
     latestVersionAvailable: null,
+    consoleAssetVersion: globals.consoleAssetVersion,
   };
 
   componentDidMount() {
@@ -43,6 +46,13 @@ class About extends Component {
 
           {this.state.serverVersion && this.state.latestVersionAvailable ? (
             <div>
+              <div className={styles.add_mar_top + ' ' + styles.wd60}>
+                <Star /> <b>Console asset version: </b>
+                <span className={styles.add_mar_left_mid}>
+                  {this.state.consoleAssetVersion}
+                </span>
+              </div>
+              <hr />
               <div className={styles.add_mar_top + ' ' + styles.wd60}>
                 <Star /> <b>Server version: </b>
                 <span className={styles.add_mar_left_mid}>
