@@ -80,17 +80,17 @@ assertPermDefined roleName pa tableInfo =
   where
     rpi = M.lookup roleName $ tiRolePermInfoMap tableInfo
 
-askPermInfo
+getPermInfo
   :: (MonadError QErr m)
   => TableInfo
   -> RoleName
   -> PermAccessor c
   -> m c
-askPermInfo tabInfo roleName pa =
+getPermInfo tabInfo roleName pa =
   case M.lookup roleName rpim >>= (^. paL) of
     Just c  -> return c
-    Nothing -> throw400 PermissionDenied $ mconcat
-               [ pt <> " permisison on " <>> tiName tabInfo
+    Nothing -> throw404 $ mconcat
+               [ pt <> " permission on " <>> tiName tabInfo
                , " for role " <>> roleName
                , " does not exist"
                ]
@@ -330,7 +330,7 @@ dropPermP1
 dropPermP1 dp@(DropPerm tn rn) = do
   adminOnly
   tabInfo <- askTabInfo tn
-  askPermInfo tabInfo rn $ getPermAcc2 dp
+  getPermInfo tabInfo rn $ getPermAcc2 dp
 
 dropPermP2
   :: (IsPerm a, QErrM m, CacheRWM m, MonadTx m)
