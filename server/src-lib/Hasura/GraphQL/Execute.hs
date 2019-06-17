@@ -89,12 +89,12 @@ data RemoteRelField =
   RemoteRelField
     { rrRemoteField :: !RemoteField
     , rrField :: !Field
-    , rrRelFieldPath :: !Path
+    , rrRelFieldPath :: !RelFieldPath
     -- , rrAlias :: !G.Alias
     }
   deriving (Show)
 
-newtype Path = Path (Seq.Seq G.Alias)
+newtype RelFieldPath = RelFieldPath (Seq.Seq G.Alias)
   deriving (Show, Monoid, Semigroup, Eq)
 
 newtype ResultIdx =
@@ -247,7 +247,7 @@ rebuildFieldStrippingRemoteRels =
           (toList (_fSelSet field0))
       pure field0 {_fSelSet = mconcat selSet}
       where
-        thisPath = parentPath <> Path (pure (_fAlias field0))
+        thisPath = parentPath <> RelFieldPath (pure (_fAlias field0))
 
 -- | Get a list of fields needed from a hasura result.
 neededHasuraFields
@@ -259,13 +259,13 @@ neededHasuraFields remoteField = toList (rtrHasuraFields remoteRelationship)
 -- remote result = {"data":{"result_0":{"name":"alice"},"result_1":{"name":"bob"},"result_2":{"name":"alice"}}}
 
 -- | Join the data from the original hasura with the remote values.
-joinIndices :: [(Path, [ResultIdx], EncJSON)]
+joinIndices :: [(RelFieldPath, [ResultIdx], EncJSON)]
             -> J.Value
             -> Either String J.Value
 joinIndices paths = undefined
 
 -- | Insert at path, index the value in the larger structure.
-insertValueAt :: J.Value -> Path -> Int -> J.Value -> J.Value
+insertValueAt :: J.Value -> RelFieldPath -> Int -> J.Value -> J.Value
 insertValueAt value path index =
   undefined
 
@@ -274,7 +274,7 @@ produceBatches ::
      Map.HashMap RemoteRelKey ( RemoteRelField
                               , RemoteSchemaInfo
                               , Seq.Seq (Map.HashMap G.Variable G.ValueConst))
-  -> Map.HashMap RemoteRelKey (VQ.RemoteTopQuery, Path, [ResultIdx])
+  -> Map.HashMap RemoteRelKey (VQ.RemoteTopQuery, RelFieldPath, [ResultIdx])
 produceBatches =
   fmap
     (\(remoteRelField, remoteSchemaInfo, rows) ->
@@ -285,7 +285,7 @@ produceBatch ::
      RemoteSchemaInfo
   -> RemoteRelField
   -> Seq.Seq (Map.HashMap G.Variable G.ValueConst)
-  -> (VQ.RemoteTopQuery, Path, [ResultIdx])
+  -> (VQ.RemoteTopQuery, RelFieldPath, [ResultIdx])
 produceBatch remoteSchemaInfo remoteRelField rows = (remoteTopQuery, path, resultIndexes)
   where
     remoteTopQuery =
@@ -491,7 +491,7 @@ peelRemoteKeys (remoteRelKey, remoteRelField) =
     (neededHasuraFields (rrRemoteField remoteRelField))
   where
     updatingRelPath ::
-         Either Text (Text, Path)
+         Either Text (Text, RelFieldPath)
       -> (Text, Either RemoteRelKey (RemoteRelKey, RemoteRelField))
     updatingRelPath result =
       case result of
@@ -499,11 +499,11 @@ peelRemoteKeys (remoteRelKey, remoteRelField) =
           ( key
           , Right (remoteRelKey, remoteRelField {rrRelFieldPath = remainingPath}))
         Left key -> (key, Left remoteRelKey)
-    unconsPath :: FieldName -> Either Text (Text, Path)
+    unconsPath :: FieldName -> Either Text (Text, RelFieldPath)
     unconsPath fieldName =
       case rrRelFieldPath remoteRelField of
-        Path Seq.Empty -> Left (getFieldNameTxt fieldName)
-        Path (G.Alias (G.Name key) Seq.:<| xs) -> Right (key, Path xs)
+        RelFieldPath Seq.Empty -> Left (getFieldNameTxt fieldName)
+        RelFieldPath (G.Alias (G.Name key) Seq.:<| xs) -> Right (key, RelFieldPath xs)
 
 -- | Convert a JSON value to a GraphQL value.
 valueToValueConst :: J.Value -> G.ValueConst
