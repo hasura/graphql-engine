@@ -67,36 +67,36 @@ class About extends Component {
                 {this.state.serverVersion !==
                 this.state.latestVersionAvailable ? (
                   <span className={styles.add_mar_left_mid}>
-                    <a
+                      <a
                       href={
-                        'https://github.com/hasura/graphql-engine/releases/tag/' +
+                          'https://github.com/hasura/graphql-engine/releases/tag/' +
                         this.state.latestVersionAvailable
-                      }
+                        }
                       target="_blank"
                       rel="noopener noreferrer"
                     >
                       <span>
-                        <i>View Changelog</i>
-                      </span>
+                          <i>View Changelog</i>
+                        </span>
                     </a>
-                    <span className={styles.middot}>
+                      <span className={styles.middot}>
                       {' '}
                       <b>&middot;</b>{' '}
                     </span>
-                    <a
+                      <a
                       className={styles.updateLink}
                       href="https://docs.hasura.io/1.0/graphql/manual/deployment/updating.html"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
                       <span>
-                        <i>Update Now</i>
-                      </span>
+                          <i>Update Now</i>
+                        </span>
                     </a>
-                  </span>
-                ) : (
-                  ''
-                )}
+                    </span>
+                  ) : (
+                    ''
+                  )}
               </div>
               <hr />
             </div>

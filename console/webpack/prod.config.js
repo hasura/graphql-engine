@@ -176,6 +176,7 @@ module.exports = {
       __SERVER__: false,
       __DEVELOPMENT__: false,
       __DEVTOOLS__: false,
+      'process.env.CONSOLE_ASSET_VERSION': process.env.CONSOLE_ASSET_VERSION? JSON.stringify(process.env.CONSOLE_ASSET_VERSION): '',
     }),
 
     // ignore dev config

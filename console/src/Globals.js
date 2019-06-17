@@ -42,7 +42,7 @@ const globals = {
   telemetryTopic:
     window.__env.nodeEnv !== 'development' ? 'console' : 'console_test',
   assetsPath: window.__env.assetsPath,
-  consoleAssetVersion: window.__env.assetsVersion,
+  consoleAssetVersion: window.__env.consoleAssetVersion,
 };
 
 // set defaults
