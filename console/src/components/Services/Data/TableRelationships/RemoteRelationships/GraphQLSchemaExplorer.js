@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import styles from './SchemaExplorer.scss';
-import { getSchemaTree } from './utils';
+import { getSchemaTree } from '../utils';
 
 const CheckboxWithLabel = ({
   label,

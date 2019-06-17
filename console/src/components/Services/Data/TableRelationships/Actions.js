@@ -4,6 +4,7 @@ import { makeMigrationCall, updateSchemaInfo } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 import { showErrorNotification } from '../../Common/Notification';
 import suggestedRelationshipsRaw from './autoRelations';
+import { getRemoteRelPayload } from './utils';
 
 export const SET_MANUAL_REL_ADD = 'ModifyTable/SET_MANUAL_REL_ADD';
 export const MANUAL_REL_SET_TYPE = 'ModifyTable/MANUAL_REL_SET_TYPE';
@@ -22,6 +23,86 @@ export const defaultRemoteRelationship = {
   name: '',
   remoteSchema: '',
   remoteField: [],
+};
+
+export const createRemoteRelationship = (
+  index,
+  successCallback,
+  errorCallback
+) => {
+  return (dispatch, getState) => {
+    const state = getState().tables.modify.remoteRelationships[index];
+    if (!gqlPattern.test(state.name)) {
+      return dispatch(
+        showErrorNotification(
+          gqlRelErrorNotif[0],
+          gqlRelErrorNotif[1],
+          gqlRelErrorNotif[2],
+          gqlRelErrorNotif[3]
+        )
+      );
+    }
+    if (!state.remoteSchema) {
+      return dispatch(showErrorNotification('Remote schema is required'));
+    }
+    const table = {
+      schema: getState().tables.currentSchema,
+      name: getState().tables.currentTable,
+    };
+    const upQuery = [
+      {
+        type: 'create_remote_relationship',
+        args: getRemoteRelPayload(state, table),
+      },
+    ];
+    const downQuery = [
+      {
+        type: 'drop_remote_relationship',
+        args: {
+          name: state.name,
+          table,
+        },
+      },
+    ];
+
+    console.log(upQuery);
+    console.log(downQuery);
+    return;
+
+    // Apply migrations
+    const migrationName = `table_${table.name}_create_remote_relationship_${
+      state.name
+    }`;
+
+    const requestMsg = 'Creating remote relationship...';
+    const successMsg = 'Successfully created remote relationship';
+    const errorMsg = 'Creating remote relationship failed';
+
+    const customOnSuccess = () => {
+      if (successCallback) {
+        successCallback();
+      }
+    };
+    const customOnError = () => {
+      if (errorCallback) {
+        errorCallback();
+      }
+    };
+
+    // Rename relationship should fetch entire schema info.
+    makeMigrationCall(
+      dispatch,
+      getState,
+      upQuery,
+      downQuery,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
 };
 
 export const setRemoteRelationships = remoteRelationships => ({

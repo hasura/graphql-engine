@@ -19,7 +19,7 @@ import { getRelDef, getObjArrRelList } from './utils';
 
 import Button from '../../../Common/Button/Button';
 import AddManualRelationship from './AddManualRelationship';
-import RemoteRelationships from './RemoteRelationships';
+import RemoteRelationships from './RemoteRelationships/RemoteRelationships';
 import suggestedRelationshipsRaw from './autoRelations';
 import RelationshipEditor from './RelationshipEditor';
 import { NotFoundError } from '../../../Error/PageNotFound';

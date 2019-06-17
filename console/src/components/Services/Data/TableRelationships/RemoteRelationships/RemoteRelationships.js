@@ -1,10 +1,10 @@
 import React from 'react';
-import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
+import ExpandableEditor from '../../../../Common/Layout/ExpandableEditor/Editor';
 import { buildClientSchema } from 'graphql';
-import styles from '../TableModify/ModifyTable.scss';
+import styles from '../../TableModify/ModifyTable.scss';
 import RemoteRelationshipExplorer from './GraphQLSchemaExplorer';
-import { sampleSchema, transformRemoteRelState } from './utils';
-import { setRemoteRelationships, defaultRemoteRelationship } from './Actions';
+import { sampleSchema, transformRemoteRelState } from '../utils';
+import { setRemoteRelationships, defaultRemoteRelationship, createRemoteRelationship } from '../Actions';
 
 console.log(buildClientSchema(sampleSchema.data).getQueryType());
 
@@ -51,15 +51,16 @@ const RemoteRelationshipEditor = ({
 }) => {
   const isLast = index === numRels - 1;
 
-  const newRelationships = JSON.parse(JSON.stringify(allRelationships));
 
   const handleRelnameChange = e => {
+    const newRelationships = JSON.parse(JSON.stringify(allRelationships));
     newRelationships[index].name = e.target.value;
     dispatch(setRemoteRelationships(newRelationships));
   };
 
   const handleRemoteSchemaChange = e => {
-    if (e.target.value === newRelationships[index].remoteSchemaName) {
+    const newRelationships = JSON.parse(JSON.stringify(allRelationships));
+    if (e.target.value === newRelationships[index].remoteSchema) {
       return;
     }
     const relName = newRelationships[index].name;
@@ -67,11 +68,12 @@ const RemoteRelationshipEditor = ({
       JSON.stringify(defaultRemoteRelationship)
     );
     newRelationships[index].name = relName;
-    newRelationships[index].remoteSchemaName = e.target.value;
+    newRelationships[index].remoteSchema = e.target.value;
     dispatch(setRemoteRelationships(newRelationships));
   };
 
   const handleRemoteFieldChange = (fieldName, nesting, checked) => {
+    const newRelationships = JSON.parse(JSON.stringify(allRelationships));
     const newRemoteField = newRelationships[index].remoteField.filter(
       rf => rf.name !== fieldName && rf.nesting < nesting
     );
@@ -94,6 +96,7 @@ const RemoteRelationshipEditor = ({
     checked,
     parentArg
   ) => {
+    const newRelationships = JSON.parse(JSON.stringify(allRelationships));
     const concernedRemoteField = newRelationships[index].remoteField.find(
       rf => rf.name === fieldName && nesting === rf.nesting
     );
@@ -136,6 +139,7 @@ const RemoteRelationshipEditor = ({
   };
 
   const handleColumnChange = (colName, fieldName, fieldNesting, arg) => {
+    const newRelationships = JSON.parse(JSON.stringify(allRelationships));
     const concernedRemoteField = newRelationships[index].remoteField.find(
       rf => rf.name === fieldName && fieldNesting === rf.nesting
     );
@@ -185,7 +189,7 @@ const RemoteRelationshipEditor = ({
   };
 
   const remoteSchemaSelect = () => {
-    const placeHolder = !relationship.remoteSchemaName && (
+    const placeHolder = !relationship.remoteSchema && (
       <option key="placeholder" value="">
         {' '}
         -- remote schema --
@@ -207,7 +211,7 @@ const RemoteRelationshipEditor = ({
           <div>
             <select
               className={`form-control ${styles.wd300Px}`}
-              value={relationship.remoteSchemaName}
+              value={relationship.remoteSchema}
               onChange={handleRemoteSchemaChange}
             >
               {placeHolder}
@@ -243,7 +247,7 @@ const RemoteRelationshipEditor = ({
 
   const collapsedContent = () => null;
 
-  const saveFunc = () => transformRemoteRelState(relationship, {});
+  const saveFunc = () => dispatch(createRemoteRelationship(index));
 
   let removeFunc;
   if (!isLast) {
