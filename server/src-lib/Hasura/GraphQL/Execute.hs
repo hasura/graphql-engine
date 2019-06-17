@@ -95,6 +95,7 @@ data RemoteRelField =
     , rrField :: !Field
     , rrRelFieldPath :: !RelFieldPath
     , rrAlias :: !G.Alias
+    , rrPhantomFields :: ![Text]
     }
   deriving (Show)
 
@@ -255,6 +256,19 @@ rebuildFieldStrippingRemoteRels =
                            , rrField = subfield
                            , rrRelFieldPath = thisPath
                            , rrAlias = _fAlias subfield
+                           , rrPhantomFields =
+                               map
+                                 G.unName
+                                 (filter
+                                    (\name ->
+                                       notElem
+                                         name
+                                         (map _fName (toList (_fSelSet field0))))
+                                    (map
+                                       (G.Name . getFieldNameTxt)
+                                       (toList
+                                          (rtrHasuraFields
+                                             (rmfRemoteRelationship remoteField)))))
                            })
           (_fSelSet field0)
       let fields = rights (toList selSetEithers)
@@ -335,12 +349,15 @@ insertBatchResults remoteHash batch hasuraHash0 =
       case cardinality of
         One ->
           Right
-            (Map.insert
-               (batchRelationshipKeyToMake batch)
-               (peelOffNestedFields
-                  (batchNestedFields batch)
-                  (J.Object remoteHash))
-               hasuraHash)
+            (foldl'
+               (flip Map.delete)
+               (Map.insert
+                  (batchRelationshipKeyToMake batch)
+                  (peelOffNestedFields
+                     (batchNestedFields batch)
+                     (J.Object remoteHash))
+                  hasuraHash)
+               (batchPhantoms batch))
         Many ->
           Left
             ("Cardinality mismatch with result: expected array but got object.")
@@ -383,12 +400,16 @@ insertBatchResults remoteHash batch hasuraHash0 =
                                    Just remoteRowValue ->
                                      pure
                                        (J.Object
-                                          (Map.insert
-                                             (batchRelationshipKeyToMake batch)
-                                             (peelOffNestedFields
-                                                (batchNestedFields batch)
-                                                remoteRowValue)
-                                             hasuraRowHash))
+                                          (foldl'
+                                             (flip Map.delete)
+                                             (Map.insert
+                                                (batchRelationshipKeyToMake
+                                                   batch)
+                                                (peelOffNestedFields
+                                                   (batchNestedFields batch)
+                                                   remoteRowValue)
+                                                hasuraRowHash)
+                                             (batchPhantoms batch)))
                                _ ->
                                  Left
                                    ("Row result in hasura should be an object, but it's: " <>
@@ -450,7 +471,8 @@ data Batch =
     , batchIndices :: ![ArrayIndex]
     , batchRelationshipKeyToMake :: !Text
     , batchInputs :: !BatchInputs
-    , batchNestedFields :: NonEmpty G.Name
+    , batchNestedFields :: !(NonEmpty G.Name)
+    , batchPhantoms :: ![Text]
     } deriving (Show)
 
 -- | Produce batch queries for a given remote relationship.
@@ -466,6 +488,7 @@ produceBatch remoteSchemaInfo remoteRelField inputs =
     , batchIndices = resultIndexes
     , batchRelationshipKeyToMake = G.unName (G.unAlias (rrAlias remoteRelField))
     , batchInputs = inputs
+    , batchPhantoms = rrPhantomFields remoteRelField
     , batchNestedFields =
         fmap
           fcName
