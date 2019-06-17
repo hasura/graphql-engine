@@ -1,6 +1,6 @@
 # Track function and table with same name: error
 
-# Needed in order to track the return type of the "article" function
+# Track "test2" table in order to track the return type of the "test1" function
 - description: Track table
   url: /v1/query
   status: 200
@@ -9,9 +9,9 @@
   query:
     type: track_table
     args:
-      name: author
+      name: test2
 
-# Track the article function
+# Track the "test1" function
 - description: Track function
   url: /v1/query
   status: 200
@@ -20,17 +20,17 @@
   query:
     type: track_function
     args:
-      name: article
+      name: test1
 
-# Track the article table - this fails because a function with the same name is already being tracked
+# Track the "test1" table - this fails because a function with the same name is already being tracked
 - description: Track table
   url: /v1/query
   status: 400
   response:
     code: not-supported
-    error: function with name "article" already exists
+    error: function with name "test1" already exists
     path: $.args
   query:
     type: track_table
     args:
-      name: article
+      name: test1

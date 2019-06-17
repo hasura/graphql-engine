@@ -4,16 +4,24 @@ args:
 - type: run_sql
   args:
     sql: |
-      CREATE TABLE author(
+      CREATE TABLE author (
           id SERIAL PRIMARY KEY,
           name TEXT UNIQUE,
           remarks TEXT
       );
 
-      CREATE TABLE article(
+      CREATE TABLE article (
           id SERIAL PRIMARY KEY,
           title TEXT,
           author_id INTEGER REFERENCES author(id)
+      );
+
+      CREATE TABLE test1 (
+          id SERIAL PRIMARY KEY
+      );
+
+      CREATE TABLE test2 (
+          id SERIAL PRIMARY KEY
       );
 
       CREATE TABLE hge_tests.resident (
@@ -30,7 +38,7 @@ args:
         ('Resident 1', 23),
         ('Resident 2', 31);
 
-      CREATE OR REPLACE FUNCTION article()
-      RETURNS SETOF author AS $$
-          SELECT * FROM author
+      CREATE OR REPLACE FUNCTION test1()
+      RETURNS SETOF test2 AS $$
+          SELECT * FROM test2
       $$ LANGUAGE sql STABLE;
