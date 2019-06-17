@@ -499,8 +499,17 @@ toAnnGValue =
     G.VCString (G.StringValue v) -> AGScalar PGText (Just (PGValText v))
     G.VCBoolean v -> AGScalar PGBoolean (Just (PGValBoolean v))
     G.VCNull -> AGScalar (PGUnknown "null") Nothing
-    G.VCEnum {} -> error "TODO: toAnnGValue"
-    G.VCList {} -> error "TODO: toAnnGValue: list"
+    G.VCEnum {} -> AGScalar (PGUnknown "null") Nothing -- TODO: implement.
+    G.VCList (G.ListValueG list) ->
+      AGArray
+        (G.ListType
+           (G.TypeList
+              (G.Nullability False)
+              (G.ListType
+                 (G.TypeNamed
+                    (G.Nullability False)
+                    (G.NamedType (G.Name "unknown2"))))))
+        (pure (map valueConstToAnnInpVal list))
     G.VCObject (G.ObjectValueG keys) ->
       AGObject
         (G.NamedType (G.Name "unknown2"))
