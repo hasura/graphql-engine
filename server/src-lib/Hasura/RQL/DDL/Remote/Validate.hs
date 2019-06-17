@@ -109,6 +109,7 @@ validateRelationship remoteRelationship gctx tables = do
                          pure
                          (runStateT
                             (stripInMap
+                               (rtrName remoteRelationship)
                                (GS._gTypes gctx)
                                (_fiParams objFldInfo)
                                providedArguments)
@@ -116,7 +117,9 @@ validateRelationship remoteRelationship gctx tables = do
                      innerObjTyInfo <-
                        getTyInfoFromField (GS._gTypes gctx) objFldInfo
                      pure
-                       (innerObjTyInfo, _fiTy objFldInfo, (newParamMap, newTypeMap)))
+                       ( innerObjTyInfo
+                       , _fiTy objFldInfo
+                       , (newParamMap, newTypeMap)))
           (pure
              ( GS._gQueryRoot gctx
              , G.toGT (_otiName $ GS._gQueryRoot gctx)
@@ -143,11 +146,11 @@ validateRelationship remoteRelationship gctx tables = do
 -- specified as an atomic (variable, constant), keys which are kept
 -- have their values modified by 'stripObject' or 'stripList'.
 stripInMap ::
-     HM.HashMap G.NamedType TypeInfo
+     RemoteRelationshipName -> HM.HashMap G.NamedType TypeInfo
   -> HM.HashMap G.Name InpValInfo
   -> HM.HashMap G.Name G.Value
   -> StateT (HM.HashMap G.NamedType TypeInfo) (Either ValidationError) (HM.HashMap G.Name InpValInfo)
-stripInMap types schemaArguments templateArguments =
+stripInMap remoteRelationshipName types schemaArguments templateArguments =
   fmap
     (HM.mapMaybe id)
     (HM.traverseWithKey
@@ -155,7 +158,7 @@ stripInMap types schemaArguments templateArguments =
           case HM.lookup name templateArguments of
             Nothing -> pure (Just inpValInfo)
             Just value -> do
-              maybeNewGType <- stripValue types (_iviType inpValInfo) value
+              maybeNewGType <- stripValue remoteRelationshipName types (_iviType inpValInfo) value
               pure
                 (fmap
                    (\newGType -> inpValInfo {_iviType = newGType})
@@ -165,11 +168,11 @@ stripInMap types schemaArguments templateArguments =
 -- | Strip a value type completely, or modify it, if the given value
 -- is atomic-ish.
 stripValue ::
-     HM.HashMap G.NamedType TypeInfo
+     RemoteRelationshipName -> HM.HashMap G.NamedType TypeInfo
   -> G.GType
   -> G.Value
   -> StateT (HM.HashMap G.NamedType TypeInfo) (Either ValidationError) (Maybe G.GType)
-stripValue types gtype value = do
+stripValue remoteRelationshipName types gtype value = do
   case value of
     G.VVariable {} -> pure Nothing
     G.VInt {} -> pure Nothing
@@ -181,21 +184,22 @@ stripValue types gtype value = do
     G.VList (G.ListValueG values) ->
       case values of
         [] -> pure Nothing
-        [gvalue] -> stripList types gtype gvalue
+        [gvalue] -> stripList remoteRelationshipName types gtype gvalue
         _ -> lift (Left UnsupportedMultipleElementLists)
     G.VObject (G.unObjectValue -> keypairs) ->
-      fmap Just (stripObject types gtype keypairs)
+      fmap Just (stripObject remoteRelationshipName types gtype keypairs)
 
 -- | Produce a new type for the list, or strip it entirely.
 stripList ::
-     HM.HashMap G.NamedType TypeInfo
+     RemoteRelationshipName
+  -> HM.HashMap G.NamedType TypeInfo
   -> G.GType
   -> G.Value
   -> StateT (HM.HashMap G.NamedType TypeInfo) (Either ValidationError) (Maybe G.GType)
-stripList types originalOuterGType value =
+stripList remoteRelationshipName types originalOuterGType value =
   case originalOuterGType of
     G.TypeList nullability (G.ListType innerGType) -> do
-      maybeNewInnerGType <- stripValue types innerGType value
+      maybeNewInnerGType <- stripValue remoteRelationshipName types innerGType value
       pure
         (fmap
            (\newGType -> G.TypeList nullability (G.ListType newGType))
@@ -206,20 +210,26 @@ stripList types originalOuterGType value =
 -- 'stripInMap'. Objects can't be deleted entirely, just keys of an
 -- object.
 stripObject ::
-     HM.HashMap G.NamedType TypeInfo
+     RemoteRelationshipName -> HM.HashMap G.NamedType TypeInfo
   -> G.GType
   -> [G.ObjectFieldG G.Value]
   -> StateT (HM.HashMap G.NamedType TypeInfo) (Either ValidationError) G.GType
-stripObject types originalGtype keypairs =
+stripObject remoteRelationshipName types originalGtype keypairs =
   case originalGtype of
     G.TypeNamed nullability originalNamedType ->
       case HM.lookup (getBaseTy originalGtype) types of
         Just (TIInpObj originalInpObjTyInfo) -> do
           let originalSchemaArguments = _iotiFields originalInpObjTyInfo
               newNamedType =
-                renameNamedType renameTypeForRelationship originalNamedType
+                renameNamedType
+                  (renameTypeForRelationship remoteRelationshipName)
+                  originalNamedType
           newSchemaArguments <-
-            stripInMap types originalSchemaArguments templateArguments
+            stripInMap
+              remoteRelationshipName
+              types
+              originalSchemaArguments
+              templateArguments
           let newInpObjTyInfo =
                 originalInpObjTyInfo
                   {_iotiFields = newSchemaArguments, _iotiName = newNamedType}
@@ -235,8 +245,9 @@ stripObject types originalGtype keypairs =
 
 -- | Produce a new name for a type, used when stripping the schema
 -- types for a remote relationship.
-renameTypeForRelationship :: Text -> Text
-renameTypeForRelationship = (<> "_for_remote_relationship")
+renameTypeForRelationship :: RemoteRelationshipName -> Text -> Text
+renameTypeForRelationship (RemoteRelationshipName name) text =
+  text <> "_remote_rel_" <> name
 
 -- | Rename a type.
 renameNamedType :: (Text -> Text) -> G.NamedType -> G.NamedType
