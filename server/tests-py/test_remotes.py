@@ -26,7 +26,7 @@ def graphql_service():
     svc = NodeGraphQL(["node", "remote_schemas/nodejs/index.js"])
     return svc
 
-class TestTopLevelMixedFields:
+class TestCreateRemoteRelationship:
 
     @classmethod
     def dir(cls):
@@ -92,18 +92,32 @@ class TestTopLevelMixedFields:
 
         check_query_f(hge_ctx, self.dir() + 'select_remote_fields.yaml')
 
+class TestDeleteRemoteRelationship:
+    @classmethod
+    def dir(cls):
+        return "queries/remote_schemas/remote_relationships/"
 
+    @pytest.fixture(autouse=True)
+    def transact(self, hge_ctx, graphql_service):
+        print("In setup method")
+        graphql_service.start()
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'teardown.yaml')
+        assert st_code == 200, resp
+        graphql_service.stop()
 
-# class TestRemoteRelationships:
+    def test_delete(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
+        assert st_code == 200, resp
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'delete_remote_rel.yaml')
+        assert st_code == 200, resp
 
-#     @pytest.fixture(autouse=True)
-#     def transact(self, request, hge_ctx):
-#         print("In setup method")
-#         st_code, resp = hge_ctx.v1q_f('queries/remote_schemas/setup_relationship.yaml')
-#         assert st_code == 200, resp
-#         yield
-#         st_code, resp = hge_ctx.v1q_f('queries/remote_schemas/teardown_relationship.yaml')
-#         assert st_code == 200, resp
-
-#     def test_basic(self, hge_ctx):
-#         check_query_f(hge_ctx, 'queries/remote_schemas/basic_remote_relationship.yaml')
+    def test_delete_dependencies(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
+        assert st_code == 200, resp
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'remove_remote_schema.yaml')
+        assert st_code == 400, resp
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'delete_remote_rel.yaml')
+        assert st_code == 200, resp

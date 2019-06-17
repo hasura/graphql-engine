@@ -14,32 +14,33 @@ module Hasura.RQL.DDL.Relationship
   , runDropRel
   , runSetRelComment
   , runCreateRemoteRelationship
+  , runDeleteRemoteRelationship
   , module Hasura.RQL.DDL.Relationship.Types
   )
 where
 
-import qualified Database.PG.Query as Q
-import           Hasura.RQL.DDL.Remote.Validate
-import           Hasura.RQL.DDL.Remote.Types
+import qualified Database.PG.Query                 as Q
 import           Hasura.GraphQL.Validate.Types
+import           Hasura.RQL.DDL.Remote.Types
+import           Hasura.RQL.DDL.Remote.Validate
 import           Hasura.RQL.Types.Common
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Deps
-import           Hasura.RQL.DDL.Permission (purgePerm)
+import           Hasura.RQL.DDL.Permission         (purgePerm)
 import           Hasura.RQL.DDL.Relationship.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 import           Data.Aeson.Types
-import qualified Data.HashMap.Strict as HM
-import qualified Data.HashSet as HS
-import qualified Data.Map.Strict as M
-import qualified Data.Text as T
-import           Data.Tuple (swap)
-import           Instances.TH.Lift ()
+import qualified Data.HashMap.Strict               as HM
+import qualified Data.HashSet                      as HS
+import qualified Data.Map.Strict                   as M
 import qualified Data.Set                          as Set
+import qualified Data.Text                         as T
+import           Data.Tuple                        (swap)
+import           Instances.TH.Lift                 ()
 
 validateManualConfig
   :: (QErrM m, CacheRM m)
@@ -184,8 +185,8 @@ runCreateRemoteRelationshipP1 remoteRelationship = do
 runCreateRemoteRelationshipP2 ::
      (MonadTx m, CacheRWM m) => RemoteField -> TypeMap -> m EncJSON
 runCreateRemoteRelationshipP2 remoteField additionalTypesMap = do
-  liftTx (persistCreateRemoteRelationship (rmfRemoteRelationship remoteField))
-  addRemoteFieldToCache remoteField additionalTypesMap schemaDependencies
+  liftTx (persistRemoteRelationship (rmfRemoteRelationship remoteField))
+  addRemoteRelToCache remoteField additionalTypesMap schemaDependencies
   pure successMsg
   where
     schemaDependencies =
@@ -204,8 +205,9 @@ runCreateRemoteRelationshipP2 remoteField additionalTypesMap = do
             SchemaDependency (SORemoteSchema remoteSchemaName) "remote schema"
        in (tableDep : remoteSchemaDep : columnsDep)
 
-persistCreateRemoteRelationship :: RemoteRelationship -> Q.TxE QErr ()
-persistCreateRemoteRelationship remoteRelationship =
+persistRemoteRelationship
+  :: RemoteRelationship -> Q.TxE QErr ()
+persistRemoteRelationship remoteRelationship =
   Q.unitQE defaultTxErrorHandler [Q.sql|
   INSERT INTO hdb_catalog.hdb_remote_relationship
   (name, table_schema, table_name, remote_schema, configuration)
@@ -218,6 +220,27 @@ persistCreateRemoteRelationship remoteRelationship =
       ,rtrRemoteSchema remoteRelationship
       ,Q.JSONB (toJSON (remoteRelationship))))
   True
+
+runDeleteRemoteRelationship ::
+     (MonadTx m, CacheRWM m, UserInfoM m) => DeleteRemoteRelationship -> m EncJSON
+runDeleteRemoteRelationship (DeleteRemoteRelationship table relName)= do
+  adminOnly
+  delRemoteRelFromCache table relName
+  liftTx $ delRemoteRelFromCatalog table relName
+  return successMsg
+
+delRemoteRelFromCatalog
+  :: QualifiedTable
+  -> RemoteRelationshipName
+  -> Q.TxE QErr ()
+delRemoteRelFromCatalog (QualifiedObject sn tn) (RemoteRelationshipName relName) =
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+           DELETE FROM
+                  hdb_catalog.hdb_remote_relationship
+           WHERE table_schema =  $1
+             AND table_name = $2
+             AND name = $3
+                |] (sn, tn, relName) True
 
 runCreateObjRel
   :: (QErrM m, CacheRWM m, MonadTx m , UserInfoM m)

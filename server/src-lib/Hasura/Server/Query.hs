@@ -43,9 +43,11 @@ data RQLQuery
   | RQCreateObjectRelationship !CreateObjRel
   | RQCreateArrayRelationship !CreateArrRel
   | RQDropRelationship !DropRel
-  | RQCreateRemoteRelationship !RemoteRelationship
   | RQSetRelationshipComment !SetRelComment
   | RQRenameRelationship !RenameRel
+
+  | RQCreateRemoteRelationship !RemoteRelationship
+  | RQDeleteRemoteRelationship !DeleteRemoteRelationship
 
   | RQCreateInsertPermission !CreateInsPerm
   | RQCreateSelectPermission !CreateSelPerm
@@ -194,7 +196,8 @@ queryNeedsReload qi = case qi of
   RQSetRelationshipComment  _     -> False
   RQRenameRelationship _          -> True
 
-  RQCreateRemoteRelationship {}   -> True
+  RQCreateRemoteRelationship _    -> True
+  RQDeleteRemoteRelationship _    -> True
 
   RQCreateInsertPermission _      -> True
   RQCreateSelectPermission _      -> True
@@ -254,7 +257,6 @@ runQueryM
   => RQLQuery
   -> m EncJSON
 runQueryM rq = withPathK "args" $ case rq of
-  RQCreateRemoteRelationship q -> runCreateRemoteRelationship q
   RQAddExistingTableOrView q   -> runTrackTableQ q
   RQTrackTable q               -> runTrackTableQ q
   RQUntrackTable q             -> runUntrackTableQ q
@@ -267,6 +269,9 @@ runQueryM rq = withPathK "args" $ case rq of
   RQDropRelationship  q        -> runDropRel q
   RQSetRelationshipComment  q  -> runSetRelComment q
   RQRenameRelationship q       -> runRenameRel q
+
+  RQCreateRemoteRelationship q -> runCreateRemoteRelationship q
+  RQDeleteRemoteRelationship q -> runDeleteRemoteRelationship q
 
   RQCreateInsertPermission q   -> runCreatePerm q
   RQCreateSelectPermission q   -> runCreatePerm q
