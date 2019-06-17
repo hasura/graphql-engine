@@ -89,13 +89,12 @@ runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer manager reqHdrs r
               liftIO
                 (putStrLn
                    ("joined = " <> either show (L8.unpack . encode) joinResult))
-              pure
-                (HttpResponse
-                   (either
-                      (const encJson) -- FIXME: make an error
-                      (encJFromJValue . wrapPayload . Object)
-                      joinResult)
-                   Nothing)
+              case joinResult of
+                Left e -> throw500 (T.pack e)
+                Right v -> pure
+                             (HttpResponse
+                                (encJFromJValue . wrapPayload . Object $ v)
+                                Nothing)
   case mergeResponseData (toList (fmap _hrBody results)) of
     Right merged -> do
       liftIO (putStrLn ("Response:\n" ++ L8.unpack (encJToLBS merged)))
