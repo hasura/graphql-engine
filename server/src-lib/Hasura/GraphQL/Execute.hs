@@ -279,11 +279,12 @@ joinResults paths hasuraValue0 = do
            Left err -> Left err
            Right object -> pure (batch, object :: J.Value))
       paths
-  foldM
-    (\hasuraValue (batch, remoteValue) ->
-       pure (insertResultsAt remoteValue (batchRelFieldPath batch) hasuraValue))
-    hasuraValue0
-    remoteValues
+  -- foldM
+  --   (\hasuraValue (batch, remoteValue) ->
+  --      pure (insertResultsAt remoteValue (batchRelFieldPath batch) hasuraValue))
+  --   hasuraValue0
+  --   remoteValues
+  undefined
 
 -- | Insert at path, index the value in the larger structure.
 insertResultsAt :: J.Value -> RelFieldPath -> Maybe ArrayIndex -> J.Value -> J.Value
