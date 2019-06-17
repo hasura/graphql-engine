@@ -1329,6 +1329,10 @@ code {
   width: 100% !important;
 }
 
+.wd300Px {
+  width: 300px;
+}
+
 /* container height subtracting top header and bottom scroll bar */
 $mainContainerHeight: calc(100vh - 50px - 25px);
 

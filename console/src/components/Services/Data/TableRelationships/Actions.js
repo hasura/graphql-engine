@@ -16,6 +16,19 @@ export const MANUAL_REL_NAME_CHANGED = 'ModifyTable/MANUAL_REL_NAME_CHANGED';
 export const REL_NAME_CHANGED = 'ModifyTable/REL_NAME_CHANGED';
 export const REL_ADD_NEW_CLICKED = 'ModifyTable/REL_ADD_NEW_CLICKED';
 
+export const SET_REMOTE_RELATIONSHIPS = 'ModifyTable/SET_REMOTE_RELATIONSHIPS';
+
+export const defaultRemoteRelationship = {
+  name: '',
+  remoteSchema: '',
+  remoteField: [],
+};
+
+export const setRemoteRelationships = remoteRelationships => ({
+  type: SET_REMOTE_RELATIONSHIPS,
+  remoteRelationships,
+});
+
 const resetRelationshipForm = () => ({ type: REL_RESET });
 const resetManualRelationshipForm = () => ({ type: MANUAL_REL_RESET });
 const addNewRelClicked = () => ({ type: REL_ADD_NEW_CLICKED });

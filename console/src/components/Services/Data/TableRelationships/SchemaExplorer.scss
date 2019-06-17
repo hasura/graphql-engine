@@ -1,0 +1,10 @@
+@import "../../../Common/Common.scss";
+
+.schemaExplorerContainer {
+  background-color: #f7f7f7;
+  padding: 10px;
+  border: 1px solid #ccc;
+  overflow: scroll;
+  max-height: 200px;
+  border-radius: 4px;
+}

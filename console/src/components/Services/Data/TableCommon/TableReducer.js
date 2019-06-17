@@ -37,6 +37,7 @@ import {
   MANUAL_REL_RESET,
   REL_SELECTION_CHANGED,
   REL_ADD_NEW_CLICKED,
+  SET_REMOTE_RELATIONSHIPS,
 } from '../TableRelationships/Actions';
 
 // TABLE PERMISSIONS
@@ -573,6 +574,12 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       return {
         ...modifyState,
         uniqueKeyModify: action.keys,
+      };
+
+    case SET_REMOTE_RELATIONSHIPS:
+      return {
+        ...modifyState,
+        remoteRelationships: action.remoteRelationships,
       };
     default:
       return modifyState;
