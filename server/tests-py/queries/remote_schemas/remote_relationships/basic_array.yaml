@@ -20,13 +20,15 @@ response:
             msg: You win!
           - name: alice
             msg: Another alice
-query: 
+query:
   query: |
     query {
       profiles {
         id
+        name
         messagesNestedArr {
           name
+          msg
         }
       }
     }
