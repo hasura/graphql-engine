@@ -429,7 +429,7 @@ extractRemoteRelArguments ::
   -> Either String ( J.Value
                    , [( RemoteRelField
                       , RemoteSchemaInfo
-                      , Seq.Seq (Map.HashMap G.Variable G.ValueConst))])
+                      , BatchInputs)])
 extractRemoteRelArguments remoteSchemaMap encJson rels =
   case J.eitherDecode (encJToLBS encJson) of
     Left err -> Left err
@@ -439,35 +439,57 @@ extractRemoteRelArguments remoteSchemaMap encJson rels =
           Left
             ("Couldn't find `data' payload in " <> L8.unpack (J.encode object))
         Just value -> do
-          hash <- flip execStateT mempty (extractFromResult keyedRemotes value)
-          remotes <- Map.traverseWithKey
-                       (\key rows ->
-                          case Map.lookup key keyedMap of
-                            Nothing -> Left "Failed to assicate remote key with remote."
-                            Just remoteRel ->
-                              case Map.lookup
-                                     (rtrRemoteSchema
-                                        (rmfRemoteRelationship (rrRemoteField remoteRel)))
-                                     remoteSchemaMap of
-                                Just remoteSchemaInfo ->
-                                  pure (remoteRel, remoteSchemaInfo, rows)
-                                Nothing -> Left "Couldn't find remote schema info!")
-                       hash
+          hash <-
+            flip execStateT mempty (extractFromResult One keyedRemotes value)
+          remotes <-
+            Map.traverseWithKey
+              (\key rows ->
+                 case Map.lookup key keyedMap of
+                   Nothing -> Left "Failed to assicate remote key with remote."
+                   Just remoteRel ->
+                     case Map.lookup
+                            (rtrRemoteSchema
+                               (rmfRemoteRelationship (rrRemoteField remoteRel)))
+                            remoteSchemaMap of
+                       Just remoteSchemaInfo ->
+                         pure (remoteRel, remoteSchemaInfo, rows)
+                       Nothing -> Left "Couldn't find remote schema info!")
+              hash
           pure (value, Map.elems remotes)
   where
     keyedRemotes = NE.zip (fmap RemoteRelKey (0 :| [1 ..])) rels
     keyedMap = Map.fromList (toList keyedRemotes)
 
+data BatchInputs =
+  BatchInputs
+    { biRows :: !(Seq.Seq (Map.HashMap G.Variable G.ValueConst))
+    , biCardinality :: Cardinality
+    }
+
+instance Semigroup BatchInputs where
+  (<>) (BatchInputs r1 c1) (BatchInputs r2 c2) =
+    BatchInputs (r1 <> r2) (c1 <> c2)
+
+data Cardinality = Many | One
+ deriving (Eq, Show)
+
+instance Semigroup Cardinality where
+    (<>) x Many = Many
+    (<>) Many x = Many
+    (<>) One One = One
+
 -- | Extract from a given result.
 extractFromResult ::
-     NonEmpty (RemoteRelKey, RemoteRelField)
+     Cardinality
+  -> NonEmpty (RemoteRelKey, RemoteRelField)
   -> J.Value
-  -> StateT (Map.HashMap RemoteRelKey (Seq.Seq (Map.HashMap G.Variable G.ValueConst))) (Either String) ()
-extractFromResult keyedRemotes value =
+  -> StateT (Map.HashMap RemoteRelKey BatchInputs) (Either String) ()
+extractFromResult cardinality keyedRemotes value =
   case value of
-    J.Array values -> mapM_ (extractFromResult keyedRemotes) values
+    J.Array values -> mapM_ (extractFromResult Many keyedRemotes) values
     J.Object hashmap -> do
-      remotesRows :: Map.HashMap RemoteRelKey (Seq.Seq (G.Variable, G.ValueConst)) <-
+      remotesRows :: Map.HashMap RemoteRelKey (Seq.Seq ( G.Variable
+                                                       , G.ValueConst)) <-
         foldM
           (\result (key, remotes) ->
              case Map.lookup key hashmap of
@@ -477,7 +499,7 @@ extractFromResult keyedRemotes value =
                  case NE.nonEmpty unfinishedKeyedRemotes of
                    Nothing -> pure ()
                    Just subRemotes -> do
-                     extractFromResult subRemotes subvalue
+                     extractFromResult cardinality subRemotes subvalue
                  pure
                    (foldl'
                       (\result' remoteRelKey ->
@@ -504,7 +526,8 @@ extractFromResult keyedRemotes value =
              (Map.insertWith
                 (flip (<>))
                 remoteRelKey
-                (pure (Map.fromList (toList row)))))
+                (BatchInputs {biRows = pure (Map.fromList (toList row))
+                             ,biCardinality = cardinality})))
         (Map.toList remotesRows)
     _ -> pure ()
   where
