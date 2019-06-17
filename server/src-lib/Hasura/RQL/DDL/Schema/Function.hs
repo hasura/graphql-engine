@@ -1,3 +1,7 @@
+{- |
+Description: Create/delete SQL functions to/from Hasura metadata.
+-}
+
 module Hasura.RQL.DDL.Schema.Function where
 
 import           Hasura.EncJSON
@@ -108,6 +112,9 @@ newtype TrackFunction
   { tfName :: QualifiedFunction}
   deriving (Show, Eq, FromJSON, ToJSON, Lift)
 
+-- | Track function, Phase 1:
+-- Validate function tracking operation. Fails if function is already being
+-- tracked, or if a table with the same name is being tracked.
 trackFunctionP1
   :: (CacheRM m, UserInfoM m, QErrM m) => TrackFunction -> m ()
 trackFunctionP1 (TrackFunction qf) = do
