@@ -12,6 +12,10 @@ response:
         messageBasic:
           id : 2
           name: bob
+      - id: 3
+        messageBasic:
+          id: 3
+          name: alice
 query:
   query: |
     fragment basicInfo on Message {
@@ -27,4 +31,3 @@ query:
         }
       }
     }
-

@@ -61,7 +61,7 @@ runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer manager reqHdrs r
                   remoteRels
           liftIO $ putStrLn ("extractRemoteRelArguments = " ++ show result)
           case result of
-            Left e -> error e
+            Left e -> throw500 (T.pack e)
             Right (value, remotes) -> do
               let batches = E.produceBatches remotes
               liftIO $ putStrLn ("batches = " ++ show batches)

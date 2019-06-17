@@ -124,20 +124,20 @@ class TestExecution:
     def test_basic_relationship(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + 'basic_relationship.yaml', transport)
 
-    # def test_basic_array(self, hge_ctx, transport):
-    #     check_query_f(hge_ctx, self.dir() + 'basic_array.yaml', transport)
+    def test_basic_array(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + 'basic_array.yaml', transport)
 
-    # def test_multiple_fields(self, hge_ctx, transport):
-    #     check_query_f(hge_ctx, self.dir() + 'basic_multiple_fields.yaml', transport)
+    def test_multiple_fields(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + 'basic_multiple_fields.yaml', transport)
 
-    # def test_with_variables(self, hge_ctx, transport):
-    #     check_query_f(hge_ctx, self.dir() + 'mixed_variables.yaml', transport)
-    #     check_query_f(hge_ctx, self.dir() + 'remote_rel_variables.yaml', transport)
+    def test_with_variables(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + 'mixed_variables.yaml', transport)
+        check_query_f(hge_ctx, self.dir() + 'remote_rel_variables.yaml', transport)
 
-    # def test_with_fragments(self, hge_ctx, transport):
-    #     check_query_f(hge_ctx, self.dir() + 'mixed_fragments.yaml', transport)
-    #     check_query_f(hge_ctx, self.dir() + 'remote_rel_fragments.yaml', transport)
+    def test_with_fragments(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + 'mixed_fragments.yaml', transport)
+        check_query_f(hge_ctx, self.dir() + 'remote_rel_fragments.yaml', transport)
 
-    # def test_with_interface(self, hge_ctx, transport):
-    #     check_query_f(hge_ctx, self.dir() + 'mixed_interface.yaml', transport)
-    #     check_query_f(hge_ctx, self.dir() + 'remote_rel_interface.yaml', transport)
+    def test_with_interface(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + 'mixed_interface.yaml', transport)
+        check_query_f(hge_ctx, self.dir() + 'remote_rel_interface.yaml', transport)
