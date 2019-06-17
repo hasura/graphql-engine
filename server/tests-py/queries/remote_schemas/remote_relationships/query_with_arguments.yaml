@@ -16,14 +16,12 @@ response:
             msg: Another alice
 query:
   query: |
-    query ($name: String!) {
+    query {
       profiles {
         id
-        messagesNestedArgs(includes: { name:  [$name] }) {
+        messagesNestedArgs(where: { name: { eq:  'alice' } }) {
           id
           msg
         }
       }
     }
-  variables:
-    name: alice
