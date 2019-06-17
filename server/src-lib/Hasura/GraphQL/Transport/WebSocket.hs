@@ -27,6 +27,7 @@ import qualified StmContainers.Map                           as STMMap
 
 import           Control.Concurrent                          (threadDelay)
 
+import Hasura.GraphQL.Validate
 import qualified Hasura.GraphQL.Validate as VQ
 import           Hasura.EncJSON
 import qualified Hasura.GraphQL.Execute                      as E
@@ -272,14 +273,16 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
     runRemoteGQ :: UserInfo -> [H.Header]
                 -> VQ.RemoteTopQuery
                 -> ExceptT () IO ()
-    runRemoteGQ userInfo reqHdrs rsi = do
+    runRemoteGQ userInfo reqHdrs rt = do
 
       -- if it's not a subscription, use HTTP to execute the query on the remote
       -- server
       -- try to parse the (apollo protocol) websocket frame and get only the
       -- payload
-      resp <- runExceptT $ E.execRemoteGQ httpMgr userInfo reqHdrs
-              rsi
+      resp <- let (rsi, fields) = remoteTopQueryEither rt in
+              runExceptT $ E.execRemoteGQ httpMgr userInfo reqHdrs
+              rsi fields
+
       either postExecErr (sendRemoteResp . _hrBody) resp
       sendCompleted
 

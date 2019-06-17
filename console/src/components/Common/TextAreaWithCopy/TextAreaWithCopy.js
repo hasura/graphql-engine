@@ -3,22 +3,33 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 class TextAreaWithCopy extends React.Component {
-  copyToClip(type, id) {
-    const { copyText, textLanguage } = this.props;
+  copyToClip(id, e) {
+    e.preventDefault();
+
+    const { copyText, textLanguage, containerId } = this.props;
 
     let text = '';
-    if (this.props.copyText.length > 0) {
-      text =
-        window.sqlFormatter &&
-        textLanguage &&
-        textLanguage.toLowerCase() === 'sql'
-          ? window.sqlFormatter.format(copyText, { language: textLanguage })
-          : copyText;
+    if (copyText.length > 0) {
+      switch (textLanguage) {
+        case 'sql':
+          text = window.sqlFormatter
+            ? window.sqlFormatter.format(copyText, { language: textLanguage })
+            : copyText;
+          break;
+        default:
+          text = copyText;
+      }
     }
 
     const textArea = document.createElement('textarea');
     textArea.value = text;
-    document.body.appendChild(textArea);
+
+    const appendLoc = containerId
+      ? document.getElementById(containerId)
+      : document.body;
+
+    appendLoc.appendChild(textArea);
+
     textArea.focus();
     textArea.select();
 
@@ -26,14 +37,17 @@ class TextAreaWithCopy extends React.Component {
       const successful = document.execCommand('copy');
       // const msg = successful ? 'successful' : 'unsuccessful';
       const tooltip = document.getElementById(id);
-      tooltip.innerHTML = 'Copied';
       if (!successful) {
+        tooltip.innerHTML = 'Error copying';
         throw new Error('Copy was unsuccessful');
+      } else {
+        tooltip.innerHTML = 'Copied';
       }
     } catch (err) {
       alert('Oops, unable to copy - ' + err);
     }
-    document.body.removeChild(textArea);
+
+    appendLoc.removeChild(textArea);
   }
 
   resetCopy(id) {
@@ -44,7 +58,13 @@ class TextAreaWithCopy extends React.Component {
   render() {
     const style = require('./TextAreaWithCopy.scss');
 
-    const { copyText, toolTipClass } = this.props;
+    const {
+      copyText,
+      toolTipClass,
+      id,
+      containerId,
+      textLanguage,
+    } = this.props;
 
     const renderSimpleValue = () => {
       return (
@@ -55,6 +75,10 @@ class TextAreaWithCopy extends React.Component {
     };
 
     const renderSQLValue = () => {
+      if (!window || !window.hljs || !window.sqlFormatter) {
+        return renderSimpleValue();
+      }
+
       return (
         <pre>
           <code
@@ -62,9 +86,7 @@ class TextAreaWithCopy extends React.Component {
             dangerouslySetInnerHTML={{
               __html: window.hljs.highlight(
                 'sql',
-                window.sqlFormatter.format(copyText, {
-                  language: this.props.textLanguage,
-                })
+                window.sqlFormatter.format(copyText, { language: textLanguage })
               ).value,
             }}
           />
@@ -72,40 +94,61 @@ class TextAreaWithCopy extends React.Component {
       );
     };
 
-    const useSQLValue =
-      window &&
-      window.sqlFormatter &&
-      window.hljs &&
-      this.props.textLanguage &&
-      this.props.textLanguage.toLowerCase() === 'sql';
+    const renderJSONValue = () => {
+      if (!window || !window.hljs) {
+        return renderSimpleValue();
+      }
+
+      return (
+        <pre>
+          <code
+            className={style.formattedCode}
+            dangerouslySetInnerHTML={{
+              __html: window.hljs.highlight(
+                'json',
+                JSON.stringify(JSON.parse(copyText), null, 4)
+              ).value,
+            }}
+          />
+        </pre>
+      );
+    };
+
+    const getTypeRenderer = type => {
+      let typeRenderer;
+
+      switch (type) {
+        case 'sql':
+          typeRenderer = renderSQLValue;
+          break;
+        case 'json':
+          typeRenderer = renderJSONValue;
+          break;
+        default:
+          typeRenderer = renderSimpleValue;
+      }
+
+      return typeRenderer;
+    };
 
     return (
-      <div className={`${style.codeBlockCustom}`}>
-        <div className={`${style.copyGenerated}`}>
-          <div className={`${style.copyTooltip}`}>
+      <div className={style.codeBlockCustom} id={containerId}>
+        <div className={style.copyGenerated}>
+          <div className={style.copyTooltip}>
             <span
               className={toolTipClass ? toolTipClass : style.tooltiptext}
-              id="copyCustomFunctionSQL"
+              id={id}
             >
               Copy
             </span>
             <i
               className={'fa fa-copy'}
-              onClick={this.copyToClip.bind(
-                this,
-                'plan',
-                'copyCustomFunctionSQL'
-              )}
-              onMouseLeave={this.resetCopy.bind(this, 'copyCustomFunctionSQL')}
+              onClick={this.copyToClip.bind(this, id)}
+              onMouseLeave={this.resetCopy.bind(this, id)}
             />
-            {/*
-              onClick={this.copyToClip.bind(this, 'plan', 'copyPlan')}
-              onMouseLeave={this.resetCopy.bind(this, 'copyPlan')}
-            */}
           </div>
         </div>
-
-        {useSQLValue ? renderSQLValue() : renderSimpleValue()}
+        {getTypeRenderer(textLanguage)()}
       </div>
     );
   }
@@ -114,6 +157,8 @@ class TextAreaWithCopy extends React.Component {
 TextAreaWithCopy.propTypes = {
   copyText: PropTypes.string.isRequired,
   textLanguage: PropTypes.string,
+  id: PropTypes.string.isRequired,
+  containerId: PropTypes.string,
 };
 
 export default TextAreaWithCopy;

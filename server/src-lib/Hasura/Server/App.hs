@@ -43,12 +43,14 @@ import qualified Hasura.Logging                         as L
 
 import           Hasura.EncJSON
 import           Hasura.Prelude                         hiding (get, put)
+import           Hasura.RQL.DDL.Remote.Types
 import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                     (AuthMode (..),
                                                          getUserInfo)
+import           Hasura.Server.Config                   (runGetConfig)
 import           Hasura.Server.Context
 import           Hasura.Server.Cors
 import           Hasura.Server.Init
@@ -152,6 +154,9 @@ isGraphQLEnabled sc = S.member GRAPHQL $ scEnabledAPIs sc
 
 isPGDumpEnabled :: ServerCtx -> Bool
 isPGDumpEnabled sc = S.member PGDUMP $ scEnabledAPIs sc
+
+isConfigEnabled :: ServerCtx -> Bool
+isConfigEnabled sc = S.member CONFIG $ scEnabledAPIs sc
 
 isDeveloperAPIEnabled :: ServerCtx -> Bool
 isDeveloperAPIEnabled sc = S.member DEVELOPER $ scEnabledAPIs sc
@@ -310,6 +315,19 @@ v1Alpha1PGDumpHandler b = do
   ci <- scConnInfo . hcServerCtx <$> ask
   output <- PGD.execPGDump b ci
   return $ RawResp $ HttpResponse output (Just [Header sqlHeader])
+
+remoteSchemaProxyHandler :: T.Text -> Handler (HttpResponse EncJSON)
+remoteSchemaProxyHandler remoteSchemaNameTxt = do
+  userInfo <- asks hcUser
+  reqBody <- asks hcReqBody
+  reqHeaders <- asks hcReqHeaders
+  manager <- scManager . hcServerCtx <$> ask
+  scRef <- scCacheRef . hcServerCtx <$> ask
+  (sc, _) <- liftIO $ readIORef $ _scrCache scRef
+  let remoteSchemaInfoM = M.lookup (RemoteSchemaName remoteSchemaNameTxt) (scRemoteResolvers sc)
+  case remoteSchemaInfoM of
+    Nothing  -> throw400 NotFound "remote schema not found"
+    Just rsi -> E.execRemoteGQ manager userInfo reqHeaders rsi (Left reqBody)
 
 consoleAssetsHandler :: L.Logger -> Text -> FilePath -> ActionT IO ()
 consoleAssetsHandler logger dir path = do
@@ -481,6 +499,14 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
         query <- parseBody
         v1Alpha1PGDumpHandler query
 
+    when enableConfig $
+      get "v1alpha1/config" $ mkSpockAction encodeQErr id serverCtx $
+        mkAPIRespHandler $ do
+          onlyAdmin
+          return $ HttpResponse
+            (encJFromJValue $ runGetConfig (scAuthMode serverCtx))
+            Nothing
+
     when enableGraphQL $ do
       post "v1alpha1/graphql/explain" gqlExplainAction
 
@@ -495,6 +521,11 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
         mkAPIRespHandler $ do
           query <- parseBody
           v1GQHandler query
+
+      post ("v1/graphql/proxy" <//> var) $ \remoteSchemaName ->  mkSpockAction GH.encodeGQErr id serverCtx $
+        mkAPIRespHandler $ do
+          onlyAdmin
+          remoteSchemaProxyHandler remoteSchemaName
 
     when (isDeveloperAPIEnabled serverCtx) $ do
       get "dev/plan_cache" $ mkSpockAction encodeQErr id serverCtx $
@@ -530,6 +561,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
     enableGraphQL = isGraphQLEnabled serverCtx
     enableMetadata = isMetadataEnabled serverCtx
     enablePGDump = isPGDumpEnabled serverCtx
+    enableConfig = isConfigEnabled serverCtx
     tmpltGetOrDeleteH tmpltName = do
       tmpltArgs <- tmpltArgsFromQueryParams
       mkSpockAction encodeQErr id serverCtx $ mkAPIRespHandler $

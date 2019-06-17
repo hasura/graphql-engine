@@ -1,5 +1,6 @@
 module Hasura.GraphQL.Validate
   ( validateGQ
+  , remoteTopQueryEither
   , showVars
   , LocatedTopField(..)
   , HasuraTopField(..)
@@ -171,6 +172,9 @@ data HasuraTopField
   | HasuraTopSubscription !Field
   deriving (Show, Eq)
 
+remoteTopQueryEither :: RemoteTopQuery -> (RemoteSchemaInfo, Either a [Field])
+remoteTopQueryEither (RemoteTopQuery remoteSchemaInfo fields) = (remoteSchemaInfo, pure fields)
+
 data RemoteTopQuery =
   RemoteTopQuery
     { rtqRemoteSchemaInfo :: !RemoteSchemaInfo
@@ -226,7 +230,9 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
       \case
          HasuraLocated field ->
            pure (HasuraTopField (HasuraTopMutation field))
-         _ -> throw500 "mutations not valid for remote"
+         RemoteLocated remoteSchemaInfo field ->
+           -- TODO: Insert variables.
+           pure (RemoteTopField (RemoteTopQuery remoteSchemaInfo (pure field)))
     makeTopSubscription =
       \case
         HasuraLocated field ->

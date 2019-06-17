@@ -13,8 +13,7 @@ module Hasura.RQL.DDL.Remote.Validate
 
 import           Data.Bifunctor
 import           Data.Foldable
-import           Data.List.NonEmpty (NonEmpty (..))
-import qualified Data.List.NonEmpty as NE
+import           Data.List.NonEmpty            (NonEmpty (..))
 import           Data.Validation
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
@@ -82,45 +81,63 @@ validateRelationship remoteRelationship gctx tables = do
                     Left (pure (TableFieldNonexistent tableName fieldName))
                   Just fieldInfo -> pure (fieldName, fieldInfo))
              (toList (rtrHasuraFields remoteRelationship)))
-      fieldsAndTypes <-
-        traverse
-          (\fieldCall -> do
-             objFldInfo <- lookupField (fcName fieldCall) (GS._gQueryRoot gctx)
-             case _fiLoc objFldInfo of
-               HasuraType ->
-                 Left (pure (FieldNotFoundInRemoteSchema (fcName fieldCall)))
-               RemoteType {} -> do
-                 let providedArguments =
-                       remoteArgumentsToMap (fcArguments fieldCall)
-                 toEither
-                   (validateRemoteArguments
-                      (_fiParams objFldInfo)
-                      providedArguments
-                      (HM.fromList
-                         (map (first fieldNameToVariable) (HM.toList fieldInfos)))
-                      (GS._gTypes gctx))
-                 (paramMap, typeMap) <-
-                   first
+      (_leafTyInfo, leafGType, (leafParamMap, leafTypeMap)) <-
+        foldl
+          (\eitherObjTyInfoAndTypes fieldCall ->
+             case eitherObjTyInfoAndTypes of
+               Left err -> Left err
+               Right (objTyInfo, _, (_, typeMap)) -> do
+                 objFldInfo <- lookupField (fcName fieldCall) objTyInfo
+                 case _fiLoc objFldInfo of
+                   HasuraType ->
+                     Left
+                       (pure (FieldNotFoundInRemoteSchema (fcName fieldCall)))
+                   RemoteType {} -> do
+                     let providedArguments =
+                           remoteArgumentsToMap (fcArguments fieldCall)
+                     toEither
+                       (validateRemoteArguments
+                          (_fiParams objFldInfo)
+                          providedArguments
+                          (HM.fromList
+                             (map
+                                (first fieldNameToVariable)
+                                (HM.toList fieldInfos)))
+                          (GS._gTypes gctx))
+                     (newParamMap, newTypeMap) <-
+                       first
+                         pure
+                         (runStateT
+                            (stripInMap
+                               (GS._gTypes gctx)
+                               (_fiParams objFldInfo)
+                               providedArguments)
+                            typeMap)
+                     innerObjTyInfo <-
+                       getTyInfoFromField (GS._gTypes gctx) objFldInfo
                      pure
-                     (runStateT
-                        (stripInMap
-                           (GS._gTypes gctx)
-                           (_fiParams objFldInfo)
-                           providedArguments)
-                        mempty)
-                 pure
-                   ( RemoteField
-                       { rmfRemoteRelationship = remoteRelationship
-                       , rmfGType = _fiTy objFldInfo
-                       , rmfParamMap = paramMap
-                       }
-                   , typeMap))
+                       (innerObjTyInfo, _fiTy objFldInfo, (newParamMap, newTypeMap)))
+          (pure
+             ( GS._gQueryRoot gctx
+             , G.toGT (_otiName $ GS._gQueryRoot gctx)
+             , (mempty, mempty)))
           (rtrRemoteFields remoteRelationship)
       pure
-        ( fst (NE.last fieldsAndTypes)
-        , mconcat (fmap snd (toList fieldsAndTypes)))
+        ( RemoteField
+            { rmfRemoteRelationship = remoteRelationship
+            , rmfGType = leafGType
+            , rmfParamMap = leafParamMap
+            }
+        , leafTypeMap)
   where
     tableName = rtrTable remoteRelationship
+    getTyInfoFromField types field =
+      let baseTy = getBaseTy (_fiTy field)
+          fieldName = _fiName field
+          typeInfo = HM.lookup baseTy types
+       in case typeInfo of
+            Just (TIObj objTyInfo) -> pure objTyInfo
+            _ -> Left (pure (FieldNotFoundInRemoteSchema fieldName))
 
 -- | Return a map with keys deleted whose template argument is
 -- specified as an atomic (variable, constant), keys which are kept

@@ -45,13 +45,15 @@ module Hasura.RQL.Types.SchemaCache
        -- , addFldToCache
        , addColToCache
        , addRelToCache
-       , addRemoteFieldToCache
+       , addRemoteSchemaToCache
+       , addRemoteRelToCache
 
        , addRemoteRelInputTypes
 
        , delColFromCache
        , updColInCache
        , delRelFromCache
+       , delRemoteRelFromCache
 
        , RolePermInfo(..)
        , permIns
@@ -107,11 +109,16 @@ module Hasura.RQL.Types.SchemaCache
        , addRelationshipTypes
        ) where
 
+import           Control.Lens
+import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
 import qualified Hasura.GraphQL.Context            as GC
+import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
+import           Hasura.RQL.DDL.Remote.Types
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.DDL.Remote.Types
 import           Hasura.RQL.Types.DML
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
@@ -120,12 +127,7 @@ import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCacheTypes
-import           Hasura.GraphQL.Validate.Types
 import           Hasura.SQL.Types
-import           Control.Lens
-import           Data.Aeson
-import           Data.Aeson.Casing
-import           Data.Aeson.TH
 
 import qualified Data.HashMap.Strict               as M
 import qualified Data.HashSet                      as HS
@@ -453,7 +455,7 @@ data SchemaCache
   , scDefaultRemoteGCtx   :: !GC.GCtx
   , scDepMap              :: !DepMap
   , scInconsistentObjs    :: ![InconsistentMetadataObj]
-  , scRemoteRelInputTypes :: !TypeMap
+  , scRemoteRelInputTypes :: !(M.HashMap (QualifiedTable, RemoteRelationshipName) TypeMap)
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
@@ -591,28 +593,60 @@ addRelToCache rn ri deps tn = do
   where
     schObjId = SOTableObj tn $ TORel $ riName ri
 
-addRemoteFieldToCache ::
+addRemoteSchemaToCache
+  :: CacheRWM m
+  => RemoteSchemaName
+  -> RemoteSchemaInfo
+  -> m ()
+addRemoteSchemaToCache name rmDef = do
+  sc <- askSchemaCache
+  let resolvers = scRemoteResolvers sc
+  writeSchemaCache sc
+    {scRemoteResolvers = M.insert name rmDef resolvers}
+
+addRemoteRelToCache ::
      (QErrM m, CacheRWM m)
   => RemoteField
   -> TypeMap
   -> [SchemaDependency]
   -> m ()
-addRemoteFieldToCache remoteField additionalTypes deps = do
+addRemoteRelToCache remoteField additionalTypes deps = do
   addFldToCache (FieldName (unRemoteRelationshipName rn)) (FIRemote remoteField) qt
-  addRelationshipTypes additionalTypes
+  addRelationshipTypes (qt, rn) additionalTypes
   modDepMapInCache (addToDepMap schObjId deps)
   where
     qt = rtrTable (rmfRemoteRelationship remoteField)
     rn = rtrName (rmfRemoteRelationship remoteField)
     schObjId = SOTableObj qt $ TORel (RelName (unRemoteRelationshipName rn))
 
-addRelationshipTypes :: (CacheRWM m) => TypeMap -> m ()
-addRelationshipTypes additionalTypesMap = do
+delRemoteRelFromCache ::
+    (QErrM m, CacheRWM m)
+  => QualifiedTable -> RemoteRelationshipName -> m ()
+delRemoteRelFromCache table rn = do
+  delFldFromCache (FieldName (unRemoteRelationshipName rn)) table
+  removeRelationshipTypes table rn
+  modDepMapInCache (removeFromDepMap schObjId)
+  where
+    schObjId = SOTableObj table $ TORel (RelName (unRemoteRelationshipName rn))
+
+addRelationshipTypes :: (CacheRWM m) => (QualifiedTable, RemoteRelationshipName) -> TypeMap -> m ()
+addRelationshipTypes (qt, rn) additionalTypesMap = do
   schemaCache <- askSchemaCache
   writeSchemaCache
     schemaCache
       { scRemoteRelInputTypes =
-          additionalTypesMap <> (scRemoteRelInputTypes schemaCache)
+           M.insert (qt, rn) additionalTypesMap (scRemoteRelInputTypes schemaCache)
+      }
+
+removeRelationshipTypes ::
+  (CacheRWM m) =>
+  QualifiedTable-> RemoteRelationshipName -> m ()
+removeRelationshipTypes table rn = do
+  schemaCache <- askSchemaCache
+  writeSchemaCache
+    schemaCache
+      { scRemoteRelInputTypes =
+          M.delete (table, rn) (scRemoteRelInputTypes schemaCache)
       }
 
 addFldToCache
@@ -844,9 +878,9 @@ getDependentObjsWith f sc objId =
     induces objId1 objId2                    = objId1 == objId2
     -- allDeps = toList $ fromMaybe HS.empty $ M.lookup objId $ scDepMap sc
 
-mergeTypesWithGCtx :: TypeMap -> GC.GCtx -> GC.GCtx
-mergeTypesWithGCtx typeMap gctx =
-  gctx {GC._gTypes = typeMap <> GC._gTypes gctx }
+mergeRemoteTypesWithGCtx :: (M.HashMap (QualifiedTable, RemoteRelationshipName) TypeMap) -> GC.GCtx -> GC.GCtx
+mergeRemoteTypesWithGCtx remoteTypeMaps gctx =
+  gctx {GC._gTypes = (mconcat $ M.elems remoteTypeMaps) <> GC._gTypes gctx }
 
 addRemoteRelInputTypes
   :: (MonadError QErr m)
@@ -855,9 +889,9 @@ addRemoteRelInputTypes sc = do
   let gCtx = scDefaultRemoteGCtx sc
       gCtxMap = scGCtxMap sc
       remoteRelInputTypes = scRemoteRelInputTypes sc
-      newGCtxMap = M.map (mergeTypesWithGCtx remoteRelInputTypes) gCtxMap
+      newGCtxMap = M.map (mergeRemoteTypesWithGCtx remoteRelInputTypes) gCtxMap
   return $
     sc
       { scGCtxMap = newGCtxMap
-      , scDefaultRemoteGCtx = mergeTypesWithGCtx remoteRelInputTypes gCtx
+      , scDefaultRemoteGCtx = mergeRemoteTypesWithGCtx remoteRelInputTypes gCtx
       }

@@ -21,6 +21,7 @@ module Hasura.GraphQL.Execute
 
 import           Control.Exception (try)
 import           Control.Lens
+import qualified Data.ByteString.Lazy as L
 import qualified Data.ByteString.Lazy.Char8 as L8
 import           Data.Scientific
 import           Data.Validation
@@ -815,9 +816,10 @@ execRemoteGQ
   => HTTP.Manager
   -> UserInfo
   -> [N.Header]
-  -> VQ.RemoteTopQuery
+  -> RemoteSchemaInfo
+  -> Either L.ByteString [Field]
   -> m (HttpResponse EncJSON)
-execRemoteGQ manager userInfo reqHdrs remoteTopField = do
+execRemoteGQ manager userInfo reqHdrs remoteSchemaInfo bsOrField = do
   hdrs <- getHeadersFromConf hdrConf
   let confHdrs   = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
       clientHdrs = bool [] filteredHeaders fwdClientHdrs
@@ -830,8 +832,12 @@ execRemoteGQ manager userInfo reqHdrs remoteTopField = do
       finalHdrs  = foldr Map.union Map.empty hdrMaps
       options    = wreqOptions manager (Map.toList finalHdrs)
 
-  gqlReq <- fieldsToRequest field
-  let jsonbytes = encJToLBS (encJFromJValue gqlReq)
+  jsonbytes <- case bsOrField of
+    Right field -> do gqlReq <- fieldsToRequest field
+                      let jsonbytes = encJToLBS (encJFromJValue gqlReq)
+                      pure jsonbytes
+    Left bytes -> pure bytes
+
   liftIO (putStrLn ("payload_to_server = " ++ L8.unpack jsonbytes))
   res  <- liftIO $ try $ Wreq.postWith options (show url) jsonbytes
   resp <- either httpThrow return res
@@ -840,8 +846,7 @@ execRemoteGQ manager userInfo reqHdrs remoteTopField = do
   return $ HttpResponse (encJFromLBS $ resp ^. Wreq.responseBody) respHdrs
 
   where
-    VQ.RemoteTopQuery (RemoteSchemaInfo url hdrConf fwdClientHdrs) field =
-      remoteTopField
+    (RemoteSchemaInfo url hdrConf fwdClientHdrs) = remoteSchemaInfo
 
     httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
     httpThrow err = throw500 $ T.pack . show $ err

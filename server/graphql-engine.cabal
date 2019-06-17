@@ -170,6 +170,7 @@ library
                      , Hasura.Server.Telemetry
                      , Hasura.Server.SchemaUpdate
                      , Hasura.Server.PGDump
+                     , Hasura.Server.Config
 
                      , Hasura.RQL.Types
                      , Hasura.RQL.Instances

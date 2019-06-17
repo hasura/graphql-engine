@@ -2,6 +2,7 @@ module Hasura.GraphQL.Transport.HTTP
   ( runGQ
   ) where
 
+
 import           Data.Aeson
 import qualified Data.ByteString.Lazy as L
 import qualified Data.ByteString.Lazy.Char8 as L8
@@ -9,8 +10,10 @@ import           Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HM
 import           Data.Text (Text)
 import qualified Data.Text as T
+import           Hasura.GraphQL.Validate
 import qualified Network.HTTP.Client as HTTP
 import qualified Network.HTTP.Types as N
+
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Transport.HTTP.Protocol
@@ -50,7 +53,9 @@ runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer manager reqHdrs r
         E.ExPHasura resolvedOp -> do
           encJson <- runHasuraGQ pgExecCtx userInfo resolvedOp
           pure (HttpResponse encJson Nothing)
-        E.ExPRemote rsi -> E.execRemoteGQ manager userInfo reqHdrs rsi
+        E.ExPRemote rt -> let (rsi, fields) = remoteTopQueryEither rt
+                           in E.execRemoteGQ manager userInfo reqHdrs rsi fields
+
         E.ExPMixed resolvedOp remoteRels -> do
           encJson <- runHasuraGQ pgExecCtx userInfo resolvedOp
           liftIO $ putStrLn ("hasura_JSON = " ++ show encJson)
@@ -69,11 +74,14 @@ runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer manager reqHdrs r
                 traverse
                   (\batch -> do
                      HttpResponse res _ <-
+                       let (rsi, fields) = remoteTopQueryEither (E.batchRemoteTopQuery batch)
+                        in
                        E.execRemoteGQ
                          manager
                          userInfo
                          reqHdrs
-                         (E.batchRemoteTopQuery batch)
+                         rsi fields
+
                      liftIO (putStrLn ("remote result = " ++ show res))
                      pure (batch, res))
                   batches
@@ -93,6 +101,7 @@ runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer manager reqHdrs r
       liftIO (putStrLn ("Response:\n" ++ L8.unpack (encJToLBS merged)))
       pure (HttpResponse merged (foldMap _hrHeaders results))
     Left err -> throw500 ("Invalid response: " <> T.pack err)
+
 
 runHasuraGQ
   :: (MonadIO m, MonadError QErr m)

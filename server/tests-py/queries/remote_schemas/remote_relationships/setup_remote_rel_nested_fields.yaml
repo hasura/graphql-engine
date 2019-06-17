@@ -11,9 +11,9 @@ args:
       arguments:
         user_id: $id
       field:
-        messages:
+        userMessages:
           arguments:
-            where:
+            whered:
               name:
                 eq: $name
 

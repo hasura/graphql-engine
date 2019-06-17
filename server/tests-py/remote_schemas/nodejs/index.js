@@ -12,7 +12,7 @@ const typeDefs = gql`
 
   type User {
     user_id: Int
-    messages(where: MessageWhereInpObj, includes: IncludeInpObj): [Message]
+    userMessages(whered: MessageWhereInpObj, includes: IncludeInpObj): [Message]
   }
 
   interface Communication {
@@ -58,10 +58,10 @@ const typeDefs = gql`
 const resolvers = {
 
     User: {
-        messages: (parent, { where, includes }) => {
+        userMessages: (parent, { whered, includes }) => {
             var result = allMessages.filter(m => m.id == parent.user_id);
-            if (where && where.id) {
-                var intExp = where.id;
+            if (whered && whered.id) {
+                var intExp = whered.id;
                 Object.keys(intExp).forEach(op => {
                     switch(op) {
                     case "eq":
@@ -78,8 +78,8 @@ const resolvers = {
                     }
                 });
             }
-            if (where && where.name) {
-                var stringExp = where.name;
+            if (whered && whered.name) {
+                var stringExp = whered.name;
                 Object.keys(stringExp).forEach(op => {
                     switch(op) {
                     case "eq":
@@ -157,7 +157,7 @@ const resolvers = {
         },
         user: (_, { user_id }) => {
             return { "user_id": user_id };
-        }
+        },
         communications: (_, { id }) => {
             var result = allMessages;
             if(id) {
