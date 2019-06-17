@@ -20,9 +20,9 @@ import           Hasura.HTTP
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils     (isRunningOnCI)
 import           Hasura.Server.Version
 
+import qualified CI
 import qualified Control.Concurrent      as C
 import qualified Data.Aeson              as A
 import qualified Data.Aeson.Casing       as A
@@ -73,7 +73,7 @@ data HasuraTelemetry
   { _htDbUid       :: !Text
   , _htInstanceUid :: !Text
   , _htVersion     :: !Text
-  , _htCi          :: !Bool
+  , _htCi          :: !(Maybe CI.CI)
   , _htMetrics     :: !Metrics
   } deriving (Show, Eq)
 $(A.deriveJSON (A.aesonDrop 3 A.snakeCase) ''HasuraTelemetry)
@@ -90,9 +90,9 @@ telemetryUrl = "https://telemetry.hasura.io/v1/http"
 
 mkPayload :: Text -> Text -> Text -> Metrics -> IO TelemetryPayload
 mkPayload dbId instanceId version metrics = do
-  isCI <- isRunningOnCI
+  ci <- CI.getCI
   return $ TelemetryPayload topic $
-    HasuraTelemetry dbId instanceId version isCI metrics
+    HasuraTelemetry dbId instanceId version ci metrics
   where topic = bool "server" "server_test" isDevVersion
 
 runTelemetry

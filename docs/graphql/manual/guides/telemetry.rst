@@ -45,6 +45,7 @@ Here is a sample row from the telemetry database:
       "db_uid": "dddff371-dab2-450f-9969-235bca66dab1",
       "instance_uid": "6799360d-a431-40c5-9f68-24592a9f07df",
       "version": "v1.0.0-alpha36",
+      "ci": "TRAVIS",
       "metrics": {
         "views": 1,
         "tables": 2,
