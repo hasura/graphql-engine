@@ -509,7 +509,7 @@ const makeMigrationCall = (
     body: JSON.stringify(finalReqBody),
   };
 
-  const onSuccess = () => {
+  const onSuccess = data => {
     if (!shouldSkipSchemaReload) {
       if (globals.consoleMode === 'cli') {
         dispatch(loadMigrationStatus()); // don't call for server mode
@@ -519,7 +519,7 @@ const makeMigrationCall = (
     if (successMsg) {
       dispatch(showSuccessNotification(successMsg));
     }
-    customOnSuccess();
+    customOnSuccess(data, globals.consoleMode, currMigrationMode);
   };
 
   const onError = err => {

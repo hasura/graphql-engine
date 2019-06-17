@@ -6,7 +6,7 @@ import Button from '../../Common/Button/Button';
 
 const styles = require('../../Common/TableCommon/Table.scss');
 
-const showErrorNotification = (title, message, reqBody, error) => {
+const showErrorNotification = (title, message, _reqBody, error) => {
   let modMessage;
   let refreshBtn;
 
@@ -170,9 +170,43 @@ const showInfoNotification = title => {
   };
 };
 
+const showWarningNotificationWithAceEditor = (
+  title,
+  message,
+  aceEditorData
+) => {
+  const children = [
+    <div className={styles.aceBlock}>
+      <AceEditor
+        readOnly
+        showPrintMargin={false}
+        mode="json"
+        showGutter={false}
+        theme="github"
+        name="notification-response"
+        value={JSON.stringify(aceEditorData, null, 4)}
+        minLines={1}
+        maxLines={15}
+        width="100%"
+      />
+    </div>,
+  ];
+  return dispatch => {
+    dispatch(
+      showNotification({
+        level: 'warning',
+        title,
+        message,
+        children,
+      })
+    );
+  };
+};
+
 export {
   showErrorNotification,
   showSuccessNotification,
   showInfoNotification,
   showTempErrorNotification,
+  showWarningNotificationWithAceEditor,
 };

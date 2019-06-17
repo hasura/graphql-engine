@@ -11,6 +11,7 @@ import { SET_SQL } from '../RawSQL/Actions';
 import {
   showErrorNotification,
   showSuccessNotification,
+  showWarningNotificationWithAceEditor,
 } from '../../Common/Notification';
 import dataHeaders from '../Common/Headers';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
@@ -315,14 +316,14 @@ const saveForeignKeys = (index, tableSchema, columns) => {
           alter table "${schemaName}"."${tableName}" drop constraint "${generatedConstraintName}",
           add constraint "${constraintName}" 
           foreign key (${Object.keys(oldConstraint.column_mapping)
-    .map(lc => `"${lc}"`)
-    .join(', ')}) 
+            .map(lc => `"${lc}"`)
+            .join(', ')}) 
           references "${oldConstraint.ref_table_table_schema}"."${
-  oldConstraint.ref_table
-}"
+        oldConstraint.ref_table
+      }"
           (${Object.values(oldConstraint.column_mapping)
-    .map(rc => `"${rc}"`)
-    .join(', ')}) 
+            .map(rc => `"${rc}"`)
+            .join(', ')}) 
           on update ${pgConfTypes[oldConstraint.on_update]}
           on delete ${pgConfTypes[oldConstraint.on_delete]};
         `;
@@ -790,22 +791,17 @@ const deleteViewSql = viewName => {
   };
 };
 
-const deleteColumnSql = (tableName, colName) => {
+const deleteColumnSql = column => {
   return (dispatch, getState) => {
-    const currentSchema = getState().tables.currentSchema;
-    const deleteQueryUp =
-      'ALTER TABLE ' +
-      '"' +
-      currentSchema +
-      '"' +
-      '.' +
-      '"' +
-      tableName +
-      '"' +
-      ' DROP COLUMN ' +
-      '"' +
-      colName +
-      '"';
+    const name = column.column_name;
+    const tableName = column.table_name;
+    const currentSchema = column.table_schema;
+    const comment = column.comment;
+    const is_nullable = column.is_nullable;
+    const col_type = column.data_type;
+    const alterStatement =
+      'ALTER TABLE ' + '"' + currentSchema + '"' + '.' + '"' + tableName + '" ';
+    const deleteQueryUp = alterStatement + 'DROP COLUMN ' + '"' + name + '"';
     const schemaChangesUp = [
       {
         type: 'run_sql',
@@ -815,29 +811,89 @@ const deleteColumnSql = (tableName, colName) => {
       },
     ];
 
-    /*
-    const schemaChangesDown = [{
+    const schemaChangesDown = [];
+
+    schemaChangesDown.push({
       type: 'run_sql',
       args: {
-        'sql': deleteQueryDown
-      }
-    }];
-    */
+        sql: alterStatement + 'ADD COLUMN ' + '"' + name + '"' + ' ' + col_type,
+      },
+    });
 
+    if (is_nullable) {
+      schemaChangesDown.push({
+        type: 'run_sql',
+        args: {
+          sql:
+            alterStatement +
+            'ALTER COLUMN ' +
+            '"' +
+            name +
+            '" ' +
+            'DROP NOT NULL',
+        },
+      });
+    } else {
+      schemaChangesDown.push({
+        type: 'run_sql',
+        args: {
+          sql:
+            alterStatement +
+            'ALTER COLUMN ' +
+            '"' +
+            name +
+            '" ' +
+            'SET NOT NULL',
+        },
+      });
+    }
+
+    // COMMENT ON COLUMN my_table.my_column IS 'Employee ID number';
+    if (comment) {
+      schemaChangesDown.push({
+        type: 'run_sql',
+        args: {
+          sql:
+            'COMMENT ON COLUMN ' +
+            '"' +
+            currentSchema +
+            '"' +
+            '.' +
+            '"' +
+            tableName +
+            '"' +
+            '.' +
+            '"' +
+            name +
+            '"' +
+            ' ' +
+            'IS ' +
+            "'" +
+            comment +
+            "'",
+        },
+      });
+    }
     // Apply migrations
     const migrationName =
-      'alter_table_' +
-      currentSchema +
-      '_' +
-      tableName +
-      '_drop_column_' +
-      colName;
+      'alter_table_' + currentSchema + '_' + tableName + '_drop_column_' + name;
 
     const requestMsg = 'Deleting Column...';
     const successMsg = 'Column deleted';
     const errorMsg = 'Deleting column failed';
 
-    const customOnSuccess = () => {};
+    const customOnSuccess = (data, consoleMode, migrationMode) => {
+      if (consoleMode === 'cli' && migrationMode) {
+        // show warning information
+        dispatch(
+          showWarningNotificationWithAceEditor(
+            'Check down migration',
+            'Check down migration',
+            data
+          )
+        );
+      }
+    };
     const customOnError = () => {};
 
     makeMigrationCall(
@@ -1207,24 +1263,24 @@ const saveColumnChangesSql = (colName, column) => {
     const schemaChangesUp =
       originalColType !== colType
         ? [
-          {
-            type: 'run_sql',
-            args: {
-              sql: columnChangesUpQuery,
+            {
+              type: 'run_sql',
+              args: {
+                sql: columnChangesUpQuery,
+              },
             },
-          },
-        ]
+          ]
         : [];
     const schemaChangesDown =
       originalColType !== colType
         ? [
-          {
-            type: 'run_sql',
-            args: {
-              sql: columnChangesDownQuery,
+            {
+              type: 'run_sql',
+              args: {
+                sql: columnChangesDownQuery,
+              },
             },
-          },
-        ]
+          ]
         : [];
 
     /* column default up/down migration */
