@@ -25,6 +25,7 @@ import {
   fetchTrackedTableFkQuery,
   fetchTableListQuery,
   fetchTrackedTableListQuery,
+  fetchTrackedTableRemoteRelationshipQuery,
   mergeLoadSchemaData,
 } from './utils';
 
@@ -264,6 +265,7 @@ const loadSchema = configOptions => {
         fetchTrackedTableListQuery(configOptions), // v1/query
         fetchTrackedTableFkQuery(configOptions),
         fetchTrackedTableReferencedFkQuery(configOptions),
+        fetchTrackedTableRemoteRelationshipQuery(configOptions),
       ],
     };
 
@@ -280,7 +282,8 @@ const loadSchema = configOptions => {
           JSON.parse(data[0].result[1]),
           data[1],
           JSON.parse(data[2].result[1]),
-          JSON.parse(data[3].result[1])
+          JSON.parse(data[3].result[1]),
+          JSON.parse(data[4].result[1])
         );
 
         const { inconsistentObjects } = getState().metadata;

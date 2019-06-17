@@ -438,11 +438,46 @@ FROM
   };
 };
 
+export const fetchTrackedTableRemoteRelationshipQuery = options => {
+  const whereQuery = generateWhereClause(options);
+
+  const runSql = `select 
+  COALESCE(
+    json_agg(
+      row_to_json(info)
+    ), 
+    '[]' :: JSON
+  ) AS tables 
+FROM 
+  (
+    select
+      ist.table_schema,
+      ist.table_name,
+      hdb_remote_rel.name,
+      hdb_remote_rel.remote_schema,
+      hdb_remote_rel.configuration
+    from 
+      hdb_catalog.hdb_table AS ist 
+      JOIN hdb_catalog.hdb_remote_relationship AS hdb_remote_rel ON hdb_remote_rel.table_schema = ist.table_schema 
+      and hdb_remote_rel.table_name = ist.table_name
+    ${whereQuery}
+  ) as info
+`;
+
+  return {
+    type: 'run_sql',
+    args: {
+      sql: runSql,
+    },
+  };
+};
+
 export const mergeLoadSchemaData = (
   infoSchemaTableData,
   hdbTableData,
   fkData,
-  refFkData
+  refFkData,
+  remoteRelData
 ) => {
   const _mergedTableData = [];
 
@@ -468,6 +503,7 @@ export const mergeLoadSchemaData = (
     let _uniqueConstraints = [];
     let _fkConstraints = [];
     let _refFkConstraints = [];
+    let _remoteRelationships = [];
 
     if (_isTableTracked) {
       _primaryKey = trackedTableInfo.primary_key;
@@ -483,6 +519,11 @@ export const mergeLoadSchemaData = (
         fk =>
           fk.ref_table_table_schema === _tableSchema &&
           fk.ref_table === _tableName
+      );
+
+      _remoteRelationships = remoteRelData.filter(
+        rel =>
+          rel.table_schema === _tableSchema && rel.table_name === _tableName
       );
     }
 
@@ -501,6 +542,7 @@ export const mergeLoadSchemaData = (
       foreign_key_constraints: _fkConstraints,
       opp_foreign_key_constraints: _refFkConstraints,
       view_info: _viewInfo,
+      remote_relationships: _remoteRelationships,
     };
 
     _mergedTableData.push(_mergedInfo);
