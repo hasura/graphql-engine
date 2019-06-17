@@ -62,13 +62,12 @@ runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer manager reqHdrs r
           liftIO $ putStrLn ("extractRemoteRelArguments = " ++ show result)
           case result of
             Left e -> error e
-            Right remotes -> do
+            Right (value, remotes) -> do
               let batches = E.produceBatches remotes
               liftIO $ putStrLn ("batches = " ++ show batches)
               results <-
                 traverse
                   (\batch -> do
-
                      HttpResponse res _ <-
                        E.execRemoteGQ
                          manager
@@ -76,8 +75,12 @@ runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer manager reqHdrs r
                          reqHdrs
                          (E.batchRemoteTopQuery batch)
                      liftIO (putStrLn ("remote result = " ++ show res))
-                     pure res)
+                     pure (batch, res))
                   batches
+              liftIO
+                (putStrLn
+                   ("joined = " <>
+                    either show (L8.unpack . encode) (E.joinResults results value)))
               pure ()
           pure (HttpResponse encJson Nothing)
   case mergeResponseData (toList (fmap _hrBody results)) of
