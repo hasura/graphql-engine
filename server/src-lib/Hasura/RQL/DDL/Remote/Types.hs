@@ -4,6 +4,8 @@
 
 module Hasura.RQL.DDL.Remote.Types where
 
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Remote.Input
 import           Hasura.RQL.Instances ()
@@ -56,6 +58,14 @@ newtype RemoteRelationshipName
   = RemoteRelationshipName
   { unRemoteRelationshipName :: Text}
   deriving (Show, Eq, Lift, Hashable, ToJSON, ToJSONKey, FromJSON, Q.ToPrepArg, Q.FromCol)
+
+data DeleteRemoteRelationship =
+  DeleteRemoteRelationship
+    { drrTable :: QualifiedTable
+    , drrName  :: RemoteRelationshipName
+    }  deriving (Show, Eq, Lift)
+
+$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''DeleteRemoteRelationship)
 
 --------------------------------------------------------------------------------
 -- Custom JSON roundtrip instances for RemoteField and down
