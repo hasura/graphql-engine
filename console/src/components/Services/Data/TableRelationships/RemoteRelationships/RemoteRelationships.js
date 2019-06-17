@@ -3,8 +3,12 @@ import ExpandableEditor from '../../../../Common/Layout/ExpandableEditor/Editor'
 import { buildClientSchema } from 'graphql';
 import styles from '../../TableModify/ModifyTable.scss';
 import RemoteRelationshipExplorer from './GraphQLSchemaExplorer';
-import { sampleSchema, transformRemoteRelState } from '../utils';
-import { setRemoteRelationships, defaultRemoteRelationship, createRemoteRelationship } from '../Actions';
+import { sampleSchema } from '../utils';
+import {
+  setRemoteRelationships,
+  defaultRemoteRelationship,
+  createRemoteRelationship,
+} from '../Actions';
 
 console.log(buildClientSchema(sampleSchema.data).getQueryType());
 
@@ -50,7 +54,6 @@ const RemoteRelationshipEditor = ({
   tableSchema,
 }) => {
   const isLast = index === numRels - 1;
-
 
   const handleRelnameChange = e => {
     const newRelationships = JSON.parse(JSON.stringify(allRelationships));
@@ -173,12 +176,13 @@ const RemoteRelationshipEditor = ({
       <div>
         <div className={`${styles.add_mar_bottom}`}>
           <div className={`${styles.add_mar_bottom_mid}`}>
-            <b>Relationship Name</b>
+            <b>Name</b>
           </div>
           <div>
             <input
               type="text"
               className={`form-control ${styles.wd300Px}`}
+              placeholder="name"
               value={relationship.name}
               onChange={handleRelnameChange}
             />
@@ -254,8 +258,6 @@ const RemoteRelationshipEditor = ({
     removeFunc = () => null;
   }
 
-  console.log(relationship.remoteField);
-
   return (
     <ExpandableEditor
       editorExpanded={expandedContent}
@@ -269,3 +271,11 @@ const RemoteRelationshipEditor = ({
 };
 
 export default RemoteRelationships;
+
+/*
+  1. In handleRemoteSchemaChange, whenever a remote schmea is changed, introspect the remote schema and store in state
+  2. Onsave, create the remote relationship
+  3. OnDelte, delete the remote relationship
+  4. OnLoad, serialise the remote relationships into state
+  5. OnEdit of remote schema, introspect
+*/

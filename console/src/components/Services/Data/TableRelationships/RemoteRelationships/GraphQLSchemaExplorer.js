@@ -58,14 +58,14 @@ const CheckboxWithLabel = ({
   return (
     <div
       className={`${styles.display_flex} ${styles.add_mar_bottom_mid}`}
+      onClick={toggle}
       style={checkboxStyle}
     >
-      <div>
+      <div className={styles.add_mar_right_small}>
         <input
           checked={isChecked}
           type="checkbox"
-          className={styles.add_mar_right_small}
-          onChange={toggle}
+          className={styles.cursorPointer}
         />
       </div>
       <div className={styles.add_mar_right_small}>
@@ -90,6 +90,10 @@ const SchemaExplorer = ({
 }) => {
   useEffect(() => {}, []);
 
+  if (!relationship.remoteSchema) {
+    return <i>No schema selected</i>;
+  }
+
   const schemaTree = getSchemaTree(
     relationship,
     Object.values(schema._queryType._fields)
@@ -103,6 +107,8 @@ const SchemaExplorer = ({
         const checkboxStyle = {
           marginLeft: `${(f.nesting + (f.argNesting || 0)) * 20}px`,
           color: f.isArg ? '#8B2BB9' : 'rgb(31, 97, 160)',
+          fontStyle: f.isArg ? 'italic' : 'normal',
+          cursor: 'pointer',
         };
 
         const toggle = () => {
