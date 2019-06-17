@@ -77,12 +77,17 @@ runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer manager reqHdrs r
                      liftIO (putStrLn ("remote result = " ++ show res))
                      pure (batch, res))
                   batches
+              let joinResult = (E.joinResults results value)
               liftIO
                 (putStrLn
-                   ("joined = " <>
-                    either show (L8.unpack . encode) (E.joinResults results value)))
-              pure ()
-          pure (HttpResponse encJson Nothing)
+                   ("joined = " <> either show (L8.unpack . encode) joinResult))
+              pure
+                (HttpResponse
+                   (either
+                      (const encJson) -- FIXME: make an error
+                      (encJFromJValue . wrapPayload . Object)
+                      joinResult)
+                   Nothing)
   case mergeResponseData (toList (fmap _hrBody results)) of
     Right merged -> do
       liftIO (putStrLn ("Response:\n" ++ L8.unpack (encJToLBS merged)))
@@ -112,7 +117,7 @@ runHasuraGQ pgExecCtx userInfo resolvedOp = do
 -- TODO: Original order of keys is not preserved, either.
 mergeResponseData :: [EncJSON] -> Either String EncJSON
 mergeResponseData =
-  fmap (encJFromJValue . Object . HM.singleton "data" . Object . HM.unions) .
+  fmap (encJFromJValue . wrapPayload . Object . HM.unions) .
   traverse (parse . encJToLBS)
   where
     parse :: L.ByteString -> Either String (HashMap Text Value)
@@ -123,3 +128,6 @@ mergeResponseData =
       case HM.lookup "data" hm of
         Nothing -> Left "No `data' key in response!"
         Just data' -> pure data'
+
+wrapPayload :: Value -> Value
+wrapPayload = Object . HM.singleton "data"

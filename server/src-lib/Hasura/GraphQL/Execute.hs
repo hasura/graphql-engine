@@ -24,6 +24,7 @@ import           Control.Lens
 import qualified Data.ByteString.Lazy.Char8 as L8
 import           Data.Scientific
 import           Data.Validation
+import qualified Data.Vector as V
 import           Hasura.SQL.Types
 
 import           Data.Has
@@ -272,24 +273,104 @@ joinResults :: [(Batch, EncJSON)]
             -> Map.HashMap Text J.Value
             -> Either String (Map.HashMap Text J.Value)
 joinResults paths hasuraValue0 = do
-  remoteValues :: [(Batch, J.Value)] <-
+  remoteValues :: [(Batch, Map.HashMap Text J.Value)] <-
     mapM
       (\(batch, encJson) ->
          case J.eitherDecode (encJToLBS encJson) of
            Left err -> Left err
-           Right object -> pure (batch, object :: J.Value))
+           Right object ->
+             case Map.lookup ("data" :: Text) object of
+               Nothing -> Left "No data key in payload!"
+               Just hash -> pure (batch, hash))
       paths
   foldM
     (\hasuraValue (batch, remoteValue) ->
-       pure (insertBatchResults remoteValue batch hasuraValue))
+       insertBatchResults remoteValue batch hasuraValue)
     hasuraValue0
     remoteValues
 
 -- | Insert at path, index the value in the larger structure.
 insertBatchResults ::
-     J.Value -> Batch -> Map.HashMap Text J.Value -> Map.HashMap Text J.Value
-insertBatchResults remoteValue batch hasuraValue =
-  error "insertBatchResults"
+     Map.HashMap Text J.Value
+  -> Batch
+  -> Map.HashMap Text J.Value
+  -> Either String (Map.HashMap Text J.Value)
+insertBatchResults remoteHash batch hasuraHash0 =
+  inHashmap (batchRelFieldPath batch) hasuraHash0
+  where
+    cardinality = biCardinality (batchInputs batch)
+    inHashmap (RelFieldPath Seq.Empty) hasuraHash =
+      case cardinality of
+        One ->
+          Right
+            (Map.insert
+               (batchRelationshipKeyToMake batch)
+               (J.Object remoteHash)
+               hasuraHash)
+        Many ->
+          Left
+            ("Cardinality mismatch with result: expected array but got object.")
+    inHashmap (RelFieldPath (G.Alias (G.Name key) Seq.:<| rest)) hasuraHash =
+      case Map.lookup key hasuraHash of
+        Nothing ->
+          Left
+            ("Couldn't find expected key " <> show key <> " in " <>
+             L8.unpack (J.encode hasuraHash) <>
+             ", while traversing " <>
+             L8.unpack (J.encode hasuraHash0))
+        Just hasuraValue ->
+          fmap
+            (\hasuraValue' -> Map.insert key hasuraValue' hasuraHash)
+            (inValue (RelFieldPath rest) hasuraValue)
+    inValue path hasuraValue =
+      case hasuraValue of
+        J.Object hasuraHash -> J.Object <$> (inHashmap path hasuraHash)
+        J.Array values ->
+          case path of
+            RelFieldPath Seq.Empty ->
+              case cardinality of
+                Many ->
+                  fmap
+                    J.Array
+                    (sequence
+                       (V.zipWith
+                          (\arrayIndex hasuraRowValue ->
+                             case hasuraRowValue of
+                               J.Object hasuraRowHash ->
+                                 case Map.lookup
+                                        (arrayIndexText arrayIndex)
+                                        remoteHash of
+                                   Nothing ->
+                                     Left
+                                       ("Couldn't find remote row for " <>
+                                        show arrayIndex <>
+                                        " in " <>
+                                        L8.unpack (J.encode remoteHash))
+                                   Just remoteRowValue ->
+                                     pure
+                                       (J.Object
+                                          (Map.insert
+                                             (batchRelationshipKeyToMake batch)
+                                             remoteRowValue
+                                             hasuraRowHash))
+                               _ ->
+                                 Left
+                                   ("Row result in hasura should be an object, but it's: " <>
+                                    show hasuraRowValue))
+                          (V.fromList (batchIndices batch))
+                          values))
+                One ->
+                  Left
+                    "Cardinality mismatch: found array in hasura value, but expected one."
+            _ ->
+              Left
+                ("Encountered array too early: path=" <> show path <> ", value=" <>
+                 L8.unpack (J.encode hasuraValue))
+        _ ->
+          Left
+            ("Expected object or array in hasura value but got: " <>
+             L8.unpack (J.encode hasuraValue))
+
 
 -- | Produce the set of remote relationship batch requests.
 produceBatches ::
@@ -352,8 +433,13 @@ produceBatch remoteSchemaInfo remoteRelField inputs =
 
 -- | Produce the alias name for a result index.
 arrayIndexAlias :: ArrayIndex -> G.Alias
-arrayIndexAlias (ArrayIndex i) =
-  G.Alias (G.Name (T.pack ("hasura_array_idx_" ++ show i)))
+arrayIndexAlias i =
+  G.Alias (G.Name (arrayIndexText i))
+
+-- | Produce the alias name for a result index.
+arrayIndexText :: ArrayIndex -> Text
+arrayIndexText (ArrayIndex i) =
+  T.pack ("hasura_array_idx_" ++ show i)
 
 -- | Produce a field from the nested field calls.
 fieldCallsToField ::

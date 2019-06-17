@@ -6,11 +6,14 @@ response:
     profiles:
       - id: 1
         messageBasic:
-          name: Alice
+          name: alice
       - id: 2
         messageBasic:
-          name: Bob
-query: 
+          name: bob
+      - id: 3
+        messageBasic:
+          name: alice
+query:
   query: |
     query {
       profiles {
