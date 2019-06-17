@@ -100,12 +100,12 @@ newtype RelFieldPath = RelFieldPath (Seq.Seq G.Alias)
 data InsertPath =
   InsertPath
     { ipFields :: !(Seq.Seq Text)
-    , ipIndex :: !ResultIdx
+    , ipIndex :: !(Maybe ArrayIndex)
     }
   deriving (Show, Eq)
 
-newtype ResultIdx =
-  ResultIdx Int
+newtype ArrayIndex =
+  ArrayIndex Int
   deriving (Show, Eq, Ord)
 
 getExecPlanPartial
@@ -266,7 +266,7 @@ neededHasuraFields remoteField = toList (rtrHasuraFields remoteRelationship)
 -- remote result = {"data":{"result_0":{"name":"alice"},"result_1":{"name":"bob"},"result_2":{"name":"alice"}}}
 
 -- | Join the data from the original hasura with the remote values.
-joinIndices :: [(RelFieldPath, [ResultIdx], EncJSON)]
+joinIndices :: [(RelFieldPath, [ArrayIndex], EncJSON)]
             -> J.Value
             -> Either String J.Value
 joinIndices paths = undefined
@@ -281,7 +281,7 @@ produceBatches ::
      Map.HashMap RemoteRelKey ( RemoteRelField
                               , RemoteSchemaInfo
                               , Seq.Seq (Map.HashMap G.Variable G.ValueConst))
-  -> Map.HashMap RemoteRelKey (VQ.RemoteTopQuery, RelFieldPath, [ResultIdx])
+  -> Map.HashMap RemoteRelKey (VQ.RemoteTopQuery, RelFieldPath, [ArrayIndex])
 produceBatches =
   fmap
     (\(remoteRelField, remoteSchemaInfo, rows) ->
@@ -292,7 +292,7 @@ produceBatch ::
      RemoteSchemaInfo
   -> RemoteRelField
   -> Seq.Seq (Map.HashMap G.Variable G.ValueConst)
-  -> (VQ.RemoteTopQuery, RelFieldPath, [ResultIdx])
+  -> (VQ.RemoteTopQuery, RelFieldPath, [ArrayIndex])
 produceBatch remoteSchemaInfo remoteRelField rows = (remoteTopQuery, path, resultIndexes)
   where
     remoteTopQuery =
@@ -302,23 +302,23 @@ produceBatch remoteSchemaInfo remoteRelField rows = (remoteTopQuery, path, resul
             fmap
               (\(i, variables) ->
                  fieldCallsToField
-                   (resultIndexAlias i)
+                   (arrayIndexAlias i)
                    (_fArguments originalField)
                    variables
                    (_fSelSet originalField)
                    (rtrRemoteFields remoteRelationship))
               indexedRows
         }
-    indexedRows = zip (map ResultIdx [0 :: Int ..]) (toList rows)
+    indexedRows = zip (map ArrayIndex [0 :: Int ..]) (toList rows)
     resultIndexes = map fst indexedRows
     remoteRelationship = rmfRemoteRelationship (rrRemoteField remoteRelField)
     path = rrRelFieldPath remoteRelField
     originalField = rrField remoteRelField
 
 -- | Produce the alias name for a result index.
-resultIndexAlias :: ResultIdx -> G.Alias
-resultIndexAlias (ResultIdx i) =
-  G.Alias (G.Name (T.pack ("hasura_result_idx_" ++ show i)))
+arrayIndexAlias :: ArrayIndex -> G.Alias
+arrayIndexAlias (ArrayIndex i) =
+  G.Alias (G.Name (T.pack ("hasura_array_idx_" ++ show i)))
 
 -- | Produce a field from the nested field calls.
 fieldCallsToField ::
