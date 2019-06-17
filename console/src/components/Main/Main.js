@@ -19,6 +19,8 @@ import {
   redirectToMetadataStatus,
 } from '../Services/Metadata/Actions';
 
+import { fetchResolvers } from '../Services/CustomResolver/customActions';
+
 import {
   getLoveConsentState,
   setLoveConsentState,
@@ -47,7 +49,7 @@ class Main extends React.Component {
 
     dispatch(loadServerVersion()).then(() => {
       dispatch(featureCompatibilityInit());
-
+      dispatch(fetchResolvers());
       dispatch(loadInconsistentObjects()).then(() => {
         this.handleMetadataRedirect();
       });

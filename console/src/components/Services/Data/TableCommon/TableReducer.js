@@ -38,6 +38,9 @@ import {
   REL_SELECTION_CHANGED,
   REL_ADD_NEW_CLICKED,
   SET_REMOTE_RELATIONSHIPS,
+  SET_INTROSPECTION_SCHEMA,
+  INTROSPECTING_REMOTE_SCHEMA,
+  INTROSPECTION_ERROR,
 } from '../TableRelationships/Actions';
 
 // TABLE PERMISSIONS
@@ -579,7 +582,38 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
     case SET_REMOTE_RELATIONSHIPS:
       return {
         ...modifyState,
-        remoteRelationships: action.remoteRelationships,
+        remoteRelationships: {
+          ...modifyState.remoteRelationships,
+          relationships: action.remoteRelationships,
+        },
+      };
+    case INTROSPECTING_REMOTE_SCHEMA:
+      return {
+        ...modifyState,
+        remoteRelationships: {
+          ...modifyState.remoteRelationships,
+          loading: true,
+        },
+      };
+    case INTROSPECTION_ERROR:
+      return {
+        ...modifyState,
+        remoteRelationships: {
+          ...modifyState.remoteRelationships,
+          loading: false,
+          error: true,
+        },
+      };
+    case SET_INTROSPECTION_SCHEMA:
+      return {
+        ...modifyState,
+        remoteRelationships: {
+          ...modifyState.remoteRelationships,
+          loading: false,
+          remoteSchema: {
+            [action.schemaName]: action.schema,
+          },
+        },
       };
     default:
       return modifyState;

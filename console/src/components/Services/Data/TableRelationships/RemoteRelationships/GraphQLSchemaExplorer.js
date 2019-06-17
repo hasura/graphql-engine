@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import styles from './SchemaExplorer.scss';
 import { getSchemaTree } from '../utils';
 
@@ -58,7 +58,6 @@ const CheckboxWithLabel = ({
   return (
     <div
       className={`${styles.display_flex} ${styles.add_mar_bottom_mid}`}
-      onClick={toggle}
       style={checkboxStyle}
     >
       <div className={styles.add_mar_right_small}>
@@ -66,9 +65,13 @@ const CheckboxWithLabel = ({
           checked={isChecked}
           type="checkbox"
           className={styles.cursorPointer}
+          onChange={toggle}
         />
       </div>
-      <div className={styles.add_mar_right_small}>
+      <div
+        className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
+        onClick={toggle}
+      >
         {label}
         {isArg &&
           isChecked &&
@@ -87,11 +90,14 @@ const SchemaExplorer = ({
   handleColumnChange,
   handleRemoteFieldChange,
   tableSchema,
+  loading,
 }) => {
-  useEffect(() => {}, []);
-
   if (!relationship.remoteSchema) {
-    return <i>No schema selected</i>;
+    return <i>No remote schema selected</i>;
+  }
+
+  if (loading) {
+    return <i> Loading remote schema. Please wait... </i>;
   }
 
   const schemaTree = getSchemaTree(
@@ -108,7 +114,6 @@ const SchemaExplorer = ({
           marginLeft: `${(f.nesting + (f.argNesting || 0)) * 20}px`,
           color: f.isArg ? '#8B2BB9' : 'rgb(31, 97, 160)',
           fontStyle: f.isArg ? 'italic' : 'normal',
-          cursor: 'pointer',
         };
 
         const toggle = () => {
@@ -135,6 +140,7 @@ const SchemaExplorer = ({
             item={f}
             columns={columns}
             handleColumnChange={handleColumnChange}
+            key={`${f.name}-${f.nesting}-${f.argNesting || ''}-${f.isArg}`}
           />
         );
       })}

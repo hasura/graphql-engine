@@ -3,33 +3,33 @@ import ExpandableEditor from '../../../../Common/Layout/ExpandableEditor/Editor'
 import { buildClientSchema } from 'graphql';
 import styles from '../../TableModify/ModifyTable.scss';
 import RemoteRelationshipExplorer from './GraphQLSchemaExplorer';
-import { sampleSchema } from '../utils';
 import {
   setRemoteRelationships,
   defaultRemoteRelationship,
   createRemoteRelationship,
+  introspectRemoteSchema,
 } from '../Actions';
-
-console.log(buildClientSchema(sampleSchema.data).getQueryType());
-
-const schemaList = ['schema1', 'schema2'];
 
 const RemoteRelationships = ({
   remoteRelationships,
   dispatch,
   tableSchema,
+  remoteSchemas,
 }) => {
   const relationshipList = () => {
     const numRels = remoteRelationships.length;
-    return remoteRelationships.map((remoteRelationship, i) => {
+    return remoteRelationships.relationships.map((remoteRelationship, i) => {
       return (
         <RemoteRelationshipEditor
           relationship={remoteRelationship}
-          allRelationships={remoteRelationships}
+          allRelationships={remoteRelationships.relationships}
           index={i}
           numRels={numRels}
           dispatch={dispatch}
           tableSchema={tableSchema}
+          remoteSchemas={remoteSchemas}
+          graphqlSchema={Object.values(remoteRelationships.remoteSchema)[0]}
+          loading={remoteRelationships.loading}
         />
       );
     });
@@ -52,6 +52,9 @@ const RemoteRelationshipEditor = ({
   index,
   numRels,
   tableSchema,
+  remoteSchemas,
+  graphqlSchema,
+  loading,
 }) => {
   const isLast = index === numRels - 1;
 
@@ -73,6 +76,7 @@ const RemoteRelationshipEditor = ({
     newRelationships[index].name = relName;
     newRelationships[index].remoteSchema = e.target.value;
     dispatch(setRemoteRelationships(newRelationships));
+    dispatch(introspectRemoteSchema(e.target.value));
   };
 
   const handleRemoteFieldChange = (fieldName, nesting, checked) => {
@@ -199,7 +203,7 @@ const RemoteRelationshipEditor = ({
         -- remote schema --
       </option>
     );
-    const remoteSchemaOptions = schemaList.map(s => {
+    const remoteSchemaOptions = remoteSchemas.map(s => {
       return (
         <option key={s} value={s}>
           {s}
@@ -237,12 +241,13 @@ const RemoteRelationshipEditor = ({
             <b>Configuration</b>
           </div>
           <RemoteRelationshipExplorer
-            schema={buildClientSchema(sampleSchema.data)}
+            schema={graphqlSchema ? buildClientSchema(graphqlSchema) : null}
             relationship={relationship}
             handleArgChange={handleArgChange}
             handleRemoteFieldChange={handleRemoteFieldChange}
             handleColumnChange={handleColumnChange}
             tableSchema={tableSchema}
+            loading={loading}
           />
         </div>
       </div>

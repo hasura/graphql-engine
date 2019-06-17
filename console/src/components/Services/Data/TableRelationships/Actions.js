@@ -2,7 +2,10 @@ import inflection from 'inflection';
 
 import { makeMigrationCall, updateSchemaInfo } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
+import { getIntrospectionQuery } from 'graphql';
 import { showErrorNotification } from '../../Common/Notification';
+import endpoints from '../../../../Endpoints';
+import requestAction from '../../../../utils/requestAction';
 import suggestedRelationshipsRaw from './autoRelations';
 import { getRemoteRelPayload } from './utils';
 
@@ -19,10 +22,44 @@ export const REL_ADD_NEW_CLICKED = 'ModifyTable/REL_ADD_NEW_CLICKED';
 
 export const SET_REMOTE_RELATIONSHIPS = 'ModifyTable/SET_REMOTE_RELATIONSHIPS';
 
+export const INTROSPECTING_REMOTE_SCHEMA =
+  'ModifyTable/INTROSPECTING_REMOTE_SCHEMA';
+export const INTROSPECTION_ERROR = 'ModifyTable/INTROSPECTION_ERROR';
+export const SET_INTROSPECTION_SCHEMA = 'ModifyTable/SET_INTROSPECTION_SCHEMA';
+
 export const defaultRemoteRelationship = {
   name: '',
   remoteSchema: '',
   remoteField: [],
+};
+
+export const introspectRemoteSchema = schemaName => {
+  return (dispatch, getState) => {
+    const headers = getState().tables.dataHeaders;
+    dispatch({ type: INTROSPECTING_REMOTE_SCHEMA });
+    return dispatch(
+      requestAction(`${endpoints.graphQLUrl}/proxy/${schemaName}`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          query: getIntrospectionQuery(),
+        }),
+      })
+    ).then(
+      data => {
+        const schema = data.data;
+        dispatch({
+          type: SET_INTROSPECTION_SCHEMA,
+          schemaName,
+          schema,
+        });
+      },
+      error => {
+        console.error(error);
+        dispatch({ type: INTROSPECTION_ERROR });
+      }
+    );
+  };
 };
 
 export const createRemoteRelationship = (
@@ -64,10 +101,6 @@ export const createRemoteRelationship = (
         },
       },
     ];
-
-    console.log(upQuery);
-    console.log(downQuery);
-    return;
 
     // Apply migrations
     const migrationName = `table_${table.name}_create_remote_relationship_${

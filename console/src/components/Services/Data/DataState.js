@@ -125,11 +125,10 @@ const defaultModifyState = {
     colMappings: [{ column: '', refColumn: '' }],
     isToggled: false,
   },
-  remoteRelationships: [
-    {
-      ...defaultRemoteRelationship,
-    },
-  ],
+  remoteRelationships: {
+    remoteSchema: {},
+    relationships: [{ ...defaultRemoteRelationship }],
+  },
   permissionsState: { ...defaultPermissionsState },
   prevPermissionState: { ...defaultPermissionsState },
   ongoingRequest: false,
