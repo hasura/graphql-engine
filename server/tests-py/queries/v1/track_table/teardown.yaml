@@ -5,5 +5,7 @@ args:
   args:
     sql: |
       drop table hge_tests.resident;
+      drop function article;
       drop table article;
       drop table author;
+    cascade: true
