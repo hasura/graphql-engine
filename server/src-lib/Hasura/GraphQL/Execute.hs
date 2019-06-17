@@ -295,7 +295,7 @@ insertResultsAt value path idx =
 produceBatches ::
      [( RemoteRelField
       , RemoteSchemaInfo
-      , Seq.Seq (Map.HashMap G.Variable G.ValueConst))]
+      , BatchInputs)]
   -> [Batch]
 produceBatches =
   fmap
@@ -308,20 +308,22 @@ data Batch =
     , batchRelFieldPath :: !RelFieldPath
     , batchIndices :: ![ArrayIndex]
     , batchRelationshipKeyToMake :: !Text
+    , batchInputs :: !BatchInputs
     } deriving (Show)
 
 -- | Produce batch queries for a given remote relationship.
 produceBatch ::
      RemoteSchemaInfo
   -> RemoteRelField
-  -> Seq.Seq (Map.HashMap G.Variable G.ValueConst)
+  -> BatchInputs
   -> Batch
-produceBatch remoteSchemaInfo remoteRelField rows =
+produceBatch remoteSchemaInfo remoteRelField inputs =
   Batch
     { batchRemoteTopQuery = remoteTopQuery
     , batchRelFieldPath = path
     , batchIndices = resultIndexes
     , batchRelationshipKeyToMake = relationshipNameText
+    , batchInputs = inputs
     }
   where
     remoteTopQuery =
@@ -339,6 +341,7 @@ produceBatch remoteSchemaInfo remoteRelField rows =
               indexedRows
         }
     indexedRows = zip (map ArrayIndex [0 :: Int ..]) (toList rows)
+    rows = biRows inputs
     resultIndexes = map fst indexedRows
     remoteRelationship = rmfRemoteRelationship (rrRemoteField remoteRelField)
     path = rrRelFieldPath remoteRelField
@@ -464,7 +467,7 @@ data BatchInputs =
   BatchInputs
     { biRows :: !(Seq.Seq (Map.HashMap G.Variable G.ValueConst))
     , biCardinality :: Cardinality
-    }
+    } deriving (Show)
 
 instance Semigroup BatchInputs where
   (<>) (BatchInputs r1 c1) (BatchInputs r2 c2) =
@@ -474,8 +477,8 @@ data Cardinality = Many | One
  deriving (Eq, Show)
 
 instance Semigroup Cardinality where
-    (<>) x Many = Many
-    (<>) Many x = Many
+    (<>) _ Many = Many
+    (<>) Many _ = Many
     (<>) One One = One
 
 -- | Extract from a given result.
