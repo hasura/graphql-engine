@@ -94,7 +94,7 @@ data RemoteRelField =
     { rrRemoteField :: !RemoteField
     , rrField :: !Field
     , rrRelFieldPath :: !RelFieldPath
-    -- , rrAlias :: !G.Alias
+    , rrAlias :: !G.Alias
     }
   deriving (Show)
 
@@ -254,6 +254,7 @@ rebuildFieldStrippingRemoteRels =
                            { rrRemoteField = remoteField
                            , rrField = subfield
                            , rrRelFieldPath = thisPath
+                           , rrAlias = _fAlias subfield
                            })
           (_fSelSet field0)
       let fields = rights (toList selSetEithers)
@@ -463,7 +464,7 @@ produceBatch remoteSchemaInfo remoteRelField inputs =
     { batchRemoteTopQuery = remoteTopQuery
     , batchRelFieldPath = path
     , batchIndices = resultIndexes
-    , batchRelationshipKeyToMake = relationshipNameText
+    , batchRelationshipKeyToMake = G.unName (G.unAlias (rrAlias remoteRelField))
     , batchInputs = inputs
     , batchNestedFields =
         fmap
@@ -491,9 +492,6 @@ produceBatch remoteSchemaInfo remoteRelField inputs =
     resultIndexes = map fst indexedRows
     remoteRelationship = rmfRemoteRelationship (rrRemoteField remoteRelField)
     path = rrRelFieldPath remoteRelField
-    relationshipNameText =
-      unRemoteRelationshipName
-        (rtrName (rmfRemoteRelationship (rrRemoteField remoteRelField)))
     originalField = rrField remoteRelField
 
 -- | Produce the alias name for a result index.
