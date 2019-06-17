@@ -241,22 +241,52 @@ rebuildFieldStrippingRemoteRels =
     extract (field, remoteRelFields) =
       fmap (field, ) (NE.nonEmpty remoteRelFields)
     rebuild parentPath field0 = do
-      selSet <-
+      selSetEithers <-
         traverse
           (\subfield ->
              case _fRemoteRel subfield of
-               Nothing -> fmap pure (rebuild thisPath subfield)
+               Nothing -> fmap Right (rebuild thisPath subfield)
                Just remoteField -> do
                  modify (remoteRelField :)
-                 pure mempty -- TODO: Do this.
+                 pure (Left remoteField)
                  where remoteRelField =
                          RemoteRelField
                            { rrRemoteField = remoteField
                            , rrField = subfield
                            , rrRelFieldPath = thisPath
                            })
-          (toList (_fSelSet field0))
-      pure field0 {_fSelSet = mconcat selSet}
+          (_fSelSet field0)
+      let fields = rights (toList selSetEithers)
+      pure
+        field0
+          { _fSelSet =
+              Seq.fromList
+                (concatMap
+                   (\case
+                      Right field -> pure field
+                        where _ = _fAlias field
+                      Left remoteField ->
+                        mapMaybe
+                          (\name ->
+                             if elem name (map _fName fields)
+                               then Nothing
+                               else Just
+                                      (Field
+                                         { _fAlias = G.Alias name
+                                         , _fName = name
+                                         , _fType =
+                                             G.NamedType (G.Name "unknown3")
+                                         , _fArguments = mempty
+                                         , _fSelSet = mempty
+                                         , _fRemoteRel = Nothing
+                                         }))
+                          (map
+                             (G.Name . getFieldNameTxt)
+                             (toList
+                                (rtrHasuraFields
+                                   (rmfRemoteRelationship remoteField)))))
+                   (toList selSetEithers))
+          }
       where
         thisPath = parentPath <> RelFieldPath (pure (_fAlias field0))
 
