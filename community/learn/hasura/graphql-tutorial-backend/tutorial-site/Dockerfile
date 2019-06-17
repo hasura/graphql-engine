@@ -1,18 +1,18 @@
 FROM node:carbon
 
-# update this line when gatsby-gitbook-boilerplate repo changes
+# update this line when gatsby-gitbook-starter repo changes
 RUN sh -c 'echo -e "Updated at: 2019-06-03 19:00:00 IST"'
 
 # Install global dependencies
 RUN npm -g install gatsby-cli
 
-# clone gatsby-gitbook-boilerplate repo
-RUN git clone https://github.com/hasura/gatsby-gitbook-boilerplate.git
+# clone gatsby-gitbook-starter repo
+RUN git clone https://github.com/hasura/gatsby-gitbook-starter.git
 
 # Create app directory
-WORKDIR /gatsby-gitbook-boilerplate
+WORKDIR /gatsby-gitbook-starter
 
-RUN cd /gatsby-gitbook-boilerplate
+RUN cd /gatsby-gitbook-starter
 
 # Install dependencies
 RUN npm install
