@@ -500,13 +500,39 @@ fieldCallsToField mindexedAlias0 userProvidedArguments variables finalSelSet =
                   createArguments variables (fcArguments fieldCall)
              in case NE.nonEmpty rest of
                   Just {} -> templatedArguments
-                  Nothing -> userProvidedArguments <> templatedArguments
+                  Nothing ->
+                    Map.unionWith
+                      mergeAnnInpVal
+                      userProvidedArguments
+                      templatedArguments
         , _fSelSet =
             case NE.nonEmpty rest of
               Nothing -> finalSelSet
               Just calls -> pure (nest Nothing calls)
         , _fRemoteRel = Nothing
         }
+
+mergeAnnInpVal :: AnnInpVal -> AnnInpVal -> AnnInpVal
+mergeAnnInpVal an1 an2 =
+  an1 {_aivValue = mergeAnnGValue (_aivValue an1) (_aivValue an2)}
+
+mergeAnnGValue :: AnnGValue -> AnnGValue -> AnnGValue
+mergeAnnGValue (AGObject n1 (Just o1)) (AGObject _ (Just o2)) =
+  (AGObject n1 (Just (mergeAnnGObject o1 o2)))
+mergeAnnGValue (AGObject n1 (Just o1)) (AGObject _ Nothing) =
+  (AGObject n1 (Just o1))
+mergeAnnGValue (AGObject n1 Nothing) (AGObject _ (Just o1)) =
+  (AGObject n1 (Just o1))
+mergeAnnGValue (AGArray t (Just xs)) (AGArray _ (Just xs2)) =
+  AGArray t (Just (xs <> xs2))
+mergeAnnGValue (AGArray t (Just xs)) (AGArray _ Nothing) =
+  AGArray t (Just xs)
+mergeAnnGValue (AGArray t Nothing) (AGArray _ (Just xs)) =
+    AGArray t (Just xs)
+mergeAnnGValue x _ = x -- FIXME: Make error condition.
+
+mergeAnnGObject :: AnnGObject -> AnnGObject -> AnnGObject
+mergeAnnGObject = OHM.unionWith mergeAnnInpVal
 
 -- | Create an argument map using the inputs taken from the hasura database.
 createArguments ::
