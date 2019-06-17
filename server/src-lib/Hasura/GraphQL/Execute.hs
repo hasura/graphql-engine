@@ -278,7 +278,7 @@ joinResults paths hasuraValue0 = do
     mapM
       (\(batch, encJson) ->
          case J.eitherDecode (encJToLBS encJson) of
-           Left err -> Left err
+           Left err -> Left ("joinResults: eitherDecode: " <> err)
            Right object ->
              case Map.lookup ("data" :: Text) object of
                Nothing -> Left "No data key in payload!"
@@ -415,7 +415,7 @@ produceBatch remoteSchemaInfo remoteRelField inputs =
             fmap
               (\(i, variables) ->
                  fieldCallsToField
-                   (arrayIndexAlias i)
+                   (Just (arrayIndexAlias i))
                    (_fArguments originalField)
                    variables
                    (_fSelSet originalField)
@@ -444,19 +444,21 @@ arrayIndexText (ArrayIndex i) =
 
 -- | Produce a field from the nested field calls.
 fieldCallsToField ::
-     G.Alias
+     Maybe G.Alias
   -> Map.HashMap G.Name AnnInpVal
   -> Map.HashMap G.Variable G.ValueConst
   -> SelSet
   -> NonEmpty FieldCall
   -> Field
-fieldCallsToField indexedAlias userProvidedArguments variables finalSelSet = nest
+fieldCallsToField mindexedAlias0 userProvidedArguments variables finalSelSet =
+  nest mindexedAlias0
   where
-    nest (fieldCall :| rest) =
+    nest mindexedAlias (fieldCall :| rest) =
       Field
-        { _fAlias = case NE.nonEmpty rest of
-                      Just{} -> indexedAlias
-                      Nothing -> G.Alias (fcName fieldCall)
+        { _fAlias =
+            case mindexedAlias of
+              Just indexedAlias -> indexedAlias
+              Nothing -> G.Alias (fcName fieldCall)
         , _fName = fcName fieldCall
         , _fType = G.NamedType (G.Name "unknown_type")
         , _fArguments =
@@ -468,7 +470,7 @@ fieldCallsToField indexedAlias userProvidedArguments variables finalSelSet = nes
         , _fSelSet =
             case NE.nonEmpty rest of
               Nothing -> finalSelSet
-              Just calls -> pure (nest calls)
+              Just calls -> pure (nest Nothing calls)
         , _fRemoteRel = Nothing
         }
 
@@ -531,7 +533,7 @@ extractRemoteRelArguments ::
                       , BatchInputs)])
 extractRemoteRelArguments remoteSchemaMap encJson rels =
   case J.eitherDecode (encJToLBS encJson) of
-    Left err -> Left err
+    Left err -> Left ("extractRemoteRelArguments: decode error: " <> err)
     Right object ->
       case Map.lookup ("data" :: Text) object of
         Nothing ->
