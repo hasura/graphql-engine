@@ -7,15 +7,15 @@ response:
       - id: 1
         name: alice
         userNestedFields:
-          name: alice
+          - name: alice
       - id: 2
         name: bob
         userNestedFields:
-          name: bob
+          - name: bob
       - id: 3
         name: alice
         userNestedFields:
-          name: alice
+          - name: alice
 query:
   query: |
     query {

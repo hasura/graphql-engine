@@ -306,7 +306,9 @@ insertBatchResults remoteHash batch hasuraHash0 =
           Right
             (Map.insert
                (batchRelationshipKeyToMake batch)
-               (J.Object remoteHash)
+               (peelOffNestedFields
+                  (batchNestedFields batch)
+                  (J.Object remoteHash))
                hasuraHash)
         Many ->
           Left
@@ -352,7 +354,9 @@ insertBatchResults remoteHash batch hasuraHash0 =
                                        (J.Object
                                           (Map.insert
                                              (batchRelationshipKeyToMake batch)
-                                             remoteRowValue
+                                             (peelOffNestedFields
+                                                (batchNestedFields batch)
+                                                remoteRowValue)
                                              hasuraRowHash))
                                _ ->
                                  Left
@@ -372,6 +376,30 @@ insertBatchResults remoteHash batch hasuraHash0 =
             ("Expected object or array in hasura value but got: " <>
              L8.unpack (J.encode hasuraValue))
 
+-- | The drop 1 in here is dropping the first level of nesting. The
+-- top field is already aliased to e.g. foo_idx_1, and that layer is
+-- already peeled off. So here we are just peeling nested fields.
+peelOffNestedFields :: NonEmpty G.Name -> J.Value -> J.Value
+peelOffNestedFields xs toplevel = go (drop 1 (toList xs)) toplevel
+  where
+    go [] value = value
+    go (G.Name key:rest) value =
+      case value of
+        J.Object hashmap ->
+          case Map.lookup key hashmap of
+            Nothing ->
+              error
+                ("Nein! " <> show key <> " in " <> show value <> " from " <>
+                 show toplevel <>
+                 " with " <>
+                 show xs)
+            Just value' -> go rest value'
+        _ ->
+          error
+            ("No! " <> show key <> " in " <> show value <> " from " <>
+             show toplevel <>
+             " with " <>
+             show xs)
 
 -- | Produce the set of remote relationship batch requests.
 produceBatches ::
@@ -391,6 +419,7 @@ data Batch =
     , batchIndices :: ![ArrayIndex]
     , batchRelationshipKeyToMake :: !Text
     , batchInputs :: !BatchInputs
+    , batchNestedFields :: NonEmpty G.Name
     } deriving (Show)
 
 -- | Produce batch queries for a given remote relationship.
@@ -406,6 +435,11 @@ produceBatch remoteSchemaInfo remoteRelField inputs =
     , batchIndices = resultIndexes
     , batchRelationshipKeyToMake = relationshipNameText
     , batchInputs = inputs
+    , batchNestedFields =
+        fmap
+          fcName
+          (rtrRemoteFields
+             (rmfRemoteRelationship (rrRemoteField remoteRelField)))
     }
   where
     remoteTopQuery =
