@@ -334,12 +334,8 @@ execRemoteGQ
   -> BL.ByteString
   -- ^ the raw request string
   -> RemoteSchemaInfo
-  -> G.TypedOperationDefinition
   -> m (HttpResponse EncJSON)
-execRemoteGQ manager userInfo reqHdrs q rsi opDef = do
-  let opTy = G._todType opDef
-  when (opTy == G.OperationTypeSubscription) $
-    throw400 NotSupported "subscription to remote server is not supported"
+execRemoteGQ manager userInfo reqHdrs q rsi = do
   hdrs <- getHeadersFromConf hdrConf
   let confHdrs   = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
       clientHdrs = bool [] filteredHeaders fwdClientHdrs

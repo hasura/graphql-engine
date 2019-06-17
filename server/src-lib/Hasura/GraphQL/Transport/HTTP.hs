@@ -3,6 +3,7 @@ module Hasura.GraphQL.Transport.HTTP
   ) where
 
 import qualified Data.ByteString.Lazy                   as BL
+import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
 
@@ -35,8 +36,11 @@ runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer
   case execPlan of
     E.GExPHasura resolvedOp ->
       flip HttpResponse Nothing <$> runHasuraGQ pgExecCtx userInfo resolvedOp
-    E.GExPRemote rsi opDef  ->
-      E.execRemoteGQ manager userInfo reqHdrs rawReq rsi opDef
+    E.GExPRemote rsi opDef  -> do
+      let opTy = G._todType opDef
+      when (opTy == G.OperationTypeSubscription) $
+        throw400 NotSupported "subscription to remote server is not supported"
+      E.execRemoteGQ manager userInfo reqHdrs rawReq rsi
 
 runHasuraGQ
   :: (MonadIO m, MonadError QErr m)
