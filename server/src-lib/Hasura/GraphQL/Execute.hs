@@ -269,8 +269,8 @@ neededHasuraFields remoteField = toList (rtrHasuraFields remoteRelationship)
 
 -- | Join the data from the original hasura with the remote values.
 joinResults :: [(Batch, EncJSON)]
-            -> J.Value
-            -> Either String J.Value
+            -> Map.HashMap Text J.Value
+            -> Either String (Map.HashMap Text J.Value)
 joinResults paths hasuraValue0 = do
   remoteValues :: [(Batch, J.Value)] <-
     mapM
@@ -279,17 +279,17 @@ joinResults paths hasuraValue0 = do
            Left err -> Left err
            Right object -> pure (batch, object :: J.Value))
       paths
-  -- foldM
-  --   (\hasuraValue (batch, remoteValue) ->
-  --      pure (insertResultsAt remoteValue (batchRelFieldPath batch) hasuraValue))
-  --   hasuraValue0
-  --   remoteValues
-  undefined
+  foldM
+    (\hasuraValue (batch, remoteValue) ->
+       pure (insertBatchResults remoteValue batch hasuraValue))
+    hasuraValue0
+    remoteValues
 
 -- | Insert at path, index the value in the larger structure.
-insertResultsAt :: J.Value -> RelFieldPath -> Maybe ArrayIndex -> J.Value -> J.Value
-insertResultsAt value path idx =
-  undefined
+insertBatchResults ::
+     J.Value -> Batch -> Map.HashMap Text J.Value -> Map.HashMap Text J.Value
+insertBatchResults remoteValue batch hasuraValue =
+  error "insertBatchResults"
 
 -- | Produce the set of remote relationship batch requests.
 produceBatches ::
@@ -429,7 +429,7 @@ extractRemoteRelArguments ::
      RemoteSchemaMap
   -> EncJSON
   -> NonEmpty RemoteRelField
-  -> Either String ( J.Value
+  -> Either String ( Map.HashMap Text J.Value
                    , [( RemoteRelField
                       , RemoteSchemaInfo
                       , BatchInputs)])
@@ -443,7 +443,10 @@ extractRemoteRelArguments remoteSchemaMap encJson rels =
             ("Couldn't find `data' payload in " <> L8.unpack (J.encode object))
         Just value -> do
           hash <-
-            flip execStateT mempty (extractFromResult One keyedRemotes value)
+            flip
+              execStateT
+              mempty
+              (extractFromResult One keyedRemotes (J.Object value))
           remotes <-
             Map.traverseWithKey
               (\key rows ->
