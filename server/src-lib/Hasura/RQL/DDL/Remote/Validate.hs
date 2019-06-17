@@ -109,7 +109,7 @@ validateRelationship remoteRelationship gctx tables = do
                          pure
                          (runStateT
                             (stripInMap
-                               (rtrName remoteRelationship)
+                               remoteRelationship
                                (GS._gTypes gctx)
                                (_fiParams objFldInfo)
                                providedArguments)
@@ -146,7 +146,7 @@ validateRelationship remoteRelationship gctx tables = do
 -- specified as an atomic (variable, constant), keys which are kept
 -- have their values modified by 'stripObject' or 'stripList'.
 stripInMap ::
-     RemoteRelationshipName -> HM.HashMap G.NamedType TypeInfo
+     RemoteRelationship -> HM.HashMap G.NamedType TypeInfo
   -> HM.HashMap G.Name InpValInfo
   -> HM.HashMap G.Name G.Value
   -> StateT (HM.HashMap G.NamedType TypeInfo) (Either ValidationError) (HM.HashMap G.Name InpValInfo)
@@ -168,7 +168,7 @@ stripInMap remoteRelationshipName types schemaArguments templateArguments =
 -- | Strip a value type completely, or modify it, if the given value
 -- is atomic-ish.
 stripValue ::
-     RemoteRelationshipName -> HM.HashMap G.NamedType TypeInfo
+     RemoteRelationship -> HM.HashMap G.NamedType TypeInfo
   -> G.GType
   -> G.Value
   -> StateT (HM.HashMap G.NamedType TypeInfo) (Either ValidationError) (Maybe G.GType)
@@ -191,7 +191,7 @@ stripValue remoteRelationshipName types gtype value = do
 
 -- | Produce a new type for the list, or strip it entirely.
 stripList ::
-     RemoteRelationshipName
+     RemoteRelationship
   -> HM.HashMap G.NamedType TypeInfo
   -> G.GType
   -> G.Value
@@ -210,7 +210,7 @@ stripList remoteRelationshipName types originalOuterGType value =
 -- 'stripInMap'. Objects can't be deleted entirely, just keys of an
 -- object.
 stripObject ::
-     RemoteRelationshipName -> HM.HashMap G.NamedType TypeInfo
+     RemoteRelationship -> HM.HashMap G.NamedType TypeInfo
   -> G.GType
   -> [G.ObjectFieldG G.Value]
   -> StateT (HM.HashMap G.NamedType TypeInfo) (Either ValidationError) G.GType
@@ -245,9 +245,13 @@ stripObject remoteRelationshipName types originalGtype keypairs =
 
 -- | Produce a new name for a type, used when stripping the schema
 -- types for a remote relationship.
-renameTypeForRelationship :: RemoteRelationshipName -> Text -> Text
-renameTypeForRelationship (RemoteRelationshipName name) text =
+-- TODO: Consider a separator character to avoid conflicts.
+renameTypeForRelationship :: RemoteRelationship -> Text -> Text
+renameTypeForRelationship rtr text =
   text <> "_remote_rel_" <> name
+  where name = schema <> "_" <> table <> rrname
+        QualifiedObject (SchemaName schema) (TableName table) = rtrTable rtr
+        RemoteRelationshipName rrname = rtrName rtr
 
 -- | Rename a type.
 renameNamedType :: (Text -> Text) -> G.NamedType -> G.NamedType
