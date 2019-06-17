@@ -1,5 +1,6 @@
 ---
-title: 'What next?'
+title: "What next?"
+metaTitle: "What next? | GraphQL Android Apollo Tutorial"
 ---
 
 import TwitterShare from "./twitter-share";
@@ -10,7 +11,7 @@ In case you are wondering what to do next, you have the following options:
 
 ## Take the Hasura backend course
 
-We have an [Introduction to Hasura](https://learn.hasura.io/graphql/hasura) backend course to build the backend that you just used for your iOS app.
+We have an [Introduction to Hasura](https://learn.hasura.io/graphql/hasura) backend course to build the backend that you just used for your Android app.
 
 ## Join Discord for Support
 

@@ -2,6 +2,8 @@
 
 Visit https://serverless-push.demo.hasura.app/ for a live demo.
 
+[![Edit serverless-push](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/github/hasura/graphql-engine/tree/master/community/sample-apps/serverless-push?fontsize=14)
+
 ## Pre-requisites
 
 - Google Cloud account with billing enabled

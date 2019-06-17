@@ -8,7 +8,7 @@ import { getMainDefinition } from 'apollo-utilities'
 import { OperationDefinitionNode } from 'graphql'
 import { getAuthHeader } from './services/auth.service'
 
-const httpUri = process.env.REACT_APP_SERVER_URL
+const httpUri = process.env.REACT_APP_SERVER_URL ? process.env.REACT_APP_SERVER_URL : 'https://whatsapp-clone.demo.hasura.app/v1/graphql'
 const wsUri = httpUri.replace(/^https?/, process.env.REACT_APP_ENV === 'dev' ? 'ws' : 'wss')
 
 const httpLink = new HttpLink({

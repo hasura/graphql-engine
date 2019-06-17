@@ -17,6 +17,8 @@ import Button from '../../../Common/Button/Button';
 
 import { appPrefix, pageTitle } from '../constants';
 
+import { NotFoundError } from '../../../Error/PageNotFound';
+
 import globals from '../../../../Globals';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
@@ -102,9 +104,18 @@ class Edit extends React.Component {
   }
 
   render() {
+    const currentResolver = this.props.allResolvers.find(
+      r => r.name === this.props.params.resolverName
+    );
+
+    if (!currentResolver) {
+      // throw a 404 exception
+      throw new NotFoundError();
+    }
+
     const styles = require('../CustomResolver.scss');
 
-    const { isFetching, isRequesting, editState, migrationMode } = this.props;
+    const { isFetching, isRequesting, editState } = this.props;
     const { resolverName } = this.props.params;
 
     const generateMigrateBtns = () => {
@@ -223,7 +234,7 @@ class Edit extends React.Component {
             }}
           >
             <Common {...this.props} />
-            {migrationMode ? generateMigrateBtns() : null}
+            {generateMigrateBtns()}
           </form>
         )}
       </div>
@@ -234,7 +245,7 @@ const mapStateToProps = state => {
   return {
     ...state.customResolverData.addData,
     ...state.customResolverData.headerData,
-    migrationMode: state.main.migrationMode,
+    allResolvers: state.customResolverData.listData.resolvers,
     dataHeaders: { ...state.tables.dataHeaders },
   };
 };

@@ -13,6 +13,8 @@ import ReloadMetadata from '../../Metadata/MetadataOptions/ReloadMetadata';
 
 import { appPrefix } from '../constants';
 
+import { NotFoundError } from '../../../Error/PageNotFound';
+
 import globals from '../../../../Globals';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
@@ -49,6 +51,15 @@ class ViewStitchedSchema extends React.Component {
   }
 
   render() {
+    const currentResolver = this.props.allResolvers.find(
+      r => r.name === this.props.params.resolverName
+    );
+
+    if (!currentResolver) {
+      // throw a 404 exception
+      throw new NotFoundError();
+    }
+
     const styles = require('../CustomResolver.scss');
 
     const { resolverName } = this.props.params;
@@ -171,6 +182,7 @@ const mapStateToProps = state => {
   return {
     ...state.customResolverData.addData,
     ...state.customResolverData.headerData,
+    allResolvers: state.customResolverData.listData.resolvers,
     dataHeaders: { ...state.tables.dataHeaders },
   };
 };

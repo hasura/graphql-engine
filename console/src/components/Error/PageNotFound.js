@@ -5,10 +5,14 @@ import { connect } from 'react-redux';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
 
+export class NotFoundError extends Error {}
+
 class PageNotFound extends Component {
   render() {
     const errorImage = require('./error-logo.png');
     const styles = require('./ErrorPage.scss');
+
+    const { resetCallback } = this.props;
 
     return (
       <div className={styles.viewContainer}>
@@ -19,7 +23,11 @@ class PageNotFound extends Component {
               <h1>404</h1>
               <br />
               <div>
-                This page doesn't exist. Head back <Link to="/">Home</Link>.
+                This page doesn't exist. Head back{' '}
+                <Link to="/" onClick={resetCallback}>
+                  Home
+                </Link>
+                .
               </div>
             </div>
             <div className="col-xs-4">
@@ -39,6 +47,7 @@ class PageNotFound extends Component {
 
 PageNotFound.propTypes = {
   dispatch: PropTypes.func.isRequired,
+  resetCallback: PropTypes.func.isRequired,
 };
 
 export default connect()(PageNotFound);

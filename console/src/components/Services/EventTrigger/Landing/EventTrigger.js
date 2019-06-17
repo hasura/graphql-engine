@@ -23,7 +23,7 @@ class EventTrigger extends Component {
   }
 
   render() {
-    const { migrationMode, dispatch, listingTrigger } = this.props;
+    const { dispatch, listingTrigger } = this.props;
 
     const styles = require('../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
 
@@ -52,29 +52,23 @@ class EventTrigger extends Component {
     };
 
     const getAddBtn = () => {
-      let addBtn = null;
+      const handleClick = e => {
+        e.preventDefault();
 
-      if (migrationMode) {
-        const handleClick = e => {
-          e.preventDefault();
+        dispatch(push(`${appPrefix}/manage/triggers/add`));
+      };
 
-          dispatch(push(`${appPrefix}/manage/triggers/add`));
-        };
-
-        addBtn = (
-          <Button
-            data-test="data-create-trigger"
-            color="yellow"
-            size="sm"
-            className={styles.add_mar_left}
-            onClick={handleClick}
-          >
-            Create
-          </Button>
-        );
-      }
-
-      return addBtn;
+      return (
+        <Button
+          data-test="data-create-trigger"
+          color="yellow"
+          size="sm"
+          className={styles.add_mar_left}
+          onClick={handleClick}
+        >
+          Create
+        </Button>
+      );
     };
 
     const footerEvent = (
@@ -123,7 +117,6 @@ class EventTrigger extends Component {
 EventTrigger.propTypes = {
   schema: PropTypes.array.isRequired,
   untrackedRelations: PropTypes.array.isRequired,
-  migrationMode: PropTypes.bool.isRequired,
   currentSchema: PropTypes.string.isRequired,
   dispatch: PropTypes.func.isRequired,
 };
@@ -131,7 +124,6 @@ EventTrigger.propTypes = {
 const mapStateToProps = state => ({
   schema: state.tables.allSchemas,
   schemaList: state.tables.schemaList,
-  migrationMode: state.main.migrationMode,
   untrackedRelations: state.tables.untrackedRelations,
   currentSchema: state.tables.currentSchema,
   listingTrigger: state.triggers.listingTrigger,
