@@ -1,6 +1,5 @@
 module Hasura.RQL.DDL.RemoteSchema
   ( runAddRemoteSchema
-  , addRemoteSchemaToCache
   , resolveRemoteSchemas
   , runRemoveRemoteSchema
   , removeRemoteSchemaFromCache
@@ -20,6 +19,7 @@ import qualified Database.PG.Query           as Q
 import qualified Network.HTTP.Client         as HTTP
 
 import           Hasura.GraphQL.RemoteServer
+import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.Types
 import           Hasura.RQL.DDL.Remote.Types
 
@@ -64,17 +64,6 @@ addRemoteSchemaP2 q rsi = do
   where
     name = _arsqName q
 
-addRemoteSchemaToCache
-  :: CacheRWM m
-  => RemoteSchemaName
-  -> RemoteSchemaInfo
-  -> m ()
-addRemoteSchemaToCache name rmDef = do
-  sc <- askSchemaCache
-  let resolvers = scRemoteResolvers sc
-  writeSchemaCache sc
-    {scRemoteResolvers = Map.insert name rmDef resolvers}
-
 refreshGCtxMapInSchema
   :: (CacheRWM m, MonadIO m, MonadError QErr m, HasHttpManager m)
   => m ()
@@ -104,6 +93,10 @@ removeRemoteSchemaP1 rsn = do
   case Map.lookup rsn resolvers of
     Just _  -> return ()
     Nothing -> throw400 NotExists "no such remote schema"
+  let depObjs = getDependentObjs sc remoteSchemaDepId
+  when (depObjs /= []) $ reportDeps depObjs
+  where
+    remoteSchemaDepId = SORemoteSchema rsn
 
 removeRemoteSchemaP2
   :: ( CacheRWM m
