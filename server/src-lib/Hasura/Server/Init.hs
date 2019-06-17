@@ -122,7 +122,7 @@ data API
   | PGDUMP
   | DEVELOPER
   deriving (Show, Eq, Read, Generic)
-$(J.deriveJSON (J.defaultOptions { J.constructorTagModifier = map toLower})
+$(J.deriveJSON (J.defaultOptions { J.constructorTagModifier = map toLower })
   ''API)
 
 instance Hashable API

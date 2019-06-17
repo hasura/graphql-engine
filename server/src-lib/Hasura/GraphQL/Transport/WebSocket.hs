@@ -330,7 +330,9 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       logWSEvent logger wsConn $ EOperation opDet
       where
         opDet = OperationDetails opId reqId (_grOperationName q) opTy gq
-        gq = bool Nothing (Just q) $ L.unVerboseLogging verboseLog
+        gq = case opTy of
+          ODQueryErr _ -> Just q
+          _            -> Nothing
 
     getErrFn errTy =
       case errTy of

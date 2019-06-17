@@ -18,6 +18,17 @@ Based on your deployment method, Hasura GraphQL engine logs can be accessed as f
 Log structure and metrics
 -------------------------
 
+All requests are identified by a request id. If the client sends a
+``x-request-id`` header then that is used, otherwise a request id is generated
+for each request. This is also sent back to the client as a response header
+(``x-request-id``). This is useful to correlate logs from the server and the
+client.
+
+.. note::
+
+   Please note verbose logging only enables the ``query-log`` to get printed,
+   nothing of ``http-log`` or ``websocket-log`` is affected by verbose logging.
+
 Query log structure
 ^^^^^^^^^^^^^^^^^^^
 
@@ -162,9 +173,10 @@ address, URL path, HTTP status code etc.
 
 ``operation`` lists various information regarding the GraphQL query/operation.
 
-- ``query_execution_time``: the time taken to parse the GraphQL query, compile
-  it to SQL with permissions and user session variables, and then executing it
-  and fetching the results back from Postgres. The unit is in seconds.
+- ``query_execution_time``: the time taken to parse the GraphQL query (from JSON
+  request), compile it to SQL with permissions and user session variables, and
+  then executing it and fetching the results back from Postgres. The unit is in
+  seconds.
 
 - ``user_vars``: contains the user session variables. Or the ``x-hasura-*``
   session variables inferred from the authorization mode.
@@ -304,14 +316,50 @@ your convenience.
 For some examples, see :doc:`../guides/monitoring/index`
 
 
-Migration path from logs from (<= ``v1.0.0-beta.2`` to newer)
--------------------------------------------------------------
+Migration path of logs from (<= ``v1.0.0-beta.2`` to newer)
+-----------------------------------------------------------
 
 Previously, there were two main kinds of logs for every request - `http-log` and `ws-handler` for HTTP and websockets respectively. (The other logs being, logs during startup, event-trigger logs, schema-sync logs, jwk-refresh logs etc.).
 
 The structure of the ``http-log`` has changed
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Summary of the changes
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. list-table:: ``http-log`` changes
+   :header-rows: 1
+
+   * - Older
+     - Newer
+   * - ``detail.status``
+     - ``detail.http_info.status``
+   * - ``detail.http_version``
+     - ``detail.http_info.version``
+   * - ``detail.method``
+     - ``detail.http_info.method``
+   * - ``detail.url``
+     - ``detail.http_info.url``
+   * - ``detail.ip``
+     - ``detail.http_info.ip``
+   * - ``detail.query_hash``
+     - removed
+   * - ``detail.query_execution_time``
+     - ``detail.operation.query_execution_time``
+   * - ``detail.request_id``
+     - ``detail.operation.request_id``
+   * - ``detail.response_size``
+     - ``detail.operation.response_size``
+   * - ``detail.user``
+     - ``detail.operation.user_vars``
+   * - ``detail.detail.error`` (only on error)
+     - ``detail.operation.error`` (only on error)
+   * - ``detail.detail.request`` (only on error)
+     - ``detail.operation.query`` (only on error)
+
+
+Full example logs
+^^^^^^^^^^^^^^^^^
 Older, on success :
 
 .. code-block:: json
@@ -441,6 +489,87 @@ Newer, on error:
 
 The structure for ``ws-handler`` has changed, and ``ws-handler`` has been renamed to ``websocket-log``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Summary of the changes
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. list-table:: ``websocket-log`` changes
+   :header-rows: 1
+
+   * - Older
+     - Newer
+   * - ``detail.websocket_id``
+     - ``detail.connection_info.websocket_id``
+   * - ``detail.jwt_expiry``
+     - ``detail.connection_info.jwt_expiry``
+   * - ``detail.msg``
+     - ``detail.connection_info.msg``
+   * - ``detail.user``
+     - ``detail.user_vars``
+   * - ``detail.event.detail``:
+
+       .. code-block:: json
+
+        [
+          "1",
+          null,
+          {
+            "type": "started"
+          }
+        ]
+     - ``detail.event.detail``:
+
+       .. code-block:: json
+
+          {
+            "request_id": "d2ede87d-5cb7-44b6-8736-1d898117722a",
+            "operation_id": "1",
+            "operation_type": {
+              "type": "started"
+            },
+            "operation_name": null
+          }
+   * - ``detail.event.detail`` (on error):
+
+       .. code-block:: json
+
+        [
+          "1",
+          null,
+          {
+            "type": "query_err",
+            "detail": {
+              "path": "$.selectionSet.todo.selectionSet.titlex",
+              "error": "field \"titlex\" not found in type: 'todo'",
+              "code": "validation-failed"
+            }
+          }
+        ]
+     - ``detail.event.detail`` (on error):
+
+       .. code-block:: json
+
+          {
+            "request_id": "150e3e6a-e1a7-46ba-a9d4-da6b192a4005",
+            "operation_id": "1",
+            "query": {
+              "variables": {},
+              "query": "subscription {\n  author {\n    namex\n  }\n}\n"
+            },
+            "operation_type": {
+              "type": "query_err",
+              "detail": {
+                "path": "$.selectionSet.author.selectionSet.namex",
+                "error": "field \"namex\" not found in type: 'author'",
+                "code": "validation-failed"
+              }
+            },
+            "operation_name": null
+          }
+
+
+Full example logs
+^^^^^^^^^^^^^^^^^
 
 Older, on success:
 

@@ -271,16 +271,17 @@ instance J.ToJSON PreparedStatement where
       prepArgsJVal (_, arg) = fmap (bsToTxt . fst) arg
 
 -- | Intermediate reperesentation of a computed SQL statement and prepared
--- | arguments, or a raw bytestring (mostly, for introspection responses)
--- | From this intermediate representation, a `LazyTx` can be generated, or the
--- | SQL can be logged etc.
+-- arguments, or a raw bytestring (mostly, for introspection responses)
+-- From this intermediate representation, a `LazyTx` can be generated, or the
+-- SQL can be logged etc.
 -- TODO: better naming?
 data ResolvedResp
   = RRRaw !B.ByteString
   | RRSql !PreparedStatement
 
 -- | The computed SQL with alias which can be logged. Nothing here represents no
--- | SQL for cases like introspection responses
+-- SQL for cases like introspection responses. Tuple of alias to a (maybe)
+-- prepared statement
 -- TODO: better naming?
 type GeneratedSql = [(G.Alias, Maybe PreparedStatement)]
 
