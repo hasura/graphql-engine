@@ -43,6 +43,7 @@ import qualified Hasura.Logging                         as L
 
 import           Hasura.EncJSON
 import           Hasura.Prelude                         hiding (get, put)
+import           Hasura.RQL.DDL.Remote.Types
 import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.DML.QueryTemplate
@@ -316,6 +317,19 @@ v1Alpha1PGDumpHandler b = do
   output <- PGD.execPGDump b ci
   return $ RawResp $ HttpResponse output (Just [Header sqlHeader])
 
+remoteSchemaProxyHandler :: T.Text -> Handler (HttpResponse EncJSON)
+remoteSchemaProxyHandler remoteSchemaNameTxt = do
+  userInfo <- asks hcUser
+  reqBody <- asks hcReqBody
+  reqHeaders <- asks hcReqHeaders
+  manager <- scManager . hcServerCtx <$> ask
+  scRef <- scCacheRef . hcServerCtx <$> ask
+  (sc, _) <- liftIO $ readIORef $ _scrCache scRef
+  let remoteSchemaInfoM = M.lookup (RemoteSchemaName remoteSchemaNameTxt) (scRemoteResolvers sc)
+  case remoteSchemaInfoM of
+    Nothing  -> throw400 NotFound "remote schema not found"
+    Just rsi -> E.execRemoteGQ manager userInfo reqHeaders reqBody rsi
+
 consoleAssetsHandler :: L.Logger -> Text -> FilePath -> ActionT IO ()
 consoleAssetsHandler logger dir path = do
   -- '..' in paths need not be handed as it is resolved in the url by
@@ -508,6 +522,11 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
         mkAPIRespHandler $ do
           query <- parseBody
           v1GQHandler query
+
+      post ("v1/graphql/proxy" <//> var) $ \remoteSchemaName ->  mkSpockAction GH.encodeGQErr id serverCtx $
+        mkAPIRespHandler $ do
+          onlyAdmin
+          remoteSchemaProxyHandler remoteSchemaName
 
     when (isDeveloperAPIEnabled serverCtx) $ do
       get "dev/plan_cache" $ mkSpockAction encodeQErr id serverCtx $

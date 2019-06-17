@@ -285,7 +285,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
         err500 Unexpected "invalid websocket payload"
       let payload = J.encode $ _wpPayload sockPayload
       resp <- runExceptT $ E.execRemoteGQ httpMgr userInfo reqHdrs
-              payload rsi opDef
+              payload rsi
       either postExecErr (sendRemoteResp . _hrBody) resp
       sendCompleted
 
