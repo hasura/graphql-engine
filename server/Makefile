@@ -10,6 +10,7 @@ packager_ver := 20190326
 pg_dump_ver := 11
 project_dir := $(shell pwd)
 build_dir := $(project_dir)/$(shell stack path --dist-dir)/build
+build_dir_docker := $(project_dir)/$(shell stack --docker path --dist-dir)/build
 
 build_output := /build/_server_output
 
@@ -30,6 +31,17 @@ image: $(project).cabal
 		--build-arg stack_resolver=$(stack_resolver) \
 		--build-arg packager_version=$(packager_ver) \
 		.
+
+local-image:
+	docker pull "fpco/stack-build:$(stack_resolver)"
+	stack --docker build --fast
+	mkdir -p packaging/build/rootfs
+	docker run --rm -v "$(build_dir_docker)/$(project)/$(project):/root/$(project)" \
+		$(registry)/graphql-engine-packager:$(packager_ver) /build.sh \
+		$(project) | tar -x -C packaging/build/rootfs
+	strip --strip-unneeded packaging/build/rootfs/bin/$(project)
+	upx packaging/build/rootfs/bin/$(project)
+	docker build -t "$(registry)/$(project):$(VERSION)" packaging/build
 
 release-image: $(project).cabal
 	docker build -t "$(registry)/$(project):$(VERSION)" \
@@ -77,4 +89,4 @@ push-latest:
 packager: packaging/packager.df
 	docker build -t "$(registry)/graphql-engine-packager:$(packager_ver)" -f packaging/packager.df ./packaging/
 
-.PHONY: image release-image push packager ci-binary-and-test ci-image ci-save-image ci-load-image build exec build-local-console exec-local-console
+.PHONY: image local-image release-image push packager ci-binary-and-test ci-image ci-save-image ci-load-image build exec build-local-console exec-local-console
