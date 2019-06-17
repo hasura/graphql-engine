@@ -831,7 +831,9 @@ execRemoteGQ manager userInfo reqHdrs remoteTopField = do
       options    = wreqOptions manager (Map.toList finalHdrs)
 
   gqlReq <- fieldsToRequest field
-  res  <- liftIO $ try $ Wreq.postWith options (show url) (encJToLBS (encJFromJValue gqlReq))
+  let jsonbytes = encJToLBS (encJFromJValue gqlReq)
+  liftIO (putStrLn ("payload_to_server = " ++ L8.unpack jsonbytes))
+  res  <- liftIO $ try $ Wreq.postWith options (show url) jsonbytes
   resp <- either httpThrow return res
   let cookieHdr = getCookieHdr (resp ^? Wreq.responseHeader "Set-Cookie")
       respHdrs  = Just $ mkRespHeaders cookieHdr
