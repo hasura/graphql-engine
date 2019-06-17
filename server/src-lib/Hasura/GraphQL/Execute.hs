@@ -455,8 +455,8 @@ fieldCallsToField indexedAlias userProvidedArguments variables finalSelSet = nes
     nest (fieldCall :| rest) =
       Field
         { _fAlias = case NE.nonEmpty rest of
-                      Just{} -> G.Alias (fcName fieldCall)
-                      Nothing -> indexedAlias
+                      Just{} -> indexedAlias
+                      Nothing -> G.Alias (fcName fieldCall)
         , _fName = fcName fieldCall
         , _fType = G.NamedType (G.Name "unknown_type")
         , _fArguments =
