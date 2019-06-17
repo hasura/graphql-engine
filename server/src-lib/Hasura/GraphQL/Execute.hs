@@ -7,6 +7,7 @@ module Hasura.GraphQL.Execute
   , getExecPlanPartial
   , extractRemoteRelArguments
   , produceBatches
+  , joinResults
 
   , ExecOp(..)
   , getResolvedExecPlan
@@ -267,22 +268,34 @@ neededHasuraFields remoteField = toList (rtrHasuraFields remoteRelationship)
 -- remote result = {"data":{"result_0":{"name":"alice"},"result_1":{"name":"bob"},"result_2":{"name":"alice"}}}
 
 -- | Join the data from the original hasura with the remote values.
-joinIndices :: [(RelFieldPath, [ArrayIndex], EncJSON)]
+joinResults :: [(Batch, EncJSON)]
             -> J.Value
             -> Either String J.Value
-joinIndices paths = undefined
+joinResults paths hasuraValue0 = do
+  remoteValues :: [(Batch, J.Value)] <-
+    mapM
+      (\(batch, encJson) ->
+         case J.eitherDecode (encJToLBS encJson) of
+           Left err -> Left err
+           Right object -> pure (batch, object :: J.Value))
+      paths
+  foldM
+    (\hasuraValue (batch, remoteValue) ->
+       pure (insertResultsAt remoteValue (batchRelFieldPath batch) hasuraValue))
+    hasuraValue0
+    remoteValues
 
 -- | Insert at path, index the value in the larger structure.
-insertValueAt :: J.Value -> RelFieldPath -> Int -> J.Value -> J.Value
-insertValueAt value path idx =
+insertResultsAt :: J.Value -> RelFieldPath -> Maybe ArrayIndex -> J.Value -> J.Value
+insertResultsAt value path idx =
   undefined
 
 -- | Produce the set of remote relationship batch requests.
 produceBatches ::
-     Map.HashMap RemoteRelKey ( RemoteRelField
-                              , RemoteSchemaInfo
-                              , Seq.Seq (Map.HashMap G.Variable G.ValueConst))
-  -> Map.HashMap RemoteRelKey Batch
+     [( RemoteRelField
+      , RemoteSchemaInfo
+      , Seq.Seq (Map.HashMap G.Variable G.ValueConst))]
+  -> [Batch]
 produceBatches =
   fmap
     (\(remoteRelField, remoteSchemaInfo, rows) ->
@@ -412,9 +425,10 @@ extractRemoteRelArguments ::
      RemoteSchemaMap
   -> EncJSON
   -> NonEmpty RemoteRelField
-  -> Either String (Map.HashMap RemoteRelKey ( RemoteRelField
-                                             , RemoteSchemaInfo
-                                             , Seq.Seq (Map.HashMap G.Variable G.ValueConst)))
+  -> Either String ( J.Value
+                   , [( RemoteRelField
+                      , RemoteSchemaInfo
+                      , Seq.Seq (Map.HashMap G.Variable G.ValueConst))])
 extractRemoteRelArguments remoteSchemaMap encJson rels =
   case J.eitherDecode (encJToLBS encJson) of
     Left err -> Left err
@@ -425,19 +439,20 @@ extractRemoteRelArguments remoteSchemaMap encJson rels =
             ("Couldn't find `data' payload in " <> L8.unpack (J.encode object))
         Just value -> do
           hash <- flip execStateT mempty (extractFromResult keyedRemotes value)
-          Map.traverseWithKey
-            (\key rows ->
-               case Map.lookup key keyedMap of
-                 Nothing -> Left "Failed to assicate remote key with remote."
-                 Just remoteRel ->
-                   case Map.lookup
-                          (rtrRemoteSchema
-                             (rmfRemoteRelationship (rrRemoteField remoteRel)))
-                          remoteSchemaMap of
-                     Just remoteSchemaInfo ->
-                       pure (remoteRel, remoteSchemaInfo, rows)
-                     Nothing -> Left "Couldn't find remote schema info!")
-            hash
+          remotes <- Map.traverseWithKey
+                       (\key rows ->
+                          case Map.lookup key keyedMap of
+                            Nothing -> Left "Failed to assicate remote key with remote."
+                            Just remoteRel ->
+                              case Map.lookup
+                                     (rtrRemoteSchema
+                                        (rmfRemoteRelationship (rrRemoteField remoteRel)))
+                                     remoteSchemaMap of
+                                Just remoteSchemaInfo ->
+                                  pure (remoteRel, remoteSchemaInfo, rows)
+                                Nothing -> Left "Couldn't find remote schema info!")
+                       hash
+          pure (value, Map.elems remotes)
   where
     keyedRemotes = NE.zip (fmap RemoteRelKey (0 :| [1 ..])) rels
     keyedMap = Map.fromList (toList keyedRemotes)
