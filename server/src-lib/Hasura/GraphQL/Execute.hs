@@ -3,6 +3,7 @@
 module Hasura.GraphQL.Execute
   ( QExecPlanResolved(..)
   , QExecPlanPartial(..)
+  , Batch(..)
   , getExecPlanPartial
   , extractRemoteRelArguments
   , produceBatches
@@ -273,7 +274,7 @@ joinIndices paths = undefined
 
 -- | Insert at path, index the value in the larger structure.
 insertValueAt :: J.Value -> RelFieldPath -> Int -> J.Value -> J.Value
-insertValueAt value path index =
+insertValueAt value path idx =
   undefined
 
 -- | Produce the set of remote relationship batch requests.
@@ -281,19 +282,33 @@ produceBatches ::
      Map.HashMap RemoteRelKey ( RemoteRelField
                               , RemoteSchemaInfo
                               , Seq.Seq (Map.HashMap G.Variable G.ValueConst))
-  -> Map.HashMap RemoteRelKey (VQ.RemoteTopQuery, RelFieldPath, [ArrayIndex])
+  -> Map.HashMap RemoteRelKey Batch
 produceBatches =
   fmap
     (\(remoteRelField, remoteSchemaInfo, rows) ->
        produceBatch remoteSchemaInfo remoteRelField rows)
+
+data Batch =
+  Batch
+    { batchRemoteTopQuery :: !VQ.RemoteTopQuery
+    , batchRelFieldPath :: !RelFieldPath
+    , batchIndices :: ![ArrayIndex]
+    , batchRelationshipKeyToMake :: !Text
+    } deriving (Show)
 
 -- | Produce batch queries for a given remote relationship.
 produceBatch ::
      RemoteSchemaInfo
   -> RemoteRelField
   -> Seq.Seq (Map.HashMap G.Variable G.ValueConst)
-  -> (VQ.RemoteTopQuery, RelFieldPath, [ArrayIndex])
-produceBatch remoteSchemaInfo remoteRelField rows = (remoteTopQuery, path, resultIndexes)
+  -> Batch
+produceBatch remoteSchemaInfo remoteRelField rows =
+  Batch
+    { batchRemoteTopQuery = remoteTopQuery
+    , batchRelFieldPath = path
+    , batchIndices = resultIndexes
+    , batchRelationshipKeyToMake = relationshipNameText
+    }
   where
     remoteTopQuery =
       VQ.RemoteTopQuery
@@ -313,6 +328,9 @@ produceBatch remoteSchemaInfo remoteRelField rows = (remoteTopQuery, path, resul
     resultIndexes = map fst indexedRows
     remoteRelationship = rmfRemoteRelationship (rrRemoteField remoteRelField)
     path = rrRelFieldPath remoteRelField
+    relationshipNameText =
+      unRemoteRelationshipName
+        (rtrName (rmfRemoteRelationship (rrRemoteField remoteRelField)))
     originalField = rrField remoteRelField
 
 -- | Produce the alias name for a result index.

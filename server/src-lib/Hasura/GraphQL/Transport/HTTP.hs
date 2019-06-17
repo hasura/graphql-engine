@@ -67,12 +67,16 @@ runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer manager reqHdrs r
               liftIO $ putStrLn ("batches = " ++ show batches)
               results <-
                 traverse
-                  (\(remoteTopQuery, path, resultIndices) ->
-                     do HttpResponse res _ <- E.execRemoteGQ manager userInfo reqHdrs remoteTopQuery
-                        liftIO (putStrLn ("remote result = " ++ show res))
-                        -- let modified = joinIndices encJson path res
-                        -- liftIO (putStrLn ("modified_hasura_JSON = " ++ show modified))
-                        pure res)
+                  (\batch -> do
+
+                     HttpResponse res _ <-
+                       E.execRemoteGQ
+                         manager
+                         userInfo
+                         reqHdrs
+                         (E.batchRemoteTopQuery batch)
+                     liftIO (putStrLn ("remote result = " ++ show res))
+                     pure res)
                   batches
               pure ()
           pure (HttpResponse encJson Nothing)
