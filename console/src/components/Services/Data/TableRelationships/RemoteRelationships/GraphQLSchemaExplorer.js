@@ -17,11 +17,6 @@ const SchemaExplorer = ({
 }) => {
   const [schema, setRemoteSchema] = useState(null);
 
-  console.log('===================================');
-  console.log(schema);
-  console.log(loading);
-  console.log('===================================');
-
   useEffect(() => {
     if (relationship.remoteSchema) {
       const introspectionCallback = introspectionResult => {

@@ -318,12 +318,10 @@ export const getRemoteRelConfig = (rel, tableName, styles) => {
   return (
     <div className={styles.display_flex}>
       <div>
-        <b>
-          {`${tableName} → ${rel.remoteSchema} . ${remoteField.name}` + ' '}
-        </b>
+        <b>{`${rel.name}`}</b>&nbsp;
       </div>
       <div>
-        <i>{`- ${rel.name}`}</i>
+        <i>{`- ${tableName} → ${rel.remoteSchema} . ${remoteField.name}`}</i>
       </div>
     </div>
   );
