@@ -8,3 +8,24 @@
   max-height: 200px;
   border-radius: 4px;
 }
+
+.height200Px { 
+  height: 200px;
+}
+
+.skeletonItem {
+  margin-bottom: 15px;
+}
+
+.skeletonCheckbox {
+  width: 15px;
+  height: 15px;
+  background-color: white;
+  margin-right: 15px;
+}
+
+.skeletonLabel {
+  width: 200px;
+  height: 15px;
+  background-color: white;
+}

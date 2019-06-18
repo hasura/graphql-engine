@@ -96,7 +96,7 @@ export const createRemoteRelationship = (
     ];
     const downQuery = [
       {
-        type: 'drop_remote_relationship',
+        type: 'delete_remote_relationship',
         args: {
           name: state.name,
           table,
@@ -112,6 +112,71 @@ export const createRemoteRelationship = (
     const requestMsg = 'Creating remote relationship...';
     const successMsg = 'Successfully created remote relationship';
     const errorMsg = 'Creating remote relationship failed';
+
+    const customOnSuccess = () => {
+      if (successCallback) {
+        successCallback();
+      }
+    };
+    const customOnError = () => {
+      if (errorCallback) {
+        errorCallback();
+      }
+    };
+
+    // Rename relationship should fetch entire schema info.
+    makeMigrationCall(
+      dispatch,
+      getState,
+      upQuery,
+      downQuery,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
+export const dropRemoteRelationship = (
+  index,
+  successCallback,
+  errorCallback
+) => {
+  return (dispatch, getState) => {
+    const state = getState().tables.modify.remoteRelationships.relationships[
+      index
+    ];
+    const table = {
+      schema: getState().tables.currentSchema,
+      name: getState().tables.currentTable,
+    };
+    const downQuery = [
+      {
+        type: 'create_remote_relationship',
+        args: getRemoteRelPayload(state, table),
+      },
+    ];
+    const upQuery = [
+      {
+        type: 'delete_remote_relationship',
+        args: {
+          name: state.name,
+          table,
+        },
+      },
+    ];
+
+    // Apply migrations
+    const migrationName = `table_${table.name}_drop_remote_relationship_${
+      state.name
+    }`;
+
+    const requestMsg = 'Deleting remote relationship...';
+    const successMsg = 'Successfully deleted remote relationship';
+    const errorMsg = 'Deleting remote relationship failed';
 
     const customOnSuccess = () => {
       if (successCallback) {

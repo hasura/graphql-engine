@@ -1,87 +1,8 @@
 import React from 'react';
 import styles from './SchemaExplorer.scss';
 import { getSchemaTree } from '../utils';
-
-const CheckboxWithLabel = ({
-  label,
-  checkboxStyle,
-  columns,
-  handleColumnChange,
-  toggle,
-  item,
-}) => {
-  const {
-    isArg,
-    isScalar,
-    isScalarList,
-    isNonNullableScalar,
-    isChecked,
-    parentFieldName,
-    parentFieldNesting,
-  } = item;
-
-  const columnSelect = () => {
-    if (
-      !isArg ||
-      !isChecked ||
-      !(isScalar || isScalarList || isNonNullableScalar)
-    ) {
-      return;
-    }
-    const onColumnChange = e => {
-      if (!e.target.value) return;
-      const columnValue = isScalarList ? [e.target.value] : e.target.value;
-      handleColumnChange(
-        columnValue,
-        parentFieldName,
-        parentFieldNesting,
-        item
-      );
-    };
-    return (
-      <div>
-        <select defaultValue="" onChange={onColumnChange}>
-          <option key="placeholder" value="">
-            -- column --
-          </option>
-          {columns.map(c => {
-            return (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            );
-          })}
-        </select>
-      </div>
-    );
-  };
-  return (
-    <div
-      className={`${styles.display_flex} ${styles.add_mar_bottom_mid}`}
-      style={checkboxStyle}
-    >
-      <div className={styles.add_mar_right_small}>
-        <input
-          checked={isChecked}
-          type="checkbox"
-          className={styles.cursorPointer}
-          onChange={toggle}
-        />
-      </div>
-      <div
-        className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
-        onClick={toggle}
-      >
-        {label}
-        {isArg &&
-          isChecked &&
-          (isScalar || isNonNullableScalar || isScalarList) &&
-          ':'}
-      </div>
-      <div>{columnSelect()}</div>
-    </div>
-  );
-};
+import ExplorerItem from './ExplorerItem';
+import { NoRemoteSchemaPlaceholder, LoadingSkeleton } from './Placeholders';
 
 const SchemaExplorer = ({
   schema,
@@ -93,11 +14,11 @@ const SchemaExplorer = ({
   loading,
 }) => {
   if (!relationship.remoteSchema) {
-    return <i>No remote schema selected</i>;
+    return <NoRemoteSchemaPlaceholder />;
   }
 
-  if (loading) {
-    return <i> Loading remote schema. Please wait... </i>;
+  if (loading || !schema) {
+    return <LoadingSkeleton />;
   }
 
   const schemaTree = getSchemaTree(
@@ -133,14 +54,16 @@ const SchemaExplorer = ({
         };
 
         return (
-          <CheckboxWithLabel
+          <ExplorerItem
             label={f.name}
             checkboxStyle={checkboxStyle}
             toggle={toggle}
             item={f}
             columns={columns}
             handleColumnChange={handleColumnChange}
-            key={`${f.name}-${f.nesting}-${f.argNesting || ''}-${f.isArg}`}
+            key={`${f.name}-${f.nesting}-${f.argNesting || ''}-${
+              f.isArg && f.parentArg ? f.parentArg : ''
+            }`}
           />
         );
       })}
