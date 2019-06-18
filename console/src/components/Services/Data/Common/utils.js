@@ -1,6 +1,6 @@
 import { aggCategory, pgCategoryCode } from './PgInfo';
 
-const commonlyUsedFunctions = ['now', 'gen_random_uuid'];
+const commonlyUsedFunctions = ['now', 'gen_random_uuid', 'random'];
 
 const getParanthesized = name => {
   return `${name}()`;
@@ -94,7 +94,7 @@ const getDefaultFunctionsOptions = (funcs, identifier) => {
       defaultValues[0].suggestions.push(suggestionObj);
     }
   });
-  /* Reversing the array just so that if frequently used types were peresent, they come first */
+  /* Reversing the array just so that if frequently used types were present, they come first */
   return {
     defaultValues: defaultValues.reverse(),
   };

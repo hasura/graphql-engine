@@ -5,7 +5,7 @@ import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSele
 import { commonDataTypes } from '../utils';
 import { getDataOptions, inferDefaultValues } from '../Common/utils';
 
-import TableDefault from './TableDefault';
+import TableColumnDefault from './TableColumnDefault';
 
 /* Custom style object for searchable select box */
 const customSelectBoxStyles = {
@@ -77,15 +77,13 @@ const TableColumn = props => {
 
   /* Collect list of relevant default values if the type doesn't have any default values
    * */
-  const inferredDefaultValues = inferDefaultValues(
-    columnDefaultFunctions,
-    columnTypeCasts
-  )(column.type);
+  const getInferredDefaultValues = () =>
+    inferDefaultValues(columnDefaultFunctions, columnTypeCasts)(column.type);
 
   const defaultFunctions =
     column.type in columnDefaultFunctions
       ? columnDefaultFunctions[column.type]
-      : inferredDefaultValues;
+      : getInferredDefaultValues();
 
   return (
     <div key={i} className={`${styles.display_flex} form-group`}>
@@ -108,10 +106,11 @@ const TableColumn = props => {
           bsClass={`col-type-${i} add_table_column_selector`}
           styleOverrides={customSelectBoxStyles}
           filterOption={'prefix'}
+          placeholder="column_type"
         />
       </span>
       <span className={`${styles.inputDefault} ${styles.defaultWidth}`}>
-        <TableDefault
+        <TableColumnDefault
           onChange={setColDefaultValue}
           colIndex={i}
           testId={`col-default-${i}`}

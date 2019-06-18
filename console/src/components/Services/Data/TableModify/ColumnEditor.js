@@ -58,7 +58,7 @@ const ColumnEditor = ({
     colName
   );
 
-  const defaultInputTheme = require('../../../Common/CustomInputAutoSuggest/CustomInputEditColumnTheme.scss');
+  const theme = require('../../../Common/CustomInputAutoSuggest/CustomThemes/EditColumnDefault.scss');
 
   const updateColumnName = e => {
     dispatch(editColumn(colName, 'name', e.target.value));
@@ -90,7 +90,7 @@ const ColumnEditor = ({
         type="text"
         disabled={columnProperties.pkConstraint}
         data-test="edit-col-default"
-        theme={defaultInputTheme}
+        theme={theme}
       />
     );
   };
@@ -120,6 +120,7 @@ const ColumnEditor = ({
               bsClass={`col-type-${0} modify_select`}
               styleOverrides={customSelectBoxStyles}
               filterOption={'prefix'}
+              placeholder="column_type"
             />
           </div>
         </div>

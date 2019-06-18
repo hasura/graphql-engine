@@ -120,19 +120,17 @@ const ColumnCreator = ({
     onSubmit,
   } = useColumnEditor(dispatch, tableName);
 
-  const defaultInputTheme = require('../../../Common/CustomInputAutoSuggest/CustomInputAddColumnTheme.scss');
+  const theme = require('../../../Common/CustomInputAutoSuggest/CustomThemes/AddColumnDefault.scss');
 
   let defaultOptions = [];
 
-  const inferredDefaultValues = inferDefaultValues(
-    columnDefaultFunctions,
-    validTypeCasts
-  )(colType.value);
+  const getInferredDefaultValues = () =>
+    inferDefaultValues(columnDefaultFunctions, validTypeCasts)(colType.value);
 
   const colDefaultFunctions =
     colType.value in columnDefaultFunctions
       ? columnDefaultFunctions[colType.value]
-      : inferredDefaultValues;
+      : getInferredDefaultValues();
 
   if (colDefaultFunctions && colDefaultFunctions.length > 0) {
     defaultOptions = getDefaultFunctionsOptions(colDefaultFunctions, 0)
@@ -149,7 +147,7 @@ const ColumnCreator = ({
           input-sm form-control`}
         {...colDefault}
         data-test="default-value"
-        theme={defaultInputTheme}
+        theme={theme}
       />
     );
   };
@@ -199,6 +197,7 @@ const ColumnCreator = ({
             bsClass={`col-type-${0} modify_select`}
             styleOverrides={customSelectBoxStyles}
             filterOption={'prefix'}
+            placeholder="column_type"
           />
         </span>
         <input

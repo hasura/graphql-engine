@@ -6,7 +6,7 @@ import {
   getDefaultFunctionsOptions,
 } from '../Common/utils';
 
-const TableDefault = ({
+const TableColumnDefault = ({
   column,
   colDefaultFunctions,
   onChange,
@@ -14,12 +14,12 @@ const TableDefault = ({
   colIndex: i,
 }) => {
   // const styles = require('../../../Common/TableCommon/Table.scss');
-  const defaultInputTheme = require('../../../Common/CustomInputAutoSuggest/CustomInputAddTableTheme.scss');
+  const theme = require('../../../Common/CustomInputAutoSuggest/Theme.scss');
   const handleColDefaultValueChange = (e, data) => {
     const { newValue } = data;
     onChange(i, column.nullable || false, newValue);
   };
-  const renderDefaultHtml = () => {
+  const renderTableColumnDefaultHtml = () => {
     const dfVal = getDefaultValue(column);
     /* Collect direct default functions and the indirect default functions */
     const { defaultValues } = getDefaultFunctionsOptions(
@@ -34,12 +34,12 @@ const TableDefault = ({
         className={`col-default-value-${i} add_table_default_value_selector form-control`}
         placeholder={getPlaceholder(column)}
         id={`col-default-value-${i}`}
-        theme={defaultInputTheme}
+        theme={theme}
         data-test={testId}
       />
     );
   };
-  return renderDefaultHtml();
+  return renderTableColumnDefaultHtml();
 };
 
-export default TableDefault;
+export default TableColumnDefault;

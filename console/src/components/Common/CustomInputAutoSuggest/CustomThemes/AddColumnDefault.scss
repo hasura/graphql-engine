@@ -1,8 +1,9 @@
-@import './CustomInputTheme.scss';
+@import '../Theme.scss';
 
 .suggestionsContainerOpen {
   top: 30px;
-  width: 100%;
+  width: 280px;
+  left: 5px;
 }
 
 .suggestion {
