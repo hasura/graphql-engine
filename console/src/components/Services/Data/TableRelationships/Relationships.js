@@ -21,6 +21,7 @@ import Button from '../../../Common/Button/Button';
 import AddManualRelationship from './AddManualRelationship';
 import suggestedRelationshipsRaw from './autoRelations';
 import RelationshipEditor from './RelationshipEditor';
+import { NotFoundError } from '../../../Error/PageNotFound';
 
 const addRelationshipCellView = (
   dispatch,
@@ -328,6 +329,12 @@ class Relationships extends Component {
     const tableSchema = allSchemas.find(
       t => t.table_name === tableName && t.table_schema === currentSchema
     );
+
+    if (!tableSchema) {
+      // throw a 404 exception
+      throw new NotFoundError();
+    }
+
     let alert = null;
     if (ongoingRequest) {
       alert = (
