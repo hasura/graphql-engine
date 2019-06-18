@@ -414,7 +414,7 @@ serveCmdFooter =
       , accessKeyEnv, authHookEnv, authHookModeEnv
       , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, enableConsoleEnv
       , enableTelemetryEnv, wsReadCookieEnv, stringifyNumEnv, enabledAPIsEnv
-      , enableAllowlistEnv
+      , enableAllowlistEnv, adminRoleEnv
       ]
 
     eventEnvs =
