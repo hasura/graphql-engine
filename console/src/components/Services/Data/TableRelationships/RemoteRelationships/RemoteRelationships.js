@@ -50,7 +50,11 @@ const RemoteRelationships = ({
             remoteRelationships.remoteSchema[remoteRelationship.remoteSchema]
           }
           loading={remoteRelationships.loading}
-          key={existingRemoteRelationships[i].name || 'new-remote-rel'}
+          key={
+            existingRemoteRelationships[i]
+              ? existingRemoteRelationships[i].name
+              : 'new-remote-rel'
+          }
         />
       );
     });
@@ -275,8 +279,6 @@ const RemoteRelationshipEditor = ({
     );
   };
 
-  const collapsedContent = () => null;
-
   const saveFunc = () => {
     const successCallback = () => {
       if (isLast) {
@@ -330,7 +332,6 @@ const RemoteRelationshipEditor = ({
   return (
     <ExpandableEditor
       editorExpanded={expandedContent}
-      editorCollapsed={collapsedContent}
       property={'remote-relationship-add'}
       service="table-relationship"
       saveFunc={saveFunc}
