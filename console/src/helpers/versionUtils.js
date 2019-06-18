@@ -2,12 +2,14 @@ const semver = require('semver');
 
 export const FT_JWT_ANALYZER = 'JWTAnalyzer';
 export const RELOAD_METADATA_API_CHANGE = 'reloadMetaDataApiChange';
+export const FT_REMOTE_RELATIONSHIPS = 'RemoteRelationships';
 
 // list of feature launch versions
 const featureLaunchVersions = {
   // feature: 'v1.0.0'
   [RELOAD_METADATA_API_CHANGE]: 'v1.0.0-beta.3',
   [FT_JWT_ANALYZER]: 'v1.0.0-beta.3',
+  [FT_REMOTE_RELATIONSHIPS]: 'v1.0.0-beta.3',
 };
 
 export const getFeaturesCompatibility = serverVersion => {

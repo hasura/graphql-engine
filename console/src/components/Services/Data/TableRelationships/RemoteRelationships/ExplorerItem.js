@@ -39,7 +39,11 @@ const ExplorerItem = ({
     };
     return (
       <div>
-        <select value={item.column || ''} onChange={onColumnChange}>
+        <select
+          value={item.column || ''}
+          onChange={onColumnChange}
+          className={styles.scalarColumnSelect}
+        >
           {!item.column && (
             <option key="placeholder" value="">
               -- column --
