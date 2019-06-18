@@ -5879,7 +5879,7 @@ export const getRemoteRelPayload = (remoteRel, table) => {
       },
     };
     if (_field[_rf.name].field === undefined) {
-      delete _field.field;
+      delete _field[_rf.name].field;
     }
     return _field;
   };

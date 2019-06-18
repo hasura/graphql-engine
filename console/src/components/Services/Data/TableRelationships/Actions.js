@@ -68,7 +68,9 @@ export const createRemoteRelationship = (
   errorCallback
 ) => {
   return (dispatch, getState) => {
-    const state = getState().tables.modify.remoteRelationships[index];
+    const state = getState().tables.modify.remoteRelationships.relationships[
+      index
+    ];
     if (!gqlPattern.test(state.name)) {
       return dispatch(
         showErrorNotification(
