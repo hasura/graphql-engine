@@ -15,6 +15,7 @@ module Hasura.RQL.DDL.Relationship
   , runSetRelComment
   , runCreateRemoteRelationship
   , runDeleteRemoteRelationship
+  , delRemoteRelFromCatalog
   , module Hasura.RQL.DDL.Relationship.Types
   )
 where

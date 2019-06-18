@@ -617,7 +617,7 @@ addRemoteRelToCache remoteField additionalTypes deps = do
   where
     qt = rtrTable (rmfRemoteRelationship remoteField)
     rn = rtrName (rmfRemoteRelationship remoteField)
-    schObjId = SOTableObj qt $ TORel (RelName (unRemoteRelationshipName rn))
+    schObjId = SOTableObj qt $ TORemoteRel rn
 
 delRemoteRelFromCache ::
     (QErrM m, CacheRWM m)
@@ -627,7 +627,7 @@ delRemoteRelFromCache table rn = do
   removeRelationshipTypes table rn
   modDepMapInCache (removeFromDepMap schObjId)
   where
-    schObjId = SOTableObj table $ TORel (RelName (unRemoteRelationshipName rn))
+    schObjId = SOTableObj table $ TORemoteRel rn
 
 addRelationshipTypes :: (CacheRWM m) => (QualifiedTable, RemoteRelationshipName) -> TypeMap -> m ()
 addRelationshipTypes (qt, rn) additionalTypesMap = do

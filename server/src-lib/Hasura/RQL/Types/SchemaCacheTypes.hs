@@ -17,6 +17,7 @@ import           Hasura.SQL.Types
 data TableObjId
   = TOCol !PGCol
   | TORel !RelName
+  | TORemoteRel !RemoteRelationshipName
   | TOCons !ConstraintName
   | TOPerm !RoleName !PermType
   | TOTrigger !TriggerName
@@ -43,6 +44,8 @@ reportSchemaObj (SOTableObj tn (TOCol cn)) =
   "column " <> qualObjectToText tn <> "." <> getPGColTxt cn
 reportSchemaObj (SOTableObj tn (TORel cn)) =
   "relationship " <> qualObjectToText tn <> "." <> getRelTxt cn
+reportSchemaObj (SOTableObj tn (TORemoteRel rn)) =
+  "remote relationship " <> qualObjectToText tn <> "." <> unRemoteRelationshipName rn
 reportSchemaObj (SOTableObj tn (TOCons cn)) =
   "constraint " <> qualObjectToText tn <> "." <> getConstraintTxt cn
 reportSchemaObj (SOTableObj tn (TOPerm rn pt)) =

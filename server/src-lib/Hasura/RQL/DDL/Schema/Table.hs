@@ -118,6 +118,10 @@ purgeDep schemaObjId = case schemaObjId of
     liftTx $ delRelFromCatalog qt rn
     delRelFromCache rn qt
 
+  (SOTableObj qt (TORemoteRel rn))     -> do
+    liftTx $ delRemoteRelFromCatalog qt rn
+    delRemoteRelFromCache qt rn
+
   (SOQTemplate qtn)              -> do
     liftTx $ delQTemplateFromCatalog qtn
     delQTemplateFromCache qtn
@@ -218,6 +222,10 @@ delTableAndDirectDeps qtn@(QualifiedObject sn tn) = do
     Q.unitQ [Q.sql|
              DELETE FROM "hdb_catalog"."event_triggers"
              WHERE schema_name = $1 AND table_name = $2
+              |] (sn, tn) False
+    Q.unitQ [Q.sql|
+             DELETE FROM "hdb_catalog"."hdb_remote_relationship"
+             WHERE table_schema = $1 AND table_name = $2
               |] (sn, tn) False
     delTableFromCatalog qtn
   delTableFromCache qtn
