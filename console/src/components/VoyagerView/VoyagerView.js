@@ -5,15 +5,11 @@ import Endpoints from '../../Endpoints';
 import '../../../node_modules/graphql-voyager/dist/voyager.css';
 import './voyagerView.css';
 
-console.log(GraphQLVoyager);
-
 class VoyagerView extends Component {
   introspectionProvider(query) {
     return fetch(Endpoints.graphQLUrl, {
-      method: 'post',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      method: 'POST',
+      headers: this.props.headers,
       body: JSON.stringify({ query: query }),
     }).then(response => response.json());
   }
@@ -22,7 +18,7 @@ class VoyagerView extends Component {
     return (
       <div>
         <GraphQLVoyager
-          introspection={this.introspectionProvider}
+          introspection={this.introspectionProvider.bind(this)}
           workerURI={
             'https://cdn.jsdelivr.net/npm/graphql-voyager@1.0.0-rc.27/dist/voyager.worker.min.js'
           }
@@ -32,4 +28,13 @@ class VoyagerView extends Component {
   }
 }
 
-export default VoyagerView;
+const generatedVoyagerConnector = connect => {
+  const mapStateToProps = state => {
+    return {
+      headers: state.tables.dataHeaders,
+    };
+  };
+  return connect(mapStateToProps)(VoyagerView);
+};
+
+export default generatedVoyagerConnector;

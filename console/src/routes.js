@@ -3,7 +3,7 @@ import { Route, IndexRoute, IndexRedirect } from 'react-router';
 
 import { connect } from 'react-redux';
 
-import { App, Main, PageNotFound, VoyagerView } from 'components';
+import { App, Main, PageNotFound } from 'components';
 
 import globals from './Globals';
 
@@ -22,6 +22,8 @@ import { getCustomResolverRouter } from './components/Services/CustomResolver';
 import generatedApiExplorer from './components/Services/ApiExplorer/ApiExplorerGenerator';
 
 import generatedLoginConnector from './components/Login/Login';
+
+import generatedVoyagerConnector from './components/VoyagerView/VoyagerView';
 
 import metadataContainer from './components/Services/Metadata/Container';
 import metadataOptionsContainer from './components/Services/Metadata/MetadataOptions/MetadataOptions';
@@ -81,7 +83,6 @@ const routes = store => {
 
   return (
     <Route path="/" component={App} onEnter={validateLogin(store)}>
-      <Route path="test-voyager-view(/:root)" component={VoyagerView} />
       <Route path="login" component={generatedLoginConnector(connect)} />
       <Route
         path=""
@@ -90,7 +91,10 @@ const routes = store => {
       >
         <Route path="">
           <IndexRoute component={generatedApiExplorer(connect)} />
-          <Route path="voyager-view(/:root)" component={VoyagerView} />
+          <Route
+            path="voyager-view"
+            component={generatedVoyagerConnector(connect)}
+          />
           <Route
             path="api-explorer"
             component={generatedApiExplorer(connect)}
