@@ -58,8 +58,6 @@ const ColumnEditor = ({
     colName
   );
 
-  const theme = require('../../../Common/CustomInputAutoSuggest/CustomThemes/EditColumnDefault.scss');
-
   const updateColumnName = e => {
     dispatch(editColumn(colName, 'name', e.target.value));
   };
@@ -81,6 +79,8 @@ const ColumnEditor = ({
   };
 
   const getDefaultInput = () => {
+    const theme = require('../../../Common/CustomInputAutoSuggest/CustomThemes/EditColumnDefault.scss');
+
     return (
       <CustomInputAutoSuggest
         options={defaultOptions}

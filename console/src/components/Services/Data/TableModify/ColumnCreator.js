@@ -120,8 +120,6 @@ const ColumnCreator = ({
     onSubmit,
   } = useColumnEditor(dispatch, tableName);
 
-  const theme = require('../../../Common/CustomInputAutoSuggest/CustomThemes/AddColumnDefault.scss');
-
   let defaultOptions = [];
 
   const getInferredDefaultValues = () =>
@@ -133,11 +131,12 @@ const ColumnCreator = ({
       : getInferredDefaultValues();
 
   if (colDefaultFunctions && colDefaultFunctions.length > 0) {
-    defaultOptions = getDefaultFunctionsOptions(colDefaultFunctions, 0)
-      .defaultValues;
+    defaultOptions = getDefaultFunctionsOptions(colDefaultFunctions, 0);
   }
 
   const getDefaultInput = () => {
+    const theme = require('../../../Common/CustomInputAutoSuggest/CustomThemes/AddColumnDefault.scss');
+
     return (
       <CustomInputAutoSuggest
         placeholder="default value"

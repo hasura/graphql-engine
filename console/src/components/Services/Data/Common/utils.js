@@ -95,9 +95,7 @@ const getDefaultFunctionsOptions = (funcs, identifier) => {
     }
   });
   /* Reversing the array just so that if frequently used types were present, they come first */
-  return {
-    defaultValues: defaultValues.reverse(),
-  };
+  return defaultValues.reverse();
 };
 
 /*

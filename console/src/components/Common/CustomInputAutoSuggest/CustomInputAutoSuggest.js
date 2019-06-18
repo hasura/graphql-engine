@@ -4,7 +4,9 @@ import Autosuggest from 'react-autosuggest';
 
 const CustomInputAutoSuggest = props => {
   const [suggestions, setSuggestions] = useState([]);
-  const { options, theme } = props;
+
+  const { options, theme = require('./Theme.scss') } = props;
+
   const getSuggestions = value => {
     const inputValue = value.trim().toLowerCase();
     const inputLength = inputValue.length;

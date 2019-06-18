@@ -165,8 +165,8 @@ const ColumnEditorList = ({
           validTypeCasts
         )(lowerUdtName);
       }
-      const { defaultValues } = getDefaultFunctionsOptions(defaultOptions);
-      return defaultValues;
+
+      return getDefaultFunctionsOptions(defaultOptions);
     };
 
     /*

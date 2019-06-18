@@ -14,18 +14,17 @@ const TableColumnDefault = ({
   colIndex: i,
 }) => {
   // const styles = require('../../../Common/TableCommon/Table.scss');
-  const theme = require('../../../Common/CustomInputAutoSuggest/Theme.scss');
   const handleColDefaultValueChange = (e, data) => {
     const { newValue } = data;
     onChange(i, column.nullable || false, newValue);
   };
+
   const renderTableColumnDefaultHtml = () => {
     const dfVal = getDefaultValue(column);
+
     /* Collect direct default functions and the indirect default functions */
-    const { defaultValues } = getDefaultFunctionsOptions(
-      colDefaultFunctions,
-      i
-    );
+    const defaultValues = getDefaultFunctionsOptions(colDefaultFunctions, i);
+
     return (
       <CustomInputAutoSuggest
         options={defaultValues}
@@ -34,7 +33,6 @@ const TableColumnDefault = ({
         className={`col-default-value-${i} add_table_default_value_selector form-control`}
         placeholder={getPlaceholder(column)}
         id={`col-default-value-${i}`}
-        theme={theme}
         data-test={testId}
       />
     );
