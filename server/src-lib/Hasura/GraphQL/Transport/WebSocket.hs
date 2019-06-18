@@ -19,7 +19,6 @@ import qualified Data.IORef                                  as IORef
 import qualified Data.Text                                   as T
 import qualified Data.Text.Encoding                          as TE
 import qualified Data.Time.Clock                             as TC
-import qualified Language.GraphQL.Draft.Syntax               as G
 import qualified ListT
 import qualified Network.HTTP.Client                         as H
 import qualified Network.HTTP.Types                          as H
@@ -28,6 +27,8 @@ import qualified StmContainers.Map                           as STMMap
 
 import           Control.Concurrent                          (threadDelay)
 
+import Hasura.GraphQL.Validate
+import qualified Hasura.GraphQL.Validate as VQ
 import           Hasura.EncJSON
 import qualified Hasura.GraphQL.Execute                      as E
 import qualified Hasura.GraphQL.Execute.LiveQuery            as LQ
@@ -242,12 +243,13 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
   (sc, scVer) <- liftIO $ IORef.readIORef gCtxMapRef
   execPlanE <- runExceptT $ E.getResolvedExecPlan pgExecCtx
                planCache userInfo sqlGenCtx enableAL sc scVer q
-  execPlan <- either (withComplete . preExecErr) return execPlanE
-  case execPlan of
-    E.GExPHasura resolvedOp ->
-      runHasuraGQ userInfo resolvedOp
-    E.GExPRemote rsi opDef  ->
-      runRemoteGQ userInfo reqHdrs opDef rsi
+  execPlans <- either (withComplete . preExecErr) return execPlanE
+  forM_ execPlans $ \execPlan ->
+    case execPlan of
+      E.ExPHasura resolvedOp ->
+        runHasuraGQ userInfo resolvedOp
+      E.ExPRemote rsi  ->
+        runRemoteGQ userInfo reqHdrs rsi
   where
     runHasuraGQ :: UserInfo -> E.ExecOp -> ExceptT () IO ()
     runHasuraGQ userInfo = \case
@@ -269,23 +271,18 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       sendCompleted
 
     runRemoteGQ :: UserInfo -> [H.Header]
-                -> G.TypedOperationDefinition -> RemoteSchemaInfo
+                -> VQ.RemoteTopQuery
                 -> ExceptT () IO ()
-    runRemoteGQ userInfo reqHdrs opDef rsi = do
-      when (G._todType opDef == G.OperationTypeSubscription) $
-        withComplete $ preExecErr $
-        err400 NotSupported "subscription to remote server is not supported"
+    runRemoteGQ userInfo reqHdrs rt = do
 
       -- if it's not a subscription, use HTTP to execute the query on the remote
       -- server
       -- try to parse the (apollo protocol) websocket frame and get only the
       -- payload
-      sockPayload <- onLeft (J.eitherDecode msgRaw) $
-        const $ withComplete $ preExecErr $
-        err500 Unexpected "invalid websocket payload"
-      let payload = J.encode $ _wpPayload sockPayload
-      resp <- runExceptT $ E.execRemoteGQ httpMgr userInfo reqHdrs
-              payload rsi
+      resp <- let (rsi, fields) = remoteTopQueryEither rt in
+              runExceptT $ E.execRemoteGQ httpMgr userInfo reqHdrs
+              rsi fields
+
       either postExecErr (sendRemoteResp . _hrBody) resp
       sendCompleted
 

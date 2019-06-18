@@ -3,8 +3,9 @@ const gql = require('graphql-tag');
 
 
 const allMessages = [
-    { id: 1, name: "Alice", msg: "You win!"},
-    { id: 2, name: "Bob", msg: "You lose!"},
+    { id: 1, name: "alice", msg: "You win!"},
+    { id: 2, name: "bob", msg: "You lose!"},
+    { id: 3, name: "alice", msg: "Another alice"},
 ];
 
 const typeDefs = gql`
@@ -14,7 +15,12 @@ const typeDefs = gql`
     userMessages(whered: MessageWhereInpObj, includes: IncludeInpObj): [Message]
   }
 
-  type Message {
+  interface Communication {
+    id: Int!
+    msg: String!
+  }
+
+  type Message implements Communication {
     id: Int!
     name: String!
     msg: String!
@@ -43,8 +49,9 @@ const typeDefs = gql`
   type Query {
     hello: String
     messages(where: MessageWhereInpObj, includes: IncludeInpObj): [Message]
-    message(id: Int!): Message
     user(user_id: Int!): User
+    message(id: Int!) : Message
+    communications(id: Int): [Communication]
   }
 `;
 
@@ -150,8 +157,23 @@ const resolvers = {
         },
         user: (_, { user_id }) => {
             return { "user_id": user_id };
+        },
+        communications: (_, { id }) => {
+            var result = allMessages;
+            if(id) {
+                result = allMessages.filter(m => m.id == id);
+            }
+            return result;
         }
     },
+    Communication: {
+        __resolveType(communication, context, info){
+            if(communication.name) {
+                return "Message";
+            }
+            return null;
+        }
+    }
 };
 
 const schema = new ApolloServer({ typeDefs, resolvers });

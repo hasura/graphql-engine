@@ -9,15 +9,15 @@ response:
       - args: []
         name: id
       - args: []
-        name: message
+        name: messageBasic
       - args:
         - name: includes
           type:
             name: IncludeInpObj
         - name: where
           type:
-            name: MessageWhereInpObj_for_remote_relationship
-        name: messages
+            name: MessageWhereInpObj_remote_rel_public_profilesmessagesNestedArgs
+        name: messagesNestedArgs
       - args: []
         name: name
 query:

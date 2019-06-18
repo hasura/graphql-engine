@@ -113,21 +113,28 @@ explainGQLQuery
   -> GQLExplain
   -> m EncJSON
 explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw)= do
-  execPlan <- E.getExecPlanPartial userInfo sc enableAL query
-  (gCtx, rootSelSet) <- case execPlan of
-    E.GExPHasura (gCtx, rootSelSet, _) ->
-      return (gCtx, rootSelSet)
-    E.GExPRemote _ _  ->
-      throw400 InvalidParams "only hasura queries can be explained"
-  case rootSelSet of
-    GV.RQuery selSet -> do
-      let tx = mapM (explainField userInfo gCtx sqlGenCtx) (toList selSet)
-      plans <- liftIO (runExceptT $ runLazyTx pgExecCtx tx) >>= liftEither
-      return $ encJFromJValue plans
-    GV.RMutation _ ->
-      throw400 InvalidParams "only queries can be explained"
-    GV.RSubscription _ ->
-      throw400 InvalidParams "only queries can be explained"
+  execPlans <- E.getExecPlanPartial userInfo sc enableAL query
+  mresults <- forM (toList execPlans) $ \execPlan -> do
+    case execPlan of
+      E.ExPHasuraPartial (gCtx, rootSelSets, _) ->
+        return (Just (gCtx, rootSelSets))
+      E.ExPRemotePartial{}  ->
+        return Nothing
+  case catMaybes mresults of
+    [] -> throw400 InvalidParams "only hasura queries can be explained"
+    results@((gCtx, _):_) -> do
+     let rootSelSets = map snd results
+     plans :: [[FieldPlan]] <- forM rootSelSets $ \rootSelSet -> do
+      case rootSelSet of
+       GV.HasuraTopQuery field -> do
+         let tx = mapM (explainField userInfo gCtx sqlGenCtx) (pure field)
+         plans <- liftIO (runExceptT $ runLazyTx pgExecCtx tx) >>= liftEither
+         return $ plans
+       GV.HasuraTopMutation _ ->
+         throw400 InvalidParams "only queries can be explained"
+       GV.HasuraTopSubscription _ ->
+         throw400 InvalidParams "only queries can be explained"
+     pure (encJFromJValue (foldMap toList plans))
   where
     usrVars = mkUserVars $ maybe [] Map.toList userVarsRaw
     userInfo = mkUserInfo (fromMaybe adminRole $ roleFromVars usrVars) usrVars

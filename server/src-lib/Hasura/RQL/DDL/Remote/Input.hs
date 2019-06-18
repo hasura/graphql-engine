@@ -16,8 +16,6 @@ import qualified Data.Aeson.Types as A
 import           Data.Foldable
 import           Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HM
-import           Data.Map.Strict (Map)
-import qualified Data.Map.Strict as M
 import           Data.Scientific (floatingOrInteger)
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -50,7 +48,7 @@ data SubstituteError
 
 -- | Substitute values in the argument list.
 substituteVariables ::
-     Map G.Variable G.ValueConst
+     HashMap G.Variable G.ValueConst
   -- ^ Values to use.
   -> [G.ObjectFieldG G.Value]
   -- ^ A template.
@@ -60,7 +58,7 @@ substituteVariables values = traverse (traverse go)
     go =
       \case
         G.VVariable variable ->
-          case M.lookup variable values of
+          case HM.lookup variable values of
             Nothing -> Failure [ValueNotProvided variable]
             Just valueConst -> pure valueConst
         G.VInt int32 -> pure (G.VCInt int32)

@@ -2,11 +2,12 @@ module Hasura.SQL.Value where
 
 import           Hasura.SQL.GeoJSON
 import           Hasura.SQL.Time
+import           Hasura.SQL.Time
 import           Hasura.SQL.Types
 
-import qualified Database.PG.Query          as Q
-import qualified Database.PG.Query.PTI      as PTI
-import qualified Hasura.SQL.DML             as S
+import qualified Database.PG.Query as Q
+import qualified Database.PG.Query.PTI as PTI
+import qualified Hasura.SQL.DML as S
 
 import           Data.Aeson
 import           Data.Aeson.Internal
@@ -15,13 +16,13 @@ import           Data.Scientific
 import           Data.Time
 import           Hasura.Prelude
 
-import qualified Data.Aeson.Text            as AE
-import qualified Data.Aeson.Types           as AT
-import qualified Data.Text                  as T
-import qualified Data.Text.Encoding         as TE
-import qualified Data.Text.Lazy             as TL
+import qualified Data.Aeson.Text as AE
+import qualified Data.Aeson.Types as AT
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
+import qualified Data.Text.Lazy as TL
 
-import qualified Database.PostgreSQL.LibPQ  as PQ
+import qualified Database.PostgreSQL.LibPQ as PQ
 import qualified PostgreSQL.Binary.Encoding as PE
 
 --  Binary value. Used in prepared sq

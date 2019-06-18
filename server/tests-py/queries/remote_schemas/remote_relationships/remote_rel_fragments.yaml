@@ -1,0 +1,33 @@
+description: Fragments on remote relationship GraphQL query
+url: /v1/graphql
+status: 200
+response:
+  data:
+    profiles:
+      - id: 1
+        messageBasic:
+          id: 1
+          name: alice
+      - id: 2
+        messageBasic:
+          id : 2
+          name: bob
+      - id: 3
+        messageBasic:
+          id: 3
+          name: alice
+query:
+  query: |
+    fragment basicInfo on Message {
+      id
+      name
+    }
+
+    query {
+      profiles {
+        id
+        messageBasic {
+          ...basicInfo
+        }
+      }
+    }

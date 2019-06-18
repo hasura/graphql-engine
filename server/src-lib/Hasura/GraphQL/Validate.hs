@@ -1,7 +1,10 @@
 module Hasura.GraphQL.Validate
   ( validateGQ
+  , remoteTopQueryEither
   , showVars
-  , RootSelSet(..)
+  , LocatedTopField(..)
+  , HasuraTopField(..)
+  , RemoteTopQuery(..)
   , getTypedOp
   , QueryParts (..)
   , getQueryParts
@@ -19,10 +22,11 @@ module Hasura.GraphQL.Validate
 import           Data.Has
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                    as Map
-import qualified Data.HashSet                           as HS
-import qualified Data.Sequence                          as Seq
-import qualified Language.GraphQL.Draft.Syntax          as G
+
+import qualified Data.HashMap.Strict as Map
+import qualified Data.HashSet as HS
+import qualified Data.Sequence as Seq
+import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Transport.HTTP.Protocol
@@ -33,7 +37,7 @@ import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.QueryCollection
 
-import           Hasura.SQL.Types                       (PGColType)
+import           Hasura.SQL.Types (PGColType)
 import           Hasura.SQL.Value                       (PGColValue,
                                                          parsePGValue)
 
@@ -157,10 +161,25 @@ validateFrag (G.FragmentDefinition n onTy dirs selSet) = do
     "fragments can only be defined on object types"
   return $ FragDef n objTyInfo selSet
 
-data RootSelSet
-  = RQuery !SelSet
-  | RMutation !SelSet
-  | RSubscription !Field
+data LocatedTopField
+  = HasuraTopField !HasuraTopField
+  | RemoteTopField !RemoteTopQuery
+  deriving (Show, Eq)
+
+data HasuraTopField
+  = HasuraTopQuery !Field
+  | HasuraTopMutation !Field
+  | HasuraTopSubscription !Field
+  deriving (Show, Eq)
+
+remoteTopQueryEither :: RemoteTopQuery -> (RemoteSchemaInfo, Either a [Field])
+remoteTopQueryEither (RemoteTopQuery remoteSchemaInfo fields) = (remoteSchemaInfo, pure fields)
+
+data RemoteTopQuery =
+  RemoteTopQuery
+    { rtqRemoteSchemaInfo :: !RemoteSchemaInfo
+    , rtqFields :: ![Field]
+    }
   deriving (Show, Eq)
 
 -- {-# SCC validateGQ #-}
@@ -168,7 +187,7 @@ validateGQ
   :: (MonadError QErr m, MonadReader GCtx m)
   -- => GraphQLRequest
   => QueryParts
-  -> m RootSelSet
+  -> m (Seq.Seq LocatedTopField)
 validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
 
   ctx <- ask
@@ -184,21 +203,41 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
   annFragDefs <- mapM validateFrag fragDefs
 
   -- build a validation ctx
-  let valCtx = ValidationCtx (_gTypes ctx) annVarVals annFragDefs
+  let valCtx = ValidationCtx (_gTypes ctx) annVarVals annFragDefs (_gFields ctx)
 
   selSet <- flip runReaderT valCtx $ denormSelSet [] opRoot $
             G._todSelectionSet opDef
 
   case G._todType opDef of
-    G.OperationTypeQuery -> return $ RQuery selSet
-    G.OperationTypeMutation -> return $ RMutation selSet
+    G.OperationTypeQuery -> mapM makeTopQuery selSet
+    G.OperationTypeMutation -> mapM makeTopMutation selSet
     G.OperationTypeSubscription ->
       case Seq.viewl selSet of
         Seq.EmptyL     -> throw500 "empty selset for subscription"
         fld Seq.:< rst -> do
           unless (null rst) $
             throwVE "subscription must select only one top level field"
-          return $ RSubscription fld
+          fmap pure (makeTopSubscription fld)
+  where
+    makeTopQuery =
+      \case
+         HasuraLocated field ->
+           pure (HasuraTopField (HasuraTopQuery field))
+         RemoteLocated remoteSchemaInfo field ->
+           -- TODO: Insert variables.
+           pure (RemoteTopField (RemoteTopQuery remoteSchemaInfo (pure field)))
+    makeTopMutation =
+      \case
+         HasuraLocated field ->
+           pure (HasuraTopField (HasuraTopMutation field))
+         RemoteLocated remoteSchemaInfo field ->
+           -- TODO: Insert variables.
+           pure (RemoteTopField (RemoteTopQuery remoteSchemaInfo (pure field)))
+    makeTopSubscription =
+      \case
+        HasuraLocated field ->
+          pure (HasuraTopField (HasuraTopSubscription field))
+        _ -> throw500 "subscriptions not valid for remote"
 
 isQueryInAllowlist :: GQLExecDoc -> HS.HashSet GQLQuery -> Bool
 isQueryInAllowlist q = HS.member gqlQuery
