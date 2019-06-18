@@ -2,6 +2,7 @@ module Hasura.RQL.Types.Catalog where
 
 import           Hasura.Prelude
 
+import           Hasura.RQL.DDL.Remote.Types
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.EventTrigger
@@ -76,5 +77,6 @@ data CatalogMetadata
   , _cmFunctions            :: ![CatalogFunction]
   , _cmForeignKeys          :: ![ForeignKey]
   , _cmAllowlistCollections :: ![CollectionDef]
+  , _cmRemoteRelationships  :: ![RemoteRelationship]
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogMetadata)

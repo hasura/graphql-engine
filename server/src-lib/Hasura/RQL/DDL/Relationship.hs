@@ -14,6 +14,8 @@ module Hasura.RQL.DDL.Relationship
   , runDropRel
   , runSetRelComment
   , runCreateRemoteRelationship
+  , runCreateRemoteRelationshipP1
+  , runCreateRemoteRelationshipP2Setup
   , runDeleteRemoteRelationship
   , delRemoteRelFromCatalog
   , module Hasura.RQL.DDL.Relationship.Types
@@ -183,12 +185,10 @@ runCreateRemoteRelationshipP1 remoteRelationship = do
           pure (remoteField, additionalTypesMap)
     Nothing -> throw400 RemoteSchemaError "No such remote schema"
 
-runCreateRemoteRelationshipP2 ::
-     (MonadTx m, CacheRWM m) => RemoteField -> TypeMap -> m EncJSON
-runCreateRemoteRelationshipP2 remoteField additionalTypesMap = do
-  liftTx (persistRemoteRelationship (rmfRemoteRelationship remoteField))
+runCreateRemoteRelationshipP2Setup ::
+     (MonadTx m, CacheRWM m) => RemoteField -> TypeMap -> m ()
+runCreateRemoteRelationshipP2Setup remoteField additionalTypesMap = do
   addRemoteRelToCache remoteField additionalTypesMap schemaDependencies
-  pure successMsg
   where
     schemaDependencies =
       let table = rtrTable $ rmfRemoteRelationship remoteField
@@ -205,6 +205,13 @@ runCreateRemoteRelationshipP2 remoteField additionalTypesMap = do
           remoteSchemaDep =
             SchemaDependency (SORemoteSchema remoteSchemaName) "remote schema"
        in (tableDep : remoteSchemaDep : columnsDep)
+
+runCreateRemoteRelationshipP2 ::
+     (MonadTx m, CacheRWM m) => RemoteField -> TypeMap -> m EncJSON
+runCreateRemoteRelationshipP2 remoteField additionalTypesMap = do
+  liftTx (persistRemoteRelationship (rmfRemoteRelationship remoteField))
+  runCreateRemoteRelationshipP2Setup remoteField additionalTypesMap
+  pure successMsg
 
 persistRemoteRelationship
   :: RemoteRelationship -> Q.TxE QErr ()

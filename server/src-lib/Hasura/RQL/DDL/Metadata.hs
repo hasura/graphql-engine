@@ -539,4 +539,5 @@ purgeMetadataObj = liftTx . \case
   (MOQTemplate qtn)               -> DQ.delQTemplateFromCatalog qtn
   (MOTableObj qt (MTORel rn _))   -> DR.delRelFromCatalog qt rn
   (MOTableObj qt (MTOPerm rn pt)) -> DP.dropPermFromCatalog qt rn pt
-  (MOTableObj _ (MTOTrigger trn)) -> DE.delEventTriggerFromCatalog trn
+  (MOTableObj _ (MTOEventTrigger trn)) -> DE.delEventTriggerFromCatalog trn
+  (MOTableObj qt (MTORemoteRelationship rn)) -> DR.delRemoteRelFromCatalog qt rn

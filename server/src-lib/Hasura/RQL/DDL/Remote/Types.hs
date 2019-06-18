@@ -1,4 +1,4 @@
-{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE NamedFieldPuns  #-}
 {-# LANGUAGE RecordWildCards #-}
 -- |
 
@@ -8,43 +8,43 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Remote.Input
-import           Hasura.RQL.Instances ()
+import           Hasura.RQL.Instances          ()
 import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Types
 
-import           Data.Aeson as A
-import           Data.Aeson.Types (Parser)
-import           Data.HashMap.Strict (HashMap)
-import qualified Data.HashMap.Strict as HM
-import           Data.List.NonEmpty (NonEmpty(..))
+import           Data.Aeson                    as A
+import           Data.Aeson.Types              (Parser)
+import           Data.HashMap.Strict           (HashMap)
+import qualified Data.HashMap.Strict           as HM
+import           Data.List.NonEmpty            (NonEmpty (..))
 import           Data.Scientific
-import           Data.Set (Set)
-import           Data.Text (Text)
-import qualified Database.PG.Query as Q
-import           Instances.TH.Lift ()
+import           Data.Set                      (Set)
+import           Data.Text                     (Text)
+import qualified Database.PG.Query             as Q
+import           Instances.TH.Lift             ()
 import qualified Language.GraphQL.Draft.Syntax as G
-import           Language.Haskell.TH.Syntax (Lift)
+import           Language.Haskell.TH.Syntax    (Lift)
 
 data RemoteField =
   RemoteField
     { rmfRemoteRelationship :: !RemoteRelationship
-    , rmfGType :: !G.GType
-    , rmfParamMap :: !(HashMap G.Name InpValInfo)
+    , rmfGType              :: !G.GType
+    , rmfParamMap           :: !(HashMap G.Name InpValInfo)
     }
   deriving (Show, Eq, Lift)
 
 data RemoteRelationship =
   RemoteRelationship
-    { rtrName :: RemoteRelationshipName
-    , rtrTable :: QualifiedTable
-    , rtrHasuraFields :: Set FieldName
+    { rtrName         :: RemoteRelationshipName
+    , rtrTable        :: QualifiedTable
+    , rtrHasuraFields :: Set FieldName -- change to PGCol
     , rtrRemoteSchema :: RemoteSchemaName
     , rtrRemoteFields :: NonEmpty FieldCall
     }  deriving (Show, Eq, Lift)
 
 data FieldCall =
   FieldCall
-    { fcName :: !G.Name
+    { fcName      :: !G.Name
     , fcArguments :: !RemoteArguments
     }
   deriving (Show, Eq, Lift, Generic)
