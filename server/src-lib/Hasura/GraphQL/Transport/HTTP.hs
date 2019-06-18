@@ -4,15 +4,15 @@ module Hasura.GraphQL.Transport.HTTP
 
 
 import           Data.Aeson
-import qualified Data.ByteString.Lazy as L
-import qualified Data.ByteString.Lazy.Char8 as L8
-import           Data.HashMap.Strict (HashMap)
-import qualified Data.HashMap.Strict as HM
-import           Data.Text (Text)
-import qualified Data.Text as T
+import qualified Data.ByteString.Lazy                   as L
+import qualified Data.ByteString.Lazy.Char8             as L8
+import           Data.HashMap.Strict                    (HashMap)
+import qualified Data.HashMap.Strict                    as HM
+import           Data.Text                              (Text)
+import qualified Data.Text                              as T
 import           Hasura.GraphQL.Validate
-import qualified Network.HTTP.Client as HTTP
-import qualified Network.HTTP.Types as N
+import qualified Network.HTTP.Client                    as HTTP
+import qualified Network.HTTP.Types                     as N
 
 
 import           Hasura.EncJSON
@@ -21,7 +21,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Context
 
-import qualified Hasura.GraphQL.Execute as E
+import qualified Hasura.GraphQL.Execute                 as E
 
 runGQ
   :: (MonadIO m, MonadError QErr m)
@@ -54,7 +54,7 @@ runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer manager reqHdrs r
           encJson <- runHasuraGQ pgExecCtx userInfo resolvedOp
           pure (HttpResponse encJson Nothing)
         E.ExPRemote rt -> let (rsi, fields) = remoteTopQueryEither rt
-                           in E.execRemoteGQ manager userInfo reqHdrs rsi fields
+                           in E.execRemoteGQ manager userInfo reqHdrs (rtqOperationType rt) rsi fields
 
         E.ExPMixed resolvedOp remoteRels -> do
           encJson <- runHasuraGQ pgExecCtx userInfo resolvedOp
@@ -68,19 +68,22 @@ runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer manager reqHdrs r
           case result of
             Left e -> throw500 (T.pack e)
             Right (value, remotes) -> do
-              let batches = E.produceBatches remotes
+              let batches = E.produceBatches (E.getOpTypeFromExecOp resolvedOp) remotes
               liftIO $ putStrLn ("batches = " ++ show batches)
               results <-
                 traverse
                   (\batch -> do
                      HttpResponse res _ <-
-                       let (rsi, fields) = remoteTopQueryEither (E.batchRemoteTopQuery batch)
+                       let batchQuery = E.batchRemoteTopQuery batch
+                           (rsi, fields) = remoteTopQueryEither batchQuery
                         in
                        E.execRemoteGQ
                          manager
                          userInfo
                          reqHdrs
-                         rsi fields
+                         (rtqOperationType batchQuery)
+                         rsi
+                         fields
 
                      liftIO (putStrLn ("remote result = " ++ show res))
                      pure (batch, res))
@@ -134,7 +137,7 @@ mergeResponseData =
          HashMap Text (HashMap Text Value) -> Either String (HashMap Text Value)
     getData hm =
       case HM.lookup "data" hm of
-        Nothing -> Left "No `data' key in response!"
+        Nothing    -> Left "No `data' key in response!"
         Just data' -> pure data'
 
 wrapPayload :: Value -> Value

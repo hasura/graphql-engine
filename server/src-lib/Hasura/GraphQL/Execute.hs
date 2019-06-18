@@ -1,4 +1,3 @@
-{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE DisambiguateRecordFields #-}
 module Hasura.GraphQL.Execute
   ( QExecPlanResolved(..)
@@ -8,6 +7,7 @@ module Hasura.GraphQL.Execute
   , extractRemoteRelArguments
   , produceBatches
   , joinResults
+  , getOpTypeFromExecOp
 
   , ExecOp(..)
   , getResolvedExecPlan
@@ -19,70 +19,70 @@ module Hasura.GraphQL.Execute
   , EP.dumpPlanCache
   ) where
 
-import           Control.Exception (try)
+import           Control.Exception                      (try)
 import           Control.Lens
-import qualified Data.ByteString.Lazy as L
-import qualified Data.ByteString.Lazy.Char8 as L8
+import qualified Data.ByteString.Lazy                   as L
+import qualified Data.ByteString.Lazy.Char8             as L8
 import           Data.Scientific
 import           Data.Validation
-import qualified Data.Vector as V
+import qualified Data.Vector                            as V
 import           Hasura.SQL.Types
 
 import           Data.Has
-import           Data.List.NonEmpty (NonEmpty(..))
-import qualified Data.List.NonEmpty as NE
+import           Data.List.NonEmpty                     (NonEmpty (..))
+import qualified Data.List.NonEmpty                     as NE
 import           Data.Time
 import           Debug.Trace
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.SQL.Time
 
-import qualified Data.HashMap.Strict.InsOrd as OHM
-import qualified Data.Aeson as J
-import qualified Data.CaseInsensitive as CI
-import qualified Data.HashMap.Strict as Map
-import qualified Data.Sequence as Seq
-import qualified Data.String.Conversions as CS
-import qualified Data.Text as T
-import qualified Language.GraphQL.Draft.Syntax as G
-import qualified Network.HTTP.Client as HTTP
-import qualified Network.HTTP.Types as N
-import qualified Network.Wreq as Wreq
+import qualified Data.Aeson                             as J
+import qualified Data.CaseInsensitive                   as CI
+import qualified Data.HashMap.Strict                    as Map
+import qualified Data.HashMap.Strict.InsOrd             as OHM
+import qualified Data.Sequence                          as Seq
+import qualified Data.String.Conversions                as CS
+import qualified Data.Text                              as T
+import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Network.HTTP.Client                    as HTTP
+import qualified Network.HTTP.Types                     as N
+import qualified Network.Wreq                           as Wreq
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Transport.HTTP.Protocol
-import           Hasura.SQL.Value
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.HTTP
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Remote.Input
 import           Hasura.RQL.DDL.Headers
+import           Hasura.RQL.DDL.Remote.Input
+import           Hasura.RQL.DDL.Remote.Types
 import           Hasura.RQL.Types
 import           Hasura.Server.Context
 import           Hasura.Server.Utils                    (bsToTxt,
                                                          filterRequestHeaders)
-import           Hasura.RQL.DDL.Remote.Types
+import           Hasura.SQL.Value
 
-import qualified Hasura.GraphQL.Execute.LiveQuery as EL
-import qualified Hasura.GraphQL.Execute.Plan as EP
-import qualified Hasura.GraphQL.Execute.Query as EQ
+import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
+import qualified Hasura.GraphQL.Execute.Plan            as EP
+import qualified Hasura.GraphQL.Execute.Query           as EQ
 
-import qualified Hasura.GraphQL.Resolve as GR
-import qualified Hasura.GraphQL.Validate as VQ
+import qualified Hasura.GraphQL.Resolve                 as GR
+import qualified Hasura.GraphQL.Validate                as VQ
 
 -- The current execution plan of a graphql operation, it is
 -- currently, either local pg execution or a remote execution
 data QExecPlanPartial
   = ExPHasuraPartial !(GCtx, VQ.HasuraTopField, [G.VariableDefinition])
-  | ExPRemotePartial !VQ.RemoteTopQuery
+  | ExPRemotePartial !VQ.RemoteTopField
 
 -- The current execution plan of a graphql operation, it is
 -- currently, either local pg execution or a remote execution
 data QExecPlanResolved
   = ExPHasura !ExecOp
-  | ExPRemote !VQ.RemoteTopQuery
+  | ExPRemote !VQ.RemoteTopField
   | ExPMixed !ExecOp (NonEmpty RemoteRelField)
 
 newtype RemoteRelKey =
@@ -91,10 +91,10 @@ newtype RemoteRelKey =
 
 data RemoteRelField =
   RemoteRelField
-    { rrRemoteField :: !RemoteField
-    , rrField :: !Field
-    , rrRelFieldPath :: !RelFieldPath
-    , rrAlias :: !G.Alias
+    { rrRemoteField   :: !RemoteField
+    , rrField         :: !Field
+    , rrRelFieldPath  :: !RelFieldPath
+    , rrAlias         :: !G.Alias
     , rrPhantomFields :: ![Text]
     }
   deriving (Show)
@@ -105,7 +105,7 @@ newtype RelFieldPath = RelFieldPath (Seq.Seq G.Alias)
 data InsertPath =
   InsertPath
     { ipFields :: !(Seq.Seq Text)
-    , ipIndex :: !(Maybe ArrayIndex)
+    , ipIndex  :: !(Maybe ArrayIndex)
     }
   deriving (Show, Eq)
 
@@ -133,9 +133,9 @@ getExecPlanPartial userInfo sc enableAL req = do
   return $
     fmap
       (\case
-          VQ.HasuraTopField hasuraTopField ->
+          VQ.HasuraLocatedTopField hasuraTopField ->
             ExPHasuraPartial (gCtx, hasuraTopField, varDefs)
-          VQ.RemoteTopField remoteTopField -> ExPRemotePartial remoteTopField)
+          VQ.RemoteLocatedTopField remoteTopField -> ExPRemotePartial remoteTopField)
       topFields
 
   where
@@ -160,6 +160,12 @@ data ExecOp
   = ExOpQuery !LazyRespTx
   | ExOpMutation !LazyRespTx
   | ExOpSubs !EL.LiveQueryOp
+
+getOpTypeFromExecOp :: ExecOp -> G.OperationType
+getOpTypeFromExecOp = \case
+  ExOpQuery _ -> G.OperationTypeQuery
+  ExOpMutation _ -> G.OperationTypeMutation
+  ExOpSubs _ -> G.OperationTypeSubscription
 
 getResolvedExecPlan
   :: (MonadError QErr m, MonadIO m)
@@ -326,7 +332,7 @@ joinResults paths hasuraValue0 = do
            Left err -> Left ("joinResults: eitherDecode: " <> err)
            Right object ->
              case Map.lookup ("data" :: Text) object of
-               Nothing -> Left "No data key in payload!"
+               Nothing   -> Left "No data key in payload!"
                Just hash -> pure (batch, hash))
       paths
   foldM
@@ -455,33 +461,35 @@ peelOffNestedFields xs toplevel = go (drop 1 (toList xs)) toplevel
 
 -- | Produce the set of remote relationship batch requests.
 produceBatches ::
-     [( RemoteRelField
-      , RemoteSchemaInfo
-      , BatchInputs)]
+     G.OperationType
+  -> [( RemoteRelField
+    , RemoteSchemaInfo
+    , BatchInputs)]
   -> [Batch]
-produceBatches =
+produceBatches opType =
   fmap
     (\(remoteRelField, remoteSchemaInfo, rows) ->
-       produceBatch remoteSchemaInfo remoteRelField rows)
+       produceBatch opType remoteSchemaInfo remoteRelField rows)
 
 data Batch =
   Batch
-    { batchRemoteTopQuery :: !VQ.RemoteTopQuery
-    , batchRelFieldPath :: !RelFieldPath
-    , batchIndices :: ![ArrayIndex]
+    { batchRemoteTopQuery        :: !VQ.RemoteTopField
+    , batchRelFieldPath          :: !RelFieldPath
+    , batchIndices               :: ![ArrayIndex]
     , batchRelationshipKeyToMake :: !Text
-    , batchInputs :: !BatchInputs
-    , batchNestedFields :: !(NonEmpty G.Name)
-    , batchPhantoms :: ![Text]
+    , batchInputs                :: !BatchInputs
+    , batchNestedFields          :: !(NonEmpty G.Name)
+    , batchPhantoms              :: ![Text]
     } deriving (Show)
 
 -- | Produce batch queries for a given remote relationship.
 produceBatch ::
-     RemoteSchemaInfo
+     G.OperationType
+  -> RemoteSchemaInfo
   -> RemoteRelField
   -> BatchInputs
   -> Batch
-produceBatch remoteSchemaInfo remoteRelField inputs =
+produceBatch opType remoteSchemaInfo remoteRelField inputs =
   Batch
     { batchRemoteTopQuery = remoteTopQuery
     , batchRelFieldPath = path
@@ -497,7 +505,7 @@ produceBatch remoteSchemaInfo remoteRelField inputs =
     }
   where
     remoteTopQuery =
-      VQ.RemoteTopQuery
+      VQ.RemoteTopField
         { rtqRemoteSchemaInfo = remoteSchemaInfo
         , rtqFields =
             fmap
@@ -509,6 +517,7 @@ produceBatch remoteSchemaInfo remoteRelField inputs =
                    (_fSelSet originalField)
                    (rtrRemoteFields remoteRelationship))
               indexedRows
+         , rtqOperationType = opType
         }
     indexedRows = zip (map ArrayIndex [0 :: Int ..]) (toList rows)
     rows = biRows inputs
@@ -543,7 +552,7 @@ fieldCallsToField mindexedAlias0 userProvidedArguments variables finalSelSet =
         { _fAlias =
             case mindexedAlias of
               Just indexedAlias -> indexedAlias
-              Nothing -> G.Alias (fcName fieldCall)
+              Nothing           -> G.Alias (fcName fieldCall)
         , _fName = fcName fieldCall
         , _fType = G.NamedType (G.Name "unknown_type")
         , _fArguments =
@@ -558,7 +567,7 @@ fieldCallsToField mindexedAlias0 userProvidedArguments variables finalSelSet =
                       templatedArguments
         , _fSelSet =
             case NE.nonEmpty rest of
-              Nothing -> finalSelSet
+              Nothing    -> finalSelSet
               Just calls -> pure (nest Nothing calls)
         , _fRemoteRel = Nothing
         }
@@ -677,7 +686,7 @@ extractRemoteRelArguments remoteSchemaMap encJson rels =
 
 data BatchInputs =
   BatchInputs
-    { biRows :: !(Seq.Seq (Map.HashMap G.Variable G.ValueConst))
+    { biRows        :: !(Seq.Seq (Map.HashMap G.Variable G.ValueConst))
     , biCardinality :: Cardinality
     } deriving (Show)
 
@@ -689,8 +698,8 @@ data Cardinality = Many | One
  deriving (Eq, Show)
 
 instance Semigroup Cardinality where
-    (<>) _ Many = Many
-    (<>) Many _ = Many
+    (<>) _ Many  = Many
+    (<>) Many _  = Many
     (<>) One One = One
 
 -- | Extract from a given result.
@@ -929,10 +938,11 @@ execRemoteGQ
   => HTTP.Manager
   -> UserInfo
   -> [N.Header]
+  -> G.OperationType
   -> RemoteSchemaInfo
   -> Either L.ByteString [Field]
   -> m (HttpResponse EncJSON)
-execRemoteGQ manager userInfo reqHdrs remoteSchemaInfo bsOrField = do
+execRemoteGQ manager userInfo reqHdrs opType remoteSchemaInfo bsOrField = do
   hdrs <- getHeadersFromConf hdrConf
   let confHdrs   = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
       clientHdrs = bool [] filteredHeaders fwdClientHdrs
@@ -946,7 +956,7 @@ execRemoteGQ manager userInfo reqHdrs remoteSchemaInfo bsOrField = do
       options    = wreqOptions manager (Map.toList finalHdrs)
 
   jsonbytes <- case bsOrField of
-    Right field -> do gqlReq <- fieldsToRequest field
+    Right field -> do gqlReq <- fieldsToRequest opType field
                       let jsonbytes = encJToLBS (encJFromJValue gqlReq)
                       pure jsonbytes
     Left bytes -> pure bytes
@@ -980,9 +990,10 @@ execRemoteGQ manager userInfo reqHdrs remoteSchemaInfo bsOrField = do
 
 fieldsToRequest
   :: (MonadIO m, MonadError QErr m)
-  => [VQ.Field]
+  => G.OperationType
+  -> [VQ.Field]
   -> m GQLReqParsed
-fieldsToRequest fields = do
+fieldsToRequest opType fields = do
   case traverse fieldToField fields of
     Right gfields ->
       pure
@@ -991,11 +1002,23 @@ fieldsToRequest fields = do
            , _grQuery =
                GQLExecDoc
                  [ G.ExecutableDefinitionOperation
-                     (G.OperationDefinitionUnTyped (map G.SelectionField gfields))
+                     (G.OperationDefinitionTyped
+                       (emptyOperationDefinition {
+                         G._todSelectionSet = (map G.SelectionField gfields)
+                         } )
+                       )
                  ]
            , _grVariables = Nothing -- TODO: Put variables in here?
            })
     Left err -> throw500 ("While converting remote field: " <> err)
+    where
+      emptyOperationDefinition =
+        G.TypedOperationDefinition {
+          G._todType = opType
+        , G._todName = Nothing
+        , G._todVariableDefinitions = []
+        , G._todDirectives = []
+        , G._todSelectionSet = [] }
 
 fieldToField :: VQ.Field -> Either Text G.Field
 fieldToField field = do
@@ -1026,7 +1049,7 @@ annGValueToValue =
         Just pg -> pgcolvalueToGValue pg
     AGEnum _ mval ->
       case mval of
-        Nothing -> pure G.VNull
+        Nothing        -> pure G.VNull
         Just enumValue -> pure (G.VEnum enumValue)
     AGObject _ mobj ->
       case mobj of

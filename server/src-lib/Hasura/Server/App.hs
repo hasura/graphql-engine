@@ -62,6 +62,8 @@ import           Hasura.Server.Utils
 import           Hasura.Server.Version
 import           Hasura.SQL.Types
 
+import qualified Language.GraphQL.Draft.Syntax          as G
+
 consoleTmplt :: M.Template
 consoleTmplt = $(M.embedSingleTemplate "src-rsr/console.html")
 
@@ -327,7 +329,7 @@ remoteSchemaProxyHandler remoteSchemaNameTxt = do
   let remoteSchemaInfoM = M.lookup (RemoteSchemaName remoteSchemaNameTxt) (scRemoteResolvers sc)
   case remoteSchemaInfoM of
     Nothing  -> throw400 NotFound "remote schema not found"
-    Just rsi -> E.execRemoteGQ manager userInfo reqHeaders rsi (Left reqBody)
+    Just rsi -> E.execRemoteGQ manager userInfo reqHeaders G.OperationTypeQuery rsi (Left reqBody)
 
 consoleAssetsHandler :: L.Logger -> Text -> FilePath -> ActionT IO ()
 consoleAssetsHandler logger dir path = do
