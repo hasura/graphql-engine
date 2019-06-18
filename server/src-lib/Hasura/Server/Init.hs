@@ -63,6 +63,7 @@ data RawServeOptions
   , rsoMxBatchSize        :: !(Maybe LQ.BatchSize)
   , rsoFallbackRefetchInt :: !(Maybe LQ.RefetchInterval)
   , rsoEnableAllowlist    :: !Bool
+  ,rsoAdminRole           :: !(Maybe Text)
   } deriving (Show, Eq)
 
 data ServeOptions
@@ -83,6 +84,7 @@ data ServeOptions
   , soEnabledAPIs      :: !(Set.HashSet API)
   , soLiveQueryOpts    :: !LQ.LQOpts
   , soEnableAllowlist  :: !Bool
+  , soAdminRole        :: !(Maybe Text)
   } deriving (Show, Eq)
 
 data RawConnInfo =
@@ -277,9 +279,10 @@ mkServeOptions rso = do
                      withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
   lqOpts <- mkLQOpts
   enableAL <- withEnvBool (rsoEnableAllowlist rso) $ fst enableAllowlistEnv
+  adminRole <- withEnv (rsoAdminRole rso) (fst adminRoleEnv)
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
-                        enableTelemetry strfyNum enabledAPIs lqOpts enableAL
+                        enableTelemetry strfyNum enabledAPIs lqOpts enableAL adminRole
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -557,6 +560,12 @@ consoleAssetsDirEnv =
   ++ " default docker image to disable loading assets from CDN."
   )
 
+adminRoleEnv :: (String, String)
+adminRoleEnv =
+  ( "HASURA_GRAPHQL_ADMIN_ROLE"
+  , "Change the admin role name. The default is admin."
+  )
+
 parseRawConnInfo :: Parser RawConnInfo
 parseRawConnInfo =
   RawConnInfo <$> host <*> port <*> user <*> password
@@ -783,6 +792,13 @@ parseConsoleAssetsDir = optional $
     option (eitherReader fromEnv)
       ( long "console-assets-dir" <>
         help (snd consoleAssetsDirEnv)
+      )
+
+parseAdminRole :: Parser (Maybe Text)
+parseAdminRole = optional $
+    option (eitherReader fromEnv)
+      ( long "admin-role" <>
+        help (snd adminRoleEnv)
       )
 
 parseEnableTelemetry :: Parser (Maybe Bool)
