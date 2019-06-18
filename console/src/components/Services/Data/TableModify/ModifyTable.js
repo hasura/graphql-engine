@@ -23,7 +23,7 @@ import TableCommentEditor from './TableCommentEditor';
 import ForeignKeyEditor from './ForeignKeyEditor';
 import UniqueKeyEditor from './UniqueKeyEditor';
 import styles from './ModifyTable.scss';
-import { replace } from 'react-router-redux';
+import { NotFoundError } from '../../../Error/PageNotFound';
 
 class ModifyTable extends React.Component {
   componentDidMount() {
@@ -61,8 +61,8 @@ class ModifyTable extends React.Component {
       t => t.table_name === tableName && t.table_schema === currentSchema
     );
     if (!tableSchema) {
-      dispatch(replace('/404'));
-      return null;
+      // throw a 404 exception
+      throw new NotFoundError();
     }
     const tableComment = tableSchema.comment;
 

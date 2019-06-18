@@ -573,10 +573,11 @@ const deleteTableSql = tableName => {
     const errorMsg = 'Deleting table failed';
 
     const customOnSuccess = () => {
-      dispatch(updateSchemaInfo()).then(() => {
-        dispatch(_push('/'));
-      });
+      dispatch(updateSchemaInfo());
+
+      dispatch(_push('/'));
     };
+
     const customOnError = err => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
     };
