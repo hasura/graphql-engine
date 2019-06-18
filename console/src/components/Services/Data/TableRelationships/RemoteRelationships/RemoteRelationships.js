@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import ExpandableEditor from '../../../../Common/Layout/ExpandableEditor/Editor';
-import { buildClientSchema } from 'graphql';
 import styles from '../../TableModify/ModifyTable.scss';
 import RemoteRelationshipExplorer from './GraphQLSchemaExplorer';
 import { parseRemoteRelationship, getRemoteRelConfig } from '../utils';
@@ -8,7 +7,6 @@ import {
   setRemoteRelationships,
   defaultRemoteRelationship,
   createRemoteRelationship,
-  introspectRemoteSchema,
   dropRemoteRelationship,
 } from '../Actions';
 
@@ -46,9 +44,6 @@ const RemoteRelationships = ({
           dispatch={dispatch}
           tableSchema={tableSchema}
           remoteSchemas={remoteSchemas}
-          graphqlSchema={
-            remoteRelationships.remoteSchema[remoteRelationship.remoteSchema]
-          }
           loading={remoteRelationships.loading}
           key={
             existingRemoteRelationships[i]
@@ -78,7 +73,6 @@ const RemoteRelationshipEditor = ({
   numRels,
   tableSchema,
   remoteSchemas,
-  graphqlSchema,
   loading,
 }) => {
   const isLast = index === numRels - 1;
@@ -101,7 +95,6 @@ const RemoteRelationshipEditor = ({
     newRelationships[index].name = relName;
     newRelationships[index].remoteSchema = e.target.value;
     dispatch(setRemoteRelationships(newRelationships));
-    dispatch(introspectRemoteSchema(e.target.value));
   };
 
   const handleRemoteFieldChange = (fieldName, nesting, checked) => {
@@ -266,7 +259,7 @@ const RemoteRelationshipEditor = ({
             <b>Configuration</b>
           </div>
           <RemoteRelationshipExplorer
-            schema={graphqlSchema ? buildClientSchema(graphqlSchema) : null}
+            dispatch={dispatch}
             relationship={relationship}
             handleArgChange={handleArgChange}
             handleRemoteFieldChange={handleRemoteFieldChange}
@@ -310,21 +303,12 @@ const RemoteRelationshipEditor = ({
     };
   }
 
-  const expandCallback = () => {
-    if (isLast) return;
-    if (!graphqlSchema) {
-      dispatch(introspectRemoteSchema(relationship.remoteSchema));
-    }
-  };
-
   const expandButtonText = isLast
     ? numRels > 1
       ? 'Add a new remote relationship'
       : 'Add a remote relationship'
     : 'Edit';
   const collapseButtonText = isLast ? 'Cancel' : 'Close';
-
-  console.log(expandButtonText);
 
   const collapsedLabel = () =>
     getRemoteRelConfig(relationship, tableSchema.table_name, styles);
@@ -335,7 +319,6 @@ const RemoteRelationshipEditor = ({
       property={'remote-relationship-add'}
       service="table-relationship"
       saveFunc={saveFunc}
-      expandCallback={expandCallback}
       expandButtonText={expandButtonText}
       collapseButtonText={collapseButtonText}
       collapsedLabel={collapsedLabel}

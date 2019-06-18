@@ -1,18 +1,42 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { buildClientSchema } from 'graphql';
 import styles from './SchemaExplorer.scss';
 import { getSchemaTree } from '../utils';
 import ExplorerItem from './ExplorerItem';
 import { NoRemoteSchemaPlaceholder, LoadingSkeleton } from './Placeholders';
+import { introspectRemoteSchema } from '../Actions';
 
 const SchemaExplorer = ({
-  schema,
   relationship,
   handleArgChange,
   handleColumnChange,
   handleRemoteFieldChange,
   tableSchema,
   loading,
+  dispatch,
 }) => {
+  const [schema, setRemoteSchema] = useState(null);
+
+  console.log('===================================');
+  console.log(schema);
+  console.log(loading);
+  console.log('===================================');
+
+  useEffect(() => {
+    if (relationship.remoteSchema) {
+      const introspectionCallback = introspectionResult => {
+        const clientSchema = buildClientSchema(introspectionResult.data);
+        setRemoteSchema(clientSchema);
+      };
+      dispatch(
+        introspectRemoteSchema(relationship.remoteSchema, introspectionCallback)
+      );
+    }
+    return () => {
+      setRemoteSchema(null);
+    };
+  }, [relationship.remoteSchema]);
+
   if (!relationship.remoteSchema) {
     return <NoRemoteSchemaPlaceholder />;
   }

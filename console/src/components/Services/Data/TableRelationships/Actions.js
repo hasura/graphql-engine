@@ -25,7 +25,7 @@ export const SET_REMOTE_RELATIONSHIPS = 'ModifyTable/SET_REMOTE_RELATIONSHIPS';
 export const INTROSPECTING_REMOTE_SCHEMA =
   'ModifyTable/INTROSPECTING_REMOTE_SCHEMA';
 export const INTROSPECTION_ERROR = 'ModifyTable/INTROSPECTION_ERROR';
-export const SET_INTROSPECTION_SCHEMA = 'ModifyTable/SET_INTROSPECTION_SCHEMA';
+export const INTROSPECTION_SUCCESSFUL = 'ModifyTable/SET_INTROSPECTION_SCHEMA';
 
 export const defaultRemoteRelationship = {
   name: '',
@@ -33,7 +33,7 @@ export const defaultRemoteRelationship = {
   remoteField: [],
 };
 
-export const introspectRemoteSchema = schemaName => {
+export const introspectRemoteSchema = (schemaName, introspectionCallback) => {
   return (dispatch, getState) => {
     const headers = getState().tables.dataHeaders;
     dispatch({ type: INTROSPECTING_REMOTE_SCHEMA });
@@ -47,12 +47,8 @@ export const introspectRemoteSchema = schemaName => {
       })
     ).then(
       data => {
-        const schema = data.data;
-        dispatch({
-          type: SET_INTROSPECTION_SCHEMA,
-          schemaName,
-          schema,
-        });
+        dispatch({ type: INTROSPECTION_SUCCESSFUL });
+        introspectionCallback(data);
       },
       error => {
         console.error(error);

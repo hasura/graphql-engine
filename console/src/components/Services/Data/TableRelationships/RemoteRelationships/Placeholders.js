@@ -23,7 +23,9 @@ export const LoadingSkeleton = () => {
     <div className={`${styles.schemaExplorerContainer} ${styles.overflowAuto}`}>
       {Array(5)
         .fill()
-        .map(() => skeletonItem)}
+        .map((_, i) => (
+          <div key={i}>{skeletonItem}</div>
+        ))}
     </div>
   );
 };
