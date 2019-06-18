@@ -1,5 +1,4 @@
 import React from 'react';
-import globals from '../../../../Globals';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
 import { changeTableOrViewName } from '../TableModify/ModifyActions';
@@ -24,26 +23,8 @@ const TableHeader = ({
   }
   const activeTab = tabNameMap[tabName];
 
-  const tableRenameCallback = newName => {
-    const currentPath = window.location.pathname.replace(
-      new RegExp(globals.urlPrefix, 'g'),
-      ''
-    );
-    const newPath = currentPath.replace(
-      /(\/schema\/.*)\/tables\/(\w*)(\/.*)?/,
-      `$1/tables/${newName}$3`
-    );
-    window.location.replace(
-      `${window.location.origin}${globals.urlPrefix}${newPath}`
-    );
-  };
-
   const saveTableNameChange = newName => {
-    dispatch(
-      changeTableOrViewName(true, tableName, newName, () =>
-        tableRenameCallback(newName)
-      )
-    );
+    dispatch(changeTableOrViewName(true, tableName, newName));
   };
 
   const getBreadCrumbs = () => {
