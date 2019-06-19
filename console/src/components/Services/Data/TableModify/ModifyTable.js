@@ -76,8 +76,9 @@ class ModifyTable extends React.Component {
         color="white"
         size="sm"
         onClick={() => {
-          const isOk = confirm('Are you sure to untrack?');
-          if (isOk) {
+          const confirmMessage = `Are you absolutely sure?\nThis will untrack the table ${tableName}. Please type "UNTRACK" (in caps, without quotes) to confirm.\n`;
+          const a = handleDelete(confirmMessage);
+          if (a && typeof a === 'string' && a.trim() === 'UNTRACK') {
             dispatch(untrackTableSql(tableName));
           }
         }}
