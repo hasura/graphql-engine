@@ -196,7 +196,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
   where
     GQLReq opNameM queryStr queryVars = reqUnparsed
     addPlanToCache plan =
-      liftIO $
+      -- liftIO $
       EP.addPlan scVer (userRole userInfo) opNameM queryStr plan planCache
     noExistingPlan = do
       req <- toParsed reqUnparsed
@@ -223,7 +223,9 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
                             (flip ExPMixed cursors, newField)
                 (queryTx, planM) <-
                   getQueryOp gCtx sqlGenCtx userInfo (pure alteredField) varDefs
-                mapM_ (addPlanToCache . EP.RPQuery) planM
+
+                -- TODO: How to cache query for each field?
+                -- mapM_ (addPlanToCache . EP.RPQuery) planM
                 return $ constructor $ ExOpQuery queryTx
               VQ.HasuraTopSubscription fld -> do
                 (lqOp, planM) <-
@@ -235,7 +237,9 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
                     reqUnparsed
                     varDefs
                     fld
-                mapM_ (addPlanToCache . EP.RPSubs) planM
+
+                -- TODO: How to cache query for each field?
+                -- mapM_ (addPlanToCache . EP.RPSubs) planM
                 return $ ExPHasura $ ExOpSubs lqOp
 
 -- Rebuild the field with remote relationships removed, and paths that
