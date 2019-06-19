@@ -23,7 +23,7 @@ import           Hasura.GraphQL.Resolve.ContextTypes
 import           Hasura.GraphQL.Validate.Context
 import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Types
-import Hasura.RQL.DDL.Remote.Types
+import           Hasura.RQL.DDL.Remote.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Value
 
@@ -169,7 +169,7 @@ denormSel visFrags parObjTyInfo sel = case sel of
     parTy = _otiName parObjTyInfo
     localize fldInfo field =
       case _fiLoc fldInfo of
-        HasuraType -> HasuraLocated field
+        HasuraType                    -> HasuraLocated field
         RemoteType _ remoteSchemaInfo -> RemoteLocated remoteSchemaInfo field
 
 processArgs
@@ -236,6 +236,15 @@ denormFld parObjTyInfo visFrags fldInfo (G.Field aliasM name args dirs selSet) =
       throwVE $ "internal error: unexpected input type for field: "
       <> showName name
 
+    (TIIFace _, []) ->
+      throwVE $ "field " <> showName name <> " of type "
+      <> G.showGT fldTy <> " must have a selection of subfields"
+
+-- add some trivial logic for interface validation
+    (TIIFace _, _) -> throwVE $ "interface types not supported"
+
+    (TIUnion _, _) -> throwVE $ "union types not supported"
+
     -- when scalar/enum and no empty set
     (_, _) ->
       throwVE $ "field " <> showName name <> " must not have a "
@@ -248,7 +257,7 @@ denormFld parObjTyInfo visFrags fldInfo (G.Field aliasM name args dirs selSet) =
     (Field (fromMaybe (G.Alias name) aliasM) name fldBaseTy argMap (fmap getLoc fields)
            (case mtypedField of
               Just (FldRemote remoteField) -> pure remoteField
-              _ -> Nothing))
+              _                            -> Nothing))
 
 denormInlnFrag
   :: ( MonadReader ValidationCtx m
@@ -274,7 +283,7 @@ data Located a
    deriving (Functor, Show, Eq, Traversable, Foldable)
 
 getLoc :: Located a -> a
-getLoc (HasuraLocated a) = a
+getLoc (HasuraLocated a)   = a
 getLoc (RemoteLocated _ a) = a
 
 denormSelSet
