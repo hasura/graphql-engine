@@ -306,15 +306,6 @@ class Permissions extends Component {
             dispatch(permSetBulkSelect(isChecked, selectedRole));
           };
 
-          // const dispatchDeletePermission = () => {
-          //   const isConfirm = window.confirm(
-          //     'Are you sure you want to delete the permission for role ' + role + '?'
-          //   );
-          //   if (isConfirm) {
-          //     dispatch(permRemoveRole(tableSchema, role));
-          //   }
-          // };
-
           const getEditLink = () => {
             return (
               <span className={styles.editPermsLink}>
@@ -379,15 +370,6 @@ class Permissions extends Component {
             _permissionsRowHtml.push(<td key={-1} />);
           } else {
             const bulkSelect = permissionsState.bulkSelect;
-
-            // const deleteIcon = (
-            //   <i
-            //     onClick={dispatchDeletePermission}
-            //     className={styles.permissionDelete + ' fa fa-close'}
-            //     title="Remove all permissions"
-            //     aria-hidden="true"
-            //   />
-            // );
 
             _permissionsRowHtml.push(
               <td key={-1}>
@@ -1650,7 +1632,8 @@ class Permissions extends Component {
         };
 
         const dispatchRemoveAccess = () => {
-          const confirmMessage = 'Are you absolutely sure?\nThis action cannot be undone. This will permanently delete the permissions. Please type "DELETE" (in caps, without quotes) to confirm.\n';
+          const confirmMessage =
+            'Are you absolutely sure?\nThis action cannot be undone. This will permanently delete the permissions. Please type "DELETE" (in caps, without quotes) to confirm.\n';
           const a = handleDelete(confirmMessage);
           if (a && typeof a === 'string' && a.trim() === 'DELETE') {
             dispatch(permChangePermissions(permChangeTypes.delete));

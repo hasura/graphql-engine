@@ -79,9 +79,11 @@ class RelationshipEditor extends React.Component {
     const onDelete = e => {
       e.preventDefault();
 
-      const confirmMessage = `Are you absolutely sure?\nThis action cannot be undone. This will permanently delete the relationship ${relConfig}. Please type "DELETE" (in caps, without quotes) to confirm.\n`;
+      const confirmMessage = `Are you absolutely sure?\nThis action cannot be undone. This will permanently remove the relationship ${
+        relConfig.relName
+      }. Please type "REMOVE" (in caps, without quotes) to confirm.\n`;
       const a = handleDelete(confirmMessage);
-      if (a && typeof a === 'string' && a.trim() === 'DELETE') {
+      if (a && typeof a === 'string' && a.trim() === 'REMOVE') {
         dispatch(deleteRelMigrate(relConfig));
       }
     };
