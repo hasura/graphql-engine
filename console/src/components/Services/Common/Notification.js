@@ -170,31 +170,32 @@ const showInfoNotification = title => {
   };
 };
 
-const showWarningNotificationWithAceEditor = (
-  title,
-  message,
-  aceEditorData
-) => {
-  const children = [
-    <div className={styles.aceBlock}>
-      <AceEditor
-        readOnly
-        showPrintMargin={false}
-        mode="json"
-        showGutter={false}
-        theme="github"
-        name="notification-response"
-        value={JSON.stringify(aceEditorData, null, 4)}
-        minLines={1}
-        maxLines={15}
-        width="100%"
-      />
-    </div>,
-  ];
+const showWarningNotification = (title, message, aceEditorData) => {
+  const children = [];
+  if (aceEditorData) {
+    children.push(
+      <div className={styles.aceBlock}>
+        <AceEditor
+          readOnly
+          showPrintMargin={false}
+          mode="json"
+          showGutter={false}
+          theme="github"
+          name="notification-response"
+          value={JSON.stringify(aceEditorData, null, 4)}
+          minLines={1}
+          maxLines={15}
+          width="100%"
+        />
+      </div>
+    );
+  }
+
   return dispatch => {
     dispatch(
       showNotification({
         level: 'warning',
+        autoDismiss: 0,
         title,
         message,
         children,
@@ -208,5 +209,5 @@ export {
   showSuccessNotification,
   showInfoNotification,
   showTempErrorNotification,
-  showWarningNotificationWithAceEditor,
+  showWarningNotification,
 };
