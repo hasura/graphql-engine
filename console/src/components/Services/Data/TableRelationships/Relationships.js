@@ -8,7 +8,6 @@ import {
   relSelectionChanged,
   relNameChanged,
   resetRelationshipForm,
-  relManualAddClicked,
   formRelName,
   getExistingFieldsMap,
 } from './Actions';
@@ -22,6 +21,7 @@ import Button from '../../../Common/Button/Button';
 import AddManualRelationship from './AddManualRelationship';
 import suggestedRelationshipsRaw from './autoRelations';
 import RelationshipEditor from './RelationshipEditor';
+import { NotFoundError } from '../../../Error/PageNotFound';
 
 const addRelationshipCellView = (
   dispatch,
@@ -148,9 +148,7 @@ const AddRelationship = ({
     return (
       <div className={`${styles.remove_margin_bottom} form-group`}>
         <label>
-          {' '}
-          You have no new relationships that can be added. Add a foreign key to
-          get suggestions{' '}
+          You have no new relationships that can be added via foreign-keys
         </label>
       </div>
     );
@@ -257,7 +255,7 @@ const AddRelationship = ({
   return (
     <div>
       <div>
-        <label> Add a new relationship </label>
+        <label> Add new relationships via foreign-keys </label>
       </div>
       <div className={tableStyles.tableContainer}>
         <table
@@ -268,8 +266,8 @@ const AddRelationship = ({
           <thead>
             <tr>
               {[
-                'Suggested object relationships',
-                'Suggested Array relationships',
+                'Suggested Object Relationships',
+                'Suggested Array Relationships',
               ].map((s, i) => (
                 <th key={i}>{s}</th>
               ))}
@@ -320,6 +318,7 @@ class Relationships extends Component {
       lastSuccess,
       dispatch,
       relAdd,
+      manualRelAdd,
       currentSchema,
       migrationMode,
       schemaList,
@@ -330,6 +329,12 @@ class Relationships extends Component {
     const tableSchema = allSchemas.find(
       t => t.table_name === tableName && t.table_schema === currentSchema
     );
+
+    if (!tableSchema) {
+      // throw a 404 exception
+      throw new NotFoundError();
+    }
+
     let alert = null;
     if (ongoingRequest) {
       alert = (
@@ -416,7 +421,6 @@ class Relationships extends Component {
       );
     }
 
-    // if (tableSchema.primary_key.columns > 0) {}
     return (
       <div className={`${styles.container} container-fluid`}>
         <TableHeader
@@ -438,8 +442,15 @@ class Relationships extends Component {
                   tableName={tableName}
                   currentSchema={currentSchema}
                   allSchemas={allSchemas}
-                  currentSchema={currentSchema}
                   cachedRelationshipData={relAdd}
+                  dispatch={dispatch}
+                />
+                <hr />
+                <AddManualRelationship
+                  tableSchema={tableSchema}
+                  allSchemas={allSchemas}
+                  schemaList={schemaList}
+                  relAdd={manualRelAdd}
                   dispatch={dispatch}
                 />
               </div>
@@ -455,40 +466,6 @@ class Relationships extends Component {
                 + Add relationship
               </Button>
             )}
-            <hr />
-            {relAdd.isManualExpanded ? (
-              <div className={styles.activeEdit}>
-                <AddManualRelationship
-                  tableName={tableName}
-                  isObjRel={relAdd.isObjRel}
-                  rTable={relAdd.rTable}
-                  dispatch={dispatch}
-                  lcol={relAdd.lcol}
-                  rcol={relAdd.rcol}
-                  allSchemas={allSchemas}
-                  schemaList={schemaList}
-                  manualColumns={relAdd.manualColumns}
-                  manualRelInfo={relAdd.manualRelInfo}
-                  titleInfo={'Add a relationship manually'}
-                  currentSchema={currentSchema}
-                  showClose
-                  dataTestVal={'table-add-manual-relationship'}
-                />
-              </div>
-            ) : (
-              <Button
-                type="submit"
-                color="white"
-                size="sm"
-                onClick={() => {
-                  dispatch(relManualAddClicked());
-                }}
-                data-test="add-manual-relationship"
-              >
-                + Add a relationship manually
-              </Button>
-            )}
-            <hr />
           </div>
         </div>
         <div className={`${styles.fixed} hidden`}>{alert}</div>
@@ -504,6 +481,7 @@ Relationships.propTypes = {
   activeEdit: PropTypes.object.isRequired,
   fkAdd: PropTypes.object.isRequired,
   relAdd: PropTypes.object.isRequired,
+  manualRelAdd: PropTypes.object.isRequired,
   migrationMode: PropTypes.bool.isRequired,
   ongoingRequest: PropTypes.bool.isRequired,
   lastError: PropTypes.object,
