@@ -6,6 +6,8 @@ import { showErrorNotification } from '../../Common/Notification';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 import styles from '../TableModify/ModifyTable.scss';
 
+import { handleDelete } from '../../../../handleDelete';
+
 class RelationshipEditor extends React.Component {
   constructor(props) {
     super(props);
@@ -76,8 +78,10 @@ class RelationshipEditor extends React.Component {
 
     const onDelete = e => {
       e.preventDefault();
-      const isOk = confirm('Are you sure?');
-      if (isOk) {
+
+      const confirmMessage = `Are you absolutely sure?\nThis action cannot be undone. This will permanently delete the relationship ${relConfig}. Please type "DELETE" (in caps, without quotes) to confirm.\n`;
+      const a = handleDelete(confirmMessage);
+      if (a && typeof a === 'string' && a.trim() === 'DELETE') {
         dispatch(deleteRelMigrate(relConfig));
       }
     };

@@ -49,6 +49,7 @@ import Button from '../../../Common/Button/Button';
 import { defaultPresetsState } from '../DataState';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
+import { handleDelete } from '../../../../handleDelete';
 
 class Permissions extends Component {
   constructor() {
@@ -1649,8 +1650,9 @@ class Permissions extends Component {
         };
 
         const dispatchRemoveAccess = () => {
-          const isOk = confirm('Are you sure?');
-          if (isOk) {
+          const confirmMessage = 'Are you absolutely sure?\nThis action cannot be undone. This will permanently delete the permissions. Please type "DELETE" (in caps, without quotes) to confirm.\n';
+          const a = handleDelete(confirmMessage);
+          if (a && typeof a === 'string' && a.trim() === 'DELETE') {
             dispatch(permChangePermissions(permChangeTypes.delete));
           }
         };

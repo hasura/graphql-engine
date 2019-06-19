@@ -26,6 +26,8 @@ import UniqueKeyEditor from './UniqueKeyEditor';
 import styles from './ModifyTable.scss';
 import { NotFoundError } from '../../../Error/PageNotFound';
 
+import { handleDelete } from '../../../../handleDelete';
+
 class ModifyTable extends React.Component {
   componentDidMount() {
     const { dispatch } = this.props;
@@ -91,8 +93,9 @@ class ModifyTable extends React.Component {
         color="red"
         size="sm"
         onClick={() => {
-          const isOk = confirm('Are you sure?');
-          if (isOk) {
+          const confirmMessage = `Are you absolutely sure?\nThis action cannot be undone. This will permanently delete the table ${tableName}. Please type "DELETE" (in caps, without quotes) to confirm.\n`;
+          const a = handleDelete(confirmMessage);
+          if (a && typeof a === 'string' && a.trim() === 'DELETE') {
             dispatch(deleteTableSql(tableName, tableSchema));
           }
         }}
