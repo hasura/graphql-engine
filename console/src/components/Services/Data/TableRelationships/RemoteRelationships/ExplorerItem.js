@@ -1,5 +1,6 @@
 import React from 'react';
 import styles from './SchemaExplorer.scss';
+import { columnScalar as columnScalarTooltip } from './Tooltips';
 
 const ExplorerItem = ({
   label,
@@ -19,12 +20,14 @@ const ExplorerItem = ({
     parentFieldNesting,
   } = item;
 
+  const isLeaf =
+    isArg && isChecked && (isScalar || isScalarList || isNonNullableScalar);
+
+  const tooltip =
+    isLeaf && columnScalarTooltip(`${item.parentArg}.${item.name}`);
+
   const columnSelect = () => {
-    if (
-      !isArg ||
-      !isChecked ||
-      !(isScalar || isScalarList || isNonNullableScalar)
-    ) {
+    if (!isLeaf) {
       return;
     }
     const onColumnChange = e => {
@@ -37,6 +40,7 @@ const ExplorerItem = ({
         item
       );
     };
+
     return (
       <div>
         <select
@@ -83,7 +87,8 @@ const ExplorerItem = ({
           (isScalar || isNonNullableScalar || isScalarList) &&
           ':'}
       </div>
-      <div>{columnSelect()}</div>
+      <div className={styles.add_mar_right_small}>{columnSelect()}</div>
+      <div>{tooltip}</div>
     </div>
   );
 };

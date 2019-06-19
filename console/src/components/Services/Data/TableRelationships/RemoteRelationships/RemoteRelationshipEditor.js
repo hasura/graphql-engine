@@ -2,6 +2,11 @@ import React from 'react';
 import ExpandableEditor from '../../../../Common/Layout/ExpandableEditor/Editor';
 import RemoteRelationshipExplorer from './GraphQLSchemaExplorer';
 import styles from '../../TableModify/ModifyTable.scss';
+import {
+  relName as relNameTooltip,
+  remoteSchema as remoteSchemaTooltip,
+  configuration as configTooltip,
+} from './Tooltips';
 import { getRemoteRelConfig } from '../utils';
 import {
   setRemoteRelationships,
@@ -142,8 +147,13 @@ const RemoteRelationshipEditor = ({
     return (
       <div>
         <div className={`${styles.add_mar_bottom}`}>
-          <div className={`${styles.add_mar_bottom_mid}`}>
-            <b>Name</b>
+          <div
+            className={`${styles.add_mar_bottom_mid} ${styles.display_flex}`}
+          >
+            <div className={styles.add_mar_right_small}>
+              <b>Name</b>
+            </div>
+            <div>{relNameTooltip(tableSchema.table_name)}</div>
           </div>
           <div>
             <input
@@ -176,8 +186,15 @@ const RemoteRelationshipEditor = ({
     return (
       <div>
         <div className={`${styles.add_mar_bottom}`}>
-          <div className={`${styles.add_mar_bottom_mid}`}>
-            <b>Remote Schema:</b>
+          <div
+            className={`${styles.add_mar_bottom_mid} ${styles.display_flex} ${
+              styles.add_mar_right_small
+            }`}
+          >
+            <div className={styles.add_mar_right_small}>
+              <b>Remote Schema:</b>
+            </div>
+            <div>{remoteSchemaTooltip(tableSchema.table_name)}</div>
           </div>
           <div>
             <select
@@ -200,8 +217,15 @@ const RemoteRelationshipEditor = ({
         {relNameTextBox()}
         {remoteSchemaSelect()}
         <div>
-          <div className={styles.add_mar_bottom_mid}>
-            <b>Configuration</b>
+          <div
+            className={`${styles.add_mar_bottom_mid} ${styles.display_flex} ${
+              styles.add_mar_right_small
+            }`}
+          >
+            <div className={styles.add_mar_right_small}>
+              <b>Configuration:</b>
+            </div>
+            <div>{configTooltip()}</div>
           </div>
           <RemoteRelationshipExplorer
             dispatch={dispatch}

@@ -52,7 +52,7 @@ const RemoteRelationships = ({
   return (
     <div>
       <div className={styles.add_mar_bottom}>
-        Add relationship to a remote schema
+        Relationships to remote schemas
       </div>
       <div>{relationshipList()}</div>
     </div>
