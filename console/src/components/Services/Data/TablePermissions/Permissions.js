@@ -50,6 +50,7 @@ import { defaultPresetsState } from '../DataState';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { handleDelete } from '../../../../handleDelete';
+import { showSuccessNotification } from '../../Common/Notification';
 
 class Permissions extends Component {
   constructor() {
@@ -1637,6 +1638,8 @@ class Permissions extends Component {
           const a = handleDelete(confirmMessage);
           if (a && typeof a === 'string' && a.trim() === 'DELETE') {
             dispatch(permChangePermissions(permChangeTypes.delete));
+          } else {
+            return dispatch(showSuccessNotification('No changes'));
           }
         };
 

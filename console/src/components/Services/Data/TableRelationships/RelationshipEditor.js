@@ -7,6 +7,7 @@ import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 import styles from '../TableModify/ModifyTable.scss';
 
 import { handleDelete } from '../../../../handleDelete';
+import { showSuccessNotification } from '../../Common/Notification';
 
 class RelationshipEditor extends React.Component {
   constructor(props) {
@@ -85,6 +86,8 @@ class RelationshipEditor extends React.Component {
       const a = handleDelete(confirmMessage);
       if (a && typeof a === 'string' && a.trim() === 'REMOVE') {
         dispatch(deleteRelMigrate(relConfig));
+      } else {
+        return dispatch(showSuccessNotification('No changes'));
       }
     };
     const collapsed = () => (

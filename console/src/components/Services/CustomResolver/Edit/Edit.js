@@ -78,10 +78,10 @@ class Edit extends React.Component {
 
     const a = handleDelete(confirmMessage);
     try {
-      if (a && typeof a === 'string' && a.trim() === 'DELETE') {
+      if (typeof a === 'string' && a.trim() === 'DELETE') {
         this.updateDeleteConfirmationError(null);
         this.props.dispatch(deleteResolver());
-      } else {
+      } else if (a) {
         // Input didn't match
         // Show an error message right next to the button
         this.updateDeleteConfirmationError('user confirmation error!');

@@ -13,6 +13,9 @@ import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import ForeignKeySelector from '../Common/ReusableComponents/ForeignKeySelector';
 import { updateSchemaInfo } from '../DataActions';
 
+import { handleDelete } from '../../../../handleDelete';
+import { showSuccessNotification } from '../../Common/Notification';
+
 const ForeignKeyEditor = ({
   tableSchema,
   allSchemas,
@@ -138,9 +141,12 @@ const ForeignKeyEditor = ({
     let removeFk;
     if (!isLast) {
       removeFk = () => {
-        const isOk = window.confirm('Are you sure?');
-        if (isOk) {
+        const confirmMessage = 'Are you absolutely sure?\n. This will permanently remove the foreign key. Please type "REMOVE" (in caps, without quotes) to confirm.\n';
+        const a = handleDelete(confirmMessage);
+        if (a && typeof a === 'string' && a.trim() === 'REMOVE') {
           dispatch(removeForeignKey(i, tableSchema, orderedColumns));
+        } else {
+          return dispatch(showSuccessNotification('No changes'));
         }
       };
     }

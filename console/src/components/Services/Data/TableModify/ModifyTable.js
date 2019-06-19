@@ -26,6 +26,7 @@ import UniqueKeyEditor from './UniqueKeyEditor';
 import styles from './ModifyTable.scss';
 import { NotFoundError } from '../../../Error/PageNotFound';
 
+import { showSuccessNotification } from '../../Common/Notification';
 import { handleDelete } from '../../../../handleDelete';
 
 class ModifyTable extends React.Component {
@@ -80,6 +81,8 @@ class ModifyTable extends React.Component {
           const a = handleDelete(confirmMessage);
           if (a && typeof a === 'string' && a.trim() === 'UNTRACK') {
             dispatch(untrackTableSql(tableName));
+          } else {
+            return dispatch(showSuccessNotification('No changes'));
           }
         }}
         data-test="untrack-table"
@@ -98,6 +101,8 @@ class ModifyTable extends React.Component {
           const a = handleDelete(confirmMessage);
           if (a && typeof a === 'string' && a.trim() === 'DELETE') {
             dispatch(deleteTableSql(tableName, tableSchema));
+          } else {
+            return dispatch(showSuccessNotification('No changes'));
           }
         }}
         data-test="delete-table"
