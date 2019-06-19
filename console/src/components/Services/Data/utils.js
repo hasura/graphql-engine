@@ -581,7 +581,7 @@ SELECT
   t.typcategory
 FROM pg_catalog.pg_type t
      LEFT JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
-WHERE (t.typrelid = 0 OR (SELECT c.relkind = 'c' FROM pg_catalog.pg_class c WHERE c.oid = t.typrelid))
+WHERE t.typrelid = 0
   AND NOT EXISTS(SELECT 1 FROM pg_catalog.pg_type el WHERE el.oid = t.typelem AND el.typarray = t.oid)
   AND pg_catalog.pg_type_is_visible(t.oid)
   AND t.typname != 'unknown'
@@ -596,7 +596,7 @@ JOIN pg_type t
 ON pgp.prorettype = t.oid
 JOIN pg_namespace pgn
 ON pgn.oid = pgp.pronamespace
-WHERE (t.typrelid = 0 OR (SELECT c.relkind = 'c' FROM pg_catalog.pg_class c WHERE c.oid = t.typrelid))
+WHERE t.typrelid = 0
   AND NOT EXISTS(SELECT 1 FROM pg_catalog.pg_type el WHERE el.oid = t.typelem AND el.typarray = t.oid)
   AND pg_catalog.pg_type_is_visible(t.oid)
   AND t.typname != 'unknown'
@@ -604,7 +604,6 @@ WHERE (t.typrelid = 0 OR (SELECT c.relkind = 'c' FROM pg_catalog.pg_class c WHER
   AND (array_length(pgp.proargtypes, 1) = 0)
   AND ( pgn.nspname = '${schema}' OR pgn.nspname = 'pg_catalog' )
   AND pgp.proretset=false
-  AND pgp.prokind='f'
 GROUP BY t.typname
 ORDER BY t.typname ASC;
 `;
