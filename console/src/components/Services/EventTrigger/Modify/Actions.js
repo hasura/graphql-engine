@@ -70,7 +70,7 @@ export const REQUEST_COMPLETE = 'ModifyTrigger/REQUEST_COMPLETE';
 export const showValidationError = message => {
   return dispatch => {
     dispatch(
-      showErrorNotification('Error modifying trigger!', 'Invalid input', '', {
+      showErrorNotification('Error modifying trigger!', 'Invalid input', {
         custom: message,
       })
     );

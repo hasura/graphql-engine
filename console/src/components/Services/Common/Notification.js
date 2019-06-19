@@ -6,7 +6,7 @@ import Button from '../../Common/Button/Button';
 
 const styles = require('../../Common/TableCommon/Table.scss');
 
-const showErrorNotification = (title, message, _reqBody, error) => {
+const showErrorNotification = (title, message, error) => {
   let modMessage;
   let refreshBtn;
 

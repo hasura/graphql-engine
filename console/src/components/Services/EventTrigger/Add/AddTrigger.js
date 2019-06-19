@@ -146,7 +146,7 @@ class AddTrigger extends Component {
       this.props.dispatch(createTrigger());
     } else {
       this.props.dispatch(
-        showErrorNotification('Error creating trigger!', errorMsg, '', {
+        showErrorNotification('Error creating trigger!', errorMsg, {
           custom: customMsg,
         })
       );
