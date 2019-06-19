@@ -43,10 +43,11 @@ export const createNewSchema = (schemaName, successCb, errorCb) => {
     const errorMsg = 'Error creating schema';
 
     const customOnSuccess = () => {
-      dispatch(fetchSchemaList());
-      if (successCb) {
-        successCb();
-      }
+      dispatch(fetchSchemaList()).then(() => {
+        if (successCb) {
+          successCb();
+        }
+      });
     };
     const customOnError = () => {
       if (errorCb) {

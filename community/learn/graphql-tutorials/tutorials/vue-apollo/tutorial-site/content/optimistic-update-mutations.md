@@ -1,5 +1,7 @@
 ---
 title: "Optimistic UI updates after mutations"
+metaTitle: "Optimistic UI updates after mutations | GraphQL Vue Apollo Tutorial"
+metaDescription: "We will use the Apollo Client Optimistic Response to perform UI updates after a GraphQL mutation in the Vue app"
 ---
 
 We can notice that there is a lag when users create a todo.
@@ -12,7 +14,7 @@ use optimistic updates when we run mutations!
 We will learn the following concepts:
 
 - Creating a GraphQL mutation
-- Using the `<Mutation>` component
+- Using the Mutation with $apollo.mutate 
 - Capturing loading/finished/error states
 - Use optimistic responses
 

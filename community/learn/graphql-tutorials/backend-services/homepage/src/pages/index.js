@@ -5,6 +5,7 @@ import TopBanner from '../components/TopBanner';
 import Tutorials from '../components/Tutorials';
 import WillLearn from '../components/WillLearn';
 import SubscribeNewsletter from '../components/SubscribeNewsletter';
+import Testimonials from '../components/Testimonials';
 import Footer from '../components/Footer';
 class Index extends React.Component {
   render() {
@@ -14,6 +15,7 @@ class Index extends React.Component {
         <TopBanner/>
         <Tutorials/>
         <WillLearn/>
+        <Testimonials/>
         <SubscribeNewsletter/>
         <Footer/>
       </div>

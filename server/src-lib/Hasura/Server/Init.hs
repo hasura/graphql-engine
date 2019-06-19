@@ -111,6 +111,7 @@ data API
   | GRAPHQL
   | PGDUMP
   | DEVELOPER
+  | CONFIG
   deriving (Show, Eq, Read, Generic)
 
 instance Hashable API
@@ -284,9 +285,9 @@ mkServeOptions rso = do
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
   where
 #ifdef DeveloperAPIs
-    defaultAPIs = [METADATA,GRAPHQL,PGDUMP,DEVELOPER]
+    defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
 #else
-    defaultAPIs = [METADATA,GRAPHQL,PGDUMP]
+    defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG]
 #endif
     mkConnParams (RawConnParams s c i p) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
@@ -548,7 +549,7 @@ stringifyNumEnv =
 enabledAPIsEnv :: (String, String)
 enabledAPIsEnv =
   ( "HASURA_GRAPHQL_ENABLED_APIS"
-  , "List of comma separated list of allowed APIs. (default: metadata,graphql,pgdump)"
+  , "List of comma separated list of allowed APIs. (default: metadata,graphql,pgdump,config)"
   )
 
 consoleAssetsDirEnv :: (String, String)
@@ -712,11 +713,12 @@ readHookType tyS =
 readAPIs :: String -> Either String [API]
 readAPIs = mapM readAPI . T.splitOn "," . T.pack
   where readAPI si = case T.toUpper $ T.strip si of
-          "METADATA" -> Right METADATA
-          "GRAPHQL"  -> Right GRAPHQL
-          "PGDUMP"   -> Right PGDUMP
+          "METADATA"  -> Right METADATA
+          "GRAPHQL"   -> Right GRAPHQL
+          "PGDUMP"    -> Right PGDUMP
           "DEVELOPER" -> Right DEVELOPER
-          _          -> Left "Only expecting list of comma separated API types metadata,graphql,pgdump,developer"
+          "CONFIG"    -> Right CONFIG
+          _            -> Left "Only expecting list of comma separated API types metadata,graphql,pgdump,developer,config"
 
 parseWebHook :: Parser RawAuthHook
 parseWebHook =
