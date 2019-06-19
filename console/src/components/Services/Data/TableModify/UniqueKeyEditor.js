@@ -8,6 +8,8 @@ import {
 } from '../Common/ReusableComponents/utils';
 import { saveUniqueKey, removeUniqueKey } from './ModifyActions';
 
+import { handleDelete } from '../../../../handleDelete';
+
 const UniqueKeyEditor = ({
   uniqueKeys,
   tableSchema,
@@ -99,20 +101,18 @@ const UniqueKeyEditor = ({
     let removeFunc;
     if (!isLast) {
       removeFunc = toggle => {
-        const isOk = window.confirm(
-          'Are you sure you want to remove this unique key constraint?'
-        );
-        if (!isOk) {
-          return;
+        const confirmMessage = 'Are you absolutely sure?\nThis will remove this unique key constraint. Please type "REMOVE" (in caps, without quotes) to confirm.\n';
+        const a = handleDelete(confirmMessage);
+        if (a && typeof a === 'string' && a.trim() === 'REMOVE') {
+          dispatch(
+            removeUniqueKey(
+              i,
+              tableSchema.table_name,
+              existingConstraints,
+              toggle
+            )
+          );
         }
-        dispatch(
-          removeUniqueKey(
-            i,
-            tableSchema.table_name,
-            existingConstraints,
-            toggle
-          )
-        );
       };
     }
 

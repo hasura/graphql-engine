@@ -11,6 +11,8 @@ import {
 } from '../Actions';
 import Button from '../../../Common/Button/Button';
 
+import { handleDelete } from '../../../../handleDelete';
+
 class AllowedQueriesList extends React.Component {
   constructor(props) {
     super(props);
@@ -109,9 +111,9 @@ class AllowedQueriesList extends React.Component {
         };
 
         const onDelete = () => {
-          const isOk = window.confirm('Are you sure?');
-
-          if (isOk) {
+          const confirmMessage = 'Are you absolutely sure?\nThis will delete the query. Please type "DELETE" (in caps, without quotes) to confirm.\n';
+          const a = handleDelete(confirmMessage);
+          if (a && typeof a === 'string' && a.trim() === 'DELETE') {
             const isLastQuery = allowedQueries.length === 1;
 
             dispatch(deleteAllowedQuery(query.name, isLastQuery));
@@ -139,9 +141,9 @@ class AllowedQueriesList extends React.Component {
 
     const getDeleteAllBtn = () => {
       const handleDeleteAll = () => {
-        const isOk = window.confirm('Are you sure?');
-
-        if (isOk) {
+        const confirmMessage = 'Are you absolutely sure?\nThis will delete all the queries. Please type "DELETE ALL" (in caps, without quotes) to confirm.\n';
+        const a = handleDelete(confirmMessage);
+        if (a && typeof a === 'string' && a.trim() === 'DELETE ALL') {
           dispatch(deleteAllowList());
         }
       };
