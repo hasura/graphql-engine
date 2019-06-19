@@ -581,3 +581,46 @@ class TestManualEvents(object):
         assert st_code == 200, resp
         st_code, resp = hge_ctx.v1q_f('queries/event_triggers/manual_events/disabled.yaml')
         assert st_code == 400, resp
+
+
+class TestSkipDiff:
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, hge_ctx, evts_webhook):
+        print("In setup method")
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/listen_cols/setup.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/listen_cols/teardown.yaml')
+        assert st_code == 200, resp
+
+    def test_row_skip_diff(self, hge_ctx, evts_webhook):
+        table = {"schema": "hge_tests", "name": "test_t1"}
+
+        init_row = {"c1": 1, "c2": "hello"}
+        exp_ev_data = {
+            "old": None,
+            "new": init_row
+        }
+        st_code, resp = insert(hge_ctx, table, init_row)
+        assert st_code == 200, resp
+        check_event(hge_ctx, evts_webhook, "t1_all", table, "INSERT", exp_ev_data)
+
+        where_exp = {"c1": 1}
+        set_exp = {"c2": "world"}
+        exp_ev_data = {
+            "old": init_row,
+            "new": {"c1": 1, "c2": "world"}
+        }
+        st_code, resp = update(hge_ctx, table, where_exp, set_exp)
+        assert st_code == 200, resp
+        check_event(hge_ctx, evts_webhook, "t1_all", table, "UPDATE", exp_ev_data)
+        where_exp = {"c1": 1}
+        set_exp = {"c2": "world"}
+        exp_ev_data = {
+            "old": {"c1": 1, "c2": "world"},
+            "new": {"c1": 1, "c2": "world"}
+        }
+        st_code, resp = update(hge_ctx, table, where_exp, set_exp)
+        assert st_code == 200, resp
+        check_event(hge_ctx, evts_webhook, "t1_all", table, "UPDATE", exp_ev_data)

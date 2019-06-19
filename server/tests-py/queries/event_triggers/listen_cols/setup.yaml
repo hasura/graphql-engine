@@ -13,18 +13,15 @@ args:
     name: test_t1
 - type: create_event_trigger
   args:
-    name: t1_payload
+    name: t1_all
     table:
       schema: hge_tests
       name: test_t1
     insert:
       payload: "*"
     update:
-      columns: "*"
-      payload: ["c1"]
+      payload: "*"
+      columns: []
     delete:
-      payload: ["c2"]
+      payload: "*"
     webhook: http://127.0.0.1:5592
-    retry_conf:
-      num_retries: 10
-      interval_sec: 100

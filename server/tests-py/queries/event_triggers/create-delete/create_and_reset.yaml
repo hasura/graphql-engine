@@ -15,12 +15,12 @@ query:
         schema: hge_tests
         name: test_t1
       insert:
-        columns: "*"
+        payload: "*"
       update:
         columns: "*"
+        payload: "*"
       delete:
-        columns: "*"
+        payload: "*"
       webhook: http://127.0.0.1:5592
-
   - type: clear_metadata
     args: {}

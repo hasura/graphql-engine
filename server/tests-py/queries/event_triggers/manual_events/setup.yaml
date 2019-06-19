@@ -18,11 +18,12 @@ args:
       schema: hge_tests
       name: test_t1
     insert:
-      columns: "*"
+      payload: "*"
     update:
+      payload: "*"
       columns: "*"
     delete:
-      columns: "*"
+      payload: "*"
     enable_manual: true
     webhook: http://127.0.0.1:5592
 - type: create_event_trigger
@@ -32,10 +33,11 @@ args:
       schema: hge_tests
       name: test_t1
     insert:
-      columns: "*"
+      payload: "*"
     update:
+      payload: "*"
       columns: "*"
     delete:
-      columns: "*"
+      payload: "*"
     enable_manual: false
     webhook: http://127.0.0.1:5592
