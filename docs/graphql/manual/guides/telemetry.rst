@@ -33,7 +33,8 @@ Server
 The server periodically sends the number of tables, views, relationships,
 permission rules, custom SQL functions, event triggers and remote schemas
 tracked by GraphQL Engine, along with randomly generated UUID per database and
-per instance. The server version is also sent.
+per instance. The name of the current continuous integration environment
+(if any) and the server version is also sent.
 
 Here is a sample row from the telemetry database:
 
