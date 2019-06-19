@@ -97,9 +97,9 @@ class ModifyTable extends React.Component {
         color="red"
         size="sm"
         onClick={() => {
-          const confirmMessage = `Are you absolutely sure?\nThis action cannot be undone. This will permanently delete the table ${tableName}. Please type "DELETE" (in caps, without quotes) to confirm.\n`;
+          const confirmMessage = `Are you absolutely sure?\nThis action cannot be undone. This will permanently delete the table ${tableName}. Please type table name(case sensitive) to confirm.\n`;
           const a = handleDelete(confirmMessage);
-          if (a && typeof a === 'string' && a.trim() === 'DELETE') {
+          if (a && typeof a === 'string' && a.trim() === tableName) {
             dispatch(deleteTableSql(tableName, tableSchema));
           } else {
             return dispatch(showSuccessNotification('No changes'));
