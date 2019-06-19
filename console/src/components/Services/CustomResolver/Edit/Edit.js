@@ -20,6 +20,7 @@ import { appPrefix, pageTitle } from '../constants';
 import { NotFoundError } from '../../../Error/PageNotFound';
 
 import globals from '../../../../Globals';
+import { handleDelete } from '../../../../handleDelete';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
@@ -29,6 +30,9 @@ class Edit extends React.Component {
     this.editClicked = this.editClicked.bind(this);
     this.modifyClick = this.modifyClick.bind(this);
     this.handleDeleteResolver = this.handleDeleteResolver.bind(this);
+    this.updateDeleteConfirmationError = this.updateDeleteConfirmationError.bind(
+      this
+    );
     this.handleCancelModify = this.handleCancelModify.bind(this);
 
     this.state = {};
@@ -68,23 +72,14 @@ class Edit extends React.Component {
 
   handleDeleteResolver(e) {
     e.preventDefault();
-
-    const a = prompt(
-      'Are you absolutely sure?\nThis action cannot be undone. This will permanently delete stitched GraphQL schema. Please type "DELETE" (in caps, without quotes) to confirm.\n'
+    const confirmMessage =
+      'Are you absolutely sure?\nThis action cannot be undone. This will permanently delete stitched GraphQL schema. Please type "DELETE" (in caps, without quotes) to confirm.\n';
+    handleDelete(
+      confirmMessage,
+      deleteResolver,
+      this.updateDeleteConfirmationError,
+      this.props.dispatch
     );
-
-    try {
-      if (a && typeof a === 'string' && a.trim() === 'DELETE') {
-        this.updateDeleteConfirmationError(null);
-        this.props.dispatch(deleteResolver());
-      } else {
-        // Input didn't match
-        // Show an error message right next to the button
-        this.updateDeleteConfirmationError('user confirmation error!');
-      }
-    } catch (err) {
-      console.error(err);
-    }
   }
 
   updateDeleteConfirmationError(data) {
