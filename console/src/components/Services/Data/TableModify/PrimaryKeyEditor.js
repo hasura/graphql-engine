@@ -14,6 +14,8 @@ import {
 
 import styles from './ModifyTable.scss';
 
+import { handleDelete } from '../../../../handleDelete';
+
 const PrimaryKeyEditor = ({
   tableSchema,
   pkModify,
@@ -98,15 +100,18 @@ const PrimaryKeyEditor = ({
 
   // remove
   const onRemove = () => {
-    let isOk;
     if (pkConstraintName) {
-      isOk = window.confirm(DELETE_PK_WARNING);
-      if (!isOk) {
+      const confirmMessage =
+        DELETE_PK_WARNING +
+        '\nPlease type "DELETE PRIMARY KEY" (in caps, without quotes) to confirm.\n';
+      const a = handleDelete(confirmMessage);
+      if (a && typeof a === 'string' && a.trim() === 'DELETE PRIMARY KEY') {
+        dispatch(setPrimaryKeys(['']));
+        onSave(null, true);
+      } else {
         return dispatch(showSuccessNotification('No changes'));
       }
     }
-    dispatch(setPrimaryKeys(['']));
-    onSave(null, isOk);
   };
 
   // Toggle button text when the editor is expanded and collapsed
