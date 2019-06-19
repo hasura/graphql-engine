@@ -440,6 +440,7 @@ CREATE VIEW hdb_catalog.hdb_table_info_agg AS (
 select
   tables.table_name as table_name,
   tables.table_schema as table_schema,
+  descriptions.description,
   coalesce(columns.columns, '[]') as columns,
   coalesce(pk.columns, '[]') as primary_key_columns,
   coalesce(constraints.constraints, '[]') as constraints,
@@ -509,6 +510,18 @@ from
   ) views on (
     tables.table_schema = views.table_schema
     AND tables.table_name = views.table_name
+  )
+  left outer join (
+    select
+        pc.relname as table_name,
+        pn.nspname as table_schema,
+        pd.description
+    from pg_class pc
+        left join pg_namespace pn on pn.oid = pc.relnamespace
+        left join pg_description pd on pd.objoid = pc.oid
+  ) descriptions on (
+    tables.table_schema = descriptions.table_schema
+    AND tables.table_name = descriptions.table_name
   )
 );
 

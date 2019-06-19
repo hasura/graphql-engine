@@ -262,15 +262,20 @@ type table {
 -}
 mkTableObj
   :: QualifiedTable
+  -> Maybe Text
   -> [SelField]
   -> ObjTyInfo
-mkTableObj tn allowedFlds =
+mkTableObj tn descM allowedFlds =
   mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) HasuraType
   where
     flds = concatMap (either (pure . mkPGColFld) mkRelFld') allowedFlds
     mkRelFld' (relInfo, allowAgg, _, _, isNullable) =
       mkRelFld allowAgg relInfo isNullable
-    desc = G.Description $ "columns and relationships of " <>> tn
+    defaultDesc = "columns and relationships of " <>> tn
+    desc = G.Description $ case descM of
+      Nothing -> defaultDesc
+      Just "" -> defaultDesc
+      Just d -> d <> "\n\n" <> defaultDesc
 
 {-
 type table_aggregate {
@@ -1228,6 +1233,8 @@ mkOnConflictTypes tn uniqueOrPrimaryCons cols =
 
 mkGCtxRole'
   :: QualifiedTable
+  -- table description
+  -> Maybe Text
   -- insert permission
   -> Maybe ([PGColInfo], RelationInfoMap)
   -- select permission
@@ -1244,7 +1251,7 @@ mkGCtxRole'
   -- all functions
   -> [FunctionInfo]
   -> TyAgg
-mkGCtxRole' tn insPermM selPermM updColsM
+mkGCtxRole' tn descM insPermM selPermM updColsM
             delPermM pkeyCols constraints viM funcs =
 
   TyAgg (mkTyInfoMap allTypes) fieldMap scalars ordByCtx
@@ -1356,7 +1363,7 @@ mkGCtxRole' tn insPermM selPermM updColsM
             && any (`isMutable` viM) [viIsInsertable, viIsUpdatable, viIsDeletable]
 
     -- table obj
-    selObjM = mkTableObj tn <$> selFldsM
+    selObjM = mkTableObj tn descM <$> selFldsM
 
     -- aggregate objs and order by inputs
     (aggObjs, aggOrdByInps) = case selPermM of
@@ -1574,6 +1581,7 @@ mkGCtxRole
   :: (MonadError QErr m)
   => TableCache
   -> QualifiedTable
+  -> Maybe Text
   -> FieldInfoMap
   -> [PGCol]
   -> [ConstraintName]
@@ -1582,7 +1590,7 @@ mkGCtxRole
   -> RoleName
   -> RolePermInfo
   -> m (TyAgg, RootFlds, InsCtxMap)
-mkGCtxRole tableCache tn fields pCols constraints funcs viM role permInfo = do
+mkGCtxRole tableCache tn descM fields pCols constraints funcs viM role permInfo = do
   selPermM <- mapM (getSelPerm tableCache fields role) $ _permSel permInfo
   tabInsInfoM <- forM (_permIns permInfo) $ \ipi -> do
     ctx <- mkInsCtx role tableCache fields ipi $ _permUpd permInfo
@@ -1592,7 +1600,7 @@ mkGCtxRole tableCache tn fields pCols constraints funcs viM role permInfo = do
   let insPermM = snd <$> tabInsInfoM
       insCtxM = fst <$> tabInsInfoM
       updColsM = filterColInfos . upiCols <$> _permUpd permInfo
-      tyAgg = mkGCtxRole' tn insPermM selPermM updColsM
+      tyAgg = mkGCtxRole' tn descM insPermM selPermM updColsM
               (void $ _permDel permInfo) pColInfos constraints viM funcs
       rootFlds = getRootFldsRole tn pCols constraints fields funcs viM permInfo
       insCtxMap = maybe Map.empty (Map.singleton tn) insCtxM
@@ -1638,15 +1646,15 @@ mkGCtxMapTable
   -> m (Map.HashMap RoleName (TyAgg, RootFlds, InsCtxMap))
 mkGCtxMapTable tableCache funcCache tabInfo = do
   m <- Map.traverseWithKey
-       (mkGCtxRole tableCache tn fields pkeyCols validConstraints tabFuncs viewInfo) rolePerms
+       (mkGCtxRole tableCache tn descM fields pkeyCols validConstraints tabFuncs viewInfo) rolePerms
   adminInsCtx <- mkAdminInsCtx tn tableCache fields
-  let adminCtx = mkGCtxRole' tn (Just (colInfos, icRelations adminInsCtx))
+  let adminCtx = mkGCtxRole' tn descM (Just (colInfos, icRelations adminInsCtx))
                  (Just (True, selFlds)) (Just colInfos) (Just ())
                  pkeyColInfos validConstraints viewInfo tabFuncs
       adminInsCtxMap = Map.singleton tn adminInsCtx
   return $ Map.insert adminRole (adminCtx, adminRootFlds, adminInsCtxMap) m
   where
-    TableInfo tn _ fields rolePerms constraints pkeyCols viewInfo _ = tabInfo
+    TableInfo tn descM _ fields rolePerms constraints pkeyCols viewInfo _ = tabInfo
     validConstraints = mkValidConstraints constraints
     colInfos = getValidCols fields
     validColNames = map pgiName colInfos

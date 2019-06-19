@@ -85,15 +85,15 @@ trackExistingTableOrViewP2 vn isSystemDefined = do
   return successMsg
   where
     QualifiedObject sn tn = vn
-    mkTableInfo (cols, pCols, constraints, viewInfoM) =
+    mkTableInfo (cols, pCols, constraints, viewInfoM, descM) =
       let colMap = M.fromList $ flip map (Q.getAltJ cols) $
             \c -> (fromPGCol $ pgiName c, FIColumn c)
-      in TableInfo vn isSystemDefined colMap mempty (Q.getAltJ constraints)
+      in TableInfo vn descM isSystemDefined colMap mempty (Q.getAltJ constraints)
                   (Q.getAltJ pCols) (Q.getAltJ viewInfoM) mempty
     fetchTableCatalog = map mkTableInfo <$>
       Q.listQE defaultTxErrorHandler [Q.sql|
            SELECT columns, primary_key_columns,
-                  constraints, view_info
+                  constraints, view_info, description
            FROM hdb_catalog.hdb_table_info_agg
            WHERE table_schema = $1 AND table_name = $2
            |] (sn, tn) True

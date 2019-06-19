@@ -36,6 +36,7 @@ from
               'schema', table_schema,
               'name', table_name
             ),
+            'description', description,
             'columns', columns,
             'primary_key_columns', primary_key_columns,
             'constraints', constraints,
