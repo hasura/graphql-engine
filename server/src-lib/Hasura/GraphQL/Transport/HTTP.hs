@@ -100,7 +100,7 @@ runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer manager reqHdrs r
                                 Nothing)
   case mergeResponseData (toList (fmap _hrBody results)) of
     Right merged -> do
-      liftIO (putStrLn ("Response:\n" ++ L8.unpack (encJToLBS merged)))
+      -- liftIO (putStrLn ("Response:\n" ++ L8.unpack (encJToLBS merged)))
       pure (HttpResponse merged (foldMap _hrHeaders results))
     Left err -> throw500 ("Invalid response: " <> T.pack err)
 
