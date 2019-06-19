@@ -245,6 +245,7 @@ queryNeedsReload qi = case qi of
 
   RQBulk qs                       -> any queryNeedsReload qs
 
+-- | Run `RQLQuery` and build GraphQL context if needed
 runQueryM
   :: ( QErrM m, CacheRWM m, UserInfoM m, MonadTx m
      , MonadIO m, HasHttpManager m, HasSQLGenCtx m
@@ -256,6 +257,7 @@ runQueryM rq = runQueryM' rq <* rebuildGCtx
     rebuildGCtx = when (queryNeedsReload rq) $
                   withPathK "args" buildGCtxMap
 
+-- | Run `RQLQuery`
 runQueryM'
   :: ( QErrM m, CacheRWM m, UserInfoM m, MonadTx m
      , MonadIO m, HasHttpManager m, HasSQLGenCtx m
@@ -326,4 +328,6 @@ runQueryM' rq = withPathK "args" $ case rq of
 
   RQRunSql q                   -> runRunSQL q
 
-  RQBulk qs                    -> encJFromList <$> indexedMapM runQueryM' qs
+  RQBulk qs                    ->
+    -- use `runQueryM'` for each query to avoid building GraphQL context
+    encJFromList <$> indexedMapM runQueryM' qs

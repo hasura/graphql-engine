@@ -22,7 +22,7 @@ import qualified Network.Wreq                  as Wreq
 import           Hasura.HTTP                   (wreqOptions)
 import           Hasura.RQL.DDL.Headers        (getHeadersFromConf)
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils           (httpExceptToJSON)
+import           Hasura.Server.Utils           (bsToTxt, httpExceptToJSON)
 
 import qualified Hasura.GraphQL.Context        as GC
 import qualified Hasura.GraphQL.Schema         as GS
@@ -82,12 +82,12 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _) = do
     httpExceptMsg =
       "HTTP exception occurred while sending the request to " <> show url
 
-    non200Msg st = "Introspection query to " <> show url
+    non200Msg st = "introspection query to " <> show url
                    <> " has responded with " <> show st <> " status code"
 
     decodeNon200Resp bs = case J.eitherDecode bs of
       Right a -> J.object ["response" J..= (a :: J.Value)]
-      Left _  -> J.object ["raw_body" J..= show bs]
+      Left _  -> J.object ["raw_body" J..= bsToTxt (BL.toStrict bs)]
 
 mergeSchemas
   :: (MonadError QErr m)
