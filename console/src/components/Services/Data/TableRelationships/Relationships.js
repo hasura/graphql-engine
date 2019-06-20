@@ -18,6 +18,7 @@ import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 import { getRelDef, getObjArrRelList } from './utils';
 
 import Button from '../../../Common/Button/Button';
+import { FT_REMOTE_RELATIONSHIPS } from '../../../../helpers/versionUtils';
 import AddManualRelationship from './AddManualRelationship';
 import RemoteRelationships from './RemoteRelationships/RemoteRelationships';
 import suggestedRelationshipsRaw from './autoRelations';
@@ -323,6 +324,7 @@ class Relationships extends Component {
       currentSchema,
       migrationMode,
       schemaList,
+      featuresCompatibility
     } = this.props;
     const styles = require('../TableModify/ModifyTable.scss');
     const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
@@ -422,6 +424,23 @@ class Relationships extends Component {
       );
     }
 
+    const remoteRelationshipsSection = () => {
+      if (!featuresCompatibility[FT_REMOTE_RELATIONSHIPS]) {
+        return null;
+      }
+      return (
+        <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
+          <h4 className={styles.subheading_text}>Remote Relationships</h4>
+          <RemoteRelationships
+            remoteRelationships={remoteRelationships}
+            dispatch={dispatch}
+            tableSchema={tableSchema}
+            remoteSchemas={remoteSchemas}
+          />
+        </div>
+      );
+    };
+
     return (
       <div className={`${styles.container} container-fluid`}>
         <TableHeader
@@ -472,15 +491,7 @@ class Relationships extends Component {
               </Button>
             )}
           </div>
-          <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
-            <h4 className={styles.subheading_text}>Remote Relationships</h4>
-            <RemoteRelationships
-              remoteRelationships={remoteRelationships}
-              dispatch={dispatch}
-              tableSchema={tableSchema}
-              remoteSchemas={remoteSchemas}
-            />
-          </div>
+          {remoteRelationshipsSection()}
         </div>
         <div className={`${styles.fixed} hidden`}>{alert}</div>
       </div>
@@ -502,8 +513,8 @@ Relationships.propTypes = {
   lastFormError: PropTypes.object,
   lastSuccess: PropTypes.bool,
   dispatch: PropTypes.func.isRequired,
-  serverVersion: PropTypes.string,
   remoteSchemas: PropTypes.array.isRequired,
+  featuresCompatibility: PropTypes.object
 };
 
 const mapStateToProps = (state, ownProps) => ({
@@ -511,7 +522,7 @@ const mapStateToProps = (state, ownProps) => ({
   allSchemas: state.tables.allSchemas,
   currentSchema: state.tables.currentSchema,
   migrationMode: state.main.migrationMode,
-  serverVersion: state.main.serverVersion,
+  featuresCompatibility: state.main.featuresCompatibility,
   schemaList: state.tables.schemaList,
   remoteSchemas: state.customResolverData.listData.resolvers.map(r => r.name),
   ...state.tables.modify,
