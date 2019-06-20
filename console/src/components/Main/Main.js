@@ -614,10 +614,7 @@ class Main extends React.Component {
             </div>
           </div>
 
-          <div
-            id="right_container_wrapper"
-            className={styles.main + ' container-fluid'}
-          >
+          <div className={styles.main + ' container-fluid'}>
             {getMainContent()}
           </div>
 
