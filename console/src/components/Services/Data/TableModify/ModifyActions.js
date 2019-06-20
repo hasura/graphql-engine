@@ -25,6 +25,8 @@ import {
   getUniqueConstraintName,
 } from '../Common/ReusableComponents/utils';
 
+import { isPostgresFunction } from '../utils';
+
 import {
   fetchColumnCastsQuery,
   convertArrayToJson,
@@ -472,10 +474,12 @@ const setUniqueKeys = keys => ({
   keys,
 });
 
-const changeTableOrViewName = (isTable, oldName, newName, callback) => {
+const changeTableOrViewName = (isTable, oldName, newName) => {
   return (dispatch, getState) => {
     const property = isTable ? 'table' : 'view';
+
     dispatch({ type: SAVE_NEW_TABLE_NAME });
+
     if (oldName === newName) {
       return dispatch(
         showErrorNotification(
@@ -484,6 +488,7 @@ const changeTableOrViewName = (isTable, oldName, newName, callback) => {
         )
       );
     }
+
     if (!gqlPattern.test(newName)) {
       const gqlValidationError = isTable
         ? gqlTableErrorNotif
@@ -522,7 +527,20 @@ const changeTableOrViewName = (isTable, oldName, newName, callback) => {
     const errorMsg = `Renaming ${property} failed`;
 
     const customOnSuccess = () => {
-      callback();
+      dispatch(_push('/schema/' + currentSchema)); // to avoid 404
+      dispatch(updateSchemaInfo()).then(() => {
+        dispatch(
+          _push(
+            '/schema/' +
+              currentSchema +
+              '/' +
+              property +
+              's/' +
+              newName +
+              '/modify'
+          )
+        );
+      });
     };
     const customOnError = err => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
@@ -865,7 +883,9 @@ const addColSql = (
   callback
 ) => {
   let defWithQuotes = "''";
-  if (colType === 'text' && colDefault !== '') {
+
+  const checkIfFunctionFormat = isPostgresFunction(colDefault);
+  if (colType === 'text' && colDefault !== '' && !checkIfFunctionFormat) {
     defWithQuotes = "'" + colDefault + "'";
   } else {
     defWithQuotes = colDefault;
@@ -1151,9 +1171,10 @@ const saveColumnChangesSql = (colName, column) => {
     const comment = columnEdit.comment || '';
     const newName = columnEdit.name;
     const currentSchema = columnEdit.schemaName;
+    const checkIfFunctionFormat = isPostgresFunction(def);
     // ALTER TABLE <table> ALTER COLUMN <column> TYPE <column_type>;
     let defWithQuotes;
-    if (colType === 'text') {
+    if (colType === 'text' && !checkIfFunctionFormat) {
       defWithQuotes = `'${def}'`;
     } else {
       defWithQuotes = def;
