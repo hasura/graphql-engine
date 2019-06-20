@@ -607,7 +607,6 @@ WHERE (t.typrelid = 0 OR (SELECT c.relkind = 'c' FROM pg_catalog.pg_class c WHER
   AND (array_length(pgp.proargtypes, 1) = 0)
   AND ( pgn.nspname = '${schema}' OR pgn.nspname = 'pg_catalog' )
   AND pgp.proretset=false
-  AND pgp.prokind='f'
 GROUP BY t.typname
 ORDER BY t.typname ASC;
 `;
