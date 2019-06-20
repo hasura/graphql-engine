@@ -435,10 +435,9 @@ const setTable = tableName => ({ type: SET_TABLE, tableName });
 /* **********Shared functions between table actions********* */
 
 const handleMigrationErrors = (title, errorMsg) => dispatch => {
-  const requestMsg = title;
   if (globals.consoleMode === SERVER_CONSOLE_MODE) {
     // handle errors for run_sql based workflow
-    dispatch(showErrorNotification(title, errorMsg.code, requestMsg, errorMsg));
+    dispatch(showErrorNotification(title, errorMsg.code, errorMsg));
   } else if (errorMsg.code === 'migration_failed') {
     dispatch(showErrorNotification(title, 'Migration Failed', errorMsg));
   } else if (errorMsg.code === 'data_api_error') {

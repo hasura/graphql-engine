@@ -1,6 +1,6 @@
 import React from 'react';
 import AceEditor from 'react-ace';
-import { showNotification, showTempNotification } from '../../App/Actions';
+import { showNotification } from '../../App/Actions';
 import { notifExpand, notifMsg } from '../../App/Actions';
 import Button from '../../Common/Button/Button';
 
@@ -146,19 +146,6 @@ const showSuccessNotification = (title, message) => {
   };
 };
 
-const showTempErrorNotification = (title, message) => {
-  return dispatch => {
-    dispatch(
-      showTempNotification({
-        level: 'error',
-        title,
-        message: message ? message : null,
-        autoDismiss: 3,
-      })
-    );
-  };
-};
-
 const showInfoNotification = title => {
   return dispatch => {
     dispatch(
@@ -170,9 +157,9 @@ const showInfoNotification = title => {
   };
 };
 
-const showWarningNotification = (title, message, aceEditorData) => {
+const showWarningNotification = (title, message, dataObj) => {
   const children = [];
-  if (aceEditorData) {
+  if (dataObj) {
     children.push(
       <div className={styles.aceBlock}>
         <AceEditor
@@ -182,7 +169,7 @@ const showWarningNotification = (title, message, aceEditorData) => {
           showGutter={false}
           theme="github"
           name="notification-response"
-          value={JSON.stringify(aceEditorData, null, 4)}
+          value={JSON.stringify(dataObj, null, 4)}
           minLines={1}
           maxLines={15}
           width="100%"
@@ -195,7 +182,6 @@ const showWarningNotification = (title, message, aceEditorData) => {
     dispatch(
       showNotification({
         level: 'warning',
-        autoDismiss: 0,
         title,
         message,
         children,
@@ -208,6 +194,5 @@ export {
   showErrorNotification,
   showSuccessNotification,
   showInfoNotification,
-  showTempErrorNotification,
   showWarningNotification,
 };

@@ -5,7 +5,10 @@ import processedEventsReducer from './ProcessedEvents/ViewActions';
 import pendingEventsReducer from './PendingEvents/ViewActions';
 import runningEventsReducer from './RunningEvents/ViewActions';
 import streamingLogsReducer from './StreamingLogs/LogActions';
-import { showErrorNotification, showSuccessNotification } from './Notification';
+import {
+  showSuccessNotification,
+  showErrorNotification,
+} from '../Common/Notification';
 import dataHeaders from './Common/Headers';
 import { loadMigrationStatus } from '../../Main/Actions';
 import returnMigrateUrl from './Common/getMigrateUrl';

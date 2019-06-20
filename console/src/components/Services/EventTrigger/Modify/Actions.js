@@ -1,7 +1,7 @@
 import defaultState from './State';
 import { loadTriggers, makeMigrationCall, setTrigger } from '../EventActions';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
-import { showErrorNotification } from '../Notification';
+import { showErrorNotification } from '../../Common/Notification';
 
 import { MANUAL_TRIGGER_VAR } from './utils';
 
