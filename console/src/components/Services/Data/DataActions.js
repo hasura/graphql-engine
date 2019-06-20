@@ -35,6 +35,8 @@ import { fetchColumnCastsQuery, convertArrayToJson } from './TableModify/utils';
 
 import { SERVER_CONSOLE_MODE } from '../../../constants';
 
+import { FT_REMOTE_RELATIONSHIPS } from '../../../helpers/versionUtils';
+
 const SET_TABLE = 'Data/SET_TABLE';
 const LOAD_FUNCTIONS = 'Data/LOAD_FUNCTIONS';
 const LOAD_NON_TRACKABLE_FUNCTIONS = 'Data/LOAD_NON_TRACKABLE_FUNCTIONS';
@@ -270,7 +272,7 @@ const loadSchema = configOptions => {
       ],
     };
 
-    if (featuresCompatibility.RemoteRelationShips) {
+    if (featuresCompatibility[FT_REMOTE_RELATIONSHIPS]) {
       body.args.push(fetchTrackedTableRemoteRelationshipQuery(configOptions));
     }
 
@@ -288,7 +290,7 @@ const loadSchema = configOptions => {
         const refFkList = JSON.parse(data[3].result[1]);
         let remoteRelationships = [];
 
-        if (featuresCompatibility.RemoteRelationShips) {
+        if (featuresCompatibility[FT_REMOTE_RELATIONSHIPS]) {
           remoteRelationships = JSON.parse(data[4].result[1]);
         }
 
