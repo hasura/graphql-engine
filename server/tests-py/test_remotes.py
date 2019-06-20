@@ -96,7 +96,6 @@ class TestCreateRemoteRelationship:
 
         check_query_f(hge_ctx, self.dir() + 'select_remote_fields.yaml')
 
-
 class TestDeleteRemoteRelationship:
     @classmethod
     def dir(cls):
@@ -155,10 +154,20 @@ class TestExecution:
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'basic_relationship.yaml', transport)
 
+    def test_basic_relationship_on_object(self, hge_ctx, transport):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'query_with_object_rel.yaml', transport)
+
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_nested_args.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'query_with_arr_rel.yaml', transport)
+
     def test_basic_array(self, hge_ctx, transport):
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_array.yaml')
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'basic_array.yaml', transport)
+
     def test_basic_array_without_join_key(self, hge_ctx, transport):
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_array.yaml')
         assert st_code == 200, resp
@@ -194,3 +203,11 @@ class TestExecution:
     # def test_with_interface(self, hge_ctx, transport):
     #     check_query_f(hge_ctx, self.dir() + 'mixed_interface.yaml', transport)
     #     check_query_f(hge_ctx, self.dir() + 'remote_rel_interface.yaml', transport)
+
+    def test_with_errors(self, hge_ctx, transport):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'query_with_errors_obj.yaml', transport)
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_nested_args.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'query_with_errors_arr.yaml', transport)

@@ -24,6 +24,7 @@ const typeDefs = gql`
     id: Int!
     name: String!
     msg: String!
+    errorMsg: String
   }
 
   input MessageWhereInpObj {
@@ -105,6 +106,12 @@ const resolvers = {
         },
     },
 
+    Message: {
+        errorMsg : () => {
+            throw new ApolloError("intentional-error", "you asked for it");
+        }
+    },
+
     Query: {
         hello: () => "world",
         message: (_, { id }) => {
@@ -164,7 +171,7 @@ const resolvers = {
                 result = allMessages.filter(m => m.id == id);
             }
             return result;
-        }
+        },
     },
     Communication: {
         __resolveType(communication, context, info){
@@ -176,7 +183,12 @@ const resolvers = {
     }
 };
 
-const schema = new ApolloServer({ typeDefs, resolvers });
+const schema = new ApolloServer(
+    { typeDefs,
+      resolvers,
+      formatError: (err) => {
+          return err;
+      } });
 
 schema.listen({ port: process.env.PORT || 4000 }).then(({ url }) => {
     console.log(`schema ready at ${url}`);

@@ -1,0 +1,33 @@
+description: Remote relationship GraphQL query with errors
+url: /v1/graphql
+status: 200
+response:
+  data:
+    profiles:
+      - id: 1
+        name: alice
+        messagesNestedArgs:
+          - msg: You win!
+            errorMsg: null
+      - id: 2
+        name: bob
+        messagesNestedArgs:
+          - msg: You lose!
+            errorMsg: null
+      - id: 3
+        name: alice
+        messagesNestedArgs:
+          - msg: Another alice
+            errorMsg: null
+query:
+  query: |
+    query {
+      profiles {
+        id
+        name
+        messagesNestedArgs {
+          msg
+          errorMsg
+        }
+      }
+    }

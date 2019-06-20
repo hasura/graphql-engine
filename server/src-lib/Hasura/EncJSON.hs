@@ -15,16 +15,15 @@ module Hasura.EncJSON
   , encJFromAssocList
   ) where
 
-import           Data.ByteString (ByteString)
-import qualified Data.ByteString.Char8 as S8
+import qualified Data.ByteString.Char8   as S8
 import           Hasura.Prelude
 
-import qualified Data.Aeson as J
-import qualified Data.ByteString as B
+import qualified Data.Aeson              as J
+import qualified Data.ByteString         as B
 import qualified Data.ByteString.Builder as BB
-import qualified Data.ByteString.Lazy as BL
-import qualified Data.Text.Encoding as TE
-import qualified Database.PG.Query as Q
+import qualified Data.ByteString.Lazy    as BL
+import qualified Data.Text.Encoding      as TE
+import qualified Database.PG.Query       as Q
 
 -- encoded json
 -- TODO: can be improved with gadts capturing bytestring, lazybytestring

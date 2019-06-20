@@ -1,8 +1,10 @@
 {-# LANGUAGE DisambiguateRecordFields #-}
+
 module Hasura.GraphQL.Execute
   ( QExecPlanResolved(..)
   , QExecPlanPartial(..)
   , Batch(..)
+  , GQRespValue(..)
   , getExecPlanPartial
   , extractRemoteRelArguments
   , produceBatches
@@ -17,7 +19,10 @@ module Hasura.GraphQL.Execute
   , EP.initPlanCache
   , EP.clearPlanCache
   , EP.dumpPlanCache
+  , emptyResp
   ) where
+
+import           Debug.Trace
 
 import           Control.Exception                      (try)
 import           Control.Lens
@@ -32,11 +37,12 @@ import           Data.Has
 import           Data.List.NonEmpty                     (NonEmpty (..))
 import qualified Data.List.NonEmpty                     as NE
 import           Data.Time
-import           Debug.Trace
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.SQL.Time
 
 import qualified Data.Aeson                             as J
+import qualified Data.Aeson.Casing                      as J
+import qualified Data.Aeson.TH                          as J
 import qualified Data.CaseInsensitive                   as CI
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OHM
@@ -71,6 +77,29 @@ import qualified Hasura.GraphQL.Execute.Query           as EQ
 
 import qualified Hasura.GraphQL.Resolve                 as GR
 import qualified Hasura.GraphQL.Validate                as VQ
+
+data GQRespValue =
+  GQRespValue
+  { gqRespData   :: Maybe (Map.HashMap Text J.Value)
+  , gqRespErrors :: Maybe [J.Value]
+  } deriving (Show, Eq)
+
+$(J.deriveToJSON
+    (J.aesonDrop 6 J.snakeCase) {J.omitNothingFields = True}
+    ''GQRespValue)
+
+instance J.FromJSON GQRespValue where
+  parseJSON (J.Object o) = do
+    data' <- o J..:? "data"
+    errors' <- o J..:? "errors"
+    return $ GQRespValue data' errors'
+  parseJSON _ = fail "expected object for GraphQL response"
+
+data GQJoinError =  GQJoinError !T.Text
+  deriving (Show, Eq)
+
+instance J.ToJSON GQJoinError where
+  toJSON (GQJoinError msg)   = J.object [ "message" J..= msg ]
 
 -- The current execution plan of a graphql operation, it is
 -- currently, either local pg execution or a remote execution
@@ -326,34 +355,53 @@ neededHasuraFields remoteField = toList (rtrHasuraFields remoteRelationship)
 
 -- | Join the data from the original hasura with the remote values.
 joinResults :: [(Batch, EncJSON)]
-            -> Map.HashMap Text J.Value
-            -> Either String (Map.HashMap Text J.Value)
-joinResults paths hasuraValue0 = do
-  remoteValues :: [(Batch, Map.HashMap Text J.Value)] <-
-    mapM
-      (\(batch, encJson) ->
-         case J.eitherDecode (encJToLBS encJson) of
-           Left err -> Left ("joinResults: eitherDecode: " <> err)
-           Right object ->
-             case Map.lookup ("data" :: Text) object of
-               Nothing   -> Left "No data key in payload!"
-               Just hash -> pure (batch, hash))
-      paths
-  foldM
-    (\hasuraValue (batch, remoteValue) ->
-       insertBatchResults remoteValue batch hasuraValue)
-    hasuraValue0
-    remoteValues
+            -> GQRespValue
+            -> GQRespValue
+joinResults paths hasuraValue0 =
+  let remoteValues :: [(Batch, GQRespValue)] =
+        map
+          (\(batch, encJson) ->
+             case J.eitherDecode (encJToLBS encJson) of
+               Left err ->
+                 ( batch
+                 , appendJoinError
+                     emptyResp
+                     (GQJoinError ("joinResults: eitherDecode: " <> T.pack err)))
+               Right gqResp@(GQRespValue mdata _merrors) ->
+                 case mdata of
+                   Nothing ->
+                     ( batch
+                     , appendJoinError
+                         gqResp
+                         (GQJoinError ("could not find join key")))
+                   Just _ -> (batch, gqResp))
+          paths
+   in foldl
+        (\resp (batch, remoteResp) ->
+           insertBatchResults
+             remoteResp
+             batch
+             resp
+        )
+        hasuraValue0
+        (trace (" remote values == " ++ show remoteValues) remoteValues)
+
+emptyResp :: GQRespValue
+emptyResp = GQRespValue Nothing Nothing
 
 -- | Insert at path, index the value in the larger structure.
 insertBatchResults ::
-     Map.HashMap Text J.Value
+     GQRespValue
   -> Batch
-  -> Map.HashMap Text J.Value
-  -> Either String (Map.HashMap Text J.Value)
-insertBatchResults remoteHash batch hasuraHash0 =
-  inHashmap (batchRelFieldPath batch) hasuraHash0
+  -> GQRespValue
+  -> GQRespValue
+insertBatchResults remoteValue batch hasuraResp =
+  case inHashmap (batchRelFieldPath batch) hasuraHash0 of
+    Left err  -> appendJoinError hasuraResp (GQJoinError (T.pack err))
+    Right val -> GQRespValue (Just val) (gqRespErrors hasuraResp)
   where
+    hasuraHash0 = fromMaybe mempty (gqRespData hasuraResp)
+    remoteHash = fromMaybe mempty (gqRespData remoteValue)
     cardinality = biCardinality (batchInputs batch)
     inHashmap (RelFieldPath Seq.Empty) hasuraHash =
       case cardinality of
@@ -385,7 +433,30 @@ insertBatchResults remoteHash batch hasuraHash0 =
             (inValue (RelFieldPath rest) hasuraValue)
     inValue path hasuraValue =
       case hasuraValue of
-        J.Object hasuraHash -> J.Object <$> (inHashmap path hasuraHash)
+        J.Object hasuraRowHash ->
+          case Map.lookup
+                 (arrayIndexText $ ArrayIndex 0)
+                 remoteHash of
+            Nothing ->
+              Left
+                ("Couldn't find remote row for " <>
+                 show (ArrayIndex 0)<>
+                 " in " <>
+                 L8.unpack (J.encode remoteHash))
+            Just remoteRowValue ->
+              pure
+                (J.Object
+                   (foldl'
+                      (flip Map.delete)
+                      (Map.insert
+                         (batchRelationshipKeyToMake
+                            batch)
+                         (peelOffNestedFields
+                            (batchNestedFields batch)
+                            remoteRowValue)
+                         hasuraRowHash)
+                      (batchPhantoms batch)))
+          -- J.Object <$> (inHashmap path hasuraHash)
         J.Array values ->
           case path of
             RelFieldPath Seq.Empty ->
@@ -449,19 +520,19 @@ peelOffNestedFields xs toplevel = go (drop 1 (toList xs)) toplevel
       case value of
         J.Object hashmap ->
           case Map.lookup key hashmap of
-            Nothing ->
-              error
-                ("Nein! " <> show key <> " in " <> show value <> " from " <>
-                 show toplevel <>
-                 " with " <>
-                 show xs)
+            Nothing     -> J.Null
+              -- Left $ GQJoinError
+              --   (T.pack ("No " <> show key <> " in " <> show value <> " from " <>
+              --    show toplevel <>
+              --    " with " <>
+              --    show xs))
             Just value' -> go rest value'
-        _ ->
-          error
-            ("No! " <> show key <> " in " <> show value <> " from " <>
-             show toplevel <>
-             " with " <>
-             show xs)
+        _ -> J.Null
+          -- Left $ GQJoinError
+          --   (T.pack ("No! " <> show key <> " in " <> show value <> " from " <>
+          --    show toplevel <>
+          --    " with " <>
+          --    show xs))
 
 -- | Produce the set of remote relationship batch requests.
 produceBatches ::
@@ -651,39 +722,39 @@ extractRemoteRelArguments ::
      RemoteSchemaMap
   -> EncJSON
   -> NonEmpty RemoteRelField
-  -> Either String ( Map.HashMap Text J.Value
-                   , [( RemoteRelField
-                      , RemoteSchemaInfo
-                      , BatchInputs)])
-extractRemoteRelArguments remoteSchemaMap encJson rels =
-  case J.eitherDecode (encJToLBS encJson) of
-    Left err -> Left ("extractRemoteRelArguments: decode error: " <> err)
-    Right object ->
-      case Map.lookup ("data" :: Text) object of
-        Nothing ->
-          Left
-            ("Couldn't find `data' payload in " <> L8.unpack (J.encode object))
+  -> Either GQRespValue ( GQRespValue
+                        , [( RemoteRelField
+                           , RemoteSchemaInfo
+                           , BatchInputs)])
+extractRemoteRelArguments remoteSchemaMap hasuraJson rels =
+  case J.eitherDecode (encJToLBS hasuraJson) of
+    Left err -> Left $ appendJoinError emptyResp (GQJoinError ("decode error: " <> T.pack err))
+    Right gqResp@(GQRespValue mdata _merrors) ->
+      case mdata of
+        Nothing ->Left $ appendJoinError gqResp (GQJoinError ("no hasura data to extract for join"))
         Just value -> do
-          hash <-
-            flip
-              execStateT
-              mempty
-              (extractFromResult One keyedRemotes (J.Object value))
-          remotes <-
-            Map.traverseWithKey
-              (\key rows ->
-                 case Map.lookup key keyedMap of
-                   Nothing -> Left "Failed to assicate remote key with remote."
-                   Just remoteRel ->
-                     case Map.lookup
-                            (rtrRemoteSchema
-                               (rmfRemoteRelationship (rrRemoteField remoteRel)))
-                            remoteSchemaMap of
-                       Just remoteSchemaInfo ->
-                         pure (remoteRel, remoteSchemaInfo, rows)
-                       Nothing -> Left "Couldn't find remote schema info!")
-              hash
-          pure (value, Map.elems remotes)
+          let hashE = execStateT
+                (extractFromResult One keyedRemotes (J.Object value))
+                mempty
+          case hashE of
+            Left err -> Left $ appendJoinError gqResp err
+            Right hash -> do
+              remotes <-
+                Map.traverseWithKey
+                  (\key rows ->
+                     case Map.lookup key keyedMap of
+                       Nothing -> Left $ appendJoinError gqResp (GQJoinError "failed to associate remote key with remote")
+                       Just remoteRel ->
+                         case Map.lookup
+                                (rtrRemoteSchema
+                                   (rmfRemoteRelationship (rrRemoteField remoteRel)))
+                                remoteSchemaMap of
+                           Just remoteSchemaInfo ->
+                             pure (remoteRel, remoteSchemaInfo, rows)
+                           Nothing -> Left $ appendJoinError gqResp (GQJoinError "could not find remote schema info")
+                  )
+                  hash
+              pure (gqResp, Map.elems remotes)
   where
     keyedRemotes = NE.zip (fmap RemoteRelKey (0 :| [1 ..])) rels
     keyedMap = Map.fromList (toList keyedRemotes)
@@ -711,7 +782,7 @@ extractFromResult ::
      Cardinality
   -> NonEmpty (RemoteRelKey, RemoteRelField)
   -> J.Value
-  -> StateT (Map.HashMap RemoteRelKey BatchInputs) (Either String) ()
+  -> StateT (Map.HashMap RemoteRelKey BatchInputs) (Either GQJoinError) ()
 extractFromResult cardinality keyedRemotes value =
   case value of
     J.Array values -> mapM_ (extractFromResult Many keyedRemotes) values
@@ -743,9 +814,10 @@ extractFromResult cardinality keyedRemotes value =
                       remoteRelKeys)
                Nothing ->
                  lift
-                   (Left
-                      ("Expected key " <> show key <> " at this position: " <>
-                       L8.unpack (J.encode value))))
+                   (Left $
+                      GQJoinError
+                        ("Expected key " <> key <> " at this position: " <>
+                         (T.pack $ L8.unpack (J.encode value)))))
           mempty
           (Map.toList candidates)
       mapM_
@@ -1094,3 +1166,12 @@ pgcolvalueToGValue colVal = case colVal of
   PGValJSONB {}  -> Left "PGValJSONB: cannot convert"
   PGValGeo {}    -> Left "PGValGeo: cannot convert"
   PGValUnknown t -> pure $ G.VString $ G.StringValue t
+
+appendJoinError :: GQRespValue -> GQJoinError -> GQRespValue
+appendJoinError resp err =
+  resp
+    { gqRespData = gqRespData resp
+    , gqRespErrors =
+        Just $
+        maybe (pure $ J.toJSON err) ((:) (J.toJSON err)) (gqRespErrors resp)
+    }

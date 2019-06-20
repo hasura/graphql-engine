@@ -1,0 +1,30 @@
+description: Remote relationship GraphQL query with errors
+url: /v1/graphql
+status: 200
+response:
+  data:
+    profiles:
+      - id: 1
+        messageBasic:
+            msg: You win!
+            errorMsg: null
+      - id: 2
+        messageBasic:
+            msg: You lose!
+            errorMsg: null
+      - id: 3
+        messageBasic:
+            msg: Another alice
+            errorMsg: null
+query:
+  query: |
+    query {
+      profiles {
+        id
+        messageBasic {
+          msg
+          errorMsg
+        }
+      }
+      
+    }
