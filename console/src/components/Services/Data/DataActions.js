@@ -224,6 +224,8 @@ const loadSchema = configOptions => {
   return (dispatch, getState) => {
     const url = Endpoints.getSchema;
 
+    const featuresCompatibility = getState().main.featuresCompatibility;
+
     let allSchemas = getState().tables.allSchemas;
 
     if (
@@ -265,9 +267,12 @@ const loadSchema = configOptions => {
         fetchTrackedTableListQuery(configOptions), // v1/query
         fetchTrackedTableFkQuery(configOptions),
         fetchTrackedTableReferencedFkQuery(configOptions),
-        fetchTrackedTableRemoteRelationshipQuery(configOptions),
       ],
     };
+
+    if (featuresCompatibility.RemoteRelationShips) {
+      body.args.push(fetchTrackedTableRemoteRelationshipQuery(configOptions));
+    }
 
     const options = {
       credentials: globalCookiePolicy,
@@ -278,12 +283,21 @@ const loadSchema = configOptions => {
 
     return dispatch(requestAction(url, options)).then(
       data => {
+        const tableList = JSON.parse(data[0].result[1]);
+        const fkList = JSON.parse(data[2].result[1]);
+        const refFkList = JSON.parse(data[3].result[1]);
+        let remoteRelationships = [];
+
+        if (featuresCompatibility.RemoteRelationShips) {
+          remoteRelationships = JSON.parse(data[4].result[1]);
+        }
+
         const mergedData = mergeLoadSchemaData(
-          JSON.parse(data[0].result[1]),
+          tableList,
           data[1],
-          JSON.parse(data[2].result[1]),
-          JSON.parse(data[3].result[1]),
-          JSON.parse(data[4].result[1])
+          fkList,
+          refFkList,
+          remoteRelationships
         );
 
         const { inconsistentObjects } = getState().metadata;
