@@ -33,7 +33,7 @@ image: $(project).cabal
 		.
 
 local-image:
-	docker pull "fpco/stack-build:$(stack_resolver)"
+	stack docker pull
 	stack --docker build --fast
 	mkdir -p packaging/build/rootfs
 	docker run --rm -v "$(build_dir_docker)/$(project)/$(project):/root/$(project)" \
