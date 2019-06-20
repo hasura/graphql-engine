@@ -4,7 +4,7 @@ import { vSetDefaults, vMakeRequest, vExpandHeading } from './ViewActions'; // e
 import { setTrigger } from '../EventActions';
 import TableHeader from '../TableCommon/TableHeader';
 import ViewRows from './ViewRows';
-import { replace } from 'react-router-redux';
+import { NotFoundError } from '../../../Error/PageNotFound';
 
 const genHeadings = headings => {
   if (headings.length === 0) {
@@ -143,8 +143,8 @@ class ViewTable extends Component {
     // check if table exists
     const currentTrigger = triggerList.find(s => s.name === triggerName);
     if (!currentTrigger) {
-      // dispatch a 404 route
-      dispatch(replace('/404'));
+      // throw a 404 exception
+      throw new NotFoundError();
     }
     // Is this a view
     const isView = false;
