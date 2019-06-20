@@ -6,7 +6,11 @@ import Tooltip from 'react-bootstrap/lib/Tooltip';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import { push } from 'react-router-redux';
 
-import { fetchResolver, RESET } from '../Add/addResolverReducer';
+import {
+  fetchResolver,
+  RESET,
+  getHeaderEvents,
+} from '../Add/addResolverReducer';
 
 import { VIEW_RESOLVER } from '../customActions';
 import ReloadMetadata from '../../Metadata/MetadataOptions/ReloadMetadata';
@@ -46,6 +50,16 @@ class ViewStitchedSchema extends React.Component {
   componentWillUnmount() {
     Promise.all([
       this.props.dispatch({ type: RESET }),
+      this.props.dispatch({
+        type: getHeaderEvents.UPDATE_HEADERS,
+        data: [
+          {
+            name: '',
+            type: 'static',
+            value: '',
+          },
+        ],
+      }),
       this.props.dispatch({ type: VIEW_RESOLVER, data: '' }),
     ]);
   }
