@@ -132,11 +132,11 @@ For ``serve`` sub-command these are the flags and ENV variables available:
 
    * - ``-s, --stripes <NO_OF_STRIPES>``
      - ``HASURA_GRAPHQL_PG_STRIPES``
-     - Number of conns that need to be opened to Postgres (default: 1)
+     - Number of stripes (distinct sub-pools) to maintain with Postgres (default: 1)
 
    * - ``-c, --connections <NO_OF_CONNS>``
      - ``HASURA_GRAPHQL_PG_CONNECTIONS``
-     - Number of conns that need to be opened to Postgres (default: 50)
+     - Number of connections per stripe that need to be opened to Postgres (default: 50)
 
    * - ``--timeout <SECONDS>``
      - ``HASURA_GRAPHQL_PG_TIMEOUT``

@@ -128,6 +128,7 @@ export const passSearchTables = () => {
   validateCT(getTableName(0, testName), 'success');
   cy.get(getElementFromAlias('search-tables')).type('0');
   cy.get(getElementFromAlias('table-links')).should('not.contain', '1');
+  cy.get(getElementFromAlias('search-tables')).type('{home}{del}');
 };
 
 export const checkInsertRoute = () => {
@@ -436,17 +437,14 @@ export const checkViewRelationship = () => {
   cy.get(getElementFromAlias('tableName')).type(getTableName(2, testName));
   cy.get(getElementFromAlias('column-0')).type('id');
   tableColumnTypeSelector('col-type-0');
-  // cy.get(getElementFromAlias('col-type-0')).click();
   cy.get(getElementFromAlias('data_test_column_type_value_serial'))
     .first()
     .click();
   cy.get(getElementFromAlias('column-1')).type('someID');
   tableColumnTypeSelector('col-type-1');
-  // cy.get(getElementFromAlias('col-type-1')).click();
   cy.get(getElementFromAlias('data_test_column_type_value_integer'))
     .first()
     .click();
-  // cy.get(getElementFromAlias('col-type-1')).select('integer');
   // Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
   // Click on create

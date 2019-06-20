@@ -71,5 +71,26 @@ args:
     name: get_test
     schema: public
 
+# custom add sql function
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE integer_column
+      (
+        result integer
+      );
 
+      CREATE FUNCTION my_add (first integer, second integer DEFAULT 10)
+      RETURNS SETOF integer_column as $$
+        SELECT q.* FROM (VALUES (first + second)) as q
+      $$ LANGUAGE SQL STABLE;
 
+- type: track_table
+  args:
+    name: integer_column
+    schema: public
+
+- type: track_function
+  args:
+    name: my_add
+    schema: public

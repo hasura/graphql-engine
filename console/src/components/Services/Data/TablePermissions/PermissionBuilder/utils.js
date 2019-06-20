@@ -212,7 +212,9 @@ export const isArrayColumnOperator = operator => {
 };
 
 export const getOperatorInputType = operator => {
-  return columnOperatorsInfo[operator].inputType;
+  return columnOperatorsInfo[operator]
+    ? columnOperatorsInfo[operator].inputType
+    : null;
 };
 
 export const getRootPGType = type => {

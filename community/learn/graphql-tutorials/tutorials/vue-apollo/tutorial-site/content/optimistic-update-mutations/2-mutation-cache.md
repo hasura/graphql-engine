@@ -1,5 +1,7 @@
 ---
 title: "Mutation and update cache"
+metaTitle: "Vue Apollo client.mutate for GraphQL mutation update | GraphQL Vue Apollo Tutorial"
+metaDescription: "We will use the Apollo Client's $apollo.mutate from vue-apollo as an example to modify existing data and update cache locally using readQuery and writeQuery and handle optimisticResponse"
 ---
 
 import GithubLink from "../../src/GithubLink.js";

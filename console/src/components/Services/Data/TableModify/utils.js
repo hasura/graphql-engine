@@ -20,24 +20,26 @@ const getValidAlterOptions = (alterTypeOptions, colName) => {
     typValueMap: validOptionsMap,
   } = getDataTypeInfo(alterTypeOptions.slice(3, 6), colName, 0);
 
-  const allInfo = [...currentInfo, ...validOptions];
-  const allOptionsMap = {
+  const _allInfo = [...currentInfo, ...validOptions];
+
+  const _allOptionsMap = {
     ...validOptionsMap,
     ...currentMap,
   };
+
   return {
-    alterOptions: allInfo,
-    alterOptionsValueMap: allOptionsMap,
+    alterOptions: _allInfo,
+    alterOptionsValueMap: _allOptionsMap,
   };
 };
 
 const fetchColumnCastsQuery = `
 SELECT ts.typname AS "Source Type",
        pg_catalog.format_type(castsource, NULL) AS "Source Info",
-       pg_catalog.obj_description(castsource, 'pg_type') as "Source Descriptions",
+       coalesce(pg_catalog.obj_description(castsource, 'pg_type'), '') as "Source Descriptions",
        string_agg(tt.typname, ',') AS "Target Type",
        string_agg(pg_catalog.format_type(casttarget, NULL), ',') AS "Target Info",
-       string_agg(pg_catalog.obj_description(casttarget, 'pg_type'), ':') as "Target Descriptions",
+       string_agg(coalesce(pg_catalog.obj_description(casttarget, 'pg_type'), ''), ':') as "Target Descriptions",
        string_agg(CASE WHEN castfunc = 0 THEN '(binary coercible)'
             ELSE p.proname
        END, ',') as "Function"
@@ -59,4 +61,26 @@ ORDER BY 1, 2;
 
 `;
 
-export { convertArrayToJson, getValidAlterOptions, fetchColumnCastsQuery };
+const getCreatePkSql = ({
+  schemaName,
+  tableName,
+  selectedPkColumns,
+  constraintName,
+}) => {
+  return `alter table "${schemaName}"."${tableName}"
+    add constraint "${constraintName}" primary key ( ${selectedPkColumns
+    .map(pkc => `"${pkc}"`)
+    .join(', ')} );`;
+};
+
+const getDropPkSql = ({ schemaName, tableName, constraintName }) => {
+  return `alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}";`;
+};
+
+export {
+  convertArrayToJson,
+  getValidAlterOptions,
+  fetchColumnCastsQuery,
+  getCreatePkSql,
+  getDropPkSql,
+};
