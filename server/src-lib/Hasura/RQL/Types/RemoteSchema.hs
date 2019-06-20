@@ -45,23 +45,6 @@ data RemoteSchemaDef
 
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''RemoteSchemaDef)
 
--- instance J.ToJSON RemoteSchemaDef where
---   toJSON (RemoteSchemaDef name eUrlVal headers fwdHdrs) =
---     case eUrlVal of
---       Left url ->
---         J.object [ "url" J..= url
---                  , "headers" J..= headers
---                  , "name" J..= name
---                  , "forward_client_headers" J..= fwdHdrs
---                  ]
---       Right urlFromEnv ->
---         J.object [ "url_from_env" J..= urlFromEnv
---                  , "headers" J..= headers
---                  , "name" J..= name
---                  , "forward_client_headers" J..= fwdHdrs
---                  ]
-
-
 data AddRemoteSchemaQuery
   = AddRemoteSchemaQuery
   { _arsqName       :: !RemoteSchemaName -- TODO: name validation: cannot be empty?
@@ -70,14 +53,6 @@ data AddRemoteSchemaQuery
   } deriving (Show, Eq, Lift)
 
 $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''AddRemoteSchemaQuery)
-
--- data AddRemoteSchemaQuery'
---   = AddRemoteSchemaQuery'
---   { _arsqUrl                  :: !(Maybe N.URI)
---   , _arsqUrlFromEnv           :: !(Maybe Text)
---   , _arsqHeaders              :: !(Maybe [HeaderConf])
---   , _arsqForwardClientHeaders :: !Bool
---   } deriving (Show, Eq, Lift)
 
 newtype RemoteSchemaNameQuery
   = RemoteSchemaNameQuery

@@ -294,28 +294,6 @@ instance J.FromJSON (FromIntrospection G.ValueConst) where
    parseJSON = J.withText "defaultValue" $ \t -> fmap FromIntrospection
      $ either (fail . T.unpack) return $ G.parseValueConst t
 
--- instance J.FromJSON (FromIntrospection G.ListType) where
---   parseJSON = parseJSON
-
--- instance (J.FromJSON (G.ObjectFieldG a)) =>
---          J.FromJSON (FromIntrospection (G.ObjectValueG a)) where
---   parseJSON = fmap (FromIntrospection . G.ObjectValueG) . J.parseJSON
-
--- instance (J.FromJSON a) => J.FromJSON (FromIntrospection (G.ObjectFieldG a)) where
---   parseJSON = J.withObject "ObjectValueG a" $ \o -> do
---     name <- o .: "name"
---     ofVal <- o .: "value"
---     return $ FromIntrospection $ G.ObjectFieldG name ofVal
-
--- instance J.FromJSON (FromIntrospection G.Value) where
---   parseJSON =
---     fmap FromIntrospection .
---     $(J.mkParseJSON J.defaultOptions{J.sumEncoding=J.UntaggedValue} ''G.Value)
-
-
--- $(J.deriveFromJSON J.defaultOptions{J.sumEncoding=J.UntaggedValue} ''G.Value)
-
-
 instance J.FromJSON (FromIntrospection G.InterfaceTypeDefinition) where
   parseJSON = J.withObject "InterfaceTypeDefinition" $ \o -> do
     kind  <- o .: "kind"
