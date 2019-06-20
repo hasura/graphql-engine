@@ -160,6 +160,12 @@ export const getSchemaTree = (relationship, fields) => {
     return false;
   };
   const handleField = (field, nesting) => {
+    if (isScalarType(getUnderlyingType(field.type))) {
+      console.log(field);
+      if (!field.args || (field.args && field.args.length === 0)) {
+        return;
+      }
+    }
     const isChecked = isFieldChecked(field, nesting);
     schemaTree.push({
       name: field.name,
