@@ -396,7 +396,7 @@ const modifyResolver = () => {
     const customOnSuccess = data => {
       // dispatch({ type: REQUEST_SUCCESS });
       dispatch({ type: RESET, data: data });
-      dispatch(push(`${prefixUrl}/manage/schemas`)); // Hack to avoid 404
+      dispatch(push(`${prefixUrl}/manage/schemas`)); // to avoid 404
       dispatch(fetchResolvers()).then(() => {
         dispatch(push(`${prefixUrl}/manage/${remoteSchemaName}/details`));
       });
