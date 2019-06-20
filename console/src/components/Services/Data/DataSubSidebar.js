@@ -216,7 +216,7 @@ class DataSubSidebar extends React.Component {
 
     return (
       <LeftSubSidebar
-        migrationMode={migrationMode}
+        showAddBtn={migrationMode}
         searchInput={getSearchInput()}
         heading={`Tables (${trackedTablesLength})`}
         addLink={'/data/schema/' + currentSchema + '/table/add'}

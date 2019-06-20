@@ -10,8 +10,6 @@ import { pageTitle, appPrefix } from '../Modify/constants';
 import tabInfo from '../Modify/tabInfo';
 import globals from '../../../../../Globals';
 
-const prefixUrl = globals.urlPrefix + appPrefix;
-
 import { fetchCustomFunction } from '../customFunctionReducer';
 import {
   updateSchemaInfo,
@@ -19,15 +17,32 @@ import {
   fetchFunctionInit,
   setTable,
 } from '../../DataActions';
+import { NotFoundError } from '../../../../Error/PageNotFound';
+
+const prefixUrl = globals.urlPrefix + appPrefix;
 
 class Permission extends React.Component {
+  constructor() {
+    super();
+
+    this.state = {
+      funcFetchCompleted: false,
+    };
+  }
+
   componentDidMount() {
     const { functionName, schema } = this.props.params;
+
     if (!functionName) {
       this.props.dispatch(push(prefixUrl));
     }
+
     Promise.all([
-      this.props.dispatch(fetchCustomFunction(functionName, schema)),
+      this.props
+        .dispatch(fetchCustomFunction(functionName, schema))
+        .then(() => {
+          this.setState({ funcFetchCompleted: true });
+        }),
     ]);
   }
   render() {
@@ -38,6 +53,11 @@ class Permission extends React.Component {
       setOffTable,
       setOffTableSchema,
     } = this.props.functions;
+
+    if (this.state.funcFetchCompleted && !functionName) {
+      // throw a 404 exception
+      throw new NotFoundError();
+    }
 
     const { dispatch } = this.props;
 
