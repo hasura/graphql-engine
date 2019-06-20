@@ -163,18 +163,18 @@ toMultiplexedQueryVar = \case
       -- the check has to be made before this
       (Just var, _) -> do
         modify $ Map.insert var (colTy, colVal)
-        return $ fromResVars colTy
+        return $ fromResVars (PgTypeSimple colTy)
           [ "variables"
           , G.unName $ G.unVariable var
           ]
       _             -> return $ toTxtValue colTy colVal
   -- TODO: check the logic around colTy and session variable's type
-  GR.UVSessVar colTy sessVar ->
-    return $ fromResVars colTy [ "user", T.toLower sessVar]
+  GR.UVSessVar ty sessVar ->
+    return $ fromResVars ty [ "user", T.toLower sessVar]
   GR.UVSQL sqlExp -> return sqlExp
   where
-    fromResVars colTy jPath =
-      S.withTyAnn colTy $ S.SEOpApp (S.SQLOp "#>>")
+    fromResVars ty jPath =
+      flip S.SETyAnn (S.mkTypeAnn ty) $ S.SEOpApp (S.SQLOp "#>>")
       [ S.SEQIden $ S.QIden (S.QualIden $ Iden "_subs")
         (Iden "result_vars")
       , S.SEArray $ map S.SELit jPath
