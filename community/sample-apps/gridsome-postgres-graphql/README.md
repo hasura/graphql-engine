@@ -2,6 +2,8 @@
 
 Boilerplate to get started with Gridsome, Hasura GraphQL engine as CMS and postgres as database using the awesome plugin [source-graphql](https://github.com/gridsome/gridsome/tree/master/packages/source-graphql).
 
+[![Edit gridsome-postgres-graphql](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/github/hasura/graphql-engine/tree/master/community/sample-apps/gridsome-postgres-graphql?fontsize=14)
+
 ![Gridsome Postgres GraphQL](https://graphql-engine-cdn.hasura.io/assets/gridsome-postgres-graphql/gridsome-postgres-graphql.png)
 
 # Tutorial

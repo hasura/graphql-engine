@@ -71,5 +71,3 @@ export const filterSchema = (metadata, inconsistentObject, type) => {
   }
   return metadata;
 };
-
-export const reloadMetadataVersionSym = 'reloadMetaDataApiChange';

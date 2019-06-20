@@ -3,7 +3,8 @@ import { push } from 'react-router-redux';
 import globals from '../../../Globals';
 import endpoints from '../../../Endpoints';
 import defaultState from './State';
-import { filterSchema, reloadMetadataVersionSym } from './utils';
+import { filterSchema } from './utils';
+import { RELOAD_METADATA_API_CHANGE } from '../../../helpers/versionUtils';
 import {
   setConsistentSchema,
   setConsistentFunctions,
@@ -146,8 +147,8 @@ export const reloadRemoteSchema = (remoteSchemaName, successCb, failureCb) => {
     let reloadQuery = {};
 
     if (
-      reloadMetadataVersionSym in featuresCompatibility &&
-      featuresCompatibility[reloadMetadataVersionSym]
+      RELOAD_METADATA_API_CHANGE in featuresCompatibility &&
+      featuresCompatibility[RELOAD_METADATA_API_CHANGE]
     ) {
       reloadQuery = {
         ...reloadRemoteCacheAndGetInconsistentObjectsQuery(remoteSchemaName),
@@ -557,7 +558,7 @@ export const metadataReducer = (state = defaultState, action) => {
         ...state,
         allowedQueries: [
           ...state.allowedQueries.map(q =>
-            q.name === action.data.queryName ? action.data.newQuery : q
+            (q.name === action.data.queryName ? action.data.newQuery : q)
           ),
         ],
       };
