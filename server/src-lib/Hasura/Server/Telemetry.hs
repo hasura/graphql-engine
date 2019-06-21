@@ -106,8 +106,7 @@ runTelemetry (Logger logger) manager cacheRef (dbId, instanceId) = do
   forever $ do
     schemaCache <- fmap fst $ readIORef cacheRef
     let metrics = computeMetrics schemaCache
-    p <- mkPayload dbId instanceId currentVersion metrics
-    let payload = A.encode $ p
+    payload <- A.encode <$> mkPayload dbId instanceId currentVersion metrics
     logger $ debugLBS $ "metrics_info: " <> payload
     resp <- try $ Wreq.postWith options (T.unpack telemetryUrl) payload
     either logHttpEx handleHttpResp resp
