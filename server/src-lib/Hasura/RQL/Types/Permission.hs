@@ -69,6 +69,7 @@ newtype UserVars
 isUserVar :: T.Text -> Bool
 isUserVar = T.isPrefixOf "x-hasura-" . T.toLower
 
+-- returns Nothing if x-hasura-role is an empty string
 roleFromVars :: UserVars -> Maybe RoleName
 roleFromVars uv =
   getVarVal userRoleHeader uv >>= fmap RoleName . mkNEText
