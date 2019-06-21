@@ -2,7 +2,6 @@ package metadata
 
 import (
 	"io/ioutil"
-	"os"
 
 	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
@@ -16,21 +15,10 @@ func (c *config) Apply() error {
 	}
 
 	var data interface{}
-	var metadataContent []byte
-	for _, format := range []string{"yaml", "json"} {
-		metadataPath, err := c.getMetadataFilePath(format)
-		if err != nil {
-			return errors.Wrap(err, "cannot apply metadata")
-		}
 
-		metadataContent, err = ioutil.ReadFile(metadataPath)
-		if err != nil {
-			if os.IsNotExist(err) {
-				continue
-			}
-			return err
-		}
-		break
+	metadataContent, err := ioutil.ReadFile(c.metadataPath)
+	if err != nil {
+		return err
 	}
 
 	if metadataContent == nil {

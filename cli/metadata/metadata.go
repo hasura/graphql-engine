@@ -1,10 +1,8 @@
 package metadata
 
 import (
-	"errors"
-	"fmt"
 	"net/url"
-	"path/filepath"
+	"os"
 
 	"github.com/hasura/graphql-engine/cli/version"
 	"github.com/sirupsen/logrus"
@@ -23,32 +21,29 @@ type config struct {
 
 	sourceDir string
 
-	hasuraDBConfig *hasuraDBConfig
+	metadataPath string
 
-	metadataFiles []string
+	hasuraDBConfig *hasuraDBConfig
 }
 
 func New(dir string, endpoint *url.URL, adminSecret string, version *version.Version) (*config, error) {
-	files := make([]string, 0)
-	files = append(files, filepath.Join(dir, "metadata.yaml"))
-	files = append(files, filepath.Join(dir, "metadata.json"))
 	return &config{
 		hasuraDBConfig: &hasuraDBConfig{
 			endpoint:    endpoint,
 			adminSecret: adminSecret,
 			version:     version,
 		},
-		metadataFiles: files,
 	}, nil
 }
 
-func (c *config) getMetadataFilePath(format string) (string, error) {
-	ext := fmt.Sprintf(".%s", format)
-	for _, filePath := range c.metadataFiles {
-		switch p := filepath.Ext(filePath); p {
-		case ext:
-			return filePath, nil
+func (c *config) SetMetadataPath(path string, checkExists bool) error {
+	// check if file exists
+	if checkExists {
+		_, err := os.Stat(path)
+		if err != nil {
+			return err
 		}
 	}
-	return "", errors.New("unsupported file type")
+	c.metadataPath = path
+	return nil
 }

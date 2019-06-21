@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"os"
+
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/metadata"
 	"github.com/pkg/errors"
@@ -58,6 +60,21 @@ func (o *metadataApplyOptions) run() error {
 	config, err := metadata.New(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Version)
 	if err != nil {
 		return err
+	}
+	for _, format := range []string{"yaml", "json"} {
+		metadataPath, err := o.EC.GetMetadataFilePath(format)
+		if err != nil {
+			return errors.Wrap(err, "cannot apply metadata")
+		}
+
+		err = config.SetMetadataPath(metadataPath, true)
+		if err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+			return err
+		}
+		break
 	}
 	return config.Apply()
 }

@@ -30,12 +30,7 @@ func (c *config) Export() error {
 		return err
 	}
 
-	metadataPath, err := c.getMetadataFilePath("yaml")
-	if err != nil {
-		return errors.Wrap(err, "cannot save metadata")
-	}
-
-	err = ioutil.WriteFile(metadataPath, data, 0644)
+	err = ioutil.WriteFile(c.metadataPath, data, 0644)
 	if err != nil {
 		return errors.Wrap(err, "cannot save metadata")
 	}

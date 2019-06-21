@@ -66,5 +66,15 @@ func (o *metadataExportOptions) run() error {
 	if err != nil {
 		return err
 	}
+
+	metadataPath, err := ec.GetMetadataFilePath("yaml")
+	if err != nil {
+		return errors.Wrap(err, "cannot save metadata")
+	}
+
+	err = config.SetMetadataPath(metadataPath, false)
+	if err != nil {
+		return errors.Wrap(err, "cannot save metadata")
+	}
 	return config.Export()
 }
