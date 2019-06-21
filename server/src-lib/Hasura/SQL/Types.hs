@@ -226,6 +226,10 @@ snakeCaseTable (QualifiedObject sn tn) =
 
 type QualifiedFunction = QualifiedObject FunctionName
 
+newtype PGDescription
+  = PGDescription { getPGDescription :: T.Text }
+  deriving (Show, Eq, FromJSON, ToJSON, Q.FromCol)
+
 newtype PGCol
   = PGCol { getPGColTxt :: T.Text }
   deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, ToJSONKey, FromJSONKey, Lift)

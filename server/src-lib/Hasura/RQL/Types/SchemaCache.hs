@@ -343,7 +343,7 @@ mutableView qt f mVI operation =
 data TableInfo
   = TableInfo
   { tiName                  :: !QualifiedTable
-  , tiDescription           :: !(Maybe Text)
+  , tiDescription           :: !(Maybe PGDescription)
   , tiSystemDefined         :: !Bool
   , tiFieldInfoMap          :: !FieldInfoMap
   , tiRolePermInfoMap       :: !RolePermInfoMap
@@ -358,7 +358,7 @@ $(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
 instance FromJSON TableInfo where
   parseJSON = withObject "TableInfo" $ \o -> do
     name <- o .: "name"
-    description <- o .:? "description"
+    descM <- o .:? "description"
     columns <- o .: "columns"
     pkeyCols <- o .: "primary_key_columns"
     constraints <- o .: "constraints"
@@ -366,7 +366,7 @@ instance FromJSON TableInfo where
     isSystemDefined <- o .:? "is_system_defined" .!= False
     let colMap = M.fromList $ flip map columns $
                  \c -> (fromPGCol $ pgiName c, FIColumn c)
-    return $ TableInfo name description isSystemDefined colMap mempty
+    return $ TableInfo name descM isSystemDefined colMap mempty
                        constraints pkeyCols viewInfoM mempty
 
 data FunctionType

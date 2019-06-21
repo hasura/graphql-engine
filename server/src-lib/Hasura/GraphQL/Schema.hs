@@ -262,20 +262,21 @@ type table {
 -}
 mkTableObj
   :: QualifiedTable
-  -> Maybe Text
+  -> Maybe PGDescription
   -> [SelField]
   -> ObjTyInfo
 mkTableObj tn descM allowedFlds =
-  mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) HasuraType
+  mkObjTyInfo (Just gqlDesc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) HasuraType
   where
     flds = concatMap (either (pure . mkPGColFld) mkRelFld') allowedFlds
     mkRelFld' (relInfo, allowAgg, _, _, isNullable) =
       mkRelFld allowAgg relInfo isNullable
-    defaultDesc = "columns and relationships of " <>> tn
-    desc = G.Description $ case descM of
-      Nothing -> defaultDesc
-      Just "" -> defaultDesc
-      Just d -> d <> "\n\n" <> defaultDesc
+    txtDescDefault = "columns and relationships of " <>> tn
+    gqlDesc = G.Description $ case descM of
+      Nothing -> txtDescDefault
+      Just (PGDescription txtDesc) -> if T.length txtDesc == 0
+        then txtDescDefault
+        else txtDesc <> "\n\n" <> txtDescDefault
 
 {-
 type table_aggregate {
@@ -1234,7 +1235,7 @@ mkOnConflictTypes tn uniqueOrPrimaryCons cols =
 mkGCtxRole'
   :: QualifiedTable
   -- table description
-  -> Maybe Text
+  -> Maybe PGDescription
   -- insert permission
   -> Maybe ([PGColInfo], RelationInfoMap)
   -- select permission
@@ -1581,7 +1582,7 @@ mkGCtxRole
   :: (MonadError QErr m)
   => TableCache
   -> QualifiedTable
-  -> Maybe Text
+  -> Maybe PGDescription
   -> FieldInfoMap
   -> [PGCol]
   -> [ConstraintName]
