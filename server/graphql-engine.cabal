@@ -158,6 +158,7 @@ library
                      , Hasura.Server.Auth
                      , Hasura.Server.Auth.JWT
                      , Hasura.Server.Init
+                     , Hasura.Server.Context
                      , Hasura.Server.Middleware
                      , Hasura.Server.Logging
                      , Hasura.Server.Query
@@ -168,6 +169,7 @@ library
                      , Hasura.Server.Telemetry
                      , Hasura.Server.SchemaUpdate
                      , Hasura.Server.PGDump
+                     , Hasura.Server.Config
 
                      , Hasura.RQL.Types
                      , Hasura.RQL.Instances

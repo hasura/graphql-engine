@@ -1,5 +1,7 @@
 ---
 title: "Update mutation and automatic cache updates"
+metaTitle: "Apollo Mutation component for GraphQL mutation update | GraphQL React Native Apollo Tutorial"
+metaDescription: "We will use the Apollo Mutation component from react-apollo as an example to modify existing data and update cache automatically and handle optimisticResponse"
 ---
 
 import GithubLink from "../../src/GithubLink.js";

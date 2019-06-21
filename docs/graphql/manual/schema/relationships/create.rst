@@ -189,7 +189,7 @@ Step 1: Open manual relationship section
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Open the console and navigate to the ``Data -> author -> Relationships`` tab.
-- Click on the ``+ Add a manual relationship`` button:
+- Click on the ``Configure`` button:
 
 .. thumbnail:: ../../../../img/graphql/manual/schema/manual-relationship-btn.png
 
@@ -204,12 +204,12 @@ In this case:
 
 - **Relationship Type** will be: ``Object Relationship``
 - **Relationship Name** can be: ``avg_rating``
-- **Configuration** will be: ``id :: author_avg_rating -> id`` *(similar to defining a foreign-key)*
+- **Reference** will be: ``id -> author_avg_rating . id`` *(similar to defining a foreign-key)*
 
 Step 3: Create the relationship
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Now click on the ``Add`` button to create the relationship.
+Now click on the ``Save`` button to create the relationship.
 
 We can now run a nested object query that is based on this ``object relationship``.
 

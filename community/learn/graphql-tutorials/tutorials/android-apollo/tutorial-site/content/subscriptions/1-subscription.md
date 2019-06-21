@@ -1,5 +1,7 @@
 ---
-title: 'Subscription'
+title: "Subscription"
+metaTitle: "Set up GraphQL Subscriptions using Apollo Client | GraphQL Android Apollo Tutorial"
+metaDescription: "You will learn how to configure GraphQL Subscriptions using Android Apollo Client by installing dependencies like subscriptionTransportFactory. This will also have authorization token setup"
 ---
 
 import GithubLink from '../../src/GithubLink.js'

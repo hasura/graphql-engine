@@ -378,22 +378,18 @@ export const passVAddManualObjRel = () => {
   cy.wait(2000);
   cy.get(getElementFromAlias('table-relationships')).click();
   cy.wait(2000);
-  cy.get(getElementFromAlias('rel-type')).select('object_rel');
+  cy.get(getElementFromAlias('create-edit-manual-rel')).click();
+  cy.get(getElementFromAlias('manual-relationship-type')).select('object');
   cy.get("input[placeholder='Enter relationship name']").type('author');
-  cy.get('select')
-    .find('option')
-    .contains('Current Column')
-    .parent()
-    .select('id');
-  cy.get('select')
-    .find('option')
-    .contains('Remote Table')
-    .parent()
-    .select('author_table_vt');
-  cy.get('select')
-    .last()
-    .select('id');
-  cy.get(getElementFromAlias('view-add-relationship')).click();
+  cy.get(getElementFromAlias('manual-relationship-ref-schema')).select(
+    'public'
+  );
+  cy.get(getElementFromAlias('manual-relationship-ref-table')).select(
+    'author_table_vt'
+  );
+  cy.get(getElementFromAlias('manual-relationship-lcol-0')).select('id');
+  cy.get(getElementFromAlias('manual-relationship-rcol-0')).select('id');
+  cy.get(getElementFromAlias('create-manual-rel-save')).click();
   cy.wait(7000);
   validateColumn(
     'author_average_rating_vt',

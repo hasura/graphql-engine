@@ -1,5 +1,7 @@
 ---
 title: "Remove todos - Integration"
+metaTitle: "Apollo Mutation Component for GraphQL mutation delete | GraphQL React Native Apollo Tutorial"
+metaDescription: "We will use the Apollo Mutation component from react-apollo with variables as an example to delete existing data and update cache automatically"
 ---
 
 import GithubLink from "../../src/GithubLink.js";

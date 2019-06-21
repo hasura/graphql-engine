@@ -25,6 +25,8 @@ import {
   getUniqueConstraintName,
 } from '../Common/ReusableComponents/utils';
 
+import { isPostgresFunction } from '../utils';
+
 import {
   fetchColumnCastsQuery,
   convertArrayToJson,
@@ -263,63 +265,90 @@ const saveForeignKeys = (index, tableSchema, columns) => {
     }
     const lcols = filteredMappings.map(cm => `"${columns[cm.column].name}"`);
     const rcols = filteredMappings.map(cm => `"${cm.refColumn}"`);
-    const migrationUp = [];
-    if (constraintName) {
-      migrationUp.push({
-        type: 'run_sql',
-        args: {
-          sql: `alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}";`,
-        },
-      });
-    }
 
+    const migrationUp = [];
     const generatedConstraintName = generateFKConstraintName(
       tableName,
       lcols,
-      tableSchema.foreign_key_constraints
+      tableSchema.foreign_key_constraints,
+      [constraintName]
     );
 
-    migrationUp.push({
-      type: 'run_sql',
-      args: {
-        sql: `alter table "${schemaName}"."${tableName}" add constraint "${constraintName ||
-          generatedConstraintName}" foreign key (${lcols.join(
-          ', '
-        )}) references "${refSchemaName}"."${refTableName}"(${rcols.join(
-          ', '
-        )}) on update ${onUpdate} on delete ${onDelete};`,
-      },
-    });
-    const migrationDown = [
-      {
-        type: 'run_sql',
-        args: {
-          sql: `alter table "${schemaName}"."${tableName}" drop constraint "${constraintName ||
-            generatedConstraintName}";`,
-        },
-      },
-    ];
     if (constraintName) {
-      const oldConstraint = tableSchema.foreign_key_constraints[index];
-      migrationDown.push({
+      // foreign key already exists, alter the foreign key
+      const migrationUpAlterFKeySql = `
+             alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}",
+             add constraint "${generatedConstraintName}" 
+             foreign key (${lcols.join(', ')}) 
+             references "${refSchemaName}"."${refTableName}"
+             (${rcols.join(', ')}) on update ${onUpdate} on delete ${onDelete};
+      `;
+
+      migrationUp.push({
         type: 'run_sql',
         args: {
-          sql: `alter table "${schemaName}"."${tableName}" add constraint "${constraintName}" foreign key (${Object.keys(
-            oldConstraint.column_mapping
-          )
-            .map(lc => `"${lc}"`)
-            .join(', ')}) references "${
-            oldConstraint.ref_table_table_schema
-          }"."${oldConstraint.ref_table}"(${Object.values(
-            oldConstraint.column_mapping
-          )
-            .map(rc => `"${rc}"`)
-            .join(', ')}) on update ${
-            pgConfTypes[oldConstraint.on_update]
-          } on delete ${pgConfTypes[oldConstraint.on_delete]};`,
+          sql: migrationUpAlterFKeySql,
+        },
+      });
+    } else {
+      // foreign key not found, create a new one
+      const migrationUpCreateFKeySql = `
+           alter table "${schemaName}"."${tableName}"
+           add constraint "${generatedConstraintName}" 
+           foreign key (${lcols.join(', ')}) 
+           references "${refSchemaName}"."${refTableName}"
+           (${rcols.join(', ')}) on update ${onUpdate} on delete ${onDelete};
+      `;
+
+      migrationUp.push({
+        type: 'run_sql',
+        args: {
+          sql: migrationUpCreateFKeySql,
         },
       });
     }
+
+    const migrationDown = [];
+
+    if (constraintName) {
+      // when foreign key is altered
+      const oldConstraint = tableSchema.foreign_key_constraints[index];
+      const migrationDownAlterFKeySql = `
+          alter table "${schemaName}"."${tableName}" drop constraint "${generatedConstraintName}",
+          add constraint "${constraintName}" 
+          foreign key (${Object.keys(oldConstraint.column_mapping)
+    .map(lc => `"${lc}"`)
+    .join(', ')}) 
+          references "${oldConstraint.ref_table_table_schema}"."${
+  oldConstraint.ref_table
+}"
+          (${Object.values(oldConstraint.column_mapping)
+    .map(rc => `"${rc}"`)
+    .join(', ')}) 
+          on update ${pgConfTypes[oldConstraint.on_update]}
+          on delete ${pgConfTypes[oldConstraint.on_delete]};
+        `;
+
+      migrationDown.push({
+        type: 'run_sql',
+        args: {
+          sql: migrationDownAlterFKeySql,
+        },
+      });
+    } else {
+      // when foreign key is created
+      const migrationDownDeleteFKeySql = `
+          alter table "${schemaName}"."${tableName}" drop constraint "${generatedConstraintName}"
+      `;
+
+      migrationDown.push({
+        type: 'run_sql',
+        args: {
+          sql: migrationDownDeleteFKeySql,
+        },
+      });
+    }
+
     const migrationName = `set_fk_${schemaName}_${tableName}_${lcols.join(
       '_'
     )}`;
@@ -445,10 +474,12 @@ const setUniqueKeys = keys => ({
   keys,
 });
 
-const changeTableOrViewName = (isTable, oldName, newName, callback) => {
+const changeTableOrViewName = (isTable, oldName, newName) => {
   return (dispatch, getState) => {
     const property = isTable ? 'table' : 'view';
+
     dispatch({ type: SAVE_NEW_TABLE_NAME });
+
     if (oldName === newName) {
       return dispatch(
         showErrorNotification(
@@ -457,6 +488,7 @@ const changeTableOrViewName = (isTable, oldName, newName, callback) => {
         )
       );
     }
+
     if (!gqlPattern.test(newName)) {
       const gqlValidationError = isTable
         ? gqlTableErrorNotif
@@ -495,7 +527,20 @@ const changeTableOrViewName = (isTable, oldName, newName, callback) => {
     const errorMsg = `Renaming ${property} failed`;
 
     const customOnSuccess = () => {
-      callback();
+      dispatch(_push('/schema/' + currentSchema)); // to avoid 404
+      dispatch(updateSchemaInfo()).then(() => {
+        dispatch(
+          _push(
+            '/schema/' +
+              currentSchema +
+              '/' +
+              property +
+              's/' +
+              newName +
+              '/modify'
+          )
+        );
+      });
     };
     const customOnError = err => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
@@ -544,10 +589,11 @@ const deleteTableSql = tableName => {
     const errorMsg = 'Deleting table failed';
 
     const customOnSuccess = () => {
-      dispatch(updateSchemaInfo()).then(() => {
-        dispatch(_push('/'));
-      });
+      dispatch(updateSchemaInfo());
+
+      dispatch(_push('/'));
     };
+
     const customOnError = err => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
     };
@@ -837,7 +883,9 @@ const addColSql = (
   callback
 ) => {
   let defWithQuotes = "''";
-  if (colType === 'text' && colDefault !== '') {
+
+  const checkIfFunctionFormat = isPostgresFunction(colDefault);
+  if (colType === 'text' && colDefault !== '' && !checkIfFunctionFormat) {
     defWithQuotes = "'" + colDefault + "'";
   } else {
     defWithQuotes = colDefault;
@@ -1123,9 +1171,10 @@ const saveColumnChangesSql = (colName, column) => {
     const comment = columnEdit.comment || '';
     const newName = columnEdit.name;
     const currentSchema = columnEdit.schemaName;
+    const checkIfFunctionFormat = isPostgresFunction(def);
     // ALTER TABLE <table> ALTER COLUMN <column> TYPE <column_type>;
     let defWithQuotes;
-    if (colType === 'text') {
+    if (colType === 'text' && !checkIfFunctionFormat) {
       defWithQuotes = `'${def}'`;
     } else {
       defWithQuotes = def;

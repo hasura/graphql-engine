@@ -1,20 +1,7 @@
 import React, { useEffect } from 'react';
 
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
-
-/*
-import {
-  INTEGER,
-  SERIAL,
-  BIGINT,
-  BIGSERIAL,
-  UUID,
-  JSONDTYPE,
-  JSONB,
-  TIMESTAMP,
-  TIME,
-} from '../../../../constants';
-*/
+import CustomInputAutoSuggest from '../../../Common/CustomInputAutoSuggest/CustomInputAutoSuggest';
 
 import { getValidAlterOptions } from './utils';
 
@@ -26,6 +13,7 @@ const ColumnEditor = ({
   selectedProperties,
   editColumn,
   alterTypeOptions,
+  defaultOptions,
 }) => {
   const colName = columnProperties.name;
 
@@ -76,8 +64,9 @@ const ColumnEditor = ({
   const updateColumnType = selected => {
     dispatch(editColumn(colName, 'type', selected.value));
   };
-  const updateColumnDef = e => {
-    dispatch(editColumn(colName, 'default', e.target.value));
+  const updateColumnDef = (e, data) => {
+    const { newValue } = data;
+    dispatch(editColumn(colName, 'default', newValue));
   };
   const updateColumnComment = e => {
     dispatch(editColumn(colName, 'comment', e.target.value));
@@ -87,6 +76,23 @@ const ColumnEditor = ({
   };
   const toggleColumnUnique = e => {
     dispatch(editColumn(colName, 'isUnique', e.target.value === 'true'));
+  };
+
+  const getDefaultInput = () => {
+    const theme = require('../../../Common/CustomInputAutoSuggest/CustomThemes/EditColumnDefault.scss');
+
+    return (
+      <CustomInputAutoSuggest
+        options={defaultOptions}
+        className="input-sm form-control"
+        value={selectedProperties[colName].default || ''}
+        onChange={updateColumnDef}
+        type="text"
+        disabled={columnProperties.pkConstraint}
+        data-test="edit-col-default"
+        theme={theme}
+      />
+    );
   };
 
   return (
@@ -113,6 +119,8 @@ const ColumnEditor = ({
               value={columnTypePG && alterOptionsValueMap[columnTypePG]}
               bsClass={`col-type-${0} modify_select`}
               styleOverrides={customSelectBoxStyles}
+              filterOption={'prefix'}
+              placeholder="column_type"
             />
           </div>
         </div>
@@ -149,6 +157,8 @@ const ColumnEditor = ({
         <div className={`${styles.display_flex} form-group`}>
           <label className="col-xs-2">Default</label>
           <div className="col-xs-6">
+            {getDefaultInput()}
+            {/*
             <input
               className="input-sm form-control"
               value={selectedProperties[colName].default || ''}
@@ -157,6 +167,7 @@ const ColumnEditor = ({
               disabled={columnProperties.pkConstraint}
               data-test="edit-col-default"
             />
+            */}
           </div>
         </div>
         <div className={`${styles.display_flex} form-group`}>
