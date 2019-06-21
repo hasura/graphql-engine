@@ -2,6 +2,7 @@ package commands
 
 import (
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/metadata"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -57,13 +58,9 @@ type metadataReloadOptions struct {
 }
 
 func (o *metadataReloadOptions) run() error {
-	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version)
+	config, err := metadata.New(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Version)
 	if err != nil {
 		return err
 	}
-	err = executeMetadata(o.actionType, migrateDrv, o.EC)
-	if err != nil {
-		return errors.Wrap(err, "Cannot reload metadata")
-	}
-	return nil
+	return config.Reload()
 }

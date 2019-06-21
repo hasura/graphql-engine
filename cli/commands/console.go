@@ -110,7 +110,7 @@ func (o *consoleOptions) run() error {
 
 	o.EC.Logger.Debugf("rendering console template [%s] with assets [%s]", consoleTemplateVersion, consoleAssetsVersion)
 
-	adminSecretHeader := getAdminSecretHeaderName(o.EC.Version)
+	adminSecretHeader := util.GetAdminSecretHeaderName(o.EC.Version)
 
 	consoleRouter, err := serveConsole(consoleTemplateVersion, o.StaticDir, gin.H{
 		"apiHost":         "http://" + o.Address,
@@ -118,7 +118,7 @@ func (o *consoleOptions) run() error {
 		"cliVersion":      o.EC.Version.GetCLIVersion(),
 		"dataApiUrl":      o.EC.ServerConfig.ParsedEndpoint.String(),
 		"dataApiVersion":  "",
-		"hasAccessKey":    adminSecretHeader == XHasuraAccessKey,
+		"hasAccessKey":    adminSecretHeader == util.XHasuraAccessKey,
 		"adminSecret":     o.EC.ServerConfig.AdminSecret,
 		"assetsVersion":   consoleAssetsVersion,
 		"enableTelemetry": o.EC.GlobalConfig.EnableTelemetry,
@@ -178,7 +178,7 @@ func (router *cRouter) setRoutes(nurl *url.URL, adminSecret, migrationDir, metad
 	{
 		apis.Use(setLogger(logger))
 		apis.Use(setFilePath(migrationDir))
-		apis.Use(setDataPath(nurl, getAdminSecretHeaderName(v), adminSecret))
+		apis.Use(setDataPath(nurl, util.GetAdminSecretHeaderName(v), adminSecret))
 		// Migrate api endpoints and middleware
 		migrateAPIs := apis.Group("/migrate")
 		{
@@ -199,7 +199,7 @@ func (router *cRouter) setRoutes(nurl *url.URL, adminSecret, migrationDir, metad
 
 func setDataPath(nurl *url.URL, adminSecretHeader, adminSecret string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		host := getDataPath(nurl, adminSecretHeader, adminSecret)
+		host := util.GetDataPath(nurl, adminSecretHeader, adminSecret)
 
 		c.Set("dbpath", host)
 		c.Next()
@@ -208,7 +208,7 @@ func setDataPath(nurl *url.URL, adminSecretHeader, adminSecret string) gin.Handl
 
 func setFilePath(dir string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		host := getFilePath(dir)
+		host := util.GetFilePath(dir)
 		c.Set("filedir", host)
 		c.Next()
 	}
@@ -231,8 +231,8 @@ func setLogger(logger *logrus.Logger) gin.HandlerFunc {
 func allowCors() gin.HandlerFunc {
 	config := cors.DefaultConfig()
 	config.AddAllowHeaders("X-Hasura-User-Id")
-	config.AddAllowHeaders(XHasuraAccessKey)
-	config.AddAllowHeaders(XHasuraAdminSecret)
+	config.AddAllowHeaders(util.XHasuraAccessKey)
+	config.AddAllowHeaders(util.XHasuraAdminSecret)
 	config.AddAllowHeaders("X-Hasura-Role")
 	config.AddAllowHeaders("X-Hasura-Allowed-Roles")
 	config.AddAllowMethods("DELETE")
