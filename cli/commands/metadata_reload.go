@@ -11,8 +11,7 @@ import (
 func newMetadataReloadCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
 	opts := &metadataReloadOptions{
-		EC:         ec,
-		actionType: "reload",
+		EC: ec,
 	}
 
 	metadataReloadCmd := &cobra.Command{
@@ -53,8 +52,6 @@ func newMetadataReloadCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 type metadataReloadOptions struct {
 	EC *cli.ExecutionContext
-
-	actionType string
 }
 
 func (o *metadataReloadOptions) run() error {

@@ -25,7 +25,6 @@ func testMetadataReload(t *testing.T, metadataFile string, endpoint *url.URL) {
 				ParsedEndpoint: endpoint,
 			},
 		},
-		actionType: "reload",
 	}
 
 	opts.EC.Version = version.New()

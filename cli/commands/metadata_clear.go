@@ -11,8 +11,7 @@ import (
 func newMetadataClearCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
 	opts := &metadataClearOptions{
-		EC:         ec,
-		actionType: "clear",
+		EC: ec,
 	}
 
 	metadataResetCmd := &cobra.Command{
@@ -57,8 +56,6 @@ func newMetadataClearCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 type metadataClearOptions struct {
 	EC *cli.ExecutionContext
-
-	actionType string
 }
 
 func (o *metadataClearOptions) run() error {

@@ -25,7 +25,6 @@ func testMetadataApply(t *testing.T, metadataFile string, endpoint *url.URL) {
 				ParsedEndpoint: endpoint,
 			},
 		},
-		actionType: "apply",
 	}
 
 	opts.EC.Version = version.New()

@@ -17,8 +17,7 @@ on those tables.`
 func newMetadataExportCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
 	opts := &metadataExportOptions{
-		EC:         ec,
-		actionType: "export",
+		EC: ec,
 	}
 
 	metadataExportCmd := &cobra.Command{
@@ -60,8 +59,6 @@ func newMetadataExportCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 type metadataExportOptions struct {
 	EC *cli.ExecutionContext
-
-	actionType string
 }
 
 func (o *metadataExportOptions) run() error {

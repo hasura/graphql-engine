@@ -25,7 +25,6 @@ func testMetadataExport(t *testing.T, metadataFile string, endpoint *url.URL) {
 				ParsedEndpoint: endpoint,
 			},
 		},
-		actionType: "export",
 	}
 
 	opts.EC.Version = version.New()
