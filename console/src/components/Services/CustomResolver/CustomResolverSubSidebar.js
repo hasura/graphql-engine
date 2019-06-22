@@ -11,7 +11,6 @@ const CustomResolverSubSidebar = ({
   location,
   filterItem,
   viewResolver,
-  migrationMode,
 }) => {
   const styles = require('../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
 
@@ -81,7 +80,7 @@ const CustomResolverSubSidebar = ({
 
   return (
     <LeftSubSidebar
-      migrationMode={migrationMode}
+      showAddBtn
       searchInput={getSearchInput()}
       heading={`Remote Schemas (${dataList.length})`}
       addLink={`${appPrefix}/manage/add`}

@@ -108,8 +108,8 @@ const ViewRows = ({
 
     _gridHeadings.push({
       Header: '',
-      accessor: 'actions',
-      id: 'actions',
+      accessor: 'tableRowActionButtons',
+      id: 'tableRowActionButtons',
     });
 
     _columns.map(col => {
@@ -391,7 +391,7 @@ const ViewRows = ({
       };
 
       // Insert Edit, Delete, Clone in a cell
-      newRow.actions = getActionButtons();
+      newRow.tableRowActionButtons = getActionButtons();
 
       // Insert column cells
       _tableSchema.columns.forEach(col => {
