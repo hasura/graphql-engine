@@ -186,7 +186,7 @@ jobs:
             make ci-binary
           else
             echo "Non-release branch, non-optimized build with coverage"
-            BUILD_FLAGS="--fast --coverage" make ci-binary
+            BUILD_FLAGS="--coverage" make ci-binary
           fi
     - run:
         name: Build the docker image
