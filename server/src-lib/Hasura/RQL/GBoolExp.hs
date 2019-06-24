@@ -83,12 +83,10 @@ parseOpExp rhsParser fim (PGColInfo cn colTy _) (opStr, val) =
     "_has_key"       -> jsonbOnlyOp $ AHasKey <$> parseWithTy PGText
     "$has_key"       -> jsonbOnlyOp $ AHasKey <$> parseWithTy PGText
 
-    --FIXME:- Parse a session variable as text array values
-    --TODO:- Add following commented operators after fixing above said
-    -- "_has_keys_any"  -> jsonbOnlyOp $ AHasKeysAny <$> parseVal
-    -- "$has_keys_any"  -> jsonbOnlyOp $ AHasKeysAny <$> parseVal
-    -- "_has_keys_all"  -> jsonbOnlyOp $ AHasKeysAll <$> parseVal
-    -- "$has_keys_all"  -> jsonbOnlyOp $ AHasKeysAll <$> parseVal
+    "_has_keys_any"  -> jsonbOnlyOp $ AHasKeysAny <$> parseManyWithType PGText
+    "$has_keys_any"  -> jsonbOnlyOp $ AHasKeysAny <$> parseManyWithType PGText
+    "_has_keys_all"  -> jsonbOnlyOp $ AHasKeysAll <$> parseManyWithType PGText
+    "$has_keys_all"  -> jsonbOnlyOp $ AHasKeysAll <$> parseManyWithType PGText
 
     -- geometry types
     "_st_contains"   -> parseGeometryOp ASTContains
