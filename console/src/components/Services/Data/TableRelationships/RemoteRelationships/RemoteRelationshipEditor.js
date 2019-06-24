@@ -113,7 +113,13 @@ const RemoteRelationshipEditor = ({
     dispatch(setRemoteRelationships(newRelationships));
   };
 
-  const handleColumnChange = (colName, fieldName, fieldNesting, arg) => {
+  const handleArgValueChange = (
+    value,
+    isColumn,
+    fieldName,
+    fieldNesting,
+    arg
+  ) => {
     const newRelationships = JSON.parse(JSON.stringify(allRelationships));
     const concernedRemoteField = newRelationships[index].remoteField.find(
       rf => rf.name === fieldName && fieldNesting === rf.nesting
@@ -129,7 +135,9 @@ const RemoteRelationshipEditor = ({
       name: arg.name,
       parentArg: arg.parentArg,
       argNesting: arg.argNesting,
-      column: colName,
+      static: undefined,
+      column: undefined,
+      [isColumn ? 'column' : 'static']: value,
     });
     concernedRemoteField.arguments = concernedArgs;
     newRelationships[index].remoteField = newRelationships[
@@ -232,7 +240,7 @@ const RemoteRelationshipEditor = ({
             relationship={relationship}
             handleArgChange={handleArgChange}
             handleRemoteFieldChange={handleRemoteFieldChange}
-            handleColumnChange={handleColumnChange}
+            handleArgValueChange={handleArgValueChange}
             tableSchema={tableSchema}
             loading={loading}
           />

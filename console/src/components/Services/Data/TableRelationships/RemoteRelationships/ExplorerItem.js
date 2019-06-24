@@ -1,12 +1,13 @@
 import React from 'react';
 import styles from './SchemaExplorer.scss';
 import { columnScalar as columnScalarTooltip } from './Tooltips';
+import ValueInput from './ValueInput';
 
 const ExplorerItem = ({
   label,
   checkboxStyle,
   columns,
-  handleColumnChange,
+  handleArgValueChange,
   toggle,
   item,
 }) => {
@@ -26,15 +27,15 @@ const ExplorerItem = ({
   const tooltip =
     isLeaf && columnScalarTooltip(`${item.parentArg}.${item.name}`);
 
-  const columnSelect = () => {
+  const valueInput = () => {
     if (!isLeaf) {
       return;
     }
-    const onColumnChange = e => {
-      if (!e.target.value) return;
-      const columnValue = isScalarList ? [e.target.value] : e.target.value;
-      handleColumnChange(
-        columnValue,
+
+    const onValueChange = (value, isColumn) => {
+      handleArgValueChange(
+        value,
+        isColumn,
         parentFieldName,
         parentFieldNesting,
         item
@@ -42,26 +43,13 @@ const ExplorerItem = ({
     };
 
     return (
-      <div>
-        <select
-          value={item.column || ''}
-          onChange={onColumnChange}
-          className={styles.scalarColumnSelect}
-        >
-          {!item.column && (
-            <option key="placeholder" value="">
-              -- column --
-            </option>
-          )}
-          {columns.map(c => {
-            return (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            );
-          })}
-        </select>
-      </div>
+      <ValueInput
+        selectOptions={columns}
+        onValueChange={onValueChange}
+        staticValue={item.static}
+        columnValue={item.column}
+        type={item.static ? 'static' : 'column'}
+      />
     );
   };
   return (
@@ -87,7 +75,7 @@ const ExplorerItem = ({
           (isScalar || isNonNullableScalar || isScalarList) &&
           ':'}
       </div>
-      <div className={styles.add_mar_right_small}>{columnSelect()}</div>
+      <div className={styles.add_mar_right_small}>{valueInput()}</div>
       <div>{tooltip}</div>
     </div>
   );

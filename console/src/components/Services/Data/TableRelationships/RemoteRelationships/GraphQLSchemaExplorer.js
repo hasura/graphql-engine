@@ -9,7 +9,7 @@ import { introspectRemoteSchema } from '../Actions';
 const SchemaExplorer = ({
   relationship,
   handleArgChange,
-  handleColumnChange,
+  handleArgValueChange,
   handleRemoteFieldChange,
   tableSchema,
   loading,
@@ -79,7 +79,7 @@ const SchemaExplorer = ({
             toggle={toggle}
             item={f}
             columns={columns}
-            handleColumnChange={handleColumnChange}
+            handleArgValueChange={handleArgValueChange}
             key={`${f.name}-${f.nesting}-${f.argNesting || ''}-${
               f.isArg && f.parentArg ? f.parentArg : ''
             }`}

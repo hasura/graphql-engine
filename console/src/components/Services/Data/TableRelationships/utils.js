@@ -81,7 +81,10 @@ export const getSchemaTree = (relationship, fields) => {
           a.parentArg === parentArg
       );
       if (search) {
-        return search.column || true;
+        return {
+          column: search.column,
+          static: search.static,
+        };
       }
     }
     return false;
@@ -100,7 +103,8 @@ export const getSchemaTree = (relationship, fields) => {
       nesting,
       argNesting,
       isChecked: !!isChecked,
-      column: isChecked === true ? null : isChecked,
+      column: isChecked ? isChecked.column : false,
+      static: isChecked ? isChecked.static : false,
       isScalar:
         isScalarType(getUnderlyingType(arg.type)) ||
         isEnumType(getUnderlyingType(arg.type)),
@@ -225,6 +229,8 @@ export const getRemoteRelPayload = (remoteRel, table) => {
         if (a.column) {
           argObj[a.name] = `$${a.column}`;
           hasuraFields.push(a.column);
+        } else if (a.static) {
+          argObj[a.name] = a.static;
         } else {
           argObj[a.name] = getArgs(
             field,
@@ -285,7 +291,11 @@ export const parseRemoteRelationship = remoteRel => {
         };
         const argValue = Object.values(args)[i];
         if (typeof argValue === 'string') {
-          argObj.column = argValue.substr(1);
+          if (argValue[0] === '$') {
+            argObj.column = argValue.substr(1);
+          } else {
+            argObj.static = argValue;
+          }
         }
         argsList.push(argObj);
         if (typeof argValue === 'object') {

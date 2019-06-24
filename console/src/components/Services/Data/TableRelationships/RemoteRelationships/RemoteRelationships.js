@@ -22,6 +22,7 @@ const RemoteRelationships = ({
   existingRemoteRelationships.push({
     ...defaultRemoteRelationship,
   });
+
   useEffect(() => {
     dispatch(setRemoteRelationships(existingRemoteRelationships));
   }, []);
