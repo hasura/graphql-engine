@@ -1,8 +1,11 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 
 import LeftSubSidebar from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
+import gqlPattern from './Common/GraphQLValidation';
+import { schemeWarningTip } from './Schema/Tooltips';
 
 const appPrefix = '/data';
 
@@ -108,10 +111,23 @@ class DataSubSidebar extends React.Component {
             ) {
               activeTableClass = styles.activeTable;
             }
+            const schemeWarning = !gqlPattern.test(tableName) ? (
+              <div
+                className={styles.scheme_warning + ' ' + styles.display_inline}
+              >
+                <OverlayTrigger placement="right" overlay={schemeWarningTip}>
+                  <i
+                    className="fa fa-exclamation-triangle"
+                    aria-hidden="true"
+                  />
+                </OverlayTrigger>
+              </div>
+            ) : null;
             if (tables[tableName].table_type === 'BASE TABLE') {
               return (
                 <li className={activeTableClass} key={i}>
                   <Link
+                    className={styles.scheme_warning_table}
                     to={
                       appPrefix +
                       '/schema/' +
@@ -128,6 +144,7 @@ class DataSubSidebar extends React.Component {
                     />
                     {tableName}
                   </Link>
+                  {schemeWarning}
                 </li>
               );
             }
@@ -151,6 +168,7 @@ class DataSubSidebar extends React.Component {
                   />
                   <i>{tableName}</i>
                 </Link>
+                {schemeWarning}
               </li>
             );
           });

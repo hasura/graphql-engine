@@ -10,6 +10,7 @@ import {
   untrackedRelTip,
   trackableFunctionsTip,
   nonTrackableFunctionsTip,
+  schemeWarningTip,
 } from './Tooltips';
 import Button from '../../../Common/Button/Button';
 import {
@@ -31,6 +32,7 @@ import globals from '../../../../Globals';
 import { getRelDef } from '../TableRelationships/utils';
 import { createNewSchema, deleteCurrentSchema } from './Actions';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
+import gqlPattern from '../Common/GraphQLValidation';
 
 const appPrefix = globals.urlPrefix + '/data';
 
@@ -317,6 +319,16 @@ class Schema extends Component {
             dispatch(addExistingTableSql());
           };
 
+          const schemeWarning = !gqlPattern.test(table.table_name) ? (
+            <div
+              className={styles.scheme_warning + ' ' + styles.display_inline}
+            >
+              <OverlayTrigger placement="right" overlay={schemeWarningTip}>
+                <i className="fa fa-exclamation-triangle" aria-hidden="true" />
+              </OverlayTrigger>
+            </div>
+          ) : null;
+
           untrackedTablesList.push(
             <div className={styles.padd_bottom} key={`untracked-${i}`}>
               <div
@@ -333,6 +345,7 @@ class Schema extends Component {
                 </Button>
               </div>
               <div className={styles.display_inline}>{table.table_name}</div>
+              {schemeWarning}
             </div>
           );
         });
