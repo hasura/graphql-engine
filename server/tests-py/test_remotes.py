@@ -200,6 +200,7 @@ class TestExecution:
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'remote_rel_fragments.yaml', transport)
 
+    # TODO: Support interface in remote relationships
     # def test_with_interface(self, hge_ctx, transport):
     #     check_query_f(hge_ctx, self.dir() + 'mixed_interface.yaml', transport)
     #     check_query_f(hge_ctx, self.dir() + 'remote_rel_interface.yaml', transport)

@@ -520,6 +520,7 @@ peelOffNestedFields xs toplevel = go (drop 1 (toList xs)) toplevel
       case value of
         J.Object hashmap ->
           case Map.lookup key hashmap of
+            -- TODO: Return proper error
             Nothing     -> J.Null
               -- Left $ GQJoinError
               --   (T.pack ("No " <> show key <> " in " <> show value <> " from " <>
@@ -528,6 +529,7 @@ peelOffNestedFields xs toplevel = go (drop 1 (toList xs)) toplevel
               --    show xs))
             Just value' -> go rest value'
         _ -> J.Null
+            -- TODO: Return proper error
           -- Left $ GQJoinError
           --   (T.pack ("No! " <> show key <> " in " <> show value <> " from " <>
           --    show toplevel <>
