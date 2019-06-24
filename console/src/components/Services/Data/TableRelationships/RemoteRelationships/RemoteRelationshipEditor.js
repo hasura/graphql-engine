@@ -27,12 +27,14 @@ const RemoteRelationshipEditor = ({
 }) => {
   const isLast = index === numRels - 1;
 
+  // handle relationship name change
   const handleRelnameChange = e => {
     const newRelationships = JSON.parse(JSON.stringify(allRelationships));
     newRelationships[index].name = e.target.value;
     dispatch(setRemoteRelationships(newRelationships));
   };
 
+  // handle remote schema selection change
   const handleRemoteSchemaChange = e => {
     const newRelationships = JSON.parse(JSON.stringify(allRelationships));
     if (e.target.value === newRelationships[index].remoteSchema) {
@@ -47,6 +49,7 @@ const RemoteRelationshipEditor = ({
     dispatch(setRemoteRelationships(newRelationships));
   };
 
+  // handle remote field change
   const handleRemoteFieldChange = (fieldName, nesting, checked) => {
     const newRelationships = JSON.parse(JSON.stringify(allRelationships));
     const newRemoteField = newRelationships[index].remoteField.filter(
@@ -63,6 +66,7 @@ const RemoteRelationshipEditor = ({
     dispatch(setRemoteRelationships(newRelationships));
   };
 
+  // handle argument change
   const handleArgChange = (
     fieldName,
     nesting,
@@ -113,6 +117,7 @@ const RemoteRelationshipEditor = ({
     dispatch(setRemoteRelationships(newRelationships));
   };
 
+  // handle argument value change
   const handleArgValueChange = (
     value,
     isColumn,
@@ -151,6 +156,7 @@ const RemoteRelationshipEditor = ({
     dispatch(setRemoteRelationships(newRelationships));
   };
 
+  // render relationship name textbox
   const relNameTextBox = () => {
     return (
       <div>
@@ -177,6 +183,7 @@ const RemoteRelationshipEditor = ({
     );
   };
 
+  // render remote schema select
   const remoteSchemaSelect = () => {
     const placeHolder = !relationship.remoteSchema && (
       <option key="placeholder" value="">
@@ -219,6 +226,18 @@ const RemoteRelationshipEditor = ({
     );
   };
 
+  const relationshipExplorer = () => (
+    <RemoteRelationshipExplorer
+      dispatch={dispatch}
+      relationship={relationship}
+      handleArgChange={handleArgChange}
+      handleRemoteFieldChange={handleRemoteFieldChange}
+      handleArgValueChange={handleArgValueChange}
+      tableSchema={tableSchema}
+      loading={loading}
+    />
+  );
+
   const expandedContent = () => {
     return (
       <div>
@@ -235,15 +254,7 @@ const RemoteRelationshipEditor = ({
             </div>
             <div>{configTooltip()}</div>
           </div>
-          <RemoteRelationshipExplorer
-            dispatch={dispatch}
-            relationship={relationship}
-            handleArgChange={handleArgChange}
-            handleRemoteFieldChange={handleRemoteFieldChange}
-            handleArgValueChange={handleArgValueChange}
-            tableSchema={tableSchema}
-            loading={loading}
-          />
+          {relationshipExplorer()}
         </div>
       </div>
     );

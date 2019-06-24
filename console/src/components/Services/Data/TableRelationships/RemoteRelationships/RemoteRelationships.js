@@ -10,6 +10,7 @@ const RemoteRelationships = ({
   tableSchema,
   remoteSchemas,
 }) => {
+  // restructure existing relationships to the state structure
   const existingRemoteRelationships = tableSchema.remote_relationships.map(
     rr => {
       return parseRemoteRelationship({
@@ -22,11 +23,11 @@ const RemoteRelationships = ({
   existingRemoteRelationships.push({
     ...defaultRemoteRelationship,
   });
-
   useEffect(() => {
     dispatch(setRemoteRelationships(existingRemoteRelationships));
   }, []);
 
+  // render list of relationships
   const relationshipList = () => {
     const numRels = remoteRelationships.relationships.length;
     return remoteRelationships.relationships.map((remoteRelationship, i) => {
@@ -61,11 +62,3 @@ const RemoteRelationships = ({
 };
 
 export default RemoteRelationships;
-
-/*
-  1. In handleRemoteSchemaChange, whenever a remote schmea is changed, introspect the remote schema and store in state
-  2. Onsave, create the remote relationship
-  3. OnDelte, delete the remote relationship
-  4. OnLoad, serialise the remote relationships into state
-  5. OnEdit of remote schema, introspect
-*/

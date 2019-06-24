@@ -15,8 +15,8 @@ const SchemaExplorer = ({
   loading,
   dispatch,
 }) => {
+  // introspect selected remote schema
   const [schema, setRemoteSchema] = useState(null);
-
   useEffect(() => {
     if (relationship.remoteSchema) {
       const introspectionCallback = introspectionResult => {
@@ -32,30 +32,36 @@ const SchemaExplorer = ({
     };
   }, [relationship.remoteSchema]);
 
+  // When remote schema is not selected
   if (!relationship.remoteSchema) {
     return <NoRemoteSchemaPlaceholder />;
   }
 
+  // While introspecting remote schema or when introspection fails
   if (loading || !schema) {
     return <LoadingSkeleton />;
   }
 
+  // generate a list of selected/unselected checkboxes from the graphql schema and the relationship
   const schemaTree = getSchemaTree(
     relationship,
     Object.values(schema._queryType._fields)
   );
 
+  // table columns
   const columns = tableSchema.columns.map(c => c.column_name).sort();
 
   return (
     <div className={styles.schemaExplorerContainer}>
       {schemaTree.map(f => {
+        // inline styles
         const checkboxStyle = {
           marginLeft: `${(f.nesting + (f.argNesting || 0)) * 20}px`,
           color: f.isArg ? '#8B2BB9' : 'rgb(31, 97, 160)',
           fontStyle: f.isArg ? 'italic' : 'normal',
         };
 
+        // toggle checkbox
         const toggle = () => {
           const checked = !f.isChecked;
           if (f.isArg) {
