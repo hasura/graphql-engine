@@ -29,6 +29,9 @@ module Hasura.RQL.Types
        , askEventTriggerInfo
        , askTabInfoFromTrigger
 
+       , askRemoteRel
+       , assertRemoteRel
+
        , askQTemplateInfo
 
        , adminOnly
@@ -59,6 +62,8 @@ import qualified Hasura.GraphQL.Context        as GC
 import qualified Data.HashMap.Strict           as M
 import qualified Data.Text                     as T
 import qualified Network.HTTP.Client           as HTTP
+
+import           Hasura.RQL.DDL.Remote.Types
 
 getFieldInfoMap
   :: QualifiedTable
@@ -250,6 +255,25 @@ askFieldInfo m f =
     throw400 NotExists $ mconcat
     [ f <<> " does not exist"
     ]
+
+assertRemoteRel :: (MonadError QErr m)
+            => FieldInfoMap
+            -> RemoteRelationshipName
+            -> m ()
+assertRemoteRel fieldInfoMap relName = do
+  _ <- askRemoteRel fieldInfoMap relName
+  return ()
+
+askRemoteRel :: (MonadError QErr m)
+           => FieldInfoMap
+           -> RemoteRelationshipName
+           -> m RemoteField
+askRemoteRel fieldInfoMap relName = do
+  fieldInfo <- askFieldInfo fieldInfoMap (FieldName (unRemoteRelationshipName relName))
+  case fieldInfo of
+    (FIRemote remoteField) -> return remoteField
+    _                        ->
+      throwError $ err400 UnexpectedPayload "expecting a remote relationship"
 
 askCurRole :: (UserInfoM m) => m RoleName
 askCurRole = userRole <$> askUserInfo

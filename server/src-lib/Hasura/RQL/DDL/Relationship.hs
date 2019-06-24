@@ -18,6 +18,7 @@ module Hasura.RQL.DDL.Relationship
   , runCreateRemoteRelationshipP2Setup
   , runDeleteRemoteRelationship
   , delRemoteRelFromCatalog
+  , runUpdateRemoteRelationship
   , module Hasura.RQL.DDL.Relationship.Types
   )
 where
@@ -163,8 +164,9 @@ createObjRelP2 (WithTable qt rd) = do
   return successMsg
 
 runCreateRemoteRelationship ::
-     (MonadTx m, CacheRWM m) => RemoteRelationship -> m EncJSON
+     (MonadTx m, CacheRWM m, UserInfoM m) => RemoteRelationship -> m EncJSON
 runCreateRemoteRelationship remoteRelationship = do
+  adminOnly
   (remoteField, additionalTypesMap) <-
     runCreateRemoteRelationshipP1 remoteRelationship
   runCreateRemoteRelationshipP2 remoteField additionalTypesMap
@@ -213,6 +215,21 @@ runCreateRemoteRelationshipP2 remoteField additionalTypesMap = do
   runCreateRemoteRelationshipP2Setup remoteField additionalTypesMap
   pure successMsg
 
+runUpdateRemoteRelationship ::
+     (MonadTx m, CacheRWM m, UserInfoM m) => RemoteRelationship -> m EncJSON
+runUpdateRemoteRelationship remoteRelationship = do
+  adminOnly
+  fieldInfoMap <- askFieldInfoMap table
+  assertRemoteRel fieldInfoMap relName
+  delRemoteRelFromCache table relName
+  (remoteField, additionalTypesMap) <-
+    runCreateRemoteRelationshipP1 remoteRelationship
+  liftTx $ updateRemoteRelInCatalog (rmfRemoteRelationship remoteField)
+  runCreateRemoteRelationshipP2Setup remoteField additionalTypesMap
+  return successMsg
+  where
+    RemoteRelationship relName table _ _ _ = remoteRelationship
+
 persistRemoteRelationship
   :: RemoteRelationship -> Q.TxE QErr ()
 persistRemoteRelationship remoteRelationship =
@@ -220,6 +237,24 @@ persistRemoteRelationship remoteRelationship =
   INSERT INTO hdb_catalog.hdb_remote_relationship
   (name, table_schema, table_name, remote_schema, configuration)
   VALUES ($1, $2, $3, $4, $5 :: jsonb)
+  |]
+  (let QualifiedObject schema_name table_name = rtrTable remoteRelationship
+   in (rtrName remoteRelationship
+      ,schema_name
+      ,table_name
+      ,rtrRemoteSchema remoteRelationship
+      ,Q.JSONB (toJSON (remoteRelationship))))
+  True
+
+updateRemoteRelInCatalog
+  :: RemoteRelationship -> Q.TxE QErr ()
+updateRemoteRelInCatalog remoteRelationship =
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+  UPDATE hdb_catalog.hdb_remote_relationship
+  SET
+  remote_schema = $4,
+  configuration = $5
+  WHERE name = $1 AND table_schema = $2 AND table_name = $3
   |]
   (let QualifiedObject schema_name table_name = rtrTable remoteRelationship
    in (rtrName remoteRelationship

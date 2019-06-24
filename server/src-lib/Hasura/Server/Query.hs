@@ -47,6 +47,7 @@ data RQLQuery
   | RQRenameRelationship !RenameRel
 
   | RQCreateRemoteRelationship !RemoteRelationship
+  | RQUpdateRemoteRelationship !RemoteRelationship
   | RQDeleteRemoteRelationship !DeleteRemoteRelationship
 
   | RQCreateInsertPermission !CreateInsPerm
@@ -197,6 +198,7 @@ queryNeedsReload qi = case qi of
   RQRenameRelationship _          -> True
 
   RQCreateRemoteRelationship _    -> True
+  RQUpdateRemoteRelationship _    -> True
   RQDeleteRemoteRelationship _    -> True
 
   RQCreateInsertPermission _      -> True
@@ -271,6 +273,7 @@ runQueryM rq = withPathK "args" $ case rq of
   RQRenameRelationship q       -> runRenameRel q
 
   RQCreateRemoteRelationship q -> runCreateRemoteRelationship q
+  RQUpdateRemoteRelationship q -> runUpdateRemoteRelationship q
   RQDeleteRemoteRelationship q -> runDeleteRemoteRelationship q
 
   RQCreateInsertPermission q   -> runCreatePerm q
