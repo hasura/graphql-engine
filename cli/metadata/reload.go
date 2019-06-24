@@ -1,17 +1,16 @@
 package metadata
 
 import (
-	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
 )
 
 func (c *config) Reload() error {
-	migrateDrv, err := util.NewMigrate(c.sourceDir, c.hasuraDBConfig.endpoint, c.hasuraDBConfig.adminSecret, c.Logger, c.hasuraDBConfig.version)
+	err := c.createMigrateInstance()
 	if err != nil {
 		return err
 	}
 
-	err = migrateDrv.ReloadMetadata()
+	err = c.migrateDrv.ReloadMetadata()
 	if err != nil {
 		return errors.Wrap(err, "cannot reload Metadata")
 	}

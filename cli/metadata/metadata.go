@@ -4,6 +4,8 @@ import (
 	"net/url"
 	"os"
 
+	"github.com/hasura/graphql-engine/cli/migrate"
+	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/hasura/graphql-engine/cli/version"
 	"github.com/sirupsen/logrus"
 )
@@ -24,6 +26,8 @@ type config struct {
 	metadataPath string
 
 	hasuraDBConfig *hasuraDBConfig
+
+	migrateDrv *migrate.Migrate
 }
 
 func New(dir string, endpoint *url.URL, adminSecret string, version *version.Version) (*config, error) {
@@ -45,5 +49,14 @@ func (c *config) SetMetadataPath(path string, checkExists bool) error {
 		}
 	}
 	c.metadataPath = path
+	return nil
+}
+
+func (c *config) createMigrateInstance() error {
+	migrateDrv, err := util.NewMigrate(c.sourceDir, c.hasuraDBConfig.endpoint, c.hasuraDBConfig.adminSecret, c.Logger, c.hasuraDBConfig.version)
+	if err != nil {
+		return err
+	}
+	c.migrateDrv = migrateDrv
 	return nil
 }

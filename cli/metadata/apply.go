@@ -4,12 +4,11 @@ import (
 	"io/ioutil"
 
 	"github.com/ghodss/yaml"
-	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
 )
 
 func (c *config) Apply() error {
-	migrateDrv, err := util.NewMigrate(c.sourceDir, c.hasuraDBConfig.endpoint, c.hasuraDBConfig.adminSecret, c.Logger, c.hasuraDBConfig.version)
+	err := c.createMigrateInstance()
 	if err != nil {
 		return err
 	}
@@ -30,7 +29,7 @@ func (c *config) Apply() error {
 		return errors.Wrap(err, "cannot parse metadata file")
 	}
 
-	err = migrateDrv.ApplyMetadata(data)
+	err = c.migrateDrv.ApplyMetadata(data)
 	if err != nil {
 		return errors.Wrap(err, "cannot apply metadata on the database")
 	}
