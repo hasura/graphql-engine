@@ -3,9 +3,9 @@ package metadata
 import (
 	"io/ioutil"
 
+	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
-	"gopkg.in/yaml.v2"
 )
 
 func (c *config) Apply() error {
