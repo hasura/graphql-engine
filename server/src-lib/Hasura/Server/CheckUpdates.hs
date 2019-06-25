@@ -49,7 +49,10 @@ checkForUpdates (LoggerCtx loggerSet _ _) manager = do
     getUrl = do
       let buildUrl agent = "https://releases.hasura.io/graphql-engine?agent=" <>
                            agent <> "&version=" <> currentVersion
-      buildUrl . bool "server" "server-ci" <$> CI.isCI
+      ciM <- CI.getCI
+      return . buildUrl $ case ciM of
+        Nothing -> "server"
+        Just ci -> "server-" <> (T.toLower . T.pack $ show ci)
 
     aDay = 86400 * 1000 * 1000
 
