@@ -902,9 +902,8 @@ const deleteColumnSql = column => {
         dispatch(
           showWarningNotification(
             'Check down migration',
-            'Please verify that the down migration "' +
-              data.name +
-              '" contains recreation of all the appropriate dependent objects (like constraints)'
+            'Please verify that the down migration will reset the DB to the previous state (check creation of constraints, defaults, etc.)',
+            data
           )
         );
       }

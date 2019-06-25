@@ -41,7 +41,7 @@ const showNotification = ({
         {
           position,
           autoDismiss: ['error', 'warning'].includes(level) ? 0 : 5,
-          dismissible: ['error', 'warning'].includes(level) ? 'click' : 'both',
+          dismissible: ['error', 'warning'].includes(level) ? 'button' : 'both',
           children: json ? jsonFormat(json) : null,
           ...options,
         },
