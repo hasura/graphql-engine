@@ -13,6 +13,7 @@ const typeDefs = gql`
   type User {
     user_id: Int
     userMessages(whered: MessageWhereInpObj, includes: IncludeInpObj): [Message]
+    gimmeText(text: String): String
   }
 
   interface Communication {
@@ -104,6 +105,14 @@ const resolvers = {
 
             return result;
         },
+
+        gimmeText: (_, { text }) => {
+            if (text) {
+                return text;
+            } else {
+                return "no text";
+            }
+        }
     },
 
     Message: {

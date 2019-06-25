@@ -236,3 +236,8 @@ class TestExecution:
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_nested_args.yaml')
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'query_with_errors_arr.yaml', transport)
+
+    def test_with_scalar_relationship(self, hge_ctx, transport):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_scalar.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'query_with_scalar_rel.yaml', transport)
