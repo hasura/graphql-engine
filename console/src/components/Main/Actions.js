@@ -1,10 +1,9 @@
 import { push } from 'react-router-redux';
 import globals from 'Globals';
 import defaultState from './State';
-import Endpoints from '../../Endpoints';
 import requestAction from '../../utils/requestAction';
 import requestActionPlain from '../../utils/requestActionPlain';
-import { globalCookiePolicy } from '../../Endpoints';
+import Endpoints, { globalCookiePolicy } from '../../Endpoints';
 import { saveAdminSecretState } from '../AppState';
 import {
   ADMIN_SECRET_ERROR,
@@ -31,6 +30,11 @@ const UPDATE_ADMIN_SECRET_INPUT = 'Main/UPDATE_ADMIN_SECRET_INPUT';
 const LOGIN_IN_PROGRESS = 'Main/LOGIN_IN_PROGRESS';
 const LOGIN_ERROR = 'Main/LOGIN_ERROR';
 
+/* Server config constants*/
+const FETCHING_SERVER_CONFIG = 'Main/FETCHING_SERVER_CONFIG';
+const SERVER_CONFIG_FETCH_SUCCESS = 'Main/SERVER_CONFIG_FETCH_SUCCESS';
+const SERVER_CONFIG_FETCH_FAIL = 'Main/SERVER_CONFIG_FETCH_FAIL';
+/* End */
 const SET_FEATURES_COMPATIBILITY = 'Main/SET_FEATURES_COMPATIBILITY';
 const setFeaturesCompatibility = data => ({
   type: SET_FEATURES_COMPATIBILITY,
@@ -90,6 +94,32 @@ const loadServerVersion = () => dispatch => {
     error => {
       console.error(error);
       dispatch({ type: SET_SERVER_VERSION_ERROR, data: null });
+    }
+  );
+};
+
+const fetchServerConfig = () => (dispatch, getState) => {
+  const url = Endpoints.serverConfig;
+  const options = {
+    method: 'GET',
+    credentials: globalCookiePolicy,
+    headers: getState().tables.dataHeaders,
+  };
+  dispatch({
+    type: FETCHING_SERVER_CONFIG,
+  });
+  return dispatch(requestAction(url, options)).then(
+    data => {
+      return dispatch({
+        type: SERVER_CONFIG_FETCH_SUCCESS,
+        data: data,
+      });
+    },
+    error => {
+      return dispatch({
+        type: SERVER_CONFIG_FETCH_FAIL,
+        data: error,
+      });
     }
   );
 };
@@ -304,6 +334,34 @@ const mainReducer = (state = defaultState, action) => {
       return { ...state, loginInProgress: action.data };
     case LOGIN_ERROR:
       return { ...state, loginError: action.data };
+    case FETCHING_SERVER_CONFIG:
+      return {
+        ...state,
+        serverConfig: {
+          ...defaultState.serverConfig,
+          isFetching: true,
+        },
+      };
+    case SERVER_CONFIG_FETCH_SUCCESS:
+      return {
+        ...state,
+        serverConfig: {
+          ...state.serverConfig,
+          data: {
+            ...action.data,
+          },
+          isFetching: false,
+        },
+      };
+    case SERVER_CONFIG_FETCH_FAIL:
+      return {
+        ...state,
+        serverConfig: {
+          ...state.serverConfig,
+          error: action.data,
+          isFetching: false,
+        },
+      };
     case SET_FEATURES_COMPATIBILITY:
       return {
         ...state,
@@ -327,6 +385,7 @@ export {
   LOGIN_ERROR,
   validateLogin,
   loadServerVersion,
+  fetchServerConfig,
   loadLatestServerVersion,
   featureCompatibilityInit,
 };

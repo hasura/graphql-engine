@@ -29,7 +29,10 @@ import {
   fetchTrackedTableListQuery,
   mergeLoadSchemaData,
 } from './utils';
-import { fetchColumnTypesQuery } from './utils';
+
+import { fetchColumnTypesQuery, fetchColumnDefaultFunctions } from './utils';
+
+import { fetchColumnCastsQuery, convertArrayToJson } from './TableModify/utils';
 
 import { SERVER_CONSOLE_MODE } from '../../../constants';
 
@@ -43,14 +46,13 @@ const FETCH_SCHEMA_LIST = 'Data/FETCH_SCHEMA_LIST';
 const UPDATE_CURRENT_SCHEMA = 'Data/UPDATE_CURRENT_SCHEMA';
 const ADMIN_SECRET_ERROR = 'Data/ADMIN_SECRET_ERROR';
 const UPDATE_DATA_HEADERS = 'Data/UPDATE_DATA_HEADERS';
-const RESET_MANUAL_REL_TABLE_LIST = 'Data/RESET_MANUAL_REL_TABLE_LIST';
 const UPDATE_REMOTE_SCHEMA_MANUAL_REL = 'Data/UPDATE_SCHEMA_MANUAL_REL';
 const SET_CONSISTENT_SCHEMA = 'Data/SET_CONSISTENT_SCHEMA';
 const SET_CONSISTENT_FUNCTIONS = 'Data/SET_CONSISTENT_FUNCTIONS';
 
-const FETCH_COLUMN_TYPE_LIST = 'Data/FETCH_COLUMN_TYPE_LIST';
-const FETCH_COLUMN_TYPE_LIST_FAIL = 'Data/FETCH_COLUMN_TYPE_LIST_FAIL';
-const RESET_COLUMN_TYPE_LIST = 'Data/RESET_COLUMN_TYPE_LIST';
+const FETCH_COLUMN_TYPE_INFO = 'Data/FETCH_COLUMN_TYPE_INFO';
+const FETCH_COLUMN_TYPE_INFO_FAIL = 'Data/FETCH_COLUMN_TYPE_INFO_FAIL';
+const RESET_COLUMN_TYPE_INFO = 'Data/RESET_COLUMN_TYPE_INFO';
 
 const MAKE_REQUEST = 'ModifyTable/MAKE_REQUEST';
 const REQUEST_SUCCESS = 'ModifyTable/REQUEST_SUCCESS';
@@ -396,8 +398,10 @@ const fetchFunctionInit = () => (dispatch, getState) => {
   );
 };
 
-const updateCurrentSchema = schemaName => dispatch => {
-  dispatch(push(`${globals.urlPrefix}/data/schema/${schemaName}`));
+const updateCurrentSchema = (schemaName, redirect = true) => dispatch => {
+  if (redirect) {
+    dispatch(push(`${globals.urlPrefix}/data/schema/${schemaName}`));
+  }
 
   Promise.all([
     dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: schemaName }),
@@ -534,15 +538,39 @@ const makeMigrationCall = (
   );
 };
 
-const fetchColumnTypes = () => {
+const getBulkColumnInfoFetchQuery = schema => {
+  const fetchColumnTypes = {
+    type: 'run_sql',
+    args: {
+      sql: fetchColumnTypesQuery,
+    },
+  };
+  const fetchTypeDefaultValues = {
+    type: 'run_sql',
+    args: {
+      sql: fetchColumnDefaultFunctions(schema),
+    },
+  };
+
+  const fetchValidTypeCasts = {
+    type: 'run_sql',
+    args: {
+      sql: fetchColumnCastsQuery,
+    },
+  };
+
+  return {
+    type: 'bulk',
+    args: [fetchColumnTypes, fetchTypeDefaultValues, fetchValidTypeCasts],
+  };
+};
+
+const fetchColumnTypeInfo = () => {
   return (dispatch, getState) => {
     const url = Endpoints.getSchema;
-    const reqQuery = {
-      type: 'run_sql',
-      args: {
-        sql: fetchColumnTypesQuery,
-      },
-    };
+    const currState = getState();
+    const { currentSchema } = currState.tables;
+    const reqQuery = getBulkColumnInfoFetchQuery(currentSchema);
     const options = {
       credentials: globalCookiePolicy,
       method: 'POST',
@@ -551,9 +579,20 @@ const fetchColumnTypes = () => {
     };
     return dispatch(requestAction(url, options)).then(
       data => {
+        const resultData = data[1].result.slice(1);
+        const typeFuncsMap = {};
+
+        resultData.forEach(r => {
+          typeFuncsMap[r[1]] = r[0].split(',');
+        });
+        const columnDataTypeInfo = {
+          columnDataTypes: data[0].result.slice(1),
+          columnTypeDefaultValues: typeFuncsMap,
+          columnTypeCasts: convertArrayToJson(data[2].result.slice(1)),
+        };
         return dispatch({
-          type: FETCH_COLUMN_TYPE_LIST,
-          data: data.result.slice(1),
+          type: FETCH_COLUMN_TYPE_INFO,
+          data: columnDataTypeInfo,
         });
       },
       error => {
@@ -566,7 +605,7 @@ const fetchColumnTypes = () => {
           )
         );
         return dispatch({
-          type: FETCH_COLUMN_TYPE_LIST_FAIL,
+          type: FETCH_COLUMN_TYPE_INFO_FAIL,
           data: error,
         });
       }
@@ -582,6 +621,7 @@ const dataReducer = (state = defaultState, action) => {
       ...state,
       view: viewReducer(
         state.currentTable,
+        state.currentSchema,
         state.allSchemas,
         state.view,
         action
@@ -672,44 +712,36 @@ const dataReducer = (state = defaultState, action) => {
         ...state,
         modify: {
           ...state.modify,
-          relAdd: {
-            ...state.modify.relAdd,
-            manualRelInfo: {
-              ...state.modify.relAdd.manualRelInfo,
-              remoteSchema: action.data,
-            },
+          manualRelAdd: {
+            ...state.modify.manualRelAdd,
+            rSchema: action.data,
           },
         },
       };
-    case RESET_MANUAL_REL_TABLE_LIST:
+    case FETCH_COLUMN_TYPE_INFO:
       return {
         ...state,
-        modify: {
-          ...state.modify,
-          relAdd: {
-            ...state.modify.relAdd,
-            manualRelInfo: { ...defaultState.modify.relAdd.manualRelInfo },
-          },
-        },
-      };
-    case FETCH_COLUMN_TYPE_LIST:
-      return {
-        ...state,
-        columnDataTypes: action.data,
-        columnDataTypeFetchErr: 'Error fetching data',
+        columnDataTypes: action.data.columnDataTypes,
+        columnDefaultFunctions: action.data.columnTypeDefaultValues,
+        columnDataTypeInfoErr: null,
+        columnTypeCasts: action.data.columnTypeCasts,
       };
 
-    case FETCH_COLUMN_TYPE_LIST_FAIL:
+    case FETCH_COLUMN_TYPE_INFO_FAIL:
       return {
         ...state,
         columnDataTypes: [],
-        columnDataTypeFetchErr: action.data,
+        columnDefaultFunctions: {},
+        columnTypeCasts: {},
+        columnDataTypeInfoErr: action.data,
       };
-    case RESET_COLUMN_TYPE_LIST:
+    case RESET_COLUMN_TYPE_INFO:
       return {
         ...state,
         columnDataTypes: [...defaultState.columnDataTypes],
-        columnDataTypeFetchErr: defaultState.columnDataTypes,
+        columnDefaultFunctions: { ...defaultState.columnDefaultFunctions },
+        columnTypeCasts: { ...defaultState.columnTypeCasts },
+        columnDataTypeInfoErr: defaultState.columnDataTypeInfoErr,
       };
     default:
       return state;
@@ -734,13 +766,12 @@ export {
   ADMIN_SECRET_ERROR,
   UPDATE_DATA_HEADERS,
   UPDATE_REMOTE_SCHEMA_MANUAL_REL,
-  RESET_MANUAL_REL_TABLE_LIST,
   fetchTrackedFunctions,
   initQueries,
   LOAD_SCHEMA,
   setConsistentSchema,
   setConsistentFunctions,
-  fetchColumnTypes,
-  RESET_COLUMN_TYPE_LIST,
+  fetchColumnTypeInfo,
+  RESET_COLUMN_TYPE_INFO,
   setUntrackedRelations,
 };

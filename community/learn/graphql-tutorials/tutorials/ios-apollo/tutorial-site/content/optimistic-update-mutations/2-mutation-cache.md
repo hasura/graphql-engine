@@ -1,5 +1,7 @@
 ---
 title: "Mutation and update cache"
+metaTitle: "Apollo perform(mutation) for GraphQL mutation update | GraphQL iOS Apollo Tutorial"
+metaDescription: "We will use the Apollo client perform(mutation) from apollo-ios as an example to modify existing data and update cache locally using readQuery and writeQuery and handle optimisticResponse"
 ---
 
 import GithubLink from '../../src/GithubLink.js'

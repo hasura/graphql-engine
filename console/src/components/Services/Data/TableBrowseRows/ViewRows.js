@@ -108,8 +108,8 @@ const ViewRows = ({
 
     _gridHeadings.push({
       Header: '',
-      accessor: 'actions',
-      id: 'actions',
+      accessor: 'tableRowActionButtons',
+      id: 'tableRowActionButtons',
     });
 
     _columns.map(col => {
@@ -381,7 +381,7 @@ const ViewRows = ({
       };
 
       // Insert Edit, Delete, Clone in a cell
-      newRow.actions = getActionButtons();
+      newRow.tableRowActionButtons = getActionButtons();
 
       // Insert column cells
       _tableSchema.columns.forEach(col => {
@@ -499,7 +499,9 @@ const ViewRows = ({
   };
 
   const curRelName = curPath.length > 0 ? curPath.slice(-1)[0] : null;
-  const tableSchema = schemas.find(x => x.table_name === curTableName);
+  const tableSchema = schemas.find(
+    x => x.table_name === curTableName && x.table_schema === currentSchema
+  );
 
   const tableColumnsSorted = tableSchema.columns.sort(ordinalColSort);
   const tableRelationships = tableSchema.relationships;

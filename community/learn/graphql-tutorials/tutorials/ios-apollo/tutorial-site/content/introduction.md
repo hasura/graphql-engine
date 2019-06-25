@@ -1,5 +1,7 @@
 ---
 title: "Course introduction"
+metaTitle: "Course Introduction | GraphQL iOS Apollo Tutorial"
+metaDescription: "A powerful and concise tutorial that will introduce you to GraphQL and integrating GraphQL into your iOS app with Apollo and Swift, in the shortest amount of time possible."
 ---
 
 GraphQL is becoming the new way to use APIs in modern web and mobile apps.
@@ -8,7 +10,7 @@ However, learning new things always takes time and without getting your hands di
 
 So, we put together a powerful and concise course that will introduce you to GraphQL and integrating GraphQL into your frontend stack, in the shortest amount of time possible.
 
-We will explore the fundamentals of GraphQL and the especially things that make GraphQL suitable for modern applications, like its realtime capabilities! The course is light on opinions so that once you grok the fundamentals you can go on to choose your favorite libraries, tools and tailor your workflow.
+We will explore the fundamentals of GraphQL and the things that make GraphQL especially suitable for modern applications, like its realtime capabilities! The course is light on opinions so that once you grok the fundamentals you can go on to choose your favorite libraries, tools and tailor your workflow.
 
 ## Key topics and takeways:
 
@@ -19,7 +21,7 @@ We will explore the fundamentals of GraphQL and the especially things that make 
 - Integrating GraphQL mutations with query variables to handle form input
 - Updating local state after a GraphQL mutation (form input) using Apollo cache
 - Optimistic updates to local state and UI after GraphQL mutations for a slick UX
-- Using subscriptions with a subscriptions components
+- Using subscriptions with subscription components
 - Building a real-time feed with notifications using mutations and subscriptions
 
 ## What will we be building?

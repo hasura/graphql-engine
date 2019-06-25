@@ -2,6 +2,8 @@
 
 Live demo at https://serverless-etl.demo.hasura.app/
 
+[![Edit serverless-etl](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/github/hasura/graphql-engine/tree/master/community/sample-apps/serverless-etl?fontsize=14)
+
 This application demonstrates an ETL process using event triggers on [Hasura
 GraphQL Engine](https://github.com/hasura/graphql-engine).
 

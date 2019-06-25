@@ -5,6 +5,8 @@ The react client is a forked version of [urigo/whatsapp-client-react](https://gi
 - Explore the backend using [Hasura
   Console](https://whatsapp-clone.demo.hasura.app/console).
 
+[![Edit whatsapp-clone](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/github/hasura/graphql-engine/tree/master/community/sample-apps/whatsapp-clone-typescript-react/react-app?fontsize=14)
+
 ## Running the app yourself
 
 #### Deploy Postgres and GraphQL Engine on Heroku:

@@ -10,6 +10,8 @@ import { getPlaceholder, BOOLEAN, JSONB, JSONDTYPE } from '../utils';
 
 import { getParentNodeByClass } from '../../../../utils/domFunctions';
 
+import { NotFoundError } from '../../../Error/PageNotFound';
+
 class InsertItem extends Component {
   constructor() {
     super();
@@ -48,7 +50,18 @@ class InsertItem extends Component {
     } = this.props;
 
     const styles = require('../../../Common/TableCommon/Table.scss');
-    const _columns = schemas.find(x => x.table_name === tableName).columns;
+    // check if table exists
+    const currentTable = schemas.find(
+      s => s.table_name === tableName && s.table_schema === currentSchema
+    );
+    if (!currentTable) {
+      // throw a 404 exception
+      throw new NotFoundError();
+    }
+
+    const _columns = schemas.find(
+      x => x.table_name === tableName && x.table_schema === currentSchema
+    ).columns;
     const refs = {};
     const columns = _columns.sort(ordinalColSort);
 
@@ -116,7 +129,8 @@ class InsertItem extends Component {
         type: 'text',
       };
 
-      const colType = col.data_type;
+      // const colType = col.data_type;
+      const colType = col.udt_name;
       const placeHolder = hasDefault
         ? col.column_default
         : getPlaceholder(colType);

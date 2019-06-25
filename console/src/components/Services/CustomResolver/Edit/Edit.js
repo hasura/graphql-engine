@@ -7,6 +7,7 @@ import {
   modifyResolver,
   RESET,
   TOGGLE_MODIFY,
+  getHeaderEvents,
 } from '../Add/addResolverReducer';
 import { VIEW_RESOLVER } from '../customActions';
 import { push } from 'react-router-redux';
@@ -16,6 +17,8 @@ import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLay
 import Button from '../../../Common/Button/Button';
 
 import { appPrefix, pageTitle } from '../constants';
+
+import { NotFoundError } from '../../../Error/PageNotFound';
 
 import globals from '../../../../Globals';
 
@@ -60,6 +63,16 @@ class Edit extends React.Component {
   componentWillUnmount() {
     Promise.all([
       this.props.dispatch({ type: RESET }),
+      this.props.dispatch({
+        type: getHeaderEvents.UPDATE_HEADERS,
+        data: [
+          {
+            name: '',
+            type: 'static',
+            value: '',
+          },
+        ],
+      }),
       this.props.dispatch({ type: VIEW_RESOLVER, data: '' }),
     ]);
   }
@@ -102,9 +115,18 @@ class Edit extends React.Component {
   }
 
   render() {
+    const currentResolver = this.props.allResolvers.find(
+      r => r.name === this.props.params.resolverName
+    );
+
+    if (!currentResolver) {
+      // throw a 404 exception
+      throw new NotFoundError();
+    }
+
     const styles = require('../CustomResolver.scss');
 
-    const { isFetching, isRequesting, editState, migrationMode } = this.props;
+    const { isFetching, isRequesting, editState } = this.props;
     const { resolverName } = this.props.params;
 
     const generateMigrateBtns = () => {
@@ -223,7 +245,7 @@ class Edit extends React.Component {
             }}
           >
             <Common {...this.props} />
-            {migrationMode ? generateMigrateBtns() : null}
+            {generateMigrateBtns()}
           </form>
         )}
       </div>
@@ -234,7 +256,7 @@ const mapStateToProps = state => {
   return {
     ...state.customResolverData.addData,
     ...state.customResolverData.headerData,
-    migrationMode: state.main.migrationMode,
+    allResolvers: state.customResolverData.listData.resolvers,
     dataHeaders: { ...state.tables.dataHeaders },
   };
 };

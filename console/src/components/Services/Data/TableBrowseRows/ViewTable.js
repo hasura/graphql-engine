@@ -12,7 +12,8 @@ import { setTable } from '../DataActions';
 import TableHeader from '../TableCommon/TableHeader';
 import ViewHeader from './ViewHeader';
 import ViewRows from './ViewRows';
-import { replace } from 'react-router-redux';
+
+import { NotFoundError } from '../../../Error/PageNotFound';
 
 const genHeadings = headings => {
   if (headings.length === 0) {
@@ -146,7 +147,7 @@ class ViewTable extends Component {
       query,
       curFilter,
       rows,
-      count, // eslint-disable-line no-unused-vars
+      count,
       activePath,
       migrationMode,
       ongoingRequest,
@@ -159,17 +160,20 @@ class ViewTable extends Component {
       manualTriggers = [],
       triggeredRow,
       triggeredFunction,
-    } = this.props; // eslint-disable-line no-unused-vars
+    } = this.props;
 
     // check if table exists
-    const currentTable = schemas.find(s => s.table_name === tableName);
+    const currentTable = schemas.find(
+      s => s.table_name === tableName && s.table_schema === currentSchema
+    );
+
     if (!currentTable) {
-      // dispatch a 404 route
-      dispatch(replace('/404'));
+      // throw a 404 exception
+      throw new NotFoundError();
     }
+
     // Is this a view
-    const isView =
-      schemas.find(s => s.table_name === tableName).table_type !== 'BASE TABLE';
+    const isView = currentTable.table_type !== 'BASE TABLE';
 
     // Are there any expanded columns
     const viewRows = (

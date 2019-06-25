@@ -1,6 +1,8 @@
 ---
 title: "Architecture"
 order: 1
+metaTitle: "GraphQL Architecture | GraphQL React Native Apollo Tutorial"
+metaDescription: "Learn about the architecture of GraphQL, GraphQL over HTTP, the client server model with an example of http request"
 ---
 
 Before going further in understanding GraphQL, it's useful to get a sense of how
@@ -10,7 +12,7 @@ GraphQL is actually used in an HTTP client (typically a web/mobile app).
 Check out the diagram below, to get a sense of how GraphQL is typically used in
 your stack:
 
-![GraphQL over HTTP](./graphql-on-http.png)
+![GraphQL over HTTP](https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-react/graphql-on-http.png)
 
 ### GraphQL client-server flow:
 
