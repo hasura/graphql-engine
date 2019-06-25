@@ -318,14 +318,14 @@ const saveForeignKeys = (index, tableSchema, columns) => {
           alter table "${schemaName}"."${tableName}" drop constraint "${generatedConstraintName}",
           add constraint "${constraintName}" 
           foreign key (${Object.keys(oldConstraint.column_mapping)
-    .map(lc => `"${lc}"`)
-    .join(', ')}) 
+            .map(lc => `"${lc}"`)
+            .join(', ')}) 
           references "${oldConstraint.ref_table_table_schema}"."${
-  oldConstraint.ref_table
-}"
+        oldConstraint.ref_table
+      }"
           (${Object.values(oldConstraint.column_mapping)
-    .map(rc => `"${rc}"`)
-    .join(', ')}) 
+            .map(rc => `"${rc}"`)
+            .join(', ')}) 
           on update ${pgConfTypes[oldConstraint.on_update]}
           on delete ${pgConfTypes[oldConstraint.on_delete]};
         `;
@@ -811,14 +811,15 @@ const deleteColumnSql = column => {
     const comment = column.comment;
     const is_nullable = column.is_nullable;
     const col_type = column.udt_name;
+
     const alterStatement =
       'ALTER TABLE ' + '"' + currentSchema + '"' + '.' + '"' + tableName + '" ';
-    const deleteQueryUp = alterStatement + 'DROP COLUMN ' + '"' + name + '"';
+
     const schemaChangesUp = [
       {
         type: 'run_sql',
         args: {
-          sql: deleteQueryUp,
+          sql: alterStatement + 'DROP COLUMN ' + '"' + name + '"',
         },
       },
     ];
@@ -886,6 +887,7 @@ const deleteColumnSql = column => {
         },
       });
     }
+
     // Apply migrations
     const migrationName =
       'alter_table_' + currentSchema + '_' + tableName + '_drop_column_' + name;
@@ -900,8 +902,9 @@ const deleteColumnSql = column => {
         dispatch(
           showWarningNotification(
             'Check down migration',
-            'Check down migration',
-            data
+            'Please verify that the down migration "' +
+              data.name +
+              '" contains recreation of all the appropriate dependent objects (like constraints)'
           )
         );
       }
@@ -1209,7 +1212,7 @@ const isColumnUnique = (tableSchema, colName) => {
   );
 };
 
-const saveColumnChangesSql = (colName, column) => {
+const saveColumnChangesSql = (colName, column, onSuccess) => {
   // eslint-disable-line no-unused-vars
   return (dispatch, getState) => {
     const columnEdit = getState().tables.modify.columnEdit[colName];
@@ -1278,24 +1281,24 @@ const saveColumnChangesSql = (colName, column) => {
     const schemaChangesUp =
       originalColType !== colType
         ? [
-          {
-            type: 'run_sql',
-            args: {
-              sql: columnChangesUpQuery,
+            {
+              type: 'run_sql',
+              args: {
+                sql: columnChangesUpQuery,
+              },
             },
-          },
-        ]
+          ]
         : [];
     const schemaChangesDown =
       originalColType !== colType
         ? [
-          {
-            type: 'run_sql',
-            args: {
-              sql: columnChangesDownQuery,
+            {
+              type: 'run_sql',
+              args: {
+                sql: columnChangesDownQuery,
+              },
             },
-          },
-        ]
+          ]
         : [];
 
     /* column default up/down migration */
@@ -1745,7 +1748,8 @@ const saveColumnChangesSql = (colName, column) => {
     const errorMsg = 'Modifying column failed';
 
     const customOnSuccess = () => {
-      dispatch(setColumnEdit(columnEdit));
+      dispatch(resetColumnEdit(colName));
+      onSuccess();
     };
     const customOnError = () => {};
 

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
 import CustomInputAutoSuggest from '../../../Common/CustomInputAutoSuggest/CustomInputAutoSuggest';
@@ -8,7 +8,6 @@ import { getValidAlterOptions } from './utils';
 const ColumnEditor = ({
   onSubmit,
   dispatch,
-  columnComment,
   columnProperties,
   selectedProperties,
   editColumn,
@@ -22,12 +21,6 @@ const ColumnEditor = ({
   }
 
   const styles = require('./ModifyTable.scss');
-
-  useEffect(() => {
-    if (columnComment) {
-      dispatch(editColumn(colName, 'comment', columnComment || ''));
-    }
-  }, [columnComment]);
 
   const getColumnType = () => {
     return (
@@ -78,7 +71,7 @@ const ColumnEditor = ({
     dispatch(editColumn(colName, 'isUnique', e.target.value === 'true'));
   };
 
-  const getDefaultInput = () => {
+  const getColumnDefaultInput = () => {
     const theme = require('../../../Common/CustomInputAutoSuggest/CustomThemes/EditColumnDefault.scss');
 
     return (
@@ -156,19 +149,7 @@ const ColumnEditor = ({
         </div>
         <div className={`${styles.display_flex} form-group`}>
           <label className="col-xs-2">Default</label>
-          <div className="col-xs-6">
-            {getDefaultInput()}
-            {/*
-            <input
-              className="input-sm form-control"
-              value={selectedProperties[colName].default || ''}
-              onChange={updateColumnDef}
-              type="text"
-              disabled={columnProperties.pkConstraint}
-              data-test="edit-col-default"
-            />
-            */}
-          </div>
+          <div className="col-xs-6">{getColumnDefaultInput()}</div>
         </div>
         <div className={`${styles.display_flex} form-group`}>
           <label className="col-xs-2">Comment</label>

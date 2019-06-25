@@ -71,10 +71,11 @@ const ColumnEditorList = ({
           : false,
       // uniqueConstraint: columnUniqueConstraints[colName],
       default: col.column_default || '',
+      comment: col.comment || '',
     };
 
-    const onSubmit = () => {
-      dispatch(saveColumnChangesSql(colName, col));
+    const onSubmit = toggleEditor => {
+      dispatch(saveColumnChangesSql(colName, col, toggleEditor));
     };
 
     const onDelete = () => {
@@ -96,6 +97,8 @@ const ColumnEditorList = ({
     };
 
     const keyProperties = () => {
+      const propertiesDisplay = [];
+
       const propertiesList = [];
 
       propertiesList.push(columnProperties.display_type_name);
@@ -118,7 +121,15 @@ const ColumnEditorList = ({
 
       const keyPropertiesString = propertiesList.join(', ');
 
-      return <i>{keyPropertiesString && `- ${keyPropertiesString}`}</i>;
+      propertiesDisplay.push(
+        <i>{keyPropertiesString && `- ${keyPropertiesString}`}</i>
+      );
+      propertiesDisplay.push(<br />);
+      propertiesDisplay.push(
+        <i>{columnProperties.comment && `${columnProperties.comment}`}</i>
+      );
+
+      return propertiesDisplay;
     };
 
     const collapsedLabel = () => {
@@ -192,7 +203,6 @@ const ColumnEditorList = ({
           tableName={tableName}
           dispatch={dispatch}
           currentSchema={currentSchema}
-          columnComment={col.comment}
           columnProperties={columnProperties}
           selectedProperties={columnEdit}
           editColumn={editColumn}
