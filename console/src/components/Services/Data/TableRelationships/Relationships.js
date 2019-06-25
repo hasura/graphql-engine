@@ -10,6 +10,7 @@ import {
   resetRelationshipForm,
   formRelName,
   getExistingFieldsMap,
+  fetchRemoteRelationships,
 } from './Actions';
 import { findAllFromRel } from '../utils';
 import { showErrorNotification } from '../../Common/Notification';
@@ -318,6 +319,15 @@ const Relationships = ({
   schemaList,
   featuresCompatibility,
 }) => {
+  useEffect(() => {
+    if (
+      featuresCompatibility &&
+      featuresCompatibility[FT_REMOTE_RELATIONSHIPS]
+    ) {
+      dispatch(fetchRemoteRelationships(tableName, currentSchema));
+    }
+  }, [featuresCompatibility]);
+
   useEffect(() => {
     dispatch({ type: RESET });
     dispatch(setTable(tableName));

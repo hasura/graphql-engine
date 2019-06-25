@@ -1,12 +1,17 @@
 import inflection from 'inflection';
 
-import { makeMigrationCall, updateSchemaInfo } from '../DataActions';
+import {
+  makeMigrationCall,
+  updateSchemaInfo,
+  mergeRemoteRelationshipsWithSchema,
+} from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 import { getIntrospectionQuery } from 'graphql';
 import { showErrorNotification } from '../../Common/Notification';
 import endpoints from '../../../../Endpoints';
 import requestAction from '../../../../utils/requestAction';
 import suggestedRelationshipsRaw from './autoRelations';
+import { fetchTrackedTableRemoteRelationshipQuery } from '../utils';
 import { getRemoteRelPayload, parseRemoteRelationship } from './utils';
 
 export const SET_MANUAL_REL_ADD = 'ModifyTable/SET_MANUAL_REL_ADD';
@@ -19,6 +24,10 @@ export const REL_SELECTION_CHANGED = 'ModifyTable/REL_SELECTION_CHANGED';
 export const MANUAL_REL_NAME_CHANGED = 'ModifyTable/MANUAL_REL_NAME_CHANGED';
 export const REL_NAME_CHANGED = 'ModifyTable/REL_NAME_CHANGED';
 export const REL_ADD_NEW_CLICKED = 'ModifyTable/REL_ADD_NEW_CLICKED';
+export const FETCHING_REMOTE_RELATIONSHIPS =
+  'ModifyTable/FETCHING_REMOTE_RELATIONSHIPS';
+export const FETCHED_REMOTE_RELATIONSHIPS =
+  'ModifyTable/FETCHED_REMOTE_RELATIONSHIPS';
 
 export const SET_REMOTE_RELATIONSHIPS = 'ModifyTable/SET_REMOTE_RELATIONSHIPS';
 
@@ -223,6 +232,40 @@ export const dropRemoteRelationship = (
       requestMsg,
       successMsg,
       errorMsg
+    );
+  };
+};
+
+export const fetchRemoteRelationships = () => {
+  return (dispatch, getState) => {
+    const headers = getState().tables.dataHeaders;
+    dispatch({ type: FETCHING_REMOTE_RELATIONSHIPS });
+    const tableName = getState().tables.currentTable;
+    const currentSchema = getState().tables.currentSchema;
+    return dispatch(
+      requestAction(`${endpoints.query}`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(
+          fetchTrackedTableRemoteRelationshipQuery({
+            tables: [{ table_name: tableName, table_schema: currentSchema }],
+          })
+        ),
+      })
+    ).then(
+      data => {
+        const remoteRelationships = JSON.parse(data.result[1]);
+        dispatch({ type: FETCHED_REMOTE_RELATIONSHIPS });
+        dispatch(
+          mergeRemoteRelationshipsWithSchema(remoteRelationships, {
+            name: tableName,
+            schema: currentSchema,
+          })
+        );
+      },
+      error => {
+        console.error(error);
+      }
     );
   };
 };

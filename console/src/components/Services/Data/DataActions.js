@@ -172,6 +172,30 @@ const initQueries = {
   },
 };
 
+export const mergeRemoteRelationshipsWithSchema = (
+  remoteRelationships,
+  table
+) => {
+  return (dispatch, getState) => {
+    const { allSchemas } = getState().tables;
+    const t = allSchemas.find(s => {
+      return s.table_name === table.name && s.table_schema === table.schema;
+    });
+    if (!t) return;
+    const newAllSchemas = allSchemas.filter(
+      s => !(s.table_name === table.name && s.table_schema === table.schema)
+    );
+    newAllSchemas.push({
+      ...t,
+      remote_relationships: remoteRelationships,
+    });
+    dispatch({
+      type: LOAD_SCHEMA,
+      allSchemas: newAllSchemas,
+    });
+  };
+};
+
 const fetchTrackedFunctions = () => {
   return (dispatch, getState) => {
     const url = Endpoints.getSchema;
@@ -288,11 +312,7 @@ const loadSchema = configOptions => {
         const tableList = JSON.parse(data[0].result[1]);
         const fkList = JSON.parse(data[2].result[1]);
         const refFkList = JSON.parse(data[3].result[1]);
-        let remoteRelationships = [];
-
-        if (featuresCompatibility[FT_REMOTE_RELATIONSHIPS]) {
-          remoteRelationships = JSON.parse(data[4].result[1]);
-        }
+        const remoteRelationships = [];
 
         const mergedData = mergeLoadSchemaData(
           tableList,
