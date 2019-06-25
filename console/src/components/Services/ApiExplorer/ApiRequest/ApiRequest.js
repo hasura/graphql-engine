@@ -725,6 +725,7 @@ ApiRequest.propTypes = {
   numberOfTables: PropTypes.number.isRequired,
   headerFocus: PropTypes.bool.isRequired,
   urlParams: PropTypes.object.isRequired,
+  consoleUrl: PropTypes.string.isRequired,
 };
 
 export default ApiRequest;
