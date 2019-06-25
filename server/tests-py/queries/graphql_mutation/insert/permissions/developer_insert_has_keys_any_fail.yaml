@@ -10,7 +10,7 @@ response:
 headers:
   X-Hasura-Role: developer
   X-Hasura-Spec-Keys: |-
-    ["display","memory","warranty"]
+    {display,memory,warranty}
 query:
   variables:
     spec:
@@ -27,7 +27,6 @@ query:
       ) {
         affected_rows
         returning {
-          id
           name
           spec
           }

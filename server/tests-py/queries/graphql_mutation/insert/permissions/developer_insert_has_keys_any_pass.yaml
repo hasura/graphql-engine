@@ -6,14 +6,13 @@ response:
     insert_computer:
       affected_rows: 1
       returning:
-      - id: 1
-        name: Computer1
+      - name: Computer1
         spec:
           processor: AMD
 headers:
   X-Hasura-Role: developer
   X-Hasura-Spec-Keys: |-
-    ["processor","display","memory","warranty"]
+    {processor,display,memory,warranty}
 query:
   variables:
     spec:
@@ -30,7 +29,6 @@ query:
       ) {
         affected_rows
         returning {
-          id
           name
           spec
           }
