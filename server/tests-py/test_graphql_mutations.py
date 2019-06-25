@@ -376,6 +376,12 @@ class TestGraphqlDeletePermissions(DefaultTestMutations):
     def test_resident_delete_without_select_perm_fail(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/resident_delete_without_select_perm_fail.yaml")
 
+    def test_agent_delete_perm_arr_sess_var(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/agent_delete_perm_arr_sess_var.yaml")
+
+    def test_agent_delete_perm_arr_sess_var_fail(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/agent_delete_perm_arr_sess_var_fail.yaml")
+
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/delete/permissions"
