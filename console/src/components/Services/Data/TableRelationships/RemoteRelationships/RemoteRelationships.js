@@ -35,6 +35,7 @@ const RemoteRelationships = ({
         <RemoteRelationshipEditor
           relationship={remoteRelationship}
           allRelationships={remoteRelationships.relationships}
+          existingRelationship={existingRemoteRelationships[i]}
           index={i}
           numRels={numRels}
           dispatch={dispatch}

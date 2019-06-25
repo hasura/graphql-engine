@@ -7,7 +7,7 @@ import { showErrorNotification } from '../../Common/Notification';
 import endpoints from '../../../../Endpoints';
 import requestAction from '../../../../utils/requestAction';
 import suggestedRelationshipsRaw from './autoRelations';
-import { getRemoteRelPayload } from './utils';
+import { getRemoteRelPayload, parseRemoteRelationship } from './utils';
 
 export const SET_MANUAL_REL_ADD = 'ModifyTable/SET_MANUAL_REL_ADD';
 export const MANUAL_REL_SET_TYPE = 'ModifyTable/MANUAL_REL_SET_TYPE';
@@ -86,10 +86,6 @@ export const saveRemoteRelationship = (
       name: getState().tables.currentTable,
     };
 
-    /*const existingRelationship = getState().tables.allSchemas.find(
-      s => s.table_name === table.name && s.table_schema === table.schema
-    ).remote_relationships[index];*/
-
     const upQuery = [
       {
         type: isNew
@@ -108,7 +104,20 @@ export const saveRemoteRelationship = (
         },
       });
     } else {
-      // TODO
+      const existingRelationship = getState().tables.allSchemas.find(
+        s => s.table_name === table.name && s.table_schema === table.schema
+      ).remote_relationships[index];
+      const downQueryArgs = getRemoteRelPayload(
+        parseRemoteRelationship({
+          remote_schema: existingRelationship.configuration.remote_schema,
+          remote_field: existingRelationship.configuration.remote_field,
+        }),
+        table
+      );
+      downQuery.push({
+        type: 'update_remote_relationship',
+        args: downQueryArgs,
+      });
     }
 
     // Apply migrations
@@ -123,7 +132,7 @@ export const saveRemoteRelationship = (
       isNew ? 'created' : 'updated'
     } remote relationship`;
     const errorMsg = `${
-      isNew ? 'Updating' : 'Creating'
+      isNew ? 'Creating' : 'Updating'
     } remote relationship failed`;
 
     const customOnSuccess = () => {

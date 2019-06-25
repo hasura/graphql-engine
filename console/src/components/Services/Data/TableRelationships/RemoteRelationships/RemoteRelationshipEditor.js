@@ -21,6 +21,7 @@ const RemoteRelationshipEditor = ({
   allRelationships,
   index,
   numRels,
+  existingRelationship,
   tableSchema,
   remoteSchemas,
   loading,
@@ -309,6 +310,19 @@ const RemoteRelationshipEditor = ({
   const collapsedLabel = () =>
     getRemoteRelConfig(relationship, tableSchema.table_name, styles);
 
+  const collapseCallback = () => {
+    console.log('Called');
+    if (isLast) return;
+    const newRelationships = JSON.parse(JSON.stringify(allRelationships));
+    dispatch(
+      setRemoteRelationships([
+        ...newRelationships.slice(0, index),
+        existingRelationship,
+        ...newRelationships.slice(index + 1),
+      ])
+    );
+  };
+
   return (
     <ExpandableEditor
       editorExpanded={expandedContent}
@@ -317,6 +331,7 @@ const RemoteRelationshipEditor = ({
       saveFunc={saveFunc}
       expandButtonText={expandButtonText}
       collapseButtonText={collapseButtonText}
+      collapseCallback={collapseCallback}
       collapsedLabel={collapsedLabel}
       removeFunc={removeFunc}
     />
