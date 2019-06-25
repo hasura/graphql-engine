@@ -98,7 +98,10 @@ class Schema extends Component {
 
       const _untrackedTables = schema.filter(
         table => !table.is_table_tracked && table.table_schema === currentSchema
-      );
+      ).map(table => {
+        table.schemeWarning = gqlPattern.test(table.table_name);
+        return table;
+      });
 
       return _untrackedTables.sort(tableSortFunc);
     };
@@ -285,14 +288,18 @@ class Schema extends Component {
       const getTrackAllBtn = () => {
         let trackAllBtn = null;
 
+        const _allUntrackedTables = allUntrackedTables.filter(
+          table => table.schemeWarning
+        );
+
         const trackAllTables = e => {
           e.stopPropagation();
           e.preventDefault();
 
-          dispatch(addAllUntrackedTablesSql(allUntrackedTables));
+          dispatch(addAllUntrackedTablesSql(_allUntrackedTables));
         };
 
-        if (allUntrackedTables.length > 0) {
+        if (_allUntrackedTables.length > 0) {
           trackAllBtn = (
             <Button
               className={`${styles.display_inline} ${styles.add_mar_left}`}
@@ -319,7 +326,7 @@ class Schema extends Component {
             dispatch(addExistingTableSql());
           };
 
-          const schemeWarning = !gqlPattern.test(table.table_name) ? (
+          const schemeWarning = !table.schemeWarning ? (
             <div
               className={styles.scheme_warning + ' ' + styles.display_inline}
             >
@@ -340,6 +347,7 @@ class Schema extends Component {
                   color="white"
                   size="xs"
                   onClick={handleTrackTable}
+                  disabled={!!schemeWarning}
                 >
                   Track
                 </Button>
