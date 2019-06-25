@@ -6,8 +6,7 @@ response:
     insert_computer:
       affected_rows: 1
       returning:
-      - id: 1
-        name: Computer1
+      - name: Computer1
         spec: &spec
           processor: AMD
           display: '16" FHD'
@@ -15,7 +14,7 @@ response:
 headers:
   X-Hasura-Role: seller
   X-Hasura-Spec-Required-Keys: |-
-    ["processor","display","memory"]
+    {processor,display,memory}
 query:
   variables:
     spec: *spec
@@ -31,7 +30,6 @@ query:
       ) {
         affected_rows
         returning {
-          id
           name
           spec
           }
