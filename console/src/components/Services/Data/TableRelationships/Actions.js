@@ -58,8 +58,9 @@ export const introspectRemoteSchema = (schemaName, introspectionCallback) => {
   };
 };
 
-export const createRemoteRelationship = (
+export const saveRemoteRelationship = (
   index,
+  isNew,
   successCallback,
   errorCallback
 ) => {
@@ -84,30 +85,46 @@ export const createRemoteRelationship = (
       schema: getState().tables.currentSchema,
       name: getState().tables.currentTable,
     };
+
+    /*const existingRelationship = getState().tables.allSchemas.find(
+      s => s.table_name === table.name && s.table_schema === table.schema
+    ).remote_relationships[index];*/
+
     const upQuery = [
       {
-        type: 'create_remote_relationship',
+        type: isNew
+          ? 'create_remote_relationship'
+          : 'update_remote_relationship',
         args: getRemoteRelPayload(state, table),
       },
     ];
-    const downQuery = [
-      {
+    const downQuery = [];
+    if (isNew) {
+      downQuery.push({
         type: 'delete_remote_relationship',
         args: {
           name: state.name,
           table,
         },
-      },
-    ];
+      });
+    } else {
+      // TODO
+    }
 
     // Apply migrations
     const migrationName = `table_${table.name}_create_remote_relationship_${
       state.name
     }`;
 
-    const requestMsg = 'Creating remote relationship...';
-    const successMsg = 'Successfully created remote relationship';
-    const errorMsg = 'Creating remote relationship failed';
+    const requestMsg = `${
+      isNew ? 'Creating' : 'Updating'
+    } remote relationship...`;
+    const successMsg = `Successfully ${
+      isNew ? 'created' : 'updated'
+    } remote relationship`;
+    const errorMsg = `${
+      isNew ? 'Updating' : 'Creating'
+    } remote relationship failed`;
 
     const customOnSuccess = () => {
       if (successCallback) {

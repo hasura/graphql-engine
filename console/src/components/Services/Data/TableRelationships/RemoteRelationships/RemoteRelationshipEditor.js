@@ -11,7 +11,7 @@ import { getRemoteRelConfig } from '../utils';
 import {
   setRemoteRelationships,
   defaultRemoteRelationship,
-  createRemoteRelationship,
+  saveRemoteRelationship,
   dropRemoteRelationship,
 } from '../Actions';
 
@@ -158,6 +158,11 @@ const RemoteRelationshipEditor = ({
 
   // render relationship name textbox
   const relNameTextBox = () => {
+    let title;
+    if (!isLast) {
+      title =
+        'Relationship name cannot be changed. Please drop and recreate the relationship if you wish to rename.';
+    }
     return (
       <div>
         <div className={`${styles.add_mar_bottom}`}>
@@ -176,6 +181,8 @@ const RemoteRelationshipEditor = ({
               placeholder="name"
               value={relationship.name}
               onChange={handleRelnameChange}
+              disabled={!isLast}
+              title={title}
             />
           </div>
         </div>
@@ -271,7 +278,7 @@ const RemoteRelationshipEditor = ({
       }
       toggle();
     };
-    dispatch(createRemoteRelationship(index, successCallback));
+    dispatch(saveRemoteRelationship(index, isLast, successCallback));
   };
 
   let removeFunc;

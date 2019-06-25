@@ -179,9 +179,13 @@ export const getSchemaTree = (relationship, fields) => {
       const currentSelectedField = remoteField.find(
         rf => field.name === rf.name && nesting === rf.nesting
       );
-      field.args.forEach(fa => {
-        handleArg(fa, nesting + 1, 0, currentSelectedField, '');
-      });
+      field.args
+        .sort((fa1, fa2) => {
+          return fa1.name > fa2.name ? 1 : fa1.name < fa2.name ? -1 : 0;
+        })
+        .forEach(fa => {
+          handleArg(fa, nesting + 1, 0, currentSelectedField, '');
+        });
 
       const handleScalarTypeField = () => {};
 
