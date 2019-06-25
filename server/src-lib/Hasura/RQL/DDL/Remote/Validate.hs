@@ -22,10 +22,10 @@ import           Hasura.RQL.DDL.Remote.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Data.HashMap.Strict as HM
-import qualified Data.Text as T
-import qualified Hasura.GraphQL.Context as GC
-import qualified Hasura.GraphQL.Schema as GS
+import qualified Data.HashMap.Strict           as HM
+import qualified Data.Text                     as T
+import qualified Hasura.GraphQL.Context        as GC
+import qualified Hasura.GraphQL.Schema         as GS
 import qualified Language.GraphQL.Draft.Syntax as G
 
 -- | An error validating the remote relationship.
@@ -183,9 +183,9 @@ stripValue remoteRelationshipName types gtype value = do
     G.VEnum {} -> pure Nothing
     G.VList (G.ListValueG values) ->
       case values of
-        [] -> pure Nothing
+        []       -> pure Nothing
         [gvalue] -> stripList remoteRelationshipName types gtype gvalue
-        _ -> lift (Left UnsupportedMultipleElementLists)
+        _        -> lift (Left UnsupportedMultipleElementLists)
     G.VObject (G.unObjectValue -> keypairs) ->
       fmap Just (stripObject remoteRelationshipName types gtype keypairs)
 
@@ -283,7 +283,8 @@ validateRemoteArguments ::
   -> Validation (NonEmpty ValidationError) ()
 validateRemoteArguments expectedArguments providedArguments permittedVariables types = do
   traverse validateProvided (HM.toList providedArguments)
-  traverse validateExpected (HM.toList expectedArguments)
+  -- Not neccessary to validate if all required args are provided in the relationship
+  -- traverse validateExpected (HM.toList expectedArguments)
   pure ()
   where
     validateProvided (providedName, providedValue) =
@@ -291,16 +292,16 @@ validateRemoteArguments expectedArguments providedArguments permittedVariables t
         Nothing -> Failure (pure (NoSuchArgumentForRemote providedName))
         Just (_iviType -> expectedType) ->
           validateType permittedVariables providedValue expectedType types
-    validateExpected (expectedKey, expectedInpValInfo) =
-      if G.isNullable (_iviType expectedInpValInfo)
-        then pure ()
-        else case _iviDefVal expectedInpValInfo of
-               Just {} -> pure ()
-               Nothing ->
-                 case HM.lookup expectedKey providedArguments of
-                   Nothing ->
-                     Failure (pure (MissingRequiredArgument expectedKey))
-                   Just {} -> pure ()
+    -- validateExpected (expectedKey, expectedInpValInfo) =
+    --   if G.isNullable (_iviType expectedInpValInfo)
+    --     then pure ()
+    --     else case _iviDefVal expectedInpValInfo of
+    --            Just {} -> pure ()
+    --            Nothing ->
+    --              case HM.lookup expectedKey providedArguments of
+    --                Nothing ->
+    --                  Failure (pure (MissingRequiredArgument expectedKey))
+    --                Just {} -> pure ()
 
 
 -- | Validate a value against a type.
@@ -327,9 +328,9 @@ validateType permittedVariables value expectedGType types =
     v@(G.VEnum _) -> Failure (pure (UnsupportedArgumentType v))
     G.VList (G.unListValue -> values) -> do
       case values of
-        [] -> pure ()
+        []  -> pure ()
         [_] -> pure ()
-        _ -> Failure (pure UnsupportedMultipleElementLists)
+        _   -> Failure (pure UnsupportedMultipleElementLists)
       (assertListType expectedGType)
       (flip
          traverse_
