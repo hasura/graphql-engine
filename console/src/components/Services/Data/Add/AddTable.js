@@ -136,7 +136,6 @@ class AddTable extends Component {
         showErrorNotification(
           'Error creating table!',
           'Minimum one column required',
-          '',
           {
             custom: ATLEAST_ONE_COLUMN_MSG,
           }
@@ -155,7 +154,6 @@ class AddTable extends Component {
           showErrorNotification(
             'Error creating table!',
             'Column name cannot be empty',
-            '',
             {
               custom: 'Column name cannot be empty',
             }
@@ -167,7 +165,6 @@ class AddTable extends Component {
           showErrorNotification(
             gqlColumnErrorNotif[0],
             gqlColumnErrorNotif[1],
-            gqlColumnErrorNotif[2],
             gqlColumnErrorNotif[3]
           )
         );
@@ -192,7 +189,6 @@ class AddTable extends Component {
               showErrorNotification(
                 gqlColumnErrorNotif[0],
                 gqlColumnErrorNotif[1],
-                gqlColumnErrorNotif[2],
                 gqlColumnErrorNotif[3]
               )
             );
@@ -214,7 +210,6 @@ class AddTable extends Component {
         showErrorNotification(
           'Error creating table!',
           'Select atleast one primary key',
-          '',
           {
             custom: ATLEAST_ONE_PRIMARY_KEY_MSG,
           }
@@ -233,7 +228,6 @@ class AddTable extends Component {
         showErrorNotification(
           'Error creating table!',
           'Table name cannot be empty',
-          '',
           {
             custom: 'Table name cannot be empty. Please add a name',
           }
@@ -245,7 +239,6 @@ class AddTable extends Component {
         showErrorNotification(
           gqlTableErrorNotif[0],
           gqlTableErrorNotif[1],
-          gqlTableErrorNotif[2],
           gqlTableErrorNotif[3]
         )
       );
