@@ -25,7 +25,6 @@ import {
   setColNullable,
   setColDefault,
   setForeignKeys,
-  addCol,
   setUniqueKeys,
 } from './AddActions';
 
@@ -96,11 +95,8 @@ class AddTable extends Component {
     dispatch(setColName(e.target.value, i, isNullableChecked));
   };
   onColTypeChange = (i, value) => {
-    const { dispatch, columns } = this.props;
+    const { dispatch } = this.props;
     dispatch(setColType(value, i));
-    if (i + 1 === columns.length) {
-      dispatch(addCol());
-    }
   };
   onColNullableChange = (i, e) => {
     const { dispatch } = this.props;
