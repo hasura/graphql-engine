@@ -101,11 +101,12 @@ const PrimaryKeyEditor = ({
   // remove
   const onRemove = () => {
     if (pkConstraintName) {
-      const confirmMessage =
-        DELETE_PK_WARNING +
-        '\nPlease type "DELETE PRIMARY KEY" (in caps, without quotes) to confirm.\n';
+      const confirmMessage = DELETE_PK_WARNING;
       const a = handleDelete(confirmMessage);
-      if (a && typeof a === 'string' && a.trim() === 'DELETE PRIMARY KEY') {
+      if (
+        a === true ||
+        (a && typeof a === 'string' && a.trim() === 'DELETE PRIMARY KEY')
+      ) {
         dispatch(setPrimaryKeys(['']));
         onSave(null, true);
       } else {

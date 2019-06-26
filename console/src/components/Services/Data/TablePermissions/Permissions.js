@@ -1634,9 +1634,12 @@ class Permissions extends Component {
 
         const dispatchRemoveAccess = () => {
           const confirmMessage =
-            'Are you absolutely sure?\nThis action cannot be undone. This will permanently delete the permissions. Please type "DELETE" (in caps, without quotes) to confirm.\n';
+            'Are you absolutely sure?\nThis action cannot be undone. This will permanently delete the permissions.';
           const a = handleDelete(confirmMessage);
-          if (a && typeof a === 'string' && a.trim() === 'DELETE') {
+          if (
+            a === true ||
+            (a && typeof a === 'string' && a.trim() === 'DELETE')
+          ) {
             dispatch(permChangePermissions(permChangeTypes.delete));
           } else {
             return dispatch(showSuccessNotification('No changes'));

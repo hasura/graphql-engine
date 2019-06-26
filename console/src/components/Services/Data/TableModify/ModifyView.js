@@ -139,9 +139,12 @@ class ModifyView extends Component {
         color="red"
         size="sm"
         onClick={() => {
-          const confirmMessage = `Are you absolutely sure?\nThis action cannot be undone. This will permanently delete the table ${tableName}. Please type "DELETE" (in caps, without quotes) to confirm.\n`;
+          const confirmMessage = `Are you absolutely sure?\nThis action cannot be undone. This will permanently delete the view ${tableName}.\n`;
           const a = handleDelete(confirmMessage);
-          if (a && typeof a === 'string' && a.trim() === 'DELETE') {
+          if (
+            a === true ||
+            (a && typeof a === 'string' && a.trim() === 'DELETE')
+          ) {
             dispatch(deleteViewSql(tableName));
           }
         }}

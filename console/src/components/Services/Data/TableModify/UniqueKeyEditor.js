@@ -101,9 +101,13 @@ const UniqueKeyEditor = ({
     let removeFunc;
     if (!isLast) {
       removeFunc = toggle => {
-        const confirmMessage = 'Are you absolutely sure?\nThis will remove this unique key constraint. Please type "REMOVE" (in caps, without quotes) to confirm.\n';
+        const confirmMessage =
+          'Are you absolutely sure?\nThis will remove this unique key constraint.';
         const a = handleDelete(confirmMessage);
-        if (a && typeof a === 'string' && a.trim() === 'REMOVE') {
+        if (
+          a === true ||
+          (a && typeof a === 'string' && a.trim() === 'REMOVE')
+        ) {
           dispatch(
             removeUniqueKey(
               i,

@@ -5,9 +5,9 @@ import { handleDelete } from '../../../../handleDelete';
 import { showSuccessNotification } from '../../Common/Notification';
 
 const verifyDeleteTrigger = (triggerName, dispatch) => {
-  const confirmMessage = `Are you absolutely sure?\nThis action cannot be undone. This will permanently delete the trigger ${triggerName}. Please type "DELETE" (in caps, without quotes) to confirm.\n`;
+  const confirmMessage = `Are you absolutely sure?\nThis action cannot be undone. This will permanently delete the trigger ${triggerName}.`;
   const a = handleDelete(confirmMessage);
-  if (a && typeof a === 'string' && a.trim() === 'DELETE') {
+  if (a === true || (a && typeof a === 'string' && a.trim() === 'DELETE')) {
     dispatch(deleteTrigger(triggerName));
   } else {
     return dispatch(showSuccessNotification('No changes'));

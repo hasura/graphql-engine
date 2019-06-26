@@ -111,9 +111,13 @@ class AllowedQueriesList extends React.Component {
         };
 
         const onDelete = () => {
-          const confirmMessage = 'Are you absolutely sure?\nThis will delete the query. Please type "DELETE" (in caps, without quotes) to confirm.\n';
+          const confirmMessage =
+            'Are you absolutely sure?\nThis will delete the query.';
           const a = handleDelete(confirmMessage);
-          if (a && typeof a === 'string' && a.trim() === 'DELETE') {
+          if (
+            a === true ||
+            (a && typeof a === 'string' && a.trim() === 'DELETE')
+          ) {
             const isLastQuery = allowedQueries.length === 1;
 
             dispatch(deleteAllowedQuery(query.name, isLastQuery));
@@ -141,7 +145,8 @@ class AllowedQueriesList extends React.Component {
 
     const getDeleteAllBtn = () => {
       const handleDeleteAll = () => {
-        const confirmMessage = 'Are you absolutely sure?\nThis will delete all the queries. Please type "DELETE ALL" (in caps, without quotes) to confirm.\n';
+        const confirmMessage =
+          'Are you absolutely sure?\nThis will delete all the queries. Please type "DELETE ALL" (in caps, without quotes) to confirm.\n';
         const a = handleDelete(confirmMessage);
         if (a && typeof a === 'string' && a.trim() === 'DELETE ALL') {
           dispatch(deleteAllowList());

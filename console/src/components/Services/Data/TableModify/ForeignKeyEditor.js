@@ -141,9 +141,13 @@ const ForeignKeyEditor = ({
     let removeFk;
     if (!isLast) {
       removeFk = () => {
-        const confirmMessage = 'Are you absolutely sure?\n. This will permanently remove the foreign key. Please type "REMOVE" (in caps, without quotes) to confirm.\n';
+        const confirmMessage =
+          'Are you absolutely sure?\n. This will permanently remove the foreign key.\n';
         const a = handleDelete(confirmMessage);
-        if (a && typeof a === 'string' && a.trim() === 'REMOVE') {
+        if (
+          a === true ||
+          (a && typeof a === 'string' && a.trim() === 'REMOVE')
+        ) {
           dispatch(removeForeignKey(i, tableSchema, orderedColumns));
         } else {
           return dispatch(showSuccessNotification('No changes'));

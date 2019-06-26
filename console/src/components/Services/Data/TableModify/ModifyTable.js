@@ -77,9 +77,12 @@ class ModifyTable extends React.Component {
         color="white"
         size="sm"
         onClick={() => {
-          const confirmMessage = `Are you absolutely sure?\nThis will untrack the table ${tableName}. Please type "UNTRACK" (in caps, without quotes) to confirm.\n`;
+          const confirmMessage = `Are you absolutely sure?\nThis will untrack the table ${tableName}.\n`;
           const a = handleDelete(confirmMessage);
-          if (a && typeof a === 'string' && a.trim() === 'UNTRACK') {
+          if (
+            a === true ||
+            (a && typeof a === 'string' && a.trim() === 'UNTRACK')
+          ) {
             dispatch(untrackTableSql(tableName));
           } else {
             return dispatch(showSuccessNotification('No changes'));
@@ -98,7 +101,7 @@ class ModifyTable extends React.Component {
         size="sm"
         onClick={() => {
           const confirmMessage = `Are you absolutely sure?\nThis action cannot be undone. This will permanently delete the table ${tableName}. Please type table name(case sensitive) to confirm.\n`;
-          const a = handleDelete(confirmMessage);
+          const a = handleDelete(confirmMessage, true);
           if (a && typeof a === 'string' && a.trim() === tableName) {
             dispatch(deleteTableSql(tableName, tableSchema));
           } else {

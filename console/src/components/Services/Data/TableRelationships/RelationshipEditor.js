@@ -82,9 +82,9 @@ class RelationshipEditor extends React.Component {
 
       const confirmMessage = `Are you absolutely sure?\nThis action cannot be undone. This will permanently remove the relationship ${
         relConfig.relName
-      }. Please type "REMOVE" (in caps, without quotes) to confirm.\n`;
+      }`;
       const a = handleDelete(confirmMessage);
-      if (a && typeof a === 'string' && a.trim() === 'REMOVE') {
+      if (a === true || (a && typeof a === 'string' && a.trim() === 'REMOVE')) {
         dispatch(deleteRelMigrate(relConfig));
       } else {
         return dispatch(showSuccessNotification('No changes'));

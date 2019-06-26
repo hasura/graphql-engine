@@ -74,11 +74,11 @@ class Edit extends React.Component {
     e.preventDefault();
 
     const confirmMessage =
-      'Are you absolutely sure?\nThis action cannot be undone. This will permanently delete stitched GraphQL schema. Please type "DELETE" (in caps, without quotes) to confirm.\n';
+      'Are you absolutely sure?\nThis action cannot be undone. This will permanently delete stitched GraphQL schema.\n';
 
     const a = handleDelete(confirmMessage);
     try {
-      if (typeof a === 'string' && a.trim() === 'DELETE') {
+      if (a === true || (a && typeof a === 'string' && a.trim() === 'DELETE')) {
         this.updateDeleteConfirmationError(null);
         this.props.dispatch(deleteResolver());
       } else if (a) {
