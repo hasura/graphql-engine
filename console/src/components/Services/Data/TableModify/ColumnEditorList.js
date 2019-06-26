@@ -122,11 +122,13 @@ const ColumnEditorList = ({
       const keyPropertiesString = propertiesList.join(', ');
 
       propertiesDisplay.push(
-        <i>{keyPropertiesString && `- ${keyPropertiesString}`}</i>
+        <i key={'props'}>{keyPropertiesString && `- ${keyPropertiesString}`}</i>
       );
       propertiesDisplay.push(<br />);
       propertiesDisplay.push(
-        <i>{columnProperties.comment && `${columnProperties.comment}`}</i>
+        <span key={'comment'} className={styles.text_gray}>
+          {columnProperties.comment && `${columnProperties.comment}`}
+        </span>
       );
 
       return propertiesDisplay;
