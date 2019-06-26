@@ -14,15 +14,12 @@ const ExplorerItem = ({
   const {
     isArg,
     isScalar,
-    isScalarList,
-    isNonNullableScalar,
     isChecked,
     parentFieldName,
     parentFieldNesting,
   } = item;
 
-  const isLeaf =
-    isArg && isChecked && (isScalar || isScalarList || isNonNullableScalar);
+  const isLeaf = isArg && isChecked && isScalar;
 
   const tooltip =
     isLeaf && columnScalarTooltip(`${item.parentArg}.${item.name}`);
@@ -70,10 +67,7 @@ const ExplorerItem = ({
         onClick={toggle}
       >
         {label}
-        {isArg &&
-          isChecked &&
-          (isScalar || isNonNullableScalar || isScalarList) &&
-          ':'}
+        {isArg && isChecked && isScalar && ':'}
       </div>
       <div className={styles.add_mar_right_small}>{valueInput()}</div>
       <div>{tooltip}</div>

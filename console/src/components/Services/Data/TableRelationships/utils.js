@@ -2,8 +2,6 @@ import React from 'react';
 import {
   isInputObjectType,
   isInterfaceType,
-  isListType,
-  isNonNullType,
   isEnumType,
   isObjectType,
   isScalarType,
@@ -108,12 +106,6 @@ export const getSchemaTree = (relationship, fields) => {
       isScalar:
         isScalarType(getUnderlyingType(arg.type)) ||
         isEnumType(getUnderlyingType(arg.type)),
-      isScalarList:
-        isListType(arg.type) &&
-        (isScalarType(arg.type.ofType) || isEnumType(arg.type.ofType)),
-      isNonNullableScalar:
-        isNonNullType(arg.type) &&
-        (isScalarType(arg.type.ofType) || isEnumType(arg.type.ofType)),
       isArg: true,
       parentFieldName: parentField.name,
       parentFieldNesting: parentField.nesting,
