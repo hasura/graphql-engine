@@ -803,7 +803,7 @@ const deleteViewSql = viewName => {
   };
 };
 
-const deleteColumnSql = column => {
+const deleteColumnSql = (column, tableSchema) => {
   return (dispatch, getState) => {
     const name = column.column_name;
     const tableName = column.table_name;
@@ -811,6 +811,15 @@ const deleteColumnSql = column => {
     const comment = column.comment;
     const is_nullable = column.is_nullable;
     const col_type = column.udt_name;
+    const foreign_key_constraints = tableSchema.foreign_key_constraints.filter(
+      fkc => {
+        const columnKeys = Object.keys(fkc.column_mapping);
+        return columnKeys.includes(name);
+      }
+    );
+    const unique_constraints = tableSchema.unique_constraints.filter(
+      uc => uc.columns.includes(name)
+    );
 
     const alterStatement =
       'ALTER TABLE ' + '"' + currentSchema + '"' + '.' + '"' + tableName + '" ';
@@ -859,6 +868,53 @@ const deleteColumnSql = column => {
             'SET NOT NULL',
         },
       });
+    }
+
+    if (foreign_key_constraints.length > 0) {
+      foreign_key_constraints.forEach(
+        fkc => {
+          // add foreign key constraint to down migration
+          const lcol = Object.keys(fkc.column_mapping);
+          const rcol = Object.values(fkc.column_mapping);
+          const onUpdate = pgConfTypes[fkc.on_update];
+          const onDelete = pgConfTypes[fkc.on_delete];
+          schemaChangesDown.push({
+            type: 'run_sql',
+            args: {
+              sql:
+              alterStatement +
+              'ADD CONSTRAINT ' +
+              `${fkc.constraint_name} ` +
+              'FOREIGN KEY ' +
+              `(${lcol.join(', ')}) ` +
+              'REFERENCES ' +
+              `"${fkc.ref_table_table_schema}"."${fkc.ref_table}" ` +
+              `(${rcol.join(', ')}) ` +
+              `ON DELETE ${onDelete} ` +
+              `ON UPDATE ${onUpdate}`
+            }
+          });
+        }
+      );
+    }
+
+    if (unique_constraints.length > 0) {
+      unique_constraints.forEach(
+        uc => {
+          // add unique constraint to down migration
+          schemaChangesDown.push({
+            type: 'run_sql',
+            args: {
+              sql:
+              alterStatement +
+              'ADD CONSTRAINT ' +
+              `${uc.constraint_name} ` +
+              'UNIQUE ' +
+              `(${uc.columns.join(', ')})`
+            }
+          });
+        }
+      );
     }
 
     // COMMENT ON COLUMN my_table.my_column IS 'Employee ID number';

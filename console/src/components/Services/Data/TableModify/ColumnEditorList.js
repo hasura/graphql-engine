@@ -81,7 +81,7 @@ const ColumnEditorList = ({
     const onDelete = () => {
       const isOk = confirm('Are you sure you want to delete?');
       if (isOk) {
-        dispatch(deleteColumnSql(col));
+        dispatch(deleteColumnSql(col, tableSchema));
       }
     };
 
@@ -92,7 +92,7 @@ const ColumnEditorList = ({
       }
       const isOk = window.confirm(confirmMessage);
       if (isOk) {
-        dispatch(deleteColumnSql(col));
+        dispatch(deleteColumnSql(col, tableSchema));
       }
     };
 
