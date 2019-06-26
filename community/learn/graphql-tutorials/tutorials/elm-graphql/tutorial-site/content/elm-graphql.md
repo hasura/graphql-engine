@@ -10,7 +10,7 @@ import GithubLink from "../src/GithubLink.js";
 
 We looked into the problems of making a GraphQL query from an elm application in the architecture section. Elm is statically typed and hence everything needs to be properly typed. 
 
-Elm GraphQL [cli](https://www.npmjs.com/package/@dillonkearns/elm-graphql#setup) is a tool which spits out elm types based on the GraphQL schema. We can use these types to interact with the GraphQL server.
+Elm GraphQL [CLI](https://www.npmjs.com/package/@dillonkearns/elm-graphql#setup) is a tool which spits out elm types based on the GraphQL schema. We can use these types to interact with the GraphQL server.
 
 ### Elm GraphQL CLI Installation
 Let's get started by installing elm-graphql:
