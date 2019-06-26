@@ -1,7 +1,7 @@
 import defaultState from './State';
 import { loadTriggers, makeMigrationCall, setTrigger } from '../EventActions';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
-import { showErrorNotification } from '../Notification';
+import { showErrorNotification } from '../../Common/Notification';
 
 import { MANUAL_TRIGGER_VAR } from './utils';
 
@@ -70,7 +70,7 @@ export const REQUEST_COMPLETE = 'ModifyTrigger/REQUEST_COMPLETE';
 export const showValidationError = message => {
   return dispatch => {
     dispatch(
-      showErrorNotification('Error modifying trigger!', 'Invalid input', '', {
+      showErrorNotification('Error modifying trigger!', 'Invalid input', {
         custom: message,
       })
     );

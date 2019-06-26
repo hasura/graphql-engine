@@ -195,9 +195,7 @@ const deleteItem = pkClause => {
         );
       },
       err => {
-        dispatch(
-          showErrorNotification('Deleting row failed!', err.error, reqBody, err)
-        );
+        dispatch(showErrorNotification('Deleting row failed!', err.error, err));
       }
     );
   };

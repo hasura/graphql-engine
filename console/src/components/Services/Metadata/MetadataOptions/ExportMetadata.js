@@ -63,7 +63,6 @@ class ExportMetadata extends Component {
                       showErrorNotification(
                         'Metadata export failed',
                         'Something is wrong.',
-                        requestBody,
                         parsedErrorMsg
                       )
                     );

@@ -113,7 +113,6 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
               showErrorNotification(
                 'SQL execution failed!',
                 'Something is wrong. Data sent back an invalid response json.',
-                requestBody,
                 parsedErrorMsg
               )
             );

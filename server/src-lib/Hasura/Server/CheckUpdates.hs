@@ -5,8 +5,8 @@ module Hasura.Server.CheckUpdates
 import           Control.Exception     (try)
 import           Control.Lens
 import           Control.Monad         (forever)
-import           System.Environment    (lookupEnv)
 
+import qualified CI
 import qualified Control.Concurrent    as C
 import qualified Data.Aeson            as A
 import qualified Data.Aeson.Casing     as A
@@ -47,14 +47,12 @@ checkForUpdates (LoggerCtx loggerSet _ _) manager = do
   where
     updateMsg v = "Update: A new version is available: " <> v
     getUrl = do
-      let buildUrl a = "https://releases.hasura.io/graphql-engine?agent="
-                       <> a
-                       <> "&version="
-                       <> currentVersion
-      isCI <- lookupEnv "CI"
-      case isCI of
-        Just "true" -> return $ buildUrl "server-ci"
-        _           -> return $ buildUrl "server"
+      let buildUrl agent = "https://releases.hasura.io/graphql-engine?agent=" <>
+                           agent <> "&version=" <> currentVersion
+      ciM <- CI.getCI
+      return . buildUrl $ case ciM of
+        Nothing -> "server"
+        Just ci -> "server-" <> (T.toLower . T.pack $ show ci)
 
     aDay = 86400 * 1000 * 1000
 
