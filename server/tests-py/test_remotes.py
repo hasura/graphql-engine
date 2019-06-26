@@ -241,3 +241,48 @@ class TestExecution:
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_scalar.yaml')
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'query_with_scalar_rel.yaml', transport)
+
+
+@pytest.mark.parametrize("transport", ['http'])
+class TestDeepExecution:
+
+    @classmethod
+    def dir(cls):
+        return "queries/remote_schemas/remote_relationships/"
+
+    @pytest.fixture(autouse=True)
+    def transact(self, hge_ctx, graphql_service):
+        print("In setup method")
+        graphql_service.start()
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup.yaml')
+        assert st_code == 200, resp
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_address.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'teardown_address.yaml')
+        assert st_code == 200, resp
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'teardown.yaml')
+        assert st_code == 200, resp
+        graphql_service.stop()
+
+    def test_with_deep_object(self, hge_ctx, transport):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'query_with_deep_nesting_obj.yaml', transport)
+
+    def test_with_deep_array(self, hge_ctx, transport):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_nested_args.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'query_with_deep_nesting_arr.yaml', transport)
+
+    def test_with_complex_path_object(self, hge_ctx, transport):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'query_with_deep_nesting_complex_path_obj.yaml', transport)
+        check_query_f(hge_ctx, self.dir() + 'query_with_deep_nesting_complex_path_obj2.yaml', transport)
+
+    def test_with_complex_path_array(self, hge_ctx, transport):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'query_with_deep_nesting_complex_path_arr.yaml', transport)
+        check_query_f(hge_ctx, self.dir() + 'query_with_deep_nesting_complex_path_arr2.yaml', transport)

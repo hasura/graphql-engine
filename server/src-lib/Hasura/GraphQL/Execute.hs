@@ -30,13 +30,14 @@ import qualified Data.ByteString.Lazy                   as L
 import qualified Data.ByteString.Lazy.Char8             as L8
 import           Data.Scientific
 import           Data.Validation
-import qualified Data.Vector                            as V
 import           Hasura.SQL.Types
 
 import           Data.Has
+import           Data.List
 import           Data.List.NonEmpty                     (NonEmpty (..))
 import qualified Data.List.NonEmpty                     as NE
 import           Data.Time
+import qualified Data.Vector                            as Vec
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.SQL.Time
 
@@ -128,8 +129,10 @@ data RemoteRelField =
     }
   deriving (Show)
 
-newtype RelFieldPath = RelFieldPath (Seq.Seq G.Alias)
-  deriving (Show, Monoid, Semigroup, Eq)
+newtype RelFieldPath =
+  RelFieldPath {
+    unRelFieldPath :: (Seq.Seq G.Alias)
+  } deriving (Show, Monoid, Semigroup, Eq)
 
 data InsertPath =
   InsertPath
@@ -384,7 +387,7 @@ joinResults paths hasuraValue0 =
              resp
         )
         hasuraValue0
-        (trace (" remote values == " ++ show remoteValues) remoteValues)
+        remoteValues
 
 emptyResp :: GQRespValue
 emptyResp = GQRespValue Nothing Nothing
@@ -396,30 +399,62 @@ insertBatchResults ::
   -> GQRespValue
   -> GQRespValue
 insertBatchResults remoteValue batch hasuraResp =
-  case inHashmap (batchRelFieldPath batch) hasuraHash0 of
+  case inHashmap (batchRelFieldPath batch) hasuraHash0 remoteHash0 of
     Left err  -> appendJoinError hasuraResp (GQJoinError (T.pack err))
-    Right val -> GQRespValue (Just val) (gqRespErrors hasuraResp)
+    Right val -> GQRespValue (Just (fst val)) (gqRespErrors hasuraResp)
   where
     hasuraHash0 = fromMaybe mempty (gqRespData hasuraResp)
-    remoteHash = fromMaybe mempty (gqRespData remoteValue)
+    remoteHash0 =
+      sortOn fst (Map.toList $ fromMaybe mempty (gqRespData remoteValue))
     cardinality = biCardinality (batchInputs batch)
-    inHashmap (RelFieldPath Seq.Empty) hasuraHash =
+    inHashmap ::
+         RelFieldPath
+      -> Map.HashMap Text J.Value
+      -> [(Text, J.Value)]
+      -> Either String (Map.HashMap Text J.Value, [(Text, J.Value)])
+    inHashmap (RelFieldPath Seq.Empty) hasuraHash remoteHash =
       case cardinality of
         One ->
-          Right
-            (foldl'
-               (flip Map.delete)
-               (Map.insert
-                  (batchRelationshipKeyToMake batch)
-                  (peelOffNestedFields
-                     (batchNestedFields batch)
-                     (J.Object remoteHash))
-                  hasuraHash)
-               (batchPhantoms batch))
+          case length remoteHash of
+            0 ->
+              Left
+                ("Expected one remote object but got none, while traversing " <>
+                 L8.unpack (J.encode hasuraHash))
+            1 ->
+              Right
+                ( (foldl'
+                     (flip Map.delete)
+                     (Map.insert
+                        (batchRelationshipKeyToMake batch)
+                        (peelOffNestedFields
+                           (batchNestedFields batch)
+                           (snd $ head remoteHash))
+                        hasuraHash)
+                     (batchPhantoms batch))
+                , tail remoteHash)
+            _ ->
+              Left
+                ("Expected one remote object but got many, while traversing " <>
+                 L8.unpack (J.encode hasuraHash))
         Many ->
-          Left
-            ("Cardinality mismatch with result: expected array but got object.")
-    inHashmap (RelFieldPath (G.Alias (G.Name key) Seq.:<| rest)) hasuraHash =
+          case length remoteHash of
+            0 ->
+              Left
+                ("Expected many objects but got none, while traversing " <>
+                 L8.unpack (J.encode hasuraHash))
+            _ ->
+              Right
+                ( (foldl'
+                     (flip Map.delete)
+                     (Map.insert
+                        (batchRelationshipKeyToMake batch)
+                        (peelOffNestedFields
+                           (batchNestedFields batch)
+                           (snd $ head remoteHash))
+                        hasuraHash)
+                     (batchPhantoms batch))
+                , tail remoteHash)
+    inHashmap (RelFieldPath (G.Alias (G.Name key) Seq.:<| rest)) hasuraHash remoteHash =
       case Map.lookup key hasuraHash of
         Nothing ->
           Left
@@ -427,87 +462,93 @@ insertBatchResults remoteValue batch hasuraResp =
              L8.unpack (J.encode hasuraHash) <>
              ", while traversing " <>
              L8.unpack (J.encode hasuraHash0))
-        Just hasuraValue ->
+        Just currentValue ->
           fmap
-            (\hasuraValue' -> Map.insert key hasuraValue' hasuraHash)
-            (inValue (RelFieldPath rest) hasuraValue)
-    inValue path hasuraValue =
-      case hasuraValue of
+            (\(newValue, remoteCandidates) ->
+               ((Map.insert key newValue hasuraHash), remoteCandidates))
+            (inValue rest currentValue remoteHash)
+    inValue ::
+         Seq.Seq G.Alias
+      -> J.Value
+      -> [(Text, J.Value)]
+      -> Either String (J.Value, [(Text, J.Value)])
+    inValue path currentValue remoteHash =
+      case currentValue of
         J.Object hasuraRowHash ->
-          case Map.lookup
-                 (arrayIndexText $ ArrayIndex 0)
-                 remoteHash of
-            Nothing ->
-              Left
-                ("Couldn't find remote row for " <>
-                 show (ArrayIndex 0)<>
-                 " in " <>
-                 L8.unpack (J.encode remoteHash))
-            Just remoteRowValue ->
-              pure
-                (J.Object
-                   (foldl'
-                      (flip Map.delete)
-                      (Map.insert
-                         (batchRelationshipKeyToMake
-                            batch)
-                         (peelOffNestedFields
-                            (batchNestedFields batch)
-                            remoteRowValue)
-                         hasuraRowHash)
-                      (batchPhantoms batch)))
-          -- J.Object <$> (inHashmap path hasuraHash)
+          fmap
+            (\(hasuraRowHash', remainingRemotes) ->
+               (J.Object hasuraRowHash', remainingRemotes))
+            (inHashmap (RelFieldPath path) hasuraRowHash remoteHash)
         J.Array values ->
           case path of
-            RelFieldPath Seq.Empty ->
+            Seq.Empty ->
               case cardinality of
-                Many ->
-                  fmap
-                    J.Array
-                    (sequence
-                       (V.zipWith
-                          (\arrayIndex hasuraRowValue ->
-                             case hasuraRowValue of
-                               J.Object hasuraRowHash ->
-                                 case Map.lookup
-                                        (arrayIndexText arrayIndex)
-                                        remoteHash of
-                                   Nothing ->
-                                     Left
-                                       ("Couldn't find remote row for " <>
-                                        show arrayIndex <>
-                                        " in " <>
-                                        L8.unpack (J.encode remoteHash))
-                                   Just remoteRowValue ->
-                                     pure
-                                       (J.Object
-                                          (foldl'
-                                             (flip Map.delete)
-                                             (Map.insert
-                                                (batchRelationshipKeyToMake
-                                                   batch)
-                                                (peelOffNestedFields
-                                                   (batchNestedFields batch)
-                                                   remoteRowValue)
-                                                hasuraRowHash)
-                                             (batchPhantoms batch)))
-                               _ ->
-                                 Left
-                                   ("Row result in hasura should be an object, but it's: " <>
-                                    show hasuraRowValue))
-                          (V.fromList (batchIndices batch))
-                          values))
+                Many -> do
+                  (hasuraArray, remainingRemotes) <-
+                    (foldl
+                       (\eitherRows hasuraRowValue ->
+                          case eitherRows of
+                            Left err -> Left err
+                            Right (hasuraRowsSoFar, remainingRemotes) ->
+                              case hasuraRowValue of
+                                J.Object hasuraRowHash ->
+                                  case remainingRemotes of
+                                    [] ->
+                                      Left
+                                        ("no remote objects left for joining at " <>
+                                         L8.unpack (J.encode hasuraRowValue))
+                                    (x:xs) -> do
+                                      let peeledRemoteValue =
+                                            peelOffNestedFields
+                                              (batchNestedFields batch)
+                                              (snd x)
+                                          remoteAlias =
+                                            (batchRelationshipKeyToMake batch)
+                                          phantoms = batchPhantoms batch
+                                      pure
+                                        ( hasuraRowsSoFar <>
+                                          [ (J.Object
+                                               (foldl'
+                                                  (flip Map.delete)
+                                                  (Map.insert
+                                                     remoteAlias
+                                                     peeledRemoteValue
+                                                     hasuraRowHash)
+                                                  phantoms))
+                                          ]
+                                        , xs)
+                                _ -> Left "expected object here")
+                       (pure ([], remoteHash))
+                       (toList values))
+                  pure (J.Array (Vec.fromList hasuraArray), remainingRemotes)
                 One ->
                   Left
-                    "Cardinality mismatch: found array in hasura value, but expected one."
-            _ ->
-              Left
-                ("Encountered array too early: path=" <> show path <> ", value=" <>
-                 L8.unpack (J.encode hasuraValue))
+                    "Cardinality mismatch: found array in hasura value, but expected object"
+            (nonEmptyPath) -> do
+              (hasuraArray, remainingCandidates) <-
+                (foldl
+                   (\eitherRows hasuraRowValue ->
+                      case eitherRows of
+                        Left err -> Left err
+                        Right (hasuraRowsSoFar, remaining) ->
+                          case hasuraRowValue of
+                            J.Object object -> do
+                              (hasuraRowHash, remainder) <-
+                                inHashmap
+                                  (RelFieldPath nonEmptyPath)
+                                  object
+                                  remaining
+                              pure (hasuraRowsSoFar <> [J.Object hasuraRowHash], remainder)
+                            _ -> Left ("expected array of objects in " <> L8.unpack (J.encode hasuraRowValue))
+                   )
+                   (pure ([], remoteHash))
+                   (toList values))
+              pure (J.Array (Vec.fromList hasuraArray), remainingCandidates)
+        J.Null -> pure (J.Null, remoteHash)
         _ ->
           Left
             ("Expected object or array in hasura value but got: " <>
-             L8.unpack (J.encode hasuraValue))
+             L8.unpack (J.encode currentValue))
 
 -- | The drop 1 in here is dropping the first level of nesting. The
 -- top field is already aliased to e.g. foo_idx_1, and that layer is
@@ -730,14 +771,21 @@ extractRemoteRelArguments ::
                            , BatchInputs)])
 extractRemoteRelArguments remoteSchemaMap hasuraJson rels =
   case J.eitherDecode (encJToLBS hasuraJson) of
-    Left err -> Left $ appendJoinError emptyResp (GQJoinError ("decode error: " <> T.pack err))
+    Left err ->
+      Left $
+      appendJoinError emptyResp (GQJoinError ("decode error: " <> T.pack err))
     Right gqResp@(GQRespValue mdata _merrors) ->
       case mdata of
-        Nothing ->Left $ appendJoinError gqResp (GQJoinError ("no hasura data to extract for join"))
+        Nothing ->
+          Left $
+          appendJoinError
+            gqResp
+            (GQJoinError ("no hasura data to extract for join"))
         Just value -> do
-          let hashE = execStateT
-                (extractFromResult One keyedRemotes (J.Object value))
-                mempty
+          let hashE =
+                execStateT
+                  (extractFromResult One keyedRemotes (J.Object value))
+                  mempty
           case hashE of
             Left err -> Left $ appendJoinError gqResp err
             Right hash -> do
@@ -745,16 +793,25 @@ extractRemoteRelArguments remoteSchemaMap hasuraJson rels =
                 Map.traverseWithKey
                   (\key rows ->
                      case Map.lookup key keyedMap of
-                       Nothing -> Left $ appendJoinError gqResp (GQJoinError "failed to associate remote key with remote")
+                       Nothing ->
+                         Left $
+                         appendJoinError
+                           gqResp
+                           (GQJoinError
+                              "failed to associate remote key with remote")
                        Just remoteRel ->
                          case Map.lookup
                                 (rtrRemoteSchema
-                                   (rmfRemoteRelationship (rrRemoteField remoteRel)))
+                                   (rmfRemoteRelationship
+                                      (rrRemoteField remoteRel)))
                                 remoteSchemaMap of
                            Just remoteSchemaInfo ->
                              pure (remoteRel, remoteSchemaInfo, rows)
-                           Nothing -> Left $ appendJoinError gqResp (GQJoinError "could not find remote schema info")
-                  )
+                           Nothing ->
+                             Left $
+                             appendJoinError
+                               gqResp
+                               (GQJoinError "could not find remote schema info"))
                   hash
               pure (gqResp, Map.elems remotes)
   where
@@ -1177,3 +1234,33 @@ appendJoinError resp err =
         Just $
         maybe (pure $ J.toJSON err) ((:) (J.toJSON err)) (gqRespErrors resp)
     }
+
+
+-- getValueAtPath :: J.Object -> [Text] -> Either String J.Value
+-- getValueAtPath obj [] = return (J.Object obj)
+-- getValueAtPath obj [x] = maybe (Left ("could not find any value at path: " <> T.unpack x)) pure (Map.lookup x obj)
+-- getValueAtPath obj (x:xs) = do
+--   val <- getValueAtPath obj [x]
+--   valObj <- assertObject val
+--   getValueAtPath valObj xs
+
+-- setValueAtPathAndRemovePhantoms :: J.Object -> [Text] -> (Text, J.Value) -> [Text] -> Either String J.Object
+-- setValueAtPathAndRemovePhantoms obj path (k, newVal) phantoms =
+--   case path of
+--     [] -> pure $ foldl (flip Map.delete) (Map.insert k newVal obj) phantoms
+--     (x:xs) -> do
+--       val <- getValueAtPath obj [x]
+--       valObj <- assertObject val
+--       finalObj <- setValueAtPathAndRemovePhantoms valObj xs (k, newVal) phantoms
+--       setValueAtPathAndRemovePhantoms obj [] (x, J.Object finalObj) []
+
+-- assertObject :: J.Value -> Either String J.Object
+-- assertObject val = case val of
+--   J.Object obj -> pure obj
+--   _            -> Left "could not parse as JSON object"
+
+-- assertArray :: J.Value -> Either String J.Array
+-- assertArray val = case val of
+--   J.Array arr -> pure arr
+--   _           -> Left "could not parse as JSON array"
+
