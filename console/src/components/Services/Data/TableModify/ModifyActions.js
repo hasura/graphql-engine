@@ -318,14 +318,14 @@ const saveForeignKeys = (index, tableSchema, columns) => {
           alter table "${schemaName}"."${tableName}" drop constraint "${generatedConstraintName}",
           add constraint "${constraintName}" 
           foreign key (${Object.keys(oldConstraint.column_mapping)
-            .map(lc => `"${lc}"`)
-            .join(', ')}) 
+    .map(lc => `"${lc}"`)
+    .join(', ')}) 
           references "${oldConstraint.ref_table_table_schema}"."${
-        oldConstraint.ref_table
-      }"
+  oldConstraint.ref_table
+}"
           (${Object.values(oldConstraint.column_mapping)
-            .map(rc => `"${rc}"`)
-            .join(', ')}) 
+    .map(rc => `"${rc}"`)
+    .join(', ')}) 
           on update ${pgConfTypes[oldConstraint.on_update]}
           on delete ${pgConfTypes[oldConstraint.on_delete]};
         `;
@@ -817,6 +817,12 @@ const deleteColumnSql = (column, tableSchema) => {
         return columnKeys.includes(name);
       }
     );
+    const opp_foreign_key_constraints = tableSchema.opp_foreign_key_constraints.filter(
+      fkc => {
+        const columnKeys = Object.values(fkc.column_mapping);
+        return columnKeys.includes(name);
+      }
+    );
     const unique_constraints = tableSchema.unique_constraints.filter(uc =>
       uc.columns.includes(name)
     );
@@ -827,7 +833,7 @@ const deleteColumnSql = (column, tableSchema) => {
       {
         type: 'run_sql',
         args: {
-          sql: alterStatement + 'DROP COLUMN ' + '"' + name + '"',
+          sql: alterStatement + 'DROP COLUMN ' + '"' + name + '" CASCADE',
         },
       },
     ];
@@ -868,8 +874,9 @@ const deleteColumnSql = (column, tableSchema) => {
       });
     }
 
-    if (foreign_key_constraints.length > 0) {
-      foreign_key_constraints.forEach(fkc => {
+    const merged_fkc = foreign_key_constraints.concat(opp_foreign_key_constraints);
+    if (merged_fkc.length > 0) {
+      merged_fkc.forEach(fkc => {
         // add foreign key constraint to down migration
         const lcol = Object.keys(fkc.column_mapping);
         const rcol = Object.values(fkc.column_mapping);
@@ -1346,24 +1353,24 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     const schemaChangesUp =
       originalColType !== colType
         ? [
-            {
-              type: 'run_sql',
-              args: {
-                sql: columnChangesUpQuery,
-              },
+          {
+            type: 'run_sql',
+            args: {
+              sql: columnChangesUpQuery,
             },
-          ]
+          },
+        ]
         : [];
     const schemaChangesDown =
       originalColType !== colType
         ? [
-            {
-              type: 'run_sql',
-              args: {
-                sql: columnChangesDownQuery,
-              },
+          {
+            type: 'run_sql',
+            args: {
+              sql: columnChangesDownQuery,
             },
-          ]
+          },
+        ]
         : [];
 
     /* column default up/down migration */
