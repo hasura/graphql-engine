@@ -25,7 +25,6 @@ import {
   setColNullable,
   setColDefault,
   setForeignKeys,
-  addCol,
   setUniqueKeys,
 } from './AddActions';
 
@@ -69,8 +68,6 @@ class AddTable extends Component {
     this.onColNullableChange = this.onColNullableChange.bind(this);
     this.onColUniqueChange = this.onColUniqueChange.bind(this);
     this.setColDefaultValue = this.setColDefaultValue.bind(this);
-    this.doINeedANewColumn = this.doINeedANewColumn.bind(this);
-    this.isValidColumn = this.isValidColumn.bind(this);
   }
   componentDidMount() {
     this.props.dispatch(fetchColumnTypeInfo());
@@ -80,24 +77,6 @@ class AddTable extends Component {
     this.props.dispatch({
       type: RESET_COLUMN_TYPE_INFO,
     });
-  }
-  isValidColumn = col => {
-    return (
-      col.name !== null &&
-      col.name !== '' &&
-      col.type !== null &&
-      col.type !== ''
-    );
-  };
-  doINeedANewColumn() {
-    const { dispatch, columns } = this.props;
-    if (
-      columns.length === 0 ||
-      this.isValidColumn(columns[columns.length - 1])
-    ) {
-      dispatch(addCol());
-      // TODO - NUTS, this won't work, because the first action hasn't happened
-    }
   }
   onTableNameChange = e => {
     const { dispatch } = this.props;
@@ -110,22 +89,18 @@ class AddTable extends Component {
   onRemoveColumn = i => {
     const { dispatch } = this.props;
     dispatch(removeColumn(i));
-    this.doINeedANewColumn();
   };
   onColumnNameChange = (i, isNullableChecked, e) => {
     const { dispatch } = this.props;
     dispatch(setColName(e.target.value, i, isNullableChecked));
-    this.doINeedANewColumn();
   };
   onColTypeChange = (i, value) => {
     const { dispatch } = this.props;
     dispatch(setColType(value, i));
-    this.doINeedANewColumn();
   };
   onColNullableChange = (i, e) => {
     const { dispatch } = this.props;
     dispatch(setColNullable(e.target.checked, i));
-    this.doINeedANewColumn();
   };
 
   onColUniqueChange = (i, numUniqueKeys, isColumnUnique, _uindex) => {

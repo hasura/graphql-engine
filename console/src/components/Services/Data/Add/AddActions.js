@@ -476,8 +476,31 @@ const specificAddTableReducer = (state = defaultState, action) => {
   }
 };
 
+const isValidColumn = col => {
+  return (
+    col.name !== null && col.name !== '' && col.type !== null && col.type !== ''
+  );
+};
+
+const needsNewColumn = columns => {
+  return columns.length === 0 || isValidColumn(columns[columns.length - 1]);
+};
+
+const addACol = columns => {
+  return [...columns, { name: '', type: '' }];
+};
+
 const addTableReducer = (state = defaultState, action) => {
-  return specificAddTableReducer(state, action);
+  const rawstate = specificAddTableReducer(state, action);
+
+  // and now we do everything to make the model make sense
+  if (needsNewColumn(rawstate.columns)) {
+    return {
+      ...rawstate,
+      columns: addACol(rawstate.columns),
+    };
+  }
+  return rawstate;
 };
 
 export default addTableReducer;
