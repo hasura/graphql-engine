@@ -11,10 +11,6 @@ data:
       }
 
       redir 301 {
-        /graphql/react/boilerplate.zip https://graphql-engine-cdn.hasura.io/learn-hasura/boilerplates/react/react-boilerplate.zip
-      }
-
-      redir 301 {
         /graphql/react-native/boilerplate.zip https://graphql-engine-cdn.hasura.io/learn-hasura/boilerplates/react-native/react-native-boilerplate.zip
       }
 
