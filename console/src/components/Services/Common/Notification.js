@@ -36,7 +36,7 @@ const showErrorNotification = (title, message, error) => {
     } else {
       modMessage = error.code;
     }
-  } else if (error && 'internal' in error) {
+  } else if (error && 'internal' in error && 'error' in error.internal) {
     modMessage = error.code + ' : ' + error.internal.error.message;
   } else if (error && 'custom' in error) {
     modMessage = error.custom;
