@@ -312,7 +312,7 @@ const createTableSql = () => {
   };
 };
 
-const addTableReducer = (state = defaultState, action) => {
+const specificAddTableReducer = (state = defaultState, action) => {
   switch (action.type) {
     case SET_DEFAULTS:
       return { ...defaultState };
@@ -474,6 +474,10 @@ const addTableReducer = (state = defaultState, action) => {
     default:
       return state;
   }
+};
+
+const addTableReducer = (state = defaultState, action) => {
+  return specificAddTableReducer(state, action);
 };
 
 export default addTableReducer;

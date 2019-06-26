@@ -70,6 +70,7 @@ class AddTable extends Component {
     this.onColUniqueChange = this.onColUniqueChange.bind(this);
     this.setColDefaultValue = this.setColDefaultValue.bind(this);
     this.doINeedANewColumn = this.doINeedANewColumn.bind(this);
+    this.isValidColumn = this.isValidColumn.bind(this);
   }
   componentDidMount() {
     this.props.dispatch(fetchColumnTypeInfo());
@@ -80,16 +81,23 @@ class AddTable extends Component {
       type: RESET_COLUMN_TYPE_INFO,
     });
   }
+  isValidColumn = col => {
+    return (
+      col.name !== null &&
+      col.name !== '' &&
+      col.type !== null &&
+      col.type !== ''
+    );
+  };
   doINeedANewColumn() {
     const { dispatch, columns } = this.props;
-    if (columns.length === 0) {
+    if (
+      columns.length === 0 ||
+      this.isValidColumn(columns[columns.length - 1])
+    ) {
       dispatch(addCol());
-    } /* else if ()
-      // TODO check column validity of last col, if valid
-      // add one
-      if (i + 1 === columns.length) {
-        dispatch(addCol());
-      } */
+      // TODO - NUTS, this won't work, because the first action hasn't happened
+    }
   }
   onTableNameChange = e => {
     const { dispatch } = this.props;
@@ -110,7 +118,7 @@ class AddTable extends Component {
     this.doINeedANewColumn();
   };
   onColTypeChange = (i, value) => {
-    const { dispatch, columns } = this.props;
+    const { dispatch } = this.props;
     dispatch(setColType(value, i));
     this.doINeedANewColumn();
   };
