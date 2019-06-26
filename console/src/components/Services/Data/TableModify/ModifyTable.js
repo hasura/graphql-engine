@@ -8,13 +8,12 @@ import {
   deleteTableSql,
   untrackTableSql,
   RESET,
-  fetchColumnCasts,
   setUniqueKeys,
 } from '../TableModify/ModifyActions';
 import {
   setTable,
-  fetchColumnTypes,
-  RESET_COLUMN_TYPE_LIST,
+  fetchColumnTypeInfo,
+  RESET_COLUMN_TYPE_INFO,
 } from '../DataActions';
 import Button from '../../../Common/Button/Button';
 import ColumnEditorList from './ColumnEditorList';
@@ -24,19 +23,18 @@ import TableCommentEditor from './TableCommentEditor';
 import ForeignKeyEditor from './ForeignKeyEditor';
 import UniqueKeyEditor from './UniqueKeyEditor';
 import styles from './ModifyTable.scss';
-import { replace } from 'react-router-redux';
+import { NotFoundError } from '../../../Error/PageNotFound';
 
 class ModifyTable extends React.Component {
   componentDidMount() {
     const { dispatch } = this.props;
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
-    dispatch(fetchColumnTypes());
-    dispatch(fetchColumnCasts());
+    dispatch(fetchColumnTypeInfo());
   }
   componentWillUnmount() {
     this.props.dispatch({
-      type: RESET_COLUMN_TYPE_LIST,
+      type: RESET_COLUMN_TYPE_INFO,
     });
   }
   render() {
@@ -53,6 +51,7 @@ class ModifyTable extends React.Component {
       dataTypes,
       validTypeCasts,
       uniqueKeyModify,
+      columnDefaultFunctions,
       schemaList,
     } = this.props;
 
@@ -62,8 +61,8 @@ class ModifyTable extends React.Component {
       t => t.table_name === tableName && t.table_schema === currentSchema
     );
     if (!tableSchema) {
-      dispatch(replace('/404'));
-      return null;
+      // throw a 404 exception
+      throw new NotFoundError();
     }
     const tableComment = tableSchema.comment;
 
@@ -135,6 +134,7 @@ class ModifyTable extends React.Component {
               columnEdit={columnEdit}
               dispatch={dispatch}
               currentSchema={currentSchema}
+              columnDefaultFunctions={columnDefaultFunctions}
             />
             <hr />
             <h4 className={styles.subheading_text}>Add a new column</h4>
@@ -142,6 +142,8 @@ class ModifyTable extends React.Component {
               dispatch={dispatch}
               tableName={tableName}
               dataTypes={dataTypes}
+              validTypeCasts={validTypeCasts}
+              columnDefaultFunctions={columnDefaultFunctions}
             />
             <hr />
             <h4 className={styles.subheading_text}>Primary Key</h4>
@@ -212,7 +214,8 @@ const mapStateToProps = (state, ownProps) => ({
   pkModify: state.tables.modify.pkModify,
   fkModify: state.tables.modify.fkModify,
   dataTypes: state.tables.columnDataTypes,
-  validTypeCasts: state.tables.modify.alterColumnOptions,
+  columnDefaultFunctions: state.tables.columnDefaultFunctions,
+  validTypeCasts: state.tables.columnTypeCasts,
   columnDataTypeFetchErr: state.tables.columnDataTypeFetchErr,
   schemaList: state.tables.schemaList,
   ...state.tables.modify,

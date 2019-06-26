@@ -495,8 +495,11 @@ class TestRunSQL(DefaultTestQueries):
     def test_sql_rename_table(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/sql_rename_table.yaml')
 
-    def test_sql_rename_columns(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/sql_rename_columns.yaml')
+    def test_sql_rename_columns_article(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/sql_rename_columns_article.yaml')
+
+    def test_sql_rename_columns_author(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/sql_rename_columns_author.yaml')
 
     def test_sql_rename_table_and_column(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/sql_rename_table_and_column.yaml')

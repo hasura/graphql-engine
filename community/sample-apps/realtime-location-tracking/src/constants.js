@@ -2,7 +2,7 @@
 
 const GOOGLE_API_KEY = process.env.NODE_ENV==='production'? process.env.REACT_APP_GOOGLE_API_KEY : ''; 
 
-const HASURA_GRAPHQL_ENGINE_HOSTNAME = window.location.host;
+const HASURA_GRAPHQL_ENGINE_HOSTNAME = 'realtime-location-tracking.demo.hasura.app';
 
 const scheme = (proto) => {
   return window.location.protocol === 'https:' ? `${proto}s` : proto;

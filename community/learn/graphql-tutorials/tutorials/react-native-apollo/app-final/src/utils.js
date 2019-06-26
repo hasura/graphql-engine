@@ -11,7 +11,7 @@ const handleError = async (error, navigate) => {
     errObj.networkError.result.errors[0].code === 'invalid-jwt'
   ) {
     console.log(errObj).networkError.result;
-    await AsyncStorage.removeItem('@todo-graphql:auth0');
+    await AsyncStorage.removeItem('@todo-graphql:session');
     navigate('Loading');
   }
   console.log(errObj);
