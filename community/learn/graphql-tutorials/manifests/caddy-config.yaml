@@ -32,7 +32,7 @@ data:
 
 
       redir 301 {
-        /graphql/elm/ /graphql/elm-graphql/introduction
+        /graphql/elm/ /graphql/elm/introduction
       }
 
       redir 301 {
