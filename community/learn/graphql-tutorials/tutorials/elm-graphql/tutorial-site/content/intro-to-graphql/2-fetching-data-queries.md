@@ -4,10 +4,6 @@ metaTitle: "GraphQL Queries to fetch data | GraphQL Elm Tutorial"
 metaDescription: "Try out GraphQL Query using GraphiQL. A GraphQL query example with parameters, arguments and variables to fetch data dynamically"
 ---
 
-import YoutubeEmbed from "../../src/YoutubeEmbed.js";
-
-<YoutubeEmbed link="https://www.youtube.com/embed/mE1Jgvn4k1g" />
-
 <a name="graphiql"></a>
 ## Try out GraphQL queries
 

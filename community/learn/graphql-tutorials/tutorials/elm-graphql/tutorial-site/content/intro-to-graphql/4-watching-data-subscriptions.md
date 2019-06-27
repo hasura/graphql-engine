@@ -4,10 +4,6 @@ metaTitle: "GraphQL Subscriptions for realtime data | GraphQL Elm Tutorial"
 metaDescription: "Try out GraphQL Subscription using GraphiQL. A GraphQL subscriptions example to fetch live data pushed over websockets "
 ---
 
-import YoutubeEmbed from "../../src/YoutubeEmbed.js";
-
-<YoutubeEmbed link="https://www.youtube.com/embed/i9hZYVVsDPg" />
-
 The GraphQL specification allows for something called subscriptions that are like GraphQL queries
 but instead of returning data in one read, you get data pushed from the server.
 

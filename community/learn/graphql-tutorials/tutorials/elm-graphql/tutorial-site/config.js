@@ -1,15 +1,15 @@
 const config = {
 	"gatsby": {
-		"pathPrefix": "/graphql/elm",
+		"pathPrefix": "/graphql/elm-graphql",
 		"siteUrl": "https://learn.hasura.io",
 		"gaTrackingId": "UA-59768903-1"
 	},
 	"header": {
 		"logo": "https://graphql-engine-cdn.hasura.io/img/hasura_icon_white.svg",
-		"title": "/ graphql / elm",
+		"title": "/ graphql / elm-graphql",
 		"githubUrl": "https://github.com/hasura/graphql-engine",
 		"helpUrl": "https://discordapp.com/invite/vBPpJkS",
-		"tweetText": "Check out this GraphQL course for Elm developers by @HasuraHQ https://learn.hasura.io/graphql/elm",
+		"tweetText": "Check out this GraphQL course for Elm developers by @HasuraHQ https://learn.hasura.io/graphql/elm-graphql",
 		"links": [{
 			"text": "hasura.io",
 			"link": "https://hasura.io"

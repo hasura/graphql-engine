@@ -13,7 +13,7 @@ Lets use the ports defined in the previous step to open a subscription client
 
 Open `src/Main.elm` and add the following code:
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/elm/app-final/src/Main.elm" text="src/Main.elm" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/elm-graphql/app-final/src/Main.elm" text="src/Main.elm" />
 
 ```
 +import Graphql.Document
@@ -225,7 +225,7 @@ Add port integration to index.js
 
 Open `src/index.js` and add the following code:
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/elm/app-final/src/index.js" text="src/index.js" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/elm-graphql/app-final/src/index.js" text="src/index.js" />
 
 ```
 document.addEventListener("DOMContentLoaded", function() {

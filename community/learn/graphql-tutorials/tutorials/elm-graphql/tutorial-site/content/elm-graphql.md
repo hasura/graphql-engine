@@ -24,7 +24,7 @@ Let's generate Elm Types by adding a script to our package.json file as follows
 
 Open `package.json` and add the following script:
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/elm/app-final/package.json" text="package.json" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/elm-graphql/app-final/package.json" text="package.json" />
 
 ```json
 {

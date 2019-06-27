@@ -27,7 +27,7 @@ The goal is to update every few seconds from the client that you are online. Ide
 
 Open `src/Main.elm` and configure the following ports
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/elm/app-final/src/Main.elm" text="src/Main.elm" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/elm-graphql/app-final/src/Main.elm" text="src/Main.elm" />
 
 ```
 main : Program () Model Msg                                                                                                                          

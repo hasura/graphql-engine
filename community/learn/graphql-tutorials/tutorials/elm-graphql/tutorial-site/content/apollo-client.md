@@ -20,7 +20,7 @@ $ npm install --save apollo-client apollo-link-http apollo-cache-inmemory apollo
 ### Create Apollo Client Instance
 Open `src/index.js` and add the following imports at the top:
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/elm/app-final/src/index.js" text="src/index.js" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/elm-graphql/app-final/src/index.js" text="src/index.js" />
 
 ```javascript
 import './main.css';
