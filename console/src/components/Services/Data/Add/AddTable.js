@@ -57,7 +57,9 @@ import { commonDataTypes } from '../utils';
 class AddTable extends Component {
   constructor(props) {
     super(props);
+
     this.props.dispatch(setDefaults());
+
     this.onTableNameChange = this.onTableNameChange.bind(this);
     this.onTableCommentChange = this.onTableCommentChange.bind(this);
     this.onRemoveColumn = this.onRemoveColumn.bind(this);
@@ -66,8 +68,11 @@ class AddTable extends Component {
     this.onColNullableChange = this.onColNullableChange.bind(this);
     this.onColUniqueChange = this.onColUniqueChange.bind(this);
     this.setColDefaultValue = this.setColDefaultValue.bind(this);
+
     this.trimEmptyColumns = this.trimEmptyColumns.bind(this);
     this.checkAndDispatch = this.checkAndDispatch.bind(this);
+    this.validateAndSubmit = this.validateAndSubmit.bind(this);
+
     this.tableNameCheck = this.tableNameCheck.bind(this);
     this.validateEnoughColumns = this.validateEnoughColumns.bind(this);
     this.validateColumnNames = this.validateColumnNames.bind(this);
@@ -79,31 +84,38 @@ class AddTable extends Component {
     this.isValidType = this.isValidType.bind(this);
     this.isValidDefault = this.isValidDefault.bind(this);
   }
+
   componentDidMount() {
     this.props.dispatch(fetchColumnTypes());
   }
+
   componentWillUnmount() {
     this.props.dispatch(setDefaults());
     this.props.dispatch({
       type: RESET_COLUMN_TYPE_LIST,
     });
   }
+
   onTableNameChange = e => {
     const { dispatch } = this.props;
     dispatch(setTableName(e.target.value));
   };
+
   onTableCommentChange = e => {
     const { dispatch } = this.props;
     dispatch(setTableComment(e.target.value));
   };
+
   onRemoveColumn = i => {
     const { dispatch } = this.props;
     dispatch(removeColumn(i));
   };
+
   onColumnNameChange = (i, isNullableChecked, e) => {
     const { dispatch } = this.props;
     dispatch(setColName(e.target.value, i, isNullableChecked));
   };
+
   onColTypeChange = (i, value) => {
     const { dispatch, columns } = this.props;
     dispatch(setColType(value, i));
@@ -319,6 +331,7 @@ class AddTable extends Component {
         }
     }
 */
+
   validateColumnDefaults(cols) {
     const l = cols.length;
     for (let i = 0; i < l; i++) {
@@ -511,7 +524,7 @@ class AddTable extends Component {
             <hr />
             <Button
               type="submit"
-              onClick={this.validateAndSubmit.bind(this)}
+              onClick={this.validateAndSubmit}
               data-test="table-create"
               color="yellow"
               size="sm"
