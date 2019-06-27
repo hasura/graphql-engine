@@ -32,7 +32,7 @@ data:
 
 
       redir 301 {
-        /graphql/elm/ /graphql/elm/introduction
+        /graphql/elm/ /graphql/elm-graphql/introduction
       }
 
       redir 301 {
@@ -107,7 +107,7 @@ data:
 
       proxy /graphql/android android-apollo
 
-      proxy /graphql/elm elm-graphql
+      proxy /graphql/elm-graphql elm-graphql
       
       proxy /graphql hasura/v1/graphql {
         without /graphql
