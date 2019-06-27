@@ -36,6 +36,10 @@ data:
       }
 
       redir 301 {
+        /graphql/elm/introduction /graphql/elm-graphql/introduction
+      }
+
+      redir 301 {
         /graphql/react-native/ /graphql/react-native/introduction
       }
 
