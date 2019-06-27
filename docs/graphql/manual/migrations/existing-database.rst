@@ -87,14 +87,17 @@ including the Postgres (public) schema and Hasura metadata. The apply command
 will mark this migration as "applied" on the server. If you'd like to read more
 about the format of migration files, check out the :ref:`migration_file_format`.
 
+.. note::
 
-If you need to export other schemas along with ``public`` name them using
-``--schema`` flag. For example, to export ``public``, ``schema1``, ``schema2``,
-execute the following command:
+  If you need to export other schemas along with ``public``, you can name them using the
+  ``--schema`` flag. 
+  
+  For example, to export schemas ``public``, ``schema1`` and ``schema2``,
+  execute the following command:
 
-.. code-block:: bash
+  .. code-block:: bash
 
-   hasura migrate create "init" --from-server --schema "public" --schema "schema1" --schema "schema2"
+     hasura migrate create "init" --from-server --schema "public" --schema "schema1" --schema "schema2"
 
 Step 4: Use the console from the CLI
 ------------------------------------
