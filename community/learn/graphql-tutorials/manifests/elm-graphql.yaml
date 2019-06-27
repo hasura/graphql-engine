@@ -30,7 +30,7 @@ spec:
           protocol: TCP
         readinessProbe:
           httpGet:
-            path: /graphql/elm/introduction
+            path: /graphql/elm-graphql/introduction
             port: 8080
 ---
 apiVersion: v1
