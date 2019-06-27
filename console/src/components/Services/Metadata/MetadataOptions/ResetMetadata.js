@@ -66,7 +66,6 @@ class ResetMetadata extends Component {
                       showErrorNotification(
                         'Metadata reset failed',
                         'Something went wrong.',
-                        requestBody,
                         parsedErrorMsg
                       )
                     );

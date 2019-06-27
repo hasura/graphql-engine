@@ -9,6 +9,8 @@ import {
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { setTable } from '../DataActions.js';
 
+import { isPostgresFunction } from '../utils';
+
 const SET_DEFAULTS = 'AddTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddTable/SET_TABLENAME';
 const SET_TABLECOMMENT = 'AddTable/SET_TABLECOMMENT';
@@ -121,7 +123,14 @@ const createTableSql = () => {
       ) {
         if (currentCols[i].type === 'text') {
           // if a column type is text and if it has a default value, add a single quote by default
-          tableColumns += " DEFAULT '" + currentCols[i].default.value + "'";
+          const checkIfFunctionFormat = isPostgresFunction(
+            currentCols[i].default.value
+          );
+          if (!checkIfFunctionFormat) {
+            tableColumns += " DEFAULT '" + currentCols[i].default.value + "'";
+          } else {
+            tableColumns += ' DEFAULT ' + currentCols[i].default.value;
+          }
         } else {
           if (currentCols[i].type === 'uuid') {
             isUUIDDefault = true;
@@ -303,7 +312,7 @@ const createTableSql = () => {
   };
 };
 
-const addTableReducer = (state = defaultState, action) => {
+const specificAddTableReducer = (state = defaultState, action) => {
   switch (action.type) {
     case SET_DEFAULTS:
       return { ...defaultState };
@@ -465,6 +474,33 @@ const addTableReducer = (state = defaultState, action) => {
     default:
       return state;
   }
+};
+
+const isValidColumn = col => {
+  return (
+    col.name !== null && col.name !== '' && col.type !== null && col.type !== ''
+  );
+};
+
+const needsNewColumn = columns => {
+  return columns.length === 0 || isValidColumn(columns[columns.length - 1]);
+};
+
+const addACol = columns => {
+  return [...columns, { name: '', type: '' }];
+};
+
+const addTableReducer = (state = defaultState, action) => {
+  const rawstate = specificAddTableReducer(state, action);
+
+  // and now we do everything to make the model make sense
+  if (needsNewColumn(rawstate.columns)) {
+    return {
+      ...rawstate,
+      columns: addACol(rawstate.columns),
+    };
+  }
+  return rawstate;
 };
 
 export default addTableReducer;

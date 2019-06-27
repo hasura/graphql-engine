@@ -6,12 +6,18 @@ import Tooltip from 'react-bootstrap/lib/Tooltip';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import { push } from 'react-router-redux';
 
-import { fetchResolver, RESET } from '../Add/addResolverReducer';
+import {
+  fetchResolver,
+  RESET,
+  getHeaderEvents,
+} from '../Add/addResolverReducer';
 
 import { VIEW_RESOLVER } from '../customActions';
 import ReloadMetadata from '../../Metadata/MetadataOptions/ReloadMetadata';
 
 import { appPrefix } from '../constants';
+
+import { NotFoundError } from '../../../Error/PageNotFound';
 
 import globals from '../../../../Globals';
 
@@ -44,11 +50,30 @@ class ViewStitchedSchema extends React.Component {
   componentWillUnmount() {
     Promise.all([
       this.props.dispatch({ type: RESET }),
+      this.props.dispatch({
+        type: getHeaderEvents.UPDATE_HEADERS,
+        data: [
+          {
+            name: '',
+            type: 'static',
+            value: '',
+          },
+        ],
+      }),
       this.props.dispatch({ type: VIEW_RESOLVER, data: '' }),
     ]);
   }
 
   render() {
+    const currentResolver = this.props.allResolvers.find(
+      r => r.name === this.props.params.resolverName
+    );
+
+    if (!currentResolver) {
+      // throw a 404 exception
+      throw new NotFoundError();
+    }
+
     const styles = require('../CustomResolver.scss');
 
     const { resolverName } = this.props.params;
@@ -171,6 +196,7 @@ const mapStateToProps = state => {
   return {
     ...state.customResolverData.addData,
     ...state.customResolverData.headerData,
+    allResolvers: state.customResolverData.listData.resolvers,
     dataHeaders: { ...state.tables.dataHeaders },
   };
 };

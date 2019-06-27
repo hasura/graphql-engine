@@ -6,6 +6,10 @@ metaDescription: "Try out GraphQL Mutation using GraphiQL. A GraphQL mutation ex
 
 import {Link} from 'gatsby';
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/qGq1aVveKDc"/>
+
 These are the concepts you should know before you attack mutations (haha):
 - <Link to="/intro-to-graphql/2-fetching-data-queries#graphiql">Using GraphiQL</Link>
 - <Link to="/intro-to-graphql/2-fetching-data-queries#graphql-query-variables">Using query variables</Link>

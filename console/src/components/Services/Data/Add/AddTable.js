@@ -25,11 +25,10 @@ import {
   setColNullable,
   setColDefault,
   setForeignKeys,
-  addCol,
   setUniqueKeys,
 } from './AddActions';
 
-import { fetchColumnTypes, RESET_COLUMN_TYPE_LIST } from '../DataActions';
+import { fetchColumnTypeInfo, RESET_COLUMN_TYPE_INFO } from '../DataActions';
 import { setDefaults, setPk, createTableSql } from './AddActions';
 import { resetValidation } from './AddActions';
 
@@ -86,13 +85,13 @@ class AddTable extends Component {
   }
 
   componentDidMount() {
-    this.props.dispatch(fetchColumnTypes());
+    this.props.dispatch(fetchColumnTypeInfo());
   }
 
   componentWillUnmount() {
     this.props.dispatch(setDefaults());
     this.props.dispatch({
-      type: RESET_COLUMN_TYPE_LIST,
+      type: RESET_COLUMN_TYPE_INFO,
     });
   }
 
@@ -117,11 +116,8 @@ class AddTable extends Component {
   };
 
   onColTypeChange = (i, value) => {
-    const { dispatch, columns } = this.props;
+    const { dispatch } = this.props;
     dispatch(setColType(value, i));
-    if (i + 1 === columns.length) {
-      dispatch(addCol());
-    }
   };
   onColNullableChange = (i, e) => {
     const { dispatch } = this.props;
@@ -144,9 +140,9 @@ class AddTable extends Component {
     }
   };
 
-  setColDefaultValue = (i, isNullableChecked, e) => {
+  setColDefaultValue = (i, isNullableChecked, value) => {
     const { dispatch } = this.props;
-    dispatch(setColDefault(e.target.value, i, isNullableChecked));
+    dispatch(setColDefault(value, i, isNullableChecked));
   };
 
   minPrimaryKeyCheck() {
@@ -406,6 +402,8 @@ class AddTable extends Component {
       internalError,
       dataTypes,
       schemaList,
+      columnDefaultFunctions,
+      columnTypeCasts,
     } = this.props;
     const styles = require('../../../Common/TableCommon/Table.scss');
     const getCreateBtnText = () => {
@@ -443,6 +441,8 @@ class AddTable extends Component {
             <TableColumns
               uniqueKeys={uniqueKeys}
               dataTypes={dataTypes}
+              columnDefaultFunctions={columnDefaultFunctions}
+              columnTypeCasts={columnTypeCasts}
               columns={columns}
               onRemoveColumn={this.onRemoveColumn}
               onColumnChange={this.onColumnNameChange}
@@ -556,6 +556,8 @@ const mapStateToProps = state => ({
   allSchemas: state.tables.allSchemas,
   currentSchema: state.tables.currentSchema,
   dataTypes: state.tables.columnDataTypes,
+  columnDefaultFunctions: state.tables.columnDefaultFunctions,
+  columnTypeCasts: state.tables.columnTypeCasts,
   columnDataTypeFetchErr: state.tables.columnDataTypeFetchErr,
   schemaList: state.tables.schemaList,
 });

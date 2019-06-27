@@ -6,6 +6,10 @@ metaDescription: "We will use the Apollo Mutation component from react-apollo wi
 
 import GithubLink from "../../src/GithubLink.js";
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/nz26rPS6dLk" />
+
 Let us integrate the remove todos feature in our React Native app. Firstly import `gql` and define the mutation in `src/screens/components/Todo/TodoItem/js`.
 
 
