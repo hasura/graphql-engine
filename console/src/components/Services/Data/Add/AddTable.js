@@ -179,8 +179,6 @@ class AddTable extends Component {
       );
       return false;
     }
-    console.log('in AddTable.js in checkAndDispatch I have an invalid type');
-    console.log(validated);
   }
 
   tableNameCheck() {
