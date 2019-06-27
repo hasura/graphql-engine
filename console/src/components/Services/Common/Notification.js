@@ -1,12 +1,12 @@
 import React from 'react';
 import AceEditor from 'react-ace';
-import { showNotification, showTempNotification } from '../../App/Actions';
+import { showNotification } from '../../App/Actions';
 import { notifExpand, notifMsg } from '../../App/Actions';
 import Button from '../../Common/Button/Button';
 
 const styles = require('../../Common/TableCommon/Table.scss');
 
-const showErrorNotification = (title, message, reqBody, error) => {
+const showErrorNotification = (title, message, error) => {
   let modMessage;
   let refreshBtn;
 
@@ -36,7 +36,7 @@ const showErrorNotification = (title, message, reqBody, error) => {
     } else {
       modMessage = error.code;
     }
-  } else if (error && 'internal' in error) {
+  } else if (error && 'internal' in error && 'error' in error.internal) {
     modMessage = error.code + ' : ' + error.internal.error.message;
   } else if (error && 'custom' in error) {
     modMessage = error.custom;
@@ -146,19 +146,6 @@ const showSuccessNotification = (title, message) => {
   };
 };
 
-const showTempErrorNotification = (title, message) => {
-  return dispatch => {
-    dispatch(
-      showTempNotification({
-        level: 'error',
-        title,
-        message: message ? message : null,
-        autoDismiss: 3,
-      })
-    );
-  };
-};
-
 const showInfoNotification = title => {
   return dispatch => {
     dispatch(
@@ -170,9 +157,42 @@ const showInfoNotification = title => {
   };
 };
 
+const showWarningNotification = (title, message, dataObj) => {
+  const children = [];
+  if (dataObj) {
+    children.push(
+      <div className={styles.aceBlock}>
+        <AceEditor
+          readOnly
+          showPrintMargin={false}
+          mode="json"
+          showGutter={false}
+          theme="github"
+          name="notification-response"
+          value={JSON.stringify(dataObj, null, 4)}
+          minLines={1}
+          maxLines={15}
+          width="100%"
+        />
+      </div>
+    );
+  }
+
+  return dispatch => {
+    dispatch(
+      showNotification({
+        level: 'warning',
+        title,
+        message,
+        children,
+      })
+    );
+  };
+};
+
 export {
   showErrorNotification,
   showSuccessNotification,
   showInfoNotification,
-  showTempErrorNotification,
+  showWarningNotification,
 };
