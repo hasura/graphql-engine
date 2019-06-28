@@ -11,6 +11,7 @@ const RemoteRelationships = ({
   remoteSchemas,
 }) => {
   // restructure existing relationships to the state structure
+
   const existingRemoteRelationships = tableSchema.remote_relationships.map(
     rr => {
       return parseRemoteRelationship({
@@ -24,8 +25,11 @@ const RemoteRelationships = ({
     ...defaultRemoteRelationship,
   });
   useEffect(() => {
+    // if (remoteRelationships.fetchedRemoteRelationships) {
+    //   console.log(existingRemoteRelationships);
     dispatch(setRemoteRelationships(existingRemoteRelationships));
-  }, [tableSchema.remote_relationships]);
+    // }
+  }, [tableSchema]);
 
   // render list of relationships
   const relationshipList = () => {

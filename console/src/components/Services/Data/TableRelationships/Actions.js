@@ -30,7 +30,6 @@ export const FETCHED_REMOTE_RELATIONSHIPS =
   'ModifyTable/FETCHED_REMOTE_RELATIONSHIPS';
 
 export const SET_REMOTE_RELATIONSHIPS = 'ModifyTable/SET_REMOTE_RELATIONSHIPS';
-
 export const INTROSPECTING_REMOTE_SCHEMA =
   'ModifyTable/INTROSPECTING_REMOTE_SCHEMA';
 export const INTROSPECTION_ERROR = 'ModifyTable/INTROSPECTION_ERROR';
@@ -255,13 +254,13 @@ export const fetchRemoteRelationships = () => {
     ).then(
       data => {
         const remoteRelationships = JSON.parse(data.result[1]);
-        dispatch({ type: FETCHED_REMOTE_RELATIONSHIPS });
         dispatch(
           mergeRemoteRelationshipsWithSchema(remoteRelationships, {
             name: tableName,
             schema: currentSchema,
           })
         );
+        dispatch({ type: FETCHED_REMOTE_RELATIONSHIPS });
       },
       error => {
         console.error(error);

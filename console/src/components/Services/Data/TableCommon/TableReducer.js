@@ -41,6 +41,7 @@ import {
   INTROSPECTION_ERROR,
   INTROSPECTION_SUCCESSFUL,
   SET_REMOTE_RELATIONSHIPS,
+  FETCHED_REMOTE_RELATIONSHIPS,
 } from '../TableRelationships/Actions';
 
 // TABLE PERMISSIONS
@@ -610,6 +611,14 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         remoteRelationships: {
           ...modifyState.remoteRelationships,
           loading: false,
+        },
+      };
+    case FETCHED_REMOTE_RELATIONSHIPS:
+      return {
+        ...modifyState,
+        remoteRelationships: {
+          ...modifyState.remoteRelationships,
+          fetchedRemoteRelationships: true,
         },
       };
     default:

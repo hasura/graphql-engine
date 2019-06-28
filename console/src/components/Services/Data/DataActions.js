@@ -296,9 +296,9 @@ const loadSchema = configOptions => {
       ],
     };
 
-    if (featuresCompatibility[FT_REMOTE_RELATIONSHIPS]) {
-      body.args.push(fetchTrackedTableRemoteRelationshipQuery(configOptions));
-    }
+    //if (featuresCompatibility[FT_REMOTE_RELATIONSHIPS]) {
+    body.args.push(fetchTrackedTableRemoteRelationshipQuery(configOptions));
+    //}
 
     const options = {
       credentials: globalCookiePolicy,
@@ -312,7 +312,11 @@ const loadSchema = configOptions => {
         const tableList = JSON.parse(data[0].result[1]);
         const fkList = JSON.parse(data[2].result[1]);
         const refFkList = JSON.parse(data[3].result[1]);
-        const remoteRelationships = [];
+        let remoteRelationships = [];
+
+        // if (featuresCompatibility.RemoteRelationShips) {
+        remoteRelationships = JSON.parse(data[4].result[1]);
+        // }
 
         const mergedData = mergeLoadSchemaData(
           tableList,
