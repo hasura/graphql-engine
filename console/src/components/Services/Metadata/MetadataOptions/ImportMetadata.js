@@ -63,7 +63,6 @@ class ImportMetadata extends Component {
               showErrorNotification(
                 'Metadata import failed',
                 'Something is wrong.',
-                requestBody,
                 parsedErrorMsg
               )
             );

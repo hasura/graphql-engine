@@ -11,6 +11,7 @@ import { SET_SQL } from '../RawSQL/Actions';
 import {
   showErrorNotification,
   showSuccessNotification,
+  showWarningNotification,
 } from '../../Common/Notification';
 import dataHeaders from '../Common/Headers';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
@@ -497,7 +498,6 @@ const changeTableOrViewName = (isTable, oldName, newName) => {
         showErrorNotification(
           gqlValidationError[4],
           gqlValidationError[1],
-          gqlValidationError[2],
           gqlValidationError[3]
         )
       );
@@ -750,12 +750,7 @@ const fetchViewDefinition = (viewName, isRedirect) => {
       },
       err => {
         dispatch(
-          showErrorNotification(
-            'Fetching definition failed!',
-            err.error,
-            reqBody,
-            err
-          )
+          showErrorNotification('Fetching definition failed!', err.error, err)
         );
       }
     );
@@ -808,61 +803,191 @@ const deleteViewSql = viewName => {
   };
 };
 
-const deleteColumnSql = (tableName, colName) => {
+const deleteColumnSql = (column, tableSchema) => {
   return (dispatch, getState) => {
-    const currentSchema = getState().tables.currentSchema;
-    const deleteQueryUp =
-      'ALTER TABLE ' +
-      '"' +
-      currentSchema +
-      '"' +
-      '.' +
-      '"' +
-      tableName +
-      '"' +
-      ' DROP COLUMN ' +
-      '"' +
-      colName +
-      '"';
+    const name = column.column_name;
+    const tableName = column.table_name;
+    const currentSchema = column.table_schema;
+    const comment = column.comment;
+    const is_nullable = column.is_nullable;
+    const col_type = column.udt_name;
+    const foreign_key_constraints = tableSchema.foreign_key_constraints.filter(
+      fkc => {
+        const columnKeys = Object.keys(fkc.column_mapping);
+        return columnKeys.includes(name);
+      }
+    );
+    const opp_foreign_key_constraints = tableSchema.opp_foreign_key_constraints.filter(
+      fkc => {
+        const columnKeys = Object.values(fkc.column_mapping);
+        return columnKeys.includes(name);
+      }
+    );
+    const unique_constraints = tableSchema.unique_constraints.filter(uc =>
+      uc.columns.includes(name)
+    );
+    const alterStatement =
+      'ALTER TABLE ' + '"' + currentSchema + '"' + '.' + '"' + tableName + '" ';
+
     const schemaChangesUp = [
       {
         type: 'run_sql',
         args: {
-          sql: deleteQueryUp,
+          sql: alterStatement + 'DROP COLUMN ' + '"' + name + '" CASCADE',
         },
       },
     ];
+    const schemaChangesDown = [];
 
-    /*
-    const schemaChangesDown = [{
+    schemaChangesDown.push({
       type: 'run_sql',
       args: {
-        'sql': deleteQueryDown
-      }
-    }];
-    */
+        sql: alterStatement + 'ADD COLUMN ' + '"' + name + '"' + ' ' + col_type,
+      },
+    });
+
+    if (is_nullable) {
+      schemaChangesDown.push({
+        type: 'run_sql',
+        args: {
+          sql:
+            alterStatement +
+            'ALTER COLUMN ' +
+            '"' +
+            name +
+            '" ' +
+            'DROP NOT NULL',
+        },
+      });
+    } else {
+      schemaChangesDown.push({
+        type: 'run_sql',
+        args: {
+          sql:
+            alterStatement +
+            'ALTER COLUMN ' +
+            '"' +
+            name +
+            '" ' +
+            'SET NOT NULL',
+        },
+      });
+    }
+
+    const merged_fkc = foreign_key_constraints.concat(opp_foreign_key_constraints);
+    if (merged_fkc.length > 0) {
+      merged_fkc.forEach(fkc => {
+        // add foreign key constraint to down migration
+        const lcol = Object.keys(fkc.column_mapping);
+        const rcol = Object.values(fkc.column_mapping);
+        const onUpdate = pgConfTypes[fkc.on_update];
+        const onDelete = pgConfTypes[fkc.on_delete];
+        schemaChangesDown.push({
+          type: 'run_sql',
+          args: {
+            sql:
+              alterStatement +
+              'ADD CONSTRAINT ' +
+              `${fkc.constraint_name} ` +
+              'FOREIGN KEY ' +
+              `(${lcol.join(', ')}) ` +
+              'REFERENCES ' +
+              `"${fkc.ref_table_table_schema}"."${fkc.ref_table}" ` +
+              `(${rcol.join(', ')}) ` +
+              `ON DELETE ${onDelete} ` +
+              `ON UPDATE ${onUpdate}`,
+          },
+        });
+      });
+    }
+
+    if (unique_constraints.length > 0) {
+      unique_constraints.forEach(uc => {
+        // add unique constraint to down migration
+        schemaChangesDown.push({
+          type: 'run_sql',
+          args: {
+            sql:
+              alterStatement +
+              'ADD CONSTRAINT ' +
+              `${uc.constraint_name} ` +
+              'UNIQUE ' +
+              `(${uc.columns.join(', ')})`,
+          },
+        });
+      });
+    }
+
+    if (column.column_default !== null) {
+      // add column default to down migration
+      schemaChangesDown.push({
+        type: 'run_sql',
+        args: {
+          sql:
+            alterStatement +
+            'ALTER COLUMN ' +
+            `"${name}" ` +
+            'SET DEFAULT ' +
+            column.column_default,
+        },
+      });
+    }
+
+    // COMMENT ON COLUMN my_table.my_column IS 'Employee ID number';
+    if (comment) {
+      schemaChangesDown.push({
+        type: 'run_sql',
+        args: {
+          sql:
+            'COMMENT ON COLUMN ' +
+            '"' +
+            currentSchema +
+            '"' +
+            '.' +
+            '"' +
+            tableName +
+            '"' +
+            '.' +
+            '"' +
+            name +
+            '"' +
+            ' ' +
+            'IS ' +
+            "'" +
+            comment +
+            "'",
+        },
+      });
+    }
 
     // Apply migrations
     const migrationName =
-      'alter_table_' +
-      currentSchema +
-      '_' +
-      tableName +
-      '_drop_column_' +
-      colName;
+      'alter_table_' + currentSchema + '_' + tableName + '_drop_column_' + name;
 
     const requestMsg = 'Deleting Column...';
     const successMsg = 'Column deleted';
     const errorMsg = 'Deleting column failed';
 
-    const customOnSuccess = () => {};
+    const customOnSuccess = (data, consoleMode, migrationMode) => {
+      if (consoleMode === 'cli' && migrationMode) {
+        // show warning information
+        dispatch(
+          showWarningNotification(
+            'Check down migration',
+            'Please verify that the down migration will reset the DB to the previous state (you ' +
+              'might need to add recreation of some dependent objects like indexes, etc.)',
+            data
+          )
+        );
+      }
+    };
     const customOnError = () => {};
 
     makeMigrationCall(
       dispatch,
       getState,
       schemaChangesUp,
-      [],
+      schemaChangesDown,
       migrationName,
       customOnSuccess,
       customOnError,
@@ -1159,7 +1284,7 @@ const isColumnUnique = (tableSchema, colName) => {
   );
 };
 
-const saveColumnChangesSql = (colName, column) => {
+const saveColumnChangesSql = (colName, column, onSuccess) => {
   // eslint-disable-line no-unused-vars
   return (dispatch, getState) => {
     const columnEdit = getState().tables.modify.columnEdit[colName];
@@ -1663,7 +1788,6 @@ const saveColumnChangesSql = (colName, column) => {
           showErrorNotification(
             gqlColumnErrorNotif[4],
             gqlColumnErrorNotif[1],
-            gqlColumnErrorNotif[2],
             gqlColumnErrorNotif[3]
           )
         );
@@ -1696,7 +1820,8 @@ const saveColumnChangesSql = (colName, column) => {
     const errorMsg = 'Modifying column failed';
 
     const customOnSuccess = () => {
-      dispatch(setColumnEdit(columnEdit));
+      dispatch(resetColumnEdit(colName));
+      onSuccess();
     };
     const customOnError = () => {};
 
@@ -1750,7 +1875,6 @@ const fetchColumnCasts = () => {
           showErrorNotification(
             'Error fetching column casts information',
             'Kindly reach out to us in case you face this issue again',
-            error,
             error
           )
         );
