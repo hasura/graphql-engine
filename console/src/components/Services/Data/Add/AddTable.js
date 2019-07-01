@@ -43,8 +43,6 @@ import gqlPattern, {
   gqlMinPrimaryKey,
 } from '../Common/GraphQLValidation'; // TODO add the others
 
-import { commonDataTypes } from '../utils';
-
 /* AddTable is a wrapper which wraps
  *  1) Table Name input
  *  2) Columns inputs
@@ -241,10 +239,8 @@ class AddTable extends Component {
   }
 
   isValidType(s) {
-    for (let i = 0; i < commonDataTypes.length; i++) {
-      if (commonDataTypes[i].value === s) return true;
-    }
-    return false;
+    return (typeof s === 'string' &&
+            s.trim().length > 0);
   }
 
   validateColumnTypes(cols) {
