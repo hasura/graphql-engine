@@ -289,3 +289,23 @@ args:
   args:
     name: hdb_allowlist
     schema: hdb_catalog
+
+- type: track_table
+  args:
+    name: hdb_remote_relationship
+    schema: hdb_catalog
+
+- type: create_array_relationship
+  args:
+    name: remote_relationships
+    table:
+      schema: hdb_catalog
+      name: hdb_table
+    using:
+      manual_configuration:
+        remote_table:
+          schema: hdb_catalog
+          name: hdb_relationship
+        column_mapping:
+          table_schema : table_schema
+          table_name : table_name

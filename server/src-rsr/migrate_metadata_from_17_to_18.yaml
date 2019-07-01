@@ -1,0 +1,21 @@
+type: bulk
+args:
+- type: track_table
+  args:
+    schema: hdb_catalog
+    name: hdb_remote_relationship
+- type: create_array_relationship
+  args:
+    name: remote_relationships
+    table:
+      schema: hdb_catalog
+      name: hdb_table
+    using:
+      manual_configuration:
+        remote_table:
+          schema: hdb_catalog
+          name: hdb_remote_relationship
+        column_mapping:
+          table_schema : table_schema
+          table_name : table_name
+

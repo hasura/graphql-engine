@@ -103,6 +103,16 @@ setAsSystemDefinedFor16 =
              AND  table_name = 'hdb_query_collection';
            |]
 
+setAsSystemDefinedFor18 :: MonadTx m => m ()
+setAsSystemDefinedFor18 =
+  liftTx $ Q.catchE defaultTxErrorHandler $
+  Q.multiQ [Q.sql|
+            UPDATE hdb_catalog.hdb_table
+            SET is_system_defined = 'true'
+            WHERE table_schema = 'hdb_catalog'
+             AND  table_name = 'hdb_remote_relationship';
+           |]
+
 getCatalogVersion
   :: (MonadTx m)
   => m T.Text
@@ -327,11 +337,24 @@ from16To17 =
              AND  table_name = 'hdb_allowlist';
            |]
 
-from17To18 :: MonadTx m => m ()
-from17To18 = liftTx $ do
-  Q.Discard () <- Q.multiQE defaultTxErrorHandler
+from17To18
+  :: ( MonadTx m
+    , HasHttpManager m
+    , HasSQLGenCtx m
+    , CacheRWM m
+    , UserInfoM m
+    , MonadIO m
+    )
+  => m ()
+from17To18 = do
+  Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
     $(Q.sqlFromFile "src-rsr/migrate_from_17_to_18.sql")
+  migrateMetadata True migrateMetadataFromFile
+  setAsSystemDefinedFor18
   return ()
+  where
+    migrateMetadataFromFile =
+      $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_17_to_18.yaml" :: Q (TExp RQLQuery)))
 
 migrateCatalog
   :: ( MonadTx m
