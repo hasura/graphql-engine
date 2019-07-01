@@ -306,7 +306,6 @@ export const addAllowedQueries = (queries, isEmptyList, callback) => {
           showErrorNotification(
             'Adding query to allow-list failed',
             null,
-            null,
             error
           )
         );
@@ -337,7 +336,6 @@ export const deleteAllowList = () => {
         dispatch(
           showErrorNotification(
             'Deleting queries from allow-list failed',
-            null,
             null,
             error
           )
@@ -372,7 +370,6 @@ export const deleteAllowedQuery = (queryName, isLastQuery) => {
           showErrorNotification(
             'Deleting query from allow-list failed',
             null,
-            null,
             error
           )
         );
@@ -399,12 +396,7 @@ export const updateAllowedQuery = (queryName, newQuery) => {
       error => {
         console.error(error);
         dispatch(
-          showErrorNotification(
-            'Updating allow-list query failed',
-            null,
-            null,
-            error
-          )
+          showErrorNotification('Updating allow-list query failed', null, error)
         );
       }
     );
@@ -473,7 +465,7 @@ export const metadataReducer = (state = defaultState, action) => {
         ...state,
         allowedQueries: [
           ...state.allowedQueries.map(q =>
-            (q.name === action.data.queryName ? action.data.newQuery : q)
+            q.name === action.data.queryName ? action.data.newQuery : q
           ),
         ],
       };

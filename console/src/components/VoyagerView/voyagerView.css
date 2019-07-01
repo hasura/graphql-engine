@@ -1,0 +1,6 @@
+.graphql-voyager {
+  height: calc(100vh - 50px);
+}
+.graphql-voyager .type-doc > .doc-navigation {
+  padding: 5px 20px 20px 18px;
+}

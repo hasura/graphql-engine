@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -130,7 +131,7 @@ func MigrateAPI(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, &Response{Name: request.Name})
+		c.JSON(http.StatusOK, &Response{Name: fmt.Sprintf("%d_%s", timestamp, request.Name)})
 	default:
 		c.JSON(http.StatusMethodNotAllowed, &gin.H{"message": "Method not allowed"})
 	}
