@@ -332,15 +332,18 @@ export const fetchTrackedTableReferencedFkQuery = options => {
   ) AS tables 
 FROM 
   (
-    select
+    select DISTINCT ON (hdb_fkc.constraint_oid)
       hdb_fkc.*, 
-      fk_ref_table.table_name IS NOT NULL AS is_table_tracked 
+      fk_ref_table.table_name IS NOT NULL AS is_table_tracked,
+      hdb_uc.constraint_name IS NOT NULL AS is_unique
     from 
       hdb_catalog.hdb_table AS ist 
       JOIN hdb_catalog.hdb_foreign_key_constraint AS hdb_fkc ON hdb_fkc.ref_table_table_schema = ist.table_schema 
       and hdb_fkc.ref_table = ist.table_name 
       LEFT OUTER JOIN hdb_catalog.hdb_table AS fk_ref_table ON fk_ref_table.table_schema = hdb_fkc.table_schema 
       and fk_ref_table.table_name = hdb_fkc.table_name
+      LEFT OUTER JOIN hdb_catalog.hdb_unique_constraint AS hdb_uc ON hdb_uc.table_schema = hdb_fkc.table_schema
+      and hdb_uc.table_name = hdb_fkc.table_name and ARRAY(select json_array_elements_text(hdb_uc.columns) ORDER BY json_array_elements_text) = ARRAY(select json_object_keys(hdb_fkc.column_mapping) ORDER BY json_object_keys)
     ${whereQuery}
   ) as info
 `;
