@@ -50,12 +50,6 @@ To access the nested objects via the GraphQL API, :doc:`create the following rel
 - Object relationship, ``passport_info`` from ``author`` table using  ``id -> passport_info :: owner_id``
 - Object relationship, ``owner`` from ``passport_info`` table using ``owner_id -> author :: id``
 
-.. note::
-
-  Currently the console suggests an array relationship from ``author`` to ``passport_info`` table as it doesn't
-  detect the unique constraint on ``owner_id``. This will be fixed soon. For now, you can :ref:`create the
-  object relationship manually <relationships-without-fkey>` without using the foreign-key.
-
 Query using relationships
 -------------------------
 
