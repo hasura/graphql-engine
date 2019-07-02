@@ -15,21 +15,13 @@ export const TEXT = 'text';
 
 export const getPlaceholder = type => {
   switch (type) {
-    case INTEGER:
-      return 'integer';
-    case BIGINT:
-      return 'BIG integer';
-    case NUMERIC:
-      return 'float';
     case TIMESTAMP:
       return new Date().toISOString();
     case DATE:
       return new Date().toISOString().slice(0, 10);
-    case TIMETZ:
+    case TIME:
       const time = new Date().toISOString().slice(11, 19);
       return `${time}Z or ${time}+05:30`;
-    case UUID:
-      return 'UUID';
     case JSONDTYPE:
       return '{"name": "foo"} or [12, "bar"]';
     case JSONB:
