@@ -372,7 +372,6 @@ const addRelViewMigrate = (tableSchema, toggleEditor) => (
       showErrorNotification(
         'Error adding relationship!',
         'Please select a name for the relationship',
-        '',
         { custom: 'Relationship name cannot be empty' }
       )
     );
@@ -381,7 +380,6 @@ const addRelViewMigrate = (tableSchema, toggleEditor) => (
       showErrorNotification(
         gqlRelErrorNotif[0],
         gqlRelErrorNotif[1],
-        gqlRelErrorNotif[2],
         gqlRelErrorNotif[3]
       )
     );
