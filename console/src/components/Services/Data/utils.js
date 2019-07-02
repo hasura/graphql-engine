@@ -68,6 +68,15 @@ const findFKConstraint = (curTable, column) => {
   );
 };
 
+const findOppFKConstraint = (curTable, column) => {
+  const fkConstraints = curTable.opp_foreign_key_constraints;
+  return fkConstraints.find(
+    fk =>
+      Object.keys(fk.column_mapping).length === column.length &&
+      Object.keys(fk.column_mapping).join(',') === column.join(',')
+  );
+};
+
 export const findTableFromRel = (schemas, curTable, rel) => {
   let rTable = null;
   let rSchema = 'public';
@@ -140,7 +149,6 @@ export const findAllFromRel = (schemas, curTable, rel) => {
     // for object relationship
     if (rel.rel_type === 'object') {
       relMeta.lcol = [foreignKeyConstraintOn];
-
       const fkc = findFKConstraint(curTable, relMeta.lcol);
       if (fkc) {
         relMeta.rTable = fkc.ref_table;
@@ -160,12 +168,7 @@ export const findAllFromRel = (schemas, curTable, rel) => {
         relMeta.rTable = rTableConfig;
         relMeta.rSchema = 'public';
       }
-
-      const rtableSchema = schemas.find(
-        x =>
-          x.table_name === relMeta.rTable && x.table_schema === relMeta.rSchema
-      );
-      const rfkc = findFKConstraint(rtableSchema, relMeta.rcol);
+      const rfkc = findOppFKConstraint(curTable, relMeta.rcol);
       relMeta.lcol = [rfkc.column_mapping[relMeta.rcol]];
     }
   }
