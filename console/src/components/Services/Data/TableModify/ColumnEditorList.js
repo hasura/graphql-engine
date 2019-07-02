@@ -71,16 +71,17 @@ const ColumnEditorList = ({
           : false,
       // uniqueConstraint: columnUniqueConstraints[colName],
       default: col.column_default || '',
+      comment: col.comment || '',
     };
 
-    const onSubmit = () => {
-      dispatch(saveColumnChangesSql(colName, col));
+    const onSubmit = toggleEditor => {
+      dispatch(saveColumnChangesSql(colName, col, toggleEditor));
     };
 
     const onDelete = () => {
       const isOk = confirm('Are you sure you want to delete?');
       if (isOk) {
-        dispatch(deleteColumnSql(tableName, colName, col));
+        dispatch(deleteColumnSql(col, tableSchema));
       }
     };
 
@@ -91,11 +92,13 @@ const ColumnEditorList = ({
       }
       const isOk = window.confirm(confirmMessage);
       if (isOk) {
-        dispatch(deleteColumnSql(tableName, colName, col));
+        dispatch(deleteColumnSql(col, tableSchema));
       }
     };
 
     const keyProperties = () => {
+      const propertiesDisplay = [];
+
       const propertiesList = [];
 
       propertiesList.push(columnProperties.display_type_name);
@@ -118,7 +121,17 @@ const ColumnEditorList = ({
 
       const keyPropertiesString = propertiesList.join(', ');
 
-      return <i>{keyPropertiesString && `- ${keyPropertiesString}`}</i>;
+      propertiesDisplay.push(
+        <i key={'props'}>{keyPropertiesString && `- ${keyPropertiesString}`}</i>
+      );
+      propertiesDisplay.push(<br />);
+      propertiesDisplay.push(
+        <span key={'comment'} className={styles.text_gray}>
+          {columnProperties.comment && `${columnProperties.comment}`}
+        </span>
+      );
+
+      return propertiesDisplay;
     };
 
     const collapsedLabel = () => {
@@ -192,7 +205,6 @@ const ColumnEditorList = ({
           tableName={tableName}
           dispatch={dispatch}
           currentSchema={currentSchema}
-          columnComment={col.comment}
           columnProperties={columnProperties}
           selectedProperties={columnEdit}
           editColumn={editColumn}
