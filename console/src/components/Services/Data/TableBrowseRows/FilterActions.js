@@ -72,7 +72,11 @@ const runQuery = tableSchema => {
         return w;
       }
       if (colType === 'boolean') {
-        w[colName][opName] = val === 'true' ? true : false;
+        if (val === 'true') {
+          w[colName][opName] = true;
+        } else if (val === 'false') {
+          w[colName][opName] = false;
+        }
       }
       return w;
     });

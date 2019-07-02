@@ -6,7 +6,7 @@ args:
   args:
     sql: |
       create table author(
-          id serial primary key, 
+          id serial primary key,
           name text unique
       );
       insert into author (name) values ('Author 1'), ('Author 2');
@@ -20,7 +20,7 @@ args:
         ('article 1 by author 1', 'content for article 1', 1),
         ('article 2 by author 1', 'content for article 2', 1),
         ('article 1 by author 2', 'content for article 3', 2);
-        
+
 - type: track_table
   args:
     schema: public
@@ -71,3 +71,16 @@ args:
     permission:
       check:
         author_id: X-Hasura-User-Id
+
+#Article insert permission for user2
+- type: create_insert_permission
+  args:
+    table: article
+    role: user2
+    permission:
+      columns:
+      - id
+      - title
+      - content
+      - author_id
+      check: {}

@@ -22,6 +22,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Version
 
+import qualified CI
 import qualified Control.Concurrent      as C
 import qualified Data.Aeson              as A
 import qualified Data.Aeson.Casing       as A
@@ -72,6 +73,7 @@ data HasuraTelemetry
   { _htDbUid       :: !Text
   , _htInstanceUid :: !Text
   , _htVersion     :: !Text
+  , _htCi          :: !(Maybe CI.CI)
   , _htMetrics     :: !Metrics
   } deriving (Show, Eq)
 $(A.deriveJSON (A.aesonDrop 3 A.snakeCase) ''HasuraTelemetry)
@@ -86,9 +88,11 @@ $(A.deriveJSON (A.aesonDrop 3 A.snakeCase) ''TelemetryPayload)
 telemetryUrl :: Text
 telemetryUrl = "https://telemetry.hasura.io/v1/http"
 
-mkPayload :: Text -> Text -> Text -> Metrics -> TelemetryPayload
-mkPayload dbId instanceId version metrics =
-  TelemetryPayload topic $ HasuraTelemetry dbId instanceId version metrics
+mkPayload :: Text -> Text -> Text -> Metrics -> IO TelemetryPayload
+mkPayload dbId instanceId version metrics = do
+  ci <- CI.getCI
+  return $ TelemetryPayload topic $
+    HasuraTelemetry dbId instanceId version ci metrics
   where topic = bool "server" "server_test" isDevVersion
 
 runTelemetry
@@ -102,7 +106,7 @@ runTelemetry (Logger logger) manager cacheRef (dbId, instanceId) = do
   forever $ do
     schemaCache <- fmap fst $ readIORef cacheRef
     let metrics = computeMetrics schemaCache
-        payload = A.encode $ mkPayload dbId instanceId currentVersion metrics
+    payload <- A.encode <$> mkPayload dbId instanceId currentVersion metrics
     logger $ debugLBS $ "metrics_info: " <> payload
     resp <- try $ Wreq.postWith options (T.unpack telemetryUrl) payload
     either logHttpEx handleHttpResp resp
