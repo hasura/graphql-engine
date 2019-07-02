@@ -4,6 +4,10 @@ metaTitle: "Update last seen of user with Mutation | GraphQL React Native Apollo
 metaDescription: "GraphQL Mutation to update last seen of user to make them available online. Use setInterval to trigger mutation every few seconds "
 ---
 
+import YoutubeEmbed from "../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/jwHQSh0BUkk" />
+
 import GithubLink from "../src/GithubLink.js";
 
 We cruised through our GraphQL queries and mutations. We queried for todos, added a new todo, updated an existing todo, removed an existing todo.
@@ -55,7 +59,7 @@ In `componentDidMount`, we will create a `setInterval` to update the last_seen o
 // bootstrap session in componentDidMount
 async componentDidMount() {
   // fetch session
-  const session = await AsyncStorage.getItem('@todo-graphql:auth0');
+  const session = await AsyncStorage.getItem('@todo-graphql:session');
   const sessionObj = JSON.parse(session);
   const { token, id } = sessionObj;
   // make apollo client with this session token

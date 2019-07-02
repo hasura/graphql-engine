@@ -4,6 +4,11 @@ metaTitle: "Mutation to create todos | GraphQL React Native Apollo Tutorial"
 metaDescription: "GraphQL Mutation to create new personal todos. Try the mutation in GraphiQL, passing the Authorization token to get authenticated results."
 ---
 
+
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/wjOBsczz_fU" />
+
 In this part of the tutorial, you will learn how to create new todos by using GraphQL Mutations.
 
 Let's define a graphql query to do a mutation into todos.

@@ -40,31 +40,8 @@ const showNotification = ({
       Notifications.show(
         {
           position,
-          autoDismiss: level === 'error' ? 0 : 5,
-          dismissible: level === 'error' ? 'click' : 'both',
-          children: json ? jsonFormat(json) : null,
-          ...options,
-        },
-        level
-      )
-    );
-  };
-};
-
-const showTempNotification = ({
-  level = 'info',
-  position = 'tr',
-  json,
-  ...options
-} = {}) => {
-  return dispatch => {
-    dispatch(Notifications.removeAll());
-    dispatch(
-      Notifications.show(
-        {
-          position,
-          autoDismiss: 2,
-          dismissible: 'both',
+          autoDismiss: ['error', 'warning'].includes(level) ? 0 : 5,
+          dismissible: ['error', 'warning'].includes(level) ? 'button' : 'both',
           children: json ? jsonFormat(json) : null,
           ...options,
         },
@@ -161,5 +138,4 @@ export {
   notifExpand,
   notifMsg,
   showNotification,
-  showTempNotification,
 };
