@@ -129,8 +129,7 @@ class InsertItem extends Component {
         type: 'text',
       };
 
-      // const colType = col.data_type;
-      const colType = col.udt_name;
+      const colType = col.data_type;
       const placeHolder = hasDefault
         ? col.column_default
         : getPlaceholder(colType);

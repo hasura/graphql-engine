@@ -4,6 +4,10 @@ metaTitle: "Todo app react native boilerplate setup | GraphQL React Native Apoll
 metaDescription: "The GraphQL backend is already ready. The task is to convert the static UI into a working realtime app in React Native"
 ---
 
+import YoutubeEmbed from "../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/gn3Qrsi2HFs" />
+
 For this tutorial, the GraphQL backend and the basic app UI is already ready.
 Our task will be convert the "static" UI into a working realtime app.
 

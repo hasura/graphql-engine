@@ -6,7 +6,7 @@ import { findTableFromRel } from '../utils';
 import {
   showSuccessNotification,
   showErrorNotification,
-} from '../Notification';
+} from '../../Common/Notification';
 import dataHeaders from '../Common/Headers';
 
 /* ****************** View actions *************/
@@ -192,9 +192,7 @@ const deleteItem = pkClause => {
         );
       },
       err => {
-        dispatch(
-          showErrorNotification('Deleting row failed!', err.error, reqBody, err)
-        );
+        dispatch(showErrorNotification('Deleting row failed!', err.error, err));
       }
     );
   };
