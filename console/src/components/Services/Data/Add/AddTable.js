@@ -45,7 +45,7 @@ import gqlPattern, {
 } from '../Common/GraphQLValidation'; // TODO add the others
 
 import styles from '../../../Common/TableCommon/Table.scss';
-import { frequentlyUsedColumns, getFrequentlyUsedColumn } from './utils';
+import { frequentlyUsedColumns, getFreqUsedColDisplayInfo } from './utils';
 import Dropdown from '../../../Common/Dropdown/Dropdown';
 /* AddTable is a wrapper which wraps
  *  1) Table Name input
@@ -243,8 +243,7 @@ class AddTable extends Component {
   }
 
   isValidType(s) {
-    return (typeof s === 'string' &&
-            s.trim().length > 0);
+    return typeof s === 'string' && s.trim().length > 0;
   }
 
   validateColumnTypes(cols) {
@@ -421,7 +420,7 @@ class AddTable extends Component {
 
     const frequentlyUsedColumnsOptions = () => {
       return frequentlyUsedColumns.map(fuc => {
-        const { title, subTitle } = getFrequentlyUsedColumn(fuc);
+        const { title, subTitle } = getFreqUsedColDisplayInfo(fuc);
         return {
           content: (
             <div>

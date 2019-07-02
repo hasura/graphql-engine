@@ -69,13 +69,16 @@ const setColNullable = (isNull, index) => ({
 const setFreqUsedColumn = column => (dispatch, getState) => {
   const tableState = JSON.parse(JSON.stringify(getState().addTable.table));
   const { columns } = tableState;
+
   let newPks = tableState.primaryKeys;
+
   const newColumn = {
     name: column.name,
     type: column.type,
     nullable: false,
     getDependentSql: column.getDependentSql,
   };
+
   if (column.default) {
     newColumn.default = { __type: 'value', value: column.default };
   }
@@ -85,30 +88,29 @@ const setFreqUsedColumn = column => (dispatch, getState) => {
   }
 
   const numExistingCols = columns.length;
+
+  let newColIndex;
   if (
     !columns[numExistingCols - 1].name &&
     !columns[numExistingCols - 1].type
   ) {
     columns[numExistingCols - 1] = newColumn;
-    if (column.primary) {
-      newPks = [
-        ...newPks.slice(0, newPks.length - 1),
-        (numExistingCols - 1).toString(),
-        '',
-      ];
-    }
+    newColIndex = numExistingCols - 1;
   } else {
     columns.push(newColumn);
-    if (column.primary) {
-      newPks = [
-        ...newPks.slice(0, newPks.length - 1),
-        numExistingCols.toString(),
-        '',
-      ];
-    }
+    newColIndex = numExistingCols;
   }
-  columns.push({ name: '', type: '', nullable: false });
+
+  if (column.primary) {
+    newPks = [
+      ...newPks.slice(0, newPks.length - 1),
+      newColIndex.toString(),
+      '',
+    ];
+  }
+
   dispatch({ type: SET_COLUMNS_BULK, columns });
+
   if (column.primary) {
     dispatch({ type: SET_PK, pks: newPks });
   }
@@ -383,7 +385,7 @@ const createTableSql = () => {
   };
 };
 
-const specificAddTableReducer = (state = defaultState, action) => {
+const addTableReducerCore = (state = defaultState, action) => {
   switch (action.type) {
     case SET_DEFAULTS:
       return { ...defaultState };
@@ -567,16 +569,17 @@ const addACol = columns => {
 };
 
 const addTableReducer = (state = defaultState, action) => {
-  const rawstate = specificAddTableReducer(state, action);
+  let newState = addTableReducerCore(state, action);
 
-  // and now we do everything to make the model make sense
-  if (needsNewColumn(rawstate.columns)) {
-    return {
-      ...rawstate,
-      columns: addACol(rawstate.columns),
+  // do everything to make the model make sense
+  if (needsNewColumn(newState.columns)) {
+    newState = {
+      ...newState,
+      columns: addACol(newState.columns),
     };
   }
-  return rawstate;
+
+  return newState;
 };
 
 export default addTableReducer;

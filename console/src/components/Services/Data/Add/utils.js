@@ -5,7 +5,7 @@ export const frequentlyUsedColumns = [
     typeText: 'integer (auto-increment)',
     primary: true,
     default: null,
-    dependent_sql: null,
+    getDependentSql: null,
   },
   {
     name: 'id',
@@ -13,7 +13,7 @@ export const frequentlyUsedColumns = [
     typeText: 'UUID',
     primary: true,
     default: 'gen_random_uuid()',
-    dependent_sql: null,
+    getDependentSql: null,
   },
   {
     name: 'created_at',
@@ -21,7 +21,7 @@ export const frequentlyUsedColumns = [
     typeText: 'timestamp',
     primary: false,
     default: 'now()',
-    dependent_sql: null,
+    getDependentSql: null,
   },
   {
     name: 'updated_at',
@@ -50,7 +50,7 @@ export const frequentlyUsedColumns = [
   },
 ];
 
-export const getFrequentlyUsedColumn = c => {
+export const getFreqUsedColDisplayInfo = c => {
   const title = c.name;
   const subTitle = `${c.typeText}; ${
     c.default ? `default ${c.default};` : ''
