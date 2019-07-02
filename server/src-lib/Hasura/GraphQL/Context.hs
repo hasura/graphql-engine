@@ -136,7 +136,7 @@ mkHsraObjFldInfo
   -> G.GType
   -> ObjFldInfo
 mkHsraObjFldInfo descM name params ty =
-  ObjFldInfo descM name params ty HasuraType
+  ObjFldInfo descM name params ty TLHasuraType
 
 mkHsraObjTyInfo
   :: Maybe G.Description
@@ -145,7 +145,7 @@ mkHsraObjTyInfo
   -> ObjFieldMap
   -> ObjTyInfo
 mkHsraObjTyInfo descM ty implIFaces flds =
-  mkObjTyInfo descM ty implIFaces flds HasuraType
+  mkObjTyInfo descM ty implIFaces flds TLHasuraType
 
 mkHsraInpTyInfo
   :: Maybe G.Description
@@ -153,7 +153,7 @@ mkHsraInpTyInfo
   -> InpObjFldMap
   -> InpObjTyInfo
 mkHsraInpTyInfo descM ty flds =
-  InpObjTyInfo descM ty flds HasuraType
+  InpObjTyInfo descM ty flds TLHasuraType
 
 mkHsraEnumTyInfo
   :: Maybe G.Description
@@ -161,10 +161,10 @@ mkHsraEnumTyInfo
   -> Map.HashMap G.EnumValue EnumValInfo
   -> EnumTyInfo
 mkHsraEnumTyInfo descM ty enumVals =
-  EnumTyInfo descM ty enumVals HasuraType
+  EnumTyInfo descM ty enumVals TLHasuraType
 
 mkHsraScalarTyInfo :: PGColType -> ScalarTyInfo
-mkHsraScalarTyInfo ty = ScalarTyInfo Nothing ty HasuraType
+mkHsraScalarTyInfo ty = ScalarTyInfo Nothing ty TLHasuraType
 
 fromInpValL :: [InpValInfo] -> Map.HashMap G.Name InpValInfo
 fromInpValL = mapFromL _iviName
@@ -211,7 +211,7 @@ mkCompExpInp colTy =
   , bool [] (stDWithinGeoOpInpVal stDWithinGeographyInpTy :
              map geoOpToInpVal geoOps) isGeographyType
   , [InpValInfo Nothing "_is_null" Nothing $ G.TypeNamed (G.Nullability True) $ G.NamedType "Boolean"]
-  ]) HasuraType
+  ]) TLHasuraType
   where
     tyDesc = mconcat
       [ "expression to compare columns of type "
@@ -349,7 +349,7 @@ ordByEnumTy =
       ]
 
 defaultTypes :: [TypeInfo]
-defaultTypes = $(fromSchemaDocQ defaultSchema HasuraType)
+defaultTypes = $(fromSchemaDocQ defaultSchema TLHasuraType)
 
 
 mkGCtx :: TyAgg -> RootFlds -> InsCtxMap -> GCtx

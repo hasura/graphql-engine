@@ -813,6 +813,8 @@ addRemoteSchemaToCache rmCtx = do
   sc <- askSchemaCache
   let rmSchemas = scRemoteSchemas sc
       name = rscName rmCtx
+  -- ideally, remote schema shouldn't present in cache
+  -- if present unexpected 500 is thrown
   onJust (M.lookup name rmSchemas) $ const $
     throw500 $ "remote schema with name " <> name
     <<> " already found in cache"
@@ -824,6 +826,8 @@ delRemoteSchemaFromCache
 delRemoteSchemaFromCache name = do
   sc <- askSchemaCache
   let rmSchemas = scRemoteSchemas sc
+  -- ideally, remote schema should be present in cache
+  -- if not present unexpected 500 is thrown
   void $ onNothing (M.lookup name rmSchemas) $
     throw500 $ "remote schema with name " <> name
     <<> " not found in cache"

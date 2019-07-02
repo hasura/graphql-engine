@@ -49,6 +49,15 @@ Adding a remote schema
 
 Follow the steps below to add a "remote schema" to Hasura GraphQL engine:
 
+.. note::
+
+  For version <= ``v1.0.0-beta.2`` GraphQL schema of each remote server added
+  is refreshed for any metadata defining operation like adding tables/functions
+  , defining relationships/permissions etc. From ``v1.0.0-beta.3`` onwards,
+  remote server's GraphQL schema is cached and refreshed only when user
+  explicitly reloads remote schema by clicking ``reload`` button on console or
+  by making :doc:`reload_remote_schema<../api-reference/schema-metadata-api/remote-schemas>` metadata API request
+
 Step 1: Write a custom GraphQL server
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -172,9 +181,9 @@ will selected.
 Cookie header from your remote GraphQL servers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ``Set-Cookie`` headers from your remote schema servers are sent back to the
-client over HTTP transport. **Over websocket transport there exists no means 
-to send headers after a query/mutation and hence ``Set-Cookie`` headers are 
-not sent to the client.** Use HTTP transport if your remote servers set cookies. 
+client over HTTP transport. **Over websocket transport there exists no means
+to send headers after a query/mutation and hence ``Set-Cookie`` headers are
+not sent to the client.** Use HTTP transport if your remote servers set cookies.
 
 
 Bypassing Hasura's authorization system for remote schema queries

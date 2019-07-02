@@ -251,7 +251,7 @@ mkTableObj
   -> [SelField]
   -> ObjTyInfo
 mkTableObj tn allowedFlds =
-  mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) HasuraType
+  mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) TLHasuraType
   where
     flds = concatMap (either (pure . mkPGColFld) mkRelFld') allowedFlds
     mkRelFld' (relInfo, allowAgg, _, _, isNullable) =
