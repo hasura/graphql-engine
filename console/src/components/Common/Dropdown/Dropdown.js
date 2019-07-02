@@ -9,12 +9,9 @@ const ComponentData = ({ options, dismiss, position }) => {
   /*
    * options is a list which has the following
    *  content: html inside each row
-   *  onClick (optional): An onClick handler for each row. If this is undefined, the row is not clicable
+   *  onClick (optional): An onClick handler for each row. If this is undefined, the row is not clickable
    * */
 
-  /*
-    TODO: Implement position API
-  */
   const generateOptions = options.map(o => {
     const liStyle = o.onClick ? styles.cursorPointer : '';
     const onClick = {};
@@ -42,9 +39,7 @@ const ComponentData = ({ options, dismiss, position }) => {
 };
 
 const attachEventListener = updateToggle => {
-  document.addEventListener('click', updateToggle, {
-    once: true,
-  });
+  document.addEventListener('click', updateToggle, { once: true });
 };
 
 const removeEventListener = updateToggle => {
@@ -56,7 +51,7 @@ const removeEventListener = updateToggle => {
  *  testId: Tag the component with this keyPrefix. This can be consumed in tests
  *  *children*: Dropdown is tied to this element. Dropdown state is toggled based on clicks to this element.
  *  options: Line items
- *  position: TODO: Unimplemented functionality.
+ *  position: bottom, right (default: right)
  *
  * */
 const Dropdown = ({ keyPrefix, testId, children, options, position }) => {
