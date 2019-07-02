@@ -56,11 +56,11 @@ runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer manager reqHdrs r
                 (rtqOperationType rt)
                 rsi
                 fields
-          liftIO (putStrLn ("remote result = " ++ show res))
+          -- liftIO (putStrLn ("remote result = " ++ show res))
           return resp
         E.ExPMixed resolvedOp remoteRels -> do
           hasuraJson <- runHasuraGQ pgExecCtx userInfo resolvedOp
-          liftIO $ putStrLn ("hasura_JSON = " ++ show hasuraJson)
+          -- liftIO $ putStrLn ("hasura_JSON = " ++ show hasuraJson)
           let result =
                 E.extractRemoteRelArguments
                   (scRemoteResolvers sc)
@@ -84,11 +84,11 @@ runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer manager reqHdrs r
                              (rtqOperationType batchQuery)
                              rsi
                              fields
-                     liftIO (putStrLn ("remote result = " ++ show res))
+                     -- liftIO (putStrLn ("remote result = " ++ show res))
                      pure (batch, res))
                   batches
               let joinResult = (E.joinResults results hasuraValue)
-              liftIO (putStrLn ("joined = " <> (L8.unpack . encode) joinResult))
+              -- liftIO (putStrLn ("joined = " <> (L8.unpack . encode) joinResult))
               pure (HttpResponse (encJFromJValue $ toJSON joinResult) Nothing)
   let mergedResp = mergeResponseData (toList (fmap _hrBody results))
   pure (HttpResponse mergedResp (foldMap _hrHeaders results))

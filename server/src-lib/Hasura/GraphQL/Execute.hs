@@ -246,12 +246,12 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
                       case rebuildFieldStrippingRemoteRels originalField of
                         Nothing -> (ExPHasura, originalField)
                         Just (newField, cursors) ->
-                          trace
-                            (unlines
-                               [ "originalField = " ++ show originalField
-                               , "newField = " ++ show newField
-                               , "cursors = " ++ show (fmap rrRelFieldPath cursors)
-                               ])
+                          -- trace
+                          --   (unlines
+                          --      [ "originalField = " ++ show originalField
+                          --      , "newField = " ++ show newField
+                          --      , "cursors = " ++ show (fmap rrRelFieldPath cursors)
+                          --      ])
                             (flip ExPMixed cursors, newField)
                 (queryTx, planM) <-
                   getQueryOp gCtx sqlGenCtx userInfo (pure alteredField) varDefs
@@ -1096,7 +1096,7 @@ execRemoteGQ manager userInfo reqHdrs opType remoteSchemaInfo bsOrField = do
                       pure jsonbytes
     Left bytes -> pure bytes
 
-  liftIO (putStrLn ("payload_to_server = " ++ L8.unpack jsonbytes))
+  -- liftIO (putStrLn ("payload_to_server = " ++ L8.unpack jsonbytes))
   res  <- liftIO $ try $ Wreq.postWith options (show url) jsonbytes
   resp <- either httpThrow return res
   let cookieHdr = getCookieHdr (resp ^? Wreq.responseHeader "Set-Cookie")
