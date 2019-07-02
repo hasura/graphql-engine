@@ -66,13 +66,11 @@ runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer manager reqHdrs r
                   (scRemoteResolvers sc)
                   hasuraJson
                   remoteRels
-          liftIO $ putStrLn ("extractRemoteRelArguments = " ++ show result)
           case result of
             Left errors -> return $ HttpResponse (encJFromJValue errors) Nothing
             Right (hasuraValue, remotes) -> do
               let batches =
                     E.produceBatches (E.getOpTypeFromExecOp resolvedOp) remotes
-              liftIO $ putStrLn ("batches = " ++ show batches)
               results <-
                 traverse
                   (\batch -> do
