@@ -37,7 +37,7 @@ export const getPlaceholder = type => {
     case BOOLEAN:
       return '';
     default:
-      return 'text';
+      return type;
   }
 };
 
