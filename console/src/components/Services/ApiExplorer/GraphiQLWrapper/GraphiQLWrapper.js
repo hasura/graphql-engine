@@ -58,10 +58,12 @@ class GraphiQLWrapper extends Component {
     );
 
     const renderGraphiql = graphiqlProps => {
+      const voyagerUrl = graphqlNetworkData.consoleUrl + '/voyager-view';
       return (
         <GraphiQL
           fetcher={graphQLFetcher}
           supportAnalyze
+          voyagerUrl={voyagerUrl}
           analyzeFetcher={analyzeFetcherInstance}
           {...graphiqlProps}
         />

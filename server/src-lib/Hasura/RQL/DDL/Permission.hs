@@ -133,10 +133,13 @@ buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) =
   (be, beDeps) <- withPathK "check" $
     -- procBoolExp tn fieldInfoMap (S.QualVar "NEW") chk
     procBoolExp tn fieldInfoMap chk
-  let fltrHeaders = getDependentHeaders chk
   (setColsSQL, setHdrs, setColDeps) <- procSetObj tabInfo set
-  let reqHdrs = fltrHeaders `union` setHdrs
-      deps = mkParentDep tn : beDeps ++ setColDeps
+  void $ withPathK "columns" $ indexedForM insCols $ \col ->
+         askPGType fieldInfoMap col ""
+  let fltrHeaders = getDependentHeaders chk
+      reqHdrs = fltrHeaders `union` setHdrs
+      insColDeps = map (mkColDep "untyped" tn) insCols
+      deps = mkParentDep tn : beDeps ++ setColDeps ++ insColDeps
       insColsWithoutPresets = insCols \\ HM.keys setColsSQL
   return (InsPermInfo (HS.fromList insColsWithoutPresets) vn be setColsSQL reqHdrs, deps)
   where
@@ -285,7 +288,7 @@ buildUpdPermInfo tabInfo (UpdPerm colSpec set fltr) = do
   (setColsSQL, setHeaders, setColDeps) <- procSetObj tabInfo set
 
   -- check if the columns exist
-  _ <- withPathK "columns" $ indexedForM updCols $ \updCol ->
+  void $ withPathK "columns" $ indexedForM updCols $ \updCol ->
        askPGType fieldInfoMap updCol relInUpdErr
 
   let updColDeps = map (mkColDep "untyped" tn) updCols

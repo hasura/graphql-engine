@@ -7,6 +7,7 @@ import {
   modifyResolver,
   RESET,
   TOGGLE_MODIFY,
+  getHeaderEvents,
 } from '../Add/addResolverReducer';
 import { VIEW_RESOLVER } from '../customActions';
 import { push } from 'react-router-redux';
@@ -62,6 +63,16 @@ class Edit extends React.Component {
   componentWillUnmount() {
     Promise.all([
       this.props.dispatch({ type: RESET }),
+      this.props.dispatch({
+        type: getHeaderEvents.UPDATE_HEADERS,
+        data: [
+          {
+            name: '',
+            type: 'static',
+            value: '',
+          },
+        ],
+      }),
       this.props.dispatch({ type: VIEW_RESOLVER, data: '' }),
     ]);
   }
