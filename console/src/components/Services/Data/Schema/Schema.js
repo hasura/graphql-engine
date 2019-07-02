@@ -133,9 +133,11 @@ class Schema extends Component {
     };
 
     const getCurrentSchemaSection = () => {
-      const schemaOptions = schemaList.map(s => {
-        return <option key={s.schema_name}>{s.schema_name}</option>;
-      });
+      const getSchemaOptions = () => {
+        return schemaList.map(s => (
+          <option key={s.schema_name}>{s.schema_name}</option>
+        ));
+      };
 
       const getCreateSchemaSection = () => {
         let createSchemaSection = null;
@@ -262,7 +264,7 @@ class Schema extends Component {
               }
               value={currentSchema}
             >
-              {schemaOptions}
+              {getSchemaOptions()}
             </select>
           </div>
           <div className={styles.display_inline + ' ' + styles.add_mar_left}>

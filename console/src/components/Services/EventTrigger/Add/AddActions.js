@@ -1,7 +1,7 @@
 import defaultState from './AddState';
 import _push from '../push';
 import { loadTriggers, makeMigrationCall, setTrigger } from '../EventActions';
-import { showSuccessNotification } from '../Notification';
+import { showSuccessNotification } from '../../Common/Notification';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { updateSchemaInfo } from '../../Data/DataActions';
 

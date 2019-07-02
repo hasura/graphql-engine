@@ -142,6 +142,9 @@ library
                      -- metrics in multiplexed subs
                      , ekg-core
 
+                     -- metrics for CI integration
+                     , ci-info
+
                      -- serve static files
                      , filepath >= 1.4
                      , mime-types >= 0.1
