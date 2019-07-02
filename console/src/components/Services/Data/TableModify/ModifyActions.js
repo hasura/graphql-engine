@@ -874,7 +874,9 @@ const deleteColumnSql = (column, tableSchema) => {
       });
     }
 
-    const merged_fkc = foreign_key_constraints.concat(opp_foreign_key_constraints);
+    const merged_fkc = foreign_key_constraints.concat(
+      opp_foreign_key_constraints
+    );
     if (merged_fkc.length > 0) {
       merged_fkc.forEach(fkc => {
         // add foreign key constraint to down migration
