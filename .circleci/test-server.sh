@@ -386,7 +386,7 @@ wait_for_port 8080
 
 pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-logging test_logging.py
 
-unset HASURA_GRAPHQL_ENABLE_VERBOSE_LOG
+unset HASURA_GRAPHQL_ENABLED_LOG_TYPES
 kill_hge_servers
 
 # end verbose logging tests

@@ -87,7 +87,9 @@ class TestLogging():
         def _get_http_logs(x):
             return x['type'] == 'http-log'
 
+        print('all logs gathered', self.logs)
         http_logs = list(filter(_get_http_logs, self.logs))
+        print('http logs', http_logs)
         assert len(http_logs) > 0
         http_info = http_logs[0]['detail']['http_info']
         assert 'url' in http_info
