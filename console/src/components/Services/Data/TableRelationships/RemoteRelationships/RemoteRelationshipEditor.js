@@ -271,13 +271,13 @@ const RemoteRelationshipEditor = ({
   const saveFunc = toggle => {
     const successCallback = () => {
       if (isLast) {
+        toggle();
         const newRelationships = JSON.parse(JSON.stringify(allRelationships));
         newRelationships.push({
           ...defaultRemoteRelationship,
         });
         dispatch(setRemoteRelationships(newRelationships));
       }
-      toggle();
     };
     dispatch(saveRemoteRelationship(index, isLast, successCallback));
   };

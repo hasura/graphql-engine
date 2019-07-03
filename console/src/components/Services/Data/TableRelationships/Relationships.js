@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import TableHeader from '../TableCommon/TableHeader';
-import { RESET } from '../TableModify/ModifyActions';
 import {
   addNewRelClicked,
   addRelNewFromStateMigrate,
@@ -319,7 +318,6 @@ const Relationships = ({
   featuresCompatibility,
 }) => {
   useEffect(() => {
-    dispatch({ type: RESET });
     dispatch(setTable(tableName));
   }, []);
   const styles = require('../TableModify/ModifyTable.scss');
