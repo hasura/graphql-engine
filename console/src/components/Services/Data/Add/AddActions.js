@@ -270,7 +270,7 @@ const createTableSql = () => {
         }
 
         const uniqueColumns = uk.map(c => `"${state.columns[c].name}"`);
-        tableDefSql += `${tableDefSql}, UNIQUE (${uniqueColumns.join(', ')})`;
+        tableDefSql += `, UNIQUE (${uniqueColumns.join(', ')})`;
       });
     }
 
