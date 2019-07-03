@@ -73,6 +73,7 @@ data RawServeOptions
   , rsoFallbackRefetchInt :: !(Maybe LQ.RefetchInterval)
   , rsoEnableAllowlist    :: !Bool
   , rsoEnabledLogTypes    :: !(Maybe [L.EngineLogType])
+  , rsoLogLevel           :: !(Maybe L.LogLevel)
   } deriving (Show, Eq)
 
 data ServeOptions
@@ -94,6 +95,7 @@ data ServeOptions
   , soLiveQueryOpts    :: !LQ.LQOpts
   , soEnableAllowlist  :: !Bool
   , soEnabledLogTypes  :: !(Set.HashSet L.EngineLogType)
+  , soLogLevel         :: !L.LogLevel
   } deriving (Show, Eq)
 
 data RawConnInfo =
@@ -189,6 +191,9 @@ instance FromEnv JWTConfig where
 
 instance FromEnv [L.EngineLogType] where
   fromEnv = readLogTypes
+
+instance FromEnv L.LogLevel where
+  fromEnv = readLogLevel
 
 parseStrAsBool :: String -> Either String Bool
 parseStrAsBool t
@@ -301,10 +306,11 @@ mkServeOptions rso = do
   enableAL <- withEnvBool (rsoEnableAllowlist rso) $ fst enableAllowlistEnv
   enabledLogs <- Set.fromList . fromMaybe (Set.toList L.defaultEnabledLogTypes) <$>
                  withEnv (rsoEnabledLogTypes rso) (fst enabledLogsEnv)
+  serverLogLevel <- fromMaybe L.LevelInfo <$> withEnv (rsoLogLevel rso) (fst logLevelEnv)
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
-                        enabledLogs
+                        enabledLogs serverLogLevel
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -435,7 +441,7 @@ serveCmdFooter =
       , adminSecretEnv , accessKeyEnv, authHookEnv, authHookModeEnv
       , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, enableConsoleEnv
       , enableTelemetryEnv, wsReadCookieEnv, stringifyNumEnv, enabledAPIsEnv
-      , enableAllowlistEnv, enabledLogsEnv
+      , enableAllowlistEnv, enabledLogsEnv, logLevelEnv
       ]
 
     eventEnvs =
@@ -589,6 +595,11 @@ enabledLogsEnv =
     <> "(all: startup,http-log,webhook-log,websocket-log,query-log)"
   )
 
+logLevelEnv :: (String, String)
+logLevelEnv =
+  ( "HASURA_GRAPHQL_LOG_LEVEL"
+  , "Server log level (default: info) (all: error, warn, info, debug)"
+  )
 
 parseRawConnInfo :: Parser RawConnInfo
 parseRawConnInfo =
@@ -761,6 +772,15 @@ readLogTypes = mapM readLogType . T.splitOn "," . T.pack
           _               -> Left $ "Valid list of comma-separated log types: "
                              <> intercalate "," L.userAllowedLogTypes
 
+readLogLevel :: String -> Either String L.LogLevel
+readLogLevel s = case T.toLower $ T.strip $ T.pack s of
+  "debug" -> Right L.LevelDebug
+  "info"  -> Right L.LevelInfo
+  "warn"  -> Right L.LevelWarn
+  "error" -> Right L.LevelError
+  _       -> Left "Valid log levels: debug, info, warn or error"
+
+
 readJson :: (J.FromJSON a) => String -> Either String a
 readJson = J.eitherDecodeStrict . txtToBs . T.pack
 
@@ -859,13 +879,6 @@ parseEnabledAPIs = optional $
            help (snd enabledAPIsEnv)
          )
 
-parseEnabledLogs :: Parser (Maybe [L.EngineLogType])
-parseEnabledLogs = optional $
-  option (eitherReader readLogTypes)
-         ( long "enabled-log-types" <>
-           help (snd enabledAPIsEnv)
-         )
-
 parseMxRefetchInt :: Parser (Maybe LQ.RefetchInterval)
 parseMxRefetchInt =
   optional $
@@ -926,6 +939,20 @@ fallbackRefetchDelayEnv =
   <> "live queries which cannot be multiplexed. Default: 1000 (1sec)"
   )
 
+parseEnabledLogs :: Parser (Maybe [L.EngineLogType])
+parseEnabledLogs = optional $
+  option (eitherReader readLogTypes)
+         ( long "enabled-log-types" <>
+           help (snd enabledLogsEnv)
+         )
+
+parseLogLevel :: Parser (Maybe L.LogLevel)
+parseLogLevel = optional $
+  option (eitherReader readLogLevel)
+         ( long "log-level" <>
+           help (snd logLevelEnv)
+         )
+
 -- Init logging related
 connInfoToLog :: Q.ConnInfo -> StartupLog
 connInfoToLog (Q.ConnInfo host port user _ db _ retries) =
@@ -960,15 +987,16 @@ serveOptsToLog so =
                        , "live_query_options" J..= soLiveQueryOpts so
                        , "enable_allowlist" J..= soEnableAllowlist so
                        , "enabled_log_types" J..= soEnabledLogTypes so
+                       , "log_level" J..= soLogLevel so
                        ]
 
-mkGenericStrLog :: T.Text -> String -> StartupLog
-mkGenericStrLog k msg =
-  StartupLog L.LevelInfo k $ J.toJSON msg
+mkGenericStrLog :: L.LogLevel -> T.Text -> String -> StartupLog
+mkGenericStrLog logLevel k msg =
+  StartupLog logLevel k $ J.toJSON msg
 
-mkGenericLog :: (J.ToJSON a) => Text -> a -> StartupLog
-mkGenericLog k msg =
-  StartupLog L.LevelInfo k $ J.toJSON msg
+mkGenericLog :: (J.ToJSON a) => L.LogLevel -> Text -> a -> StartupLog
+mkGenericLog logLevel k msg =
+  StartupLog logLevel k $ J.toJSON msg
 
 inconsistentMetadataLog :: SchemaCache -> StartupLog
 inconsistentMetadataLog sc =

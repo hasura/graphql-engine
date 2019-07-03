@@ -200,9 +200,11 @@ logResult
   -> Either QErr BL.ByteString
   -> Maybe (UTCTime, UTCTime)
   -> m ()
-logResult logger userInfoM reqId httpReq req res qTime =
-  liftIO $ L.unLogger logger $
-    mkAccessLog userInfoM reqId httpReq res req qTime
+logResult logger userInfoM reqId httpReq req res qTime = do
+  let logline = case res of
+        Right res' -> mkAccessLog userInfoM reqId httpReq res' qTime
+        Left e     -> mkErrorLog userInfoM reqId httpReq e req qTime
+  liftIO $ L.unLogger logger logline
 
 logError
   :: (MonadIO m)
@@ -213,7 +215,7 @@ logError
   -> Maybe Value
   -> QErr -> m ()
 logError logger userInfoM reqId httpReq req qErr =
-  logResult logger userInfoM reqId httpReq req (Left qErr) Nothing
+  liftIO $ L.unLogger logger $ mkErrorLog userInfoM reqId httpReq qErr req Nothing
 
 mkSpockAction
   :: (MonadIO m, FromJSON a, ToJSON a)

@@ -21,6 +21,8 @@ cabal.config
 *.hp
 TAGS
 .stack-work*
+*.log
+*.lock
 
 # ws related
 ws/

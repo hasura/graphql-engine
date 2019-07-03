@@ -24,7 +24,7 @@ import           Data.Time.Format                (defaultTimeLocale, parseTimeM)
 import           Network.URI                     (URI)
 
 import           Hasura.HTTP
-import           Hasura.Logging                  (Logger (..))
+import           Hasura.Logging                  (LogLevel (..), Logger (..))
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
@@ -128,7 +128,9 @@ updateJwkRef
   -> m (Maybe NominalDiffTime)
 updateJwkRef (Logger logger) manager url jwkRef = do
   let options = wreqOptions manager []
-      urlT = T.pack $ show url
+      urlT    = T.pack $ show url
+      infoMsg = "refreshing JWK from endpoint: " <> urlT
+  liftIO $ logger $ JwkRefreshLog LevelInfo infoMsg Nothing
   res  <- liftIO $ try $ Wreq.getWith options $ show url
   resp <- either logAndThrowHttp return res
   let status = resp ^. Wreq.responseStatus
@@ -155,7 +157,7 @@ updateJwkRef (Logger logger) manager url jwkRef = do
   where
     logAndThrow :: (MonadIO m, MonadError T.Text m) => T.Text -> Maybe JwkRefreshHttpError -> m a
     logAndThrow err httpErr = do
-      liftIO $ logger $ mkJwkRefreshLog err httpErr
+      liftIO $ logger $ JwkRefreshLog (LevelOther "critical") err httpErr
       throwError err
 
     logAndThrowHttp :: (MonadIO m, MonadError T.Text m) => HTTP.HttpException -> m a

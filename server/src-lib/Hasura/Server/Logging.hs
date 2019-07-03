@@ -6,6 +6,7 @@ module Hasura.Server.Logging
   , PGLog(..)
   , mkInconsMetadataLog
   , mkAccessLog
+  , mkErrorLog
   , WebHookLog(..)
   , WebHookLogger
   , HttpException
@@ -149,24 +150,29 @@ $(deriveToJSON (aesonDrop 2 snakeCase) ''OperationLog)
 
 data HttpAccessLog
   = HttpAccessLog
-  { alHttpInfo  :: !HttpInfoLog
-  , alOperation :: !OperationLog
+  { halHttpInfo  :: !HttpInfoLog
+  , halOperation :: !OperationLog
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 2 snakeCase) ''HttpAccessLog)
 
-instance L.ToEngineLog HttpAccessLog where
-  toEngineLog accessLog =
-    (L.LevelInfo, ELTHttpLog, toJSON accessLog)
+data HttpLog
+  = HttpLog
+  { _hlLogLevel :: !L.LogLevel
+  , _hlLogLing  :: !HttpAccessLog
+  }
+
+instance L.ToEngineLog HttpLog where
+  toEngineLog (HttpLog logLevel accessLog) =
+    (logLevel, ELTHttpLog, toJSON accessLog)
 
 mkAccessLog
   :: Maybe UserInfo -- may not have been resolved
   -> RequestId
   -> Wai.Request
-  -> Either QErr BL.ByteString
-  -> Maybe Value
+  -> BL.ByteString
   -> Maybe (UTCTime, UTCTime)
-  -> HttpAccessLog
-mkAccessLog userInfoM reqId req res extraInfo mTimeT =
+  -> HttpLog
+mkAccessLog userInfoM reqId req res mTimeT =
   let http = HttpInfoLog
              { hlStatus       = status
              , hlMethod       = bsToTxt $ Wai.requestMethod req
@@ -179,26 +185,56 @@ mkAccessLog userInfoM reqId req res extraInfo mTimeT =
            , olUserVars     = userVars <$> userInfoM
            , olResponseSize = respSize
            , olQueryExecutionTime = respTime
-           , olQuery = query
-           , olError = toJSON <$> err
+           , olQuery = Nothing
+           , olError = Nothing
            }
-  in HttpAccessLog http op
+  in HttpLog L.LevelInfo $ HttpAccessLog http op
   where
-    (query, status, err, respTime, respSize) = genLogInfo res extraInfo mTimeT
+    status = N.status200
+    (respTime, respSize) = genLogInfo res mTimeT
 
-genLogInfo
-  :: Either QErr BL.ByteString
+mkErrorLog
+  :: Maybe UserInfo -- may not have been resolved
+  -> RequestId
+  -> Wai.Request
+  -> QErr
   -> Maybe Value
   -> Maybe (UTCTime, UTCTime)
-  -> (Maybe Value, N.Status, Maybe QErr, Maybe Double, Maybe Int64)
-genLogInfo res extraInfo mTimeT =
-  (query, status, err, diffTime, Just size)
+  -> HttpLog
+mkErrorLog userInfoM reqId req err query mTimeT =
+  let http = HttpInfoLog
+             { hlStatus       = status
+             , hlMethod       = bsToTxt $ Wai.requestMethod req
+             , hlSource       = bsToTxt $ getSourceFromFallback req
+             , hlPath         = bsToTxt $ Wai.rawPathInfo req
+             , hlHttpVersion  = Wai.httpVersion req
+             }
+      op = OperationLog
+           { olRequestId    = reqId
+           , olUserVars     = userVars <$> userInfoM
+           , olResponseSize = respSize
+           , olQueryExecutionTime = respTime
+           , olQuery = toJSON <$> query
+           , olError = Just $ toJSON err
+           }
+  in HttpLog L.LevelError $ HttpAccessLog http op
   where
-    status = either qeStatus (const N.status200) res
-    size = BL.length $ either encode id res
-    err = either Just (const Nothing) res
+    status = qeStatus err
+    (respTime, respSize) = genLogInfo (encode err) mTimeT
+
+genLogInfo
+  :: BL.ByteString
+  -- -> Maybe Value
+  -> Maybe (UTCTime, UTCTime)
+  -> (Maybe Double, Maybe Int64)
+genLogInfo res mTimeT =
+  (diffTime, Just size)
+  where
+    --status = either qeStatus (const N.status200) res
+    size = BL.length res
     diffTime = fmap (realToFrac . uncurry (flip diffUTCTime)) mTimeT
-    query = either (const extraInfo) (const Nothing) res
+    --err = either Just (const Nothing) res
+    --query = either (const extraInfo) (const Nothing) res
 
 getSourceFromSocket :: Wai.Request -> ByteString
 getSourceFromSocket = BS.pack . showSockAddr . Wai.remoteHost

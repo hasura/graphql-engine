@@ -50,5 +50,5 @@ instance ToEngineLog JwkRefreshLog where
   toEngineLog jwkRefreshLog =
     (jrlLogLevel jwkRefreshLog, ELTJwkRefreshLog, toJSON jwkRefreshLog)
 
-mkJwkRefreshLog :: T.Text -> Maybe JwkRefreshHttpError -> JwkRefreshLog
-mkJwkRefreshLog = JwkRefreshLog (LevelOther "critical")
+mkJwkRefreshLog :: LogLevel -> T.Text -> Maybe JwkRefreshHttpError -> JwkRefreshLog
+mkJwkRefreshLog = JwkRefreshLog

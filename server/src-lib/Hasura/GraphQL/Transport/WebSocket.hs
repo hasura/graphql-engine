@@ -130,17 +130,30 @@ data WsConnInfo
   } deriving (Show, Eq)
 $(J.deriveToJSON (J.aesonDrop 5 J.snakeCase) ''WsConnInfo)
 
+data WSLogInfo
+  = WSLogInfo
+  { _wsliUserVars       :: !(Maybe UserVars)
+  , _wsliConnectionInfo :: !WsConnInfo
+  , _wsliEvent          :: !WSEvent
+  } deriving (Show, Eq)
+$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''WSLogInfo)
+
 data WSLog
   = WSLog
-  { _wslUserVars       :: !(Maybe UserVars)
-  , _wslConnectionInfo :: !WsConnInfo
-  , _wslEvent          :: !WSEvent
-  } deriving (Show, Eq)
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''WSLog)
-
+  { _wslLogLevel :: !L.LogLevel
+  , _wslInfo     :: !WSLogInfo
+  }
 instance L.ToEngineLog WSLog where
-  toEngineLog wsLog =
-    (L.LevelInfo, L.ELTWebsocketLog, J.toJSON wsLog)
+  toEngineLog (WSLog logLevel wsLog) =
+    (logLevel, L.ELTWebsocketLog, J.toJSON wsLog)
+
+mkWsInfoLog :: Maybe UserVars -> WsConnInfo -> WSEvent -> WSLog
+mkWsInfoLog uv ci ev =
+  WSLog L.LevelInfo $ WSLogInfo uv ci ev
+
+mkWsErrorLog :: Maybe UserVars -> WsConnInfo -> WSEvent -> WSLog
+mkWsErrorLog uv ci ev =
+  WSLog L.LevelError $ WSLogInfo uv ci ev
 
 data WSServerEnv
   = WSServerEnv
@@ -182,7 +195,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
       threadDelay $ diffTimeToMicro $ TC.diffUTCTime expTime currTime
 
     accept hdrs errType = do
-      logger $ WSLog Nothing (WsConnInfo wsId Nothing Nothing) EAccepted
+      logger $ mkWsInfoLog Nothing (WsConnInfo wsId Nothing Nothing) EAccepted
       connData <- WSConnData
                   <$> STM.newTVarIO (CSNotInitialised hdrs)
                   <*> STMMap.newIO
@@ -193,7 +206,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
                        (Just keepAliveAction) (Just jwtExpiryHandler)
 
     reject qErr = do
-      logger $ WSLog Nothing (WsConnInfo wsId Nothing Nothing) (ERejected qErr)
+      logger $ mkWsErrorLog Nothing (WsConnInfo wsId Nothing Nothing) (ERejected qErr)
       return $ Left $ WS.RejectRequest
         (H.statusCode $ qeStatus qErr)
         (H.statusMessage $ qeStatus qErr) []
@@ -216,7 +229,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
         then return reqHdrs
         else do
           liftIO $ logger $
-            WSLog Nothing (WsConnInfo wsId Nothing (Just corsNote)) EAccepted
+            mkWsInfoLog Nothing (WsConnInfo wsId Nothing (Just corsNote)) EAccepted
           return $ filter (\h -> fst h /= "Cookie") reqHdrs
       CCAllowedOrigins ds
         -- if the origin is in our cors domains, no error
@@ -428,10 +441,22 @@ logWSEvent (L.Logger logger) wsConn wsEv = do
                                          , jwtM
                                          )
         _                             -> (Nothing, Nothing)
-  liftIO $ logger $ WSLog userVarsM (WsConnInfo wsId jwtExpM Nothing) wsEv
+  liftIO $ logger $ WSLog logLevel $ WSLogInfo userVarsM (WsConnInfo wsId jwtExpM Nothing) wsEv
   where
     WSConnData userInfoR _ _ = WS.getData wsConn
     wsId = WS.getWSId wsConn
+    logLevel = bool L.LevelInfo L.LevelError isError
+    isError = case wsEv of
+      EAccepted   -> False
+      ERejected _ -> True
+      EConnErr _  -> True
+      EClosed     -> False
+      EOperation op -> case _odOperationType op of
+        ODStarted    -> False
+        ODProtoErr _ -> True
+        ODQueryErr _ -> True
+        ODCompleted  -> False
+        ODStopped    -> False
 
 onConnInit
   :: (MonadIO m)

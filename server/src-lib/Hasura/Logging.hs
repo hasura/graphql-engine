@@ -151,9 +151,9 @@ data LoggerSettings
   , _lsLevel           :: !LogLevel
   } deriving (Show, Eq)
 
-defaultLoggerSettings :: Bool -> LoggerSettings
+defaultLoggerSettings :: Bool -> LogLevel -> LoggerSettings
 defaultLoggerSettings isCached =
-  LoggerSettings isCached Nothing LevelInfo
+  LoggerSettings isCached Nothing
 
 getFormattedTime :: Maybe Time.TimeZone -> IO FormattedTime
 getFormattedTime tzM = do
