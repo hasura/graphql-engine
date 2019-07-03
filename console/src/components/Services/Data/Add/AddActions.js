@@ -70,8 +70,6 @@ const setFreqUsedColumn = column => (dispatch, getState) => {
   const tableState = JSON.parse(JSON.stringify(getState().addTable.table));
   const { columns } = tableState;
 
-  let newPks = tableState.primaryKeys;
-
   const newColumn = {
     name: column.name,
     type: column.type,
@@ -81,10 +79,6 @@ const setFreqUsedColumn = column => (dispatch, getState) => {
 
   if (column.default) {
     newColumn.default = { __type: 'value', value: column.default };
-  }
-
-  if (column.primary) {
-    newPks = [...newPks.slice(0, newPks.length - 1)];
   }
 
   const numExistingCols = columns.length;
@@ -101,17 +95,11 @@ const setFreqUsedColumn = column => (dispatch, getState) => {
     newColIndex = numExistingCols;
   }
 
-  if (column.primary) {
-    newPks = [
-      ...newPks.slice(0, newPks.length - 1),
-      newColIndex.toString(),
-      '',
-    ];
-  }
-
   dispatch({ type: SET_COLUMNS_BULK, columns });
 
   if (column.primary) {
+    const newPks = [newColIndex.toString(), ''];
+
     dispatch({ type: SET_PK, pks: newPks });
   }
 };
@@ -148,121 +136,125 @@ const createTableSql = () => {
   return (dispatch, getState) => {
     dispatch({ type: MAKING_REQUEST });
     dispatch(showSuccessNotification('Creating Table...'));
+
     const state = getState().addTable.table;
     const currentSchema = getState().tables.currentSchema;
+
     const { foreignKeys, uniqueKeys } = state;
+
     // validations
     if (state.tableName.trim() === '') {
       alert('Table name cannot be empty');
     }
-    let tableColumns = '';
+
     const currentCols = state.columns.filter(c => c.name !== '');
+
     const pKeys = state.primaryKeys
       .filter(p => p !== '')
       .map(p => state.columns[p].name);
-    let isUUIDDefault = false;
+
+    let hasUUIDDefault = false;
     const columnSpecificSql = [];
+
+    let tableDefSql = '';
     for (let i = 0; i < currentCols.length; i++) {
-      if (currentCols[i].getDependentSql) {
-        columnSpecificSql.push({
-          type: 'run_sql',
-          args: {
-            sql: currentCols[i].getDependentSql(
-              currentSchema,
-              state.tableName,
-              currentCols[i].name
-            ),
-          },
-        });
-      }
-      tableColumns +=
-        '"' + currentCols[i].name + '"' + ' ' + currentCols[i].type + ' ';
+      tableDefSql +=
+        '"' + currentCols[i].name + '"' + ' ' + currentCols[i].type;
+
       // check if column is nullable
       if (!currentCols[i].nullable) {
-        tableColumns += 'NOT NULL';
+        tableDefSql += ' NOT NULL';
       }
+
       // check if column has a default value
       if (
         currentCols[i].default !== undefined &&
         currentCols[i].default.value !== ''
       ) {
-        if (currentCols[i].type === 'text') {
-          // if a column type is text and if it has a default value, add a single quote by default
-          const checkIfFunctionFormat = isPostgresFunction(
-            currentCols[i].default.value
-          );
-          if (!checkIfFunctionFormat) {
-            tableColumns += " DEFAULT '" + currentCols[i].default.value + "'";
-          } else {
-            tableColumns += ' DEFAULT ' + currentCols[i].default.value;
-          }
+        if (
+          currentCols[i].type === 'text' &&
+          !isPostgresFunction(currentCols[i].default.value)
+        ) {
+          // if a column type is text and if it has a non-func default value, add a single quote by default
+          tableDefSql += " DEFAULT '" + currentCols[i].default.value + "'";
         } else {
-          if (currentCols[i].type === 'uuid') {
-            isUUIDDefault = true;
-          }
-          tableColumns += ' DEFAULT ' + currentCols[i].default.value;
+          tableDefSql += ' DEFAULT ' + currentCols[i].default.value;
+        }
+
+        if (currentCols[i].type === 'uuid') {
+          hasUUIDDefault = true;
         }
       }
-      tableColumns += i === currentCols.length - 1 ? '' : ', ';
+
+      tableDefSql += i === currentCols.length - 1 ? '' : ', ';
     }
+
     // add primary key
     if (pKeys.length > 0) {
-      tableColumns += ', PRIMARY KEY (';
-      pKeys.map(col => {
-        tableColumns += '"' + col + '"' + ',';
-      });
-      tableColumns = tableColumns.slice(0, -1);
-      tableColumns += ') ';
+      tableDefSql += ', PRIMARY KEY (';
+      tableDefSql += pKeys.map(col => '"' + col + '"').join(',');
+      tableDefSql += ') ';
     }
+
+    // add foreign keys
     const numFks = foreignKeys.length;
-    let errorColumn = null;
+    let fkDupColumn = null;
     if (numFks > 1) {
       foreignKeys.forEach((fk, _i) => {
         if (_i === numFks - 1) {
           return;
         }
-        const mappingObj = {};
+
         const { colMappings, refTableName, onUpdate, onDelete } = fk;
+
+        const mappingObj = {};
         const rCols = [];
         const lCols = [];
+
         colMappings.slice(0, -1).forEach(cm => {
           if (mappingObj[cm.column] !== undefined) {
-            errorColumn = state.columns[cm.column].name;
+            fkDupColumn = state.columns[cm.column].name;
           }
+
           mappingObj[cm.column] = cm.refColumn;
           lCols.push(`"${state.columns[cm.column].name}"`);
           rCols.push(`"${cm.refColumn}"`);
         });
-        if (lCols.length === 0) return;
-        tableColumns = `${tableColumns}, FOREIGN KEY (${lCols.join(
-          ', '
-        )}) REFERENCES "${fk.refSchemaName}"."${refTableName}"(${rCols.join(
+
+        if (lCols.length === 0) {
+          return;
+        }
+
+        tableDefSql += `, FOREIGN KEY (${lCols.join(', ')}) REFERENCES "${
+          fk.refSchemaName
+        }"."${refTableName}"(${rCols.join(
           ', '
         )}) ON UPDATE ${onUpdate} ON DELETE ${onDelete}`;
       });
     }
-    if (errorColumn) {
+
+    if (fkDupColumn) {
       return dispatch(
         showErrorNotification(
           'Create table failed',
-          `The column "${errorColumn}" seems to be referencing multiple foreign columns`
+          `The column "${fkDupColumn}" seems to be referencing multiple foreign columns`
         )
       );
     }
 
+    // add unique keys
     const numUniqueConstraints = uniqueKeys.length;
     if (numUniqueConstraints > 0) {
       uniqueKeys.forEach(uk => {
         if (!uk.length) {
           return;
         }
+
         const uniqueColumns = uk.map(c => `"${state.columns[c].name}"`);
-        tableColumns = `${tableColumns}, UNIQUE (${uniqueColumns.join(', ')})`;
+        tableDefSql += `${tableDefSql}, UNIQUE (${uniqueColumns.join(', ')})`;
       });
     }
 
-    // const sqlCreateTable = 'CREATE TABLE ' + '\'' + state.tableName.trim() + '\'' + '(' + tableColumns + ')';
-    const sqlCreateExtension = 'CREATE EXTENSION IF NOT EXISTS pgcrypto;';
     let sqlCreateTable =
       'CREATE TABLE ' +
       '"' +
@@ -273,9 +265,10 @@ const createTableSql = () => {
       state.tableName.trim() +
       '"' +
       '(' +
-      tableColumns +
+      tableDefSql +
       ');';
-    // add comment if applicable
+
+    // add comment
     if (state.tableComment && state.tableComment !== '') {
       sqlCreateTable +=
         ' COMMENT ON TABLE ' +
@@ -291,20 +284,28 @@ const createTableSql = () => {
         state.tableComment +
         "'";
     }
+
     // apply migrations
     const migrationName =
       'create_table_' + currentSchema + '_' + state.tableName.trim();
+
+    // up migration
     const upQueryArgs = [];
-    if (isUUIDDefault) {
+
+    if (hasUUIDDefault) {
+      const sqlCreateExtension = 'CREATE EXTENSION IF NOT EXISTS pgcrypto;';
+
       upQueryArgs.push({
         type: 'run_sql',
         args: { sql: sqlCreateExtension },
       });
     }
+
     upQueryArgs.push({
       type: 'run_sql',
       args: { sql: sqlCreateTable },
     });
+
     upQueryArgs.push({
       type: 'add_existing_table_or_view',
       args: {
@@ -312,18 +313,19 @@ const createTableSql = () => {
         schema: currentSchema,
       },
     });
+
     if (columnSpecificSql.length) {
       columnSpecificSql.forEach(csql => {
         upQueryArgs.push(csql);
       });
     }
 
-    console.log(upQueryArgs);
-
     const upQuery = {
       type: 'bulk',
       args: upQueryArgs,
     };
+
+    // down migration
     const sqlDropTable =
       'DROP TABLE ' +
       '"' +
@@ -333,6 +335,7 @@ const createTableSql = () => {
       '"' +
       state.tableName.trim() +
       '"';
+
     const downQuery = {
       type: 'bulk',
       args: [
@@ -342,6 +345,8 @@ const createTableSql = () => {
         },
       ],
     };
+
+    // make request
     const requestMsg = 'Creating table...';
     const successMsg = 'Table Created';
     const errorMsg = 'Create table failed';
