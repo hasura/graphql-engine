@@ -369,7 +369,7 @@ kill_hge_servers
 echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH QUERY LOG ########>\n"
 TEST_TYPE="query-logs"
 
-export HASURA_GRAPHQL_ENABLED_LOG_TYPES="startup,http-log,websocket-log,webhook-log,query-log"
+export HASURA_GRAPHQL_ENABLED_LOG_TYPES=" startup,http-log,webhook-log,websocket-log,query-log"
 
 #run_hge_with_args serve
 # we are doing this instead of calling run_hge_with_args, because we want to save in a custom log file

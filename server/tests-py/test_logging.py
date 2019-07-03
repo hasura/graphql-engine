@@ -2,6 +2,7 @@
 
 import json
 import os
+import time
 
 import pytest
 
@@ -28,6 +29,8 @@ class TestLogging():
                                  headers=headers)
         assert resp.status_code == 200 and 'data' in resp.json()
         self.logs = self._parse_logs(hge_ctx)
+        # sometimes the log might take time to buffer
+        time.sleep(2)
         yield
         self._teardown(hge_ctx)
 
@@ -81,7 +84,7 @@ class TestLogging():
         assert 'enabled_apis' in info
         assert 'live_query_options' in info
         assert 'enable_allowlist' in info
-        assert 'enable_verbose_log' in info
+        assert 'enabled_log_types' in info
 
     def test_http_log(self, hge_ctx):
         def _get_http_logs(x):
