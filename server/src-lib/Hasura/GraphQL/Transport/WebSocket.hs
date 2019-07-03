@@ -140,7 +140,7 @@ $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''WSLog)
 
 instance L.ToEngineLog WSLog where
   toEngineLog wsLog =
-    (L.LevelInfo, "websocket-log", J.toJSON wsLog)
+    (L.LevelInfo, L.ELTWebsocketLog, J.toJSON wsLog)
 
 data WSServerEnv
   = WSServerEnv
@@ -154,7 +154,6 @@ data WSServerEnv
   , _wseQueryCache      :: !E.PlanCache
   , _wseServer          :: !WSServer
   , _wseEnableAllowlist :: !Bool
-  , _wseVerboseLogging  :: !L.VerboseLogging
   }
 
 onConn :: L.Logger -> CorsPolicy -> WS.OnConnH WSConnData
@@ -266,7 +265,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   execPlanE <- runExceptT $ E.getResolvedExecPlan pgExecCtx
                planCache userInfo sqlGenCtx enableAL sc scVer q
   execPlan <- either (withComplete . preExecErr requestId) return execPlanE
-  let execCtx = E.ExecutionCtx logger verboseLog sqlGenCtx pgExecCtx
+  let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx
                 planCache sc scVer httpMgr enableAL
 
   case execPlan of
@@ -285,7 +284,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           runLazyTx pgExecCtx $ withUserInfo userInfo opTx
       E.ExOpSubs lqOp -> do
         -- log the graphql query
-        liftIO $ logGraphqlQuery logger verboseLog $ QueryLog query Nothing reqId
+        liftIO $ logGraphqlQuery logger $ QueryLog query Nothing reqId
         lqId <- liftIO $ LQ.addLiveQuery lqMap lqOp liveQOnChange
         liftIO $ STM.atomically $
           STMMap.insert (lqId, _grOperationName q) opId opMap
@@ -294,7 +293,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     execQueryOrMut reqId query genSql action = do
       logOpEv ODStarted (Just reqId)
       -- log the generated SQL and the graphql query
-      liftIO $ logGraphqlQuery logger verboseLog $ QueryLog query genSql reqId
+      liftIO $ logGraphqlQuery logger $ QueryLog query genSql reqId
       resp <- liftIO $ runExceptT action
       either (postExecErr reqId) sendSuccResp resp
       sendCompleted (Just reqId)
@@ -321,8 +320,8 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     invalidGqlErr err = err500 Unexpected $
       "Failed parsing GraphQL response from remote: " <> err
 
-    WSServerEnv logger pgExecCtx lqMap gCtxMapRef httpMgr  _
-      sqlGenCtx planCache _ enableAL verboseLog = serverEnv
+    WSServerEnv logger pgExecCtx lqMap gCtxMapRef httpMgr _ sqlGenCtx planCache
+      _ enableAL = serverEnv
 
     WSConnData userInfoR opMap errRespTy = WS.getData wsConn
 
@@ -490,14 +489,13 @@ createWSServerEnv
   -> SQLGenCtx
   -> Bool
   -> E.PlanCache
-  -> L.VerboseLogging
   -> IO WSServerEnv
 createWSServerEnv logger pgExecCtx lqState cacheRef httpManager
-  corsPolicy sqlGenCtx enableAL planCache verboseLog = do
+  corsPolicy sqlGenCtx enableAL planCache = do
   wsServer <- STM.atomically $ WS.createWSServer logger
   return $
     WSServerEnv logger pgExecCtx lqState cacheRef httpManager corsPolicy
-    sqlGenCtx planCache wsServer enableAL verboseLog
+    sqlGenCtx planCache wsServer enableAL
 
 createWSServerApp :: AuthMode -> WSServerEnv -> WS.ServerApp
 createWSServerApp authMode serverEnv =

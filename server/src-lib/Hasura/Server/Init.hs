@@ -72,7 +72,7 @@ data RawServeOptions
   , rsoMxBatchSize        :: !(Maybe LQ.BatchSize)
   , rsoFallbackRefetchInt :: !(Maybe LQ.RefetchInterval)
   , rsoEnableAllowlist    :: !Bool
-  , rsoVerboseLogging     :: !L.VerboseLogging
+  , rsoEnabledLogTypes    :: !(Maybe [L.EngineLogType])
   } deriving (Show, Eq)
 
 data ServeOptions
@@ -93,7 +93,7 @@ data ServeOptions
   , soEnabledAPIs      :: !(Set.HashSet API)
   , soLiveQueryOpts    :: !LQ.LQOpts
   , soEnableAllowlist  :: !Bool
-  , soVerboseLogging   :: !L.VerboseLogging
+  , soEnabledLogTypes  :: !(Set.HashSet L.EngineLogType)
   } deriving (Show, Eq)
 
 data RawConnInfo =
@@ -186,6 +186,9 @@ instance FromEnv LQ.RefetchInterval where
 
 instance FromEnv JWTConfig where
   fromEnv = readJson
+
+instance FromEnv [L.EngineLogType] where
+  fromEnv = readLogTypes
 
 parseStrAsBool :: String -> Either String Bool
 parseStrAsBool t
@@ -296,14 +299,12 @@ mkServeOptions rso = do
                      withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
   lqOpts <- mkLQOpts
   enableAL <- withEnvBool (rsoEnableAllowlist rso) $ fst enableAllowlistEnv
-  verboseLogging <- L.VerboseLogging <$>
-                    withEnvBool (L.unVerboseLogging $ rsoVerboseLogging rso)
-                                (fst verboseLoggingEnv)
-
+  enabledLogs <- Set.fromList . fromMaybe (Set.toList L.defaultEnabledLogTypes) <$>
+                 withEnv (rsoEnabledLogTypes rso) (fst enabledLogsEnv)
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
-                        verboseLogging
+                        enabledLogs
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -434,7 +435,7 @@ serveCmdFooter =
       , adminSecretEnv , accessKeyEnv, authHookEnv, authHookModeEnv
       , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, enableConsoleEnv
       , enableTelemetryEnv, wsReadCookieEnv, stringifyNumEnv, enabledAPIsEnv
-      , enableAllowlistEnv, verboseLoggingEnv
+      , enableAllowlistEnv, enabledLogsEnv
       ]
 
     eventEnvs =
@@ -569,7 +570,7 @@ stringifyNumEnv =
 enabledAPIsEnv :: (String, String)
 enabledAPIsEnv =
   ( "HASURA_GRAPHQL_ENABLED_APIS"
-  , "List of comma separated list of allowed APIs. (default: metadata,graphql,pgdump,config)"
+  , "Comma separated list of enabled APIs. (default: metadata,graphql,pgdump,config)"
   )
 
 consoleAssetsDirEnv :: (String, String)
@@ -580,10 +581,12 @@ consoleAssetsDirEnv =
   ++ " default docker image to disable loading assets from CDN."
   )
 
-verboseLoggingEnv :: (String, String)
-verboseLoggingEnv =
-  ( "HASURA_GRAPHQL_ENABLE_VERBOSE_LOG"
-  , "Enable verbose logging (default: false)"
+enabledLogsEnv :: (String, String)
+enabledLogsEnv =
+  ( "HASURA_GRAPHQL_ENABLED_LOG_TYPES"
+  , "Comma separated list of enabled log types "
+    <> "(default: startup,http-log,webhook-log,websocket-log)"
+    <> "(all: startup,http-log,webhook-log,websocket-log,query-log)"
   )
 
 
@@ -747,6 +750,17 @@ readAPIs = mapM readAPI . T.splitOn "," . T.pack
           "CONFIG"    -> Right CONFIG
           _            -> Left "Only expecting list of comma separated API types metadata,graphql,pgdump,developer,config"
 
+readLogTypes :: String -> Either String [L.EngineLogType]
+readLogTypes = mapM readLogType . T.splitOn "," . T.pack
+  where readLogType si = case T.toLower $ T.strip si of
+          "startup"       -> Right L.ELTStartup
+          "http-log"      -> Right L.ELTHttpLog
+          "webhook-log"   -> Right L.ELTWebhookLog
+          "websocket-log" -> Right L.ELTWebsocketLog
+          "query-log"     -> Right L.ELTQueryLog
+          _               -> Left $ "Valid list of comma-separated log types: "
+                             <> intercalate "," L.userAllowedLogTypes
+
 readJson :: (J.FromJSON a) => String -> Either String a
 readJson = J.eitherDecodeStrict . txtToBs . T.pack
 
@@ -845,10 +859,11 @@ parseEnabledAPIs = optional $
            help (snd enabledAPIsEnv)
          )
 
-parseEnableVerboseLog :: Parser L.VerboseLogging
-parseEnableVerboseLog = L.VerboseLogging <$>
-  switch ( long "enable-verbose-log" <>
-           help (snd verboseLoggingEnv)
+parseEnabledLogs :: Parser (Maybe [L.EngineLogType])
+parseEnabledLogs = optional $
+  option (eitherReader readLogTypes)
+         ( long "enabled-log-types" <>
+           help (snd enabledAPIsEnv)
          )
 
 parseMxRefetchInt :: Parser (Maybe LQ.RefetchInterval)
@@ -944,7 +959,7 @@ serveOptsToLog so =
                        , "enabled_apis" J..= soEnabledAPIs so
                        , "live_query_options" J..= soLiveQueryOpts so
                        , "enable_allowlist" J..= soEnableAllowlist so
-                       , "enable_verbose_log" J..= soVerboseLogging so
+                       , "enabled_log_types" J..= soEnabledLogTypes so
                        ]
 
 mkGenericStrLog :: T.Text -> String -> StartupLog

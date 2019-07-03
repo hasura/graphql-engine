@@ -25,7 +25,7 @@ runGQ
   -> GQLReqUnparsed
   -> m (HttpResponse EncJSON)
 runGQ reqId userInfo reqHdrs req = do
-  E.ExecutionCtx _ _ sqlGenCtx pgExecCtx planCache sc scVer _ enableAL <- ask
+  E.ExecutionCtx _ sqlGenCtx pgExecCtx planCache sc scVer _ enableAL <- ask
   execPlan <- E.getResolvedExecPlan pgExecCtx planCache
               userInfo sqlGenCtx enableAL sc scVer req
   case execPlan of
@@ -45,15 +45,15 @@ runHasuraGQ
   -> E.ExecOp
   -> m EncJSON
 runHasuraGQ reqId query userInfo resolvedOp = do
-  E.ExecutionCtx logger verbose _ pgExecCtx _ _ _ _ _ <- ask
+  E.ExecutionCtx logger _ pgExecCtx _ _ _ _ _ <- ask
   respE <- liftIO $ runExceptT $ case resolvedOp of
     E.ExOpQuery tx genSql  -> do
       -- log the generated SQL and the graphql query
-      liftIO $ logGraphqlQuery logger verbose $ QueryLog query genSql reqId
+      liftIO $ logGraphqlQuery logger $ QueryLog query genSql reqId
       runLazyTx' pgExecCtx tx
     E.ExOpMutation tx -> do
       -- log the generated SQL and the graphql query
-      liftIO $ logGraphqlQuery logger verbose $ QueryLog query Nothing reqId
+      liftIO $ logGraphqlQuery logger $ QueryLog query Nothing reqId
       runLazyTx pgExecCtx $ withUserInfo userInfo tx
     E.ExOpSubs _ ->
       throw400 UnexpectedPayload

@@ -120,7 +120,6 @@ data ServerCtx
   , scPlanCache       :: !E.PlanCache
   , scLQState         :: !EL.LiveQueriesState
   , scEnableAllowlist :: !Bool
-  , scVerboseLogging  :: !L.VerboseLogging
   }
 
 data HandlerCtx
@@ -194,7 +193,6 @@ buildQCtx = do
 logResult
   :: (MonadIO m)
   => L.Logger
-  -> L.VerboseLogging
   -> Maybe UserInfo
   -> RequestId
   -> Wai.Request
@@ -202,21 +200,20 @@ logResult
   -> Either QErr BL.ByteString
   -> Maybe (UTCTime, UTCTime)
   -> m ()
-logResult logger verbose userInfoM reqId httpReq req res qTime =
+logResult logger userInfoM reqId httpReq req res qTime =
   liftIO $ L.unLogger logger $
-    mkAccessLog verbose userInfoM reqId httpReq res req qTime
+    mkAccessLog userInfoM reqId httpReq res req qTime
 
 logError
   :: (MonadIO m)
   => L.Logger
-  -> L.VerboseLogging
   -> Maybe UserInfo
   -> RequestId
   -> Wai.Request
   -> Maybe Value
   -> QErr -> m ()
-logError logger verbose userInfoM reqId httpReq req qErr =
-  logResult logger verbose userInfoM reqId httpReq req (Left qErr) Nothing
+logError logger userInfoM reqId httpReq req qErr =
+  logResult logger userInfoM reqId httpReq req (Left qErr) Nothing
 
 mkSpockAction
   :: (MonadIO m, FromJSON a, ToJSON a)
@@ -258,17 +255,16 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
   let modResult = fmapL qErrModifier result
 
   -- log result
-  logResult logger verboseLog (Just userInfo) requestId req (toJSON <$> q)
+  logResult logger (Just userInfo) requestId req (toJSON <$> q)
     (apiRespToLBS <$> modResult) $ Just (t1, t2)
   either (qErrToResp (isAdmin curRole)) (resToResp requestId) modResult
 
   where
     logger     = scLogger serverCtx
-    verboseLog = scVerboseLogging serverCtx
 
     logAndThrow reqId req reqBody includeInternal qErr = do
       let reqTxt = Just $ toJSON $ String $ bsToTxt $ BL.toStrict reqBody
-      logError logger verboseLog Nothing reqId req reqTxt qErr
+      logError logger Nothing reqId req reqTxt qErr
       qErrToResp includeInternal qErr
 
     -- encode error response
@@ -330,9 +326,8 @@ v1Alpha1GQHandler query = do
   planCache <- scPlanCache . hcServerCtx <$> ask
   enableAL  <- scEnableAllowlist . hcServerCtx <$> ask
   logger    <- scLogger . hcServerCtx <$> ask
-  verbose   <- scVerboseLogging . hcServerCtx <$> ask
   requestId <- asks hcRequestId
-  let execCtx = E.ExecutionCtx logger verbose sqlGenCtx pgExecCtx planCache
+  let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx planCache
                 sc scVer manager enableAL
   flip runReaderT execCtx $ GH.runGQ requestId userInfo reqHeaders query
 
@@ -359,8 +354,8 @@ v1Alpha1PGDumpHandler b = do
   output <- PGD.execPGDump b ci
   return $ RawResp $ HttpResponse output (Just [Header sqlHeader])
 
-consoleAssetsHandler :: L.Logger -> L.VerboseLogging -> Text -> FilePath -> ActionT IO ()
-consoleAssetsHandler logger verbose dir path = do
+consoleAssetsHandler :: L.Logger -> Text -> FilePath -> ActionT IO ()
+consoleAssetsHandler logger dir path = do
   -- '..' in paths need not be handed as it is resolved in the url by
   -- spock's routing. we get the expanded path.
   eFileContents <- liftIO $ try $ BL.readFile $
@@ -371,7 +366,7 @@ consoleAssetsHandler logger verbose dir path = do
       mapM_ (uncurry setHeader) headers
       lazyBytes c
     onError :: IOException -> ActionT IO ()
-    onError = raiseGenericApiError logger verbose . err404 NotFound . T.pack . show
+    onError = raiseGenericApiError logger . err404 NotFound . T.pack . show
     fn = T.pack $ takeFileName path
     -- set gzip header if the filename ends with .gz
     (fileName, encHeader) = case T.stripSuffix ".gz" fn of
@@ -451,11 +446,9 @@ mkWaiApp
   -> InstanceId
   -> S.HashSet API
   -> EL.LQOpts
-  -> L.VerboseLogging
   -> IO (Wai.Application, SchemaCacheRef, Maybe UTCTime)
 mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
-         enableConsole consoleAssetsDir enableTelemetry instanceId apis lqOpts
-         verLog = do
+         enableConsole consoleAssetsDir enableTelemetry instanceId apis lqOpts = do
 
     let pgExecCtx = PGExecCtx pool isoLevel
         pgExecCtxSer = PGExecCtx pool Q.Serializable
@@ -476,12 +469,12 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
 
     lqState <- EL.initLiveQueriesState lqOpts pgExecCtx
     wsServerEnv <- WS.createWSServerEnv logger pgExecCtx lqState cacheRef
-                   httpManager corsPolicy sqlGenCtx enableAL planCache verLog
+                   httpManager corsPolicy sqlGenCtx enableAL planCache
 
     let schemaCacheRef =
           SchemaCacheRef cacheLock cacheRef (E.clearPlanCache planCache)
         serverCtx = ServerCtx pgExecCtx ci logger schemaCacheRef mode httpManager
-                    sqlGenCtx apis instanceId planCache lqState enableAL verLog
+                    sqlGenCtx apis instanceId planCache lqState enableAL
 
     spockApp <- spockAsApp $ spockT id $
                 httpApp corsCfg serverCtx enableConsole
@@ -567,11 +560,10 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
 
     forM_ [GET,POST] $ \m -> hookAny m $ \_ -> do
       let qErr = err404 NotFound "resource does not exist"
-      raiseGenericApiError logger verboseLog qErr
+      raiseGenericApiError logger qErr
 
   where
     logger = scLogger serverCtx
-    verboseLog = scVerboseLogging serverCtx
 
     -- all graphql errors should be of type 200
     allMod200 qe = qe { qeStatus = N.status200 }
@@ -612,20 +604,20 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       -- serve static files if consoleAssetsDir is set
       onJust consoleAssetsDir $ \dir ->
         get ("console/assets" <//> wildcard) $ \path ->
-          consoleAssetsHandler logger verboseLog dir (T.unpack path)
+          consoleAssetsHandler logger dir (T.unpack path)
 
       -- serve console html
       get ("console" <//> wildcard) $ \path ->
-        either (raiseGenericApiError logger verboseLog . err500 Unexpected . T.pack) html $
+        either (raiseGenericApiError logger . err500 Unexpected . T.pack) html $
         mkConsoleHTML path (scAuthMode serverCtx) enableTelemetry consoleAssetsDir
 
-raiseGenericApiError :: L.Logger -> L.VerboseLogging -> QErr -> ActionT IO ()
-raiseGenericApiError logger verbose qErr = do
+raiseGenericApiError :: L.Logger -> QErr -> ActionT IO ()
+raiseGenericApiError logger qErr = do
   req <- request
   reqBody <- liftIO $ strictRequestBody req
   let reqTxt = toJSON $ String $ bsToTxt $ BL.toStrict reqBody
   reqId <- getRequestId $ requestHeaders req
-  logError logger verbose Nothing reqId req (Just reqTxt) qErr
+  logError logger Nothing reqId req (Just reqTxt) qErr
   uncurry setHeader jsonHeader
   setStatus $ qeStatus qErr
   lazyBytes $ encode qErr

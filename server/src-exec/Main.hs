@@ -86,7 +86,7 @@ parseHGECommand =
                 <*> parseMxBatchSize
                 <*> parseFallbackRefetchInt
                 <*> parseEnableAllowlist
-                <*> parseEnableVerboseLog
+                <*> parseEnabledLogs
 
 
 parseArgs :: IO HGEOptions
@@ -118,21 +118,21 @@ main =  do
   (HGEOptionsG rci hgeCmd) <- parseArgs
   -- global http manager
   httpManager <- HTTP.newManager HTTP.tlsManagerSettings
-  loggerCtx   <- mkLoggerCtx $ defaultLoggerSettings True
-  instanceId <- mkInstanceId
-  let logger = mkLogger loggerCtx
-      pgLogger = mkPGLogger logger
+  instanceId  <- mkInstanceId
   case hgeCmd of
     HCServe so@(ServeOptions port host cp isoL mAdminSecret mAuthHook
                 mJwtSecret mUnAuthRole corsCfg enableConsole consoleAssetsDir
                 enableTelemetry strfyNum enabledAPIs lqOpts enableAL
-                verboseLogging) -> do
+                enabledLogs) -> do
+
       let sqlGenCtx = SQLGenCtx strfyNum
+
+      (loggerCtx, logger, pgLogger) <- mkLoggers enabledLogs
 
       initTime <- Clock.getCurrentTime
       -- log serve options
       unLogger logger $ serveOptsToLog so
-      hloggerCtx  <- mkLoggerCtx $ defaultLoggerSettings False
+      hloggerCtx  <- mkLoggerCtx (defaultLoggerSettings False) enabledLogs
 
       authModeRes <- runExceptT $ mkAuthMode mAdminSecret mAuthHook mJwtSecret
                                              mUnAuthRole httpManager loggerCtx
@@ -151,7 +151,7 @@ main =  do
       (app, cacheRef, cacheInitTime) <-
         mkWaiApp isoL loggerCtx sqlGenCtx enableAL pool ci httpManager am
           corsCfg enableConsole consoleAssetsDir enableTelemetry
-          instanceId enabledAPIs lqOpts verboseLogging
+          instanceId enabledAPIs lqOpts
 
       -- log inconsistent schema objects
       inconsObjs <- scInconsistentObjs <$> getSCFromRef cacheRef
@@ -191,16 +191,19 @@ main =  do
       Warp.runSettings warpSettings app
 
     HCExport -> do
+      (_, _, pgLogger) <- mkLoggers defaultEnabledLogTypes
       ci <- procConnInfo rci
       res <- runTx' pgLogger ci fetchMetadata
       either printErrJExit printJSON res
 
     HCClean -> do
+      (_, _, pgLogger) <- mkLoggers defaultEnabledLogTypes
       ci <- procConnInfo rci
       res <- runTx' pgLogger ci cleanCatalog
       either printErrJExit (const cleanSuccess) res
 
     HCExecute -> do
+      (_, _, pgLogger) <- mkLoggers defaultEnabledLogTypes
       queryBs <- BL.getContents
       ci <- procConnInfo rci
       let sqlGenCtx = SQLGenCtx False
@@ -210,6 +213,12 @@ main =  do
 
     HCVersion -> putStrLn $ "Hasura GraphQL Engine: " ++ T.unpack currentVersion
   where
+
+    mkLoggers enabledLogs = do
+      loggerCtx <- mkLoggerCtx (defaultLoggerSettings True) enabledLogs
+      let logger = mkLogger loggerCtx
+          pgLogger = mkPGLogger logger
+      return (loggerCtx, logger, pgLogger)
 
     runTx pool tx =
       runExceptT $ Q.runTx pool (Q.Serializable, Nothing) tx

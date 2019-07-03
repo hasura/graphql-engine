@@ -69,7 +69,6 @@ data GQExecPlan a
 data ExecutionCtx
   = ExecutionCtx
   { _ecxLogger          :: !L.Logger
-  , _ecxVerboseLogging  :: !L.VerboseLogging
   , _ecxSqlGenCtx       :: !SQLGenCtx
   , _ecxPgExecCtx       :: !PGExecCtx
   , _ecxPlanCache       :: !EP.PlanCache
@@ -357,7 +356,7 @@ execRemoteGQ
   -> G.TypedOperationDefinition
   -> m (HttpResponse EncJSON)
 execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
-  ExecutionCtx logger verbose _ _ _ _ _ manager _ <- ask
+  ExecutionCtx logger _ _ _ _ _ manager _ <- ask
   let opTy = G._todType opDef
   when (opTy == G.OperationTypeSubscription) $
     throw400 NotSupported "subscription to remote server is not supported"
@@ -374,7 +373,7 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
       options    = wreqOptions manager (Map.toList finalHdrs)
 
   -- log the graphql query
-  liftIO $ logGraphqlQuery logger verbose $ QueryLog q Nothing reqId
+  liftIO $ logGraphqlQuery logger $ QueryLog q Nothing reqId
   res  <- liftIO $ try $ Wreq.postWith options (show url) (J.toJSON q)
   resp <- either httpThrow return res
   let cookieHdr = getCookieHdr (resp ^? Wreq.responseHeader "Set-Cookie")

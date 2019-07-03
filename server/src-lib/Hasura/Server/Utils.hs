@@ -3,6 +3,7 @@ module Hasura.Server.Utils where
 import qualified Database.PG.Query.Connection as Q
 
 import           Data.Aeson
+import           Data.Char
 import           Data.List                    (find)
 import           Data.List.Split
 import           Data.Time.Clock
@@ -216,3 +217,15 @@ filterResponseHeaders =
 
 filterHeaders :: Set.HashSet HTTP.HeaderName -> [HTTP.Header] -> [HTTP.Header]
 filterHeaders list = filter (\(n, _) -> not $ n `Set.member` list)
+
+
+hyphenate :: String -> String
+hyphenate = u . applyFirst toLower
+    where u []                 = []
+          u (x:xs) | isUpper x = '-' : toLower x : hyphenate xs
+                   | otherwise = x : u xs
+
+applyFirst :: (Char -> Char) -> String -> String
+applyFirst _ []     = []
+applyFirst f [x]    = [f x]
+applyFirst f (x:xs) = f x: xs

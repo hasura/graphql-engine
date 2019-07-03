@@ -36,7 +36,7 @@ instance J.ToJSON QueryLog where
              ]
 
 instance L.ToEngineLog QueryLog where
-  toEngineLog ql = (L.LevelInfo, "query-log", J.toJSON ql)
+  toEngineLog ql = (L.LevelInfo, L.ELTQueryLog, J.toJSON ql)
 
 -- | Helper function to convert the list of alias to generated SQL into a
 -- | key-value map to be printed as JSON
@@ -54,8 +54,6 @@ GraphQL query to log the GraphQL query and optionally the generated SQL.
 logGraphqlQuery
   :: (MonadIO m)
   => L.Logger
-  -> L.VerboseLogging
   -> QueryLog
   -> m ()
-logGraphqlQuery logger verbose =
-  when (L.unVerboseLogging verbose) . liftIO . L.unLogger logger
+logGraphqlQuery logger = liftIO . L.unLogger logger

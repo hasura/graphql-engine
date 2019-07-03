@@ -31,6 +31,7 @@ import qualified Network.HTTP.Types    as N
 import qualified Network.Wai           as Wai
 
 import           Hasura.HTTP
+import           Hasura.Logging        (EngineLogType (..))
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
@@ -52,7 +53,7 @@ instance ToJSON StartupLog where
 
 instance L.ToEngineLog StartupLog where
   toEngineLog startupLog =
-    (slLogLevel startupLog, "startup", toJSON startupLog)
+    (slLogLevel startupLog, ELTStartup, toJSON startupLog)
 
 data PGLog
   = PGLog
@@ -66,7 +67,7 @@ instance ToJSON PGLog where
 
 instance L.ToEngineLog PGLog where
   toEngineLog pgLog =
-    (plLogLevel pgLog, "pg-client", toJSON pgLog)
+    (plLogLevel pgLog, ELTPgClient, toJSON pgLog)
 
 data MetadataLog
   = MetadataLog
@@ -83,7 +84,7 @@ instance ToJSON MetadataLog where
 
 instance L.ToEngineLog MetadataLog where
   toEngineLog ml =
-    (mlLogLevel ml, "metadata", toJSON ml)
+    (mlLogLevel ml, ELTMetadata, toJSON ml)
 
 mkInconsMetadataLog :: [InconsistentMetadataObj] -> MetadataLog
 mkInconsMetadataLog objs =
@@ -102,7 +103,7 @@ data WebHookLog
 
 instance L.ToEngineLog WebHookLog where
   toEngineLog webHookLog =
-    (whlLogLevel webHookLog, "webhook-log", toJSON webHookLog)
+    (whlLogLevel webHookLog, ELTWebhookLog, toJSON webHookLog)
 
 instance ToJSON WebHookLog where
   toJSON whl =
@@ -115,8 +116,9 @@ instance ToJSON WebHookLog where
 
 type WebHookLogger = WebHookLog -> IO ()
 
-data HttpLog
-  = HttpLog
+-- | Log information about the HTTP request
+data HttpInfoLog
+  = HttpInfoLog
   { hlStatus      :: !N.Status
   , hlMethod      :: !T.Text
   , hlSource      :: !T.Text
@@ -124,8 +126,8 @@ data HttpLog
   , hlHttpVersion :: !N.HttpVersion
   } deriving (Show, Eq)
 
-instance ToJSON HttpLog where
-  toJSON (HttpLog st met src path hv) =
+instance ToJSON HttpInfoLog where
+  toJSON (HttpInfoLog st met src path hv) =
     object [ "status" .= N.statusCode st
            , "method" .= met
            , "ip" .= src
@@ -133,6 +135,7 @@ instance ToJSON HttpLog where
            , "http_version" .= show hv
            ]
 
+-- | Information about a GraphQL operation over HTTP
 data OperationLog
   = OperationLog
   { olRequestId          :: !RequestId
@@ -144,28 +147,27 @@ data OperationLog
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 2 snakeCase) ''OperationLog)
 
-data AccessLog
-  = AccessLog
-  { alHttpInfo  :: !HttpLog
+data HttpAccessLog
+  = HttpAccessLog
+  { alHttpInfo  :: !HttpInfoLog
   , alOperation :: !OperationLog
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 2 snakeCase) ''AccessLog)
+$(deriveToJSON (aesonDrop 2 snakeCase) ''HttpAccessLog)
 
-instance L.ToEngineLog AccessLog where
+instance L.ToEngineLog HttpAccessLog where
   toEngineLog accessLog =
-    (L.LevelInfo, "http-log", toJSON accessLog)
+    (L.LevelInfo, ELTHttpLog, toJSON accessLog)
 
 mkAccessLog
-  :: L.VerboseLogging
-  -> Maybe UserInfo -- may not have been resolved
+  :: Maybe UserInfo -- may not have been resolved
   -> RequestId
   -> Wai.Request
   -> Either QErr BL.ByteString
   -> Maybe Value
   -> Maybe (UTCTime, UTCTime)
-  -> AccessLog
-mkAccessLog _ userInfoM reqId req res extraInfo mTimeT =
-  let http = HttpLog
+  -> HttpAccessLog
+mkAccessLog userInfoM reqId req res extraInfo mTimeT =
+  let http = HttpInfoLog
              { hlStatus       = status
              , hlMethod       = bsToTxt $ Wai.requestMethod req
              , hlSource       = bsToTxt $ getSourceFromFallback req
@@ -180,16 +182,16 @@ mkAccessLog _ userInfoM reqId req res extraInfo mTimeT =
            , olQuery = query
            , olError = toJSON <$> err
            }
-  in AccessLog http op
+  in HttpAccessLog http op
   where
-    (query, status, err, respTime, respSize) = ravenLogGen res extraInfo mTimeT
+    (query, status, err, respTime, respSize) = genLogInfo res extraInfo mTimeT
 
-ravenLogGen
+genLogInfo
   :: Either QErr BL.ByteString
   -> Maybe Value
-  -> Maybe (UTCTime , UTCTime)
+  -> Maybe (UTCTime, UTCTime)
   -> (Maybe Value, N.Status, Maybe QErr, Maybe Double, Maybe Int64)
-ravenLogGen res extraInfo mTimeT =
+genLogInfo res extraInfo mTimeT =
   (query, status, err, diffTime, Just size)
   where
     status = either qeStatus (const N.status200) res
