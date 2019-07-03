@@ -366,10 +366,10 @@ pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" -
 kill_hge_servers
 
 # verbose logging tests
-echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH VERBOSE LOGGING ########>\n"
-TEST_TYPE="verbose-logging"
+echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH QUERY LOG ########>\n"
+TEST_TYPE="query-logs"
 
-export HASURA_GRAPHQL_ENABLE_VERBOSE_LOG="true"
+export HASURA_GRAPHQL_ENABLED_LOG_TYPES="startup,http-log,websocket-log,webhook-log,query-log"
 
 #run_hge_with_args serve
 # we are doing this instead of calling run_hge_with_args, because we want to save in a custom log file
