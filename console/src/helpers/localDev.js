@@ -9,6 +9,7 @@ const envObj = `apiHost: '${process.env.API_HOST}',
         assetsPath: '${process.env.ASSETS_PATH}',
         assetsVersion: '${process.env.ASSETS_VERSION}',
         cdnAssets: ${process.env.CDN_ASSETS},
+        serverVersion: '${process.env.SERVER_VERSION}',
 `;
 
 let appendObj;

@@ -1,17 +1,12 @@
 import inflection from 'inflection';
 
-import {
-  makeMigrationCall,
-  updateSchemaInfo,
-  mergeRemoteRelationshipsWithSchema,
-} from '../DataActions';
+import { makeMigrationCall, updateSchemaInfo } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 import { getIntrospectionQuery } from 'graphql';
 import { showErrorNotification } from '../../Common/Notification';
 import endpoints from '../../../../Endpoints';
 import requestAction from '../../../../utils/requestAction';
 import suggestedRelationshipsRaw from './autoRelations';
-import { fetchTrackedTableRemoteRelationshipQuery } from '../utils';
 import { getRemoteRelPayload, parseRemoteRelationship } from './utils';
 
 export const SET_MANUAL_REL_ADD = 'ModifyTable/SET_MANUAL_REL_ADD';
@@ -231,40 +226,6 @@ export const dropRemoteRelationship = (
       requestMsg,
       successMsg,
       errorMsg
-    );
-  };
-};
-
-export const fetchRemoteRelationships = () => {
-  return (dispatch, getState) => {
-    const headers = getState().tables.dataHeaders;
-    dispatch({ type: FETCHING_REMOTE_RELATIONSHIPS });
-    const tableName = getState().tables.currentTable;
-    const currentSchema = getState().tables.currentSchema;
-    return dispatch(
-      requestAction(`${endpoints.query}`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(
-          fetchTrackedTableRemoteRelationshipQuery({
-            tables: [{ table_name: tableName, table_schema: currentSchema }],
-          })
-        ),
-      })
-    ).then(
-      data => {
-        const remoteRelationships = JSON.parse(data.result[1]);
-        dispatch(
-          mergeRemoteRelationshipsWithSchema(remoteRelationships, {
-            name: tableName,
-            schema: currentSchema,
-          })
-        );
-        dispatch({ type: FETCHED_REMOTE_RELATIONSHIPS });
-      },
-      error => {
-        console.error(error);
-      }
     );
   };
 };

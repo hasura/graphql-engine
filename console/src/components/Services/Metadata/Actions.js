@@ -1,4 +1,5 @@
 import requestAction from '../../../utils/requestAction';
+import { clearRemoteSchemaCache } from '../../../utils/cache';
 import { push } from 'react-router-redux';
 import globals from '../../../Globals';
 import endpoints from '../../../Endpoints';
@@ -133,6 +134,9 @@ export const loadInconsistentObjects = (
         if (successCb) {
           successCb();
         }
+        if (shouldReloadCache) {
+          clearRemoteSchemaCache();
+        }
       },
       error => {
         console.error(error);
@@ -205,6 +209,7 @@ export const dropInconsistentObjects = () => {
         dispatch({ type: DROPPED_INCONSISTENT_METADATA });
         dispatch(showSuccessNotification('Dropped inconsistent metadata'));
         dispatch(loadInconsistentObjects(false));
+        clearRemoteSchemaCache();
       },
       error => {
         console.error(error);

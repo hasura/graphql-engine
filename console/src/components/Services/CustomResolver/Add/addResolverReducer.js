@@ -14,6 +14,7 @@ import { makeRequest } from '../customActions';
 import { appPrefix } from '../constants';
 
 import globals from '../../../../Globals';
+import { clearRemoteSchemaCache } from '../../../../utils/cache';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
@@ -281,6 +282,7 @@ const deleteResolver = () => {
         dispatch(push(prefixUrl)),
         dispatch(fetchResolvers()),
       ]);
+      clearRemoteSchemaCache();
     };
     const customOnError = error => {
       Promise.all([dispatch({ type: DELETE_RESOLVER_FAIL, data: error })]);
@@ -401,6 +403,7 @@ const modifyResolver = () => {
         dispatch(push(`${prefixUrl}/manage/${remoteSchemaName}/details`));
       });
       dispatch(fetchResolver(remoteSchemaName));
+      clearRemoteSchemaCache();
     };
     const customOnError = error => {
       Promise.all([dispatch({ type: MODIFY_RESOLVER_FAIL, data: error })]);

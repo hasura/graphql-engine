@@ -25,11 +25,8 @@ const RemoteRelationships = ({
     ...defaultRemoteRelationship,
   });
   useEffect(() => {
-    // if (remoteRelationships.fetchedRemoteRelationships) {
-    //   console.log(existingRemoteRelationships);
     dispatch(setRemoteRelationships(existingRemoteRelationships));
-    // }
-  }, [tableSchema]);
+  }, []);
 
   // render list of relationships
   const relationshipList = () => {

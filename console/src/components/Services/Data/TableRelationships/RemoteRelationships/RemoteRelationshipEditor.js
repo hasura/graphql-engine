@@ -311,7 +311,6 @@ const RemoteRelationshipEditor = ({
     getRemoteRelConfig(relationship, tableSchema.table_name, styles);
 
   const collapseCallback = () => {
-    console.log('Called');
     if (isLast) return;
     const newRelationships = JSON.parse(JSON.stringify(allRelationships));
     dispatch(

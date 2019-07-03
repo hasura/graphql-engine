@@ -10,7 +10,6 @@ import {
   resetRelationshipForm,
   formRelName,
   getExistingFieldsMap,
-  fetchRemoteRelationships,
 } from './Actions';
 import { findAllFromRel } from '../utils';
 import { showErrorNotification } from '../../Common/Notification';
@@ -319,16 +318,8 @@ const Relationships = ({
   schemaList,
   featuresCompatibility,
 }) => {
-  // useEffect(() => {
-  //   if (
-  //     featuresCompatibility &&
-  //     featuresCompatibility[FT_REMOTE_RELATIONSHIPS]
-  //   ) {
-  //     dispatch(fetchRemoteRelationships(tableName, currentSchema));
-  //   }
-  // }, [featuresCompatibility]);
-
   useEffect(() => {
+    dispatch({ type: RESET });
     dispatch(setTable(tableName));
   }, []);
   const styles = require('../TableModify/ModifyTable.scss');
@@ -430,9 +421,9 @@ const Relationships = ({
   }
 
   const remoteRelationshipsSection = () => {
-    // if (!featuresCompatibility[FT_REMOTE_RELATIONSHIPS]) {
-    //   return null;
-    // }
+    if (!featuresCompatibility[FT_REMOTE_RELATIONSHIPS]) {
+      return null;
+    }
     return (
       <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
         <h4 className={styles.subheading_text}>Remote Relationships</h4>
