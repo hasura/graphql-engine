@@ -12,7 +12,7 @@ const ComponentData = ({ options, dismiss, position }) => {
    *  onClick (optional): An onClick handler for each row. If this is undefined, the row is not clickable
    * */
 
-  const generateOptions = options.map(o => {
+  const generateOptions = options.map((o, i) => {
     const liStyle = o.onClick ? styles.cursorPointer : '';
     const onClick = {};
     if (o.onClick) {
@@ -22,7 +22,7 @@ const ComponentData = ({ options, dismiss, position }) => {
       };
     }
     return (
-      <li className={liStyle} {...onClick}>
+      <li key={i} className={liStyle} {...onClick}>
         {o.content}
       </li>
     );

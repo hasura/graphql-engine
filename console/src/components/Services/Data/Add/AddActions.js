@@ -5,6 +5,7 @@ import { updateSchemaInfo, makeMigrationCall } from '../DataActions';
 import {
   showSuccessNotification,
   showErrorNotification,
+  showWarningNotification,
 } from '../../Common/Notification';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { setTable } from '../DataActions.js';
@@ -74,11 +75,14 @@ const setFreqUsedColumn = column => (dispatch, getState) => {
     name: column.name,
     type: column.type,
     nullable: false,
-    getDependentSql: column.getDependentSql,
   };
 
   if (column.default) {
     newColumn.default = { __type: 'value', value: column.default };
+  }
+
+  if (column.dependentSQLGenerator) {
+    newColumn.dependentSQLGenerator = column.dependentSQLGenerator;
   }
 
   const numExistingCols = columns.length;
@@ -101,6 +105,10 @@ const setFreqUsedColumn = column => (dispatch, getState) => {
     const newPks = [newColIndex.toString(), ''];
 
     dispatch({ type: SET_PK, pks: newPks });
+  }
+
+  if (column.warning) {
+    dispatch(showWarningNotification('Warning', column.warning));
   }
 };
 
@@ -141,9 +149,10 @@ const createTableSql = () => {
     const currentSchema = getState().tables.currentSchema;
 
     const { foreignKeys, uniqueKeys } = state;
+    const tableName = state.tableName.trim();
 
     // validations
-    if (state.tableName.trim() === '') {
+    if (tableName === '') {
       alert('Table name cannot be empty');
     }
 
@@ -184,6 +193,16 @@ const createTableSql = () => {
         if (currentCols[i].type === 'uuid') {
           hasUUIDDefault = true;
         }
+      }
+
+      // check if column has dependent sql
+      if (currentCols[i].dependentSQLGenerator) {
+        const dependentSql = currentCols[i].dependentSQLGenerator(
+          currentSchema,
+          tableName,
+          currentCols[i].name
+        );
+        columnSpecificSql.push(dependentSql);
       }
 
       tableDefSql += i === currentCols.length - 1 ? '' : ', ';
@@ -262,7 +281,7 @@ const createTableSql = () => {
       '"' +
       '.' +
       '"' +
-      state.tableName.trim() +
+      tableName +
       '"' +
       '(' +
       tableDefSql +
@@ -277,7 +296,7 @@ const createTableSql = () => {
         '"' +
         '.' +
         '"' +
-        state.tableName.trim() +
+        tableName +
         '"' +
         ' IS ' +
         "'" +
@@ -285,9 +304,14 @@ const createTableSql = () => {
         "'";
     }
 
+    if (columnSpecificSql.length) {
+      columnSpecificSql.forEach(csql => {
+        sqlCreateTable += csql;
+      });
+    }
+
     // apply migrations
-    const migrationName =
-      'create_table_' + currentSchema + '_' + state.tableName.trim();
+    const migrationName = 'create_table_' + currentSchema + '_' + tableName;
 
     // up migration
     const upQueryArgs = [];
@@ -309,16 +333,10 @@ const createTableSql = () => {
     upQueryArgs.push({
       type: 'add_existing_table_or_view',
       args: {
-        name: state.tableName.trim(),
+        name: tableName,
         schema: currentSchema,
       },
     });
-
-    if (columnSpecificSql.length) {
-      columnSpecificSql.forEach(csql => {
-        upQueryArgs.push(csql);
-      });
-    }
 
     const upQuery = {
       type: 'bulk',
@@ -327,14 +345,7 @@ const createTableSql = () => {
 
     // down migration
     const sqlDropTable =
-      'DROP TABLE ' +
-      '"' +
-      currentSchema +
-      '"' +
-      '.' +
-      '"' +
-      state.tableName.trim() +
-      '"';
+      'DROP TABLE ' + '"' + currentSchema + '"' + '.' + '"' + tableName + '"';
 
     const downQuery = {
       type: 'bulk',
@@ -354,16 +365,10 @@ const createTableSql = () => {
     const customOnSuccess = () => {
       dispatch({ type: REQUEST_SUCCESS });
       dispatch({ type: SET_DEFAULTS });
-      dispatch(setTable(state.tableName.trim()));
+      dispatch(setTable(tableName));
       dispatch(updateSchemaInfo()).then(() =>
         dispatch(
-          _push(
-            '/schema/' +
-              currentSchema +
-              '/tables/' +
-              state.tableName.trim() +
-              '/modify'
-          )
+          _push('/schema/' + currentSchema + '/tables/' + tableName + '/modify')
         )
       );
       return;
@@ -576,7 +581,7 @@ const addACol = columns => {
 const addTableReducer = (state = defaultState, action) => {
   let newState = addTableReducerCore(state, action);
 
-  // do everything to make the model make sense
+  // and now we do everything to make the model make sense
   if (needsNewColumn(newState.columns)) {
     newState = {
       ...newState,

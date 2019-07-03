@@ -4,8 +4,6 @@ export const frequentlyUsedColumns = [
     type: 'serial',
     typeText: 'integer (auto-increment)',
     primary: true,
-    default: null,
-    getDependentSql: null,
   },
   {
     name: 'id',
@@ -13,47 +11,47 @@ export const frequentlyUsedColumns = [
     typeText: 'UUID',
     primary: true,
     default: 'gen_random_uuid()',
-    getDependentSql: null,
   },
   {
     name: 'created_at',
-    type: 'timestamp with time zone',
+    type: 'timestamptz',
     typeText: 'timestamp',
-    primary: false,
     default: 'now()',
-    getDependentSql: null,
   },
   {
     name: 'updated_at',
-    type: 'timestamp with time zone',
+    type: 'timestamptz',
     typeText: 'timestamp',
-    primary: false,
     default: 'now()',
-    getDependentSql: (schemaName, tableName, columnName) => {
+    dependentSQLGenerator: (schemaName, tableName, columnName) => {
       return `
-        CREATE OR REPLACE FUNCTION "${schemaName}".set_current_timestamp()
-        RETURNS TRIGGER AS $$
-        DECLARE
-          _new record;
-        BEGIN
-          _new := NEW;
-          _new."${columnName}" = NOW();
-          RETURN _new;
-        END;
-        $$ LANGUAGE plpgsql;
-        CREATE TRIGGER "trigger_set_${tableName}_updated_at"
-        BEFORE UPDATE ON "${schemaName}"."${tableName}"
-        FOR EACH ROW
-        EXECUTE PROCEDURE "${schemaName}".set_current_timestamp();
-      `;
+CREATE OR REPLACE FUNCTION "${schemaName}".set_current_timestamp_${columnName}()
+RETURNS TRIGGER AS $$
+DECLARE
+  _new record;
+BEGIN
+  _new := NEW;
+  _new."${columnName}" = NOW();
+  RETURN _new;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER "trigger_set_${schemaName}_${tableName}_${columnName}"
+BEFORE UPDATE ON "${schemaName}"."${tableName}"
+FOR EACH ROW
+EXECUTE PROCEDURE "${schemaName}".set_current_timestamp_${columnName}();
+`;
     },
+    warning:
+      'This will create a before update trigger on the table to set the value of ' +
+      'this column. Once the table is created, deleting this column without dropping the ' +
+      'trigger will cause updates to fail for the table',
   },
 ];
 
 export const getFreqUsedColDisplayInfo = c => {
   const title = c.name;
   const subTitle = `${c.typeText}; ${
-    c.default ? `default ${c.default};` : ''
+    c.default ? `default: ${c.default};` : ''
   } ${c.primary ? 'primary key' : ''}`;
   return {
     title,

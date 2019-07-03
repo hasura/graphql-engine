@@ -1,7 +1,7 @@
 const defaultState = {
   tableName: null,
   tableComment: null,
-  columns: [{ name: '', type: '', nullable: false, getDependentSql: null }],
+  columns: [{ name: '', type: '', nullable: false }],
   primaryKeys: [''],
   foreignKeys: [
     {

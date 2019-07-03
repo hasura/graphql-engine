@@ -474,7 +474,7 @@ class AddTable extends Component {
                 key={'frequently-used-columns'}
                 keyPrefix={'frequently-used-columns'}
               >
-                <Button color="white" size="sm">
+                <Button color="white" size="xs">
                   + Frequently used columns
                 </Button>
               </Dropdown>
