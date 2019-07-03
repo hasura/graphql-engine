@@ -35,7 +35,7 @@ migrateMetadata buildSC rqlQuery = do
   -- metadata migration depends on metadata added in previous versions
   when buildSC $ buildSchemaCacheStrict
   -- run the RQL query to Migrate metadata
-  void $ runQueryM rqlQuery
+  void $ runQueryAndBuildGCtx rqlQuery
 
 setAsSystemDefinedFor2 :: (MonadTx m) => m ()
 setAsSystemDefinedFor2 =
