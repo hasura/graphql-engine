@@ -84,7 +84,7 @@ initCatalogStrict createSchema initTime =  do
     return ()
 
   -- add default metadata
-  void $ runQueryAndBuildGCtx metadataQuery
+  void $ runQueryM metadataQuery
 
   setAllAsSystemDefined >> addVersion initTime
   return "successfully initialised"
@@ -141,7 +141,7 @@ execQuery queryBs = do
     Just jVal -> decodeValue jVal
     Nothing   -> throw400 InvalidJSON "invalid json"
   buildSchemaCacheStrict
-  encJToLBS <$> runQueryAndBuildGCtx query
+  encJToLBS <$> runQueryM query
 
 -- error messages
 pgcryptoReqdMsg :: T.Text
