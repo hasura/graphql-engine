@@ -68,7 +68,7 @@ const setColNullable = (isNull, index) => ({
 });
 
 const setFreqUsedColumn = column => (dispatch, getState) => {
-  const tableState = JSON.parse(JSON.stringify(getState().addTable.table));
+  const tableState = getState().addTable.table;
   const { columns } = tableState;
 
   const newColumn = {
