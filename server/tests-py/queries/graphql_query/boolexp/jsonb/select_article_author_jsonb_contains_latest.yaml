@@ -23,7 +23,7 @@ response:
       - latest
 query:
   query: |
-    query ($tags: jsonb) {
+    query {
       article (
       where: { tags: {_contains: "latest"}}
       ) {

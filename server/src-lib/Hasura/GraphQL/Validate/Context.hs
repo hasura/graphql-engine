@@ -27,9 +27,9 @@ getFieldInfo oti fldName =
 
 getInpFieldInfo
   :: ( MonadError QErr m)
-  => InpObjTyInfo -> G.Name -> m G.GType
+  => InpObjTyInfo -> G.Name -> m InpValInfo
 getInpFieldInfo tyInfo fldName =
-  fmap _iviType $ onNothing (Map.lookup fldName $ _iotiFields tyInfo) $
+  onNothing (Map.lookup fldName $ _iotiFields tyInfo) $
   throwVE $ "field " <> showName fldName <>
   " not found in type: " <> showNamedTy (_iotiName tyInfo)
 

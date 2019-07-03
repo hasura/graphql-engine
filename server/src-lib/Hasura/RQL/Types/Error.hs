@@ -30,6 +30,7 @@ module Hasura.RQL.Types.Error
 
          -- Attach context
        , withPathK
+       , withPathKeys
        , withPathI
        , indexedFoldM
        , indexedForM
@@ -259,6 +260,10 @@ withPathE pe m =
 withPathK :: (QErrM m)
           => T.Text -> m a -> m a
 withPathK = withPathE . Key
+
+withPathKeys :: (QErrM m)
+             => [T.Text] -> m a -> m a
+withPathKeys = foldr ((.) . withPathK) id
 
 withPathI :: (QErrM m)
           => Int -> m a -> m a

@@ -189,7 +189,7 @@ checkOnColExp
   -> AnnBoolExpFldSQL
   -> m AnnBoolExpFldSQL
 checkOnColExp spi sessVarBldr annFld = case annFld of
-  AVCol (PGColInfo cn _ _) _ -> do
+  AVCol (PGColInfoG cn _ _) _ -> do
     checkSelOnCol spi cn
     return annFld
   AVRel relInfo nesAnn -> do
@@ -217,12 +217,8 @@ convPartialSQLExp f = \case
 
 sessVarFromCurrentSetting
   :: (Applicative f) => PGColType -> SessVar -> f S.SQLExp
-sessVarFromCurrentSetting columnType sessVar =
-  pure $ sessVarFromCurrentSetting' columnType sessVar
-
-sessVarFromCurrentSetting' :: PGColType -> SessVar -> S.SQLExp
-sessVarFromCurrentSetting' columnType sessVar =
-  S.withTyAnn columnType $ withGeoVal columnType $
+sessVarFromCurrentSetting columnType sessVar = pure $
+  S.annotateExp columnType $ withGeoVal columnType $
     S.SEOpApp (S.SQLOp "->>") [curSess, S.SELit $ T.toLower sessVar]
   where
     curSess = S.SEUnsafe "current_setting('hasura.user')::json"
@@ -256,16 +252,32 @@ dmlTxErrorHandler p2Res =
   where err = simplifyError p2Res
 
 toJSONableExp :: Bool -> PGColType -> S.SQLExp -> S.SQLExp
-toJSONableExp strfyNum colTy expn
+toJSONableExp strfyNum colTy expn = case pgColTyDetails colTy of
+  PGTyBase b  -> toJSONableExpBase strfyNum b expn
+  PGTyArray{} -> maybe expn (\ty -> toJSONableArrExp strfyNum ty expn) $
+                 getArrayBaseTy colTy
+  _           -> expn
+
+toJSONableArrExp :: Bool -> PGColType -> S.SQLExp -> S.SQLExp
+toJSONableArrExp strfyNum bcolTy expn = case pgColTyDetails bcolTy of
+  PGTyBase b   -> toJSONableArrExpBase strfyNum b expn
+  PGTyDomain b -> toJSONableExp strfyNum b expn
+  _            -> expn
+
+toJSONableExpBase :: Bool -> PGBaseColType -> S.SQLExp -> S.SQLExp
+toJSONableExpBase strfyNum colTy expn
   | colTy == PGGeometry || colTy == PGGeography =
-      S.SEFnApp "ST_AsGeoJSON"
-      [ expn
-      , S.SEUnsafe "15" -- max decimal digits
-      , S.SEUnsafe "4"  -- to print out crs
-      ] Nothing
-      `S.SETyAnn` S.jsonType
-  | isBigNum colTy && strfyNum =
-      expn `S.SETyAnn` S.textType
+      applyAsGeoJSON expn
+  | isBigNumBase colTy && strfyNum =
+      expn `S.SETyAnn` textType
+  | otherwise = expn
+
+toJSONableArrExpBase :: Bool -> PGBaseColType -> S.SQLExp -> S.SQLExp
+toJSONableArrExpBase strfyNum bColTy expn
+  | bColTy == PGGeometry || bColTy == PGGeography =
+      applyAsGeoJSONArr expn `S.SETyAnn` jsonArrType
+  | isBigNumBase bColTy && strfyNum =
+      expn `S.SETyAnn` textArrType
   | otherwise = expn
 
 -- validate headers

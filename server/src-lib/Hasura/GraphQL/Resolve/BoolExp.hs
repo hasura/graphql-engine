@@ -12,10 +12,11 @@ import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
-import           Hasura.SQL.Value
 import           Hasura.SQL.Types
+import           Hasura.SQL.Value
 
 type OpExp = OpExpG AnnPGVal
+
 
 parseOpExps
   :: (MonadError QErr m)
@@ -47,11 +48,12 @@ parseOpExps colTy annVal = do
       "_nsimilar" -> fmap ANSIMILAR <$> asPGColValM v
 
       -- jsonb related operators
-      "_contains"     -> fmap AContains <$> asPGColValM v
-      "_contained_in" -> fmap AContainedIn <$> asPGColValM v
-      "_has_key"      -> fmap AHasKey <$> asPGColValM v
-      "_has_keys_any" -> fmap AHasKeysAny <$> parseMany asPGColText v
-      "_has_keys_all" -> fmap AHasKeysAll <$> parseMany asPGColText v
+      "_contains"        -> fmap AContains <$> asPGColValM v
+      "_contained_in"    -> fmap AContainedIn <$> asPGColValM v
+      "_is_contained_by" -> fmap AContainedIn <$> asPGColValM v
+      "_has_key"         -> fmap AHasKey <$> asPGColValM v
+      "_has_keys_any"    -> fmap AHasKeysAny <$> parseMany asPGColText v
+      "_has_keys_all"    -> fmap AHasKeysAll <$> parseMany asPGColText v
 
       -- geometry/geography type related operators
       "_st_contains"   -> fmap ASTContains <$> asPGColValM v
@@ -72,10 +74,10 @@ parseOpExps colTy annVal = do
   return $ catMaybes $ fromMaybe [] opExpsM
   where
     resolveIsNull v = case _aivValue v of
-      AGScalar _ Nothing -> return Nothing
-      AGScalar _ (Just (PGValBoolean b)) ->
+      AGPGVal _ Nothing -> return Nothing
+      AGPGVal _ (Just (PGBoolVal _ b)) ->
         return $ Just $ bool ANISNOTNULL ANISNULL b
-      AGScalar _ _ -> throw500 "boolean value is expected"
+      AGPGVal _ _ -> throw500 "boolean value is expected"
       _ -> tyMismatch "pgvalue" v
 
     parseAsSTDWithinObj obj = do
@@ -86,12 +88,12 @@ parseOpExps colTy annVal = do
                 throw500 "expected \"from\" input field in st_d_within"
       from <- asPGColVal fromVal
       case colTy of
-        PGGeography -> do
+        PGGeogTy{} -> do
           useSpheroidVal <- onNothing (OMap.lookup "use_spheroid" obj) $
                     throw500 "expected \"use_spheroid\" input field in st_d_within"
           useSpheroid <- asPGColVal useSpheroidVal
           return $ ASTDWithinGeog $ DWithinGeogOp dist from useSpheroid
-        PGGeometry ->
+        PGGeomTy{} ->
           return $ ASTDWithinGeom $ DWithinGeomOp dist from
         _ -> throw500 "expected PGGeometry/PGGeography column for st_d_within"
 

@@ -338,7 +338,7 @@ convertCount args = do
     parseDistinct v = do
       val <- _apvValue <$> asPGColVal v
       case val of
-        PGValBoolean b -> return b
+        PGBoolVal _ b -> return b
         _              ->
           throw500 "expecting Boolean for \"distinct\""
 

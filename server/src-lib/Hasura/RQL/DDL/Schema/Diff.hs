@@ -40,7 +40,7 @@ data PGColMeta
   = PGColMeta
   { pcmColumnName      :: !PGCol
   , pcmOrdinalPosition :: !Int
-  , pcmDataType        :: !PGColType
+  , pcmDataType        :: !PGColOidInfo
   , pcmIsNullable      :: !Bool
   } deriving (Show, Eq)
 
@@ -87,8 +87,8 @@ data TableDiff
   = TableDiff
   { _tdNewName         :: !(Maybe QualifiedTable)
   , _tdDroppedCols     :: ![PGCol]
-  , _tdAddedCols       :: ![PGColInfo]
-  , _tdAlteredCols     :: ![(PGColInfo, PGColInfo)]
+  , _tdAddedCols       :: ![PGColInfoR]
+  , _tdAlteredCols     :: ![(PGColInfoR, PGColInfoR)]
   , _tdDroppedFKeyCons :: ![ConstraintName]
   -- The final list of uniq/primary constraint names
   -- used for generating types on_conflict clauses
@@ -117,7 +117,7 @@ getTableDiff oldtm newtm =
     existingCols = getOverlap pcmOrdinalPosition oldCols newCols
 
     pcmToPci (PGColMeta colName _ colType isNullable)
-      = PGColInfo colName colType isNullable
+      = PGColInfoG colName colType isNullable
 
     alteredCols =
       flip map (filter (uncurry (/=)) existingCols) $ pcmToPci *** pcmToPci

@@ -44,7 +44,7 @@ asPGColValM
   :: (MonadError QErr m)
   => AnnInpVal -> m (Maybe AnnPGVal)
 asPGColValM annInpVal = case val of
-  AGScalar colTy valM ->
+  AGPGVal colTy valM ->
     return $ fmap (AnnPGVal varM (G.isNullable ty) colTy) valM
   _                   ->
     tyMismatch "pgvalue" annInpVal
@@ -55,9 +55,9 @@ asPGColVal
   :: (MonadError QErr m)
   => AnnInpVal -> m AnnPGVal
 asPGColVal v = case _aivValue v of
-  AGScalar colTy (Just val) ->
+  AGPGVal colTy (Just val) ->
     return $ AnnPGVal (_aivVariable v) (G.isNullable (_aivType v)) colTy val
-  AGScalar colTy Nothing    ->
+  AGPGVal colTy Nothing    ->
     throw500 $ "unexpected null for ty "
     <> T.pack (show colTy)
   _            -> tyMismatch "pgvalue" v
@@ -130,8 +130,8 @@ onlyText
   :: (MonadError QErr m)
   => PGColValue -> m Text
 onlyText = \case
-  PGValText t -> return t
-  PGValVarchar t -> return t
+  PGTxtVal _ t     -> return t
+  PGVarcharVal _ t -> return t
   _           -> throw500 "expecting text for asPGColText"
 
 asPGColText

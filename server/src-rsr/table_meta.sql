@@ -27,14 +27,35 @@ FROM
             (
               SELECT
                 column_name,
-                udt_name AS data_type,
+                json_build_object(
+                  'oid',
+                  td.atttypid :: int,
+                  'dimension',
+                  td.attndims
+                ) AS data_type,
                 ordinal_position,
                 is_nullable :: boolean
             ) r
         )
       ) as columns
     FROM
-      information_schema.columns
+      information_schema.columns c
+      LEFT OUTER JOIN (
+        select
+          pc.relnamespace,
+          pc.relname,
+          pa.attname,
+          pa.attndims,
+          pa.atttypid,
+          pa.atttypmod
+        from
+          pg_attribute pa
+          left join pg_class pc on pa.attrelid = pc.oid
+      ) td on (
+        c.table_schema :: regnamespace :: oid = td.relnamespace
+        AND c.table_name = td.relname
+        AND c.column_name = td.attname
+      )
     GROUP BY
       table_schema,
       table_name

@@ -6,17 +6,17 @@ module Hasura.GraphQL.Resolve.Introspect
 import           Data.Has
 import           Hasura.Prelude
 
-import qualified Data.Aeson                        as J
-import qualified Data.HashMap.Strict               as Map
-import qualified Data.HashSet                      as Set
-import qualified Data.Text                         as T
-import qualified Language.GraphQL.Draft.Syntax     as G
+import qualified Data.Aeson                         as J
+import qualified Data.HashMap.Strict                as Map
+import qualified Data.HashSet                       as Set
+import qualified Data.Text                          as T
+import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
-import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Context
 import           Hasura.GraphQL.Validate.Field
+import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Value
@@ -60,13 +60,13 @@ scalarR
   => ScalarTyInfo
   -> Field
   -> m J.Object
-scalarR (ScalarTyInfo descM pgColType _) fld =
+scalarR (ScalarTyInfo descM name _ _) fld =
   withSubFields (_fSelSet fld) $ \subFld ->
   case _fName subFld of
     "__typename"  -> retJT "__Type"
     "kind"        -> retJ TKSCALAR
     "description" -> retJ $ fmap G.unDescription descM
-    "name"        -> retJ $ pgColTyToScalar pgColType
+    "name"        -> retJ $ G.unName name
     _             -> return J.Null
 
 -- 4.5.2.2
@@ -99,7 +99,7 @@ getImplTypes :: (MonadReader t m, Has TypeMap t) => AsObjType -> m [ObjTyInfo]
 getImplTypes aot = do
    tyInfo :: TypeMap <- asks getter
    return $ sortOn _otiName $
-     Map.elems $ getPossibleObjTypes' tyInfo aot
+     Map.elems $ getPossibleObjTypes tyInfo aot
 
 -- 4.5.2.3
 unionR
@@ -242,7 +242,7 @@ fieldR
   :: ( MonadReader r m, Has TypeMap r
      , MonadError QErr m)
   => ObjFldInfo -> Field -> m J.Object
-fieldR (ObjFldInfo descM n params ty _) fld =
+fieldR (ObjFldInfo descM n params _ ty _) fld =
   withSubFields (_fSelSet fld) $ \subFld ->
   case _fName subFld of
     "__typename"   -> retJT "__Field"
@@ -259,14 +259,13 @@ inputValueR
   :: ( MonadReader r m, Has TypeMap r
      , MonadError QErr m)
   => Field -> InpValInfo -> m J.Object
-inputValueR fld (InpValInfo descM n defM ty) =
+inputValueR fld (InpValInfo descM n defM _ ty) =
   withSubFields (_fSelSet fld) $ \subFld ->
   case _fName subFld of
     "__typename"   -> retJT "__InputValue"
     "name"         -> retJ $ G.unName n
     "description"  -> retJ $ fmap G.unDescription descM
     "type"         -> J.toJSON <$> gtypeR ty subFld
-    -- TODO: figure out what the spec means by 'string encoding'
     "defaultValue" -> retJ $ pPrintValueC <$> defM
     _              -> return J.Null
 
@@ -341,8 +340,8 @@ typeR fld = do
   name <- withArg args "name" $ \arg -> do
     pgColVal <- _apvValue <$> asPGColVal arg
     case pgColVal of
-      PGValText t -> return t
-      _           -> throw500 "expecting string for name arg of __type"
+      PGTxtVal _ t -> return t
+      _            -> throw500 "expecting string for name arg of __type"
   typeR' (G.Name name) fld
   where
     args = _fArguments fld

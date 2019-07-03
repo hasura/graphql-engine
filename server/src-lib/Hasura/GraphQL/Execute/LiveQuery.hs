@@ -174,7 +174,7 @@ toMultiplexedQueryVar = \case
   GR.UVSQL sqlExp -> return sqlExp
   where
     fromResVars colTy jPath =
-      S.withTyAnn colTy $ S.SEOpApp (S.SQLOp "#>>")
+      S.annotateExp colTy $ S.SEOpApp (S.SQLOp "#>>")
       [ S.SEQIden $ S.QIden (S.QualIden $ Iden "_subs")
         (Iden "result_vars")
       , S.SEArray $ map S.SELit jPath
@@ -240,7 +240,7 @@ validateAnnVarValsOnPg pgExecCtx annVarVals = do
 
   Q.Discard _ <- runTx' $ liftTx $
     Q.rawQE valPgErrHandler (Q.fromBuilder $ toSQL valSel) [] False
-  return $ fmap (txtEncodedPGVal . snd) annVarVals
+  return $ fmap (txtEncodePGVal . snd) annVarVals
 
   where
     mkExtrs = map (flip S.Extractor Nothing . uncurry toTxtValue)

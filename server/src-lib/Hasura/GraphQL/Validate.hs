@@ -16,6 +16,7 @@ module Hasura.GraphQL.Validate
   , SelSet
   ) where
 
+import           Data.Aeson.Internal                    (JSONPathElement (..))
 import           Data.Has
 import           Hasura.Prelude
 
@@ -28,7 +29,6 @@ import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Validate.Context
 import           Hasura.GraphQL.Validate.Field
-import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.QueryCollection
@@ -85,7 +85,8 @@ getAnnVarVals varDefsL inpVals = withPathK "variableValues" $ do
     throwVE $ "the following variables are defined more than once: " <>
     showVars dups
 
-  let unexpectedVars = filter (not . (`Map.member` varDefs)) $ Map.keys inpVals
+  let unexpectedVars =
+        filter (not . (`Map.member` varDefs)) $ Map.keys inpVals
 
   unless (null unexpectedVars) $
     throwVE $ "unexpected variables in variableValues: " <>
@@ -97,18 +98,15 @@ getAnnVarVals varDefsL inpVals = withPathK "variableValues" $ do
     -- check that the variable is defined on input types
     when (isObjTy baseTyInfo) $ throwVE $ objTyErrMsg baseTy
 
-    let defM' = bool (defM <|> Just G.VCNull) defM $ G.isNotNull ty
-    annDefM <- withPathK "defaultValue" $
-               mapM (validateInputValue constValueParser ty) defM'
-    let inpValM = Map.lookup var inpVals
-    annInpValM <- withPathK (G.unName $ G.unVariable var) $
-                  mapM (validateInputValue jsonParser ty) inpValM
-    let varValM = annInpValM <|> annDefM
-    onNothing varValM $ throwVE $
+    let defM' = bool defM (defM <|> Just G.VCNull) $ G.isNotNull ty
+        inpValM = Map.lookup var inpVals
+
+    when (isNothing defM' && isNothing inpValM) $ throwVE $
       "expecting a value for non-nullable variable: " <>
       showVars [var] <>
       " of type: " <> G.showGT ty <>
       " in variableValues"
+    return $ AnnVarVal ty defM' inpValM
   where
     objTyErrMsg namedTy =
       "variables can only be defined on input types"
@@ -174,7 +172,7 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
   ctx <- ask
 
   -- annotate the variables of this operation
-  annVarVals <- getAnnVarVals (G._todVariableDefinitions opDef) $
+  varVals <- getAnnVarVals (G._todVariableDefinitions opDef) $
                 fromMaybe Map.empty varValsM
 
   -- annotate the fragments
@@ -184,9 +182,9 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
   annFragDefs <- mapM validateFrag fragDefs
 
   -- build a validation ctx
-  let valCtx = ValidationCtx (_gTypes ctx) annVarVals annFragDefs
+  let valCtx = ValidationCtx (_gTypes ctx) varVals annFragDefs
 
-  selSet <- flip runReaderT valCtx $ denormSelSet [] opRoot $
+  selSet <- flip runReaderT valCtx $ pathFromRoot $ denormSelSet [] opRoot $
             G._todSelectionSet opDef
 
   case G._todType opDef of
@@ -199,6 +197,12 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
           unless (null rst) $
             throwVE "subscription must select only one top level field"
           return $ RSubscription fld
+
+pathFromRoot :: (MonadError QErr m) => m a -> m a
+pathFromRoot f = f `catchError` (throwError . fromRoot)
+  where
+    fromRoot q = q { qePath = frp $ qePath q}
+      where frp = reverse . takeWhile (/= Key "$") . reverse
 
 isQueryInAllowlist :: GQLExecDoc -> HS.HashSet GQLQuery -> Bool
 isQueryInAllowlist q = HS.member gqlQuery

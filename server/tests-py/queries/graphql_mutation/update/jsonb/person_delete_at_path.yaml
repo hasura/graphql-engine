@@ -12,7 +12,7 @@ response:
       affected_rows: 1
 query:
   query: |
-    mutation update_person($value: jsonb) {
+    mutation update_person {
       update_person(
         where: {id: {_eq: 1}},
         _delete_at_path: {

@@ -58,7 +58,6 @@
       mutation insert_test_types
       ( $json: json
       , $jsonb: jsonb
-      , $compositeComplex: complex
       ) {
         insert_test_types(
           objects: [

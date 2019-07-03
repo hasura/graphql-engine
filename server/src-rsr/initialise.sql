@@ -368,17 +368,26 @@ SELECT
   END AS return_type_type,
   p.proretset AS returns_set,
   ( SELECT
-      COALESCE(json_agg(q.type_name), '[]')
+      COALESCE(json_agg(q.type_info), '[]')
     FROM
       (
         SELECT
-          pt.typname AS type_name,
+          json_build_object(
+            'oid', pat.oid::int,
+            'dimension',
+            case
+              when pt.oid IS NOT NULL then 1
+              else 0
+            end,
+            'name', format_type(pat.oid, null)
+          ) AS type_info,
           pat.ordinality
         FROM
-          unnest(
-            COALESCE(p.proallargtypes, (p.proargtypes) :: oid [])
+          UNNEST(
+              COALESCE(p.proallargtypes, (p.proargtypes) :: oid [])
           ) WITH ORDINALITY pat(oid, ordinality)
-          LEFT JOIN pg_type pt ON ((pt.oid = pat.oid))
+          LEFT OUTER JOIN
+            pg_type pt ON (pt.typarray = pat.oid)
         ORDER BY pat.ordinality ASC
       ) q
    ) AS input_arg_types,
@@ -455,13 +464,35 @@ from
           'name',
           column_name,
           'type',
-          udt_name,
+          json_build_object(
+            'oid',
+            ty.oid :: int ,
+            'dimension',
+            td.attndims
+          ),
           'is_nullable',
           is_nullable :: boolean
         )
       ) as columns
     from
       information_schema.columns c
+      left outer join (
+        select pc.relnamespace,
+               pc.relname,
+               pa.attname,
+               pa.attndims,
+               pa.atttypid,
+               pa.atttypmod
+          from pg_attribute pa
+                 left join pg_class pc
+                     on pa.attrelid = pc.oid
+      ) td on
+      ( c.table_schema::regnamespace::oid = td.relnamespace
+      AND c.table_name = td.relname
+      AND c.column_name = td.attname
+      )
+      left outer join pg_type ty
+                     on td.atttypid = ty.oid
     group by
       c.table_schema,
       c.table_name
@@ -592,4 +623,91 @@ CREATE TABLE hdb_catalog.hdb_allowlist
 (
   collection_name TEXT UNIQUE
     REFERENCES hdb_catalog.hdb_query_collection(collection_name)
+);
+
+CREATE VIEW hdb_catalog.hdb_type_info AS
+(
+select
+  t.oid :: integer as oid,
+  json_build_object(
+    'name',
+    t.typname,
+    'schema',
+    ns.nspname
+  ) as name,
+  pg_catalog.format_type(t.oid, NULL) as sql_name,
+  case
+    when arr_elem.oid is not null then json_build_object(
+      'type',
+      'array',
+      'elem_oid',
+      arr_elem.oid :: integer
+    )
+    when t.typtype = 'b' then json_build_object('type', 'base')
+    when t.typtype = 'e' then json_build_object(
+      'type',
+      'enum',
+      'possible_values',
+      (
+        select
+          array_agg(
+            enumlabel
+            order by
+              enumsortorder
+          )
+        from
+          pg_enum
+        where
+          enumtypid = t.oid
+      )
+    )
+    when t.typtype = 'c' then json_build_object(
+      'type',
+      'composite',
+      'fields',
+      (
+        select
+          json_agg(
+            (
+              select
+                json_build_object(
+                  attname,
+                  (
+                    select
+                      row_to_json(x)
+                    from
+                      (
+                        select
+                          atttypid :: integer as oid,
+                          attndims as dimension
+                      ) x
+                  )
+                )
+            )
+          )
+        from
+          pg_attribute
+        where
+          attrelid = t.typrelid
+      )
+    )
+    when t.typtype = 'd' then json_build_object(
+      'type',
+      'domain',
+      'base_type',
+      json_build_object(
+        'oid',
+        t.typbasetype :: integer,
+        'dimension',
+        t.typndims
+      )
+    )
+    when t.typtype = 'p' then json_build_object('type', 'pseudo')
+    when t.typtype = 'r' then json_build_object('type', 'range')
+    else null
+  end as detail
+from
+  pg_type t
+  left outer join pg_namespace ns on t.typnamespace = ns.oid
+  left outer join pg_type arr_elem on t.oid = arr_elem.typarray
 );

@@ -88,7 +88,7 @@ uFromItem fromItem = case fromItem of
   S.FIIden iden ->
     S.FIIden <$> return iden
   S.FIFunc f args alM ->
-    S.FIFunc f args <$> mapM addAlias alM
+    S.FIFunc f <$> mapM uSqlExp args <*> mapM addAlias alM
   S.FIUnnest args als cols ->
     S.FIUnnest <$> mapM uSqlExp args <*> addAlias als <*> mapM uSqlExp cols
   S.FISelect isLateral sel al -> do

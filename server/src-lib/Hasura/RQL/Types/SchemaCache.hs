@@ -8,7 +8,9 @@ module Hasura.RQL.Types.SchemaCache
        , initSchemaCacheVer
        , incSchemaCacheVer
        , emptySchemaCache
-       , TableInfo(..)
+       , TableInfoG(..)
+       , TableInfo
+       , TableInfoR
        , TableConstraint(..)
        , ConstraintType(..)
        , ViewInfo(..)
@@ -17,6 +19,7 @@ module Hasura.RQL.Types.SchemaCache
        , onlyIntCols
        , onlyNumCols
        , onlyJSONBCols
+       , onlyArrCols
        , onlyComparableCols
        , isUniqueOrPrimary
        , isForeignKey
@@ -30,18 +33,19 @@ module Hasura.RQL.Types.SchemaCache
        , CacheRWM(..)
 
        , FieldInfoMap
-       , FieldInfo(..)
+       , FieldInfoG(..)
+       , FieldInfo
        , fieldInfoToEither
        , partitionFieldInfos
        , partitionFieldInfosWith
        , getCols
        , getRels
 
-       , PGColInfo(..)
+       , PGColInfoG(..)
+       , PGColInfo
        , isPGColInfo
        , getColInfos
        , RelInfo(..)
-       -- , addFldToCache
        , addColToCache
        , addRelToCache
 
@@ -99,6 +103,7 @@ module Hasura.RQL.Types.SchemaCache
        , askFunctionInfo
        , delFunctionFromCache
 
+       , PGTyCache
        , replaceAllowlist
        ) where
 
@@ -155,6 +160,9 @@ onlyNumCols = filter (isNumType . pgiType)
 onlyJSONBCols :: [PGColInfo] -> [PGColInfo]
 onlyJSONBCols = filter (isJSONBType . pgiType)
 
+onlyArrCols :: [PGColInfo] -> [PGColInfo]
+onlyArrCols = filter (isArrType . pgiType)
+
 onlyComparableCols :: [PGColInfo] -> [PGColInfo]
 onlyComparableCols = filter (isComparableType . pgiType)
 
@@ -164,16 +172,18 @@ getColInfos cols allColInfos =
 
 type WithDeps a = (a, [SchemaDependency])
 
-data FieldInfo
-  = FIColumn !PGColInfo
+data FieldInfoG a
+  = FIColumn !(PGColInfoG a)
   | FIRelationship !RelInfo
-  deriving (Show, Eq)
+  deriving (Show, Eq, Functor, Foldable, Traversable)
 
 $(deriveToJSON
   defaultOptions { constructorTagModifier = snakeCase . drop 2
                  , sumEncoding = TaggedObject "type" "detail"
                  }
-  ''FieldInfo)
+  ''FieldInfoG)
+
+type FieldInfo = FieldInfoG PGColType
 
 fieldInfoToEither :: FieldInfo -> Either PGColInfo RelInfo
 fieldInfoToEither (FIColumn l)       = Left l
@@ -189,7 +199,8 @@ partitionFieldInfosWith fns =
   where
     biMapEither (f1, f2) = either (Left . f1) (Right . f2)
 
-type FieldInfoMap = M.HashMap FieldName FieldInfo
+type FieldInfoMapG a = M.HashMap FieldName (FieldInfoG a)
+type FieldInfoMap = FieldInfoMapG PGColType
 
 getCols :: FieldInfoMap -> [PGColInfo]
 getCols fim = lefts $ map fieldInfoToEither $ M.elems fim
@@ -340,21 +351,24 @@ mutableView qt f mVI operation =
   unless (isMutable f mVI) $ throw400 NotSupported $
   "view " <> qt <<> " is not " <> operation
 
-data TableInfo
-  = TableInfo
+data TableInfoG a
+  = TableInfoG
   { tiName                  :: !QualifiedTable
   , tiSystemDefined         :: !Bool
-  , tiFieldInfoMap          :: !FieldInfoMap
+  , tiFieldInfoMap          :: !(FieldInfoMapG a)
   , tiRolePermInfoMap       :: !RolePermInfoMap
   , tiUniqOrPrimConstraints :: ![ConstraintName]
   , tiPrimaryKeyCols        :: ![PGCol]
   , tiViewInfo              :: !(Maybe ViewInfo)
   , tiEventTriggerInfoMap   :: !EventTriggerInfoMap
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Functor, Foldable, Traversable)
 
-$(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
+$(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfoG)
 
-instance FromJSON TableInfo where
+type TableInfo = TableInfoG PGColType
+type TableInfoR = TableInfoG PGColOidInfo
+
+instance (FromJSON a) => FromJSON (TableInfoG a) where
   parseJSON = withObject "TableInfo" $ \o -> do
     name <- o .: "name"
     columns <- o .: "columns"
@@ -364,7 +378,7 @@ instance FromJSON TableInfo where
     isSystemDefined <- o .:? "is_system_defined" .!= False
     let colMap = M.fromList $ flip map columns $
                  \c -> (fromPGCol $ pgiName c, FIColumn c)
-    return $ TableInfo name isSystemDefined colMap mempty
+    return $ TableInfoG name isSystemDefined colMap mempty
                        constraints pkeyCols viewInfoM mempty
 
 data FunctionType
@@ -409,6 +423,7 @@ $(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionInfo)
 
 type TableCache = M.HashMap QualifiedTable TableInfo -- info of all tables
 type FunctionCache = M.HashMap QualifiedFunction FunctionInfo -- info of all functions
+type PGTyCache = M.HashMap PGColOidInfo PGColType
 
 type DepMap = M.HashMap SchemaObjId (HS.HashSet SchemaDependency)
 
@@ -448,6 +463,7 @@ data SchemaCache
   , scGCtxMap           :: !GC.GCtxMap
   , scDefaultRemoteGCtx :: !GC.GCtx
   , scDepMap            :: !DepMap
+  -- , scTyMap             :: !PGTyCache
   , scInconsistentObjs  :: ![InconsistentMetadataObj]
   } deriving (Show, Eq)
 
@@ -472,7 +488,6 @@ instance (Monad m) => CacheRM (StateT SchemaCache m) where
   askSchemaCache = get
 
 class (CacheRM m) => CacheRWM m where
-
   -- Get the schema cache
   writeSchemaCache :: SchemaCache -> m ()
 

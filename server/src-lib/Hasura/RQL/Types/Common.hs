@@ -1,5 +1,10 @@
+{-# LANGUAGE PatternSynonyms #-}
+
 module Hasura.RQL.Types.Common
-       ( PGColInfo(..)
+       ( PGColInfoG(..)
+       , pattern JSONColInfo
+       , PGColInfo
+       , PGColInfoR
        , RelName(..)
        , RelType(..)
        , relTypeToTxt
@@ -14,32 +19,135 @@ module Hasura.RQL.Types.Common
 
        , ToAesonPairs(..)
        , WithTable(..)
+
+       , mkPGTyMaps
+       , PGTyInfoMaps
+       , PGColOidInfo(..)
+       , PGTyInfo(..)
+       , resolveColType
        , ColVals
        , MutateResp(..)
        , ForeignKey(..)
        ) where
 
 import           Hasura.Prelude
+import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Types
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import qualified Data.HashMap.Strict        as HM
+import qualified Data.HashMap.Strict        as Map
+import qualified Data.HashMap.Strict.InsOrd as OMap
 import qualified Data.Text                  as T
 import qualified Database.PG.Query          as Q
+import qualified Database.PostgreSQL.LibPQ  as PQ (Oid)
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 import qualified PostgreSQL.Binary.Decoding as PD
 
-data PGColInfo
-  = PGColInfo
-  { pgiName       :: !PGCol
-  , pgiType       :: !PGColType
-  , pgiIsNullable :: !Bool
+newtype PGColOid = PGColOid { getOid :: Text }
+  deriving(Show, Eq, FromJSON, ToJSON)
+
+newtype PGDomBaseTyInfo
+  = PGDomBaseTyInfo
+  { pcdbDimension :: Integer } deriving (Show, Eq)
+
+$(deriveJSON (aesonDrop 4 camelCase) ''PGDomBaseTyInfo )
+
+
+type PGCompTyFldMap = [Map.HashMap PGTyFldName PGColOidInfo]
+
+data PGTyInfoDet
+  = PGTBase
+  | PGTRange
+  | PGTPseudo
+  | PGTArray     { pgtaElemOid        :: !PQ.Oid         }
+  | PGTDomain    { pgtdBaseType       :: !PGColOidInfo   }
+  | PGTEnum      { pgtePossibleValues :: ![EnumVal]      }
+  | PGTComposite { pgtcFields         :: !PGCompTyFldMap }
+  deriving (Show, Eq)
+
+data PGTyInfo
+  = PGTyInfo
+  { ptiName    :: !QualifiedType
+  , ptiOid     :: !PQ.Oid
+  , ptiSqlName :: !AnnType
+  , ptiDetail  :: !PGTyInfoDet
   } deriving (Show, Eq)
 
-$(deriveJSON (aesonDrop 3 snakeCase) ''PGColInfo)
+data PGColOidInfo
+  = PGColOidInfo
+  { pcoiOid       :: PQ.Oid
+  , pcoiDimension :: Integer
+  } deriving (Show, Eq, Generic)
+
+instance Hashable PGColOidInfo
+
+instance ToJSONKey PGColOidInfo
+
+type PGTyInfoMaps =
+  ( Map.HashMap PQ.Oid QualifiedType
+  , Map.HashMap QualifiedType PGTyInfo
+  )
+
+mkPGTyMaps :: [PGTyInfo] -> PGTyInfoMaps
+mkPGTyMaps x =
+  ( Map.fromList $ flip map x $ \y -> (ptiOid y, ptiName y)
+  , Map.fromList $ flip map x $ \y -> (ptiName y, y)
+  )
+
+getPGColTy :: PGTyInfoMaps  -> PGColOidInfo -> Maybe PGColType
+getPGColTy maps@(oidNameMap,nameTyMap) (PGColOidInfo oid dims) = do
+  PGTyInfo name _ sqlName tyDtls <- getTyOfOid oid
+  fmap (PGColType name sqlName oid) $ case tyDtls of
+    PGTRange       -> return PGTyRange
+    PGTPseudo      -> return PGTyPseudo
+    PGTBase        -> return $ PGTyBase $
+                      txtToPgBaseColTy $ getTyText $ qName name
+    PGTEnum x      -> return $ PGTyEnum x
+    PGTComposite x -> fmap PGTyComposite $ mapM getSubTy $
+                      OMap.fromList $ concatMap Map.toList x
+    PGTDomain bct  -> PGTyDomain <$> getSubTy bct
+    PGTArray bOid  -> do
+      let asDimArray n y
+            | n > 1     = PGTyArray $ PGColType name sqlName oid $ asDimArray (n-1) y
+            | otherwise = PGTyArray y
+      asDimArray dims <$> getSubTy (PGColOidInfo bOid 0)
+  where
+    getTyOfOid  = flip Map.lookup oidNameMap >=> flip Map.lookup nameTyMap
+    getSubTy = getPGColTy maps
+
+resolveColType
+  :: MonadError QErr m
+  => PGTyInfoMaps -> PGColOidInfo -> m PGColType
+resolveColType tyMaps ty =
+  onNothing (getPGColTy tyMaps ty) $ throw500 $
+      "Could not find Postgres type for oid " <> T.pack (show $ pcoiOid ty)
+
+$(deriveJSON (aesonDrop 4 snakeCase) ''PGColOidInfo)
+$(deriveJSON
+  (aesonDrop 4 snakeCase)
+    { constructorTagModifier = snakeCase . drop 3
+    , sumEncoding = TaggedObject "type" "detail"
+    }
+  ''PGTyInfoDet)
+$(deriveJSON (aesonDrop 3 snakeCase) ''PGTyInfo)
+
+data PGColInfoG a
+  = PGColInfoG
+  { pgiName       :: !PGCol
+  , pgiType       :: !a
+  , pgiIsNullable :: !Bool
+  } deriving (Show, Eq, Functor, Foldable, Traversable)
+
+$(deriveJSON (aesonDrop 3 snakeCase) ''PGColInfoG)
+
+type PGColInfo = PGColInfoG PGColType
+type PGColInfoR = PGColInfoG PGColOidInfo
+
+pattern JSONColInfo :: PGCol -> Bool -> QualifiedType -> AnnType -> PQ.Oid -> PGColInfo
+pattern JSONColInfo a b x y z = PGColInfoG a (PGColType x y z (PGTyBase PGJSON)) b
 
 newtype RelName
   = RelName {getRelTxt :: T.Text}
@@ -140,7 +248,7 @@ instance (ToAesonPairs a) => ToJSON (WithTable a) where
   toJSON (WithTable tn rel) =
     object $ ("table" .= tn):toAesonPairs rel
 
-type ColVals = HM.HashMap PGCol Value
+type ColVals = Map.HashMap PGCol Value
 
 data MutateResp
   = MutateResp
@@ -149,7 +257,7 @@ data MutateResp
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''MutateResp)
 
-type ColMapping = HM.HashMap PGCol PGCol
+type ColMapping = Map.HashMap PGCol PGCol
 
 data ForeignKey
   = ForeignKey

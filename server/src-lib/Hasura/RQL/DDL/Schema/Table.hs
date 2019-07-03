@@ -51,6 +51,16 @@ saveTableToCatalog (QualifiedObject sn tn) =
             INSERT INTO "hdb_catalog"."hdb_table" VALUES ($1, $2)
                 |] (sn, tn) False
 
+toPGColTypes
+  :: (QErrM m)
+  => PGTyInfoMaps -> [PGColInfoR] -> m [PGColInfo]
+toPGColTypes tyMaps = mapM (traverse (resolveColType tyMaps))
+
+resolveTableInfos
+  :: (CacheRWM m, MonadTx m)
+  => PGTyInfoMaps -> [TableInfoR] -> m [TableInfo]
+resolveTableInfos tyMaps = mapM (traverse (resolveColType tyMaps))
+
 newtype TrackTable
   = TrackTable
   { tName :: QualifiedTable }
@@ -72,8 +82,10 @@ trackExistingTableOrViewP2 vn isSystemDefined = do
   let defGCtx = scDefaultRemoteGCtx sc
   GS.checkConflictingNode defGCtx $ GS.qualObjectToName vn
 
+  tyMaps <- liftTx getPGTyInfoMap
   tables <- liftTx fetchTableCatalog
-  case tables of
+  tables' <- resolveTableInfos tyMaps tables
+  case tables' of
     []   -> throw400 NotExists $ "no such table/view exists in postgres : " <>> vn
     [ti] -> addTableToCache ti
     _    -> throw500 $ "more than one row found for: " <>> vn
@@ -88,7 +100,7 @@ trackExistingTableOrViewP2 vn isSystemDefined = do
     mkTableInfo (cols, pCols, constraints, viewInfoM) =
       let colMap = M.fromList $ flip map (Q.getAltJ cols) $
             \c -> (fromPGCol $ pgiName c, FIColumn c)
-      in TableInfo vn isSystemDefined colMap mempty (Q.getAltJ constraints)
+      in TableInfoG vn isSystemDefined colMap mempty (Q.getAltJ constraints)
                   (Q.getAltJ pCols) (Q.getAltJ viewInfoM) mempty
     fetchTableCatalog = map mkTableInfo <$>
       Q.listQE defaultTxErrorHandler [Q.sql|
@@ -134,8 +146,8 @@ purgeDep schemaObjId = case schemaObjId of
     "unexpected dependent object : " <> reportSchemaObj schemaObjId
 
 processTableChanges :: (MonadTx m, CacheRWM m)
-                    => TableInfo -> TableDiff -> m Bool
-processTableChanges ti tableDiff = do
+                    => PGTyInfoMaps -> TableInfo -> TableDiff -> m Bool
+processTableChanges tyMaps ti tableDiff = do
   -- If table rename occurs then don't replace constraints and
   -- process dropped/added columns, because schema reload happens eventually
   sc <- askSchemaCache
@@ -163,7 +175,7 @@ processTableChanges ti tableDiff = do
   maybe withOldTabName withNewTabName mNewName
 
   where
-    TableDiff mNewName droppedCols addedCols alteredCols _ constraints = tableDiff
+    TableDiff mNewName droppedCols addedCols' alteredCols _ constraints = tableDiff
     replaceConstraints tn = flip modTableInCache tn $ \tInfo ->
       return $ tInfo {tiUniqOrPrimConstraints = constraints}
 
@@ -172,9 +184,10 @@ processTableChanges ti tableDiff = do
         -- Drop the column from the cache
         delColFromCache droppedCol tn
 
-    procAddedCols tn =
+    procAddedCols tn = do
       -- In the newly added columns check that there is no conflict with relationships
-      forM_ addedCols $ \pci@(PGColInfo colName _ _) ->
+      addedCols <- toPGColTypes tyMaps addedCols'
+      forM_ addedCols $ \pci@(PGColInfoG colName _ _) ->
         case M.lookup (fromPGCol colName) $ tiFieldInfoMap ti of
           Just (FIRelationship _) ->
             throw400 AlreadyExists $ "cannot add column " <> colName
@@ -182,10 +195,13 @@ processTableChanges ti tableDiff = do
             " as a relationship with the name already exists"
           _ -> addColToCache colName pci tn
 
-    procAlteredCols sc tn = fmap or $ forM alteredCols $
-      \( PGColInfo oColName oColTy oNullable
-       , npci@(PGColInfo nColName nColTy nNullable)
-       ) ->
+    procAlteredCols sc tn = do
+      let (l, r) = unzip alteredCols
+      alteredCols' <- zip <$> toPGColTypes tyMaps l <*> toPGColTypes tyMaps r
+      fmap or $ forM alteredCols' $
+        \( PGColInfoG oColName oColTy oNullable
+         , npci@(PGColInfoG nColName nColTy nNullable)
+         ) ->
         if | oColName /= nColName -> do
                renameColInCatalog oColName nColName tn ti
                return True
@@ -222,8 +238,8 @@ delTableAndDirectDeps qtn@(QualifiedObject sn tn) = do
     delTableFromCatalog qtn
   delTableFromCache qtn
 
-processSchemaChanges :: (MonadTx m, CacheRWM m) => SchemaDiff -> m Bool
-processSchemaChanges schemaDiff = do
+processSchemaChanges :: (MonadTx m, CacheRWM m) => PGTyInfoMaps -> SchemaDiff -> m Bool
+processSchemaChanges tyMaps schemaDiff = do
   -- Purge the dropped tables
   mapM_ delTableAndDirectDeps droppedTables
 
@@ -232,7 +248,7 @@ processSchemaChanges schemaDiff = do
     ti <- case M.lookup oldQtn $ scTables sc of
       Just ti -> return ti
       Nothing -> throw500 $ "old table metadata not found in cache : " <>> oldQtn
-    processTableChanges ti tableDiff
+    processTableChanges tyMaps ti tableDiff
   where
     SchemaDiff droppedTables alteredTables = schemaDiff
 
@@ -354,13 +370,15 @@ buildSchemaCacheG withSetup = do
 
   -- fetch all catalog metadata
   CatalogMetadata tables relationships permissions qTemplates
-    eventTriggers remoteSchemas functions fkeys' allowlistDefs
+    eventTriggers remoteSchemas functions fkeys' allowlistDefs tyInfos
     <- liftTx fetchCatalogData
 
   let fkeys = HS.fromList fkeys'
+      tyMaps = mkPGTyMaps tyInfos
 
   -- tables
-  forM_ tables $ \ct -> do
+  tables' <- forM tables $ traverse (resolveColType tyMaps)
+  forM_ tables' $ \ct -> do
     let qt = _ctTable ct
         isSysDef = _ctSystemDefined ct
         tableInfoM = _ctInfo ct
@@ -437,7 +455,7 @@ buildSchemaCacheG withSetup = do
       handleInconsistentObj mkInconsObj $ do
       rawfi <- onNothing rawfiM $
         throw400 NotExists $ "no such function exists in postgres : " <>> qf
-      trackFunctionP2Setup qf rawfi
+      trackFunctionP2Setup tyMaps qf rawfi
 
   -- allow list
   replaceAllowlist $ concatMap _cdQueries allowlistDefs
@@ -572,8 +590,10 @@ execWithMDCheck (RunSQL t cascade _) = do
       throw400 NotSupported $
       "type of function " <> qf <<> " is altered to \"VOLATILE\" which is not supported now"
 
+  tyMaps <- liftTx getPGTyInfoMap
+
   -- update the schema cache and hdb_catalog with the changes
-  reloadRequired <- processSchemaChanges schemaDiff
+  reloadRequired <- processSchemaChanges tyMaps schemaDiff
 
   let withReload = do -- in case of any rename
         buildSchemaCache

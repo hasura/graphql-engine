@@ -52,7 +52,7 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _) = do
     either schemaErr return $ J.eitherDecode respData
   let (sDoc, qRootN, mRootN, sRootN) =
         fromIntrospection introspectRes
-  typMap <- either remoteSchemaErr return $ VT.fromSchemaDoc sDoc $
+  typMap <- either remoteSchemaErr return $ VT.fromSchemaDoc sDoc Map.empty $
      VT.RemoteType name def
   let mQrTyp = Map.lookup qRootN typMap
       mMrTyp = maybe Nothing (\mr -> Map.lookup mr typMap) mRootN

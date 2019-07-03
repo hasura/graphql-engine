@@ -15,13 +15,15 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
-data CatalogTable
-  = CatalogTable
+data CatalogTableG a
+  = CatalogTableG
   { _ctTable         :: !QualifiedTable
   , _ctSystemDefined :: !Bool
-  , _ctInfo          :: !(Maybe TableInfo)
-  } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 3 snakeCase) ''CatalogTable)
+  , _ctInfo          :: !(Maybe (TableInfoG a))
+  } deriving (Show, Eq, Functor, Foldable, Traversable)
+$(deriveJSON (aesonDrop 3 snakeCase) ''CatalogTableG)
+
+type CatalogTable = CatalogTableG PGColOidInfo
 
 data CatalogRelation
   = CatalogRelation
@@ -76,5 +78,6 @@ data CatalogMetadata
   , _cmFunctions            :: ![CatalogFunction]
   , _cmForeignKeys          :: ![ForeignKey]
   , _cmAllowlistCollections :: ![CollectionDef]
+  , _cmPgTypeInfos          :: ![PGTyInfo]
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogMetadata)

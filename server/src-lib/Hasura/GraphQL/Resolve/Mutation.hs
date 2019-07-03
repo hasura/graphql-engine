@@ -18,8 +18,8 @@ import qualified Hasura.RQL.DML.Delete             as RD
 import qualified Hasura.RQL.DML.Returning          as RR
 import qualified Hasura.RQL.DML.Update             as RU
 
-import qualified Hasura.SQL.DML                    as S
 import qualified Hasura.RQL.DML.Select             as RS
+import qualified Hasura.SQL.DML                    as S
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
@@ -72,44 +72,45 @@ convertRowObj val =
     let prepExp = fromMaybe (UVSQL $ S.SEUnsafe "NULL") prepExpM
     return (PGCol $ G.unName k, prepExp)
 
-type ApplySQLOp =  (PGCol, S.SQLExp) -> S.SQLExp
+type ApplySQLOp =  (PGCol, PGColType, S.SQLExp) -> S.SQLExp
 
-rhsExpOp :: S.SQLOp -> S.AnnType -> ApplySQLOp
-rhsExpOp op annTy (col, e) =
+rhsExpOp :: S.SQLOp -> (PGColType -> AnnType) -> ApplySQLOp
+rhsExpOp op annTyFn (col, ty, e) =
   S.mkSQLOpExp op (S.SEIden $ toIden col) annExp
   where
-    annExp = S.SETyAnn e annTy
+    annExp = S.SETyAnn e $ annTyFn ty
 
-lhsExpOp :: S.SQLOp -> S.AnnType -> ApplySQLOp
-lhsExpOp op annTy (col, e) =
+lhsExpOp :: S.SQLOp -> (PGColType -> AnnType) -> ApplySQLOp
+lhsExpOp op annTyFn (col, ty, e) =
   S.mkSQLOpExp op annExp $ S.SEIden $ toIden col
   where
-    annExp = S.SETyAnn e annTy
+    annExp = S.SETyAnn e $ annTyFn ty
 
 convObjWithOp
   :: (MonadError QErr m)
   => ApplySQLOp -> AnnInpVal -> m [(PGCol, UnresolvedVal)]
 convObjWithOp opFn val =
   flip withObject val $ \_ obj -> forM (OMap.toList obj) $ \(k, v) -> do
-  colVal <- _apvValue <$> asPGColVal v
+  colVal <- asPGColVal v
   let pgCol = PGCol $ G.unName k
       -- TODO: why are we using txtEncoder here?
-      encVal = txtEncoder colVal
-      sqlExp = opFn (pgCol, encVal)
+      encVal = txtEncoder $ _apvValue colVal
+      colTy = _apvType colVal
+      sqlExp = opFn (pgCol, colTy, encVal)
   return (pgCol, UVSQL sqlExp)
 
 convDeleteAtPathObj
-  :: (MonadError QErr m)
+ :: (MonadError QErr m)
   => AnnInpVal -> m [(PGCol, UnresolvedVal)]
 convDeleteAtPathObj val =
-  flip withObject val $ \_ obj -> forM (OMap.toList obj) $ \(k, v) -> do
-    vals <- flip withArray v $ \_ annVals -> mapM asPGColVal annVals
-    let valExps = map (txtEncoder . _apvValue) vals
-        pgCol = PGCol $ G.unName k
-        annEncVal = S.SETyAnn (S.SEArray valExps) S.textArrType
-        sqlExp = S.SEOpApp S.jsonbDeleteAtPathOp
-                 [S.SEIden $ toIden pgCol, annEncVal]
-    return (pgCol, UVSQL sqlExp)
+ flip withObject val $ \_ obj -> forM (OMap.toList obj) $ \(k, v) -> do
+   keysArr <- asPGColVal v
+   let valExp = txtEncoder $ _apvValue keysArr
+       pgCol = PGCol $ G.unName k
+       annEncVal = S.SETyAnn valExp textArrType
+       sqlExp = S.SEOpApp S.jsonbDeleteAtPathOp
+                [S.SEIden $ toIden pgCol, annEncVal]
+   return (pgCol, UVSQL sqlExp)
 
 convertUpdateP1
   :: ( MonadError QErr m
@@ -126,19 +127,21 @@ convertUpdateP1 opCtx fld = do
   whereExp <- withArg args "where" parseBoolExp
   -- increment operator on integer columns
   incExpM <- withArgM args "_inc" $
-    convObjWithOp $ rhsExpOp S.incOp S.intType
+    convObjWithOp $ rhsExpOp S.incOp $ const intType
   -- append jsonb value
   appendExpM <- withArgM args "_append" $
-    convObjWithOp $ rhsExpOp S.jsonbConcatOp S.jsonbType
+    convObjWithOp $ rhsExpOp S.jsonbConcatOp $ const jsonbType
   -- prepend jsonb value
   prependExpM <- withArgM args "_prepend" $
-    convObjWithOp $ lhsExpOp S.jsonbConcatOp S.jsonbType
+    convObjWithOp $ lhsExpOp S.jsonbConcatOp $ const jsonbType
   -- delete a key in jsonb object
   deleteKeyExpM <- withArgM args "_delete_key" $
-    convObjWithOp $ rhsExpOp S.jsonbDeleteOp S.textType
+    convObjWithOp $ rhsExpOp S.jsonbDeleteOp $ const textType
   -- delete an element in jsonb array
   deleteElemExpM <- withArgM args "_delete_elem" $
-    convObjWithOp $ rhsExpOp S.jsonbDeleteOp S.intType
+    convObjWithOp $ rhsExpOp S.jsonbDeleteOp $ const intType
+  arrExpsM <- forM arrUpdExps $ \(op,applySQLOp,annTyFn) ->
+    withArgM args op $ convObjWithOp $ applySQLOp S.arrConcatOp annTyFn
   -- delete at path in jsonb value
   deleteAtPathExpM <- withArgM args "_delete_at_path" convDeleteAtPathObj
   mutFlds <- convertMutResp (_fType fld) $ _fSelSet fld
@@ -148,7 +151,7 @@ convertUpdateP1 opCtx fld = do
 
   let updExpsM = [ setExpM, incExpM, appendExpM, prependExpM
                  , deleteKeyExpM, deleteElemExpM, deleteAtPathExpM
-                 ]
+                 ] <> arrExpsM
       setItems = resolvedPreSetItems ++ concat (catMaybes updExpsM)
 
   -- atleast one of update operators is expected
@@ -166,6 +169,14 @@ convertUpdateP1 opCtx fld = do
   where
     UpdOpCtx tn _ filterExp preSetCols allCols = opCtx
     args = _fArguments fld
+    getElemTyAnn pct = maybe (pgColTySqlName pct) pgColTySqlName $
+                       getArrayElemTy pct
+    arrUpdExps =
+      [ ("_append_array"   , rhsExpOp, pgColTySqlName)
+      , ("_append_element" , rhsExpOp, getElemTyAnn)
+      , ("_prepend_array"  , lhsExpOp, pgColTySqlName)
+      , ("_prepend_element", lhsExpOp, getElemTyAnn)
+      ]
 
 convertUpdate
   :: ( MonadError QErr m

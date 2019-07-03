@@ -38,7 +38,7 @@ data RawFuncInfo
   , rfiReturnTypeName   :: !T.Text
   , rfiReturnTypeType   :: !PGTypType
   , rfiReturnsSet       :: !Bool
-  , rfiInputArgTypes    :: ![PGColType]
+  , rfiInputArgTypes    :: ![PGColOidInfo]
   , rfiInputArgNames    :: ![T.Text]
   , rfiReturnsTable     :: !Bool
   } deriving (Show, Eq)
@@ -64,8 +64,8 @@ validateFuncArgs args =
     invalidArgs = filter (not . isValidName) $ map G.Name funcArgsText
 
 mkFunctionInfo
-  :: QErrM m => QualifiedFunction -> RawFuncInfo -> m FunctionInfo
-mkFunctionInfo qf rawFuncInfo = do
+  :: QErrM m => PGTyInfoMaps ->  QualifiedFunction -> RawFuncInfo -> m FunctionInfo
+mkFunctionInfo tyMaps qf rawFuncInfo = do
   -- throw error if function has variadic arguments
   when hasVariadic $ throw400 NotSupported "function with \"VARIADIC\" parameters are not supported"
   -- throw error if return type is not composite type
@@ -77,8 +77,10 @@ mkFunctionInfo qf rawFuncInfo = do
   -- throw error if function type is VOLATILE
   when (funTy == FTVOLATILE) $ throw400 NotSupported "function of type \"VOLATILE\" is not supported now"
 
+  inpArgTyps <- forM inpArgOids $ resolveColType tyMaps
   let funcArgs = mkFunctionArgs inpArgTyps inpArgNames
   validateFuncArgs funcArgs
+
 
   let funcArgsSeq = Seq.fromList funcArgs
       dep = SchemaDependency (SOTable retTable) "table"
@@ -86,7 +88,7 @@ mkFunctionInfo qf rawFuncInfo = do
   return $ FunctionInfo qf False funTy funcArgsSeq retTable [dep]
   where
     RawFuncInfo hasVariadic funTy retSn retN retTyTyp
-                retSet inpArgTyps inpArgNames returnsTab
+                retSet inpArgOids inpArgNames returnsTab
                 = rawFuncInfo
 
 saveFunctionToCatalog :: QualifiedFunction -> Bool -> Q.TxE QErr ()
@@ -116,10 +118,10 @@ trackFunctionP1 (TrackFunction qf) = do
   when (M.member qf $ scFunctions rawSchemaCache) $
     throw400 AlreadyTracked $ "function already tracked : " <>> qf
 
-trackFunctionP2Setup :: (QErrM m, CacheRWM m, MonadTx m)
-                     => QualifiedFunction -> RawFuncInfo -> m ()
-trackFunctionP2Setup qf rawfi = do
-  fi <- mkFunctionInfo qf rawfi
+trackFunctionP2Setup :: (QErrM m, CacheRWM m)
+                     => PGTyInfoMaps -> QualifiedFunction -> RawFuncInfo -> m ()
+trackFunctionP2Setup tyMaps qf rawfi = do
+  fi <- mkFunctionInfo tyMaps qf rawfi
   let retTable = fiReturnType fi
       err = err400 NotExists $ "table " <> retTable <<> " is not tracked"
   sc <- askSchemaCache
@@ -137,7 +139,6 @@ trackFunctionP2 qf = do
     "function name " <> qf <<> " is not in compliance with GraphQL spec"
   -- check for conflicts in remote schema
   GS.checkConflictingNode defGCtx funcNameGQL
-
   -- fetch function info
   functionInfos <- liftTx fetchFuncDets
   rawfi <- case functionInfos of
@@ -147,7 +148,8 @@ trackFunctionP2 qf = do
     _       ->
       throw400 NotSupported $
       "function " <> qf <<> " is overloaded. Overloaded functions are not supported"
-  trackFunctionP2Setup qf rawfi
+  tyMaps <- liftTx getPGTyInfoMap
+  trackFunctionP2Setup tyMaps qf rawfi
   liftTx $ saveFunctionToCatalog qf False
   return successMsg
   where
@@ -159,6 +161,13 @@ trackFunctionP2 qf = do
              WHERE function_schema = $1
                AND function_name = $2
            |] (sn, fn) True
+
+getPGTyInfoMap :: Q.TxE QErr PGTyInfoMaps
+getPGTyInfoMap = do
+  mkPGTyMaps . map (Q.getAltJ . runIdentity) <$>
+    Q.listQE defaultTxErrorHandler [Q.sql|
+      SELECT row_to_json(q) FROM hdb_catalog.hdb_type_info q
+    |] () True
 
 runTrackFunc
   :: ( QErrM m, CacheRWM m, MonadTx m

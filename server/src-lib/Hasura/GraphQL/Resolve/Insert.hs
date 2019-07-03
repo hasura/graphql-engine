@@ -29,10 +29,9 @@ import           Hasura.GraphQL.Resolve.Mutation
 import           Hasura.GraphQL.Resolve.Select
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
-import           Hasura.RQL.DML.Internal           ( dmlTxErrorHandler
-                                                   , convPartialSQLExp
-                                                   , sessVarFromCurrentSetting
-                                                   )
+import           Hasura.RQL.DML.Internal           (convPartialSQLExp,
+                                                    dmlTxErrorHandler,
+                                                    sessVarFromCurrentSetting)
 import           Hasura.RQL.DML.Mutation
 import           Hasura.RQL.GBoolExp               (toSQLBoolExp)
 import           Hasura.RQL.Types
@@ -105,9 +104,9 @@ traverseInsObj
   -> m AnnInsObj
 traverseInsObj rim (gName, annVal) defVal@(AnnInsObj cols objRels arrRels) =
   case _aivValue annVal of
-    AGScalar colty mColVal -> do
+    AGPGVal colty mColVal -> do
       let col = PGCol $ G.unName gName
-          colVal = fromMaybe (PGNull colty) mColVal
+          colVal = fromMaybe (PGColValue (pgColTyOid colty) PGNull) mColVal
       return (AnnInsObj ((col, colty, colVal):cols) objRels arrRels)
 
     _ -> do

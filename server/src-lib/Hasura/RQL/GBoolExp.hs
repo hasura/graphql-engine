@@ -18,13 +18,14 @@ import           Data.Aeson
 import qualified Data.HashMap.Strict as M
 import qualified Data.Text.Extended  as T
 
+
 parseOpExp
   :: (MonadError QErr m)
   => ValueParser m a
   -> FieldInfoMap
   -> PGColInfo
   -> (T.Text, Value) -> m (OpExpG a)
-parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
+parseOpExp parser fim (PGColInfoG cn colTy _) (opStr, val) = withErrPath $
   case opStr of
     "$eq"            -> parseEq
     "_eq"            -> parseEq
@@ -73,12 +74,15 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
     "_is_null"       -> parseIsNull
 
     -- jsonb type
-    "_contains"      -> jsonbOnlyOp $ AContains <$> parseOne
-    "$contains"      -> jsonbOnlyOp $ AContains <$> parseOne
-    "_contained_in"  -> jsonbOnlyOp $ AContainedIn <$> parseOne
-    "$contained_in"  -> jsonbOnlyOp $ AContainedIn <$> parseOne
-    "_has_key"       -> jsonbOnlyOp $ AHasKey <$> parseWithTy PGText
-    "$has_key"       -> jsonbOnlyOp $ AHasKey <$> parseWithTy PGText
+    "_contains"        -> jsonbOrArrOp $ AContains <$> parseOne
+    "$contains"        -> jsonbOrArrOp $ AContains <$> parseOne
+    "_contained_in"    -> jsonbOrArrOp $ AContainedIn <$> parseOne
+    "$contained_in"    -> jsonbOnlyOp  $ AContainedIn <$> parseOne
+    "$is_contained_by" -> jsonbOrArrOp $ AContainedIn <$> parseOne
+    "_is_contained_by" -> jsonbOrArrOp $ AContainedIn <$> parseOne
+
+    "_has_key"       -> jsonbOnlyOp $ AHasKey <$> parseWithTy textColTy
+    "$has_key"       -> jsonbOnlyOp $ AHasKey <$> parseWithTy textColTy
 
     --FIXME:- Parse a session variable as text array values
     --TODO:- Add following commented operators after fixing above said
@@ -155,9 +159,13 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
     parseCgte     = CGTE <$> decodeAndValidateRhsCol
     parseClte     = CLTE <$> decodeAndValidateRhsCol
 
-    jsonbOnlyOp m = case colTy of
-      PGJSONB -> m
-      ty      -> throwError $ buildMsg ty [PGJSONB]
+    jsonbOrArrOp m
+      | getPGTyArrDim colTy > 0 = m
+      | otherwise = jsonbOnlyOp m
+
+    jsonbOnlyOp m = case pgColTyDetails colTy of
+      PGTyBase PGJSONB -> m
+      _                -> throwError $ buildMsg colTy [jsonbColTy]
 
     parseGeometryOp f =
       geometryOp colTy >> f <$> parseOne
@@ -165,18 +173,18 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
       geometryOrGeographyOp colTy >> f <$> parseOne
 
     parseSTDWithinObj = case colTy of
-      PGGeometry -> do
+      PGGeomTy{} -> do
         DWithinGeomOp distVal fromVal <- parseVal
-        dist <- withPathK "distance" $ parser PGFloat distVal
+        dist <- withPathK "distance" $ parser floatColTy distVal
         from <- withPathK "from" $ parser colTy fromVal
         return $ ASTDWithinGeom $ DWithinGeomOp dist from
-      PGGeography -> do
+      PGGeogTy{} -> do
         DWithinGeogOp distVal fromVal sphVal <- parseVal
-        dist <- withPathK "distance" $ parser PGFloat distVal
+        dist <- withPathK "distance" $ parser floatColTy distVal
         from <- withPathK "from" $ parser colTy fromVal
-        useSpheroid <- withPathK "use_spheroid" $ parser PGBoolean sphVal
+        useSpheroid <- withPathK "use_spheroid" $ parser boolColTy sphVal
         return $ ASTDWithinGeog $ DWithinGeogOp dist from useSpheroid
-      _ -> throwError $ buildMsg colTy [PGGeometry, PGGeography]
+      _ -> throwError $ buildMsg colTy [geometryColTy, geographyColTy]
 
     decodeAndValidateRhsCol =
       parseVal >>= validateRhsCol
@@ -189,13 +197,13 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
              "incompatible column types : " <> cn <<> ", " <>> rhsCol
         else return rhsCol
 
-    geometryOp PGGeometry = return ()
+    geometryOp PGGeomTy{} = return ()
     geometryOp ty =
-      throwError $ buildMsg ty [PGGeometry]
-    geometryOrGeographyOp PGGeometry = return ()
-    geometryOrGeographyOp PGGeography = return ()
+      throwError $ buildMsg ty [geometryColTy]
+    geometryOrGeographyOp PGGeomTy{} = return ()
+    geometryOrGeographyOp PGGeogTy{} = return ()
     geometryOrGeographyOp ty =
-      throwError $ buildMsg ty [PGGeometry, PGGeography]
+      throwError $ buildMsg ty [geometryColTy, geographyColTy]
 
     parseWithTy ty = parser ty val
     parseOne = parseWithTy colTy
@@ -228,11 +236,16 @@ buildMsg ty expTys =
   , T.intercalate "/" $ map (T.dquote . T.pack . show) expTys
   ]
 
-textOnlyOp :: (MonadError QErr m) => PGColType -> m ()
-textOnlyOp PGText    = return ()
-textOnlyOp PGVarchar = return ()
-textOnlyOp ty =
-  throwError $ buildMsg ty [PGVarchar, PGText]
+textOnlyOp :: MonadError QErr m => PGColType -> m ()
+textOnlyOp colTy = case  pgColTyDetails colTy of
+  PGTyBase b -> textOnlyOpBase b
+  _          -> onlyTxtTyErr
+  where
+    textOnlyOpBase PGText    = return ()
+    textOnlyOpBase PGVarchar = return ()
+    textOnlyOpBase _         = onlyTxtTyErr
+
+    onlyTxtTyErr = throwError $ buildMsg colTy $ baseTy <$> [PGVarchar, PGText]
 
 -- This convoluted expression instead of col = val
 -- to handle the case of col : null
@@ -268,10 +281,8 @@ annColExp
 annColExp valueParser colInfoMap (ColExp fieldName colVal) = do
   colInfo <- askFieldInfo colInfoMap fieldName
   case colInfo of
-    FIColumn (PGColInfo _ PGJSON _) ->
-      throwError (err400 UnexpectedPayload "JSON column can not be part of where clause")
-    -- FIColumn (PGColInfo _ PGJSONB _) ->
-    --   throwError (err400 UnexpectedPayload "JSONB column can not be part of where clause")
+    FIColumn JSONColInfo{} ->
+      throw400 UnexpectedPayload "JSON column can not be part of where clause"
     FIColumn pgi ->
       AVCol pgi <$> parseOpExps valueParser colInfoMap pgi colVal
     FIRelationship relInfo -> do
@@ -293,7 +304,7 @@ convBoolRhs' tq =
 convColRhs
   :: S.Qual -> AnnBoolExpFldSQL -> State Word64 S.BoolExp
 convColRhs tableQual = \case
-  AVCol (PGColInfo cn _ _) opExps -> do
+  AVCol (PGColInfoG cn _ _) opExps -> do
     let bExps = map (mkColCompExp tableQual cn) opExps
     return $ foldr (S.BEBin S.AndOp) (S.BELit True) bExps
 
@@ -375,8 +386,10 @@ mkColCompExp qual lhsCol = \case
     mkQCol = S.SEQIden . S.QIden qual . toIden
     lhs = mkQCol lhsCol
 
-    toTextArray arr =
-      S.SETyAnn (S.SEArray $ map (txtEncoder . PGValText) arr) S.textArrType
+    txtEncoderBase = fromEncPGVal . txtEncodePGValBase
+
+    toTextArray arr = flip S.SETyAnn textArrType $ S.SEArray $
+                      flip map arr $ txtEncoderBase . PGValKnown . PGValText
 
     mkGeomOpBe fn v = applySQLFn fn [lhs, v]
 
