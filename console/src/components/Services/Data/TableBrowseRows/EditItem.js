@@ -211,7 +211,6 @@ class EditItem extends Component {
           />
         );
       } else {
-        // everything else is text.
         // find value to be shown. rich text editor vs clone
         let defaultValue = '';
         let currentValue = '';
@@ -228,7 +227,7 @@ class EditItem extends Component {
           typedInput = (
             <span>
               <input
-                placeholder={'text'}
+                placeholder={getPlaceholder(colType)}
                 type="text"
                 className={'form-control ' + styles.insertBox}
                 onClick={clicker}
@@ -245,7 +244,7 @@ class EditItem extends Component {
           typedInput = (
             <span>
               <input
-                placeholder={'text'}
+                placeholder={getPlaceholder(colType)}
                 type="text"
                 className={'form-control ' + styles.insertBox}
                 onClick={clicker}

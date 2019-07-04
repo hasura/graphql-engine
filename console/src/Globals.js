@@ -5,6 +5,7 @@ import { SERVER_CONSOLE_MODE } from './constants';
 /* eslint-disable */
 import sqlFormatter from './helpers/sql-formatter.min';
 import hljs from './helpers/highlight.min';
+import { getFeaturesCompatibility } from './helpers/versionUtils';
 /* eslint-enable */
 
 /* */
@@ -42,6 +43,10 @@ const globals = {
   telemetryTopic:
     window.__env.nodeEnv !== 'development' ? 'console' : 'console_test',
   assetsPath: window.__env.assetsPath,
+  serverVersion: window.__env.serverVersion,
+  featuresCompatibility: window.__env.serverVersion
+    ? getFeaturesCompatibility(window.__env.serverVersion)
+    : null,
 };
 
 // set defaults
