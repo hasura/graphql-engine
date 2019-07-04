@@ -49,15 +49,6 @@ Adding a remote schema
 
 Follow the steps below to add a "remote schema" to Hasura GraphQL engine:
 
-.. note::
-
-  For version <= ``v1.0.0-beta.2`` GraphQL schema of each remote server added
-  is refreshed for any metadata defining operation like adding tables/functions
-  , defining relationships/permissions etc. From ``v1.0.0-beta.3`` onwards,
-  remote server's GraphQL schema is cached and refreshed only when user
-  explicitly reloads remote schema by clicking ``reload`` button on console or
-  by making :doc:`reload_remote_schema<../api-reference/schema-metadata-api/remote-schemas>` metadata API request
-
 Step 1: Write a custom GraphQL server
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -128,6 +119,17 @@ Remote schema fields nomenclature
 - Top-level field names need to be unique across all merged schemas (*case-sensitive match*).
 - Types with the *exact same name and structure* will be merged. But types with the *same name but different
   structure* will result in type conflicts.
+
+
+Schema refreshing
+^^^^^^^^^^^^^^^^^
+
+For versions <= ``v1.0.0-beta.2``, GraphQL schema of each added remote server is refreshed every time a
+metadata modifying operation like adding tables/functions, defining relationships/permissions etc. is done.
+
+From ``v1.0.0-beta.3`` onwards, a remote server's GraphQL schema is cached and refreshed only when user
+explicitly reloads remote schema by clicking the ``Reload`` button on console or
+by making :doc:`reload_remote_schema<../api-reference/schema-metadata-api/remote-schemas>` metadata API request
 
 
 Current limitations
