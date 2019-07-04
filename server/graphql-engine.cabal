@@ -53,11 +53,9 @@ library
                      , Spock-core
                      , split
                      , optparse-applicative
-                     , wai-extra
                      , containers
                      , monad-control
                      , monad-time
-                     , wai-logger
                      , fast-logger
                      , wai
                      , postgresql-binary
@@ -98,9 +96,6 @@ library
                      -- Http client
                      , wreq
                      , http-client
-                     , http-client-tls
-                     , connection
-                     , retry
 
                      -- ordered map
                      , insert-ordered-containers
@@ -122,7 +117,6 @@ library
                      -- websockets interface related
                      , websockets
                      , wai-websockets
-                     , hashtables
                      , stm
                      , stm-containers
                      , list-t
@@ -351,7 +345,6 @@ executable graphql-engine
                      , http-client-tls
                      , stm
                      , wreq
-                     , connection
                      , string-conversions
                      , uuid
 
