@@ -89,7 +89,7 @@ getPermInfo
 getPermInfo tabInfo roleName pa =
   case M.lookup roleName rpim >>= (^. paL) of
     Just c  -> return c
-    Nothing -> throw404 $ mconcat
+    Nothing -> throw400 BadRequest $ mconcat
                [ pt <> " permission on " <>> tiName tabInfo
                , " for role " <>> roleName
                , " does not exist"
