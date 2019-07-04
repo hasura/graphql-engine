@@ -7,7 +7,7 @@ license:             Apache-2.0
 -- license-file:        LICENSE.md
 author:              Vamshi Surabhi
 maintainer:          vamshi@hasura.io
-copyright:           2017-2019 Hasura Inc.
+copyright:           Hasura Inc.
 category:            Database
 build-type:          Simple
 -- extra-source-files:  README.md
