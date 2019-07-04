@@ -23,6 +23,7 @@ export const frequentlyUsedColumns = [
     type: 'timestamptz',
     typeText: 'timestamp',
     default: 'now()',
+    defaultText: 'now() + trigger to set value on update',
     dependentSQLGenerator: (schemaName, tableName, columnName) => {
       return `
 CREATE OR REPLACE FUNCTION "${schemaName}".set_current_timestamp_${columnName}()
@@ -39,20 +40,23 @@ CREATE TRIGGER "trigger_set_${schemaName}_${tableName}_${columnName}"
 BEFORE UPDATE ON "${schemaName}"."${tableName}"
 FOR EACH ROW
 EXECUTE PROCEDURE "${schemaName}".set_current_timestamp_${columnName}();
+COMMENT ON TRIGGER "trigger_set_${schemaName}_${tableName}_${columnName}" ON "${schemaName}"."${tableName}" 
+IS 'trigger to set value of column "${columnName}" to current timestamp on row update'
 `;
     },
-    warning:
-      'This will create a before update trigger on the table to set the value of ' +
-      'this column. Once the table is created, deleting this column without dropping the ' +
-      'trigger will cause updates to fail for the table',
   },
 ];
 
 export const getFreqUsedColDisplayInfo = c => {
   const title = c.name;
-  const subTitle = `${c.typeText}; ${
-    c.default ? `default: ${c.default};` : ''
-  } ${c.primary ? 'primary key' : ''}`;
+
+  const typeText = c.typeText;
+  const defaultText =
+    c.defaultText || c.default ? `default: ${c.defaultText || c.default}` : '';
+  const pkText = c.primary ? 'primary key' : '';
+
+  const subTitle = [typeText, defaultText, pkText].join('; ');
+
   return {
     title,
     subTitle,

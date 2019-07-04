@@ -5,7 +5,6 @@ import { updateSchemaInfo, makeMigrationCall } from '../DataActions';
 import {
   showSuccessNotification,
   showErrorNotification,
-  showWarningNotification,
 } from '../../Common/Notification';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { setTable } from '../DataActions.js';
@@ -69,7 +68,7 @@ const setColNullable = (isNull, index) => ({
 
 const setFreqUsedColumn = column => (dispatch, getState) => {
   const tableState = getState().addTable.table;
-  const { columns } = tableState;
+  const columns = [...tableState.columns];
 
   const newColumn = {
     name: column.name,
@@ -105,10 +104,6 @@ const setFreqUsedColumn = column => (dispatch, getState) => {
     const newPks = [newColIndex.toString(), ''];
 
     dispatch({ type: SET_PK, pks: newPks });
-  }
-
-  if (column.warning) {
-    dispatch(showWarningNotification('Warning', column.warning));
   }
 };
 
