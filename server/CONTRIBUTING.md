@@ -92,17 +92,12 @@ pip3 install -r tests-py/requirements.txt
 ```
 
 - Make sure postgres is running
-- Run the graphql-engine:
-
-```
-stack exec graphql-engine -- --database-url=<database-url> serve --enable-console
-```
-
-- Set the environmental variables for event-trigger tests
+- Set the environmental variables for event-trigger tests and run the graphql-engine:
 
 ```
 export EVENT_WEBHOOK_HEADER="MyEnvValue"
 export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
+stack exec graphql-engine -- --database-url=<database-url> serve --enable-console --stringify-numeric-types
 ```
 
 - Run tests:
