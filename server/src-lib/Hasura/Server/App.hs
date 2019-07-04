@@ -345,6 +345,7 @@ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir = do
              , "enableTelemetry" .= boolToText enableTelemetry
              , "cdnAssets" .= boolToText (isNothing consoleAssetsDir)
              , "assetsVersion" .= consoleVersion
+             , "serverVersion" .= currentVersion
              ]
     consolePath = case path of
       "" -> "/console"
