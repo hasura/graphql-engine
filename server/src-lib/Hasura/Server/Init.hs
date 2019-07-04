@@ -971,7 +971,7 @@ serveOptsToLog so =
   where
     infoVal = J.object [ "port" J..= soPort so
                        , "server_host" J..= show (soHost so)
-                       -- , "transaction_isolation" J..= show (soTxIso so)
+                       , "transaction_isolation" J..= show (soTxIso so)
                        , "admin_secret_set" J..= isJust (soAdminSecret so)
                        , "auth_hook" J..= (ahUrl <$> soAuthHook so)
                        , "auth_hook_mode" J..= (show . ahType <$> soAuthHook so)

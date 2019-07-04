@@ -224,17 +224,13 @@ mkErrorLog userInfoM reqId req err query mTimeT =
 
 genLogInfo
   :: BL.ByteString
-  -- -> Maybe Value
   -> Maybe (UTCTime, UTCTime)
   -> (Maybe Double, Maybe Int64)
 genLogInfo res mTimeT =
   (diffTime, Just size)
   where
-    --status = either qeStatus (const N.status200) res
     size = BL.length res
     diffTime = fmap (realToFrac . uncurry (flip diffUTCTime)) mTimeT
-    --err = either Just (const Nothing) res
-    --query = either (const extraInfo) (const Nothing) res
 
 getSourceFromSocket :: Wai.Request -> ByteString
 getSourceFromSocket = BS.pack . showSockAddr . Wai.remoteHost

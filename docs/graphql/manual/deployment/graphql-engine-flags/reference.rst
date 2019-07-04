@@ -185,11 +185,16 @@ For ``serve`` sub-command these are the flags and ENV variables available:
      - Set the value to ``/srv/console-assets`` for the console to load assets from the server itself
        instead of CDN. *(Available for versions > v1.0.0-beta.1)*
 
-   * - ``enable-verbose-log``
-     - ``HASURA_GRAPHQL_ENABLE_VERBOSE_LOG``
-     - Enable verbose logging. This will enable query log which logs the full
-       GraphQL query and the generated SQL on each request. See :doc:`logging
-       <../logging>` for more details.
+   * - ``enabled-log-types``
+     - ``HASURA_GRAPHQL_ENABLED_LOG_TYPES``
+     - Set the enabled log types. This is a comma-separated list of log-types to
+       enable. Default: ``startup, http-log, webhook-log, websocket-log``. See
+       :ref:`log types <log-types>` for more details.
+
+   * - ``log-level``
+    - ``HASURA_GRAPHQL_LOG_LEVEL``
+    - Set the logging level. Default: ``info``. Options: ``debug``, ``info``,
+      ``warn``, ``error``.
 
 .. note::
 

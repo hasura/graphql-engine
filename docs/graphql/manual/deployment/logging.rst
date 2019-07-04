@@ -15,6 +15,62 @@ Based on your deployment method, Hasura GraphQL engine logs can be accessed as f
 - :doc:`On Docker <docker/logging>`
 - :doc:`On Kubernetes <kubernetes/logging>`
 
+.. _log-types:
+
+Different log types
+-------------------
+
+The Hasura GraphQL engine has different kind of log types (also written as
+log-type) depending on the sub-system or the layer.
+
+For example, the HTTP webserver logs incoming requests as access log, and is
+called ``http-log``. Similarly logs from the websocket layer is called
+``websocket-log``, logs from the event trigger system is called
+``event-trigger`` etc.
+
+Log types can be enabled via the flag ``--enabled-log-types`` (or env var
+``HASURA_GRAPHQL_ENABLED_LOG_TYPES``).
+See :doc:`enabling log types <../deployment/graphql-engine-flags/reference>`
+
+Default enabled log types are: ``startup, http-log, webhook-log, websocket-log``
+
+All the log-types that can be enabled/disabled are:
+
+.. list-table:: ``http-log`` changes
+   :header-rows: 1
+
+   * - Log type
+     - Description
+     - Log Level
+
+   * - ``startup``
+     - Information that is logged during startup
+     - ``info``
+
+   * - ``query-log``
+     - Logs: the entire GraphQL query with variables, generated SQL statements
+       (only for queries, not for mutations/subscriptions or remote schema
+       queries), the operation name (if provided in the GraphQL request)
+     - ``info``
+
+   * - ``http-log``
+     - Http access and error logs at the webserver layer
+     - ``info`` and ``error``
+
+   * - ``websocket-log``
+     - Websocket events and error logs at the websocket server layer
+     - ``info`` and ``error``
+
+   * - ``webhook-log``
+     - Logs responses and errors from the webhook
+     - ``info`` and ``error``
+
+
+Apart from the above, there are other internal log-types which can't be configured.
+
+Namely: (pg-client, metadata, jwk-refresh-log, telemetry-log, event-trigger,
+ws-server, schema-sync-thread)
+
 Log structure and metrics
 -------------------------
 
@@ -23,11 +79,6 @@ All requests are identified by a request id. If the client sends a
 for each request. This is also sent back to the client as a response header
 (``x-request-id``). This is useful to correlate logs from the server and the
 client.
-
-.. note::
-
-   Please note verbose logging only enables the ``query-log`` to get printed,
-   nothing of ``http-log`` or ``websocket-log`` is affected by verbose logging.
 
 Query log structure
 ^^^^^^^^^^^^^^^^^^^
@@ -314,6 +365,20 @@ You can integrate the logs emitted by Hasura GraphQL with external monitoring to
 your convenience.
 
 For some examples, see :doc:`../guides/monitoring/index`
+
+
+Logging Levels
+---------------
+
+You can set the desired logging level on the server.
+See :doc:`log levels <../deployment/graphql-engine-flags/reference>`
+
+For example, setting ``--log-level=error``, will only enable error logs to be
+printed. So even if the user has enabled ``query-log`` it won't be printed as
+the level of ``query-log`` is ``info``. Only errors will be printed in
+``http-log`` or ``websocket-log``.
+
+See :ref:`log types <log-types>` for more details on log-level of each log-type.
 
 
 Migration path of logs from (<= ``v1.0.0-beta.2`` to newer)
