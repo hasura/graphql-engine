@@ -153,7 +153,7 @@ data HttpAccessLog
   { halHttpInfo  :: !HttpInfoLog
   , halOperation :: !OperationLog
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 2 snakeCase) ''HttpAccessLog)
+$(deriveToJSON (aesonDrop 3 snakeCase) ''HttpAccessLog)
 
 data HttpLog
   = HttpLog
