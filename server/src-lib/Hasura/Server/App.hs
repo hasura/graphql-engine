@@ -403,10 +403,11 @@ mkWaiApp
   -> InstanceId
   -> S.HashSet API
   -> EL.LQOpts
+  -> Maybe Wai.Middleware
   -> IO (Wai.Application, SchemaCacheRef, Maybe UTCTime)
 mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
          enableConsole consoleAssetsDir enableTelemetry instanceId apis
-         lqOpts = do
+         lqOpts extraMiddleware = do
     let pgExecCtx = PGExecCtx pool isoLevel
         pgExecCtxSer = PGExecCtx pool Q.Serializable
     (cacheRef, cacheBuiltTime) <- do
@@ -436,7 +437,7 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
 
     spockApp <- spockAsApp $ spockT id $
                 httpApp corsCfg serverCtx enableConsole
-                  consoleAssetsDir enableTelemetry
+                  consoleAssetsDir enableTelemetry extraMiddleware
 
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
     return ( WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp
@@ -444,15 +445,24 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
            , cacheBuiltTime
            )
 
-httpApp :: CorsConfig -> ServerCtx -> Bool -> Maybe Text -> Bool -> SpockT IO ()
-httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
+httpApp
+  :: CorsConfig
+  -> ServerCtx
+  -> Bool
+  -> Maybe Text
+  -> Bool
+  -> Maybe Wai.Middleware
+  -> SpockT IO ()
+httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry extraMiddleware = do
     -- cors middleware
     unless (isCorsDisabled corsCfg) $
       middleware $ corsMiddleware (mkDefaultCorsPolicy corsCfg)
 
+    -- run any given extra middleware
+    maybe (return ()) middleware extraMiddleware
+
     -- API Console and Root Dir
-    when (enableConsole && enableMetadata) $ do
-      serveApiConsole
+    when (enableConsole && enableMetadata) serveApiConsole
 
     -- Health check endpoint
     get "healthz" $ do

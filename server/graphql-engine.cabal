@@ -354,6 +354,7 @@ executable graphql-engine
                      , connection
                      , string-conversions
                      , uuid
+                     , wai
 
   other-modules:       Ops
                      , Migrate
