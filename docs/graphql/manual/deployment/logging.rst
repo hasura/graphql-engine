@@ -36,7 +36,7 @@ Default enabled log types are: ``startup, http-log, webhook-log, websocket-log``
 
 All the log-types that can be enabled/disabled are:
 
-.. list-table:: ``http-log`` changes
+.. list-table:: Available log-types
    :header-rows: 1
 
    * - Log type
@@ -68,8 +68,43 @@ All the log-types that can be enabled/disabled are:
 
 Apart from the above, there are other internal log-types which can't be configured.
 
-Namely: (pg-client, metadata, jwk-refresh-log, telemetry-log, event-trigger,
-ws-server, schema-sync-thread)
+.. list-table:: Internal log-types
+   :header-rows: 1
+
+   * - Log type
+     - Description
+     - Log Level
+
+   * - ``pg-client``
+     - Logs from the postgres client library
+     - ``warn``
+
+   * - ``metadata``
+     - Logs inconsistent metadata items
+     - ``warn``
+
+   * - ``jwk-refresh-log``
+     - Logs information and errors about periodic refreshing of JWK
+     - ``info`` and ``error``
+
+   * - ``telemetry-log``
+     - Logs error (if any) while sending out telemetry data
+     - ``info``
+
+   * - ``event-trigger``
+     - Logs HTTP responses from the webhook, and HTTP exceptions and internal
+       errors
+     - ``info`` and ``error``
+
+   * - ``ws-server``
+     - Logs from the websocket server
+     - ``debug``
+
+   * - ``schema-sync-thread``
+     - Logs internal events, when it detects schema has changed on Postgres and
+       when it reloads the schema
+     - ``info`` and ``error``
+
 
 Log structure and metrics
 -------------------------
