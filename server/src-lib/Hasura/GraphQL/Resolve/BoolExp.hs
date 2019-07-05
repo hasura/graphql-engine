@@ -76,7 +76,6 @@ parseOpExps colTy annVal = do
   where
     asOpRhs = fmap (fmap UVPG) . asPGColValM
 
-    -- TODO: Check the non nullability of _in and _nin operators
     asPGArray rhsTy v = do
       valsM <- parseMany asPGColVal v
       forM valsM $ \vals -> do

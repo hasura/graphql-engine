@@ -113,7 +113,6 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
               showErrorNotification(
                 'SQL execution failed!',
                 'Something is wrong. Data sent back an invalid response json.',
-                requestBody,
                 parsedErrorMsg
               )
             );
@@ -129,9 +128,14 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
       }
       response.json().then(
         errorMsg => {
+          const title = 'SQL Execution Failed';
           dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: errorMsg });
           dispatch({ type: REQUEST_ERROR, data: errorMsg });
-          dispatch(handleMigrationErrors('SQL Execution Failed', errorMsg));
+          if (isMigration) {
+            dispatch(handleMigrationErrors(title, errorMsg));
+          } else {
+            dispatch(showErrorNotification(title, errorMsg.code, errorMsg));
+          }
         },
         () => {
           dispatch(

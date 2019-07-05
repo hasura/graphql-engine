@@ -95,9 +95,7 @@ const editItem = (tableName, colValues) => {
         );
       },
       err => {
-        dispatch(
-          showErrorNotification('Edit failed!', err.error, reqBody, err)
-        );
+        dispatch(showErrorNotification('Edit failed!', err.error, err));
       }
     );
   };
