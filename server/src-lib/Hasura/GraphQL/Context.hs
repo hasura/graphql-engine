@@ -203,7 +203,7 @@ mkCompExpInp :: PGColType -> InpObjTyInfo
 mkCompExpInp colTy =
   InpObjTyInfo (Just tyDesc) (mkCompExpTy colTy) (fromInpValL $ concat
   [ map (mk colScalarTy) typedOps
-  , map (mk $ G.toLT colScalarTy) listOps
+  , map (mk $ G.toLT $ G.toNT colScalarTy) listOps
   , bool [] (map (mk $ mkScalarTy PGText) stringOps) isStringTy
   , bool [] (map jsonbOpToInpVal jsonbOps) isJsonbTy
   , bool [] (stDWithinGeoOpInpVal stDWithinGeometryInpTy :
