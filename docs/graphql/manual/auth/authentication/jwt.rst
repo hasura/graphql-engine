@@ -43,8 +43,7 @@ TL;DR
    in a custom namespace in the claims.
 2. Other optional ``x-hasura-*`` fields (required as per your defined
    permissions).
-3. You can send ``x-hasura-role`` as header in the request to indicate a
-   different role.
+3. You can send ``x-hasura-role`` as header in the request to indicate a role.
 4. Send the JWT via ``Authorization: Bearer <JWT>`` header.
 
 
@@ -53,8 +52,10 @@ The Spec
 When your auth server generates the JWT, the custom claims in the JWT **must contain**
 the following:
 
-1. A ``x-hasura-default-role`` field : indicating the default role of that user
-2. A ``x-hasura-allowed-roles`` field : a list of allowed roles for the user
+1. A ``x-hasura-default-role`` field : indicating the default role of that user i.e. the role that will be
+   used in case ``x-hasura-role`` header is not passed
+2. A ``x-hasura-allowed-roles`` field : a list of allowed roles for the user i.e. acceptable values of the
+   ``x-hasura-role`` header
 
 The claims in the JWT, can have other ``x-hasura-*`` fields where their values
 can only be strings. You can use these ``x-hasura-*`` fields in your
