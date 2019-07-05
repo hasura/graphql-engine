@@ -52,7 +52,7 @@ runHasuraGQ reqId query userInfo resolvedOp = do
       liftIO $ logGraphqlQuery logger $ QueryLog query genSql reqId
       runLazyTx' pgExecCtx tx
     E.ExOpMutation tx -> do
-      -- log the generated SQL and the graphql query
+      -- log the graphql query
       liftIO $ logGraphqlQuery logger $ QueryLog query Nothing reqId
       runLazyTx pgExecCtx $ withUserInfo userInfo tx
     E.ExOpSubs _ ->

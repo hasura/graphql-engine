@@ -86,8 +86,14 @@ defaultEnabledLogTypes =
   Set.fromList [ELTStartup, ELTHttpLog, ELTWebhookLog, ELTWebsocketLog]
 
 -- log types that can be set by the user
-userAllowedLogTypes :: [String]
-userAllowedLogTypes = ["startup", "http-log", "webhook-log", "websocket-log", "query-log"]
+userAllowedLogTypes :: [EngineLogType]
+userAllowedLogTypes =
+  [ ELTStartup
+  , ELTHttpLog
+  , ELTWebhookLog
+  , ELTWebsocketLog
+  , ELTQueryLog
+  ]
 
 data LogLevel
   = LevelDebug

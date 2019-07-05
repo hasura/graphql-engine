@@ -2,7 +2,7 @@ module Hasura.GraphQL.Execute.Query
   ( convertQuerySelSet
   , queryOpFromPlan
   , ReusableQueryPlan
-  , GeneratedSql
+  , GeneratedSqlMap
   , PreparedSql(..)
   ) where
 
@@ -127,7 +127,7 @@ mkCurPlanTx
   :: (MonadError QErr m)
   => UserVars
   -> QueryPlan
-  -> m (LazyRespTx, GeneratedSql)
+  -> m (LazyRespTx, GeneratedSqlMap)
 mkCurPlanTx usrVars (QueryPlan _ fldPlans) = do
   -- generate the SQL and prepared vars or the bytestring
   resolved <- forM fldPlans $ \(alias, fldPlan) -> do
@@ -138,7 +138,7 @@ mkCurPlanTx usrVars (QueryPlan _ fldPlans) = do
         return $ RRSql $ PreparedSql q args
     return (alias, fldResp)
 
-  return (mkLazyRespTx resolved, mkGeneratedSql resolved)
+  return (mkLazyRespTx resolved, mkGeneratedSqlMap resolved)
 
 withUserVars :: UserVars -> [Q.PrepArg] -> [Q.PrepArg]
 withUserVars usrVars l =
@@ -214,7 +214,7 @@ convertQuerySelSet
      )
   => [G.VariableDefinition]
   -> V.SelSet
-  -> m (LazyRespTx, Maybe ReusableQueryPlan, GeneratedSql)
+  -> m (LazyRespTx, Maybe ReusableQueryPlan, GeneratedSqlMap)
 convertQuerySelSet varDefs fields = do
   usrVars <- asks (userVars . getter)
   fldPlans <- forM (toList fields) $ \fld -> do
@@ -240,19 +240,16 @@ queryOpFromPlan
   => UserVars
   -> Maybe GH.VariableValues
   -> ReusableQueryPlan
-  -> m (LazyRespTx, GeneratedSql)
+  -> m (LazyRespTx, GeneratedSqlMap)
 queryOpFromPlan usrVars varValsM (ReusableQueryPlan varTypes fldPlans) = do
   validatedVars <- GV.getAnnPGVarVals varTypes varValsM
   -- generate the SQL and prepared vars or the bytestring
-  resolved <- forM fldPlans $ \(alias, fldPlan) -> do
-    fldResp <- case fldPlan of
+  resolved <- forM fldPlans $ \(alias, fldPlan) ->
+    (alias,) <$> case fldPlan of
       RFPRaw resp        -> return $ RRRaw resp
-      RFPPostgres pgPlan -> do
-        res <- withPlan usrVars pgPlan validatedVars
-        return $ RRSql res
-    return (alias, fldResp)
+      RFPPostgres pgPlan -> RRSql <$> withPlan usrVars pgPlan validatedVars
 
-  return (mkLazyRespTx resolved, mkGeneratedSql resolved)
+  return (mkLazyRespTx resolved, mkGeneratedSqlMap resolved)
 
 
 data PreparedSql
@@ -274,18 +271,16 @@ instance J.ToJSON PreparedSql where
 -- arguments, or a raw bytestring (mostly, for introspection responses)
 -- From this intermediate representation, a `LazyTx` can be generated, or the
 -- SQL can be logged etc.
--- TODO: better naming?
-data ResolvedResp
+data ResolvedQuery
   = RRRaw !B.ByteString
   | RRSql !PreparedSql
 
 -- | The computed SQL with alias which can be logged. Nothing here represents no
 -- SQL for cases like introspection responses. Tuple of alias to a (maybe)
 -- prepared statement
--- TODO: better naming?
-type GeneratedSql = [(G.Alias, Maybe PreparedSql)]
+type GeneratedSqlMap = [(G.Alias, Maybe PreparedSql)]
 
-mkLazyRespTx :: [(G.Alias, ResolvedResp)] -> LazyRespTx
+mkLazyRespTx :: [(G.Alias, ResolvedQuery)] -> LazyRespTx
 mkLazyRespTx resolved =
   fmap encJFromAssocList $ forM resolved $ \(alias, node) -> do
     resp <- case node of
@@ -293,8 +288,8 @@ mkLazyRespTx resolved =
       RRSql (PreparedSql q args) -> liftTx $ asSingleRowJsonResp q args
     return (G.unName $ G.unAlias alias, resp)
 
-mkGeneratedSql :: [(G.Alias, ResolvedResp)] -> GeneratedSql
-mkGeneratedSql resolved =
+mkGeneratedSqlMap :: [(G.Alias, ResolvedQuery)] -> GeneratedSqlMap
+mkGeneratedSqlMap resolved =
   flip map resolved $ \(alias, node) ->
     let res = case node of
                 RRRaw _  -> Nothing

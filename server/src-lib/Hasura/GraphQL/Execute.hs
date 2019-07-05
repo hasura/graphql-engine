@@ -165,7 +165,7 @@ getExecPlanPartial userInfo sc enableAL req = do
 -- queries and mutations it is just a transaction
 -- to be executed
 data ExecOp
-  = ExOpQuery !LazyRespTx !(Maybe EQ.GeneratedSql)
+  = ExOpQuery !LazyRespTx !(Maybe EQ.GeneratedSqlMap)
   | ExOpMutation !LazyRespTx
   | ExOpSubs !EL.LiveQueryOp
 
@@ -257,7 +257,7 @@ getQueryOp
   -> UserInfo
   -> VQ.SelSet
   -> [G.VariableDefinition]
-  -> m (LazyRespTx, Maybe EQ.ReusableQueryPlan, EQ.GeneratedSql)
+  -> m (LazyRespTx, Maybe EQ.ReusableQueryPlan, EQ.GeneratedSqlMap)
 getQueryOp gCtx sqlGenCtx userInfo fields varDefs =
   runE gCtx sqlGenCtx userInfo $ EQ.convertQuerySelSet varDefs fields
 
@@ -356,8 +356,10 @@ execRemoteGQ
   -> G.TypedOperationDefinition
   -> m (HttpResponse EncJSON)
 execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
-  ExecutionCtx logger _ _ _ _ _ manager _ <- ask
-  let opTy = G._todType opDef
+  execCtx <- ask
+  let logger  = _ecxLogger execCtx
+      manager = _ecxHttpManager execCtx
+      opTy    = G._todType opDef
   when (opTy == G.OperationTypeSubscription) $
     throw400 NotSupported "subscription to remote server is not supported"
   hdrs <- getHeadersFromConf hdrConf

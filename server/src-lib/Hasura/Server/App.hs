@@ -202,8 +202,8 @@ logResult
   -> m ()
 logResult logger userInfoM reqId httpReq req res qTime = do
   let logline = case res of
-        Right res' -> mkAccessLog userInfoM reqId httpReq res' qTime
-        Left e     -> mkErrorLog userInfoM reqId httpReq e req qTime
+        Right res' -> mkHttpAccessLog userInfoM reqId httpReq res' qTime
+        Left e     -> mkHttpErrorLog userInfoM reqId httpReq e req qTime
   liftIO $ L.unLogger logger logline
 
 logError
@@ -215,7 +215,7 @@ logError
   -> Maybe Value
   -> QErr -> m ()
 logError logger userInfoM reqId httpReq req qErr =
-  liftIO $ L.unLogger logger $ mkErrorLog userInfoM reqId httpReq qErr req Nothing
+  liftIO $ L.unLogger logger $ mkHttpErrorLog userInfoM reqId httpReq qErr req Nothing
 
 mkSpockAction
   :: (MonadIO m, FromJSON a, ToJSON a)

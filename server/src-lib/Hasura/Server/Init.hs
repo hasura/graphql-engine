@@ -10,6 +10,7 @@ import           Options.Applicative
 import qualified Data.Aeson                       as J
 import qualified Data.Aeson.Casing                as J
 import qualified Data.Aeson.TH                    as J
+import qualified Data.ByteString.Lazy.Char8       as BLC
 import qualified Data.HashSet                     as Set
 import qualified Data.String                      as DataString
 import qualified Data.Text                        as T
@@ -770,7 +771,7 @@ readLogTypes = mapM readLogType . T.splitOn "," . T.pack
           "websocket-log" -> Right L.ELTWebsocketLog
           "query-log"     -> Right L.ELTQueryLog
           _               -> Left $ "Valid list of comma-separated log types: "
-                             <> intercalate "," L.userAllowedLogTypes
+                             <> BLC.unpack (J.encode L.userAllowedLogTypes)
 
 readLogLevel :: String -> Either String L.LogLevel
 readLogLevel s = case T.toLower $ T.strip $ T.pack s of

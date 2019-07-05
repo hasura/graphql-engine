@@ -341,8 +341,9 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     logOpEv opTy reqId =
       logWSEvent logger wsConn $ EOperation opDet
       where
-        opDet = OperationDetails opId reqId (_grOperationName q) opTy gq
-        gq = case opTy of
+        opDet = OperationDetails opId reqId (_grOperationName q) opTy query
+        -- log the query only in errors
+        query = case opTy of
           ODQueryErr _ -> Just q
           _            -> Nothing
 

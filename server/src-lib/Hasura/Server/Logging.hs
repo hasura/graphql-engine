@@ -1,12 +1,11 @@
 -- This is taken from wai-logger and customised for our use
-{-# LANGUAGE OverloadedStrings #-}
 
 module Hasura.Server.Logging
   ( StartupLog(..)
   , PGLog(..)
   , mkInconsMetadataLog
-  , mkAccessLog
-  , mkErrorLog
+  , mkHttpAccessLog
+  , mkHttpErrorLog
   , WebHookLog(..)
   , WebHookLogger
   , HttpException
@@ -136,7 +135,7 @@ instance ToJSON HttpInfoLog where
            , "http_version" .= show hv
            ]
 
--- | Information about a GraphQL operation over HTTP
+-- | Information about a GraphQL/Hasura metadata operation over HTTP
 data OperationLog
   = OperationLog
   { olRequestId          :: !RequestId
@@ -165,14 +164,14 @@ instance L.ToEngineLog HttpLog where
   toEngineLog (HttpLog logLevel accessLog) =
     (logLevel, ELTHttpLog, toJSON accessLog)
 
-mkAccessLog
+mkHttpAccessLog
   :: Maybe UserInfo -- may not have been resolved
   -> RequestId
   -> Wai.Request
   -> BL.ByteString
   -> Maybe (UTCTime, UTCTime)
   -> HttpLog
-mkAccessLog userInfoM reqId req res mTimeT =
+mkHttpAccessLog userInfoM reqId req res mTimeT =
   let http = HttpInfoLog
              { hlStatus       = status
              , hlMethod       = bsToTxt $ Wai.requestMethod req
@@ -191,9 +190,10 @@ mkAccessLog userInfoM reqId req res mTimeT =
   in HttpLog L.LevelInfo $ HttpAccessLog http op
   where
     status = N.status200
-    (respTime, respSize) = genLogInfo res mTimeT
+    respSize = Just $ BL.length res
+    respTime = computeTimeDiff mTimeT
 
-mkErrorLog
+mkHttpErrorLog
   :: Maybe UserInfo -- may not have been resolved
   -> RequestId
   -> Wai.Request
@@ -201,7 +201,7 @@ mkErrorLog
   -> Maybe Value
   -> Maybe (UTCTime, UTCTime)
   -> HttpLog
-mkErrorLog userInfoM reqId req err query mTimeT =
+mkHttpErrorLog userInfoM reqId req err query mTimeT =
   let http = HttpInfoLog
              { hlStatus       = status
              , hlMethod       = bsToTxt $ Wai.requestMethod req
@@ -220,17 +220,11 @@ mkErrorLog userInfoM reqId req err query mTimeT =
   in HttpLog L.LevelError $ HttpAccessLog http op
   where
     status = qeStatus err
-    (respTime, respSize) = genLogInfo (encode err) mTimeT
+    respSize = Just $ BL.length $ encode err
+    respTime = computeTimeDiff mTimeT
 
-genLogInfo
-  :: BL.ByteString
-  -> Maybe (UTCTime, UTCTime)
-  -> (Maybe Double, Maybe Int64)
-genLogInfo res mTimeT =
-  (diffTime, Just size)
-  where
-    size = BL.length res
-    diffTime = fmap (realToFrac . uncurry (flip diffUTCTime)) mTimeT
+computeTimeDiff :: Maybe (UTCTime, UTCTime) -> Maybe Double
+computeTimeDiff = fmap (realToFrac . uncurry (flip diffUTCTime))
 
 getSourceFromSocket :: Wai.Request -> ByteString
 getSourceFromSocket = BS.pack . showSockAddr . Wai.remoteHost

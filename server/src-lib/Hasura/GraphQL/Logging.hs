@@ -24,7 +24,7 @@ import qualified Hasura.Logging                         as L
 data QueryLog
   = QueryLog
   { _qlQuery        :: !GQLReqUnparsed
-  , _qlGeneratedSql :: !(Maybe EQ.GeneratedSql)
+  , _qlGeneratedSql :: !(Maybe EQ.GeneratedSqlMap)
   , _qlRequestId    :: !RequestId
   }
 
@@ -40,7 +40,7 @@ instance L.ToEngineLog QueryLog where
 
 -- | Helper function to convert the list of alias to generated SQL into a
 -- | key-value map to be printed as JSON
-encodeSql :: EQ.GeneratedSql -> J.Value
+encodeSql :: EQ.GeneratedSqlMap -> J.Value
 encodeSql sql =
   jValFromAssocList $ map (\(a, q) -> (alName a, fmap J.toJSON q)) sql
   where
