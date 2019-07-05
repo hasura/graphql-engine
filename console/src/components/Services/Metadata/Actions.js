@@ -3,12 +3,13 @@ import { push } from 'react-router-redux';
 import globals from '../../../Globals';
 import endpoints from '../../../Endpoints';
 import defaultState from './State';
-import { filterSchema } from './utils';
+import { filterInconsistentMetadataObjects } from './utils';
 import { RELOAD_METADATA_API_CHANGE } from '../../../helpers/versionUtils';
 import {
   setConsistentSchema,
   setConsistentFunctions,
 } from '../Data/DataActions';
+import { setConsistentRemoteSchemas } from '../CustomResolver/customActions';
 import {
   showSuccessNotification,
   showErrorNotification,
@@ -67,23 +68,11 @@ const dropInconsistentObjectsQuery = {
   args: {},
 };
 
-export const filterInconsistentMetadata = (
-  metadata,
-  inconsistentObjects,
-  type
-) => {
-  let filtered = JSON.parse(JSON.stringify(metadata));
-  inconsistentObjects.forEach(object => {
-    const partiallyFiltered = filterSchema(filtered, object, type);
-    filtered = partiallyFiltered;
-  });
-  return filtered;
-};
-
 const handleInconsistentObjects = inconsistentObjects => {
   return (dispatch, getState) => {
     const allSchemas = getState().tables.allSchemas;
     const functions = getState().tables.trackedFunctions;
+    const remoteSchemas = getState().customResolverData.listData.resolvers;
 
     dispatch({
       type: LOAD_INCONSISTENT_OBJECTS,
@@ -91,18 +80,25 @@ const handleInconsistentObjects = inconsistentObjects => {
     });
 
     if (inconsistentObjects.length > 0) {
-      const filteredSchema = filterInconsistentMetadata(
+      const filteredSchema = filterInconsistentMetadataObjects(
         allSchemas,
         inconsistentObjects,
         'tables'
       );
-      const filteredFunctions = filterInconsistentMetadata(
+      const filteredFunctions = filterInconsistentMetadataObjects(
         functions,
         inconsistentObjects,
         'functions'
       );
+      const filteredRemoteSchemas = filterInconsistentMetadataObjects(
+        remoteSchemas,
+        inconsistentObjects,
+        'remote_schemas'
+      );
+
       dispatch(setConsistentSchema(filteredSchema));
       dispatch(setConsistentFunctions(filteredFunctions));
+      dispatch(setConsistentRemoteSchemas(filteredRemoteSchemas));
     }
   };
 };
