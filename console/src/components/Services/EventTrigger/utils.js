@@ -110,7 +110,8 @@ FROM
       hdb_et.type, 
       hdb_et.schema_name AS table_schema, 
       hdb_et.table_name, 
-      hdb_et.configuration, 
+      hdb_et.configuration,
+      hdb_et.comment,
       to_jsonb(
         array_remove(
           array_agg(
