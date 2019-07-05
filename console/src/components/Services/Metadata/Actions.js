@@ -38,7 +38,7 @@ const reloadCacheQuery = {
   args: {},
 };
 
-const updateReloadRemoteCacheQuery = remoteSchemaName => {
+const reloadRemoteSchemaCacheQuery = remoteSchemaName => {
   return {
     type: 'reload_remote_schema',
     args: {
@@ -47,11 +47,11 @@ const updateReloadRemoteCacheQuery = remoteSchemaName => {
   };
 };
 
-const reloadRemoteCacheAndGetInconsistentObjectsQuery = remoteSchemaName => {
+const reloadRemoteSchemaCacheAndGetInconsistentObjectsQuery = remoteSchemaName => {
   return {
     type: 'bulk',
     args: [
-      updateReloadRemoteCacheQuery(remoteSchemaName),
+      reloadRemoteSchemaCacheQuery(remoteSchemaName),
       getInconsistentObjectsQuery,
     ],
   };
@@ -80,6 +80,33 @@ export const filterInconsistentMetadata = (
   return filtered;
 };
 
+const handleInconsistentObjects = inconsistentObjects => {
+  return (dispatch, getState) => {
+    const allSchemas = getState().tables.allSchemas;
+    const functions = getState().tables.trackedFunctions;
+
+    dispatch({
+      type: LOAD_INCONSISTENT_OBJECTS,
+      data: inconsistentObjects,
+    });
+
+    if (inconsistentObjects.length > 0) {
+      const filteredSchema = filterInconsistentMetadata(
+        allSchemas,
+        inconsistentObjects,
+        'tables'
+      );
+      const filteredFunctions = filterInconsistentMetadata(
+        functions,
+        inconsistentObjects,
+        'functions'
+      );
+      dispatch(setConsistentSchema(filteredSchema));
+      dispatch(setConsistentFunctions(filteredFunctions));
+    }
+  };
+};
+
 export const loadInconsistentObjects = (
   shouldReloadCache,
   successCb,
@@ -87,42 +114,26 @@ export const loadInconsistentObjects = (
 ) => {
   return (dispatch, getState) => {
     const headers = getState().tables.dataHeaders;
+
+    const loadQuery = shouldReloadCache
+      ? reloadCacheAndGetInconsistentObjectsQuery
+      : getInconsistentObjectsQuery;
+
     dispatch({ type: LOADING_METADATA });
     return dispatch(
       requestAction(endpoints.query, {
         method: 'POST',
         headers,
-        body: JSON.stringify(
-          shouldReloadCache
-            ? reloadCacheAndGetInconsistentObjectsQuery
-            : getInconsistentObjectsQuery
-        ),
+        body: JSON.stringify(loadQuery),
       })
     ).then(
       data => {
-        const allSchemas = getState().tables.allSchemas;
-        const functions = getState().tables.trackedFunctions;
         const inconsistentObjects = shouldReloadCache
           ? data[1].inconsistent_objects
           : data.inconsistent_objects;
-        dispatch({
-          type: LOAD_INCONSISTENT_OBJECTS,
-          data: inconsistentObjects,
-        });
-        if (inconsistentObjects.length > 0) {
-          const filteredSchema = filterInconsistentMetadata(
-            allSchemas,
-            inconsistentObjects,
-            'tables'
-          );
-          const filteredFunctions = filterInconsistentMetadata(
-            functions,
-            inconsistentObjects,
-            'functions'
-          );
-          dispatch(setConsistentSchema(filteredSchema));
-          dispatch(setConsistentFunctions(filteredFunctions));
-        }
+
+        dispatch(handleInconsistentObjects(inconsistentObjects));
+
         if (successCb) {
           successCb();
         }
@@ -144,20 +155,11 @@ export const reloadRemoteSchema = (remoteSchemaName, successCb, failureCb) => {
   return (dispatch, getState) => {
     const headers = getState().tables.dataHeaders;
     const { featuresCompatibility } = getState().main;
-    let reloadQuery = {};
 
-    if (
-      RELOAD_METADATA_API_CHANGE in featuresCompatibility &&
-      featuresCompatibility[RELOAD_METADATA_API_CHANGE]
-    ) {
-      reloadQuery = {
-        ...reloadRemoteCacheAndGetInconsistentObjectsQuery(remoteSchemaName),
-      };
-    } else {
-      reloadQuery = {
-        ...reloadCacheAndGetInconsistentObjectsQuery,
-      };
-    }
+    const reloadQuery = featuresCompatibility[RELOAD_METADATA_API_CHANGE]
+      ? reloadRemoteSchemaCacheAndGetInconsistentObjectsQuery(remoteSchemaName)
+      : reloadCacheAndGetInconsistentObjectsQuery;
+
     dispatch({ type: LOADING_METADATA });
     return dispatch(
       requestAction(endpoints.query, {
@@ -167,27 +169,10 @@ export const reloadRemoteSchema = (remoteSchemaName, successCb, failureCb) => {
       })
     ).then(
       data => {
-        const allSchemas = getState().tables.allSchemas;
-        const functions = getState().tables.trackedFunctions;
         const inconsistentObjects = data[1].inconsistent_objects;
-        dispatch({
-          type: LOAD_INCONSISTENT_OBJECTS,
-          data: inconsistentObjects,
-        });
-        if (inconsistentObjects.length > 0) {
-          const filteredSchema = filterInconsistentMetadata(
-            allSchemas,
-            inconsistentObjects,
-            'tables'
-          );
-          const filteredFunctions = filterInconsistentMetadata(
-            functions,
-            inconsistentObjects,
-            'functions'
-          );
-          dispatch(setConsistentSchema(filteredSchema));
-          dispatch(setConsistentFunctions(filteredFunctions));
-        }
+
+        dispatch(handleInconsistentObjects(inconsistentObjects));
+
         if (successCb) {
           successCb();
         }
