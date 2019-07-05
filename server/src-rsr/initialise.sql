@@ -165,7 +165,23 @@ SELECT
   json_agg(constraint_column_usage.column_name) AS columns
 FROM
   (
-    information_schema.table_constraints tc
+    (
+      SELECT
+        nr.nspname::information_schema.sql_identifier AS table_schema,
+        r.relname::information_schema.sql_identifier AS table_name,
+        c.conname::information_schema.sql_identifier AS constraint_name,
+        c.contype AS constraint_type
+      FROM
+        pg_namespace nr,
+        pg_constraint c,
+        pg_class r
+      WHERE
+        nr.oid = r.relnamespace
+        AND c.conrelid = r.oid
+        AND c.contype = 'p'
+        AND (r.relkind = ANY (ARRAY['r'::"char", 'p'::"char"]))
+        AND NOT pg_is_other_temp_schema(nr.oid)
+    ) tc
     JOIN (
       SELECT
         x.tblschema AS table_schema,
@@ -243,7 +259,7 @@ FROM
                 r.relkind = ANY (ARRAY ['r'::"char", 'p'::"char"])
               )
             )
-        ) x(
+        ) x (
           tblschema,
           tblname,
           colname,
@@ -257,8 +273,6 @@ FROM
       )
     )
   )
-WHERE
-  ((tc.constraint_type) :: text = 'PRIMARY KEY' :: text)
 GROUP BY
   tc.table_schema,
   tc.table_name,
