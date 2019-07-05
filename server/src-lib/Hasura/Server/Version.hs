@@ -44,14 +44,14 @@ mkConsoleV v = case getReleaseChannel v of
 
 getReleaseChannel :: V.Version -> Maybe String
 getReleaseChannel sv = case sv ^. V.release of
-  [] -> Just "stable"
+  []     -> Just "stable"
   (mr:_) -> case getTextFromId mr of
     Nothing -> Nothing
-    Just r -> case T.unpack r of
-      ('a':'l':'p':'h':'a':_) -> Just "alpha"
-      ('b':'e':'t':'a':_)     -> Just "beta"
-      ('r':'c':_)             -> Just "rc"
-      _                       -> Nothing
+    Just r  -> if
+      | "alpha" `T.isPrefixOf` r -> Just "alpha"
+      | "beta" `T.isPrefixOf` r  -> Just "beta"
+      | "rc" `T.isPrefixOf` r    -> Just "rc"
+      | otherwise                -> Nothing
 
 getTextFromId :: V.Identifier -> Maybe T.Text
 getTextFromId i = Just i ^? (toTextualM . V._Textual)
