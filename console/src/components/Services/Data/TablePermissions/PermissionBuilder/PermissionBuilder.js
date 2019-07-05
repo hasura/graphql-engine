@@ -406,7 +406,13 @@ class PermissionBuilder extends React.Component {
 
     /********************************/
 
-    const renderValue = (dispatchFunc, value, prefix, valueType) => {
+    const renderValue = (
+      dispatchFunc,
+      value,
+      prefix,
+      valueType,
+      showSuggestion = true
+    ) => {
       const dispatchInput = val => {
         let _val = val;
 
@@ -454,7 +460,7 @@ class PermissionBuilder extends React.Component {
 
       return (
         <span>
-          {input} {suggestion}
+          {input} {showSuggestion ? suggestion : ''}
         </span>
       );
     };
@@ -475,7 +481,8 @@ class PermissionBuilder extends React.Component {
           dispatchFunc,
           val,
           addToPrefix(prefix, i),
-          valueType
+          valueType,
+          false
         );
         inputArray.push(input);
       });
