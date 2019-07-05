@@ -27,8 +27,14 @@ class ReloadRemoteSchema extends Component {
             dispatch(showSuccessNotification('Remote schema reloaded'));
             this.setState({ isReloading: false });
           },
-          () => {
-            dispatch(showErrorNotification('Error reloading remote schema'));
+          error => {
+            dispatch(
+              showErrorNotification(
+                'Error reloading remote schema',
+                null,
+                error
+              )
+            );
             this.setState({ isReloading: false });
           }
         )
