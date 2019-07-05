@@ -159,9 +159,9 @@ GROUP BY
 
 CREATE VIEW hdb_catalog.hdb_primary_key AS
 SELECT
-  nr.nspname as table_schema,
-  r.relname as table_name,
-  c.conname as constraint_name,
+  (nr.nspname :: information_schema.sql_identifier) as table_schema,
+  (r.relname :: information_schema.sql_identifier) as table_name,
+  (c.conname :: information_schema.sql_identifier) as constraint_name,
   json_agg(a.attname) as "columns"
 FROM
   pg_namespace nr,
