@@ -403,7 +403,7 @@ mkWaiApp
   -> InstanceId
   -> S.HashSet API
   -> EL.LQOpts
-  -> Maybe Wai.Middleware
+  -> Maybe (RQLQuery -> Handler ())
   -> IO (Wai.Application, SchemaCacheRef, Maybe UTCTime)
 mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
          enableConsole consoleAssetsDir enableTelemetry instanceId apis
@@ -451,15 +451,12 @@ httpApp
   -> Bool
   -> Maybe Text
   -> Bool
-  -> Maybe Wai.Middleware
+  -> Maybe (RQLQuery -> Handler ())
   -> SpockT IO ()
 httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry extraMiddleware = do
     -- cors middleware
     unless (isCorsDisabled corsCfg) $
       middleware $ corsMiddleware (mkDefaultCorsPolicy corsCfg)
-
-    -- run any given extra middleware
-    maybe (return ()) middleware extraMiddleware
 
     -- API Console and Root Dir
     when (enableConsole && enableMetadata) serveApiConsole
@@ -483,6 +480,8 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry extraMi
 
       post "v1/query" $ mkSpockAction encodeQErr id serverCtx $ mkAPIRespHandler $ do
         query <- parseBody
+        -- run any given extra middleware
+        maybe (return ()) (\fn -> fn query) extraMiddleware
         v1QueryHandler query
 
       post ("api/1/table" <//> var <//> var) $ \tableName queryType ->

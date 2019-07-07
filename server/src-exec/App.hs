@@ -22,7 +22,6 @@ import qualified Data.Time.Clock            as Clock
 import qualified Data.Yaml                  as Y
 import qualified Network.HTTP.Client        as HTTP
 import qualified Network.HTTP.Client.TLS    as HTTP
-import qualified Network.Wai                as Wai
 import qualified Network.Wai.Handler.Warp   as Warp
 
 import           Hasura.Db
@@ -33,13 +32,14 @@ import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
 import           Hasura.RQL.Types           (QErr, SQLGenCtx (..),
                                              SchemaCache (..), adminUserInfo,
                                              emptySchemaCache)
-import           Hasura.Server.App          (SchemaCacheRef (..), getSCFromRef,
-                                             logInconsObjs, mkWaiApp)
+import           Hasura.Server.App          (Handler, SchemaCacheRef (..),
+                                             getSCFromRef, logInconsObjs,
+                                             mkWaiApp)
 import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates (checkForUpdates)
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
-import           Hasura.Server.Query        (Run, peelRun)
+import           Hasura.Server.Query        (RQLQuery, Run, peelRun)
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
 import           Hasura.Server.Version      (currentVersion)
@@ -136,7 +136,7 @@ handleCommand
   -> InstanceId
   -> Logger
   -> Q.PGLogger
-  -> Maybe Wai.Middleware
+  -> Maybe (RQLQuery -> Handler ())
   -> IO ()
 handleCommand hgeCmd rci httpManager loggerCtx instanceId logger pgLogger extraMiddleware =
   case hgeCmd of
