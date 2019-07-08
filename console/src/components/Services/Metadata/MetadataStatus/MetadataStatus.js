@@ -11,10 +11,7 @@ import styles from '../../../Common/TableCommon/Table.scss';
 import CheckIcon from '../../../Common/Icons/Check';
 import CrossIcon from '../../../Common/Icons/Cross';
 
-const MetadataStatus = ({
-  dispatch,
-  metadata,
-}) => {
+const MetadataStatus = ({ dispatch, metadata }) => {
   const [shouldShowErrorBanner, toggleErrorBanner] = useState(true);
   const dismissErrorBanner = () => {
     toggleErrorBanner(false);
@@ -131,8 +128,8 @@ const MetadataStatus = ({
           <div className={styles.add_mar_top}>
             <div className={styles.add_mar_top_small}>
               The following objects in your metadata are inconsistent because
-              they reference database or Remote-Schema entities which do not
-              seem to exist
+              they reference database or remote-schema entities which do not
+              seem to exist or are conflicting
             </div>
             <div className={styles.add_mar_top_small}>
               The GraphQL API has been generated using only the consistent parts
@@ -153,8 +150,8 @@ const MetadataStatus = ({
           To resolve these inconsistencies, you can do one of the following:
           <ul className={styles.add_mar_top_small}>
             <li>
-              To delete all the inconsistent objects, click the "Delete all"
-              button
+              To delete all the inconsistent objects from the metadata, click
+              the "Delete all" button
             </li>
             <li>
               If you want to manage these objects on your own, please do so and

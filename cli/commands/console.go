@@ -116,6 +116,7 @@ func (o *consoleOptions) run() error {
 		"apiHost":         "http://" + o.Address,
 		"apiPort":         o.APIPort,
 		"cliVersion":      o.EC.Version.GetCLIVersion(),
+		"serverVersion":   o.EC.Version.GetServerVersion(),
 		"dataApiUrl":      o.EC.ServerConfig.ParsedEndpoint.String(),
 		"dataApiVersion":  "",
 		"hasAccessKey":    adminSecretHeader == XHasuraAccessKey,

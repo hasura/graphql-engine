@@ -1,7 +1,7 @@
 module Hasura.GraphQL.Schema
   ( mkGCtxMap
-  , updateSCWithGCtx
   , GCtxMap
+  , buildGCtxMapPG
   , getGCtx
   , GCtx(..)
   , OpCtx(..)
@@ -11,7 +11,6 @@ module Hasura.GraphQL.Schema
   , isAggFld
   , qualObjectToName
   -- Schema stitching related
-  , RemoteGCtx (..)
   , checkSchemaConflicts
   , checkConflictingNode
   , emptyGCtx
@@ -20,7 +19,6 @@ module Hasura.GraphQL.Schema
   ) where
 
 
-import           Data.Has
 import           Data.Maybe                     (maybeToList)
 
 import qualified Data.HashMap.Strict            as Map
@@ -52,18 +50,6 @@ getTabInfo
 getTabInfo tc t =
   onNothing (Map.lookup t tc) $
      throw500 $ "table not found: " <>> t
-
-data RemoteGCtx
-  = RemoteGCtx
-  { _rgTypes            :: !TypeMap
-  , _rgQueryRoot        :: !ObjTyInfo
-  , _rgMutationRoot     :: !(Maybe ObjTyInfo)
-  , _rgSubscriptionRoot :: !(Maybe ObjTyInfo)
-  } deriving (Show, Eq)
-
-instance Has TypeMap RemoteGCtx where
-  getter = _rgTypes
-  modifier f ctx = ctx { _rgTypes = f $ _rgTypes ctx }
 
 type SelField = Either PGColInfo (RelInfo, Bool, AnnBoolExpPartialSQL, Maybe Int, Bool)
 
@@ -264,7 +250,7 @@ mkTableObj
   -> [SelField]
   -> ObjTyInfo
 mkTableObj tn allowedFlds =
-  mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) HasuraType
+  mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) TLHasuraType
   where
     flds = concatMap (either (pure . mkPGColFld) mkRelFld') allowedFlds
     mkRelFld' (relInfo, allowAgg, _, _, isNullable) =
@@ -1777,12 +1763,14 @@ mkGCtxMap tableCache functionCache = do
     tableFltr ti = not (tiSystemDefined ti)
                    && isValidObjectName (tiName ti)
 
-updateSCWithGCtx
-  :: (MonadError QErr m)
-  => SchemaCache -> m SchemaCache
-updateSCWithGCtx sc = do
+-- | build GraphQL schema from postgres tables and functions
+buildGCtxMapPG
+  :: (QErrM m, CacheRWM m)
+  => m ()
+buildGCtxMapPG = do
+  sc <- askSchemaCache
   gCtxMap <- mkGCtxMap (scTables sc) (scFunctions sc)
-  return $ sc {scGCtxMap = gCtxMap}
+  writeSchemaCache sc {scGCtxMap = gCtxMap}
 
 getGCtx :: (CacheRM m) => RoleName -> GCtxMap -> m GCtx
 getGCtx rn ctxMap = do
