@@ -262,6 +262,7 @@ library
 
                      , Data.Text.Extended
                      , Data.Aeson.Extended
+                     , Data.Parser.Json
                      , Data.Sequence.NonEmpty
                      , Data.TByteString
                      , Data.HashMap.Strict.InsOrd.Extended
