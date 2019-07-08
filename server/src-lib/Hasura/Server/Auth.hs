@@ -12,7 +12,7 @@ module Hasura.Server.Auth
   , JWTConfig (..)
   , JWTCtx (..)
   , JWKSet (..)
-  , processJwt
+  , processJwtOrUnauthRole
   , updateJwkRef
   , jwkRefreshCtrl
   ) where
@@ -132,7 +132,8 @@ mkJwtCtx jwtConf httpManager loggerCtx = do
           jwkRefreshCtrl logger httpManager url ref t
           return ref
   let claimsFmt = fromMaybe JCFJson (jcClaimsFormat conf)
-  return $ JWTCtx jwkRef (jcClaimNs conf) (jcAudience conf) claimsFmt
+      jwtHdr    = fromMaybe JHAuthorization (jcHeader conf)
+  return $ JWTCtx jwkRef (jcClaimNs conf) (jcAudience conf) claimsFmt jwtHdr
   where
     decodeErr e = throwError . T.pack $ "Fatal Error: JWT conf: " <> e
 
@@ -248,7 +249,7 @@ getUserInfoWithExpTime logger manager rawHeaders = \case
       withNoExpTime $ userInfoFromAuthHook logger manager hook rawHeaders
 
   AMAdminSecretAndJWT accKey jwtSecret unAuthRole ->
-    whenAdminSecretAbsent accKey (processJwt jwtSecret rawHeaders unAuthRole)
+    whenAdminSecretAbsent accKey (processJwtOrUnauthRole jwtSecret rawHeaders unAuthRole)
 
   where
     -- when admin secret is absent, run the action to retrieve UserInfo, otherwise
