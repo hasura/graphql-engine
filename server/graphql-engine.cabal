@@ -267,8 +267,10 @@ library
                      , Hasura.SQL.Time
                      , Hasura.SQL.Rewrite
                      , Network.URI.Extended
-                     , Ops
-                     , Migrate
+
+                     , Hasura.App.Ops
+                     , Hasura.App.Migrate
+                     , Hasura.App
 
   other-modules:       Hasura.Server.Auth.JWT.Internal
                      , Hasura.Server.Auth.JWT.Logging
@@ -356,10 +358,6 @@ executable graphql-engine
                      , uuid
                      , wai
 
-  other-modules:       Ops
-                     , Migrate
-                     , App
-
   if flag(developer)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries
 
@@ -421,10 +419,6 @@ executable graphql-engine-enterprise
                      , http-types
                      , wreq
                      , jose
-
-  other-modules:       Ops
-                     , Migrate
-                     , App
 
   if flag(developer)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries

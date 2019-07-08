@@ -1,4 +1,4 @@
-module Migrate
+module Hasura.App.Migrate
   ( curCatalogVer
   , migrateCatalog
   )

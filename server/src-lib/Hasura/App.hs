@@ -1,9 +1,6 @@
 {-# LANGUAGE TypeApplications #-}
 
-module App where
-
-import           Migrate                    (migrateCatalog)
-import           Ops
+module Hasura.App where
 
 import           Control.Monad.STM          (atomically)
 import           Data.Time.Clock            (getCurrentTime)
@@ -24,6 +21,8 @@ import qualified Network.HTTP.Client        as HTTP
 import qualified Network.HTTP.Client.TLS    as HTTP
 import qualified Network.Wai.Handler.Warp   as Warp
 
+import           Hasura.App.Migrate         (migrateCatalog)
+import           Hasura.App.Ops
 import           Hasura.Db
 import           Hasura.Events.Lib
 import           Hasura.Logging

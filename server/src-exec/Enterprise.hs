@@ -17,7 +17,7 @@ import qualified Network.Wreq         as Wreq
 import qualified Options.Applicative  as OptParse
 import qualified System.Environment   as Sys
 
-import qualified App                  as HGE
+import qualified Hasura.App           as HGE
 import qualified Hasura.HTTP          as HGE
 import qualified Hasura.RQL.Types     as HGE
 import qualified Hasura.Server.App    as HGE

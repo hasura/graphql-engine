@@ -1,6 +1,6 @@
 module Main where
 
-import           App
+import           Hasura.App
 import           Hasura.Prelude
 import           Hasura.Server.Init
 

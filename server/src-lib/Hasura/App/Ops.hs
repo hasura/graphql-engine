@@ -1,4 +1,4 @@
-module Ops
+module Hasura.App.Ops
   ( initCatalogSafe
   , cleanCatalog
   , execQuery
@@ -6,8 +6,8 @@ module Ops
 
 import           Data.Time.Clock              (UTCTime)
 import           Language.Haskell.TH.Syntax   (Q, TExp, unTypeQ)
-import           Migrate                      (curCatalogVer)
 
+import           Hasura.App.Migrate           (curCatalogVer)
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema.Table
