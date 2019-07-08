@@ -498,7 +498,7 @@ mkMutRespObj
   -> ObjTyInfo
 mkMutRespObj tn sel =
   mkHsraObjTyInfo (Just objDesc) (mkMutRespTy tn) Set.empty $ mapFromL _fiName
-    $ affectedRowsFld : bool [] [returningFld] sel
+    $ affectedRowsFld : bool [] [returningFld, queryRootFld] sel
   where
     objDesc = G.Description $
       "response of any mutation on the table " <>> tn
@@ -512,6 +512,11 @@ mkMutRespObj tn sel =
         G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy tn
       where
         desc = "data of the affected rows by the mutation"
+    queryRootFld =
+      mkHsraObjFldInfo (Just desc) "query" Map.empty $
+        G.toGT $ G.toNT queryRootTy
+      where
+        desc = "the query root"
 
 -- table_bool_exp
 mkBoolExpInp
@@ -1718,8 +1723,8 @@ checkSchemaConflicts gCtx remoteCtx = do
       (TIInpObj t1, TIInpObj t2) -> typeEq t1 t2
       _                          -> False
 
-    hQRName = G.NamedType "query_root"
-    hMRName = G.NamedType "mutation_root"
+    hQRName = queryRootTy
+    hMRName = mutationRootTy
     tyMsg ty = "types: [ " <> namesToTxt ty <>
                " ] have mismatch with current graphql schema. HINT: Types must be same."
     nodesMsg n = "top-level nodes: [ " <> namesToTxt n <>
@@ -1759,8 +1764,8 @@ checkConflictingNode gCtx node = do
         throw400 RemoteSchemaConflicts msg
     _ -> return ()
   where
-    hQRName = G.NamedType "query_root"
-    hMRName = G.NamedType "mutation_root"
+    hQRName = queryRootTy
+    hMRName = mutationRootTy
     msg = "node " <> G.unName node <>
           " already exists in current graphql schema"
 

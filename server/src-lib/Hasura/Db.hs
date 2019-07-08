@@ -3,6 +3,7 @@
 module Hasura.Db
   ( MonadTx(..)
   , LazyTx
+  , lazyTxToQTx
 
   , PGExecCtx(..)
   , runLazyTx

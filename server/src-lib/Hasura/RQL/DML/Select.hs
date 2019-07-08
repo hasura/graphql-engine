@@ -308,7 +308,7 @@ mkFuncSelectSimple
   -> Q.Query
 mkFuncSelectSimple annFnSel =
   Q.fromBuilder $ toSQL $
-  mkFuncSelectWith (mkSQLSelect False) annFnSel
+  mkFuncSelectWith (mkSQLSelect $ QuerySingleObj False) annFnSel
 
 mkFuncSelectAgg
   :: AnnFnSelAgg
@@ -317,16 +317,16 @@ mkFuncSelectAgg annFnSel =
   Q.fromBuilder $ toSQL $
   mkFuncSelectWith mkAggSelect annFnSel
 
-selectP2 :: Bool -> (AnnSimpleSel, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
-selectP2 asSingleObject (sel, p) =
+selectP2 :: QuerySingleObj -> (AnnSimpleSel, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
+selectP2 qSingleObject (sel, p) =
   encJFromBS . runIdentity . Q.getRow
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder selectSQL) (toList p) True
   where
-    selectSQL = toSQL $ mkSQLSelect asSingleObject sel
+    selectSQL = toSQL $ mkSQLSelect qSingleObject sel
 
-selectQuerySQL :: Bool -> AnnSimpleSel -> Q.Query
-selectQuerySQL asSingleObject sel =
-  Q.fromBuilder $ toSQL $ mkSQLSelect asSingleObject sel
+selectQuerySQL :: QuerySingleObj -> AnnSimpleSel -> Q.Query
+selectQuerySQL qSingleObject sel =
+  Q.fromBuilder $ toSQL $ mkSQLSelect qSingleObject sel
 
 selectAggQuerySQL :: AnnAggSel -> Q.Query
 selectAggQuerySQL =
@@ -345,7 +345,7 @@ phaseOne =
 
 phaseTwo :: (MonadTx m) => (AnnSimpleSel, DS.Seq Q.PrepArg) -> m EncJSON
 phaseTwo =
-  liftTx . selectP2 False
+  liftTx . selectP2 (QuerySingleObj False)
 
 runSelect
   :: (QErrM m, UserInfoM m, CacheRWM m, HasSQLGenCtx m, MonadTx m)

@@ -245,7 +245,16 @@ Mutation Response
         response-field2
         ..
       }
+      query {
+        query-field1
+        query-field2
+        ..
+      }
     }
+
+.. note::
+
+     For more details on ``query`` field, please see :doc:`this <../queries/index>`.
 
 E.g.:
 
@@ -256,6 +265,12 @@ E.g.:
       returning {
         id
         author_id
+      }
+      query {
+        author(where: {id: {_eq: 1}}){
+          id
+          name
+        }
       }
     }
 

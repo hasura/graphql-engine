@@ -5,7 +5,6 @@ module Hasura.GraphQL.Resolve.Mutation
   , buildEmptyMutResp
   ) where
 
-import           Control.Arrow                     (second)
 import           Data.Has
 import           Hasura.Prelude
 
@@ -18,8 +17,8 @@ import qualified Hasura.RQL.DML.Delete             as RD
 import qualified Hasura.RQL.DML.Returning          as RR
 import qualified Hasura.RQL.DML.Update             as RU
 
-import qualified Hasura.SQL.DML                    as S
 import qualified Hasura.RQL.DML.Select             as RS
+import qualified Hasura.SQL.DML                    as S
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
@@ -42,7 +41,7 @@ import           Hasura.SQL.Value
 
 convertMutResp
   :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
-     , Has OrdByCtx r, Has SQLGenCtx r
+     , Has OrdByCtx r, Has SQLGenCtx r , Has QueryResolver r
      )
   => G.NamedType -> SelSet -> m (RR.MutFldsG UnresolvedVal)
 convertMutResp ty selSet =
@@ -54,6 +53,9 @@ convertMutResp ty selSet =
       annFldsResolved <- traverse
         (traverse (RS.traverseAnnFld convertUnresolvedVal)) annFlds
       return $ RR.MRet annFldsResolved
+    "query"         -> do
+      resolver <- asks getter
+      return $ RR.MQuery $ getQueryResolver resolver $ _fSelSet fld
     G.Name t        -> throw500 $ "unexpected field in mutation resp : " <> t
   where
     convertUnresolvedVal = \case
@@ -115,6 +117,7 @@ convertUpdateP1
   :: ( MonadError QErr m
      , MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
+     , Has QueryResolver r
      )
   => UpdOpCtx -- the update context
   -> Field -- the mutation field
@@ -171,6 +174,7 @@ convertUpdate
   :: ( MonadError QErr m
      , MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
+     , Has QueryResolver r
      )
   => UpdOpCtx -- the update context
   -> Field -- the mutation field
@@ -182,8 +186,7 @@ convertUpdate opCtx fld = do
   strfyNum <- stringifyNum <$> asks getter
   let whenNonEmptyItems = return $ RU.updateQueryToTx strfyNum
                           (annUpdResolved, prepArgs)
-      whenEmptyItems    = return $ return $
-                          buildEmptyMutResp $ RU.uqp1MutFlds annUpdResolved
+      whenEmptyItems    = buildEmptyMutResp $ RU.uqp1MutFlds annUpdResolved
    -- if there are not set items then do not perform
    -- update and return empty mutation response
   bool whenNonEmptyItems whenEmptyItems $ null $ RU.uqp1SetExps annUpdResolved
@@ -192,6 +195,7 @@ convertDelete
   :: ( MonadError QErr m
      , MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
+     , Has QueryResolver r
      )
   => DelOpCtx -- the delete context
   -> Field -- the mutation field
@@ -211,12 +215,16 @@ convertDelete opCtx fld = do
     DelOpCtx tn _ filterExp allCols = opCtx
 
 -- | build mutation response for empty objects
-buildEmptyMutResp :: RR.MutFlds -> EncJSON
-buildEmptyMutResp = mkTx
+buildEmptyMutResp :: Monad m => RR.MutFlds -> m RespTx
+buildEmptyMutResp mutFlds =
+  return $ do
+    mutResults <- mkMutResults
+    return $ encJFromAssocList mutResults
   where
-    mkTx = encJFromJValue . OMap.fromList . map (second convMutFld)
     -- generate empty mutation response
-    convMutFld = \case
-      RR.MCount -> J.toJSON (0 :: Int)
-      RR.MExp e -> J.toJSON e
-      RR.MRet _ -> J.toJSON ([] :: [J.Value])
+    mkMutResults = forM mutFlds $ \(t, fld) -> (t,) <$>
+      case fld of
+        RR.MCount     -> return $ encJFromJValue (0 :: Int)
+        RR.MExp e     -> return $ encJFromJValue e
+        RR.MRet _     -> return $ encJFromJValue ([] :: [J.Value])
+        RR.MQuery qTx -> qTx

@@ -23,6 +23,8 @@ Auto-generated delete mutation schema
     affected_rows: Int!
     #data of the affected rows by the mutation
     returning: [article!]!
+    #queries in mutation response
+    query: query_root!
   }
 
 As you can see from the schema:
@@ -31,6 +33,8 @@ As you can see from the schema:
   for filtering options. Objects can be deleted based on filters on their own fields or those in their nested objects.
   The ``{}`` expression can be used to delete all rows.
 - You can return the number of affected rows and the affected objects (with nested objects) in the response.
+- You can query any object present in ``query root`` through ``query`` field.
+  See :doc:`Queries <../queries/index>` for more details.
 
 See the :ref:`delete mutation API reference <delete_syntax>` for the full specifications
 

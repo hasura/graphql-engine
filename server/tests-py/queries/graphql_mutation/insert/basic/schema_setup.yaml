@@ -52,11 +52,28 @@ args:
         id SERIAL PRIMARY KEY,
         placed TIMESTAMPTZ NOT NULL,
         shipped TIMESTAMPTZ
-      )
+      );
+      INSERT INTO orders (placed)
+      VALUES ('2017-08-15 14:22:11.802755+02'),
+             ('2017-08-16 14:22:11.802755+02'),
+             ('2017-08-17 14:22:11.802755+02');
+      CREATE FUNCTION get_orders(timestamptz)
+      returns setof orders as $$
+          select *
+          from orders
+          where
+          placed >= $1
+      $$ language sql stable;
 - type: track_table
   args:
     schema: public
     name: orders
+- type: track_function
+  args:
+    schema: public
+    name: get_orders
+
+
 
 
 #Object relationship

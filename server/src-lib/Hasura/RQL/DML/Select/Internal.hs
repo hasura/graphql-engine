@@ -645,10 +645,11 @@ mkAggSelect annAggSel =
     ArrNode extr _ bn =
       aggSelToArrNode (Iden "root") (FieldName "root") aggSel
 
-mkSQLSelect :: Bool -> AnnSimpleSel -> S.Select
-mkSQLSelect isSingleObject annSel =
+mkSQLSelect :: QuerySingleObj -> AnnSimpleSel -> S.Select
+mkSQLSelect qSingleObj annSel =
   prefixNumToAliases $ arrNodeToSelect baseNode extrs $ S.BELit True
   where
+    QuerySingleObj isSingleObject = qSingleObj
     permLimit = getPermLimit annSel
     extrs = pure $ asJsonAggExtr isSingleObject rootFldAls permLimit
             $ _bnOrderBy baseNode
@@ -661,7 +662,7 @@ mkFuncSelectWith
   -> AnnFnSelG (AnnSelG a S.SQLExp) S.SQLExp
   -> S.SelectWith
 mkFuncSelectWith f annFn =
-  S.SelectWith [(funcAls, S.CTESelect funcSel)] $
+  S.SelectWith [(funcAls, S.CTESelect funcSel)] $ pure $
   -- we'll need to modify the table from of the underlying
   -- select to the alias of the select from function
   f annSel { _asnFrom = newTabFrom }

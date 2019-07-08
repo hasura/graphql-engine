@@ -480,8 +480,8 @@ traverseQueryRootFldAST f = \case
 
 toPGQuery :: QueryRootFldResolved -> Q.Query
 toPGQuery = \case
-  QRFPk s       -> RS.selectQuerySQL True s
-  QRFSimple s   -> RS.selectQuerySQL False s
+  QRFPk s       -> RS.selectQuerySQL (QuerySingleObj True) s
+  QRFSimple s   -> RS.selectQuerySQL (QuerySingleObj False) s
   QRFAgg s      -> RS.selectAggQuerySQL s
   QRFFnSimple s -> RS.mkFuncSelectSimple s
   QRFFnAgg s    -> RS.mkFuncSelectAgg s

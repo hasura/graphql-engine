@@ -2,6 +2,7 @@ module Hasura.RQL.DML.Mutation
   ( Mutation(..)
   , runMutation
   , mutateAndFetchCols
+  , execCTEAndBuildMutResp
   , mkSelCTEFromColVals
   )
 where
@@ -33,27 +34,22 @@ data Mutation
 
 runMutation :: Mutation -> Q.TxE QErr EncJSON
 runMutation mut =
-  bool (mutateAndReturn mut) (mutateAndSel mut) $
+  bool (mutateAndReturn qSingleObj mut) (mutateAndSel qSingleObj mut) $
     hasNestedFld $ _mFields mut
-
-mutateAndReturn :: Mutation -> Q.TxE QErr EncJSON
-mutateAndReturn (Mutation qt (cte, p) mutFlds _ strfyNum) =
-  encJFromBS . runIdentity . Q.getRow
-    <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder $ toSQL selWith)
-        (toList p) True
   where
-    selWith = mkSelWith qt cte mutFlds False strfyNum
+    qSingleObj = QuerySingleObj False
 
-mutateAndSel :: Mutation -> Q.TxE QErr EncJSON
-mutateAndSel (Mutation qt q mutFlds allCols strfyNum) = do
+mutateAndReturn :: QuerySingleObj -> Mutation -> Q.TxE QErr EncJSON
+mutateAndReturn qSingleObj (Mutation qt cte mutFlds _ strfyNum) =
+  execCTEAndBuildMutResp qt cte mutFlds qSingleObj strfyNum
+
+mutateAndSel :: QuerySingleObj -> Mutation -> Q.TxE QErr EncJSON
+mutateAndSel qSingleObj (Mutation qt q mutFlds allCols strfyNum) = do
   -- Perform mutation and fetch unique columns
   MutateResp _ colVals <- mutateAndFetchCols qt allCols q strfyNum
   selCTE <- mkSelCTEFromColVals qt allCols colVals
-  let selWith = mkSelWith qt selCTE mutFlds False strfyNum
   -- Perform select query and fetch returning fields
-  encJFromBS . runIdentity . Q.getRow
-    <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder $ toSQL selWith) [] True
-
+  execCTEAndBuildMutResp qt (selCTE, DS.empty) mutFlds qSingleObj False
 
 mutateAndFetchCols
   :: QualifiedTable
@@ -61,31 +57,16 @@ mutateAndFetchCols
   -> (S.CTE, DS.Seq Q.PrepArg)
   -> Bool
   -> Q.TxE QErr MutateResp
-mutateAndFetchCols qt cols (cte, p) strfyNum =
-  Q.getAltJ . runIdentity . Q.getRow
-    <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sql) (toList p) True
+mutateAndFetchCols qt cols cte strfyNum = do
+  res <- execCTEAndBuildMutResp qt cte mutFlds qSingleObj strfyNum
+  decodeEncJSON res
   where
-    aliasIden = Iden $ qualObjectToText qt <> "__mutation_result"
-    tabFrom = TableFrom qt $ Just aliasIden
-    tabPerm = TablePerm annBoolExpTrue Nothing
+    qSingleObj = QuerySingleObj False
+    mutFlds = [ ("affected_rows", MCount)
+              , ("returning_columns", MRet selFlds)
+              ]
     selFlds = flip map cols $
               \ci -> (fromPGCol $ pgiName ci, FCol ci Nothing)
-
-    sql = toSQL selectWith
-    selectWith = S.SelectWith [(S.Alias aliasIden, cte)] select
-    select = S.mkSelect {S.selExtr = [S.Extractor extrExp Nothing]}
-    extrExp = S.applyJsonBuildObj
-              [ S.SELit "affected_rows", affRowsSel
-              , S.SELit "returning_columns", colSel
-              ]
-
-    affRowsSel = S.SESelect $
-      S.mkSelect
-      { S.selExtr = [S.Extractor S.countStar Nothing]
-      , S.selFrom = Just $ S.FromExp [S.FIIden aliasIden]
-      }
-    colSel = S.SESelect $ mkSQLSelect False $
-             AnnSelG selFlds tabFrom tabPerm noTableArgs strfyNum
 
 mkSelCTEFromColVals
   :: MonadError QErr m
@@ -115,3 +96,78 @@ mkSelCTEFromColVals qt allCols colVals =
                  , S.selFrom = Just $ S.mkSimpleFromExp qt
                  , S.selWhere = Just $ S.WhereFrag $ S.BELit False
                  }
+
+execCTEAndBuildMutResp
+  :: QualifiedTable
+  -> (S.CTE, DS.Seq Q.PrepArg)
+  -> MutFlds
+  -> QuerySingleObj
+  -> Bool
+  -> Q.TxE QErr EncJSON
+execCTEAndBuildMutResp qt (cte, p) mutFlds singleObj strfyNum = do
+  mutResults <-
+    Q.listQE dmlTxErrorHandler (Q.fromBuilder sql) (toList p) True
+  queryResults <- forM qFlds $ \(t, qTx) -> do
+    r <- qTx
+    return (t, encJToLBS r)
+  let resMap = Map.fromList mutResults
+               `Map.union` Map.fromList queryResults
+  mutResp <- forM mutFlds $ \(t, _) -> do
+    r <- onNothing (Map.lookup t resMap) $
+      throw500 $ "alias " <> t <> " not found in results"
+    return (t, encJFromLBS r)
+  return $ encJFromAssocList mutResp
+  where
+    sql = toSQL selWith
+    alias = Iden $ snakeCaseTable qt <> "__mutation_result_alias"
+    selWith = S.SelectWith [(S.Alias alias, cte)] unionSelects
+    unionSelects = countSels <> expSels <> returningSels
+
+    mkExtrs t e =
+      let aliasIden = S.Alias $ Iden "alias"
+          aliasLit = S.SELit t
+          resultIden = S.Alias $ Iden "result"
+      in [ S.Extractor aliasLit (Just aliasIden)
+         , S.Extractor e (Just resultIden)
+         ]
+
+    countFlds = mapMaybe getCount mutFlds
+    countSels = flip map countFlds $ \t ->
+      S.mkSelect
+      { S.selExtr = mkExtrs t $ S.sqlToJSON S.countStar
+      , S.selFrom = Just $ S.FromExp $ pure $ S.FIIden alias
+      }
+
+    expFlds = mapMaybe getExp mutFlds
+    expSels = flip map expFlds $ \(t, e) ->
+      S.mkSelect {S.selExtr = mkExtrs t $ S.sqlToJSON $ S.SELit e}
+
+    returningFlds = mapMaybe getRetFld mutFlds
+    returningSels = flip map returningFlds $ \(t, selFlds) ->
+      let tabFrom = TableFrom qt $ Just alias
+          tabPerm = TablePerm annBoolExpTrue Nothing
+          selExp = S.SESelect $ mkSQLSelect singleObj $
+            AnnSelG selFlds tabFrom tabPerm noTableArgs strfyNum
+      in S.mkSelect {S.selExtr = mkExtrs t selExp}
+
+    qFlds = mapMaybe getQFld mutFlds
+
+    getCount (t, fld) =
+      case fld of
+        MCount -> Just t
+        _      -> Nothing
+
+    getExp (t, fld) =
+      case fld of
+        (MExp e) -> Just (t, e)
+        _        -> Nothing
+
+    getRetFld (t, fld) =
+      case fld of
+        (MRet r) -> Just (t, r)
+        _        -> Nothing
+
+    getQFld (t, fld) =
+      case fld of
+        (MQuery q) -> Just (t, q)
+        _          -> Nothing

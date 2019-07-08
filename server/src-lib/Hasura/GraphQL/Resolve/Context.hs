@@ -32,6 +32,8 @@ module Hasura.GraphQL.Resolve.Context
   , prepareColVal
   , withPrepArgs
 
+  , QueryResolver(..)
+
   , txtConverter
 
   , withSelSet
@@ -160,6 +162,9 @@ withArgM args arg f = prependArgsInPath $ nameAsPath arg $
                    hasNullVal $ _aivValue v
 
 type PrepArgs = Seq.Seq Q.PrepArg
+
+newtype QueryResolver
+  = QueryResolver{getQueryResolver :: SelSet -> RespTx}
 
 prepare
   :: (MonadState PrepArgs m) => AnnPGVal -> m S.SQLExp

@@ -22,6 +22,7 @@ module Hasura.RQL.Types.Error
          -- Aeson helpers
        , runAesonParser
        , decodeValue
+       , decodeEncJSON
 
          -- Modify error messages
        , modifyErr
@@ -42,6 +43,7 @@ import           Data.Aeson
 import           Data.Aeson.Internal
 import           Data.Aeson.Types
 import qualified Database.PG.Query   as Q
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Text.Show           (Show (..))
 
@@ -313,3 +315,7 @@ runAesonParser p =
 
 decodeValue :: (FromJSON a, QErrM m) => Value -> m a
 decodeValue = liftIResult . ifromJSON
+
+decodeEncJSON :: (FromJSON a, QErrM m) => EncJSON -> m a
+decodeEncJSON =
+  either (throw500 . T.pack) decodeValue . eitherDecode . encJToLBS

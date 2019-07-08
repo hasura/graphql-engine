@@ -1,0 +1,10 @@
+type: bulk
+args:
+#Insert author
+- type: run_sql
+  args:
+    sql: |
+      INSERT INTO orders (placed)
+      VALUES ('2017-08-15 14:22:11.802755+02'),
+             ('2017-08-16 14:22:11.802755+02'),
+             ('2017-08-17 14:22:11.802755+02');

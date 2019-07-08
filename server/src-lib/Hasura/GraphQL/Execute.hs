@@ -213,6 +213,7 @@ type E m =
           , OrdByCtx
           , InsCtxMap
           , SQLGenCtx
+          , QueryResolver
           ) (ExceptT QErr m)
 
 runE
@@ -224,7 +225,7 @@ runE
   -> m a
 runE ctx sqlGenCtx userInfo action = do
   res <- runExceptT $ runReaderT action
-    (userInfo, opCtxMap, typeMap, fldMap, ordByCtx, insCtxMap, sqlGenCtx)
+    (userInfo, opCtxMap, typeMap, fldMap, ordByCtx, insCtxMap, sqlGenCtx, queryResolver)
   either throwError return res
   where
     opCtxMap = _gOpCtxMap ctx
@@ -232,6 +233,9 @@ runE ctx sqlGenCtx userInfo action = do
     fldMap = _gFields ctx
     ordByCtx = _gOrdByCtx ctx
     insCtxMap = _gInsCtxMap ctx
+    queryResolver = QueryResolver $ \selSet -> do
+      (lazyTx, _) <- getQueryOp ctx sqlGenCtx userInfo selSet []
+      lazyTxToQTx lazyTx
 
 getQueryOp
   :: (MonadError QErr m)
@@ -256,6 +260,7 @@ resolveMutSelSet
      , Has OrdByCtx r
      , Has SQLGenCtx r
      , Has InsCtxMap r
+     , Has QueryResolver r
      )
   => VQ.SelSet
   -> m LazyRespTx

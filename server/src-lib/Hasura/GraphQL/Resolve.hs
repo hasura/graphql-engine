@@ -97,6 +97,7 @@ mutFldToTx
      , Has OrdByCtx r
      , Has SQLGenCtx r
      , Has InsCtxMap r
+     , Has QueryResolver r
      )
   => Field
   -> m RespTx

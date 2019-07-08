@@ -24,6 +24,8 @@ Auto-generated insert mutation schema
     affected_rows: Int!
     #data of the affected rows by the mutation
     returning: [article!]!
+    #queries in mutation response
+    query: query_root!
   }
 
 As you can see from the schema:
@@ -31,6 +33,8 @@ As you can see from the schema:
 - ``objects`` argument is necessary and you can pass multiple ``objects`` to the mutation.
 - You can pass an ``on_conflict`` argument to convert the mutation to an :doc:`upsert mutation <upsert>`
 - You can return the number of affected rows and the affected objects (with nested objects) in the response.
+- You can query any object present in ``query root`` through ``query`` field.
+  See :doc:`Queries <../queries/index>` for more details.
 
 See the :ref:`insert mutation API reference <insert_upsert_syntax>` for the full specifications
 

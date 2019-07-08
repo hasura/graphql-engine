@@ -19,6 +19,7 @@ import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.HTTP.Client           as HTTP
 import qualified Network.Wreq                  as Wreq
 
+import           Hasura.GraphQL.Context
 import           Hasura.HTTP                   (wreqOptions)
 import           Hasura.RQL.DDL.Headers        (getHeadersFromConf)
 import           Hasura.RQL.Types
@@ -153,11 +154,11 @@ mergeMutRoot a b =
 
 mkNewEmptyMutRoot :: VT.ObjTyInfo
 mkNewEmptyMutRoot = VT.ObjTyInfo (Just "mutation root")
-                    (G.NamedType "mutation_root") Set.empty Map.empty
+                    mutationRootTy Set.empty Map.empty
 
 mkNewMutRoot :: VT.ObjFieldMap -> VT.ObjTyInfo
 mkNewMutRoot flds = VT.ObjTyInfo (Just "mutation root")
-                    (G.NamedType "mutation_root") Set.empty flds
+                    mutationRootTy Set.empty flds
 
 mergeSubRoot :: GS.GCtx -> GS.GCtx -> Maybe VT.ObjTyInfo
 mergeSubRoot a b =
@@ -174,7 +175,7 @@ mergeSubRoot a b =
 
 mkNewEmptySubRoot :: VT.ObjTyInfo
 mkNewEmptySubRoot = VT.ObjTyInfo (Just "subscription root")
-                    (G.NamedType "subscription_root") Set.empty Map.empty
+                    subscriptionRootTy Set.empty Map.empty
 
 
 mergeTyMaps
@@ -185,10 +186,10 @@ mergeTyMaps
   -> VT.TypeMap
 mergeTyMaps hTyMap rmTyMap newQR newMR =
   let newTyMap  = hTyMap <> rmTyMap
-      newTyMap' = Map.insert (G.NamedType "query_root") (VT.TIObj newQR) $
+      newTyMap' = Map.insert queryRootTy (VT.TIObj newQR) $
                   newTyMap
   in maybe newTyMap' (\mr -> Map.insert
-                              (G.NamedType "mutation_root")
+                              mutationRootTy
                               (VT.TIObj mr) newTyMap') newMR
 
 
