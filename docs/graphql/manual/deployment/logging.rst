@@ -17,27 +17,28 @@ Based on your deployment method, Hasura GraphQL engine logs can be accessed as f
 
 .. _log-types:
 
-Different log types
+Different log-types
 -------------------
 
-The Hasura GraphQL engine has different kind of log types (also written as
-log-type) depending on the sub-system or the layer.
+The Hasura GraphQL engine has different kind of log-types depending on the sub-system or the layer.
 
 For example, the HTTP webserver logs incoming requests as access log, and is
 called ``http-log``. Similarly logs from the websocket layer is called
 ``websocket-log``, logs from the event trigger system is called
 ``event-trigger`` etc.
 
-Log types can be enabled via the flag ``--enabled-log-types`` (or env var
-``HASURA_GRAPHQL_ENABLED_LOG_TYPES``).
-See :doc:`enabling log types <../deployment/graphql-engine-flags/reference>`
 
-Default enabled log types are: ``startup, http-log, webhook-log, websocket-log``
+You can configure the GraphQL engine to enable/disable certain log-types using the
+the ``--enabled-log-types`` flag or the ``HASURA_GRAPHQL_ENABLED_LOG_TYPES`` env var.
+See :doc:`../deployment/graphql-engine-flags/reference`
+
+Default enabled log-types are: ``startup, http-log, webhook-log, websocket-log``
 
 All the log-types that can be enabled/disabled are:
 
-.. list-table:: Available log-types
+.. list-table:: Configurable log-types
    :header-rows: 1
+   :widths: 10 25 10
 
    * - Log type
      - Description
@@ -66,10 +67,11 @@ All the log-types that can be enabled/disabled are:
      - ``info`` and ``error``
 
 
-Apart from the above, there are other internal log-types which can't be configured.
+Apart from the above, there are other internal log-types which cannot be configured:
 
 .. list-table:: Internal log-types
    :header-rows: 1
+   :widths: 10 25 10
 
    * - Log type
      - Description
@@ -105,6 +107,21 @@ Apart from the above, there are other internal log-types which can't be configur
        when it reloads the schema
      - ``info`` and ``error``
 
+Logging levels
+--------------
+
+You can set the desired logging level on the server using the ``log-level`` flag or the ``HASURA_GRAPHQL_LOG_LEVEL``
+env var. See :doc:`../deployment/graphql-engine-flags/reference`.
+
+The default log-level is ``info``.
+
+Setting a log-level will print all logs of priority greater than the set level. The log-level
+hierarchy is: ``debug < info < warn < error``
+
+For example, setting ``--log-level=warning``, will enable all warn and error level logs only. So even if the you
+have enabled ``query-log`` it won't be printed as the level of ``query-log`` is ``info``.
+
+See :ref:`log-types <log-types>` for more details on log-level of each log-type.
 
 Log structure and metrics
 -------------------------
@@ -115,10 +132,10 @@ for each request. This is also sent back to the client as a response header
 (``x-request-id``). This is useful to correlate logs from the server and the
 client.
 
-Query log structure
-^^^^^^^^^^^^^^^^^^^
+**query-log** structure
+^^^^^^^^^^^^^^^^^^^^^^^
 
-On enabling :doc:`verbose logging <../deployment/graphql-engine-flags/reference>`,
+On enabling verbose logging, i.e. enabling ``query-log``,
 GraphQL engine will log the full GraphQL query object on each request.
 
 It will also log the generated SQL for GraphQL queries (but not mutations and
@@ -170,12 +187,12 @@ This log contains 3 important fields:
   mutations and subscriptions this field will be ``null``.
 
 
-HTTP access log structure
-^^^^^^^^^^^^^^^^^^^^^^^^^
+**http-log** structure
+^^^^^^^^^^^^^^^^^^^^^^
 
-This is how the HTTP access log look like:
+This is how the HTTP access logs look like:
 
-- On successful response:
+- On success response:
 
 .. code-block:: json
 
@@ -245,10 +262,6 @@ This is how the HTTP access log look like:
 
     }
 
-
-Breakdown of the log
-++++++++++++++++++++
-
 The ``type`` in the log will be ``http-log`` for HTTP access/error log. This
 log contains basic information about the HTTP request and the GraphQL operation.
 
@@ -273,17 +286,17 @@ address, URL path, HTTP status code etc.
 
 - ``response_size``: Size of the response in bytes.
 
-- ``error``: Is optional. Will contain the error object when there is an error,
+- ``error``: *optional*. Will contain the error object when there is an error,
   otherwise this will be ``null``. This key can be used to detect if there is an
   error in the request. The status code for error requests will be ``200`` on
   the ``v1/graphql`` endpoint.
 
-- ``query``: Optional. This will contain the GraphQL query object only when
+- ``query``: *optional*. This will contain the GraphQL query object only when
   there is an error. On successful response this will be ``null``.
 
-Websocket log structure
-^^^^^^^^^^^^^^^^^^^^^^^
-This is how the Websocket log look like:
+**websocket-log** structure
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+This is how the Websocket logs look like:
 
 - On successful operation start:
 
@@ -392,7 +405,6 @@ This is how the Websocket log look like:
       }
     }
 
-
 Monitoring frameworks
 ---------------------
 
@@ -401,33 +413,20 @@ your convenience.
 
 For some examples, see :doc:`../guides/monitoring/index`
 
-
-Logging Levels
----------------
-
-You can set the desired logging level on the server.
-See :doc:`log levels <../deployment/graphql-engine-flags/reference>`
-
-For example, setting ``--log-level=error``, will only enable error logs to be
-printed. So even if the user has enabled ``query-log`` it won't be printed as
-the level of ``query-log`` is ``info``. Only errors will be printed in
-``http-log`` or ``websocket-log``.
-
-See :ref:`log types <log-types>` for more details on log-level of each log-type.
-
-
-Migration path of logs from (<= ``v1.0.0-beta.2`` to newer)
+Migration path of logs from (<= **v1.0.0-beta.2** to newer)
 -----------------------------------------------------------
 
-Previously, there were two main kinds of logs for every request - `http-log` and `ws-handler` for HTTP and websockets respectively. (The other logs being, logs during startup, event-trigger logs, schema-sync logs, jwk-refresh logs etc.).
+Previously, there were two main kinds of logs for every request - ``http-log`` and ``ws-handler``
+for HTTP and websockets respectively. (The other logs being, logs during startup, event-trigger
+logs, schema-sync logs, jwk-refresh logs etc.).
 
-The structure of the ``http-log`` has changed
+The structure of the **http-log** has changed
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary of the changes
-^^^^^^^^^^^^^^^^^^^^^^
+++++++++++++++++++++++
 
-.. list-table:: ``http-log`` changes
+.. list-table:: **http-log** changes
    :header-rows: 1
 
    * - Older
@@ -459,7 +458,8 @@ Summary of the changes
 
 
 Full example logs
-^^^^^^^^^^^^^^^^^
++++++++++++++++++
+
 Older, on success :
 
 .. code-block:: json
@@ -515,7 +515,7 @@ Newer, on success:
       }
     }
 
-Older on error:
+Older, on error:
 
 .. code-block:: json
 
@@ -587,13 +587,13 @@ Newer, on error:
 
     }
 
-The structure for ``ws-handler`` has changed, and ``ws-handler`` has been renamed to ``websocket-log``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The structure for **ws-handler** has changed, and has been renamed to **websocket-log**
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary of the changes
-^^^^^^^^^^^^^^^^^^^^^^
+++++++++++++++++++++++
 
-.. list-table:: ``websocket-log`` changes
+.. list-table:: **websocket-log** changes
    :header-rows: 1
 
    * - Older
@@ -669,7 +669,7 @@ Summary of the changes
 
 
 Full example logs
-^^^^^^^^^^^^^^^^^
++++++++++++++++++
 
 Older, on success:
 

@@ -192,9 +192,9 @@ For ``serve`` sub-command these are the flags and ENV variables available:
        :ref:`log types <log-types>` for more details.
 
    * - ``log-level``
-    - ``HASURA_GRAPHQL_LOG_LEVEL``
-    - Set the logging level. Default: ``info``. Options: ``debug``, ``info``,
-      ``warn``, ``error``.
+     - ``HASURA_GRAPHQL_LOG_LEVEL``
+     - Set the logging level. Default: ``info``. Options: ``debug``, ``info``,
+       ``warn``, ``error``.
 
 .. note::
 
