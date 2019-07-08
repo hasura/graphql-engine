@@ -19,7 +19,7 @@ import qualified Text.PrettyPrint.ANSI.Leijen     as PP
 import           Hasura.Prelude
 import           Hasura.RQL.Types                 ( RoleName (..)
                                                   , SchemaCache (..)
-                                                  , mkNEText )
+                                                  , mkNonEmptyText )
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
 import           Hasura.Server.Logging
@@ -152,7 +152,7 @@ instance FromEnv AdminSecret where
   fromEnv = Right . AdminSecret . T.pack
 
 instance FromEnv RoleName where
-  fromEnv string = case mkNEText (T.pack string) of
+  fromEnv string = case mkNonEmptyText (T.pack string) of
     Nothing -> Left "empty string not allowed"
     Just neText -> Right $ RoleName neText
 
@@ -757,7 +757,7 @@ parseUnAuthRole = fmap mkRoleName $ optional $
               help (snd unAuthRoleEnv)
             )
   where
-    mkRoleName mText = mText >>= (fmap RoleName . mkNEText)
+    mkRoleName mText = mText >>= (fmap RoleName . mkNonEmptyText)
 
 parseCorsConfig :: Parser (Maybe CorsConfig)
 parseCorsConfig = mapCC <$> disableCors <*> corsDomain

@@ -20,9 +20,9 @@ module Hasura.RQL.Types.Common
        , MutateResp(..)
        , ForeignKey(..)
 
-       , NEText
-       , mkNEText
-       , unNEText
+       , NonEmptyText
+       , mkNonEmptyText
+       , unNonEmptyText
        , adminText
        , rootText
        ) where
@@ -50,36 +50,36 @@ data PGColInfo
 
 $(deriveJSON (aesonDrop 3 snakeCase) ''PGColInfo)
 
-newtype NEText = NEText {unNEText :: T.Text}
+newtype NonEmptyText = NonEmptyText {unNonEmptyText :: T.Text}
   deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg, DQuote)
 
-mkNEText :: T.Text -> Maybe NEText
-mkNEText ""   = Nothing
-mkNEText text = Just $ NEText text
+mkNonEmptyText :: T.Text -> Maybe NonEmptyText
+mkNonEmptyText ""   = Nothing
+mkNonEmptyText text = Just $ NonEmptyText text
 
-parseNEText :: T.Text -> Parser NEText
-parseNEText text = case mkNEText text of
+parseNonEmptyText :: T.Text -> Parser NonEmptyText
+parseNonEmptyText text = case mkNonEmptyText text of
   Nothing     -> fail "empty string not allowed"
   Just neText -> return neText
 
-instance FromJSON NEText where
-  parseJSON = withText "String" parseNEText
+instance FromJSON NonEmptyText where
+  parseJSON = withText "String" parseNonEmptyText
 
-instance FromJSONKey NEText where
-  fromJSONKey = FromJSONKeyTextParser parseNEText
+instance FromJSONKey NonEmptyText where
+  fromJSONKey = FromJSONKeyTextParser parseNonEmptyText
 
-instance Q.FromCol NEText where
-  fromCol bs = mkNEText <$> Q.fromCol bs
+instance Q.FromCol NonEmptyText where
+  fromCol bs = mkNonEmptyText <$> Q.fromCol bs
     >>= maybe (Left "empty string not allowed") Right
 
-adminText :: NEText
-adminText = NEText "admin"
+adminText :: NonEmptyText
+adminText = NonEmptyText "admin"
 
-rootText :: NEText
-rootText = NEText "root"
+rootText :: NonEmptyText
+rootText = NonEmptyText "root"
 
 newtype RelName
-  = RelName {getRelTxt :: NEText}
+  = RelName {getRelTxt :: NonEmptyText}
   deriving (Show, Eq, Hashable, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Lift)
 
 instance IsIden RelName where
@@ -92,7 +92,7 @@ rootRelName :: RelName
 rootRelName = RelName rootText
 
 relNameToTxt :: RelName -> T.Text
-relNameToTxt = unNEText . getRelTxt
+relNameToTxt = unNonEmptyText . getRelTxt
 
 relTypeToTxt :: RelType -> T.Text
 relTypeToTxt ObjRel = "object"
@@ -147,15 +147,15 @@ fromRel :: RelName -> FieldName
 fromRel = FieldName . relNameToTxt
 
 newtype TQueryName
-  = TQueryName { getTQueryName :: NEText }
+  = TQueryName { getTQueryName :: NonEmptyText }
   deriving ( Show, Eq, Hashable, FromJSONKey, ToJSONKey
            , FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Lift)
 
 instance IsIden TQueryName where
-  toIden (TQueryName r) = Iden $ unNEText r
+  toIden (TQueryName r) = Iden $ unNonEmptyText r
 
 instance DQuote TQueryName where
-  dquoteTxt (TQueryName r) = unNEText r
+  dquoteTxt (TQueryName r) = unNonEmptyText r
 
 newtype TemplateParam
   = TemplateParam { getTemplateParam :: T.Text }

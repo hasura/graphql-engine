@@ -260,7 +260,7 @@ processAuthZHeader jwtCtx headers authzHeader = do
     getCurrentRole defaultRole =
       let userRoleHeaderB = CS.cs userRoleHeader
           mUserRole = snd <$> find (\h -> fst h == CI.mk userRoleHeaderB) headers
-      in maybe defaultRole RoleName $ mUserRole >>= mkNEText . bsToTxt
+      in maybe defaultRole RoleName $ mUserRole >>= mkNonEmptyText . bsToTxt
 
     decodeJSON val = case A.fromJSON val of
       A.Error e   -> throw400 JWTInvalidClaims ("x-hasura-* claims: " <> T.pack e)

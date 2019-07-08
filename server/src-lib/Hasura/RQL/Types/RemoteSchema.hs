@@ -1,7 +1,7 @@
 module Hasura.RQL.Types.RemoteSchema where
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Common    (NEText)
+import           Hasura.RQL.Types.Common    (NonEmptyText)
 import           Language.Haskell.TH.Syntax (Lift)
 import           System.Environment         (lookupEnv)
 
@@ -20,7 +20,7 @@ type UrlFromEnv = Text
 
 newtype RemoteSchemaName
   = RemoteSchemaName
-  { unRemoteSchemaName :: NEText }
+  { unRemoteSchemaName :: NonEmptyText }
   deriving ( Show, Eq, Lift, Hashable, J.ToJSON, J.ToJSONKey
            , J.FromJSON, Q.ToPrepArg, Q.FromCol, DQuote
            )

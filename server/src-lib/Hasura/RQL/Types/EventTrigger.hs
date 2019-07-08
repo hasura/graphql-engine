@@ -28,7 +28,7 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.Types.Common    (NEText (..))
+import           Hasura.RQL.Types.Common    (NonEmptyText (..))
 import           Hasura.SQL.Types
 import           Language.Haskell.TH.Syntax (Lift)
 
@@ -37,11 +37,11 @@ import qualified Data.Text                  as T
 import qualified Database.PG.Query          as Q
 import qualified Text.Regex.TDFA            as TDFA
 
-newtype TriggerName = TriggerName { unTriggerName :: NEText }
+newtype TriggerName = TriggerName { unTriggerName :: NonEmptyText }
   deriving (Show, Eq, Hashable, Lift, FromJSON, ToJSON, ToJSONKey, Q.FromCol, Q.ToPrepArg)
 
 triggerNameToTxt :: TriggerName -> Text
-triggerNameToTxt = unNEText . unTriggerName
+triggerNameToTxt = unNonEmptyText . unTriggerName
 
 type EventId = T.Text
 

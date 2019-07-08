@@ -528,7 +528,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
         gqlExplainHandler expQuery
 
     mkTmpltName tmpltText =
-      onNothing (mkNEText tmpltText) $ throw400 NotSupported "template name is empty string"
+      onNothing (mkNonEmptyText tmpltText) $ throw400 NotSupported "template name is empty string"
 
     enableGraphQL = isGraphQLEnabled serverCtx
     enableMetadata = isMetadataEnabled serverCtx

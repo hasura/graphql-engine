@@ -24,8 +24,8 @@ module Hasura.RQL.Types.Permission
        ) where
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Common    (NEText, adminText, mkNEText,
-                                             unNEText)
+import           Hasura.RQL.Types.Common    (NonEmptyText, adminText, mkNonEmptyText,
+                                             unNonEmptyText)
 import           Hasura.Server.Utils        (adminSecretHeader,
                                              deprecatedAccessKeyHeader,
                                              userRoleHeader)
@@ -43,15 +43,15 @@ import qualified Data.Text                  as T
 import qualified PostgreSQL.Binary.Decoding as PD
 
 newtype RoleName
-  = RoleName {getRoleTxt :: NEText}
+  = RoleName {getRoleTxt :: NonEmptyText}
   deriving ( Show, Eq, Hashable, FromJSONKey, ToJSONKey, FromJSON
            , ToJSON, Q.FromCol, Q.ToPrepArg, Lift)
 
 instance DQuote RoleName where
-  dquoteTxt (RoleName r) = unNEText r
+  dquoteTxt = roleNameToTxt
 
 roleNameToTxt :: RoleName -> Text
-roleNameToTxt = unNEText . getRoleTxt
+roleNameToTxt = unNonEmptyText . getRoleTxt
 
 adminRole :: RoleName
 adminRole = RoleName adminText
@@ -72,7 +72,7 @@ isUserVar = T.isPrefixOf "x-hasura-" . T.toLower
 -- returns Nothing if x-hasura-role is an empty string
 roleFromVars :: UserVars -> Maybe RoleName
 roleFromVars uv =
-  getVarVal userRoleHeader uv >>= fmap RoleName . mkNEText
+  getVarVal userRoleHeader uv >>= fmap RoleName . mkNonEmptyText
 
 getVarVal :: SessVar -> UserVars -> Maybe SessVarVal
 getVarVal k =

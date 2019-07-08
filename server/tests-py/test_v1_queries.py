@@ -578,7 +578,7 @@ class TestCreatePermission(DefaultTestQueries):
         return "queries/v1/permissions"
 
 
-class TestNEText:
+class TestNonEmptyText:
 
     def test_create_event_trigger(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/create_event_trigger.yaml')

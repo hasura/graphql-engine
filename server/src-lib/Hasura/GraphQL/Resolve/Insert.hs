@@ -114,7 +114,7 @@ traverseInsObj rim (gName, annVal) defVal@(AnnInsObj cols objRels arrRels) =
       -- if relational insert input is 'null' then ignore
       -- return default value
       fmap (fromMaybe defVal) $ forM objM $ \obj -> do
-        let relNameM = RelName <$> mkNEText (G.unName gName)
+        let relNameM = RelName <$> mkNonEmptyText (G.unName gName)
             onConflictM = OMap.lookup "on_conflict" obj
         relName <- onNothing relNameM $ throw500 "found empty GName String"
         dataVal <- onNothing (OMap.lookup "data" obj) $
