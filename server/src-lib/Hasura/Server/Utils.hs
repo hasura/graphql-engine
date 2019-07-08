@@ -17,6 +17,7 @@ import qualified Data.Text.Encoding           as TE
 import qualified Data.Text.Encoding.Error     as TE
 import qualified Data.Text.IO                 as TI
 import qualified Language.Haskell.TH.Syntax   as TH
+import qualified Network.HTTP.Client          as HC
 import qualified Network.HTTP.Types           as HTTP
 import qualified Text.Ginger                  as TG
 import qualified Text.Regex.TDFA              as TDFA
@@ -166,8 +167,29 @@ diffTimeToMicro diff =
   where
     aSecond = 1000 * 1000
 
--- ignore the following request headers from the client
+-- json representation of HTTP exception
+httpExceptToJSON :: HC.HttpException -> Value
+httpExceptToJSON e = case e of
+  HC.HttpExceptionRequest x c ->
+      let reqObj = object
+            [ "host" .= bsToTxt (HC.host x)
+            , "port" .= show (HC.port x)
+            , "secure" .= HC.secure x
+            , "path" .= bsToTxt (HC.path x)
+            , "method" .= bsToTxt (HC.method x)
+            , "proxy" .= (showProxy <$> HC.proxy x)
+            , "redirectCount" .= show (HC.redirectCount x)
+            , "responseTimeout" .= show (HC.responseTimeout x)
+            , "requestVersion" .= show (HC.requestVersion x)
+            ]
+          msg = show c
+      in object ["request" .= reqObj, "message" .= msg]
+  _        -> toJSON $ show e
+  where
+    showProxy (HC.Proxy h p) =
+      "host: " <> bsToTxt h <> " port: " <> T.pack (show p)
 
+-- ignore the following request headers from the client
 commonClientHeadersIgnored :: (IsString a) => [a]
 commonClientHeadersIgnored =
   [ "Content-Length", "Content-MD5", "User-Agent", "Host"
