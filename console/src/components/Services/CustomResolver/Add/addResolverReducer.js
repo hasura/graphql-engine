@@ -546,6 +546,7 @@ export {
   RESET,
   TOGGLE_MODIFY,
   UPDATE_FORWARD_CLIENT_HEADERS,
+  getHeaderEvents,
 };
 
 export default addResolverReducer;

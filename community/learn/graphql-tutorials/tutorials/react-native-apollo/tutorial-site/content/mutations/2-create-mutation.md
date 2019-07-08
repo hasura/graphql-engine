@@ -6,6 +6,10 @@ metaDescription: "We will use the Apollo Client Mutation component from react-ap
 
 import GithubLink from "../../src/GithubLink.js";
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/dCm4hIhQB7w" />
+
 Firstly, let us define the mutation that we looked at in the previous section. Import `gql` from `graphql-tag` and define the following mutation in `src/screens/components/Todo/Textbox.js`.
 
 <GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-native-apollo/app-final/src/screens/components/Todo/Textbox.js" text="Textbox.js"/>

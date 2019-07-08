@@ -3,11 +3,13 @@ import { push } from 'react-router-redux';
 import globals from '../../../Globals';
 import endpoints from '../../../Endpoints';
 import defaultState from './State';
-import { filterSchema } from './utils';
+import { filterInconsistentMetadataObjects } from './utils';
+import { RELOAD_METADATA_API_CHANGE } from '../../../helpers/versionUtils';
 import {
   setConsistentSchema,
   setConsistentFunctions,
 } from '../Data/DataActions';
+import { setConsistentRemoteSchemas } from '../CustomResolver/customActions';
 import {
   showSuccessNotification,
   showErrorNotification,
@@ -37,6 +39,25 @@ const reloadCacheQuery = {
   args: {},
 };
 
+const reloadRemoteSchemaCacheQuery = remoteSchemaName => {
+  return {
+    type: 'reload_remote_schema',
+    args: {
+      name: remoteSchemaName,
+    },
+  };
+};
+
+const reloadRemoteSchemaCacheAndGetInconsistentObjectsQuery = remoteSchemaName => {
+  return {
+    type: 'bulk',
+    args: [
+      reloadRemoteSchemaCacheQuery(remoteSchemaName),
+      getInconsistentObjectsQuery,
+    ],
+  };
+};
+
 const reloadCacheAndGetInconsistentObjectsQuery = {
   type: 'bulk',
   args: [reloadCacheQuery, getInconsistentObjectsQuery],
@@ -47,17 +68,39 @@ const dropInconsistentObjectsQuery = {
   args: {},
 };
 
-export const filterInconsistentMetadata = (
-  metadata,
-  inconsistentObjects,
-  type
-) => {
-  let filtered = JSON.parse(JSON.stringify(metadata));
-  inconsistentObjects.forEach(object => {
-    const partiallyFiltered = filterSchema(filtered, object, type);
-    filtered = partiallyFiltered;
-  });
-  return filtered;
+const handleInconsistentObjects = inconsistentObjects => {
+  return (dispatch, getState) => {
+    const allSchemas = getState().tables.allSchemas;
+    const functions = getState().tables.trackedFunctions;
+    const remoteSchemas = getState().customResolverData.listData.resolvers;
+
+    dispatch({
+      type: LOAD_INCONSISTENT_OBJECTS,
+      data: inconsistentObjects,
+    });
+
+    if (inconsistentObjects.length > 0) {
+      const filteredSchema = filterInconsistentMetadataObjects(
+        allSchemas,
+        inconsistentObjects,
+        'tables'
+      );
+      const filteredFunctions = filterInconsistentMetadataObjects(
+        functions,
+        inconsistentObjects,
+        'functions'
+      );
+      const filteredRemoteSchemas = filterInconsistentMetadataObjects(
+        remoteSchemas,
+        inconsistentObjects,
+        'remote_schemas'
+      );
+
+      dispatch(setConsistentSchema(filteredSchema));
+      dispatch(setConsistentFunctions(filteredFunctions));
+      dispatch(setConsistentRemoteSchemas(filteredRemoteSchemas));
+    }
+  };
 };
 
 export const loadInconsistentObjects = (
@@ -67,42 +110,65 @@ export const loadInconsistentObjects = (
 ) => {
   return (dispatch, getState) => {
     const headers = getState().tables.dataHeaders;
+
+    const loadQuery = shouldReloadCache
+      ? reloadCacheAndGetInconsistentObjectsQuery
+      : getInconsistentObjectsQuery;
+
     dispatch({ type: LOADING_METADATA });
     return dispatch(
       requestAction(endpoints.query, {
         method: 'POST',
         headers,
-        body: JSON.stringify(
-          shouldReloadCache
-            ? reloadCacheAndGetInconsistentObjectsQuery
-            : getInconsistentObjectsQuery
-        ),
+        body: JSON.stringify(loadQuery),
       })
     ).then(
       data => {
-        const allSchemas = getState().tables.allSchemas;
-        const functions = getState().tables.trackedFunctions;
         const inconsistentObjects = shouldReloadCache
           ? data[1].inconsistent_objects
           : data.inconsistent_objects;
-        dispatch({
-          type: LOAD_INCONSISTENT_OBJECTS,
-          data: inconsistentObjects,
-        });
-        if (inconsistentObjects.length > 0) {
-          const filteredSchema = filterInconsistentMetadata(
-            allSchemas,
-            inconsistentObjects,
-            'tables'
-          );
-          const filteredFunctions = filterInconsistentMetadata(
-            functions,
-            inconsistentObjects,
-            'functions'
-          );
-          dispatch(setConsistentSchema(filteredSchema));
-          dispatch(setConsistentFunctions(filteredFunctions));
+
+        dispatch(handleInconsistentObjects(inconsistentObjects));
+
+        if (successCb) {
+          successCb();
         }
+      },
+      error => {
+        console.error(error);
+        dispatch({ type: LOAD_METADATA_ERROR });
+        if (failureCb) {
+          failureCb(error);
+        }
+      }
+    );
+  };
+};
+
+/* Reloads only remote schema metadata */
+
+export const reloadRemoteSchema = (remoteSchemaName, successCb, failureCb) => {
+  return (dispatch, getState) => {
+    const headers = getState().tables.dataHeaders;
+    const { featuresCompatibility } = getState().main;
+
+    const reloadQuery = featuresCompatibility[RELOAD_METADATA_API_CHANGE]
+      ? reloadRemoteSchemaCacheAndGetInconsistentObjectsQuery(remoteSchemaName)
+      : reloadCacheAndGetInconsistentObjectsQuery;
+
+    dispatch({ type: LOADING_METADATA });
+    return dispatch(
+      requestAction(endpoints.query, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(reloadQuery),
+      })
+    ).then(
+      data => {
+        const inconsistentObjects = data[1].inconsistent_objects;
+
+        dispatch(handleInconsistentObjects(inconsistentObjects));
+
         if (successCb) {
           successCb();
         }
@@ -306,7 +372,6 @@ export const addAllowedQueries = (queries, isEmptyList, callback) => {
           showErrorNotification(
             'Adding query to allow-list failed',
             null,
-            null,
             error
           )
         );
@@ -337,7 +402,6 @@ export const deleteAllowList = () => {
         dispatch(
           showErrorNotification(
             'Deleting queries from allow-list failed',
-            null,
             null,
             error
           )
@@ -372,7 +436,6 @@ export const deleteAllowedQuery = (queryName, isLastQuery) => {
           showErrorNotification(
             'Deleting query from allow-list failed',
             null,
-            null,
             error
           )
         );
@@ -399,12 +462,7 @@ export const updateAllowedQuery = (queryName, newQuery) => {
       error => {
         console.error(error);
         dispatch(
-          showErrorNotification(
-            'Updating allow-list query failed',
-            null,
-            null,
-            error
-          )
+          showErrorNotification('Updating allow-list query failed', null, error)
         );
       }
     );

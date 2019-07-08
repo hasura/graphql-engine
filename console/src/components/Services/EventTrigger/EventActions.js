@@ -5,16 +5,17 @@ import processedEventsReducer from './ProcessedEvents/ViewActions';
 import pendingEventsReducer from './PendingEvents/ViewActions';
 import runningEventsReducer from './RunningEvents/ViewActions';
 import streamingLogsReducer from './StreamingLogs/LogActions';
-import { showErrorNotification, showSuccessNotification } from './Notification';
+import {
+  showSuccessNotification,
+  showErrorNotification,
+} from '../Common/Notification';
 import dataHeaders from './Common/Headers';
 import { loadMigrationStatus } from '../../Main/Actions';
 import returnMigrateUrl from './Common/getMigrateUrl';
 import globals from '../../../Globals';
 import push from './push';
-import {
-  filterInconsistentMetadata,
-  loadInconsistentObjects,
-} from '../Metadata/Actions';
+import { loadInconsistentObjects } from '../Metadata/Actions';
+import { filterInconsistentMetadataObjects } from '../Metadata/utils';
 import { replace } from 'react-router-redux';
 import { getEventTriggersQuery } from './utils';
 
@@ -70,7 +71,7 @@ const loadTriggers = triggerNames => (dispatch, getState) => {
       const { inconsistentObjects } = getState().metadata;
       let consistentTriggers;
       if (inconsistentObjects.length > 1) {
-        consistentTriggers = filterInconsistentMetadata(
+        consistentTriggers = filterInconsistentMetadataObjects(
           triggerData,
           inconsistentObjects,
           'events'
@@ -317,34 +318,23 @@ const setRedeliverEvent = eventId => dispatch => {
 /* **********Shared functions between table actions********* */
 
 const handleMigrationErrors = (title, errorMsg) => dispatch => {
-  const requestMsg = title;
   if (globals.consoleMode === SERVER_CONSOLE_MODE) {
     // handle errors for run_sql based workflow
-    dispatch(showErrorNotification(title, errorMsg.code, requestMsg, errorMsg));
+    dispatch(showErrorNotification(title, errorMsg.code, errorMsg));
   } else if (errorMsg.code === 'migration_failed') {
-    dispatch(
-      showErrorNotification(title, 'Migration Failed', requestMsg, errorMsg)
-    );
+    dispatch(showErrorNotification(title, 'Migration Failed', errorMsg));
   } else if (errorMsg.code === 'data_api_error') {
     const parsedErrorMsg = errorMsg;
     parsedErrorMsg.message = JSON.parse(errorMsg.message);
     dispatch(
-      showErrorNotification(
-        title,
-        parsedErrorMsg.message.error,
-        requestMsg,
-        parsedErrorMsg
-      )
+      showErrorNotification(title, parsedErrorMsg.message.error, parsedErrorMsg)
     );
   } else {
     // any other unhandled codes
     const parsedErrorMsg = errorMsg;
     parsedErrorMsg.message = JSON.parse(errorMsg.message);
-    dispatch(
-      showErrorNotification(title, errorMsg.code, requestMsg, parsedErrorMsg)
-    );
+    dispatch(showErrorNotification(title, errorMsg.code, parsedErrorMsg));
   }
-  // dispatch(showErrorNotification(msg, firstDisplay, request, response));
 };
 
 const makeMigrationCall = (

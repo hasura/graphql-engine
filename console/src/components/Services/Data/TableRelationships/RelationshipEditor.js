@@ -52,7 +52,6 @@ class RelationshipEditor extends React.Component {
         showErrorNotification(
           gqlRelErrorNotif[4],
           gqlRelErrorNotif[1],
-          gqlRelErrorNotif[2],
           gqlRelErrorNotif[3]
         )
       );

@@ -16,10 +16,8 @@ import {
 import dataHeaders from './Common/Headers';
 import { loadMigrationStatus } from '../../Main/Actions';
 import returnMigrateUrl from './Common/getMigrateUrl';
-import {
-  filterInconsistentMetadata,
-  loadInconsistentObjects,
-} from '../Metadata/Actions';
+import { loadInconsistentObjects } from '../Metadata/Actions';
+import { filterInconsistentMetadataObjects } from '../Metadata/utils';
 import globals from '../../../Globals';
 
 import {
@@ -193,7 +191,7 @@ const fetchTrackedFunctions = () => {
         const { inconsistentObjects } = getState().metadata;
 
         if (inconsistentObjects.length > 0) {
-          consistentFunctions = filterInconsistentMetadata(
+          consistentFunctions = filterInconsistentMetadataObjects(
             data,
             inconsistentObjects,
             'functions'
@@ -291,7 +289,7 @@ const loadSchema = configOptions => {
 
         let consistentSchemas;
         if (inconsistentObjects.length > 0) {
-          consistentSchemas = filterInconsistentMetadata(
+          consistentSchemas = filterInconsistentMetadataObjects(
             maybeInconsistentSchemas,
             inconsistentObjects,
             'tables'
@@ -384,7 +382,7 @@ const fetchFunctionInit = () => (dispatch, getState) => {
       let consistentFunctions = data[2];
       const { inconsistentObjects } = getState().metadata;
       if (inconsistentObjects.length > 0) {
-        consistentFunctions = filterInconsistentMetadata(
+        consistentFunctions = filterInconsistentMetadataObjects(
           consistentFunctions,
           inconsistentObjects,
           'functions'
@@ -435,34 +433,23 @@ const setTable = tableName => ({ type: SET_TABLE, tableName });
 /* **********Shared functions between table actions********* */
 
 const handleMigrationErrors = (title, errorMsg) => dispatch => {
-  const requestMsg = title;
   if (globals.consoleMode === SERVER_CONSOLE_MODE) {
     // handle errors for run_sql based workflow
-    dispatch(showErrorNotification(title, errorMsg.code, requestMsg, errorMsg));
+    dispatch(showErrorNotification(title, errorMsg.code, errorMsg));
   } else if (errorMsg.code === 'migration_failed') {
-    dispatch(
-      showErrorNotification(title, 'Migration Failed', requestMsg, errorMsg)
-    );
+    dispatch(showErrorNotification(title, 'Migration Failed', errorMsg));
   } else if (errorMsg.code === 'data_api_error') {
     const parsedErrorMsg = errorMsg;
     parsedErrorMsg.message = JSON.parse(errorMsg.message);
     dispatch(
-      showErrorNotification(
-        title,
-        parsedErrorMsg.message.error,
-        requestMsg,
-        parsedErrorMsg
-      )
+      showErrorNotification(title, parsedErrorMsg.message.error, parsedErrorMsg)
     );
   } else {
     // any other unhandled codes
     const parsedErrorMsg = errorMsg;
     parsedErrorMsg.message = JSON.parse(errorMsg.message);
-    dispatch(
-      showErrorNotification(title, errorMsg.code, requestMsg, parsedErrorMsg)
-    );
+    dispatch(showErrorNotification(title, errorMsg.code, parsedErrorMsg));
   }
-  // dispatch(showErrorNotification(msg, firstDisplay, request, response));
 };
 
 const makeMigrationCall = (
@@ -512,7 +499,7 @@ const makeMigrationCall = (
     body: JSON.stringify(finalReqBody),
   };
 
-  const onSuccess = () => {
+  const onSuccess = data => {
     if (!shouldSkipSchemaReload) {
       if (globals.consoleMode === 'cli') {
         dispatch(loadMigrationStatus()); // don't call for server mode
@@ -522,7 +509,7 @@ const makeMigrationCall = (
     if (successMsg) {
       dispatch(showSuccessNotification(successMsg));
     }
-    customOnSuccess();
+    customOnSuccess(data, globals.consoleMode, currMigrationMode);
   };
 
   const onError = err => {
@@ -600,7 +587,6 @@ const fetchColumnTypeInfo = () => {
           showErrorNotification(
             'Error fetching column types',
             'Kindly reach out to us in case you face this issue again',
-            error,
             error
           )
         );

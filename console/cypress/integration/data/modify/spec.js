@@ -234,8 +234,7 @@ export const passRemoveUniqueKey = () => {
 };
 
 export const passMTDeleteCol = () => {
-  // cy.get(getElementFromAlias(`edit-${getColName(0)}`)).click();
-  // cy.wait(500);
+  cy.get(getElementFromAlias('modify-table-edit-column-1')).click();
   cy.get(getElementFromAlias('modify-table-column-1-remove')).click();
   cy.on('window:alert', str => {
     expect(str === 'Are you sure you want to delete?').to.be.true;
