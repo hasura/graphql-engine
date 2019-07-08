@@ -52,7 +52,7 @@ data FieldCall =
 newtype RemoteSchemaName
   = RemoteSchemaName
   { unRemoteSchemaName :: Text}
-  deriving (Show, Eq, Lift, Hashable, ToJSON, ToJSONKey, FromJSON, Q.ToPrepArg, Q.FromCol)
+  deriving (Show, Eq, Lift, Hashable, ToJSON, ToJSONKey, FromJSON, Q.ToPrepArg, Q.FromCol, DQuote)
 
 newtype RemoteRelationshipName
   = RemoteRelationshipName

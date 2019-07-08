@@ -1,7 +1,7 @@
 module Hasura.GraphQL.Schema
   ( mkGCtxMap
-  , updateSCWithGCtx
   , GCtxMap
+  , buildGCtxMapPG
   , getGCtx
   , GCtx(..)
   , OpCtx(..)
@@ -11,7 +11,6 @@ module Hasura.GraphQL.Schema
   , isAggFld
   , qualObjectToName
   -- Schema stitching related
-  , RemoteGCtx (..)
   , checkSchemaConflicts
   , checkConflictingNode
   , emptyGCtx
@@ -21,25 +20,24 @@ module Hasura.GraphQL.Schema
   ) where
 
 
-import           Data.Has
-import           Data.Maybe                     (maybeToList)
-import           Control.Lens (preview)
-import           Control.Lens.TH (makePrisms)
+import           Control.Lens                        (preview)
+import           Control.Lens.TH                     (makePrisms)
+import           Data.Maybe                          (maybeToList)
 
-import qualified Data.HashMap.Strict            as Map
-import qualified Data.HashSet                   as Set
-import qualified Data.Sequence                  as Seq
+import qualified Data.HashMap.Strict                 as Map
+import qualified Data.HashSet                        as Set
+import qualified Data.Sequence                       as Seq
 
-import qualified Data.Text                      as T
-import qualified Language.GraphQL.Draft.Syntax  as G
+import qualified Data.Text                           as T
+import qualified Language.GraphQL.Draft.Syntax       as G
 
-import           Hasura.RQL.DDL.Remote.Types
 import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Resolve.ContextTypes
 import           Hasura.GraphQL.Resolve.Context
+import           Hasura.GraphQL.Resolve.ContextTypes
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
-import           Hasura.RQL.DML.Internal        (mkAdminRolePermInfo)
+import           Hasura.RQL.DDL.Remote.Types
+import           Hasura.RQL.DML.Internal             (mkAdminRolePermInfo)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -57,18 +55,6 @@ getTabInfo
 getTabInfo tc t =
   onNothing (Map.lookup t tc) $
      throw500 $ "table not found: " <>> t
-
-data RemoteGCtx
-  = RemoteGCtx
-  { _rgTypes            :: !TypeMap
-  , _rgQueryRoot        :: !ObjTyInfo
-  , _rgMutationRoot     :: !(Maybe ObjTyInfo)
-  , _rgSubscriptionRoot :: !(Maybe ObjTyInfo)
-  } deriving (Show, Eq)
-
-instance Has TypeMap RemoteGCtx where
-  getter = _rgTypes
-  modifier f ctx = ctx { _rgTypes = f $ _rgTypes ctx }
 
 data SelField
   = SelFldCol PGColInfo
@@ -284,7 +270,7 @@ mkTableObj
   -> [SelField]
   -> ObjTyInfo
 mkTableObj tn allowedFlds =
-  mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) HasuraType
+  mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) TLHasuraType
   where
     flds =
       concatMap
@@ -1821,12 +1807,14 @@ mkGCtxMap tableCache functionCache = do
     tableFltr ti = not (tiSystemDefined ti)
                    && isValidObjectName (tiName ti)
 
-updateSCWithGCtx
-  :: (MonadError QErr m)
-  => SchemaCache -> m SchemaCache
-updateSCWithGCtx sc = do
+-- | build GraphQL schema from postgres tables and functions
+buildGCtxMapPG
+  :: (QErrM m, CacheRWM m)
+  => m ()
+buildGCtxMapPG = do
+  sc <- askSchemaCache
   gCtxMap <- mkGCtxMap (scTables sc) (scFunctions sc)
-  return $ sc {scGCtxMap = gCtxMap}
+  writeSchemaCache sc {scGCtxMap = gCtxMap}
 
 getGCtx :: (CacheRM m) => RoleName -> GCtxMap -> m GCtx
 getGCtx rn ctxMap = do

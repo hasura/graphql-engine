@@ -35,7 +35,6 @@ import qualified Database.PG.Query                      as Q
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Explain                 as GE
-import qualified Hasura.GraphQL.Schema                  as GS
 import qualified Hasura.GraphQL.Transport.HTTP          as GH
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Transport.WebSocket     as WS
@@ -44,7 +43,6 @@ import qualified Hasura.Logging                         as L
 import           Hasura.EncJSON
 import           Hasura.Prelude                         hiding (get, put)
 import           Hasura.RQL.DDL.Remote.Types
-import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.Types
@@ -191,7 +189,7 @@ logResult
   -> Either QErr BL.ByteString -> Maybe (UTCTime, UTCTime)
   -> m ()
 logResult userInfoM req reqBody logger res qTime =
-  liftIO $ (L.unLogger logger) $ mkAccessLog userInfoM req (reqBody, res) qTime
+  liftIO $ L.unLogger logger $ mkAccessLog userInfoM req (reqBody, res) qTime
 
 logError
   :: MonadIO m
@@ -257,7 +255,7 @@ v1QueryHandler :: RQLQuery -> Handler (HttpResponse EncJSON)
 v1QueryHandler query = do
   scRef <- scCacheRef . hcServerCtx <$> ask
   logger <- scLogger . hcServerCtx <$> ask
-  res <- bool (fst <$> dbAction) (withSCUpdate scRef logger dbActionReload) $
+  res <- bool (fst <$> dbAction) (withSCUpdate scRef logger dbAction) $
          queryNeedsReload query
   return $ HttpResponse res Nothing
   where
@@ -271,17 +269,6 @@ v1QueryHandler query = do
       pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
       instanceId <- scInstanceId . hcServerCtx <$> ask
       runQuery pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx query
-
-    -- Also update the schema cache
-    dbActionReload = do
-      (resp, newSc) <- dbAction
-      httpMgr <- scManager . hcServerCtx <$> ask
-      --FIXME: should we be fetching the remote schema again? if not how do we get the remote schema?
-      newSc' <- do
-        newScWithDefaultGCtxMap <- GS.updateSCWithGCtx newSc
-        newScDefaultRemoteGCtx <- resolveRemoteSchemas newScWithDefaultGCtxMap httpMgr
-        addRemoteRelInputTypes newScDefaultRemoteGCtx
-      return (resp, newSc')
 
 v1Alpha1GQHandler :: GH.GQLReqUnparsed -> Handler (HttpResponse EncJSON)
 v1Alpha1GQHandler query = do
@@ -326,10 +313,10 @@ remoteSchemaProxyHandler remoteSchemaNameTxt = do
   manager <- scManager . hcServerCtx <$> ask
   scRef <- scCacheRef . hcServerCtx <$> ask
   (sc, _) <- liftIO $ readIORef $ _scrCache scRef
-  let remoteSchemaInfoM = M.lookup (RemoteSchemaName remoteSchemaNameTxt) (scRemoteResolvers sc)
+  let remoteSchemaInfoM = M.lookup (RemoteSchemaName remoteSchemaNameTxt) (scRemoteSchemas sc)
   case remoteSchemaInfoM of
     Nothing  -> throw400 NotFound "remote schema not found"
-    Just rsi -> E.execRemoteGQ manager userInfo reqHeaders G.OperationTypeQuery rsi (Left reqBody)
+    Just rsCtx -> E.execRemoteGQ manager userInfo reqHeaders G.OperationTypeQuery (rscInfo rsCtx) (Left reqBody)
 
 consoleAssetsHandler :: L.Logger -> Text -> FilePath -> ActionT IO ()
 consoleAssetsHandler logger dir path = do
@@ -353,7 +340,7 @@ consoleAssetsHandler logger dir path = do
     headers = ("Content-Type", mimeType) : encHeader
 
 mkConsoleHTML :: T.Text -> AuthMode -> Bool -> Maybe Text -> Either String T.Text
-mkConsoleHTML path authMode enableTelemetry consoleAssetsDir = do
+mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
   bool (Left errMsg) (Right res) $ null errs
   where
     (errs, res) = M.checkedSubstitute consoleTmplt $
@@ -469,8 +456,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       middleware $ corsMiddleware (mkDefaultCorsPolicy corsCfg)
 
     -- API Console and Root Dir
-    when (enableConsole && enableMetadata) $ do
-      serveApiConsole
+    when (enableConsole && enableMetadata) serveApiConsole
 
     -- Health check endpoint
     get "healthz" $ do

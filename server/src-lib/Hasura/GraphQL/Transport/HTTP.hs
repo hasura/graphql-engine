@@ -63,7 +63,7 @@ runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer manager reqHdrs r
           -- liftIO $ putStrLn ("hasura_JSON = " ++ show hasuraJson)
           let result =
                 E.extractRemoteRelArguments
-                  (scRemoteResolvers sc)
+                  (scRemoteSchemas sc)
                   hasuraJson
                   remoteRels
           case result of

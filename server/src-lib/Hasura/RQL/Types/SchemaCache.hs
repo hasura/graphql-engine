@@ -24,6 +24,11 @@ module Hasura.RQL.Types.SchemaCache
        , modTableInCache
        , delTableFromCache
 
+       , RemoteSchemaCtx(..)
+       , RemoteSchemaMap
+       , addRemoteSchemaToCache
+       , delRemoteSchemaFromCache
+
        , WithDeps
 
        , CacheRM(..)
@@ -45,10 +50,7 @@ module Hasura.RQL.Types.SchemaCache
        -- , addFldToCache
        , addColToCache
        , addRelToCache
-       , addRemoteSchemaToCache
        , addRemoteRelToCache
-
-       , addRemoteRelInputTypes
 
        , delColFromCache
        , updColInCache
@@ -107,6 +109,8 @@ module Hasura.RQL.Types.SchemaCache
 
        , replaceAllowlist
        , addRelationshipTypes
+
+       , mergeRemoteTypesWithGCtx
        ) where
 
 import           Control.Lens
@@ -416,6 +420,18 @@ $(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionInfo)
 type TableCache = M.HashMap QualifiedTable TableInfo -- info of all tables
 type FunctionCache = M.HashMap QualifiedFunction FunctionInfo -- info of all functions
 
+data RemoteSchemaCtx
+  = RemoteSchemaCtx
+  { rscName :: !RemoteSchemaName
+  , rscGCtx :: !GC.RemoteGCtx
+  , rscInfo :: !RemoteSchemaInfo
+  } deriving (Show, Eq)
+
+instance ToJSON RemoteSchemaCtx where
+  toJSON = toJSON . rscInfo
+
+type RemoteSchemaMap = M.HashMap RemoteSchemaName RemoteSchemaCtx
+
 type DepMap = M.HashMap SchemaObjId (HS.HashSet SchemaDependency)
 
 addToDepMap :: SchemaObjId -> [SchemaDependency] -> DepMap -> DepMap
@@ -446,15 +462,15 @@ incSchemaCacheVer (SchemaCacheVer prev) =
 
 data SchemaCache
   = SchemaCache
-  { scTables              :: !TableCache
-  , scFunctions           :: !FunctionCache
-  , scQTemplates          :: !QTemplateCache
-  , scAllowlist           :: !(HS.HashSet GQLQuery)
-  , scRemoteResolvers     :: !RemoteSchemaMap
-  , scGCtxMap             :: !GC.GCtxMap
-  , scDefaultRemoteGCtx   :: !GC.GCtx
-  , scDepMap              :: !DepMap
-  , scInconsistentObjs    :: ![InconsistentMetadataObj]
+  { scTables            :: !TableCache
+  , scFunctions         :: !FunctionCache
+  , scQTemplates        :: !QTemplateCache
+  , scRemoteSchemas     :: !RemoteSchemaMap
+  , scAllowlist         :: !(HS.HashSet GQLQuery)
+  , scGCtxMap           :: !GC.GCtxMap
+  , scDefaultRemoteGCtx :: !GC.GCtx
+  , scDepMap            :: !DepMap
+  , scInconsistentObjs  :: ![InconsistentMetadataObj]
   , scRemoteRelInputTypes :: !(M.HashMap (QualifiedTable, RemoteRelationshipName) TypeMap)
   } deriving (Show, Eq)
 
@@ -520,8 +536,8 @@ delQTemplateFromCache qtn = do
 
 emptySchemaCache :: SchemaCache
 emptySchemaCache =
-  SchemaCache M.empty M.empty M.empty HS.empty
-              M.empty M.empty GC.emptyGCtx mempty [] M.empty
+  SchemaCache M.empty M.empty M.empty M.empty
+              HS.empty M.empty GC.emptyGCtx mempty [] M.empty
 
 modTableCache :: (CacheRWM m) => TableCache -> m ()
 modTableCache tc = do
@@ -592,17 +608,6 @@ addRelToCache rn ri deps tn = do
   modDepMapInCache (addToDepMap schObjId deps)
   where
     schObjId = SOTableObj tn $ TORel $ riName ri
-
-addRemoteSchemaToCache
-  :: CacheRWM m
-  => RemoteSchemaName
-  -> RemoteSchemaInfo
-  -> m ()
-addRemoteSchemaToCache name rmDef = do
-  sc <- askSchemaCache
-  let resolvers = scRemoteResolvers sc
-  writeSchemaCache sc
-    {scRemoteResolvers = M.insert name rmDef resolvers}
 
 addRemoteRelToCache ::
      (QErrM m, CacheRWM m)
@@ -852,6 +857,32 @@ data TemplateParamInfo
   , tpiDefault :: !(Maybe Value)
   } deriving (Show, Eq)
 
+addRemoteSchemaToCache
+  :: (QErrM m, CacheRWM m) => RemoteSchemaCtx -> m ()
+addRemoteSchemaToCache rmCtx = do
+  sc <- askSchemaCache
+  let rmSchemas = scRemoteSchemas sc
+      name = rscName rmCtx
+  -- ideally, remote schema shouldn't present in cache
+  -- if present unexpected 500 is thrown
+  onJust (M.lookup name rmSchemas) $ const $
+    throw500 $ "remote schema with name " <> name
+    <<> " already found in cache"
+  writeSchemaCache sc
+    {scRemoteSchemas = M.insert name rmCtx rmSchemas}
+
+delRemoteSchemaFromCache
+  :: (QErrM m, CacheRWM m) => RemoteSchemaName -> m ()
+delRemoteSchemaFromCache name = do
+  sc <- askSchemaCache
+  let rmSchemas = scRemoteSchemas sc
+  -- ideally, remote schema should be present in cache
+  -- if not present unexpected 500 is thrown
+  void $ onNothing (M.lookup name rmSchemas) $
+    throw500 $ "remote schema with name " <> name
+    <<> " not found in cache"
+  writeSchemaCache sc {scRemoteSchemas = M.delete name rmSchemas}
+
 replaceAllowlist
   :: (CacheRWM m)
   => QueryList -> m ()
@@ -881,17 +912,3 @@ getDependentObjsWith f sc objId =
 mergeRemoteTypesWithGCtx :: (M.HashMap (QualifiedTable, RemoteRelationshipName) TypeMap) -> GC.GCtx -> GC.GCtx
 mergeRemoteTypesWithGCtx remoteTypeMaps gctx =
   gctx {GC._gTypes = (mconcat $ M.elems remoteTypeMaps) <> GC._gTypes gctx }
-
-addRemoteRelInputTypes
-  :: (MonadError QErr m)
-  => SchemaCache -> m SchemaCache
-addRemoteRelInputTypes sc = do
-  let gCtx = scDefaultRemoteGCtx sc
-      gCtxMap = scGCtxMap sc
-      remoteRelInputTypes = scRemoteRelInputTypes sc
-      newGCtxMap = M.map (mergeRemoteTypesWithGCtx remoteRelInputTypes) gCtxMap
-  return $
-    sc
-      { scGCtxMap = newGCtxMap
-      , scDefaultRemoteGCtx = mergeRemoteTypesWithGCtx remoteRelInputTypes gCtx
-      }

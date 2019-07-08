@@ -177,7 +177,7 @@ runCreateRemoteRelationshipP1 remoteRelationship = do
   sc <- askSchemaCache
   case HM.lookup
          (rtrRemoteSchema remoteRelationship)
-         (scRemoteResolvers sc) of
+         (scRemoteSchemas sc) of
     Just {} -> do
       validation <-
         getCreateRemoteRelationshipValidation remoteRelationship

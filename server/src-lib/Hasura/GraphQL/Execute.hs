@@ -102,11 +102,16 @@ data GQJoinError =  GQJoinError !T.Text
 instance J.ToJSON GQJoinError where
   toJSON (GQJoinError msg)   = J.object [ "message" J..= msg ]
 
--- The current execution plan of a graphql operation, it is
--- currently, either local pg execution or a remote execution
 data QExecPlanPartial
   = ExPHasuraPartial !(GCtx, VQ.HasuraTopField, [G.VariableDefinition])
   | ExPRemotePartial !VQ.RemoteTopField
+--
+-- The 'a' is parameterised so this AST can represent
+-- intermediate passes
+data GQExecPlan a
+  = GExPHasura !a
+  | GExPRemote !RemoteSchemaInfo !G.TypedOperationDefinition
+  deriving (Functor, Foldable, Traversable)
 
 -- The current execution plan of a graphql operation, it is
 -- currently, either local pg execution or a remote execution
@@ -169,7 +174,6 @@ getExecPlanPartial userInfo sc enableAL req = do
             ExPHasuraPartial (gCtx, hasuraTopField, varDefs)
           VQ.RemoteLocatedTopField remoteTopField -> ExPRemotePartial remoteTopField)
       topFields
-
   where
     role = userRole userInfo
     gCtxRoleMap = scGCtxMap sc
@@ -805,8 +809,8 @@ extractRemoteRelArguments remoteSchemaMap hasuraJson rels =
                                    (rmfRemoteRelationship
                                       (rrRemoteField remoteRel)))
                                 remoteSchemaMap of
-                           Just remoteSchemaInfo ->
-                             pure (remoteRel, remoteSchemaInfo, rows)
+                           Just remoteSchemaCtx ->
+                             pure (remoteRel, (rscInfo remoteSchemaCtx), rows)
                            Nothing ->
                              Left $
                              appendJoinError

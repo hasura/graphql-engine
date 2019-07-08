@@ -13,7 +13,7 @@ packages:
 # Packages to be pulled from upstream that are not in the resolver (e.g., acme-missiles-0.3)
 extra-deps:
 - git: https://github.com/hasura/pg-client-hs.git
-  commit: 85f9c2c15e4fa09f2e2a86dbb23149b5256bdd34
+  commit: 3f905a5fa57e2898dbb733a777cadb80990b3d45
 - git: https://github.com/hasura/graphql-parser-hs.git
   commit: 39d175c5c7bca35ec04d13c92a39f600bd6413cf
 - git: https://github.com/hasura/ci-info-hs.git

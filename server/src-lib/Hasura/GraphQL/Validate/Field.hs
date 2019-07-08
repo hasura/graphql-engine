@@ -169,8 +169,8 @@ denormSel visFrags parObjTyInfo sel = case sel of
     parTy = _otiName parObjTyInfo
     localize fldInfo field =
       case _fiLoc fldInfo of
-        HasuraType                    -> HasuraLocated field
-        RemoteType _ remoteSchemaInfo -> RemoteLocated remoteSchemaInfo field
+        TLHasuraType                    -> HasuraLocated field
+        TLRemoteType _ remoteSchemaInfo -> RemoteLocated remoteSchemaInfo field
 
 processArgs
   :: ( MonadReader ValidationCtx m

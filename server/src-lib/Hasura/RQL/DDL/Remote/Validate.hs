@@ -89,10 +89,10 @@ validateRelationship remoteRelationship gctx tables = do
                Right (objTyInfo, _, (_, typeMap)) -> do
                  objFldInfo <- lookupField (fcName fieldCall) objTyInfo
                  case _fiLoc objFldInfo of
-                   HasuraType ->
+                   TLHasuraType ->
                      Left
                        (pure (FieldNotFoundInRemoteSchema (fcName fieldCall)))
-                   RemoteType {} -> do
+                   TLRemoteType {} -> do
                      let providedArguments =
                            remoteArgumentsToMap (fcArguments fieldCall)
                      toEither
