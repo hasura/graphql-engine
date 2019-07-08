@@ -377,7 +377,7 @@ FROM
         ):: regclass, 
         'pg_class'
       ) as comment, 
-      json_agg(
+      COALESCE(json_agg(
         row_to_json(isc) :: JSONB || jsonb_build_object(
           'comment', 
           (
@@ -399,7 +399,7 @@ FROM
               AND c.relname = isc.table_name
           )
         )
-      ) AS columns,
+      ) FILTER (WHERE isc.column_name IS NOT NULL), '[]' :: JSON) AS columns,
       row_to_json(isc_views) as view_info
     from 
       information_schema.tables AS ist 
