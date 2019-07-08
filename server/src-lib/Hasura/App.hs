@@ -116,7 +116,8 @@ mkPGLogger (Logger logger) (Q.PLERetryMsg msg) =
   logger $ PGLog LevelWarn msg
 
 
--- TODO: put this in handleCommand, this is detail of handleCommand and neet not be handled separately
+-- | this is separate because some of these contexts might be used by external
+--   functions
 initialiseCtx :: IO (HTTP.Manager, LoggerCtx, InstanceId, Logger, Q.PGLogger)
 initialiseCtx = do
   -- global http manager
