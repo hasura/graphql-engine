@@ -85,6 +85,7 @@ table thead tr th {
       border-bottom: 1px solid #E6E6E6;
       padding: 0px 0px;
       // border-left: 5px solid transparent;
+
       a {
         color: #767E93;
         background-color: #f0f0f0;
@@ -93,6 +94,7 @@ table thead tr th {
         padding: 15px 0 15px 20px;
         display: block;
       }
+
     }
 
     .linkBorder {
@@ -1314,12 +1316,6 @@ code {
 
 .pkEditorExpandedText {
   width: 325px;
-}
-
-.scheme_warning {
-  i {
-    margin-left: 5px;
-  }
 }
 
 .wd100Percent {

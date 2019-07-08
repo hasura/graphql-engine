@@ -1,3 +1,7 @@
+import React from 'react';
+import { gqlCompatibilityTip } from './Schema/Tooltips';
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+
 export const INTEGER = 'integer';
 export const SERIAL = 'serial';
 export const BIGINT = 'bigint';
@@ -612,3 +616,17 @@ const postgresFunctionTester = /.*\(\)$/gm;
 
 export const isPostgresFunction = str =>
   new RegExp(postgresFunctionTester).test(str);
+
+export const GqlCompatibilityWarning = () => {
+  const styles = require('../../Common/Common.scss');
+  return (
+    <div className={styles.display_inline}>
+      <OverlayTrigger placement="right" overlay={gqlCompatibilityTip}>
+        <i
+          className={`fa fa-exclamation-triangle ${styles.add_mar_left_small}`}
+          aria-hidden="true"
+        />
+      </OverlayTrigger>
+    </div>
+  );
+};

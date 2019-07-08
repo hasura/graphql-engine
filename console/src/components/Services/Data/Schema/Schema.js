@@ -10,7 +10,6 @@ import {
   untrackedRelTip,
   trackableFunctionsTip,
   nonTrackableFunctionsTip,
-  schemeWarningTip,
 } from './Tooltips';
 import Button from '../../../Common/Button/Button';
 import {
@@ -33,6 +32,7 @@ import { getRelDef } from '../TableRelationships/utils';
 import { createNewSchema, deleteCurrentSchema } from './Actions';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 import gqlPattern from '../Common/GraphQLValidation';
+import { GqlCompatibilityWarning } from '../utils';
 
 const appPrefix = globals.urlPrefix + '/data';
 
@@ -96,13 +96,19 @@ class Schema extends Component {
           : +(a.table_name > b.table_name) || -1;
       };
 
-      const _untrackedTables = schema.filter(
-        table => !table.is_table_tracked && table.table_schema === currentSchema
-      ).map(table => {
-        table.schemeWarning = gqlPattern.test(table.table_name);
-        return table;
-      });
+      const _untrackedTables = [];
+      schema.forEach(table => {
+        // consider only untracked tables
+        if (table.is_table_tracked || table.table_schema !== currentSchema) {
+          return;
+        }
 
+        // add the gql validation information in the table object and push
+        _untrackedTables.push({
+          ...table,
+          isGQLCompatible: gqlPattern.test(table.table_name),
+        });
+      });
       return _untrackedTables.sort(tableSortFunc);
     };
 
@@ -288,18 +294,18 @@ class Schema extends Component {
       const getTrackAllBtn = () => {
         let trackAllBtn = null;
 
-        const _allUntrackedTables = allUntrackedTables.filter(
-          table => table.schemeWarning
+        const allValidUntrackedTables = allUntrackedTables.filter(
+          table => table.isGQLCompatible
         );
 
         const trackAllTables = e => {
           e.stopPropagation();
           e.preventDefault();
 
-          dispatch(addAllUntrackedTablesSql(_allUntrackedTables));
+          dispatch(addAllUntrackedTablesSql(allValidUntrackedTables));
         };
 
-        if (_allUntrackedTables.length > 0) {
+        if (allValidUntrackedTables.length > 0) {
           trackAllBtn = (
             <Button
               className={`${styles.display_inline} ${styles.add_mar_left}`}
@@ -326,14 +332,8 @@ class Schema extends Component {
             dispatch(addExistingTableSql());
           };
 
-          const schemeWarning = !table.schemeWarning ? (
-            <div
-              className={styles.scheme_warning + ' ' + styles.display_inline}
-            >
-              <OverlayTrigger placement="right" overlay={schemeWarningTip}>
-                <i className="fa fa-exclamation-triangle" aria-hidden="true" />
-              </OverlayTrigger>
-            </div>
+          const gqlCompatibility = !table.isGQLCompatible ? (
+            <GqlCompatibilityWarning />
           ) : null;
 
           untrackedTablesList.push(
@@ -347,13 +347,13 @@ class Schema extends Component {
                   color="white"
                   size="xs"
                   onClick={handleTrackTable}
-                  disabled={!!schemeWarning}
+                  disabled={!!gqlCompatibility}
                 >
                   Track
                 </Button>
               </div>
               <div className={styles.display_inline}>{table.table_name}</div>
-              {schemeWarning}
+              {gqlCompatibility}
             </div>
           );
         });

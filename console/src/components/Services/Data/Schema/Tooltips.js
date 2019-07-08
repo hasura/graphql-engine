@@ -26,9 +26,9 @@ export const nonTrackableFunctionsTip = (
   </Tooltip>
 );
 
-export const schemeWarningTip = (
+export const gqlCompatibilityTip = (
   <Tooltip id="tooltip-scheme-warning">
-    This identifier name does not conform to the GraphQL naming standard.
-    Names in GraphQL should be limited to this ASCII subset: /[_A-Za-z][_0-9A-Za-z]*/.
+    This identifier name does not conform to the GraphQL naming standard. Names
+    in GraphQL should be limited to this ASCII subset: /[_A-Za-z][_0-9A-Za-z]*/.
   </Tooltip>
 );
