@@ -69,7 +69,7 @@ assertSameLocationNodes
 assertSameLocationNodes typeLocs =
   case Set.toList (Set.fromList typeLocs) of
     -- this shouldn't happen
-    []    -> return VT.HasuraType
+    []    -> return VT.TLHasuraType
     [loc] -> return loc
     _     -> throw400 NotSupported msg
   where
@@ -124,11 +124,11 @@ getExecPlanPartial userInfo sc enableAL req = do
   typeLoc <- assertSameLocationNodes typeLocs
 
   case typeLoc of
-    VT.HasuraType -> do
+    VT.TLHasuraType -> do
       rootSelSet <- runReaderT (VQ.validateGQ queryParts) gCtx
       let varDefs = G._todVariableDefinitions $ VQ.qpOpDef queryParts
       return $ GExPHasura (gCtx, rootSelSet, varDefs)
-    VT.RemoteType _ rsi ->
+    VT.TLRemoteType _ rsi ->
       return $ GExPRemote rsi opDef
   where
     role = userRole userInfo
