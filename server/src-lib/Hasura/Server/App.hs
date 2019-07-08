@@ -34,7 +34,6 @@ import qualified Database.PG.Query                      as Q
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Explain                 as GE
-import qualified Hasura.GraphQL.Schema                  as GS
 import qualified Hasura.GraphQL.Transport.HTTP          as GH
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Transport.WebSocket     as WS
@@ -43,7 +42,6 @@ import qualified Hasura.Server.PGDump                   as PGD
 
 import           Hasura.EncJSON
 import           Hasura.Prelude                         hiding (get, put)
-import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.Types
@@ -204,7 +202,9 @@ logResult logger userInfoM reqId httpReq req res qTime = do
   let logline = case res of
         Right res' -> mkHttpAccessLog userInfoM reqId httpReq res' qTime
         Left e     -> mkHttpErrorLog userInfoM reqId httpReq e req qTime
-  liftIO $ L.unLogger logger logline
+  liftIO $ L.unLogger logger $ logline
+-- logResult userInfoM req reqBody logger res qTime =
+--   liftIO $ L.unLogger logger $ mkAccessLog userInfoM req (reqBody, res) qTime
 
 logError
   :: (MonadIO m)
@@ -291,7 +291,7 @@ v1QueryHandler :: RQLQuery -> Handler (HttpResponse EncJSON)
 v1QueryHandler query = do
   scRef <- scCacheRef . hcServerCtx <$> ask
   logger <- scLogger . hcServerCtx <$> ask
-  res <- bool (fst <$> dbAction) (withSCUpdate scRef logger dbActionReload) $
+  res <- bool (fst <$> dbAction) (withSCUpdate scRef logger dbAction) $
          queryNeedsReload query
   return $ HttpResponse res Nothing
   where
@@ -306,17 +306,7 @@ v1QueryHandler query = do
       instanceId <- scInstanceId . hcServerCtx <$> ask
       runQuery pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx query
 
-    -- Also update the schema cache
-    dbActionReload = do
-      (resp, newSc) <- dbAction
-      httpMgr <- scManager . hcServerCtx <$> ask
-      --FIXME: should we be fetching the remote schema again? if not how do we get the remote schema?
-      newSc' <- GS.updateSCWithGCtx newSc >>= flip resolveRemoteSchemas httpMgr
-      return (resp, newSc')
-
-v1Alpha1GQHandler
-  :: GH.GQLReqUnparsed
-  -> Handler (HttpResponse EncJSON)
+v1Alpha1GQHandler :: GH.GQLReqUnparsed -> Handler (HttpResponse EncJSON)
 v1Alpha1GQHandler query = do
   userInfo <- asks hcUser
   reqHeaders <- asks hcReqHeaders

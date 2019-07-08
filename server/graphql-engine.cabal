@@ -3,11 +3,11 @@ version:             1.0.0
 synopsis:            GraphQL API over Postgres
 -- description:
 homepage:            https://www.hasura.io
-license:             AGPL-3.0
+license:             Apache-2.0
 -- license-file:        LICENSE.md
 author:              Vamshi Surabhi
 maintainer:          vamshi@hasura.io
-copyright:           2017-2018 Hasura Techonologies Pvt. Ltd
+copyright:           Hasura Inc.
 category:            Database
 build-type:          Simple
 -- extra-source-files:  README.md
@@ -53,11 +53,9 @@ library
                      , Spock-core
                      , split
                      , optparse-applicative
-                     , wai-extra
                      , containers
                      , monad-control
                      , monad-time
-                     , wai-logger
                      , fast-logger
                      , wai
                      , postgresql-binary
@@ -99,9 +97,6 @@ library
                      -- Http client
                      , wreq
                      , http-client
-                     , http-client-tls
-                     , connection
-                     , retry
 
                      -- ordered map
                      , insert-ordered-containers
@@ -123,7 +118,6 @@ library
                      -- websockets interface related
                      , websockets
                      , wai-websockets
-                     , hashtables
                      , stm
                      , stm-containers
                      , list-t
@@ -353,7 +347,6 @@ executable graphql-engine
                      , http-client-tls
                      , stm
                      , wreq
-                     , connection
                      , string-conversions
                      , uuid
 
@@ -370,31 +363,3 @@ executable graphql-engine
                -Wincomplete-uni-patterns
                -Wredundant-constraints
                -threaded -rtsopts
-
-test-suite graphql-engine-test
-  type:               exitcode-stdio-1.0
-  main-is:            Main.hs
-  Default-Language:   Haskell2010
-  Hs-Source-Dirs:     test
-  ghc-options:        -O2 -Wall
-  Build-Depends:       Spock-core >= 0.11
-                     , base
-                     , aeson
-                     , aeson-casing
-                     , bytestring
-                     , hspec
-                     , hspec-core
-                     , hspec-wai
-                     , optparse-applicative
-                     , graphql-engine -any
-                     , text
-                     , wai
-                     , pg-client
-                     , time
-                     , yaml
-                     , http-client
-                     , http-client-tls
-                     , unordered-containers >= 0.2
-                     , case-insensitive
-
-  other-modules:     Spec

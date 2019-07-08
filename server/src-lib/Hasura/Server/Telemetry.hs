@@ -142,7 +142,7 @@ computeMetrics sc =
         PermissionMetric selPerms insPerms updPerms delPerms nRoles
       evtTriggers = Map.size $ Map.filter (not . Map.null)
                     $ Map.map tiEventTriggerInfoMap usrTbls
-      rmSchemas   = Map.size $ scRemoteResolvers sc
+      rmSchemas   = Map.size $ scRemoteSchemas sc
       funcs = Map.size $ Map.filter (not . fiSystemDefined) $ scFunctions sc
 
   in Metrics nTables nViews relMetrics permMetrics evtTriggers rmSchemas funcs
