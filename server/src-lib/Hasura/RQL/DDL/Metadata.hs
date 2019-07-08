@@ -41,7 +41,6 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query                  as Q
-import qualified Hasura.GraphQL.Schema              as GS
 import qualified Hasura.RQL.DDL.EventTrigger        as DE
 import qualified Hasura.RQL.DDL.Permission          as DP
 import qualified Hasura.RQL.DDL.Permission.Internal as DP
@@ -287,17 +286,10 @@ applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas mCollections mAll
   -- remote schemas
   onJust mSchemas $ \schemas ->
     withPathK "remote_schemas" $
-      indexedForM_ schemas $ \conf ->
-        void $ DRS.addRemoteSchemaP1 conf
-               >>= DRS.addRemoteSchemaP2 conf
+      indexedMapM_ (void . DRS.addRemoteSchemaP2) schemas
 
-  -- build GraphQL Context
-  sc <- GS.updateSCWithGCtx =<< askSchemaCache
-
-  -- resolve remote schemas
-  httpMgr <- askHttpManager
-  newSc <- DRS.resolveRemoteSchemas sc httpMgr
-  writeSchemaCache newSc
+  -- build GraphQL Context with Remote schemas
+  DRS.buildGCtxMap
 
   return successMsg
 
