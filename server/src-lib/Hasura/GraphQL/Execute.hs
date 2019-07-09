@@ -1,3 +1,4 @@
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE DisambiguateRecordFields #-}
 
 module Hasura.GraphQL.Execute
@@ -6,6 +7,8 @@ module Hasura.GraphQL.Execute
   , Batch(..)
   , GQRespValue(..)
   , getExecPlanPartial
+  , gqrespValueToValue
+  , parseGQRespValue
   , extractRemoteRelArguments
   , produceBatches
   , joinResults
@@ -22,12 +25,9 @@ module Hasura.GraphQL.Execute
   , emptyResp
   ) where
 
-import           Debug.Trace
-
 import           Control.Exception                      (try)
 import           Control.Lens
 import qualified Data.ByteString.Lazy                   as L
-import qualified Data.ByteString.Lazy.Char8             as L8
 import           Data.Scientific
 import           Data.Validation
 import           Hasura.SQL.Types
@@ -42,8 +42,8 @@ import           Hasura.GraphQL.Validate.Field
 import           Hasura.SQL.Time
 
 import qualified Data.Aeson                             as J
-import qualified Data.Aeson.Casing                      as J
-import qualified Data.Aeson.TH                          as J
+import qualified Data.Parser.Json                       as OJ
+import qualified Data.Vector                            as V
 import qualified Data.CaseInsensitive                   as CI
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OHM
@@ -81,26 +81,44 @@ import qualified Hasura.GraphQL.Validate                as VQ
 
 data GQRespValue =
   GQRespValue
-  { gqRespData   :: Maybe (Map.HashMap Text J.Value)
-  , gqRespErrors :: Maybe [J.Value]
+  { gqRespData   :: Maybe OJ.Object
+  , gqRespErrors :: Maybe [OJ.Value]
   } deriving (Show, Eq)
 
-$(J.deriveToJSON
-    (J.aesonDrop 6 J.snakeCase) {J.omitNothingFields = True}
-    ''GQRespValue)
+parseGQRespValue :: OJ.Value -> Either String GQRespValue
+parseGQRespValue =
+  \case
+    OJ.Object obj -> do
+      gqRespData <-
+        case OJ.lookup "data" obj of
+          Nothing -> pure Nothing
+          Just (OJ.Object dobj) -> pure (Just dobj)
+          Just _ -> Left "expected object for GraphQL data response"
+      gqRespErrors <-
+        case OJ.lookup "errors" obj of
+          Nothing -> pure Nothing
+          Just (OJ.Array vec) -> pure (Just (toList vec))
+          Just _ -> Left "expected array for GraphQL error response"
+      pure (GQRespValue {gqRespData, gqRespErrors})
+    _ -> Left "expected object for GraphQL response"
 
-instance J.FromJSON GQRespValue where
-  parseJSON (J.Object o) = do
-    data' <- o J..:? "data"
-    errors' <- o J..:? "errors"
-    return $ GQRespValue data' errors'
-  parseJSON _ = fail "expected object for GraphQL response"
+gqrespValueToValue :: GQRespValue -> OJ.Value
+gqrespValueToValue (GQRespValue mdata' merrors) =
+  OJ.Object
+    (OJ.fromList
+       (concat
+          [ [("data", OJ.Object data') | Just data' <- [mdata']]
+          , [ ("errors", OJ.Array (V.fromList errors))
+            | Just errors <- [merrors]
+            ]
+          ]))
 
 data GQJoinError =  GQJoinError !T.Text
   deriving (Show, Eq)
 
-instance J.ToJSON GQJoinError where
-  toJSON (GQJoinError msg)   = J.object [ "message" J..= msg ]
+gQJoinErrorToValue :: GQJoinError -> OJ.Value
+gQJoinErrorToValue (GQJoinError msg) =
+  OJ.Object (OJ.fromList [("message", OJ.String msg)])
 
 -- The current execution plan of a graphql operation, it is
 -- currently, either local pg execution or a remote execution
@@ -125,13 +143,14 @@ data RemoteRelField =
     , rrField         :: !Field
     , rrRelFieldPath  :: !RelFieldPath
     , rrAlias         :: !G.Alias
+    , rrAliasIndex    :: !Int
     , rrPhantomFields :: ![Text]
     }
   deriving (Show)
 
 newtype RelFieldPath =
   RelFieldPath {
-    unRelFieldPath :: (Seq.Seq G.Alias)
+    unRelFieldPath :: (Seq.Seq (Int, G.Alias))
   } deriving (Show, Monoid, Semigroup, Eq)
 
 data InsertPath =
@@ -279,16 +298,16 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
 rebuildFieldStrippingRemoteRels ::
      VQ.Field -> Maybe (VQ.Field, NonEmpty RemoteRelField)
 rebuildFieldStrippingRemoteRels =
-  extract . flip runState mempty . rebuild mempty
+  extract . flip runState mempty . rebuild 0 mempty
   where
     extract (field, remoteRelFields) =
       fmap (field, ) (NE.nonEmpty remoteRelFields)
-    rebuild parentPath field0 = do
+    rebuild idx0 parentPath field0 = do
       selSetEithers <-
         traverse
-          (\subfield ->
+          (\(idx, subfield) ->
              case _fRemoteRel subfield of
-               Nothing -> fmap Right (rebuild thisPath subfield)
+               Nothing -> fmap Right (rebuild idx thisPath subfield)
                Just remoteField -> do
                  modify (remoteRelField :)
                  pure (Left remoteField)
@@ -298,6 +317,7 @@ rebuildFieldStrippingRemoteRels =
                            , rrField = subfield
                            , rrRelFieldPath = thisPath
                            , rrAlias = _fAlias subfield
+                           , rrAliasIndex = idx
                            , rrPhantomFields =
                                map
                                  G.unName
@@ -312,8 +332,8 @@ rebuildFieldStrippingRemoteRels =
                                           (rtrHasuraFields
                                              (rmfRemoteRelationship remoteField)))))
                            })
-          (_fSelSet field0)
-      let fields = rights (toList selSetEithers)
+          (zip [0..] (toList (_fSelSet field0)))
+      let fields = rights selSetEithers
       pure
         field0
           { _fSelSet =
@@ -345,7 +365,7 @@ rebuildFieldStrippingRemoteRels =
                    (toList selSetEithers))
           }
       where
-        thisPath = parentPath <> RelFieldPath (pure (_fAlias field0))
+        thisPath = parentPath <> RelFieldPath (pure (idx0, _fAlias field0))
 
 -- | Get a list of fields needed from a hasura result.
 neededHasuraFields
@@ -364,7 +384,7 @@ joinResults paths hasuraValue0 =
   let remoteValues :: [(Batch, GQRespValue)] =
         map
           (\(batch, encJson) ->
-             case J.eitherDecode (encJToLBS encJson) of
+             case OJ.eitherDecode (encJToLBS encJson) >>= parseGQRespValue of
                Left err ->
                  ( batch
                  , appendJoinError
@@ -400,86 +420,91 @@ insertBatchResults ::
   -> GQRespValue
 insertBatchResults remoteValue batch hasuraResp =
   case inHashmap (batchRelFieldPath batch) hasuraHash0 remoteHash0 of
-    Left err  -> appendJoinError hasuraResp (GQJoinError (T.pack err))
+    Left err -> appendJoinError hasuraResp (GQJoinError (T.pack err))
     Right val -> GQRespValue (Just (fst val)) (gqRespErrors hasuraResp)
   where
-    hasuraHash0 = fromMaybe mempty (gqRespData hasuraResp)
+    hasuraHash0 = fromMaybe OJ.empty (gqRespData hasuraResp)
+    -- The 'sortOn' below is not strictly necessary by the spec, but
+    -- implementations may not guarantee order of results matching
+    -- order of query.
     remoteHash0 =
-      sortOn fst (Map.toList $ fromMaybe mempty (gqRespData remoteValue))
+      fromMaybe mempty $ fmap (sortOn fst . OJ.toList) (gqRespData remoteValue)
     cardinality = biCardinality (batchInputs batch)
     inHashmap ::
          RelFieldPath
-      -> Map.HashMap Text J.Value
-      -> [(Text, J.Value)]
-      -> Either String (Map.HashMap Text J.Value, [(Text, J.Value)])
+      -> OJ.Object
+      -> [(Text, OJ.Value)]
+      -> Either String (OJ.Object, [(Text, OJ.Value)])
     inHashmap (RelFieldPath Seq.Empty) hasuraHash remoteHash =
       case cardinality of
         One ->
-          case length remoteHash of
-            0 ->
+          case remoteHash of
+            [] ->
               Left
                 ("Expected one remote object but got none, while traversing " <>
-                 L8.unpack (J.encode hasuraHash))
-            1 ->
+                 show (OJ.toEncJSON (OJ.Object hasuraHash)))
+            [theRemoteHash] ->
               Right
                 ( (foldl'
-                     (flip Map.delete)
-                     (Map.insert
-                        (batchRelationshipKeyToMake batch)
+                     (flip OJ.delete)
+                     (OJ.insert
+                        ( batchRelationshipKeyIndex batch
+                        , batchRelationshipKeyToMake batch)
                         (peelOffNestedFields
                            (batchNestedFields batch)
-                           (snd $ head remoteHash))
+                           (snd $ theRemoteHash))
                         hasuraHash)
                      (batchPhantoms batch))
-                , tail remoteHash)
+                , mempty)
             _ ->
               Left
                 ("Expected one remote object but got many, while traversing " <>
-                 L8.unpack (J.encode hasuraHash))
+                 show (OJ.toEncJSON (OJ.Object hasuraHash)))
         Many ->
-          case length remoteHash of
-            0 ->
+          case remoteHash of
+            [] ->
               Left
                 ("Expected many objects but got none, while traversing " <>
-                 L8.unpack (J.encode hasuraHash))
-            _ ->
+                 show (OJ.toEncJSON (OJ.Object hasuraHash)))
+            (theRemoteHash:remainingRemoteHashes) ->
               Right
                 ( (foldl'
-                     (flip Map.delete)
-                     (Map.insert
-                        (batchRelationshipKeyToMake batch)
+                     (flip OJ.delete)
+                     (OJ.insert
+                        ( batchRelationshipKeyIndex batch
+                        , batchRelationshipKeyToMake batch)
                         (peelOffNestedFields
                            (batchNestedFields batch)
-                           (snd $ head remoteHash))
+                           (snd (theRemoteHash)))
                         hasuraHash)
                      (batchPhantoms batch))
-                , tail remoteHash)
-    inHashmap (RelFieldPath (G.Alias (G.Name key) Seq.:<| rest)) hasuraHash remoteHash =
-      case Map.lookup key hasuraHash of
+                , remainingRemoteHashes)
+    inHashmap (RelFieldPath ((idx, G.Alias (G.Name key)) Seq.:<| rest)) hasuraHash remoteHash =
+      case OJ.lookup key hasuraHash of
         Nothing ->
           Left
             ("Couldn't find expected key " <> show key <> " in " <>
-             L8.unpack (J.encode hasuraHash) <>
+             show (OJ.toEncJSON (OJ.Object hasuraHash)) <>
              ", while traversing " <>
-             L8.unpack (J.encode hasuraHash0))
+             show (OJ.toEncJSON (OJ.Object hasuraHash0)))
         Just currentValue ->
           fmap
             (\(newValue, remoteCandidates) ->
-               ((Map.insert key newValue hasuraHash), remoteCandidates))
+               (OJ.insert (idx, key) newValue hasuraHash, remoteCandidates))
             (inValue rest currentValue remoteHash)
     inValue ::
-         Seq.Seq G.Alias
-      -> J.Value
-      -> [(Text, J.Value)]
-      -> Either String (J.Value, [(Text, J.Value)])
+         Seq.Seq (Int, G.Alias)
+      -> OJ.Value
+      -> [(Text, OJ.Value)]
+      -> Either String (OJ.Value, [(Text, OJ.Value)])
     inValue path currentValue remoteHash =
       case currentValue of
-        J.Object hasuraRowHash ->
+        OJ.Object hasuraRowHash ->
           fmap
             (\(hasuraRowHash', remainingRemotes) ->
-               (J.Object hasuraRowHash', remainingRemotes))
+               (OJ.Object hasuraRowHash', remainingRemotes))
             (inHashmap (RelFieldPath path) hasuraRowHash remoteHash)
-        J.Array values ->
+        OJ.Array values ->
           case path of
             Seq.Empty ->
               case cardinality of
@@ -491,27 +516,28 @@ insertBatchResults remoteValue batch hasuraResp =
                             Left err -> Left err
                             Right (hasuraRowsSoFar, remainingRemotes) ->
                               case hasuraRowValue of
-                                J.Object hasuraRowHash ->
+                                OJ.Object hasuraRowHash ->
                                   case remainingRemotes of
                                     [] ->
                                       Left
                                         ("no remote objects left for joining at " <>
-                                         L8.unpack (J.encode hasuraRowValue))
+                                         show (OJ.toEncJSON hasuraRowValue))
                                     (x:xs) -> do
                                       let peeledRemoteValue =
                                             peelOffNestedFields
                                               (batchNestedFields batch)
                                               (snd x)
-                                          remoteAlias =
-                                            (batchRelationshipKeyToMake batch)
                                           phantoms = batchPhantoms batch
                                       pure
                                         ( hasuraRowsSoFar <>
-                                          [ (J.Object
+                                          [ (OJ.Object
                                                (foldl'
-                                                  (flip Map.delete)
-                                                  (Map.insert
-                                                     remoteAlias
+                                                  (flip OJ.delete)
+                                                  (OJ.insert
+                                                     ( batchRelationshipKeyIndex
+                                                         batch
+                                                     , batchRelationshipKeyToMake
+                                                         batch)
                                                      peeledRemoteValue
                                                      hasuraRowHash)
                                                   phantoms))
@@ -520,11 +546,11 @@ insertBatchResults remoteValue batch hasuraResp =
                                 _ -> Left "expected object here")
                        (pure ([], remoteHash))
                        (toList values))
-                  pure (J.Array (Vec.fromList hasuraArray), remainingRemotes)
+                  pure (OJ.Array (Vec.fromList hasuraArray), remainingRemotes)
                 One ->
                   Left
                     "Cardinality mismatch: found array in hasura value, but expected object"
-            (nonEmptyPath) -> do
+            nonEmptyPath -> do
               (hasuraArray, remainingCandidates) <-
                 (foldl
                    (\eitherRows hasuraRowValue ->
@@ -532,44 +558,48 @@ insertBatchResults remoteValue batch hasuraResp =
                         Left err -> Left err
                         Right (hasuraRowsSoFar, remaining) ->
                           case hasuraRowValue of
-                            J.Object object -> do
+                            OJ.Object object -> do
                               (hasuraRowHash, remainder) <-
                                 inHashmap
                                   (RelFieldPath nonEmptyPath)
                                   object
                                   remaining
-                              pure (hasuraRowsSoFar <> [J.Object hasuraRowHash], remainder)
-                            _ -> Left ("expected array of objects in " <> L8.unpack (J.encode hasuraRowValue))
-                   )
+                              pure
+                                ( hasuraRowsSoFar <> [OJ.Object hasuraRowHash]
+                                , remainder)
+                            _ ->
+                              Left
+                                ("expected array of objects in " <>
+                                 show (OJ.toEncJSON hasuraRowValue)))
                    (pure ([], remoteHash))
                    (toList values))
-              pure (J.Array (Vec.fromList hasuraArray), remainingCandidates)
-        J.Null -> pure (J.Null, remoteHash)
+              pure (OJ.Array (Vec.fromList hasuraArray), remainingCandidates)
+        OJ.Null -> pure (OJ.Null, remoteHash)
         _ ->
           Left
             ("Expected object or array in hasura value but got: " <>
-             L8.unpack (J.encode currentValue))
+             show (OJ.toEncJSON currentValue))
 
 -- | The drop 1 in here is dropping the first level of nesting. The
 -- top field is already aliased to e.g. foo_idx_1, and that layer is
 -- already peeled off. So here we are just peeling nested fields.
-peelOffNestedFields :: NonEmpty G.Name -> J.Value -> J.Value
+peelOffNestedFields :: NonEmpty G.Name -> OJ.Value -> OJ.Value
 peelOffNestedFields xs toplevel = go (drop 1 (toList xs)) toplevel
   where
     go [] value = value
     go (G.Name key:rest) value =
       case value of
-        J.Object hashmap ->
-          case Map.lookup key hashmap of
+        OJ.Object hashmap ->
+          case OJ.lookup key hashmap of
             -- TODO: Return proper error
-            Nothing     -> J.Null
+            Nothing     -> OJ.Null
               -- Left $ GQJoinError
               --   (T.pack ("No " <> show key <> " in " <> show value <> " from " <>
               --    show toplevel <>
               --    " with " <>
               --    show xs))
             Just value' -> go rest value'
-        _ -> J.Null
+        _ -> OJ.Null
             -- TODO: Return proper error
           -- Left $ GQJoinError
           --   (T.pack ("No! " <> show key <> " in " <> show value <> " from " <>
@@ -595,6 +625,8 @@ data Batch =
     , batchRelFieldPath          :: !RelFieldPath
     , batchIndices               :: ![ArrayIndex]
     , batchRelationshipKeyToMake :: !Text
+    , batchRelationshipKeyIndex  :: !Int
+      -- ^ Insertion index in target object.
     , batchInputs                :: !BatchInputs
     , batchNestedFields          :: !(NonEmpty G.Name)
     , batchPhantoms              :: ![Text]
@@ -613,6 +645,7 @@ produceBatch opType remoteSchemaInfo remoteRelField inputs =
     , batchRelFieldPath = path
     , batchIndices = resultIndexes
     , batchRelationshipKeyToMake = G.unName (G.unAlias (rrAlias remoteRelField))
+    , batchRelationshipKeyIndex = rrAliasIndex remoteRelField
     , batchInputs = inputs
     , batchPhantoms = rrPhantomFields remoteRelField
     , batchNestedFields =
@@ -770,7 +803,7 @@ extractRemoteRelArguments ::
                            , RemoteSchemaInfo
                            , BatchInputs)])
 extractRemoteRelArguments remoteSchemaMap hasuraJson rels =
-  case J.eitherDecode (encJToLBS hasuraJson) of
+  case OJ.eitherDecode (encJToLBS hasuraJson) >>= parseGQRespValue of
     Left err ->
       Left $
       appendJoinError emptyResp (GQJoinError ("decode error: " <> T.pack err))
@@ -784,7 +817,7 @@ extractRemoteRelArguments remoteSchemaMap hasuraJson rels =
         Just value -> do
           let hashE =
                 execStateT
-                  (extractFromResult One keyedRemotes (J.Object value))
+                  (extractFromResult One keyedRemotes (OJ.Object value))
                   mempty
           case hashE of
             Left err -> Left $ appendJoinError gqResp err
@@ -840,17 +873,17 @@ instance Semigroup Cardinality where
 extractFromResult ::
      Cardinality
   -> NonEmpty (RemoteRelKey, RemoteRelField)
-  -> J.Value
+  -> OJ.Value
   -> StateT (Map.HashMap RemoteRelKey BatchInputs) (Either GQJoinError) ()
 extractFromResult cardinality keyedRemotes value =
   case value of
-    J.Array values -> mapM_ (extractFromResult Many keyedRemotes) values
-    J.Object hashmap -> do
+    OJ.Array values -> mapM_ (extractFromResult Many keyedRemotes) values
+    OJ.Object hashmap -> do
       remotesRows :: Map.HashMap RemoteRelKey (Seq.Seq ( G.Variable
                                                        , G.ValueConst)) <-
         foldM
           (\result (key, remotes) ->
-             case Map.lookup key hashmap of
+             case OJ.lookup key hashmap of
                Just subvalue -> do
                  let (remoteRelKeys, unfinishedKeyedRemotes) =
                        partitionEithers (toList remotes)
@@ -876,7 +909,7 @@ extractFromResult cardinality keyedRemotes value =
                    (Left $
                       GQJoinError
                         ("Expected key " <> key <> " at this position: " <>
-                         (T.pack $ L8.unpack (J.encode value)))))
+                         (T.pack (show (OJ.toEncJSON value))))))
           mempty
           (Map.toList candidates)
       mapM_
@@ -926,25 +959,25 @@ peelRemoteKeys (remoteRelKey, remoteRelField) =
     unconsPath fieldName =
       case rrRelFieldPath remoteRelField of
         RelFieldPath Seq.Empty -> Left (getFieldNameTxt fieldName)
-        RelFieldPath (G.Alias (G.Name key) Seq.:<| xs) -> Right (key, RelFieldPath xs)
+        RelFieldPath ((_, G.Alias (G.Name key)) Seq.:<| xs) -> Right (key, RelFieldPath xs)
 
 -- | Convert a JSON value to a GraphQL value.
-valueToValueConst :: J.Value -> G.ValueConst
+valueToValueConst :: OJ.Value -> G.ValueConst
 valueToValueConst =
   \case
-    J.Array xs -> G.VCList (G.ListValueG (fmap valueToValueConst (toList xs)))
-    J.String str -> G.VCString (G.StringValue str)
+    OJ.Array xs -> G.VCList (G.ListValueG (fmap valueToValueConst (toList xs)))
+    OJ.String str -> G.VCString (G.StringValue str)
     -- TODO: Note the danger zone of scientific:
-    J.Number sci -> either G.VCFloat G.VCInt (floatingOrInteger sci)
-    J.Null -> G.VCNull
-    J.Bool b -> G.VCBoolean b
-    J.Object hashmap ->
+    OJ.Number sci -> either G.VCFloat G.VCInt (floatingOrInteger sci)
+    OJ.Null -> G.VCNull
+    OJ.Bool b -> G.VCBoolean b
+    OJ.Object hashmap ->
       G.VCObject
         (G.ObjectValueG
            (map
               (\(key, value) ->
                  G.ObjectFieldG (G.Name key) (valueToValueConst value))
-              (Map.toList hashmap)))
+              (OJ.toList hashmap)))
 
 -- Monad for resolving a hasura query/mutation
 type E m =
@@ -1231,8 +1264,7 @@ appendJoinError resp err =
   resp
     { gqRespData = gqRespData resp
     , gqRespErrors =
-        Just $
-        maybe (pure $ J.toJSON err) ((:) (J.toJSON err)) (gqRespErrors resp)
+        pure (gQJoinErrorToValue err : fromMaybe mempty (gqRespErrors resp))
     }
 
 
@@ -1263,4 +1295,3 @@ appendJoinError resp err =
 -- assertArray val = case val of
 --   J.Array arr -> pure arr
 --   _           -> Left "could not parse as JSON array"
-
