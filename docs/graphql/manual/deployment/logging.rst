@@ -118,7 +118,7 @@ The default log-level is ``info``.
 Setting a log-level will print all logs of priority greater than the set level. The log-level
 hierarchy is: ``debug < info < warn < error``
 
-For example, setting ``--log-level=warning``, will enable all warn and error level logs only. So even if the you
+For example, setting ``--log-level=warn``, will enable all warn and error level logs only. So even if the you
 have enabled ``query-log`` it won't be printed as the level of ``query-log`` is ``info``.
 
 See :ref:`log-types <log-types>` for more details on log-level of each log-type.
