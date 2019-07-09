@@ -130,6 +130,7 @@ data HandlerCtx
   }
 
 type Handler = ExceptT QErr (ReaderT HandlerCtx IO)
+type HasuraMiddleware a = a -> Handler ()
 
 data APIResp
   = JSONResp !(HttpResponse EncJSON)
@@ -165,6 +166,7 @@ parseBody = do
   case decode' reqBody of
     Just jVal -> decodeValue jVal
     Nothing   -> throw400 InvalidJSON "invalid json"
+
 
 onlyAdmin :: Handler ()
 onlyAdmin = do
@@ -393,7 +395,7 @@ mkWaiApp
   -> InstanceId
   -> S.HashSet API
   -> EL.LQOpts
-  -> Maybe (RQLQuery -> Handler ())
+  -> Maybe (HasuraMiddleware RQLQuery)
   -> IO (Wai.Application, SchemaCacheRef, Maybe UTCTime)
 mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
          enableConsole consoleAssetsDir enableTelemetry instanceId apis
@@ -441,9 +443,11 @@ httpApp
   -> Bool
   -> Maybe Text
   -> Bool
-  -> Maybe (RQLQuery -> Handler ())
+  -> Maybe (HasuraMiddleware RQLQuery)
+  -- ^ The current middleware is only for RQLQuery (metadata) queries, in future
+  -- this can be extended to take a `HashMap (HttpMethod, Path) (HasuraMiddleware a)`
   -> SpockT IO ()
-httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry extraMiddleware = do
+httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry metadataMiddleware = do
     -- cors middleware
     unless (isCorsDisabled corsCfg) $
       middleware $ corsMiddleware (mkDefaultCorsPolicy corsCfg)
@@ -470,8 +474,8 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry extraMi
 
       post "v1/query" $ mkSpockAction encodeQErr id serverCtx $ mkAPIRespHandler $ do
         query <- parseBody
-        -- run any given extra middleware
-        maybe (return ()) (\fn -> fn query) extraMiddleware
+        -- run any given metadata query middleware
+        maybe (return ()) (\m -> m query) metadataMiddleware
         v1QueryHandler query
 
       post ("api/1/table" <//> var <//> var) $ \tableName queryType ->

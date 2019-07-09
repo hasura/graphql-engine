@@ -60,6 +60,7 @@ library
                      , wai
                      , postgresql-binary
                      , process
+                     , http-client-tls
 
                      -- Encoder related
                      , uuid
