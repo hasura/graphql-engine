@@ -20,17 +20,12 @@ Based on your deployment method, Hasura GraphQL engine logs can be accessed as f
 Different log-types
 -------------------
 
-The Hasura GraphQL engine has different kind of log-types depending on the sub-system or the layer.
+The Hasura GraphQL engine has different kind of log-types depending on the sub-system or the layer. A log-type is simply the ``type`` field in a log line, which indicates which sub-system the log comes from.
 
-For example, the HTTP webserver logs incoming requests as access log, and is
-called ``http-log``. Similarly logs from the websocket layer is called
-``websocket-log``, logs from the event trigger system is called
-``event-trigger`` etc.
+For example, the HTTP webserver logs incoming requests as access log, and is called ``http-log``. Similarly logs from the websocket layer is called ``websocket-log``, logs from the event trigger system is called ``event-trigger`` etc.
 
 
-You can configure the GraphQL engine to enable/disable certain log-types using the
-the ``--enabled-log-types`` flag or the ``HASURA_GRAPHQL_ENABLED_LOG_TYPES`` env var.
-See :doc:`../deployment/graphql-engine-flags/reference`
+You can configure the GraphQL engine to enable/disable certain log-types using the the ``--enabled-log-types`` flag or the ``HASURA_GRAPHQL_ENABLED_LOG_TYPES`` env var. See :doc:`../deployment/graphql-engine-flags/reference`
 
 Default enabled log-types are: ``startup, http-log, webhook-log, websocket-log``
 
@@ -55,15 +50,15 @@ All the log-types that can be enabled/disabled are:
      - ``info``
 
    * - ``http-log``
-     - Http access and error logs at the webserver layer
+     - Http access and error logs at the webserver layer (handling GraphQL and metadata requests)
      - ``info`` and ``error``
 
    * - ``websocket-log``
-     - Websocket events and error logs at the websocket server layer
+     - Websocket events and error logs at the websocket server layer (handling GraphQL requests)
      - ``info`` and ``error``
 
    * - ``webhook-log``
-     - Logs responses and errors from the webhook
+     - Logs responses and errors from the authorization webhook (if setup)
      - ``info`` and ``error``
 
 
@@ -94,12 +89,12 @@ Apart from the above, there are other internal log-types which cannot be configu
      - ``info``
 
    * - ``event-trigger``
-     - Logs HTTP responses from the webhook, and HTTP exceptions and internal
+     - Logs HTTP responses from the webhook, HTTP exceptions and internal
        errors
      - ``info`` and ``error``
 
    * - ``ws-server``
-     - Logs from the websocket server
+     - Debug logs from the websocket server, mostly used internally for debugging
      - ``debug``
 
    * - ``schema-sync-thread``
@@ -110,27 +105,20 @@ Apart from the above, there are other internal log-types which cannot be configu
 Logging levels
 --------------
 
-You can set the desired logging level on the server using the ``log-level`` flag or the ``HASURA_GRAPHQL_LOG_LEVEL``
-env var. See :doc:`../deployment/graphql-engine-flags/reference`.
+You can set the desired logging level on the server using the ``log-level`` flag or the ``HASURA_GRAPHQL_LOG_LEVEL`` env var. See :doc:`../deployment/graphql-engine-flags/reference`.
 
 The default log-level is ``info``.
 
-Setting a log-level will print all logs of priority greater than the set level. The log-level
-hierarchy is: ``debug < info < warn < error``
+Setting a log-level will print all logs of priority greater than the set level. The log-level hierarchy is: ``debug < info < warn < error``
 
-For example, setting ``--log-level=warning``, will enable all warn and error level logs only. So even if the you
-have enabled ``query-log`` it won't be printed as the level of ``query-log`` is ``info``.
+For example, setting ``--log-level=warning``, will enable all warn and error level logs only. So even if the you have enabled ``query-log`` it won't be printed as the level of ``query-log`` is ``info``.
 
 See :ref:`log-types <log-types>` for more details on log-level of each log-type.
 
 Log structure and metrics
 -------------------------
 
-All requests are identified by a request id. If the client sends a
-``x-request-id`` header then that is used, otherwise a request id is generated
-for each request. This is also sent back to the client as a response header
-(``x-request-id``). This is useful to correlate logs from the server and the
-client.
+All requests are identified by a request id. If the client sends a ``x-request-id`` header then that is used, otherwise a request id is generated for each request. This is also sent back to the client as a response header (``x-request-id``). This is useful to correlate logs from the server and the client.
 
 **query-log** structure
 ^^^^^^^^^^^^^^^^^^^^^^^
