@@ -72,6 +72,7 @@ data Code
   | AlreadyInit
   | ConstraintViolation
   | DataException
+  | BadRequest
   -- Graphql error
   | NoTables
   | ValidationFailed
@@ -92,6 +93,7 @@ instance Show Code where
   show = \case
     NotNullViolation      -> "not-null-violation"
     DataException         -> "data-exception"
+    BadRequest            -> "bad-request"
     ConstraintViolation   -> "constraint-violation"
     PermissionDenied      -> "permission-denied"
     NotExists             -> "not-exists"
