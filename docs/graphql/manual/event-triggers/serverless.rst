@@ -95,7 +95,7 @@ Our AWS Lambda code looks like this:
             statusCode: 200,
             body: "success"
         };
-        const qv = {noteId: request.data.old.id, data: request.data.old.note};
+        const qv = {noteId: request.event.data.old.id, data: request.event.data.old.note};
         fetch(hgeEndpoint + '/v1/graphql', {
             method: 'POST',
             body: JSON.stringify({query: query, variables: qv}),
