@@ -1,33 +1,43 @@
 import React, { useState } from 'react';
 import AceEditor from 'react-ace';
 
+import 'brace/mode/html';
 import 'brace/mode/markdown';
 import 'brace/theme/github';
+import 'brace/theme/chrome';
 
-const styles = require('./JsonInput.scss');
+const styles = require('./TextInput.scss');
 
-const NORMALKEY = 'normal';
-const JSONKEY = 'json';
+// editorType is what sort of editor. All are ACE Editor
+// modes except 0, which is text input
 
-const parseJSONData = (data, editorType) => {
-  try {
-    const dataObject = typeof data === 'object' ? data : JSON.parse(data);
+// ACE editor  mode names
+const EDITORTYPES = [
+  'normal', // must be first
+  'text',
+  'markdown',
+  'html',
+];
 
-    return JSON.stringify(dataObject, null, editorType === JSONKEY ? 4 : 0);
-  } catch (e) {
-    return data;
-  }
-};
+// human readable editor names
+const EDITORTYPENAMES = [
+  'single line input',
+  'multi-line text input',
+  'markdown',
+  'html',
+];
+
+const NORMALKEY = 0;
 
 const createInitialState = data => {
   const initialState = {
     editorType: NORMALKEY,
-    data: parseJSONData(data, NORMALKEY),
+    data: data,
   };
   return initialState;
 };
 
-const JsonInput = props => {
+const TextInput = props => {
   const { standardProps, placeholderProp } = props;
   const { defaultValue, onChange } = standardProps;
   const allProps = { ...standardProps };
@@ -42,25 +52,23 @@ const JsonInput = props => {
     };
   };
 
-  const toggleEditorType = currentState => {
-    const nextEditorType =
-      currentState.editorType === JSONKEY ? NORMALKEY : JSONKEY;
+  const cycleEditorType = currentState => {
+    const nextEditorType = (currentState.editorType + 1) % EDITORTYPES.length;
 
     return {
       ...currentState,
-      data: parseJSONData(currentState.data, nextEditorType),
       editorType: nextEditorType,
     };
   };
 
   const handleKeyUpEvent = e => {
     if ((e.ctrlKey || event.metaKey) && e.which === 32) {
-      updateState(toggleEditorType);
+      updateState(cycleEditorType);
     }
   };
 
   const handleEditorExec = () => {
-    updateState(toggleEditorType);
+    updateState(cycleEditorType);
   };
 
   const handleInputChangeAndPropagate = e => {
@@ -79,14 +87,14 @@ const JsonInput = props => {
     }
   };
 
-  const getJsonEditor = () => {
+  const getAceEditor = curmode => {
     return (
       <AceEditor
-        key="ace_json_editor"
+        key="ace_text_editor"
         {...allProps}
-        mode="json"
-        theme="github"
-        name="jsontoggler"
+        mode={curmode}
+        theme="chrome"
+        name="texttoggler"
         minLines={10}
         maxLines={100}
         width="100%"
@@ -109,35 +117,36 @@ const JsonInput = props => {
   const getNormalEditor = () => {
     return (
       <input
-        key="input_json_editor"
+        key="input_text_editor"
         {...allProps}
         placeholder={placeholderProp}
         value={data}
         onChange={handleInputChangeAndPropagate}
         onKeyUp={handleKeyUpEvent}
-        className={allProps.className + ' ' + styles.jsonNormalInput}
+        className={allProps.className + ' ' + styles.textNormalInput}
       />
     );
   };
 
-  const editor = editorType === JSONKEY ? getJsonEditor() : getNormalEditor();
+  const editor =
+    editorType === NORMALKEY
+      ? getNormalEditor()
+      : getAceEditor(EDITORTYPES[editorType]);
 
   return (
-    <span className="json_input_editor">
+    <span className="text_input_editor">
       <label>{editor}</label>
       <i
-        key="icon_json_editor"
-        className={
-          'fa ' +
-          styles.jsonToggleButton +
-          (editorType === JSONKEY ? ' fa-compress' : ' fa-expand')
-        }
-        onClick={() => updateState(toggleEditorType)}
+        key="icon_text_editor"
+        className={'fa ' + styles.textToggleButton + ' fa-refresh'}
+        onClick={() => updateState(cycleEditorType)}
         title={
-          (editorType === JSONKEY ? 'Collapse' : 'Expand') + '(Ctrl + Space)'
+          'Change to ' +
+          EDITORTYPENAMES[(editorType + 1) % EDITORTYPES.length] +
+          '(Ctrl + Space)'
         }
       />
     </span>
   );
 };
-export default JsonInput;
+export default TextInput;
