@@ -104,6 +104,10 @@ ul {
   font-size: 20px !important;
 }
 
+[role="main"] h4 {
+  font-size: 18px !important;
+}
+
 #docs-content,
 #docs-header {
   font-size: 16px !important;
