@@ -27,6 +27,10 @@ const EDITORTYPENAMES = [
   'html',
 ];
 
+// short human readable editor names
+// for the visible label
+const SHORTEDITORTYPENAMES = ['', 'multi-line', 'markdown', 'html'];
+
 const NORMALKEY = 0;
 
 const createInitialState = data => {
@@ -136,6 +140,9 @@ const TextInput = props => {
   return (
     <span className="text_input_editor">
       <label>{editor}</label>
+      <span className={styles.textEditType}>
+        {SHORTEDITORTYPENAMES[editorType]}
+      </span>
       <i
         key="icon_text_editor"
         className={'fa ' + styles.textToggleButton + ' fa-refresh'}
