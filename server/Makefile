@@ -32,7 +32,7 @@ image: $(project).cabal
 		.
 
 local-image:
-	build_dir_docker := $(project_dir)/$(shell stack --docker path --dist-dir)/build
+	$(eval build_dir_docker := $(project_dir)/$(shell stack --docker path --dist-dir)/build)
 	stack docker pull
 	stack --docker build --fast
 	mkdir -p packaging/build/rootfs
