@@ -50,12 +50,14 @@ IS 'trigger to set value of column "${columnName}" to current timestamp on row u
 export const getFreqUsedColDisplayInfo = c => {
   const title = c.name;
 
-  const typeText = c.typeText;
+  const typeText = c.typeText + '; ';
   const defaultText =
-    c.defaultText || c.default ? `default: ${c.defaultText || c.default}` : '';
-  const pkText = c.primary ? 'primary key' : '';
+    c.defaultText || c.default
+      ? `default: ${c.defaultText || c.default}; `
+      : '';
+  const pkText = c.primary ? 'primary key; ' : '';
 
-  const subTitle = [typeText, defaultText, pkText].join('; ');
+  const subTitle = typeText + defaultText + pkText;
 
   return {
     title,
