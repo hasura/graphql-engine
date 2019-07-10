@@ -108,3 +108,25 @@ args:
     permission:
       filter:
         id: X-Hasura-Resident-Id
+
+- type: create_delete_permission
+  args:
+    table: resident
+    role: agent
+    permission:
+      filter:
+        id:
+          $in: X-Hasura-Allowed-Resident-Ids
+
+- type: create_select_permission
+  args:
+    table: resident
+    role: agent
+    permission:
+      columns:
+      - id
+      - name
+      - age
+      filter:
+        id:
+          $in: X-Hasura-Allowed-Resident-Ids

@@ -112,7 +112,7 @@ procSetObj ti mObj = do
     fmap HM.fromList $ forM (HM.toList setObj) $ \(pgCol, val) -> do
       ty <- askPGType fieldInfoMap pgCol $
         "column " <> pgCol <<> " not found in table " <>> tn
-      sqlExp <- valueParser ty val
+      sqlExp <- valueParser (PgTypeSimple ty) val
       return (pgCol, sqlExp)
   let deps = map (mkColDep "on_type" tn . fst) $ HM.toList setColsSQL
   return (setColsSQL, depHeaders, deps)

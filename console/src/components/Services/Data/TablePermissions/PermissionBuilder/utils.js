@@ -113,16 +113,16 @@ const columnOperatorsInfo = {
     inputType: 'character',
     PGTypes: ['json'],
   },
-  // _has_key_any: {
-  //   type: 'array',
-  //   inputType: 'character',
-  //   PGTypes: ['json']
-  // },
-  // _has_key_all: {
-  //   type: 'array',
-  //   inputType: 'character',
-  //   PGTypes: ['json']
-  // },
+  _has_keys_any: {
+    type: 'array',
+    inputType: 'character',
+    PGTypes: ['json'],
+  },
+  _has_keys_all: {
+    type: 'array',
+    inputType: 'character',
+    PGTypes: ['json'],
+  },
   _st_contains: {
     type: 'object',
     PGTypes: ['geometry'],

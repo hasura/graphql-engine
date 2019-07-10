@@ -1,0 +1,74 @@
+- description: user can only select free artists
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: free_user_in
+    X-Hasura-free-artists: "{Camilla,DSP}"
+  response:
+    data:
+      Artist:
+      - name: Camilla
+      - name: DSP
+  query:
+    query: |
+      query {
+        Artist (order_by: {name: asc}) {
+          name
+        }
+      }
+
+- description: user can only select free artists (no free artists)
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: free_user_in
+    X-Hasura-free-artists: "{}"
+  response:
+    data:
+      Artist: []
+  query:
+    query: |
+      query {
+        Artist (order_by: {name: asc}) {
+          name
+        }
+      }
+
+- description: user can only select non premium artists
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: free_user_nin
+    X-Hasura-premium-artists: "{Akon}"
+  response:
+    data:
+      Artist:
+      - name: Camilla
+      - name: DSP
+  query:
+    query: |
+      query {
+        Artist (order_by: {name: asc}) {
+          name
+        }
+      }
+
+- description: user can only select non premium artists (no premium artists
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: free_user_nin
+    X-Hasura-premium-artists: "{}"
+  response:
+    data:
+      Artist:
+      - name: Akon
+      - name: Camilla
+      - name: DSP
+  query:
+    query: |
+      query {
+        Artist (order_by: {name: asc}) {
+          name
+        }
+      }
