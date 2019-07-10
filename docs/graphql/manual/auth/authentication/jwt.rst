@@ -43,8 +43,7 @@ TL;DR
    in a custom namespace in the claims.
 2. Other optional ``x-hasura-*`` fields (required as per your defined
    permissions).
-3. You can send ``x-hasura-role`` as header in the request to indicate a
-   different role.
+3. You can send ``x-hasura-role`` as header in the request to indicate a role.
 4. Send the JWT via ``Authorization: Bearer <JWT>`` header.
 
 
@@ -53,8 +52,10 @@ The Spec
 When your auth server generates the JWT, the custom claims in the JWT **must contain**
 the following:
 
-1. A ``x-hasura-default-role`` field : indicating the default role of that user
-2. A ``x-hasura-allowed-roles`` field : a list of allowed roles for the user
+1. A ``x-hasura-default-role`` field : indicating the default role of that user i.e. the role that will be
+   used in case ``x-hasura-role`` header is not passed
+2. A ``x-hasura-allowed-roles`` field : a list of allowed roles for the user i.e. acceptable values of the
+   ``x-hasura-role`` header
 
 The claims in the JWT, can have other ``x-hasura-*`` fields where their values
 can only be strings. You can use these ``x-hasura-*`` fields in your
@@ -123,7 +124,9 @@ JSON object:
      "key": "<optional-key-as-string>",
      "jwk_url": "<optional-url-to-refresh-jwks>",
      "claims_namespace": "<optional-key-name-in-claims>",
-     "claims_format": "json|stringified_json"
+     "claims_format": "json|stringified_json",
+     "audience": <optional-string-or-list-of-strings-to-verify-audience>,
+     "issuer": "<optional-string-to-verify-issuer>"
    }
 
 ``key`` or ``jwk_url``, **one of them has to be present**.
@@ -228,6 +231,64 @@ If ``claims_format`` is ``stringified_json`` then JWT claims should look like:
   }
 
 
+``audience``
+^^^^^^^^^^^^
+This is an optional field. Certain providers might set a claim which indicates
+the intended audience for the JWT. This can be checked by setting this field.
+
+When this field is set, during the verification process of JWT, the ``aud``
+claim in the JWT will be checked if it is equal to the ``audience`` field given
+in the configuration.
+
+See `RFC <https://tools.ietf.org/html/rfc7519#section-4.1.3>`__ for more details.
+
+This field can be a string, or a list of strings.
+
+Examples:
+
+.. code-block:: json
+
+   {
+     "type": "RS512",
+     "jwk_url": "https://......",
+     "audience": "myapp-1234"
+     ...
+   }
+
+or
+
+.. code-block:: json
+
+   {
+     "type": "RS512",
+     "jwk_url": "https://......",
+     "audience": ["myapp-1234", "myapp-6789"]
+     ...
+   }
+
+
+``issuer``
+^^^^^^^^^^
+This is an optional field. It takes a string value.
+
+When this field is set, during the verification process of JWT, the ``iss``
+claim in the JWT will be checked if it is equal to the ``issuer`` field given
+in the configuration.
+
+See `RFC <https://tools.ietf.org/html/rfc7519#section-4.1.1>`__ for more details.
+
+Examples:
+
+.. code-block:: json
+
+   {
+     "type": "RS512",
+     "jwk_url": "https://......",
+     "issuer": "https://my-auth-server.com"
+     ...
+   }
+
+
 Examples
 ^^^^^^^^
 
@@ -324,10 +385,12 @@ If you are using Firebase and Hasura, use this config:
 
 .. code-block:: json
 
-    {
-      "type":"RS512",
-      "jwk_url": "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com"
-    }
+   {
+     "type":"RS256",
+     "jwk_url": "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com",
+     "audience": "<firebase-project-id>",
+     "issuer": "https://securetoken.google.com/<firebase-project-id>"
+   }
 
 
 .. _auth0-issues:
