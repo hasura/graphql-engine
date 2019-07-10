@@ -239,8 +239,7 @@ class AddTable extends Component {
   }
 
   isValidType(s) {
-    return (typeof s === 'string' &&
-            s.trim().length > 0);
+    return typeof s === 'string' && s.trim().length > 0;
   }
 
   validateColumnTypes(cols) {

@@ -250,6 +250,15 @@ class TestGraphqlQueryPermissions(DefaultTestSelectQueries):
     def test_user_query_auction(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/user_query_auction.yaml', transport)
 
+    def test_jsonb_has_all(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/jsonb_has_all.yaml', transport)
+
+    def test_jsonb_has_any(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/jsonb_has_any.yaml', transport)
+
+    def test_in_and_nin(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/in_and_nin.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/permissions'
