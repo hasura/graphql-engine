@@ -356,6 +356,7 @@ data TableInfo
   , tiPrimaryKeyCols        :: ![PGCol]
   , tiViewInfo              :: !(Maybe ViewInfo)
   , tiEventTriggerInfoMap   :: !EventTriggerInfoMap
+  , tiCustomRootFields      :: !(Maybe GC.TableCustomRootFields)
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
@@ -372,6 +373,7 @@ instance FromJSON TableInfo where
                  \c -> (fromPGCol $ pgiName c, FIColumn c)
     return $ TableInfo name isSystemDefined colMap mempty
                        constraints pkeyCols viewInfoM mempty
+                       Nothing
 
 data FunctionType
   = FTVOLATILE

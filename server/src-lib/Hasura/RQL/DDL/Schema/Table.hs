@@ -45,11 +45,15 @@ delTableFromCatalog (QualifiedObject sn tn) =
             WHERE table_schema = $1 AND table_name = $2
                 |] (sn, tn) False
 
-saveTableToCatalog :: QualifiedTable -> Q.Tx ()
-saveTableToCatalog (QualifiedObject sn tn) =
+saveTableToCatalog :: QualifiedTable -> Maybe TableConfig -> Q.Tx ()
+saveTableToCatalog (QualifiedObject sn tn) configM =
   Q.unitQ [Q.sql|
-            INSERT INTO "hdb_catalog"."hdb_table" VALUES ($1, $2)
-                |] (sn, tn) False
+            INSERT INTO "hdb_catalog"."hdb_table"
+              (table_schema, table_name, configuration)
+            VALUES ($1, $2, $3)
+                |] (sn, tn, configVal) False
+  where
+    configVal = Q.AltJ . toJSON <$> configM
 
 newtype TrackTable
   = TrackTable
@@ -57,17 +61,17 @@ newtype TrackTable
   deriving (Show, Eq, FromJSON, ToJSON, Lift)
 
 trackExistingTableOrViewP1
-  :: (CacheRM m, UserInfoM m, QErrM m) => TrackTable -> m ()
-trackExistingTableOrViewP1 (TrackTable vn) = do
+  :: (CacheRM m, UserInfoM m, QErrM m) => QualifiedTable -> m ()
+trackExistingTableOrViewP1 qt = do
   adminOnly
   rawSchemaCache <- askSchemaCache
-  when (M.member vn $ scTables rawSchemaCache) $
-    throw400 AlreadyTracked $ "view/table already tracked : " <>> vn
+  when (M.member qt $ scTables rawSchemaCache) $
+    throw400 AlreadyTracked $ "view/table already tracked : " <>> qt
 
 trackExistingTableOrViewP2
   :: (QErrM m, CacheRWM m, MonadTx m)
-  => QualifiedTable -> Bool -> m EncJSON
-trackExistingTableOrViewP2 vn isSystemDefined = do
+  => QualifiedTable -> Maybe TableConfig -> Bool -> m EncJSON
+trackExistingTableOrViewP2 vn mTableConfig isSystemDefined = do
   sc <- askSchemaCache
   let defGCtx = scDefaultRemoteGCtx sc
   GS.checkConflictingNode defGCtx $ GS.qualObjectToName vn
@@ -77,16 +81,17 @@ trackExistingTableOrViewP2 vn isSystemDefined = do
     []   -> throw400 NotExists $ "no such table/view exists in postgres : " <>> vn
     [ti] -> addTableToCache ti
     _    -> throw500 $ "more than one row found for: " <>> vn
-  liftTx $ Q.catchE defaultTxErrorHandler $ saveTableToCatalog vn
+  liftTx $ Q.catchE defaultTxErrorHandler $ saveTableToCatalog vn mTableConfig
 
   return successMsg
   where
     QualifiedObject sn tn = vn
+    mCustomRootFlds = _tcCustomRootFields <$> mTableConfig
     mkTableInfo (cols, pCols, constraints, viewInfoM) =
       let colMap = M.fromList $ flip map (Q.getAltJ cols) $
             \c -> (fromPGCol $ pgiName c, FIColumn c)
       in TableInfo vn isSystemDefined colMap mempty (Q.getAltJ constraints)
-                  (Q.getAltJ pCols) (Q.getAltJ viewInfoM) mempty
+                  (Q.getAltJ pCols) (Q.getAltJ viewInfoM) mempty mCustomRootFlds
     fetchTableCatalog = map mkTableInfo <$>
       Q.listQE defaultTxErrorHandler [Q.sql|
            SELECT columns, primary_key_columns,
@@ -98,9 +103,23 @@ trackExistingTableOrViewP2 vn isSystemDefined = do
 runTrackTableQ
   :: (QErrM m, CacheRWM m, MonadTx m, UserInfoM m)
   => TrackTable -> m EncJSON
-runTrackTableQ q = do
-  trackExistingTableOrViewP1 q
-  trackExistingTableOrViewP2 (tName q) False
+runTrackTableQ (TrackTable qt) = do
+  trackExistingTableOrViewP1 qt
+  trackExistingTableOrViewP2 qt Nothing False
+
+data TrackTableV2
+  = TrackTableV2
+  { ttv2Table         :: !QualifiedTable
+  , ttv2Configuration :: !(Maybe TableConfig)
+  } deriving (Show, Eq, Lift)
+$(deriveJSON (aesonDrop 4 snakeCase) ''TrackTableV2)
+
+runTrackTableV2Q
+  :: (QErrM m, CacheRWM m, MonadTx m, UserInfoM m)
+  => TrackTableV2 -> m EncJSON
+runTrackTableV2Q (TrackTableV2 qt configM) = do
+  trackExistingTableOrViewP1 qt
+  trackExistingTableOrViewP2 qt configM False
 
 purgeDep :: (CacheRWM m, MonadTx m)
          => SchemaObjId -> m ()
@@ -353,13 +372,17 @@ buildSchemaCacheG withSetup = do
     let qt = _ctTable ct
         isSysDef = _ctSystemDefined ct
         tableInfoM = _ctInfo ct
+        mTableConfig = _ctConfiguration ct
+        mCustomRootFlds = _tcCustomRootFields <$> mTableConfig
         mkInconsObj = InconsistentMetadataObj (MOTable qt)
                       MOTTable $ toJSON $ TrackTable qt
     modifyErr (\e -> "table " <> qt <<> "; " <> e) $
       handleInconsistentObj mkInconsObj $ do
       ti <- onNothing tableInfoM $ throw400 NotExists $
             "no such table/view exists in postgres : " <>> qt
-      addTableToCache $ ti{tiSystemDefined = isSysDef}
+      addTableToCache $ ti{ tiSystemDefined = isSysDef
+                          , tiCustomRootFields = mCustomRootFlds
+                          }
 
   -- relationships
   forM_ relationships $ \(CatalogRelation qt rn rt rDef cmnt) -> do

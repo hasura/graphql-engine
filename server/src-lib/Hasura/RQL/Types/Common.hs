@@ -17,20 +17,24 @@ module Hasura.RQL.Types.Common
        , ColVals
        , MutateResp(..)
        , ForeignKey(..)
+       , GraphQLName(..)
        ) where
 
+import           Hasura.GraphQL.Utils          (isValidName)
 import           Hasura.Prelude
 import           Hasura.SQL.Types
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import qualified Data.HashMap.Strict        as HM
-import qualified Data.Text                  as T
-import qualified Database.PG.Query          as Q
-import           Instances.TH.Lift          ()
-import           Language.Haskell.TH.Syntax (Lift)
-import qualified PostgreSQL.Binary.Decoding as PD
+import           Instances.TH.Lift             ()
+import           Language.Haskell.TH.Syntax    (Lift)
+
+import qualified Data.HashMap.Strict           as HM
+import qualified Data.Text                     as T
+import qualified Database.PG.Query             as Q
+import qualified Language.GraphQL.Draft.Syntax as G
+import qualified PostgreSQL.Binary.Decoding    as PD
 
 data PGColInfo
   = PGColInfo
@@ -162,3 +166,14 @@ data ForeignKey
 $(deriveJSON (aesonDrop 3 snakeCase) ''ForeignKey)
 
 instance Hashable ForeignKey
+
+newtype GraphQLName
+  = GraphQLName {unGraphQLName :: G.Name}
+  deriving (Show, Eq, Lift, ToJSON)
+
+instance FromJSON GraphQLName where
+  parseJSON = withText "GraphQLName" $ \t -> do
+    let gName = G.Name t
+    if not $ isValidName gName then
+      fail $ T.unpack t <> " is not valid GraphQL name"
+    else return $ GraphQLName gName

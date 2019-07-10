@@ -347,14 +347,12 @@ table(
 ):  [table!]!
 
 -}
-mkSelFld
-  :: QualifiedTable
-  -> ObjFldInfo
-mkSelFld tn =
+mkSelFld :: Maybe G.Name -> QualifiedTable -> ObjFldInfo
+mkSelFld mCustomName tn =
   mkHsraObjFldInfo (Just desc) fldName args ty
   where
     desc    = G.Description $ "fetch data from the table: " <>> tn
-    fldName = qualObjectToName tn
+    fldName = fromMaybe (qualObjectToName tn) mCustomName
     args    = fromInpValL $ mkSelArgs tn
     ty      = G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy tn
 
@@ -366,15 +364,13 @@ table_by_pk(
   coln: valuen!
 ): table
 -}
-mkSelFldPKey
-  :: QualifiedTable -> [PGColInfo]
-  -> ObjFldInfo
-mkSelFldPKey tn cols =
+mkSelFldPKey :: Maybe G.Name -> QualifiedTable -> [PGColInfo] -> ObjFldInfo
+mkSelFldPKey mCustomName tn cols =
   mkHsraObjFldInfo (Just desc) fldName args ty
   where
     desc = G.Description $ "fetch data from the table: " <> tn
            <<> " using primary key columns"
-    fldName = mkTableByPkName tn
+    fldName = fromMaybe (mkTableByPkName tn) mCustomName
     args = fromInpValL $ map colInpVal cols
     ty = G.toGT $ mkTableTy tn
     colInpVal (PGColInfo n typ _) =
@@ -390,14 +386,14 @@ table_aggregate(
 
 -}
 mkAggSelFld
-  :: QualifiedTable
-  -> ObjFldInfo
-mkAggSelFld tn =
+  :: Maybe G.Name -> QualifiedTable -> ObjFldInfo
+mkAggSelFld mCustomName tn =
   mkHsraObjFldInfo (Just desc) fldName args ty
   where
     desc = G.Description $ "fetch aggregated fields from the table: "
            <>> tn
-    fldName = qualObjectToName tn <> "_aggregate"
+    defFldName = qualObjectToName tn <> "_aggregate"
+    fldName = fromMaybe defFldName mCustomName
     args = fromInpValL $ mkSelArgs tn
     ty = G.toGT $ G.toNT $ mkTableAggTy tn
 
@@ -788,9 +784,8 @@ mkJSONOpInpVals tn cols = bool jsonbOpArgs [] $ null jsonbCols
       InpValInfo (Just deleteAtPathDesc) deleteAtPathOp Nothing $
       G.toGT $ mkJSONOpTy tn deleteAtPathOp
 
-mkUpdMutFld
-  :: QualifiedTable -> [PGColInfo] -> ObjFldInfo
-mkUpdMutFld tn cols =
+mkUpdMutFld :: Maybe G.Name -> QualifiedTable -> [PGColInfo] -> ObjFldInfo
+mkUpdMutFld mCustomName tn cols =
   mkHsraObjFldInfo (Just desc) fldName (fromInpValL inputValues) $
     G.toGT $ mkMutRespTy tn
   where
@@ -798,7 +793,8 @@ mkUpdMutFld tn cols =
                   <> mkJSONOpInpVals tn cols
     desc = G.Description $ "update data of the table: " <>> tn
 
-    fldName = "update_" <> qualObjectToName tn
+    defFldName = "update_" <> qualObjectToName tn
+    fldName = fromMaybe defFldName mCustomName
 
     filterArgDesc = "filter the rows which have to be updated"
     filterArg =
@@ -819,15 +815,15 @@ delete_table(
 
 -}
 
-mkDelMutFld
-  :: QualifiedTable -> ObjFldInfo
-mkDelMutFld tn =
+mkDelMutFld :: Maybe G.Name -> QualifiedTable -> ObjFldInfo
+mkDelMutFld mCustomName tn =
   mkHsraObjFldInfo (Just desc) fldName (fromInpValL [filterArg]) $
     G.toGT $ mkMutRespTy tn
   where
     desc = G.Description $ "delete data from the table: " <>> tn
 
-    fldName = "delete_" <> qualObjectToName tn
+    defFldName = "delete_" <> qualObjectToName tn
+    fldName = fromMaybe defFldName mCustomName
 
     filterArgDesc = "filter the rows which have to be deleted"
     filterArg =
@@ -976,9 +972,8 @@ insert_table(
   ): table_mutation_response!
 -}
 
-mkInsMutFld
-  :: QualifiedTable -> Bool -> ObjFldInfo
-mkInsMutFld tn isUpsertable =
+mkInsMutFld :: Maybe G.Name -> QualifiedTable -> Bool -> ObjFldInfo
+mkInsMutFld mCustomName tn isUpsertable =
   mkHsraObjFldInfo (Just desc) fldName (fromInpValL inputVals) $
     G.toGT $ mkMutRespTy tn
   where
@@ -986,7 +981,8 @@ mkInsMutFld tn isUpsertable =
     desc = G.Description $
       "insert data into the table: " <>> tn
 
-    fldName = "insert_" <> qualObjectToName tn
+    defFldName = "insert_" <> qualObjectToName tn
+    fldName = fromMaybe defFldName mCustomName
 
     objsArgDesc = "the rows to be inserted"
     objectsArg =
@@ -996,8 +992,8 @@ mkInsMutFld tn isUpsertable =
     onConflictInpVal = bool Nothing (Just onConflictArg) isUpsertable
 
     onConflictDesc = "on conflict condition"
-    onConflictArg =
-      InpValInfo (Just onConflictDesc) "on_conflict" Nothing $ G.toGT $ mkOnConflictInpTy tn
+    onConflictArg = InpValInfo (Just onConflictDesc) "on_conflict"
+                    Nothing $ G.toGT $ mkOnConflictInpTy tn
 
 mkConstriantTy :: QualifiedTable -> [ConstraintName] -> EnumTyInfo
 mkConstriantTy tn cons = enumTyInfo
@@ -1393,9 +1389,10 @@ getRootFldsRole'
   -> Maybe ([PGCol], PreSetColsPartial, AnnBoolExpPartialSQL, [T.Text]) -- update filter
   -> Maybe (AnnBoolExpPartialSQL, [T.Text]) -- delete filter
   -> Maybe ViewInfo
+  -> Maybe TableCustomRootFields -- custom field name
   -> RootFlds
-getRootFldsRole' tn primCols constraints fields funcs insM selM updM delM viM =
-  RootFlds mFlds
+getRootFldsRole' tn primCols constraints fields funcs insM
+  selM updM delM viM mCustomFields = RootFlds mFlds
   where
     allCols = getCols fields
     mFlds = mapFromL (either _fiName _fiName . snd) $
@@ -1416,27 +1413,37 @@ getRootFldsRole' tn primCols constraints fields funcs insM selM updM delM viM =
     mutHelper f getDet mutM =
       bool Nothing (getDet <$> mutM) $ isMutable f viM
 
+    getCustomNameWith = getCustomName mCustomFields
+
     colInfos = fst $ validPartitionFieldInfoMap fields
+    insCustName = getCustomNameWith _tcrfInsert
     getInsDet (hdrs, upsertPerm) =
       let isUpsertable = upsertable constraints upsertPerm $ isJust viM
       in ( OCInsert $ InsOpCtx tn $ hdrs `union` maybe [] (\(_, _, _, x) -> x) updM
-         , Right $ mkInsMutFld tn isUpsertable
+         , Right $ mkInsMutFld insCustName tn isUpsertable
          )
 
+    updCustName = getCustomNameWith _tcrfUpdate
     getUpdDet (updCols, preSetCols, updFltr, hdrs) =
       ( OCUpdate $ UpdOpCtx tn hdrs updFltr preSetCols allCols
-      , Right $ mkUpdMutFld tn $ getColInfos updCols colInfos
+      , Right $ mkUpdMutFld updCustName tn $ getColInfos updCols colInfos
       )
 
+    delCustName = getCustomNameWith _tcrfDelete
     getDelDet (delFltr, hdrs) =
       ( OCDelete $ DelOpCtx tn hdrs delFltr allCols
-      , Right $ mkDelMutFld tn
+      , Right $ mkDelMutFld delCustName tn
       )
-    getSelDet (selFltr, pLimit, hdrs, _) =
-      selFldHelper OCSelect mkSelFld selFltr pLimit hdrs
 
+
+    selCustName = getCustomNameWith _tcrfSelect
+    getSelDet (selFltr, pLimit, hdrs, _) =
+      selFldHelper OCSelect (mkSelFld selCustName) selFltr pLimit hdrs
+
+    selAggCustName = getCustomNameWith _tcrfSelectAggregate
     getSelAggDet (Just (selFltr, pLimit, hdrs, True)) =
-      Just $ selFldHelper OCSelectAgg mkAggSelFld selFltr pLimit hdrs
+      Just $ selFldHelper OCSelectAgg (mkAggSelFld selAggCustName)
+               selFltr pLimit hdrs
     getSelAggDet _                                    = Nothing
 
     selFldHelper f g pFltr pLimit hdrs =
@@ -1444,12 +1451,13 @@ getRootFldsRole' tn primCols constraints fields funcs insM selM updM delM viM =
       , Left $ g tn
       )
 
+    selByPkCustName = getCustomNameWith _tcrfSelectByPk
     getPKeySelDet Nothing _ = Nothing
     getPKeySelDet _ [] = Nothing
     getPKeySelDet (Just (selFltr, _, hdrs, _)) pCols = Just
       ( OCSelectPkey $ SelPkOpCtx tn hdrs selFltr $
         mapFromL (mkColName . pgiName) pCols
-      , Left $ mkSelFldPKey tn pCols
+      , Left $ mkSelFldPKey selByPkCustName tn pCols
       )
 
     getFuncQueryFlds (selFltr, pLimit, hdrs, _) =
@@ -1565,10 +1573,11 @@ mkGCtxRole
   -> [ConstraintName]
   -> [FunctionInfo]
   -> Maybe ViewInfo
+  -> Maybe TableCustomRootFields
   -> RoleName
   -> RolePermInfo
   -> m (TyAgg, RootFlds, InsCtxMap)
-mkGCtxRole tableCache tn fields pCols constraints funcs viM role permInfo = do
+mkGCtxRole tableCache tn fields pCols constraints funcs viM tcrfM role permInfo = do
   selPermM <- mapM (getSelPerm tableCache fields role) $ _permSel permInfo
   tabInsInfoM <- forM (_permIns permInfo) $ \ipi -> do
     ctx <- mkInsCtx role tableCache fields ipi $ _permUpd permInfo
@@ -1580,7 +1589,7 @@ mkGCtxRole tableCache tn fields pCols constraints funcs viM role permInfo = do
       updColsM = filterColInfos . upiCols <$> _permUpd permInfo
       tyAgg = mkGCtxRole' tn insPermM selPermM updColsM
               (void $ _permDel permInfo) pColInfos constraints viM funcs
-      rootFlds = getRootFldsRole tn pCols constraints fields funcs viM permInfo
+      rootFlds = getRootFldsRole tn pCols constraints fields funcs permInfo viM tcrfM
       insCtxMap = maybe Map.empty (Map.singleton tn) insCtxM
   return (tyAgg, rootFlds, insCtxMap)
   where
@@ -1596,14 +1605,14 @@ getRootFldsRole
   -> [ConstraintName]
   -> FieldInfoMap
   -> [FunctionInfo]
-  -> Maybe ViewInfo
   -> RolePermInfo
+  -> Maybe ViewInfo
+  -> Maybe TableCustomRootFields
   -> RootFlds
-getRootFldsRole tn pCols constraints fields funcs viM (RolePermInfo insM selM updM delM) =
+getRootFldsRole tn pCols constraints fields funcs (RolePermInfo insM selM updM delM) =
   getRootFldsRole' tn pCols constraints fields funcs
   (mkIns <$> insM) (mkSel <$> selM)
   (mkUpd <$> updM) (mkDel <$> delM)
-  viM
   where
     mkIns i = (ipiRequiredHeaders i, isJust updM)
     mkSel s = ( spiFilter s, spiLimit s
@@ -1624,7 +1633,7 @@ mkGCtxMapTable
   -> m (Map.HashMap RoleName (TyAgg, RootFlds, InsCtxMap))
 mkGCtxMapTable tableCache funcCache tabInfo = do
   m <- Map.traverseWithKey
-       (mkGCtxRole tableCache tn fields pkeyCols validConstraints tabFuncs viewInfo) rolePerms
+       (mkGCtxRole tableCache tn fields pkeyCols validConstraints tabFuncs viewInfo customRootFlds) rolePerms
   adminInsCtx <- mkAdminInsCtx tn tableCache fields
   let adminCtx = mkGCtxRole' tn (Just (colInfos, icRelations adminInsCtx))
                  (Just (True, selFlds)) (Just colInfos) (Just ())
@@ -1632,7 +1641,7 @@ mkGCtxMapTable tableCache funcCache tabInfo = do
       adminInsCtxMap = Map.singleton tn adminInsCtx
   return $ Map.insert adminRole (adminCtx, adminRootFlds, adminInsCtxMap) m
   where
-    TableInfo tn _ fields rolePerms constraints pkeyCols viewInfo _ = tabInfo
+    TableInfo tn _ fields rolePerms constraints pkeyCols viewInfo _ customRootFlds = tabInfo
     validConstraints = mkValidConstraints constraints
     colInfos = getValidCols fields
     validColNames = map pgiName colInfos
@@ -1646,7 +1655,7 @@ mkGCtxMapTable tableCache funcCache tabInfo = do
       getRootFldsRole' tn pkeyCols validConstraints fields tabFuncs
       (Just ([], True)) (Just (noFilter, Nothing, [], True))
       (Just (validColNames, mempty, noFilter, [])) (Just (noFilter, []))
-      viewInfo
+      viewInfo customRootFlds
 
 noFilter :: AnnBoolExpPartialSQL
 noFilter = annBoolExpTrue

@@ -1,6 +1,8 @@
 module Hasura.GraphQL.Context where
 
 import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
 import           Data.Has
 import           Hasura.Prelude
 
@@ -8,6 +10,8 @@ import qualified Data.HashMap.Strict                 as Map
 import qualified Data.HashSet                        as Set
 import qualified Data.Text                           as T
 import qualified Language.GraphQL.Draft.Syntax       as G
+
+import           Language.Haskell.TH.Syntax          (Lift)
 
 import           Hasura.GraphQL.Resolve.ContextTypes
 import           Hasura.GraphQL.Validate.Types
@@ -425,3 +429,20 @@ data RemoteGCtx
   , _rgMutationRoot     :: !(Maybe ObjTyInfo)
   , _rgSubscriptionRoot :: !(Maybe ObjTyInfo)
   } deriving (Show, Eq)
+
+data TableCustomRootFields
+  = TableCustomRootFields
+  { _tcrfSelect          :: !(Maybe GraphQLName)
+  , _tcrfSelectByPk      :: !(Maybe GraphQLName)
+  , _tcrfSelectAggregate :: !(Maybe GraphQLName)
+  , _tcrfInsert          :: !(Maybe GraphQLName)
+  , _tcrfUpdate          :: !(Maybe GraphQLName)
+  , _tcrfDelete          :: !(Maybe GraphQLName)
+  } deriving (Show, Eq, Lift)
+$(deriveJSON (aesonDrop 5 snakeCase) ''TableCustomRootFields)
+
+getCustomName
+  :: Maybe TableCustomRootFields
+  -> (TableCustomRootFields -> Maybe GraphQLName)
+  -> Maybe G.Name
+getCustomName customFieldsM f = customFieldsM >>= (fmap unGraphQLName . f)

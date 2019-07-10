@@ -343,7 +343,7 @@ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
     errMsg = "console template rendering failed: " ++ show errs
 
 newtype QueryParser
-  = QueryParser { getQueryParser :: QualifiedTable -> Handler RQLQuery }
+  = QueryParser { getQueryParser :: QualifiedTable -> Handler RQLQueryV1 }
 
 queryParsers :: M.HashMap T.Text QueryParser
 queryParsers =
@@ -365,7 +365,7 @@ queryParsers =
 legacyQueryHandler :: TableName -> T.Text -> Handler (HttpResponse EncJSON)
 legacyQueryHandler tn queryType =
   case M.lookup queryType queryParsers of
-    Just queryParser -> getQueryParser queryParser qt >>= v1QueryHandler
+    Just queryParser -> getQueryParser queryParser qt >>= (v1QueryHandler . RQV1)
     Nothing          -> throw404 "No such resource exists"
   where
     qt = QualifiedObject publicSchema tn
@@ -548,7 +548,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
         TemplateParam *** String
 
     mkQTemplateAction tmpltName tmpltArgs =
-      v1QueryHandler $ RQExecuteQueryTemplate $
+      v1QueryHandler $ RQV1 $ RQExecuteQueryTemplate $
       ExecQueryTemplate (TQueryName tmpltName) tmpltArgs
 
     serveApiConsole = do

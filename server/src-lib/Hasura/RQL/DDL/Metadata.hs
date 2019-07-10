@@ -50,12 +50,14 @@ import qualified Hasura.RQL.DDL.Relationship        as DR
 import qualified Hasura.RQL.DDL.RemoteSchema        as DRS
 import qualified Hasura.RQL.DDL.Schema.Function     as DF
 import qualified Hasura.RQL.DDL.Schema.Table        as DT
+import qualified Hasura.RQL.Types.Catalog           as TRC
 import qualified Hasura.RQL.Types.EventTrigger      as DTS
 import qualified Hasura.RQL.Types.RemoteSchema      as TRS
 
 data TableMeta
   = TableMeta
   { _tmTable               :: !QualifiedTable
+  , _tmConfiguration       :: !(Maybe TRC.TableConfig)
   , _tmObjectRelationships :: ![DR.ObjRelDef]
   , _tmArrayRelationships  :: ![DR.ArrRelDef]
   , _tmInsertPermissions   :: ![DP.InsPermDef]
@@ -65,9 +67,9 @@ data TableMeta
   , _tmEventTriggers       :: ![DTS.EventTriggerConf]
   } deriving (Show, Eq, Lift)
 
-mkTableMeta :: QualifiedTable -> TableMeta
-mkTableMeta qt =
-  TableMeta qt [] [] [] [] [] [] []
+mkTableMeta :: QualifiedTable -> Maybe TRC.TableConfig -> TableMeta
+mkTableMeta qt configM =
+  TableMeta qt configM [] [] [] [] [] [] []
 
 makeLenses ''TableMeta
 
@@ -79,6 +81,7 @@ instance FromJSON TableMeta where
 
     TableMeta
      <$> o .: tableKey
+     <*> o .:? configKey .!= Nothing
      <*> o .:? orKey .!= []
      <*> o .:? arKey .!= []
      <*> o .:? ipKey .!= []
@@ -89,6 +92,7 @@ instance FromJSON TableMeta where
 
     where
       tableKey = "table"
+      configKey = "configuration"
       orKey = "object_relationships"
       arKey = "array_relationships"
       ipKey = "insert_permissions"
@@ -231,8 +235,10 @@ applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas mCollections mAll
   withPathK "tables" $ do
 
     -- tables and views
-    indexedForM_ (map _tmTable tables) $ \tableName ->
-      void $ DT.trackExistingTableOrViewP2 tableName False
+    indexedForM_ tables $ \table -> do
+      let tableName = table ^. tmTable
+          config = table ^. tmConfiguration
+      void $ DT.trackExistingTableOrViewP2 tableName config False
 
     -- Relationships
     indexedForM_ tables $ \table -> do
@@ -323,8 +329,11 @@ $(deriveToJSON defaultOptions ''ExportMetadata)
 fetchMetadata :: Q.TxE QErr ReplaceMetadata
 fetchMetadata = do
   tables <- Q.catchE defaultTxErrorHandler fetchTables
-  let qts          = map (uncurry QualifiedObject) tables
-      tableMetaMap = M.fromList $ zip qts $ map mkTableMeta qts
+  let tableMetaMap = M.fromList $ flip map tables $
+                     \(sn, tn, mConfig) ->
+                       let qt = QualifiedObject sn tn
+                           mConfigVal = Q.getAltJ <$> mConfig
+                       in (qt, mkTableMeta qt mConfigVal)
 
   -- Fetch all the relationships
   relationships <- Q.catchE defaultTxErrorHandler fetchRelationships
@@ -403,8 +412,9 @@ fetchMetadata = do
 
     fetchTables =
       Q.listQ [Q.sql|
-                SELECT table_schema, table_name from hdb_catalog.hdb_table
-                 WHERE is_system_defined = 'false'
+                SELECT table_schema, table_name, configuration
+                FROM hdb_catalog.hdb_table
+                WHERE is_system_defined = 'false'
                     |] () False
 
     fetchRelationships =

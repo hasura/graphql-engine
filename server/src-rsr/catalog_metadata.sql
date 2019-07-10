@@ -21,6 +21,7 @@ from
             'schema', ht.table_schema
           ),
           'system_defined', ht.is_system_defined,
+          'configuration', ht.configuration,
           'info', tables.info
         )
       ), '[]') as items
