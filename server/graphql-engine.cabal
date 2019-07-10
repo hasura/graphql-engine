@@ -331,26 +331,8 @@ executable graphql-engine
   main-is:           Main.hs
   default-language:  Haskell2010
   hs-source-dirs:    src-exec
-  build-depends:       base
-                     , warp >= 3.2
-                     , graphql-engine
-                     , aeson >= 1.0
-                     , bytestring >= 0.10
-                     , mtl
-                     , optparse-applicative >= 0.12
-                     , yaml
-                     , template-haskell >= 2.11 , time >= 1.6
-                     , text
-                     , lens
-                     , unordered-containers >= 0.2
-                     , pg-client
-                     , http-client
-                     , http-client-tls
-                     , stm
-                     , wreq
-                     , string-conversions
-                     , uuid
-                     , wai
+  build-depends:     base
+                   , graphql-engine
 
   if flag(developer)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries
