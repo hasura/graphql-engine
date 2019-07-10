@@ -2,6 +2,10 @@
 
 Barebones example to show how to have Firebase Auth integrated with Hasura JWT mode.
 
+## Compatibility
+
+In order to use Firebase Auth securely, update your Hasura instances to the following image: `hasura/graphql-engine:v1.0.0-beta.2-hotfix.1`. Previous versions of Hasura may have a bug in their audience/issuer check. Docs on how to update Hasura can be found [[here]](https://docs.hasura.io/1.0/graphql/manual/deployment/updating.html).
+
 ## Firebase Auth
 
 Firebase has few ways of implementing custom JWT claims in Firebase Auth:
@@ -52,7 +56,7 @@ HASURA_GRAPHQL_ADMIN_SECRET : youradminsecretkey
 ```
 
 ```
-HASURA_GRAPHQL_JWT_SECRET: {"type":"RS512", "jwk_url": "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com"}
+HASURA_GRAPHQL_JWT_SECRET: {"type":"RS512", "jwk_url": "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com", "audience": "<firebase-project-id>", "issuer": "https://securetoken.google.com/<firebase-project-id>"}
 ```
 
 ## Sending JWT to Hasura
