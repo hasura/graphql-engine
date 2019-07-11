@@ -123,8 +123,8 @@ data OpExpG a
   = AEQ !Bool !a
   | ANE !Bool !a
 
-  | AIN  ![a]
-  | ANIN ![a]
+  | AIN  !a
+  | ANIN !a
 
   | AGT !a
   | ALT !a
@@ -143,8 +143,8 @@ data OpExpG a
   | AContains !a
   | AContainedIn !a
   | AHasKey !a
-  | AHasKeysAny [Text]
-  | AHasKeysAll [Text]
+  | AHasKeysAny !a
+  | AHasKeysAll !a
 
   | ASTContains !a
   | ASTCrosses !a
@@ -182,8 +182,8 @@ opExpToJPair f = \case
   AEQ _ a          -> ("_eq", f a)
   ANE _ a          -> ("_ne", f a)
 
-  AIN a          -> ("_in", toJSON $ map f a)
-  ANIN a         -> ("_nin", toJSON $ map f a)
+  AIN a          -> ("_in", f a)
+  ANIN a         -> ("_nin", f a)
 
   AGT a          -> ("_gt", f a)
   ALT a          -> ("_lt", f a)
@@ -202,8 +202,8 @@ opExpToJPair f = \case
   AContains a    -> ("_contains", f a)
   AContainedIn a -> ("_contained_in", f a)
   AHasKey a      -> ("_has_key", f a)
-  AHasKeysAny a  -> ("_has_keys_any", toJSON a)
-  AHasKeysAll a  -> ("_has_keys_all", toJSON a)
+  AHasKeysAny a  -> ("_has_keys_any", f a)
+  AHasKeysAll a  -> ("_has_keys_all", f a)
 
   ASTContains a    -> ("_st_contains", f a)
   ASTCrosses a     -> ("_st_crosses", f a)
@@ -261,6 +261,7 @@ andAnnBoolExps l r =
 
 type AnnBoolExpFldSQL = AnnBoolExpFld S.SQLExp
 type AnnBoolExpSQL = AnnBoolExp S.SQLExp
+
 type AnnBoolExpFldPartialSQL = AnnBoolExpFld PartialSQLExp
 type AnnBoolExpPartialSQL = AnnBoolExp PartialSQLExp
 
@@ -269,7 +270,7 @@ type PreSetCols = M.HashMap PGCol S.SQLExp
 
 -- doesn't resolve the session variable
 data PartialSQLExp
-  = PSESessVar !PGColType !SessVar
+  = PSESessVar !PgType !SessVar
   | PSESQLExp !S.SQLExp
   deriving (Show, Eq)
 
@@ -287,7 +288,7 @@ instance ToJSON AnnBoolExpPartialSQL where
           , toJSON (pci, map opExpSToJSON opExps)
           )
         AVRel ri relBoolExp ->
-          ( getRelTxt $ riName ri
+          ( relNameToTxt $ riName ri
           , toJSON (ri, toJSON relBoolExp)
           )
       opExpSToJSON :: OpExpG PartialSQLExp -> Value

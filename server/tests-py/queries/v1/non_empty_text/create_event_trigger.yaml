@@ -1,0 +1,31 @@
+description: Create event trigger with role ""
+url: /v1/query
+status: 400
+response:
+  path: $.name
+  error: >-
+    empty string not allowed
+  code: parse-failed
+query:
+  type: create_event_trigger
+  args:
+    name: ""
+    table: users
+    webhook: https://httpbin.org/post
+    insert:
+      columns: "*"
+      payload:
+      - username
+    update:
+      columns:
+      - username
+      - real_name
+      payload: "*"
+    delete:
+      columns: "*"
+    headers:
+    - name: X-Hasura-From-Val
+      value: myvalue
+    - name: X-Hasura-From-Env
+      value_from_env: EVENT_WEBHOOK_HEADER
+    replace: false

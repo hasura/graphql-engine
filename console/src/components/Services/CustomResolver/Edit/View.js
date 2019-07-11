@@ -13,7 +13,7 @@ import {
 } from '../Add/addResolverReducer';
 
 import { VIEW_RESOLVER } from '../customActions';
-import ReloadMetadata from '../../Metadata/MetadataOptions/ReloadMetadata';
+import ReloadRemoteSchema from '../../Metadata/MetadataOptions/ReloadRemoteSchema';
 
 import { appPrefix } from '../constants';
 
@@ -117,6 +117,23 @@ class ViewStitchedSchema extends React.Component {
       </Tooltip>
     );
 
+    const showReloadRemoteSchema =
+      resolverName && resolverName.length > 0 ? (
+        <div className={styles.commonBtn + ' ' + styles.detailsRefreshButton}>
+          <span>
+            <ReloadRemoteSchema
+              {...this.props}
+              remoteSchemaName={resolverName}
+            />
+          </span>
+          <span>
+            <OverlayTrigger placement="right" overlay={refresh}>
+              <i className="fa fa-question-circle" aria-hidden="true" />
+            </OverlayTrigger>
+          </span>
+        </div>
+      ) : null;
+
     return (
       <div
         className={styles.view_stitch_schema_wrapper + ' ' + styles.addWrapper}
@@ -169,21 +186,7 @@ class ViewStitchedSchema extends React.Component {
               </tbody>
             </table>
           </div>
-          <div className={styles.commonBtn + ' ' + styles.detailsRefreshButton}>
-            <span>
-              <ReloadMetadata
-                {...this.props}
-                btnText={'Refresh schema'}
-                btnTextChanging={'Refreshing schema...'}
-                bsClass={styles.yellow_button}
-              />
-            </span>
-            <span>
-              <OverlayTrigger placement="right" overlay={refresh}>
-                <i className="fa fa-question-circle" aria-hidden="true" />
-              </OverlayTrigger>
-            </span>
-          </div>
+          {showReloadRemoteSchema}
         </div>
         <br />
         <br />

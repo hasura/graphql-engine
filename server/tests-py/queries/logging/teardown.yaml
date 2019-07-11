@@ -1,0 +1,6 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      drop table hello

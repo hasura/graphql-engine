@@ -133,14 +133,13 @@ checkPermOnCol pt allowedCols pgCol = do
   unless (HS.member pgCol allowedCols) $
     throw400 PermissionDenied $ permErrMsg roleName
   where
-    permErrMsg (RoleName "admin") =
-      "no such column exists : " <>> pgCol
-    permErrMsg roleName =
-      mconcat
-      [ "role " <>> roleName
-      , " does not have permission to "
-      , permTypeToCode pt <> " column " <>> pgCol
-      ]
+    permErrMsg roleName
+      | roleName == adminRole = "no such column exists : " <>> pgCol
+      | otherwise = mconcat
+        [ "role " <>> roleName
+        , " does not have permission to "
+        , permTypeToCode pt <> " column " <>> pgCol
+        ]
 
 binRHSBuilder
   :: PGColType -> Value -> DMLP1 S.SQLExp
@@ -158,7 +157,7 @@ fetchRelTabInfo refTabName =
   -- Internal error
   modifyErrAndSet500 ("foreign " <> ) $ askTabInfo refTabName
 
-type SessVarBldr m = PGColType -> SessVar -> m S.SQLExp
+type SessVarBldr m = PgType -> SessVar -> m S.SQLExp
 
 fetchRelDet
   :: (UserInfoM m, QErrM m, CacheRM m)
@@ -216,37 +215,49 @@ convPartialSQLExp f = \case
   PSESessVar colTy sessVar -> f colTy sessVar
 
 sessVarFromCurrentSetting
-  :: (Applicative f) => PGColType -> SessVar -> f S.SQLExp
-sessVarFromCurrentSetting columnType sessVar =
-  pure $ sessVarFromCurrentSetting' columnType sessVar
+  :: (Applicative f) => PgType -> SessVar -> f S.SQLExp
+sessVarFromCurrentSetting pgType sessVar =
+  pure $ sessVarFromCurrentSetting' pgType sessVar
 
-sessVarFromCurrentSetting' :: PGColType -> SessVar -> S.SQLExp
-sessVarFromCurrentSetting' columnType sessVar =
-  S.withTyAnn columnType $ withGeoVal columnType $
-    S.SEOpApp (S.SQLOp "->>") [curSess, S.SELit $ T.toLower sessVar]
+sessVarFromCurrentSetting' :: PgType -> SessVar -> S.SQLExp
+sessVarFromCurrentSetting' ty sessVar =
+  flip S.SETyAnn (S.mkTypeAnn ty) $
+  case ty of
+    PgTypeSimple baseTy -> withGeoVal baseTy sessVarVal
+    PgTypeArray _       -> sessVarVal
   where
     curSess = S.SEUnsafe "current_setting('hasura.user')::json"
+    sessVarVal = S.SEOpApp (S.SQLOp "->>")
+                 [curSess, S.SELit $ T.toLower sessVar]
 
 checkSelPerm
   :: (UserInfoM m, QErrM m, CacheRM m)
   => SelPermInfo
-  -> (PGColType -> SessVar -> m S.SQLExp)
+  -> SessVarBldr m
   -> AnnBoolExpSQL
   -> m AnnBoolExpSQL
 checkSelPerm spi sessVarBldr =
   traverse (checkOnColExp spi sessVarBldr)
 
 convBoolExp
-  :: ( UserInfoM m, QErrM m, CacheRM m)
+  :: (UserInfoM m, QErrM m, CacheRM m)
   => FieldInfoMap
   -> SelPermInfo
   -> BoolExp
-  -> (PGColType -> SessVar -> m S.SQLExp)
+  -> SessVarBldr m
   -> (PGColType -> Value -> m S.SQLExp)
   -> m AnnBoolExpSQL
 convBoolExp cim spi be sessVarBldr prepValBldr = do
-  abe <- annBoolExp prepValBldr cim be
+  abe <- annBoolExp rhsParser cim be
   checkSelPerm spi sessVarBldr abe
+  where
+    rhsParser pgType val = case pgType of
+      PgTypeSimple ty  -> prepValBldr ty val
+      PgTypeArray ofTy -> do
+        -- for arrays we don't use the prepared builder
+        vals <- runAesonParser parseJSON val
+        arrayExp <- S.SEArray <$> indexedForM vals (txtRHSBuilder ofTy)
+        return $ S.SETyAnn arrayExp $ S.mkTypeAnn pgType
 
 dmlTxErrorHandler :: Q.PGTxErr -> QErr
 dmlTxErrorHandler p2Res =
@@ -263,9 +274,9 @@ toJSONableExp strfyNum colTy expn
       , S.SEUnsafe "15" -- max decimal digits
       , S.SEUnsafe "4"  -- to print out crs
       ] Nothing
-      `S.SETyAnn` S.jsonType
+      `S.SETyAnn` S.jsonTypeAnn
   | isBigNum colTy && strfyNum =
-      expn `S.SETyAnn` S.textType
+      expn `S.SETyAnn` S.textTypeAnn
   | otherwise = expn
 
 -- validate headers
