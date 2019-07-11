@@ -200,6 +200,10 @@ class TestJWTBasic():
         check_query(hge_ctx, self.conf, add_auth=False)
 
     def test_jwt_no_audience_in_conf(self, hge_ctx, endpoint):
+        jwt_conf = json.loads(hge_ctx.hge_jwt_conf)
+        if 'audience' in jwt_conf:
+            pytest.skip('audience present in conf, skipping testing no audience')
+
         self.claims['https://hasura.io/jwt/claims'] = mk_claims(hge_ctx.hge_jwt_conf, {
             'x-hasura-user-id': '1',
             'x-hasura-default-role': 'user',
@@ -213,6 +217,10 @@ class TestJWTBasic():
         check_query(hge_ctx, self.conf, add_auth=False)
 
     def test_jwt_no_issuer_in_conf(self, hge_ctx, endpoint):
+        jwt_conf = json.loads(hge_ctx.hge_jwt_conf)
+        if 'issuer' in jwt_conf:
+            pytest.skip('issuer present in conf, skipping testing no issuer')
+
         self.claims['https://hasura.io/jwt/claims'] = mk_claims(hge_ctx.hge_jwt_conf, {
             'x-hasura-user-id': '1',
             'x-hasura-default-role': 'user',
