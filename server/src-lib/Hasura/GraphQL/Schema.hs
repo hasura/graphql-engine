@@ -274,9 +274,7 @@ mkTableObj tn descM allowedFlds =
     txtDescDefault = "columns and relationships of " <>> tn
     gqlDesc = G.Description $ case descM of
       Nothing -> txtDescDefault
-      Just (PGDescription txtDesc) -> if T.length txtDesc == 0
-        then txtDescDefault
-        else txtDesc <> "\n\n" <> txtDescDefault
+      Just (PGDescription txtDesc) -> T.unlines [txtDesc, txtDescDefault]
 
 {-
 type table_aggregate {

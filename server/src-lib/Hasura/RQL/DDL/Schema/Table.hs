@@ -143,6 +143,8 @@ processTableChanges ti tableDiff = do
       withOldTabName = do
         -- replace constraints
         replaceConstraints tn
+        -- replace description
+        replaceDescription tn
         -- for all the dropped columns
         procDroppedCols tn
         -- for all added columns
@@ -163,9 +165,12 @@ processTableChanges ti tableDiff = do
   maybe withOldTabName withNewTabName mNewName
 
   where
-    TableDiff mNewName droppedCols addedCols alteredCols _ constraints = tableDiff
+    TableDiff mNewName droppedCols addedCols alteredCols _ constraints descM = tableDiff
     replaceConstraints tn = flip modTableInCache tn $ \tInfo ->
       return $ tInfo {tiUniqOrPrimConstraints = constraints}
+
+    replaceDescription tn = flip modTableInCache tn $ \tInfo ->
+      return $ tInfo {tiDescription = descM}
 
     procDroppedCols tn =
       forM_ droppedCols $ \droppedCol ->
@@ -606,18 +611,18 @@ execWithMDCheck (RunSQL t cascade _) = do
   where
     reportFuncs = T.intercalate ", " . map dquoteTxt
 
-isAltrDropReplace :: QErrM m => T.Text -> m Bool
-isAltrDropReplace = either throwErr return . matchRegex regex False
+isAltrDropReplaceComment :: QErrM m => T.Text -> m Bool
+isAltrDropReplaceComment = either throwErr return . matchRegex regex False
   where
     throwErr s = throw500 $ "compiling regex failed: " <> T.pack s
-    regex = "alter|drop|replace|create function"
+    regex = "alter|drop|replace|create function|comment on"
 
 runRunSQL
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
   => RunSQL -> m EncJSON
 runRunSQL q@(RunSQL t _ mChkMDCnstcy) = do
   adminOnly
-  isMDChkNeeded <- maybe (isAltrDropReplace t) return mChkMDCnstcy
+  isMDChkNeeded <- maybe (isAltrDropReplaceComment t) return mChkMDCnstcy
   bool (execRawSQL t) (execWithMDCheck q) isMDChkNeeded
 
 -- Should be used only after checking the status

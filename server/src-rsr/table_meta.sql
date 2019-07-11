@@ -2,6 +2,7 @@ SELECT
   t.table_schema,
   t.table_name,
   t.table_oid,
+  t.description,
   coalesce(c.columns, '[]') as columns,
   coalesce(f.constraints, '[]') as constraints,
   coalesce(fk.fkeys, '[]') as foreign_keys
@@ -10,10 +11,12 @@ FROM
     SELECT
       c.oid as table_oid,
       c.relname as table_name,
-      n.nspname as table_schema
+      n.nspname as table_schema,
+      pd.description as description
     FROM
       pg_catalog.pg_class c
       JOIN pg_catalog.pg_namespace as n ON c.relnamespace = n.oid
+      LEFT JOIN pg_catalog.pg_description pd on c.oid = pd.objoid
   ) t
   LEFT OUTER JOIN (
     SELECT

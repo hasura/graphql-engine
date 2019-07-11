@@ -59,6 +59,7 @@ data TableMeta
   = TableMeta
   { tmOid         :: !Int
   , tmTable       :: !QualifiedTable
+  , tmDescription :: !(Maybe PGDescription)
   , tmColumns     :: ![PGColMeta]
   , tmConstraints :: ![ConstraintMeta]
   , tmForeignKeys :: ![ForeignKey]
@@ -67,8 +68,8 @@ data TableMeta
 fetchTableMeta :: Q.Tx [TableMeta]
 fetchTableMeta = do
   res <- Q.listQ $(Q.sqlFromFile "src-rsr/table_meta.sql") () False
-  forM res $ \(ts, tn, toid, cols, constrnts, fkeys) ->
-    return $ TableMeta toid (QualifiedObject ts tn) (Q.getAltJ cols)
+  forM res $ \(ts, tn, toid, descM, cols, constrnts, fkeys) ->
+    return $ TableMeta toid (QualifiedObject ts tn) descM (Q.getAltJ cols)
              (Q.getAltJ constrnts) (Q.getAltJ fkeys)
 
 getOverlap :: (Eq k, Hashable k) => (v -> k) -> [v] -> [v] -> [(v, v)]
@@ -94,12 +95,13 @@ data TableDiff
   -- used for generating types on_conflict clauses
   -- TODO: this ideally should't be part of TableDiff
   , _tdUniqOrPriCons   :: ![ConstraintName]
+  , _tdNewDescription  :: !(Maybe PGDescription)
   } deriving (Show, Eq)
 
 getTableDiff :: TableMeta -> TableMeta -> TableDiff
 getTableDiff oldtm newtm =
   TableDiff mNewName droppedCols addedCols alteredCols
-  droppedFKeyConstraints uniqueOrPrimaryCons
+  droppedFKeyConstraints uniqueOrPrimaryCons mNewDesc
   where
     mNewName = bool (Just $ tmTable newtm) Nothing $ tmTable oldtm == tmTable newtm
     oldCols = tmColumns oldtm
@@ -107,6 +109,8 @@ getTableDiff oldtm newtm =
 
     uniqueOrPrimaryCons =
       [cmName cm | cm <- tmConstraints newtm, isUniqueOrPrimary (cmType cm)]
+
+    mNewDesc = tmDescription newtm
 
     droppedCols =
       map pcmColumnName $ getDifference pcmOrdinalPosition oldCols newCols
@@ -151,7 +155,7 @@ getTableChangeDeps ti tableDiff = do
   return $ droppedConsDeps <> droppedColDeps
   where
     tn = tiName ti
-    TableDiff _ droppedCols _ _ droppedFKeyConstraints _ = tableDiff
+    TableDiff _ droppedCols _ _ droppedFKeyConstraints _ _ = tableDiff
 
 data SchemaDiff
   = SchemaDiff
