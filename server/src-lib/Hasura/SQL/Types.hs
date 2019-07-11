@@ -177,7 +177,7 @@ data QualifiedObject a
   = QualifiedObject
   { qSchema :: !SchemaName
   , qName   :: !a
-  } deriving (Show, Eq, Ord, Generic, Lift)
+  } deriving (Show, Eq, Functor, Ord, Generic, Lift)
 
 instance (FromJSON a) => FromJSON (QualifiedObject a) where
   parseJSON v@(String _) =
@@ -351,7 +351,6 @@ instance FromJSON PGColType where
   parseJSON (String t) = return $ txtToPgColTy t
   parseJSON _          = fail "Expecting a string for PGColType"
 
-
 pgTypeOid :: PGColType -> PQ.Oid
 pgTypeOid PGSmallInt    = PTI.int2
 pgTypeOid PGInteger     = PTI.int4
@@ -374,6 +373,26 @@ pgTypeOid PGJSONB       = PTI.jsonb
 pgTypeOid PGGeometry    = PTI.text
 pgTypeOid PGGeography   = PTI.text
 pgTypeOid (PGUnknown _) = PTI.auto
+
+-- TODO: This is incorrect modelling as PGColType
+-- will capture anything under PGUnknown
+-- This should be fixed when support for
+-- all types is merged.
+
+data PgType
+  = PgTypeSimple !PGColType
+  | PgTypeArray !PGColType
+  deriving (Eq)
+
+instance Show PgType where
+  show = \case
+    PgTypeSimple ty -> show ty
+    -- typename array is an sql standard way
+    -- of declaring types
+    PgTypeArray ty -> show ty <> " array"
+
+instance ToJSON PgType where
+  toJSON = toJSON . show
 
 isIntegerType :: PGColType -> Bool
 isIntegerType PGInteger  = True
