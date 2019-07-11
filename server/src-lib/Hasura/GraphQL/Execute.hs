@@ -1,5 +1,5 @@
-{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE DisambiguateRecordFields #-}
+{-# LANGUAGE NamedFieldPuns           #-}
 
 module Hasura.GraphQL.Execute
   ( QExecPlanResolved(..)
@@ -42,14 +42,14 @@ import           Hasura.GraphQL.Validate.Field
 import           Hasura.SQL.Time
 
 import qualified Data.Aeson                             as J
-import qualified Data.Parser.Json                       as OJ
-import qualified Data.Vector                            as V
+import qualified Data.Aeson.Ordered                     as OJ
 import qualified Data.CaseInsensitive                   as CI
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OHM
 import qualified Data.Sequence                          as Seq
 import qualified Data.String.Conversions                as CS
 import qualified Data.Text                              as T
+import qualified Data.Vector                            as V
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
@@ -420,7 +420,7 @@ insertBatchResults ::
   -> GQRespValue
 insertBatchResults remoteValue batch hasuraResp =
   case inHashmap (batchRelFieldPath batch) hasuraHash0 remoteHash0 of
-    Left err -> appendJoinError hasuraResp (GQJoinError (T.pack err))
+    Left err  -> appendJoinError hasuraResp (GQJoinError (T.pack err))
     Right val -> GQRespValue (Just (fst val)) (gqRespErrors hasuraResp)
   where
     hasuraHash0 = fromMaybe OJ.empty (gqRespData hasuraResp)

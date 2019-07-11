@@ -1,50 +1,50 @@
+{-# LANGUAGE CPP                #-}
 {-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE CPP #-}
 
 -- | A version of aeson that parses with key order preserved.
 --
--- Copyright:   (c) 2019 Hasura, Inc.
+-- Copyright:
 --              (c) 2011-2016 Bryan O'Sullivan
 --              (c) 2011 MailRank, Inc.
 
-module Data.Parser.Json
+module Data.Aeson.Ordered
   ( Value(..)
   , Object
-  , union
+  , Data.Aeson.Ordered.union
   , value
   , decode
-  , toList
+  , Data.Aeson.Ordered.toList
   , fromList
   , insert
   , delete
   , empty
   , eitherDecode
   , toEncJSON
-  , Data.Parser.Json.lookup
+  , Data.Aeson.Ordered.lookup
   ) where
 
-import           Control.Applicative hiding (empty)
-import qualified Data.Aeson as J
-import           Data.Aeson.Parser (jstring)
-import           Data.Attoparsec.ByteString (Parser)
-import qualified Data.Attoparsec.ByteString as A
+import           Control.Applicative              hiding (empty)
+import qualified Data.Aeson                       as J
+import           Data.Aeson.Parser                (jstring)
+import           Data.Attoparsec.ByteString       (Parser)
+import qualified Data.Attoparsec.ByteString       as A
 import qualified Data.Attoparsec.ByteString.Char8 as A8
 import           Data.Bifunctor
-import           Data.ByteString (ByteString)
-import qualified Data.ByteString.Lazy as L
+import           Data.ByteString                  (ByteString)
+import qualified Data.ByteString.Lazy             as L
 import           Data.Data
 import           Data.Functor
-import           Data.HashMap.Strict.InsOrd (InsOrdHashMap)
-import qualified Data.HashMap.Strict.InsOrd as OMap
+import           Data.HashMap.Strict.InsOrd       (InsOrdHashMap)
+import qualified Data.HashMap.Strict.InsOrd       as OMap
 import           Data.Scientific
-import           Data.Text (Text)
-import qualified Data.Text as T
-import           Data.Vector (Vector)
-import qualified Data.Vector as V
+import           Data.Text                        (Text)
+import qualified Data.Text                        as T
+import           Data.Vector                      (Vector)
+import qualified Data.Vector                      as V
 import           GHC.Generics
 import           Hasura.EncJSON
-import           Prelude
-import           Prelude hiding (error, undefined)
+import           Hasura.Prelude
+-- import           Prelude                          hiding (error, undefined)
 
 --------------------------------------------------------------------------------
 -- Encoding via Hasura's EncJSON

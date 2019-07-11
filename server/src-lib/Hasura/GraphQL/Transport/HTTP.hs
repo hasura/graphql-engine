@@ -2,11 +2,11 @@ module Hasura.GraphQL.Transport.HTTP
   ( runGQ
   ) where
 
-import qualified Data.Parser.Json as OJ
-import qualified Data.Text as T
+import qualified Data.Aeson.Ordered                     as OJ
+import qualified Data.Text                              as T
 import           Hasura.GraphQL.Validate
-import qualified Network.HTTP.Client as HTTP
-import qualified Network.HTTP.Types as N
+import qualified Network.HTTP.Client                    as HTTP
+import qualified Network.HTTP.Types                     as N
 
 
 import           Hasura.EncJSON
@@ -15,7 +15,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Context
 
-import qualified Hasura.GraphQL.Execute as E
+import qualified Hasura.GraphQL.Execute                 as E
 
 runGQ
   :: (MonadIO m, MonadError QErr m)
