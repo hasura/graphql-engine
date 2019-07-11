@@ -124,7 +124,9 @@ const ColumnEditorList = ({
       propertiesDisplay.push(
         <i key={'props'}>{keyPropertiesString && `- ${keyPropertiesString}`}</i>
       );
-      propertiesDisplay.push(<br />);
+
+      propertiesDisplay.push(<br key={'br1'} />);
+
       propertiesDisplay.push(
         <span key={'comment'} className={styles.text_gray}>
           {columnProperties.comment && `${columnProperties.comment}`}
