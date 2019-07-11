@@ -74,13 +74,13 @@ convertRowObj val =
 
 type ApplySQLOp =  (PGCol, S.SQLExp) -> S.SQLExp
 
-rhsExpOp :: S.SQLOp -> S.AnnType -> ApplySQLOp
+rhsExpOp :: S.SQLOp -> S.TypeAnn -> ApplySQLOp
 rhsExpOp op annTy (col, e) =
   S.mkSQLOpExp op (S.SEIden $ toIden col) annExp
   where
     annExp = S.SETyAnn e annTy
 
-lhsExpOp :: S.SQLOp -> S.AnnType -> ApplySQLOp
+lhsExpOp :: S.SQLOp -> S.TypeAnn -> ApplySQLOp
 lhsExpOp op annTy (col, e) =
   S.mkSQLOpExp op annExp $ S.SEIden $ toIden col
   where
@@ -106,7 +106,7 @@ convDeleteAtPathObj val =
     vals <- flip withArray v $ \_ annVals -> mapM asPGColVal annVals
     let valExps = map (txtEncoder . _apvValue) vals
         pgCol = PGCol $ G.unName k
-        annEncVal = S.SETyAnn (S.SEArray valExps) S.textArrType
+        annEncVal = S.SETyAnn (S.SEArray valExps) S.textArrTypeAnn
         sqlExp = S.SEOpApp S.jsonbDeleteAtPathOp
                  [S.SEIden $ toIden pgCol, annEncVal]
     return (pgCol, UVSQL sqlExp)
@@ -126,19 +126,19 @@ convertUpdateP1 opCtx fld = do
   whereExp <- withArg args "where" parseBoolExp
   -- increment operator on integer columns
   incExpM <- withArgM args "_inc" $
-    convObjWithOp $ rhsExpOp S.incOp S.intType
+    convObjWithOp $ rhsExpOp S.incOp S.intTypeAnn
   -- append jsonb value
   appendExpM <- withArgM args "_append" $
-    convObjWithOp $ rhsExpOp S.jsonbConcatOp S.jsonbType
+    convObjWithOp $ rhsExpOp S.jsonbConcatOp S.jsonbTypeAnn
   -- prepend jsonb value
   prependExpM <- withArgM args "_prepend" $
-    convObjWithOp $ lhsExpOp S.jsonbConcatOp S.jsonbType
+    convObjWithOp $ lhsExpOp S.jsonbConcatOp S.jsonbTypeAnn
   -- delete a key in jsonb object
   deleteKeyExpM <- withArgM args "_delete_key" $
-    convObjWithOp $ rhsExpOp S.jsonbDeleteOp S.textType
+    convObjWithOp $ rhsExpOp S.jsonbDeleteOp S.textTypeAnn
   -- delete an element in jsonb array
   deleteElemExpM <- withArgM args "_delete_elem" $
-    convObjWithOp $ rhsExpOp S.jsonbDeleteOp S.intType
+    convObjWithOp $ rhsExpOp S.jsonbDeleteOp S.intTypeAnn
   -- delete at path in jsonb value
   deleteAtPathExpM <- withArgM args "_delete_at_path" convDeleteAtPathObj
   mutFlds <- convertMutResp (_fType fld) $ _fSelSet fld

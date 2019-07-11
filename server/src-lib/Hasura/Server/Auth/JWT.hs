@@ -24,12 +24,12 @@ import           Data.Time.Format                (defaultTimeLocale, parseTimeM)
 import           Network.URI                     (URI)
 
 import           Hasura.HTTP
-import           Hasura.Logging                  (Logger (..))
+import           Hasura.Logging                  (LogLevel (..), Logger (..))
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
-import           Hasura.Server.Utils             (bsToTxt, diffTimeToMicro,
+import           Hasura.Server.Utils             (diffTimeToMicro,
                                                   userRoleHeader)
 
 import qualified Control.Concurrent              as C
@@ -128,19 +128,23 @@ updateJwkRef
   -> m (Maybe NominalDiffTime)
 updateJwkRef (Logger logger) manager url jwkRef = do
   let options = wreqOptions manager []
+      urlT    = T.pack $ show url
+      infoMsg = "refreshing JWK from endpoint: " <> urlT
+  liftIO $ logger $ JwkRefreshLog LevelInfo infoMsg Nothing
   res  <- liftIO $ try $ Wreq.getWith options $ show url
   resp <- either logAndThrowHttp return res
   let status = resp ^. Wreq.responseStatus
       respBody = resp ^. Wreq.responseBody
 
   when (status ^. Wreq.statusCode /= 200) $ do
-    let urlT = T.pack $ show url
-        respBodyT = Just $ CS.cs respBody
-        errMsg = "non-200 response on fetching JWK from: " <> urlT
+    let respBodyT = Just $ CS.cs respBody
+        errMsg = "Non-200 response on fetching JWK from: " <> urlT
         httpErr = Just (JwkRefreshHttpError (Just status) urlT Nothing respBodyT)
     logAndThrow errMsg httpErr
 
-  jwkset <- either (\e -> logAndThrow (T.pack e) Nothing) return . A.eitherDecode $ respBody
+  let parseErr e = "Error parsing JWK from url (" <> urlT <> "): " <> T.pack e
+  jwkset <- either (\e -> logAndThrow (parseErr e) Nothing) return $
+    A.eitherDecode respBody
   liftIO $ modifyIORef jwkRef (const jwkset)
 
   let mExpiresT = resp ^? Wreq.responseHeader "Expires"
@@ -153,14 +157,14 @@ updateJwkRef (Logger logger) manager url jwkRef = do
   where
     logAndThrow :: (MonadIO m, MonadError T.Text m) => T.Text -> Maybe JwkRefreshHttpError -> m a
     logAndThrow err httpErr = do
-      liftIO $ logger $ mkJwkRefreshLog err httpErr
+      liftIO $ logger $ JwkRefreshLog (LevelOther "critical") err httpErr
       throwError err
 
     logAndThrowHttp :: (MonadIO m, MonadError T.Text m) => HTTP.HttpException -> m a
     logAndThrowHttp err = do
       let httpErr = JwkRefreshHttpError Nothing (T.pack $ show url)
                     (Just $ HttpException err) Nothing
-          errMsg = "error fetching JWK: " <> T.pack (show err)
+          errMsg = "Error fetching JWK: " <> T.pack (show err)
       logAndThrow errMsg (Just httpErr)
 
     timeFmt = "%a, %d %b %Y %T GMT"
@@ -333,6 +337,19 @@ verifyJwt ctx (RawJWT rawJWT) = do
     audCheck aud = maybe True (== (T.pack . show) aud) $ jcxAudience ctx
     config = defaultJWTValidationSettings audCheck
 
+
+instance A.ToJSON JWTConfig where
+  toJSON (JWTConfig ty keyOrUrl claimNs aud claimsFmt) =
+    case keyOrUrl of
+         Left _    -> mkObj ("key" A..= A.String "<JWK REDACTED>")
+         Right url -> mkObj ("jwk_url" A..= url)
+    where
+      mkObj item = A.object [ "type" A..= ty
+                            , "claims_namespace" A..= claimNs
+                            , "claims_format" A..= claimsFmt
+                            , "audience" A..= aud
+                            , item
+                            ]
 
 -- | Parse from a json string like:
 -- | `{"type": "RS256", "key": "<PEM-encoded-public-key-or-X509-cert>"}`

@@ -365,6 +365,31 @@ pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" -
 
 kill_hge_servers
 
+# verbose logging tests
+echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH QUERY LOG ########>\n"
+TEST_TYPE="query-logs"
+
+export HASURA_GRAPHQL_ENABLED_LOG_TYPES=" startup,http-log,webhook-log,websocket-log,query-log"
+
+#run_hge_with_args serve
+# we are doing this instead of calling run_hge_with_args, because we want to save in a custom log file
+i=$((TIX_FILE_INDEX++))
+export HPCTIXFILE="${OUTPUT_FOLDER}/hpc/graphql-engine-${i}-${TEST_TYPE}.tix"
+rm -f "$HPCTIXFILE"
+TIX_FILES="$TIX_FILES:$HPCTIXFILE"
+set -x
+export LOGGING_TEST_LOGFILE_PATH="$OUTPUT_FOLDER/graphql-engine-verbose-logging.log"
+"$GRAPHQL_ENGINE" serve 2>&1 > "$LOGGING_TEST_LOGFILE_PATH" & HGE_PIDS="$HGE_PIDS $!"
+set +x
+
+wait_for_port 8080
+
+pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-logging test_logging.py
+
+unset HASURA_GRAPHQL_ENABLED_LOG_TYPES
+kill_hge_servers
+
+# end verbose logging tests
 
 # webhook tests
 
