@@ -193,10 +193,13 @@ prepareWithPlan = \case
       _                 -> getNextArgNum
     addPrepArg argNum $ binEncoder colVal
     return $ toPrepParam argNum colTy
-  R.UVSessVar colTy sessVar ->
-    return $ S.withTyAnn colTy $ withGeoVal colTy $
-      S.SEOpApp (S.SQLOp "->>")
-      [S.SEPrep 1, S.SELit $ T.toLower sessVar]
+  R.UVSessVar ty sessVar -> do
+    let sessVarVal =
+          S.SEOpApp (S.SQLOp "->>")
+          [S.SEPrep 1, S.SELit $ T.toLower sessVar]
+    return $ flip S.SETyAnn (S.mkTypeAnn ty) $ case ty of
+      PgTypeSimple colTy -> withGeoVal colTy sessVarVal
+      PgTypeArray _      -> sessVarVal
   R.UVSQL sqlExp -> return sqlExp
 
 queryRootName :: Text

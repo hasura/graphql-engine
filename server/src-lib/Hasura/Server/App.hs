@@ -8,9 +8,11 @@ import           Control.Arrow                          ((***))
 import           Control.Concurrent.MVar
 import           Control.Exception                      (IOException, try)
 import           Data.Aeson                             hiding (json)
+import           Data.Int                               (Int64)
 import           Data.IORef
 import           Data.Time.Clock                        (UTCTime,
                                                          getCurrentTime)
+import           Data.Time.Clock.POSIX                  (getPOSIXTime)
 import           Network.Mime                           (defaultMimeLookup)
 import           Network.Wai                            (requestHeaders,
                                                          strictRequestBody)
@@ -27,6 +29,8 @@ import qualified Network.HTTP.Types                     as N
 import qualified Network.Wai                            as Wai
 import qualified Network.Wai.Handler.WebSockets         as WS
 import qualified Network.WebSockets                     as WS
+import qualified System.Metrics                         as EKG
+import qualified System.Metrics.Json                    as EKG
 import qualified Text.Mustache                          as M
 import qualified Text.Mustache.Compile                  as M
 
@@ -118,6 +122,7 @@ data ServerCtx
   , scPlanCache       :: !E.PlanCache
   , scLQState         :: !EL.LiveQueriesState
   , scEnableAllowlist :: !Bool
+  , scEkgStore        :: !EKG.Store
   }
 
 data HandlerCtx
@@ -463,10 +468,18 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
     wsServerEnv <- WS.createWSServerEnv logger pgExecCtx lqState cacheRef
                    httpManager corsPolicy sqlGenCtx enableAL planCache
 
+    ekgStore <- EKG.newStore
+
     let schemaCacheRef =
           SchemaCacheRef cacheLock cacheRef (E.clearPlanCache planCache)
-        serverCtx = ServerCtx pgExecCtx ci logger schemaCacheRef mode httpManager
-                    sqlGenCtx apis instanceId planCache lqState enableAL
+        serverCtx = ServerCtx pgExecCtx ci logger
+                    schemaCacheRef mode httpManager
+                    sqlGenCtx apis instanceId planCache
+                    lqState enableAL ekgStore
+
+    when (isDeveloperAPIEnabled serverCtx) $ do
+      EKG.registerGcMetrics ekgStore
+      EKG.registerCounter "ekg.server_timestamp_ms" getTimeMs ekgStore
 
     spockApp <- spockAsApp $ spockT id $
                 httpApp corsCfg serverCtx enableConsole
@@ -477,6 +490,9 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
            , schemaCacheRef
            , cacheBuiltTime
            )
+  where
+    getTimeMs :: IO Int64
+    getTimeMs = (round . (* 1000)) `fmap` getPOSIXTime
 
 httpApp :: CorsConfig -> ServerCtx -> Bool -> Maybe Text -> Bool -> SpockT IO ()
 httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
@@ -534,6 +550,11 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
         mkPostHandler $ mkAPIRespHandler v1GQHandler
 
     when (isDeveloperAPIEnabled serverCtx) $ do
+      get "dev/ekg" $ mkSpockAction encodeQErr id serverCtx $
+        mkGetHandler $ do
+          onlyAdmin
+          respJ <- liftIO $ EKG.sampleAll $ scEkgStore serverCtx
+          return $ JSONResp $ HttpResponse (encJFromJValue $ EKG.sampleToJson respJ) Nothing
       get "dev/plan_cache" $ mkSpockAction encodeQErr id serverCtx $
         mkGetHandler $ do
           onlyAdmin

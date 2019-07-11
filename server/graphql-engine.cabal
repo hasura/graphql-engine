@@ -133,8 +133,9 @@ library
                      -- pretty printer
                      , ansi-wl-pprint
 
-                     -- metrics in multiplexed subs
+                     -- for capturing various metrics
                      , ekg-core
+                     , ekg-json
 
                      -- metrics for CI integration
                      , ci-info
