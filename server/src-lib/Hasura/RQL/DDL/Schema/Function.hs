@@ -41,6 +41,7 @@ data RawFuncInfo
   , rfiInputArgTypes    :: ![PGColType]
   , rfiInputArgNames    :: ![T.Text]
   , rfiReturnsTable     :: !Bool
+  , rfiDescription      :: !(Maybe PGDescription)
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''RawFuncInfo)
 
@@ -83,10 +84,10 @@ mkFunctionInfo qf rawFuncInfo = do
   let funcArgsSeq = Seq.fromList funcArgs
       dep = SchemaDependency (SOTable retTable) "table"
       retTable = QualifiedObject retSn (TableName retN)
-  return $ FunctionInfo qf False funTy funcArgsSeq retTable [dep]
+  return $ FunctionInfo qf False funTy funcArgsSeq retTable [dep] descM
   where
-    RawFuncInfo hasVariadic funTy retSn retN retTyTyp
-                retSet inpArgTyps inpArgNames returnsTab
+    RawFuncInfo hasVariadic funTy retSn retN retTyTyp retSet
+                inpArgTyps inpArgNames returnsTab descM
                 = rawFuncInfo
 
 saveFunctionToCatalog :: QualifiedFunction -> Bool -> Q.TxE QErr ()

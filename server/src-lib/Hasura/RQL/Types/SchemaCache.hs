@@ -405,6 +405,7 @@ data FunctionInfo
   , fiInputArgs     :: !(Seq.Seq FunctionArg)
   , fiReturnType    :: !QualifiedTable
   , fiDeps          :: ![SchemaDependency]
+  , fiDescription   :: !(Maybe PGDescription)
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionInfo)

@@ -124,6 +124,11 @@ compAggOps = ["max", "min"]
 isAggFld :: G.Name -> Bool
 isAggFld = flip elem (numAggOps <> compAggOps)
 
+mkDescription :: Maybe PGDescription -> Text -> G.Description
+mkDescription descM defaultTxt = G.Description $ case descM of
+  Nothing                      -> defaultTxt
+  Just (PGDescription descTxt) -> T.unlines [descTxt, defaultTxt]
+
 mkColName :: PGCol -> G.Name
 mkColName (PGCol n) = G.Name n
 
@@ -262,19 +267,15 @@ type table {
 -}
 mkTableObj
   :: QualifiedTable
-  -> Maybe PGDescription
   -> [SelField]
   -> ObjTyInfo
-mkTableObj tn descM allowedFlds =
-  mkObjTyInfo (Just gqlDesc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) HasuraType
+mkTableObj tn allowedFlds =
+  mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) HasuraType
   where
     flds = concatMap (either (pure . mkPGColFld) mkRelFld') allowedFlds
     mkRelFld' (relInfo, allowAgg, _, _, isNullable) =
       mkRelFld allowAgg relInfo isNullable
-    txtDescDefault = "columns and relationships of " <>> tn
-    gqlDesc = G.Description $ case descM of
-      Nothing -> txtDescDefault
-      Just (PGDescription txtDesc) -> T.unlines [txtDesc, txtDescDefault]
+    desc = G.Description $ "columns and relationships of " <>> tn
 
 {-
 type table_aggregate {
@@ -367,11 +368,12 @@ table(
 -}
 mkSelFld
   :: QualifiedTable
+  -> Maybe PGDescription
   -> ObjFldInfo
-mkSelFld tn =
+mkSelFld tn descM =
   mkHsraObjFldInfo (Just desc) fldName args ty
   where
-    desc    = G.Description $ "fetch data from the table: " <>> tn
+    desc = mkDescription descM $ "fetch data from the table: " <>> tn
     fldName = qualObjectToName tn
     args    = fromInpValL $ mkSelArgs tn
     ty      = G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy tn
@@ -385,13 +387,14 @@ table_by_pk(
 ): table
 -}
 mkSelFldPKey
-  :: QualifiedTable -> [PGColInfo]
+  :: QualifiedTable
+  -> [PGColInfo]
+  -> Maybe PGDescription
   -> ObjFldInfo
-mkSelFldPKey tn cols =
+mkSelFldPKey tn cols descM =
   mkHsraObjFldInfo (Just desc) fldName args ty
   where
-    desc = G.Description $ "fetch data from the table: " <> tn
-           <<> " using primary key columns"
+    desc = mkDescription descM $ "fetch data from the table: " <> tn <<> " using primary key columns"
     fldName = mkTableByPkName tn
     args = fromInpValL $ map colInpVal cols
     ty = G.toGT $ mkTableTy tn
@@ -409,12 +412,12 @@ table_aggregate(
 -}
 mkAggSelFld
   :: QualifiedTable
+  -> Maybe PGDescription
   -> ObjFldInfo
-mkAggSelFld tn =
+mkAggSelFld tn descM =
   mkHsraObjFldInfo (Just desc) fldName args ty
   where
-    desc = G.Description $ "fetch aggregated fields from the table: "
-           <>> tn
+    desc = mkDescription descM $ "fetch aggregated fields from the table: " <>> tn
     fldName = qualObjectToName tn <> "_aggregate"
     args = fromInpValL $ mkSelArgs tn
     ty = G.toGT $ G.toNT $ mkTableAggTy tn
@@ -807,14 +810,17 @@ mkJSONOpInpVals tn cols = bool jsonbOpArgs [] $ null jsonbCols
       G.toGT $ mkJSONOpTy tn deleteAtPathOp
 
 mkUpdMutFld
-  :: QualifiedTable -> [PGColInfo] -> ObjFldInfo
-mkUpdMutFld tn cols =
+  :: QualifiedTable
+  -> [PGColInfo]
+  -> Maybe PGDescription
+  -> ObjFldInfo
+mkUpdMutFld tn cols descM =
   mkHsraObjFldInfo (Just desc) fldName (fromInpValL inputValues) $
     G.toGT $ mkMutRespTy tn
   where
     inputValues = [filterArg, setArg] <> incArg
                   <> mkJSONOpInpVals tn cols
-    desc = G.Description $ "update data of the table: " <>> tn
+    desc = mkDescription descM $ "update data of the table: " <>> tn
 
     fldName = "update_" <> qualObjectToName tn
 
@@ -838,12 +844,14 @@ delete_table(
 -}
 
 mkDelMutFld
-  :: QualifiedTable -> ObjFldInfo
-mkDelMutFld tn =
+  :: QualifiedTable
+  -> Maybe PGDescription
+  -> ObjFldInfo
+mkDelMutFld tn descM =
   mkHsraObjFldInfo (Just desc) fldName (fromInpValL [filterArg]) $
     G.toGT $ mkMutRespTy tn
   where
-    desc = G.Description $ "delete data from the table: " <>> tn
+    desc = mkDescription descM $ "delete data from the table: " <>> tn
 
     fldName = "delete_" <> qualObjectToName tn
 
@@ -995,14 +1003,16 @@ insert_table(
 -}
 
 mkInsMutFld
-  :: QualifiedTable -> Bool -> ObjFldInfo
-mkInsMutFld tn isUpsertable =
+  :: QualifiedTable
+  -> Bool
+  -> Maybe PGDescription
+  -> ObjFldInfo
+mkInsMutFld tn isUpsertable descM =
   mkHsraObjFldInfo (Just desc) fldName (fromInpValL inputVals) $
     G.toGT $ mkMutRespTy tn
   where
     inputVals = catMaybes [Just objectsArg , onConflictInpVal]
-    desc = G.Description $
-      "insert data into the table: " <>> tn
+    desc = mkDescription descM $ "insert data into the table: " <>> tn
 
     fldName = "insert_" <> qualObjectToName tn
 
@@ -1232,8 +1242,6 @@ mkOnConflictTypes tn uniqueOrPrimaryCons cols =
 
 mkGCtxRole'
   :: QualifiedTable
-  -- table description
-  -> Maybe PGDescription
   -- insert permission
   -> Maybe ([PGColInfo], RelationInfoMap)
   -- select permission
@@ -1250,7 +1258,7 @@ mkGCtxRole'
   -- all functions
   -> [FunctionInfo]
   -> TyAgg
-mkGCtxRole' tn descM insPermM selPermM updColsM
+mkGCtxRole' tn insPermM selPermM updColsM
             delPermM pkeyCols constraints viM funcs =
 
   TyAgg (mkTyInfoMap allTypes) fieldMap scalars ordByCtx
@@ -1362,7 +1370,7 @@ mkGCtxRole' tn descM insPermM selPermM updColsM
             && any (`isMutable` viM) [viIsInsertable, viIsUpdatable, viIsDeletable]
 
     -- table obj
-    selObjM = mkTableObj tn descM <$> selFldsM
+    selObjM = mkTableObj tn <$> selFldsM
 
     -- aggregate objs and order by inputs
     (aggObjs, aggOrdByInps) = case selPermM of
@@ -1404,6 +1412,7 @@ mkGCtxRole' tn descM insPermM selPermM updColsM
 
 getRootFldsRole'
   :: QualifiedTable
+  -> Maybe PGDescription
   -> [PGCol]
   -> [ConstraintName]
   -> FieldInfoMap
@@ -1414,7 +1423,7 @@ getRootFldsRole'
   -> Maybe (AnnBoolExpPartialSQL, [T.Text]) -- delete filter
   -> Maybe ViewInfo
   -> RootFlds
-getRootFldsRole' tn primCols constraints fields funcs insM selM updM delM viM =
+getRootFldsRole' tn descM primCols constraints fields funcs insM selM updM delM viM =
   RootFlds mFlds
   where
     allCols = getCols fields
@@ -1440,17 +1449,17 @@ getRootFldsRole' tn primCols constraints fields funcs insM selM updM delM viM =
     getInsDet (hdrs, upsertPerm) =
       let isUpsertable = upsertable constraints upsertPerm $ isJust viM
       in ( OCInsert $ InsOpCtx tn $ hdrs `union` maybe [] (\(_, _, _, x) -> x) updM
-         , Right $ mkInsMutFld tn isUpsertable
+         , Right $ mkInsMutFld tn isUpsertable descM
          )
 
     getUpdDet (updCols, preSetCols, updFltr, hdrs) =
       ( OCUpdate $ UpdOpCtx tn hdrs updFltr preSetCols allCols
-      , Right $ mkUpdMutFld tn $ getColInfos updCols colInfos
+      , Right $ mkUpdMutFld tn (getColInfos updCols colInfos) descM
       )
 
     getDelDet (delFltr, hdrs) =
       ( OCDelete $ DelOpCtx tn hdrs delFltr allCols
-      , Right $ mkDelMutFld tn
+      , Right $ mkDelMutFld tn descM
       )
     getSelDet (selFltr, pLimit, hdrs, _) =
       selFldHelper OCSelect mkSelFld selFltr pLimit hdrs
@@ -1461,7 +1470,7 @@ getRootFldsRole' tn primCols constraints fields funcs insM selM updM delM viM =
 
     selFldHelper f g pFltr pLimit hdrs =
       ( f $ SelOpCtx tn hdrs pFltr pLimit
-      , Left $ g tn
+      , Left $ g tn descM
       )
 
     getPKeySelDet Nothing _ = Nothing
@@ -1469,7 +1478,7 @@ getRootFldsRole' tn primCols constraints fields funcs insM selM updM delM viM =
     getPKeySelDet (Just (selFltr, _, hdrs, _)) pCols = Just
       ( OCSelectPkey $ SelPkOpCtx tn hdrs selFltr $
         mapFromL (mkColName . pgiName) pCols
-      , Left $ mkSelFldPKey tn pCols
+      , Left $ mkSelFldPKey tn pCols descM
       )
 
     getFuncQueryFlds (selFltr, pLimit, hdrs, _) =
@@ -1599,9 +1608,9 @@ mkGCtxRole tableCache tn descM fields pCols constraints funcs viM role permInfo 
   let insPermM = snd <$> tabInsInfoM
       insCtxM = fst <$> tabInsInfoM
       updColsM = filterColInfos . upiCols <$> _permUpd permInfo
-      tyAgg = mkGCtxRole' tn descM insPermM selPermM updColsM
+      tyAgg = mkGCtxRole' tn insPermM selPermM updColsM
               (void $ _permDel permInfo) pColInfos constraints viM funcs
-      rootFlds = getRootFldsRole tn pCols constraints fields funcs viM permInfo
+      rootFlds = getRootFldsRole tn descM pCols constraints fields funcs viM permInfo
       insCtxMap = maybe Map.empty (Map.singleton tn) insCtxM
   return (tyAgg, rootFlds, insCtxMap)
   where
@@ -1613,6 +1622,7 @@ mkGCtxRole tableCache tn descM fields pCols constraints funcs viM role permInfo 
 
 getRootFldsRole
   :: QualifiedTable
+  -> Maybe PGDescription
   -> [PGCol]
   -> [ConstraintName]
   -> FieldInfoMap
@@ -1620,8 +1630,8 @@ getRootFldsRole
   -> Maybe ViewInfo
   -> RolePermInfo
   -> RootFlds
-getRootFldsRole tn pCols constraints fields funcs viM (RolePermInfo insM selM updM delM) =
-  getRootFldsRole' tn pCols constraints fields funcs
+getRootFldsRole tn descM pCols constraints fields funcs viM (RolePermInfo insM selM updM delM) =
+  getRootFldsRole' tn descM pCols constraints fields funcs
   (mkIns <$> insM) (mkSel <$> selM)
   (mkUpd <$> updM) (mkDel <$> delM)
   viM
@@ -1647,7 +1657,7 @@ mkGCtxMapTable tableCache funcCache tabInfo = do
   m <- Map.traverseWithKey
        (mkGCtxRole tableCache tn descM fields pkeyCols validConstraints tabFuncs viewInfo) rolePerms
   adminInsCtx <- mkAdminInsCtx tn tableCache fields
-  let adminCtx = mkGCtxRole' tn descM (Just (colInfos, icRelations adminInsCtx))
+  let adminCtx = mkGCtxRole' tn (Just (colInfos, icRelations adminInsCtx))
                  (Just (True, selFlds)) (Just colInfos) (Just ())
                  pkeyColInfos validConstraints viewInfo tabFuncs
       adminInsCtxMap = Map.singleton tn adminInsCtx
@@ -1664,7 +1674,7 @@ mkGCtxMapTable tableCache funcCache tabInfo = do
       FIColumn pgColInfo     -> Left pgColInfo
       FIRelationship relInfo -> Right (relInfo, True, noFilter, Nothing, isRelNullable fields relInfo)
     adminRootFlds =
-      getRootFldsRole' tn pkeyCols validConstraints fields tabFuncs
+      getRootFldsRole' tn descM pkeyCols validConstraints fields tabFuncs
       (Just ([], True)) (Just (noFilter, Nothing, [], True))
       (Just (validColNames, mempty, noFilter, [])) (Just (noFilter, []))
       viewInfo
