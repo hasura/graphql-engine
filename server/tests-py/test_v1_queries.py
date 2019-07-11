@@ -545,6 +545,12 @@ class TestRelationships(DefaultTestQueries):
 
 class TestTrackTables(DefaultTestQueries):
 
+    def test_track_table_function_same_name(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/track_table_function_same_name.yaml')
+
+    def test_track_function_table_same_name(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/track_function_table_same_name.yaml')
+
     def test_track_untrack_table(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/track_untrack_table.yaml')
         hge_ctx.may_skip_test_teardown = True
