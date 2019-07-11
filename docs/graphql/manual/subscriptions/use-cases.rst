@@ -14,7 +14,7 @@ Subscribe to the latest value of a particular field
 ---------------------------------------------------
 
 In case you are interested only in the latest value of a particular field, you can use subscriptions to fetch the
-field and get updated with it's latest value whenever it changes.
+field and get updated with its latest value whenever it changes.
 
 Example: Live location tracking
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -215,7 +215,7 @@ First, create a view ``poll_results`` to give the result of the poll:
         )
     GROUP BY poll.question, o.option_id, poll.id;
 
-This view will have the fields: ``poll_id``, ``option_id`` and ``votes``. i.e. it gives the number of votes
+This view will have the following fields: ``poll_id``, ``option_id`` and ``votes``, i.e. it gives the number of votes
 received by each option for a poll.
 
 Next, :doc:`setup relationships <../schema/relationships/index>` ``poll`` and ``option`` between the ``poll_results`` view

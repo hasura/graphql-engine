@@ -29,12 +29,12 @@ Auto-generated update mutation schema
 
 As you can see from the schema:
 
-- ``where`` argument is compulsory to filter rows to be updated. See :doc:`Filter queries <../queries/query-filters>`
+- The ``where`` argument is compulsory to filter rows to be updated. See :doc:`Filter queries <../queries/query-filters>`
   for filtering options. Objects can be updated based on filters on their own fields or those in their nested objects.
   The ``{}`` expression can be used to update all rows.
 - You can return the number of affected rows and the affected objects (with nested objects) in the response.
 
-See the :ref:`update mutation API reference <update_syntax>` for the full specifications
+See the :ref:`update mutation API reference <update_syntax>` for the full specifications.
 
 .. note::
 
@@ -206,7 +206,7 @@ Update all objects
 ------------------
 
 You can update all objects in a table using the ``{}`` expression as the ``where`` argument. ``{}`` basically
-evaluates to ``true`` for all objects
+evaluates to ``true`` for all objects.
 
 **Example:** Reset rating of all articles:
 
@@ -286,7 +286,7 @@ The currently available ``jsonb`` operators are:
 
 .. note::
 
-  You can learn more about Postgres jsonb operators `here <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`__
+  You can learn more about Postgres jsonb operators `here <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`__.
 
 .. contents:: Examples
   :backlinks: none
@@ -299,7 +299,7 @@ You can append any ``jsonb`` column with another json value by using the ``_appe
 
 Since the input is a json value, it should be provided through a variable.
 
-**Example:** Append the json ``{"key1": "value1"}`` to ``jsonb`` column ``extra_info`` of ``article`` table:
+**Example:** Append the json ``{"key1": "value1"}`` to the ``jsonb`` column ``extra_info`` of the ``article`` table:
 
 .. graphiql::
   :view_only:
@@ -342,7 +342,7 @@ You can prepend any ``jsonb`` column with another json value by using the ``_pre
 
 Since the input is a json value, it should be provided through a variable.
 
-**Example:** Prepend the json ``{"key0": "value0"}`` to ``jsonb`` column ``extra_info`` of ``article`` table:
+**Example:** Prepend the json ``{"key0": "value0"}`` to the ``jsonb`` column ``extra_info`` of the ``article`` table:
 
 .. graphiql::
   :view_only:
@@ -384,9 +384,9 @@ Delete a top-level key from a jsonb column
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 You can delete a top-level key of a ``jsonb`` column by using the ``_delete_key`` operator.
 
-Input value should be a ``String``.
+The input value should be a ``String``.
 
-**Example:** Delete the key ``key`` in the ``jsonb`` column ``extra_info`` of ``article`` table:
+**Example:** Delete the key ``key`` in the ``jsonb`` column ``extra_info`` of the ``article`` table:
 
 .. graphiql::
   :view_only:
@@ -424,10 +424,10 @@ Delete an element from a jsonb column storing a json array
 If a ``jsonb`` column is storing a json array, you can delete an element from the array using the ``_delete_elem``
 operator.
 
-Input value should be an ``Int``.
+The input value should be an ``Int``.
 
-**Example:** Delete the element at position 2 in the array value of ``jsonb`` column ``extra_info``
-of ``article`` table:
+**Example:** Delete the element at position 2 in the array value of the ``jsonb`` column ``extra_info``
+of the ``article`` table:
 
 .. graphiql::
   :view_only:
@@ -461,9 +461,9 @@ Delete an element at a specific path in a jsonb column
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 You can delete a field or element of a ``jsonb`` column at a specified path by using the ``_delete_at_path`` operator.
 
-Input value should be a ``String Array``.
+The input value should be a ``String Array``.
 
-**Example:** Delete element at json path ``name.last`` in ``jsonb`` column ``extra_info`` of author table:
+**Example:** Delete element at json path ``name.last`` in the ``jsonb`` column ``extra_info`` of the author table:
 
 .. graphiql::
   :view_only:

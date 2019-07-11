@@ -29,10 +29,10 @@ Auto-generated insert mutation schema
 As you can see from the schema:
 
 - ``objects`` argument is necessary and you can pass multiple ``objects`` to the mutation.
-- You can pass an ``on_conflict`` argument to convert the mutation to an :doc:`upsert mutation <upsert>`
+- You can pass an ``on_conflict`` argument to convert the mutation to an :doc:`upsert mutation <upsert>`.
 - You can return the number of affected rows and the affected objects (with nested objects) in the response.
 
-See the :ref:`insert mutation API reference <insert_upsert_syntax>` for the full specifications
+See the :ref:`insert mutation API reference <insert_upsert_syntax>` for the full specifications.
 
 .. note::
 
@@ -41,7 +41,7 @@ See the :ref:`insert mutation API reference <insert_upsert_syntax>` for the full
 
 Insert a single object
 ----------------------
-**Example:** Insert a new ``article`` object and return the inserted article object in the response
+**Example:** Insert a new ``article`` object and return the inserted article object in the response:
 
 .. graphiql::
   :view_only:
@@ -119,7 +119,7 @@ Using variables:
 
 Insert multiple objects of the same type in the same mutation
 -------------------------------------------------------------
-**Example:** Insert 2 new ``article`` objects and return both the article objects in the response
+**Example:** Insert 2 new ``article`` objects and return both the article objects in the response:
 
 .. graphiql::
   :view_only:
@@ -168,7 +168,7 @@ Insert multiple objects of the same type in the same mutation
 
 Insert an object and get a nested object in response
 ----------------------------------------------------
-**Example:** Insert a new ``article`` object and return the inserted article object with its author in the response
+**Example:** Insert a new ``article`` object and return the inserted article object with its author in the response:
 
 .. graphiql::
   :view_only:
@@ -217,7 +217,7 @@ Insert an object and get a nested object in response
 Insert an object and its nested object in the same mutation
 -----------------------------------------------------------
 **Example:** Insert a new ``article`` object with its ``author`` and return the inserted article object with its author
-in the response
+in the response:
 
 .. graphiql::
   :view_only:
@@ -270,7 +270,7 @@ in the response
 
 Insert an object with a JSONB column
 ------------------------------------
-**Example:** Insert a new ``author`` object with a JSONB ``address`` column
+**Example:** Insert a new ``author`` object with a JSONB ``address`` column:
 
 .. graphiql::
   :view_only:
@@ -331,7 +331,7 @@ Set a field to its default value during insert
 To set a field to its ``default`` value, just omit it from the input object, irrespective of the
 :doc:`default value configuration <../schema/default-values/index>` i.e. via Postgres defaults or using column presets.
 
-**Example:** if default value of ``id`` is set to auto-incrementing integer, no need to pass ``id`` field in input object
+**Example:** If the default value of ``id`` is set to auto-incrementing integer, there's no need to pass the ``id`` field to the input object:
 
 .. graphiql::
   :view_only:
@@ -373,8 +373,8 @@ Set a field to NULL during insert
 If a field is ``nullable`` in the database, to set its value to ``null``, either pass its value as ``null`` or
 just omit it from the input object.
 
-**Example:** if ``age`` is a nullable field, either don't pass ``age`` field in input object or pass it as ``null``
-to set it to ``null``
+**Example:** If ``age`` is a nullable field, either don't pass the ``age`` field to the input object, or pass it as ``null``, so that it gets set to
+``null``:
 
 .. graphiql::
   :view_only:

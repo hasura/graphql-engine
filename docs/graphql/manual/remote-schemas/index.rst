@@ -26,14 +26,14 @@ This is what Hasura running with "Remote schemas" looks like:
   This is a new feature under active development. Please do give us feedback, bug-reports and ask us questions on
   our `discord <https://discord.gg/vBPpJkS>`__ or on `github <https://github.com/hasura/graphql-engine>`__.
 
-Use-cases
+Use cases
 ---------
 
 - Custom business logic, like a payment API
 - Querying data that is not available in your database
 
 
-You can handle these use-cases by writing resolvers in a custom GraphQL server
+You can handle these use cases by writing resolvers in a custom GraphQL server
 and making Hasura merge this "remote schema" with the existing auto-generated
 schema. You can also add multiple remote schemas. Think of the merged schema as
 a union of top-level nodes from each of the sub-schemas.
@@ -47,7 +47,7 @@ a union of top-level nodes from each of the sub-schemas.
 Adding a remote schema
 ----------------------
 
-Follow the steps below to add a "remote schema" to Hasura GraphQL engine:
+Follow the steps below to add a "remote schema" to the Hasura GraphQL engine:
 
 Step 1: Write a custom GraphQL server
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -65,42 +65,40 @@ started is to use one of our boilerplates:
 Step 2: Merge remote schema
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To merge your remote schema with GraphQL Engine's auto-generated schema:
-
-Head to the ``Remote Schemas`` tab of the console and click on the ``Add`` button
+To merge your remote schema with the GraphQL Engine's auto-generated schema, head to the ``Remote Schemas`` tab of the console and click on the ``Add`` button.
 
 .. thumbnail:: ../../../img/graphql/manual/business-logic/add-remote-schemas-interface.png
 
 
 You need to enter the following information:
 
-- **Remote Schema name**: an alias for the remote schema that must be unique on an instance of GraphQL Engine.
+- **Remote Schema name**: an alias for the remote schema that must be unique on an instance of the GraphQL Engine.
 - **GraphQL server URL**: the endpoint at which your remote GraphQL server is available. This value can be entered
   manually or by specifying an environment variable that contains this information.
 
   .. note::
 
-    During **local development** using docker and a localhost server, ensure the Hasura docker container can reach
-    the server endpoint on the host. i.e. use ``host.docker.internal`` on mac or ``docker.for.win.localhost`` on
-    windows.
+    During **local development** using Docker and a localhost server, ensure the Hasura Docker container can reach
+    the server endpoint on the host, i.e. use ``host.docker.internal`` on Mac or ``docker.for.win.localhost`` on
+    Windows.
 
-- **Headers**: configure the headers to be sent to your custom GraphQL server.
+- **Headers**: configure the headers to be sent to your custom GraphQL server:
 
   - Toggle forwarding all headers sent by the client (when making a GraphQL query) to your remote GraphQL server.
-  - Send additional headers to your remote server - These can be static header name-value pairs; and/or pairs of
-    "header name-environment variable name". You can specify the value of the header to picked up from the environment
+  - Send additional headers to your remote server - these can be static header name-value pairs; and/or pairs of
+    "header name-environment variable name". You can specify the value of the header to be picked up from the environment
     variable.
 
     **Example**: Let's say your remote GraphQL server needs a ``X-Api-Key`` as a header. As this value contains
-    sensitive data (like API key in this example), you can configure name of an environment variable which will hold
-    the value. This environment variable needs to be present when you start GraphQL Engine. When Hasura sends
+    sensitive data (like API key in this example), you can configure the name of an environment variable which will hold
+    the value. This environment variable needs to be present when you start the GraphQL Engine. When Hasura sends
     requests to your remote server, it will pick up the value from this environment variable.
 
 .. admonition:: Using environment variables
 
   If you are using environment variables in the remote schema configuration - either
   for URL or headers - **the environment variables need to be present**  with valid values
-  when adding the remote schema i.e. GraphQL engine should be started with these env variables
+  when adding the remote schema i.e. the GraphQL engine should be started with these environment variables.
 
 Click on the ``Add Remote Schema`` button to merge the remote schema.
 
@@ -133,14 +131,14 @@ These limitations will be addressed in upcoming versions.
 Extending the auto-generated GraphQL schema fields
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For some use cases, you may need to extend the GraphQL schema fields exposed by Hasura GraphQL engine
+For some use cases, you may need to extend the GraphQL schema fields exposed by the Hasura GraphQL engine
 (*and not merely augment as we have done above*) with a custom schema/server. To support them, you can use
-community tooling to write your own client-facing GraphQL gateway that interacts with GraphQL Engine.
+community tooling to write your own client-facing GraphQL gateway that interacts with the GraphQL Engine.
 
 .. note::
 
-  **Adding an additional layer on top of Hasura GraphQL engine significantly impacts the performance provided by
-  it out of the box** (*by as much as 4x*). If you need any help with remodelling these kind of use cases to use the
+  **Adding an additional layer on top of the Hasura GraphQL engine significantly impacts the performance provided by
+  it out of the box** (*by as much as 4x*). If you need any help with remodelling these kinds of use cases to use the
   built-in remote schemas feature, please get in touch with us on `Discord <https://discord.gg/vBPpJkS>`__.
 
 
@@ -157,15 +155,15 @@ You can also configure Hasura to have (as shown :ref:`above <merge_remote_schema
 2. forward all headers from the client (like ``Authorization``, ``Cookie`` headers etc.)
 
 In case there are multiple headers with same name, the order of precedence is:
-configuration headers > resolved user (``x-hasura-*``) variables > client headers
+configuration headers > resolved user (``x-hasura-*``) variables > client headers.
 
-So for example, if client sends an ``Authorization`` header, and the
-configuration also has ``Authorization`` header, the configuration header value
+So for example, if the client sends an ``Authorization`` header, and the
+configuration also has an ``Authorization`` header, the configuration header value
 will selected.
 
 .. note::
 
-   The headers from client behave similar to the authorization system. If
+   The headers from the client behave similarly to the authorization system. If
    ``x-hasura-admin-secret`` is sent, then all ``x-hasura-*`` values from the
    client are respected, otherwise they are ignored.
 
@@ -173,7 +171,7 @@ Cookie header from your remote GraphQL servers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ``Set-Cookie`` headers from your remote schema servers are sent back to the
 client over HTTP transport. **Over websocket transport there exists no means 
-to send headers after a query/mutation and hence ``Set-Cookie`` headers are 
+of sending headers after a query/mutation and hence the ``Set-Cookie`` headers are 
 not sent to the client.** Use HTTP transport if your remote servers set cookies. 
 
 
@@ -190,7 +188,7 @@ you would not want to perform Hasura's authorization when the user is making a
 login/signup request.
 
 There is no first-class option to currently do this via any configuration in
-Hasura. However a similar solution can achieved by the following workarounds:
+Hasura. However a similar solution can be achieved by the following workarounds:
 
 Bypassing webhook authorization
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -231,5 +229,5 @@ For example, the generated JWT can be:
 
 
 Hasura will get this JWT and successfully validate it. When your remote server receives this JWT, it should
-specifically validate the JWT and, for example, check for ``role`` key in the JWT. If it is set to ``anonymous``
+specifically validate the JWT and, for example, check for the ``role`` key in the JWT. If it is set to ``anonymous``,
 then it should consider the request as unauthenticated.
