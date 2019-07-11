@@ -1,4 +1,4 @@
-Setting default values for fields using role based column presets
+Setting default values for fields using role-based column presets
 =================================================================
 
 .. contents:: Table of contents
@@ -7,7 +7,7 @@ Setting default values for fields using role based column presets
   :local:
 
 Let's say you want certain fields to have their values set automatically when not explicitly passed using session
-variables or fixed values when a new row is created with a particular :doc:`user role <../../auth/authorization/roles-variables>`
+variables or fixed values when a new row is created with a particular :doc:`user role <../../auth/authorization/roles-variables>`.
 
 Hasura GraphQL engine's column presets let you define role-based default values for any field/column. These values
 can either be a session variable value or a static value.
@@ -34,7 +34,7 @@ setting the preset using a static value or from a session variable.
 .. thumbnail:: ../../../../img/graphql/manual/schema/column-presets-value-options.png
 
 For our chosen example, we'll use the ``from session variable`` option and configure the ``user_id`` column to be
-automatically populated based on the value of ``X-Hasura-User-Id`` session variable.
+automatically populated based on the value of the ``X-Hasura-User-Id`` session variable.
 
 .. note::
 

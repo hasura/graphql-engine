@@ -315,7 +315,7 @@ Fetch a list of articles that were published on or after date "01/01/2018":
 List based search operators (_in, _nin)
 ---------------------------------------
 
-The ``_in`` (in a list) and ``_nin`` (not in list) operators are used to comparing field values to a list of values.
+The ``_in`` (in a list) and ``_nin`` (not in list) operators are used to compare field values to a list of values.
 They are compatible with any Postgres type other than ``json`` or ``jsonB`` (like ``Integer``, ``Float``, ``Double``,
 ``Text``, ``Boolean``, ``Date``/``Time``/``Timestamp``, etc.).
 
@@ -323,7 +323,7 @@ The following are examples of using these operators on different types:
 
 Example: Integer (works with Double, Float, etc.)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Fetches a list of articles rated 1, 3 or 5:
+Fetch a list of articles rated 1, 3 or 5:
 
 .. graphiql::
   :view_only:
@@ -748,7 +748,7 @@ Filter based on failure of some criteria (_not)
 -----------------------------------------------
 
 The ``_not`` operator can be used to fetch results for which some condition does not hold true. i.e. to invert the
-filter set for a condition
+filter set for a condition.
 
 Example: _not
 ^^^^^^^^^^^^^
@@ -926,7 +926,7 @@ Fetch a list of articles rated more than 4 or published after "01/01/2018":
 Filter nested objects
 ---------------------
 
-The ``where`` argument can be used in **array relationships** as well to filter the nested objects.
+The ``where`` argument can be used in **array relationships** as well as to filter the nested objects.
 **Object relationships** have only one nested object and hence they do not expose the ``where`` argument.
 
 Example:
@@ -985,7 +985,7 @@ Filter based on nested objects' fields
 
 You can use the fields of nested objects as well to filter your query results.
 
-For example,
+For example:
 
 .. code-block:: graphql
    :emphasize-lines: 2
@@ -1076,12 +1076,12 @@ Fetch all articles whose author's name starts with "A":
     }
 
 
-Fetch if **any** of the nested objects defined via an array relationship satisfy a condition
+Fetch if **any** of the nested objects defined via an array relationship satisfies a condition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Example:
 ~~~~~~~~
-Fetch all authors which have written at least one article which is rated 1
+Fetch all authors which have written at least one article which is rated 1:
 
 .. graphiql::
   :view_only:
@@ -1157,11 +1157,11 @@ Fetch all authors which have written at least one article which is rated 1
 Fetch if **all** of the nested objects defined via an array relationship satisfy a condition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-As by default a row is returned if any of the nested objects satisfy a condition, to achieve the above we need to frame
+As by default a row is returned if any of the nested objects satisfy a condition. To achieve the above, we need to frame
 the ``where`` expression as ``{_not: {inverse-of-condition}}``. This reads as: fetch if not (any of the nested objects
 satisfy the inverted condition) i.e. all of the nested objects satisfy the condition.
 
-For example,
+For example:
 
 +---------------------------------------+-----------------------------------------------+
 | condition                             | where expression                              |
@@ -1258,7 +1258,7 @@ Fetch all authors which have all of their articles published i.e. have ``{is_pub
 Fetch if **none** of the nested objects defined via an array relationship satisfy a condition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-As by default a row is returned if any of the nested objects satisfy a condition, to achieve the above we need to frame
+As by default a row is returned if any of the nested objects satisfy a condition. To achieve the above, we need to frame
 the ``where`` expression as ``{_not: {condition}}``. This reads as: fetch if not (any of the nested objects
 satisfy the condition) i.e. none of the nested objects satisy the condition.
 
@@ -1274,7 +1274,7 @@ For example,
 
 Example:
 ~~~~~~~~
-Fetch all authors which have none of their articles published i.e. have ``{is_published {_eq: true}``.
+Fetch all authors which have none of their articles published i.e. have ``{is_published {_eq: true}``:
 
 .. graphiql::
   :view_only:

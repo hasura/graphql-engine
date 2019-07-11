@@ -41,12 +41,12 @@ Custom SQL functions can be created using SQL which can be run in the Hasura con
 
   If the ``SETOF`` table doesn't already exist or your function needs to return a custom type i.e. row set,
   create and track an empty table with the required schema to support the function before executing the above
-  steps
+  steps.
 
 Querying custom functions using GraphQL queries
 -----------------------------------------------
 
-Let's see how we can query custom functions using a GraphQL query by using the below examples:
+Let's see how we can query custom functions using a GraphQL query as in the below examples:
 
 Example: Text-search functions
 ******************************
@@ -297,7 +297,7 @@ function in our GraphQL API as follows:
 Aggregations on custom functions
 ********************************
 
-You can query aggregations on a function result using ``<function-name>_aggregate`` field.
+You can query aggregations on a function result using the ``<function-name>_aggregate`` field.
 
 **For example**, count the number of articles returned by the function defined in the text-search example above:
 
@@ -337,7 +337,7 @@ function-based queries.
 Using argument default values for custom functions
 **************************************************
 
-If you omit an argument in ``args`` input field then GraphQL Engine executes the SQL function without the argument.
+If you omit an argument in the ``args`` input field then the GraphQL Engine executes the SQL function without the argument.
 Hence, the function will use the default value of that argument set in its definition.
 
 **For example:** In the above :ref:`PostGIS functions example <custom_functions_postgis>`, the function

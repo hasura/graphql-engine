@@ -42,7 +42,7 @@ Create an object relationship, ``avg_rating``, by mapping ``author::id -> author
 
 Step 3: Query using the relationship
 ------------------------------------
-Now that we have the relationship between the ``author`` table and the ``author_average_rating`` view has been set
+Now that the relationship between the ``author`` table and the ``author_average_rating`` view has been set
 up, we can query the aggregate data in ``author_average_rating`` as with any regular nested object.
 
 Fetch a list of authors along with their average article rating:

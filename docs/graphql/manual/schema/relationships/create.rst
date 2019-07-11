@@ -15,7 +15,7 @@ as foreign-keys can't be created on views.
 
 .. _relationships-using-fkey:
 
-Using Foreign Keys
+Using foreign keys
 ------------------
 
 Say we created two tables, ``author(id, name)`` and ``article(id, title, content, rating, author_id)``.
@@ -43,7 +43,7 @@ Add an ``object relationship`` named ``author`` for the ``article`` table as sho
 
 .. thumbnail:: ../../../../img/graphql/manual/schema/add-1-1-relationship.png
 
-We can now run a nested object query that is based on this ``object relationship``
+We can now run a nested object query that is based on this ``object relationship``.
 
 Fetch a list of articles and each article's author:
 
@@ -176,7 +176,7 @@ Fetch a list of authors and a nested list of each author's articles:
 
 .. _relationships-without-fkey:
 
-Using Manual Relationships
+Using manual relationships
 --------------------------
 
 Let's say you have a table ``author(id, name)`` and a view ``author_avg_rating(id, avg)`` which has the
@@ -185,7 +185,7 @@ average rating of articles for each author.
 Let us now create an ``object relationship`` called ``avg_rating`` from the ``author`` table to the
 ``author_avg_rating`` view using a manual relationship:
 
-Step 1: Open manual relationship section
+Step 1: Open the manual relationship section
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Open the console and navigate to the ``Data -> author -> Relationships`` tab.

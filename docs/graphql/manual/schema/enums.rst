@@ -11,7 +11,7 @@ Enum type fields can only take a value from a fixed set of allowed values.
 In a relational database such as Postgres, an enum type field in a table can be defined by:
 
 - using native database enum types
-- setting a foreign-key to a reference table which contains the list of allowed values.
+- setting a foreign key to a reference table which contains the list of allowed values
 
 `Postgres Enum types <https://www.postgresql.org/docs/current/datatype-enum.html>`__ are not easily mutable. Hence
 they should be used only for enums which are not going to change over time. e.g. measurement units, days of the
@@ -23,7 +23,7 @@ of tags, list of teams, etc.
 .. admonition:: Current limitations
 
   Hasura currently does not generate GraphQL enums. This feature is being worked upon. Hence this guide is currently
-  only tailored towards helping you maintain data consistency in your database
+  only tailored towards helping you maintain data consistency in your database.
 
 
 **For example**, let's say we have a table ``magazine`` with fields ``(id, title, issue_month, issue_year)``

@@ -31,7 +31,7 @@ In the Hasura console, navigate to ``Events -> Create trigger`` and:
 1. Enter trigger name as ``echo``.
 2. Select table ``profile`` from the table dropdown.
 3. Select operations: ``insert``, ``update`` and ``delete``.
-4. Enter webhook URL as: ``https://httpbin.org/post``.
+4. Enter the following webhook URL: ``https://httpbin.org/post``.
 
 .. thumbnail:: ../../../img/graphql/manual/getting-started/create-event-trigger.png
 
