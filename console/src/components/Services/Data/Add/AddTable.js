@@ -36,13 +36,16 @@ import { resetValidation } from './AddActions';
 import gqlPattern, {
   gqlTableErrorNotif,
   gqlColumnErrorNotif,
-  gqlTableNameNullNotif,
-  gqlTableEnufColumns,
-  gqlColumnNoDups,
-  gqlColumnTypes,
-  gqlColumnDefaults,
-  gqlMinPrimaryKey,
 } from '../Common/GraphQLValidation'; // TODO add the others
+
+import {
+  tableNameNullNotif,
+  tableEnufColumns,
+  tableColumnNoDups,
+  tableColumnTypes,
+  tableColumnDefaults,
+  tableMinPrimaryKey,
+} from './AddWarning';
 
 import styles from '../../../Common/TableCommon/Table.scss';
 import { frequentlyUsedColumns, getFreqUsedColDisplayInfo } from './utils';
@@ -354,12 +357,12 @@ class AddTable extends Component {
     if (
       this.checkAndDispatch(
         this.props.tableName !== null,
-        gqlTableNameNullNotif
+        tableNameNullNotif
       ) &&
       this.checkAndDispatch(this.tableNameCheck(), gqlTableErrorNotif) &&
       this.checkAndDispatch(
         this.validateEnoughColumns(validColumns),
-        gqlTableEnufColumns
+        tableEnufColumns
       ) &&
       this.checkAndDispatch(
         this.validateColumnNames(validColumns),
@@ -367,17 +370,17 @@ class AddTable extends Component {
       ) &&
       this.checkAndDispatch(
         this.validateNoDupNames(validColumns),
-        gqlColumnNoDups
+        tableColumnNoDups
       ) &&
       this.checkAndDispatch(
         this.validateColumnTypes(validColumns),
-        gqlColumnTypes
+        tableColumnTypes
       ) &&
       this.checkAndDispatch(
         this.validateColumnDefaults(validColumns),
-        gqlColumnDefaults
+        tableColumnDefaults
       ) &&
-      this.checkAndDispatch(this.minPrimaryKeyCheck(), gqlMinPrimaryKey)
+      this.checkAndDispatch(this.minPrimaryKeyCheck(), tableMinPrimaryKey)
     ) {
       this.props.dispatch(createTableSql());
     }
