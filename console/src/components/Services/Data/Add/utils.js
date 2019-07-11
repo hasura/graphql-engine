@@ -41,7 +41,7 @@ BEFORE UPDATE ON "${schemaName}"."${tableName}"
 FOR EACH ROW
 EXECUTE PROCEDURE "${schemaName}".set_current_timestamp_${columnName}();
 COMMENT ON TRIGGER "trigger_set_${schemaName}_${tableName}_${columnName}" ON "${schemaName}"."${tableName}" 
-IS 'trigger to set value of column "${columnName}" to current timestamp on row update'
+IS 'trigger to set value of column "${columnName}" to current timestamp on row update';
 `;
     },
   },
