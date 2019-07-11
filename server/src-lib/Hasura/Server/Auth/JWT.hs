@@ -3,7 +3,7 @@ module Hasura.Server.Auth.JWT
   , RawJWT
   , JWTConfig (..)
   , JWTCtx (..)
-  , JWKSet (..)
+  , Jose.JWKSet (..)
   , JWTClaimsFormat (..)
   , updateJwkRef
   , jwkRefreshCtrl
@@ -14,7 +14,6 @@ import           Control.Arrow                   (first)
 import           Control.Exception               (try)
 import           Control.Lens
 import           Control.Monad                   (when)
-import           Crypto.JWT
 import           Data.IORef                      (IORef, modifyIORef, readIORef)
 
 import           Data.List                       (find)
@@ -33,6 +32,7 @@ import           Hasura.Server.Utils             (diffTimeToMicro,
                                                   userRoleHeader)
 
 import qualified Control.Concurrent              as C
+import qualified Crypto.JWT                      as Jose
 import qualified Data.Aeson                      as A
 import qualified Data.Aeson.Casing               as A
 import qualified Data.Aeson.TH                   as A
@@ -62,24 +62,25 @@ $(A.deriveJSON A.defaultOptions { A.sumEncoding = A.ObjectWithSingleField
 data JWTConfig
   = JWTConfig
   { jcType         :: !T.Text
-  , jcKeyOrUrl     :: !(Either JWK URI)
+  , jcKeyOrUrl     :: !(Either Jose.JWK URI)
   , jcClaimNs      :: !(Maybe T.Text)
-  , jcAudience     :: !(Maybe T.Text)
+  , jcAudience     :: !(Maybe Jose.Audience)
   , jcClaimsFormat :: !(Maybe JWTClaimsFormat)
-  -- , jcIssuer   :: !(Maybe T.Text)
+  , jcIssuer       :: !(Maybe Jose.StringOrURI)
   } deriving (Show, Eq)
 
 data JWTCtx
   = JWTCtx
-  { jcxKey          :: !(IORef JWKSet)
+  { jcxKey          :: !(IORef Jose.JWKSet)
   , jcxClaimNs      :: !(Maybe T.Text)
-  , jcxAudience     :: !(Maybe T.Text)
+  , jcxAudience     :: !(Maybe Jose.Audience)
   , jcxClaimsFormat :: !JWTClaimsFormat
+  , jcxIssuer       :: !(Maybe Jose.StringOrURI)
   } deriving (Eq)
 
 instance Show JWTCtx where
-  show (JWTCtx _ nsM audM cf) =
-    show ["<IORef JWKSet>", show nsM, show audM, show cf]
+  show (JWTCtx _ nsM audM cf iss) =
+    show ["<IORef JWKSet>", show nsM, show audM, show cf, show iss]
 
 data HasuraClaims
   = HasuraClaims
@@ -103,7 +104,7 @@ jwkRefreshCtrl
   => Logger
   -> HTTP.Manager
   -> URI
-  -> IORef JWKSet
+  -> IORef Jose.JWKSet
   -> NominalDiffTime
   -> m ()
 jwkRefreshCtrl lggr mngr url ref time =
@@ -124,7 +125,7 @@ updateJwkRef
   => Logger
   -> HTTP.Manager
   -> URI
-  -> IORef JWKSet
+  -> IORef Jose.JWKSet
   -> m (Maybe NominalDiffTime)
 updateJwkRef (Logger logger) manager url jwkRef = do
   let options = wreqOptions manager []
@@ -210,10 +211,10 @@ processAuthZHeader jwtCtx headers authzHeader = do
 
   let claimsNs  = fromMaybe defaultClaimNs $ jcxClaimNs jwtCtx
       claimsFmt = jcxClaimsFormat jwtCtx
-      expTimeM = fmap (\(NumericDate t) -> t) $ claims ^. claimExp
+      expTimeM = fmap (\(Jose.NumericDate t) -> t) $ claims ^. Jose.claimExp
 
   -- see if the hasura claims key exist in the claims map
-  let mHasuraClaims = Map.lookup claimsNs $ claims ^. unregisteredClaims
+  let mHasuraClaims = Map.lookup claimsNs $ claims ^. Jose.unregisteredClaims
   hasuraClaimsV <- maybe claimsNotFound return mHasuraClaims
 
   -- get hasura claims value as an object. parse from string possibly
@@ -322,24 +323,31 @@ parseHasuraClaims claimsMap = do
 
 -- | Verify the JWT against given JWK
 verifyJwt
-  :: ( MonadError JWTError m
+  :: ( MonadError Jose.JWTError m
      , MonadIO m
      )
   => JWTCtx
   -> RawJWT
-  -> m ClaimsSet
+  -> m Jose.ClaimsSet
 verifyJwt ctx (RawJWT rawJWT) = do
   key <- liftIO $ readIORef $ jcxKey ctx
-  jwt <- decodeCompact rawJWT
+  jwt <- Jose.decodeCompact rawJWT
   t   <- liftIO getCurrentTime
-  verifyClaimsAt config key t jwt
+  Jose.verifyClaimsAt config key t jwt
   where
-    audCheck aud = maybe True (== (T.pack . show) aud) $ jcxAudience ctx
-    config = defaultJWTValidationSettings audCheck
+    config = case jcxIssuer ctx of
+      Nothing  -> Jose.defaultJWTValidationSettings audCheck
+      Just iss -> Jose.defaultJWTValidationSettings audCheck
+                  & set Jose.issuerPredicate (== iss)
+    audCheck audience =
+      -- dont perform the check if there are no audiences in the conf
+      case jcxAudience ctx of
+        Nothing                        -> True
+        Just (Jose.Audience audiences) -> audience `elem` audiences
 
 
 instance A.ToJSON JWTConfig where
-  toJSON (JWTConfig ty keyOrUrl claimNs aud claimsFmt) =
+  toJSON (JWTConfig ty keyOrUrl claimNs aud claimsFmt iss) =
     case keyOrUrl of
          Left _    -> mkObj ("key" A..= A.String "<JWK REDACTED>")
          Right url -> mkObj ("jwk_url" A..= url)
@@ -348,6 +356,7 @@ instance A.ToJSON JWTConfig where
                             , "claims_namespace" A..= claimNs
                             , "claims_format" A..= claimsFmt
                             , "audience" A..= aud
+                            , "issuer" A..= iss
                             , item
                             ]
 
@@ -361,6 +370,7 @@ instance A.FromJSON JWTConfig where
     mRawKey <- o A..:? "key"
     claimNs <- o A..:? "claims_namespace"
     aud     <- o A..:? "audience"
+    iss     <- o A..:? "issuer"
     jwkUrl  <- o A..:? "jwk_url"
     isStrngfd <- o A..:? "claims_format"
 
@@ -369,9 +379,9 @@ instance A.FromJSON JWTConfig where
       (Just _, Just _)   -> fail "key, jwk_url both cannot be present"
       (Just rawKey, Nothing) -> do
         key <- parseKey keyType rawKey
-        return $ JWTConfig keyType (Left key) claimNs aud isStrngfd
+        return $ JWTConfig keyType (Left key) claimNs aud isStrngfd iss
       (Nothing, Just url) ->
-        return $ JWTConfig keyType (Right url) claimNs aud isStrngfd
+        return $ JWTConfig keyType (Right url) claimNs aud isStrngfd iss
 
     where
       parseKey keyType rawKey =
