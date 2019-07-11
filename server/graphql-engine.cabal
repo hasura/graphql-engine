@@ -256,6 +256,7 @@ library
 
                      , Data.Text.Extended
                      , Data.Aeson.Extended
+                     , Data.Aeson.Ordered
                      , Data.Sequence.NonEmpty
                      , Data.TByteString
                      , Data.HashMap.Strict.InsOrd.Extended
