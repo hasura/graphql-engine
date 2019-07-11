@@ -18,14 +18,17 @@ import           Data.Aeson
 import qualified Data.HashMap.Strict as M
 import qualified Data.Text.Extended  as T
 
+type OpRhsParser m v =
+  PgType -> Value -> m v
+
 parseOpExp
   :: (MonadError QErr m)
-  => ValueParser m a
+  => OpRhsParser m v
   -> FieldInfoMap
   -> PGColInfo
-  -> (T.Text, Value) -> m (OpExpG a)
-parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
-  case opStr of
+  -> (T.Text, Value) -> m (OpExpG v)
+parseOpExp rhsParser fim (PGColInfo cn colTy _) (opStr, val) =
+  withErrPath $ case opStr of
     "$eq"            -> parseEq
     "_eq"            -> parseEq
 
@@ -80,12 +83,10 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
     "_has_key"       -> jsonbOnlyOp $ AHasKey <$> parseWithTy PGText
     "$has_key"       -> jsonbOnlyOp $ AHasKey <$> parseWithTy PGText
 
-    --FIXME:- Parse a session variable as text array values
-    --TODO:- Add following commented operators after fixing above said
-    -- "_has_keys_any"  -> jsonbOnlyOp $ AHasKeysAny <$> parseVal
-    -- "$has_keys_any"  -> jsonbOnlyOp $ AHasKeysAny <$> parseVal
-    -- "_has_keys_all"  -> jsonbOnlyOp $ AHasKeysAll <$> parseVal
-    -- "$has_keys_all"  -> jsonbOnlyOp $ AHasKeysAll <$> parseVal
+    "_has_keys_any"  -> jsonbOnlyOp $ AHasKeysAny <$> parseManyWithType PGText
+    "$has_keys_any"  -> jsonbOnlyOp $ AHasKeysAny <$> parseManyWithType PGText
+    "_has_keys_all"  -> jsonbOnlyOp $ AHasKeysAll <$> parseManyWithType PGText
+    "$has_keys_all"  -> jsonbOnlyOp $ AHasKeysAll <$> parseManyWithType PGText
 
     -- geometry types
     "_st_contains"   -> parseGeometryOp ASTContains
@@ -132,8 +133,8 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
 
     parseEq       = AEQ False <$> parseOne -- equals
     parseNe       = ANE False <$> parseOne -- <>
-    parseIn       = AIN <$> parseMany -- in an array
-    parseNin      = ANIN <$> parseMany -- not in an array
+    parseIn       = AIN <$> parseManyWithType colTy -- in an array
+    parseNin      = ANIN <$> parseManyWithType colTy -- not in an array
     parseGt       = AGT <$> parseOne -- >
     parseLt       = ALT <$> parseOne -- <
     parseGte      = AGTE <$> parseOne -- >=
@@ -160,21 +161,22 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
       ty      -> throwError $ buildMsg ty [PGJSONB]
 
     parseGeometryOp f =
-      geometryOp colTy >> f <$> parseOne
+      geometryOp colTy >> f <$> parseOneNoSess colTy val
+
     parseGeometryOrGeographyOp f =
-      geometryOrGeographyOp colTy >> f <$> parseOne
+      geometryOrGeographyOp colTy >> f <$> parseOneNoSess colTy val
 
     parseSTDWithinObj = case colTy of
       PGGeometry -> do
         DWithinGeomOp distVal fromVal <- parseVal
-        dist <- withPathK "distance" $ parser PGFloat distVal
-        from <- withPathK "from" $ parser colTy fromVal
+        dist <- withPathK "distance" $ parseOneNoSess PGFloat distVal
+        from <- withPathK "from" $ parseOneNoSess colTy fromVal
         return $ ASTDWithinGeom $ DWithinGeomOp dist from
       PGGeography -> do
         DWithinGeogOp distVal fromVal sphVal <- parseVal
-        dist <- withPathK "distance" $ parser PGFloat distVal
-        from <- withPathK "from" $ parser colTy fromVal
-        useSpheroid <- withPathK "use_spheroid" $ parser PGBoolean sphVal
+        dist <- withPathK "distance" $ parseOneNoSess PGFloat distVal
+        from <- withPathK "from" $ parseOneNoSess colTy fromVal
+        useSpheroid <- withPathK "use_spheroid" $ parseOneNoSess PGBoolean sphVal
         return $ ASTDWithinGeog $ DWithinGeogOp dist from useSpheroid
       _ -> throwError $ buildMsg colTy [PGGeometry, PGGeography]
 
@@ -197,27 +199,28 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
     geometryOrGeographyOp ty =
       throwError $ buildMsg ty [PGGeometry, PGGeography]
 
-    parseWithTy ty = parser ty val
+    parseWithTy ty = rhsParser (PgTypeSimple ty) val
+
+    -- parse one with the column's type
     parseOne = parseWithTy colTy
-    parseMany = do
-      vals <- runAesonParser parseJSON val
-      indexedForM vals (parser colTy)
+    parseOneNoSess ty = rhsParser (PgTypeSimple ty)
+
+    parseManyWithType ty = rhsParser (PgTypeArray ty) val
 
     parseVal :: (FromJSON a, QErrM m) => m a
     parseVal = decodeValue val
 
 parseOpExps
   :: (MonadError QErr m)
-  => ValueParser m a
+  => OpRhsParser m v
   -> FieldInfoMap
   -> PGColInfo
   -> Value
-  -> m [OpExpG a]
-parseOpExps valParser cim colInfo = \case
-  (Object o) -> mapM (parseOpExp valParser cim colInfo)(M.toList o)
-  val        -> pure . AEQ False <$> valParser (pgiType colInfo) val
-
-type ValueParser m a = PGColType -> Value -> m a
+  -> m [OpExpG v]
+parseOpExps rhsParser cim colInfo = \case
+  (Object o) -> mapM (parseOpExp rhsParser cim colInfo)(M.toList o)
+  val        -> pure . AEQ False <$>
+                rhsParser (PgTypeSimple $ pgiType colInfo) val
 
 buildMsg :: PGColType -> [PGColType] -> QErr
 buildMsg ty expTys =
@@ -252,32 +255,30 @@ notEqualsBoolExpBuilder qualColExp rhsExp =
 
 annBoolExp
   :: (QErrM m, CacheRM m)
-  => ValueParser m a
+  => OpRhsParser m v
   -> FieldInfoMap
   -> BoolExp
-  -> m (AnnBoolExp a)
-annBoolExp valParser fim (BoolExp boolExp) =
-  traverse (annColExp valParser fim) boolExp
+  -> m (AnnBoolExp v)
+annBoolExp rhsParser fim (BoolExp boolExp) =
+  traverse (annColExp rhsParser fim) boolExp
 
 annColExp
   :: (QErrM m, CacheRM m)
-  => ValueParser m a
+  => OpRhsParser m v
   -> FieldInfoMap
   -> ColExp
-  -> m (AnnBoolExpFld a)
-annColExp valueParser colInfoMap (ColExp fieldName colVal) = do
+  -> m (AnnBoolExpFld v)
+annColExp rhsParser colInfoMap (ColExp fieldName colVal) = do
   colInfo <- askFieldInfo colInfoMap fieldName
   case colInfo of
     FIColumn (PGColInfo _ PGJSON _) ->
       throwError (err400 UnexpectedPayload "JSON column can not be part of where clause")
-    -- FIColumn (PGColInfo _ PGJSONB _) ->
-    --   throwError (err400 UnexpectedPayload "JSONB column can not be part of where clause")
     FIColumn pgi ->
-      AVCol pgi <$> parseOpExps valueParser colInfoMap pgi colVal
+      AVCol pgi <$> parseOpExps rhsParser colInfoMap pgi colVal
     FIRelationship relInfo -> do
       relBoolExp      <- decodeValue colVal
       relFieldInfoMap <- askFieldInfoMap $ riRTable relInfo
-      annRelBoolExp   <- annBoolExp valueParser relFieldInfoMap relBoolExp
+      annRelBoolExp   <- annBoolExp rhsParser relFieldInfoMap relBoolExp
       return $ AVRel relInfo annRelBoolExp
 
 toSQLBoolExp
@@ -334,8 +335,10 @@ mkColCompExp qual lhsCol = \case
   AEQ True val     -> S.BECompare S.SEQ lhs val
   ANE False val    -> notEqualsBoolExpBuilder lhs val
   ANE True  val    -> S.BECompare S.SNE lhs val
-  AIN vals         -> handleEmptyIn vals
-  ANIN vals        -> S.BENot $ handleEmptyIn vals
+
+  AIN val          -> S.BECompareAny S.SEQ lhs val
+  ANIN val         -> S.BENot $ S.BECompareAny S.SEQ lhs val
+
   AGT val          -> S.BECompare S.SGT lhs val
   ALT val          -> S.BECompare S.SLT lhs val
   AGTE val         -> S.BECompare S.SGTE lhs val
@@ -349,8 +352,9 @@ mkColCompExp qual lhsCol = \case
   AContains val    -> S.BECompare S.SContains lhs val
   AContainedIn val -> S.BECompare S.SContainedIn lhs val
   AHasKey val      -> S.BECompare S.SHasKey lhs val
-  AHasKeysAny keys -> S.BECompare S.SHasKeysAny lhs $ toTextArray keys
-  AHasKeysAll keys -> S.BECompare S.SHasKeysAll lhs $ toTextArray keys
+
+  AHasKeysAny val  -> S.BECompare S.SHasKeysAny lhs val
+  AHasKeysAll val  -> S.BECompare S.SHasKeysAll lhs val
 
   ASTContains val   -> mkGeomOpBe "ST_Contains" val
   ASTCrosses val    -> mkGeomOpBe "ST_Crosses" val
@@ -359,9 +363,10 @@ mkColCompExp qual lhsCol = \case
   ASTOverlaps val   -> mkGeomOpBe "ST_Overlaps" val
   ASTTouches val    -> mkGeomOpBe "ST_Touches" val
   ASTWithin val     -> mkGeomOpBe "ST_Within" val
-
-  ASTDWithinGeom (DWithinGeomOp r val)      -> applySQLFn "ST_DWithin" [lhs, val, r]
-  ASTDWithinGeog (DWithinGeogOp r val sph)  -> applySQLFn "ST_DWithin" [lhs, val, r, sph]
+  ASTDWithinGeom (DWithinGeomOp r val)     ->
+    applySQLFn "ST_DWithin" [lhs, val, r]
+  ASTDWithinGeog (DWithinGeogOp r val sph) ->
+    applySQLFn "ST_DWithin" [lhs, val, r, sph]
 
   ANISNULL         -> S.BENull lhs
   ANISNOTNULL      -> S.BENotNull lhs
@@ -372,18 +377,13 @@ mkColCompExp qual lhsCol = \case
   CGTE rhsCol      -> S.BECompare S.SGTE lhs $ mkQCol rhsCol
   CLTE rhsCol      -> S.BECompare S.SLTE lhs $ mkQCol rhsCol
   where
+
     mkQCol = S.SEQIden . S.QIden qual . toIden
     lhs = mkQCol lhsCol
-
-    toTextArray arr =
-      S.SETyAnn (S.SEArray $ map (txtEncoder . PGValText) arr) S.textArrType
 
     mkGeomOpBe fn v = applySQLFn fn [lhs, v]
 
     applySQLFn f exps = S.BEExp $ S.SEFnApp f exps Nothing
-
-    handleEmptyIn []   = S.BELit False
-    handleEmptyIn vals = S.BEIN lhs vals
 
 getColExpDeps :: QualifiedTable -> AnnBoolExpFld a -> [SchemaDependency]
 getColExpDeps tn = \case

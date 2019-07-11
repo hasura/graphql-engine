@@ -641,7 +641,7 @@ mkAggSelect :: AnnAggSel -> S.Select
 mkAggSelect annAggSel =
   prefixNumToAliases $ arrNodeToSelect bn extr $ S.BELit True
   where
-    aggSel = AnnRelG (RelName "root") [] annAggSel
+    aggSel = AnnRelG rootRelName [] annAggSel
     ArrNode extr _ bn =
       aggSelToArrNode (Iden "root") (FieldName "root") aggSel
 

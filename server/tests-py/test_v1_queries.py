@@ -545,6 +545,12 @@ class TestRelationships(DefaultTestQueries):
 
 class TestTrackTables(DefaultTestQueries):
 
+    def test_track_table_function_same_name(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/track_table_function_same_name.yaml')
+
+    def test_track_function_table_same_name(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/track_function_table_same_name.yaml')
+
     def test_track_untrack_table(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/track_untrack_table.yaml')
         hge_ctx.may_skip_test_teardown = True
@@ -576,3 +582,28 @@ class TestCreatePermission(DefaultTestQueries):
     @classmethod
     def dir(cls):
         return "queries/v1/permissions"
+
+
+class TestNonEmptyText:
+
+    def test_create_event_trigger(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/create_event_trigger.yaml')
+
+    def test_create_insert_permission(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/create_insert_permission.yaml')
+
+    def test_create_query_collection(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/create_query_collection.yaml')
+
+    def test_create_query_collection_queryname(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/create_query_collection_queryname.yaml')
+
+    def test_create_object_relationship(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/create_object_relationship.yaml')
+
+    def test_create_remote_schema(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/create_remote_schema.yaml')
+
+    @classmethod
+    def dir(cls):
+        return "queries/v1/non_empty_text"

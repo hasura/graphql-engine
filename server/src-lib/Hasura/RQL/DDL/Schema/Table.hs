@@ -1,3 +1,7 @@
+{- |
+Description: Create/delete SQL tables to/from Hasura metadata.
+-}
+
 {-# LANGUAGE TypeApplications #-}
 
 module Hasura.RQL.DDL.Schema.Table where
@@ -56,6 +60,9 @@ newtype TrackTable
   { tName :: QualifiedTable }
   deriving (Show, Eq, FromJSON, ToJSON, Lift)
 
+-- | Track table/view, Phase 1:
+-- Validate table tracking operation. Fails if table is already being tracked,
+-- or if a function with the same name is being tracked.
 trackExistingTableOrViewP1
   :: (CacheRM m, UserInfoM m, QErrM m) => TrackTable -> m ()
 trackExistingTableOrViewP1 (TrackTable vn) = do
@@ -63,6 +70,9 @@ trackExistingTableOrViewP1 (TrackTable vn) = do
   rawSchemaCache <- askSchemaCache
   when (M.member vn $ scTables rawSchemaCache) $
     throw400 AlreadyTracked $ "view/table already tracked : " <>> vn
+  let qf = fmap (FunctionName . getTableTxt) vn
+  when (M.member qf $ scFunctions rawSchemaCache) $
+    throw400 NotSupported $ "function with name " <> vn <<> " already exists"
 
 trackExistingTableOrViewP2
   :: (QErrM m, CacheRWM m, MonadTx m)
