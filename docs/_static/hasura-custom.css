@@ -182,6 +182,10 @@ ul {
   width:  100%;
 }
 
+#docs-content table caption {
+  position: relative;
+}
+
 /*** random overrides ***/
 
 .wy-plain-list-decimal ol,

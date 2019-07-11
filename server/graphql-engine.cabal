@@ -69,8 +69,9 @@ library
                      , network
                      , byteorder
 
-                     -- hashing for logging
+                     -- for parsing RSA keys
                      , cryptonite
+
                      -- for jwt verification
                      , jose
                      , pem
@@ -242,6 +243,7 @@ library
                      , Hasura.GraphQL.RemoteServer
                      , Hasura.GraphQL.Context
                      , Hasura.GraphQL.Resolve.ContextTypes
+                     , Hasura.GraphQL.Logging
 
                      , Hasura.Events.Lib
                      , Hasura.Events.HTTP

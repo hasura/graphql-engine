@@ -22,7 +22,7 @@ import qualified Network.Wreq                  as Wreq
 import           Hasura.HTTP                   (wreqOptions)
 import           Hasura.RQL.DDL.Headers        (getHeadersFromConf)
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils           (bsToTxt, httpExceptToJSON)
+import           Hasura.Server.Utils           (httpExceptToJSON)
 
 import qualified Hasura.GraphQL.Context        as GC
 import qualified Hasura.GraphQL.Schema         as GS

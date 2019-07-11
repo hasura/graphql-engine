@@ -58,6 +58,13 @@ data LQOpts
   , _loFallbackOpts :: LQF.FallbackOpts
   } deriving (Show, Eq)
 
+-- | Required for logging server configuration on startup
+instance J.ToJSON LQOpts where
+  toJSON (LQOpts mxOpts fbOpts) =
+    J.object [ "multiplexed_options" J..= mxOpts
+             , "fallback_options" J..= fbOpts
+             ]
+
 mkLQOpts :: LQM.MxOpts -> LQF.FallbackOpts -> LQOpts
 mkLQOpts = LQOpts
 
