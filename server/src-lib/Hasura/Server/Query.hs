@@ -5,6 +5,8 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Time                          (UTCTime)
 import           Language.Haskell.TH.Syntax         (Lift)
+
+import qualified Data.HashMap.Strict                as HM
 import qualified Network.HTTP.Client                as HTTP
 
 import           Hasura.EncJSON
@@ -103,6 +105,8 @@ data RQLQueryV2
   = RQV2TrackTable !TrackTableV2
   deriving (Show, Eq, Lift)
 
+-- TODO:- Switch to template haskell FromJSON and ToJSON
+-- implementaion when another query type added to `RQLQueryV2`
 instance FromJSON RQLQueryV2 where
   parseJSON = withObject "Object" $ \o -> do
     qType :: String <- o .: "type"
@@ -111,6 +115,13 @@ instance FromJSON RQLQueryV2 where
       "track_table" -> RQV2TrackTable <$> parseJSON argsV
       t                -> fail $
         "expected only \"track_function\" for \"type\", but encountered " ++ t
+
+instance ToJSON RQLQueryV2 where
+  toJSON = \case
+    RQV2TrackTable q -> object
+                      [ "type" .= ("track_function" :: Text)
+                      , "args" .= q
+                      ]
 
 data RQLQuery
   = RQV1 !RQLQueryV1
@@ -126,7 +137,17 @@ instance FromJSON RQLQuery where
       VIVersion1 -> RQV1 <$> parseJSON val
       VIVersion2 -> RQV2 <$> parseJSON val
 
-$(deriveFromJSON
+instance ToJSON RQLQuery where
+  toJSON = \case
+    RQV1 q -> embedVersion VIVersion1 $ toJSON q
+    RQV2 q -> embedVersion VIVersion2 $ toJSON q
+    where
+      embedVersion version (Object o) =
+        Object $ HM.insert "version" (toJSON version) o
+      -- never happens since JSON value of RQL queries are always objects
+      embedVersion _ _ = Null
+
+$(deriveJSON
   defaultOptions { constructorTagModifier = snakeCase . drop 2
                  , sumEncoding = TaggedObject "type" "args"
                  }

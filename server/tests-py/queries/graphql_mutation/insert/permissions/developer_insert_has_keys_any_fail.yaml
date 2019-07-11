@@ -1,0 +1,34 @@
+description: Inserts computer specs with atleast one of the required keys
+url: /v1alpha1/graphql
+status: 400
+response:
+  errors:
+  - extensions:
+      path: $.selectionSet.insert_computer.args.objects
+      code: permission-error
+    message: Check constraint violation. insert check constraint failed
+headers:
+  X-Hasura-Role: developer
+  X-Hasura-Spec-Keys: |-
+    {display,memory,warranty}
+query:
+  variables:
+    spec:
+      processor: AMD
+  query: |
+    mutation insert_computer($spec: jsonb) {
+      insert_computer (
+        objects: [
+          {
+            name: "Computer1",
+            spec: $spec
+          },
+          ],
+      ) {
+        affected_rows
+        returning {
+          name
+          spec
+          }
+        }
+    }
