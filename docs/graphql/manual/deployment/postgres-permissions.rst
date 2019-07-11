@@ -57,6 +57,7 @@ Here's a sample SQL block that you can run on your database to create the right 
     -- grant all privileges on all tables in the public schema. This can be customised:
     -- For example, if you only want to use GraphQL regular queries and not mutations,
     -- then you can set: GRANT SELECT ON ALL TABLES...
+    GRANT USAGE ON SCHEMA public TO hasurauser;
     GRANT ALL ON ALL TABLES IN SCHEMA public TO hasurauser;
     GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO hasurauser;
 

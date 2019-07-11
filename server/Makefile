@@ -10,7 +10,6 @@ packager_ver := 20190326
 pg_dump_ver := 11
 project_dir := $(shell pwd)
 build_dir := $(project_dir)/$(shell stack path --dist-dir)/build
-build_dir_docker := $(project_dir)/$(shell stack --docker path --dist-dir)/build
 
 build_output := /build/_server_output
 
@@ -33,6 +32,7 @@ image: $(project).cabal
 		.
 
 local-image:
+	$(eval build_dir_docker := $(project_dir)/$(shell stack --docker path --dist-dir)/build)
 	stack docker pull
 	stack --docker build --fast
 	mkdir -p packaging/build/rootfs

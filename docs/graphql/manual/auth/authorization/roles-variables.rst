@@ -188,11 +188,59 @@ configured authentication to relay this information. We can then check for the f
 the same rule - *is the organization that this repository belongs to part of the list of the organizations the
 user is a member of*.
 
+The permission for ``org-member`` role changes to this:
+
+.. code-block:: json
+
+  {
+    "_or": [
+      {
+        "creator_id": {
+          "_eq": "X-Hasura-User-Id"
+        }
+      },
+      {
+        "organization_id": {
+          "_in": "X-Hasura-Allowed-Organisations"
+        }
+      }
+    ]
+  }
+
 .. admonition:: Arrays in permission rules
 
-  The ability to use arrays and operators like ``contains`` or ``contained_by`` are currently work-in-progress
-  and will be available soon.
+   Support for using session variables for array operators like ``_in``, ``_nin``, ``_has_any_keys``,
+   ``_has_all_keys`` is only added in ``beta.3`` release.
 
+Format of session variables
+---------------------------
 
+Session variables are currently expected to be Strings and should be encoded as Postgres's literals for
+the relevant type.
 
+For example, in the above example, let's say ``creator_id`` and ``organisation_id`` columns are of
+type ``integer``, then the values of ``X-Hasura-User-Id`` and  ``X-Hasura-Allowed-Organisations`` should
+be of type ``integer`` and ``integer[]`` (an integer array) respectively. To pass say a value ``1`` for
+``X-Hasura-User-Id``, it'll be "``1``" and if the allowed organisations are ``1``, ``2`` and ``3``, then
+``X-Hasura-Allowed-Organisations`` will be "``{1,2,3}``". ``{}`` is the syntax for specifying
+`arrays in Postgres <https://www.postgresql.org/docs/current/arrays.html#ARRAYS-INPUT>`_.
 
+The types and their formats are detailed `here <https://www.postgresql.org/docs/current/datatype.html>`_. When
+in doubt about the Postgres format for a type, you can always test it in the SQL window. To check
+if ``s`` is a valid literal for type ``t`` then, you can check it as follows:
+
+.. code-block:: sql
+
+   select 's'::t;
+
+If the above command returns data, then ``s`` is a valid literal of type ``t``. For example, to check
+if ``{hello,world}`` is a valid format of type ``text[]``, you can run:
+
+.. code-block:: sql
+
+   select '{hello,world}'::text[];
+
+.. admonition:: JSON format
+
+   In future, we'll add support for passing session variables as JSON values where possible (i.e, auth
+   webhook and JWT but not in headers).

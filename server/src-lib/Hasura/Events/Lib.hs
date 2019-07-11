@@ -56,7 +56,7 @@ newtype EventInternalErr
   deriving (Show, Eq)
 
 instance L.ToEngineLog EventInternalErr where
-  toEngineLog (EventInternalErr qerr) = (L.LevelError, "event-trigger", toJSON qerr )
+  toEngineLog (EventInternalErr qerr) = (L.LevelError, L.ELTEventTrigger, toJSON qerr )
 
 data TriggerMeta
   = TriggerMeta { tmName :: TriggerName }

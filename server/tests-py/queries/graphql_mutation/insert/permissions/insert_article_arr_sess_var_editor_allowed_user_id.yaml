@@ -1,0 +1,31 @@
+#Inserting article data
+description: Editor insert article for an allowed user-id
+url: /v1alpha1/graphql
+status: 200
+headers:
+  X-Hasura-Role: editor
+  X-Hasura-Allowed-User-Ids: '{2,3}'
+response:
+  data:
+    insert_article:
+      returning:
+      - content: Sample article content 4
+        title: Article 4
+query:
+  query: |
+    mutation insert_article {
+      insert_article (
+        objects: [
+          {
+            title: "Article 4",
+            content: "Sample article content 4",
+            author_id: 2
+          },
+        ]
+      ) {
+        returning {
+          title
+          content
+        }
+      }
+    }
