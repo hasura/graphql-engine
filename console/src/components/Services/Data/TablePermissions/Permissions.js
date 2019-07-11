@@ -354,9 +354,11 @@ class Permissions extends Component {
 
                 if (JSON.stringify(permissions[filterKey]) === '{}') {
                   if (
-                    (checkColumns && !permissions.columns) ||
-                    (!permissions.columns.includes('*') &&
-                      permissions.columns.length !== tableSchema.columns.length)
+                    checkColumns &&
+                    (!permissions.columns ||
+                      (!permissions.columns.includes('*') &&
+                        permissions.columns.length !==
+                          tableSchema.columns.length))
                   ) {
                     _permission = permissionsSymbols.partialAccess;
                   } else {
