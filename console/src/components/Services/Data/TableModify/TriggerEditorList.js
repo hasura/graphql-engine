@@ -1,4 +1,5 @@
 import React from 'react';
+import AceEditor from 'react-ace';
 
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 
@@ -15,6 +16,10 @@ const TriggerEditorList = ({ tableSchema, dispatch }) => {
   return triggers.map((trigger, i) => {
     const triggerName = trigger.trigger_name;
 
+    const isEventTriggerPGTrigger = trigger.action_statement.includes(
+      'hdb_views'
+    );
+
     const onDelete = () => {
       const isOk = confirm('Are you sure you want to delete?');
       if (isOk) {
@@ -27,8 +32,7 @@ const TriggerEditorList = ({ tableSchema, dispatch }) => {
         <div>
           <b>{triggerName}</b>&nbsp;-&nbsp;
           <i>
-            {trigger.action_timing} {trigger.event_manipulation}{' '}
-            {trigger.action_statement}
+            {trigger.action_timing} {trigger.event_manipulation}
           </i>
         </div>
         <div className={styles.text_gray}>{trigger.comment}</div>
@@ -38,23 +42,40 @@ const TriggerEditorList = ({ tableSchema, dispatch }) => {
     const expandedLabel = () => <b>{triggerName}</b>;
 
     const expandedContent = () => {
-      let comment;
+      let commentText;
       if (trigger.comment) {
+        commentText = trigger.comment;
+      } else if (isEventTriggerPGTrigger) {
+        commentText = 'This is a custom trigger generated for an Event trigger';
+      }
+
+      let comment;
+      if (commentText) {
         comment = (
-          <div className={styles.text_gray + ' ' + styles.add_mar_bottom}>
-            {trigger.comment}
+          <div className={styles.text_gray + ' ' + styles.add_mar_top}>
+            {commentText}
           </div>
         );
       }
 
       return (
         <div>
-          {comment}
           <div>
             <i>
-              {trigger.action_timing} {trigger.event_manipulation}{' '}
-              {trigger.action_statement}
+              {trigger.action_timing} {trigger.event_manipulation}
             </i>
+            <AceEditor
+              mode="sql"
+              theme="github"
+              name="trigger_action"
+              value={trigger.action_statement}
+              minLines={3}
+              maxLines={100}
+              width="100%"
+              showPrintMargin={false}
+              className={styles.add_mar_top_small}
+            />
+            {comment}
           </div>
         </div>
       );
@@ -69,7 +90,7 @@ const TriggerEditorList = ({ tableSchema, dispatch }) => {
           property={`trigger-${i}`}
           service="modify-table"
           saveFunc={null}
-          removeFunc={onDelete}
+          removeFunc={isEventTriggerPGTrigger ? null : onDelete}
           isCollapsable
         />
       </div>
