@@ -196,10 +196,11 @@ getSchemaChangeDeps schemaDiff = do
 
 data FunctionMeta
   = FunctionMeta
-  { fmOid    :: !Int
-  , fmSchema :: !SchemaName
-  , fmName   :: !FunctionName
-  , fmType   :: !FunctionType
+  { fmOid         :: !Int
+  , fmSchema      :: !SchemaName
+  , fmName        :: !FunctionName
+  , fmType        :: !FunctionType
+  , fmDescription :: !(Maybe PGDescription)
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 2 snakeCase) ''FunctionMeta)
 
@@ -214,7 +215,8 @@ fetchFunctionMeta =
         'oid', p.oid :: integer,
         'schema', f.function_schema,
         'name', f.function_name,
-        'type', f.function_type
+        'type', f.function_type,
+        'description', f.description
       ) AS function_meta
     FROM
       hdb_catalog.hdb_function_agg f
@@ -225,13 +227,13 @@ fetchFunctionMeta =
       )
     WHERE
       f.function_schema <> 'hdb_catalog'
-    GROUP BY p.oid, f.function_schema, f.function_name, f.function_type
+    GROUP BY p.oid, f.function_schema, f.function_name, f.function_type, f.description
     |] () False
 
 data FunctionDiff
   = FunctionDiff
   { fdDropped :: ![QualifiedFunction]
-  , fdAltered :: ![(QualifiedFunction, FunctionType)]
+  , fdAltered :: ![(QualifiedFunction, FunctionType, Maybe PGDescription)]
   } deriving (Show, Eq)
 
 getFuncDiff :: [FunctionMeta] -> [FunctionMeta] -> FunctionDiff
@@ -242,8 +244,9 @@ getFuncDiff oldMeta newMeta =
     alteredFuncs = mapMaybe mkAltered $ getOverlap fmOid oldMeta newMeta
     mkAltered (oldfm, newfm) =
       let isTypeAltered = fmType oldfm /= fmType newfm
-          alteredFunc = (funcFromMeta oldfm, fmType newfm)
-      in bool Nothing (Just alteredFunc) isTypeAltered
+          isDescriptionAltered = fmDescription oldfm /= fmDescription newfm
+          alteredFunc = (funcFromMeta oldfm, fmType newfm, fmDescription newfm)
+      in bool Nothing (Just alteredFunc) $ isTypeAltered || isDescriptionAltered
 
 getOverloadedFuncs
   :: [QualifiedFunction] -> [FunctionMeta] -> [QualifiedFunction]

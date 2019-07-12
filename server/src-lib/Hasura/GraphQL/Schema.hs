@@ -447,15 +447,17 @@ mkFuncArgs funInfo =
     funcInpArgs = bool [funcInpArg] [] $ null funcArgs
 
 mkFuncQueryFld
-  :: FunctionInfo -> ObjFldInfo
-mkFuncQueryFld funInfo =
+  :: FunctionInfo
+  -> Maybe PGDescription
+  -> ObjFldInfo
+mkFuncQueryFld funInfo descM =
   mkHsraObjFldInfo (Just desc) fldName (mkFuncArgs funInfo) ty
   where
     retTable = fiReturnType funInfo
     funcName = fiName funInfo
 
-    desc = G.Description $ "execute function " <> funcName
-           <<> " which returns " <>> retTable
+    desc = mkDescription descM $
+           "execute function " <> funcName <<> " which returns " <>> retTable
     fldName = qualObjectToName funcName
 
     ty      = G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy retTable
@@ -472,14 +474,17 @@ function_aggregate(
 -}
 
 mkFuncAggQueryFld
-  :: FunctionInfo -> ObjFldInfo
-mkFuncAggQueryFld funInfo =
+  :: FunctionInfo
+  -> Maybe PGDescription
+  -> ObjFldInfo
+mkFuncAggQueryFld funInfo descM =
   mkHsraObjFldInfo (Just desc) fldName (mkFuncArgs funInfo) ty
   where
     funcName = fiName funInfo
     retTable = fiReturnType funInfo
 
-    desc = G.Description $ "execute function " <> funcName
+    desc = mkDescription descM $
+           "execute function " <> funcName
            <<> " and query aggregates on result of table type "
            <>> retTable
 
@@ -1491,7 +1496,7 @@ getRootFldsRole' tn descM primCols constraints fields funcs insM selM updM delM 
     funcFldHelper f g pFltr pLimit hdrs =
       flip map funcs $ \fi ->
       ( f $ FuncQOpCtx tn hdrs pFltr pLimit (fiName fi) $ mkFuncArgItemSeq fi
-      , Left $ g fi
+      , Left $ g fi $ fiDescription fi
       )
 
     mkFuncArgItemSeq fi = Seq.fromList $

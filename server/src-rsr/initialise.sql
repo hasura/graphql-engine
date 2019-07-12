@@ -333,6 +333,7 @@ CREATE VIEW hdb_catalog.hdb_function_agg AS
 SELECT
   p.proname::text AS function_name,
   pn.nspname::text AS function_schema,
+  pd.description,
 
   CASE
     WHEN (p.provariadic = (0) :: oid) THEN false
@@ -388,6 +389,7 @@ FROM
   JOIN pg_namespace pn ON (pn.oid = p.pronamespace)
   JOIN pg_type rt ON (rt.oid = p.prorettype)
   JOIN pg_namespace rtn ON (rtn.oid = rt.typnamespace)
+  LEFT JOIN pg_description pd ON p.oid = pd.objoid
 WHERE
   pn.nspname :: text NOT LIKE 'pg_%'
   AND pn.nspname :: text NOT IN ('information_schema', 'hdb_catalog', 'hdb_views')
@@ -536,6 +538,7 @@ CREATE VIEW hdb_catalog.hdb_function_info_agg AS (
           FROM
               (
                 SELECT
+                  description,
                   has_variadic,
                   function_type,
                   return_type_schema,

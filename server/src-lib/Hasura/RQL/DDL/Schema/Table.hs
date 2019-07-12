@@ -572,7 +572,7 @@ execWithMDCheck (RunSQL t cascade _) = do
     delFunctionFromCache qf
 
   -- Process altered functions
-  forM_ alteredFuncs $ \(qf, newTy) ->
+  forM_ alteredFuncs $ \(qf, newTy, _) ->
     when (newTy == FTVOLATILE) $
       throw400 NotSupported $
       "type of function " <> qf <<> " is altered to \"VOLATILE\" which is not supported now"
