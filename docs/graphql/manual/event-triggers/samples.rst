@@ -10,17 +10,17 @@ Event trigger samples
 Boilerplates
 ^^^^^^^^^^^^
 
-Here are few boilerplates you can use to build and deploy event triggers on different cloud providers:
+Here are a few boilerplates you can use to build and deploy event triggers on different cloud providers:
 
 * Source code: https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers
 
 There are 2 types of boilerplates:
 
 **Echo**
-Returns the event payload with some augmented data. Helps you in understanding the event payload and parsing it.
+Returns the event payload with some augmented data. It helps you in understanding the event payload and parsing it.
 
 **Mutation**
-Makes a mutation based on the event payload. Helps in understanding database access in event trigger.
+Makes a mutation based on the event payload. It helps in understanding database access inside an event trigger.
 
 Push Notifications
 ^^^^^^^^^^^^^^^^^^

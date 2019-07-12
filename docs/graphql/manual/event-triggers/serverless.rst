@@ -6,7 +6,7 @@ Using serverless functions
   :depth: 1
   :local:
 
-You can use serverless functions along with Event Triggers to design an async business workflow without
+You can use serverless functions along with event triggers to design an async business workflow without
 having to manage any dedicated infrastructure.
 
 As Hasura event triggers can deliver database events to any webhook, serverless functions can be perfect candidates

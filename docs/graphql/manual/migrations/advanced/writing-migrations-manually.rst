@@ -8,8 +8,8 @@ Writing migrations manually
 
 While the Hasura Console can auto generate migrations for every action,
 sometimes you might want to write the migrations yourself, by hand. Using the
-Hasura CLI, you can bootstrap these migration files and write the SQL for
-Postgres Schema and YAML for Hasura metadata actions.
+Hasura CLI, you can bootstrap these migration files and write the SQL for the
+Postgres schema and YAML for Hasura metadata actions.
 
 #. Set up the migration files:
 

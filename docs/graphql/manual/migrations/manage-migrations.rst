@@ -1,6 +1,6 @@
 .. _postgres_schema_metadata:
 
-Managing Postgres Schema and Hasura Metadata
+Managing Postgres schema and Hasura metadata
 ============================================
 
 .. contents:: Table of contents
@@ -15,7 +15,7 @@ modifying SQL statements, as YAML files. These files are called migrations and
 they can be applied and rolled back step-by-step. These files can be version
 controlled and can be used with your CI/CD system to make incremental updates.
 
-When you're looking to setup migrations, there are two scenarios:
+When you're looking to set up migrations, there are two scenarios:
 
 #. :doc:`You already have a database and Hasura setup <existing-database>`.
 #. :doc:`You're starting from scratch - an empty database and a fresh Hasura instance <new-database>`.

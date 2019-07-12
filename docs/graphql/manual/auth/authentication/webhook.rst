@@ -9,7 +9,7 @@ Authentication using webhooks
 Introduction
 ------------
 
-You can configure GraphQL engine to use a webhook to authenticate all incoming requests to the Hasura GraphQL engine server. 
+You can configure the GraphQL engine to use a webhook to authenticate all incoming requests to the Hasura GraphQL engine server. 
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/webhook-auth.png
 
@@ -19,14 +19,14 @@ You can configure GraphQL engine to use a webhook to authenticate all incoming r
 
 In webhook mode, on a secured endpoint:
 
-- The configured webhook is  **called** when ``X-Hasura-Admin-Secret`` header is not found in the request.
-- The configured webhook is **ignored** when ``X-Hasura-Admin-Secret`` header is found in the request and
+- The configured webhook is  **called** when the ``X-Hasura-Admin-Secret`` header is not found in the request.
+- The configured webhook is **ignored** when the ``X-Hasura-Admin-Secret`` header is found in the request and
   admin access is granted.
 
 Configuring webhook mode
 ------------------------
 
-* You can configure Hasura to run in webhook mode by running GraphQL engine with the ``--auth-hook`` flag or the ``HASURA_GRAPHQL_AUTH_HOOK`` environment variable (see :doc:`GraphQL engine server options <../../deployment/graphql-engine-flags/reference>`), the value of which is the webhook endpoint.
+* You can configure Hasura to run in webhook mode by running the GraphQL engine with the ``--auth-hook`` flag or the ``HASURA_GRAPHQL_AUTH_HOOK`` environment variable (see :doc:`GraphQL engine server options <../../deployment/graphql-engine-flags/reference>`), the value of which is the webhook endpoint.
 
 * You can configure Hasura to send either a ``GET`` or a ``POST`` request to your auth webhook. The default configuration is ``GET`` and you can override this with ``POST`` by using the ``--auth-hook-mode`` flag or the ``HASURA_GRAPHQL_AUTH_HOOK_MODE`` environment variable (*in addition to those specified above; see* :doc:`GraphQL engine server options <../../deployment/graphql-engine-flags/reference>`).
 
@@ -78,7 +78,7 @@ POST request
       }
    }
 
-If you configure your webhook to use ``POST``, then Hasura **will send all client headers in payload**
+If you configure your webhook to use ``POST``, then Hasura **will send all client headers in payload**.
 
 Response
 ^^^^^^^^
@@ -105,14 +105,14 @@ You should send the ``X-Hasura-*`` "session variables" to your permission rules 
 
 Failure
 +++++++
-If you want to deny the GraphQL request return a ``401 Unauthorized`` exception.
+If you want to deny the GraphQL request, return a ``401 Unauthorized`` exception.
 
 .. code-block:: http
 
    HTTP/1.1 401 Unauthorized
 
 .. note::
-   Anything other than a ``200`` or ``401`` response from webhook makes server raise a ``500 Internal Server Error``
+   Anything other than a ``200`` or ``401`` response from webhook makes the server raise a ``500 Internal Server Error``
    exception.
 
 Auth webhook samples
@@ -136,4 +136,4 @@ Once deployed, you can use any of the following endpoints as your auth webhook i
 
 .. note::
 
-   If you are using ``firebase`` you will have to set the associated environment variables.
+   If you are using ``Firebase``, you will have to set the associated environment variables.

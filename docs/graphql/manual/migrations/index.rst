@@ -14,7 +14,7 @@ Introduction
 It is typical for developers to use some kind of "migration" tool to track
 changes to the Postgres schema. Usually the SQL statements used to create the
 tables, views etc. are stored as a single file or multiple files. Certain tools
-also let you add an "up" and a "down" step so that you can roll-back the
+also let you add an "up" and a "down" step so that you can roll back the
 changes.
 
 When you connect Hasura to a Postgres database and use the console to "track" a
@@ -22,7 +22,7 @@ table, a piece of information is added to the Hasura "metadata" (configuration)
 indicating this table in Postgres should be exposed via GraphQL. Similarly,
 most of the actions on the console update the Hasura metadata.
 
-In the development phase, you'll be using the Hasura Console to create and track
+In the development phase, you'll be using the Hasura console to create and track
 tables, create relationships, add permissions etc. When you need to move to a
 new environment, it will become quite hard to re-do all these operations using
 the console again on a fresh database. You might be looking for a way to export

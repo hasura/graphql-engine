@@ -10,7 +10,7 @@ Introduction
 ------------
 
 Access control rules in Hasura are defined at a role, table and action (*insert, update, select, delete*)
-level granulaity:
+level granularly:
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/permission-rule-granularity.png
 
@@ -90,7 +90,7 @@ Using operators to build rules
 ******************************
 
 Type-based operators (*depending on the column type*) are available for constructing row-level permissions.
-You can use the same operators that you use to :doc:`filtering query results <../../queries/query-filters>`
+You can use the same operators that you use to :doc:`filter query results <../../queries/query-filters>`
 to define permission rules.
 
 E.g. the following two images illustrate the different operators available for ``integer`` and ``text`` types:
@@ -108,7 +108,7 @@ the value in the ``id`` column is greater than 10:
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/simple-boolean-expression.png
 
-You can construct more complex boolean expression using the ``_and``, ``_or`` and ``not`` operators:
+You can construct more complex boolean expressions using the ``_and``, ``_or`` and ``not`` operators:
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/boolean-operators.png
 
@@ -121,8 +121,8 @@ or "A":
 Using session variables
 ***********************
 
-Session variable, that have been resolved from authentication tokens by either your authentication webhook or
-by Hasura using the JWT configuration, are available for constructing row-level permissions.
+Session variables that have been resolved from authentication tokens by either your authentication webhook or
+by Hasura using the JWT configuration are available for constructing row-level permissions.
 
 E.g. to allow an ``author`` to access only their articles, you can use the ``X-Hasura-User-ID`` session variable
 to construct a rule to restrict access for ``select`` to rows in the ``articles`` table where the value in the
@@ -139,7 +139,7 @@ Using relationships or nested objects
 You can leverage :doc:`relationships <../../schema/relationships/index>` to define permission rules with fields
 from a nested object.
 
-For e.g. let's say you have an object relationship called ``agent`` from the ``authors`` table to another table
+For example, let's say you have an object relationship called ``agent`` from the ``authors`` table to another table
 called ``agent`` (*an author can have an agent*) and we want to allow users with the role ``agent`` to access
 the details of the authors who they manage in ``authors`` table. We can define the following permission rule
 that uses the aforementioned object relationship:
@@ -147,10 +147,10 @@ that uses the aforementioned object relationship:
 .. thumbnail:: ../../../../img/graphql/manual/auth/nested-object-permission-simple-example.png
 
 This permission rule reads as "*if the author's agent's*  ``id``  *is the same as the requesting user's*
-``id`` *, allow access to the author's details*.
+``id`` *, allow access to the author's details*."
 
 
-.. admonition:: Array and Object relationships work similarly
+.. admonition:: Array and object relationships work similarly
 
    - The above example would have worked even if the relationship were an array relationship. In our example,
      the corresponding rule for an array relationship would have read "*if any of this author's agents'* ``id``
@@ -163,7 +163,7 @@ This permission rule reads as "*if the author's agent's*  ``id``  *is the same a
 
 Column-level permissions
 ^^^^^^^^^^^^^^^^^^^^^^^^
-Column-level permissions determine access to columns in the rows that accessible based on row-level
+Column-level permissions determine access to columns in the rows that are accessible based on row-level
 permissions. These permissions are simple selections:
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/column-level-permissions.png
@@ -173,7 +173,7 @@ the ``select`` operation.
 
 .. _limit-rows-permissions:
 
-Row Fetch Limit
+Row fetch limit
 ^^^^^^^^^^^^^^^
 
 In the case of ``select`` operations, the number of rows to be returned in the response can be limited

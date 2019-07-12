@@ -10,16 +10,16 @@ This guide is to be followed if you already have set up a database and Hasura
 instance and now want to start using migrations to help you track the database
 and GraphQL schema changes.
 
-Step 0: Disable console on Server
+Step 0: Disable console on the server
 ---------------------------------
 
-To use migrations effectively, console on the Server (which is served at
+To use migrations effectively, the console on the server (which is served at
 ``/console``) should be disabled and all changes must go through the console
-served by CLI. Otherwise, changes could be made through the server-console and
+served by CLI. Otherwise, changes could be made through the server console and
 they will not be tracked by migrations.
 
-So, the first step is to disable console served by the GraphQL Engine server. In
-order to do that remove ``--enable-console`` flag from the command that starts
+So, the first step is to disable the console served by the GraphQL Engine server. In
+order to do that, remove the ``--enable-console`` flag from the command that starts
 the server or set the following environment variable to false:
 
 .. code-block:: bash
@@ -39,7 +39,7 @@ Follow the instructions in :ref:`install_hasura_cli`.
 Step 2: Set up a project directory
 ----------------------------------
 
-Execute the following command. For the endpoint referred here, let's say you've
+Execute the command below. For the endpoint referred here, let's say you've
 deployed the GraphQL engine on Heroku, then this endpoint is:
 ``https://my-graphql.herokuapp.com``. In case you've deployed this using Docker,
 the URL might be ``http://xx.xx.xx.xx:8080``. This endpoint should not contain
@@ -53,21 +53,21 @@ sub-path if it is configured that way.
   cd my-project
 
 This will create a new directory called ``my-project`` with a ``config.yaml``
-file and ``migrations`` directory. This directory structure is mandatory to use
+file and a ``migrations`` directory. This directory structure is mandatory to use
 Hasura migrations. You can commit this directory to version control.
 
 .. note::
 
    In case there is an admin secret set, you can set it as an environment
    variable ``HASURA_GRAPHQL_ADMIN_SECRET=<your-admin-secret`` on the local
-   machine and the the CLI will use it. You can also use it as a flag to CLI:
+   machine and the CLI will use it. You can also use it as a flag to CLI:
    ``--admin-secret "<your-admin-secret>"``.
 
 Step 3: Initialize the migrations as per your current state
 -----------------------------------------------------------
 
 Create a migration called ``init`` by exporting the current Postgres schema and
-metadata from server:
+metadata from the server:
 
 .. code-block:: bash
 
@@ -103,7 +103,7 @@ Step 4: Use the console from the CLI
 ------------------------------------
 
 From this point onwards, instead of using the console at
-``http://my-graphql.herokuapp.com/console`` you should use the console from CLI
+``http://my-graphql.herokuapp.com/console`` you should use the console from the CLI
 by running:
 
 .. code-block:: bash
@@ -121,7 +121,7 @@ in the ``migrations/`` directory in your project.
 
    Migrations are only created when using the console through CLI.
 
-Step 6: Apply the migrations on another instance of GraphQL engine
+Step 6: Apply the migrations on another instance of the GraphQL engine
 ------------------------------------------------------------------
 
 Apply all migrations present in the ``migrations/`` directory on a new
@@ -133,11 +133,11 @@ instance at ``http://another-graphql-instance.herokuapp.com``:
    hasura migrate apply --endpoint http://another-graphql-instance.herokuapp.com
 
 In case you need an automated way of applying the migrations, take a look at the
-:doc:`CLI-Migrations <auto-apply-migrations>` docker image, which can start
-GraphQL Engine after automatically applying the migrations which are
+:doc:`CLI-Migrations <auto-apply-migrations>` Docker image, which can start the
+GraphQL engine after automatically applying the migrations which are
 mounted into a directory.  
 
-Step 7: Check status of migrations
+Step 7: Check the status of migrations
 ----------------------------------
 
 .. code-block:: bash
@@ -158,13 +158,13 @@ For example,
    1550931962927  Present        Present
    1550931970826  Present        Present
 
-Such a migration status indicate that there are 3 migration versions in the
+Such a migration status indicates that there are 3 migration versions in the
 local directory and all of them are applied on the database.
 
 If ``SOURCE STATUS`` indicates ``Not Present``, it means that the migration
 version is present on the server, but not on the current user's local directory.
 This typically happens if multiple people are collaborating on a project and one
-of the collaborator forgot to pull the latest changes which included the latest
+of the collaborators forgot to pull the latest changes which included the latest
 migration files or another collaborator forgot to push the latest migration
 files that were applied on the database. Syncing of the files would fix the
 issue.
