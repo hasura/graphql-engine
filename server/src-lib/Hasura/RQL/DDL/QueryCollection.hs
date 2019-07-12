@@ -34,7 +34,7 @@ addCollectionP2 (CollectionDef queryList) =
   withPathK "queries" $
     unless (null duplicateNames) $ throw400 NotSupported $
       "found duplicate query names "
-      <> T.intercalate ", " (map (T.dquote . unQueryName) duplicateNames)
+      <> T.intercalate ", " (map (T.dquote . unNonEmptyText . unQueryName) duplicateNames)
   where
     duplicateNames = duplicates $ map _lqName queryList
 
