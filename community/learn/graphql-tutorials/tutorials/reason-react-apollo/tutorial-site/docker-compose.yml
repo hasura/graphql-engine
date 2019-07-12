@@ -1,0 +1,10 @@
+version: '3.7'
+services:
+  gatsby:
+    build: .
+    restart: always
+    ports: 
+      - 8080:8080
+    volumes:
+      - ./content:/gatsby-gitbook-starter/content
+      - ./config.js:/gatsby-gitbook-starter/config.js 
