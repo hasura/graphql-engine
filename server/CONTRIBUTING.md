@@ -6,106 +6,63 @@ own machine and how to contribute.
 ## Pre-requisites
 
 - [stack](https://docs.haskellstack.org/en/stable/README/#how-to-install)
-- A Postgres server (Recommended: Use docker to run a local postgres instance)
-- GNU Make (optional)
-- [Node.js](https://nodejs.org/en/) (v8.9+)
+- [Node.js](https://nodejs.org/en/) (>= v8.9)
+- npm >= 5.7
 - libpq-dev
-- psql
-- python >= 3.7 with pip3
+- python >= 3.5 with pip3
 
-## Upgrading npm
+The last two prerequisites can be installed on Debian with:
 
-If your npm is too old  (< 5.7),
+    $ sudo apt install libpq-dev python3 python3-pip python3-venv
 
-npm install -g npm@latest
+### Upgrading npm
 
-or
+If your npm is too old (>= 5.7 required):
 
-sudo npm install -g npm@latest
+    $ npm install -g npm@latest   # sudo may be required
 
-or update your nodejs
+or update your nodejs.
 
-## Getting pip3
-
-sudo apt install python3-pip
 
 ## Development workflow
 
-### Fork and clone
-- Fork the repo on GitHub
-- Clone your forked repo: `git clone https://github.com/<your-username>/graphql-engine`
-- `cd graphql-engine`
+You should fork the repo on github and then `git clone https://github.com/<your-username>/graphql-engine`.
+After making your changes
 
 ### Compile
-- compile console assets
-  ```
-  cd console
-  npm ci
-  npm run server-build
-  cd ..
-  ```
-- compile the server
-  ```
-  cd server
-  stack build --fast
-  ```
 
-### Run
-- Make sure postgres is running (Postgres >= 9.5)
-- Create a database on postgres
-- Run the binary: `stack exec graphql-engine -- --database-url=<database-url> serve`
+...console assets:
 
-Use `--enable-console --console-assets-dir ../console/static/dist` if you want console to be served.
+    $ cd console
+    $ npm ci
+    $ npm run server-build
+    $ cd ..
 
-database url looks like: `postgres://<username>:<password>@<host>:<port>/<dbname>`
+...and the server:
 
-### Running Postgres
+    $ cd server
+    $ stack build --fast
 
-The easiest way is to run docker in a container
+### Run and Test
 
-````
-docker run -p 5432:5432 -d postgres:11.1
-````
+The easiest way to run `graphql-engine` locally for development is to first
+launch a new postgres container with:
 
-Test if it's running by
+    $ scripts/dev.sh postgres
 
-telnet localhost 5432
+Then in a new terminal launch `graphql-engine` in dev mode with:
 
-### psql
+    $ scripts/dev.sh graphql-engine
 
-You will need psql or another client
+The `dev.sh` will print some helpful information and logs from both services
+will be printed to screen.
 
-````
-sudo apt install postgresql-client
-````
+You can run the test suite with:
 
+    $ scripts/dev.sh test
 
-### Work
-- Work on the feature/fix
-- Add test cases if relevant
+This should run in isolation.
 
-### Test
-- Install the py-test dependencies:
-
-```
-pip3 install -r tests-py/requirements.txt
-```
-
-- Make sure postgres is running
-- Set the environmental variables for event-trigger tests and run the graphql-engine:
-
-```
-export EVENT_WEBHOOK_HEADER="MyEnvValue"
-export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
-stack exec graphql-engine -- --database-url=<database-url> serve --enable-console --stringify-numeric-types
-```
-
-- Run tests:
-
-```
-cd tests-py
-pytest --hge-urls http://127.0.0.1:8080 --pg-urls <database_url> -vv
-```
 
 ### Create Pull Request
 - Make sure your commit messages meet the [guidelines](../CONTRIBUTING.md).
