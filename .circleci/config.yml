@@ -401,6 +401,7 @@ jobs:
     - image: hasura/graphql-engine-console-builder:v0.3
       environment:
         CYPRESS_KEY: 983be0db-0f19-40cc-bfc4-194fcacd85e1
+        GHCRTS: -N1
     - image: circleci/postgres:10-alpine-postgis
       environment:
         POSTGRES_USER: gql_test
