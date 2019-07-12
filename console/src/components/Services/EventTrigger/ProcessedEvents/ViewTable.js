@@ -184,6 +184,7 @@ class ViewTable extends Component {
     return (
       <div>
         {header}
+        <br />
         <div>{viewRows}</div>
       </div>
     );
