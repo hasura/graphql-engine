@@ -59,6 +59,10 @@ Query
      - true
      - JSON Value
      - The arguments to the query
+   * - version
+     - false
+     - Integer
+     - Version of the API (default: 1)
 
 Request types
 -------------
@@ -70,154 +74,197 @@ The various types of queries are listed in the following table:
 
    * - ``type``
      - ``args``
+     - ``version``
      - Synopsis
 
    * - **bulk**
      - :ref:`Query <Query>` array
+     - 1
      - Execute multiple operations in a single query
 
    * - :ref:`run_sql`
      - :ref:`run_sql_args <run_sql_syntax>`
+     - 1
      - Run SQL directly on Postgres
 
    * - :ref:`track_table`
      - :ref:`TableName <TableName>`
+     - 1
      - Add a table/view
+
+   * - :ref:`track_table <track_table_v2>`
+     - :ref:`track_table_args <track_table_args_syntax_v2>`
+     - 2
+     - Add a table/view with configuration
 
    * - :ref:`untrack_table`
      - :ref:`untrack_table_args <untrack_table_syntax>`
+     - 1
      - Remove a table/view
 
    * - :ref:`track_function`
      - :ref:`FunctionName <FunctionName>`
+     - 1
      - Add a SQL function
 
    * - :ref:`untrack_function`
      - :ref:`FunctionName <FunctionName>`
+     - 1
      - Remove a SQL function
 
    * - :ref:`create_object_relationship`
      - :ref:`create_object_relationship_args <create_object_relationship_syntax>`
+     - 1
      - Define a new object relationship
 
    * - :ref:`create_array_relationship`
      - :ref:`create_array_relationship_args <create_array_relationship_syntax>`
+     - 1
      - Define a new array relationship
 
    * - :ref:`drop_relationship`
      - :ref:`drop_relationship_args <drop_relationship_syntax>`
+     - 1
      - Drop an existing relationship
 
    * - :ref:`set_relationship_comment`
      - :ref:`set_relationship_comment_args <set_relationship_comment_syntax>`
+     - 1
      - Set comment on an existing relationship
 
    * - :ref:`create_insert_permission`
      - :ref:`create_insert_permission_args <create_insert_permission_syntax>`
+     - 1
      - Specify insert permission
 
    * - :ref:`drop_insert_permission`
      - :ref:`drop_insert_permission_args <drop_insert_permission_syntax>`
+     - 1
      - Remove existing insert permission
 
    * - :ref:`create_select_permission`
      - :ref:`create_select_permission_args <create_select_permission_syntax>`
+     - 1
      - Specify select permission
 
    * - :ref:`drop_select_permission`
      - :ref:`drop_select_permission_args <drop_select_permission_syntax>`
+     - 1
      - Remove existing select permission
 
    * - :ref:`create_update_permission`
      - :ref:`create_update_permission_args <create_update_permission_syntax>`
+     - 1
      - Specify update permission
 
    * - :ref:`drop_update_permission`
      - :ref:`drop_update_permission_args <drop_update_permission_syntax>`
+     - 1
      - Remove existing update permission
 
    * - :ref:`create_delete_permission`
      - :ref:`create_delete_permission_args <create_delete_permission_syntax>`
+     - 1
      - Specify delete permission
 
    * - :ref:`drop_delete_permission`
      - :ref:`drop_delete_permission_args <drop_delete_permission_syntax>`
+     - 1
      - Remove existing delete permission
 
    * - :ref:`set_permission_comment`
      - :ref:`set_permission_comment_args <set_permission_comment_syntax>`
+     - 1
      - Set comment on an existing permission
 
    * - :ref:`create_event_trigger`
      - :ref:`create_event_trigger_args <create_event_trigger_syntax>`
+     - 1
      - Create or replace event trigger
 
    * - :ref:`invoke_event_trigger`
      - :ref:`invoke_event_trigger_args <invoke_event_trigger_syntax>`
+     - 1
      - Invoke trigger manually
 
    * - :ref:`delete_event_trigger`
      - :ref:`delete_event_trigger_args <delete_event_trigger_syntax>`
+     - 1
      - Delete existing event trigger
 
    * - :ref:`add_remote_schema`
      - :ref:`add_remote_schema_args <add_remote_schema_syntax>`
+     - 1
      - Add a remote GraphQL server as remote schema
 
    * - :ref:`remove_remote_schema`
      - :ref:`remove_remote_schema_args <remove_remote_schema_syntax>`
+     - 1
      - Remove existing remote schema
 
    * - :ref:`reload_remote_schema`
      - :ref:`reload_remote_schema_args <reload_remote_schema_syntax>`
+     - 1
      - Reload schema of existing remote server
 
    * - :ref:`export_metadata`
      - :ref:`Empty Object`
+     - 1
      - Export the current metadata
 
    * - :ref:`replace_metadata`
      - :ref:`replace_metadata_args <replace_metadata_syntax>`
+     - 1
      - Import and replace existing metadata
 
    * - :ref:`reload_metadata`
      - :ref:`Empty Object`
+     - 1
      - Reload changes to the underlying Postgres DB
 
    * - :ref:`clear_metadata`
      - :ref:`Empty Object`
+     - 1
      - Clear/wipe-out the current metadata state form server
 
    * - :ref:`get_inconsistent_metadata`
      - :ref:`Empty Object`
+     - 1
      - List all inconsistent metadata objects
 
    * - :ref:`drop_inconsistent_metadata`
      - :ref:`Empty Object`
+     - 1
      - Drop all inconsistent metadata objects
 
    * - :ref:`create_query_collection`
      - :ref:`create_query_collection_args <create_query_collection_syntax>`
+     - 1
      - Create a query collection
 
    * - :ref:`drop_query_collection`
      - :ref:`drop_query_collection_args <drop_query_collection_syntax>`
+     - 1
      - Drop a query collection
 
    * - :ref:`add_query_to_collection`
      - :ref:`add_query_to_collection_args <add_query_to_collection_syntax>`
+     - 1
      - Add a query to given collection
 
    * - :ref:`drop_query_from_collection`
      - :ref:`drop_query_from_collection_args <drop_query_from_collection_syntax>`
+     - 1
      - Drop a query from given collection
 
    * - :ref:`add_collection_to_allowlist`
      - :ref:`add_collection_to_allowlist_args <add_collection_to_allowlist_syntax>`
+     - 1
      - Add a collection to allow-list
 
    * - :ref:`drop_collection_from_allowlist`
      - :ref:`drop_collection_from_allowlist_args <drop_collection_from_allowlist_syntax>`
+     - 1
      - Drop a collection from allow-list
 
 **See:**
