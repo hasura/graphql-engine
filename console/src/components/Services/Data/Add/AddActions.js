@@ -296,7 +296,7 @@ const createTableSql = () => {
         ' IS ' +
         "'" +
         state.tableComment +
-        "'";
+        "';";
     }
 
     if (columnSpecificSql.length) {
