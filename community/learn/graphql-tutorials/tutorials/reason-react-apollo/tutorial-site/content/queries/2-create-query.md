@@ -1,5 +1,7 @@
 ---
 title: "<Query> component"
+metaTitle: "Apollo Query Component | GraphQL ReasonML React Apollo Tutorial"
+metaDescription: "We will see how to use Apollo Client Query component in ReasonML. It is a render prop API to fetch data and handle data, loading and error props"
 ---
 
 import GithubLink from "../../src/GithubLink.js";

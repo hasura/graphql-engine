@@ -1,11 +1,11 @@
 ---
 title: "Subscriptions to show online users"
+metaTitle: "Update last seen of user with Mutation | GraphQL ReasonML React Apollo Tutorial"
+metaDescription: "GraphQL Mutation to update last seen of user to make them available online. Use setInterval to trigger mutation every few seconds "
 ---
 
 import GithubLink from "../src/GithubLink.js";
 import YoutubeEmbed from "../src/YoutubeEmbed.js";
-
-<YoutubeEmbed link="https://www.youtube.com/embed/Zegh4VJqrHM" />
 
 We cruised through our GraphQL queries and mutations. We queried for todos, added a new todo, updated an existing todo, removed an existing todo.
 

@@ -1,5 +1,7 @@
 ---
 title: "Fetch public todos"
+metaTitle: "Fetch all public todos with pagination | GraphQL ReasonML React Apollo Tutorial"
+metaDescription: "You will learn how to make use of Apollo Client instance to make GraphQL queries without the JSX components"
 ---
 
 In this section, we are going to need to fire queries without using the JSX components. This means, we need access to the Apollo Client instance. Wrap the required component in an ApolloConsumer so that you can access the `client`. Go to `src/todo/TodoPublicWrapper.re` and wrap `TodoPublicList` component with `ApolloConsumer`.

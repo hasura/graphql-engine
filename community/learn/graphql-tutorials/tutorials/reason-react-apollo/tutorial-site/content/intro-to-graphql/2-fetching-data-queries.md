@@ -1,10 +1,12 @@
 ---
 title: Fetching data - Queries
+metaTitle: "GraphQL Queries to fetch data | GraphQL ReasonML React Apollo Tutorial"
+metaDescription: "Try out GraphQL Query using GraphiQL. A GraphQL query example with parameters, arguments and variables to fetch data dynamically"
 ---
 
 import YoutubeEmbed from "../../src/YoutubeEmbed.js";
 
-<YoutubeEmbed link="https://www.youtube.com/embed/mE1Jgvn4k1g" />
+<YoutubeEmbed link="https://www.youtube.com/embed/xyI6w3vL_vw"/>
 
 <a name="graphiql"></a>
 ## Try out GraphQL queries
@@ -107,7 +109,7 @@ and their profile information (which is just their name for now):
 
 In most API calls, you usually use parameters. For example, to specify what data you're fetching.
 If you're familiar with making `GET` calls, you would have used a query parameter. For example,
-to fetch only 10 todos you might have made this API call: `GET /api/todos?limit=10`.
+to fetch only 10 todos you might have made this API calls: `GET /api/todos?limit=10`.
 
 The GraphQL query analog of this is *arguments* that you can attach to a "field".
 

@@ -1,5 +1,7 @@
 ---
 title: "Remove todos integration"
+metaTitle: "GraphQL mutation delete | GraphQL ReasonML React Apollo Tutorial"
+metaDescription: "We will use the Apollo Mutation component from ReasonML with variables as an example to delete existing data and update cache using refetchQueries"
 ---
 
 import GithubLink from "../../src/GithubLink.js";

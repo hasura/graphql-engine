@@ -1,5 +1,7 @@
 ---
 title: "Sync new todos"
+metaTitle: "Sync new todos in public feed | GraphQL ReasonML React Apollo Tutorial"
+metaDescription: "You will learn how to sync new todos added by other people in the public feed by fetching older and newer data using GraphQL Queries"
 ---
 
 In the previous section, we detected if there are new todos in the database and showed a banner saying `New todos have arrived`. Now, we need to write an onClick handler of that banner that would fetch the todos newer than the latest visible todo and append it to the todos array in the state.

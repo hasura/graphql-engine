@@ -1,5 +1,7 @@
 ---
 title: "Detect new todos"
+metaTitle: "Subscribe to new todos | GraphQL ReasonML React Apollo Tutorial"
+metaDescription: "You will learn how to make use of GraphQL Subscriptions to get notified whenever a new todo comes in your app"
 ---
 
 We will use GraphQL subscriptions to get notified if there are any new public tasks added. Whenever, a notification is received, we will fetch the tasks newer than the newest task in local state.

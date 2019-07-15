@@ -1,5 +1,7 @@
 ---
 title: "Set up a GraphQL client with Apollo"
+metaTitle: "Apollo Client GraphQL Setup | GraphQL ReasonML React Apollo Tutorial"
+metaDescription: "You will learn how to configure Apollo Client in ReasonReact by installing dependencies like react-apollo, apollo-client, apollo-link-http, apollo-cache-inmemory"
 ---
 
 import GithubLink from "../src/GithubLink.js";

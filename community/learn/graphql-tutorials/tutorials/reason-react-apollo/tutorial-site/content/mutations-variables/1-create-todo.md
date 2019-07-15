@@ -1,5 +1,7 @@
 ---
 title: "Create todos - mutation"
+metaTitle: "Mutation to create todos | GraphQL ReasonML React Apollo Tutorial"
+metaDescription: "GraphQL Mutation to create new personal todos. Try the mutation in GraphiQL, passing the Authorization token to get authenticated results."
 ---
 
 import YoutubeEmbed from "../../src/YoutubeEmbed.js";

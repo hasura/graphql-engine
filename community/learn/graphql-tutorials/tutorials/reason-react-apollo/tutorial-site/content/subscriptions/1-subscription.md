@@ -1,5 +1,7 @@
 ---
 title: "Subscription"
+metaTitle: "Set up GraphQL Subscriptions using Apollo Client | GraphQL ReasonML React Apollo Tutorial"
+metaDescription: "You will learn how to configure GraphQL Subscriptions using ReasonML Apollo Client by installing dependencies like apollo-link-ws, subscriptions-transport-ws. This will also have authorization token setup"
 ---
 
 import GithubLink from "../../src/GithubLink.js";

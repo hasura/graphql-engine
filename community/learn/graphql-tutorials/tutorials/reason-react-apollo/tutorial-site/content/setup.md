@@ -1,5 +1,7 @@
 ---
 title: "Tutorial & boilerplate setup"
+metaTitle: "Todo app boilerplate setup | GraphQL ReasonML React Apollo Tutorial"
+metaDescription: "The GraphQL backend is already ready. The task is to convert the static UI into a working realtime app in ReasonReact"
 ---
 
 import YoutubeEmbed from "../src/YoutubeEmbed.js";

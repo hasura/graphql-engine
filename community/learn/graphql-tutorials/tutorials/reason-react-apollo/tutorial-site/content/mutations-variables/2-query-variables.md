@@ -1,5 +1,7 @@
 ---
 title: "Query Variables"
+metaTitle: "Query Variables | GraphQL ReasonML React Apollo Tutorial"
+metaDescription: "GraphQL Mutation to create new personal todos by parameterizing with query variables.
 ---
 
 import GithubLink from "../../src/GithubLink.js";
