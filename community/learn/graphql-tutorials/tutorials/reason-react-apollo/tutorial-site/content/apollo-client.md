@@ -41,7 +41,7 @@ Finally, you need a `graphql_schema.json` in the root of your project so that th
 
 1. Go to https://learn.hasura.io/graphql/graphiql and login
 2. Copy the JWT from headers:
-  ![graphiql-jwt-copy](https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-reason-react-apollo/graphiql-jwt-copy.png)
+  ![graphiql-jwt-copy](https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-reason-react-apollo/graphiql-jwt-copy.png)
 3. Run this command from the root of your project:
 
   ```js
