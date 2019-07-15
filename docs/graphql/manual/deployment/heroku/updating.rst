@@ -50,7 +50,7 @@ When you ``git push`` to deploy, the Heroku app will get updated with the latest
 
    $ git push heroku master
 
-If you are getting error: ``fatal: 'heroku' does not appear to be a git repository``, you need to add your heroku repo to your local git remote via: ``git remote add heroku https://git.heroku.com/<you-app-name>.git``, you can find this URL in your Heroku - Settings - Info - Heroku Git URL. Type `git remote -v`, you will see your `heroku` app has been added as the upstream.
+If you are getting the following error: ``fatal: 'heroku' does not appear to be a git repository``, add your heroku repo to your local git remote via: ``git remote add heroku https://git.heroku.com/<you-app-name>.git``. (this URL locates in your Heroku - Settings - Info - Heroku Git URL)
 
 Deploy a specific version of Hasura GraphQL engine
 --------------------------------------------------
