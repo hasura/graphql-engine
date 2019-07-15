@@ -13,12 +13,13 @@ const TriggerEditorList = ({ tableSchema, dispatch }) => {
     return <div>No triggers</div>;
   }
 
+  // HACK
+  const isEventTriggerPGTrigger = trigger => {
+    return trigger.action_statement.includes('hdb_views');
+  };
+
   return triggers.map((trigger, i) => {
     const triggerName = trigger.trigger_name;
-
-    const isEventTriggerPGTrigger = trigger.action_statement.includes(
-      'hdb_views'
-    );
 
     const onDelete = () => {
       const isOk = confirm('Are you sure you want to delete?');
@@ -45,7 +46,7 @@ const TriggerEditorList = ({ tableSchema, dispatch }) => {
       let commentText;
       if (trigger.comment) {
         commentText = trigger.comment;
-      } else if (isEventTriggerPGTrigger) {
+      } else if (isEventTriggerPGTrigger(trigger)) {
         commentText = 'This is a custom trigger generated for an Event trigger';
       }
 
@@ -62,7 +63,8 @@ const TriggerEditorList = ({ tableSchema, dispatch }) => {
         <div>
           <div>
             <i>
-              {trigger.action_timing} {trigger.event_manipulation}
+              {trigger.action_timing} {trigger.event_manipulation}, FOR EACH{' '}
+              {trigger.action_orientation}
             </i>
             <AceEditor
               mode="sql"
@@ -90,7 +92,7 @@ const TriggerEditorList = ({ tableSchema, dispatch }) => {
           property={`trigger-${i}`}
           service="modify-table"
           saveFunc={null}
-          removeFunc={isEventTriggerPGTrigger ? null : onDelete}
+          removeFunc={isEventTriggerPGTrigger(trigger) ? null : onDelete}
           isCollapsable
         />
       </div>
