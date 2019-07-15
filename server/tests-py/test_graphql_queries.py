@@ -333,6 +333,15 @@ class TestGraphQLQueryBoolExpPostGIS(DefaultTestSelectQueries):
     def test_query_geography_spatial_ops(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/query_geography_spatial_ops.yaml', transport)
 
+    def test_query_cast_geometry_to_geography(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_cast_geometry_to_geography.yaml', transport)
+
+    def test_query_cast_geography_to_geometry(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_cast_geography_to_geometry.yaml', transport)
+
+    def test_query_illegal_cast_is_not_allowed(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_illegal_cast_is_not_allowed.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/boolexp/postgis'

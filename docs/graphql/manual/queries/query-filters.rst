@@ -367,7 +367,7 @@ Fetches a list of articles rated 1, 3 or 5:
 
 Example: String or Text
 ^^^^^^^^^^^^^^^^^^^^^^^
-Fetch a list of those authors whose names are NOT part of a list: 
+Fetch a list of those authors whose names are NOT part of a list:
 
 .. graphiql::
   :view_only:
@@ -1396,5 +1396,115 @@ Fetch all authors which have at least one article written by them:
       }
     }
 
+Cast a field to a different type before filtering (_cast)
+---------------------------------------------------------
 
+The ``_cast`` operator can be used to cast a field to a different type, which allows type-specific
+operators to be used on fields that otherwise would not support them. Currently, only casting
+between PostGIS ``geometry`` and ``geography`` types is supported.
 
+Casting using ``_cast`` corresponds directly to
+`SQL type casts <https://www.postgresql.org/docs/current/sql-expressions.html#SQL-SYNTAX-TYPE-CASTS>`__.
+
+Example: cast ``geometry`` to ``geography``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Filtering using ``_st_d_within`` over large distances can be inaccurate for location data stored in
+``geometry`` columns. For accurate queries, cast the field to ``geography`` before comparing:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query cities_near($point: geography!, $distance: Float!) {
+      cities(
+        where: {location: {
+          _cast: {geography: {
+            _st_d_within: {from: $point, distance: $distance}
+          }}
+        }}
+      ) {
+        name
+      }
+    }
+  :response:
+    {
+      "data": {
+        "cities": [
+          {
+            "name": "London"
+          },
+          {
+            "name": "Paris"
+          }
+        ]
+      }
+    }
+  :variables:
+    {
+      "point": {
+        "type": "Point",
+        "coordinates": [1, 50]
+      },
+      "distance": 1000000
+    }
+
+Example: cast ``geography`` to ``geometry``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Columns of type ``geography`` are more accurate, but they don’t support as many operations as
+``geometry``. Cast to ``geometry`` to use those operations in a filter:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query cities_inside($polygon: geometry) {
+      cities(
+        where: {location: {
+          _cast: {geometry: {
+            _st_within: $polygon
+          }}
+        }}
+      ) {
+        name
+      }
+    }
+  :response:
+    {
+      "data": {
+        "cities": [
+          {
+            "name": "New York"
+          }
+        ]
+      }
+    }
+  :variables:
+    {
+      "polygon": {
+        "type": "Polygon",
+        "crs": {
+          "type": "name",
+          "properties": { "name": "EPSG:4326" }
+        },
+        "coordinates": [
+          [
+            [-75, 40],
+            [-74, 40],
+            [-74, 41],
+            [-75, 41],
+            [-75, 40]
+          ]
+        ]
+      }
+    }
+
+.. note::
+
+  For performant queries that filter on casted fields, create an
+  `expression index <https://www.postgresql.org/docs/current/indexes-expressional.html>`__
+  on the casted column. For example, if you frequently perform queries on a field ``location`` of
+  type ``geometry`` casted to type ``geography``, you should create an index like the following:
+
+  .. code-block:: sql
+
+    CREATE INDEX cities_location_geography ON cities USING GIST ((location::geography));
