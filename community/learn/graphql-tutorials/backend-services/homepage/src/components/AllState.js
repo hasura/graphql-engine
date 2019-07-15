@@ -22,8 +22,8 @@ const frontendTutorial = [
   },
   {
     name: 'Elm',
-    url: 'https://learn.hasura.io/graphql/elm',
-    comingSoon: true,
+    url: 'https://learn.hasura.io/graphql/elm-graphql',
+    comingSoon: false,
     bgClassName: 'elmBg',
     disableBgClassName: 'elmDisableBg',
   },
