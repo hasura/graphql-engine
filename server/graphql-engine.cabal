@@ -70,8 +70,9 @@ library
                      , network
                      , byteorder
 
-                     -- hashing for logging
+                     -- for parsing RSA keys
                      , cryptonite
+
                      -- for jwt verification
                      , jose
                      , pem
@@ -133,8 +134,9 @@ library
                      -- pretty printer
                      , ansi-wl-pprint
 
-                     -- metrics in multiplexed subs
+                     -- for capturing various metrics
                      , ekg-core
+                     , ekg-json
 
                      -- metrics for CI integration
                      , ci-info
@@ -242,6 +244,7 @@ library
                      , Hasura.GraphQL.RemoteServer
                      , Hasura.GraphQL.Context
                      , Hasura.GraphQL.Resolve.ContextTypes
+                     , Hasura.GraphQL.Logging
 
                      , Hasura.Events.Lib
                      , Hasura.Events.HTTP
@@ -344,3 +347,4 @@ executable graphql-engine
                -Wincomplete-uni-patterns
                -Wredundant-constraints
                -threaded -rtsopts
+               -with-rtsopts=-N

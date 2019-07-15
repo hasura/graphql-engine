@@ -230,7 +230,6 @@ If ``claims_format`` is ``stringified_json`` then JWT claims should look like:
     "https://hasura.io/jwt/claims": "{\"x-hasura-allowed-roles\":[\"editor\",\"user\",\"mod\"],\"x-hasura-default-role\":\"user\",\"x-hasura-user-id\":\"1234567890\",\"x-hasura-org-id\":\"123\",\"x-hasura-custom\":\"custom-value\"}"
   }
 
-
 ``audience``
 ^^^^^^^^^^^^
 This is an optional field. Certain providers might set a claim which indicates
@@ -252,7 +251,6 @@ Examples:
      "type": "RS512",
      "jwk_url": "https://......",
      "audience": "myapp-1234"
-     ...
    }
 
 or
@@ -263,7 +261,6 @@ or
      "type": "RS512",
      "jwk_url": "https://......",
      "audience": ["myapp-1234", "myapp-6789"]
-     ...
    }
 
 
@@ -285,8 +282,8 @@ Examples:
      "type": "RS512",
      "jwk_url": "https://......",
      "issuer": "https://my-auth-server.com"
-     ...
    }
+
 
 
 Examples
