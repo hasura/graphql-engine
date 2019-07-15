@@ -160,7 +160,7 @@ const ColumnEditorList = ({
       if (lowerUdtName in validTypeCasts) {
         return validTypeCasts[lowerUdtName];
       }
-      if (dataTypeIndexMap && Object.keys(dataTypeIndexMap).length > 0) {
+      if (dataTypeIndexMap && dataTypeIndexMap[lowerUdtName]) {
         return [
           ...dataTypeIndexMap[lowerUdtName],
           ...dataTypeIndexMap[defaultDataTypeToCast],

@@ -7,6 +7,7 @@ import           Hasura.Prelude
 
 import           Data.Aeson
 import           Data.Aeson.Encoding        (text)
+import           Data.Aeson.Types           (toJSONKeyText)
 import           Data.String                (fromString)
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
@@ -293,9 +294,14 @@ instance Show PGColType where
 instance ToJSON PGColType where
   toJSON pct = String $ T.pack $ show pct
 
+instance ToJSONKey PGColType where
+  toJSONKey = toJSONKeyText (T.pack . show)
+
 instance ToSQL PGColType where
   toSQL pct = fromString $ show pct
 
+instance DQuote PGColType where
+  dquoteTxt = T.pack . show
 
 txtToPgColTy :: Text -> PGColType
 txtToPgColTy t = case t of
