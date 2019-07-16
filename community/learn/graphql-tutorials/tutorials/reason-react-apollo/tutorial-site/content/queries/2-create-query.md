@@ -117,15 +117,11 @@ Now let us use the React Component `GetMyTodosQuery` to load the personal todos 
 +  <GraphQLQueries.GetMyTodosQuery>
 ```
 
-Woot! You have written your first GraphQL integration with React. Easy isn't it?
+Woot! You have written your first GraphQL integration with ReasonReact. Easy isn't it?
 
 How does this work?
 -------------------
-When you wrapped your return with `<GetMyTodosQuery>` component, Apollo provides the render prop function with a Union type of `Loading`, `Error(error)` and `Data(data)`. You can pattern match over the argument of the render prop and figure out the status of the GraphQL request.
-
-`Loading`: When the result matches `Loading`, this means that the GraphQL request is in loading state. This information can be used to display a loading spinner.
-
-`Error(error)`: A runtime error with graphQLErrors and networkError properties. Contains information about what went wrong with your query.
+When you wrapped your return with `<GetMyTodosQuery>` component, Apollo provides the render prop function with a Union type of `Loading`, `Error(error)` and `Data(data)`. You can pattern match over the argument of the render prop and figure out the status of the GraphQL request. Currently, we are rendering data only if it matches with `Data(data)`, in the next section, we will handle the `Loading` and `Error` states.
 
 `Data(data)`: A type containing the result of your GraphQL query. This will contain our actual data from the server. In our case, it will be the todo data.
 

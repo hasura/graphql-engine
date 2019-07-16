@@ -6,6 +6,10 @@ metaDescription: "We will handle the GraphQL loading and error states in the app
 
 As we saw in the previous step, Apollo the GraphQL state into the component’s render prop function. Among them `Loading` and `Error` are common ones that you will need to handle in your app.
 
+`Loading`: When the result matches `Loading`, this means that the GraphQL request is in loading state. This information can be used to display a loading spinner.
+
+`Error(error)`: A runtime error with graphQLErrors and networkError properties. Contains information about what went wrong with your query.
+
 Now let's go back to the `GraphQLQueries.GetMyTodosQuery>` component that you wrote in the previous step.
 
 ```javascript
