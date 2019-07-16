@@ -60,10 +60,10 @@ spec:
       path: ./community/learn/graphql-tutorials/tutorials/android-apollo/tutorial-site
     name: android-apollo
   - containers:
-    - dockerfile: ./community/learn/graphql-tutorials/tutorials/elm-apollo/tutorial-site/Dockerfile
-      name: elm-apollo
-      path: ./community/learn/graphql-tutorials/tutorials/elm-apollo/tutorial-site
-    name: elm-apollo
+    - dockerfile: ./community/learn/graphql-tutorials/tutorials/elm-graphql/tutorial-site/Dockerfile
+      name: elm-graphql
+      path: ./community/learn/graphql-tutorials/tutorials/elm-graphql/tutorial-site
+    name: elm-graphql
   - containers:
     - dockerfile: ./community/learn/graphql-tutorials/tutorials/reason-react-apollo/tutorial-site/Dockerfile
       name: reason-react-apollo
