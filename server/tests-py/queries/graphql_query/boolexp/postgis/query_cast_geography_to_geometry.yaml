@@ -1,0 +1,31 @@
+description: Test casting from PostGIS geography to geometry in condition
+url: /v1/graphql
+status: 200
+response:
+  data:
+    geog_table:
+    - name: New York
+query:
+  query: |
+    {
+      geog_table(where: {
+        geog_col: {
+          _cast: {
+            geometry: {
+              _st_within: {
+                type: "Polygon"
+                coordinates:
+                  [[ [-75, 40]
+                   , [-74, 40]
+                   , [-74, 41]
+                   , [-75, 41]
+                   , [-75, 40] ]]
+                crs: { type: "name", properties: { name: "EPSG:4326" } }
+              }
+            }
+          }
+        }
+      }){
+        name
+      }
+    }

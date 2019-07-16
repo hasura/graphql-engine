@@ -406,7 +406,13 @@ class PermissionBuilder extends React.Component {
 
     /********************************/
 
-    const renderValue = (dispatchFunc, value, prefix, valueType) => {
+    const renderValue = (
+      dispatchFunc,
+      value,
+      prefix,
+      valueType,
+      showSuggestion = true
+    ) => {
       const dispatchInput = val => {
         let _val = val;
 
@@ -454,30 +460,48 @@ class PermissionBuilder extends React.Component {
 
       return (
         <span>
-          {input} {suggestion}
+          {input} {showSuggestion ? suggestion : ''}
         </span>
       );
     };
 
     const renderValueArray = (dispatchFunc, values, prefix, valueType) => {
-      const _inputArray = [];
+      const dispatchInput = val => {
+        dispatchFunc({ prefix: prefix, value: val });
+      };
+
+      const sessionVariableSuggestion = () => {
+        return renderSuggestion(dispatchInput, 'X-Hasura-Allowed-Ids');
+      };
+
+      const inputArray = [];
+
       (values || []).concat(['']).map((val, i) => {
         const input = renderValue(
           dispatchFunc,
           val,
           addToPrefix(prefix, i),
-          valueType
+          valueType,
+          false
         );
-        _inputArray.push(input);
+        inputArray.push(input);
       });
 
       const unselectedElements = [(values || []).length];
 
-      return (
+      const _inputArray = (
         <QueryBuilderJson
-          element={_inputArray}
+          element={inputArray}
           unselectedElements={unselectedElements}
         />
+      );
+
+      const _suggestion = sessionVariableSuggestion(dispatchInput);
+
+      return (
+        <span>
+          {_inputArray} {_suggestion}
+        </span>
       );
     };
 
@@ -509,7 +533,10 @@ class PermissionBuilder extends React.Component {
       if (operator) {
         const operatorInputType = getOperatorInputType(operator) || valueType;
 
-        if (isArrayColumnOperator(operator)) {
+        if (
+          isArrayColumnOperator(operator) &&
+          operationValue instanceof Array
+        ) {
           _valueInput = renderValueArray(
             dispatchFunc,
             operationValue,
