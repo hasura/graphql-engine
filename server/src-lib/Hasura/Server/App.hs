@@ -252,7 +252,7 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
       return (res, Nothing)
     AHPost handler -> do
       parsedReqE <- runExceptT $ parseBody reqBody
-      parsedReq  <- either (qErrToResp (isAdmin curRole) . qErrModifier) return parsedReqE
+      parsedReq  <- either (logAndThrow requestId req reqBody (isAdmin curRole) . qErrModifier) return parsedReqE
       res <- liftIO $ runReaderT (runExceptT $ handler parsedReq) handlerState
       return (res, Just parsedReq)
 
@@ -269,6 +269,9 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
   where
     logger     = scLogger serverCtx
 
+    logAndThrow
+      :: (MonadIO m)
+      => RequestId -> Wai.Request -> BL.ByteString -> Bool -> QErr -> ActionCtxT ctx m b
     logAndThrow reqId req reqBody includeInternal qErr = do
       let reqTxt = Just $ toJSON $ String $ bsToTxt $ BL.toStrict reqBody
       logError logger Nothing reqId req reqTxt qErr
