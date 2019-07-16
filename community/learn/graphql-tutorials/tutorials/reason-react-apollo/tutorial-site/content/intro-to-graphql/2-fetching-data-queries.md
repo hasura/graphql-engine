@@ -6,7 +6,6 @@ metaDescription: "Try out GraphQL Query using GraphiQL. A GraphQL query example 
 
 import YoutubeEmbed from "../../src/YoutubeEmbed.js";
 
-<YoutubeEmbed link="https://www.youtube.com/embed/xyI6w3vL_vw"/>
 
 <a name="graphiql"></a>
 ## Try out GraphQL queries

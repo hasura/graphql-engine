@@ -6,7 +6,7 @@ metaDescription: "We will use the Apollo Mutation component from ReasonML with v
 
 import GithubLink from "../../src/GithubLink.js";
 
-Lets define the graphql mutation to delete the todo. Open `src/GraphQLQueriess.re` and add the following code below everything else:
+Lets define the graphql mutation to delete the todo. Open `src/GraphQLQueries.re` and add the following code below everything else:
 
 <GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/reason-react-apollo/app-final/src/GraphQLQueries.re" text="GraphQLQueries.re" />
 
