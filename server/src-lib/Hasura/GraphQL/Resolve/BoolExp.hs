@@ -5,6 +5,7 @@ module Hasura.GraphQL.Resolve.BoolExp
 import           Data.Has
 import           Hasura.Prelude
 
+import qualified Data.HashMap.Strict               as Map
 import qualified Data.HashMap.Strict.InsOrd        as OMap
 import qualified Language.GraphQL.Draft.Syntax     as G
 
@@ -26,6 +27,8 @@ parseOpExps colTy annVal = do
   opExpsM <- flip withObjectM annVal $ \nt objM -> forM objM $ \obj ->
     forM (OMap.toList obj) $ \(k, v) ->
     case k of
+      "_cast"     -> fmap ACast <$> parseCastExpression v
+
       "_eq"       -> fmap (AEQ True) <$> asOpRhs v
       "_ne"       -> fmap (ANE True) <$> asOpRhs v
       "_neq"      -> fmap (ANE True) <$> asOpRhs v
@@ -106,6 +109,17 @@ parseOpExps colTy annVal = do
         PGGeometry ->
           return $ ASTDWithinGeom $ DWithinGeomOp dist from
         _ -> throw500 "expected PGGeometry/PGGeography column for st_d_within"
+
+parseCastExpression
+  :: (MonadError QErr m)
+  => AnnInpVal -> m (Maybe (CastExp UnresolvedVal))
+parseCastExpression =
+  withObjectM $ \_ objM -> forM objM $ \obj -> do
+    targetExps <- forM (OMap.toList obj) $ \(targetTypeName, castedComparisonExpressionInput) -> do
+      let targetType = txtToPgColTy $ G.unName targetTypeName
+      castedComparisonExpressions <- parseOpExps targetType castedComparisonExpressionInput
+      return (targetType, castedComparisonExpressions)
+    return $ Map.fromList targetExps
 
 parseColExp
   :: ( MonadError QErr m

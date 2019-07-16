@@ -6,6 +6,7 @@ module Hasura.RQL.Types.BoolExp
 
        , DWithinGeomOp(..)
        , DWithinGeogOp(..)
+       , CastExp
        , OpExpG(..)
        , opExpDepCol
 
@@ -119,8 +120,12 @@ data DWithinGeogOp a =
   } deriving (Show, Eq, Functor, Foldable, Traversable)
 $(deriveJSON (aesonDrop 6 snakeCase) ''DWithinGeogOp)
 
+type CastExp a = M.HashMap PGColType [OpExpG a]
+
 data OpExpG a
-  = AEQ !Bool !a
+  = ACast !(CastExp a)
+
+  | AEQ !Bool !a
   | ANE !Bool !a
 
   | AIN  !a
@@ -179,6 +184,8 @@ opExpDepCol = \case
 
 opExpToJPair :: (a -> Value) -> OpExpG a -> (Text, Value)
 opExpToJPair f = \case
+  ACast a        -> ("_cast", toJSON $ M.map opExpsToJSON a)
+
   AEQ _ a          -> ("_eq", f a)
   ANE _ a          -> ("_ne", f a)
 
@@ -224,6 +231,8 @@ opExpToJPair f = \case
   CLT a          -> ("_clt", toJSON a)
   CGTE a         -> ("_cgte", toJSON a)
   CLTE a         -> ("_clte", toJSON a)
+  where
+    opExpsToJSON = object . map (opExpToJPair f)
 
 data AnnBoolExpFld a
   = AVCol !PGColInfo ![OpExpG a]
