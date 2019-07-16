@@ -147,6 +147,7 @@ data LoggerCtx
   , _lcLogLevel        :: !LogLevel
   , _lcTimeGetter      :: !(IO FormattedTime)
   , _lcEnabledLogTypes :: !(Set.HashSet EngineLogType)
+  , _lcLogCallback     :: !(Maybe (BL.ByteString -> IO ()))
   }
 
 data LoggerSettings
@@ -172,11 +173,11 @@ getFormattedTime tzM = do
     format = "%FT%H:%M:%S%3Q%z"
     -- format = Format.iso8601DateFormat (Just "%H:%M:%S")
 
-mkLoggerCtx :: LoggerSettings -> Set.HashSet EngineLogType -> IO LoggerCtx
-mkLoggerCtx (LoggerSettings cacheTime tzM logLevel) enabledLogs = do
+mkLoggerCtx :: LoggerSettings -> Set.HashSet EngineLogType -> Maybe (BL.ByteString -> IO ()) -> IO LoggerCtx
+mkLoggerCtx (LoggerSettings cacheTime tzM logLevel) enabledLogs logCallback = do
   loggerSet <- FL.newStdoutLoggerSet FL.defaultBufSize
   timeGetter <- bool (return $ getFormattedTime tzM) cachedTimeGetter cacheTime
-  return $ LoggerCtx loggerSet logLevel timeGetter enabledLogs
+  return $ LoggerCtx loggerSet logLevel timeGetter enabledLogs logCallback
   where
     cachedTimeGetter =
       Auto.mkAutoUpdate Auto.defaultUpdateSettings {
@@ -190,9 +191,10 @@ cleanLoggerCtx =
 newtype Logger = Logger { unLogger :: forall a. (ToEngineLog a) => a -> IO () }
 
 mkLogger :: LoggerCtx -> Logger
-mkLogger (LoggerCtx loggerSet serverLogLevel timeGetter enabledLogTypes) = Logger $ \l -> do
+mkLogger (LoggerCtx loggerSet serverLogLevel timeGetter enabledLogTypes callbackFn) = Logger $ \l -> do
   localTime <- timeGetter
   let (logLevel, logTy, logDet) = toEngineLog l
-  when (logLevel >= serverLogLevel && logTy `Set.member` enabledLogTypes) $
-    FL.pushLogStrLn loggerSet $ FL.toLogStr $
-    J.encode $ EngineLog localTime logLevel logTy logDet
+  when (logLevel >= serverLogLevel && logTy `Set.member` enabledLogTypes) $ do
+    let logStr = J.encode $ EngineLog localTime logLevel logTy logDet
+    FL.pushLogStrLn loggerSet $ FL.toLogStr logStr
+    forM_ callbackFn $ \func -> func logStr

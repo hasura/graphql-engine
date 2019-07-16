@@ -8,4 +8,5 @@ main :: IO ()
 main =  do
   (HGEOptionsG rci hgeCmd) <- parseArgs
   (httpManager, instanceId) <- initialiseCtx
-  handleCommand hgeCmd rci httpManager instanceId Nothing Nothing
+  -- middlewares and logCallback are Nothing for OSS HGE operations
+  handleCommand hgeCmd rci httpManager instanceId Nothing Nothing Nothing

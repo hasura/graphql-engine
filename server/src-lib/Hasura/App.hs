@@ -126,6 +126,8 @@ initialiseCtx = do
   instanceId <- mkInstanceId
   return (httpManager, instanceId)
 
+type LogCallbackFunction = BL.ByteString -> IO ()
+
 handleCommand
   :: HGECommand
   -> RawConnInfo
@@ -133,8 +135,9 @@ handleCommand
   -> InstanceId
   -> Maybe UserAuthMiddleware
   -> Maybe (HasuraMiddleware RQLQuery)
+  -> Maybe LogCallbackFunction
   -> IO ()
-handleCommand hgeCmd rci httpManager instanceId authMiddleware metadataMiddleware =
+handleCommand hgeCmd rci httpManager instanceId authMiddleware metadataMiddleware logCallback =
 
   case hgeCmd of
     HCServe so@(ServeOptions port host cp isoL mAdminSecret mAuthHook
@@ -149,7 +152,7 @@ handleCommand hgeCmd rci httpManager instanceId authMiddleware metadataMiddlewar
       initTime <- Clock.getCurrentTime
       -- log serve options
       unLogger logger $ serveOptsToLog so
-      hloggerCtx  <- mkLoggerCtx (defaultLoggerSettings False serverLogLevel) enabledLogs
+      hloggerCtx  <- mkLoggerCtx (defaultLoggerSettings False serverLogLevel) enabledLogs logCallback
 
       authModeRes <- runExceptT $ mkAuthMode mAdminSecret mAuthHook mJwtSecret
                                              mUnAuthRole httpManager loggerCtx
@@ -232,7 +235,7 @@ handleCommand hgeCmd rci httpManager instanceId authMiddleware metadataMiddlewar
   where
 
     mkLoggers enabledLogs logLevel = do
-      loggerCtx <- mkLoggerCtx (defaultLoggerSettings True logLevel) enabledLogs
+      loggerCtx <- mkLoggerCtx (defaultLoggerSettings True logLevel) enabledLogs logCallback
       let logger = mkLogger loggerCtx
           pgLogger = mkPGLogger logger
       return (loggerCtx, logger, pgLogger)

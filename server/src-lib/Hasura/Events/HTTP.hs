@@ -156,8 +156,9 @@ runHTTP req exLog = do
   return $ either (Left . HClient) anyBodyParser res
 
 mkHLogger :: LoggerCtx -> HLogger
-mkHLogger (LoggerCtx loggerSet serverLogLevel timeGetter enabledLogs) (logLevel, logTy, logDet) = do
+mkHLogger (LoggerCtx loggerSet serverLogLevel timeGetter enabledLogs callbackFn) (logLevel, logTy, logDet) = do
   localTime <- timeGetter
-  when (logLevel >= serverLogLevel && logTy `Set.member` enabledLogs) $
-    FL.pushLogStrLn loggerSet $ FL.toLogStr $
-    J.encode $ EngineLog localTime logLevel logTy logDet
+  when (logLevel >= serverLogLevel && logTy `Set.member` enabledLogs) $ do
+    let logStr = J.encode $ EngineLog localTime logLevel logTy logDet
+    FL.pushLogStrLn loggerSet $ FL.toLogStr logStr
+    forM_ callbackFn $ \func -> func logStr

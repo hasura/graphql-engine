@@ -136,7 +136,7 @@ data WSLogInfo
   , _wsliConnectionInfo :: !WsConnInfo
   , _wsliEvent          :: !WSEvent
   } deriving (Show, Eq)
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''WSLogInfo)
+$(J.deriveToJSON (J.aesonDrop 5 J.snakeCase) ''WSLogInfo)
 
 data WSLog
   = WSLog
