@@ -34,7 +34,7 @@ data:
       }
 
       redir 301 {
-        /graphql/reason-react-apollo/reason-react-boilerplate.zip https://graphql-engine-cdn.hasura.io/learn-hasura/boilerplates/reason-react/reason-react-boilerplate.zip
+        /graphql/reason-react-apollo/boilerplate.zip https://graphql-engine-cdn.hasura.io/learn-hasura/boilerplates/reason-react-apollo/boilerplate.zip
       }
 
       redir 301 {
