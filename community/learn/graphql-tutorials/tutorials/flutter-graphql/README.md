@@ -1,0 +1,1 @@
+# graphQL-flutter-boilerplate
