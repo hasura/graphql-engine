@@ -6,6 +6,9 @@ metadata:
 data:
   Caddyfile: |
     learn.hasura.io {
+      tls {
+        dns cloudflare
+      }
       redir 301 {
         /graphql/react/boilerplate.zip https://graphql-engine-cdn.hasura.io/learn-hasura/boilerplates/react/react-boilerplate.zip
       }
@@ -33,10 +36,6 @@ data:
 
       redir 301 {
         /graphql/elm/ /graphql/elm-graphql/introduction
-      }
-
-      redir 301 {
-        /graphql/elm/introduction /graphql/elm-graphql/introduction
       }
 
       redir 301 {
