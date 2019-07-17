@@ -42,7 +42,7 @@ const config = {
 	"siteMetadata": {
 		"title": "2 hour GraphQL course for React developers | Hasura",
 		"description": "A concise and powerful tutorial that covers fundamental concepts of both GraphQL and using GraphQL in ReactReact",
-		"ogImage": "https://graphql-engine-cdn.hasura.io/learn-hasura/assets/social-media/twitter-card-reason-react-apollo.jpg",
+		"ogImage": "https://graphql-engine-cdn.hasura.io/learn-hasura/assets/social-media/twitter-card-reason-react-apollo.png",
 		"docsLocation": "https://github.com/hasura/graphql-engine/tree/master/community/learn/graphql-tutorials/tutorials/reason-react-apollo/tutorial-site/content",
 		"favicon": "https://raw.githubusercontent.com/reasonml/reasonml.github.io/source/website/static/img/icon_50.png"
 	},
