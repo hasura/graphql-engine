@@ -98,6 +98,13 @@ defaultRoleClaim = "x-hasura-default-role"
 defaultClaimNs :: T.Text
 defaultClaimNs = "https://hasura.io/jwt/claims"
 
+-- | if the time is greater than 100 seconds, should refresh the JWK 10 seonds
+-- before the expiry, else refresh at given seconds
+computeDiffTime :: NominalDiffTime -> Int
+computeDiffTime t =
+  let intTime = diffTimeToMicro t
+  in if intTime > 100 then intTime - 10 else intTime
+
 -- | create a background thread to refresh the JWK
 jwkRefreshCtrl
   :: (MonadIO m)
@@ -113,7 +120,9 @@ jwkRefreshCtrl lggr mngr url ref time =
     forever $ do
       res <- runExceptT $ updateJwkRef lggr mngr url ref
       mTime <- either (const $ return Nothing) return res
-      C.threadDelay $ maybe (60 * aSecond) diffTimeToMicro mTime
+      -- if can't parse time from header, defaults to 1 min
+      let delay = maybe (60 * aSecond) computeDiffTime mTime
+      C.threadDelay delay
   where
     aSecond = 1000 * 1000
 
@@ -130,7 +139,7 @@ updateJwkRef
 updateJwkRef (Logger logger) manager url jwkRef = do
   let options = wreqOptions manager []
       urlT    = T.pack $ show url
-      infoMsg = "refreshing JWK from endpoint: " <> urlT
+      infoMsg = JLNInfo $ "refreshing JWK from endpoint: " <> urlT
   liftIO $ logger $ JwkRefreshLog LevelInfo infoMsg Nothing
   res  <- liftIO $ try $ Wreq.getWith options $ show url
   resp <- either logAndThrowHttp return res
@@ -158,7 +167,7 @@ updateJwkRef (Logger logger) manager url jwkRef = do
   where
     logAndThrow :: (MonadIO m, MonadError T.Text m) => T.Text -> Maybe JwkRefreshHttpError -> m a
     logAndThrow err httpErr = do
-      liftIO $ logger $ JwkRefreshLog (LevelOther "critical") err httpErr
+      liftIO $ logger $ JwkRefreshLog (LevelOther "critical") (JLNError err) httpErr
       throwError err
 
     logAndThrowHttp :: (MonadIO m, MonadError T.Text m) => HTTP.HttpException -> m a

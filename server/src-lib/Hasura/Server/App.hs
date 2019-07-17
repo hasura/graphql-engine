@@ -245,10 +245,12 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
   let headers = requestHeaders req
       authMode = scAuthMode serverCtx
       manager = scManager serverCtx
+      -- convert ByteString to Maybe Value for logging
+      reqTxt = Just $ String $ bsToTxt $ BL.toStrict reqBody
 
   requestId <- getRequestId headers
   userInfoE <- liftIO $ runExceptT $ getUserInfo logger manager headers authMode
-  userInfo  <- either (logErrorAndResp Nothing requestId req reqBody False . qErrModifier)
+  userInfo  <- either (logErrorAndResp Nothing requestId req reqTxt False . qErrModifier)
                return userInfoE
 
   let handlerState = HandlerCtx serverCtx userInfo headers requestId
@@ -262,7 +264,7 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
       return (res, Nothing)
     AHPost handler -> do
       parsedReqE <- runExceptT $ parseBody reqBody
-      parsedReq  <- either (logErrorAndResp (Just userInfo) requestId req reqBody (isAdmin curRole) . qErrModifier) return parsedReqE
+      parsedReq  <- either (logErrorAndResp (Just userInfo) requestId req reqTxt (isAdmin curRole) . qErrModifier) return parsedReqE
       res <- liftIO $ runReaderT (runExceptT $ handler parsedReq) handlerState
       return (res, Just parsedReq)
 
@@ -273,29 +275,17 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
 
   -- log and return result
   case modResult of
-    Left err -> logParsedErrorAndResp (Just userInfo) requestId req (toJSON <$> q) (isAdmin curRole) err
+    Left err  -> logErrorAndResp (Just userInfo) requestId req (toJSON <$> q) (isAdmin curRole) err
     Right res -> logSuccessAndResp (Just userInfo) requestId req res (Just (t1, t2))
-  -- logResult logger (Just userInfo) requestId req (toJSON <$> q)
-  --   (apiRespToLBS <$> modResult) $ Just (t1, t2)
-  --either (qErrToResp (isAdmin curRole)) (resToResp requestId) modResult
 
   where
     logger = scLogger serverCtx
 
-    logParsedErrorAndResp
-      :: (MonadIO m)
-      => Maybe UserInfo -> RequestId -> Wai.Request -> Maybe Value -> Bool -> QErr -> ActionCtxT ctx m b
-    logParsedErrorAndResp userInfo reqId req reqBody includeInternal qErr = do
-      logError logger userInfo reqId req reqBody qErr
-      setStatus $ qeStatus qErr
-      json $ qErrEncoder includeInternal qErr
-
     logErrorAndResp
       :: (MonadIO m)
-      => Maybe UserInfo -> RequestId -> Wai.Request -> BL.ByteString -> Bool -> QErr -> ActionCtxT ctx m b
+      => Maybe UserInfo -> RequestId -> Wai.Request -> Maybe Value -> Bool -> QErr -> ActionCtxT ctx m a
     logErrorAndResp userInfo reqId req reqBody includeInternal qErr = do
-      let reqTxt = Just $ toJSON $ String $ bsToTxt $ BL.toStrict reqBody
-      logError logger userInfo reqId req reqTxt qErr
+      logError logger userInfo reqId req reqBody qErr
       setStatus $ qeStatus qErr
       json $ qErrEncoder includeInternal qErr
 
