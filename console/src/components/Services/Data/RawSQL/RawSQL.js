@@ -130,7 +130,7 @@ const RawSQL = ({
     );
   }
 
-  const getMigrationModal = () => {
+  const getMigrationWarningModal = () => {
     const onModalClose = () => {
       dispatch(modalClose());
     };
@@ -504,7 +504,7 @@ const RawSQL = ({
         <div className="hidden col-xs-4">{alert}</div>
       </div>
 
-      {getMigrationModal()}
+      {getMigrationWarningModal()}
 
       <div className={styles.add_mar_bottom}>{getResultTable()}</div>
     </div>
