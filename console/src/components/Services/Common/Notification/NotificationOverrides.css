@@ -1,0 +1,16 @@
+.notifications-wrapper .notification {
+  height: auto !important;
+  width: auto !important;
+}
+
+.notifications-wrapper .notifications-tr {
+  width: auto !important;
+}
+
+.notifications-wrapper .notification > * {
+  width: 400px;
+}
+
+.notifications-wrapper .notification .notification-details {
+  width: 75vw;
+}

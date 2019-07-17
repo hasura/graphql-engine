@@ -1,5 +1,4 @@
 import defaultState from './State';
-import jsonFormat from './JSONFormat';
 import Notifications from 'react-notification-system-redux';
 
 const LOAD_REQUEST = 'App/ONGOING_REQUEST';
@@ -26,20 +25,19 @@ const CONNECTION_FAILED = 'App/CONNECTION_FAILED';
 const showNotification = ({
   level = 'info',
   position = 'tr',
-  json,
   ...options
 } = {}) => {
   return dispatch => {
     if (level === 'success') {
       dispatch(Notifications.removeAll());
     }
+
     dispatch(
       Notifications.show(
         {
           position,
           autoDismiss: ['error', 'warning'].includes(level) ? 0 : 5,
           dismissible: ['error', 'warning'].includes(level) ? 'button' : 'both',
-          children: json ? jsonFormat(json) : null,
           ...options,
         },
         level

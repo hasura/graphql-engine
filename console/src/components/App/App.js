@@ -4,7 +4,6 @@ import { connect } from 'react-redux';
 import ProgressBar from 'react-progress-bar-plus';
 import Notifications from 'react-notification-system-redux';
 import { hot } from 'react-hot-loader';
-import './progress-bar.scss';
 import ErrorBoundary from '../Error/ErrorBoundary';
 import { telemetryNotificationShown } from '../../telemetry/Actions';
 import { showTelemetryNotification } from '../../telemetry/Notifications';
@@ -19,7 +18,7 @@ class App extends Component {
   }
 
   render() {
-    const styles = require('./progress-bar.scss');
+    const styles = require('./App.scss');
     const {
       requestError,
       error,
@@ -38,26 +37,9 @@ class App extends Component {
       // console.error(requestError, error);
     }
 
-    const notificationStyle = {
-      Containers: {
-        DefaultStyle: {
-          width: '400px',
-          height: 'auto',
-        },
-      },
-      NotificationItem: {
-        DefaultStyle: {
-          height: 'auto',
-        },
-        error: {
-          height: 'auto',
-        },
-      },
-    };
-
-    let hasuraCliDown = null;
+    let connectionFailMsg = null;
     if (connectionFailed) {
-      hasuraCliDown = (
+      connectionFailMsg = (
         <div
           style={{ marginBottom: '0px' }}
           className={styles.alertDanger + ' alert alert-danger'}
@@ -81,7 +63,7 @@ class App extends Component {
     return (
       <ErrorBoundary metadata={metadata} dispatch={dispatch}>
         <div>
-          {hasuraCliDown}
+          {connectionFailMsg}
           {ongoingRequest && (
             <ProgressBar
               percent={percent}
@@ -91,10 +73,7 @@ class App extends Component {
             />
           )}
           <div>{children}</div>
-          <Notifications
-            notifications={notifications}
-            style={notificationStyle}
-          />
+          <Notifications notifications={notifications} />
         </div>
       </ErrorBoundary>
     );
