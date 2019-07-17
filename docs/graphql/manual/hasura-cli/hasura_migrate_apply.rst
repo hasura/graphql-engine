@@ -3,13 +3,13 @@
 Hasura CLI: hasura migrate apply
 --------------------------------
 
-Apply migrations on the database
+Apply migrations on the database.
 
 Synopsis
 ~~~~~~~~
 
 
-Apply migrations on the database
+Apply migrations on the database.
 
 ::
 

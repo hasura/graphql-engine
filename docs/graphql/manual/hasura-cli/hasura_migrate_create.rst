@@ -3,13 +3,13 @@
 Hasura CLI: hasura migrate create
 ---------------------------------
 
-Create files required for a migration
+Create files required for a migration.
 
 Synopsis
 ~~~~~~~~
 
 
-Create sql and yaml files required for a migration
+Create ``sql`` and ``yaml`` files required for a migration.
 
 ::
 

@@ -3,13 +3,13 @@
 Hasura CLI: hasura migrate status
 ---------------------------------
 
-Display current status of migrations on a database
+Display current status of migrations on a database.
 
 Synopsis
 ~~~~~~~~
 
 
-Display current status of migrations on a database
+Display current status of migrations on a database.
 
 ::
 
