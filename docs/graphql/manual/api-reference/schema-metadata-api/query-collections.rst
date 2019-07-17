@@ -6,9 +6,9 @@ Schema/Metadata API Reference: Query collections
   :depth: 1
   :local:
 
-Group queries using Query collections.
+Group queries using query collections.
 
-Create/Drop query collections and Add/Drop a query to a collection using following query types.
+Create/drop query collections and add/drop a query to a collection using the following query types.
 
 .. _create_query_collection:
 
@@ -102,14 +102,14 @@ Args syntax
    * - cascade
      - true
      - boolean
-     - When set to ``true``, the collection (if present) is removed from allowlist
+     - When set to ``true``, the collection (if present) is removed from the allowlist
 
 .. _add_query_to_collection:
 
 add_query_to_collection
 -----------------------
 
-``add_query_to_collection`` is used to add a query to given collection
+``add_query_to_collection`` is used to add a query to a given collection.
 
 .. code-block:: http
 
@@ -156,7 +156,7 @@ Args Syntax
 drop_query_from_collection
 --------------------------
 
-``drop_query_from_collection`` is used to remove a query from given collection
+``drop_query_from_collection`` is used to remove a query from a given collection.
 
 .. code-block:: http
 
@@ -198,7 +198,7 @@ Args Syntax
 add_collection_to_allowlist
 ----------------------------
 
-``add_collection_to_allowlist`` is used to add a collection to allow-list
+``add_collection_to_allowlist`` is used to add a collection to the allow-list.
 
 .. code-block:: http
 
@@ -235,7 +235,7 @@ Args Syntax
 drop_collection_from_allowlist
 -------------------------------
 
-``drop_collection_from_allowlist`` is used to remove a collection from allow-list
+``drop_collection_from_allowlist`` is used to remove a collection from the allow-list.
 
 .. code-block:: http
 

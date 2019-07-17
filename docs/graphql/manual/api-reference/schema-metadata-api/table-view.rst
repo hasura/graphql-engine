@@ -6,7 +6,7 @@ Schema/Metadata API Reference: Tables/Views
   :depth: 1
   :local:
 
-Track/untrack a table/view in Hasura GraphQL engine
+Track/untrack a table/view in Hasura GraphQL engine.
 
 Only tracked tables/views are available for querying/mutating/subscribing data over the GraphQL API.
 
@@ -96,4 +96,4 @@ Args syntax
    * - cascade
      - false
      - Boolean
-     - When set to ``true``, the effect (if possible) is cascaded to any metadata dependent objects (relationships, permissions, templates).
+     - When set to ``true``, the effect (if possible) is cascaded to any metadata dependent objects (relationships, permissions, templates)

@@ -13,7 +13,7 @@ Postgres instance that Hasura is configured with.
 
 The primary motive of this API is to provide convenience methods to initialise migrations from an
 existing Hasura instance. But the functionality can be later expanded to do other things
-such as taking data dump etc.
+such as taking a data dump etc.
 
 Endpoint
 --------
@@ -94,4 +94,4 @@ state that this API is not enabled. i.e. remove it from the list of enabled APIs
    --enabled-apis="graphql,metadata"
    HASURA_GRAPHQL_ENABLED_APIS="graphql,metadata"
 
-See :doc:`../deployment/graphql-engine-flags/reference` for info on setting the above flag/env var
+See :doc:`../deployment/graphql-engine-flags/reference` for info on setting the above flag/env var.

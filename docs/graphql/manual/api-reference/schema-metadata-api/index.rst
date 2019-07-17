@@ -8,12 +8,12 @@ Schema / Metadata API Reference
   :depth: 1
   :local:
 
-The Schema / Metadata API provides the following features:
+The schema / metadata API provides the following features:
 
 1. Execute SQL on the underlying Postgres database, supports schema modifying actions.
-2. Modify Hasura metadata (permissions rules and relationships).
+2. Modify Hasura metadata (permission rules and relationships).
 
-This is primarily intended to be used as an ``admin`` API to manage Hasura schema and metadata.
+This is primarily intended to be used as an ``admin`` API to manage the Hasura schema and metadata.
 
 Endpoint
 --------
@@ -90,11 +90,11 @@ The various types of queries are listed in the following table:
 
    * - :ref:`track_function`
      - :ref:`FunctionName <FunctionName>`
-     - Add a SQL function
+     - Add an SQL function
 
    * - :ref:`untrack_function`
      - :ref:`FunctionName <FunctionName>`
-     - Remove a SQL function
+     - Remove an SQL function
 
    * - :ref:`create_object_relationship`
      - :ref:`create_object_relationship_args <create_object_relationship_syntax>`
@@ -150,15 +150,15 @@ The various types of queries are listed in the following table:
 
    * - :ref:`create_event_trigger`
      - :ref:`create_event_trigger_args <create_event_trigger_syntax>`
-     - Create or replace event trigger
+     - Create or replace an event trigger
 
    * - :ref:`delete_event_trigger`
      - :ref:`delete_event_trigger_args <delete_event_trigger_syntax>`
-     - Delete existing event trigger
+     - Delete an existing event trigger
 
    * - :ref:`invoke_event_trigger`
      - :ref:`invoke_event_trigger_args <invoke_event_trigger_syntax>`
-     - Invoke trigger manually
+     - Invoke a trigger manually
 
    * - :ref:`export_metadata`
      - :ref:`Empty Object`
@@ -194,19 +194,19 @@ The various types of queries are listed in the following table:
 
    * - :ref:`add_query_to_collection`
      - :ref:`add_query_to_collection_args <add_query_to_collection_syntax>`
-     - Add a query to given collection
+     - Add a query to a given collection
 
    * - :ref:`drop_query_from_collection`
      - :ref:`drop_query_from_collection_args <drop_query_from_collection_syntax>`
-     - Drop a query from given collection
+     - Drop a query from a given collection
 
    * - :ref:`add_collection_to_allowlist`
      - :ref:`add_collection_to_allowlist_args <add_collection_to_allowlist_syntax>`
-     - Add a collection to allow-list
+     - Add a collection to the allow-list
 
    * - :ref:`drop_collection_from_allowlist`
      - :ref:`drop_collection_from_allowlist_args <drop_collection_from_allowlist_syntax>`
-     - Drop a collection from allow-list
+     - Drop a collection from the allow-list
 
 **See:**
 
@@ -270,15 +270,15 @@ Error codes
    :widths: 10, 20, 70
    :header-rows: 1
 
-Disabling Schema/Metadata API
+Disabling schema / metadata API
 -----------------------------
 
 Since this API can be used to make changes to the GraphQL schema, it can be
 disabled, especially in production deployments.
 
 The ``enabled-apis`` flag or the ``HASURA_GRAPHQL_ENABLED_APIS`` env var can be used to
-enable/disable this API. By default, The schema/metadata API is enabled. To disable it, you need
-to explicitly state that this API is not enabled. i.e. remove it from the list of enabled APIs.
+enable/disable this API. By default, the schema/metadata API is enabled. To disable it, you need
+to explicitly state that this API is not enabled i.e. remove it from the list of enabled APIs.
 
 .. code-block:: bash
 
@@ -286,7 +286,7 @@ to explicitly state that this API is not enabled. i.e. remove it from the list o
    --enabled-apis="graphql"
    HASURA_GRAPHQL_ENABLED_APIS="graphql"
 
-See :doc:`../../deployment/graphql-engine-flags/reference` for info on setting the above flag/env var
+See :doc:`../../deployment/graphql-engine-flags/reference` for info on setting the above flag/env var.
 
 .. toctree::
   :maxdepth: 1

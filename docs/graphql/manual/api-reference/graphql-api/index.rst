@@ -11,12 +11,12 @@ All GraphQL requests for queries, subscriptions and mutations are made to the Gr
 Endpoint
 --------
 
-All requests are ``POST`` requests to ``/v1/graphql`` (or ``/v1alpha1/graphql``) endpoint.
+All requests are ``POST`` requests to the ``/v1/graphql`` (or ``/v1alpha1/graphql``) endpoint.
 
 .. note::
 
-   ``/v1/graphql`` endpoint returns HTTP 200 status codes for all responses.
-   This is a **breaking** change from ``/v1alpha1/graphql`` behaviour, where
+   The ``/v1/graphql`` endpoint returns HTTP 200 status codes for all responses.
+   This is a **breaking** change from the ``/v1alpha1/graphql`` behaviour, where
    request errors and internal errors were responded with 4xx and 5xx status
    codes.
 

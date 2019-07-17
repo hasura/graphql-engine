@@ -13,8 +13,8 @@ APIs to manage Hasura metadata which is stored in ``hdb_catalog`` schema.
 export_metadata
 ---------------
 
-``export_metadata`` is used to export the current metadata from server as a JSON
-file. Response JSON will be the metadata object.
+``export_metadata`` is used to export the current metadata from the server as a JSON
+file. The response JSON will be the metadata object.
 
 .. code-block:: http
 
@@ -59,7 +59,7 @@ Args should be the JSON object which is same as the output of
 reload_metadata
 ---------------
 
-``reload_metadata`` should be used when there is change in underlying Postgres
+``reload_metadata`` should be used when there is a change in underlying Postgres
 database that Hasura should be aware of. Example: a new column is added to a
 table using ``psql`` and this column should now be added to the GraphQL schema.
 
@@ -156,7 +156,7 @@ Response:-
 drop_inconsistent_metadata
 --------------------------
 
-``drop_inconsistent_metadata`` can be used to purge all inconsistent objects from metadata.
+``drop_inconsistent_metadata`` can be used to purge all inconsistent objects from the metadata.
 
 .. code-block:: http
 

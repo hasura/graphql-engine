@@ -8,7 +8,7 @@ API Reference - Mutation
 
 .. _insert_upsert_syntax:
 
-Insert/Upsert syntax
+Insert / upsert syntax
 --------------------
 
 .. code-block:: none
@@ -31,19 +31,19 @@ Insert/Upsert syntax
    * - mutation-name
      - false
      - Value
-     - Name mutation for observability
+     - Name of mutation for observability
    * - mutation-field-name
      - true
      - Value
-     - name of the auto-generated mutation field. E.g. *insert_author*
+     - Name of the auto-generated mutation field, e.g. *insert_author*
    * - input-object
      - true
      - InputObject_
-     - name of the auto-generated mutation field
+     - Name of the auto-generated mutation field
    * - mutation-response
      - true
      - MutationResponse_
-     - Object to be returned after mutation succeeds.
+     - Object to be returned after mutation succeeds
    * - on-conflict
      - false
      - ConflictClause_
@@ -120,11 +120,11 @@ Update syntax
    * - mutation-field-name
      - true
      - Value
-     - name of the auto-generated update mutation field. E.g. *update_author*
+     - Name of the auto-generated update mutation field, e.g. *update_author*
    * - where-argument
      - true
      - whereArgExp_
-     - selection criteria for rows to be updated
+     - Selection criteria for rows to be updated
    * - set-argument
      - false
      - setArgExp_
@@ -144,19 +144,19 @@ Update syntax
    * - delete-key-argument
      - false
      - deleteKeyArgExp_
-     - key to be deleted in the value of JSONB columns in the table
+     - Key to be deleted in the value of JSONB columns in the table
    * - delete-elem-argument
      - false
      - deleteElemArgExp_
-     - array element to be deleted in the value of JSONB columns in the table
+     - Array element to be deleted in the value of JSONB columns in the table
    * - delete-at-path-argument
      - false
      - deleteAtPathArgExp_
-     - element at path to be deleted in the value of JSONB columns in the table
+     - Element at path to be deleted in the value of JSONB columns in the table
    * - mutation-response
      - true
      - MutationResponse_
-     - Object to be returned after mutation succeeds.
+     - Object to be returned after mutation succeeds
 
 **E.g. UPDATE**:
 
@@ -199,15 +199,15 @@ Delete syntax
    * - mutation-field-name
      - true
      - Value
-     - name of the auto-generated delete mutation field. E.g. *delete_author*
+     - Name of the auto-generated delete mutation field, e.g. *delete_author*
    * - where-argument
      - true
      - whereArgExp_
-     - selection criteria for rows to delete
+     - Selection criteria for rows to delete
    * - mutation-response
      - true
      - MutationResponse_
-     - Object to be returned after mutation succeeds.
+     - Object to be returned after mutation succeeds
 
 **E.g. DELETE**:
 
@@ -234,7 +234,7 @@ Syntax definitions
 
 .. _MutationResponse:
 
-Mutation Response
+Mutation response
 ^^^^^^^^^^^^^^^^^
 .. code-block:: none
 
@@ -305,7 +305,7 @@ E.g.:
 
 **on_conflict** argument
 ^^^^^^^^^^^^^^^^^^^^^^^^
-Conflict clause is used to convert an *insert* query to an *upsert* query. *Upsert* respects the table's *update*
+The conflict clause is used to convert an *insert* query to an *upsert* query. *Upsert* respects the table's *update*
 permissions before editing an existing row in case of a conflict. Hence the conflict clause is permitted only if a
 table has *update* permissions defined.
 
