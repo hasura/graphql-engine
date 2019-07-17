@@ -17,7 +17,7 @@ The flags can be passed as ENV variables as well.
 Server flags
 ^^^^^^^^^^^^
 
-For ``graphql-engine`` command these are the flags and ENV variables available:
+For the ``graphql-engine`` command these are the available flags and ENV variables:
 
 
 .. list-table::
@@ -36,7 +36,7 @@ For ``graphql-engine`` command these are the flags and ENV variables available:
 
        Example: ``postgres://admin:mypass@mydomain.com:5432/mydb``
 
-Or you can specify following options *(only via flags)*
+Or you can specify the following options *(only via flags)*:
 
 .. code-block:: none
 
@@ -52,7 +52,7 @@ Or you can specify following options *(only via flags)*
 Command flags
 ^^^^^^^^^^^^^
 
-For ``serve`` sub-command these are the flags and ENV variables available:
+For the ``serve`` sub-command these are the available flags and ENV variables:
 
 .. list-table::
    :header-rows: 1
@@ -98,14 +98,14 @@ For ``serve`` sub-command these are the flags and ENV variables available:
    * - ``--unauthorized-role <ROLE>``
      - ``HASURA_GRAPHQL_UNAUTHORIZED_ROLE``
      - Unauthorized role, used when access-key is not sent in access-key only
-       mode or "Authorization" header is absent in JWT mode.
-       Example: ``anonymous``. Now whenever "Authorization" header is
-       absent, request's role will default to "anonymous".
+       mode or the "authorization" header is absent in JWT mode.
+       Example: ``anonymous``. Now whenever the "authorization" header is
+       absent, the request's role will default to ``anonymous``.
 
    * - ``--cors-domain <DOMAINS>``
      - ``HASURA_GRAPHQL_CORS_DOMAIN``
      - CSV of list of domains, excluding scheme (http/https) and including port,
-       to allow CORS for. Wildcard domains are allowed.
+       to allow for CORS. Wildcard domains are allowed.
 
    * - ``--disable-cors``
      - N/A
@@ -148,7 +148,7 @@ For ``serve`` sub-command these are the flags and ENV variables available:
 
    * - ``-i, --tx-iso <TXISO>``
      - ``HASURA_GRAPHQL_TX_ISOLATION``
-     - transaction isolation. read-committed / repeatable-read / serializable (default: read-commited)
+     - Transaction isolation. read-committed / repeatable-read / serializable (default: read-commited)
 
    * - ``--stringify-numeric-types``
      - ``HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES``
@@ -163,27 +163,27 @@ For ``serve`` sub-command these are the flags and ENV variables available:
 
    * - ``--live-queries-fallback-refetch-interval``
      - ``HASURA_GRAPHQL_LIVE_QUERIES_FALLBACK_REFETCH_INTERVAL``
-     - updated results (if any) will be sent at most once in this interval (in milliseconds) for live queries
+     - Updated results (if any) will be sent at most once in this interval (in milliseconds) for live queries
        which cannot be multiplexed. Default: 1000 (1sec)
 
    * - ``live-queries-multiplexed-refetch-interval``
      - ``HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL``
-     - updated results (if any) will be sent at most once in this interval (in milliseconds) for live queries
+     - Updated results (if any) will be sent at most once in this interval (in milliseconds) for live queries
        which can be multiplexed. Default: 1000 (1sec)
 
    * - ``live-queries-multiplexed-batch-size``
      - ``HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE``
-     - multiplexed live queries are split into batches of the specified size. Default 100. 
+     - Multiplexed live queries are split into batches of the specified size. Default: 100 
 
    * - ``enable-allowlist``
      - ``HASURA_GRAPHQL_ENABLE_ALLOWLIST``
-     - Restrict queries allowed to be executed by GraphQL engine to those that are part of the configured
-       allow-list. Default ``false``. *(Available for versions > v1.0.0-beta.1)*
+     - Restrict queries allowed to be executed by the GraphQL engine to those that are part of the configured
+       allow-list. Default: ``false`` *(Available for versions > v1.0.0-beta.1)*
   
    * - ``console-assets-dir``
      - ``HASURA_GRAPHQL_CONSOLE_ASSETS_DIR``
      - Set the value to ``/srv/console-assets`` for the console to load assets from the server itself
-       instead of CDN. *(Available for versions > v1.0.0-beta.1)*
+       instead of CDN *(Available for versions > v1.0.0-beta.1)*
 
 .. note::
 

@@ -1,4 +1,4 @@
-Run Hasura GraphQL Engine using Docker
+Run Hasura GraphQL engine using Docker
 ======================================
 
 .. contents:: Table of contents
@@ -21,7 +21,7 @@ Step 1: Get the **docker-run.sh** bash script
 The `hasura/graphql-engine/install-manifests <https://github.com/hasura/graphql-engine/tree/master/install-manifests>`_
 repo contains all installation manifests required to deploy Hasura anywhere.
 
-Get the docker run bash script from there:
+Get the Docker run bash script from there:
 
 .. code-block:: bash
 
@@ -30,7 +30,7 @@ Get the docker run bash script from there:
 Step 2: Configure the **docker-run.sh** script
 ----------------------------------------------
 
-The ``docker-run.sh`` script has a sample docker run command in it. The following changes have to be
+The ``docker-run.sh`` script has a sample Docker run command in it. The following changes have to be
 made to the command:
 
 - Database URL
@@ -64,12 +64,12 @@ Examples of ``HASURA_GRAPHQL_DATABASE_URL``:
     to connect to the database.
 
   - Hasura GraphQL engine needs access permissions to your Postgres database as described in
-    :doc:`Postgres permissions <../postgres-permissions>`
+    :doc:`Postgres permissions <../postgres-permissions>`.
 
 Network config
 ^^^^^^^^^^^^^^
 
-If your Postgres instance is running on ``localhost`` the following changes will be needed to the ``docker run``
+If your Postgres instance is running on ``localhost``, the following changes will be needed to the ``docker run``
 command to allow the Docker container to access the host's network:
 
 .. rst-class:: api_tabs
@@ -118,7 +118,7 @@ command to allow the Docker container to access the host's network:
           hasura/graphql-engine:latest
           
 
-Step 3: Run the Hasura docker container
+Step 3: Run the Hasura Docker container
 ---------------------------------------
 
 Execute ``docker-run.sh`` & check if everything is running well:
