@@ -12,6 +12,7 @@ import           Hasura.Logging        (EngineLogType (..), LogLevel (..),
                                         ToEngineLog (..))
 import           Hasura.Prelude
 import           Hasura.Server.Logging ()
+import           Hasura.Server.Utils   (httpExceptToJSON)
 
 import qualified Data.Text             as T
 import qualified Network.HTTP.Types    as HTTP
@@ -42,7 +43,7 @@ instance ToJSON JwkRefreshHttpError where
     object [ "status_code" .= (HTTP.statusCode <$> jrheStatus jhe)
            , "url" .= jrheUrl jhe
            , "response" .= jrheResponse jhe
-           , "http_exception" .= (toJSON <$> jrheHttpException jhe)
+           , "http_exception" .= (httpExceptToJSON . unHttpException <$> jrheHttpException jhe)
            ]
 
 instance ToJSON JwkRefreshLog where

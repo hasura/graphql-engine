@@ -165,17 +165,22 @@ updateJwkRef (Logger logger) manager url jwkRef = do
     return $ diffUTCTime expires currTime
 
   where
-    logAndThrow :: (MonadIO m, MonadError T.Text m) => T.Text -> Maybe JwkRefreshHttpError -> m a
+    logAndThrow
+      :: (MonadIO m, MonadError T.Text m)
+      => T.Text -> Maybe JwkRefreshHttpError -> m a
     logAndThrow err httpErr = do
       liftIO $ logger $ JwkRefreshLog (LevelOther "critical") (JLNError err) httpErr
       throwError err
 
     logAndThrowHttp :: (MonadIO m, MonadError T.Text m) => HTTP.HttpException -> m a
     logAndThrowHttp err = do
-      let httpErr = JwkRefreshHttpError Nothing (T.pack $ show url)
-                    (Just $ HttpException err) Nothing
-          errMsg = "Error fetching JWK: " <> T.pack (show err)
+      let httpErr = JwkRefreshHttpError Nothing (T.pack $ show url) (Just $ HttpException err) Nothing
+          errMsg = "Error fetching JWK: " <> T.pack (getHttpExceptionMsg err)
       logAndThrow errMsg (Just httpErr)
+
+    getHttpExceptionMsg = \case
+      HTTP.HttpExceptionRequest _ reason -> show reason
+      HTTP.InvalidUrlException _ reason -> show reason
 
     timeFmt = "%a, %d %b %Y %T GMT"
 
