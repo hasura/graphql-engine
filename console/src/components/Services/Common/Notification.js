@@ -1,7 +1,6 @@
 import React from 'react';
 import AceEditor from 'react-ace';
 import { showNotification } from '../../App/Actions';
-import { notifExpand, notifMsg } from '../../App/Actions';
 import Button from '../../Common/Button/Button';
 
 const styles = require('../../Common/TableCommon/Table.scss');
@@ -69,25 +68,12 @@ const showErrorNotification = (title, message, error) => {
   }
 
   return dispatch => {
-    const expandClicked = finalMsg => {
-      // trigger a modal with a bigger view
-      dispatch(notifExpand(true));
-      dispatch(notifMsg(JSON.stringify(finalMsg, null, 4)));
-    };
-
     const getNotificationAction = () => {
       let action = null;
 
       if (finalJson) {
         const notification = [
           <div className={styles.aceBlock}>
-            <i
-              onClick={e => {
-                e.preventDefault();
-                expandClicked(finalJson);
-              }}
-              className={styles.aceBlockExpand + ' fa fa-expand'}
-            />
             <AceEditor
               readOnly
               showPrintMargin={false}

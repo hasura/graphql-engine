@@ -13,7 +13,6 @@ import {
   featureCompatibilityInit,
 } from './Actions';
 import { loadConsoleTelemetryOpts } from '../../telemetry/Actions.js';
-import './NotificationOverrides.css';
 import {
   loadInconsistentObjects,
   redirectToMetadataStatus,

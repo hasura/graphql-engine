@@ -3,12 +3,8 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import ProgressBar from 'react-progress-bar-plus';
 import Notifications from 'react-notification-system-redux';
-import Modal from 'react-bootstrap/lib/Modal';
 import { hot } from 'react-hot-loader';
 import './progress-bar.scss';
-import { NOTIF_EXPANDED } from './Actions';
-import AceEditor from 'react-ace';
-import 'brace/mode/json';
 import ErrorBoundary from '../Error/ErrorBoundary';
 import { telemetryNotificationShown } from '../../telemetry/Actions';
 import { showTelemetryNotification } from '../../telemetry/Notifications';
@@ -22,10 +18,6 @@ class App extends Component {
     document.getElementById('loading').style.display = 'none';
   }
 
-  onModalClose = () => {
-    this.props.dispatch({ type: NOTIF_EXPANDED, data: false });
-  };
-
   render() {
     const styles = require('./progress-bar.scss');
     const {
@@ -37,8 +29,6 @@ class App extends Component {
       children,
       notifications,
       connectionFailed,
-      isNotifExpanded,
-      notifMsg,
       telemetry,
       dispatch,
       metadata,
@@ -64,9 +54,6 @@ class App extends Component {
         },
       },
     };
-    if (isNotifExpanded) {
-      notificationStyle.Containers.DefaultStyle.width = '800px';
-    }
 
     let hasuraCliDown = null;
     if (connectionFailed) {
@@ -108,33 +95,6 @@ class App extends Component {
             notifications={notifications}
             style={notificationStyle}
           />
-          <Modal
-            show={isNotifExpanded}
-            onHide={this.onModalClose}
-            dialogClassName={styles.notifModalDialog}
-          >
-            <Modal.Header closeButton>
-              <Modal.Title>Error</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-              <div className="content-fluid">
-                <div className="row">
-                  <div className="col-md-12">
-                    <AceEditor
-                      mode="json"
-                      theme="github"
-                      name="notif_error"
-                      value={notifMsg}
-                      minLines={8}
-                      maxLines={100}
-                      width="100%"
-                      showPrintMargin={false}
-                    />
-                  </div>
-                </div>
-              </div>
-            </Modal.Body>
-          </Modal>
         </div>
       </ErrorBoundary>
     );
@@ -146,7 +106,6 @@ App.propTypes = {
   reqData: PropTypes.object,
   statusCode: PropTypes.number,
 
-  modalOpen: PropTypes.bool,
   error: PropTypes.object,
   ongoingRequest: PropTypes.bool,
   requestError: PropTypes.bool,
@@ -159,8 +118,6 @@ App.propTypes = {
   dispatch: PropTypes.func.isRequired,
 
   notifications: PropTypes.array,
-  isNotifExpanded: PropTypes.bool,
-  notifMsg: PropTypes.string,
 };
 
 const mapStateToProps = state => {
