@@ -14,9 +14,9 @@ Deployment guides
 - `Blog: Instant GraphQL on AWS RDS <https://blog.hasura.io/instant-graphql-on-aws-rds-1edfb85b5985>`__
 
 .. note::
-   The above are guides to deploy Hasura GraphQL engine on some specific platforms.
+   The above are guides to deploy the Hasura GraphQL engine on some specific platforms.
 
-   For more generic guides, see :doc:`../deployment/index`
+   For more generic guides, see :doc:`../deployment/index`.
 
 Sample apps
 -----------
@@ -38,7 +38,7 @@ Integration/migration tutorials
 Integrating with monitoring frameworks
 --------------------------------------
 
-The following demonstrate integrating Hasura GraphQL engine logs with some external
+The following posts demonstrate integrating the Hasura GraphQL engine logs with some external
 monitoring frameworks:
 
 - `Blog: GraphQL Observability with Hasura GraphQL Engine and Honeycomb <https://blog.hasura.io/graphql-observability-with-hasura-graphql-engine-and-honeycomb-ee0a1a836c41>`__

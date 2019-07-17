@@ -33,7 +33,7 @@ Once these packages are installed, import them as follows in the file where you 
   import { InMemoryCache } from 'apollo-cache-inmemory';
 
 
-below these imports initialise your client to fetch subscriptions along with query and mutation.
+Below these imports initialise your client to fetch subscriptions along with query and mutation.
 
 .. code-block:: js
 
@@ -130,8 +130,8 @@ care of when switching to subscriptions.
 
 .. admonition:: Caveat
 
-  If all the 3 changes are not made, **it works like a query instead of a subscription**
-  since, the code that sets up apollo-link doesn't work.
+  If not all 3 changes are made, **it works like a query instead of a subscription**
+  since the code that sets up apollo-link doesn't work.
 
   .. code-block:: js
 

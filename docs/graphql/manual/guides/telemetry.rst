@@ -32,7 +32,7 @@ Server
 
 The server periodically sends the number of tables, views, relationships,
 permission rules, custom SQL functions, event triggers and remote schemas
-tracked by GraphQL Engine, along with randomly generated UUID per database and
+tracked by the GraphQL engine, along with randomly generated UUIDs per database and
 per instance. The name of the current continuous integration environment
 (if any) and the server version is also sent.
 
@@ -90,7 +90,7 @@ Here is a sample:
      "cli_uuid": null
    }
 
-Please note, that ``TABLE_NAME`` and ``SCHEMA_NAME`` are not placeholders. 
+Please note that ``TABLE_NAME`` and ``SCHEMA_NAME`` are not placeholders. 
 The actual names of the tables, schemas, remote-schemas and event-triggers that
 are a part of the URL are not sent.
 
@@ -100,7 +100,7 @@ CLI
 The CLI collects each execution event, along with a randomly generated UUID.
 The execution event contains the command name, timestamp and whether the
 execution resulted in an error or not. **Error messages, arguments and flags
-are not recorded**. CLI also collects the server version and UUID that it
+are not recorded**. The CLI also collects the server version and UUID that it
 is talking to. The operating system platform and architecture is also
 noted along with the CLI version.
 
@@ -133,7 +133,7 @@ The data is sent to Hasura's servers addressed by ``telemetry.hasura.io``.
 How do I turn off telemetry (opt-out)?
 --------------------------------------
 
-You can turn off telemetry on the server and on the console hosted by server
+You can turn off telemetry on the server and on the console hosted by the server
 by setting the following environment variable on the server or by using
 the flag ``--enable-telemetry=false``:
 
@@ -141,7 +141,7 @@ the flag ``--enable-telemetry=false``:
 
    HASURA_GRAPHQL_ENABLE_TELEMETRY=false
 
-In order to turn off telemetry on CLI and on the console served by CLI,
+In order to turn off telemetry on the CLI and on the console served by the CLI,
 you can set the same environment varibale on the machine running CLI.
 You can also set ``"enable_telemetry": false`` in the JSON file created
 by the CLI at ``~/.hasura/config.json`` to perisist the setting.

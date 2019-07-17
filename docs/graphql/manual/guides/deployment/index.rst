@@ -12,9 +12,9 @@ Guides: Deployment
 - `Blog: Instant GraphQL on AWS RDS <https://blog.hasura.io/instant-graphql-on-aws-rds-1edfb85b5985>`__
 
 .. note::
-   The above are guides to deploy Hasura GraphQL engine on some specific platforms.
+   The above are guides to deploy the Hasura GraphQL engine on some specific platforms.
 
-   For more generic guides, see :doc:`../../deployment/index`
+   For more generic guides, see :doc:`../../deployment/index`.
 
 .. toctree::
    :maxdepth: 1

@@ -6,7 +6,7 @@ Guides: Integrating with monitoring frameworks
   :depth: 1
   :local:
 
-The following demonstrate integrating Hasura GraphQL engine logs with some external
+The following posts demonstrate integrating the Hasura GraphQL engine logs with some external
 monitoring frameworks:
 
 - `Blog: GraphQL Observability with Hasura GraphQL Engine and Honeycomb <https://blog.hasura.io/graphql-observability-with-hasura-graphql-engine-and-honeycomb-ee0a1a836c41>`__
