@@ -8,21 +8,21 @@ Hasura GraphQL engine metadata schema
   :depth: 2
   :local:
 
-Hasura GraphQL engine uses a set of internal tables to manage the state of the database and the
+The Hasura GraphQL engine uses a set of internal tables to manage the state of the database and the
 GraphQL schema. It uses the data in these tables to generate the GraphQL API which then can be accessed
 from different clients.
 
-Hasura GraphQL engine when initialized, creates a schema called ``hdb_catalog`` in the Postgres database and
+The Hasura GraphQL engine when initialized, creates a schema called ``hdb_catalog`` in the Postgres database and
 initializes a few tables under it as described below.
 
 **hdb_catalog** schema
 ----------------------
 
-This schema is created by Hasura GraphQL Engine to manage its internal state. Whenever a
-table/permission/relationship is created/updated using the Hasura console or the metadata API. Hasura GraphQL engine
+This schema is created by the Hasura GraphQL Engine to manage its internal state. Whenever a
+table/permission/relationship is created/updated using the Hasura console or the metadata API, the Hasura GraphQL engine
 captures that information and stores it in the corresponding tables.
 
-The following tables are used by Hasura GraphQL engine:
+The following tables are used by the Hasura GraphQL engine:
 
 **hdb_table** table
 ^^^^^^^^^^^^^^^^^^^
