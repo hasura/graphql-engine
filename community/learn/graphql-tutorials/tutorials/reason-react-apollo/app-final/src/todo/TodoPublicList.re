@@ -60,7 +60,7 @@ let make = (~client, ~latestTodoId) => {
       "query": ApolloClient.gql(. fetchOlderTodosQuery##query),
       "variables": fetchOlderTodosQuery##variables
     };
-    let apolloData = c##query(query);
+    let apolloData = client##query(query);
     apolloData
     |> Js.Promise.then_(gqlResp => {
       let resp = toApolloResult(gqlResp);
@@ -81,7 +81,7 @@ let make = (~client, ~latestTodoId) => {
       "query": ApolloClient.gql(. fetchNewerTodosQuery##query),
       "variables": fetchNewerTodosQuery##variables
     };
-    let apolloData = c##query(query);
+    let apolloData = client##query(query);
     apolloData
     |> Js.Promise.then_(gqlResp => {
       let resp = toApolloResult(gqlResp);
