@@ -39,7 +39,7 @@ local-image:
 	docker run --rm -v "$(build_dir_docker)/$(project)/$(project):/root/$(project)" \
 		$(registry)/graphql-engine-packager:$(packager_ver) /build.sh \
 		$(project) | tar -x -C packaging/build/rootfs
-	strip --strip-unneeded packaging/build/rootfs/bin/$(project)
+	strip packaging/build/rootfs/bin/$(project)
 	upx packaging/build/rootfs/bin/$(project)
 	docker build -t "$(registry)/$(project):$(VERSION)" packaging/build
 
