@@ -313,7 +313,7 @@ mkServeOptions rso = do
   enabledLogs <- Set.fromList . fromMaybe (Set.toList L.defaultEnabledLogTypes) <$>
                  withEnv (rsoEnabledLogTypes rso) (fst enabledLogsEnv)
   serverLogLevel <- fromMaybe L.LevelInfo <$> withEnv (rsoLogLevel rso) (fst logLevelEnv)
-  readOnlyDb <- fromMaybe True <$>
+  readOnlyDb <- fromMaybe False <$>
                 withEnv (rsoReadOnlyDb rso) (fst readOnlyDBEnv)
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
