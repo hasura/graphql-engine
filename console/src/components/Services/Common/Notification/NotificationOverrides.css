@@ -1,7 +1,6 @@
 .notifications-wrapper .notification {
   height: auto !important;
   width: auto !important;
-  min-height: 100px;
 }
 
 .notifications-wrapper .notifications-tr,
