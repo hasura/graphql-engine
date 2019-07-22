@@ -1,8 +1,8 @@
-.textNormalInput {
+.normalInput {
   padding-right: 30px;
 }
 
-.textToggleButton {
+.modeToggleButton {
   position: absolute;
   top: 10px;
   right: 10px;
@@ -13,9 +13,9 @@
   }
 }
 
-.textEditType {
+.modeType {
   position: absolute;
-  top: 4px;
+  top: 6px;
   right: 28px;
   z-index: 100;
   font-style: italic;

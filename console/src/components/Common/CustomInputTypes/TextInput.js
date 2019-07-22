@@ -6,7 +6,7 @@ import 'brace/mode/markdown';
 import 'brace/theme/github';
 import 'brace/theme/chrome';
 
-const styles = require('./TextInput.scss');
+const styles = require('./CustomInput.scss');
 
 // editorType is what sort of editor. All are ACE Editor
 // modes except 0, which is text input
@@ -127,7 +127,7 @@ const TextInput = props => {
         value={data}
         onChange={handleInputChangeAndPropagate}
         onKeyUp={handleKeyUpEvent}
-        className={allProps.className + ' ' + styles.textNormalInput}
+        className={allProps.className + ' ' + styles.normalInput}
       />
     );
   };
@@ -140,19 +140,26 @@ const TextInput = props => {
   return (
     <span className="text_input_editor">
       <label>{editor}</label>
-      <span className={styles.textEditType}>
-        {SHORTEDITORTYPENAMES[editorType]}
-      </span>
-      <i
-        key="icon_text_editor"
-        className={'fa ' + styles.textToggleButton + ' fa-refresh'}
+      <span
         onClick={() => updateState(cycleEditorType)}
         title={
           'Change to ' +
           EDITORTYPENAMES[(editorType + 1) % EDITORTYPES.length] +
-          '(Ctrl + Space)'
+          ' (Ctrl + Space)'
         }
-      />
+      >
+        <span className={styles.modeType}>
+          {SHORTEDITORTYPENAMES[editorType]}
+        </span>
+        <i
+          key="icon_text_editor"
+          className={
+            'fa ' +
+            styles.modeToggleButton +
+            (editorType === NORMALKEY ? ' fa-expand' : ' fa-chevron-right')
+          }
+        />
+      </span>
     </span>
   );
 };
