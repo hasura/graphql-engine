@@ -135,20 +135,19 @@ fetchLastUpdate = do
        ORDER BY occurred_at DESC LIMIT 1
           |] () True
   case l of
-    []           -> return Nothing
-    [(instId, occurredAt)] ->
-      return $ Just (InstanceId instId, occurredAt)
+    []  -> return Nothing
+    [i] -> return $ Just i
     -- never happens
-    _            -> throw500 "more than one row returned by query"
+    _   -> throw500 "more than one row returned by query"
 
 recordSchemaUpdate :: InstanceId -> Q.TxE QErr ()
 recordSchemaUpdate instanceId =
   liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
-             INSERT INTO
-                  hdb_catalog.hdb_schema_update_event
-                  (instance_id, occurred_at)
-             VALUES ($1::uuid, DEFAULT)
-            |] (Identity $ getInstanceId instanceId) True
+             INSERT INTO hdb_catalog.hdb_schema_update_event
+               (instance_id, occurred_at) VALUES ($1::uuid, DEFAULT)
+             ON CONFLICT ((occurred_at IS NOT NULL))
+             DO UPDATE SET instance_id = $1::uuid, occurred_at = DEFAULT
+            |] (Identity instanceId) True
 
 peelRun
   :: SchemaCache
