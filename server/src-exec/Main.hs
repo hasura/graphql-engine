@@ -38,7 +38,6 @@ import           Hasura.Server.Logging
 import           Hasura.Server.Query        (peelRun)
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
-import           Hasura.Server.Utils
 import           Hasura.Server.Version      (currentVersion)
 
 import qualified Database.PG.Query          as Q
@@ -119,7 +118,7 @@ main =  do
   (HGEOptionsG rci hgeCmd) <- parseArgs
   -- global http manager
   httpManager <- HTTP.newManager HTTP.tlsManagerSettings
-  instanceId  <- mkInstanceId
+  instanceId  <- generateInstanceId
   case hgeCmd of
     HCServe so@(ServeOptions port host cp isoL mAdminSecret mAuthHook
                 mJwtSecret mUnAuthRole corsCfg enableConsole consoleAssetsDir
@@ -147,7 +146,7 @@ main =  do
       pool <- Q.initPGPool ci cp pgLogger
 
       -- safe init catalog
-      initRes <- initialise pool sqlGenCtx logger httpManager
+      dbId <- initialise pool sqlGenCtx logger httpManager
 
       (app, cacheRef, cacheInitTime) <-
         mkWaiApp isoL loggerCtx sqlGenCtx enableAL pool ci httpManager am
@@ -183,7 +182,7 @@ main =  do
       -- start a background thread for telemetry
       when enableTelemetry $ do
         unLogger logger $ mkGenericStrLog LevelInfo "telemetry" telemetryNotice
-        void $ C.forkIO $ runTelemetry logger httpManager scRef initRes
+        void $ C.forkIO $ runTelemetry logger httpManager scRef dbId instanceId
 
       finishTime <- Clock.getCurrentTime
       let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime
@@ -253,19 +252,14 @@ main =  do
                 migrateCatalog currentTime
       either printErrJExit (logger . mkGenericStrLog LevelInfo "db_migrate") migRes
 
-      -- generate and retrieve uuids
-      getUniqIds pool
+      -- retrieve database id
+      eDbId <- runTx pool getDbId
+      either printErrJExit return eDbId
 
     prepareEvents pool (Logger logger) = do
       logger $ mkGenericStrLog LevelInfo "event_triggers" "preparing data"
       res <- runTx pool unlockAllEvents
       either printErrJExit return res
-
-    getUniqIds pool = do
-      eDbId <- runTx pool getDbId
-      dbId <- either printErrJExit return eDbId
-      fp <- liftIO generateFingerprint
-      return (dbId, fp)
 
     getFromEnv :: (Read a) => a -> String -> IO a
     getFromEnv defaults env = do
