@@ -103,7 +103,7 @@ const showErrorNotification = (title, message, error) => {
       errorJson = error.action;
     } else if (error && 'internal' in error) {
       errorJson = error.internal;
-    } else {
+    } else if (error && 'message' in error) {
       errorJson = error.message;
     }
 
@@ -128,6 +128,7 @@ const showErrorNotification = (title, message, error) => {
             dispatch(
               showNotification({
                 level: 'error',
+                position: 'br', // HACK: to avoid expansion of existing notifications
                 title,
                 message: errorMessage,
                 children: errorDetails,
