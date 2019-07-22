@@ -76,6 +76,7 @@ data RawServeOptions
   , rsoEnableAllowlist    :: !Bool
   , rsoEnabledLogTypes    :: !(Maybe [L.EngineLogType])
   , rsoLogLevel           :: !(Maybe L.LogLevel)
+  , rsoReadOnlyDb         :: !(Maybe Bool)
   } deriving (Show, Eq)
 
 data ServeOptions
@@ -98,6 +99,7 @@ data ServeOptions
   , soEnableAllowlist  :: !Bool
   , soEnabledLogTypes  :: !(Set.HashSet L.EngineLogType)
   , soLogLevel         :: !L.LogLevel
+  , soReadOnlyDb       :: !Bool
   } deriving (Show, Eq)
 
 data RawConnInfo =
@@ -311,10 +313,12 @@ mkServeOptions rso = do
   enabledLogs <- Set.fromList . fromMaybe (Set.toList L.defaultEnabledLogTypes) <$>
                  withEnv (rsoEnabledLogTypes rso) (fst enabledLogsEnv)
   serverLogLevel <- fromMaybe L.LevelInfo <$> withEnv (rsoLogLevel rso) (fst logLevelEnv)
+  readOnlyDb <- fromMaybe True <$>
+                withEnv (rsoReadOnlyDb rso) (fst readOnlyDBEnv)
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
-                        enabledLogs serverLogLevel
+                        enabledLogs serverLogLevel readOnlyDb
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -445,7 +449,7 @@ serveCmdFooter =
       , adminSecretEnv , accessKeyEnv, authHookEnv, authHookModeEnv
       , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, enableConsoleEnv
       , enableTelemetryEnv, wsReadCookieEnv, stringifyNumEnv, enabledAPIsEnv
-      , enableAllowlistEnv, enabledLogsEnv, logLevelEnv
+      , enableAllowlistEnv, enabledLogsEnv, logLevelEnv, readOnlyDBEnv
       ]
 
     eventEnvs =
@@ -560,6 +564,13 @@ enableTelemetryEnv =
   ( "HASURA_GRAPHQL_ENABLE_TELEMETRY"
   -- TODO: better description
   , "Enable anonymous telemetry (default: true)"
+  )
+
+readOnlyDBEnv :: (String, String)
+readOnlyDBEnv =
+  ( "HASURA_GRAPHQL_READ_ONLY_DB"
+  -- TODO: better description
+  , "Database is a read replica (default: false)"
   )
 
 wsReadCookieEnv :: (String, String)
@@ -866,6 +877,13 @@ parseEnableTelemetry = optional $
            help (snd enableTelemetryEnv)
          )
 
+parseReadOnlyDB :: Parser (Maybe Bool)
+parseReadOnlyDB = optional $
+  option (eitherReader parseStrAsBool)
+         ( long "read-only-db" <>
+           help (snd enableTelemetryEnv)
+         )
+
 parseWsReadCookie :: Parser Bool
 parseWsReadCookie =
   switch ( long "ws-read-cookie" <>
@@ -994,6 +1012,7 @@ serveOptsToLog so =
                        , "enable_allowlist" J..= soEnableAllowlist so
                        , "enabled_log_types" J..= soEnabledLogTypes so
                        , "log_level" J..= soLogLevel so
+                       , "read_only_db" J..= soReadOnlyDb so
                        ]
 
 mkGenericStrLog :: L.LogLevel -> T.Text -> String -> StartupLog
