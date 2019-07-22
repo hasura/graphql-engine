@@ -30,7 +30,7 @@ class InsertItem extends Component {
   nextInsert() {
     // when use state object remember to do it inside a class method.
     // Since the state variable lifecycle is tied to the instance of the class
-    // and making this change using an anonymous function will case errors.
+    // and making this change using an anonymous function will cause errors.
     this.setState({
       insertedRows: this.state.insertedRows + 1,
     });
@@ -60,6 +60,13 @@ class InsertItem extends Component {
       throw new NotFoundError();
     }
 
+    const isColumnAutoIncrement = column => {
+      return (
+        column.column_default ===
+        "nextval('" + tableName + '_' + column.column_name + "_seq'::regclass)"
+      );
+    };
+
     const _columns = schemas.find(
       x => x.table_name === tableName && x.table_schema === currentSchema
     ).columns;
@@ -82,14 +89,8 @@ class InsertItem extends Component {
         }
         e.target.focus();
       };
-      const colDefault = col.column_default;
-      let isAutoIncrement = false;
-      if (
-        colDefault ===
-        "nextval('" + tableName + '_' + colName + "_seq'::regclass)"
-      ) {
-        isAutoIncrement = true;
-      }
+
+      const isAutoIncrement = isColumnAutoIncrement(col);
 
       const standardInputProps = {
         className: `form-control ${styles.insertBox}`,
