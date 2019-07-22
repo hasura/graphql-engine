@@ -42,6 +42,7 @@ data PGColMeta
   , pcmOrdinalPosition :: !Int
   , pcmDataType        :: !PGScalarType
   , pcmIsNullable      :: !Bool
+  , pcmReferences      :: ![QualifiedTable]
   } deriving (Show, Eq)
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''PGColMeta)
@@ -87,8 +88,8 @@ data TableDiff
   = TableDiff
   { _tdNewName         :: !(Maybe QualifiedTable)
   , _tdDroppedCols     :: ![PGCol]
-  , _tdAddedCols       :: ![PGColInfo]
-  , _tdAlteredCols     :: ![(PGColInfo, PGColInfo)]
+  , _tdAddedCols       :: ![PGRawColInfo]
+  , _tdAlteredCols     :: ![(PGRawColInfo, PGRawColInfo)]
   , _tdDroppedFKeyCons :: ![ConstraintName]
   -- The final list of uniq/primary constraint names
   -- used for generating types on_conflict clauses
@@ -116,8 +117,8 @@ getTableDiff oldtm newtm =
 
     existingCols = getOverlap pcmOrdinalPosition oldCols newCols
 
-    pcmToPci (PGColMeta colName _ colType isNullable)
-      = PGColInfo colName colType isNullable
+    pcmToPci (PGColMeta colName _ colType isNullable references)
+      = PGRawColInfo colName colType isNullable references
 
     alteredCols =
       flip map (filter (uncurry (/=)) existingCols) $ pcmToPci *** pcmToPci
@@ -137,7 +138,7 @@ getTableDiff oldtm newtm =
 
 getTableChangeDeps
   :: (QErrM m, CacheRWM m)
-  => TableInfo -> TableDiff -> m [SchemaObjId]
+  => TableInfo PGColInfo -> TableDiff -> m [SchemaObjId]
 getTableChangeDeps ti tableDiff = do
   sc <- askSchemaCache
   -- for all the dropped columns
@@ -150,7 +151,7 @@ getTableChangeDeps ti tableDiff = do
     return $ getDependentObjs sc objId
   return $ droppedConsDeps <> droppedColDeps
   where
-    tn = tiName ti
+    tn = _tiName ti
     TableDiff _ droppedCols _ _ droppedFKeyConstraints _ = tableDiff
 
 data SchemaDiff

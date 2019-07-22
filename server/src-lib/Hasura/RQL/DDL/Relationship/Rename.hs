@@ -27,7 +27,7 @@ renameRelP2 qt newRN relInfo = do
   oldSC <- askSchemaCache
   tabInfo <- askTabInfo qt
   -- check for conflicts in fieldInfoMap
-  case HM.lookup (fromRel newRN) $ tiFieldInfoMap tabInfo of
+  case HM.lookup (fromRel newRN) $ _tiFieldInfoMap tabInfo of
     Nothing -> return ()
     Just _  ->
       throw400 AlreadyExists $ "cannot rename relationship " <> oldRN

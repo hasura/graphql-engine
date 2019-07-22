@@ -225,23 +225,23 @@ newtype TypeAnn
   = TypeAnn {unTypeAnn :: T.Text}
   deriving (Show, Eq, Data)
 
-mkTypeAnn :: PgType -> TypeAnn
+mkTypeAnn :: PGType PGScalarType -> TypeAnn
 mkTypeAnn = TypeAnn . toSQLTxt
 
 intTypeAnn :: TypeAnn
-intTypeAnn = mkTypeAnn $ PgTypeSimple PGInteger
+intTypeAnn = mkTypeAnn $ PGTypeSimple PGInteger
 
 textTypeAnn :: TypeAnn
-textTypeAnn = mkTypeAnn $ PgTypeSimple PGText
+textTypeAnn = mkTypeAnn $ PGTypeSimple PGText
 
 textArrTypeAnn :: TypeAnn
-textArrTypeAnn = mkTypeAnn $ PgTypeArray PGText
+textArrTypeAnn = mkTypeAnn $ PGTypeArray PGText
 
 jsonTypeAnn :: TypeAnn
-jsonTypeAnn = mkTypeAnn $ PgTypeSimple PGJSON
+jsonTypeAnn = mkTypeAnn $ PGTypeSimple PGJSON
 
 jsonbTypeAnn :: TypeAnn
-jsonbTypeAnn = mkTypeAnn $ PgTypeSimple PGJSONB
+jsonbTypeAnn = mkTypeAnn $ PGTypeSimple PGJSONB
 
 data CountType
   = CTStar
@@ -266,6 +266,7 @@ instance ToSQL TupleExp where
 
 data SQLExp
   = SEPrep !Int
+  | SENull
   | SELit !T.Text
   | SEUnsafe !T.Text
   | SESelect !Select
@@ -286,7 +287,7 @@ data SQLExp
   deriving (Show, Eq, Data)
 
 withTyAnn :: PGScalarType -> SQLExp -> SQLExp
-withTyAnn colTy v = SETyAnn v . mkTypeAnn $ PgTypeSimple colTy
+withTyAnn colTy v = SETyAnn v . mkTypeAnn $ PGTypeSimple colTy
 
 instance J.ToJSON SQLExp where
   toJSON = J.toJSON . toSQLTxt
@@ -310,6 +311,8 @@ countStar = SECount CTStar
 instance ToSQL SQLExp where
   toSQL (SEPrep argNumber) =
     TB.char '$' <> fromString (show argNumber)
+  toSQL SENull =
+    TB.text "null"
   toSQL (SELit tv) =
     TB.text $ pgFmtLit tv
   toSQL (SEUnsafe t) =

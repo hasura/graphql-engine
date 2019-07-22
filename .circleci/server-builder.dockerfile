@@ -28,3 +28,5 @@ RUN apt-get -y update \
     && rm -rf /usr/share/doc/ \
     && rm -rf /usr/share/man/ \
     && rm -rf /usr/share/locale/
+
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8

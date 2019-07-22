@@ -108,7 +108,7 @@ mkSelCTEFromColVals qt allCols colVals =
         let pgCol = pgiName ci
         val <- onNothing (Map.lookup pgCol colVal) $
           throw500 $ "column " <> pgCol <<> " not found in returning values"
-        runAesonParser (convToTxt (pgiType ci)) val
+        toTxtValue <$> parsePGScalarValue (pgiType ci) val
 
     selNoRows =
       S.mkSelect { S.selExtr = [S.selectStar]

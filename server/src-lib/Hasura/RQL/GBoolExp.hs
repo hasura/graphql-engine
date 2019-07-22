@@ -2,14 +2,11 @@ module Hasura.RQL.GBoolExp
   ( toSQLBoolExp
   , getBoolExpDeps
   , annBoolExp
-  , txtRHSBuilder
-  , pgValParser
   ) where
 
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import           Hasura.SQL.Value
 
 import qualified Hasura.SQL.DML      as S
 
@@ -21,16 +18,16 @@ import qualified Data.HashMap.Strict as M
 import qualified Data.Text.Extended  as T
 
 type OpRhsParser m v =
-  PgType -> Value -> m v
+  PGType PGColumnType -> Value -> m v
 
 -- | Represents a reference to a Postgres column, possibly casted an arbitrary
 -- number of times. Used within 'parseOperationsExpression' for bookkeeping.
 data ColumnReference
   = ColumnReferenceColumn !PGColInfo
-  | ColumnReferenceCast !ColumnReference !PGScalarType
+  | ColumnReferenceCast !ColumnReference !PGColumnType
   deriving (Show, Eq)
 
-columnReferenceType :: ColumnReference -> PGScalarType
+columnReferenceType :: ColumnReference -> PGColumnType
 columnReferenceType = \case
   ColumnReferenceColumn column -> pgiType column
   ColumnReferenceCast _ targetType -> targetType
@@ -46,7 +43,7 @@ parseOperationsExpression
   :: forall m v
    . (MonadError QErr m)
   => OpRhsParser m v
-  -> FieldInfoMap
+  -> FieldInfoMap PGColInfo
   -> PGColInfo
   -> Value
   -> m [OpExpG v]
@@ -59,7 +56,7 @@ parseOperationsExpression rhsParser fim columnInfo =
       Object o -> mapM (parseOperation column) (M.toList o)
       val      -> pure . AEQ False <$> rhsParser columnType val
       where
-        columnType = PgTypeSimple $ columnReferenceType column
+        columnType = PGTypeSimple $ columnReferenceType column
 
     parseOperation :: ColumnReference -> (T.Text, Value) -> m (OpExpG v)
     parseOperation column (opStr, val) = withPathK opStr $
@@ -114,17 +111,17 @@ parseOperationsExpression rhsParser fim columnInfo =
         "_is_null"       -> parseIsNull
 
         -- jsonb type
-        "_contains"      -> jsonbOnlyOp $ AContains <$> parseOne
-        "$contains"      -> jsonbOnlyOp $ AContains <$> parseOne
-        "_contained_in"  -> jsonbOnlyOp $ AContainedIn <$> parseOne
-        "$contained_in"  -> jsonbOnlyOp $ AContainedIn <$> parseOne
-        "_has_key"       -> jsonbOnlyOp $ AHasKey <$> parseWithTy PGText
-        "$has_key"       -> jsonbOnlyOp $ AHasKey <$> parseWithTy PGText
+        "_contains"      -> guardType [PGJSONB] >> AContains <$> parseOne
+        "$contains"      -> guardType [PGJSONB] >> AContains <$> parseOne
+        "_contained_in"  -> guardType [PGJSONB] >> AContainedIn <$> parseOne
+        "$contained_in"  -> guardType [PGJSONB] >> AContainedIn <$> parseOne
+        "_has_key"       -> guardType [PGJSONB] >> AHasKey <$> parseWithTy (PGColumnScalar PGText)
+        "$has_key"       -> guardType [PGJSONB] >> AHasKey <$> parseWithTy (PGColumnScalar PGText)
 
-        "_has_keys_any"  -> jsonbOnlyOp $ AHasKeysAny <$> parseManyWithType PGText
-        "$has_keys_any"  -> jsonbOnlyOp $ AHasKeysAny <$> parseManyWithType PGText
-        "_has_keys_all"  -> jsonbOnlyOp $ AHasKeysAll <$> parseManyWithType PGText
-        "$has_keys_all"  -> jsonbOnlyOp $ AHasKeysAll <$> parseManyWithType PGText
+        "_has_keys_any"  -> guardType [PGJSONB] >> AHasKeysAny <$> parseManyWithType (PGColumnScalar PGText)
+        "$has_keys_any"  -> guardType [PGJSONB] >> AHasKeysAny <$> parseManyWithType (PGColumnScalar PGText)
+        "_has_keys_all"  -> guardType [PGJSONB] >> AHasKeysAll <$> parseManyWithType (PGColumnScalar PGText)
+        "$has_keys_all"  -> guardType [PGJSONB] >> AHasKeysAll <$> parseManyWithType (PGColumnScalar PGText)
 
         -- geometry types
         "_st_contains"   -> parseGeometryOp ASTContains
@@ -177,12 +174,12 @@ parseOperationsExpression rhsParser fim columnInfo =
         parseLt       = ALT <$> parseOne -- <
         parseGte      = AGTE <$> parseOne -- >=
         parseLte      = ALTE <$> parseOne -- <=
-        parseLike     = textOnlyOp colTy >> ALIKE <$> parseOne
-        parseNlike    = textOnlyOp colTy >> ANLIKE <$> parseOne
-        parseIlike    = textOnlyOp colTy >> AILIKE <$> parseOne
-        parseNilike   = textOnlyOp colTy >> ANILIKE <$> parseOne
-        parseSimilar  = textOnlyOp colTy >> ASIMILAR <$> parseOne
-        parseNsimilar = textOnlyOp colTy >> ANSIMILAR <$> parseOne
+        parseLike     = guardType stringTypes >> ALIKE <$> parseOne
+        parseNlike    = guardType stringTypes >> ANLIKE <$> parseOne
+        parseIlike    = guardType stringTypes >> AILIKE <$> parseOne
+        parseNilike   = guardType stringTypes >> ANILIKE <$> parseOne
+        parseSimilar  = guardType stringTypes >> ASIMILAR <$> parseOne
+        parseNsimilar = guardType stringTypes >> ANSIMILAR <$> parseOne
 
         parseIsNull   = bool ANISNOTNULL ANISNULL -- is null
                         <$> parseVal
@@ -199,7 +196,7 @@ parseOperationsExpression rhsParser fim columnInfo =
           parsedCastOperations <-
             forM (M.toList castOperations) $ \(targetTypeName, castedComparisons) -> do
               let targetType = txtToPgColTy targetTypeName
-                  castedColumn = ColumnReferenceCast column targetType
+                  castedColumn = ColumnReferenceCast column (PGColumnScalar targetType)
               checkValidCast targetType
               parsedCastedComparisons <- withPathK targetTypeName $
                 parseOperations castedColumn castedComparisons
@@ -207,31 +204,27 @@ parseOperationsExpression rhsParser fim columnInfo =
           return . ACast $ M.fromList parsedCastOperations
 
         checkValidCast targetType = case (colTy, targetType) of
-          (PGGeometry, PGGeography) -> return ()
-          (PGGeography, PGGeometry) -> return ()
+          (PGColumnScalar PGGeometry, PGGeography) -> return ()
+          (PGColumnScalar PGGeography, PGGeometry) -> return ()
           _ -> throw400 UnexpectedPayload $
             "cannot cast column of type " <> colTy <<> " to type " <>> targetType
 
-        jsonbOnlyOp m = case colTy of
-          PGJSONB -> m
-          ty      -> throwError $ buildMsg ty [PGJSONB]
-
         parseGeometryOp f =
-          geometryOp colTy >> f <$> parseOneNoSess colTy val
+          guardType [PGGeometry] >> f <$> parseOneNoSess colTy val
         parseGeometryOrGeographyOp f =
-          geometryOrGeographyOp colTy >> f <$> parseOneNoSess colTy val
+          guardType geoTypes >> f <$> parseOneNoSess colTy val
 
         parseSTDWithinObj = case colTy of
-          PGGeometry -> do
+          PGColumnScalar PGGeometry -> do
             DWithinGeomOp distVal fromVal <- parseVal
-            dist <- withPathK "distance" $ parseOneNoSess PGFloat distVal
+            dist <- withPathK "distance" $ parseOneNoSess (PGColumnScalar PGFloat) distVal
             from <- withPathK "from" $ parseOneNoSess colTy fromVal
             return $ ASTDWithinGeom $ DWithinGeomOp dist from
-          PGGeography -> do
+          PGColumnScalar PGGeography -> do
             DWithinGeogOp distVal fromVal sphVal <- parseVal
-            dist <- withPathK "distance" $ parseOneNoSess PGFloat distVal
+            dist <- withPathK "distance" $ parseOneNoSess (PGColumnScalar PGFloat) distVal
             from <- withPathK "from" $ parseOneNoSess colTy fromVal
-            useSpheroid <- withPathK "use_spheroid" $ parseOneNoSess PGBoolean sphVal
+            useSpheroid <- withPathK "use_spheroid" $ parseOneNoSess (PGColumnScalar PGBoolean) sphVal
             return $ ASTDWithinGeog $ DWithinGeogOp dist from useSpheroid
           _ -> throwError $ buildMsg colTy [PGGeometry, PGGeography]
 
@@ -246,35 +239,22 @@ parseOperationsExpression rhsParser fim columnInfo =
                  "incompatible column types : " <> column <<> ", " <>> rhsCol
             else return rhsCol
 
-        geometryOp PGGeometry = return ()
-        geometryOp ty =
-          throwError $ buildMsg ty [PGGeometry]
-        geometryOrGeographyOp PGGeometry = return ()
-        geometryOrGeographyOp PGGeography = return ()
-        geometryOrGeographyOp ty =
-          throwError $ buildMsg ty [PGGeometry, PGGeography]
-
-        parseWithTy ty = rhsParser (PgTypeSimple ty) val
+        parseWithTy ty = rhsParser (PGTypeSimple ty) val
 
         -- parse one with the column's type
         parseOne = parseWithTy colTy
-        parseOneNoSess ty = rhsParser (PgTypeSimple ty)
+        parseOneNoSess ty = rhsParser (PGTypeSimple ty)
 
-        parseManyWithType ty = rhsParser (PgTypeArray ty) val
+        parseManyWithType ty = rhsParser (PGTypeArray ty) val
+
+        guardType validTys = unless (isScalarColumnWhere (`elem` validTys) colTy) $
+          throwError $ buildMsg colTy validTys
+        buildMsg ty expTys = err400 UnexpectedPayload
+          $ " is of type " <> ty <<> "; this operator works only on columns of type "
+          <> T.intercalate "/" (map dquote expTys)
 
         parseVal :: (FromJSON a) => m a
         parseVal = decodeValue val
-
-buildMsg :: PGScalarType -> [PGScalarType] -> QErr
-buildMsg ty expTys = err400 UnexpectedPayload
-  $ " is of type " <> ty <<> "; this operator works only on columns of type "
-  <> T.intercalate "/" (map dquote expTys)
-
-textOnlyOp :: (MonadError QErr m) => PGScalarType -> m ()
-textOnlyOp PGText    = return ()
-textOnlyOp PGVarchar = return ()
-textOnlyOp ty =
-  throwError $ buildMsg ty [PGVarchar, PGText]
 
 -- This convoluted expression instead of col = val
 -- to handle the case of col : null
@@ -295,7 +275,7 @@ notEqualsBoolExpBuilder qualColExp rhsExp =
 annBoolExp
   :: (QErrM m, CacheRM m)
   => OpRhsParser m v
-  -> FieldInfoMap
+  -> FieldInfoMap PGColInfo
   -> BoolExp
   -> m (AnnBoolExp v)
 annBoolExp rhsParser fim (BoolExp boolExp) =
@@ -304,13 +284,13 @@ annBoolExp rhsParser fim (BoolExp boolExp) =
 annColExp
   :: (QErrM m, CacheRM m)
   => OpRhsParser m v
-  -> FieldInfoMap
+  -> FieldInfoMap PGColInfo
   -> ColExp
   -> m (AnnBoolExpFld v)
 annColExp rhsParser colInfoMap (ColExp fieldName colVal) = do
   colInfo <- askFieldInfo colInfoMap fieldName
   case colInfo of
-    FIColumn (PGColInfo _ PGJSON _) ->
+    FIColumn (PGColInfo _ (PGColumnScalar PGJSON) _) ->
       throwError (err400 UnexpectedPayload "JSON column can not be part of where clause")
     FIColumn pgi ->
       AVCol pgi <$> parseOperationsExpression rhsParser colInfoMap pgi colVal
@@ -354,18 +334,6 @@ convColRhs tableQual = \case
     return $ S.mkExists (S.FISimple relTN $ Just $ S.Alias newIden) innerBoolExp
   where
     mkQCol q = S.SEQIden . S.QIden q . toIden
-
-pgValParser
-  :: (MonadError QErr m)
-  => PGScalarType -> Value -> m PGColValue
-pgValParser ty =
-  runAesonParser (parsePGValue ty)
-
-txtRHSBuilder
-  :: (MonadError QErr m)
-  => PGScalarType -> Value -> m S.SQLExp
-txtRHSBuilder ty val =
-  toTxtValue ty <$> pgValParser ty val
 
 mkColCompExp
   :: S.Qual -> PGCol -> OpExpG S.SQLExp -> S.BoolExp
@@ -428,7 +396,7 @@ mkColCompExp qual lhsCol = mkCompExp (mkQCol lhsCol)
 
         mkCastsExp casts =
           sqlAll . flip map (M.toList casts) $ \(targetType, operations) ->
-            let targetAnn = S.mkTypeAnn $ PgTypeSimple targetType
+            let targetAnn = S.mkTypeAnn $ PGTypeSimple targetType
             in sqlAll $ map (mkCompExp (S.SETyAnn lhs targetAnn)) operations
 
         sqlAll = foldr (S.BEBin S.AndOp) (S.BELit True)

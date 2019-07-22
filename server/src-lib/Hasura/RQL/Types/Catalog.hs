@@ -1,8 +1,30 @@
-module Hasura.RQL.Types.Catalog where
+-- | This module provides 'fetchCatalogData', which loads the entire catalog in one go from the
+-- database, consulting tables such as @hdb_catalog.hdb_table@. It is used by
+-- 'Hasura.RQL.Schema.Table.buildSchemaCache' to seed or reload the schema cache.
+module Hasura.RQL.Types.Catalog
+  ( fetchCatalogData
+  , CatalogMetadata(..)
+
+  , CatalogTable(..)
+  , CatalogTableInfo(..)
+
+  , CatalogRelation(..)
+  , CatalogPermission(..)
+  , CatalogEventTrigger(..)
+  , CatalogFunction(..)
+  ) where
 
 import           Hasura.Prelude
 
+import qualified Database.PG.Query                as Q
+
+import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
+
+import           Hasura.Db
 import           Hasura.RQL.DDL.Schema.Function
+import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
@@ -11,15 +33,21 @@ import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCache
 import           Hasura.SQL.Types
 
-import           Data.Aeson
-import           Data.Aeson.Casing
-import           Data.Aeson.TH
+data CatalogTableInfo
+  = CatalogTableInfo
+  { _ctiColumns           :: ![PGRawColInfo]
+  , _ctiConstraints       :: ![ConstraintName]
+  , _ctiPrimaryKeyColumns :: ![PGCol]
+  , _ctiViewInfo          :: !(Maybe ViewInfo)
+  } deriving (Show, Eq)
+$(deriveJSON (aesonDrop 4 snakeCase) ''CatalogTableInfo)
 
 data CatalogTable
   = CatalogTable
-  { _ctTable         :: !QualifiedTable
-  , _ctSystemDefined :: !Bool
-  , _ctInfo          :: !(Maybe TableInfo)
+  { _ctName            :: !QualifiedTable
+  , _ctIsSystemDefined :: !Bool
+  , _ctIsEnum          :: !Bool
+  , _ctInfo            :: !(Maybe CatalogTableInfo)
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogTable)
 
@@ -70,3 +98,9 @@ data CatalogMetadata
   , _cmAllowlistCollections :: ![CollectionDef]
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogMetadata)
+
+-- | See "Hasura.RQL.Types.Catalog".
+fetchCatalogData :: (MonadTx m) => m CatalogMetadata
+fetchCatalogData =
+  liftTx $ Q.getAltJ . runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
+    $(Q.sqlFromFile "src-rsr/catalog_metadata.sql") () True

@@ -128,8 +128,8 @@ runTelemetry (Logger logger) manager cacheRef dbId instanceId = do
 
 computeMetrics :: SchemaCache -> Metrics
 computeMetrics sc =
-  let nTables = Map.size $ Map.filter (isNothing . tiViewInfo) usrTbls
-      nViews  = Map.size $ Map.filter (isJust . tiViewInfo) usrTbls
+  let nTables = Map.size $ Map.filter (isNothing . _tiViewInfo) usrTbls
+      nViews  = Map.size $ Map.filter (isJust . _tiViewInfo) usrTbls
       allRels = join $ Map.elems $ Map.map relsOfTbl usrTbls
       (manualRels, autoRels) = partition riIsManual allRels
       relMetrics = RelationshipMetric (length manualRels) (length autoRels)
@@ -143,23 +143,23 @@ computeMetrics sc =
       permMetrics =
         PermissionMetric selPerms insPerms updPerms delPerms nRoles
       evtTriggers = Map.size $ Map.filter (not . Map.null)
-                    $ Map.map tiEventTriggerInfoMap usrTbls
+                    $ Map.map _tiEventTriggerInfoMap usrTbls
       rmSchemas   = Map.size $ scRemoteSchemas sc
       funcs = Map.size $ Map.filter (not . fiSystemDefined) $ scFunctions sc
 
   in Metrics nTables nViews relMetrics permMetrics evtTriggers rmSchemas funcs
 
   where
-    usrTbls = Map.filter (not . tiSystemDefined) $ scTables sc
+    usrTbls = Map.filter (not . _tiSystemDefined) $ scTables sc
 
     calcPerms :: (RolePermInfo -> Maybe a) -> [RolePermInfo] -> Int
     calcPerms fn perms = length $ catMaybes $ map fn perms
 
-    relsOfTbl :: TableInfo -> [RelInfo]
-    relsOfTbl = rights . Map.elems . Map.map fieldInfoToEither . tiFieldInfoMap
+    relsOfTbl :: TableInfo PGColInfo -> [RelInfo]
+    relsOfTbl = rights . Map.elems . Map.map fieldInfoToEither . _tiFieldInfoMap
 
-    permsOfTbl :: TableInfo -> [(RoleName, RolePermInfo)]
-    permsOfTbl = Map.toList . tiRolePermInfoMap
+    permsOfTbl :: TableInfo PGColInfo -> [(RoleName, RolePermInfo)]
+    permsOfTbl = Map.toList . _tiRolePermInfoMap
 
 
 getDbId :: Q.TxE QErr Text

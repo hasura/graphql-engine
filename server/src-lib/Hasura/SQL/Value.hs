@@ -136,68 +136,35 @@ textToPrepVal t =
 parsePGValue' :: PGScalarType
              -> Value
              -> AT.Parser PGColValue
-parsePGValue' ty Null =
-  return $ PGNull ty
-parsePGValue' PGSmallInt val =
-  PGValSmallInt <$> parseJSON val
-parsePGValue' PGInteger val =
-  PGValInteger <$> parseJSON val
-parsePGValue' PGBigInt val =
-  PGValBigInt <$> parseJSON val
-parsePGValue' PGSerial val =
-  PGValInteger <$> parseJSON val
-parsePGValue' PGBigSerial val =
-  PGValBigInt <$> parseJSON val
-parsePGValue' PGFloat val =
-  PGValFloat <$> parseJSON val
-parsePGValue' PGDouble val =
-  PGValDouble <$> parseJSON val
-parsePGValue' PGNumeric val =
-  PGValNumeric <$> parseJSON val
-parsePGValue' PGBoolean val =
-  PGValBoolean <$> parseJSON val
-parsePGValue' PGChar val =
-  PGValChar <$> parseJSON val
-parsePGValue' PGVarchar val =
-  PGValVarchar <$> parseJSON val
-parsePGValue' PGText val =
-  PGValText <$> parseJSON val
-parsePGValue' PGDate val =
-  PGValDate <$> parseJSON val
-parsePGValue' PGTimeStampTZ val =
-  PGValTimeStampTZ <$> parseJSON val
-parsePGValue' PGTimeTZ val =
-  PGValTimeTZ <$> parseJSON val
-parsePGValue' PGJSON val =
-  PGValJSON . Q.JSON <$> parseJSON val
-parsePGValue' PGJSONB val =
-  PGValJSONB . Q.JSONB <$> parseJSON val
-parsePGValue' PGGeometry val =
-  PGValGeo <$> parseJSON val
-parsePGValue' PGGeography val =
-  PGValGeo <$> parseJSON val
-parsePGValue' (PGUnknown _) (String t) =
-  return $ PGValUnknown t
-parsePGValue' (PGUnknown tyName) _ =
-  fail $ "A string is expected for type : " ++ T.unpack tyName
+parsePGValue' ty v = case (ty, v) of
+  (_, Null) -> return $ PGNull ty
+  (PGSmallInt, val) -> PGValSmallInt <$> parseJSON val
+  (PGInteger, val) -> PGValInteger <$> parseJSON val
+  (PGBigInt, val) -> PGValBigInt <$> parseJSON val
+  (PGSerial, val) -> PGValInteger <$> parseJSON val
+  (PGBigSerial, val) -> PGValBigInt <$> parseJSON val
+  (PGFloat, val) -> PGValFloat <$> parseJSON val
+  (PGDouble, val) -> PGValDouble <$> parseJSON val
+  (PGNumeric, val) -> PGValNumeric <$> parseJSON val
+  (PGBoolean, val) -> PGValBoolean <$> parseJSON val
+  (PGChar, val) -> PGValChar <$> parseJSON val
+  (PGVarchar, val) -> PGValVarchar <$> parseJSON val
+  (PGText, val) -> PGValText <$> parseJSON val
+  (PGDate, val) -> PGValDate <$> parseJSON val
+  (PGTimeStampTZ, val) -> PGValTimeStampTZ <$> parseJSON val
+  (PGTimeTZ, val) -> PGValTimeTZ <$> parseJSON val
+  (PGJSON, val) -> PGValJSON . Q.JSON <$> parseJSON val
+  (PGJSONB, val) -> PGValJSONB . Q.JSONB <$> parseJSON val
+  (PGGeometry, val) -> PGValGeo <$> parseJSON val
+  (PGGeography, val) -> PGValGeo <$> parseJSON val
+  (PGUnknown _, String t) -> return $ PGValUnknown t
+  (PGUnknown tyName, _) -> fail $ "A string is expected for type : " ++ T.unpack tyName
 
 parsePGValue :: PGScalarType -> Value -> AT.Parser PGColValue
 parsePGValue pct val =
   case val of
     String t -> parsePGValue' pct val <|> return (PGValUnknown t)
     _        -> parsePGValue' pct val
-
-convToBin :: PGScalarType
-          -> Value
-          -> AT.Parser Q.PrepArg
-convToBin ty val =
-  binEncoder <$> parsePGValue ty val
-
-convToTxt :: PGScalarType
-          -> Value
-          -> AT.Parser S.SQLExp
-convToTxt ty val =
-  toTxtValue ty <$> parsePGValue ty val
 
 readEitherTxt :: (Read a) => T.Text -> Either String a
 readEitherTxt = readEither . T.unpack
@@ -210,26 +177,19 @@ pgValFromJVal :: (FromJSON a) => Value -> Either String a
 pgValFromJVal = iresToEither . ifromJSON
 
 withGeoVal :: PGScalarType -> S.SQLExp -> S.SQLExp
-withGeoVal ty v =
-  bool v applyGeomFromGeoJson isGeoTy
-  where
-    applyGeomFromGeoJson =
-      S.SEFnApp "ST_GeomFromGeoJSON" [v] Nothing
-
-    isGeoTy = case ty of
-      PGGeometry  -> True
-      PGGeography -> True
-      _           -> False
+withGeoVal ty v
+  | isGeoType ty = S.SEFnApp "ST_GeomFromGeoJSON" [v] Nothing
+  | otherwise = v
 
 toPrepParam :: Int -> PGScalarType -> S.SQLExp
 toPrepParam i ty =
   withGeoVal ty $ S.SEPrep i
 
-toTxtValue :: PGScalarType -> PGColValue -> S.SQLExp
-toTxtValue ty val =
-  S.withTyAnn ty txtVal
-  where
-    txtVal = withGeoVal ty $ txtEncoder val
+toBinaryValue :: PGScalarTyped PGColValue -> Q.PrepArg
+toBinaryValue = binEncoder . pstValue
+
+toTxtValue :: PGScalarTyped PGColValue -> S.SQLExp
+toTxtValue (PGScalarTyped ty val) = S.withTyAnn ty . withGeoVal ty $ txtEncoder val
 
 pgColValueToInt :: PGColValue -> Maybe Int
 pgColValueToInt (PGValInteger i)  = Just $ fromIntegral i

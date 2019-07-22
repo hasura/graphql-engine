@@ -60,7 +60,7 @@ mkDeleteCTE (AnnDel tn (fltr, wc) _ _) =
 validateDeleteQWith
   :: (UserInfoM m, QErrM m, CacheRM m)
   => SessVarBldr m
-  -> (PGScalarType -> Value -> m S.SQLExp)
+  -> (PGColumnType -> Value -> m S.SQLExp)
   -> DeleteQuery
   -> m AnnDel
 validateDeleteQWith sessVarBldr prepValBldr
@@ -69,7 +69,7 @@ validateDeleteQWith sessVarBldr prepValBldr
 
   -- If table is view then check if it deletable
   mutableView tableName viIsDeletable
-    (tiViewInfo tableInfo) "deletable"
+    (_tiViewInfo tableInfo) "deletable"
 
   -- Check if the role has delete permissions
   delPerm <- askDelPermInfo tableInfo
@@ -81,7 +81,7 @@ validateDeleteQWith sessVarBldr prepValBldr
   selPerm <- modifyErr (<> selNecessaryMsg) $
              askSelPermInfo tableInfo
 
-  let fieldInfoMap = tiFieldInfoMap tableInfo
+  let fieldInfoMap = _tiFieldInfoMap tableInfo
       allCols = getCols fieldInfoMap
 
   -- convert the returning cols into sql returing exp

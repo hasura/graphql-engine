@@ -1,6 +1,5 @@
 module Hasura.RQL.Types.Common
-       ( PGColInfo(..)
-       , RelName(..)
+       ( RelName(..)
        , relNameToTxt
        , RelType(..)
        , rootRelName
@@ -37,15 +36,6 @@ import qualified Database.PG.Query          as Q
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 import qualified PostgreSQL.Binary.Decoding as PD
-
-data PGColInfo
-  = PGColInfo
-  { pgiName       :: !PGCol
-  , pgiType       :: !PGScalarType
-  , pgiIsNullable :: !Bool
-  } deriving (Show, Eq)
-
-$(deriveJSON (aesonDrop 3 snakeCase) ''PGColInfo)
 
 newtype NonEmptyText = NonEmptyText {unNonEmptyText :: T.Text}
   deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg, DQuote)

@@ -7,6 +7,7 @@ import           Hasura.Prelude
 
 import           Data.Aeson
 import           Data.Aeson.Encoding        (text)
+import           Data.Aeson.TH
 import           Data.Aeson.Types           (toJSONKeyText)
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
@@ -392,9 +393,15 @@ isNumType PGDouble  = True
 isNumType PGNumeric = True
 isNumType ty        = isIntegerType ty
 
-isJSONBType :: PGScalarType -> Bool
-isJSONBType PGJSONB = True
-isJSONBType _       = False
+stringTypes :: [PGScalarType]
+stringTypes = [PGVarchar, PGText]
+isStringType :: PGScalarType -> Bool
+isStringType = (`elem` stringTypes)
+
+jsonTypes :: [PGScalarType]
+jsonTypes = [PGJSON, PGJSONB]
+isJSONType :: PGScalarType -> Bool
+isJSONType = (`elem` jsonTypes)
 
 isComparableType :: PGScalarType -> Bool
 isComparableType PGJSON        = False
@@ -413,26 +420,33 @@ isBigNum = \case
   PGDouble    -> True
   _           -> False
 
+geoTypes :: [PGScalarType]
+geoTypes = [PGGeometry, PGGeography]
 isGeoType :: PGScalarType -> Bool
-isGeoType = \case
-  PGGeometry  -> True
-  PGGeography -> True
-  _           -> False
+isGeoType = (`elem` geoTypes)
 
--- | The type of all Postgres types (i.e. scalars and arrays).
+data PGScalarTyped a
+  = PGScalarTyped
+  { pstType  :: !PGScalarType
+  , pstValue :: !a
+  } deriving (Show, Eq, Functor, Foldable, Traversable)
+
+-- | The type of all Postgres types (i.e. scalars and arrays). This type is parameterized so that
+-- we can have both @'PGType' 'PGScalarType'@ and @'PGType' 'Hasura.RQL.Types.PGColumnType'@, for
+-- when we care about the distinction made by 'Hasura.RQL.Types.PGColumnType'. If we ever change
+-- 'Hasura.RQL.Types.PGColumnType' to handle arrays, not just scalars, then the parameterization can
+-- go away.
 --
 -- TODO: This is incorrect modeling, as 'PGScalarType' will capture anything (under 'PGUnknown').
 -- This should be fixed when support for all types is merged.
-data PgType
-  = PgTypeSimple !PGScalarType
-  | PgTypeArray !PGScalarType
-  deriving (Show, Eq, Data)
+data PGType a
+  = PGTypeSimple !a
+  | PGTypeArray !a
+  deriving (Show, Eq, Data, Functor)
+$(deriveJSON defaultOptions{constructorTagModifier = drop 6} ''PGType)
 
-instance ToSQL PgType where
+instance (ToSQL a) => ToSQL (PGType a) where
   toSQL = \case
-    PgTypeSimple ty -> toSQL ty
+    PGTypeSimple ty -> toSQL ty
     -- typename array is an sql standard way of declaring types
-    PgTypeArray ty -> toSQL ty <> " array"
-
-instance ToJSON PgType where
-  toJSON = toJSON . toSQLTxt
+    PGTypeArray ty -> toSQL ty <> " array"

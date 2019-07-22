@@ -8,6 +8,7 @@ import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Hasura.RQL.Types.BoolExp
+import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Permission
 import           Hasura.SQL.Types
@@ -141,8 +142,12 @@ data AnnPGVal
   = AnnPGVal
   { _apvVariable   :: !(Maybe G.Variable)
   , _apvIsNullable :: !Bool
-  , _apvType       :: !PGScalarType
-  , _apvValue      :: !PGColValue
+  , _apvType       :: !PGColumnType
+  -- ^ Note: '_apvValue' is a @'PGScalarTyped' 'PGColValue'@, so it includes its type as a
+  -- 'PGScalarType'. However, we /also/ need to keep the original 'PGColumnType' information around
+  -- in case we need to re-parse a new value with its type because we’re reusing a cached query
+  -- plan.
+  , _apvValue      :: !(PGScalarTyped PGColValue)
   } deriving (Show, Eq)
 
 type PrepFn m = AnnPGVal -> m S.SQLExp
@@ -156,7 +161,7 @@ partialSQLExpToUnresolvedVal = \case
 -- A value that will be converted to an sql expression eventually
 data UnresolvedVal
   -- From a session variable
-  = UVSessVar !PgType !SessVar
+  = UVSessVar !(PGType PGScalarType) !SessVar
   -- This is postgres
   | UVPG !AnnPGVal
   -- This is a full resolved sql expression

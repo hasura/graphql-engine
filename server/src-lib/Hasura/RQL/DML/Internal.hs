@@ -41,13 +41,13 @@ instance UserInfoM DMLP1 where
 instance HasSQLGenCtx DMLP1 where
   askSQLGenCtx = DMLP1 $ lift askSQLGenCtx
 
-mkAdminRolePermInfo :: TableInfo -> RolePermInfo
+mkAdminRolePermInfo :: TableInfo PGColInfo -> RolePermInfo
 mkAdminRolePermInfo ti =
   RolePermInfo (Just i) (Just s) (Just u) (Just d)
   where
-    pgCols = map pgiName $ getCols $ tiFieldInfoMap ti
+    pgCols = map pgiName $ getCols $ _tiFieldInfoMap ti
 
-    tn = tiName ti
+    tn = _tiName ti
     i = InsPermInfo (HS.fromList pgCols) tn annBoolExpTrue M.empty []
     s = SelPermInfo (HS.fromList pgCols) tn annBoolExpTrue
         Nothing True []
@@ -57,14 +57,14 @@ mkAdminRolePermInfo ti =
 askPermInfo'
   :: (UserInfoM m)
   => PermAccessor c
-  -> TableInfo
+  -> TableInfo PGColInfo
   -> m (Maybe c)
 askPermInfo' pa tableInfo = do
   roleName <- askCurRole
   let mrpi = getRolePermInfo roleName
   return $ mrpi >>= (^. permAccToLens pa)
   where
-    rpim = tiRolePermInfoMap tableInfo
+    rpim = _tiRolePermInfoMap tableInfo
     getRolePermInfo roleName
       | roleName == adminRole = Just $ mkAdminRolePermInfo tableInfo
       | otherwise             = M.lookup roleName rpim
@@ -72,7 +72,7 @@ askPermInfo' pa tableInfo = do
 askPermInfo
   :: (UserInfoM m, QErrM m)
   => PermAccessor c
-  -> TableInfo
+  -> TableInfo PGColInfo
   -> m c
 askPermInfo pa tableInfo = do
   roleName <- askCurRole
@@ -80,38 +80,38 @@ askPermInfo pa tableInfo = do
   case mPermInfo of
     Just c  -> return c
     Nothing -> throw400 PermissionDenied $ mconcat
-      [ pt <> " on " <>> tiName tableInfo
+      [ pt <> " on " <>> _tiName tableInfo
       , " for role " <>> roleName
       , " is not allowed. "
       ]
   where
     pt = permTypeToCode $ permAccToType pa
 
-isTabUpdatable :: RoleName -> TableInfo -> Bool
+isTabUpdatable :: RoleName -> TableInfo PGColInfo -> Bool
 isTabUpdatable role ti
   | role == adminRole = True
   | otherwise = isJust $ M.lookup role rpim >>= _permUpd
   where
-    rpim = tiRolePermInfoMap ti
+    rpim = _tiRolePermInfoMap ti
 
 askInsPermInfo
   :: (UserInfoM m, QErrM m)
-  => TableInfo -> m InsPermInfo
+  => TableInfo PGColInfo -> m InsPermInfo
 askInsPermInfo = askPermInfo PAInsert
 
 askSelPermInfo
   :: (UserInfoM m, QErrM m)
-  => TableInfo -> m SelPermInfo
+  => TableInfo PGColInfo -> m SelPermInfo
 askSelPermInfo = askPermInfo PASelect
 
 askUpdPermInfo
   :: (UserInfoM m, QErrM m)
-  => TableInfo -> m UpdPermInfo
+  => TableInfo PGColInfo -> m UpdPermInfo
 askUpdPermInfo = askPermInfo PAUpdate
 
 askDelPermInfo
   :: (UserInfoM m, QErrM m)
-  => TableInfo -> m DelPermInfo
+  => TableInfo PGColInfo -> m DelPermInfo
 askDelPermInfo = askPermInfo PADelete
 
 verifyAsrns :: (MonadError QErr m) => [a -> m ()] -> [a] -> m ()
@@ -142,27 +142,27 @@ checkPermOnCol pt allowedCols pgCol = do
         ]
 
 binRHSBuilder
-  :: PGScalarType -> Value -> DMLP1 S.SQLExp
+  :: PGColumnType -> Value -> DMLP1 S.SQLExp
 binRHSBuilder colType val = do
   preparedArgs <- get
-  binVal <- runAesonParser (convToBin colType) val
-  put (preparedArgs DS.|> binVal)
-  return $ toPrepParam (DS.length preparedArgs + 1) colType
+  scalarValue <- parsePGScalarValue colType val
+  put (preparedArgs DS.|> toBinaryValue scalarValue)
+  return $ toPrepParam (DS.length preparedArgs + 1) (pstType scalarValue)
 
 fetchRelTabInfo
   :: (QErrM m, CacheRM m)
   => QualifiedTable
-  -> m TableInfo
+  -> m (TableInfo PGColInfo)
 fetchRelTabInfo refTabName =
   -- Internal error
   modifyErrAndSet500 ("foreign " <> ) $ askTabInfo refTabName
 
-type SessVarBldr m = PgType -> SessVar -> m S.SQLExp
+type SessVarBldr m = PGType PGScalarType -> SessVar -> m S.SQLExp
 
 fetchRelDet
   :: (UserInfoM m, QErrM m, CacheRM m)
   => RelName -> QualifiedTable
-  -> m (FieldInfoMap, SelPermInfo)
+  -> m (FieldInfoMap PGColInfo, SelPermInfo)
 fetchRelDet relName refTabName = do
   roleName <- askCurRole
   -- Internal error
@@ -171,7 +171,7 @@ fetchRelDet relName refTabName = do
   refSelPerm <- modifyErr (relPermErr refTabName roleName) $
                 askSelPermInfo refTabInfo
 
-  return (tiFieldInfoMap refTabInfo, refSelPerm)
+  return (_tiFieldInfoMap refTabInfo, refSelPerm)
   where
     relPermErr rTable roleName _ =
       mconcat
@@ -215,16 +215,16 @@ convPartialSQLExp f = \case
   PSESessVar colTy sessVar -> f colTy sessVar
 
 sessVarFromCurrentSetting
-  :: (Applicative f) => PgType -> SessVar -> f S.SQLExp
+  :: (Applicative f) => PGType PGScalarType -> SessVar -> f S.SQLExp
 sessVarFromCurrentSetting pgType sessVar =
   pure $ sessVarFromCurrentSetting' pgType sessVar
 
-sessVarFromCurrentSetting' :: PgType -> SessVar -> S.SQLExp
+sessVarFromCurrentSetting' :: PGType PGScalarType -> SessVar -> S.SQLExp
 sessVarFromCurrentSetting' ty sessVar =
   flip S.SETyAnn (S.mkTypeAnn ty) $
   case ty of
-    PgTypeSimple baseTy -> withGeoVal baseTy sessVarVal
-    PgTypeArray _       -> sessVarVal
+    PGTypeSimple baseTy -> withGeoVal baseTy sessVarVal
+    PGTypeArray _       -> sessVarVal
   where
     curSess = S.SEUnsafe "current_setting('hasura.user')::json"
     sessVarVal = S.SEOpApp (S.SQLOp "->>")
@@ -241,23 +241,25 @@ checkSelPerm spi sessVarBldr =
 
 convBoolExp
   :: (UserInfoM m, QErrM m, CacheRM m)
-  => FieldInfoMap
+  => FieldInfoMap PGColInfo
   -> SelPermInfo
   -> BoolExp
   -> SessVarBldr m
-  -> (PGScalarType -> Value -> m S.SQLExp)
+  -> (PGColumnType -> Value -> m S.SQLExp)
   -> m AnnBoolExpSQL
 convBoolExp cim spi be sessVarBldr prepValBldr = do
   abe <- annBoolExp rhsParser cim be
   checkSelPerm spi sessVarBldr abe
   where
     rhsParser pgType val = case pgType of
-      PgTypeSimple ty  -> prepValBldr ty val
-      PgTypeArray ofTy -> do
-        -- for arrays we don't use the prepared builder
+      PGTypeSimple ty  -> prepValBldr ty val
+      PGTypeArray ofTy -> do
+        -- for arrays, we don't use the prepared builder
         vals <- runAesonParser parseJSON val
-        arrayExp <- S.SEArray <$> indexedForM vals (txtRHSBuilder ofTy)
-        return $ S.SETyAnn arrayExp $ S.mkTypeAnn pgType
+        PGScalarTyped scalarType scalarValues <- parsePGScalarValues ofTy vals
+        return $ S.SETyAnn
+          (S.SEArray $ map (toTxtValue . PGScalarTyped scalarType) scalarValues)
+          (S.mkTypeAnn $ PGTypeArray scalarType)
 
 dmlTxErrorHandler :: Q.PGTxErr -> QErr
 dmlTxErrorHandler p2Res =
@@ -266,16 +268,16 @@ dmlTxErrorHandler p2Res =
     Just (code, msg) -> err400 code msg
   where err = simplifyError p2Res
 
-toJSONableExp :: Bool -> PGScalarType -> S.SQLExp -> S.SQLExp
+toJSONableExp :: Bool -> PGColumnType -> S.SQLExp -> S.SQLExp
 toJSONableExp strfyNum colTy expn
-  | colTy == PGGeometry || colTy == PGGeography =
+  | isScalarColumnWhere isGeoType colTy =
       S.SEFnApp "ST_AsGeoJSON"
       [ expn
       , S.SEUnsafe "15" -- max decimal digits
       , S.SEUnsafe "4"  -- to print out crs
       ] Nothing
       `S.SETyAnn` S.jsonTypeAnn
-  | isBigNum colTy && strfyNum =
+  | isScalarColumnWhere isBigNum colTy && strfyNum =
       expn `S.SETyAnn` S.textTypeAnn
   | otherwise = expn
 

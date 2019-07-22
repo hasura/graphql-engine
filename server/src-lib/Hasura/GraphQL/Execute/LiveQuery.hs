@@ -166,18 +166,18 @@ toMultiplexedQueryVar
   => GR.UnresolvedVal -> m S.SQLExp
 toMultiplexedQueryVar = \case
   GR.UVPG annPGVal ->
-    let GR.AnnPGVal varM isNullable colTy colVal = annPGVal
+    let GR.AnnPGVal varM isNullable _ colVal = annPGVal
     in case (varM, isNullable) of
       -- we don't check for nullability as
       -- this is only used for reusable plans
       -- the check has to be made before this
       (Just var, _) -> do
-        modify $ Map.insert var (colTy, colVal)
-        return $ fromResVars (PgTypeSimple colTy)
+        modify $ Map.insert var colVal
+        return $ fromResVars (PGTypeSimple $ pstType colVal)
           [ "variables"
           , G.unName $ G.unVariable var
           ]
-      _             -> return $ toTxtValue colTy colVal
+      _             -> return $ toTxtValue colVal
   GR.UVSessVar ty sessVar ->
     return $ fromResVars ty [ "user", T.toLower sessVar]
   GR.UVSQL sqlExp -> return sqlExp
@@ -198,19 +198,19 @@ subsOpFromPGAST
      , MonadIO m
      )
 
-  -- | to validate arguments
   => PGExecCtx
+  -- ^ to validate arguments
 
-  -- | used as part of an identifier in the underlying live query systems
-  -- to avoid unnecessary load on Postgres where possible
   -> GH.GQLReqUnparsed
+  -- ^ used as part of an identifier in the underlying live query systems
+  -- to avoid unnecessary load on Postgres where possible
 
-  -- | variable definitions as seen in the subscription, needed in
-  -- checking whether the subscription can be multiplexed or not
   -> [G.VariableDefinition]
+  -- ^ variable definitions as seen in the subscription, needed in
+  -- checking whether the subscription can be multiplexed or not
 
-  -- | The alias and the partially processed live query field
   -> (G.Alias, GR.QueryRootFldUnresolved)
+  -- ^ The alias and the partially processed live query field
 
   -> m (LiveQueryOp, Maybe SubsPlan)
 subsOpFromPGAST pgExecCtx reqUnparsed varDefs (fldAls, astUnresolved) = do
@@ -273,10 +273,10 @@ validateAnnVarValsOnPg pgExecCtx annVarVals = do
 
   Q.Discard _ <- runTx' $ liftTx $
     Q.rawQE valPgErrHandler (Q.fromBuilder $ toSQL valSel) [] False
-  return $ fmap (txtEncodedPGVal . snd) annVarVals
+  return $ fmap (txtEncodedPGVal . pstValue) annVarVals
 
   where
-    mkExtrs = map (flip S.Extractor Nothing . uncurry toTxtValue)
+    mkExtrs = map (flip S.Extractor Nothing . toTxtValue)
     mkValidationSel vars =
       S.mkSelect { S.selExtr = mkExtrs vars }
     runTx' tx = do

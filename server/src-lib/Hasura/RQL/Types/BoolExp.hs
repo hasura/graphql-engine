@@ -20,6 +20,7 @@ module Hasura.RQL.Types.BoolExp
        , AnnBoolExpFldSQL
        , AnnBoolExpSQL
        , PartialSQLExp(..)
+       , mkScalarSessionVar
        , isStaticValue
        , AnnBoolExpFldPartialSQL
        , AnnBoolExpPartialSQL
@@ -30,6 +31,7 @@ module Hasura.RQL.Types.BoolExp
        ) where
 
 import           Hasura.Prelude
+import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Permission
 import qualified Hasura.SQL.DML              as S
@@ -280,9 +282,13 @@ type PreSetCols = M.HashMap PGCol S.SQLExp
 
 -- doesn't resolve the session variable
 data PartialSQLExp
-  = PSESessVar !PgType !SessVar
+  = PSESessVar !(PGType PGScalarType) !SessVar
   | PSESQLExp !S.SQLExp
   deriving (Show, Eq, Data)
+
+mkScalarSessionVar :: PGType PGColumnType -> SessVar -> PartialSQLExp
+mkScalarSessionVar columnType =
+  PSESessVar (unsafePGColumnToRepresentation <$> columnType)
 
 instance ToJSON PartialSQLExp where
   toJSON = \case

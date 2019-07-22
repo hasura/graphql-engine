@@ -7,7 +7,7 @@ response:
       code: validation-failed
       path: $.selectionSet.author.args.where.name._ne
     message: |-
-      field "_ne" not found in type: 'text_comparison_exp'
+      field "_ne" not found in type: 'String_comparison_exp'
 query:
   query: |
     query {

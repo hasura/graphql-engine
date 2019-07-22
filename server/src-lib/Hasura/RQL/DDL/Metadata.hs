@@ -55,6 +55,7 @@ import qualified Hasura.RQL.Types.RemoteSchema      as TRS
 data TableMeta
   = TableMeta
   { _tmTable               :: !QualifiedTable
+  , _tmIsEnum              :: !Bool
   , _tmObjectRelationships :: ![DR.ObjRelDef]
   , _tmArrayRelationships  :: ![DR.ArrRelDef]
   , _tmInsertPermissions   :: ![DP.InsPermDef]
@@ -64,9 +65,9 @@ data TableMeta
   , _tmEventTriggers       :: ![DTS.EventTriggerConf]
   } deriving (Show, Eq, Lift)
 
-mkTableMeta :: QualifiedTable -> TableMeta
-mkTableMeta qt =
-  TableMeta qt [] [] [] [] [] [] []
+mkTableMeta :: QualifiedTable -> Bool -> TableMeta
+mkTableMeta qt isEnum =
+  TableMeta qt isEnum [] [] [] [] [] [] []
 
 makeLenses ''TableMeta
 
@@ -78,6 +79,7 @@ instance FromJSON TableMeta where
 
     TableMeta
      <$> o .: tableKey
+     <*> o .:? isEnumKey .!= False
      <*> o .:? orKey .!= []
      <*> o .:? arKey .!= []
      <*> o .:? ipKey .!= []
@@ -88,6 +90,7 @@ instance FromJSON TableMeta where
 
     where
       tableKey = "table"
+      isEnumKey = "is_enum"
       orKey = "object_relationships"
       arKey = "array_relationships"
       ipKey = "insert_permissions"
@@ -100,8 +103,8 @@ instance FromJSON TableMeta where
         HS.fromList (M.keys o) `HS.difference` expectedKeySet
 
       expectedKeySet =
-        HS.fromList [ tableKey, orKey, arKey, ipKey
-                    , spKey, upKey, dpKey, etKey
+        HS.fromList [ tableKey, isEnumKey, orKey, arKey
+                    , ipKey, spKey, upKey, dpKey, etKey
                     ]
 
   parseJSON _ =
@@ -225,8 +228,11 @@ applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = 
   withPathK "tables" $ do
 
     -- tables and views
-    indexedForM_ (map _tmTable tables) $ \tableName ->
-      void $ DT.trackExistingTableOrViewP2 tableName False
+    indexedForM_ tables $ \tableMeta -> do
+      let trackQuery = DT.TrackTable
+            { DT.tName = tableMeta ^. tmTable
+            , DT.tIsEnum = tableMeta ^. tmIsEnum }
+      void $ DT.trackExistingTableOrViewP2 trackQuery
 
     -- Relationships
     indexedForM_ tables $ \table -> do
@@ -288,7 +294,7 @@ applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = 
     processPerms tabInfo perms =
       indexedForM_ perms $ \permDef -> do
         permInfo <- DP.addPermP1 tabInfo permDef
-        DP.addPermP2 (tiName tabInfo) permDef permInfo
+        DP.addPermP2 (_tiName tabInfo) permDef permInfo
 
 runReplaceMetadata
   :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
@@ -311,8 +317,9 @@ $(deriveToJSON defaultOptions ''ExportMetadata)
 fetchMetadata :: Q.TxE QErr ReplaceMetadata
 fetchMetadata = do
   tables <- Q.catchE defaultTxErrorHandler fetchTables
-  let qts          = map (uncurry QualifiedObject) tables
-      tableMetaMap = M.fromList $ zip qts $ map mkTableMeta qts
+  let tableMetaMap = M.fromList . flip map tables $ \(schema, name, isEnum) ->
+        let qualifiedName = QualifiedObject schema name
+        in (qualifiedName, mkTableMeta qualifiedName isEnum)
 
   -- Fetch all the relationships
   relationships <- Q.catchE defaultTxErrorHandler fetchRelationships
@@ -384,7 +391,7 @@ fetchMetadata = do
 
     fetchTables =
       Q.listQ [Q.sql|
-                SELECT table_schema, table_name from hdb_catalog.hdb_table
+                SELECT table_schema, table_name, is_enum from hdb_catalog.hdb_table
                  WHERE is_system_defined = 'false'
                     |] () False
 

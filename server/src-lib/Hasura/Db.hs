@@ -14,6 +14,8 @@ module Hasura.Db
   , defaultTxErrorHandler
   ) where
 
+import           Control.Monad.Validate
+
 import qualified Data.Aeson.Extended         as J
 import qualified Database.PG.Query           as Q
 
@@ -34,8 +36,9 @@ class (MonadError QErr m) => MonadTx m where
 
 instance (MonadTx m) => MonadTx (StateT s m) where
   liftTx = lift . liftTx
-
 instance (MonadTx m) => MonadTx (ReaderT s m) where
+  liftTx = lift . liftTx
+instance (MonadTx m) => MonadTx (ValidateT e m) where
   liftTx = lift . liftTx
 
 data LazyTx e a

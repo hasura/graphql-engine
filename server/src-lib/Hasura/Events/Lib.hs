@@ -432,7 +432,7 @@ tryWebhook headers responseTimeout ep webhook = do
 getEventTriggerInfoFromEvent :: SchemaCache -> Event -> Maybe EventTriggerInfo
 getEventTriggerInfoFromEvent sc e = let table = eTable e
                                         tableInfo = M.lookup table $ scTables sc
-                                    in M.lookup ( tmName $ eTrigger e) =<< (tiEventTriggerInfoMap <$> tableInfo)
+                                    in M.lookup ( tmName $ eTrigger e) =<< (_tiEventTriggerInfoMap <$> tableInfo)
 
 fetchEvents :: Q.TxE QErr [Event]
 fetchEvents =
