@@ -202,13 +202,13 @@ main =  do
     HCExport -> do
       (_, _, pgLogger) <- mkLoggers defaultEnabledLogTypes LevelInfo
       ci <- procConnInfo rci
-      res <- runTx' pgLogger ci fetchMetadata
+      res <- runTx' pgLogger ci Q.Serializable fetchMetadata
       either printErrJExit printJSON res
 
     HCClean -> do
       (_, _, pgLogger) <- mkLoggers defaultEnabledLogTypes LevelInfo
       ci <- procConnInfo rci
-      res <- runTx' pgLogger ci cleanCatalog
+      res <- runTx' pgLogger ci Q.Serializable cleanCatalog
       either printErrJExit (const cleanSuccess) res
 
     HCExecute -> do
@@ -217,7 +217,7 @@ main =  do
       ci <- procConnInfo rci
       let sqlGenCtx = SQLGenCtx False
       pool <- getMinimalPool pgLogger ci
-      res <- runAsAdmin pool sqlGenCtx Q.RepeatableRead logger httpManager $ execQuery queryBs
+      res <- runAsAdmin pool sqlGenCtx Q.Serializable logger httpManager $ execQuery queryBs
       either printErrJExit BLC.putStrLn res
 
     HCVersion -> putStrLn $ "Hasura GraphQL Engine: " ++ T.unpack currentVersion
@@ -232,9 +232,9 @@ main =  do
     runTx pool isolationLevel tx =
       runExceptT $ Q.runTx pool (isolationLevel, Nothing) tx
 
-    runTx' pgLogger ci tx = do
+    runTx' pgLogger ci isolationLevel tx = do
       pool <- getMinimalPool pgLogger ci
-      runExceptT $ Q.runTx pool (Q.RepeatableRead, Nothing) tx
+      runExceptT $ Q.runTx pool (isolationLevel, Nothing) tx
 
     runAsAdmin pool sqlGenCtx isolationLevel (Logger logger) httpManager m = do
       logger $ mkGenericStrLog LevelInfo "startup" "running runAsAdmin"
