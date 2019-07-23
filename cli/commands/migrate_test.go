@@ -264,7 +264,7 @@ func mustWriteFile(t testing.TB, dir, file string, body string) {
 
 func compareMetadata(t testing.TB, metadataFile string, actualType string, serverVersion *semver.Version) {
 	var actualData []byte
-	c, err := semver.NewConstraint("<= 1.0.0-alpha45")
+	c, err := semver.NewConstraint("<= v1.0.0-beta.3")
 	if err != nil {
 		t.Fatal(err)
 	}
