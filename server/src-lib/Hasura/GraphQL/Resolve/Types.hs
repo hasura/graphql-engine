@@ -15,7 +15,23 @@ import           Hasura.SQL.Value
 
 import qualified Hasura.SQL.DML                as S
 
-type OpCtxMap = Map.HashMap G.Name OpCtx
+data QueryCtx
+  = QCSelect !SelOpCtx
+  | QCSelectPkey !SelPkOpCtx
+  | QCSelectAgg !SelOpCtx
+  | QCFuncQuery !FuncQOpCtx
+  | QCFuncAggQuery !FuncQOpCtx
+  deriving (Show, Eq)
+
+data MutationCtx
+  = MCInsert !InsOpCtx
+  | MCUpdate !UpdOpCtx
+  | MCDelete !DelOpCtx
+  deriving (Show, Eq)
+
+type OpCtxMap a = Map.HashMap G.Name a
+type QueryCtxMap = OpCtxMap QueryCtx
+type MutationCtxMap = OpCtxMap MutationCtx
 
 data InsOpCtx
   = InsOpCtx

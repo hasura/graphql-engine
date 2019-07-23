@@ -44,7 +44,7 @@ validateHdrs userInfo hdrs = do
 queryFldToPGAST
   :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r, Has UserInfo r
-     , Has OpCtxMap r
+     , Has QueryCtxMap r
      )
   => V.Field
   -> m RS.QueryRootFldUnresolved
@@ -52,32 +52,26 @@ queryFldToPGAST fld = do
   opCtx <- getOpCtx $ V._fName fld
   userInfo <- asks getter
   case opCtx of
-    OCSelect ctx -> do
+    QCSelect ctx -> do
       validateHdrs userInfo (_socHeaders ctx)
       RS.convertSelect ctx fld
-    OCSelectPkey ctx -> do
+    QCSelectPkey ctx -> do
       validateHdrs userInfo (_spocHeaders ctx)
       RS.convertSelectByPKey ctx fld
-    OCSelectAgg ctx -> do
+    QCSelectAgg ctx -> do
       validateHdrs userInfo (_socHeaders ctx)
       RS.convertAggSelect ctx fld
-    OCFuncQuery ctx -> do
+    QCFuncQuery ctx -> do
       validateHdrs userInfo (_fqocHeaders ctx)
       RS.convertFuncQuerySimple ctx fld
-    OCFuncAggQuery ctx -> do
+    QCFuncAggQuery ctx -> do
       validateHdrs userInfo (_fqocHeaders ctx)
       RS.convertFuncQueryAgg ctx fld
-    OCInsert _ ->
-      throw500 "unexpected OCInsert for query field context"
-    OCUpdate _ ->
-      throw500 "unexpected OCUpdate for query field context"
-    OCDelete _ ->
-      throw500 "unexpected OCDelete for query field context"
 
 queryFldToSQL
   :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r, Has UserInfo r
-     , Has OpCtxMap r
+     , Has QueryCtxMap r
      )
   => PrepFn m
   -> V.Field
@@ -94,7 +88,7 @@ mutFldToTx
   :: ( MonadError QErr m
      , MonadReader r m
      , Has UserInfo r
-     , Has OpCtxMap r
+     , Has MutationCtxMap r
      , Has FieldMap r
      , Has OrdByCtx r
      , Has SQLGenCtx r
@@ -106,33 +100,23 @@ mutFldToTx fld = do
   userInfo <- asks getter
   opCtx <- getOpCtx $ V._fName fld
   case opCtx of
-    OCInsert ctx -> do
+    MCInsert ctx -> do
       let roleName = userRole userInfo
       validateHdrs userInfo (_iocHeaders ctx)
       RI.convertInsert roleName (_iocTable ctx) fld
-    OCUpdate ctx -> do
+    MCUpdate ctx -> do
       validateHdrs userInfo (_uocHeaders ctx)
       RM.convertUpdate ctx fld
-    OCDelete ctx -> do
+    MCDelete ctx -> do
       validateHdrs userInfo (_docHeaders ctx)
       RM.convertDelete ctx fld
-    OCSelect _ ->
-      throw500 "unexpected query field context for a mutation field"
-    OCSelectPkey _ ->
-      throw500 "unexpected query field context for a mutation field"
-    OCSelectAgg _ ->
-      throw500 "unexpected query field context for a mutation field"
-    OCFuncQuery _ ->
-      throw500 "unexpected query field context for a mutation field"
-    OCFuncAggQuery _ ->
-      throw500 "unexpected query field context for a mutation field"
 
 getOpCtx
   :: ( MonadError QErr m
      , MonadReader r m
-     , Has OpCtxMap r
+     , Has (OpCtxMap a) r
      )
-  => G.Name -> m OpCtx
+  => G.Name -> m a
 getOpCtx f = do
   opCtxMap <- asks getter
   onNothing (Map.lookup f opCtxMap) $ throw500 $

@@ -4,7 +4,8 @@ module Hasura.GraphQL.Schema
   , buildGCtxMapPG
   , getGCtx
   , GCtx(..)
-  , OpCtx(..)
+  , QueryCtx(..)
+  , MutationCtx(..)
   , InsCtx(..)
   , InsCtxMap
   , RelationInfoMap
@@ -291,22 +292,26 @@ getRootFldsRole'
   -> Maybe ([PGCol], PreSetColsPartial, AnnBoolExpPartialSQL, [T.Text]) -- update filter
   -> Maybe (AnnBoolExpPartialSQL, [T.Text]) -- delete filter
   -> Maybe ViewInfo
-  -> RootFlds
+  -> RootFields
 getRootFldsRole' tn primCols constraints fields funcs insM selM updM delM viM =
-  RootFlds mFlds
+  RootFields
+    { rootQueryFields = makeFieldMap
+        $  funcQueries
+        <> funcAggQueries
+        <> catMaybes
+          [ getSelDet <$> selM
+          , getSelAggDet selM
+          , getPKeySelDet selM $ getColInfos primCols colInfos
+          ]
+    , rootMutationFields = makeFieldMap $ catMaybes
+        [ mutHelper viIsInsertable getInsDet insM
+        , mutHelper viIsUpdatable getUpdDet updM
+        , mutHelper viIsDeletable getDelDet delM
+        ]
+    }
   where
+    makeFieldMap = mapFromL (_fiName . snd)
     allCols = getCols fields
-    mFlds = mapFromL (either _fiName _fiName . snd) $
-      funcQueries <>
-      funcAggQueries <>
-      catMaybes
-            [ mutHelper viIsInsertable getInsDet insM
-            , mutHelper viIsUpdatable getUpdDet updM
-            , mutHelper viIsDeletable getDelDet delM
-            , getSelDet <$> selM, getSelAggDet selM
-            , getPKeySelDet selM $ getColInfos primCols colInfos
-            ]
-
     funcQueries = maybe [] getFuncQueryFlds selM
     funcAggQueries = maybe [] getFuncAggQueryFlds selM
 
@@ -317,50 +322,50 @@ getRootFldsRole' tn primCols constraints fields funcs insM selM updM delM viM =
     colInfos = fst $ validPartitionFieldInfoMap fields
     getInsDet (hdrs, upsertPerm) =
       let isUpsertable = upsertable constraints upsertPerm $ isJust viM
-      in ( OCInsert $ InsOpCtx tn $ hdrs `union` maybe [] (\(_, _, _, x) -> x) updM
-         , Right $ mkInsMutFld tn isUpsertable
+      in ( MCInsert . InsOpCtx tn $ hdrs `union` maybe [] (\(_, _, _, x) -> x) updM
+         , mkInsMutFld tn isUpsertable
          )
 
     getUpdDet (updCols, preSetCols, updFltr, hdrs) =
-      ( OCUpdate $ UpdOpCtx tn hdrs updFltr preSetCols allCols
-      , Right $ mkUpdMutFld tn $ getColInfos updCols colInfos
+      ( MCUpdate $ UpdOpCtx tn hdrs updFltr preSetCols allCols
+      , mkUpdMutFld tn $ getColInfos updCols colInfos
       )
 
     getDelDet (delFltr, hdrs) =
-      ( OCDelete $ DelOpCtx tn hdrs delFltr allCols
-      , Right $ mkDelMutFld tn
+      ( MCDelete $ DelOpCtx tn hdrs delFltr allCols
+      , mkDelMutFld tn
       )
     getSelDet (selFltr, pLimit, hdrs, _) =
-      selFldHelper OCSelect mkSelFld selFltr pLimit hdrs
+      selFldHelper QCSelect mkSelFld selFltr pLimit hdrs
 
     getSelAggDet (Just (selFltr, pLimit, hdrs, True)) =
-      Just $ selFldHelper OCSelectAgg mkAggSelFld selFltr pLimit hdrs
+      Just $ selFldHelper QCSelectAgg mkAggSelFld selFltr pLimit hdrs
     getSelAggDet _                                    = Nothing
 
     selFldHelper f g pFltr pLimit hdrs =
       ( f $ SelOpCtx tn hdrs pFltr pLimit
-      , Left $ g tn
+      , g tn
       )
 
     getPKeySelDet Nothing _ = Nothing
     getPKeySelDet _ [] = Nothing
     getPKeySelDet (Just (selFltr, _, hdrs, _)) pCols = Just
-      ( OCSelectPkey $ SelPkOpCtx tn hdrs selFltr $
+      ( QCSelectPkey . SelPkOpCtx tn hdrs selFltr $
         mapFromL (mkColName . pgiName) pCols
-      , Left $ mkSelFldPKey tn pCols
+      , mkSelFldPKey tn pCols
       )
 
     getFuncQueryFlds (selFltr, pLimit, hdrs, _) =
-      funcFldHelper OCFuncQuery mkFuncQueryFld selFltr pLimit hdrs
+      funcFldHelper QCFuncQuery mkFuncQueryFld selFltr pLimit hdrs
 
     getFuncAggQueryFlds (selFltr, pLimit, hdrs, True) =
-      funcFldHelper OCFuncAggQuery mkFuncAggQueryFld selFltr pLimit hdrs
+      funcFldHelper QCFuncAggQuery mkFuncAggQueryFld selFltr pLimit hdrs
     getFuncAggQueryFlds _                             = []
 
     funcFldHelper f g pFltr pLimit hdrs =
       flip map funcs $ \fi ->
-      ( f $ FuncQOpCtx tn hdrs pFltr pLimit (fiName fi) $ mkFuncArgItemSeq fi
-      , Left $ g fi
+      ( f . FuncQOpCtx tn hdrs pFltr pLimit (fiName fi) $ mkFuncArgItemSeq fi
+      , g fi
       )
 
     mkFuncArgItemSeq fi = Seq.fromList $
@@ -465,7 +470,7 @@ mkGCtxRole
   -> Maybe ViewInfo
   -> RoleName
   -> RolePermInfo
-  -> m (TyAgg, RootFlds, InsCtxMap)
+  -> m (TyAgg, RootFields, InsCtxMap)
 mkGCtxRole tableCache tn fields pCols constraints funcs viM role permInfo = do
   selPermM <- mapM (getSelPerm tableCache fields role) $ _permSel permInfo
   tabInsInfoM <- forM (_permIns permInfo) $ \ipi -> do
@@ -496,7 +501,7 @@ getRootFldsRole
   -> [FunctionInfo]
   -> Maybe ViewInfo
   -> RolePermInfo
-  -> RootFlds
+  -> RootFields
 getRootFldsRole tn pCols constraints fields funcs viM (RolePermInfo insM selM updM delM) =
   getRootFldsRole' tn pCols constraints fields funcs
   (mkIns <$> insM) (mkSel <$> selM)
@@ -519,7 +524,7 @@ mkGCtxMapTable
   => TableCache
   -> FunctionCache
   -> TableInfo
-  -> m (Map.HashMap RoleName (TyAgg, RootFlds, InsCtxMap))
+  -> m (Map.HashMap RoleName (TyAgg, RootFields, InsCtxMap))
 mkGCtxMapTable tableCache funcCache tabInfo = do
   m <- Map.traverseWithKey
        (mkGCtxRole tableCache tn fields pkeyCols validConstraints tabFuncs viewInfo) rolePerms
@@ -598,6 +603,10 @@ ppGCtx gCtx =
     mRootO = _gMutRoot gCtx
     sRootO = _gSubRoot gCtx
 
+-- | A /types aggregate/, which holds role-specific information about visible GraphQL types.
+-- Importantly, it holds more than just the information needed by GraphQL: it also includes how the
+-- GraphQL types relate to Postgres types, which is used to validate literals provided for
+-- Postgres-specific scalars.
 data TyAgg
   = TyAgg
   { _taTypes   :: !TypeMap
@@ -615,21 +624,23 @@ instance Monoid TyAgg where
   mempty = TyAgg Map.empty Map.empty Set.empty Map.empty
   mappend = (<>)
 
-newtype RootFlds
-  = RootFlds
-  { _taMutation :: Map.HashMap G.Name (OpCtx, Either ObjFldInfo ObjFldInfo)
+-- | A role-specific mapping from root field names to allowed operations.
+data RootFields
+  = RootFields
+  { rootQueryFields :: !(Map.HashMap G.Name (QueryCtx, ObjFldInfo))
+  , rootMutationFields :: !(Map.HashMap G.Name (MutationCtx, ObjFldInfo))
   } deriving (Show, Eq)
 
-instance Semigroup RootFlds where
-  (RootFlds m1) <> (RootFlds m2)
-    = RootFlds (Map.union m1 m2)
+instance Semigroup RootFields where
+  RootFields a1 b1 <> RootFields a2 b2
+    = RootFields (Map.union a1 a2) (Map.union b1 b2)
 
-instance Monoid RootFlds where
-  mempty = RootFlds Map.empty
+instance Monoid RootFields where
+  mempty = RootFields Map.empty Map.empty
   mappend  = (<>)
 
-mkGCtx :: TyAgg -> RootFlds -> InsCtxMap -> GCtx
-mkGCtx tyAgg (RootFlds flds) insCtxMap =
+mkGCtx :: TyAgg -> RootFields -> InsCtxMap -> GCtx
+mkGCtx tyAgg (RootFields queryFields mutationFields) insCtxMap =
   let queryRoot = mkQueryRootTyInfo qFlds
       scalarTys = map (TIScalar . mkHsraScalarTyInfo) (Set.toList allScalarTypes)
       compTys   = map (TIInpObj . mkCompExpInp) (Set.toList allComparableTypes)
@@ -642,8 +653,8 @@ mkGCtx tyAgg (RootFlds flds) insCtxMap =
                             ] <>
                   scalarTys <> compTys <> defaultTypes <> wiredInGeoInputTypes
   -- for now subscription root is query root
-  in GCtx allTys fldInfos ordByEnums queryRoot mutRootM subRootM
-     (Map.map fst flds) insCtxMap
+  in GCtx allTys fldInfos queryRoot mutRootM subRootM ordByEnums
+     (Map.map fst queryFields) (Map.map fst mutationFields) insCtxMap
   where
     TyAgg tyInfos fldInfos scalars ordByEnums = tyAgg
     colTys = Set.fromList $ map pgiType $ lefts $ Map.elems fldInfos
@@ -655,7 +666,10 @@ mkGCtx tyAgg (RootFlds flds) insCtxMap =
       mkHsraObjTyInfo (Just "subscription root")
       (G.NamedType "subscription_root") Set.empty . mapFromL _fiName
     subRootM = bool (Just $ mkSubRoot qFlds) Nothing $ null qFlds
-    (qFlds, mFlds) = partitionEithers $ map snd $ Map.elems flds
+
+    qFlds = rootFieldInfos queryFields
+    mFlds = rootFieldInfos mutationFields
+    rootFieldInfos = map snd . Map.elems
 
     anyGeoTypes = any isGeoType colTys
     allComparableTypes =

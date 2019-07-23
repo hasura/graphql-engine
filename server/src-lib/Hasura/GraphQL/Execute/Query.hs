@@ -208,7 +208,7 @@ convertQuerySelSet
   :: ( MonadError QErr m
      , MonadReader r m
      , Has TypeMap r
-     , Has OpCtxMap r
+     , Has QueryCtxMap r
      , Has FieldMap r
      , Has OrdByCtx r
      , Has SQLGenCtx r
