@@ -115,6 +115,9 @@ mkPGLogger :: Logger -> Q.PGLogger
 mkPGLogger (Logger logger) (Q.PLERetryMsg msg) =
   logger $ PGLog LevelWarn msg
 
+getIsolationLevel :: Bool -> Q.TxIsolation
+getIsolationLevel readOnlyDb = if readOnlyDb then Q.RepeatableRead else Q.Serializable
+
 main :: IO ()
 main =  do
   (HGEOptionsG rci hgeCmd) <- parseArgs
@@ -128,6 +131,7 @@ main =  do
                 enabledLogs serverLogLevel readOnlyDb) -> do
 
       let sqlGenCtx = SQLGenCtx strfyNum
+      let isolationLevel = getIsolationLevel readOnlyDb
 
       (loggerCtx, logger, pgLogger) <- mkLoggers enabledLogs serverLogLevel
 
@@ -150,7 +154,7 @@ main =  do
       unLogger logger $ mkGenericStrLog LevelInfo "startup" "postgres connection established"
 
       -- safe init catalog
-      initRes <- initialise pool sqlGenCtx logger httpManager
+      initRes <- initialise pool sqlGenCtx isolationLevel logger httpManager
       unLogger logger $ mkGenericStrLog LevelInfo "startup" "catalog initialised"
 
       (app, cacheRef, cacheInitTime) <-
@@ -214,7 +218,7 @@ main =  do
       ci <- procConnInfo rci
       let sqlGenCtx = SQLGenCtx False
       pool <- getMinimalPool pgLogger ci
-      res <- runAsAdmin pool sqlGenCtx logger httpManager $ execQuery queryBs
+      res <- runAsAdmin pool sqlGenCtx Q.RepeatableRead logger httpManager $ execQuery queryBs
       either printErrJExit BLC.putStrLn res
 
     HCVersion -> putStrLn $ "Hasura GraphQL Engine: " ++ T.unpack currentVersion
@@ -233,10 +237,10 @@ main =  do
       pool <- getMinimalPool pgLogger ci
       runExceptT $ Q.runTx pool (Q.RepeatableRead, Nothing) tx
 
-    runAsAdmin pool sqlGenCtx (Logger logger) httpManager m = do
+    runAsAdmin pool sqlGenCtx isolationLevel (Logger logger) httpManager m = do
       logger $ mkGenericStrLog LevelInfo "startup" "running runAsAdmin"
       res  <- runExceptT $ peelRun emptySchemaCache adminUserInfo
-              httpManager sqlGenCtx (PGExecCtx pool Q.RepeatableRead) m
+              httpManager sqlGenCtx (PGExecCtx pool isolationLevel) m
       return $ fmap fst res
 
     procConnInfo rci =
@@ -247,15 +251,15 @@ main =  do
       let connParams = Q.defaultConnParams { Q.cpConns = 1 }
       Q.initPGPool ci connParams pgLogger
 
-    initialise pool sqlGenCtx (Logger logger) httpMgr = do
+    initialise pool sqlGenCtx isolationLevel (Logger logger) httpMgr = do
       currentTime <- getCurrentTime
       -- initialise the catalog
-      initRes <- runAsAdmin pool sqlGenCtx (Logger logger) httpMgr $
+      initRes <- runAsAdmin pool sqlGenCtx isolationLevel (Logger logger) httpMgr $
                  initCatalogSafe currentTime
       either printErrJExit (logger . mkGenericStrLog LevelInfo "db_init") initRes
 
       -- migrate catalog if necessary
-      migRes <- runAsAdmin pool sqlGenCtx (Logger logger) httpMgr $
+      migRes <- runAsAdmin pool sqlGenCtx isolationLevel (Logger logger) httpMgr $
                 migrateCatalog currentTime
       --when (not readOnly) $ either printErrJExit (logger . mkGenericStrLog LevelInfo "db_migrate") migRes
 
