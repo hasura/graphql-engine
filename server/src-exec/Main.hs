@@ -178,7 +178,7 @@ main =  do
       logEnvHeaders <- getFromEnv False "LOG_HEADERS_FROM_ENV"
 
       -- prepare event triggers data
-      when (not readOnlyDb) (prepareEvents pool logger)
+      when (not readOnlyDb) (prepareEvents pool isolationLevel logger)
       eventEngineCtx <- atomically $ initEventEngineCtx maxEvThrds evFetchMilliSec
       let scRef = _scrCache cacheRef
       when (not readOnlyDb) (unLogger logger $
@@ -229,8 +229,8 @@ main =  do
           pgLogger = mkPGLogger logger
       return (loggerCtx, logger, pgLogger)
 
-    runTx pool tx =
-      runExceptT $ Q.runTx pool (Q.RepeatableRead, Nothing) tx
+    runTx pool isolationLevel tx =
+      runExceptT $ Q.runTx pool (isolationLevel, Nothing) tx
 
     runTx' pgLogger ci tx = do
       pool <- getMinimalPool pgLogger ci
@@ -263,15 +263,15 @@ main =  do
       when (not readOnlyDb) $ either printErrJExit (logger . mkGenericStrLog LevelInfo "db_migrate") migRes
 
       -- generate and retrieve uuids
-      getUniqIds pool
+      getUniqIds pool (getIsolationLevel readOnlyDb)
 
-    prepareEvents pool (Logger logger) = do
+    prepareEvents pool isolationLevel (Logger logger) = do
       logger $ mkGenericStrLog LevelInfo "event_triggers" "preparing data"
-      res <- runTx pool unlockAllEvents
+      res <- runTx pool isolationLevel unlockAllEvents
       either printErrJExit return res
 
-    getUniqIds pool = do
-      eDbId <- runTx pool getDbId
+    getUniqIds pool isolationLevel = do
+      eDbId <- runTx pool isolationLevel getDbId
       dbId <- either printErrJExit return eDbId
       fp <- liftIO generateFingerprint
       return (dbId, fp)
