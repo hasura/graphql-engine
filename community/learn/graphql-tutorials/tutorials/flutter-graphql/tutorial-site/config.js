@@ -26,6 +26,7 @@ const config = {
     		"/update-delete-mutations",
     		"/subscriptions",
     		"/realtime-feed",
+    		"/logout",
     		"/what-next"
     		],
 		"links": [
