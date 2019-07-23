@@ -148,13 +148,14 @@ $(document).ready(function () {
     fetchData();
 
     function addPlot(elem, series, opts) {
+        // 1 hour of data visible for 1 sample/sec rate:
+        var maxPoints = 3600;
         var defaultOptions = {
             series: { shadowSize: 0 },  // drawing is faster without shadows
-            xaxis: { mode: "time", tickSize: [10, "second"] }
+            xaxis: { mode: "time", ticks: 8 }
         };
         var options = $.extend(true, {}, defaultOptions, opts);
         var data = new Array(series.length);
-        var maxPoints = 60;
         for(var i = 0; i < series.length; i++) {
             data[i] = [];
         }
