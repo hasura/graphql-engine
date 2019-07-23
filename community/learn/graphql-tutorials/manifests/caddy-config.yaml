@@ -38,6 +38,14 @@ data:
       }
 
       redir 301 {
+        /graphql/flutter-graphql/boilerplate.zip https://graphql-engine-cdn.hasura.io/learn-hasura/boilerplates/flutter-graphql/boilerplate.zip
+      }
+
+      redir 301 {
+        /graphql/flutter-graphql/ /graphql/flutter-graphql/introduction
+      }
+
+      redir 301 {
         /graphql/reason-react-apollo/ /graphql/reason-react-apollo/introduction
       }
 
@@ -120,6 +128,8 @@ data:
       proxy /graphql/elm-graphql elm-graphql
 
       proxy /graphql/reason-react-apollo reason-react-apollo
+
+      proxy /graphql/flutter-graphql flutter-graphql
 
       proxy /graphql hasura/v1/graphql {
         without /graphql
