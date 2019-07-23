@@ -53,8 +53,9 @@ query_templates: []
 remote_schemas: []
 tables: []
 `),
+}
 
-}var testMetadataCurrent = map[string][]byte{
+var testMetadataCurrent = map[string][]byte{
 	"metadata": []byte(`allowlist: []
 functions: []
 query_collections: []
