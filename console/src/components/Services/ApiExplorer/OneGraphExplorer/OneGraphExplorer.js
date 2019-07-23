@@ -26,7 +26,8 @@ class OneGraphExplorer extends React.Component {
     schema: null,
     query: undefined,
     isResizing: false,
-    headers: this.props.headers || [],
+    loading: false,
+    previousIntrospectionHeaders: [],
   };
 
   componentDidMount() {
@@ -35,8 +36,13 @@ class OneGraphExplorer extends React.Component {
   }
 
   componentDidUpdate() {
-    if (this.shouldIntrospect()) {
-      this.introspect();
+    if (!this.props.headerFocus && !this.state.loading) {
+      if (
+        JSON.stringify(this.props.headers) !==
+        JSON.stringify(this.state.previousIntrospectionHeaders)
+      ) {
+        this.introspect();
+      }
     }
   }
 
@@ -71,15 +77,10 @@ class OneGraphExplorer extends React.Component {
     }
   }
 
-  shouldIntrospect() {
-    return (
-      JSON.stringify(this.props.headers) !== JSON.stringify(this.state.headers)
-    );
-  }
-
   introspect() {
-    const { endpoint, headers } = this.props;
-
+    const { endpoint } = this.props;
+    const headers = JSON.parse(JSON.stringify(this.props.headers));
+    this.setState({ loading: true });
     fetch(endpoint, {
       method: 'POST',
       headers: getHeadersAsJSON(headers || []),
@@ -91,13 +92,15 @@ class OneGraphExplorer extends React.Component {
       .then(result => {
         this.setState({
           schema: buildClientSchema(result.data),
-          headers: JSON.parse(JSON.stringify(headers)),
+          loading: false,
+          previousIntrospectionHeaders: headers,
         });
       })
       .catch(() => {
         this.setState({
           schema: null,
-          headers: JSON.parse(JSON.stringify(headers)),
+          loading: false,
+          previousIntrospectionHeaders: headers,
         });
       });
   }

@@ -5,32 +5,31 @@ module Hasura.GraphQL.Transport.HTTP
 import qualified Data.Aeson.Ordered                     as OJ
 import qualified Data.Text                              as T
 import           Hasura.GraphQL.Validate
-import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
 
 
 import           Hasura.EncJSON
+import           Hasura.GraphQL.Logging
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Context
+import           Hasura.Server.Utils                    (RequestId)
 
 import qualified Hasura.GraphQL.Execute                 as E
 
 runGQ
-  :: (MonadIO m, MonadError QErr m)
-  => PGExecCtx
+  :: ( MonadIO m
+     , MonadError QErr m
+     , MonadReader E.ExecutionCtx m
+     )
+  => RequestId
   -> UserInfo
-  -> SQLGenCtx
-  -> Bool
-  -> E.PlanCache
-  -> SchemaCache
-  -> SchemaCacheVer
-  -> HTTP.Manager
   -> [N.Header]
   -> GQLReqUnparsed
   -> m (HttpResponse EncJSON)
-runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer manager reqHdrs req = do
+runGQ reqId userInfo reqHdrs req = do
+  E.ExecutionCtx _ sqlGenCtx pgExecCtx planCache sc scVer _ enableAL <- ask
   execPlans <-
     E.getResolvedExecPlan
       pgExecCtx
@@ -45,12 +44,12 @@ runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer manager reqHdrs r
     forM execPlans $ \execPlan ->
       case execPlan of
         E.ExPHasura resolvedOp -> do
-          hasuraJson <- runHasuraGQ pgExecCtx userInfo resolvedOp
+          hasuraJson <- runHasuraGQ reqId req userInfo resolvedOp
           pure (HttpResponse hasuraJson Nothing)
         E.ExPRemote rt -> do
           let (rsi, fields) = remoteTopQueryEither rt
-          resp@(HttpResponse _ _) <- E.execRemoteGQ
-                manager
+          resp@(HttpResponse _res _) <- E.execRemoteGQ
+                reqId
                 userInfo
                 reqHdrs
                 (rtqOperationType rt)
@@ -59,7 +58,7 @@ runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer manager reqHdrs r
           -- liftIO (putStrLn ("remote result = " ++ show res))
           return resp
         E.ExPMixed resolvedOp remoteRels -> do
-          hasuraJson <- runHasuraGQ pgExecCtx userInfo resolvedOp
+          hasuraJson <- runHasuraGQ reqId req userInfo resolvedOp
           -- liftIO $ putStrLn ("hasura_JSON = " ++ show hasuraJson)
           let result =
                 E.extractRemoteRelArguments
@@ -78,7 +77,7 @@ runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer manager reqHdrs r
                        let batchQuery = E.batchRemoteTopQuery batch
                            (rsi, fields) = remoteTopQueryEither batchQuery
                         in E.execRemoteGQ
-                             manager
+                             reqId
                              userInfo
                              reqHdrs
                              (rtqOperationType batchQuery)
@@ -98,16 +97,25 @@ runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer manager reqHdrs r
 
 
 runHasuraGQ
-  :: (MonadIO m, MonadError QErr m)
-  => PGExecCtx
+  :: ( MonadIO m
+     , MonadError QErr m
+     , MonadReader E.ExecutionCtx m
+     )
+  => RequestId
+  -> GQLReqUnparsed
   -> UserInfo
   -> E.ExecOp
   -> m EncJSON
-runHasuraGQ pgExecCtx userInfo resolvedOp = do
+runHasuraGQ reqId query userInfo resolvedOp = do
+  E.ExecutionCtx logger _ pgExecCtx _ _ _ _ _ <- ask
   respE <- liftIO $ runExceptT $ case resolvedOp of
-    E.ExOpQuery tx    ->
+    E.ExOpQuery tx genSql  -> do
+      -- log the generated SQL and the graphql query
+      liftIO $ logGraphqlQuery logger $ QueryLog query genSql reqId
       runLazyTx' pgExecCtx tx
-    E.ExOpMutation tx ->
+    E.ExOpMutation tx -> do
+      -- log the graphql query
+      liftIO $ logGraphqlQuery logger $ QueryLog query Nothing reqId
       runLazyTx pgExecCtx $ withUserInfo userInfo tx
     E.ExOpSubs _ ->
       throw400 UnexpectedPayload

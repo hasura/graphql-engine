@@ -560,7 +560,72 @@ const changeTableOrViewName = (isTable, oldName, newName) => {
   };
 };
 
-// TABLE MODIFY
+const deleteTrigger = (trigger, table) => {
+  return (dispatch, getState) => {
+    const triggerName = trigger.trigger_name;
+    const triggerSchema = trigger.trigger_schema;
+
+    const tableName = table.table_name;
+    const tableSchema = table.table_schema;
+
+    const upMigrationSql = `DROP TRIGGER "${triggerName}" ON "${tableSchema}"."${tableName}";`;
+
+    const migrationUp = [
+      {
+        type: 'run_sql',
+        args: {
+          sql: upMigrationSql,
+        },
+      },
+    ];
+
+    let downMigrationSql = '';
+
+    downMigrationSql += `CREATE TRIGGER "${triggerName}"
+${trigger.action_timing} ${
+  trigger.event_manipulation
+} ON "${tableSchema}"."${tableName}"
+FOR EACH ${trigger.action_orientation} ${trigger.action_statement};`;
+
+    if (trigger.comment) {
+      downMigrationSql += `COMMENT ON TRIGGER "${triggerName}" ON "${tableSchema}"."${tableName}" 
+IS '${trigger.comment}';`;
+    }
+    const migrationDown = [
+      {
+        type: 'run_sql',
+        args: {
+          sql: downMigrationSql,
+        },
+      },
+    ];
+
+    const migrationName = `delete_trigger_${triggerSchema}_${triggerName}`;
+
+    const requestMsg = 'Deleting trigger...';
+    const successMsg = 'Trigger deleted';
+    const errorMsg = 'Deleting trigger failed';
+
+    const customOnSuccess = () => {};
+    const customOnError = err => {
+      dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
+    };
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      migrationUp,
+      migrationDown,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
 const deleteTableSql = tableName => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
@@ -2122,4 +2187,5 @@ export {
   setUniqueKeys,
   removeUniqueKey,
   saveUniqueKey,
+  deleteTrigger,
 };

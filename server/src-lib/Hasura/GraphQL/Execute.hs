@@ -22,12 +22,14 @@ module Hasura.GraphQL.Execute
   , EP.initPlanCache
   , EP.clearPlanCache
   , EP.dumpPlanCache
+
+  , ExecutionCtx(..)
+
   , emptyResp
   ) where
 
 import           Control.Exception                      (try)
 import           Control.Lens
-import qualified Data.ByteString.Lazy                   as L
 import           Data.Scientific
 import           Data.Validation
 import           Hasura.SQL.Types
@@ -68,16 +70,17 @@ import           Hasura.RQL.DDL.Remote.Input
 import           Hasura.RQL.DDL.Remote.Types
 import           Hasura.RQL.Types
 import           Hasura.Server.Context
-import           Hasura.Server.Utils                    (bsToTxt,
+import           Hasura.Server.Utils                    (RequestId,
                                                          filterRequestHeaders)
 import           Hasura.SQL.Value
 
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Plan            as EP
 import qualified Hasura.GraphQL.Execute.Query           as EQ
-
+import           Hasura.GraphQL.Logging
 import qualified Hasura.GraphQL.Resolve                 as GR
 import qualified Hasura.GraphQL.Validate                as VQ
+import qualified Hasura.Logging                         as L
 
 data GQRespValue =
   GQRespValue
@@ -137,6 +140,19 @@ data QExecPlanResolved
   = ExPHasura !ExecOp
   | ExPRemote !VQ.RemoteTopField
   | ExPMixed !ExecOp (NonEmpty RemoteRelField)
+
+-- | Execution context
+data ExecutionCtx
+  = ExecutionCtx
+  { _ecxLogger          :: !L.Logger
+  , _ecxSqlGenCtx       :: !SQLGenCtx
+  , _ecxPgExecCtx       :: !PGExecCtx
+  , _ecxPlanCache       :: !EP.PlanCache
+  , _ecxSchemaCache     :: !SchemaCache
+  , _ecxSchemaCacheVer  :: !SchemaCacheVer
+  , _ecxHttpManager     :: !HTTP.Manager
+  , _ecxEnableAllowList :: !Bool
+  }
 
 newtype RemoteRelKey =
   RemoteRelKey Int
@@ -208,17 +224,18 @@ getExecPlanPartial userInfo sc enableAL req = do
       let msg = "query is not in any of the allowlists"
       in e{qeInternal = Just $ J.object [ "message" J..= J.String msg]}
 
+
 -- An execution operation, in case of
 -- queries and mutations it is just a transaction
 -- to be executed
 data ExecOp
-  = ExOpQuery !LazyRespTx
+  = ExOpQuery !LazyRespTx !(Maybe EQ.GeneratedSqlMap)
   | ExOpMutation !LazyRespTx
   | ExOpSubs !EL.LiveQueryOp
 
 getOpTypeFromExecOp :: ExecOp -> G.OperationType
 getOpTypeFromExecOp = \case
-  ExOpQuery _ -> G.OperationTypeQuery
+  ExOpQuery _ _ -> G.OperationTypeQuery
   ExOpMutation _ -> G.OperationTypeMutation
   ExOpSubs _ -> G.OperationTypeSubscription
 
@@ -243,8 +260,9 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
     Just plan ->
       pure . ExPHasura <$>
       case plan of
-        EP.RPQuery queryPlan ->
-          ExOpQuery <$> EQ.queryOpFromPlan usrVars queryVars queryPlan
+        EP.RPQuery queryPlan -> do
+          (tx, genSql) <- EQ.queryOpFromPlan usrVars queryVars queryPlan
+          return $ ExOpQuery tx (Just genSql)
         EP.RPSubs subsPlan ->
           ExOpSubs <$> EL.subsOpFromPlan pgExecCtx usrVars queryVars subsPlan
     Nothing -> noExistingPlan
@@ -276,14 +294,14 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
                           --      , "cursors = " ++ show (fmap rrRelFieldPath cursors)
                           --      ])
                             (flip ExPMixed cursors, newField)
-                (queryTx, planM) <-
+                (queryTx, _planM, genSql) <-
                   getQueryOp gCtx sqlGenCtx userInfo (pure alteredField) varDefs
 
                 -- TODO: How to cache query for each field?
                 -- mapM_ (addPlanToCache . EP.RPQuery) planM
-                return $ constructor $ ExOpQuery queryTx
+                return $ constructor $ ExOpQuery queryTx (Just genSql)
               VQ.HasuraTopSubscription fld -> do
-                (lqOp, planM) <-
+                (lqOp, _planM) <-
                   getSubsOp
                     pgExecCtx
                     gCtx
@@ -1019,7 +1037,7 @@ getQueryOp
   -> UserInfo
   -> VQ.SelSet
   -> [G.VariableDefinition]
-  -> m (LazyRespTx, Maybe EQ.ReusableQueryPlan)
+  -> m (LazyRespTx, Maybe EQ.ReusableQueryPlan, EQ.GeneratedSqlMap)
 getQueryOp gCtx sqlGenCtx userInfo fields varDefs =
   runE gCtx sqlGenCtx userInfo $ EQ.convertQuerySelSet varDefs fields
 
@@ -1106,57 +1124,59 @@ getSubsOp pgExecCtx gCtx sqlGenCtx userInfo req varDefs fld =
   runE gCtx sqlGenCtx userInfo $ getSubsOpM pgExecCtx req varDefs fld
 
 execRemoteGQ
-  :: (MonadIO m, MonadError QErr m)
-  => HTTP.Manager
+  :: ( MonadIO m
+     , MonadError QErr m
+     , MonadReader ExecutionCtx m
+     )
+  => RequestId
   -> UserInfo
   -> [N.Header]
-  -> G.OperationType
+  -> G.OperationType -- This should come from Field
   -> RemoteSchemaInfo
-  -> Either L.ByteString [Field]
+  -> Either GQLReqUnparsed [Field]
   -> m (HttpResponse EncJSON)
-execRemoteGQ manager userInfo reqHdrs opType remoteSchemaInfo bsOrField = do
+execRemoteGQ reqId userInfo reqHdrs opType rsi bsOrField = do
+  execCtx <- ask
+  let logger = _ecxLogger execCtx
+      manager = _ecxHttpManager execCtx
   hdrs <- getHeadersFromConf hdrConf
-  let confHdrs   = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
+  let confHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
       clientHdrs = bool [] filteredHeaders fwdClientHdrs
       -- filter out duplicate headers
       -- priority: conf headers > resolved userinfo vars > client headers
-      hdrMaps    = [ Map.fromList confHdrs
-                   , Map.fromList userInfoToHdrs
-                   , Map.fromList clientHdrs
-                   ]
-      finalHdrs  = foldr Map.union Map.empty hdrMaps
-      options    = wreqOptions manager (Map.toList finalHdrs)
-
-  jsonbytes <- case bsOrField of
-    Right field -> do gqlReq <- fieldsToRequest opType field
-                      let jsonbytes = encJToLBS (encJFromJValue gqlReq)
-                      pure jsonbytes
-    Left bytes -> pure bytes
-
-  -- liftIO (putStrLn ("payload_to_server = " ++ L8.unpack jsonbytes))
-  res  <- liftIO $ try $ Wreq.postWith options (show url) jsonbytes
+      hdrMaps =
+        [ Map.fromList confHdrs
+        , Map.fromList userInfoToHdrs
+        , Map.fromList clientHdrs
+        ]
+      finalHdrs = foldr Map.union Map.empty hdrMaps
+      options = wreqOptions manager (Map.toList finalHdrs)
+  jsonbytes <-
+    case bsOrField of
+      Right field -> do
+        gqlReq <- fieldsToRequest opType field
+        let jsonbytes = encJToLBS (encJFromJValue gqlReq)
+        pure jsonbytes
+      Left unparsedQuery -> do
+        liftIO $ logGraphqlQuery logger $ QueryLog unparsedQuery Nothing reqId
+        pure (J.encode $ J.toJSON unparsedQuery)
+  res <- liftIO $ try $ Wreq.postWith options (show url) jsonbytes
   resp <- either httpThrow return res
   let cookieHdr = getCookieHdr (resp ^? Wreq.responseHeader "Set-Cookie")
-      respHdrs  = Just $ mkRespHeaders cookieHdr
+      respHdrs = Just $ mkRespHeaders cookieHdr
   return $ HttpResponse (encJFromLBS $ resp ^. Wreq.responseBody) respHdrs
-
   where
-    (RemoteSchemaInfo url hdrConf fwdClientHdrs) = remoteSchemaInfo
-
+    (RemoteSchemaInfo url hdrConf fwdClientHdrs) = rsi
     httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
     httpThrow err = throw500 $ T.pack . show $ err
-
-    userInfoToHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
-                     userInfoToList userInfo
+    userInfoToHdrs =
+      map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $ userInfoToList userInfo
     filteredHeaders = filterUserVars $ filterRequestHeaders reqHdrs
-
     filterUserVars hdrs =
       let txHdrs = map (\(n, v) -> (bsToTxt $ CI.original n, bsToTxt v)) hdrs
-      in map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
-         filter (not . isUserVar . fst) txHdrs
-
+       in map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
+          filter (not . isUserVar . fst) txHdrs
     getCookieHdr = maybe [] (\h -> [("Set-Cookie", h)])
-
     mkRespHeaders hdrs =
       map (\(k, v) -> Header (bsToTxt $ CI.original k, bsToTxt v)) hdrs
 

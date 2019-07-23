@@ -21,6 +21,7 @@ import           Data.Scientific
 import           Data.Set                      (Set)
 import           Data.Text                     (Text)
 import qualified Database.PG.Query             as Q
+import           Hasura.RQL.Types.Common       (NonEmptyText)
 import           Instances.TH.Lift             ()
 import qualified Language.GraphQL.Draft.Syntax as G
 import           Language.Haskell.TH.Syntax    (Lift)
@@ -51,7 +52,7 @@ data FieldCall =
 
 newtype RemoteSchemaName
   = RemoteSchemaName
-  { unRemoteSchemaName :: Text}
+  { unRemoteSchemaName :: NonEmptyText}
   deriving (Show, Eq, Lift, Hashable, ToJSON, ToJSONKey, FromJSON, Q.ToPrepArg, Q.FromCol, DQuote)
 
 newtype RemoteRelationshipName

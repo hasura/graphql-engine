@@ -109,7 +109,7 @@ askTabInfoFromTrigger trn = do
   let tabInfos = M.elems $ scTables sc
   liftMaybe (err400 NotExists errMsg) $ find (isJust.M.lookup trn.tiEventTriggerInfoMap) tabInfos
   where
-    errMsg = "event trigger " <> trn <<> " does not exist"
+    errMsg = "event trigger " <> triggerNameToTxt trn <<> " does not exist"
 
 askEventTriggerInfo
   :: (QErrM m, CacheRM m)
@@ -119,7 +119,7 @@ askEventTriggerInfo trn = do
   let etim = tiEventTriggerInfoMap ti
   liftMaybe (err400 NotExists errMsg) $ M.lookup trn etim
   where
-    errMsg = "event trigger " <> trn <<> " does not exist"
+    errMsg = "event trigger " <> triggerNameToTxt trn <<> " does not exist"
 
 askQTemplateInfo
   :: (P1C m)

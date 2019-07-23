@@ -124,7 +124,9 @@ JSON object:
      "key": "<optional-key-as-string>",
      "jwk_url": "<optional-url-to-refresh-jwks>",
      "claims_namespace": "<optional-key-name-in-claims>",
-     "claims_format": "json|stringified_json"
+     "claims_format": "json|stringified_json",
+     "audience": <optional-string-or-list-of-strings-to-verify-audience>,
+     "issuer": "<optional-string-to-verify-issuer>"
    }
 
 ``key`` or ``jwk_url``, **one of them has to be present**.
@@ -228,6 +230,78 @@ If ``claims_format`` is ``stringified_json`` then JWT claims should look like:
     "https://hasura.io/jwt/claims": "{\"x-hasura-allowed-roles\":[\"editor\",\"user\",\"mod\"],\"x-hasura-default-role\":\"user\",\"x-hasura-user-id\":\"1234567890\",\"x-hasura-org-id\":\"123\",\"x-hasura-custom\":\"custom-value\"}"
   }
 
+``audience``
+^^^^^^^^^^^^
+This is an optional field. Certain providers might set a claim which indicates
+the intended audience for the JWT. This can be checked by setting this field.
+
+When this field is set, during the verification process of JWT, the ``aud``
+claim in the JWT will be checked if it is equal to the ``audience`` field given
+in the configuration.
+
+See `RFC <https://tools.ietf.org/html/rfc7519#section-4.1.3>`__ for more details.
+
+This field can be a string, or a list of strings.
+
+Examples:
+
+.. code-block:: json
+
+   {
+     "type": "RS512",
+     "jwk_url": "https://......",
+     "audience": "myapp-1234"
+   }
+
+or
+
+.. code-block:: json
+
+   {
+     "type": "RS512",
+     "jwk_url": "https://......",
+     "audience": ["myapp-1234", "myapp-6789"]
+   }
+
+
+.. admonition:: Important!
+
+   Certain JWT providers share JWKs between multiple tenants. They use the
+   ``aud`` claim of JWT to specify the intended audience for the JWT. Setting
+   the ``audience`` field in the Hasura JWT configuration will make sure that
+   the ``aud`` claim from the JWT is also checked during verification. Not doing
+   this check will allow JWTs issued for other tenants to be valid as well.
+
+   In these cases, you **MUST** set the ``audience`` field to appropriate value.
+   Failing to do is a major security vulnerability.
+
+
+``issuer``
+^^^^^^^^^^
+This is an optional field. It takes a string value.
+
+When this field is set, during the verification process of JWT, the ``iss``
+claim in the JWT will be checked if it is equal to the ``issuer`` field given
+in the configuration.
+
+See `RFC <https://tools.ietf.org/html/rfc7519#section-4.1.1>`__ for more details.
+
+Examples:
+
+.. code-block:: json
+
+   {
+     "type": "RS512",
+     "jwk_url": "https://......",
+     "issuer": "https://my-auth-server.com"
+   }
+
+.. note::
+
+   Certain providers require you to verify the ``iss`` claim on the JWT. To do
+   that you can set this field to the appropriate value.
+
+
 
 Examples
 ^^^^^^^^
@@ -306,6 +380,16 @@ Using env vars:
       serve
 
 
+Security considerations
+-----------------------
+
+Setting audience check
+^^^^^^^^^^^^^^^^^^^^^^
+Certain JWT providers share JWKs between multiple tenants (like Firebase). They use the ``aud`` claim of JWT to specify the intended tenant for the JWT. Setting the ``audience`` field in the Hasura JWT configuration will make sure that the ``aud`` claim from the JWT is also checked during verification. Not doing this check will allow JWTs issued for other tenants to be valid as well.
+
+In these cases, you **MUST** set the ``audience`` field to appropriate value. Failing to do is a major security vulnerability.
+
+
 Popular providers and known issues
 ----------------------------------
 
@@ -325,10 +409,12 @@ If you are using Firebase and Hasura, use this config:
 
 .. code-block:: json
 
-    {
-      "type":"RS512",
-      "jwk_url": "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com"
-    }
+   {
+     "type":"RS256",
+     "jwk_url": "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com",
+     "audience": "<firebase-project-id>",
+     "issuer": "https://securetoken.google.com/<firebase-project-id>"
+   }
 
 
 .. _auth0-issues:
