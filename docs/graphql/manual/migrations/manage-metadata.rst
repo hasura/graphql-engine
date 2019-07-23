@@ -30,7 +30,7 @@ Exporting Hasura metadata
 
      1. Click on the Settings gear icon at the top right corner of the console screen.
      2. In the Settings page that open, click on the ``Export Metadata`` button.
-     3. This will prompt a file download for ``metadata.json``. Save the file. 
+     3. This will prompt a file download for ``hasura_metadata_<timestamp>.json``. Save the file.
 
   .. tab:: API
 
@@ -41,9 +41,9 @@ Exporting Hasura metadata
 
      .. code-block:: bash
 
-        curl -d'{"type": "export_metadata", "args": {}}' http://localhost:8080/v1/query -o metadata.json
+        curl -d'{"type": "export_metadata", "args": {}}' http://localhost:8080/v1/query -o hasura_metadata.json
 
-     This command will create a ``metadata.json`` file. If admin secret is set,
+     This command will create a ``hasura_metadata.json`` file. If admin secret is set,
      add ``-H 'X-Hasura-Admin-Secret: <your-admin-secret>'`` as the API is an
      admin-only API.
 
@@ -61,7 +61,7 @@ the existing metadata with that instance.
 
      1. Click on the Settings gear icon at the top right corner of the console screen.
      2. Click on ``Import Metadata`` button.
-     3. Choose a ``metadata.json`` file that was exported earlier.
+     3. Choose a ``hasura_metadata.json`` file that was exported earlier.
      4. A notification should appear indicating the success or error.
 
   .. tab:: API
@@ -72,9 +72,9 @@ the existing metadata with that instance.
 
      .. code-block:: bash
 
-        curl -d'{"type":"replace_metadata", "args":'$(cat metadata.json)'}' http://localhost:8080/v1/query
+        curl -d'{"type":"replace_metadata", "args":'$(cat hasura_metadata.json)'}' http://localhost:8080/v1/query
 
-     This command will read ``metadata.json`` file and makes a POST request to
+     This command will read ``hasura_metadata.json`` file and makes a POST request to
      replace the metadata. If admin secret is set, add ``-H
      'X-Hasura-Admin-Secret: <your-admin-secret>'`` as the API is an admin-only
      API.
