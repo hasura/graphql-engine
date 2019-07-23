@@ -162,7 +162,9 @@ if [ "$MODE" = "graphql-engine" ]; then
     echo_pretty "Useful endpoints when compiling with 'graphql-engine:developer' and running with '+RTS -T'"
     echo_pretty "   http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT/dev/subscriptions"
     echo_pretty "   http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT/dev/plan_cache"
-    echo_pretty "   http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT/dev/ekg"
+    echo_pretty ""
+    echo_pretty "To view realtime GC stats and other info open in your browser:"
+    echo_pretty "    file://$PROJECT_ROOT/scripts/ekg/ekg.html#$HASURA_GRAPHQL_SERVER_PORT"
     echo_pretty ""
     echo_pretty "▼▼▼ additional graphql-engine logs will appear below: ▼▼▼"
   } &

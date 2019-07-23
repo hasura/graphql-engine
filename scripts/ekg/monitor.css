@@ -1,0 +1,56 @@
+/**
+ * Blueprint/flot compatibility
+ *
+ * Resets some styles back to the browser default.
+ */
+
+.plot table {
+    width: auto;
+    border-spacing: 2px;
+}
+
+.plot th,
+.plot td,
+.plot caption {
+    padding: 0;
+}
+
+/**
+ * Body margin
+ */
+
+body {
+    padding-top: 60px;
+}
+
+/**
+ * Plots
+ */
+
+.plot {
+    width: 600px;
+    height: 300px;
+    margin-bottom: 1.5em;
+}
+
+.close-button {
+    float: right;
+    cursor: pointer;
+}
+
+/**
+ * Table
+ */
+
+.value {
+    text-align: right;
+}
+
+.string {
+    text-align: left;
+}
+
+.graph-button {
+    cursor: pointer;
+    vertical-align: middle;
+}
