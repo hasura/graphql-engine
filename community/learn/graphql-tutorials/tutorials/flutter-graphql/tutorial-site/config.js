@@ -20,10 +20,10 @@ const config = {
 			"/introduction",
     		"/intro-to-graphql",
     		"/setup",
-    		"/apollo-client",
+    		"/graphql-client",
     		"/queries",
-    		"/mutations-variables",
-    		"/optimistic-update-mutations",
+    		"/mutations",
+    		"/update-delete-mutations",
     		"/subscriptions",
     		"/realtime-feed",
     		"/what-next"
