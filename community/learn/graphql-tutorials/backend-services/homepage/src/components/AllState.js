@@ -29,8 +29,8 @@ const frontendTutorial = [
   },
   {
     name: 'ReasonML',
-    url: 'https://learn.hasura.io/graphql/reasonml',
-    comingSoon: true,
+    url: 'https://learn.hasura.io/graphql/reason-react-apollo',
+    comingSoon: false,
     bgClassName: 'reBg',
     disableBgClassName: 'reDisableBg',
   },
