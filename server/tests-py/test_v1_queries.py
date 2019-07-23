@@ -212,6 +212,15 @@ class TestV1SelectBoolExpPostGIS(DefaultTestSelectQueries):
     def test_query_geog_stintersects(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/query_geog_stintersects.yaml')
 
+    def test_query_cast_geometry_to_geography(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_cast_geometry_to_geography.yaml')
+
+    def test_query_cast_geography_to_geometry(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_cast_geography_to_geometry.yaml')
+
+    def test_query_illegal_cast_is_not_allowed(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_illegal_cast_is_not_allowed.yaml')
+
     @classmethod
     def dir(cls):
         return 'queries/v1/select/boolexp/postgis'
