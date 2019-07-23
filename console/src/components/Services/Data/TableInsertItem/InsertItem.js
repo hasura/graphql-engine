@@ -5,8 +5,9 @@ import { insertItem, I_RESET } from './InsertActions';
 import { ordinalColSort } from '../utils';
 import { setTable } from '../DataActions';
 import JsonInput from '../../../Common/CustomInputTypes/JsonInput';
+import TextInput from '../../../Common/CustomInputTypes/TextInput';
 import Button from '../../../Common/Button/Button';
-import { getPlaceholder, BOOLEAN, JSONB, JSONDTYPE } from '../utils';
+import { getPlaceholder, BOOLEAN, JSONB, JSONDTYPE, TEXT } from '../utils';
 
 import { getParentNodeByClass } from '../../../../utils/domFunctions';
 
@@ -28,8 +29,8 @@ class InsertItem extends Component {
 
   nextInsert() {
     // when use state object remember to do it inside a class method.
-    // Since the state variable lifecycle is tired to the instance of the class
-    // and making this change using an anonymous function will case errors.
+    // Since the state variable lifecycle is tied to the instance of the class
+    // and making this change using an anonymous function will cause errors.
     this.setState({
       insertedRows: this.state.insertedRows + 1,
     });
@@ -59,6 +60,13 @@ class InsertItem extends Component {
       throw new NotFoundError();
     }
 
+    const isColumnAutoIncrement = column => {
+      return (
+        column.column_default ===
+        "nextval('" + tableName + '_' + column.column_name + "_seq'::regclass)"
+      );
+    };
+
     const _columns = schemas.find(
       x => x.table_name === tableName && x.table_schema === currentSchema
     ).columns;
@@ -81,14 +89,8 @@ class InsertItem extends Component {
         }
         e.target.focus();
       };
-      const colDefault = col.column_default;
-      let isAutoIncrement = false;
-      if (
-        colDefault ===
-        "nextval('" + tableName + '_' + colName + "_seq'::regclass)"
-      ) {
-        isAutoIncrement = true;
-      }
+
+      const isAutoIncrement = isColumnAutoIncrement(col);
 
       const standardInputProps = {
         className: `form-control ${styles.insertBox}`,
@@ -144,34 +146,44 @@ class InsertItem extends Component {
         );
       }
 
-      if (colType === JSONDTYPE || colType === JSONB) {
-        // JSON/JSONB
-        typedInput = (
-          <JsonInput
-            standardProps={standardInputProps}
-            placeholderProp={getPlaceholder(colType)}
-          />
-        );
-      }
-
-      if (colType === BOOLEAN) {
-        // Boolean
-        typedInput = (
-          <select
-            {...standardInputProps}
-            onClick={e => {
-              e.target.parentNode.parentNode.click();
-              e.target.focus();
-            }}
-            defaultValue={placeHolder}
-          >
-            <option value="" disabled>
-              -- bool --
-            </option>
-            <option value="true">True</option>
-            <option value="false">False</option>
-          </select>
-        );
+      switch (colType) {
+        case JSONB:
+        case JSONDTYPE:
+          typedInput = (
+            <JsonInput
+              standardProps={standardInputProps}
+              placeholderProp={getPlaceholder(colType)}
+            />
+          );
+          break;
+        case TEXT:
+          typedInput = (
+            <TextInput
+              standardProps={standardInputProps}
+              placeholderProp={getPlaceholder(colType)}
+            />
+          );
+          break;
+        case BOOLEAN:
+          typedInput = (
+            <select
+              {...standardInputProps}
+              onClick={e => {
+                e.target.parentNode.parentNode.click();
+                e.target.focus();
+              }}
+              defaultValue={placeHolder}
+            >
+              <option value="" disabled>
+                -- bool --
+              </option>
+              <option value="true">True</option>
+              <option value="false">False</option>
+            </select>
+          );
+          break;
+        default:
+          break;
       }
 
       return (
