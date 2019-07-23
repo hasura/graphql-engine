@@ -22,6 +22,7 @@ import PrimaryKeyEditor from './PrimaryKeyEditor';
 import TableCommentEditor from './TableCommentEditor';
 import ForeignKeyEditor from './ForeignKeyEditor';
 import UniqueKeyEditor from './UniqueKeyEditor';
+import TriggerEditorList from './TriggerEditorList';
 import styles from './ModifyTable.scss';
 import { NotFoundError } from '../../../Error/PageNotFound';
 
@@ -173,6 +174,9 @@ class ModifyTable extends React.Component {
               uniqueKeys={uniqueKeyModify}
               setUniqueKeys={setUniqueKeys}
             />
+            <hr />
+            <h4 className={styles.subheading_text}>Triggers</h4>
+            <TriggerEditorList tableSchema={tableSchema} dispatch={dispatch} />
             <hr />
             {untrackBtn}
             {deleteBtn}

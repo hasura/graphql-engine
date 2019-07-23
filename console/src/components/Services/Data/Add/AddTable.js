@@ -26,6 +26,7 @@ import {
   setColDefault,
   setForeignKeys,
   setUniqueKeys,
+  setFreqUsedColumn,
 } from './AddActions';
 
 import { fetchColumnTypeInfo, RESET_COLUMN_TYPE_INFO } from '../DataActions';
@@ -35,14 +36,20 @@ import { resetValidation } from './AddActions';
 import gqlPattern, {
   gqlTableErrorNotif,
   gqlColumnErrorNotif,
-  gqlTableNameNullNotif,
-  gqlTableEnufColumns,
-  gqlColumnNoDups,
-  gqlColumnTypes,
-  gqlColumnDefaults,
-  gqlMinPrimaryKey,
 } from '../Common/GraphQLValidation'; // TODO add the others
 
+import {
+  tableNameNullNotif,
+  tableEnufColumns,
+  tableColumnNoDups,
+  tableColumnTypes,
+  tableColumnDefaults,
+  tableMinPrimaryKey,
+} from './AddWarning';
+
+import styles from '../../../Common/TableCommon/Table.scss';
+import { frequentlyUsedColumns, getFreqUsedColDisplayInfo } from './utils';
+import Dropdown from '../../../Common/Dropdown/Dropdown';
 /* AddTable is a wrapper which wraps
  *  1) Table Name input
  *  2) Columns inputs
@@ -239,8 +246,7 @@ class AddTable extends Component {
   }
 
   isValidType(s) {
-    return (typeof s === 'string' &&
-            s.trim().length > 0);
+    return typeof s === 'string' && s.trim().length > 0;
   }
 
   validateColumnTypes(cols) {
@@ -351,12 +357,12 @@ class AddTable extends Component {
     if (
       this.checkAndDispatch(
         this.props.tableName !== null,
-        gqlTableNameNullNotif
+        tableNameNullNotif
       ) &&
       this.checkAndDispatch(this.tableNameCheck(), gqlTableErrorNotif) &&
       this.checkAndDispatch(
         this.validateEnoughColumns(validColumns),
-        gqlTableEnufColumns
+        tableEnufColumns
       ) &&
       this.checkAndDispatch(
         this.validateColumnNames(validColumns),
@@ -364,17 +370,17 @@ class AddTable extends Component {
       ) &&
       this.checkAndDispatch(
         this.validateNoDupNames(validColumns),
-        gqlColumnNoDups
+        tableColumnNoDups
       ) &&
       this.checkAndDispatch(
         this.validateColumnTypes(validColumns),
-        gqlColumnTypes
+        tableColumnTypes
       ) &&
       this.checkAndDispatch(
         this.validateColumnDefaults(validColumns),
-        gqlColumnDefaults
+        tableColumnDefaults
       ) &&
-      this.checkAndDispatch(this.minPrimaryKeyCheck(), gqlMinPrimaryKey)
+      this.checkAndDispatch(this.minPrimaryKeyCheck(), tableMinPrimaryKey)
     ) {
       this.props.dispatch(createTableSql());
     }
@@ -401,7 +407,6 @@ class AddTable extends Component {
       columnDefaultFunctions,
       columnTypeCasts,
     } = this.props;
-    const styles = require('../../../Common/TableCommon/Table.scss');
     const getCreateBtnText = () => {
       let createBtnText = 'Add Table';
       if (ongoingRequest) {
@@ -414,6 +419,23 @@ class AddTable extends Component {
         createBtnText = 'Created! Redirecting...';
       }
       return createBtnText;
+    };
+
+    const frequentlyUsedColumnsOptions = () => {
+      return frequentlyUsedColumns.map(fuc => {
+        const { title, subTitle } = getFreqUsedColDisplayInfo(fuc);
+        return {
+          content: (
+            <div>
+              <div>
+                <b>{title}</b>
+              </div>
+              <div>{subTitle}</div>
+            </div>
+          ),
+          onClick: () => dispatch(setFreqUsedColumn(fuc)),
+        };
+      });
     };
 
     return (
@@ -447,6 +469,19 @@ class AddTable extends Component {
               onColUniqueChange={this.onColUniqueChange}
               setColDefaultValue={this.setColDefaultValue}
             />
+            <div>
+              <Dropdown
+                testId={'frequently-used-columns'}
+                options={frequentlyUsedColumnsOptions()}
+                position="bottom"
+                key={'frequently-used-columns'}
+                keyPrefix={'frequently-used-columns'}
+              >
+                <Button color="white" size="xs">
+                  + Frequently used columns
+                </Button>
+              </Dropdown>
+            </div>
             <hr />
             <h4 className={styles.subheading_text}>
               Primary Key &nbsp; &nbsp;

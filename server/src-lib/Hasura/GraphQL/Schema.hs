@@ -1,7 +1,7 @@
 module Hasura.GraphQL.Schema
   ( mkGCtxMap
-  , updateSCWithGCtx
   , GCtxMap
+  , buildGCtxMapPG
   , getGCtx
   , GCtx(..)
   , OpCtx(..)
@@ -11,7 +11,6 @@ module Hasura.GraphQL.Schema
   , isAggFld
   , qualObjectToName
   -- Schema stitching related
-  , RemoteGCtx (..)
   , checkSchemaConflicts
   , checkConflictingNode
   , emptyGCtx
@@ -20,7 +19,6 @@ module Hasura.GraphQL.Schema
   ) where
 
 
-import           Data.Has
 import           Data.Maybe                     (maybeToList)
 
 import qualified Data.HashMap.Strict            as Map
@@ -53,18 +51,6 @@ getTabInfo tc t =
   onNothing (Map.lookup t tc) $
      throw500 $ "table not found: " <>> t
 
-data RemoteGCtx
-  = RemoteGCtx
-  { _rgTypes            :: !TypeMap
-  , _rgQueryRoot        :: !ObjTyInfo
-  , _rgMutationRoot     :: !(Maybe ObjTyInfo)
-  , _rgSubscriptionRoot :: !(Maybe ObjTyInfo)
-  } deriving (Show, Eq)
-
-instance Has TypeMap RemoteGCtx where
-  getter = _rgTypes
-  modifier f ctx = ctx { _rgTypes = f $ _rgTypes ctx }
-
 type SelField = Either PGColInfo (RelInfo, Bool, AnnBoolExpPartialSQL, Maybe Int, Bool)
 
 qualObjectToName :: (ToTxt a) => QualifiedObject a -> G.Name
@@ -77,8 +63,7 @@ isValidCol :: PGCol -> Bool
 isValidCol = isValidName . G.Name . getPGColTxt
 
 isValidRel :: ToTxt a => RelName -> QualifiedObject a -> Bool
-isValidRel rn rt = isValidName (G.Name $ getRelTxt rn)
-                          && isValidObjectName rt
+isValidRel rn rt = isValidName (mkRelName rn) && isValidObjectName rt
 
 isValidField :: FieldInfo -> Bool
 isValidField = \case
@@ -133,10 +118,10 @@ mkColName :: PGCol -> G.Name
 mkColName (PGCol n) = G.Name n
 
 mkRelName :: RelName -> G.Name
-mkRelName (RelName r) = G.Name r
+mkRelName rn = G.Name $ relNameToTxt rn
 
 mkAggRelName :: RelName -> G.Name
-mkAggRelName (RelName r) = G.Name $ r <> "_aggregate"
+mkAggRelName rn = G.Name $ relNameToTxt rn <> "_aggregate"
 
 mkBoolExpName :: QualifiedTable -> G.Name
 mkBoolExpName tn =
@@ -244,13 +229,13 @@ mkRelFld allowAgg (RelInfo rn rTy _ remTab isManual) isNullable = case rTy of
   ObjRel -> [objRelFld]
   where
     objRelFld = mkHsraObjFldInfo (Just "An object relationship")
-      (G.Name $ getRelTxt rn) Map.empty objRelTy
+      (mkRelName rn) Map.empty objRelTy
     objRelTy = bool (G.toGT $ G.toNT relTabTy) (G.toGT relTabTy) isObjRelNullable
     isObjRelNullable = isManual || isNullable
     relTabTy = mkTableTy remTab
 
     arrRelFld =
-      mkHsraObjFldInfo (Just "An array relationship") (G.Name $ getRelTxt rn)
+      mkHsraObjFldInfo (Just "An array relationship") (mkRelName rn)
       (fromInpValL $ mkSelArgs remTab) arrRelTy
     arrRelTy = G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy remTab
     aggArrRelFld = mkHsraObjFldInfo (Just "An aggregated array relationship")
@@ -270,7 +255,7 @@ mkTableObj
   -> [SelField]
   -> ObjTyInfo
 mkTableObj tn allowedFlds =
-  mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) HasuraType
+  mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) TLHasuraType
   where
     flds = concatMap (either (pure . mkPGColFld) mkRelFld') allowedFlds
     mkRelFld' (relInfo, allowAgg, _, _, isNullable) =
@@ -559,7 +544,7 @@ mkBoolExpInp tn fields =
       Left (PGColInfo colName colTy _) ->
         mk (mkColName colName) (mkCompExpTy colTy)
       Right (RelInfo relName _ _ remTab _, _, _, _, _) ->
-        mk (G.Name $ getRelTxt relName) (mkBoolExpTy remTab)
+        mk (mkRelName relName) (mkBoolExpTy remTab)
 
 mkPGColInp :: PGColInfo -> InpValInfo
 mkPGColInp (PGColInfo colName colTy _) =
@@ -968,13 +953,13 @@ mkInsInp tn insCols relInfoMap =
 
     relInps = flip map (Map.toList relInfoMap) $
       \(relName, relInfo) ->
-         let rty = riType relInfo
-             remoteQT = riRTable relInfo
-         in case rty of
-            ObjRel -> InpValInfo Nothing (G.Name $ getRelTxt relName) Nothing $
-                      G.toGT $ mkObjInsInpTy remoteQT
-            ArrRel -> InpValInfo Nothing (G.Name $ getRelTxt relName) Nothing $
-                      G.toGT $ mkArrInsInpTy remoteQT
+         let remoteQT = riRTable relInfo
+             tyMaker = case riType relInfo of
+               ObjRel -> mkObjInsInpTy
+               ArrRel -> mkArrInsInpTy
+         in  InpValInfo Nothing (mkRelName relName) Nothing $
+               G.toGT $ tyMaker remoteQT
+
 
 {-
 
@@ -1352,7 +1337,7 @@ mkGCtxRole' tn insPermM selPermM updColsM
     mkFld ty = \case
       Left ci -> [((ty, mkColName $ pgiName ci), Left ci)]
       Right (ri, allowAgg, perm, lim, _) ->
-        let relFld = ( (ty, G.Name $ getRelTxt $ riName ri)
+        let relFld = ( (ty, mkRelName $ riName ri)
                      , Right (ri, False, perm, lim)
                      )
             aggRelFld = ( (ty, mkAggRelName $ riName ri)
@@ -1800,12 +1785,14 @@ mkGCtxMap tableCache functionCache = do
     tableFltr ti = not (tiSystemDefined ti)
                    && isValidObjectName (tiName ti)
 
-updateSCWithGCtx
-  :: (MonadError QErr m)
-  => SchemaCache -> m SchemaCache
-updateSCWithGCtx sc = do
+-- | build GraphQL schema from postgres tables and functions
+buildGCtxMapPG
+  :: (QErrM m, CacheRWM m)
+  => m ()
+buildGCtxMapPG = do
+  sc <- askSchemaCache
   gCtxMap <- mkGCtxMap (scTables sc) (scFunctions sc)
-  return $ sc {scGCtxMap = gCtxMap}
+  writeSchemaCache sc {scGCtxMap = gCtxMap}
 
 getGCtx :: (CacheRM m) => RoleName -> GCtxMap -> m GCtx
 getGCtx rn ctxMap = do

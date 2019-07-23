@@ -6,7 +6,6 @@
 module Hasura.Server.Telemetry
   ( runTelemetry
   , getDbId
-  , generateFingerprint
   , mkTelemetryLog
   )
   where
@@ -31,8 +30,6 @@ import qualified Data.ByteString.Lazy    as BL
 import qualified Data.HashMap.Strict     as Map
 import qualified Data.String.Conversions as CS
 import qualified Data.Text               as T
-import qualified Data.UUID               as UUID
-import qualified Data.UUID.V4            as UUID
 import qualified Database.PG.Query       as Q
 import qualified Network.HTTP.Client     as HTTP
 import qualified Network.HTTP.Types      as HTTP
@@ -145,7 +142,7 @@ computeMetrics sc =
         PermissionMetric selPerms insPerms updPerms delPerms nRoles
       evtTriggers = Map.size $ Map.filter (not . Map.null)
                     $ Map.map tiEventTriggerInfoMap usrTbls
-      rmSchemas   = Map.size $ scRemoteResolvers sc
+      rmSchemas   = Map.size $ scRemoteSchemas sc
       funcs = Map.size $ Map.filter (not . fiSystemDefined) $ scFunctions sc
 
   in Metrics nTables nViews relMetrics permMetrics evtTriggers rmSchemas funcs
@@ -162,9 +159,6 @@ computeMetrics sc =
     permsOfTbl :: TableInfo -> [(RoleName, RolePermInfo)]
     permsOfTbl = Map.toList . tiRolePermInfoMap
 
-
-generateFingerprint :: IO Text
-generateFingerprint = UUID.toText <$> UUID.nextRandom
 
 getDbId :: Q.TxE QErr Text
 getDbId =
@@ -210,7 +204,7 @@ instance A.ToJSON TelemetryHttpError where
 
 
 instance ToEngineLog TelemetryLog where
-  toEngineLog tl = (_tlLogLevel tl, "telemetry-log", A.toJSON tl)
+  toEngineLog tl = (_tlLogLevel tl, ELTTelemetryLog, A.toJSON tl)
 
 mkHttpError
   :: Text

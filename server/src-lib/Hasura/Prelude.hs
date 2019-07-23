@@ -3,6 +3,8 @@ module Hasura.Prelude
   , onNothing
   , onJust
   , onLeft
+  , bsToTxt
+  , txtToBs
   ) where
 
 import           Control.Applicative        as M ((<|>))
@@ -17,6 +19,7 @@ import           Data.Bool                  as M (bool)
 import           Data.Either                as M (lefts, partitionEithers,
                                                   rights)
 import           Data.Foldable              as M (foldrM, toList)
+import           Data.Functor               as M (($>), (<&>))
 import           Data.Hashable              as M (Hashable)
 import           Data.List                  as M (find, foldl', group,
                                                   intercalate, intersect,
@@ -34,6 +37,10 @@ import           GHC.Generics               as M (Generic)
 import           Prelude                    as M hiding (fail, init, lookup)
 import           Text.Read                  as M (readEither, readMaybe)
 
+import qualified Data.ByteString            as B
+import qualified Data.Text.Encoding         as TE
+import qualified Data.Text.Encoding.Error   as TE
+
 onNothing :: (Monad m) => Maybe a -> m a -> m a
 onNothing m act = maybe act return m
 
@@ -43,5 +50,8 @@ onJust m action = maybe (return ()) action m
 onLeft :: (Monad m) => Either e a -> (e -> m a) -> m a
 onLeft e f = either f return e
 
+bsToTxt :: B.ByteString -> Text
+bsToTxt = TE.decodeUtf8With TE.lenientDecode
 
-
+txtToBs :: Text -> B.ByteString
+txtToBs = TE.encodeUtf8

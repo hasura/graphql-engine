@@ -5,6 +5,7 @@ module Hasura.GraphQL.Resolve.BoolExp
 import           Data.Has
 import           Hasura.Prelude
 
+import qualified Data.HashMap.Strict               as Map
 import qualified Data.HashMap.Strict.InsOrd        as OMap
 import qualified Language.GraphQL.Draft.Syntax     as G
 
@@ -12,10 +13,12 @@ import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
-import           Hasura.SQL.Value
 import           Hasura.SQL.Types
+import           Hasura.SQL.Value
 
-type OpExp = OpExpG AnnPGVal
+import qualified Hasura.SQL.DML                    as S
+
+type OpExp = OpExpG UnresolvedVal
 
 parseOpExps
   :: (MonadError QErr m)
@@ -24,43 +27,46 @@ parseOpExps colTy annVal = do
   opExpsM <- flip withObjectM annVal $ \nt objM -> forM objM $ \obj ->
     forM (OMap.toList obj) $ \(k, v) ->
     case k of
-      "_eq"       -> fmap (AEQ True) <$> asPGColValM v
-      "_ne"       -> fmap (ANE True) <$> asPGColValM v
-      "_neq"      -> fmap (ANE True) <$> asPGColValM v
+      "_cast"     -> fmap ACast <$> parseCastExpression v
+
+      "_eq"       -> fmap (AEQ True) <$> asOpRhs v
+      "_ne"       -> fmap (ANE True) <$> asOpRhs v
+      "_neq"      -> fmap (ANE True) <$> asOpRhs v
       "_is_null"  -> resolveIsNull v
 
-      "_in"       -> fmap (AIN . catMaybes) <$> parseMany asPGColValM v
-      "_nin"      -> fmap (ANIN . catMaybes) <$> parseMany asPGColValM v
+      "_in"       -> fmap AIN <$> asPGArray colTy v
+      "_nin"      -> fmap ANIN <$> asPGArray colTy v
 
-      "_gt"       -> fmap AGT <$> asPGColValM v
-      "_lt"       -> fmap ALT <$> asPGColValM v
-      "_gte"      -> fmap AGTE <$> asPGColValM v
-      "_lte"      -> fmap ALTE <$> asPGColValM v
+      "_gt"       -> fmap AGT <$> asOpRhs v
+      "_lt"       -> fmap ALT <$> asOpRhs v
+      "_gte"      -> fmap AGTE <$> asOpRhs v
+      "_lte"      -> fmap ALTE <$> asOpRhs v
 
-      "_like"     -> fmap ALIKE <$> asPGColValM v
-      "_nlike"    -> fmap ANLIKE <$> asPGColValM v
+      "_like"     -> fmap ALIKE <$> asOpRhs v
+      "_nlike"    -> fmap ANLIKE <$> asOpRhs v
 
-      "_ilike"    -> fmap AILIKE <$> asPGColValM v
-      "_nilike"   -> fmap ANILIKE <$> asPGColValM v
+      "_ilike"    -> fmap AILIKE <$> asOpRhs v
+      "_nilike"   -> fmap ANILIKE <$> asOpRhs v
 
-      "_similar"  -> fmap ASIMILAR <$> asPGColValM v
-      "_nsimilar" -> fmap ANSIMILAR <$> asPGColValM v
+      "_similar"  -> fmap ASIMILAR <$> asOpRhs v
+      "_nsimilar" -> fmap ANSIMILAR <$> asOpRhs v
 
       -- jsonb related operators
-      "_contains"     -> fmap AContains <$> asPGColValM v
-      "_contained_in" -> fmap AContainedIn <$> asPGColValM v
-      "_has_key"      -> fmap AHasKey <$> asPGColValM v
-      "_has_keys_any" -> fmap AHasKeysAny <$> parseMany asPGColText v
-      "_has_keys_all" -> fmap AHasKeysAll <$> parseMany asPGColText v
+      "_contains"     -> fmap AContains <$> asOpRhs v
+      "_contained_in" -> fmap AContainedIn <$> asOpRhs v
+      "_has_key"      -> fmap AHasKey <$> asOpRhs v
+
+      "_has_keys_any" -> fmap AHasKeysAny <$> asPGArray PGText v
+      "_has_keys_all" -> fmap AHasKeysAll <$> asPGArray PGText v
 
       -- geometry/geography type related operators
-      "_st_contains"   -> fmap ASTContains <$> asPGColValM v
-      "_st_crosses"    -> fmap ASTCrosses <$> asPGColValM v
-      "_st_equals"     -> fmap ASTEquals <$> asPGColValM v
-      "_st_intersects" -> fmap ASTIntersects <$> asPGColValM v
-      "_st_overlaps"   -> fmap ASTOverlaps <$> asPGColValM v
-      "_st_touches"    -> fmap ASTTouches <$> asPGColValM v
-      "_st_within"     -> fmap ASTWithin <$> asPGColValM v
+      "_st_contains"   -> fmap ASTContains <$> asOpRhs v
+      "_st_crosses"    -> fmap ASTCrosses <$> asOpRhs v
+      "_st_equals"     -> fmap ASTEquals <$> asOpRhs v
+      "_st_intersects" -> fmap ASTIntersects <$> asOpRhs v
+      "_st_overlaps"   -> fmap ASTOverlaps <$> asOpRhs v
+      "_st_touches"    -> fmap ASTTouches <$> asOpRhs v
+      "_st_within"     -> fmap ASTWithin <$> asOpRhs v
       "_st_d_within"   -> asObjectM v >>= mapM parseAsSTDWithinObj
 
       _ ->
@@ -71,6 +77,14 @@ parseOpExps colTy annVal = do
           <> showName k
   return $ catMaybes $ fromMaybe [] opExpsM
   where
+    asOpRhs = fmap (fmap UVPG) . asPGColValM
+
+    asPGArray rhsTy v = do
+      valsM <- parseMany asPGColVal v
+      forM valsM $ \vals -> do
+        let arrayExp = S.SEArray $ map (txtEncoder . _apvValue) vals
+        return $ UVSQL $ S.SETyAnn arrayExp $ S.mkTypeAnn $ PgTypeArray rhsTy
+
     resolveIsNull v = case _aivValue v of
       AGScalar _ Nothing -> return Nothing
       AGScalar _ (Just (PGValBoolean b)) ->
@@ -81,19 +95,31 @@ parseOpExps colTy annVal = do
     parseAsSTDWithinObj obj = do
       distanceVal <- onNothing (OMap.lookup "distance" obj) $
                 throw500 "expected \"distance\" input field in st_d_within"
-      dist <- asPGColVal distanceVal
+      dist <- UVPG <$> asPGColVal distanceVal
       fromVal <- onNothing (OMap.lookup "from" obj) $
                 throw500 "expected \"from\" input field in st_d_within"
-      from <- asPGColVal fromVal
+      from <- UVPG <$> asPGColVal fromVal
       case colTy of
         PGGeography -> do
-          useSpheroidVal <- onNothing (OMap.lookup "use_spheroid" obj) $
-                    throw500 "expected \"use_spheroid\" input field in st_d_within"
-          useSpheroid <- asPGColVal useSpheroidVal
+          useSpheroidVal <-
+            onNothing (OMap.lookup "use_spheroid" obj) $
+            throw500 "expected \"use_spheroid\" input field in st_d_within"
+          useSpheroid <- UVPG <$> asPGColVal useSpheroidVal
           return $ ASTDWithinGeog $ DWithinGeogOp dist from useSpheroid
         PGGeometry ->
           return $ ASTDWithinGeom $ DWithinGeomOp dist from
         _ -> throw500 "expected PGGeometry/PGGeography column for st_d_within"
+
+parseCastExpression
+  :: (MonadError QErr m)
+  => AnnInpVal -> m (Maybe (CastExp UnresolvedVal))
+parseCastExpression =
+  withObjectM $ \_ objM -> forM objM $ \obj -> do
+    targetExps <- forM (OMap.toList obj) $ \(targetTypeName, castedComparisonExpressionInput) -> do
+      let targetType = txtToPgColTy $ G.unName targetTypeName
+      castedComparisonExpressions <- parseOpExps targetType castedComparisonExpressionInput
+      return (targetType, castedComparisonExpressions)
+    return $ Map.fromList targetExps
 
 parseColExp
   :: ( MonadError QErr m
@@ -107,7 +133,7 @@ parseColExp nt n val = do
   case fldInfo of
     Left pgColInfo -> do
       opExps <- parseOpExps (pgiType pgColInfo) val
-      return $ AVCol pgColInfo $ map (fmap UVPG) opExps
+      return $ AVCol pgColInfo opExps
     Right (relInfo, _, permExp, _) -> do
       relBoolExp <- parseBoolExp val
       return $ AVRel relInfo $ andAnnBoolExps relBoolExp $

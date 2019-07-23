@@ -113,6 +113,7 @@ const defaultModifyState = {
     rTable: null,
     rSchema: null,
     rcol: [],
+    isUnique: false,
   },
   manualRelAdd: {
     relName: '',

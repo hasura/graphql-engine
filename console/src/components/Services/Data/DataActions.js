@@ -16,10 +16,8 @@ import {
 import dataHeaders from './Common/Headers';
 import { loadMigrationStatus } from '../../Main/Actions';
 import returnMigrateUrl from './Common/getMigrateUrl';
-import {
-  filterInconsistentMetadata,
-  loadInconsistentObjects,
-} from '../Metadata/Actions';
+import { loadInconsistentObjects } from '../Metadata/Actions';
+import { filterInconsistentMetadataObjects } from '../Metadata/utils';
 import globals from '../../../Globals';
 
 import {
@@ -193,7 +191,7 @@ const fetchTrackedFunctions = () => {
         const { inconsistentObjects } = getState().metadata;
 
         if (inconsistentObjects.length > 0) {
-          consistentFunctions = filterInconsistentMetadata(
+          consistentFunctions = filterInconsistentMetadataObjects(
             data,
             inconsistentObjects,
             'functions'
@@ -291,7 +289,7 @@ const loadSchema = configOptions => {
 
         let consistentSchemas;
         if (inconsistentObjects.length > 0) {
-          consistentSchemas = filterInconsistentMetadata(
+          consistentSchemas = filterInconsistentMetadataObjects(
             maybeInconsistentSchemas,
             inconsistentObjects,
             'tables'
@@ -384,7 +382,7 @@ const fetchFunctionInit = () => (dispatch, getState) => {
       let consistentFunctions = data[2];
       const { inconsistentObjects } = getState().metadata;
       if (inconsistentObjects.length > 0) {
-        consistentFunctions = filterInconsistentMetadata(
+        consistentFunctions = filterInconsistentMetadataObjects(
           consistentFunctions,
           inconsistentObjects,
           'functions'

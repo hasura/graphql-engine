@@ -29,10 +29,9 @@ import           Hasura.GraphQL.Resolve.Mutation
 import           Hasura.GraphQL.Resolve.Select
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
-import           Hasura.RQL.DML.Internal           ( dmlTxErrorHandler
-                                                   , convPartialSQLExp
-                                                   , sessVarFromCurrentSetting
-                                                   )
+import           Hasura.RQL.DML.Internal           (convPartialSQLExp,
+                                                    dmlTxErrorHandler,
+                                                    sessVarFromCurrentSetting)
 import           Hasura.RQL.DML.Mutation
 import           Hasura.RQL.GBoolExp               (toSQLBoolExp)
 import           Hasura.RQL.Types
@@ -115,8 +114,9 @@ traverseInsObj rim (gName, annVal) defVal@(AnnInsObj cols objRels arrRels) =
       -- if relational insert input is 'null' then ignore
       -- return default value
       fmap (fromMaybe defVal) $ forM objM $ \obj -> do
-        let relName = RelName $ G.unName gName
+        let relNameM = RelName <$> mkNonEmptyText (G.unName gName)
             onConflictM = OMap.lookup "on_conflict" obj
+        relName <- onNothing relNameM $ throw500 "found empty GName String"
         dataVal <- onNothing (OMap.lookup "data" obj) $
                    throw500 "\"data\" object not found"
         relInfo <- onNothing (Map.lookup relName rim) $
@@ -280,7 +280,7 @@ validateInsert insCols objRels addCols = do
   forM_ objRels $ \relInfo -> do
     let lCols = map fst $ riMapping relInfo
         relName = riName relInfo
-        relNameTxt = getRelTxt relName
+        relNameTxt = relNameToTxt relName
         lColConflicts = lCols `intersect` (addCols <> insCols)
     withPathK relNameTxt $ unless (null lColConflicts) $ throwVE $
       "cannot insert object relation ship " <> relName
@@ -311,7 +311,7 @@ insertObjRel strfyNum role objRelIns =
     RelIns singleObjIns relInfo = objRelIns
     multiObjIns = singleToMulti singleObjIns
     relName = riName relInfo
-    relNameTxt = getRelTxt relName
+    relNameTxt = relNameToTxt relName
     mapCols = riMapping relInfo
     tn = riRTable relInfo
     allCols = _aiTableCols singleObjIns
@@ -352,7 +352,7 @@ insertArrRel strfyNum role resCols arrRelIns =
     RelIns multiObjIns relInfo = arrRelIns
     colMapping = riMapping relInfo
     tn = riRTable relInfo
-    relNameTxt = getRelTxt $ riName relInfo
+    relNameTxt = relNameToTxt $ riName relInfo
     mutFlds = [("affected_rows", RR.MCount)]
 
 -- | insert an object with object and array relationships
