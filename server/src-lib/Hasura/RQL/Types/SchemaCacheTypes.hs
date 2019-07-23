@@ -39,21 +39,21 @@ reportSchemaObj :: SchemaObjId -> T.Text
 reportSchemaObj (SOTable tn) = "table " <> qualObjectToText tn
 reportSchemaObj (SOFunction fn) = "function " <> qualObjectToText fn
 reportSchemaObj (SOQTemplate qtn) =
-  "query-template " <> getTQueryName qtn
+  "query-template " <> unNonEmptyText (getTQueryName qtn)
 reportSchemaObj (SOTableObj tn (TOCol cn)) =
   "column " <> qualObjectToText tn <> "." <> getPGColTxt cn
 reportSchemaObj (SOTableObj tn (TORel cn)) =
-  "relationship " <> qualObjectToText tn <> "." <> getRelTxt cn
+  "relationship " <> qualObjectToText tn <> "." <> relNameToTxt cn
 reportSchemaObj (SOTableObj tn (TORemoteRel rn)) =
   "remote relationship " <> qualObjectToText tn <> "." <> unRemoteRelationshipName rn
 reportSchemaObj (SOTableObj tn (TOCons cn)) =
   "constraint " <> qualObjectToText tn <> "." <> getConstraintTxt cn
 reportSchemaObj (SOTableObj tn (TOPerm rn pt)) =
-  "permission " <> qualObjectToText tn <> "." <> getRoleTxt rn
+  "permission " <> qualObjectToText tn <> "." <> roleNameToTxt rn
   <> "." <> permTypeToCode pt
 reportSchemaObj (SOTableObj tn (TOTrigger trn )) =
-  "event-trigger " <> qualObjectToText tn <> "." <> trn
-reportSchemaObj (SORemoteSchema remoteSchemaName) = "remote schema " <> unRemoteSchemaName remoteSchemaName
+  "event-trigger " <> qualObjectToText tn <> "." <> triggerNameToTxt trn
+reportSchemaObj (SORemoteSchema remoteSchemaName) = "remote schema " <> unNonEmptyText (unRemoteSchemaName remoteSchemaName)
 
 instance Show SchemaObjId where
   show soi = T.unpack $ reportSchemaObj soi

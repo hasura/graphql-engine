@@ -37,6 +37,19 @@ args:
     name: geog_table
     schema: public
 
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE geog_as_geom_table(
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        geom_col geometry NOT NULL
+      );
+- type: track_table
+  args:
+    name: geog_as_geom_table
+    schema: public
+
 #Insert data
 - type: run_sql
   args:
@@ -60,3 +73,12 @@ args:
       ('New York', ST_GeographyFromText('POINT(-74.0060 40.7128)') ),
       ('Linestring', ST_GeographyFromText('SRID=4326;LINESTRING(-43.23456 72.4567,-43.23456 72.4568)')),
       ('Point', ST_GeographyFromText('SRID=4326;POINT(-43.23456 72.4567772)'));
+- type: run_sql
+  args:
+    sql: |
+      INSERT INTO geog_as_geom_table (name, geom_col)
+      VALUES
+      ('London', ST_GeomFromText('SRID=4326;POINT(0.1278 51.5074)')),
+      ('Paris',  ST_GeomFromText('SRID=4326;POINT(2.3522 48.8566)')),
+      ('Moscow', ST_GeomFromText('SRID=4326;POINT(37.6173 55.7558)')),
+      ('New York', ST_GeomFromText('SRID=4326;POINT(-74.0060 40.7128)'));

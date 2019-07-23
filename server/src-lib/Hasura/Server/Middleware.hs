@@ -1,23 +1,23 @@
 module Hasura.Server.Middleware where
 
-import           Data.Maybe            (fromMaybe)
+import           Data.Maybe           (fromMaybe)
 import           Network.Wai
 
 import           Control.Applicative
 import           Hasura.Prelude
 import           Hasura.Server.Cors
-import           Hasura.Server.Logging (getRequestHeader)
 import           Hasura.Server.Utils
 
-import qualified Data.ByteString       as B
-import qualified Data.CaseInsensitive  as CI
-import qualified Data.Text.Encoding    as TE
-import qualified Network.HTTP.Types    as H
+import qualified Data.ByteString      as B
+import qualified Data.CaseInsensitive as CI
+import qualified Data.Text.Encoding   as TE
+import qualified Network.HTTP.Types   as H
 
 
 corsMiddleware :: CorsPolicy -> Middleware
-corsMiddleware policy app req sendResp =
-  maybe (app req sendResp) handleCors $ getRequestHeader "Origin" req
+corsMiddleware policy app req sendResp = do
+  let origin = getRequestHeader "Origin" $ requestHeaders req
+  maybe (app req sendResp) handleCors origin
 
   where
     handleCors origin = case cpConfig policy of
@@ -44,7 +44,8 @@ corsMiddleware policy app req sendResp =
 
     emptyResponse = responseLBS H.status204 [] ""
     requestedHeaders =
-      fromMaybe "" $ getRequestHeader "Access-Control-Request-Headers" req
+      fromMaybe "" $ getRequestHeader "Access-Control-Request-Headers" $
+        requestHeaders req
 
     injectCorsHeaders :: B.ByteString -> Response -> Response
     injectCorsHeaders origin = setHeaders (mkCorsHeaders origin)
