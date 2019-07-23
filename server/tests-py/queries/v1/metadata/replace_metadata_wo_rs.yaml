@@ -6,7 +6,6 @@ response:
 query:
   type: replace_metadata
   args:
-    query_templates: []
     functions:
     - schema: public
       name: search_articles

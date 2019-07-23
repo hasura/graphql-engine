@@ -30,7 +30,6 @@ response:
     update_permissions: []
     delete_permissions: []
     event_triggers: []
-  query_templates: []
   query_collections: []
   allowlist: []
   functions:
