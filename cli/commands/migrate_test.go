@@ -31,27 +31,6 @@ var ravenVersions = []mt.Version{
 }
 
 var testMetadataPrev = map[string][]byte{
-	"metadata": []byte(`functions: []
-query_templates: []
-remote_schemas: []
-tables:
-- array_relationships: []
-  delete_permissions: []
-  event_triggers: []
-  insert_permissions: []
-  object_relationships: []
-  select_permissions: []
-  table: test
-  update_permissions: []
-`),
-	"empty-metadata": []byte(`functions: []
-query_templates: []
-remote_schemas: []
-tables: []
-`),
-}
-
-var testMetadataCurrent = map[string][]byte{
 	"metadata": []byte(`allowlist: []
 functions: []
 query_collections: []
@@ -71,6 +50,28 @@ tables:
 functions: []
 query_collections: []
 query_templates: []
+remote_schemas: []
+tables: []
+`),
+
+}var testMetadataCurrent = map[string][]byte{
+	"metadata": []byte(`allowlist: []
+functions: []
+query_collections: []
+remote_schemas: []
+tables:
+- array_relationships: []
+  delete_permissions: []
+  event_triggers: []
+  insert_permissions: []
+  object_relationships: []
+  select_permissions: []
+  table: test
+  update_permissions: []
+`),
+	"empty-metadata": []byte(`allowlist: []
+functions: []
+query_collections: []
 remote_schemas: []
 tables: []
 `),
