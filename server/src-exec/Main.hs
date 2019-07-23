@@ -154,7 +154,7 @@ main =  do
       unLogger logger $ mkGenericStrLog LevelInfo "startup" "postgres connection established"
 
       -- safe init catalog
-      initRes <- initialise pool sqlGenCtx isolationLevel logger httpManager
+      initRes <- initialise pool sqlGenCtx readOnlyDb logger httpManager
       unLogger logger $ mkGenericStrLog LevelInfo "startup" "catalog initialised"
 
       (app, cacheRef, cacheInitTime) <-
@@ -167,9 +167,8 @@ main =  do
       logInconsObjs logger inconsObjs
 
       -- start a background thread for schema sync
-      let readOnly = True
-      when (not readOnly) $ startSchemaSync sqlGenCtx pool logger httpManager
-                            cacheRef instanceId cacheInitTime
+      when (not readOnlyDb) $ startSchemaSync sqlGenCtx pool logger httpManager
+                              cacheRef instanceId cacheInitTime
       --unLogger logger $ mkGenericStrLog LevelInfo "startup" "started schema sync"
 
       let warpSettings = Warp.setPort port $ Warp.setHost host Warp.defaultSettings
@@ -179,12 +178,12 @@ main =  do
       logEnvHeaders <- getFromEnv False "LOG_HEADERS_FROM_ENV"
 
       -- prepare event triggers data
-      when (not readOnly) (prepareEvents pool logger)
+      when (not readOnlyDb) (prepareEvents pool logger)
       eventEngineCtx <- atomically $ initEventEngineCtx maxEvThrds evFetchMilliSec
       let scRef = _scrCache cacheRef
-      when (not readOnly) (unLogger logger $
+      when (not readOnlyDb) (unLogger logger $
         mkGenericStrLog LevelInfo "event_triggers" "starting workers")
-      when (not readOnly) $ void $ C.forkIO $ processEventQueue hloggerCtx logEnvHeaders httpManager pool scRef eventEngineCtx
+      when (not readOnlyDb) $ void $ C.forkIO $ processEventQueue hloggerCtx logEnvHeaders httpManager pool scRef eventEngineCtx
 
       -- start a background thread to check for updates
       void $ C.forkIO $ checkForUpdates loggerCtx httpManager
@@ -251,17 +250,17 @@ main =  do
       let connParams = Q.defaultConnParams { Q.cpConns = 1 }
       Q.initPGPool ci connParams pgLogger
 
-    initialise pool sqlGenCtx isolationLevel (Logger logger) httpMgr = do
+    initialise pool sqlGenCtx readOnlyDb (Logger logger) httpMgr = do
       currentTime <- getCurrentTime
       -- initialise the catalog
-      initRes <- runAsAdmin pool sqlGenCtx isolationLevel (Logger logger) httpMgr $
+      initRes <- runAsAdmin pool sqlGenCtx (getIsolationLevel readOnlyDb) (Logger logger) httpMgr $
                  initCatalogSafe currentTime
       either printErrJExit (logger . mkGenericStrLog LevelInfo "db_init") initRes
 
       -- migrate catalog if necessary
-      migRes <- runAsAdmin pool sqlGenCtx isolationLevel (Logger logger) httpMgr $
+      migRes <- runAsAdmin pool sqlGenCtx (getIsolationLevel readOnlyDb) (Logger logger) httpMgr $
                 migrateCatalog currentTime
-      --when (not readOnly) $ either printErrJExit (logger . mkGenericStrLog LevelInfo "db_migrate") migRes
+      when (not readOnlyDb) $ either printErrJExit (logger . mkGenericStrLog LevelInfo "db_migrate") migRes
 
       -- generate and retrieve uuids
       getUniqIds pool
