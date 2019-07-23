@@ -1,6 +1,6 @@
 const config = {
 	"gatsby": {
-		"pathPrefix": "/graphql/flutter",
+		"pathPrefix": "/graphql/flutter-graphql",
 		"siteUrl": "https://learn.hasura.io",
 		"gaTrackingId": "UA-59768903-1"
 	},
@@ -9,7 +9,7 @@ const config = {
 		"title": "/ graphql / flutter",
 		"githubUrl": "https://github.com/hasura/graphql-engine",
 		"helpUrl": "https://discordapp.com/invite/vBPpJkS",
-		"tweetText": "Check out this GraphQL course for Flutter developers by @HasuraHQ https://learn.hasura.io/graphql/flutter",
+		"tweetText": "Check out this GraphQL course for Flutter developers by @HasuraHQ https://learn.hasura.io/graphql/flutter-graphql",
 		"links": [{
 			"text": "hasura.io",
 			"link": "https://hasura.io"
