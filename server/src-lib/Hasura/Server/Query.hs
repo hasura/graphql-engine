@@ -128,17 +128,12 @@ instance HasSQLGenCtx Run where
 
 fetchLastUpdate :: Q.TxE QErr (Maybe (InstanceId, UTCTime))
 fetchLastUpdate = do
-  l <- Q.listQE defaultTxErrorHandler
+  Q.withQE defaultTxErrorHandler
     [Q.sql|
        SELECT instance_id::text, occurred_at
        FROM hdb_catalog.hdb_schema_update_event
        ORDER BY occurred_at DESC LIMIT 1
           |] () True
-  case l of
-    []  -> return Nothing
-    [i] -> return $ Just i
-    -- never happens
-    _   -> throw500 "more than one row returned by query"
 
 recordSchemaUpdate :: InstanceId -> Q.TxE QErr ()
 recordSchemaUpdate instanceId =

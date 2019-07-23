@@ -435,11 +435,7 @@ $function$
 $function$
 LANGUAGE plpgsql;
 
-CREATE TRIGGER hdb_schema_update_event_notifier_insert AFTER INSERT ON
-  hdb_catalog.hdb_schema_update_event FOR EACH ROW EXECUTE PROCEDURE
-  hdb_catalog.hdb_schema_update_event_notifier();
-
-CREATE TRIGGER hdb_schema_update_event_notifier_update AFTER UPDATE ON
+CREATE TRIGGER hdb_schema_update_event_notifier_insert AFTER INSERT OR UPDATE ON
   hdb_catalog.hdb_schema_update_event FOR EACH ROW EXECUTE PROCEDURE
   hdb_catalog.hdb_schema_update_event_notifier();
 
