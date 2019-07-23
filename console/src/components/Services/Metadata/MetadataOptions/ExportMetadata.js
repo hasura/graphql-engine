@@ -48,7 +48,10 @@ class ExportMetadata extends Component {
                       encodeURIComponent(JSON.stringify(data));
                     const anchorElem = document.createElement('a');
                     anchorElem.setAttribute('href', dataStr);
-                    anchorElem.setAttribute('download', 'metadata.json');
+                    anchorElem.setAttribute(
+                      'download',
+                      `hasura_metadata_${Date.now()}.json`
+                    );
                     // The following fixes the download issue on firefox
                     document.body.appendChild(anchorElem);
                     anchorElem.click();
