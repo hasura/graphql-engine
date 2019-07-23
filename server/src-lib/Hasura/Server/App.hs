@@ -443,12 +443,13 @@ mkWaiApp
   -> InstanceId
   -> S.HashSet API
   -> EL.LQOpts
+  -> Q.TxIsolation
   -> IO (Wai.Application, SchemaCacheRef, Maybe UTCTime)
 mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
-         enableConsole consoleAssetsDir enableTelemetry instanceId apis lqOpts = do
+         enableConsole consoleAssetsDir enableTelemetry instanceId apis lqOpts cacheIsoLevel = do
 
     let pgExecCtx = PGExecCtx pool isoLevel
-        pgExecCtxSer = PGExecCtx pool Q.RepeatableRead
+        pgExecCtxSer = PGExecCtx pool cacheIsoLevel
     (cacheRef, cacheBuiltTime) <- do
       pgResp <- runExceptT $ peelRun emptySchemaCache adminUserInfo
                 httpManager sqlGenCtx pgExecCtxSer $ do
