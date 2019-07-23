@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import Button from '../../../Common/Button/Button';
+import { getCurrTimeForFileName } from './utils';
 
 import {
   showSuccessNotification,
@@ -46,19 +47,23 @@ class ExportMetadata extends Component {
                     const dataStr =
                       'data:text/json;charset=utf-8,' +
                       encodeURIComponent(JSON.stringify(data));
+
+                    const fileName =
+                      'hasura_metadata_' + getCurrTimeForFileName() + '.json';
+
                     const anchorElem = document.createElement('a');
                     anchorElem.setAttribute('href', dataStr);
-                    anchorElem.setAttribute(
-                      'download',
-                      `hasura_metadata_${Date.now()}.json`
-                    );
+                    anchorElem.setAttribute('download', fileName);
                     // The following fixes the download issue on firefox
                     document.body.appendChild(anchorElem);
                     anchorElem.click();
                     anchorElem.remove();
                     this.setState({ isExporting: false });
                     this.props.dispatch(
-                      showSuccessNotification('Metadata exported successfully!')
+                      showSuccessNotification(
+                        'Metadata exported successfully!',
+                        `Metadata file "${fileName}"`
+                      )
                     );
                   } else {
                     const parsedErrorMsg = data;
