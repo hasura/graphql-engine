@@ -290,18 +290,14 @@ class Schema extends Component {
       const getTrackAllBtn = () => {
         let trackAllBtn = null;
 
-        const allValidUntrackedTables = allUntrackedTables.filter(
-          table => table.isGQLCompatible
-        );
-
         const trackAllTables = e => {
           e.stopPropagation();
           e.preventDefault();
 
-          dispatch(addAllUntrackedTablesSql(allValidUntrackedTables));
+          dispatch(addAllUntrackedTablesSql(allUntrackedTables));
         };
 
-        if (allValidUntrackedTables.length > 0) {
+        if (allUntrackedTables.length > 0) {
           trackAllBtn = (
             <Button
               className={`${styles.display_inline} ${styles.add_mar_left}`}
@@ -345,7 +341,6 @@ class Schema extends Component {
                   color="white"
                   size="xs"
                   onClick={handleTrackTable}
-                  disabled={!table.isGQLCompatible}
                 >
                   Track
                 </Button>
