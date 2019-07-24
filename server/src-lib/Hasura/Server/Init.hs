@@ -569,7 +569,6 @@ enableTelemetryEnv =
 readOnlyDBEnv :: (String, String)
 readOnlyDBEnv =
   ( "HASURA_GRAPHQL_READ_ONLY_DB"
-  -- TODO: better description
   , "Database is a read replica (default: false)"
   )
 

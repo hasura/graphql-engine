@@ -150,12 +150,9 @@ main =  do
       unLogger logger $ connInfoToLog ci
 
       pool <- Q.initPGPool ci cp pgLogger
-      
-      unLogger logger $ mkGenericStrLog LevelInfo "startup" "postgres connection established"
 
       -- safe init catalog
       initRes <- initialise pool sqlGenCtx readOnlyDb logger httpManager
-      unLogger logger $ mkGenericStrLog LevelInfo "startup" "catalog initialised"
 
       (app, cacheRef, cacheInitTime) <-
         mkWaiApp isoL loggerCtx sqlGenCtx enableAL pool ci httpManager am
@@ -169,7 +166,6 @@ main =  do
       -- start a background thread for schema sync
       when (not readOnlyDb) $ startSchemaSync sqlGenCtx pool logger httpManager
                               cacheRef instanceId cacheInitTime
-      --unLogger logger $ mkGenericStrLog LevelInfo "startup" "started schema sync"
 
       let warpSettings = Warp.setPort port $ Warp.setHost host Warp.defaultSettings
 
@@ -212,12 +208,12 @@ main =  do
       either printErrJExit (const cleanSuccess) res
 
     HCExecute -> do
-      (_, logger, pgLogger) <- mkLoggers defaultEnabledLogTypes LevelInfo
+      (_, _, pgLogger) <- mkLoggers defaultEnabledLogTypes LevelInfo
       queryBs <- BL.getContents
       ci <- procConnInfo rci
       let sqlGenCtx = SQLGenCtx False
       pool <- getMinimalPool pgLogger ci
-      res <- runAsAdmin pool sqlGenCtx Q.Serializable logger httpManager $ execQuery queryBs
+      res <- runAsAdmin pool sqlGenCtx Q.Serializable httpManager $ execQuery queryBs
       either printErrJExit BLC.putStrLn res
 
     HCVersion -> putStrLn $ "Hasura GraphQL Engine: " ++ T.unpack currentVersion
@@ -236,8 +232,7 @@ main =  do
       pool <- getMinimalPool pgLogger ci
       runExceptT $ Q.runTx pool (isolationLevel, Nothing) tx
 
-    runAsAdmin pool sqlGenCtx isolationLevel (Logger logger) httpManager m = do
-      logger $ mkGenericStrLog LevelInfo "startup" "running runAsAdmin"
+    runAsAdmin pool sqlGenCtx isolationLevel httpManager m = do
       res  <- runExceptT $ peelRun emptySchemaCache adminUserInfo
               httpManager sqlGenCtx (PGExecCtx pool isolationLevel) m
       return $ fmap fst res
@@ -253,12 +248,12 @@ main =  do
     initialise pool sqlGenCtx readOnlyDb (Logger logger) httpMgr = do
       currentTime <- getCurrentTime
       -- initialise the catalog
-      initRes <- runAsAdmin pool sqlGenCtx (getIsolationLevel readOnlyDb) (Logger logger) httpMgr $
+      initRes <- runAsAdmin pool sqlGenCtx (getIsolationLevel readOnlyDb) httpMgr $
                  initCatalogSafe currentTime
       either printErrJExit (logger . mkGenericStrLog LevelInfo "db_init") initRes
 
       -- migrate catalog if necessary
-      migRes <- runAsAdmin pool sqlGenCtx (getIsolationLevel readOnlyDb) (Logger logger) httpMgr $
+      migRes <- runAsAdmin pool sqlGenCtx (getIsolationLevel readOnlyDb) httpMgr $
                 migrateCatalog currentTime
       when (not readOnlyDb) $ either printErrJExit (logger . mkGenericStrLog LevelInfo "db_migrate") migRes
 
