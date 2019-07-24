@@ -18,6 +18,7 @@ module Hasura.Logging
   , LoggerCtx(..)
   , mkLoggerCtx
   , cleanLoggerCtx
+  , LogCallbackFunction
   ) where
 
 import           Hasura.Prelude
@@ -147,7 +148,7 @@ data LoggerCtx
   , _lcLogLevel        :: !LogLevel
   , _lcTimeGetter      :: !(IO FormattedTime)
   , _lcEnabledLogTypes :: !(Set.HashSet EngineLogType)
-  , _lcLogCallback     :: !(Maybe (BL.ByteString -> IO ()))
+  , _lcLogCallback     :: !(Maybe LogCallbackFunction)
   }
 
 data LoggerSettings
@@ -157,6 +158,8 @@ data LoggerSettings
   , _lsTimeZone        :: !(Maybe Time.TimeZone)
   , _lsLevel           :: !LogLevel
   } deriving (Show, Eq)
+
+type LogCallbackFunction = BL.ByteString -> IO ()
 
 defaultLoggerSettings :: Bool -> LogLevel -> LoggerSettings
 defaultLoggerSettings isCached =
@@ -173,7 +176,11 @@ getFormattedTime tzM = do
     format = "%FT%H:%M:%S%3Q%z"
     -- format = Format.iso8601DateFormat (Just "%H:%M:%S")
 
-mkLoggerCtx :: LoggerSettings -> Set.HashSet EngineLogType -> Maybe (BL.ByteString -> IO ()) -> IO LoggerCtx
+mkLoggerCtx
+  :: LoggerSettings
+  -> Set.HashSet EngineLogType
+  -> Maybe (BL.ByteString -> IO ())
+  -> IO LoggerCtx
 mkLoggerCtx (LoggerSettings cacheTime tzM logLevel) enabledLogs logCallback = do
   loggerSet <- FL.newStdoutLoggerSet FL.defaultBufSize
   timeGetter <- bool (return $ getFormattedTime tzM) cachedTimeGetter cacheTime

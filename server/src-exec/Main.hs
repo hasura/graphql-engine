@@ -7,6 +7,6 @@ import           Hasura.Server.Init
 main :: IO ()
 main =  do
   (HGEOptionsG rci hgeCmd) <- parseArgs
-  (httpManager, instanceId) <- initialiseCtx
+  initCtx <- initialiseCtx hgeCmd rci Nothing
   -- middlewares and logCallback are Nothing for OSS HGE operations
-  handleCommand hgeCmd rci httpManager instanceId Nothing Nothing Nothing
+  handleCommand hgeCmd initCtx Nothing Nothing

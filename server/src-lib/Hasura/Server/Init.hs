@@ -21,17 +21,21 @@ import qualified Hasura.Logging                   as L
 import qualified Text.PrettyPrint.ANSI.Leijen     as PP
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types                 ( RoleName (..)
-                                                  , SchemaCache (..)
-                                                  , mkNonEmptyText )
+import           Hasura.RQL.Types                 (RoleName (..),
+                                                   SchemaCache (..),
+                                                   mkNonEmptyText)
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
 import           Hasura.Server.Logging
 import           Hasura.Server.Utils
 
+newtype DbUid
+  = DbUid { getDbUid :: Text }
+  deriving (Show, Eq, J.ToJSON, J.FromJSON)
+
 newtype InstanceId
   = InstanceId { getInstanceId :: Text }
-  deriving (Show, Eq, J.ToJSON, J.FromJSON)
+  deriving (Show, Eq, J.ToJSON, J.FromJSON, Q.FromCol, Q.ToPrepArg)
 
 mkInstanceId :: IO InstanceId
 mkInstanceId = InstanceId . UUID.toText <$> UUID.nextRandom
@@ -169,7 +173,7 @@ instance FromEnv AdminSecret where
 
 instance FromEnv RoleName where
   fromEnv string = case mkNonEmptyText (T.pack string) of
-    Nothing -> Left "empty string not allowed"
+    Nothing     -> Left "empty string not allowed"
     Just neText -> Right $ RoleName neText
 
 instance FromEnv Bool where

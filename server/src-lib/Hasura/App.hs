@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 module Hasura.App where
 
 import           Control.Monad.STM          (atomically)
@@ -40,7 +41,6 @@ import           Hasura.Server.Logging
 import           Hasura.Server.Query        (RQLQuery, Run, peelRun)
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
-import           Hasura.Server.Utils        (generateFingerprint)
 import           Hasura.Server.Version      (currentVersion)
 
 import qualified Database.PG.Query          as Q
@@ -117,59 +117,98 @@ mkPGLogger (Logger logger) (Q.PLERetryMsg msg) =
   logger $ PGLog LevelWarn msg
 
 
--- | this is separate because some of these contexts might be used by external
---   functions
-initialiseCtx :: IO (HTTP.Manager, InstanceId)
-initialiseCtx = do
+-- | most of the required types for initializing graphql-engine
+data InitCtx
+  = InitCtx
+  { _icHttpManager :: !HTTP.Manager
+  , _icInstanceId  :: !InstanceId
+  , _icDbUid       :: !Text
+  , _icLoggers     :: !Loggers
+  , _icConnInfo    :: !Q.ConnInfo
+  , _icPgPool      :: !Q.PGPool
+  }
+
+-- | Collection of the LoggerCtx, the regular Logger and the PGLogger
+data Loggers
+  = Loggers
+  { _loggersLoggerCtx :: !LoggerCtx
+  , _loggersLogger    :: !Logger
+  , _loggersPgLogger  :: !Q.PGLogger
+  }
+
+-- | a separate function to create the initialization context because some of
+-- these contexts might be used by external functions
+initialiseCtx :: HGECommand -> RawConnInfo -> Maybe LogCallbackFunction -> IO InitCtx
+initialiseCtx hgeCmd rci logCallback = do
   -- global http manager
   httpManager <- HTTP.newManager HTTP.tlsManagerSettings
   instanceId <- mkInstanceId
-  return (httpManager, instanceId)
+  connInfo <- procConnInfo
+  (loggerThings, pool) <- case hgeCmd of
+    HCServe ServeOptions{..} -> do
+      l@(Loggers _ logger pgLogger) <- mkLoggers soEnabledLogTypes soLogLevel
+      -- log postgres connection info
+      unLogger logger $ connInfoToLog connInfo
+      pool <- Q.initPGPool connInfo soConnParams pgLogger
+      return (l, pool)
 
-type LogCallbackFunction = BL.ByteString -> IO ()
+    _ -> do
+      l@(Loggers _ _ pgLogger) <- mkLoggers defaultEnabledLogTypes LevelInfo
+      pool <- getMinimalPool pgLogger connInfo
+      return (l, pool)
+
+  eDbId <- runExceptT $ Q.runTx pool (Q.Serializable, Nothing) getDbId
+  dbId <- either printErrJExit return eDbId
+
+  return $ InitCtx httpManager instanceId dbId loggerThings connInfo pool
+  where
+    procConnInfo =
+      either (printErrExit . connInfoErrModifier) return $ mkConnInfo rci
+
+    getMinimalPool pgLogger ci = do
+      let connParams = Q.defaultConnParams { Q.cpConns = 1 }
+      Q.initPGPool ci connParams pgLogger
+
+    mkLoggers enabledLogs logLevel = do
+      loggerCtx <- mkLoggerCtx (defaultLoggerSettings True logLevel) enabledLogs logCallback
+      let logger = mkLogger loggerCtx
+          pgLogger = mkPGLogger logger
+      return $ Loggers loggerCtx logger pgLogger
 
 handleCommand
   :: HGECommand
-  -> RawConnInfo
-  -> HTTP.Manager
-  -> InstanceId
+  -> InitCtx
   -> Maybe UserAuthMiddleware
   -> Maybe (HasuraMiddleware RQLQuery)
-  -> Maybe LogCallbackFunction
   -> IO ()
-handleCommand hgeCmd rci httpManager instanceId authMiddleware metadataMiddleware logCallback =
+handleCommand hgeCmd (InitCtx httpManager instanceId dbId loggers connInfo pgPool)
+  authMiddleware metadataMiddleware =
 
   case hgeCmd of
-    HCServe so@(ServeOptions port host cp isoL mAdminSecret mAuthHook
+    HCServe so@(ServeOptions port host _ isoL mAdminSecret mAuthHook
                 mJwtSecret mUnAuthRole corsCfg enableConsole consoleAssetsDir
                 enableTelemetry strfyNum enabledAPIs lqOpts enableAL
-                enabledLogs serverLogLevel) -> do
+                _ _) -> do
 
       let sqlGenCtx = SQLGenCtx strfyNum
 
-      (loggerCtx, logger, pgLogger) <- mkLoggers enabledLogs serverLogLevel
+      let Loggers loggerCtx logger _ = loggers
 
       initTime <- Clock.getCurrentTime
       -- log serve options
       unLogger logger $ serveOptsToLog so
-      hloggerCtx  <- mkLoggerCtx (defaultLoggerSettings False serverLogLevel) enabledLogs logCallback
+      --hloggerCtx  <- mkLoggerCtx (defaultLoggerSettings False serverLogLevel) enabledLogs logCallback
 
       authModeRes <- runExceptT $ mkAuthMode mAdminSecret mAuthHook mJwtSecret
                                              mUnAuthRole httpManager loggerCtx
 
       authMode <- either (printErrExit . T.unpack) return authModeRes
 
-      ci <- procConnInfo
-      -- log postgres connection info
-      unLogger logger $ connInfoToLog ci
-
-      pool <- Q.initPGPool ci cp pgLogger
-
       -- safe init catalog
-      initRes <- initialise pool sqlGenCtx logger
+      initialise pgPool sqlGenCtx logger
 
       (app, cacheRef, cacheInitTime) <-
-        mkWaiApp isoL loggerCtx sqlGenCtx enableAL pool ci httpManager
+        mkWaiApp isoL loggerCtx sqlGenCtx enableAL pgPool connInfo httpManager
           authMode corsCfg enableConsole consoleAssetsDir enableTelemetry
           instanceId enabledAPIs lqOpts authMiddleware metadataMiddleware
 
@@ -178,7 +217,7 @@ handleCommand hgeCmd rci httpManager instanceId authMiddleware metadataMiddlewar
       logInconsObjs logger inconsObjs
 
       -- start a background thread for schema sync
-      startSchemaSync sqlGenCtx pool logger httpManager
+      startSchemaSync sqlGenCtx pgPool logger httpManager
                       cacheRef instanceId cacheInitTime
 
       let warpSettings = Warp.setPort port $ Warp.setHost host Warp.defaultSettings
@@ -188,12 +227,12 @@ handleCommand hgeCmd rci httpManager instanceId authMiddleware metadataMiddlewar
       logEnvHeaders <- getFromEnv False "LOG_HEADERS_FROM_ENV"
 
       -- prepare event triggers data
-      prepareEvents pool logger
+      prepareEvents pgPool logger
       eventEngineCtx <- atomically $ initEventEngineCtx maxEvThrds evFetchMilliSec
       let scRef = _scrCache cacheRef
       unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
-      void $ C.forkIO $ processEventQueue hloggerCtx logEnvHeaders
-        httpManager pool scRef eventEngineCtx
+      void $ C.forkIO $ processEventQueue loggerCtx logEnvHeaders
+        httpManager pgPool scRef eventEngineCtx
 
       -- start a background thread to check for updates
       void $ C.forkIO $ checkForUpdates loggerCtx httpManager
@@ -201,7 +240,7 @@ handleCommand hgeCmd rci httpManager instanceId authMiddleware metadataMiddlewar
       -- start a background thread for telemetry
       when enableTelemetry $ do
         unLogger logger $ mkGenericStrLog LevelInfo "telemetry" telemetryNotice
-        void $ C.forkIO $ runTelemetry logger httpManager scRef initRes
+        void $ C.forkIO $ runTelemetry logger httpManager scRef dbId instanceId
 
       finishTime <- Clock.getCurrentTime
       let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime
@@ -210,55 +249,33 @@ handleCommand hgeCmd rci httpManager instanceId authMiddleware metadataMiddlewar
       Warp.runSettings warpSettings app
 
     HCExport -> do
-      (_, _, pgLogger) <- mkLoggers defaultEnabledLogTypes LevelInfo
-      ci <- procConnInfo
-      res <- runTx' pgLogger ci fetchMetadata
+      res <- runTx' fetchMetadata
       either printErrJExit printJSON res
 
     HCClean -> do
-      (_, _, pgLogger) <- mkLoggers defaultEnabledLogTypes LevelInfo
-      ci <- procConnInfo
-      res <- runTx' pgLogger ci cleanCatalog
+      res <- runTx' cleanCatalog
       either printErrJExit (const cleanSuccess) res
 
     HCExecute -> do
-      (_, _, pgLogger) <- mkLoggers defaultEnabledLogTypes LevelInfo
       queryBs <- BL.getContents
-      ci <- procConnInfo
       let sqlGenCtx = SQLGenCtx False
-      pool <- getMinimalPool pgLogger ci
-      res <- runAsAdmin pool sqlGenCtx $ execQuery queryBs
+      res <- runAsAdmin pgPool sqlGenCtx $ execQuery queryBs
       either printErrJExit BLC.putStrLn res
 
     HCVersion -> putStrLn $ "Hasura GraphQL Engine: " ++ T.unpack currentVersion
   where
-
-    mkLoggers enabledLogs logLevel = do
-      loggerCtx <- mkLoggerCtx (defaultLoggerSettings True logLevel) enabledLogs logCallback
-      let logger = mkLogger loggerCtx
-          pgLogger = mkPGLogger logger
-      return (loggerCtx, logger, pgLogger)
-
     runTx pool tx =
       runExceptT $ Q.runTx pool (Q.Serializable, Nothing) tx
 
-    runTx' pgLogger ci tx = do
-      pool <- getMinimalPool pgLogger ci
-      runExceptT $ Q.runTx pool (Q.Serializable, Nothing) tx
+    runTx' :: Q.TxE QErr a -> IO (Either QErr a)
+    runTx' tx =
+      runExceptT $ Q.runTx pgPool (Q.Serializable, Nothing) tx
 
     runAsAdmin :: Q.PGPool -> SQLGenCtx -> Run a -> IO (Either QErr a)
     runAsAdmin pool sqlGenCtx m = do
       res  <- runExceptT $ peelRun emptySchemaCache adminUserInfo
               httpManager sqlGenCtx (PGExecCtx pool Q.Serializable) m
       return $ fmap fst res
-
-    procConnInfo =
-      either (printErrExit . connInfoErrModifier) return $
-        mkConnInfo rci
-
-    getMinimalPool pgLogger ci = do
-      let connParams = Q.defaultConnParams { Q.cpConns = 1 }
-      Q.initPGPool ci connParams pgLogger
 
     initialise pool sqlGenCtx (Logger logger) = do
       currentTime <- getCurrentTime
@@ -270,19 +287,10 @@ handleCommand hgeCmd rci httpManager instanceId authMiddleware metadataMiddlewar
       migRes <- runAsAdmin pool sqlGenCtx $ migrateCatalog currentTime
       either printErrJExit (logger . mkGenericStrLog LevelInfo "db_migrate") migRes
 
-      -- generate and retrieve uuids
-      getUniqIds pool
-
     prepareEvents pool (Logger logger) = do
       logger $ mkGenericStrLog LevelInfo "event_triggers" "preparing data"
       res <- runTx pool unlockAllEvents
       either printErrJExit return res
-
-    getUniqIds pool = do
-      eDbId <- runTx pool getDbId
-      dbId <- either printErrJExit return eDbId
-      fp <- liftIO generateFingerprint
-      return (dbId, fp)
 
     getFromEnv :: (Read a) => a -> String -> IO a
     getFromEnv defaults env = do

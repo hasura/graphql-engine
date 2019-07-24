@@ -19,6 +19,7 @@ import           Hasura.HTTP
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import           Hasura.Server.Init
 import           Hasura.Server.Version
 
 import qualified CI
@@ -68,7 +69,7 @@ $(A.deriveJSON (A.aesonDrop 3 A.snakeCase) ''Metrics)
 data HasuraTelemetry
   = HasuraTelemetry
   { _htDbUid       :: !Text
-  , _htInstanceUid :: !Text
+  , _htInstanceUid :: !InstanceId
   , _htVersion     :: !Text
   , _htCi          :: !(Maybe CI.CI)
   , _htMetrics     :: !Metrics
@@ -85,7 +86,7 @@ $(A.deriveJSON (A.aesonDrop 3 A.snakeCase) ''TelemetryPayload)
 telemetryUrl :: Text
 telemetryUrl = "https://telemetry.hasura.io/v1/http"
 
-mkPayload :: Text -> Text -> Text -> Metrics -> IO TelemetryPayload
+mkPayload :: Text -> InstanceId -> Text -> Metrics -> IO TelemetryPayload
 mkPayload dbId instanceId version metrics = do
   ci <- CI.getCI
   return $ TelemetryPayload topic $
@@ -96,9 +97,10 @@ runTelemetry
   :: Logger
   -> HTTP.Manager
   -> IORef (SchemaCache, SchemaCacheVer)
-  -> (Text, Text)
+  -> Text
+  -> InstanceId
   -> IO ()
-runTelemetry (Logger logger) manager cacheRef (dbId, instanceId) = do
+runTelemetry (Logger logger) manager cacheRef dbId instanceId = do
   let options = wreqOptions manager []
   forever $ do
     schemaCache <- fmap fst $ readIORef cacheRef
