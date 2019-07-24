@@ -32,7 +32,7 @@ import { getRelDef } from '../TableRelationships/utils';
 import { createNewSchema, deleteCurrentSchema } from './Actions';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 import gqlPattern from '../Common/GraphQLValidation';
-import GqlCompatibilityWarning from '../Common/ReusableComponents/GqlCompatibilityWarning';
+import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
 
 const appPrefix = globals.urlPrefix + '/data';
 

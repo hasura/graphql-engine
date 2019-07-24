@@ -2,7 +2,7 @@ import React from 'react';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 
-import styles from '../../../../Common/Common.scss';
+import styles from './GqlCompatibilityWarning.scss';
 
 const GqlCompatibilityWarning = () => {
   const gqlCompatibilityTip = (
@@ -17,7 +17,7 @@ const GqlCompatibilityWarning = () => {
     <div className={styles.display_inline}>
       <OverlayTrigger placement="right" overlay={gqlCompatibilityTip}>
         <i
-          className={`fa fa-exclamation-triangle ${styles.add_mar_left_small}`}
+          className={`fa fa-exclamation-triangle ${styles.add_mar_left_mid} ${styles.gqlCompatibilityWarning}`}
           aria-hidden="true"
         />
       </OverlayTrigger>

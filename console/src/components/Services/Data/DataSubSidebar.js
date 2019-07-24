@@ -4,7 +4,7 @@ import { Link } from 'react-router';
 
 import LeftSubSidebar from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
 import gqlPattern from './Common/GraphQLValidation';
-import GqlCompatibilityWarning from './Common/ReusableComponents/GqlCompatibilityWarning';
+import GqlCompatibilityWarning from '../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
 
 const appPrefix = '/data';
 
