@@ -59,8 +59,9 @@ contributing guide](../CONTRIBUTING.md#common-guidelines).
 - Just before committing your changes, delete your local `_build` folder completely and then build docs again. Scan 
 the output and look for any Warnings (e.g. title underline too short, Could not lex literal block, etc.). Ideally 
 there should not be any Warnings that are being thrown.
-- Keep heading underlining the same length as the heading. It's just aesthetically nice. (Short underlines will 
-even throw a Warning)
+- Keep heading underlining the same length as the heading. It's just aesthetically nice (short underlines will 
+even throw a Warning).
+- Use bold in headings in place of string literals for aesthetics (i.e. ** in place of ``)
 - Page titles should be self sufficient. Don't expect the user to have context of the hierarchy of the page in the 
 docs tree. A user can land on a page via search as well. e.g. Say you are adding a new deployment guide for AWS under 
 `Guides -> Deployment -> AWS`. The title of this page should not be just `AWS` but instead `AWS deployment guide for 
