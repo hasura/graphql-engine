@@ -4,7 +4,6 @@
 
 module Hasura.Server.App where
 
-import           Control.Arrow                          ((***))
 import           Control.Concurrent.MVar
 import           Control.Exception                      (IOException, try)
 import           Data.Aeson                             hiding (json)
@@ -47,7 +46,6 @@ import qualified Hasura.Server.PGDump                   as PGD
 import           Hasura.EncJSON
 import           Hasura.Prelude                         hiding (get, put)
 import           Hasura.RQL.DDL.Schema.Table
-import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                     (AuthMode (..),
                                                          getUserInfo)
@@ -516,10 +514,6 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       lazyBytes $ encode $ object [ "version" .= currentVersion ]
 
     when enableMetadata $ do
-      get    ("v1/template" <//> var) tmpltGetOrDeleteH
-      post   ("v1/template" <//> var) tmpltPutOrPostH
-      put    ("v1/template" <//> var) tmpltPutOrPostH
-      delete ("v1/template" <//> var) tmpltGetOrDeleteH
 
       post "v1/query" $ mkSpockAction encodeQErr id serverCtx $
         mkPostHandler $ mkAPIRespHandler v1QueryHandler
@@ -586,35 +580,10 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       mkSpockAction encodeQErr id serverCtx $ mkPostHandler $
         mkAPIRespHandler gqlExplainHandler
 
-    mkTmpltName tmpltText =
-      onNothing (mkNonEmptyText tmpltText) $ throw400 NotSupported "template name is empty string"
-
     enableGraphQL = isGraphQLEnabled serverCtx
     enableMetadata = isMetadataEnabled serverCtx
     enablePGDump = isPGDumpEnabled serverCtx
     enableConfig = isConfigEnabled serverCtx
-
-    tmpltGetOrDeleteH tmpltText = do
-      tmpltArgs <- tmpltArgsFromQueryParams
-      mkSpockAction encodeQErr id serverCtx $ mkGetHandler $ do
-        tmpltName <- mkTmpltName tmpltText
-        JSONResp <$> mkQTemplateAction tmpltName tmpltArgs
-
-    tmpltPutOrPostH tmpltText = do
-      tmpltArgs <- tmpltArgsFromQueryParams
-      mkSpockAction encodeQErr id serverCtx $ mkPostHandler $
-        mkAPIRespHandler $ \bodyTmpltArgs -> do
-          tmpltName <- mkTmpltName tmpltText
-          mkQTemplateAction tmpltName $ M.union bodyTmpltArgs tmpltArgs
-
-    tmpltArgsFromQueryParams = do
-      qparams <- params
-      return $ M.fromList $ flip map qparams $
-        TemplateParam *** String
-
-    mkQTemplateAction tmpltName tmpltArgs =
-      v1QueryHandler $ RQExecuteQueryTemplate $
-      ExecQueryTemplate (TQueryName tmpltName) tmpltArgs
 
     serveApiConsole = do
       -- redirect / to /console
