@@ -27,7 +27,6 @@ instance Hashable TableObjId
 
 data SchemaObjId
   = SOTable !QualifiedTable
-  | SOQTemplate !TQueryName
   | SOTableObj !QualifiedTable !TableObjId
   | SOFunction !QualifiedFunction
   | SORemoteSchema !RemoteSchemaName
@@ -38,8 +37,6 @@ instance Hashable SchemaObjId
 reportSchemaObj :: SchemaObjId -> T.Text
 reportSchemaObj (SOTable tn) = "table " <> qualObjectToText tn
 reportSchemaObj (SOFunction fn) = "function " <> qualObjectToText fn
-reportSchemaObj (SOQTemplate qtn) =
-  "query-template " <> unNonEmptyText (getTQueryName qtn)
 reportSchemaObj (SOTableObj tn (TOCol cn)) =
   "column " <> qualObjectToText tn <> "." <> getPGColTxt cn
 reportSchemaObj (SOTableObj tn (TORel cn)) =

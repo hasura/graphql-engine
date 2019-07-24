@@ -178,11 +178,6 @@ args:
 - type: add_existing_table_or_view
   args:
     schema: hdb_catalog
-    name: hdb_query_template
-
-- type: add_existing_table_or_view
-  args:
-    schema: hdb_catalog
     name: event_triggers
 
 - type: add_existing_table_or_view

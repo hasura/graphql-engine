@@ -18,6 +18,7 @@ module Hasura.RQL.Types
        , QCtx(..)
        , HasQCtx(..)
        , mkAdminQCtx
+
        , askTabInfo
        , askFieldInfoMap
        , askPGType
@@ -28,11 +29,8 @@ module Hasura.RQL.Types
        , askCurRole
        , askEventTriggerInfo
        , askTabInfoFromTrigger
-
        , askRemoteRel
        , assertRemoteRel
-
-       , askQTemplateInfo
 
        , adminOnly
 
@@ -90,8 +88,6 @@ mkAdminQCtx soc sc = QCtx adminUserInfo sc soc
 class (Monad m) => UserInfoM m where
   askUserInfo :: m UserInfo
 
-type P1C m = (UserInfoM m, QErrM m, CacheRM m)
-
 askTabInfo
   :: (QErrM m, CacheRM m)
   => QualifiedTable -> m TableInfo
@@ -120,16 +116,6 @@ askEventTriggerInfo trn = do
   liftMaybe (err400 NotExists errMsg) $ M.lookup trn etim
   where
     errMsg = "event trigger " <> triggerNameToTxt trn <<> " does not exist"
-
-askQTemplateInfo
-  :: (P1C m)
-  => TQueryName
-  -> m QueryTemplateInfo
-askQTemplateInfo qtn = do
-  rawSchemaCache <- askSchemaCache
-  liftMaybe (err400 NotExists errMsg) $ M.lookup qtn $ scQTemplates rawSchemaCache
-  where
-    errMsg = "query-template " <> qtn <<> " does not exist"
 
 instance UserInfoM P1 where
   askUserInfo = qcUserInfo <$> ask
