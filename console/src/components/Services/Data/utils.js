@@ -1,7 +1,3 @@
-import React from 'react';
-import { gqlCompatibilityTip } from './Schema/Tooltips';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-
 export const INTEGER = 'integer';
 export const SERIAL = 'serial';
 export const BIGINT = 'bigint';
@@ -627,44 +623,7 @@ GROUP BY t.typname
 ORDER BY t.typname ASC;
 `;
 
-export const fetchTableTriggersSQL = (schema, table) => {
-  return `  
-select 
-  COALESCE(
-    json_agg(
-      row_to_json(t)
-    ), 
-    '[]' :: JSON
-  ) AS result FROM (
-select 
-  trigger_schema, 
-  trigger_name, 
-  event_manipulation, 
-  action_timing, 
-  action_statement, 
-  event_object_schema, 
-  event_object_table 
-FROM information_schema.triggers 
-WHERE event_object_schema = '${schema}' AND event_object_table = '${table}'
-) AS t
-  `;
-};
-
 const postgresFunctionTester = /.*\(\)$/gm;
 
 export const isPostgresFunction = str =>
   new RegExp(postgresFunctionTester).test(str);
-
-export const GqlCompatibilityWarning = () => {
-  const styles = require('../../Common/Common.scss');
-  return (
-    <div className={styles.display_inline}>
-      <OverlayTrigger placement="right" overlay={gqlCompatibilityTip}>
-        <i
-          className={`fa fa-exclamation-triangle ${styles.add_mar_left_small}`}
-          aria-hidden="true"
-        />
-      </OverlayTrigger>
-    </div>
-  );
-};

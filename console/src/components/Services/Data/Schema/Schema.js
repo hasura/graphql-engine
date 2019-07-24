@@ -32,7 +32,7 @@ import { getRelDef } from '../TableRelationships/utils';
 import { createNewSchema, deleteCurrentSchema } from './Actions';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 import gqlPattern from '../Common/GraphQLValidation';
-import { GqlCompatibilityWarning } from '../utils';
+import GqlCompatibilityWarning from '../Common/ReusableComponents/GqlCompatibilityWarning';
 
 const appPrefix = globals.urlPrefix + '/data';
 
@@ -96,19 +96,15 @@ class Schema extends Component {
           : +(a.table_name > b.table_name) || -1;
       };
 
-      const _untrackedTables = [];
-      schema.forEach(table => {
-        // consider only untracked tables
-        if (table.is_table_tracked || table.table_schema !== currentSchema) {
-          return;
-        }
+      const _untrackedTables = schema.filter(
+        table => !table.is_table_tracked && table.table_schema === currentSchema
+      );
 
-        // add the gql validation information in the table object and push
-        _untrackedTables.push({
-          ...table,
-          isGQLCompatible: gqlPattern.test(table.table_name),
-        });
+      // update tableInfo with graphql compatibility
+      _untrackedTables.forEach(t => {
+        t.isGQLCompatible = gqlPattern.test(t.table_name);
       });
+
       return _untrackedTables.sort(tableSortFunc);
     };
 
@@ -332,7 +328,7 @@ class Schema extends Component {
             dispatch(addExistingTableSql());
           };
 
-          const gqlCompatibility = !table.isGQLCompatible ? (
+          const gqlCompatibilityWarning = !table.isGQLCompatible ? (
             <GqlCompatibilityWarning />
           ) : null;
 
@@ -347,13 +343,13 @@ class Schema extends Component {
                   color="white"
                   size="xs"
                   onClick={handleTrackTable}
-                  disabled={!!gqlCompatibility}
+                  disabled={!table.isGQLCompatible}
                 >
                   Track
                 </Button>
               </div>
               <div className={styles.display_inline}>{table.table_name}</div>
-              {gqlCompatibility}
+              {gqlCompatibilityWarning}
             </div>
           );
         });

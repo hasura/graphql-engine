@@ -25,10 +25,3 @@ export const nonTrackableFunctionsTip = (
     Custom functions that do not conform to Hasura requirements
   </Tooltip>
 );
-
-export const gqlCompatibilityTip = (
-  <Tooltip id="tooltip-scheme-warning">
-    This identifier name does not conform to the GraphQL naming standard. Names
-    in GraphQL should be limited to this ASCII subset: /[_A-Za-z][_0-9A-Za-z]*/.
-  </Tooltip>
-);
