@@ -34,7 +34,7 @@ There are 2 ways in which you can create an object relationship.
 1. Using foreign key constraint on a column
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Create an ``object relationship`` ``author`` on ``article`` table,  using the
+Create an ``object relationship`` ``author`` on ``article`` *table*,  *using* the
 *foreign_key_constraint_on* the ``author_id`` column:
 
 .. code-block:: http
