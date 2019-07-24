@@ -1,19 +1,27 @@
 module Hasura.RQL.Types.RemoteSchema where
 
 import           Hasura.Prelude
-import           Language.Haskell.TH.Syntax  (Lift)
-import           System.Environment          (lookupEnv)
+import           Language.Haskell.TH.Syntax (Lift)
+import           System.Environment         (lookupEnv)
 
-import qualified Data.Aeson.Casing           as J
-import qualified Data.Aeson.TH               as J
-import qualified Data.Text                   as T
-import qualified Network.URI.Extended        as N
+import           Data.Aeson
+import qualified Data.Aeson.Casing          as J
+import qualified Data.Aeson.TH              as J
+import qualified Data.Text                  as T
+import qualified Database.PG.Query          as Q
+import qualified Network.URI.Extended       as N
 
-import           Hasura.RQL.DDL.Headers      (HeaderConf (..))
-import           Hasura.RQL.DDL.Remote.Types (RemoteSchemaName)
+import           Hasura.RQL.DDL.Headers     (HeaderConf (..))
+import           Hasura.RQL.Types.Common    (NonEmptyText)
 import           Hasura.RQL.Types.Error
+import           Hasura.SQL.Types
 
 type UrlFromEnv = Text
+
+newtype RemoteSchemaName
+  = RemoteSchemaName
+  { unRemoteSchemaName :: NonEmptyText}
+  deriving (Show, Eq, Lift, Hashable, ToJSON, ToJSONKey, FromJSON, Q.ToPrepArg, Q.FromCol, DQuote)
 
 data RemoteSchemaInfo
   = RemoteSchemaInfo

@@ -3,12 +3,13 @@ module Hasura.RQL.Types.Metadata where
 import           Data.Aeson
 import           Hasura.Prelude
 
-import qualified Data.Text                     as T
+import qualified Data.Text                           as T
 
-import           Hasura.RQL.DDL.Remote.Types
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
+import           Hasura.RQL.Types.RemoteRelationship
+import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Types
 
 data MetadataObjType

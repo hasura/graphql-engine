@@ -45,7 +45,6 @@ import qualified Hasura.Server.PGDump                   as PGD
 
 import           Hasura.EncJSON
 import           Hasura.Prelude                         hiding (get, put)
-import           Hasura.RQL.DDL.Remote.Types
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                     (AuthMode (..),

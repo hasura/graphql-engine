@@ -66,8 +66,6 @@ import           Hasura.GraphQL.Validate.Types
 import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.DDL.Remote.Input
-import           Hasura.RQL.DDL.Remote.Types
 import           Hasura.RQL.Types
 import           Hasura.Server.Context
 import           Hasura.Server.Utils                    (RequestId,

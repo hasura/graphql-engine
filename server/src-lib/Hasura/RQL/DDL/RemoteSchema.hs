@@ -19,7 +19,6 @@ import qualified Data.HashMap.Strict          as Map
 import qualified Database.PG.Query            as Q
 
 import           Hasura.GraphQL.RemoteServer
-import           Hasura.RQL.DDL.Remote.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 

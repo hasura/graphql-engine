@@ -23,7 +23,6 @@ import           Hasura.GraphQL.Resolve.ContextTypes
 import           Hasura.GraphQL.Validate.Context
 import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Types
-import           Hasura.RQL.DDL.Remote.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Value
 

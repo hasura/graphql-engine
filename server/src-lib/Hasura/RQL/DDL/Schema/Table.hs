@@ -14,7 +14,6 @@ import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Relationship
-import           Hasura.RQL.DDL.Remote.Types
 import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.DDL.Schema.Function

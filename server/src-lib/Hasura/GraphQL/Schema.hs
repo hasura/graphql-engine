@@ -36,7 +36,6 @@ import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.ContextTypes
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Remote.Types
 import           Hasura.RQL.DML.Internal             (mkAdminRolePermInfo)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types

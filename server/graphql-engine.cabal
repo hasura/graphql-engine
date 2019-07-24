@@ -185,6 +185,7 @@ library
                      , Hasura.RQL.Types.RemoteSchema
                      , Hasura.RQL.Types.Metadata
                      , Hasura.RQL.Types.QueryCollection
+                     , Hasura.RQL.Types.RemoteRelationship
                      , Hasura.RQL.DDL.Deps
                      , Hasura.RQL.DDL.Permission.Internal
                      , Hasura.RQL.DDL.Permission.Triggers
@@ -202,9 +203,7 @@ library
                      , Hasura.RQL.DDL.Headers
                      , Hasura.RQL.DDL.RemoteSchema
                      , Hasura.RQL.DDL.QueryCollection
-                     , Hasura.RQL.DDL.Remote.Input
-                     , Hasura.RQL.DDL.Remote.Validate
-                     , Hasura.RQL.DDL.Remote.Types
+                     , Hasura.RQL.DDL.RemoteRelationship.Validate
                      , Hasura.RQL.DML.Delete
                      , Hasura.RQL.DML.Internal
                      , Hasura.RQL.DML.Insert

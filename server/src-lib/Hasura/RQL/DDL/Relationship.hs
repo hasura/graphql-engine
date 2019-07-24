@@ -23,28 +23,27 @@ module Hasura.RQL.DDL.Relationship
   )
 where
 
-import qualified Database.PG.Query                 as Q
+import qualified Database.PG.Query                          as Q
 import           Hasura.GraphQL.Validate.Types
-import           Hasura.RQL.DDL.Remote.Types
-import           Hasura.RQL.DDL.Remote.Validate
 import           Hasura.RQL.Types.Common
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Deps
-import           Hasura.RQL.DDL.Permission         (purgePerm)
+import           Hasura.RQL.DDL.Permission                  (purgePerm)
 import           Hasura.RQL.DDL.Relationship.Types
+import           Hasura.RQL.DDL.RemoteRelationship.Validate
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 import           Data.Aeson.Types
-import qualified Data.HashMap.Strict               as HM
-import qualified Data.HashSet                      as HS
-import qualified Data.Map.Strict                   as M
-import qualified Data.Set                          as Set
-import qualified Data.Text                         as T
-import           Data.Tuple                        (swap)
-import           Instances.TH.Lift                 ()
+import qualified Data.HashMap.Strict                        as HM
+import qualified Data.HashSet                               as HS
+import qualified Data.Map.Strict                            as M
+import qualified Data.Set                                   as Set
+import qualified Data.Text                                  as T
+import           Data.Tuple                                 (swap)
+import           Instances.TH.Lift                          ()
 
 validateManualConfig
   :: (QErrM m, CacheRM m)

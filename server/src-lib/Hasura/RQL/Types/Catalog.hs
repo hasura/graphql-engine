@@ -2,12 +2,12 @@ module Hasura.RQL.Types.Catalog where
 
 import           Hasura.Prelude
 
-import           Hasura.RQL.DDL.Remote.Types
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
+import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCache
 import           Hasura.SQL.Types

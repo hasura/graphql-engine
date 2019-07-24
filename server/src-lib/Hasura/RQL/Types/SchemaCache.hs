@@ -112,10 +112,9 @@ import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import qualified Hasura.GraphQL.Context            as GC
+import qualified Hasura.GraphQL.Context              as GC
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Remote.Types
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
@@ -123,14 +122,15 @@ import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Metadata
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
+import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.SQL.Types
 
-import qualified Data.HashMap.Strict               as M
-import qualified Data.HashSet                      as HS
-import qualified Data.Sequence                     as Seq
-import qualified Data.Text                         as T
+import qualified Data.HashMap.Strict                 as M
+import qualified Data.HashSet                        as HS
+import qualified Data.Sequence                       as Seq
+import qualified Data.Text                           as T
 
 reportSchemaObjs :: [SchemaObjId] -> T.Text
 reportSchemaObjs = T.intercalate ", " . map reportSchemaObj

@@ -40,28 +40,28 @@ module Hasura.RQL.Types
        , module R
        ) where
 
-import           Hasura.Db                     as R
+import           Hasura.Db                           as R
 import           Hasura.EncJSON
 import           Hasura.Prelude
-import           Hasura.RQL.Types.BoolExp      as R
-import           Hasura.RQL.Types.Common       as R
-import           Hasura.RQL.Types.DML          as R
-import           Hasura.RQL.Types.Error        as R
-import           Hasura.RQL.Types.EventTrigger as R
-import           Hasura.RQL.Types.Metadata     as R
-import           Hasura.RQL.Types.Permission   as R
-import           Hasura.RQL.Types.RemoteSchema as R
-import           Hasura.RQL.Types.SchemaCache  as R
+import           Hasura.RQL.Types.BoolExp            as R
+import           Hasura.RQL.Types.Common             as R
+import           Hasura.RQL.Types.DML                as R
+import           Hasura.RQL.Types.Error              as R
+import           Hasura.RQL.Types.EventTrigger       as R
+import           Hasura.RQL.Types.Metadata           as R
+import           Hasura.RQL.Types.Permission         as R
+import           Hasura.RQL.Types.RemoteRelationship as R
+import           Hasura.RQL.Types.RemoteSchema       as R
+import           Hasura.RQL.Types.SchemaCache        as R
 
 import           Hasura.SQL.Types
 
-import qualified Hasura.GraphQL.Context        as GC
+import qualified Hasura.GraphQL.Context              as GC
 
-import qualified Data.HashMap.Strict           as M
-import qualified Data.Text                     as T
-import qualified Network.HTTP.Client           as HTTP
+import qualified Data.HashMap.Strict                 as M
+import qualified Data.Text                           as T
+import qualified Network.HTTP.Client                 as HTTP
 
-import           Hasura.RQL.DDL.Remote.Types
 
 getFieldInfoMap
   :: QualifiedTable
