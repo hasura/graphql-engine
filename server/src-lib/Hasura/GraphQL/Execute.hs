@@ -3,7 +3,9 @@
 
 module Hasura.GraphQL.Execute
   ( QExecPlanResolved(..)
+  , QExecPlanUnresolved(..)
   , QExecPlanPartial(..)
+  , QExecPlan(..)
   , Batch(..)
   , GQRespValue(..)
   , getExecPlanPartial
@@ -15,7 +17,7 @@ module Hasura.GraphQL.Execute
   , getOpTypeFromExecOp
 
   , ExecOp(..)
-  , getResolvedExecPlan
+  , getExecPlan
   , execRemoteGQ
 
   , EP.PlanCache
@@ -26,6 +28,10 @@ module Hasura.GraphQL.Execute
   , ExecutionCtx(..)
 
   , emptyResp
+
+  , JoinParams(..)
+  , Joinable
+  , mkQuery
   ) where
 
 import           Control.Exception                      (try)
@@ -127,9 +133,9 @@ data QExecPlanPartial
 --
 -- The 'a' is parameterised so this AST can represent
 -- intermediate passes
-data GQExecPlan a
-  = GExPHasura !a
-  | GExPRemote !RemoteSchemaInfo !G.TypedOperationDefinition
+data QExecPlanCore a
+  = ExPCoreHasura !a
+  | ExPCoreRemote !RemoteSchemaInfo !G.TypedOperationDefinition
   deriving (Functor, Foldable, Traversable)
 
 -- The current execution plan of a graphql operation, it is
@@ -137,7 +143,27 @@ data GQExecPlan a
 data QExecPlanResolved
   = ExPHasura !ExecOp
   | ExPRemote !VQ.RemoteTopField
-  | ExPMixed !ExecOp (NonEmpty RemoteRelField)
+  -- | ExPMixed !ExecOp (NonEmpty RemoteRelField)
+
+class Joinable a where
+  mkQuery :: JoinParams -> a -> (Batch, QExecPlanResolved)
+
+instance Joinable QExecPlanUnresolved where
+  mkQuery joinParams unresolvedPlan
+    = let batch = produceBatch opType remoteSchemaInfo remoteRelField rows
+          batchQuery = batchRemoteTopQuery batch
+      in (batch, ExPRemote batchQuery)
+    where
+      JoinParams opType rows = joinParams
+      QExecPlanUnresolved remoteRelField remoteSchemaInfo = unresolvedPlan
+
+data QExecPlanUnresolved = QExecPlanUnresolved RemoteRelField RemoteSchemaInfo
+
+-- data JoinConfiguration = JoinConfiguration
+
+data JoinParams = JoinParams G.OperationType BatchInputs
+
+data QExecPlan = Leaf QExecPlanResolved | Tree QExecPlanResolved (NonEmpty QExecPlanUnresolved)
 
 -- | Execution context
 data ExecutionCtx
@@ -237,7 +263,7 @@ getOpTypeFromExecOp = \case
   ExOpMutation _ -> G.OperationTypeMutation
   ExOpSubs _ -> G.OperationTypeSubscription
 
-getResolvedExecPlan
+getExecPlan
   :: (MonadError QErr m, MonadIO m)
   => PGExecCtx
   -> EP.PlanCache
@@ -247,8 +273,8 @@ getResolvedExecPlan
   -> SchemaCache
   -> SchemaCacheVer
   -> GQLReqUnparsed
-  -> m (Seq.Seq QExecPlanResolved)
-getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer reqUnparsed = do
+  -> m (Seq.Seq QExecPlan)
+getExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer reqUnparsed = do
   planM <-
     liftIO $ EP.getPlan scVer (userRole userInfo) opNameM queryStr planCache
   let usrVars = userVars userInfo
@@ -256,13 +282,14 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
     -- plans are only for queries and subscriptions
         of
     Just plan ->
-      pure . ExPHasura <$>
+      -- pure $ pure $ Leaf (ExPHasura <$>
       case plan of
         EP.RPQuery queryPlan -> do
           (tx, genSql) <- EQ.queryOpFromPlan usrVars queryVars queryPlan
-          return $ ExOpQuery tx (Just genSql)
-        EP.RPSubs subsPlan ->
-          ExOpSubs <$> EL.subsOpFromPlan pgExecCtx usrVars queryVars subsPlan
+          pure $ Seq.singleton (Leaf (ExPHasura (ExOpQuery tx (Just genSql))))
+        EP.RPSubs subsPlan -> do
+          liveQueryOp <- EL.subsOpFromPlan pgExecCtx usrVars queryVars subsPlan
+          pure $ Seq.singleton (Leaf (ExPHasura (ExOpSubs liveQueryOp)))
     Nothing -> noExistingPlan
   where
     GQLReq opNameM queryStr queryVars = reqUnparsed
@@ -274,30 +301,30 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
       partialExecPlans <- getExecPlanPartial userInfo sc enableAL req
       forM partialExecPlans $ \partialExecPlan ->
         case partialExecPlan of
-          ExPRemotePartial r -> pure (ExPRemote r)
+          ExPRemotePartial r -> pure (Leaf $ ExPRemote r)
           ExPHasuraPartial (gCtx, rootSelSet, varDefs) -> do
             case rootSelSet of
               VQ.HasuraTopMutation field ->
-                ExPHasura . ExOpMutation <$>
+                Leaf . ExPHasura . ExOpMutation <$>
                 getMutOp gCtx sqlGenCtx userInfo (pure field)
               VQ.HasuraTopQuery originalField -> do
-                let (constructor, alteredField) =
-                      case rebuildFieldStrippingRemoteRels originalField of
-                        Nothing -> (ExPHasura, originalField)
-                        Just (newField, cursors) ->
-                          -- trace
-                          --   (unlines
-                          --      [ "originalField = " ++ show originalField
-                          --      , "newField = " ++ show newField
-                          --      , "cursors = " ++ show (fmap rrRelFieldPath cursors)
-                          --      ])
-                            (flip ExPMixed cursors, newField)
-                (queryTx, _planM, genSql) <-
-                  getQueryOp gCtx sqlGenCtx userInfo (pure alteredField) varDefs
+                case rebuildFieldStrippingRemoteRels originalField of
+                  Nothing -> do
+                    (queryTx, _planM, genSql) <- getQueryOp gCtx sqlGenCtx userInfo (pure originalField) varDefs
 
-                -- TODO: How to cache query for each field?
-                -- mapM_ (addPlanToCache . EP.RPQuery) planM
-                return $ constructor $ ExOpQuery queryTx (Just genSql)
+                    -- TODO: How to cache query for each field?
+                    -- mapM_ (addPlanToCache . EP.RPQuery) planM
+                    pure $ Leaf . ExPHasura $ ExOpQuery queryTx (Just genSql)
+                  Just (newHasuraField, remoteRelFields) -> do
+                    -- trace
+                    --   (unlines
+                    --      [ "originalField = " ++ show originalField
+                    --      , "newField = " ++ show newField
+                    --      , "cursors = " ++ show (fmap rrRelFieldPath cursors)
+                    --      ])
+                    (queryTx, _planM, genSql) <- getQueryOp gCtx sqlGenCtx userInfo (pure newHasuraField) varDefs
+                    let unresolvedPlans = mkUnresolvedPlans remoteRelFields
+                    pure $ Tree (ExPHasura $ ExOpQuery queryTx (Just genSql)) unresolvedPlans
               VQ.HasuraTopSubscription fld -> do
                 (lqOp, _planM) <-
                   getSubsOp
@@ -311,7 +338,18 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
 
                 -- TODO: How to cache query for each field?
                 -- mapM_ (addPlanToCache . EP.RPSubs) planM
-                return $ ExPHasura $ ExOpSubs lqOp
+                pure $ Leaf . ExPHasura $ ExOpSubs lqOp
+
+    mkUnresolvedPlans :: NonEmpty RemoteRelField -> NonEmpty QExecPlanUnresolved
+    mkUnresolvedPlans = fmap (\remoteRelField -> QExecPlanUnresolved remoteRelField  (getRsi remoteRelField))
+      where
+        getRsi remoteRel =
+          case Map.lookup
+                 (rtrRemoteSchema
+                    (rmfRemoteRelationship
+                       (rrRemoteField remoteRel)))
+                 (scRemoteSchemas sc) of
+            Just remoteSchemaCtx -> rscInfo remoteSchemaCtx
 
 -- Rebuild the field with remote relationships removed, and paths that
 -- point back to them.
@@ -817,11 +855,8 @@ toAnnGValue =
 extractRemoteRelArguments ::
      RemoteSchemaMap
   -> EncJSON
-  -> NonEmpty RemoteRelField
-  -> Either GQRespValue ( GQRespValue
-                        , [( RemoteRelField
-                           , RemoteSchemaInfo
-                           , BatchInputs)])
+  -> [RemoteRelField]
+  -> Either GQRespValue ( GQRespValue , [ BatchInputs ])
 extractRemoteRelArguments remoteSchemaMap hasuraJson rels =
   case OJ.eitherDecode (encJToLBS hasuraJson) >>= parseGQRespValue of
     Left err ->
@@ -866,9 +901,9 @@ extractRemoteRelArguments remoteSchemaMap hasuraJson rels =
                                gqResp
                                (GQJoinError "could not find remote schema info"))
                   hash
-              pure (gqResp, Map.elems remotes)
+              pure (gqResp, map (\(_, _, batchInputs ) -> batchInputs) $ Map.elems remotes)
   where
-    keyedRemotes = NE.zip (fmap RemoteRelKey (0 :| [1 ..])) rels
+    keyedRemotes = zip (fmap RemoteRelKey [0 ..]) rels
     keyedMap = Map.fromList (toList keyedRemotes)
 
 data BatchInputs =
@@ -892,7 +927,7 @@ instance Semigroup Cardinality where
 -- | Extract from a given result.
 extractFromResult ::
      Cardinality
-  -> NonEmpty (RemoteRelKey, RemoteRelField)
+  -> [(RemoteRelKey, RemoteRelField)]
   -> OJ.Value
   -> StateT (Map.HashMap RemoteRelKey BatchInputs) (Either GQJoinError) ()
 extractFromResult cardinality keyedRemotes value =
@@ -907,10 +942,7 @@ extractFromResult cardinality keyedRemotes value =
                Just subvalue -> do
                  let (remoteRelKeys, unfinishedKeyedRemotes) =
                        partitionEithers (toList remotes)
-                 case NE.nonEmpty unfinishedKeyedRemotes of
-                   Nothing -> pure ()
-                   Just subRemotes -> do
-                     extractFromResult cardinality subRemotes subvalue
+                 extractFromResult cardinality unfinishedKeyedRemotes subvalue
                  pure
                    (foldl'
                       (\result' remoteRelKey ->

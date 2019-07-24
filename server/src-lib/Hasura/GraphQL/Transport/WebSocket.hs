@@ -278,7 +278,7 @@ onStart serverEnv wsConn (StartMsg opId q) =
     (sc, scVer) <- liftIO $ IORef.readIORef gCtxMapRef
     execPlanE <-
       runExceptT $
-      E.getResolvedExecPlan
+      E.getExecPlan
         pgExecCtx
         planCache
         userInfo
@@ -292,10 +292,14 @@ onStart serverEnv wsConn (StartMsg opId q) =
                 planCache sc scVer httpMgr enableAL
     forM_ execPlans $ \execPlan ->
       case execPlan of
-        E.ExPHasura resolvedOp -> runHasuraGQ requestId q userInfo resolvedOp
-        E.ExPRemote rtf        -> runRemoteGQ execCtx requestId userInfo reqHdrs rtf
-        E.ExPMixed {}          -> postExecErr requestId
-                                   (err400 NotSupported "remote relationships not supported over websocket")
+        E.Leaf plan -> case plan of
+          E.ExPHasura resolvedOp -> runHasuraGQ requestId q userInfo resolvedOp
+          E.ExPRemote rtf        -> runRemoteGQ execCtx requestId userInfo reqHdrs rtf
+          -- E.ExPMixed {}          -> postExecErr requestId
+                                   -- (err400 NotSupported "remote relationships not supported over websocket")
+        E.Tree {} -> postExecErr requestId
+                       (err400 NotSupported "remote relationships not supported over websocket")
+
   where
     runHasuraGQ :: RequestId -> GQLReqUnparsed -> UserInfo -> E.ExecOp -> ExceptT () IO ()
     runHasuraGQ reqId query userInfo =
