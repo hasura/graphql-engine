@@ -45,7 +45,6 @@ import qualified Hasura.RQL.DDL.EventTrigger        as DE
 import qualified Hasura.RQL.DDL.Permission          as DP
 import qualified Hasura.RQL.DDL.Permission.Internal as DP
 import qualified Hasura.RQL.DDL.QueryCollection     as DQC
-import qualified Hasura.RQL.DDL.QueryTemplate       as DQ
 import qualified Hasura.RQL.DDL.Relationship        as DR
 import qualified Hasura.RQL.DDL.RemoteSchema        as DRS
 import qualified Hasura.RQL.DDL.Schema.Function     as DF
@@ -120,7 +119,6 @@ instance FromJSON ClearMetadata where
 
 clearMetadata :: Q.TxE QErr ()
 clearMetadata = Q.catchE defaultTxErrorHandler $ do
-  Q.unitQ "DELETE FROM hdb_catalog.hdb_query_template WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_function WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_permission WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_relationship WHERE is_system_defined <> 'true'" () False
@@ -144,7 +142,6 @@ runClearMetadata _ = do
 data ReplaceMetadata
   = ReplaceMetadata
   { aqTables           :: ![TableMeta]
-  , aqQueryTemplates   :: ![DQ.CreateQueryTemplate]
   , aqFunctions        :: !(Maybe [QualifiedFunction])
   , aqRemoteSchemas    :: !(Maybe [TRS.AddRemoteSchemaQuery])
   , aqQueryCollections :: !(Maybe [DQC.CreateCollection])
@@ -156,7 +153,7 @@ $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ReplaceMetadata)
 applyQP1
   :: (QErrM m, UserInfoM m)
   => ReplaceMetadata -> m ()
-applyQP1 (ReplaceMetadata tables templates mFunctions mSchemas mCollections mAllowlist) = do
+applyQP1 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = do
 
   adminOnly
 
@@ -181,9 +178,6 @@ applyQP1 (ReplaceMetadata tables templates mFunctions mSchemas mCollections mAll
       checkMultipleDecls "update permissions" updPerms
       checkMultipleDecls "delete permissions" delPerms
       checkMultipleDecls "event triggers" eventTriggers
-
-  withPathK "queryTemplates" $
-    checkMultipleDecls "query templates" $ map DQ.cqtName templates
 
   withPathK "functions" $
     checkMultipleDecls "functions" functions
@@ -223,7 +217,7 @@ applyQP2
      )
   => ReplaceMetadata
   -> m EncJSON
-applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas mCollections mAllowlist) = do
+applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = do
 
   liftTx clearMetadata
   DT.buildSchemaCacheStrict
@@ -260,12 +254,6 @@ applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas mCollections mAll
       withPathK "event_triggers" $
         indexedForM_ (table ^. tmEventTriggers) $ \etc ->
         DE.subTableP2 (table ^. tmTable) False etc
-
-  -- query templates
-  withPathK "queryTemplates" $
-    indexedForM_ templates $ \template -> do
-      qti <- DQ.createQueryTemplateP1 template
-      void $ DQ.createQueryTemplateP2 template qti
 
   -- sql functions
   withPathK "functions" $
@@ -341,13 +329,6 @@ fetchMetadata = do
   updPermDefs <- mkPermDefs PTUpdate permissions
   delPermDefs <- mkPermDefs PTDelete permissions
 
-  -- Fetch all the query templates
-  qTmpltRows <- Q.catchE defaultTxErrorHandler fetchQTemplates
-
-  qTmpltDefs <- forM qTmpltRows $ \(qtn, Q.AltJ qtDefVal, mComment) -> do
-    qtDef <- decodeValue qtDefVal
-    return $ DQ.CreateQueryTemplate qtn qtDef mComment
-
   -- Fetch all event triggers
   eventTriggers <- Q.catchE defaultTxErrorHandler fetchEventTriggers
   triggerMetaDefs <- mkTriggerMetaDefs eventTriggers
@@ -374,7 +355,7 @@ fetchMetadata = do
   -- fetch allow list
   allowlist <- map DQC.CollectionReq <$> DQC.fetchAllowlist
 
-  return $ ReplaceMetadata (M.elems postRelMap) qTmpltDefs (Just functions)
+  return $ ReplaceMetadata (M.elems postRelMap) (Just functions)
                            (Just schemas) (Just collections) (Just allowlist)
 
   where
@@ -421,12 +402,6 @@ fetchMetadata = do
                  WHERE is_system_defined = 'false'
                     |] () False
 
-    fetchQTemplates =
-      Q.listQ [Q.sql|
-                SELECT template_name, template_defn :: json, comment
-                  FROM hdb_catalog.hdb_query_template
-                 WHERE is_system_defined = 'false'
-                  |] () False
     fetchEventTriggers =
      Q.listQ [Q.sql|
               SELECT e.schema_name, e.table_name, e.configuration::json
@@ -528,7 +503,6 @@ purgeMetadataObj = liftTx . \case
     Q.catchE defaultTxErrorHandler $ DT.delTableFromCatalog qt
   (MOFunction qf)                 -> DF.delFunctionFromCatalog qf
   (MORemoteSchema rsn)            -> DRS.removeRemoteSchemaFromCatalog rsn
-  (MOQTemplate qtn)               -> DQ.delQTemplateFromCatalog qtn
   (MOTableObj qt (MTORel rn _))   -> DR.delRelFromCatalog qt rn
   (MOTableObj qt (MTOPerm rn pt)) -> DP.dropPermFromCatalog qt rn pt
   (MOTableObj _ (MTOTrigger trn)) -> DE.delEventTriggerFromCatalog trn
