@@ -10,7 +10,7 @@ Our task will be convert the "static" UI into a working realtime app.
 ### Download and run the boilerplate
 
 
-1. Download the boilerplate at: <!-- FIXME: Add the zip URL here -->
+1. Download the boilerplate at: [https://learn.hasura.io/graphql/flutter-graphql/boilerplate.zip](https://learn.hasura.io/graphql/flutter-graphql/boilerplate.zip)
 2. Unzip and make sure you're in the `app-boilerplate` directory.
 3. Run this app in your phone or emulator using `Flutter SDK`
     - `flutter run`

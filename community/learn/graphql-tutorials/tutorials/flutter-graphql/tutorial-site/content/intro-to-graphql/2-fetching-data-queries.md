@@ -4,10 +4,6 @@ metaTitle: "GraphQL Queries to fetch data | GraphQL Flutter Tutorial"
 metaDescription: "Try out GraphQL Query using GraphiQL. A GraphQL query example with parameters, arguments and variables to fetch data dynamically"
 ---
 
-import YoutubeEmbed from "../../src/YoutubeEmbed.js";
-
-<YoutubeEmbed link="https://www.youtube.com/embed/xyI6w3vL_vw"/>
-
 <a name="graphiql"></a>
 ## Try out GraphQL queries
 For this tutorial we've set up a GraphQL API for you. The most common
