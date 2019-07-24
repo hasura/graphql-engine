@@ -31,20 +31,6 @@
   }
 }
 
-.aceBlock {
-  max-height: 300px;
-  position: relative;
-  margin-top: 10px;
-}
-
-.aceBlockExpand {
-  position: absolute;
-  top: -25px;
-  right: 5px;
-  z-index: 1;
-  cursor: pointer;
-}
-
 .viewRowsContainer {
   border-left: 1px solid #ddd;
 }

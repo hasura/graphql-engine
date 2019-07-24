@@ -50,9 +50,9 @@ class RelationshipEditor extends React.Component {
     if (!gqlPattern.test(text)) {
       return dispatch(
         showErrorNotification(
-          gqlRelErrorNotif[4],
+          gqlRelErrorNotif[3],
           gqlRelErrorNotif[1],
-          gqlRelErrorNotif[3]
+          gqlRelErrorNotif[2]
         )
       );
     }

@@ -4,7 +4,6 @@ import { Link } from 'react-router';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import globals from '../../Globals';
 import * as tooltip from './Tooltips';
-import 'react-toggle/style.css';
 import Spinner from '../Common/Spinner/Spinner';
 import {
   loadServerVersion,
@@ -13,7 +12,6 @@ import {
   featureCompatibilityInit,
 } from './Actions';
 import { loadConsoleTelemetryOpts } from '../../telemetry/Actions.js';
-import './NotificationOverrides.css';
 import {
   loadInconsistentObjects,
   redirectToMetadataStatus,

@@ -166,19 +166,15 @@ class AddTable extends Component {
         showErrorNotification(
           notificationArray[0],
           notificationArray[1],
-          notificationArray[2],
-          notificationArray[3]
+          notificationArray[2]
         )
       );
       return false;
     } else if (typeof validated === 'string') {
       this.props.dispatch(
-        showErrorNotification(
-          notificationArray[0],
-          validated,
-          notificationArray[2],
-          { custom: validated }
-        )
+        showErrorNotification(notificationArray[0], validated, {
+          custom: validated,
+        })
       );
       return false;
     } else if (typeof validated === 'object') {
@@ -186,8 +182,7 @@ class AddTable extends Component {
         showErrorNotification(
           notificationArray[0],
           notificationArray[1],
-          notificationArray[2],
-          notificationArray[3]
+          notificationArray[2]
         )
       );
       return false;
