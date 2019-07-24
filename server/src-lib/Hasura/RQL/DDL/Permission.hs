@@ -82,9 +82,9 @@ type InsPermDef = PermDef InsPerm
 type CreateInsPerm = CreatePerm InsPerm
 
 buildViewName :: QualifiedTable -> RoleName -> PermType -> QualifiedTable
-buildViewName (QualifiedObject sn tn) (RoleName rTxt) pt =
+buildViewName (QualifiedObject sn tn) rn pt =
   QualifiedObject hdbViewsSchema $ TableName
-  (rTxt <> "__" <> T.pack (show pt) <> "__" <> snTxt <> "__" <> tnTxt)
+  (roleNameToTxt rn <> "__" <> T.pack (show pt) <> "__" <> snTxt <> "__" <> tnTxt)
   where
     snTxt = getSchemaTxt sn
     tnTxt = getTableTxt tn
@@ -112,7 +112,7 @@ procSetObj ti mObj = do
     fmap HM.fromList $ forM (HM.toList setObj) $ \(pgCol, val) -> do
       ty <- askPGType fieldInfoMap pgCol $
         "column " <> pgCol <<> " not found in table " <>> tn
-      sqlExp <- valueParser ty val
+      sqlExp <- valueParser (PgTypeSimple ty) val
       return (pgCol, sqlExp)
   let deps = map (mkColDep "on_type" tn . fst) $ HM.toList setColsSQL
   return (setColsSQL, depHeaders, deps)

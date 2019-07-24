@@ -1,14 +1,56 @@
-/**
- * These are the list of warning and lies...
- */
+const tableColumnNoDups = [
+  'Error adding column',
+  'Column name is duplicated',
+  {
+    custom: 'Column name is duplicated',
+  },
+];
 
-export const ATLEAST_ONE_PRIMARY_KEY_MSG =
-  'You should have atleast one column as a primary key.';
-export const primaryKeyAlreadyPresentMsg = key =>
-  `You key [${key}] is already present in the current set of primary keys.`;
-export const ATLEAST_ONE_COLUMN_MSG =
-  'You need atleast one column for a given table.';
-export const RECOMMENEDED_NAMING_CONVENTION =
-  'We recommend using the snake_case naming convertion for table, column names. E.g.: article_author.';
-export const fieldRepeatedMsg = list =>
-  `You have the following column names repeated: [${list}]`;
+const tableMinPrimaryKey = [
+  'Error adding table',
+  'A primary key is required',
+  {
+    custom: 'A primary key is required',
+  },
+];
+
+const tableNameNullNotif = [
+  'Error creating table!',
+  'Table name cannot be empty',
+  {
+    custom: 'Table name cannot be empty. Please add a name',
+  },
+];
+
+const tableEnufColumns = [
+  'Error creating table!',
+  'Table must have at least one column',
+  {
+    custom: 'Table must have at least one column.',
+  },
+];
+
+const tableColumnDefaults = [
+  'Error creating table!',
+  'Default value is invalid',
+  {
+    custom: 'Default value is invalid',
+  },
+];
+
+const tableColumnTypes = [
+  'Error creating table!',
+  'Column type is invalid',
+  {
+    custom: 'Column type is invalid',
+  },
+];
+
+export {
+  tableNameNullNotif,
+  tableEnufColumns,
+  tableColumnNoDups,
+  tableMinPrimaryKey,
+  tableColumnDefaults,
+  tableColumnTypes,
+};

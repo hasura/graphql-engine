@@ -4,7 +4,10 @@ metaTitle: "Apollo Client GraphQL Setup | GraphQL React Native Apollo Tutorial"
 metaDescription: "You will learn how to configure Apollo Client in React Native by installing dependencies like react-apollo, apollo-client, apollo-link-http, apollo-cache-inmemory"
 ---
 
+import YoutubeEmbed from "../src/YoutubeEmbed.js";
 import GithubLink from "../src/GithubLink.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/XSR6jH5doXk" />
 
 Apollo gives a neat abstraction layer and an interface to your GraphQL server. You don't need to worry about constructing your queries with request body, headers and options, that you might have done with `axios` or `fetch` say. You can directly write queries and mutations in GraphQL and they will automatically be sent to your server via your apollo client instance.
 
@@ -81,7 +84,7 @@ export default class App extends React.Component {
 
 + async componentDidMount() {
 +   // fetch session
-+   const session = await AsyncStorage.getItem('@todo-graphql:auth0');
++   const session = await AsyncStorage.getItem('@todo-graphql:session');
 +   const sessionObj = JSON.parse(session);
 +   const { token, id } = sessionObj;
 +   // make apollo client with this session token

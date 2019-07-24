@@ -1,0 +1,23 @@
+
+{
+  "name": "react-hooks-template",
+  "reason": {
+    "react-jsx": 3
+  },
+  "sources": {
+    "dir" : "src",
+    "subdirs" : true
+  },
+  "package-specs": [{
+    "module": "commonjs",
+    "in-source": true
+  }],
+  "suffix": ".bs.js",
+  "namespace": true,
+  "bs-dependencies": [
+    "reason-react",
+    "bs-react-bootstrap",
+    "@glennsl/bs-json"
+  ],
+  "refmt": 3
+}

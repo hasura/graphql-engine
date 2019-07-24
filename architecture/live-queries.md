@@ -92,7 +92,7 @@ Incidentally, because we had started the engineering work behind Hasura many yea
 
 Because of implementing authorization at the application layer in Hasura (instead of using RLS and passing user-details via current session settings in the postgres connection) had significant benefits, which we’ll soon see.
 
-To summarise, wow that authorization is declarative and available at a table, view or even a function (if the function returns SETOF) it is possible to create a single SQL query that has the authorization rules.
+To summarise, now that authorization is declarative and available at a table, view or even a function (if the function returns SETOF) it is possible to create a single SQL query that has the authorization rules.
 
 GraphQL query → GraphQL AST → Internal AST with authorization rules → SQL AST → SQL
 

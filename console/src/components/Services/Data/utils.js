@@ -19,21 +19,13 @@ export const TEXT = 'text';
 
 export const getPlaceholder = type => {
   switch (type) {
-    case INTEGER:
-      return 'integer';
-    case BIGINT:
-      return 'BIG integer';
-    case NUMERIC:
-      return 'float';
     case TIMESTAMP:
       return new Date().toISOString();
     case DATE:
       return new Date().toISOString().slice(0, 10);
-    case TIMETZ:
+    case TIME:
       const time = new Date().toISOString().slice(11, 19);
       return `${time}Z or ${time}+05:30`;
-    case UUID:
-      return 'UUID';
     case JSONDTYPE:
       return '{"name": "foo"} or [12, "bar"]';
     case JSONB:
@@ -41,7 +33,7 @@ export const getPlaceholder = type => {
     case BOOLEAN:
       return '';
     default:
-      return 'text';
+      return type;
   }
 };
 
@@ -65,6 +57,15 @@ export const ordinalColSort = (a, b) => {
 
 const findFKConstraint = (curTable, column) => {
   const fkConstraints = curTable.foreign_key_constraints;
+  return fkConstraints.find(
+    fk =>
+      Object.keys(fk.column_mapping).length === column.length &&
+      Object.keys(fk.column_mapping).join(',') === column.join(',')
+  );
+};
+
+const findOppFKConstraint = (curTable, column) => {
+  const fkConstraints = curTable.opp_foreign_key_constraints;
   return fkConstraints.find(
     fk =>
       Object.keys(fk.column_mapping).length === column.length &&
@@ -144,7 +145,6 @@ export const findAllFromRel = (schemas, curTable, rel) => {
     // for object relationship
     if (rel.rel_type === 'object') {
       relMeta.lcol = [foreignKeyConstraintOn];
-
       const fkc = findFKConstraint(curTable, relMeta.lcol);
       if (fkc) {
         relMeta.rTable = fkc.ref_table;
@@ -164,12 +164,7 @@ export const findAllFromRel = (schemas, curTable, rel) => {
         relMeta.rTable = rTableConfig;
         relMeta.rSchema = 'public';
       }
-
-      const rtableSchema = schemas.find(
-        x =>
-          x.table_name === relMeta.rTable && x.table_schema === relMeta.rSchema
-      );
-      const rfkc = findFKConstraint(rtableSchema, relMeta.rcol);
+      const rfkc = findOppFKConstraint(curTable, relMeta.rcol);
       relMeta.lcol = [rfkc.column_mapping[relMeta.rcol]];
     }
   }
@@ -341,15 +336,18 @@ export const fetchTrackedTableReferencedFkQuery = options => {
   ) AS tables 
 FROM 
   (
-    select
+    select DISTINCT ON (hdb_fkc.constraint_oid)
       hdb_fkc.*, 
-      fk_ref_table.table_name IS NOT NULL AS is_table_tracked 
+      fk_ref_table.table_name IS NOT NULL AS is_table_tracked,
+      hdb_uc.constraint_name IS NOT NULL AS is_unique
     from 
       hdb_catalog.hdb_table AS ist 
       JOIN hdb_catalog.hdb_foreign_key_constraint AS hdb_fkc ON hdb_fkc.ref_table_table_schema = ist.table_schema 
       and hdb_fkc.ref_table = ist.table_name 
       LEFT OUTER JOIN hdb_catalog.hdb_table AS fk_ref_table ON fk_ref_table.table_schema = hdb_fkc.table_schema 
       and fk_ref_table.table_name = hdb_fkc.table_name
+      LEFT OUTER JOIN hdb_catalog.hdb_unique_constraint AS hdb_uc ON hdb_uc.table_schema = hdb_fkc.table_schema
+      and hdb_uc.table_name = hdb_fkc.table_name and ARRAY(select json_array_elements_text(hdb_uc.columns) ORDER BY json_array_elements_text) = ARRAY(select json_object_keys(hdb_fkc.column_mapping) ORDER BY json_object_keys)
     ${whereQuery}
   ) as info
 `;
@@ -364,7 +362,9 @@ FROM
 export const fetchTableListQuery = options => {
   const whereQuery = generateWhereClause(options);
 
-  const runSql = `select 
+  // TODO: optimise this. Multiple OUTER JOINS causes data bloating
+  const runSql = `
+select 
   COALESCE(
     json_agg(
       row_to_json(info)
@@ -382,14 +382,14 @@ FROM
           quote_ident(ist.table_schema) || '.' || quote_ident(ist.table_name)
         ):: regclass, 
         'pg_class'
-      ) as comment, 
-      json_agg(
-        row_to_json(isc) :: JSONB || jsonb_build_object(
-          'comment', 
+      ) AS comment, 
+      COALESCE(json_agg(
+        DISTINCT row_to_json(is_columns) :: JSONB || jsonb_build_object(
+          'comment',
           (
             SELECT 
               pg_catalog.col_description(
-                c.oid, isc.ordinal_position :: int
+                c.oid, is_columns.ordinal_position :: int
               ) 
             FROM 
               pg_catalog.pg_class c 
@@ -402,23 +402,36 @@ FROM
                     ):: text
                   ):: regclass :: oid
               ) 
-              AND c.relname = isc.table_name
+              AND c.relname = is_columns.table_name
           )
         )
-      ) AS columns,
-      row_to_json(isc_views) as view_info
-    from 
+      ) FILTER (WHERE is_columns.column_name IS NOT NULL), '[]' :: JSON) AS columns,
+      COALESCE(json_agg(
+        DISTINCT row_to_json(is_triggers) :: JSONB || jsonb_build_object(
+          'comment',
+          (
+            SELECT description FROM pg_description JOIN pg_trigger ON pg_description.objoid = pg_trigger.oid 
+            WHERE tgname = is_triggers.trigger_name
+          )
+        )
+      ) FILTER (WHERE is_triggers.trigger_name IS NOT NULL), '[]' :: JSON) AS triggers,
+      row_to_json(is_views) AS view_info
+    FROM 
       information_schema.tables AS ist 
-      LEFT OUTER JOIN information_schema.columns AS isc ON isc.table_schema = ist.table_schema 
-      and isc.table_name = ist.table_name 
-      LEFT OUTER JOIN information_schema.views AS isc_views ON isc_views.table_schema = ist.table_schema
-      and isc_views.table_name = ist.table_name
+      LEFT OUTER JOIN information_schema.columns AS is_columns ON 
+        is_columns.table_schema = ist.table_schema 
+        AND is_columns.table_name = ist.table_name 
+      LEFT OUTER JOIN information_schema.views AS is_views ON is_views.table_schema = ist.table_schema
+        AND is_views.table_name = ist.table_name
+      LEFT OUTER JOIN information_schema.triggers AS is_triggers ON 
+        is_triggers.event_object_schema = ist.table_schema AND 
+        is_triggers.event_object_table = ist.table_name
     ${whereQuery} 
     GROUP BY 
       ist.table_schema, 
       ist.table_name,
       ist.table_type,
-      isc_views.*
+      is_views.*
   ) AS info
 `;
   return {
@@ -450,6 +463,7 @@ export const mergeLoadSchemaData = (
     const _columns = infoSchemaTableInfo.columns;
     const _comment = infoSchemaTableInfo.comment;
     const _tableType = infoSchemaTableInfo.table_type;
+    const _triggers = infoSchemaTableInfo.triggers; // TODO: get from v1/query
     const _viewInfo = infoSchemaTableInfo.view_info; // TODO: get from v1/query
 
     let _primaryKey = null;
@@ -483,6 +497,7 @@ export const mergeLoadSchemaData = (
       is_table_tracked: _isTableTracked,
       columns: _columns,
       comment: _comment,
+      triggers: _triggers,
       primary_key: _primaryKey,
       relationships: _relationships,
       permissions: _permissions,
@@ -611,6 +626,29 @@ WHERE (t.typrelid = 0 OR (SELECT c.relkind = 'c' FROM pg_catalog.pg_class c WHER
 GROUP BY t.typname
 ORDER BY t.typname ASC;
 `;
+
+export const fetchTableTriggersSQL = (schema, table) => {
+  return `  
+select 
+  COALESCE(
+    json_agg(
+      row_to_json(t)
+    ), 
+    '[]' :: JSON
+  ) AS result FROM (
+select 
+  trigger_schema, 
+  trigger_name, 
+  event_manipulation, 
+  action_timing, 
+  action_statement, 
+  event_object_schema, 
+  event_object_table 
+FROM information_schema.triggers 
+WHERE event_object_schema = '${schema}' AND event_object_table = '${table}'
+) AS t
+  `;
+};
 
 const postgresFunctionTester = /.*\(\)$/gm;
 

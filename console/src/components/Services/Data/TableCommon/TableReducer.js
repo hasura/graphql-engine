@@ -153,6 +153,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           rTable: selectedRel.rTable,
           rSchema: selectedRel.rSchema,
           rcol: selectedRel.rcol,
+          isUnique: selectedRel.isUnique,
         },
       };
     case REL_RESET:

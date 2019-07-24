@@ -1,0 +1,15 @@
+description: Create object relationship with name ""
+url: /v1/query
+status: 400
+response:
+  path: $.name
+  error: >-
+    empty string not allowed
+  code: parse-failed
+query:
+  type: create_object_relationship
+  args:
+    table: article
+    name: ""
+    using:
+      foreign_key_constraint_on: author_id

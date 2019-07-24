@@ -3,7 +3,6 @@ const gqlPattern = /^[_A-Za-z][_0-9A-Za-z]*$/;
 const gqlTableErrorNotif = [
   'Error creating table!',
   'Table name cannot contain special characters',
-  '',
   {
     custom:
       'Table name cannot contain special characters. It can have alphabets, numbers and _ (cannot start with numbers)',
@@ -14,7 +13,6 @@ const gqlTableErrorNotif = [
 const gqlColumnErrorNotif = [
   'Error adding column!',
   'Column name cannot contain special characters',
-  '',
   {
     custom:
       'Column name cannot contain special characters. It can have alphabets, numbers and _ (cannot start with numbers)',
@@ -25,7 +23,6 @@ const gqlColumnErrorNotif = [
 const gqlViewErrorNotif = [
   'Error creating view!',
   'View name cannot contain special characters',
-  '',
   {
     custom:
       'View name cannot contain special characters. It can have alphabets, numbers and _ (cannot start with numbers)',
@@ -36,7 +33,6 @@ const gqlViewErrorNotif = [
 const gqlRelErrorNotif = [
   'Error adding relationship!',
   'Relationship name cannot contain special characters',
-  '',
   {
     custom:
       'Relationship name cannot contain special characters. It can have alphabets, numbers and _ (cannot start with numbers)',
@@ -47,7 +43,6 @@ const gqlRelErrorNotif = [
 const gqlSchemaErrorNotif = [
   'Error creating schema!',
   'Schema name cannot contain special characters',
-  '',
   {
     custom:
       'Schema name cannot contain special characters. It can have alphabets, numbers and _ (cannot start with numbers)',
