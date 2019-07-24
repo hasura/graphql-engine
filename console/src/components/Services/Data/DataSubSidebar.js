@@ -114,7 +114,9 @@ class DataSubSidebar extends React.Component {
             }
 
             const gqlCompatibilityWarning = !gqlPattern.test(tableName) ? (
-              <GqlCompatibilityWarning />
+              <span className={styles.add_mar_left_mid}>
+                <GqlCompatibilityWarning />
+              </span>
             ) : null;
 
             if (tables[tableName].table_type === 'BASE TABLE') {

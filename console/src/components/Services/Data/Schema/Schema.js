@@ -329,7 +329,9 @@ class Schema extends Component {
           };
 
           const gqlCompatibilityWarning = !table.isGQLCompatible ? (
-            <GqlCompatibilityWarning />
+            <span className={styles.add_mar_left_mid}>
+              <GqlCompatibilityWarning />
+            </span>
           ) : null;
 
           untrackedTablesList.push(

@@ -17,7 +17,9 @@ const GqlCompatibilityWarning = () => {
     <div className={styles.display_inline}>
       <OverlayTrigger placement="right" overlay={gqlCompatibilityTip}>
         <i
-          className={`fa fa-exclamation-triangle ${styles.add_mar_left_mid} ${styles.gqlCompatibilityWarning}`}
+          className={`fa fa-exclamation-triangle ${
+            styles.gqlCompatibilityWarning
+          }`}
           aria-hidden="true"
         />
       </OverlayTrigger>
