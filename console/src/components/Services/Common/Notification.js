@@ -9,7 +9,7 @@ const styles = require('./Notification/Notification.scss');
 
 const getNotificationDetails = (detailsJson, children = null) => {
   return (
-    <div className={styles.notificationDetails + ' notification-details'}>
+    <div className={'notification-details'}>
       <AceEditor
         readOnly
         showPrintMargin={false}
