@@ -188,7 +188,8 @@ cleanLoggerCtx :: LoggerCtx -> IO ()
 cleanLoggerCtx =
   FL.rmLoggerSet . _lcLoggerSet
 
-newtype Logger = Logger { unLogger :: forall a. (ToEngineLog a) => a -> IO () }
+newtype Logger =
+  Logger { unLogger :: forall a. (ToEngineLog a) => a -> IO () }
 
 mkLogger :: LoggerCtx -> Logger
 mkLogger (LoggerCtx loggerSet serverLogLevel timeGetter enabledLogTypes callbackFn) = Logger $ \l -> do

@@ -134,7 +134,9 @@ data HandlerCtx
   }
 
 type Handler = ExceptT QErr (ReaderT HandlerCtx IO)
+
 type HasuraMiddleware a = a -> Handler ()
+
 type UserAuthMiddleware =
   L.Logger -> HTTP.Manager -> [N.Header] -> AuthMode -> ExceptT QErr IO UserInfo
 
@@ -300,6 +302,7 @@ mkSpockAction serverCtx userAuthMiddleware qErrEncoder qErrModifier apiHandler =
     logAndThrow reqId req reqBody includeInternal qErr = do
       let reqTxt = Just $ toJSON $ String $ bsToTxt $ BL.toStrict reqBody
       logError logger Nothing reqId req reqTxt qErr
+
       qErrToResp includeInternal qErr
 
     -- encode error response
@@ -566,13 +569,6 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry
       put    ("v1/template" <//> var) tmpltPutOrPostH
       delete ("v1/template" <//> var) tmpltGetOrDeleteH
 
--- <<<<<<< HEAD
---       post "v1/query" $ mkSpockAction encodeQErr id serverCtx $ mkAPIRespHandler $ do
---         query <- parseBody
---         -- run any given metadata query middleware
---         maybe (return ()) (\m -> m query) metadataMiddleware
---         v1QueryHandler query
--- =======
       post "v1/query" $ spockAction encodeQErr id $
         mkPostHandler $ mkAPIRespHandler (v1QueryHandler metadataMiddleware)
 
