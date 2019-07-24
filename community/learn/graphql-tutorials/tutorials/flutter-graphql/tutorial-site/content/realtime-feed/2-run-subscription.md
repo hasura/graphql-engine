@@ -1,5 +1,5 @@
 ---
-title: "Detect new todos - integration"
+title: "Detect new todos - Integration"
 metaTitle: "Fetch public todos using Subscription | GraphQL Flutter Tutorial"
 metaDescription: "You will learn how to make use of GraphQL Subscriptions to get notified whenever a new todo comes in Flutter app."
 ---
@@ -36,7 +36,8 @@ And initialize _client in initState method.
 +    super.initState();
 +  }
 ```
-Now let the wraping done
+Now let's wrap the subscription
+
  ```dart
 + Subscription(
 +          "fetchNewNotification",
@@ -73,10 +74,10 @@ Now let the wraping done
 
 The `fetchNewNotification` does the following:
 
-1. Starts a subscription to the last todo in the database
-2. Whenever data is received, it looks at the todos and compare previous id with current id via subscription, if new id is greater then previous one it will increase the count of notification.
+1. Starts a subscription to the last todo in the database.
+2. Whenever data is received, it looks at the todos and compare previous id with current id via subscription, if new id is greater then previous id, it will increase the count of notification.
 
 
 Awesome! You are now detecting new todo updates from the backend.
 
-Now lets make this button functional and add feeds to our list.
+Now let's make this button functional and add feeds to our list.

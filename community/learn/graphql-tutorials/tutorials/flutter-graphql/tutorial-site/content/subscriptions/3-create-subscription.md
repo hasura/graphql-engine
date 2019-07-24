@@ -18,7 +18,7 @@ Open `src/data/online_fetch.dart` and add the following code.
 ```
 
 Open `screens/abs/dashboard/online.dart`
-Now,Wrap the ListView with `Subscription` widget passing graphql subscription string. 
+Now, Wrap the ListView with `Subscription` widget passing GraphQL subscription string. 
 
 ```dart
 +   Subscription(
@@ -55,7 +55,7 @@ Now,Wrap the ListView with `Subscription` widget passing graphql subscription st
 
 How does this work?
 -------------------
-We are using the `Subscription` widget which gives payload (similar data in to `Query` and `Mutation` widget) of the realtime data for the query we have made.
+We are using the `Subscription` widget which gives payload (similar to data in the `Query` and `Mutation` widget) of the realtime data for the query we have made.
 
 Refresh your app and see yourself online! Don't be surprised; There could be other users online as well.
 

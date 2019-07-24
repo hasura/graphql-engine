@@ -7,8 +7,8 @@ metaDescription: "Integrate GraphQL Queries in Flutter app to fetch personal tod
 Let's integrate a GraphQL query to show the user their personal task list.
 We will learn the following concepts:
 
-- Setting up a GraphQL client with GraphQl Client
+- Setting up a GraphQL client using the package graphql_client
 - Fetching data with queries
-- Handle loading/error state
+- Handle loading and error states
 
 Let's get started!

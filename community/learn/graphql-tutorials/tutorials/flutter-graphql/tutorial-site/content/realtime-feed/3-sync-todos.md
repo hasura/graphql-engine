@@ -5,9 +5,10 @@ metaDescription: "You will learn how to sync new todos added by other people in 
 ---
 
 
-In the previous section we made a button that shows up only when there are new public todos in the database. Now lets make this button functional i.e. on pressing this button, newer todos should be fetched from the backend, synced with the local todos and the button must be dismissed.
+In the previous section, we made a button that shows up only when there are new public todos in the database. Now lets make this button functional i.e. on pressing this button, newer todos should be fetched from the backend, synced with the local todos and the button must be dismissed.
 
 Go to `lib/data/feed_fetch.dart`, and add following query strings in it.
+
 ```dart
 +  static String loadMoreTodos = """ query loadMoreTodos (\$oldestTodoId: Int!) {
 +       todos (where: { is_public: { _eq: true}, id: {_lt: \$oldestTodoId}}, limit: 7, order_by: { 
@@ -32,11 +33,12 @@ Go to `lib/data/feed_fetch.dart`, and add following query strings in it.
 +    }""";
 ```
 
-Now, whenever we  navigate to feeds tab we want current todos and on pressing new notification we want to add new todos in existing list and also on tap of load more we want to fetch older todos.
+Now, whenever we navigate to feeds tab, we want current todos and on pressing new notification, we want to add new todos in existing list and also on tap of load more, we want to fetch older todos.
 
 Let's update our code accordingly step by step
 
 First let's fetch current todos and new notification todos.
+
 ```dart
         Subscription(
           "fetchNewNotification",
@@ -120,9 +122,9 @@ First let's fetch current todos and new notification todos.
         ),
 ```
 
-So the above code is fetching some already existing todo from database and adding them to `feedList` to very first time and then on tap of new notification it is updating `feedList` with new todos.
+So the above code is fetching some already existing todo from database and adding them to `feedList` to the very first time and then on tap of new notification, it is updating `feedList` with new todos.
 
-Now let's add functionality to our load more button by again using `_client.query`
+Now let's add functionality to our load more button by again using `_client.query`.
 
 ```dart
        CustomButton(
@@ -151,6 +153,6 @@ Now let's add functionality to our load more button by again using `_client.quer
           width: MediaQuery.of(context).size.width / 3,
         )
 ```
-And yes to add new public todo you can follow same as adding private todo.
+And yes to add new public todo, you can follow same as adding private todo.
 
 With this, your fully functional realtime todo app is ready.

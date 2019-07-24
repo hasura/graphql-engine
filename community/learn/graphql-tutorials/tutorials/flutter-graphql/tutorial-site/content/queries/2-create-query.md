@@ -1,18 +1,18 @@
 ---
-title: "<Query> Widget"
+title: "Query Widget"
 metaTitle: "Flutter Query Widget | GraphQL Flutter Tutorial"
 metaDescription: "We will use the GraphQl Client Query widget provided by  graphql_flutter package. It is a widget to fetch, handle data and build UI"
 ---
 
 In this section, we will implement GraphQL Queries and integrate it with the UI.
 
-For Queries graphql_flutter package provides a Widget named Query.
-The query widget provides two parameters, options and builder. `options` takes `QueryOptions` widget which again provides us several parameters like `document` to pass query ,`variables` to pass query variables `pollInterval` to add polling in query. And builder is to build a Widgets according to the data received from a query result.
+For queries, graphql_flutter package provides a widget named `Query`.
+The `Query` widget provides two parameters, options and builder. `options` takes a widget argument of type `QueryOptions`, which again provides us several parameters like `document` to pass query ,`variables` to pass query variables and `pollInterval` to add polling in the query. `builder` parameter is used to build widgets according to the data received from the query result.
 
 
-Great! Now let's define the graphql query to be used:
+Great! Now let's define the GraphQL query to be used:
 
-Open `lib/data/` and add the file named `todo_fetch.dart`and add following code:
+Open `lib/data/` and add the file named `todo_fetch.dart`and add the following code:
 
 <!-- TODO github link required  -->
 
@@ -30,18 +30,18 @@ class TodoFetch {
 }
 ```
 
-We have now written the graphql query as a String named fetchAll and this is passed to QueryOptions as `document` parameter.
+We have now written the GraphQL query as a String named fetchAll and it will be passed to QueryOptions as `document` parameter.
 
 What does this query do? 
 ------------------------
-The query fetches `todos` with a simple condition; `is_public` must be false. We sort the todos descending by its `created_at` time according to the schema. We specify which fields we need for the todos node.
+The query fetches `todos` with a simple condition : `is_public` which must be false. We sort the todos in descending order using its `created_at` attribute, according to the schema. We specify the fields we need for todos node.
 
 [Try](https://learn.hasura.io/graphql/graphiql?tutorial=react-native) out this query now!
 
 Introducing query variables
 ---------------------------
 
-As you see, we have explicitly mentioned that `is_public` must be false. But in order to reuse this query for private and public todos, we must parameterise this query using `query variables`. Lets define a boolean query variable called `is_public`. The GraphQL query would fetch public todos if `is_public` is true and personal todos if `is_public` is false. Change it in the code as follows:
+As you see, we have explicitly mentioned that `is_public` must be false. But in order to reuse this query for private and public todos, we must parameterize this query using `query variables`. Lets define a boolean query variable called `is_public`. The GraphQL query would fetch public todos if `is_public` is true and personal todos if `is_public` is false, which in code is represented as follows:
 
 ```graphql
 query
@@ -59,7 +59,7 @@ query
 }
 ```
 
-Great! The query is now ready, let's integrate it. Currently, we are just using some dummy data. Let us remove this dummy data and create the UI based on our GraphQL response.
+Cool! The query is now ready, let's integrate it. Currently, we are just using some dummy data. Let us remove this dummy data and create the UI based on our GraphQL response.
 
 Now, inside `lib/screens/tabs/todos/all.dart` ,  lets wrap our ListView with Query widget
 
@@ -105,24 +105,24 @@ Expanded(
 +      ),
 ```
 
-As `delete` and `toggleIsCompleted` depends on our local list and will not work now.So let's leave them empty
+`delete` and `toggleIsCompleted` will not work now as it depends on our local list. So let's leave them empty for now.
 
 Woot! You have written your first GraphQL integration with Flutter. Easy isn't it?
 
 How does this work?
 -------------------
-When you wrapped your widget with `Query` widget, It provides builder method which gives you result as `QueryResult` object which have several variables to use. Most important ones are:
+When you wrapped your widget with `Query` widget, It provides a builder method which gives you result as `QueryResult` object which has several variables to use. Most important ones are:
 
 `loading`: A boolean that indicates whether the request is in flight. If loading is true, then the request hasn't finished. Typically this information can be used to display a loading spinner.
 
-`errors`: A runtime error with graphQLErrors and networkError properties. Contains information about what went wrong with your query.
+`errors`: A runtime error with GraphQLErrors and NetworkError properties. Contains information about what went wrong with your query.
 
 `data`: An object containing the result of your GraphQL query. This will contain our actual data from the server. In our case, it will be the todo data.
 
 
-Using the `data`, we are parsing the results from the server. In our query, `data`  has an array `todos` which can be mapped over to create `TodoItem` object which then used to create `TodoItemTile` widget.
+Using the `data`, we are parsing the results from the server. In our query, `data`  has an array `todos` which can be mapped over to create `TodoItem` object which then can be used to create `TodoItemTile` widget.
 
-If you noted, there has been some client side filtering to the todos that are displayed. Like to collect all active todo or completed todo. For that follow the same procedure and add following queries to your `lib/data/todo_fetch.dart` file.
+If you have noted, there has been some client side filtering to the todos that are displayed. For example to collect all active todo or completed todo. For that follow the same procedure and add following queries to your `lib/data/todo_fetch.dart` file.
 
 ```dart
 static String fetchActive = """query getActiveTodos{

@@ -11,7 +11,7 @@ Firstly, let us define the mutation that we looked at in the previous section. D
 
 ```dart
 + static String addTodo =
-+      """mutation addTodo(\$title: String!, \$isPublic: Boolean!) {
++      '''mutation addTodo(\$title: String!, \$isPublic: Boolean!) {
 + action: insert_todos(objects: { title: \$title, is_public: \$isPublic }) {
 +    returning {
 +     id
@@ -19,13 +19,13 @@ Firstly, let us define the mutation that we looked at in the previous section. D
 +     is_completed
 +   }
 + }
-+ }""";
++ }''';
 
 ```
 
 Now let's do the integration part. 
 
-We will wrap the AddTask widget with `Mutation` passing our graphql mutation string in Mutation Option as a document.
+We will wrap the AddTask widget with `Mutation` widget passing our graphql mutation string in Mutation Option as a document.
 
 ```dart
 + Mutation(
@@ -48,7 +48,7 @@ We will wrap the AddTask widget with `Mutation` passing our graphql mutation str
 +       ),
 ```
 
-The mutate function optionally takes various callbacks like `onCompleted`, `update`.
+The mutation widget optionally takes various callbacks like `onCompleted` and `update`.
 
 We are calling the runMutation function  to our Button's `onAdd` callback. We are also passing the query variables that is `title` and `isPublic` to this runMutation function so that our mutation is called with those variables. `title` is the value of the textfeild while `isPublic` is the type of the todo, and we are explicitly marking it as false as it's a private todo.
 

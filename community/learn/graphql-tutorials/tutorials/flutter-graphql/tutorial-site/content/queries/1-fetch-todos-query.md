@@ -1,12 +1,12 @@
 ---
-title: "Fetch todos - query"
+title: "Fetch todos - Query"
 metaTitle: "Query to fetch todo | GraphQL Flutter Tutorial"
 metaDescription: "GraphQL Query to fetch personal todos. Try the query in GraphiQL, passing the Authorization token to get authenticated results"
 ---
 
 
 
-The first graphql query you will write will be to fetch personal todos. You will need to load the todo data from the database which belongs to the logged in user. Let's define a graphql query to fetch the required data.
+The first graphql query you will write will be to fetch personal todos. You will need to load the todo data from the database which belongs to the logged-in user. Let's define a graphql query to fetch the required data.
 
 ```query getMyTodos {
   todos(where: { is_public: { _eq: false} }, order_by: { created_at: desc }) {
@@ -24,4 +24,4 @@ The first graphql query you will write will be to fetch personal todos. You will
 
 Don't be surprised to see results being empty. You haven't added any todos yet! This query is just to ensure if everything works as expected.
 
-Let's now integrate this graphql query into our flutter app.
+Now let's integrate this GraphQL query into our Flutter app.

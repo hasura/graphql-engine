@@ -66,13 +66,13 @@ Now, in `TodoItemTile` widget inside `lib/component/todo_item_tile.dart`, let's 
 +           },
 +         )
 ```
-The above code is not using `toggleIsCompleted` callback but it is using `toggleDocument`, `toggleRunMutaion` to pass mutation query and mutation varible repectively, So define them in constructor of `TodoItemTile` widget itself and remove `toggleIsCompleted` callback function from constructor. Pass your toggle mutation query and toggle variable document in the widget from screens i.e `all.dart` , `active.dat` , `completed.dart`.
+The above code isn't using `toggleIsCompleted` callback but it's using `toggleDocument`, `toggleRunMutaion` to pass mutation query and mutation variable repectively, So define them in constructor of `TodoItemTile` widget itself and remove `toggleIsCompleted` callback function from constructor. Pass your toggle mutation query and toggle variable document in the widget from screens i.e `all.dart` , `active.dart` and `completed.dart`.
 
-`runMutation` takes `optimisticResult` as an argument in which we can pass our optimistic result.
-Now we have to update our cache according to optimisticResult. For that we will find the correct item in the cache using `typenameDataIdFromObject` function which which takes a Map of item to be updated.
-we will get that map using `extractTodoData`function which we will define in `TodoItemTile` itself.
+`runMutation` has `optimisticResult` as an argument in which we can pass as our optimistic result.
+Now we have to update our cache according to optimisticResult. For this, we have to find the key of item in the cache using `typenameDataIdFromObject` function which takes the item of type map as parameter to be updated.
+We get that map using `extractTodoData`function which we will define in `TodoItemTile` itself.
 
-Note: We are using refetchQuery inside our onCompleted function which we also getting as an callback using constructor itself.
+Note: We are using refetchQuery inside our onCompleted function which we also get as a callback using constructor itself.
 
 Add this function code in your `TodoItemTile` class(or widget).
 
@@ -89,9 +89,9 @@ Add this function code in your `TodoItemTile` class(or widget).
 ```
 Add finally cache.write will update the cache.
 
-To summaries the above code will follow :
+To summarize the above code it follows that :
 
-1. It looks at the `id` and `__typename` of the mutation response
+1. It looks at the `id` and `__typename` of the mutation response.
 2. It looks for the objects in the cache that have `id` and `__typename` similar to the ones in the mutation response.
-3. If there is a match, it updates the cache with the data from the mutation response
+3. If there is a match, it updates the cache with the data from the mutation response.
 

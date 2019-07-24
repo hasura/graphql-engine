@@ -5,7 +5,7 @@ metaDescription: "We will handle the GraphQL loading and error Flutter app"
 ---
 
 
-As we saw in the previous step,We get various variables in `QueryResult` object. Among them `loading` and `errors` are common ones that you will need to handle in your app.
+As we saw in the previous step, we got various variables in `QueryResult` object. Among them `loading` and `errors` are common ones that you will need to handle in your app.
 
 Now let's go back to the `Query` widget that you wrote in the previous step.
 
@@ -54,7 +54,7 @@ Now let's go back to the `Query` widget that you wrote in the previous step.
 ```
 
 
-When Query `builder` runs you can manage states of your app like loading and error.  
+When Query's `builder` runs you can manage states of your app like loading and error.  
 In loading state, typically you can do fancy things like displaying a loading spinner.
 
 We are just printing `error` but you can handel it also, by navigating to some screen or showing some pop up. 
