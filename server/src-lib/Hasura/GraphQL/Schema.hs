@@ -1536,7 +1536,8 @@ getSelPerm tableCache fields role selPermInfo = do
                              , spiLimit rmSelPermM
                              , isRelNullable fields relInfo
                              )
-    FIRemote {} -> pure Nothing
+    -- TODO: Derive permissions for remote relationships
+    FIRemote remoteField  -> pure $ Just (SelFldRemote remoteField)
   return (spiAllowAgg selPermInfo, selFlds)
   where
     allowedCols = spiCols selPermInfo

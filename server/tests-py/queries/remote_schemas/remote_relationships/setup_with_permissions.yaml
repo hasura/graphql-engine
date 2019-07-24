@@ -1,0 +1,55 @@
+type: bulk
+args:
+
+# To model this:
+
+# query {
+#   profiles {
+#     id
+#     message {
+#       id
+#       msg
+#     }
+#   }
+# }
+
+#Profile table
+- type: run_sql
+  args:
+    sql: |
+      create table profiles (
+          id serial primary key,
+          name text
+      );
+- type: run_sql
+  args:
+    sql: |
+      insert into profiles (name) values
+      ( 'alice' ),
+      ( 'bob' ),
+      ( 'alice')
+- type: track_table
+  args:
+    schema: public
+    name: profiles
+
+- type: create_select_permission
+  args:
+    table:
+      schema: public
+      name: profiles
+    role: user
+    permission:
+      columns: ["id", "name"]
+      filter:
+        id:
+          _eq: "X-Hasura-User-Id"
+      allow_aggregations: true
+
+- type: add_remote_schema
+  args:
+    name: my-remote-schema
+    definition:
+      url: http://localhost:4000
+      forward_client_headers: false
+

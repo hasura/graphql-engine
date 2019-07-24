@@ -1,0 +1,19 @@
+description: Simple remote relationship GraphQL query
+url: /v1/graphql
+status: 200
+headers:
+  X-Hasura-Role: user
+  X-Hasura-User-Id: '1'
+response:
+  data:
+    profiles: []
+query:
+  query: |
+    query {
+      profiles(where: { id: {_eq: 2} }) {
+        id
+        messageBasic {
+          name
+        }
+      }
+    }
