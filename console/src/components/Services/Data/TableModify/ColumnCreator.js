@@ -38,17 +38,14 @@ const useColumnEditor = (dispatch, tableName) => {
         showErrorNotification(
           gqlColumnErrorNotif[0],
           gqlColumnErrorNotif[1],
-          gqlColumnErrorNotif[3]
+          gqlColumnErrorNotif[2]
         )
       );
     } else if (colName === '' || colType === '') {
       dispatch(
         showErrorNotification(
           'Error creating column!',
-          'Column name/type cannot be empty',
-          {
-            custom: 'Column name/type cannot be empty',
-          }
+          'Column name/type cannot be empty'
         )
       );
     } else {

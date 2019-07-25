@@ -496,9 +496,9 @@ const changeTableOrViewName = (isTable, oldName, newName) => {
         : gqlViewErrorNotif;
       return dispatch(
         showErrorNotification(
-          gqlValidationError[4],
+          gqlValidationError[3],
           gqlValidationError[1],
-          gqlValidationError[3]
+          gqlValidationError[2]
         )
       );
     }
@@ -1853,9 +1853,9 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
       if (!gqlPattern.test(newName)) {
         return dispatch(
           showErrorNotification(
-            gqlColumnErrorNotif[4],
+            gqlColumnErrorNotif[3],
             gqlColumnErrorNotif[1],
-            gqlColumnErrorNotif[3]
+            gqlColumnErrorNotif[2]
           )
         );
       }
