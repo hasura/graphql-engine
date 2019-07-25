@@ -880,7 +880,7 @@ parseReadOnlyDB :: Parser (Maybe Bool)
 parseReadOnlyDB = optional $
   option (eitherReader parseStrAsBool)
          ( long "read-only-db" <>
-           help (snd enableTelemetryEnv)
+           help (snd readOnlyDBEnv)
          )
 
 parseWsReadCookie :: Parser Bool
