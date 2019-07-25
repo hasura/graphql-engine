@@ -33,14 +33,14 @@ const Sidebar = ({ location, metadata }) => {
   sectionsData.push({
     key: 'allowed-queries',
     link: '/metadata/allowed-queries',
-    dataTestVal: 'metadata-allowed-queries-link',
+    dataTestVal: 'allowed-queries-link',
     title: 'Allowed Queries',
   });
 
   sectionsData.push({
     key: 'about',
     link: '/metadata/about',
-    dataTestVal: 'metadata-about-link',
+    dataTestVal: 'about-link',
     title: 'About ',
   });
 
