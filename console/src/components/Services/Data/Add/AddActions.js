@@ -301,7 +301,7 @@ const createTableSql = () => {
 
     if (columnSpecificSql.length) {
       columnSpecificSql.forEach(csql => {
-        sqlCreateTable += csql;
+        sqlCreateTable += csql.upSql;
       });
     }
 
