@@ -30,3 +30,4 @@ Events can be of the following types:
    serverless
    samples
    Invoke trigger via console <invoke-trigger-console>
+   Clean-up event data <clean-up>
