@@ -18,7 +18,7 @@ ARG project="graphql-engine"
 RUN mkdir -p /packaging/build/rootfs
 COPY --from=builder /build/${project} /root/
 RUN /build.sh ${project} | tar -xC /packaging/build/rootfs
-RUN strip /packaging/build/rootfs/bin/${project}
+RUN strip --strip-unneeded /packaging/build/rootfs/bin/${project}
 RUN upx /packaging/build/rootfs/bin/${project}
 
 # Stage 3: copy the rootfs into a scratch container
