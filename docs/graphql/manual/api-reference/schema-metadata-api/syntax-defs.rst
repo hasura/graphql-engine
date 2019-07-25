@@ -1,5 +1,5 @@
-Schema/Metadata API reference: Syntax definitions
-=================================================
+Schema/Metadata API Reference: Common syntax definitions
+========================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -257,7 +257,7 @@ ColumnExp
 Operator
 ^^^^^^^^
 
-Generic operators (all column types except json, jsonb) :
+**Generic operators (all column types except json, jsonb) :**
 
 - ``"$eq"``
 - ``"$ne"``
@@ -268,7 +268,7 @@ Generic operators (all column types except json, jsonb) :
 - ``"$gte"``
 - ``"$lte"``
 
-Text related operators :
+**Text related operators :**
 
 - ``"$like"``
 - ``"$nlike"``
@@ -277,7 +277,7 @@ Text related operators :
 - ``"$similar"``
 - ``"$nsimilar"``
 
-Operators for comparing columns (all column types except json, jsonb):
+**Operators for comparing columns (all column types except json, jsonb):**
 
 - ``"$ceq"``
 - ``"$cne"``
@@ -286,11 +286,11 @@ Operators for comparing columns (all column types except json, jsonb):
 - ``"$cgte"``
 - ``"$clte"``
 
-Checking for NULL values :
+**Checking for NULL values :**
 
 - ``_is_null`` (takes true/false as values)
 
-JSONB operators :
+**JSONB operators :**
 
 .. list-table::
    :header-rows: 1
@@ -303,8 +303,14 @@ JSONB operators :
      - ``<@``
    * - ``_has_key``
      - ``?``
+   * - ``_has_keys_any``
+     - ``?|``
+   * - ``_has_keys_all``
+     - ``?&``
 
-PostGIS related operators on GEOMETRY columns:
+(For more details on what these operators do, refer to `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`__.)
+
+**PostGIS related operators on GEOMETRY columns:**
 
 .. list-table::
    :header-rows: 1
@@ -398,6 +404,35 @@ E.g. where ``id`` is derived from session variable and ``city`` is a static valu
 .. note::
 
    If the value of any key begins with "x-hasura-" (*case-insensitive*), the value of the column specified in the key will be derived from a session variable of the same name.
+
+.. _RemoteSchemaName:
+
+RemoteSchemaName
+^^^^^^^^^^^^^^^^
+
+.. parsed-literal::
+
+  String
+
+.. _RemoteSchemaDef:
+
+RemoteSchemaDef
+^^^^^^^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   {
+      "url" : url-string,
+      "url_from_env" : env-var-string,
+      "headers": [
+           { "name": header-name-string,
+             "value": header-value-string,
+             "value_from_env": env-var-string
+           }
+      ],
+      "forward_client_headers": boolean
+   }
 
 .. _CollectionName:
 

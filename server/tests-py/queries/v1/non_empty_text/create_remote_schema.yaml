@@ -1,0 +1,19 @@
+description: Create remote schema with name ""
+url: /v1/query
+status: 400
+response:
+  path: $.name
+  error: >-
+    empty string not allowed
+  code: parse-failed
+query:
+  type: add_remote_schema
+  args:
+    name: ""
+    definition:
+      url: https://remote-server.com/graphql
+      headers:
+      - name: X-Server-Request-From
+        value: Hasura
+      forward_client_headers: false
+    comment: some optional comment

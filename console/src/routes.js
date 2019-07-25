@@ -23,6 +23,8 @@ import generatedApiExplorer from './components/Services/ApiExplorer/ApiExplorerG
 
 import generatedLoginConnector from './components/Login/Login';
 
+import generatedVoyagerConnector from './components/VoyagerView/VoyagerView';
+
 import metadataContainer from './components/Services/Metadata/Container';
 import metadataOptionsContainer from './components/Services/Metadata/MetadataOptions/MetadataOptions';
 import metadataStatusContainer from './components/Services/Metadata/MetadataStatus/MetadataStatus';
@@ -90,6 +92,10 @@ const routes = store => {
       >
         <Route path="">
           <IndexRoute component={generatedApiExplorer(connect)} />
+          <Route
+            path="voyager-view"
+            component={generatedVoyagerConnector(connect)}
+          />
           <Route
             path="api-explorer"
             component={generatedApiExplorer(connect)}

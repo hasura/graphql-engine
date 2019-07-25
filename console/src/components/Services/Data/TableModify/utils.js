@@ -14,17 +14,28 @@ const getValidAlterOptions = (alterTypeOptions, colName) => {
     colName,
     0
   );
-
-  const {
-    typInfo: validOptions,
-    typValueMap: validOptionsMap,
-  } = getDataTypeInfo(alterTypeOptions.slice(3, 6), colName, 0);
-
-  const allInfo = [...currentInfo, ...validOptions];
-  const allOptionsMap = {
-    ...validOptionsMap,
+  /*
+   * alterTypeOptions can also only contain only three elements
+   */
+  let allInfo = [...currentInfo];
+  let allOptionsMap = {
     ...currentMap,
   };
+
+  if (alterTypeOptions.length > 3) {
+    const {
+      typInfo: validOptions,
+      typValueMap: validOptionsMap,
+    } = getDataTypeInfo(alterTypeOptions.slice(3, 6), colName, 0);
+
+    allInfo = allInfo.concat(validOptions);
+    // const allInfo = [...currentInfo, ...validOptions];
+    allOptionsMap = {
+      ...validOptionsMap,
+      ...currentMap,
+    };
+  }
+
   return {
     alterOptions: allInfo,
     alterOptionsValueMap: allOptionsMap,
@@ -34,10 +45,10 @@ const getValidAlterOptions = (alterTypeOptions, colName) => {
 const fetchColumnCastsQuery = `
 SELECT ts.typname AS "Source Type",
        pg_catalog.format_type(castsource, NULL) AS "Source Info",
-       pg_catalog.obj_description(castsource, 'pg_type') as "Source Descriptions",
+       coalesce(pg_catalog.obj_description(castsource, 'pg_type'), '') as "Source Descriptions",
        string_agg(tt.typname, ',') AS "Target Type",
        string_agg(pg_catalog.format_type(casttarget, NULL), ',') AS "Target Info",
-       string_agg(pg_catalog.obj_description(casttarget, 'pg_type'), ':') as "Target Descriptions",
+       string_agg(coalesce(pg_catalog.obj_description(casttarget, 'pg_type'), ''), ':') as "Target Descriptions",
        string_agg(CASE WHEN castfunc = 0 THEN '(binary coercible)'
             ELSE p.proname
        END, ',') as "Function"
@@ -59,15 +70,25 @@ ORDER BY 1, 2;
 
 `;
 
-const getCreatePkSql = ({ schemaName, tableName, selectedPkColumns, constraintName }) => {
+const getCreatePkSql = ({
+  schemaName,
+  tableName,
+  selectedPkColumns,
+  constraintName,
+}) => {
   return `alter table "${schemaName}"."${tableName}"
-    add constraint "${constraintName}" primary key ( ${selectedPkColumns
-  .map(pkc => `"${pkc}"`)
-  .join(', ')} );`;
+    add constraint "${constraintName}" 
+    primary key ( ${selectedPkColumns.map(pkc => `"${pkc}"`).join(', ')} );`;
 };
 
 const getDropPkSql = ({ schemaName, tableName, constraintName }) => {
   return `alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}";`;
 };
 
-export { convertArrayToJson, getValidAlterOptions, fetchColumnCastsQuery, getCreatePkSql, getDropPkSql };
+export {
+  convertArrayToJson,
+  getValidAlterOptions,
+  fetchColumnCastsQuery,
+  getCreatePkSql,
+  getDropPkSql,
+};

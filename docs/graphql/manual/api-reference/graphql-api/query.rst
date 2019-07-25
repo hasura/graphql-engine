@@ -109,18 +109,18 @@ E.g.
 
    author {
       id  # scalar integer field
-      
+
       name  # scalar text field
 
       address(path: "$.city") # scalar JSON field -> property
       address(path: "city") # scalar JSON field -> property; '$.' prefix is optional
       contacts(path: "[0]") # scalar JSON field -> array_item
-      contacts(path: "[0].phone") # scalar JSON field -> array_item_property 
-      
+      contacts(path: "[0].phone") # scalar JSON field -> array_item_property
+
       article {  # nested object
         title
       }
-      
+
       article_aggregate {  # aggregate nested object
         aggregate {
           count
@@ -371,6 +371,10 @@ Operator
 
 - ``_is_null`` (takes true/false as values)
 
+**Type casting:**
+
+- ``_cast`` (takes a CastExp_ as a value)
+
 **JSONB operators:**
 
 .. list-table::
@@ -427,6 +431,19 @@ Operator
        {
          field-name : {_st_d_within: {distance: Float, from: Value} }
        }
+
+.. _CastExp:
+
+CastExp
+#######
+
+.. parsed-literal ::
+
+    {type-name: {Operator_: Value}}
+
+.. note::
+
+   Currently, only casting between ``geometry`` and ``geography`` types is allowed.
 
 .. _OrderByExp:
 
