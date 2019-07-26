@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
-import { showNotification } from '../../../App/Actions';
 import Button from '../../../Common/Button/Button';
 
 import {
@@ -32,11 +31,10 @@ class ResetMetadata extends Component {
             if (a.trim() !== 'RESET') {
               console.error('Did not reset metadata: User confirmation error');
               this.props.dispatch(
-                showNotification({
-                  level: 'error',
-                  title: 'Metadata reset failed',
-                  message: 'User Confirmation Error',
-                })
+                showErrorNotification(
+                  'Metadata reset failed',
+                  'User Confirmation Error'
+                )
               );
             } else {
               this.setState({ isResetting: true });

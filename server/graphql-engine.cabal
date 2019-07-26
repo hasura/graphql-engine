@@ -362,4 +362,5 @@ executable graphql-engine
                -Wincomplete-uni-patterns
                -Wredundant-constraints
                -threaded -rtsopts
-               -with-rtsopts=-N
+               -- Re. `-I2` see #2565
+               "-with-rtsopts=-N -I2"
