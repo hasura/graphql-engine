@@ -21,7 +21,10 @@ Rename `.env.EXAMPLE` to `.env.development` (or `.env.production`) and replace `
 Replace the `<value>` for `AUTH0_CALLBACK` with the URL for your callback route. The default for development is `http://localhost:8000/callback`.
 
 ## Contentful
-Contentful remote schema is added as part of the migration. Configure the environment variable `CONTENTFUL_API_KEY` in Hasura GraphQL Engine server for the types to get merged.
+Contentful remote schema is added as part of the migration. Configure the environment variables in Hasura GraphQL Engine server for the types to get merged.
+
+- `CONTENTFUL_API_KEY` 
+- `CONTENTFUL_API_ENDPOINT` which is of the format https://graphql.contentful.com/content/v1/spaces/<space-id>
 
 ## Migrations
 

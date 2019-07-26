@@ -4,8 +4,8 @@
     remote_schemas:
     - name: contentful
       definition:
-        url: https://graphql.contentful.com/content/v1/spaces/mdlp1bro8u6t
-        url_from_env: 
+        url: 
+        url_from_env: CONTENTFUL_API_ENDPOINT
         headers:
         - name: Authorization
           value_from_env: CONTENTFUL_API_KEY
