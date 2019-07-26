@@ -147,6 +147,14 @@ module.exports = {
       __DEVELOPMENT__: true,
       __DEVTOOLS__: true, // <-------- DISABLE redux-devtools HERE
     }),
+    // set global consts
+    new webpack.DefinePlugin({
+      CONSOLE_ASSET_VERSION: JSON.stringify(
+        Math.random()
+          .toString(36)
+          .slice(2)
+      ),
+    }),
     webpackIsomorphicToolsPlugin.development(),
   ],
 };
