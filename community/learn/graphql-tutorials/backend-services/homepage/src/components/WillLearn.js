@@ -33,7 +33,7 @@ class WillLearn extends React.Component {
       )
     })
     return (
-      <div className={'whiteBgColor commonSectionWrapper'}>
+      <div className={'lightGrayBgColor commonSectionWrapper'}>
         <div className={'container noPadd'}>
           <div className={'willLearnWrapper'}>
             <div className={'col-md-12'}>
