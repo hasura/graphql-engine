@@ -41,6 +41,8 @@ to be able to push to this app.
    $ heroku git:remote -a <hasura-heroku>
    $ heroku stack:set container -a <hasura-heroku>
 
+You can find your Heroku git repo in your Heroku - Settings - Info - Heroku Git URL
+
 Step 3: Git push to deploy the latest Hasura GraphQL engine
 -----------------------------------------------------------
 
@@ -49,8 +51,6 @@ When you ``git push`` to deploy, the Heroku app will get updated with the latest
 .. code-block:: bash
 
    $ git push heroku master
-
-If you are getting the following error: ``fatal: 'heroku' does not appear to be a git repository``, add your heroku repo to your local git remote via: ``git remote add heroku https://git.heroku.com/<you-app-name>.git``. (this URL locates in your Heroku - Settings - Info - Heroku Git URL)
 
 Deploy a specific version of Hasura GraphQL engine
 --------------------------------------------------
