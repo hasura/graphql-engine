@@ -411,6 +411,7 @@ class PermissionBuilder extends React.Component {
       value,
       prefix,
       valueType,
+      tableColumns,
       showSuggestion = true
     ) => {
       const dispatchInput = val => {
@@ -453,6 +454,8 @@ class PermissionBuilder extends React.Component {
       } else if (PGTypes.json.includes(valueType)) {
         input = inputBox();
         suggestion = jsonSuggestion();
+      } else if (valueType === 'column') {
+        input = renderSelect(dispatchInput, value, tableColumns);
       } else {
         input = wrapDoubleQuotes(inputBox());
         suggestion = sessionVariableSuggestion();
@@ -465,7 +468,13 @@ class PermissionBuilder extends React.Component {
       );
     };
 
-    const renderValueArray = (dispatchFunc, values, prefix, valueType) => {
+    const renderValueArray = (
+      dispatchFunc,
+      values,
+      prefix,
+      valueType,
+      tableColumns
+    ) => {
       const dispatchInput = val => {
         dispatchFunc({ prefix: prefix, value: val });
       };
@@ -482,6 +491,7 @@ class PermissionBuilder extends React.Component {
           val,
           addToPrefix(prefix, i),
           valueType,
+          tableColumns,
           false
         );
         inputArray.push(input);
@@ -505,7 +515,13 @@ class PermissionBuilder extends React.Component {
       );
     };
 
-    const renderOperatorExp = (dispatchFunc, expression, prefix, valueType) => {
+    const renderOperatorExp = (
+      dispatchFunc,
+      expression,
+      prefix,
+      valueType,
+      tableColumns
+    ) => {
       const dispatchColumnOperatorSelect = val => {
         dispatchFunc({ prefix: val });
       };
@@ -541,14 +557,16 @@ class PermissionBuilder extends React.Component {
             dispatchFunc,
             operationValue,
             addToPrefix(prefix, operator),
-            operatorInputType
+            operatorInputType,
+            tableColumns
           );
         } else {
           _valueInput = renderValue(
             dispatchFunc,
             operationValue,
             addToPrefix(prefix, operator),
-            operatorInputType
+            operatorInputType,
+            tableColumns
           );
         }
       }
@@ -576,10 +594,12 @@ class PermissionBuilder extends React.Component {
       tableSchemas,
       prefix
     ) => {
+      let tableColumns = [];
       let tableRelationships = [];
       let tableSchema;
       if (table) {
         tableSchema = getTableSchema(tableSchemas, table);
+        tableColumns = getTableColumnNames(tableSchema);
         tableRelationships = getTableRelationshipNames(tableSchema);
       }
 
@@ -602,7 +622,8 @@ class PermissionBuilder extends React.Component {
           dispatchFunc,
           expression,
           prefix,
-          columnType
+          columnType,
+          tableColumns
         );
       }
 
