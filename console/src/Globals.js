@@ -44,7 +44,6 @@ const globals = {
     window.__env.nodeEnv !== 'development' ? 'console' : 'console_test',
   assetsPath: window.__env.assetsPath,
   serverVersion: window.__env.serverVersion,
-  consoleAssetVersion: window.__env.consoleAssetVersion,
   featuresCompatibility: window.__env.serverVersion
     ? getFeaturesCompatibility(window.__env.serverVersion)
     : null,
