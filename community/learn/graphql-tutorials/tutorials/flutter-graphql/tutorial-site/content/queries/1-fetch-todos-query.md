@@ -8,7 +8,8 @@ metaDescription: "GraphQL Query to fetch personal todos. Try the query in Graphi
 
 The first graphql query you will write will be to fetch personal todos. You will need to load the todo data from the database which belongs to the logged-in user. Let's define a graphql query to fetch the required data.
 
-```query getMyTodos {
+```graphql
+ query getMyTodos {
   todos(where: { is_public: { _eq: false} }, order_by: { created_at: desc }) {
     __typename
     id
