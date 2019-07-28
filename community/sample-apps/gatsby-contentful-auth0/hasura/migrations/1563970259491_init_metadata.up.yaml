@@ -1,0 +1,169 @@
+- type: replace_metadata
+  args:
+    functions: []
+    remote_schemas:
+    - name: contentful
+      definition:
+        url: 
+        url_from_env: CONTENTFUL_API_ENDPOINT
+        headers:
+        - name: Authorization
+          value_from_env: CONTENTFUL_API_KEY
+        forward_client_headers: false
+      comment: 
+    query_collections: []
+    allowlist: []
+    tables:
+    - table: users
+      object_relationships: []
+      array_relationships:
+      - using:
+          foreign_key_constraint_on:
+            column: user_id
+            table: playlist
+        name: playlists
+        comment: 
+      insert_permissions: []
+      select_permissions:
+      - role: user
+        comment: 
+        permission:
+          allow_aggregations: false
+          columns:
+          - id
+          - name
+          - created_at
+          filter: {}
+      update_permissions: []
+      delete_permissions: []
+      event_triggers: []
+    - table: album
+      object_relationships: []
+      array_relationships:
+      - using:
+          foreign_key_constraint_on:
+            column: album_id
+            table: track
+        name: tracks
+        comment: 
+      insert_permissions: []
+      select_permissions:
+      - role: user
+        comment: 
+        permission:
+          allow_aggregations: false
+          columns:
+          - name
+          - created_at
+          - id
+          filter: {}
+      update_permissions: []
+      delete_permissions: []
+      event_triggers: []
+    - table: playlist_track
+      object_relationships:
+      - using:
+          foreign_key_constraint_on: playlist_id
+        name: playlist
+        comment: 
+      - using:
+          foreign_key_constraint_on: track_id
+        name: track_details
+        comment: 
+      array_relationships: []
+      insert_permissions:
+      - role: user
+        comment: 
+        permission:
+          set: {}
+          check:
+            playlist:
+              user_id:
+                _eq: X-Hasura-User-Id
+          columns:
+          - playlist_id
+          - track_id
+      select_permissions:
+      - role: user
+        comment: 
+        permission:
+          allow_aggregations: false
+          columns:
+          - track_id
+          - playlist_id
+          filter:
+            playlist:
+              user_id:
+                _eq: X-Hasura-User-Id
+      update_permissions: []
+      delete_permissions: []
+      event_triggers: []
+    - table: playlist
+      object_relationships:
+      - using:
+          foreign_key_constraint_on: user_id
+        name: user
+        comment: 
+      array_relationships:
+      - using:
+          foreign_key_constraint_on:
+            column: playlist_id
+            table: playlist_track
+        name: tracks
+        comment: 
+      insert_permissions:
+      - role: user
+        comment: 
+        permission:
+          set:
+            user_id: x-hasura-User-Id
+          check:
+            user_id:
+              _eq: X-Hasura-User-Id
+          columns:
+          - name
+          - user_id
+      select_permissions:
+      - role: user
+        comment: 
+        permission:
+          allow_aggregations: false
+          columns:
+          - id
+          - name
+          - user_id
+          - created_at
+          filter:
+            user_id:
+              _eq: X-Hasura-User-Id
+      update_permissions: []
+      delete_permissions: []
+      event_triggers: []
+    - table: track
+      object_relationships:
+      - using:
+          foreign_key_constraint_on: album_id
+        name: album
+        comment: 
+      array_relationships:
+      - using:
+          foreign_key_constraint_on:
+            column: track_id
+            table: playlist_track
+        name: playlists
+        comment: 
+      insert_permissions: []
+      select_permissions:
+      - role: user
+        comment: 
+        permission:
+          allow_aggregations: false
+          columns:
+          - id
+          - name
+          - album_id
+          filter: {}
+      update_permissions: []
+      delete_permissions: []
+      event_triggers: []
+
