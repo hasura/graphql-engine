@@ -1,0 +1,23 @@
+description: Simple remote relationship GraphQL query
+url: /v1/graphql
+status: 200
+response:
+  data:
+    user:
+      user_id: 1
+      messageRemoteToRemote:
+        id: 1
+        name: alice
+        msg: You win!
+query:
+  query: |
+    query {
+      user(user_id: 1) {
+        user_id
+        messageRemoteToRemote {
+          id
+          name
+          msg
+        }
+      }
+    }

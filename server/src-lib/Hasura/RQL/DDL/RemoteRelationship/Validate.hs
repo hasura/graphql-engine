@@ -424,7 +424,7 @@ isListType =
 getCreateRemoteToRemoteRelationshipValidation ::
      (QErrM m, CacheRM m)
   => RemoteToRemoteRelationship
-  -> m (Either (NonEmpty ValidationError) (RemoteToRemoteField, TypeMap))
+  -> m (Either (NonEmpty ValidationError) (RemoteToRemoteField))
 getCreateRemoteToRemoteRelationshipValidation createRemoteToRemoteRelationship = do
   schemaCache <- askSchemaCache
   pure
@@ -438,7 +438,7 @@ validateRemoteToRemoteRelationship ::
      RemoteToRemoteRelationship
   -> GC.GCtx
   -> RemoteSchemaMap
-  -> Either (NonEmpty ValidationError) (RemoteToRemoteField, TypeMap)
+  -> Either (NonEmpty ValidationError) (RemoteToRemoteField)
 validateRemoteToRemoteRelationship remoteRelationship gctx remoteSchemas = do
   case HM.lookup baseSchemaName remoteSchemas of
     Nothing -> Left (pure (RemoteSchemaNotFound baseSchemaName))
@@ -508,12 +508,12 @@ validateRemoteToRemoteRelationship remoteRelationship gctx remoteSchemas = do
                      , (mempty, mempty)))
                   (rtrrRemoteFields remoteRelationship)
               pure
-                ( RemoteToRemoteField
+                 RemoteToRemoteField
                     { rrmfRemoteRelationship = remoteRelationship
                     , rrmfGType = leafGType
                     , rrmfParamMap = leafParamMap
+                    , rrmfAdditionalTypes = leafTypeMap
                     }
-                , leafTypeMap)
             _other -> Left (pure (InvalidType (G.toGT baseType) "only objects types can be joined"))
   where
     baseSchemaName = rtrrBaseSchema remoteRelationship

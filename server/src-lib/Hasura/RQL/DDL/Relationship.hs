@@ -496,13 +496,12 @@ runCreateRemoteToRemoteRelationship ::
      (MonadTx m, CacheRWM m, UserInfoM m) => RemoteToRemoteRelationship -> m EncJSON
 runCreateRemoteToRemoteRelationship remoteRelationship = do
   adminOnly
-  (remoteField, additionalTypesMap) <-
+  remoteField <-
     runCreateRemoteToRemoteRelationshipP1 remoteRelationship
-  pure successMsg
-  -- runCreateRemoteToRemoteRelationshipP2 remoteField additionalTypesMap
+  runCreateRemoteToRemoteRelationshipP2 remoteField
 
 runCreateRemoteToRemoteRelationshipP1 ::
-     (QErrM m, CacheRM m) => RemoteToRemoteRelationship -> m (RemoteToRemoteField, TypeMap)
+     (QErrM m, CacheRM m) => RemoteToRemoteRelationship -> m RemoteToRemoteField
 runCreateRemoteToRemoteRelationshipP1 remoteToRemoteRelationship = do
   sc <- askSchemaCache
   case HM.lookup
@@ -513,16 +512,17 @@ runCreateRemoteToRemoteRelationshipP1 remoteToRemoteRelationship = do
         getCreateRemoteToRemoteRelationshipValidation remoteToRemoteRelationship
       case validation of
         Left err -> throw400 RemoteSchemaError (T.pack (show err))
-        Right (remoteField, additionalTypesMap) ->
-          pure (remoteField, additionalTypesMap)
+        Right remoteToRemoteField ->
+          pure remoteToRemoteField
     Nothing -> throw400 RemoteSchemaError "No such remote schema"
 
 runCreateRemoteToRemoteRelationshipP2Setup ::
-     (MonadTx m, CacheRWM m) => RemoteToRemoteField -> TypeMap -> m ()
-runCreateRemoteToRemoteRelationshipP2Setup remoteField additionalTypesMap = do
-  addRemoteToRemoteRelToCache remoteField additionalTypesMap schemaDependencies
+     (MonadTx m, CacheRWM m) => RemoteToRemoteField -> m ()
+runCreateRemoteToRemoteRelationshipP2Setup remoteToRemoteField = do
+  addRemoteToRemoteRelToCache remoteToRemoteField schemaDependencies
   where
-    schemaDependencies = undefined
+    schemaDependencies = [SchemaDependency (SORemoteSchema remoteSchemaName) "remote schema"]
+    remoteSchemaName = rtrrRemoteSchema (rrmfRemoteRelationship remoteToRemoteField)
       -- let table = rtrTable $ rrmfRemoteRelationship remoteField
       --     columns = rtrHasuraFields $ rrmfRemoteRelationship remoteField
       --     remoteSchemaName = rtrRemoteSchema $ rmfRemoteRelationship remoteField
@@ -539,10 +539,10 @@ runCreateRemoteToRemoteRelationshipP2Setup remoteField additionalTypesMap = do
       --  in (tableDep : remoteSchemaDep : columnsDep)
 
 runCreateRemoteToRemoteRelationshipP2 ::
-     (MonadTx m, CacheRWM m) => RemoteToRemoteField -> TypeMap -> m EncJSON
-runCreateRemoteToRemoteRelationshipP2 remoteField additionalTypesMap = do
-  liftTx (persistRemoteToRemoteRelationship (rrmfRemoteRelationship remoteField))
-  runCreateRemoteToRemoteRelationshipP2Setup remoteField additionalTypesMap
+     (MonadTx m, CacheRWM m) => RemoteToRemoteField -> m EncJSON
+runCreateRemoteToRemoteRelationshipP2 remoteField = do
+  -- liftTx (persistRemoteToRemoteRelationship (rrmfRemoteRelationship remoteField))
+  runCreateRemoteToRemoteRelationshipP2Setup remoteField
   pure successMsg
 
 persistRemoteToRemoteRelationship

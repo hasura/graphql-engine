@@ -319,18 +319,18 @@ class TestCreateRemoteToRemoteRelationship:
     def dir(cls):
         return "queries/remote_schemas/remote_relationships/"
 
-    @pytest.fixture(autouse=True)
-    def transact(self, hge_ctx, graphql_service):
-        print("In setup method")
-        graphql_service.start()
-        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_to_remote.yaml')
-        assert st_code == 200, resp
-        yield
-        st_code, resp = hge_ctx.v1q_f(self.dir() + 'teardown_remote_to_remote.yaml')
-        assert st_code == 200, resp
-        graphql_service.stop()
+    # @pytest.fixture(autouse=True)
+    # def transact(self, hge_ctx, graphql_service):
+    #     print("In setup method")
+    #     graphql_service.start()
+    #     st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_to_remote.yaml')
+    #     assert st_code == 200, resp
+    #     yield
+    #     st_code, resp = hge_ctx.v1q_f(self.dir() + 'teardown_remote_to_remote.yaml')
+    #     assert st_code == 200, resp
+    #     graphql_service.stop()
 
     def test_basic_relationship(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_to_remote_rel_basic.yaml')
         assert st_code == 200, resp
-        # check_query_f(hge_ctx, self.dir() + 'basic_remote_to_remote_relationship.yaml', transport)
+        check_query_f(hge_ctx, self.dir() + 'basic_remote_to_remote_relationship.yaml')

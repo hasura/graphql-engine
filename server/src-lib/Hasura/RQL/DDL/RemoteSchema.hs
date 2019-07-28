@@ -136,11 +136,20 @@ buildGCtxMap = do
   (mergedGCtxMap, defGCtx) <- mergeSchemas (scRemoteSchemas sc) gCtxMap
   -- Add remote relationship types
   let remoteRelInputTypes = scRemoteRelInputTypes sc
-      newGCtxMap = Map.map (SC.mergeRemoteTypesWithGCtx remoteRelInputTypes) mergedGCtxMap
-      newDefGCtx = mergeRemoteTypesWithGCtx remoteRelInputTypes defGCtx
+      newGCtxMap = Map.map (SC.mergeRemoteTypesWithGCtx (Map.elems remoteRelInputTypes)) mergedGCtxMap
+      newDefGCtx = SC.mergeRemoteTypesWithGCtx (Map.elems remoteRelInputTypes) defGCtx
   writeSchemaCache sc { scGCtxMap = newGCtxMap
                       , scDefaultRemoteGCtx = newDefGCtx
                       }
+  -- Add remote to remote relationship types
+  sc2 <- askSchemaCache
+  let remoteToRemoteRels = scRemoteToRemoteRels sc2
+  let newGCtxMap2 = Map.map (SC.mergeRemoteTypesWithGCtx (map rrmfAdditionalTypes remoteToRemoteRels ) ) (scGCtxMap sc2)
+      newDefGCtx2 = SC.mergeRemoteTypesWithGCtx (map rrmfAdditionalTypes remoteToRemoteRels ) (scDefaultRemoteGCtx sc2)
+      newDefGCtx3 = SC.addRemoteToRemoteRels (scRemoteSchemas sc2) remoteToRemoteRels newDefGCtx2
+  writeSchemaCache sc2 { scGCtxMap = newGCtxMap2
+                       , scDefaultRemoteGCtx = newDefGCtx3
+                       }
 
 addRemoteSchemaToCatalog
   :: AddRemoteSchemaQuery

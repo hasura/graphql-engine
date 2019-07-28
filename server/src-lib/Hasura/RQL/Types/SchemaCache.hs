@@ -107,6 +107,7 @@ module Hasura.RQL.Types.SchemaCache
        , addRelationshipTypes
 
        , mergeRemoteTypesWithGCtx
+       , addRemoteToRemoteRels
        ) where
 
 import           Control.Lens
@@ -132,6 +133,8 @@ import qualified Data.HashMap.Strict                 as M
 import qualified Data.HashSet                        as HS
 import qualified Data.Sequence                       as Seq
 import qualified Data.Text                           as T
+
+import qualified Language.GraphQL.Draft.Syntax       as G
 
 reportSchemaObjs :: [SchemaObjId] -> T.Text
 reportSchemaObjs = T.intercalate ", " . map reportSchemaObj
@@ -456,6 +459,7 @@ data SchemaCache
   , scDepMap            :: !DepMap
   , scInconsistentObjs  :: ![InconsistentMetadataObj]
   , scRemoteRelInputTypes :: !(M.HashMap (QualifiedTable, RemoteRelationshipName) TypeMap)
+  , scRemoteToRemoteRels :: ![RemoteToRemoteField]
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
@@ -498,6 +502,7 @@ emptySchemaCache =
   , scDepMap = M.empty
   , scInconsistentObjs = []
   , scRemoteRelInputTypes = M.empty
+  , scRemoteToRemoteRels = []
   }
 
 modTableCache :: (CacheRWM m) => TableCache -> m ()
@@ -588,11 +593,22 @@ addRemoteRelToCache remoteField additionalTypes deps = do
 addRemoteToRemoteRelToCache ::
      (QErrM m, CacheRWM m)
   => RemoteToRemoteField
-  -> TypeMap
   -> [SchemaDependency]
   -> m ()
-addRemoteToRemoteRelToCache remoteField additionalTypes deps = do
-  undefined
+addRemoteToRemoteRelToCache remoteToRemoteField deps = do
+  addRemoteToRemoteFldToCache remoteToRemoteField
+  modDepMapInCache (addToDepMap schObjId deps)
+  where
+    baseSchemaName = rtrrBaseSchema (rrmfRemoteRelationship remoteToRemoteField)
+    schObjId = SORemoteSchema baseSchemaName
+
+addRemoteToRemoteFldToCache ::
+    (QErrM m, CacheRWM m)
+  => RemoteToRemoteField
+  -> m ()
+addRemoteToRemoteFldToCache remoteToRemoteField = do
+  sc <- askSchemaCache
+  writeSchemaCache sc { scRemoteToRemoteRels = remoteToRemoteField : scRemoteToRemoteRels sc }
 
 delRemoteRelFromCache ::
     (QErrM m, CacheRWM m)
@@ -873,6 +889,45 @@ getDependentObjsWith f sc objId =
     induces objId1 objId2                    = objId1 == objId2
     -- allDeps = toList $ fromMaybe HS.empty $ M.lookup objId $ scDepMap sc
 
-mergeRemoteTypesWithGCtx :: (M.HashMap (QualifiedTable, RemoteRelationshipName) TypeMap) -> GC.GCtx -> GC.GCtx
-mergeRemoteTypesWithGCtx remoteTypeMaps gctx =
-  gctx {GC._gTypes = (mconcat $ M.elems remoteTypeMaps) <> GC._gTypes gctx }
+mergeRemoteTypesWithGCtx :: [TypeMap] -> GC.GCtx -> GC.GCtx
+mergeRemoteTypesWithGCtx remoteTypes gctx =
+  -- gctx {GC._gTypes = (mconcat $ M.elems remoteTypeMaps) <> GC._gTypes gctx }
+  gctx {GC._gTypes = (mconcat remoteTypes) <> GC._gTypes gctx }
+
+addRemoteToRemoteRels :: RemoteSchemaMap -> [RemoteToRemoteField] -> GC.GCtx -> GC.GCtx
+addRemoteToRemoteRels remoteSchemas remToRemFlds gCtx =
+  foldl (\gctx remToRemFld ->
+           let oldTypes = GC._gTypes gctx
+               baseType = rtrrBaseType (rrmfRemoteRelationship remToRemFld)
+               baseTypeInfoM = M.lookup baseType oldTypes
+           in case baseTypeInfoM of
+               Just baseTypeInfo ->
+                 let typeInfoM = extendType baseTypeInfo remToRemFld
+                 in case typeInfoM of
+                   Just typeInfo -> let newTypes = M.insert baseType typeInfo oldTypes
+                                    in gctx { GC._gTypes = newTypes }
+                   Nothing -> gctx
+               Nothing -> gctx
+        )
+    gCtx
+    remToRemFlds
+  where
+    extendType baseTypeInfo remToRemFld =
+      let (RemoteRelationshipName relName) = rtrrName (rrmfRemoteRelationship remToRemFld)
+          remoteSchemaName = (rtrrRemoteSchema (rrmfRemoteRelationship remToRemFld))
+          rsCtxM = M.lookup remoteSchemaName remoteSchemas
+      in case rsCtxM of
+            Nothing -> Nothing
+            Just rsCtx ->
+              let fldInfo = ObjFldInfo
+                    { _fiDesc = Just (G.Description "remote relationship")
+                    , _fiName = G.Name relName
+                    , _fiParams = rrmfParamMap remToRemFld
+                    , _fiTy = rrmfGType remToRemFld
+                    , _fiLoc = TLRemoteType remoteSchemaName (rscInfo rsCtx)
+                    }
+              in case baseTypeInfo of
+                 TIObj oldObjTyInfo ->
+                   pure $ TIObj $ oldObjTyInfo
+                   { _otiFields = M.insert (G.Name relName) fldInfo (_otiFields oldObjTyInfo)  }
+                 _ -> Nothing

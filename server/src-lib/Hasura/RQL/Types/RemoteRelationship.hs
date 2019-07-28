@@ -30,6 +30,8 @@ import           Language.Haskell.TH.Syntax    (Lift)
 
 import           Hasura.RQL.Types.RemoteSchema
 
+import qualified Hasura.GraphQL.Validate.Types as VT
+
 data RemoteField =
   RemoteField
     { rmfRemoteRelationship :: !RemoteRelationship
@@ -373,5 +375,13 @@ data RemoteToRemoteField =
     { rrmfRemoteRelationship :: !RemoteToRemoteRelationship
     , rrmfGType              :: !G.GType
     , rrmfParamMap           :: !(HashMap G.Name InpValInfo)
+    , rrmfAdditionalTypes    :: !VT.TypeMap
     }
   deriving (Show, Eq, Lift)
+
+instance ToJSON RemoteToRemoteField where
+  toJSON RemoteToRemoteField {..} =
+    object
+      [ "remote_relationship" .= rrmfRemoteRelationship
+      ]
+
