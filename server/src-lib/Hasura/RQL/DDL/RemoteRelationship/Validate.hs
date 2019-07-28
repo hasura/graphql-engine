@@ -28,7 +28,7 @@ import qualified Hasura.GraphQL.Schema         as GS
 import qualified Language.GraphQL.Draft.Syntax as G
 
 newtype UniqueRelIdentifier
-  = UniqueRelIdentifier { getUniqueRelIdentifier :: T.Text }
+  = UniqueRelIdentifier { _getUniqueRelIdentifier :: T.Text }
 
 -- | An error validating the remote relationship.
 data ValidationError
@@ -71,17 +71,17 @@ validateRelationship ::
   -> HM.HashMap QualifiedTable TableInfo
   -> Either (NonEmpty ValidationError) (RemoteField, TypeMap)
 validateRelationship remoteRelationship gctx tables = do
-  case HM.lookup tableName tables of
-    Nothing -> Left (pure (TableNotFound tableName))
-    Just table -> do
+  case HM.lookup table tables of
+    Nothing -> Left (pure (TableNotFound table))
+    Just tableInfo -> do
       fieldInfos <-
         fmap
           HM.fromList
           (traverse
              (\fieldName ->
-                case HM.lookup fieldName (tiFieldInfoMap table) of
+                case HM.lookup fieldName (tiFieldInfoMap tableInfo) of
                   Nothing ->
-                    Left (pure (TableFieldNonexistent tableName fieldName))
+                    Left (pure (TableFieldNonexistent table fieldName))
                   Just fieldInfo ->
                     case fieldInfo of
                       FIColumn pgColInfo -> pure (fieldName, (mkScalarTy (pgiType pgColInfo)))
@@ -144,8 +144,10 @@ validateRelationship remoteRelationship gctx tables = do
             }
         , leafTypeMap)
   where
-    tableName = rtrTable remoteRelationship
-    uniqueRelId = UniqueRelIdentifier "remote_relationship"
+    table = rtrTable remoteRelationship
+    (RemoteRelationshipName relName) = rtrName remoteRelationship
+    QualifiedObject (SchemaName schema) (TableName tableName) = table
+    uniqueRelId = UniqueRelIdentifier $ "_remote_rel_" <> schema <> "_" <> tableName <> relName
     getTyInfoFromField types field =
       let baseTy = getBaseTy (_fiTy field)
           fieldName = _fiName field
@@ -402,16 +404,16 @@ assertListType actualType =
     (Failure (pure $ InvalidType actualType "is not a list type")))
 
 -- | Convert a field info to a named type, if possible.
-fieldInfoToNamedType ::
-     FieldInfo
-  -> Validation (NonEmpty ValidationError) G.NamedType
-fieldInfoToNamedType =
-  \case
-    FIColumn pgColInfo -> pure (mkScalarTy (pgiType pgColInfo))
-    FIRelationship relInfo ->
-      Failure (pure (ForeignRelationshipsNotAllowedInRemoteVariable relInfo))
-    FIRemote remoteField ->
-      Failure (pure (RemoteFieldsNotAllowedInArguments remoteField))
+-- fieldInfoToNamedType ::
+--      FieldInfo
+--   -> Validation (NonEmpty ValidationError) G.NamedType
+-- fieldInfoToNamedType =
+--   \case
+--     FIColumn pgColInfo -> pure (mkScalarTy (pgiType pgColInfo))
+--     FIRelationship relInfo ->
+--       Failure (pure (ForeignRelationshipsNotAllowedInRemoteVariable relInfo))
+--     FIRemote remoteField ->
+--       Failure (pure (RemoteFieldsNotAllowedInArguments remoteField))
 
 -- | Reify the constructors to an Either.
 isListType :: G.GType -> Bool

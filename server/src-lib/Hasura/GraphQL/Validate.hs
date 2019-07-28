@@ -188,8 +188,9 @@ validateGQ
   :: (MonadError QErr m, MonadReader GCtx m)
   -- => GraphQLRequest
   => QueryParts
+  -> [RemoteToRemoteField]
   -> m (Seq.Seq LocatedTopField)
-validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
+validateGQ (QueryParts opDef opRoot fragDefsL varValsM) remoteToRemoteRels = do
 
   ctx <- ask
 
@@ -204,7 +205,7 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
   annFragDefs <- mapM validateFrag fragDefs
 
   -- build a validation ctx
-  let valCtx = ValidationCtx (_gTypes ctx) annVarVals annFragDefs (_gFields ctx)
+  let valCtx = ValidationCtx (_gTypes ctx) annVarVals annFragDefs (_gFields ctx) remoteToRemoteRels
 
   selSet <- flip runReaderT valCtx $ denormSelSet [] opRoot $
             G._todSelectionSet opDef

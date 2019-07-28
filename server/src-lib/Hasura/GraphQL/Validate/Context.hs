@@ -9,14 +9,14 @@ module Hasura.GraphQL.Validate.Context
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict           as Map
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.HashMap.Strict                 as Map
+import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Data.Has
+import           Hasura.GraphQL.Resolve.ContextTypes (FieldMap)
 import           Hasura.GraphQL.Utils
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
-import           Hasura.GraphQL.Resolve.ContextTypes (FieldMap)
 
 getFieldInfo
   :: ( MonadError QErr m)
@@ -36,12 +36,13 @@ getInpFieldInfo tyInfo fldName =
 
 data ValidationCtx
   = ValidationCtx
-  { _vcTypeMap    :: !TypeMap
+  { _vcTypeMap            :: !TypeMap
   -- these are in the scope of the operation
-  , _vcVarVals    :: !AnnVarVals
+  , _vcVarVals            :: !AnnVarVals
   -- all the fragments
-  , _vcFragDefMap :: !FragDefMap
-  , _vcFields     :: !FieldMap
+  , _vcFragDefMap         :: !FragDefMap
+  , _vcFields             :: !FieldMap
+  , _vcRemoteToRemoteRels :: [RemoteToRemoteField]
   } deriving (Show, Eq)
 
 instance Has TypeMap ValidationCtx where

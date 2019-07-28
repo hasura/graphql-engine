@@ -184,7 +184,7 @@ newtype RemoteRelKey =
 
 data RemoteRelField =
   RemoteRelField
-    { rrRemoteField   :: !RemoteField
+    { rrRemoteField   :: !(Either RemoteField RemoteToRemoteField)
     , rrField         :: !Field
     , rrRelFieldPath  :: !RelFieldPath
     , rrAlias         :: !G.Alias
@@ -224,7 +224,7 @@ getExecPlanPartial userInfo sc enableAL req = do
   (gCtx, _)  <- flip runStateT sc $ getGCtx role gCtxRoleMap
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
 
-  topFields <- runReaderT (VQ.validateGQ queryParts) gCtx
+  topFields <- runReaderT (VQ.validateGQ queryParts (scRemoteToRemoteRels sc)) gCtx
   let varDefs = G._todVariableDefinitions $ VQ.qpOpDef queryParts
   return $
     fmap
@@ -301,7 +301,15 @@ getExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer reqUnparsed
       partialExecPlans <- getExecPlanPartial userInfo sc enableAL req
       forM partialExecPlans $ \partialExecPlan ->
         case partialExecPlan of
-          ExPRemotePartial r -> pure (Leaf $ ExPRemote r)
+          ExPRemotePartial originalField -> do
+            let fstField = head $ VQ.rtqFields originalField
+            case rebuildFieldStrippingRemoteRels fstField of
+              Nothing -> pure (Leaf $ ExPRemote originalField)
+              Just (newRemoteField, remoteRelFields) -> do
+                let unresolvedPlans = mkUnresolvedPlans remoteRelFields
+                    newTopRemoteField = originalField { VQ.rtqFields = [newRemoteField]}
+
+                pure $ Tree (ExPRemote newTopRemoteField) unresolvedPlans
           ExPHasuraPartial (gCtx, rootSelSet, varDefs) -> do
             case rootSelSet of
               VQ.HasuraTopMutation field ->
@@ -345,11 +353,15 @@ getExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer reqUnparsed
       where
         getRsi remoteRel =
           case Map.lookup
-                 (rtrRemoteSchema
-                    (rmfRemoteRelationship
-                       (rrRemoteField remoteRel)))
+                 (getRemoteSchemaNameFromField
+                    (rrRemoteField remoteRel))
                  (scRemoteSchemas sc) of
             Just remoteSchemaCtx -> rscInfo remoteSchemaCtx
+
+getRemoteSchemaNameFromField :: Either RemoteField RemoteToRemoteField -> RemoteSchemaName
+getRemoteSchemaNameFromField remoteRelField = case remoteRelField of
+  Left remFld       -> rtrRemoteSchema $ rmfRemoteRelationship remFld
+  Right remToRemFld ->  rtrrRemoteSchema $ rrmfRemoteRelationship remToRemFld
 
 -- Rebuild the field with remote relationships removed, and paths that
 -- point back to them.
@@ -369,7 +381,8 @@ rebuildFieldStrippingRemoteRels =
                Just remoteField -> do
                  modify (remoteRelField :)
                  pure (Left remoteField)
-                 where remoteRelField =
+                 where
+                   remoteRelField =
                          RemoteRelField
                            { rrRemoteField = remoteField
                            , rrField = subfield
@@ -386,9 +399,7 @@ rebuildFieldStrippingRemoteRels =
                                          (map _fName (toList (_fSelSet field0))))
                                     (map
                                        (G.Name . getFieldNameTxt)
-                                       (toList
-                                          (rtrHasuraFields
-                                             (rmfRemoteRelationship remoteField)))))
+                                       (neededHasuraFields remoteField)))
                            })
           (zip [0..] (toList (_fSelSet field0)))
       let fields = rights selSetEithers
@@ -417,9 +428,7 @@ rebuildFieldStrippingRemoteRels =
                                          }))
                           (map
                              (G.Name . getFieldNameTxt)
-                             (toList
-                                (rtrHasuraFields
-                                   (rmfRemoteRelationship remoteField)))))
+                             (neededHasuraFields remoteField)))
                    (toList selSetEithers))
           }
       where
@@ -427,10 +436,11 @@ rebuildFieldStrippingRemoteRels =
 
 -- | Get a list of fields needed from a hasura result.
 neededHasuraFields
-  :: RemoteField -> [FieldName]
-neededHasuraFields remoteField = toList (rtrHasuraFields remoteRelationship)
+  :: Either RemoteField RemoteToRemoteField -> [FieldName]
+neededHasuraFields remoteField = case remoteField of
+  Left remFld  -> toList (rtrHasuraFields $ rmfRemoteRelationship remFld)
+  Right remToRemFld -> map (\(G.Name name) -> FieldName name) (toList (rtrrJoinFields $ rrmfRemoteRelationship remToRemFld))
   where
-    remoteRelationship = rmfRemoteRelationship remoteField
 
 -- remote result = {"data":{"result_0":{"name":"alice"},"result_1":{"name":"bob"},"result_2":{"name":"alice"}}}
 
@@ -709,8 +719,7 @@ produceBatch opType remoteSchemaInfo remoteRelField inputs =
     , batchNestedFields =
         fmap
           fcName
-          (rtrRemoteFields
-             (rmfRemoteRelationship (rrRemoteField remoteRelField)))
+          (getRemoteFieldsFromField remoteRelField)
     }
   where
     remoteTopQuery =
@@ -724,16 +733,22 @@ produceBatch opType remoteSchemaInfo remoteRelField inputs =
                    (_fArguments originalField)
                    variables
                    (_fSelSet originalField)
-                   (rtrRemoteFields remoteRelationship))
+                   (remoteRelationshipFields))
               indexedRows
          , rtqOperationType = opType
         }
     indexedRows = zip (map ArrayIndex [0 :: Int ..]) (toList rows)
     rows = biRows inputs
     resultIndexes = map fst indexedRows
-    remoteRelationship = rmfRemoteRelationship (rrRemoteField remoteRelField)
+    remoteRelationshipFields = getRemoteFieldsFromField remoteRelField
     path = rrRelFieldPath remoteRelField
     originalField = rrField remoteRelField
+
+
+getRemoteFieldsFromField :: RemoteRelField -> NonEmpty FieldCall
+getRemoteFieldsFromField rrf = case (rrRemoteField rrf) of
+  Left remFld       -> rtrRemoteFields $ rmfRemoteRelationship remFld
+  Right remToRemFld -> rtrrRemoteFields $ rrmfRemoteRelationship remToRemFld
 
 -- | Produce the alias name for a result index.
 arrayIndexAlias :: ArrayIndex -> G.Alias
@@ -889,9 +904,7 @@ extractRemoteRelArguments remoteSchemaMap hasuraJson rels =
                               "failed to associate remote key with remote")
                        Just remoteRel ->
                          case Map.lookup
-                                (rtrRemoteSchema
-                                   (rmfRemoteRelationship
-                                      (rrRemoteField remoteRel)))
+                                (getRemoteSchemaNameFromField (rrRemoteField remoteRel))
                                 remoteSchemaMap of
                            Just remoteSchemaCtx ->
                              pure (remoteRel, (rscInfo remoteSchemaCtx), rows)

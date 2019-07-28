@@ -56,7 +56,7 @@ data Field
   , _fType      :: !G.NamedType
   , _fArguments :: !ArgsMap
   , _fSelSet    :: !SelSet
-  , _fRemoteRel :: !(Maybe RemoteField)
+  , _fRemoteRel :: !(Maybe (Either RemoteField RemoteToRemoteField))
   } deriving (Eq, Show)
 
 $(J.deriveToJSON (J.aesonDrop 2 J.camelCase){J.omitNothingFields=True}
@@ -215,6 +215,8 @@ denormFld parObjTyInfo visFrags fldInfo (G.Field aliasM name args dirs selSet) =
   let fldTy = _fiTy fldInfo
       fldBaseTy = getBaseTy fldTy
 
+  remoteToRemoteRels <- (asks _vcRemoteToRemoteRels) -- :: [RemoteToRemoteField]
+
   fldTyInfo <- getTyInfo fldBaseTy
 
   argMap <- withPathK "args" $ processArgs (_fiParams fldInfo) args
@@ -250,17 +252,22 @@ denormFld parObjTyInfo visFrags fldInfo (G.Field aliasM name args dirs selSet) =
       <> "selection since type " <> G.showGT fldTy <> " has no subfields"
 
   fldMap <- asks _vcFields
-  let mtypedField = Map.lookup (_otiName parObjTyInfo, name) fldMap
+  let mRemoteRel = case Map.lookup (_otiName parObjTyInfo, name) fldMap of
+        Just (FldRemote remoteField ) -> pure (Left remoteField)
+        Just _                        -> Nothing
+        -- TODO: This is not perfect because we are checking any field with a correspondinding RemoteToRemoteRel
+        -- This needs to change to type appropriate RemoteToRemoteRel
+        Nothing                       -> fmap Right $
+          flip find remoteToRemoteRels
+                   (\remToRemFld -> rtrrName (rrmfRemoteRelationship remToRemFld) == RemoteRelationshipName relName)
 
   withPathK "directives" $ withDirectives dirs $ return $
-    (Field (fromMaybe (G.Alias name) aliasM) name fldBaseTy argMap (fmap getLoc fields)
-           (case mtypedField of
-              Just (FldRemote remoteField) -> pure remoteField
-              _                            -> Nothing))
+    (Field (fromMaybe (G.Alias name) aliasM) name fldBaseTy argMap (fmap getLoc fields) mRemoteRel)
+    where
+      G.Name relName = name
 
-denormInlnFrag
-  :: ( MonadReader ValidationCtx m
-     , MonadError QErr m)
+denormInlnFrag ::
+     (MonadReader ValidationCtx m, MonadError QErr m)
   => [G.Name] -- visited fragments
   -> ObjTyInfo -- type information of the field
   -> G.InlineFragment
