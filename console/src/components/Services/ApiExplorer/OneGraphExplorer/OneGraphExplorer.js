@@ -2,7 +2,7 @@ import React from 'react';
 
 import { getIntrospectionQuery, buildClientSchema } from 'graphql';
 import GraphiQLExplorer from 'graphiql-explorer-hasura';
-
+import CodeExporter from 'graphiql-code-exporter';
 import {
   makeDefaultArg,
   getDefaultScalarArgValue,
@@ -14,17 +14,22 @@ import {
 import { getGraphiQLQueryFromLocalStorage } from '../GraphiQLWrapper/utils';
 import { getRemoteQueries } from '../Actions';
 import { getHeadersAsJSON } from '../utils';
+import builtInSnippets from 'graphiql-code-exporter/lib/snippets';
+import snippets from './snippets';
 
 import '../GraphiQLWrapper/GraphiQL.css';
 import './OneGraphExplorer.css';
+import 'graphiql-code-exporter/CodeExporter.css';
 
 class OneGraphExplorer extends React.Component {
   state = {
     explorerOpen: getExplorerIsOpen(),
     explorerWidth: getExplorerWidth(),
+    exporterOpen: false,
     explorerClientX: null,
     schema: null,
     query: undefined,
+    variables: '',
     isResizing: false,
     loading: false,
     previousIntrospectionHeaders: [],
@@ -126,6 +131,10 @@ class OneGraphExplorer extends React.Component {
     this.setState({ query });
   };
 
+  editVariables = variables => {
+    this.setState({ variables });
+  };
+
   handleToggle = () => {
     const newIsOpen = !this.state.explorerOpen;
 
@@ -154,12 +163,14 @@ class OneGraphExplorer extends React.Component {
     const {
       schema,
       explorerOpen,
+      exporterOpen,
       query,
+      variables,
       explorerWidth,
       isResizing,
     } = this.state;
 
-    const { renderGraphiql } = this.props;
+    const { renderGraphiql, endpoint, headers } = this.props;
 
     const explorer = (
       <GraphiQLExplorer
@@ -185,11 +196,31 @@ class OneGraphExplorer extends React.Component {
       );
     }
 
+    const toggleExporter = () => {
+      this.setState({
+        exporterOpen: !exporterOpen,
+      });
+    };
+
+    const exporter = exporterOpen && (
+      <CodeExporter
+        hideCodeExporter={toggleExporter}
+        query={query}
+        variables={variables}
+        headers={getHeadersAsJSON(headers)}
+        snippets={[...builtInSnippets, ...snippets]}
+        serverUrl={endpoint}
+        codeMirrorTheme="neo"
+      />
+    );
+
     const graphiql = renderGraphiql({
       query: query,
       onEditQuery: this.editQuery,
+      onEditVariables: this.editVariables,
       schema: schema,
       toggleExplorer: this.handleToggle,
+      toggleExporter: toggleExporter,
     });
 
     return (
@@ -204,6 +235,7 @@ class OneGraphExplorer extends React.Component {
           {explorerSeparator}
         </div>
         {graphiql}
+        {exporter}
       </div>
     );
   }
