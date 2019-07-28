@@ -18,7 +18,7 @@ import (
 )
 
 const migrateCreateCmdExamples = `  # Setup migration files for the first time by introspecting a server:
-  hasura migrate create "init" --from-sever`
+  hasura migrate create "init" --from-server`
 
 func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
