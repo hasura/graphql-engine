@@ -19,6 +19,9 @@ module Hasura.RQL.DDL.Relationship
   , runDeleteRemoteRelationship
   , delRemoteRelFromCatalog
   , runUpdateRemoteRelationship
+  , runCreateRemoteToRemoteRelationship
+  , runCreateRemoteToRemoteRelationshipP1
+  , runCreateRemoteToRemoteRelationshipP2Setup
   , module Hasura.RQL.DDL.Relationship.Types
   )
 where
@@ -171,7 +174,7 @@ runCreateRemoteRelationship remoteRelationship = do
   runCreateRemoteRelationshipP2 remoteField additionalTypesMap
 
 runCreateRemoteRelationshipP1 ::
-     (MonadTx m, CacheRM m) => RemoteRelationship -> m (RemoteField, TypeMap)
+     (QErrM m, CacheRM m) => RemoteRelationship -> m (RemoteField, TypeMap)
 runCreateRemoteRelationshipP1 remoteRelationship = do
   sc <- askSchemaCache
   case HM.lookup
@@ -488,3 +491,73 @@ fetchFkeysAsRemoteTable rqt@(QualifiedObject rsn rtn) = do
   fmap HS.fromList $
     forM r $ \(sn, tn, constr, oid, Q.AltJ colMapping) ->
     return $ ForeignKey (QualifiedObject sn tn) rqt oid constr colMapping
+
+runCreateRemoteToRemoteRelationship ::
+     (MonadTx m, CacheRWM m, UserInfoM m) => RemoteToRemoteRelationship -> m EncJSON
+runCreateRemoteToRemoteRelationship remoteRelationship = do
+  adminOnly
+  (remoteField, additionalTypesMap) <-
+    runCreateRemoteToRemoteRelationshipP1 remoteRelationship
+  pure successMsg
+  -- runCreateRemoteToRemoteRelationshipP2 remoteField additionalTypesMap
+
+runCreateRemoteToRemoteRelationshipP1 ::
+     (QErrM m, CacheRM m) => RemoteToRemoteRelationship -> m (RemoteToRemoteField, TypeMap)
+runCreateRemoteToRemoteRelationshipP1 remoteToRemoteRelationship = do
+  sc <- askSchemaCache
+  case HM.lookup
+         (rtrrRemoteSchema remoteToRemoteRelationship)
+         (scRemoteSchemas sc) of
+    Just {} -> do
+      validation <-
+        getCreateRemoteToRemoteRelationshipValidation remoteToRemoteRelationship
+      case validation of
+        Left err -> throw400 RemoteSchemaError (T.pack (show err))
+        Right (remoteField, additionalTypesMap) ->
+          pure (remoteField, additionalTypesMap)
+    Nothing -> throw400 RemoteSchemaError "No such remote schema"
+
+runCreateRemoteToRemoteRelationshipP2Setup ::
+     (MonadTx m, CacheRWM m) => RemoteToRemoteField -> TypeMap -> m ()
+runCreateRemoteToRemoteRelationshipP2Setup remoteField additionalTypesMap = do
+  addRemoteToRemoteRelToCache remoteField additionalTypesMap schemaDependencies
+  where
+    schemaDependencies = undefined
+      -- let table = rtrTable $ rrmfRemoteRelationship remoteField
+      --     columns = rtrHasuraFields $ rrmfRemoteRelationship remoteField
+      --     remoteSchemaName = rtrRemoteSchema $ rmfRemoteRelationship remoteField
+      --     tableDep = SchemaDependency (SOTable table) "hasura table"
+      --     columnsDep =
+      --       map
+      --         (\column ->
+      --            SchemaDependency
+      --              (SOTableObj table $ TOCol column)
+      --              "remote relationship join column") $
+      --       map (\(getFieldNameTxt -> name) -> PGCol name) (Set.toList columns)
+      --     remoteSchemaDep =
+      --       SchemaDependency (SORemoteSchema remoteSchemaName) "remote schema"
+      --  in (tableDep : remoteSchemaDep : columnsDep)
+
+runCreateRemoteToRemoteRelationshipP2 ::
+     (MonadTx m, CacheRWM m) => RemoteToRemoteField -> TypeMap -> m EncJSON
+runCreateRemoteToRemoteRelationshipP2 remoteField additionalTypesMap = do
+  liftTx (persistRemoteToRemoteRelationship (rrmfRemoteRelationship remoteField))
+  runCreateRemoteToRemoteRelationshipP2Setup remoteField additionalTypesMap
+  pure successMsg
+
+persistRemoteToRemoteRelationship
+  :: RemoteToRemoteRelationship -> Q.TxE QErr ()
+persistRemoteToRemoteRelationship remoteToRemoteRelationship =
+  undefined
+  -- Q.unitQE defaultTxErrorHandler [Q.sql|
+  -- INSERT INTO hdb_catalog.hdb_remote_to_remote_relationship
+  -- (name, table_schema, table_name, remote_schema, configuration)
+  -- VALUES ($1, $2, $3, $4, $5 :: jsonb)
+  -- |]
+  -- (let QualifiedObject schema_name table_name = rtrTable remoteRelationship
+  --  in (rtrName remoteRelationship
+  --     ,schema_name
+  --     ,table_name
+  --     ,rtrRemoteSchema remoteRelationship
+  --     ,Q.JSONB (toJSON (remoteRelationship))))
+  -- True

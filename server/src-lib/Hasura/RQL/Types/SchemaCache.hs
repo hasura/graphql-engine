@@ -51,6 +51,7 @@ module Hasura.RQL.Types.SchemaCache
        , addColToCache
        , addRelToCache
        , addRemoteRelToCache
+       , addRemoteToRemoteRelToCache
 
        , delColFromCache
        , updColInCache
@@ -583,6 +584,15 @@ addRemoteRelToCache remoteField additionalTypes deps = do
     qt = rtrTable (rmfRemoteRelationship remoteField)
     rn = rtrName (rmfRemoteRelationship remoteField)
     schObjId = SOTableObj qt $ TORemoteRel rn
+
+addRemoteToRemoteRelToCache ::
+     (QErrM m, CacheRWM m)
+  => RemoteToRemoteField
+  -> TypeMap
+  -> [SchemaDependency]
+  -> m ()
+addRemoteToRemoteRelToCache remoteField additionalTypes deps = do
+  undefined
 
 delRemoteRelFromCache ::
     (QErrM m, CacheRWM m)

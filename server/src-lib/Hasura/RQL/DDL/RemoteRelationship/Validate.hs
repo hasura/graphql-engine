@@ -9,6 +9,7 @@ module Hasura.RQL.DDL.RemoteRelationship.Validate
   , validateRelationship
   , validateRemoteArguments
   , ValidationError(..)
+  , getCreateRemoteToRemoteRelationshipValidation
   ) where
 
 import           Data.Bifunctor
@@ -26,6 +27,9 @@ import qualified Hasura.GraphQL.Context        as GC
 import qualified Hasura.GraphQL.Schema         as GS
 import qualified Language.GraphQL.Draft.Syntax as G
 
+newtype UniqueRelIdentifier
+  = UniqueRelIdentifier { getUniqueRelIdentifier :: T.Text }
+
 -- | An error validating the remote relationship.
 data ValidationError
   = CouldntFindRemoteField G.Name ObjTyInfo
@@ -34,10 +38,11 @@ data ValidationError
   | MissingRequiredArgument G.Name
   | TypeNotFound G.NamedType
   | TableNotFound !QualifiedTable
+  | RemoteSchemaNotFound !RemoteSchemaName
   | TableFieldNonexistent !QualifiedTable !FieldName
   | ExpectedTypeButGot !G.GType !G.GType
   | InvalidType !G.GType!T.Text
-  | InvalidVariable G.Variable (HM.HashMap G.Variable FieldInfo)
+  | InvalidVariable G.Variable
   | NullNotAllowedHere
   | ForeignRelationshipsNotAllowedInRemoteVariable !RelInfo
   | RemoteFieldsNotAllowedInArguments !RemoteField
@@ -77,7 +82,11 @@ validateRelationship remoteRelationship gctx tables = do
                 case HM.lookup fieldName (tiFieldInfoMap table) of
                   Nothing ->
                     Left (pure (TableFieldNonexistent tableName fieldName))
-                  Just fieldInfo -> pure (fieldName, fieldInfo))
+                  Just fieldInfo ->
+                    case fieldInfo of
+                      FIColumn pgColInfo -> pure (fieldName, (mkScalarTy (pgiType pgColInfo)))
+                      FIRelationship relInfo ->  Left (pure (ForeignRelationshipsNotAllowedInRemoteVariable relInfo))
+                      FIRemote remoteFld -> Left (pure (RemoteFieldsNotAllowedInArguments remoteFld)))
              (toList (rtrHasuraFields remoteRelationship)))
       (_leafTyInfo, leafGType, (leafParamMap, leafTypeMap)) <-
         foldl
@@ -107,7 +116,7 @@ validateRelationship remoteRelationship gctx tables = do
                          pure
                          (runStateT
                             (stripInMap
-                               remoteRelationship
+                               uniqueRelId
                                (GS._gTypes gctx)
                                (_fiParams objFldInfo)
                                providedArguments)
@@ -136,6 +145,7 @@ validateRelationship remoteRelationship gctx tables = do
         , leafTypeMap)
   where
     tableName = rtrTable remoteRelationship
+    uniqueRelId = UniqueRelIdentifier "remote_relationship"
     getTyInfoFromField types field =
       let baseTy = getBaseTy (_fiTy field)
           fieldName = _fiName field
@@ -160,7 +170,8 @@ validateRelationship remoteRelationship gctx tables = do
 -- specified as an atomic (variable, constant), keys which are kept
 -- have their values modified by 'stripObject' or 'stripList'.
 stripInMap ::
-     RemoteRelationship -> HM.HashMap G.NamedType TypeInfo
+     UniqueRelIdentifier
+  -> HM.HashMap G.NamedType TypeInfo
   -> HM.HashMap G.Name InpValInfo
   -> HM.HashMap G.Name G.Value
   -> StateT (HM.HashMap G.NamedType TypeInfo) (Either ValidationError) (HM.HashMap G.Name InpValInfo)
@@ -182,7 +193,8 @@ stripInMap remoteRelationshipName types schemaArguments templateArguments =
 -- | Strip a value type completely, or modify it, if the given value
 -- is atomic-ish.
 stripValue ::
-     RemoteRelationship -> HM.HashMap G.NamedType TypeInfo
+     UniqueRelIdentifier
+  -> HM.HashMap G.NamedType TypeInfo
   -> G.GType
   -> G.Value
   -> StateT (HM.HashMap G.NamedType TypeInfo) (Either ValidationError) (Maybe G.GType)
@@ -205,7 +217,7 @@ stripValue remoteRelationshipName types gtype value = do
 
 -- | Produce a new type for the list, or strip it entirely.
 stripList ::
-     RemoteRelationship
+     UniqueRelIdentifier
   -> HM.HashMap G.NamedType TypeInfo
   -> G.GType
   -> G.Value
@@ -224,7 +236,8 @@ stripList remoteRelationshipName types originalOuterGType value =
 -- 'stripInMap'. Objects can't be deleted entirely, just keys of an
 -- object.
 stripObject ::
-     RemoteRelationship -> HM.HashMap G.NamedType TypeInfo
+     UniqueRelIdentifier
+  -> HM.HashMap G.NamedType TypeInfo
   -> G.GType
   -> [G.ObjectFieldG G.Value]
   -> StateT (HM.HashMap G.NamedType TypeInfo) (Either ValidationError) G.GType
@@ -260,12 +273,9 @@ stripObject remoteRelationshipName types originalGtype keypairs =
 -- | Produce a new name for a type, used when stripping the schema
 -- types for a remote relationship.
 -- TODO: Consider a separator character to avoid conflicts.
-renameTypeForRelationship :: RemoteRelationship -> Text -> Text
-renameTypeForRelationship rtr text =
-  text <> "_remote_rel_" <> name
-  where name = schema <> "_" <> table <> rrname
-        QualifiedObject (SchemaName schema) (TableName table) = rtrTable rtr
-        RemoteRelationshipName rrname = rtrName rtr
+renameTypeForRelationship :: UniqueRelIdentifier -> Text -> Text
+renameTypeForRelationship (UniqueRelIdentifier suffix) text =
+  text <> suffix
 
 -- | Rename a type.
 renameNamedType :: (Text -> Text) -> G.NamedType -> G.NamedType
@@ -292,7 +302,7 @@ lookupField name objFldInfo = viaObject objFldInfo
 validateRemoteArguments ::
      HM.HashMap G.Name InpValInfo
   -> HM.HashMap G.Name G.Value
-  -> HM.HashMap G.Variable FieldInfo
+  -> HM.HashMap G.Variable G.NamedType
   -> HM.HashMap G.NamedType TypeInfo
   -> Validation (NonEmpty ValidationError) ()
 validateRemoteArguments expectedArguments providedArguments permittedVariables types = do
@@ -320,7 +330,7 @@ validateRemoteArguments expectedArguments providedArguments permittedVariables t
 
 -- | Validate a value against a type.
 validateType ::
-     HM.HashMap G.Variable FieldInfo
+     HM.HashMap G.Variable G.NamedType
   -> G.Value
   -> G.GType
   -> HM.HashMap G.NamedType TypeInfo
@@ -329,11 +339,8 @@ validateType permittedVariables value expectedGType types =
   case value of
     G.VVariable variable ->
       case HM.lookup variable permittedVariables of
-        Nothing -> Failure (pure (InvalidVariable variable permittedVariables))
-        Just fieldInfo ->
-          bindValidation
-            (fieldInfoToNamedType fieldInfo)
-            (\actualNamedType -> assertType (G.toGT actualNamedType) expectedGType)
+        Nothing        -> Failure (pure (InvalidVariable variable))
+        Just namedType-> assertType (G.toGT namedType) expectedGType
     G.VInt {} -> assertType (G.toGT $ mkScalarTy PGInteger) expectedGType
     G.VFloat {} -> assertType (G.toGT $ mkScalarTy PGFloat) expectedGType
     G.VBoolean {} -> assertType (G.toGT $ mkScalarTy PGBoolean) expectedGType
@@ -412,3 +419,124 @@ isListType =
   \case
     G.TypeNamed {} -> False
     G.TypeList {} -> True
+
+-- | Get a validation for the remote relationship proposal.
+getCreateRemoteToRemoteRelationshipValidation ::
+     (QErrM m, CacheRM m)
+  => RemoteToRemoteRelationship
+  -> m (Either (NonEmpty ValidationError) (RemoteToRemoteField, TypeMap))
+getCreateRemoteToRemoteRelationshipValidation createRemoteToRemoteRelationship = do
+  schemaCache <- askSchemaCache
+  pure
+    (validateRemoteToRemoteRelationship
+       createRemoteToRemoteRelationship
+       (scDefaultRemoteGCtx schemaCache)
+       (scRemoteSchemas schemaCache))
+
+-- | Validate a remote relationship given a context.
+validateRemoteToRemoteRelationship ::
+     RemoteToRemoteRelationship
+  -> GC.GCtx
+  -> RemoteSchemaMap
+  -> Either (NonEmpty ValidationError) (RemoteToRemoteField, TypeMap)
+validateRemoteToRemoteRelationship remoteRelationship gctx remoteSchemas = do
+  case HM.lookup baseSchemaName remoteSchemas of
+    Nothing -> Left (pure (RemoteSchemaNotFound baseSchemaName))
+    Just baseSchemaCtx -> do
+      let baseTypes = GC._rgTypes (rscGCtx baseSchemaCtx)
+      case HM.lookup baseType baseTypes of
+        Nothing       -> Left (pure (TypeNotFound baseType))
+        Just typeInfo -> do
+          case typeInfo of
+            TIObj objTypeInfo -> do
+              fieldInfos <-
+                fmap
+                  HM.fromList
+                  (traverse
+                     (\fieldName ->
+                        case HM.lookup fieldName (_otiFields objTypeInfo) of
+                          Nothing ->
+                            Left (pure (FieldNotFoundInRemoteSchema fieldName))
+                          Just fieldInfo -> pure (fieldName, fieldInfo))
+                     (toList joinFields))
+              (_leafTyInfo, leafGType, (leafParamMap, leafTypeMap)) <-
+                foldl
+                  (\eitherObjTyInfoAndTypes fieldCall ->
+                     case eitherObjTyInfoAndTypes of
+                       Left err -> Left err
+                       Right (objTyInfo, _, (_, typeMap)) -> do
+                         objFldInfo <- lookupField (fcName fieldCall) objTyInfo
+                         case _fiLoc objFldInfo of
+                           TLHasuraType ->
+                             Left
+                               (pure (FieldNotFoundInRemoteSchema (fcName fieldCall)))
+                           TLRemoteType {} -> do
+                             let providedArguments =
+                                   remoteArgumentsToMap (fcArguments fieldCall)
+                             toEither
+                               (validateRemoteArguments
+                                  (_fiParams objFldInfo)
+                                  providedArguments
+                                  (HM.fromList
+                                     (map
+                                        (\(n, objFld) -> (G.Variable n, getBaseTy (_fiTy objFld)))
+                                        (HM.toList fieldInfos)))
+                                  (GS._gTypes gctx))
+                             (newParamMap, newTypeMap) <-
+                               first
+                                 pure
+                                 (runStateT
+                                    (stripInMap
+                                       uniqueRelId
+                                       (GS._gTypes gctx)
+                                       (_fiParams objFldInfo)
+                                       providedArguments)
+                                    typeMap)
+                             innerObjTyInfo <-
+                               if isObjType (GS._gTypes gctx) objFldInfo
+                               then getTyInfoFromField (GS._gTypes gctx) objFldInfo
+                               else if isScalarType (GS._gTypes gctx) objFldInfo
+                               then pure objTyInfo
+                               else (Left (pure (InvalidType (_fiTy objFldInfo) "only objects or scalar types expected")))
+                             pure
+                               ( innerObjTyInfo
+                               , _fiTy objFldInfo
+                               , (newParamMap, newTypeMap)))
+                  (pure
+                     ( GS._gQueryRoot gctx
+                     , G.toGT (_otiName $ GS._gQueryRoot gctx)
+                     , (mempty, mempty)))
+                  (rtrrRemoteFields remoteRelationship)
+              pure
+                ( RemoteToRemoteField
+                    { rrmfRemoteRelationship = remoteRelationship
+                    , rrmfGType = leafGType
+                    , rrmfParamMap = leafParamMap
+                    }
+                , leafTypeMap)
+            _other -> Left (pure (InvalidType (G.toGT baseType) "only objects types can be joined"))
+  where
+    baseSchemaName = rtrrBaseSchema remoteRelationship
+    baseType = rtrrBaseType remoteRelationship
+    joinFields = rtrrJoinFields remoteRelationship
+    uniqueRelId = UniqueRelIdentifier "_remote_to_remote_field"
+    getTyInfoFromField types field =
+      let baseTy = getBaseTy (_fiTy field)
+          fieldName = _fiName field
+          typeInfo = HM.lookup baseTy types
+       in case typeInfo of
+            Just (TIObj objTyInfo) -> pure objTyInfo
+            _ -> Left (pure (FieldNotFoundInRemoteSchema fieldName))
+    isObjType types field =
+      let baseTy = getBaseTy (_fiTy field)
+          typeInfo = HM.lookup baseTy types
+      in case typeInfo of
+           Just (TIObj _) -> True
+           _              -> False
+    isScalarType types field =
+      let baseTy = getBaseTy (_fiTy field)
+          typeInfo = HM.lookup baseTy types
+      in case typeInfo of
+           Just (TIScalar _) -> True
+           _                 -> False
+

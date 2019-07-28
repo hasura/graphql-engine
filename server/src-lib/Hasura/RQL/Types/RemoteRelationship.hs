@@ -336,3 +336,42 @@ remoteArgumentsToMap =
   map (\field -> (G._ofName field, G._ofValue field)) .
   getRemoteArguments
 
+data RemoteToRemoteRelationship =
+  RemoteToRemoteRelationship
+    { rtrrName         :: RemoteRelationshipName
+    , rtrrBaseSchema   :: RemoteSchemaName
+    , rtrrBaseType     :: G.NamedType
+    , rtrrJoinFields   :: Set G.Name
+    , rtrrRemoteSchema :: RemoteSchemaName
+    , rtrrRemoteFields :: NonEmpty FieldCall
+    }  deriving (Show, Eq, Lift)
+
+instance FromJSON RemoteToRemoteRelationship where
+  parseJSON value = do
+    o <- parseJSON value
+    rtrrName <- o .: "name"
+    rtrrBaseSchema <- o .: "base_schema"
+    rtrrBaseType <- o .: "base_type"
+    rtrrJoinFields <- o .: "join_fields"
+    rtrrRemoteSchema <- o .: "remote_schema"
+    rtrrRemoteFields <- o .: "remote_field" >>= parseRemoteFields
+    pure RemoteToRemoteRelationship {..}
+
+instance ToJSON RemoteToRemoteRelationship where
+  toJSON RemoteToRemoteRelationship {..} =
+    object
+      [ "name" .= rtrrName
+      , "base_schema" .= rtrrBaseSchema
+      , "base_type" .= rtrrBaseType
+      , "join_fields" .= rtrrJoinFields
+      , "remote_schema" .= rtrrRemoteSchema
+      , "remote_fields" .= remoteFieldsJson rtrrRemoteFields
+      ]
+
+data RemoteToRemoteField =
+  RemoteToRemoteField
+    { rrmfRemoteRelationship :: !RemoteToRemoteRelationship
+    , rrmfGType              :: !G.GType
+    , rrmfParamMap           :: !(HashMap G.Name InpValInfo)
+    }
+  deriving (Show, Eq, Lift)
