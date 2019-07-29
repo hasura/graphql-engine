@@ -48,7 +48,7 @@ instance ToJSON JwkRefreshLog where
 
 instance ToEngineLog JwkRefreshLog where
   toEngineLog jwkRefreshLog =
-    (jrlLogLevel jwkRefreshLog, ELTJwkRefreshLog, toJSON jwkRefreshLog)
+    (jrlLogLevel jwkRefreshLog, ELTInternal "jwk-refresh-log", toJSON jwkRefreshLog)
 
 mkJwkRefreshLog :: LogLevel -> T.Text -> Maybe JwkRefreshHttpError -> JwkRefreshLog
 mkJwkRefreshLog = JwkRefreshLog

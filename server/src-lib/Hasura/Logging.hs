@@ -1,3 +1,4 @@
+{-# LANGUAGE GADTs      #-}
 {-# LANGUAGE RankNTypes #-}
 
 module Hasura.Logging
@@ -6,7 +7,7 @@ module Hasura.Logging
   , EngineLog(..)
   , EngineLogType(..)
   , defaultEnabledLogTypes
-  , alwaysOnLogTypes
+  -- , alwaysOnLogTypes
   , userAllowedLogTypes
   , ToEngineLog(..)
   , debugT
@@ -37,7 +38,7 @@ import qualified Data.Time.Format      as Format
 import qualified Data.Time.LocalTime   as Time
 import qualified System.Log.FastLogger as FL
 
-import           Hasura.Server.Utils   (hyphenate)
+--import           Hasura.Server.Utils   (hyphenate)
 
 newtype FormattedTime
   = FormattedTime { _unFormattedTime :: Text }
@@ -50,41 +51,55 @@ data EngineLogType
   | ELTQueryLog
   | ELTStartup
   -- internal log types
-  | ELTPgClient
-  | ELTMetadata
-  | ELTJwkRefreshLog
-  | ELTTelemetryLog
-  | ELTEventTrigger
-  | ELTWsServer
-  | ELTSchemaSyncThread
-  | ELTUnstructured
+  | ELTInternal !Text
+  -- | ELTPgClient
+  -- | ELTMetadata
+  -- | ELTJwkRefreshLog
+  -- | ELTTelemetryLog
+  -- | ELTEventTrigger
+  -- | ELTWsServer
+  -- | ELTSchemaSyncThread
+  -- | ELTUnstructured
   deriving (Show, Eq, Generic)
 
 instance Hashable EngineLogType
 
-$(J.deriveJSON J.defaultOptions {
-     J.constructorTagModifier = hyphenate . drop 3
-     } ''EngineLogType)
+instance J.ToJSON EngineLogType where
+  toJSON = \case
+    ELTHttpLog      -> "http-log"
+    ELTWebsocketLog -> "websocket-log"
+    ELTWebhookLog   -> "webhook-log"
+    ELTQueryLog     -> "query-log"
+    ELTStartup      -> "startup"
+    ELTInternal t   -> J.String t
+
+-- $(J.deriveJSON J.defaultOptions {
+--      J.constructorTagModifier = hyphenate . drop 3
+--      } ''EngineLogType)
 
 -- | Log types that can't be disabled/enabled by the user, they are always
 -- enabled
-alwaysOnLogTypes :: Set.HashSet EngineLogType
-alwaysOnLogTypes = Set.fromList
-  [ ELTPgClient
-  , ELTMetadata
-  , ELTJwkRefreshLog
-  , ELTTelemetryLog
-  , ELTEventTrigger
-  , ELTWsServer
-  , ELTSchemaSyncThread
-  , ELTUnstructured
-  ]
+-- alwaysOnLogTypes :: Set.HashSet EngineLogType
+-- alwaysOnLogTypes = Set.fromList
+--   [ ELTPgClient
+--   , ELTMetadata
+--   , ELTJwkRefreshLog
+--   , ELTTelemetryLog
+--   , ELTEventTrigger
+--   , ELTWsServer
+--   , ELTSchemaSyncThread
+--   , ELTUnstructured
+--   ]
 
 -- the default enabled log-types
 defaultEnabledLogTypes :: Set.HashSet EngineLogType
 defaultEnabledLogTypes =
-  Set.union alwaysOnLogTypes $
   Set.fromList [ELTStartup, ELTHttpLog, ELTWebhookLog, ELTWebsocketLog]
+
+isLogTypeEnabled :: Set.HashSet EngineLogType -> EngineLogType -> Bool
+isLogTypeEnabled enabledTypes logTy = case logTy of
+  ELTInternal _ -> True
+  _             -> logTy `Set.member` enabledTypes
 
 -- log types that can be set by the user
 userAllowedLogTypes :: [EngineLogType]
@@ -137,7 +152,7 @@ debugLBS = UnstructuredLog . TBS.fromLBS
 
 instance ToEngineLog UnstructuredLog where
   toEngineLog (UnstructuredLog t) =
-    (LevelDebug, ELTUnstructured, J.toJSON t)
+    (LevelDebug, ELTInternal "unstructured", J.toJSON t)
 
 class ToEngineLog a where
   toEngineLog :: a -> (LogLevel, EngineLogType, J.Value)
@@ -202,7 +217,7 @@ mkLogger :: LoggerCtx -> Logger
 mkLogger (LoggerCtx loggerSet serverLogLevel timeGetter enabledLogTypes callbackFn) = Logger $ \l -> do
   localTime <- timeGetter
   let (logLevel, logTy, logDet) = toEngineLog l
-  when (logLevel >= serverLogLevel && logTy `Set.member` enabledLogTypes) $ do
+  when (logLevel >= serverLogLevel && isLogTypeEnabled enabledLogTypes logTy) $ do
     let logStr = EngineLog localTime logLevel logTy logDet
     FL.pushLogStrLn loggerSet $ FL.toLogStr (J.encode logStr)
     forM_ callbackFn $ \func -> func logStr

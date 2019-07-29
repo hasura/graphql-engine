@@ -52,7 +52,7 @@ instance ToJSON SchemaSyncThreadLog where
 
 instance ToEngineLog SchemaSyncThreadLog where
   toEngineLog threadLog =
-    (suelLogLevel threadLog, ELTSchemaSyncThread, toJSON threadLog)
+    (suelLogLevel threadLog, ELTInternal "schema-sync-thread", toJSON threadLog)
 
 data EventPayload
   = EventPayload

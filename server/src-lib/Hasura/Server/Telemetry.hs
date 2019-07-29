@@ -206,7 +206,7 @@ instance A.ToJSON TelemetryHttpError where
 
 
 instance ToEngineLog TelemetryLog where
-  toEngineLog tl = (_tlLogLevel tl, ELTTelemetryLog, A.toJSON tl)
+  toEngineLog tl = (_tlLogLevel tl, ELTInternal "telemetry-log", A.toJSON tl)
 
 mkHttpError
   :: Text

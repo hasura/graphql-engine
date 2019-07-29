@@ -67,7 +67,7 @@ instance ToJSON PGLog where
 
 instance L.ToEngineLog PGLog where
   toEngineLog pgLog =
-    (plLogLevel pgLog, ELTPgClient, toJSON pgLog)
+    (plLogLevel pgLog, ELTInternal "pg-client", toJSON pgLog)
 
 data MetadataLog
   = MetadataLog
@@ -84,7 +84,7 @@ instance ToJSON MetadataLog where
 
 instance L.ToEngineLog MetadataLog where
   toEngineLog ml =
-    (mlLogLevel ml, ELTMetadata, toJSON ml)
+    (mlLogLevel ml, ELTInternal "metadata", toJSON ml)
 
 mkInconsMetadataLog :: [InconsistentMetadataObj] -> MetadataLog
 mkInconsMetadataLog objs =

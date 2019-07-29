@@ -54,7 +54,7 @@ data HTTPResp
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase){J.omitNothingFields=True} ''HTTPResp)
 
 instance ToEngineLog HTTPResp where
-  toEngineLog resp = (LevelInfo, ELTEventTrigger, J.toJSON resp )
+  toEngineLog resp = (LevelInfo, ELTInternal "event-trigger", J.toJSON resp )
 
 mkHTTPResp :: HTTP.Response B.ByteString -> HTTPResp
 mkHTTPResp resp =
@@ -77,7 +77,7 @@ data HTTPRespExtra
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''HTTPRespExtra)
 
 instance ToEngineLog HTTPRespExtra where
-  toEngineLog resp = (LevelInfo, ELTEventTrigger, J.toJSON resp )
+  toEngineLog resp = (LevelInfo, ELTInternal "event-trigger", J.toJSON resp )
 
 data HTTPErr
   = HClient !HTTP.HttpException
@@ -102,7 +102,7 @@ instance J.ToJSON HTTPErr where
                               , "detail" J..= v]
 -- encapsulates a http operation
 instance ToEngineLog HTTPErr where
-  toEngineLog err = (LevelError, ELTEventTrigger, J.toJSON err )
+  toEngineLog err = (LevelError, ELTInternal "event-trigger", J.toJSON err )
 
 isNetworkError :: HTTPErr -> Bool
 isNetworkError = \case
@@ -137,7 +137,7 @@ data HTTPReq
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''HTTPReq)
 
 instance ToEngineLog  HTTPReq where
-  toEngineLog req = (LevelInfo, ELTEventTrigger, J.toJSON req )
+  toEngineLog req = (LevelInfo, ELTInternal "event-trigger", J.toJSON req )
 
 runHTTP
   :: ( MonadReader r m
