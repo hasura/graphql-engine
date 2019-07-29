@@ -88,6 +88,7 @@ parseHGECommand =
                 <*> parseEnableAllowlist
                 <*> parseEnabledLogs
                 <*> parseLogLevel
+                <*> parseReadOnlyDB
 
 
 parseArgs :: IO HGEOptions
@@ -114,6 +115,9 @@ mkPGLogger :: Logger -> Q.PGLogger
 mkPGLogger (Logger logger) (Q.PLERetryMsg msg) =
   logger $ PGLog LevelWarn msg
 
+getIsolationLevel :: Bool -> Q.TxIsolation
+getIsolationLevel readOnlyDb = if readOnlyDb then Q.RepeatableRead else Q.Serializable
+
 main :: IO ()
 main =  do
   (HGEOptionsG rci hgeCmd) <- parseArgs
@@ -124,9 +128,10 @@ main =  do
     HCServe so@(ServeOptions port host cp isoL mAdminSecret mAuthHook
                 mJwtSecret mUnAuthRole corsCfg enableConsole consoleAssetsDir
                 enableTelemetry strfyNum enabledAPIs lqOpts enableAL
-                enabledLogs serverLogLevel) -> do
+                enabledLogs serverLogLevel readOnlyDb) -> do
 
       let sqlGenCtx = SQLGenCtx strfyNum
+      let isolationLevel = getIsolationLevel readOnlyDb
 
       (loggerCtx, logger, pgLogger) <- mkLoggers enabledLogs serverLogLevel
 
@@ -147,20 +152,20 @@ main =  do
       pool <- Q.initPGPool ci cp pgLogger
 
       -- safe init catalog
-      initRes <- initialise pool sqlGenCtx logger httpManager
+      initRes <- initialise pool sqlGenCtx readOnlyDb logger httpManager
 
       (app, cacheRef, cacheInitTime) <-
         mkWaiApp isoL loggerCtx sqlGenCtx enableAL pool ci httpManager am
           corsCfg enableConsole consoleAssetsDir enableTelemetry
-          instanceId enabledAPIs lqOpts
+          instanceId enabledAPIs lqOpts isolationLevel
 
       -- log inconsistent schema objects
       inconsObjs <- scInconsistentObjs <$> getSCFromRef cacheRef
       logInconsObjs logger inconsObjs
 
       -- start a background thread for schema sync
-      startSchemaSync sqlGenCtx pool logger httpManager
-                      cacheRef instanceId cacheInitTime
+      when (not readOnlyDb) $ startSchemaSync sqlGenCtx pool logger httpManager
+                              cacheRef instanceId cacheInitTime
 
       let warpSettings = Warp.setPort port $ Warp.setHost host Warp.defaultSettings
 
@@ -169,13 +174,12 @@ main =  do
       logEnvHeaders <- getFromEnv False "LOG_HEADERS_FROM_ENV"
 
       -- prepare event triggers data
-      prepareEvents pool logger
+      when (not readOnlyDb) (prepareEvents pool isolationLevel logger)
       eventEngineCtx <- atomically $ initEventEngineCtx maxEvThrds evFetchMilliSec
       let scRef = _scrCache cacheRef
-      unLogger logger $
-        mkGenericStrLog LevelInfo "event_triggers" "starting workers"
-      void $ C.forkIO $ processEventQueue hloggerCtx logEnvHeaders
-        httpManager pool scRef eventEngineCtx
+      when (not readOnlyDb) (unLogger logger $
+        mkGenericStrLog LevelInfo "event_triggers" "starting workers")
+      when (not readOnlyDb) $ void $ C.forkIO $ processEventQueue hloggerCtx logEnvHeaders httpManager pool scRef eventEngineCtx
 
       -- start a background thread to check for updates
       void $ C.forkIO $ checkForUpdates loggerCtx httpManager
@@ -194,13 +198,13 @@ main =  do
     HCExport -> do
       (_, _, pgLogger) <- mkLoggers defaultEnabledLogTypes LevelInfo
       ci <- procConnInfo rci
-      res <- runTx' pgLogger ci fetchMetadata
+      res <- runTx' pgLogger ci Q.Serializable fetchMetadata
       either printErrJExit printJSON res
 
     HCClean -> do
       (_, _, pgLogger) <- mkLoggers defaultEnabledLogTypes LevelInfo
       ci <- procConnInfo rci
-      res <- runTx' pgLogger ci cleanCatalog
+      res <- runTx' pgLogger ci Q.Serializable cleanCatalog
       either printErrJExit (const cleanSuccess) res
 
     HCExecute -> do
@@ -209,7 +213,7 @@ main =  do
       ci <- procConnInfo rci
       let sqlGenCtx = SQLGenCtx False
       pool <- getMinimalPool pgLogger ci
-      res <- runAsAdmin pool sqlGenCtx httpManager $ execQuery queryBs
+      res <- runAsAdmin pool sqlGenCtx Q.Serializable httpManager $ execQuery queryBs
       either printErrJExit BLC.putStrLn res
 
     HCVersion -> putStrLn $ "Hasura GraphQL Engine: " ++ T.unpack currentVersion
@@ -221,16 +225,16 @@ main =  do
           pgLogger = mkPGLogger logger
       return (loggerCtx, logger, pgLogger)
 
-    runTx pool tx =
-      runExceptT $ Q.runTx pool (Q.Serializable, Nothing) tx
+    runTx pool isolationLevel tx =
+      runExceptT $ Q.runTx pool (isolationLevel, Nothing) tx
 
-    runTx' pgLogger ci tx = do
+    runTx' pgLogger ci isolationLevel tx = do
       pool <- getMinimalPool pgLogger ci
-      runExceptT $ Q.runTx pool (Q.Serializable, Nothing) tx
+      runExceptT $ Q.runTx pool (isolationLevel, Nothing) tx
 
-    runAsAdmin pool sqlGenCtx httpManager m = do
+    runAsAdmin pool sqlGenCtx isolationLevel httpManager m = do
       res  <- runExceptT $ peelRun emptySchemaCache adminUserInfo
-              httpManager sqlGenCtx (PGExecCtx pool Q.Serializable) m
+              httpManager sqlGenCtx (PGExecCtx pool isolationLevel) m
       return $ fmap fst res
 
     procConnInfo rci =
@@ -241,28 +245,28 @@ main =  do
       let connParams = Q.defaultConnParams { Q.cpConns = 1 }
       Q.initPGPool ci connParams pgLogger
 
-    initialise pool sqlGenCtx (Logger logger) httpMgr = do
+    initialise pool sqlGenCtx readOnlyDb (Logger logger) httpMgr = do
       currentTime <- getCurrentTime
       -- initialise the catalog
-      initRes <- runAsAdmin pool sqlGenCtx httpMgr $
+      initRes <- runAsAdmin pool sqlGenCtx (getIsolationLevel readOnlyDb) httpMgr $
                  initCatalogSafe currentTime
       either printErrJExit (logger . mkGenericStrLog LevelInfo "db_init") initRes
 
       -- migrate catalog if necessary
-      migRes <- runAsAdmin pool sqlGenCtx httpMgr $
+      migRes <- runAsAdmin pool sqlGenCtx (getIsolationLevel readOnlyDb) httpMgr $
                 migrateCatalog currentTime
-      either printErrJExit (logger . mkGenericStrLog LevelInfo "db_migrate") migRes
+      when (not readOnlyDb) $ either printErrJExit (logger . mkGenericStrLog LevelInfo "db_migrate") migRes
 
       -- generate and retrieve uuids
-      getUniqIds pool
+      getUniqIds pool (getIsolationLevel readOnlyDb)
 
-    prepareEvents pool (Logger logger) = do
+    prepareEvents pool isolationLevel (Logger logger) = do
       logger $ mkGenericStrLog LevelInfo "event_triggers" "preparing data"
-      res <- runTx pool unlockAllEvents
+      res <- runTx pool isolationLevel unlockAllEvents
       either printErrJExit return res
 
-    getUniqIds pool = do
-      eDbId <- runTx pool getDbId
+    getUniqIds pool isolationLevel = do
+      eDbId <- runTx pool isolationLevel getDbId
       dbId <- either printErrJExit return eDbId
       fp <- liftIO generateFingerprint
       return (dbId, fp)
