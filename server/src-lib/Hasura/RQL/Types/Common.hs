@@ -20,6 +20,7 @@ module Hasura.RQL.Types.Common
        , MutateResp(..)
        , ForeignKey(..)
        , GraphQLName(..)
+       , CustomColFields
 
        , NonEmptyText
        , mkNonEmptyText
@@ -220,3 +221,5 @@ instance FromJSON GraphQLName where
     if not $ isValidName gName then
       fail $ T.unpack t <> " is not valid GraphQL name"
     else return $ GraphQLName gName
+
+type CustomColFields = HM.HashMap PGCol GraphQLName

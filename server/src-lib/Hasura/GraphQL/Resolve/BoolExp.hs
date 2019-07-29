@@ -5,18 +5,19 @@ module Hasura.GraphQL.Resolve.BoolExp
 import           Data.Has
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict               as Map
-import qualified Data.HashMap.Strict.InsOrd        as OMap
-import qualified Language.GraphQL.Draft.Syntax     as G
+import qualified Data.HashMap.Strict                 as Map
+import qualified Data.HashMap.Strict.InsOrd          as OMap
+import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Hasura.GraphQL.Resolve.Context
+import           Hasura.GraphQL.Resolve.ContextTypes
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-import qualified Hasura.SQL.DML                    as S
+import qualified Hasura.SQL.DML                      as S
 
 type OpExp = OpExpG UnresolvedVal
 
@@ -134,7 +135,7 @@ parseColExp nt n val = do
     Left pgColInfo -> do
       opExps <- parseOpExps (pgiType pgColInfo) val
       return $ AVCol pgColInfo opExps
-    Right (relInfo, _, permExp, _) -> do
+    Right (RelFld relInfo _ _ permExp _)-> do
       relBoolExp <- parseBoolExp val
       return $ AVRel relInfo $ andAnnBoolExps relBoolExp $
         fmapAnnBoolExp partialSQLExpToUnresolvedVal permExp

@@ -8,16 +8,14 @@ module Hasura.RQL.Types.SchemaCache
        , initSchemaCacheVer
        , incSchemaCacheVer
        , emptySchemaCache
+       , TableConfig(..)
        , TableInfo(..)
        , TableConstraint(..)
        , ConstraintType(..)
        , ViewInfo(..)
+       , checkForFldConfilct
        , isMutable
        , mutableView
-       , onlyIntCols
-       , onlyNumCols
-       , onlyJSONBCols
-       , onlyComparableCols
        , isUniqueOrPrimary
        , isForeignKey
        , addTableToCache
@@ -126,6 +124,7 @@ import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Language.Haskell.TH.Syntax        (Lift)
 
 import qualified Data.HashMap.Strict               as M
 import qualified Data.HashSet                      as HS
@@ -151,18 +150,6 @@ data QueryTemplateInfo
 $(deriveToJSON (aesonDrop 3 snakeCase) ''QueryTemplateInfo)
 
 type QTemplateCache = M.HashMap TQueryName QueryTemplateInfo
-
-onlyIntCols :: [PGColInfo] -> [PGColInfo]
-onlyIntCols = filter (isIntegerType . pgiType)
-
-onlyNumCols :: [PGColInfo] -> [PGColInfo]
-onlyNumCols = filter (isNumType . pgiType)
-
-onlyJSONBCols :: [PGColInfo] -> [PGColInfo]
-onlyJSONBCols = filter (isJSONBType . pgiType)
-
-onlyComparableCols :: [PGColInfo] -> [PGColInfo]
-onlyComparableCols = filter (isComparableType . pgiType)
 
 getColInfos :: [PGCol] -> [PGColInfo] -> [PGColInfo]
 getColInfos cols allColInfos =
@@ -346,6 +333,13 @@ mutableView qt f mVI operation =
   unless (isMutable f mVI) $ throw400 NotSupported $
   "view " <> qt <<> " is not " <> operation
 
+data TableConfig
+  = TableConfig
+  { _tcCustomRootFields   :: !GC.TableCustomRootFields
+  , _tcCustomColumnFields :: !CustomColFields
+  } deriving (Show, Eq, Lift)
+$(deriveJSON (aesonDrop 3 snakeCase) ''TableConfig)
+
 data TableInfo
   = TableInfo
   { tiName                  :: !QualifiedTable
@@ -356,7 +350,7 @@ data TableInfo
   , tiPrimaryKeyCols        :: ![PGCol]
   , tiViewInfo              :: !(Maybe ViewInfo)
   , tiEventTriggerInfoMap   :: !EventTriggerInfoMap
-  , tiCustomRootFields      :: !(Maybe GC.TableCustomRootFields)
+  , tiCustomConfig          :: !(Maybe TableConfig)
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
@@ -374,6 +368,21 @@ instance FromJSON TableInfo where
     return $ TableInfo name isSystemDefined colMap mempty
                        constraints pkeyCols viewInfoM mempty
                        Nothing
+
+checkForFldConfilct
+  :: (MonadError QErr m)
+  => TableInfo
+  -> FieldName
+  -> m ()
+checkForFldConfilct tabInfo f =
+  case M.lookup f (tiFieldInfoMap tabInfo) of
+    Just _ -> throw400 AlreadyExists $ mconcat
+      [ "column/relationship " <>> f
+      , " of table " <>> tiName tabInfo
+      , " already exists"
+      ]
+    Nothing -> return ()
+
 
 data FunctionType
   = FTVOLATILE

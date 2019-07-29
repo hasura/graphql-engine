@@ -11,17 +11,9 @@ import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCache
 import           Hasura.SQL.Types
 
-import qualified Hasura.GraphQL.Context           as GC
-
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax       (Lift)
-
-newtype TableConfig
-  = TableConfig { _tcCustomRootFields :: GC.TableCustomRootFields}
-  deriving (Show, Eq, Lift)
-$(deriveJSON (aesonDrop 3 snakeCase) ''TableConfig)
 
 data CatalogTable
   = CatalogTable

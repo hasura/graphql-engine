@@ -13,11 +13,11 @@ packages:
     git: https://github.com/hasura/pg-client-hs.git
     pantry-tree:
       size: 1051
-      sha256: 8a7b60e962b07231fde5c7dd6b11c7d0fe3bf6b6d179cdbf0b2e4378bb63cad1
-    commit: 3f905a5fa57e2898dbb733a777cadb80990b3d45
+      sha256: fbab919039158f3714c3f0ac3d605d3fb9c85061517b4b9fc67147403b0b9975
+    commit: 16f27a134f12c4f24fee19d57f0ca179bdb4135b
   original:
     git: https://github.com/hasura/pg-client-hs.git
-    commit: 3f905a5fa57e2898dbb733a777cadb80990b3d45
+    commit: 16f27a134f12c4f24fee19d57f0ca179bdb4135b
 - completed:
     cabal-file:
       size: 3295
@@ -27,11 +27,11 @@ packages:
     git: https://github.com/hasura/graphql-parser-hs.git
     pantry-tree:
       size: 1771
-      sha256: 3563de0762f9a606aa1b3e0975f2465c9b9c513a92851db4bdb233ba03b55b34
-    commit: 39d175c5c7bca35ec04d13c92a39f600bd6413cf
+      sha256: 6e506a5dbf965325c515efc523e63bbc15640c994a5dbe21448d328c7ba619a1
+    commit: 1ccdbb4c4d743b679f3141992df39feaee971640
   original:
     git: https://github.com/hasura/graphql-parser-hs.git
-    commit: 39d175c5c7bca35ec04d13c92a39f600bd6413cf
+    commit: 1ccdbb4c4d743b679f3141992df39feaee971640
 - completed:
     cabal-file:
       size: 1253

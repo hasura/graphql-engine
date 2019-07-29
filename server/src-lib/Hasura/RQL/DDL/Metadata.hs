@@ -50,14 +50,13 @@ import qualified Hasura.RQL.DDL.Relationship        as DR
 import qualified Hasura.RQL.DDL.RemoteSchema        as DRS
 import qualified Hasura.RQL.DDL.Schema.Function     as DF
 import qualified Hasura.RQL.DDL.Schema.Table        as DT
-import qualified Hasura.RQL.Types.Catalog           as TRC
 import qualified Hasura.RQL.Types.EventTrigger      as DTS
 import qualified Hasura.RQL.Types.RemoteSchema      as TRS
 
 data TableMeta
   = TableMeta
   { _tmTable               :: !QualifiedTable
-  , _tmConfiguration       :: !(Maybe TRC.TableConfig)
+  , _tmConfiguration       :: !(Maybe TableConfig)
   , _tmObjectRelationships :: ![DR.ObjRelDef]
   , _tmArrayRelationships  :: ![DR.ArrRelDef]
   , _tmInsertPermissions   :: ![DP.InsPermDef]
@@ -67,7 +66,7 @@ data TableMeta
   , _tmEventTriggers       :: ![DTS.EventTriggerConf]
   } deriving (Show, Eq, Lift)
 
-mkTableMeta :: QualifiedTable -> Maybe TRC.TableConfig -> TableMeta
+mkTableMeta :: QualifiedTable -> Maybe TableConfig -> TableMeta
 mkTableMeta qt configM =
   TableMeta qt configM [] [] [] [] [] [] []
 

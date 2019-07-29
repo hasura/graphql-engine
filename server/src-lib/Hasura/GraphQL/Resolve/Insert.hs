@@ -7,33 +7,34 @@ import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.Server.Utils
 
-import qualified Data.Aeson                        as J
-import qualified Data.Aeson.Casing                 as J
-import qualified Data.Aeson.TH                     as J
-import qualified Data.HashMap.Strict               as Map
-import qualified Data.HashMap.Strict.InsOrd        as OMap
-import qualified Data.Sequence                     as Seq
-import qualified Data.Text                         as T
-import qualified Language.GraphQL.Draft.Syntax     as G
+import qualified Data.Aeson                          as J
+import qualified Data.Aeson.Casing                   as J
+import qualified Data.Aeson.TH                       as J
+import qualified Data.HashMap.Strict                 as Map
+import qualified Data.HashMap.Strict.InsOrd          as OMap
+import qualified Data.Sequence                       as Seq
+import qualified Data.Text                           as T
+import qualified Language.GraphQL.Draft.Syntax       as G
 
-import qualified Database.PG.Query                 as Q
-import qualified Hasura.RQL.DML.Insert             as RI
-import qualified Hasura.RQL.DML.Returning          as RR
-import qualified Hasura.RQL.GBoolExp               as RB
+import qualified Database.PG.Query                   as Q
+import qualified Hasura.RQL.DML.Insert               as RI
+import qualified Hasura.RQL.DML.Returning            as RR
+import qualified Hasura.RQL.GBoolExp                 as RB
 
-import qualified Hasura.SQL.DML                    as S
+import qualified Hasura.SQL.DML                      as S
 
 import           Hasura.GraphQL.Resolve.Context
+import           Hasura.GraphQL.Resolve.ContextTypes
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Resolve.Mutation
 import           Hasura.GraphQL.Resolve.Select
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
-import           Hasura.RQL.DML.Internal           (convPartialSQLExp,
-                                                    dmlTxErrorHandler,
-                                                    sessVarFromCurrentSetting)
+import           Hasura.RQL.DML.Internal             (convPartialSQLExp,
+                                                      dmlTxErrorHandler,
+                                                      sessVarFromCurrentSetting)
 import           Hasura.RQL.DML.Mutation
-import           Hasura.RQL.GBoolExp               (toSQLBoolExp)
+import           Hasura.RQL.GBoolExp                 (toSQLBoolExp)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
@@ -89,23 +90,26 @@ data AnnInsObj
 mkAnnInsObj
   :: (MonadError QErr m, Has InsCtxMap r, MonadReader r m)
   => RelationInfoMap
+  -> PGColGNameMap
   -> AnnGObject
   -> m AnnInsObj
-mkAnnInsObj relInfoMap annObj =
-  foldrM (traverseInsObj relInfoMap) emptyInsObj $ OMap.toList annObj
+mkAnnInsObj relInfoMap allColMap annObj =
+  foldrM (traverseInsObj relInfoMap allColMap) emptyInsObj $ OMap.toList annObj
   where
     emptyInsObj = AnnInsObj [] [] []
 
 traverseInsObj
   :: (MonadError QErr m, Has InsCtxMap r, MonadReader r m)
   => RelationInfoMap
+  -> PGColGNameMap
   -> (G.Name, AnnInpVal)
   -> AnnInsObj
   -> m AnnInsObj
-traverseInsObj rim (gName, annVal) defVal@(AnnInsObj cols objRels arrRels) =
+traverseInsObj rim allColMap (gName, annVal) defVal@(AnnInsObj cols objRels arrRels) =
   case _aivValue annVal of
     AGScalar colty mColVal -> do
-      let col = PGCol $ G.unName gName
+      colInfo <- onNothing (Map.lookup gName allColMap) $ throw500 "column not found in PGColGNameMap"
+      let col = pgiName colInfo
           colVal = fromMaybe (PGNull colty) mColVal
       return (AnnInsObj ((col, colty, colVal):cols) objRels arrRels)
 
@@ -123,15 +127,16 @@ traverseInsObj rim (gName, annVal) defVal@(AnnInsObj cols objRels arrRels) =
                    throw500 $ "relation " <> relName <<> " not found"
 
         let rTable = riRTable relInfo
-        InsCtx rtView rtCols rtDefVals rtRelInfoMap rtUpdPerm <- getInsCtx rTable
+        InsCtx rtView rtColMap rtDefVals rtRelInfoMap rtUpdPerm <- getInsCtx rTable
+        let rtCols = Map.elems rtColMap
         rtDefValsRes <- mapM (convPartialSQLExp sessVarFromCurrentSetting)
                         rtDefVals
 
         withPathK (G.unName gName) $ case riType relInfo of
           ObjRel -> do
             dataObj <- asObject dataVal
-            annDataObj <- mkAnnInsObj rtRelInfoMap dataObj
-            ccM <- forM onConflictM $ parseOnConflict rTable rtUpdPerm
+            annDataObj <- mkAnnInsObj rtRelInfoMap rtColMap dataObj
+            ccM <- forM onConflictM $ parseOnConflict rTable rtUpdPerm rtColMap
             let singleObjIns = AnnIns annDataObj ccM rtView rtCols rtDefValsRes
                 objRelIns = RelIns singleObjIns relInfo
             return (AnnInsObj cols (objRelIns:objRels) arrRels)
@@ -141,8 +146,8 @@ traverseInsObj rim (gName, annVal) defVal@(AnnInsObj cols objRels arrRels) =
             let withNonEmptyArrData = do
                   annDataObjs <- forM arrDataVals $ \arrDataVal -> do
                     dataObj <- asObject arrDataVal
-                    mkAnnInsObj rtRelInfoMap dataObj
-                  ccM <- forM onConflictM $ parseOnConflict rTable rtUpdPerm
+                    mkAnnInsObj rtRelInfoMap rtColMap dataObj
+                  ccM <- forM onConflictM $ parseOnConflict rTable rtUpdPerm rtColMap
                   let multiObjIns = AnnIns annDataObjs ccM rtView
                                     rtCols rtDefValsRes
                       arrRelIns = RelIns multiObjIns relInfo
@@ -153,9 +158,12 @@ traverseInsObj rim (gName, annVal) defVal@(AnnInsObj cols objRels arrRels) =
 
 parseOnConflict
   :: (MonadError QErr m)
-  => QualifiedTable -> Maybe UpdPermForIns
-  -> AnnInpVal -> m RI.ConflictClauseP1
-parseOnConflict tn updFiltrM val = withPathK "on_conflict" $
+  => QualifiedTable
+  -> Maybe UpdPermForIns
+  -> PGColGNameMap
+  -> AnnInpVal
+  -> m RI.ConflictClauseP1
+parseOnConflict tn updFiltrM allColMap val = withPathK "on_conflict" $
   flip withObject val $ \_ obj -> do
     constraint <- RI.Constraint <$> parseConstraint obj
     updCols <- getUpdCols obj
@@ -175,7 +183,7 @@ parseOnConflict tn updFiltrM val = withPathK "on_conflict" $
     getUpdCols o = do
       updColsVal <- onNothing (OMap.lookup "update_columns" o) $ throw500
         "\"update_columns\" argument in expected in \"on_conflict\" field "
-      parseColumns updColsVal
+      parseColumns allColMap updColsVal
 
     parseConstraint o = do
       v <- onNothing (OMap.lookup "constraint" o) $ throw500
@@ -492,14 +500,15 @@ convertInsert role tn fld = prefixErrPath fld $ do
     (withEmptyObjs mutFldsRes) $ null annVals
   where
     withNonEmptyObjs annVals mutFlds = do
-      InsCtx vn tableCols defValMap relInfoMap updPerm <- getInsCtx tn
+      InsCtx vn tableColMap defValMap relInfoMap updPerm <- getInsCtx tn
       annObjs <- mapM asObject annVals
-      annInsObjs <- forM annObjs $ mkAnnInsObj relInfoMap
-      conflictClauseM <- forM onConflictM $ parseOnConflict tn updPerm
+      annInsObjs <- forM annObjs $ mkAnnInsObj relInfoMap tableColMap
+      conflictClauseM <- forM onConflictM $ parseOnConflict tn updPerm tableColMap
       defValMapRes <- mapM (convPartialSQLExp sessVarFromCurrentSetting)
                       defValMap
       let multiObjIns = AnnIns annInsObjs conflictClauseM
                         vn tableCols defValMapRes
+          tableCols = Map.elems tableColMap
       strfyNum <- stringifyNum <$> asks getter
       return $ prefixErrPath fld $ insertMultipleObjects strfyNum role tn
         multiObjIns [] mutFlds "objects"
@@ -517,7 +526,7 @@ getInsCtx tn = do
   insCtx <- onNothing (Map.lookup tn ctxMap) $
     throw500 $ "table " <> tn <<> " not found"
   let defValMap = fmap PSESQLExp $ S.mkColDefValMap $ map pgiName $
-                  icAllCols insCtx
+                  Map.elems $ icAllCols insCtx
       setCols = icSet insCtx
   return $ insCtx {icSet = Map.union setCols defValMap}
 

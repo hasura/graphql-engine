@@ -68,20 +68,6 @@ persistRel (QualifiedObject sn tn) rn relType relDef comment =
            VALUES ($1, $2, $3, $4, $5 :: jsonb, $6)
                 |] (sn, tn, rn, relTypeToTxt relType, Q.AltJ relDef, comment) True
 
-checkForFldConfilct
-  :: (MonadError QErr m)
-  => TableInfo
-  -> FieldName
-  -> m ()
-checkForFldConfilct tabInfo f =
-  case HM.lookup f (tiFieldInfoMap tabInfo) of
-    Just _ -> throw400 AlreadyExists $ mconcat
-      [ "column/relationship " <>> f
-      , " of table " <>> tiName tabInfo
-      , " already exists"
-      ]
-    Nothing -> return ()
-
 validateObjRel
   :: (QErrM m, CacheRM m)
   => QualifiedTable

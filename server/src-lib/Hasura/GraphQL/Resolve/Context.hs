@@ -36,6 +36,7 @@ module Hasura.GraphQL.Resolve.Context
 
   , withSelSet
   , fieldAsPath
+  , resolvePGCol
   , module Hasura.GraphQL.Utils
   ) where
 
@@ -101,7 +102,7 @@ type AnnBoolExpUnresolved = AnnBoolExp UnresolvedVal
 getFldInfo
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
   => G.NamedType -> G.Name
-  -> m (Either PGColInfo (RelInfo, Bool, AnnBoolExpPartialSQL, Maybe Int))
+  -> m (Either PGColInfo RelFld)
 getFldInfo nt n = do
   fldMap <- asks getter
   onNothing (Map.lookup (nt,n) fldMap) $
@@ -203,3 +204,8 @@ withSelSet selSet f =
 
 fieldAsPath :: (MonadError QErr m) => Field -> m a -> m a
 fieldAsPath = nameAsPath . _fName
+
+resolvePGCol :: (MonadError QErr m) => PGColGNameMap -> G.Name -> m PGColInfo
+resolvePGCol colFldMap fldName =
+  onNothing (Map.lookup fldName colFldMap) $ throw500 $
+  "no column associated with name " <> G.unName fldName

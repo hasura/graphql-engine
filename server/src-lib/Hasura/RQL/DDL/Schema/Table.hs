@@ -8,6 +8,7 @@ module Hasura.RQL.DDL.Schema.Table where
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.RemoteServer
+import           Hasura.GraphQL.Utils               (showNames)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.EventTrigger
@@ -23,7 +24,7 @@ import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
 import           Hasura.RQL.Types.QueryCollection
-import           Hasura.Server.Utils                (matchRegex)
+import           Hasura.Server.Utils                (duplicates, matchRegex)
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query                  as Q
@@ -41,6 +42,7 @@ import qualified Data.HashSet                       as HS
 import qualified Data.Text                          as T
 import qualified Data.Text.Encoding                 as TE
 import qualified Database.PostgreSQL.LibPQ          as PQ
+import qualified Language.GraphQL.Draft.Syntax      as G
 
 delTableFromCatalog :: QualifiedTable -> Q.Tx ()
 delTableFromCatalog (QualifiedObject sn tn) =
@@ -56,6 +58,16 @@ saveTableToCatalog (QualifiedObject sn tn) configM =
               (table_schema, table_name, configuration)
             VALUES ($1, $2, $3)
                 |] (sn, tn, configVal) False
+  where
+    configVal = Q.AltJ . toJSON <$> configM
+
+updateTableConfig :: QualifiedTable -> Maybe TableConfig -> Q.TxE QErr ()
+updateTableConfig (QualifiedObject sn tn) configM =
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+           UPDATE "hdb_catalog"."hdb_table"
+              SET configuration = $1
+            WHERE table_schema = $2 AND table_name = $3
+                |] (configVal, sn, tn) False
   where
     configVal = Q.AltJ . toJSON <$> configM
 
@@ -78,6 +90,20 @@ trackExistingTableOrViewP1 qt = do
   when (M.member qf $ scFunctions rawSchemaCache) $
     throw400 NotSupported $ "function with name " <> qt <<> " already exists"
 
+validateTableConfig
+  :: (QErrM m)
+  => TableInfo -> TableConfig -> m ()
+validateTableConfig tableInfo (TableConfig _ colFlds) =
+  withPathK "configuration" $ withPathK "custom_column_fields" $
+  forM_ (M.toList colFlds) $ \(col, GraphQLName customName) -> do
+    void $ askPGColInfo (tiFieldInfoMap tableInfo) col ""
+    withPathK (getPGColTxt col) $
+      checkForFldConfilct tableInfo $ FieldName $ G.unName customName
+    when (not $ null duplicateNames) $ throw400 NotSupported $
+      "the following names are duplicated: " <> showNames duplicateNames
+  where
+    duplicateNames = duplicates $ map unGraphQLName $ M.elems colFlds
+
 trackExistingTableOrViewP2
   :: (QErrM m, CacheRWM m, MonadTx m)
   => QualifiedTable -> Maybe TableConfig -> Bool -> m EncJSON
@@ -89,19 +115,21 @@ trackExistingTableOrViewP2 vn mTableConfig isSystemDefined = do
   tables <- liftTx fetchTableCatalog
   case tables of
     []   -> throw400 NotExists $ "no such table/view exists in postgres : " <>> vn
-    [ti] -> addTableToCache ti
+    [ti] -> do
+      -- validate table config
+      mapM_ (validateTableConfig ti) mTableConfig
+      addTableToCache ti
     _    -> throw500 $ "more than one row found for: " <>> vn
   liftTx $ Q.catchE defaultTxErrorHandler $ saveTableToCatalog vn mTableConfig
 
   return successMsg
   where
     QualifiedObject sn tn = vn
-    mCustomRootFlds = _tcCustomRootFields <$> mTableConfig
     mkTableInfo (cols, pCols, constraints, viewInfoM) =
       let colMap = M.fromList $ flip map (Q.getAltJ cols) $
             \c -> (fromPGCol $ pgiName c, FIColumn c)
       in TableInfo vn isSystemDefined colMap mempty (Q.getAltJ constraints)
-                  (Q.getAltJ pCols) (Q.getAltJ viewInfoM) mempty mCustomRootFlds
+                  (Q.getAltJ pCols) (Q.getAltJ viewInfoM) mempty mTableConfig
     fetchTableCatalog = map mkTableInfo <$>
       Q.listQE defaultTxErrorHandler [Q.sql|
            SELECT columns, primary_key_columns,
@@ -128,8 +156,22 @@ runTrackTableV2Q
   :: (QErrM m, CacheRWM m, MonadTx m, UserInfoM m)
   => TrackTableV2 -> m EncJSON
 runTrackTableV2Q (TrackTableV2 qt configM) = do
-  trackExistingTableOrViewP1 qt
-  trackExistingTableOrViewP2 qt configM False
+  sc <- askSchemaCache
+  let tableCache = scTables sc
+  case (M.lookup qt tableCache) of
+    Nothing -> do
+      trackExistingTableOrViewP1 qt
+      trackExistingTableOrViewP2 qt configM False
+    Just ti -> do
+      -- validate table config
+      mapM_ (validateTableConfig ti) configM
+      -- modify cache with new table configuration
+      let newTableInfo = ti {tiCustomConfig = configM}
+          newTableCache = M.insert qt newTableInfo tableCache
+      writeSchemaCache sc {scTables = newTableCache}
+      -- update catalog with new configuration
+      liftTx $ updateTableConfig qt configM
+      return successMsg
 
 purgeDep :: (CacheRWM m, MonadTx m)
          => SchemaObjId -> m ()
@@ -383,7 +425,6 @@ buildSchemaCacheG withSetup = do
         isSysDef = _ctSystemDefined ct
         tableInfoM = _ctInfo ct
         mTableConfig = _ctConfiguration ct
-        mCustomRootFlds = _tcCustomRootFields <$> mTableConfig
         mkInconsObj = InconsistentMetadataObj (MOTable qt)
                       MOTTable $ toJSON $ TrackTable qt
     modifyErr (\e -> "table " <> qt <<> "; " <> e) $
@@ -391,7 +432,7 @@ buildSchemaCacheG withSetup = do
       ti <- onNothing tableInfoM $ throw400 NotExists $
             "no such table/view exists in postgres : " <>> qt
       addTableToCache $ ti{ tiSystemDefined = isSysDef
-                          , tiCustomRootFields = mCustomRootFlds
+                          , tiCustomConfig = mTableConfig
                           }
 
   -- relationships
