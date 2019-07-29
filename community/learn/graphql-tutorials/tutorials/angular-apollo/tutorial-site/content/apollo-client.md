@@ -5,9 +5,6 @@ metaDescription: "You will learn how to configure Apollo Client in Angular by in
 ---
 
 import GithubLink from "../src/GithubLink.js";
-import YoutubeEmbed from "../src/YoutubeEmbed.js";
-
-<YoutubeEmbed link="https://www.youtube.com/embed/m3IAzTwoUUM" />
 
 Apollo gives a neat abstraction layer and an interface to your GraphQL server. You don't need to worry about constructing your queries with request body, headers and options, that you might have done with `axios` or `fetch` say. You can directly write queries and mutations in GraphQL and they will automatically be sent to your server via your apollo client instance.
 
@@ -19,9 +16,9 @@ $ npm install --save apollo-client apollo-angular apollo-cache-inmemory apollo-l
 ```
 
 ### Create Apollo Client Instance
-Open `src/components/App.js` and add the following imports at the top:
+Open `src/app/app.module.ts` and add the following imports at the top:
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo/app-final/src/components/App.js" text="src/components/App.js" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/angular-apollo/app-final/src/app/app.module.ts" text="src/app/app.module.ts" />
 
 ```typescript
 import { BrowserModule } from '@angular/platform-browser';
@@ -36,13 +33,9 @@ import { NgModule } from '@angular/core'
 
 ```
 
-These are the required apollo dependencies to get started. Now let's define a function which will return apollo client with httplink and cache.
+These are the required apollo dependencies to get started. Now let's define a provider which will return apollo client with httplink and cache.
 
 ```typescript
-import ApolloClient from 'apollo-client';
-import { InMemoryCache } from 'apollo-cache-inmemory';
-import { HttpLink } from 'apollo-link-http';
-import { ApolloProvider } from 'react-apollo';
 
   imports: [
     BrowserModule,
@@ -67,6 +60,7 @@ import { ApolloProvider } from 'react-apollo';
 +    },
 +    deps: [HttpLink]
   }]
+```  
 
 Let's try to understand what is happening here. 
 
@@ -75,4 +69,3 @@ We are creating an `HttpLink` to connect ApolloClient with the GraphQL server. A
 
 At the end, we instantiate ApolloClient by passing in our HttpLink and a new instance of `InMemoryCache` (recommended caching solution). We are wrapping all of this in a function which will return the client.
 
-We are going to make use of this function inside `App` component.

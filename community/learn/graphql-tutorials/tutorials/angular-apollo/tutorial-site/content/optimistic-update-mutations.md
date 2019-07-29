@@ -14,7 +14,7 @@ use optimistic updates when we run mutations!
 We will learn the following concepts:
 
 - Creating a GraphQL mutation
-- Using the `<Mutation>` component
+- Using the `mutate` method
 - Integrating Optimistic UI Updates
 - Capturing loading/finished/error states
 

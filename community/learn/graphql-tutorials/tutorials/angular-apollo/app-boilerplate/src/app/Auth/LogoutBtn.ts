@@ -3,7 +3,6 @@ import { Component, EventEmitter, Output } from '@angular/core';
 @Component({  
     selector: 'LogoutBtn',  
     templateUrl: './Logout.template.html',  
-    // styleUrls: ['./products.component.css']  
   }) 
 
 export class LogoutBtn {

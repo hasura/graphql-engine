@@ -4,7 +4,6 @@ import { Component,  Input, Output, EventEmitter, OnChanges } from '@angular/cor
 @Component({  
     selector: 'TodoFilters',  
     templateUrl: './TodoFilters.template.html',  
-    // styleUrls: ['./products.component.css']  
   }) 
 
 export class TodoFilters implements  OnChanges{
@@ -36,7 +35,6 @@ export class TodoFilters implements  OnChanges{
     }
 
     filterResultsHandler(filter) {
-          console.log("filter", filter);  
           this.filterResultsFn.emit({ event:event, filter: filter });
         ;
     };

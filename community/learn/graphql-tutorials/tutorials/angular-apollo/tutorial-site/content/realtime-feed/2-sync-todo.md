@@ -1,12 +1,8 @@
 ---
 title: "Sync new todos"
-metaTitle: "Sync new todos in public feed | GraphQL React Apollo Tutorial"
+metaTitle: "Sync new todos in public feed | GraphQL Angular Apollo Tutorial"
 metaDescription: "You will learn how to sync new todos added by other people in the public feed by fetching older and newer data using GraphQL Queries"
 ---
-
-import YoutubeEmbed from "../../src/YoutubeEmbed.js";
-
-<YoutubeEmbed link="https://www.youtube.com/embed/0_tCwIuoBaM" />
 
 Once a new todo is entered in a public list, it needs to appear in the UI. Instead of automatically displaying the todo in the UI, we use a Feed like Notification banner which appears whenever a new todo is received.
 
@@ -14,7 +10,7 @@ Remember that previously we updated the cache using the cache API and the UI got
 
 We are not going to use that approach here since we don't want public list UI to be automatically updated.
 
-In the Subscription component of the previous step, we only get the latest todo and not the existing list. We will now write a simple query to fetch the list of existing public todos.
+In the Subscription method of the previous step, we only get the latest todo and not the existing list. We will now write a simple query to fetch the list of existing public todos.
 
 ```typescript
 export class TodoPublicList implements OnInit {
@@ -91,14 +87,14 @@ Update the `loadOlder` method to the following:
 +          this.olderTodosAvailable = false;
 +        }
 +      }
-+      console.log('got something old todos', data);
++      console.log('got data', data);
 +    },(error) => {
 +      console.log('there was an error sending the query', error);
 +    });
 }
 ```
 
-We are defining a query to fetch older public todos and making a `client.query` call to get the data from the database. Once we get the data, we update the `todos` state to re-render the UI with the available list of public todos.
+We are defining a query to fetch older public todos and making a `apollo.watchQuery` call to get the data from the database. Once we get the data, we update the `todos` state to re-render the UI with the available list of public todos.
 
 Now try adding a new todo to the public feed and you will see the notification appearing saying that a new task has arrived.
 
@@ -132,7 +128,7 @@ Update `loadNew()` method with the following code
 +          this.todos = [...todosData.todos, ...this.todos]
 +          this.newTodosCount=0;
 +        }
-+        console.log('got something new users', data);
++        console.log('got data', data);
 +      },(error) => {
 +        console.log('there was an error sending the query', error);
 +      });

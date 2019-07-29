@@ -3,7 +3,6 @@ import { Component, Input, Output, EventEmitter, OnChanges } from '@angular/core
 @Component({  
     selector: 'TodoFilters',  
     templateUrl: './TodoFilters.template.html',  
-    // styleUrls: ['./products.component.css']  
   }) 
 
 export class TodoFilters implements OnChanges{

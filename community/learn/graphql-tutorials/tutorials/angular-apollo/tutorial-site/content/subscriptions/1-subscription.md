@@ -5,9 +5,6 @@ metaDescription: "You will learn how to configure GraphQL Subscriptions using An
 ---
 
 import GithubLink from "../../src/GithubLink.js";
-import YoutubeEmbed from "../../src/YoutubeEmbed.js";
-
-<YoutubeEmbed link="https://www.youtube.com/embed/yZmVWeyoW_4" />
 
 When we had initially set up Apollo, we used Apollo Boost to install the required dependencies. But subscriptions is an advanced use case which Apollo Boost does not support. So we have to install more dependencies to set up subscriptions.
 
@@ -19,9 +16,9 @@ When we had initially set up Apollo, we used Apollo Boost to install the require
 
 Now we need to update our `ApolloClient` instance to point to the subscription server.
 
-Open `src/components/App.js` and update the following imports:
+Open `src/app/app.module.ts` and update the following imports:
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo/app-final/src/components/App.js" text="src/components/App.js" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/angular-apollo/app-final/src/app/app.module.ts" text="src/app/app.module.ts" />
 
 ```typescript
 + import { WebSocketLink } from 'apollo-link-ws';

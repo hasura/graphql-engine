@@ -4,10 +4,6 @@ metaTitle: "Todo app angular boilerplate setup | GraphQL Angular Apollo Tutorial
 metaDescription: "The GraphQL backend is already ready. The task is to convert the static UI into a working realtime app in Angular"
 ---
 
-import YoutubeEmbed from "../src/YoutubeEmbed.js";
-
-<YoutubeEmbed link="https://www.youtube.com/embed/rzH_Xxv4d-A" />
-
 For this tutorial, the GraphQL backend and the basic app UI is already ready.
 Our task will be to convert the "static" UI into a working realtime app.
 

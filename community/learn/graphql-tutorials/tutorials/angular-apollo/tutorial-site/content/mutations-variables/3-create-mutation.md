@@ -1,23 +1,19 @@
 ---
 title: "Run mutation, update cache"
-metaTitle: "Apollo Mutation Component | GraphQL Angular Apollo Tutorial"
-metaDescription: "We will use the Apollo Client Mutation component from apollo-angular in Angular app as an example to insert new data and update cache locally using readQuery and writeQuery."
+metaTitle: "Apollo Mutate Method | GraphQL Angular Apollo Tutorial"
+metaDescription: "We will use the Apollo Client Mutate method from apollo-angular in Angular app as an example to insert new data and update cache locally using readQuery and writeQuery."
 ---
 
-import YoutubeEmbed from "../../src/YoutubeEmbed.js";
-
-<YoutubeEmbed link="https://www.youtube.com/embed/ZgMblvlIg28" />
-
-### Apollo Angular Mutation Component
-Now let's do the integration part. Open `src/components/Todo/TodoInput.js` and add the following code below the other imports:
+### Apollo Angular Mutate Method 
+Now let's do the integration part. Open `src/app/Todo/TodoInput.ts` and add the following code below the other imports:
 
 ```typescript
 import { Apollo } from 'apollo-angular';
 ```
 
-We are importing the `Mutation` component from `react-apollo` and the graphql query we defined above to fetch the todo data.
+`Apollo` is being imported from `apollo-angular` and the graphql query we defined above to fetch the todo data.
 
-Now, we will wrap the component with `Mutation` passing our graphql mutation constant that we imported. Add the following code:
+Now, we will add the mutate method passing our graphql mutation constant that we imported. Add the following code:
 
 ```typescript
 export class TodoInput {
@@ -45,11 +41,9 @@ export class TodoInput {
 }
 ```
 
-In the `<Mutation>` component defined above, the first argument of the render prop function is the mutate function; (addTodo) in this case. Read more about the mutate function [here](https://www.apollographql.com/docs/react/essentials/mutations.html#render-prop)
-
 The mutate function optionally takes variables, optimisticResponse, refetchQueries, and update; You are going to make use of the `update` function later.
 
-Now let's handle the form submit to invoke the mutation.
+Now let's handle the form submit and input value to invoke the mutation.
 
 ```html
   <form class="formInput" (submit)="addTodo($event)">
@@ -63,12 +57,9 @@ Now let's handle the form submit to invoke the mutation.
   </form>
 ```
 
-We are passing the mutate function (`addTodo`) to our form submit handler.
-The mutate function's first argument would be the mutation query's options, such as variables etc. We are now passing the variables required for the mutation. 
-
 The mutation has been integrated and the new todos will be inserted into the database. But the UI doesn't know that a new todo has been added. We need a way to tell Apollo Client to update the query for the list of todos.
 
-### Apollo React Mutation Update
+### Apollo Angular Mutation Update
 The `update` function comes in handy to update the cache for this mutation. It comes with utility functions such as `readQuery` and `writeQuery` that helps in reading from and writing to the cache.
 
 Let's implement `update` for the above mutation.
@@ -79,7 +70,7 @@ We need to fetch the current list of todos from the cache. So let's import the q
 import {GET_MY_TODOS} from './TodoPrivateList';
 ```
 
-Let's define the updateCache function to read and write to cache.
+Let's define the update function to read and write to cache.
 
 ```typescript
 addTodo(e) {
@@ -108,7 +99,7 @@ addTodo(e) {
       }).subscribe(({ data, loading }) => {
         this.loading = loading;
         this.todoInput = '';
-        console.log('got data add todo', data);
+        console.log('got data ', data);
       },(error) => {
         console.log('there was an error sending the query', error);
       });
@@ -141,6 +132,6 @@ We have already done the mutation to the graphql server using the mutate functio
 
 We concatenate our new todo from our mutation with the list of existing todos and write the query back to the cache with cache.writeQuery
 
-Now, the TodoPrivateList component wrapped with the `Query` component will get the updated todo list as it is automatically subscribed to the store.
+Now, the TodoPrivateList component will get the updated todo list as it is automatically subscribed to the store.
 
 Great! That was actually easy :)

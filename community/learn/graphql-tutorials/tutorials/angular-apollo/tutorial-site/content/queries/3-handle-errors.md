@@ -1,12 +1,12 @@
 ---
 title: "Handle loading/errors"
 metaTitle: "Apollo Query Component Error Handling | GraphQL Angular Apollo Tutorial"
-metaDescription: "We will handle the GraphQL loading and error states in Angular app using the Apollo Query Component render props - loading and error "
+metaDescription: "We will handle the GraphQL loading and error states in Angular app using the Apollo watchQuery Method fields - loading and error "
 ---
 
-As we saw in the previous step, Apollo injected props into the component’s render prop function. Among them `loading` and `error` are common ones that you will need to handle in your app.
+As we saw in the previous step, watchQuery method, returns the data and few other fields. Among them `loading` and `error` are common ones that you will need to handle in your app.
 
-Now let's go back to the `<Query>` component that you wrote in the previous step.
+Now let's go back to the `watchQuery` method that you wrote in the previous step.
 
 ```typescript
 

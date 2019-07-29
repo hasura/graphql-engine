@@ -49,7 +49,7 @@ export class TodoPublicList implements OnInit{
             }
              
           }
-          console.log('got something getnotfivations', data);
+          console.log('got data ', data);
         },(error) => {
           console.log('there was an error sending the query', error);
         });
@@ -80,7 +80,7 @@ export class TodoPublicList implements OnInit{
           this.todos = [...todosData.todos, ...this.todos]
           this.newTodosCount=0;
         }
-        console.log('got something new users', data);
+        console.log('got data ', data);
       },(error) => {
         console.log('there was an error sending the query', error);
       });
@@ -113,7 +113,7 @@ export class TodoPublicList implements OnInit{
           this.olderTodosAvailable = false;
         }
       }
-      console.log('got something old todos', data);
+      console.log('got data ', data);
     },(error) => {
       console.log('there was an error sending the query', error);
     });

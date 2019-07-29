@@ -12,9 +12,9 @@ GraphQL has a first-class way to factor dynamic values out of the query, and pas
 
 So let's define the graphql mutation to be used.
 
-Open `src/components/Todo/TodoInput.js` and add the following code:
+Open `src/app/Todo/TodoInput.ts` and add the following code:
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo/app-final/src/components/Todo/TodoInput.js" text="src/components/Todo/TodoInput.js" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/angular-apollo/app-final/src/app/Todo/TodoInput.ts" text="src/app/Todo/TodoInput.ts" />
 
 ```typescript
 import { Component, OnInit, Input } from '@angular/core';

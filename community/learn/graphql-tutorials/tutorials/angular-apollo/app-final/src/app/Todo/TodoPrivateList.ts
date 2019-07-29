@@ -1,7 +1,5 @@
 import { Component, OnInit  } from '@angular/core';
 
-import {TodoItem} from "./TodoItem";
-import {TodoFilters} from "./TodoFilters";
 import { Apollo } from 'apollo-angular';
 import gql from 'graphql-tag';
 
@@ -70,7 +68,7 @@ export class TodoPrivateList implements OnInit {
             cache.writeQuery({query:GET_MY_TODOS, data: {todos: newTodos}});
           },
         }).subscribe(({ data, loading }) => {
-          console.log('got something clear completed', data);
+          console.log('got data ', data);
         },(error) => {
           console.log('there was an error sending the query', error);
         });

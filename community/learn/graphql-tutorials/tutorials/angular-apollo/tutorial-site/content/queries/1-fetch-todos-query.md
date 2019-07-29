@@ -4,10 +4,6 @@ metaTitle: "Query to fetch todo | GraphQL Angular Apollo Tutorial"
 metaDescription: "GraphQL Query to fetch personal todos. Try the query in GraphiQL, passing the Authorization token to get authenticated results"
 ---
 
-import YoutubeEmbed from "../../src/YoutubeEmbed.js";
-
-<YoutubeEmbed link="https://www.youtube.com/embed/e66SASjCncY" />
-
 The first graphql query you will write will be to fetch personal todos. You will need to load the todo data from the database which belongs to the logged in user. Let's define a graphql query to fetch the required data.
 
 ```graphql

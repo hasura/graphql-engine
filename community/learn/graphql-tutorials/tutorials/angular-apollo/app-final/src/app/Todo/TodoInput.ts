@@ -56,7 +56,7 @@ export class TodoInput {
       }).subscribe(({ data, loading }) => {
         this.loading = loading;
         this.todoInput = '';
-        console.log('got data add todo', data);
+        console.log('got data ', data);
       },(error) => {
         console.log('there was an error sending the query', error);
       });

@@ -1,9 +1,8 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core'; 
+import { Component, Output, EventEmitter } from '@angular/core'; 
 
 @Component({  
     selector: 'Login',  
     templateUrl: './Login.template.html',  
-    // styleUrls: ['./products.component.css']  
 })  
 
 export class Login {

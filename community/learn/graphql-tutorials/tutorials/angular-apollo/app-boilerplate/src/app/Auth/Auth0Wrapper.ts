@@ -1,15 +1,11 @@
 import { Component, OnInit, Input } from '@angular/core'; 
 import auth0 from 'auth0-js';
 
-// import {history} from '../../utils/history';
 import {AUTH_CONFIG} from './auth0-variables';
-import {App} from '../App';
-import {Callback} from './Callback';
-import {Login} from './Login';
+
 @Component({  
   selector: 'Auth0Wrapper',  
   templateUrl: './Auth0Wrapper.template.html',  
-  // styleUrls: ['./products.component.css']  
 })  
 
 export class Auth0Wrapper implements OnInit {
@@ -67,7 +63,6 @@ export class Auth0Wrapper implements OnInit {
     this.expiresAt = expiresAt;
 
     // navigate to the home route
-    //history.replace('/');
     this.isAuthenticated = true;
     this.idToken = authResult.idToken;
   }
@@ -100,7 +95,6 @@ export class Auth0Wrapper implements OnInit {
     });
 
     // navigate to the home route
-    //history.replace('/');
     this.isAuthenticated = false;
     this.idToken = null;
   }

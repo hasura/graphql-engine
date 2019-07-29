@@ -2,8 +2,6 @@ import { Component, OnInit  } from '@angular/core';
 import { Apollo } from 'apollo-angular';
 import gql from 'graphql-tag';
 
-import {OnlineUser} from "./OnlineUser"
-
 const SUBSCRIBE_TO_ONLINE_USERS = gql`
 subscription getOnlineUsers {
   online_users(order_by: {user: {name: asc }}) {
@@ -39,7 +37,7 @@ export class OnlineUsersWrapper implements OnInit {
                 this.onlineUsers.push(u.user)
               })
           }
-          console.log('got something online users', data);
+          console.log('got data ', data);
         },(error) => {
           console.log('there was an error sending the query', error);
         }); 
@@ -57,7 +55,7 @@ export class OnlineUsersWrapper implements OnInit {
           mutation: UPDATE_LASTSEEN_MUTATION,
           variables: {now: (new Date()).toISOString()}
         }).subscribe(({ data, loading }) => {
-          console.log('got data lastseen', data);
+          console.log('got data ', data);
         },(error) => {
           console.log('there was an error sending the query', error);
         });

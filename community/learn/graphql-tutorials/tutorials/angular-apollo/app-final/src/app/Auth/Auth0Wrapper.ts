@@ -1,15 +1,11 @@
 import { Component, OnInit, Input } from '@angular/core'; 
 import auth0 from 'auth0-js';
 
-// import {history} from '../../utils/history';
 import {AUTH_CONFIG} from './auth0-variables';
-import {App} from '../App';
-import {Callback} from './Callback';
-import {Login} from './Login';
+;
 @Component({  
   selector: 'Auth0Wrapper',  
   templateUrl: './Auth0Wrapper.template.html',  
-  // styleUrls: ['./products.component.css']  
 })  
 
 export class Auth0Wrapper implements OnInit {
@@ -68,7 +64,6 @@ export class Auth0Wrapper implements OnInit {
     localStorage.setItem('token', this.idToken);
 
     // navigate to the home route
-    //history.replace('/');
     this.isAuthenticated = true;
     this.idToken = authResult.idToken;
   }
@@ -102,7 +97,6 @@ export class Auth0Wrapper implements OnInit {
     });
 
     // navigate to the home route
-    //history.replace('/');
     this.isAuthenticated = false;
     this.idToken = null;
   }
@@ -116,8 +110,6 @@ export class Auth0Wrapper implements OnInit {
 
   ngOnInit() {
     // If this is a callback URL then do the right things
-    console.log("location", window.location);
-    console.log("auth", this.isAuthenticated);
     const location = window.location;
     if (location && location.pathname.startsWith('/callback') && /access_token|id_token|error/.test(location.hash)) {
       this.handleAuthentication();

@@ -1,13 +1,10 @@
 ---
 title: "Subscriptions to show online users"
-metaTitle: "Update last seen of user with Mutation | GraphQL React Apollo Tutorial"
+metaTitle: "Update last seen of user with Mutation | GraphQL Angular Apollo Tutorial"
 metaDescription: "GraphQL Mutation to update last seen of user to make them available online. Use setInterval to trigger mutation every few seconds "
 ---
 
 import GithubLink from "../src/GithubLink.js";
-import YoutubeEmbed from "../src/YoutubeEmbed.js";
-
-<YoutubeEmbed link="https://www.youtube.com/embed/Zegh4VJqrHM" />
 
 We cruised through our GraphQL queries and mutations. We queried for todos, added a new todo, updated an existing todo, removed an existing todo.
 
@@ -28,9 +25,9 @@ We have to make this change to see yourself online first. Remember that you are 
 
 The goal is to update every few seconds from the client that you are online. Ideally you should do this after you have successfully authenticated with Auth0. So let's update some code to handle this. 
 
-Open `src/components/OnlineUsers/OnlineUsersWrapper.js` and add the following imports and set the client prop in the constructor
+Open `src/app/OnlineUsers/OnlineUsersWrapper.ts` and add the following imports and set the client prop in the constructor
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo/app-final/src/components/OnlineUsers/OnlineUsersWrapper.js" text="src/components/OnlineUsers/OnlineUsersWrapper.js" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/angular-apollo/app-final/src/app/OnlineUsers/OnlineUsersWrapper.ts" text="src/app/OnlineUsers/OnlineUsersWrapper.ts" />
 
 ```typescript
 + import gql from "graphql-tag";
@@ -96,6 +93,6 @@ export class OnlineUsersWrapper implements OnInit {
 }
 ```
 
-Again, we are making use of `client.mutate` to update the `users` table of the database.
+Again, we are making use of `apollo.mutate` to update the `users` table of the database.
 
 Great! Now the metadata about whether the user is online will be available in the backend. Let's now do the integration to display realtime data of online users.

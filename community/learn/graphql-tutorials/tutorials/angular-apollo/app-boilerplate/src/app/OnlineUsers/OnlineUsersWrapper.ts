@@ -1,11 +1,8 @@
-import { Component, OnInit, Input } from '@angular/core';
-
-import {OnlineUser} from "./OnlineUser"
+import { Component } from '@angular/core';
 
 @Component({  
     selector: 'OnlineUsersWrapper',  
     templateUrl: './OnlineUsersWrapper.template.html',  
-    // styleUrls: ['./products.component.css']  
   }) 
 
 export class OnlineUsersWrapper {

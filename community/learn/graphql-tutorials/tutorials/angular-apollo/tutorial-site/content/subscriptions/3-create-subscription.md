@@ -1,21 +1,18 @@
 ---
 title: "Create Subscription and Render Result"
-metaTitle: "Apollo Subscription Component | GraphQL React Apollo Tutorial"
-metaDescription: "Integrate React Apollo Subscription Component to watch for changes in realtime data. We use GraphQL subscriptions as an example to get live data in the React app"
+metaTitle: "Apollo Subscription Method | GraphQL Angular Apollo Tutorial"
+metaDescription: "Integrate Angular Apollo Subscription Method to watch for changes in realtime data. We use GraphQL subscriptions as an example to get live data in the Angulart app"
 ---
 
 import GithubLink from "../../src/GithubLink.js";
-import YoutubeEmbed from "../../src/YoutubeEmbed.js";
-
-<YoutubeEmbed link="https://www.youtube.com/embed/yqL_PpEAU7E" />
 
 So let's define the graphql subscription to be used.
 
-Open `src/components/OnlineUsers/OnlineUsersWrapper.js` and add the following code, below the other imports
+Open `src/app/OnlineUsers/OnlineUsersWrapper.ts` and add the following code, below the other imports
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo/app-final/src/OnlineUsers/OnlineUsersWrapper.js" text="src/OnlineUsers/OnlineUsersWrapper.js" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/angular-apollo/app-final/src/app/OnlineUsers/OnlineUsersWrapper.ts" text="src/app/OnlineUsers/OnlineUsersWrapper.ts" />
 
-Now, we will wrap the component with `Subscription` passing our graphql mutation constant that we imported. Replace the `return` with the following code:
+Now, we will add the `apollo.subscribe` method to get live online users.
 
 ```typescript
 import { Component, OnInit  } from '@angular/core';
@@ -62,7 +59,7 @@ export class OnlineUsersWrapper implements OnInit {
 +                this.onlineUsers.push(u.user)
 +              })
 +          }
-+          console.log('got something online users', data);
++          console.log('got data ', data);
 +        },(error) => {
 +          console.log('there was an error sending the query', error);
 +        }); 
@@ -91,8 +88,8 @@ export class OnlineUsersWrapper implements OnInit {
 How does this work?
 -------------------
 
-We are using the `<Subscription>` component which gives render props (similar to `<Query>` and `<Mutation>` components). The `data` prop gives the result of the realtime data for the query we have made.
+We are using the `apollo.subscribe` method  which gives fields (similar to `watchQuery` and `mutate` methods). The `data` field gives the result of the realtime data for the query we have made.
 
-Refresh your react app and see yourself online! Don't be surprised; There could be other users online as well.
+Refresh your angular app and see yourself online! Don't be surprised; There could be other users online as well.
 
 Awesome! You have completed basic implementations of a GraphQL Query, Mutation and Subscriptions. Easy isn't it?

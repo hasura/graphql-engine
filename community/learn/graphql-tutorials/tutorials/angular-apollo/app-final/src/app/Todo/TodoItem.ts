@@ -46,7 +46,7 @@ export class TodoItem {
             });
           },
         }).subscribe(({ data, loading }) => {
-          console.log('got something remove todo', data);
+          console.log('got data ', data);
         },(error) => {
           console.log('there was an error sending the query', error);
         });
@@ -71,7 +71,7 @@ export class TodoItem {
             });
           },
         }).subscribe(({ data, loading }) => {
-          console.log('got something toggle todo', data);
+          console.log('got data ', data);
         },(error) => {
           console.log('there was an error sending the query', error);
         });

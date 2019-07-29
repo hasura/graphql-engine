@@ -3,7 +3,6 @@ import { Component, OnInit, Input } from '@angular/core';
 @Component({  
     selector: 'TodoPrivateList',  
     templateUrl: './TodoPrivateList.template.html',  
-    // styleUrls: ['./products.component.css']  
   }) 
 
 export class TodoPrivateList implements OnInit {

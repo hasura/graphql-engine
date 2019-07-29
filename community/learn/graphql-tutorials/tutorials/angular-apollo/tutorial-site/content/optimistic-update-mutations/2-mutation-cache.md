@@ -1,22 +1,19 @@
 ---
 title: "Mutation and update cache"
-metaTitle: "Apollo client.mutate for GraphQL mutation update | GraphQL React Apollo Tutorial"
-metaDescription: "We will use the Apollo client.mutate from withApollo HOC from react-apollo as an example to modify existing data and update cache locally using readQuery and writeQuery and handle optimisticResponse"
+metaTitle: "Apollo apollo.mutate for GraphQL mutation update | GraphQL Angular Apollo Tutorial"
+metaDescription: "We will use the Apollo apollo.mutate from apollo-angular as an example to modify existing data and update cache locally using readQuery and writeQuery and handle optimisticResponse"
 ---
 
 import GithubLink from "../../src/GithubLink.js";
-import YoutubeEmbed from "../../src/YoutubeEmbed.js";
 
-<YoutubeEmbed link="https://www.youtube.com/embed/lXIQxuSZ588" />
-
-Now let's do the integration part. Open `src/components/Todo/TodoItem.js` and add the following code below the other imports:
+Now let's do the integration part. Open `src/app/Todo/TodoItem.ts` and add the following code below the other imports:
 
 ```typescript
 + import gql from 'graphql-tag';
 ```
 Let's define the graphql mutation to update the completed status of the todo
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo/app-final/src/components/Todo/TodoItem.js" text="src/components/Todo/TodoItem.js" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/angular-apollo/app-final/src/app/Todo/TodoItem.ts" text="src/app/Todo/TodoItem.ts" />
 
 ```typescript
 import { Component, Input } from '@angular/core';
@@ -33,8 +30,8 @@ import gql from 'graphql-tag';
 
 ```
 
-### Apollo client.mutate
-We need to call `client.mutate` to make the mutation. To make sure we have access to `client`, we wrap our TodoItem component with `withApollo` like below:
+### Apollo apollo.mutate
+We need to call `apollo.mutate` to make the mutation.
 
 ```typescript
   import { Component, Input } from '@angular/core';

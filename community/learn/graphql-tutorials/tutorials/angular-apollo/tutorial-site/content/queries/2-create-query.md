@@ -1,28 +1,25 @@
 ---
-title: "<Query> component"
+title: "watchQuery method"
 metaTitle: "Apollo Query Component | GraphQL Angular Apollo Tutorial"
-metaDescription: "We will use the Apollo Client Query component from react-apollo. It is a render prop API to fetch data and handle data, loading and error props"
+metaDescription: "We will use the Apollo Client watchQuery from apollo-angular. It is a API to fetch data and handle data, loading and error fields"
 ---
 
 import GithubLink from "../../src/GithubLink.js";
-import YoutubeEmbed from "../../src/YoutubeEmbed.js";
 
-<YoutubeEmbed link="https://www.youtube.com/embed/60-y9jygWBA" />
-
-In this section, we will implement GraphQL Queries and integrate with the react UI.
+In this section, we will implement GraphQL Queries and integrate with the angular UI.
 With Apollo Client, you can send queries in 2 different ways.
 
-1. Using the `query` method directly and then process the response.
-2. New Render Prop API with React. (Recommended)
+1. Using the query method.
+2. Using the watchQuery method. (Recommended)
 
-### Apollo Query Component
-The recommended method is to use the render prop method, where you will just pass your GraphQL query as prop and `<Query />` component will fetch the data automatically and will present it in the component's render prop function.
+### Apollo watchQuery Method 
+query method returns an Observable that emits a result, just once. watchQuery also does the same, except it can emit multiple results. (The GraphQL query itself is still only sent once, but the watchQuery observable can also update if, for example, another query causes the object to be updated within Apollo Client's global cache.)
 
 Great! Now let's define the graphql query to be used:
 
-Open `src/components/Todo/TodoPrivateList.js` and add the following code:
+Open `src/app/Todo/TodoPrivateList.ts` and add the following code:
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo/app-final/src/components/Todo/TodoPrivateList.js" text="src/components/Todo/TodoPrivateList.js" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/angular-apollo/app-final/src/app/Todo/TodoPrivateList.ts" text="src/app/Todo/TodoPrivateList.ts" />
 
 ```typescript
 import { Component, OnInit, Input } from '@angular/core';
@@ -42,20 +39,20 @@ import {TodoFilters} from "./TodoFilters";
 + }`;
 ```
 
-We have now written the graphql query as a javascript constant using the `gql` parser function. This function is used to parse the plain string as a graphql query.
+We have now written the graphql query as a typescript constant using the `gql` parser function. This function is used to parse the plain string as a graphql query.
 
 What does this query do? 
 ------------------------
 The query fetches `todos` with a simple condition; `is_public` must be false. We sort the todos descending by its `created_at` time according to the schema. We specify which fields we need for the todos node.
 
-The query is now ready, let's integrate it with our react code.
+The query is now ready, let's integrate it with our angular code.
 
-```javascript
+```typescript
 
 + import { Apollo } from 'apollo-angular';
 ```
 
-`<Query>` component is being imported from `react-apollo`
+`Apollo` is being imported from `apollo-angular`
 
 ```typescript
 
@@ -126,9 +123,7 @@ clearCompleted() {}
 
 ```
 
-Remember that we wrapped our App component with `<ApolloProvider>` and passed `client` as a prop. We are using the same client prop to send it down to the components.
-
-We are importing the `Query` component from `react-apollo` and the graphql query we defined above to fetch the todo data.
+We are importing `Apollo` from `apollo-angular` and the graphql query we defined above to fetch the todo data.
 
 Let's remove the mock `todos` data which was used to populate sample data.
 
@@ -171,11 +166,11 @@ clearCompleted() {}
 
 ```
 
-Woot! You have written your first GraphQL integration with React. Easy isn't it?
+Woot! You have written your first GraphQL integration with Angular. Easy isn't it?
 
 How does this work?
 -------------------
-When you wrapped your return with `<Query>` component, Apollo injected props into the component’s render prop function. Most important ones are:
+The watchQuery method, returns an Observable, which has a subscribe method with the data and few other fields.  Most important ones are:
 
 `loading`: A boolean that indicates whether the request is in flight. If loading is true, then the request hasn't finished. Typically this information can be used to display a loading spinner.
 
@@ -183,8 +178,6 @@ When you wrapped your return with `<Query>` component, Apollo injected props int
 
 `data`: An object containing the result of your GraphQL query. This will contain our actual data from the server. In our case, it will be the todo data.
 
-You can read more about other render props that Apollo passes [here](https://www.apollographql.com/docs/react/essentials/queries.html#render-prop)
-
-Using the `data` prop, we are parsing the results from the server. In our query, `data` prop has an array `todos` which can be mapped over to render each `TodoItem`.
+Using the `data` field, we are parsing the results from the server. In our query, `data` field has an array `todos` which can be mapped over to render each `TodoItem`.
 
 If you noted, there has been some client side filtering to the todos that are displayed.
