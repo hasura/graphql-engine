@@ -1,4 +1,3 @@
-{-# LANGUAGE GADTs      #-}
 {-# LANGUAGE RankNTypes #-}
 
 module Hasura.Logging
@@ -38,7 +37,6 @@ import qualified Data.Time.Format      as Format
 import qualified Data.Time.LocalTime   as Time
 import qualified System.Log.FastLogger as FL
 
---import           Hasura.Server.Utils   (hyphenate)
 
 newtype FormattedTime
   = FormattedTime { _unFormattedTime :: Text }
@@ -52,14 +50,6 @@ data EngineLogType
   | ELTStartup
   -- internal log types
   | ELTInternal !Text
-  -- | ELTPgClient
-  -- | ELTMetadata
-  -- | ELTJwkRefreshLog
-  -- | ELTTelemetryLog
-  -- | ELTEventTrigger
-  -- | ELTWsServer
-  -- | ELTSchemaSyncThread
-  -- | ELTUnstructured
   deriving (Show, Eq, Generic)
 
 instance Hashable EngineLogType
@@ -72,24 +62,6 @@ instance J.ToJSON EngineLogType where
     ELTQueryLog     -> "query-log"
     ELTStartup      -> "startup"
     ELTInternal t   -> J.String t
-
--- $(J.deriveJSON J.defaultOptions {
---      J.constructorTagModifier = hyphenate . drop 3
---      } ''EngineLogType)
-
--- | Log types that can't be disabled/enabled by the user, they are always
--- enabled
--- alwaysOnLogTypes :: Set.HashSet EngineLogType
--- alwaysOnLogTypes = Set.fromList
---   [ ELTPgClient
---   , ELTMetadata
---   , ELTJwkRefreshLog
---   , ELTTelemetryLog
---   , ELTEventTrigger
---   , ELTWsServer
---   , ELTSchemaSyncThread
---   , ELTUnstructured
---   ]
 
 -- the default enabled log-types
 defaultEnabledLogTypes :: Set.HashSet EngineLogType
