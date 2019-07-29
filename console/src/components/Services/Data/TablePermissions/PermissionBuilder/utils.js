@@ -1,5 +1,6 @@
 /* Constants */
 
+// TODO: generate using SQL query to handle all types
 export const PGTypes = {
   boolean: ['boolean'],
   character: ['character', 'character varying', 'text', 'citext'],
