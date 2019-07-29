@@ -65,7 +65,7 @@
 
 .ReactTable .rt-tbody .rt-th,
 .ReactTable .rt-tbody .rt-td {
-  padding: 8px;
+  padding: 5px 8px;
   border-right: 1px solid rgba(0, 0, 0, 0.1);
   word-wrap: break-word;
 }
@@ -77,6 +77,19 @@
 .ReactTable .rt-td > div {
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.ReactTable .rt-table .rt-tr.-even {
+  background-color: #f4f4f4;
+}
+
+.ReactTable .rt-table .rt-tr.-odd {
+  background-color: #ffffff;
+}
+
+.ReactTable .rt-table .rt-tbody .rt-tr-group .rt-tr.-even:hover,
+.ReactTable .rt-table .rt-tbody .rt-tr-group .rt-tr.-odd:hover {
+  background-color: #eaeaea;
 }
 
 .ReactTable .rt-table .rt-thead .rt-tr .rt-th {
@@ -102,9 +115,6 @@
   min-width: 170px;
 }
 
-.ReactTable .rt-table .rt-tbody .rt-tr-group .rt-tr.-odd:hover {
-  background-color: #ebf7de;
-}
 .ReactTable .rt-table {
   overflow: unset;
 }
@@ -126,10 +136,6 @@
 }
 .ReactTable .rt-tbody .rt-tr-group:last-child {
   border-bottom: solid 1px rgba(0, 0, 0, 0.05);
-}
-
-.ReactTable .rt-table .rt-tbody .rt-tr-group .rt-tr.-even:hover {
-  background-color: #ebf7de;
 }
 
 .ReactTable .rt-table .rt-tbody {
