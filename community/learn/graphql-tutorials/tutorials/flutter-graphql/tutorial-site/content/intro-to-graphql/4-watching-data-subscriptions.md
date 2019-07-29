@@ -10,7 +10,7 @@ but instead of returning data in one read, you get data pushed from the server.
 This is useful for your app to subscribe to "events" or "live results" from the backend, but
 while allowing you to control the "shape" of the event from your app.
 
-GraphQL subscriptions are a critical component of adding realtime or reactive features
+GraphQL subscriptions are a critical widget for adding realtime features
 to your apps easily. GraphQL clients and servers that support subscriptions are great because
 they allow you to build great experiences without having to deal with websocket code!
 

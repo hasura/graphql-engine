@@ -1,6 +1,6 @@
 ---
 title: "Remove todos - Integration"
-metaTitle: "Apollo Mutation Component for GraphQL mutation delete | GraphQL Flutter Tutorial"
+metaTitle: "Mutation widget for GraphQL mutation delete | GraphQL Flutter Tutorial"
 metaDescription: "We will use the Mutation Widget with variables as an example to delete existing data"
 ---
 

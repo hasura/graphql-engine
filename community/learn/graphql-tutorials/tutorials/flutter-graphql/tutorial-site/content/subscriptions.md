@@ -1,6 +1,6 @@
 ---
 title: "Subscriptions to show online users"
-metaTitle: "Update last seen of user with Mutation | GraphQL React Native Apollo Tutorial"
+metaTitle: "Update last seen of user with Mutation | GraphQL Flutter Tutorial"
 metaDescription: "GraphQL Mutation to update last seen of user to make them available online. Use setInterval to trigger mutation every few seconds "
 ---
 

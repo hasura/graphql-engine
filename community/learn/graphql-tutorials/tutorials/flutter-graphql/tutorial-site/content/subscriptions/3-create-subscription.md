@@ -1,7 +1,7 @@
 ---
 title: "Create Subscription and Render Result"
-metaTitle: "Apollo Subscription Component | GraphQL React Native Apollo Tutorial"
-metaDescription: "Integrate React Apollo Subscription Component to watch for changes in realtime data. We use GraphQL subscriptions as an example to get live data in the React Native app"
+metaTitle: "Flutter Subscription widget | GraphQL Flutter Tutorial"
+metaDescription: "Integrate Subscription widget to watch for changes in realtime data. We use GraphQL subscriptions as an example to get live data in the Flutter app"
 ---
 
 Open `src/data/online_fetch.dart` and add the following code.

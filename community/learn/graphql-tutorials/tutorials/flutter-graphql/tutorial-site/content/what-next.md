@@ -1,6 +1,6 @@
 ---
 title: "What next?"
-metaTitle: "What next? | GraphQL React Native Apollo Tutorial"
+metaTitle: "What next? | GraphQL Flutter Tutorial"
 ---
 
 import TwitterShare from './twitter-share';
