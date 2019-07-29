@@ -447,7 +447,7 @@ validateRemoteToRemoteRelationship remoteRelationship gctx remoteSchemas = do
     Just baseSchemaCtx -> do
       let baseTypes = GC._rgTypes (rscGCtx baseSchemaCtx)
       case HM.lookup baseType baseTypes of
-        Nothing       -> Left (pure (TypeNotFound baseType))
+        Nothing -> Left (pure (TypeNotFound baseType))
         Just typeInfo -> do
           case typeInfo of
             TIObj objTypeInfo -> do
@@ -471,7 +471,9 @@ validateRemoteToRemoteRelationship remoteRelationship gctx remoteSchemas = do
                          case _fiLoc objFldInfo of
                            TLHasuraType ->
                              Left
-                               (pure (FieldNotFoundInRemoteSchema (fcName fieldCall)))
+                               (pure
+                                  (FieldNotFoundInRemoteSchema
+                                     (fcName fieldCall)))
                            TLRemoteType {} -> do
                              let providedArguments =
                                    remoteArgumentsToMap (fcArguments fieldCall)
@@ -481,7 +483,9 @@ validateRemoteToRemoteRelationship remoteRelationship gctx remoteSchemas = do
                                   providedArguments
                                   (HM.fromList
                                      (map
-                                        (\(n, objFld) -> (G.Variable n, getBaseTy (_fiTy objFld)))
+                                        (\(n, objFld) ->
+                                           ( G.Variable n
+                                           , getBaseTy (_fiTy objFld)))
                                         (HM.toList fieldInfos)))
                                   (GS._gTypes gctx))
                              (newParamMap, newTypeMap) <-
@@ -496,10 +500,18 @@ validateRemoteToRemoteRelationship remoteRelationship gctx remoteSchemas = do
                                     typeMap)
                              innerObjTyInfo <-
                                if isObjType (GS._gTypes gctx) objFldInfo
-                               then getTyInfoFromField (GS._gTypes gctx) objFldInfo
-                               else if isScalarType (GS._gTypes gctx) objFldInfo
-                               then pure objTyInfo
-                               else (Left (pure (InvalidType (_fiTy objFldInfo) "only objects or scalar types expected")))
+                                 then getTyInfoFromField
+                                        (GS._gTypes gctx)
+                                        objFldInfo
+                                 else if isScalarType
+                                           (GS._gTypes gctx)
+                                           objFldInfo
+                                        then pure objTyInfo
+                                        else (Left
+                                                (pure
+                                                   (InvalidType
+                                                      (_fiTy objFldInfo)
+                                                      "only objects or scalar types expected")))
                              pure
                                ( innerObjTyInfo
                                , _fiTy objFldInfo
@@ -510,18 +522,29 @@ validateRemoteToRemoteRelationship remoteRelationship gctx remoteSchemas = do
                      , (mempty, mempty)))
                   (rtrrRemoteFields remoteRelationship)
               pure
-                 RemoteToRemoteField
-                    { rrmfRemoteRelationship = remoteRelationship
-                    , rrmfGType = leafGType
-                    , rrmfParamMap = leafParamMap
-                    , rrmfAdditionalTypes = leafTypeMap
-                    }
-            _other -> Left (pure (InvalidType (G.toGT baseType) "only objects types can be joined"))
+                RemoteToRemoteField
+                  { rrmfRemoteRelationship = remoteRelationship
+                  , rrmfGType = leafGType
+                  , rrmfParamMap = leafParamMap
+                  , rrmfAdditionalTypes = leafTypeMap
+                  }
+            _other ->
+              Left
+                (pure
+                   (InvalidType
+                      (G.toGT baseType)
+                      "only objects types can be joined"))
   where
     baseSchemaName = rtrrBaseSchema remoteRelationship
     baseType = rtrrBaseType remoteRelationship
     joinFields = rtrrJoinFields remoteRelationship
-    uniqueRelId = UniqueRelIdentifier "_remote_to_remote_field"
+    remoteSchemaName = rtrrRemoteSchema remoteRelationship
+    uniqueRelId =
+      UniqueRelIdentifier $
+      "_remote_to_remote_rel_" <> getRemoteSchemaTxt baseSchemaName <> "_" <>
+      showNamedTy baseType <>
+      "_" <>
+      getRemoteSchemaTxt remoteSchemaName
     getTyInfoFromField types field =
       let baseTy = getBaseTy (_fiTy field)
           fieldName = _fiName field
@@ -532,13 +555,13 @@ validateRemoteToRemoteRelationship remoteRelationship gctx remoteSchemas = do
     isObjType types field =
       let baseTy = getBaseTy (_fiTy field)
           typeInfo = HM.lookup baseTy types
-      in case typeInfo of
-           Just (TIObj _) -> True
-           _              -> False
+       in case typeInfo of
+            Just (TIObj _) -> True
+            _              -> False
     isScalarType types field =
       let baseTy = getBaseTy (_fiTy field)
           typeInfo = HM.lookup baseTy types
-      in case typeInfo of
-           Just (TIScalar _) -> True
-           _                 -> False
-
+       in case typeInfo of
+            Just (TIScalar _) -> True
+            _                 -> False
+    getRemoteSchemaTxt = unNonEmptyText . unRemoteSchemaName
