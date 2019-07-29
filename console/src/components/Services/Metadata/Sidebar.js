@@ -37,13 +37,6 @@ const Sidebar = ({ location, metadata }) => {
     title: 'Allowed Queries',
   });
 
-  sectionsData.push({
-    key: 'about',
-    link: '/metadata/about',
-    dataTestVal: 'about-link',
-    title: 'About ',
-  });
-
   const currentLocation = location.pathname;
 
   const sections = [];

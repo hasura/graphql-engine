@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 
-import Endpoints from '../../../../Endpoints';
+import Endpoints from '../../../Endpoints';
 
-import globals from '../../../../Globals';
+import globals from '../../../Globals';
 
 import styles from './About.scss';
 
@@ -111,9 +111,7 @@ class About extends Component {
 
     return (
       <div
-        className={`${styles.clear_fix} ${styles.padd_left} ${
-          styles.padd_top
-        } ${styles.metadata_wrapper} container-fluid`}
+        className={`container-fluid ${styles.add_mar_top}  ${styles.add_mar_left}`}
       >
         <div className={styles.subHeader}>
           <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
