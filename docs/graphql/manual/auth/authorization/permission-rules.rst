@@ -93,12 +93,16 @@ Type-based operators (*depending on the column type*) are available for construc
 You can use the same operators that you use to :doc:`filtering query results <../../queries/query-filters>`
 to define permission rules.
 
+See the :ref:`API reference <MetadataOperator>` for a list of all supported operators.
+
 E.g. the following two images illustrate the different operators available for ``integer`` and ``text`` types:
 
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/operators-for-integer-types.png
+   :width: 45%
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/operators-for-text-types.png
+   :width: 45%
 
 Using boolean expressions
 *************************

@@ -77,6 +77,36 @@ const columnOperatorsInfo = {
     inputType: 'boolean',
     PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
   },
+  _ceq: {
+    type: 'object',
+    inputType: 'column',
+    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+  },
+  _cne: {
+    type: 'object',
+    inputType: 'column',
+    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+  },
+  _cgt: {
+    type: 'object',
+    inputType: 'column',
+    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+  },
+  _clt: {
+    type: 'object',
+    inputType: 'column',
+    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+  },
+  _cgte: {
+    type: 'object',
+    inputType: 'column',
+    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+  },
+  _clte: {
+    type: 'object',
+    inputType: 'column',
+    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+  },
   _like: {
     type: 'object',
     PGTypes: ['character'],
