@@ -22,6 +22,7 @@ module Hasura.RQL.DDL.Relationship
   , runCreateRemoteToRemoteRelationship
   , runCreateRemoteToRemoteRelationshipP1
   , runCreateRemoteToRemoteRelationshipP2Setup
+  , runDeleteRemoteToRemoteRelationship
   , module Hasura.RQL.DDL.Relationship.Types
   )
 where
@@ -561,3 +562,11 @@ persistRemoteToRemoteRelationship remoteToRemoteRelationship =
   --     ,rtrRemoteSchema remoteRelationship
   --     ,Q.JSONB (toJSON (remoteRelationship))))
   -- True
+
+runDeleteRemoteToRemoteRelationship ::
+     (MonadTx m, CacheRWM m, UserInfoM m) => DeleteRemoteToRemoteRelationship -> m EncJSON
+runDeleteRemoteToRemoteRelationship remoteToRemoteRel = do
+  adminOnly
+  delRemoteToRemoteRelFromCache remoteToRemoteRel
+  -- liftTx $ delRemoteRelFromCatalog table relName
+  return successMsg

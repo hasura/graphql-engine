@@ -385,3 +385,11 @@ instance ToJSON RemoteToRemoteField where
       [ "remote_relationship" .= rrmfRemoteRelationship
       ]
 
+data DeleteRemoteToRemoteRelationship =
+  DeleteRemoteToRemoteRelationship
+    { drtrrBaseSchema :: RemoteSchemaName
+    , drtrrBaseType   :: G.NamedType
+    , drtrrName       :: RemoteRelationshipName
+    }  deriving (Show, Eq, Lift)
+
+$(deriveJSON (aesonDrop 5 snakeCase){omitNothingFields=True} ''DeleteRemoteToRemoteRelationship)

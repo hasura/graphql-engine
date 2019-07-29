@@ -1,3 +1,10 @@
-type: remove_remote_schema
+type: bulk
 args:
-  name: my-remote-schema
+  - type: delete_remote_to_remote_relationship
+    args:
+      name: messageRemoteToRemote
+      base_schema: my-remote-schema
+      base_type: User
+  - type: remove_remote_schema
+    args:
+      name: my-remote-schema

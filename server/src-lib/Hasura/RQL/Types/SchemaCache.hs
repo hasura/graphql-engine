@@ -57,6 +57,7 @@ module Hasura.RQL.Types.SchemaCache
        , updColInCache
        , delRelFromCache
        , delRemoteRelFromCache
+       , delRemoteToRemoteRelFromCache
 
        , RolePermInfo(..)
        , permIns
@@ -619,6 +620,41 @@ delRemoteRelFromCache table rn = do
   modDepMapInCache (removeFromDepMap schObjId)
   where
     schObjId = SOTableObj table $ TORemoteRel rn
+
+delRemoteToRemoteRelFromCache ::
+    (QErrM m, CacheRWM m)
+  => DeleteRemoteToRemoteRelationship -> m ()
+delRemoteToRemoteRelFromCache remoteToRemoteRel = do
+  delRemoteToRemoteFldFromCache remoteToRemoteRel
+  modDepMapInCache (removeFromDepMap schObjId)
+  where
+    baseSchemaName = drtrrBaseSchema remoteToRemoteRel
+    schObjId = SORemoteSchema baseSchemaName
+
+delRemoteToRemoteFldFromCache ::
+    (QErrM m, CacheRWM m)
+  => DeleteRemoteToRemoteRelationship -> m ()
+delRemoteToRemoteFldFromCache delRel = do
+  sc <- askSchemaCache
+  writeSchemaCache
+    sc
+      { scRemoteToRemoteRels =
+          (scRemoteToRemoteRels sc) \\
+          filter
+            (\remToRemFld ->
+               baseSchemaName == (schemaOfField remToRemFld) &&
+               baseType == (typeOfField remToRemFld) &&
+               name == (nameOfField remToRemFld)
+            )
+            (scRemoteToRemoteRels sc)
+      }
+  where
+    name = drtrrName delRel
+    baseSchemaName = drtrrBaseSchema delRel
+    baseType = drtrrBaseType delRel
+    nameOfField remFld = rtrrName (rrmfRemoteRelationship remFld)
+    schemaOfField remFld = rtrrBaseSchema (rrmfRemoteRelationship remFld)
+    typeOfField remFld = rtrrBaseType (rrmfRemoteRelationship remFld)
 
 addRelationshipTypes :: (CacheRWM m) => (QualifiedTable, RemoteRelationshipName) -> TypeMap -> m ()
 addRelationshipTypes (qt, rn) additionalTypesMap = do
