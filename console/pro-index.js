@@ -1,8 +1,12 @@
 // import GraphiQL parts
 import GraphiQLWrapper from './src/components/Services/ApiExplorer/GraphiQLWrapper/GraphiQLWrapper';
 
+// import utility functions
+
+import { loadMigrationStatus } from './src/components/Main/Actions';
+
 // import Data Tab parts
-import dataRouter from './src/components/Services/Data/DataRouter';
+import { dataRouterUtils } from './src/components/Services/Data/';
 import { dataReducer } from './src/components/Services/Data';
 import dataHeaders from './src/components/Services/Data/Common/Headers';
 import { handleMigrationErrors } from './src/components/Services/Data/TableModify/ModifyActions';
@@ -11,34 +15,96 @@ import {
   updateSchemaInfo,
   UPDATE_CURRENT_SCHEMA,
   UPDATE_DATA_HEADERS,
+  ADMIN_SECRET_ERROR,
 } from './src/components/Services/Data/DataActions';
 
 // import Event Tab parts
-import eventRouterUtils from './src/components/Services/EventTrigger/EventRouter';
+import { eventRouterUtils } from './src/components/Services/EventTrigger';
 import { eventReducer } from './src/components/Services/EventTrigger';
 
 // import Remote Schema parts
-import getCustomResolverRouter from './src/components/Services/CustomResolver/CustomResolverRouter.js';
+import { getCustomResolverRouter } from './src/components/Services/CustomResolver';
 import customResolverReducer from './src/components/Services/CustomResolver/customResolverReducer.js';
 
+// Api Explorer and other exports */
+
+import generatedApiExplorer from './src/components/Services/ApiExplorer/ApiExplorerGenerator';
+import apiExplorerReducer from './src/components/Services/ApiExplorer/Actions';
+
+import generatedLoginConnector from './src/components/Login/Login';
+
+import generatedVoyagerConnector from './src/components/VoyagerView/VoyagerView';
+//
+
+import telemetryReducer from './src/telemetry/Actions';
+
+// Common components
+
+// React components
+import Spinner from './src/components/Common/Spinner/Spinner';
+import Button from './src/components/Common/Button/Button';
+// Css modules
+const CommonScss = require('./src/components/Common/Common.scss');
+
+export { Spinner, Button, CommonScss };
+
+// Meta data
+
+import metadataContainer from './src/components/Services/Metadata/Container';
+import metadataOptionsContainer from './src/components/Services/Metadata/MetadataOptions/MetadataOptions';
+import metadataStatusContainer from './src/components/Services/Metadata/MetadataStatus/MetadataStatus';
+import allowedQueriesContainer from './src/components/Services/Metadata/AllowedQueries/AllowedQueries';
+
+import {
+  loadInconsistentObjects,
+  redirectToMetadataStatus,
+  isMetadataStatusPage,
+} from './src/components/Services/Metadata/Actions';
+
+import { metadataReducer } from './src/components/Services/Metadata/Actions';
+
 // import other globals
-import routes from './src/routes';
+// import routes from './src/routes';
 import globals from './src/Globals';
 import endpoints from './src/Endpoints';
 import mainState from './src/components/Main/State';
 import { changeRequestHeader } from './src/components/Services/ApiExplorer/Actions';
-import { validateLogin } from './src/components/Main/Actions';
+import validateLogin from './src/utils/validateLogin';
 
 const filterQueryScss = require('./src/components/Common/FilterQuery/FilterQuery.scss');
 const tableScss = require('./src/components/Common/TableCommon/Table.scss');
+
+// Export telemetry stuff
+
+export { telemetryReducer };
+
+// Export APIExplorer and entrypoints
+export {
+  generatedApiExplorer,
+  apiExplorerReducer,
+  generatedLoginConnector,
+  generatedVoyagerConnector,
+};
+
+// Export the metadata parts
+export {
+  metadataReducer,
+  metadataContainer,
+  metadataOptionsContainer,
+  metadataStatusContainer,
+  allowedQueriesContainer,
+  loadInconsistentObjects,
+  redirectToMetadataStatus,
+  isMetadataStatusPage,
+};
 
 // export GraphiQL parts
 export { GraphiQLWrapper };
 
 // export Data Tab parts
-export { dataRouter, dataReducer };
+export { dataRouterUtils, dataReducer };
 export { fetchSchemaList, updateSchemaInfo };
-export { UPDATE_CURRENT_SCHEMA, UPDATE_DATA_HEADERS };
+export { ADMIN_SECRET_ERROR, UPDATE_CURRENT_SCHEMA, UPDATE_DATA_HEADERS };
 export { dataHeaders };
 
 // export Event Tab parts
@@ -48,9 +114,9 @@ export { eventRouterUtils, eventReducer };
 export { getCustomResolverRouter, customResolverReducer };
 
 // export other globals
-export default routes;
+
 export { globals, endpoints, mainState };
-export { changeRequestHeader };
+export { changeRequestHeader, loadMigrationStatus };
 export { validateLogin };
 export { handleMigrationErrors };
 

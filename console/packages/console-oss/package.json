@@ -1,6 +1,6 @@
 {
   "name": "@vksci123/console-oss",
-  "version": "0.0.2-patch",
+  "version": "0.0.2-patch.05",
   "description": "Contains modules from open-source console",
   "main": "index.js",
   "scripts": {
@@ -15,5 +15,6 @@
     "Hasura"
   ],
   "author": "Karthik V",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {}
 }
