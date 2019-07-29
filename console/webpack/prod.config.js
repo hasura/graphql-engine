@@ -189,7 +189,7 @@ module.exports = {
       },
       CONSOLE_ASSET_VERSION: JSON.stringify(
         Math.random()
-          .toString(36)
+          .toString(16)
           .slice(2)
       ),
     }),
