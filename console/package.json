@@ -17,6 +17,7 @@
     "dev": "concurrently --kill-others \"npm run watch-client\" \"npm run start-dev\"",
     "start-prod": "cross-env NODE_PATH=./src PORT=8080 NODE_ENV=production node ./bin/server.js",
     "build": "webpack --progress -p --colors --display-error-details --config webpack/prod.config.js",
+    "build-lib": "webpack --progress -p --colors --display-error-details --config webpack/bundle.config.js",
     "server-build": "make server-build",
     "build-unused": "webpack --verbose --colors --display-error-details --config webpack/prod.config.js --json | webpack-unused -s src",
     "cypress": "cypress open",
@@ -165,6 +166,7 @@
     "cypress": "4.6.0",
     "dotenv": "5.0.1",
     "eslint": "6.8.0",
+
     "eslint-config-airbnb": "16.1.0",
     "eslint-config-prettier": "6.10.0",
     "eslint-loader": "1.9.0",
