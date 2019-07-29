@@ -82,7 +82,7 @@ class EditItem extends Component {
         refs[colName].valueNode = node;
       };
       const clicker = e => {
-        e.target.parentNode.click();
+        e.target.closest('.radio-inline').click();
         e.target.focus();
       };
 

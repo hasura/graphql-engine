@@ -10,7 +10,7 @@ class RuntimeError extends Component {
     const errorImage = require('./error-logo.png');
     const styles = require('./ErrorPage.scss');
 
-    const { resetCallback } = this.props;
+    const { resetCallback, error } = this.props;
 
     return (
       <div className={styles.viewContainer}>
@@ -26,6 +26,10 @@ class RuntimeError extends Component {
                   Home
                 </Link>
                 .
+              </div>
+              <br />
+              <div>
+                <pre className={styles.errorStack}>{error.stack}</pre>
               </div>
               <br />
               <div>

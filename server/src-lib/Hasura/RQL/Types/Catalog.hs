@@ -44,13 +44,6 @@ data CatalogPermission
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogPermission)
 
-data CatalogQueryTemplate
-  = CatalogQueryTemplate
-  { _cqtName :: !TQueryName
-  , _cqtDef  :: !Value
-  } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 4 snakeCase) ''CatalogQueryTemplate)
-
 data CatalogEventTrigger
   = CatalogEventTrigger
   { _cetTable :: !QualifiedTable
@@ -71,7 +64,6 @@ data CatalogMetadata
   { _cmTables               :: ![CatalogTable]
   , _cmRelations            :: ![CatalogRelation]
   , _cmPermissions          :: ![CatalogPermission]
-  , _cmQueryTemplates       :: ![CatalogQueryTemplate]
   , _cmEventTriggers        :: ![CatalogEventTrigger]
   , _cmRemoteSchemas        :: ![AddRemoteSchemaQuery]
   , _cmFunctions            :: ![CatalogFunction]
