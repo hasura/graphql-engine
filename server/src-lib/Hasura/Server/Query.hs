@@ -13,7 +13,6 @@ import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.QueryCollection
-import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Relationship.Rename
 import           Hasura.RQL.DDL.RemoteSchema
@@ -22,7 +21,6 @@ import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.DML.Count
 import           Hasura.RQL.DML.Delete
 import           Hasura.RQL.DML.Insert
-import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.DML.Select
 import           Hasura.RQL.DML.Update
 import           Hasura.RQL.Types
@@ -68,17 +66,13 @@ data RQLQuery
 
   -- schema-stitching, custom resolver related
   | RQAddRemoteSchema !AddRemoteSchemaQuery
-  | RQRemoveRemoteSchema !RemoveRemoteSchemaQuery
+  | RQRemoveRemoteSchema !RemoteSchemaNameQuery
+  | RQReloadRemoteSchema !RemoteSchemaNameQuery
 
   | RQCreateEventTrigger !CreateEventTriggerQuery
   | RQDeleteEventTrigger !DeleteEventTriggerQuery
   | RQRedeliverEvent     !RedeliverEventQuery
   | RQInvokeEventTrigger !InvokeEventTriggerQuery
-
-  | RQCreateQueryTemplate !CreateQueryTemplate
-  | RQDropQueryTemplate !DropQueryTemplate
-  | RQExecuteQueryTemplate !ExecQueryTemplate
-  | RQSetQueryTemplateComment !SetQueryTemplateComment
 
   -- query collections, allow list related
   | RQCreateQueryCollection !CreateCollection
@@ -214,16 +208,12 @@ queryNeedsReload qi = case qi of
 
   RQAddRemoteSchema _             -> True
   RQRemoveRemoteSchema _          -> True
+  RQReloadRemoteSchema _          -> True
 
   RQCreateEventTrigger _          -> True
   RQDeleteEventTrigger _          -> True
   RQRedeliverEvent _              -> False
   RQInvokeEventTrigger _          -> False
-
-  RQCreateQueryTemplate _         -> True
-  RQDropQueryTemplate _           -> True
-  RQExecuteQueryTemplate _        -> False
-  RQSetQueryTemplateComment _     -> False
 
   RQCreateQueryCollection _       -> True
   RQDropQueryCollection _         -> True
@@ -249,67 +239,68 @@ runQueryM
      )
   => RQLQuery
   -> m EncJSON
-runQueryM rq = withPathK "args" $ case rq of
-  RQAddExistingTableOrView q   -> runTrackTableQ q
-  RQTrackTable q               -> runTrackTableQ q
-  RQUntrackTable q             -> runUntrackTableQ q
+runQueryM rq =
+  withPathK "args" $ runQueryM' <* rebuildGCtx
+  where
+    rebuildGCtx = when (queryNeedsReload rq) buildGCtxMap
 
-  RQTrackFunction q            -> runTrackFunc q
-  RQUntrackFunction q          -> runUntrackFunc q
+    runQueryM' = case rq of
+      RQAddExistingTableOrView q   -> runTrackTableQ q
+      RQTrackTable q               -> runTrackTableQ q
+      RQUntrackTable q             -> runUntrackTableQ q
 
-  RQCreateObjectRelationship q -> runCreateObjRel q
-  RQCreateArrayRelationship  q -> runCreateArrRel q
-  RQDropRelationship  q        -> runDropRel q
-  RQSetRelationshipComment  q  -> runSetRelComment q
-  RQRenameRelationship q       -> runRenameRel q
+      RQTrackFunction q            -> runTrackFunc q
+      RQUntrackFunction q          -> runUntrackFunc q
 
-  RQCreateInsertPermission q   -> runCreatePerm q
-  RQCreateSelectPermission q   -> runCreatePerm q
-  RQCreateUpdatePermission q   -> runCreatePerm q
-  RQCreateDeletePermission q   -> runCreatePerm q
+      RQCreateObjectRelationship q -> runCreateObjRel q
+      RQCreateArrayRelationship  q -> runCreateArrRel q
+      RQDropRelationship  q        -> runDropRel q
+      RQSetRelationshipComment  q  -> runSetRelComment q
+      RQRenameRelationship q       -> runRenameRel q
 
-  RQDropInsertPermission q     -> runDropPerm q
-  RQDropSelectPermission q     -> runDropPerm q
-  RQDropUpdatePermission q     -> runDropPerm q
-  RQDropDeletePermission q     -> runDropPerm q
-  RQSetPermissionComment q     -> runSetPermComment q
+      RQCreateInsertPermission q   -> runCreatePerm q
+      RQCreateSelectPermission q   -> runCreatePerm q
+      RQCreateUpdatePermission q   -> runCreatePerm q
+      RQCreateDeletePermission q   -> runCreatePerm q
 
-  RQGetInconsistentMetadata q  -> runGetInconsistentMetadata q
-  RQDropInconsistentMetadata q -> runDropInconsistentMetadata q
+      RQDropInsertPermission q     -> runDropPerm q
+      RQDropSelectPermission q     -> runDropPerm q
+      RQDropUpdatePermission q     -> runDropPerm q
+      RQDropDeletePermission q     -> runDropPerm q
+      RQSetPermissionComment q     -> runSetPermComment q
 
-  RQInsert q                   -> runInsert q
-  RQSelect q                   -> runSelect q
-  RQUpdate q                   -> runUpdate q
-  RQDelete q                   -> runDelete q
-  RQCount  q                   -> runCount q
+      RQGetInconsistentMetadata q  -> runGetInconsistentMetadata q
+      RQDropInconsistentMetadata q -> runDropInconsistentMetadata q
 
-  RQAddRemoteSchema    q       -> runAddRemoteSchema q
-  RQRemoveRemoteSchema q       -> runRemoveRemoteSchema q
+      RQInsert q                   -> runInsert q
+      RQSelect q                   -> runSelect q
+      RQUpdate q                   -> runUpdate q
+      RQDelete q                   -> runDelete q
+      RQCount  q                   -> runCount q
 
-  RQCreateEventTrigger q       -> runCreateEventTriggerQuery q
-  RQDeleteEventTrigger q       -> runDeleteEventTriggerQuery q
-  RQRedeliverEvent q           -> runRedeliverEvent q
-  RQInvokeEventTrigger q       -> runInvokeEventTrigger q
+      RQAddRemoteSchema    q       -> runAddRemoteSchema q
+      RQRemoveRemoteSchema q       -> runRemoveRemoteSchema q
+      RQReloadRemoteSchema q       -> runReloadRemoteSchema q
 
-  RQCreateQueryTemplate q      -> runCreateQueryTemplate q
-  RQDropQueryTemplate q        -> runDropQueryTemplate q
-  RQExecuteQueryTemplate q     -> runExecQueryTemplate q
-  RQSetQueryTemplateComment q  -> runSetQueryTemplateComment q
+      RQCreateEventTrigger q       -> runCreateEventTriggerQuery q
+      RQDeleteEventTrigger q       -> runDeleteEventTriggerQuery q
+      RQRedeliverEvent q           -> runRedeliverEvent q
+      RQInvokeEventTrigger q       -> runInvokeEventTrigger q
 
-  RQCreateQueryCollection q        -> runCreateCollection q
-  RQDropQueryCollection q          -> runDropCollection q
-  RQAddQueryToCollection q         -> runAddQueryToCollection q
-  RQDropQueryFromCollection q      -> runDropQueryFromCollection q
-  RQAddCollectionToAllowlist q     -> runAddCollectionToAllowlist q
-  RQDropCollectionFromAllowlist q  -> runDropCollectionFromAllowlist q
+      RQCreateQueryCollection q        -> runCreateCollection q
+      RQDropQueryCollection q          -> runDropCollection q
+      RQAddQueryToCollection q         -> runAddQueryToCollection q
+      RQDropQueryFromCollection q      -> runDropQueryFromCollection q
+      RQAddCollectionToAllowlist q     -> runAddCollectionToAllowlist q
+      RQDropCollectionFromAllowlist q  -> runDropCollectionFromAllowlist q
 
-  RQReplaceMetadata q          -> runReplaceMetadata q
-  RQClearMetadata q            -> runClearMetadata q
-  RQExportMetadata q           -> runExportMetadata q
-  RQReloadMetadata q           -> runReloadMetadata q
+      RQReplaceMetadata q          -> runReplaceMetadata q
+      RQClearMetadata q            -> runClearMetadata q
+      RQExportMetadata q           -> runExportMetadata q
+      RQReloadMetadata q           -> runReloadMetadata q
 
-  RQDumpInternalState q        -> runDumpInternalState q
+      RQDumpInternalState q        -> runDumpInternalState q
 
-  RQRunSql q                   -> runRunSQL q
+      RQRunSql q                   -> runRunSQL q
 
-  RQBulk qs                    -> encJFromList <$> indexedMapM runQueryM qs
+      RQBulk qs                    -> encJFromList <$> indexedMapM runQueryM qs

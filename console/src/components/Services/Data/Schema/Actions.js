@@ -13,8 +13,7 @@ export const createNewSchema = (schemaName, successCb, errorCb) => {
         showErrorNotification(
           gqlSchemaErrorNotif[0],
           gqlSchemaErrorNotif[1],
-          gqlSchemaErrorNotif[2],
-          gqlSchemaErrorNotif[3]
+          gqlSchemaErrorNotif[2]
         )
       );
     }

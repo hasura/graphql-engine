@@ -1,3 +1,7 @@
+{- |
+Description: Create/delete SQL tables to/from Hasura metadata.
+-}
+
 {-# LANGUAGE TypeApplications #-}
 
 module Hasura.RQL.DDL.Schema.Table where
@@ -9,7 +13,6 @@ import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
-import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Diff
@@ -56,6 +59,9 @@ newtype TrackTable
   { tName :: QualifiedTable }
   deriving (Show, Eq, FromJSON, ToJSON, Lift)
 
+-- | Track table/view, Phase 1:
+-- Validate table tracking operation. Fails if table is already being tracked,
+-- or if a function with the same name is being tracked.
 trackExistingTableOrViewP1
   :: (CacheRM m, UserInfoM m, QErrM m) => TrackTable -> m ()
 trackExistingTableOrViewP1 (TrackTable vn) = do
@@ -63,9 +69,12 @@ trackExistingTableOrViewP1 (TrackTable vn) = do
   rawSchemaCache <- askSchemaCache
   when (M.member vn $ scTables rawSchemaCache) $
     throw400 AlreadyTracked $ "view/table already tracked : " <>> vn
+  let qf = fmap (FunctionName . getTableTxt) vn
+  when (M.member qf $ scFunctions rawSchemaCache) $
+    throw400 NotSupported $ "function with name " <> vn <<> " already exists"
 
 trackExistingTableOrViewP2
-  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
+  :: (QErrM m, CacheRWM m, MonadTx m)
   => QualifiedTable -> Bool -> m EncJSON
 trackExistingTableOrViewP2 vn isSystemDefined = do
   sc <- askSchemaCache
@@ -78,9 +87,6 @@ trackExistingTableOrViewP2 vn isSystemDefined = do
     [ti] -> addTableToCache ti
     _    -> throw500 $ "more than one row found for: " <>> vn
   liftTx $ Q.catchE defaultTxErrorHandler $ saveTableToCatalog vn
-
-  -- refresh the gCtx in schema cache
-  refreshGCtxMapInSchema
 
   return successMsg
   where
@@ -99,9 +105,7 @@ trackExistingTableOrViewP2 vn isSystemDefined = do
            |] (sn, tn) True
 
 runTrackTableQ
-  :: ( QErrM m, CacheRWM m, MonadTx m
-     , MonadIO m, HasHttpManager m, UserInfoM m
-     )
+  :: (QErrM m, CacheRWM m, MonadTx m, UserInfoM m)
   => TrackTable -> m EncJSON
 runTrackTableQ q = do
   trackExistingTableOrViewP1 q
@@ -117,10 +121,6 @@ purgeDep schemaObjId = case schemaObjId of
   (SOTableObj qt (TORel rn))     -> do
     liftTx $ delRelFromCatalog qt rn
     delRelFromCache rn qt
-
-  (SOQTemplate qtn)              -> do
-    liftTx $ delQTemplateFromCatalog qtn
-    delQTemplateFromCache qtn
 
   (SOFunction qf) -> do
     liftTx $ delFunctionFromCatalog qf
@@ -257,7 +257,7 @@ unTrackExistingTableOrViewP1 (UntrackTable vn _) = do
       "view/table already untracked : " <>> vn
 
 unTrackExistingTableOrViewP2
-  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
+  :: (QErrM m, CacheRWM m, MonadTx m)
   => UntrackTable -> m EncJSON
 unTrackExistingTableOrViewP2 (UntrackTable qtn cascade) = do
   sc <- askSchemaCache
@@ -275,9 +275,6 @@ unTrackExistingTableOrViewP2 (UntrackTable qtn cascade) = do
   -- delete the table and its direct dependencies
   delTableAndDirectDeps qtn
 
-  -- refresh the gctxmap in schema cache
-  refreshGCtxMapInSchema
-
   return successMsg
   where
     isDirectDep = \case
@@ -285,9 +282,7 @@ unTrackExistingTableOrViewP2 (UntrackTable qtn cascade) = do
       _                  -> False
 
 runUntrackTableQ
-  :: ( QErrM m, CacheRWM m, MonadTx m
-     , MonadIO m, HasHttpManager m, UserInfoM m
-     )
+  :: (QErrM m, CacheRWM m, MonadTx m, UserInfoM m)
   => UntrackTable -> m EncJSON
 runUntrackTableQ q = do
   unTrackExistingTableOrViewP1 q
@@ -349,11 +344,10 @@ buildSchemaCacheG withSetup = do
   when withSetup $ liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
   -- reset the current schemacache
   writeSchemaCache emptySchemaCache
-  hMgr <- askHttpManager
   sqlGenCtx <- askSQLGenCtx
 
   -- fetch all catalog metadata
-  CatalogMetadata tables relationships permissions qTemplates
+  CatalogMetadata tables relationships permissions
     eventTriggers remoteSchemas functions fkeys' allowlistDefs
     <- liftTx fetchCatalogData
 
@@ -404,18 +398,6 @@ buildSchemaCacheG withSetup = do
           PTUpdate -> permHelper withSetup sqlGenCtx qt rn pDef PAUpdate
           PTDelete -> permHelper withSetup sqlGenCtx qt rn pDef PADelete
 
-  -- query templates
-  forM_ qTemplates $ \(CatalogQueryTemplate qtn qtDefVal) -> do
-    let def = object ["name" .= qtn, "template" .= qtDefVal]
-        mkInconsObj =
-          InconsistentMetadataObj (MOQTemplate qtn) MOTQTemplate def
-    handleInconsistentObj mkInconsObj $ do
-      qtDef <- decodeValue qtDefVal
-      qCtx <- mkAdminQCtx sqlGenCtx <$> askSchemaCache
-      (qti, deps) <- liftP1WithQCtx qCtx $ createQueryTemplateP1 $
-             CreateQueryTemplate qtn qtDef Nothing
-      addQTemplateToCache qti deps
-
   -- event triggers
   forM_ eventTriggers $ \(CatalogEventTrigger qt trn configuration) -> do
     let objId = MOTableObj qt $ MTOTrigger trn
@@ -442,12 +424,11 @@ buildSchemaCacheG withSetup = do
   -- allow list
   replaceAllowlist $ concatMap _cdQueries allowlistDefs
 
-  -- build GraphQL context
-  postGCtxSc <- askSchemaCache >>= GS.updateSCWithGCtx
-  writeSchemaCache postGCtxSc
+  -- build GraphQL context with tables and functions
+  GS.buildGCtxMapPG
 
   -- remote schemas
-  forM_ remoteSchemas $ resolveSingleRemoteSchema hMgr
+  forM_ remoteSchemas resolveSingleRemoteSchema
 
   where
     permHelper setup sqlGenCtx qt rn pDef pa = do
@@ -460,17 +441,16 @@ buildSchemaCacheG withSetup = do
       addPermToCache qt rn pa permInfo deps
       -- p2F qt rn p1Res
 
-    resolveSingleRemoteSchema hMgr rs = do
-      let AddRemoteSchemaQuery name def _ = rs
+    resolveSingleRemoteSchema rs = do
+      let AddRemoteSchemaQuery name _ _ = rs
           mkInconsObj = InconsistentMetadataObj (MORemoteSchema name)
                         MOTRemoteSchema (toJSON rs)
       handleInconsistentObj mkInconsObj $ do
-        rsi <- validateRemoteSchemaDef def
-        addRemoteSchemaToCache name rsi
+        rsCtx <- addRemoteSchemaP2Setup rs
         sc <- askSchemaCache
         let gCtxMap = scGCtxMap sc
             defGCtx = scDefaultRemoteGCtx sc
-        rGCtx <- convRemoteGCtx <$> fetchRemoteSchema hMgr name rsi
+            rGCtx = convRemoteGCtx $ rscGCtx rsCtx
         mergedGCtxMap <- mergeRemoteSchema gCtxMap rGCtx
         mergedDefGCtx <- mergeGCtx defGCtx rGCtx
         writeSchemaCache sc { scGCtxMap = mergedGCtxMap
@@ -598,9 +578,6 @@ execWithMDCheck (RunSQL t cascade _) = do
             liftTx $ mkAllTriggersQ trn tn cols strfyNum fullspec
 
   bool withoutReload withReload reloadRequired
-
-  -- refresh the gCtxMap in schema cache
-  refreshGCtxMapInSchema
 
   return res
   where

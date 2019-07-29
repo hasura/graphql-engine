@@ -14,7 +14,6 @@ import qualified Network.HTTP.Types    as HTTP
 import qualified Network.Wreq          as Wreq
 
 import           Data.CaseInsensitive  (original)
-import           Hasura.Server.Utils   (bsToTxt)
 import           Hasura.Server.Version (currentVersion)
 
 hdrsToText :: [HTTP.Header] -> [(Text, Text)]

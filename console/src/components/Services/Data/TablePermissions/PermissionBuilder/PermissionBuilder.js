@@ -406,7 +406,14 @@ class PermissionBuilder extends React.Component {
 
     /********************************/
 
-    const renderValue = (dispatchFunc, value, prefix, valueType) => {
+    const renderValue = (
+      dispatchFunc,
+      value,
+      prefix,
+      valueType,
+      tableColumns,
+      showSuggestion = true
+    ) => {
       const dispatchInput = val => {
         let _val = val;
 
@@ -447,6 +454,8 @@ class PermissionBuilder extends React.Component {
       } else if (PGTypes.json.includes(valueType)) {
         input = inputBox();
         suggestion = jsonSuggestion();
+      } else if (valueType === 'column') {
+        input = renderSelect(dispatchInput, value, tableColumns);
       } else {
         input = wrapDoubleQuotes(inputBox());
         suggestion = sessionVariableSuggestion();
@@ -454,34 +463,65 @@ class PermissionBuilder extends React.Component {
 
       return (
         <span>
-          {input} {suggestion}
+          {input} {showSuggestion ? suggestion : ''}
         </span>
       );
     };
 
-    const renderValueArray = (dispatchFunc, values, prefix, valueType) => {
-      const _inputArray = [];
+    const renderValueArray = (
+      dispatchFunc,
+      values,
+      prefix,
+      valueType,
+      tableColumns
+    ) => {
+      const dispatchInput = val => {
+        dispatchFunc({ prefix: prefix, value: val });
+      };
+
+      const sessionVariableSuggestion = () => {
+        return renderSuggestion(dispatchInput, 'X-Hasura-Allowed-Ids');
+      };
+
+      const inputArray = [];
+
       (values || []).concat(['']).map((val, i) => {
         const input = renderValue(
           dispatchFunc,
           val,
           addToPrefix(prefix, i),
-          valueType
+          valueType,
+          tableColumns,
+          false
         );
-        _inputArray.push(input);
+        inputArray.push(input);
       });
 
       const unselectedElements = [(values || []).length];
 
-      return (
+      const _inputArray = (
         <QueryBuilderJson
-          element={_inputArray}
+          element={inputArray}
           unselectedElements={unselectedElements}
         />
       );
+
+      const _suggestion = sessionVariableSuggestion(dispatchInput);
+
+      return (
+        <span>
+          {_inputArray} {_suggestion}
+        </span>
+      );
     };
 
-    const renderOperatorExp = (dispatchFunc, expression, prefix, valueType) => {
+    const renderOperatorExp = (
+      dispatchFunc,
+      expression,
+      prefix,
+      valueType,
+      tableColumns
+    ) => {
       const dispatchColumnOperatorSelect = val => {
         dispatchFunc({ prefix: val });
       };
@@ -509,19 +549,24 @@ class PermissionBuilder extends React.Component {
       if (operator) {
         const operatorInputType = getOperatorInputType(operator) || valueType;
 
-        if (isArrayColumnOperator(operator)) {
+        if (
+          isArrayColumnOperator(operator) &&
+          operationValue instanceof Array
+        ) {
           _valueInput = renderValueArray(
             dispatchFunc,
             operationValue,
             addToPrefix(prefix, operator),
-            operatorInputType
+            operatorInputType,
+            tableColumns
           );
         } else {
           _valueInput = renderValue(
             dispatchFunc,
             operationValue,
             addToPrefix(prefix, operator),
-            operatorInputType
+            operatorInputType,
+            tableColumns
           );
         }
       }
@@ -549,10 +594,12 @@ class PermissionBuilder extends React.Component {
       tableSchemas,
       prefix
     ) => {
+      let tableColumns = [];
       let tableRelationships = [];
       let tableSchema;
       if (table) {
         tableSchema = getTableSchema(tableSchemas, table);
+        tableColumns = getTableColumnNames(tableSchema);
         tableRelationships = getTableRelationshipNames(tableSchema);
       }
 
@@ -575,7 +622,8 @@ class PermissionBuilder extends React.Component {
           dispatchFunc,
           expression,
           prefix,
-          columnType
+          columnType,
+          tableColumns
         );
       }
 

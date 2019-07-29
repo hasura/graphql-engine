@@ -6,10 +6,14 @@ import Tooltip from 'react-bootstrap/lib/Tooltip';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import { push } from 'react-router-redux';
 
-import { fetchResolver, RESET } from '../Add/addResolverReducer';
+import {
+  fetchResolver,
+  RESET,
+  getHeaderEvents,
+} from '../Add/addResolverReducer';
 
 import { VIEW_RESOLVER } from '../customActions';
-import ReloadMetadata from '../../Metadata/MetadataOptions/ReloadMetadata';
+import ReloadRemoteSchema from '../../Metadata/MetadataOptions/ReloadRemoteSchema';
 
 import { appPrefix } from '../constants';
 
@@ -46,6 +50,16 @@ class ViewStitchedSchema extends React.Component {
   componentWillUnmount() {
     Promise.all([
       this.props.dispatch({ type: RESET }),
+      this.props.dispatch({
+        type: getHeaderEvents.UPDATE_HEADERS,
+        data: [
+          {
+            name: '',
+            type: 'static',
+            value: '',
+          },
+        ],
+      }),
       this.props.dispatch({ type: VIEW_RESOLVER, data: '' }),
     ]);
   }
@@ -103,6 +117,23 @@ class ViewStitchedSchema extends React.Component {
       </Tooltip>
     );
 
+    const showReloadRemoteSchema =
+      resolverName && resolverName.length > 0 ? (
+        <div className={styles.commonBtn + ' ' + styles.detailsRefreshButton}>
+          <span>
+            <ReloadRemoteSchema
+              {...this.props}
+              remoteSchemaName={resolverName}
+            />
+          </span>
+          <span>
+            <OverlayTrigger placement="right" overlay={refresh}>
+              <i className="fa fa-question-circle" aria-hidden="true" />
+            </OverlayTrigger>
+          </span>
+        </div>
+      ) : null;
+
     return (
       <div
         className={styles.view_stitch_schema_wrapper + ' ' + styles.addWrapper}
@@ -155,21 +186,7 @@ class ViewStitchedSchema extends React.Component {
               </tbody>
             </table>
           </div>
-          <div className={styles.commonBtn + ' ' + styles.detailsRefreshButton}>
-            <span>
-              <ReloadMetadata
-                {...this.props}
-                btnText={'Refresh schema'}
-                btnTextChanging={'Refreshing schema...'}
-                bsClass={styles.yellow_button}
-              />
-            </span>
-            <span>
-              <OverlayTrigger placement="right" overlay={refresh}>
-                <i className="fa fa-question-circle" aria-hidden="true" />
-              </OverlayTrigger>
-            </span>
-          </div>
+          {showReloadRemoteSchema}
         </div>
         <br />
         <br />

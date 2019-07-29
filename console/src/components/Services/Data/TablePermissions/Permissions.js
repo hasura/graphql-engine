@@ -348,8 +348,10 @@ class Permissions extends Component {
                 if (JSON.stringify(permissions[filterKey]) === '{}') {
                   if (
                     checkColumns &&
-                    !permissions.columns.includes('*') &&
-                    permissions.columns.length !== tableSchema.columns.length
+                    (!permissions.columns ||
+                      (!permissions.columns.includes('*') &&
+                        permissions.columns.length !==
+                          tableSchema.columns.length))
                   ) {
                     _permission = permissionsSymbols.partialAccess;
                   } else {
@@ -997,6 +999,7 @@ class Permissions extends Component {
               )}
               useDefaultTitleStyle
               testId={'toggle-col-permission'}
+              isOpen={colSectionStatus === 'no columns'}
             >
               <div
                 className={sectionClasses}
@@ -1756,18 +1759,20 @@ class Permissions extends Component {
     } else if (tableType === 'view') {
       qTypes = [];
 
-      qTypes.push('select');
-
       // Add insert/update permission if it is insertable/updatable as returned by pg
       if (tSchema.view_info) {
         if (tSchema.view_info.is_insertable_into === 'YES') {
           qTypes.push('insert');
         }
 
+        qTypes.push('select'); // to maintain order
+
         if (tSchema.view_info.is_updatable === 'YES') {
           qTypes.push('update');
           qTypes.push('delete');
         }
+      } else {
+        qTypes.push('select');
       }
     }
 

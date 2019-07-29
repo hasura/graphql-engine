@@ -4,8 +4,13 @@ import gqlPattern, { gqlColumnErrorNotif } from '../Common/GraphQLValidation';
 import { commonDataTypes } from '../utils';
 
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
+import CustomInputAutoSuggest from '../../../Common/CustomInputAutoSuggest/CustomInputAutoSuggest';
 
-import { getDataOptions } from '../Common/utils';
+import {
+  getDataOptions,
+  getDefaultFunctionsOptions,
+  inferDefaultValues,
+} from '../Common/utils';
 
 import Button from '../../../Common/Button/Button';
 import { addColSql } from '../TableModify/ModifyActions';
@@ -33,19 +38,14 @@ const useColumnEditor = (dispatch, tableName) => {
         showErrorNotification(
           gqlColumnErrorNotif[0],
           gqlColumnErrorNotif[1],
-          gqlColumnErrorNotif[2],
-          gqlColumnErrorNotif[3]
+          gqlColumnErrorNotif[2]
         )
       );
     } else if (colName === '' || colType === '') {
       dispatch(
         showErrorNotification(
           'Error creating column!',
-          'Column name/type cannot be empty',
-          '',
-          {
-            custom: 'Column name/type cannot be empty',
-          }
+          'Column name/type cannot be empty'
         )
       );
     } else {
@@ -90,15 +90,22 @@ const useColumnEditor = (dispatch, tableName) => {
     },
     colDefault: {
       value: colDefault,
-      onChange: e => {
-        setColumnState({ ...columnState, colDefault: e.target.value });
+      onChange: (e, data) => {
+        const { newValue } = data;
+        setColumnState({ ...columnState, colDefault: newValue });
       },
     },
     onSubmit,
   };
 };
 
-const ColumnCreator = ({ dispatch, tableName, dataTypes: restTypes = [] }) => {
+const ColumnCreator = ({
+  dispatch,
+  tableName,
+  dataTypes: restTypes = [],
+  validTypeCasts,
+  columnDefaultFunctions,
+}) => {
   const {
     colName,
     colType,
@@ -107,6 +114,37 @@ const ColumnCreator = ({ dispatch, tableName, dataTypes: restTypes = [] }) => {
     colDefault,
     onSubmit,
   } = useColumnEditor(dispatch, tableName);
+
+  let defaultOptions = [];
+
+  const getInferredDefaultValues = () =>
+    inferDefaultValues(columnDefaultFunctions, validTypeCasts)(colType.value);
+
+  const colDefaultFunctions =
+    colType.value in columnDefaultFunctions
+      ? columnDefaultFunctions[colType.value]
+      : getInferredDefaultValues();
+
+  if (colDefaultFunctions && colDefaultFunctions.length > 0) {
+    defaultOptions = getDefaultFunctionsOptions(colDefaultFunctions, 0);
+  }
+
+  const getDefaultInput = () => {
+    const theme = require('../../../Common/CustomInputAutoSuggest/CustomThemes/AddColumnDefault.scss');
+
+    return (
+      <CustomInputAutoSuggest
+        placeholder="default value"
+        options={defaultOptions}
+        className={`${styles.input}
+          ${styles.defaultInput}
+          input-sm form-control`}
+        {...colDefault}
+        data-test="default-value"
+        theme={theme}
+      />
+    );
+  };
 
   const { columnDataTypes, columnTypeValueMap } = getDataOptions(
     commonDataTypes,
@@ -153,6 +191,7 @@ const ColumnCreator = ({ dispatch, tableName, dataTypes: restTypes = [] }) => {
             bsClass={`col-type-${0} modify_select`}
             styleOverrides={customSelectBoxStyles}
             filterOption={'prefix'}
+            placeholder="column_type"
           />
         </span>
         <input
@@ -170,7 +209,8 @@ const ColumnCreator = ({ dispatch, tableName, dataTypes: restTypes = [] }) => {
           data-test="unique-checkbox"
         />
         <label className={styles.nullLabel}>Unique</label>
-
+        {getDefaultInput()}
+        {/*
         <input
           placeholder="default value"
           type="text"
@@ -180,6 +220,7 @@ const ColumnCreator = ({ dispatch, tableName, dataTypes: restTypes = [] }) => {
           {...colDefault}
           data-test="default-value"
         />
+        */}
 
         <Button
           type="submit"
