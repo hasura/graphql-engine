@@ -154,19 +154,11 @@ data APIHandler a
   | AHPost !(a -> Handler APIResp)
 
 
---postV1q = ("/v1/query", POST)
---getV1q = ("/v1/query", POST)
-
 postGql :: (Text, Text)
 postGql = ("/v1/graphql", "POST")
 
 postV1q :: (Text, Text)
 postV1q = ("/v1/query", "POST")
-
--- x :: (FromJSON a, ToJSON a) => M.HashMap (Text, Text) (APIHandler a)
--- x = M.fromList [ (postGql, mkPostHandler (mkAPIRespHandler v1QueryHandler))
---                , (postV1q, mkPostHandler (mkAPIRespHandler v1GQHandler))
---                ]
 
 mkGetHandler :: Handler APIResp -> APIHandler ()
 mkGetHandler = AHGet
@@ -407,22 +399,29 @@ consoleAssetsHandler logger dir path = do
 
 mkConsoleHTML :: T.Text -> AuthMode -> Bool -> Maybe Text -> Either String T.Text
 mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
-  bool (Left errMsg) (Right res) $ null errs
-  where
-    (errs, res) = M.checkedSubstitute consoleTmplt $
-      -- variables required to render the template
-      object [ "isAdminSecretSet" .= isAdminSecretSet authMode
-             , "consolePath" .= consolePath
-             , "enableTelemetry" .= boolToText enableTelemetry
-             , "cdnAssets" .= boolToText (isNothing consoleAssetsDir)
-             , "assetsVersion" .= consoleVersion
-             , "serverVersion" .= currentVersion
-             ]
+  renderConsoleHtml consoleTmplt $
+    -- variables required to render the template
+    object [ "isAdminSecretSet" .= isAdminSecretSet authMode
+           , "consolePath" .= consolePath
+           , "enableTelemetry" .= boolToText enableTelemetry
+           , "cdnAssets" .= boolToText (isNothing consoleAssetsDir)
+           , "assetsVersion" .= consoleVersion
+           , "serverVersion" .= currentVersion
+           ]
+   where
     consolePath = case path of
       "" -> "/console"
       r  -> "/console/" <> r
-    errMsg = "console template rendering failed: " ++ show errs
 
+renderConsoleHtml :: M.Template -> Value -> Either String Text
+renderConsoleHtml consoleTemplate jVal =
+  bool (Left errMsg) (Right res) $ null errs
+  where
+    errMsg = "console template rendering failed: " ++ show errs
+    (errs, res) = M.checkedSubstitute consoleTemplate jVal
+
+newtype ConsoleRenderer
+  = ConsoleRenderer { unConsoleRenderer :: Either String Text }
 
 newtype QueryParser
   = QueryParser
@@ -480,10 +479,11 @@ mkWaiApp
   -> EL.LQOpts
   -> Maybe UserAuthMiddleware
   -> Maybe (HasuraMiddleware RQLQuery)
+  -> Maybe ConsoleRenderer
   -> IO (Wai.Application, SchemaCacheRef, Maybe UTCTime)
 mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
          enableConsole consoleAssetsDir enableTelemetry instanceId apis
-         lqOpts authMiddleware metadataMiddleware = do
+         lqOpts authMiddleware metadataMiddleware renderConsole = do
     let pgExecCtx = PGExecCtx pool isoLevel
         pgExecCtxSer = PGExecCtx pool Q.Serializable
     (cacheRef, cacheBuiltTime) <- do
@@ -520,7 +520,7 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
 
     spockApp <- spockAsApp $ spockT id $
                 httpApp corsCfg serverCtx enableConsole
-                  consoleAssetsDir enableTelemetry authMiddleware metadataMiddleware
+                  consoleAssetsDir enableTelemetry authMiddleware metadataMiddleware renderConsole
 
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
     return ( WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp
@@ -541,9 +541,10 @@ httpApp
   -> Maybe (HasuraMiddleware RQLQuery)
   -- ^ The current middleware is only for RQLQuery (metadata) queries, in future
   -- this can be extended to take a `HashMap (HttpMethod, Path) (HasuraMiddleware a)`
+  -> Maybe ConsoleRenderer
   -> SpockT IO ()
 httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry
-        authMiddleware metadataMiddleware = do
+        authMiddleware metadataMiddleware consoleRenderer = do
 
     -- cors middleware
     unless (isCorsDisabled corsCfg) $
@@ -677,9 +678,11 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry
           consoleAssetsHandler logger dir (T.unpack path)
 
       -- serve console html
-      get ("console" <//> wildcard) $ \path ->
-        either (raiseGenericApiError logger . err500 Unexpected . T.pack) html $
-        mkConsoleHTML path (scAuthMode serverCtx) enableTelemetry consoleAssetsDir
+      get ("console" <//> wildcard) $ \path -> do
+        let consoleHtml = maybe (mkConsoleHTML path (scAuthMode serverCtx) enableTelemetry consoleAssetsDir)
+                                unConsoleRenderer
+                                consoleRenderer
+        either (raiseGenericApiError logger . err500 Unexpected . T.pack) html consoleHtml
 
 raiseGenericApiError :: L.Logger -> QErr -> ActionT IO ()
 raiseGenericApiError logger qErr = do

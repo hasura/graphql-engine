@@ -30,7 +30,7 @@ import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
 import           Hasura.RQL.Types           (QErr, SQLGenCtx (..),
                                              SchemaCache (..), adminUserInfo,
                                              emptySchemaCache)
-import           Hasura.Server.App          (HasuraMiddleware,
+import           Hasura.Server.App          (ConsoleRenderer, HasuraMiddleware,
                                              SchemaCacheRef (..),
                                              UserAuthMiddleware, getSCFromRef,
                                              logInconsObjs, mkWaiApp)
@@ -180,9 +180,10 @@ handleCommand
   -> InitCtx
   -> Maybe UserAuthMiddleware
   -> Maybe (HasuraMiddleware RQLQuery)
+  -> Maybe ConsoleRenderer
   -> IO ()
 handleCommand hgeCmd (InitCtx httpManager instanceId dbId loggers connInfo pgPool)
-  authMiddleware metadataMiddleware =
+  authMiddleware metadataMiddleware renderConsole =
 
   case hgeCmd of
     HCServe so@(ServeOptions port host _ isoL mAdminSecret mAuthHook
@@ -210,7 +211,7 @@ handleCommand hgeCmd (InitCtx httpManager instanceId dbId loggers connInfo pgPoo
       (app, cacheRef, cacheInitTime) <-
         mkWaiApp isoL loggerCtx sqlGenCtx enableAL pgPool connInfo httpManager
           authMode corsCfg enableConsole consoleAssetsDir enableTelemetry
-          instanceId enabledAPIs lqOpts authMiddleware metadataMiddleware
+          instanceId enabledAPIs lqOpts authMiddleware metadataMiddleware renderConsole
 
       -- log inconsistent schema objects
       inconsObjs <- scInconsistentObjs <$> getSCFromRef cacheRef
