@@ -1,0 +1,11 @@
+<li>
+    <div class="userInfoPublic" title={todo.user.name}>
+      @{{todo.user.name}}
+    </div>
+
+    <div [ngClass]="todo.is_completed ? 'labelContent completed' : 'labelContent'">
+      <div>
+        {{todo.title}}
+      </div>
+    </div>
+  </li>

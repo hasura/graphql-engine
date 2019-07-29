@@ -1,0 +1,10 @@
+<div class="onlineUsersWrapper" *ngIf="!loading">
+    <div class="sliderHeader">
+      Online users - {{onlineUsers.length}}
+    </div>
+    <ng-container *ngFor="let user of onlineUsers; let i = index" [attr.data-index]="i">
+        <OnlineUser [user]="user"></OnlineUser>
+      </ng-container>
+</div>
+<div *ngIf="loading">Loading...</div>
+    

@@ -1,0 +1,24 @@
+<li>
+      <div class="view">
+        <div class="round">
+          <input
+            [checked]="todo.is_completed"
+            type="checkbox"
+            id={{todo.id}}
+            disabled
+            (change)="toggleTodo()"
+          />
+          <label htmlFor={{todo.id}}> </label>
+        </div>
+      </div>
+
+      <div [ngClass]="todo.is_completed ? 'labelContent completed' : 'labelContent'">
+        <div>
+          {{todo.title}}
+        </div>
+      </div>
+
+      <button class="closeBtn" (click)="removeTodo($event)">
+        x
+      </button>
+    </li>

@@ -1,0 +1,27 @@
+<div class="footerList">
+    <span> {{itemCount}} item{{itemCount !== 1 ? "s" : ""}}</span>
+
+    <ul>
+      <li (click)="filterResultsHandler('all')">
+        <a [ngClass]="currentFilter === 'all' ? 'selected' : ''">
+          All
+        </a>
+      </li>
+
+      <li (click)="filterResultsHandler('active')">
+        <a [ngClass]= "currentFilter === 'active' ? 'selected' : ''">
+          Active
+        </a>
+      </li>
+
+      <li (click)="filterResultsHandler('completed')">
+        <a [ngClass]="currentFilter === 'completed' ? 'selected' : ''">
+          Completed
+        </a>
+      </li>
+    </ul>
+
+    <button (click)="clearCompletedFnWrapper()" class="clearComp">
+        Clear completed
+      </button>
+  </div>
