@@ -106,6 +106,53 @@ const ViewRows = ({
   const getGridHeadings = (_columns, _relationships) => {
     const _gridHeadings = [];
 
+    const getColWidth = (header, contentRows = []) => {
+      const MAX_WIDTH = 600;
+      const HEADER_PADDING = 42;
+      const CONTENT_PADDING = 18;
+      const HEADER_FONT = 'bold 16px Gudea';
+      const CONTENT_FONT = '14px Gudea';
+
+      const getTextWidth = (text, font) => {
+        // Doesn't work well with non-monospace fonts
+        // const CHAR_WIDTH = 8;
+        // return text.length * CHAR_WIDTH;
+
+        // if given, use cached canvas for better performance
+        // else, create new canvas
+        const canvas =
+          getTextWidth.canvas ||
+          (getTextWidth.canvas = document.createElement('canvas'));
+
+        const context = canvas.getContext('2d');
+        context.font = font;
+
+        const metrics = context.measureText(text);
+        return metrics.width;
+      };
+
+      let maxContentWidth = 0;
+      for (let i = 0; i < contentRows.length; i++) {
+        if (contentRows[i] !== undefined && contentRows[i][header] !== null) {
+          const content = contentRows[i][header];
+          const contentString =
+            typeof content === 'object' ? JSON.stringify(content) : content;
+
+          const currLength =
+            getTextWidth(contentString || 'NULL', CONTENT_FONT) +
+            CONTENT_PADDING;
+
+          if (currLength > maxContentWidth) {
+            maxContentWidth = currLength;
+          }
+        }
+      }
+
+      const headerWidth = getTextWidth(header, HEADER_FONT) + HEADER_PADDING;
+
+      return Math.min(MAX_WIDTH, Math.max(maxContentWidth, headerWidth));
+    };
+
     _gridHeadings.push({
       Header: '',
       accessor: 'tableRowActionButtons',
@@ -126,47 +173,6 @@ const ViewRows = ({
         });
       }
 
-      const getColWidth = () => {
-        const MAX_WIDTH = 600;
-        const HEADER_PADDING = 42;
-        const CONTENT_PADDING = 18;
-        const HEADER_FONT = 'bold 16px Gudea';
-        const CONTENT_FONT = '14px Gudea';
-        // const CHAR_WIDTH = 8;
-
-        const getTextWidth = (text, font) => {
-          // Doesn't work well with non-monospace fonts
-          // return text.length * CHAR_WIDTH;
-
-          // if given, use cached canvas for better performance
-          // else, create new canvas
-          const canvas =
-            getTextWidth.canvas ||
-            (getTextWidth.canvas = document.createElement('canvas'));
-          const context = canvas.getContext('2d');
-          context.font = font;
-          const metrics = context.measureText(text);
-          return metrics.width;
-        };
-
-        let maxContentWidth = 0;
-        for (let i = 0; i < curRows.length; i++) {
-          if (curRows[i] !== undefined && curRows[i][columnName] !== null) {
-            const currLength =
-              getTextWidth(curRows[i][columnName] || 'NULL', CONTENT_FONT) +
-              CONTENT_PADDING;
-            if (currLength > maxContentWidth) {
-              maxContentWidth = currLength;
-            }
-          }
-        }
-
-        const headerWidth =
-          getTextWidth(columnName, HEADER_FONT) + HEADER_PADDING;
-
-        return Math.min(MAX_WIDTH, Math.max(maxContentWidth, headerWidth));
-      };
-
       _gridHeadings.push({
         Header: (
           <div className="ellipsis" title="Click to sort">
@@ -178,7 +184,7 @@ const ViewRows = ({
         accessor: columnName,
         id: columnName,
         foldable: true,
-        width: getColWidth(),
+        width: getColWidth(columnName, curRows),
       });
     });
 
@@ -194,6 +200,7 @@ const ViewRows = ({
         accessor: relName,
         id: relName,
         foldable: true,
+        width: getColWidth(relName),
       });
     });
 
