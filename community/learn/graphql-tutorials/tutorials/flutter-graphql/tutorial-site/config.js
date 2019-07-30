@@ -38,7 +38,9 @@ const config = {
 			"text": "GraphQL Docs",
 			"link": "https://graphql.org/learn"
 			}
-		]
+		],
+		"frontline": false,
+		"ignoreIndex": true
 	},
 	"siteMetadata": {
 		"title": "2 hour GraphQL course for Flutter developers | Hasura",
