@@ -65,7 +65,7 @@
 
 .ReactTable .rt-tbody .rt-th,
 .ReactTable .rt-tbody .rt-td {
-  padding: 5px 8px;
+  padding: 4px 8px;
   border-right: 1px solid rgba(0, 0, 0, 0.1);
   word-wrap: break-word;
 }

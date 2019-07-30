@@ -126,6 +126,47 @@ const ViewRows = ({
         });
       }
 
+      const getColWidth = () => {
+        const MAX_WIDTH = 600;
+        const HEADER_PADDING = 42;
+        const CONTENT_PADDING = 18;
+        const HEADER_FONT = 'bold 16px Gudea';
+        const CONTENT_FONT = '14px Gudea';
+        // const CHAR_WIDTH = 8;
+
+        const getTextWidth = (text, font) => {
+          // Doesn't work well with non-monospace fonts
+          // return text.length * CHAR_WIDTH;
+
+          // if given, use cached canvas for better performance
+          // else, create new canvas
+          const canvas =
+            getTextWidth.canvas ||
+            (getTextWidth.canvas = document.createElement('canvas'));
+          const context = canvas.getContext('2d');
+          context.font = font;
+          const metrics = context.measureText(text);
+          return metrics.width;
+        };
+
+        let maxContentWidth = 0;
+        for (let i = 0; i < curRows.length; i++) {
+          if (curRows[i] !== undefined && curRows[i][columnName] !== null) {
+            const currLength =
+              getTextWidth(curRows[i][columnName] || 'NULL', CONTENT_FONT) +
+              CONTENT_PADDING;
+            if (currLength > maxContentWidth) {
+              maxContentWidth = currLength;
+            }
+          }
+        }
+
+        const headerWidth =
+          getTextWidth(columnName, HEADER_FONT) + HEADER_PADDING;
+
+        return Math.min(MAX_WIDTH, Math.max(maxContentWidth, headerWidth));
+      };
+
       _gridHeadings.push({
         Header: (
           <div className="ellipsis" title="Click to sort">
@@ -137,6 +178,7 @@ const ViewRows = ({
         accessor: columnName,
         id: columnName,
         foldable: true,
+        width: getColWidth(),
       });
     });
 
