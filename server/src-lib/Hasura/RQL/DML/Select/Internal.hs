@@ -604,20 +604,20 @@ mkBaseNode subQueryReq pfx fldAls annSelFlds tableFrom
       FArr ar -> Just (f, ar)
       _       -> Nothing
 
-annSelToBaseNode :: Iden -> FieldName -> AnnSimpleSel -> BaseNode
-annSelToBaseNode pfx fldAls annSel =
-  mkBaseNode False pfx fldAls (TAFNodes selFlds) tabFrm tabPerm tabArgs strfyNum
+annSelToBaseNode :: Bool -> Iden -> FieldName -> AnnSimpleSel -> BaseNode
+annSelToBaseNode subQueryReq pfx fldAls annSel =
+  mkBaseNode subQueryReq pfx fldAls (TAFNodes selFlds) tabFrm tabPerm tabArgs strfyNum
   where
     AnnSelG selFlds tabFrm tabPerm tabArgs strfyNum = annSel
 
 mkObjNode :: Iden -> (FieldName, ObjSel) -> ObjNode
 mkObjNode pfx (fldName, AnnRelG _ rMapn rAnnSel) =
-  ObjNode rMapn $ annSelToBaseNode pfx fldName rAnnSel
+  ObjNode rMapn $ annSelToBaseNode False pfx fldName rAnnSel
 
 mkArrNode :: Bool -> Iden -> (FieldName, ArrSel) -> ArrNode
 mkArrNode subQueryReq pfx (fldName, annArrSel) = case annArrSel of
   ASSimple annArrRel ->
-    let bn = annSelToBaseNode pfx fldName $ aarAnnSel annArrRel
+    let bn = annSelToBaseNode subQueryReq pfx fldName $ aarAnnSel annArrRel
         permLimit = getPermLimit $ aarAnnSel annArrRel
         extr = asJsonAggExtr False (S.toAlias fldName) subQueryReq permLimit $
                _bnOrderBy bn
@@ -698,7 +698,7 @@ mkSQLSelect isSingleObject annSel =
     permLimit = getPermLimit annSel
     extrs = pure $ asJsonAggExtr isSingleObject rootFldAls False permLimit
             $ _bnOrderBy baseNode
-    baseNode = annSelToBaseNode (toIden rootFldName) rootFldName annSel
+    baseNode = annSelToBaseNode False (toIden rootFldName) rootFldName annSel
     rootFldName = FieldName "root"
     rootFldAls  = S.Alias $ toIden rootFldName
 

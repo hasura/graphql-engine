@@ -1,0 +1,27 @@
+description: Query author along with posts with order by posts count
+url: /v1/graphql
+status: 200
+headers:
+  X-Hasura-Role: user
+response:
+  data:
+    author:
+    - id: 2
+      name: Author 2
+      posts:
+      - id: 4
+        title: Post 4
+        content: Post 4 Content
+query:
+  query: |
+    query {
+      author(order_by: {posts_aggregate: {count: asc}}){
+        id
+        name
+        posts{
+          id
+          title
+          content
+        }
+      }
+    }
