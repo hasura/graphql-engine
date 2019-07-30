@@ -38,6 +38,13 @@ data:
       }
 
       redir 301 {
+        /graphql/angular-apollo/boilerplate.zip https://graphql-engine-cdn.hasura.io/learn-hasura/boilerplates/angular-apollo/boilerplate.zip
+      }
+       redir 301 {
+        /graphql/angular-apollo/ /graphql/angular-apollo/introduction
+      }
+
+      redir 301 {
         /graphql/reason-react-apollo/ /graphql/reason-react-apollo/introduction
       }
 
@@ -120,6 +127,8 @@ data:
       proxy /graphql/elm-graphql elm-graphql
 
       proxy /graphql/reason-react-apollo reason-react-apollo
+
+      proxy /graphql/angular-apollo angular-apollo
 
       proxy /graphql hasura/v1/graphql {
         without /graphql

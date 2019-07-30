@@ -4,6 +4,8 @@ metaTitle: "Course Introduction | GraphQL Angular Apollo Tutorial"
 metaDescription: "A powerful and concise tutorial that will introduce you to GraphQL and integrating GraphQL into your Angular app with Apollo, in the shortest amount of time possible."
 ---
 
+import CommunityAuthor from '../src/CommunityAuthor.js';
+
 GraphQL is becoming the new way to use APIs in modern web and mobile apps.
 
 However, learning new things always takes time and without getting your hands dirty it’s very hard to understand the nuances of a new technology.
@@ -41,8 +43,16 @@ You need to have npm & node 8+ running.
 ## How long will this tutorial take?
 Less than 2 hours
 
-## Other courses:
+## Other courses
 
 **Frontend**: GraphQL for: [Vue](https://learn.hasura.io/graphql/vue), [React Native](https://learn.hasura.io/graphql/react-native), [iOS](https://learn.hasura.io/graphql/ios), [React](https://learn.hasura.io/graphql/react)
 
 **Backend**: [Building a realtime GraphQL backend with Hasura](https://learn.hasura.io/graphql/hasura) in 30 mins (ideal for frontend, backend or fullstack developers)
+
+<CommunityAuthor 
+    name="Apoorv Vardhan"
+    imageUrl="https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-angular/author.jpg"
+    twitterUrl="https://twitter.com/vardhanapoorv16"
+    githubUrl="https://github.com/vardhanapoorv"
+    description="Loves to try out and build new things!"
+/>

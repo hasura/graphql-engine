@@ -37,12 +37,14 @@ const config = {
 			"text": "GraphQL Docs",
 			"link": "https://graphql.org/learn"
 			}
-		]
+		],
+		"frontline": false,
+		"ignoreIndex": true
 	},
 	"siteMetadata": {
 		"title": "2 hour GraphQL course for Angular developers | Hasura",
 		"description": "A concise and powerful tutorial that covers fundamental concepts of both GraphQL and using GraphQL in Angular",
-		"ogImage": "https://graphql-engine-cdn.hasura.io/learn-hasura/assets/social-media/twitter-card-react.png",
+		"ogImage": "https://graphql-engine-cdn.hasura.io/learn-hasura/assets/social-media/twitter-card-angular.png",
 		"docsLocation": "https://github.com/hasura/graphql-engine/tree/master/community/learn/graphql-tutorials/tutorials/angular-apollo/tutorial-site/content",
 		"favicon": "https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-react/react-favicon.png"
 	},
