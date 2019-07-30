@@ -185,24 +185,24 @@ data RemoteTopField =
 
 -- {-# SCC validateGQ #-}
 validateGQ
-  :: (MonadError QErr m, MonadReader GCtx m)
+  :: (MonadError QErr m, MonadReader r m, Has GCtx r, Has [RemoteToRemoteField] r )
   -- => GraphQLRequest
   => QueryParts
-  -> [RemoteToRemoteField]
   -> m (Seq.Seq LocatedTopField)
-validateGQ (QueryParts opDef opRoot fragDefsL varValsM) remoteToRemoteRels = do
+validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
 
-  ctx <- ask
+  ctx <- asks getter
+  remoteToRemoteRels <- asks getter
 
   -- annotate the variables of this operation
-  annVarVals <- getAnnVarVals (G._todVariableDefinitions opDef) $
-                fromMaybe Map.empty varValsM
+  annVarVals <- runReaderT (getAnnVarVals (G._todVariableDefinitions opDef) $
+                fromMaybe Map.empty varValsM) ctx
 
   -- annotate the fragments
   fragDefs <- onLeft (mkMapWith G._fdName fragDefsL) $ \dups ->
     throwVE $ "the following fragments are defined more than once: " <>
     showNames dups
-  annFragDefs <- mapM validateFrag fragDefs
+  annFragDefs <- runReaderT (mapM validateFrag fragDefs) ctx
 
   -- build a validation ctx
   let valCtx = ValidationCtx (_gTypes ctx) annVarVals annFragDefs (_gFields ctx) remoteToRemoteRels

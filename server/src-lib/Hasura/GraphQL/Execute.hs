@@ -224,7 +224,7 @@ getExecPlanPartial userInfo sc enableAL req = do
   (gCtx, _)  <- flip runStateT sc $ getGCtx role gCtxRoleMap
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
 
-  topFields <- runReaderT (VQ.validateGQ queryParts (scRemoteToRemoteRels sc)) gCtx
+  topFields <- runReaderT (VQ.validateGQ queryParts) (gCtx, (scRemoteToRemoteRels sc))
   let varDefs = G._todVariableDefinitions $ VQ.qpOpDef queryParts
   return $
     fmap
