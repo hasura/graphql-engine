@@ -31,27 +31,6 @@ var ravenVersions = []mt.Version{
 }
 
 var testMetadataPrev = map[string][]byte{
-	"metadata": []byte(`functions: []
-query_templates: []
-remote_schemas: []
-tables:
-- array_relationships: []
-  delete_permissions: []
-  event_triggers: []
-  insert_permissions: []
-  object_relationships: []
-  select_permissions: []
-  table: test
-  update_permissions: []
-`),
-	"empty-metadata": []byte(`functions: []
-query_templates: []
-remote_schemas: []
-tables: []
-`),
-}
-
-var testMetadataCurrent = map[string][]byte{
 	"metadata": []byte(`allowlist: []
 functions: []
 query_collections: []
@@ -71,6 +50,29 @@ tables:
 functions: []
 query_collections: []
 query_templates: []
+remote_schemas: []
+tables: []
+`),
+}
+
+var testMetadataCurrent = map[string][]byte{
+	"metadata": []byte(`allowlist: []
+functions: []
+query_collections: []
+remote_schemas: []
+tables:
+- array_relationships: []
+  delete_permissions: []
+  event_triggers: []
+  insert_permissions: []
+  object_relationships: []
+  select_permissions: []
+  table: test
+  update_permissions: []
+`),
+	"empty-metadata": []byte(`allowlist: []
+functions: []
+query_collections: []
 remote_schemas: []
 tables: []
 `),
@@ -262,7 +264,7 @@ func mustWriteFile(t testing.TB, dir, file string, body string) {
 
 func compareMetadata(t testing.TB, metadataFile string, actualType string, serverVersion *semver.Version) {
 	var actualData []byte
-	c, err := semver.NewConstraint("<= 1.0.0-alpha45")
+	c, err := semver.NewConstraint("<= v1.0.0-beta.3")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -26,8 +26,6 @@ your stack:
    database or other services to fetch the data that the client requested.
 4. The server then takes the data and returns it to the client in a JSON object.
 
-### Example GraphQL client setup:
-
 In your day to day work, you don't actually need to worry about the underlying
 HTTP requests & responses.
 
@@ -39,24 +37,3 @@ handling responses much easier.
 In fact, the mechanism of how you send the GraphQL query and accept the GraphQL
 response has become standard. This makes working with GraphQL very easy on the
 client.
-
-Here's what a typical GraphQL client setup and making a query would look like:
-
-```javascript
-
-// Setup a GraphQL client to use the endpoint
-
-const client = new client("https://myapi.com/graphql");
-
-
-// Now, send your query as a string (Note that ` is used to create a multi-line
-// string in javascript).
-
-client.query(`
-  query {
-    user {
-      id
-      name
-    }
-  }`);
-```

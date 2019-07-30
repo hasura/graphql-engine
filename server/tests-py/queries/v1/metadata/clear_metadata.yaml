@@ -14,7 +14,6 @@
     allowlist: []
     functions: []
     query_collections: []
-    query_templates: []
     tables: []
     remote_schemas: []
   query:
