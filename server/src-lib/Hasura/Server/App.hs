@@ -421,7 +421,9 @@ renderConsoleHtml consoleTemplate jVal =
     (errs, res) = M.checkedSubstitute consoleTemplate jVal
 
 newtype ConsoleRenderer
-  = ConsoleRenderer { unConsoleRenderer :: Either String Text }
+  = ConsoleRenderer
+  { unConsoleRenderer :: T.Text -> AuthMode -> Bool -> Maybe Text -> Either String Text
+  }
 
 newtype QueryParser
   = QueryParser
@@ -679,8 +681,9 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry
 
       -- serve console html
       get ("console" <//> wildcard) $ \path -> do
-        let consoleHtml = maybe (mkConsoleHTML path (scAuthMode serverCtx) enableTelemetry consoleAssetsDir)
-                                unConsoleRenderer
+        let authMode = scAuthMode serverCtx
+        let consoleHtml = maybe (mkConsoleHTML path authMode enableTelemetry consoleAssetsDir)
+                                (\cr -> unConsoleRenderer cr path authMode enableTelemetry consoleAssetsDir)
                                 consoleRenderer
         either (raiseGenericApiError logger . err500 Unexpected . T.pack) html consoleHtml
 
