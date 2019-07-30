@@ -171,6 +171,9 @@ type ExecutionContext struct {
 	// LogLevel indicates the logrus default logging level
 	LogLevel string
 
+	// NoColor indicates if the outputs are colorized
+	NoColor bool
+
 	// Telemetry collects the telemetry data throughout the execution
 	Telemetry *telemetry.Data
 
@@ -343,13 +346,17 @@ func (ec *ExecutionContext) Spin(message string) {
 func (ec *ExecutionContext) setupLogger() {
 	if ec.Logger == nil {
 		logger := logrus.New()
+
 		logger.Formatter = &logrus.TextFormatter{
-			ForceColors:      true,
+			DisableColors:    ec.NoColor,
+			ForceColors:      !ec.NoColor,
 			DisableTimestamp: true,
 		}
 		logger.Out = colorable.NewColorableStdout()
 		ec.Logger = logger
 	}
+
+	println(ec.LogLevel)
 
 	if ec.LogLevel != "" {
 		level, err := logrus.ParseLevel(ec.LogLevel)
