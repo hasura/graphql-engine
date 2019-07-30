@@ -100,6 +100,7 @@
     "__DISABLE_SSR__": true,
     "__DEVTOOLS__": true,
     "socket": true,
-    "webpackIsomorphicTools": true
+    "webpackIsomorphicTools": true,
+    "CONSOLE_ASSET_VERSION":  true
   }
 }

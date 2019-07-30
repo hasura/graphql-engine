@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import { GraphQLVoyager } from 'graphql-voyager';
 import fetch from 'isomorphic-fetch';
-import Endpoints from '../../Endpoints';
-import '../../../node_modules/graphql-voyager/dist/voyager.css';
+import Endpoints from '../../../Endpoints';
+import '../../../../node_modules/graphql-voyager/dist/voyager.css';
 import './voyagerView.css';
 
 class VoyagerView extends Component {
