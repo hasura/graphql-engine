@@ -119,13 +119,13 @@ module.exports = {
         use: [
           {
             loader: 'url-loader',
-            options: { limit: 1, mimetype: 'image/svg+xml' },
+            options: { limit: 10000, mimetype: 'image/svg+xml' },
           },
         ],
       },
       {
         test: webpackIsomorphicToolsPlugin.regular_expression('images'),
-        use: [{ loader: 'url-loader', options: { limit: 1 } }],
+        use: [{ loader: 'url-loader', options: { limit: 10240 } }],
       },
     ],
   },
