@@ -1,9 +1,5 @@
 import React from 'react';
 import '../styles/styles.scss';
-const frontendWeekly = require('./images/frontend-weekly.png');
-const jsk = require('./images/jsk.png');
-const react = require('./images/react.png');
-const vueNews = require('./images/vue-news.png');
 class Featured extends React.Component {
   render() {
     return (
@@ -17,16 +13,16 @@ class Featured extends React.Component {
             </div>
             <div className={'featuredIconWrapper'}>
               <div className={'featuredIcon'}>
-                <a href="https://frontendweekly.co/issues/152" target="_blank" rel="noopener noreferrer"><img src={frontendWeekly} alt={'Frontend Weekly'}/></a>
+                <a href="https://frontendweekly.co/issues/152" target="_blank" rel="noopener noreferrer"><img src={'https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/frontend-weekly.png'} alt={'Frontend Weekly'}/></a>
               </div>
               <div className={'featuredIcon'}>
-                <a href="https://javascriptkicks.com/articles/202558/jsk-weekly-july-10-2019" target="_blank" rel="noopener noreferrer"><img src={jsk} alt={'JSK'}/></a>
+                <a href="https://javascriptkicks.com/articles/202558/jsk-weekly-july-10-2019" target="_blank" rel="noopener noreferrer"><img src={'https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/jsk.png'} alt={'JSK'}/></a>
               </div>
               <div className={'featuredIcon'}>
-                <a href="https://react.statuscode.com/issues/138" target="_blank" rel="noopener noreferrer"><img src={react} alt={'React'}/></a>
+                <a href="https://react.statuscode.com/issues/138" target="_blank" rel="noopener noreferrer"><img src={'https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/react.png'} alt={'React Statuscode'}/></a>
               </div>
               <div className={'featuredIcon'}>
-                <a href="https://news.vuejs.org/issues/142" target="_blank" rel="noopener noreferrer"><img src={vueNews} alt={'Vue News'}/></a>
+                <a href="https://news.vuejs.org/issues/142" target="_blank" rel="noopener noreferrer"><img src={'https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/vue-news.png'} alt={'Vue News'}/></a>
               </div>
             </div>
           </div>
