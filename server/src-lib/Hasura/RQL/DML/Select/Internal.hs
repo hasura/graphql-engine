@@ -80,10 +80,9 @@ asSingleRowExtr col =
 
 withJsonAggExtr
   :: Bool -> Maybe Int -> Maybe S.OrderByExp -> S.Alias -> S.SQLExp
-withJsonAggExtr hasAggSel permLimitM ordBy alias =
-  -- if select has aggregations and permission limit is defined
-  -- then use subquery to apply permission limit
-  if hasAggSel then maybe simpleJsonAgg withPermLimit permLimitM
+withJsonAggExtr subQueryReq permLimitM ordBy alias =
+  -- if select has aggregations then use subquery to apply permission limit
+  if subQueryReq then maybe simpleJsonAgg withPermLimit permLimitM
   else simpleJsonAgg
   where
     simpleJsonAgg = mkSimpleJsonAgg rowIdenExp ordBy
@@ -133,12 +132,11 @@ withJsonAggExtr hasAggSel permLimitM ordBy alias =
                     , iden
                     )
 
-
 asJsonAggExtr
   :: Bool -> S.Alias -> Bool -> Maybe Int -> Maybe S.OrderByExp -> S.Extractor
-asJsonAggExtr singleObj als hasAggSel permLimit ordByExpM =
+asJsonAggExtr singleObj als subQueryReq permLimit ordByExpM =
   flip S.Extractor (Just als) $
-  bool (withJsonAggExtr hasAggSel permLimit ordByExpM als)
+  bool (withJsonAggExtr subQueryReq permLimit ordByExpM als)
        (asSingleRowExtr als)
        singleObj
 
@@ -201,8 +199,8 @@ buildJsonObject pfx parAls arrRelCtx strfyNum flds =
         let qual = mkObjRelTableAls pfx $ aarName objSel
         in S.mkQIdenExp qual fldAls
       FArr arrSel      ->
-        let arrPfx = snd $ mkArrNodePfx pfx parAls arrRelCtx $
-                     ANIField (fldAls, arrSel)
+        let arrPfx = _aniPrefix $ mkArrNodeInfo pfx parAls arrRelCtx $
+                               ANIField (fldAls, arrSel)
         in S.mkQIdenExp arrPfx fldAls
 
     toSQLCol :: PGColInfo -> Maybe ColOp -> S.SQLExp
@@ -315,8 +313,8 @@ processAnnOrderByCol pfx parAls arrRelCtx strfyNum = \case
        , OBNObjNode rn relNode
        )
   AOCAgg (RelInfo rn _ colMapping relTab _ ) relFltr annAggOb ->
-    let (arrAls, arrPfx) =
-          mkArrNodePfx pfx parAls arrRelCtx $ ANIAggOrdBy rn
+    let ArrNodeInfo arrAls arrPfx _ =
+          mkArrNodeInfo pfx parAls arrRelCtx $ ANIAggOrdBy rn
         fldName = mkAggObFld annAggOb
         qOrdBy = S.mkQIdenExp arrPfx $ toIden fldName
         tabFrom = TableFrom relTab Nothing
@@ -375,49 +373,60 @@ aggSelToArrNode pfx als aggSel =
     mergedBN = foldr mergeBaseNodes emptyBN allBNs
 
     mkAggBaseNode (fn, selFld) =
-      mkBaseNode hasAggSel pfx fn selFld tabFrm tabPerm tabArgs strfyNum
+      mkBaseNode subQueryReq pfx fn selFld tabFrm tabPerm tabArgs strfyNum
 
     selFldToExtr (FieldName t, fld) = (:) (S.SELit t) $ pure $ case fld of
       TAFAgg flds -> aggFldToExp flds
       TAFNodes _  ->
-        withJsonAggExtr hasAggSel permLimit ordBy $ S.Alias $ Iden t
+        withJsonAggExtr subQueryReq permLimit ordBy $ S.Alias $ Iden t
       TAFExp e    ->
         -- bool_or to force aggregation
         S.SEFnApp "coalesce"
         [ S.SELit e , S.SEUnsafe "bool_or('true')::text"] Nothing
 
-    hasAggSel = any (isTabAggFld . snd) aggFlds
+    subQueryReq = hasAggFld aggFlds
 
+hasAggFld :: Foldable t => t (a, TableAggFldG v) -> Bool
+hasAggFld = any (isTabAggFld . snd)
+  where
     isTabAggFld (TAFAgg _) = True
     isTabAggFld _          = False
 
-mkArrNodePfx
+mkArrNodeInfo
   :: Iden
   -> FieldName
   -> ArrRelCtx
   -> ArrNodeItem
-  -> (S.Alias, Iden)
-mkArrNodePfx pfx parAls (ArrRelCtx arrFlds obRels) = \case
+  -> ArrNodeInfo
+mkArrNodeInfo pfx parAls (ArrRelCtx arrFlds obRels) = \case
   ANIField aggFld@(fld, annArrSel) ->
     let (rn, tabArgs) = fetchRNAndTArgs annArrSel
         similarFlds = getSimilarAggFlds rn tabArgs $ delete aggFld
+        similarFldNames = map fst similarFlds
         similarOrdByFound = rn `elem` obRels && tabArgs == noTableArgs
         extraOrdByFlds = bool [] [ordByFldName] similarOrdByFound
-        sortedFlds = sort $ fld : (similarFlds <> extraOrdByFlds)
-    in ( S.Alias $ mkUniqArrRelAls parAls sortedFlds
-       , mkArrRelTableAls pfx parAls sortedFlds
-       )
+        sortedFlds = sort $ fld : (similarFldNames <> extraOrdByFlds)
+        alias = S.Alias $ mkUniqArrRelAls parAls sortedFlds
+        prefix = mkArrRelTableAls pfx parAls sortedFlds
+    in ArrNodeInfo alias prefix $
+       subQueryRequired similarFlds similarOrdByFound
   ANIAggOrdBy rn ->
-    let similarFlds = getSimilarAggFlds rn noTableArgs id
+    let similarFlds = map fst $ getSimilarAggFlds rn noTableArgs id
         sortedFlds = sort $ ordByFldName:similarFlds
-    in ( S.Alias $ mkUniqArrRelAls parAls sortedFlds
-       , mkArrRelTableAls pfx parAls sortedFlds
-       )
+        alias = S.Alias $ mkUniqArrRelAls parAls sortedFlds
+        prefix = mkArrRelTableAls pfx parAls sortedFlds
+    in ArrNodeInfo alias prefix False
   where
-    getSimilarAggFlds rn tabArgs f = map fst $
+    getSimilarAggFlds rn tabArgs f =
       flip filter (f arrFlds) $ \(_, annArrSel) ->
         let (lrn, lTabArgs) = fetchRNAndTArgs annArrSel
         in (lrn == rn) && (lTabArgs == tabArgs)
+
+    subQueryRequired similarFlds hasSimOrdBy =
+      hasSimOrdBy || any hasAgg similarFlds
+
+    hasAgg (_, ASSimple _)                 = False
+    hasAgg (_, ASAgg (AnnRelG _ _ annSel)) = hasAggFld $ _asnFields annSel
 
     fetchRNAndTArgs (ASSimple (AnnRelG rn _ annSel)) =
       (rn, _asnArgs annSel)
@@ -481,7 +490,7 @@ mkBaseNode
   -> TableArgs
   -> Bool
   -> BaseNode
-mkBaseNode hasAggSel pfx fldAls annSelFlds tableFrom
+mkBaseNode subQueryReq pfx fldAls annSelFlds tableFrom
            tablePerm tableArgs strfyNum =
   BaseNode pfx distExprM fromItem finalWhere ordByExpM finalLimit offsetM
   allExtrs allObjsWithOb allArrsWithOb
@@ -489,17 +498,18 @@ mkBaseNode hasAggSel pfx fldAls annSelFlds tableFrom
     TablePerm permFilter permLimit = tablePerm
     TableArgs whereM orderByM inpLimitM offsetM distM = tableArgs
 
-    -- if selection has aggregations then only use input limit
+    -- if sub query is used, then only use input limit
+    --    because permission limit is being applied in subquery
     -- else compare input and permission limits
     finalLimit =
-      if hasAggSel then inpLimitM
+      if subQueryReq then inpLimitM
       else withPermLimit
 
     withPermLimit =
       case (inpLimitM, permLimit) of
-        (inpLim, Nothing)  -> inpLim
-        (Nothing, permLim) -> permLim
-        (Just i, Just p)   -> Just $ if i < p then i else p
+        (inpLim, Nothing)     -> inpLim
+        (Nothing, permLim)    -> permLim
+        (Just inp, Just perm) -> Just $ if inp < perm then inp else perm
 
 
     aggOrdByRelNames = fetchOrdByAggRels orderByM
@@ -514,9 +524,8 @@ mkBaseNode hasAggSel pfx fldAls annSelFlds tableFrom
               objNodes = HM.fromListWith mergeObjNodes $
                         map mkObjItem (mapMaybe getAnnObj flds)
               -- all array items (array relationships + aggregates)
-              hasArrAggSel = any (isArrFldAgg . snd) arrFlds
               arrNodes = HM.fromListWith mergeArrNodes $
-                         map (mkArrItem hasArrAggSel arrRelCtx) arrFlds
+                         map (mkArrItem arrRelCtx) arrFlds
 
               (obExtrs, ordByObjs, ordByArrs, obeM)
                       = mkOrdByItems' arrRelCtx
@@ -581,10 +590,10 @@ mkBaseNode hasAggSel pfx fldAls annSelFlds tableFrom
       in (relName, objNode)
 
     -- process an array/array-aggregate item
-    mkArrItem hasArrAggSel arrRelCtx (fld, arrSel) =
-      let (arrAls, arrPfx) = mkArrNodePfx pfx fldAls arrRelCtx $
-                             ANIField (fld, arrSel)
-          arrNode = mkArrNode hasArrAggSel arrPfx (fld, arrSel)
+    mkArrItem arrRelCtx (fld, arrSel) =
+      let ArrNodeInfo arrAls arrPfx subQReq =
+            mkArrNodeInfo pfx fldAls arrRelCtx $ ANIField (fld, arrSel)
+          arrNode = mkArrNode subQReq arrPfx (fld, arrSel)
       in (arrAls, arrNode)
 
     getAnnObj (f, annFld) = case annFld of
@@ -594,9 +603,6 @@ mkBaseNode hasAggSel pfx fldAls annSelFlds tableFrom
     getAnnArr (f, annFld) = case annFld of
       FArr ar -> Just (f, ar)
       _       -> Nothing
-
-    isArrFldAgg (ASAgg _)    = True
-    isArrFldAgg (ASSimple _) = False
 
 annSelToBaseNode :: Iden -> FieldName -> AnnSimpleSel -> BaseNode
 annSelToBaseNode pfx fldAls annSel =
@@ -609,11 +615,11 @@ mkObjNode pfx (fldName, AnnRelG _ rMapn rAnnSel) =
   ObjNode rMapn $ annSelToBaseNode pfx fldName rAnnSel
 
 mkArrNode :: Bool -> Iden -> (FieldName, ArrSel) -> ArrNode
-mkArrNode hasAggSel pfx (fldName, annArrSel) = case annArrSel of
+mkArrNode subQueryReq pfx (fldName, annArrSel) = case annArrSel of
   ASSimple annArrRel ->
     let bn = annSelToBaseNode pfx fldName $ aarAnnSel annArrRel
         permLimit = getPermLimit $ aarAnnSel annArrRel
-        extr = asJsonAggExtr False (S.toAlias fldName) hasAggSel permLimit $
+        extr = asJsonAggExtr False (S.toAlias fldName) subQueryReq permLimit $
                _bnOrderBy bn
     in ArrNode [extr] (aarMapping annArrRel) bn
 
