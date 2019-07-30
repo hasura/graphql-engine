@@ -169,7 +169,7 @@ denormSel visFrags parObjTyInfo sel = case sel of
     localize fldInfo field =
       case _fiLoc fldInfo of
         TLHasuraType                    -> HasuraLocated field
-        TLRemoteType _ remoteSchemaInfo -> RemoteLocated remoteSchemaInfo field
+        TLRemoteType _ remoteSchemaInfo _ -> RemoteLocated remoteSchemaInfo field
 
 processArgs
   :: ( MonadReader ValidationCtx m
@@ -255,16 +255,20 @@ denormFld parObjTyInfo visFrags fldInfo (G.Field aliasM name args dirs selSet) =
   let mRemoteRel = case Map.lookup (_otiName parObjTyInfo, name) fldMap of
         Just (FldRemote remoteField ) -> pure (Left remoteField)
         Just _                        -> Nothing
-        -- TODO: This is not perfect because we are checking any field with a correspondinding RemoteToRemoteRel
-        -- This needs to change to type appropriate RemoteToRemoteRel
-        Nothing                       -> fmap Right $
-          flip find remoteToRemoteRels
-                   (\remToRemFld -> rtrrName (rrmfRemoteRelationship remToRemFld) == RemoteRelationshipName relName)
+        Nothing                       -> case (_fiLoc fldInfo) of
+          TLRemoteType _ _ (Just baseSchemaName) -> fmap Right $
+            (findRemoteRel name . (findRemoteRelsForBaseSchema baseSchemaName)) remoteToRemoteRels
+          _                                      -> Nothing
 
   withPathK "directives" $ withDirectives dirs $ return $
     (Field (fromMaybe (G.Alias name) aliasM) name fldBaseTy argMap (fmap getLoc fields) mRemoteRel)
     where
-      G.Name relName = name
+      findRemoteRelsForBaseSchema baseSchemaName = filter
+        (\remToRemFld -> rtrrBaseSchema (rrmfRemoteRelationship remToRemFld) == baseSchemaName)
+
+      findRemoteRel (G.Name relName) = find
+        (\remToRemFld -> rtrrName (rrmfRemoteRelationship remToRemFld) == RemoteRelationshipName relName)
+
 
 denormInlnFrag ::
      (MonadReader ValidationCtx m, MonadError QErr m)

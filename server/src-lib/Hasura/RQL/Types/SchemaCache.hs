@@ -950,6 +950,7 @@ addRemoteToRemoteRels remoteSchemas remToRemFlds gCtx =
   where
     extendType baseTypeInfo remToRemFld =
       let (RemoteRelationshipName relName) = rtrrName (rrmfRemoteRelationship remToRemFld)
+          baseSchemaName = (rtrrBaseSchema (rrmfRemoteRelationship remToRemFld))
           remoteSchemaName = (rtrrRemoteSchema (rrmfRemoteRelationship remToRemFld))
           rsCtxM = M.lookup remoteSchemaName remoteSchemas
       in case rsCtxM of
@@ -960,7 +961,7 @@ addRemoteToRemoteRels remoteSchemas remToRemFlds gCtx =
                     , _fiName = G.Name relName
                     , _fiParams = rrmfParamMap remToRemFld
                     , _fiTy = rrmfGType remToRemFld
-                    , _fiLoc = TLRemoteType remoteSchemaName (rscInfo rsCtx)
+                    , _fiLoc = TLRemoteType remoteSchemaName (rscInfo rsCtx) (Just baseSchemaName)
                     }
               in case baseTypeInfo of
                  TIObj oldObjTyInfo ->
