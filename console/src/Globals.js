@@ -44,6 +44,7 @@ const globals = {
     window.__env.nodeEnv !== 'development' ? 'console' : 'console_test',
   assetsPath: window.__env.assetsPath,
   serverVersion: window.__env.serverVersion,
+  consoleAssetVersion: CONSOLE_ASSET_VERSION,
   featuresCompatibility: window.__env.serverVersion
     ? getFeaturesCompatibility(window.__env.serverVersion)
     : null,
@@ -57,6 +58,7 @@ if (!window.__env.urlPrefix) {
 if (!window.__env.consoleMode) {
   globals.consoleMode = SERVER_CONSOLE_MODE;
 }
+
 if (!globals.adminSecret) {
   globals.adminSecret = null;
 }
