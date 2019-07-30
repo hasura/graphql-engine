@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import AceEditor from 'react-ace';
 
-const styles = require('./JsonInput.scss');
+import 'brace/mode/markdown';
+import 'brace/theme/github';
+
+const styles = require('./CustomInput.scss');
 
 const NORMALKEY = 'normal';
 const JSONKEY = 'json';
@@ -112,7 +115,7 @@ const JsonInput = props => {
         value={data}
         onChange={handleInputChangeAndPropagate}
         onKeyUp={handleKeyUpEvent}
-        className={allProps.className + ' ' + styles.jsonNormalInput}
+        className={allProps.className + ' ' + styles.normalInput}
       />
     );
   };
@@ -126,12 +129,12 @@ const JsonInput = props => {
         key="icon_json_editor"
         className={
           'fa ' +
-          styles.jsonToggleButton +
+          styles.modeToggleButton +
           (editorType === JSONKEY ? ' fa-compress' : ' fa-expand')
         }
         onClick={() => updateState(toggleEditorType)}
         title={
-          (editorType === JSONKEY ? 'Collapse' : 'Expand') + '(Ctrl + Space)'
+          (editorType === JSONKEY ? 'Collapse' : 'Expand') + ' (Ctrl + Space)'
         }
       />
     </span>

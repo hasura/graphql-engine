@@ -254,6 +254,8 @@ ColumnExp
        PGColumn_ : { Operator_ : Value }
    }
 
+.. _MetadataOperator:
+
 Operator
 ^^^^^^^^
 

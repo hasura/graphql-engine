@@ -5,6 +5,7 @@ import { editItem, E_ONGOING_REQ } from './EditActions';
 import globals from '../../../../Globals';
 import { modalClose } from './EditActions';
 import JsonInput from '../../../Common/CustomInputTypes/JsonInput';
+import TextInput from '../../../Common/CustomInputTypes/TextInput';
 import Button from '../../../Common/Button/Button';
 
 import {
@@ -19,6 +20,7 @@ import {
   TIMETZ,
   JSONB,
   JSONDTYPE,
+  TEXT,
 } from '../utils';
 // import RichTextEditor from 'react-rte';
 import { replace } from 'react-router-redux';
@@ -80,184 +82,63 @@ class EditItem extends Component {
         refs[colName].valueNode = node;
       };
       const clicker = e => {
-        e.target.parentNode.click();
+        e.target.closest('.radio-inline').click();
         e.target.focus();
+      };
+
+      const standardEditProps = {
+        className: `form-control ${styles.insertBox}`,
+        onClick: clicker,
+        ref: inputRef,
+        'data-test': `typed-input-${i}`,
+        type: 'text',
+        defaultValue: oldItem[colName],
       };
 
       // Text type
       let typedInput = (
-        <input
-          placeholder={getPlaceholder(colType)}
-          type="text"
-          className={'form-control ' + styles.insertBox}
-          onClick={clicker}
-          ref={inputRef}
-          defaultValue={oldItem[colName]}
-          data-test={`typed-input-${i}`}
-        />
+        <input {...standardEditProps} placeholder={getPlaceholder(colType)} />
       );
 
-      // Integer
-      if (colType === INTEGER) {
-        typedInput = (
-          <input
-            placeholder={getPlaceholder(colType)}
-            type="text"
-            className={'form-control ' + styles.insertBox}
-            onClick={clicker}
-            ref={inputRef}
-            defaultValue={oldItem[colName]}
-            data-test={`typed-input-${i}`}
-          />
-        );
-      } else if (colType === BIGINT) {
-        typedInput = (
-          <input
-            placeholder={getPlaceholder(colType)}
-            type="text"
-            className={'form-control ' + styles.insertBox}
-            onClick={clicker}
-            ref={inputRef}
-            defaultValue={oldItem[colName]}
-            data-test={`typed-input-${i}`}
-          />
-        );
-      } else if (colType === NUMERIC) {
-        typedInput = (
-          <input
-            placeholder={getPlaceholder(colType)}
-            type="text"
-            className={'form-control ' + styles.insertBox}
-            onClick={clicker}
-            ref={inputRef}
-            defaultValue={oldItem[colName]}
-            data-test={`typed-input-${i}`}
-          />
-        );
-      } else if (colType === TIMESTAMP) {
-        typedInput = (
-          <input
-            placeholder={getPlaceholder(colType)}
-            type="text"
-            className={'form-control ' + styles.insertBox}
-            onClick={clicker}
-            ref={inputRef}
-            defaultValue={oldItem[colName]}
-            data-test={`typed-input-${i}`}
-          />
-        );
-      } else if (colType === DATE) {
-        typedInput = (
-          <input
-            placeholder={getPlaceholder(colType)}
-            type="text"
-            className={'form-control ' + styles.insertBox}
-            onClick={clicker}
-            ref={inputRef}
-            defaultValue={oldItem[colName]}
-            data-test={`typed-input-${i}`}
-          />
-        );
-      } else if (colType === TIMETZ) {
-        typedInput = (
-          <input
-            placeholder={getPlaceholder(colType)}
-            type="text"
-            className={'form-control ' + styles.insertBox}
-            onClick={clicker}
-            ref={inputRef}
-            defaultValue={oldItem[colName]}
-            data-test={`typed-input-${i}`}
-          />
-        );
-      } else if (colType === JSONDTYPE || colType === JSONB) {
-        const standardEditProps = {
-          className: `form-control ${styles.insertBox}`,
-          onClick: clicker,
-          ref: inputRef,
-          defaultValue: JSON.stringify(oldItem[colName]),
-          'data-test': `typed-input-${i}`,
-          type: 'text',
-        };
-        typedInput = (
-          <JsonInput
-            standardProps={standardEditProps}
-            placeholderProp={getPlaceholder(colType)}
-          />
-        );
-      } else if (colType === BOOLEAN) {
-        typedInput = (
-          <select
-            className={'form-control ' + styles.insertBox}
-            onClick={clicker}
-            ref={inputRef}
-            defaultValue={JSON.stringify(oldItem[colName])}
-            data-test={`typed-input-${i}`}
-          >
-            <option value="true">True</option>
-            <option value="false">False</option>
-          </select>
-        );
-      } else if (colType === UUID) {
-        typedInput = (
-          <input
-            placeholder={getPlaceholder(colType)}
-            type="text"
-            className={'form-control ' + styles.insertBox}
-            onClick={clicker}
-            ref={inputRef}
-            defaultValue={oldItem[colName]}
-            data-test={`typed-input-${i}`}
-          />
-        );
-      } else {
-        // find value to be shown. rich text editor vs clone
-        let defaultValue = '';
-        let currentValue = '';
-        if (
-          this.state.editorColumnMap[colName] === null ||
-          this.state.editorColumnMap[colName] === undefined
-        ) {
-          defaultValue = oldItem[colName];
-        } else if (this.state.editorColumnMap[colName] !== null) {
-          defaultValue = this.state.editorColumnMap[colName];
-          currentValue = this.state.editorColumnMap[colName];
-        }
-        if (currentValue !== '') {
+      switch (colType) {
+        case INTEGER:
+        case BIGINT:
+        case NUMERIC:
+        case TIMESTAMP:
+        case DATE:
+        case TIMETZ:
+        case UUID:
+          break;
+        case JSONB:
+        case JSONDTYPE:
           typedInput = (
-            <span>
-              <input
-                placeholder={getPlaceholder(colType)}
-                type="text"
-                className={'form-control ' + styles.insertBox}
-                onClick={clicker}
-                ref={inputRef}
-                onChange={e => {
-                  this.onTextChange(e, colName);
-                }}
-                value={currentValue}
-                data-test={`typed-input-${i}`}
-              />
-            </span>
+            <JsonInput
+              standardProps={{
+                ...standardEditProps,
+                defaultValue: JSON.stringify(oldItem[colName]),
+              }}
+              placeholderProp={getPlaceholder(colType)}
+            />
           );
-        } else {
+          break;
+        case TEXT:
           typedInput = (
-            <span>
-              <input
-                placeholder={getPlaceholder(colType)}
-                type="text"
-                className={'form-control ' + styles.insertBox}
-                onClick={clicker}
-                ref={inputRef}
-                onChange={e => {
-                  this.onTextChange(e, colName);
-                }}
-                value={defaultValue}
-                data-test={`typed-input-${i}`}
-              />
-            </span>
+            <TextInput
+              standardProps={{ ...standardEditProps }}
+              placeholderProp={getPlaceholder(colType)}
+            />
           );
-        }
+          break;
+        case BOOLEAN:
+          typedInput = (
+            <select {...standardEditProps}>
+              <option value="true">True</option>
+              <option value="false">False</option>
+            </select>
+          );
+          break;
+        default:
+          break;
       }
 
       return (

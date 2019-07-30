@@ -13,7 +13,6 @@ import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
-import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Diff
@@ -122,10 +121,6 @@ purgeDep schemaObjId = case schemaObjId of
   (SOTableObj qt (TORel rn))     -> do
     liftTx $ delRelFromCatalog qt rn
     delRelFromCache rn qt
-
-  (SOQTemplate qtn)              -> do
-    liftTx $ delQTemplateFromCatalog qtn
-    delQTemplateFromCache qtn
 
   (SOFunction qf) -> do
     liftTx $ delFunctionFromCatalog qf
@@ -352,7 +347,7 @@ buildSchemaCacheG withSetup = do
   sqlGenCtx <- askSQLGenCtx
 
   -- fetch all catalog metadata
-  CatalogMetadata tables relationships permissions qTemplates
+  CatalogMetadata tables relationships permissions
     eventTriggers remoteSchemas functions fkeys' allowlistDefs
     <- liftTx fetchCatalogData
 
@@ -402,18 +397,6 @@ buildSchemaCacheG withSetup = do
           PTSelect -> permHelper withSetup sqlGenCtx qt rn pDef PASelect
           PTUpdate -> permHelper withSetup sqlGenCtx qt rn pDef PAUpdate
           PTDelete -> permHelper withSetup sqlGenCtx qt rn pDef PADelete
-
-  -- query templates
-  forM_ qTemplates $ \(CatalogQueryTemplate qtn qtDefVal) -> do
-    let def = object ["name" .= qtn, "template" .= qtDefVal]
-        mkInconsObj =
-          InconsistentMetadataObj (MOQTemplate qtn) MOTQTemplate def
-    handleInconsistentObj mkInconsObj $ do
-      qtDef <- decodeValue qtDefVal
-      qCtx <- mkAdminQCtx sqlGenCtx <$> askSchemaCache
-      (qti, deps) <- liftP1WithQCtx qCtx $ createQueryTemplateP1 $
-             CreateQueryTemplate qtn qtDef Nothing
-      addQTemplateToCache qti deps
 
   -- event triggers
   forM_ eventTriggers $ \(CatalogEventTrigger qt trn configuration) -> do

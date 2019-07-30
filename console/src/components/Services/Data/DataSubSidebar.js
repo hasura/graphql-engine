@@ -3,6 +3,8 @@ import { connect } from 'react-redux';
 import { Link } from 'react-router';
 
 import LeftSubSidebar from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
+import gqlPattern from './Common/GraphQLValidation';
+import GqlCompatibilityWarning from '../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
 
 const appPrefix = '/data';
 
@@ -101,6 +103,8 @@ class DataSubSidebar extends React.Component {
         tableLinks = Object.keys(tables)
           .sort()
           .map((tableName, i) => {
+            let _childLink;
+
             let activeTableClass = '';
             if (
               tableName === currentTable &&
@@ -108,8 +112,15 @@ class DataSubSidebar extends React.Component {
             ) {
               activeTableClass = styles.activeTable;
             }
+
+            const gqlCompatibilityWarning = !gqlPattern.test(tableName) ? (
+              <span className={styles.add_mar_left_mid}>
+                <GqlCompatibilityWarning />
+              </span>
+            ) : null;
+
             if (tables[tableName].table_type === 'BASE TABLE') {
-              return (
+              _childLink = (
                 <li className={activeTableClass} key={i}>
                   <Link
                     to={
@@ -128,31 +139,35 @@ class DataSubSidebar extends React.Component {
                     />
                     {tableName}
                   </Link>
+                  {gqlCompatibilityWarning}
+                </li>
+              );
+            } else {
+              _childLink = (
+                <li className={activeTableClass} key={i}>
+                  <Link
+                    to={
+                      appPrefix +
+                      '/schema/' +
+                      currentSchema +
+                      '/views/' +
+                      tableName +
+                      '/browse'
+                    }
+                    data-test={tableName}
+                  >
+                    <i
+                      className={styles.tableIcon + ' fa fa-table'}
+                      aria-hidden="true"
+                    />
+                    <i>{tableName}</i>
+                  </Link>
+                  {gqlCompatibilityWarning}
                 </li>
               );
             }
 
-            return (
-              <li className={activeTableClass} key={i}>
-                <Link
-                  to={
-                    appPrefix +
-                    '/schema/' +
-                    currentSchema +
-                    '/views/' +
-                    tableName +
-                    '/browse'
-                  }
-                  data-test={tableName}
-                >
-                  <i
-                    className={styles.tableIcon + ' fa fa-table'}
-                    aria-hidden="true"
-                  />
-                  <i>{tableName}</i>
-                </Link>
-              </li>
-            );
+            return _childLink;
           });
       }
 

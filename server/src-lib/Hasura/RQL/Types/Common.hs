@@ -11,9 +11,6 @@ module Hasura.RQL.Types.Common
        , fromPGCol
        , fromRel
 
-       , TQueryName(..)
-       , TemplateParam(..)
-
        , ToAesonPairs(..)
        , WithTable(..)
        , ColVals
@@ -145,24 +142,6 @@ fromPGCol (PGCol c) = FieldName c
 
 fromRel :: RelName -> FieldName
 fromRel = FieldName . relNameToTxt
-
-newtype TQueryName
-  = TQueryName { getTQueryName :: NonEmptyText }
-  deriving ( Show, Eq, Hashable, FromJSONKey, ToJSONKey
-           , FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Lift)
-
-instance IsIden TQueryName where
-  toIden (TQueryName r) = Iden $ unNonEmptyText r
-
-instance DQuote TQueryName where
-  dquoteTxt (TQueryName r) = unNonEmptyText r
-
-newtype TemplateParam
-  = TemplateParam { getTemplateParam :: T.Text }
-  deriving (Show, Eq, Hashable, FromJSON, FromJSONKey, ToJSONKey, ToJSON, Lift)
-
-instance DQuote TemplateParam where
-  dquoteTxt (TemplateParam r) = r
 
 class ToAesonPairs a where
   toAesonPairs :: (KeyValue v) => a -> [v]
