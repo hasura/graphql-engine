@@ -171,7 +171,7 @@ type ExecutionContext struct {
 	// LogLevel indicates the logrus default logging level
 	LogLevel string
 
-	// NoColor indicates if the outputs are colorized
+	// NoColor indicates if the outputs shouldn't be colorized
 	NoColor bool
 
 	// Telemetry collects the telemetry data throughout the execution
