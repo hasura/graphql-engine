@@ -13,7 +13,6 @@ import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.QueryCollection
-import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Relationship.Rename
 import           Hasura.RQL.DDL.RemoteSchema
@@ -22,7 +21,6 @@ import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.DML.Count
 import           Hasura.RQL.DML.Delete
 import           Hasura.RQL.DML.Insert
-import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.DML.Select
 import           Hasura.RQL.DML.Update
 import           Hasura.RQL.Types
@@ -75,11 +73,6 @@ data RQLQuery
   | RQDeleteEventTrigger !DeleteEventTriggerQuery
   | RQRedeliverEvent     !RedeliverEventQuery
   | RQInvokeEventTrigger !InvokeEventTriggerQuery
-
-  | RQCreateQueryTemplate !CreateQueryTemplate
-  | RQDropQueryTemplate !DropQueryTemplate
-  | RQExecuteQueryTemplate !ExecQueryTemplate
-  | RQSetQueryTemplateComment !SetQueryTemplateComment
 
   -- query collections, allow list related
   | RQCreateQueryCollection !CreateCollection
@@ -222,11 +215,6 @@ queryNeedsReload qi = case qi of
   RQRedeliverEvent _              -> False
   RQInvokeEventTrigger _          -> False
 
-  RQCreateQueryTemplate _         -> True
-  RQDropQueryTemplate _           -> True
-  RQExecuteQueryTemplate _        -> False
-  RQSetQueryTemplateComment _     -> False
-
   RQCreateQueryCollection _       -> True
   RQDropQueryCollection _         -> True
   RQAddQueryToCollection _        -> True
@@ -298,11 +286,6 @@ runQueryM rq =
       RQDeleteEventTrigger q       -> runDeleteEventTriggerQuery q
       RQRedeliverEvent q           -> runRedeliverEvent q
       RQInvokeEventTrigger q       -> runInvokeEventTrigger q
-
-      RQCreateQueryTemplate q      -> runCreateQueryTemplate q
-      RQDropQueryTemplate q        -> runDropQueryTemplate q
-      RQExecuteQueryTemplate q     -> runExecQueryTemplate q
-      RQSetQueryTemplateComment q  -> runSetQueryTemplateComment q
 
       RQCreateQueryCollection q        -> runCreateCollection q
       RQDropQueryCollection q          -> runDropCollection q

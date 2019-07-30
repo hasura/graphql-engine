@@ -21,9 +21,11 @@ import { getCustomResolverRouter } from './components/Services/CustomResolver';
 
 import generatedApiExplorer from './components/Services/ApiExplorer/ApiExplorerGenerator';
 
-import generatedLoginConnector from './components/Login/Login';
+import generatedVoyagerConnector from './components/Services/VoyagerView/VoyagerView';
 
-import generatedVoyagerConnector from './components/VoyagerView/VoyagerView';
+import about from './components/Services/About/About';
+
+import generatedLoginConnector from './components/Login/Login';
 
 import metadataContainer from './components/Services/Metadata/Container';
 import metadataOptionsContainer from './components/Services/Metadata/MetadataOptions/MetadataOptions';
@@ -92,13 +94,14 @@ const routes = store => {
         <Route path="">
           <IndexRoute component={generatedApiExplorer(connect)} />
           <Route
-            path="voyager-view"
-            component={generatedVoyagerConnector(connect)}
-          />
-          <Route
             path="api-explorer"
             component={generatedApiExplorer(connect)}
           />
+          <Route
+            path="voyager-view"
+            component={generatedVoyagerConnector(connect)}
+          />
+          <Route path="about" component={about(connect)} />
           <Route path="metadata" component={metadataContainer(connect)}>
             <IndexRedirect to="actions" />
             <Route path="status" component={metadataStatusContainer(connect)} />
