@@ -18,11 +18,11 @@ Our task will be convert the "static" UI into a working realtime app.
 
 After you login, you should get something like this:
 
-![UI after logging in](<!-- FIXME: Add the assets URL here -->)
+![UI after logging in](https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-flutter/ui-after-logging-in.png)
 
 ### Load GraphiQL to play with your GraphQL APIs
 
-1. Head to https://learn.hasura.io/graphql/graphiql?tutorial=react-native
+1. Head to [https://learn.hasura.io/graphql/graphiql](https://learn.hasura.io/graphql/graphiql?tutorial=react-native)
 2. Log in (so that you can test the GraphQL APIs with a valid user token)
 
 This is what you should see after the steps above:
