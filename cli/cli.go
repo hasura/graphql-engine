@@ -21,7 +21,7 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/gofrs/uuid"
 	"github.com/hasura/graphql-engine/cli/version"
-	colorable "github.com/mattn/go-colorable"
+	"github.com/mattn/go-colorable"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -348,15 +348,19 @@ func (ec *ExecutionContext) setupLogger() {
 		logger := logrus.New()
 
 		logger.Formatter = &logrus.TextFormatter{
-			DisableColors:    ec.NoColor,
-			ForceColors:      !ec.NoColor,
+			ForceColors:      true,
 			DisableTimestamp: true,
 		}
 		logger.Out = colorable.NewColorableStdout()
 		ec.Logger = logger
 	}
 
-	println(ec.LogLevel)
+	if ec.NoColor {
+		ec.Logger.Formatter = &logrus.TextFormatter{
+			DisableColors:    true,
+			DisableTimestamp: true,
+		}
+	}
 
 	if ec.LogLevel != "" {
 		level, err := logrus.ParseLevel(ec.LogLevel)
