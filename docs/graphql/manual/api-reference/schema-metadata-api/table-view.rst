@@ -78,6 +78,9 @@ Add a table/view ``author``:
               "insert": "AddAuthors",
               "update": "UpdateAuthors",
               "delete": "DeleteAuthors"
+           },
+           "custom_column_fields": {
+              "id": "authorId"
            }
         }
       }
@@ -120,6 +123,10 @@ Table Config
      - true
      - :ref:`Custom Root Fields <custom_root_fields>`
      - Customise the root fields
+   * - custom_column_fields
+     - true
+     - :ref:`CustomColumnFields`
+     - Customise the column fields
 
 .. _custom_root_fields:
 

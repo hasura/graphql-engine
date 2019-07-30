@@ -466,3 +466,18 @@ CollectionQuery
        "name": String,
        "query": String
    }
+
+.. _CustomColumnFields:
+
+CustomColumnFields
+^^^^^^^^^^^^^^^^^^
+A JSONObject_ of Postgres column name to GraphQL name mapping
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   {
+      "column1" : String,
+      "column2" : String,
+      ..
+   }
