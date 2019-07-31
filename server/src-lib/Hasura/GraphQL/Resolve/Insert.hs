@@ -108,7 +108,8 @@ traverseInsObj
 traverseInsObj rim allColMap (gName, annVal) defVal@(AnnInsObj cols objRels arrRels) =
   case _aivValue annVal of
     AGScalar colty mColVal -> do
-      colInfo <- onNothing (Map.lookup gName allColMap) $ throw500 "column not found in PGColGNameMap"
+      colInfo <- onNothing (Map.lookup gName allColMap) $
+                 throw500 "column not found in PGColGNameMap"
       let col = pgiName colInfo
           colVal = fromMaybe (PGNull colty) mColVal
       return (AnnInsObj ((col, colty, colVal):cols) objRels arrRels)
@@ -201,24 +202,28 @@ toSQLExps cols =
     return (c, prepExp)
 
 mkSQLRow :: Map.HashMap PGCol S.SQLExp -> [(PGCol, S.SQLExp)] -> [S.SQLExp]
-mkSQLRow defVals withPGCol =
-  Map.elems $ Map.union (Map.fromList withPGCol) defVals
+mkSQLRow defVals withPGCol = map snd $
+  flip map (Map.toList defVals) $
+    \(col, defVal) -> (col,) $ fromMaybe defVal $ Map.lookup col withPGColMap
+  where
+    withPGColMap = Map.fromList withPGCol
 
 mkInsertQ
   :: MonadError QErr m
   => QualifiedTable
   -> Maybe RI.ConflictClauseP1
   -> [(PGCol, PGColType, PGColValue)]
-  -> [PGCol]
   -> Map.HashMap PGCol S.SQLExp
   -> RoleName
   -> m (CTEExp, Maybe RI.ConflictCtx)
-mkInsertQ vn onConflictM insCols tableCols defVals role = do
+mkInsertQ vn onConflictM insCols defVals role = do
   (givenCols, args) <- flip runStateT Seq.Empty $ toSQLExps insCols
   let sqlConflict = RI.toSQLConflict <$> onConflictM
       sqlExps = mkSQLRow defVals givenCols
       valueExp = S.ValuesExp [S.TupleExp sqlExps]
-      sqlInsert = S.SQLInsert vn tableCols valueExp sqlConflict $ Just S.returningStar
+      tableCols = Map.keys defVals
+      sqlInsert =
+        S.SQLInsert vn tableCols valueExp sqlConflict $ Just S.returningStar
       adminIns = return (CTEExp (S.CTEInsert sqlInsert) args, Nothing)
       nonAdminInsert = do
         ccM <- mapM RI.extractConflictCtx onConflictM
@@ -387,7 +392,7 @@ insertObj strfyNum role tn singleObjIns addCols = do
 
   -- prepare insert query as with expression
   (CTEExp cte insPArgs, ccM) <-
-    mkInsertQ vn onConflictM finalInsCols (map pgiName allCols) defVals role
+    mkInsertQ vn onConflictM finalInsCols defVals role
 
   RI.setConflictCtx ccM
   MutateResp affRows colVals <- mutateAndFetchCols tn allCols (cte, insPArgs) strfyNum
@@ -447,7 +452,7 @@ insertMultipleObjects strfyNum role tn multiObjIns addCols mutFlds errP =
 
       let addColsWithType = mkPGColWithTypeAndVal tableColInfos addCols
           withAddCols = flip map insCols $ union addColsWithType
-          tableCols = map pgiName tableColInfos
+          tableCols = Map.keys defVals
 
       (sqlRows, prepArgs) <- flip runStateT Seq.Empty $ do
         rowsWithCol <- mapM toSQLExps withAddCols

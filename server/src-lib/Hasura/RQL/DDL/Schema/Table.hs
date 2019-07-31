@@ -90,16 +90,21 @@ trackExistingTableOrViewP1 qt = do
     throw400 NotSupported $ "function with name " <> qt <<> " already exists"
 
 validateTableConfig
-  :: (QErrM m)
+  :: (QErrM m, CacheRM m)
   => TableInfo -> TableConfig -> m ()
-validateTableConfig tableInfo (TableConfig _ colFlds) =
-  withPathK "configuration" $ withPathK "custom_column_fields" $
-  forM_ (M.toList colFlds) $ \(col, GraphQLName customName) -> do
-    void $ askPGColInfo (tiFieldInfoMap tableInfo) col ""
-    withPathK (getPGColTxt col) $
-      checkForFldConfilct tableInfo $ FieldName $ G.unName customName
-    when (not $ null duplicateNames) $ throw400 NotSupported $
-      "the following names are duplicated: " <> showNames duplicateNames
+validateTableConfig tableInfo (TableConfig rootFlds colFlds) =
+  withPathK "configuration" $ do
+    withPathK "custom_root_fields" $ do
+      sc <- askSchemaCache
+      let defRemoteGCtx = scDefaultRemoteGCtx sc
+      GS.validateCustomRootFlds defRemoteGCtx rootFlds
+    withPathK "custom_column_fields" $
+      forM_ (M.toList colFlds) $ \(col, GraphQLName customName) -> do
+        void $ askPGColInfo (tiFieldInfoMap tableInfo) col ""
+        withPathK (getPGColTxt col) $
+          checkForFldConfilct tableInfo $ FieldName $ G.unName customName
+        when (not $ null duplicateNames) $ throw400 NotSupported $
+          "the following names are duplicated: " <> showNames duplicateNames
   where
     duplicateNames = duplicates $ map unGraphQLName $ M.elems colFlds
 
@@ -110,7 +115,6 @@ trackExistingTableOrViewP2 vn mTableConfig isSystemDefined = do
   sc <- askSchemaCache
   let defGCtx = scDefaultRemoteGCtx sc
   GS.checkConflictingNode defGCtx $ GS.qualObjectToName vn
-
   tables <- liftTx fetchTableCatalog
   case tables of
     []   -> throw400 NotExists $ "no such table/view exists in postgres : " <>> vn

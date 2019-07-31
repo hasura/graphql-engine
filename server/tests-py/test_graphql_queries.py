@@ -407,3 +407,16 @@ class TestGraphQLQueryFunctions(DefaultTestSelectQueries):
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/functions'
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+class TestGraphQLQueryCustomSchema(DefaultTestSelectQueries):
+
+    def test_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/author.yaml', transport)
+
+    def test_article(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/article.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/custom_schema'

@@ -13,6 +13,7 @@ module Hasura.GraphQL.Schema
   -- Schema stitching related
   , checkSchemaConflicts
   , checkConflictingNode
+  , validateCustomRootFlds
   , emptyGCtx
   , mergeMaybeMaps
   , ppGCtx
@@ -35,6 +36,7 @@ import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal             (mkAdminRolePermInfo)
 import           Hasura.RQL.Types
+import           Hasura.Server.Utils                 (duplicates)
 import           Hasura.SQL.Types
 
 
@@ -1823,6 +1825,17 @@ checkConflictingNode gCtx node = do
     msg = "node " <> G.unName node <>
           " already exists in current graphql schema"
 
+validateCustomRootFlds
+  :: (MonadError QErr m)
+  => GCtx
+  -> TableCustomRootFields
+  -> m ()
+validateCustomRootFlds defRemoteGCtx rootFlds =
+  forM_ rootFldNames $ checkConflictingNode defRemoteGCtx
+  where
+    TableCustomRootFields sel selByPk selAgg ins upd del = rootFlds
+    rootFldNames = map unGraphQLName $
+                   catMaybes [sel, selByPk, selAgg, ins, upd, del]
 
 mkGCtxMap
   :: (MonadError QErr m)
@@ -1830,12 +1843,23 @@ mkGCtxMap
 mkGCtxMap tableCache functionCache = do
   typesMapL <- mapM (mkGCtxMapTable tableCache functionCache) $
                filter tableFltr $ Map.elems tableCache
+  -- since root field names are customisable, we need to check for
+  -- duplicate root field names across all tables
+  duplicateRootFlds <- (duplicates . concat) <$> forM typesMapL getRootFlds
+  unless (null duplicateRootFlds) $
+    throw400 Unexpected $ "following root fields are duplicated: "
+    <> showNames duplicateRootFlds
   let typesMap = foldr (Map.unionWith mappend) Map.empty typesMapL
   return $ flip Map.map typesMap $ \(ty, flds, insCtxMap) ->
     mkGCtx ty flds insCtxMap
   where
     tableFltr ti = not (tiSystemDefined ti)
                    && isValidObjectName (tiName ti)
+
+    getRootFlds roleMap = do
+      (_, rootFlds, _) <- onNothing (Map.lookup adminRole roleMap) $
+                          throw500 "admin schema not found"
+      return $ Map.keys $ _taMutation rootFlds
 
 -- | build GraphQL schema from postgres tables and functions
 buildGCtxMapPG
