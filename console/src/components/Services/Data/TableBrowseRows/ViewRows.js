@@ -87,7 +87,7 @@ const ViewRows = ({
       _curRelName &&
       parentTableSchema &&
       parentTableSchema.relationships.find(
-        r => r.name === _curRelName && r.rel_type === 'object'
+        r => r.rel_name === _curRelName && r.rel_type === 'object'
       )
     ) {
       // Am I an obj_rel for my parent?
@@ -157,6 +157,7 @@ const ViewRows = ({
       Header: '',
       accessor: 'tableRowActionButtons',
       id: 'tableRowActionButtons',
+      width: 160,
     });
 
     _columns.map(col => {
@@ -645,10 +646,13 @@ const ViewRows = ({
         const rel = tableSchema.relationships.find(r => r.rel_name === cq.name);
 
         if (rel) {
+          const isObjectRel = rel.rel_type === 'object';
+
           let childRows = curRows[0][cq.name];
-          if (rel.rel_type === 'object') {
+          if (isObjectRel) {
             childRows = [childRows];
           }
+
           // Find the name of this childTable using the rel
           return (
             <ViewRows
@@ -811,8 +815,8 @@ const ViewRows = ({
         minRows={0}
         getTheadThProps={getTheadThProps}
         getResizerProps={getResizerProps}
-        showPagination={count > curFilter.limit}
-        defaultPageSize={Math.min(curFilter.limit, count)}
+        showPagination={!isSingleRow}
+        pageSize={curFilter.limit}
         pages={Math.ceil(count / curFilter.limit)}
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
@@ -830,8 +834,7 @@ const ViewRows = ({
   return (
     <div className={isVisible ? '' : 'hide '}>
       {getFilterQuery()}
-      <hr />
-      <div className="row">
+      <div className={`row ${styles.add_mar_top}`}>
         <div className="col-xs-12">
           <div className={styles.tableContainer}>{renderTableBody()}</div>
           <br />

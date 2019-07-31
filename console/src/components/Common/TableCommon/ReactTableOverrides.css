@@ -3,13 +3,13 @@
 }
 
 .ReactTable .rt-tbody {
-  min-height: 40px;
+  min-height: 32px;
   overflow: unset;
 }
 
 .ReactTable .rt-noData {
-  padding: 5px;
-  top: 62px;
+  padding: 0;
+  top: 48px;
   background: none;
 }
 
@@ -100,19 +100,10 @@
   text-align: left;
 }
 
-.ReactTable .rt-table .rt-thead .rt-tr .rt-th:first-child {
-  flex: 24 0 auto !important;
-  min-width: 170px;
-}
-
-.ReactTable .rt-table .rt-tbody .rt-tr-group .rt-tr.-odd .rt-td:first-child {
-  flex: 24 0 auto !important;
-  min-width: 170px;
-}
-
+.ReactTable .rt-table .rt-thead .rt-tr .rt-th:first-child,
+.ReactTable .rt-table .rt-tbody .rt-tr-group .rt-tr.-odd .rt-td:first-child,
 .ReactTable .rt-table .rt-tbody .rt-tr-group .rt-tr.-even .rt-td:first-child {
   flex: 24 0 auto !important;
-  min-width: 170px;
 }
 
 .ReactTable .rt-table {
