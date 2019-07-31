@@ -806,7 +806,7 @@ const ViewRows = ({
 
     return (
       <DragFoldTable
-        className="-highlight"
+        className="-highlight -fit-content"
         data={_gridRows}
         columns={_gridHeadings}
         resizable

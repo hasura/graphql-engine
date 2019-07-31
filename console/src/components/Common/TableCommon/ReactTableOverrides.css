@@ -2,7 +2,8 @@
   border: 0;
 }
 
-.ReactTable .rt-table {
+.ReactTable.-fit-content,
+.ReactTable.-fit-content .rt-table {
   width: fit-content;
 }
 
