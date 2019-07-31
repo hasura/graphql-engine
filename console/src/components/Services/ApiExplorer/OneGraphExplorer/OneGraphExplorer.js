@@ -15,7 +15,7 @@ import { getGraphiQLQueryFromLocalStorage } from '../GraphiQLWrapper/utils';
 import { getRemoteQueries } from '../Actions';
 import { getHeadersAsJSON } from '../utils';
 import builtInSnippets from 'graphiql-code-exporter/lib/snippets';
-import snippets from './snippets';
+import snippets from './CodeExporterUtils/snippets';
 
 import '../GraphiQLWrapper/GraphiQL.css';
 import './OneGraphExplorer.css';
@@ -207,6 +207,7 @@ class OneGraphExplorer extends React.Component {
         hideCodeExporter={toggleExporter}
         query={query}
         variables={variables}
+        context={{ schema }}
         headers={getHeadersAsJSON(headers)}
         snippets={[...builtInSnippets, ...snippets]}
         serverUrl={endpoint}
@@ -218,7 +219,7 @@ class OneGraphExplorer extends React.Component {
       query: query,
       onEditQuery: this.editQuery,
       onEditVariables: this.editVariables,
-      schema: schema,
+      schema,
       toggleExplorer: this.handleToggle,
       toggleExporter: toggleExporter,
     });
