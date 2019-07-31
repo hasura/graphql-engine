@@ -6,7 +6,8 @@
 
 .tableContainer {
   overflow: auto;
-  width: 95%;
+  max-width: 100%;
+  width: fit-content;
   padding-right: 5px; // removes scrollbar if width is enough
 }
 
@@ -63,18 +64,17 @@
 .table {
   width: auto;
 
-  thead {
-    background: #333;
-    color: #ddd;
+  tr:nth-child(even) {
+    background: #f4f4f4
   }
 
   th {
-    min-width: 100px;
+    //min-width: 100px;
     font-weight: 300;
   }
 
   td {
-    max-width: 300px;
+    max-width: 600px;
     white-space: pre;
     overflow: hidden;
     text-overflow: ellipsis;

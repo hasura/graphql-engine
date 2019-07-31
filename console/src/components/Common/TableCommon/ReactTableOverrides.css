@@ -13,13 +13,6 @@
   background: none;
 }
 
-.ReactTable .-pagination .-btn {
-  height: 35px !important;
-  width: 40%;
-  display: inline-block;
-  font-weight: bold;
-}
-
 .ReactTable .rt-thead {
   font-size: 16px;
   color: #333;
@@ -48,6 +41,18 @@
 .ReactTable .-pagination {
   box-shadow: none;
   border: none;
+}
+
+.ReactTable .-pagination .-center {
+  flex: unset;
+}
+
+.ReactTable .-pagination .-btn {
+  height: 35px !important;
+  width: 40%;
+  min-width: 65px;
+  display: inline-block;
+  font-weight: bold;
 }
 
 .ReactTable .rt-table .rt-thead .rt-th,
