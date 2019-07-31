@@ -1,4 +1,4 @@
-import { isWrappingType } from 'graphql';
+import { isWrappingType, isListType, validate } from 'graphql';
 import gql from 'graphql-tag';
 import 'codemirror/mode/clike/clike';
 
@@ -10,8 +10,17 @@ const hasuraToJavaTypeMap = {
   String: 'String',
 };
 
-const getJavaType = hasuraType => {
-  return hasuraToJavaTypeMap[hasuraType] || 'String';
+const getJavaType = (hasuraType, isList, isScalar) => {
+  if (isScalar) {
+    if (isList) {
+      return `List <${hasuraToJavaTypeMap[hasuraType] || 'String'}>`;
+    }
+    return hasuraToJavaTypeMap[hasuraType] || 'String';
+  }
+  if (isList) {
+    return `List <${hasuraType}>`;
+  }
+  return hasuraType;
 };
 
 let classNameMap = {};
@@ -47,10 +56,17 @@ const generateClassName = maybeName => {
 
 const getUnderlyingType = t => {
   let _type = t;
+  let isList = false;
   while (isWrappingType(_type)) {
+    if (isListType(_type)) {
+      isList = true;
+    }
     _type = _type.ofType;
   }
-  return _type;
+  return {
+    type: _type,
+    isList
+  };
 };
 
 const populateTypes = (classes, schema) => {
@@ -59,14 +75,19 @@ const populateTypes = (classes, schema) => {
     if (!c.path) return;
     let currentType = schema._queryType;
     c.path.forEach(field => {
-      currentType = getUnderlyingType(currentType._fields[field].type);
+      currentType = getUnderlyingType(currentType._fields[field].type).type;
     });
     Object.keys(c.fields).forEach(f => {
       if (!c.fields[f]) {
         const fieldName = getNameFromAlias(f);
         const _type = currentType._fields[fieldName].type;
         const unWrappedType = getUnderlyingType(_type);
-        classesWithTypes[i].fields[f] = getJavaType(unWrappedType);
+        classesWithTypes[i].fields[f] = getJavaType(unWrappedType.type, unWrappedType.isList, true);
+      } else {
+        const fieldName = getNameFromAlias(f);
+        const _type = currentType._fields[fieldName].type;
+        const unWrappedType = getUnderlyingType(_type);
+        classesWithTypes[i].fields[f] = getJavaType(c.fields[f], unWrappedType.isList, false);
       }
     });
   });
@@ -107,7 +128,7 @@ const generateClasses = (queryString, schema) => {
   `;
   const classes = [];
   const queryDef = queryAst.definitions[0];
-  const queryName = generateClassName(queryDef.name || 'GraphQLResponse');
+  const queryName = generateClassName('GraphQLResponse');
   const pushClass = c => {
     classes.push(c);
   };
@@ -134,13 +155,20 @@ const generateClassesCode = classes => {
     let classFieldsCode = '';
     Object.keys(c.fields).forEach(f => {
       classFieldsCode = `${classFieldsCode}
-  ${c.fields[f]} ${f};
-      `;
+  final ${c.fields[f]} ${f};`;
     });
+
+    const constructorCode = `
+  public ${c.name}(${Object.keys(c.fields).map(f => `${c.fields[f]} _${f}`).join(', ')}) {
+    ${Object.keys(c.fields).map(f => `${f} = _${f}`).join('\n    ')}
+  }
+    `;
+
     code = `${code}
 public class ${c.name} {
 ${classFieldsCode}
-};
+${constructorCode}
+}
     `;
   }
   return code;
@@ -162,8 +190,10 @@ const javaSnippet = {
       context: { schema },
     } = config;
     const { query, variables } = operationDataList[0];
+    if (validate(schema, gql`${query}`).length) {
+      return 'Invalid Query';
+    }
     const generatedClasses = generateClasses(query, schema);
-    console.log(generatedClasses);
     let stringifiedQuery = JSON.stringify(query);
     stringifiedQuery = stringifiedQuery.substring(
       1,
@@ -208,6 +238,11 @@ Request request = new Request.Builder()
   .build();
 
 Response response = client.newCall(request).execute();
+String responseString = response.body().string();
+
+Gson g = new Gson();
+GraphQLResponse r = g.fromJson(responseString, GraphQLResponse.class);
+
 
 // Required classes
 ${generateClassesCode(generatedClasses)}
