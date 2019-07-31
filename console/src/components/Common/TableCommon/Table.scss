@@ -73,7 +73,8 @@
     font-weight: 300;
   }
 
-  td {
+  tbody > tr > td {
+    padding: 4px 8px;
     max-width: 600px;
     white-space: pre;
     overflow: hidden;
