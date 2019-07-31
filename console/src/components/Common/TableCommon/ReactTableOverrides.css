@@ -46,6 +46,7 @@
 .ReactTable .-pagination {
   box-shadow: none;
   border: none;
+  max-width: 60vw;
 }
 
 .ReactTable .-pagination .-center {
