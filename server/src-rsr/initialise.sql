@@ -73,14 +73,6 @@ FROM
 GROUP BY
     table_schema, table_name, role_name;
 
-CREATE TABLE hdb_catalog.hdb_query_template
-(
-    template_name TEXT PRIMARY KEY,
-    template_defn JSONB NOT NULL,
-    comment    TEXT NULL,
-    is_system_defined boolean default false
-);
-
 CREATE VIEW hdb_catalog.hdb_foreign_key_constraint AS
 SELECT
     q.table_schema :: text,
@@ -435,7 +427,7 @@ $function$
 $function$
 LANGUAGE plpgsql;
 
-CREATE TRIGGER hdb_schema_update_event_notifier_insert AFTER INSERT OR UPDATE ON
+CREATE TRIGGER hdb_schema_update_event_notifier AFTER INSERT OR UPDATE ON
   hdb_catalog.hdb_schema_update_event FOR EACH ROW EXECUTE PROCEDURE
   hdb_catalog.hdb_schema_update_event_notifier();
 

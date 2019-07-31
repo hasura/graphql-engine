@@ -584,11 +584,7 @@ const fetchColumnTypeInfo = () => {
       },
       error => {
         dispatch(
-          showErrorNotification(
-            'Error fetching column types',
-            'Kindly reach out to us in case you face this issue again',
-            error
-          )
+          showErrorNotification('Error fetching column types', null, error)
         );
         return dispatch({
           type: FETCH_COLUMN_TYPE_INFO_FAIL,
