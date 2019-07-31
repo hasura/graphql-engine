@@ -63,6 +63,7 @@
     "graphiql-code-exporter": "^2.0.5",
     "graphiql-explorer-hasura": "0.0.7",
     "graphql": "^14.3.0",
+    "graphql-tag": "^2.10.1",
     "graphql-voyager": "^1.0.0-rc.27",
     "hasura-console-graphiql": "0.1.0-alpha.1",
     "history": "^3.0.0",
