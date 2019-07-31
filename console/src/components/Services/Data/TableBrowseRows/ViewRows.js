@@ -157,7 +157,7 @@ const ViewRows = ({
       Header: '',
       accessor: 'tableRowActionButtons',
       id: 'tableRowActionButtons',
-      width: 160,
+      width: 152,
     });
 
     _columns.map(col => {
