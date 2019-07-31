@@ -71,7 +71,7 @@ runGQ reqId userInfo reqHdrs req = do
                 HttpResponse
                   (OJ.toEncJSON
                      (E.gqrespValueToValue
-                        (E.joinResults (toList results) initValue)))
+                        (E.joinResults initValue $ toList results)))
                   Nothing
   let mergedRespResult = mergeResponseData (toList (fmap _hrBody results))
   case mergedRespResult of
@@ -128,7 +128,7 @@ runGQ reqId userInfo reqHdrs req = do
         --              -- liftIO (putStrLn ("remote result = " ++ show res))
         --              pure (batch, res))
         --           batches
-        --       let joinResult = (E.joinResults results hasuraValue)
+        --       let joinResult = (E.joinResults hasuraValue results)
         --       -- liftIO (putStrLn ("joined = " <> (L8.unpack . encode) joinResult))
         --       pure (HttpResponse (OJ.toEncJSON $ E.gqrespValueToValue joinResult) Nothing)
 
@@ -159,46 +159,43 @@ runHasuraGQ reqId query userInfo resolvedOp = do
   resp <- liftEither respE
   return $ encodeGQResp $ GQSuccess $ encJToLBS resp
 
--- | Merge the list of objects by the @data@ key.
+-- | Merge the list of response objects by the @data@ key.
 mergeResponseData :: [EncJSON] -> Either String EncJSON
 mergeResponseData responses = do
   resps <- traverse ((OJ.eitherDecode . encJToLBS) >=> E.parseGQRespValue) responses
-  let mergedGQResp =
-        foldM
-          (\accResp resp ->
-             case (E.gqRespData resp, E.gqRespErrors resp) of
-               (Nothing, Nothing) -> pure accResp
-               (Nothing, Just errors) ->
-                 pure
-                   accResp
-                     { E.gqRespErrors =
-                         maybe
-                           (Just errors)
-                           (\accErr -> Just $ accErr <> errors)
-                           (E.gqRespErrors accResp)
-                     }
-               (Just data', Nothing) -> do
-                 combined <-
-                   maybe
-                     (pure (Just data'))
-                     (\accData -> fmap Just $ OJ.union accData data')
-                     (E.gqRespData accResp)
-                 pure accResp {E.gqRespData = combined}
-               (Just data', Just errors) -> do
-                 combined <-
-                   maybe
-                     (pure (Just data'))
-                     (\accData -> fmap Just $ OJ.union accData data')
-                     (E.gqRespData accResp)
-                 pure
-                   accResp
-                     { E.gqRespData = combined
-                     , E.gqRespErrors =
-                         maybe
-                           (Just errors)
-                           (\accErr -> Just $ accErr <> errors)
-                           (E.gqRespErrors accResp)
-                     })
-          E.emptyResp
-          resps
-   in fmap (OJ.toEncJSON . E.gqrespValueToValue) mergedGQResp
+  fmap (OJ.toEncJSON . E.gqrespValueToValue) (mergeGQResp resps)
+
+  where mergeGQResp = flip foldM E.emptyResp $ \accResp E.GQRespValue{..} ->
+          case (gqRespData, gqRespErrors) of
+            (Nothing, Nothing) -> pure accResp
+            (Nothing, Just errors) ->
+              pure
+                accResp
+                  { E.gqRespErrors =
+                      maybe
+                        (Just errors)
+                        (\accErr -> Just $ accErr <> errors)
+                        (E.gqRespErrors accResp)
+                  }
+            (Just data', Nothing) -> do
+              combined <-
+                maybe
+                  (pure (Just data'))
+                  (\accData -> fmap Just $ OJ.union accData data')
+                  (E.gqRespData accResp)
+              pure accResp {E.gqRespData = combined}
+            (Just data', Just errors) -> do
+              combined <-
+                maybe
+                  (pure (Just data'))
+                  (\accData -> fmap Just $ OJ.union accData data')
+                  (E.gqRespData accResp)
+              pure
+                accResp
+                  { E.gqRespData = combined
+                  , E.gqRespErrors =
+                      maybe
+                        (Just errors)
+                        (\accErr -> Just $ accErr <> errors)
+                        (E.gqRespErrors accResp)
+                  }

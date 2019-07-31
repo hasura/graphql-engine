@@ -34,6 +34,7 @@ module Hasura.GraphQL.Execute
   , mkQuery
   ) where
 
+import           Control.Arrow                          (first)
 import           Control.Exception                      (try)
 import           Control.Lens
 import           Data.Scientific
@@ -435,37 +436,19 @@ neededHasuraFields remoteField = toList (rtrHasuraFields remoteRelationship)
 -- remote result = {"data":{"result_0":{"name":"alice"},"result_1":{"name":"bob"},"result_2":{"name":"alice"}}}
 
 -- | Join the data from the original hasura with the remote values.
-joinResults :: [(Batch, EncJSON)]
+joinResults :: GQRespValue
+            -> [(Batch, EncJSON)] 
             -> GQRespValue
-            -> GQRespValue
-joinResults paths hasuraValue0 =
-  let remoteValues :: [(Batch, GQRespValue)] =
-        map
-          (\(batch, encJson) ->
-             case OJ.eitherDecode (encJToLBS encJson) >>= parseGQRespValue of
-               Left err ->
-                 ( batch
-                 , appendJoinError
-                     emptyResp
-                     (GQJoinError ("joinResults: eitherDecode: " <> T.pack err)))
-               Right gqResp@(GQRespValue mdata _merrors) ->
-                 case mdata of
-                   Nothing ->
-                     ( batch
-                     , appendJoinError
-                         gqResp
-                         (GQJoinError ("could not find join key")))
-                   Just _ -> (batch, gqResp))
-          paths
-   in foldl
-        (\resp (batch, remoteResp) ->
-           insertBatchResults
-             remoteResp
-             batch
-             resp
-        )
-        hasuraValue0
-        remoteValues
+joinResults hasuraValue0 = 
+  foldl (uncurry . insertBatchResults) hasuraValue0 . map (fmap f)
+  where
+    f encJson = 
+      case OJ.eitherDecode (encJToLBS encJson) >>= parseGQRespValue of
+        Left err ->
+          appendJoinError emptyResp (GQJoinError $ "joinResults: eitherDecode: " <> T.pack err)
+        Right gqResp@(GQRespValue Nothing _merrors) ->
+          appendJoinError gqResp $ GQJoinError "could not find join key"
+        Right gqResp -> gqResp
 
 emptyResp :: GQRespValue
 emptyResp = GQRespValue Nothing Nothing
@@ -476,8 +459,8 @@ insertBatchResults ::
   -> Batch
   -> GQRespValue
   -> GQRespValue
-insertBatchResults remoteValue batch hasuraResp =
-  case inHashmap (batchRelFieldPath batch) hasuraHash0 remoteHash0 of
+insertBatchResults hasuraResp Batch{..} remoteResp =
+  case inHashmap batchRelFieldPath hasuraHash0 remoteHash0 of
     Left err  -> appendJoinError hasuraResp (GQJoinError (T.pack err))
     Right val -> GQRespValue (Just (fst val)) (gqRespErrors hasuraResp)
   where
@@ -486,70 +469,50 @@ insertBatchResults remoteValue batch hasuraResp =
     -- implementations may not guarantee order of results matching
     -- order of query.
     remoteHash0 =
-      fromMaybe mempty $ fmap (sortOn fst . OJ.toList) (gqRespData remoteValue)
-    cardinality = biCardinality (batchInputs batch)
+      fromMaybe mempty $ fmap (sortOn fst . OJ.toList) (gqRespData remoteResp)
+    cardinality = biCardinality batchInputs
+
     inHashmap ::
          RelFieldPath
       -> OJ.Object
       -> [(Text, OJ.Value)]
       -> Either String (OJ.Object, [(Text, OJ.Value)])
-    inHashmap (RelFieldPath Seq.Empty) hasuraHash remoteHash =
-      case cardinality of
-        One ->
-          case remoteHash of
-            [] ->
-              Left
-                ("Expected one remote object but got none, while traversing " <>
-                 show (OJ.toEncJSON (OJ.Object hasuraHash)))
-            [theRemoteHash] ->
-              Right
-                ( (foldl'
-                     (flip OJ.delete)
-                     (OJ.insert
-                        ( batchRelationshipKeyIndex batch
-                        , batchRelationshipKeyToMake batch)
-                        (peelOffNestedFields
-                           (batchNestedFields batch)
-                           (snd $ theRemoteHash))
-                        hasuraHash)
-                     (batchPhantoms batch))
-                , mempty)
-            _ ->
-              Left
-                ("Expected one remote object but got many, while traversing " <>
-                 show (OJ.toEncJSON (OJ.Object hasuraHash)))
-        Many ->
-          case remoteHash of
-            [] ->
-              Left
-                ("Expected many objects but got none, while traversing " <>
-                 show (OJ.toEncJSON (OJ.Object hasuraHash)))
-            (theRemoteHash:remainingRemoteHashes) ->
-              Right
-                ( (foldl'
-                     (flip OJ.delete)
-                     (OJ.insert
-                        ( batchRelationshipKeyIndex batch
-                        , batchRelationshipKeyToMake batch)
-                        (peelOffNestedFields
-                           (batchNestedFields batch)
-                           (snd (theRemoteHash)))
-                        hasuraHash)
-                     (batchPhantoms batch))
-                , remainingRemoteHashes)
-    inHashmap (RelFieldPath ((idx, G.Alias (G.Name key)) Seq.:<| rest)) hasuraHash remoteHash =
-      case OJ.lookup key hasuraHash of
-        Nothing ->
-          Left
-            ("Couldn't find expected key " <> show key <> " in " <>
-             show (OJ.toEncJSON (OJ.Object hasuraHash)) <>
-             ", while traversing " <>
-             show (OJ.toEncJSON (OJ.Object hasuraHash0)))
-        Just currentValue ->
-          fmap
-            (\(newValue, remoteCandidates) ->
-               (OJ.insert (idx, key) newValue hasuraHash, remoteCandidates))
-            (inValue rest currentValue remoteHash)
+    inHashmap (RelFieldPath p) hasuraHash remoteHash = case p of
+      Seq.Empty ->
+        case remoteHash of
+          [] -> Left $ err <> show (OJ.toEncJSON $ OJ.Object hasuraHash)
+            where err = case cardinality of 
+                          One -> "Expected one remote object but got none, while traversing " 
+                          Many -> "Expected many objects but got none, while traversing " 
+
+          (theRemoteHash:remainingRemoteHashes) 
+            | cardinality == One && not (null remainingRemoteHashes) ->
+                Left $
+                  "Expected one remote object but got many, while traversing " <> showHash hasuraHash
+            | otherwise -> 
+                Right
+                  ( (foldl'
+                       (flip OJ.delete)
+                       (OJ.insert
+                          (batchRelationshipKeyIndex, batchRelationshipKeyToMake)
+                          (peelOffNestedFields batchNestedFields (snd theRemoteHash))
+                          hasuraHash)
+                       batchPhantoms)
+                  , remainingRemoteHashes)
+ 
+      ((idx, G.Alias (G.Name key)) Seq.:<| rest) ->
+        case OJ.lookup key hasuraHash of
+          Nothing ->
+            Left $ 
+              "Couldn't find expected key " <> show key <> " in " <> showHash hasuraHash <>
+              ", while traversing " <> showHash hasuraHash0
+          Just currentValue ->
+            first (\newValue -> OJ.insert (idx, key) newValue hasuraHash)
+              <$> inValue rest currentValue remoteHash
+      where
+        showHash = show . OJ.toEncJSON . OJ.Object
+
+    -- TODO what is this supposed to do, and what does the return values mean?
     inValue ::
          Seq.Seq (Int, G.Alias)
       -> OJ.Value
@@ -583,22 +546,18 @@ insertBatchResults remoteValue batch hasuraResp =
                                     (x:xs) -> do
                                       let peeledRemoteValue =
                                             peelOffNestedFields
-                                              (batchNestedFields batch)
+                                              batchNestedFields
                                               (snd x)
-                                          phantoms = batchPhantoms batch
                                       pure
                                         ( hasuraRowsSoFar <>
                                           [ (OJ.Object
                                                (foldl'
                                                   (flip OJ.delete)
                                                   (OJ.insert
-                                                     ( batchRelationshipKeyIndex
-                                                         batch
-                                                     , batchRelationshipKeyToMake
-                                                         batch)
+                                                     (batchRelationshipKeyIndex, batchRelationshipKeyToMake)
                                                      peeledRemoteValue
                                                      hasuraRowHash)
-                                                  phantoms))
+                                                  batchPhantoms))
                                           ]
                                         , xs)
                                 _ -> Left "expected object here")
@@ -697,43 +656,33 @@ produceBatch ::
   -> RemoteRelField
   -> BatchInputs
   -> Batch
-produceBatch opType remoteSchemaInfo remoteRelField inputs =
-  Batch
-    { batchRemoteTopQuery = remoteTopQuery
-    , batchRelFieldPath = path
-    , batchIndices = resultIndexes
-    , batchRelationshipKeyToMake = G.unName (G.unAlias (rrAlias remoteRelField))
-    , batchRelationshipKeyIndex = rrAliasIndex remoteRelField
-    , batchInputs = inputs
-    , batchPhantoms = rrPhantomFields remoteRelField
-    , batchNestedFields =
-        fmap
-          fcName
-          (rtrRemoteFields
-             (rmfRemoteRelationship (rrRemoteField remoteRelField)))
-    }
+produceBatch rtqOperationType rtqRemoteSchemaInfo RemoteRelField{..} batchInputs =
+  Batch{..}
   where
-    remoteTopQuery =
-      VQ.RemoteTopField
-        { rtqRemoteSchemaInfo = remoteSchemaInfo
-        , rtqFields =
-            fmap
-              (\(i, variables) ->
-                 fieldCallsToField
-                   (Just (arrayIndexAlias i))
-                   (_fArguments originalField)
-                   variables
-                   (_fSelSet originalField)
-                   (rtrRemoteFields remoteRelationship))
-              indexedRows
-         , rtqOperationType = opType
-        }
-    indexedRows = zip (map ArrayIndex [0 :: Int ..]) (toList rows)
-    rows = biRows inputs
-    resultIndexes = map fst indexedRows
-    remoteRelationship = rmfRemoteRelationship (rrRemoteField remoteRelField)
-    path = rrRelFieldPath remoteRelField
-    originalField = rrField remoteRelField
+    batchRelationshipKeyToMake = G.unName (G.unAlias rrAlias)
+    batchNestedFields =
+      fmap
+        fcName
+        (rtrRemoteFields
+           (rmfRemoteRelationship rrRemoteField))
+    batchRemoteTopQuery = VQ.RemoteTopField{..}
+    rtqFields =
+      map
+        (\(i, variables) ->
+           fieldCallsToField
+             (Just (arrayIndexAlias i))
+             (_fArguments rrField)
+             variables
+             (_fSelSet rrField)
+             (rtrRemoteFields remoteRelationship))
+        indexedRows
+    indexedRows = zip (map ArrayIndex [0 :: Int ..]) $ toList $ biRows batchInputs
+    batchIndices = map fst indexedRows
+    remoteRelationship = rmfRemoteRelationship rrRemoteField
+    -- TODO These might be good candidates for reusing names with DuplicateRecordFields if they have the same semantics:
+    batchRelationshipKeyIndex = rrAliasIndex
+    batchPhantoms = rrPhantomFields
+    batchRelFieldPath = rrRelFieldPath
 
 -- | Produce the alias name for a result index.
 arrayIndexAlias :: ArrayIndex -> G.Alias

@@ -281,6 +281,7 @@ library
                       InstanceSigs
                       MultiParamTypeClasses
                       LambdaCase
+                      RecordWildCards
                       MultiWayIf
                       TupleSections
                       DeriveFoldable
@@ -317,6 +318,7 @@ executable graphql-engine
                       InstanceSigs
                       MultiParamTypeClasses
                       LambdaCase
+                      RecordWildCards
                       MultiWayIf
                       TupleSections
                       DeriveFoldable
