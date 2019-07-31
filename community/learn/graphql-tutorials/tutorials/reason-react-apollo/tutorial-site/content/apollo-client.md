@@ -45,7 +45,7 @@ Finally, you need a `graphql_schema.json` in the root of your project so that th
 3. Run this command from the root of your project:
 
   ```js
-  npx send-introspection-query https://learn.hasura.io/graphql --haders "Authorization: Bearer <JWT>"
+  npx send-introspection-query https://learn.hasura.io/graphql --headers "Authorization: Bearer <JWT>"
   ```
 
 ## Setup
