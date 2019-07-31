@@ -2,6 +2,10 @@
   border: 0;
 }
 
+.ReactTable .rt-table {
+  width: fit-content;
+}
+
 .ReactTable .rt-tbody {
   min-height: 32px;
   overflow: unset;

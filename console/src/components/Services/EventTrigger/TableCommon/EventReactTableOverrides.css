@@ -4,6 +4,10 @@
   width: 95% !important;
 }
 
+.eventsTableBody .ReactTable .rt-table {
+  width: 100%;
+}
+
 .eventsTableBody .ReactTable .rt-table .rt-thead .rt-tr .rt-th:first-child {
   min-width: 75px;
 }
@@ -54,11 +58,8 @@
 .processedEventsTable .invocationsFailure {
   color: red;
 }
-.streamingLogs .ReactTable {
-  // max-height: 350px;
-}
-.streamingLogs .ReactTable .rt-thead.-header {
-  // display: none;
+.streamingLogs .ReactTable .rt-table {
+  width: 100%;
 }
 .streamingLogs .ReactTable .rt-table .rt-thead .rt-tr .rt-th:nth-child(2) {
   width: 100px;
