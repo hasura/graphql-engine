@@ -136,11 +136,14 @@ const ViewRows = ({
         if (contentRows[i] !== undefined && contentRows[i][header] !== null) {
           const content = contentRows[i][header];
           const contentString =
-            typeof content === 'object' ? JSON.stringify(content) : content;
+            typeof content === 'object'
+              ? JSON.stringify(content, null, 4)
+              : content;
 
-          const currLength =
-            getTextWidth(contentString || 'NULL', CONTENT_FONT) +
-            CONTENT_PADDING;
+          const currLength = getTextWidth(
+            contentString || 'NULL',
+            CONTENT_FONT
+          );
 
           if (currLength > maxContentWidth) {
             maxContentWidth = currLength;
@@ -148,9 +151,15 @@ const ViewRows = ({
         }
       }
 
-      const headerWidth = getTextWidth(header, HEADER_FONT) + HEADER_PADDING;
+      const maxContentCellWidth = maxContentWidth + CONTENT_PADDING;
 
-      return Math.min(MAX_WIDTH, Math.max(maxContentWidth, headerWidth));
+      const headerCellWidth =
+        getTextWidth(header, HEADER_FONT) + HEADER_PADDING;
+
+      return Math.min(
+        MAX_WIDTH,
+        Math.max(maxContentCellWidth, headerCellWidth)
+      );
     };
 
     _gridHeadings.push({
@@ -473,14 +482,11 @@ const ViewRows = ({
           } else if (rowColumnValue === undefined) {
             cellValue = 'NULL';
             cellTitle = cellValue;
-          } else if (col.data_type === 'json' || col.data_type === 'jsonb') {
-            cellValue = JSON.stringify(rowColumnValue);
+          } else if (typeof rowColumnValue === 'object') {
+            cellValue = JSON.stringify(rowColumnValue, null, 4);
             cellTitle = cellValue;
           } else {
-            /*
-             * This will render [object Object] if the state is not common data types
-             * */
-            cellValue = rowColumnValue.toString();
+            cellValue = rowColumnValue;
             cellTitle = cellValue;
           }
 
