@@ -187,8 +187,11 @@ data RemoteRelField =
   RemoteRelField
     { rrRemoteField   :: !RemoteField
     , rrField         :: !Field
+    -- ^ TODO this is strange, since (_fRemoteRel rrField) == Just rrRemoteField, right? Is that an invariant?
+    -- maybe we need to just unpack part of the Field here (DuplicateRecordNames could help here)
     , rrRelFieldPath  :: !RelFieldPath
     , rrAlias         :: !G.Alias
+    -- ^ TODO similar to comment above ^ is rrAlias always a derivative of rrField? If so we should remove rrAlias unless it's very expensive to compute.
     , rrAliasIndex    :: !Int
     , rrPhantomFields :: ![Text]
     }
@@ -352,11 +355,13 @@ getExecPlan pgExecCtx planCache userInfo@UserInfo{..} sqlGenCtx enableAL sc scVe
 -- point back to them.
 rebuildFieldStrippingRemoteRels ::
      VQ.Field -> Maybe (VQ.Field, NonEmpty RemoteRelField)
+-- TODO consider passing just relevant fields (_fSelSet and _fAlias?) from Field here and modify Field in caller
 rebuildFieldStrippingRemoteRels =
   extract . flip runState mempty . rebuild 0 mempty
   where
     extract (field, remoteRelFields) =
       fmap (field, ) (NE.nonEmpty remoteRelFields)
+    -- TODO refactor for clarity
     rebuild idx0 parentPath field0 = do
       selSetEithers <-
         traverse
