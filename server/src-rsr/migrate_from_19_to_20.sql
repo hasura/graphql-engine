@@ -83,6 +83,7 @@ from
     from pg_class pc
         left join pg_namespace pn on pn.oid = pc.relnamespace
         left join pg_description pd on pd.objoid = pc.oid
+    where pd.objsubid = 0
   ) descriptions on (
     tables.table_schema = descriptions.table_schema
     AND tables.table_name = descriptions.table_name
