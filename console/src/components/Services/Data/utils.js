@@ -623,29 +623,6 @@ GROUP BY t.typname
 ORDER BY t.typname ASC;
 `;
 
-export const fetchTableTriggersSQL = (schema, table) => {
-  return `  
-select 
-  COALESCE(
-    json_agg(
-      row_to_json(t)
-    ), 
-    '[]' :: JSON
-  ) AS result FROM (
-select 
-  trigger_schema, 
-  trigger_name, 
-  event_manipulation, 
-  action_timing, 
-  action_statement, 
-  event_object_schema, 
-  event_object_table 
-FROM information_schema.triggers 
-WHERE event_object_schema = '${schema}' AND event_object_table = '${table}'
-) AS t
-  `;
-};
-
 const postgresFunctionTester = /.*\(\)$/gm;
 
 export const isPostgresFunction = str =>

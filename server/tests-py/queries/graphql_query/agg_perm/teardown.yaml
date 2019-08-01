@@ -12,5 +12,6 @@ args:
   args:
     sql: |
       DROP TABLE article;
+      DROP TABLE post;
       DROP TABLE author;
     cascade: true

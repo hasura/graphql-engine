@@ -1015,6 +1015,7 @@ class Permissions extends Component {
               )}
               useDefaultTitleStyle
               testId={'toggle-col-permission'}
+              isOpen={colSectionStatus === 'no columns'}
             >
               <div
                 className={sectionClasses}
