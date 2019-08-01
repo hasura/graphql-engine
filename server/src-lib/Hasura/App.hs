@@ -147,9 +147,14 @@ initialiseCtx hgeCmd rci logCallback = do
   (loggerThings, pool) <- case hgeCmd of
     HCServe ServeOptions{..} -> do
       l@(Loggers _ logger pgLogger) <- mkLoggers soEnabledLogTypes soLogLevel
+      let sqlGenCtx = SQLGenCtx soStringifyNum
       -- log postgres connection info
       unLogger logger $ connInfoToLog connInfo
       pool <- Q.initPGPool connInfo soConnParams pgLogger
+
+      -- safe init catalog
+      initialise pool sqlGenCtx logger
+
       return (l, pool)
 
     _ -> do
@@ -157,11 +162,22 @@ initialiseCtx hgeCmd rci logCallback = do
       pool <- getMinimalPool pgLogger connInfo
       return (l, pool)
 
+  -- get the unique db id
   eDbId <- runExceptT $ Q.runTx pool (Q.Serializable, Nothing) getDbId
   dbId <- either printErrJExit return eDbId
 
   return $ InitCtx httpManager instanceId dbId loggerThings connInfo pool
   where
+    initialise pool sqlGenCtx (Logger logger) = do
+      currentTime <- getCurrentTime
+      -- initialise the catalog
+      initRes <- runAsAdmin pool sqlGenCtx $ initCatalogSafe currentTime
+      either printErrJExit (logger . mkGenericStrLog LevelInfo "db_init") initRes
+
+      -- migrate catalog if necessary
+      migRes <- runAsAdmin pool sqlGenCtx $ migrateCatalog currentTime
+      either printErrJExit (logger . mkGenericStrLog LevelInfo "db_migrate") migRes
+
     procConnInfo =
       either (printErrExit . connInfoErrModifier) return $ mkConnInfo rci
 
@@ -175,6 +191,92 @@ initialiseCtx hgeCmd rci logCallback = do
           pgLogger = mkPGLogger logger
       return $ Loggers loggerCtx logger pgLogger
 
+
+runHGEServer :: ServeOptions -> InitCtx -> Maybe UserAuthMiddleware -> Maybe (HasuraMiddleware RQLQuery) -> Maybe ConsoleRenderer -> IO ()
+runHGEServer so@(ServeOptions port host _ isoL mAdminSecret mAuthHook mJwtSecret mUnAuthRole corsCfg enableConsole consoleAssetsDir enableTelemetry strfyNum enabledAPIs lqOpts enableAL _ _) (InitCtx httpManager instanceId dbId loggers connInfo pgPool) authMiddleware metadataMiddleware renderConsole = do
+  let sqlGenCtx = SQLGenCtx strfyNum
+
+  let Loggers loggerCtx logger _ = loggers
+
+  initTime <- Clock.getCurrentTime
+  -- log serve options
+  unLogger logger $ serveOptsToLog so
+  --hloggerCtx  <- mkLoggerCtx (defaultLoggerSettings False serverLogLevel) enabledLogs logCallback
+
+  authModeRes <- runExceptT $ mkAuthMode mAdminSecret mAuthHook mJwtSecret
+                                          mUnAuthRole httpManager loggerCtx
+
+  authMode <- either (printErrExit . T.unpack) return authModeRes
+
+
+  (app, cacheRef, cacheInitTime) <-
+    mkWaiApp isoL loggerCtx sqlGenCtx enableAL pgPool connInfo httpManager
+      authMode corsCfg enableConsole consoleAssetsDir enableTelemetry
+      instanceId enabledAPIs lqOpts authMiddleware metadataMiddleware renderConsole
+
+  -- log inconsistent schema objects
+  inconsObjs <- scInconsistentObjs <$> getSCFromRef cacheRef
+  logInconsObjs logger inconsObjs
+
+  -- start a background thread for schema sync
+  startSchemaSync sqlGenCtx pgPool logger httpManager
+                  cacheRef instanceId cacheInitTime
+
+  let warpSettings = Warp.setPort port $ Warp.setHost host Warp.defaultSettings
+
+  maxEvThrds <- getFromEnv defaultMaxEventThreads "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
+  evFetchMilliSec  <- getFromEnv defaultFetchIntervalMilliSec "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
+  logEnvHeaders <- getFromEnv False "LOG_HEADERS_FROM_ENV"
+
+  -- prepare event triggers data
+  prepareEvents pgPool logger
+  eventEngineCtx <- atomically $ initEventEngineCtx maxEvThrds evFetchMilliSec
+  let scRef = _scrCache cacheRef
+  unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
+  void $ C.forkIO $ processEventQueue loggerCtx logEnvHeaders
+    httpManager pgPool scRef eventEngineCtx
+
+  -- start a background thread to check for updates
+  void $ C.forkIO $ checkForUpdates loggerCtx httpManager
+
+  -- start a background thread for telemetry
+  when enableTelemetry $ do
+    unLogger logger $ mkGenericStrLog LevelInfo "telemetry" telemetryNotice
+    void $ C.forkIO $ runTelemetry logger httpManager scRef dbId instanceId
+
+  finishTime <- Clock.getCurrentTime
+  let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime
+  unLogger logger $ mkGenericLog LevelInfo "server" $
+    StartupTimeInfo "starting API server" apiInitTime
+  Warp.runSettings warpSettings app
+
+  where
+    prepareEvents pool (Logger logger) = do
+      logger $ mkGenericStrLog LevelInfo "event_triggers" "preparing data"
+      res <- runTx pool unlockAllEvents
+      either printErrJExit return res
+
+    getFromEnv :: (Read a) => a -> String -> IO a
+    getFromEnv defaults env = do
+      mEnv <- lookupEnv env
+      let mRes = case mEnv of
+            Nothing  -> Just defaults
+            Just val -> readMaybe val
+          eRes = maybe (Left $ "Wrong expected type for environment variable: " <> env) Right mRes
+      either printErrExit return eRes
+
+    runTx pool tx =
+      runExceptT $ Q.runTx pool (Q.Serializable, Nothing) tx
+
+
+runAsAdmin :: Q.PGPool -> SQLGenCtx -> Run a -> IO (Either QErr a)
+runAsAdmin pool sqlGenCtx m = do
+  httpManager <- HTTP.newManager HTTP.tlsManagerSettings
+  res  <- runExceptT $ peelRun emptySchemaCache adminUserInfo
+          httpManager sqlGenCtx (PGExecCtx pool Q.Serializable) m
+  return $ fmap fst res
+
+
 handleCommand
   :: HGECommand
   -> InitCtx
@@ -182,73 +284,11 @@ handleCommand
   -> Maybe (HasuraMiddleware RQLQuery)
   -> Maybe ConsoleRenderer
   -> IO ()
-handleCommand hgeCmd (InitCtx httpManager instanceId dbId loggers connInfo pgPool)
+handleCommand hgeCmd initCtx@(InitCtx _ _ _ _ _ pgPool)
   authMiddleware metadataMiddleware renderConsole =
 
   case hgeCmd of
-    HCServe so@(ServeOptions port host _ isoL mAdminSecret mAuthHook
-                mJwtSecret mUnAuthRole corsCfg enableConsole consoleAssetsDir
-                enableTelemetry strfyNum enabledAPIs lqOpts enableAL
-                _ _) -> do
-
-      let sqlGenCtx = SQLGenCtx strfyNum
-
-      let Loggers loggerCtx logger _ = loggers
-
-      initTime <- Clock.getCurrentTime
-      -- log serve options
-      unLogger logger $ serveOptsToLog so
-      --hloggerCtx  <- mkLoggerCtx (defaultLoggerSettings False serverLogLevel) enabledLogs logCallback
-
-      authModeRes <- runExceptT $ mkAuthMode mAdminSecret mAuthHook mJwtSecret
-                                             mUnAuthRole httpManager loggerCtx
-
-      authMode <- either (printErrExit . T.unpack) return authModeRes
-
-      -- safe init catalog
-      initialise pgPool sqlGenCtx logger
-
-      (app, cacheRef, cacheInitTime) <-
-        mkWaiApp isoL loggerCtx sqlGenCtx enableAL pgPool connInfo httpManager
-          authMode corsCfg enableConsole consoleAssetsDir enableTelemetry
-          instanceId enabledAPIs lqOpts authMiddleware metadataMiddleware renderConsole
-
-      -- log inconsistent schema objects
-      inconsObjs <- scInconsistentObjs <$> getSCFromRef cacheRef
-      logInconsObjs logger inconsObjs
-
-      -- start a background thread for schema sync
-      startSchemaSync sqlGenCtx pgPool logger httpManager
-                      cacheRef instanceId cacheInitTime
-
-      let warpSettings = Warp.setPort port $ Warp.setHost host Warp.defaultSettings
-
-      maxEvThrds <- getFromEnv defaultMaxEventThreads "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
-      evFetchMilliSec  <- getFromEnv defaultFetchIntervalMilliSec "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
-      logEnvHeaders <- getFromEnv False "LOG_HEADERS_FROM_ENV"
-
-      -- prepare event triggers data
-      prepareEvents pgPool logger
-      eventEngineCtx <- atomically $ initEventEngineCtx maxEvThrds evFetchMilliSec
-      let scRef = _scrCache cacheRef
-      unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
-      void $ C.forkIO $ processEventQueue loggerCtx logEnvHeaders
-        httpManager pgPool scRef eventEngineCtx
-
-      -- start a background thread to check for updates
-      void $ C.forkIO $ checkForUpdates loggerCtx httpManager
-
-      -- start a background thread for telemetry
-      when enableTelemetry $ do
-        unLogger logger $ mkGenericStrLog LevelInfo "telemetry" telemetryNotice
-        void $ C.forkIO $ runTelemetry logger httpManager scRef dbId instanceId
-
-      finishTime <- Clock.getCurrentTime
-      let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime
-      unLogger logger $ mkGenericLog LevelInfo "server" $
-        StartupTimeInfo "starting API server" apiInitTime
-      Warp.runSettings warpSettings app
-
+    HCServe so -> runHGEServer so initCtx authMiddleware metadataMiddleware renderConsole
     HCExport -> do
       res <- runTx' fetchMetadata
       either printErrJExit printJSON res
@@ -265,42 +305,10 @@ handleCommand hgeCmd (InitCtx httpManager instanceId dbId loggers connInfo pgPoo
 
     HCVersion -> putStrLn $ "Hasura GraphQL Engine: " ++ T.unpack currentVersion
   where
-    runTx pool tx =
-      runExceptT $ Q.runTx pool (Q.Serializable, Nothing) tx
-
     runTx' :: Q.TxE QErr a -> IO (Either QErr a)
     runTx' tx =
       runExceptT $ Q.runTx pgPool (Q.Serializable, Nothing) tx
 
-    runAsAdmin :: Q.PGPool -> SQLGenCtx -> Run a -> IO (Either QErr a)
-    runAsAdmin pool sqlGenCtx m = do
-      res  <- runExceptT $ peelRun emptySchemaCache adminUserInfo
-              httpManager sqlGenCtx (PGExecCtx pool Q.Serializable) m
-      return $ fmap fst res
-
-    initialise pool sqlGenCtx (Logger logger) = do
-      currentTime <- getCurrentTime
-      -- initialise the catalog
-      initRes <- runAsAdmin pool sqlGenCtx $ initCatalogSafe currentTime
-      either printErrJExit (logger . mkGenericStrLog LevelInfo "db_init") initRes
-
-      -- migrate catalog if necessary
-      migRes <- runAsAdmin pool sqlGenCtx $ migrateCatalog currentTime
-      either printErrJExit (logger . mkGenericStrLog LevelInfo "db_migrate") migRes
-
-    prepareEvents pool (Logger logger) = do
-      logger $ mkGenericStrLog LevelInfo "event_triggers" "preparing data"
-      res <- runTx pool unlockAllEvents
-      either printErrJExit return res
-
-    getFromEnv :: (Read a) => a -> String -> IO a
-    getFromEnv defaults env = do
-      mEnv <- lookupEnv env
-      let mRes = case mEnv of
-            Nothing  -> Just defaults
-            Just val -> readMaybe val
-          eRes = maybe (Left $ "Wrong expected type for environment variable: " <> env) Right mRes
-      either printErrExit return eRes
     cleanSuccess =
       putStrLn "successfully cleaned graphql-engine related data"
 
