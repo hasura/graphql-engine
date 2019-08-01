@@ -40,9 +40,10 @@ import qualified PostgreSQL.Binary.Decoding as PD
 
 data PGColInfo
   = PGColInfo
-  { pgiName       :: !PGCol
-  , pgiType       :: !PGColType
-  , pgiIsNullable :: !Bool
+  { pgiName        :: !PGCol
+  , pgiType        :: !PGColType
+  , pgiIsNullable  :: !Bool
+  , pgiDescription :: !(Maybe PGDescription)
   } deriving (Show, Eq)
 
 $(deriveJSON (aesonDrop 3 snakeCase) ''PGColInfo)

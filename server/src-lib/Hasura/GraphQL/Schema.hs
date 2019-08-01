@@ -67,7 +67,7 @@ isValidRel rn rt = isValidName (mkRelName rn) && isValidObjectName rt
 
 isValidField :: FieldInfo -> Bool
 isValidField = \case
-  FIColumn (PGColInfo col _ _) -> isValidCol col
+  FIColumn colInfo -> isValidCol $ pgiName colInfo
   FIRelationship (RelInfo rn _ _ remTab _) -> isValidRel rn remTab
 
 upsertable :: [ConstraintName] -> Bool -> Bool -> Bool
@@ -171,9 +171,10 @@ mkPGColParams = \case
       ]
 
 mkPGColFld :: PGColInfo -> ObjFldInfo
-mkPGColFld (PGColInfo colName colTy isNullable) =
-  mkHsraObjFldInfo Nothing n (mkPGColParams colTy) ty
+mkPGColFld (PGColInfo colName colTy isNullable pgDesc) =
+  mkHsraObjFldInfo desc n (mkPGColParams colTy) ty
   where
+    desc = (G.Description . getPGDescription) <$> pgDesc
     n  = G.Name $ getPGColTxt colName
     ty = bool notNullTy nullTy isNullable
     scalarTy = mkScalarTy colTy
@@ -383,7 +384,7 @@ mkSelFldPKey tn cols descM =
     fldName = mkTableByPkName tn
     args = fromInpValL $ map colInpVal cols
     ty = G.toGT $ mkTableTy tn
-    colInpVal (PGColInfo n typ _) =
+    colInpVal (PGColInfo n typ _ _) =
       InpValInfo Nothing (mkColName n) Nothing $ G.toGT $ G.toNT $ mkScalarTy typ
 
 {-
@@ -541,13 +542,13 @@ mkBoolExpInp tn fields =
       ]
 
     mkFldExpInp = \case
-      Left (PGColInfo colName colTy _) ->
+      Left (PGColInfo colName colTy _ _) ->
         mk (mkColName colName) (mkCompExpTy colTy)
       Right (RelInfo relName _ _ remTab _, _, _, _, _) ->
         mk (mkRelName relName) (mkBoolExpTy remTab)
 
 mkPGColInp :: PGColInfo -> InpValInfo
-mkPGColInp (PGColInfo colName colTy _) =
+mkPGColInp (PGColInfo colName colTy _ _) =
   InpValInfo Nothing (G.Name $ getPGColTxt colName) Nothing $
   G.toGT $ mkScalarTy colTy
 

@@ -179,7 +179,8 @@ processTableChanges ti tableDiff = do
 
     procAddedCols tn =
       -- In the newly added columns check that there is no conflict with relationships
-      forM_ addedCols $ \pci@(PGColInfo colName _ _) ->
+      forM_ addedCols $ \pci -> do
+        let colName = pgiName pci
         case M.lookup (fromPGCol colName) $ tiFieldInfoMap ti of
           Just (FIRelationship _) ->
             throw400 AlreadyExists $ "cannot add column " <> colName
@@ -188,8 +189,8 @@ processTableChanges ti tableDiff = do
           _ -> addColToCache colName pci tn
 
     procAlteredCols sc tn = fmap or $ forM alteredCols $
-      \( PGColInfo oColName oColTy oNullable
-       , npci@(PGColInfo nColName nColTy nNullable)
+      \( PGColInfo oColName oColTy oNullable oDesc
+       , npci@(PGColInfo nColName nColTy nNullable nDesc)
        ) ->
         if | oColName /= nColName -> do
                renameColInCatalog oColName nColName tn ti
@@ -203,7 +204,7 @@ processTableChanges ti tableDiff = do
                  reportSchemaObjs depObjs
                updColInCache nColName npci tn
                return False
-           | oNullable /= nNullable -> do
+           | oNullable /= nNullable || oDesc /= nDesc -> do
                updColInCache nColName npci tn
                return False
            | otherwise -> return False

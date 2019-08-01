@@ -32,12 +32,17 @@ FROM
                 column_name,
                 udt_name AS data_type,
                 ordinal_position,
-                is_nullable :: boolean
+                is_nullable :: boolean,
+                col_description(pc.oid, ordinal_position) AS description
             ) r
         )
       ) as columns
     FROM
       information_schema.columns
+        left join pg_class pc on pc.relname = table_name
+        left join pg_namespace pn on ( pn.oid = pc.relnamespace
+                                      and pn.nspname = table_schema
+                                     )
     GROUP BY
       table_schema,
       table_name

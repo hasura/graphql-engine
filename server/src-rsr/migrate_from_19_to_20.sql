@@ -22,11 +22,17 @@ from
           'type',
           udt_name,
           'is_nullable',
-          is_nullable :: boolean
+          is_nullable :: boolean,
+          'description',
+          col_description(pc.oid, c.ordinal_position)
         )
       ) as columns
     from
       information_schema.columns c
+      left join pg_class pc on pc.relname = c.table_name
+      left join pg_namespace pn on ( pn.oid = pc.relnamespace
+                                    and pn.nspname = c.table_schema
+                                   )
     group by
       c.table_schema,
       c.table_name
