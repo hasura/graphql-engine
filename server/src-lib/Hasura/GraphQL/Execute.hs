@@ -197,6 +197,7 @@ data RemoteRelField =
     }
   deriving (Show)
 
+-- TODO What is this? It seems it's okay if it's empty but I'm not totally confident that's the intention.
 newtype RelFieldPath =
   RelFieldPath {
     unRelFieldPath :: (Seq.Seq (Int, G.Alias))
@@ -252,9 +253,8 @@ getExecPlanPartial UserInfo{userRole} sc enableAL req = do
       in e{qeInternal = Just $ J.object [ "message" J..= J.String msg]}
 
 
--- An execution operation, in case of
--- queries and mutations it is just a transaction
--- to be executed
+-- An execution operation, in case of queries and mutations it is just a
+-- transaction to be executed
 data ExecOp
   = ExOpQuery !LazyRespTx !(Maybe EQ.GeneratedSqlMap)
   | ExOpMutation !LazyRespTx
@@ -516,6 +516,7 @@ insertBatchResults hasuraResp Batch{..} remoteResp =
       -> [(Text, OJ.Value)]
       -> Either String (OJ.Value, [(Text, OJ.Value)])
     inValue path currentValue remoteHash =
+      -- TODO refactor with MonadError
       case currentValue of
         OJ.Object hasuraRowHash ->
           fmap
@@ -724,6 +725,7 @@ mergeAnnInpVal :: AnnInpVal -> AnnInpVal -> AnnInpVal
 mergeAnnInpVal an1 an2 =
   an1 {_aivValue = mergeAnnGValue (_aivValue an1) (_aivValue an2)}
 
+-- TODO what is an AnnGValue? What does the "Ann" prefix signify? Why is it okay to merge them in this particular way?
 mergeAnnGValue :: AnnGValue -> AnnGValue -> AnnGValue
 mergeAnnGValue (AGObject n1 (Just o1)) (AGObject _ (Just o2)) =
   (AGObject n1 (Just (mergeAnnGObject o1 o2)))
@@ -750,7 +752,7 @@ createArguments ::
 createArguments variables (RemoteArguments arguments) =
   either
     (error . show)
-    (\xs -> Map.fromList (map (\(G.ObjectFieldG key val) -> (key, valueConstToAnnInpVal val)) xs))
+    (Map.fromList . map (\(G.ObjectFieldG key val) -> (key, valueConstToAnnInpVal val)))
     (toEither (substituteVariables variables arguments))
 
 valueConstToAnnInpVal :: G.ValueConst -> AnnInpVal
@@ -797,6 +799,7 @@ extractRemoteRelArguments ::
   -> [RemoteRelField]
   -> Either GQRespValue ( GQRespValue , [ BatchInputs ])
 extractRemoteRelArguments remoteSchemaMap hasuraJson rels =
+  -- TODO refactor with MonadError
   case OJ.eitherDecode (encJToLBS hasuraJson) >>= parseGQRespValue of
     Left err ->
       Left $
