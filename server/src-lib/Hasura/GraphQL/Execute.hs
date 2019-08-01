@@ -428,9 +428,7 @@ rebuildFieldStrippingRemoteRels =
 -- | Get a list of fields needed from a hasura result.
 neededHasuraFields
   :: RemoteField -> [FieldName]
-neededHasuraFields remoteField = toList (rtrHasuraFields remoteRelationship)
-  where
-    remoteRelationship = rmfRemoteRelationship remoteField
+neededHasuraFields = toList . rtrHasuraFields . rmfRemoteRelationship
 
 -- remote result = {"data":{"result_0":{"name":"alice"},"result_1":{"name":"bob"},"result_2":{"name":"alice"}}}
 
@@ -666,15 +664,13 @@ produceBatch rtqOperationType rtqRemoteSchemaInfo RemoteRelField{..} batchInputs
            (rmfRemoteRelationship rrRemoteField))
     batchRemoteTopQuery = VQ.RemoteTopField{..}
     rtqFields =
-      map
-        (\(i, variables) ->
-           fieldCallsToField
-             (Just (arrayIndexAlias i))
-             (_fArguments rrField)
-             variables
-             (_fSelSet rrField)
-             (rtrRemoteFields remoteRelationship))
-        indexedRows
+      flip map indexedRows $ \(i, variables) ->
+         fieldCallsToField
+           (_fArguments rrField)
+           variables
+           (_fSelSet rrField)
+           (Just (arrayIndexAlias i))
+           (rtrRemoteFields remoteRelationship)
     indexedRows = zip (map ArrayIndex [0 :: Int ..]) $ toList $ biRows batchInputs
     batchIndices = map fst indexedRows
     remoteRelationship = rmfRemoteRelationship rrRemoteField
@@ -695,26 +691,24 @@ arrayIndexText (ArrayIndex i) =
 
 -- | Produce a field from the nested field calls.
 fieldCallsToField ::
-     Maybe G.Alias
-  -> Map.HashMap G.Name AnnInpVal
+     Map.HashMap G.Name AnnInpVal
   -> Map.HashMap G.Variable G.ValueConst
   -> SelSet
+  -> Maybe G.Alias
   -> NonEmpty FieldCall
   -> Field
-fieldCallsToField mindexedAlias0 userProvidedArguments variables finalSelSet =
-  nest mindexedAlias0
+fieldCallsToField userProvidedArguments variables finalSelSet = nest
   where
-    nest mindexedAlias (fieldCall :| rest) =
+    nest mindexedAlias (FieldCall{..} :| rest) =
       Field
-        { _fAlias =
-            case mindexedAlias of
-              Just indexedAlias -> indexedAlias
-              Nothing           -> G.Alias (fcName fieldCall)
-        , _fName = fcName fieldCall
+        { _fAlias = fromMaybe (G.Alias fcName) mindexedAlias
+        , _fName = fcName
         , _fType = G.NamedType (G.Name "unknown_type")
         , _fArguments =
             let templatedArguments =
-                  createArguments variables (fcArguments fieldCall)
+                  createArguments variables fcArguments
+             -- TODO this looks sketchy to me... should we really be checking some invariant here,
+             -- that relates userProvidedArguments and the 'NonEmpty FieldCall'?
              in case NE.nonEmpty rest of
                   Just {} -> templatedArguments
                   Nothing ->
@@ -722,10 +716,7 @@ fieldCallsToField mindexedAlias0 userProvidedArguments variables finalSelSet =
                       mergeAnnInpVal
                       userProvidedArguments
                       templatedArguments
-        , _fSelSet =
-            case NE.nonEmpty rest of
-              Nothing    -> finalSelSet
-              Just calls -> pure (nest Nothing calls)
+        , _fSelSet = maybe finalSelSet (pure . nest Nothing) $ NE.nonEmpty rest
         , _fRemoteRel = Nothing
         }
 
