@@ -106,6 +106,8 @@ instance Hashable UserInfo
 --   ''UserInfo
 --  )
 
+-- TODO a better name (we know this is UserInfo to List from the type, but what does the result mean?
+--      if UserInfo were documented this might be more clear.
 userInfoToList :: UserInfo -> [(Text, Text)]
 userInfoToList userInfo =
   let vars = Map.toList $ unUserVars . userVars $ userInfo
