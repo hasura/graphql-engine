@@ -397,32 +397,30 @@ rebuildFieldStrippingRemoteRels =
       pure
         field0
           { _fSelSet =
-              Seq.fromList
-                (concatMap
-                   (\case
-                      Right field -> pure field
-                        where _ = _fAlias field
-                      Left remoteField ->
-                        mapMaybe
-                          (\name ->
-                             if elem name (map _fName fields)
-                               then Nothing
-                               else Just
-                                      (Field
-                                         { _fAlias = G.Alias name
-                                         , _fName = name
-                                         , _fType =
-                                             G.NamedType (G.Name "unknown3")
-                                         , _fArguments = mempty
-                                         , _fSelSet = mempty
-                                         , _fRemoteRel = Nothing
-                                         }))
-                          (map
-                             (G.Name . getFieldNameTxt)
-                             (toList
-                                (rtrHasuraFields
-                                   (rmfRemoteRelationship remoteField)))))
-                   (toList selSetEithers))
+              Seq.fromList $
+                selSetEithers >>= \case
+                  Right field -> pure field
+                    where _ = _fAlias field
+                  Left remoteField ->
+                    mapMaybe
+                      (\name ->
+                         if elem name (map _fName fields)
+                           then Nothing
+                           else Just
+                                  (Field
+                                     { _fAlias = G.Alias name
+                                     , _fName = name
+                                     , _fType =
+                                         G.NamedType (G.Name "unknown3")
+                                     , _fArguments = mempty
+                                     , _fSelSet = mempty
+                                     , _fRemoteRel = Nothing
+                                     }))
+                      (map
+                         (G.Name . getFieldNameTxt)
+                         (toList
+                            (rtrHasuraFields
+                               (rmfRemoteRelationship remoteField))))
           }
       where
         thisPath = parentPath <> RelFieldPath (pure (idx0, _fAlias field0))
