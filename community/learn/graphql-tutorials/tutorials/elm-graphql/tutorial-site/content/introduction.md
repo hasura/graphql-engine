@@ -40,7 +40,7 @@ You need to have elm 0.19.0, npm/yarn & node 8+ running.
 ## How long will this tutorial take?
 Less than 2 hours
 
-## Other courses:
+## Other courses
 
 **Frontend**: GraphQL for: [React](https://learn.hasura.io/graphql/react), [Vue](https://learn.hasura.io/graphql/vue), [React Native](https://learn.hasura.io/graphql/react-native), [iOS](https://learn.hasura.io/graphql/ios)
 
