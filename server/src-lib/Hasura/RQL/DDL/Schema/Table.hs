@@ -553,10 +553,11 @@ execWithMDCheck (RunSQL t cascade _) = do
     delFunctionFromCache qf
 
   -- Process altered functions
-  forM_ alteredFuncs $ \(qf, newTy, _) ->
+  forM_ alteredFuncs $ \(qf, newTy, newDesc) -> do
     when (newTy == FTVOLATILE) $
-      throw400 NotSupported $
-      "type of function " <> qf <<> " is altered to \"VOLATILE\" which is not supported now"
+      throw400 NotSupported $ "type of function " <> qf
+      <<> " is altered to \"VOLATILE\" which is not supported now"
+    updateFunctionDescription qf newDesc
 
   -- update the schema cache and hdb_catalog with the changes
   reloadRequired <- processSchemaChanges schemaDiff
