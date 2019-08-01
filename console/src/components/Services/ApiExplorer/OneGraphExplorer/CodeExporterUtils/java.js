@@ -41,15 +41,18 @@ const getNameFromAlias = alias => {
 
 const generateClassName = maybeName => {
   let suffix = '';
-  while (classNameMap[`${maybeName}${suffix}`]) {
+  let name;
+  let uncasedName;
+  while (true) {
+    uncasedName = `${maybeName}${suffix}`;
+    name = uncasedName.charAt(0).toUpperCase() + uncasedName.slice(1);
+    if (!classNameMap[name]) break;
     if (suffix === '') {
-      suffix = 1;
+      suffix = 2;
     } else {
       suffix += 1;
     }
   }
-  const uncasedName = `${maybeName}${suffix}`;
-  const name = uncasedName.charAt(0).toUpperCase() + uncasedName.slice(1);
   classNameMap[name] = true;
   return name;
 };
@@ -65,7 +68,7 @@ const getUnderlyingType = t => {
   }
   return {
     type: _type,
-    isList
+    isList,
   };
 };
 
@@ -82,12 +85,20 @@ const populateTypes = (classes, schema) => {
         const fieldName = getNameFromAlias(f);
         const _type = currentType._fields[fieldName].type;
         const unWrappedType = getUnderlyingType(_type);
-        classesWithTypes[i].fields[f] = getJavaType(unWrappedType.type, unWrappedType.isList, true);
+        classesWithTypes[i].fields[f] = getJavaType(
+          unWrappedType.type,
+          unWrappedType.isList,
+          true
+        );
       } else {
         const fieldName = getNameFromAlias(f);
         const _type = currentType._fields[fieldName].type;
         const unWrappedType = getUnderlyingType(_type);
-        classesWithTypes[i].fields[f] = getJavaType(c.fields[f], unWrappedType.isList, false);
+        classesWithTypes[i].fields[f] = getJavaType(
+          c.fields[f],
+          unWrappedType.isList,
+          false
+        );
       }
     });
   });
@@ -155,12 +166,16 @@ const generateClassesCode = classes => {
     let classFieldsCode = '';
     Object.keys(c.fields).forEach(f => {
       classFieldsCode = `${classFieldsCode}
-  final ${c.fields[f]} ${f};`;
+  public final ${c.fields[f]} ${f};`;
     });
 
     const constructorCode = `
-  public ${c.name}(${Object.keys(c.fields).map(f => `${c.fields[f]} _${f}`).join(', ')}) {
-    ${Object.keys(c.fields).map(f => `${f} = _${f}`).join('\n    ')}
+  public ${c.name}(${Object.keys(c.fields)
+      .map(f => `${c.fields[f]} _${f}`)
+      .join(', ')}) {
+    ${Object.keys(c.fields)
+      .map(f => `${f} = _${f};`)
+      .join('\n    ')}
   }
     `;
 
@@ -190,7 +205,14 @@ const javaSnippet = {
       context: { schema },
     } = config;
     const { query, variables } = operationDataList[0];
-    if (validate(schema, gql`${query}`).length) {
+    if (
+      validate(
+        schema,
+        gql`
+          ${query}
+        `
+      ).length
+    ) {
       return 'Invalid Query';
     }
     const generatedClasses = generateClasses(query, schema);
