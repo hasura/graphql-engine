@@ -14,7 +14,11 @@ module Hasura.GraphQL.Execute.LiveQuery
   , initLiveQueriesState
   , dumpLiveQueriesState
 
+  , LiveQueryOpG(..)
+
   , LiveQueryOp
+  , LiveQueryOpPartial
+  , getLiveQueryOpPartial
   , LiveQueryId
   , addLiveQuery
   , removeLiveQuery
@@ -22,6 +26,7 @@ module Hasura.GraphQL.Execute.LiveQuery
   , SubsPlan
   , subsOpFromPlan
   , subsOpFromPGAST
+
   ) where
 
 import           Data.Has
@@ -30,7 +35,6 @@ import qualified Control.Concurrent.STM                       as STM
 import qualified Data.Aeson                                   as J
 import qualified Data.HashMap.Strict                          as Map
 import qualified Data.HashSet                                 as Set
-import qualified Data.Text                                    as T
 import qualified Database.PG.Query                            as Q
 import qualified Database.PG.Query.Connection                 as Q
 import qualified Language.GraphQL.Draft.Syntax                as G
@@ -48,7 +52,6 @@ import           Hasura.GraphQL.Execute.LiveQuery.Types
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Select                        (asSingleRowJsonResp)
 import           Hasura.RQL.Types
-
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
@@ -95,9 +98,12 @@ initLiveQueriesState (LQOpts mxOpts fallbackOpts) pgExecCtx = do
         <*> LQF.initLiveQueriesState fallbackOpts
   return $ LiveQueriesState mxMap fallbackMap pgExecCtx
 
-data LiveQueryOp
-  = LQMultiplexed !LQM.MxOp
-  | LQFallback !LQF.FallbackOp
+data LiveQueryOpG f m
+  = LQFallback !f
+  | LQMultiplexed !m
+  deriving (Show, Eq)
+
+type LiveQueryOp = LiveQueryOpG LQF.FallbackOp LQM.MxOp
 
 data LiveQueryId
   = LQIMultiplexed !LQM.LiveQueryId
@@ -161,33 +167,56 @@ type TextEncodedVariables
 -- referring correctly to the values from '_subs' temporary table
 -- The variables are at _subs.result_vars.variables and
 -- session variables at _subs.result_vars.user
-toMultiplexedQueryVar
-  :: (MonadState GV.AnnPGVarVals m)
-  => GR.UnresolvedVal -> m S.SQLExp
-toMultiplexedQueryVar = \case
-  GR.UVPG annPGVal ->
-    let GR.AnnPGVal varM isNullable colTy colVal = annPGVal
-    in case (varM, isNullable) of
-      -- we don't check for nullability as
-      -- this is only used for reusable plans
-      -- the check has to be made before this
-      (Just var, _) -> do
-        modify $ Map.insert var (colTy, colVal)
-        return $ fromResVars (PgTypeSimple colTy)
-          [ "variables"
-          , G.unName $ G.unVariable var
-          ]
-      _             -> return $ toTxtValue colTy colVal
-  GR.UVSessVar ty sessVar ->
-    return $ fromResVars ty [ "user", T.toLower sessVar]
-  GR.UVSQL sqlExp -> return sqlExp
+type FallbackOpPartial = (GR.QueryRootFldUnresolved, Set.HashSet G.Variable)
+type MultiplexedOpPartial = (GV.VarPGTypes, Q.Query, TextEncodedVariables)
+
+type LiveQueryOpPartial = LiveQueryOpG FallbackOpPartial MultiplexedOpPartial
+
+-- | Creates a partial live query operation, used in both
+-- analyze and execution of a live query
+getLiveQueryOpPartial
+  :: ( MonadError QErr m
+     , MonadIO m
+     )
+
+  -- | to validate arguments
+  => PGExecCtx
+
+  -- | variable definitions as seen in the subscription, needed in
+  -- checking whether the subscription can be multiplexed or not
+  -> [G.VariableDefinition]
+
+  -- | The partially processed live query field
+  -> GR.QueryRootFldUnresolved
+
+  -> m LiveQueryOpPartial
+getLiveQueryOpPartial pgExecCtx varDefs astUnresolved = do
+  -- collect the variables (with their types) used inside the subscription
+  (_, varTypes) <- flip runStateT mempty $ GR.traverseQueryRootFldAST
+                   collectNonNullableVars astUnresolved
+
+  let nonConfirmingVariables = getNonConfirmingVariables varTypes
+
+  -- Can the subscription be multiplexed?
+  -- Only if all variables are non null and can be prepared
+  if null nonConfirmingVariables
+    then do
+      let (mxQuery, annVarVals) = LQM.resolveToMxQuery astUnresolved
+      -- We need to ensure that the values provided for variables
+      -- are correct according to Postgres. Without this check
+      -- an invalid value for a variable for one instance of the
+      -- subscription will take down the entire multiplexed query
+      txtEncodedVars <- validateAnnVarValsOnPg pgExecCtx annVarVals
+      return $ LQMultiplexed (varTypes, mxQuery, txtEncodedVars)
+    else
+      return $ LQFallback (astUnresolved, nonConfirmingVariables)
   where
-    fromResVars ty jPath =
-      flip S.SETyAnn (S.mkTypeAnn ty) $ S.SEOpApp (S.SQLOp "#>>")
-      [ S.SEQIden $ S.QIden (S.QualIden $ Iden "_subs")
-        (Iden "result_vars")
-      , S.SEArray $ map S.SELit jPath
-      ]
+    -- get the variables which don't conifrm to the
+    -- 'non-null scalar' rule
+    getNonConfirmingVariables usedVariables =
+      let queryVariables = Set.fromList $ map G._vdVariable varDefs
+          confirmingVariables = Map.keysSet usedVariables
+      in queryVariables `Set.difference` confirmingVariables
 
 -- | Creates a live query operation and if possible, a reusable plan
 --
@@ -216,32 +245,18 @@ subsOpFromPGAST
 subsOpFromPGAST pgExecCtx reqUnparsed varDefs (fldAls, astUnresolved) = do
   userInfo <- asks getter
 
-  -- collect the variables (with their types) used inside the subscription
-  (_, varTypes) <- flip runStateT mempty $ GR.traverseQueryRootFldAST
-                   collectNonNullableVars astUnresolved
+  liveQueryOpPartial <- getLiveQueryOpPartial pgExecCtx varDefs astUnresolved
 
-  -- Can the subscription be multiplexed?
-  -- Only if all variables are non null and can be prepared
-  if Set.fromList (Map.keys varTypes) == allVars
-    then mkMultiplexedOp userInfo varTypes
-    else mkFallbackOp userInfo
+  case liveQueryOpPartial of
+    LQFallback _ -> mkFallbackOp userInfo
+    LQMultiplexed (varTypes, mxQuery, txtEncodedVars) ->
+      mkMultiplexedOp userInfo varTypes mxQuery txtEncodedVars
+
   where
-    allVars = Set.fromList $ map G._vdVariable varDefs
-
     -- multiplexed subscription
-    mkMultiplexedOp userInfo varTypes = do
-      (astResolved, annVarVals) <-
-        flip runStateT mempty $ GR.traverseQueryRootFldAST
-        toMultiplexedQueryVar astUnresolved
+    mkMultiplexedOp userInfo varTypes mxQuery txtEncodedVars = do
       let mxOpCtx = LQM.mkMxOpCtx (userRole userInfo)
-                    (GH._grQuery reqUnparsed) fldAls $
-                    GR.toPGQuery astResolved
-
-      -- We need to ensure that the values provided for variables
-      -- are correct according to Postgres. Without this check
-      -- an invalid value for a variable for one instance of the
-      -- subscription will take down the entire multiplexed query
-      txtEncodedVars <- validateAnnVarValsOnPg pgExecCtx annVarVals
+                    (GH._grQuery reqUnparsed) fldAls mxQuery
       let mxOp = (mxOpCtx, userVars userInfo, txtEncodedVars)
       return (LQMultiplexed mxOp, Just $ SubsPlan mxOpCtx varTypes)
 

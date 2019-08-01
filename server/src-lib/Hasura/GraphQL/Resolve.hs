@@ -2,6 +2,7 @@ module Hasura.GraphQL.Resolve
   ( mutFldToTx
   , queryFldToPGAST
   , RS.traverseQueryRootFldAST
+  , RS.QueryRootFldResolved
   , RS.toPGQuery
   , UnresolvedVal(..)
   , AnnPGVal(..)

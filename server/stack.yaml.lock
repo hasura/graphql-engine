@@ -97,7 +97,7 @@ packages:
     hackage: Spock-core-0.13.0.0
 snapshots:
 - completed:
-    size: 498167
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/13/20.yaml
-    sha256: cda928d57b257a5f17bcad796843c9daa674fef47d600dbea3aa7b0e49d64a11
-  original: lts-13.20
+    size: 500539
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/13/30.yaml
+    sha256: 59ad6b944c9903847fecdc1d4815e8500c1f9999d80fd1b4d2d66e408faec44b
+  original: lts-13.30

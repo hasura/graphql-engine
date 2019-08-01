@@ -10,6 +10,7 @@ module Hasura.GraphQL.Execute.LiveQuery.Multiplexed
   , initLiveQueriesState
   , dumpLiveQueriesState
 
+  , resolveToMxQuery
   , MxOpCtx
   , mkMxOpCtx
   , MxOp
@@ -17,6 +18,12 @@ module Hasura.GraphQL.Execute.LiveQuery.Multiplexed
   , LiveQueryId
   , addLiveQuery
   , removeLiveQuery
+
+  , RespId
+  , newRespId
+  , RespVars
+  , getRespVars
+  , mkMxQueryArgs
   ) where
 
 import           Data.List                              (unfoldr)
@@ -27,6 +34,7 @@ import qualified Control.Concurrent.Async               as A
 import qualified Control.Concurrent.STM                 as STM
 import qualified Data.Aeson.Extended                    as J
 import qualified Data.HashMap.Strict                    as Map
+import qualified Data.Text                              as T
 import qualified Data.Time.Clock                        as Clock
 import qualified Data.UUID                              as UUID
 import qualified Data.UUID.V4                           as UUID
@@ -37,11 +45,16 @@ import qualified System.Metrics.Distribution            as Metrics
 
 import           Control.Concurrent                     (threadDelay)
 
+import qualified Hasura.GraphQL.Resolve                 as GR
+import qualified Hasura.GraphQL.Validate                as GV
+import qualified Hasura.SQL.DML                         as S
+
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.LiveQuery.Types
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
 -- remove these when array encoding is merged
@@ -255,9 +268,9 @@ data CandidateState
 -- and the validated, text encoded query variables
 data MxOpCtx
   = MxOpCtx
-  { _mocGroup     :: !LQGroup
-  , _mocAlias     :: !G.Alias
-  , _mocQuery     :: !Q.Query
+  { _mocGroup :: !LQGroup
+  , _mocAlias :: !G.Alias
+  , _mocQuery :: !Q.Query
   }
 
 instance J.ToJSON MxOpCtx where
@@ -274,14 +287,14 @@ mkMxOpCtx
   -> G.Alias -> Q.Query
   -> MxOpCtx
 mkMxOpCtx role queryTxt als query =
-  MxOpCtx lqGroup als $ mkMxQuery query
+  MxOpCtx lqGroup als query
   where
     lqGroup = LQGroup role queryTxt
 
-mkMxQuery :: Q.Query -> Q.Query
-mkMxQuery baseQuery =
+mkMxQuery :: GR.QueryRootFldResolved -> Q.Query
+mkMxQuery astResolved =
   Q.fromText $ mconcat $ map Q.getQueryText $
-      [mxQueryPfx, baseQuery, mxQuerySfx]
+      [mxQueryPfx, GR.toPGQuery astResolved, mxQuerySfx]
   where
     mxQueryPfx :: Q.Query
     mxQueryPfx =
@@ -487,6 +500,55 @@ chunks :: Word32 -> [a] -> [[a]]
 chunks n =
   takeWhile (not.null) . unfoldr (Just . splitAt (fromIntegral n))
 
+newtype MxQueryArgs
+  = MxQueryArgs { _unMxQueryArgs :: (RespIdList, RespVarsList)}
+  deriving (Q.ToPrepArgs)
+
+mkMxQueryArgs :: [(RespId, RespVars)] -> MxQueryArgs
+mkMxQueryArgs args =
+  MxQueryArgs (RespIdList respIdL, RespVarsList respVarsL)
+  where
+    (respIdL, respVarsL) = unzip args
+
+toMultiplexedQueryVar
+  :: (MonadState GV.AnnPGVarVals m)
+  => GR.UnresolvedVal -> m S.SQLExp
+toMultiplexedQueryVar = \case
+  GR.UVPG annPGVal ->
+    let GR.AnnPGVal varM isNullable colTy colVal = annPGVal
+    in case (varM, isNullable) of
+      -- we don't check for nullability as
+      -- this is only used for reusable plans
+      -- the check has to be made before this
+      (Just var, _) -> do
+        modify $ Map.insert var (colTy, colVal)
+        return $ fromResVars (PgTypeSimple colTy)
+          [ "variables"
+          , G.unName $ G.unVariable var
+          ]
+      _             -> return $ toTxtValue colTy colVal
+  GR.UVSessVar ty sessVar ->
+    return $ fromResVars ty [ "user", T.toLower sessVar]
+  GR.UVSQL sqlExp -> return sqlExp
+  where
+    fromResVars ty jPath =
+      flip S.SETyAnn (S.mkTypeAnn ty) $ S.SEOpApp (S.SQLOp "#>>")
+      [ S.SEQIden $ S.QIden (S.QualIden $ Iden "_subs")
+        (Iden "result_vars")
+      , S.SEArray $ map S.SELit jPath
+      ]
+
+resolveToMxQuery
+  :: GR.QueryRootFldUnresolved
+  -> (Q.Query, GV.AnnPGVarVals)
+resolveToMxQuery astUnresolved =
+  (mxQuery, annVarVals)
+  where
+    mxQuery = mkMxQuery astResolved
+    (astResolved, annVarVals) =
+      flip runState mempty $ GR.traverseQueryRootFldAST
+      toMultiplexedQueryVar astUnresolved
+
 pollQuery
   :: RefetchMetrics
   -> BatchSize
@@ -505,7 +567,7 @@ pollQuery metrics batchSize pgExecCtx handler = do
     mapM (STM.atomically . getCandidateSnapshot) candidates
 
   let queryVarsBatches = chunks (unBatchSize batchSize) $
-                        getQueryVars candidateSnapshotMap
+                         getQueryVars candidateSnapshotMap
 
   snapshotFinish <- Clock.getCurrentTime
   Metrics.add (_rmSnapshot metrics) $
@@ -514,7 +576,7 @@ pollQuery metrics batchSize pgExecCtx handler = do
     queryInit <- Clock.getCurrentTime
     mxRes <- runExceptT $ runLazyTx' pgExecCtx $
              liftTx $ Q.listQE defaultTxErrorHandler
-             pgQuery (mkMxQueryPrepArgs queryVars) True
+             pgQuery (mkMxQueryArgs queryVars) True
     queryFinish <- Clock.getCurrentTime
     Metrics.add (_rmQuery metrics) $
       realToFrac $ Clock.diffUTCTime queryFinish queryInit
@@ -546,10 +608,6 @@ pollQuery metrics batchSize pgExecCtx handler = do
 
     getQueryVars candidateSnapshotMap =
       Map.toList $ fmap _csRespVars candidateSnapshotMap
-
-    mkMxQueryPrepArgs l =
-      let (respIdL, respVarL) = unzip l
-      in (RespIdList respIdL, RespVarsList respVarL)
 
     getCandidateOperations candidateSnapshotMap = \case
       Left e ->
