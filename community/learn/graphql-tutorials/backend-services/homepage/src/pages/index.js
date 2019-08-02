@@ -2,6 +2,7 @@ import React from 'react';
 import '../styles/styles.scss';
 import Header from '../components/Header';
 import TopBanner from '../components/TopBanner';
+import Featured from '../components/Featured';
 import Tutorials from '../components/Tutorials';
 import WillLearn from '../components/WillLearn';
 import SubscribeNewsletter from '../components/SubscribeNewsletter';
@@ -14,6 +15,7 @@ class Index extends React.Component {
         <Header/>
         <TopBanner/>
         <Tutorials/>
+        <Featured/>
         <WillLearn/>
         <Testimonials/>
         <SubscribeNewsletter/>

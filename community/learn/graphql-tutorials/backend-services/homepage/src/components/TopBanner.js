@@ -15,7 +15,7 @@ class TopBanner extends React.Component {
               <div className={'whiteLineSeperator'}>
               </div>
               <div className={'sectionDescription'}>
-                With these <a href="https://github.com/hasura/graphql-engine/tree/master/community/learn">open-source</a> tutorials, you will move from the basics of GraphQL to building a real-time application in 2 hours
+                With these <a href="https://github.com/hasura/graphql-engine/tree/master/community/learn">open-source</a> community maintained tutorials, you will move from the basics of GraphQL to building a real-time application in 2 hours
               </div>
             </div>
             <div className={'col-md-6 col-sm-6 col-xs-12 noPadd'}>

@@ -1,23 +1,15 @@
 type: bulk
 args:
 
-#Author table
 - type: run_sql
   args:
     sql: |
+      -- author table
       create table author(
           id serial primary key,
           name text unique
       );
-- type: track_table
-  args:
-    schema: public
-    name: author
-
-#Article table
-- type: run_sql
-  args:
-    sql: |
+      -- article table
       CREATE TABLE article (
         id SERIAL PRIMARY KEY,
         title TEXT,
@@ -25,13 +17,89 @@ args:
         author_id INTEGER REFERENCES author(id),
         is_published BOOLEAN,
         published_on TIMESTAMP NOT NULL DEFAULT NOW()
-      )
+      );
+      -- post table
+      CREATE TABLE post (
+        id SERIAL PRIMARY KEY,
+        title TEXT,
+        content TEXT,
+        author_id INTEGER REFERENCES author(id)
+      );
+
+      -- insert data
+      INSERT INTO author (name)
+        VALUES
+        ('Author 1'),
+        ('Author 2')
+      ;
+
+      INSERT INTO article (title,content,author_id,is_published)
+        VALUES
+        (
+          'Article 1',
+          'Sample article content 1',
+          1,
+          false
+        ),
+        (
+          'Article 2',
+          'Sample article content 2',
+          1,
+          true
+        ),
+        (
+          'Article 3',
+          'Sample article content 3',
+          2,
+          true
+        )
+      ;
+
+      INSERT INTO post (title, content, author_id)
+        VALUES
+        (
+          'Post 1',
+          'Post 1 Content',
+          1
+        ),
+        (
+          'Post 2',
+          'Post 2 Content',
+          1
+        ),
+        (
+          'Post 3',
+          'Post 3 Content',
+          1
+        ),
+        (
+          'Post 4',
+          'Post 4 Content',
+          2
+        ),
+        (
+          'Post 5',
+          'Post 5 Content',
+          2
+        )
+      ;
+
+- type: track_table
+  args:
+    schema: public
+    name: author
+
 - type: track_table
   args:
     schema: public
     name: article
 
-#Object relationship
+- type: track_table
+  args:
+    schema: public
+    name: post
+
+#Object relationship article <-> author
 - type: create_object_relationship
   args:
     table: article
@@ -39,7 +107,7 @@ args:
     using:
       foreign_key_constraint_on: author_id
 
-#Array relationship
+#Array relationship author <-> article
 - type: create_array_relationship
   args:
     table: author
@@ -47,6 +115,16 @@ args:
     using:
       foreign_key_constraint_on:
         table: article
+        column: author_id
+
+#Array relationship author <-> post
+- type: create_array_relationship
+  args:
+    table: author
+    name: posts
+    using:
+      foreign_key_constraint_on:
+        table: post
         column: author_id
 
 #Select pemissions on User
@@ -70,35 +148,12 @@ args:
       allow_aggregations: false
       limit: 1
 
-#Insert values
-- type: run_sql
+- type: create_select_permission
   args:
-    sql: |
-      insert into author (name)
-      values
-      ('Author 1'),
-      ('Author 2')
-
-- type: run_sql
-  args:
-    sql: |
-      insert into article (title,content,author_id,is_published)
-      values
-      (
-        'Article 1',
-        'Sample article content 1',
-        1,
-        false
-      ),
-      (
-        'Article 2',
-        'Sample article content 2',
-        1,
-        true
-      ),
-      (
-        'Article 3',
-        'Sample article content 3',
-        2,
-        true
-      )
+    table: post
+    role: user
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+      limit: 1
