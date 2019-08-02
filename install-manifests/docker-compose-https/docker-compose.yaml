@@ -6,7 +6,7 @@ services:
     volumes:
     - db_data:/var/lib/postgresql/data
   graphql-engine:
-    image: hasura/graphql-engine:v1.0.0-beta.3
+    image: hasura/graphql-engine:v1.0.0-beta.4
     depends_on:
     - "postgres"
     restart: always

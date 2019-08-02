@@ -90,6 +90,9 @@ class TestGraphQLQueryAggPerm(DefaultTestSelectQueries):
     def test_author_articles_agg_fail(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/author_articles_agg_fail.yaml', transport)
 
+    def test_author_post_agg_order_by(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/author_post_agg_order_by.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/agg_perm'
