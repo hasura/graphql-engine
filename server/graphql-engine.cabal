@@ -231,8 +231,9 @@ library
                      , Hasura.GraphQL.Execute.LiveQuery.Multiplexed
                      , Hasura.GraphQL.Execute.LiveQuery.Fallback
                      , Hasura.GraphQL.Resolve
-                     , Hasura.GraphQL.Resolve.BoolExp
+                     , Hasura.GraphQL.Resolve.Types
                      , Hasura.GraphQL.Resolve.Context
+                     , Hasura.GraphQL.Resolve.BoolExp
                      , Hasura.GraphQL.Resolve.InputValue
                      , Hasura.GraphQL.Resolve.Introspect
                      , Hasura.GraphQL.Resolve.Insert
@@ -240,7 +241,6 @@ library
                      , Hasura.GraphQL.Resolve.Select
                      , Hasura.GraphQL.RemoteServer
                      , Hasura.GraphQL.Context
-                     , Hasura.GraphQL.Resolve.ContextTypes
                      , Hasura.GraphQL.Logging
 
                      , Hasura.Events.Lib
