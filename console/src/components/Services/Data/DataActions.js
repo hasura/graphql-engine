@@ -33,6 +33,7 @@ import { fetchColumnTypesQuery, fetchColumnDefaultFunctions } from './utils';
 import { fetchColumnCastsQuery, convertArrayToJson } from './TableModify/utils';
 
 import { SERVER_CONSOLE_MODE } from '../../../constants';
+import { formatRequest } from '../../Common/utils/sqlUtils';
 
 const SET_TABLE = 'Data/SET_TABLE';
 const LOAD_FUNCTIONS = 'Data/LOAD_FUNCTIONS';
@@ -465,14 +466,17 @@ const makeMigrationCall = (
   errorMsg,
   shouldSkipSchemaReload
 ) => {
+  const formattedUpQueries = upQueries.map(q => formatRequest(q));
+  const formattedDownQueries = downQueries.map(q => formatRequest(q));
+
   const upQuery = {
     type: 'bulk',
-    args: upQueries,
+    args: formattedUpQueries,
   };
 
   const downQuery = {
     type: 'bulk',
-    args: downQueries,
+    args: formattedDownQueries,
   };
 
   const migrationBody = {
