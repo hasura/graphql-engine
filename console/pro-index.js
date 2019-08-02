@@ -1,4 +1,10 @@
 // import GraphiQL parts
+import {
+  HASURA_CONSOLE_GRAPHIQL_HEADERS,
+  setGraphiQLHeadersInLocalStorage,
+  getGraphiQLHeadersFromLocalStorage,
+} from './src/components/Services/ApiExplorer/ApiRequest/utils';
+
 import GraphiQLWrapper from './src/components/Services/ApiExplorer/GraphiQLWrapper/GraphiQLWrapper';
 
 // import utility functions
@@ -80,6 +86,9 @@ export { telemetryReducer };
 
 // Export APIExplorer and entrypoints
 export {
+  HASURA_CONSOLE_GRAPHIQL_HEADERS,
+  setGraphiQLHeadersInLocalStorage,
+  getGraphiQLHeadersFromLocalStorage,
   generatedApiExplorer,
   apiExplorerReducer,
   generatedLoginConnector,
