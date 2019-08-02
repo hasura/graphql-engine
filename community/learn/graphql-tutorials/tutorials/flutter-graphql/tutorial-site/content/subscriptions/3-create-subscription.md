@@ -5,6 +5,7 @@ metaDescription: "Integrate Subscription widget to watch for changes in realtime
 ---
 
 Open `src/data/online_fetch.dart` and add the following code.
+
 ```dart
 +static String fetchUsers = """
 +   subscription fetchOnlineUsers {
@@ -17,8 +18,8 @@ Open `src/data/online_fetch.dart` and add the following code.
 """;
 ```
 
-Open `screens/abs/dashboard/online.dart`
-Now, Wrap the ListView with `Subscription` widget passing GraphQL subscription string. 
+Open `screens/tabs/dashboard/online.dart`
+Now, Wrap the ListView with `Subscription` widget passing GraphQL subscription string.
 
 ```dart
 +   Subscription(
@@ -53,8 +54,8 @@ Now, Wrap the ListView with `Subscription` widget passing GraphQL subscription s
 +       ),
 ```
 
-How does this work?
--------------------
+## How does this work?
+
 We are using the `Subscription` widget which gives payload (similar to data in the `Query` and `Mutation` widget) of the realtime data for the query we have made.
 
 Refresh your app and see yourself online! Don't be surprised; There could be other users online as well.

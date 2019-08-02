@@ -28,16 +28,18 @@ We will explore the fundamentals of GraphQL and the things that make GraphQL esp
 
 ## What will we be building?
 
-We will be building a realtime todo app using authenticated GraphQL APIs. 
+We will be building a realtime todo app using authenticated GraphQL APIs.
 
 ## Will this course teach Flutter as well?
 
 No, we will be simulating a scenario where we already have a GraphQL API and the basic UI of a flutter app built. Our task in this scenario is to integrate the GraphQL APIs into our flutter app to build a complete and working app.
 
 ## What do I need to take this tutorial?
+
 You need to have flutter installation done.
 
 ## How long will this tutorial take?
+
 Less than 2 hours
 
 ## Other courses
@@ -51,5 +53,5 @@ Less than 2 hours
     imageUrl="https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-flutter/author.png"
     twitterUrl="https://twitter.com/rajajain08"
     githubUrl="https://github.com/rajajain08"
-    description="Software Engineer / Flutter Developer at GeekyAnts. Raja is very passionate about Open Source in Flutter, leading him to take part in various contributions, contests and experiments. His experience in flutter has helped him to attend various technical events such as FirebaseRoadshow, Google I/O, Apple App Accelerator, AngelHack, Flutter Create, hack19."
+    description="Software Engineer / Flutter Developer at GeekyAnts. Raja is very passionate about Open Source in Flutter, leading him to take part in various contributions, contests and experiments. His experience in flutter has helped him to attend various technical events."
 />

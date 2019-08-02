@@ -37,7 +37,7 @@ class _FeedsState extends State<Feeds> {
                   width: 90,
                   height: 50,
                   onTap: () {
-                    feedList.addFeed("You", _controller.text);
+                    feedList.addFeed("", "You", _controller.text);
                     _controller.clear();
                     FocusScope.of(context).requestFocus(new FocusNode());
                   },

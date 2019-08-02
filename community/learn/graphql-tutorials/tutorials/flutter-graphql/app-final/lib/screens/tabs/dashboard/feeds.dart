@@ -23,13 +23,10 @@ class _FeedsState extends State<Feeds> {
 
   @override
   void initState() {
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => initializeClient(context));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _client = GraphQLProvider.of(context).value;
+    });
     super.initState();
-  }
-
-  initializeClient(context) {
-    _client = GraphQLProvider.of(context).value;
   }
 
   @override

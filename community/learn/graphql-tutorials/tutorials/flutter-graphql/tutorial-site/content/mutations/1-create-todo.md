@@ -8,8 +8,8 @@ In this part of the tutorial, you will learn how to create new todos by using Gr
 Let's define a GraphQL query to do a mutation into todos.
 
 ```graphql
-  mutation addTodo(\$title: String!, \$isPublic: Boolean!) {
-  action: insert_todos(objects: { title: \$title, is_public: \$isPublic }) {
+  mutation addTodo($title: String!, $isPublic: Boolean!) {
+  action: insert_todos(objects: { title: $title, is_public: $isPublic }) {
     returning {
       id
       title
