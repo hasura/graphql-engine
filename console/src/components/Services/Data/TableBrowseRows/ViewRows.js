@@ -135,15 +135,17 @@ const ViewRows = ({
       for (let i = 0; i < contentRows.length; i++) {
         if (contentRows[i] !== undefined && contentRows[i][header] !== null) {
           const content = contentRows[i][header];
-          const contentString =
-            typeof content === 'object'
-              ? JSON.stringify(content, null, 4)
-              : content;
 
-          const currLength = getTextWidth(
-            contentString || 'NULL',
-            CONTENT_FONT
-          );
+          let contentString;
+          if (content === null || content === undefined) {
+            contentString = 'NULL';
+          } else if (typeof content === 'object') {
+            contentString = JSON.stringify(content, null, 4);
+          } else {
+            contentString = content.toString();
+          }
+
+          const currLength = getTextWidth(contentString, CONTENT_FONT);
 
           if (currLength > maxContentWidth) {
             maxContentWidth = currLength;
@@ -486,7 +488,7 @@ const ViewRows = ({
             cellValue = JSON.stringify(rowColumnValue, null, 4);
             cellTitle = cellValue;
           } else {
-            cellValue = rowColumnValue;
+            cellValue = rowColumnValue.toString();
             cellTitle = cellValue;
           }
 
