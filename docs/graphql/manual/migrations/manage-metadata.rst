@@ -47,6 +47,20 @@ Exporting Hasura metadata
      add ``-H 'X-Hasura-Admin-Secret: <your-admin-secret>'`` as the API is an
      admin-only API.
 
+  .. tab:: CLI
+
+     The export can be done via the :doc:`Hasura CLI
+     <../api-reference/schema-metadata-api/manage-metadata>` too.
+     A file will a YAML file with the Hasura metadata, and the file name will have the timestamp and the name you set. Here is a example using ``hasura`` CLI tool:
+
+     .. code-block:: bash
+
+        hasura migrate create "<name>" --metadata-from-server
+
+     This command will create a ``timestamp_foobar.up.yaml`` file. If admin secret is set,
+     add ``--admin-secret "<your-admin-secret>"`` as the API is an
+     admin-only API.
+
 Importing Hasura Metadata
 -------------------------
 
@@ -77,6 +91,25 @@ the existing metadata with that instance.
      This command will read ``metadata.json`` file and makes a POST request to
      replace the metadata. If admin secret is set, add ``-H
      'X-Hasura-Admin-Secret: <your-admin-secret>'`` as the API is an admin-only
+     API.
+
+  .. tab:: CLI
+
+     The exported YAML can be imported via the :doc:`Hasura CLI
+     <../hasura-cli/hasura>` too.
+     Here is a example using ``hasura``:
+
+     .. code-block:: bash
+
+        hasura migrate apply migrations/1564820308357_init.up.yaml
+
+     You can also apply all outstanding migrations as follows:
+
+     .. code-block:: bash
+
+        hasura migrate apply
+
+     If admin secret is set, add ``--admin-secret <your-admin-secret>'`` as the API is an admin-only
      API.
 
 .. note::
