@@ -465,15 +465,15 @@ insertBatchResults hasuraResp Batch{..} remoteResp =
     -- The 'sortOn' below is not strictly necessary by the spec, but
     -- implementations may not guarantee order of results matching
     -- order of query.
-    remoteHash0 =
+    remoteHash0 = map snd $
       fromMaybe mempty $ fmap (sortOn fst . OJ.toList) (gqRespData remoteResp)
     cardinality = biCardinality batchInputs
 
     inHashmap ::
          RelFieldPath
       -> OJ.Object
-      -> [(Text, OJ.Value)]
-      -> Either String (OJ.Object, [(Text, OJ.Value)])
+      -> [OJ.Value]
+      -> Either String (OJ.Object, [OJ.Value])
     inHashmap (RelFieldPath p) hasuraHash remoteHash = case p of
       Seq.Empty ->
         case remoteHash of
@@ -492,7 +492,7 @@ insertBatchResults hasuraResp Batch{..} remoteResp =
                        (flip OJ.delete)
                        (OJ.insert
                           (batchRelationshipKeyIndex, batchRelationshipKeyToMake)
-                          (peelOffNestedFields batchNestedFields (snd theRemoteHash))
+                          (peelOffNestedFields batchNestedFields theRemoteHash)
                           hasuraHash)
                        batchPhantoms)
                   , remainingRemoteHashes)
@@ -511,8 +511,8 @@ insertBatchResults hasuraResp Batch{..} remoteResp =
     inValue ::
          Seq.Seq (Int, G.Alias)
       -> OJ.Value
-      -> [(Text, OJ.Value)]
-      -> Either String (OJ.Value, [(Text, OJ.Value)])
+      -> [OJ.Value]
+      -> Either String (OJ.Value, [OJ.Value])
     inValue path currentValue remoteHash =
       case currentValue of
         OJ.Object hasuraRowHash ->
@@ -534,9 +534,7 @@ insertBatchResults hasuraResp Batch{..} remoteResp =
                                "no remote objects left for joining at " <> showHashO hasuraRowHash
                            (x:xs) -> do
                              let peeledRemoteValue =
-                                   peelOffNestedFields
-                                     batchNestedFields
-                                     (snd x)
+                                   peelOffNestedFields batchNestedFields x
                              Right
                                ( hasuraRowsSoFar <>
                                  [ (OJ.Object
@@ -550,8 +548,8 @@ insertBatchResults hasuraResp Batch{..} remoteResp =
                                  ]
                                , xs)
                     One ->
-                      Left
-                        "Cardinality mismatch: found array in hasura value, but expected object"
+                      Left "Cardinality mismatch: found array in hasura value, but expected object"
+
                 nonEmptyPath -> foldHasuraRowObjs $
                   \(hasuraRowsSoFar, remainingRemotes) hasuraRowHash ->
                      first (\hasuraRowHash'-> hasuraRowsSoFar <> [OJ.Object hasuraRowHash']) <$>
