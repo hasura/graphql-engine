@@ -96,7 +96,6 @@ data RawConnInfo =
   , connPassword :: !String
   , connUrl      :: !(Maybe String)
   , connDatabase :: !(Maybe String)
-  , connAppName  :: !(Maybe String)
   , connOptions  :: !(Maybe String)
   , connRetries  :: !(Maybe Int)
   } deriving (Eq, Read, Show)
@@ -563,8 +562,8 @@ consoleAssetsDirEnv =
 parseRawConnInfo :: Parser RawConnInfo
 parseRawConnInfo =
   RawConnInfo <$> host <*> port <*> user <*> password
-              <*> dbUrl <*> dbName <*> appName
-              <*> pure Nothing <*> retries
+              <*> dbUrl <*> dbName <*> pure Nothing
+              <*> retries
   where
     host = optional $
       strOption ( long "host" <>
@@ -603,12 +602,6 @@ parseRawConnInfo =
                   metavar "<DBNAME>" <>
                   help "Database name to connect to"
                 )
-
-    appName = optional $
-      strOption ( long "app-name" <>
-                  metavar "<APPNAME>" <>
-                  help "Postgres application name" )
-
     retries = optional $
       option auto ( long "retries" <>
                     metavar "NO OF RETRIES" <>
@@ -619,11 +612,11 @@ connInfoErrModifier :: String -> String
 connInfoErrModifier s = "Fatal Error : " ++ s
 
 mkConnInfo :: RawConnInfo -> Either String Q.ConnInfo
-mkConnInfo (RawConnInfo mHost mPort mUser pass mURL mDB mAppName opts mRetries) =
+mkConnInfo (RawConnInfo mHost mPort mUser pass mURL mDB opts mRetries) =
   case (mHost, mPort, mUser, mDB, mURL) of
 
     (Just host, Just port, Just user, Just db, Nothing) ->
-      return $ Q.CIOptions $ Q.ConnOptions host port user pass db appName opts retries
+      return $ Q.CIOptions $ Q.ConnOptions host port user pass db opts retries
 
     (_, _, _, _, Just dbURL) ->
       return $ Q.CIDatabaseURI retries $ TE.encodeUtf8 $ T.pack dbURL
@@ -632,7 +625,6 @@ mkConnInfo (RawConnInfo mHost mPort mUser pass mURL mDB mAppName opts mRetries) 
                     ++ "(host, port, user, dbname, password) or "
                     ++ "database-url (HASURA_GRAPHQL_DATABASE_URL)"
   where
-    appName = fromMaybe "" mAppName
     retries = fromMaybe 1 mRetries
 
 parseTxIsolation :: Parser (Maybe Q.TxIsolation)
@@ -890,7 +882,6 @@ connInfoToLog ci =
                  , "port" J..= Q.connPort co
                  , "user" J..= Q.connUser co
                  , "database" J..= Q.connDatabase co
-                 , "app_name" J..= Q.connAppName co
                  , "retries" J..= Q.connRetries co
                  ]
 
