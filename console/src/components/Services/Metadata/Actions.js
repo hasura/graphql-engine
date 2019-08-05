@@ -210,7 +210,11 @@ export const dropInconsistentObjects = () => {
         console.error(error);
         dispatch({ type: DROPPING_INCONSISTENT_METADATA_FAILED });
         dispatch(
-          showErrorNotification('Dropping inconsistent metadata failed')
+          showErrorNotification(
+            'Dropping inconsistent metadata failed',
+            null,
+            error
+          )
         );
       }
     );
@@ -531,7 +535,7 @@ export const metadataReducer = (state = defaultState, action) => {
         ...state,
         allowedQueries: [
           ...state.allowedQueries.map(q =>
-            (q.name === action.data.queryName ? action.data.newQuery : q)
+            q.name === action.data.queryName ? action.data.newQuery : q
           ),
         ],
       };
