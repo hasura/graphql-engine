@@ -7,7 +7,7 @@ import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
 import {
   inputChange,
   UPDATE_FORWARD_CLIENT_HEADERS,
-} from '../Add/addResolverReducer';
+} from '../Add/addRemoteSchemaReducer';
 
 import CommonHeader from '../../../Common/Layout/ReusableHeader/Header';
 
@@ -34,7 +34,7 @@ class Common extends React.Component {
   }
 
   render() {
-    const styles = require('../CustomResolver.scss');
+    const styles = require('../RemoteSchema.scss');
 
     const { name, manualUrl, envName, forwardClientHeaders } = this.props;
     const { isModify, id } = this.props.editState;
@@ -163,7 +163,7 @@ class Common extends React.Component {
           </OverlayTrigger>
         </div>
         <CommonHeader
-          eventPrefix="CUSTOM_RESOLVER"
+          eventPrefix="REMOTE_SCHEMA"
           headers={this.props.headers}
           dispatch={this.props.dispatch}
           typeOptions={[

@@ -2,14 +2,14 @@ import React from 'react';
 import Common from '../Common/Common';
 
 import {
-  fetchResolver,
-  deleteResolver,
-  modifyResolver,
+  fetchRemoteSchema,
+  deleteRemoteSchema,
+  modifyRemoteSchema,
   RESET,
   TOGGLE_MODIFY,
   getHeaderEvents,
-} from '../Add/addResolverReducer';
-import { VIEW_RESOLVER } from '../customActions';
+} from '../Add/addRemoteSchemaReducer';
+import { VIEW_REMOTE_SCHEMA } from '../Actions';
 import { push } from 'react-router-redux';
 import Helmet from 'react-helmet';
 import tabInfo from './tabInfo';
@@ -29,7 +29,7 @@ class Edit extends React.Component {
     super();
     this.editClicked = this.editClicked.bind(this);
     this.modifyClick = this.modifyClick.bind(this);
-    this.handleDeleteResolver = this.handleDeleteResolver.bind(this);
+    this.handleDeleteRemoteSchema = this.handleDeleteRemoteSchema.bind(this);
     this.handleCancelModify = this.handleCancelModify.bind(this);
 
     this.state = {};
@@ -37,24 +37,28 @@ class Edit extends React.Component {
   }
 
   componentDidMount() {
-    const { resolverName } = this.props.params;
-    if (!resolverName) {
+    const { remoteSchemaName } = this.props.params;
+    if (!remoteSchemaName) {
       this.props.dispatch(push(prefixUrl));
     }
 
     Promise.all([
-      this.props.dispatch(fetchResolver(resolverName)),
-      this.props.dispatch({ type: VIEW_RESOLVER, data: resolverName }),
+      this.props.dispatch(fetchRemoteSchema(remoteSchemaName)),
+      this.props.dispatch({ type: VIEW_REMOTE_SCHEMA, data: remoteSchemaName }),
     ]);
   }
 
   componentWillReceiveProps(nextProps) {
-    if (nextProps.params.resolverName !== this.props.params.resolverName) {
+    if (
+      nextProps.params.remoteSchemaName !== this.props.params.remoteSchemaName
+    ) {
       Promise.all([
-        this.props.dispatch(fetchResolver(nextProps.params.resolverName)),
+        this.props.dispatch(
+          fetchRemoteSchema(nextProps.params.remoteSchemaName)
+        ),
         this.props.dispatch({
-          type: VIEW_RESOLVER,
-          data: nextProps.params.resolverName,
+          type: VIEW_REMOTE_SCHEMA,
+          data: nextProps.params.remoteSchemaName,
         }),
       ]);
     }
@@ -73,11 +77,11 @@ class Edit extends React.Component {
           },
         ],
       }),
-      this.props.dispatch({ type: VIEW_RESOLVER, data: '' }),
+      this.props.dispatch({ type: VIEW_REMOTE_SCHEMA, data: '' }),
     ]);
   }
 
-  handleDeleteResolver(e) {
+  handleDeleteRemoteSchema(e) {
     e.preventDefault();
 
     const a = prompt(
@@ -87,7 +91,7 @@ class Edit extends React.Component {
     try {
       if (a && typeof a === 'string' && a.trim() === 'DELETE') {
         this.updateDeleteConfirmationError(null);
-        this.props.dispatch(deleteResolver());
+        this.props.dispatch(deleteRemoteSchema());
       } else {
         // Input didn't match
         // Show an error message right next to the button
@@ -111,23 +115,23 @@ class Edit extends React.Component {
   }
 
   editClicked() {
-    this.props.dispatch(modifyResolver());
+    this.props.dispatch(modifyRemoteSchema());
   }
 
   render() {
-    const currentResolver = this.props.allResolvers.find(
-      r => r.name === this.props.params.resolverName
+    const currentRemoteSchema = this.props.allRemoteSchemas.find(
+      r => r.name === this.props.params.remoteSchemaName
     );
 
-    if (!currentResolver) {
+    if (!currentRemoteSchema) {
       // throw a 404 exception
       throw new NotFoundError();
     }
 
-    const styles = require('../CustomResolver.scss');
+    const styles = require('../RemoteSchema.scss');
 
     const { isFetching, isRequesting, editState } = this.props;
-    const { resolverName } = this.props.params;
+    const { remoteSchemaName } = this.props.params;
 
     const generateMigrateBtns = () => {
       return 'isModify' in editState && !editState.isModify ? (
@@ -150,7 +154,7 @@ class Edit extends React.Component {
             size="sm"
             onClick={e => {
               e.preventDefault();
-              this.handleDeleteResolver(e);
+              this.handleDeleteRemoteSchema(e);
             }}
             disabled={isRequesting}
             data-test={'remote-schema-edit-delete-btn'}
@@ -205,15 +209,15 @@ class Edit extends React.Component {
       },
     ];
 
-    if (resolverName) {
+    if (remoteSchemaName) {
       breadCrumbs.push({
-        title: resolverName.trim(),
+        title: remoteSchemaName.trim(),
         url:
           appPrefix +
           '/' +
           'manage' +
           '/' +
-          resolverName.trim() +
+          remoteSchemaName.trim() +
           '/' +
           'details',
       });
@@ -226,15 +230,15 @@ class Edit extends React.Component {
     return (
       <div className={styles.addWrapper}>
         <Helmet
-          title={`Edit ${pageTitle} - ${resolverName} - ${pageTitle}s | Hasura`}
+          title={`Edit ${pageTitle} - ${remoteSchemaName} - ${pageTitle}s | Hasura`}
         />
         <CommonTabLayout
           appPrefix={appPrefix}
           currentTab="modify"
-          heading={resolverName}
+          heading={remoteSchemaName}
           tabsInfo={tabInfo}
           breadCrumbs={breadCrumbs}
-          baseUrl={`${appPrefix}/manage/${resolverName}`}
+          baseUrl={`${appPrefix}/manage/${remoteSchemaName}`}
           showLoader={isFetching}
         />
         {isFetching ? null : (
@@ -254,9 +258,9 @@ class Edit extends React.Component {
 }
 const mapStateToProps = state => {
   return {
-    ...state.customResolverData.addData,
-    ...state.customResolverData.headerData,
-    allResolvers: state.customResolverData.listData.resolvers,
+    ...state.remoteSchemas.addData,
+    ...state.remoteSchemas.headerData,
+    allRemoteSchemas: state.remoteSchemas.listData.remoteSchemas,
     dataHeaders: { ...state.tables.dataHeaders },
   };
 };

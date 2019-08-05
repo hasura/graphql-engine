@@ -4,18 +4,18 @@ import { Route, IndexRedirect } from 'react-router';
 import { rightContainerConnector } from '../../Common/Layout';
 import globals from '../../../Globals';
 import {
-  customResolverPageConnector,
+  remoteSchemaPageConnector,
   landingConnector,
   addConnector,
   editConnector,
   viewConnector,
 } from '.';
-import { fetchResolvers, FILTER_RESOLVER } from './customActions';
+import { fetchRemoteSchemas, FILTER_REMOTE_SCHEMAS } from './Actions';
 
-// Objective is to render list of custom resolvers on the
+// Objective is to render list of custom remoteSchemas on the
 // left nav bar.
-// Custom resolvers list is fetched from hdb_catalog/custom_resolver
-// Whenever any operation happens like add resolver/delete resolver, this state should update automatically.
+// Custom remoteSchemas list is fetched from hdb_catalog/custom_remoteSchema
+// Whenever any operation happens like add remoteSchema/delete remoteSchema, this state should update automatically.
 
 import { appPrefix } from './constants';
 
@@ -30,7 +30,7 @@ const filterItem = dispatch => {
       );
     });
     dispatch({
-      type: FILTER_RESOLVER,
+      type: FILTER_REMOTE_SCHEMA,
       data: {
         filtered: matchedTables,
         searchQuery: searchVal,
@@ -42,12 +42,12 @@ const filterItem = dispatch => {
 const leftNavMapStateToProps = state => {
   return {
     ...state,
-    dataList: [...state.customResolverData.listData.resolvers],
-    isError: state.customResolverData.listData.isError,
-    isRequesting: state.customResolverData.listData.isRequesting,
-    filtered: [...state.customResolverData.listData.filtered],
-    searchQuery: state.customResolverData.listData.searchQuery,
-    viewResolver: state.customResolverData.listData.viewResolver,
+    dataList: [...state.remoteSchemas.listData.remoteSchemas],
+    isError: state.remoteSchemas.listData.isError,
+    isRequesting: state.remoteSchemas.listData.isRequesting,
+    filtered: [...state.remoteSchemas.listData.filtered],
+    searchQuery: state.remoteSchemas.listData.searchQuery,
+    viewRemoteSchema: state.remoteSchemas.listData.viewRemoteSchema,
     appPrefix,
   };
 };
@@ -62,14 +62,14 @@ const fetchInitialData = ({ dispatch }) => {
   return (nextState, replaceState, cb) => {
     /*
     const currState = getState();
-    const dataList = currState.customResolverData.listData.resolvers;
+    const dataList = currState.remoteSchemas.listData.remoteSchemas;
     if (dataList.length) {
       cb();
       return;
     }
     */
 
-    Promise.all([dispatch(fetchResolvers())]).then(
+    Promise.all([dispatch(fetchRemoteSchemas())]).then(
       () => {
         cb();
       },
@@ -82,11 +82,11 @@ const fetchInitialData = ({ dispatch }) => {
   };
 };
 
-const getCustomResolverRouter = (connect, store, composeOnEnterHooks) => {
+const getRemoteSchemaRouter = (connect, store, composeOnEnterHooks) => {
   return (
     <Route
       path="remote-schemas"
-      component={customResolverPageConnector(
+      component={remoteSchemaPageConnector(
         connect,
         leftNavMapStateToProps,
         leftNavMapDispatchToProps
@@ -100,14 +100,14 @@ const getCustomResolverRouter = (connect, store, composeOnEnterHooks) => {
         <Route path="schemas" component={landingConnector(connect)} />
         <Route path="add" component={addConnector(connect)} />
         <Route
-          path=":resolverName/details"
+          path=":remoteSchemaName/details"
           component={viewConnector(connect)}
         />
-        <Route path=":resolverName/modify" component={editConnector(connect)} />
+        <Route path=":remoteSchemaName/modify" component={editConnector(connect)} />
       </Route>
     </Route>
   );
 };
 
-export default getCustomResolverRouter;
+export default getRemoteSchemaRouter;
 export { appPrefix };

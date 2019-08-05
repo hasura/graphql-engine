@@ -7,12 +7,12 @@ import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import { push } from 'react-router-redux';
 
 import {
-  fetchResolver,
+  fetchRemoteSchema,
   RESET,
   getHeaderEvents,
-} from '../Add/addResolverReducer';
+} from '../Add/addRemoteSchemaReducer';
 
-import { VIEW_RESOLVER } from '../customActions';
+import { VIEW_REMOTE_SCHEMA } from '../Actions';
 import ReloadRemoteSchema from '../../Metadata/MetadataOptions/ReloadRemoteSchema';
 
 import { appPrefix } from '../constants';
@@ -25,23 +25,27 @@ const prefixUrl = globals.urlPrefix + appPrefix;
 
 class ViewStitchedSchema extends React.Component {
   componentDidMount() {
-    const { resolverName } = this.props.params;
-    if (!resolverName) {
+    const { remoteSchemaName } = this.props.params;
+    if (!remoteSchemaName) {
       this.props.dispatch(push(prefixUrl));
     }
     Promise.all([
-      this.props.dispatch(fetchResolver(resolverName)),
-      this.props.dispatch({ type: VIEW_RESOLVER, data: resolverName }),
+      this.props.dispatch(fetchRemoteSchema(remoteSchemaName)),
+      this.props.dispatch({ type: VIEW_REMOTE_SCHEMA, data: remoteSchemaName }),
     ]);
   }
 
   componentWillReceiveProps(nextProps) {
-    if (nextProps.params.resolverName !== this.props.params.resolverName) {
+    if (
+      nextProps.params.remoteSchemaName !== this.props.params.remoteSchemaName
+    ) {
       Promise.all([
-        this.props.dispatch(fetchResolver(nextProps.params.resolverName)),
+        this.props.dispatch(
+          fetchRemoteSchema(nextProps.params.remoteSchemaName)
+        ),
         this.props.dispatch({
-          type: VIEW_RESOLVER,
-          data: nextProps.params.resolverName,
+          type: VIEW_REMOTE_SCHEMA,
+          data: nextProps.params.remoteSchemaName,
         }),
       ]);
     }
@@ -60,23 +64,23 @@ class ViewStitchedSchema extends React.Component {
           },
         ],
       }),
-      this.props.dispatch({ type: VIEW_RESOLVER, data: '' }),
+      this.props.dispatch({ type: VIEW_REMOTE_SCHEMA, data: '' }),
     ]);
   }
 
   render() {
-    const currentResolver = this.props.allResolvers.find(
-      r => r.name === this.props.params.resolverName
+    const currentRemoteSchema = this.props.allRemoteSchemas.find(
+      r => r.name === this.props.params.remoteSchemaName
     );
 
-    if (!currentResolver) {
+    if (!currentRemoteSchema) {
       // throw a 404 exception
       throw new NotFoundError();
     }
 
-    const styles = require('../CustomResolver.scss');
+    const styles = require('../RemoteSchema.scss');
 
-    const { resolverName } = this.props.params;
+    const { remoteSchemaName } = this.props.params;
     const { manualUrl, envName, headers } = this.props;
 
     const filterHeaders = headers.filter(h => !!h.name);
@@ -92,15 +96,15 @@ class ViewStitchedSchema extends React.Component {
       },
     ];
 
-    if (resolverName) {
+    if (remoteSchemaName) {
       breadCrumbs.push({
-        title: resolverName.trim(),
+        title: remoteSchemaName.trim(),
         url:
           appPrefix +
           '/' +
           'manage' +
           '/' +
-          resolverName.trim() +
+          remoteSchemaName.trim() +
           '/' +
           'details',
       });
@@ -118,12 +122,12 @@ class ViewStitchedSchema extends React.Component {
     );
 
     const showReloadRemoteSchema =
-      resolverName && resolverName.length > 0 ? (
+      remoteSchemaName && remoteSchemaName.length > 0 ? (
         <div className={styles.commonBtn + ' ' + styles.detailsRefreshButton}>
           <span>
             <ReloadRemoteSchema
               {...this.props}
-              remoteSchemaName={resolverName}
+              remoteSchemaName={remoteSchemaName}
             />
           </span>
           <span>
@@ -141,10 +145,10 @@ class ViewStitchedSchema extends React.Component {
         <CommonTabLayout
           appPrefix={appPrefix}
           currentTab="details"
-          heading={resolverName}
+          heading={remoteSchemaName}
           tabsInfo={tabInfo}
           breadCrumbs={breadCrumbs}
-          baseUrl={`${appPrefix}/manage/${resolverName}`}
+          baseUrl={`${appPrefix}/manage/${remoteSchemaName}`}
         />
         <br />
         <div>
@@ -197,9 +201,9 @@ class ViewStitchedSchema extends React.Component {
 
 const mapStateToProps = state => {
   return {
-    ...state.customResolverData.addData,
-    ...state.customResolverData.headerData,
-    allResolvers: state.customResolverData.listData.resolvers,
+    ...state.remoteSchemas.addData,
+    ...state.remoteSchemas.headerData,
+    allRemoteSchemas: state.remoteSchemas.listData.remoteSchemas,
     dataHeaders: { ...state.tables.dataHeaders },
   };
 };

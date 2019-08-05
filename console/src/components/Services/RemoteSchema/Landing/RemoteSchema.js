@@ -8,12 +8,12 @@ import Button from '../../../Common/Button/Button';
 import TopicDescription from '../../Common/Landing/TopicDescription';
 import TryItOut from '../../Common/Landing/TryItOut';
 
-class CustomResolver extends React.Component {
+class RemoteSchema extends React.Component {
   render() {
-    const styles = require('../CustomResolver.scss');
+    const styles = require('../RemoteSchema.scss');
 
-    const { dispatch, customResolverList } = this.props;
-    const showIntroSection = !customResolverList.resolvers.length;
+    const { dispatch, remoteSchemaList } = this.props;
+    const showIntroSection = !remoteSchemaList.remoteSchemas.length;
     const getIntroSection = () => {
       if (!showIntroSection) {
         return null;
@@ -58,7 +58,7 @@ class CustomResolver extends React.Component {
     return (
       <div
         className={`${styles.padd_left_remove} ${
-          styles.resolverWrapper
+          styles.remoteSchemaWrapper
         } container-fluid ${styles.padd_top}`}
       >
         <div className={styles.padd_left}>
@@ -95,11 +95,10 @@ class CustomResolver extends React.Component {
 
 const mapStateToProps = state => {
   return {
-    customResolverList: state.customResolverData.listData,
+    remoteSchemaList: state.remoteSchemas.listData,
   };
 };
 
-const customResolverConnector = connect =>
-  connect(mapStateToProps)(CustomResolver);
+const remoteSchemaConnector = connect => connect(mapStateToProps)(RemoteSchema);
 
-export default customResolverConnector;
+export default remoteSchemaConnector;

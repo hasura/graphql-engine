@@ -16,18 +16,20 @@ import { filterInconsistentMetadataObjects } from '../Metadata/utils';
 
 /* Action constants */
 
-const FETCH_RESOLVERS = '@customResolver/FETCH_RESOLVERS';
-const RESOLVERS_FETCH_SUCCESS = '@customResolver/RESOLVERS_FETCH_SUCCESS';
-const FILTER_RESOLVER = '@customResolver/FILTER_RESOLVER';
-const RESOLVERS_FETCH_FAIL = '@customResolver/RESOLVERS_FETCH_FAIL';
-const RESET = '@customResolver/RESET';
-const SET_CONSISTENT_RESOLVERS = '@customResolver/SET_CONSISTENT_RESOLVERS';
+const FETCH_REMOTE_SCHEMAS = '@remoteSchema/FETCH_REMOTE_SCHEMAS';
+const REMOTE_SCHEMAS_FETCH_SUCCESS =
+  '@remoteSchema/REMOTE_SCHEMAS_FETCH_SUCCESS';
+const FILTER_REMOTE_SCHEMAS = '@remoteSchema/FILTER_REMOTE_SCHEMAS';
+const REMOTE_SCHEMAS_FETCH_FAIL = '@remoteSchema/REMOTE_SCHEMAS_FETCH_FAIL';
+const RESET = '@remoteSchema/RESET';
+const SET_CONSISTENT_REMOTE_SCHEMAS =
+  '@remoteSchema/SET_CONSISTENT_REMOTE_SCHEMAS';
 
-const VIEW_RESOLVER = '@customResolver/VIEW_RESOLVER';
+const VIEW_REMOTE_SCHEMA = '@remoteSchema/VIEW_REMOTE_SCHEMA';
 
 /* */
 
-const fetchResolvers = () => {
+const fetchRemoteSchemas = () => {
   return (dispatch, getState) => {
     const url = Endpoints.getSchema;
     const options = {
@@ -46,7 +48,7 @@ const fetchResolvers = () => {
         },
       }),
     };
-    dispatch({ type: FETCH_RESOLVERS });
+    dispatch({ type: FETCH_REMOTE_SCHEMAS });
     return dispatch(requestAction(url, options)).then(
       data => {
         let consistentRemoteSchemas = data;
@@ -61,14 +63,14 @@ const fetchResolvers = () => {
         }
 
         dispatch({
-          type: RESOLVERS_FETCH_SUCCESS,
+          type: REMOTE_SCHEMAS_FETCH_SUCCESS,
           data: consistentRemoteSchemas,
         });
         return Promise.resolve();
       },
       error => {
-        console.error('Failed to load triggers' + JSON.stringify(error));
-        dispatch({ type: RESOLVERS_FETCH_FAIL, data: error });
+        console.error('Failed to load remote schemas' + JSON.stringify(error));
+        dispatch({ type: REMOTE_SCHEMAS_FETCH_FAIL, data: error });
         return Promise.reject();
       }
     );
@@ -76,35 +78,35 @@ const fetchResolvers = () => {
 };
 
 const setConsistentRemoteSchemas = data => ({
-  type: SET_CONSISTENT_RESOLVERS,
+  type: SET_CONSISTENT_REMOTE_SCHEMAS,
   data,
 });
 
 const listReducer = (state = listState, action) => {
   switch (action.type) {
-    case FETCH_RESOLVERS:
+    case FETCH_REMOTE_SCHEMAS:
       return {
         ...state,
         isRequesting: true,
         isError: false,
       };
 
-    case RESOLVERS_FETCH_SUCCESS:
+    case REMOTE_SCHEMAS_FETCH_SUCCESS:
       return {
         ...state,
-        resolvers: action.data,
+        remoteSchemas: action.data,
         isRequesting: false,
         isError: false,
       };
 
-    case RESOLVERS_FETCH_FAIL:
+    case REMOTE_SCHEMAS_FETCH_FAIL:
       return {
         ...state,
-        resolvers: [],
+        remoteSchemas: [],
         isRequesting: false,
         isError: action.data,
       };
-    case FILTER_RESOLVER:
+    case FILTER_REMOTE_SCHEMAS:
       return {
         ...state,
         ...action.data,
@@ -113,15 +115,15 @@ const listReducer = (state = listState, action) => {
       return {
         ...listState,
       };
-    case VIEW_RESOLVER:
+    case VIEW_REMOTE_SCHEMA:
       return {
         ...state,
-        viewResolver: action.data,
+        viewRemoteSchema: action.data,
       };
-    case SET_CONSISTENT_RESOLVERS:
+    case SET_CONSISTENT_REMOTE_SCHEMAS:
       return {
         ...state,
-        resolvers: action.data,
+        remoteSchemas: action.data,
       };
     default:
       return {
@@ -199,9 +201,9 @@ const makeRequest = (
 /* */
 
 export {
-  fetchResolvers,
-  FILTER_RESOLVER,
-  VIEW_RESOLVER,
+  fetchRemoteSchemas,
+  FILTER_REMOTE_SCHEMAS,
+  VIEW_REMOTE_SCHEMA,
   makeRequest,
   setConsistentRemoteSchemas,
 };

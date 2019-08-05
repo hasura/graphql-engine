@@ -1,13 +1,13 @@
 import { combineReducers } from 'redux';
 
-import listReducer from './customActions';
-import addReducer from './Add/addResolverReducer';
+import listReducer from './Actions';
+import addReducer from './Add/addRemoteSchemaReducer';
 import headerReducer from '../../Common/Layout/ReusableHeader/HeaderReducer';
 
-const customResolverReducer = combineReducers({
+const remoteSchemaReducer = combineReducers({
   addData: addReducer,
   listData: listReducer,
-  headerData: headerReducer('CUSTOM_RESOLVER', [
+  headerData: headerReducer('REMOTE_SCHEMA', [
     {
       name: '',
       type: 'static',
@@ -16,4 +16,4 @@ const customResolverReducer = combineReducers({
   ]),
 });
 
-export default customResolverReducer;
+export default remoteSchemaReducer;

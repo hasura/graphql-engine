@@ -6,10 +6,10 @@ import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import requestAction from '../../../../utils/requestAction';
 import dataHeaders from '../../Data/Common/Headers';
 import { push } from 'react-router-redux';
-import { fetchResolvers } from '../customActions';
+import { fetchRemoteSchemas } from '../Actions';
 
 import { generateHeaderSyms } from '../../../Common/Layout/ReusableHeader/HeaderReducer';
-import { makeRequest } from '../customActions';
+import { makeRequest } from '../Actions';
 // import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { appPrefix } from '../constants';
 
@@ -18,28 +18,28 @@ import globals from '../../../../Globals';
 const prefixUrl = globals.urlPrefix + appPrefix;
 
 /* */
-const MANUAL_URL_CHANGED = '@addResolver/MANUAL_URL_CHANGED';
-const ENV_URL_CHANGED = '@addResolver/ENV_URL_CHANGED';
-const NAME_CHANGED = '@addResolver/NAME_CHANGED';
-// const HEADER_CHANGED = '@addResolver/HEADER_CHANGED';
-const ADDING_RESOLVER = '@addResolver/ADDING_RESOLVER';
-const ADD_RESOLVER_FAIL = '@addResolver/ADD_RESOLVER_FAIL';
-const RESET = '@addResolver/RESET';
-const FETCHING_INDIV_RESOLVER = '@addResolver/FETCHING_INDIV_RESOLVER';
-const RESOLVER_FETCH_SUCCESS = '@addResolver/RESOLVER_FETCH_SUCCESS';
-const RESOLVER_FETCH_FAIL = '@addResolver/RESOLVER_FETCH_FAIL';
+const MANUAL_URL_CHANGED = '@addRemoteSchema/MANUAL_URL_CHANGED';
+const ENV_URL_CHANGED = '@addRemoteSchema/ENV_URL_CHANGED';
+const NAME_CHANGED = '@addRemoteSchema/NAME_CHANGED';
+// const HEADER_CHANGED = '@addRemoteSchema/HEADER_CHANGED';
+const ADDING_REMOTE_SCHEMA = '@addRemoteSchema/ADDING_REMOTE_SCHEMA';
+const ADD_REMOTE_SCHEMA_FAIL = '@addRemoteSchema/ADD_REMOTE_SCHEMA_FAIL';
+const RESET = '@addRemoteSchema/RESET';
+const FETCHING_INDIV_REMOTE_SCHEMA = '@addRemoteSchema/FETCHING_INDIV_REMOTE_SCHEMA';
+const REMOTE_SCHEMA_FETCH_SUCCESS = '@addRemoteSchema/REMOTE_SCHEMA_FETCH_SUCCESS';
+const REMOTE_SCHEMA_FETCH_FAIL = '@addRemoteSchema/REMOTE_SCHEMA_FETCH_FAIL';
 
-const DELETING_RESOLVER = '@addResolver/DELETING_RESOLVER';
-const DELETE_RESOLVER_FAIL = '@addResolver/DELETE_RESOLVER_FAIL';
+const DELETING_REMOTE_SCHEMA = '@addRemoteSchema/DELETING_REMOTE_SCHEMA';
+const DELETE_REMOTE_SCHEMA_FAIL = '@addRemoteSchema/DELETE_REMOTE_SCHEMA_FAIL';
 
-const MODIFY_RESOLVER_FAIL = '@addResolver/MODIFY_RESOLVER_FAIL';
-const MODIFYING_RESOLVER = '@addResolver/MODIFYING_RESOLVER';
+const MODIFY_REMOTE_SCHEMA_FAIL = '@addRemoteSchema/MODIFY_REMOTE_SCHEMA_FAIL';
+const MODIFYING_REMOTE_SCHEMA = '@addRemoteSchema/MODIFYING_REMOTE_SCHEMA';
 
 const UPDATE_FORWARD_CLIENT_HEADERS =
-  '@addResolver/UPDATE_FORWARD_CLIENT_HEADERS';
+  '@addRemoteSchema/UPDATE_FORWARD_CLIENT_HEADERS';
 
 /* */
-const TOGGLE_MODIFY = '@editResolver/TOGGLE_MODIFY';
+const TOGGLE_MODIFY = '@editRemoteSchema/TOGGLE_MODIFY';
 /* */
 /* */
 
@@ -54,7 +54,7 @@ const inputChange = (type, data) => {
   return dispatch => dispatch({ type: inputEventMap[type], data });
 };
 
-const getHeaderEvents = generateHeaderSyms('CUSTOM_RESOLVER');
+const getHeaderEvents = generateHeaderSyms('CUSTOM_REMOTE_SCHEMA');
 /* */
 
 const getReqHeader = headers => {
@@ -80,7 +80,7 @@ const getReqHeader = headers => {
   return requestHeaders;
 };
 
-const fetchResolver = resolver => {
+const fetchRemoteSchema = remoteSchema => {
   return (dispatch, getState) => {
     const url = Endpoints.getSchema;
     const options = {
@@ -96,16 +96,16 @@ const fetchResolver = resolver => {
           },
           columns: ['*'],
           where: {
-            name: resolver,
+            name: remoteSchema,
           },
         },
       }),
     };
-    dispatch({ type: FETCHING_INDIV_RESOLVER });
+    dispatch({ type: FETCHING_INDIV_REMOTE_SCHEMA });
     return dispatch(requestAction(url, options)).then(
       data => {
         if (data.length > 0) {
-          dispatch({ type: RESOLVER_FETCH_SUCCESS, data: data });
+          dispatch({ type: REMOTE_SCHEMA_FETCH_SUCCESS, data: data });
           const headerObj = [];
           data[0].definition.headers.forEach(d => {
             headerObj.push({
@@ -128,16 +128,16 @@ const fetchResolver = resolver => {
         return dispatch(push(`${prefixUrl}`));
       },
       error => {
-        console.error('Failed to fetch resolver' + JSON.stringify(error));
-        return dispatch({ type: RESOLVER_FETCH_FAIL, data: error });
+        console.error('Failed to fetch remoteSchema' + JSON.stringify(error));
+        return dispatch({ type: REMOTE_SCHEMA_FETCH_FAIL, data: error });
       }
     );
   };
 };
 
-const addResolver = () => {
+const addRemoteSchema = () => {
   return (dispatch, getState) => {
-    const currState = getState().customResolverData.addData;
+    const currState = getState().remoteSchemas.addData;
     // const url = Endpoints.getSchema;
     const resolveObj = {
       name: currState.name.trim().replace(/ +/g, ''),
@@ -150,7 +150,7 @@ const addResolver = () => {
     };
 
     resolveObj.definition.headers = [
-      ...getReqHeader(getState().customResolverData.headerData.headers),
+      ...getReqHeader(getState().remoteSchemas.headerData.headers),
     ];
     if (resolveObj.definition.url) {
       delete resolveObj.definition.url_from_env;
@@ -197,7 +197,7 @@ const addResolver = () => {
     const customOnSuccess = data => {
       Promise.all([
         dispatch({ type: RESET }),
-        dispatch(fetchResolvers()).then(() => {
+        dispatch(fetchRemoteSchemas()).then(() => {
           dispatch(push(`${prefixUrl}/manage/${resolveObj.name}/details`));
         }),
         dispatch({ type: getHeaderEvents.RESET_HEADER, data: data }),
@@ -205,11 +205,11 @@ const addResolver = () => {
     };
     const customOnError = err => {
       console.error('Failed to create remote schema' + JSON.stringify(err));
-      dispatch({ type: ADD_RESOLVER_FAIL, data: err });
+      dispatch({ type: ADD_REMOTE_SCHEMA_FAIL, data: err });
       // dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
       // alert(JSON.stringify(err));
     };
-    dispatch({ type: ADDING_RESOLVER });
+    dispatch({ type: ADDING_REMOTE_SCHEMA });
     return dispatch(
       makeRequest(
         upQuery.args,
@@ -225,9 +225,9 @@ const addResolver = () => {
   };
 };
 
-const deleteResolver = () => {
+const deleteRemoteSchema = () => {
   return (dispatch, getState) => {
-    const currState = getState().customResolverData.addData;
+    const currState = getState().remoteSchemas.addData;
     // const url = Endpoints.getSchema;
     const resolveObj = {
       name: currState.editState.originalName,
@@ -279,14 +279,14 @@ const deleteResolver = () => {
       Promise.all([
         dispatch({ type: RESET }),
         dispatch(push(prefixUrl)),
-        dispatch(fetchResolvers()),
+        dispatch(fetchRemoteSchemas()),
       ]);
     };
     const customOnError = error => {
-      Promise.all([dispatch({ type: DELETE_RESOLVER_FAIL, data: error })]);
+      Promise.all([dispatch({ type: DELETE_REMOTE_SCHEMA_FAIL, data: error })]);
     };
 
-    dispatch({ type: DELETING_RESOLVER });
+    dispatch({ type: DELETING_REMOTE_SCHEMA });
     return dispatch(
       makeRequest(
         upQuery.args,
@@ -302,15 +302,15 @@ const deleteResolver = () => {
   };
 };
 
-const modifyResolver = () => {
+const modifyRemoteSchema = () => {
   return (dispatch, getState) => {
-    const currState = getState().customResolverData.addData;
+    const currState = getState().remoteSchemas.addData;
     const remoteSchemaName = currState.name.trim().replace(/ +/g, '');
     // const url = Endpoints.getSchema;
     const upQueryArgs = [];
     const downQueryArgs = [];
     const migrationName = 'update_remote_schema_' + remoteSchemaName;
-    const deleteResolverUp = {
+    const deleteRemoteSchemaUp = {
       type: 'remove_remote_schema',
       args: {
         name: currState.editState.originalName,
@@ -327,7 +327,7 @@ const modifyResolver = () => {
     };
 
     resolveObj.definition.headers = [
-      ...getReqHeader(getState().customResolverData.headerData.headers),
+      ...getReqHeader(getState().remoteSchemas.headerData.headers),
     ];
     if (resolveObj.definition.url) {
       delete resolveObj.definition.url_from_env;
@@ -335,17 +335,17 @@ const modifyResolver = () => {
       delete resolveObj.definition.url;
     }
 
-    const createResolverUp = {
+    const createRemoteSchemaUp = {
       type: 'add_remote_schema',
       args: {
         ...resolveObj,
       },
     };
-    upQueryArgs.push(deleteResolverUp);
-    upQueryArgs.push(createResolverUp);
+    upQueryArgs.push(deleteRemoteSchemaUp);
+    upQueryArgs.push(createRemoteSchemaUp);
 
     // Delete the new one and create the old one
-    const deleteResolverDown = {
+    const deleteRemoteSchemaDown = {
       type: 'remove_remote_schema',
       args: {
         name: remoteSchemaName,
@@ -371,14 +371,14 @@ const modifyResolver = () => {
       delete resolveDownObj.definition.url;
     }
 
-    const createResolverDown = {
+    const createRemoteSchemaDown = {
       type: 'add_remote_schema',
       args: {
         ...resolveDownObj,
       },
     };
-    downQueryArgs.push(deleteResolverDown);
-    downQueryArgs.push(createResolverDown);
+    downQueryArgs.push(deleteRemoteSchemaDown);
+    downQueryArgs.push(createRemoteSchemaDown);
     // End of down
 
     const upQuery = {
@@ -397,16 +397,16 @@ const modifyResolver = () => {
       // dispatch({ type: REQUEST_SUCCESS });
       dispatch({ type: RESET, data: data });
       dispatch(push(`${prefixUrl}/manage/schemas`)); // to avoid 404
-      dispatch(fetchResolvers()).then(() => {
+      dispatch(fetchRemoteSchemas()).then(() => {
         dispatch(push(`${prefixUrl}/manage/${remoteSchemaName}/details`));
       });
-      dispatch(fetchResolver(remoteSchemaName));
+      dispatch(fetchRemoteSchema(remoteSchemaName));
     };
     const customOnError = error => {
-      Promise.all([dispatch({ type: MODIFY_RESOLVER_FAIL, data: error })]);
+      Promise.all([dispatch({ type: MODIFY_REMOTE_SCHEMA_FAIL, data: error })]);
     };
 
-    dispatch({ type: MODIFYING_RESOLVER });
+    dispatch({ type: MODIFYING_REMOTE_SCHEMA });
     return dispatch(
       makeRequest(
         upQuery.args,
@@ -422,7 +422,7 @@ const modifyResolver = () => {
   };
 };
 
-const addResolverReducer = (state = addState, action) => {
+const addRemoteSchemaReducer = (state = addState, action) => {
   switch (action.type) {
     case MANUAL_URL_CHANGED:
       return {
@@ -441,13 +441,13 @@ const addResolverReducer = (state = addState, action) => {
         envName: action.data,
         manualUrl: null,
       };
-    case ADDING_RESOLVER:
+    case ADDING_REMOTE_SCHEMA:
       return {
         ...state,
         isRequesting: true,
         isError: null,
       };
-    case ADD_RESOLVER_FAIL:
+    case ADD_REMOTE_SCHEMA_FAIL:
       return {
         ...state,
         isRequesting: false,
@@ -467,13 +467,13 @@ const addResolverReducer = (state = addState, action) => {
       return {
         ...addState,
       };
-    case FETCHING_INDIV_RESOLVER:
+    case FETCHING_INDIV_REMOTE_SCHEMA:
       return {
         ...state,
         isFetching: true,
         isFetchError: null,
       };
-    case RESOLVER_FETCH_SUCCESS:
+    case REMOTE_SCHEMA_FETCH_SUCCESS:
       return {
         ...state,
         name: action.data[0].name,
@@ -495,31 +495,31 @@ const addResolverReducer = (state = addState, action) => {
         isFetching: false,
         isFetchError: null,
       };
-    case RESOLVER_FETCH_FAIL:
+    case REMOTE_SCHEMA_FETCH_FAIL:
       return {
         ...state,
         isFetching: false,
         isFetchError: action.data,
       };
-    case DELETE_RESOLVER_FAIL:
+    case DELETE_REMOTE_SCHEMA_FAIL:
       return {
         ...state,
         isRequesting: false,
         isError: action.data,
       };
-    case DELETING_RESOLVER:
+    case DELETING_REMOTE_SCHEMA:
       return {
         ...state,
         isRequesting: true,
         isError: null,
       };
-    case MODIFY_RESOLVER_FAIL:
+    case MODIFY_REMOTE_SCHEMA_FAIL:
       return {
         ...state,
         isRequesting: false,
         isError: action.data,
       };
-    case MODIFYING_RESOLVER:
+    case MODIFYING_REMOTE_SCHEMA:
       return {
         ...state,
         isRequesting: true,
@@ -539,14 +539,14 @@ const addResolverReducer = (state = addState, action) => {
 
 export {
   inputChange,
-  addResolver,
-  fetchResolver,
-  deleteResolver,
-  modifyResolver,
+  addRemoteSchema,
+  fetchRemoteSchema,
+  deleteRemoteSchema,
+  modifyRemoteSchema,
   RESET,
   TOGGLE_MODIFY,
   UPDATE_FORWARD_CLIENT_HEADERS,
   getHeaderEvents,
 };
 
-export default addResolverReducer;
+export default addRemoteSchemaReducer;
