@@ -16,7 +16,7 @@ FROM
     FROM
       pg_catalog.pg_class c
       JOIN pg_catalog.pg_namespace as n ON c.relnamespace = n.oid
-      LEFT JOIN pg_catalog.pg_description pd on c.oid = pd.objoid
+      LEFT JOIN pg_catalog.pg_description pd on (c.oid = pd.objoid and pd.objsubid = 0)
   ) t
   LEFT OUTER JOIN (
     SELECT
