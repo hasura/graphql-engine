@@ -6,6 +6,10 @@ metaDescription: "You will learn how to make use of GraphQL Subscriptions to get
 
 import GithubLink from "../../src/GithubLink.js";
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/NPF19xKjfqI" />
+
 Go to `src/screens/components/Todos`.
 
 For running a custom subscription, we need access to our `ApolloClient` instance. To do that, we convert our `Todos` component into an Apollo HOC by wrapping it in `withApollo`.

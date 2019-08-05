@@ -89,7 +89,15 @@ about the format of migration files, check out the :ref:`migration_file_format`.
 
 .. note::
 
-  Migration version cannot be "0". i.e. the files cannot be of the form ``0_<something>.up.yaml``
+  If you need to export other schemas along with ``public``, you can name them using the
+  ``--schema`` flag. 
+  
+  For example, to export schemas ``public``, ``schema1`` and ``schema2``,
+  execute the following command:
+
+  .. code-block:: bash
+
+     hasura migrate create "init" --from-server --schema "public" --schema "schema1" --schema "schema2"
 
 Step 4: Use the console from the CLI
 ------------------------------------

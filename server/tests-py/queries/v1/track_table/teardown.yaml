@@ -4,6 +4,9 @@ args:
 - type: run_sql
   args:
     sql: |
-      drop table hge_tests.resident;
-      drop table article;
-      drop table author;
+      DROP TABLE hge_tests.resident;
+      DROP TABLE article;
+      DROP TABLE author;
+      DROP TABLE test1;
+      DROP TABLE test2 CASCADE;
+    cascade: true

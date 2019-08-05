@@ -34,9 +34,6 @@ const vMakeRequest = () => {
     const state = getState();
     const url = Endpoints.query;
     const originalTrigger = getState().triggers.currentTrigger;
-    const triggerList = getState().triggers.triggerList;
-    const triggerSchema = triggerList.filter(t => t.name === originalTrigger);
-    const triggerName = triggerSchema[0].name;
     const currentQuery = JSON.parse(JSON.stringify(state.triggers.view.query));
     // count query
     const countQuery = JSON.parse(JSON.stringify(state.triggers.view.query));
@@ -52,7 +49,7 @@ const vMakeRequest = () => {
       finalAndClause.push({ error: false });
       currentQuery.columns[1].where = { $and: finalAndClause };
       currentQuery.where = { name: state.triggers.currentTrigger };
-      countQuery.where.$and.push({ trigger_name: triggerName });
+      countQuery.where.$and.push({ trigger_name: originalTrigger });
     } else {
       // reset where for events
       if (currentQuery.columns[1]) {

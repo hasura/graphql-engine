@@ -73,14 +73,6 @@ FROM
 GROUP BY
     table_schema, table_name, role_name;
 
-CREATE TABLE hdb_catalog.hdb_query_template
-(
-    template_name TEXT PRIMARY KEY,
-    template_defn JSONB NOT NULL,
-    comment    TEXT NULL,
-    is_system_defined boolean default false
-);
-
 CREATE VIEW hdb_catalog.hdb_foreign_key_constraint AS
 SELECT
     q.table_schema :: text,
@@ -410,10 +402,12 @@ CREATE TABLE hdb_catalog.remote_schemas (
 );
 
 CREATE TABLE hdb_catalog.hdb_schema_update_event (
-  id BIGSERIAL PRIMARY KEY,
   instance_id uuid NOT NULL,
   occurred_at timestamptz NOT NULL DEFAULT NOW()
 );
+
+CREATE UNIQUE INDEX hdb_schema_update_event_one_row
+  ON hdb_catalog.hdb_schema_update_event ((occurred_at IS NOT NULL));
 
 CREATE FUNCTION hdb_catalog.hdb_schema_update_event_notifier() RETURNS trigger AS
 $function$
@@ -433,8 +427,9 @@ $function$
 $function$
 LANGUAGE plpgsql;
 
-CREATE TRIGGER hdb_schema_update_event_notifier AFTER INSERT ON hdb_catalog.hdb_schema_update_event
-  FOR EACH ROW EXECUTE PROCEDURE hdb_catalog.hdb_schema_update_event_notifier();
+CREATE TRIGGER hdb_schema_update_event_notifier AFTER INSERT OR UPDATE ON
+  hdb_catalog.hdb_schema_update_event FOR EACH ROW EXECUTE PROCEDURE
+  hdb_catalog.hdb_schema_update_event_notifier();
 
 CREATE VIEW hdb_catalog.hdb_table_info_agg AS (
 select

@@ -6,6 +6,10 @@ metaDescription: "We will use the Apollo Mutation component from react-apollo wi
 
 import GithubLink from "../../src/GithubLink.js";
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/nz26rPS6dLk" />
+
 Let us integrate the remove todos feature in our React Native app. Firstly import `gql` and define the mutation in `src/screens/components/Todo/TodoItem/js`.
 
 
@@ -29,7 +33,7 @@ Let us integrate the remove todos feature in our React Native app. Firstly impor
 +`;
 ```
 
-Now, in the render method of the `TodoItem` component, update the `deletetButton` function to wrap the button JSX with a `Mutation` component.
+Now, in the render method of the `TodoItem` component, update the `deleteButton` function to wrap the button JSX with a `Mutation` component.
 
 ```js
 

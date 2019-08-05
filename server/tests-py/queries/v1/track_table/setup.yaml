@@ -1,30 +1,44 @@
 type: bulk
 args:
 
-#Author table
 - type: run_sql
   args:
     sql: |
-      create table author(
-          id serial primary key,
-          name text unique,
-          remarks text
+      CREATE TABLE author (
+          id SERIAL PRIMARY KEY,
+          name TEXT UNIQUE,
+          remarks TEXT
       );
-      create table article(
-          id serial primary key,
-          title text,
-          author_id integer references author(id)
+
+      CREATE TABLE article (
+          id SERIAL PRIMARY KEY,
+          title TEXT,
+          author_id INTEGER REFERENCES author(id)
       );
+
+      CREATE TABLE test1 (
+          id SERIAL PRIMARY KEY
+      );
+
+      CREATE TABLE test2 (
+          id SERIAL PRIMARY KEY
+      );
+
       CREATE TABLE hge_tests.resident (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
         age INTEGER NOT NULL
       );
-      insert into author (name)
-      values
-      ('Author 1'),
-      ('Author 2');
-      insert into hge_tests.resident (name,age)
-      values
-      ('Resident 1', 23),
-      ('Resident 2', 31);
+
+      INSERT INTO author (name) VALUES
+        ('Author 1'),
+        ('Author 2');
+
+      INSERT INTO hge_tests.resident (name, age) VALUES
+        ('Resident 1', 23),
+        ('Resident 2', 31);
+
+      CREATE OR REPLACE FUNCTION test1()
+      RETURNS SETOF test2 AS $$
+          SELECT * FROM test2
+      $$ LANGUAGE sql STABLE;

@@ -49,6 +49,7 @@ class PopUp extends React.Component {
             <TextAreaWithCopy
               copyText={queryDefinition}
               textLanguage={'graphql'}
+              id={'copyQueryDefinition'}
             />
           </div>
           <div className={styles.listItems}>

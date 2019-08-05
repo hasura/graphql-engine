@@ -126,8 +126,8 @@ type ParamMap = Map.HashMap G.Name InpValInfo
 
 -- | location of the type: a hasura type or a remote type
 data TypeLoc
-  = HasuraType
-  | RemoteType RemoteSchemaName RemoteSchemaInfo
+  = TLHasuraType
+  | TLRemoteType !RemoteSchemaName !RemoteSchemaInfo
   deriving (Show, Eq, TH.Lift, Generic)
 
 instance Hashable TypeLoc

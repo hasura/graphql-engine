@@ -1,0 +1,17 @@
+description: Create query collection with name ""
+url: /v1/query
+status: 400
+response:
+  path: $.name
+  error: >-
+    empty string not allowed
+  code: parse-failed
+query:
+  type: create_query_collection
+  args:
+    name: ""
+    comment: an optional comment
+    definition:
+      queries:
+      - name: query_1
+        query: query { test {id name}}

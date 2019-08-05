@@ -197,8 +197,9 @@ const addResolver = () => {
     const customOnSuccess = data => {
       Promise.all([
         dispatch({ type: RESET }),
-        dispatch(push(`${prefixUrl}/manage/${resolveObj.name}/details`)),
-        dispatch(fetchResolvers()),
+        dispatch(fetchResolvers()).then(() => {
+          dispatch(push(`${prefixUrl}/manage/${resolveObj.name}/details`));
+        }),
         dispatch({ type: getHeaderEvents.RESET_HEADER, data: data }),
       ]);
     };
@@ -304,21 +305,19 @@ const deleteResolver = () => {
 const modifyResolver = () => {
   return (dispatch, getState) => {
     const currState = getState().customResolverData.addData;
+    const remoteSchemaName = currState.name.trim().replace(/ +/g, '');
     // const url = Endpoints.getSchema;
     const upQueryArgs = [];
     const downQueryArgs = [];
-    const migrationName =
-      'update_remote_schema_' + currState.name.trim().replace(/ +/g, '');
-    const schemaName = currState.name.trim().replace(/ +/g, '');
+    const migrationName = 'update_remote_schema_' + remoteSchemaName;
     const deleteResolverUp = {
       type: 'remove_remote_schema',
       args: {
         name: currState.editState.originalName,
       },
     };
-    const trimmedName = currState.name.trim().replace(/ +/g, '');
     const resolveObj = {
-      name: trimmedName,
+      name: remoteSchemaName,
       definition: {
         url: currState.manualUrl,
         url_from_env: currState.envName,
@@ -349,7 +348,7 @@ const modifyResolver = () => {
     const deleteResolverDown = {
       type: 'remove_remote_schema',
       args: {
-        name: trimmedName,
+        name: remoteSchemaName,
       },
     };
     const resolveDownObj = {
@@ -396,15 +395,12 @@ const modifyResolver = () => {
 
     const customOnSuccess = data => {
       // dispatch({ type: REQUEST_SUCCESS });
-      Promise.all([
-        dispatch({ type: RESET, data: data }),
-        dispatch(fetchResolvers()),
-      ]).then(() => {
-        return Promise.all([
-          dispatch(fetchResolver(schemaName)),
-          dispatch(push(`${prefixUrl}/manage/${trimmedName}/details`)),
-        ]);
+      dispatch({ type: RESET, data: data });
+      dispatch(push(`${prefixUrl}/manage/schemas`)); // to avoid 404
+      dispatch(fetchResolvers()).then(() => {
+        dispatch(push(`${prefixUrl}/manage/${remoteSchemaName}/details`));
       });
+      dispatch(fetchResolver(remoteSchemaName));
     };
     const customOnError = error => {
       Promise.all([dispatch({ type: MODIFY_RESOLVER_FAIL, data: error })]);
@@ -425,149 +421,6 @@ const modifyResolver = () => {
     );
   };
 };
-
-/*
-const modifyResolver = () => {
-  return (dispatch, getState) => {
-    const currState = getState().customResolverData.addData;
-    // const url = Endpoints.getSchema;
-    let upQueryArgs = [];
-    let downQueryArgs = [];
-    const migrationName = 'update_add_schema_' + currState.name.trim();
-    const schemaName = currState.name.trim();
-    const deleteResolverUp = {
-      type: 'remove_remote_schema',
-      args: {
-        name: currState.editState.originalName,
-      },
-    };
-
-    upQueryArgs.push(deleteResolverUp);
-
-    // Delete the new one and create the old one
-    const resolveDownObj = {
-      name: currState.editState.originalName,
-      url: currState.editState.originalUrl,
-      url_from_env: currState.editState.originalEnvUrl,
-      headers: [],
-    };
-
-    resolveDownObj.headers = [...currState.editState.originalHeaders];
-    if (resolveDownObj.url) {
-      delete resolveDownObj.url_from_env;
-    } else {
-      delete resolveDownObj.url;
-    }
-
-    const createResolverDown = {
-      type: 'add_remote_schema',
-      args: {
-        ...resolveDownObj,
-      },
-    };
-    downQueryArgs.push(createResolverDown);
-
-    let upQuery = {
-      type: 'bulk',
-      args: upQueryArgs,
-    };
-    let downQuery = {
-      type: 'bulk',
-      args: downQueryArgs,
-    };
-    const requestMsg = 'Modifying schema...';
-    const successMsg = 'Schema modified';
-    const errorMsg = 'Modify schema failed';
-
-    const customOnSuccess = () => {
-      // dispatch({ type: REQUEST_SUCCESS });
-      // Do the modify thing here
-      upQueryArgs = [];
-      downQueryArgs = [];
-      const resolveObj = {
-        name: currState.name.trim(),
-        url: currState.manualUrl,
-        url_from_env: currState.envName,
-        headers: [],
-      };
-
-      resolveObj.headers = [
-        ...getReqHeader(getState().customResolverData.headerData.headers),
-      ];
-      if (resolveObj.url) {
-        delete resolveObj.url_from_env;
-      } else {
-        delete resolveObj.url;
-      }
-
-      const createResolverUp = {
-        type: 'add_remote_schema',
-        args: {
-          ...resolveObj,
-        },
-      };
-      upQueryArgs.push(createResolverUp);
-
-      const deleteResolverDown = {
-        type: 'remove_remote_schema',
-        args: {
-          name: currState.name,
-        },
-      };
-      downQueryArgs.push(deleteResolverDown);
-
-      upQuery = {
-        type: 'bulk',
-        args: upQueryArgs,
-      };
-      downQuery = {
-        type: 'bulk',
-        args: downQueryArgs,
-      };
-
-      const tOnSuccess = () => {
-        Promise.all([
-          dispatch({ type: RESET }),
-          dispatch(fetchResolvers()),
-        ]).then(() => {
-          return dispatch(fetchResolver(schemaName));
-        });
-      };
-      const tOnError = error => {
-        Promise.all([dispatch({ type: MODIFY_RESOLVER_FAIL, data: error })]);
-      };
-
-      return dispatch(
-        makeRequest(
-          upQuery.args,
-          downQuery.args,
-          migrationName,
-          tOnSuccess,
-          tOnError,
-          requestMsg,
-          successMsg,
-          errorMsg
-        )
-      );
-    };
-    const customOnError = error => {
-      Promise.all([dispatch({ type: MODIFY_RESOLVER_FAIL, data: error })]);
-    };
-
-    dispatch({ type: MODIFYING_RESOLVER });
-    return dispatch(
-      makeRequest(
-        upQuery.args,
-        downQuery.args,
-        migrationName,
-        customOnSuccess,
-        customOnError,
-        requestMsg
-      )
-    );
-  };
-};
-*/
 
 const addResolverReducer = (state = addState, action) => {
   switch (action.type) {
@@ -693,6 +546,7 @@ export {
   RESET,
   TOGGLE_MODIFY,
   UPDATE_FORWARD_CLIENT_HEADERS,
+  getHeaderEvents,
 };
 
 export default addResolverReducer;

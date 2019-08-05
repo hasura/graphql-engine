@@ -9,24 +9,25 @@ module Hasura.Events.HTTP
   , ExtraContext(..)
   ) where
 
-import qualified Data.Aeson                 as J
-import qualified Data.Aeson.Casing          as J
-import qualified Data.Aeson.TH              as J
-import qualified Data.ByteString.Lazy       as B
-import qualified Data.CaseInsensitive       as CI
+import qualified Data.Aeson                    as J
+import qualified Data.Aeson.Casing             as J
+import qualified Data.Aeson.TH                 as J
+import qualified Data.ByteString.Lazy          as B
+import qualified Data.CaseInsensitive          as CI
 import           Data.Either
-import qualified Data.TByteString           as TBS
-import qualified Data.Text                  as T
-import qualified Data.Text.Encoding         as TE
-import qualified Data.Text.Encoding.Error   as TE
-import qualified Data.Time.Clock            as Time
-import qualified Network.HTTP.Client        as HTTP
-import qualified Network.HTTP.Types         as HTTP
-import qualified System.Log.FastLogger      as FL
+import qualified Data.HashSet                  as Set
+import qualified Data.TByteString              as TBS
+import qualified Data.Text                     as T
+import qualified Data.Text.Encoding            as TE
+import qualified Data.Text.Encoding.Error      as TE
+import qualified Data.Time.Clock               as Time
+import qualified Network.HTTP.Client           as HTTP
+import qualified Network.HTTP.Types            as HTTP
+import qualified System.Log.FastLogger         as FL
 
-import           Control.Exception          (try)
-import           Control.Monad.IO.Class     (MonadIO, liftIO)
-import           Control.Monad.Reader       (MonadReader)
+import           Control.Exception             (try)
+import           Control.Monad.IO.Class        (MonadIO, liftIO)
+import           Control.Monad.Reader          (MonadReader)
 import           Data.Has
 import           Hasura.Logging
 import           Hasura.Prelude
@@ -53,7 +54,7 @@ data HTTPResp
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase){J.omitNothingFields=True} ''HTTPResp)
 
 instance ToEngineLog HTTPResp where
-  toEngineLog resp = (LevelInfo, "event-trigger", J.toJSON resp )
+  toEngineLog resp = (LevelInfo, ELTEventTrigger, J.toJSON resp )
 
 mkHTTPResp :: HTTP.Response B.ByteString -> HTTPResp
 mkHTTPResp resp =
@@ -76,7 +77,7 @@ data HTTPRespExtra
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''HTTPRespExtra)
 
 instance ToEngineLog HTTPRespExtra where
-  toEngineLog resp = (LevelInfo, "event-trigger", J.toJSON resp )
+  toEngineLog resp = (LevelInfo, ELTEventTrigger, J.toJSON resp )
 
 data HTTPErr
   = HClient !HTTP.HttpException
@@ -101,7 +102,7 @@ instance J.ToJSON HTTPErr where
                               , "detail" J..= v]
 -- encapsulates a http operation
 instance ToEngineLog HTTPErr where
-  toEngineLog err = (LevelError, "event-trigger", J.toJSON err )
+  toEngineLog err = (LevelError, ELTEventTrigger, J.toJSON err )
 
 isNetworkError :: HTTPErr -> Bool
 isNetworkError = \case
@@ -136,7 +137,7 @@ data HTTPReq
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''HTTPReq)
 
 instance ToEngineLog  HTTPReq where
-  toEngineLog req = (LevelInfo, "event-trigger", J.toJSON req )
+  toEngineLog req = (LevelInfo, ELTEventTrigger, J.toJSON req )
 
 runHTTP
   :: ( MonadReader r m
@@ -155,8 +156,8 @@ runHTTP req exLog = do
   return $ either (Left . HClient) anyBodyParser res
 
 mkHLogger :: LoggerCtx -> HLogger
-mkHLogger (LoggerCtx loggerSet serverLogLevel timeGetter) (logLevel, logTy, logDet) = do
+mkHLogger (LoggerCtx loggerSet serverLogLevel timeGetter enabledLogs) (logLevel, logTy, logDet) = do
   localTime <- timeGetter
-  when (logLevel >= serverLogLevel) $
+  when (logLevel >= serverLogLevel && logTy `Set.member` enabledLogs) $
     FL.pushLogStrLn loggerSet $ FL.toLogStr $
     J.encode $ EngineLog localTime logLevel logTy logDet

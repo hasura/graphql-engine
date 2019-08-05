@@ -198,7 +198,7 @@ class FilterQuery extends Component {
     const { dispatch, whereAnd, triggerSchema, orderBy } = this.props;
     const styles = require('../../../Common/FilterQuery/FilterQuery.scss');
     return (
-      <div className={styles.filterOptions}>
+      <div>
         <form
           onSubmit={e => {
             e.preventDefault();

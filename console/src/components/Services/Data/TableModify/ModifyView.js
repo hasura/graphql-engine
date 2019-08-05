@@ -12,6 +12,7 @@ import TableCommentEditor from './TableCommentEditor';
 import { ordinalColSort } from '../utils';
 import { setTable } from '../DataActions';
 import Button from '../../../Common/Button/Button';
+import { NotFoundError } from '../../../Error/PageNotFound';
 
 class ModifyView extends Component {
   componentDidMount() {
@@ -45,7 +46,13 @@ class ModifyView extends Component {
 
     const tableSchema = allSchemas.find(
       t => t.table_name === tableName && t.table_schema === currentSchema
-    ); // eslint-disable-line no-unused-vars
+    );
+
+    if (!tableSchema) {
+      // throw a 404 exception
+      throw new NotFoundError();
+    }
+
     const tableComment = tableSchema.comment;
 
     let alert = null;

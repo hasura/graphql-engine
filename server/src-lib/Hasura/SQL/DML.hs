@@ -221,24 +221,27 @@ jsonbDeleteOp = SQLOp "-"
 jsonbDeleteAtPathOp :: SQLOp
 jsonbDeleteAtPathOp = SQLOp "#-"
 
-newtype AnnType
-  = AnnType {unAnnType :: T.Text}
+newtype TypeAnn
+  = TypeAnn {unTypeAnn :: T.Text}
   deriving (Show, Eq)
 
-intType :: AnnType
-intType = AnnType "int"
+mkTypeAnn :: PgType -> TypeAnn
+mkTypeAnn = TypeAnn . T.pack . show
 
-textType :: AnnType
-textType = AnnType "text"
+intTypeAnn :: TypeAnn
+intTypeAnn = mkTypeAnn $ PgTypeSimple PGInteger
 
-textArrType :: AnnType
-textArrType = AnnType "text[]"
+textTypeAnn :: TypeAnn
+textTypeAnn = mkTypeAnn $ PgTypeSimple PGText
 
-jsonType :: AnnType
-jsonType = AnnType "json"
+textArrTypeAnn :: TypeAnn
+textArrTypeAnn = mkTypeAnn $ PgTypeArray PGText
 
-jsonbType :: AnnType
-jsonbType = AnnType "jsonb"
+jsonTypeAnn :: TypeAnn
+jsonTypeAnn = mkTypeAnn $ PgTypeSimple PGJSON
+
+jsonbTypeAnn :: TypeAnn
+jsonbTypeAnn = mkTypeAnn $ PgTypeSimple PGJSONB
 
 data CountType
   = CTStar
@@ -273,7 +276,7 @@ data SQLExp
   | SEQIden !QIden
   | SEFnApp !T.Text ![SQLExp] !(Maybe OrderByExp)
   | SEOpApp !SQLOp ![SQLExp]
-  | SETyAnn !SQLExp !AnnType
+  | SETyAnn !SQLExp !TypeAnn
   | SECond !BoolExp !SQLExp !SQLExp
   | SEBool !BoolExp
   | SEExcluded !T.Text
@@ -283,7 +286,7 @@ data SQLExp
   deriving (Show, Eq)
 
 withTyAnn :: PGColType -> SQLExp -> SQLExp
-withTyAnn colTy v = SETyAnn v $ AnnType $ T.pack $ show colTy
+withTyAnn colTy v = SETyAnn v $ TypeAnn $ T.pack $ show colTy
 
 instance J.ToJSON SQLExp where
   toJSON = J.toJSON . toSQLTxt
@@ -327,7 +330,7 @@ instance ToSQL SQLExp where
   toSQL (SEOpApp op args) =
      paren (sqlOpTxt op <+> args)
   toSQL (SETyAnn e ty) =
-     paren (toSQL e) <> "::" <> TB.text (unAnnType ty)
+     paren (toSQL e) <> "::" <> TB.text (unTypeAnn ty)
   toSQL (SECond cond te fe) =
     "CASE WHEN" <-> toSQL cond <->
     "THEN" <-> toSQL te <->
@@ -487,6 +490,9 @@ data BoolExp
   | BEBin !BinOp !BoolExp !BoolExp
   | BENot !BoolExp
   | BECompare !CompareOp !SQLExp !SQLExp
+  -- this is because l = (ANY (e)) is not valid
+  -- i.e, (ANY(e)) is not same as ANY(e)
+  | BECompareAny !CompareOp !SQLExp !SQLExp
   | BENull !SQLExp
   | BENotNull !SQLExp
   | BEExists !Select
@@ -530,6 +536,8 @@ instance ToSQL BoolExp where
     "NOT" <-> paren (toSQL be)
   toSQL (BECompare co vl vr) =
     paren (toSQL vl) <-> toSQL co <-> paren (toSQL vr)
+  toSQL (BECompareAny co vl vr) =
+    paren (toSQL vl) <-> toSQL co <-> "ANY" <> paren (toSQL vr)
   toSQL (BENull v) =
     paren (toSQL v) <-> "IS NULL"
   toSQL (BENotNull v) =

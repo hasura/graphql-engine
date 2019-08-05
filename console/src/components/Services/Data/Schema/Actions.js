@@ -13,8 +13,7 @@ export const createNewSchema = (schemaName, successCb, errorCb) => {
         showErrorNotification(
           gqlSchemaErrorNotif[0],
           gqlSchemaErrorNotif[1],
-          gqlSchemaErrorNotif[2],
-          gqlSchemaErrorNotif[3]
+          gqlSchemaErrorNotif[2]
         )
       );
     }
@@ -43,10 +42,11 @@ export const createNewSchema = (schemaName, successCb, errorCb) => {
     const errorMsg = 'Error creating schema';
 
     const customOnSuccess = () => {
-      dispatch(fetchSchemaList());
-      if (successCb) {
-        successCb();
-      }
+      dispatch(fetchSchemaList()).then(() => {
+        if (successCb) {
+          successCb();
+        }
+      });
     };
     const customOnError = () => {
       if (errorCb) {

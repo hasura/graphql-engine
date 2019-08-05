@@ -15,7 +15,6 @@ data MetadataObjType
   = MOTTable
   | MOTRel !RelType
   | MOTPerm !PermType
-  | MOTQTemplate
   | MOTEventTrigger
   | MOTFunction
   | MOTRemoteSchema
@@ -25,7 +24,6 @@ instance Show MetadataObjType where
   show MOTTable        = "table"
   show (MOTRel ty)     = T.unpack (relTypeToTxt ty) <> "_relation"
   show (MOTPerm ty)    = show ty <> "_permission"
-  show MOTQTemplate    = "query_template"
   show MOTEventTrigger = "event_trigger"
   show MOTFunction     = "function"
   show MOTRemoteSchema = "remote_schema"
@@ -43,7 +41,6 @@ instance Hashable TableMetadataObjId
 
 data MetadataObjId
   = MOTable !QualifiedTable
-  | MOQTemplate !TQueryName
   | MOFunction !QualifiedFunction
   | MORemoteSchema !RemoteSchemaName
   | MOTableObj !QualifiedTable !TableMetadataObjId

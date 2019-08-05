@@ -31,6 +31,8 @@ import globals from '../../../../Globals';
 import { getRelDef } from '../TableRelationships/utils';
 import { createNewSchema, deleteCurrentSchema } from './Actions';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
+import gqlPattern from '../Common/GraphQLValidation';
+import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
 
 const appPrefix = globals.urlPrefix + '/data';
 
@@ -98,6 +100,11 @@ class Schema extends Component {
         table => !table.is_table_tracked && table.table_schema === currentSchema
       );
 
+      // update tableInfo with graphql compatibility
+      _untrackedTables.forEach(t => {
+        t.isGQLCompatible = gqlPattern.test(t.table_name);
+      });
+
       return _untrackedTables.sort(tableSortFunc);
     };
 
@@ -133,9 +140,11 @@ class Schema extends Component {
     };
 
     const getCurrentSchemaSection = () => {
-      const schemaOptions = schemaList.map(s => {
-        return <option key={s.schema_name}>{s.schema_name}</option>;
-      });
+      const getSchemaOptions = () => {
+        return schemaList.map(s => (
+          <option key={s.schema_name}>{s.schema_name}</option>
+        ));
+      };
 
       const getCreateSchemaSection = () => {
         let createSchemaSection = null;
@@ -262,7 +271,7 @@ class Schema extends Component {
               }
               value={currentSchema}
             >
-              {schemaOptions}
+              {getSchemaOptions()}
             </select>
           </div>
           <div className={styles.display_inline + ' ' + styles.add_mar_left}>
@@ -315,6 +324,12 @@ class Schema extends Component {
             dispatch(addExistingTableSql());
           };
 
+          const gqlCompatibilityWarning = !table.isGQLCompatible ? (
+            <span className={styles.add_mar_left_mid}>
+              <GqlCompatibilityWarning />
+            </span>
+          ) : null;
+
           untrackedTablesList.push(
             <div className={styles.padd_bottom} key={`untracked-${i}`}>
               <div
@@ -331,6 +346,7 @@ class Schema extends Component {
                 </Button>
               </div>
               <div className={styles.display_inline}>{table.table_name}</div>
+              {gqlCompatibilityWarning}
             </div>
           );
         });

@@ -22,16 +22,13 @@ import {
   loadRunningEvents,
 } from '../EventTrigger/EventActions';
 
-import { SERVER_CONSOLE_MODE } from '../../../constants';
-
 const makeEventRouter = (
   connect,
   store,
   composeOnEnterHooks,
   requireSchema,
   requirePendingEvents,
-  requireRunningEvents,
-  migrationRedirects
+  requireRunningEvents
 ) => {
   return (
     <Route
@@ -64,12 +61,10 @@ const makeEventRouter = (
       </Route>
       <Route
         path="manage/triggers/add"
-        onEnter={composeOnEnterHooks([migrationRedirects])}
         component={addTriggerConnector(connect)}
       />
       <Route
         path="manage/triggers/:trigger/modify"
-        onEnter={composeOnEnterHooks([migrationRedirects])}
         component={modifyTriggerConnector(connect)}
       />
     </Route>
@@ -148,23 +143,6 @@ const eventRouterUtils = (connect, store, composeOnEnterHooks) => {
     );
   };
 
-  const migrationRedirects = (nextState, replaceState, cb) => {
-    const state = store.getState();
-    if (!state.main.migrationMode) {
-      replaceState(globals.urlPrefix + '/events/manage');
-      cb();
-    }
-    cb();
-  };
-
-  const consoleModeRedirects = (nextState, replaceState, cb) => {
-    if (globals.consoleMode === SERVER_CONSOLE_MODE) {
-      replaceState(globals.urlPrefix + '/events/manage');
-      cb();
-    }
-    cb();
-  };
-
   return {
     makeEventRouter: makeEventRouter(
       connect,
@@ -172,12 +150,9 @@ const eventRouterUtils = (connect, store, composeOnEnterHooks) => {
       composeOnEnterHooks,
       requireSchema,
       requirePendingEvents,
-      requireRunningEvents,
-      migrationRedirects,
-      consoleModeRedirects
+      requireRunningEvents
     ),
     requireSchema,
-    migrationRedirects,
   };
 };
 

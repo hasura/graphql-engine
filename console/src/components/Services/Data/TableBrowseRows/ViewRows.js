@@ -108,8 +108,8 @@ const ViewRows = ({
 
     _gridHeadings.push({
       Header: '',
-      accessor: 'actions',
-      id: 'actions',
+      accessor: 'tableRowActionButtons',
+      id: 'tableRowActionButtons',
     });
 
     _columns.map(col => {
@@ -309,11 +309,21 @@ const ViewRows = ({
 
           const triggerOptions = manualTriggers.map(m => {
             return {
-              callbackArguments: [m.name, rowIndex],
-              buttonText: 'Invoke',
-              displayText: m.name,
-              testId: m.name,
-              onClick: invokeTrigger,
+              content: (
+                <div>
+                  <Button
+                    color="white"
+                    size="xs"
+                    data-test={`run_manual_trigger_${m.name}`}
+                    onClick={() =>
+                      invokeTrigger.apply(undefined, [m.name, rowIndex])
+                    }
+                  >
+                    Invoke
+                  </Button>
+                  {`${m.name}`}
+                </div>
+              ),
             };
           });
 
@@ -381,7 +391,7 @@ const ViewRows = ({
       };
 
       // Insert Edit, Delete, Clone in a cell
-      newRow.actions = getActionButtons();
+      newRow.tableRowActionButtons = getActionButtons();
 
       // Insert column cells
       _tableSchema.columns.forEach(col => {

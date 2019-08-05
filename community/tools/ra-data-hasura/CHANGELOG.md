@@ -1,3 +1,7 @@
+## 0.0.6 (June 14, 2019)
+
+- Bug Fix: Fix sort order, fix primary key when response not an array and add filters to GET_* operations.
+
 ## 0.0.5 (May 16, 2019)
 
 - Feature: Support specifying primary keys other than id for tables using a config object 

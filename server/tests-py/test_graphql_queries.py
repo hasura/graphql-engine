@@ -90,6 +90,9 @@ class TestGraphQLQueryAggPerm(DefaultTestSelectQueries):
     def test_author_articles_agg_fail(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/author_articles_agg_fail.yaml', transport)
 
+    def test_author_post_agg_order_by(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/author_post_agg_order_by.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/agg_perm'
@@ -250,6 +253,15 @@ class TestGraphqlQueryPermissions(DefaultTestSelectQueries):
     def test_user_query_auction(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/user_query_auction.yaml', transport)
 
+    def test_jsonb_has_all(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/jsonb_has_all.yaml', transport)
+
+    def test_jsonb_has_any(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/jsonb_has_any.yaml', transport)
+
+    def test_in_and_nin(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/in_and_nin.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/permissions'
@@ -323,6 +335,15 @@ class TestGraphQLQueryBoolExpPostGIS(DefaultTestSelectQueries):
 
     def test_query_geography_spatial_ops(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/query_geography_spatial_ops.yaml', transport)
+
+    def test_query_cast_geometry_to_geography(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_cast_geometry_to_geography.yaml', transport)
+
+    def test_query_cast_geography_to_geometry(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_cast_geography_to_geometry.yaml', transport)
+
+    def test_query_illegal_cast_is_not_allowed(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_illegal_cast_is_not_allowed.yaml', transport)
 
     @classmethod
     def dir(cls):

@@ -2,6 +2,8 @@
 
 A sample [Svelte 3](https://svelte.dev) app to demonstrate usage of GraphQL Queries, Mutations and Subscriptions with [svelte-apollo](https://github.com/timhall/svelte-apollo), Hasura GraphQL engine and Postgres as database. Forked from the standard svelte [template](https://github.com/sveltejs/template)
 
+[![Edit svelte-graphql](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/github/hasura/graphql-engine/tree/master/community/sample-apps/svelte-apollo?fontsize=14)
+
 ## Deploy Hasura
 
 - Deploy Postgres and GraphQL Engine on Heroku:

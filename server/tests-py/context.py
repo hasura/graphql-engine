@@ -228,7 +228,8 @@ class HGECtxGQLServer:
 class HGECtx:
 
     def __init__(self, hge_url, pg_url, hge_key, hge_webhook, webhook_insecure,
-                 hge_jwt_key_file, hge_jwt_conf, metadata_disabled, ws_read_cookie, hge_scale_url):
+                 hge_jwt_key_file, hge_jwt_conf, metadata_disabled,
+                 ws_read_cookie, hge_scale_url):
 
         self.http = requests.Session()
         self.hge_key = hge_key

@@ -60,10 +60,11 @@ resolveVal
 resolveVal userInfo = \case
   RS.UVPG annPGVal ->
     txtConverter annPGVal
-  RS.UVSessVar colTy sessVar -> do
-    sessVarVal <- getSessVarVal userInfo sessVar
-    return $ S.withTyAnn colTy $ withGeoVal colTy $
-      S.SELit sessVarVal
+  RS.UVSessVar ty sessVar -> do
+    sessVarVal <- S.SELit <$> getSessVarVal userInfo sessVar
+    return $ flip S.SETyAnn (S.mkTypeAnn ty) $ case ty of
+      PgTypeSimple colTy -> withGeoVal colTy sessVarVal
+      PgTypeArray _      -> sessVarVal
   RS.UVSQL sqlExp -> return sqlExp
 
 getSessVarVal
@@ -112,7 +113,7 @@ explainGQLQuery
   -> Bool
   -> GQLExplain
   -> m EncJSON
-explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw)= do
+explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw) = do
   execPlan <- E.getExecPlanPartial userInfo sc enableAL query
   (gCtx, rootSelSet) <- case execPlan of
     E.GExPHasura (gCtx, rootSelSet, _) ->
@@ -128,6 +129,7 @@ explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw)= 
       throw400 InvalidParams "only queries can be explained"
     GV.RSubscription _ ->
       throw400 InvalidParams "only queries can be explained"
+
   where
-    usrVars = mkUserVars $ maybe [] Map.toList userVarsRaw
+    usrVars  = mkUserVars $ maybe [] Map.toList userVarsRaw
     userInfo = mkUserInfo (fromMaybe adminRole $ roleFromVars usrVars) usrVars

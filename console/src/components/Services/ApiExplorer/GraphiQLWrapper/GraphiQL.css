@@ -317,11 +317,15 @@
   cursor: pointer;
   display: inline-block;
   margin: 0 5px;
-  padding: 3px 11px 5px;
+  padding: 3px 11px 3px;
   text-decoration: none;
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 150px;
+}
+
+.graphiql-container .toolbar-button span i {
+  margin-left: 5px;
 }
 
 .graphiql-container .toolbar-button:active {

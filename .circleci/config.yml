@@ -118,6 +118,8 @@ refs:
     - run:
         name: Run Python tests
         environment:
+          # hpc report seems to fail with the default -N
+          GHCRTS: -N1
           HASURA_GRAPHQL_DATABASE_URL: 'postgres://gql_test:@localhost:5432/gql_test'
           HASURA_GRAPHQL_DATABASE_URL_2: 'postgres://gql_test:@localhost:5432/gql_test2'
           GRAPHQL_ENGINE: '/build/_server_output/graphql-engine'
@@ -399,6 +401,7 @@ jobs:
     - image: hasura/graphql-engine-console-builder:v0.3
       environment:
         CYPRESS_KEY: 983be0db-0f19-40cc-bfc4-194fcacd85e1
+        GHCRTS: -N1
     - image: circleci/postgres:10-alpine-postgis
       environment:
         POSTGRES_USER: gql_test

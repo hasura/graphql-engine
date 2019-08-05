@@ -30,7 +30,7 @@ export const permNoCheck = (tableName, query, first) => {
   // set filter { }
   // Toggle all columns in case
   if (query === 'select' || query === 'update') {
-    cy.get(getElementFromAlias('toggle-col-permission')).click();
+    // cy.get(getElementFromAlias('toggle-col-permission')).click();
     cy.get(getElementFromAlias('toggle-all-col-btn')).click();
   }
   if (query === 'insert' || query === 'update') {

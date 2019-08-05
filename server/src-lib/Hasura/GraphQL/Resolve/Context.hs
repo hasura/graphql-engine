@@ -83,13 +83,13 @@ type PrepFn m = AnnPGVal -> m S.SQLExp
 -- lifts PartialSQLExp to UnresolvedVal
 partialSQLExpToUnresolvedVal :: PartialSQLExp -> UnresolvedVal
 partialSQLExpToUnresolvedVal = \case
-  PSESessVar colTy sessVar -> UVSessVar colTy sessVar
-  PSESQLExp s -> UVSQL s
+  PSESessVar ty sessVar -> UVSessVar ty sessVar
+  PSESQLExp s           -> UVSQL s
 
 -- A value that will be converted to an sql expression eventually
 data UnresolvedVal
   -- From a session variable
-  = UVSessVar !PGColType !SessVar
+  = UVSessVar !PgType !SessVar
   -- This is postgres
   | UVPG !AnnPGVal
   -- This is a full resolved sql expression

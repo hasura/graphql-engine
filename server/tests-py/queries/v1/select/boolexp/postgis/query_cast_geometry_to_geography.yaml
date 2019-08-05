@@ -1,0 +1,22 @@
+description: Test casting from PostGIS geometry to geography in condition
+url: /v1/query
+status: 200
+response:
+- name: London
+- name: Paris
+query:
+  type: select
+  args:
+    table: geog_as_geom_table
+    columns:
+    - name
+    where:
+      geom_col:
+        $cast:
+          geography:
+            $st_d_within:
+              use_spheroid: true
+              distance: 1000000
+              from:
+                type: Point
+                coordinates: [1, 50]
