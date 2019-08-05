@@ -477,7 +477,7 @@ insertBatchResults hasuraResp Batch{..} remoteResp =
     inHashmap (RelFieldPath p) hasuraHash remoteHash = case p of
       Seq.Empty ->
         case remoteHash of
-          [] -> Left $ err <> show (OJ.toEncJSON $ OJ.Object hasuraHash)
+          [] -> Left $ err <> showHashO hasuraHash
             where err = case cardinality of 
                           One -> "Expected one remote object but got none, while traversing " 
                           Many -> "Expected many objects but got none, while traversing " 
@@ -485,7 +485,7 @@ insertBatchResults hasuraResp Batch{..} remoteResp =
           (theRemoteHash:remainingRemoteHashes) 
             | cardinality == One && not (null remainingRemoteHashes) ->
                 Left $
-                  "Expected one remote object but got many, while traversing " <> showHash hasuraHash
+                  "Expected one remote object but got many, while traversing " <> showHashO hasuraHash
             | otherwise -> 
                 Right
                   ( (foldl'
@@ -501,13 +501,11 @@ insertBatchResults hasuraResp Batch{..} remoteResp =
         case OJ.lookup key hasuraHash of
           Nothing ->
             Left $ 
-              "Couldn't find expected key " <> show key <> " in " <> showHash hasuraHash <>
-              ", while traversing " <> showHash hasuraHash0
+              "Couldn't find expected key " <> show key <> " in " <> showHashO hasuraHash <>
+              ", while traversing " <> showHashO hasuraHash0
           Just currentValue ->
             first (\newValue -> OJ.insert (idx, key) newValue hasuraHash)
               <$> inValue rest currentValue remoteHash
-      where
-        showHash = show . OJ.toEncJSON . OJ.Object
 
     -- TODO what is this supposed to do, and what does the return values mean?
     inValue ::
@@ -516,84 +514,61 @@ insertBatchResults hasuraResp Batch{..} remoteResp =
       -> [(Text, OJ.Value)]
       -> Either String (OJ.Value, [(Text, OJ.Value)])
     inValue path currentValue remoteHash =
-      -- TODO refactor with MonadError
       case currentValue of
         OJ.Object hasuraRowHash ->
-          fmap
-            (\(hasuraRowHash', remainingRemotes) ->
-               (OJ.Object hasuraRowHash', remainingRemotes))
-            (inHashmap (RelFieldPath path) hasuraRowHash remoteHash)
-        OJ.Array values ->
-          case path of
-            Seq.Empty ->
-              case cardinality of
-                Many -> do
-                  (hasuraArray, remainingRemotes) <-
-                    (foldl
-                       (\eitherRows hasuraRowValue ->
-                          case eitherRows of
-                            Left err -> Left err
-                            Right (hasuraRowsSoFar, remainingRemotes) ->
-                              case hasuraRowValue of
-                                OJ.Object hasuraRowHash ->
-                                  case remainingRemotes of
-                                    [] ->
-                                      Left
-                                        ("no remote objects left for joining at " <>
-                                         show (OJ.toEncJSON hasuraRowValue))
-                                    (x:xs) -> do
-                                      let peeledRemoteValue =
-                                            peelOffNestedFields
-                                              batchNestedFields
-                                              (snd x)
-                                      pure
-                                        ( hasuraRowsSoFar <>
-                                          [ (OJ.Object
-                                               (foldl'
-                                                  (flip OJ.delete)
-                                                  (OJ.insert
-                                                     (batchRelationshipKeyIndex, batchRelationshipKeyToMake)
-                                                     peeledRemoteValue
-                                                     hasuraRowHash)
-                                                  batchPhantoms))
-                                          ]
-                                        , xs)
-                                _ -> Left "expected object here")
-                       (pure ([], remoteHash))
-                       (toList values))
-                  pure (OJ.Array (Vec.fromList hasuraArray), remainingRemotes)
-                One ->
-                  Left
-                    "Cardinality mismatch: found array in hasura value, but expected object"
-            nonEmptyPath -> do
-              (hasuraArray, remainingCandidates) <-
-                (foldl
-                   (\eitherRows hasuraRowValue ->
-                      case eitherRows of
-                        Left err -> Left err
-                        Right (hasuraRowsSoFar, remaining) ->
-                          case hasuraRowValue of
-                            OJ.Object object -> do
-                              (hasuraRowHash, remainder) <-
-                                inHashmap
-                                  (RelFieldPath nonEmptyPath)
-                                  object
-                                  remaining
-                              pure
-                                ( hasuraRowsSoFar <> [OJ.Object hasuraRowHash]
-                                , remainder)
-                            _ ->
-                              Left
-                                ("expected array of objects in " <>
-                                 show (OJ.toEncJSON hasuraRowValue)))
-                   (pure ([], remoteHash))
-                   (toList values))
-              pure (OJ.Array (Vec.fromList hasuraArray), remainingCandidates)
-        OJ.Null -> pure (OJ.Null, remoteHash)
+          first OJ.Object <$>
+            inHashmap (RelFieldPath path) hasuraRowHash remoteHash
+        OJ.Array hasuraRowValues -> first (OJ.Array . Vec.fromList) <$>
+          let foldHasuraRowObjs f = foldM (withObj f) ([], remoteHash) hasuraRowValues
+              withObj f tup (OJ.Object hasuraRowHash) = f tup hasuraRowHash
+              withObj _ _    hasuraRowValue = Left $
+                "expected array of objects in " <> showHash hasuraRowValue
+           in case path of
+                Seq.Empty ->
+                  case cardinality of
+                    Many -> foldHasuraRowObjs $
+                      \(hasuraRowsSoFar, remainingRemotes) hasuraRowHash ->
+                         case remainingRemotes of
+                           [] ->
+                             Left $
+                               "no remote objects left for joining at " <> showHashO hasuraRowHash
+                           (x:xs) -> do
+                             let peeledRemoteValue =
+                                   peelOffNestedFields
+                                     batchNestedFields
+                                     (snd x)
+                             Right
+                               ( hasuraRowsSoFar <>
+                                 [ (OJ.Object
+                                      (foldl'
+                                         (flip OJ.delete)
+                                         (OJ.insert
+                                            (batchRelationshipKeyIndex, batchRelationshipKeyToMake)
+                                            peeledRemoteValue
+                                            hasuraRowHash)
+                                         batchPhantoms))
+                                 ]
+                               , xs)
+                    One ->
+                      Left
+                        "Cardinality mismatch: found array in hasura value, but expected object"
+                nonEmptyPath -> foldHasuraRowObjs $
+                  \(hasuraRowsSoFar, remainingRemotes) hasuraRowHash ->
+                     first (\hasuraRowHash'-> hasuraRowsSoFar <> [OJ.Object hasuraRowHash']) <$>
+                       inHashmap
+                         (RelFieldPath nonEmptyPath)
+                         hasuraRowHash
+                         remainingRemotes
+
+        OJ.Null -> Right (OJ.Null, remoteHash)
         _ ->
-          Left
-            ("Expected object or array in hasura value but got: " <>
-             show (OJ.toEncJSON currentValue))
+          Left $
+            "Expected object or array in hasura value but got: " <> showHash currentValue
+
+    -- logging helpers:
+    showHash = show . OJ.toEncJSON
+    showHashO = showHash . OJ.Object
+
 
 -- | The drop 1 in here is dropping the first level of nesting. The
 -- top field is already aliased to e.g. foo_idx_1, and that layer is

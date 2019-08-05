@@ -177,6 +177,7 @@ mergeResponseData responses = do
                         (\accErr -> Just $ accErr <> errors)
                         (E.gqRespErrors accResp)
                   }
+            -- TODO combine these cases
             (Just data', Nothing) -> do
               combined <-
                 maybe
