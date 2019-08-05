@@ -304,7 +304,10 @@ const loadSchema = configOptions => {
         dispatch(loadInconsistentObjects());
       },
       error => {
-        console.error('Failed to load schema ' + JSON.stringify(error));
+        console.error('loadSchema error: ' + JSON.stringify(error));
+        dispatch(
+          showErrorNotification('DB schema loading failed', null, error)
+        );
       }
     );
   };
@@ -584,11 +587,7 @@ const fetchColumnTypeInfo = () => {
       },
       error => {
         dispatch(
-          showErrorNotification(
-            'Error fetching column types',
-            'Kindly reach out to us in case you face this issue again',
-            error
-          )
+          showErrorNotification('Error fetching column types', null, error)
         );
         return dispatch({
           type: FETCH_COLUMN_TYPE_INFO_FAIL,

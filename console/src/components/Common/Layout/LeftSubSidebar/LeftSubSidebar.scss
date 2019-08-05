@@ -133,7 +133,7 @@
 
   li {
     border-bottom: 0px !important;
-    padding: 0 0 !important;
+    padding: 4px 0 !important;
 
     .tableFunctionDivider {
       margin-top: 5px;
@@ -146,6 +146,7 @@
       padding: 5px 0px !important;
       font-weight: 400 !important;
       padding-left: 5px !important;
+      display: initial !important;
 
       .tableIcon, .functionIcon {
         margin-right: 5px;

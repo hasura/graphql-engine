@@ -32,7 +32,7 @@ Step 2: Attach your Heroku app
 
 Let's say your Heroku app is called ``hasura-heroku`` and is running on ``https://hasura-heroku.herokuapp.com``.
 
-Use the `Heroku CLI <https://devcenter.heroku.com/articles/heroku-cli>`_ to configure the git repo you cloned in Step 1
+Navigate to your project directory, use the `Heroku CLI <https://devcenter.heroku.com/articles/heroku-cli>`_ to configure the git repo you cloned in Step 1
 to be able to push to this app.
 
 .. code-block:: bash
@@ -40,6 +40,8 @@ to be able to push to this app.
    # Replace <hasura-heroku> with your Heroku app's name
    $ heroku git:remote -a <hasura-heroku>
    $ heroku stack:set container -a <hasura-heroku>
+
+You can find your Heroku git repo in your Heroku - Settings - Info - Heroku Git URL
 
 Step 3: Git push to deploy the latest Hasura GraphQL engine
 -----------------------------------------------------------

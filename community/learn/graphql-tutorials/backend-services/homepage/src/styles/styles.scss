@@ -15,6 +15,11 @@ body
   width: 100%;
   float: left;
 }
+.wd80
+{
+  width: 80%;
+  margin: 0 auto;
+}
 .noPadd
 {
   padding-left: 0 !important;
@@ -490,82 +495,82 @@ ul
 }
 .reactBg
 {
-  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/react-purple.svg');
+  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/react-original.svg');
   &:hover
   {
-    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/react-original.svg');
+    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/react-purple.svg');
   }
 }
 .vueBg
 {
-  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/vue-purple.svg');
+  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/vue-original.svg');
   &:hover
   {
-    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/vue-original.svg');
+    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/vue-purple.svg');
   }
 }
 .angularBg
 {
-  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/angular-purple.svg');
+  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/angular-original.svg');
   &:hover
   {
-    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/angular-original.svg');
+    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/angular-purple.svg');
   }
 }
 .elmBg
 {
-  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/elm-purple.svg');
+  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/elm-original.jpg');
   &:hover
   {
-    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/elm-original.jpg');
+    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/elm-purple.svg');
   }
 }
 .reBg
 {
-  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/reasonml-purple.svg');
+  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/reasonml-original.svg');
   &:hover
   {
-    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/reasonml-original.svg');
+    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/reasonml-purple.svg');
   }
 }
 .hasuraBg
 {
-  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/hasura-purple.svg');
+  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/hasura-original.svg');
   &:hover
   {
-    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/hasura-original.svg');
+    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/hasura-purple.svg');
   }
 }
 .postgresBg
 {
-  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/postgres-purple.svg');
+  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/postgres-original.svg');
   &:hover
   {
-    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/postgres-original.svg');
+    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/postgres-purple.svg');
   }
 }
 .iosBg
 {
-  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/ios-purple.svg');
+  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/ios-original.png');
   &:hover
   {
-    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/ios-original.png');
+    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/ios-purple.svg');
   }
 }
 .androidBg
 {
-  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/android-purple.svg');
+  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/android-original.svg');
   &:hover
   {
-    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/android-original.svg');
+    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/android-purple.svg');
   }
 }
 .flutterBg
 {
-  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/flutter-purple.svg');
+  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/flutter-original.svg');
   &:hover
   {
-    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/flutter-original.svg');
+    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/flutter-purple.svg');
   }
 }
 .reactDisableBg
@@ -999,6 +1004,112 @@ ul
   clear: both;
   font-size: 12px;
 }
+.testimoialsWrapper
+{
+  .sectionHeader
+  {
+    text-align: center;
+    padding-bottom: 20px;
+  }
+  .purpleLineSeperator
+  {
+    margin: 0 auto;
+  }
+  .testimonialListWrapper
+  {
+    .testimonialList
+    {
+      padding: 40px 0;
+      border-bottom: 1px solid #cbcbcb;
+      .testimonialContent
+      {
+        font-family: 'Raleway';
+        font-size: 28px;
+        font-weight: bold;
+        color: #606060;
+        line-height: 1.36;
+        padding: 24px 0;
+      }
+      .authorWrapper
+      {
+        display: flex;
+        align-items: center;
+        .authorImg
+        {
+          img
+          {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+          }
+        }
+        .author
+        {
+          padding-left: 24px;
+          .name
+          {
+            font-family: 'Roboto';
+            font-size: 18px;
+            font-weight: bold;
+            line-height: 1.33;
+            color: #1f88e5;
+            padding-bottom: 4px;
+            a
+            {
+              color: #1f88e5;
+            }
+            a:hover
+            {
+              text-decoration: none;
+            }
+          }
+          .designation
+          {
+            font-family: 'Roboto';
+            font-size: 16px;
+            font-weight: normal;
+            color: #303030;
+            line-height: 1.31;
+            a
+            {
+              color: #1f88e5;
+            }
+            a:hover
+            {
+              text-decoration: none;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+.featuredWrapper
+{
+  .sectionHeader
+  {
+    text-align: center;
+    padding-bottom: 20px;
+  }
+  .purpleLineSeperator
+  {
+    margin: 0 auto;
+  }
+  .featuredIconWrapper
+  {
+    text-align: center;
+    padding-top: 60px;
+    .featuredIcon
+    {
+      display: inline-block;
+      padding: 0 35px;
+      img
+      {
+        max-height: 90px;
+      }
+    }
+  }
+}
 @media (max-width: 767px)
 {
   .commonSectionWrapper
@@ -1245,6 +1356,76 @@ ul
   {
     padding-top: 30px;
   }
+  .wd80
+  {
+    width: 100%;
+  }
+  .testimoialsWrapper
+  {
+    padding: 0 15px;
+    .testimonialListWrapper
+    {
+      .testimonialList
+      {
+        .quotes
+        {
+          img
+          {
+            width: 30px;
+          }
+        }
+        .testimonialContent
+        {
+          font-size: 16px;
+          padding: 15px 0;
+          line-height: 1.6;
+          a
+          {
+            word-break: break-all;
+          }
+        }
+        .authorWrapper
+        {
+          .authorImg
+          {
+            img
+            {
+              width: 75px;
+              height: 75px;
+            }
+          }
+          .author
+          {
+            padding-left: 15px;
+            .name
+            {
+              font-size: 16px;
+            }
+            .designation
+            {
+              font-size: 14px;
+            }
+          }
+        }
+      }
+    }
+  }
+  .featuredWrapper
+  {
+    .featuredIconWrapper
+    {
+      padding-top: 40px;
+      .featuredIcon
+      {
+        padding: 0 10px;
+        img
+        {
+          max-height: 50px;
+          max-width: 75px;
+        }
+      }
+    }
+  }
 }
 @media (min-width: 768px) and (max-width: 991px)
 {
@@ -1347,5 +1528,18 @@ ul
   .copy_text
   {
     padding-top: 30px;
+  }
+  .testimoialsWrapper
+  {
+    .testimonialListWrapper
+    {
+      .testimonialList
+      {
+        .testimonialContent
+        {
+          font-size: 20px;
+        }
+      }
+    }
   }
 }

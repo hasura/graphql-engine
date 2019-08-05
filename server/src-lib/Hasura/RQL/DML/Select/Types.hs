@@ -389,3 +389,10 @@ mergeArrNodes lNode rNode =
   where
     ArrNode lExtrs colMapping lBN = lNode
     ArrNode rExtrs _          rBN = rNode
+
+data ArrNodeInfo
+  = ArrNodeInfo
+  { _aniAlias            :: !S.Alias
+  , _aniPrefix           :: !Iden
+  , _aniSubQueryRequired :: !Bool
+  } deriving (Show, Eq)

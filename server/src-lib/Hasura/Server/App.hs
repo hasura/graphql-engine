@@ -4,7 +4,6 @@
 
 module Hasura.Server.App where
 
-import           Control.Arrow                          ((***))
 import           Control.Concurrent.MVar
 import           Control.Exception                      (IOException, try)
 import           Data.Aeson                             hiding (json)
@@ -47,7 +46,6 @@ import qualified Hasura.Server.PGDump                   as PGD
 import           Hasura.EncJSON
 import           Hasura.Prelude                         hiding (get, put)
 import           Hasura.RQL.DDL.Schema.Table
-import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                     (AuthMode (..),
                                                          getUserInfo)
@@ -207,9 +205,19 @@ logResult logger userInfoM reqId httpReq req res qTime = do
   let logline = case res of
         Right res' -> mkHttpAccessLog userInfoM reqId httpReq res' qTime
         Left e     -> mkHttpErrorLog userInfoM reqId httpReq e req qTime
-  liftIO $ L.unLogger logger $ logline
--- logResult userInfoM req reqBody logger res qTime =
---   liftIO $ L.unLogger logger $ mkAccessLog userInfoM req (reqBody, res) qTime
+  liftIO $ L.unLogger logger logline
+
+logSuccess
+  :: (MonadIO m)
+  => L.Logger
+  -> Maybe UserInfo
+  -> RequestId
+  -> Wai.Request
+  -> BL.ByteString
+  -> Maybe (UTCTime, UTCTime)
+  -> m ()
+logSuccess logger userInfoM reqId httpReq res qTime =
+  liftIO $ L.unLogger logger $ mkHttpAccessLog userInfoM reqId httpReq res qTime
 
 logError
   :: (MonadIO m)
@@ -235,10 +243,12 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
   let headers = requestHeaders req
       authMode = scAuthMode serverCtx
       manager = scManager serverCtx
+      -- convert ByteString to Maybe Value for logging
+      reqTxt = Just $ String $ bsToTxt $ BL.toStrict reqBody
 
   requestId <- getRequestId headers
   userInfoE <- liftIO $ runExceptT $ getUserInfo logger manager headers authMode
-  userInfo  <- either (logAndThrow requestId req reqBody False . qErrModifier)
+  userInfo  <- either (logErrorAndResp Nothing requestId req reqTxt False . qErrModifier)
                return userInfoE
 
   let handlerState = HandlerCtx serverCtx userInfo headers requestId
@@ -252,7 +262,7 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
       return (res, Nothing)
     AHPost handler -> do
       parsedReqE <- runExceptT $ parseBody reqBody
-      parsedReq  <- either (qErrToResp (isAdmin curRole) . qErrModifier) return parsedReqE
+      parsedReq  <- either (logErrorAndResp (Just userInfo) requestId req reqTxt (isAdmin curRole) . qErrModifier) return parsedReqE
       res <- liftIO $ runReaderT (runExceptT $ handler parsedReq) handlerState
       return (res, Just parsedReq)
 
@@ -261,36 +271,34 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
   -- apply the error modifier
   let modResult = fmapL qErrModifier result
 
-  -- log result
-  logResult logger (Just userInfo) requestId req (toJSON <$> q)
-    (apiRespToLBS <$> modResult) $ Just (t1, t2)
-  either (qErrToResp (isAdmin curRole)) (resToResp requestId) modResult
+  -- log and return result
+  case modResult of
+    Left err  -> logErrorAndResp (Just userInfo) requestId req (toJSON <$> q) (isAdmin curRole) err
+    Right res -> logSuccessAndResp (Just userInfo) requestId req res (Just (t1, t2))
 
   where
-    logger     = scLogger serverCtx
+    logger = scLogger serverCtx
 
-    logAndThrow reqId req reqBody includeInternal qErr = do
-      let reqTxt = Just $ toJSON $ String $ bsToTxt $ BL.toStrict reqBody
-      logError logger Nothing reqId req reqTxt qErr
-      qErrToResp includeInternal qErr
-
-    -- encode error response
-    qErrToResp :: (MonadIO m) => Bool -> QErr -> ActionCtxT ctx m b
-    qErrToResp includeInternal qErr = do
+    logErrorAndResp
+      :: (MonadIO m)
+      => Maybe UserInfo -> RequestId -> Wai.Request -> Maybe Value -> Bool -> QErr -> ActionCtxT ctx m a
+    logErrorAndResp userInfo reqId req reqBody includeInternal qErr = do
+      logError logger userInfo reqId req reqBody qErr
       setStatus $ qeStatus qErr
       json $ qErrEncoder includeInternal qErr
 
-    resToResp reqId = \case
-      JSONResp (HttpResponse j h) -> do
-        uncurry setHeader jsonHeader
-        uncurry setHeader (requestIdHeader, unRequestId reqId)
-        mapM_ (mapM_ (uncurry setHeader . unHeader)) h
-        lazyBytes $ encJToLBS j
-      RawResp (HttpResponse b h) -> do
-        uncurry setHeader (requestIdHeader, unRequestId reqId)
-        mapM_ (mapM_ (uncurry setHeader . unHeader)) h
-        lazyBytes b
-
+    logSuccessAndResp userInfo reqId req result qTime = do
+      logSuccess logger userInfo reqId req (apiRespToLBS result) qTime
+      case result of
+        JSONResp (HttpResponse j h) -> do
+          uncurry setHeader jsonHeader
+          uncurry setHeader (requestIdHeader, unRequestId reqId)
+          mapM_ (mapM_ (uncurry setHeader . unHeader)) h
+          lazyBytes $ encJToLBS j
+        RawResp (HttpResponse b h) -> do
+          uncurry setHeader (requestIdHeader, unRequestId reqId)
+          mapM_ (mapM_ (uncurry setHeader . unHeader)) h
+          lazyBytes b
 
 v1QueryHandler :: RQLQuery -> Handler (HttpResponse EncJSON)
 v1QueryHandler query = do
@@ -515,10 +523,6 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       lazyBytes $ encode $ object [ "version" .= currentVersion ]
 
     when enableMetadata $ do
-      get    ("v1/template" <//> var) tmpltGetOrDeleteH
-      post   ("v1/template" <//> var) tmpltPutOrPostH
-      put    ("v1/template" <//> var) tmpltPutOrPostH
-      delete ("v1/template" <//> var) tmpltGetOrDeleteH
 
       post "v1/query" $ mkSpockAction encodeQErr id serverCtx $
         mkPostHandler $ mkAPIRespHandler v1QueryHandler
@@ -585,35 +589,10 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       mkSpockAction encodeQErr id serverCtx $ mkPostHandler $
         mkAPIRespHandler gqlExplainHandler
 
-    mkTmpltName tmpltText =
-      onNothing (mkNonEmptyText tmpltText) $ throw400 NotSupported "template name is empty string"
-
     enableGraphQL = isGraphQLEnabled serverCtx
     enableMetadata = isMetadataEnabled serverCtx
     enablePGDump = isPGDumpEnabled serverCtx
     enableConfig = isConfigEnabled serverCtx
-
-    tmpltGetOrDeleteH tmpltText = do
-      tmpltArgs <- tmpltArgsFromQueryParams
-      mkSpockAction encodeQErr id serverCtx $ mkGetHandler $ do
-        tmpltName <- mkTmpltName tmpltText
-        JSONResp <$> mkQTemplateAction tmpltName tmpltArgs
-
-    tmpltPutOrPostH tmpltText = do
-      tmpltArgs <- tmpltArgsFromQueryParams
-      mkSpockAction encodeQErr id serverCtx $ mkPostHandler $
-        mkAPIRespHandler $ \bodyTmpltArgs -> do
-          tmpltName <- mkTmpltName tmpltText
-          mkQTemplateAction tmpltName $ M.union bodyTmpltArgs tmpltArgs
-
-    tmpltArgsFromQueryParams = do
-      qparams <- params
-      return $ M.fromList $ flip map qparams $
-        TemplateParam *** String
-
-    mkQTemplateAction tmpltName tmpltArgs =
-      v1QueryHandler $ RQExecuteQueryTemplate $
-      ExecQueryTemplate (TQueryName tmpltName) tmpltArgs
 
     serveApiConsole = do
       -- redirect / to /console
