@@ -180,7 +180,7 @@ fmapL _ (Right x) = pure x
 -- diff time to micro seconds
 diffTimeToMicro :: NominalDiffTime -> Int
 diffTimeToMicro diff =
-  (floor (realToFrac diff :: Double) - 10) * aSecond
+  floor (realToFrac diff :: Double) * aSecond
   where
     aSecond = 1000 * 1000
 
