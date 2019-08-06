@@ -305,7 +305,10 @@ const loadSchema = configOptions => {
         dispatch(loadInconsistentObjects());
       },
       error => {
-        console.error('Failed to load schema ' + JSON.stringify(error));
+        console.error('loadSchema error: ' + JSON.stringify(error));
+        dispatch(
+          showErrorNotification('DB schema loading failed', null, error)
+        );
       }
     );
   };
