@@ -448,14 +448,17 @@ buildSchemaCacheG withSetup = do
       handleInconsistentObj mkInconsObj $ do
         rsCtx <- addRemoteSchemaP2Setup rs
         sc <- askSchemaCache
+        -- TODO: Add permissions for Remote Schemas here
         let gCtxMap = scGCtxMap sc
             defGCtx = scDefaultRemoteGCtx sc
             rGCtx = convRemoteGCtx $ rscGCtx rsCtx
-        mergedGCtxMap <- mergeRemoteSchema gCtxMap rGCtx
+            rsWithRoles = scRemoteSchemasWithRole sc
+        -- mergedGCtxMap <- mergeRoleRemoteSchemas gCtxMap rGCtx
         mergedDefGCtx <- mergeGCtx defGCtx rGCtx
-        writeSchemaCache sc { scGCtxMap = mergedGCtxMap
-                            , scDefaultRemoteGCtx = mergedDefGCtx
-                            }
+        -- writeSchemaCache sc { scGCtxMap = mergedGCtxMap
+        --                     , scDefaultRemoteGCtx = mergedDefGCtx
+        --                     }
+        writeSchemaCache sc { scDefaultRemoteGCtx = mergedDefGCtx }
 
 fetchCatalogData :: Q.TxE QErr CatalogMetadata
 fetchCatalogData =

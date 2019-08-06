@@ -144,6 +144,8 @@ library
                      , filepath >= 1.4
                      , mime-types >= 0.1
 
+                     , monad-validate
+
   exposed-modules:     Hasura.Prelude
                      , Hasura.Logging
                      , Hasura.EncJSON

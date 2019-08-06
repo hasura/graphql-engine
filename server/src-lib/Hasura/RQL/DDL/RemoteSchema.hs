@@ -1,3 +1,5 @@
+{-# LANGUAGE RecordWildCards #-}
+
 module Hasura.RQL.DDL.RemoteSchema
   ( runAddRemoteSchema
   , runRemoveRemoteSchema
@@ -8,20 +10,25 @@ module Hasura.RQL.DDL.RemoteSchema
   , addRemoteSchemaP1
   , addRemoteSchemaP2Setup
   , addRemoteSchemaP2
+  , runAddRemoteSchemaPermissions
   ) where
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
 
-import qualified Data.Aeson                  as J
-import qualified Data.HashMap.Strict         as Map
-import qualified Database.PG.Query           as Q
+import qualified Data.Aeson                    as J
+import qualified Data.HashMap.Strict           as Map
+import qualified Database.PG.Query             as Q
+import qualified Hasura.GraphQL.Validate.Types as VT
 
+import           Control.Monad.Validate
 import           Hasura.GraphQL.RemoteServer
+import           Hasura.GraphQL.Utils
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Hasura.GraphQL.Schema       as GS
+import qualified Hasura.GraphQL.Context        as GC
+import qualified Hasura.GraphQL.Schema         as GS
 
 runAddRemoteSchema
   :: ( QErrM m, UserInfoM m
@@ -124,7 +131,7 @@ buildGCtxMap = do
   sc <- askSchemaCache
   let gCtxMap = scGCtxMap sc
   -- Stitch remote schemas
-  (mergedGCtxMap, defGCtx) <- mergeSchemas (scRemoteSchemas sc) gCtxMap
+  (mergedGCtxMap, defGCtx) <- mergeSchemas (scRemoteSchemas sc) (scRemoteSchemasWithRole sc) gCtxMap
   writeSchemaCache sc { scGCtxMap = mergedGCtxMap
                       , scDefaultRemoteGCtx = defGCtx
                       }
@@ -156,3 +163,111 @@ fetchRemoteSchemas =
      |] () True
   where
     fromRow (n, Q.AltJ def, comm) = AddRemoteSchemaQuery n def comm
+
+runAddRemoteSchemaPermissions
+  :: ( QErrM m, UserInfoM m
+     , CacheRWM m, MonadTx m
+     )
+  => RemoteSchemaPermissions -> m EncJSON
+runAddRemoteSchemaPermissions q = do
+  adminOnly
+  newRSCtx <- runAddRemoteSchemaPermissionsP1 q
+  runAddRemoteSchemaPermissionsP2Setup q newRSCtx
+  pure successMsg
+
+runAddRemoteSchemaPermissionsP1
+  :: (QErrM m, CacheRM m) => RemoteSchemaPermissions -> m RemoteSchemaCtx
+runAddRemoteSchemaPermissionsP1 remoteSchemaPermission = do
+  validateRemoteSchemaPermissions remoteSchemaPermission
+
+runAddRemoteSchemaPermissionsP2Setup
+  :: (QErrM m, CacheRWM m) => RemoteSchemaPermissions -> RemoteSchemaCtx -> m ()
+runAddRemoteSchemaPermissionsP2Setup RemoteSchemaPermissions{..} rsCtx = do
+  sc <- askSchemaCache
+  let rmSchemaWithRoles = scRemoteSchemasWithRole sc
+      newSchemasWithRoles = Map.insert (rsPermRole, rsPermRemoteSchemaName) rsCtx rmSchemaWithRoles
+  writeSchemaCache sc { scRemoteSchemasWithRole = newSchemasWithRoles }
+
+validateRemoteSchemaPermissions :: (QErrM m, CacheRM m) => RemoteSchemaPermissions -> m RemoteSchemaCtx
+validateRemoteSchemaPermissions remoteSchemaPerm = do
+  sc <- askSchemaCache
+  case Map.lookup
+       (rsPermRemoteSchemaName remoteSchemaPerm)
+       (scRemoteSchemas sc) of
+    Nothing  -> throw400 RemoteSchemaError "No such remote schema"
+    Just remoteSchemaCtx -> do
+      newTypes <- validateTypes (rsPermTypes remoteSchemaPerm) (GC._rgTypes $ rscGCtx remoteSchemaCtx)
+      newGCtx <- updateRemoteGCtxFromTypes newTypes (rscGCtx remoteSchemaCtx)
+      pure $ remoteSchemaCtx { rscGCtx = newGCtx }
+
+validateTypes :: (QErrM m) => PermTypeMap -> VT.TypeMap -> m VT.TypeMap
+validateTypes permTypes allTypes = do
+  eitherTypeMap <- runValidateT validateTypes'
+  case eitherTypeMap of
+    Left errs     -> throw400 Unexpected (mconcat errs)
+    Right typeMap -> pure typeMap
+  where
+    validateTypes' :: (MonadValidate [Text] m) => m VT.TypeMap
+    validateTypes' = do
+      Map.traverseWithKey
+        (\namedType typeInfo ->
+           case typeInfo of
+             VT.TIObj objTy ->
+               case Map.lookup namedType permTypes of
+                 Nothing -> pure $ VT.TIObj objTy { VT._otiFields = Map.empty }
+                 Just fields -> do
+                   newFields <-
+                     traverse
+                       (\fieldName ->
+                          case Map.lookup fieldName (VT._otiFields objTy) of
+                            Nothing ->
+                              refute
+                                [ "field: " <> showName fieldName <>
+                                  " not found in type: " <>
+                                  showNamedTy namedType
+                                ]
+                            Just fieldInfo -> pure (fieldName, fieldInfo))
+                       fields
+                   pure $
+                     VT.TIObj objTy {VT._otiFields = Map.fromList newFields}
+             VT.TIInpObj inpObjTy ->
+                case Map.lookup namedType permTypes of
+                 Nothing -> pure $ VT.TIInpObj inpObjTy { VT._iotiFields = Map.empty }
+                 Just fields -> do
+                   newFields <-
+                     traverse
+                       (\fieldName ->
+                          case Map.lookup fieldName (VT._iotiFields inpObjTy) of
+                            Nothing ->
+                              refute
+                                [ "field: " <> showName fieldName <>
+                                  " not found in type: " <>
+                                  showNamedTy namedType
+                                ]
+                            Just fieldInfo -> pure (fieldName, fieldInfo))
+                       fields
+                   pure $
+                     VT.TIInpObj inpObjTy {VT._iotiFields = Map.fromList newFields}
+             _otherwise ->
+               refute
+                 [ ("type: " <> showNamedTy namedType <>
+                    " is not an object type or input object type")
+                 ])
+        allTypes
+
+updateRemoteGCtxFromTypes :: (QErrM m) => VT.TypeMap -> GC.RemoteGCtx -> m GC.RemoteGCtx
+updateRemoteGCtxFromTypes newTypeMap oldRemoteGCtx = do
+  let mQrTyp = Map.lookup qRootN newTypeMap
+      mMrTyp = maybe Nothing (`Map.lookup` newTypeMap) mRootN
+      mSrTyp = maybe Nothing (`Map.lookup` newTypeMap) sRootN
+  qrTyp <- liftMaybe noQueryRoot mQrTyp
+  let mRmQR = VT.getObjTyM qrTyp
+      mRmMR = join $ VT.getObjTyM <$> mMrTyp
+      mRmSR = join $ VT.getObjTyM <$> mSrTyp
+  rmQR <- liftMaybe (err400 Unexpected "query root has to be an object type") mRmQR
+  return $ GC.RemoteGCtx newTypeMap rmQR mRmMR mRmSR
+  where
+    qRootN = VT._otiName $ GC._rgQueryRoot oldRemoteGCtx
+    mRootN = VT._otiName <$> GC._rgMutationRoot oldRemoteGCtx
+    sRootN = VT._otiName <$> GC._rgSubscriptionRoot oldRemoteGCtx
+    noQueryRoot = err400 Unexpected "query root is missing"

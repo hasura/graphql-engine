@@ -92,12 +92,13 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _) = do
 mergeSchemas
   :: (MonadError QErr m)
   => RemoteSchemaMap
+  -> RemoteSchemasWithRole
   -> GS.GCtxMap
   -- the merged GCtxMap and the default GCtx without roles
   -> m (GS.GCtxMap, GS.GCtx)
-mergeSchemas rmSchemaMap gCtxMap = do
+mergeSchemas rmSchemaMap rmSchemaMapWithRole gCtxMap = do
   def <- mkDefaultRemoteGCtx remoteSchemas
-  merged <- mergeRemoteSchema gCtxMap def
+  merged <- mergeRoleRemoteSchemas gCtxMap rmSchemaMapWithRole
   return (merged, def)
   where
     remoteSchemas = map rscGCtx $ Map.elems rmSchemaMap
@@ -109,15 +110,18 @@ mkDefaultRemoteGCtx =
   foldlM (\combG -> mergeGCtx combG . convRemoteGCtx) GS.emptyGCtx
 
 -- merge a remote schema `gCtx` into current `gCtxMap`
-mergeRemoteSchema
+mergeRoleRemoteSchemas
   :: (MonadError QErr m)
   => GS.GCtxMap
-  -> GS.GCtx
+  -> RemoteSchemasWithRole
   -> m GS.GCtxMap
-mergeRemoteSchema ctxMap mergedRemoteGCtx = do
-  res <- forM (Map.toList ctxMap) $ \(role, gCtx) -> do
-    updatedGCtx <- mergeGCtx gCtx mergedRemoteGCtx
-    return (role, updatedGCtx)
+mergeRoleRemoteSchemas gCtxMap rmSchemaWithRoles = do
+  res <- forM (Map.toList rmSchemaWithRoles) $ \((role, _rsName), rsCtx) -> do
+    case Map.lookup role gCtxMap of
+      Nothing -> pure (role, (convRemoteGCtx $ rscGCtx rsCtx))
+      Just gCtx -> do
+        updatedGCtx <- mergeGCtx gCtx (convRemoteGCtx $ rscGCtx rsCtx)
+        pure (role, updatedGCtx)
   return $ Map.fromList res
 
 mergeGCtx

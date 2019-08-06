@@ -26,6 +26,7 @@ module Hasura.RQL.Types.SchemaCache
 
        , RemoteSchemaCtx(..)
        , RemoteSchemaMap
+       , RemoteSchemasWithRole
        , addRemoteSchemaToCache
        , delRemoteSchemaFromCache
 
@@ -411,6 +412,7 @@ instance ToJSON RemoteSchemaCtx where
   toJSON = toJSON . rscInfo
 
 type RemoteSchemaMap = M.HashMap RemoteSchemaName RemoteSchemaCtx
+type RemoteSchemasWithRole = M.HashMap (RoleName, RemoteSchemaName) RemoteSchemaCtx
 
 type DepMap = M.HashMap SchemaObjId (HS.HashSet SchemaDependency)
 
@@ -442,14 +444,15 @@ incSchemaCacheVer (SchemaCacheVer prev) =
 
 data SchemaCache
   = SchemaCache
-  { scTables            :: !TableCache
-  , scFunctions         :: !FunctionCache
-  , scRemoteSchemas     :: !RemoteSchemaMap
-  , scAllowlist         :: !(HS.HashSet GQLQuery)
-  , scGCtxMap           :: !GC.GCtxMap
-  , scDefaultRemoteGCtx :: !GC.GCtx
-  , scDepMap            :: !DepMap
-  , scInconsistentObjs  :: ![InconsistentMetadataObj]
+  { scTables                :: !TableCache
+  , scFunctions             :: !FunctionCache
+  , scRemoteSchemas         :: !RemoteSchemaMap
+  , scRemoteSchemasWithRole :: !RemoteSchemasWithRole
+  , scAllowlist             :: !(HS.HashSet GQLQuery)
+  , scGCtxMap               :: !GC.GCtxMap
+  , scDefaultRemoteGCtx     :: !GC.GCtx
+  , scDepMap                :: !DepMap
+  , scInconsistentObjs      :: ![InconsistentMetadataObj]
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
@@ -482,8 +485,17 @@ instance (Monad m) => CacheRWM (StateT SchemaCache m) where
 
 emptySchemaCache :: SchemaCache
 emptySchemaCache =
-  SchemaCache M.empty M.empty M.empty
-              HS.empty M.empty GC.emptyGCtx mempty []
+  SchemaCache
+  { scTables       = M.empty
+  , scFunctions = M.empty
+  , scRemoteSchemas = M.empty
+  , scRemoteSchemasWithRole = M.empty
+  , scAllowlist  = HS.empty
+  , scGCtxMap  = M.empty
+  , scDefaultRemoteGCtx  = GC.emptyGCtx
+  , scDepMap    = M.empty
+  , scInconsistentObjs  = []
+  }
 
 modTableCache :: (CacheRWM m) => TableCache -> m ()
 modTableCache tc = do

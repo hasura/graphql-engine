@@ -1,20 +1,23 @@
 module Hasura.RQL.Types.RemoteSchema where
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Common    (NonEmptyText)
-import           Language.Haskell.TH.Syntax (Lift)
-import           System.Environment         (lookupEnv)
+import           Hasura.RQL.Types.Common       (NonEmptyText)
+import           Language.Haskell.TH.Syntax    (Lift)
+import           System.Environment            (lookupEnv)
 
-import qualified Data.Aeson                 as J
-import qualified Data.Aeson.Casing          as J
-import qualified Data.Aeson.TH              as J
-import qualified Data.Text                  as T
-import qualified Database.PG.Query          as Q
-import qualified Network.URI.Extended       as N
+import qualified Data.Aeson                    as J
+import qualified Data.Aeson.Casing             as J
+import qualified Data.Aeson.TH                 as J
+import qualified Data.HashMap.Strict           as Map
+import qualified Data.Text                     as T
+import qualified Database.PG.Query             as Q
+import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Network.URI.Extended          as N
 
-import           Hasura.RQL.DDL.Headers     (HeaderConf (..))
+import           Hasura.RQL.DDL.Headers        (HeaderConf (..))
 import           Hasura.RQL.Types.Error
-import           Hasura.SQL.Types           (DQuote)
+import           Hasura.RQL.Types.Permission
+import           Hasura.SQL.Types              (DQuote)
 
 type UrlFromEnv = Text
 
@@ -61,6 +64,17 @@ newtype RemoteSchemaNameQuery
   } deriving (Show, Eq, Lift)
 
 $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''RemoteSchemaNameQuery)
+
+type PermTypeMap = Map.HashMap G.NamedType [G.Name]
+
+data RemoteSchemaPermissions
+  = RemoteSchemaPermissions
+  { rsPermRemoteSchemaName :: RemoteSchemaName
+  , rsPermRole             :: RoleName
+  , rsPermTypes            :: PermTypeMap
+  } deriving (Show, Eq, Lift)
+
+$(J.deriveJSON (J.aesonDrop 6 J.snakeCase) ''RemoteSchemaPermissions)
 
 getUrlFromEnv :: (MonadIO m, MonadError QErr m) => Text -> m N.URI
 getUrlFromEnv urlFromEnv = do
