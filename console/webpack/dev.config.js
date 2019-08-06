@@ -20,6 +20,12 @@ const webpackIsomorphicToolsPlugin = new WebpackIsomorphicToolsPlugin(
 
 // const { UnusedFilesWebpackPlugin } = require('unused-files-webpack-plugin');
 
+const getRandomHexString = () => {
+  return Math.random()
+    .toString(16)
+    .slice(2);
+};
+
 module.exports = {
   mode: 'development',
   devtool: 'inline-source-map',
@@ -146,6 +152,10 @@ module.exports = {
       __SERVER__: false,
       __DEVELOPMENT__: true,
       __DEVTOOLS__: true, // <-------- DISABLE redux-devtools HERE
+    }),
+    // set global consts
+    new webpack.DefinePlugin({
+      CONSOLE_ASSET_VERSION: JSON.stringify(getRandomHexString()),
     }),
     webpackIsomorphicToolsPlugin.development(),
   ],

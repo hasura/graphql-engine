@@ -5,8 +5,9 @@ const config = {
 		"gaTrackingId": "UA-59768903-1"
 	},
 	"header": {
-		"logo": "https://graphql-engine-cdn.hasura.io/img/hasura_icon_white.svg",
-		"title": "/ graphql / react",
+		"logo": "https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/logo.png",
+		"logoLink": "https://learn.hasura.io",
+		"title": "<a href='https://learn.hasura.io'>/ graphql </a><a href='https://learn.hasura.io/graphql/react'>/ react</a>",
 		"githubUrl": "https://github.com/hasura/graphql-engine",
 		"helpUrl": "https://discordapp.com/invite/vBPpJkS",
 		"tweetText": "Check out this GraphQL course for React developers by @HasuraHQ https://learn.hasura.io/graphql/react",
@@ -27,7 +28,7 @@ const config = {
     		"/subscriptions",
     		"/realtime-feed",
     		"/what-next"
-    		],
+    	],
 		"links": [
 			{
 			"text": "Hasura Docs",
@@ -37,7 +38,9 @@ const config = {
 			"text": "GraphQL Docs",
 			"link": "https://graphql.org/learn"
 			}
-		]
+		],
+		"frontline": false,
+		"ignoreIndex": true
 	},
 	"siteMetadata": {
 		"title": "2 hour GraphQL course for React developers | Hasura",
