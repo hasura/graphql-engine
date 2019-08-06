@@ -246,7 +246,7 @@ showPGCols :: (Foldable t) => t PGCol -> T.Text
 showPGCols cols =
   T.intercalate ", " $ map (T.dquote . getPGColTxt) $ toList cols
 
-data PGColType
+data PGScalarType
   = PGSmallInt
   | PGInteger
   | PGBigInt
@@ -269,9 +269,9 @@ data PGColType
   | PGUnknown !T.Text
   deriving (Show, Eq, Lift, Generic, Data)
 
-instance Hashable PGColType
+instance Hashable PGScalarType
 
-instance ToSQL PGColType where
+instance ToSQL PGScalarType where
   toSQL = \case
     PGSmallInt    -> "smallint"
     PGInteger     -> "integer"
@@ -294,16 +294,16 @@ instance ToSQL PGColType where
     PGGeography   -> "geography"
     PGUnknown t   -> TB.text t
 
-instance ToJSON PGColType where
+instance ToJSON PGScalarType where
   toJSON = String . toSQLTxt
 
-instance ToJSONKey PGColType where
+instance ToJSONKey PGScalarType where
   toJSONKey = toJSONKeyText toSQLTxt
 
-instance DQuote PGColType where
+instance DQuote PGScalarType where
   dquoteTxt = toSQLTxt
 
-txtToPgColTy :: Text -> PGColType
+txtToPgColTy :: Text -> PGScalarType
 txtToPgColTy t = case t of
   "serial"                   -> PGSerial
   "bigserial"                -> PGBigSerial
@@ -353,11 +353,11 @@ txtToPgColTy t = case t of
   _                          -> PGUnknown t
 
 
-instance FromJSON PGColType where
+instance FromJSON PGScalarType where
   parseJSON (String t) = return $ txtToPgColTy t
-  parseJSON _          = fail "Expecting a string for PGColType"
+  parseJSON _          = fail "Expecting a string for PGScalarType"
 
-pgTypeOid :: PGColType -> PQ.Oid
+pgTypeOid :: PGScalarType -> PQ.Oid
 pgTypeOid PGSmallInt    = PTI.int2
 pgTypeOid PGInteger     = PTI.int4
 pgTypeOid PGBigInt      = PTI.int8
@@ -380,23 +380,23 @@ pgTypeOid PGGeometry    = PTI.text
 pgTypeOid PGGeography   = PTI.text
 pgTypeOid (PGUnknown _) = PTI.auto
 
-isIntegerType :: PGColType -> Bool
+isIntegerType :: PGScalarType -> Bool
 isIntegerType PGInteger  = True
 isIntegerType PGSmallInt = True
 isIntegerType PGBigInt   = True
 isIntegerType _          = False
 
-isNumType :: PGColType -> Bool
+isNumType :: PGScalarType -> Bool
 isNumType PGFloat   = True
 isNumType PGDouble  = True
 isNumType PGNumeric = True
 isNumType ty        = isIntegerType ty
 
-isJSONBType :: PGColType -> Bool
+isJSONBType :: PGScalarType -> Bool
 isJSONBType PGJSONB = True
 isJSONBType _       = False
 
-isComparableType :: PGColType -> Bool
+isComparableType :: PGScalarType -> Bool
 isComparableType PGJSON        = False
 isComparableType PGJSONB       = False
 isComparableType PGGeometry    = False
@@ -405,7 +405,7 @@ isComparableType PGBoolean     = False
 isComparableType (PGUnknown _) = False
 isComparableType _             = True
 
-isBigNum :: PGColType -> Bool
+isBigNum :: PGScalarType -> Bool
 isBigNum = \case
   PGBigInt    -> True
   PGBigSerial -> True
@@ -413,7 +413,7 @@ isBigNum = \case
   PGDouble    -> True
   _           -> False
 
-isGeoType :: PGColType -> Bool
+isGeoType :: PGScalarType -> Bool
 isGeoType = \case
   PGGeometry  -> True
   PGGeography -> True
@@ -424,8 +424,8 @@ isGeoType = \case
 -- TODO: This is incorrect modeling, as 'PGScalarType' will capture anything (under 'PGUnknown').
 -- This should be fixed when support for all types is merged.
 data PgType
-  = PgTypeSimple !PGColType
-  | PgTypeArray !PGColType
+  = PgTypeSimple !PGScalarType
+  | PgTypeArray !PGScalarType
   deriving (Show, Eq, Data)
 
 instance ToSQL PgType where

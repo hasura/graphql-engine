@@ -324,15 +324,15 @@ mkHsraInpTyInfo descM ty flds =
 data ScalarTyInfo
   = ScalarTyInfo
   { _stiDesc :: !(Maybe G.Description)
-  , _stiType :: !PGColType
+  , _stiType :: !PGScalarType
   , _stiLoc  :: !TypeLoc
   } deriving (Show, Eq, TH.Lift)
 
-mkHsraScalarTyInfo :: PGColType -> ScalarTyInfo
+mkHsraScalarTyInfo :: PGScalarType -> ScalarTyInfo
 mkHsraScalarTyInfo ty = ScalarTyInfo Nothing ty TLHasuraType
 
 instance EquatableGType ScalarTyInfo where
-  type EqProps ScalarTyInfo = PGColType
+  type EqProps ScalarTyInfo = PGScalarType
   getEqProps = _stiType
 
 fromScalarTyDef
@@ -546,7 +546,7 @@ isSubTypeBase subTyInfo supTyInfo = case (subTyInfo,supTyInfo) of
     notSubTyErr = throwError $ "Type " <> showTy subTyInfo <> " is not a sub type of " <> showTy supTyInfo
 
 -- map postgres types to builtin scalars
-pgColTyToScalar :: PGColType -> Text
+pgColTyToScalar :: PGScalarType -> Text
 pgColTyToScalar = \case
   PGInteger -> "Int"
   PGBoolean -> "Boolean"
@@ -555,7 +555,7 @@ pgColTyToScalar = \case
   PGVarchar -> "String"
   t         -> toSQLTxt t
 
-mkScalarTy :: PGColType -> G.NamedType
+mkScalarTy :: PGScalarType -> G.NamedType
 mkScalarTy =
   G.NamedType . G.Name . pgColTyToScalar
 
@@ -660,7 +660,7 @@ data AnnInpVal
 type AnnGObject = OMap.InsOrdHashMap G.Name AnnInpVal
 
 data AnnGValue
-  = AGScalar !PGColType !(Maybe PGColValue)
+  = AGScalar !PGScalarType !(Maybe PGColValue)
   | AGEnum !G.NamedType !(Maybe G.EnumValue)
   | AGObject !G.NamedType !(Maybe AnnGObject)
   | AGArray !G.ListType !(Maybe [AnnInpVal])

@@ -22,7 +22,7 @@ type OpExp = OpExpG UnresolvedVal
 
 parseOpExps
   :: (MonadError QErr m)
-  => PGColType -> AnnInpVal -> m [OpExp]
+  => PGScalarType -> AnnInpVal -> m [OpExp]
 parseOpExps colTy annVal = do
   opExpsM <- flip withObjectM annVal $ \nt objM -> forM objM $ \obj ->
     forM (OMap.toList obj) $ \(k, v) ->

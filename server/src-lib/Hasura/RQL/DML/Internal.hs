@@ -142,7 +142,7 @@ checkPermOnCol pt allowedCols pgCol = do
         ]
 
 binRHSBuilder
-  :: PGColType -> Value -> DMLP1 S.SQLExp
+  :: PGScalarType -> Value -> DMLP1 S.SQLExp
 binRHSBuilder colType val = do
   preparedArgs <- get
   binVal <- runAesonParser (convToBin colType) val
@@ -245,7 +245,7 @@ convBoolExp
   -> SelPermInfo
   -> BoolExp
   -> SessVarBldr m
-  -> (PGColType -> Value -> m S.SQLExp)
+  -> (PGScalarType -> Value -> m S.SQLExp)
   -> m AnnBoolExpSQL
 convBoolExp cim spi be sessVarBldr prepValBldr = do
   abe <- annBoolExp rhsParser cim be
@@ -266,7 +266,7 @@ dmlTxErrorHandler p2Res =
     Just (code, msg) -> err400 code msg
   where err = simplifyError p2Res
 
-toJSONableExp :: Bool -> PGColType -> S.SQLExp -> S.SQLExp
+toJSONableExp :: Bool -> PGScalarType -> S.SQLExp -> S.SQLExp
 toJSONableExp strfyNum colTy expn
   | colTy == PGGeometry || colTy == PGGeography =
       S.SEFnApp "ST_AsGeoJSON"

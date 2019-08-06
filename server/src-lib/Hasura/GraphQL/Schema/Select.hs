@@ -50,7 +50,7 @@ mkTableByPkName :: QualifiedTable -> G.Name
 mkTableByPkName tn = qualObjectToName tn <> "_by_pk"
 
 -- Support argument params for PG columns
-mkPGColParams :: PGColType -> ParamMap
+mkPGColParams :: PGScalarType -> ParamMap
 mkPGColParams = \case
   PGJSONB -> jsonParams
   PGJSON  -> jsonParams
@@ -222,7 +222,7 @@ type table_<agg-op>_fields{
 mkTableColAggFldsObj
   :: QualifiedTable
   -> G.Name
-  -> (PGColType -> G.NamedType)
+  -> (PGScalarType -> G.NamedType)
   -> [PGColInfo]
   -> ObjTyInfo
 mkTableColAggFldsObj tn op f cols =

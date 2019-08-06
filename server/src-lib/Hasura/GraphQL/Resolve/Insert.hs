@@ -81,7 +81,7 @@ data CTEExp
 
 data AnnInsObj
   = AnnInsObj
-  { _aioColumns :: ![(PGCol, PGColType, PGColValue)]
+  { _aioColumns :: ![(PGCol, PGScalarType, PGColValue)]
   , _aioObjRels :: ![ObjRelIns]
   , _aioArrRels :: ![ArrRelIns]
   } deriving (Show, Eq)
@@ -185,7 +185,7 @@ parseOnConflict tn updFiltrM val = withPathK "on_conflict" $
 
 toSQLExps
   :: (MonadError QErr m, MonadState PrepArgs m)
-  => [(PGCol, PGColType, PGColValue)]
+  => [(PGCol, PGScalarType, PGColValue)]
   -> m [(PGCol, S.SQLExp)]
 toSQLExps cols =
   forM cols $ \(c, ty, v) -> do
@@ -200,7 +200,7 @@ mkInsertQ
   :: MonadError QErr m
   => QualifiedTable
   -> Maybe RI.ConflictClauseP1
-  -> [(PGCol, PGColType, PGColValue)]
+  -> [(PGCol, PGScalarType, PGColValue)]
   -> [PGCol]
   -> Map.HashMap PGCol S.SQLExp
   -> RoleName
@@ -535,7 +535,7 @@ mergeListsWith (x:xs) l b f = case find (b x) l of
   Just y  ->  f x y : mergeListsWith xs l b f
 
 mkPGColWithTypeAndVal :: [PGColInfo] -> [PGColWithValue]
-                      -> [(PGCol, PGColType, PGColValue)]
+                      -> [(PGCol, PGScalarType, PGColValue)]
 mkPGColWithTypeAndVal pgColInfos pgColWithVal =
     mergeListsWith pgColInfos pgColWithVal
     (\ci (c, _) -> pgiName ci == c)

@@ -40,7 +40,7 @@ data PGColMeta
   = PGColMeta
   { pcmColumnName      :: !PGCol
   , pcmOrdinalPosition :: !Int
-  , pcmDataType        :: !PGColType
+  , pcmDataType        :: !PGScalarType
   , pcmIsNullable      :: !Bool
   } deriving (Show, Eq)
 

@@ -41,7 +41,7 @@ import qualified PostgreSQL.Binary.Decoding as PD
 data PGColInfo
   = PGColInfo
   { pgiName       :: !PGCol
-  , pgiType       :: !PGColType
+  , pgiType       :: !PGScalarType
   , pgiIsNullable :: !Bool
   } deriving (Show, Eq)
 

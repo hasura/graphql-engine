@@ -63,7 +63,7 @@ mkSQLCount (CountQueryP1 tn (permFltr, mWc) mDistCols) =
 validateCountQWith
   :: (UserInfoM m, QErrM m, CacheRM m)
   => SessVarBldr m
-  -> (PGColType -> Value -> m S.SQLExp)
+  -> (PGScalarType -> Value -> m S.SQLExp)
   -> CountQuery
   -> m CountQueryP1
 validateCountQWith sessVarBldr prepValBldr (CountQuery qt mDistCols mWhere) = do

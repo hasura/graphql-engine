@@ -64,7 +64,7 @@ toSQLConflict conflict = case conflict of
 
 convObj
   :: (UserInfoM m, QErrM m)
-  => (PGColType -> Value -> m S.SQLExp)
+  => (PGScalarType -> Value -> m S.SQLExp)
   -> HM.HashMap PGCol S.SQLExp
   -> HM.HashMap PGCol S.SQLExp
   -> FieldInfoMap
@@ -160,7 +160,7 @@ convInsertQuery
   :: (UserInfoM m, QErrM m, CacheRM m)
   => (Value -> m [InsObj])
   -> SessVarBldr m
-  -> (PGColType -> Value -> m S.SQLExp)
+  -> (PGScalarType -> Value -> m S.SQLExp)
   -> InsertQuery
   -> m InsertQueryP1
 convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRetCols) = do

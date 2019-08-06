@@ -285,7 +285,7 @@ data SQLExp
   | SECount !CountType
   deriving (Show, Eq, Data)
 
-withTyAnn :: PGColType -> SQLExp -> SQLExp
+withTyAnn :: PGScalarType -> SQLExp -> SQLExp
 withTyAnn colTy v = SETyAnn v . mkTypeAnn $ PgTypeSimple colTy
 
 instance J.ToJSON SQLExp where

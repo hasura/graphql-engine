@@ -611,7 +611,7 @@ data TyAgg
   = TyAgg
   { _taTypes   :: !TypeMap
   , _taFields  :: !FieldMap
-  , _taScalars :: !(Set.HashSet PGColType)
+  , _taScalars :: !(Set.HashSet PGScalarType)
   , _taOrdBy   :: !OrdByCtx
   } deriving (Show, Eq)
 

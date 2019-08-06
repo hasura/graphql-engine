@@ -67,9 +67,9 @@ mkUpdateCTE (AnnUpd tn setExps (permFltr, wc) _ _) =
 
 convInc
   :: (QErrM m)
-  => (PGColType -> Value -> m S.SQLExp)
+  => (PGScalarType -> Value -> m S.SQLExp)
   -> PGCol
-  -> PGColType
+  -> PGScalarType
   -> Value
   -> m (PGCol, S.SQLExp)
 convInc f col colType val = do
@@ -78,9 +78,9 @@ convInc f col colType val = do
 
 convMul
   :: (QErrM m)
-  => (PGColType -> Value -> m S.SQLExp)
+  => (PGScalarType -> Value -> m S.SQLExp)
   -> PGCol
-  -> PGColType
+  -> PGScalarType
   -> Value
   -> m (PGCol, S.SQLExp)
 convMul f col colType val = do
@@ -89,16 +89,16 @@ convMul f col colType val = do
 
 convSet
   :: (QErrM m)
-  => (PGColType -> Value -> m S.SQLExp)
+  => (PGScalarType -> Value -> m S.SQLExp)
   -> PGCol
-  -> PGColType
+  -> PGScalarType
   -> Value
   -> m (PGCol, S.SQLExp)
 convSet f col colType val = do
   prepExp <- f colType val
   return (col, prepExp)
 
-convDefault :: (Monad m) => PGCol -> PGColType -> () -> m (PGCol, S.SQLExp)
+convDefault :: (Monad m) => PGCol -> PGScalarType -> () -> m (PGCol, S.SQLExp)
 convDefault col _ _ = return (col, S.SEUnsafe "DEFAULT")
 
 convOp
@@ -107,7 +107,7 @@ convOp
   -> [PGCol]
   -> UpdPermInfo
   -> [(PGCol, a)]
-  -> (PGCol -> PGColType -> a -> m (PGCol, S.SQLExp))
+  -> (PGCol -> PGScalarType -> a -> m (PGCol, S.SQLExp))
   -> m [(PGCol, S.SQLExp)]
 convOp fieldInfoMap preSetCols updPerm objs conv =
   forM objs $ \(pgCol, a) -> do
@@ -129,7 +129,7 @@ convOp fieldInfoMap preSetCols updPerm objs conv =
 validateUpdateQueryWith
   :: (UserInfoM m, QErrM m, CacheRM m)
   => SessVarBldr m
-  -> (PGColType -> Value -> m S.SQLExp)
+  -> (PGScalarType -> Value -> m S.SQLExp)
   -> UpdateQuery
   -> m AnnUpd
 validateUpdateQueryWith sessVarBldr prepValBldr uq = do

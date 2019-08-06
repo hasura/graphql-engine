@@ -381,7 +381,7 @@ newtype FunctionArgName =
 data FunctionArg
   = FunctionArg
   { faName :: !(Maybe FunctionArgName)
-  , faType :: !PGColType
+  , faType :: !PGScalarType
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionArg)

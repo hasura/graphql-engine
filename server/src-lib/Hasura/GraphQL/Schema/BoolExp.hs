@@ -22,10 +22,10 @@ addTypeSuffix suffix baseType = G.NamedType $ G.unNamedType baseType <> G.Name s
 typeToDescription :: G.NamedType -> G.Description
 typeToDescription = G.Description . G.unName . G.unNamedType
 
-mkCompExpTy :: PGColType -> G.NamedType
+mkCompExpTy :: PGScalarType -> G.NamedType
 mkCompExpTy = addTypeSuffix "_comparison_exp" . mkScalarTy
 
-mkCastExpTy :: PGColType -> G.NamedType
+mkCastExpTy :: PGScalarType -> G.NamedType
 mkCastExpTy = addTypeSuffix "_cast_exp" . mkScalarTy
 
 -- TODO(shahidhk) this should ideally be st_d_within_geometry
@@ -51,7 +51,7 @@ stDWithinGeographyInpTy = G.NamedType "st_d_within_geography_input"
 
 -- | Makes an input type declaration for the @_cast@ field of a comparison expression.
 -- (Currently only used for casting between geometry and geography types.)
-mkCastExpressionInputType :: PGColType -> [PGColType] -> InpObjTyInfo
+mkCastExpressionInputType :: PGScalarType -> [PGScalarType] -> InpObjTyInfo
 mkCastExpressionInputType sourceType targetTypes =
   mkHsraInpTyInfo (Just description) (mkCastExpTy sourceType) (fromInpValL targetFields)
   where
@@ -68,7 +68,7 @@ mkCastExpressionInputType sourceType targetTypes =
       (G.toGT $ mkCompExpTy targetType)
 
 --- | make compare expression input type
-mkCompExpInp :: PGColType -> InpObjTyInfo
+mkCompExpInp :: PGScalarType -> InpObjTyInfo
 mkCompExpInp colTy =
   InpObjTyInfo (Just tyDesc) (mkCompExpTy colTy) (fromInpValL $ concat
   [ map (mk colScalarTy) typedOps

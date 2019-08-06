@@ -141,7 +141,7 @@ data AnnPGVal
   = AnnPGVal
   { _apvVariable   :: !(Maybe G.Variable)
   , _apvIsNullable :: !Bool
-  , _apvType       :: !PGColType
+  , _apvType       :: !PGScalarType
   , _apvValue      :: !PGColValue
   } deriving (Show, Eq)
 

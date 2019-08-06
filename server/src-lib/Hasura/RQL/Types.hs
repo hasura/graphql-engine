@@ -176,7 +176,7 @@ askPGType
   => FieldInfoMap
   -> PGCol
   -> T.Text
-  -> m PGColType
+  -> m PGScalarType
 askPGType m c msg =
   pgiType <$> askPGColInfo m c msg
 

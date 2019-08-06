@@ -136,7 +136,7 @@ withPrepArgs m = runStateT m Seq.empty
 
 prepareColVal
   :: (MonadState PrepArgs m)
-  => PGColType -> PGColValue -> m S.SQLExp
+  => PGScalarType -> PGColValue -> m S.SQLExp
 prepareColVal colTy colVal = do
   preparedArgs <- get
   put (preparedArgs Seq.|> binEncoder colVal)

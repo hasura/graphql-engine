@@ -121,7 +121,7 @@ data DWithinGeogOp a =
   } deriving (Show, Eq, Functor, Foldable, Traversable, Data)
 $(deriveJSON (aesonDrop 6 snakeCase) ''DWithinGeogOp)
 
-type CastExp a = M.HashMap PGColType [OpExpG a]
+type CastExp a = M.HashMap PGScalarType [OpExpG a]
 
 data OpExpG a
   = ACast !(CastExp a)

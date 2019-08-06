@@ -50,7 +50,7 @@ hasNestedFld = any isNestedMutFld
       FArr _ -> True
       _      -> False
 
-pgColsFromMutFld :: MutFld -> [(PGCol, PGColType)]
+pgColsFromMutFld :: MutFld -> [(PGCol, PGScalarType)]
 pgColsFromMutFld = \case
   MCount -> []
   MExp _ -> []
@@ -59,7 +59,7 @@ pgColsFromMutFld = \case
     FCol (PGColInfo col colTy _) _ -> Just (col, colTy)
     _                              -> Nothing
 
-pgColsFromMutFlds :: MutFlds -> [(PGCol, PGColType)]
+pgColsFromMutFlds :: MutFlds -> [(PGCol, PGScalarType)]
 pgColsFromMutFlds = concatMap (pgColsFromMutFld . snd)
 
 pgColsToSelFlds :: [PGColInfo] -> [(FieldName, AnnFld)]

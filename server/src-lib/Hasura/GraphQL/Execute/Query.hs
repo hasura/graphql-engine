@@ -34,7 +34,7 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-type PlanVariables = Map.HashMap G.Variable (Int, PGColType)
+type PlanVariables = Map.HashMap G.Variable (Int, PGScalarType)
 type PrepArgMap = IntMap.IntMap Q.PrepArg
 
 data PGPlan
@@ -63,7 +63,7 @@ instance J.ToJSON RootFieldPlan where
     RFPRaw encJson     -> J.toJSON $ TBS.fromBS encJson
     RFPPostgres pgPlan -> J.toJSON pgPlan
 
-type VariableTypes = Map.HashMap G.Variable PGColType
+type VariableTypes = Map.HashMap G.Variable PGScalarType
 
 data QueryPlan
   = QueryPlan
@@ -156,7 +156,7 @@ initPlanningSt =
 
 getVarArgNum
   :: (MonadState PlanningSt m)
-  => G.Variable -> PGColType -> m Int
+  => G.Variable -> PGScalarType -> m Int
 getVarArgNum var colTy = do
   PlanningSt curArgNum vars prepped <- get
   case Map.lookup var vars of

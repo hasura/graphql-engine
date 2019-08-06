@@ -60,7 +60,7 @@ mkDeleteCTE (AnnDel tn (fltr, wc) _ _) =
 validateDeleteQWith
   :: (UserInfoM m, QErrM m, CacheRM m)
   => SessVarBldr m
-  -> (PGColType -> Value -> m S.SQLExp)
+  -> (PGScalarType -> Value -> m S.SQLExp)
   -> DeleteQuery
   -> m AnnDel
 validateDeleteQWith sessVarBldr prepValBldr

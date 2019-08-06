@@ -39,7 +39,7 @@ data PGColValue
   | PGValDate !Day
   | PGValTimeStampTZ !UTCTime
   | PGValTimeTZ !ZonedTimeOfDay
-  | PGNull !PGColType
+  | PGNull !PGScalarType
   | PGValJSON !Q.JSON
   | PGValJSONB !Q.JSONB
   | PGValGeo !GeometryWithCRS
@@ -133,7 +133,7 @@ textToPrepVal :: Text -> Q.PrepArg
 textToPrepVal t =
   (PTI.auto, Just (TE.encodeUtf8 t, PQ.Text))
 
-parsePGValue' :: PGColType
+parsePGValue' :: PGScalarType
              -> Value
              -> AT.Parser PGColValue
 parsePGValue' ty Null =
@@ -181,19 +181,19 @@ parsePGValue' (PGUnknown _) (String t) =
 parsePGValue' (PGUnknown tyName) _ =
   fail $ "A string is expected for type : " ++ T.unpack tyName
 
-parsePGValue :: PGColType -> Value -> AT.Parser PGColValue
+parsePGValue :: PGScalarType -> Value -> AT.Parser PGColValue
 parsePGValue pct val =
   case val of
     String t -> parsePGValue' pct val <|> return (PGValUnknown t)
     _        -> parsePGValue' pct val
 
-convToBin :: PGColType
+convToBin :: PGScalarType
           -> Value
           -> AT.Parser Q.PrepArg
 convToBin ty val =
   binEncoder <$> parsePGValue ty val
 
-convToTxt :: PGColType
+convToTxt :: PGScalarType
           -> Value
           -> AT.Parser S.SQLExp
 convToTxt ty val =
@@ -209,7 +209,7 @@ iresToEither (ISuccess a)   = return a
 pgValFromJVal :: (FromJSON a) => Value -> Either String a
 pgValFromJVal = iresToEither . ifromJSON
 
-withGeoVal :: PGColType -> S.SQLExp -> S.SQLExp
+withGeoVal :: PGScalarType -> S.SQLExp -> S.SQLExp
 withGeoVal ty v =
   bool v applyGeomFromGeoJson isGeoTy
   where
@@ -221,11 +221,11 @@ withGeoVal ty v =
       PGGeography -> True
       _           -> False
 
-toPrepParam :: Int -> PGColType -> S.SQLExp
+toPrepParam :: Int -> PGScalarType -> S.SQLExp
 toPrepParam i ty =
   withGeoVal ty $ S.SEPrep i
 
-toTxtValue :: PGColType -> PGColValue -> S.SQLExp
+toTxtValue :: PGScalarType -> PGColValue -> S.SQLExp
 toTxtValue ty val =
   S.withTyAnn ty txtVal
   where

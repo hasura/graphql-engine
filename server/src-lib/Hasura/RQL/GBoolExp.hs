@@ -27,10 +27,10 @@ type OpRhsParser m v =
 -- number of times. Used within 'parseOperationsExpression' for bookkeeping.
 data ColumnReference
   = ColumnReferenceColumn !PGColInfo
-  | ColumnReferenceCast !ColumnReference !PGColType
+  | ColumnReferenceCast !ColumnReference !PGScalarType
   deriving (Show, Eq)
 
-columnReferenceType :: ColumnReference -> PGColType
+columnReferenceType :: ColumnReference -> PGScalarType
 columnReferenceType = \case
   ColumnReferenceColumn column -> pgiType column
   ColumnReferenceCast _ targetType -> targetType
@@ -265,12 +265,12 @@ parseOperationsExpression rhsParser fim columnInfo =
         parseVal :: (FromJSON a) => m a
         parseVal = decodeValue val
 
-buildMsg :: PGColType -> [PGColType] -> QErr
+buildMsg :: PGScalarType -> [PGScalarType] -> QErr
 buildMsg ty expTys = err400 UnexpectedPayload
   $ " is of type " <> ty <<> "; this operator works only on columns of type "
   <> T.intercalate "/" (map dquote expTys)
 
-textOnlyOp :: (MonadError QErr m) => PGColType -> m ()
+textOnlyOp :: (MonadError QErr m) => PGScalarType -> m ()
 textOnlyOp PGText    = return ()
 textOnlyOp PGVarchar = return ()
 textOnlyOp ty =
@@ -357,13 +357,13 @@ convColRhs tableQual = \case
 
 pgValParser
   :: (MonadError QErr m)
-  => PGColType -> Value -> m PGColValue
+  => PGScalarType -> Value -> m PGColValue
 pgValParser ty =
   runAesonParser (parsePGValue ty)
 
 txtRHSBuilder
   :: (MonadError QErr m)
-  => PGColType -> Value -> m S.SQLExp
+  => PGScalarType -> Value -> m S.SQLExp
 txtRHSBuilder ty val =
   toTxtValue ty <$> pgValParser ty val
 

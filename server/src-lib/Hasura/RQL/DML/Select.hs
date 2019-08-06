@@ -149,7 +149,7 @@ convSelectQ
   -> SelPermInfo   -- Additional select permission info
   -> SelectQExt     -- Given Select Query
   -> SessVarBldr m
-  -> (PGColType -> Value -> m S.SQLExp)
+  -> (PGScalarType -> Value -> m S.SQLExp)
   -> m AnnSimpleSel
 convSelectQ fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
 
@@ -217,7 +217,7 @@ convExtRel
   -> Maybe RelName
   -> SelectQExt
   -> SessVarBldr m
-  -> (PGColType -> Value -> m S.SQLExp)
+  -> (PGScalarType -> Value -> m S.SQLExp)
   -> m (Either ObjSel ArrSel)
 convExtRel fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
   -- Point to the name key
@@ -250,7 +250,7 @@ convExtRel fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
 convSelectQuery
   :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
   => SessVarBldr m
-  -> (PGColType -> Value -> m S.SQLExp)
+  -> (PGScalarType -> Value -> m S.SQLExp)
   -> SelectQuery
   -> m AnnSimpleSel
 convSelectQuery sessVarBldr prepArgBuilder (DMLQuery qt selQ) = do

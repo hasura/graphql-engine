@@ -33,7 +33,7 @@ import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.QueryCollection
 
-import           Hasura.SQL.Types                       (PGColType)
+import           Hasura.SQL.Types                       (PGScalarType)
 import           Hasura.SQL.Value                       (PGColValue,
                                                          parsePGValue)
 
@@ -118,8 +118,8 @@ getAnnVarVals varDefsL inpVals = withPathK "variableValues" $ do
 showVars :: (Functor f, Foldable f) => f G.Variable -> Text
 showVars = showNames . fmap G.unVariable
 
-type VarPGTypes = Map.HashMap G.Variable PGColType
-type AnnPGVarVals = Map.HashMap G.Variable (PGColType, PGColValue)
+type VarPGTypes = Map.HashMap G.Variable PGScalarType
+type AnnPGVarVals = Map.HashMap G.Variable (PGScalarType, PGColValue)
 
 -- this is in similar spirit to getAnnVarVals, however
 -- here it is much simpler and can get rid of typemap requirement
