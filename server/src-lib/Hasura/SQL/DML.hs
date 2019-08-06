@@ -226,7 +226,7 @@ newtype TypeAnn
   deriving (Show, Eq, Data)
 
 mkTypeAnn :: PgType -> TypeAnn
-mkTypeAnn = TypeAnn . T.pack . show
+mkTypeAnn = TypeAnn . toSQLTxt
 
 intTypeAnn :: TypeAnn
 intTypeAnn = mkTypeAnn $ PgTypeSimple PGInteger
@@ -286,7 +286,7 @@ data SQLExp
   deriving (Show, Eq, Data)
 
 withTyAnn :: PGColType -> SQLExp -> SQLExp
-withTyAnn colTy v = SETyAnn v $ TypeAnn $ T.pack $ show colTy
+withTyAnn colTy v = SETyAnn v . mkTypeAnn $ PgTypeSimple colTy
 
 instance J.ToJSON SQLExp where
   toJSON = J.toJSON . toSQLTxt

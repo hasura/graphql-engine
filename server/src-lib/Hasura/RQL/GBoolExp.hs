@@ -40,7 +40,7 @@ instance DQuote ColumnReference where
     ColumnReferenceColumn column ->
       getPGColTxt $ pgiName column
     ColumnReferenceCast reference targetType ->
-      dquoteTxt reference <> "::" <> T.pack (show targetType)
+      dquoteTxt reference <> "::" <> dquoteTxt targetType
 
 parseOperationsExpression
   :: forall m v
@@ -266,13 +266,9 @@ parseOperationsExpression rhsParser fim columnInfo =
         parseVal = decodeValue val
 
 buildMsg :: PGColType -> [PGColType] -> QErr
-buildMsg ty expTys =
-  err400 UnexpectedPayload $ mconcat
-  [ " is of type " <> T.pack (show ty)
-  , "; this operator works "
-  , "only on columns of type "
-  , T.intercalate "/" $ map (T.dquote . T.pack . show) expTys
-  ]
+buildMsg ty expTys = err400 UnexpectedPayload
+  $ " is of type " <> ty <<> "; this operator works only on columns of type "
+  <> T.intercalate "/" (map dquote expTys)
 
 textOnlyOp :: (MonadError QErr m) => PGColType -> m ()
 textOnlyOp PGText    = return ()
@@ -432,11 +428,10 @@ mkColCompExp qual lhsCol = mkCompExp (mkQCol lhsCol)
 
         mkCastsExp casts =
           sqlAll . flip map (M.toList casts) $ \(targetType, operations) ->
-            let targetAnn = pgTypeToAnnType targetType
+            let targetAnn = S.mkTypeAnn $ PgTypeSimple targetType
             in sqlAll $ map (mkCompExp (S.SETyAnn lhs targetAnn)) operations
 
         sqlAll = foldr (S.BEBin S.AndOp) (S.BELit True)
-        pgTypeToAnnType = S.TypeAnn . T.pack . show
 
 hasStaticExp :: OpExpG PartialSQLExp -> Bool
 hasStaticExp = has (template . filtered isStaticValue)

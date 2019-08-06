@@ -16,19 +16,17 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
+addTypeSuffix :: T.Text -> G.NamedType -> G.NamedType
+addTypeSuffix suffix baseType = G.NamedType $ G.unNamedType baseType <> G.Name suffix
+
+typeToDescription :: G.NamedType -> G.Description
+typeToDescription = G.Description . G.unName . G.unNamedType
+
 mkCompExpTy :: PGColType -> G.NamedType
-mkCompExpTy =
-  G.NamedType . mkCompExpName
-
-mkCompExpName :: PGColType -> G.Name
-mkCompExpName pgColTy =
-  G.Name $ T.pack (show pgColTy) <> "_comparison_exp"
-
-mkCastExpName :: PGColType -> G.Name
-mkCastExpName pgColTy = G.Name $ T.pack (show pgColTy) <> "_cast_exp"
+mkCompExpTy = addTypeSuffix "_comparison_exp" . mkScalarTy
 
 mkCastExpTy :: PGColType -> G.NamedType
-mkCastExpTy = G.NamedType . mkCastExpName
+mkCastExpTy = addTypeSuffix "_cast_exp" . mkScalarTy
 
 -- TODO(shahidhk) this should ideally be st_d_within_geometry
 {-
@@ -59,13 +57,13 @@ mkCastExpressionInputType sourceType targetTypes =
   where
     description = mconcat
       [ "Expression to compare the result of casting a column of type "
-      , G.Description (T.pack $ show sourceType)
+      , typeToDescription $ mkScalarTy sourceType
       , ". Multiple cast targets are combined with logical 'AND'."
       ]
     targetFields = map targetField targetTypes
     targetField targetType = InpValInfo
       Nothing
-      (G.Name . T.pack $ show targetType)
+      (G.unNamedType $ mkScalarTy targetType)
       Nothing
       (G.toGT $ mkCompExpTy targetType)
 
@@ -85,11 +83,9 @@ mkCompExpInp colTy =
   , maybeToList castOpInputValue
   ]) TLHasuraType
   where
-    tyDesc = mconcat
-      [ "expression to compare columns of type "
-      , G.Description (T.pack $ show colTy)
-      , ". All fields are combined with logical 'AND'."
-      ]
+    tyDesc =
+      "expression to compare columns of type " <> colTyDesc
+        <> ". All fields are combined with logical 'AND'."
     isStringTy = case colTy of
       PGVarchar -> True
       PGText    -> True
@@ -158,8 +154,7 @@ mkCompExpInp colTy =
 
     geoOpToInpVal (op, desc) =
       InpValInfo (Just desc) op Nothing $ G.toGT $ mkScalarTy colTy
-
-    colTyDesc = G.Description $ T.pack $ show colTy
+    colTyDesc = typeToDescription $ mkScalarTy colTy
 
     -- operators applicable only to geometry types
     geomOps :: [(G.Name, G.Description)]

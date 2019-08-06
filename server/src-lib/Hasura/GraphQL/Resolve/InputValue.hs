@@ -19,12 +19,12 @@ module Hasura.GraphQL.Resolve.InputValue
 
 import           Hasura.Prelude
 
-import qualified Data.Text                      as T
 import qualified Language.GraphQL.Draft.Syntax  as G
 
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types ((<>>))
 import           Hasura.SQL.Value
 
 withNotNull
@@ -58,10 +58,8 @@ asPGColVal
 asPGColVal v = case _aivValue v of
   AGScalar colTy (Just val) ->
     return $ AnnPGVal (_aivVariable v) (G.isNullable (_aivType v)) colTy val
-  AGScalar colTy Nothing    ->
-    throw500 $ "unexpected null for ty "
-    <> T.pack (show colTy)
-  _            -> tyMismatch "pgvalue" v
+  AGScalar colTy Nothing -> throw500 $ "unexpected null for ty " <>> colTy
+  _ -> tyMismatch "pgvalue" v
 
 asEnumVal
   :: (MonadError QErr m)

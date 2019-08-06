@@ -553,7 +553,7 @@ pgColTyToScalar = \case
   PGFloat   -> "Float"
   PGText    -> "String"
   PGVarchar -> "String"
-  t         -> T.pack $ show t
+  t         -> toSQLTxt t
 
 mkScalarTy :: PGColType -> G.NamedType
 mkScalarTy =

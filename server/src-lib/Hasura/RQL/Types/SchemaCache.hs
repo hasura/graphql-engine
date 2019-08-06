@@ -382,7 +382,7 @@ data FunctionArg
   = FunctionArg
   { faName :: !(Maybe FunctionArgName)
   , faType :: !PGColType
-  } deriving(Show, Eq)
+  } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionArg)
 

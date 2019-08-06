@@ -79,7 +79,7 @@ data ReusableQueryPlan
 
 instance J.ToJSON ReusableQueryPlan where
   toJSON (ReusableQueryPlan varTypes fldPlans) =
-    J.object [ "variables"       J..= show varTypes
+    J.object [ "variables"       J..= varTypes
              , "field_plans"     J..= fldPlans
              ]
 

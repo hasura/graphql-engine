@@ -8,7 +8,6 @@ import           Hasura.Prelude
 import           Data.Aeson
 import           Data.Aeson.Encoding        (text)
 import           Data.Aeson.Types           (toJSONKeyText)
-import           Data.String                (fromString)
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 
@@ -52,6 +51,21 @@ class DQuote a where
 
 instance DQuote T.Text where
   dquoteTxt = id
+  {-# INLINE dquoteTxt #-}
+
+dquote :: (DQuote a) => a -> T.Text
+dquote = T.dquote . dquoteTxt
+{-# INLINE dquote #-}
+
+infixr 6 <>>
+(<>>) :: (DQuote a) => T.Text -> a -> T.Text
+(<>>) lTxt a = lTxt <> dquote a
+{-# INLINE (<>>) #-}
+
+infixr 6 <<>
+(<<>) :: (DQuote a) => a -> T.Text -> T.Text
+(<<>) a rTxt = dquote a <> rTxt
+{-# INLINE (<<>) #-}
 
 pgFmtIden :: T.Text -> T.Text
 pgFmtIden x =
@@ -68,18 +82,6 @@ pgFmtLit x =
 
 trimNullChars :: T.Text -> T.Text
 trimNullChars = T.takeWhile (/= '\x0')
-
-infixr 6 <>>
-(<>>) :: (DQuote a) => T.Text -> a -> T.Text
-(<>>) lTxt a =
-  lTxt <> T.dquote (dquoteTxt a)
-{-# INLINE (<>>) #-}
-
-infixr 6 <<>
-(<<>) :: (DQuote a) => a -> T.Text -> T.Text
-(<<>) a rTxt =
-  T.dquote (dquoteTxt a) <> rTxt
-{-# INLINE (<<>) #-}
 
 instance (ToSQL a) => ToSQL (Maybe a) where
   toSQL (Just a) = toSQL a
@@ -265,43 +267,41 @@ data PGColType
   | PGGeometry
   | PGGeography
   | PGUnknown !T.Text
-  deriving (Eq, Lift, Generic, Data)
+  deriving (Show, Eq, Lift, Generic, Data)
 
 instance Hashable PGColType
 
-instance Show PGColType where
-  show PGSmallInt    = "smallint"
-  show PGInteger     = "integer"
-  show PGBigInt      = "bigint"
-  show PGSerial      = "serial"
-  show PGBigSerial   = "bigserial"
-  show PGFloat       = "real"
-  show PGDouble      = "float8"
-  show PGNumeric     = "numeric"
-  show PGBoolean     = "boolean"
-  show PGChar        = "character"
-  show PGVarchar     = "varchar"
-  show PGText        = "text"
-  show PGDate        = "date"
-  show PGTimeStampTZ = "timestamptz"
-  show PGTimeTZ      = "timetz"
-  show PGJSON        = "json"
-  show PGJSONB       = "jsonb"
-  show PGGeometry    = "geometry"
-  show PGGeography   = "geography"
-  show (PGUnknown t) = T.unpack t
+instance ToSQL PGColType where
+  toSQL = \case
+    PGSmallInt    -> "smallint"
+    PGInteger     -> "integer"
+    PGBigInt      -> "bigint"
+    PGSerial      -> "serial"
+    PGBigSerial   -> "bigserial"
+    PGFloat       -> "real"
+    PGDouble      -> "float8"
+    PGNumeric     -> "numeric"
+    PGBoolean     -> "boolean"
+    PGChar        -> "character"
+    PGVarchar     -> "varchar"
+    PGText        -> "text"
+    PGDate        -> "date"
+    PGTimeStampTZ -> "timestamptz"
+    PGTimeTZ      -> "timetz"
+    PGJSON        -> "json"
+    PGJSONB       -> "jsonb"
+    PGGeometry    -> "geometry"
+    PGGeography   -> "geography"
+    PGUnknown t   -> TB.text t
 
 instance ToJSON PGColType where
-  toJSON pct = String $ T.pack $ show pct
+  toJSON = String . toSQLTxt
 
 instance ToJSONKey PGColType where
-  toJSONKey = toJSONKeyText (T.pack . show)
-
-instance ToSQL PGColType where
-  toSQL pct = fromString $ show pct
+  toJSONKey = toJSONKeyText toSQLTxt
 
 instance DQuote PGColType where
-  dquoteTxt = T.pack . show
+  dquoteTxt = toSQLTxt
 
 txtToPgColTy :: Text -> PGColType
 txtToPgColTy t = case t of
@@ -380,26 +380,6 @@ pgTypeOid PGGeometry    = PTI.text
 pgTypeOid PGGeography   = PTI.text
 pgTypeOid (PGUnknown _) = PTI.auto
 
--- TODO: This is incorrect modelling as PGColType
--- will capture anything under PGUnknown
--- This should be fixed when support for
--- all types is merged.
-
-data PgType
-  = PgTypeSimple !PGColType
-  | PgTypeArray !PGColType
-  deriving (Eq, Data)
-
-instance Show PgType where
-  show = \case
-    PgTypeSimple ty -> show ty
-    -- typename array is an sql standard way
-    -- of declaring types
-    PgTypeArray ty -> show ty <> " array"
-
-instance ToJSON PgType where
-  toJSON = toJSON . show
-
 isIntegerType :: PGColType -> Bool
 isIntegerType PGInteger  = True
 isIntegerType PGSmallInt = True
@@ -438,3 +418,21 @@ isGeoType = \case
   PGGeometry  -> True
   PGGeography -> True
   _           -> False
+
+-- | The type of all Postgres types (i.e. scalars and arrays).
+--
+-- TODO: This is incorrect modeling, as 'PGScalarType' will capture anything (under 'PGUnknown').
+-- This should be fixed when support for all types is merged.
+data PgType
+  = PgTypeSimple !PGColType
+  | PgTypeArray !PGColType
+  deriving (Show, Eq, Data)
+
+instance ToSQL PgType where
+  toSQL = \case
+    PgTypeSimple ty -> toSQL ty
+    -- typename array is an sql standard way of declaring types
+    PgTypeArray ty -> toSQL ty <> " array"
+
+instance ToJSON PgType where
+  toJSON = toJSON . toSQLTxt
