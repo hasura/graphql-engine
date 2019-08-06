@@ -61,6 +61,7 @@ runGQ reqId userInfo reqHdrs req = do
                       (\(batchInput, unresolvedPlan) ->
                          E.mkQuery (joinParamsPartial batchInput) unresolvedPlan)
                       (zip remoteBatchInputs unresolvedPlans)
+                      -- TODO ^ can we be sure we're not throwing away a tail of either of these lists?
               results <-
                 traverse
                   (\(batch, resolvedSubPlan) -> do
