@@ -479,7 +479,7 @@ class Main extends React.Component {
                 </OverlayTrigger>
                 <OverlayTrigger
                   placement="right"
-                  overlay={tooltip.customresolver}
+                  overlay={tooltip.remoteSchema}
                 >
                   <li>
                     <Link
