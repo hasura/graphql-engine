@@ -4,9 +4,9 @@ import PropTypes from 'prop-types';
 
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
-import CustomResolverSubSidebar from './CustomResolverSubSidebar';
+import RemoteSchemaSubSidebar from './RemoteSchemaSubSidebar';
 
-class CustomResolverPageContainer extends React.Component {
+class RemoteSchemaPageContainer extends React.Component {
   render() {
     const styles = require('../../Common/TableCommon/Table.scss');
     const { appPrefix, children } = this.props;
@@ -26,7 +26,7 @@ class CustomResolverPageContainer extends React.Component {
           <Link className={styles.linkBorder} to={appPrefix + '/manage'}>
             Manage
           </Link>
-          <CustomResolverSubSidebar {...this.props} />
+          <RemoteSchemaSubSidebar {...this.props} />
         </li>
       </ul>
     );
@@ -43,7 +43,7 @@ class CustomResolverPageContainer extends React.Component {
   }
 }
 
-CustomResolverPageContainer.propTypes = {
+RemoteSchemaPageContainer.propTypes = {
   appPrefix: PropTypes.string.isRequired,
 };
 
@@ -51,4 +51,4 @@ export default (connect, mapStateToProps, mapDispatchToProps) =>
   connect(
     mapStateToProps,
     mapDispatchToProps
-  )(CustomResolverPageContainer);
+  )(RemoteSchemaPageContainer);

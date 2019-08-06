@@ -3,14 +3,14 @@ import { Link } from 'react-router';
 
 import LeftSubSidebar from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
 
-const CustomResolverSubSidebar = ({
+const RemoteSchemaSubSidebar = ({
   appPrefix,
   dataList,
   filtered,
   searchQuery,
   location,
   filterItem,
-  viewResolver,
+  viewRemoteSchema,
 }) => {
   const styles = require('../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
 
@@ -48,8 +48,8 @@ const CustomResolverSubSidebar = ({
       childList = _dataList.map((d, i) => {
         let activeTableClass = '';
         if (
-          d.name === viewResolver &&
-          location.pathname.includes(viewResolver)
+          d.name === viewRemoteSchema &&
+          location.pathname.includes(viewRemoteSchema)
         ) {
           activeTableClass = styles.activeTable;
         }
@@ -93,4 +93,4 @@ const CustomResolverSubSidebar = ({
   );
 };
 
-export default CustomResolverSubSidebar;
+export default RemoteSchemaSubSidebar;

@@ -1,7 +1,7 @@
 import React from 'react';
 import Common from '../Common/Common';
 
-import { addResolver, RESET } from './addResolverReducer';
+import { addRemoteSchema, RESET } from './addRemoteSchemaReducer';
 import Helmet from 'react-helmet';
 import Button from '../../../Common/Button/Button';
 
@@ -13,7 +13,7 @@ class Add extends React.Component {
   }
 
   render() {
-    const styles = require('../CustomResolver.scss');
+    const styles = require('../RemoteSchema.scss');
 
     const { isRequesting, dispatch } = this.props;
 
@@ -24,7 +24,7 @@ class Add extends React.Component {
         <form
           onSubmit={e => {
             e.preventDefault();
-            dispatch(addResolver());
+            dispatch(addRemoteSchema());
           }}
         >
           <Common {...this.props} />
@@ -50,8 +50,8 @@ class Add extends React.Component {
 
 const mapStateToProps = state => {
   return {
-    ...state.customResolverData.addData,
-    ...state.customResolverData.headerData,
+    ...state.remoteSchemas.addData,
+    ...state.remoteSchemas.headerData,
   };
 };
 

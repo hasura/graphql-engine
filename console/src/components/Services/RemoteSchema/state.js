@@ -6,10 +6,10 @@ const asyncState = {
 };
 
 const listState = {
-  resolvers: [],
+  remoteSchemas: [],
   filtered: [],
   searchQuery: '',
-  viewResolver: '',
+  viewRemoteSchema: '',
   ...asyncState,
 };
 
