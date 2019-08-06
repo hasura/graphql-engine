@@ -30,7 +30,7 @@ const filterItem = dispatch => {
       );
     });
     dispatch({
-      type: FILTER_REMOTE_SCHEMA,
+      type: FILTER_REMOTE_SCHEMAS,
       data: {
         filtered: matchedTables,
         searchQuery: searchVal,
@@ -103,7 +103,10 @@ const getRemoteSchemaRouter = (connect, store, composeOnEnterHooks) => {
           path=":remoteSchemaName/details"
           component={viewConnector(connect)}
         />
-        <Route path=":remoteSchemaName/modify" component={editConnector(connect)} />
+        <Route
+          path=":remoteSchemaName/modify"
+          component={editConnector(connect)}
+        />
       </Route>
     </Route>
   );
