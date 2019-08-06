@@ -324,3 +324,20 @@
   display: flex;
   align-items: center;
 }
+
+.remoteSchemaPermSelector {
+  background-color: #f7f7f7;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.remoteSchemaPermType {
+  width: fit-content;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.remoteSchemaPermTypeField {
+  color: rgb(31, 97, 160);
+}
