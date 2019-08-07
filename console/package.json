@@ -15,7 +15,7 @@
     "start": "concurrently --kill-others \"npm run start-prod\"",
     "start-prod": "better-npm-run start-prod",
     "build": "webpack --progress -p --colors --display-error-details --config webpack/prod.config.js",
-    "server-build": "npm run build && mkdir -p static/dist/versioned && cp static/dist/*.js static/dist/*.css static/dist/versioned/ && gzip -r -f static/dist/versioned",
+    "server-build": "npm run build && mkdir -p static/dist/versioned && cp static/dist/*.js static/dist/*.css static/dist/versioned/ && rm static/dist/versioned/*.gz && gzip -r -f static/dist/versioned",
     "build-unused": "webpack --verbose --colors --display-error-details --config webpack/prod.config.js --json | webpack-unused -s src",
     "postinstall": "webpack --display-error-details --config webpack/prod.config.js",
     "lint": "eslint -c .eslintrc src api",
