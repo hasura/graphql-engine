@@ -1,96 +1,112 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import Helmet from 'react-helmet';
 import Button from '../Common/Button/Button';
 import globals from '../../Globals';
-import { loginClicked, UPDATE_ADMIN_SECRET_INPUT } from '../Main/Actions';
+import { verifyLogin } from './Actions';
 
-class Login extends Component {
-  handleAdminSecret = e => {
-    this.props.dispatch({
-      type: UPDATE_ADMIN_SECRET_INPUT,
-      data: e.target.value,
+const styles = require('./Login.scss');
+const hasuraLogo = require('./blue-logo.svg');
+
+const Login = ({ dispatch }) => {
+  // request state
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // should persist admin secret
+  const [shouldPersist, setShouldPersist] = useState(true);
+  const toggleShouldPersist = () => setShouldPersist(!shouldPersist);
+
+  // input handler
+  const [adminSecretInput, setAdminSecretInput] = useState('');
+  const onAdminSecretChange = e => setAdminSecretInput(e.target.value);
+
+  // login button text
+  let loginText = 'Enter';
+  if (loading) {
+    loginText = (
+      <span>
+        Verifying...
+        <i className="fa fa-spinner fa-spin" aria-hidden="true" />
+      </span>
+    );
+  } else if (error) {
+    loginText = 'Error. Try again?';
+  }
+
+  // form submit handler
+  const onSubmit = e => {
+    e.preventDefault();
+    const successCallback = () => {
+      setLoading(false);
+      setError(null);
+    };
+    const errorCallback = err => {
+      setAdminSecretInput('');
+      setLoading(false);
+      setError(err);
+    };
+    setLoading(true);
+    verifyLogin({
+      adminSecret: adminSecretInput,
+      shouldPersist,
+      successCallback,
+      errorCallback,
+      dispatch,
     });
   };
 
-  loginClicked = () => {
-    this.props.dispatch(loginClicked());
-  };
-
-  render() {
-    const { loginInProgress, loginError, dispatch } = this.props;
-
-    const styles = require('./Login.scss');
-    const hasuraLogo = require('./blue-logo.svg');
-
-    let loginText = 'Enter';
-    if (loginInProgress) {
-      loginText = (
-        <span>
-          Verifying...
-          <i className="fa fa-spinner fa-spin" aria-hidden="true" />
-        </span>
-      );
-    } else if (loginError) {
-      loginText = 'Error. Try again?';
-    }
-
-    return (
-      <div className={styles.mainWrapper + ' container-fluid'}>
-        <div className={styles.container + ' container'} id="login">
-          <div className={styles.loginCenter}>
-            <Helmet title={'Login | ' + 'Hasura'} />
-            <div className={styles.hasuraLogo}>
-              <img src={hasuraLogo} />
-            </div>
-            <div className={styles.loginWrapper}>
-              <form
-                className="form-horizontal"
-                onSubmit={e => {
-                  e.preventDefault();
-                  dispatch(loginClicked());
-                }}
-              >
-                <div
-                  className={styles.input_addon_group + ' ' + styles.padd_top}
+  return (
+    <div className={styles.mainWrapper + ' container-fluid'}>
+      <div className={styles.container + ' container'} id="login">
+        <div className={styles.loginCenter}>
+          <Helmet title={'Login | ' + 'Hasura'} />
+          <div className={styles.hasuraLogo}>
+            <img src={hasuraLogo} />
+          </div>
+          <div className={styles.loginWrapper}>
+            <form className="form-horizontal" onSubmit={onSubmit}>
+              <div className={styles.input_addon_group + ' ' + styles.padd_top}>
+                <div className={'input-group ' + styles.input_group}>
+                  <input
+                    onChange={onAdminSecretChange}
+                    className={styles.form_input + ' form-control'}
+                    type="password"
+                    placeholder={`Enter ${globals.adminSecretLabel}`}
+                    name="password"
+                  />
+                </div>
+              </div>
+              <div className={styles.signin_btn}>
+                <Button
+                  type="submit"
+                  color="green"
+                  className="form-control"
+                  disabled={loading}
                 >
-                  <div className={'input-group ' + styles.input_group}>
-                    <input
-                      onChange={this.handleAdminSecret}
-                      className={styles.form_input + ' form-control'}
-                      type="password"
-                      placeholder={`Enter ${globals.adminSecretLabel}`}
-                      name="password"
-                    />
-                  </div>
-                </div>
-                <div className={styles.signin_btn}>
-                  <Button type="submit" color="green" className="form-control">
-                    {loginText}
-                  </Button>
-                </div>
-              </form>
-            </div>
+                  {loginText}
+                </Button>
+              </div>
+              <div className={`${styles.display_flex} ${styles.add_pad_left}`}>
+                <input
+                  type="checkbox"
+                  checked={shouldPersist}
+                  onChange={toggleShouldPersist}
+                  className={`${styles.add_mar_right_small} ${
+                    styles.remove_margin_top
+                  }`}
+                />
+                <label>Remember in this browser</label>
+              </div>
+            </form>
           </div>
         </div>
       </div>
-    );
-  }
-}
-
-Login.propTypes = {
-  dispatch: PropTypes.func.isRequired,
+    </div>
+  );
 };
 
 const generatedLoginConnector = connect => {
-  const mapStateToProps = state => {
-    return {
-      loginInProgress: state.main.loginInProgress,
-      loginError: state.main.loginError,
-      adminSecretError: state.tables.adminSecretError,
-    };
-  };
-  return connect(mapStateToProps)(Login);
+  return connect()(Login);
 };
 
 export default generatedLoginConnector;

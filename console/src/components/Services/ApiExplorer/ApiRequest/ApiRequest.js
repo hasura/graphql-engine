@@ -15,7 +15,6 @@ import {
   removeRequestHeader,
   focusHeaderTextbox,
   unfocusTypingHeader,
-  setInitialHeaderState,
   verifyJWTToken,
 } from '../Actions';
 
@@ -30,9 +29,10 @@ import {
   setEndPointSectionIsOpen,
   getHeadersSectionIsOpen,
   setHeadersSectionIsOpen,
-  getGraphiQLHeadersFromLocalStorage,
   setGraphiQLHeadersInLocalStorage,
 } from './utils';
+
+import { handleHeaderInit } from '../../../Login/Actions';
 
 import styles from '../ApiExplorer.scss';
 
@@ -78,19 +78,7 @@ class ApiRequest extends Component {
   }
 
   componentDidMount() {
-    const { headers } = this.props;
-    const HEADER_FROM_LS = getGraphiQLHeadersFromLocalStorage();
-    if (HEADER_FROM_LS) {
-      try {
-        const initialHeader = JSON.parse(HEADER_FROM_LS);
-        this.props.dispatch(setInitialHeaderState(initialHeader));
-      } catch (e) {
-        console.error(e);
-        setGraphiQLHeadersInLocalStorage(JSON.stringify(headers));
-      }
-    } else {
-      setGraphiQLHeadersInLocalStorage(JSON.stringify(headers));
-    }
+    this.props.dispatch(handleHeaderInit());
   }
 
   onAnalyzeBearerClose() {
@@ -242,7 +230,15 @@ class ApiRequest extends Component {
           const index = parseInt(e.target.getAttribute('data-header-id'), 10);
           this.props
             .dispatch(removeRequestHeader(index))
-            .then(r => setGraphiQLHeadersInLocalStorage(JSON.stringify(r)));
+            .then(r =>
+              setGraphiQLHeadersInLocalStorage(
+                JSON.stringify(
+                  r.filter(
+                    h => h.key !== `x-hasura-${globals.adminSecretLabel}`
+                  )
+                )
+              )
+            );
         };
 
         const onHeaderValueChanged = e => {
@@ -251,7 +247,15 @@ class ApiRequest extends Component {
           const newValue = e.target.value;
           this.props
             .dispatch(changeRequestHeader(index, key, newValue, false))
-            .then(r => setGraphiQLHeadersInLocalStorage(JSON.stringify(r)));
+            .then(r =>
+              setGraphiQLHeadersInLocalStorage(
+                JSON.stringify(
+                  r.filter(
+                    h => h.key !== `x-hasura-${globals.adminSecretLabel}`
+                  )
+                )
+              )
+            );
         };
 
         const onShowAdminSecretClicked = () => {

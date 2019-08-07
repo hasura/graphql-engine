@@ -28,7 +28,7 @@ const REQUEST_PARAMS_CHANGED = 'ApiExplorer/REQUEST_PARAMS_CHANGED';
 const REQUEST_HEADER_CHANGED = 'ApiExplorer/REQUEST_HEADER_CHANGED';
 const REQUEST_HEADER_ADDED = 'ApiExplorer/REQUEST_HEADER_ADDED';
 const REQUEST_HEADER_REMOVED = 'ApiExplorer/REQUEST_HEADER_REMOVED';
-const SET_INITIAL_HEADER_DATA = 'ApiExplorer/SET_INITIAL_HEADER_DATA';
+const SET_REQUEST_HEADERS_BULK = 'ApiExplorer/SET_REQUEST_HEADERS_BULK';
 
 const MAKING_API_REQUEST = 'ApiExplorer/MAKING_API_REQUEST';
 const RESET_MAKING_REQUEST = 'ApiExplorer/RESET_MAKING_REQUEST';
@@ -237,13 +237,6 @@ const analyzeFetcher = (url, headers) => {
 };
 /* End of it */
 
-const setInitialHeaderState = headerObj => {
-  return {
-    type: SET_INITIAL_HEADER_DATA,
-    data: headerObj,
-  };
-};
-
 const changeRequestHeader = (index, key, newValue, isDisabled) => {
   return (dispatch, getState) => {
     const currentState = getState().apiexplorer;
@@ -268,6 +261,8 @@ const changeRequestHeader = (index, key, newValue, isDisabled) => {
     return Promise.resolve(updatedHeaders);
   };
 };
+
+const setHeadersBulk = headers => ({ type: SET_REQUEST_HEADERS_BULK, headers });
 
 const removeRequestHeader = index => {
   return (dispatch, getState) => {
@@ -513,18 +508,6 @@ const apiExplorerReducer = (state = defaultState, action) => {
           },
         },
       };
-
-    case SET_INITIAL_HEADER_DATA:
-      return {
-        ...state,
-        displayedApi: {
-          ...state.displayedApi,
-          request: {
-            ...state.displayedApi.request,
-            headers: [...action.data],
-          },
-        },
-      };
     case REQUEST_HEADER_ADDED:
       return {
         ...state,
@@ -621,6 +604,18 @@ const apiExplorerReducer = (state = defaultState, action) => {
         ...state,
         headerFocus: true,
       };
+    case SET_REQUEST_HEADERS_BULK:
+      console.log(action.headers);
+      return {
+        ...state,
+        displayedApi: {
+          ...state.displayedApi,
+          request: {
+            ...state.displayedApi.request,
+            headers: action.headers,
+          },
+        },
+      };
     default:
       return state;
   }
@@ -651,6 +646,6 @@ export {
   unfocusTypingHeader,
   getRemoteQueries,
   analyzeFetcher,
-  setInitialHeaderState,
   verifyJWTToken,
+  setHeadersBulk,
 };
