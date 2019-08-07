@@ -12,6 +12,8 @@ Examples in this repository support the following cloud function platforms:
 
 * Zeit Now
 
+* Netlify Functions
+
 Note: *If you want to add support for other platforms, please submit a PR or create an issue and tag it with `help-wanted`*
 
 

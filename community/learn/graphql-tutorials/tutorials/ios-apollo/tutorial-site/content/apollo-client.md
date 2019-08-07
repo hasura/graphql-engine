@@ -88,7 +88,7 @@ At this point, you can try building your target in Xcode. This will verify that 
 
 You may receive a warning when you first start up Xcode after installing these add-ons.
 
-### Create `.graphql` files with your queries or mutations
+### Create .graphql files with your queries or mutations
 
 Apollo iOS generates code from queries and mutations contained in `.graphql` files in your target.
 
@@ -96,7 +96,7 @@ A useful convention is to colocate queries, mutations or fragments with the Swif
 
 If you have the Xcode add-ons installed, you can use the Xcode companion view to show a `.swift` file and the corresponding `.graphql` file side by side.
 
-### Create apollo client with
+### Create apollo client
 
 Open LoginVC.swift and add below
 
