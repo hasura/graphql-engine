@@ -20,6 +20,7 @@ module Hasura.RQL.Types.BoolExp
        , AnnBoolExpFldSQL
        , AnnBoolExpSQL
        , PartialSQLExp(..)
+       , isStaticValue
        , AnnBoolExpFldPartialSQL
        , AnnBoolExpPartialSQL
 
@@ -303,3 +304,8 @@ instance ToJSON AnnBoolExpPartialSQL where
       opExpSToJSON :: OpExpG PartialSQLExp -> Value
       opExpSToJSON =
         object . pure . opExpToJPair toJSON
+
+isStaticValue :: PartialSQLExp -> Bool
+isStaticValue = \case
+  PSESessVar _ _ -> False
+  PSESQLExp _    -> True

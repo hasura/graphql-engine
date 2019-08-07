@@ -44,6 +44,9 @@ module Hasura.RQL.DDL.Permission
 
     , SetPermComment(..)
     , runSetPermComment
+
+    , rebuildPermInfo
+    , fetchPermDef
     ) where
 
 import           Hasura.EncJSON
@@ -108,20 +111,22 @@ procSetObj
   => TableInfo -> Maybe ColVals
   -> m (PreSetColsPartial, [Text], [SchemaDependency])
 procSetObj ti mObj = do
-  setColsSQL <- withPathK "set" $
-    fmap HM.fromList $ forM (HM.toList setObj) $ \(pgCol, val) -> do
+  (setColTups, deps) <- withPathK "set" $
+    fmap unzip $ forM (HM.toList setObj) $ \(pgCol, val) -> do
       ty <- askPGType fieldInfoMap pgCol $
         "column " <> pgCol <<> " not found in table " <>> tn
       sqlExp <- valueParser (PgTypeSimple ty) val
-      return (pgCol, sqlExp)
-  let deps = map (mkColDep "on_type" tn . fst) $ HM.toList setColsSQL
-  return (setColsSQL, depHeaders, deps)
+      let dep = mkColDep (getDepReason sqlExp) tn pgCol
+      return ((pgCol, sqlExp), dep)
+  return (HM.fromList setColTups, depHeaders, deps)
   where
     fieldInfoMap = tiFieldInfoMap ti
     tn = tiName ti
     setObj = fromMaybe mempty mObj
     depHeaders = getDepHeadersFromVal $ Object $
       HM.fromList $ map (first getPGColTxt) $ HM.toList setObj
+
+    getDepReason = bool "sess_var" "on_type" . isStaticValue
 
 buildInsPermInfo
   :: (QErrM m, CacheRM m)
@@ -437,3 +442,47 @@ purgePerm qt rn pt =
   where
     dp :: DropPerm a
     dp = DropPerm qt rn
+
+rebuildPermInfo
+  :: (QErrM m, CacheRWM m, MonadTx m)
+  => QualifiedTable -> RoleName -> PermType -> m ()
+rebuildPermInfo qt rn pt = do
+  (pDef, comment) <- liftTx $ fetchPermDef qt rn pt
+  case pt of
+    PTInsert -> do
+      perm <- decodeValue pDef
+      updatePerm PAInsert $ PermDef rn perm comment
+    PTSelect -> do
+      perm <- decodeValue pDef
+      updatePerm PASelect $ PermDef rn perm comment
+    PTUpdate -> do
+      perm <- decodeValue pDef
+      updatePerm PAUpdate $ PermDef rn perm comment
+    PTDelete -> do
+      perm <- decodeValue pDef
+      updatePerm PADelete $ PermDef rn perm comment
+
+  where
+    updatePerm :: (QErrM m, CacheRWM m, IsPerm a)
+               => PermAccessor (PermInfo a) -> PermDef a -> m ()
+    updatePerm pa perm = do
+      delPermFromCache pa rn qt
+      tabInfo <- askTabInfo qt
+      (permInfo, deps) <- addPermP1 tabInfo perm
+      addPermToCache qt rn pa permInfo deps
+
+fetchPermDef
+  :: QualifiedTable
+  -> RoleName
+  -> PermType
+  -> Q.TxE QErr (Value, Maybe T.Text)
+fetchPermDef (QualifiedObject sn tn) rn pt =
+ (first Q.getAltJ .  Q.getRow) <$> Q.withQE defaultTxErrorHandler
+      [Q.sql|
+            SELECT perm_def::json, comment
+              FROM hdb_catalog.hdb_permission
+             WHERE table_schema = $1
+               AND table_name = $2
+               AND role_name = $3
+               AND perm_type = $4
+            |] (sn, tn, rn, permTypeToCode pt) True

@@ -436,19 +436,62 @@ mkColCompExp qual lhsCol = mkCompExp (mkQCol lhsCol)
         sqlAll = foldr (S.BEBin S.AndOp) (S.BELit True)
         pgTypeToAnnType = S.TypeAnn . T.pack . show
 
-getColExpDeps :: QualifiedTable -> AnnBoolExpFld a -> [SchemaDependency]
+hasStaticExp :: OpExpG PartialSQLExp -> Bool
+hasStaticExp = \case
+  ACast casts  -> any hasStaticExp $ concat $ M.elems casts
+
+  AEQ _ val    -> isStaticValue val
+  ANE _ val    -> isStaticValue val
+
+  AIN val          -> isStaticValue val
+  ANIN val         -> isStaticValue val
+  AGT val          -> isStaticValue val
+  ALT val          -> isStaticValue val
+  AGTE val         -> isStaticValue val
+  ALTE val         -> isStaticValue val
+
+  ALIKE val        -> isStaticValue val
+  ANLIKE val       -> isStaticValue val
+  AILIKE val       -> isStaticValue val
+  ANILIKE val      -> isStaticValue val
+
+  ASIMILAR val     -> isStaticValue val
+  ANSIMILAR val    -> isStaticValue val
+
+  AContains val    -> isStaticValue val
+  AContainedIn val -> isStaticValue val
+  AHasKey val      -> isStaticValue val
+  AHasKeysAny val  -> isStaticValue val
+  AHasKeysAll val  -> isStaticValue val
+
+  ASTContains val   -> isStaticValue val
+  ASTCrosses val    -> isStaticValue val
+  ASTEquals val     -> isStaticValue val
+  ASTIntersects val -> isStaticValue val
+  ASTOverlaps val   -> isStaticValue val
+  ASTTouches val    -> isStaticValue val
+  ASTWithin val     -> isStaticValue val
+  ASTDWithinGeom (DWithinGeomOp r val)     -> any isStaticValue [r, val]
+  ASTDWithinGeog (DWithinGeogOp r val sph) -> any isStaticValue [r, val, sph]
+
+  _                -> False
+
+getColExpDeps
+  :: QualifiedTable -> AnnBoolExpFldPartialSQL -> [SchemaDependency]
 getColExpDeps tn = \case
   AVCol colInfo opExps ->
     let cn = pgiName colInfo
+        colDepReason = bool "sess_var" "on_type" $ any hasStaticExp opExps
+        colDep = mkColDep colDepReason tn cn
         depColsInOpExp = mapMaybe opExpDepCol opExps
-        allDepCols = cn:depColsInOpExp
-    in map (mkColDep "on_type" tn) allDepCols
+        colDepsInOpExp = map (mkColDep "on_type" tn) depColsInOpExp
+    in colDep:colDepsInOpExp
   AVRel relInfo relBoolExp ->
     let rn = riName relInfo
         relTN = riRTable relInfo
         pd = SchemaDependency (SOTableObj tn (TORel rn)) "on_type"
     in pd : getBoolExpDeps relTN relBoolExp
 
-getBoolExpDeps :: QualifiedTable -> AnnBoolExp a -> [SchemaDependency]
+getBoolExpDeps :: QualifiedTable -> AnnBoolExpPartialSQL -> [SchemaDependency]
 getBoolExpDeps tn =
   foldr (\annFld deps -> getColExpDeps tn annFld <> deps) []
