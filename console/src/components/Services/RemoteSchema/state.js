@@ -31,4 +31,14 @@ const addState = {
   },
 };
 
-export { listState, addState };
+const permissionState = {
+  rolePermissions: [
+    {
+      role: '',
+      allowedTypes: {},
+    },
+  ],
+  ...asyncState,
+};
+
+export { listState, addState, permissionState };

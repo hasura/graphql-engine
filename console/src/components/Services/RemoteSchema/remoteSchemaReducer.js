@@ -3,6 +3,7 @@ import { combineReducers } from 'redux';
 import listReducer from './Actions';
 import addReducer from './Add/addRemoteSchemaReducer';
 import headerReducer from '../../Common/Layout/ReusableHeader/HeaderReducer';
+import permissionsReducer from './Permissions/Actions';
 
 const remoteSchemaReducer = combineReducers({
   addData: addReducer,
@@ -14,6 +15,7 @@ const remoteSchemaReducer = combineReducers({
       value: '',
     },
   ]),
+  permissions: permissionsReducer,
 });
 
 export default remoteSchemaReducer;
