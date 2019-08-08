@@ -188,17 +188,16 @@ data RemoteRelField =
   RemoteRelField
     { rrRemoteField   :: !RemoteField
     , rrField         :: !Field
-    -- ^ TODO this is strange, since (_fRemoteRel rrField) == Just rrRemoteField, right? Is that an invariant?
+    -- ^ TODO Dedupe data since (_fRemoteRel rrField) == Just rrRemoteField
     -- maybe we need to just unpack part of the Field here (DuplicateRecordNames could help here)
     , rrRelFieldPath  :: !RelFieldPath
     , rrAlias         :: !G.Alias
-    -- ^ TODO similar to comment above ^ is rrAlias always a derivative of rrField? If so we should remove rrAlias unless it's very expensive to compute.
+    -- ^ TODO similar to comment above ^ is rrAlias always a derivative of rrField?
     , rrAliasIndex    :: !Int
     , rrPhantomFields :: ![Text]
     }
   deriving (Show)
 
--- TODO What is this? It seems it's okay if it's empty but I'm not totally confident that's the intention.
 newtype RelFieldPath =
   RelFieldPath {
     unRelFieldPath :: (Seq.Seq (Int, G.Alias))
@@ -431,16 +430,14 @@ neededHasuraFields
   :: RemoteField -> [FieldName]
 neededHasuraFields = toList . rtrHasuraFields . rmfRemoteRelationship
 
--- remote result = {"data":{"result_0":{"name":"alice"},"result_1":{"name":"bob"},"result_2":{"name":"alice"}}}
-
 -- | Join the data from the original hasura with the remote values.
 joinResults :: GQRespValue
-            -> [(Batch, EncJSON)] 
+            -> [(Batch, EncJSON)]
             -> GQRespValue
-joinResults hasuraValue0 = 
+joinResults hasuraValue0 =
   foldl (uncurry . insertBatchResults) hasuraValue0 . map (fmap f)
   where
-    f encJson = 
+    f encJson =
       case OJ.eitherDecode (encJToLBS encJson) >>= parseGQRespValue of
         Left err ->
           appendJoinError emptyResp (GQJoinError $ "joinResults: eitherDecode: " <> T.pack err)
@@ -466,11 +463,11 @@ insertBatchResults hasuraResp Batch{..} remoteResp =
     -- The 'sortOn' below is not strictly necessary by the spec, but
     -- implementations may not guarantee order of results matching
     -- order of query.
+    -- Since remote results are aliased by keys of the form 'remote_result_1', 'remote_result_2',
+    -- we can sort by the keys for a ordered list
     remoteData0 =
       maybe mempty (map snd . sortOn fst . OJ.toList) (gqRespData remoteResp)
-      -- ^ TODO I can't figure out what's going on here. It looks like we're
-      --   relying for correctness here on some ordering invariant in how we
-      --   prepare the remote request?
+
     cardinality = biCardinality batchInputs
 
     inHashmap ::
@@ -483,30 +480,31 @@ insertBatchResults hasuraResp Batch{..} remoteResp =
       Seq.Empty ->
         case remoteDataVals of
           [] -> Left $ err <> showHashO hasuraData
-            where err = case cardinality of 
-                          One -> "Expected one remote object but got none, while traversing " 
-                          Many -> "Expected many objects but got none, while traversing " 
+            where err = case cardinality of
+                          One -> "Expected one remote object but got none, while traversing "
+                          Many -> "Expected many objects but got none, while traversing "
 
-          (remoteDataVal:rest) 
+          (remoteDataVal:rest)
             | cardinality == One && not (null rest) ->
                 Left $
                   "Expected one remote object but got many, while traversing " <> showHashO hasuraData
-            | otherwise -> 
+            | otherwise ->
                 Right
                   ( spliceRemote remoteDataVal hasuraData
                   , rest)
- 
+
       ((idx, G.Alias (G.Name key)) Seq.:<| rest) ->
         case OJ.lookup key hasuraData of
           Nothing ->
-            Left $ 
+            Left $
               "Couldn't find expected key " <> show key <> " in " <> showHashO hasuraData <>
               ", while traversing " <> showHashO hasuraData0
           Just currentValue ->
             first (\newValue -> OJ.insert (idx, key) newValue hasuraData)
               <$> inValue rest currentValue remoteDataVals
 
-    -- TODO it might be fruitful to inline this and try simplifying further. In
+    -- TODO Brandon note:
+    -- it might be fruitful to inline this and try simplifying further. In
     -- particular I'm looking at the way that e.g. the third argument being []
     -- is always an error condition, but this is checked in several different
     -- places. See also TODO note below
@@ -527,8 +525,9 @@ insertBatchResults hasuraResp Batch{..} remoteResp =
               withObj _ _    hasuraRowValue = Left $
                 "expected array of objects in " <> showHash hasuraRowValue
            in case path of
-                -- TODO do we need to assert something about the Right.snd of the result here?
-                --      the remainingRemotes tail (xs) is tossed away (I think?) in caller
+                -- TODO Brandon note:
+                -- do we need to assert something about the Right.snd of the result here?
+                -- the remainingRemotes tail (xs) is tossed away (I think?) in caller
                 Seq.Empty ->
                   case cardinality of
                     Many -> foldHasuraRowObjs $
@@ -562,7 +561,7 @@ insertBatchResults hasuraResp Batch{..} remoteResp =
 
     -- splice the remote result into the hasura result with the proper key (and
     -- at the right index), removing phantom fields
-    spliceRemote remoteDataVal hasuraData = 
+    spliceRemote remoteDataVal hasuraData =
       foldl' (flip OJ.delete)
              (OJ.insert
                 (batchRelationshipKeyIndex, batchRelationshipKeyToMake)
@@ -689,8 +688,6 @@ fieldCallsToField userProvidedArguments variables finalSelSet = nest
         , _fArguments =
             let templatedArguments =
                   createArguments variables fcArguments
-             -- TODO this looks sketchy to me... should we really be checking some invariant here,
-             -- that relates userProvidedArguments and the 'NonEmpty FieldCall'?
              in case NE.nonEmpty rest of
                   Just {} -> templatedArguments
                   Nothing ->
@@ -702,11 +699,15 @@ fieldCallsToField userProvidedArguments variables finalSelSet = nest
         , _fRemoteRel = Nothing
         }
 
+-- This is a kind of "deep merge".
+-- For e.g. suppose the input argument of the remote field is something like:
+-- `where: { id : 1}`
+-- And during execution, client also gives the input arg: `where: {name: "tiru"}`
+-- We need to merge the input argument to where: {id : 1, name: "tiru"}
 mergeAnnInpVal :: AnnInpVal -> AnnInpVal -> AnnInpVal
 mergeAnnInpVal an1 an2 =
   an1 {_aivValue = mergeAnnGValue (_aivValue an1) (_aivValue an2)}
 
--- TODO what is an AnnGValue? What does the "Ann" prefix signify? Why is it okay to merge them in this particular way?
 mergeAnnGValue :: AnnGValue -> AnnGValue -> AnnGValue
 mergeAnnGValue (AGObject n1 (Just o1)) (AGObject _ (Just o2)) =
   (AGObject n1 (Just (mergeAnnGObject o1 o2)))
