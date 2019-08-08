@@ -236,6 +236,7 @@ library
                      , Hasura.GraphQL.Execute.LiveQuery.Types
                      , Hasura.GraphQL.Execute.LiveQuery.Multiplexed
                      , Hasura.GraphQL.Execute.LiveQuery.Fallback
+                     , Hasura.GraphQL.Execute.RemoteJoins
                      , Hasura.GraphQL.Resolve
                      , Hasura.GraphQL.Resolve.BoolExp
                      , Hasura.GraphQL.Resolve.Context

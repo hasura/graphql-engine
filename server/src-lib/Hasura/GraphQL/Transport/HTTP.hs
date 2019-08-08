@@ -4,12 +4,11 @@ module Hasura.GraphQL.Transport.HTTP
 
 import qualified Data.Aeson.Ordered                     as OJ
 import qualified Data.Text                              as T
-import           Hasura.GraphQL.Validate
 import qualified Network.HTTP.Types                     as N
-
 import qualified Language.GraphQL.Draft.Syntax          as G
 
 import           Hasura.EncJSON
+import           Hasura.GraphQL.Validate
 import           Hasura.GraphQL.Logging
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.Prelude
@@ -18,6 +17,7 @@ import           Hasura.Server.Context
 import           Hasura.Server.Utils                    (RequestId)
 
 import qualified Hasura.GraphQL.Execute                 as E
+import qualified Hasura.GraphQL.Execute.RemoteJoins     as E
 
 runGQ
   :: ( MonadIO m
@@ -98,40 +98,7 @@ runGQ reqId userInfo reqHdrs req = do
               (rtqOperationType rt)
               rsi
               fields
-            -- liftIO (putStrLn ("remote result = " ++ show res))
           return resp
-        -- E.ExPMixed resolvedOp remoteRels -> do
-        --   hasuraJson <- runHasuraGQ reqId req userInfo resolvedOp
-        --   -- liftIO $ putStrLn ("hasura_JSON = " ++ show hasuraJson)
-        --   let result =
-        --         E.extractRemoteRelArguments
-        --           (scRemoteSchemas sc)
-        --           hasuraJson
-        --           remoteRels
-        --   case result of
-        --     Left errors -> return $ HttpResponse (OJ.toEncJSON (E.gqrespValueToValue errors)) Nothing
-        --     Right (hasuraValue, remotes) -> do
-        --       let batches =
-        --             E.produceBatches (E.getOpTypeFromExecOp resolvedOp) remotes
-        --       results <-
-        --         traverse
-        --           (\batch -> do
-        --              HttpResponse res _ <-
-        --                let batchQuery = E.batchRemoteTopQuery batch
-        --                    (rsi, fields) = remoteTopQueryEither batchQuery
-        --                 in E.execRemoteGQ
-        --                      reqId
-        --                      userInfo
-        --                      reqHdrs
-        --                      (rtqOperationType batchQuery)
-        --                      rsi
-        --                      fields
-        --              -- liftIO (putStrLn ("remote result = " ++ show res))
-        --              pure (batch, res))
-        --           batches
-        --       let joinResult = (E.joinResults hasuraValue results)
-        --       -- liftIO (putStrLn ("joined = " <> (L8.unpack . encode) joinResult))
-        --       pure (HttpResponse (OJ.toEncJSON $ E.gqrespValueToValue joinResult) Nothing)
 
 runHasuraGQ
   :: ( MonadIO m
