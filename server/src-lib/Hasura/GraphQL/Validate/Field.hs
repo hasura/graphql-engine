@@ -49,6 +49,8 @@ type ArgsMap = Map.HashMap G.Name AnnInpVal
 
 type SelSet = Seq.Seq Field
 
+-- N.B. This is a tree via 'SelSet'
+-- | https://graphql.github.io/graphql-spec/June2018/#sec-Language.Fields 
 data Field
   = Field
   { _fAlias     :: !G.Alias

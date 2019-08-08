@@ -34,6 +34,7 @@ module Hasura.GraphQL.Execute
   , mkQuery
   ) where
 
+import           Control.Arrow                          (first)
 import           Control.Exception                      (try)
 import           Control.Lens
 import           Data.Scientific
@@ -86,6 +87,7 @@ import qualified Hasura.GraphQL.Resolve                 as GR
 import qualified Hasura.GraphQL.Validate                as VQ
 import qualified Hasura.Logging                         as L
 
+-- | https://graphql.github.io/graphql-spec/June2018/#sec-Response-Format
 data GQRespValue =
   GQRespValue
   { gqRespData   :: Maybe OJ.Object
@@ -186,8 +188,11 @@ data RemoteRelField =
   RemoteRelField
     { rrRemoteField   :: !RemoteField
     , rrField         :: !Field
+    -- ^ TODO Dedupe data since (_fRemoteRel rrField) == Just rrRemoteField
+    -- maybe we need to just unpack part of the Field here (DuplicateRecordNames could help here)
     , rrRelFieldPath  :: !RelFieldPath
     , rrAlias         :: !G.Alias
+    -- ^ TODO similar to comment above ^ is rrAlias always a derivative of rrField?
     , rrAliasIndex    :: !Int
     , rrPhantomFields :: ![Text]
     }
@@ -216,12 +221,12 @@ getExecPlanPartial
   -> Bool
   -> GQLReqParsed
   -> m (Seq.Seq QExecPlanPartial)
-getExecPlanPartial userInfo sc enableAL req = do
+getExecPlanPartial UserInfo{userRole} sc enableAL req = do
 
   -- check if query is in allowlist
   when enableAL checkQueryInAllowlist
 
-  (gCtx, _)  <- flip runStateT sc $ getGCtx role gCtxRoleMap
+  (gCtx, _)  <- flip runStateT sc $ getGCtx userRole gCtxRoleMap
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
 
   topFields <- runReaderT (VQ.validateGQ queryParts) gCtx
@@ -234,12 +239,11 @@ getExecPlanPartial userInfo sc enableAL req = do
           VQ.RemoteLocatedTopField remoteTopField -> ExPRemotePartial remoteTopField)
       topFields
   where
-    role = userRole userInfo
     gCtxRoleMap = scGCtxMap sc
 
     checkQueryInAllowlist =
       -- only for non-admin roles
-      when (role /= adminRole) $ do
+      when (userRole /= adminRole) $ do
         let notInAllowlist =
               not $ VQ.isQueryInAllowlist (_grQuery req) (scAllowlist sc)
         when notInAllowlist $ modifyQErr modErr $ throwVE "query is not allowed"
@@ -249,9 +253,8 @@ getExecPlanPartial userInfo sc enableAL req = do
       in e{qeInternal = Just $ J.object [ "message" J..= J.String msg]}
 
 
--- An execution operation, in case of
--- queries and mutations it is just a transaction
--- to be executed
+-- An execution operation, in case of queries and mutations it is just a
+-- transaction to be executed
 data ExecOp
   = ExOpQuery !LazyRespTx !(Maybe EQ.GeneratedSqlMap)
   | ExOpMutation !LazyRespTx
@@ -274,43 +277,47 @@ getExecPlan
   -> SchemaCacheVer
   -> GQLReqUnparsed
   -> m (Seq.Seq QExecPlan)
-getExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer reqUnparsed = do
-  planM <-
-    liftIO $ EP.getPlan scVer (userRole userInfo) opNameM queryStr planCache
-  let usrVars = userVars userInfo
-  case planM
-    -- plans are only for queries and subscriptions
-        of
+getExecPlan pgExecCtx planCache userInfo@UserInfo{..} sqlGenCtx enableAL sc scVer reqUnparsed@GQLReq{..} = do
+  liftIO (EP.getPlan scVer userRole _grOperationName _grQuery planCache) >>= \case
     Just plan ->
       -- pure $ pure $ Leaf (ExPHasura <$>
       case plan of
+        -- plans are only for queries and subscriptions
         EP.RPQuery queryPlan -> do
-          (tx, genSql) <- EQ.queryOpFromPlan usrVars queryVars queryPlan
+          (tx, genSql) <- EQ.queryOpFromPlan userVars _grVariables queryPlan
           pure $ Seq.singleton (Leaf (ExPHasura (ExOpQuery tx (Just genSql))))
         EP.RPSubs subsPlan -> do
-          liveQueryOp <- EL.subsOpFromPlan pgExecCtx usrVars queryVars subsPlan
+          liveQueryOp <- EL.subsOpFromPlan pgExecCtx userVars _grVariables subsPlan
           pure $ Seq.singleton (Leaf (ExPHasura (ExOpSubs liveQueryOp)))
     Nothing -> noExistingPlan
   where
-    GQLReq opNameM queryStr queryVars = reqUnparsed
     addPlanToCache plan =
       -- liftIO $
-      EP.addPlan scVer (userRole userInfo) opNameM queryStr plan planCache
+      EP.addPlan scVer userRole _grOperationName _grQuery plan planCache
     noExistingPlan = do
       req <- toParsed reqUnparsed
       partialExecPlans <- getExecPlanPartial userInfo sc enableAL req
       forM partialExecPlans $ \partialExecPlan ->
         case partialExecPlan of
           ExPRemotePartial r -> pure (Leaf $ ExPRemote r)
-          ExPHasuraPartial (gCtx, rootSelSet, varDefs) -> do
+          ExPHasuraPartial (GCtx{..}, rootSelSet, varDefs) -> do
+            let runE' :: (MonadError QErr m) => E m a -> m a
+                runE' action = do
+                  res <- runExceptT $ runReaderT action
+                    (userInfo, _gOpCtxMap, _gTypes, _gFields, _gOrdByCtx, _gInsCtxMap, sqlGenCtx)
+                  either throwError return res
+
+                getQueryOp = runE' . EQ.convertQuerySelSet varDefs . pure
+
             case rootSelSet of
               VQ.HasuraTopMutation field ->
                 Leaf . ExPHasura . ExOpMutation <$>
-                getMutOp gCtx sqlGenCtx userInfo (pure field)
+                (runE' $ resolveMutSelSet $ pure field)
+
               VQ.HasuraTopQuery originalField -> do
                 case rebuildFieldStrippingRemoteRels originalField of
                   Nothing -> do
-                    (queryTx, _planM, genSql) <- getQueryOp gCtx sqlGenCtx userInfo (pure originalField) varDefs
+                    (queryTx, _planM, genSql) <- getQueryOp originalField
 
                     -- TODO: How to cache query for each field?
                     -- mapM_ (addPlanToCache . EP.RPQuery) planM
@@ -322,19 +329,12 @@ getExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer reqUnparsed
                     --      , "newField = " ++ show newField
                     --      , "cursors = " ++ show (fmap rrRelFieldPath cursors)
                     --      ])
-                    (queryTx, _planM, genSql) <- getQueryOp gCtx sqlGenCtx userInfo (pure newHasuraField) varDefs
-                    let unresolvedPlans = mkUnresolvedPlans remoteRelFields
-                    pure $ Tree (ExPHasura $ ExOpQuery queryTx (Just genSql)) unresolvedPlans
+                    (queryTx, _planM, genSql) <- getQueryOp newHasuraField
+                    pure $ Tree (ExPHasura $ ExOpQuery queryTx (Just genSql)) $
+                      mkUnresolvedPlans remoteRelFields
               VQ.HasuraTopSubscription fld -> do
                 (lqOp, _planM) <-
-                  getSubsOp
-                    pgExecCtx
-                    gCtx
-                    sqlGenCtx
-                    userInfo
-                    reqUnparsed
-                    varDefs
-                    fld
+                  runE' $ getSubsOpM pgExecCtx reqUnparsed varDefs fld
 
                 -- TODO: How to cache query for each field?
                 -- mapM_ (addPlanToCache . EP.RPSubs) planM
@@ -355,11 +355,13 @@ getExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer reqUnparsed
 -- point back to them.
 rebuildFieldStrippingRemoteRels ::
      VQ.Field -> Maybe (VQ.Field, NonEmpty RemoteRelField)
+-- TODO consider passing just relevant fields (_fSelSet and _fAlias?) from Field here and modify Field in caller
 rebuildFieldStrippingRemoteRels =
   extract . flip runState mempty . rebuild 0 mempty
   where
     extract (field, remoteRelFields) =
       fmap (field, ) (NE.nonEmpty remoteRelFields)
+    -- TODO refactor for clarity
     rebuild idx0 parentPath field0 = do
       selSetEithers <-
         traverse
@@ -395,32 +397,30 @@ rebuildFieldStrippingRemoteRels =
       pure
         field0
           { _fSelSet =
-              Seq.fromList
-                (concatMap
-                   (\case
-                      Right field -> pure field
-                        where _ = _fAlias field
-                      Left remoteField ->
-                        mapMaybe
-                          (\name ->
-                             if elem name (map _fName fields)
-                               then Nothing
-                               else Just
-                                      (Field
-                                         { _fAlias = G.Alias name
-                                         , _fName = name
-                                         , _fType =
-                                             G.NamedType (G.Name "unknown3")
-                                         , _fArguments = mempty
-                                         , _fSelSet = mempty
-                                         , _fRemoteRel = Nothing
-                                         }))
-                          (map
-                             (G.Name . getFieldNameTxt)
-                             (toList
-                                (rtrHasuraFields
-                                   (rmfRemoteRelationship remoteField)))))
-                   (toList selSetEithers))
+              Seq.fromList $
+                selSetEithers >>= \case
+                  Right field -> pure field
+                    where _ = _fAlias field
+                  Left remoteField ->
+                    mapMaybe
+                      (\name ->
+                         if elem name (map _fName fields)
+                           then Nothing
+                           else Just
+                                  (Field
+                                     { _fAlias = G.Alias name
+                                     , _fName = name
+                                     , _fType =
+                                         G.NamedType (G.Name "unknown3")
+                                     , _fArguments = mempty
+                                     , _fSelSet = mempty
+                                     , _fRemoteRel = Nothing
+                                     }))
+                      (map
+                         (G.Name . getFieldNameTxt)
+                         (toList
+                            (rtrHasuraFields
+                               (rmfRemoteRelationship remoteField))))
           }
       where
         thisPath = parentPath <> RelFieldPath (pure (idx0, _fAlias field0))
@@ -428,44 +428,22 @@ rebuildFieldStrippingRemoteRels =
 -- | Get a list of fields needed from a hasura result.
 neededHasuraFields
   :: RemoteField -> [FieldName]
-neededHasuraFields remoteField = toList (rtrHasuraFields remoteRelationship)
-  where
-    remoteRelationship = rmfRemoteRelationship remoteField
-
--- remote result = {"data":{"result_0":{"name":"alice"},"result_1":{"name":"bob"},"result_2":{"name":"alice"}}}
+neededHasuraFields = toList . rtrHasuraFields . rmfRemoteRelationship
 
 -- | Join the data from the original hasura with the remote values.
-joinResults :: [(Batch, EncJSON)]
+joinResults :: GQRespValue
+            -> [(Batch, EncJSON)]
             -> GQRespValue
-            -> GQRespValue
-joinResults paths hasuraValue0 =
-  let remoteValues :: [(Batch, GQRespValue)] =
-        map
-          (\(batch, encJson) ->
-             case OJ.eitherDecode (encJToLBS encJson) >>= parseGQRespValue of
-               Left err ->
-                 ( batch
-                 , appendJoinError
-                     emptyResp
-                     (GQJoinError ("joinResults: eitherDecode: " <> T.pack err)))
-               Right gqResp@(GQRespValue mdata _merrors) ->
-                 case mdata of
-                   Nothing ->
-                     ( batch
-                     , appendJoinError
-                         gqResp
-                         (GQJoinError ("could not find join key")))
-                   Just _ -> (batch, gqResp))
-          paths
-   in foldl
-        (\resp (batch, remoteResp) ->
-           insertBatchResults
-             remoteResp
-             batch
-             resp
-        )
-        hasuraValue0
-        remoteValues
+joinResults hasuraValue0 =
+  foldl (uncurry . insertBatchResults) hasuraValue0 . map (fmap f)
+  where
+    f encJson =
+      case OJ.eitherDecode (encJToLBS encJson) >>= parseGQRespValue of
+        Left err ->
+          appendJoinError emptyResp (GQJoinError $ "joinResults: eitherDecode: " <> T.pack err)
+        Right gqResp@(GQRespValue Nothing _merrors) ->
+          appendJoinError gqResp $ GQJoinError "could not find join key"
+        Right gqResp -> gqResp
 
 emptyResp :: GQRespValue
 emptyResp = GQRespValue Nothing Nothing
@@ -476,173 +454,131 @@ insertBatchResults ::
   -> Batch
   -> GQRespValue
   -> GQRespValue
-insertBatchResults remoteValue batch hasuraResp =
-  case inHashmap (batchRelFieldPath batch) hasuraHash0 remoteHash0 of
+insertBatchResults hasuraResp Batch{..} remoteResp =
+  case inHashmap batchRelFieldPath hasuraData0 remoteData0 of
     Left err  -> appendJoinError hasuraResp (GQJoinError (T.pack err))
     Right val -> GQRespValue (Just (fst val)) (gqRespErrors hasuraResp)
   where
-    hasuraHash0 = fromMaybe OJ.empty (gqRespData hasuraResp)
+    hasuraData0 = fromMaybe OJ.empty (gqRespData hasuraResp)
     -- The 'sortOn' below is not strictly necessary by the spec, but
     -- implementations may not guarantee order of results matching
     -- order of query.
-    remoteHash0 =
-      fromMaybe mempty $ fmap (sortOn fst . OJ.toList) (gqRespData remoteValue)
-    cardinality = biCardinality (batchInputs batch)
+    -- Since remote results are aliased by keys of the form 'remote_result_1', 'remote_result_2',
+    -- we can sort by the keys for a ordered list
+    remoteData0 =
+      maybe mempty (map snd . sortOn fst . OJ.toList) (gqRespData remoteResp)
+
+    cardinality = biCardinality batchInputs
+
     inHashmap ::
          RelFieldPath
       -> OJ.Object
-      -> [(Text, OJ.Value)]
-      -> Either String (OJ.Object, [(Text, OJ.Value)])
-    inHashmap (RelFieldPath Seq.Empty) hasuraHash remoteHash =
-      case cardinality of
-        One ->
-          case remoteHash of
-            [] ->
-              Left
-                ("Expected one remote object but got none, while traversing " <>
-                 show (OJ.toEncJSON (OJ.Object hasuraHash)))
-            [theRemoteHash] ->
-              Right
-                ( (foldl'
-                     (flip OJ.delete)
-                     (OJ.insert
-                        ( batchRelationshipKeyIndex batch
-                        , batchRelationshipKeyToMake batch)
-                        (peelOffNestedFields
-                           (batchNestedFields batch)
-                           (snd $ theRemoteHash))
-                        hasuraHash)
-                     (batchPhantoms batch))
-                , mempty)
-            _ ->
-              Left
-                ("Expected one remote object but got many, while traversing " <>
-                 show (OJ.toEncJSON (OJ.Object hasuraHash)))
-        Many ->
-          case remoteHash of
-            [] ->
-              Left
-                ("Expected many objects but got none, while traversing " <>
-                 show (OJ.toEncJSON (OJ.Object hasuraHash)))
-            (theRemoteHash:remainingRemoteHashes) ->
-              Right
-                ( (foldl'
-                     (flip OJ.delete)
-                     (OJ.insert
-                        ( batchRelationshipKeyIndex batch
-                        , batchRelationshipKeyToMake batch)
-                        (peelOffNestedFields
-                           (batchNestedFields batch)
-                           (snd (theRemoteHash)))
-                        hasuraHash)
-                     (batchPhantoms batch))
-                , remainingRemoteHashes)
-    inHashmap (RelFieldPath ((idx, G.Alias (G.Name key)) Seq.:<| rest)) hasuraHash remoteHash =
-      case OJ.lookup key hasuraHash of
-        Nothing ->
-          Left
-            ("Couldn't find expected key " <> show key <> " in " <>
-             show (OJ.toEncJSON (OJ.Object hasuraHash)) <>
-             ", while traversing " <>
-             show (OJ.toEncJSON (OJ.Object hasuraHash0)))
-        Just currentValue ->
-          fmap
-            (\(newValue, remoteCandidates) ->
-               (OJ.insert (idx, key) newValue hasuraHash, remoteCandidates))
-            (inValue rest currentValue remoteHash)
+      -> [OJ.Value]
+      -- ^ The remote result data with no keys, only the values sorted by key
+      -> Either String (OJ.Object, [OJ.Value])
+    inHashmap (RelFieldPath p) hasuraData remoteDataVals = case p of
+      Seq.Empty ->
+        case remoteDataVals of
+          [] -> Left $ err <> showHashO hasuraData
+            where err = case cardinality of
+                          One -> "Expected one remote object but got none, while traversing "
+                          Many -> "Expected many objects but got none, while traversing "
+
+          (remoteDataVal:rest)
+            | cardinality == One && not (null rest) ->
+                Left $
+                  "Expected one remote object but got many, while traversing " <> showHashO hasuraData
+            | otherwise ->
+                Right
+                  ( spliceRemote remoteDataVal hasuraData
+                  , rest)
+
+      ((idx, G.Alias (G.Name key)) Seq.:<| rest) ->
+        case OJ.lookup key hasuraData of
+          Nothing ->
+            Left $
+              "Couldn't find expected key " <> show key <> " in " <> showHashO hasuraData <>
+              ", while traversing " <> showHashO hasuraData0
+          Just currentValue ->
+            first (\newValue -> OJ.insert (idx, key) newValue hasuraData)
+              <$> inValue rest currentValue remoteDataVals
+
+    -- TODO Brandon note:
+    -- it might be fruitful to inline this and try simplifying further. In
+    -- particular I'm looking at the way that e.g. the third argument being []
+    -- is always an error condition, but this is checked in several different
+    -- places. See also TODO note below
     inValue ::
          Seq.Seq (Int, G.Alias)
       -> OJ.Value
-      -> [(Text, OJ.Value)]
-      -> Either String (OJ.Value, [(Text, OJ.Value)])
-    inValue path currentValue remoteHash =
+      -> [OJ.Value]
+      -> Either String (OJ.Value, [OJ.Value])
+    inValue path currentValue remoteDataVals =
       case currentValue of
-        OJ.Object hasuraRowHash ->
-          fmap
-            (\(hasuraRowHash', remainingRemotes) ->
-               (OJ.Object hasuraRowHash', remainingRemotes))
-            (inHashmap (RelFieldPath path) hasuraRowHash remoteHash)
-        OJ.Array values ->
-          case path of
-            Seq.Empty ->
-              case cardinality of
-                Many -> do
-                  (hasuraArray, remainingRemotes) <-
-                    (foldl
-                       (\eitherRows hasuraRowValue ->
-                          case eitherRows of
-                            Left err -> Left err
-                            Right (hasuraRowsSoFar, remainingRemotes) ->
-                              case hasuraRowValue of
-                                OJ.Object hasuraRowHash ->
-                                  case remainingRemotes of
-                                    [] ->
-                                      Left
-                                        ("no remote objects left for joining at " <>
-                                         show (OJ.toEncJSON hasuraRowValue))
-                                    (x:xs) -> do
-                                      let peeledRemoteValue =
-                                            peelOffNestedFields
-                                              (batchNestedFields batch)
-                                              (snd x)
-                                          phantoms = batchPhantoms batch
-                                      pure
-                                        ( hasuraRowsSoFar <>
-                                          [ (OJ.Object
-                                               (foldl'
-                                                  (flip OJ.delete)
-                                                  (OJ.insert
-                                                     ( batchRelationshipKeyIndex
-                                                         batch
-                                                     , batchRelationshipKeyToMake
-                                                         batch)
-                                                     peeledRemoteValue
-                                                     hasuraRowHash)
-                                                  phantoms))
-                                          ]
-                                        , xs)
-                                _ -> Left "expected object here")
-                       (pure ([], remoteHash))
-                       (toList values))
-                  pure (OJ.Array (Vec.fromList hasuraArray), remainingRemotes)
-                One ->
-                  Left
-                    "Cardinality mismatch: found array in hasura value, but expected object"
-            nonEmptyPath -> do
-              (hasuraArray, remainingCandidates) <-
-                (foldl
-                   (\eitherRows hasuraRowValue ->
-                      case eitherRows of
-                        Left err -> Left err
-                        Right (hasuraRowsSoFar, remaining) ->
-                          case hasuraRowValue of
-                            OJ.Object object -> do
-                              (hasuraRowHash, remainder) <-
-                                inHashmap
-                                  (RelFieldPath nonEmptyPath)
-                                  object
-                                  remaining
-                              pure
-                                ( hasuraRowsSoFar <> [OJ.Object hasuraRowHash]
-                                , remainder)
-                            _ ->
-                              Left
-                                ("expected array of objects in " <>
-                                 show (OJ.toEncJSON hasuraRowValue)))
-                   (pure ([], remoteHash))
-                   (toList values))
-              pure (OJ.Array (Vec.fromList hasuraArray), remainingCandidates)
-        OJ.Null -> pure (OJ.Null, remoteHash)
+        OJ.Object hasuraData ->
+          first OJ.Object <$>
+            inHashmap (RelFieldPath path) hasuraData remoteDataVals
+
+        OJ.Array hasuraRowValues -> first (OJ.Array . Vec.fromList) <$>
+          let foldHasuraRowObjs f = foldM (withObj f) ([], remoteDataVals) hasuraRowValues
+              withObj f tup (OJ.Object hasuraData) = f tup hasuraData
+              withObj _ _    hasuraRowValue = Left $
+                "expected array of objects in " <> showHash hasuraRowValue
+           in case path of
+                -- TODO Brandon note:
+                -- do we need to assert something about the Right.snd of the result here?
+                -- the remainingRemotes tail (xs) is tossed away (I think?) in caller
+                Seq.Empty ->
+                  case cardinality of
+                    Many -> foldHasuraRowObjs $
+                      \(hasuraRowsSoFar, remainingRemotes) hasuraData ->
+                         case remainingRemotes of
+                           [] ->
+                             Left $
+                               "no remote objects left for joining at " <> showHashO hasuraData
+                           (remoteDataVal:rest) ->
+                             Right
+                               -- TODO bad time complexity; cons then reverse instead?:
+                               ( hasuraRowsSoFar <>
+                                 [ OJ.Object $ spliceRemote remoteDataVal hasuraData ]
+                               , rest)
+                    One ->
+                      Left "Cardinality mismatch: found array in hasura value, but expected object"
+
+                nonEmptyPath -> foldHasuraRowObjs $
+                  \(hasuraRowsSoFar, remainingRemotes) hasuraData ->
+                               -- TODO bad time complexity; cons then reverse instead?:
+                     first (\hasuraRowHash'-> hasuraRowsSoFar <> [OJ.Object hasuraRowHash']) <$>
+                       inHashmap
+                         (RelFieldPath nonEmptyPath)
+                         hasuraData
+                         remainingRemotes
+
+        OJ.Null -> Right (OJ.Null, remoteDataVals)
         _ ->
-          Left
-            ("Expected object or array in hasura value but got: " <>
-             show (OJ.toEncJSON currentValue))
+          Left $
+            "Expected object or array in hasura value but got: " <> showHash currentValue
+
+    -- splice the remote result into the hasura result with the proper key (and
+    -- at the right index), removing phantom fields
+    spliceRemote remoteDataVal hasuraData =
+      foldl' (flip OJ.delete)
+             (OJ.insert
+                (batchRelationshipKeyIndex, batchRelationshipKeyToMake)
+                (peelOffNestedFields batchNestedFields remoteDataVal)
+                hasuraData)
+             batchPhantoms
+
+    -- logging helpers:
+    showHash = show . OJ.toEncJSON
+    showHashO = showHash . OJ.Object
+
 
 -- | The drop 1 in here is dropping the first level of nesting. The
 -- top field is already aliased to e.g. foo_idx_1, and that layer is
 -- already peeled off. So here we are just peeling nested fields.
 peelOffNestedFields :: NonEmpty G.Name -> OJ.Value -> OJ.Value
-peelOffNestedFields xs toplevel = go (drop 1 (toList xs)) toplevel
+peelOffNestedFields = go . NE.drop 1
   where
     go [] value = value
     go (G.Name key:rest) value =
@@ -677,6 +613,7 @@ produceBatches opType =
     (\(remoteRelField, remoteSchemaInfo, rows) ->
        produceBatch opType remoteSchemaInfo remoteRelField rows)
 
+-- TODO document all of this
 data Batch =
   Batch
     { batchRemoteTopQuery        :: !VQ.RemoteTopField
@@ -697,43 +634,31 @@ produceBatch ::
   -> RemoteRelField
   -> BatchInputs
   -> Batch
-produceBatch opType remoteSchemaInfo remoteRelField inputs =
-  Batch
-    { batchRemoteTopQuery = remoteTopQuery
-    , batchRelFieldPath = path
-    , batchIndices = resultIndexes
-    , batchRelationshipKeyToMake = G.unName (G.unAlias (rrAlias remoteRelField))
-    , batchRelationshipKeyIndex = rrAliasIndex remoteRelField
-    , batchInputs = inputs
-    , batchPhantoms = rrPhantomFields remoteRelField
-    , batchNestedFields =
-        fmap
-          fcName
-          (rtrRemoteFields
-             (rmfRemoteRelationship (rrRemoteField remoteRelField)))
-    }
+produceBatch rtqOperationType rtqRemoteSchemaInfo RemoteRelField{..} batchInputs =
+  Batch{..}
   where
-    remoteTopQuery =
-      VQ.RemoteTopField
-        { rtqRemoteSchemaInfo = remoteSchemaInfo
-        , rtqFields =
-            fmap
-              (\(i, variables) ->
-                 fieldCallsToField
-                   (Just (arrayIndexAlias i))
-                   (_fArguments originalField)
-                   variables
-                   (_fSelSet originalField)
-                   (rtrRemoteFields remoteRelationship))
-              indexedRows
-         , rtqOperationType = opType
-        }
-    indexedRows = zip (map ArrayIndex [0 :: Int ..]) (toList rows)
-    rows = biRows inputs
-    resultIndexes = map fst indexedRows
-    remoteRelationship = rmfRemoteRelationship (rrRemoteField remoteRelField)
-    path = rrRelFieldPath remoteRelField
-    originalField = rrField remoteRelField
+    batchRelationshipKeyToMake = G.unName (G.unAlias rrAlias)
+    batchNestedFields =
+      fmap
+        fcName
+        (rtrRemoteFields
+           (rmfRemoteRelationship rrRemoteField))
+    batchRemoteTopQuery = VQ.RemoteTopField{..}
+    rtqFields =
+      flip map indexedRows $ \(i, variables) ->
+         fieldCallsToField
+           (_fArguments rrField)
+           variables
+           (_fSelSet rrField)
+           (Just (arrayIndexAlias i))
+           (rtrRemoteFields remoteRelationship)
+    indexedRows = zip (map ArrayIndex [0 :: Int ..]) $ toList $ biRows batchInputs
+    batchIndices = map fst indexedRows
+    remoteRelationship = rmfRemoteRelationship rrRemoteField
+    -- TODO These might be good candidates for reusing names with DuplicateRecordFields if they have the same semantics:
+    batchRelationshipKeyIndex = rrAliasIndex
+    batchPhantoms = rrPhantomFields
+    batchRelFieldPath = rrRelFieldPath
 
 -- | Produce the alias name for a result index.
 arrayIndexAlias :: ArrayIndex -> G.Alias
@@ -747,26 +672,22 @@ arrayIndexText (ArrayIndex i) =
 
 -- | Produce a field from the nested field calls.
 fieldCallsToField ::
-     Maybe G.Alias
-  -> Map.HashMap G.Name AnnInpVal
+     Map.HashMap G.Name AnnInpVal
   -> Map.HashMap G.Variable G.ValueConst
   -> SelSet
+  -> Maybe G.Alias
   -> NonEmpty FieldCall
   -> Field
-fieldCallsToField mindexedAlias0 userProvidedArguments variables finalSelSet =
-  nest mindexedAlias0
+fieldCallsToField userProvidedArguments variables finalSelSet = nest
   where
-    nest mindexedAlias (fieldCall :| rest) =
+    nest mindexedAlias (FieldCall{..} :| rest) =
       Field
-        { _fAlias =
-            case mindexedAlias of
-              Just indexedAlias -> indexedAlias
-              Nothing           -> G.Alias (fcName fieldCall)
-        , _fName = fcName fieldCall
+        { _fAlias = fromMaybe (G.Alias fcName) mindexedAlias
+        , _fName = fcName
         , _fType = G.NamedType (G.Name "unknown_type")
         , _fArguments =
             let templatedArguments =
-                  createArguments variables (fcArguments fieldCall)
+                  createArguments variables fcArguments
              in case NE.nonEmpty rest of
                   Just {} -> templatedArguments
                   Nothing ->
@@ -774,13 +695,15 @@ fieldCallsToField mindexedAlias0 userProvidedArguments variables finalSelSet =
                       mergeAnnInpVal
                       userProvidedArguments
                       templatedArguments
-        , _fSelSet =
-            case NE.nonEmpty rest of
-              Nothing    -> finalSelSet
-              Just calls -> pure (nest Nothing calls)
+        , _fSelSet = maybe finalSelSet (pure . nest Nothing) $ NE.nonEmpty rest
         , _fRemoteRel = Nothing
         }
 
+-- This is a kind of "deep merge".
+-- For e.g. suppose the input argument of the remote field is something like:
+-- `where: { id : 1}`
+-- And during execution, client also gives the input arg: `where: {name: "tiru"}`
+-- We need to merge the input argument to where: {id : 1, name: "tiru"}
 mergeAnnInpVal :: AnnInpVal -> AnnInpVal -> AnnInpVal
 mergeAnnInpVal an1 an2 =
   an1 {_aivValue = mergeAnnGValue (_aivValue an1) (_aivValue an2)}
@@ -811,7 +734,7 @@ createArguments ::
 createArguments variables (RemoteArguments arguments) =
   either
     (error . show)
-    (\xs -> Map.fromList (map (\(G.ObjectFieldG key val) -> (key, valueConstToAnnInpVal val)) xs))
+    (Map.fromList . map (\(G.ObjectFieldG key val) -> (key, valueConstToAnnInpVal val)))
     (toEither (substituteVariables variables arguments))
 
 valueConstToAnnInpVal :: G.ValueConst -> AnnInpVal
@@ -858,6 +781,7 @@ extractRemoteRelArguments ::
   -> [RemoteRelField]
   -> Either GQRespValue ( GQRespValue , [ BatchInputs ])
 extractRemoteRelArguments remoteSchemaMap hasuraJson rels =
+  -- TODO refactor with MonadError
   case OJ.eitherDecode (encJToLBS hasuraJson) >>= parseGQRespValue of
     Left err ->
       Left $
@@ -924,6 +848,7 @@ instance Semigroup Cardinality where
     (<>) Many _  = Many
     (<>) One One = One
 
+-- TODO extract what from what exactly? Document please.
 -- | Extract from a given result.
 extractFromResult ::
      Cardinality
@@ -973,6 +898,7 @@ extractFromResult cardinality keyedRemotes value =
                 (BatchInputs {biRows = pure (Map.fromList (toList row))
                              ,biCardinality = cardinality})))
         (Map.toList remotesRows)
+    -- TODO is there actually an invariant to be checked here?
     _ -> pure ()
   where
     candidates ::
@@ -1042,35 +968,6 @@ type E m =
           , SQLGenCtx
           ) (ExceptT QErr m)
 
-runE
-  :: (MonadError QErr m)
-  => GCtx
-  -> SQLGenCtx
-  -> UserInfo
-  -> E m a
-  -> m a
-runE ctx sqlGenCtx userInfo action = do
-  res <- runExceptT $ runReaderT action
-    (userInfo, opCtxMap, typeMap, fldMap, ordByCtx, insCtxMap, sqlGenCtx)
-  either throwError return res
-  where
-    opCtxMap = _gOpCtxMap ctx
-    typeMap = _gTypes ctx
-    fldMap = _gFields ctx
-    ordByCtx = _gOrdByCtx ctx
-    insCtxMap = _gInsCtxMap ctx
-
-getQueryOp
-  :: (MonadError QErr m)
-  => GCtx
-  -> SQLGenCtx
-  -> UserInfo
-  -> VQ.SelSet
-  -> [G.VariableDefinition]
-  -> m (LazyRespTx, Maybe EQ.ReusableQueryPlan, EQ.GeneratedSqlMap)
-getQueryOp gCtx sqlGenCtx userInfo fields varDefs =
-  runE gCtx sqlGenCtx userInfo $ EQ.convertQuerySelSet varDefs fields
-
 mutationRootName :: Text
 mutationRootName = "mutation_root"
 
@@ -1103,17 +1000,7 @@ resolveMutSelSet fields = do
     toSingleTx :: [(Text, LazyRespTx)] -> LazyRespTx
     toSingleTx aliasedTxs =
       fmap encJFromAssocList $
-      forM aliasedTxs $ \(al, tx) -> (,) al <$> tx
-
-getMutOp
-  :: (MonadError QErr m)
-  => GCtx
-  -> SQLGenCtx
-  -> UserInfo
-  -> VQ.SelSet
-  -> m LazyRespTx
-getMutOp ctx sqlGenCtx userInfo selSet =
-  runE ctx sqlGenCtx userInfo $ resolveMutSelSet selSet
+        forM aliasedTxs sequence
 
 getSubsOpM
   :: ( MonadError QErr m
@@ -1138,21 +1025,6 @@ getSubsOpM pgExecCtx req varDefs fld =
       astUnresolved <- GR.queryFldToPGAST fld
       EL.subsOpFromPGAST pgExecCtx req varDefs (VQ._fAlias fld, astUnresolved)
 
-getSubsOp
-  :: ( MonadError QErr m
-     , MonadIO m
-     )
-  => PGExecCtx
-  -> GCtx
-  -> SQLGenCtx
-  -> UserInfo
-  -> GQLReqUnparsed
-  -> [G.VariableDefinition]
-  -> VQ.Field
-  -> m (EL.LiveQueryOp, Maybe EL.SubsPlan)
-getSubsOp pgExecCtx gCtx sqlGenCtx userInfo req varDefs fld =
-  runE gCtx sqlGenCtx userInfo $ getSubsOpM pgExecCtx req varDefs fld
-
 execRemoteGQ
   :: ( MonadIO m
      , MonadError QErr m
@@ -1166,9 +1038,7 @@ execRemoteGQ
   -> Either GQLReqUnparsed [Field]
   -> m (HttpResponse EncJSON)
 execRemoteGQ reqId userInfo reqHdrs opType rsi bsOrField = do
-  execCtx <- ask
-  let logger = _ecxLogger execCtx
-      manager = _ecxHttpManager execCtx
+  ExecutionCtx{_ecxLogger, _ecxHttpManager} <- ask
   hdrs <- getHeadersFromConf hdrConf
   let confHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
       clientHdrs = bool [] filteredHeaders fwdClientHdrs
@@ -1179,8 +1049,8 @@ execRemoteGQ reqId userInfo reqHdrs opType rsi bsOrField = do
         , Map.fromList userInfoToHdrs
         , Map.fromList clientHdrs
         ]
-      finalHdrs = foldr Map.union Map.empty hdrMaps
-      options = wreqOptions manager (Map.toList finalHdrs)
+      finalHdrs = foldr Map.union Map.empty hdrMaps -- mconcat
+      options = wreqOptions _ecxHttpManager (Map.toList finalHdrs)
   jsonbytes <-
     case bsOrField of
       Right field -> do
@@ -1188,7 +1058,7 @@ execRemoteGQ reqId userInfo reqHdrs opType rsi bsOrField = do
         let jsonbytes = encJToLBS (encJFromJValue gqlReq)
         pure jsonbytes
       Left unparsedQuery -> do
-        liftIO $ logGraphqlQuery logger $ QueryLog unparsedQuery Nothing reqId
+        liftIO $ logGraphqlQuery _ecxLogger $ QueryLog unparsedQuery Nothing reqId
         pure (J.encode $ J.toJSON unparsedQuery)
   res <- liftIO $ try $ Wreq.postWith options (show url) jsonbytes
   resp <- either httpThrow return res
@@ -1243,51 +1113,41 @@ fieldsToRequest opType fields = do
         , G._todSelectionSet = [] }
 
 fieldToField :: VQ.Field -> Either Text G.Field
-fieldToField field = do
-  args <- traverse makeArgument (Map.toList (VQ._fArguments field))
-  selections <- traverse fieldToField (VQ._fSelSet field)
-  pure $ G.Field
-    { _fAlias = Just (VQ._fAlias field)
-    , _fName = VQ._fName field
-    , _fArguments = args
-    , _fDirectives = []
-    , _fSelectionSet = fmap G.SelectionField (toList selections)
-    }
+fieldToField VQ.Field{..} = do
+  _fArguments <- traverse makeArgument (Map.toList _fArguments)
+  _fSelectionSet <- fmap G.SelectionField . toList <$>
+    traverse fieldToField _fSelSet
+  _fDirectives <- pure []
+  _fAlias      <- pure (Just _fAlias)
+  pure $ 
+    G.Field{..}
 
 makeArgument :: (G.Name, AnnInpVal) -> Either Text G.Argument
-makeArgument (gname, annInpVal) =
-  do v <- annInpValToValue annInpVal
-     pure $ G.Argument {_aName = gname, _aValue = v}
+makeArgument (_aName, annInpVal) =
+  do _aValue <- annInpValToValue annInpVal
+     pure $ G.Argument {..}
 
 annInpValToValue :: AnnInpVal -> Either Text G.Value
 annInpValToValue = annGValueToValue . _aivValue
 
 annGValueToValue :: AnnGValue -> Either Text G.Value
-annGValueToValue =
+annGValueToValue = fromMaybe (pure G.VNull) . 
   \case
-    AGScalar _ty mv ->
-      case mv of
-        Nothing -> pure G.VNull
-        Just pg -> pgcolvalueToGValue pg
+    AGScalar _ty mv -> 
+      pgcolvalueToGValue <$> mv
     AGEnum _ mval ->
-      case mval of
-        Nothing        -> pure G.VNull
-        Just enumValue -> pure (G.VEnum enumValue)
+      pure . G.VEnum <$> mval
     AGObject _ mobj ->
-      case mobj of
-        Nothing -> pure G.VNull
-        Just obj -> do
-          fields <-
-            traverse
-              (\(k, av) -> do
-                 v <- annInpValToValue av
-                 pure (G.ObjectFieldG {_ofName = k, _ofValue = v}))
-              (OHM.toList obj)
-          pure (G.VObject (G.ObjectValueG fields))
+      flip fmap mobj $ \obj -> do
+        fields <-
+          traverse
+            (\(_ofName, av) -> do
+               _ofValue <- annInpValToValue av
+               pure (G.ObjectFieldG {..}))
+            (OHM.toList obj)
+        pure (G.VObject (G.ObjectValueG fields))
     AGArray _ mvs ->
-      case mvs of
-        Nothing -> pure G.VNull
-        Just vs -> G.VList . G.ListValueG <$> traverse annInpValToValue vs
+      fmap (G.VList . G.ListValueG) . traverse annInpValToValue <$> mvs
 
 pgcolvalueToGValue :: PGColValue -> Either Text G.Value
 pgcolvalueToGValue colVal = case colVal of
