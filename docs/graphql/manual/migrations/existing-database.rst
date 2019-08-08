@@ -64,7 +64,7 @@ Hasura migrations. You can commit this directory to version control.
    ``--admin-secret "<your-admin-secret>"``.
 
    If you have a long admin secret and get "event not found" error, you can run "set +H" first, 
-   then use single quote when set  the flag: ``--admin-secret '<your-admin-secret>'``
+   then use single quote when set the flag: ``--admin-secret '<your-admin-secret>'``
 
 Step 3: Initialize the migrations as per your current state
 -----------------------------------------------------------
