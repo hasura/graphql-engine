@@ -71,6 +71,28 @@ class Permissions extends Component {
     this.props.dispatch(setTable(this.props.tableName));
   }
 
+  componentDidUpdate(prevProps) {
+    const currPermissionsState = this.props.permissionsState;
+    const prevPermissionsState = prevProps.permissionsState;
+
+    // scroll to edit section if role/query change
+    if (
+      (currPermissionsState.role &&
+        currPermissionsState.role !== prevPermissionsState.role) ||
+      (currPermissionsState.query &&
+        currPermissionsState.query !== prevPermissionsState.query)
+    ) {
+      document.getElementById('permission-edit-section').scrollIntoView();
+    }
+
+    if (
+      !prevPermissionsState.bulkSelect.length &&
+      currPermissionsState.bulkSelect.length
+    ) {
+      document.getElementById('bulk-section').scrollIntoView();
+    }
+  }
+
   render() {
     const {
       dispatch,
@@ -518,7 +540,7 @@ class Permissions extends Component {
       };
 
       return (
-        <div className={styles.activeEdit}>
+        <div id={'bulk-section'} className={styles.activeEdit}>
           <div className={styles.editPermsHeading}>Apply Bulk Actions</div>
           <div>
             <span className={styles.add_pad_right}>Selected Roles</span>
@@ -1722,6 +1744,7 @@ class Permissions extends Component {
 
       return (
         <div
+          id={'permission-edit-section'}
           key={`${permissionsState.role}-${permissionsState.query}`}
           className={styles.activeEdit}
         >
