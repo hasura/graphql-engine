@@ -207,6 +207,12 @@ class TestGraphQLQueryBoolExpBasic(DefaultTestSelectQueries):
     def test_self_referential_relationships(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/self_referential_relationships.yaml', transport)
 
+    def test_query_account_permission_success(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_account_permission_success.yaml', transport)
+
+    def test_query_account_permission_fail(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_account_permission_fail.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/boolexp/basic'
