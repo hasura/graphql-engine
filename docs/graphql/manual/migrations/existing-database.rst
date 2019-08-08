@@ -63,8 +63,8 @@ Hasura migrations. You can commit this directory to version control.
    machine and the the CLI will use it. You can also use it as a flag to CLI:
    ``--admin-secret "<your-admin-secret>"``.
 
-   If you have a long admin secret and get "event not found" error, you can run "set +H" first, 
-   then use single quote when set the flag: ``--admin-secret '<your-admin-secret>'``
+   If you have a long admin secret and get "event not found" error, you can use
+   single quote when set the flag: ``--admin-secret '<your-admin-secret>'``
 
 Step 3: Initialize the migrations as per your current state
 -----------------------------------------------------------
