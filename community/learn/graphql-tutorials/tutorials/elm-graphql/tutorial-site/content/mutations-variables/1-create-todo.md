@@ -42,7 +42,6 @@ import Graphql.Http
 - import Graphql.Operation exposing (RootQuery)
 +import Graphql.Operation exposing (RootMutation, RootQuery)
 
-
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 
 +makeGraphQLMutation : String -> SelectionSet decodesTo RootMutation -> (Result (Graphql.Http.Error decodesTo) decodesTo -> msg) -> Cmd msg
