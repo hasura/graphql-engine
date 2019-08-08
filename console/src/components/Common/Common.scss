@@ -43,10 +43,19 @@ table {
   font-size: 14px;
 }
 
-table thead tr th {
+table thead tr th,
+table tbody tr th {
   background-color: #F2F2F2 !important;
   color: #4D4D4D;
   font-weight: 600 !important;
+}
+
+.full_container {
+  margin: 20px;
+}
+
+.fit_content {
+  width: fit-content;
 }
 
 .pageSidebar {
@@ -165,10 +174,6 @@ table thead tr th {
 
 .displayFlexContainer {
   display: flex;
-}
-
-.full_container {
-  margin: 20px;
 }
 
 .wd5 {
@@ -752,6 +757,10 @@ code {
 
 .align_left {
   float: left;
+}
+
+.text_center {
+  text-align: center;
 }
 
 .block_wrapper {

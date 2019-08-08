@@ -15,8 +15,10 @@ export const events = (
 );
 
 export const remoteSchema = (
-  <Tooltip id="tooltip-remoteschema">Manage Remote Schemas</Tooltip>
+  <Tooltip id="tooltip-remote-schemas">Manage Remote Schemas</Tooltip>
 );
+
+export const roles = <Tooltip id="tooltip-roles">User Roles Summary</Tooltip>;
 
 export const secureEndpoint = (
   <Tooltip id="tooltip-secure-endpoint">

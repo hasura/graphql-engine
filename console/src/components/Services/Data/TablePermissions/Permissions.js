@@ -45,6 +45,14 @@ import EnhancedInput from '../../../Common/InputChecker/InputChecker';
 import { setTable } from '../DataActions';
 import { getIngForm, getEdForm, escapeRegExp } from '../utils';
 import { allOperators, getLegacyOperator } from './PermissionBuilder/utils';
+import {
+  permissionsSymbols,
+  getAllRoles,
+  getPermissionFilterString,
+  getPermissionColumnAccessSummary,
+  getTablePermissionsByRoles,
+  getPermissionRowAccessSummary,
+} from '../../Roles/utils';
 import Button from '../../../Common/Button/Button';
 import { defaultPresetsState } from '../DataState';
 
@@ -121,24 +129,6 @@ class Permissions extends Component {
 
     const styles = require('../TableModify/ModifyTable.scss');
 
-    const getAllRoles = allTableSchemas => {
-      const _allRoles = [];
-
-      allTableSchemas.forEach(tableSchema => {
-        if (tableSchema.permissions) {
-          tableSchema.permissions.forEach(p => {
-            if (!_allRoles.includes(p.role_name)) {
-              _allRoles.push(p.role_name);
-            }
-          });
-        }
-      });
-
-      _allRoles.sort();
-
-      return _allRoles;
-    };
-
     const addTooltip = (text, tooltip) => {
       return (
         <span>
@@ -148,10 +138,6 @@ class Permissions extends Component {
           </OverlayTrigger>
         </span>
       );
-    };
-
-    const getQueryFilterKey = query => {
-      return query === 'insert' ? 'check' : 'filter';
     };
 
     /********************/
@@ -216,27 +202,6 @@ class Permissions extends Component {
     };
 
     const getPermissionsTable = (tableSchema, queryTypes, roleList) => {
-      const permissionsSymbols = {
-        fullAccess: (
-          <i
-            className={'fa fa-check ' + styles.permissionSymbolFA}
-            aria-hidden="true"
-          />
-        ),
-        noAccess: (
-          <i
-            className={'fa fa-times ' + styles.permissionSymbolNA}
-            aria-hidden="true"
-          />
-        ),
-        partialAccess: (
-          <i
-            className={'fa fa-filter ' + styles.permissionSymbolPA}
-            aria-hidden="true"
-          />
-        ),
-      };
-
       const getPermissionsLegend = () => (
         <div>
           <div className={styles.permissionsLegend}>
@@ -285,11 +250,11 @@ class Permissions extends Component {
       const getPermissionsTableHead = () => {
         const _permissionsHead = [];
 
-        _permissionsHead.push(<td key={-1}>Actions</td>);
-        _permissionsHead.push(<td key={-2}>Role</td>);
+        _permissionsHead.push(<th key={-1}>Actions</th>);
+        _permissionsHead.push(<th key={-2}>Role</th>);
 
         queryTypes.forEach((queryType, i) => {
-          _permissionsHead.push(<td key={i}>{queryType}</td>);
+          _permissionsHead.push(<th key={i}>{queryType}</th>);
         });
 
         return (
@@ -311,7 +276,7 @@ class Permissions extends Component {
             } else if (role !== '') {
               dispatch(permOpenEdit(tableSchema, role, queryType));
             } else {
-              document.getElementById('newRoleInput').focus();
+              document.getElementById('new-role-input').focus();
             }
           };
 
@@ -349,10 +314,7 @@ class Permissions extends Component {
           const getRoleQueryPermission = queryType => {
             let _permission;
 
-            const rolePermissions = {};
-            tableSchema.permissions.forEach(
-              p => (rolePermissions[p.role_name] = p.permissions)
-            );
+            const rolePermissions = getTablePermissionsByRoles(tableSchema);
 
             if (role === 'admin') {
               _permission = permissionsSymbols.fullAccess;
@@ -436,7 +398,7 @@ class Permissions extends Component {
             _permissionsRowHtml.push(
               <td key={-2}>
                 <input
-                  id="newRoleInput"
+                  id="new-role-input"
                   className={`form-control ${styles.newRoleInput}`}
                   onChange={dispatchRoleNameChange}
                   type="text"
@@ -592,15 +554,12 @@ class Permissions extends Component {
       };
 
       const getRowSection = () => {
-        const filterKey = getQueryFilterKey(query);
+        let filterString = getPermissionFilterString(
+          permissionsState[query],
+          query
+        );
 
-        let filterString = '';
-        if (permissionsState[query]) {
-          filterString = JSON.stringify(permissionsState[query][filterKey]);
-        }
-
-        const noAccess = filterString === '';
-        const noChecks = filterString === '{}';
+        const rowSectionStatus = getPermissionRowAccessSummary(filterString);
 
         // replace legacy operator values
         allOperators.forEach(operator => {
@@ -634,12 +593,11 @@ class Permissions extends Component {
                 return;
               }
 
-              const queryFilterKey = getQueryFilterKey(queryType);
-
               let queryFilterString = '';
               if (permissionsState[queryType]) {
-                queryFilterString = JSON.stringify(
-                  permissionsState[queryType][queryFilterKey]
+                queryFilterString = getPermissionFilterString(
+                  permissionsState[queryType],
+                  queryType
                 );
               }
 
@@ -689,7 +647,9 @@ class Permissions extends Component {
           // TODO: add no access option
 
           const addNoChecksOption = () => {
-            const isSelected = !permissionsState.custom_checked && noChecks;
+            const isSelected =
+              !permissionsState.custom_checked &&
+              rowSectionStatus === 'without any checks';
 
             // Add allow all option
             let allowAllQueryInfo = '';
@@ -869,15 +829,6 @@ class Permissions extends Component {
 
         const rowSectionTitle = 'Row ' + query + ' permissions';
 
-        let rowSectionStatus;
-        if (noAccess) {
-          rowSectionStatus = 'no access';
-        } else if (noChecks) {
-          rowSectionStatus = 'without any checks';
-        } else {
-          rowSectionStatus = 'with custom check';
-        }
-
         return (
           <CollapsibleToggle
             title={getSectionHeader(
@@ -887,7 +838,7 @@ class Permissions extends Component {
             )}
             useDefaultTitleStyle
             testId={'toggle-row-permission'}
-            isOpen={noAccess}
+            isOpen={rowSectionStatus === 'no access'}
           >
             <div className={styles.editPermsSection}>
               <div>
@@ -1014,21 +965,10 @@ class Permissions extends Component {
 
           const colSectionTitle = 'Column ' + query + ' permissions';
 
-          let colSectionStatus;
-          if (
-            !permissionsState[query] ||
-            !permissionsState[query].columns.length
-          ) {
-            colSectionStatus = 'no columns';
-          } else if (
-            permissionsState[query].columns === '*' ||
-            permissionsState[query].columns.length ===
-              tableSchema.columns.length
-          ) {
-            colSectionStatus = 'all columns';
-          } else {
-            colSectionStatus = 'partial columns';
-          }
+          const colSectionStatus = getPermissionColumnAccessSummary(
+            permissionsState[query],
+            tableSchema.columns
+          );
 
           _columnSection = (
             <CollapsibleToggle
@@ -1549,7 +1489,7 @@ class Permissions extends Component {
           const actionsList = ['insert', 'select', 'update', 'delete'];
 
           const getApplyToRow = (applyTo, index) => {
-            const getSelect = (type, options) => {
+            const getSelect = (type, options, value = '') => {
               const setApplyTo = e => {
                 dispatch(permSetApplySamePerm(index, type, e.target.value));
               };
@@ -1575,7 +1515,7 @@ class Permissions extends Component {
                   disabled={noPermissions}
                   title={noPermissions ? disabledCloneMsg : ''}
                 >
-                  <option disabled value="">
+                  <option disabled value={value}>
                     Select {type}
                   </option>
                   {optionsList}
@@ -1604,7 +1544,7 @@ class Permissions extends Component {
 
             return (
               <div key={index} className={styles.add_mar_bottom_mid}>
-                {getSelect('table', tableOptions)}
+                {getSelect('table', tableOptions, tableName)}
                 {getSelect('role', roleList)}
                 {getSelect('action', actionsList)}
                 {getRemoveIcon()}

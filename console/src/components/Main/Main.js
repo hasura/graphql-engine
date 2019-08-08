@@ -522,6 +522,27 @@ class Main extends React.Component {
                     </Link>
                   </li>
                 </OverlayTrigger>
+                <OverlayTrigger placement="right" overlay={tooltip.roles}>
+                  <li>
+                    <Link
+                      className={
+                        currentActiveBlock === 'roles'
+                          ? styles.navSideBarActive
+                          : ''
+                      }
+                      to={appPrefix + '/roles'}
+                    >
+                      <div className={styles.iconCenter}>
+                        <i
+                          title="Roles"
+                          className="fa fa-user"
+                          aria-hidden="true"
+                        />
+                      </div>
+                      <p>Roles</p>
+                    </Link>
+                  </li>
+                </OverlayTrigger>
               </ul>
             </div>
             <div id="dropdown_wrapper" className={styles.clusterInfoWrapper}>

@@ -1,0 +1,49 @@
+@import "../../Common/Common.scss";
+
+//.rolesTableWrapper {
+//}
+
+.rolesTable {
+  th, td {
+    vertical-align: middle !important;
+  }
+
+  th {
+    min-width: 150px;
+  }
+
+  td {
+    min-width: 200px;
+  }
+
+  th.selectable {
+    cursor: pointer;
+  }
+
+  td pre {
+    max-height: 150px;
+  }
+}
+
+.rolesTable.fixed {
+  table-layout: fixed;
+}
+
+.selected,
+.selected th {
+  background-color: #FFF3D5 !important;
+}
+
+.permissionSymbolNA {
+  color: firebrick;
+}
+
+.permissionSymbolFA {
+  color: green;
+}
+
+.permissionSymbolNA,
+.permissionSymbolFA,
+.permissionSymbolPA {
+  font-size: 16px;
+}
