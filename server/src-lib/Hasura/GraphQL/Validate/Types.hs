@@ -1,10 +1,15 @@
 module Hasura.GraphQL.Validate.Types
   ( InpValInfo(..)
   , ParamMap
+
   , ObjFldInfo(..)
+  , mkHsraObjFldInfo
   , ObjFieldMap
+
   , ObjTyInfo(..)
   , mkObjTyInfo
+  , mkHsraObjTyInfo
+
   , IFaceTyInfo(..)
   , IFacesSet
   , UnionTyInfo(..)
@@ -12,11 +17,18 @@ module Hasura.GraphQL.Validate.Types
   , FragDefMap
   , AnnVarVals
   , AnnInpVal(..)
+
   , EnumTyInfo(..)
+  , mkHsraEnumTyInfo
+
   , EnumValInfo(..)
   , InpObjFldMap
   , InpObjTyInfo(..)
+  , mkHsraInpTyInfo
+
   , ScalarTyInfo(..)
+  , mkHsraScalarTyInfo
+
   , DirectiveInfo(..)
   , AsObjType(..)
   , defaultDirectives
@@ -106,6 +118,14 @@ fromEnumTyDef (G.EnumTypeDefinition descM n _ valDefs) loc =
     enumVals = Map.fromList
       [(G._evdName valDef, fromEnumValDef valDef) | valDef <- valDefs]
 
+mkHsraEnumTyInfo
+  :: Maybe G.Description
+  -> G.NamedType
+  -> Map.HashMap G.EnumValue EnumValInfo
+  -> EnumTyInfo
+mkHsraEnumTyInfo descM ty enumVals =
+  EnumTyInfo descM ty enumVals TLHasuraType
+
 data InpValInfo
   = InpValInfo
   { _iviDesc   :: !(Maybe G.Description)
@@ -151,6 +171,15 @@ fromFldDef (G.FieldDefinition descM n args ty _) loc =
   where
     params = Map.fromList [(G._ivdName arg, fromInpValDef arg) | arg <- args]
 
+mkHsraObjFldInfo
+  :: Maybe G.Description
+  -> G.Name
+  -> ParamMap
+  -> G.GType
+  -> ObjFldInfo
+mkHsraObjFldInfo descM name params ty =
+  ObjFldInfo descM name params ty TLHasuraType
+
 type ObjFieldMap = Map.HashMap G.Name ObjFldInfo
 
 type IFacesSet = Set.HashSet G.NamedType
@@ -183,7 +212,18 @@ mkObjTyInfo descM ty iFaces flds loc =
   ObjTyInfo descM ty iFaces $ Map.insert (_fiName newFld) newFld flds
   where newFld = typenameFld loc
 
-mkIFaceTyInfo :: Maybe G.Description -> G.NamedType -> Map.HashMap G.Name ObjFldInfo -> TypeLoc -> IFaceTyInfo
+mkHsraObjTyInfo
+  :: Maybe G.Description
+  -> G.NamedType
+  -> IFacesSet
+  -> ObjFieldMap
+  -> ObjTyInfo
+mkHsraObjTyInfo descM ty implIFaces flds =
+  mkObjTyInfo descM ty implIFaces flds TLHasuraType
+
+mkIFaceTyInfo
+  :: Maybe G.Description -> G.NamedType
+  -> Map.HashMap G.Name ObjFldInfo -> TypeLoc -> IFaceTyInfo
 mkIFaceTyInfo descM ty flds loc =
   IFaceTyInfo descM ty $ Map.insert (_fiName newFld) newFld flds
   where newFld = typenameFld loc
@@ -232,7 +272,7 @@ type MemberTypes = Set.HashSet G.NamedType
 data UnionTyInfo
   = UnionTyInfo
   { _utiDesc        :: !(Maybe G.Description)
-  , _utiName        :: !(G.NamedType)
+  , _utiName        :: !G.NamedType
   , _utiMemberTypes :: !MemberTypes
   } deriving (Show, Eq, TH.Lift)
 
@@ -273,12 +313,23 @@ fromInpObjTyDef (G.InputObjectTypeDefinition descM n _ inpFlds) loc =
     fldMap = Map.fromList
       [(G._ivdName inpFld, fromInpValDef inpFld) | inpFld <- inpFlds]
 
+mkHsraInpTyInfo
+  :: Maybe G.Description
+  -> G.NamedType
+  -> InpObjFldMap
+  -> InpObjTyInfo
+mkHsraInpTyInfo descM ty flds =
+  InpObjTyInfo descM ty flds TLHasuraType
+
 data ScalarTyInfo
   = ScalarTyInfo
   { _stiDesc :: !(Maybe G.Description)
   , _stiType :: !PGColType
   , _stiLoc  :: !TypeLoc
   } deriving (Show, Eq, TH.Lift)
+
+mkHsraScalarTyInfo :: PGColType -> ScalarTyInfo
+mkHsraScalarTyInfo ty = ScalarTyInfo Nothing ty TLHasuraType
 
 instance EquatableGType ScalarTyInfo where
   type EqProps ScalarTyInfo = PGColType
@@ -377,7 +428,7 @@ showSPTxt :: SchemaPath -> Text
 showSPTxt p = showSPTxt' p <> showSP p
 
 validateIFace :: MonadError Text f => IFaceTyInfo -> f ()
-validateIFace (IFaceTyInfo _ n flds) = do
+validateIFace (IFaceTyInfo _ n flds) =
   when (isFldListEmpty flds) $ throwError $ "List of fields cannot be empty for interface " <> showNamedTy n
 
 validateObj :: TypeMap -> ObjTyInfo -> Either Text ()
@@ -474,7 +525,7 @@ validateIsSubType tyMap subFldTy supFldTy = do
       subTyInfo <- extrTyInfo tyMap subTy
       supTyInfo <- extrTyInfo tyMap supTy
       isSubTypeBase subTyInfo supTyInfo
-    (G.TypeList _ (G.ListType sub), G.TypeList _ (G.ListType sup) ) -> do
+    (G.TypeList _ (G.ListType sub), G.TypeList _ (G.ListType sup) ) ->
       validateIsSubType tyMap sub sup
     _ -> throwError $ showIsListTy subFldTy <> " Type " <> G.showGT subFldTy <>
       " cannot be a sub-type of " <> showIsListTy supFldTy <> " Type " <> G.showGT supFldTy

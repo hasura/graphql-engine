@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="bootstrap-1.4.0.min.css">
+    <link rel="stylesheet" href="monitor.css" type="text/css">
+    <script type="text/javascript" src="jquery-1.6.4.min.js"></script>
+    <script type="text/javascript" src="jquery.flot.min.js"></script>
+    <title>ekg</title>
+  </head>
+  <body>
+    <div class="topbar">
+      <div class="topbar-inner">
+        <div class="container-fluid">
+          <span class="brand">ekg</span>
+          <p class="pull-right">Polling interval:
+            <select id="updateInterval" class="small">
+              <option value="100">100 ms</option>
+              <option value="200">200 ms</option>
+              <option value="500">500 ms</option>
+              <option value="1000" selected="selected">1 s</option>
+              <option value="2000">2 s</option>
+              <option value="5000">5 s</option>
+              <option value="10000">10 s</option>
+            </select> |
+            <button id="pause-ui" class="btn">Pause UI</button>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="row">
+        <div class="alert-message error fade in hide" data-alert="alert">
+          <p>Lost connection to server.</p>
+        </div>
+      </div>
+
+      <div class="row">
+        <div id="plots" class="span11">
+          <div id="current-bytes-used-plot" class="plot-container">
+            <h3>Current residency</h3>
+            <div class="plot"></div>
+          </div>
+
+          <div id="allocation-rate-plot" class="plot-container">
+            <h3>Allocation rate</h3>
+            <div class="plot"></div>
+          </div>
+
+          <div id="productivity-plot" class="plot-container">
+            <h3>Productivity</h3>
+            <div class="plot"></div>
+          </div>
+        </div>
+
+        <div class="span5">
+          <h3>GC and memory statistics</h3>
+          <table class="condensed-table">
+            <thead>
+              <tr>
+                <th>Statistic</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Maximum residency</td>
+                <td id="max-bytes-used" class="span3 value">0</td>
+              </tr>
+              <tr>
+                <td>Current residency</td>
+                <td id="current-bytes-used" class="value">0</td>
+              </tr>
+              <tr>
+                <td>Maximum slop</td>
+                <td id="max-bytes-slop" class="value">0</td>
+              </tr>
+              <tr>
+                <td>Current slop</td>
+                <td id="current-bytes-slop" class="value">0</td>
+              </tr>
+              <tr>
+                <td>Productivity (wall clock time)</td>
+                <td id="productivity-wall" class="value">0</td>
+              </tr>
+              <tr>
+                <td>Productivity (cpu time)</td>
+                <td id="productivity-cpu" class="value">0</td>
+              </tr>
+              <tr>
+                <td>Allocation rate</td>
+                <td id="allocation-rate" class="value">0</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>Metrics</h3>
+          <table id="metric-table" class="condensed-table">
+            <thead>
+              <tr>
+                <th class="span4">Name</th>
+                <th class="span1">Value</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+
+        </div>
+      </div>
+    </div>
+
+    <script type="text/javascript" src="monitor.js"></script>
+  </body>
+</html>

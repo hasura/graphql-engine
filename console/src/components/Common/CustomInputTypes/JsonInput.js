@@ -122,21 +122,25 @@ const JsonInput = props => {
 
   const editor = editorType === JSONKEY ? getJsonEditor() : getNormalEditor();
 
+  const toggleIcon = (
+    <i
+      key="icon_json_editor"
+      className={
+        'fa ' +
+        styles.modeToggleButton +
+        (editorType === JSONKEY ? ' fa-compress' : ' fa-expand')
+      }
+      onClick={() => updateState(toggleEditorType)}
+      title={
+        (editorType === JSONKEY ? 'Collapse' : 'Expand') + ' (Ctrl + Space)'
+      }
+    />
+  );
+
   return (
     <span className="json_input_editor">
       <label>{editor}</label>
-      <i
-        key="icon_json_editor"
-        className={
-          'fa ' +
-          styles.modeToggleButton +
-          (editorType === JSONKEY ? ' fa-compress' : ' fa-expand')
-        }
-        onClick={() => updateState(toggleEditorType)}
-        title={
-          (editorType === JSONKEY ? 'Collapse' : 'Expand') + ' (Ctrl + Space)'
-        }
-      />
+      {toggleIcon}
     </span>
   );
 };
