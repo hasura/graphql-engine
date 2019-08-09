@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
 import Permissions from '../Permissions/Permissions';
@@ -6,6 +6,7 @@ import styles from '../RemoteSchema.scss';
 import globals from '../../../../Globals';
 import tabInfo from './tabInfo';
 import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLayout';
+import { setCurrentRemoteSchema } from '../Permissions/Actions';
 import { appPrefix, pageTitle } from '../constants';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
@@ -16,6 +17,15 @@ const PermissionsWrapper = props => {
   if (!remoteSchemaName) {
     props.dispatch(push(prefixUrl));
   }
+
+  useEffect(() => {
+    if (remoteSchemaName) {
+      props.dispatch(setCurrentRemoteSchema(remoteSchemaName));
+    }
+    return () => {
+      props.dispatch(setCurrentRemoteSchema(''));
+    };
+  }, [remoteSchemaName]);
 
   const breadCrumbs = [
     {
@@ -60,14 +70,18 @@ const PermissionsWrapper = props => {
         showLoader={false}
       />
       <div className={`${styles.add_pad_top} ${styles.add_pad_bottom}`}>
-        <Permissions {...props} />
+        <Permissions remoteSchemaName={remoteSchemaName} {...props} />
       </div>
     </div>
   );
 };
 
-const mapStateToProps = () => {
-  return {};
+const mapStateToProps = state => {
+  return {
+    remoteSchemasList: state.remoteSchemas.listData.remoteSchemas,
+    permissions: state.remoteSchemas.permissions,
+    adminHeaders: state.tables.dataHeaders,
+  };
 };
 
 export default connect => connect(mapStateToProps)(PermissionsWrapper);

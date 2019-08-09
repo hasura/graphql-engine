@@ -31,13 +31,15 @@ const addState = {
   },
 };
 
+const defaultRolePermission = {
+  role: '',
+  allowedTypes: {},
+  allowAll: false,
+};
+
 const permissionState = {
-  rolePermissions: [
-    {
-      role: '',
-      allowedTypes: {},
-    },
-  ],
+  rolePermissions: [JSON.parse(JSON.stringify(defaultRolePermission))],
+  currentRemoteSchemaName: '',
   ...asyncState,
 };
 

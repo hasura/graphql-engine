@@ -1,10 +1,26 @@
 import React, { useState } from 'react';
 import styles from '../RemoteSchema.scss';
 
-const GraphQLType = ({ typeName, fields }) => {
+const GraphQLType = ({
+  typeName,
+  fields,
+  fieldToggleCallback,
+  typeRemovalCallback,
+  isRootType,
+}) => {
   const [isExpanded, setExpansion] = useState(true);
   const expandType = () => setExpansion(true);
   const collapseType = () => setExpansion(false);
+
+  const removeTypeButton = !isRootType && (
+    <div>
+      <i
+        className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
+        data-test={`remove-type-${typeName}`}
+        onClick={typeRemovalCallback}
+      />
+    </div>
+  );
 
   const getTypeName = () => {
     const onClick = isExpanded ? collapseType : expandType;
@@ -18,7 +34,8 @@ const GraphQLType = ({ typeName, fields }) => {
             styles.add_mar_right_mid
           }`}
         />
-        <b>{typeName}</b>
+        <b className={`${styles.add_mar_right_mid}`}>{typeName}</b>
+        {removeTypeButton}
       </div>
     );
   };
@@ -32,17 +49,28 @@ const GraphQLType = ({ typeName, fields }) => {
         }`}
       >
         {Object.keys(fields).map(f => {
+          const toggle = e => {
+            fieldToggleCallback(f, e.target.checked);
+          };
+
           return (
-            <div className={`${styles.display_flex} ${styles.perm}`}>
+            <div
+              className={`${styles.display_flex} ${styles.perm}`}
+              key={`${typeName}-${f}`}
+              onClick={toggle}
+            >
               <div className={`${styles.add_mar_right_mid}`}>
-                <input type="checkbox" />
+                <input type="checkbox" checked={fields[f].isChecked} readOnly />
               </div>
               <div
                 className={`${styles.add_mar_right_mid} ${
                   styles.remoteSchemaPermTypeField
-                }`}
+                } ${styles.display_flex}`}
               >
-                {f}
+                <div>{f}:&emsp;</div>
+                <div>
+                  <i>{fields[f].typeName}</i>
+                </div>
               </div>
             </div>
           );
@@ -52,7 +80,7 @@ const GraphQLType = ({ typeName, fields }) => {
   };
 
   return (
-    <div className={`${styles.remoteSchemaPermSelector} ${styles.add_padding}`}>
+    <div>
       {getTypeName()}
       {getFieldsCheckbox()}
     </div>

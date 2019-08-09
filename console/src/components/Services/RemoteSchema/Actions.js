@@ -27,8 +27,6 @@ const SET_CONSISTENT_REMOTE_SCHEMAS =
 
 const VIEW_REMOTE_SCHEMA = '@remoteSchema/VIEW_REMOTE_SCHEMA';
 
-/* */
-
 const fetchRemoteSchemas = () => {
   return (dispatch, getState) => {
     const url = Endpoints.getSchema;
