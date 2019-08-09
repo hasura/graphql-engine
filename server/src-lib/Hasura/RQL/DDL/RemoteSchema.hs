@@ -248,11 +248,7 @@ validateTypes permTypes allTypes = do
                        fields
                    pure $
                      VT.TIInpObj inpObjTy {VT._iotiFields = Map.fromList newFields}
-             _otherwise ->
-               refute
-                 [ ("type: " <> showNamedTy namedType <>
-                    " is not an object type or input object type")
-                 ])
+             otherType -> pure otherType)
         allTypes
 
 updateRemoteGCtxFromTypes :: (QErrM m) => VT.TypeMap -> GC.RemoteGCtx -> m GC.RemoteGCtx
