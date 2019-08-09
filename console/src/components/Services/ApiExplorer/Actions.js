@@ -605,7 +605,6 @@ const apiExplorerReducer = (state = defaultState, action) => {
         headerFocus: true,
       };
     case SET_REQUEST_HEADERS_BULK:
-      console.log(action.headers);
       return {
         ...state,
         displayedApi: {
@@ -613,6 +612,7 @@ const apiExplorerReducer = (state = defaultState, action) => {
           request: {
             ...state.displayedApi.request,
             headers: action.headers,
+            headersInitialised: true,
           },
         },
       };
