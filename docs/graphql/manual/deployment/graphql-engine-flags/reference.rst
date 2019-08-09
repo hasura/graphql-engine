@@ -166,32 +166,32 @@ For ``serve`` sub-command these are the flags and ENV variables available:
      - updated results (if any) will be sent at most once in this interval (in milliseconds) for live queries
        which cannot be multiplexed. Default: 1000 (1sec)
 
-   * - ``live-queries-multiplexed-refetch-interval``
+   * - ``--live-queries-multiplexed-refetch-interval``
      - ``HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL``
      - updated results (if any) will be sent at most once in this interval (in milliseconds) for live queries
        which can be multiplexed. Default: 1000 (1sec)
 
-   * - ``live-queries-multiplexed-batch-size``
+   * - ``--live-queries-multiplexed-batch-size``
      - ``HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE``
      - multiplexed live queries are split into batches of the specified size. Default 100. 
 
-   * - ``enable-allowlist``
+   * - ``--enable-allowlist``
      - ``HASURA_GRAPHQL_ENABLE_ALLOWLIST``
      - Restrict queries allowed to be executed by GraphQL engine to those that are part of the configured
        allow-list. Default ``false``. *(Available for versions > v1.0.0-beta.1)*
   
-   * - ``console-assets-dir``
+   * - ``--console-assets-dir``
      - ``HASURA_GRAPHQL_CONSOLE_ASSETS_DIR``
      - Set the value to ``/srv/console-assets`` for the console to load assets from the server itself
        instead of CDN. *(Available for versions > v1.0.0-beta.1)*
 
-   * - ``enabled-log-types``
+   * - ``--enabled-log-types``
      - ``HASURA_GRAPHQL_ENABLED_LOG_TYPES``
      - Set the enabled log types. This is a comma-separated list of log-types to
        enable. Default: ``startup, http-log, webhook-log, websocket-log``. See
        :ref:`log types <log-types>` for more details.
 
-   * - ``log-level``
+   * - ``--log-level``
      - ``HASURA_GRAPHQL_LOG_LEVEL``
      - Set the logging level. Default: ``info``. Options: ``debug``, ``info``,
        ``warn``, ``error``.
