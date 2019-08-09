@@ -1,4 +1,5 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { Apollo } from 'apollo-angular';
 import gql from 'graphql-tag'; 
 
@@ -17,13 +18,17 @@ import gql from 'graphql-tag';
     templateUrl: './TodoPublicList.template.html',  
   }) 
 
-export class TodoPublicList implements OnInit{
+export class TodoPublicList implements OnInit, OnDestroy{
           olderTodosAvailable= true;
           newTodosCount = 0;
           oldestTodoId;
           newestTodoId;
           todos= [];
           loading: boolean = true;
+
+      private oldTodosQuerySubscription: Subscription;
+      private newTodosQuerySubscription: Subscription;
+      private notifyNewTodosQuerySubscription: Subscription;
 
       constructor(private apollo: Apollo) {}
 
@@ -32,7 +37,7 @@ export class TodoPublicList implements OnInit{
       }
 
       getNotifications() {
-        this.apollo.subscribe({
+        this.notifyNewTodosQuerySubscription = this.apollo.subscribe({
           query: NOTIFY_NEW_PUBLIC_TODOS,
         }).subscribe(({ data, loading }) => {
           this.loading = loading;
@@ -68,7 +73,7 @@ export class TodoPublicList implements OnInit{
           }
         }
       `;
-      this.apollo.watchQuery({
+      this.newTodosQuerySubscription = this.apollo.watchQuery({
         query: GET_NEW_PUBLIC_TODOS,
         variables: {latestVisibleId: this.todos[0].id}
       })
@@ -98,7 +103,7 @@ export class TodoPublicList implements OnInit{
           }
         }
       }`;
-    this.apollo.watchQuery({
+    this.oldTodosQuerySubscription = this.apollo.watchQuery({
       query: GET_OLD_PUBLIC_TODOS,
       variables: {oldestTodoId: this.oldestTodoId}
     })
@@ -118,5 +123,11 @@ export class TodoPublicList implements OnInit{
       console.log('there was an error sending the query', error);
     });
       }
+
+   ngOnDestroy() {
+    this.notifyNewTodosQuerySubscription.unsubscribe();
+    this.newTodosQuerySubscription.unsubscribe();
+    this.oldTodosQuerySubscription.unsubscribe();
+   }   
     
 }

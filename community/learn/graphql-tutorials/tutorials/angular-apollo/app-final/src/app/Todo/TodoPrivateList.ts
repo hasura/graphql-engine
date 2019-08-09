@@ -1,5 +1,5 @@
-import { Component, OnInit  } from '@angular/core';
-
+import { Component, OnInit, OnDestroy  } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { Apollo } from 'apollo-angular';
 import gql from 'graphql-tag';
 
@@ -18,7 +18,7 @@ export const GET_MY_TODOS = gql`
     templateUrl: './TodoPrivateList.template.html'
   }) 
 
-export class TodoPrivateList implements OnInit {
+export class TodoPrivateList implements OnInit, OnDestroy {
     
           filter = "all";
           clearInProgress= false;
@@ -26,11 +26,12 @@ export class TodoPrivateList implements OnInit {
           filteredTodos: any;
           loading: boolean = true;
 
+          private querySubscription: Subscription;
 
           constructor(private apollo: Apollo) {}
 
           ngOnInit() {
-            this.apollo.watchQuery<any>({
+            this.querySubscription = this.apollo.watchQuery<any>({
               query: GET_MY_TODOS
             })
               .valueChanges
@@ -72,5 +73,9 @@ export class TodoPrivateList implements OnInit {
         },(error) => {
           console.log('there was an error sending the query', error);
         });
+      }
+
+      ngOnDestroy() {
+        this.querySubscription.unsubscribe();
       }
 }

@@ -1,4 +1,5 @@
-import { Component, OnInit  } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { Apollo } from 'apollo-angular';
 import gql from 'graphql-tag';
 
@@ -17,16 +18,18 @@ subscription getOnlineUsers {
     templateUrl: './OnlineUsersWrapper.template.html',  
   }) 
 
-export class OnlineUsersWrapper implements OnInit {
+export class OnlineUsersWrapper implements OnInit, OnDestroy {
     onlineUsers = []
     onlineIndicator: any;
     loading: boolean = true;
-      
-      constructor(private apollo: Apollo) {}
+
+    private querySubscription: Subscription;
+
+    constructor(private apollo: Apollo) {}
 
       ngOnInit(){
         this.onlineIndicator = setInterval(() => this.updateLastSeen(), 30000);
-        this.apollo.subscribe({
+        this.querySubscription = this.apollo.subscribe({
           query: SUBSCRIBE_TO_ONLINE_USERS,
         }).subscribe(({ data, loading }) => {
           if(data) {
@@ -59,6 +62,10 @@ export class OnlineUsersWrapper implements OnInit {
         },(error) => {
           console.log('there was an error sending the query', error);
         });
+      }
+
+      ngOnDestroy() {
+        this.querySubscription.unsubscribe();
       }
    
 }
