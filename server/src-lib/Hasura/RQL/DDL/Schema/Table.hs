@@ -192,7 +192,7 @@ processTableChanges ti tableDiff = do
 
            | oColTy /= nColTy -> do
                let colId   = SOTableObj tn $ TOCol oColName
-                   typeDepObjs = getDependentObjsWith (== "on_type") sc colId
+                   typeDepObjs = getDependentObjsWith (== DROnType) sc colId
 
                -- Raise exception if any objects found which are dependant on column type
                unless (null typeDepObjs) $ throw400 DependencyError $
@@ -206,7 +206,8 @@ processTableChanges ti tableDiff = do
                -- If any dependant permissions found with the column whose type
                -- being altered is provided with a session variable,
                -- then rebuild permission info and update the cache
-               let sessVarDepObjs = getDependentObjsWith (== "sess_var") sc colId
+               let sessVarDepObjs =
+                     getDependentObjsWith (== DRSessionVariable) sc colId
                forM_ sessVarDepObjs $ \objId ->
                  case objId of
                    SOTableObj qt (TOPerm rn pt) -> rebuildPermInfo qt rn pt

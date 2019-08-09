@@ -126,7 +126,7 @@ procSetObj ti mObj = do
     depHeaders = getDepHeadersFromVal $ Object $
       HM.fromList $ map (first getPGColTxt) $ HM.toList setObj
 
-    getDepReason = bool "sess_var" "on_type" . isStaticValue
+    getDepReason = bool DRSessionVariable DROnType . isStaticValue
 
 buildInsPermInfo
   :: (QErrM m, CacheRM m)
@@ -143,7 +143,7 @@ buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) =
          askPGType fieldInfoMap col ""
   let fltrHeaders = getDependentHeaders chk
       reqHdrs = fltrHeaders `union` setHdrs
-      insColDeps = map (mkColDep "untyped" tn) insCols
+      insColDeps = map (mkColDep DRUntyped tn) insCols
       deps = mkParentDep tn : beDeps ++ setColDeps ++ insColDeps
       insColsWithoutPresets = insCols \\ HM.keys setColsSQL
   return (InsPermInfo (HS.fromList insColsWithoutPresets) vn be setColsSQL reqHdrs, deps)
@@ -226,7 +226,7 @@ buildSelPermInfo tabInfo sp = do
   void $ withPathK "columns" $ indexedForM pgCols $ \pgCol ->
     askPGType fieldInfoMap pgCol autoInferredErr
 
-  let deps = mkParentDep tn : beDeps ++ map (mkColDep "untyped" tn) pgCols
+  let deps = mkParentDep tn : beDeps ++ map (mkColDep DRUntyped tn) pgCols
       depHeaders = getDependentHeaders $ spFilter sp
       mLimit = spLimit sp
 
@@ -296,7 +296,7 @@ buildUpdPermInfo tabInfo (UpdPerm colSpec set fltr) = do
   void $ withPathK "columns" $ indexedForM updCols $ \updCol ->
        askPGType fieldInfoMap updCol relInUpdErr
 
-  let updColDeps = map (mkColDep "untyped" tn) updCols
+  let updColDeps = map (mkColDep DRUntyped tn) updCols
       deps = mkParentDep tn : beDeps ++ updColDeps ++ setColDeps
       depHeaders = getDependentHeaders fltr
       reqHeaders = depHeaders `union` setHeaders

@@ -481,15 +481,15 @@ getColExpDeps
 getColExpDeps tn = \case
   AVCol colInfo opExps ->
     let cn = pgiName colInfo
-        colDepReason = bool "sess_var" "on_type" $ any hasStaticExp opExps
+        colDepReason = bool DRSessionVariable DROnType $ any hasStaticExp opExps
         colDep = mkColDep colDepReason tn cn
         depColsInOpExp = mapMaybe opExpDepCol opExps
-        colDepsInOpExp = map (mkColDep "on_type" tn) depColsInOpExp
+        colDepsInOpExp = map (mkColDep DROnType tn) depColsInOpExp
     in colDep:colDepsInOpExp
   AVRel relInfo relBoolExp ->
     let rn = riName relInfo
         relTN = riRTable relInfo
-        pd = SchemaDependency (SOTableObj tn (TORel rn)) "on_type"
+        pd = SchemaDependency (SOTableObj tn (TORel rn)) DROnType
     in pd : getBoolExpDeps relTN relBoolExp
 
 getBoolExpDeps :: QualifiedTable -> AnnBoolExpPartialSQL -> [SchemaDependency]
