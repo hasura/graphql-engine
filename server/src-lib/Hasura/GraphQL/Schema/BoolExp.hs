@@ -1,13 +1,14 @@
 module Hasura.GraphQL.Schema.BoolExp
   ( geoInputTypes
+  , stIntersectsNbandGeomInput
   , mkCompExpInp
 
   , mkBoolExpTy
   , mkBoolExpInp
   ) where
 
-import qualified Data.Text                     as T
 import qualified Data.HashMap.Strict           as Map
+import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Hasura.GraphQL.Schema.Common
@@ -73,16 +74,18 @@ mkCastExpressionInputType sourceType targetTypes =
 mkCompExpInp :: PGColType -> InpObjTyInfo
 mkCompExpInp colTy =
   InpObjTyInfo (Just tyDesc) (mkCompExpTy colTy) (fromInpValL $ concat
-  [ map (mk colScalarTy) typedOps
+  [ map (mk colScalarTy) eqOps
+  , bool [] (map (mk colScalarTy) compOps) (not isRasterTy)
   , map (mk $ G.toLT $ G.toNT colScalarTy) listOps
   , bool [] (map (mk $ mkScalarTy PGText) stringOps) isStringTy
-  , bool [] (map jsonbOpToInpVal jsonbOps) isJsonbTy
+  , bool [] (map opToInpVal jsonbOps) isJsonbTy
   , bool [] (stDWithinGeoOpInpVal stDWithinGeometryInpTy :
              map geoOpToInpVal (geoOps ++ geomOps)) isGeometryType
   , bool [] (stDWithinGeoOpInpVal stDWithinGeographyInpTy :
              map geoOpToInpVal geoOps) isGeographyType
   , [InpValInfo Nothing "_is_null" Nothing $ G.TypeNamed (G.Nullability True) $ G.NamedType "Boolean"]
   , maybeToList castOpInputValue
+  , bool [] (map opToInpVal rasterOps) isRasterTy
   ]) TLHasuraType
   where
     tyDesc = mconcat
@@ -97,8 +100,10 @@ mkCompExpInp colTy =
     mk t n = InpValInfo Nothing n Nothing $ G.toGT t
     colScalarTy = mkScalarTy colTy
     -- colScalarListTy = GA.GTList colGTy
-    typedOps =
-       ["_eq", "_neq", "_gt", "_lt", "_gte", "_lte"]
+    eqOps =
+       ["_eq", "_neq"]
+    compOps =
+      ["_gt", "_lt", "_gte", "_lte"]
     listOps =
       [ "_in", "_nin" ]
     -- TODO
@@ -112,7 +117,7 @@ mkCompExpInp colTy =
     isJsonbTy = case colTy of
       PGJSONB -> True
       _       -> False
-    jsonbOpToInpVal (op, ty, desc) = InpValInfo (Just desc) op Nothing ty
+    opToInpVal (op, ty, desc) = InpValInfo (Just desc) op Nothing ty
     jsonbOps =
       [ ( "_contains"
         , G.toGT $ mkScalarTy PGJSONB
@@ -145,6 +150,8 @@ mkCompExpInp colTy =
       InpValInfo (Just stDWithinGeoDesc) "_st_d_within" Nothing $ G.toGT ty
     stDWithinGeoDesc =
       "is the column within a distance from a " <> colTyDesc <> " value"
+
+    isRasterTy = isRasterType colTy
 
     -- Geometry related ops
     isGeometryType = case colTy of
@@ -193,6 +200,23 @@ mkCompExpInp colTy =
         )
       ]
 
+    -- raster related operators
+    rasterOps =
+      [
+        ( "_st_intersects_rast"
+        , G.toGT $ mkScalarTy PGRaster
+        , "boolean ST_Intersects( raster rastA , raster rastB )"
+        )
+      , ( "_st_intersects_nband_geom"
+        , G.toGT stIntersectsNbandGeomInputTy
+        , "boolean ST_Intersects(raster rast ,integer nband ,geometry geommin)"
+        )
+      , ( "_st_intersects_geom"
+        , G.toGT $ mkScalarTy PGGeometry
+        , "boolean ST_Intersects( raster rast , geometry geommin , integer nband=NULL )"
+        )
+      ]
+
 geoInputTypes :: [InpObjTyInfo]
 geoInputTypes =
   [ stDWithinGeometryInputType
@@ -218,6 +242,16 @@ geoInputTypes =
 
     castGeometryInputType = mkCastExpressionInputType PGGeometry [PGGeography]
     castGeographyInputType = mkCastExpressionInputType PGGeography [PGGeometry]
+
+stIntersectsNbandGeomInputTy :: G.NamedType
+stIntersectsNbandGeomInputTy = G.NamedType "st_intersects_nband_geom_input"
+
+stIntersectsNbandGeomInput :: InpObjTyInfo
+stIntersectsNbandGeomInput =
+  mkHsraInpTyInfo Nothing stIntersectsNbandGeomInputTy $ fromInpValL
+  [ InpValInfo Nothing "nband" Nothing $ G.toGT $ G.toNT $ mkScalarTy PGInteger
+  , InpValInfo Nothing "geommin" Nothing $ G.toGT $ G.toNT $ mkScalarTy PGGeometry
+  ]
 
 mkBoolExpName :: QualifiedTable -> G.Name
 mkBoolExpName tn =

@@ -264,6 +264,7 @@ data PGColType
   | PGJSONB
   | PGGeometry
   | PGGeography
+  | PGRaster
   | PGUnknown !T.Text
   deriving (Eq, Lift, Generic, Data)
 
@@ -289,6 +290,7 @@ instance Show PGColType where
   show PGJSONB       = "jsonb"
   show PGGeometry    = "geometry"
   show PGGeography   = "geography"
+  show PGRaster      = "raster"
   show (PGUnknown t) = T.unpack t
 
 instance ToJSON PGColType where
@@ -350,6 +352,8 @@ txtToPgColTy t = case t of
 
   "geometry"                 -> PGGeometry
   "geography"                -> PGGeography
+
+  "raster"                   -> PGRaster
   _                          -> PGUnknown t
 
 
@@ -378,6 +382,7 @@ pgTypeOid PGJSONB       = PTI.jsonb
 -- we are using the ST_GeomFromGeoJSON($i) instead of $i
 pgTypeOid PGGeometry    = PTI.text
 pgTypeOid PGGeography   = PTI.text
+pgTypeOid PGRaster      = PTI.auto
 pgTypeOid (PGUnknown _) = PTI.auto
 
 -- TODO: This is incorrect modelling as PGColType
@@ -438,3 +443,8 @@ isGeoType = \case
   PGGeometry  -> True
   PGGeography -> True
   _           -> False
+
+isRasterType :: PGColType -> Bool
+isRasterType = \case
+  PGRaster -> True
+  _        -> False

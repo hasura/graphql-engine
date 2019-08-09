@@ -9,6 +9,7 @@ module Hasura.RQL.Types.BoolExp
        , CastExp
        , OpExpG(..)
        , opExpDepCol
+       , STIntersectsNbandGeommin(..)
 
        , AnnBoolExpFld(..)
        , AnnBoolExp
@@ -121,6 +122,13 @@ data DWithinGeogOp a =
   } deriving (Show, Eq, Functor, Foldable, Traversable, Data)
 $(deriveJSON (aesonDrop 6 snakeCase) ''DWithinGeogOp)
 
+data STIntersectsNbandGeommin a =
+  STIntersectsNbandGeommin
+  { singNband   :: !a
+  , singGeommin :: !a
+  } deriving (Show, Eq, Functor, Foldable, Traversable)
+$(deriveJSON (aesonDrop 4 snakeCase) ''STIntersectsNbandGeommin)
+
 type CastExp a = M.HashMap PGColType [OpExpG a]
 
 data OpExpG a
@@ -161,6 +169,10 @@ data OpExpG a
   | ASTOverlaps !a
   | ASTTouches !a
   | ASTWithin !a
+
+  | ASTIntersectsRast !a
+  | ASTIntersectsGeom !a
+  | ASTIntersectsNbandGeom !(STIntersectsNbandGeommin a)
 
   | ANISNULL -- IS NULL
   | ANISNOTNULL -- IS NOT NULL
@@ -222,6 +234,10 @@ opExpToJPair f = \case
   ASTOverlaps a    -> ("_st_overlaps", f a)
   ASTTouches a     -> ("_st_touches", f a)
   ASTWithin a      -> ("_st_within", f a)
+
+  ASTIntersectsRast a      -> ("_st_intersects_rast", f a)
+  ASTIntersectsNbandGeom a -> ("_st_intersects_nband_geom", toJSON $ f <$> a)
+  ASTIntersectsGeom a      -> ("_st_intersects_geom", f a)
 
   ANISNULL       -> ("_is_null", toJSON True)
   ANISNOTNULL    -> ("_is_null", toJSON False)

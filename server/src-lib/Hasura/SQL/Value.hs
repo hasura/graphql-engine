@@ -43,6 +43,7 @@ data PGColValue
   | PGValJSON !Q.JSON
   | PGValJSONB !Q.JSONB
   | PGValGeo !GeometryWithCRS
+  | PGValRaster !T.Text
   | PGValUnknown !T.Text
   deriving (Show, Eq)
 
@@ -83,6 +84,7 @@ txtEncodedPGVal colVal = case colVal of
     AE.encodeToLazyText j
   PGValGeo o    -> TELit $ TL.toStrict $
     AE.encodeToLazyText o
+  PGValRaster r -> TELit r
   PGValUnknown t -> TELit t
 
 txtEncoder :: PGColValue -> S.SQLExp
@@ -126,6 +128,8 @@ binEncoder colVal = case colVal of
     Q.toPrepVal u
   PGValGeo o ->
     Q.toPrepVal $ TL.toStrict $ AE.encodeToLazyText o
+  PGValRaster r ->
+    Q.toPrepVal r
   PGValUnknown t ->
     textToPrepVal t
 
@@ -176,6 +180,8 @@ parsePGValue' PGGeometry val =
   PGValGeo <$> parseJSON val
 parsePGValue' PGGeography val =
   PGValGeo <$> parseJSON val
+parsePGValue' PGRaster val =
+  PGValRaster <$> parseJSON val
 parsePGValue' (PGUnknown _) (String t) =
   return $ PGValUnknown t
 parsePGValue' (PGUnknown tyName) _ =
@@ -211,8 +217,9 @@ pgValFromJVal = iresToEither . ifromJSON
 
 withGeoVal :: PGColType -> S.SQLExp -> S.SQLExp
 withGeoVal ty v =
-  bool v applyGeomFromGeoJson isGeoTy
+  bool tyAnnVal applyGeomFromGeoJson isGeoTy
   where
+    tyAnnVal = S.withTyAnn ty v
     applyGeomFromGeoJson =
       S.SEFnApp "ST_GeomFromGeoJSON" [v] Nothing
 
@@ -227,9 +234,7 @@ toPrepParam i ty =
 
 toTxtValue :: PGColType -> PGColValue -> S.SQLExp
 toTxtValue ty val =
-  S.withTyAnn ty txtVal
-  where
-    txtVal = withGeoVal ty $ txtEncoder val
+  withGeoVal ty $ txtEncoder val
 
 pgColValueToInt :: PGColValue -> Maybe Int
 pgColValueToInt (PGValInteger i)  = Just $ fromIntegral i

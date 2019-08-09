@@ -417,6 +417,13 @@ mkColCompExp qual lhsCol = mkCompExp (mkQCol lhsCol)
       ASTDWithinGeog (DWithinGeogOp r val sph) ->
         applySQLFn "ST_DWithin" [lhs, val, r, sph]
 
+      ASTIntersectsRast val ->
+        applySQLFn "ST_Intersects" [lhs, val]
+      ASTIntersectsNbandGeom (STIntersectsNbandGeommin nband geommin) ->
+        applySQLFn "ST_Intersects" [lhs, nband, geommin]
+      ASTIntersectsGeom val ->
+        applySQLFn "ST_Intersects" [lhs, val, S.SEUnsafe "NULL"]
+
       ANISNULL         -> S.BENull lhs
       ANISNOTNULL      -> S.BENotNull lhs
       CEQ rhsCol       -> S.BECompare S.SEQ lhs $ mkQCol rhsCol

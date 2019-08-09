@@ -69,6 +69,12 @@ parseOpExps colTy annVal = do
       "_st_within"     -> fmap ASTWithin <$> asOpRhs v
       "_st_d_within"   -> asObjectM v >>= mapM parseAsSTDWithinObj
 
+      -- raster type related operators
+      "_st_intersects_rast"    -> fmap ASTIntersectsRast <$> asOpRhs v
+      "_st_intersects_nband_geom" -> asObjectM v >>=
+                                     mapM parseAsSTIntersectsNbandGeomObj
+      "_st_intersects_geom" -> fmap ASTIntersectsGeom <$> asOpRhs v
+
       _ ->
         throw500
           $  "unexpected operator found in opexp of "
@@ -109,6 +115,15 @@ parseOpExps colTy annVal = do
         PGGeometry ->
           return $ ASTDWithinGeom $ DWithinGeomOp dist from
         _ -> throw500 "expected PGGeometry/PGGeography column for st_d_within"
+
+    parseAsSTIntersectsNbandGeomObj obj = do
+      nbandVal <- onNothing (OMap.lookup "nband" obj) $
+                  throw500 "expected \"nband\" input field"
+      nband <- UVPG <$> asPGColVal nbandVal
+      geomminVal <- onNothing (OMap.lookup "geommin" obj) $
+                    throw500 "expected \"geommin\" input field"
+      geommin <- UVPG <$> asPGColVal geomminVal
+      return $ ASTIntersectsNbandGeom $ STIntersectsNbandGeommin nband geommin
 
 parseCastExpression
   :: (MonadError QErr m)

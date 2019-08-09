@@ -35,13 +35,13 @@ import           Hasura.SQL.Types
 import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Function
+import           Hasura.GraphQL.Schema.Merge
 import           Hasura.GraphQL.Schema.Mutation.Common
 import           Hasura.GraphQL.Schema.Mutation.Delete
 import           Hasura.GraphQL.Schema.Mutation.Insert
 import           Hasura.GraphQL.Schema.Mutation.Update
 import           Hasura.GraphQL.Schema.OrderBy
 import           Hasura.GraphQL.Schema.Select
-import           Hasura.GraphQL.Schema.Merge
 
 getInsPerm :: TableInfo -> RoleName -> Maybe InsPermInfo
 getInsPerm tabInfo role
@@ -639,6 +639,7 @@ mkGCtx tyAgg (RootFlds flds) insCtxMap =
                             , TIObj <$> mutRootM
                             , TIObj <$> subRootM
                             , TIEnum <$> ordByEnumTyM
+                            , TIInpObj <$> rasterInpType
                             ] <>
                   scalarTys <> compTys <> defaultTypes <> wiredInGeoInputTypes
   -- for now subscription root is query root
@@ -667,3 +668,6 @@ mkGCtx tyAgg (RootFlds flds) insCtxMap =
     allScalarTypes = allComparableTypes <> scalars
 
     wiredInGeoInputTypes = guard anyGeoTypes *> map TIInpObj geoInputTypes
+
+    anyRasterTypes = any isRasterType colTys
+    rasterInpType = guard anyRasterTypes *> Just stIntersectsNbandGeomInput
