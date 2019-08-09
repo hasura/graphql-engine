@@ -95,7 +95,10 @@ const Login = ({ dispatch }) => {
                     styles.remove_margin_top
                   }`}
                 />
-                <label>Remember in this browser</label>
+                <label className={styles.add_mar_right_mid}>Remember in this browser</label>
+                <div style={{ marginTop: '2px' }} className={styles.cursorPointer}>
+                  <i className={'fa fa-question-circle'} data-toggle="tooltip" data-placement="bottom" title="Do not check this in production" />
+                </div>
               </div>
             </form>
           </div>
