@@ -1,0 +1,6 @@
+Open `ekg.html` in your browser, providing the port number of the local
+graphql-engine to connect to in the URL fragment, e.g. 
+
+    file://.../ekg.html#8088
+
+These are assets forked from https://github.com/tibbe/ekg at revision fe5e5a1e67

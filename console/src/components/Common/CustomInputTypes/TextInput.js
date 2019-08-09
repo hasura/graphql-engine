@@ -20,22 +20,23 @@ const EDITORTYPES = [
 ];
 
 // human readable editor names
-const EDITORTYPENAMES = [
-  'single line input',
-  'multi-line text input',
-  'markdown',
-  'html',
-];
+// const EDITORTYPENAMES = [
+//   'single line input',
+//   'multi-line text input',
+//   'markdown',
+//   'html',
+// ];
 
 // short human readable editor names
 // for the visible label
-const SHORTEDITORTYPENAMES = ['', 'multi-line', 'markdown', 'html'];
+// const SHORT_EDITOR_TYPE_NAMES = ['', 'multi-line', 'markdown', 'html'];
 
-const NORMALKEY = 0;
+const NORMAL_KEY = 0;
+const MULTILINE_KEY = 1;
 
 const createInitialState = data => {
   const initialState = {
-    editorType: NORMALKEY,
+    editorType: NORMAL_KEY,
     data: data,
   };
   return initialState;
@@ -57,7 +58,9 @@ const TextInput = props => {
   };
 
   const cycleEditorType = currentState => {
-    const nextEditorType = (currentState.editorType + 1) % EDITORTYPES.length;
+    // const nextEditorType = (currentState.editorType + 1) % EDITORTYPES.length;
+    const nextEditorType =
+      currentState.editorType === NORMAL_KEY ? MULTILINE_KEY : NORMAL_KEY;
 
     return {
       ...currentState,
@@ -133,33 +136,53 @@ const TextInput = props => {
   };
 
   const editor =
-    editorType === NORMALKEY
+    editorType === NORMAL_KEY
       ? getNormalEditor()
       : getAceEditor(EDITORTYPES[editorType]);
+
+  // const cycleIcon = (
+  //   <span
+  //     onClick={() => updateState(cycleEditorType)}
+  //     title={
+  //       'Change to ' +
+  //       EDITORTYPENAMES[(editorType + 1) % EDITORTYPES.length] +
+  //       ' (Ctrl + Space)'
+  //     }
+  //   >
+  //     <span className={styles.modeType}>
+  //       {SHORT_EDITOR_TYPE_NAMES[editorType]}
+  //     </span>
+  //     <i
+  //       key="icon_text_editor"
+  //       className={
+  //         'fa ' +
+  //         styles.modeToggleButton +
+  //         (editorType === NORMAL_KEY ? ' fa-expand' : ' fa-chevron-right')
+  //       }
+  //     />
+  //   </span>
+  // );
+
+  const cycleIcon = (
+    <i
+      key="icon_text_editor"
+      className={
+        'fa ' +
+        styles.modeToggleButton +
+        (editorType === MULTILINE_KEY ? ' fa-compress' : ' fa-expand')
+      }
+      onClick={() => updateState(cycleEditorType)}
+      title={
+        (editorType === MULTILINE_KEY ? 'Collapse' : 'Expand') +
+        ' (Ctrl + Space)'
+      }
+    />
+  );
 
   return (
     <span className="text_input_editor">
       <label>{editor}</label>
-      <span
-        onClick={() => updateState(cycleEditorType)}
-        title={
-          'Change to ' +
-          EDITORTYPENAMES[(editorType + 1) % EDITORTYPES.length] +
-          ' (Ctrl + Space)'
-        }
-      >
-        <span className={styles.modeType}>
-          {SHORTEDITORTYPENAMES[editorType]}
-        </span>
-        <i
-          key="icon_text_editor"
-          className={
-            'fa ' +
-            styles.modeToggleButton +
-            (editorType === NORMALKEY ? ' fa-expand' : ' fa-chevron-right')
-          }
-        />
-      </span>
+      {cycleIcon}
     </span>
   );
 };

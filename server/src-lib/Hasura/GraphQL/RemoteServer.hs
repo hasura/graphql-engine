@@ -106,7 +106,7 @@ mkDefaultRemoteGCtx
   :: (MonadError QErr m)
   => [GC.RemoteGCtx] -> m GS.GCtx
 mkDefaultRemoteGCtx =
-  foldlM (\combG -> mergeGCtx combG . convRemoteGCtx) GS.emptyGCtx
+  foldlM (\combG -> mergeGCtx combG . convRemoteGCtx) GC.emptyGCtx
 
 -- merge a remote schema `gCtx` into current `gCtxMap`
 mergeRemoteSchema
@@ -142,7 +142,7 @@ mergeGCtx gCtx rmMergedGCtx = do
 
 convRemoteGCtx :: GC.RemoteGCtx -> GS.GCtx
 convRemoteGCtx rmGCtx =
-  GS.emptyGCtx { GS._gTypes     = GC._rgTypes rmGCtx
+  GC.emptyGCtx { GS._gTypes     = GC._rgTypes rmGCtx
                , GS._gQueryRoot = GC._rgQueryRoot rmGCtx
                , GS._gMutRoot   = GC._rgMutationRoot rmGCtx
                , GS._gSubRoot   = GC._rgSubscriptionRoot rmGCtx

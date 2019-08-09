@@ -60,9 +60,6 @@ ci-binary:
 # cp "$(build_dir)/$(project)-test/$(project)-test" $(build_output)
 	echo "$(VERSION)" > $(build_output)/version.txt
 
-ci-test:
-	$(build_output)/graphql-engine-test --database-url=$(DATABASE_URL)
-
 # assumes this is built in circleci
 ci-image:
 	docker create -v /root/ --name dummy alpine:3.4 /bin/true

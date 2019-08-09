@@ -1,9 +1,10 @@
 ## Running tests
 
-```bash
-pip install -r requirements.txt
-pytest --hge-urls "http://127.0.0.1:8080" --pg-urls "postgresql://admin@127.0.0.1:5432/hge_tests" -vv
-```
+The easiest way to run the test suite is to do:
+
+    $ scripts/dev.sh test
+
+This should install python dependencies if required, and run in isolation.
 
 ## Tests Structure
 

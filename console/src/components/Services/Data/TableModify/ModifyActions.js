@@ -27,6 +27,7 @@ import {
 } from '../Common/ReusableComponents/utils';
 
 import { isPostgresFunction } from '../utils';
+import { sqlEscapeText } from '../../../Common/utils/sqlUtils';
 
 import {
   fetchColumnCastsQuery,
@@ -589,7 +590,7 @@ FOR EACH ${trigger.action_orientation} ${trigger.action_statement};`;
 
     if (trigger.comment) {
       downMigrationSql += `COMMENT ON TRIGGER "${triggerName}" ON "${tableSchema}"."${tableName}" 
-IS '${trigger.comment}';`;
+IS ${sqlEscapeText(trigger.comment)};`;
     }
     const migrationDown = [
       {
@@ -1020,9 +1021,7 @@ const deleteColumnSql = (column, tableSchema) => {
             '"' +
             ' ' +
             'IS ' +
-            "'" +
-            comment +
-            "'",
+            sqlEscapeText(comment),
         },
       });
     }
@@ -1300,7 +1299,7 @@ const saveTableCommentSql = isTable => {
     const commentUpQuery =
       updatedComment === ''
         ? commentQueryBase + 'NULL'
-        : commentQueryBase + "'" + updatedComment + "'";
+        : commentQueryBase + sqlEscapeText(updatedComment);
 
     const commentDownQuery = commentQueryBase + 'NULL';
     const schemaChangesUp = [
@@ -1838,9 +1837,8 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
       colName +
       '"' +
       ' IS ' +
-      "'" +
-      comment +
-      "'";
+      sqlEscapeText(comment);
+
     const columnCommentDownQuery =
       'COMMENT ON COLUMN ' +
       '"' +
@@ -1855,9 +1853,7 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
       colName +
       '"' +
       ' IS ' +
-      "'" +
-      originalColComment +
-      "'";
+      sqlEscapeText(originalColComment);
 
     // check if comment is unchanged and then do an update. if not skip
     if (originalColComment !== comment.trim()) {
