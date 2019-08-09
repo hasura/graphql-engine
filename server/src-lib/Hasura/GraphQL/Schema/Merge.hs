@@ -1,4 +1,4 @@
-module Hasura.GraphQL.Schema.Stitch
+module Hasura.GraphQL.Schema.Merge
   ( checkSchemaConflicts
   , checkConflictingNode
   ) where

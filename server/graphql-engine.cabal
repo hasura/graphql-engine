@@ -220,7 +220,7 @@ library
                      , Hasura.GraphQL.Schema.Function
                      , Hasura.GraphQL.Schema.OrderBy
                      , Hasura.GraphQL.Schema.Select
-                     , Hasura.GraphQL.Schema.Stitch
+                     , Hasura.GraphQL.Schema.Merge
                      , Hasura.GraphQL.Schema.Mutation.Common
                      , Hasura.GraphQL.Schema.Mutation.Insert
                      , Hasura.GraphQL.Schema.Mutation.Update

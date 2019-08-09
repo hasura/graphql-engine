@@ -41,7 +41,7 @@ import           Hasura.GraphQL.Schema.Mutation.Insert
 import           Hasura.GraphQL.Schema.Mutation.Update
 import           Hasura.GraphQL.Schema.OrderBy
 import           Hasura.GraphQL.Schema.Select
-import           Hasura.GraphQL.Schema.Stitch
+import           Hasura.GraphQL.Schema.Merge
 
 getInsPerm :: TableInfo -> RoleName -> Maybe InsPermInfo
 getInsPerm tabInfo role
