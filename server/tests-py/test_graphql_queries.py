@@ -50,6 +50,10 @@ class TestGraphQLQueryBasic(DefaultTestSelectQueries):
         transport = 'http'
         check_query_f(hge_ctx, self.dir() + "/nested_select_with_foreign_key_alter.yaml", transport)
 
+    def test_select_query_invalid_escape_sequence(self, hge_ctx, transport):
+        transport = 'http'
+        check_query_f(hge_ctx, self.dir() + "/select_query_invalid_escape_sequence.yaml", transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/basic'
