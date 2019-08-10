@@ -13,8 +13,6 @@ Our task will be convert the "static" UI into a working realtime app.
 
 ### Download and run the boilerplate
 
-<!-- FIXME: Add the zip URL here -->
-
 1. Download the boilerplate at: https://learn.hasura.io/graphql/vue/boilerplate.zip
 2. Unzip and make sure you're in the `app-boilerplate` directory
 3. Install dependencies and run the "static" app
