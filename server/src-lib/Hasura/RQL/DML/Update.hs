@@ -36,7 +36,7 @@ data AnnUpdG v
   -- however the session variable can still be
   -- converted as desired
   , uqp1MutFlds :: !(MutFldsG v)
-  , uqp1AllCols :: ![PGColInfo]
+  , uqp1AllCols :: ![PGColumnInfo]
   } deriving (Show, Eq)
 
 traverseAnnUpd
@@ -103,7 +103,7 @@ convDefault col _ _ = return (col, S.SEUnsafe "DEFAULT")
 
 convOp
   :: (UserInfoM m, QErrM m)
-  => FieldInfoMap PGColInfo
+  => FieldInfoMap PGColumnInfo
   -> [PGCol]
   -> UpdPermInfo
   -> [(PGCol, a)]

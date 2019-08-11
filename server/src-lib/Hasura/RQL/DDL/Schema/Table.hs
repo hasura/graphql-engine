@@ -207,7 +207,7 @@ runUntrackTableQ q = do
   unTrackExistingTableOrViewP2 q
 
 processTableChanges :: (MonadTx m, CacheRWM m)
-                    => TableInfo PGColInfo -> TableDiff -> m Bool
+                    => TableInfo PGColumnInfo -> TableDiff -> m Bool
 processTableChanges ti tableDiff = do
   -- If table rename occurs then don't replace constraints and
   -- process dropped/added columns, because schema reload happens eventually
@@ -243,7 +243,7 @@ processTableChanges ti tableDiff = do
 
     procAddedCols tn =
       -- In the newly added columns check that there is no conflict with relationships
-      forM_ addedCols $ \rawInfo@(PGRawColInfo colName _ _ _) ->
+      forM_ addedCols $ \rawInfo@(PGRawColumnInfo colName _ _ _) ->
         case M.lookup (fromPGCol colName) $ _tiFieldInfoMap ti of
           Just (FIRelationship _) ->
             throw400 AlreadyExists $ "cannot add column " <> colName
@@ -254,8 +254,8 @@ processTableChanges ti tableDiff = do
             addColToCache colName info tn
 
     procAlteredCols sc tn = fmap or $ forM alteredCols $
-      \( PGRawColInfo oldName oldType _ _
-       , newRawInfo@(PGRawColInfo newName newType _ _) ) -> do
+      \( PGRawColumnInfo oldName oldType _ _
+       , newRawInfo@(PGRawColumnInfo newName newType _ _) ) -> do
         let performColumnUpdate = do
               newInfo <- processColumnInfoUsingCache tn newRawInfo
               updColInCache newName newInfo tn
@@ -316,19 +316,19 @@ processSchemaChanges schemaDiff = do
   where
     SchemaDiff droppedTables alteredTables = schemaDiff
 
--- | Builds an initial @'TableCache' 'PGColInfo'@ from catalog information. Does not fill in
+-- | Builds an initial @'TableCache' 'PGColumnInfo'@ from catalog information. Does not fill in
 -- '_tiRolePermInfoMap' or '_tiEventTriggerInfoMap' at all, and '_tiFieldInfoMap' only contains
 -- columns, not relationships; those pieces of information are filled in by later stages.
 buildTableCache
   :: forall m. (MonadTx m, CacheRWM m)
-  => [CatalogTable] -> m (TableCache PGColInfo)
+  => [CatalogTable] -> m (TableCache PGColumnInfo)
 buildTableCache = processTableCache <=< buildRawTableCache
   where
     withTable name = withSchemaObject $
       InconsistentMetadataObj (MOTable name) MOTTable (toJSON name)
 
     -- Step 1: Build the raw table cache from metadata information.
-    buildRawTableCache :: [CatalogTable] -> m (TableCache PGRawColInfo)
+    buildRawTableCache :: [CatalogTable] -> m (TableCache PGRawColumnInfo)
     buildRawTableCache catalogTables = fmap (M.fromList . catMaybes) . for catalogTables $
       \(CatalogTable name isSystemDefined isEnum maybeInfo) -> withTable name $ do
         catalogInfo <- onNothing maybeInfo $
@@ -358,7 +358,7 @@ buildTableCache = processTableCache <=< buildRawTableCache
 
     -- Step 2: Process the raw table cache to replace Postgres column types with logical column
     -- types.
-    processTableCache :: TableCache PGRawColInfo -> m (TableCache PGColInfo)
+    processTableCache :: TableCache PGRawColumnInfo -> m (TableCache PGColumnInfo)
     processTableCache rawTables = fmap (M.mapMaybe id) . for rawTables $ \rawInfo -> do
       let tableName = _tiName rawInfo
       withTable tableName $ rawInfo
@@ -366,17 +366,17 @@ buildTableCache = processTableCache <=< buildRawTableCache
       where
         enumTables = M.mapMaybe _tiEnumValues rawTables
 
--- | “Processes” a 'PGRawColInfo' into a 'PGColInfo' by resolving its type using a map of known
+-- | “Processes” a 'PGRawColumnInfo' into a 'PGColumnInfo' by resolving its type using a map of known
 -- enum tables.
 processColumnInfo
   :: (QErrM m)
   => M.HashMap QualifiedTable EnumValues -- ^ known enum tables
   -> QualifiedTable -- ^ the table this column belongs to
-  -> PGRawColInfo -- ^ the column’s raw information
-  -> m PGColInfo
+  -> PGRawColumnInfo -- ^ the column’s raw information
+  -> m PGColumnInfo
 processColumnInfo enumTables tableName rawInfo = do
   resolvedType <- resolveColumnType
-  pure PGColInfo
+  pure PGColumnInfo
     { pgiName = prciName rawInfo
     , pgiType = resolvedType
     , pgiIsNullable = prciIsNullable rawInfo }
@@ -400,7 +400,7 @@ processColumnInfo enumTables tableName rawInfo = do
 
 -- | Like 'processColumnInfo', but uses the information in the current schema cache to resolve a
 -- column’s type.
-processColumnInfoUsingCache :: (CacheRM m, QErrM m) => QualifiedTable -> PGRawColInfo -> m PGColInfo
+processColumnInfoUsingCache :: (CacheRM m, QErrM m) => QualifiedTable -> PGRawColumnInfo -> m PGColumnInfo
 processColumnInfoUsingCache tableName rawInfo = do
   tables <- scTables <$> askSchemaCache
   processColumnInfo (M.mapMaybe _tiEnumValues tables) tableName rawInfo

@@ -8,8 +8,8 @@ module Hasura.RQL.Types.Column
   , parsePGScalarValues
   , unsafePGColumnToRepresentation
 
-  , PGColInfo(..)
-  , PGRawColInfo(..)
+  , PGColumnInfo(..)
+  , PGRawColumnInfo(..)
   , onlyIntCols
   , onlyNumCols
   , onlyJSONBCols
@@ -88,16 +88,16 @@ isScalarColumnWhere f = \case
 
 -- | Gets the representation type associated with a 'PGColumnType'. Avoid using this if possible.
 -- Prefer 'parsePGScalarValue', 'parsePGScalarValues', or
--- 'Hasura.RQL.Types.BoolExp.mkScalarSessionVar'.
+-- 'Hasura.RQL.Types.BoolExp.mkTypedSessionVar'.
 unsafePGColumnToRepresentation :: PGColumnType -> PGScalarType
 unsafePGColumnToRepresentation = \case
   PGColumnScalar scalarType -> scalarType
   PGColumnEnumReference _ -> PGText
 
-parsePGScalarValue :: (MonadError QErr m) => PGColumnType -> Value -> m (PGScalarTyped PGColValue)
+parsePGScalarValue :: (MonadError QErr m) => PGColumnType -> Value -> m (WithScalarType PGScalarValue)
 parsePGScalarValue columnType value = case columnType of
   PGColumnScalar scalarType ->
-    PGScalarTyped scalarType <$> runAesonParser (parsePGValue scalarType) value
+    WithScalarType scalarType <$> runAesonParser (parsePGValue scalarType) value
   PGColumnEnumReference (EnumReference tableName enumValues) -> do
     let typeName = snakeCaseQualObject tableName
     flip runAesonParser value . withText (T.unpack typeName) $ \textValue -> do
@@ -106,20 +106,20 @@ parsePGScalarValue columnType value = case columnType of
         fail . T.unpack
           $ "expected one of the values " <> T.intercalate ", " (map dquote enumTextValues)
           <> " for type " <> typeName <<> ", given " <>> textValue
-      pure $ PGScalarTyped PGText (PGValText textValue)
+      pure $ WithScalarType PGText (PGValText textValue)
 
 parsePGScalarValues
   :: (MonadError QErr m)
-  => PGColumnType -> [Value] -> m (PGScalarTyped [PGColValue])
+  => PGColumnType -> [Value] -> m (WithScalarType [PGScalarValue])
 parsePGScalarValues columnType values = do
   scalarValues <- indexedMapM (fmap pstValue . parsePGScalarValue columnType) values
-  pure $ PGScalarTyped (unsafePGColumnToRepresentation columnType) scalarValues
+  pure $ WithScalarType (unsafePGColumnToRepresentation columnType) scalarValues
 
 -- | “Raw” column info, as stored in the catalog (but not in the schema cache). Instead of
 -- containing a 'PGColumnType', it only contains a 'PGScalarType', which is combined with the
 -- 'pcirReferences' field and other table data to eventually resolve the type to a 'PGColumnType'.
-data PGRawColInfo
-  = PGRawColInfo
+data PGRawColumnInfo
+  = PGRawColumnInfo
   { prciName       :: !PGCol
   , prciType       :: !PGScalarType
   , prciIsNullable :: !Bool
@@ -127,30 +127,30 @@ data PGRawColInfo
   -- ^ only stores single-column references to primary key of foreign tables (used for detecting
   -- references to enum tables)
   } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 4 snakeCase) ''PGRawColInfo)
+$(deriveJSON (aesonDrop 4 snakeCase) ''PGRawColumnInfo)
 
--- | “Resolved” column info, produced from a 'PGRawColInfo' value that has been combined with other
+-- | “Resolved” column info, produced from a 'PGRawColumnInfo' value that has been combined with other
 -- schema information to produce a 'PGColumnType'.
-data PGColInfo
-  = PGColInfo
+data PGColumnInfo
+  = PGColumnInfo
   { pgiName       :: !PGCol
   , pgiType       :: !PGColumnType
   , pgiIsNullable :: !Bool
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 3 snakeCase) ''PGColInfo)
+$(deriveToJSON (aesonDrop 3 snakeCase) ''PGColumnInfo)
 
-onlyIntCols :: [PGColInfo] -> [PGColInfo]
+onlyIntCols :: [PGColumnInfo] -> [PGColumnInfo]
 onlyIntCols = filter (isScalarColumnWhere isIntegerType . pgiType)
 
-onlyNumCols :: [PGColInfo] -> [PGColInfo]
+onlyNumCols :: [PGColumnInfo] -> [PGColumnInfo]
 onlyNumCols = filter (isScalarColumnWhere isNumType . pgiType)
 
-onlyJSONBCols :: [PGColInfo] -> [PGColInfo]
+onlyJSONBCols :: [PGColumnInfo] -> [PGColumnInfo]
 onlyJSONBCols = filter (isScalarColumnWhere (== PGJSONB) . pgiType)
 
-onlyComparableCols :: [PGColInfo] -> [PGColInfo]
+onlyComparableCols :: [PGColumnInfo] -> [PGColumnInfo]
 onlyComparableCols = filter (isScalarColumnWhere isComparableType . pgiType)
 
-getColInfos :: [PGCol] -> [PGColInfo] -> [PGColInfo]
+getColInfos :: [PGCol] -> [PGColumnInfo] -> [PGColumnInfo]
 getColInfos cols allColInfos =
   flip filter allColInfos $ \ci -> pgiName ci `elem` cols

@@ -23,7 +23,7 @@ type OpRhsParser m v =
 -- | Represents a reference to a Postgres column, possibly casted an arbitrary
 -- number of times. Used within 'parseOperationsExpression' for bookkeeping.
 data ColumnReference
-  = ColumnReferenceColumn !PGColInfo
+  = ColumnReferenceColumn !PGColumnInfo
   | ColumnReferenceCast !ColumnReference !PGColumnType
   deriving (Show, Eq)
 
@@ -43,8 +43,8 @@ parseOperationsExpression
   :: forall m v
    . (MonadError QErr m)
   => OpRhsParser m v
-  -> FieldInfoMap PGColInfo
-  -> PGColInfo
+  -> FieldInfoMap PGColumnInfo
+  -> PGColumnInfo
   -> Value
   -> m [OpExpG v]
 parseOperationsExpression rhsParser fim columnInfo =
@@ -56,7 +56,7 @@ parseOperationsExpression rhsParser fim columnInfo =
       Object o -> mapM (parseOperation column) (M.toList o)
       val      -> pure . AEQ False <$> rhsParser columnType val
       where
-        columnType = PGTypeSimple $ columnReferenceType column
+        columnType = PGTypeScalar $ columnReferenceType column
 
     parseOperation :: ColumnReference -> (T.Text, Value) -> m (OpExpG v)
     parseOperation column (opStr, val) = withPathK opStr $
@@ -239,11 +239,11 @@ parseOperationsExpression rhsParser fim columnInfo =
                  "incompatible column types : " <> column <<> ", " <>> rhsCol
             else return rhsCol
 
-        parseWithTy ty = rhsParser (PGTypeSimple ty) val
+        parseWithTy ty = rhsParser (PGTypeScalar ty) val
 
         -- parse one with the column's type
         parseOne = parseWithTy colTy
-        parseOneNoSess ty = rhsParser (PGTypeSimple ty)
+        parseOneNoSess ty = rhsParser (PGTypeScalar ty)
 
         parseManyWithType ty = rhsParser (PGTypeArray ty) val
 
@@ -275,7 +275,7 @@ notEqualsBoolExpBuilder qualColExp rhsExp =
 annBoolExp
   :: (QErrM m, CacheRM m)
   => OpRhsParser m v
-  -> FieldInfoMap PGColInfo
+  -> FieldInfoMap PGColumnInfo
   -> BoolExp
   -> m (AnnBoolExp v)
 annBoolExp rhsParser fim (BoolExp boolExp) =
@@ -284,13 +284,13 @@ annBoolExp rhsParser fim (BoolExp boolExp) =
 annColExp
   :: (QErrM m, CacheRM m)
   => OpRhsParser m v
-  -> FieldInfoMap PGColInfo
+  -> FieldInfoMap PGColumnInfo
   -> ColExp
   -> m (AnnBoolExpFld v)
 annColExp rhsParser colInfoMap (ColExp fieldName colVal) = do
   colInfo <- askFieldInfo colInfoMap fieldName
   case colInfo of
-    FIColumn (PGColInfo _ (PGColumnScalar PGJSON) _) ->
+    FIColumn (PGColumnInfo _ (PGColumnScalar PGJSON) _) ->
       throwError (err400 UnexpectedPayload "JSON column can not be part of where clause")
     FIColumn pgi ->
       AVCol pgi <$> parseOperationsExpression rhsParser colInfoMap pgi colVal
@@ -313,7 +313,7 @@ convBoolRhs' tq =
 convColRhs
   :: S.Qual -> AnnBoolExpFldSQL -> State Word64 S.BoolExp
 convColRhs tableQual = \case
-  AVCol (PGColInfo cn _ _) opExps -> do
+  AVCol (PGColumnInfo cn _ _) opExps -> do
     let bExps = map (mkColCompExp tableQual cn) opExps
     return $ foldr (S.BEBin S.AndOp) (S.BELit True) bExps
 
@@ -396,7 +396,7 @@ mkColCompExp qual lhsCol = mkCompExp (mkQCol lhsCol)
 
         mkCastsExp casts =
           sqlAll . flip map (M.toList casts) $ \(targetType, operations) ->
-            let targetAnn = S.mkTypeAnn $ PGTypeSimple targetType
+            let targetAnn = S.mkTypeAnn $ PGTypeScalar targetType
             in sqlAll $ map (mkCompExp (S.SETyAnn lhs targetAnn)) operations
 
         sqlAll = foldr (S.BEBin S.AndOp) (S.BELit True)

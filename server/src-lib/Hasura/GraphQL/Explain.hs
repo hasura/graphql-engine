@@ -61,7 +61,7 @@ resolveVal userInfo = \case
   RS.UVSessVar ty sessVar -> do
     sessVarVal <- S.SELit <$> getSessVarVal userInfo sessVar
     return $ flip S.SETyAnn (S.mkTypeAnn ty) $ case ty of
-      PGTypeSimple colTy -> withGeoVal colTy sessVarVal
+      PGTypeScalar colTy -> withGeoVal colTy sessVarVal
       PGTypeArray _      -> sessVarVal
   RS.UVSQL sqlExp -> return sqlExp
 

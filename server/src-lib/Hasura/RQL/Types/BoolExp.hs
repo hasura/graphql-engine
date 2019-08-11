@@ -20,7 +20,7 @@ module Hasura.RQL.Types.BoolExp
        , AnnBoolExpFldSQL
        , AnnBoolExpSQL
        , PartialSQLExp(..)
-       , mkScalarSessionVar
+       , mkTypedSessionVar
        , isStaticValue
        , AnnBoolExpFldPartialSQL
        , AnnBoolExpPartialSQL
@@ -238,7 +238,7 @@ opExpToJPair f = \case
     opExpsToJSON = object . map (opExpToJPair f)
 
 data AnnBoolExpFld a
-  = AVCol !PGColInfo ![OpExpG a]
+  = AVCol !PGColumnInfo ![OpExpG a]
   | AVRel !RelInfo !(AnnBoolExp a)
   deriving (Show, Eq, Functor, Foldable, Traversable)
 
@@ -286,8 +286,8 @@ data PartialSQLExp
   | PSESQLExp !S.SQLExp
   deriving (Show, Eq, Data)
 
-mkScalarSessionVar :: PGType PGColumnType -> SessVar -> PartialSQLExp
-mkScalarSessionVar columnType =
+mkTypedSessionVar :: PGType PGColumnType -> SessVar -> PartialSQLExp
+mkTypedSessionVar columnType =
   PSESessVar (unsafePGColumnToRepresentation <$> columnType)
 
 instance ToJSON PartialSQLExp where

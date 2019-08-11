@@ -173,7 +173,7 @@ toMultiplexedQueryVar = \case
       -- the check has to be made before this
       (Just var, _) -> do
         modify $ Map.insert var colVal
-        return $ fromResVars (PGTypeSimple $ pstType colVal)
+        return $ fromResVars (PGTypeScalar $ pstType colVal)
           [ "variables"
           , G.unName $ G.unVariable var
           ]

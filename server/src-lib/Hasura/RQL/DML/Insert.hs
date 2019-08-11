@@ -39,7 +39,7 @@ data InsertQueryP1
   , iqp1Tuples   :: ![[S.SQLExp]]
   , iqp1Conflict :: !(Maybe ConflictClauseP1)
   , iqp1MutFlds  :: !MutFlds
-  , iqp1AllCols  :: ![PGColInfo]
+  , iqp1AllCols  :: ![PGColumnInfo]
   } deriving (Show, Eq)
 
 mkInsertCTE :: InsertQueryP1 -> S.CTE
@@ -67,7 +67,7 @@ convObj
   => (PGColumnType -> Value -> m S.SQLExp)
   -> HM.HashMap PGCol S.SQLExp
   -> HM.HashMap PGCol S.SQLExp
-  -> FieldInfoMap PGColInfo
+  -> FieldInfoMap PGColumnInfo
   -> InsObj
   -> m ([PGCol], [S.SQLExp])
 convObj prepFn defInsVals setInsVals fieldInfoMap insObj = do
@@ -99,7 +99,7 @@ validateInpCols inpCols updColsPerm = forM_ inpCols $ \inpCol ->
 buildConflictClause
   :: (UserInfoM m, QErrM m)
   => SessVarBldr m
-  -> TableInfo PGColInfo
+  -> TableInfo PGColumnInfo
   -> [PGCol]
   -> OnConflict
   -> m ConflictClauseP1

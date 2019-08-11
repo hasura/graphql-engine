@@ -35,7 +35,7 @@ import           Instances.TH.Lift                 ()
 
 validateManualConfig
   :: (QErrM m, CacheRM m)
-  => FieldInfoMap PGColInfo
+  => FieldInfoMap PGColumnInfo
   -> RelManualConfig
   -> m ()
 validateManualConfig fim rm = do
@@ -70,7 +70,7 @@ persistRel (QualifiedObject sn tn) rn relType relDef comment =
 
 checkForFldConfilct
   :: (MonadError QErr m)
-  => TableInfo PGColInfo
+  => TableInfo PGColumnInfo
   -> FieldName
   -> m ()
 checkForFldConfilct tabInfo f =

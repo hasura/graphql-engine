@@ -61,7 +61,7 @@ import qualified Network.HTTP.Client           as HTTP
 
 getFieldInfoMap
   :: QualifiedTable
-  -> SchemaCache -> Maybe (FieldInfoMap PGColInfo)
+  -> SchemaCache -> Maybe (FieldInfoMap PGColumnInfo)
 getFieldInfoMap tn =
   fmap _tiFieldInfoMap . M.lookup tn . scTables
 
@@ -86,7 +86,7 @@ class (Monad m) => UserInfoM m where
 
 askTabInfo
   :: (QErrM m, CacheRM m)
-  => QualifiedTable -> m (TableInfo PGColInfo)
+  => QualifiedTable -> m (TableInfo PGColumnInfo)
 askTabInfo tabName = do
   rawSchemaCache <- askSchemaCache
   liftMaybe (err400 NotExists errMsg) $ M.lookup tabName $ scTables rawSchemaCache
@@ -95,7 +95,7 @@ askTabInfo tabName = do
 
 askTabInfoFromTrigger
   :: (QErrM m, CacheRM m)
-  => TriggerName -> m (TableInfo PGColInfo)
+  => TriggerName -> m (TableInfo PGColumnInfo)
 askTabInfoFromTrigger trn = do
   sc <- askSchemaCache
   let tabInfos = M.elems $ scTables sc
@@ -165,7 +165,7 @@ liftP1WithQCtx r m =
 
 askFieldInfoMap
   :: (QErrM m, CacheRM m)
-  => QualifiedTable -> m (FieldInfoMap PGColInfo)
+  => QualifiedTable -> m (FieldInfoMap PGColumnInfo)
 askFieldInfoMap tabName = do
   mFieldInfoMap <- getFieldInfoMap tabName <$> askSchemaCache
   maybe (throw400 NotExists errMsg) return mFieldInfoMap
@@ -174,7 +174,7 @@ askFieldInfoMap tabName = do
 
 askPGType
   :: (MonadError QErr m)
-  => FieldInfoMap PGColInfo
+  => FieldInfoMap PGColumnInfo
   -> PGCol
   -> T.Text
   -> m PGColumnType

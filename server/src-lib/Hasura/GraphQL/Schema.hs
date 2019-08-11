@@ -45,7 +45,7 @@ import           Hasura.GraphQL.Schema.OrderBy
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Merge
 
-getInsPerm :: TableInfo PGColInfo -> RoleName -> Maybe InsPermInfo
+getInsPerm :: TableInfo PGColumnInfo -> RoleName -> Maybe InsPermInfo
 getInsPerm tabInfo role
   | role == adminRole = _permIns $ mkAdminRolePermInfo tabInfo
   | otherwise = Map.lookup role rolePermInfoMap >>= _permIns
@@ -54,7 +54,7 @@ getInsPerm tabInfo role
 
 getTabInfo
   :: MonadError QErr m
-  => TableCache PGColInfo -> QualifiedTable -> m (TableInfo PGColInfo)
+  => TableCache PGColumnInfo -> QualifiedTable -> m (TableInfo PGColumnInfo)
 getTabInfo tc t =
   onNothing (Map.lookup t tc) $
      throw500 $ "table not found: " <>> t
@@ -68,32 +68,32 @@ isValidCol = isValidName . G.Name . getPGColTxt
 isValidRel :: ToTxt a => RelName -> QualifiedObject a -> Bool
 isValidRel rn rt = isValidName (mkRelName rn) && isValidObjectName rt
 
-isValidField :: FieldInfo PGColInfo -> Bool
+isValidField :: FieldInfo PGColumnInfo -> Bool
 isValidField = \case
-  FIColumn (PGColInfo col _ _) -> isValidCol col
+  FIColumn (PGColumnInfo col _ _) -> isValidCol col
   FIRelationship (RelInfo rn _ _ remTab _) -> isValidRel rn remTab
 
 upsertable :: [ConstraintName] -> Bool -> Bool -> Bool
 upsertable uniqueOrPrimaryCons isUpsertAllowed isAView =
   not (null uniqueOrPrimaryCons) && isUpsertAllowed && not isAView
 
-toValidFieldInfos :: FieldInfoMap PGColInfo -> [FieldInfo PGColInfo]
+toValidFieldInfos :: FieldInfoMap PGColumnInfo -> [FieldInfo PGColumnInfo]
 toValidFieldInfos = filter isValidField . Map.elems
 
-validPartitionFieldInfoMap :: FieldInfoMap PGColInfo -> ([PGColInfo], [RelInfo])
+validPartitionFieldInfoMap :: FieldInfoMap PGColumnInfo -> ([PGColumnInfo], [RelInfo])
 validPartitionFieldInfoMap = partitionFieldInfos . toValidFieldInfos
 
-getValidCols :: FieldInfoMap PGColInfo -> [PGColInfo]
+getValidCols :: FieldInfoMap PGColumnInfo -> [PGColumnInfo]
 getValidCols = fst . validPartitionFieldInfoMap
 
-getValidRels :: FieldInfoMap PGColInfo -> [RelInfo]
+getValidRels :: FieldInfoMap PGColumnInfo -> [RelInfo]
 getValidRels = snd . validPartitionFieldInfoMap
 
 mkValidConstraints :: [ConstraintName] -> [ConstraintName]
 mkValidConstraints =
   filter (isValidName . G.Name . getConstraintTxt)
 
-isRelNullable :: FieldInfoMap PGColInfo -> RelInfo -> Bool
+isRelNullable :: FieldInfoMap PGColumnInfo -> RelInfo -> Bool
 isRelNullable fim ri = isNullable
   where
     lCols = map fst $ riMapping ri
@@ -114,15 +114,15 @@ isAggFld = flip elem (numAggOps <> compAggOps)
 
 mkGCtxRole'
   :: QualifiedTable
-  -> Maybe ([PGColInfo], RelationInfoMap)
+  -> Maybe ([PGColumnInfo], RelationInfoMap)
   -- ^ insert permission
   -> Maybe (Bool, [SelField])
   -- ^ select permission
-  -> Maybe [PGColInfo]
+  -> Maybe [PGColumnInfo]
   -- ^ update cols
   -> Maybe ()
   -- ^ delete cols
-  -> [PGColInfo]
+  -> [PGColumnInfo]
   -- ^ primary key columns
   -> [ConstraintName]
   -- ^ constraints
@@ -292,7 +292,7 @@ getRootFldsRole'
   :: QualifiedTable
   -> [PGCol]
   -> [ConstraintName]
-  -> FieldInfoMap PGColInfo
+  -> FieldInfoMap PGColumnInfo
   -> [FunctionInfo]
   -> Maybe ([T.Text], Bool) -- insert perm
   -> Maybe (AnnBoolExpPartialSQL, Maybe Int, [T.Text], Bool) -- select filter
@@ -379,15 +379,15 @@ getRootFldsRole' tn primCols constraints fields funcs insM selM updM delM viM =
       procFuncArgs (fiInputArgs fi) $ \_ t -> FuncArgItem $ G.Name t
 
 
-getSelPermission :: TableInfo PGColInfo -> RoleName -> Maybe SelPermInfo
+getSelPermission :: TableInfo PGColumnInfo -> RoleName -> Maybe SelPermInfo
 getSelPermission tabInfo role =
   Map.lookup role (_tiRolePermInfoMap tabInfo) >>= _permSel
 
 getSelPerm
   :: (MonadError QErr m)
-  => TableCache PGColInfo
+  => TableCache PGColumnInfo
   -- all the fields of a table
-  -> FieldInfoMap PGColInfo
+  -> FieldInfoMap PGColumnInfo
   -- role and its permission
   -> RoleName -> SelPermInfo
   -> m (Bool, [SelField])
@@ -413,8 +413,8 @@ getSelPerm tableCache fields role selPermInfo = do
 mkInsCtx
   :: MonadError QErr m
   => RoleName
-  -> TableCache PGColInfo
-  -> FieldInfoMap PGColInfo
+  -> TableCache PGColumnInfo
+  -> FieldInfoMap PGColumnInfo
   -> InsPermInfo
   -> Maybe UpdPermInfo
   -> m InsCtx
@@ -445,8 +445,8 @@ mkInsCtx role tableCache fields insPermInfo updPermM = do
 mkAdminInsCtx
   :: MonadError QErr m
   => QualifiedTable
-  -> TableCache PGColInfo
-  -> FieldInfoMap PGColInfo
+  -> TableCache PGColumnInfo
+  -> FieldInfoMap PGColumnInfo
   -> m InsCtx
 mkAdminInsCtx tn tc fields = do
   relTupsM <- forM rels $ \relInfo -> do
@@ -468,9 +468,9 @@ mkAdminInsCtx tn tc fields = do
 
 mkGCtxRole
   :: (MonadError QErr m)
-  => TableCache PGColInfo
+  => TableCache PGColumnInfo
   -> QualifiedTable
-  -> FieldInfoMap PGColInfo
+  -> FieldInfoMap PGColumnInfo
   -> [PGCol]
   -> [ConstraintName]
   -> [FunctionInfo]
@@ -505,7 +505,7 @@ getRootFldsRole
   :: QualifiedTable
   -> [PGCol]
   -> [ConstraintName]
-  -> FieldInfoMap PGColInfo
+  -> FieldInfoMap PGColumnInfo
   -> [FunctionInfo]
   -> Maybe ViewInfo
   -> RolePermInfo
@@ -529,9 +529,9 @@ getRootFldsRole tn pCols constraints fields funcs viM (RolePermInfo insM selM up
 
 mkGCtxMapTable
   :: (MonadError QErr m)
-  => TableCache PGColInfo
+  => TableCache PGColumnInfo
   -> FunctionCache
-  -> TableInfo PGColInfo
+  -> TableInfo PGColumnInfo
   -> m (Map.HashMap RoleName (TyAgg, RootFields, InsCtxMap))
 mkGCtxMapTable tableCache funcCache tabInfo = do
   m <- Map.traverseWithKey
@@ -565,7 +565,7 @@ noFilter = annBoolExpTrue
 
 mkGCtxMap
   :: (MonadError QErr m)
-  => TableCache PGColInfo -> FunctionCache -> m GCtxMap
+  => TableCache PGColumnInfo -> FunctionCache -> m GCtxMap
 mkGCtxMap tableCache functionCache = do
   typesMapL <- mapM (mkGCtxMapTable tableCache functionCache) $
                filter tableFltr $ Map.elems tableCache

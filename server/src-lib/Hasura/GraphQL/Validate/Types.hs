@@ -687,7 +687,7 @@ data AnnGEnumValue
   deriving (Show, Eq)
 
 data AnnGValue
-  = AGScalar !PGScalarType !(Maybe PGColValue)
+  = AGScalar !PGScalarType !(Maybe PGScalarValue)
   | AGEnum !G.NamedType !AnnGEnumValue
   | AGObject !G.NamedType !(Maybe AnnGObject)
   | AGArray !G.ListType !(Maybe [AnnInpVal])

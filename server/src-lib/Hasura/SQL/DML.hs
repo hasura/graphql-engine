@@ -229,19 +229,19 @@ mkTypeAnn :: PGType PGScalarType -> TypeAnn
 mkTypeAnn = TypeAnn . toSQLTxt
 
 intTypeAnn :: TypeAnn
-intTypeAnn = mkTypeAnn $ PGTypeSimple PGInteger
+intTypeAnn = mkTypeAnn $ PGTypeScalar PGInteger
 
 textTypeAnn :: TypeAnn
-textTypeAnn = mkTypeAnn $ PGTypeSimple PGText
+textTypeAnn = mkTypeAnn $ PGTypeScalar PGText
 
 textArrTypeAnn :: TypeAnn
 textArrTypeAnn = mkTypeAnn $ PGTypeArray PGText
 
 jsonTypeAnn :: TypeAnn
-jsonTypeAnn = mkTypeAnn $ PGTypeSimple PGJSON
+jsonTypeAnn = mkTypeAnn $ PGTypeScalar PGJSON
 
 jsonbTypeAnn :: TypeAnn
-jsonbTypeAnn = mkTypeAnn $ PGTypeSimple PGJSONB
+jsonbTypeAnn = mkTypeAnn $ PGTypeScalar PGJSONB
 
 data CountType
   = CTStar
@@ -287,7 +287,7 @@ data SQLExp
   deriving (Show, Eq, Data)
 
 withTyAnn :: PGScalarType -> SQLExp -> SQLExp
-withTyAnn colTy v = SETyAnn v . mkTypeAnn $ PGTypeSimple colTy
+withTyAnn colTy v = SETyAnn v . mkTypeAnn $ PGTypeScalar colTy
 
 instance J.ToJSON SQLExp where
   toJSON = J.toJSON . toSQLTxt

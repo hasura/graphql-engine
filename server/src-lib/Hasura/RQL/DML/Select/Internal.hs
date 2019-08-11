@@ -203,7 +203,7 @@ buildJsonObject pfx parAls arrRelCtx strfyNum flds =
                                ANIField (fldAls, arrSel)
         in S.mkQIdenExp arrPfx fldAls
 
-    toSQLCol :: PGColInfo -> Maybe ColOp -> S.SQLExp
+    toSQLCol :: PGColumnInfo -> Maybe ColOp -> S.SQLExp
     toSQLCol col colOpM =
       toJSONableExp strfyNum (pgiType col) $ case colOpM of
         Nothing              -> colNameExp

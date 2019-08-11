@@ -424,7 +424,7 @@ incSchemaCacheVer (SchemaCacheVer prev) =
 
 data SchemaCache
   = SchemaCache
-  { scTables            :: !(TableCache PGColInfo)
+  { scTables            :: !(TableCache PGColumnInfo)
   , scFunctions         :: !FunctionCache
   , scRemoteSchemas     :: !RemoteSchemaMap
   , scAllowlist         :: !(HS.HashSet GQLQuery)
@@ -467,13 +467,13 @@ emptySchemaCache =
   SchemaCache M.empty M.empty M.empty
               HS.empty M.empty GC.emptyGCtx mempty []
 
-modTableCache :: (CacheRWM m) => TableCache PGColInfo -> m ()
+modTableCache :: (CacheRWM m) => TableCache PGColumnInfo -> m ()
 modTableCache tc = do
   sc <- askSchemaCache
   writeSchemaCache $ sc { scTables = tc }
 
 addTableToCache :: (QErrM m, CacheRWM m)
-                => TableInfo PGColInfo -> m ()
+                => TableInfo PGColumnInfo -> m ()
 addTableToCache ti = do
   sc <- askSchemaCache
   assertTableNotExists tn sc
@@ -495,7 +495,7 @@ delTableFromCache tn = do
 getTableInfoFromCache :: (QErrM m)
                       => QualifiedTable
                       -> SchemaCache
-                      -> m (TableInfo PGColInfo)
+                      -> m (TableInfo PGColumnInfo)
 getTableInfoFromCache tn sc =
   case M.lookup tn (scTables sc) of
     Nothing -> throw500 $ "table not found in cache : " <>> tn
@@ -511,7 +511,7 @@ assertTableNotExists tn sc =
     Just _  -> throw500 $ "table exists in cache : " <>> tn
 
 modTableInCache :: (QErrM m, CacheRWM m)
-                => (TableInfo PGColInfo -> m (TableInfo PGColInfo))
+                => (TableInfo PGColumnInfo -> m (TableInfo PGColumnInfo))
                 -> QualifiedTable
                 -> m ()
 modTableInCache f tn = do
@@ -522,7 +522,7 @@ modTableInCache f tn = do
 
 addColToCache
   :: (QErrM m, CacheRWM m)
-  => PGCol -> PGColInfo
+  => PGCol -> PGColumnInfo
   -> QualifiedTable -> m ()
 addColToCache cn ci =
   addFldToCache (fromPGCol cn) (FIColumn ci)
@@ -539,7 +539,7 @@ addRelToCache rn ri deps tn = do
 
 addFldToCache
   :: (QErrM m, CacheRWM m)
-  => FieldName -> FieldInfo PGColInfo
+  => FieldName -> FieldInfo PGColumnInfo
   -> QualifiedTable -> m ()
 addFldToCache fn fi =
   modTableInCache modFieldInfoMap
@@ -578,7 +578,7 @@ delRelFromCache rn tn = do
 
 updColInCache
   :: (QErrM m, CacheRWM m)
-  => PGCol -> PGColInfo
+  => PGCol -> PGColumnInfo
   -> QualifiedTable -> m ()
 updColInCache cn ci tn = do
   delColFromCache cn tn

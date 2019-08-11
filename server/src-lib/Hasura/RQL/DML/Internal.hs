@@ -41,7 +41,7 @@ instance UserInfoM DMLP1 where
 instance HasSQLGenCtx DMLP1 where
   askSQLGenCtx = DMLP1 $ lift askSQLGenCtx
 
-mkAdminRolePermInfo :: TableInfo PGColInfo -> RolePermInfo
+mkAdminRolePermInfo :: TableInfo PGColumnInfo -> RolePermInfo
 mkAdminRolePermInfo ti =
   RolePermInfo (Just i) (Just s) (Just u) (Just d)
   where
@@ -57,7 +57,7 @@ mkAdminRolePermInfo ti =
 askPermInfo'
   :: (UserInfoM m)
   => PermAccessor c
-  -> TableInfo PGColInfo
+  -> TableInfo PGColumnInfo
   -> m (Maybe c)
 askPermInfo' pa tableInfo = do
   roleName <- askCurRole
@@ -72,7 +72,7 @@ askPermInfo' pa tableInfo = do
 askPermInfo
   :: (UserInfoM m, QErrM m)
   => PermAccessor c
-  -> TableInfo PGColInfo
+  -> TableInfo PGColumnInfo
   -> m c
 askPermInfo pa tableInfo = do
   roleName <- askCurRole
@@ -87,7 +87,7 @@ askPermInfo pa tableInfo = do
   where
     pt = permTypeToCode $ permAccToType pa
 
-isTabUpdatable :: RoleName -> TableInfo PGColInfo -> Bool
+isTabUpdatable :: RoleName -> TableInfo PGColumnInfo -> Bool
 isTabUpdatable role ti
   | role == adminRole = True
   | otherwise = isJust $ M.lookup role rpim >>= _permUpd
@@ -96,22 +96,22 @@ isTabUpdatable role ti
 
 askInsPermInfo
   :: (UserInfoM m, QErrM m)
-  => TableInfo PGColInfo -> m InsPermInfo
+  => TableInfo PGColumnInfo -> m InsPermInfo
 askInsPermInfo = askPermInfo PAInsert
 
 askSelPermInfo
   :: (UserInfoM m, QErrM m)
-  => TableInfo PGColInfo -> m SelPermInfo
+  => TableInfo PGColumnInfo -> m SelPermInfo
 askSelPermInfo = askPermInfo PASelect
 
 askUpdPermInfo
   :: (UserInfoM m, QErrM m)
-  => TableInfo PGColInfo -> m UpdPermInfo
+  => TableInfo PGColumnInfo -> m UpdPermInfo
 askUpdPermInfo = askPermInfo PAUpdate
 
 askDelPermInfo
   :: (UserInfoM m, QErrM m)
-  => TableInfo PGColInfo -> m DelPermInfo
+  => TableInfo PGColumnInfo -> m DelPermInfo
 askDelPermInfo = askPermInfo PADelete
 
 verifyAsrns :: (MonadError QErr m) => [a -> m ()] -> [a] -> m ()
@@ -152,7 +152,7 @@ binRHSBuilder colType val = do
 fetchRelTabInfo
   :: (QErrM m, CacheRM m)
   => QualifiedTable
-  -> m (TableInfo PGColInfo)
+  -> m (TableInfo PGColumnInfo)
 fetchRelTabInfo refTabName =
   -- Internal error
   modifyErrAndSet500 ("foreign " <> ) $ askTabInfo refTabName
@@ -162,7 +162,7 @@ type SessVarBldr m = PGType PGScalarType -> SessVar -> m S.SQLExp
 fetchRelDet
   :: (UserInfoM m, QErrM m, CacheRM m)
   => RelName -> QualifiedTable
-  -> m (FieldInfoMap PGColInfo, SelPermInfo)
+  -> m (FieldInfoMap PGColumnInfo, SelPermInfo)
 fetchRelDet relName refTabName = do
   roleName <- askCurRole
   -- Internal error
@@ -188,7 +188,7 @@ checkOnColExp
   -> AnnBoolExpFldSQL
   -> m AnnBoolExpFldSQL
 checkOnColExp spi sessVarBldr annFld = case annFld of
-  AVCol (PGColInfo cn _ _) _ -> do
+  AVCol (PGColumnInfo cn _ _) _ -> do
     checkSelOnCol spi cn
     return annFld
   AVRel relInfo nesAnn -> do
@@ -223,7 +223,7 @@ sessVarFromCurrentSetting' :: PGType PGScalarType -> SessVar -> S.SQLExp
 sessVarFromCurrentSetting' ty sessVar =
   flip S.SETyAnn (S.mkTypeAnn ty) $
   case ty of
-    PGTypeSimple baseTy -> withGeoVal baseTy sessVarVal
+    PGTypeScalar baseTy -> withGeoVal baseTy sessVarVal
     PGTypeArray _       -> sessVarVal
   where
     curSess = S.SEUnsafe "current_setting('hasura.user')::json"
@@ -241,7 +241,7 @@ checkSelPerm spi sessVarBldr =
 
 convBoolExp
   :: (UserInfoM m, QErrM m, CacheRM m)
-  => FieldInfoMap PGColInfo
+  => FieldInfoMap PGColumnInfo
   -> SelPermInfo
   -> BoolExp
   -> SessVarBldr m
@@ -252,13 +252,13 @@ convBoolExp cim spi be sessVarBldr prepValBldr = do
   checkSelPerm spi sessVarBldr abe
   where
     rhsParser pgType val = case pgType of
-      PGTypeSimple ty  -> prepValBldr ty val
+      PGTypeScalar ty  -> prepValBldr ty val
       PGTypeArray ofTy -> do
         -- for arrays, we don't use the prepared builder
         vals <- runAesonParser parseJSON val
-        PGScalarTyped scalarType scalarValues <- parsePGScalarValues ofTy vals
+        WithScalarType scalarType scalarValues <- parsePGScalarValues ofTy vals
         return $ S.SETyAnn
-          (S.SEArray $ map (toTxtValue . PGScalarTyped scalarType) scalarValues)
+          (S.SEArray $ map (toTxtValue . WithScalarType scalarType) scalarValues)
           (S.mkTypeAnn $ PGTypeArray scalarType)
 
 dmlTxErrorHandler :: Q.PGTxErr -> QErr

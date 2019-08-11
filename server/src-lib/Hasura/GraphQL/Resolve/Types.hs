@@ -72,7 +72,7 @@ data UpdOpCtx
   , _uocHeaders    :: ![T.Text]
   , _uocFilter     :: !AnnBoolExpPartialSQL
   , _uocPresetCols :: !PreSetColsPartial
-  , _uocAllCols    :: ![PGColInfo]
+  , _uocAllCols    :: ![PGColumnInfo]
   } deriving (Show, Eq)
 
 data DelOpCtx
@@ -80,7 +80,7 @@ data DelOpCtx
   { _docTable   :: !QualifiedTable
   , _docHeaders :: ![T.Text]
   , _docFilter  :: !AnnBoolExpPartialSQL
-  , _docAllCols :: ![PGColInfo]
+  , _docAllCols :: ![PGColumnInfo]
   } deriving (Show, Eq)
 
 data OpCtx
@@ -96,11 +96,11 @@ data OpCtx
 
 type FieldMap
   = Map.HashMap (G.NamedType, G.Name)
-    (Either PGColInfo (RelInfo, Bool, AnnBoolExpPartialSQL, Maybe Int))
+    (Either PGColumnInfo (RelInfo, Bool, AnnBoolExpPartialSQL, Maybe Int))
 
 -- order by context
 data OrdByItem
-  = OBIPGCol !PGColInfo
+  = OBIPGCol !PGColumnInfo
   | OBIRel !RelInfo !AnnBoolExpPartialSQL
   | OBIAgg !RelInfo !AnnBoolExpPartialSQL
   deriving (Show, Eq)
@@ -128,7 +128,7 @@ data UpdPermForIns
 data InsCtx
   = InsCtx
   { icView      :: !QualifiedTable
-  , icAllCols   :: ![PGColInfo]
+  , icAllCols   :: ![PGColumnInfo]
   , icSet       :: !PreSetColsPartial
   , icRelations :: !RelationInfoMap
   , icUpdPerm   :: !(Maybe UpdPermForIns)
@@ -136,18 +136,18 @@ data InsCtx
 
 type InsCtxMap = Map.HashMap QualifiedTable InsCtx
 
-type PGColArgMap = Map.HashMap G.Name PGColInfo
+type PGColArgMap = Map.HashMap G.Name PGColumnInfo
 
 data AnnPGVal
   = AnnPGVal
   { _apvVariable   :: !(Maybe G.Variable)
   , _apvIsNullable :: !Bool
   , _apvType       :: !PGColumnType
-  -- ^ Note: '_apvValue' is a @'PGScalarTyped' 'PGColValue'@, so it includes its type as a
+  -- ^ Note: '_apvValue' is a @'WithScalarType' 'PGScalarValue'@, so it includes its type as a
   -- 'PGScalarType'. However, we /also/ need to keep the original 'PGColumnType' information around
   -- in case we need to re-parse a new value with its type because we’re reusing a cached query
   -- plan.
-  , _apvValue      :: !(PGScalarTyped PGColValue)
+  , _apvValue      :: !(WithScalarType PGScalarValue)
   } deriving (Show, Eq)
 
 type PrepFn m = AnnPGVal -> m S.SQLExp

@@ -108,14 +108,14 @@ dropView vn =
 
 procSetObj
   :: (QErrM m)
-  => TableInfo PGColInfo -> Maybe ColVals
+  => TableInfo PGColumnInfo -> Maybe ColVals
   -> m (PreSetColsPartial, [Text], [SchemaDependency])
 procSetObj ti mObj = do
   (setColTups, deps) <- withPathK "set" $
     fmap unzip $ forM (HM.toList setObj) $ \(pgCol, val) -> do
       ty <- askPGType fieldInfoMap pgCol $
         "column " <> pgCol <<> " not found in table " <>> tn
-      sqlExp <- valueParser (PGTypeSimple ty) val
+      sqlExp <- valueParser (PGTypeScalar ty) val
       let dep = mkColDep (getDepReason sqlExp) tn pgCol
       return ((pgCol, sqlExp), dep)
   return (HM.fromList setColTups, depHeaders, deps)
@@ -130,7 +130,7 @@ procSetObj ti mObj = do
 
 buildInsPermInfo
   :: (QErrM m, CacheRM m)
-  => TableInfo PGColInfo
+  => TableInfo PGColumnInfo
   -> PermDef InsPerm
   -> m (WithDeps InsPermInfo)
 buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) =
@@ -213,7 +213,7 @@ $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''SelPerm)
 
 buildSelPermInfo
   :: (QErrM m, CacheRM m)
-  => TableInfo PGColInfo
+  => TableInfo PGColumnInfo
   -> SelPerm
   -> m (WithDeps SelPermInfo)
 buildSelPermInfo tabInfo sp = do
@@ -283,7 +283,7 @@ type CreateUpdPerm = CreatePerm UpdPerm
 
 buildUpdPermInfo
   :: (QErrM m, CacheRM m)
-  => TableInfo PGColInfo
+  => TableInfo PGColumnInfo
   -> UpdPerm
   -> m (WithDeps UpdPermInfo)
 buildUpdPermInfo tabInfo (UpdPerm colSpec set fltr) = do
@@ -347,7 +347,7 @@ type CreateDelPerm = CreatePerm DelPerm
 
 buildDelPermInfo
   :: (QErrM m, CacheRM m)
-  => TableInfo PGColInfo
+  => TableInfo PGColumnInfo
   -> DelPerm
   -> m (WithDeps DelPermInfo)
 buildDelPermInfo tabInfo (DelPerm fltr) = do

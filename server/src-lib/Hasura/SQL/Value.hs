@@ -25,7 +25,7 @@ import qualified Database.PostgreSQL.LibPQ  as PQ
 import qualified PostgreSQL.Binary.Encoding as PE
 
 --  Binary value. Used in prepared sq
-data PGColValue
+data PGScalarValue
   = PGValInteger !Int32
   | PGValSmallInt !Int16
   | PGValBigInt !Int64
@@ -58,7 +58,7 @@ instance ToJSON TxtEncodedPGVal where
     TENull  -> Null
     TELit t -> String t
 
-txtEncodedPGVal :: PGColValue -> TxtEncodedPGVal
+txtEncodedPGVal :: PGScalarValue -> TxtEncodedPGVal
 txtEncodedPGVal colVal = case colVal of
   PGValInteger i  -> TELit $ T.pack $ show i
   PGValSmallInt i -> TELit $ T.pack $ show i
@@ -85,12 +85,12 @@ txtEncodedPGVal colVal = case colVal of
     AE.encodeToLazyText o
   PGValUnknown t -> TELit t
 
-txtEncoder :: PGColValue -> S.SQLExp
+txtEncoder :: PGScalarValue -> S.SQLExp
 txtEncoder colVal = case txtEncodedPGVal colVal of
   TENull  -> S.SEUnsafe "NULL"
   TELit t -> S.SELit t
 
-binEncoder :: PGColValue -> Q.PrepArg
+binEncoder :: PGScalarValue -> Q.PrepArg
 binEncoder colVal = case colVal of
   PGValInteger i ->
     Q.toPrepVal i
@@ -135,7 +135,7 @@ textToPrepVal t =
 
 parsePGValue' :: PGScalarType
              -> Value
-             -> AT.Parser PGColValue
+             -> AT.Parser PGScalarValue
 parsePGValue' ty v = case (ty, v) of
   (_, Null) -> return $ PGNull ty
   (PGSmallInt, val) -> PGValSmallInt <$> parseJSON val
@@ -160,7 +160,7 @@ parsePGValue' ty v = case (ty, v) of
   (PGUnknown _, String t) -> return $ PGValUnknown t
   (PGUnknown tyName, _) -> fail $ "A string is expected for type : " ++ T.unpack tyName
 
-parsePGValue :: PGScalarType -> Value -> AT.Parser PGColValue
+parsePGValue :: PGScalarType -> Value -> AT.Parser PGScalarValue
 parsePGValue pct val =
   case val of
     String t -> parsePGValue' pct val <|> return (PGValUnknown t)
@@ -185,13 +185,13 @@ toPrepParam :: Int -> PGScalarType -> S.SQLExp
 toPrepParam i ty =
   withGeoVal ty $ S.SEPrep i
 
-toBinaryValue :: PGScalarTyped PGColValue -> Q.PrepArg
+toBinaryValue :: WithScalarType PGScalarValue -> Q.PrepArg
 toBinaryValue = binEncoder . pstValue
 
-toTxtValue :: PGScalarTyped PGColValue -> S.SQLExp
-toTxtValue (PGScalarTyped ty val) = S.withTyAnn ty . withGeoVal ty $ txtEncoder val
+toTxtValue :: WithScalarType PGScalarValue -> S.SQLExp
+toTxtValue (WithScalarType ty val) = S.withTyAnn ty . withGeoVal ty $ txtEncoder val
 
-pgColValueToInt :: PGColValue -> Maybe Int
+pgColValueToInt :: PGScalarValue -> Maybe Int
 pgColValueToInt (PGValInteger i)  = Just $ fromIntegral i
 pgColValueToInt (PGValSmallInt i) = Just $ fromIntegral i
 pgColValueToInt (PGValBigInt i)   = Just $ fromIntegral i

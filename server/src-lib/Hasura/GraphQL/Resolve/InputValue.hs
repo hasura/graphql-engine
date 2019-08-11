@@ -47,12 +47,12 @@ tyMismatch expectedTy v =
 asPGColumnTypeAndValueM
   :: (MonadError QErr m)
   => AnnInpVal
-  -> m (PGColumnType, PGScalarTyped (Maybe PGColValue))
+  -> m (PGColumnType, WithScalarType (Maybe PGScalarValue))
 asPGColumnTypeAndValueM v = case _aivValue v of
-  AGScalar colTy val -> pure (PGColumnScalar colTy, PGScalarTyped colTy val)
+  AGScalar colTy val -> pure (PGColumnScalar colTy, WithScalarType colTy val)
   AGEnum _ (AGEReference reference maybeValue) -> do
     let maybeScalarValue = PGValText . RQL.getEnumValue <$> maybeValue
-    pure (PGColumnEnumReference reference, PGScalarTyped PGText maybeScalarValue)
+    pure (PGColumnEnumReference reference, WithScalarType PGText maybeScalarValue)
   _ -> tyMismatch "pgvalue" v
 
 asPGColumnTypeAndAnnValueM :: (MonadError QErr m) => AnnInpVal -> m (PGColumnType, Maybe AnnPGVal)
@@ -139,7 +139,7 @@ parseMany fn v = case _aivValue v of
 
 onlyText
   :: (MonadError QErr m)
-  => PGColValue -> m Text
+  => PGScalarValue -> m Text
 onlyText = \case
   PGValText t -> return t
   PGValVarchar t -> return t

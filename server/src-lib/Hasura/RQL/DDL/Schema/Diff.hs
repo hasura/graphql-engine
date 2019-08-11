@@ -88,8 +88,8 @@ data TableDiff
   = TableDiff
   { _tdNewName         :: !(Maybe QualifiedTable)
   , _tdDroppedCols     :: ![PGCol]
-  , _tdAddedCols       :: ![PGRawColInfo]
-  , _tdAlteredCols     :: ![(PGRawColInfo, PGRawColInfo)]
+  , _tdAddedCols       :: ![PGRawColumnInfo]
+  , _tdAlteredCols     :: ![(PGRawColumnInfo, PGRawColumnInfo)]
   , _tdDroppedFKeyCons :: ![ConstraintName]
   -- The final list of uniq/primary constraint names
   -- used for generating types on_conflict clauses
@@ -118,7 +118,7 @@ getTableDiff oldtm newtm =
     existingCols = getOverlap pcmOrdinalPosition oldCols newCols
 
     pcmToPci (PGColMeta colName _ colType isNullable references)
-      = PGRawColInfo colName colType isNullable references
+      = PGRawColumnInfo colName colType isNullable references
 
     alteredCols =
       flip map (filter (uncurry (/=)) existingCols) $ pcmToPci *** pcmToPci
@@ -138,7 +138,7 @@ getTableDiff oldtm newtm =
 
 getTableChangeDeps
   :: (QErrM m, CacheRWM m)
-  => TableInfo PGColInfo -> TableDiff -> m [SchemaObjId]
+  => TableInfo PGColumnInfo -> TableDiff -> m [SchemaObjId]
 getTableChangeDeps ti tableDiff = do
   sc <- askSchemaCache
   -- for all the dropped columns

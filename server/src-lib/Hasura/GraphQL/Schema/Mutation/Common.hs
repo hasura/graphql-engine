@@ -14,8 +14,8 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-mkPGColInp :: PGColInfo -> InpValInfo
-mkPGColInp (PGColInfo colName colTy _) =
+mkPGColInp :: PGColumnInfo -> InpValInfo
+mkPGColInp (PGColumnInfo colName colTy _) =
   InpValInfo Nothing (G.Name $ getPGColTxt colName) Nothing $
   G.toGT $ mkColumnType colTy
 

@@ -55,7 +55,7 @@ getTriggerSql
   :: Ops
   -> TriggerName
   -> QualifiedTable
-  -> [PGColInfo]
+  -> [PGColumnInfo]
   -> Bool
   -> SubscribeOpSpec
   -> Maybe T.Text
@@ -118,7 +118,7 @@ getTriggerSql op trn qt allCols strfyNum spec =
 mkAllTriggersQ
   :: TriggerName
   -> QualifiedTable
-  -> [PGColInfo]
+  -> [PGColumnInfo]
   -> Bool
   -> TriggerOpsDef
   -> Q.TxE QErr ()
@@ -133,7 +133,7 @@ mkAllTriggersQ trn qt allCols strfyNum fullspec = do
 mkTriggerQ
   :: TriggerName
   -> QualifiedTable
-  -> [PGColInfo]
+  -> [PGColumnInfo]
   -> Bool
   -> Ops
   -> SubscribeOpSpec
@@ -151,7 +151,7 @@ delTriggerQ trn = mapM_ (\op -> Q.unitQE
 
 addEventTriggerToCatalog
   :: QualifiedTable
-  -> [PGColInfo]
+  -> [PGColumnInfo]
   -> Bool
   -> EventTriggerConf
   -> Q.TxE QErr ()
@@ -179,7 +179,7 @@ delEventTriggerFromCatalog trn = do
 
 updateEventTriggerToCatalog
   :: QualifiedTable
-  -> [PGColInfo]
+  -> [PGColumnInfo]
   -> Bool
   -> EventTriggerConf
   -> Q.TxE QErr ()

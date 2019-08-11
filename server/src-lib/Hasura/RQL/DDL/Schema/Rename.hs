@@ -73,7 +73,7 @@ renameTableInCatalog newQT oldQT = do
 
 renameColInCatalog
   :: (MonadTx m, CacheRM m)
-  => PGCol -> PGCol -> QualifiedTable -> TableInfo PGColInfo -> m ()
+  => PGCol -> PGCol -> QualifiedTable -> TableInfo PGColumnInfo -> m ()
 renameColInCatalog oCol nCol qt ti = do
   sc <- askSchemaCache
   -- Check if any relation exists with new column name

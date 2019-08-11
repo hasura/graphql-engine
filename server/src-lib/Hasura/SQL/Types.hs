@@ -425,8 +425,8 @@ geoTypes = [PGGeometry, PGGeography]
 isGeoType :: PGScalarType -> Bool
 isGeoType = (`elem` geoTypes)
 
-data PGScalarTyped a
-  = PGScalarTyped
+data WithScalarType a
+  = WithScalarType
   { pstType  :: !PGScalarType
   , pstValue :: !a
   } deriving (Show, Eq, Functor, Foldable, Traversable)
@@ -440,13 +440,13 @@ data PGScalarTyped a
 -- TODO: This is incorrect modeling, as 'PGScalarType' will capture anything (under 'PGUnknown').
 -- This should be fixed when support for all types is merged.
 data PGType a
-  = PGTypeSimple !a
+  = PGTypeScalar !a
   | PGTypeArray !a
   deriving (Show, Eq, Data, Functor)
 $(deriveJSON defaultOptions{constructorTagModifier = drop 6} ''PGType)
 
 instance (ToSQL a) => ToSQL (PGType a) where
   toSQL = \case
-    PGTypeSimple ty -> toSQL ty
+    PGTypeScalar ty -> toSQL ty
     -- typename array is an sql standard way of declaring types
     PGTypeArray ty -> toSQL ty <> " array"

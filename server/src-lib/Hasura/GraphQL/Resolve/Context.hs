@@ -52,7 +52,7 @@ import qualified Hasura.SQL.DML                as S
 getFldInfo
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
   => G.NamedType -> G.Name
-  -> m (Either PGColInfo (RelInfo, Bool, AnnBoolExpPartialSQL, Maybe Int))
+  -> m (Either PGColumnInfo (RelInfo, Bool, AnnBoolExpPartialSQL, Maybe Int))
 getFldInfo nt n = do
   fldMap <- asks getter
   onNothing (Map.lookup (nt,n) fldMap) $
@@ -61,7 +61,7 @@ getFldInfo nt n = do
 
 getPGColInfo
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
-  => G.NamedType -> G.Name -> m PGColInfo
+  => G.NamedType -> G.Name -> m PGColumnInfo
 getPGColInfo nt n = do
   fldInfo <- getFldInfo nt n
   case fldInfo of
@@ -134,8 +134,8 @@ withPrepArgs m = runStateT m Seq.empty
 
 prepareColVal
   :: (MonadState PrepArgs m)
-  => PGScalarTyped PGColValue -> m S.SQLExp
-prepareColVal (PGScalarTyped scalarType colVal) = do
+  => WithScalarType PGScalarValue -> m S.SQLExp
+prepareColVal (WithScalarType scalarType colVal) = do
   preparedArgs <- get
   put (preparedArgs Seq.|> binEncoder colVal)
   return $ toPrepParam (Seq.length preparedArgs + 1) scalarType

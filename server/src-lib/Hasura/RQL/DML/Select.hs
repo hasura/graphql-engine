@@ -30,7 +30,7 @@ import qualified Database.PG.Query              as Q
 import qualified Hasura.SQL.DML                 as S
 
 convSelCol :: (UserInfoM m, QErrM m, CacheRM m)
-           => FieldInfoMap PGColInfo
+           => FieldInfoMap PGColumnInfo
            -> SelPermInfo
            -> SelCol
            -> m [ExtCol]
@@ -50,7 +50,7 @@ convSelCol fieldInfoMap spi (SCStar wildcard) =
 
 convWildcard
   :: (UserInfoM m, QErrM m, CacheRM m)
-  => FieldInfoMap PGColInfo
+  => FieldInfoMap PGColumnInfo
   -> SelPermInfo
   -> Wildcard
   -> m [ExtCol]
@@ -78,7 +78,7 @@ convWildcard fieldInfoMap (SelPermInfo cols _ _ _ _ _) wildcard =
     relExtCols wc = mapM (mkRelCol wc) relColInfos
 
 resolveStar :: (UserInfoM m, QErrM m, CacheRM m)
-            => FieldInfoMap PGColInfo
+            => FieldInfoMap PGColumnInfo
             -> SelPermInfo
             -> SelectQ
             -> m SelectQExt
@@ -105,7 +105,7 @@ resolveStar fim spi (SelectG selCols mWh mOb mLt mOf) = do
 convOrderByElem
   :: (UserInfoM m, QErrM m, CacheRM m)
   => SessVarBldr m
-  -> (FieldInfoMap PGColInfo, SelPermInfo)
+  -> (FieldInfoMap PGColumnInfo, SelPermInfo)
   -> OrderByCol
   -> m AnnObCol
 convOrderByElem sessVarBldr (flds, spi) = \case
@@ -145,7 +145,7 @@ convOrderByElem sessVarBldr (flds, spi) = \case
 
 convSelectQ
   :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
-  => FieldInfoMap PGColInfo  -- Table information of current table
+  => FieldInfoMap PGColumnInfo  -- Table information of current table
   -> SelPermInfo   -- Additional select permission info
   -> SelectQExt     -- Given Select Query
   -> SessVarBldr m
@@ -200,10 +200,10 @@ convSelectQ fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
 
 convExtSimple
   :: (UserInfoM m, QErrM m)
-  => FieldInfoMap PGColInfo
+  => FieldInfoMap PGColumnInfo
   -> SelPermInfo
   -> PGCol
-  -> m PGColInfo
+  -> m PGColumnInfo
 convExtSimple fieldInfoMap selPermInfo pgCol = do
   checkSelOnCol selPermInfo pgCol
   askPGColInfo fieldInfoMap pgCol relWhenPGErr
@@ -212,7 +212,7 @@ convExtSimple fieldInfoMap selPermInfo pgCol = do
 
 convExtRel
   :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
-  => FieldInfoMap PGColInfo
+  => FieldInfoMap PGColumnInfo
   -> RelName
   -> Maybe RelName
   -> SelectQExt

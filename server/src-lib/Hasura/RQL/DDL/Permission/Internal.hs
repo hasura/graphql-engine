@@ -40,7 +40,7 @@ instance ToJSON PermColSpec where
   toJSON (PCCols cols) = toJSON cols
   toJSON PCStar        = "*"
 
-convColSpec :: FieldInfoMap PGColInfo -> PermColSpec -> [PGCol]
+convColSpec :: FieldInfoMap PGColumnInfo -> PermColSpec -> [PGCol]
 convColSpec _ (PCCols cols) = cols
 convColSpec cim PCStar      = map pgiName $ getCols cim
 
@@ -48,7 +48,7 @@ assertPermNotDefined
   :: (MonadError QErr m)
   => RoleName
   -> PermAccessor a
-  -> TableInfo PGColInfo
+  -> TableInfo PGColumnInfo
   -> m ()
 assertPermNotDefined roleName pa tableInfo =
   when (permissionIsDefined rpi pa || roleName == adminRole)
@@ -70,7 +70,7 @@ assertPermDefined
   :: (MonadError QErr m)
   => RoleName
   -> PermAccessor a
-  -> TableInfo PGColInfo
+  -> TableInfo PGColumnInfo
   -> m ()
 assertPermDefined roleName pa tableInfo =
   unless (permissionIsDefined rpi pa) $ throw400 PermissionDenied $ mconcat
@@ -84,7 +84,7 @@ assertPermDefined roleName pa tableInfo =
 
 askPermInfo
   :: (MonadError QErr m)
-  => TableInfo PGColInfo
+  => TableInfo PGColumnInfo
   -> RoleName
   -> PermAccessor c
   -> m c
@@ -175,7 +175,7 @@ data CreatePermP1Res a
 
 procBoolExp
   :: (QErrM m, CacheRM m)
-  => QualifiedTable -> FieldInfoMap PGColInfo -> BoolExp
+  => QualifiedTable -> FieldInfoMap PGColumnInfo -> BoolExp
   -> m (AnnBoolExpPartialSQL, [SchemaDependency])
 procBoolExp tn fieldInfoMap be = do
   abe <- annBoolExp valueParser fieldInfoMap be
@@ -209,16 +209,16 @@ valueParser
 valueParser pgType = \case
   -- When it is a special variable
   String t
-    | isUserVar t   -> return $ mkScalarSessionVar pgType t
-    | isReqUserId t -> return $ mkScalarSessionVar pgType userIdHeader
+    | isUserVar t   -> return $ mkTypedSessionVar pgType t
+    | isReqUserId t -> return $ mkTypedSessionVar pgType userIdHeader
   -- Typical value as Aeson's value
   val -> case pgType of
-    PGTypeSimple columnType -> PSESQLExp . toTxtValue <$> parsePGScalarValue columnType val
+    PGTypeScalar columnType -> PSESQLExp . toTxtValue <$> parsePGScalarValue columnType val
     PGTypeArray ofType -> do
       vals <- runAesonParser parseJSON val
-      PGScalarTyped scalarType scalarValues <- parsePGScalarValues ofType vals
+      WithScalarType scalarType scalarValues <- parsePGScalarValues ofType vals
       return . PSESQLExp $ S.SETyAnn
-        (S.SEArray $ map (toTxtValue . PGScalarTyped scalarType) scalarValues)
+        (S.SEArray $ map (toTxtValue . WithScalarType scalarType) scalarValues)
         (S.mkTypeAnn $ PGTypeArray scalarType)
 
 injectDefaults :: QualifiedTable -> QualifiedTable -> Q.Query
@@ -258,7 +258,7 @@ class (ToJSON a) => IsPerm a where
 
   buildPermInfo
     :: (QErrM m, CacheRM m)
-    => TableInfo PGColInfo
+    => TableInfo PGColumnInfo
     -> PermDef a
     -> m (WithDeps (PermInfo a))
 
@@ -282,7 +282,7 @@ class (ToJSON a) => IsPerm a where
   getPermAcc2 _ = permAccessor
 
 validateViewPerm
-  :: (IsPerm a, QErrM m) => PermDef a -> TableInfo PGColInfo -> m ()
+  :: (IsPerm a, QErrM m) => PermDef a -> TableInfo PGColumnInfo -> m ()
 validateViewPerm permDef tableInfo =
   case permAcc of
     PASelect -> return ()
@@ -296,7 +296,7 @@ validateViewPerm permDef tableInfo =
 
 addPermP1
   :: (QErrM m, CacheRM m, IsPerm a)
-  => TableInfo PGColInfo -> PermDef a -> m (WithDeps (PermInfo a))
+  => TableInfo PGColumnInfo -> PermDef a -> m (WithDeps (PermInfo a))
 addPermP1 tabInfo pd = do
   assertPermNotDefined (pdRole pd) (getPermAcc1 pd) tabInfo
   buildPermInfo tabInfo pd

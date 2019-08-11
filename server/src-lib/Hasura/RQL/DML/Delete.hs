@@ -30,7 +30,7 @@ data AnnDelG v
   { dqp1Table   :: !QualifiedTable
   , dqp1Where   :: !(AnnBoolExp v, AnnBoolExp v)
   , dqp1MutFlds :: !(MutFldsG v)
-  , dqp1AllCols :: ![PGColInfo]
+  , dqp1AllCols :: ![PGColumnInfo]
   } deriving (Show, Eq)
 
 traverseAnnDel

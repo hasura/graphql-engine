@@ -57,8 +57,8 @@ mkPGColParams colType
       [ (G.Name "path", InpValInfo (Just pathDesc) "path" Nothing $ G.toGT $ mkScalarTy PGText) ]
   | otherwise = Map.empty
 
-mkPGColFld :: PGColInfo -> ObjFldInfo
-mkPGColFld (PGColInfo colName colTy isNullable) =
+mkPGColFld :: PGColumnInfo -> ObjFldInfo
+mkPGColFld (PGColumnInfo colName colTy isNullable) =
   mkHsraObjFldInfo Nothing n (mkPGColParams colTy) ty
   where
     n  = G.Name $ getPGColTxt colName
@@ -218,7 +218,7 @@ mkTableColAggFldsObj
   :: QualifiedTable
   -> G.Name
   -> (PGColumnType -> G.NamedType)
-  -> [PGColInfo]
+  -> [PGColumnInfo]
   -> ObjTyInfo
 mkTableColAggFldsObj tn op f cols =
   mkHsraObjTyInfo (Just desc) (mkTableColAggFldsTy op tn) Set.empty $ mapFromL _fiName $
@@ -258,7 +258,7 @@ table_by_pk(
 ): table
 -}
 mkSelFldPKey
-  :: QualifiedTable -> [PGColInfo]
+  :: QualifiedTable -> [PGColumnInfo]
   -> ObjFldInfo
 mkSelFldPKey tn cols =
   mkHsraObjFldInfo (Just desc) fldName args ty
@@ -268,7 +268,7 @@ mkSelFldPKey tn cols =
     fldName = mkTableByPkName tn
     args = fromInpValL $ map colInpVal cols
     ty = G.toGT $ mkTableTy tn
-    colInpVal (PGColInfo n typ _) =
+    colInpVal (PGColumnInfo n typ _) =
       InpValInfo Nothing (mkColName n) Nothing $ G.toGT $ G.toNT $ mkColumnType typ
 
 {-

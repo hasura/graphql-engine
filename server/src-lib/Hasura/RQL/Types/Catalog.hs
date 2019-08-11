@@ -35,7 +35,7 @@ import           Hasura.SQL.Types
 
 data CatalogTableInfo
   = CatalogTableInfo
-  { _ctiColumns           :: ![PGRawColInfo]
+  { _ctiColumns           :: ![PGRawColumnInfo]
   , _ctiConstraints       :: ![ConstraintName]
   , _ctiPrimaryKeyColumns :: ![PGCol]
   , _ctiViewInfo          :: !(Maybe ViewInfo)

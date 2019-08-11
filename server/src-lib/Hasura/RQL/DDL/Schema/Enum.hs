@@ -35,18 +35,18 @@ import qualified Hasura.SQL.DML                as S
 data EnumTableIntegrityError
   = EnumTableMissingPrimaryKey
   | EnumTableMultiColumnPrimaryKey ![PGCol]
-  | EnumTableNonTextualPrimaryKey !PGRawColInfo
+  | EnumTableNonTextualPrimaryKey !PGRawColumnInfo
   | EnumTableNoEnumValues
   | EnumTableInvalidEnumValueNames !(NE.NonEmpty T.Text)
-  | EnumTableNonTextualCommentColumn !PGRawColInfo
+  | EnumTableNonTextualCommentColumn !PGRawColumnInfo
   | EnumTableTooManyColumns ![PGCol]
   deriving (Show, Eq)
 
 fetchAndValidateEnumValues
   :: (MonadTx m)
   => QualifiedTable
-  -> [PGRawColInfo]
-  -> [PGRawColInfo]
+  -> [PGRawColumnInfo]
+  -> [PGRawColumnInfo]
   -> m EnumValues
 fetchAndValidateEnumValues tableName primaryKeyColumns columnInfos =
   either (throw400 ConstraintViolation . showErrors) pure =<< runValidateT fetchAndValidate

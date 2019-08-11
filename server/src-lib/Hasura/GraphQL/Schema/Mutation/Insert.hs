@@ -105,7 +105,7 @@ input table_insert_input {
 -}
 
 mkInsInp
-  :: QualifiedTable -> [PGColInfo] -> RelationInfoMap -> InpObjTyInfo
+  :: QualifiedTable -> [PGColumnInfo] -> RelationInfoMap -> InpObjTyInfo
 mkInsInp tn insCols relInfoMap =
   mkHsraInpTyInfo (Just desc) (mkInsInpTy tn) $ fromInpValL $
   map mkPGColInp insCols <> relInps

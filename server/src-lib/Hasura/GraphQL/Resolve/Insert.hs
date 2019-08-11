@@ -47,7 +47,7 @@ data AnnIns a
   { _aiInsObj         :: !a
   , _aiConflictClause :: !(Maybe RI.ConflictClauseP1)
   , _aiView           :: !QualifiedTable
-  , _aiTableCols      :: ![PGColInfo]
+  , _aiTableCols      :: ![PGColumnInfo]
   , _aiDefVals        :: !(Map.HashMap PGCol S.SQLExp)
   } deriving (Show, Eq, Functor, Foldable, Traversable)
 
@@ -69,7 +69,7 @@ data RelIns a
 type ObjRelIns = RelIns SingleObjIns
 type ArrRelIns = RelIns MultiObjIns
 
-type PGColWithValue = (PGCol, PGScalarTyped PGColValue)
+type PGColWithValue = (PGCol, WithScalarType PGScalarValue)
 
 data CTEExp
   = CTEExp
@@ -107,10 +107,10 @@ traverseInsObj rim (gName, annVal) defVal@(AnnInsObj cols objRels arrRels) =
     _          -> parseObject
   where
     parseValue = do
-      (_, PGScalarTyped scalarType maybeScalarValue) <- asPGColumnTypeAndValueM annVal
+      (_, WithScalarType scalarType maybeScalarValue) <- asPGColumnTypeAndValueM annVal
       let columnName = PGCol $ G.unName gName
           scalarValue = fromMaybe (PGNull scalarType) maybeScalarValue
-      pure $ AnnInsObj ((columnName, PGScalarTyped scalarType scalarValue):cols) objRels arrRels
+      pure $ AnnInsObj ((columnName, WithScalarType scalarType scalarValue):cols) objRels arrRels
 
     parseObject = do
       objM <- asObjectM annVal
@@ -232,9 +232,9 @@ asSingleObject = \case
 fetchFromColVals
   :: MonadError QErr m
   => ColVals
-  -> [PGColInfo]
-  -> (PGColInfo -> a)
-  -> m [(a, PGScalarTyped PGColValue)]
+  -> [PGColumnInfo]
+  -> (PGColumnInfo -> a)
+  -> m [(a, WithScalarType PGScalarValue)]
 fetchFromColVals colVal reqCols f =
   forM reqCols $ \ci -> do
     let valM = Map.lookup (pgiName ci) colVal
@@ -246,7 +246,7 @@ fetchFromColVals colVal reqCols f =
 mkSelCTE
   :: MonadError QErr m
   => QualifiedTable
-  -> [PGColInfo]
+  -> [PGColumnInfo]
   -> Maybe ColVals
   -> m CTEExp
 mkSelCTE tn allCols colValM = do
