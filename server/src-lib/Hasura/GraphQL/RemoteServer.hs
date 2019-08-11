@@ -118,7 +118,9 @@ mergeRoleRemoteSchemas
 mergeRoleRemoteSchemas gCtxMap rmSchemaWithRoles = do
   res <- forM (Map.toList rmSchemaWithRoles) $ \((role, _rsName), rsCtx) -> do
     case Map.lookup role gCtxMap of
-      Nothing -> pure (role, (convRemoteGCtx $ rscGCtx rsCtx))
+      Nothing -> do
+        updatedGCtx <- mergeGCtx GS.emptyGCtx (convRemoteGCtx $ rscGCtx rsCtx)
+        pure (role, updatedGCtx)
       Just gCtx -> do
         updatedGCtx <- mergeGCtx gCtx (convRemoteGCtx $ rscGCtx rsCtx)
         pure (role, updatedGCtx)
