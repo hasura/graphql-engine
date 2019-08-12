@@ -1,8 +1,14 @@
 ---
 title: "Detect new todos - integration"
+metaTitle: "Fetch public todos using Subscription | GraphQL React Native Apollo Tutorial"
+metaDescription: "You will learn how to make use of GraphQL Subscriptions to get notified whenever a new todo comes in React app. We use withApollo HOC"
 ---
 
 import GithubLink from "../../src/GithubLink.js";
+
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/NPF19xKjfqI" />
 
 Go to `src/screens/components/Todos`.
 

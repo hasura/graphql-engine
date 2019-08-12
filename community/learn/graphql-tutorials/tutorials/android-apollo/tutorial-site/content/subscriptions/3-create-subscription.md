@@ -1,5 +1,7 @@
 ---
-title: 'Create Subscription and Render Result'
+title: "Create Subscription and Render Result"
+metaTitle: "Apollo Subscription in Android | GraphQL Android Apollo Tutorial"
+metaDescription: "Integrate Android Apollo Subscription to watch for changes in realtime data. We use GraphQL subscriptions as an example to get live data in the Android app"
 ---
 
 import GithubLink from '../../src/GithubLink.js'

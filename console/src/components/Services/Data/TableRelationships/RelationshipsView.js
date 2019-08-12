@@ -2,14 +2,12 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import ViewHeader from '../TableBrowseRows/ViewHeader';
 import { RESET } from '../TableModify/ModifyActions';
-import { addNewRelClicked } from './Actions';
 import { findAllFromRel } from '../utils';
 import { getObjArrRelList } from './utils';
 import { setTable, UPDATE_REMOTE_SCHEMA_MANUAL_REL } from '../DataActions';
-
-import Button from '../../../Common/Button/Button';
 import AddManualRelationship from './AddManualRelationship';
 import RelationshipEditor from './RelationshipEditor';
+import { NotFoundError } from '../../../Error/PageNotFound';
 
 class RelationshipsView extends Component {
   componentDidMount() {
@@ -32,7 +30,7 @@ class RelationshipsView extends Component {
       lastFormError,
       lastSuccess,
       dispatch,
-      relAdd,
+      manualRelAdd,
       currentSchema,
       migrationMode,
       schemaList,
@@ -43,6 +41,12 @@ class RelationshipsView extends Component {
     const tableSchema = allSchemas.find(
       t => t.table_name === tableName && t.table_schema === currentSchema
     );
+
+    if (!tableSchema) {
+      // throw a 404 exception
+      throw new NotFoundError();
+    }
+
     let alert = null;
     if (ongoingRequest) {
       alert = (
@@ -129,7 +133,6 @@ class RelationshipsView extends Component {
       );
     }
 
-    // if (tableSchema.primary_key.columns > 0) {}
     return (
       <div className={`${styles.container} container-fluid`}>
         <ViewHeader
@@ -145,37 +148,13 @@ class RelationshipsView extends Component {
             <h4 className={styles.subheading_text}>Relationships</h4>
             {addedRelationshipsView}
             <br />
-            {relAdd.isActive ? (
-              <div className={styles.activeEdit}>
-                <AddManualRelationship
-                  tableName={tableName}
-                  isObjRel={relAdd.isObjRel}
-                  rTable={relAdd.rTable}
-                  dispatch={dispatch}
-                  lcol={relAdd.lcol}
-                  rcol={relAdd.rcol}
-                  allSchemas={allSchemas}
-                  schemaList={schemaList}
-                  manualColumns={relAdd.manualColumns}
-                  manualRelInfo={relAdd.manualRelInfo}
-                  titleInfo={'Add new relationship'}
-                  currentSchema={currentSchema}
-                  showClose={false}
-                  dataTestVal={'view-add-relationship'}
-                />
-              </div>
-            ) : (
-              <Button
-                type="submit"
-                color="white"
-                size="sm"
-                onClick={() => {
-                  dispatch(addNewRelClicked());
-                }}
-              >
-                + Add relationship
-              </Button>
-            )}
+            <AddManualRelationship
+              tableSchema={tableSchema}
+              allSchemas={allSchemas}
+              schemaList={schemaList}
+              relAdd={manualRelAdd}
+              dispatch={dispatch}
+            />
             <hr />
           </div>
         </div>
@@ -190,8 +169,7 @@ RelationshipsView.propTypes = {
   allSchemas: PropTypes.array.isRequired,
   currentSchema: PropTypes.string.isRequired,
   activeEdit: PropTypes.object.isRequired,
-  fkAdd: PropTypes.object.isRequired,
-  relAdd: PropTypes.object.isRequired,
+  manualRelAdd: PropTypes.object.isRequired,
   ongoingRequest: PropTypes.bool.isRequired,
   lastError: PropTypes.object,
   lastFormError: PropTypes.object,

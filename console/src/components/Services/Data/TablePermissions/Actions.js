@@ -130,10 +130,10 @@ const getBasePermissionsState = (tableSchema, role, query) => {
       _permissions[q] = rolePermissions.permissions[q];
       // If the query is insert, transform set object if exists to an array
       if (q === 'insert' || q === 'update') {
-        // If set is an object
         if (!_permissions[q].columns) {
-          _permissions[q].columns = tableSchema.columns.map(c => c.column_name);
+          _permissions[q].columns = [];
         }
+
         if ('set' in _permissions[q]) {
           if (
             Object.keys(_permissions[q].set).length > 0 &&

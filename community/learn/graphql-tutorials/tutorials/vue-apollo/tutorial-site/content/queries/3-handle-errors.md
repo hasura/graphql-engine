@@ -1,5 +1,7 @@
 ---
 title: "Handle loading/errors"
+metaTitle: "Vue Apollo Error Handling | GraphQL Vue Apollo Tutorial"
+metaDescription: "We will handle the GraphQL loading and error states using the Vue Apollo properties and hooks - loading and error "
 ---
 
 import YoutubeEmbed from "../../src/YoutubeEmbed.js";
@@ -9,6 +11,7 @@ import YoutubeEmbed from "../../src/YoutubeEmbed.js";
 As we saw in the previous step, Apollo gives access to properties and hooks to handle `loading` and `error` states. These are common ones that you will need to handle in your app.
 
 Now let's go back to the template that exists and add a loading state.
+In `src/components/TodoPrivateList.vue`, let's make the following modifications.
 
 ```javascript
 <template>
@@ -95,4 +98,4 @@ So once an error occurs, we store the `error.message` value in our `error` data 
 
 Of course this is just a basic implementation of error handling. Now depending upon the error codes the server returns, you can show different messages to the user.
 
-All said and done, these are two important states that needs to be handled inside your component. What you have written above is basic, but sufficient for this tutorial.
+All said and done, these are two important states that need to be handled inside your component. What you have written above is basic, but sufficient for this tutorial.

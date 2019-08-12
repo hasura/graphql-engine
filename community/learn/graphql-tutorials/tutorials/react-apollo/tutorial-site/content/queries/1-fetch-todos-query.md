@@ -1,5 +1,7 @@
 ---
 title: "Fetch todos - query"
+metaTitle: "Query to fetch todo | GraphQL React Apollo Tutorial"
+metaDescription: "GraphQL Query to fetch personal todos. Try the query in GraphiQL, passing the Authorization token to get authenticated results"
 ---
 
 import YoutubeEmbed from "../../src/YoutubeEmbed.js";

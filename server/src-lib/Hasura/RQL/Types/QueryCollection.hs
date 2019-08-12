@@ -2,6 +2,7 @@ module Hasura.RQL.Types.QueryCollection where
 
 import           Hasura.GraphQL.Validate.Types    (stripTypenames)
 import           Hasura.Prelude
+import           Hasura.RQL.Types.Common          (NonEmptyText)
 import           Hasura.SQL.Types
 
 import           Data.Aeson
@@ -15,13 +16,13 @@ import qualified Database.PG.Query                as Q
 import qualified Language.GraphQL.Draft.Syntax    as G
 
 newtype CollectionName
-  = CollectionName {unCollectionName :: T.Text}
+  = CollectionName {unCollectionName :: NonEmptyText}
   deriving ( Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift
            , FromJSON, Q.FromCol, Q.ToPrepArg, DQuote
            )
 
 newtype QueryName
-  = QueryName {unQueryName :: T.Text}
+  = QueryName {unQueryName :: NonEmptyText}
   deriving (Show, Eq, Ord, Hashable, Lift, ToJSON, ToJSONKey, FromJSON, DQuote)
 
 newtype GQLQuery

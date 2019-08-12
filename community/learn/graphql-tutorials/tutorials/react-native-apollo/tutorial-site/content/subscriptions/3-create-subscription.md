@@ -1,8 +1,14 @@
 ---
 title: "Create Subscription and Render Result"
+metaTitle: "Apollo Subscription Component | GraphQL React Native Apollo Tutorial"
+metaDescription: "Integrate React Apollo Subscription Component to watch for changes in realtime data. We use GraphQL subscriptions as an example to get live data in the React Native app"
 ---
 
 import GithubLink from "../../src/GithubLink.js";
+
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/vg6BLT11RAs" />
 
 So let's define the graphql subscription to be used.
 

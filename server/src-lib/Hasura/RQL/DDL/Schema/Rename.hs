@@ -36,14 +36,9 @@ data RenameField
 type RenameTable = (QualifiedTable, QualifiedTable)
 
 otherDeps :: QErrM m => Text -> SchemaObjId -> m ()
-otherDeps errMsg = \case
-  SOQTemplate name ->
-    throw400 NotSupported $
-      "found dependant query template " <> name <<> "; " <> errMsg
-  d                ->
-      throw500 $ "unexpected dependancy "
-        <> reportSchemaObj d <> "; " <> errMsg
-
+otherDeps errMsg d =
+  throw500 $ "unexpected dependancy "
+    <> reportSchemaObj d <> "; " <> errMsg
 
 renameTableInCatalog
   :: (MonadTx m, CacheRM m)

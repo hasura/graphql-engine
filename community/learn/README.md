@@ -17,7 +17,7 @@ There are three different series:
 
 - [React Native](https://learn.hasura.io/graphql/react-native)
 - [iOS](https://learn.hasura.io/graphql/ios)
-- Android (coming soon)
+- [Android](https://learn.hasura.io/graphql/android)
 - Flutter (coming soon)
 
 #### Backend

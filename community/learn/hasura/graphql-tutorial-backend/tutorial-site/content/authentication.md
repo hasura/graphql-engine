@@ -1,5 +1,7 @@
 ---
 title: "Authentication"
+metaTitle: "Authentication with Hasura | Hasura GraphQL Tutorial"
+metaDescription: "This part of the tutorial covers how to do Authentication in Hasura GraphQL Engine by integrating with an Authentication provider like Auth0"
 ---
 
 In this part, we will look at how to integrate an Authentication provider.

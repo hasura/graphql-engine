@@ -1,5 +1,7 @@
 ---
-title: 'Mutation and update cache'
+title: "Mutation and update cache"
+metaTitle: "apolloClient.mutate for GraphQL mutation update | GraphQL Android Apollo Tutorial"
+metaDescription: "We will use the Apollo client.mutate from android apollo as an example to modify existing data and update cache locally using read and write methods of apolloStore and handle optimisticResponse"
 ---
 
 import GithubLink from '../../src/GithubLink.js'

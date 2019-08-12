@@ -1,0 +1,18 @@
+    <div class="todoListWrapper" *ngIf="!loading">
+        <div *ngIf="newTodosCount" class="loadMoreSection" (click)="loadNew()">
+            New tasks have arrived! ({{newTodosCount}})
+          </div>
+
+          <ul>
+            <ng-container *ngFor="let todo of todos; let i = index" [attr.data-index]="i">
+                <TaskItem
+                    [todo]="todo"
+                ></TaskItem>
+            </ng-container>
+          </ul>
+
+      <div class="loadMoreSection" (click)="loadOlder()">
+        {{olderTodosAvailable ? 'Load older tasks' : 'No more public tasks!'}}
+      </div>
+    </div>
+    <div *ngIf="loading">Loading...</div>

@@ -1,10 +1,18 @@
 ---
 title: "Subscription"
+metaTitle: "Set up GraphQL Subscriptions using Apollo Client | GraphQL React Native Apollo Tutorial"
+metaDescription: "You will learn how to configure GraphQL Subscriptions using React Native Apollo Client by installing dependencies like apollo-link-ws, subscriptions-transport-ws. This will also have authorization token setup"
 ---
 
 import GithubLink from "../../src/GithubLink.js";
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/O7Wv2RCQvcc" />
+
 When we had initially set up Apollo, we used Apollo Boost to install the required dependencies. But subscriptions is an advanced use case which Apollo Boost does not support. So we have to install more dependencies to set up subscriptions.
+
+### React Native Apollo Subscriptions Setup
 
 ```bash
 + $ npm install apollo-link-ws subscriptions-transport-ws --save

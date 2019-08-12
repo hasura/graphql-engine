@@ -1,5 +1,7 @@
 ---
 title: "Basic Data Modelling"
+metaTitle: "Basic Data Modelling with Hasura | Hasura GraphQL Tutorial"
+metaDescription: "This tutorial covers how to do basic data modelling in Postgres and create tables using Hasura console"
 ---
 
 import YoutubeEmbed from "../src/YoutubeEmbed.js";
@@ -11,7 +13,7 @@ In this part of the course, we will build the data model for a realtime todo app
 - Users can maintain personal todos
 - Users can view public todos
 - A list of current online users using the app
-- Send email when a user signups
+- Send email when a user signs up
 
 Broadly this means that we have two models in this app: `users` and `todos`, each with its own set of properties.
 

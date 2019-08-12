@@ -1,5 +1,7 @@
 ---
 title: "GraphQL Query to load older todos"
+metaTitle: "GraphQL Query to load older todos | GraphQL React Native Apollo Tutorial"
+metaDescription: "You will learn the GraphQL query to be made to load older todos with parameters and arguments."
 ---
 
 import GithubLink from "../../src/GithubLink.js";
@@ -9,12 +11,12 @@ Firstly, we need to modify our first `FETCH_TODOS` query such that it fetches on
 <GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-native-apollo/app-final/src/screens/components/Todo/Todos.js" text="Todos.js" />
 
 ```graphql
- query ($is_public: Boolean) {
+ query ($isPublic: Boolean) {
    todos (
      order_by: {
        created_at: desc
      },
-     where: { is_public: { _eq: $is_public} },
+     where: { is_public: { _eq: $isPublic} },
 +    limit: 10
    ) {
      id

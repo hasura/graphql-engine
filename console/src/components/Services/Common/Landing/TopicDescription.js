@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 class TopicDescription extends React.Component {
   render() {
     const Rectangle = require('./images/Rectangle.svg');
-    const styles = require('../../CustomResolver/CustomResolver.scss');
+    const styles = require('../../RemoteSchema/RemoteSchema.scss');
     const { title, imgUrl, imgAlt, description } = this.props;
     return (
       <div>

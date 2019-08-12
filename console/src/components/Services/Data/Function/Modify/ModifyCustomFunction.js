@@ -23,12 +23,16 @@ import {
 } from '../customFunctionReducer';
 
 import { SET_SQL } from '../../RawSQL/Actions';
+import { NotFoundError } from '../../../../Error/PageNotFound';
 
 class ModifyCustomFunction extends React.Component {
   constructor() {
     super();
-    this.state = {};
-    this.state.deleteConfirmationError = null;
+
+    this.state = {
+      deleteConfirmationError: null,
+      funcFetchCompleted: false,
+    };
   }
 
   componentDidMount() {
@@ -37,7 +41,11 @@ class ModifyCustomFunction extends React.Component {
       this.props.dispatch(push(prefixUrl));
     }
     Promise.all([
-      this.props.dispatch(fetchCustomFunction(functionName, schema)),
+      this.props
+        .dispatch(fetchCustomFunction(functionName, schema))
+        .then(() => {
+          this.setState({ funcFetchCompleted: true });
+        }),
     ]);
   }
 
@@ -48,12 +56,16 @@ class ModifyCustomFunction extends React.Component {
       schema !== nextProps.params.schema
     ) {
       Promise.all([
-        this.props.dispatch(
-          fetchCustomFunction(
-            nextProps.params.functionName,
-            nextProps.params.schema
+        this.props
+          .dispatch(
+            fetchCustomFunction(
+              nextProps.params.functionName,
+              nextProps.params.schema
+            )
           )
-        ),
+          .then(() => {
+            this.setState({ funcFetchCompleted: true });
+          }),
       ]);
     }
   }
@@ -107,6 +119,11 @@ class ModifyCustomFunction extends React.Component {
       isUntracking,
       isFetching,
     } = this.props.functions;
+
+    if (this.state.funcFetchCompleted && !functionName) {
+      // throw a 404 exception
+      throw new NotFoundError();
+    }
 
     const { migrationMode } = this.props;
 
@@ -182,6 +199,7 @@ class ModifyCustomFunction extends React.Component {
         url: '',
       });
     }
+
     return (
       <div className={'col-xs-8' + ' ' + styles.modifyWrapper}>
         <Helmet
@@ -205,6 +223,7 @@ class ModifyCustomFunction extends React.Component {
           <TextAreaWithCopy
             copyText={functionDefinition}
             textLanguage={'sql'}
+            id={'copyCustomFunctionSQL'}
           />
         </div>
         {migrationMode

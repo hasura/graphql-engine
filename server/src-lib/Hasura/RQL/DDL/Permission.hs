@@ -82,9 +82,9 @@ type InsPermDef = PermDef InsPerm
 type CreateInsPerm = CreatePerm InsPerm
 
 buildViewName :: QualifiedTable -> RoleName -> PermType -> QualifiedTable
-buildViewName (QualifiedObject sn tn) (RoleName rTxt) pt =
+buildViewName (QualifiedObject sn tn) rn pt =
   QualifiedObject hdbViewsSchema $ TableName
-  (rTxt <> "__" <> T.pack (show pt) <> "__" <> snTxt <> "__" <> tnTxt)
+  (roleNameToTxt rn <> "__" <> T.pack (show pt) <> "__" <> snTxt <> "__" <> tnTxt)
   where
     snTxt = getSchemaTxt sn
     tnTxt = getTableTxt tn
@@ -112,7 +112,7 @@ procSetObj ti mObj = do
     fmap HM.fromList $ forM (HM.toList setObj) $ \(pgCol, val) -> do
       ty <- askPGType fieldInfoMap pgCol $
         "column " <> pgCol <<> " not found in table " <>> tn
-      sqlExp <- valueParser ty val
+      sqlExp <- valueParser (PgTypeSimple ty) val
       return (pgCol, sqlExp)
   let deps = map (mkColDep "on_type" tn . fst) $ HM.toList setColsSQL
   return (setColsSQL, depHeaders, deps)
@@ -133,10 +133,13 @@ buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) =
   (be, beDeps) <- withPathK "check" $
     -- procBoolExp tn fieldInfoMap (S.QualVar "NEW") chk
     procBoolExp tn fieldInfoMap chk
-  let fltrHeaders = getDependentHeaders chk
   (setColsSQL, setHdrs, setColDeps) <- procSetObj tabInfo set
-  let reqHdrs = fltrHeaders `union` setHdrs
-      deps = mkParentDep tn : beDeps ++ setColDeps
+  void $ withPathK "columns" $ indexedForM insCols $ \col ->
+         askPGType fieldInfoMap col ""
+  let fltrHeaders = getDependentHeaders chk
+      reqHdrs = fltrHeaders `union` setHdrs
+      insColDeps = map (mkColDep "untyped" tn) insCols
+      deps = mkParentDep tn : beDeps ++ setColDeps ++ insColDeps
       insColsWithoutPresets = insCols \\ HM.keys setColsSQL
   return (InsPermInfo (HS.fromList insColsWithoutPresets) vn be setColsSQL reqHdrs, deps)
   where
@@ -285,7 +288,7 @@ buildUpdPermInfo tabInfo (UpdPerm colSpec set fltr) = do
   (setColsSQL, setHeaders, setColDeps) <- procSetObj tabInfo set
 
   -- check if the columns exist
-  _ <- withPathK "columns" $ indexedForM updCols $ \updCol ->
+  void $ withPathK "columns" $ indexedForM updCols $ \updCol ->
        askPGType fieldInfoMap updCol relInUpdErr
 
   let updColDeps = map (mkColDep "untyped" tn) updCols

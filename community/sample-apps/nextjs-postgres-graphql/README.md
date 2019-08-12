@@ -2,6 +2,8 @@
 
 Boilerplate to get started with Nextjs, Hasura GraphQL engine as CMS and postgres as database using this awesome library: [withData](https://github.com/adamsoffer/next-apollo).
 
+[![Edit nextjs-postgres-graphql](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/github/hasura/graphql-engine/tree/master/community/sample-apps/nextjs-postgres-graphql?fontsize=14)
+
 ![Nextjs Postgres GraphQL](./assets/nextjs-postgres-graphql.png)
 
 # Tutorial

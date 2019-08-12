@@ -1,0 +1,33 @@
+description: Run queries on SQL my_add function with null input values
+url: /v1/graphql
+status: 200
+response:
+  data:
+    my_add:
+    - result: 5
+    my_add_null:
+    - result:
+    my_add_default:
+    - result: 12
+query:
+  query: |
+    query {
+      my_add(
+        args: {first: 2 second: 3}
+      ){
+        result
+      }
+      # input null value
+      my_add_null: my_add(
+        args: {first: null second: 2}
+      ){
+        result
+      }
+      # omiting 'second' parameter to consider
+      # it's default value in postgres
+      my_add_default: my_add(
+        args: {first: 2}
+      ){
+        result
+      }
+    }

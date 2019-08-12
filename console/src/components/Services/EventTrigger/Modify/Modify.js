@@ -3,7 +3,6 @@ import TableHeader from '../TableCommon/TableHeader';
 import styles from './ModifyEvent.scss';
 
 import { getTableColumns } from '../utils';
-import _push from '../push';
 
 import Info from './Info';
 import WebhookEditor from './WebhookEditor';
@@ -13,6 +12,8 @@ import HeadersEditor from './HeadersEditor';
 import ActionButtons from './ActionButtons';
 
 import { save, setDefaults, RESET_MODIFY_STATE } from './Actions';
+
+import { NotFoundError } from '../../../Error/PageNotFound';
 
 class Modify extends React.Component {
   componentDidMount() {
@@ -32,7 +33,6 @@ class Modify extends React.Component {
       modifyTriggerName,
       modifyTrigger,
       triggerList,
-      migrationMode,
       dispatch,
     } = this.props;
 
@@ -41,8 +41,8 @@ class Modify extends React.Component {
     );
 
     if (!currentTrigger) {
-      dispatch(_push('/events/manage'));
-      return null;
+      // throw a 404 exception
+      throw new NotFoundError();
     }
 
     const {
@@ -59,7 +59,6 @@ class Modify extends React.Component {
           dispatch={dispatch}
           triggerName={modifyTriggerName}
           tabName="modify"
-          migrationMode={migrationMode}
         />
         <br />
         <div className={styles.container}>

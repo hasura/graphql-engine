@@ -13,6 +13,8 @@ const defaultState = {
 
 /* Action constants */
 const generateHeaderSyms = (prefix = 'API_HEADER') => {
+  // TODO: change this anti-pattern
+  // There is no way to guarantee if the derived constants actually exists. The whole point of using constants is lost
   return {
     HEADER_KEY_CHANGE: `${prefix}/HEADER_KEY_CHANGE`,
     HEADER_VALUE_TYPE_CHANGE: `${prefix}/HEADER_VALUE_TYPE_CHANGE`,

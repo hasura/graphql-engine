@@ -212,6 +212,15 @@ class TestV1SelectBoolExpPostGIS(DefaultTestSelectQueries):
     def test_query_geog_stintersects(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/query_geog_stintersects.yaml')
 
+    def test_query_cast_geometry_to_geography(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_cast_geometry_to_geography.yaml')
+
+    def test_query_cast_geography_to_geometry(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_cast_geography_to_geometry.yaml')
+
+    def test_query_illegal_cast_is_not_allowed(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_illegal_cast_is_not_allowed.yaml')
+
     @classmethod
     def dir(cls):
         return 'queries/v1/select/boolexp/postgis'
@@ -492,8 +501,11 @@ class TestRunSQL(DefaultTestQueries):
     def test_sql_rename_table(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/sql_rename_table.yaml')
 
-    def test_sql_rename_columns(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/sql_rename_columns.yaml')
+    def test_sql_rename_columns_article(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/sql_rename_columns_article.yaml')
+
+    def test_sql_rename_columns_author(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/sql_rename_columns_author.yaml')
 
     def test_sql_rename_table_and_column(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/sql_rename_table_and_column.yaml')
@@ -542,6 +554,12 @@ class TestRelationships(DefaultTestQueries):
 
 class TestTrackTables(DefaultTestQueries):
 
+    def test_track_table_function_same_name(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/track_table_function_same_name.yaml')
+
+    def test_track_function_table_same_name(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/track_function_table_same_name.yaml')
+
     def test_track_untrack_table(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/track_untrack_table.yaml')
         hge_ctx.may_skip_test_teardown = True
@@ -573,3 +591,28 @@ class TestCreatePermission(DefaultTestQueries):
     @classmethod
     def dir(cls):
         return "queries/v1/permissions"
+
+
+class TestNonEmptyText:
+
+    def test_create_event_trigger(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/create_event_trigger.yaml')
+
+    def test_create_insert_permission(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/create_insert_permission.yaml')
+
+    def test_create_query_collection(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/create_query_collection.yaml')
+
+    def test_create_query_collection_queryname(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/create_query_collection_queryname.yaml')
+
+    def test_create_object_relationship(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/create_object_relationship.yaml')
+
+    def test_create_remote_schema(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/create_remote_schema.yaml')
+
+    @classmethod
+    def dir(cls):
+        return "queries/v1/non_empty_text"

@@ -1,5 +1,7 @@
 ---
 title: "Write event webhook"
+metaTitle: "Write event webhook | Hasura GraphQL Tutorial"
+metaDescription: "In this part, we will look at how to write an event webhook and trigger them asynchronously after a mutation operation."
 ---
 
 import YoutubeEmbed from "../../src/YoutubeEmbed.js";

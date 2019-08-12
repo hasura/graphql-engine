@@ -42,7 +42,7 @@ triggerTmplt = case parseGingerTmplt $(FE.embedStringFile "src-rsr/trigger.sql.j
   Right tmplt -> Just tmplt
 
 pgIdenTrigger:: Ops -> TriggerName -> T.Text
-pgIdenTrigger op trn = pgFmtIden (qualifyTriggerName op trn)
+pgIdenTrigger op trn = pgFmtIden . qualifyTriggerName op $ triggerNameToTxt trn
   where
     qualifyTriggerName op' trn' = "notify_hasura_" <> trn' <> "_" <> T.pack (show op')
 
@@ -61,7 +61,7 @@ getTriggerSql
   -> Maybe T.Text
 getTriggerSql op trn qt allCols strfyNum spec =
   let globalCtx =  HashMap.fromList
-                   [ (T.pack "NAME", trn)
+                   [ (T.pack "NAME", triggerNameToTxt trn)
                    , (T.pack "QUALIFIED_TRIGGER_NAME", pgIdenTrigger op trn)
                    , (T.pack "QUALIFIED_TABLE", toSQLTxt qt)
                    ]

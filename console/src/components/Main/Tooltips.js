@@ -14,8 +14,8 @@ export const events = (
   <Tooltip id="tooltip-events">Manage Event Triggers</Tooltip>
 );
 
-export const customresolver = (
-  <Tooltip id="tooltip-customresolver">Manage Remote Schemas</Tooltip>
+export const remoteSchema = (
+  <Tooltip id="tooltip-remoteschema">Manage Remote Schemas</Tooltip>
 );
 
 export const secureEndpoint = (

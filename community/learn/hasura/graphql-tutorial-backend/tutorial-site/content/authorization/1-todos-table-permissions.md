@@ -1,5 +1,7 @@
 ---
 title: "Setup todos table permissions"
+metaTitle: "Setup todos table permissions | Hasura GraphQL Tutorial"
+metaDescription: "This tutorial covers how to set up permissions for todos table for insert, select, update and delete operations using Hasura console"
 ---
 
 import YoutubeEmbed from "../../src/YoutubeEmbed.js";

@@ -1,5 +1,7 @@
 ---
 title: "Create Subscription and Render Result"
+metaTitle: "Apollo Subscription in iOS Swift | GraphQL iOS Apollo Tutorial"
+metaDescription: "Integrate apollo-ios subscription method to watch for changes in realtime data. We use GraphQL subscriptions as an example to get live data in the iOS app"
 ---
 
 import GithubLink from '../../src/GithubLink.js'

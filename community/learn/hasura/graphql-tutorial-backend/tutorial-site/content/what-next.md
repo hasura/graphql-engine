@@ -1,5 +1,6 @@
 ---
 title: "What next?"
+metaTitle: "What next? | Hasura GraphQL Tutorial"
 ---
 
 import TwitterShare from './twitter-share';

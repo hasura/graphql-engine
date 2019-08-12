@@ -1,5 +1,7 @@
 ---
 title: "Write custom resolvers"
+metaTitle: "Write custom resolvers | Hasura GraphQL Tutorial"
+metaDescription: "In this part, we will look at how to write custom resolvers and add it as a Remote schema in Hasura GraphQL Engine."
 ---
 
 import YoutubeEmbed from "../../src/YoutubeEmbed.js";

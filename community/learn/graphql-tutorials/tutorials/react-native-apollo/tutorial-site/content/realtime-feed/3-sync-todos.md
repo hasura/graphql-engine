@@ -1,8 +1,14 @@
 ---
 title: "Sync new todos"
+metaTitle: "Sync new todos in public feed | GraphQL React Native Apollo Tutorial"
+metaDescription: "You will learn how to sync new todos added by other people in the public feed by fetching older and newer data using GraphQL Queries"
 ---
 
 import GithubLink from "../../src/GithubLink.js";
+
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/mQaYuHjUyIg" />
 
 In the previous section we made a button that shows up only when there are new public todos in the database. Now lets make this button functional i.e. on pressing this button, newer todos should be fetched from the backend, synced with the local todos and the button must be dismissed.
 

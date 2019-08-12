@@ -1,13 +1,18 @@
 ---
 title: "Handle loading/errorrs"
+metaTitle: "Apollo Query Component Error Handling | GraphQL React Native Apollo Tutorial"
+metaDescription: "We will handle the GraphQL loading and error states in React Native app using the Apollo Query Component render props - loading and error "
 ---
 
 import GithubLink from "../../src/GithubLink.js";
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/RoZRYf-7mUY" />
+
 As we saw in the previous step, Apollo injected props into the component’s render prop function. Among them `loading` and `error` are common ones that you will need to handle in your app.
 
 Now let's go back to the `<Query>` component that you wrote in the previous step.
-
 
 <GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-native-apollo/app-final/src/screens/components/Todo/Todos.js" text="Todos.js"/>
 

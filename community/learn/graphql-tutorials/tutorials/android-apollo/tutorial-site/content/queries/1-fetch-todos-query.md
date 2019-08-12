@@ -1,5 +1,7 @@
 ---
-title: 'Fetch todos - query'
+title: "Fetch todos - query"
+metaTitle: "Query to fetch todo | GraphQL Android Apollo Tutorial"
+metaDescription: "GraphQL Query to fetch personal todos. Try the query in GraphiQL, passing the Authorization token to get authenticated results"
 ---
 
 The first graphql query you will write will be to fetch personal todos. You will need to load the todo data from the database which belongs to the logged in user.

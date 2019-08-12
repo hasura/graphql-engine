@@ -19,6 +19,7 @@ import {
 import { ordinalColSort, convertDateTimeToLocale } from '../utils';
 import Spinner from '../../../Common/Spinner/Spinner';
 import '../TableCommon/EventReactTableOverrides.css';
+import { verifySuccessStatus } from '../utils';
 
 const ViewRows = ({
   curTriggerName,
@@ -262,12 +263,11 @@ const ViewRows = ({
           const invocationRowsData = [];
           currentRow.logs.map((r, rowIndex) => {
             const newRow = {};
-            const status =
-              r.status === 200 ? (
-                <i className={styles.invocationSuccess + ' fa fa-check'} />
-              ) : (
-                <i className={styles.invocationFailure + ' fa fa-times'} />
-              );
+            const status = verifySuccessStatus(r.status) ? (
+              <i className={styles.invocationSuccess + ' fa fa-check'} />
+            ) : (
+              <i className={styles.invocationFailure + ' fa fa-times'} />
+            );
 
             // Insert cells corresponding to all rows
             invocationColumns.forEach(col => {

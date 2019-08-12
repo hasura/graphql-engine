@@ -49,6 +49,9 @@ class Footer extends React.Component {
                     <a href="https://blog.hasura.io/" target="_blank" rel="noopener noreferrer">Blog</a>
                   </div>
                   <div className={'footer_links'}>
+                    <a href="https://learn.hasura.io/" target="_blank" rel="noopener noreferrer">GraphQL Tutorials</a>
+                  </div>
+                  <div className={'footer_links'}>
                     <a href="https://hasura.io/community" target="_blank" rel="noopener noreferrer">Community & Events</a>
                   </div>
                   <div className={'footer_links'}>
@@ -71,6 +74,9 @@ class Footer extends React.Component {
                   </div>
                   <div className={'footer_links'}>
                     <a href="https://hasura.io/react-graphql" target="_blank" rel="noopener noreferrer">React GraphQL</a>
+                  </div>
+                  <div className={'footer_links'}>
+                    <a href="https://www.graphql-asia.org/" target="_blank" rel="noopener noreferrer">GraphQL Asia</a>
                   </div>
                 </div>
               </div>

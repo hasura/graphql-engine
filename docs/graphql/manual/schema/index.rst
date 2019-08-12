@@ -28,4 +28,5 @@ Postgres constructs.
   Default field values <default-values/index>
   Enum type fields <enums>
   Using an existing database <using-existing-database>
+  Setting up soft deletes <soft-deletes>
   Export GraphQL schema <export-graphql-schema>

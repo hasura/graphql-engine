@@ -1,11 +1,16 @@
 ---
 title: "Update mutation and automatic cache updates"
+metaTitle: "Apollo Mutation component for GraphQL mutation update | GraphQL React Native Apollo Tutorial"
+metaDescription: "We will use the Apollo Mutation component from react-apollo as an example to modify existing data and update cache automatically and handle optimisticResponse"
 ---
 
 import GithubLink from "../../src/GithubLink.js";
 
-Now let's do the integration part. Open `src/screens/components/Todo/TodoItem.js` and add the following code below the other imports:
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
 
+<YoutubeEmbed link="https://www.youtube.com/embed/KlenUF0jBg4" />
+
+Now let's do the integration part. Open `src/screens/components/Todo/TodoItem.js` and add the following code below the other imports:
 
 <GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-native-apollo/app-final/src/screens/components/Todo/TodoItem.js" text="TodoItem.js"/>
 
@@ -19,8 +24,7 @@ Let's define the graphql mutation to update the completed status of the todo
 +  mutation ($id: Int, $isCompleted: Boolean) {
 +    update_todos (
 +      _set: {
-+        is_completed: $isCompleted,
-+        updated_at: "now()"
++        is_completed: $isCompleted
 +      },
 +      where: {
 +        id: {

@@ -1,5 +1,7 @@
 ---
 title: "Create Relationship"
+metaTitle: "Create Relationship | Hasura GraphQL Tutorial"
+metaDescription: "This part of the tutorial covers how to create relationship between two tables using Hasura console"
 ---
 
 import YoutubeEmbed from "../../src/YoutubeEmbed.js";

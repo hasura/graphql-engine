@@ -1,5 +1,7 @@
 ---
 title: "Fetch public todos - subscription"
+metaTitle: "Fetch public todos using Subscription | GraphQL iOS Apollo Tutorial"
+metaDescription: "You will learn how to make use of GraphQL Subscriptions to get notified whenever a new todo comes in iOS app"
 ---
 
 import GithubLink from '../../src/GithubLink.js'

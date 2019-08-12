@@ -3,11 +3,9 @@ import PropTypes from 'prop-types';
 
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
 import { commonDataTypes } from '../utils';
-import {
-  getDataOptions,
-  getPlaceholder,
-  getDefaultValue,
-} from '../Common/utils';
+import { getDataOptions, inferDefaultValues } from '../Common/utils';
+
+import TableColumnDefault from './TableColumnDefault';
 
 /* Custom style object for searchable select box */
 const customSelectBoxStyles = {
@@ -16,6 +14,9 @@ const customSelectBoxStyles = {
   },
   singleValue: {
     color: '#555555',
+  },
+  valueContainer: {
+    padding: '0px 12px',
   },
 };
 
@@ -32,6 +33,8 @@ const TableColumn = props => {
     onColNullableChange,
     onColUniqueChange,
     dataTypes: restTypes,
+    columnDefaultFunctions,
+    columnTypeCasts,
     uniqueKeys,
   } = props;
 
@@ -56,6 +59,7 @@ const TableColumn = props => {
     restTypes,
     i
   );
+
   const getRemoveIcon = colLen => {
     let removeIcon;
     if (i + 1 === colLen) {
@@ -70,6 +74,16 @@ const TableColumn = props => {
     }
     return removeIcon;
   };
+
+  /* Collect list of relevant default values if the type doesn't have any default values
+   * */
+  const getInferredDefaultValues = () =>
+    inferDefaultValues(columnDefaultFunctions, columnTypeCasts)(column.type);
+
+  const defaultFunctions =
+    column.type in columnDefaultFunctions
+      ? columnDefaultFunctions[column.type]
+      : getInferredDefaultValues();
 
   return (
     <div key={i} className={`${styles.display_flex} form-group`}>
@@ -91,8 +105,20 @@ const TableColumn = props => {
           value={column.type && columnTypeValueMap[column.type]}
           bsClass={`col-type-${i} add_table_column_selector`}
           styleOverrides={customSelectBoxStyles}
+          filterOption={'prefix'}
+          placeholder="column_type"
         />
       </span>
+      <span className={`${styles.inputDefault} ${styles.defaultWidth}`}>
+        <TableColumnDefault
+          onChange={setColDefaultValue}
+          colIndex={i}
+          testId={`col-default-${i}`}
+          column={column}
+          colDefaultFunctions={defaultFunctions}
+        />
+      </span>
+      {/*
       <input
         placeholder={getPlaceholder(column)}
         type="text"
@@ -106,7 +132,8 @@ const TableColumn = props => {
           column.nullable || false
         )}
         data-test={`col-default-${i}`}
-      />{' '}
+      />
+      */}{' '}
       <input
         className={`${styles.inputCheckbox} form-control `}
         checked={column.nullable}

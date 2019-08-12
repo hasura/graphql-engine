@@ -1,5 +1,7 @@
 ---
 title: "Deploy Hasura"
+metaTitle: "Deploy Hasura to Heroku | Hasura GraphQL Tutorial"
+metaDescription: "This tutorial covers how to deploy Hasura GraphQL Engine on Heroku using one-click deployment and access the Hasura Console"
 ---
 
 import YoutubeEmbed from "../src/YoutubeEmbed.js";

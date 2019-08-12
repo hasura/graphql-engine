@@ -1,5 +1,7 @@
 ---
 title: "Run mutation, update cache"
+metaTitle: "Apollo Mutation using apollo.perform | GraphQL iOS Apollo Tutorial"
+metaDescription: "We will use the Apollo Client apollo.perform in iOS app as an example to insert new data and update cache locally using read and write methods."
 ---
 
 Now let's do the integration part. Open `Todo/TodoVC.swift` and add the following code below the previous one:
@@ -79,12 +81,12 @@ The update function is used to update the cache after a mutation occurs.
 You can directly read and update the cache as needed using Swift's `inout` parameters. This functionality is useful when performing mutations or receiving subscription data, as you should always update the local cache to ensure consistency with the operation that was just performed. The ability to write to the cache directly also prevents you from needing to re-fetch data over the network after a mutation is performed.
 
 read
----------------
+----
 
 Unlike `apollo.fetch#query`, read will never make a request to your GraphQL server. It will always read from the cache. So we make a read request to the cache to get the current list of todos.
 
 update
-----------------
+------
 
 We have already done the mutation to the graphql server using the mutate function. Our goal was to update the UI. This is where `update` comes to the rescue. `update` will allow you to change data in your local cache, but it is important to remember that they will not change any data on your server (exactly what we need).
 

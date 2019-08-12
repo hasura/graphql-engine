@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
-import globals from '../../../../Globals';
 import { changeTableOrViewName } from '../TableModify/ModifyActions';
 import EditableHeading from '../../../Common/EditableHeading/EditableHeading';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
@@ -18,26 +17,9 @@ const ViewHeader = ({
   let capitalised = tabName;
   capitalised = capitalised[0].toUpperCase() + capitalised.slice(1);
   const activeTab = tabNameMap[tabName];
-  const viewRenameCallback = newName => {
-    const currentPath = window.location.pathname.replace(
-      new RegExp(globals.urlPrefix, 'g'),
-      ''
-    );
-    const newPath = currentPath.replace(
-      /(\/schema\/.*)\/views\/(\w*)(\/.*)?/,
-      `$1/views/${newName}$3`
-    );
-    window.location.replace(
-      `${window.location.origin}${globals.urlPrefix}${newPath}`
-    );
-  };
 
   const saveViewNameChange = newName => {
-    dispatch(
-      changeTableOrViewName(false, tableName, newName, () =>
-        viewRenameCallback(newName)
-      )
-    );
+    dispatch(changeTableOrViewName(false, tableName, newName));
   };
 
   const getBreadCrumbs = () => {

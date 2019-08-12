@@ -3,6 +3,8 @@ module Hasura.Server.Utils where
 import qualified Database.PG.Query.Connection as Q
 
 import           Data.Aeson
+import           Data.Char
+import           Data.List                    (find)
 import           Data.List.Split
 import           Data.Time.Clock
 import           Network.URI
@@ -11,16 +13,25 @@ import           System.Exit
 import           System.Process
 
 import qualified Data.ByteString              as B
+import qualified Data.CaseInsensitive         as CI
+import qualified Data.HashSet                 as Set
 import qualified Data.Text                    as T
 import qualified Data.Text.Encoding           as TE
-import qualified Data.Text.Encoding.Error     as TE
 import qualified Data.Text.IO                 as TI
+import qualified Data.UUID                    as UUID
+import qualified Data.UUID.V4                 as UUID
 import qualified Language.Haskell.TH.Syntax   as TH
+import qualified Network.HTTP.Client          as HC
+import qualified Network.HTTP.Types           as HTTP
 import qualified Text.Ginger                  as TG
 import qualified Text.Regex.TDFA              as TDFA
 import qualified Text.Regex.TDFA.ByteString   as TDFA
 
 import           Hasura.Prelude
+
+newtype RequestId
+  = RequestId { unRequestId :: Text }
+  deriving (Show, Eq, ToJSON, FromJSON)
 
 jsonHeader :: (T.Text, T.Text)
 jsonHeader = ("Content-Type", "application/json; charset=utf-8")
@@ -46,19 +57,20 @@ adminSecretHeader = "x-hasura-admin-secret"
 userIdHeader :: T.Text
 userIdHeader = "x-hasura-user-id"
 
-bsToTxt :: B.ByteString -> T.Text
-bsToTxt = TE.decodeUtf8With TE.lenientDecode
+requestIdHeader :: T.Text
+requestIdHeader = "x-request-id"
 
-commonClientHeadersIgnored :: (IsString a) => [a]
-commonClientHeadersIgnored =
-  [ "Content-Length", "Content-MD5", "User-Agent", "Host"
-  , "Origin", "Referer" , "Accept", "Accept-Encoding"
-  , "Accept-Language", "Accept-Datetime"
-  , "Cache-Control", "Connection", "DNT", "Content-Type"
-  ]
+getRequestHeader :: B.ByteString -> [HTTP.Header] -> Maybe B.ByteString
+getRequestHeader hdrName hdrs = snd <$> mHeader
+  where
+    mHeader = find (\h -> fst h == CI.mk hdrName) hdrs
 
-txtToBs :: T.Text -> B.ByteString
-txtToBs = TE.encodeUtf8
+getRequestId :: (MonadIO m) => [HTTP.Header] -> m RequestId
+getRequestId headers =
+  -- generate a request id for every request if the client has not sent it
+  case getRequestHeader (txtToBs requestIdHeader) headers  of
+    Nothing    -> RequestId <$> liftIO generateFingerprint
+    Just reqId -> return $ RequestId $ bsToTxt reqId
 
 -- Parsing postgres database url
 -- from: https://github.com/futurice/postgresql-simple-url/
@@ -168,6 +180,74 @@ fmapL _ (Right x) = pure x
 -- diff time to micro seconds
 diffTimeToMicro :: NominalDiffTime -> Int
 diffTimeToMicro diff =
-  (floor (realToFrac diff :: Double) - 10) * aSecond
+  floor (realToFrac diff :: Double) * aSecond
   where
     aSecond = 1000 * 1000
+
+generateFingerprint :: IO Text
+generateFingerprint = UUID.toText <$> UUID.nextRandom
+
+-- json representation of HTTP exception
+httpExceptToJSON :: HC.HttpException -> Value
+httpExceptToJSON e = case e of
+  HC.HttpExceptionRequest x c ->
+      let reqObj = object
+            [ "host" .= bsToTxt (HC.host x)
+            , "port" .= show (HC.port x)
+            , "secure" .= HC.secure x
+            , "path" .= bsToTxt (HC.path x)
+            , "method" .= bsToTxt (HC.method x)
+            , "proxy" .= (showProxy <$> HC.proxy x)
+            , "redirectCount" .= show (HC.redirectCount x)
+            , "responseTimeout" .= show (HC.responseTimeout x)
+            , "requestVersion" .= show (HC.requestVersion x)
+            ]
+          msg = show c
+      in object ["request" .= reqObj, "message" .= msg]
+  _        -> toJSON $ show e
+  where
+    showProxy (HC.Proxy h p) =
+      "host: " <> bsToTxt h <> " port: " <> T.pack (show p)
+
+-- ignore the following request headers from the client
+commonClientHeadersIgnored :: (IsString a) => [a]
+commonClientHeadersIgnored =
+  [ "Content-Length", "Content-MD5", "User-Agent", "Host"
+  , "Origin", "Referer" , "Accept", "Accept-Encoding"
+  , "Accept-Language", "Accept-Datetime"
+  , "Cache-Control", "Connection", "DNT", "Content-Type"
+  ]
+
+commonResponseHeadersIgnored :: (IsString a) => [a]
+commonResponseHeadersIgnored =
+  [ "Server", "Transfer-Encoding", "Cache-Control"
+  , "Access-Control-Allow-Credentials"
+  , "Access-Control-Allow-Methods"
+  , "Access-Control-Allow-Origin"
+  , "Content-Type", "Content-Length"
+  ]
+
+
+filterRequestHeaders :: [HTTP.Header] -> [HTTP.Header]
+filterRequestHeaders =
+  filterHeaders $ Set.fromList commonClientHeadersIgnored
+
+-- ignore the following response headers from remote
+filterResponseHeaders :: [HTTP.Header] -> [HTTP.Header]
+filterResponseHeaders =
+  filterHeaders $ Set.fromList commonResponseHeadersIgnored
+
+filterHeaders :: Set.HashSet HTTP.HeaderName -> [HTTP.Header] -> [HTTP.Header]
+filterHeaders list = filter (\(n, _) -> not $ n `Set.member` list)
+
+
+hyphenate :: String -> String
+hyphenate = u . applyFirst toLower
+    where u []                 = []
+          u (x:xs) | isUpper x = '-' : toLower x : hyphenate xs
+                   | otherwise = x : u xs
+
+applyFirst :: (Char -> Char) -> String -> String
+applyFirst _ []     = []
+applyFirst f [x]    = [f x]
+applyFirst f (x:xs) = f x: xs

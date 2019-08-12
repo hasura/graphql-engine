@@ -60,35 +60,40 @@ export const getExistingFKConstraints = (tableSchema, orderedColumns) => {
 export const generateFKConstraintName = (
   tableName,
   lCols,
-  existingConstraints
+  existingConstraints,
+  ignoreConstraints = []
 ) => {
-  const expectedNamePrefix = `${tableName}_${lCols
+  const expectedName = `${tableName}_${lCols
     .map(lc => lc.replace(/"/g, ''))
     .join('_')}_fkey`.substring(0, 60);
-  const prefixLength = expectedNamePrefix.length;
-  let suffix;
+
+  let maxSuffix;
   for (let i = existingConstraints.length - 1; i >= 0; i--) {
     const existingConstraintName = existingConstraints[i].constraint_name;
-    if (existingConstraintName.indexOf(expectedNamePrefix) === 0) {
-      if (existingConstraintName === expectedNamePrefix) {
-        if (!suffix) {
-          suffix = 1;
-          continue;
-        }
+
+    if (ignoreConstraints.includes(existingConstraintName)) {
+      continue;
+    }
+
+    if (existingConstraintName.startsWith(expectedName)) {
+      let currSuffix;
+
+      if (existingConstraintName === expectedName) {
+        currSuffix = 1;
+      } else {
+        const prefixLength = expectedName.length;
+        currSuffix = parseInt(existingConstraintName.slice(prefixLength), 10);
       }
-      const intSuffix = parseInt(
-        existingConstraintName.slice(prefixLength),
-        10
-      );
-      if (!isNaN(intSuffix) && (!suffix || (suffix && intSuffix >= suffix))) {
-        suffix = intSuffix;
+
+      if (!isNaN(currSuffix) && (!maxSuffix || currSuffix >= maxSuffix)) {
+        maxSuffix = currSuffix;
       }
     }
   }
-  if (suffix === undefined) {
-    return expectedNamePrefix;
-  }
-  return `${expectedNamePrefix}${suffix + 1}`;
+
+  return maxSuffix === undefined
+    ? expectedName
+    : `${expectedName}${maxSuffix + 1}`;
 };
 
 export const getUniqueConstraintName = (tableName, columns) => {

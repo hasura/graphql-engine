@@ -1,5 +1,7 @@
 ---
 title: "Data Transformations"
+metaTitle: "Data Transformations in Postgres | Hasura GraphQL Tutorial"
+metaDescription: "We are going to leverage Postgres data transformations using Views and SQL Functions to find online users required for the app"
 ---
 
 import YoutubeEmbed from "../src/YoutubeEmbed.js";

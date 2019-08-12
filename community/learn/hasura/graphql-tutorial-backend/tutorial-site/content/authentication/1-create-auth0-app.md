@@ -1,5 +1,7 @@
 ---
 title: "Create Auth0 App"
+metaTitle: "Create Auth0 App | Hasura GraphQL Tutorial"
+metaDescription: "In this part, we will learn how to create Auth0 app using the dashboard for a Single Page Web Application."
 ---
 
 import YoutubeEmbed from "../../src/YoutubeEmbed.js";

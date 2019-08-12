@@ -13,7 +13,6 @@ const EventSubSidebar = ({
   currentTrigger,
   triggerList,
   listingTrigger,
-  migrationMode,
   // children,
   dispatch,
   location,
@@ -93,7 +92,7 @@ const EventSubSidebar = ({
 
   return (
     <LeftSubSidebar
-      migrationMode={migrationMode}
+      showAddBtn
       searchInput={getSearchInput()}
       heading={`Event Triggers (${triggerList.length})`}
       addLink={'/events/manage/triggers/add'}
@@ -111,7 +110,6 @@ const mapStateToProps = state => {
     currentTrigger: state.triggers.currentTrigger,
     triggerList: state.triggers.triggerList,
     listingTrigger: state.triggers.listingTrigger,
-    migrationMode: state.main.migrationMode,
   };
 };
 

@@ -1,6 +1,8 @@
 ---
 title: "Architecture"
 order: 1
+metaTitle: "GraphQL Architecture | GraphQL Vue Apollo Tutorial"
+metaDescription: "Learn about the architecture of GraphQL, GraphQL over HTTP, the client server model with an example of http request"
 ---
 
 Before going further in understanding GraphQL, it's useful to get a sense of how

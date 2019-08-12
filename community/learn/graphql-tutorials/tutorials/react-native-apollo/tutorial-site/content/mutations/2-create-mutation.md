@@ -1,8 +1,14 @@
 ---
 title: "Run mutation, update cache"
+metaTitle: "Apollo Mutation Component | GraphQL React Native Apollo Tutorial"
+metaDescription: "We will use the Apollo Client Mutation component from react-apollo in React Native app as an example to insert new data and update cache locally using readQuery and writeQuery."
 ---
 
 import GithubLink from "../../src/GithubLink.js";
+
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/dCm4hIhQB7w" />
 
 Firstly, let us define the mutation that we looked at in the previous section. Import `gql` from `graphql-tag` and define the following mutation in `src/screens/components/Todo/Textbox.js`.
 

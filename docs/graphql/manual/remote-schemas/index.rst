@@ -121,6 +121,17 @@ Remote schema fields nomenclature
   structure* will result in type conflicts.
 
 
+Schema refreshing
+^^^^^^^^^^^^^^^^^
+
+For versions <= ``v1.0.0-beta.2``, GraphQL schema of each added remote server is refreshed every time a
+metadata modifying operation like adding tables/functions, defining relationships/permissions etc. is done.
+
+From ``v1.0.0-beta.3`` onwards, a remote server's GraphQL schema is cached and refreshed only when user
+explicitly reloads remote schema by clicking the ``Reload`` button on console or
+by making :doc:`reload_remote_schema<../api-reference/schema-metadata-api/remote-schemas>` metadata API request
+
+
 Current limitations
 ^^^^^^^^^^^^^^^^^^^
 
@@ -168,6 +179,13 @@ will selected.
    The headers from client behave similar to the authorization system. If
    ``x-hasura-admin-secret`` is sent, then all ``x-hasura-*`` values from the
    client are respected, otherwise they are ignored.
+
+Cookie header from your remote GraphQL servers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``Set-Cookie`` headers from your remote schema servers are sent back to the
+client over HTTP transport. **Over websocket transport there exists no means
+to send headers after a query/mutation and hence ``Set-Cookie`` headers are
+not sent to the client.** Use HTTP transport if your remote servers set cookies.
 
 
 Bypassing Hasura's authorization system for remote schema queries

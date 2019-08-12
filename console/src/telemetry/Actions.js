@@ -6,7 +6,7 @@ import defaultTelemetryState from './State';
 const SET_CONSOLE_OPTS = 'Telemetry/SET_CONSOLE_OPTS';
 const SET_NOTIFICATION_SHOWN = 'Telemetry/SET_NOTIFICATION_SHOWN';
 const SET_HASURA_UUID = 'Telemetry/SET_HASURA_UUID';
-const SET_TELEMETRY_DISABLED = 'Telemetr/SET_TELEMETRY_DISABLED';
+const SET_TELEMETRY_DISABLED = 'Telemetry/SET_TELEMETRY_DISABLED';
 
 const telemetryNotificationShown = () => dispatch => {
   dispatch({ type: SET_NOTIFICATION_SHOWN });
@@ -41,11 +41,12 @@ const setNotificationShownInDB = () => (dispatch, getState) => {
   );
 };
 
-const loadConsoleOpts = () => {
+const loadConsoleTelemetryOpts = () => {
   return (dispatch, getState) => {
     if (window.__env.enableTelemetry === undefined) {
       return dispatch({ type: SET_TELEMETRY_DISABLED });
     }
+
     const url = Endpoints.getSchema;
     const options = {
       credentials: globalCookiePolicy,
@@ -62,6 +63,7 @@ const loadConsoleOpts = () => {
         },
       }),
     };
+
     return dispatch(requestAction(url, options)).then(
       data => {
         if (data.length !== 0) {
@@ -116,7 +118,7 @@ const telemetryReducer = (state = defaultTelemetryState, action) => {
 
 export default telemetryReducer;
 export {
-  loadConsoleOpts,
+  loadConsoleTelemetryOpts,
   telemetryNotificationShown,
   setNotificationShownInDB,
 };

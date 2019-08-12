@@ -1,5 +1,7 @@
 ---
 title: "Connect Hasura with Auth0"
+metaTitle: "Connect Hasura with Auth0 | Hasura GraphQL Tutorial"
+metaDescription: "In this part, you will learn how to connect Hasura with the Auth0 application and secure your app with HASURA_GRAPHQL_JWT_SECRET and HASURA_GRAPHQL_ADMIN_SECRET"
 ---
 
 import YoutubeEmbed from "../../src/YoutubeEmbed.js";

@@ -1,5 +1,7 @@
 ---
 title: Watching data - Subscriptions
+metaTitle: "GraphQL Subscriptions for realtime data | GraphQL Vue Apollo Tutorial"
+metaDescription: "Try out GraphQL Subscription using GraphiQL. A GraphQL subscriptions example to fetch live data pushed over websockets "
 ---
 
 import YoutubeEmbed from "../../src/YoutubeEmbed.js";

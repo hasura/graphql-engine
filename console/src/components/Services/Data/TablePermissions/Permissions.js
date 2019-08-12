@@ -48,6 +48,8 @@ import { allOperators, getLegacyOperator } from './PermissionBuilder/utils';
 import Button from '../../../Common/Button/Button';
 import { defaultPresetsState } from '../DataState';
 
+import { NotFoundError } from '../../../Error/PageNotFound';
+
 class Permissions extends Component {
   constructor() {
     super();
@@ -66,16 +68,6 @@ class Permissions extends Component {
 
   componentDidMount() {
     this.props.dispatch({ type: RESET });
-    const currentTableSchema = this.props.allSchemas.find(
-      t =>
-        t.table_name === this.props.tableName &&
-        t.table_schema === this.props.currentSchema
-    );
-
-    if (!currentTableSchema) {
-      return;
-    }
-
     this.props.dispatch(setTable(this.props.tableName));
   }
 
@@ -93,6 +85,17 @@ class Permissions extends Component {
       migrationMode,
       currentSchema,
     } = this.props;
+
+    const currentTableSchema = this.props.allSchemas.find(
+      t =>
+        t.table_name === this.props.tableName &&
+        t.table_schema === this.props.currentSchema
+    );
+
+    if (!currentTableSchema) {
+      // throw a 404 exception
+      throw new NotFoundError();
+    }
 
     const styles = require('../TableModify/ModifyTable.scss');
 
@@ -236,8 +239,10 @@ class Permissions extends Component {
           tableType === 'view' &&
           !(
             tableSchema.view_info &&
-            tableSchema.view_info.is_insertable_into === 'YES' &&
-            tableSchema.view_info.is_updatable === 'YES'
+            (tableSchema.view_info.is_insertable_into === 'YES' ||
+              tableSchema.view_info.is_trigger_insertable_into === 'YES') &&
+            (tableSchema.view_info.is_updatable === 'YES' ||
+              tableSchema.view_info.is_trigger_updatable === 'YES')
           )
         ) {
           hasPermissions = false;
@@ -352,8 +357,10 @@ class Permissions extends Component {
                 if (JSON.stringify(permissions[filterKey]) === '{}') {
                   if (
                     checkColumns &&
-                    !permissions.columns.includes('*') &&
-                    permissions.columns.length !== tableSchema.columns.length
+                    (!permissions.columns ||
+                      (!permissions.columns.includes('*') &&
+                        permissions.columns.length !==
+                          tableSchema.columns.length))
                   ) {
                     _permission = permissionsSymbols.partialAccess;
                   } else {
@@ -1010,6 +1017,7 @@ class Permissions extends Component {
               )}
               useDefaultTitleStyle
               testId={'toggle-col-permission'}
+              isOpen={colSectionStatus === 'no columns'}
             >
               <div
                 className={sectionClasses}
@@ -1762,18 +1770,31 @@ class Permissions extends Component {
     } else if (tableType === 'view') {
       qTypes = [];
 
-      qTypes.push('select');
-
       // Add insert/update permission if it is insertable/updatable as returned by pg
       if (tSchema.view_info) {
-        if (tSchema.view_info.is_insertable_into === 'YES') {
+        if (
+          tSchema.view_info.is_insertable_into === 'YES' ||
+          tSchema.view_info.is_trigger_insertable_into === 'YES'
+        ) {
           qTypes.push('insert');
         }
+
+        qTypes.push('select'); // to maintain order
 
         if (tSchema.view_info.is_updatable === 'YES') {
           qTypes.push('update');
           qTypes.push('delete');
+        } else {
+          if (tSchema.view_info.is_trigger_updatable === 'YES') {
+            qTypes.push('update');
+          }
+
+          if (tSchema.view_info.is_trigger_deletable === 'YES') {
+            qTypes.push('delete');
+          }
         }
+      } else {
+        qTypes.push('select');
       }
     }
 

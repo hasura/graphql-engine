@@ -1,7 +1,7 @@
 const converter = require('./converter');
 
 function convert (type, graphqlData) {
- try {
+  try {
     return converter(graphqlData, type);
   } catch (e) {
     console.error('unexpected error in graphql2chartjs; please check your graphql response');
@@ -35,9 +35,11 @@ class Graphql2Chartjs {
   transformGqlData(graphqlData, transformer) {
     const transformedGqlData = {};
     Object.keys(graphqlData).forEach(datasetName => {
-      transformedGqlData[datasetName] = graphqlData[datasetName].map((dataPoint) => {
-        return { ...dataPoint, ...transformer(datasetName, dataPoint) }
-      });
+      if (Array.isArray(graphqlData[datasetName])) {
+        transformedGqlData[datasetName] = graphqlData[datasetName].map((dataPoint) => {
+          return { ...dataPoint, ...transformer(datasetName, dataPoint) }
+        });
+      }
     });
     return transformedGqlData;
   }

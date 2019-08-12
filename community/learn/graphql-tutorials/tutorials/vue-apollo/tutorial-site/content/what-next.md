@@ -1,5 +1,6 @@
 ---
 title: "What next?"
+metaTitle: "What next? | GraphQL Vue Apollo Tutorial"
 ---
 
 import TwitterShare from './twitter-share';

@@ -3,11 +3,11 @@ version:             1.0.0
 synopsis:            GraphQL API over Postgres
 -- description:
 homepage:            https://www.hasura.io
-license:             AGPL-3.0
+license:             Apache-2.0
 -- license-file:        LICENSE.md
 author:              Vamshi Surabhi
 maintainer:          vamshi@hasura.io
-copyright:           2017-2018 Hasura Techonologies Pvt. Ltd
+copyright:           Hasura Inc.
 category:            Database
 build-type:          Simple
 -- extra-source-files:  README.md
@@ -53,11 +53,9 @@ library
                      , Spock-core
                      , split
                      , optparse-applicative
-                     , wai-extra
                      , containers
                      , monad-control
                      , monad-time
-                     , wai-logger
                      , fast-logger
                      , wai
                      , postgresql-binary
@@ -71,8 +69,9 @@ library
                      , network
                      , byteorder
 
-                     -- hashing for logging
+                     -- for parsing RSA keys
                      , cryptonite
+
                      -- for jwt verification
                      , jose
                      , pem
@@ -98,9 +97,6 @@ library
                      -- Http client
                      , wreq
                      , http-client
-                     , http-client-tls
-                     , connection
-                     , retry
 
                      -- ordered map
                      , insert-ordered-containers
@@ -122,7 +118,6 @@ library
                      -- websockets interface related
                      , websockets
                      , wai-websockets
-                     , hashtables
                      , stm
                      , stm-containers
                      , list-t
@@ -138,8 +133,12 @@ library
                      -- pretty printer
                      , ansi-wl-pprint
 
-                     -- metrics in multiplexed subs
+                     -- for capturing various metrics
                      , ekg-core
+                     , ekg-json
+
+                     -- metrics for CI integration
+                     , ci-info
 
                      -- serve static files
                      , filepath >= 1.4
@@ -155,6 +154,7 @@ library
                      , Hasura.Server.Auth
                      , Hasura.Server.Auth.JWT
                      , Hasura.Server.Init
+                     , Hasura.Server.Context
                      , Hasura.Server.Middleware
                      , Hasura.Server.Logging
                      , Hasura.Server.Query
@@ -165,6 +165,7 @@ library
                      , Hasura.Server.Telemetry
                      , Hasura.Server.SchemaUpdate
                      , Hasura.Server.PGDump
+                     , Hasura.Server.Config
 
                      , Hasura.RQL.Types
                      , Hasura.RQL.Instances
@@ -187,7 +188,6 @@ library
                      , Hasura.RQL.DDL.Relationship
                      , Hasura.RQL.DDL.Relationship.Rename
                      , Hasura.RQL.DDL.Relationship.Types
-                     , Hasura.RQL.DDL.QueryTemplate
                      , Hasura.RQL.DDL.Schema.Table
                      , Hasura.RQL.DDL.Schema.Rename
                      , Hasura.RQL.DDL.Schema.Function
@@ -208,7 +208,6 @@ library
                      , Hasura.RQL.DML.Select
                      , Hasura.RQL.DML.Update
                      , Hasura.RQL.DML.Count
-                     , Hasura.RQL.DML.QueryTemplate
                      , Hasura.RQL.GBoolExp
 
                      , Hasura.GraphQL.Transport.HTTP.Protocol
@@ -216,6 +215,16 @@ library
                      , Hasura.GraphQL.Transport.WebSocket.Protocol
                      , Hasura.GraphQL.Transport.WebSocket.Server
                      , Hasura.GraphQL.Transport.WebSocket
+                     , Hasura.GraphQL.Schema.BoolExp
+                     , Hasura.GraphQL.Schema.Common
+                     , Hasura.GraphQL.Schema.Function
+                     , Hasura.GraphQL.Schema.OrderBy
+                     , Hasura.GraphQL.Schema.Select
+                     , Hasura.GraphQL.Schema.Merge
+                     , Hasura.GraphQL.Schema.Mutation.Common
+                     , Hasura.GraphQL.Schema.Mutation.Insert
+                     , Hasura.GraphQL.Schema.Mutation.Update
+                     , Hasura.GraphQL.Schema.Mutation.Delete
                      , Hasura.GraphQL.Schema
                      , Hasura.GraphQL.Utils
                      , Hasura.GraphQL.Validate
@@ -232,8 +241,9 @@ library
                      , Hasura.GraphQL.Execute.LiveQuery.Multiplexed
                      , Hasura.GraphQL.Execute.LiveQuery.Fallback
                      , Hasura.GraphQL.Resolve
-                     , Hasura.GraphQL.Resolve.BoolExp
+                     , Hasura.GraphQL.Resolve.Types
                      , Hasura.GraphQL.Resolve.Context
+                     , Hasura.GraphQL.Resolve.BoolExp
                      , Hasura.GraphQL.Resolve.InputValue
                      , Hasura.GraphQL.Resolve.Introspect
                      , Hasura.GraphQL.Resolve.Insert
@@ -241,7 +251,7 @@ library
                      , Hasura.GraphQL.Resolve.Select
                      , Hasura.GraphQL.RemoteServer
                      , Hasura.GraphQL.Context
-                     , Hasura.GraphQL.Resolve.ContextTypes
+                     , Hasura.GraphQL.Logging
 
                      , Hasura.Events.Lib
                      , Hasura.Events.HTTP
@@ -346,7 +356,6 @@ executable graphql-engine
                      , http-client-tls
                      , stm
                      , wreq
-                     , connection
                      , string-conversions
                      , uuid
 
@@ -363,31 +372,5 @@ executable graphql-engine
                -Wincomplete-uni-patterns
                -Wredundant-constraints
                -threaded -rtsopts
-
-test-suite graphql-engine-test
-  type:               exitcode-stdio-1.0
-  main-is:            Main.hs
-  Default-Language:   Haskell2010
-  Hs-Source-Dirs:     test
-  ghc-options:        -O2 -Wall
-  Build-Depends:       Spock-core >= 0.11
-                     , base
-                     , aeson
-                     , aeson-casing
-                     , bytestring
-                     , hspec
-                     , hspec-core
-                     , hspec-wai
-                     , optparse-applicative
-                     , graphql-engine -any
-                     , text
-                     , wai
-                     , pg-client
-                     , time
-                     , yaml
-                     , http-client
-                     , http-client-tls
-                     , unordered-containers >= 0.2
-                     , case-insensitive
-
-  other-modules:     Spec
+               -- Re. `-I2` see #2565
+               "-with-rtsopts=-N -I2"

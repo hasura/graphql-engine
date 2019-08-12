@@ -6,4 +6,5 @@ args:
     sql: |
       DROP TABLE post cascade;
       DROP TABLE test cascade;
+      DROP TABLE integer_column cascade;
     cascade: true

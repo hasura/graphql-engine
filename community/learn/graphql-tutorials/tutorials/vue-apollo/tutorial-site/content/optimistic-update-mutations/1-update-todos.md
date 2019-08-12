@@ -1,5 +1,7 @@
 ---
 title: "Update todos - mutation"
+metaTitle: "Mutation to update todos | GraphQL Vue Apollo Tutorial"
+metaDescription: "GraphQL Mutation to update existing personal todos. Try the mutation in GraphiQL, passing the Authorization token to mark a todo as completed"
 ---
 
 import YoutubeEmbed from "../../src/YoutubeEmbed.js";

@@ -1,5 +1,7 @@
 ---
 title: "Loading older todos"
+metaTitle: "Loading older todos | GraphQL React Native Apollo Tutorial"
+metaDescription: "You will learn how to load older todos added by other people to see an example of pagination in GraphQL."
 ---
 
 It might not be always ideal to load all the todos in the database. You would want to have some kind of pagination to enforce fetching data incrementally.

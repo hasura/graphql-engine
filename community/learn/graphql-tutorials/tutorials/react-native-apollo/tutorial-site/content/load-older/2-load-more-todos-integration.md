@@ -1,8 +1,14 @@
 ---
 title: "Load more todos integration"
+metaTitle: "GraphQL Query to load older todos | GraphQL React Native Apollo Tutorial"
+metaDescription: "You will learn the GraphQL query to be made to load older todos with parameters and arguments."
 ---
 
 import GithubLink from "../../src/GithubLink.js";
+
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/ajMuxGqX-Dg" />
 
 In the last section, we modified the query that fetches all the todos to fetch only 10 todos on first load. We also wrote another query that fetches older todos. Now let us implement a button that loads older todos on press. Go to `src/screens/components/Todo/LoadOlder.js`, import `gql` from `graphql-tag` and define the query that we wrote in the last section:
 

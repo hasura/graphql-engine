@@ -1,5 +1,7 @@
 ---
 title: "Course introduction"
+metaTitle: "Course Introduction | Hasura GraphQL Tutorial"
+metaDescription: "A powerful and concise tutorial that will introduce you to setting up a GraphQL backend with Hasura GraphQL Engine in the shortest amount of time possible."
 ---
 
 This course is a super fast introduction to setting up a GraphQL backend with Hasura.
@@ -19,12 +21,12 @@ is an ideal starting point before diving into advanced topics.
 4. Event triggers: Run business logic on the backend when there are database events
 
 
-## What will be building?
+## What will we be building?
 
-We will be building the backend of a realtime todo app. If you're interested in building the frontend and are new to GraphQL, head to the GraphQL tutorials for different frontend frameworks:
+We will be building the backend of a realtime todo app. If you're interested in building the frontend and are new to GraphQL, head to the [GraphQL tutorials](https://learn.hasura.io) for different frontend frameworks:
 
 Try this deployed version of the app, to see what features our backend will need to have:
-https://final-graphql-tutorial.netlify.com/
+https://learn-hasura-todo-app.netlify.com/
 
 ## What do I need to take this tutorial?
 

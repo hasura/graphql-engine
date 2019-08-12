@@ -3,7 +3,6 @@ select
     'tables', tables.items,
     'relations', relations.items,
     'permissions', permissions.items,
-    'query_templates', query_templates.items,
     'event_triggers', event_triggers.items,
     'remote_schemas', remote_schemas.items,
     'functions', functions.items,
@@ -95,20 +94,6 @@ from
       coalesce(
         json_agg(
           json_build_object(
-            'name', template_name,
-            'def', template_defn :: json
-          )
-        ),
-        '[]'
-      ) as items
-    from
-      hdb_catalog.hdb_query_template
-  ) as query_templates,
-  (
-    select
-      coalesce(
-        json_agg(
-          json_build_object(
             'table',
             json_build_object(
               'schema', schema_name,
@@ -179,6 +164,7 @@ from
               'schema', f.ref_table_table_schema,
               'name', f.ref_table
             ),
+            'oid', f.constraint_oid,
             'constraint', f.constraint_name,
             'column_mapping', f.column_mapping
           ) as info

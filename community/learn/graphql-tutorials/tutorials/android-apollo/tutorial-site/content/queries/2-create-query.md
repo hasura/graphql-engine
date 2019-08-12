@@ -1,12 +1,14 @@
 ---
 title: '.graphql file'
+metaTitle: "Querying using apolloClient.query  | GraphQL Android Apollo Tutorial"
+metaDescription: "We will dine the GraphQL query in .graphql file and use the apolloClient.query from android apollo. It will give a callback with onResponse to handle data state"
 ---
 
 import GithubLink from '../../src/GithubLink.js'
 
 In this section, we will learn more about GraphQL Queries and integrate with the android app UI.
 
-### Create `.graphql` files with your queries or mutations
+### Create .graphql files with your queries or mutations
 
 Apollo android generates code from queries and mutations contained in `.graphql` files in your target. Let's define a graphql query to fetch the required data. We define all our queries and mutations in `api.graphql` file.
 

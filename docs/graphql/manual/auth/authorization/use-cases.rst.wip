@@ -74,8 +74,6 @@ You can notice above how the same query now only includes the right slice of dat
 
   This rule reads as: allow selecting an article if it was published after "31-12-2018" and its author is the current user.
 
-  **Note:** The operators ``_has_keys_all`` and ``_has_keys_any`` are currently not supported in permission rules
-
 .. _restrict_columns:
 
 Restrict access to certain columns

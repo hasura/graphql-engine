@@ -1,4 +1,9 @@
-const ordinalColSort = (a, b) => {
+// check 2xx success status codes
+export const verifySuccessStatus = status => {
+  return /^2[0-9][0-9]$/.test(status.toString());
+};
+
+export const ordinalColSort = (a, b) => {
   if (a.ordinal_position < b.ordinal_position) {
     return -1;
   }
@@ -18,7 +23,7 @@ const findFKConstraint = (curTable, column) => {
   );
 };
 
-const findTableFromRel = (schemas, curTable, rel) => {
+export const findTableFromRel = (schemas, curTable, rel) => {
   let rtable = null;
 
   // for view
@@ -52,77 +57,7 @@ const findTableFromRel = (schemas, curTable, rel) => {
   return schemas.find(x => x.table_name === rtable);
 };
 
-const findAllFromRel = (schemas, curTable, rel) => {
-  let rtable = null;
-  let lcol;
-  let rcol;
-
-  const foreignKeyConstraintOn = rel.rel_def.foreign_key_constraint_on;
-
-  // for view
-  if (rel.rel_def.manual_configuration !== undefined) {
-    rtable = rel.rel_def.manual_configuration.remote_table;
-
-    if (rtable.schema) {
-      rtable = rtable.name;
-    }
-    const columnMapping = rel.rel_def.manual_configuration.column_mapping;
-    lcol = Object.keys(columnMapping)[0];
-    rcol = columnMapping[lcol];
-  }
-
-  // for table
-  if (foreignKeyConstraintOn !== undefined) {
-    // for object relationship
-    if (rel.rel_type === 'object') {
-      lcol = foreignKeyConstraintOn;
-
-      const fkc = findFKConstraint(curTable, lcol);
-      if (fkc) {
-        rtable = fkc.ref_table;
-        rcol = fkc.column_mapping[lcol];
-      }
-    }
-
-    // for array relationship
-    if (rel.rel_type === 'array') {
-      rtable = foreignKeyConstraintOn.table;
-      rcol = foreignKeyConstraintOn.column;
-      if (rtable.schema) {
-        // if schema exists, its not public schema
-        rtable = rtable.name;
-      }
-
-      const rtableSchema = schemas.find(x => x.table_name === rtable);
-      const rfkc = findFKConstraint(rtableSchema, rcol);
-      lcol = rfkc.column_mapping[rcol];
-    }
-  }
-
-  return { lcol, rtable, rcol };
-};
-
-const getIngForm = string => {
-  return (
-    (string[string.length - 1] === 'e'
-      ? string.slice(0, string.length - 1)
-      : string) + 'ing'
-  );
-};
-
-const getEdForm = string => {
-  return (
-    (string[string.length - 1] === 'e'
-      ? string.slice(0, string.length - 1)
-      : string) + 'ed'
-  );
-};
-
-const escapeRegExp = string => {
-  return string.replace(/([.*+?^${}()|[\]\\])/g, '\\$1');
-};
-
-const getTableColumns = tableSchema => {
+export const getTableColumns = tableSchema => {
   if (tableSchema) {
     return tableSchema.columns.map(colObj => ({
       name: colObj.column_name,
@@ -132,7 +67,7 @@ const getTableColumns = tableSchema => {
   return [];
 };
 
-const convertDateTimeToLocale = dateTime => {
+export const convertDateTimeToLocale = dateTime => {
   const options = {
     hourCycle: 'h24',
     day: 'numeric',
@@ -148,7 +83,7 @@ const convertDateTimeToLocale = dateTime => {
   return new Date(dateTime + 'Z').toLocaleString('en-US', options);
 };
 
-const getEventTriggersQuery = (triggerNames) => {
+export const getEventTriggersQuery = triggerNames => {
   let whereQuery = '';
   const triggerLength = triggerNames.length;
   if (triggerLength !== 0) {
@@ -156,7 +91,7 @@ const getEventTriggersQuery = (triggerNames) => {
     whereQuery = 'where';
     triggerNames.forEach((triggerName, index) => {
       whereQuery = whereQuery + ` hdb_et.name='${triggerName}'`;
-      if ((index + 1) !== triggerLength) {
+      if (index + 1 !== triggerLength) {
         whereQuery = whereQuery + ' and';
       }
     });
@@ -209,14 +144,54 @@ FROM
   };
 };
 
-export {
-  ordinalColSort,
-  findTableFromRel,
-  findAllFromRel,
-  getEdForm,
-  getIngForm,
-  escapeRegExp,
-  getTableColumns,
-  convertDateTimeToLocale,
-  getEventTriggersQuery,
+export const parseRowData = (row, dataType) => {
+  switch (dataType) {
+    case 'request':
+      switch (row.request.version) {
+        case '2':
+          const data = row.request.payload;
+          return {
+            data: data,
+            headers: row.request.headers,
+          };
+        default:
+          return {
+            data: row.request,
+          };
+      }
+    case 'response':
+      let data;
+      switch (row.response.version) {
+        case '2':
+          try {
+            // Handle graphql-engine server error message
+            if (row.response.data.message) {
+              data = row.response.data;
+            } else {
+              data = JSON.parse(row.response.data.body);
+            }
+          } catch (e) {
+            console.error(e);
+            data = row.response.data.body;
+          }
+          return {
+            data: data,
+            headers: row.response.data.headers,
+            status_code: row.response.data.status,
+          };
+        default:
+          try {
+            data = JSON.parse(row.response);
+          } catch (e) {
+            console.error(e);
+            data = row.response;
+          }
+          return {
+            data: data,
+            status_code: row.status,
+          };
+      }
+    default:
+      return false;
+  }
 };

@@ -7,6 +7,7 @@ import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 import DataSubSidebar from './DataSubSidebar';
 
 import { updateCurrentSchema } from './DataActions';
+import { NotFoundError } from '../../Error/PageNotFound';
 
 const sectionPrefix = '/data';
 
@@ -19,6 +20,13 @@ const DataPageContainer = ({
   dispatch,
 }) => {
   const styles = require('../../Common/TableCommon/Table.scss');
+
+  if (!schemaList.map(s => s.schema_name).includes(currentSchema)) {
+    dispatch(updateCurrentSchema('public', false));
+
+    // throw a 404 exception
+    throw new NotFoundError();
+  }
 
   const currentLocation = location.pathname;
 
@@ -42,6 +50,14 @@ const DataPageContainer = ({
     dispatch(updateCurrentSchema(e.target.value));
   };
 
+  const getSchemaOptions = () => {
+    return schemaList.map(s => (
+      <option key={s.schema_name} value={s.schema_name}>
+        {s.schema_name}
+      </option>
+    ));
+  };
+
   const sidebarContent = (
     <ul>
       <li
@@ -60,11 +76,7 @@ const DataPageContainer = ({
                 value={currentSchema}
                 className={styles.changeSchema + ' form-control'}
               >
-                {schemaList.map(s => (
-                  <option key={s.schema_name} value={s.schema_name}>
-                    {s.schema_name}
-                  </option>
-                ))}
+                {getSchemaOptions()}
               </select>
             </div>
           </div>

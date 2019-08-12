@@ -86,10 +86,15 @@ deploy_console() {
 # build and push container for auto-migrations
 build_and_push_cli_migrations_image() {
     IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations"
+    LATEST_IMAGE_TAG="hasura/graphql-engine:latest.cli-migrations"
     cd "$ROOT/scripts/cli-migrations"
     cp /build/_cli_output/binaries/cli-hasura-linux-amd64 .
     docker build -t "$IMAGE_TAG" .
     docker push "$IMAGE_TAG"
+
+    # push latest.cli-migrations tag
+    docker tag "$IMAGE_TAG" "$LATEST_IMAGE_TAG"
+    docker push "$LATEST_IMAGE_TAG"
 }
 
 # copy docker-compose-https manifests to gcr for digital ocean one-click app

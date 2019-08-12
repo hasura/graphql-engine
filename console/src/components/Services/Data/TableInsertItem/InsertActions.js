@@ -100,9 +100,7 @@ const insertItem = (tableName, colValues) => {
         );
       },
       err => {
-        dispatch(
-          showErrorNotification('Insert failed!', err.error, reqBody, err)
-        );
+        dispatch(showErrorNotification('Insert failed!', err.error, err));
       }
     );
   };
