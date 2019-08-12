@@ -21,6 +21,8 @@ class TestLogging():
         # setup some tables
         st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
         assert st_code == 200, resp
+
+        # make a successful query
         q = {'query': 'query { hello {code name} }'}
         headers = {}
         if hge_ctx.hge_key:
@@ -28,6 +30,17 @@ class TestLogging():
         resp = hge_ctx.http.post(hge_ctx.hge_url + '/v1/graphql', json=q,
                                  headers=headers)
         assert resp.status_code == 200 and 'data' in resp.json()
+
+        # make a query where JSON body parsing fails
+        q = {'quer': 'query { hello {code name} }'}
+        headers = {'x-request-id': 'json-parse-fail-log-test'}
+        if hge_ctx.hge_key:
+            headers['x-hasura-admin-secret'] = hge_ctx.hge_key
+        resp = hge_ctx.http.post(hge_ctx.hge_url + '/v1/graphql', json=q,
+                                 headers=headers)
+        assert resp.status_code == 200 and 'errors' in resp.json()
+
+        # gather and parse the logs now
         self.logs = self._parse_logs(hge_ctx)
         # sometimes the log might take time to buffer
         time.sleep(2)
@@ -115,3 +128,15 @@ class TestLogging():
         assert 'query' in onelog
         assert 'query' in onelog['query']
         assert 'generated_sql' in onelog
+
+    def test_http_parse_failed_log(self, hge_ctx):
+        def _get_parse_failed_logs(x):
+            return x['type'] == 'http-log' and \
+                x['detail']['operation']['request_id'] == 'json-parse-fail-log-test'
+
+        http_logs = list(filter(_get_parse_failed_logs, self.logs))
+        print('parse failed logs', http_logs)
+        assert len(http_logs) > 0
+        print(http_logs[0])
+        assert 'error' in http_logs[0]['detail']['operation']
+        assert http_logs[0]['detail']['operation']['error']['code'] == 'parse-failed'

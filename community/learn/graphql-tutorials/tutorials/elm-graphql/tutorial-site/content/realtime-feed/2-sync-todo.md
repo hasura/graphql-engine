@@ -234,7 +234,7 @@ Lets add it to our update function to update the models appropriately
 
 ```
 
-### Update `loadLatestPublicTodo` and `loadOldPublicTodos`
+### Update loadLatestPublicTodo and loadOldPublicTodos
 
 Lets update our render functions to invoke relevant actions on click
 

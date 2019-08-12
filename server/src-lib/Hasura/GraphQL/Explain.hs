@@ -12,8 +12,6 @@ import qualified Language.GraphQL.Draft.Syntax          as G
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Resolve.Context
-import           Hasura.GraphQL.Validate.Field
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
@@ -56,10 +54,10 @@ runExplain ctx m =
 
 resolveVal
   :: (MonadError QErr m)
-  => UserInfo -> UnresolvedVal -> m S.SQLExp
+  => UserInfo -> RS.UnresolvedVal -> m S.SQLExp
 resolveVal userInfo = \case
   RS.UVPG annPGVal ->
-    txtConverter annPGVal
+    RS.txtConverter annPGVal
   RS.UVSessVar ty sessVar -> do
     sessVarVal <- S.SELit <$> getSessVarVal userInfo sessVar
     return $ flip S.SETyAnn (S.mkTypeAnn ty) $ case ty of
@@ -81,7 +79,7 @@ getSessVarVal userInfo sessVar =
 
 explainField
   :: (MonadTx m)
-  => UserInfo -> GCtx -> SQLGenCtx -> Field -> m FieldPlan
+  => UserInfo -> GCtx -> SQLGenCtx -> GV.Field -> m FieldPlan
 explainField userInfo gCtx sqlGenCtx fld =
   case fName of
     "__type"     -> return $ FieldPlan fName Nothing Nothing
@@ -99,7 +97,7 @@ explainField userInfo gCtx sqlGenCtx fld =
         Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True
       return $ FieldPlan fName (Just txtSQL) $ Just planLines
   where
-    fName = _fName fld
+    fName = GV._fName fld
 
     opCtxMap = _gOpCtxMap gCtx
     fldMap = _gFields gCtx

@@ -19,7 +19,7 @@ import qualified Data.Yaml.TH                as Y
 import qualified Database.PG.Query           as Q
 
 curCatalogVer :: T.Text
-curCatalogVer = "19"
+curCatalogVer = "20"
 
 migrateMetadata
   :: ( MonadTx m
@@ -103,8 +103,8 @@ setAsSystemDefinedFor16 =
              AND  table_name = 'hdb_query_collection';
            |]
 
-setAsSystemDefinedFor19 :: MonadTx m => m ()
-setAsSystemDefinedFor19 =
+setAsSystemDefinedFor20 :: MonadTx m => m ()
+setAsSystemDefinedFor20 =
   liftTx $ Q.catchE defaultTxErrorHandler $
   Q.multiQ [Q.sql|
             UPDATE hdb_catalog.hdb_table
@@ -347,7 +347,14 @@ from17To18 =
             DROP table hdb_catalog.hdb_query_template
            |]
 
-from18To19
+from18To19 :: MonadTx m => m ()
+from18To19 = do
+  -- Migrate database
+  Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
+    $(Q.sqlFromFile "src-rsr/migrate_from_18_to_19.sql")
+  return ()
+
+from19To20
   :: ( MonadTx m
     , HasHttpManager m
     , HasSQLGenCtx m
@@ -356,15 +363,14 @@ from18To19
     , MonadIO m
     )
   => m ()
-from18To19 = do
+from19To20 = do
   Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
-    $(Q.sqlFromFile "src-rsr/migrate_from_18_to_19.sql")
+    $(Q.sqlFromFile "src-rsr/migrate_from_19_to_20.sql")
   migrateMetadata True migrateMetadataFromFile
-  setAsSystemDefinedFor19
-  return ()
+  setAsSystemDefinedFor20
   where
     migrateMetadataFromFile =
-      $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_18_to_19.yaml" :: Q (TExp RQLQuery)))
+      $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_19_to_20.yaml" :: Q (TExp RQLQuery)))
 
 migrateCatalog
   :: ( MonadTx m
@@ -377,32 +383,39 @@ migrateCatalog
   => UTCTime -> m String
 migrateCatalog migrationTime = do
   preVer <- getCatalogVersion
-  if | preVer == curCatalogVer ->
-         return $ "already at the latest version. current version: "
-                   <> show curCatalogVer
-     | preVer == "0.8" -> from08ToCurrent
-     | preVer == "1"   -> from1ToCurrent
-     | preVer == "2"   -> from2ToCurrent
-     | preVer == "3"   -> from3ToCurrent
-     | preVer == "4"   -> from4ToCurrent
-     | preVer == "5"   -> from5ToCurrent
-     | preVer == "6"   -> from6ToCurrent
-     | preVer == "7"   -> from7ToCurrent
-     | preVer == "8"   -> from8ToCurrent
-     | preVer == "9"   -> from9ToCurrent
-     | preVer == "10"  -> from10ToCurrent
-     | preVer == "11"  -> from11ToCurrent
-     | preVer == "12"  -> from12ToCurrent
-     | preVer == "13"  -> from13ToCurrent
-     | preVer == "14"  -> from14ToCurrent
-     | preVer == "15"  -> from15ToCurrent
-     | preVer == "16"  -> from16ToCurrent
-     | preVer == "17"  -> from17ToCurrent
-     | preVer == "18"  -> from18ToCurrent
-     | otherwise -> throw400 NotSupported $
-                    "unsupported version : " <> preVer
+  if preVer == curCatalogVer
+    then
+      return $ "already at the latest version. current version: "
+                <> show curCatalogVer
+    else do
+      case preVer of
+        "0.8" -> from08ToCurrent
+        "1"   -> from1ToCurrent
+        "2"   -> from2ToCurrent
+        "3"   -> from3ToCurrent
+        "4"   -> from4ToCurrent
+        "5"   -> from5ToCurrent
+        "6"   -> from6ToCurrent
+        "7"   -> from7ToCurrent
+        "8"   -> from8ToCurrent
+        "9"   -> from9ToCurrent
+        "10"  -> from10ToCurrent
+        "11"  -> from11ToCurrent
+        "12"  -> from12ToCurrent
+        "13"  -> from13ToCurrent
+        "14"  -> from14ToCurrent
+        "15"  -> from15ToCurrent
+        "16"  -> from16ToCurrent
+        "17"  -> from17ToCurrent
+        "18"  -> from18ToCurrent
+        "19"  -> from19ToCurrent
+        _     -> throw400 NotSupported $
+                   "unsupported version : " <> preVer
+      postMigrate
   where
-    from18ToCurrent = from18To19 >> postMigrate
+    from19ToCurrent = from19To20
+
+    from18ToCurrent = from18To19 >> from19ToCurrent
 
     from17ToCurrent = from17To18 >> from18ToCurrent
 
