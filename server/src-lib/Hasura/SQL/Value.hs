@@ -1,4 +1,18 @@
-module Hasura.SQL.Value where
+module Hasura.SQL.Value
+  ( PGScalarValue(..)
+  , pgColValueToInt
+  , withGeoVal
+  , parsePGValue
+
+  , TxtEncodedPGVal
+  , txtEncodedPGVal
+
+  , binEncoder
+  , txtEncoder
+  , toBinaryValue
+  , toTxtValue
+  , toPrepParam
+  ) where
 
 import           Hasura.SQL.GeoJSON
 import           Hasura.SQL.Time
@@ -9,7 +23,6 @@ import qualified Database.PG.Query.PTI      as PTI
 import qualified Hasura.SQL.DML             as S
 
 import           Data.Aeson
-import           Data.Aeson.Internal
 import           Data.Int
 import           Data.Scientific
 import           Data.Time
@@ -45,6 +58,46 @@ data PGScalarValue
   | PGValGeo !GeometryWithCRS
   | PGValUnknown !T.Text
   deriving (Show, Eq)
+
+pgColValueToInt :: PGScalarValue -> Maybe Int
+pgColValueToInt (PGValInteger i)  = Just $ fromIntegral i
+pgColValueToInt (PGValSmallInt i) = Just $ fromIntegral i
+pgColValueToInt (PGValBigInt i)   = Just $ fromIntegral i
+pgColValueToInt _                 = Nothing
+
+withGeoVal :: PGScalarType -> S.SQLExp -> S.SQLExp
+withGeoVal ty v
+  | isGeoType ty = S.SEFnApp "ST_GeomFromGeoJSON" [v] Nothing
+  | otherwise = v
+
+parsePGValue :: PGScalarType -> Value -> AT.Parser PGScalarValue
+parsePGValue ty val = case (ty, val) of
+  (_          , Null)     -> pure $ PGNull ty
+  (PGUnknown _, String t) -> pure $ PGValUnknown t
+  (_          , String t) -> parseTyped <|> pure (PGValUnknown t)
+  (_          , _)        -> parseTyped
+  where
+    parseTyped = case ty of
+      PGSmallInt -> PGValSmallInt <$> parseJSON val
+      PGInteger -> PGValInteger <$> parseJSON val
+      PGBigInt -> PGValBigInt <$> parseJSON val
+      PGSerial -> PGValInteger <$> parseJSON val
+      PGBigSerial -> PGValBigInt <$> parseJSON val
+      PGFloat -> PGValFloat <$> parseJSON val
+      PGDouble -> PGValDouble <$> parseJSON val
+      PGNumeric -> PGValNumeric <$> parseJSON val
+      PGBoolean -> PGValBoolean <$> parseJSON val
+      PGChar -> PGValChar <$> parseJSON val
+      PGVarchar -> PGValVarchar <$> parseJSON val
+      PGText -> PGValText <$> parseJSON val
+      PGDate -> PGValDate <$> parseJSON val
+      PGTimeStampTZ -> PGValTimeStampTZ <$> parseJSON val
+      PGTimeTZ -> PGValTimeTZ <$> parseJSON val
+      PGJSON -> PGValJSON . Q.JSON <$> parseJSON val
+      PGJSONB -> PGValJSONB . Q.JSONB <$> parseJSON val
+      PGGeometry -> PGValGeo <$> parseJSON val
+      PGGeography -> PGValGeo <$> parseJSON val
+      PGUnknown tyName -> fail $ "A string is expected for type : " ++ T.unpack tyName
 
 data TxtEncodedPGVal
   = TENull
@@ -85,114 +138,37 @@ txtEncodedPGVal colVal = case colVal of
     AE.encodeToLazyText o
   PGValUnknown t -> TELit t
 
+binEncoder :: PGScalarValue -> Q.PrepArg
+binEncoder colVal = case colVal of
+  PGValInteger i -> Q.toPrepVal i
+  PGValSmallInt i -> Q.toPrepVal i
+  PGValBigInt i -> Q.toPrepVal i
+  PGValFloat f -> Q.toPrepVal f
+  PGValDouble d -> Q.toPrepVal d
+  PGValNumeric sc -> Q.toPrepVal sc
+  PGValBoolean b -> Q.toPrepVal b
+  PGValChar t -> Q.toPrepVal t
+  PGValVarchar t -> Q.toPrepVal t
+  PGValText t -> Q.toPrepVal t
+  PGValDate d -> Q.toPrepVal d
+  PGValTimeStampTZ u -> Q.toPrepVal u
+  PGValTimeTZ (ZonedTimeOfDay t z) -> Q.toPrepValHelper PTI.timetz PE.timetz_int (t, z)
+  PGNull ty -> (pgTypeOid ty, Nothing)
+  PGValJSON u -> Q.toPrepVal u
+  PGValJSONB u -> Q.toPrepVal u
+  PGValGeo o -> Q.toPrepVal $ TL.toStrict $ AE.encodeToLazyText o
+  PGValUnknown t -> (PTI.auto, Just (TE.encodeUtf8 t, PQ.Text))
+
 txtEncoder :: PGScalarValue -> S.SQLExp
 txtEncoder colVal = case txtEncodedPGVal colVal of
   TENull  -> S.SEUnsafe "NULL"
   TELit t -> S.SELit t
 
-binEncoder :: PGScalarValue -> Q.PrepArg
-binEncoder colVal = case colVal of
-  PGValInteger i ->
-    Q.toPrepVal i
-  PGValSmallInt i ->
-    Q.toPrepVal i
-  PGValBigInt i ->
-    Q.toPrepVal i
-  PGValFloat f ->
-    Q.toPrepVal f
-  PGValDouble d ->
-    Q.toPrepVal d
-  PGValNumeric sc ->
-    Q.toPrepVal sc
-  PGValBoolean b ->
-    Q.toPrepVal b
-  PGValChar t ->
-    Q.toPrepVal t
-  PGValVarchar t ->
-    Q.toPrepVal t
-  PGValText t ->
-    Q.toPrepVal t
-  PGValDate d ->
-    Q.toPrepVal d
-  PGValTimeStampTZ u ->
-    Q.toPrepVal u
-  PGValTimeTZ (ZonedTimeOfDay t z) ->
-    Q.toPrepValHelper PTI.timetz PE.timetz_int (t, z)
-  PGNull ty ->
-    (pgTypeOid ty, Nothing)
-  PGValJSON u ->
-    Q.toPrepVal u
-  PGValJSONB u ->
-    Q.toPrepVal u
-  PGValGeo o ->
-    Q.toPrepVal $ TL.toStrict $ AE.encodeToLazyText o
-  PGValUnknown t ->
-    textToPrepVal t
-
-textToPrepVal :: Text -> Q.PrepArg
-textToPrepVal t =
-  (PTI.auto, Just (TE.encodeUtf8 t, PQ.Text))
-
-parsePGValue' :: PGScalarType
-             -> Value
-             -> AT.Parser PGScalarValue
-parsePGValue' ty v = case (ty, v) of
-  (_, Null) -> return $ PGNull ty
-  (PGSmallInt, val) -> PGValSmallInt <$> parseJSON val
-  (PGInteger, val) -> PGValInteger <$> parseJSON val
-  (PGBigInt, val) -> PGValBigInt <$> parseJSON val
-  (PGSerial, val) -> PGValInteger <$> parseJSON val
-  (PGBigSerial, val) -> PGValBigInt <$> parseJSON val
-  (PGFloat, val) -> PGValFloat <$> parseJSON val
-  (PGDouble, val) -> PGValDouble <$> parseJSON val
-  (PGNumeric, val) -> PGValNumeric <$> parseJSON val
-  (PGBoolean, val) -> PGValBoolean <$> parseJSON val
-  (PGChar, val) -> PGValChar <$> parseJSON val
-  (PGVarchar, val) -> PGValVarchar <$> parseJSON val
-  (PGText, val) -> PGValText <$> parseJSON val
-  (PGDate, val) -> PGValDate <$> parseJSON val
-  (PGTimeStampTZ, val) -> PGValTimeStampTZ <$> parseJSON val
-  (PGTimeTZ, val) -> PGValTimeTZ <$> parseJSON val
-  (PGJSON, val) -> PGValJSON . Q.JSON <$> parseJSON val
-  (PGJSONB, val) -> PGValJSONB . Q.JSONB <$> parseJSON val
-  (PGGeometry, val) -> PGValGeo <$> parseJSON val
-  (PGGeography, val) -> PGValGeo <$> parseJSON val
-  (PGUnknown _, String t) -> return $ PGValUnknown t
-  (PGUnknown tyName, _) -> fail $ "A string is expected for type : " ++ T.unpack tyName
-
-parsePGValue :: PGScalarType -> Value -> AT.Parser PGScalarValue
-parsePGValue pct val =
-  case val of
-    String t -> parsePGValue' pct val <|> return (PGValUnknown t)
-    _        -> parsePGValue' pct val
-
-readEitherTxt :: (Read a) => T.Text -> Either String a
-readEitherTxt = readEither . T.unpack
-
-iresToEither :: IResult a -> Either String a
-iresToEither (IError _ msg) = Left msg
-iresToEither (ISuccess a)   = return a
-
-pgValFromJVal :: (FromJSON a) => Value -> Either String a
-pgValFromJVal = iresToEither . ifromJSON
-
-withGeoVal :: PGScalarType -> S.SQLExp -> S.SQLExp
-withGeoVal ty v
-  | isGeoType ty = S.SEFnApp "ST_GeomFromGeoJSON" [v] Nothing
-  | otherwise = v
-
 toPrepParam :: Int -> PGScalarType -> S.SQLExp
-toPrepParam i ty =
-  withGeoVal ty $ S.SEPrep i
+toPrepParam i ty = withGeoVal ty $ S.SEPrep i
 
 toBinaryValue :: WithScalarType PGScalarValue -> Q.PrepArg
 toBinaryValue = binEncoder . pstValue
 
 toTxtValue :: WithScalarType PGScalarValue -> S.SQLExp
 toTxtValue (WithScalarType ty val) = S.withTyAnn ty . withGeoVal ty $ txtEncoder val
-
-pgColValueToInt :: PGScalarValue -> Maybe Int
-pgColValueToInt (PGValInteger i)  = Just $ fromIntegral i
-pgColValueToInt (PGValSmallInt i) = Just $ fromIntegral i
-pgColValueToInt (PGValBigInt i)   = Just $ fromIntegral i
-pgColValueToInt _                 = Nothing
