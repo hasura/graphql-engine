@@ -60,13 +60,14 @@ $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogFunction)
 
 data CatalogMetadata
   = CatalogMetadata
-  { _cmTables               :: ![CatalogTable]
-  , _cmRelations            :: ![CatalogRelation]
-  , _cmPermissions          :: ![CatalogPermission]
-  , _cmEventTriggers        :: ![CatalogEventTrigger]
-  , _cmRemoteSchemas        :: ![AddRemoteSchemaQuery]
-  , _cmFunctions            :: ![CatalogFunction]
-  , _cmForeignKeys          :: ![ForeignKey]
-  , _cmAllowlistCollections :: ![CollectionDef]
+  { _cmTables                  :: ![CatalogTable]
+  , _cmRelations               :: ![CatalogRelation]
+  , _cmPermissions             :: ![CatalogPermission]
+  , _cmEventTriggers           :: ![CatalogEventTrigger]
+  , _cmRemoteSchemas           :: ![AddRemoteSchemaQuery]
+  , _cmFunctions               :: ![CatalogFunction]
+  , _cmForeignKeys             :: ![ForeignKey]
+  , _cmAllowlistCollections    :: ![CollectionDef]
+  , _cmRemoteSchemaPermissions :: ![RemoteSchemaPermissions]
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogMetadata)

@@ -69,9 +69,9 @@ type PermTypeMap = Map.HashMap G.NamedType [G.Name]
 
 data RemoteSchemaPermissions
   = RemoteSchemaPermissions
-  { rsPermRemoteSchemaName :: RemoteSchemaName
-  , rsPermRole             :: RoleName
-  , rsPermTypes            :: PermTypeMap
+  { rsPermRemoteSchema :: RemoteSchemaName
+  , rsPermRole         :: RoleName
+  , rsPermDefinition   :: PermTypeMap
   } deriving (Show, Eq, Lift)
 
 $(J.deriveJSON (J.aesonDrop 6 J.snakeCase) ''RemoteSchemaPermissions)

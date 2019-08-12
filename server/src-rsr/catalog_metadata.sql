@@ -7,7 +7,8 @@ select
     'remote_schemas', remote_schemas.items,
     'functions', functions.items,
     'foreign_keys', foreign_keys.items,
-    'allowlist_collections', allowlist.item
+    'allowlist_collections', allowlist.item,
+    'remote_schema_permissions', remote_schema_permissions.items
   )
 from
   (
@@ -183,4 +184,19 @@ from
     left outer join
          hdb_catalog.hdb_query_collection hqc
          on (hqc.collection_name = ha.collection_name)
-  ) as allowlist
+  ) as allowlist,
+  (
+    select
+      coalesce(
+        json_agg(
+          json_build_object(
+            'remote_schema', remote_schema,
+            'role', role,
+            'definition', definition :: json
+          )
+        ),
+        '[]'
+      ) as items
+      from
+          hdb_catalog.remote_schema_permissions
+  ) as remote_schema_permissions

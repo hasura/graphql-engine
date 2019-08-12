@@ -348,7 +348,7 @@ buildSchemaCacheG withSetup = do
 
   -- fetch all catalog metadata
   CatalogMetadata tables relationships permissions
-    eventTriggers remoteSchemas functions fkeys' allowlistDefs
+    eventTriggers remoteSchemas functions fkeys' allowlistDefs rsPermissions
     <- liftTx fetchCatalogData
 
   let fkeys = HS.fromList fkeys'
@@ -429,6 +429,10 @@ buildSchemaCacheG withSetup = do
 
   -- remote schemas
   forM_ remoteSchemas resolveSingleRemoteSchema
+  -- add remote schema permissions
+  forM_ rsPermissions $ \rsPerm -> do
+    rsCtx <- runAddRemoteSchemaPermissionsP1 rsPerm
+    runAddRemoteSchemaPermissionsP2Setup rsPerm rsCtx
 
   where
     permHelper setup sqlGenCtx qt rn pDef pa = do
@@ -448,16 +452,9 @@ buildSchemaCacheG withSetup = do
       handleInconsistentObj mkInconsObj $ do
         rsCtx <- addRemoteSchemaP2Setup rs
         sc <- askSchemaCache
-        -- TODO: Add permissions for Remote Schemas here
-        let gCtxMap = scGCtxMap sc
-            defGCtx = scDefaultRemoteGCtx sc
+        let defGCtx = scDefaultRemoteGCtx sc
             rGCtx = convRemoteGCtx $ rscGCtx rsCtx
-            rsWithRoles = scRemoteSchemasWithRole sc
-        -- mergedGCtxMap <- mergeRoleRemoteSchemas gCtxMap rGCtx
         mergedDefGCtx <- mergeGCtx defGCtx rGCtx
-        -- writeSchemaCache sc { scGCtxMap = mergedGCtxMap
-        --                     , scDefaultRemoteGCtx = mergedDefGCtx
-        --                     }
         writeSchemaCache sc { scDefaultRemoteGCtx = mergedDefGCtx }
 
 fetchCatalogData :: Q.TxE QErr CatalogMetadata

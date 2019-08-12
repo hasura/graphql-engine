@@ -11,6 +11,8 @@ module Hasura.RQL.DDL.RemoteSchema
   , addRemoteSchemaP2Setup
   , addRemoteSchemaP2
   , runAddRemoteSchemaPermissions
+  , runAddRemoteSchemaPermissionsP1
+  , runAddRemoteSchemaPermissionsP2Setup
   ) where
 
 import           Hasura.EncJSON
@@ -172,7 +174,7 @@ runAddRemoteSchemaPermissions
 runAddRemoteSchemaPermissions q = do
   adminOnly
   newRSCtx <- runAddRemoteSchemaPermissionsP1 q
-  runAddRemoteSchemaPermissionsP2Setup q newRSCtx
+  runAddRemoteSchemaPermissionsP2 q newRSCtx
   pure successMsg
 
 runAddRemoteSchemaPermissionsP1
@@ -180,23 +182,29 @@ runAddRemoteSchemaPermissionsP1
 runAddRemoteSchemaPermissionsP1 remoteSchemaPermission = do
   validateRemoteSchemaPermissions remoteSchemaPermission
 
+runAddRemoteSchemaPermissionsP2
+  :: (QErrM m, CacheRWM m, MonadTx m) => RemoteSchemaPermissions -> RemoteSchemaCtx -> m ()
+runAddRemoteSchemaPermissionsP2 rsPerm rsCtx = do
+  runAddRemoteSchemaPermissionsP2Setup rsPerm rsCtx
+  liftTx $ addRemoteSchemaPermissionsToCatalog rsPerm
+
 runAddRemoteSchemaPermissionsP2Setup
   :: (QErrM m, CacheRWM m) => RemoteSchemaPermissions -> RemoteSchemaCtx -> m ()
 runAddRemoteSchemaPermissionsP2Setup RemoteSchemaPermissions{..} rsCtx = do
   sc <- askSchemaCache
   let rmSchemaWithRoles = scRemoteSchemasWithRole sc
-      newSchemasWithRoles = Map.insert (rsPermRole, rsPermRemoteSchemaName) rsCtx rmSchemaWithRoles
+      newSchemasWithRoles = Map.insert (rsPermRole, rsPermRemoteSchema) rsCtx rmSchemaWithRoles
   writeSchemaCache sc { scRemoteSchemasWithRole = newSchemasWithRoles }
 
 validateRemoteSchemaPermissions :: (QErrM m, CacheRM m) => RemoteSchemaPermissions -> m RemoteSchemaCtx
 validateRemoteSchemaPermissions remoteSchemaPerm = do
   sc <- askSchemaCache
   case Map.lookup
-       (rsPermRemoteSchemaName remoteSchemaPerm)
+       (rsPermRemoteSchema remoteSchemaPerm)
        (scRemoteSchemas sc) of
     Nothing  -> throw400 RemoteSchemaError "No such remote schema"
     Just remoteSchemaCtx -> do
-      newTypes <- validateTypes (rsPermTypes remoteSchemaPerm) (GC._rgTypes $ rscGCtx remoteSchemaCtx)
+      newTypes <- validateTypes (rsPermDefinition remoteSchemaPerm) (GC._rgTypes $ rscGCtx remoteSchemaCtx)
       newGCtx <- updateRemoteGCtxFromTypes newTypes (rscGCtx remoteSchemaCtx)
       pure $ remoteSchemaCtx { rscGCtx = newGCtx }
 
@@ -267,3 +275,13 @@ updateRemoteGCtxFromTypes newTypeMap oldRemoteGCtx = do
     mRootN = VT._otiName <$> GC._rgMutationRoot oldRemoteGCtx
     sRootN = VT._otiName <$> GC._rgSubscriptionRoot oldRemoteGCtx
     noQueryRoot = err400 Unexpected "query root is missing"
+
+addRemoteSchemaPermissionsToCatalog
+  :: RemoteSchemaPermissions
+  -> Q.TxE QErr ()
+addRemoteSchemaPermissionsToCatalog (RemoteSchemaPermissions rsName rsRole rsDef) =
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+    INSERT into hdb_catalog.remote_schema_permissions
+      (remote_schema, role, definition)
+      VALUES ($1, $2, $3)
+  |] (rsName, rsRole, Q.AltJ $ J.toJSON rsDef) True
