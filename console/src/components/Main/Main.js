@@ -423,7 +423,13 @@ class Main extends React.Component {
       return helpDropdownPosStyle;
     };
 
-    const getSidebarItem = (title, icon, tooltipText, path) => {
+    const getSidebarItem = (
+      title,
+      icon,
+      tooltipText,
+      path,
+      isDefault = false
+    ) => {
       const itemTooltip = <Tooltip>{tooltipText}</Tooltip>;
 
       const block = getPathRoot(path);
@@ -433,7 +439,8 @@ class Main extends React.Component {
           <li>
             <Link
               className={
-                currentActiveBlock === block || currentActiveBlock === ''
+                currentActiveBlock === block ||
+                (isDefault && currentActiveBlock === '')
                   ? styles.navSideBarActive
                   : ''
               }
@@ -472,7 +479,7 @@ class Main extends React.Component {
                   'fa-flask',
                   tooltips.apiExplorer,
                   '/api-explorer',
-                  'api-explorer'
+                  true
                 )}
                 {getSidebarItem(
                   'Data',
