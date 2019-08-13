@@ -1,5 +1,4 @@
 import React, { useEffect, Fragment, useState } from 'react';
-import {withApollo, Subscription} from 'react-apollo';
 import { useMutation, useSubscription } from '@apollo/react-hooks';
 import gql from 'graphql-tag';
 
@@ -19,7 +18,7 @@ const OnlineUsersWrapper = () => {
        // Clean up
       clearInterval(onlineIndicator);
     }
-  })  
+  }, [])  
   
   const UPDATE_LASTSEEN_MUTATION=gql`
       mutation updateLastSeen ($now: timestamptz!) {
