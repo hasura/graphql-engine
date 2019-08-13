@@ -85,8 +85,9 @@ class Roles extends Component {
         <th
           key={'back-btn'}
           className={styles.selectable + ' ' + styles.selected}
+          onClick={clear}
         >
-          <a onClick={clear}>&larr; Back</a>
+          <span className={styles.text_link}>&larr; Back</span>
         </th>
       );
     };

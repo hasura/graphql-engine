@@ -874,6 +874,14 @@ code {
   color: #767E96
 }
 
+.text_link {
+  color: #337ab7;
+}
+
+.text_link:hover, .text_link:focus {
+  color: #23527c;
+}
+
 .docsButton {
   background-color: #fff;
   border-radius: 5px;
