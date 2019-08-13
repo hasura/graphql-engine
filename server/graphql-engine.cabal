@@ -190,8 +190,11 @@ library
                      , Hasura.RQL.DDL.Relationship
                      , Hasura.RQL.DDL.Relationship.Rename
                      , Hasura.RQL.DDL.Relationship.Types
-                     , Hasura.RQL.DDL.Schema.Enum
+                     , Hasura.RQL.DDL.Schema
+                     , Hasura.RQL.DDL.Schema.Cache
+                     , Hasura.RQL.DDL.Schema.Catalog
                      , Hasura.RQL.DDL.Schema.Diff
+                     , Hasura.RQL.DDL.Schema.Enum
                      , Hasura.RQL.DDL.Schema.Function
                      , Hasura.RQL.DDL.Schema.Rename
                      , Hasura.RQL.DDL.Schema.Table
@@ -285,6 +288,7 @@ library
 
   default-extensions: ApplicativeDo
                       BangPatterns
+                      ConstraintKinds
                       DeriveDataTypeable
                       DeriveFoldable
                       DeriveFunctor
@@ -305,6 +309,7 @@ library
                       ScopedTypeVariables
                       TemplateHaskell
                       TupleSections
+                      TypeApplications
                       TypeFamilies
 
 
@@ -325,6 +330,7 @@ library
 executable graphql-engine
   default-extensions: ApplicativeDo
                       BangPatterns
+                      ConstraintKinds
                       DeriveDataTypeable
                       DeriveFoldable
                       DeriveFunctor
@@ -345,6 +351,7 @@ executable graphql-engine
                       ScopedTypeVariables
                       TemplateHaskell
                       TupleSections
+                      TypeApplications
                       TypeFamilies
 
   main-is:           Main.hs

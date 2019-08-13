@@ -47,8 +47,7 @@ import qualified Hasura.RQL.DDL.Permission.Internal as DP
 import qualified Hasura.RQL.DDL.QueryCollection     as DQC
 import qualified Hasura.RQL.DDL.Relationship        as DR
 import qualified Hasura.RQL.DDL.RemoteSchema        as DRS
-import qualified Hasura.RQL.DDL.Schema.Function     as DF
-import qualified Hasura.RQL.DDL.Schema.Table        as DT
+import qualified Hasura.RQL.DDL.Schema              as DS
 import qualified Hasura.RQL.Types.EventTrigger      as DTS
 import qualified Hasura.RQL.Types.RemoteSchema      as TRS
 
@@ -139,7 +138,7 @@ runClearMetadata
 runClearMetadata _ = do
   adminOnly
   liftTx clearMetadata
-  DT.buildSchemaCacheStrict
+  DS.buildSchemaCacheStrict
   return successMsg
 
 data ReplaceMetadata
@@ -223,16 +222,16 @@ applyQP2
 applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = do
 
   liftTx clearMetadata
-  DT.buildSchemaCacheStrict
+  DS.buildSchemaCacheStrict
 
   withPathK "tables" $ do
 
     -- tables and views
     indexedForM_ tables $ \tableMeta -> do
-      let trackQuery = DT.TrackTable
-            { DT.tName = tableMeta ^. tmTable
-            , DT.tIsEnum = tableMeta ^. tmIsEnum }
-      void $ DT.trackExistingTableOrViewP2 trackQuery
+      let trackQuery = DS.TrackTable
+            { DS.tName = tableMeta ^. tmTable
+            , DS.tIsEnum = tableMeta ^. tmIsEnum }
+      void $ DS.trackExistingTableOrViewP2 trackQuery
 
     -- Relationships
     indexedForM_ tables $ \table -> do
@@ -263,7 +262,7 @@ applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = 
 
   -- sql functions
   withPathK "functions" $
-    indexedMapM_ (void . DF.trackFunctionP2) functions
+    indexedMapM_ (void . DS.trackFunctionP2) functions
 
   -- query collections
   withPathK "query_collections" $
@@ -444,7 +443,7 @@ runReloadMetadata
   => ReloadMetadata -> m EncJSON
 runReloadMetadata _ = do
   adminOnly
-  DT.buildSchemaCache
+  DS.buildSchemaCache
   return successMsg
 
 data DumpInternalState
@@ -506,9 +505,8 @@ runDropInconsistentMetadata _ = do
 
 purgeMetadataObj :: MonadTx m => MetadataObjId -> m ()
 purgeMetadataObj = liftTx . \case
-  (MOTable qt) ->
-    Q.catchE defaultTxErrorHandler $ DT.delTableFromCatalog qt
-  (MOFunction qf)                 -> DF.delFunctionFromCatalog qf
+  (MOTable qt)                    -> DS.deleteTableFromCatalog qt
+  (MOFunction qf)                 -> DS.delFunctionFromCatalog qf
   (MORemoteSchema rsn)            -> DRS.removeRemoteSchemaFromCatalog rsn
   (MOTableObj qt (MTORel rn _))   -> DR.delRelFromCatalog qt rn
   (MOTableObj qt (MTOPerm rn pt)) -> DP.dropPermFromCatalog qt rn pt

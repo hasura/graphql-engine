@@ -447,16 +447,12 @@ modDepMapInCache f = do
   writeSchemaCache $ sc { scDepMap = f (scDepMap sc)}
 
 class (Monad m) => CacheRM m where
-
-  -- Get the schema cache
   askSchemaCache :: m SchemaCache
 
 instance (Monad m) => CacheRM (StateT SchemaCache m) where
   askSchemaCache = get
 
 class (CacheRM m) => CacheRWM m where
-
-  -- Get the schema cache
   writeSchemaCache :: SchemaCache -> m ()
 
 instance (Monad m) => CacheRWM (StateT SchemaCache m) where

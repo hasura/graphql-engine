@@ -1,9 +1,7 @@
--- | This module provides 'fetchCatalogData', which loads the entire catalog in one go from the
--- database, consulting tables such as @hdb_catalog.hdb_table@. It is used by
--- 'Hasura.RQL.Schema.Table.buildSchemaCache' to seed or reload the schema cache.
+-- | Types that represent the raw data stored in the catalog. See also: the module documentation for
+-- "Hasura.RQL.DDL.Schema".
 module Hasura.RQL.Types.Catalog
-  ( fetchCatalogData
-  , CatalogMetadata(..)
+  ( CatalogMetadata(..)
 
   , CatalogTable(..)
   , CatalogTableInfo(..)
@@ -16,13 +14,10 @@ module Hasura.RQL.Types.Catalog
 
 import           Hasura.Prelude
 
-import qualified Database.PG.Query                as Q
-
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
-import           Hasura.Db
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
@@ -98,9 +93,3 @@ data CatalogMetadata
   , _cmAllowlistCollections :: ![CollectionDef]
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogMetadata)
-
--- | See "Hasura.RQL.Types.Catalog".
-fetchCatalogData :: (MonadTx m) => m CatalogMetadata
-fetchCatalogData =
-  liftTx $ Q.getAltJ . runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
-    $(Q.sqlFromFile "src-rsr/catalog_metadata.sql") () True
