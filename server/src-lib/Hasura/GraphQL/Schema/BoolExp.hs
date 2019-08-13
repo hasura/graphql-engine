@@ -1,6 +1,6 @@
 module Hasura.GraphQL.Schema.BoolExp
   ( geoInputTypes
-  , stIntersectsNbandGeomInput
+  , rasterIntersectsInputTypes
   , mkCompExpInp
 
   , mkBoolExpTy
@@ -205,17 +205,19 @@ mkCompExpInp colTy =
       [
         ( "_st_intersects_rast"
         , G.toGT $ mkScalarTy PGRaster
-        , "boolean ST_Intersects( raster rastA , raster rastB )"
+        , boolFnMsg <> "ST_Intersects(raster <raster-col>, raster <raster-input>)"
         )
       , ( "_st_intersects_nband_geom"
         , G.toGT stIntersectsNbandGeomInputTy
-        , "boolean ST_Intersects(raster rast ,integer nband ,geometry geommin)"
+        , boolFnMsg <> "ST_Intersects(raster <raster-col>, integer nband, geometry geommin)"
         )
-      , ( "_st_intersects_geom"
-        , G.toGT $ mkScalarTy PGGeometry
-        , "boolean ST_Intersects( raster rast , geometry geommin , integer nband=NULL )"
+      , ( "_st_intersects_geom_nband"
+        , G.toGT stIntersectsGeomNbandInputTy
+        , boolFnMsg <> "ST_Intersects(raster <raster-col> , geometry geommin, integer nband=NULL)"
         )
       ]
+
+    boolFnMsg = "evaluates the following boolean Postgres function; "
 
 geoInputTypes :: [InpObjTyInfo]
 geoInputTypes =
@@ -246,12 +248,30 @@ geoInputTypes =
 stIntersectsNbandGeomInputTy :: G.NamedType
 stIntersectsNbandGeomInputTy = G.NamedType "st_intersects_nband_geom_input"
 
-stIntersectsNbandGeomInput :: InpObjTyInfo
-stIntersectsNbandGeomInput =
-  mkHsraInpTyInfo Nothing stIntersectsNbandGeomInputTy $ fromInpValL
-  [ InpValInfo Nothing "nband" Nothing $ G.toGT $ G.toNT $ mkScalarTy PGInteger
-  , InpValInfo Nothing "geommin" Nothing $ G.toGT $ G.toNT $ mkScalarTy PGGeometry
+stIntersectsGeomNbandInputTy :: G.NamedType
+stIntersectsGeomNbandInputTy = G.NamedType "st_intersects_geom_nband_input"
+
+rasterIntersectsInputTypes :: [InpObjTyInfo]
+rasterIntersectsInputTypes =
+  [ stIntersectsNbandGeomInput
+  , stIntersectsGeomNbandInput
   ]
+  where
+    stIntersectsNbandGeomInput =
+      mkHsraInpTyInfo Nothing stIntersectsNbandGeomInputTy $ fromInpValL
+      [ InpValInfo Nothing "nband" Nothing $
+        G.toGT $ G.toNT $ mkScalarTy PGInteger
+      , InpValInfo Nothing "geommin" Nothing $
+        G.toGT $ G.toNT $ mkScalarTy PGGeometry
+      ]
+
+    stIntersectsGeomNbandInput =
+      mkHsraInpTyInfo Nothing stIntersectsGeomNbandInputTy $ fromInpValL
+      [ InpValInfo Nothing "geommin" Nothing $
+        G.toGT $ G.toNT $ mkScalarTy PGGeometry
+      , InpValInfo Nothing "nband" Nothing $
+        G.toGT $ mkScalarTy PGInteger
+      ]
 
 mkBoolExpName :: QualifiedTable -> G.Name
 mkBoolExpName tn =

@@ -10,6 +10,7 @@ module Hasura.RQL.Types.BoolExp
        , OpExpG(..)
        , opExpDepCol
        , STIntersectsNbandGeommin(..)
+       , STIntersectsGeomminNband(..)
 
        , AnnBoolExpFld(..)
        , AnnBoolExp
@@ -129,6 +130,13 @@ data STIntersectsNbandGeommin a =
   } deriving (Show, Eq, Functor, Foldable, Traversable)
 $(deriveJSON (aesonDrop 4 snakeCase) ''STIntersectsNbandGeommin)
 
+data STIntersectsGeomminNband a =
+  STIntersectsGeomminNband
+  { signGeommin :: !a
+  , signNband   :: !(Maybe a)
+  } deriving (Show, Eq, Functor, Foldable, Traversable)
+$(deriveJSON (aesonDrop 4 snakeCase) ''STIntersectsGeomminNband)
+
 type CastExp a = M.HashMap PGColType [OpExpG a]
 
 data OpExpG a
@@ -171,7 +179,7 @@ data OpExpG a
   | ASTWithin !a
 
   | ASTIntersectsRast !a
-  | ASTIntersectsGeom !a
+  | ASTIntersectsGeomNband !(STIntersectsGeomminNband a)
   | ASTIntersectsNbandGeom !(STIntersectsNbandGeommin a)
 
   | ANISNULL -- IS NULL
@@ -237,7 +245,7 @@ opExpToJPair f = \case
 
   ASTIntersectsRast a      -> ("_st_intersects_rast", f a)
   ASTIntersectsNbandGeom a -> ("_st_intersects_nband_geom", toJSON $ f <$> a)
-  ASTIntersectsGeom a      -> ("_st_intersects_geom", f a)
+  ASTIntersectsGeomNband a -> ("_st_intersects_geom_nband", toJSON $ f <$> a)
 
   ANISNULL       -> ("_is_null", toJSON True)
   ANISNOTNULL    -> ("_is_null", toJSON False)

@@ -639,9 +639,9 @@ mkGCtx tyAgg (RootFlds flds) insCtxMap =
                             , TIObj <$> mutRootM
                             , TIObj <$> subRootM
                             , TIEnum <$> ordByEnumTyM
-                            , TIInpObj <$> rasterInpType
                             ] <>
                   scalarTys <> compTys <> defaultTypes <> wiredInGeoInputTypes
+                  <> wiredInRastInputTypes
   -- for now subscription root is query root
   in GCtx allTys fldInfos ordByEnums queryRoot mutRootM subRootM
      (Map.map fst flds) insCtxMap
@@ -670,4 +670,5 @@ mkGCtx tyAgg (RootFlds flds) insCtxMap =
     wiredInGeoInputTypes = guard anyGeoTypes *> map TIInpObj geoInputTypes
 
     anyRasterTypes = any isRasterType colTys
-    rasterInpType = guard anyRasterTypes *> Just stIntersectsNbandGeomInput
+    wiredInRastInputTypes = guard anyRasterTypes *>
+                            map TIInpObj rasterIntersectsInputTypes

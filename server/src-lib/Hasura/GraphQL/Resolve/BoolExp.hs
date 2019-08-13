@@ -67,13 +67,12 @@ parseOpExps colTy annVal = do
       "_st_overlaps"   -> fmap ASTOverlaps <$> asOpRhs v
       "_st_touches"    -> fmap ASTTouches <$> asOpRhs v
       "_st_within"     -> fmap ASTWithin <$> asOpRhs v
-      "_st_d_within"   -> asObjectM v >>= mapM parseAsSTDWithinObj
+      "_st_d_within"   -> parseAsObjectM v parseAsSTDWithinObj
 
       -- raster type related operators
-      "_st_intersects_rast"    -> fmap ASTIntersectsRast <$> asOpRhs v
-      "_st_intersects_nband_geom" -> asObjectM v >>=
-                                     mapM parseAsSTIntersectsNbandGeomObj
-      "_st_intersects_geom" -> fmap ASTIntersectsGeom <$> asOpRhs v
+      "_st_intersects_rast"       -> fmap ASTIntersectsRast <$> asOpRhs v
+      "_st_intersects_nband_geom" -> parseAsObjectM v parseAsSTIntersectsNbandGeomObj
+      "_st_intersects_geom_nband" -> parseAsObjectM v parseAsSTIntersectsGeomNbandObj
 
       _ ->
         throw500
@@ -84,6 +83,8 @@ parseOpExps colTy annVal = do
   return $ catMaybes $ fromMaybe [] opExpsM
   where
     asOpRhs = fmap (fmap UVPG) . asPGColValM
+
+    parseAsObjectM v f = asObjectM v >>= mapM f
 
     asPGArray rhsTy v = do
       valsM <- parseMany asPGColVal v
@@ -120,10 +121,18 @@ parseOpExps colTy annVal = do
       nbandVal <- onNothing (OMap.lookup "nband" obj) $
                   throw500 "expected \"nband\" input field"
       nband <- UVPG <$> asPGColVal nbandVal
+      geommin <- parseGeommin obj
+      return $ ASTIntersectsNbandGeom $ STIntersectsNbandGeommin nband geommin
+
+    parseAsSTIntersectsGeomNbandObj obj = do
+      nbandM <- fmap UVPG <$> mapM asPGColVal (OMap.lookup "nband" obj)
+      geommin <- parseGeommin obj
+      return $ ASTIntersectsGeomNband $ STIntersectsGeomminNband geommin nbandM
+
+    parseGeommin obj = do
       geomminVal <- onNothing (OMap.lookup "geommin" obj) $
                     throw500 "expected \"geommin\" input field"
-      geommin <- UVPG <$> asPGColVal geomminVal
-      return $ ASTIntersectsNbandGeom $ STIntersectsNbandGeommin nband geommin
+      UVPG <$> asPGColVal geomminVal
 
 parseCastExpression
   :: (MonadError QErr m)

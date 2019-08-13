@@ -418,11 +418,11 @@ mkColCompExp qual lhsCol = mkCompExp (mkQCol lhsCol)
         applySQLFn "ST_DWithin" [lhs, val, r, sph]
 
       ASTIntersectsRast val ->
-        applySQLFn "ST_Intersects" [lhs, val]
+        applySTIntersects [lhs, val]
       ASTIntersectsNbandGeom (STIntersectsNbandGeommin nband geommin) ->
-        applySQLFn "ST_Intersects" [lhs, nband, geommin]
-      ASTIntersectsGeom val ->
-        applySQLFn "ST_Intersects" [lhs, val, S.SEUnsafe "NULL"]
+        applySTIntersects [lhs, nband, geommin]
+      ASTIntersectsGeomNband (STIntersectsGeomminNband geommin mNband)->
+        applySTIntersects [lhs, geommin, withSQLNull mNband]
 
       ANISNULL         -> S.BENull lhs
       ANISNOTNULL      -> S.BENotNull lhs
@@ -436,6 +436,10 @@ mkColCompExp qual lhsCol = mkCompExp (mkQCol lhsCol)
         mkGeomOpBe fn v = applySQLFn fn [lhs, v]
 
         applySQLFn f exps = S.BEExp $ S.SEFnApp f exps Nothing
+
+        applySTIntersects = applySQLFn "ST_Intersects"
+
+        withSQLNull = fromMaybe (S.SEUnsafe "NULL")
 
         mkCastsExp casts =
           sqlAll . flip map (M.toList casts) $ \(targetType, operations) ->
