@@ -4,12 +4,15 @@ module Hasura.GraphQL.Resolve
   , RS.traverseQueryRootFldAST
   , RS.toPGQuery
   , UnresolvedVal(..)
+
   , AnnPGVal(..)
+  , txtConverter
+
   , RS.QueryRootFldUnresolved
   , resolveValPrep
   , queryFldToSQL
-  , schemaR
-  , typeR
+  , RIntro.schemaR
+  , RIntro.typeR
   ) where
 
 import           Data.Has
@@ -18,18 +21,17 @@ import qualified Data.HashMap.Strict               as Map
 import qualified Database.PG.Query                 as Q
 import qualified Language.GraphQL.Draft.Syntax     as G
 
-import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.Context
-import           Hasura.GraphQL.Resolve.Introspect
-import           Hasura.GraphQL.Validate.Field
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal           (sessVarFromCurrentSetting)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 import qualified Hasura.GraphQL.Resolve.Insert     as RI
+import qualified Hasura.GraphQL.Resolve.Introspect as RIntro
 import qualified Hasura.GraphQL.Resolve.Mutation   as RM
 import qualified Hasura.GraphQL.Resolve.Select     as RS
+import qualified Hasura.GraphQL.Validate           as V
 
 validateHdrs
   :: (Foldable t, QErrM m) => UserInfo -> t Text -> m ()
@@ -44,10 +46,10 @@ queryFldToPGAST
      , Has OrdByCtx r, Has SQLGenCtx r, Has UserInfo r
      , Has OpCtxMap r
      )
-  => Field
+  => V.Field
   -> m RS.QueryRootFldUnresolved
 queryFldToPGAST fld = do
-  opCtx <- getOpCtx $ _fName fld
+  opCtx <- getOpCtx $ V._fName fld
   userInfo <- asks getter
   case opCtx of
     OCSelect ctx -> do
@@ -78,7 +80,7 @@ queryFldToSQL
      , Has OpCtxMap r
      )
   => PrepFn m
-  -> Field
+  -> V.Field
   -> m Q.Query
 queryFldToSQL fn fld = do
   pgAST <- queryFldToPGAST fld
@@ -98,11 +100,11 @@ mutFldToTx
      , Has SQLGenCtx r
      , Has InsCtxMap r
      )
-  => Field
+  => V.Field
   -> m RespTx
 mutFldToTx fld = do
   userInfo <- asks getter
-  opCtx <- getOpCtx $ _fName fld
+  opCtx <- getOpCtx $ V._fName fld
   case opCtx of
     OCInsert ctx -> do
       let roleName = userRole userInfo

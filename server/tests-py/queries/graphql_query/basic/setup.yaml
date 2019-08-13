@@ -271,6 +271,23 @@ args:
     - name: User 2
       number: '123456780'
 
+- type: run_sql
+  args:
+    sql: |
+      create table person (
+          id serial primary key,
+          name text
+      );
+- type: track_table
+  args:
+    schema: public
+    name: person
+- type: insert
+  args:
+    table: person
+    objects:
+    - name: "John\\"
+
 #Set timezone
 - type: run_sql
   args:

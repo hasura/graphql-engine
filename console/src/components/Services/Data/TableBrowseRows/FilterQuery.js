@@ -177,7 +177,7 @@ class FilterQuery extends Component {
     const { dispatch, whereAnd, tableSchema, orderBy } = this.props; // eslint-disable-line no-unused-vars
     const styles = require('../../../Common/FilterQuery/FilterQuery.scss');
     return (
-      <div>
+      <div className={styles.add_mar_top}>
         <form
           onSubmit={e => {
             e.preventDefault();

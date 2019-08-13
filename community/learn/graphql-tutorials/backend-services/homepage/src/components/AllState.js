@@ -15,8 +15,8 @@ const frontendTutorial = [
   },
   {
     name: 'Angular',
-    url: 'https://learn.hasura.io/graphql/angular',
-    comingSoon: true,
+    url: 'https://learn.hasura.io/graphql/angular-apollo',
+    comingSoon: false,
     bgClassName: 'angularBg',
     disableBgClassName: 'angularDisableBg',
   },
@@ -75,8 +75,8 @@ const mobileTutorial = [
   },
   {
     name: 'Flutter',
-    url: 'https://learn.hasura.io/graphql/flutter',
-    comingSoon: true,
+    url: 'https://learn.hasura.io/graphql/flutter-graphql',
+    comingSoon: false,
     bgClassName: 'flutterBg',
     disableBgClassName: 'flutterDisableBg',
   },

@@ -1,4 +1,4 @@
-const tableColumnNoDups = [
+const tableColumnNoDupsNotif = [
   'Error adding column',
   'Column name is duplicated',
   {
@@ -6,7 +6,7 @@ const tableColumnNoDups = [
   },
 ];
 
-const tableMinPrimaryKey = [
+const tableMinPrimaryKeyNotif = [
   'Error adding table',
   'A primary key is required',
   {
@@ -22,7 +22,7 @@ const tableNameNullNotif = [
   },
 ];
 
-const tableEnufColumns = [
+const tableEnufColumnsNotif = [
   'Error creating table!',
   'Table must have at least one column',
   {
@@ -30,7 +30,7 @@ const tableEnufColumns = [
   },
 ];
 
-const tableColumnDefaults = [
+const tableColumnDefaultsNotif = [
   'Error creating table!',
   'Default value is invalid',
   {
@@ -38,7 +38,7 @@ const tableColumnDefaults = [
   },
 ];
 
-const tableColumnTypes = [
+const tableColumnTypesNotif = [
   'Error creating table!',
   'Column type is invalid',
   {
@@ -48,9 +48,9 @@ const tableColumnTypes = [
 
 export {
   tableNameNullNotif,
-  tableEnufColumns,
-  tableColumnNoDups,
-  tableMinPrimaryKey,
-  tableColumnDefaults,
-  tableColumnTypes,
+  tableEnufColumnsNotif,
+  tableColumnNoDupsNotif,
+  tableMinPrimaryKeyNotif,
+  tableColumnDefaultsNotif,
+  tableColumnTypesNotif,
 };

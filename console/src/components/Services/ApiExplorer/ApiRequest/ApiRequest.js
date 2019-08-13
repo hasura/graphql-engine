@@ -226,7 +226,7 @@ class ApiRequest extends Component {
     };
 
     const getHeaderTable = () => {
-      const { headersSectionIsOpen } = this.state;
+      const { headersSectionIsOpen, adminSecretVisible } = this.state;
       const getHeaderRows = () => {
         const headers = this.props.headers;
 
@@ -259,6 +259,9 @@ class ApiRequest extends Component {
         };
 
         return headers.map((header, i) => {
+          const isAdminSecret =
+            header.key.toLowerCase() === `x-hasura-${globals.adminSecretLabel}`;
+
           const getHeaderActiveCheckBox = () => {
             let headerActiveCheckbox = null;
 
@@ -338,11 +341,7 @@ class ApiRequest extends Component {
             }
 
             let type = 'text';
-            if (
-              header.key.toLowerCase() ===
-                `x-hasura-${globals.adminSecretLabel}` &&
-              !this.state.adminSecretVisible
-            ) {
+            if (isAdminSecret && !adminSecretVisible) {
               type = 'password';
             }
 
@@ -368,10 +367,7 @@ class ApiRequest extends Component {
           const getHeaderAdminVal = () => {
             let headerAdminVal = null;
 
-            if (
-              header.key.toLowerCase() ===
-              `x-hasura-${globals.adminSecretLabel}`
-            ) {
+            if (isAdminSecret) {
               headerAdminVal = (
                 <i
                   className={styles.showAdminSecret + ' fa fa-eye'}
@@ -617,8 +613,8 @@ class ApiRequest extends Component {
             claimData =
               claimFormat === 'stringified_json'
                 ? generateValidNameSpaceData(
-                  JSON.parse(payload[claimNameSpace])
-                )
+                    JSON.parse(payload[claimNameSpace])
+                  )
                 : generateValidNameSpaceData(payload[claimNameSpace]);
           } catch (e) {
             console.error(e);

@@ -152,6 +152,9 @@ def hge_ctx(request):
             hge_scale_url=hge_scale_url,
         )
     except HGECtxError as e:
+        assert False, "Error from hge_cxt: " + str(e)
+        # TODO this breaks things (https://github.com/pytest-dev/pytest-xdist/issues/86)
+        #      so at least make sure the real error gets printed (above)
         pytest.exit(str(e))
 
     yield hge_ctx  # provide the fixture value
