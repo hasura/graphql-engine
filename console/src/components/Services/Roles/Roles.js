@@ -154,7 +154,7 @@ class Roles extends Component {
       return rolesHeaders;
     };
 
-    const getRoleCellOnClick = (table, role, action) => {
+    const getCellOnClick = (table, role, action) => {
       return () => {
         dispatch(push(getTablePermissionsRoute(table)));
 
@@ -178,7 +178,7 @@ class Roles extends Component {
           <td
             key={role}
             className={styles.clickableCell}
-            onClick={getRoleCellOnClick(table, role, currAction)}
+            onClick={getCellOnClick(table, role, currAction)}
           >
             <div
               className={styles.display_flex + ' ' + styles.flex_space_between}
@@ -198,7 +198,11 @@ class Roles extends Component {
       return allActions.map(action => {
         const actionPermission = rolePermission[action];
         return (
-          <td key={action}>
+          <td
+            key={action}
+            className={styles.clickableCell}
+            onClick={getCellOnClick(table, currRole, action)}
+          >
             {actionCellRenderer(actionPermission, table, action)}
           </td>
         );
@@ -495,7 +499,7 @@ class Roles extends Component {
           <table
             className={`table table-bordered ${styles.rolesTable} ${
               styles.remove_margin
-            }`}
+            } ${styles.fit_content}`}
           >
             <thead>{getRolesHeaderRow()}</thead>
           </table>
@@ -563,7 +567,11 @@ class Roles extends Component {
       };
 
       return (
-        <table className={`table table-bordered ${styles.rolesTable}`}>
+        <table
+          className={`table table-bordered ${styles.rolesTable} ${
+            styles.fit_content
+          }`}
+        >
           <thead>{getHeaderRow()}</thead>
           <tbody>{getAllTableAllRolesRows()}</tbody>
         </table>
