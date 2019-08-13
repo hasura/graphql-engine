@@ -1,6 +1,12 @@
 import React, { Component } from 'react';
 import Helmet from 'react-helmet';
+import { push } from 'react-router-redux';
+
 import styles from './Roles.scss';
+
+import { findTable, getTableSchema, getTableName, checkIfTable } from '../../Common/utils/pgSchemaUtils';
+import { getTablePermissionsRoute } from '../../Common/utils/routesUtils';
+
 import { updateSchemaInfo } from '../Data/DataActions';
 import {
   permissionsSymbols,
@@ -10,7 +16,6 @@ import {
   getTablePermissionsByRoles,
   getPermissionRowAccessSummary,
 } from './utils';
-import { findTable } from '../../Common/utils/pgSchemaUtils';
 
 class Roles extends Component {
   constructor(props) {
@@ -29,6 +34,7 @@ class Roles extends Component {
 
   render() {
     const { currRole, currAction, currTable } = this.state;
+    const { dispatch } = this.props;
 
     // ------------------------------------------------------------------------------
 
@@ -41,11 +47,11 @@ class Roles extends Component {
     // ------------------------------------------------------------------------------
 
     const noAccessDisplay = (
-      <div className={styles.text_center}>{permissionsSymbols.noAccess}</div>
+      <div className={styles.text_center + ' ' + styles.wd100}>{permissionsSymbols.noAccess}</div>
     );
 
     const fullAccessDisplay = (
-      <div className={styles.text_center}>{permissionsSymbols.fullAccess}</div>
+      <div className={styles.text_center + ' ' + styles.wd100}>{permissionsSymbols.fullAccess}</div>
     );
 
     // ------------------------------------------------------------------------------
@@ -92,6 +98,14 @@ class Roles extends Component {
       );
     };
 
+    const getEditIcon = () => {
+      return (
+        <span className={styles.editPermsIcon}>
+          <i className="fa fa-pencil" aria-hidden="true" />
+        </span>
+      );
+    };
+
     // ------------------------------------------------------------------------------
 
     const getRolesHeaders = (selectable = true, selectedFirst = false) => {
@@ -127,7 +141,7 @@ class Roles extends Component {
       return rolesHeaders;
     };
 
-    const getRolesCells = (table, roleCellRenderer) => {
+    const getRolesCells = (table, roleCellRenderer, roleCellOnClick) => {
       const tablePermissions = getTablePermissionsByRoles(table);
 
       return allRoles.map(role => {
@@ -136,7 +150,18 @@ class Roles extends Component {
           ? rolePermissions[currAction]
           : null;
 
-        return <td key={role}>{roleCellRenderer(actionPermission, table)}</td>;
+        return (
+          <td key={role} className={styles.clickableCell} onClick={roleCellOnClick(actionPermission, table)}>
+            <div className={styles.display_flex + ' ' + styles.flex_space_between}>
+              <div>
+                {roleCellRenderer(actionPermission, table)}
+              </div>
+              <div>
+                {getEditIcon()}
+              </div>
+            </div>
+          </td>
+        );
       });
     };
 
@@ -162,8 +187,9 @@ class Roles extends Component {
       const tablesRows = [];
 
       allSchemas.forEach((table, i) => {
-        const tableName = table.table_name;
-        const tableSchema = table.table_schema;
+        const tableName = getTableName(table);
+        const tableSchema = getTableSchema(table);
+        const isTable = checkIfTable(table);
 
         const isCurrTable =
           currTable &&
@@ -185,7 +211,7 @@ class Roles extends Component {
                 isCurrTable ? styles.selected : ''
               }`}
             >
-              {tableName}
+              {isTable ? <span>{tableName}</span> : <i>{tableName}</i>}
             </th>
           );
         };
@@ -283,6 +309,12 @@ class Roles extends Component {
       return permissionDisplay;
     };
 
+    const rolePermissionsOnClick = (actionPermission, table) => {
+      return () => {
+        dispatch(push(getTablePermissionsRoute(table)));
+      };
+    };
+
     // ------------------------------------------------------------------------------
 
     const getTableAllRolesTable = () => {
@@ -336,7 +368,9 @@ class Roles extends Component {
               return rowsDisplay;
             };
 
-            return getRolesCells(currTableInfo, roleRowPermissionsRenderer);
+            const rolesRowPermissionsOnClick = rolePermissionsOnClick;
+
+            return getRolesCells(currTableInfo, roleRowPermissionsRenderer, rolesRowPermissionsOnClick);
           };
 
           const getTableActionRolesRowLimits = () => {
@@ -350,7 +384,9 @@ class Roles extends Component {
               );
             };
 
-            return getRolesCells(currTableInfo, roleRowLimitRenderer);
+            const rolesRowLimitOnClick = rolePermissionsOnClick;
+
+            return getRolesCells(currTableInfo, roleRowLimitRenderer, rolesRowLimitOnClick);
           };
 
           rowRows.push(
@@ -388,7 +424,9 @@ class Roles extends Component {
                 return columnAllowed ? fullAccessDisplay : noAccessDisplay;
               };
 
-              return getRolesCells(currTableInfo, roleColumnPermissionRenderer);
+              const rolesColumnPermissionsOnClick = rolePermissionsOnClick;
+
+              return getRolesCells(currTableInfo, roleColumnPermissionRenderer, rolesColumnPermissionsOnClick);
             };
 
             return (
@@ -504,7 +542,7 @@ class Roles extends Component {
 
       const getAllTableAllRolesRows = () => {
         const tablePermissionListRenderer = table => {
-          return getRolesCells(table, rolePermissionsRenderer);
+          return getRolesCells(table, rolePermissionsRenderer, rolePermissionsOnClick);
         };
 
         return getTablesRows(tablePermissionListRenderer);

@@ -176,6 +176,11 @@ table tbody tr th {
   display: flex;
 }
 
+.flex_space_between {
+  display: flex;
+  justify-content: space-between;
+}
+
 .flex_0 {
   flex: 0;
 }
@@ -205,6 +210,10 @@ table tbody tr th {
 .wd100 {
   width: 100%;
   float: left;
+}
+
+.wd100Percent {
+  width: 100% !important;
 }
 
 .wd90 {
@@ -1344,10 +1353,6 @@ code {
 
 .pkEditorExpandedText {
   width: 325px;
-}
-
-.wd100Percent {
-  width: 100% !important;
 }
 
 /* container height subtracting top header and bottom scroll bar */
