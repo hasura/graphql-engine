@@ -421,8 +421,8 @@ class Roles extends Component {
 
       return (
         <div className={styles.displayFlexContainer}>
-          {getTablesColumnTable()}
-          {getTableAllRolesAllActionsTable()}
+          <div className={styles.flex_0}>{getTablesColumnTable()}</div>
+          <div>{getTableAllRolesAllActionsTable()}</div>
         </div>
       );
     };
