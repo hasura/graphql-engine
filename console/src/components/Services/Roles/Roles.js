@@ -4,10 +4,17 @@ import { push } from 'react-router-redux';
 
 import styles from './Roles.scss';
 
-import { findTable, getTableSchema, getTableName, checkIfTable } from '../../Common/utils/pgSchemaUtils';
+import {
+  findTable,
+  getTableSchema,
+  getTableName,
+  checkIfTable,
+} from '../../Common/utils/pgSchemaUtils';
 import { getTablePermissionsRoute } from '../../Common/utils/routesUtils';
 
 import { updateSchemaInfo } from '../Data/DataActions';
+import { permOpenEdit } from '../Data/TablePermissions/Actions';
+
 import {
   permissionsSymbols,
   getAllRoles,
@@ -47,11 +54,15 @@ class Roles extends Component {
     // ------------------------------------------------------------------------------
 
     const noAccessDisplay = (
-      <div className={styles.text_center + ' ' + styles.wd100}>{permissionsSymbols.noAccess}</div>
+      <div className={styles.text_center + ' ' + styles.wd100}>
+        {permissionsSymbols.noAccess}
+      </div>
     );
 
     const fullAccessDisplay = (
-      <div className={styles.text_center + ' ' + styles.wd100}>{permissionsSymbols.fullAccess}</div>
+      <div className={styles.text_center + ' ' + styles.wd100}>
+        {permissionsSymbols.fullAccess}
+      </div>
     );
 
     // ------------------------------------------------------------------------------
@@ -63,7 +74,9 @@ class Roles extends Component {
 
       const getActionsOptions = () => {
         return allActions.map(action => (
-          <option value={action}>{action}</option>
+          <option key={action} value={action}>
+            {action}
+          </option>
         ));
       };
 
@@ -141,7 +154,18 @@ class Roles extends Component {
       return rolesHeaders;
     };
 
-    const getRolesCells = (table, roleCellRenderer, roleCellOnClick) => {
+    const getRoleCellOnClick = (table, role, action) => {
+      return () => {
+        dispatch(push(getTablePermissionsRoute(table)));
+
+        if (role && action) {
+          // TODO: fix this. above redirect clears state set by this
+          dispatch(permOpenEdit(table, role, action));
+        }
+      };
+    };
+
+    const getRolesCells = (table, roleCellRenderer) => {
       const tablePermissions = getTablePermissionsByRoles(table);
 
       return allRoles.map(role => {
@@ -151,14 +175,16 @@ class Roles extends Component {
           : null;
 
         return (
-          <td key={role} className={styles.clickableCell} onClick={roleCellOnClick(actionPermission, table)}>
-            <div className={styles.display_flex + ' ' + styles.flex_space_between}>
-              <div>
-                {roleCellRenderer(actionPermission, table)}
-              </div>
-              <div>
-                {getEditIcon()}
-              </div>
+          <td
+            key={role}
+            className={styles.clickableCell}
+            onClick={getRoleCellOnClick(table, role, currAction)}
+          >
+            <div
+              className={styles.display_flex + ' ' + styles.flex_space_between}
+            >
+              <div>{roleCellRenderer(actionPermission, table)}</div>
+              <div>{getEditIcon()}</div>
             </div>
           </td>
         );
@@ -309,12 +335,6 @@ class Roles extends Component {
       return permissionDisplay;
     };
 
-    const rolePermissionsOnClick = (actionPermission, table) => {
-      return () => {
-        dispatch(push(getTablePermissionsRoute(table)));
-      };
-    };
-
     // ------------------------------------------------------------------------------
 
     const getTableAllRolesTable = () => {
@@ -368,9 +388,7 @@ class Roles extends Component {
               return rowsDisplay;
             };
 
-            const rolesRowPermissionsOnClick = rolePermissionsOnClick;
-
-            return getRolesCells(currTableInfo, roleRowPermissionsRenderer, rolesRowPermissionsOnClick);
+            return getRolesCells(currTableInfo, roleRowPermissionsRenderer);
           };
 
           const getTableActionRolesRowLimits = () => {
@@ -384,9 +402,7 @@ class Roles extends Component {
               );
             };
 
-            const rolesRowLimitOnClick = rolePermissionsOnClick;
-
-            return getRolesCells(currTableInfo, roleRowLimitRenderer, rolesRowLimitOnClick);
+            return getRolesCells(currTableInfo, roleRowLimitRenderer);
           };
 
           rowRows.push(
@@ -424,9 +440,7 @@ class Roles extends Component {
                 return columnAllowed ? fullAccessDisplay : noAccessDisplay;
               };
 
-              const rolesColumnPermissionsOnClick = rolePermissionsOnClick;
-
-              return getRolesCells(currTableInfo, roleColumnPermissionRenderer, rolesColumnPermissionsOnClick);
+              return getRolesCells(currTableInfo, roleColumnPermissionRenderer);
             };
 
             return (
@@ -542,7 +556,7 @@ class Roles extends Component {
 
       const getAllTableAllRolesRows = () => {
         const tablePermissionListRenderer = table => {
-          return getRolesCells(table, rolePermissionsRenderer, rolePermissionsOnClick);
+          return getRolesCells(table, rolePermissionsRenderer);
         };
 
         return getTablesRows(tablePermissionListRenderer);
