@@ -250,12 +250,16 @@ class Permissions extends Component {
       const getPermissionsTableHead = () => {
         const _permissionsHead = [];
 
-        _permissionsHead.push(<th key={-1}>Actions</th>);
+        // push role head
         _permissionsHead.push(<th key={-2}>Role</th>);
 
+        // push action heads
         queryTypes.forEach((queryType, i) => {
           _permissionsHead.push(<th key={i}>{queryType}</th>);
         });
+
+        // push bulk actions head
+        _permissionsHead.push(<th key={-1} />);
 
         return (
           <thead>
@@ -362,6 +366,65 @@ class Permissions extends Component {
           };
 
           const _permissionsRowHtml = [];
+
+          // push role value
+          if (newPermRow) {
+            const isNewRole = !roleList.includes(permissionsState.newRole);
+
+            _permissionsRowHtml.push(
+              <th key={-2}>
+                <input
+                  id="new-role-input"
+                  className={`form-control ${styles.newRoleInput}`}
+                  onChange={dispatchRoleNameChange}
+                  type="text"
+                  placeholder="Enter new role"
+                  value={isNewRole ? permissionsState.newRole : ''}
+                  data-test="role-textbox"
+                />
+              </th>
+            );
+          } else {
+            _permissionsRowHtml.push(<th key={-2}>{role}</th>);
+          }
+
+          // push action permission value
+          queryTypes.forEach((queryType, i) => {
+            const isEditAllowed = role !== 'admin';
+            const isCurrEdit =
+              permissionsState.role === role &&
+              permissionsState.query === queryType;
+
+            let editLink = '';
+            let className = '';
+            let onClick = () => {};
+            if (isEditAllowed) {
+              className += styles.clickableCell;
+              editLink = getEditLink();
+
+              if (isCurrEdit) {
+                onClick = dispatchCloseEdit;
+                className += ' ' + styles.currEdit;
+              } else {
+                onClick = dispatchOpenEdit(queryType);
+              }
+            }
+
+            _permissionsRowHtml.push(
+              <td
+                key={i}
+                className={className}
+                onClick={onClick}
+                title="Edit permissions"
+                data-test={`${role}-${queryType}`}
+              >
+                {getRoleQueryPermission(queryType)}
+                {editLink}
+              </td>
+            );
+          });
+
+          // push bulk action value
           if (role === 'admin' || role === '') {
             _permissionsRowHtml.push(<td key={-1} />);
           } else {
@@ -392,73 +455,20 @@ class Permissions extends Component {
             );
           }
 
-          if (newPermRow) {
-            const isNewRole = !roleList.includes(permissionsState.newRole);
-
-            _permissionsRowHtml.push(
-              <td key={-2}>
-                <input
-                  id="new-role-input"
-                  className={`form-control ${styles.newRoleInput}`}
-                  onChange={dispatchRoleNameChange}
-                  type="text"
-                  placeholder="Enter new role"
-                  value={isNewRole ? permissionsState.newRole : ''}
-                  data-test="role-textbox"
-                />
-              </td>
-            );
-          } else {
-            _permissionsRowHtml.push(<td key={-2}>{role}</td>);
-          }
-
-          queryTypes.forEach((queryType, i) => {
-            const isEditAllowed = role !== 'admin';
-            const isCurrEdit =
-              permissionsState.role === role &&
-              permissionsState.query === queryType;
-
-            let editLink = '';
-            let className = '';
-            let onClick = () => {};
-            if (isEditAllowed) {
-              editLink = getEditLink();
-
-              className += styles.clickableCell;
-              onClick = dispatchOpenEdit(queryType);
-              if (isCurrEdit) {
-                onClick = dispatchCloseEdit;
-                className += ` ${styles.currEdit}`;
-              }
-            }
-
-            _permissionsRowHtml.push(
-              <td
-                key={i}
-                className={className}
-                onClick={onClick}
-                title="Edit permissions"
-                data-test={`${role}-${queryType}`}
-              >
-                {getRoleQueryPermission(queryType)}
-                {editLink}
-              </td>
-            );
-          });
-
           return _permissionsRowHtml;
         };
 
         // add admin to roles
         const _roleList = ['admin'].concat(roleList);
 
+        // add existing roles rows
         _roleList.forEach((role, i) => {
           _permissionsRowsHtml.push(
             <tr key={i}>{getPermissionsTableRow(role)}</tr>
           );
         });
 
-        // new role row
+        // add new role row
         _permissionsRowsHtml.push(
           <tr key="newPerm">{getPermissionsTableRow('', true)}</tr>
         );

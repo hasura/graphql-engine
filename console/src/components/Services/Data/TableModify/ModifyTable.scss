@@ -171,14 +171,14 @@ hr {
     font-weight: bold;
   }
 
-  td:first-child, th:first-child {
-    border-right: 4px double #ddd;
-    font-weight: bold;
+  td:last-child, th:last-child {
+    border-left: 4px double #ddd;
     width: 10%;
   }
 
-  td:nth-child(2) {
+  td:first-child, th:first-child {
     overflow: auto;
+    border-right: 4px double #ddd;
     max-width: 250px;
     width: 250px;
   }
@@ -194,6 +194,7 @@ hr {
     right: 10px;
     color: #337ab7;
     cursor: pointer;
+    display: none;
   }
 
   .bulkSelect {
@@ -206,11 +207,19 @@ hr {
 
   .clickableCell:hover {
     background-color: #efefef;
+
+    .editPermsLink {
+      display: inline-block;
+    }
   }
 
   .currEdit, .currEdit:hover {
     background-color: #FFF3D5;
     color: #FD9540;
+
+    .editPermsLink {
+      display: inline-block;
+    }
   }
 }
 
