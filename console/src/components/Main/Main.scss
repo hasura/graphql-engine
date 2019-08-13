@@ -83,7 +83,7 @@
 }
 
 .header_items {
-  width: 55%;
+  width: 60%;
 }
 
 .header_logo_wrapper {
@@ -145,7 +145,7 @@
 }
 
 .clusterInfoWrapper {
-  width: 25%;
+  width: 20%;
   display: flex;
   justify-content: flex-end;
   position: relative;
@@ -953,13 +953,15 @@
 }
 
 .secureSection {
-  // background-color: #545a6c;
-
   padding: 15px;
 
   a {
-    color: white;
+    color: #FFC627;
     text-decoration: none;
+  }
+
+  .secureSectionSymbol {
+    color: #FFC627 !important;
   }
 }
 
