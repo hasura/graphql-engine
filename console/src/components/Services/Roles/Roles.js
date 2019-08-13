@@ -499,7 +499,7 @@ class Roles extends Component {
           <table
             className={`table table-bordered ${styles.rolesTable} ${
               styles.remove_margin
-            } ${styles.fit_content}`}
+            }`}
           >
             <thead>{getRolesHeaderRow()}</thead>
           </table>
@@ -531,8 +531,8 @@ class Roles extends Component {
         return (
           <table
             className={`table table-bordered ${styles.rolesTable} ${
-              styles.fixed
-            } ${styles.remove_margin}`}
+              styles.remove_margin
+            }`}
           >
             <thead>{getActionsHeaderRow()}</thead>
             <tbody>{getRoleAllTablesAllActionsRows()}</tbody>
@@ -567,11 +567,7 @@ class Roles extends Component {
       };
 
       return (
-        <table
-          className={`table table-bordered ${styles.rolesTable} ${
-            styles.fit_content
-          }`}
-        >
+        <table className={`table table-bordered ${styles.rolesTable}`}>
           <thead>{getHeaderRow()}</thead>
           <tbody>{getAllTableAllRolesRows()}</tbody>
         </table>

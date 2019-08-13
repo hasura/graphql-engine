@@ -4,6 +4,8 @@
 //}
 
 .rolesTable {
+  width: fit-content;
+
   th, td {
     vertical-align: middle !important;
   }
@@ -19,10 +21,6 @@
   td pre {
     max-height: 150px;
   }
-}
-
-.rolesTable.fixed {
-  table-layout: fixed;
 }
 
 .selected,
