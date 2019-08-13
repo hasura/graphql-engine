@@ -84,7 +84,7 @@ class Roles extends Component {
       return (
         <th
           key={'back-btn'}
-          className={styles.selectable + ' ' + styles.selected}
+          className={styles.cursorPointer + ' ' + styles.selected}
           onClick={clear}
         >
           <span className={styles.text_link}>&larr; Back</span>
@@ -109,7 +109,7 @@ class Roles extends Component {
           <th
             key={role}
             onClick={selectable ? setRole : null}
-            className={`${selectable ? styles.selectable : ''} ${
+            className={`${selectable ? styles.cursorPointer : ''} ${
               isCurrRole ? styles.selected : ''
             }`}
           >
@@ -181,7 +181,7 @@ class Roles extends Component {
             <th
               key={tableName}
               onClick={selectable ? setTable : null}
-              className={`${selectable ? styles.selectable : ''} ${
+              className={`${selectable ? styles.cursorPointer : ''} ${
                 isCurrTable ? styles.selected : ''
               }`}
             >
@@ -220,32 +220,6 @@ class Roles extends Component {
       if (!actionPermission) {
         permissionDisplay = noAccessDisplay;
       } else {
-        const getColumnsDisplay = () => {
-          let columnsDisplay = null;
-
-          const columns = actionPermission.columns;
-          if (columns) {
-            const getColumnsDetails = () => {
-              return <div>{columns.length ? columns.join(', ') : 'None'}</div>;
-            };
-
-            columnsDisplay = (
-              <div className={styles.add_mar_bottom_small}>
-                <b>Columns</b> -{' '}
-                <i>
-                  {getPermissionColumnAccessSummary(
-                    actionPermission,
-                    table.columns
-                  )}
-                </i>
-                {showDetails && getColumnsDetails()}
-              </div>
-            );
-          }
-
-          return columnsDisplay;
-        };
-
         const getRowsDisplay = () => {
           let filterDisplay = noAccessDisplay;
 
@@ -272,10 +246,36 @@ class Roles extends Component {
           return filterDisplay;
         };
 
+        const getColumnsDisplay = () => {
+          let columnsDisplay = null;
+
+          const columns = actionPermission.columns;
+          if (columns) {
+            const getColumnsDetails = () => {
+              return <div>{columns.length ? columns.join(', ') : 'None'}</div>;
+            };
+
+            columnsDisplay = (
+              <div className={styles.add_mar_bottom_small}>
+                <b>Columns</b> -{' '}
+                <i>
+                  {getPermissionColumnAccessSummary(
+                    actionPermission,
+                    table.columns
+                  )}
+                </i>
+                {showDetails && getColumnsDetails()}
+              </div>
+            );
+          }
+
+          return columnsDisplay;
+        };
+
         permissionDisplay = (
           <div>
-            {getColumnsDisplay()}
             {getRowsDisplay()}
+            {getColumnsDisplay()}
           </div>
         );
       }
