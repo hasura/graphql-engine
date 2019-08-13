@@ -127,7 +127,7 @@ class Permissions extends Component {
       throw new NotFoundError();
     }
 
-    const styles = require('../TableModify/ModifyTable.scss');
+    const styles = require('./Permissions.scss');
 
     const addTooltip = (text, tooltip) => {
       return (
@@ -307,9 +307,9 @@ class Permissions extends Component {
           //   }
           // };
 
-          const getEditLink = () => {
+          const getEditIcon = () => {
             return (
-              <span className={styles.editPermsLink}>
+              <span className={styles.editPermsIcon}>
                 <i className="fa fa-pencil" aria-hidden="true" />
               </span>
             );
@@ -395,12 +395,12 @@ class Permissions extends Component {
               permissionsState.role === role &&
               permissionsState.query === queryType;
 
-            let editLink = '';
+            let editIcon = '';
             let className = '';
             let onClick = () => {};
             if (isEditAllowed) {
               className += styles.clickableCell;
-              editLink = getEditLink();
+              editIcon = getEditIcon();
 
               if (isCurrEdit) {
                 onClick = dispatchCloseEdit;
@@ -419,7 +419,7 @@ class Permissions extends Component {
                 data-test={`${role}-${queryType}`}
               >
                 {getRoleQueryPermission(queryType)}
-                {editLink}
+                {editIcon}
               </td>
             );
           });
