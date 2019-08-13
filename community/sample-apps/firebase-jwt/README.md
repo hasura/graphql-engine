@@ -21,7 +21,9 @@ This example is adapted from [this guide](https://firebase.google.com/docs/auth/
 
 ### Pre-requisites
 
-This example assumes that you already have Firebase Auth setup for your app.
+This example assumes that you already have completed:
+- Firebase Auth setup for your app
+- The backend section of Hasura Firebase authentication [tutorial](https://blog.hasura.io/authentication-and-authorization-using-hasura-and-firebase#step-one-hasura)
 
 ### Add the cloud function
 

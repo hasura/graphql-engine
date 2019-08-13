@@ -1,5 +1,5 @@
 // Initialize Firebase
-var config = {
+const config = {
   apiKey: "xxxxxxxxxxxxxxxxxxxxxxxxxx",
   authDomain: "<your-app>.firebaseapp.com",
   databaseURL: "https://<your-app>.firebaseio.com",
@@ -8,6 +8,7 @@ var config = {
   messagingSenderId: "xxxxxxxxxxxx"
 };
 firebase.initializeApp(config);
+const hasuraHerokuAppUrl = 'https://<your-heroku-subdomain>.herokuapp.com/v1/graphql';
 
 document.getElementById('login-form').onsubmit = function(event) {
   event.preventDefault();
@@ -21,6 +22,43 @@ document.getElementById('get-token').onclick = function(event) {
   event.preventDefault();
   firebase.auth().currentUser.getIdToken(true).
     then(token => document.getElementById('id-token').innerHTML = token);
+};
+
+document.getElementById('query').onclick = async (event) => {
+  event.preventDefault();
+  // Force refresh to pick up the latest custom claims changes.
+  // Note this is always triggered on first call. Further optimization could be
+  // added to avoid the initial trigger when the token is issued and already contains
+  // the latest claims.
+  const token = await firebase.auth().currentUser.getIdToken(true);
+
+  // GraphQL query
+  const body = {
+    query: `mutation {
+      insert_loved_language(objects: {name: "${Math.random()}"}) {
+        returning {
+          name
+        }
+      }
+    }`
+  };
+  const settings = {
+        method: 'POST',
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
+    };
+  try {
+    const response = await fetch(hasuraHerokuAppUrl, settings);
+    const json = await response.json();
+    console.log(json);
+  }
+  catch(error) {
+    console.log(error);
+  }
 };
 
 function login(email, password) {
