@@ -7,8 +7,9 @@ const GraphQLType = ({
   fieldToggleCallback,
   typeRemovalCallback,
   isRootType,
+  isTypeExpanded,
 }) => {
-  const [isExpanded, setExpansion] = useState(true);
+  const [isExpanded, setExpansion] = useState(isTypeExpanded);
   const expandType = () => setExpansion(true);
   const collapseType = () => setExpansion(false);
 
@@ -26,7 +27,9 @@ const GraphQLType = ({
     const onClick = isExpanded ? collapseType : expandType;
     return (
       <div
-        className={`${styles.display_flex} ${styles.add_mar_bottom_mid}`}
+        className={`${styles.display_flex} ${styles.add_mar_bottom_mid} ${
+          styles.cursorPointer
+        }`}
         onClick={onClick}
       >
         <i
@@ -55,7 +58,9 @@ const GraphQLType = ({
 
           return (
             <div
-              className={`${styles.display_flex} ${styles.perm}`}
+              className={`${styles.display_flex} ${styles.perm} ${
+                styles.cursorPointer
+              }`}
               key={`${typeName}-${f}`}
               onClick={toggle}
             >

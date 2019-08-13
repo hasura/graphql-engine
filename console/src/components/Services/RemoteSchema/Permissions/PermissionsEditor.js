@@ -99,6 +99,7 @@ const PermissionsEditor = ({
             fields={permission.allowedTypes[at]}
             fieldToggleCallback={fieldToggleCallback}
             isRootType={isRootType}
+            isTypeExpanded={!isRootType}
             typeRemovalCallback={typeRemovalCallback}
           />
         </div>
