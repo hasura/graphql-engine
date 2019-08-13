@@ -204,7 +204,7 @@ neededHasuraFields
   :: RemoteField -> [FieldName]
 neededHasuraFields = toList . rtrHasuraFields . rmfRemoteRelationship
 
--- | Join the data from the original hasura with the remote values.
+-- | Join the data returned from the original hasura request with the remote values.
 joinResults :: GQRespValue
             -> [(Batch, EncJSON)]
             -> GQRespValue
@@ -291,11 +291,12 @@ insertBatchResults hasuraResp Batch{..} remoteResp =
           first OJ.Object <$>
             inHashmap (RelFieldPath path) hasuraData remoteDataVals
 
-        OJ.Array hasuraRowValues -> first (OJ.Array . Vec.fromList) <$>
-          let foldHasuraRowObjs f = foldM (withObj f) ([], remoteDataVals) hasuraRowValues
-              withObj f tup (OJ.Object hasuraData) = f tup hasuraData
-              withObj _ _    hasuraRowValue = Left $
-                "expected array of objects in " <> showHash hasuraRowValue
+        OJ.Array hasuraRowValues -> first (OJ.Array . Vec.fromList . reverse) <$>
+          let foldHasuraRowObjs f = foldM f_onObj ([], remoteDataVals) hasuraRowValues
+                where
+                  f_onObj tup (OJ.Object hasuraData) = f tup hasuraData
+                  f_onObj _    hasuraRowValue = Left $
+                    "expected array of objects in " <> showHash hasuraRowValue
            in case path of
                 -- TODO Brandon note:
                 -- do we need to assert something about the Right.snd of the result here?
@@ -311,15 +312,13 @@ insertBatchResults hasuraResp Batch{..} remoteResp =
                            (remoteDataVal:rest) -> do
                              spliced <- spliceRemote remoteDataVal hasuraData
                              pure
-                               -- TODO bad time complexity; cons then reverse instead?:
-                               (hasuraRowsSoFar <> [ OJ.Object spliced ] , rest)
+                               (OJ.Object spliced : hasuraRowsSoFar , rest)
                     One ->
                       Left "Cardinality mismatch: found array in hasura value, but expected object"
 
                 nonEmptyPath -> foldHasuraRowObjs $
                   \(hasuraRowsSoFar, remainingRemotes) hasuraData ->
-                               -- TODO bad time complexity; cons then reverse instead?:
-                     first (\hasuraRowHash'-> hasuraRowsSoFar <> [OJ.Object hasuraRowHash']) <$>
+                     first (\hasuraRowHash'-> OJ.Object hasuraRowHash' : hasuraRowsSoFar) <$>
                        inHashmap
                          (RelFieldPath nonEmptyPath)
                          hasuraData
