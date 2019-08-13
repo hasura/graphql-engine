@@ -47,9 +47,11 @@ export default (serverEndpoint, headers, config) => {
     if (!filter) return where;
 
     const filterKeys = Object.keys(filter);
+
     if (filterKeys.length === 0) return where;
 
-    const whereCopy = Object.assign(where)
+    const whereCopy = Object.assign(where);
+
     filterKeys.forEach((key) => {
       whereCopy[key] = filter[key];
     });
@@ -147,30 +149,41 @@ export default (serverEndpoint, headers, config) => {
         break;
       case 'GET_MANY':
         // select multiple within where clause
-        finalQuery = cloneQuery(selectQuery);
-        finalQuery.args.table = {'name': tableName, 'schema': schema};
-        finalQuery.args.where = {};
-        finalQuery.args.where[primaryKey] = { '$in': params.ids };
-        finalQuery.args.where = addFilters(finalQuery.args.where, params.filter);
-        break;
-      case 'GET_MANY_REFERENCE':
-        // select multiple with relations
         const finalManyQuery = cloneQuery(selectQuery);
         const finalManyCountQuery = cloneQuery(countQuery);
 
         finalManyQuery.args.table = {'name': tableName, 'schema': schema};
-        finalManyQuery.args.limit = params.pagination.perPage;
-        finalManyQuery.args.offset = (params.pagination.page * params.pagination.perPage) - params.pagination.perPage;
-        finalManyQuery.args.where = { [params.target]: params.id };
+        finalManyQuery.args.where = {};
+        finalManyQuery.args.where[primaryKey] = { '$in': params.ids };
         finalManyQuery.args.where = addFilters(finalManyQuery.args.where, params.filter);
-        finalManyQuery.args.order_by = {column: params.sort.field || primaryKey, type: params.sort.order.toLowerCase()};
+
         finalManyCountQuery.args.table = {'name': tableName, 'schema': schema};;
         finalManyCountQuery.args.where = {};
         finalManyCountQuery.args.where[primaryKey] = { '$ne': null };
-        finalManyCountQuery.args.where = addFilters(finalManyQuery.args.where, params.filter);
+        finalManyCountQuery.args.where = addFilters(finalManyCountQuery.args.where, params.filter);
+
         finalQuery = cloneQuery(bulkQuery);
         finalQuery.args.push(finalManyQuery);
         finalQuery.args.push(finalManyCountQuery);
+        break;
+      case 'GET_MANY_REFERENCE':
+        // select multiple with relations
+        const finalManyRefQuery = cloneQuery(selectQuery);
+        const finalManyRefCountQuery = cloneQuery(countQuery);
+
+        finalManyRefQuery.args.table = {'name': tableName, 'schema': schema};
+        finalManyRefQuery.args.limit = params.pagination.perPage;
+        finalManyRefQuery.args.offset = (params.pagination.page * params.pagination.perPage) - params.pagination.perPage;
+        finalManyRefQuery.args.where = { [params.target]: params.id };
+        finalManyRefQuery.args.where = addFilters(finalManyRefQuery.args.where, params.filter);
+        finalManyRefQuery.args.order_by = {column: params.sort.field || primaryKey, type: params.sort.order.toLowerCase()};
+        finalManyRefCountQuery.args.table = {'name': tableName, 'schema': schema};;
+        finalManyRefCountQuery.args.where = {};
+        finalManyRefCountQuery.args.where[primaryKey] = { '$ne': null };
+        finalManyRefCountQuery.args.where = addFilters(finalManyRefQuery.args.where, params.filter);
+        finalQuery = cloneQuery(bulkQuery);
+        finalQuery.args.push(finalManyRefQuery);
+        finalQuery.args.push(finalManyRefCountQuery);
         break;
       default:
         throw new Error(`Unsupported type ${type}`);
@@ -235,7 +248,7 @@ export default (serverEndpoint, headers, config) => {
         };
       case 'GET_MANY':
         return {
-          data: response
+          data: response[0]
         };
       case 'GET_MANY_REFERENCE':
         return {
