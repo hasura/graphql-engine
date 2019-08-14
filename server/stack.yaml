@@ -10,6 +10,9 @@ packages:
 # - extra-libs/aeson
 # - extra-libs/logger/wai-logger
 
+# Make sure `stack build --ghc-options=...` actually (flippin') works:
+rebuild-ghc-options: true
+
 # Packages to be pulled from upstream that are not in the resolver (e.g., acme-missiles-0.3)
 extra-deps:
 # use https URLs so that build systems can clone these repos

@@ -206,7 +206,6 @@ def validate_gql_ws_q(hge_ctx, endpoint, query, headers, exp_http_response, retr
             #Got query complete before payload. Retry once more
             print("Got query complete before getting query response payload. Retrying")
             ws_client.recreate_conn()
-            time.sleep(3)
             return validate_gql_ws_q(hge_ctx, query, headers, exp_http_response, False)
         else:
             assert resp['type'] in ['data', 'error'], resp

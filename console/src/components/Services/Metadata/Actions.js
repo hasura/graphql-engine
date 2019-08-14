@@ -9,7 +9,7 @@ import {
   setConsistentSchema,
   setConsistentFunctions,
 } from '../Data/DataActions';
-import { setConsistentRemoteSchemas } from '../CustomResolver/customActions';
+import { setConsistentRemoteSchemas } from '../RemoteSchema/Actions';
 import {
   showSuccessNotification,
   showErrorNotification,
@@ -72,7 +72,7 @@ const handleInconsistentObjects = inconsistentObjects => {
   return (dispatch, getState) => {
     const allSchemas = getState().tables.allSchemas;
     const functions = getState().tables.trackedFunctions;
-    const remoteSchemas = getState().customResolverData.listData.resolvers;
+    const remoteSchemas = getState().remoteSchemas.listData.remoteSchemas;
 
     dispatch({
       type: LOAD_INCONSISTENT_OBJECTS,
@@ -210,7 +210,11 @@ export const dropInconsistentObjects = () => {
         console.error(error);
         dispatch({ type: DROPPING_INCONSISTENT_METADATA_FAILED });
         dispatch(
-          showErrorNotification('Dropping inconsistent metadata failed')
+          showErrorNotification(
+            'Dropping inconsistent metadata failed',
+            null,
+            error
+          )
         );
       }
     );
@@ -531,7 +535,7 @@ export const metadataReducer = (state = defaultState, action) => {
         ...state,
         allowedQueries: [
           ...state.allowedQueries.map(q =>
-            (q.name === action.data.queryName ? action.data.newQuery : q)
+            q.name === action.data.queryName ? action.data.newQuery : q
           ),
         ],
       };

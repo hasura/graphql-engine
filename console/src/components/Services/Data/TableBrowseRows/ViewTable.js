@@ -231,7 +231,7 @@ class ViewTable extends Component {
     let comment = null;
     if (tableSchema.comment) {
       comment = (
-        <div className={styles.mar_bottom}>
+        <div className={styles.add_mar_top}>
           <div className={styles.commentText + ' alert alert-warning'}>
             {tableSchema.comment}
           </div>
@@ -242,7 +242,6 @@ class ViewTable extends Component {
     return (
       <div>
         {header}
-        <br />
         {comment}
         <div>{viewRows}</div>
       </div>

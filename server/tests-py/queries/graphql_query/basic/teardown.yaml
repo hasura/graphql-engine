@@ -32,6 +32,11 @@ args:
 - type: run_sql
   args:
     sql: |
+      drop table person
+
+- type: run_sql
+  args:
+    sql: |
       drop type complex
 
 - type: run_sql

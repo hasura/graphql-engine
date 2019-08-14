@@ -215,6 +215,16 @@ library
                      , Hasura.GraphQL.Transport.WebSocket.Protocol
                      , Hasura.GraphQL.Transport.WebSocket.Server
                      , Hasura.GraphQL.Transport.WebSocket
+                     , Hasura.GraphQL.Schema.BoolExp
+                     , Hasura.GraphQL.Schema.Common
+                     , Hasura.GraphQL.Schema.Function
+                     , Hasura.GraphQL.Schema.OrderBy
+                     , Hasura.GraphQL.Schema.Select
+                     , Hasura.GraphQL.Schema.Merge
+                     , Hasura.GraphQL.Schema.Mutation.Common
+                     , Hasura.GraphQL.Schema.Mutation.Insert
+                     , Hasura.GraphQL.Schema.Mutation.Update
+                     , Hasura.GraphQL.Schema.Mutation.Delete
                      , Hasura.GraphQL.Schema
                      , Hasura.GraphQL.Utils
                      , Hasura.GraphQL.Validate
@@ -231,8 +241,9 @@ library
                      , Hasura.GraphQL.Execute.LiveQuery.Multiplexed
                      , Hasura.GraphQL.Execute.LiveQuery.Fallback
                      , Hasura.GraphQL.Resolve
-                     , Hasura.GraphQL.Resolve.BoolExp
+                     , Hasura.GraphQL.Resolve.Types
                      , Hasura.GraphQL.Resolve.Context
+                     , Hasura.GraphQL.Resolve.BoolExp
                      , Hasura.GraphQL.Resolve.InputValue
                      , Hasura.GraphQL.Resolve.Introspect
                      , Hasura.GraphQL.Resolve.Insert
@@ -240,7 +251,6 @@ library
                      , Hasura.GraphQL.Resolve.Select
                      , Hasura.GraphQL.RemoteServer
                      , Hasura.GraphQL.Context
-                     , Hasura.GraphQL.Resolve.ContextTypes
                      , Hasura.GraphQL.Logging
 
                      , Hasura.Events.Lib
