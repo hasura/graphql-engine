@@ -9,9 +9,9 @@ GraphQL Engine](https://github.com/hasura/graphql-engine).
 
 A searchable book library is shown where user can add title and author for new
 books. When a new book in inserted into the database using [GraphQL
-Mutation](https://github.com/hasura/graphql-engine/blob/master/community/examples/serverless-etl/index.js#L36),
+Mutation](https://github.com/hasura/graphql-engine/blob/master/community/sample-apps/serverless-etl/index.js#L36),
 a [Google Cloud
-Function](https://github.com/hasura/graphql-engine/blob/master/community/examples/serverless-etl/cloudfunction/index.js)
+Function](https://github.com/hasura/graphql-engine/blob/master/community/sample-apps/serverless-etl/cloudfunction/index.js)
 is triggered which updates an Algolia search index. On the search screen, user
 can search through this index and results are shown using Algolia APIs. As many
 users add more books, the search index gets bigger.
