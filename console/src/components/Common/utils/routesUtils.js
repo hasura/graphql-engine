@@ -1,12 +1,24 @@
 import globals from '../../../Globals';
-import { getTableSchema, getTableName, checkIfTable } from './pgSchemaUtils';
+import {
+  getTableSchema,
+  getTableName,
+  checkIfTable,
+  getFunctionSchema,
+  getFunctionName,
+} from './pgSchemaUtils';
 
-export const getSchemaRoute = schemaName => {
+/*** DATA ROUTES ***/
+
+export const getSchemaBaseRoute = schemaName => {
   return `${globals.urlPrefix}/data/schema/${schemaName}`;
 };
 
+export const getSchemaAddTableRoute = schemaName => {
+  return `${getSchemaBaseRoute(schemaName)}/table/add`;
+};
+
 export const getTableBaseRoute = table => {
-  return `${getSchemaRoute(getTableSchema(table))}/${
+  return `${getSchemaBaseRoute(getTableSchema(table))}/${
     checkIfTable(table) ? 'tables' : 'views'
   }/${getTableName(table)}`;
 };
@@ -25,4 +37,18 @@ export const getTableRelationshipsRoute = table => {
 
 export const getTablePermissionsRoute = table => {
   return `${getTableBaseRoute(table)}/permissions`;
+};
+
+export const getFunctionBaseRoute = pgFunction => {
+  return `${getSchemaBaseRoute(
+    getFunctionSchema(pgFunction)
+  )}/functions/${getFunctionName(pgFunction)}`;
+};
+
+export const getFunctionModifyRoute = pgFunction => {
+  return `${getFunctionBaseRoute(pgFunction)}/modify`;
+};
+
+export const getFunctionPermissionsRoute = pgFunction => {
+  return `${getFunctionBaseRoute(pgFunction)}/permissions`;
 };
