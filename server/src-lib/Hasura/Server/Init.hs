@@ -28,7 +28,7 @@ import           Hasura.Server.Auth
 import           Hasura.Server.Cors
 import           Hasura.Server.Logging
 import           Hasura.Server.Utils
-import           Network.URI                      (parseURI, uriToString)
+import           Network.URI                      (parseURI)
 
 newtype InstanceId
   = InstanceId { getInstanceId :: Text }
@@ -974,21 +974,13 @@ connInfoToLog ci =
                  ]
 
     mkDBUriLog retries uri =
-      let mUri = parseURI uri
-          mParsedUri = flip fmap mUri $ \u -> uriToString hidePass u ""
-      in case mParsedUri of
-           Nothing -> J.object
-             [ "error" J..= ("parsing database url failed" :: String)]
-           Just s  -> J.object
-             [ "retries" J..= retries
-             , "database_url" J..= s
-             ]
-
-    hidePass s = T.unpack $
-      case T.splitOn ":" (T.pack s) of
-        []    -> T.pack s
-        [u]   -> u
-        (u:_) -> u <> ":<password>@"
+      case show <$> parseURI uri of
+        Nothing -> J.object
+          [ "error" J..= ("parsing database url failed" :: String)]
+        Just s  -> J.object
+          [ "retries" J..= retries
+          , "database_url" J..= s
+          ]
 
 serveOptsToLog :: ServeOptions -> StartupLog
 serveOptsToLog so =
