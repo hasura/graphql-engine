@@ -18,7 +18,7 @@ Deployment guides
 
    For more generic guides, see :doc:`../deployment/index`
 
-Sample apps
+Sample apps & boilerplates
 -----------
 
 - `Blog: Build a realtime chat app with GraphQL Subscriptions <https://blog.hasura.io/building-a-realtime-chat-app-with-graphql-subscriptions-d68cd33e73f>`__.
@@ -66,7 +66,7 @@ Code Editor Integrations
    :hidden:
 
    Deployment guides <deployment/index>
-   Sample apps <sample-apps/index>
+   Sample apps & boilerplates <sample-apps/index>
    Integration/migration tutorials <integrations/index>
    Integrating with monitoring frameworks <monitoring/index>
    Auditing tables <auditing-tables>
