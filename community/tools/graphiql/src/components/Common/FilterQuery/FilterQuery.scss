@@ -1,0 +1,35 @@
+@import "../Common.scss";
+
+.queryBox {
+  box-sizing: border-box;
+  position: relative;
+  min-height: 30px;
+
+  .inputRow {
+    margin: 20px 0;
+
+    div[class^=col-xs-] {
+      padding-left: 0;
+      padding-right: 2.5px;
+    }
+
+    :global(.form-control) {
+      height: 35px;
+      padding: 0 12px;
+    }
+
+    :global(.form-control):focus {
+      box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 0px rgba(102, 175, 233, 0.6);
+    }
+
+    :global(.fa) {
+      padding-top: 8px;
+      font-size: 0.8em;
+    }
+
+    i:hover {
+      cursor: pointer;
+      color: #888;
+    }
+  }
+}
