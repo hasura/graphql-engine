@@ -1,5 +1,5 @@
-import React, { Component, Fragment, useState, useEffect } from 'react';
-import { useQuery, useSubscription, useApolloClient } from '@apollo/react-hooks';
+import React, { Fragment, useState, useEffect } from 'react';
+import { useSubscription, useApolloClient } from '@apollo/react-hooks';
 import gql from 'graphql-tag';
 import TaskItem from './TaskItem';
 
@@ -38,7 +38,7 @@ const TodoPublicList = (props) => {
         }
       }`;
 
-    const { loading, error, data} = await client.query({query: GET_OLD_PUBLIC_TODOS, 
+    const { error, data} = await client.query({query: GET_OLD_PUBLIC_TODOS, 
       variables: {oldestTodoId: state.oldestTodoId}
     });
 
@@ -67,7 +67,7 @@ const TodoPublicList = (props) => {
       }
     `;
 
-const { loading, error, data } = await client.query({query: GET_NEW_PUBLIC_TODOS,
+const { error, data } = await client.query({query: GET_NEW_PUBLIC_TODOS,
   variables: {latestVisibleId: state.todos.length ? state.todos[0].id : null} 
 });   
 
@@ -83,7 +83,7 @@ const { loading, error, data } = await client.query({query: GET_NEW_PUBLIC_TODOS
     return (
       <Fragment>
         <div className="todoListWrapper">
-        {state.newTodosCount !=0 && <div className={"loadMoreSection"} onClick={loadNew}>
+        {state.newTodosCount !==0 && <div className={"loadMoreSection"} onClick={loadNew}>
           New tasks have arrived! ({state.newTodosCount.toString()})
         </div>}
 

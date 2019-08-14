@@ -21,7 +21,7 @@ const [removeTodoMutation] = useMutation(REMOVE_TODO);
     removeTodoMutation({
       variables: {id: todo.id},
       optimisticResponse: {},
-      update: (cache, {}) => {
+      update: (cache) => {
         const existingTodos = cache.readQuery({ query: GET_MY_TODOS });
         const newTodos = existingTodos.todos.filter(t => (t.id !== todo.id));
         cache.writeQuery({

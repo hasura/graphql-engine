@@ -46,7 +46,7 @@ const TodoInput = ({isPublic = false}) => {
     input.focus();
   };
 
-  const [addTodo, {loading, data }] = useMutation(ADD_TODO);
+  const [addTodo, {loading}] = useMutation(ADD_TODO);
 
   return (
     <form className="formInput" onSubmit={(e)=> {

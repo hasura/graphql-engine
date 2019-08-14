@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React from "react";
 
 import TodoInput from "./TodoInput";
 import TodoPrivateList from "./TodoPrivateList";
