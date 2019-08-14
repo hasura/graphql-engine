@@ -18,6 +18,12 @@ const nodeExternals = require('webpack-node-externals');
 
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
+const getRandomHexString = () => {
+  return Math.random()
+    .toString(16)
+    .slice(2);
+};
+
 const cleanOptions = {
   root: process.cwd(),
   verbose: true,
@@ -191,6 +197,9 @@ module.exports = {
         // Useful to reduce the size of client-side libraries, e.g. react
         NODE_ENV: JSON.stringify('production'),
       },
+    }),
+    new webpack.DefinePlugin({
+      CONSOLE_ASSET_VERSION: JSON.stringify(getRandomHexString()),
     }),
     // new BundleAnalyzerPlugin()
   ],

@@ -29,8 +29,10 @@ import { eventRouterUtils } from './src/components/Services/EventTrigger';
 import { eventReducer } from './src/components/Services/EventTrigger';
 
 // import Remote Schema parts
-import { getCustomResolverRouter } from './src/components/Services/CustomResolver';
-import customResolverReducer from './src/components/Services/CustomResolver/customResolverReducer.js';
+import {
+  getRemoteSchemaRouter,
+  remoteSchemaReducer,
+} from './src/components/Services/RemoteSchema';
 
 // Api Explorer and other exports */
 
@@ -39,7 +41,7 @@ import apiExplorerReducer from './src/components/Services/ApiExplorer/Actions';
 
 import generatedLoginConnector from './src/components/Login/Login';
 
-import generatedVoyagerConnector from './src/components/VoyagerView/VoyagerView';
+import generatedVoyagerConnector from './src/components/Services/VoyagerView/VoyagerView';
 //
 
 import telemetryReducer from './src/telemetry/Actions';
@@ -120,7 +122,7 @@ export { dataHeaders };
 export { eventRouterUtils, eventReducer };
 
 // export Remote Schema parts
-export { getCustomResolverRouter, customResolverReducer };
+export { getRemoteSchemaRouter, remoteSchemaReducer };
 
 // export other globals
 
