@@ -1,5 +1,6 @@
 module Hasura.GraphQL.Transport.HTTP
   ( runGQ
+  , mergeResponseData
   ) where
 
 import qualified Data.Aeson.Ordered                     as OJ
@@ -75,7 +76,7 @@ runGQ reqId userInfo reqHdrs req = do
                         (E.joinResults initValue $ toList results)))
                   Nothing
   let mergedRespResult = mergeResponseData (toList (fmap _hrBody results))
-  case mergedRespResult of
+  case mergedRespResult False of
     Left e ->
       throw400
         UnexpectedPayload
@@ -128,43 +129,52 @@ runHasuraGQ reqId query userInfo resolvedOp = do
   return $ encodeGQResp $ GQSuccess $ encJToLBS resp
 
 -- | Merge the list of response objects by the @data@ key.
-mergeResponseData :: [EncJSON] -> Either String EncJSON
-mergeResponseData responses = do
-  resps <- traverse ((OJ.eitherDecode . encJToLBS) >=> E.parseGQRespValue) responses
-  fmap (OJ.toEncJSON . E.gqrespValueToValue) (mergeGQResp resps)
-
-  where mergeGQResp = flip foldM E.emptyResp $ \accResp E.GQRespValue{..} ->
-          case (gqRespData, gqRespErrors) of
-            (Nothing, Nothing) -> pure accResp
-            (Nothing, Just errors) ->
-              pure
-                accResp
-                  { E.gqRespErrors =
-                      maybe
-                        (Just errors)
-                        (\accErr -> Just $ accErr <> errors)
-                        (E.gqRespErrors accResp)
-                  }
+mergeResponseData :: [EncJSON] -> Bool -> Either String EncJSON
+mergeResponseData responses onlyData = do
+  resps <-
+    traverse ((OJ.eitherDecode . encJToLBS) >=> E.parseGQRespValue) responses
+  fmap
+    (OJ.toEncJSON .
+     (\gqResp ->
+        if onlyData
+          then maybe OJ.Null OJ.Object (E.gqRespData gqResp)
+          else
+            E.gqrespValueToValue gqResp))
+    (mergeGQResp resps)
+  where
+    mergeGQResp =
+      flip foldM E.emptyResp $ \accResp E.GQRespValue {..} ->
+        case (gqRespData, gqRespErrors) of
+          (Nothing, Nothing) -> pure accResp
+          (Nothing, Just errors) ->
+            pure
+              accResp
+                { E.gqRespErrors =
+                    maybe
+                      (Just errors)
+                      (\accErr -> Just $ accErr <> errors)
+                      (E.gqRespErrors accResp)
+                }
             -- TODO combine these cases
-            (Just data', Nothing) -> do
-              combined <-
-                maybe
-                  (pure (Just data'))
-                  (\accData -> fmap Just $ OJ.union accData data')
-                  (E.gqRespData accResp)
-              pure accResp {E.gqRespData = combined}
-            (Just data', Just errors) -> do
-              combined <-
-                maybe
-                  (pure (Just data'))
-                  (\accData -> fmap Just $ OJ.union accData data')
-                  (E.gqRespData accResp)
-              pure
-                accResp
-                  { E.gqRespData = combined
-                  , E.gqRespErrors =
-                      maybe
-                        (Just errors)
-                        (\accErr -> Just $ accErr <> errors)
-                        (E.gqRespErrors accResp)
-                  }
+          (Just data', Nothing) -> do
+            combined <-
+              maybe
+                (pure (Just data'))
+                (\accData -> fmap Just $ OJ.union accData data')
+                (E.gqRespData accResp)
+            pure accResp {E.gqRespData = combined}
+          (Just data', Just errors) -> do
+            combined <-
+              maybe
+                (pure (Just data'))
+                (\accData -> fmap Just $ OJ.union accData data')
+                (E.gqRespData accResp)
+            pure
+              accResp
+                { E.gqRespData = combined
+                , E.gqRespErrors =
+                    maybe
+                      (Just errors)
+                      (\accErr -> Just $ accErr <> errors)
+                      (E.gqRespErrors accResp)
+                }
