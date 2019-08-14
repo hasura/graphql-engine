@@ -13,7 +13,9 @@ import           Hasura.SQL.Value
 
 import qualified Hasura.SQL.DML      as S
 
+import           Control.Lens        (filtered, has)
 import           Data.Aeson
+import           Data.Data.Lens      (template)
 
 import qualified Data.HashMap.Strict as M
 import qualified Data.Text.Extended  as T
@@ -437,44 +439,7 @@ mkColCompExp qual lhsCol = mkCompExp (mkQCol lhsCol)
         pgTypeToAnnType = S.TypeAnn . T.pack . show
 
 hasStaticExp :: OpExpG PartialSQLExp -> Bool
-hasStaticExp = \case
-  ACast casts  -> any hasStaticExp $ concat $ M.elems casts
-
-  AEQ _ val    -> isStaticValue val
-  ANE _ val    -> isStaticValue val
-
-  AIN val          -> isStaticValue val
-  ANIN val         -> isStaticValue val
-  AGT val          -> isStaticValue val
-  ALT val          -> isStaticValue val
-  AGTE val         -> isStaticValue val
-  ALTE val         -> isStaticValue val
-
-  ALIKE val        -> isStaticValue val
-  ANLIKE val       -> isStaticValue val
-  AILIKE val       -> isStaticValue val
-  ANILIKE val      -> isStaticValue val
-
-  ASIMILAR val     -> isStaticValue val
-  ANSIMILAR val    -> isStaticValue val
-
-  AContains val    -> isStaticValue val
-  AContainedIn val -> isStaticValue val
-  AHasKey val      -> isStaticValue val
-  AHasKeysAny val  -> isStaticValue val
-  AHasKeysAll val  -> isStaticValue val
-
-  ASTContains val   -> isStaticValue val
-  ASTCrosses val    -> isStaticValue val
-  ASTEquals val     -> isStaticValue val
-  ASTIntersects val -> isStaticValue val
-  ASTOverlaps val   -> isStaticValue val
-  ASTTouches val    -> isStaticValue val
-  ASTWithin val     -> isStaticValue val
-  ASTDWithinGeom (DWithinGeomOp r val)     -> any isStaticValue [r, val]
-  ASTDWithinGeog (DWithinGeogOp r val sph) -> any isStaticValue [r, val, sph]
-
-  _                -> False
+hasStaticExp = has (template . filtered isStaticValue)
 
 getColExpDeps
   :: QualifiedTable -> AnnBoolExpFldPartialSQL -> [SchemaDependency]

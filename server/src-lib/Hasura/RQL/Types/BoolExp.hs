@@ -110,7 +110,7 @@ data DWithinGeomOp a =
   DWithinGeomOp
   { dwgeomDistance :: !a
   , dwgeomFrom     :: !a
-  } deriving (Show, Eq, Functor, Foldable, Traversable)
+  } deriving (Show, Eq, Functor, Foldable, Traversable, Data)
 $(deriveJSON (aesonDrop 6 snakeCase) ''DWithinGeomOp)
 
 data DWithinGeogOp a =
@@ -118,7 +118,7 @@ data DWithinGeogOp a =
   { dwgeogDistance    :: !a
   , dwgeogFrom        :: !a
   , dwgeogUseSpheroid :: !a
-  } deriving (Show, Eq, Functor, Foldable, Traversable)
+  } deriving (Show, Eq, Functor, Foldable, Traversable, Data)
 $(deriveJSON (aesonDrop 6 snakeCase) ''DWithinGeogOp)
 
 type CastExp a = M.HashMap PGColType [OpExpG a]
@@ -171,7 +171,7 @@ data OpExpG a
   | CLT !PGCol
   | CGTE !PGCol
   | CLTE !PGCol
-  deriving (Eq, Show, Functor, Foldable, Traversable)
+  deriving (Eq, Show, Functor, Foldable, Traversable, Data)
 
 opExpDepCol :: OpExpG a -> Maybe PGCol
 opExpDepCol = \case
@@ -282,7 +282,7 @@ type PreSetCols = M.HashMap PGCol S.SQLExp
 data PartialSQLExp
   = PSESessVar !PgType !SessVar
   | PSESQLExp !S.SQLExp
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data)
 
 instance ToJSON PartialSQLExp where
   toJSON = \case
