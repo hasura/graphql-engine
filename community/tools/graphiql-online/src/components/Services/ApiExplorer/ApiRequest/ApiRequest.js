@@ -17,10 +17,7 @@ import {
   focusHeaderTextbox,
   unfocusTypingHeader,
   setInitialHeaderState,
-  verifyJWTToken,
 } from '../Actions';
-
-import globals from '../../../../Globals';
 
 import GraphiQLWrapper from '../GraphiQLWrapper/GraphiQLWrapper';
 
@@ -56,7 +53,6 @@ class ApiRequest extends Component {
     this.state = {
       endpointSectionIsOpen: getEndPointSectionIsOpen(),
       headersSectionIsOpen: getHeadersSectionIsOpen(),
-      adminSecretVisible: false,
       isAnalyzingToken: false,
       analyzingHeaderRow: -1,
       tokenInfo: {
@@ -152,15 +148,6 @@ class ApiRequest extends Component {
       }
     };
 
-    if (token) {
-      dispatch(verifyJWTToken(token))
-        .then(data => {
-          decodeAndSetState(data);
-        })
-        .catch(err => {
-          decodeAndSetState(err);
-        });
-    }
   }
 
   render() {
@@ -234,7 +221,7 @@ class ApiRequest extends Component {
     };
 
     const getHeaderTable = () => {
-      const { headersSectionIsOpen, adminSecretVisible } = this.state;
+      const { headersSectionIsOpen } = this.state;
       const getHeaderRows = () => {
         const headers = this.props.headers;
 
@@ -262,14 +249,7 @@ class ApiRequest extends Component {
             .then(r => setGraphiQLHeadersInLocalStorage(JSON.stringify(r)));
         };
 
-        const onShowAdminSecretClicked = () => {
-          this.setState({ adminSecretVisible: !this.state.adminSecretVisible });
-        };
-
         return headers.map((header, i) => {
-          const isAdminSecret =
-            header.key.toLowerCase() === `x-hasura-${globals.adminSecretLabel}`;
-
           const getHeaderActiveCheckBox = () => {
             let headerActiveCheckbox = null;
 
@@ -349,10 +329,6 @@ class ApiRequest extends Component {
             }
 
             let type = 'text';
-            if (isAdminSecret && !adminSecretVisible) {
-              type = 'password';
-            }
-
             return (
               <td colSpan={getColSpan()} className={className}>
                 <input
@@ -374,17 +350,6 @@ class ApiRequest extends Component {
 
           const getHeaderAdminVal = () => {
             let headerAdminVal = null;
-
-            if (isAdminSecret) {
-              headerAdminVal = (
-                <i
-                  className={styles.showAdminSecret + ' fa fa-eye'}
-                  data-header-id={i}
-                  aria-hidden="true"
-                  onClick={onShowAdminSecretClicked}
-                />
-              );
-            }
 
             return headerAdminVal;
           };

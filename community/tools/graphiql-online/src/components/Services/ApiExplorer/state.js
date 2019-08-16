@@ -1,5 +1,3 @@
-import globals from '../../../Globals';
-
 const defaultHeader = [
   {
     key: 'content-type',
@@ -16,26 +14,14 @@ defaultHeader.push({
   isNewHeader: true,
 });
 
-const getUrl = path => {
-  return `${globals.dataApiUrl}${path}`;
-};
-
 const dataApisContent = [];
-// check project version
 dataApisContent.push({
-  id: 'DataApi-3',
+  id: 'DataApi',
   details: {
     title: '',
     description:
       'Explore GraphQL APIs with headers',
     category: 'data',
-  },
-  request: {
-    method: 'POST',
-    url: getUrl('/v1/graphql'),
-    headers: defaultHeader,
-    bodyType: 'graphql',
-    params: JSON.stringify({}, null, 4),
   },
 });
 
@@ -48,7 +34,6 @@ const explorerData = {
   sendingRequest: false,
   enableResponseSection: false,
   response: {},
-  fileObj: null,
 };
 
 const defaultApi = dataApis.content[0];
@@ -61,8 +46,8 @@ const defaultState = {
     isCopied: false,
   },
   explorerData,
-  authApiExpanded: 'Username-password Login',
   headerFocus: false,
+  graphqlEndpoint: '',
 };
 
 export default defaultState;

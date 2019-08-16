@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const webpack = require('webpack');
 const assetsPath = path.resolve(__dirname, '../static/dist');
-const hasuraConfig = require('../hasuraconfig');
+const hasuraConfig = require('../appconfig');
 const host = hasuraConfig.hmrHost;
 const port = hasuraConfig.hmrPort;
 

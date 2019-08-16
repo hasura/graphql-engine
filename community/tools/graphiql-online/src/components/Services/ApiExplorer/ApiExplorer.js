@@ -4,8 +4,6 @@ import Helmet from 'react-helmet';
 
 import ApiRequestWrapper from './ApiRequestWrapper';
 
-import globals from '../../../Globals';
-
 class ApiExplorer extends Component {
   componentDidMount() {
     let localStorageUrl;
@@ -34,11 +32,7 @@ class ApiExplorer extends Component {
     } = this.props;
 
     const styles = require('./ApiExplorer.scss');
-    const consoleUrl =
-      window.location.protocol +
-      '//' +
-      window.location.host +
-      globals.urlPrefix;
+    const consoleUrl = window.location.protocol + '//' + window.location.host;
       
     let localStorageUrl;
     if (window.__env.graphqlEndpoint && window.__env.graphqlEndpoint !== 'undefined') {

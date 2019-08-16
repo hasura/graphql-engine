@@ -1,9 +1,6 @@
 import defaultState from './state';
 import requestAction from '../../../utils/requestAction';
 
-import Endpoints from '../../../Endpoints';
-// import fetch from 'isomorphic-fetch';
-
 import { SubscriptionClient } from 'subscriptions-transport-ws';
 import { WebSocketLink } from 'apollo-link-ws';
 import { parse } from 'graphql';
@@ -99,22 +96,6 @@ const getChangedHeaders = (headers, changedHeaderDetails) => {
   return nonEmptyHeaders;
 };
 
-const verifyJWTToken = token => dispatch => {
-  const url = Endpoints.graphQLUrl;
-  const body = {
-    query: '{ __type(name: "dummy") {name}}',
-    variables: null,
-  };
-  const options = {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(body),
-  };
-  return dispatch(requestAction(url, options));
-};
-
 const updateFileObject = fileObj => {
   return { type: UPDATE_FILE_OBJECT, data: fileObj };
 };
@@ -208,46 +189,6 @@ const graphQLFetcherFinal = (graphQLParams, url, headers) => {
     body: JSON.stringify(graphQLParams),
   }).then(response => response.json());
 };
-
-/* Analyse Fetcher */
-const analyzeFetcher = (url, headers) => {
-  return query => {
-    const editedQuery = {
-      query,
-    };
-
-    const user = {
-      'x-hasura-role': 'admin',
-    };
-
-    const reqHeaders = getHeadersAsJSON(headers);
-
-    // Check if x-hasura-role is available in some form in the headers
-    const totalHeaders = Object.keys(reqHeaders);
-    totalHeaders.forEach(t => {
-      // If header has x-hasura-*
-      const lHead = t.toLowerCase();
-      if (
-        lHead.slice(0, 'x-hasura-'.length) === 'x-hasura-' &&
-        lHead !== 'x-hasura-access-key' &&
-        lHead !== 'x-hasura-admin-secret'
-      ) {
-        user[lHead] = reqHeaders[t];
-        delete reqHeaders[t];
-      }
-    });
-
-    editedQuery.user = user;
-
-    return fetch(`${url}/explain`, {
-      method: 'post',
-      headers: reqHeaders,
-      body: JSON.stringify(editedQuery),
-      credentials: 'include',
-    });
-  };
-};
-/* End of it */
 
 const setInitialHeaderState = headerObj => {
   return {
@@ -667,8 +608,6 @@ export {
   focusHeaderTextbox,
   unfocusTypingHeader,
   getRemoteQueries,
-  analyzeFetcher,
   setInitialHeaderState,
-  verifyJWTToken,
   updateGraphQLEndpoint,
 };

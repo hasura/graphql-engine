@@ -24,33 +24,11 @@ class App extends Component {
       intervalTime,
       children,
       connectionFailed,
-      telemetry,
       dispatch,
-      metadata,
     } = this.props;
 
-    if (requestError && error) {
-      // console.error(requestError, error);
-    }
-
-    let connectionFailMsg = null;
-    if (connectionFailed) {
-      connectionFailMsg = (
-        <div
-          style={{ marginBottom: '0px' }}
-          className={styles.alertDanger + ' alert alert-danger'}
-        >
-          <strong>
-            Hasura console is not able to reach your Hasura GraphQL engine
-            instance. Please ensure that your instance is running and the
-            endpoint is configured correctly.
-          </strong>
-        </div>
-      );
-    }
-
     return (
-      <ErrorBoundary metadata={metadata} dispatch={dispatch}>
+      <ErrorBoundary dispatch={dispatch}>
         <div>
           {connectionFailMsg}
           {ongoingRequest && (

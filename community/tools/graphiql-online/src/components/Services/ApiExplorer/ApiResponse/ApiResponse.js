@@ -5,10 +5,6 @@ import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 
 import CopyToClipboard from 'react-copy-to-clipboard';
 
-import generateSuggestionBox from './generateSuggestionBox';
-
-import suggestionFunctions from './suggestionFunctions';
-
 class ApiResponse extends React.Component {
   constructor() {
     super();
@@ -29,14 +25,10 @@ class ApiResponse extends React.Component {
 
     const styles = require('../ApiExplorer.scss');
 
-    const suggestionFunction = suggestionFunctions[categoryType];
     const isResponseError =
       'statusCode' in response ? response.statusCode !== 200 : false;
 
-    const responseHtml =
-      isResponseError && suggestionFunction
-        ? generateSuggestionBox(response, suggestionFunction)
-        : '';
+    const responseHtml = '';
 
     const imgHTMLTag = `<img src='${url}' />`;
 

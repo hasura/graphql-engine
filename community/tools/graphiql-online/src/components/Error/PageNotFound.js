@@ -9,7 +9,6 @@ export class NotFoundError extends Error {}
 
 class PageNotFound extends Component {
   render() {
-    const errorImage = require('./error-logo.png');
     const styles = require('./ErrorPage.scss');
 
     const { resetCallback } = this.props;
@@ -29,14 +28,6 @@ class PageNotFound extends Component {
                 </Link>
                 .
               </div>
-            </div>
-            <div className="col-xs-4">
-              <img
-                src={errorImage}
-                className="img-responsive"
-                name="hasura"
-                title="We think you are lost!"
-              />
             </div>
           </div>
         </div>

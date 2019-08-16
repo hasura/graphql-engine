@@ -5,7 +5,7 @@ import GraphiQLErrorBoundary from './GraphiQLErrorBoundary';
 import OneGraphExplorer from '../OneGraphExplorer/OneGraphExplorer';
 
 import { clearCodeMirrorHints, setQueryVariableSectionHeight } from './utils';
-import { analyzeFetcher, graphQLFetcherFinal } from '../Actions';
+import { graphQLFetcherFinal } from '../Actions';
 
 import './GraphiQL.css';
 
@@ -45,11 +45,6 @@ class GraphiQLWrapper extends Component {
         graphqlNetworkData.headers
       );
     };
-
-    const analyzeFetcherInstance = analyzeFetcher(
-      graphqlNetworkData.url,
-      graphqlNetworkData.headers
-    );
 
     const renderGraphiql = graphiqlProps => {
       const voyagerUrl = graphqlNetworkData.consoleUrl + '/voyager-view';

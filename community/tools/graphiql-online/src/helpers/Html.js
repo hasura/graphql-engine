@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
-import { env } from './localDev';
 /**
  * Wrapper component containing HTML metadata and boilerplate tags.
  * Used in server-side code only to wrap the string output of the
@@ -88,10 +87,6 @@ export default class Html extends Component {
 
           <div id="content" className="content" />
           <script src={assets.javascript.main} charSet="UTF-8" />
-          {/*
-          <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.13.1/build/highlight.min.js" />
-          <script type="text/javascript" src="https://unpkg.com/sql-formatter@latest/dist/sql-formatter.min.js" />
-          */}
         </body>
       </html>
     );

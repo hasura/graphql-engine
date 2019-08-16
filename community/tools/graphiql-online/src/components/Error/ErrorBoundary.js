@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import Spinner from '../Common/Spinner/Spinner';
 
 import PageNotFound, { NotFoundError } from './PageNotFound';
-import RuntimeError from './RuntimeError';
 
 class ErrorBoundary extends React.Component {
   initialState = {
@@ -49,11 +48,7 @@ class ErrorBoundary extends React.Component {
     }
 
     if (hasError) {
-      return type === '404' ? (
-        <PageNotFound resetCallback={this.resetState} />
-      ) : (
-        <RuntimeError resetCallback={this.resetState} error={error} />
-      );
+      <PageNotFound resetCallback={this.resetState} />
     }
 
     return this.props.children;
