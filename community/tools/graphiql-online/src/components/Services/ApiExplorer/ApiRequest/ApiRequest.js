@@ -504,70 +504,6 @@ class ApiRequest extends Component {
           }
         };
 
-        const getJWTFailMessage = () => {
-          if (!tokenVerified && JWTError.length > 0) {
-            return (
-              <div className={styles.jwt_verification_fail_message}>
-                {JWTError}
-              </div>
-            );
-          }
-          return null;
-        };
-
-        const getHasuraClaims = () => {
-          const payload = tokenInfo.payload;
-          if (!payload) {
-            return null;
-          }
-          const isValidPayload = Object.keys(payload).length;
-          const payloadHasValidNamespace = claimNameSpace in payload;
-          const isSupportedFormat =
-            ['json', 'stringified_json'].indexOf(claimFormat) !== -1;
-
-          if (
-            !isValidPayload ||
-            !payloadHasValidNamespace ||
-            !isSupportedFormat
-          ) {
-            return null;
-          }
-
-          let claimData = '';
-
-          const generateValidNameSpaceData = claimD => {
-            return JSON.stringify(claimD, null, 2);
-          };
-
-          try {
-            claimData =
-              claimFormat === 'stringified_json'
-                ? generateValidNameSpaceData(
-                    JSON.parse(payload[claimNameSpace])
-                  )
-                : generateValidNameSpaceData(payload[claimNameSpace]);
-          } catch (e) {
-            console.error(e);
-            return null;
-          }
-
-          return [
-            <br key="hasura_claim_element_break" />,
-            <span key="hasura_claim_label" className={styles.analyzerLabel}>
-              Hasura Claims:
-              <span>hasura headers</span>
-            </span>,
-            <TextAreaWithCopy
-              key="hasura_claim_value"
-              copyText={claimData}
-              textLanguage={'json'}
-              id="claimNameSpaceCopy"
-              containerId="claimNameSpaceCopyBlock"
-            />,
-            <br key="hasura_claim_element_break_after" />,
-          ];
-        };
-
         let analyzeBearerBody;
 
         if (tokenAnalyzeError) {
@@ -581,8 +517,6 @@ class ApiRequest extends Component {
                   {generateJWTVerificationStatus()}
                 </span>
               </span>
-              {getJWTFailMessage() || <br />}
-              {getHasuraClaims() || <br />}
               <span className={styles.analyzerLabel}>
                 Header:
                 <span>Algorithm & Token Type</span>

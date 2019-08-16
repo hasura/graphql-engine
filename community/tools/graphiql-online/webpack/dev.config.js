@@ -5,9 +5,9 @@ const fs = require('fs');
 const path = require('path');
 const webpack = require('webpack');
 const assetsPath = path.resolve(__dirname, '../static/dist');
-const hasuraConfig = require('../appconfig');
-const host = hasuraConfig.hmrHost;
-const port = hasuraConfig.hmrPort;
+const appConfig = require('../appconfig');
+const host = appConfig.hmrHost;
+const port = appConfig.hmrPort;
 
 const autoprefixer = require('autoprefixer');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer')
@@ -46,7 +46,7 @@ module.exports = {
     path: assetsPath,
     filename: '[name]-[hash].js',
     chunkFilename: '[name]-[chunkhash].js',
-    publicPath: 'http://' + host + ':' + port + hasuraConfig.webpackPrefix,
+    publicPath: 'http://' + host + ':' + port + appConfig.webpackPrefix,
   },
   module: {
     rules: [
@@ -152,10 +152,6 @@ module.exports = {
       __SERVER__: false,
       __DEVELOPMENT__: true,
       __DEVTOOLS__: true, // <-------- DISABLE redux-devtools HERE
-    }),
-    // set global consts
-    new webpack.DefinePlugin({
-      CONSOLE_ASSET_VERSION: JSON.stringify(getRandomHexString()),
     }),
     webpackIsomorphicToolsPlugin.development(),
   ],
