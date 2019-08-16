@@ -9,7 +9,7 @@ import {
   displayTableName,
   getFunctionName,
   getTableName,
-} from '../../Common/utils/pgSchemaUtils';
+} from '../../Common/utils/pgUtils';
 import {
   getFunctionModifyRoute,
   getSchemaAddTableRoute,

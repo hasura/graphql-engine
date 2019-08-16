@@ -5,7 +5,7 @@ import {
   checkIfTable,
   getFunctionSchema,
   getFunctionName,
-} from './pgSchemaUtils';
+} from './pgUtils';
 
 /*** DATA ROUTES ***/
 
