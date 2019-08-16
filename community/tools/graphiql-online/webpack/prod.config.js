@@ -3,7 +3,7 @@ const path = require('path');
 const webpack = require('webpack');
 const CleanPlugin = require('clean-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const appconfig = require('../appconfig');
+const hasuraConfig = require('../hasuraconfig');
 
 const relativeAssetsPath = '../static/dist';
 const assetsPath = path.join(__dirname, relativeAssetsPath);
@@ -22,6 +22,12 @@ const cleanOptions = {
   dry: false,
 };
 
+const getRandomHexString = () => {
+  return Math.random()
+    .toString(16)
+    .slice(2);
+};
+
 module.exports = {
   mode: 'production',
   context: path.resolve(__dirname, '..'),
@@ -32,7 +38,7 @@ module.exports = {
     path: assetsPath,
     filename: '[name].js',
     chunkFilename: '[name].js',
-    publicPath: appconfig.webpackPrefix,
+    publicPath: hasuraConfig.webpackPrefix,
   },
   module: {
     rules: [
@@ -187,6 +193,7 @@ module.exports = {
         // Useful to reduce the size of client-side libraries, e.g. react
         NODE_ENV: JSON.stringify('production'),
       },
+      CONSOLE_ASSET_VERSION: JSON.stringify(getRandomHexString()),
     }),
   ],
 };

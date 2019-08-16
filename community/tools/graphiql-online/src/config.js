@@ -1,10 +1,8 @@
 /* @flow */
-const appConfig = require('../appconfig');
+const hasuraConfig = require('../hasuraconfig');
 
-const host = appConfig.appHost;
-const port = appConfig.port[process.env.NODE_ENV || 'development'];
-
-// require('babel-polyfill');
+const host = hasuraConfig.appHost;
+const port = hasuraConfig.port[process.env.NODE_ENV || 'development'];
 
 const environment = {
   development: {

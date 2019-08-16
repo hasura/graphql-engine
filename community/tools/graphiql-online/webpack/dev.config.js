@@ -5,11 +5,13 @@ const fs = require('fs');
 const path = require('path');
 const webpack = require('webpack');
 const assetsPath = path.resolve(__dirname, '../static/dist');
-const appconfig = require('../appconfig');
-const host = appconfig.hmrHost;
-const port = appconfig.hmrPort;
+const hasuraConfig = require('../hasuraconfig');
+const host = hasuraConfig.hmrHost;
+const port = hasuraConfig.hmrPort;
 
 const autoprefixer = require('autoprefixer');
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer')
+  .BundleAnalyzerPlugin;
 
 const WebpackIsomorphicToolsPlugin = require('webpack-isomorphic-tools/plugin');
 const webpackIsomorphicToolsPlugin = new WebpackIsomorphicToolsPlugin(
@@ -18,42 +20,11 @@ const webpackIsomorphicToolsPlugin = new WebpackIsomorphicToolsPlugin(
 
 // const { UnusedFilesWebpackPlugin } = require('unused-files-webpack-plugin');
 
-const babelrc = fs.readFileSync('./.babelrc');
-let babelrcObject = {};
-
-try {
-  babelrcObject = JSON.parse(babelrc);
-} catch (err) {
-  console.error('==>     ERROR: Error parsing your .babelrc.');
-  console.error(err);
-}
-
-const babelrcObjectDevelopment =
-  (babelrcObject.env && babelrcObject.env.development) || {};
-const babelLoaderQuery = Object.assign(
-  {},
-  babelrcObject,
-  babelrcObjectDevelopment
-);
-delete babelLoaderQuery.env;
-
-babelLoaderQuery.plugins = babelLoaderQuery.plugins || [];
-if (babelLoaderQuery.plugins.indexOf('react-transform') < 0) {
-  babelLoaderQuery.plugins.push('react-transform');
-}
-
-babelLoaderQuery.extra = babelLoaderQuery.extra || {};
-if (!babelLoaderQuery.extra['react-transform']) {
-  babelLoaderQuery.extra['react-transform'] = {};
-}
-if (!babelLoaderQuery.extra['react-transform'].transforms) {
-  babelLoaderQuery.extra['react-transform'].transforms = [];
-}
-babelLoaderQuery.extra['react-transform'].transforms.push({
-  transform: 'react-transform-hmr',
-  imports: ['react'],
-  locals: ['module'],
-});
+const getRandomHexString = () => {
+  return Math.random()
+    .toString(16)
+    .slice(2);
+};
 
 module.exports = {
   mode: 'development',
@@ -75,7 +46,7 @@ module.exports = {
     path: assetsPath,
     filename: '[name]-[hash].js',
     chunkFilename: '[name]-[chunkhash].js',
-    publicPath: 'http://' + host + ':' + port + appconfig.webpackPrefix,
+    publicPath: 'http://' + host + ':' + port + hasuraConfig.webpackPrefix,
   },
   module: {
     rules: [
@@ -174,12 +145,17 @@ module.exports = {
     new webpack.LoaderOptionsPlugin({
       postcss: [autoprefixer],
     }),
+    // new BundleAnalyzerPlugin(),
     new webpack.IgnorePlugin(/webpack-stats\.json$/),
     new webpack.DefinePlugin({
       __CLIENT__: true,
       __SERVER__: false,
       __DEVELOPMENT__: true,
       __DEVTOOLS__: true, // <-------- DISABLE redux-devtools HERE
+    }),
+    // set global consts
+    new webpack.DefinePlugin({
+      CONSOLE_ASSET_VERSION: JSON.stringify(getRandomHexString()),
     }),
     webpackIsomorphicToolsPlugin.development(),
   ],
