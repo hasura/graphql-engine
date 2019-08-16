@@ -189,18 +189,36 @@ processTableChanges ti tableDiff = do
         if | oColName /= nColName -> do
                renameColInCatalog oColName nColName tn ti
                return True
+
            | oColTy /= nColTy -> do
                let colId   = SOTableObj tn $ TOCol oColName
-                   depObjs = getDependentObjsWith (== "on_type") sc colId
-               unless (null depObjs) $ throw400 DependencyError $
+                   typeDepObjs = getDependentObjsWith (== DROnType) sc colId
+
+               -- Raise exception if any objects found which are dependant on column type
+               unless (null typeDepObjs) $ throw400 DependencyError $
                  "cannot change type of column " <> oColName <<> " in table "
                  <> tn <<> " because of the following dependencies : " <>
-                 reportSchemaObjs depObjs
+                 reportSchemaObjs typeDepObjs
+
+               -- Update column type in cache
                updColInCache nColName npci tn
+
+               -- If any dependant permissions found with the column whose type
+               -- being altered is provided with a session variable,
+               -- then rebuild permission info and update the cache
+               let sessVarDepObjs =
+                     getDependentObjsWith (== DRSessionVariable) sc colId
+               forM_ sessVarDepObjs $ \objId ->
+                 case objId of
+                   SOTableObj qt (TOPerm rn pt) -> rebuildPermInfo qt rn pt
+                   _                            -> throw500
+                     "unexpected schema dependency found for altering column type"
                return False
+
            | oNullable /= nNullable -> do
                updColInCache nColName npci tn
                return False
+
            | otherwise -> return False
 
 delTableAndDirectDeps
