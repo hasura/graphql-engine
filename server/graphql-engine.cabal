@@ -39,6 +39,7 @@ library
                      , pg-client
                      , text
                      , text-builder >= 0.6
+                     , vector-builder
                      , bytestring
                      , postgresql-libpq
                      , mtl

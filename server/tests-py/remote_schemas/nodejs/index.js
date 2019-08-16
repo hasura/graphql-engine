@@ -196,6 +196,8 @@ const schema = new ApolloServer(
     { typeDefs,
       resolvers,
       formatError: (err) => {
+          // Stack traces make expected test output brittle and noisey:
+          delete err.extensions
           return err;
       } });
 
