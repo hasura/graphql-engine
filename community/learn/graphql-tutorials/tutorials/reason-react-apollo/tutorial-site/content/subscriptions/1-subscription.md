@@ -18,7 +18,7 @@ Now we need to update our `ApolloClient` instance to point to the subscription s
 
 Open `src/ApolloClient.re` and update the `link` as follows:
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/reason-react-apollo/app-final/src/App.js" text="src/App.js" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/reason-react-apollo/app-final/src/ApolloClient.re" text="src/ApolloClient.re" />
 
 ```javascript
 

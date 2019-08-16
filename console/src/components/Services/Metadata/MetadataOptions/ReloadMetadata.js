@@ -26,8 +26,10 @@ class ReloadMetadata extends Component {
             dispatch(showSuccessNotification('Metadata reloaded'));
             this.setState({ isReloading: false });
           },
-          () => {
-            dispatch(showErrorNotification('Error reloading metadata'));
+          err => {
+            dispatch(
+              showErrorNotification('Error reloading metadata', null, err)
+            );
             this.setState({ isReloading: false });
           }
         )

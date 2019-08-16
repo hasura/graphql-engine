@@ -41,7 +41,7 @@ You need to have npm/yarn & node 8+ running.
 ## How long will this tutorial take?
 Less than 2 hours
 
-## Other courses:
+## Other courses
 
 **Frontend**: GraphQL for: [Vue](https://learn.hasura.io/graphql/vue), [React Native](https://learn.hasura.io/graphql/react-native), [React](https://learn.hasura.io/graphql/react)
 

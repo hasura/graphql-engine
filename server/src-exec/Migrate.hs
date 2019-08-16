@@ -19,7 +19,7 @@ import qualified Data.Yaml.TH                as Y
 import qualified Database.PG.Query           as Q
 
 curCatalogVer :: T.Text
-curCatalogVer = "19"
+curCatalogVer = "20"
 
 migrateMetadata
   :: ( MonadTx m
@@ -338,7 +338,14 @@ from17To18 =
            |]
 
 from18To19 :: MonadTx m => m ()
-from18To19 =
+from18To19 = do
+  -- Migrate database
+  Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
+    $(Q.sqlFromFile "src-rsr/migrate_from_18_to_19.sql")
+  return ()
+
+from19To20 :: MonadTx m => m ()
+from19To20 =
   liftTx $ Q.catchE defaultTxErrorHandler $
   Q.multiQ [Q.sql|
             ALTER TABLE hdb_catalog.hdb_table
@@ -378,10 +385,13 @@ migrateCatalog migrationTime = do
      | preVer == "16"  -> from16ToCurrent
      | preVer == "17"  -> from17ToCurrent
      | preVer == "18"  -> from18ToCurrent
+     | preVer == "19"  -> from19ToCurrent
      | otherwise -> throw400 NotSupported $
                     "unsupported version : " <> preVer
   where
-    from18ToCurrent = from18To19 >> postMigrate
+    from19ToCurrent = from19To20 >> postMigrate
+
+    from18ToCurrent = from18To19 >> from19ToCurrent
 
     from17ToCurrent = from17To18 >> from18ToCurrent
 

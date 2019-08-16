@@ -5,19 +5,18 @@ module Hasura.GraphQL.Resolve.BoolExp
 import           Data.Has
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                 as Map
-import qualified Data.HashMap.Strict.InsOrd          as OMap
-import qualified Language.GraphQL.Draft.Syntax       as G
+import qualified Data.HashMap.Strict               as Map
+import qualified Data.HashMap.Strict.InsOrd        as OMap
+import qualified Language.GraphQL.Draft.Syntax     as G
 
 import           Hasura.GraphQL.Resolve.Context
-import           Hasura.GraphQL.Resolve.ContextTypes
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-import qualified Hasura.SQL.DML                      as S
+import qualified Hasura.SQL.DML                    as S
 
 type OpExp = OpExpG UnresolvedVal
 

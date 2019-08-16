@@ -5,41 +5,32 @@ module Hasura.GraphQL.Resolve.Mutation
   , buildEmptyMutResp
   ) where
 
-import           Control.Arrow                       (second)
+import           Control.Arrow                     (second)
 import           Data.Has
 import           Hasura.Prelude
 
-import qualified Data.Aeson                          as J
-import qualified Data.HashMap.Strict                 as Map
-import qualified Data.HashMap.Strict.InsOrd          as OMap
-import qualified Language.GraphQL.Draft.Syntax       as G
+import qualified Data.Aeson                        as J
+import qualified Data.HashMap.Strict               as Map
+import qualified Data.HashMap.Strict.InsOrd        as OMap
+import qualified Language.GraphQL.Draft.Syntax     as G
 
-import qualified Hasura.RQL.DML.Delete               as RD
-import qualified Hasura.RQL.DML.Returning            as RR
-import qualified Hasura.RQL.DML.Update               as RU
+import qualified Hasura.RQL.DML.Delete             as RD
+import qualified Hasura.RQL.DML.Returning          as RR
+import qualified Hasura.RQL.DML.Update             as RU
 
-import qualified Hasura.RQL.DML.Select               as RS
-import qualified Hasura.SQL.DML                      as S
+import qualified Hasura.RQL.DML.Select             as RS
+import qualified Hasura.SQL.DML                    as S
 
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
-import           Hasura.GraphQL.Resolve.ContextTypes
 import           Hasura.GraphQL.Resolve.InputValue
-import           Hasura.GraphQL.Resolve.Select       (fromSelSet)
+import           Hasura.GraphQL.Resolve.Select     (fromSelSet)
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-
--- withPrepFn
---   :: (MonadReader r m)
---   => PrepFn m -> ReaderT (r, PrepFn m) m a -> m a
--- withPrepFn fn m = do
---   r <- ask
---   runReaderT m (r, fn)
 
 convertMutResp
   :: ( MonadError QErr m, MonadReader r m, Has FieldMap r

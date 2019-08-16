@@ -6,7 +6,7 @@ nproc    := $(shell nproc)
 
 # TODO: needs to be replaced with something like yq
 stack_resolver := $(shell awk '/^resolver:/ {print $$2;}' stack.yaml)
-packager_ver := 20190326
+packager_ver := 20190731
 pg_dump_ver := 11
 project_dir := $(shell pwd)
 build_dir := $(project_dir)/$(shell stack path --dist-dir)/build
@@ -59,9 +59,6 @@ ci-binary:
 	cp $(build_dir)/$(project)/$(project) $(build_output)
 # cp "$(build_dir)/$(project)-test/$(project)-test" $(build_output)
 	echo "$(VERSION)" > $(build_output)/version.txt
-
-ci-test:
-	$(build_output)/graphql-engine-test --database-url=$(DATABASE_URL)
 
 # assumes this is built in circleci
 ci-image:

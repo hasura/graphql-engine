@@ -7,34 +7,33 @@ import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.Server.Utils
 
-import qualified Data.Aeson                          as J
-import qualified Data.Aeson.Casing                   as J
-import qualified Data.Aeson.TH                       as J
-import qualified Data.HashMap.Strict                 as Map
-import qualified Data.HashMap.Strict.InsOrd          as OMap
-import qualified Data.Sequence                       as Seq
-import qualified Data.Text                           as T
-import qualified Language.GraphQL.Draft.Syntax       as G
+import qualified Data.Aeson                        as J
+import qualified Data.Aeson.Casing                 as J
+import qualified Data.Aeson.TH                     as J
+import qualified Data.HashMap.Strict               as Map
+import qualified Data.HashMap.Strict.InsOrd        as OMap
+import qualified Data.Sequence                     as Seq
+import qualified Data.Text                         as T
+import qualified Language.GraphQL.Draft.Syntax     as G
 
-import qualified Database.PG.Query                   as Q
-import qualified Hasura.RQL.DML.Insert               as RI
-import qualified Hasura.RQL.DML.Returning            as RR
-import qualified Hasura.RQL.GBoolExp                 as RB
+import qualified Database.PG.Query                 as Q
+import qualified Hasura.RQL.DML.Insert             as RI
+import qualified Hasura.RQL.DML.Returning          as RR
+import qualified Hasura.RQL.GBoolExp               as RB
 
-import qualified Hasura.SQL.DML                      as S
+import qualified Hasura.SQL.DML                    as S
 
 import           Hasura.GraphQL.Resolve.Context
-import           Hasura.GraphQL.Resolve.ContextTypes
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Resolve.Mutation
 import           Hasura.GraphQL.Resolve.Select
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
-import           Hasura.RQL.DML.Internal             (convPartialSQLExp,
-                                                      dmlTxErrorHandler,
-                                                      sessVarFromCurrentSetting)
+import           Hasura.RQL.DML.Internal           (convPartialSQLExp,
+                                                    dmlTxErrorHandler,
+                                                    sessVarFromCurrentSetting)
 import           Hasura.RQL.DML.Mutation
-import           Hasura.RQL.GBoolExp                 (toSQLBoolExp)
+import           Hasura.RQL.GBoolExp               (toSQLBoolExp)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value

@@ -222,7 +222,11 @@ class Main extends React.Component {
         adminSecretHtml = (
           <div className={styles.secureSection}>
             <OverlayTrigger placement="left" overlay={tooltip.secureEndpoint}>
-              <a href="https://docs.hasura.io/1.0/graphql/manual/deployment/securing-graphql-endpoint.html">
+              <a
+                href="https://docs.hasura.io/1.0/graphql/manual/deployment/securing-graphql-endpoint.html"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <i
                   className={
                     styles.padd_small_right + ' fa fa-exclamation-triangle'
@@ -479,7 +483,7 @@ class Main extends React.Component {
                 </OverlayTrigger>
                 <OverlayTrigger
                   placement="right"
-                  overlay={tooltip.customresolver}
+                  overlay={tooltip.remoteSchema}
                 >
                   <li>
                     <Link
