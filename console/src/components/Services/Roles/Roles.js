@@ -7,7 +7,6 @@ import Button from '../../Common/Button/Button';
 
 import styles from './Roles.scss';
 
-import { exists } from '../../Common/utils/jsUtils';
 import { getTablePermissionsRoute } from '../../Common/utils/routesUtils';
 import {
   findTable,
@@ -19,7 +18,10 @@ import {
 } from '../../Common/utils/pgUtils';
 
 import { updateSchemaInfo } from '../Data/DataActions';
-import { permOpenEdit } from '../Data/TablePermissions/Actions';
+import {
+  copyRolePermissions,
+  permOpenEdit,
+} from '../Data/TablePermissions/Actions';
 
 import {
   permissionsSymbols,
@@ -36,9 +38,9 @@ class Roles extends Component {
     currTable: null,
     currAction: 'select',
     copyState: {
-      copyFromRole: null,
-      copyFromTable: null,
-      copyFromAction: null,
+      copyFromRole: '',
+      copyFromTable: '',
+      copyFromAction: '',
       copyToRoles: [],
       newRole: '',
     },
@@ -158,8 +160,8 @@ class Roles extends Component {
             copyFromRole: role,
             copyFromTable: currTable
               ? getTableNameWithSchema(null, false, currTable)
-              : 'All',
-            copyFromAction: currRole ? 'All' : currAction,
+              : 'all',
+            copyFromAction: currRole ? 'all' : currAction,
           },
         });
       };
@@ -691,8 +693,26 @@ class Roles extends Component {
       };
 
       const onSave = () => {
-        alert('TODO: actually copy');
-        this.setState({ copyState: { ...this.initState.copyState } });
+        if (!copyToRoles.length) {
+          document.getElementsByClassName('role-selector')[0].focus();
+          return;
+        }
+
+        if (window.confirm('Are you sure?')) {
+          const onSuccess = () => {
+            this.setState({ copyState: { ...this.initState.copyState } });
+          };
+
+          dispatch(
+            copyRolePermissions(
+              copyState.copyFromRole,
+              copyState.copyFromTable,
+              copyState.copyFromAction,
+              copyState.copyToRoles,
+              onSuccess
+            )
+          );
+        }
       };
 
       const getFromRoleOptions = () => {
@@ -788,7 +808,9 @@ class Roles extends Component {
           return (
             <select
               key={value}
-              className={'form-control ' + styles.add_mar_top_small}
+              className={
+                'role-selector form-control ' + styles.add_mar_top_small
+              }
               value={value}
               onChange={onSelect}
             >
@@ -859,7 +881,7 @@ class Roles extends Component {
 
       return (
         <Modal
-          show={exists(copyFromRole)}
+          show={copyFromRole !== ''}
           title={'Copy permissions'}
           onClose={onClose}
           onSubmit={onSave}

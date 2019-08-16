@@ -9,6 +9,16 @@ import dataHeaders from '../Common/Headers';
 import { globalCookiePolicy } from '../../../../Endpoints';
 import requestAction from '../../../../utils/requestAction';
 import Endpoints from '../../../../Endpoints';
+import {
+  findTable,
+  generateTableDef,
+  getTableDef,
+  getTablePermissions,
+} from '../../../Common/utils/pgUtils';
+import {
+  getCreatePermissionQuery,
+  getDropPermissionQuery,
+} from '../../../Common/utils/v1QueryUtils';
 
 export const PERM_ADD_TABLE_SCHEMAS = 'ModifyTable/PERM_ADD_TABLE_SCHEMAS';
 export const PERM_OPEN_EDIT = 'ModifyTable/PERM_OPEN_EDIT';
@@ -419,6 +429,9 @@ const permRemoveMultipleRoles = tableSchema => {
 
 const applySamePermissionsBulk = tableSchema => {
   return (dispatch, getState) => {
+    const permissionsUpQueries = [];
+    const permissionsDownQueries = [];
+
     const allSchemas = getState().tables.allSchemas;
     const currentSchema = getState().tables.currentSchema;
     const permissionsState = getState().tables.modify.permissionsState;
@@ -436,9 +449,6 @@ const applySamePermissionsBulk = tableSchema => {
     const permApplyToList = permissionsState.applySamePermissions
       .filter(applyTo => applyTo.table && applyTo.action && applyTo.role)
       .concat([mainApplyTo]);
-
-    const permissionsUpQueries = [];
-    const permissionsDownQueries = [];
 
     let currentPermissions = [];
     allSchemas.forEach(tSchema => {
@@ -527,6 +537,119 @@ const applySamePermissionsBulk = tableSchema => {
       // reset checkbox selections
       dispatch({ type: PERM_RESET_APPLY_SAME });
     };
+    const customOnError = () => {};
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      permissionsUpQueries,
+      permissionsDownQueries,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
+const copyRolePermissions = (
+  fromRole,
+  tableNameWithSchema,
+  action,
+  toRoles,
+  onSuccess
+) => {
+  return (dispatch, getState) => {
+    const permissionsUpQueries = [];
+    const permissionsDownQueries = [];
+
+    const allSchemas = getState().tables.allSchemas;
+    // const currentSchema = getState().tables.currentSchema;
+
+    let tables;
+    if (tableNameWithSchema === 'all') {
+      tables = allSchemas;
+    } else {
+      const fromTableDef = generateTableDef(null, null, tableNameWithSchema);
+      tables = [findTable(allSchemas, fromTableDef)];
+    }
+
+    tables.forEach(table => {
+      const tableDef = getTableDef(table);
+
+      let actions;
+      if (action === 'all') {
+        actions = ['select', 'insert', 'update', 'delete'];
+      } else {
+        actions = [action];
+      }
+
+      toRoles.forEach(toRole => {
+        actions.forEach(_action => {
+          const currPermissions = getTablePermissions(table, toRole, _action);
+          const toBeAppliedPermissions = getTablePermissions(
+            table,
+            fromRole,
+            _action
+          );
+
+          if (currPermissions) {
+            // existing permission is there. so drop and recreate for down migrations
+            const deleteQuery = getDropPermissionQuery(
+              _action,
+              tableDef,
+              toRole
+            );
+            const createQuery = getCreatePermissionQuery(
+              _action,
+              tableDef,
+              toRole,
+              currPermissions
+            );
+
+            permissionsUpQueries.push(deleteQuery);
+            permissionsDownQueries.push(createQuery);
+          }
+
+          if (toBeAppliedPermissions) {
+            // now add normal create and drop permissions
+            const createQuery = getCreatePermissionQuery(
+              _action,
+              tableDef,
+              toRole,
+              toBeAppliedPermissions
+            );
+            const deleteQuery = getDropPermissionQuery(
+              _action,
+              tableDef,
+              toRole
+            );
+
+            permissionsUpQueries.push(createQuery);
+            permissionsDownQueries.push(deleteQuery);
+          }
+        });
+      });
+    });
+
+    // Apply migration
+    const migrationName =
+      'copy_' +
+      action +
+      '_permissions_for_' +
+      tableNameWithSchema.replace('.', '_') +
+      '_table_from_role_' +
+      fromRole +
+      '_to_' +
+      toRoles.join('_');
+
+    const requestMsg = 'Copying permissions';
+    const successMsg = 'Permissions copied';
+    const errorMsg = 'Permissions copy failed';
+
+    const customOnSuccess = onSuccess;
     const customOnError = () => {};
 
     makeMigrationCall(
@@ -704,4 +827,5 @@ export {
   permSetApplySamePerm,
   permDelApplySamePerm,
   applySamePermissionsBulk,
+  copyRolePermissions,
 };

@@ -3,6 +3,8 @@ import { isEqual } from './jsUtils';
 
 /*** Table/View utils ***/
 
+// TODO: figure out better pattern for overloading fns
+
 export const getTableName = table => {
   return table.table_name;
 };
@@ -11,7 +13,17 @@ export const getTableSchema = table => {
   return table.table_schema;
 };
 
-export const generateTableDef = (tableName, tableSchema = 'public') => {
+// tableName and tableNameWithSchema are either/or arguments
+export const generateTableDef = (
+  tableName,
+  tableSchema = 'public',
+  tableNameWithSchema = null
+) => {
+  if (tableNameWithSchema) {
+    tableSchema = tableNameWithSchema.split('.')[0];
+    tableName = tableNameWithSchema.split('.')[1];
+  }
+
   return {
     schema: tableSchema,
     name: tableName,
@@ -22,7 +34,6 @@ export const getTableDef = table => {
   return generateTableDef(getTableName(table), getTableSchema(table));
 };
 
-// TODO: figure out better pattern for overloading fns
 // table and tableDef are either/or arguments
 export const getTableNameWithSchema = (
   table,
@@ -56,6 +67,21 @@ export const displayTableName = table => {
 
 export const findTable = (allTables, tableDef) => {
   return allTables.find(t => isEqual(getTableDef(t), tableDef));
+};
+
+/*** Table/View permissions utils ***/
+export const getTablePermissions = (table, role = null, action = null) => {
+  let tablePermissions = table.permissions;
+
+  if (role) {
+    tablePermissions = tablePermissions.find(p => p.role_name === role);
+
+    if (tablePermissions && action) {
+      tablePermissions = tablePermissions.permissions[action];
+    }
+  }
+
+  return tablePermissions;
 };
 
 /*** Function utils ***/
