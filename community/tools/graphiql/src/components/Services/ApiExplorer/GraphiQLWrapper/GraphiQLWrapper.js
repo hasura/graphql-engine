@@ -33,7 +33,6 @@ class GraphiQLWrapper extends Component {
 
     const { numberOfTables, urlParams, headerFocus } = this.props;
     const graphqlNetworkData = this.props.data;
-    console.log(graphqlNetworkData);
 
     const graphQLFetcher = graphQLParams => {
       if (headerFocus) {

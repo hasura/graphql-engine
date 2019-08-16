@@ -1,9 +1,9 @@
 {
-  "name": "graphql-engine-console",
-  "description": "Console for Hasura GraphQL Engine",
-  "author": "Hasura (https://github.com/hasura/graphql-engine)",
+  "name": "graphqurl-graphiql",
+  "description": "Explore GraphQL APIs with headers",
+  "author": "Praveen <praveen@hasura.io>",
   "license": "Apache 2.0",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/hasura/graphql-engine"
@@ -20,7 +20,8 @@
     "lint": "eslint -c .eslintrc src api",
     "start-dev": "better-npm-run start-dev",
     "watch-client": "better-npm-run watch-client",
-    "dev": "concurrently --kill-others \"npm run watch-client\" \"npm run start-dev\" "
+    "dev": "concurrently --kill-others \"npm run watch-client\" \"npm run start-dev\" ",
+    "deploy": "now"
   },
   "betterScripts": {
     "start-prod": {
@@ -43,11 +44,11 @@
     "apollo-link-ws": "^1.0.8",
     "brace": "^0.11.1",
     "deep-equal": "^1.0.1",
-    "graphiql": "^0.11.11",
+    "graphiql": "^0.13.2",
     "graphiql-explorer-hasura": "0.0.7",
     "graphql": "^14.3.0",
     "graphql-voyager": "^1.0.0-rc.27",
-    "hasura-console-graphiql": "0.0.11",
+    "hasura-console-graphiql": "0.1.0-alpha.1",
     "history": "^3.0.0",
     "hoist-non-react-statics": "^1.0.3",
     "inflection": "^1.12.0",

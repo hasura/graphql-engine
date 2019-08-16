@@ -39,7 +39,13 @@ class LoginComponent extends React.Component {
                     e.preventDefault();
                     const urlRegex= /^(http[s]?:\/\/){0,1}(www\.){0,1}[a-zA-Z0-9\.\-]+\.[a-zA-Z]{2,5}[\.]{0,1}/;
                     if (!urlRegex.test(this.state.graphqlEndpoint)) {
-                      alert('Please enter a valid URL');
+                      // check if localhost url
+                      const localhostRegex = /^http:\/\/\w+(\.\w+)*(:[0-9]+)?\/?(\/[.\w]*)*$/;
+                      if(!localhostRegex.test(this.state.graphqlEndpoint)) {
+                        alert('Please enter a valid URL');
+                      } else {
+                        dispatch(updateGraphQLEndpoint(this.state.graphqlEndpoint));
+                      }
                     } else {
                       dispatch(updateGraphQLEndpoint(this.state.graphqlEndpoint));
                     }
