@@ -30,6 +30,7 @@ data RemoteSchemaInfo
   { rsUrl              :: !N.URI
   , rsHeaders          :: ![HeaderConf]
   , rsFwdClientHeaders :: !Bool
+  , rsTimeoutSeconds   :: !Int
   } deriving (Show, Eq, Lift, Generic)
 
 instance Hashable RemoteSchemaInfo
@@ -42,6 +43,7 @@ data RemoteSchemaDef
   , _rsdUrlFromEnv           :: !(Maybe UrlFromEnv)
   , _rsdHeaders              :: !(Maybe [HeaderConf])
   , _rsdForwardClientHeaders :: !Bool
+  , _rsdTimeoutSeconds       :: !(Maybe Int)
   } deriving (Show, Eq, Lift)
 
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''RemoteSchemaDef)
@@ -77,13 +79,13 @@ validateRemoteSchemaDef
   :: (MonadError QErr m, MonadIO m)
   => RemoteSchemaDef
   -> m RemoteSchemaInfo
-validateRemoteSchemaDef (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs) =
+validateRemoteSchemaDef (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs mTimeout) =
   case (mUrl, mUrlEnv) of
     (Just url, Nothing)    ->
-      return $ RemoteSchemaInfo url hdrs fwdHdrs
+      return $ RemoteSchemaInfo url hdrs fwdHdrs (fromMaybe 60 mTimeout)
     (Nothing, Just urlEnv) -> do
       url <- getUrlFromEnv urlEnv
-      return $ RemoteSchemaInfo url hdrs fwdHdrs
+      return $ RemoteSchemaInfo url hdrs fwdHdrs (fromMaybe 60 mTimeout)
     (Nothing, Nothing)     ->
         throw400 InvalidParams "both `url` and `url_from_env` can't be empty"
     (Just _, Just _)       ->

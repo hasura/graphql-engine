@@ -37,11 +37,11 @@ fetchRemoteSchema
   -> RemoteSchemaName
   -> RemoteSchemaInfo
   -> m GC.RemoteGCtx
-fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _) = do
+fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _ timeout) = do
   headers <- getHeadersFromConf headerConf
   let hdrs = flip map headers $
              \(hn, hv) -> (CI.mk . T.encodeUtf8 $ hn, T.encodeUtf8 hv)
-      options = wreqOptions manager hdrs
+      options = wreqOptions manager hdrs (Just $ timeout*1000000)
   res  <- liftIO $ try $ Wreq.postWith options (show url) introspectionQuery
   resp <- either throwHttpErr return res
 

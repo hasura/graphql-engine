@@ -31,7 +31,7 @@ $(A.deriveJSON (A.aesonDrop 2 A.snakeCase) ''UpdateInfo)
 
 checkForUpdates :: LoggerCtx -> H.Manager -> IO ()
 checkForUpdates (LoggerCtx loggerSet _ _ _) manager = do
-  let options = wreqOptions manager []
+  let options = wreqOptions manager [] Nothing
   url <- getUrl
   forever $ do
     resp <- try $ Wreq.getWith options $ T.unpack url

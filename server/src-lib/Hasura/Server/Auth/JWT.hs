@@ -137,7 +137,7 @@ updateJwkRef
   -> IORef Jose.JWKSet
   -> m (Maybe NominalDiffTime)
 updateJwkRef (Logger logger) manager url jwkRef = do
-  let options = wreqOptions manager []
+  let options = wreqOptions manager [] Nothing
       urlT    = T.pack $ show url
       infoMsg = JLNInfo $ "refreshing JWK from endpoint: " <> urlT
   liftIO $ logger $ JwkRefreshLog LevelInfo infoMsg Nothing

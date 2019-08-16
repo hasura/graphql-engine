@@ -22,17 +22,19 @@ hdrsToText hdrs =
   | (hdrName, hdrVal) <- hdrs
   ]
 
-wreqOptions :: HTTP.Manager -> [HTTP.Header] -> Wreq.Options
-wreqOptions manager hdrs =
-  Wreq.defaults
-  & Wreq.headers .~  contentType : userAgent : hdrs
-  & Wreq.checkResponse ?~ (\_ _ -> return ())
-  & Wreq.manager .~ Right manager
+wreqOptions :: HTTP.Manager -> [HTTP.Header] -> Maybe Int -> Wreq.Options
+wreqOptions manager hdrs mTimeoutMicro =
+  Wreq.defaults & Wreq.headers .~ contentType : userAgent : hdrs &
+  Wreq.checkResponse ?~ (\_ _ -> return ()) &
+  Wreq.manager .~ Right manager &
+  Wreq.manager .~
+  Left
+    (HTTP.defaultManagerSettings
+       {HTTP.managerResponseTimeout = HTTP.responseTimeoutMicro (fromMaybe 30000000 mTimeoutMicro)})
   where
     contentType = ("Content-Type", "application/json")
-    userAgent   = ( "User-Agent"
-                  , "hasura-graphql-engine/" <> T.encodeUtf8 currentVersion
-                  )
+    userAgent =
+      ("User-Agent", "hasura-graphql-engine/" <> T.encodeUtf8 currentVersion)
 
 newtype HttpException
   = HttpException

@@ -357,46 +357,41 @@ execRemoteGQ
   -> m (HttpResponse EncJSON)
 execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
   execCtx <- ask
-  let logger  = _ecxLogger execCtx
+  let logger = _ecxLogger execCtx
       manager = _ecxHttpManager execCtx
-      opTy    = G._todType opDef
+      opTy = G._todType opDef
   when (opTy == G.OperationTypeSubscription) $
     throw400 NotSupported "subscription to remote server is not supported"
   hdrs <- getHeadersFromConf hdrConf
-  let confHdrs   = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
+  let confHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
       clientHdrs = bool [] filteredHeaders fwdClientHdrs
       -- filter out duplicate headers
       -- priority: conf headers > resolved userinfo vars > client headers
-      hdrMaps    = [ Map.fromList confHdrs
-                   , Map.fromList userInfoToHdrs
-                   , Map.fromList clientHdrs
-                   ]
-      finalHdrs  = foldr Map.union Map.empty hdrMaps
-      options    = wreqOptions manager (Map.toList finalHdrs)
-
+      hdrMaps =
+        [ Map.fromList confHdrs
+        , Map.fromList userInfoToHdrs
+        , Map.fromList clientHdrs
+        ]
+      finalHdrs = foldr Map.union Map.empty hdrMaps
+      options = wreqOptions manager (Map.toList finalHdrs) (Just $ timeout * 1000000)
   -- log the graphql query
   liftIO $ logGraphqlQuery logger $ QueryLog q Nothing reqId
-  res  <- liftIO $ try $ Wreq.postWith options (show url) (J.toJSON q)
+  res <- liftIO $ try $ Wreq.postWith options (show url) (J.toJSON q)
   resp <- either httpThrow return res
   let cookieHdr = getCookieHdr (resp ^? Wreq.responseHeader "Set-Cookie")
-      respHdrs  = Just $ mkRespHeaders cookieHdr
+      respHdrs = Just $ mkRespHeaders cookieHdr
   return $ HttpResponse (encJFromLBS $ resp ^. Wreq.responseBody) respHdrs
-
   where
-    RemoteSchemaInfo url hdrConf fwdClientHdrs = rsi
+    RemoteSchemaInfo url hdrConf fwdClientHdrs timeout = rsi
     httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
     httpThrow err = throw500 $ T.pack . show $ err
-
-    userInfoToHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
-                     userInfoToList userInfo
+    userInfoToHdrs =
+      map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $ userInfoToList userInfo
     filteredHeaders = filterUserVars $ filterRequestHeaders reqHdrs
-
     filterUserVars hdrs =
       let txHdrs = map (\(n, v) -> (bsToTxt $ CI.original n, bsToTxt v)) hdrs
-      in map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
-         filter (not . isUserVar . fst) txHdrs
-
+       in map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
+          filter (not . isUserVar . fst) txHdrs
     getCookieHdr = maybe [] (\h -> [("Set-Cookie", h)])
-
     mkRespHeaders hdrs =
       map (\(k, v) -> Header (bsToTxt $ CI.original k, bsToTxt v)) hdrs

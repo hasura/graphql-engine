@@ -101,7 +101,7 @@ runTelemetry
   -> InstanceId
   -> IO ()
 runTelemetry (Logger logger) manager cacheRef dbId instanceId = do
-  let options = wreqOptions manager []
+  let options = wreqOptions manager [] Nothing
   forever $ do
     schemaCache <- fmap fst $ readIORef cacheRef
     let metrics = computeMetrics schemaCache

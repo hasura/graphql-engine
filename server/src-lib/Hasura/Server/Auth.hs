@@ -194,12 +194,12 @@ userInfoFromAuthHook logger manager hook reqHeaders = do
       AHTGet  -> False
     method = bool N.GET N.POST isPost
 
-    withGET = Wreq.getWith (mkOptions filteredHeaders) $
+    withGET = Wreq.getWith (mkOptions filteredHeaders Nothing) $
               T.unpack urlT
 
     contentType = ("Content-Type", "application/json")
     postHdrsPayload = J.toJSON $ Map.fromList $ hdrsToText reqHeaders
-    withPOST = Wreq.postWith (mkOptions [contentType]) (T.unpack urlT) $
+    withPOST = Wreq.postWith (mkOptions [contentType] Nothing) (T.unpack urlT) $
                object ["headers" J..= postHdrsPayload]
 
     logAndThrow err = do
