@@ -1540,7 +1540,7 @@ class Permissions extends Component {
                 dispatch(permDelApplySamePerm(index));
               };
 
-              if (applyTo.table || applyTo.role || applyTo.action) {
+              if (applyTo.table && applyTo.role && applyTo.action) {
                 _removeIcon = (
                   <i
                     className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
@@ -1567,9 +1567,12 @@ class Permissions extends Component {
           });
 
           // add empty row (only if prev row is completely filled)
+          const lastApplyTo = applyToList.length
+            ? applyToList[applyToList.length - 1]
+            : null;
           if (
-            !applyToList.length ||
-            !Object.values(applyToList[applyToList.length - 1]).includes('')
+            !lastApplyTo ||
+            (lastApplyTo.table && lastApplyTo.action && lastApplyTo.role)
           ) {
             _applyToListHtml.push(getApplyToRow({}, applyToList.length));
           }
@@ -1585,6 +1588,10 @@ class Permissions extends Component {
             <Tooltip id="tooltip-clone">
               Apply same permissions to other tables/roles/actions
             </Tooltip>
+          );
+
+          const validApplyToList = permissionsState.applySamePermissions.filter(
+            applyTo => applyTo.table && applyTo.action && applyTo.role
           );
 
           clonePermissionsHtml = (
@@ -1612,7 +1619,7 @@ class Permissions extends Component {
                     className={styles.add_mar_top}
                     color="yellow"
                     size="sm"
-                    disabled={!permissionsState.applySamePermissions.length}
+                    disabled={!validApplyToList.length}
                   >
                     Save Permissions
                   </Button>

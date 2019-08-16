@@ -429,13 +429,13 @@ const applySamePermissionsBulk = tableSchema => {
 
     const mainApplyTo = {
       table: table,
-      role: permissionsState.role,
       action: currentQueryType,
+      role: permissionsState.role,
     };
 
-    const permApplyToList = permissionsState.applySamePermissions.concat([
-      mainApplyTo,
-    ]);
+    const permApplyToList = permissionsState.applySamePermissions
+      .filter(applyTo => applyTo.table && applyTo.action && applyTo.role)
+      .concat([mainApplyTo]);
 
     const permissionsUpQueries = [];
     const permissionsDownQueries = [];
