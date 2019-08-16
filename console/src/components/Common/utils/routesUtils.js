@@ -1,4 +1,4 @@
-import globals from '../../../Globals';
+// import globals from '../../../Globals';
 import {
   getTableSchema,
   getTableName,
@@ -10,7 +10,8 @@ import {
 /*** DATA ROUTES ***/
 
 export const getSchemaBaseRoute = schemaName => {
-  return `${globals.urlPrefix}/data/schema/${schemaName}`;
+  // return `${globals.urlPrefix}/data/schema/${schemaName}`;
+  return `/data/schema/${schemaName}`;
 };
 
 export const getSchemaAddTableRoute = schemaName => {
