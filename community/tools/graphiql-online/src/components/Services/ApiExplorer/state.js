@@ -14,6 +14,10 @@ defaultHeader.push({
   isNewHeader: true,
 });
 
+const getUrl = path => {
+  return `${window.__env.graphqlEndpoint}`;
+};
+
 const dataApisContent = [];
 dataApisContent.push({
   id: 'DataApi',
@@ -22,6 +26,13 @@ dataApisContent.push({
     description:
       'Explore GraphQL APIs with headers',
     category: 'data',
+  },
+  request: {
+    method: 'POST',
+    url: getUrl('/v1/graphql'),
+    headers: defaultHeader,
+    bodyType: 'graphql',
+    params: JSON.stringify({}, null, 4),
   },
 });
 

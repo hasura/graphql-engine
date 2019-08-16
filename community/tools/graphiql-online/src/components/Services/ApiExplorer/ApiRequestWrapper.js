@@ -19,27 +19,6 @@ class ApiRequestWrapper extends Component {
       return null;
     };
 
-    const getAPIResponseSection = () => {
-      let apiResponseSection = null;
-
-      if (this.props.request.bodyType !== 'graphql') {
-        apiResponseSection = (
-          <ApiResponse
-            {...this.props.explorerData}
-            categoryType={this.props.details.category}
-            showHelpBulb={
-              this.props.request.showHelpBulb
-                ? this.props.request.showHelpBulb
-                : false
-            }
-            url={this.props.request.url}
-          />
-        );
-      }
-
-      return apiResponseSection;
-    };
-
     return (
       <div
         id="apiRequestBlock"
@@ -74,7 +53,6 @@ class ApiRequestWrapper extends Component {
           queryParams={this.props.queryParams}
         />
 
-        {getAPIResponseSection()}
       </div>
     );
   }

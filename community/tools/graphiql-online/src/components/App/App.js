@@ -30,7 +30,6 @@ class App extends Component {
     return (
       <ErrorBoundary dispatch={dispatch}>
         <div>
-          {connectionFailMsg}
           {ongoingRequest && (
             <ProgressBar
               percent={percent}

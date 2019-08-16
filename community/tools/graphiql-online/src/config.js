@@ -1,8 +1,8 @@
 /* @flow */
-const hasuraConfig = require('../hasuraconfig');
+const appConfig = require('../appconfig');
 
-const host = hasuraConfig.appHost;
-const port = hasuraConfig.port[process.env.NODE_ENV || 'development'];
+const host = appConfig.appHost;
+const port = appConfig.port[process.env.NODE_ENV || 'development'];
 
 const environment = {
   development: {
