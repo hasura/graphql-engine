@@ -234,7 +234,11 @@ const updateApplySamePerms = (permissionsState, data, isDelete) => {
     applySamePerms.splice(data, 1);
   } else {
     if (data.index === applySamePerms.length) {
-      applySamePerms.push({ table: '', role: '', action: '' });
+      applySamePerms.push({
+        table: permissionsState.table,
+        action: permissionsState.query,
+        role: '',
+      });
     }
   }
 
@@ -511,9 +515,9 @@ const applySamePermissionsBulk = tableSchema => {
     const migrationName =
       'apply_same_permissions_' + currentSchema + '_table_' + table;
 
-    const requestMsg = 'Applying Permissions';
-    const successMsg = 'Permission Changes Applied';
-    const errorMsg = 'Permission Changes Failed';
+    const requestMsg = 'Applying permissions';
+    const successMsg = 'Permission changes applied';
+    const errorMsg = 'Permission changes failed';
 
     const customOnSuccess = () => {
       // reset new role name

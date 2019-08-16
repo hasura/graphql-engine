@@ -1520,12 +1520,12 @@ class Permissions extends Component {
                     styles.add_mar_right +
                     ' input-sm form-control'
                   }
-                  value={applyTo[type] || ''}
+                  value={applyTo[type] || value || ''}
                   onChange={setApplyTo}
                   disabled={noPermissions}
                   title={noPermissions ? disabledCloneMsg : ''}
                 >
-                  <option disabled value={value}>
+                  <option disabled value="">
                     Select {type}
                   </option>
                   {optionsList}
@@ -1554,9 +1554,9 @@ class Permissions extends Component {
 
             return (
               <div key={index} className={styles.add_mar_bottom_mid}>
-                {getSelect('table', tableOptions, tableName)}
+                {getSelect('table', tableOptions, permissionsState.table)}
+                {getSelect('action', actionsList, permissionsState.query)}
                 {getSelect('role', roleList)}
-                {getSelect('action', actionsList)}
                 {getRemoveIcon()}
               </div>
             );
@@ -1566,8 +1566,13 @@ class Permissions extends Component {
             _applyToListHtml.push(getApplyToRow(applyTo, i));
           });
 
-          // add empty row
-          _applyToListHtml.push(getApplyToRow({}, applyToList.length));
+          // add empty row (only if prev row is completely filled)
+          if (
+            !applyToList.length ||
+            !Object.values(applyToList[applyToList.length - 1]).includes('')
+          ) {
+            _applyToListHtml.push(getApplyToRow({}, applyToList.length));
+          }
 
           return _applyToListHtml;
         };
