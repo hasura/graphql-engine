@@ -45,23 +45,32 @@
 // TODO: make common with Permissions page
 .clickableCell {
   cursor: pointer;
-
-  .flex_space_between > div:first-child {
-    width: calc(100% - 20px);
-  }
-
-  .editPermsIcon {
-    font-size: 12px;
-    color: #337ab7;
-    cursor: pointer;
-    visibility: hidden;
-  }
 }
 
 .clickableCell:hover {
   background-color: #ebf7de;
+}
 
-  .editPermsIcon {
+.actionIcon {
+  font-size: 12px;
+  color: #337ab7;
+  cursor: pointer;
+}
+
+.clickableCell,
+.actionCell {
+  .flex_space_between > div:first-child {
+    width: calc(100% - 20px);
+  }
+
+  .actionIcon {
+    visibility: hidden;
+  }
+}
+
+.clickableCell:hover,
+.actionCell:hover {
+  .actionIcon {
     visibility: visible;
   }
 }

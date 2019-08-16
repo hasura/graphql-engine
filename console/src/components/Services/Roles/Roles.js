@@ -1,16 +1,20 @@
 import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
+import Modal from '../../Common/Modal/Modal';
 
 import styles from './Roles.scss';
 
+import { exists } from '../../Common/utils/jsUtils';
+import { getTablePermissionsRoute } from '../../Common/utils/routesUtils';
 import {
   findTable,
   getTableSchema,
   getTableName,
-  checkIfTable,
-} from '../../Common/utils/pgSchemaUtils';
-import { getTablePermissionsRoute } from '../../Common/utils/routesUtils';
+  displayTableName,
+  getTableNameWithSchema,
+  getTableDef,
+} from '../../Common/utils/pgUtils';
 
 import { updateSchemaInfo } from '../Data/DataActions';
 import { permOpenEdit } from '../Data/TablePermissions/Actions';
@@ -25,13 +29,26 @@ import {
 } from './utils';
 
 class Roles extends Component {
+  initState = {
+    currRole: null,
+    currTable: null,
+    currAction: 'select',
+    copyState: {
+      copyFromRole: null,
+      copyFromTable: null,
+      copyFromAction: null,
+      copyToRoles: [],
+    },
+  };
+
   constructor(props) {
     super(props);
 
     this.state = {
-      currRole: null,
-      currTable: null,
-      currAction: 'select',
+      ...this.initState,
+      copyState: {
+        ...this.initState.copyState,
+      },
     };
 
     this.props.dispatch(
@@ -40,7 +57,7 @@ class Roles extends Component {
   }
 
   render() {
-    const { currRole, currAction, currTable } = this.state;
+    const { currRole, currAction, currTable, copyState } = this.state;
     const { dispatch } = this.props;
 
     // ------------------------------------------------------------------------------
@@ -111,47 +128,97 @@ class Roles extends Component {
       );
     };
 
-    const getEditIcon = () => {
+    const getActionIcon = (faIconType, onClick = null) => {
       return (
-        <span className={styles.editPermsIcon}>
-          <i className="fa fa-pencil" aria-hidden="true" />
+        <span className={styles.actionIcon} onClick={onClick}>
+          <i className={`fa ${faIconType}`} aria-hidden="true" />
         </span>
       );
     };
 
+    const getEditIcon = () => {
+      return getActionIcon('fa-pencil');
+    };
+
+    const getCopyIcon = role => {
+      const copyOnClick = e => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        this.setState({
+          copyState: {
+            ...copyState,
+            copyFromRole: role,
+            copyFromTable: currTable
+              ? getTableNameWithSchema(null, false, currTable)
+              : 'All',
+            copyFromAction: currRole ? 'All' : currAction,
+          },
+        });
+      };
+
+      return getActionIcon('fa-copy', copyOnClick);
+    };
+
     // ------------------------------------------------------------------------------
 
-    const getRolesHeaders = (selectable = true, selectedFirst = false) => {
-      const rolesHeaders = [];
-
-      allRoles.forEach(role => {
-        const isCurrRole = currRole === role;
-
-        const setRole = () => {
-          this.setState({ currRole: isCurrRole ? null : role });
-          window.scrollTo(0, 0);
-        };
-
-        const roleHeader = (
-          <th
-            key={role}
-            onClick={selectable ? setRole : null}
-            className={`${selectable ? styles.cursorPointer : ''} ${
-              isCurrRole ? styles.selected : ''
-            }`}
+    const getClickableCell = (key, onClick, content, actionIcon) => {
+      return (
+        <td key={key} className={styles.clickableCell} onClick={onClick}>
+          <div
+            className={styles.display_flex + ' ' + styles.flex_space_between}
           >
-            {role}
-          </th>
-        );
+            <div>{content}</div>
+            <div>{actionIcon}</div>
+          </div>
+        </td>
+      );
+    };
 
-        if (selectedFirst && isCurrRole) {
-          rolesHeaders.unshift(roleHeader);
+    const getHeader = (
+      key,
+      selectable,
+      isSelected,
+      onClick,
+      content,
+      actionIcon = null
+    ) => {
+      const getContents = () => {
+        let headerContent;
+
+        if (!actionIcon) {
+          headerContent = content;
         } else {
-          rolesHeaders.push(roleHeader);
+          headerContent = (
+            <div
+              className={
+                styles.actionCell +
+                ' ' +
+                styles.display_flex +
+                ' ' +
+                styles.flex_space_between
+              }
+            >
+              <div>{content}</div>
+              <div>{actionIcon}</div>
+            </div>
+          );
         }
-      });
 
-      return rolesHeaders;
+        return headerContent;
+      };
+
+      return (
+        <th
+          key={key}
+          onClick={selectable ? onClick : null}
+          className={`${selectable ? styles.cursorPointer : ''} ${
+            isSelected ? styles.selected : ''
+          }`}
+        >
+          {getContents()}
+        </th>
+      );
     };
 
     const getCellOnClick = (table, role, action) => {
@@ -165,6 +232,38 @@ class Roles extends Component {
       };
     };
 
+    const getRolesHeaders = (selectable = true, selectedFirst = false) => {
+      const rolesHeaders = [];
+
+      allRoles.forEach(role => {
+        const isCurrRole = currRole === role;
+
+        const setRole = () => {
+          this.setState({ currRole: isCurrRole ? null : role });
+          window.scrollTo(0, 0);
+        };
+
+        const copyIcon = getCopyIcon(role);
+
+        const roleHeader = getHeader(
+          role,
+          selectable,
+          isCurrRole,
+          setRole,
+          role,
+          copyIcon
+        );
+
+        if (selectedFirst && isCurrRole) {
+          rolesHeaders.unshift(roleHeader);
+        } else {
+          rolesHeaders.push(roleHeader);
+        }
+      });
+
+      return rolesHeaders;
+    };
+
     const getRolesCells = (table, roleCellRenderer) => {
       const tablePermissions = getTablePermissionsByRoles(table);
 
@@ -174,20 +273,12 @@ class Roles extends Component {
           ? rolePermissions[currAction]
           : null;
 
-        return (
-          <td
-            key={role}
-            className={styles.clickableCell}
-            onClick={getCellOnClick(table, role, currAction)}
-          >
-            <div
-              className={styles.display_flex + ' ' + styles.flex_space_between}
-            >
-              <div>{roleCellRenderer(actionPermission, table)}</div>
-              <div>{getEditIcon()}</div>
-            </div>
-          </td>
-        );
+        const cellKey = role;
+        const cellContent = roleCellRenderer(actionPermission, table);
+        const editIcon = getEditIcon();
+        const cellOnClick = getCellOnClick(table, role, currAction);
+
+        return getClickableCell(cellKey, cellOnClick, cellContent, editIcon);
       });
     };
 
@@ -197,15 +288,13 @@ class Roles extends Component {
 
       return allActions.map(action => {
         const actionPermission = rolePermission[action];
-        return (
-          <td
-            key={action}
-            className={styles.clickableCell}
-            onClick={getCellOnClick(table, currRole, action)}
-          >
-            {actionCellRenderer(actionPermission, table, action)}
-          </td>
-        );
+
+        const cellKey = action;
+        const cellContent = actionCellRenderer(actionPermission, table, action);
+        const editIcon = getEditIcon();
+        const cellOnClick = getCellOnClick(table, currRole, action);
+
+        return getClickableCell(cellKey, cellOnClick, cellContent, editIcon);
       });
     };
 
@@ -219,36 +308,31 @@ class Roles extends Component {
       allSchemas.forEach((table, i) => {
         const tableName = getTableName(table);
         const tableSchema = getTableSchema(table);
-        const isTable = checkIfTable(table);
 
         const isCurrTable =
           currTable &&
-          currTable.tableName === tableName &&
-          currTable.tableSchema === tableSchema;
+          currTable.name === tableName &&
+          currTable.schema === tableSchema;
 
-        const getTableHead = () => {
+        const getTableHeader = () => {
           const setTable = () => {
             this.setState({
-              currTable: isCurrTable ? null : { tableName, tableSchema },
+              currTable: isCurrTable ? null : getTableDef(table),
             });
           };
 
-          return (
-            <th
-              key={tableName}
-              onClick={selectable ? setTable : null}
-              className={`${selectable ? styles.cursorPointer : ''} ${
-                isCurrTable ? styles.selected : ''
-              }`}
-            >
-              {isTable ? <span>{tableName}</span> : <i>{tableName}</i>}
-            </th>
+          return getHeader(
+            tableName,
+            selectable,
+            isCurrTable,
+            setTable,
+            displayTableName(table)
           );
         };
 
         const tableRow = (
           <tr key={i}>
-            {getTableHead()}
+            {getTableHeader()}
             {tableRowCellRenderer(table)}
           </tr>
         );
@@ -342,11 +426,7 @@ class Roles extends Component {
     // ------------------------------------------------------------------------------
 
     const getTableAllRolesTable = () => {
-      const currTableInfo = findTable(
-        allSchemas,
-        currTable.tableName,
-        currTable.tableSchema
-      );
+      const currTableInfo = findTable(allSchemas, currTable);
       const getTablesColumnTable = () => {
         return (
           <table
@@ -590,14 +670,214 @@ class Roles extends Component {
       return tableHtml;
     };
 
+    const getCopyModal = () => {
+      const {
+        copyFromRole,
+        copyFromTable,
+        copyFromAction,
+        copyToRoles,
+      } = copyState;
+
+      const onClose = () => {
+        this.setState({ copyState: { ...this.initState.copyState } });
+      };
+
+      const onSave = () => {
+        alert('TODO: actually copy');
+        this.setState({ copyState: { ...this.initState.copyState } });
+      };
+
+      const getFromRoleOptions = () => {
+        return allRoles.map(role => {
+          return (
+            <option key={role} value={role}>
+              {role}
+            </option>
+          );
+        });
+      };
+
+      const getFromTableOptions = () => {
+        return allSchemas.map(table => {
+          const tableName = getTableName(table);
+          const tableValue = getTableNameWithSchema(table, false);
+
+          return (
+            <option key={tableValue} value={tableValue}>
+              {tableName}
+            </option>
+          );
+        });
+      };
+
+      const getFromActionOptions = () => {
+        return allActions.map(action => {
+          return (
+            <option key={action} value={action}>
+              {action}
+            </option>
+          );
+        });
+      };
+
+      const onFromRoleChange = e => {
+        this.setState({
+          copyState: { ...copyState, copyFromRole: e.target.value },
+        });
+      };
+
+      const onFromTableChange = e => {
+        this.setState({
+          copyState: { ...copyState, copyFromTable: e.target.value },
+        });
+      };
+
+      const onFromActionChange = e => {
+        this.setState({
+          copyState: { ...copyState, copyFromAction: e.target.value },
+        });
+      };
+
+      const getToRolesList = () => {
+        const _toRolesList = [];
+
+        const getRoleSelector = (value, position) => {
+          const getToRoleOptions = () => {
+            return allRoles
+              .filter(
+                role =>
+                  role === value ||
+                  (role !== copyFromRole && !copyToRoles.includes(role))
+              )
+              .map(role => {
+                return (
+                  <option key={role} value={role}>
+                    {role}
+                  </option>
+                );
+              });
+          };
+
+          const onSelect = e => {
+            const _newCopyToRoles = [...copyToRoles];
+
+            const selectedValue = e.target.value;
+
+            if (selectedValue) {
+              _newCopyToRoles[position] = selectedValue;
+            } else {
+              _newCopyToRoles.splice(position, 1);
+            }
+
+            this.setState({
+              copyState: {
+                ...copyState,
+                copyToRoles: _newCopyToRoles,
+              },
+            });
+          };
+
+          return (
+            <select
+              key={value}
+              className={'form-control ' + styles.add_mar_top_small}
+              value={value}
+              onChange={onSelect}
+            >
+              <option value={''}>--</option>
+              {getToRoleOptions()}
+            </select>
+          );
+        };
+
+        // add already selected roles
+        copyToRoles.forEach((copyToRole, position) => {
+          _toRolesList.push(getRoleSelector(copyToRole, position));
+        });
+
+        // add new role selector at end
+        _toRolesList.push(getRoleSelector('', copyToRoles.length));
+
+        return _toRolesList;
+      };
+
+      return (
+        <Modal
+          show={exists(copyFromRole)}
+          title={'Copy permissions'}
+          onClose={onClose}
+          onSubmit={onSave}
+          submitText={'Copy'}
+        >
+          <div>
+            <div>
+              <b>From:</b>
+              <div className={styles.add_mar_top_small}>
+                <div className="row form-row">
+                  <div className="form-group col-md-4">
+                    <label>Role</label>
+                    <select
+                      className={'form-control ' + styles.add_mar_top_small}
+                      value={copyFromRole}
+                      onChange={onFromRoleChange}
+                    >
+                      {getFromRoleOptions()}
+                    </select>
+                  </div>
+                  <div className="form-group col-md-4">
+                    <label>Table</label>
+                    <select
+                      className={'form-control ' + styles.add_mar_top_small}
+                      value={copyFromTable}
+                      onChange={onFromTableChange}
+                    >
+                      <option key={'all'} value={'all'}>
+                        All
+                      </option>
+                      {getFromTableOptions()}
+                    </select>
+                  </div>
+                  <div className="form-group col-md-4">
+                    <label>Action</label>
+                    <select
+                      className={'form-control ' + styles.add_mar_top_small}
+                      value={copyFromAction}
+                      onChange={onFromActionChange}
+                    >
+                      <option key={'all'} value={'all'}>
+                        All
+                      </option>
+                      {getFromActionOptions()}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className={styles.add_mar_top}>
+              <b>To:</b>
+              <div className={styles.add_mar_top_small}>
+                <div className="row form-row">
+                  <div className="form-group col-md-4">
+                    <label>Roles</label>
+                    {getToRolesList()}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Modal>
+      );
+    };
+
     return (
       <div className={`container-fluid ${styles.full_container}`}>
         <div className={styles.subHeader}>
           <Helmet title={'Roles | Hasura'} />
           <h2 className={styles.headerText}>Roles</h2>
         </div>
-
         <div className={styles.add_mar_top}>{getTable()}</div>
+
+        {getCopyModal()}
       </div>
     );
   }
