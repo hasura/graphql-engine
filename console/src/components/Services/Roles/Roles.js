@@ -886,6 +886,7 @@ class Roles extends Component {
           onClose={onClose}
           onSubmit={onSave}
           submitText={'Copy'}
+          submitTestId={'copy-roles-button'}
         >
           <div>
             <div>

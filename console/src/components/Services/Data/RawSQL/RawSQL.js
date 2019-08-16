@@ -147,6 +147,7 @@ const RawSQL = ({
         onClose={onModalClose}
         onSubmit={onConfirmNoMigration}
         submitText={'Yes, i confirm'}
+        submitTestId={'not-migration-confirm'}
       >
         <div className="content-fluid">
           <div className="row">

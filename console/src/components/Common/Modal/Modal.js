@@ -9,6 +9,7 @@ const Modal = ({
   onSubmit,
   onCancel = null,
   submitText = null,
+  submitTestId = null,
   children,
 }) => {
   return (
@@ -21,7 +22,11 @@ const Modal = ({
         <BootstrapModalButton onClick={onCancel || onClose}>
           Cancel
         </BootstrapModalButton>
-        <BootstrapModalButton onClick={onSubmit} bsStyle="primary">
+        <BootstrapModalButton
+          onClick={onSubmit}
+          bsStyle="primary"
+          data-test={submitTestId}
+        >
           {submitText || 'Submit'}
         </BootstrapModalButton>
       </BootstrapModal.Footer>
