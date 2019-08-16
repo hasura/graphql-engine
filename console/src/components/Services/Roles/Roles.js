@@ -1,7 +1,9 @@
 import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
+
 import Modal from '../../Common/Modal/Modal';
+import Button from '../../Common/Button/Button';
 
 import styles from './Roles.scss';
 
@@ -38,6 +40,7 @@ class Roles extends Component {
       copyFromTable: null,
       copyFromAction: null,
       copyToRoles: [],
+      newRole: '',
     },
   };
 
@@ -66,7 +69,11 @@ class Roles extends Component {
 
     const allActions = ['select', 'insert', 'update', 'delete'];
 
-    const allRoles = getAllRoles(allSchemas);
+    let allRoles = getAllRoles(allSchemas);
+
+    // add newly added roles
+    const newRoles = copyState.copyToRoles.filter(r => !allRoles.includes(r));
+    allRoles = allRoles.concat(newRoles);
 
     // ------------------------------------------------------------------------------
 
@@ -676,6 +683,7 @@ class Roles extends Component {
         copyFromTable,
         copyFromAction,
         copyToRoles,
+        newRole,
       } = copyState;
 
       const onClose = () => {
@@ -795,10 +803,58 @@ class Roles extends Component {
           _toRolesList.push(getRoleSelector(copyToRole, position));
         });
 
-        // add new role selector at end
+        // add empty role selector at end
         _toRolesList.push(getRoleSelector('', copyToRoles.length));
 
         return _toRolesList;
+      };
+
+      const getNewRoleCreator = () => {
+        const setNewRole = e => {
+          this.setState({
+            copyState: {
+              ...copyState,
+              newRole: e.target.value,
+            },
+          });
+        };
+
+        const addNewRole = () => {
+          const _newCopyToRoles = [...copyToRoles];
+
+          if (newRole) {
+            _newCopyToRoles.push(newRole);
+
+            this.setState({
+              copyState: {
+                ...copyState,
+                copyToRoles: _newCopyToRoles,
+                newRole: '',
+              },
+            });
+          }
+        };
+
+        return (
+          <div className={styles.display_flex}>
+            <input
+              type="text"
+              className={'form-control'}
+              placeholder="new_role"
+              value={newRole}
+              onChange={setNewRole}
+            />
+            <Button
+              color="white"
+              size="xs"
+              onClick={addNewRole}
+              title="Create new role"
+              className={styles.add_mar_left_mid}
+            >
+              <i className="fa fa-plus" aria-hidden="true" />
+            </Button>
+          </div>
+        );
       };
 
       return (
@@ -860,6 +916,14 @@ class Roles extends Component {
                   <div className="form-group col-md-4">
                     <label>Roles</label>
                     {getToRolesList()}
+                    <div
+                      className={
+                        styles.add_mar_top + ' ' + styles.add_mar_bottom
+                      }
+                    >
+                      OR
+                    </div>
+                    {getNewRoleCreator()}
                   </div>
                 </div>
               </div>
