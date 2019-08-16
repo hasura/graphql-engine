@@ -3,7 +3,7 @@ const path = require('path');
 const webpack = require('webpack');
 const CleanPlugin = require('clean-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const appConfig = require('../appconfig');
+const appconfig = require('../appconfig');
 
 const relativeAssetsPath = '../static/dist';
 const assetsPath = path.join(__dirname, relativeAssetsPath);
@@ -38,7 +38,7 @@ module.exports = {
     path: assetsPath,
     filename: '[name].js',
     chunkFilename: '[name].js',
-    publicPath: appConfig.webpackPrefix,
+    publicPath: appconfig.webpackPrefix,
   },
   module: {
     rules: [
@@ -193,7 +193,6 @@ module.exports = {
         // Useful to reduce the size of client-side libraries, e.g. react
         NODE_ENV: JSON.stringify('production'),
       },
-      CONSOLE_ASSET_VERSION: JSON.stringify(getRandomHexString()),
     }),
   ],
 };

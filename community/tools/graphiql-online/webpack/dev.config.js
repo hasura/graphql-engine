@@ -5,26 +5,16 @@ const fs = require('fs');
 const path = require('path');
 const webpack = require('webpack');
 const assetsPath = path.resolve(__dirname, '../static/dist');
-const appConfig = require('../appconfig');
-const host = appConfig.hmrHost;
-const port = appConfig.hmrPort;
+const appconfig = require('../appconfig');
+const host = appconfig.hmrHost;
+const port = appconfig.hmrPort;
 
 const autoprefixer = require('autoprefixer');
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer')
-  .BundleAnalyzerPlugin;
 
 const WebpackIsomorphicToolsPlugin = require('webpack-isomorphic-tools/plugin');
 const webpackIsomorphicToolsPlugin = new WebpackIsomorphicToolsPlugin(
   require('./webpack-isomorphic-tools')
 );
-
-// const { UnusedFilesWebpackPlugin } = require('unused-files-webpack-plugin');
-
-const getRandomHexString = () => {
-  return Math.random()
-    .toString(16)
-    .slice(2);
-};
 
 module.exports = {
   mode: 'development',
@@ -46,7 +36,7 @@ module.exports = {
     path: assetsPath,
     filename: '[name]-[hash].js',
     chunkFilename: '[name]-[chunkhash].js',
-    publicPath: 'http://' + host + ':' + port + appConfig.webpackPrefix,
+    publicPath: 'http://' + host + ':' + port + appconfig.webpackPrefix,
   },
   module: {
     rules: [
@@ -136,7 +126,6 @@ module.exports = {
   },
   plugins: [
     // hot reload
-    // new UnusedFilesWebpackPlugin({}),
     new webpack.ProvidePlugin({
       $: 'jquery',
       jQuery: 'jquery',
@@ -145,7 +134,6 @@ module.exports = {
     new webpack.LoaderOptionsPlugin({
       postcss: [autoprefixer],
     }),
-    // new BundleAnalyzerPlugin(),
     new webpack.IgnorePlugin(/webpack-stats\.json$/),
     new webpack.DefinePlugin({
       __CLIENT__: true,
