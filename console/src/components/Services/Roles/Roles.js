@@ -15,6 +15,7 @@ import {
   displayTableName,
   getTableNameWithSchema,
   getTableDef,
+  getSchemaTables,
 } from '../../Common/utils/pgUtils';
 
 import { updateSchemaInfo } from '../Data/DataActions';
@@ -67,7 +68,9 @@ class Roles extends Component {
 
     // ------------------------------------------------------------------------------
 
-    const { allSchemas } = this.props;
+    const { allSchemas, currentSchema } = this.props;
+
+    const currSchemaTables = getSchemaTables(allSchemas, currentSchema);
 
     const allActions = ['select', 'insert', 'update', 'delete'];
 
@@ -185,12 +188,12 @@ class Roles extends Component {
     };
 
     const getHeader = (
-      key,
+      content,
       selectable,
       isSelected,
       onClick,
-      content,
-      actionIcon = null
+      actionIcon = null,
+      key = null
     ) => {
       const getContents = () => {
         let headerContent;
@@ -219,7 +222,7 @@ class Roles extends Component {
 
       return (
         <th
-          key={key}
+          key={key || content}
           onClick={selectable ? onClick : null}
           className={`${selectable ? styles.cursorPointer : ''} ${
             isSelected ? styles.selected : ''
@@ -244,31 +247,34 @@ class Roles extends Component {
     const getRolesHeaders = (selectable = true, selectedFirst = false) => {
       const rolesHeaders = [];
 
-      allRoles.forEach(role => {
-        const isCurrRole = currRole === role;
+      if (!allRoles.length) {
+        rolesHeaders.push(getHeader('No roles', false));
+      } else {
+        allRoles.forEach(role => {
+          const isCurrRole = currRole === role;
 
-        const setRole = () => {
-          this.setState({ currRole: isCurrRole ? null : role });
-          window.scrollTo(0, 0);
-        };
+          const setRole = () => {
+            this.setState({ currRole: isCurrRole ? null : role });
+            window.scrollTo(0, 0);
+          };
 
-        const copyIcon = getCopyIcon(role);
+          const copyIcon = getCopyIcon(role);
 
-        const roleHeader = getHeader(
-          role,
-          selectable,
-          isCurrRole,
-          setRole,
-          role,
-          copyIcon
-        );
+          const roleHeader = getHeader(
+            role,
+            selectable,
+            isCurrRole,
+            setRole,
+            copyIcon
+          );
 
-        if (selectedFirst && isCurrRole) {
-          rolesHeaders.unshift(roleHeader);
-        } else {
-          rolesHeaders.push(roleHeader);
-        }
-      });
+          if (selectedFirst && isCurrRole) {
+            rolesHeaders.unshift(roleHeader);
+          } else {
+            rolesHeaders.push(roleHeader);
+          }
+        });
+      }
 
       return rolesHeaders;
     };
@@ -314,44 +320,51 @@ class Roles extends Component {
     ) => {
       const tablesRows = [];
 
-      allSchemas.forEach((table, i) => {
-        const tableName = getTableName(table);
-        const tableSchema = getTableSchema(table);
+      if (!currSchemaTables.length) {
+        tablesRows.push(
+          <tr key={'No tables'}>{getHeader('No tables', false)}</tr>
+        );
+      } else {
+        currSchemaTables.forEach((table, i) => {
+          const tableName = getTableName(table);
+          const tableSchema = getTableSchema(table);
 
-        const isCurrTable =
-          currTable &&
-          currTable.name === tableName &&
-          currTable.schema === tableSchema;
+          const isCurrTable =
+            currTable &&
+            currTable.name === tableName &&
+            currTable.schema === tableSchema;
 
-        const getTableHeader = () => {
-          const setTable = () => {
-            this.setState({
-              currTable: isCurrTable ? null : getTableDef(table),
-            });
+          const getTableHeader = () => {
+            const setTable = () => {
+              this.setState({
+                currTable: isCurrTable ? null : getTableDef(table),
+              });
+            };
+
+            return getHeader(
+              displayTableName(table),
+              selectable,
+              isCurrTable,
+              setTable,
+              null,
+              tableName
+            );
           };
 
-          return getHeader(
-            tableName,
-            selectable,
-            isCurrTable,
-            setTable,
-            displayTableName(table)
+          const tableRow = (
+            <tr key={i}>
+              {getTableHeader()}
+              {tableRowCellRenderer(table)}
+            </tr>
           );
-        };
 
-        const tableRow = (
-          <tr key={i}>
-            {getTableHeader()}
-            {tableRowCellRenderer(table)}
-          </tr>
-        );
-
-        if (selectedFirst && isCurrTable) {
-          tablesRows.unshift(tableRow);
-        } else {
-          tablesRows.push(tableRow);
-        }
-      });
+          if (selectedFirst && isCurrTable) {
+            tablesRows.unshift(tableRow);
+          } else {
+            tablesRows.push(tableRow);
+          }
+        });
+      }
 
       return tablesRows;
     };
@@ -435,7 +448,7 @@ class Roles extends Component {
     // ------------------------------------------------------------------------------
 
     const getTableAllRolesTable = () => {
-      const currTableInfo = findTable(allSchemas, currTable);
+      const currTableInfo = findTable(currSchemaTables, currTable);
       const getTablesColumnTable = () => {
         return (
           <table
@@ -726,7 +739,7 @@ class Roles extends Component {
       };
 
       const getFromTableOptions = () => {
-        return allSchemas.map(table => {
+        return currSchemaTables.map(table => {
           const tableName = getTableName(table);
           const tableValue = getTableNameWithSchema(table, false);
 

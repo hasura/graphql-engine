@@ -69,6 +69,10 @@ export const findTable = (allTables, tableDef) => {
   return allTables.find(t => isEqual(getTableDef(t), tableDef));
 };
 
+export const getSchemaTables = (allTables, tableSchema) => {
+  return allTables.filter(t => getTableSchema(t) === tableSchema);
+};
+
 /*** Table/View permissions utils ***/
 export const getTablePermissions = (table, role = null, action = null) => {
   let tablePermissions = table.permissions;
