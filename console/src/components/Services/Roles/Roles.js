@@ -941,7 +941,11 @@ class Roles extends Component {
                     {getToRolesList()}
                     <div
                       className={
-                        styles.add_mar_top + ' ' + styles.add_mar_bottom
+                        styles.add_mar_top +
+                        ' ' +
+                        styles.add_mar_bottom +
+                        ' ' +
+                        styles.add_mar_left
                       }
                     >
                       OR
