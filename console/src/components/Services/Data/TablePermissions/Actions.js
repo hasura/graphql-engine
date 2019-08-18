@@ -636,13 +636,13 @@ const copyRolePermissions = (
 
     // Apply migration
     const migrationName =
-      'copy_' +
-      action +
-      '_permissions_for_' +
-      tableNameWithSchema.replace('.', '_') +
-      '_table_from_role_' +
+      'copy_role_' +
       fromRole +
-      '_to_' +
+      '_' +
+      action +
+      '_query_permissions_for_' +
+      tableNameWithSchema.replace('.', '_') +
+      '_table_to_' +
       toRoles.join('_');
 
     const requestMsg = 'Copying permissions';
