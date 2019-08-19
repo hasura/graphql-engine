@@ -31,10 +31,14 @@ func newMigrateSettingsGetCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f := migrateSettingsGetCmd.Flags()
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
+	f.String("access-key", "", "access key for Hasura GraphQL Engine")
+	f.MarkDeprecated("access-key", "use --admin-secret instead")
 
 	// need to create a new viper because https://github.com/spf13/viper/issues/233
 	v.BindPFlag("endpoint", f.Lookup("endpoint"))
 	v.BindPFlag("admin_secret", f.Lookup("admin-secret"))
+	v.BindPFlag("access_key", f.Lookup("access-key"))
+
 	return migrateSettingsGetCmd
 }
 
