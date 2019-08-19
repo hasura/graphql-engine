@@ -7,10 +7,11 @@ import { Link } from 'react-router';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 
 import {
-  untrackedTip,
+  untrackedTablesTip,
   untrackedRelTip,
   trackableFunctionsTip,
   nonTrackableFunctionsTip,
+  permissionsSummaryTip,
 } from './Tooltips';
 import Button from '../../../Common/Button/Button';
 import {
@@ -107,6 +108,24 @@ class Schema extends Component {
       });
 
       return _untrackedTables.sort(tableSortFunc);
+    };
+
+    const getSectionHeading = (headingText, tooltip, actionBtn = null) => {
+      return (
+        <div>
+          <h4
+            className={`${styles.subheading_text} ${styles.display_inline} ${
+              styles.add_mar_right_mid
+            }`}
+          >
+            {headingText}
+          </h4>
+          <OverlayTrigger placement="right" overlay={tooltip}>
+            <i className="fa fa-info-circle" aria-hidden="true" />
+          </OverlayTrigger>
+          {actionBtn}
+        </div>
+      );
     };
 
     /***********/
@@ -361,20 +380,10 @@ class Schema extends Component {
         return untrackedTablesList;
       };
 
-      const heading = (
-        <div>
-          <h4
-            className={`${styles.subheading_text} ${styles.display_inline} ${
-              styles.add_mar_right_mid
-            }`}
-          >
-            Untracked tables or views
-          </h4>
-          <OverlayTrigger placement="right" overlay={untrackedTip}>
-            <i className="fa fa-info-circle" aria-hidden="true" />
-          </OverlayTrigger>
-          {getTrackAllBtn()}
-        </div>
+      const heading = getSectionHeading(
+        'Untracked tables or views',
+        untrackedTablesTip,
+        getTrackAllBtn()
       );
 
       return (
@@ -471,20 +480,10 @@ class Schema extends Component {
         return untrackedRelList;
       };
 
-      const heading = (
-        <div>
-          <h4
-            className={`${styles.subheading_text} ${styles.display_inline} ${
-              styles.add_mar_right_mid
-            }`}
-          >
-            Untracked foreign-key relations
-          </h4>
-          <OverlayTrigger placement="right" overlay={untrackedRelTip}>
-            <i className="fa fa-info-circle" aria-hidden="true" />
-          </OverlayTrigger>
-          {getTrackAllBtn()}
-        </div>
+      const heading = getSectionHeading(
+        'Untracked foreign-key relations',
+        untrackedRelTip,
+        getTrackAllBtn()
       );
 
       return (
@@ -503,19 +502,9 @@ class Schema extends Component {
       let trackableFunctionList = null;
 
       if (trackableFuncs.length > 0) {
-        const heading = (
-          <div>
-            <h4
-              className={`${styles.subheading_text} ${styles.display_inline} ${
-                styles.add_mar_right_mid
-              }`}
-            >
-              Untracked custom functions
-            </h4>
-            <OverlayTrigger placement="right" overlay={trackableFunctionsTip}>
-              <i className="fa fa-info-circle" aria-hidden="true" />
-            </OverlayTrigger>
-          </div>
+        const heading = getSectionHeading(
+          'Untracked custom functions',
+          trackableFunctionsTip
         );
 
         trackableFunctionList = (
@@ -565,22 +554,9 @@ class Schema extends Component {
       let nonTrackableFuncList = null;
 
       if (nonTrackableFunctions.length > 0) {
-        const heading = (
-          <div>
-            <h4
-              className={`${styles.subheading_text} ${styles.display_inline} ${
-                styles.add_mar_right_mid
-              }`}
-            >
-              Non trackable custom functions
-            </h4>
-            <OverlayTrigger
-              placement="right"
-              overlay={nonTrackableFunctionsTip}
-            >
-              <i className="fa fa-info-circle" aria-hidden="true" />
-            </OverlayTrigger>
-          </div>
+        const heading = getSectionHeading(
+          'Non trackable custom functions',
+          nonTrackableFunctionsTip
         );
 
         nonTrackableFuncList = (
@@ -615,11 +591,18 @@ class Schema extends Component {
     };
 
     const getPermissionsSummaryLink = () => {
+      const heading = getSectionHeading(
+        'Permissions summary',
+        permissionsSummaryTip
+      );
+
       return (
         <div className={styles.add_mar_top}>
-          <Link to={`${appPrefix}/schema/${currentSchema}/permissions`}>
-            See schema permissions summary
-          </Link>
+          <CollapsibleToggle title={heading} isOpen>
+            <Link to={`${appPrefix}/schema/${currentSchema}/permissions`}>
+              See schema permissions summary
+            </Link>
+          </CollapsibleToggle>
         </div>
       );
     };
