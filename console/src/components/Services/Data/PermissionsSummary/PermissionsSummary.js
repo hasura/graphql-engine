@@ -478,6 +478,7 @@ class PermissionsSummary extends Component {
 
     const getTableAllRolesTable = () => {
       const currTableInfo = findTable(currSchemaTables, currTable);
+
       const getTablesColumnTable = () => {
         return (
           <table
@@ -595,7 +596,7 @@ class PermissionsSummary extends Component {
           >
             <thead>
               <tr>
-                <th className={styles.selected}>{getActionSelector()}</th>
+                {getActionSelector()}
                 {getRolesHeaders(false)}
               </tr>
             </thead>
