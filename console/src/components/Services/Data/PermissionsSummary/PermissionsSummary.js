@@ -269,7 +269,6 @@ class PermissionsSummary extends Component {
                 size="xs"
                 onClick={copyOnClick}
                 title="Copy permissions"
-                className={styles.add_mar_left_mid}
               >
                 {getActionIcon('fa-copy')}
               </Button>
