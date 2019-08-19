@@ -41,6 +41,8 @@ import TableHeader from '../TableCommon/TableHeader';
 import ViewHeader from '../TableBrowseRows/ViewHeader';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 import EnhancedInput from '../../../Common/InputChecker/InputChecker';
+import PermTableHeader from '../../../Common/Layout/Permissions/TableHeader';
+import PermTableBody from '../../../Common/Layout/Permissions/TableBody';
 
 import { setTable } from '../DataActions';
 import { getIngForm, getEdForm, escapeRegExp } from '../utils';
@@ -261,178 +263,46 @@ class Permissions extends Component {
       };
 
       const getPermissionsTableHead = () => {
-        const _permissionsHead = [];
-
-        _permissionsHead.push(<td key={-1}>Actions</td>);
-        _permissionsHead.push(<td key={-2}>Role</td>);
-
-        queryTypes.forEach((queryType, i) => {
-          _permissionsHead.push(<td key={i}>{queryType}</td>);
-        });
-
-        return (
-          <thead>
-            <tr>{_permissionsHead}</tr>
-          </thead>
-        );
+        const headings = ['Actions', 'Role', ...queryTypes];
+        return <PermTableHeader headings={headings} />;
       };
 
       const getPermissionsTableBody = () => {
-        const _permissionsRowsHtml = [];
+        const dispatchRoleNameChange = e => {
+          dispatch(permSetRoleName(e.target.value));
+        };
 
-        const getPermissionsTableRow = (role, newPermRow = null) => {
-          const dispatchOpenEdit = queryType => () => {
-            if (newPermRow && permissionsState.newRole !== '') {
-              dispatch(
-                permOpenEdit(tableSchema, permissionsState.newRole, queryType)
-              );
-            } else if (role !== '') {
-              dispatch(permOpenEdit(tableSchema, role, queryType));
-            } else {
-              document.getElementById('newRoleInput').focus();
-            }
-          };
+        const getEditLink = () => {
+          return (
+            <span className={styles.editPermsLink}>
+              <i className="fa fa-pencil" aria-hidden="true" />
+            </span>
+          );
+        };
 
-          const dispatchCloseEdit = () => {
-            dispatch(permCloseEdit());
-          };
-
-          const dispatchRoleNameChange = e => {
-            dispatch(permSetRoleName(e.target.value));
-          };
-
-          const dispatchBulkSelect = e => {
-            const isChecked = e.target.checked;
-            const selectedRole = e.target.getAttribute('data-role');
-            dispatch(permSetBulkSelect(isChecked, selectedRole));
-          };
-
-          // const dispatchDeletePermission = () => {
-          //   const isConfirm = window.confirm(
-          //     'Are you sure you want to delete the permission for role ' + role + '?'
-          //   );
-          //   if (isConfirm) {
-          //     dispatch(permRemoveRole(tableSchema, role));
-          //   }
-          // };
-
-          const getEditLink = () => {
-            return (
-              <span className={styles.editPermsLink}>
-                <i className="fa fa-pencil" aria-hidden="true" />
-              </span>
-            );
-          };
-
-          const getRoleQueryPermission = queryType => {
-            let _permission;
-
-            const rolePermissions = {};
-            tableSchema.permissions.forEach(
-              p => (rolePermissions[p.role_name] = p.permissions)
-            );
-
-            if (role === 'admin') {
-              _permission = permissionsSymbols.fullAccess;
-            } else if (!Object.keys(rolePermissions).includes(role)) {
-              _permission = permissionsSymbols.noAccess;
-            } else {
-              const permissions = rolePermissions[role][queryType];
-
-              if (permissions) {
-                let checkColumns;
-                let filterKey;
-
-                if (queryType === 'select' || queryType === 'update') {
-                  checkColumns = true;
-                  filterKey = 'filter';
-                } else if (queryType === 'insert') {
-                  checkColumns = true;
-                  filterKey = 'check';
-                } else if (queryType === 'delete') {
-                  checkColumns = false;
-                  filterKey = 'filter';
-                }
-
-                if (JSON.stringify(permissions[filterKey]) === '{}') {
-                  if (
-                    checkColumns &&
-                    (!permissions.columns ||
-                      (!permissions.columns.includes('*') &&
-                        permissions.columns.length !==
-                          tableSchema.columns.length))
-                  ) {
-                    _permission = permissionsSymbols.partialAccess;
-                  } else {
-                    _permission = permissionsSymbols.fullAccess;
-                  }
-                } else {
-                  _permission = permissionsSymbols.partialAccess;
-                }
+        const getQueryTypes = (role, isNewRole) =>
+          queryTypes.map(qt => {
+            const dispatchOpenEdit = queryType => () => {
+              console.log(isNewRole, permissionsState.newRole);
+              if (isNewRole && permissionsState.newRole !== '') {
+                console.log('Dispatching');
+                dispatch(
+                  permOpenEdit(tableSchema, permissionsState.newRole, queryType)
+                );
+              } else if (role !== '') {
+                dispatch(permOpenEdit(tableSchema, role, queryType));
               } else {
-                _permission = permissionsSymbols.noAccess;
+                document.getElementById('newRoleInput').focus();
               }
-            }
+            };
 
-            return _permission;
-          };
+            const dispatchCloseEdit = () => {
+              dispatch(permCloseEdit());
+            };
 
-          const _permissionsRowHtml = [];
-          if (role === 'admin' || role === '') {
-            _permissionsRowHtml.push(<td key={-1} />);
-          } else {
-            const bulkSelect = permissionsState.bulkSelect;
-
-            // const deleteIcon = (
-            //   <i
-            //     onClick={dispatchDeletePermission}
-            //     className={styles.permissionDelete + ' fa fa-close'}
-            //     title="Remove all permissions"
-            //     aria-hidden="true"
-            //   />
-            // );
-
-            _permissionsRowHtml.push(
-              <td key={-1}>
-                <div>
-                  <input
-                    onChange={dispatchBulkSelect}
-                    checked={bulkSelect.filter(e => e === role).length}
-                    data-role={role}
-                    title="Select for bulk actions"
-                    type="checkbox"
-                  />
-                  {/*{deleteIcon}*/}
-                </div>
-              </td>
-            );
-          }
-
-          if (newPermRow) {
-            const isNewRole = !roleList.includes(permissionsState.newRole);
-
-            _permissionsRowHtml.push(
-              <td key={-2}>
-                <input
-                  id="newRoleInput"
-                  className={`form-control ${styles.newRoleInput}`}
-                  onChange={dispatchRoleNameChange}
-                  type="text"
-                  placeholder="Enter new role"
-                  value={isNewRole ? permissionsState.newRole : ''}
-                  data-test="role-textbox"
-                />
-              </td>
-            );
-          } else {
-            _permissionsRowHtml.push(<td key={-2}>{role}</td>);
-          }
-
-          queryTypes.forEach((queryType, i) => {
             const isEditAllowed = role !== 'admin';
             const isCurrEdit =
-              permissionsState.role === role &&
-              permissionsState.query === queryType;
+              permissionsState.role === role && permissionsState.query === qt;
 
             let editLink = '';
             let className = '';
@@ -441,45 +311,102 @@ class Permissions extends Component {
               editLink = getEditLink();
 
               className += styles.clickableCell;
-              onClick = dispatchOpenEdit(queryType);
+              onClick = dispatchOpenEdit(qt);
               if (isCurrEdit) {
                 onClick = dispatchCloseEdit;
                 className += ` ${styles.currEdit}`;
               }
             }
 
-            _permissionsRowHtml.push(
-              <td
-                key={i}
-                className={className}
-                onClick={onClick}
-                title="Edit permissions"
-                data-test={`${role}-${queryType}`}
-              >
-                {getRoleQueryPermission(queryType)}
-                {editLink}
-              </td>
-            );
-          });
+            const getRoleQueryPermission = queryType => {
+              let _permission;
 
-          return _permissionsRowHtml;
-        };
+              const rolePermissions = {};
+              tableSchema.permissions.forEach(
+                p => (rolePermissions[p.role_name] = p.permissions)
+              );
+
+              if (role === 'admin') {
+                _permission = permissionsSymbols.fullAccess;
+              } else if (!Object.keys(rolePermissions).includes(role)) {
+                _permission = permissionsSymbols.noAccess;
+              } else {
+                const permissions = rolePermissions[role][queryType];
+
+                if (permissions) {
+                  let checkColumns;
+                  let filterKey;
+
+                  if (queryType === 'select' || queryType === 'update') {
+                    checkColumns = true;
+                    filterKey = 'filter';
+                  } else if (queryType === 'insert') {
+                    checkColumns = true;
+                    filterKey = 'check';
+                  } else if (queryType === 'delete') {
+                    checkColumns = false;
+                    filterKey = 'filter';
+                  }
+
+                  if (JSON.stringify(permissions[filterKey]) === '{}') {
+                    if (
+                      checkColumns &&
+                      (!permissions.columns ||
+                        (!permissions.columns.includes('*') &&
+                          permissions.columns.length !==
+                            tableSchema.columns.length))
+                    ) {
+                      _permission = permissionsSymbols.partialAccess;
+                    } else {
+                      _permission = permissionsSymbols.fullAccess;
+                    }
+                  } else {
+                    _permission = permissionsSymbols.partialAccess;
+                  }
+                } else {
+                  _permission = permissionsSymbols.noAccess;
+                }
+              }
+
+              return _permission;
+            };
+
+            return {
+              name: qt,
+              className,
+              editLink,
+              onClick,
+              permSymbol: getRoleQueryPermission(qt),
+            };
+          });
 
         // add admin to roles
         const _roleList = ['admin'].concat(roleList);
 
-        _roleList.forEach((role, i) => {
-          _permissionsRowsHtml.push(
-            <tr key={i}>{getPermissionsTableRow(role)}</tr>
-          );
+        // roles wrapper
+        const roles = _roleList.map(role => {
+          const _roleProps = {};
+          _roleProps.name = role;
+          _roleProps.dispatchBulkSelect = e => {
+            const isChecked = e.target.checked;
+            const selectedRole = e.target.getAttribute('data-role');
+            dispatch(permSetBulkSelect(isChecked, selectedRole));
+          };
+          _roleProps.bulkCheck = permissionsState.bulkSelect.filter(
+            e => e === role
+          ).length;
+          return _roleProps;
         });
 
-        // new role row
-        _permissionsRowsHtml.push(
-          <tr key="newPerm">{getPermissionsTableRow('', true)}</tr>
+        return (
+          <PermTableBody
+            rolePermissions={roles}
+            dispatchRoleNameChange={dispatchRoleNameChange}
+            getPermTypes={getQueryTypes}
+            viewPermissionsNote={getViewPermissionNote()}
+            legend={getPermissionsLegend()}
+          />
         );
-
-        return <tbody>{_permissionsRowsHtml}</tbody>;
       };
 
       return (
