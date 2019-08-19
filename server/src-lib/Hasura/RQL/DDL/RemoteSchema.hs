@@ -219,45 +219,39 @@ validateTypes permTypes allTypes = do
     validateTypes' = do
       Map.traverseWithKey
         (\namedType typeInfo ->
+           -- only TIObj and TIInpObj can be permissioned, other types pass-thru
            case typeInfo of
              VT.TIObj objTy ->
                case Map.lookup namedType permTypes of
-                 Nothing -> pure $ VT.TIObj objTy { VT._otiFields = Map.empty }
-                 Just fields -> do
+                 Nothing -> pure $ VT.TIObj objTy {VT._otiFields = Map.empty}
+                 Just permFields -> do
                    newFields <-
-                     traverse
-                       (\fieldName ->
-                          case Map.lookup fieldName (VT._otiFields objTy) of
-                            Nothing ->
-                              refute
-                                [ "field: " <> showName fieldName <>
-                                  " not found in type: " <>
-                                  showNamedTy namedType
-                                ]
-                            Just fieldInfo -> pure (fieldName, fieldInfo))
-                       fields
+                     applyPerms namedType permFields (VT._otiFields objTy)
                    pure $
                      VT.TIObj objTy {VT._otiFields = Map.fromList newFields}
              VT.TIInpObj inpObjTy ->
-                case Map.lookup namedType permTypes of
-                 Nothing -> pure $ VT.TIInpObj inpObjTy { VT._iotiFields = Map.empty }
-                 Just fields -> do
+               case Map.lookup namedType permTypes of
+                 Nothing ->
+                   pure $ VT.TIInpObj inpObjTy {VT._iotiFields = Map.empty}
+                 Just permArgs -> do
                    newFields <-
-                     traverse
-                       (\fieldName ->
-                          case Map.lookup fieldName (VT._iotiFields inpObjTy) of
-                            Nothing ->
-                              refute
-                                [ "field: " <> showName fieldName <>
-                                  " not found in type: " <>
-                                  showNamedTy namedType
-                                ]
-                            Just fieldInfo -> pure (fieldName, fieldInfo))
-                       fields
+                     applyPerms namedType permArgs (VT._iotiFields inpObjTy)
                    pure $
-                     VT.TIInpObj inpObjTy {VT._iotiFields = Map.fromList newFields}
+                     VT.TIInpObj
+                       inpObjTy {VT._iotiFields = Map.fromList newFields}
              otherType -> pure otherType)
         allTypes
+    applyPerms namedType permFields allFields =
+      traverse
+        (\fieldName ->
+           case Map.lookup fieldName allFields of
+             Nothing ->
+               refute
+                 [ "field: " <> showName fieldName <> " not found in type: " <>
+                   showNamedTy namedType
+                 ]
+             Just fieldInfo -> pure (fieldName, fieldInfo))
+        permFields
 
 updateRemoteGCtxFromTypes :: (QErrM m) => VT.TypeMap -> GC.RemoteGCtx -> m GC.RemoteGCtx
 updateRemoteGCtxFromTypes newTypeMap oldRemoteGCtx = do

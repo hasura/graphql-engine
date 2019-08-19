@@ -1,3 +1,5 @@
+{-# LANGUAGE ViewPatterns #-}
+
 module Hasura.GraphQL.RemoteServer where
 
 import           Control.Exception             (try)
@@ -115,16 +117,17 @@ mergeRoleRemoteSchemas
   => GS.GCtxMap
   -> RemoteSchemasWithRole
   -> m GS.GCtxMap
-mergeRoleRemoteSchemas gCtxMap rmSchemaWithRoles = do
-  res <- forM (Map.toList rmSchemaWithRoles) $ \((role, _rsName), rsCtx) -> do
-    case Map.lookup role gCtxMap of
-      Nothing -> do
-        updatedGCtx <- mergeGCtx GS.emptyGCtx (convRemoteGCtx $ rscGCtx rsCtx)
-        pure (role, updatedGCtx)
-      Just gCtx -> do
-        updatedGCtx <- mergeGCtx gCtx (convRemoteGCtx $ rscGCtx rsCtx)
-        pure (role, updatedGCtx)
+mergeRoleRemoteSchemas gCtxMap (Map.toList -> roleSchemas) = do
+  res <-
+    forM roleSchemas $ \((role, _rsName), rsCtx) -> do
+      let mergeWith = mergeRoleSchemaWith role rsCtx
+          roleSchemaM = Map.lookup role gCtxMap
+      maybe (mergeWith GS.emptyGCtx) mergeWith roleSchemaM
   return $ Map.fromList res
+  where
+    mergeRoleSchemaWith role rsCtx initGCtx = do
+      updatedGCtx <- mergeGCtx initGCtx (convRemoteGCtx $ rscGCtx rsCtx)
+      pure (role, updatedGCtx)
 
 mergeGCtx
   :: (MonadError QErr m)
