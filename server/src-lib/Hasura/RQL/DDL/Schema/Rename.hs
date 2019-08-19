@@ -169,7 +169,7 @@ updateArrRelDef qt rn (oldQT, newQT) = do
 updatePermFlds :: (MonadTx m, CacheRM m)
   => QualifiedTable -> RoleName -> PermType -> RenameField -> m ()
 updatePermFlds refQT rn pt rf = do
-  Q.AltJ pDef <- liftTx fetchPermDef
+  pDef <- fmap fst $ liftTx $ fetchPermDef refQT rn pt
   case pt of
     PTInsert -> do
       perm <- decodeValue pDef
@@ -183,18 +183,6 @@ updatePermFlds refQT rn pt rf = do
     PTDelete -> do
       perm <- decodeValue pDef
       updateDelPermFlds refQT rf rn perm
-  where
-    QualifiedObject sn tn = refQT
-    fetchPermDef =
-      runIdentity . Q.getRow <$>
-        Q.withQE defaultTxErrorHandler [Q.sql|
-                  SELECT perm_def::json
-                    FROM hdb_catalog.hdb_permission
-                   WHERE table_schema = $1
-                     AND table_name = $2
-                     AND role_name = $3
-                     AND perm_type = $4
-                 |] (sn, tn, rn, permTypeToCode pt) True
 
 updateInsPermFlds
   :: (MonadTx m, CacheRM m)

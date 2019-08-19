@@ -22,12 +22,6 @@ const cleanOptions = {
   dry: false,
 };
 
-const getRandomHexString = () => {
-  return Math.random()
-    .toString(16)
-    .slice(2);
-};
-
 module.exports = {
   mode: 'production',
   context: path.resolve(__dirname, '..'),
@@ -193,7 +187,7 @@ module.exports = {
         // Useful to reduce the size of client-side libraries, e.g. react
         NODE_ENV: JSON.stringify('production'),
       },
-      CONSOLE_ASSET_VERSION: JSON.stringify(getRandomHexString()),
+      CONSOLE_ASSET_VERSION: Date.now().toString(),
     }),
   ],
 };
