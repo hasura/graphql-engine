@@ -149,7 +149,7 @@ module.exports = {
     }),
     // set global consts
     new webpack.DefinePlugin({
-      CONSOLE_ASSET_VERSION: JSON.stringify(Date.now()),
+      CONSOLE_ASSET_VERSION: Date.now().toString(),
     }),
     webpackIsomorphicToolsPlugin.development(),
   ],
