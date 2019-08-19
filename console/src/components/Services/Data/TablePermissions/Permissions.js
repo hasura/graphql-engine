@@ -90,14 +90,18 @@ class Permissions extends Component {
       (currPermissionsState.query &&
         currPermissionsState.query !== prevPermissionsState.query)
     ) {
-      document.getElementById('permission-edit-section').scrollIntoView();
+      document
+        .getElementById('permission-edit-section')
+        .scrollIntoView({ behavior: 'smooth' });
     }
 
     if (
       !prevPermissionsState.bulkSelect.length &&
       currPermissionsState.bulkSelect.length
     ) {
-      document.getElementById('bulk-section').scrollIntoView();
+      document
+        .getElementById('bulk-section')
+        .scrollIntoView({ behavior: 'smooth' });
     }
   }
 
