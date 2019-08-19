@@ -541,6 +541,21 @@ class PermissionsSummary extends Component {
             return getRolesCells(currTableInfo, roleRowLimitRenderer);
           };
 
+          const getTableActionRolesAggregationAllowed = () => {
+            const roleAggregateAllowedRenderer = actionPermission => {
+              return (
+                <div className={styles.text_center}>
+                  {actionPermission &&
+                  actionPermission.allow_aggregations === true
+                    ? fullAccessDisplay
+                    : noAccessDisplay}
+                </div>
+              );
+            };
+
+            return getRolesCells(currTableInfo, roleAggregateAllowedRenderer);
+          };
+
           rowRows.push(
             <tr key={'rows'}>
               <th className={styles.selected + ' ' + styles.text_gray}>Rows</th>
@@ -555,6 +570,15 @@ class PermissionsSummary extends Component {
                   Rows limit
                 </th>
                 {getTableActionRolesRowLimits()}
+              </tr>
+            );
+
+            rowRows.push(
+              <tr key={'aggregations-allowed'}>
+                <th className={styles.selected + ' ' + styles.text_gray}>
+                  Aggregations allowed
+                </th>
+                {getTableActionRolesAggregationAllowed()}
               </tr>
             );
           }
