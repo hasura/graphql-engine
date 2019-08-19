@@ -151,9 +151,20 @@ class PermissionsSummary extends Component {
 
     // ------------------------------------------------------------------------------
 
-    const getClickableCell = (key, onClick, content, actionIcon) => {
+    const getClickableCell = (
+      key,
+      onClick,
+      content,
+      actionIcon,
+      cellTooltip
+    ) => {
       return (
-        <td key={key} className={styles.clickableCell} onClick={onClick}>
+        <td
+          key={key}
+          title={cellTooltip}
+          className={styles.clickableCell}
+          onClick={onClick}
+        >
           <div
             className={styles.display_flex + ' ' + styles.flex_space_between}
           >
@@ -297,8 +308,15 @@ class PermissionsSummary extends Component {
         const cellContent = roleCellRenderer(actionPermission, table);
         const editIcon = getEditIcon();
         const cellOnClick = getCellOnClick(table, role, currAction);
+        const cellTooltip = 'Go to edit page';
 
-        return getClickableCell(cellKey, cellOnClick, cellContent, editIcon);
+        return getClickableCell(
+          cellKey,
+          cellOnClick,
+          cellContent,
+          editIcon,
+          cellTooltip
+        );
       });
     };
 
@@ -313,8 +331,15 @@ class PermissionsSummary extends Component {
         const cellContent = actionCellRenderer(actionPermission, table, action);
         const editIcon = getEditIcon();
         const cellOnClick = getCellOnClick(table, currRole, action);
+        const cellTooltip = 'Go to edit page';
 
-        return getClickableCell(cellKey, cellOnClick, cellContent, editIcon);
+        return getClickableCell(
+          cellKey,
+          cellOnClick,
+          cellContent,
+          editIcon,
+          cellTooltip
+        );
       });
     };
 
