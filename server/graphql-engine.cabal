@@ -304,6 +304,7 @@ library
                       QuasiQuotes
                       TypeFamilies
                       NoImplicitPrelude
+                      DeriveDataTypeable
 
 
   if flag(profile)
