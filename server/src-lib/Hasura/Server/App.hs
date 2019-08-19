@@ -49,6 +49,7 @@ import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                     (AuthMode (..),
                                                          getUserInfo)
+import           Hasura.Server.Compression
 import           Hasura.Server.Config                   (runGetConfig)
 import           Hasura.Server.Context
 import           Hasura.Server.Cors
@@ -108,19 +109,20 @@ withSCUpdate scr logger action = do
 
 data ServerCtx
   = ServerCtx
-  { scPGExecCtx       :: !PGExecCtx
-  , scConnInfo        :: !Q.ConnInfo
-  , scLogger          :: !L.Logger
-  , scCacheRef        :: !SchemaCacheRef
-  , scAuthMode        :: !AuthMode
-  , scManager         :: !HTTP.Manager
-  , scSQLGenCtx       :: !SQLGenCtx
-  , scEnabledAPIs     :: !(S.HashSet API)
-  , scInstanceId      :: !InstanceId
-  , scPlanCache       :: !E.PlanCache
-  , scLQState         :: !EL.LiveQueriesState
-  , scEnableAllowlist :: !Bool
-  , scEkgStore        :: !EKG.Store
+  { scPGExecCtx         :: !PGExecCtx
+  , scConnInfo          :: !Q.ConnInfo
+  , scLogger            :: !L.Logger
+  , scCacheRef          :: !SchemaCacheRef
+  , scAuthMode          :: !AuthMode
+  , scManager           :: !HTTP.Manager
+  , scSQLGenCtx         :: !SQLGenCtx
+  , scEnabledAPIs       :: !(S.HashSet API)
+  , scInstanceId        :: !InstanceId
+  , scPlanCache         :: !E.PlanCache
+  , scLQState           :: !EL.LiveQueriesState
+  , scEnableAllowlist   :: !Bool
+  , scEkgStore          :: !EKG.Store
+  , scEnableCompression :: !Bool
   }
 
 data HandlerCtx
@@ -288,17 +290,29 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
       json $ qErrEncoder includeInternal qErr
 
     logSuccessAndResp userInfo reqId req result qTime = do
-      logSuccess logger userInfo reqId req (apiRespToLBS result) qTime
+      let reqIdHeader = (requestIdHeader, unRequestId reqId)
+          reqHeaders = requestHeaders req
+          (compressedResp, mEncodingHeader) =
+            compressResponse (scEnableCompression serverCtx) reqHeaders $
+            apiRespToLBS result
+          encodingHeader = maybe [] pure mEncodingHeader
+      logSuccess logger userInfo reqId req compressedResp qTime
       case result of
-        JSONResp (HttpResponse j h) -> do
-          uncurry setHeader jsonHeader
-          uncurry setHeader (requestIdHeader, unRequestId reqId)
-          mapM_ (mapM_ (uncurry setHeader . unHeader)) h
-          lazyBytes $ encJToLBS j
-        RawResp (HttpResponse b h) -> do
-          uncurry setHeader (requestIdHeader, unRequestId reqId)
-          mapM_ (mapM_ (uncurry setHeader . unHeader)) h
-          lazyBytes b
+        JSONResp (HttpResponse _ h) -> do
+          let responseHeaders = [jsonHeader, reqIdHeader]
+                                <> mkHeaders h <> encodingHeader
+          setHeaders responseHeaders
+          lazyBytes compressedResp
+        RawResp (HttpResponse _ h) -> do
+          let responseHeaders = pure reqIdHeader <> mkHeaders h
+                                <> encodingHeader
+          setHeaders responseHeaders
+          lazyBytes compressedResp
+
+    mkHeaders Nothing  = []
+    mkHeaders (Just h) = map unHeader h
+
+    setHeaders = mapM_ (uncurry setHeader)
 
 v1QueryHandler :: RQLQuery -> Handler (HttpResponse EncJSON)
 v1QueryHandler query = do
@@ -451,9 +465,11 @@ mkWaiApp
   -> InstanceId
   -> S.HashSet API
   -> EL.LQOpts
+  -> Bool
   -> IO (Wai.Application, SchemaCacheRef, Maybe UTCTime)
-mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
-         enableConsole consoleAssetsDir enableTelemetry instanceId apis lqOpts = do
+mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode
+         corsCfg enableConsole consoleAssetsDir enableTelemetry
+         instanceId apis lqOpts enableCompression = do
 
     let pgExecCtx = PGExecCtx pool isoLevel
         pgExecCtxSer = PGExecCtx pool Q.Serializable
@@ -483,7 +499,7 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
         serverCtx = ServerCtx pgExecCtx ci logger
                     schemaCacheRef mode httpManager
                     sqlGenCtx apis instanceId planCache
-                    lqState enableAL ekgStore
+                    lqState enableAL ekgStore enableCompression
 
     when (isDeveloperAPIEnabled serverCtx) $ do
       EKG.registerGcMetrics ekgStore

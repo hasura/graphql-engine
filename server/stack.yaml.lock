@@ -95,6 +95,13 @@ packages:
       sha256: 86140298020f68bb09d07b26a6a6f1666fc3a02715d7986b09150727247a1a84
   original:
     hackage: Spock-core-0.13.0.0
+- completed:
+    hackage: brotli-0.0.0.0@sha256:0a8232f028dbc6a1f9db291ef996a5abe74aa00c7c3dc00a741c41f3da75a4dc,2873
+    pantry-tree:
+      size: 407
+      sha256: f4c2e742f10ca010554aeb0037294f118be4f35228acca98c0df97e1093bca33
+  original:
+    hackage: brotli-0.0.0.0
 snapshots:
 - completed:
     size: 498167
