@@ -25,8 +25,6 @@ import generatedVoyagerConnector from './components/Services/VoyagerView/Voyager
 
 import about from './components/Services/About/About';
 
-import roles from './components/Services/Roles/Roles';
-
 import generatedLoginConnector from './components/Login/Login';
 
 import metadataContainer from './components/Services/Metadata/Container';
@@ -103,7 +101,6 @@ const routes = store => {
             path="voyager-view"
             component={generatedVoyagerConnector(connect)}
           />
-          <Route path="roles" component={roles(connect)} />
           <Route path="about" component={about(connect)} />
           <Route path="metadata" component={metadataContainer(connect)}>
             <IndexRedirect to="actions" />

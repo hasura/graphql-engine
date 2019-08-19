@@ -1,8 +1,9 @@
-import PropTypes from 'prop-types';
-
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
+import { Link } from 'react-router';
+
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 
 import {
@@ -613,6 +614,16 @@ class Schema extends Component {
       return nonTrackableFuncList;
     };
 
+    const getPermissionsSummaryLink = () => {
+      return (
+        <div className={styles.add_mar_top}>
+          <Link to={`${appPrefix}/schema/${currentSchema}/permissions`}>
+            See schema permissions summary
+          </Link>
+        </div>
+      );
+    };
+
     return (
       <div
         className={`container-fluid ${styles.padd_left_remove} ${
@@ -632,6 +643,7 @@ class Schema extends Component {
           {getUntrackedRelationsSection()}
           {getUntrackedFunctionsSection()}
           {false && getNonTrackableFunctionsSection()}
+          {getPermissionsSummaryLink()}
         </div>
       </div>
     );

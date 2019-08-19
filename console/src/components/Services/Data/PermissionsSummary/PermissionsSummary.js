@@ -2,12 +2,12 @@ import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
 
-import Modal from '../../Common/Modal/Modal';
-import Button from '../../Common/Button/Button';
+import Modal from '../../../Common/Modal/Modal';
+import Button from '../../../Common/Button/Button';
 
-import styles from './Roles.scss';
+import styles from './PermissionsSummary.scss';
 
-import { getTablePermissionsRoute } from '../../Common/utils/routesUtils';
+import { getTablePermissionsRoute } from '../../../Common/utils/routesUtils';
 import {
   findTable,
   getTableSchema,
@@ -16,13 +16,13 @@ import {
   getTableNameWithSchema,
   getTableDef,
   getSchemaTables,
-} from '../../Common/utils/pgUtils';
+} from '../../../Common/utils/pgUtils';
 
-import { updateSchemaInfo } from '../Data/DataActions';
+import { updateSchemaInfo } from '../DataActions';
 import {
   copyRolePermissions,
   permOpenEdit,
-} from '../Data/TablePermissions/Actions';
+} from '../TablePermissions/Actions';
 
 import {
   permissionsSymbols,
@@ -33,7 +33,7 @@ import {
   getPermissionRowAccessSummary,
 } from './utils';
 
-class Roles extends Component {
+class PermissionsSummary extends Component {
   initState = {
     currRole: null,
     currTable: null,
@@ -974,27 +974,37 @@ class Roles extends Component {
     };
 
     return (
-      <div className={`container-fluid ${styles.full_container}`}>
-        <div className={styles.subHeader}>
-          <Helmet title={'Roles | Hasura'} />
-          <h2 className={styles.headerText}>Roles</h2>
-        </div>
-        <div className={styles.add_mar_top}>{getTable()}</div>
+      <div
+        className={`container-fluid ${styles.padd_left_remove} ${
+          styles.padd_top
+        }`}
+      >
+        <div className={styles.padd_left}>
+          <Helmet title="Permissions Summary | Hasura" />
+          <div className={styles.display_flex}>
+            <h2 className={styles.headerText}>
+              Permissions summary
+            </h2>
+          </div>
+          <div className={styles.add_mar_top}>
+            {getTable()}
+          </div>
 
-        {getCopyModal()}
+          {getCopyModal()}
+        </div>
       </div>
     );
   }
 }
 
-const rolesConnector = connect => {
+const permissionsSummaryConnector = connect => {
   const mapStateToProps = state => {
     return {
       allSchemas: state.tables.allSchemas,
       currentSchema: state.tables.currentSchema,
     };
   };
-  return connect(mapStateToProps)(Roles);
+  return connect(mapStateToProps)(PermissionsSummary);
 };
 
-export default rolesConnector;
+export default permissionsSummaryConnector;

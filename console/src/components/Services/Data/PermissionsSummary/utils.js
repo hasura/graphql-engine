@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from './Roles.scss';
+import styles from './PermissionsSummary.scss';
 
 export const permissionsSymbols = {
   fullAccess: (

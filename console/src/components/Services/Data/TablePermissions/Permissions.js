@@ -52,7 +52,7 @@ import {
   getPermissionColumnAccessSummary,
   getTablePermissionsByRoles,
   getPermissionRowAccessSummary,
-} from '../../Roles/utils';
+} from '../PermissionsSummary/utils';
 import Button from '../../../Common/Button/Button';
 import { defaultPresetsState } from '../DataState';
 
