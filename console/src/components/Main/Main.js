@@ -239,7 +239,7 @@ class Main extends React.Component {
                 tooltipPlacement={'left'}
                 customStyle={styles.secureSectionSymbol}
               />
-              {/*&nbsp;Secure your endpoint*/}
+              &nbsp;Secure your endpoint
             </a>
           </div>
         );
@@ -499,7 +499,6 @@ class Main extends React.Component {
                   tooltips.events,
                   '/events/manage/triggers'
                 )}
-                {getSidebarItem('Roles', 'fa-user', tooltips.roles, '/roles')}
               </ul>
             </div>
             <div id="dropdown_wrapper" className={styles.clusterInfoWrapper}>
