@@ -3,6 +3,7 @@ const asyncState = {
   isError: false,
   isFetching: false,
   isFetchError: null,
+  loadingRequests: {},
 };
 
 const listState = {

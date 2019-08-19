@@ -3,7 +3,11 @@ import styles from '../RemoteSchema.scss';
 import { getTypeFields } from '../graphqlUtils';
 import GraphQLType from './GraphQLType';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
-import { setPermissionRole, setPermissionTypes } from './Actions';
+import {
+  setPermissionRole,
+  setPermissionTypes,
+  createRemoteSchemaPermission,
+} from './Actions';
 
 const PermissionsEditor = ({
   permission,
@@ -135,17 +139,25 @@ const PermissionsEditor = ({
   const expandButtonText = isLast ? 'Create a new permission' : 'Edit';
   const collapseButtonText = isLast ? 'Cancel' : 'Close';
 
+  let saveFunc;
+  let removeFunc;
+  if (permission.role) {
+    saveFunc = () => {
+      dispatch(createRemoteSchemaPermission(index));
+    };
+  }
+
   return (
     <div key={index}>
       <ExpandableEditor
         editorExpanded={editorExpanded}
         property={'remote-relationship-add'}
         service="table-relationship"
-        saveFunc={() => null}
+        saveFunc={saveFunc}
         expandButtonText={expandButtonText}
         collapseButtonText={collapseButtonText}
         collapsedLabel={collapsedLabel}
-        removeFunc={() => null}
+        removeFunc={removeFunc}
       />
     </div>
   );
