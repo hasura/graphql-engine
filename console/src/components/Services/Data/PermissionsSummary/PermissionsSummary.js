@@ -19,10 +19,7 @@ import {
 } from '../../../Common/utils/pgUtils';
 
 import { updateSchemaInfo } from '../DataActions';
-import {
-  copyRolePermissions,
-  permOpenEdit,
-} from '../TablePermissions/Actions';
+import { copyRolePermissions, permOpenEdit } from '../TablePermissions/Actions';
 
 import {
   permissionsSymbols,
@@ -975,23 +972,18 @@ class PermissionsSummary extends Component {
 
     return (
       <div
-        className={`container-fluid ${styles.padd_left_remove} ${
-          styles.padd_top
+        className={`${styles.clear_fix} ${styles.padd_left} ${
+          styles.fit_content
         }`}
       >
-        <div className={styles.padd_left}>
-          <Helmet title="Permissions Summary | Hasura" />
-          <div className={styles.display_flex}>
-            <h2 className={styles.headerText}>
-              Permissions summary
-            </h2>
-          </div>
-          <div className={styles.add_mar_top}>
-            {getTable()}
-          </div>
-
-          {getCopyModal()}
+        <Helmet title="Permissions Summary | Hasura" />
+        <div className={styles.display_flex}>
+          <h2 className={styles.heading_text}>Schema permissions summary</h2>
         </div>
+
+        {getTable()}
+
+        {getCopyModal()}
       </div>
     );
   }
