@@ -149,26 +149,6 @@ class PermissionsSummary extends Component {
       return getActionIcon('fa-pencil');
     };
 
-    const getCopyIcon = role => {
-      const copyOnClick = e => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        this.setState({
-          copyState: {
-            ...copyState,
-            copyFromRole: role,
-            copyFromTable: currTable
-              ? getTableNameWithSchema(null, false, currTable)
-              : 'all',
-            copyFromAction: currRole ? 'all' : currAction,
-          },
-        });
-      };
-
-      return getActionIcon('fa-copy', copyOnClick);
-    };
-
     // ------------------------------------------------------------------------------
 
     const getClickableCell = (key, onClick, content, actionIcon) => {
@@ -189,13 +169,13 @@ class PermissionsSummary extends Component {
       selectable,
       isSelected,
       onClick,
-      actionIcon = null,
+      actionBtn = null,
       key = null
     ) => {
       const getContents = () => {
         let headerContent;
 
-        if (!actionIcon) {
+        if (!actionBtn) {
           headerContent = content;
         } else {
           headerContent = (
@@ -209,7 +189,7 @@ class PermissionsSummary extends Component {
               }
             >
               <div>{content}</div>
-              <div>{actionIcon}</div>
+              <div>{actionBtn}</div>
             </div>
           );
         }
@@ -255,14 +235,42 @@ class PermissionsSummary extends Component {
             window.scrollTo(0, 0);
           };
 
-          const copyIcon = getCopyIcon(role);
+          const getCopyBtn = () => {
+            const copyOnClick = e => {
+              e.preventDefault();
+              e.stopPropagation();
+
+              this.setState({
+                copyState: {
+                  ...copyState,
+                  copyFromRole: role,
+                  copyFromTable: currTable
+                    ? getTableNameWithSchema(null, false, currTable)
+                    : 'all',
+                  copyFromAction: currRole ? 'all' : currAction,
+                },
+              });
+            };
+
+            return (
+              <Button
+                color="white"
+                size="xs"
+                onClick={copyOnClick}
+                title="Copy permissions"
+                className={styles.add_mar_left_mid}
+              >
+                {getActionIcon('fa-copy')}
+              </Button>
+            );
+          };
 
           const roleHeader = getHeader(
             role,
             selectable,
             isCurrRole,
             setRole,
-            copyIcon
+            getCopyBtn()
           );
 
           if (selectedFirst && isCurrRole) {
