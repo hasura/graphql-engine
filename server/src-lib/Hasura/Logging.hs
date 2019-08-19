@@ -189,7 +189,8 @@ mkLogger :: LoggerCtx -> Logger
 mkLogger (LoggerCtx loggerSet serverLogLevel timeGetter enabledLogTypes callbackFn) = Logger $ \l -> do
   localTime <- timeGetter
   let (logLevel, logTy, logDet) = toEngineLog l
-  when (logLevel >= serverLogLevel && isLogTypeEnabled enabledLogTypes logTy) $ do
-    let logStr = EngineLog localTime logLevel logTy logDet
+      logStr = EngineLog localTime logLevel logTy logDet
+  -- send all logs (log-types and levels) to the callback function
+  forM_ callbackFn $ \func -> func logStr
+  when (logLevel >= serverLogLevel && isLogTypeEnabled enabledLogTypes logTy) $
     FL.pushLogStrLn loggerSet $ FL.toLogStr (J.encode logStr)
-    forM_ callbackFn $ \func -> func logStr
