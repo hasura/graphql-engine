@@ -12,6 +12,7 @@ import Endpoints from '../../../../Endpoints';
 import {
   findTable,
   generateTableDef,
+  getSchemaTables,
   getTableDef,
   getTablePermissions,
 } from '../../../Common/utils/pgUtils';
@@ -566,11 +567,11 @@ const copyRolePermissions = (
     const permissionsDownQueries = [];
 
     const allSchemas = getState().tables.allSchemas;
-    // const currentSchema = getState().tables.currentSchema;
+    const currentSchema = getState().tables.currentSchema;
 
     let tables;
     if (tableNameWithSchema === 'all') {
-      tables = allSchemas;
+      tables = getSchemaTables(allSchemas, currentSchema);
     } else {
       const fromTableDef = generateTableDef(null, null, tableNameWithSchema);
       tables = [findTable(allSchemas, fromTableDef)];
