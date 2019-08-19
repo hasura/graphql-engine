@@ -3,6 +3,7 @@ FROM node:buster
 # update this line when gatsby-gitbook-starter repo changes
 RUN sh -c 'echo -e "Updated at: 2019-08-19 17:00:00 IST"'
 RUN sh -c 'echo "$GATSBY_ALGOLIA_APP_ID"'
+RUN sh -c 'printenv'
 
 # Install global dependencies
 RUN npm -g install gatsby-cli
