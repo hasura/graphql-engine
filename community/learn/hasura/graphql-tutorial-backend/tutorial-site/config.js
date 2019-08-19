@@ -15,7 +15,7 @@ const config = {
 			"link": "https://hasura.io"
 		}],
 		"search": {
-			"enabled": false,
+			"enabled": true,
 			"indexName": "learn-hasura-backend",
 			"algoliaAppId": process.env.GATSBY_ALGOLIA_APP_ID,
 			"algoliaSearchKey": process.env.GATSBY_ALGOLIA_SEARCH_KEY,
