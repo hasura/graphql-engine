@@ -6,7 +6,7 @@ RUN sh -c 'echo -e "Updated at: 2019-08-19 17:00:00 IST"'
 # Install global dependencies
 RUN npm -g install gatsby-cli
 
-# clone gatsby-gitbook-starter
+# clone gatsby-gitbook-starter repo
 RUN git clone https://github.com/hasura/gatsby-gitbook-starter.git
 
 # Create app directory
