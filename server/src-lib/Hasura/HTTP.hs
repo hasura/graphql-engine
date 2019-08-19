@@ -30,7 +30,7 @@ wreqOptions manager hdrs mTimeoutMicro =
   Wreq.manager .~
   Left
     (HTTP.defaultManagerSettings
-       {HTTP.managerResponseTimeout = HTTP.responseTimeoutMicro (fromMaybe 30000000 mTimeoutMicro)})
+       {HTTP.managerResponseTimeout = HTTP.responseTimeoutMicro (fromMaybe 60000000 mTimeoutMicro)})
   where
     contentType = ("Content-Type", "application/json")
     userAgent =
