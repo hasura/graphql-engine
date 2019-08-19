@@ -29,14 +29,15 @@ import {
   autoAddRelName,
   autoTrackRelations,
 } from '../TableRelationships/Actions';
-import globals from '../../../../Globals';
 import { getRelDef } from '../TableRelationships/utils';
+import {
+  getSchemaAddTableRoute,
+  getSchemaPermissionsRoute,
+} from '../../../Common/utils/routesUtils';
 import { createNewSchema, deleteCurrentSchema } from './Actions';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 import gqlPattern from '../Common/GraphQLValidation';
 import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
-
-const appPrefix = globals.urlPrefix + '/data';
 
 class Schema extends Component {
   constructor(props) {
@@ -140,7 +141,7 @@ class Schema extends Component {
         const handleClick = e => {
           e.preventDefault();
 
-          dispatch(push(`${appPrefix}/schema/${currentSchema}/table/add`));
+          dispatch(push(getSchemaAddTableRoute(currentSchema)));
         };
 
         createBtn = (
@@ -599,7 +600,7 @@ class Schema extends Component {
       return (
         <div className={styles.add_mar_top}>
           <CollapsibleToggle title={heading} isOpen>
-            <Link to={`${appPrefix}/schema/${currentSchema}/permissions`}>
+            <Link to={getSchemaPermissionsRoute(currentSchema)}>
               See schema permissions summary
             </Link>
           </CollapsibleToggle>

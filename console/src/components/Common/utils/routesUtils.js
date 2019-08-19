@@ -18,6 +18,10 @@ export const getSchemaAddTableRoute = schemaName => {
   return `${getSchemaBaseRoute(schemaName)}/table/add`;
 };
 
+export const getSchemaPermissionsRoute = schemaName => {
+  return `${getSchemaBaseRoute(schemaName)}/permissions`;
+};
+
 export const getTableBaseRoute = table => {
   return `${getSchemaBaseRoute(getTableSchema(table))}/${
     checkIfTable(table) ? 'tables' : 'views'
