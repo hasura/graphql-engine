@@ -23,4 +23,5 @@ RUN upx /packaging/build/rootfs/bin/${project}
 
 # Stage 3: copy the rootfs into a scratch container
 FROM scratch
+STOPSIGNAL SIGINT
 COPY --from=packager /packaging/build/rootfs /

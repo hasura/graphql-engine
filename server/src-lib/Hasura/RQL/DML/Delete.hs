@@ -5,7 +5,6 @@ module Hasura.RQL.DML.Delete
   , traverseAnnDel
   , AnnDel
   , deleteQueryToTx
-  , getDeleteDeps
   , runDelete
   ) where
 
@@ -57,16 +56,6 @@ mkDeleteCTE (AnnDel tn (fltr, wc) _ _) =
     delete = S.SQLDelete tn Nothing tableFltr $ Just S.returningStar
     tableFltr = Just $ S.WhereFrag $
                 toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps fltr wc
-
-getDeleteDeps
-  :: AnnDel -> [SchemaDependency]
-getDeleteDeps (AnnDel tn (_, wc) mutFlds allCols) =
-  mkParentDep tn : allColDeps <> whereDeps <> retDeps
-  where
-    whereDeps = getBoolExpDeps tn wc
-    allColDeps = map (mkColDep "on_type" tn . pgiName) allCols
-    retDeps   = map (mkColDep "untyped" tn . fst) $
-                pgColsFromMutFlds mutFlds
 
 validateDeleteQWith
   :: (UserInfoM m, QErrM m, CacheRM m)

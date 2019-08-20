@@ -17,7 +17,7 @@ import { dataRouterUtils } from './components/Services/Data';
 
 import { eventRouterUtils } from './components/Services/EventTrigger';
 
-import { getCustomResolverRouter } from './components/Services/CustomResolver';
+import { getRemoteSchemaRouter } from './components/Services/RemoteSchema';
 
 import generatedApiExplorer from './components/Services/ApiExplorer/ApiExplorerGenerator';
 
@@ -77,7 +77,7 @@ const routes = store => {
   );
   const eventRouter = _eventRouterUtils.makeEventRouter;
 
-  const customResolverRouter = getCustomResolverRouter(
+  const remoteSchemaRouter = getRemoteSchemaRouter(
     connect,
     store,
     composeOnEnterHooks
@@ -116,7 +116,7 @@ const routes = store => {
           </Route>
           {dataRouter}
           {eventRouter}
-          {customResolverRouter}
+          {remoteSchemaRouter}
         </Route>
       </Route>
       <Route path="404" component={PageNotFound} status="404" />

@@ -27,6 +27,7 @@ import {
 } from '../Common/ReusableComponents/utils';
 
 import { isPostgresFunction } from '../utils';
+import { sqlEscapeText } from '../../../Common/utils/sqlUtils';
 
 import {
   fetchColumnCastsQuery,
@@ -589,7 +590,7 @@ FOR EACH ${trigger.action_orientation} ${trigger.action_statement};`;
 
     if (trigger.comment) {
       downMigrationSql += `COMMENT ON TRIGGER "${triggerName}" ON "${tableSchema}"."${tableName}" 
-IS '${trigger.comment}';`;
+IS ${sqlEscapeText(trigger.comment)};`;
     }
     const migrationDown = [
       {
@@ -1020,9 +1021,7 @@ const deleteColumnSql = (column, tableSchema) => {
             '"' +
             ' ' +
             'IS ' +
-            "'" +
-            comment +
-            "'",
+            sqlEscapeText(comment),
         },
       });
     }
@@ -1072,6 +1071,7 @@ const addColSql = (
   colNull,
   colUnique,
   colDefault,
+  colDependentSQLGenerator,
   callback
 ) => {
   let defWithQuotes = "''";
@@ -1100,6 +1100,7 @@ const addColSql = (
       '"' +
       ' ' +
       colType;
+
     // check if nullable
     if (colNull) {
       // nullable
@@ -1108,15 +1109,30 @@ const addColSql = (
       // not nullable
       runSqlQueryUp += ' NOT NULL';
     }
+
     // check if unique
     if (colUnique) {
       runSqlQueryUp += ' UNIQUE';
     }
+
     // check if default value
     if (colDefault !== '') {
       runSqlQueryUp += ' DEFAULT ' + defWithQuotes;
     }
+
+    runSqlQueryUp += ';';
+
+    const colDependentSQL = colDependentSQLGenerator
+      ? colDependentSQLGenerator(currentSchema, tableName, colName)
+      : null;
+
+    if (colDependentSQL) {
+      runSqlQueryUp += '\n';
+      runSqlQueryUp += colDependentSQL.upSql;
+    }
+
     const schemaChangesUp = [];
+
     if (colType === 'uuid' && colDefault !== '') {
       schemaChangesUp.push({
         type: 'run_sql',
@@ -1125,13 +1141,22 @@ const addColSql = (
         },
       });
     }
+
     schemaChangesUp.push({
       type: 'run_sql',
       args: {
         sql: runSqlQueryUp,
       },
     });
-    const runSqlQueryDown =
+
+    let runSqlQueryDown = '';
+
+    if (colDependentSQL) {
+      runSqlQueryDown += colDependentSQL.downSql;
+      runSqlQueryDown += '\n';
+    }
+
+    runSqlQueryDown +=
       'ALTER TABLE ' +
       '"' +
       currentSchema +
@@ -1143,7 +1168,8 @@ const addColSql = (
       ' DROP COLUMN ' +
       '"' +
       colName +
-      '"';
+      '";';
+
     const schemaChangesDown = [
       {
         type: 'run_sql',
@@ -1273,7 +1299,7 @@ const saveTableCommentSql = isTable => {
     const commentUpQuery =
       updatedComment === ''
         ? commentQueryBase + 'NULL'
-        : commentQueryBase + "'" + updatedComment + "'";
+        : commentQueryBase + sqlEscapeText(updatedComment);
 
     const commentDownQuery = commentQueryBase + 'NULL';
     const schemaChangesUp = [
@@ -1811,9 +1837,8 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
       colName +
       '"' +
       ' IS ' +
-      "'" +
-      comment +
-      "'";
+      sqlEscapeText(comment);
+
     const columnCommentDownQuery =
       'COMMENT ON COLUMN ' +
       '"' +
@@ -1828,9 +1853,7 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
       colName +
       '"' +
       ' IS ' +
-      "'" +
-      originalColComment +
-      "'";
+      sqlEscapeText(originalColComment);
 
     // check if comment is unchanged and then do an update. if not skip
     if (originalColComment !== comment.trim()) {
