@@ -67,7 +67,7 @@ func (o *updateOptions) run(showPrompt bool) error {
 	if showPrompt {
 		ok := ask2confirm(latestVersion.String(), o.EC.Logger)
 		if !ok {
-			o.EC.Logger.Info("skippig update, run 'hasura update-cli' to update manually")
+			o.EC.Logger.Info("skipping update, run 'hasura update-cli' to update manually")
 			return nil
 		}
 	}

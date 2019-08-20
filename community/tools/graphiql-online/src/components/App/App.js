@@ -2,9 +2,8 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import ProgressBar from 'react-progress-bar-plus';
-import './progress-bar.scss';
-import { NOTIF_EXPANDED } from './Actions';
-import ErrorBoundary from './ErrorBoundary';
+import { hot } from 'react-hot-loader';
+import ErrorBoundary from '../Error/ErrorBoundary';
 
 class App extends Component {
   componentDidMount() {
@@ -15,20 +14,21 @@ class App extends Component {
     document.getElementById('loading').style.display = 'none';
   }
 
-  onModalClose = () => {
-    this.props.dispatch({ type: NOTIF_EXPANDED, data: false });
-  };
-
   render() {
+    const styles = require('./App.scss');
     const {
+      requestError,
+      error,
       ongoingRequest,
       percent,
       intervalTime,
       children,
+      connectionFailed,
+      dispatch,
     } = this.props;
 
     return (
-      <ErrorBoundary>
+      <ErrorBoundary dispatch={dispatch}>
         <div>
           {ongoingRequest && (
             <ProgressBar
@@ -50,7 +50,6 @@ App.propTypes = {
   reqData: PropTypes.object,
   statusCode: PropTypes.number,
 
-  modalOpen: PropTypes.bool,
   error: PropTypes.object,
   ongoingRequest: PropTypes.bool,
   requestError: PropTypes.bool,
@@ -62,8 +61,6 @@ App.propTypes = {
   children: PropTypes.element,
   dispatch: PropTypes.func.isRequired,
 
-  isNotifExpanded: PropTypes.bool,
-  notifMsg: PropTypes.string,
 };
 
 const mapStateToProps = state => {
@@ -72,4 +69,4 @@ const mapStateToProps = state => {
   };
 };
 
-export default connect(mapStateToProps)(App);
+export default hot(module)(connect(mapStateToProps)(App));

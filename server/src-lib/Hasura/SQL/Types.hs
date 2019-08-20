@@ -35,7 +35,7 @@ infixr 6 <+>
 
 newtype Iden
   = Iden { getIdenTxt :: T.Text }
-  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Semigroup)
+  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Semigroup, Data)
 
 instance ToSQL Iden where
   toSQL (Iden t) =
@@ -90,7 +90,7 @@ class ToTxt a where
 
 newtype TableName
   = TableName { getTableTxt :: T.Text }
-  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift)
+  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data)
 
 instance IsIden TableName where
   toIden (TableName t) = Iden t
@@ -144,7 +144,7 @@ instance ToSQL ConstraintName where
 
 newtype FunctionName
   = FunctionName { getFunctionTxt :: T.Text }
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift, Data)
 
 instance IsIden FunctionName where
   toIden (FunctionName t) = Iden t
@@ -160,7 +160,7 @@ instance ToTxt FunctionName where
 
 newtype SchemaName
   = SchemaName { getSchemaTxt :: T.Text }
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data)
 
 publicSchema :: SchemaName
 publicSchema = SchemaName "public"
@@ -178,7 +178,7 @@ data QualifiedObject a
   = QualifiedObject
   { qSchema :: !SchemaName
   , qName   :: !a
-  } deriving (Show, Eq, Functor, Ord, Generic, Lift)
+  } deriving (Show, Eq, Functor, Ord, Generic, Lift, Data)
 
 instance (FromJSON a) => FromJSON (QualifiedObject a) where
   parseJSON v@(String _) =
@@ -229,7 +229,7 @@ type QualifiedFunction = QualifiedObject FunctionName
 
 newtype PGCol
   = PGCol { getPGColTxt :: T.Text }
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, ToJSONKey, FromJSONKey, Lift)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, ToJSONKey, FromJSONKey, Lift, Data)
 
 instance IsIden PGCol where
   toIden (PGCol t) = Iden t
@@ -265,7 +265,7 @@ data PGColType
   | PGGeometry
   | PGGeography
   | PGUnknown !T.Text
-  deriving (Eq, Lift, Generic)
+  deriving (Eq, Lift, Generic, Data)
 
 instance Hashable PGColType
 
@@ -388,7 +388,7 @@ pgTypeOid (PGUnknown _) = PTI.auto
 data PgType
   = PgTypeSimple !PGColType
   | PgTypeArray !PGColType
-  deriving (Eq)
+  deriving (Eq, Data)
 
 instance Show PgType where
   show = \case
