@@ -268,6 +268,81 @@ in the response
       }
     }
 
+Insert an object with several nested objects in the same mutation
+------------------
+**Example:** Insert an ``address``, an ``author`` and an ``article``.
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation insertData {
+      insert_authors
+        (objects: [
+          {
+            id: 11,
+            name: "John",
+            address: {
+              data: {
+                id: 12,
+                location: "San Francisco"
+              }
+            },
+            articles: {
+              data: {
+                id: 13,
+                title: "GraphQL Guide",
+                content: "Let's see what we can do with GraphQL"
+              }
+            }
+          }
+        ]
+      ) {
+        affected_rows
+        returning {
+          id
+          name
+          address {
+            location
+          }
+          articles {
+            title
+          }
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "insert_authors": {
+          "affected_rows": 3,
+          "returning": [
+            {
+              "address": {
+                "location": "San Francisco"
+              },
+              "name": "John",
+              "articles": [
+                {
+                  "title": "GraphQL Guide"
+                }
+              ],
+              "id": 11
+            }
+          ]
+        }
+      }
+    }
+
+Let's say an ``author`` has an ``object relationship`` called ``address`` to the ``address`` table and an ``array relationship`` called ``articles`` to ``article`` table.
+
+We want to insert an author object along with its address and articles. The order of actions are as follows:
+
+1. The object relationships are inserted, i.e. in this case, the address is inserted and its `id` is collected in this step. 
+
+2. The author is now inserted with the `address_id` being set to the `id` of the address that was inserted. Because of this, it is not allowed to pass `address_id` in the author object if you are also providing data for the address relationship. The `id` of author is collected in this step.
+
+3. The array relationships are now inserted, articles by setting all of their author_id to the author's `id` collected in the step 2. Hence, it's not possible to specify `article_id` in the data for the articles relationship.
+
 Insert an object with a JSONB column
 ------------------------------------
 **Example:** Insert a new ``author`` object with a JSONB ``address`` column
