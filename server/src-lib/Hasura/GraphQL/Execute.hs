@@ -385,7 +385,9 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
   where
     RemoteSchemaInfo url hdrConf fwdClientHdrs = rsi
     httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
-    httpThrow err = throw500 $ T.pack . show $ err
+    httpThrow = \case
+      HTTP.HttpExceptionRequest _req content -> throw500 $ T.pack . show $ content
+      HTTP.InvalidUrlException _url reason -> throw500 $ T.pack . show $ reason
 
     userInfoToHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
                      userInfoToList userInfo
