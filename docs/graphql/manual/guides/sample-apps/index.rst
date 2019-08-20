@@ -1,5 +1,5 @@
 Sample apps & boilerplates
-===================
+==========================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -55,6 +55,7 @@ Working apps
 
 Videos
 ------
+
 - `Build a realtime chat app with GraphQL Subscriptions <https://www.youtube.com/watch?v=xNcxdGaUGqI>`__
 - `Build a realtime blog app with Hasura and Gatsby <https://www.youtube.com/watch?v=HTEGGndT3zY>`__
 
