@@ -142,9 +142,11 @@ class PermissionsSummary extends Component {
 
     const getActionIcon = (faIconType, onClick = null) => {
       return (
-        <span className={styles.actionIcon} onClick={onClick}>
-          <i className={`fa ${faIconType}`} aria-hidden="true" />
-        </span>
+        <i
+          className={`fa ${faIconType} ${styles.actionIcon}`}
+          aria-hidden="true"
+          onClick={onClick}
+        />
       );
     };
 
