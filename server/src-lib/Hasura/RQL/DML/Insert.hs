@@ -62,14 +62,6 @@ toSQLConflict conflict = case conflict of
       Column pgCols -> S.SQLColumn pgCols
       Constraint cn -> S.SQLConstraint cn
 
-getInsertDeps
-  :: InsertQueryP1 -> [SchemaDependency]
-getInsertDeps (InsertQueryP1 tn _ _ _ _ mutFlds _) =
-  mkParentDep tn : retDeps
-  where
-    retDeps = map (mkColDep "untyped" tn . fst) $
-              pgColsFromMutFlds mutFlds
-
 convObj
   :: (UserInfoM m, QErrM m)
   => (PGColType -> Value -> m S.SQLExp)

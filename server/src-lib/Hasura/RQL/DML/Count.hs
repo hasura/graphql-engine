@@ -1,6 +1,5 @@
 module Hasura.RQL.DML.Count
   ( CountQueryP1(..)
-  , getCountDeps
   , validateCountQWith
   , validateCountQ
   , runCount
@@ -29,16 +28,6 @@ data CountQueryP1
   , cqp1Where    :: !(AnnBoolExpSQL, Maybe AnnBoolExpSQL)
   , cqp1Distinct :: !(Maybe [PGCol])
   } deriving (Show, Eq)
-
-getCountDeps
-  :: CountQueryP1 -> [SchemaDependency]
-getCountDeps (CountQueryP1 tn (_, mWc) mDistCols) =
-  mkParentDep tn
-  : fromMaybe [] whereDeps
-  <> fromMaybe [] distDeps
-  where
-    distDeps   = map (mkColDep "untyped" tn) <$> mDistCols
-    whereDeps   = getBoolExpDeps tn <$> mWc
 
 mkSQLCount
   :: CountQueryP1 -> S.Select
