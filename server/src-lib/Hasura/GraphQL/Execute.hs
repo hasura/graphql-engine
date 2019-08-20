@@ -378,14 +378,16 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
   liftIO $ logGraphqlQuery logger $ QueryLog q Nothing reqId
   res  <- liftIO $ try $ Wreq.postWith options (show url) (J.toJSON q)
   resp <- either httpThrow return res
-  let cookieHdr = getCookieHdr (resp ^? Wreq.responseHeader "Set-Cookie")
-      respHdrs  = Just $ mkRespHeaders cookieHdr
+  let cookieHdrs = getCookieHdr (resp ^.. Wreq.responseHeader "Set-Cookie")
+      respHdrs  = Just $ mkRespHeaders cookieHdrs
   return $ HttpResponse (encJFromLBS $ resp ^. Wreq.responseBody) respHdrs
 
   where
     RemoteSchemaInfo url hdrConf fwdClientHdrs = rsi
     httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
-    httpThrow err = throw500 $ T.pack . show $ err
+    httpThrow = \case
+      HTTP.HttpExceptionRequest _req content -> throw500 $ T.pack . show $ content
+      HTTP.InvalidUrlException _url reason -> throw500 $ T.pack . show $ reason
 
     userInfoToHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
                      userInfoToList userInfo
@@ -396,7 +398,7 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
       in map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
          filter (not . isUserVar . fst) txHdrs
 
-    getCookieHdr = maybe [] (\h -> [("Set-Cookie", h)])
+    getCookieHdr = fmap (\h -> ("Set-Cookie", h))
 
     mkRespHeaders hdrs =
       map (\(k, v) -> Header (bsToTxt $ CI.original k, bsToTxt v)) hdrs

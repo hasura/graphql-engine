@@ -1,6 +1,6 @@
 import { combineReducers } from 'redux';
 import { routerReducer } from 'react-router-redux';
-import apiExplorerReducer from 'components/ApiExplorer/Actions';
+import apiExplorerReducer from 'components/Services/ApiExplorer/Actions';
 import progressBarReducer from 'components/App/Actions';
 
 const reducer = combineReducers({
