@@ -73,6 +73,10 @@ export const getSchemaTables = (allTables, tableSchema) => {
   return allTables.filter(t => getTableSchema(t) === tableSchema);
 };
 
+export const getTrackedTables = tables => {
+  return tables.filter(t => t.is_table_tracked);
+};
+
 /*** Table/View permissions utils ***/
 export const getTablePermissions = (table, role = null, action = null) => {
   let tablePermissions = table.permissions;

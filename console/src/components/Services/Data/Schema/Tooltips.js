@@ -25,9 +25,3 @@ export const nonTrackableFunctionsTip = (
     Custom functions that do not conform to Hasura requirements
   </Tooltip>
 );
-
-export const permissionsSummaryTip = (
-  <Tooltip id="tooltip-permissions-summary">
-    Summary of permissions on tables/views in schema
-  </Tooltip>
-);

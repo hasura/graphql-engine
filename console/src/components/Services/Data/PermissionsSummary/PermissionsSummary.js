@@ -16,6 +16,7 @@ import {
   getTableNameWithSchema,
   getTableDef,
   getSchemaTables,
+  getTrackedTables,
 } from '../../../Common/utils/pgUtils';
 
 import { updateSchemaInfo } from '../DataActions';
@@ -67,7 +68,9 @@ class PermissionsSummary extends Component {
 
     const { allSchemas, currentSchema } = this.props;
 
-    const currSchemaTables = getSchemaTables(allSchemas, currentSchema);
+    const currSchemaTrackedTables = getTrackedTables(
+      getSchemaTables(allSchemas, currentSchema)
+    );
 
     const allActions = ['select', 'insert', 'update', 'delete'];
 
@@ -349,12 +352,12 @@ class PermissionsSummary extends Component {
     ) => {
       const tablesRows = [];
 
-      if (!currSchemaTables.length) {
+      if (!currSchemaTrackedTables.length) {
         tablesRows.push(
           <tr key={'No tables'}>{getHeader('No tables', false)}</tr>
         );
       } else {
-        currSchemaTables.forEach((table, i) => {
+        currSchemaTrackedTables.forEach((table, i) => {
           const tableName = getTableName(table);
           const tableSchema = getTableSchema(table);
 
@@ -477,7 +480,7 @@ class PermissionsSummary extends Component {
     // ------------------------------------------------------------------------------
 
     const getTableAllRolesTable = () => {
-      const currTableInfo = findTable(currSchemaTables, currTable);
+      const currTableInfo = findTable(currSchemaTrackedTables, currTable);
 
       const getTablesColumnTable = () => {
         return (
@@ -793,7 +796,7 @@ class PermissionsSummary extends Component {
       };
 
       const getFromTableOptions = () => {
-        return currSchemaTables.map(table => {
+        return currSchemaTrackedTables.map(table => {
           const tableName = getTableName(table);
           const tableValue = getTableNameWithSchema(table, false);
 
@@ -1034,8 +1037,10 @@ class PermissionsSummary extends Component {
         }`}
       >
         <Helmet title="Permissions Summary | Hasura" />
-        <div className={styles.display_flex}>
-          <h2 className={styles.heading_text}>Schema permissions summary</h2>
+        <div className={styles.add_mar_bottom}>
+          <h2 className={styles.heading_text}>
+            Permissions summary - {currentSchema}
+          </h2>
         </div>
 
         {getTable()}

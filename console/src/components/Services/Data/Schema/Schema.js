@@ -11,7 +11,6 @@ import {
   untrackedRelTip,
   trackableFunctionsTip,
   nonTrackableFunctionsTip,
-  permissionsSummaryTip,
 } from './Tooltips';
 import Button from '../../../Common/Button/Button';
 import {
@@ -592,18 +591,11 @@ class Schema extends Component {
     };
 
     const getPermissionsSummaryLink = () => {
-      const heading = getSectionHeading(
-        'Permissions summary',
-        permissionsSummaryTip
-      );
-
       return (
         <div className={styles.add_mar_top}>
-          <CollapsibleToggle title={heading} isOpen>
-            <Link to={getSchemaPermissionsRoute(currentSchema)}>
-              See schema permissions summary
-            </Link>
-          </CollapsibleToggle>
+          <Link to={getSchemaPermissionsRoute(currentSchema)}>
+            Schema permissions summary
+          </Link>
         </div>
       );
     };
@@ -627,6 +619,7 @@ class Schema extends Component {
           {getUntrackedRelationsSection()}
           {getUntrackedFunctionsSection()}
           {false && getNonTrackableFunctionsSection()}
+          <hr />
           {getPermissionsSummaryLink()}
         </div>
       </div>
