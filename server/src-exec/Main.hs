@@ -165,7 +165,7 @@ main =  do
       let warpSettings = Warp.setPort port
                        . Warp.setHost host
                        . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
-                       . Warp.setInstallShutdownHandler shutdownHandler
+                       . Warp.setInstallShutdownHandler (shutdownHandler logger)
                        $ Warp.defaultSettings
 
       maxEvThrds <- getFromEnv defaultMaxEventThreads "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
@@ -278,13 +278,16 @@ main =  do
     cleanSuccess =
       putStrLn "successfully cleaned graphql-engine related data"
 
-    -- | Catches the SIGINT signal and initiates a graceful shutdown. Graceful shutdown for regular HTTP
+    -- | Catches the SIGTERM signal and initiates a graceful shutdown. Graceful shutdown for regular HTTP
     -- requests is already implemented in Warp, and is triggered by invoking the 'closeSocket' callback.
-    -- We only catch the SIGINT signal once, that is, if the user hits CTRL-C once again, we terminate
+    -- We only catch the SIGTERM signal once, that is, if the user hits CTRL-C once again, we terminate
     -- the process immediately.
-    shutdownHandler :: IO () -> IO ()
-    shutdownHandler closeSocket =
-      void $ Signals.installHandler Signals.sigINT (Signals.CatchOnce closeSocket) Nothing
+    shutdownHandler :: Logger -> IO () -> IO ()
+    shutdownHandler  (Logger logger) closeSocket =
+      void $ Signals.installHandler Signals.sigTERM (Signals.CatchOnce $ closeSocket >> logShutdown) Nothing
+     where
+      logShutdown = logger $
+        mkGenericStrLog LevelInfo "server" "gracefully shutting down server"
 
 telemetryNotice :: String
 telemetryNotice =
