@@ -44,6 +44,7 @@
     "prefer-template": 0,
     "prefer-spread": 0,
     "object-shorthand": 0,
+    "camelcase": 0,
     "object-curly-newline": 0,
     "spaced-comment": 0,
     "prefer-destructuring": ["error", {"object": false, "array": false}],
@@ -69,6 +70,7 @@
     "react/prop-types": 0,
     "react/prefer-stateless-function": 0,
     "react/no-unescaped-entities": 0,
+    "react/sort-comp": 0,
     "jsx-a11y/click-events-have-key-events": 0,
     "jsx-a11y/no-static-element-interactions": 0,
     "jsx-a11y/no-noninteractive-element-interactions": 0,
@@ -76,7 +78,9 @@
     "jsx-a11y/anchor-is-valid": 0,
     "jsx-a11y/lang": 0,
     "jsx-a11y/alt-text": 0,
-    "max-len": 0
+    "jsx-a11y/no-autofocus": 0,
+    "max-len": 0,
+    "no-continue": 0
   },
   "plugins": [
     "react", "import", "cypress"
@@ -96,6 +100,7 @@
     "__DISABLE_SSR__": true,
     "__DEVTOOLS__": true,
     "socket": true,
-    "webpackIsomorphicTools": true
+    "webpackIsomorphicTools": true,
+    "CONSOLE_ASSET_VERSION":  true
   }
 }

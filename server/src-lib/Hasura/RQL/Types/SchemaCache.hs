@@ -82,6 +82,7 @@ module Hasura.RQL.Types.SchemaCache
        , SchemaObjId(..)
        , reportSchemaObj
        , reportSchemaObjs
+       , DependencyReason(..)
        , SchemaDependency(..)
        , mkParentDep
        , mkColDep
@@ -130,9 +131,9 @@ reportSchemaObjs :: [SchemaObjId] -> T.Text
 reportSchemaObjs = T.intercalate ", " . map reportSchemaObj
 
 mkParentDep :: QualifiedTable -> SchemaDependency
-mkParentDep tn = SchemaDependency (SOTable tn) "table"
+mkParentDep tn = SchemaDependency (SOTable tn) DRTable
 
-mkColDep :: T.Text -> QualifiedTable -> PGCol -> SchemaDependency
+mkColDep :: DependencyReason -> QualifiedTable -> PGCol -> SchemaDependency
 mkColDep reason tn col =
   flip SchemaDependency reason . SOTableObj tn $ TOCol col
 
@@ -791,7 +792,7 @@ getDependentObjs :: SchemaCache -> SchemaObjId -> [SchemaObjId]
 getDependentObjs = getDependentObjsWith (const True)
 
 getDependentObjsWith
-  :: (T.Text -> Bool) -> SchemaCache -> SchemaObjId -> [SchemaObjId]
+  :: (DependencyReason -> Bool) -> SchemaCache -> SchemaObjId -> [SchemaObjId]
 getDependentObjsWith f sc objId =
   -- [ sdObjId sd | sd <- filter (f . sdReason) allDeps]
   map fst $ filter (isDependency . snd) $ M.toList $ scDepMap sc
