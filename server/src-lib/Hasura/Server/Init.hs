@@ -613,7 +613,7 @@ logLevelEnv =
 enableCompressionEnv :: (String, String)
 enableCompressionEnv =
   ( "HASURA_GRAPHQL_ENABLE_COMPRESSION"
-  , "Enable brotli/gzip compression for '/v1/query' and '/v1/graphql'"
+  , "Enable brotli/gzip compression for responses from '/v1/query' and '/v1/graphql' endpoints"
   )
 
 parseRawConnInfo :: Parser RawConnInfo

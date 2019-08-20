@@ -173,13 +173,13 @@ For ``serve`` sub-command these are the flags and ENV variables available:
 
    * - ``--live-queries-multiplexed-batch-size``
      - ``HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE``
-     - multiplexed live queries are split into batches of the specified size. Default 100. 
+     - multiplexed live queries are split into batches of the specified size. Default 100.
 
    * - ``--enable-allowlist``
      - ``HASURA_GRAPHQL_ENABLE_ALLOWLIST``
      - Restrict queries allowed to be executed by GraphQL engine to those that are part of the configured
        allow-list. Default ``false``. *(Available for versions > v1.0.0-beta.1)*
-  
+
    * - ``--console-assets-dir``
      - ``HASURA_GRAPHQL_CONSOLE_ASSETS_DIR``
      - Set the value to ``/srv/console-assets`` for the console to load assets from the server itself
@@ -195,6 +195,10 @@ For ``serve`` sub-command these are the flags and ENV variables available:
      - ``HASURA_GRAPHQL_LOG_LEVEL``
      - Set the logging level. Default: ``info``. Options: ``debug``, ``info``,
        ``warn``, ``error``.
+
+   * - ``--enable-compression``
+     - ``HASURA_GRAPHQL_ENABLE_COMPRESSION``
+     - Enable brotli/gzip compression for responses from ``/v1/query`` and ``/v1/graphql`` endpoints.
 
 .. note::
 

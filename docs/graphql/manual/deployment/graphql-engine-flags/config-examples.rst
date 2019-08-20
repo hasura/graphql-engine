@@ -163,3 +163,26 @@ the right content-type headers.
    a ``major.minor`` version is updated continuously across all patches. If
    you're using the assets on server Docker image, it might not be that latest
    version of console.
+
+.. _http-compression:
+
+HTTP Compression
+----------------
+
+To enable compressing responses from Hasura GraphQL Engine, pass the ``--enable-compression`` flag or
+set ``HASURA_GRAPHQL_ENABLE_COMPRESSION`` environment variable to ``true``.
+Only responses from ``/v1/query`` and ``/v1/graphql`` endpoints are compressed.
+The server looks for ``Accept-Encoding`` header in request.
+If header contains ``br`` then the server uses `Brotli <https://en.wikipedia.org/wiki/Brotli>`__ compression else if header contains
+``gzip`` then the server uses `Gzip <https://en.wikipedia.org/wiki/Gzip>`__ compression.
+If both values are present then the server prefers ``Brotli`` over ``Gzip``.
+Also, the server sets ``Content-Encoding`` response header value to ``br`` if ``Brotli`` or ``gzip`` if ``Gzip``.
+
+Run server in this mode using following docker command:
+
+.. code-block:: bash
+
+   docker run -P -d hasura/graphql-engine:latest graphql-engine \
+              --database-url postgres://username:password@host:5432/dbname \
+                serve \
+                --enable-compression
