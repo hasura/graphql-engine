@@ -364,6 +364,9 @@ class TestGraphQLQueryOrderBy(DefaultTestSelectQueries):
     def test_articles_order_by_rel_author_rel_contact_phone(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/articles_order_by_rel_author_rel_contact_phone.yaml', transport)
 
+    def test_articles_order_by_null(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/articles_order_by_null.yaml', transport)
+
     def test_album_order_by_tracks_count(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/album_order_by_tracks_count.yaml', transport)
 
