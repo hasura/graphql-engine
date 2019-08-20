@@ -2,6 +2,7 @@ module Hasura.HTTP
   ( wreqOptions
   , HttpException(..)
   , hdrsToText
+  , defaultHeaders
   ) where
 
 import           Control.Lens          hiding ((.=))
@@ -25,9 +26,12 @@ hdrsToText hdrs =
 wreqOptions :: HTTP.Manager -> [HTTP.Header] -> Wreq.Options
 wreqOptions manager hdrs =
   Wreq.defaults
-  & Wreq.headers .~  contentType : userAgent : hdrs
+  & Wreq.headers .~  defaultHeaders <> hdrs
   & Wreq.checkResponse ?~ (\_ _ -> return ())
   & Wreq.manager .~ Right manager
+
+defaultHeaders :: [HTTP.Header]
+defaultHeaders = [contentType, userAgent]
   where
     contentType = ("Content-Type", "application/json")
     userAgent   = ( "User-Agent"

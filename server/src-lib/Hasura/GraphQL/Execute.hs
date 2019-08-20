@@ -366,24 +366,31 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
   let confHdrs   = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
       clientHdrs = bool [] filteredHeaders fwdClientHdrs
       -- filter out duplicate headers
-      -- priority: conf headers > resolved userinfo vars > client headers
+      -- priority: conf headers > resolved userinfo vars > client headers > default headers
       hdrMaps    = [ Map.fromList confHdrs
                    , Map.fromList userInfoToHdrs
                    , Map.fromList clientHdrs
+                   , Map.fromList defaultHeaders
                    ]
       finalHdrs  = foldr Map.union Map.empty hdrMaps
-      options    = wreqOptions manager (Map.toList finalHdrs)
+  initReqE <- liftIO $ try $ HTTP.parseRequest (show url)
+  initReq <- either httpThrow pure initReqE
+  let req = initReq
+           { HTTP.method = "POST"
+           , HTTP.requestHeaders =  (Map.toList finalHdrs)
+           , HTTP.requestBody = HTTP.RequestBodyLBS (J.encode q)
+           , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
+           }
 
-  -- log the graphql query
   liftIO $ logGraphqlQuery logger $ QueryLog q Nothing reqId
-  res  <- liftIO $ try $ Wreq.postWith options (show url) (J.toJSON q)
+  res  <- liftIO $ try $ HTTP.httpLbs req manager
   resp <- either httpThrow return res
   let cookieHdrs = getCookieHdr (resp ^.. Wreq.responseHeader "Set-Cookie")
       respHdrs  = Just $ mkRespHeaders cookieHdrs
   return $ HttpResponse (encJFromLBS $ resp ^. Wreq.responseBody) respHdrs
 
   where
-    RemoteSchemaInfo url hdrConf fwdClientHdrs = rsi
+    RemoteSchemaInfo url hdrConf fwdClientHdrs timeout = rsi
     httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
     httpThrow = \case
       HTTP.HttpExceptionRequest _req content -> throw500 $ T.pack . show $ content
