@@ -1,6 +1,7 @@
 module Hasura.Server.Auth
   ( getUserInfo
   , getUserInfoWithExpTime
+  , userInfoFromHeaders
   , AuthMode(..)
   , mkAuthMode
   , AdminSecret (..)
@@ -229,7 +230,7 @@ getUserInfoWithExpTime
   -> m (UserInfo, Maybe UTCTime)
 getUserInfoWithExpTime logger manager rawHeaders = \case
 
-  AMNoAuth -> return (userInfoFromHeaders, Nothing)
+  AMNoAuth -> return (userInfoFromHeaders rawHeaders, Nothing)
 
   AMAdminSecret adminScrt unAuthRole ->
     case adminSecretM of
@@ -256,15 +257,10 @@ getUserInfoWithExpTime logger manager rawHeaders = \case
 
     usrVars = mkUserVars $ hdrsToText rawHeaders
 
-    userInfoFromHeaders =
-      case roleFromVars usrVars of
-        Just rn -> mkUserInfo rn usrVars
-        Nothing -> mkUserInfo adminRole usrVars
-
     userInfoWhenAdminSecret key reqKey = do
       when (reqKey /= getAdminSecret key) $ throw401 $
         "invalid " <> adminSecretHeader <> "/" <> deprecatedAccessKeyHeader
-      return userInfoFromHeaders
+      return $ userInfoFromHeaders rawHeaders
 
     userInfoWhenNoAdminSecret = \case
       Nothing -> throw401 $ adminSecretHeader <> "/"
@@ -272,3 +268,12 @@ getUserInfoWithExpTime logger manager rawHeaders = \case
       Just role -> return $ mkUserInfo role usrVars
 
     withNoExpTime a = (, Nothing) <$> a
+
+
+userInfoFromHeaders :: [N.Header] -> UserInfo
+userInfoFromHeaders headers =
+  case roleFromVars usrVars of
+    Just rn -> mkUserInfo rn usrVars
+    Nothing -> mkUserInfo adminRole usrVars
+  where
+    usrVars = mkUserVars $ hdrsToText headers
