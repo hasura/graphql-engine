@@ -213,64 +213,9 @@ Insert an object and get a nested object in response
       }
     }
 
-
-Insert an object and its nested object in the same mutation
------------------------------------------------------------
-**Example:** Insert a new ``article`` object with its ``author`` and return the inserted article object with its author
-in the response
-
-.. graphiql::
-  :view_only:
-  :query:
-    mutation insert_article {
-      insert_article(
-        objects: [
-          {
-            id: 21,
-            title: "Article 1",
-            content: "Sample article content",
-            author: {
-              data: {
-                id: 11,
-                name: "Cory"
-              }
-            }
-          }
-        ]
-      ) {
-        affected_rows
-        returning {
-          id
-          title
-          author {
-            id
-            name
-          }
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "insert_article": {
-          "affected_rows": 2,
-          "returning": [
-            {
-              "id": 21,
-              "title": "Article 1",
-              "author": {
-                "id": 11,
-                "name": "Cory"
-              }
-            }
-          ]
-        }
-      }
-    }
-
-Insert an object with several nested objects in the same mutation
-------------------
-**Example:** Insert an ``address``, an ``author`` and an ``article``.
+Insert related data through relationships
+--------------------------------------------
+**Example:** Insert an ``author``, their ``address`` and an ``article``.
 
 .. graphiql::
   :view_only:
@@ -333,15 +278,17 @@ Insert an object with several nested objects in the same mutation
       }
     }
 
-Let's say an ``author`` has an ``object relationship`` called ``address`` to the ``address`` table and an ``array relationship`` called ``articles`` to ``article`` table.
+**How it works**
 
-We want to insert an author object along with its address and articles. The order of actions are as follows:
+Let's say an ``author`` has an ``object relationship`` called ``address`` to the ``addresses`` table and an ``array relationship`` called ``articles`` to the ``articles`` table.
 
-1. The object relationships are inserted, i.e. in this case, the address is inserted and its `id` is collected in this step. 
+We want to insert an author object along with its address and one article. The order of actions are as follows:
 
-2. The author is now inserted with the `address_id` being set to the `id` of the address that was inserted. Because of this, it is not allowed to pass `address_id` in the author object if you are also providing data for the address relationship. The `id` of author is collected in this step.
+1. The object relationships are inserted, i.e. in this case, the address is inserted and its ``id`` is collected in this step. 
 
-3. The array relationships are now inserted, articles by setting all of their author_id to the author's `id` collected in the step 2. Hence, it's not possible to specify `article_id` in the data for the articles relationship.
+2. The author is now inserted with the ``address_id`` being set to the ``id`` of the address that was inserted. Because of this, it is not allowed to pass ``address_id`` in the author object if you are also providing data for the address relationship. The ``id`` of the author is collected in this step.
+
+3. The array relationships are now inserted. The ``author_id`` of the article(s) will be set to the author's ``id`` collected in the step 2. Hence, it's not possible to specify ``article_id`` in the data for the articles relationship.
 
 Insert an object with a JSONB column
 ------------------------------------
