@@ -294,7 +294,18 @@ elif [ "$MODE" = "test" ]; then
   done
   echo " Ok"
 
+  ## Install misc test dependencies:
   cd "$PROJECT_ROOT/server/tests-py"
+
+
+  if [ ! -d "node_modules" ]; then
+    npm_config_loglevel=error npm install remote_schemas/nodejs/
+  else
+    echo_pretty "It looks like node dependencies have been installed already. Skipping."
+    echo_pretty "If things fail please run this and try again"
+    echo_pretty "  $ rm -r \"$PROJECT_ROOT/server/tests-py/node_modules\""
+  fi
+
   PY_VENV=.hasura-dev-python-venv
   set +u  # for venv activate
   if [ ! -d "$PY_VENV" ]; then
