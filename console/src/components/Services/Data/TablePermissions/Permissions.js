@@ -383,7 +383,7 @@ class Permissions extends Component {
                   onChange={dispatchRoleNameChange}
                   type="text"
                   placeholder="Enter new role"
-                  value={permissionsState.newRole}
+                  value={role}
                   data-test="role-textbox"
                 />
               </th>
@@ -472,7 +472,9 @@ class Permissions extends Component {
 
         // add new role row
         _permissionsRowsHtml.push(
-          <tr key="newPerm">{getPermissionsTableRow('', true)}</tr>
+          <tr key="newPerm">
+            {getPermissionsTableRow(permissionsState.newRole, true)}
+          </tr>
         );
 
         return <tbody>{_permissionsRowsHtml}</tbody>;
