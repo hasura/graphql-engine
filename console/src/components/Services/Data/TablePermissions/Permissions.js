@@ -709,7 +709,7 @@ class Permissions extends Component {
               const queries = filterQueries[filter].join(', ');
               const queryLabel = (
                 <span data-test="mutual-check">
-                  With same custom checks as <b>{queries}</b>
+                  With same custom check as <b>{queries}</b>
                 </span>
               );
               _filterOptionsSection.push(
