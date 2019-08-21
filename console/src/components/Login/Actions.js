@@ -18,7 +18,6 @@ export const verifyLogin = ({
   errorCallback,
   dispatch,
 }) => {
-  console.log(adminSecret);
   const url = Endpoints.getSchema;
   const requestOptions = {
     credentials: globalCookiePolicy,
@@ -67,6 +66,7 @@ export const verifyLogin = ({
 export const handleHeaderInit = () => (dispatch, getState) => {
   // get headers from local storage and parse them, set default headers if they are not parseable
   const graphiqlHeadersFromLocalStorage = getGraphiQLHeadersFromLocalStorage();
+
   const defaultGraphiqlHeaders = [
     {
       key: 'content-type',
@@ -76,12 +76,14 @@ export const handleHeaderInit = () => (dispatch, getState) => {
       isDisabled: false,
     },
   ];
+
   let graphiqlHeaders;
+
   try {
     graphiqlHeaders = graphiqlHeadersFromLocalStorage
       ? JSON.parse(graphiqlHeadersFromLocalStorage)
       : defaultGraphiqlHeaders;
-  } catch (e) {
+  } catch (_) {
     graphiqlHeaders = defaultGraphiqlHeaders;
   }
 
@@ -102,17 +104,21 @@ export const handleHeaderInit = () => (dispatch, getState) => {
 
   //append admin secret to headers
   if (globals.consoleMode === 'server' && globals.isAdminSecretSet) {
+
     const adminSecretFromLs = loadAdminSecretState();
+
+    const getAdminSecretHeader = (value) => ({
+      key: adminSecretKeyString,
+      value,
+      isActive: true,
+      isNewHeader: false,
+      isDisabled: true,
+    });
+
     if (adminSecretFromLs) {
       graphiqlHeaders = [
         ...graphiqlHeaders.slice(0, graphiqlHeaders.length - 1),
-        {
-          key: adminSecretKeyString,
-          value: adminSecretFromLs,
-          isActive: true,
-          isNewHeader: false,
-          isDisabled: true,
-        },
+        getAdminSecretHeader(adminSecretFromLs),
         graphiqlHeaders[graphiqlHeaders.length - 1],
       ];
     } else {
@@ -121,28 +127,19 @@ export const handleHeaderInit = () => (dispatch, getState) => {
       ];
       graphiqlHeaders = [
         ...graphiqlHeaders.slice(0, graphiqlHeaders.length - 1),
-        {
-          key: adminSecretKeyString,
-          value: adminSecretInRedux,
-          isActive: true,
-          isNewHeader: false,
-          isDisabled: true,
-        },
+        getAdminSecretHeader(adminSecretInRedux),
         graphiqlHeaders[graphiqlHeaders.length - 1],
       ];
     }
+
   } else if (globals.adminSecret) {
+
     graphiqlHeaders = [
       ...graphiqlHeaders.slice(0, graphiqlHeaders.length - 1),
-      {
-        key: adminSecretKeyString,
-        value: globals.adminSecret,
-        isActive: true,
-        isNewHeader: false,
-        isDisabled: true,
-      },
+      getAdminSecretHeader(globals.adminSecret),
       graphiqlHeaders[graphiqlHeaders.length - 1],
     ];
+
   }
 
   // set headers in redux

@@ -234,7 +234,7 @@ class ApiRequest extends Component {
               setGraphiQLHeadersInLocalStorage(
                 JSON.stringify(
                   r.filter(
-                    h => h.key !== `x-hasura-${globals.adminSecretLabel}`
+                    h => h.key.toLowerCase() !== `x-hasura-${globals.adminSecretLabel}`
                   )
                 )
               )
@@ -251,7 +251,7 @@ class ApiRequest extends Component {
               setGraphiQLHeadersInLocalStorage(
                 JSON.stringify(
                   r.filter(
-                    h => h.key !== `x-hasura-${globals.adminSecretLabel}`
+                    h => h.key.toLowerCase() !== `x-hasura-${globals.adminSecretLabel}`
                   )
                 )
               )

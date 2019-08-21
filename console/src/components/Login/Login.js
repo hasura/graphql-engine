@@ -36,16 +36,20 @@ const Login = ({ dispatch }) => {
   // form submit handler
   const onSubmit = e => {
     e.preventDefault();
+
     const successCallback = () => {
       setLoading(false);
       setError(null);
     };
+
     const errorCallback = err => {
       setAdminSecretInput('');
       setLoading(false);
       setError(err);
     };
+
     setLoading(true);
+
     verifyLogin({
       adminSecret: adminSecretInput,
       shouldPersist,
@@ -53,6 +57,7 @@ const Login = ({ dispatch }) => {
       errorCallback,
       dispatch,
     });
+
   };
 
   return (
@@ -93,12 +98,14 @@ const Login = ({ dispatch }) => {
                   onChange={toggleShouldPersist}
                   className={`${styles.add_mar_right_small} ${
                     styles.remove_margin_top
-                  }`}
+                  } ${styles.cursorPointer}`}
                 />
-                <label className={styles.add_mar_right_mid}>Remember in this browser</label>
-                <div style={{ marginTop: '2px' }} className={styles.cursorPointer}>
-                  <i className={'fa fa-question-circle'} data-toggle="tooltip" data-placement="bottom" title="Do not check this in production" />
-                </div>
+                <label
+                  className={`${styles.cursorPointer}`}
+                  onClick={toggleShouldPersist}
+                >
+                  Remember in this browser
+                </label>
               </div>
             </form>
           </div>
