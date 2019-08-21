@@ -1,0 +1,15 @@
+description: Attempt to drop an inexistent permission (error)
+url: /v1/query
+status: 400
+response:
+  path: $.args
+  error: >-
+    update permission on "author" for role "user" does not exist
+  code: bad-request
+query:
+  type: drop_update_permission
+  args:
+    table:
+      name: author
+      schema: public
+    role: user
