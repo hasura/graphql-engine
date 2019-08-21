@@ -217,6 +217,8 @@ Insert related data through relationships
 --------------------------------------------
 **Example:** Insert an ``author``, their ``address`` and an ``article``.
 
+Let's say an ``author`` has an ``object relationship`` called ``address`` to the ``addresses`` table and an ``array relationship`` called ``articles`` to the ``articles`` table.
+
 .. graphiql::
   :view_only:
   :query:
@@ -280,9 +282,7 @@ Insert related data through relationships
 
 **How it works**
 
-Let's say an ``author`` has an ``object relationship`` called ``address`` to the ``addresses`` table and an ``array relationship`` called ``articles`` to the ``articles`` table.
-
-We want to insert an author object along with its address and one article. The order of actions are as follows:
+An insert mutation is processed as follows:
 
 1. The object relationships are inserted, i.e. in this case, the address is inserted and its ``id`` is collected in this step. 
 
