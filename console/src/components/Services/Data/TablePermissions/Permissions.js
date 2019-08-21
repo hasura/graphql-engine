@@ -292,10 +292,6 @@ class Permissions extends Component {
             dispatch(permCloseEdit());
           };
 
-          const dispatchRoleNameChange = e => {
-            dispatch(permSetRoleName(e.target.value));
-          };
-
           const dispatchBulkSelect = e => {
             const isChecked = e.target.checked;
             const selectedRole = e.target.getAttribute('data-role');
@@ -372,8 +368,12 @@ class Permissions extends Component {
           const _permissionsRowHtml = [];
 
           // push role value
-          if (newPermRow) {
-            const isNewRole = !roleList.includes(permissionsState.newRole);
+          if (!newPermRow) {
+            _permissionsRowHtml.push(<th key={-2}>{role}</th>);
+          } else {
+            const dispatchRoleNameChange = e => {
+              dispatch(permSetRoleName(e.target.value));
+            };
 
             _permissionsRowHtml.push(
               <th key={-2}>
@@ -383,13 +383,11 @@ class Permissions extends Component {
                   onChange={dispatchRoleNameChange}
                   type="text"
                   placeholder="Enter new role"
-                  value={isNewRole ? permissionsState.newRole : ''}
+                  value={permissionsState.newRole}
                   data-test="role-textbox"
                 />
               </th>
             );
-          } else {
-            _permissionsRowHtml.push(<th key={-2}>{role}</th>);
           }
 
           // push action permission value
