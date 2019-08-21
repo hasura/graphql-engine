@@ -11,10 +11,6 @@ import {
   UPDATE_FORWARD_CLIENT_HEADERS,
 } from '../Add/addRemoteSchemaReducer';
 
-const supportTimeoutConf =
-  globals.featuresCompatibility &&
-  globals.featuresCompatibility[REMOTE_SCHEMA_TIMEOUT_CONF_SUPPORT];
-
 import CommonHeader from '../../../Common/Layout/ReusableHeader/Header';
 
 class Common extends React.Component {
@@ -78,17 +74,25 @@ class Common extends React.Component {
       ),
       timeoutConf: (
         <Tooltip id="tooltip-cascade">
-          Configure timeout for your GraphQL server. Defaults to 60 seconds.
+          Configure timeout for your remote GraphQL server. Defaults to 60
+          seconds.
         </Tooltip>
       ),
     };
 
     const getTimeoutSection = () => {
-      if (!supportTimeoutConf) return null;
+      const supportTimeoutConf =
+        globals.featuresCompatibility &&
+        globals.featuresCompatibility[REMOTE_SCHEMA_TIMEOUT_CONF_SUPPORT];
+
+      if (!supportTimeoutConf) {
+        return null;
+      }
+
       return (
         <React.Fragment>
           <div className={styles.subheading_text}>
-            Configure Timeout
+            GraphQL server timeout
             <OverlayTrigger placement="right" overlay={tooltips.timeoutConf}>
               <i className="fa fa-question-circle" aria-hidden="true" />
             </OverlayTrigger>
