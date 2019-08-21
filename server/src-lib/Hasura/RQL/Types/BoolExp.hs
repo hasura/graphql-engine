@@ -127,14 +127,14 @@ data STIntersectsNbandGeommin a =
   STIntersectsNbandGeommin
   { singNband   :: !a
   , singGeommin :: !a
-  } deriving (Show, Eq, Functor, Foldable, Traversable)
+  } deriving (Show, Eq, Functor, Foldable, Traversable, Data)
 $(deriveJSON (aesonDrop 4 snakeCase) ''STIntersectsNbandGeommin)
 
 data STIntersectsGeomminNband a =
   STIntersectsGeomminNband
   { signGeommin :: !a
   , signNband   :: !(Maybe a)
-  } deriving (Show, Eq, Functor, Foldable, Traversable)
+  } deriving (Show, Eq, Functor, Foldable, Traversable, Data)
 $(deriveJSON (aesonDrop 4 snakeCase) ''STIntersectsGeomminNband)
 
 type CastExp a = M.HashMap PGColType [OpExpG a]

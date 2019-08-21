@@ -665,7 +665,13 @@ mkGCtx tyAgg (RootFlds flds) insCtxMap =
         -- operations even if just one of the two appears in the schema
         then Set.union (Set.fromList [PGGeometry, PGGeography]) colTys
         else colTys
-    allScalarTypes = allComparableTypes <> scalars
+
+    additionalScalars =
+      Set.fromList
+        -- raster comparison expression needs geometry input
+      (guard anyRasterTypes *> pure PGGeometry)
+
+    allScalarTypes = allComparableTypes <> additionalScalars <> scalars
 
     wiredInGeoInputTypes = guard anyGeoTypes *> map TIInpObj geoInputTypes
 

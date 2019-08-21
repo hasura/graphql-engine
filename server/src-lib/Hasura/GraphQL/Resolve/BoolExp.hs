@@ -125,9 +125,9 @@ parseOpExps colTy annVal = do
       return $ ASTIntersectsNbandGeom $ STIntersectsNbandGeommin nband geommin
 
     parseAsSTIntersectsGeomNbandObj obj = do
-      nbandM <- fmap UVPG <$> mapM asPGColVal (OMap.lookup "nband" obj)
+      nbandMM <- (fmap . fmap) UVPG <$> mapM asPGColValM (OMap.lookup "nband" obj)
       geommin <- parseGeommin obj
-      return $ ASTIntersectsGeomNband $ STIntersectsGeomminNband geommin nbandM
+      return $ ASTIntersectsGeomNband $ STIntersectsGeomminNband geommin $ join nbandMM
 
     parseGeommin obj = do
       geomminVal <- onNothing (OMap.lookup "geommin" obj) $
