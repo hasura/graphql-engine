@@ -1,19 +1,19 @@
-import React from 'react';
+import React from "react";
 
-import Header from './Header';
-import TodoPrivateWrapper from './Todo/TodoPrivateWrapper';
-import TodoPublicWrapper from './Todo/TodoPublicWrapper';
-import OnlineUsersWrapper from './OnlineUsers/OnlineUsersWrapper';
+import Header from "./Header";
+import TodoPrivateWrapper from "./Todo/TodoPrivateWrapper";
+import TodoPublicWrapper from "./Todo/TodoPublicWrapper";
+import OnlineUsersWrapper from "./OnlineUsers/OnlineUsersWrapper";
 
-import ApolloClient from 'apollo-client';
-import { WebSocketLink } from 'apollo-link-ws';
-import { InMemoryCache } from 'apollo-cache-inmemory';
-import { ApolloProvider } from '@apollo/react-hooks'; 
+import ApolloClient from "apollo-client";
+import { WebSocketLink } from "apollo-link-ws";
+import { InMemoryCache } from "apollo-cache-inmemory";
+import { ApolloProvider } from "@apollo/react-hooks";
 
-const createApolloClient = (authToken) => {
+const createApolloClient = authToken => {
   return new ApolloClient({
     link: new WebSocketLink({
-      uri: 'wss://learn.hasura.io/graphql',
+      uri: "wss://learn.hasura.io/graphql",
       options: {
         reconnect: true,
         connectionParams: {
@@ -27,7 +27,7 @@ const createApolloClient = (authToken) => {
   });
 };
 
-const App = ({auth}) => {
+const App = ({ auth }) => {
   const client = createApolloClient(auth.idToken);
   return (
     <ApolloProvider client={client}>

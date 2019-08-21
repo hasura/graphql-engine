@@ -23,6 +23,8 @@
     "subscriptions-transport-ws": "^0.9.16"
   },
   "devDependencies": {
+    "eslint-plugin-prettier": "^3.1.0",
+    "eslint-plugin-react-hooks": "^1.7.0",
     "husky": "^1.0.0-rc.15",
     "lint-staged": "^7.3.0",
     "prettier": "1.14.3",

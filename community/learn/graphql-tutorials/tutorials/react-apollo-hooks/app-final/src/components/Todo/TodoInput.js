@@ -1,11 +1,11 @@
-import React, {useState} from 'react';
-import { useMutation } from '@apollo/react-hooks';
-import gql from 'graphql-tag';
-import {GET_MY_TODOS} from './TodoPrivateList';
+import React, { useState } from "react";
+import { useMutation } from "@apollo/react-hooks";
+import gql from "graphql-tag";
+import { GET_MY_TODOS } from "./TodoPrivateList";
 
-const ADD_TODO = gql `
-  mutation ($todo: String!, $isPublic: Boolean!) {
-    insert_todos(objects: {title: $todo, is_public: $isPublic}) {
+const ADD_TODO = gql`
+  mutation($todo: String!, $isPublic: Boolean!) {
+    insert_todos(objects: { title: $todo, is_public: $isPublic }) {
       affected_rows
       returning {
         id
@@ -17,13 +17,13 @@ const ADD_TODO = gql `
   }
 `;
 
-const TodoInput = ({isPublic = false}) => {
+const TodoInput = ({ isPublic = false }) => {
   let input;
 
-  const [todoInput, setTodoInput] = useState('');
+  const [todoInput, setTodoInput] = useState("");
 
-  const updateCache = (cache, {data}) => {
-      // If this is for the public feed, do nothing
+  const updateCache = (cache, { data }) => {
+    // If this is for the public feed, do nothing
     if (isPublic) {
       return null;
     }
@@ -37,28 +37,35 @@ const TodoInput = ({isPublic = false}) => {
     const newTodo = data.insert_todos.returning[0];
     cache.writeQuery({
       query: GET_MY_TODOS,
-      data: {todos: [newTodo, ...existingTodos.todos]}
+      data: { todos: [newTodo, ...existingTodos.todos] }
     });
   };
 
   const resetInput = () => {
-    setTodoInput('');
-    input.focus();
+    setTodoInput("");
+    // input.focus();
   };
 
-  const [addTodo, {loading}] = useMutation(ADD_TODO);
+  const [addTodo, { loading }] = useMutation(ADD_TODO, {
+    update: updateCache,
+    onCompleted: resetInput
+  });
 
   return (
-    <form className="formInput" onSubmit={(e)=> {
-      e.preventDefault();
-      addTodo({variables: {todo: todoInput, isPublic }, update: updateCache, onCompleted: resetInput()});
-    }}>
-    <input className="input"
-      value={todoInput}
-      placeholder="What needs to be done?"
-      disabled={loading}
-      ref={n => (input = n)}
-      onChange={e => (setTodoInput(e.target.value))}
+    <form
+      className="formInput"
+      onSubmit={e => {
+        e.preventDefault();
+        addTodo({ variables: { todo: todoInput, isPublic } });
+      }}
+    >
+      <input
+        className="input"
+        value={todoInput}
+        placeholder="What needs to be done?"
+        disabled={loading}
+        ref={n => (input = n)}
+        onChange={e => setTodoInput(e.target.value)}
       />
       <i className="inputMarker fa fa-angle-right" />
     </form>
