@@ -214,7 +214,7 @@ Insert an object and get a nested object in response
     }
 
 Insert related data through relationships
---------------------------------------------
+-----------------------------------------
 **Example:** Insert an ``author``, their ``address`` and an ``article``.
 
 Let's say an ``author`` has an ``object relationship`` called ``address`` to the ``addresses`` table and an ``array relationship`` called ``articles`` to the ``articles`` table.
