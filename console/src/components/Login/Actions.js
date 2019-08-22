@@ -103,17 +103,16 @@ export const handleHeaderInit = () => (dispatch, getState) => {
   setGraphiQLHeadersInLocalStorage(JSON.stringify(graphiqlHeaders));
 
   //append admin secret to headers
+  const getAdminSecretHeader = (value) => ({
+    key: adminSecretKeyString,
+    value,
+    isActive: true,
+    isNewHeader: false,
+    isDisabled: true,
+  });
   if (globals.consoleMode === 'server' && globals.isAdminSecretSet) {
 
     const adminSecretFromLs = loadAdminSecretState();
-
-    const getAdminSecretHeader = (value) => ({
-      key: adminSecretKeyString,
-      value,
-      isActive: true,
-      isNewHeader: false,
-      isDisabled: true,
-    });
 
     if (adminSecretFromLs) {
       graphiqlHeaders = [
@@ -125,21 +124,19 @@ export const handleHeaderInit = () => (dispatch, getState) => {
       const adminSecretInRedux = getState().tables.dataHeaders[
         adminSecretKeyString
       ];
+
       graphiqlHeaders = [
         ...graphiqlHeaders.slice(0, graphiqlHeaders.length - 1),
         getAdminSecretHeader(adminSecretInRedux),
         graphiqlHeaders[graphiqlHeaders.length - 1],
       ];
     }
-
   } else if (globals.adminSecret) {
-
     graphiqlHeaders = [
       ...graphiqlHeaders.slice(0, graphiqlHeaders.length - 1),
       getAdminSecretHeader(globals.adminSecret),
       graphiqlHeaders[graphiqlHeaders.length - 1],
     ];
-
   }
 
   // set headers in redux
