@@ -197,7 +197,7 @@ prepareWithPlan = \case
           S.SEOpApp (S.SQLOp "->>")
           [S.SEPrep 1, S.SELit $ T.toLower sessVar]
     return $ flip S.SETyAnn (S.mkTypeAnn ty) $ case ty of
-      PgTypeSimple colTy -> withGeoVal colTy sessVarVal
+      PgTypeSimple colTy -> withFnApp colTy sessVarVal
       PgTypeArray _      -> sessVarVal
   R.UVSQL sqlExp -> return sqlExp
 

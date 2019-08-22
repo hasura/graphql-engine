@@ -223,7 +223,7 @@ sessVarFromCurrentSetting' :: PgType -> SessVar -> S.SQLExp
 sessVarFromCurrentSetting' ty sessVar =
   flip S.SETyAnn (S.mkTypeAnn ty) $
   case ty of
-    PgTypeSimple baseTy -> withGeoVal baseTy sessVarVal
+    PgTypeSimple baseTy -> withFnApp baseTy sessVarVal
     PgTypeArray _       -> sessVarVal
   where
     curSess = S.SEUnsafe "current_setting('hasura.user')::json"

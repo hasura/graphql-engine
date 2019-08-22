@@ -368,6 +368,9 @@ class TestGraphQLQueryBoolExpRaster(DefaultTestSelectQueries):
     def test_query_st_intersects_rast_no_rows(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/query_st_intersects_rast_no_rows.yaml', transport)
 
+    def test_query_st_intersects_rast_fail(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_st_intersects_rast_fail.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/boolexp/raster'

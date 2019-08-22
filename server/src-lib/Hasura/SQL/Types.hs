@@ -382,7 +382,8 @@ pgTypeOid PGJSONB       = PTI.jsonb
 -- we are using the ST_GeomFromGeoJSON($i) instead of $i
 pgTypeOid PGGeometry    = PTI.text
 pgTypeOid PGGeography   = PTI.text
-pgTypeOid PGRaster      = PTI.auto
+-- we are using the ST_RastFromHexWKB($i) instead of $i
+pgTypeOid PGRaster      = PTI.text
 pgTypeOid (PGUnknown _) = PTI.auto
 
 -- TODO: This is incorrect modelling as PGColType
@@ -443,8 +444,3 @@ isGeoType = \case
   PGGeometry  -> True
   PGGeography -> True
   _           -> False
-
-isRasterType :: PGColType -> Bool
-isRasterType = \case
-  PGRaster -> True
-  _        -> False

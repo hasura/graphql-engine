@@ -675,6 +675,6 @@ mkGCtx tyAgg (RootFlds flds) insCtxMap =
 
     wiredInGeoInputTypes = guard anyGeoTypes *> map TIInpObj geoInputTypes
 
-    anyRasterTypes = any isRasterType colTys
+    anyRasterTypes = any (== PGRaster) colTys
     wiredInRastInputTypes = guard anyRasterTypes *>
                             map TIInpObj rasterIntersectsInputTypes

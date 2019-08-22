@@ -151,7 +151,7 @@ mkCompExpInp colTy =
     stDWithinGeoDesc =
       "is the column within a distance from a " <> colTyDesc <> " value"
 
-    isRasterTy = isRasterType colTy
+    isRasterTy = (== PGRaster) colTy
 
     -- Geometry related ops
     isGeometryType = case colTy of
