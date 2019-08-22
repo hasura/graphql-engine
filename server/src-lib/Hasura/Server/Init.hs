@@ -1011,6 +1011,7 @@ serveOptsToLog so =
                        , "enable_allowlist" J..= soEnableAllowlist so
                        , "enabled_log_types" J..= soEnabledLogTypes so
                        , "log_level" J..= soLogLevel so
+                       , "enable_compression" J..= soEnableCompression so
                        ]
 
 mkGenericStrLog :: L.LogLevel -> T.Text -> String -> StartupLog

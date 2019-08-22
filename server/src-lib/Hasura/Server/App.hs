@@ -193,22 +193,6 @@ buildQCtx = do
   sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
   return $ QCtx userInfo cache sqlGenCtx
 
-logResult
-  :: (MonadIO m)
-  => L.Logger
-  -> Maybe UserInfo
-  -> RequestId
-  -> Wai.Request
-  -> Maybe Value
-  -> Either QErr BL.ByteString
-  -> Maybe (UTCTime, UTCTime)
-  -> m ()
-logResult logger userInfoM reqId httpReq req res qTime = do
-  let logline = case res of
-        Right res' -> mkHttpAccessLog userInfoM reqId httpReq res' qTime
-        Left e     -> mkHttpErrorLog userInfoM reqId httpReq e req qTime
-  liftIO $ L.unLogger logger logline
-
 logSuccess
   :: (MonadIO m)
   => L.Logger
@@ -217,9 +201,11 @@ logSuccess
   -> Wai.Request
   -> BL.ByteString
   -> Maybe (UTCTime, UTCTime)
+  -> Maybe CompressionType
   -> m ()
-logSuccess logger userInfoM reqId httpReq res qTime =
-  liftIO $ L.unLogger logger $ mkHttpAccessLog userInfoM reqId httpReq res qTime
+logSuccess logger userInfoM reqId httpReq res qTime cType =
+  liftIO $ L.unLogger logger $
+  mkHttpAccessLog userInfoM reqId httpReq res qTime cType
 
 logError
   :: (MonadIO m)
@@ -230,7 +216,8 @@ logError
   -> Maybe Value
   -> QErr -> m ()
 logError logger userInfoM reqId httpReq req qErr =
-  liftIO $ L.unLogger logger $ mkHttpErrorLog userInfoM reqId httpReq qErr req Nothing
+  liftIO $ L.unLogger logger $
+  mkHttpErrorLog userInfoM reqId httpReq qErr req Nothing Nothing
 
 mkSpockAction
   :: (MonadIO m, FromJSON a, ToJSON a)
@@ -292,11 +279,11 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
     logSuccessAndResp userInfo reqId req result qTime = do
       let reqIdHeader = (requestIdHeader, unRequestId reqId)
           reqHeaders = requestHeaders req
-          (compressedResp, mEncodingHeader) =
+          (compressedResp, mEncodingHeader, mCompressionType) =
             compressResponse (scEnableCompression serverCtx) reqHeaders $
             apiRespToLBS result
           encodingHeader = maybe [] pure mEncodingHeader
-      logSuccess logger userInfo reqId req compressedResp qTime
+      logSuccess logger userInfo reqId req compressedResp qTime mCompressionType
       case result of
         JSONResp (HttpResponse _ h) -> do
           let responseHeaders = [jsonHeader, reqIdHeader]

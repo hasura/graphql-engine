@@ -1,5 +1,8 @@
 module Hasura.Server.Compression
-  (compressResponse)
+  ( compressResponse
+  , CompressionType(..)
+  , compressionTypeToTxt
+  )
 where
 
 import           Hasura.Prelude
@@ -12,29 +15,34 @@ import qualified Data.ByteString.Lazy      as BL
 import qualified Data.Text                 as T
 import qualified Network.HTTP.Types.Header as NH
 
-data RequiredEncoding
-  = REGZip
-  | REBrotli
-  | RENothing
+data CompressionType
+  = CTGZip
+  | CTBrotli
   deriving (Show, Eq)
+
+compressionTypeToTxt :: CompressionType -> T.Text
+compressionTypeToTxt CTGZip   = "gzip"
+compressionTypeToTxt CTBrotli = "brotli"
 
 compressResponse
   :: Bool
   -> NH.RequestHeaders
   -> BL.ByteString
-  -> (BL.ByteString, Maybe (Text, Text))
-compressResponse False _ resp                         = (resp, Nothing)
-compressResponse True requestHeaders unCompressedResp =
-  case getRequiredEncoding requestHeaders of
-    REGZip    -> (GZ.compress unCompressedResp, Just gzipHeader)
-    REBrotli  -> (BR.compress unCompressedResp, Just brHeader)
-    RENothing -> (unCompressedResp, Nothing)
+  -> (BL.ByteString, Maybe (Text, Text), Maybe CompressionType)
+compressResponse False _ resp                     = (resp, Nothing, Nothing)
+compressResponse True reqHeaders unCompressedResp =
+  let compressionTypeM = getRequiredCompression reqHeaders
+      appendCompressionType (res, headerM) = (res, headerM, compressionTypeM)
+  in appendCompressionType $ case compressionTypeM of
+       Just CTBrotli -> (BR.compress unCompressedResp, Just brHeader)
+       Just CTGZip   -> (GZ.compress unCompressedResp, Just gzipHeader)
+       Nothing       -> (unCompressedResp, Nothing)
 
-getRequiredEncoding :: NH.RequestHeaders -> RequiredEncoding
-getRequiredEncoding reqHeaders
-  | "br" `elem` acceptEncodingVals   = REBrotli
-  | "gzip" `elem` acceptEncodingVals = REGZip
-  | otherwise                        = RENothing
+getRequiredCompression :: NH.RequestHeaders -> Maybe CompressionType
+getRequiredCompression reqHeaders
+  | "br" `elem` acceptEncodingVals   = Just CTBrotli
+  | "gzip" `elem` acceptEncodingVals = Just CTGZip
+  | otherwise                        = Nothing
   where
     acceptEncodingVals = concatMap (splitHeaderVal . snd) $
                          filter (\h -> fst h == NH.hAcceptEncoding) reqHeaders
