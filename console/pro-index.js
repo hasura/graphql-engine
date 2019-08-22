@@ -11,6 +11,13 @@ import GraphiQLWrapper from './src/components/Services/ApiExplorer/GraphiQLWrapp
 
 import { loadMigrationStatus } from './src/components/Main/Actions';
 
+import {
+  showErrorNotification,
+  showSuccessNotification,
+  showInfoNotification,
+  showWarningNotification,
+} from './src/components/Services/Common/Notification';
+
 // import Data Tab parts
 import { dataRouterUtils } from './src/components/Services/Data/';
 import { dataReducer } from './src/components/Services/Data';
@@ -130,6 +137,14 @@ export { globals, endpoints, mainState };
 export { changeRequestHeader, loadMigrationStatus };
 export { validateLogin };
 export { handleMigrationErrors };
+
+/* Export notification utilities */
+export {
+  showErrorNotification,
+  showSuccessNotification,
+  showInfoNotification,
+  showWarningNotification,
+};
 
 // export styles
 export { filterQueryScss, tableScss };
