@@ -193,18 +193,23 @@ getAnnObItems f nt obj = do
     case ordByItem of
       OBIPGCol ci -> do
         let aobCol = f $ RS.AOCPG ci
-        (_, enumVal) <- asEnumVal v
-        (ordTy, nullsOrd) <- parseOrderByEnum enumVal
-        return [mkOrdByItemG ordTy aobCol nullsOrd]
+        (_, enumValM) <- asEnumValM v
+        ordByItemM <- forM enumValM $ \enumVal -> do
+          (ordTy, nullsOrd) <- parseOrderByEnum enumVal
+          return $ mkOrdByItemG ordTy aobCol nullsOrd
+        return $ maybe [] pure ordByItemM
+
       OBIRel ri fltr -> do
         let unresolvedFltr = fmapAnnBoolExp partialSQLExpToUnresolvedVal fltr
         let annObColFn = f . RS.AOCObj ri unresolvedFltr
-        withObject (getAnnObItems annObColFn) v
+        flip withObjectM v $ \nameTy objM ->
+          maybe (pure []) (getAnnObItems annObColFn nameTy) objM
 
       OBIAgg ri fltr -> do
         let unresolvedFltr = fmapAnnBoolExp partialSQLExpToUnresolvedVal fltr
         let aobColFn = f . RS.AOCAgg ri unresolvedFltr
-        flip withObject v $ \_ o -> parseAggOrdBy aobColFn o
+        flip withObjectM v $ \_ objM ->
+          maybe (pure []) (parseAggOrdBy aobColFn) objM
 
 mkOrdByItemG :: S.OrderType -> a -> S.NullsOrder -> OrderByItemG a
 mkOrdByItemG ordTy aobCol nullsOrd =
@@ -219,19 +224,20 @@ parseAggOrdBy f annObj =
   fmap concat <$> forM (OMap.toList annObj) $ \(op, obVal) ->
     case op of
       "count" -> do
-        (ordTy, nullsOrd) <- parseAsEnum obVal
-        return [mkOrdByItemG ordTy (f RS.AAOCount) nullsOrd]
+        (_, enumValM) <- asEnumValM obVal
+        ordByItemM <- forM enumValM $ \enumVal -> do
+          (ordTy, nullsOrd) <- parseOrderByEnum enumVal
+          return $ mkOrdByItemG ordTy (f RS.AAOCount) nullsOrd
+        return $ maybe [] pure ordByItemM
 
       G.Name opT ->
-        flip withObject obVal $ \_ opObObj ->
+        flip withObject obVal $ \_ opObObj -> fmap catMaybes $
           forM (OMap.toList opObObj) $ \(col, eVal) -> do
-            (ordTy, nullsOrd) <- parseAsEnum eVal
-            let aobCol = f $ RS.AAOOp opT $ PGCol $ G.unName col
-            return $ mkOrdByItemG ordTy aobCol nullsOrd
-  where
-    parseAsEnum v = do
-      (_, enumVal) <- asEnumVal v
-      parseOrderByEnum enumVal
+            (_, enumValM) <- asEnumValM eVal
+            forM enumValM $ \enumVal -> do
+              (ordTy, nullsOrd) <- parseOrderByEnum enumVal
+              let aobCol = f $ RS.AAOOp opT $ PGCol $ G.unName col
+              return $ mkOrdByItemG ordTy aobCol nullsOrd
 
 parseOrderByEnum
   :: (MonadError QErr m)
