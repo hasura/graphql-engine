@@ -9,4 +9,4 @@ test-server-flags-output
 .idea
 
 # Test artifacts
-_cli_output
+*.tix
