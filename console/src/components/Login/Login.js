@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { push } from 'react-router-redux';
 import Helmet from 'react-helmet';
 import Button from '../Common/Button/Button';
 import globals from '../../Globals';
@@ -40,6 +41,7 @@ const Login = ({ dispatch }) => {
     const successCallback = () => {
       setLoading(false);
       setError(null);
+      dispatch(push(globals.urlPrefix));
     };
 
     const errorCallback = err => {

@@ -42,17 +42,21 @@ export const verifyLogin = ({
   fetch(url, requestOptions)
     .then(response => {
       if (response.status === 200) {
-        successCallback();
-        if (shouldPersist) {
-          saveAdminSecretState(adminSecret);
+        if (adminSecret) {
+          if (shouldPersist) {
+            saveAdminSecretState(adminSecret);
+          }
+          dispatch(
+            updateDataHeaders({
+              'content-type': 'application/json',
+              [adminSecretKeyString]: adminSecret,
+            })
+          );
         }
-        dispatch(
-          updateDataHeaders({
-            'content-type': 'application/json',
-            [adminSecretKeyString]: adminSecret,
-          })
-        );
-        dispatch(push(globals.urlPrefix));
+        if (successCallback) {
+          successCallback();
+        }
+        
       } else {
         errorCallback(true);
       }

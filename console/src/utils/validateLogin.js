@@ -8,6 +8,7 @@ import Endpoints, { globalCookiePolicy } from '../Endpoints';
 
 import requestAction from './requestActionPlain';
 
+import { verifyLogin } from '../components/Login/Actions';
 import { UPDATE_DATA_HEADERS } from '../components/Services/Data/DataActions';
 import { changeRequestHeader } from '../components/Services/ApiExplorer/Actions';
 
@@ -44,50 +45,33 @@ const checkValidity = adminSecret => {
 
 const validateLogin = ({ dispatch }) => {
   return (nextState, replaceState, cb) => {
-    // Validate isAdminSecretSet env is set by server or adminSecret env is set by cli
+    // care about admin secret only if it is set
     if (globals.isAdminSecretSet || globals.adminSecret) {
-      let adminSecret = '';
-      // Check the console mode and retrieve adminSecret accordingly.
-      if (globals.consoleMode === SERVER_CONSOLE_MODE) {
-        adminSecret = loadAdminSecretState(CONSOLE_ADMIN_SECRET);
-      } else {
-        adminSecret = globals.adminSecret;
+
+      const validationSuccessCallback = () => {
+        if (nextState.location.pathname === '/login') {
+          replaceState('/');
+        }
+        cb();
       }
-      dispatch(checkValidity(adminSecret))
-        .then(() => {
-          return Promise.all([
-            dispatch({
-              type: UPDATE_DATA_HEADERS,
-              data: {
-                'content-type': 'application/json',
-                [`x-hasura-${globals.adminSecretLabel}`]: adminSecret,
-              },
-            }),
-            dispatch(
-              changeRequestHeader(
-                1,
-                'key',
-                `x-hasura-${globals.adminSecretLabel}`,
-                true
-              )
-            ),
-            dispatch(changeRequestHeader(1, 'value', adminSecret, true)),
-          ]);
-        })
-        .then(() => {
-          if (nextState.location.pathname === '/login') {
-            replaceState('/');
-          }
-          cb();
-        })
-        .catch(() => {
-          // Clear state from the localStorage if there exists one
-          clearAdminSecretState();
-          if (nextState.location.pathname !== '/login') {
-            replaceState('/login');
-          }
-          cb();
-        });
+
+      const validationFailureCallback = () => {
+        clearAdminSecretState();
+        if (nextState.location.pathname !== '/login') {
+          replaceState('/login');
+        }
+        cb();
+      };
+
+      let adminSecret = globals.consoleMode === SERVER_CONSOLE_MODE ? loadAdminSecretState() : globals.adminSecret;
+
+      verifyLogin({
+        adminSecret,
+        successCallback: validationSuccessCallback,
+        errorCallback: validationFailureCallback,
+        dispatch
+      });
+
     } else {
       cb();
       return;
