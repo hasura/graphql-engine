@@ -1513,13 +1513,13 @@ Intersect operators on RASTER columns
 -------------------------------------
 
 Intersect operators on columns with ``raster`` type are supported.
-Refer `Postgis docs <https://postgis.net/docs/RT_ST_Intersects.html>`__ to know more about intersect functions on ``raster`` columns.
-Please submit feature request via `github <https://github.com/hasura/graphql-engine>`__ if you want support for more functions.
+Refer to `Postgis docs <https://postgis.net/docs/RT_ST_Intersects.html>`__ to know more about intersect functions on ``raster`` columns.
+Please submit a feature request via `github <https://github.com/hasura/graphql-engine>`__ if you want support for more functions.
 
 Example: _st_intersects_rast
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Filter the raster values which intersects the input raster value.
+Filter the raster values which intersect the input raster value.
 
 Executes the following SQL function:
 
@@ -1560,7 +1560,7 @@ Executes the following SQL function:
 Example: _st_intersects_geom_nband
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Filter the raster values which intersects the input geometry value and optional band number.
+Filter the raster values which intersect the input geometry value and optional band number.
 
 Executes the following SQL function:
 
@@ -1613,7 +1613,7 @@ Executes the following SQL function:
 Example: _st_intersects_nband_geom
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Filter the raster values which intersects the input geometry value and with provided band number.
+Filter the raster values (with specified band number) which intersect the input geometry value.
 
 Executes the following SQL function:
 
