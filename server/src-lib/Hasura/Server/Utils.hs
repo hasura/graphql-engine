@@ -212,7 +212,7 @@ httpExceptToJSON e = case e of
 -- ignore the following request headers from the client
 commonClientHeadersIgnored :: (IsString a) => [a]
 commonClientHeadersIgnored =
-  [ "Content-Length", "Content-MD5", "Host"
+  [ "Content-Length", "Content-MD5", "User-Agent", "Host"
   , "Origin", "Referer" , "Accept", "Accept-Encoding"
   , "Accept-Language", "Accept-Datetime"
   , "Cache-Control", "Connection", "DNT", "Content-Type"
