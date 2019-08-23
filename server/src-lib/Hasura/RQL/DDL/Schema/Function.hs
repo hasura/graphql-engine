@@ -85,7 +85,7 @@ mkFunctionInfo qf rawFuncInfo = do
   validateFuncArgs funcArgs
 
   let funcArgsSeq = Seq.fromList funcArgs
-      dep = SchemaDependency (SOTable retTable) "table"
+      dep = SchemaDependency (SOTable retTable) DRTable
       retTable = QualifiedObject retSn (TableName retN)
   return $ FunctionInfo qf False funTy funcArgsSeq retTable [dep]
   where

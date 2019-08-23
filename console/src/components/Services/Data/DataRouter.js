@@ -21,6 +21,7 @@ import {
   dataPageConnector,
   migrationsConnector,
   functionWrapperConnector,
+  permissionsSummaryConnector,
   ModifyCustomFunction,
   PermissionCustomFunction,
   // metadataConnector,
@@ -107,6 +108,10 @@ const makeDataRouter = (
           path=":schema/views/:table/permissions"
           component={permissionsConnector(connect)}
           tableType={'view'}
+        />
+        <Route
+          path=":schema/permissions"
+          component={permissionsSummaryConnector(connect)}
         />
       </Route>
       <Route

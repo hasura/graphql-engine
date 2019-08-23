@@ -5,7 +5,6 @@ module Hasura.RQL.DML.Update
   , traverseAnnUpd
   , AnnUpd
   , updateQueryToTx
-  , getUpdateDeps
   , runUpdate
   ) where
 
@@ -65,18 +64,6 @@ mkUpdateCTE (AnnUpd tn setExps (permFltr, wc) _ _) =
     setExp    = S.SetExp $ map S.SetExpItem setExps
     tableFltr = Just $ S.WhereFrag $
                 toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps permFltr wc
-
-getUpdateDeps
-  :: AnnUpd
-  -> [SchemaDependency]
-getUpdateDeps (AnnUpd tn setExps (_, wc) mutFlds allCols) =
-  mkParentDep tn : colDeps <> allColDeps <> whereDeps <> retDeps
-  where
-    colDeps   = map (mkColDep "on_type" tn . fst) setExps
-    allColDeps = map (mkColDep "on_type" tn . pgiName) allCols
-    whereDeps = getBoolExpDeps tn wc
-    retDeps   = map (mkColDep "untyped" tn . fst) $
-                pgColsFromMutFlds mutFlds
 
 convInc
   :: (QErrM m)

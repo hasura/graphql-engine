@@ -16,6 +16,7 @@ import           Control.Monad.Identity     as M
 import           Control.Monad.Reader       as M
 import           Control.Monad.State.Strict as M
 import           Data.Bool                  as M (bool)
+import           Data.Data                  as M (Data (..))
 import           Data.Either                as M (lefts, partitionEithers,
                                                   rights)
 import           Data.Foldable              as M (foldrM, toList)
