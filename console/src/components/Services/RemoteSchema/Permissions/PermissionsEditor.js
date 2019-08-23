@@ -24,15 +24,9 @@ const PermissionsEditor = ({
 
   const allowedTypes = Object.keys(editState.allowedTypes).map(at => {
     const fieldToggleCallback = (fieldName, isChecked) => {
-      console.log('======================================');
-      console.log(editState.allowedTypes);
       const newAllowedTypes = JSON.parse(
         JSON.stringify(editState.allowedTypes)
       );
-      console.log(newAllowedTypes);
-      console.log(at);
-      console.log(fieldName);
-      console.log('======================================');
       newAllowedTypes[at][fieldName].isChecked = isChecked;
       if (!newAllowedTypes[at][fieldName].isScalar) {
         if (!newAllowedTypes[newAllowedTypes[at][fieldName].typeName]) {
