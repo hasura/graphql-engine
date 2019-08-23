@@ -20,10 +20,10 @@ import           Data.Int                      (Int64)
 import           Data.IORef                    (IORef, readIORef)
 import           Data.Time.Clock
 import           Hasura.Events.HTTP
+import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
-import           Hasura.Server.Version         (currentVersion)
 import           Hasura.SQL.Types
 
 import qualified Control.Concurrent.STM.TQueue as TQ
@@ -343,18 +343,6 @@ decodeHeader logenv headerInfos (hdrName, hdrVal)
                      else ehiHeaderConf ehi
    where
      decodeBS = TE.decodeUtf8With TE.lenientDecode
-
-addDefaultHeaders :: [HTTP.Header] -> [HTTP.Header]
-addDefaultHeaders hdrs = defaultHeaders <> rmDefaultHeaders hdrs
-  where
-    rmDefaultHeaders = filter (not . isDefaultHeader)
-
-    isDefaultHeader (hdrName, _) = hdrName `elem` (map fst defaultHeaders)
-
-    defaultHeaders =
-      [ (CI.mk "Content-Type", "application/json")
-      , (CI.mk "User-Agent", "hasura-graphql-engine/" <> T.encodeUtf8 currentVersion)
-      ]
 
 mkInvo
   :: EventPayload -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf]

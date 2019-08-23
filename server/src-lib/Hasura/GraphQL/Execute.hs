@@ -366,18 +366,18 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
   let confHdrs   = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
       clientHdrs = bool [] filteredHeaders fwdClientHdrs
       -- filter out duplicate headers
-      -- priority: conf headers > resolved userinfo vars > client headers > default headers
+      -- priority: conf headers > resolved userinfo vars > client headers
       hdrMaps    = [ Map.fromList confHdrs
                    , Map.fromList userInfoToHdrs
                    , Map.fromList clientHdrs
-                   , Map.fromList defaultHeaders
                    ]
-      finalHdrs  = foldr Map.union Map.empty hdrMaps
+      headers  = Map.toList $ foldr Map.union Map.empty hdrMaps
+      finalHeaders = addDefaultHeaders headers
   initReqE <- liftIO $ try $ HTTP.parseRequest (show url)
   initReq <- either httpThrow pure initReqE
   let req = initReq
            { HTTP.method = "POST"
-           , HTTP.requestHeaders =  (Map.toList finalHdrs)
+           , HTTP.requestHeaders = finalHeaders
            , HTTP.requestBody = HTTP.RequestBodyLBS (J.encode q)
            , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
            }

@@ -41,7 +41,7 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _ timeout) =
   headers <- getHeadersFromConf headerConf
   let hdrs = flip map headers $
              \(hn, hv) -> (CI.mk . T.encodeUtf8 $ hn, T.encodeUtf8 hv)
-      hdrsWithDefaults = defaultHeaders <> hdrs
+      hdrsWithDefaults = addDefaultHeaders hdrs
 
   initReqE <- liftIO $ try $ HTTP.parseRequest (show url)
   initReq <- either throwHttpErr pure initReqE
