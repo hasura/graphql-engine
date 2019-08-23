@@ -22,6 +22,12 @@ const cleanOptions = {
   dry: false,
 };
 
+const getRandomHexString = () => {
+  return Math.random()
+    .toString(16)
+    .slice(2);
+};
+
 module.exports = {
   mode: 'production',
   context: path.resolve(__dirname, '..'),

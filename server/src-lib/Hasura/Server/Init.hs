@@ -451,7 +451,7 @@ serveCmdFooter =
         , "Max event threads"
         )
       , ( "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
-        , "Postgres events polling interval"
+        , "Postgres events polling interval in milliseconds"
         )
       ]
 
