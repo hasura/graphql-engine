@@ -11,7 +11,7 @@ const QUERY_TODO = gql`
 `;
 
 const MUTATION_TODO_ADD = gql`
-  mutation insert_todo ($objects: [todo_insert_input!]){
+  mutation insert_todo ($objects: [todo_insert_input!]!){
     insert_todo(objects: $objects) {
       affected_rows
       returning {

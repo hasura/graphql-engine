@@ -58,6 +58,13 @@ data LQOpts
   , _loFallbackOpts :: LQF.FallbackOpts
   } deriving (Show, Eq)
 
+-- | Required for logging server configuration on startup
+instance J.ToJSON LQOpts where
+  toJSON (LQOpts mxOpts fbOpts) =
+    J.object [ "multiplexed_options" J..= mxOpts
+             , "fallback_options" J..= fbOpts
+             ]
+
 mkLQOpts :: LQM.MxOpts -> LQF.FallbackOpts -> LQOpts
 mkLQOpts = LQOpts
 
@@ -137,20 +144,23 @@ instance J.ToJSON SubsPlan where
 
 collectNonNullableVars
   :: (MonadState GV.VarPGTypes m)
-  => GR.UnresolvedVal -> m GR.UnresolvedVal
-collectNonNullableVars val = do
-  case val of
-    GR.UVPG annPGVal -> do
-      let GR.AnnPGVal varM isNullable colTy _ = annPGVal
-      case (varM, isNullable) of
-        (Just var, False) -> modify (Map.insert var colTy)
-        _                 -> return ()
-    _             -> return ()
-  return val
+  => GR.UnresolvedVal -> m ()
+collectNonNullableVars = \case
+  GR.UVPG annPGVal -> do
+    let GR.AnnPGVal varM isNullable colTy _ = annPGVal
+    case (varM, isNullable) of
+      (Just var, False) -> modify (Map.insert var colTy)
+      _                 -> return ()
+  _             -> return ()
 
 type TextEncodedVariables
   = Map.HashMap G.Variable TxtEncodedPGVal
 
+-- | converts the partial unresolved value containing
+-- variables, session variables to an SQL expression
+-- referring correctly to the values from '_subs' temporary table
+-- The variables are at _subs.result_vars.variables and
+-- session variables at _subs.result_vars.user
 toMultiplexedQueryVar
   :: (MonadState GV.AnnPGVarVals m)
   => GR.UnresolvedVal -> m S.SQLExp
@@ -163,39 +173,55 @@ toMultiplexedQueryVar = \case
       -- the check has to be made before this
       (Just var, _) -> do
         modify $ Map.insert var (colTy, colVal)
-        return $ fromResVars colTy
+        return $ fromResVars (PgTypeSimple colTy)
           [ "variables"
           , G.unName $ G.unVariable var
           ]
       _             -> return $ toTxtValue colTy colVal
-  -- TODO: check the logic around colTy and session variable's type
-  GR.UVSessVar colTy sessVar ->
-    return $ fromResVars colTy [ "user", T.toLower sessVar]
+  GR.UVSessVar ty sessVar ->
+    return $ fromResVars ty [ "user", T.toLower sessVar]
   GR.UVSQL sqlExp -> return sqlExp
   where
-    fromResVars colTy jPath =
-      S.withTyAnn colTy $ S.SEOpApp (S.SQLOp "#>>")
+    fromResVars ty jPath =
+      flip S.SETyAnn (S.mkTypeAnn ty) $ S.SEOpApp (S.SQLOp "#>>")
       [ S.SEQIden $ S.QIden (S.QualIden $ Iden "_subs")
         (Iden "result_vars")
       , S.SEArray $ map S.SELit jPath
       ]
 
+-- | Creates a live query operation and if possible, a reusable plan
+--
 subsOpFromPGAST
   :: ( MonadError QErr m
      , MonadReader r m
      , Has UserInfo r
      , MonadIO m
      )
+
+  -- | to validate arguments
   => PGExecCtx
+
+  -- | used as part of an identifier in the underlying live query systems
+  -- to avoid unnecessary load on Postgres where possible
   -> GH.GQLReqUnparsed
+
+  -- | variable definitions as seen in the subscription, needed in
+  -- checking whether the subscription can be multiplexed or not
   -> [G.VariableDefinition]
+
+  -- | The alias and the partially processed live query field
   -> (G.Alias, GR.QueryRootFldUnresolved)
+
   -> m (LiveQueryOp, Maybe SubsPlan)
 subsOpFromPGAST pgExecCtx reqUnparsed varDefs (fldAls, astUnresolved) = do
   userInfo <- asks getter
+
+  -- collect the variables (with their types) used inside the subscription
   (_, varTypes) <- flip runStateT mempty $ GR.traverseQueryRootFldAST
                    collectNonNullableVars astUnresolved
-  -- can the subscription be multiplexed?
+
+  -- Can the subscription be multiplexed?
+  -- Only if all variables are non null and can be prepared
   if Set.fromList (Map.keys varTypes) == allVars
     then mkMultiplexedOp userInfo varTypes
     else mkFallbackOp userInfo
@@ -210,6 +236,11 @@ subsOpFromPGAST pgExecCtx reqUnparsed varDefs (fldAls, astUnresolved) = do
       let mxOpCtx = LQM.mkMxOpCtx (userRole userInfo)
                     (GH._grQuery reqUnparsed) fldAls $
                     GR.toPGQuery astResolved
+
+      -- We need to ensure that the values provided for variables
+      -- are correct according to Postgres. Without this check
+      -- an invalid value for a variable for one instance of the
+      -- subscription will take down the entire multiplexed query
       txtEncodedVars <- validateAnnVarValsOnPg pgExecCtx annVarVals
       let mxOp = (mxOpCtx, userVars userInfo, txtEncodedVars)
       return (LQMultiplexed mxOp, Just $ SubsPlan mxOpCtx varTypes)
@@ -228,6 +259,8 @@ subsOpFromPGAST pgExecCtx reqUnparsed varDefs (fldAls, astUnresolved) = do
     withAlias tx =
       encJFromAssocList . pure . (,) fldAlsT <$> tx
 
+-- | Checks if the provided arguments are valid values for their corresponding types.
+-- Generates SQL of the format "select 'v1'::t1, 'v2'::t2 ..."
 validateAnnVarValsOnPg
   :: ( MonadError QErr m
      , MonadIO m
@@ -250,13 +283,16 @@ validateAnnVarValsOnPg pgExecCtx annVarVals = do
       res <- liftIO $ runExceptT (runLazyTx' pgExecCtx tx)
       liftEither res
 
+-- | The error handler that is used to errors in the validation SQL.
+-- It tries to specifically read few PG error codes which indicate
+-- that the format of the value provided for a type is incorrect
 valPgErrHandler :: Q.PGTxErr -> QErr
 valPgErrHandler txErr =
   fromMaybe (defaultTxErrorHandler txErr) $ do
-  stmtErr <- Q.getPGStmtErr txErr
-  codeMsg <- getPGCodeMsg stmtErr
-  (qErrCode, qErrMsg) <- extractError codeMsg
-  return $ err400 qErrCode qErrMsg
+    stmtErr <- Q.getPGStmtErr txErr
+    codeMsg <- getPGCodeMsg stmtErr
+    (qErrCode, qErrMsg) <- extractError codeMsg
+    return $ err400 qErrCode qErrMsg
   where
     getPGCodeMsg pged =
       (,) <$> Q.edStatusCode pged <*> Q.edMessage pged
@@ -269,7 +305,8 @@ valPgErrHandler txErr =
       ("22007", msg) -> return (DataException, msg)
       _              -> Nothing
 
--- use the existing plan and new variables to create a pg query
+-- | Use the existing plan with new variables and session variables
+-- to create a live query operation
 subsOpFromPlan
   :: ( MonadError QErr m
      , MonadIO m

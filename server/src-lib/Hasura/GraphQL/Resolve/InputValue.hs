@@ -4,6 +4,7 @@ module Hasura.GraphQL.Resolve.InputValue
   , asPGColValM
   , asPGColVal
   , asEnumVal
+  , asEnumValM
   , withObject
   , asObject
   , withObjectM
@@ -69,6 +70,13 @@ asEnumVal v = case _aivValue v of
   AGEnum ty (Just val) -> return (ty, val)
   AGEnum ty Nothing ->
     throw500 $ "unexpected null for ty " <> showNamedTy ty
+  _              -> tyMismatch "enum" v
+
+asEnumValM
+  :: (MonadError QErr m)
+  => AnnInpVal -> m (G.NamedType, Maybe G.EnumValue)
+asEnumValM v = case _aivValue v of
+  AGEnum ty valM -> return (ty, valM)
   _              -> tyMismatch "enum" v
 
 withObject

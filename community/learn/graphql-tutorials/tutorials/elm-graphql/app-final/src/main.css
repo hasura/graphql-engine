@@ -1,0 +1,389 @@
+/*
+  elm-hot creates an additional div wrapper around the app to make HMR possible.
+  This could break styling in development mode if you are using Elm UI.
+
+  More context in the issue:
+    https://github.com/halfzebra/create-elm-app/issues/320
+*/
+[data-elm-hot="true"] {
+  height: inherit;
+}
+body {
+  /* font-family: 'Source Sans Pro', 'Trebuchet MS', 'Lucida Grande', 'Bitstream Vera Sans', 'Helvetica Neue', sans-serif; */
+  margin: 0;
+  color: #293c4b;
+  background-color: #f7f7f7;
+  font-family: sans-serif;
+}
+
+.content {
+  width: 100%;
+}
+
+h1 {
+  font-size: 30px;
+}
+
+img {
+  margin: 20px 0;
+  max-width: 200px;
+}
+
+.p-left-right-0 {
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
+.sliderMenu {
+  height: calc(100vh - 50px);
+  overflow-y: auto;
+}
+
+.p-30 {
+  padding: 30px;
+}
+
+.formInput {
+  position: relative;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+}
+
+.formInput .mutation_loader {
+  position: absolute;
+  right: 15px;
+  font-size: 20px;
+  opacity: .6;
+}
+.formInput input {
+  height: 60px;
+  padding: 16px 16px 16px 60px;
+  border: none;
+  background-color: #fff;
+  width: 100%;
+  box-shadow: 0 0 20px 0 rgba(0,0,0,.1);
+  opacity: .6;
+  font-size: 14px;
+}
+
+.inputMarker {
+  position: absolute;
+  left: 15px;
+  font-size: 25px;
+  opacity: .6;
+}
+
+.bg-gray {
+  background-color: #efeded;
+}
+
+.border-right {
+  border-right: 1px solid #ccc;
+}
+
+.sliderHeader {
+  padding-bottom: 20px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.userInfo {
+  padding: 10px 0 10px 15px;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+
+}
+
+.userInfo .userImg {
+  text-align: center;
+  padding-right: 10px;
+}
+
+.userInfo .userImg i {
+  font-size: 20px;
+}
+
+.todoWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.todoWrapper .sectionHeader {
+  font-size: 18px;
+  font-weight: 400;
+  padding-bottom: 20px;
+}
+
+
+.todoListWrapper {
+  border-top: 1px solid #e6e6e6;
+  box-shadow: 0 0 20px 0 rgba(0,0,0,.1);
+}
+
+.todoListWrapper ul {
+  -webkit-padding-start: 0;
+  -moz-padding-start: 0;
+  margin-bottom: 0;
+}
+
+.todoListWrapper ul li {
+  list-style-type: none;
+  min-height: 60px;
+  max-height: 60px;
+  display: -webkit-flex;
+  display: flex;
+  font-size: 14px;
+  -webkit-align-items: center;
+  align-items: center;
+  border-bottom: 1px solid #ededed;
+  background-color: #fff;
+  position: relative;
+}
+
+.todoListWrapper .view {
+  width: 28px;
+  height: 28px;
+  margin: 0 15px;
+}
+
+.todoListWrapper .view .round {
+  position: relative;
+}
+
+.todoListWrapper .view .round input[type=checkbox] {
+  visibility: hidden;
+}
+
+.round input[type=checkbox]:checked+label:after {
+  opacity: 1;
+}
+
+.todoListWrapper .view .round label {
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 50%;
+  cursor: pointer;
+  height: 28px;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 28px;
+  min-width: 28px;
+}
+
+
+.todoListWrapper .view .round label:after {
+  border: 2px solid #66bb6a;
+  border-top: none;
+  border-right: none;
+  content: "";
+  height: 6px;
+  left: 7px;
+  opacity: 0;
+  position: absolute;
+  top: 8px;
+  -webkit-transform: rotate(-45deg);
+  transform: rotate(-45deg);
+  width: 12px;
+}
+
+
+.todoListWrapper .labelContent.completed {
+  text-decoration: line-through;
+}
+.todoListWrapper .labelContent {
+  padding-left: 1px;
+  color: #777;
+  width: calc(100% - 128px);
+  max-height: 60px;
+  overflow: auto;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+}
+
+.todoListWrapper .closeBtn {
+  background-color: initial;
+  border: none;
+  color: #cc9a9a;
+  position: absolute;
+  right: 15px;
+  padding: 0;
+  font-size: 25px;
+}
+
+
+.footerList {
+  height: 60px;
+  background-color: #fff;
+  border-bottom: 1px solid #ededed;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+  padding: 0 15px;
+  margin-bottom: 30px;
+}
+
+.footerList:before {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 50px;
+  overflow: hidden;
+  box-shadow: 0 1px 0 rgba(0,0,0,.2), 0 8px 0 -3px #f6f6f6, 0 9px 1px -3px rgba(0,0,0,.2), 0 16px 0 -6px #f6f6f6, 0 17px 2px -6px rgba(0,0,0,.2);
+  -moz-box-shadow: 0 1px 0 rgba(0,0,0,.2),0 8px 0 -3px #f6f6f6,0 9px 1px -3px rgba(0,0,0,.2),0 16px 0 -6px #f6f6f6,0 17px 2px -6px rgba(0,0,0,.2);
+  -webkit-box-shadow: 0 1px 0 rgba(0,0,0,.2), 0 8px 0 -3px #f6f6f6, 0 9px 1px -3px rgba(0,0,0,.2), 0 16px 0 -6px #f6f6f6, 0 17px 2px -6px rgba(0,0,0,.2);
+}
+
+.footerList ul {
+  -webkit-padding-start: 0;
+  -moz-padding-start: 0;
+  margin-bottom: 0;
+  padding-left: 20px;
+  z-index: 1;
+}
+
+
+.footerList ul li {
+  list-style-type: none;
+  display: inline-block;
+}
+
+.footerList ul li a {
+  padding: 3px 7px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  color: #777;
+  cursor: pointer;
+}
+
+.footerList ul li a.selected {
+  border-color: rgba(175,47,47,.2);
+}
+
+.footerList .clearComp {
+  background-color: initial;
+  border: none;
+  color: #777;
+  position: absolute;
+  right: 15px;
+  padding: 0;
+}
+
+.tasks_wrapper .loading_text {
+  margin-top: 10px;
+  padding: 10px;
+}
+
+/* Sign in / Sign up page css */
+
+.authentication_wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.authentication_wrapper .row {
+  width: 40%;
+  margin-top: 50px;
+}
+
+.authentication_wrapper .row .ta_center {
+  text-align: center;
+}
+
+
+.authentication_wrapper .row .sign_in_wrapper {
+  margin-left: 25%;
+}
+
+.authentication_wrapper .authentication_input {
+  margin-bottom: 10px;
+}
+
+.authentication_wrapper .c_mb_10 {
+  margin-bottom: 20px;
+}
+
+.authentication_wrapper .c_mb_5 {
+  margin-bottom: 10px;
+}
+
+
+.authentication_wrapper .remove_border {
+  border: none;
+}
+
+.wrapper {
+  box-shadow: 0 0 20px 0 rgba(0,0,0,.1);
+}
+
+.loadMoreSection {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+
+  list-style-type: none;
+  height: 30px;
+  font-size: 14px;
+  border-bottom: 1px solid #ededed;
+  background-color: #e6ecf0;
+  position: relative;
+  cursor: pointer;
+}
+
+.userInfoPublic {
+  background-color: #dfe3e6;
+  margin-left: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 8px;
+  margin-right: 10px;
+}
+
+.disabled {
+  cursor: not-allowed !important;
+  opacity: 0.5;
+}
+
+.error_auth_response {
+  display: inline-block;
+  margin-left: 20px;
+  color: red;
+}
+
+.m-bottom-0 {
+  margin-bottom: 0;
+}
+
+.navHeader {
+  width: 100%;
+}
+
+.navBrand {
+  font-size: 14px;
+}
+
+.navHeader button {
+  padding: 3.75px 7.5px;
+  font-size: 14px;
+}
+
+.signup_success {
+  color: #fff;
+  border-color: #255625;
+  background-color: #5cb85c;
+  padding: 10px 10px;
+  border-radius: 5px;
+}

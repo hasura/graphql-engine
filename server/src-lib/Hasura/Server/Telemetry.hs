@@ -6,7 +6,6 @@
 module Hasura.Server.Telemetry
   ( runTelemetry
   , getDbId
-  , generateFingerprint
   , mkTelemetryLog
   )
   where
@@ -20,6 +19,7 @@ import           Hasura.HTTP
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import           Hasura.Server.Init
 import           Hasura.Server.Version
 
 import qualified CI
@@ -31,8 +31,6 @@ import qualified Data.ByteString.Lazy    as BL
 import qualified Data.HashMap.Strict     as Map
 import qualified Data.String.Conversions as CS
 import qualified Data.Text               as T
-import qualified Data.UUID               as UUID
-import qualified Data.UUID.V4            as UUID
 import qualified Database.PG.Query       as Q
 import qualified Network.HTTP.Client     as HTTP
 import qualified Network.HTTP.Types      as HTTP
@@ -71,7 +69,7 @@ $(A.deriveJSON (A.aesonDrop 3 A.snakeCase) ''Metrics)
 data HasuraTelemetry
   = HasuraTelemetry
   { _htDbUid       :: !Text
-  , _htInstanceUid :: !Text
+  , _htInstanceUid :: !InstanceId
   , _htVersion     :: !Text
   , _htCi          :: !(Maybe CI.CI)
   , _htMetrics     :: !Metrics
@@ -88,7 +86,7 @@ $(A.deriveJSON (A.aesonDrop 3 A.snakeCase) ''TelemetryPayload)
 telemetryUrl :: Text
 telemetryUrl = "https://telemetry.hasura.io/v1/http"
 
-mkPayload :: Text -> Text -> Text -> Metrics -> IO TelemetryPayload
+mkPayload :: Text -> InstanceId -> Text -> Metrics -> IO TelemetryPayload
 mkPayload dbId instanceId version metrics = do
   ci <- CI.getCI
   return $ TelemetryPayload topic $
@@ -99,9 +97,10 @@ runTelemetry
   :: Logger
   -> HTTP.Manager
   -> IORef (SchemaCache, SchemaCacheVer)
-  -> (Text, Text)
+  -> Text
+  -> InstanceId
   -> IO ()
-runTelemetry (Logger logger) manager cacheRef (dbId, instanceId) = do
+runTelemetry (Logger logger) manager cacheRef dbId instanceId = do
   let options = wreqOptions manager []
   forever $ do
     schemaCache <- fmap fst $ readIORef cacheRef
@@ -163,9 +162,6 @@ computeMetrics sc =
     permsOfTbl = Map.toList . tiRolePermInfoMap
 
 
-generateFingerprint :: IO Text
-generateFingerprint = UUID.toText <$> UUID.nextRandom
-
 getDbId :: Q.TxE QErr Text
 getDbId =
   (runIdentity . Q.getRow) <$>
@@ -210,7 +206,7 @@ instance A.ToJSON TelemetryHttpError where
 
 
 instance ToEngineLog TelemetryLog where
-  toEngineLog tl = (_tlLogLevel tl, "telemetry-log", A.toJSON tl)
+  toEngineLog tl = (_tlLogLevel tl, ELTTelemetryLog, A.toJSON tl)
 
 mkHttpError
   :: Text

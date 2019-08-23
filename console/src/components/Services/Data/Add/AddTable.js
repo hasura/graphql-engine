@@ -6,6 +6,7 @@ import Button from '../../../Common/Button/Button';
 import PrimaryKeySelector from '../Common/ReusableComponents/PrimaryKeySelector';
 import ForeignKeyWrapper from './ForeignKeyWrapper';
 import UniqueKeyWrapper from './UniqueKeyWrapper';
+import FrequentlyUsedColumnSelector from '../Common/ReusableComponents/FrequentlyUsedColumnSelector';
 
 import { showErrorNotification } from '../../Common/Notification';
 
@@ -26,6 +27,7 @@ import {
   setColDefault,
   setForeignKeys,
   setUniqueKeys,
+  setFreqUsedColumn,
 } from './AddActions';
 
 import { fetchColumnTypeInfo, RESET_COLUMN_TYPE_INFO } from '../DataActions';
@@ -35,13 +37,18 @@ import { resetValidation } from './AddActions';
 import gqlPattern, {
   gqlTableErrorNotif,
   gqlColumnErrorNotif,
-  gqlTableNameNullNotif,
-  gqlTableEnufColumns,
-  gqlColumnNoDups,
-  gqlColumnTypes,
-  gqlColumnDefaults,
-  gqlMinPrimaryKey,
 } from '../Common/GraphQLValidation'; // TODO add the others
+
+import {
+  tableNameNullNotif,
+  tableEnufColumnsNotif,
+  tableColumnNoDupsNotif,
+  tableColumnTypesNotif,
+  tableColumnDefaultsNotif,
+  tableMinPrimaryKeyNotif,
+} from './AddWarning';
+
+import styles from '../../../Common/TableCommon/Table.scss';
 
 /* AddTable is a wrapper which wraps
  *  1) Table Name input
@@ -67,7 +74,7 @@ class AddTable extends Component {
     this.setColDefaultValue = this.setColDefaultValue.bind(this);
 
     this.trimEmptyColumns = this.trimEmptyColumns.bind(this);
-    this.checkAndDispatch = this.checkAndDispatch.bind(this);
+    this.checkAndNotify = this.checkAndNotify.bind(this);
     this.validateAndSubmit = this.validateAndSubmit.bind(this);
 
     this.tableNameCheck = this.tableNameCheck.bind(this);
@@ -147,31 +154,27 @@ class AddTable extends Component {
     return this.props.primaryKeys.filter(key => key !== '').length > 0;
   }
 
-  // check the validity and if invalid, dispatch
+  // check the validity and if invalid, notify
   // valid values are true and ""
   // strings get interpolated with notificationArray
   // and objects are assumed to be an array like notificationArray
   // and the second arg is ignored
-  checkAndDispatch(validated, notificationArray) {
+  checkAndNotify(validated, notificationArray) {
     if (validated === true || validated === '') return true;
     else if (validated === false) {
       this.props.dispatch(
         showErrorNotification(
           notificationArray[0],
           notificationArray[1],
-          notificationArray[2],
-          notificationArray[3]
+          notificationArray[2]
         )
       );
       return false;
     } else if (typeof validated === 'string') {
       this.props.dispatch(
-        showErrorNotification(
-          notificationArray[0],
-          validated,
-          notificationArray[2],
-          { custom: validated }
-        )
+        showErrorNotification(notificationArray[0], validated, {
+          custom: validated,
+        })
       );
       return false;
     } else if (typeof validated === 'object') {
@@ -179,12 +182,15 @@ class AddTable extends Component {
         showErrorNotification(
           notificationArray[0],
           notificationArray[1],
-          notificationArray[2],
-          notificationArray[3]
+          notificationArray[2]
         )
       );
       return false;
     }
+  }
+
+  tableNameEmptyCheck() {
+    return this.props.tableName !== null;
   }
 
   tableNameCheck() {
@@ -239,8 +245,7 @@ class AddTable extends Component {
   }
 
   isValidType(s) {
-    return (typeof s === 'string' &&
-            s.trim().length > 0);
+    return typeof s === 'string' && s.trim().length > 0;
   }
 
   validateColumnTypes(cols) {
@@ -349,32 +354,29 @@ class AddTable extends Component {
     const validColumns = this.trimEmptyColumns(this.props.columns);
 
     if (
-      this.checkAndDispatch(
-        this.props.tableName !== null,
-        gqlTableNameNullNotif
-      ) &&
-      this.checkAndDispatch(this.tableNameCheck(), gqlTableErrorNotif) &&
-      this.checkAndDispatch(
+      this.checkAndNotify(this.tableNameEmptyCheck(), tableNameNullNotif) &&
+      this.checkAndNotify(this.tableNameCheck(), gqlTableErrorNotif) &&
+      this.checkAndNotify(
         this.validateEnoughColumns(validColumns),
-        gqlTableEnufColumns
+        tableEnufColumnsNotif
       ) &&
-      this.checkAndDispatch(
+      this.checkAndNotify(
         this.validateColumnNames(validColumns),
         gqlColumnErrorNotif
       ) &&
-      this.checkAndDispatch(
+      this.checkAndNotify(
         this.validateNoDupNames(validColumns),
-        gqlColumnNoDups
+        tableColumnNoDupsNotif
       ) &&
-      this.checkAndDispatch(
+      this.checkAndNotify(
         this.validateColumnTypes(validColumns),
-        gqlColumnTypes
+        tableColumnTypesNotif
       ) &&
-      this.checkAndDispatch(
+      this.checkAndNotify(
         this.validateColumnDefaults(validColumns),
-        gqlColumnDefaults
+        tableColumnDefaultsNotif
       ) &&
-      this.checkAndDispatch(this.minPrimaryKeyCheck(), gqlMinPrimaryKey)
+      this.checkAndNotify(this.minPrimaryKeyCheck(), tableMinPrimaryKeyNotif)
     ) {
       this.props.dispatch(createTableSql());
     }
@@ -401,7 +403,6 @@ class AddTable extends Component {
       columnDefaultFunctions,
       columnTypeCasts,
     } = this.props;
-    const styles = require('../../../Common/TableCommon/Table.scss');
     const getCreateBtnText = () => {
       let createBtnText = 'Add Table';
       if (ongoingRequest) {
@@ -447,6 +448,13 @@ class AddTable extends Component {
               onColUniqueChange={this.onColUniqueChange}
               setColDefaultValue={this.setColDefaultValue}
             />
+            <div>
+              <FrequentlyUsedColumnSelector
+                onSelect={setFreqUsedColumn}
+                action={'add'}
+                dispatch={dispatch}
+              />
+            </div>
             <hr />
             <h4 className={styles.subheading_text}>
               Primary Key &nbsp; &nbsp;
@@ -454,10 +462,7 @@ class AddTable extends Component {
                 placement="right"
                 overlay={tooltip.primaryKeyDescription}
               >
-                <i
-                  className={`fa fa-question-circle ${styles.iClickable}`}
-                  aria-hidden="true"
-                />
+                <i className={'fa fa-question-circle'} aria-hidden="true" />
               </OverlayTrigger>{' '}
               &nbsp; &nbsp;
             </h4>
@@ -474,10 +479,7 @@ class AddTable extends Component {
                 placement="right"
                 overlay={tooltip.foreignKeyDescription}
               >
-                <i
-                  className={`fa fa-question-circle ${styles.iClickable}`}
-                  aria-hidden="true"
-                />
+                <i className={'fa fa-question-circle'} aria-hidden="true" />
               </OverlayTrigger>{' '}
               &nbsp; &nbsp;
             </h4>
@@ -499,10 +501,7 @@ class AddTable extends Component {
                 placement="right"
                 overlay={tooltip.uniqueKeyDescription}
               >
-                <i
-                  className={`fa fa-question-circle ${styles.iClickable}`}
-                  aria-hidden="true"
-                />
+                <i className={'fa fa-question-circle'} aria-hidden="true" />
               </OverlayTrigger>{' '}
               &nbsp; &nbsp;
             </h4>

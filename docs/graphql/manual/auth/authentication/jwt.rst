@@ -117,7 +117,7 @@ You can enable JWT mode by using the ``--jwt-secret`` flag or
 ``HASURA_GRAPHQL_JWT_SECRET`` environment variable; the value of which is a
 JSON object:
 
-.. code-block:: json
+.. code-block:: none
 
    {
      "type": "<standard-JWT-algorithms>",
@@ -230,7 +230,6 @@ If ``claims_format`` is ``stringified_json`` then JWT claims should look like:
     "https://hasura.io/jwt/claims": "{\"x-hasura-allowed-roles\":[\"editor\",\"user\",\"mod\"],\"x-hasura-default-role\":\"user\",\"x-hasura-user-id\":\"1234567890\",\"x-hasura-org-id\":\"123\",\"x-hasura-custom\":\"custom-value\"}"
   }
 
-
 ``audience``
 ^^^^^^^^^^^^
 This is an optional field. Certain providers might set a claim which indicates
@@ -252,7 +251,6 @@ Examples:
      "type": "RS512",
      "jwk_url": "https://......",
      "audience": "myapp-1234"
-     ...
    }
 
 or
@@ -263,8 +261,19 @@ or
      "type": "RS512",
      "jwk_url": "https://......",
      "audience": ["myapp-1234", "myapp-6789"]
-     ...
    }
+
+
+.. admonition:: Important!
+
+   Certain JWT providers share JWKs between multiple tenants. They use the
+   ``aud`` claim of JWT to specify the intended audience for the JWT. Setting
+   the ``audience`` field in the Hasura JWT configuration will make sure that
+   the ``aud`` claim from the JWT is also checked during verification. Not doing
+   this check will allow JWTs issued for other tenants to be valid as well.
+
+   In these cases, you **MUST** set the ``audience`` field to appropriate value.
+   Failing to do is a major security vulnerability.
 
 
 ``issuer``
@@ -285,8 +294,13 @@ Examples:
      "type": "RS512",
      "jwk_url": "https://......",
      "issuer": "https://my-auth-server.com"
-     ...
    }
+
+.. note::
+
+   Certain providers require you to verify the ``iss`` claim on the JWT. To do
+   that you can set this field to the appropriate value.
+
 
 
 Examples
@@ -364,6 +378,16 @@ Using env vars:
       graphql-engine \
       --database-url postgres://username:password@hostname:port/dbname \
       serve
+
+
+Security considerations
+-----------------------
+
+Setting audience check
+^^^^^^^^^^^^^^^^^^^^^^
+Certain JWT providers share JWKs between multiple tenants (like Firebase). They use the ``aud`` claim of JWT to specify the intended tenant for the JWT. Setting the ``audience`` field in the Hasura JWT configuration will make sure that the ``aud`` claim from the JWT is also checked during verification. Not doing this check will allow JWTs issued for other tenants to be valid as well.
+
+In these cases, you **MUST** set the ``audience`` field to appropriate value. Failing to do is a major security vulnerability.
 
 
 Popular providers and known issues

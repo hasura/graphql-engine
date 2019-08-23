@@ -1,20 +1,24 @@
+@import "../Common.scss";
+
 .data_dropdown_wrapper {
   display: inline-block;
-  // cursor: pointer;
-  span {
+  width: 100%;
+
+  .dataDropdown {
     position: relative;
+    width: 100%;
+
     .dropdown_wrapper {
       border-radius: 5px;
-      width: 175px;
+      width: auto;
       position: absolute;
       padding-inline-start: 0px;
       box-shadow: 7px 7px 20px 0 rgba(0, 0, 0, 0.32);
       background-color: #ffffff;
       color: yellow;
-      top: -12px;
-      left: 35px;
       -webkit-padding-start: 0px;
-      z-index: 100000000;
+      z-index: 10;
+
       li {
         display: flex;
         align-items: center;
@@ -23,25 +27,49 @@
         text-align: left;
         padding: 10px 15px;
         border-bottom: 1px solid #ededed;
+
         button {
           margin-right: 5px;
         }
+        
         // &:hover {
         //   background-color: #eee;
         // }
       }
+
       li:last-child {
         border-bottom: none;
       }
     }
-    .dropdown_wrapper:before {
+
+    .dropdownRight {
+      top: -12px;
+      left: 35px;
+    }
+
+    .dropdownBottom {
+      top: 32px;
+      left: 0;
+    }
+
+    .dropdownRight:before,
+    .dropdownBottom:before {
     	content: "";
     	position: absolute;
     	border: solid 5px transparent;
-      border-right-color: white;
       z-index: 10000;
+    }
+
+    .dropdownRight:before {
+      border-right-color: white;
       left: -10px;
       top: 17px;
+    }
+
+    .dropdownBottom:before {
+      border-bottom-color: white;
+      top: -10px;
+      left: 20px;
     }
   }
 }

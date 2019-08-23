@@ -2,14 +2,41 @@
  * Override Bootstrap styles that you can't modify via variables here.
  *
  */
-input[type="radio"], input[type="checkbox"]
-{
+
+// react select overrides: start
+.modify_select__control {
+  min-height: 30px !important;
+  max-height: 30px !important;
+}
+
+.add_table_column_selector__control, .add_table_default_value_selector__control  {
+  min-height: 34px !important;
+  max-height: 34px !important;
+}
+
+.react-selectable__single-value, .react-selectable__placeholder, .react-selectable__indicator.react-selectable__dropdown-indicator {
+  margin-top: -2px;
+}
+// react select overrides: end
+
+input[type="radio"], input[type="checkbox"] {
   margin: 0 5px 0px 0px;
 }
-label
-{
+
+.dropdown.input-group-btn {
+  button {
+    min-height: 34px;
+  }
+}
+
+.form-group .input-group {
+  min-width: 300px;
+}
+
+label {
   margin-bottom: 0 !important;
 }
+
 .navbar-brand {
   position: relative;
   padding-left: 50px;
@@ -25,13 +52,15 @@ label
   color: #33e0ff;
   background-color: transparent;
 }
-.control-label
-{
+
+.control-label {
   padding-top: 0;
 }
+
 form {
     margin-bottom: 0em;
 }
+
 .form-control:focus {
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 0px rgba(102, 175, 233, 0.6);
 }
@@ -40,27 +69,29 @@ form {
   // border-radius: 0;
   height: auto;
 }
-select.form-control
-{
+
+select.form-control {
   border-radius: 0;
   -webkit-border-radius: 0px;
 }
+
 .btn {
   // border-radius: 0;
   outline: none;
 }
-.btn:active, .btn.active
-{
+
+.btn:active, .btn.active {
   box-shadow: none !important;
 }
-.btn:focus, .btn.focus, .btn:active:focus, .btn:active.focus, .btn.active:focus, .btn.active.focus
-{
+
+.btn:focus, .btn.focus, .btn:active:focus, .btn:active.focus, .btn.active:focus, .btn.active.focus {
   outline: none !important;
 }
-.btn:focus
-{
+
+.btn:focus {
   outline: none !important;
 }
+
 .alert {
 	word-wrap: break-word;
 }
@@ -73,123 +104,43 @@ select.form-control
   font-size: 12px !important;
   line-height: 1.5 !important;
 }
+
 .btn-warning:hover {
   color: #000;
-  background-color: #ec971f;
-  border-color: #d58512;
+  background-color: #F2B130 !important;
+  border-color: #F2B130 !important;
+}
+
+.btn-warning:focus {
+  background-color: #F2B130 !important;
 }
 // Generate Code modal
-.padd_remove
-{
+.padd_remove {
   padding-left: 0 !important;
   padding-right: 0 !important;
 }
-.generateCodeWrapper
+
+.invocationClass
 {
-  width: 65% !important;
-  .modal-content
+  clear: both;
+  .rt-table
   {
-    .modal-header
+    .rt-tbody
     {
-      background-color: #F8FAFB;
-      color: #222 ;
-      padding: 20px;
-      border-top-left-radius: 4px;
-      border-top-right-radius: 4px;
-      border-bottom: 0;
-      border-bottom: 1px solid #ccc;
-      h4
+      .rt-tr-group
       {
-        font-size: 16px;
-        font-weight: bold;
-      }
-      button
-      {
-        text-shadow: none;
-        color: #C4C6C6;
-        opacity: 1;
-        span
+        .rt-tr
         {
-          font-weight: normal;
-        }
-      }
-    }
-    .modal-body
-    {
-      padding: 25px;
-      .generateBodyWrapper
-      {
-        .generateButtonWrapper
-        {
-          width: 100%;
-          float: left;
-          padding-bottom: 20px;
-          .generateSelect
+          .rt-td
           {
-            button
+            .rt-expander
             {
-              width: auto;
-              padding: 10px 35px;
-              padding-left: 10px;
-              background-color: #F9F9F9;
-              color: #606060;
-              font-size: 14px;
-              font-weight: bold;
-              text-align: left;
-              border: 1px solid #ccc;
-              position: relative;
-              .dropCaret
-              {
-                position: absolute;
-                right: 10px;
-                top: 16px;
-              }
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              height: 21px;
+              width: 13px;
             }
-          }
-          .generateCopyButton
-          {
-            text-align: right;
-            font-weight: bold;
-            button {
-              background-color: #FEC53D;
-              border-radius: 5px;
-              color: #606060;
-              border: 1px solid #FEC53D;
-              padding: 5px 10px;
-              font-size: 12px;
-              line-height: 1.5;
-              &:hover {
-                background-color: #F2B130;
-              }
-            }
-          }
-          .generateCopyButtonDisabled
-          {
-            text-align: right;
-            button
-            {
-              border-radius: 5px;
-              border: 1px solid #606060;
-              height: 39px;
-              padding: 5px 15px;
-              font-size: 15px;
-              background-color: #FFF;
-              text-align: center;
-              color: #606060;
-              font-weight: bold;
-            }
-          }
-          .ace_editor
-          {
-            min-height: 150px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-          }
-          .ace-github
-          {
-            min-height: 150px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
           }
         }
       }

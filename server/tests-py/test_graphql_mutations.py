@@ -123,6 +123,24 @@ class TestGraphqlInsertPermission(DefaultTestMutations):
     def test_blog_on_conflict_update_preset(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/blog_on_conflict_update_preset.yaml")
 
+    def test_arr_sess_var_insert_article_as_editor_allowed_user_id(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/insert_article_arr_sess_var_editor_allowed_user_id.yaml")
+
+    def test_arr_sess_var_insert_article_as_editor_err_not_allowed_user_id(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/insert_article_arr_sess_var_editors_err_not_allowed_user_id.yaml")
+
+    def test_seller_insert_computer_json_has_keys_all(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/seller_insert_computer_has_keys_all_pass.yaml")
+
+    def test_seller_insert_computer_json_has_keys_all_err(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/seller_insert_computer_has_keys_all_fail.yaml")
+
+    def test_developer_insert_computer_json_has_keys_any(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/developer_insert_has_keys_any_pass.yaml")
+
+    def test_developer_insert_computer_json_has_keys_any_err(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/developer_insert_has_keys_any_fail.yaml")
+
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/insert/permissions"
@@ -357,6 +375,12 @@ class TestGraphqlDeletePermissions(DefaultTestMutations):
 
     def test_resident_delete_without_select_perm_fail(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/resident_delete_without_select_perm_fail.yaml")
+
+    def test_agent_delete_perm_arr_sess_var(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/agent_delete_perm_arr_sess_var.yaml")
+
+    def test_agent_delete_perm_arr_sess_var_fail(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/agent_delete_perm_arr_sess_var_fail.yaml")
 
     @classmethod
     def dir(cls):

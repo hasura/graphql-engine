@@ -304,10 +304,7 @@ const ForeignKeySelector = ({
           <div className={`${styles.add_mar_bottom_mid}`}>
             <b>On Update Violation:</b>&nbsp; &nbsp;
             <OverlayTrigger placement="right" overlay={fkViolationOnUpdate}>
-              <i
-                className={`fa fa-question-circle ${styles.iClickable}`}
-                aria-hidden="true"
-              />
+              <i className={'fa fa-question-circle'} aria-hidden="true" />
             </OverlayTrigger>{' '}
             &nbsp; &nbsp;
           </div>
@@ -317,10 +314,7 @@ const ForeignKeySelector = ({
           <div className={`${styles.add_mar_bottom_mid}`}>
             <b>On Delete Violation:</b>&nbsp; &nbsp;
             <OverlayTrigger placement="right" overlay={fkViolationOnDelete}>
-              <i
-                className={`fa fa-question-circle ${styles.iClickable}`}
-                aria-hidden="true"
-              />
+              <i className={'fa fa-question-circle'} aria-hidden="true" />
             </OverlayTrigger>{' '}
             &nbsp; &nbsp;
           </div>

@@ -7,6 +7,7 @@ import           Hasura.Prelude
 
 import           Data.Aeson
 import           Data.Aeson.Encoding        (text)
+import           Data.Aeson.Types           (toJSONKeyText)
 import           Data.String                (fromString)
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
@@ -34,7 +35,7 @@ infixr 6 <+>
 
 newtype Iden
   = Iden { getIdenTxt :: T.Text }
-  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Semigroup)
+  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Semigroup, Data)
 
 instance ToSQL Iden where
   toSQL (Iden t) =
@@ -89,7 +90,7 @@ class ToTxt a where
 
 newtype TableName
   = TableName { getTableTxt :: T.Text }
-  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift)
+  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data)
 
 instance IsIden TableName where
   toIden (TableName t) = Iden t
@@ -143,7 +144,7 @@ instance ToSQL ConstraintName where
 
 newtype FunctionName
   = FunctionName { getFunctionTxt :: T.Text }
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift, Data)
 
 instance IsIden FunctionName where
   toIden (FunctionName t) = Iden t
@@ -159,7 +160,7 @@ instance ToTxt FunctionName where
 
 newtype SchemaName
   = SchemaName { getSchemaTxt :: T.Text }
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data)
 
 publicSchema :: SchemaName
 publicSchema = SchemaName "public"
@@ -177,7 +178,7 @@ data QualifiedObject a
   = QualifiedObject
   { qSchema :: !SchemaName
   , qName   :: !a
-  } deriving (Show, Eq, Ord, Generic, Lift)
+  } deriving (Show, Eq, Functor, Ord, Generic, Lift, Data)
 
 instance (FromJSON a) => FromJSON (QualifiedObject a) where
   parseJSON v@(String _) =
@@ -228,7 +229,7 @@ type QualifiedFunction = QualifiedObject FunctionName
 
 newtype PGCol
   = PGCol { getPGColTxt :: T.Text }
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, ToJSONKey, FromJSONKey, Lift)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, ToJSONKey, FromJSONKey, Lift, Data)
 
 instance IsIden PGCol where
   toIden (PGCol t) = Iden t
@@ -264,7 +265,7 @@ data PGColType
   | PGGeometry
   | PGGeography
   | PGUnknown !T.Text
-  deriving (Eq, Lift, Generic)
+  deriving (Eq, Lift, Generic, Data)
 
 instance Hashable PGColType
 
@@ -293,9 +294,14 @@ instance Show PGColType where
 instance ToJSON PGColType where
   toJSON pct = String $ T.pack $ show pct
 
+instance ToJSONKey PGColType where
+  toJSONKey = toJSONKeyText (T.pack . show)
+
 instance ToSQL PGColType where
   toSQL pct = fromString $ show pct
 
+instance DQuote PGColType where
+  dquoteTxt = T.pack . show
 
 txtToPgColTy :: Text -> PGColType
 txtToPgColTy t = case t of
@@ -351,7 +357,6 @@ instance FromJSON PGColType where
   parseJSON (String t) = return $ txtToPgColTy t
   parseJSON _          = fail "Expecting a string for PGColType"
 
-
 pgTypeOid :: PGColType -> PQ.Oid
 pgTypeOid PGSmallInt    = PTI.int2
 pgTypeOid PGInteger     = PTI.int4
@@ -374,6 +379,26 @@ pgTypeOid PGJSONB       = PTI.jsonb
 pgTypeOid PGGeometry    = PTI.text
 pgTypeOid PGGeography   = PTI.text
 pgTypeOid (PGUnknown _) = PTI.auto
+
+-- TODO: This is incorrect modelling as PGColType
+-- will capture anything under PGUnknown
+-- This should be fixed when support for
+-- all types is merged.
+
+data PgType
+  = PgTypeSimple !PGColType
+  | PgTypeArray !PGColType
+  deriving (Eq, Data)
+
+instance Show PgType where
+  show = \case
+    PgTypeSimple ty -> show ty
+    -- typename array is an sql standard way
+    -- of declaring types
+    PgTypeArray ty -> show ty <> " array"
+
+instance ToJSON PgType where
+  toJSON = toJSON . show
 
 isIntegerType :: PGColType -> Bool
 isIntegerType PGInteger  = True

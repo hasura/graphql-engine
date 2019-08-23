@@ -1,3 +1,7 @@
+{- |
+Description: Create/delete SQL tables to/from Hasura metadata.
+-}
+
 {-# LANGUAGE TypeApplications #-}
 
 module Hasura.RQL.DDL.Schema.Table where
@@ -9,7 +13,6 @@ import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
-import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Diff
@@ -56,6 +59,9 @@ newtype TrackTable
   { tName :: QualifiedTable }
   deriving (Show, Eq, FromJSON, ToJSON, Lift)
 
+-- | Track table/view, Phase 1:
+-- Validate table tracking operation. Fails if table is already being tracked,
+-- or if a function with the same name is being tracked.
 trackExistingTableOrViewP1
   :: (CacheRM m, UserInfoM m, QErrM m) => TrackTable -> m ()
 trackExistingTableOrViewP1 (TrackTable vn) = do
@@ -63,6 +69,9 @@ trackExistingTableOrViewP1 (TrackTable vn) = do
   rawSchemaCache <- askSchemaCache
   when (M.member vn $ scTables rawSchemaCache) $
     throw400 AlreadyTracked $ "view/table already tracked : " <>> vn
+  let qf = fmap (FunctionName . getTableTxt) vn
+  when (M.member qf $ scFunctions rawSchemaCache) $
+    throw400 NotSupported $ "function with name " <> vn <<> " already exists"
 
 trackExistingTableOrViewP2
   :: (QErrM m, CacheRWM m, MonadTx m)
@@ -112,10 +121,6 @@ purgeDep schemaObjId = case schemaObjId of
   (SOTableObj qt (TORel rn))     -> do
     liftTx $ delRelFromCatalog qt rn
     delRelFromCache rn qt
-
-  (SOQTemplate qtn)              -> do
-    liftTx $ delQTemplateFromCatalog qtn
-    delQTemplateFromCache qtn
 
   (SOFunction qf) -> do
     liftTx $ delFunctionFromCatalog qf
@@ -184,18 +189,36 @@ processTableChanges ti tableDiff = do
         if | oColName /= nColName -> do
                renameColInCatalog oColName nColName tn ti
                return True
+
            | oColTy /= nColTy -> do
                let colId   = SOTableObj tn $ TOCol oColName
-                   depObjs = getDependentObjsWith (== "on_type") sc colId
-               unless (null depObjs) $ throw400 DependencyError $
+                   typeDepObjs = getDependentObjsWith (== DROnType) sc colId
+
+               -- Raise exception if any objects found which are dependant on column type
+               unless (null typeDepObjs) $ throw400 DependencyError $
                  "cannot change type of column " <> oColName <<> " in table "
                  <> tn <<> " because of the following dependencies : " <>
-                 reportSchemaObjs depObjs
+                 reportSchemaObjs typeDepObjs
+
+               -- Update column type in cache
                updColInCache nColName npci tn
+
+               -- If any dependant permissions found with the column whose type
+               -- being altered is provided with a session variable,
+               -- then rebuild permission info and update the cache
+               let sessVarDepObjs =
+                     getDependentObjsWith (== DRSessionVariable) sc colId
+               forM_ sessVarDepObjs $ \objId ->
+                 case objId of
+                   SOTableObj qt (TOPerm rn pt) -> rebuildPermInfo qt rn pt
+                   _                            -> throw500
+                     "unexpected schema dependency found for altering column type"
                return False
+
            | oNullable /= nNullable -> do
                updColInCache nColName npci tn
                return False
+
            | otherwise -> return False
 
 delTableAndDirectDeps
@@ -342,7 +365,7 @@ buildSchemaCacheG withSetup = do
   sqlGenCtx <- askSQLGenCtx
 
   -- fetch all catalog metadata
-  CatalogMetadata tables relationships permissions qTemplates
+  CatalogMetadata tables relationships permissions
     eventTriggers remoteSchemas functions fkeys' allowlistDefs
     <- liftTx fetchCatalogData
 
@@ -392,18 +415,6 @@ buildSchemaCacheG withSetup = do
           PTSelect -> permHelper withSetup sqlGenCtx qt rn pDef PASelect
           PTUpdate -> permHelper withSetup sqlGenCtx qt rn pDef PAUpdate
           PTDelete -> permHelper withSetup sqlGenCtx qt rn pDef PADelete
-
-  -- query templates
-  forM_ qTemplates $ \(CatalogQueryTemplate qtn qtDefVal) -> do
-    let def = object ["name" .= qtn, "template" .= qtDefVal]
-        mkInconsObj =
-          InconsistentMetadataObj (MOQTemplate qtn) MOTQTemplate def
-    handleInconsistentObj mkInconsObj $ do
-      qtDef <- decodeValue qtDefVal
-      qCtx <- mkAdminQCtx sqlGenCtx <$> askSchemaCache
-      (qti, deps) <- liftP1WithQCtx qCtx $ createQueryTemplateP1 $
-             CreateQueryTemplate qtn qtDef Nothing
-      addQTemplateToCache qti deps
 
   -- event triggers
   forM_ eventTriggers $ \(CatalogEventTrigger qt trn configuration) -> do

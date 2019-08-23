@@ -1,0 +1,16 @@
+description: Test that casting between incompatible types is rejected
+url: /v1/graphql
+status: 200
+response:
+  errors:
+  - extensions:
+      path: $.selectionSet.geog_table.args.where.geog_col._cast.integer
+      code: validation-failed
+    message: 'field "integer" not found in type: ''geography_cast_exp'''
+query:
+  query: |
+    {
+      geog_table(where: {geog_col: {_cast: {integer: {_eq: 0}}}}) {
+        name
+      }
+    }

@@ -17,6 +17,9 @@ import {
   inferDefaultValues,
 } from '../Common/utils';
 
+import gqlPattern from '../Common/GraphQLValidation';
+import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
+
 import styles from './ModifyTable.scss';
 
 const ColumnEditorList = ({
@@ -96,6 +99,14 @@ const ColumnEditorList = ({
       }
     };
 
+    const gqlCompatibilityWarning = () => {
+      return !gqlPattern.test(colName) ? (
+        <span className={styles.add_mar_left_small}>
+          <GqlCompatibilityWarning />
+        </span>
+      ) : null;
+    };
+
     const keyProperties = () => {
       const propertiesDisplay = [];
 
@@ -121,10 +132,10 @@ const ColumnEditorList = ({
 
       const keyPropertiesString = propertiesList.join(', ');
 
-      propertiesDisplay.push(
-        <i key={'props'}>{keyPropertiesString && `- ${keyPropertiesString}`}</i>
-      );
-      propertiesDisplay.push(<br />);
+      propertiesDisplay.push(<i key={'props'}>{keyPropertiesString}</i>);
+
+      propertiesDisplay.push(<br key={'br1'} />);
+
       propertiesDisplay.push(
         <span key={'comment'} className={styles.text_gray}>
           {columnProperties.comment && `${columnProperties.comment}`}
@@ -137,7 +148,7 @@ const ColumnEditorList = ({
     const collapsedLabel = () => {
       return (
         <div key={colName}>
-          <b>{colName}</b> {keyProperties()}
+          <b>{colName}</b> {gqlCompatibilityWarning()} - {keyProperties()}
         </div>
       );
     };
@@ -158,7 +169,7 @@ const ColumnEditorList = ({
       if (lowerUdtName in validTypeCasts) {
         return validTypeCasts[lowerUdtName];
       }
-      if (dataTypeIndexMap && Object.keys(dataTypeIndexMap).length > 0) {
+      if (dataTypeIndexMap && dataTypeIndexMap[lowerUdtName]) {
         return [
           ...dataTypeIndexMap[lowerUdtName],
           ...dataTypeIndexMap[defaultDataTypeToCast],

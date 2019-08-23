@@ -73,11 +73,6 @@ module Hasura.RQL.Types.SchemaCache
        , delPermFromCache
        , PreSetColsPartial
 
-       , QueryTemplateInfo(..)
-       , addQTemplateToCache
-       , delQTemplateFromCache
-       , TemplateParamInfo(..)
-
        , addEventTriggerToCache
        , delEventTriggerFromCache
        , EventTriggerInfo(..)
@@ -87,6 +82,7 @@ module Hasura.RQL.Types.SchemaCache
        , SchemaObjId(..)
        , reportSchemaObj
        , reportSchemaObjs
+       , DependencyReason(..)
        , SchemaDependency(..)
        , mkParentDep
        , mkColDep
@@ -112,7 +108,6 @@ import qualified Hasura.GraphQL.Context            as GC
 import           Hasura.Prelude
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.DML
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Metadata
@@ -136,21 +131,11 @@ reportSchemaObjs :: [SchemaObjId] -> T.Text
 reportSchemaObjs = T.intercalate ", " . map reportSchemaObj
 
 mkParentDep :: QualifiedTable -> SchemaDependency
-mkParentDep tn = SchemaDependency (SOTable tn) "table"
+mkParentDep tn = SchemaDependency (SOTable tn) DRTable
 
-mkColDep :: T.Text -> QualifiedTable -> PGCol -> SchemaDependency
+mkColDep :: DependencyReason -> QualifiedTable -> PGCol -> SchemaDependency
 mkColDep reason tn col =
   flip SchemaDependency reason . SOTableObj tn $ TOCol col
-
-data QueryTemplateInfo
-  = QueryTemplateInfo
-  { qtiName  :: !TQueryName
-  , qtiQuery :: !QueryT
-  } deriving (Show, Eq)
-
-$(deriveToJSON (aesonDrop 3 snakeCase) ''QueryTemplateInfo)
-
-type QTemplateCache = M.HashMap TQueryName QueryTemplateInfo
 
 onlyIntCols :: [PGColInfo] -> [PGColInfo]
 onlyIntCols = filter (isIntegerType . pgiType)
@@ -460,7 +445,6 @@ data SchemaCache
   = SchemaCache
   { scTables            :: !TableCache
   , scFunctions         :: !FunctionCache
-  , scQTemplates        :: !QTemplateCache
   , scRemoteSchemas     :: !RemoteSchemaMap
   , scAllowlist         :: !(HS.HashSet GQLQuery)
   , scGCtxMap           :: !GC.GCtxMap
@@ -497,41 +481,9 @@ class (CacheRM m) => CacheRWM m where
 instance (Monad m) => CacheRWM (StateT SchemaCache m) where
   writeSchemaCache = put
 
-addQTemplateToCache
-  :: (QErrM m, CacheRWM m)
-  => QueryTemplateInfo
-  -> [SchemaDependency]
-  -> m ()
-addQTemplateToCache qti deps = do
-  sc <- askSchemaCache
-  let templateCache = scQTemplates sc
-  case M.lookup qtn templateCache of
-    Just _ -> throw500 $ "template already exists in cache " <>> qtn
-    Nothing -> do
-      let newTemplateCache = M.insert qtn qti templateCache
-      writeSchemaCache $ sc {scQTemplates = newTemplateCache}
-  modDepMapInCache (addToDepMap objId deps)
-  where
-    qtn = qtiName qti
-    objId = SOQTemplate qtn
-
-delQTemplateFromCache :: (QErrM m, CacheRWM m)
-                      => TQueryName -> m ()
-delQTemplateFromCache qtn = do
-  sc <- askSchemaCache
-  let templateCache = scQTemplates sc
-  case M.lookup qtn templateCache of
-    Nothing -> throw500 $ "template does not exist in cache " <>> qtn
-    Just _ -> do
-      let newTemplateCache = M.delete qtn templateCache
-      writeSchemaCache $ sc {scQTemplates = newTemplateCache}
-  modDepMapInCache (removeFromDepMap objId)
-  where
-    objId = SOQTemplate qtn
-
 emptySchemaCache :: SchemaCache
 emptySchemaCache =
-  SchemaCache M.empty M.empty M.empty M.empty
+  SchemaCache M.empty M.empty M.empty
               HS.empty M.empty GC.emptyGCtx mempty []
 
 modTableCache :: (CacheRWM m) => TableCache -> m ()
@@ -801,12 +753,6 @@ delPermFromCache pa rn tn = do
       return $ ti { tiRolePermInfoMap = M.insert rn newRPI rpim }
     schObjId = SOTableObj tn $ TOPerm rn $ permAccToType pa
 
-data TemplateParamInfo
-  = TemplateParamInfo
-  { tpiName    :: !TemplateParam
-  , tpiDefault :: !(Maybe Value)
-  } deriving (Show, Eq)
-
 addRemoteSchemaToCache
   :: (QErrM m, CacheRWM m) => RemoteSchemaCtx -> m ()
 addRemoteSchemaToCache rmCtx = do
@@ -846,7 +792,7 @@ getDependentObjs :: SchemaCache -> SchemaObjId -> [SchemaObjId]
 getDependentObjs = getDependentObjsWith (const True)
 
 getDependentObjsWith
-  :: (T.Text -> Bool) -> SchemaCache -> SchemaObjId -> [SchemaObjId]
+  :: (DependencyReason -> Bool) -> SchemaCache -> SchemaObjId -> [SchemaObjId]
 getDependentObjsWith f sc objId =
   -- [ sdObjId sd | sd <- filter (f . sdReason) allDeps]
   map fst $ filter (isDependency . snd) $ M.toList $ scDepMap sc
