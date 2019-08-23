@@ -330,7 +330,6 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       };
 
     case PERM_SET_FILTER_SAME_AS:
-    case PERM_SET_FILTER:
       return {
         ...modifyState,
         permissionsState: {
@@ -340,6 +339,19 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
             action.filter
           ),
           custom_checked: false,
+        },
+      };
+
+    case PERM_SET_FILTER:
+      return {
+        ...modifyState,
+        permissionsState: {
+          ...updatePermissionsState(
+            modifyState.permissionsState,
+            getFilterKey(modifyState.permissionsState.query),
+            action.filter
+          ),
+          // custom_checked: true,
         },
       };
 
