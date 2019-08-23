@@ -3,7 +3,7 @@ const semver = require('semver');
 export const FT_JWT_ANALYZER = 'JWTAnalyzer';
 export const RELOAD_METADATA_API_CHANGE = 'reloadMetaDataApiChange';
 export const REMOTE_SCHEMA_TIMEOUT_CONF_SUPPORT =
-  'remoetSchemaTimeoutConfSupport';
+  'remoteSchemaTimeoutConfSupport';
 
 // list of feature launch versions
 const featureLaunchVersions = {
