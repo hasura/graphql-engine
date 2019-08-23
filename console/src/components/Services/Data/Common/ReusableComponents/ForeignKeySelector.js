@@ -50,17 +50,17 @@ const ForeignKeySelector = ({
           onChange={dispatchSetRefSchema}
         >
           {// default unselected option
-            refSchemaName === '' && (
-              <option value={''} disabled>
-                {'-- reference schema --'}
-              </option>
-            )}
+          refSchemaName === '' && (
+            <option value={''} disabled>
+              {'-- reference schema --'}
+            </option>
+          )}
           {// all reference schema options
-            schemaList.map((rs, j) => (
-              <option key={j} value={rs}>
-                {rs}
-              </option>
-            ))}
+          schemaList.map((rs, j) => (
+            <option key={j} value={rs}>
+              {rs}
+            </option>
+          ))}
         </select>
       </div>
     );
@@ -105,19 +105,19 @@ const ForeignKeySelector = ({
           disabled={!refSchemaName}
         >
           {// default unselected option
-            refTableName === '' && (
-              <option value={''} disabled>
-                {'-- reference table --'}
-              </option>
-            )}
+          refTableName === '' && (
+            <option value={''} disabled>
+              {'-- reference table --'}
+            </option>
+          )}
           {// all reference table options
-            Object.keys(refTables)
-              .sort()
-              .map((rt, j) => (
-                <option key={j} value={rt}>
-                  {rt}
-                </option>
-              ))}
+          Object.keys(refTables)
+            .sort()
+            .map((rt, j) => (
+              <option key={j} value={rt}>
+                {rt}
+              </option>
+            ))}
         </select>
       </div>
     );
@@ -304,10 +304,7 @@ const ForeignKeySelector = ({
           <div className={`${styles.add_mar_bottom_mid}`}>
             <b>On Update Violation:</b>&nbsp; &nbsp;
             <OverlayTrigger placement="right" overlay={fkViolationOnUpdate}>
-              <i
-                className={`fa fa-question-circle ${styles.iClickable}`}
-                aria-hidden="true"
-              />
+              <i className={'fa fa-question-circle'} aria-hidden="true" />
             </OverlayTrigger>{' '}
             &nbsp; &nbsp;
           </div>
@@ -317,10 +314,7 @@ const ForeignKeySelector = ({
           <div className={`${styles.add_mar_bottom_mid}`}>
             <b>On Delete Violation:</b>&nbsp; &nbsp;
             <OverlayTrigger placement="right" overlay={fkViolationOnDelete}>
-              <i
-                className={`fa fa-question-circle ${styles.iClickable}`}
-                aria-hidden="true"
-              />
+              <i className={'fa fa-question-circle'} aria-hidden="true" />
             </OverlayTrigger>{' '}
             &nbsp; &nbsp;
           </div>

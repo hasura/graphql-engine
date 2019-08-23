@@ -142,7 +142,7 @@ initialiseCtx :: HGECommand -> RawConnInfo -> Maybe LogCallbackFunction -> IO In
 initialiseCtx hgeCmd rci logCallback = do
   -- global http manager
   httpManager <- HTTP.newManager HTTP.tlsManagerSettings
-  instanceId <- mkInstanceId
+  instanceId <- generateInstanceId
   connInfo <- procConnInfo
   (loggerThings, pool) <- case hgeCmd of
     HCServe ServeOptions{..} -> do

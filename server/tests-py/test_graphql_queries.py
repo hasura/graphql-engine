@@ -50,6 +50,10 @@ class TestGraphQLQueryBasic(DefaultTestSelectQueries):
         transport = 'http'
         check_query_f(hge_ctx, self.dir() + "/nested_select_with_foreign_key_alter.yaml", transport)
 
+    def test_select_query_invalid_escape_sequence(self, hge_ctx, transport):
+        transport = 'http'
+        check_query_f(hge_ctx, self.dir() + "/select_query_invalid_escape_sequence.yaml", transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/basic'
@@ -89,6 +93,9 @@ class TestGraphQLQueryAggPerm(DefaultTestSelectQueries):
 
     def test_author_articles_agg_fail(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/author_articles_agg_fail.yaml', transport)
+
+    def test_author_post_agg_order_by(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/author_post_agg_order_by.yaml', transport)
 
     @classmethod
     def dir(cls):
@@ -356,6 +363,9 @@ class TestGraphQLQueryOrderBy(DefaultTestSelectQueries):
 
     def test_articles_order_by_rel_author_rel_contact_phone(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/articles_order_by_rel_author_rel_contact_phone.yaml', transport)
+
+    def test_articles_order_by_null(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/articles_order_by_null.yaml', transport)
 
     def test_album_order_by_tracks_count(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/album_order_by_tracks_count.yaml', transport)

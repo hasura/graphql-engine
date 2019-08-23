@@ -19,8 +19,6 @@ We will explore the fundamentals of GraphQL and the especially things that make 
 - Setting up a GraphQL client with Apollo
 - Integrating GraphQL queries in your ReasonReact app
 - Integrating GraphQL mutations with query variables to handle form input
-- Updating local state after a GraphQL mutation (form input) using Apollo cache
-- Optimistic updates to local state and UI after GraphQL mutations for a slick UX
 - Using subscriptions with a subscriptions components
 - Building a real-time feed with notifications using mutations and subscriptions
 
@@ -41,7 +39,7 @@ You need to have npm/yarn & node 8+ running.
 ## How long will this tutorial take?
 Less than 2 hours
 
-## Other courses:
+## Other courses
 
 **Frontend**: GraphQL for: [React](https://learn.hasura.io/graphql/react), [Vue](https://learn.hasura.io/graphql/vue), [React Native](https://learn.hasura.io/graphql/react-native), [iOS](https://learn.hasura.io/graphql/ios)
 

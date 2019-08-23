@@ -13,7 +13,9 @@ import           Hasura.SQL.Value
 
 import qualified Hasura.SQL.DML      as S
 
+import           Control.Lens        (filtered, has)
 import           Data.Aeson
+import           Data.Data.Lens      (template)
 
 import qualified Data.HashMap.Strict as M
 import qualified Data.Text.Extended  as T
@@ -436,19 +438,25 @@ mkColCompExp qual lhsCol = mkCompExp (mkQCol lhsCol)
         sqlAll = foldr (S.BEBin S.AndOp) (S.BELit True)
         pgTypeToAnnType = S.TypeAnn . T.pack . show
 
-getColExpDeps :: QualifiedTable -> AnnBoolExpFld a -> [SchemaDependency]
+hasStaticExp :: OpExpG PartialSQLExp -> Bool
+hasStaticExp = has (template . filtered isStaticValue)
+
+getColExpDeps
+  :: QualifiedTable -> AnnBoolExpFldPartialSQL -> [SchemaDependency]
 getColExpDeps tn = \case
   AVCol colInfo opExps ->
     let cn = pgiName colInfo
+        colDepReason = bool DRSessionVariable DROnType $ any hasStaticExp opExps
+        colDep = mkColDep colDepReason tn cn
         depColsInOpExp = mapMaybe opExpDepCol opExps
-        allDepCols = cn:depColsInOpExp
-    in map (mkColDep "on_type" tn) allDepCols
+        colDepsInOpExp = map (mkColDep DROnType tn) depColsInOpExp
+    in colDep:colDepsInOpExp
   AVRel relInfo relBoolExp ->
     let rn = riName relInfo
         relTN = riRTable relInfo
-        pd = SchemaDependency (SOTableObj tn (TORel rn)) "on_type"
+        pd = SchemaDependency (SOTableObj tn (TORel rn)) DROnType
     in pd : getBoolExpDeps relTN relBoolExp
 
-getBoolExpDeps :: QualifiedTable -> AnnBoolExp a -> [SchemaDependency]
+getBoolExpDeps :: QualifiedTable -> AnnBoolExpPartialSQL -> [SchemaDependency]
 getBoolExpDeps tn =
   foldr (\annFld deps -> getColExpDeps tn annFld <> deps) []

@@ -22,7 +22,6 @@ import qualified Hasura.SQL.DML                    as S
 import qualified Hasura.RQL.DML.Select             as RS
 
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
@@ -32,13 +31,6 @@ import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-
--- withPrepFn
---   :: (MonadReader r m)
---   => PrepFn m -> ReaderT (r, PrepFn m) m a -> m a
--- withPrepFn fn m = do
---   r <- ask
---   runReaderT m (r, fn)
 
 convertMutResp
   :: ( MonadError QErr m, MonadReader r m, Has FieldMap r

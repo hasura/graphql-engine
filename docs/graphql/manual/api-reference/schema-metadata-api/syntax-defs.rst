@@ -254,6 +254,8 @@ ColumnExp
        PGColumn_ : { Operator_ : Value }
    }
 
+.. _MetadataOperator:
+
 Operator
 ^^^^^^^^
 
@@ -431,7 +433,8 @@ RemoteSchemaDef
              "value_from_env": env-var-string
            }
       ],
-      "forward_client_headers": boolean
+      "forward_client_headers": boolean,
+      "timeout_seconds": integer
    }
 
 .. _CollectionName:

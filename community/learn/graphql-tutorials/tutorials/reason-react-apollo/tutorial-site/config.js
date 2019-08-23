@@ -5,8 +5,9 @@ const config = {
 		"gaTrackingId": "UA-59768903-1"
 	},
 	"header": {
-		"logo": "https://graphql-engine-cdn.hasura.io/img/hasura_icon_white.svg",
-		"title": "/ graphql / reason-react-apollo",
+		"logo": "https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/logo.png",
+		"logoLink": "https://learn.hasura.io",
+		"title": "<a href='https://learn.hasura.io'>/ graphql </a><a href='https://learn.hasura.io/graphql/reason-react-apollo'>/ reason-react-apollo</a>",
 		"githubUrl": "https://github.com/hasura/graphql-engine",
 		"helpUrl": "https://discordapp.com/invite/vBPpJkS",
 		"tweetText": "Check out this GraphQL course for Reason React developers by @HasuraHQ https://learn.hasura.io/graphql/reason-react-apollo",
@@ -37,14 +38,16 @@ const config = {
 			"text": "GraphQL Docs",
 			"link": "https://graphql.org/learn"
 			}
-		]
+		],
+		"frontline": false,
+		"ignoreIndex": true
 	},
 	"siteMetadata": {
 		"title": "2 hour GraphQL course for React developers | Hasura",
 		"description": "A concise and powerful tutorial that covers fundamental concepts of both GraphQL and using GraphQL in ReactReact",
-		"ogImage": "https://graphql-engine-cdn.hasura.io/learn-hasura/assets/twitter-card-react.png",
+		"ogImage": "https://graphql-engine-cdn.hasura.io/learn-hasura/assets/social-media/twitter-card-reason-react-apollo.png",
 		"docsLocation": "https://github.com/hasura/graphql-engine/tree/master/community/learn/graphql-tutorials/tutorials/reason-react-apollo/tutorial-site/content",
-		"favicon": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/React-icon.svg/500px-React-icon.svg.png"
+		"favicon": "https://raw.githubusercontent.com/reasonml/reasonml.github.io/source/website/static/img/icon_50.png"
 	},
 };
 

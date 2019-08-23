@@ -14,8 +14,6 @@ import qualified Data.ByteString.Lazy.Char8       as BLC
 import qualified Data.HashSet                     as Set
 import qualified Data.String                      as DataString
 import qualified Data.Text                        as T
-import qualified Data.UUID                        as UUID
-import qualified Data.UUID.V4                     as UUID
 import qualified Hasura.GraphQL.Execute.LiveQuery as LQ
 import qualified Hasura.Logging                   as L
 import qualified Text.PrettyPrint.ANSI.Leijen     as PP
@@ -37,8 +35,8 @@ newtype InstanceId
   = InstanceId { getInstanceId :: Text }
   deriving (Show, Eq, J.ToJSON, J.FromJSON, Q.FromCol, Q.ToPrepArg)
 
-mkInstanceId :: IO InstanceId
-mkInstanceId = InstanceId . UUID.toText <$> UUID.nextRandom
+generateInstanceId :: IO InstanceId
+generateInstanceId = InstanceId <$> generateFingerprint
 
 data StartupTimeInfo
   = StartupTimeInfo
@@ -457,7 +455,7 @@ serveCmdFooter =
         , "Max event threads"
         )
       , ( "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
-        , "Postgres events polling interval"
+        , "Postgres events polling interval in milliseconds"
         )
       ]
 

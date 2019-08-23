@@ -33,7 +33,7 @@ Let us integrate the remove todos feature in our React Native app. Firstly impor
 +`;
 ```
 
-Now, in the render method of the `TodoItem` component, update the `deletetButton` function to wrap the button JSX with a `Mutation` component.
+Now, in the render method of the `TodoItem` component, update the `deleteButton` function to wrap the button JSX with a `Mutation` component.
 
 ```js
 

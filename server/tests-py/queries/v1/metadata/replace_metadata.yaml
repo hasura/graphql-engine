@@ -6,7 +6,6 @@ response:
 query:
   type: replace_metadata
   args:
-    query_templates: []
     remote_schemas:
     - name: test
       comment: testing replace metadata with remote schemas

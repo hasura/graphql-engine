@@ -111,20 +111,20 @@ objRelP2Setup qt fkeys (RelDef rn ru _) = do
     RUManual (ObjRelManualConfig rm) -> do
       let refqt = rmTable rm
           (lCols, rCols) = unzip $ M.toList $ rmColumns rm
-          deps  = map (\c -> SchemaDependency (SOTableObj qt $ TOCol c) "lcol") lCols
-                  <> map (\c -> SchemaDependency (SOTableObj refqt $ TOCol c) "rcol") rCols
+          deps  = map (\c -> SchemaDependency (SOTableObj qt $ TOCol c) DRLeftColumn) lCols
+                  <> map (\c -> SchemaDependency (SOTableObj refqt $ TOCol c) DRRightColumn) rCols
       return (RelInfo rn ObjRel (zip lCols rCols) refqt True, deps)
     RUFKeyOn cn -> do
       -- TODO: validation should account for this too
       ForeignKey _ refqt _ consName colMap <-
         getRequiredFkey cn fkeys $ \fk -> _fkTable fk == qt
 
-      let deps = [ SchemaDependency (SOTableObj qt $ TOCons consName) "fkey"
-                 , SchemaDependency (SOTableObj qt $ TOCol cn) "using_col"
+      let deps = [ SchemaDependency (SOTableObj qt $ TOCons consName) DRFkey
+                 , SchemaDependency (SOTableObj qt $ TOCol cn) DRUsingColumn
                  -- this needs to be added explicitly to handle the remote table
                  -- being untracked. In this case, neither the using_col nor
                  -- the constraint name will help.
-                 , SchemaDependency (SOTable refqt) "remote_table"
+                 , SchemaDependency (SOTable refqt) DRRemoteTable
                  ]
           colMapping = HM.toList colMap
       void $ askTabInfo refqt
@@ -186,19 +186,19 @@ arrRelP2Setup qt fkeys (RelDef rn ru _) = do
     RUManual (ArrRelManualConfig rm) -> do
       let refqt = rmTable rm
           (lCols, rCols) = unzip $ M.toList $ rmColumns rm
-          deps  = map (\c -> SchemaDependency (SOTableObj qt $ TOCol c) "lcol") lCols
-                  <> map (\c -> SchemaDependency (SOTableObj refqt $ TOCol c) "rcol") rCols
+          deps  = map (\c -> SchemaDependency (SOTableObj qt $ TOCol c) DRLeftColumn) lCols
+                  <> map (\c -> SchemaDependency (SOTableObj refqt $ TOCol c) DRRightColumn) rCols
       return (RelInfo rn ArrRel (zip lCols rCols) refqt True, deps)
     RUFKeyOn (ArrRelUsingFKeyOn refqt refCol) -> do
       -- TODO: validation should account for this too
       ForeignKey _ _ _ consName colMap <- getRequiredFkey refCol fkeys $
         \fk -> _fkTable fk == refqt && _fkRefTable fk == qt
-      let deps = [ SchemaDependency (SOTableObj refqt $ TOCons consName) "remote_fkey"
-                 , SchemaDependency (SOTableObj refqt $ TOCol refCol) "using_col"
+      let deps = [ SchemaDependency (SOTableObj refqt $ TOCons consName) DRRemoteFkey
+                 , SchemaDependency (SOTableObj refqt $ TOCol refCol) DRUsingColumn
                  -- we don't need to necessarily track the remote table like we did in
                  -- case of obj relationships as the remote table is indirectly
                  -- tracked by tracking the constraint name and 'using_col'
-                 , SchemaDependency (SOTable refqt) "remote_table"
+                 , SchemaDependency (SOTable refqt) DRRemoteTable
                  ]
           mapping = HM.toList colMap
       return (RelInfo rn ArrRel (map swap mapping) refqt False, deps)

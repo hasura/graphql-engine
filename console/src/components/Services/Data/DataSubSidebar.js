@@ -3,8 +3,18 @@ import { connect } from 'react-redux';
 import { Link } from 'react-router';
 
 import LeftSubSidebar from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
-
-const appPrefix = '/data';
+import gqlPattern from './Common/GraphQLValidation';
+import GqlCompatibilityWarning from '../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
+import {
+  displayTableName,
+  getFunctionName,
+  getTableName,
+} from '../../Common/utils/pgUtils';
+import {
+  getFunctionModifyRoute,
+  getSchemaAddTableRoute,
+  getTableBrowseRoute,
+} from '../../Common/utils/routesUtils';
 
 class DataSubSidebar extends React.Component {
   constructor() {
@@ -33,6 +43,7 @@ class DataSubSidebar extends React.Component {
     if (nextProps.metadata.ongoingRequest) {
       return false;
     }
+
     return true;
   }
 
@@ -47,7 +58,7 @@ class DataSubSidebar extends React.Component {
   render() {
     const styles = require('../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
     const functionSymbol = require('../../Common/Layout/LeftSubSidebar/function.svg');
-    const functionSymbolActive = require('../../Common/Layout/LeftSubSidebar/function_high.svg');
+    const functionSymbolActive = require('../../Common/Layout/LeftSubSidebar/function_active.svg');
     const {
       functionsList,
       currentTable,
@@ -62,11 +73,11 @@ class DataSubSidebar extends React.Component {
     const trackedTablesLength = trackedTables.length;
 
     const tableList = trackedTables.filter(t =>
-      t.table_name.includes(searchInput)
+      getTableName(t).includes(searchInput)
     );
 
     const listedFunctions = functionsList.filter(f =>
-      f.function_name.includes(searchInput)
+      getFunctionName(f).includes(searchInput)
     );
 
     const getSearchInput = () => {
@@ -91,7 +102,7 @@ class DataSubSidebar extends React.Component {
       const tables = {};
       tableList.map(t => {
         if (t.is_table_tracked) {
-          tables[t.table_name] = t;
+          tables[getTableName(t)] = t;
         }
       });
 
@@ -101,6 +112,8 @@ class DataSubSidebar extends React.Component {
         tableLinks = Object.keys(tables)
           .sort()
           .map((tableName, i) => {
+            const table = tables[tableName];
+
             let activeTableClass = '';
             if (
               tableName === currentTable &&
@@ -108,49 +121,26 @@ class DataSubSidebar extends React.Component {
             ) {
               activeTableClass = styles.activeTable;
             }
-            if (tables[tableName].table_type === 'BASE TABLE') {
-              return (
-                <li className={activeTableClass} key={i}>
-                  <Link
-                    to={
-                      appPrefix +
-                      '/schema/' +
-                      currentSchema +
-                      '/tables/' +
-                      tableName +
-                      '/browse'
-                    }
-                    data-test={tableName}
-                  >
-                    <i
-                      className={styles.tableIcon + ' fa fa-table'}
-                      aria-hidden="true"
-                    />
-                    {tableName}
-                  </Link>
-                </li>
+
+            let gqlCompatibilityWarning = null;
+            if (!gqlPattern.test(tableName)) {
+              gqlCompatibilityWarning = (
+                <span className={styles.add_mar_left_mid}>
+                  <GqlCompatibilityWarning />
+                </span>
               );
             }
 
             return (
               <li className={activeTableClass} key={i}>
-                <Link
-                  to={
-                    appPrefix +
-                    '/schema/' +
-                    currentSchema +
-                    '/views/' +
-                    tableName +
-                    '/browse'
-                  }
-                  data-test={tableName}
-                >
+                <Link to={getTableBrowseRoute(table)} data-test={tableName}>
                   <i
                     className={styles.tableIcon + ' fa fa-table'}
                     aria-hidden="true"
                   />
-                  <i>{tableName}</i>
+                  {displayTableName(table)}
                 </Link>
+                {gqlCompatibilityWarning}
               </li>
             );
           });
@@ -164,38 +154,23 @@ class DataSubSidebar extends React.Component {
 
       // If the listedFunctions is non empty
       if (listedFunctions.length > 0) {
-        const functionHtml = listedFunctions.map((f, i) => (
-          <li
-            className={
-              f.function_name === currentFunction ? styles.activeTable : ''
-            }
-            key={'fn ' + i}
-          >
-            <Link
-              to={
-                appPrefix +
-                '/schema/' +
-                currentSchema +
-                '/functions/' +
-                f.function_name
-              }
-              data-test={f.function_name}
-            >
-              <div
-                className={styles.display_inline + ' ' + styles.functionIcon}
-              >
-                <img
-                  src={
-                    f.function_name === currentFunction
-                      ? functionSymbolActive
-                      : functionSymbol
-                  }
-                />
-              </div>
-              {f.function_name}
-            </Link>
-          </li>
-        ));
+        const functionHtml = listedFunctions.map((func, i) => {
+          const funcName = getFunctionName(func);
+          const isActive = funcName === currentFunction;
+
+          return (
+            <li className={isActive ? styles.activeTable : ''} key={'fn ' + i}>
+              <Link to={getFunctionModifyRoute(func)} data-test={funcName}>
+                <div
+                  className={styles.display_inline + ' ' + styles.functionIcon}
+                >
+                  <img src={isActive ? functionSymbolActive : functionSymbol} />
+                </div>
+                {getFunctionName(func)}
+              </Link>
+            </li>
+          );
+        });
 
         tableLinks = [...tableLinks, ...dividerHr, ...functionHtml];
       } else if (
@@ -219,7 +194,7 @@ class DataSubSidebar extends React.Component {
         showAddBtn={migrationMode}
         searchInput={getSearchInput()}
         heading={`Tables (${trackedTablesLength})`}
-        addLink={'/data/schema/' + currentSchema + '/table/add'}
+        addLink={getSchemaAddTableRoute(currentSchema)}
         addLabel={'Add Table'}
         addTestString={'sidebar-add-table'}
         childListTestString={'table-links'}
