@@ -1,5 +1,4 @@
 import defaultState from './State';
-import jsonFormat from './JSONFormat';
 import Notifications from 'react-notification-system-redux';
 
 const LOAD_REQUEST = 'App/ONGOING_REQUEST';
@@ -7,9 +6,6 @@ const DONE_REQUEST = 'App/DONE_REQUEST';
 const FAILED_REQUEST = 'App/FAILED_REQUEST';
 const ERROR_REQUEST = 'App/ERROR_REQUEST';
 const CONNECTION_FAILED = 'App/CONNECTION_FAILED';
-const CLOSE_MODAL = 'App/CLOSE_MODAL';
-const NOTIF_EXPANDED = 'App/NOTIF_EXPANDED';
-const NOTIF_MSG = 'App/NOTIF_MSG';
 
 /**
  * Global notification function
@@ -29,20 +25,19 @@ const NOTIF_MSG = 'App/NOTIF_MSG';
 const showNotification = ({
   level = 'info',
   position = 'tr',
-  json,
   ...options
 } = {}) => {
   return dispatch => {
     if (level === 'success') {
       dispatch(Notifications.removeAll());
     }
+
     dispatch(
       Notifications.show(
         {
           position,
           autoDismiss: ['error', 'warning'].includes(level) ? 0 : 5,
           dismissible: ['error', 'warning'].includes(level) ? 'button' : 'both',
-          children: json ? jsonFormat(json) : null,
           ...options,
         },
         level
@@ -50,9 +45,6 @@ const showNotification = ({
     );
   };
 };
-
-const notifExpand = isExpanded => ({ type: NOTIF_EXPANDED, data: isExpanded });
-const notifMsg = finalMsg => ({ type: NOTIF_MSG, data: finalMsg });
 
 const progressBarReducer = (state = defaultState, action) => {
   switch (action.type) {
@@ -103,24 +95,6 @@ const progressBarReducer = (state = defaultState, action) => {
         error: true,
         connectionFailed: true,
       };
-
-    case CLOSE_MODAL:
-      return {
-        ...state,
-        modalOpen: false,
-      };
-
-    case NOTIF_EXPANDED:
-      return {
-        ...state,
-        isNotifExpanded: action.data,
-      };
-    case NOTIF_MSG:
-      return {
-        ...state,
-        notifMsg: action.data,
-      };
-
     default:
       return state;
   }
@@ -132,10 +106,6 @@ export {
   DONE_REQUEST,
   FAILED_REQUEST,
   ERROR_REQUEST,
-  CLOSE_MODAL,
   CONNECTION_FAILED,
-  NOTIF_EXPANDED,
-  notifExpand,
-  notifMsg,
   showNotification,
 };

@@ -15,6 +15,7 @@ import           Language.Haskell.TH.Syntax (Lift)
 
 import qualified Data.HashMap.Strict        as M
 import qualified Data.Text.Extended         as T
+import qualified Hasura.SQL.DML             as S
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
@@ -203,15 +204,22 @@ getDependentHeaders (BoolExp boolExp) =
 
 valueParser
   :: (MonadError QErr m)
-  => PGColType -> Value -> m PartialSQLExp
-valueParser columnType = \case
+  => PgType -> Value -> m PartialSQLExp
+valueParser pgType = \case
   -- When it is a special variable
-  val@(String t)
-    | isUserVar t   -> return $ PSESessVar columnType t
-    | isReqUserId t -> return $ PSESessVar columnType userIdHeader
-    | otherwise     -> PSESQLExp <$> txtRHSBuilder columnType val
+  String t
+    | isUserVar t   -> return $ PSESessVar pgType t
+    | isReqUserId t -> return $ PSESessVar pgType userIdHeader
+    | otherwise     -> return $ PSESQLExp $
+                       S.SETyAnn (S.SELit t) $ S.mkTypeAnn pgType
+
   -- Typical value as Aeson's value
-  val -> PSESQLExp <$> txtRHSBuilder columnType val
+  val -> case pgType of
+    PgTypeSimple columnType -> PSESQLExp <$> txtRHSBuilder columnType val
+    PgTypeArray ofType -> do
+      vals <- runAesonParser parseJSON val
+      arrayExp <- S.SEArray <$> indexedForM vals (txtRHSBuilder ofType)
+      return $ PSESQLExp $ S.SETyAnn arrayExp $ S.mkTypeAnn pgType
 
 injectDefaults :: QualifiedTable -> QualifiedTable -> Q.Query
 injectDefaults qv qt =

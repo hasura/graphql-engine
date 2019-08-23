@@ -72,7 +72,7 @@ $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''WSLog)
 
 instance L.ToEngineLog WSLog where
   toEngineLog wsLog =
-    (L.LevelDebug, "ws-server", J.toJSON wsLog)
+    (L.LevelDebug, L.ELTWsServer, J.toJSON wsLog)
 
 data WSConn a
   = WSConn

@@ -1,0 +1,22 @@
+# Track table and function with same name: error
+- description: Track table
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: track_table
+    args:
+      name: test1
+
+- description: Track function
+  url: /v1/query
+  status: 400
+  response:
+    code: not-supported
+    error: table with name "test1" already exists
+    path: $.args
+  query:
+    type: track_function
+    args:
+      name: test1

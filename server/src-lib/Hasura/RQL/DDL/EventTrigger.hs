@@ -42,7 +42,7 @@ triggerTmplt = case parseGingerTmplt $(FE.embedStringFile "src-rsr/trigger.sql.j
   Right tmplt -> Just tmplt
 
 pgIdenTrigger:: Ops -> TriggerName -> T.Text
-pgIdenTrigger op trn = pgFmtIden (qualifyTriggerName op trn)
+pgIdenTrigger op trn = pgFmtIden . qualifyTriggerName op $ triggerNameToTxt trn
   where
     qualifyTriggerName op' trn' = "notify_hasura_" <> trn' <> "_" <> T.pack (show op')
 
@@ -61,7 +61,7 @@ getTriggerSql
   -> Maybe T.Text
 getTriggerSql op trn qt allCols strfyNum spec =
   let globalCtx =  HashMap.fromList
-                   [ (T.pack "NAME", trn)
+                   [ (T.pack "NAME", triggerNameToTxt trn)
                    , (T.pack "QUALIFIED_TRIGGER_NAME", pgIdenTrigger op trn)
                    , (T.pack "QUALIFIED_TABLE", toSQLTxt qt)
                    ]
@@ -258,7 +258,7 @@ subTableP2Setup qt (EventTriggerConf name def webhook webhookFromEnv rconf mhead
   webhookInfo <- getWebhookInfoFromConf webhookConf
   headerInfos <- getHeaderInfosFromConf headerConfs
   let eTrigInfo = EventTriggerInfo name def rconf webhookInfo headerInfos
-      tabDep = SchemaDependency (SOTable qt) "parent"
+      tabDep = SchemaDependency (SOTable qt) DRParent
   addEventTriggerToCache qt eTrigInfo (tabDep:getTrigDefDeps qt def)
 
 getTrigDefDeps :: QualifiedTable -> TriggerOpsDef -> [SchemaDependency]
@@ -272,10 +272,10 @@ getTrigDefDeps qt (TriggerOpsDef mIns mUpd mDel _) =
     subsOpSpecDeps os =
       let cols = getColsFromSub $ sosColumns os
           colDeps = flip map cols $ \col ->
-            SchemaDependency (SOTableObj qt (TOCol col)) "column"
+            SchemaDependency (SOTableObj qt (TOCol col)) DRColumn
           payload = maybe [] getColsFromSub (sosPayload os)
           payloadDeps = flip map payload $ \col ->
-            SchemaDependency (SOTableObj qt (TOCol col)) "payload"
+            SchemaDependency (SOTableObj qt (TOCol col)) DRPayload
         in colDeps <> payloadDeps
     getColsFromSub sc = case sc of
       SubCStar         -> []

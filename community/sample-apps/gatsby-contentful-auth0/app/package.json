@@ -1,0 +1,35 @@
+{
+  "name": "gatsby-contentful-hasura",
+  "private": true,
+  "description": "A music playlist app built with Gatsby, Contentful and Hasura GraphQL",
+  "version": "0.1.0",
+  "license": "MIT",
+  "scripts": {
+    "build": "gatsby build",
+    "develop": "gatsby develop",
+    "format": "prettier --write src/**/*.{js,jsx}",
+    "start": "npm run develop",
+    "serve": "gatsby serve",
+    "test": "echo \"Write tests! -> https://gatsby.dev/unit-testing\""
+  },
+  "dependencies": {
+    "@reach/router": "^1.2.1",
+    "apollo-cache-inmemory": "^1.6.2",
+    "apollo-client": "^2.6.3",
+    "apollo-link-http": "^1.5.15",
+    "apollo-link-ws": "^1.0.18",
+    "auth0-js": "^9.10.1",
+    "gatsby": "^2.3.16",
+    "gatsby-source-graphql": "^2.1.3",
+    "graphql": "^14.4.2",
+    "graphql-tag": "^2.10.1",
+    "node-fetch": "^2.6.0",
+    "react": "^16.8.6",
+    "react-apollo": "^2.5.8",
+    "react-dom": "^16.8.6",
+    "subscriptions-transport-ws": "^0.9.16"
+  },
+  "devDependencies": {
+    "prettier": "^1.16.4"
+  }
+}

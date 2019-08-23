@@ -125,6 +125,8 @@ uBoolExp = restoringIdens . \case
   S.BENot b -> S.BENot <$> uBoolExp b
   S.BECompare op left right ->
     S.BECompare <$> return op <*> uSqlExp left <*> uSqlExp right
+  S.BECompareAny op left right ->
+    S.BECompareAny <$> return op <*> uSqlExp left <*> uSqlExp right
   S.BENull e -> S.BENull <$> uSqlExp e
   S.BENotNull e -> S.BENotNull <$> uSqlExp e
   S.BEExists sel -> S.BEExists <$> uSelect sel

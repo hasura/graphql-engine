@@ -1,8 +1,9 @@
 /* Constants */
 
+// TODO: generate using SQL query to handle all types
 export const PGTypes = {
   boolean: ['boolean'],
-  character: ['character', 'character varying', 'text'],
+  character: ['character', 'character varying', 'text', 'citext'],
   dateTime: [
     'timestamp',
     'timestamp with time zone',
@@ -76,6 +77,36 @@ const columnOperatorsInfo = {
     inputType: 'boolean',
     PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
   },
+  _ceq: {
+    type: 'object',
+    inputType: 'column',
+    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+  },
+  _cne: {
+    type: 'object',
+    inputType: 'column',
+    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+  },
+  _cgt: {
+    type: 'object',
+    inputType: 'column',
+    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+  },
+  _clt: {
+    type: 'object',
+    inputType: 'column',
+    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+  },
+  _cgte: {
+    type: 'object',
+    inputType: 'column',
+    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+  },
+  _clte: {
+    type: 'object',
+    inputType: 'column',
+    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+  },
   _like: {
     type: 'object',
     PGTypes: ['character'],
@@ -113,16 +144,16 @@ const columnOperatorsInfo = {
     inputType: 'character',
     PGTypes: ['json'],
   },
-  // _has_key_any: {
-  //   type: 'array',
-  //   inputType: 'character',
-  //   PGTypes: ['json']
-  // },
-  // _has_key_all: {
-  //   type: 'array',
-  //   inputType: 'character',
-  //   PGTypes: ['json']
-  // },
+  _has_keys_any: {
+    type: 'array',
+    inputType: 'character',
+    PGTypes: ['json'],
+  },
+  _has_keys_all: {
+    type: 'array',
+    inputType: 'character',
+    PGTypes: ['json'],
+  },
   _st_contains: {
     type: 'object',
     PGTypes: ['geometry'],

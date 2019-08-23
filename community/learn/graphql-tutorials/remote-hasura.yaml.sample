@@ -59,6 +59,26 @@ spec:
       name: android-apollo
       path: ./community/learn/graphql-tutorials/tutorials/android-apollo/tutorial-site
     name: android-apollo
+  - containers:
+    - dockerfile: ./community/learn/graphql-tutorials/tutorials/elm-graphql/tutorial-site/Dockerfile
+      name: elm-graphql
+      path: ./community/learn/graphql-tutorials/tutorials/elm-graphql/tutorial-site
+    name: elm-graphql
+  - containers:
+    - dockerfile: ./community/learn/graphql-tutorials/tutorials/reason-react-apollo/tutorial-site/Dockerfile
+      name: reason-react-apollo
+      path: ./community/learn/graphql-tutorials/tutorials/reason-react-apollo/tutorial-site
+    name: reason-react-apollo
+  - containers:
+    - dockerfile: ./community/learn/graphql-tutorials/tutorials/angular-apollo/tutorial-site/Dockerfile
+      name: angular-apollo
+      path: ./community/learn/graphql-tutorials/tutorials/angular-apollo/tutorial-site
+    name: angular-apollo
+  - containers:
+    - dockerfile: ./community/learn/graphql-tutorials/tutorials/flutter-graphql/tutorial-site/Dockerfile
+      name: flutter-graphql
+      path: ./community/learn/graphql-tutorials/tutorials/flutter-graphql/tutorial-site
+    name: flutter-graphql
   manifests:
     helm: {}
     path: ./community/learn/graphql-tutorials/manifests

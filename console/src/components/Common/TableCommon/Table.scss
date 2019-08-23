@@ -31,20 +31,6 @@
   }
 }
 
-.aceBlock {
-  max-height: 300px;
-  position: relative;
-  margin-top: 10px;
-}
-
-.aceBlockExpand {
-  position: absolute;
-  top: -25px;
-  right: 5px;
-  z-index: 1;
-  cursor: pointer;
-}
-
 .viewRowsContainer {
   border-left: 1px solid #ddd;
 }
@@ -77,18 +63,18 @@
 .table {
   width: auto;
 
-  thead {
-    background: #333;
-    color: #ddd;
+  tr:nth-child(even) {
+    background: #f4f4f4
   }
 
   th {
-    min-width: 100px;
+    //min-width: 100px;
     font-weight: 300;
   }
 
-  td {
-    max-width: 300px;
+  tbody > tr > td {
+    padding: 4px 8px;
+    max-width: 600px;
     white-space: pre;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -154,15 +140,6 @@ a.expanded {
   }
 }
 
-.iClickable {
-}
-
-.iClickable:hover {
-  cursor: pointer;
-  color: #b85c27;
-  transition: 0.2s;
-}
-
 .insertBox {
   min-width: 270px;
 }
@@ -204,5 +181,5 @@ a.expanded {
 }
 
 .tableCellExpanded {
-  white-space: normal;
+  white-space: pre-wrap;
 }

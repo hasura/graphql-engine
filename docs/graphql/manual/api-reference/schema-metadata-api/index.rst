@@ -314,4 +314,4 @@ See :doc:`../../deployment/graphql-engine-flags/reference` for info on setting t
   Remote Schemas <remote-schemas>
   Query Collections <query-collections>
   Manage Metadata <manage-metadata>
-  Syntax definitions <syntax-defs>
+  Common syntax definitions <syntax-defs>

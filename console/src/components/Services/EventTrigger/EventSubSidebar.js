@@ -77,7 +77,7 @@ const EventSubSidebar = ({
                 data-test={trigger}
               >
                 <i
-                  className={styles.tableIcon + ' fa fa-table'}
+                  className={styles.tableIcon + ' fa fa-send-o'}
                   aria-hidden="true"
                 />
                 {trigger}

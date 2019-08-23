@@ -1,0 +1,16 @@
+<div class="todoListWrapper">
+      <ul>
+        <ng-container *ngFor="let todo of filteredTodos; let i = index" [attr.data-index]="i">
+            <TodoItem
+              [todo]="todo"
+            ></TodoItem>
+        </ng-container>
+      </ul>
+    </div>
+
+    <TodoFilters
+      [todos]="filteredTodos"
+      [currentFilter]="filter"
+      (filterResultsFn)="filterResults($event)"
+      (clearCompletedFn)="clearCompleted()"
+    ></TodoFilters>

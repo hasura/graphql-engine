@@ -1,12 +1,13 @@
-import PropTypes from 'prop-types';
-
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
+import { Link } from 'react-router';
+
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 
 import {
-  untrackedTip,
+  untrackedTablesTip,
   untrackedRelTip,
   trackableFunctionsTip,
   nonTrackableFunctionsTip,
@@ -27,12 +28,15 @@ import {
   autoAddRelName,
   autoTrackRelations,
 } from '../TableRelationships/Actions';
-import globals from '../../../../Globals';
 import { getRelDef } from '../TableRelationships/utils';
+import {
+  getSchemaAddTableRoute,
+  getSchemaPermissionsRoute,
+} from '../../../Common/utils/routesUtils';
 import { createNewSchema, deleteCurrentSchema } from './Actions';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
-
-const appPrefix = globals.urlPrefix + '/data';
+import gqlPattern from '../Common/GraphQLValidation';
+import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
 
 class Schema extends Component {
   constructor(props) {
@@ -98,7 +102,30 @@ class Schema extends Component {
         table => !table.is_table_tracked && table.table_schema === currentSchema
       );
 
+      // update tableInfo with graphql compatibility
+      _untrackedTables.forEach(t => {
+        t.isGQLCompatible = gqlPattern.test(t.table_name);
+      });
+
       return _untrackedTables.sort(tableSortFunc);
+    };
+
+    const getSectionHeading = (headingText, tooltip, actionBtn = null) => {
+      return (
+        <div>
+          <h4
+            className={`${styles.subheading_text} ${styles.display_inline} ${
+              styles.add_mar_right_mid
+            }`}
+          >
+            {headingText}
+          </h4>
+          <OverlayTrigger placement="right" overlay={tooltip}>
+            <i className="fa fa-info-circle" aria-hidden="true" />
+          </OverlayTrigger>
+          {actionBtn}
+        </div>
+      );
     };
 
     /***********/
@@ -113,7 +140,7 @@ class Schema extends Component {
         const handleClick = e => {
           e.preventDefault();
 
-          dispatch(push(`${appPrefix}/schema/${currentSchema}/table/add`));
+          dispatch(push(getSchemaAddTableRoute(currentSchema)));
         };
 
         createBtn = (
@@ -317,6 +344,12 @@ class Schema extends Component {
             dispatch(addExistingTableSql());
           };
 
+          const gqlCompatibilityWarning = !table.isGQLCompatible ? (
+            <span className={styles.add_mar_left_mid}>
+              <GqlCompatibilityWarning />
+            </span>
+          ) : null;
+
           untrackedTablesList.push(
             <div className={styles.padd_bottom} key={`untracked-${i}`}>
               <div
@@ -333,6 +366,7 @@ class Schema extends Component {
                 </Button>
               </div>
               <div className={styles.display_inline}>{table.table_name}</div>
+              {gqlCompatibilityWarning}
             </div>
           );
         });
@@ -346,20 +380,10 @@ class Schema extends Component {
         return untrackedTablesList;
       };
 
-      const heading = (
-        <div>
-          <h4
-            className={`${styles.subheading_text} ${styles.display_inline} ${
-              styles.add_mar_right_mid
-            }`}
-          >
-            Untracked tables or views
-          </h4>
-          <OverlayTrigger placement="right" overlay={untrackedTip}>
-            <i className="fa fa-info-circle" aria-hidden="true" />
-          </OverlayTrigger>
-          {getTrackAllBtn()}
-        </div>
+      const heading = getSectionHeading(
+        'Untracked tables or views',
+        untrackedTablesTip,
+        getTrackAllBtn()
       );
 
       return (
@@ -456,20 +480,10 @@ class Schema extends Component {
         return untrackedRelList;
       };
 
-      const heading = (
-        <div>
-          <h4
-            className={`${styles.subheading_text} ${styles.display_inline} ${
-              styles.add_mar_right_mid
-            }`}
-          >
-            Untracked foreign-key relations
-          </h4>
-          <OverlayTrigger placement="right" overlay={untrackedRelTip}>
-            <i className="fa fa-info-circle" aria-hidden="true" />
-          </OverlayTrigger>
-          {getTrackAllBtn()}
-        </div>
+      const heading = getSectionHeading(
+        'Untracked foreign-key relations',
+        untrackedRelTip,
+        getTrackAllBtn()
       );
 
       return (
@@ -488,19 +502,9 @@ class Schema extends Component {
       let trackableFunctionList = null;
 
       if (trackableFuncs.length > 0) {
-        const heading = (
-          <div>
-            <h4
-              className={`${styles.subheading_text} ${styles.display_inline} ${
-                styles.add_mar_right_mid
-              }`}
-            >
-              Untracked custom functions
-            </h4>
-            <OverlayTrigger placement="right" overlay={trackableFunctionsTip}>
-              <i className="fa fa-info-circle" aria-hidden="true" />
-            </OverlayTrigger>
-          </div>
+        const heading = getSectionHeading(
+          'Untracked custom functions',
+          trackableFunctionsTip
         );
 
         trackableFunctionList = (
@@ -550,22 +554,9 @@ class Schema extends Component {
       let nonTrackableFuncList = null;
 
       if (nonTrackableFunctions.length > 0) {
-        const heading = (
-          <div>
-            <h4
-              className={`${styles.subheading_text} ${styles.display_inline} ${
-                styles.add_mar_right_mid
-              }`}
-            >
-              Non trackable custom functions
-            </h4>
-            <OverlayTrigger
-              placement="right"
-              overlay={nonTrackableFunctionsTip}
-            >
-              <i className="fa fa-info-circle" aria-hidden="true" />
-            </OverlayTrigger>
-          </div>
+        const heading = getSectionHeading(
+          'Non trackable custom functions',
+          nonTrackableFunctionsTip
         );
 
         nonTrackableFuncList = (
@@ -599,6 +590,16 @@ class Schema extends Component {
       return nonTrackableFuncList;
     };
 
+    const getPermissionsSummaryLink = () => {
+      return (
+        <div className={styles.add_mar_top}>
+          <Link to={getSchemaPermissionsRoute(currentSchema)}>
+            Schema permissions summary
+          </Link>
+        </div>
+      );
+    };
+
     return (
       <div
         className={`container-fluid ${styles.padd_left_remove} ${
@@ -618,6 +619,8 @@ class Schema extends Component {
           {getUntrackedRelationsSection()}
           {getUntrackedFunctionsSection()}
           {false && getNonTrackableFunctionsSection()}
+          <hr />
+          {getPermissionsSummaryLink()}
         </div>
       </div>
     );
