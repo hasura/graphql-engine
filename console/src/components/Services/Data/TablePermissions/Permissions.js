@@ -283,9 +283,7 @@ class Permissions extends Component {
         const getQueryTypes = (role, isNewRole) =>
           queryTypes.map(qt => {
             const dispatchOpenEdit = queryType => () => {
-              console.log(isNewRole, permissionsState.newRole);
               if (isNewRole && permissionsState.newRole !== '') {
-                console.log('Dispatching');
                 dispatch(
                   permOpenEdit(tableSchema, permissionsState.newRole, queryType)
                 );

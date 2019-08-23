@@ -32,14 +32,23 @@ const addState = {
   },
 };
 
-const defaultRolePermission = {
+const defaultEditState = {
   role: '',
   allowedTypes: {},
   allowAll: false,
 };
 
 const permissionState = {
-  rolePermissions: [JSON.parse(JSON.stringify(defaultRolePermission))],
+  existingPermissions: [{
+    remote_schema_name: 'mahSchema',
+    definition: {
+      query: ['a', 'b']
+    }
+  }],
+  editState: {
+    ...defaultEditState,
+    isEditting: false
+  },
   currentRemoteSchemaName: '',
   ...asyncState,
 };

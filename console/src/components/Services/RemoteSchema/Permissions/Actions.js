@@ -73,7 +73,7 @@ export const createRemoteSchemaPermission = (index, successCb, failureCb) => {
 };
 
 const reducer = (state = permissionState, action) => {
-  const newRolePermissions = JSON.parse(JSON.stringify(state.rolePermissions));
+  const newRolePermissions = {haha: 'haha'};
 
   switch (action.type) {
     case SET_CURRENT_REMOTE_SCHEMA:
