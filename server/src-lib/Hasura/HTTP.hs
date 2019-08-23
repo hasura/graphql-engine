@@ -26,9 +26,14 @@ hdrsToText hdrs =
 wreqOptions :: HTTP.Manager -> [HTTP.Header] -> Wreq.Options
 wreqOptions manager hdrs =
   Wreq.defaults
-  & Wreq.headers .~  defaultHeaders <> hdrs
+  & Wreq.headers .~  defaultHeaders <> rmDefaultHeaders hdrs
   & Wreq.checkResponse ?~ (\_ _ -> return ())
   & Wreq.manager .~ Right manager
+  where
+    rmDefaultHeaders = filter (not . isDefaultHeader)
+
+isDefaultHeader :: HTTP.Header -> Bool
+isDefaultHeader (hdrName, _) = hdrName `elem` (map fst defaultHeaders)
 
 defaultHeaders :: [HTTP.Header]
 defaultHeaders = [contentType, userAgent]
