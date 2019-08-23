@@ -91,3 +91,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/oliveagle/jsonpath"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/kardianos/osext"

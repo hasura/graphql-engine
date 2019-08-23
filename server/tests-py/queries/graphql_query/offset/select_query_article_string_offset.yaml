@@ -1,5 +1,5 @@
 description: Nested select on article with string offset
-url: /v1alpha1/graphql
+url: /v1/graphql
 status: 200
 response:
   data:

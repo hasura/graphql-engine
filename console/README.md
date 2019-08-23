@@ -15,6 +15,13 @@ Served by:
 
 This guide is for setting-up the console for development on your own machine, and how to contribute.
 
+### Console issues in the repo
+Issues in the repo for the console UI are labelled as `c/console`(see [list](https://github.com/hasura/graphql-engine/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen++label%3Ac%2Fconsole)). Issues also labelled as `good first issue` are aimed at those making their first contribution to the repo (see [list](https://github.com/hasura/graphql-engine/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen++label%3Ac%2Fconsole+label%3A%22good+first+issue%22)). Others marked as `help wanted` are those requiring community contributions on priority (see [list](https://github.com/hasura/graphql-engine/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen++label%3Ac%2Fconsole+label%3A%22help+wanted%22)).
+
+Please note that some of these issues, labelled with both `c/console` and `c/server`, are part of a change/task that requires modifications in both the server and the console.
+
+Feel free to open pull requests to address these issues or to add/fix  console features, even if a corresponding issue doesn't exist. If you are unsure about whether to go ahead and work on something like the latter, please get in touch with the maintainers in the `GraphQL Engine`->`contrib` channel in the community [Discord](https://discord.gg/vBPpJkS).
+
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/en/) (v8.9+)
@@ -45,9 +52,13 @@ Hasura GraphQL engine should be running to develop console in this mode. If you 
 PORT=3000
 NODE_ENV=development
 DATA_API_URL=http://localhost:8080
-ACCESS_KEY=xyz
+ADMIN_SECRET=xyz
+IS_ADMIN_SECRET_SET=true
 CONSOLE_MODE=server
 URL_PREFIX=/
+ASSETS_PATH=https://graphql-engine-cdn.hasura.io/console/assets
+ASSETS_VERSION=channel/beta/v1.0
+CDN_ASSETS=true
 ```
 
 Note that `CONSOLE_MODE` is set to `server`. In this mode, **migrations** will be disabled and the corresponding functionality on the console will be hidden. If you are looking to add/tweak functionality related to migrations, check out [Development with Hasura CLI](#development-with-hasura-cli-cli-mode).
@@ -57,9 +68,11 @@ Environment variables accepted in `server` mode:
 1. `PORT`: Configure the port where Hasura console will run locally.
 2. `NODE_ENV`: `development`
 3. `DATA_API_URL`: Configure it with the Hasura GraphQL Engine url. If you are running it on Heroku, your url will look like <app-name>.herokuapp.com.
-4. `ACCESS_KEY`: Set access key if Hasura GraphQL engine is configured to run with ACCESS_KEY.
+4. `ADMIN_SECRET`: Set admin secret if Hasura GraphQL engine is configured to run with ADMIN_SECRET.
 5. `CONSOLE_MODE`: `server`
 6. `URL_PREFIX`: `/` (forward slash)
+
+> The server also templates `consolePath` in `window.__env` which is the relative path of the current page (something like `/console/data/schema/public`). Using this path, the console determines the DATA_API_URL. You do not need to worry about this in development since you are hardcoding the value of DATA_API_URL in `.env`.
 
 #### Run Development Server:
 
@@ -77,7 +90,7 @@ NODE_ENV=development
 DATA_API_URL=http://localhost:8080
 API_HOST=http://localhost
 API_PORT=9693
-ACCESS_KEY=xyz
+ADMIN_SECRET=xyz
 CONSOLE_MODE=cli
 URL_PREFIX=/
 ```
@@ -88,7 +101,7 @@ Environment variables accepted in `cli` mode:
 3. `DATA_API_URL`: Configure it with the Hasura GraphQL Engine url. If you are running it on Heroku. Your url will look like <app-name>.herokuapp.com
 4. `API_HOST`: Hasura CLI host. Hasura CLI runs on `http://localhost` by default.
 5. `API_PORT`: Hasura CLI port. Hasura CLI exposes the API at `9693` by default
-6. `ACCESS_KEY`: Set access key if Hasura GraphQL engine is configured to run with ACCESS_KEY
+6. `ADMIN_SECRET`: Set admin secret if Hasura GraphQL engine is configured to run with ADMIN_SECRET
 7. `CONSOLE_MODE`: `cli`
 8. `URL_PREFIX`: ‘/’ (forward slash)
 
@@ -123,6 +136,9 @@ Tests are written using [Cypress](https://www.cypress.io/).
 
 You can use the [Redux DevTools Extension](http://extension.remotedev.io/) to inspect and debug the Redux store.
 It should automatically connect to the Redux store when started in development mode.
+
+By default [redux-logger](https://www.npmjs.com/package/redux-logger) is enabled to assist in development.
+You can disable it if you wish by commenting out the `createLogger` line in `src/client.js`
 
 ### Run Tests
 

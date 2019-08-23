@@ -1,0 +1,55 @@
+#Rename article table
+- url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        alter table article rename to articles;
+
+#Perform select
+- url: /v1/query
+  status: 200
+  response:
+  - id: 1
+    title: article 1 by author 1
+    content: content for article 1
+  - id: 2
+    title: article 2 by author 1
+    content: content for article 2
+  - id: 3
+    title: article 1 by author 2
+    content: content for article 3
+  query:
+    type: select
+    args:
+      table: articles
+      columns:
+      - id
+      - title
+      - content
+
+#Revert changes
+- url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        alter table articles rename to article;
+
+#Error
+- url: /v1/query
+  status: 400
+  response:
+    path: "$.args.table"
+    error: table "articles" does not exist
+    code: not-exists
+  query:
+    type: select
+    args:
+      table: articles
+      columns:
+      - id
+      - title
+      - content

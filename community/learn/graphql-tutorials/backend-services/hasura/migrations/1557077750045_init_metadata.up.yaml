@@ -1,0 +1,115 @@
+- args:
+    functions: []
+    query_templates: []
+    remote_schemas: []
+    tables:
+    - array_relationships:
+      - comment: null
+        name: todos
+        using:
+          foreign_key_constraint_on:
+            column: user_id
+            table: todos
+      delete_permissions: []
+      event_triggers: []
+      insert_permissions: []
+      object_relationships: []
+      select_permissions:
+      - comment: null
+        permission:
+          allow_aggregations: false
+          columns:
+          - id
+          - name
+          filter: {}
+        role: user
+      table: users
+      update_permissions:
+      - comment: null
+        permission:
+          columns:
+          - last_seen
+          filter:
+            id:
+              _eq: X-Hasura-User-Id
+          set: {}
+        role: user
+    - array_relationships: []
+      delete_permissions:
+      - comment: null
+        permission:
+          filter:
+            user_id:
+              _eq: X-Hasura-User-Id
+        role: user
+      event_triggers: []
+      insert_permissions:
+      - comment: null
+        permission:
+          check:
+            user_id:
+              _eq: X-Hasura-User-Id
+          columns:
+          - is_public
+          - title
+          set:
+            user_id: x-hasura-user-id
+        role: user
+      object_relationships:
+      - comment: null
+        name: user
+        using:
+          foreign_key_constraint_on: user_id
+      select_permissions:
+      - comment: null
+        permission:
+          columns:
+          - created_at
+          - id
+          - is_completed
+          - is_public
+          - title
+          - user_id
+          filter:
+            _or:
+            - is_public:
+                _eq: "true"
+            - user_id:
+                _eq: X-HASURA-USER-ID
+        role: user
+      table: todos
+      update_permissions:
+      - comment: null
+        permission:
+          columns:
+          - is_completed
+          - title
+          filter:
+            user_id:
+              _eq: X-Hasura-User-Id
+          set: {}
+        role: user
+    - array_relationships: []
+      delete_permissions: []
+      event_triggers: []
+      insert_permissions: []
+      object_relationships:
+      - comment: null
+        name: user
+        using:
+          manual_configuration:
+            column_mapping:
+              id: id
+            remote_table: users
+      select_permissions:
+      - comment: null
+        permission:
+          allow_aggregations: false
+          columns:
+          - id
+          - last_seen
+          filter: {}
+        role: user
+      table: online_users
+      update_permissions: []
+  type: replace_metadata

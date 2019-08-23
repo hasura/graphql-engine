@@ -4,6 +4,9 @@
 module Hasura.RQL.Types.SchemaCache
        ( TableCache
        , SchemaCache(..)
+       , SchemaCacheVer
+       , initSchemaCacheVer
+       , incSchemaCacheVer
        , emptySchemaCache
        , TableInfo(..)
        , TableConstraint(..)
@@ -16,10 +19,15 @@ module Hasura.RQL.Types.SchemaCache
        , onlyJSONBCols
        , onlyComparableCols
        , isUniqueOrPrimary
-       , mkTableInfo
+       , isForeignKey
        , addTableToCache
        , modTableInCache
        , delTableFromCache
+
+       , RemoteSchemaCtx(..)
+       , RemoteSchemaMap
+       , addRemoteSchemaToCache
+       , delRemoteSchemaFromCache
 
        , WithDeps
 
@@ -43,6 +51,7 @@ module Hasura.RQL.Types.SchemaCache
        , addRelToCache
 
        , delColFromCache
+       , updColInCache
        , delRelFromCache
 
        , RolePermInfo(..)
@@ -62,12 +71,7 @@ module Hasura.RQL.Types.SchemaCache
        , DelPermInfo(..)
        , addPermToCache
        , delPermFromCache
-       , InsSetCols
-
-       , QueryTemplateInfo(..)
-       , addQTemplateToCache
-       , delQTemplateFromCache
-       , TemplateParamInfo(..)
+       , PreSetColsPartial
 
        , addEventTriggerToCache
        , delEventTriggerFromCache
@@ -83,18 +87,33 @@ module Hasura.RQL.Types.SchemaCache
        , mkColDep
        , getDependentObjs
        , getDependentObjsWith
+
+       , FunctionType(..)
+       , FunctionArg(..)
+       , FunctionArgName(..)
+       , FunctionName(..)
+       , FunctionInfo(..)
+       , FunctionCache
+       , getFuncsOfTable
+       , addFunctionToCache
+       , askFunctionInfo
+       , delFunctionFromCache
+
+       , replaceAllowlist
        ) where
 
 import qualified Hasura.GraphQL.Context            as GC
+
 import           Hasura.Prelude
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.DML
 import           Hasura.RQL.Types.Error
+import           Hasura.RQL.Types.EventTrigger
+import           Hasura.RQL.Types.Metadata
 import           Hasura.RQL.Types.Permission
+import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCacheTypes
-import           Hasura.RQL.Types.Subscribe
 import           Hasura.SQL.Types
 
 import           Control.Lens
@@ -104,6 +123,7 @@ import           Data.Aeson.TH
 
 import qualified Data.HashMap.Strict               as M
 import qualified Data.HashSet                      as HS
+import qualified Data.Sequence                     as Seq
 import qualified Data.Text                         as T
 
 reportSchemaObjs :: [SchemaObjId] -> T.Text
@@ -115,16 +135,6 @@ mkParentDep tn = SchemaDependency (SOTable tn) "table"
 mkColDep :: T.Text -> QualifiedTable -> PGCol -> SchemaDependency
 mkColDep reason tn col =
   flip SchemaDependency reason . SOTableObj tn $ TOCol col
-
-data QueryTemplateInfo
-  = QueryTemplateInfo
-  { qtiName  :: !TQueryName
-  , qtiQuery :: !QueryT
-  } deriving (Show, Eq)
-
-$(deriveToJSON (aesonDrop 3 snakeCase) ''QueryTemplateInfo)
-
-type QTemplateCache = M.HashMap TQueryName QueryTemplateInfo
 
 onlyIntCols :: [PGColInfo] -> [PGColInfo]
 onlyIntCols = filter (isIntegerType . pgiType)
@@ -139,8 +149,8 @@ onlyComparableCols :: [PGColInfo] -> [PGColInfo]
 onlyComparableCols = filter (isComparableType . pgiType)
 
 getColInfos :: [PGCol] -> [PGColInfo] -> [PGColInfo]
-getColInfos cols allColInfos = flip filter allColInfos $ \ci ->
-  pgiName ci `elem` cols
+getColInfos cols allColInfos =
+  flip filter allColInfos $ \ci -> pgiName ci `elem` cols
 
 type WithDeps a = (a, [SchemaDependency])
 
@@ -183,9 +193,10 @@ isPGColInfo _            = False
 
 data InsPermInfo
   = InsPermInfo
-  { ipiView            :: !QualifiedTable
-  , ipiCheck           :: !AnnBoolExpSQL
-  , ipiSet             :: !InsSetCols
+  { ipiCols            :: !(HS.HashSet PGCol)
+  , ipiView            :: !QualifiedTable
+  , ipiCheck           :: !AnnBoolExpPartialSQL
+  , ipiSet             :: !PreSetColsPartial
   , ipiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq)
 
@@ -195,7 +206,7 @@ data SelPermInfo
   = SelPermInfo
   { spiCols            :: !(HS.HashSet PGCol)
   , spiTable           :: !QualifiedTable
-  , spiFilter          :: !AnnBoolExpSQL
+  , spiFilter          :: !AnnBoolExpPartialSQL
   , spiLimit           :: !(Maybe Int)
   , spiAllowAgg        :: !Bool
   , spiRequiredHeaders :: ![T.Text]
@@ -207,7 +218,8 @@ data UpdPermInfo
   = UpdPermInfo
   { upiCols            :: !(HS.HashSet PGCol)
   , upiTable           :: !QualifiedTable
-  , upiFilter          :: !AnnBoolExpSQL
+  , upiFilter          :: !AnnBoolExpPartialSQL
+  , upiSet             :: !PreSetColsPartial
   , upiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq)
 
@@ -216,7 +228,7 @@ $(deriveToJSON (aesonDrop 3 snakeCase) ''UpdPermInfo)
 data DelPermInfo
   = DelPermInfo
   { dpiTable           :: !QualifiedTable
-  , dpiFilter          :: !AnnBoolExpSQL
+  , dpiFilter          :: !AnnBoolExpPartialSQL
   , dpiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq)
 
@@ -240,8 +252,7 @@ type RolePermInfoMap = M.HashMap RoleName RolePermInfo
 
 data EventTriggerInfo
  = EventTriggerInfo
-   { etiId          :: !TriggerId
-   , etiName        :: !TriggerName
+   { etiName        :: !TriggerName
    , etiOpsDef      :: !TriggerOpsDef
    , etiRetryConf   :: !RetryConf
    , etiWebhookInfo :: !WebhookConfInfo
@@ -258,8 +269,6 @@ data ConstraintType
   | CTPRIMARYKEY
   | CTUNIQUE
   deriving Eq
-
-$(deriveToJSON defaultOptions{constructorTagModifier = drop 2} ''ConstraintType)
 
 constraintTyToTxt :: ConstraintType -> T.Text
 constraintTyToTxt ty = case ty of
@@ -279,6 +288,20 @@ instance FromJSON ConstraintType where
     "UNIQUE"      -> return CTUNIQUE
     c             -> fail $ "unexpected ConstraintType: " <> T.unpack c
 
+instance ToJSON ConstraintType where
+  toJSON = String . constraintTyToTxt
+
+isUniqueOrPrimary :: ConstraintType -> Bool
+isUniqueOrPrimary = \case
+  CTPRIMARYKEY -> True
+  CTUNIQUE     -> True
+  _            -> False
+
+isForeignKey :: ConstraintType -> Bool
+isForeignKey = \case
+  CTFOREIGNKEY -> True
+  _            -> False
+
 data TableConstraint
   = TableConstraint
   { tcType :: !ConstraintType
@@ -286,13 +309,6 @@ data TableConstraint
   } deriving (Show, Eq)
 
 $(deriveJSON (aesonDrop 2 snakeCase) ''TableConstraint)
-
-isUniqueOrPrimary :: TableConstraint -> Bool
-isUniqueOrPrimary (TableConstraint ty _) = case ty of
-  CTCHECK      -> False
-  CTFOREIGNKEY -> False
-  CTPRIMARYKEY -> True
-  CTUNIQUE     -> True
 
 data ViewInfo
   = ViewInfo
@@ -316,33 +332,85 @@ mutableView qt f mVI operation =
 
 data TableInfo
   = TableInfo
-  { tiName                :: !QualifiedTable
-  , tiSystemDefined       :: !Bool
-  , tiFieldInfoMap        :: !FieldInfoMap
-  , tiRolePermInfoMap     :: !RolePermInfoMap
-  , tiConstraints         :: ![TableConstraint]
-  , tiPrimaryKeyCols      :: ![PGCol]
-  , tiViewInfo            :: !(Maybe ViewInfo)
-  , tiEventTriggerInfoMap :: !EventTriggerInfoMap
+  { tiName                  :: !QualifiedTable
+  , tiSystemDefined         :: !Bool
+  , tiFieldInfoMap          :: !FieldInfoMap
+  , tiRolePermInfoMap       :: !RolePermInfoMap
+  , tiUniqOrPrimConstraints :: ![ConstraintName]
+  , tiPrimaryKeyCols        :: ![PGCol]
+  , tiViewInfo              :: !(Maybe ViewInfo)
+  , tiEventTriggerInfoMap   :: !EventTriggerInfoMap
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
 
-mkTableInfo
-  :: QualifiedTable
-  -> Bool
-  -> [TableConstraint]
-  -> [PGColInfo]
-  -> [PGCol]
-  -> Maybe ViewInfo -> TableInfo
-mkTableInfo tn isSystemDefined constraints cols pcols mVI =
-  TableInfo tn isSystemDefined colMap (M.fromList [])
-  constraints pcols mVI (M.fromList [])
-  where
-    colMap     = M.fromList $ map f cols
-    f colInfo = (fromPGCol $ pgiName colInfo, FIColumn colInfo)
+instance FromJSON TableInfo where
+  parseJSON = withObject "TableInfo" $ \o -> do
+    name <- o .: "name"
+    columns <- o .: "columns"
+    pkeyCols <- o .: "primary_key_columns"
+    constraints <- o .: "constraints"
+    viewInfoM <- o .:? "view_info"
+    isSystemDefined <- o .:? "is_system_defined" .!= False
+    let colMap = M.fromList $ flip map columns $
+                 \c -> (fromPGCol $ pgiName c, FIColumn c)
+    return $ TableInfo name isSystemDefined colMap mempty
+                       constraints pkeyCols viewInfoM mempty
+
+data FunctionType
+  = FTVOLATILE
+  | FTIMMUTABLE
+  | FTSTABLE
+  deriving (Eq)
+
+$(deriveJSON defaultOptions{constructorTagModifier = drop 2} ''FunctionType)
+
+funcTypToTxt :: FunctionType -> T.Text
+funcTypToTxt FTVOLATILE  = "VOLATILE"
+funcTypToTxt FTIMMUTABLE = "IMMUTABLE"
+funcTypToTxt FTSTABLE    = "STABLE"
+
+instance Show FunctionType where
+  show = T.unpack . funcTypToTxt
+
+newtype FunctionArgName =
+  FunctionArgName { getFuncArgNameTxt :: T.Text}
+  deriving (Show, Eq, ToJSON)
+
+data FunctionArg
+  = FunctionArg
+  { faName :: !(Maybe FunctionArgName)
+  , faType :: !PGColType
+  } deriving(Show, Eq)
+
+$(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionArg)
+
+data FunctionInfo
+  = FunctionInfo
+  { fiName          :: !QualifiedFunction
+  , fiSystemDefined :: !Bool
+  , fiType          :: !FunctionType
+  , fiInputArgs     :: !(Seq.Seq FunctionArg)
+  , fiReturnType    :: !QualifiedTable
+  , fiDeps          :: ![SchemaDependency]
+  } deriving (Show, Eq)
+
+$(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionInfo)
 
 type TableCache = M.HashMap QualifiedTable TableInfo -- info of all tables
+type FunctionCache = M.HashMap QualifiedFunction FunctionInfo -- info of all functions
+
+data RemoteSchemaCtx
+  = RemoteSchemaCtx
+  { rscName :: !RemoteSchemaName
+  , rscGCtx :: !GC.RemoteGCtx
+  , rscInfo :: !RemoteSchemaInfo
+  } deriving (Show, Eq)
+
+instance ToJSON RemoteSchemaCtx where
+  toJSON = toJSON . rscInfo
+
+type RemoteSchemaMap = M.HashMap RemoteSchemaName RemoteSchemaCtx
 
 type DepMap = M.HashMap SchemaObjId (HS.HashSet SchemaDependency)
 
@@ -361,17 +429,35 @@ removeFromDepMap :: SchemaObjId -> DepMap -> DepMap
 removeFromDepMap =
   M.delete
 
+newtype SchemaCacheVer
+  = SchemaCacheVer { unSchemaCacheVer :: Word64 }
+  deriving (Show, Eq, Hashable, ToJSON, FromJSON)
+
+initSchemaCacheVer :: SchemaCacheVer
+initSchemaCacheVer = SchemaCacheVer 0
+
+incSchemaCacheVer :: SchemaCacheVer -> SchemaCacheVer
+incSchemaCacheVer (SchemaCacheVer prev) =
+  SchemaCacheVer $ prev + 1
+
 data SchemaCache
   = SchemaCache
   { scTables            :: !TableCache
-  , scQTemplates        :: !QTemplateCache
-  , scRemoteResolvers   :: !RemoteSchemaMap
+  , scFunctions         :: !FunctionCache
+  , scRemoteSchemas     :: !RemoteSchemaMap
+  , scAllowlist         :: !(HS.HashSet GQLQuery)
   , scGCtxMap           :: !GC.GCtxMap
   , scDefaultRemoteGCtx :: !GC.GCtx
   , scDepMap            :: !DepMap
+  , scInconsistentObjs  :: ![InconsistentMetadataObj]
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
+
+getFuncsOfTable :: QualifiedTable -> FunctionCache -> [FunctionInfo]
+getFuncsOfTable qt fc = flip filter allFuncs $ \f -> qt == fiReturnType f
+  where
+    allFuncs = M.elems fc
 
 modDepMapInCache :: (CacheRWM m) => (DepMap -> DepMap) -> m ()
 modDepMapInCache f = do
@@ -394,41 +480,10 @@ class (CacheRM m) => CacheRWM m where
 instance (Monad m) => CacheRWM (StateT SchemaCache m) where
   writeSchemaCache = put
 
-addQTemplateToCache
-  :: (QErrM m, CacheRWM m)
-  => QueryTemplateInfo
-  -> [SchemaDependency]
-  -> m ()
-addQTemplateToCache qti deps = do
-  sc <- askSchemaCache
-  let templateCache = scQTemplates sc
-  case M.lookup qtn templateCache of
-    Just _ -> throw500 $ "template already exists in cache " <>> qtn
-    Nothing -> do
-      let newTemplateCache = M.insert qtn qti templateCache
-      writeSchemaCache $ sc {scQTemplates = newTemplateCache}
-  modDepMapInCache (addToDepMap objId deps)
-  where
-    qtn = qtiName qti
-    objId = SOQTemplate qtn
-
-delQTemplateFromCache :: (QErrM m, CacheRWM m)
-                      => TQueryName -> m ()
-delQTemplateFromCache qtn = do
-  sc <- askSchemaCache
-  let templateCache = scQTemplates sc
-  case M.lookup qtn templateCache of
-    Nothing -> throw500 $ "template does not exist in cache " <>> qtn
-    Just _ -> do
-      let newTemplateCache = M.delete qtn templateCache
-      writeSchemaCache $ sc {scQTemplates = newTemplateCache}
-  modDepMapInCache (removeFromDepMap objId)
-  where
-    objId = SOQTemplate qtn
-
 emptySchemaCache :: SchemaCache
 emptySchemaCache =
-  SchemaCache (M.fromList []) (M.fromList []) M.empty M.empty GC.emptyGCtx mempty
+  SchemaCache M.empty M.empty M.empty
+              HS.empty M.empty GC.emptyGCtx mempty []
 
 modTableCache :: (CacheRWM m) => TableCache -> m ()
 modTableCache tc = do
@@ -539,6 +594,14 @@ delRelFromCache rn tn = do
   where
     schObjId = SOTableObj tn $ TORel rn
 
+updColInCache
+  :: (QErrM m, CacheRWM m)
+  => PGCol -> PGColInfo
+  -> QualifiedTable -> m ()
+updColInCache cn ci tn = do
+  delColFromCache cn tn
+  addColToCache cn ci tn
+
 data PermAccessor a where
   PAInsert :: PermAccessor InsPermInfo
   PASelect :: PermAccessor SelPermInfo
@@ -592,6 +655,48 @@ delEventTriggerFromCache qt trn = do
       let etim = tiEventTriggerInfoMap ti
       return $ ti { tiEventTriggerInfoMap = M.delete trn etim }
     schObjId = SOTableObj qt $ TOTrigger trn
+
+addFunctionToCache
+  :: (QErrM m, CacheRWM m)
+  => FunctionInfo -> m ()
+addFunctionToCache fi = do
+  sc <- askSchemaCache
+  let functionCache = scFunctions sc
+  case M.lookup fn functionCache of
+    Just _ -> throw500 $ "function already exists in cache " <>> fn
+    Nothing -> do
+      let newFunctionCache = M.insert fn fi functionCache
+      writeSchemaCache $ sc {scFunctions = newFunctionCache}
+  modDepMapInCache (addToDepMap objId deps)
+  where
+    fn = fiName fi
+    objId = SOFunction $ fiName fi
+    deps = fiDeps fi
+
+askFunctionInfo
+  :: (CacheRM m, QErrM m)
+  => QualifiedFunction ->  m FunctionInfo
+askFunctionInfo qf = do
+  sc <- askSchemaCache
+  maybe throwNoFn return $ M.lookup qf $ scFunctions sc
+  where
+    throwNoFn = throw400 NotExists $
+      "function not found in cache " <>> qf
+
+delFunctionFromCache
+  :: (QErrM m, CacheRWM m)
+  => QualifiedFunction -> m ()
+delFunctionFromCache qf = do
+  sc <- askSchemaCache
+  let functionCache = scFunctions sc
+  case M.lookup qf functionCache of
+    Nothing -> throw500 $ "function does not exist in cache " <>> qf
+    Just _ -> do
+      let newFunctionCache = M.delete qf functionCache
+      writeSchemaCache $ sc {scFunctions = newFunctionCache}
+  modDepMapInCache (removeFromDepMap objId)
+  where
+    objId = SOFunction qf
 
 addPermToCache
   :: (QErrM m, CacheRWM m)
@@ -647,11 +752,40 @@ delPermFromCache pa rn tn = do
       return $ ti { tiRolePermInfoMap = M.insert rn newRPI rpim }
     schObjId = SOTableObj tn $ TOPerm rn $ permAccToType pa
 
-data TemplateParamInfo
-  = TemplateParamInfo
-  { tpiName    :: !TemplateParam
-  , tpiDefault :: !(Maybe Value)
-  } deriving (Show, Eq)
+addRemoteSchemaToCache
+  :: (QErrM m, CacheRWM m) => RemoteSchemaCtx -> m ()
+addRemoteSchemaToCache rmCtx = do
+  sc <- askSchemaCache
+  let rmSchemas = scRemoteSchemas sc
+      name = rscName rmCtx
+  -- ideally, remote schema shouldn't present in cache
+  -- if present unexpected 500 is thrown
+  onJust (M.lookup name rmSchemas) $ const $
+    throw500 $ "remote schema with name " <> name
+    <<> " already found in cache"
+  writeSchemaCache sc
+    {scRemoteSchemas = M.insert name rmCtx rmSchemas}
+
+delRemoteSchemaFromCache
+  :: (QErrM m, CacheRWM m) => RemoteSchemaName -> m ()
+delRemoteSchemaFromCache name = do
+  sc <- askSchemaCache
+  let rmSchemas = scRemoteSchemas sc
+  -- ideally, remote schema should be present in cache
+  -- if not present unexpected 500 is thrown
+  void $ onNothing (M.lookup name rmSchemas) $
+    throw500 $ "remote schema with name " <> name
+    <<> " not found in cache"
+  writeSchemaCache sc {scRemoteSchemas = M.delete name rmSchemas}
+
+replaceAllowlist
+  :: (CacheRWM m)
+  => QueryList -> m ()
+replaceAllowlist qList = do
+  sc <- askSchemaCache
+  let allowlist = HS.fromList $
+        map (queryWithoutTypeNames . getGQLQuery . _lqQuery) qList
+  writeSchemaCache sc{scAllowlist = allowlist}
 
 getDependentObjs :: SchemaCache -> SchemaObjId -> [SchemaObjId]
 getDependentObjs = getDependentObjsWith (const True)
@@ -664,7 +798,6 @@ getDependentObjsWith f sc objId =
   where
     isDependency deps = not $ HS.null $ flip HS.filter deps $
       \(SchemaDependency depId reason) -> objId `induces` depId && f reason
-
     -- induces a b : is b dependent on a
     induces (SOTable tn1) (SOTable tn2)      = tn1 == tn2
     induces (SOTable tn1) (SOTableObj tn2 _) = tn1 == tn2

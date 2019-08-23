@@ -217,13 +217,86 @@ E.g.
      }
    }
 
-variable:
+variables:
 
 .. code-block:: json
 
    {
      "value": {
        "name": "raven"
+     }
+   }
+
+.. _Geometry:
+
+Geometry
+--------
+
+GraphQL custom scalar type ``geometry`` is generated for a ``GEOMETRY`` column
+on a PostGIS enabled Postgres instance. Value should be given as GeoJSON.
+
+E.g.
+
+.. code-block:: graphql
+
+   mutation insertGeometry($point: geometry!) {
+     insert_test(
+       objects: [{
+         geometry_col: $point
+       }]
+     ) {
+       affected_rows
+       returning {
+         geometry_col
+       }
+     }
+   }
+
+variables:
+
+.. code-block:: json
+
+   {
+     "point": {
+       "type": "Point",
+       "coordinates": [0, 0]
+     }
+   }
+
+
+.. _Geography:
+
+Geography
+---------
+
+GraphQL custom scalar type ``geography`` is generated for a ``GEOGRAPHY`` column
+on a PostGIS enabled Postgres instance. Value should be given as GeoJSON.
+
+E.g.
+
+.. code-block:: graphql
+
+   mutation insertGeography($point: geography!) {
+     insert_test(
+       objects: [{
+         geography_col: $point
+       }]
+     ) {
+       affected_rows
+       returning {
+         geography_col
+       }
+     }
+   }
+
+variables:
+
+.. code-block:: json
+
+   {
+     "point": {
+       "type": "Point",
+       "coordinates": [0, 0]
      }
    }
 

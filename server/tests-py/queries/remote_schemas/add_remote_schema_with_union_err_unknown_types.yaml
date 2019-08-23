@@ -1,0 +1,16 @@
+description: Add a remote schema with a union which has unknown object types 
+url: /v1/query
+status: 400
+response:
+  path: $.args
+  error: |-
+    Could not find type 'Unknown0', which is defined as a member type of Union 'CharacterSearchResult'
+  code: remote-schema-error
+query:
+  type: add_remote_schema
+  args:
+    name: err-unknown-types
+    definition:
+      url: http://localhost:5000/union-graphql-err-unknown-types
+      headers: []
+      forward_client_headers: true

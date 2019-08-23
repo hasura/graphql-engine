@@ -1,0 +1,14 @@
+{
+  "extends": [
+    "config:base",
+    ":automergeMajor"
+  ],
+  "baseBranches": [
+    "master-step1",
+    "master-step2",
+    "master-step3",
+    "master-step4"
+  ],
+  "prHourlyLimit": 60,
+  "recreateClosed": true
+}

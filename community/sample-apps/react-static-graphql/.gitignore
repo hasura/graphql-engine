@@ -1,0 +1,9 @@
+node_modules
+.next
+.cache
+dist
+.tempdist
+.DS_Store
+yarn-error.log
+.history
+tmp

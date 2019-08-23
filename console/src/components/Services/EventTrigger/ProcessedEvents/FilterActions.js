@@ -38,7 +38,7 @@ const setOffset = offset => ({ type: SET_OFFSET, offset });
 const setNextPage = () => ({ type: SET_NEXTPAGE });
 const setPrevPage = () => ({ type: SET_PREVPAGE });
 
-const runQuery = triggerSchema => {
+const runQuery = () => {
   return (dispatch, getState) => {
     const state = getState().triggers.view.curFilter;
     const finalWhereClauses = state.where.$and.filter(w => {
@@ -64,7 +64,10 @@ const runQuery = triggerSchema => {
     if (newQuery.order_by.length === 0) {
       delete newQuery.order_by;
     }
-    dispatch({ type: 'ProcessedEvents/V_SET_QUERY_OPTS', queryStuff: newQuery });
+    dispatch({
+      type: 'ProcessedEvents/V_SET_QUERY_OPTS',
+      queryStuff: newQuery,
+    });
     dispatch(vMakeRequest());
   };
 };

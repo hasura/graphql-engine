@@ -1,0 +1,50 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: homepage
+  name: homepage
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: homepage
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 100%
+  template:
+    metadata:
+      labels:
+        app: homepage
+    spec:
+      containers:
+      - image: hasura/base-git-image:0.7
+        imagePullPolicy: IfNotPresent
+        name: homepage
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: homepage
+  name: homepage
+  namespace: default
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: homepage
+  type: ClusterIP

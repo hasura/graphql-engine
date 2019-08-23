@@ -1,6 +1,6 @@
 import yaml
 from validate import check_query_f
-from super_classes import DefaultTestSelectQueries, DefaultTestQueries
+from super_classes import DefaultTestSelectQueries, DefaultTestQueries, DefaultTestMutations
 
 class TestDropNoColsTable:
     def test_drop_no_cols_table(self, hge_ctx):
@@ -158,6 +158,72 @@ class TestV1SelectBoolExpSearch(DefaultTestSelectQueries):
     def dir(cls):
         return 'queries/v1/select/boolexp/search'
 
+class TestV1SelectBoolExpJSONB(DefaultTestSelectQueries):
+
+    def test_select_article_author_jsonb_contained_in_bestseller_latest(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_article_author_jsonb_contained_in_bestseller_latest.yaml')
+
+    def test_select_article_author_jsonb_contained_in_latest(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_article_author_jsonb_contained_in_latest.yaml')
+
+    def test_select_article_author_jsonb_contains_latest(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_article_author_jsonb_contains_latest.yaml')
+
+    def test_select_author_article_jsonb_contains_bestseller(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_author_article_jsonb_contains_bestseller.yaml')
+
+    # TODO:- Uncomment the following after adding has_keys_all and has_keys_any operators
+    # def test_select_product_jsonb_has_keys_all_ram_touchscreen(self, hge_ctx):
+    #     check_query_f(hge_ctx, self.dir() + '/select_product_jsonb_has_keys_all_ram_touchscreen.yaml')
+
+    # def test_select_product_jsonb_has_keys_any_os_operating_system(self, hge_ctx):
+    #     check_query_f(hge_ctx, self.dir() + '/select_product_jsonb_has_keys_any_os_operating_system.yaml')
+
+    def test_select_product_jsonb_has_key_sim_type(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_product_jsonb_has_key_sim_type.yaml')
+
+    @classmethod
+    def dir(cls):
+        return 'queries/v1/select/boolexp/jsonb'
+
+class TestV1SelectBoolExpPostGIS(DefaultTestSelectQueries):
+
+    def test_query_st_equals(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_st_equals.yaml')
+
+    def test_query_st_contains(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_st_contains.yaml')
+
+    def test_query_st_touches(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_st_touches.yaml')
+
+    def test_query_not_st_intersects(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_not_st_intersects.yaml')
+
+    def test_query_st_d_within(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_st_d_within.yaml')
+
+    def test_query_geog_stdwithin(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_geog_stdwithin.yaml')
+
+    def test_query_geog_stdwithin_sph(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_geog_stdwithin_sph.yaml')
+
+    def test_query_geog_stintersects(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_geog_stintersects.yaml')
+
+    def test_query_cast_geometry_to_geography(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_cast_geometry_to_geography.yaml')
+
+    def test_query_cast_geography_to_geometry(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_cast_geography_to_geometry.yaml')
+
+    def test_query_illegal_cast_is_not_allowed(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_illegal_cast_is_not_allowed.yaml')
+
+    @classmethod
+    def dir(cls):
+        return 'queries/v1/select/boolexp/postgis'
 
 class TestV1SelectPermissions(DefaultTestSelectQueries):
 
@@ -173,12 +239,33 @@ class TestV1SelectPermissions(DefaultTestSelectQueries):
     def test_user_cannot_access_remarks_col(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/user_cannot_access_remarks_col.yaml')
 
+    def test_user_can_query_geometry_values_filter(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/user_can_query_geometry_values_filter.yaml')
+
+    def test_user_can_query_geometry_values_filter_session_vars(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/user_can_query_geometry_values_filter_session_vars.yaml')
+
+    def test_user_can_query_geog_filter(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/user_can_query_geog_filter.yaml')
+
+    def test_user_can_query_geog_filter_session_vars(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/user_can_query_geog_filter_session_vars.yaml')
+
+    def test_user_can_query_jsonb_values_filter(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/user_can_query_jsonb_values_filter.yaml')
+
+    def test_user_can_query_jsonb_values_filter_session_vars(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/user_can_query_jsonb_values_filter_session_vars.yaml')
+
+    def test_user_query_auction(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/user_query_auction.yaml')
+
     @classmethod
     def dir(cls):
         return 'queries/v1/select/permissions'
 
 
-class TestV1InsertBasic(DefaultTestQueries):
+class TestV1InsertBasic(DefaultTestMutations):
 
     def test_insert_author(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/insert_author.yaml')
@@ -194,7 +281,7 @@ class TestV1InsertBasic(DefaultTestQueries):
         return "queries/v1/insert/basic"
 
 
-class TestV1InsertOnConflict(DefaultTestQueries):
+class TestV1InsertOnConflict(DefaultTestMutations):
 
     def test_author_on_conflict_update(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/upsert_author.yaml')
@@ -220,7 +307,7 @@ class TestV1InsertOnConflict(DefaultTestQueries):
         return "queries/v1/insert/onconflict"
 
 
-class TestV1InsertPermissions(DefaultTestQueries):
+class TestV1InsertPermissions(DefaultTestMutations):
 
     def test_user_role_on_conflict_update(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/article_on_conflict_user_role.yaml")
@@ -255,7 +342,7 @@ class TestV1InsertPermissions(DefaultTestQueries):
         return "queries/v1/insert/permissions"
 
 
-class TestV1UpdateBasic(DefaultTestQueries):
+class TestV1UpdateBasic(DefaultTestMutations):
 
     def test_set_author_name(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/author_set_name.yaml")
@@ -283,7 +370,7 @@ class TestV1UpdateBasic(DefaultTestQueries):
         return "queries/v1/update/basic"
 
 
-class TestV1UpdatePermissions(DefaultTestQueries):
+class TestV1UpdatePermissions(DefaultTestMutations):
 
     def test_user_can_update_unpublished_article(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/user_can_update_unpublished_article.yaml")
@@ -299,6 +386,16 @@ class TestV1UpdatePermissions(DefaultTestQueries):
     def test_user_cannot_update_id_col(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/user_cannot_update_id_col_article.yaml")
         hge_ctx.may_skip_test_teardown = True
+
+    def test_user_update_resident_preset_error(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/user_update_resident_preset_error.yaml")
+        hge_ctx.may_skip_test_teardown = True
+
+    def test_user_update_resident_preset(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/user_update_resident_preset.yaml")
+
+    def test_user_update_resident_preset_session_var(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/user_update_resident_preset_session_var.yaml")
 
     @classmethod
     def dir(cls):
@@ -401,6 +498,18 @@ class TestRunSQL(DefaultTestQueries):
     def test_sql_query_as_user_error(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/sql_query_as_user_error.yaml')
 
+    def test_sql_rename_table(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/sql_rename_table.yaml')
+
+    def test_sql_rename_columns_article(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/sql_rename_columns_article.yaml')
+
+    def test_sql_rename_columns_author(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/sql_rename_columns_author.yaml')
+
+    def test_sql_rename_table_and_column(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/sql_rename_table_and_column.yaml')
+
     @classmethod
     def dir(cls):
         return "queries/v1/run_sql"
@@ -445,8 +554,18 @@ class TestRelationships(DefaultTestQueries):
 
 class TestTrackTables(DefaultTestQueries):
 
+    def test_track_table_function_same_name(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/track_table_function_same_name.yaml')
+
+    def test_track_function_table_same_name(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/track_function_table_same_name.yaml')
+
     def test_track_untrack_table(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/track_untrack_table.yaml')
+        hge_ctx.may_skip_test_teardown = True
+
+    def test_track_untrack_table_with_deps(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/track_untrack_table_deps.yaml')
         hge_ctx.may_skip_test_teardown = True
 
     def test_track_untrack_table_non_public_schema(self, hge_ctx):
@@ -472,3 +591,28 @@ class TestCreatePermission(DefaultTestQueries):
     @classmethod
     def dir(cls):
         return "queries/v1/permissions"
+
+
+class TestNonEmptyText:
+
+    def test_create_event_trigger(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/create_event_trigger.yaml')
+
+    def test_create_insert_permission(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/create_insert_permission.yaml')
+
+    def test_create_query_collection(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/create_query_collection.yaml')
+
+    def test_create_query_collection_queryname(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/create_query_collection_queryname.yaml')
+
+    def test_create_object_relationship(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/create_object_relationship.yaml')
+
+    def test_create_remote_schema(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/create_remote_schema.yaml')
+
+    @classmethod
+    def dir(cls):
+        return "queries/v1/non_empty_text"

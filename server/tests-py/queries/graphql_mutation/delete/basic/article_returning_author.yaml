@@ -1,0 +1,40 @@
+description: Delete mutation on article with returning columns and author
+url: /v1/graphql
+status: 200
+response:
+  data:
+    delete_article:
+      affected_rows: 2
+      returning:
+      - id: 4
+        title: Article 4
+        content: Sample article content 4
+        author:
+          id: 2
+          name: Author 2
+      - id: 5
+        title: Article 5
+        content: Sample article content 5
+        author:
+          id: 2
+          name: Author 2
+query:
+  query: |
+    mutation DeleteAuthor2Articles {
+      delete_article(
+        where: {
+          author: {id: {_eq: 2}}
+        }
+      ) {
+        affected_rows
+        returning {
+          id
+          title
+          content
+          author {
+            id
+            name
+          }
+        }
+      }
+    }

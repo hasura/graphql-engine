@@ -1,5 +1,5 @@
 description: Query aggregations on author along with it's articles with user role
-url: /v1alpha1/graphql
+url: /v1/graphql
 status: 200
 headers:
   X-Hasura-Role: user
@@ -17,15 +17,6 @@ response:
       - id: 1
         title: "Article 1"
         content: "Sample article content 1"
-      - id: 2
-        title: "Article 2"
-        content: "Sample article content 2"
-    - id: 2
-      name: "Author 2"
-      articles:
-      - id: 3
-        title: "Article 3"
-        content: "Sample article content 3"
 query:
   query: |
     query {

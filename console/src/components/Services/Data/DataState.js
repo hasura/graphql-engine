@@ -19,6 +19,9 @@ const defaultViewState = {
   ongoingRequest: false,
   lastError: {},
   lastSuccess: {},
+  manualTriggers: [],
+  triggeredRow: -1,
+  triggeredFunction: null,
 };
 
 const defaultPermissionsState = {
@@ -33,9 +36,15 @@ const defaultPermissionsState = {
   tableSchemas: [],
 };
 
-const defaultInsertSetState = {
-  key: '',
-  value: '',
+const defaultPresetsState = {
+  insert: {
+    key: '',
+    value: '',
+  },
+  update: {
+    key: '',
+    value: '',
+  },
 };
 const defaultQueryPermissions = {
   insert: {
@@ -43,12 +52,11 @@ const defaultQueryPermissions = {
     allow_upsert: true,
     set: {},
     columns: [],
-    localSet: [
+    localPresets: [
       {
-        ...defaultInsertSetState,
+        ...defaultPresetsState.insert,
       },
     ],
-    isSetConfigChecked: false,
   },
   select: {
     columns: [],
@@ -59,6 +67,12 @@ const defaultQueryPermissions = {
   update: {
     columns: [],
     filter: {},
+    set: {},
+    localPresets: [
+      {
+        ...defaultPresetsState.update,
+      },
+    ],
   },
   delete: {
     filter: {},
@@ -76,38 +90,56 @@ const defaultModifyState = {
     rel: null,
     perm: '',
   },
-  fkAdd: {
-    refTable: '',
-    pairs: [],
-    lcol: '',
-    rcol: '',
-    fkCheckBox: false,
-  },
+  columnEdit: {},
+  pkEdit: [''],
+  pkModify: [''],
+  fkModify: [
+    {
+      refSchemaName: '',
+      refTableName: '',
+      colMappings: [{ '': '' }],
+      onDelete: 'restrict',
+      onUpdate: 'restrict',
+    },
+  ],
+  uniqueKeyModify: [[]],
   relAdd: {
     isActive: true,
     name: '',
-    tableName: '',
+    lTable: null,
+    lSchema: null,
     isObjRel: null,
     lcol: [],
     rTable: null,
+    rSchema: null,
     rcol: [],
-    manualColumns: [],
-    isManualExpanded: false,
-    manualRelInfo: {
-      remoteSchema: '',
-      tables: [],
-    },
+    isUnique: false,
+  },
+  manualRelAdd: {
+    relName: '',
+    relType: '',
+    rSchema: '',
+    rTable: '',
+    colMappings: [{ column: '', refColumn: '' }],
+    isToggled: false,
   },
   permissionsState: { ...defaultPermissionsState },
+  prevPermissionState: { ...defaultPermissionsState },
   ongoingRequest: false,
   lastError: null,
   lastSuccess: null,
   viewDefinition: null,
   viewDefinitionError: null,
   tableCommentEdit: { enabled: false, editedValue: null },
+  alterColumnOptions: [], // Store supported implicit column -> column casts
+  alterColumnOptionsFetchErr: null,
 };
 
 const defaultState = {
+  columnDataTypes: [], // To store list of column types supported by postgres
+  columnDataTypeInfoErr: null,
+  columnDefaultFunctions: {},
+  columnTypeCasts: {},
   currentTable: null,
   view: { ...defaultViewState },
   modify: { ...defaultModifyState },
@@ -126,18 +158,16 @@ const defaultState = {
     lastSuccess: null,
   },
   allSchemas: [],
-
+  postgresFunctions: [],
+  nonTrackablePostgresFunctions: [],
+  trackedFunctions: [],
   listingSchemas: [],
-  untrackedSchemas: [],
-  information_schema: [],
-  tableComment: null,
-  columnComment: null,
   untrackedRelations: [],
   schemaList: ['public'],
   currentSchema: 'public',
-  accessKeyError: false,
+  adminSecretError: false,
   dataHeaders: {
-    'Content-Type': 'application/json',
+    'content-type': 'application/json',
   },
 };
 
@@ -148,5 +178,5 @@ export {
   defaultModifyState,
   defaultPermissionsState,
   defaultQueryPermissions,
-  defaultInsertSetState,
+  defaultPresetsState,
 };

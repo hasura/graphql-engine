@@ -1,0 +1,671 @@
+@import url('https://fonts.googleapis.com/css?family=Raleway:400,600');
+@import url('https://fonts.googleapis.com/css?family=Open+Sans:300,400');
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+}
+body {
+  font-family: 'Open Sans';
+  font-size: 16px;
+  margin: 0;
+}
+.noPadd
+{
+  padding-left: 0;
+  padding-right: 0;
+}
+.removePaddLeft {
+    padding-left: 0;
+}
+.addPaddTop
+{
+  padding-top: 10px;
+  clear: both;
+}
+/* Landing section */
+.wd10 {
+  width: 10%;
+  display: inline-block;
+}
+.wd90 {
+  width: 90%;
+  display: inline-block;
+}
+.removePaddBottom {
+  padding-bottom: 0 !important;
+}
+.gradientBgColor {
+  background-color: #a0b4cc;
+  /* Safari 4-5, Chrome 1-9 */
+  background: -webkit-gradient(
+    linear,
+    0% 0%,
+    0% 100%,
+    from(#a0b4cc),
+    to(#c2a899)
+  );
+  /* Safari 5.1, Chrome 10+ */
+  background: -webkit-linear-gradient(top, #a0b4cc, #c2a899);
+  /* Firefox 3.6+ */
+  background: -moz-linear-gradient(top, #a0b4cc, #c2a899);
+  /* IE 10 */
+  background: -ms-linear-gradient(top, #a0b4cc, #c2a899);
+  /* Opera 11.10+ */
+  background: -o-linear-gradient(top, #a0b4cc, #c2a899);
+}
+.bgImage
+{
+  position: fixed;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background-image: url('./images/chat-app-bg.jpg');
+  background-position: center;
+  background-size: cover;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+}
+.bgImage::before
+{
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-image: linear-gradient(to bottom right,#000,#a92101);
+  opacity: .9;
+}
+.minHeight {
+  width: 100%;
+  height: 100vh;
+}
+.headerWrapper {
+  padding: 30px 0;
+  padding-left: 75px;
+  min-height: 15vh
+}
+.headerDescription {
+  font-size: 20px;
+  color: #fff;
+  font-family: "Raleway";
+  font-weight: 700;
+  z-index: 100;
+  position: relative;
+}
+.headerDescription a {
+  color: #fff;
+}
+.headerDescription a:hover {
+  text-decoration: none;
+  border-bottom: 1px solid #fff;
+}
+.loginBtn {
+  text-align: right;
+  padding-right: 75px;
+}
+.loginBtn button {
+  background-color: #f93c18;
+  padding: 10px 30px;
+  border: 0;
+  color: #fff;
+  font-family: "raleway";
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  border-radius: 25px;
+  text-transform: uppercase;
+}
+.loginBtn button:hover {
+  background-color: #e0270e;
+}
+.loginBtn button:focus {
+  outline: none;
+}
+.mainWrapper {
+  padding-left: 75px;
+  width: 100%;
+  float: left;
+  display: flex;
+  align-items: center;
+}
+.description {
+  font-size: 15px;
+  padding-bottom: 10px;
+}
+.appstackWrapper {
+  margin-top: 20px;
+  background-color: #fff;
+  border-radius: 5px;
+  padding: 30px;
+  -webkit-box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.1);
+  width: 100%;
+  float: left;
+  color: #606060;
+}
+.arrow {
+  position: absolute;
+  right: -100px;
+  top: 10px;
+  z-index: 1;
+}
+.arrow img {
+  width: 120px;
+  display: inline-block;
+}
+.appStack {
+  width: 100%;
+  float: left;
+  padding-bottom: 20px;
+}
+
+.appStack i {
+  font-size: 16px;
+}
+.checkBox
+{
+  color: #00bc00;
+  font-size: 22px !important;
+}
+.appStackIconWrapper {
+  width: 100%;
+  float: left;
+  display: flex;
+  align-items: center;
+}
+.appStackIcon img {
+  width: 70%;
+}
+.formGroupWrapper
+{
+  padding-top: 20px;
+  width: 100%;
+  float: left;
+}
+.inputGroup
+{
+  width: 100%;
+}
+.inputGroup input
+{
+  width: 68% !important;
+  display: inline-block;
+  height: 40px;
+}
+.inputGroup .groupAppend
+{
+  width: 32% !important;
+  display: inline-block;
+}
+.groupAppend button
+{
+  width: 100%;
+  border-bottom-left-radius: 0;
+  border-top-left-radius: 0;
+  border: 0;
+  height: 40px;
+  text-align: center;
+  background-color: #f93c18;
+  color: #fff;
+  font-family: "raleway";
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.groupAppend button:hover
+{
+  color: #fff;
+  background-color: #e0270e;
+}
+.groupAppend button:focus
+{
+  outline: none;
+}
+.footer {
+  padding-top: 10px;
+  text-align: center;
+  clear: both;
+  font-size: 14px;
+  color: #fff;
+}
+.footer a {
+  color: #fff;
+}
+.footer a:hover {
+  text-decoration: none;
+  border-bottom: 1px solid #fff;
+}
+.footer i {
+  color: #ed2908;
+  margin: 0 5px;
+}
+.tutorialImg {
+  position: absolute;
+  right: 0;
+  text-align: right;
+}
+.tutorialImg img {
+  width: 95%;
+  display: inline-block;
+}
+/* Landing section */
+.app {
+  text-align: left;
+}
+
+.messageOdd {
+  font-size: 18px;
+  padding-left: 5px;
+}
+
+.message {
+  font-size: 16px;
+  background-color: #fff;
+  padding-left: 5px;
+  margin: 20px;
+  border-radius: 5px;
+  width: 50%;
+  padding: 5px;
+}
+
+.selfMessage {
+  font-size: 16px;
+  background-color: #eee;
+  padding-left: 5px;
+  margin: 20px;
+  border-radius: 5px;
+  width: 50%;
+  padding: 5px;
+  float: right;
+}
+
+.newMessageEven {
+  font-size: 18px;
+  background-color: #98FB98;
+  padding-left: 5px;
+}
+
+.newMessageOdd {
+  font-size: 18px;
+  background-color: #8FBC8F;
+  padding-left: 5px;
+}
+
+.messageWrapperNew {
+  padding-bottom: 75px;
+}
+
+.banner {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  background-color: #20c40f;
+  font-size: 18px;
+  cursor: pointer;
+  font-weight: 400;
+  padding: 10px 0;
+  text-align: center;
+  font-family: 'raleway';
+  color: #fff;
+}
+
+.oldNewSeparator {
+  font-size: 18px;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+#chatbox {
+  overflow: auto;
+  height: calc(100vh - 90px);
+  background-color: #f8f9f9;
+}
+
+.textboxWrapper {
+  text-align: center;
+  position: fixed;
+  bottom: 87px;
+  width: 75%;
+  background-color: #fff;
+  padding: 1%;
+}
+
+.textbox {}
+
+.sendButton {
+  width: 20%;
+  background-color:'green';
+}
+
+.login {
+  text-align: center;
+}
+
+.loginTextbox {
+  font-size: 16px;
+  height: 43px;
+  width: 74%;
+  margin-right: 1%;
+  font-weight: 300;
+  border: 1px solid #ececec;
+  border-radius: 5px;
+  padding: 0;
+  padding-left: 10px;
+  display: inline-block;
+
+}
+
+.typoTextbox {
+  font-size: 16px;
+  height: 43px;
+  width: 75%;
+  margin-right: 1%;
+  font-weight: 300;
+  border: 1px solid #ececec;
+  border-radius: 5px;
+  padding: 0;
+  padding-left: 10px;
+  display: inline-block;
+  background-color: #f6f6f7;
+}
+
+.loginTextbox:focus, .typoTextbox:focus {
+  outline: none;
+  border-color: #016d95;
+}
+
+.typoTextbox:focus {
+  outline: none;
+  border-color: #bbbdbd;
+}
+
+.loginButton {
+  height: 45px;
+  width: 21%;
+  display: inline-block;
+  border-radius: 5px;
+  background-color: 'green' !important;
+  cursor: pointer;
+  font-size: 16px;
+  margin-right: 1%;
+}
+
+.typoButton {
+  height: 45px;
+  width: 20%;
+  display: inline-block;
+  border-radius: 5px;
+  background-color: #ffca27;
+  cursor: pointer;
+  font-size: 16px;
+  margin-right: 1%;
+  border: 0;
+  color: #222;
+}
+
+.typoButton:hover {
+  background-color: #dba203;
+}
+
+.loginButton:focus, .typoButton:focus {
+  outline: none;
+}
+
+.loginButton:hover {
+  background-color: #f6f6f6;
+}
+
+.loginHeading {
+  text-align: center;
+  font-family: 'Raleway';
+  margin-top: 0;
+  padding-bottom: 20px;
+}
+
+.loginWrapper {
+  width: 450px;
+  padding: 30px;
+  margin: 0 auto;
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border: 1px solid #ececec;
+  border-radius: 5px;
+  background-color: #f6f6f6;
+}
+
+.errorMessage {
+  text-align: center;
+  color: 'red';
+  padding-bottom: 10px;
+}
+
+.wd25 {
+  width: 25%;
+  display: inline-block;
+}
+
+.wd75 {
+  width: 75%;
+  display: inline-block;
+}
+
+.onlineUsers {
+  background-color: #4f5050;
+  height: 100vh;
+  overflow: auto;
+}
+
+.messageName, .messsageTime {
+  width: 49%;
+  display: inline-block;
+}
+
+.messageName {
+  color: #1d5d01;
+}
+
+.messsageTime {
+  text-align: right;
+  padding-right: 5px;
+  font-size: 12px;
+  color: #01999b;
+}
+
+.userList {
+  margin-top: 0;
+  margin-bottom: 0;
+  -webkit-padding-start: 0px;
+}
+
+.userList li {
+  padding: 10px;
+  border-bottom: 1px solid #444;
+  color: #fff;
+}
+
+.chatWrapper {
+  display: flex;
+  height: 100vh;
+}
+
+.userListHeading {
+  font-weight: 600;
+  padding: 15px 10px;
+  margin-top: 0;
+  margin-bottom: 0;
+  background-color: #222;
+  color: #fff;
+}
+
+.typingIndicator {
+  text-align: left;
+  padding-bottom: 10px;
+  padding-left: 1%;
+}
+
+.displayFlex
+{
+  display: flex;
+  align-items: center;
+}
+
+.hasura-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hasura-logo a {
+  padding: 0 10px;
+}
+.hasura-logo a:hover {
+  text-decoration: none;
+}
+.hasura-logo img {
+  height: 30px;
+  cursor: pointer;
+}
+.App-header {
+  background-color: #222;
+  height: 50px;
+  color: white;
+  text-align: left;
+}
+.App-footer{
+  position: fixed;
+  bottom: 0;
+  text-align: center;
+  width: 100%;
+  padding-bottom: 10px;
+  padding-top: 10px;
+  background-color: #fff;
+  border-top: 1px solid #ccc;
+}
+
+.footer-small-text{
+  font-size: 12px;
+}
+@media (max-width: 767px) {
+  .headerDescription
+  {
+    text-align: center;
+  }
+  .headerWrapper {
+    display: block !important;
+  }
+  .000scription {
+    text-align: center;
+    padding-bottom: 10px;
+  }
+  .loginBtn {
+    display: flex;
+    justify-content: center;
+  }
+  .wd75
+  {
+    width: 100%;
+  }
+  .message
+  {
+    width: 90%;
+  }
+  .textboxWrapper
+  {
+    width: 100%;
+  }
+  .mobileview
+  {
+    position: absolute;
+    right: 0px;
+    bottom: 152px;
+    width: 50%;
+  }
+  .mobileuserListHeading
+  {
+    font-size: 14px;
+    background-color: #222;
+    color: #fff;
+    font-weight: 600;
+    margin-bottom: 0;
+    padding: 5px;
+  }
+  .mobileuserListHeading i
+  {
+    margin-left: 10px;
+  }
+  .mobileUserList
+  {
+    background-color: #4f5050;
+    padding-inline-start: 0px;
+    -webkit-padding-start: 0px;
+    -moz-padding-start: 0px;
+    -o-padding-start: 0px;
+    margin-bottom: 0;
+  }
+  .mobileUserList li
+  {
+    list-style-type: none;
+    color: #fff;
+    padding: 5px;
+    font-size: 12px;
+    border-bottom: 1px solid #444;
+  }
+  .hasura-logo a {
+    padding: 0 0px;
+    font-size: 12px;
+  }
+}
+@media (max-width: 991px) {
+  .headerWrapper {
+    display: flex;
+    padding-left: 0;
+    height: auto;
+  }
+  .mainWrapper {
+    min-height: auto;
+    padding-left: 0;
+    height: auto;
+  }
+  .minHeight {
+    height: auto;
+    min-height: 100vh;
+  }
+  .loginBtn {
+    padding-right: 0;
+  }
+  .appstackWrapper {
+    padding: 20px;
+  }
+  .appStack {
+    display: flex;
+  }
+  .flexWidth {
+    flex: 1;
+  }
+  .description {
+    padding-left: 10px;
+  }
+  .appStackIconWrapper {
+    padding-left: 10px;
+  }
+  .inputGroup input
+  {
+    width: 63% !important;
+  }
+  .inputGroup .groupAppend
+  {
+    width: 37% !important;
+  }
+  .groupAppend button {
+    font-size: 13px;
+    letter-spacing: 0;
+  }
+
+}

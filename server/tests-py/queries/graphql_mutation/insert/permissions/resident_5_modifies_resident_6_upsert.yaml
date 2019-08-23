@@ -1,5 +1,5 @@
 description: Resident 5 trying to update Resident 6 age
-url: /v1alpha1/graphql
+url: /v1/graphql
 status: 200
 headers:
   X-Hasura-Role: resident

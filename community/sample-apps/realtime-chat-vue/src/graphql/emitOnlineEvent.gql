@@ -1,0 +1,14 @@
+mutation ($userId:Int!){
+    update_user (
+      _set: {
+        last_seen: "now()"
+      }
+      where: {
+        id: {
+          _eq: $userId
+        }
+      }
+    ) {
+      affected_rows
+    }
+  }

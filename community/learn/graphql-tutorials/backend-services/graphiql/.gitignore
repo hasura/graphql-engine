@@ -1,0 +1,12 @@
+.env
+cypress/videos
+cypress/screenshots
+.nyc_output
+node_modules
+static/dist
+webpack-assets.json
+webpack-stats.json
+npm-debug.log
+*.swp
+coverage
+.idea/*

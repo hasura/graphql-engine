@@ -11,7 +11,8 @@ import { SERVER_CONSOLE_MODE } from '../../../constants';
 import { loadMigrationStatus } from '../../Main/Actions';
 import { handleMigrationErrors } from '../EventTrigger/EventActions';
 
-import { showSuccessNotification } from '../Data/Notification';
+import { showSuccessNotification } from '../Common/Notification';
+import { filterInconsistentMetadataObjects } from '../Metadata/utils';
 
 /* Action constants */
 
@@ -20,6 +21,7 @@ const RESOLVERS_FETCH_SUCCESS = '@customResolver/RESOLVERS_FETCH_SUCCESS';
 const FILTER_RESOLVER = '@customResolver/FILTER_RESOLVER';
 const RESOLVERS_FETCH_FAIL = '@customResolver/RESOLVERS_FETCH_FAIL';
 const RESET = '@customResolver/RESET';
+const SET_CONSISTENT_RESOLVERS = '@customResolver/SET_CONSISTENT_RESOLVERS';
 
 const VIEW_RESOLVER = '@customResolver/VIEW_RESOLVER';
 
@@ -47,7 +49,21 @@ const fetchResolvers = () => {
     dispatch({ type: FETCH_RESOLVERS });
     return dispatch(requestAction(url, options)).then(
       data => {
-        dispatch({ type: RESOLVERS_FETCH_SUCCESS, data: data });
+        let consistentRemoteSchemas = data;
+        const { inconsistentObjects } = getState().metadata;
+
+        if (inconsistentObjects.length > 0) {
+          consistentRemoteSchemas = filterInconsistentMetadataObjects(
+            data,
+            inconsistentObjects,
+            'remote_schemas'
+          );
+        }
+
+        dispatch({
+          type: RESOLVERS_FETCH_SUCCESS,
+          data: consistentRemoteSchemas,
+        });
         return Promise.resolve();
       },
       error => {
@@ -58,6 +74,11 @@ const fetchResolvers = () => {
     );
   };
 };
+
+const setConsistentRemoteSchemas = data => ({
+  type: SET_CONSISTENT_RESOLVERS,
+  data,
+});
 
 const listReducer = (state = listState, action) => {
   switch (action.type) {
@@ -96,6 +117,11 @@ const listReducer = (state = listState, action) => {
       return {
         ...state,
         viewResolver: action.data,
+      };
+    case SET_CONSISTENT_RESOLVERS:
+      return {
+        ...state,
+        resolvers: action.data,
       };
     default:
       return {
@@ -172,5 +198,11 @@ const makeRequest = (
 };
 /* */
 
-export { fetchResolvers, FILTER_RESOLVER, VIEW_RESOLVER, makeRequest };
+export {
+  fetchResolvers,
+  FILTER_RESOLVER,
+  VIEW_RESOLVER,
+  makeRequest,
+  setConsistentRemoteSchemas,
+};
 export default listReducer;

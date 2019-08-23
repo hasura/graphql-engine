@@ -78,7 +78,13 @@ func (f *File) Open(url string, logger *log.Logger) (source.Driver, error) {
 			if err != nil {
 				continue // ignore files that we can't parse
 			}
-
+			ok, err := source.IsEmptyFile(m, p)
+			if err != nil {
+				return nil, err
+			}
+			if !ok {
+				continue
+			}
 			err = nf.migrations.Append(m)
 			if err != nil {
 				return nil, err

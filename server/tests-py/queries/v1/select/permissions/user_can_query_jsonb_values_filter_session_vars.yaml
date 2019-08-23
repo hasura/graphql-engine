@@ -1,0 +1,18 @@
+description: User can query geometry values which satisfies filter in select permission using session variables
+url: /v1/query
+status: 200
+headers:
+  X-Hasura-Role: user2
+  X-Hasura-Has-Key: age
+response:
+- id: 1
+  jsonb_col:
+    name: Hasura
+    age: 7
+query:
+  type: select
+  args:
+    table: jsonb_table
+    columns:
+    - id
+    - jsonb_col

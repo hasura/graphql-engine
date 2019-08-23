@@ -1,11 +1,19 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import { vSetDefaults, vMakeRequest, vExpandHeading } from './ViewActions'; // eslint-disable-line no-unused-vars
+import {
+  vSetDefaults,
+  vMakeRequest,
+  // vExpandHeading,
+  fetchManualTriggers,
+  UPDATE_TRIGGER_ROW,
+  UPDATE_TRIGGER_FUNCTION,
+} from './ViewActions';
 import { setTable } from '../DataActions';
 import TableHeader from '../TableCommon/TableHeader';
 import ViewHeader from './ViewHeader';
 import ViewRows from './ViewRows';
-import { replace } from 'react-router-redux';
+
+import { NotFoundError } from '../../../Error/PageNotFound';
 
 const genHeadings = headings => {
   if (headings.length === 0) {
@@ -65,28 +73,29 @@ const genRow = (row, headings) => {
 class ViewTable extends Component {
   constructor(props) {
     super(props);
-    // Initialize this table
+
     this.state = {
       dispatch: props.dispatch,
       tableName: props.tableName,
     };
-    // this.state.dispatch = props.dispatch;
-    // this.state.tableName = props.tablename;
-    const dispatch = this.props.dispatch;
-    Promise.all([
-      dispatch(setTable(this.props.tableName)),
-      dispatch(vSetDefaults(this.props.tableName)),
-      dispatch(vMakeRequest()),
-    ]);
+
+    this.getInitialData(this.props.tableName);
   }
 
   componentWillReceiveProps(nextProps) {
-    const dispatch = this.props.dispatch;
     if (nextProps.tableName !== this.props.tableName) {
-      dispatch(setTable(nextProps.tableName));
-      dispatch(vSetDefaults(nextProps.tableName));
-      dispatch(vMakeRequest());
+      this.getInitialData(nextProps.tableName);
     }
+  }
+
+  getInitialData(tableName) {
+    const { dispatch } = this.props;
+    Promise.all([
+      dispatch(setTable(tableName)),
+      dispatch(vSetDefaults(tableName)),
+      dispatch(vMakeRequest()),
+      dispatch(fetchManualTriggers(tableName)),
+    ]);
   }
 
   shouldComponentUpdate(nextProps) {
@@ -114,6 +123,22 @@ class ViewTable extends Component {
     dispatch(vSetDefaults(this.props.tableName));
   }
 
+  updateInvocationRow = row => {
+    const { dispatch } = this.props;
+    dispatch({
+      type: UPDATE_TRIGGER_ROW,
+      data: row,
+    });
+  };
+
+  updateInvocationFunction = triggerFunc => {
+    const { dispatch } = this.props;
+    dispatch({
+      type: UPDATE_TRIGGER_FUNCTION,
+      data: triggerFunc,
+    });
+  };
+
   render() {
     const {
       tableName,
@@ -122,7 +147,7 @@ class ViewTable extends Component {
       query,
       curFilter,
       rows,
-      count, // eslint-disable-line no-unused-vars
+      count,
       activePath,
       migrationMode,
       ongoingRequest,
@@ -132,18 +157,25 @@ class ViewTable extends Component {
       dispatch,
       expandedRow,
       currentSchema,
-    } = this.props; // eslint-disable-line no-unused-vars
+      manualTriggers = [],
+      triggeredRow,
+      triggeredFunction,
+    } = this.props;
 
     // check if table exists
-    const currentTable = schemas.find(s => s.table_name === tableName);
-    if (!currentTable) {
-      // dispatch a 404 route
-      dispatch(replace('/404'));
+    const tableSchema = schemas.find(
+      s => s.table_name === tableName && s.table_schema === currentSchema
+    );
+
+    if (!tableSchema) {
+      // throw a 404 exception
+      throw new NotFoundError();
     }
+
+    const styles = require('../../../Common/Common.scss');
+
     // Is this a view
-    const isView =
-      schemas.find(s => s.table_name === tableName).detail.table_type !==
-      'BASE TABLE';
+    const isView = tableSchema.table_type !== 'BASE TABLE';
 
     // Are there any expanded columns
     const viewRows = (
@@ -166,37 +198,52 @@ class ViewTable extends Component {
         count={count}
         dispatch={dispatch}
         expandedRow={expandedRow}
+        manualTriggers={manualTriggers}
+        updateInvocationRow={this.updateInvocationRow.bind(this)}
+        updateInvocationFunction={this.updateInvocationFunction.bind(this)}
+        triggeredRow={triggeredRow}
+        triggeredFunction={triggeredFunction}
       />
     );
 
     // Choose the right nav bar header thing
-    let header = (
+    const header = isView ? (
+      <ViewHeader
+        dispatch={dispatch}
+        tableName={tableName}
+        tabName="browse"
+        tableComment={tableComment}
+        migrationMode={migrationMode}
+        currentSchema={currentSchema}
+      />
+    ) : (
       <TableHeader
         count={count}
         dispatch={dispatch}
         tableName={tableName}
         tableComment={tableComment}
-        tabName="view"
+        tabName="browse"
         migrationMode={migrationMode}
         currentSchema={currentSchema}
       />
     );
-    if (isView) {
-      header = (
-        <ViewHeader
-          dispatch={dispatch}
-          tableName={tableName}
-          tabName="view"
-          tableComment={tableComment}
-          migrationMode={migrationMode}
-          currentSchema={currentSchema}
-        />
+
+    let comment = null;
+    if (tableSchema.comment) {
+      comment = (
+        <div className={styles.mar_bottom}>
+          <div className={styles.commentText + ' alert alert-warning'}>
+            {tableSchema.comment}
+          </div>
+        </div>
       );
     }
 
     return (
       <div>
         {header}
+        <br />
+        {comment}
         <div>{viewRows}</div>
       </div>
     );
@@ -229,6 +276,7 @@ const mapStateToProps = (state, ownProps) => {
     schemas: state.tables.allSchemas,
     tableComment: state.tables.tableComment,
     migrationMode: state.main.migrationMode,
+    serverVersion: state.main.serverVersion,
     ...state.tables.view,
   };
 };

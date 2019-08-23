@@ -1,0 +1,6 @@
+{
+  "version": 2,
+  "name": "hasura-edit-pg-dump",
+  "alias": "hasura-edit-pg-dump.now.sh",
+  "builds": [{ "src": "index.go", "use": "@now/go" }]
+}

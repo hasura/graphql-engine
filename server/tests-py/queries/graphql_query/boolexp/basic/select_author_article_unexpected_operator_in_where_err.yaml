@@ -1,6 +1,6 @@
 description: Select author and their articles
-url: /v1alpha1/graphql
-status: 400
+url: /v1/graphql
+status: 200
 response:
   errors:
   - extensions:

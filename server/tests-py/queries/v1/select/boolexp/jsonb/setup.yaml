@@ -1,0 +1,144 @@
+type: bulk
+args:
+
+#Author table
+- type: run_sql
+  args:
+    sql: |
+      create table author(
+          id serial primary key,
+          name text unique
+      );
+- type: track_table
+  args:
+    schema: public
+    name: author
+
+#Article table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE article (
+        id SERIAL PRIMARY KEY,
+        title TEXT,
+        content TEXT,
+        author_id INTEGER REFERENCES author(id),
+        is_published BOOLEAN,
+        published_on TIMESTAMP,
+        tags JSONB
+      )
+- type: track_table
+  args:
+    schema: public
+    name: article
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE product (
+        id          SERIAL  PRIMARY KEY,
+        name        TEXT    NOT NULL,
+        category    TEXT    NOT NULL,
+        spec        JSONB   NOT NULL
+      );
+- type: track_table
+  args:
+    schema: public
+    name: product
+
+
+#Object relationship
+- type: create_object_relationship
+  args:
+    table: article
+    name: author
+    using:
+      foreign_key_constraint_on: author_id
+
+#Array relationship
+- type: create_array_relationship
+  args:
+    table: author
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: author_id
+
+
+#Insert values
+- type: run_sql
+  args:
+    sql: |
+      insert into author (name)
+      values
+      ('Author 1'),
+      ('Author 2')
+
+- type: insert
+  args:
+    table: article
+    objects:
+    - title: Article 1
+      content: Sample article content 1
+      author_id: 1
+
+    - title: Article 2
+      content: Sample article content 2
+      author_id: 1
+      tags:
+      - bestseller
+      - latest
+
+    - title: Article 3
+      content: Sample article content 3
+      author_id: 2
+      tags:
+      - latest
+
+
+- type: insert
+  args:
+    table: product
+    objects:
+
+    - category: Laptop
+      name: laptop1
+      spec:
+        Operating System: os1
+        RAM: 8GB
+        Disk: 128GB
+        Weight: 1.2Kg
+        Processor: processor1
+
+    - category: Laptop
+      name: laptop2
+      spec:
+        OS: os2
+        RAM: 16GB
+        Disk: 128GB
+        Weight: 1.2Kg
+        Processor: processor2
+        Touchscreen: yes
+
+    - category: Mobile
+      name: mobile1
+      spec:
+        Operating System Type: osType1
+        RAM: 3GB
+        Weight: 200g
+        Processor: processor2
+        Network type: 4G
+        SIM type: DualSim
+        Sensors: Accelerometer sensor, E-compass, Proximity sensor
+        Touchscreen: yes
+
+    - category: Electric kettle
+      name: kettle1
+      spec:
+        power: 1500W
+        capacity: 1.5L
+        dimensions:
+          width: 20cm
+          height: 19cm
+          depth: 18cm

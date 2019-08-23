@@ -47,7 +47,7 @@ npm start
  git remote add heroku https://git.heroku.com/<app-name>.git
 
  # Push changes to heroku
- # Note: You need to run this command from the toplevel of the working tree (graphql-enginej)
+ # Note: You need to run this command from the toplevel of the working tree (graphql-engine)
  git subtree push --prefix community/boilerplates/auth-webhooks/passport-js heroku master
 
  # Apply migrations
@@ -90,4 +90,4 @@ The client just need to add `Authorization: Bearer <token>` to the request sendi
 
 The endpoint (say `http://localhost:8080/webhook`) can be given as an environment variable `HASURA_GRAPHQL_AUTH_HOOK` to GraphQL Engine.
 
-[Read more about webhook here](https://docs.hasura.io/1.0/graphql/manual/auth/webhook.html).
+[Read more about webhook here](https://docs.hasura.io/1.0/graphql/manual/auth/authentication/webhook.html).

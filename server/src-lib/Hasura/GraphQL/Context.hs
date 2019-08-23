@@ -16,22 +16,66 @@ import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Permission
 import           Hasura.SQL.Types
 
-
 type OpCtxMap = Map.HashMap G.Name OpCtx
 
+data InsOpCtx
+  = InsOpCtx
+  { _iocTable   :: !QualifiedTable
+  , _iocHeaders :: ![T.Text]
+  } deriving (Show, Eq)
+
+data SelOpCtx
+  = SelOpCtx
+  { _socTable   :: !QualifiedTable
+  , _socHeaders :: ![T.Text]
+  , _socFilter  :: !AnnBoolExpPartialSQL
+  , _socLimit   :: !(Maybe Int)
+  } deriving (Show, Eq)
+
+data SelPkOpCtx
+  = SelPkOpCtx
+  { _spocTable   :: !QualifiedTable
+  , _spocHeaders :: ![T.Text]
+  , _spocFilter  :: !AnnBoolExpPartialSQL
+  , _spocArgMap  :: !PGColArgMap
+  } deriving (Show, Eq)
+
+data FuncQOpCtx
+  = FuncQOpCtx
+  { _fqocTable    :: !QualifiedTable
+  , _fqocHeaders  :: ![T.Text]
+  , _fqocFilter   :: !AnnBoolExpPartialSQL
+  , _fqocLimit    :: !(Maybe Int)
+  , _fqocFunction :: !QualifiedFunction
+  , _fqocArgs     :: !FuncArgSeq
+  } deriving (Show, Eq)
+
+data UpdOpCtx
+  = UpdOpCtx
+  { _uocTable      :: !QualifiedTable
+  , _uocHeaders    :: ![T.Text]
+  , _uocFilter     :: !AnnBoolExpPartialSQL
+  , _uocPresetCols :: !PreSetColsPartial
+  , _uocAllCols    :: ![PGColInfo]
+  } deriving (Show, Eq)
+
+data DelOpCtx
+  = DelOpCtx
+  { _docTable   :: !QualifiedTable
+  , _docHeaders :: ![T.Text]
+  , _docFilter  :: !AnnBoolExpPartialSQL
+  , _docAllCols :: ![PGColInfo]
+  } deriving (Show, Eq)
+
 data OpCtx
-  -- table, req hdrs
-  = OCInsert QualifiedTable [T.Text]
-  -- tn, filter exp, limit, req hdrs
-  | OCSelect QualifiedTable AnnBoolExpSQL (Maybe Int) [T.Text]
-  -- tn, filter exp, reqt hdrs
-  | OCSelectPkey QualifiedTable AnnBoolExpSQL [T.Text]
-  -- tn, filter exp, limit, req hdrs
-  | OCSelectAgg QualifiedTable AnnBoolExpSQL (Maybe Int) [T.Text]
-  -- tn, filter exp, req hdrs
-  | OCUpdate QualifiedTable AnnBoolExpSQL [T.Text]
-  -- tn, filter exp, req hdrs
-  | OCDelete QualifiedTable AnnBoolExpSQL [T.Text]
+  = OCSelect !SelOpCtx
+  | OCSelectPkey !SelPkOpCtx
+  | OCSelectAgg !SelOpCtx
+  | OCFuncQuery !FuncQOpCtx
+  | OCFuncAggQuery !FuncQOpCtx
+  | OCInsert !InsOpCtx
+  | OCUpdate !UpdOpCtx
+  | OCDelete !DelOpCtx
   deriving (Show, Eq)
 
 data GCtx
@@ -50,37 +94,6 @@ instance Has TypeMap GCtx where
   getter = _gTypes
   modifier f ctx = ctx { _gTypes = f $ _gTypes ctx }
 
--- data OpCtx
---   -- table, req hdrs
---   = OCInsert QualifiedTable [T.Text]
---   -- tn, filter exp, limit, req hdrs
---   | OCSelect QualifiedTable S.BoolExp (Maybe Int) [T.Text]
---   -- tn, filter exp, reqt hdrs
---   | OCSelectPkey QualifiedTable S.BoolExp [T.Text]
---   -- tn, filter exp, limit, req hdrs
---   | OCSelectAgg QualifiedTable S.BoolExp (Maybe Int) [T.Text]
---   -- tn, filter exp, req hdrs
---   | OCUpdate QualifiedTable S.BoolExp [T.Text]
---   -- tn, filter exp, req hdrs
---   | OCDelete QualifiedTable S.BoolExp [T.Text]
---   deriving (Show, Eq)
-
--- data GCtx
---   = GCtx
---   { _gTypes     :: !TypeMap
---   , _gFields    :: !FieldMap
---   , _gOrdByCtx  :: !OrdByCtx
---   , _gQueryRoot :: !ObjTyInfo
---   , _gMutRoot   :: !(Maybe ObjTyInfo)
---   , _gSubRoot   :: !(Maybe ObjTyInfo)
---   , _gOpCtxMap  :: !OpCtxMap
---   , _gInsCtxMap :: !InsCtxMap
---   } deriving (Show, Eq)
-
--- instance Has TypeMap GCtx where
---   getter = _gTypes
---   modifier f ctx = ctx { _gTypes = f $ _gTypes ctx }
-
 instance ToJSON GCtx where
   toJSON _ = String "GCtx"
 
@@ -88,17 +101,19 @@ type GCtxMap = Map.HashMap RoleName GCtx
 
 data TyAgg
   = TyAgg
-  { _taTypes  :: !TypeMap
-  , _taFields :: !FieldMap
-  , _taOrdBy  :: !OrdByCtx
+  { _taTypes   :: !TypeMap
+  , _taFields  :: !FieldMap
+  , _taScalars :: !(Set.HashSet PGColType)
+  , _taOrdBy   :: !OrdByCtx
   } deriving (Show, Eq)
 
 instance Semigroup TyAgg where
-  (TyAgg t1 f1 o1) <> (TyAgg t2 f2 o2) =
-    TyAgg (Map.union t1 t2) (Map.union f1 f2) (Map.union o1 o2)
+  (TyAgg t1 f1 s1 o1) <> (TyAgg t2 f2 s2 o2) =
+    TyAgg (Map.union t1 t2) (Map.union f1 f2)
+          (Set.union s1 s2) (Map.union o1 o2)
 
 instance Monoid TyAgg where
-  mempty = TyAgg Map.empty Map.empty Map.empty
+  mempty = TyAgg Map.empty Map.empty Set.empty Map.empty
   mappend = (<>)
 
 newtype RootFlds
@@ -121,15 +136,16 @@ mkHsraObjFldInfo
   -> G.GType
   -> ObjFldInfo
 mkHsraObjFldInfo descM name params ty =
-  ObjFldInfo descM name params ty HasuraType
+  ObjFldInfo descM name params ty TLHasuraType
 
 mkHsraObjTyInfo
   :: Maybe G.Description
   -> G.NamedType
+  -> IFacesSet
   -> ObjFieldMap
   -> ObjTyInfo
-mkHsraObjTyInfo descM ty flds =
-  mkObjTyInfo descM ty flds HasuraType
+mkHsraObjTyInfo descM ty implIFaces flds =
+  mkObjTyInfo descM ty implIFaces flds TLHasuraType
 
 mkHsraInpTyInfo
   :: Maybe G.Description
@@ -137,7 +153,7 @@ mkHsraInpTyInfo
   -> InpObjFldMap
   -> InpObjTyInfo
 mkHsraInpTyInfo descM ty flds =
-  InpObjTyInfo descM ty flds HasuraType
+  InpObjTyInfo descM ty flds TLHasuraType
 
 mkHsraEnumTyInfo
   :: Maybe G.Description
@@ -145,10 +161,10 @@ mkHsraEnumTyInfo
   -> Map.HashMap G.EnumValue EnumValInfo
   -> EnumTyInfo
 mkHsraEnumTyInfo descM ty enumVals =
-  EnumTyInfo descM ty enumVals HasuraType
+  EnumTyInfo descM ty enumVals TLHasuraType
 
 mkHsraScalarTyInfo :: PGColType -> ScalarTyInfo
-mkHsraScalarTyInfo ty = ScalarTyInfo Nothing ty HasuraType
+mkHsraScalarTyInfo ty = ScalarTyInfo Nothing ty TLHasuraType
 
 fromInpValL :: [InpValInfo] -> Map.HashMap G.Name InpValInfo
 fromInpValL = mapFromL _iviName
@@ -161,16 +177,48 @@ mkCompExpTy :: PGColType -> G.NamedType
 mkCompExpTy =
   G.NamedType . mkCompExpName
 
+mkCastExpName :: PGColType -> G.Name
+mkCastExpName pgColTy = G.Name $ T.pack (show pgColTy) <> "_cast_exp"
+
+mkCastExpTy :: PGColType -> G.NamedType
+mkCastExpTy = G.NamedType . mkCastExpName
+
+-- TODO(shahidhk) this should ideally be st_d_within_geometry
+{-
+input st_d_within_input {
+  distance: Float!
+  from: geometry!
+}
+-}
+stDWithinGeometryInpTy :: G.NamedType
+stDWithinGeometryInpTy = G.NamedType "st_d_within_input"
+
+{-
+input st_d_within_geography_input {
+  distance: Float!
+  from: geography!
+  use_spheroid: Bool!
+}
+-}
+stDWithinGeographyInpTy :: G.NamedType
+stDWithinGeographyInpTy = G.NamedType "st_d_within_geography_input"
+
+
 --- | make compare expression input type
 mkCompExpInp :: PGColType -> InpObjTyInfo
 mkCompExpInp colTy =
   InpObjTyInfo (Just tyDesc) (mkCompExpTy colTy) (fromInpValL $ concat
   [ map (mk colScalarTy) typedOps
-  , map (mk $ G.toLT colScalarTy) listOps
+  , map (mk $ G.toLT $ G.toNT colScalarTy) listOps
   , bool [] (map (mk $ mkScalarTy PGText) stringOps) isStringTy
   , bool [] (map jsonbOpToInpVal jsonbOps) isJsonbTy
-  , [InpValInfo Nothing "_is_null" $ G.TypeNamed (G.Nullability True) $ G.NamedType "Boolean"]
-  ]) HasuraType
+  , bool [] (stDWithinGeoOpInpVal stDWithinGeometryInpTy :
+             map geoOpToInpVal (geoOps ++ geomOps)) isGeometryType
+  , bool [] (stDWithinGeoOpInpVal stDWithinGeographyInpTy :
+             map geoOpToInpVal geoOps) isGeographyType
+  , [InpValInfo Nothing "_is_null" Nothing $ G.TypeNamed (G.Nullability True) $ G.NamedType "Boolean"]
+  , maybeToList castOpInputValue
+  ]) TLHasuraType
   where
     tyDesc = mconcat
       [ "expression to compare columns of type "
@@ -181,7 +229,7 @@ mkCompExpInp colTy =
       PGVarchar -> True
       PGText    -> True
       _         -> False
-    mk t n = InpValInfo Nothing n $ G.toGT t
+    mk t n = InpValInfo Nothing n Nothing $ G.toGT t
     colScalarTy = mkScalarTy colTy
     -- colScalarListTy = GA.GTList colGTy
     typedOps =
@@ -195,10 +243,11 @@ mkCompExpInp colTy =
       [ "_like", "_nlike", "_ilike", "_nilike"
       , "_similar", "_nsimilar"
       ]
+
     isJsonbTy = case colTy of
       PGJSONB -> True
       _       -> False
-    jsonbOpToInpVal (op, ty, desc) = InpValInfo (Just desc) op ty
+    jsonbOpToInpVal (op, ty, desc) = InpValInfo (Just desc) op Nothing ty
     jsonbOps =
       [ ( "_contains"
         , G.toGT $ mkScalarTy PGJSONB
@@ -221,6 +270,81 @@ mkCompExpInp colTy =
         , "do all of these strings exist as top-level keys in the column"
         )
       ]
+
+    castOpInputValue =
+      -- currently, only geometry/geography types support casting
+      guard (isGeoType colTy) $>
+        InpValInfo Nothing "_cast" Nothing (G.toGT $ mkCastExpTy colTy)
+
+    stDWithinGeoOpInpVal ty =
+      InpValInfo (Just stDWithinGeoDesc) "_st_d_within" Nothing $ G.toGT ty
+    stDWithinGeoDesc =
+      "is the column within a distance from a " <> colTyDesc <> " value"
+
+    -- Geometry related ops
+    isGeometryType = case colTy of
+      PGGeometry -> True
+      _          -> False
+
+    -- Geography related ops
+    isGeographyType = case colTy of
+      PGGeography -> True
+      _           -> False
+
+    geoOpToInpVal (op, desc) =
+      InpValInfo (Just desc) op Nothing $ G.toGT $ mkScalarTy colTy
+
+    colTyDesc = G.Description $ T.pack $ show colTy
+
+    -- operators applicable only to geometry types
+    geomOps :: [(G.Name, G.Description)]
+    geomOps =
+      [
+        ( "_st_contains"
+        , "does the column contain the given geometry value"
+        )
+      , ( "_st_crosses"
+        , "does the column crosses the given geometry value"
+        )
+      , ( "_st_equals"
+        , "is the column equal to given geometry value. Directionality is ignored"
+        )
+      , ( "_st_overlaps"
+        , "does the column 'spatially overlap' (intersect but not completely contain) the given geometry value"
+        )
+      , ( "_st_touches"
+        , "does the column have atleast one point in common with the given geometry value"
+        )
+      , ( "_st_within"
+        , "is the column contained in the given geometry value"
+        )
+      ]
+
+    -- operators applicable to geometry and geography types
+    geoOps =
+      [
+        ( "_st_intersects"
+        , "does the column spatially intersect the given " <> colTyDesc <> " value"
+        )
+      ]
+
+-- | Makes an input type declaration for the @_cast@ field of a comparison expression.
+-- (Currently only used for casting between geometry and geography types.)
+mkCastExpressionInputType :: PGColType -> [PGColType] -> InpObjTyInfo
+mkCastExpressionInputType sourceType targetTypes =
+  mkHsraInpTyInfo (Just description) (mkCastExpTy sourceType) (fromInpValL targetFields)
+  where
+    description = mconcat
+      [ "Expression to compare the result of casting a column of type "
+      , G.Description (T.pack $ show sourceType)
+      , ". Multiple cast targets are combined with logical 'AND'."
+      ]
+    targetFields = map targetField targetTypes
+    targetField targetType = InpValInfo
+      Nothing
+      (G.Name . T.pack $ show targetType)
+      Nothing
+      (G.toGT $ mkCompExpTy targetType)
 
 ordByTy :: G.NamedType
 ordByTy = G.NamedType "order_by"
@@ -255,18 +379,16 @@ ordByEnumTy =
       ]
 
 defaultTypes :: [TypeInfo]
-defaultTypes = $(fromSchemaDocQ defaultSchema HasuraType)
+defaultTypes = $(fromSchemaDocQ defaultSchema TLHasuraType)
 
 
 mkGCtx :: TyAgg -> RootFlds -> InsCtxMap -> GCtx
-mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) insCtxMap =
+mkGCtx tyAgg (RootFlds flds) insCtxMap =
   let queryRoot = mkHsraObjTyInfo (Just "query root")
-                  (G.NamedType "query_root") $
+                  (G.NamedType "query_root") Set.empty $
                   mapFromL _fiName (schemaFld:typeFld:qFlds)
-      colTys    = Set.toList $ Set.fromList $ map pgiType $
-                  lefts $ Map.elems fldInfos
-      scalarTys = map (TIScalar . mkHsraScalarTyInfo) colTys
-      compTys   = map (TIInpObj . mkCompExpInp) colTys
+      scalarTys = map (TIScalar . mkHsraScalarTyInfo) (Set.toList allScalarTypes)
+      compTys   = map (TIInpObj . mkCompExpInp) (Set.toList allComparableTypes)
       ordByEnumTyM = bool (Just ordByEnumTy) Nothing $ null qFlds
       allTys    = Map.union tyInfos $ mkTyInfoMap $
                   catMaybes [ Just $ TIObj queryRoot
@@ -274,18 +396,20 @@ mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) insCtxMap =
                             , TIObj <$> subRootM
                             , TIEnum <$> ordByEnumTyM
                             ] <>
-                  scalarTys <> compTys <> defaultTypes
+                  scalarTys <> compTys <> defaultTypes <> wiredInGeoInputTypes
   -- for now subscription root is query root
   in GCtx allTys fldInfos ordByEnums queryRoot mutRootM subRootM
      (Map.map fst flds) insCtxMap
   where
+    TyAgg tyInfos fldInfos scalars ordByEnums = tyAgg
+    colTys = Set.fromList $ map pgiType $ lefts $ Map.elems fldInfos
     mkMutRoot =
-      mkHsraObjTyInfo (Just "mutation root") (G.NamedType "mutation_root") .
+      mkHsraObjTyInfo (Just "mutation root") (G.NamedType "mutation_root") Set.empty .
       mapFromL _fiName
     mutRootM = bool (Just $ mkMutRoot mFlds) Nothing $ null mFlds
     mkSubRoot =
       mkHsraObjTyInfo (Just "subscription root")
-      (G.NamedType "subscription_root") . mapFromL _fiName
+      (G.NamedType "subscription_root") Set.empty . mapFromL _fiName
     subRootM = bool (Just $ mkSubRoot qFlds) Nothing $ null qFlds
     (qFlds, mFlds) = partitionEithers $ map snd $ Map.elems flds
     schemaFld = mkHsraObjFldInfo Nothing "__schema" Map.empty $
@@ -294,9 +418,50 @@ mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) insCtxMap =
                 G.toGT $ G.NamedType "__Type"
       where
         typeFldArgs = mapFromL _iviName [
-          InpValInfo (Just "name of the type") "name"
+          InpValInfo (Just "name of the type") "name" Nothing
           $ G.toGT $ G.toNT $ G.NamedType "String"
           ]
 
+    anyGeoTypes = any isGeoType colTys
+    allComparableTypes =
+      if anyGeoTypes
+        -- due to casting, we need to generate both geometry and geography
+        -- operations even if just one of the two appears in the schema
+        then Set.union (Set.fromList [PGGeometry, PGGeography]) colTys
+        else colTys
+    allScalarTypes = allComparableTypes <> scalars
+
+    wiredInGeoInputTypes =
+      guard anyGeoTypes *> map TIInpObj
+        [ stDWithinGeometryInputType
+        , stDWithinGeographyInputType
+        , castGeometryInputType
+        , castGeographyInputType
+        ]
+
+    stDWithinGeometryInputType =
+      mkHsraInpTyInfo Nothing stDWithinGeometryInpTy $ fromInpValL
+      [ InpValInfo Nothing "from" Nothing $ G.toGT $ G.toNT $ mkScalarTy PGGeometry
+      , InpValInfo Nothing "distance" Nothing $ G.toNT $ mkScalarTy PGFloat
+      ]
+    stDWithinGeographyInputType =
+      mkHsraInpTyInfo Nothing stDWithinGeographyInpTy $ fromInpValL
+      [ InpValInfo Nothing "from" Nothing $ G.toGT $ G.toNT $ mkScalarTy PGGeography
+      , InpValInfo Nothing "distance" Nothing $ G.toNT $ mkScalarTy PGFloat
+      , InpValInfo
+        Nothing "use_spheroid" (Just $ G.VCBoolean True) $ G.toGT $ mkScalarTy PGBoolean
+      ]
+
+    castGeometryInputType = mkCastExpressionInputType PGGeometry [PGGeography]
+    castGeographyInputType = mkCastExpressionInputType PGGeography [PGGeometry]
+
 emptyGCtx :: GCtx
 emptyGCtx = mkGCtx mempty mempty mempty
+
+data RemoteGCtx
+  = RemoteGCtx
+  { _rgTypes            :: !TypeMap
+  , _rgQueryRoot        :: !ObjTyInfo
+  , _rgMutationRoot     :: !(Maybe ObjTyInfo)
+  , _rgSubscriptionRoot :: !(Maybe ObjTyInfo)
+  } deriving (Show, Eq)

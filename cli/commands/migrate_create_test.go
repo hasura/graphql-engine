@@ -11,6 +11,7 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/sirupsen/logrus/hooks/test"
+	"github.com/spf13/pflag"
 )
 
 func TestMigrateCreateCmd(t *testing.T) {
@@ -21,10 +22,11 @@ func TestMigrateCreateCmd(t *testing.T) {
 			Spinner:      spinner.New(spinner.CharSets[7], 100*time.Millisecond),
 			MigrationDir: filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000))),
 		},
-		name: "create_article",
+		name:  "create_article",
+		flags: pflag.NewFlagSet("migrate-create-test", pflag.ContinueOnError),
 	}
 
-	err := opts.run()
+	_, err := opts.run()
 	if err != nil {
 		t.Fatalf("failed creating migration: %v", err)
 	}

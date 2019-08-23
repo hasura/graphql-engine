@@ -16,7 +16,7 @@ Install packages
 
 .. code-block:: bash
 
-  npm install --save apollo-client apollo-link-ws apollo-link-http apollo-link apollo-utilities apollo-cache-inmemory
+  npm install --save apollo-client apollo-link-ws apollo-link-http apollo-link apollo-utilities apollo-cache-inmemory subscriptions-transport-ws
 
 Once these packages are installed, import them as follows in the file where you have currently initialised your client
 (usually your ``App.js`` file).
@@ -38,12 +38,12 @@ below these imports initialise your client to fetch subscriptions along with que
 .. code-block:: js
 
   const httpLink = new HttpLink({
-    uri: "https://<your-app>/v1alpha1/graphql",
+    uri: "http://<your-app>/v1/graphql", // use https for secure endpoint
   });
 
   // Create a WebSocket link:
   const wsLink = new WebSocketLink({
-    uri: "ws://<your-app>/v1alpha1/graphql",
+    uri: "ws://<your-app>/v1/graphql", // use wss for a secure endpoint
     options: {
       reconnect: true
     }

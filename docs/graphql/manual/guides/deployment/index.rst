@@ -6,8 +6,9 @@ Guides: Deployment
   :depth: 1
   :local:
 
-- :doc:`Digital Ocean One-click App <digital-ocean-one-click>`
+- :doc:`Digital Ocean One-click App on Marketplace <digital-ocean-one-click>`
 - :doc:`Azure Container Instances with Postgres <azure-container-instances-postgres>`
+- :doc:`Google Cloud Platform with Kubernetes Engine and Cloud SQL <google-kubernetes-engine-cloud-sql>`
 - `Blog: Instant GraphQL on AWS RDS <https://blog.hasura.io/instant-graphql-on-aws-rds-1edfb85b5985>`__
 
 .. note::
@@ -20,5 +21,7 @@ Guides: Deployment
    :titlesonly:
    :hidden:
 
-   DigitalOcean One-click App <digital-ocean-one-click>
+   DigitalOcean One-click App on Marketplace <digital-ocean-one-click>
    Azure Container Instances with Postgres <azure-container-instances-postgres>
+   Google Cloud Platform with Kubernetes Engine and Cloud SQL <google-kubernetes-engine-cloud-sql>
+   

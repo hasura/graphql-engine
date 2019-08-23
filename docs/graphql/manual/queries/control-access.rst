@@ -1,78 +1,77 @@
-Control access to certain data
-==============================
+Restrict access to certain fields
+=================================
 
 .. contents:: Table of contents
   :backlinks: none
   :depth: 1
   :local:
 
-If you want to control access to sensitive fields in a table, you can either use views to expose only the safe fields
-or :ref:`restrict access via permissions <restrict_columns>`.
+If you want to restrict access to sensitive fields in a table, you can either use views to expose only the safe fields
+or :ref:`restrict access via permissions <col-level-permissions>`.
 
 The following section describes setting up a view for this purpose.
 
-For example, to mask access to the ``article`` table and only expose the ``id``, ``title`` and ``rating`` columns
-from this table:
+**For example**: Say we have a table ``user_profile (id, name, email, phone, address)``, to restrict users to
+only have access to the ``id``, ``name`` & ``email`` fields of other users, we can:
 
 Step 1: Create a view
 ---------------------
 Open the Hasura console and head to the ``Data -> SQL`` tab.
 
-Create a view with data from only the required (or safe) columns:
+Create a view with data from only the required (or public) columns:
 
 .. code-block:: SQL
 
-    CREATE VIEW article_safe AS
-    SELECT id, title, rating 
-    FROM article;
+    CREATE VIEW user_public AS
+      SELECT id, name, email
+        FROM user_profile;
 
 Step 2: Modify permissions
 --------------------------
 You will need to revoke permission (if already granted) from the source table and grant access to the newly created
 view. So, in our example, we do the following:
 
-#. Remove access permissions from the ``article`` table
+#. Remove **select** permissions from the ``user_profile`` table
 
-#. Grant access permissions to the ``article_safe`` view
+#. Grant **select** permissions to the ``user_public`` view
 
 Step 3: Query the view
 ----------------------
-You can now query the newly created view like you would a regular table. For example, the following query will access
-only the *safe* fields:
+You can now query the newly created view like you would a regular table:
 
 .. graphiql::
   :view_only:
   :query:
     query {
-      article_safe {
+      user_public {
         id
-        title
-        rating
+        name
+        email
       }
     }
   :response:
     {
       "data": {
-        "article_safe": [
+        "user_public": [
           {
             "id": 1,
-            "title": "sit amet",
-            "rating": 1
+            "name": "Justin",
+            "email": "justin@xyz.com"
           },
           {
             "id": 2,
-            "title": "a nibh",
-            "rating": 3
+            "name": "Beltran",
+            "email": "beltran@xyz.com"
           },
           {
             "id": 3,
-            "title": "amet justo morbi",
-            "rating": 4
+            "name": "Sidney",
+            "email": "sidney@xyz.com"
           },
           {
             "id": 4,
-            "title": "vestibulum ac est",
-            "rating": 2
+            "name": "Angela",
+            "email": "angela@xyz.com"
           }
         ]
       }

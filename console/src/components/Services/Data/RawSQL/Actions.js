@@ -1,14 +1,19 @@
 import defaultState from './State';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
-import { loadSchema, handleMigrationErrors } from '../DataActions';
+import {
+  handleMigrationErrors,
+  fetchTrackedFunctions,
+  fetchDataInit,
+} from '../DataActions';
 import {
   showErrorNotification,
   showSuccessNotification,
-} from '../Notification';
+} from '../../Common/Notification';
 import {
   loadMigrationStatus,
   UPDATE_MIGRATION_STATUS_ERROR,
 } from '../../../Main/Actions';
+import { parseCreateSQL } from './utils';
 import dataHeaders from '../Common/Headers';
 import returnMigrateUrl from '../Common/getMigrateUrl';
 
@@ -34,7 +39,6 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
   const currMigrationMode = getState().main.migrationMode;
 
   const migrateUrl = returnMigrateUrl(currMigrationMode);
-  const currentSchema = 'public';
   const isCascadeChecked = getState().rawSQL.isCascadeChecked;
 
   let url = Endpoints.rawSQL;
@@ -45,38 +49,29 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
     },
   ];
   // check if track view enabled
+
   if (getState().rawSQL.isTableTrackChecked) {
-    const regExp = /create\s*(?:|or\s*replace)\s*(view|table)\s*((\"?\w+\"?)\.(\"?\w+\"?)|(\"?\w+\"?))/; // eslint-disable-line
-    const matches = sql.match(new RegExp(regExp, 'gmi'));
-    if (matches) {
-      matches.forEach(element => {
-        const itemMatch = element.match(new RegExp(regExp, 'i'));
-        if (itemMatch && itemMatch.length === 6) {
-          const trackQuery = {
-            type: 'add_existing_table_or_view',
-            args: {},
-          };
-          // If group 5 is undefined, use group 3 and 4 for schema and table respectively
-          // If group 5 is present, use group 5 for table name using public schema.
-          if (itemMatch[5]) {
-            trackQuery.args.name = itemMatch[5];
-            trackQuery.args.schema = currentSchema;
-          } else {
-            trackQuery.args.name = itemMatch[4];
-            trackQuery.args.schema = itemMatch[3];
-          }
-          // replace and trim schema and table name
-          trackQuery.args.name = trackQuery.args.name
-            .replace(/['"]+/g, '')
-            .trim();
-          trackQuery.args.schema = trackQuery.args.schema
-            .replace(/['"]+/g, '')
-            .trim();
-          schemaChangesUp.push(trackQuery);
-        }
-      });
-    }
+    const objects = parseCreateSQL(sql);
+
+    objects.forEach(object => {
+      const trackQuery = {
+        type: '',
+        args: {},
+      };
+
+      if (object.type === 'function') {
+        trackQuery.type = 'track_function';
+      } else {
+        trackQuery.type = 'add_existing_table_or_view';
+      }
+
+      trackQuery.args.name = object.name;
+      trackQuery.args.schema = object.schema;
+
+      schemaChangesUp.push(trackQuery);
+    });
   }
+
   let requestBody = {
     type: 'bulk',
     args: schemaChangesUp,
@@ -105,9 +100,10 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
               dispatch(loadMigrationStatus());
             }
             dispatch(showSuccessNotification('SQL executed!'));
-            dispatch(loadSchema()).then(() => {
+            dispatch(fetchDataInit()).then(() => {
               dispatch({ type: REQUEST_SUCCESS, data });
             });
+            dispatch(fetchTrackedFunctions());
           },
           err => {
             const parsedErrorMsg = err;
@@ -116,26 +112,29 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
             dispatch(
               showErrorNotification(
                 'SQL execution failed!',
-                'Something is wrong. Data sent back an invalid response json.',
-                requestBody,
+                'Something is wrong. Received an invalid response json.',
                 parsedErrorMsg
               )
             );
             dispatch({
               type: REQUEST_ERROR,
-              data:
-                'Something is wrong. Data sent back an invalid response json.',
+              data: 'Something is wrong. Received an invalid response json.',
             });
-            console.err('Error with response', err);
+            console.err('RunSQL error: ', err);
           }
         );
         return;
       }
       response.json().then(
         errorMsg => {
+          const title = 'SQL Execution Failed';
           dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: errorMsg });
           dispatch({ type: REQUEST_ERROR, data: errorMsg });
-          dispatch(handleMigrationErrors('SQL Execution Failed', errorMsg));
+          if (isMigration) {
+            dispatch(handleMigrationErrors(title, errorMsg));
+          } else {
+            dispatch(showErrorNotification(title, errorMsg.code, errorMsg));
+          }
         },
         () => {
           dispatch(

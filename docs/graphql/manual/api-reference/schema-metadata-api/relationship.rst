@@ -6,8 +6,7 @@ Schema/Metadata API Reference: Relationships
   :depth: 1
   :local:
 
-Relationships are used to capture the connectedness of data amongst tables.
-In general, when retrieving data from tables, it is very helpful if we can also
+When retrieving data from tables, it is very helpful if we can also
 fetch the related data alongside the columns. This is where relationships come
 in. They can be considered as pseudo columns for a table to access the related
 data.
@@ -17,7 +16,7 @@ For a simple ``article/author`` schema, the following relationships exist:
 - ``author`` of an ``article``
 - ``articles`` of an ``author``
 
-As you may have noticed, there are two kinds of relationships:
+There are two kinds of relationships:
 
 - one-to-one or ``object relationships`` (e.g. ``author``).
 - one-to-many or ``array relationships`` (e.g. ``articles``).
@@ -134,8 +133,8 @@ Args syntax
 
 .. _ObjRelUsing:
 
-``ObjRelUsing``
-&&&&&&&&&&&&&&&
+ObjRelUsing
+&&&&&&&&&&&
 
 .. list-table::
    :header-rows: 1
@@ -159,8 +158,8 @@ Args syntax
    and ``manual_mapping``. 
 
 
-``ObjRelUsingManualMapping``
-&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+ObjRelUsingManualMapping
+&&&&&&&&&&&&&&&&&&&&&&&&
 
 .. list-table::
    :header-rows: 1
@@ -291,8 +290,8 @@ Args syntax
 
 .. _ArrRelUsing:
 
-``ArrRelUsing``
-&&&&&&&&&&&&&&&
+ArrRelUsing
+&&&&&&&&&&&
 
 .. list-table::
    :header-rows: 1
@@ -310,8 +309,8 @@ Args syntax
      - ArrRelUsingManualMapping_
      - Manual mapping of table and columns
 
-``ArrRelUsingFKeyOn``
-&&&&&&&&&&&&&&&&&&&&&
+ArrRelUsingFKeyOn
+&&&&&&&&&&&&&&&&&
 
 .. list-table::
    :header-rows: 1
@@ -329,8 +328,8 @@ Args syntax
      - :ref:`PGColumn`
      - Name of the column with foreign key constraint
 
-``ArrRelUsingManualMapping``
-&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+ArrRelUsingManualMapping
+&&&&&&&&&&&&&&&&&&&&&&&&
 
 .. list-table::
    :header-rows: 1

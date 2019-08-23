@@ -35,7 +35,7 @@ export const establishWebSocketConn = (
     conn.onerror = onError;
   } else {
     // TODO implement a fallback which polls but mimics the interface of a WebSocket Object.
-    console.log(
+    console.error(
       'This console needs websockets and websockets is not supported by your browser.'
     );
     alert(
@@ -88,7 +88,7 @@ export const permanentWebSocketConn = (
               onError
             );
           } catch (err) {
-            console.log('Failed to establish websocket connection.');
+            console.error('Failed to establish websocket connection.');
           }
           tries++;
         }
@@ -99,9 +99,12 @@ export const permanentWebSocketConn = (
       } else {
         console.log('Re-connecting to websocket server.');
         const time = (tries / noOfTurns) * 2 + 2;
-        setTimeout(() => {
-          reConn();
-        }, time >= 60 ? 60000 : time * 1000);
+        setTimeout(
+          () => {
+            reConn();
+          },
+          time >= 60 ? 60000 : time * 1000
+        );
       }
     };
 

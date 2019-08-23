@@ -64,7 +64,7 @@ export const convertListToDictUsingKV = (keyName, keyValue, list) => {
  * @param  {[type]}  values [description]
  * @return {Boolean}        [description]
  */
-export const listDulplicate = values => {
+export const listDuplicate = values => {
   const occuranceDict = convertListToDict(values);
   return Object.keys(occuranceDict).filter(key => occuranceDict[key] > 1);
 };

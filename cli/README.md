@@ -32,7 +32,7 @@ make build
 ## Usage
 
 ```bash
-hasura init --directory <my-project> --endpoint <graphql-endpoint> --access-key <access-key>
+hasura init --directory <my-project> --endpoint <graphql-endpoint> --admin-secret <admin-secret>
 cd <my-project>
 hasura console
 ```

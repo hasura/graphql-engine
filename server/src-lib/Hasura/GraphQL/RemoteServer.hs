@@ -11,8 +11,10 @@ import qualified Data.Aeson                    as J
 import qualified Data.ByteString.Lazy          as BL
 import qualified Data.CaseInsensitive          as CI
 import qualified Data.HashMap.Strict           as Map
+import qualified Data.HashSet                  as Set
 import qualified Data.Text                     as T
 import qualified Data.Text.Encoding            as T
+import qualified Language.GraphQL.Draft.Parser as G
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.HTTP.Client           as HTTP
 import qualified Network.Wreq                  as Wreq
@@ -20,10 +22,11 @@ import qualified Network.Wreq                  as Wreq
 import           Hasura.HTTP                   (wreqOptions)
 import           Hasura.RQL.DDL.Headers        (getHeadersFromConf)
 import           Hasura.RQL.Types
+import           Hasura.Server.Utils           (httpExceptToJSON)
 
+import qualified Hasura.GraphQL.Context        as GC
 import qualified Hasura.GraphQL.Schema         as GS
 import qualified Hasura.GraphQL.Validate.Types as VT
-
 
 introspectionQuery :: BL.ByteString
 introspectionQuery = $(embedStringFile "src-rsr/introspection.json")
@@ -33,59 +36,75 @@ fetchRemoteSchema
   => HTTP.Manager
   -> RemoteSchemaName
   -> RemoteSchemaInfo
-  -> m GS.RemoteGCtx
+  -> m GC.RemoteGCtx
 fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _) = do
   headers <- getHeadersFromConf headerConf
-  let hdrs = map (\(hn, hv) -> (CI.mk . T.encodeUtf8 $ hn, T.encodeUtf8 hv)) headers
+  let hdrs = flip map headers $
+             \(hn, hv) -> (CI.mk . T.encodeUtf8 $ hn, T.encodeUtf8 hv)
       options = wreqOptions manager hdrs
   res  <- liftIO $ try $ Wreq.postWith options (show url) introspectionQuery
   resp <- either throwHttpErr return res
 
   let respData = resp ^. Wreq.responseBody
       statusCode = resp ^. Wreq.responseStatus . Wreq.statusCode
-  when (statusCode /= 200) $ schemaErr respData
+  when (statusCode /= 200) $ throwNon200 statusCode respData
 
   introspectRes :: (FromIntrospection IntrospectionResult) <-
-    either schemaErr return $ J.eitherDecode respData
-  let (G.SchemaDocument tyDefs, qRootN, mRootN, sRootN) =
+    either (remoteSchemaErr . T.pack) return $ J.eitherDecode respData
+  let (sDoc, qRootN, mRootN, sRootN) =
         fromIntrospection introspectRes
-  let etTypeInfos = mapM fromRemoteTyDef tyDefs
-  typeInfos <- either schemaErr return etTypeInfos
-  let typMap = VT.mkTyInfoMap typeInfos
-      mQrTyp = Map.lookup qRootN typMap
-      mMrTyp = maybe Nothing (\mr -> Map.lookup mr typMap) mRootN
-      mSrTyp = maybe Nothing (\sr -> Map.lookup sr typMap) sRootN
+  typMap <- either remoteSchemaErr return $ VT.fromSchemaDoc sDoc $
+     VT.TLRemoteType name def
+  let mQrTyp = Map.lookup qRootN typMap
+      mMrTyp = maybe Nothing (`Map.lookup` typMap) mRootN
+      mSrTyp = maybe Nothing (`Map.lookup` typMap) sRootN
   qrTyp <- liftMaybe noQueryRoot mQrTyp
   let mRmQR = VT.getObjTyM qrTyp
       mRmMR = join $ VT.getObjTyM <$> mMrTyp
       mRmSR = join $ VT.getObjTyM <$> mSrTyp
   rmQR <- liftMaybe (err400 Unexpected "query root has to be an object type") mRmQR
-  return $ GS.RemoteGCtx typMap rmQR mRmMR mRmSR
+  return $ GC.RemoteGCtx typMap rmQR mRmMR mRmSR
 
   where
     noQueryRoot = err400 Unexpected "query root not found in remote schema"
-    fromRemoteTyDef ty = VT.fromTyDef ty $ VT.RemoteType name def
-    schemaErr err = throw400 RemoteSchemaError (T.pack $ show err)
+    remoteSchemaErr :: (MonadError QErr m) => T.Text -> m a
+    remoteSchemaErr = throw400 RemoteSchemaError
 
     throwHttpErr :: (MonadError QErr m) => HTTP.HttpException -> m a
-    throwHttpErr = schemaErr
+    throwHttpErr = throwWithInternal httpExceptMsg . httpExceptToJSON
+
+    throwNon200 st = throwWithInternal (non200Msg st) . decodeNon200Resp
+
+    throwWithInternal msg v =
+      let err = err400 RemoteSchemaError $ T.pack msg
+      in throwError err{qeInternal = Just $ J.toJSON v}
+
+    httpExceptMsg =
+      "HTTP exception occurred while sending the request to " <> show url
+
+    non200Msg st = "introspection query to " <> show url
+                   <> " has responded with " <> show st <> " status code"
+
+    decodeNon200Resp bs = case J.eitherDecode bs of
+      Right a -> J.object ["response" J..= (a :: J.Value)]
+      Left _  -> J.object ["raw_body" J..= bsToTxt (BL.toStrict bs)]
 
 mergeSchemas
-  :: (MonadIO m, MonadError QErr m)
+  :: (MonadError QErr m)
   => RemoteSchemaMap
   -> GS.GCtxMap
-  -> HTTP.Manager
-  -> m (GS.GCtxMap, GS.GCtx) -- the merged GCtxMap and the default GCtx without roles
-mergeSchemas rmSchemaMap gCtxMap httpManager = do
-  remoteSchemas <- forM (Map.toList rmSchemaMap) $ \(name, def) ->
-    fetchRemoteSchema httpManager name def
+  -- the merged GCtxMap and the default GCtx without roles
+  -> m (GS.GCtxMap, GS.GCtx)
+mergeSchemas rmSchemaMap gCtxMap = do
   def <- mkDefaultRemoteGCtx remoteSchemas
   merged <- mergeRemoteSchema gCtxMap def
   return (merged, def)
+  where
+    remoteSchemas = map rscGCtx $ Map.elems rmSchemaMap
 
 mkDefaultRemoteGCtx
   :: (MonadError QErr m)
-  => [GS.RemoteGCtx] -> m GS.GCtx
+  => [GC.RemoteGCtx] -> m GS.GCtx
 mkDefaultRemoteGCtx =
   foldlM (\combG -> mergeGCtx combG . convRemoteGCtx) GS.emptyGCtx
 
@@ -121,12 +140,12 @@ mergeGCtx gCtx rmMergedGCtx = do
                          }
   return updatedGCtx
 
-convRemoteGCtx :: GS.RemoteGCtx -> GS.GCtx
+convRemoteGCtx :: GC.RemoteGCtx -> GS.GCtx
 convRemoteGCtx rmGCtx =
-  GS.emptyGCtx { GS._gTypes     = GS._rgTypes rmGCtx
-               , GS._gQueryRoot = GS._rgQueryRoot rmGCtx
-               , GS._gMutRoot   = GS._rgMutationRoot rmGCtx
-               , GS._gSubRoot   = GS._rgSubscriptionRoot rmGCtx
+  GS.emptyGCtx { GS._gTypes     = GC._rgTypes rmGCtx
+               , GS._gQueryRoot = GC._rgQueryRoot rmGCtx
+               , GS._gMutRoot   = GC._rgMutationRoot rmGCtx
+               , GS._gSubRoot   = GC._rgSubscriptionRoot rmGCtx
                }
 
 
@@ -148,11 +167,11 @@ mergeMutRoot a b =
 
 mkNewEmptyMutRoot :: VT.ObjTyInfo
 mkNewEmptyMutRoot = VT.ObjTyInfo (Just "mutation root")
-                    (G.NamedType "mutation_root") Map.empty
+                    (G.NamedType "mutation_root") Set.empty Map.empty
 
 mkNewMutRoot :: VT.ObjFieldMap -> VT.ObjTyInfo
 mkNewMutRoot flds = VT.ObjTyInfo (Just "mutation root")
-                    (G.NamedType "mutation_root") flds
+                    (G.NamedType "mutation_root") Set.empty flds
 
 mergeSubRoot :: GS.GCtx -> GS.GCtx -> Maybe VT.ObjTyInfo
 mergeSubRoot a b =
@@ -169,7 +188,7 @@ mergeSubRoot a b =
 
 mkNewEmptySubRoot :: VT.ObjTyInfo
 mkNewEmptySubRoot = VT.ObjTyInfo (Just "subscription root")
-                    (G.NamedType "subscription_root") Map.empty
+                    (G.NamedType "subscription_root") Set.empty Map.empty
 
 
 mergeTyMaps
@@ -180,8 +199,8 @@ mergeTyMaps
   -> VT.TypeMap
 mergeTyMaps hTyMap rmTyMap newQR newMR =
   let newTyMap  = hTyMap <> rmTyMap
-      newTyMap' = Map.insert (G.NamedType "query_root") (VT.TIObj newQR) $
-                  newTyMap
+      newTyMap' =
+        Map.insert (G.NamedType "query_root") (VT.TIObj newQR) newTyMap
   in maybe newTyMap' (\mr -> Map.insert
                               (G.NamedType "mutation_root")
                               (VT.TIObj mr) newTyMap') newMR
@@ -265,38 +284,15 @@ instance J.FromJSON (FromIntrospection G.InputValueDefinition) where
     name  <- o .:  "name"
     desc  <- o .:? "description"
     _type <- o .: "type"
-    --defValue <- o .: "defaultValue"
+    defVal <- o .:? "defaultValue"
     let desc' = fmap fromIntrospection desc
-        r = G.InputValueDefinition desc' name (fromIntrospection _type) Nothing
+    let defVal' = fmap fromIntrospection defVal
+        r = G.InputValueDefinition desc' name (fromIntrospection _type) defVal'
     return $ FromIntrospection r
 
-
--- instance J.FromJSON (FromIntrospection G.ListType) where
---   parseJSON = parseJSON
-
--- instance (J.FromJSON (G.ObjectFieldG a)) =>
---          J.FromJSON (FromIntrospection (G.ObjectValueG a)) where
---   parseJSON = fmap (FromIntrospection . G.ObjectValueG) . J.parseJSON
-
--- instance (J.FromJSON a) => J.FromJSON (FromIntrospection (G.ObjectFieldG a)) where
---   parseJSON = J.withObject "ObjectValueG a" $ \o -> do
---     name <- o .: "name"
---     ofVal <- o .: "value"
---     return $ FromIntrospection $ G.ObjectFieldG name ofVal
-
--- instance J.FromJSON (FromIntrospection G.ValueConst) where
---   parseJSON =
---     fmap FromIntrospection .
---     $(J.mkParseJSON J.defaultOptions{J.sumEncoding=J.UntaggedValue} ''G.ValueConst)
-
--- instance J.FromJSON (FromIntrospection G.Value) where
---   parseJSON =
---     fmap FromIntrospection .
---     $(J.mkParseJSON J.defaultOptions{J.sumEncoding=J.UntaggedValue} ''G.Value)
-
-
--- $(J.deriveFromJSON J.defaultOptions{J.sumEncoding=J.UntaggedValue} ''G.Value)
-
+instance J.FromJSON (FromIntrospection G.ValueConst) where
+   parseJSON = J.withText "defaultValue" $ \t -> fmap FromIntrospection
+     $ either (fail . T.unpack) return $ G.parseValueConst t
 
 instance J.FromJSON (FromIntrospection G.InterfaceTypeDefinition) where
   parseJSON = J.withObject "InterfaceTypeDefinition" $ \o -> do

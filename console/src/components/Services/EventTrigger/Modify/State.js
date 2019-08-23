@@ -5,6 +5,7 @@ const defaultState = {
   retryConf: {
     numRetrys: 0,
     retryInterval: 10,
+    timeout: 60,
   },
   ongoingRequest: false,
   lastError: null,

@@ -1,0 +1,6 @@
+query {
+    author {
+    	id
+    	name
+    }
+}

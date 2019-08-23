@@ -1,0 +1,43 @@
+description: Query data from geom_table using postgis op $st_touches in bool exp
+url: /v1/query
+status: 200
+response:
+- id: 1
+  type: point
+  geom_col:
+    type: Point
+    coordinates:
+    - 1
+    - 2
+- id: 2
+  type: linestring
+  geom_col:
+    type: LineString
+    coordinates:
+    - - 0
+      - 0
+    - - 0.5
+      - 1
+    - - 1
+      - 2
+    - - 1.5
+      - 3
+query:
+  type: select
+  args:
+    table: geom_table
+    where:
+      geom_col:
+        $st_touches:
+          type: LineString
+          coordinates:
+          - - -1
+            - 0
+          - - 0
+            - 1.5
+          - - 1
+            - 2
+    columns:
+    - id
+    - type
+    - geom_col

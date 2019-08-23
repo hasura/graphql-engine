@@ -1,10 +1,10 @@
 description: Insert a path using just a single point; error
-url: /v1alpha1/graphql
-status: 400
+url: /v1/graphql
+status: 200
 response:
   errors:
   - extensions:
-      path: $.variableValues[0].path.coordinates
+      path: $.variableValues.roads[0].path.coordinates
       code: parse-failed
     message: A LineString needs at least 2 Positions
 query:

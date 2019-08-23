@@ -1,6 +1,9 @@
 module Hasura.RQL.Types.Permission
        ( RoleName(..)
-       , UserId(..)
+       , roleNameToTxt
+
+       , SessVar
+       , SessVarVal
 
        , UserVars
        , mkUserVars
@@ -9,9 +12,7 @@ module Hasura.RQL.Types.Permission
        , getVarVal
        , roleFromVars
 
-       , UserInfo
-       , userRole
-       , userVars
+       , UserInfo(..)
        , mkUserInfo
        , userInfoToList
        , adminUserInfo
@@ -23,7 +24,11 @@ module Hasura.RQL.Types.Permission
        ) where
 
 import           Hasura.Prelude
-import           Hasura.Server.Utils        (accessKeyHeader, userRoleHeader)
+import           Hasura.RQL.Types.Common    (NonEmptyText, adminText, mkNonEmptyText,
+                                             unNonEmptyText)
+import           Hasura.Server.Utils        (adminSecretHeader,
+                                             deprecatedAccessKeyHeader,
+                                             userRoleHeader)
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query          as Q
@@ -38,36 +43,40 @@ import qualified Data.Text                  as T
 import qualified PostgreSQL.Binary.Decoding as PD
 
 newtype RoleName
-  = RoleName {getRoleTxt :: T.Text}
+  = RoleName {getRoleTxt :: NonEmptyText}
   deriving ( Show, Eq, Hashable, FromJSONKey, ToJSONKey, FromJSON
            , ToJSON, Q.FromCol, Q.ToPrepArg, Lift)
 
 instance DQuote RoleName where
-  dquoteTxt (RoleName r) = r
+  dquoteTxt = roleNameToTxt
+
+roleNameToTxt :: RoleName -> Text
+roleNameToTxt = unNonEmptyText . getRoleTxt
 
 adminRole :: RoleName
-adminRole = RoleName "admin"
+adminRole = RoleName adminText
 
 isAdmin :: RoleName -> Bool
 isAdmin = (adminRole ==)
 
-newtype UserId = UserId { getUserId :: Word64 }
-  deriving (Show, Eq, FromJSON, ToJSON)
+type SessVar = Text
+type SessVarVal = Text
 
 newtype UserVars
-  = UserVars { unUserVars :: Map.HashMap T.Text T.Text }
+  = UserVars { unUserVars :: Map.HashMap SessVar SessVarVal}
   deriving (Show, Eq, FromJSON, ToJSON, Hashable)
 
 isUserVar :: T.Text -> Bool
 isUserVar = T.isPrefixOf "x-hasura-" . T.toLower
 
+-- returns Nothing if x-hasura-role is an empty string
 roleFromVars :: UserVars -> Maybe RoleName
-roleFromVars =
-  fmap RoleName . getVarVal userRoleHeader
+roleFromVars uv =
+  getVarVal userRoleHeader uv >>= fmap RoleName . mkNonEmptyText
 
-getVarVal :: Text -> UserVars -> Maybe Text
+getVarVal :: SessVar -> UserVars -> Maybe SessVarVal
 getVarVal k =
-  Map.lookup k . unUserVars
+  Map.lookup (T.toLower k) . unUserVars
 
 getVarNames :: UserVars -> [T.Text]
 getVarNames =
@@ -88,8 +97,8 @@ data UserInfo
 
 mkUserInfo :: RoleName -> UserVars -> UserInfo
 mkUserInfo rn (UserVars v) =
-  UserInfo rn $ UserVars $ Map.insert userRoleHeader (getRoleTxt rn) $
-  Map.delete accessKeyHeader v
+  UserInfo rn $ UserVars $ Map.insert userRoleHeader (roleNameToTxt rn) $
+  foldl (flip Map.delete) v [adminSecretHeader, deprecatedAccessKeyHeader]
 
 instance Hashable UserInfo
 
@@ -100,7 +109,7 @@ instance Hashable UserInfo
 userInfoToList :: UserInfo -> [(Text, Text)]
 userInfoToList userInfo =
   let vars = Map.toList $ unUserVars . userVars $ userInfo
-      rn = getRoleTxt . userRole $ userInfo
+      rn = roleNameToTxt . userRole $ userInfo
   in (userRoleHeader, rn) : vars
 
 adminUserInfo :: UserInfo
@@ -160,7 +169,7 @@ instance Show PermId where
     show $ mconcat
     [ getTableTxt tn
     , "."
-    , getRoleTxt rn
+    , roleNameToTxt rn
     , "."
     , T.pack $ show pType
     ]

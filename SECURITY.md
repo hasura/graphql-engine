@@ -30,3 +30,8 @@ A public disclosure date is negotiated by the Hasura product security team and t
 
 (Some sections have been inspired and adapted from [https://github.com/kubernetes/website/blob/master/content/en/docs/reference/issues-security/security.md](https://github.com/kubernetes/website/blob/master/content/en/docs/reference/issues-security/security.md))
 
+## Translations
+
+This document is available in the following translations:
+
+- [French :fr:](translations/SECURITY.french.md)

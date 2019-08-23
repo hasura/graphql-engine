@@ -6,13 +6,12 @@ import { findTableFromRel } from '../utils';
 import {
   showSuccessNotification,
   showErrorNotification,
-} from '../Notification';
+} from '../../Common/Notification';
 import dataHeaders from '../Common/Headers';
 
 /* ****************** View actions *************/
 const V_SET_DEFAULTS = 'ViewTable/V_SET_DEFAULTS';
 const V_REQUEST_SUCCESS = 'ViewTable/V_REQUEST_SUCCESS';
-const V_REQUEST_ERROR = 'ViewTable/V_REQUEST_ERROR';
 const V_EXPAND_REL = 'ViewTable/V_EXPAND_REL';
 const V_CLOSE_REL = 'ViewTable/V_CLOSE_REL';
 const V_SET_ACTIVE = 'ViewTable/V_SET_ACTIVE';
@@ -20,6 +19,14 @@ const V_SET_QUERY_OPTS = 'ViewTable/V_SET_QUERY_OPTS';
 const V_REQUEST_PROGRESS = 'ViewTable/V_REQUEST_PROGRESS';
 const V_EXPAND_ROW = 'ViewTable/V_EXPAND_ROW';
 const V_COLLAPSE_ROW = 'ViewTable/V_COLLAPSE_ROW';
+
+const FETCHING_MANUAL_TRIGGER = 'ViewTable/FETCHING_MANUAL_TRIGGER';
+const FETCH_MANUAL_TRIGGER_SUCCESS = 'ViewTable/FETCH_MANUAL_TRIGGER_SUCCESS';
+const FETCH_MANUAL_TRIGGER_FAIL = 'ViewTable/FETCH_MANUAL_TRIGGER_SUCCESS';
+
+const UPDATE_TRIGGER_ROW = 'ViewTable/UPDATE_TRIGGER_ROW';
+const UPDATE_TRIGGER_FUNCTION = 'ViewTable/UPDATE_TRIGGER_FUNCTION';
+
 // const V_ADD_WHERE;
 // const V_REMOVE_WHERE;
 // const V_SET_LIMIT;
@@ -93,7 +100,65 @@ const vMakeRequest = () => {
         }
       },
       error => {
-        dispatch({ type: V_REQUEST_ERROR, data: error });
+        Promise.all([
+          dispatch(
+            showErrorNotification('Browse query failed!', error.error, error)
+          ),
+          dispatch({ type: V_REQUEST_PROGRESS, data: false }),
+        ]);
+      }
+    );
+  };
+};
+
+const fetchManualTriggers = tableName => {
+  return (dispatch, getState) => {
+    const url = Endpoints.getSchema;
+    const body = {
+      type: 'select',
+      args: {
+        table: {
+          name: 'event_triggers',
+          schema: 'hdb_catalog',
+        },
+        columns: ['*'],
+        order_by: {
+          column: 'name',
+          type: 'asc',
+          nulls: 'last',
+        },
+        where: {
+          table_name: tableName,
+        },
+      },
+    };
+
+    const options = {
+      credentials: globalCookiePolicy,
+      method: 'POST',
+      headers: dataHeaders(getState),
+      body: JSON.stringify(body),
+    };
+
+    dispatch({ type: FETCHING_MANUAL_TRIGGER });
+
+    return dispatch(requestAction(url, options)).then(
+      data => {
+        // Filter only triggers whose configuration has `enable_manual` key as true
+        const manualTriggers = data.filter(trigger => {
+          const triggerDef = trigger.configuration.definition;
+
+          return (
+            Object.keys(triggerDef).includes('enable_manual') &&
+            triggerDef.enable_manual
+          );
+        });
+
+        dispatch({ type: FETCH_MANUAL_TRIGGER_SUCCESS, data: manualTriggers });
+      },
+      error => {
+        dispatch({ type: FETCH_MANUAL_TRIGGER_FAIL, data: error });
+        console.error('Failed to load triggers' + JSON.stringify(error));
       }
     );
   };
@@ -134,9 +199,7 @@ const deleteItem = pkClause => {
         );
       },
       err => {
-        dispatch(
-          showErrorNotification('Deleting row failed!', err.error, reqBody, err)
-        );
+        dispatch(showErrorNotification('Deleting row failed!', err.error, err));
       }
     );
   };
@@ -351,18 +414,22 @@ const addQueryOptsActivePath = (query, queryStuff, activePath) => {
   return newQuery;
 };
 /* ****************** reducer ******************/
-const viewReducer = (tableName, schemas, viewState, action) => {
+const viewReducer = (tableName, currentSchema, schemas, viewState, action) => {
   if (action.type.indexOf('ViewTable/FilterQuery/') === 0) {
     return {
       ...viewState,
       curFilter: filterReducer(viewState.curFilter, action),
     };
   }
-  const tableSchema = schemas.find(x => x.table_name === tableName);
+  const tableSchema = schemas.find(
+    x => x.table_name === tableName && x.table_schema === currentSchema
+  );
   switch (action.type) {
     case V_SET_DEFAULTS:
       // check if table exists and then process.
-      const currentTable = schemas.find(t => t.table_name === tableName);
+      const currentTable = schemas.find(
+        t => t.table_name === tableName && t.table_schema === currentSchema
+      );
       let currentColumns = [];
       if (currentTable) {
         currentColumns = currentTable.columns.map(c => c.column_name);
@@ -370,7 +437,6 @@ const viewReducer = (tableName, schemas, viewState, action) => {
       return {
         ...defaultViewState,
         query: {
-          // columns: schemas.find(t => t.table_name === tableName).columns.map(c => c.column_name),
           columns: currentColumns,
           limit: 10,
         },
@@ -443,6 +509,36 @@ const viewReducer = (tableName, schemas, viewState, action) => {
         ...viewState,
         expandedRow: '',
       };
+    case FETCHING_MANUAL_TRIGGER:
+      return {
+        ...viewState,
+        ongoingRequest: true,
+        lastError: {},
+      };
+    case FETCH_MANUAL_TRIGGER_SUCCESS:
+      return {
+        ...viewState,
+        manualTriggers: action.data,
+        ongoingRequest: false,
+      };
+    case FETCH_MANUAL_TRIGGER_FAIL:
+      return {
+        ...viewState,
+        manualTriggers: [],
+        ongoingRequest: false,
+        lastError: action.data,
+      };
+    case UPDATE_TRIGGER_ROW:
+      return {
+        ...viewState,
+        triggeredRow: action.data,
+      };
+
+    case UPDATE_TRIGGER_FUNCTION:
+      return {
+        ...viewState,
+        triggeredFunction: action.data,
+      };
     default:
       return viewState;
   }
@@ -450,6 +546,7 @@ const viewReducer = (tableName, schemas, viewState, action) => {
 
 export default viewReducer;
 export {
+  fetchManualTriggers,
   vSetDefaults,
   vMakeRequest,
   vExpandRel,
@@ -458,4 +555,6 @@ export {
   vCollapseRow,
   V_SET_ACTIVE,
   deleteItem,
+  UPDATE_TRIGGER_ROW,
+  UPDATE_TRIGGER_FUNCTION,
 };

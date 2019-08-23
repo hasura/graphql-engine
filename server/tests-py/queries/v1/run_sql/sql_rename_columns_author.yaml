@@ -1,0 +1,69 @@
+#Rename columns
+- url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        alter table article rename column title to article_title;
+
+#Select Queries
+- url: /v1/query
+  status: 200
+  response:
+  - id: 1
+    article_title: article 1 by author 1
+    content: content for article 1
+    author_id: 1
+  - id: 2
+    article_title: article 2 by author 1
+    content: content for article 2
+    author_id: 1
+  - id: 3
+    article_title: article 1 by author 2
+    content: content for article 3
+    author_id: 2
+  query:
+    type: select
+    args:
+      table: article
+      columns:
+      - id
+      - article_title
+      - content
+      - author_id
+
+#Revert change
+- url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        alter table article rename column article_title to title;
+
+#Query post revert
+- url: /v1/query
+  status: 200
+  response:
+  - id: 1
+    title: article 1 by author 1
+    content: content for article 1
+    author_id: 1
+  - id: 2
+    title: article 2 by author 1
+    content: content for article 2
+    author_id: 1
+  - id: 3
+    title: article 1 by author 2
+    content: content for article 3
+    author_id: 2
+  query:
+    type: select
+    args:
+      table: article
+      columns:
+      - id
+      - title
+      - content
+      - author_id

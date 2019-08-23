@@ -1,17 +1,21 @@
 /* eslint import/prefer-default-export: 0 */
 
-import { getElementFromAlias, baseUrl } from '../../../helpers/dataHelpers';
+import {
+  getElementFromAlias,
+  baseUrl,
+  tableColumnTypeSelector,
+} from '../../../helpers/dataHelpers';
 import { validateCT } from '../../validators/validators';
 import { makeDataAPIOptions } from '../../../helpers/dataHelpers';
 import { toggleOnMigrationMode } from '../../data/migration-mode/utils';
 // ***************** UTIL FUNCTIONS **************************
 
-let accessKey;
+let adminSecret;
 let dataApiUrl;
 
 export const createTestTable = () => {
   cy.window().then(win => {
-    accessKey = win.__env.accessKey;
+    adminSecret = win.__env.adminSecret;
     dataApiUrl = win.__env.dataApiUrl;
     const { consoleMode } = win.__env;
     if (consoleMode === 'cli') {
@@ -29,11 +33,21 @@ export const createTestTable = () => {
   cy.get(getElementFromAlias('column-0'))
     .clear()
     .type('id');
-  cy.get(getElementFromAlias('col-type-0')).select('serial');
+  // cy.get(getElementFromAlias('col-type-0')).click();
+  tableColumnTypeSelector('col-type-0');
+  cy.get(getElementFromAlias('data_test_column_type_value_serial'))
+    .first()
+    .click();
+  // cy.get(getElementFromAlias('col-type-0')).select('serial');
   cy.get(getElementFromAlias('column-1'))
     .clear()
     .type('name');
-  cy.get(getElementFromAlias('col-type-1')).select('text');
+  tableColumnTypeSelector('col-type-1');
+  cy.get(getElementFromAlias('data_test_column_type_value_text'))
+    .first()
+    .click();
+
+  // cy.get(getElementFromAlias('col-type-1')).select('text');
   //   Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
   //  Click on create
@@ -65,8 +79,13 @@ export const checkExecuteQueryButton = () => {
 };
 
 export const checkQuery = () => {
-  cy.get(getElementFromAlias('header-key-2')).type('someKey');
-  cy.get(getElementFromAlias('header-value-2')).type('someValue');
+  if (adminSecret) {
+    cy.get(getElementFromAlias('header-key-2')).type('someKey');
+    cy.get(getElementFromAlias('header-value-2')).type('someValue');
+  } else {
+    cy.get(getElementFromAlias('header-key-1')).type('someKey');
+    cy.get(getElementFromAlias('header-value-1')).type('someValue');
+  }
 
   cy.get('textarea')
     .first()
@@ -120,7 +139,7 @@ export const checkSub = () => {
     },
   };
   // Make the request
-  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
   cy.request(requestOptions).then(res => {
     cy.log(JSON.stringify(res));
     cy.wait(3000);

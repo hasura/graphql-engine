@@ -7,14 +7,18 @@ import {
   modifyResolver,
   RESET,
   TOGGLE_MODIFY,
+  getHeaderEvents,
 } from '../Add/addResolverReducer';
 import { VIEW_RESOLVER } from '../customActions';
 import { push } from 'react-router-redux';
 import Helmet from 'react-helmet';
 import tabInfo from './tabInfo';
-import CommonTabLayout from '../../Layout/CommonTabLayout/CommonTabLayout';
+import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLayout';
+import Button from '../../../Common/Button/Button';
 
 import { appPrefix, pageTitle } from '../constants';
+
+import { NotFoundError } from '../../../Error/PageNotFound';
 
 import globals from '../../../../Globals';
 
@@ -31,16 +35,19 @@ class Edit extends React.Component {
     this.state = {};
     this.state.deleteConfirmationError = null;
   }
+
   componentDidMount() {
     const { resolverName } = this.props.params;
     if (!resolverName) {
       this.props.dispatch(push(prefixUrl));
     }
+
     Promise.all([
       this.props.dispatch(fetchResolver(resolverName)),
       this.props.dispatch({ type: VIEW_RESOLVER, data: resolverName }),
     ]);
   }
+
   componentWillReceiveProps(nextProps) {
     if (nextProps.params.resolverName !== this.props.params.resolverName) {
       Promise.all([
@@ -52,18 +59,31 @@ class Edit extends React.Component {
       ]);
     }
   }
+
   componentWillUnmount() {
     Promise.all([
       this.props.dispatch({ type: RESET }),
+      this.props.dispatch({
+        type: getHeaderEvents.UPDATE_HEADERS,
+        data: [
+          {
+            name: '',
+            type: 'static',
+            value: '',
+          },
+        ],
+      }),
       this.props.dispatch({ type: VIEW_RESOLVER, data: '' }),
     ]);
   }
 
   handleDeleteResolver(e) {
     e.preventDefault();
+
     const a = prompt(
       'Are you absolutely sure?\nThis action cannot be undone. This will permanently delete stitched GraphQL schema. Please type "DELETE" (in caps, without quotes) to confirm.\n'
     );
+
     try {
       if (a && typeof a === 'string' && a.trim() === 'DELETE') {
         this.updateDeleteConfirmationError(null);
@@ -77,28 +97,45 @@ class Edit extends React.Component {
       console.error(err);
     }
   }
+
   updateDeleteConfirmationError(data) {
-    this.setState({ ...this.state, deleteConfirmationError: data });
+    this.setState({ deleteConfirmationError: data });
   }
+
   modifyClick() {
     this.props.dispatch({ type: TOGGLE_MODIFY });
   }
+
   handleCancelModify() {
     this.props.dispatch({ type: TOGGLE_MODIFY });
   }
+
   editClicked() {
     this.props.dispatch(modifyResolver());
   }
+
   render() {
-    const styles = require('../Styles.scss');
-    const { isFetching, isRequesting, editState, migrationMode } = this.props;
+    const currentResolver = this.props.allResolvers.find(
+      r => r.name === this.props.params.resolverName
+    );
+
+    if (!currentResolver) {
+      // throw a 404 exception
+      throw new NotFoundError();
+    }
+
+    const styles = require('../CustomResolver.scss');
+
+    const { isFetching, isRequesting, editState } = this.props;
     const { resolverName } = this.props.params;
 
     const generateMigrateBtns = () => {
       return 'isModify' in editState && !editState.isModify ? (
         <div className={styles.commonBtn}>
-          <button
-            className={styles.yellow_button}
+          <Button
+            className={styles.button_mar_right}
+            color="yellow"
+            size="sm"
             onClick={e => {
               e.preventDefault();
               this.modifyClick();
@@ -107,9 +144,10 @@ class Edit extends React.Component {
             disabled={isRequesting}
           >
             Modify
-          </button>
-          <button
-            className={styles.danger_button + ' btn-danger'}
+          </Button>
+          <Button
+            color="red"
+            size="sm"
             onClick={e => {
               e.preventDefault();
               this.handleDeleteResolver(e);
@@ -118,7 +156,7 @@ class Edit extends React.Component {
             data-test={'remote-schema-edit-delete-btn'}
           >
             {isRequesting ? 'Deleting ...' : 'Delete'}
-          </button>
+          </Button>
           {this.state.deleteConfirmationError ? (
             <span
               className={styles.delete_confirmation_error}
@@ -130,16 +168,19 @@ class Edit extends React.Component {
         </div>
       ) : (
         <div className={styles.commonBtn}>
-          <button
-            className={styles.yellow_button}
+          <Button
+            className={styles.button_mar_right}
+            color="yellow"
+            size="sm"
             type="submit"
             disabled={isRequesting}
             data-test={'remote-schema-edit-save-btn'}
           >
             {isRequesting ? 'Saving' : 'Save'}
-          </button>
-          <button
-            className={styles.default_button}
+          </Button>
+          <Button
+            color="white"
+            size="sm"
             onClick={e => {
               e.preventDefault();
               this.handleCancelModify();
@@ -148,7 +189,7 @@ class Edit extends React.Component {
             disabled={isRequesting}
           >
             Cancel
-          </button>
+          </Button>
         </div>
       );
     };
@@ -204,7 +245,7 @@ class Edit extends React.Component {
             }}
           >
             <Common {...this.props} />
-            {migrationMode ? generateMigrateBtns() : null}
+            {generateMigrateBtns()}
           </form>
         )}
       </div>
@@ -215,7 +256,7 @@ const mapStateToProps = state => {
   return {
     ...state.customResolverData.addData,
     ...state.customResolverData.headerData,
-    migrationMode: state.main.migrationMode,
+    allResolvers: state.customResolverData.listData.resolvers,
     dataHeaders: { ...state.tables.dataHeaders },
   };
 };

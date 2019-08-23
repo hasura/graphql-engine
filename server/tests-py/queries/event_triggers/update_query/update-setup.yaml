@@ -15,3 +15,11 @@ args:
       num_retries: 5
       interval_sec: 5
     replace: true
+- type: select
+  args:
+    table:
+      schema: hdb_catalog
+      name: event_triggers
+    columns: ["configuration"]
+    where:
+      name: t1_cols

@@ -105,6 +105,8 @@ type Driver interface {
 	SettingsDriver
 
 	MetadataDriver
+
+	SchemaDriver
 }
 
 // Open returns a new driver instance.

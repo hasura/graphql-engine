@@ -1,12 +1,11 @@
 import defaultState from './AddExistingTableViewState';
 import _push from '../push';
 import {
-  loadSchema,
-  LOAD_UNTRACKED_RELATIONS,
+  updateSchemaInfo,
+  fetchTrackedFunctions,
   makeMigrationCall,
 } from '../DataActions';
-import { showSuccessNotification } from '../Notification';
-import { getAllUnTrackedRelations } from '../TableRelationships/Actions';
+import { showSuccessNotification } from '../../Common/Notification';
 
 const SET_DEFAULTS = 'AddExistingTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddExistingTable/SET_TABLENAME';
@@ -59,11 +58,13 @@ const addExistingTableSql = () => {
     const errorMsg = 'Adding existing table/view failed';
     const customOnSuccess = () => {
       dispatch({ type: REQUEST_SUCCESS });
-      dispatch(loadSchema()).then(() => {
+      dispatch(updateSchemaInfo()).then(() => {
         const newTable = getState().tables.allSchemas.find(
-          t => t.table_name === state.tableName.trim()
+          t =>
+            t.table_name === state.tableName.trim() &&
+            t.table_schema === currentSchema
         );
-        const isTable = newTable.detail.table_type === 'BASE TABLE';
+        const isTable = newTable.table_type === 'BASE TABLE';
         if (isTable) {
           dispatch(
             _push(
@@ -86,6 +87,67 @@ const addExistingTableSql = () => {
           );
         }
       });
+      return;
+    };
+    const customOnError = err => {
+      dispatch({ type: REQUEST_ERROR, data: err });
+    };
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      upQuery.args,
+      downQuery.args,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
+const addExistingFunction = name => {
+  return (dispatch, getState) => {
+    dispatch({ type: MAKING_REQUEST });
+    dispatch(showSuccessNotification('Adding an function...'));
+    const currentSchema = getState().tables.currentSchema;
+
+    const requestBodyUp = {
+      type: 'track_function',
+      args: {
+        name,
+        schema: currentSchema,
+      },
+    };
+    const requestBodyDown = {
+      type: 'untrack_function',
+      args: {
+        name,
+        schema: currentSchema,
+      },
+    };
+    const migrationName = 'add_existing_function ' + currentSchema + '_' + name;
+    const upQuery = {
+      type: 'bulk',
+      args: [requestBodyUp],
+    };
+    const downQuery = {
+      type: 'bulk',
+      args: [requestBodyDown],
+    };
+
+    const requestMsg = 'Adding existing function...';
+    const successMsg = 'Existing function added';
+    const errorMsg = 'Adding existing function failed';
+    const customOnSuccess = () => {
+      dispatch({ type: REQUEST_SUCCESS });
+      // Update the left side bar
+      dispatch(fetchTrackedFunctions(currentSchema));
+      dispatch(
+        _push('/schema/' + currentSchema + '/functions/' + name + '/modify')
+      );
       return;
     };
     const customOnError = err => {
@@ -151,16 +213,7 @@ const addAllUntrackedTablesSql = tableList => {
     const customOnSuccess = () => {
       dispatch(showSuccessNotification('Existing table/view added!'));
       dispatch({ type: REQUEST_SUCCESS });
-      dispatch(loadSchema()).then(() => {
-        const allSchemas = getState().tables.allSchemas;
-        const untrackedRelations = getAllUnTrackedRelations(
-          allSchemas,
-          currentSchema
-        ).bulkRelTrack;
-        dispatch({
-          type: LOAD_UNTRACKED_RELATIONS,
-          untrackedRelations: untrackedRelations,
-        });
+      dispatch(updateSchemaInfo()).then(() => {
         dispatch(_push('/schema/' + currentSchema));
       });
       return;
@@ -179,7 +232,8 @@ const addAllUntrackedTablesSql = tableList => {
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
+      errorMsg,
+      true
     );
   };
 };
@@ -218,6 +272,7 @@ const addExistingTableReducer = (state = defaultState, action) => {
 
 export default addExistingTableReducer;
 export {
+  addExistingFunction,
   setDefaults,
   setTableName,
   addExistingTableSql,

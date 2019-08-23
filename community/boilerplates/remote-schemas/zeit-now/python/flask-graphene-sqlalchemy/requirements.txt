@@ -1,0 +1,6 @@
+Flask==1.0.2
+Flask-GraphQL==2.0.0
+gunicorn==19.9.0
+sqlalchemy
+psycopg2
+graphene[sqlalchemy]

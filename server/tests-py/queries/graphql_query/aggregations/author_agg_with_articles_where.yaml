@@ -1,5 +1,5 @@
 descriptions: select author with id = 1 and aggregations of it's articles where aritcle's id < 3
-url: /v1alpha1/graphql
+url: /v1/graphql
 status: 200
 response:
   data:

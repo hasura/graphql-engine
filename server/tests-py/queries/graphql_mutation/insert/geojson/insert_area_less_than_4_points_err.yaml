@@ -1,11 +1,11 @@
 description: Insert an area with only 3 points; error
-url: /v1alpha1/graphql
-status: 400
+url: /v1/graphql
+status: 200
 response:
   errors:
   - extensions:
       code: parse-failed
-      path: $.variableValues[0].area.coordinates[0]
+      path: $.variableValues.areas[0].area.coordinates[0]
     message: A LinearRing needs at least 4 Positions
 query:
   variables:

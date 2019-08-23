@@ -1,0 +1,36 @@
+{
+  "name": "vuetify-todo-pwa",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint"
+  },
+  "dependencies": {
+    "apollo-cache-inmemory": "^1.5.1",
+    "apollo-client": "^2.5.1",
+    "apollo-link": "^1.2.11",
+    "apollo-link-http": "^1.5.14",
+    "graphql": "^14.1.1",
+    "graphql-tag": "^2.10.1",
+    "register-service-worker": "^1.5.2",
+    "vue": "^2.5.16",
+    "vue-apollo": "^3.0.0-beta.28",
+    "vue-router": "^3.0.1",
+    "vuetify": "^1.5.6",
+    "vuex": "^3.0.1"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "^3.0.1",
+    "@vue/cli-plugin-eslint": "^3.0.1",
+    "@vue/cli-plugin-pwa": "^3.0.1",
+    "@vue/cli-service": "^3.0.1",
+    "@vue/eslint-config-standard": "^3.0.1",
+    "babel-plugin-transform-imports": "^1.5.0",
+    "stylus": "^0.54.5",
+    "stylus-loader": "^3.0.2",
+    "vue-template-compiler": "^2.5.16",
+    "webpack-dev-server": "^3.2.1"
+  }
+}

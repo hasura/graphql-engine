@@ -1,6 +1,6 @@
 description: Insert article and it's author via nested mutation (Error)
-url: /v1alpha1/graphql
-status: 400
+url: /v1/graphql
+status: 200
 query:
   query: |
    mutation article_author{

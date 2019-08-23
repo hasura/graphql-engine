@@ -1,0 +1,5 @@
+type: invoke_event_trigger
+args:
+  name: t1_disabled
+  payload:
+    some_key: "some_value"

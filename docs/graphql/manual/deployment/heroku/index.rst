@@ -3,7 +3,7 @@ Run Hasura GraphQL Engine on Heroku
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
 This guide will help you get Hasura GraphQL engine running as a "git push to deploy" app on
@@ -15,10 +15,11 @@ Clone the Hasura GraphQL engine Heroku app
 ------------------------------------------
 
 The Hasura app with Heroku buildpack/configuration is available at:
+
 https://github.com/hasura/graphql-engine-heroku
 
-DATABASE_URL settings
-^^^^^^^^^^^^^^^^^^^^^
+Configure database URL
+^^^^^^^^^^^^^^^^^^^^^^
 
 Edit the command in the ``Dockerfile`` to change which database Hasura GraphQL engine connects to.
 By default, it connects to the primary database in your app which is available at ``DATABASE_URL``.
@@ -38,12 +39,18 @@ By default, it connects to the primary database in your app which is available a
 
 Read about more configuration options :doc:`here <../graphql-engine-flags/reference>`.
 
+.. note::
+
+  Hasura GraphQL engine needs access permissions to your Postgres database as described in
+  :doc:`Postgres permissions <../postgres-permissions>`
+
+
 Deploying
 ---------
 
 These are some sample deployment instructions while creating a new app.
 
-Step 1: Create app with ``--stack=container``
+Step 1: Create app with **--stack=container**
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Use the `Heroku CLI <https://devcenter.heroku.com/articles/heroku-cli>`_ to create a new Heroku app. Let's call
@@ -62,10 +69,10 @@ the app ``graphql-on-postgres``.
 - ``HEROKU_GIT_REMOTE``: `https://git.heroku.com/graphql-on-postgres.git`
 - ``HEROKU_APP_URL``: `https://graphql-on-postgres.herokuapp.com/`
 
-Step 2: Create the Heroku Postgres Addon
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Step 2: Create the Heroku Postgres add-on
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Create the Postgres addon in your Heroku app.
+Create the Postgres add-on in your Heroku app.
 
 .. code-block:: bash
 

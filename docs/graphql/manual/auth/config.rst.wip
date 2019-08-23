@@ -6,9 +6,9 @@ You can run Hasura's GraphQL Engine in three modes:
 1. No Authentication mode
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- When ``--access-key`` and ``--auth-hook`` are not set
+- When ``--admin-secret`` and ``--auth-hook`` are not set
 
-- It is useful when you're developing . It is not recommended to use in production but however you can have proxy gateway that will set (``X-Hasura-Access-Key``) header and other required ``X-Hasura-*`` headers.
+- It is useful when you're developing . It is not recommended to use in production but however you can have proxy gateway that will set (``X-Hasura-Admin-Secret``) header and other required ``X-Hasura-*`` headers.
 
 Run server in this mode using following docker command.
 
@@ -22,12 +22,12 @@ Run server in this mode using following docker command.
                 serve --server-port 9000 --cors-domain "*"
 
 
-2. Access key mode
-^^^^^^^^^^^^^^^^^^
+2. Admin secret mode
+^^^^^^^^^^^^^^^^^^^^
 
-- When only ``--access-key`` is set. See :doc:`GraphQL Server Options <../deployment/options>`
+- When only ``--admin-secret`` is set. See :doc:`GraphQL Server Options <../deployment/options>`
 
-- Server authenticates based on ``X-Hasura-Access-Key`` header and expects all other required ``X-Hasura-*`` headers.
+- Server authenticates based on ``X-Hasura-Admin-Secret`` header and expects all other required ``X-Hasura-*`` headers.
 
 Run server in this mode using following docker command.
 
@@ -38,18 +38,18 @@ Run server in this mode using following docker command.
               -d hasura/graphql-engine:latest graphql-engine \
               --database-url \
                 postgres://postgres:mysecretpassword@postgres:5432/postgres \
-                serve --server-port 9000 --access-key myAccKey \
+                serve --server-port 9000 --admin-secret myAdminSecretKey \
                   --cors-domain "*"
 
 
-3. Access key and Authorization webhook mode
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+3. Admin secret key and Authorization webhook mode
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- When both ``--access-key`` and ``--auth-hook`` are set
+- When both ``--admin-secret`` and ``--auth-hook`` are set
 
-- This mode is useful in production. When server founds ``X-Hasura-Access-Key`` header it ignores webhook and expects all other required ``X-Hasura*`` headers
+- This mode is useful in production. When server founds ``X-Hasura-Admin-Secret`` header it ignores webhook and expects all other required ``X-Hasura*`` headers
 
-- If ``X-Hasura-Access-key`` header not found then server authenticaters through webhook. See :doc:`Authorization
+- If ``X-Hasura-Admin-Secret`` header not found then server authenticaters through webhook. See :doc:`Authorization
   Webhook <webhook>`
 
 Run server in this mode using following docker command.
@@ -61,5 +61,5 @@ Run server in this mode using following docker command.
               -d hasura/graphql-engine:latest graphql-engine \
               --database-url \
                 postgres://postgres:mysecretpassword@postgres:5432/postgres \
-                serve --server-port 9000 --access-key myAccKey \
+                serve --server-port 9000 --admin-secret myAdminSecretKey \
                   --auth-hook http://myAuthhook/ --cors-domain "*"

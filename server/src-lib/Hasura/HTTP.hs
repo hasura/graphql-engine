@@ -1,9 +1,10 @@
 module Hasura.HTTP
   ( wreqOptions
   , HttpException(..)
+  , hdrsToText
   ) where
 
-import           Control.Lens hiding ((.=))
+import           Control.Lens          hiding ((.=))
 import           Hasura.Prelude
 
 import qualified Data.Aeson            as J
@@ -12,7 +13,14 @@ import qualified Network.HTTP.Client   as HTTP
 import qualified Network.HTTP.Types    as HTTP
 import qualified Network.Wreq          as Wreq
 
+import           Data.CaseInsensitive  (original)
 import           Hasura.Server.Version (currentVersion)
+
+hdrsToText :: [HTTP.Header] -> [(Text, Text)]
+hdrsToText hdrs =
+  [ (bsToTxt $ original hdrName, bsToTxt hdrVal)
+  | (hdrName, hdrVal) <- hdrs
+  ]
 
 wreqOptions :: HTTP.Manager -> [HTTP.Header] -> Wreq.Options
 wreqOptions manager hdrs =

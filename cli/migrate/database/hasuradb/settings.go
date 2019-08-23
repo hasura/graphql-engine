@@ -19,7 +19,7 @@ func (h *HasuraDB) ensureSettingsTable() error {
 		},
 	}
 
-	resp, body, err := h.sendQuery(query)
+	resp, body, err := h.sendv1Query(query)
 	if err != nil {
 		h.logger.Debug(err)
 		return err
@@ -60,7 +60,7 @@ func (h *HasuraDB) ensureSettingsTable() error {
 		},
 	}
 
-	resp, body, err = h.sendQuery(query)
+	resp, body, err = h.sendv1Query(query)
 	if err != nil {
 		return err
 	}
@@ -105,7 +105,7 @@ func (h *HasuraDB) setDefaultSettings() error {
 		return nil
 	}
 
-	resp, body, err := h.sendQuery(query)
+	resp, body, err := h.sendv1Query(query)
 	if err != nil {
 		return err
 	}
@@ -132,7 +132,7 @@ func (h *HasuraDB) GetSetting(name string) (value string, err error) {
 	}
 
 	// Send Query
-	resp, body, err := h.sendQuery(query)
+	resp, body, err := h.sendv1Query(query)
 	if err != nil {
 		return value, err
 	}
@@ -181,7 +181,7 @@ func (h *HasuraDB) UpdateSetting(name string, value string) error {
 	}
 
 	// Send Query
-	resp, body, err := h.sendQuery(query)
+	resp, body, err := h.sendv1Query(query)
 	if err != nil {
 		return err
 	}

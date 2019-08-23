@@ -1,0 +1,6 @@
+- args:
+    role: user
+    table:
+      name: users
+      schema: public
+  type: drop_select_permission

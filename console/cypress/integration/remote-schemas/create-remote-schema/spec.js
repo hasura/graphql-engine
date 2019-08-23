@@ -46,7 +46,7 @@ export const createSimpleRemoteSchema = () => {
     .clear()
     .type(getRemoteGraphQLURL());
   cy.get(getElementFromAlias('add-remote-schema-submit')).click();
-  cy.wait(10000);
+  cy.wait(15000);
   validateRS(getRemoteSchemaName(1, testName), 'success');
   cy.url().should(
     'eq',
@@ -242,7 +242,7 @@ export const passWithEditRemoteSchema = () => {
     .type(getRemoteSchemaName(5, testName));
 
   cy.get(getElementFromAlias('remote-schema-edit-save-btn')).click();
-  cy.wait(5000);
+  cy.wait(10000);
   validateRS(getRemoteSchemaName(5, testName), 'success');
 
   cy.get(getElementFromAlias('remote-schemas-modify')).click();
@@ -252,7 +252,7 @@ export const passWithEditRemoteSchema = () => {
     getRemoteSchemaName(5, testName)
   );
   cy.get(getElementFromAlias('remote-schema-edit-modify-btn')).should('exist');
-  cy.wait(5000);
+  cy.wait(7000);
 };
 
 export const deleteRemoteSchema = () => {

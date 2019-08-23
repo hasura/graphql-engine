@@ -1,10 +1,11 @@
 import React from 'react';
 
-import { Route, IndexRedirect, Link } from 'react-router';
-import { layoutConnector, rightBar } from '../Layout';
+import { Route, IndexRedirect } from 'react-router';
+import { rightContainerConnector } from '../../Common/Layout';
 import globals from '../../../Globals';
 import {
-  landingCustomResolverGen,
+  customResolverPageConnector,
+  landingConnector,
   addConnector,
   editConnector,
   viewConnector,
@@ -17,43 +18,6 @@ import { fetchResolvers, FILTER_RESOLVER } from './customActions';
 // Whenever any operation happens like add resolver/delete resolver, this state should update automatically.
 
 import { appPrefix } from './constants';
-
-const listItem = (dataList, styles, currentLocation, currentResolver) => {
-  if (dataList.length === 0) {
-    return (
-      <li
-        className={styles.noTables}
-        data-test="remote-schema-sidebar-no-schemas"
-      >
-        <i>No remote schemas available</i>
-      </li>
-    );
-  }
-  return dataList.map((d, i) => {
-    let activeTableClass = '';
-    if (
-      d.name === currentResolver &&
-      currentLocation.pathname.indexOf(currentResolver) !== -1
-    ) {
-      activeTableClass = styles.activeTable;
-    }
-    return (
-      <li
-        className={activeTableClass}
-        key={i}
-        data-test={`remote-schema-sidebar-links-${i + 1}`}
-      >
-        <Link
-          to={appPrefix + '/manage/' + d.name + '/details'}
-          data-test={d.name}
-        >
-          <i className={styles.tableIcon + ' fa fa-table'} aria-hidden="true" />
-          {d.name}
-        </Link>
-      </li>
-    );
-  });
-};
 
 const filterItem = dispatch => {
   return (dataList, searchVal) => {
@@ -84,8 +48,6 @@ const leftNavMapStateToProps = state => {
     filtered: [...state.customResolverData.listData.filtered],
     searchQuery: state.customResolverData.listData.searchQuery,
     viewResolver: state.customResolverData.listData.viewResolver,
-    migrationMode: state.main.migrationMode ? state.main.migrationMode : false,
-    listItemTemplate: listItem,
     appPrefix,
   };
 };
@@ -121,18 +83,10 @@ const fetchInitialData = ({ dispatch }) => {
 };
 
 const getCustomResolverRouter = (connect, store, composeOnEnterHooks) => {
-  const migrationRedirects = (nextState, replaceState, cb) => {
-    const state = store.getState();
-    if (!state.main.migrationMode) {
-      replaceState(globals.urlPrefix + appPrefix + '/manage');
-      cb();
-    }
-    cb();
-  };
   return (
     <Route
       path="remote-schemas"
-      component={layoutConnector(
+      component={customResolverPageConnector(
         connect,
         leftNavMapStateToProps,
         leftNavMapDispatchToProps
@@ -141,14 +95,10 @@ const getCustomResolverRouter = (connect, store, composeOnEnterHooks) => {
       onChange={fetchInitialData(store)}
     >
       <IndexRedirect to="manage" />
-      <Route path="manage" component={rightBar(connect)}>
+      <Route path="manage" component={rightContainerConnector(connect)}>
         <IndexRedirect to="schemas" />
-        <Route path="schemas" component={landingCustomResolverGen(connect)} />
-        <Route
-          path="add"
-          component={addConnector(connect)}
-          onEnter={composeOnEnterHooks([migrationRedirects])}
-        />
+        <Route path="schemas" component={landingConnector(connect)} />
+        <Route path="add" component={addConnector(connect)} />
         <Route
           path=":resolverName/details"
           component={viewConnector(connect)}

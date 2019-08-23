@@ -1,10 +1,10 @@
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import requestAction from 'utils/requestAction';
-import { Integers, Reals } from '../Types';
+import { Integers, Reals } from '../constants';
 import {
   showErrorNotification,
   showSuccessNotification,
-} from '../Notification';
+} from '../../Common/Notification';
 import dataHeaders from '../Common/Headers';
 
 const E_SET_EDITITEM = 'EditItem/E_SET_EDITITEM';
@@ -23,8 +23,9 @@ const editItem = (tableName, colValues) => {
     /* Type all the values correctly */
     const insertObject = {};
     const state = getState();
+    const { currentSchema } = state.tables;
     const columns = state.tables.allSchemas.find(
-      x => x.table_name === tableName
+      t => t.table_name === tableName && t.table_schema === currentSchema
     ).columns;
     let error = false;
     let errorMessage = '';
@@ -94,9 +95,7 @@ const editItem = (tableName, colValues) => {
         );
       },
       err => {
-        dispatch(
-          showErrorNotification('Edit failed!', err.error, reqBody, err)
-        );
+        dispatch(showErrorNotification('Edit failed!', err.error, err));
       }
     );
   };

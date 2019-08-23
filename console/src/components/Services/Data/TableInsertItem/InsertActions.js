@@ -1,11 +1,11 @@
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import requestAction from 'utils/requestAction';
-import { Integers, Reals } from '../Types';
+import { Integers, Reals } from '../constants';
 
 import {
   showErrorNotification,
   showSuccessNotification,
-} from '../Notification';
+} from '../../Common/Notification';
 import dataHeaders from '../Common/Headers';
 
 const I_SET_CLONE = 'InsertItem/I_SET_CLONE';
@@ -26,8 +26,9 @@ const insertItem = (tableName, colValues) => {
     dispatch({ type: I_ONGOING_REQ });
     const insertObject = {};
     const state = getState();
+    const { currentSchema } = state.tables;
     const columns = state.tables.allSchemas.find(
-      x => x.table_name === tableName
+      t => t.table_name === tableName && t.table_schema === currentSchema
     ).columns;
     let error = false;
     let errorMessage = '';
@@ -99,9 +100,7 @@ const insertItem = (tableName, colValues) => {
         );
       },
       err => {
-        dispatch(
-          showErrorNotification('Insert failed!', err.error, reqBody, err)
-        );
+        dispatch(showErrorNotification('Insert failed!', err.error, err));
       }
     );
   };

@@ -16,8 +16,9 @@ import {
   setLimit,
   addOrder,
 } from './FilterActions';
-import { ordinalColSort } from '../utils';
-import '../TableCommon/ReactTableFix.css';
+import { ordinalColSort, convertDateTimeToLocale } from '../utils';
+import '../TableCommon/EventReactTableOverrides.css';
+import { verifySuccessStatus } from '../utils';
 
 const ViewRows = ({
   curTriggerName,
@@ -33,7 +34,7 @@ const ViewRows = ({
   count,
   expandedRow,
 }) => {
-  const styles = require('../TableCommon/Table.scss');
+  const styles = require('../TableCommon/EventTable.scss');
   const triggerSchema = triggerList.find(x => x.name === curTriggerName);
   const curRelName = curPath.length > 0 ? curPath.slice(-1)[0] : null;
 
@@ -98,10 +99,10 @@ const ViewRows = ({
       // Insert cells corresponding to all rows
       sortedColumns.forEach(col => {
         const getCellContent = () => {
-          let conditionalClassname = styles.tableCellCenterAligned;
+          let conditionalClassname = styles.tableCellCenterAlignedOverflow;
           const cellIndex = `${curTriggerName}-${col}-${rowIndex}`;
           if (expandedRow === cellIndex) {
-            conditionalClassname = styles.tableCellCenterAlignedExpanded;
+            conditionalClassname = styles.tableCellExpanded;
           }
           if (row[col] === null) {
             return (
@@ -112,7 +113,7 @@ const ViewRows = ({
           }
           let content = row[col] === undefined ? 'NULL' : row[col].toString();
           if (col === 'created_at') {
-            content = new Date(row[col]).toUTCString();
+            content = convertDateTimeToLocale(row[col]);
           }
           if (col === 'event_id') {
             content = row.id.toString();
@@ -205,7 +206,7 @@ const ViewRows = ({
   };
 
   const renderTableBody = () => {
-    if (count === 0) {
+    if (newCurRows.length === 0) {
       return <div> No rows found. </div>;
     }
     let shouldSortColumn = true;
@@ -256,20 +257,20 @@ const ViewRows = ({
           const invocationRowsData = [];
           currentRow.logs.map((r, rowIndex) => {
             const newRow = {};
-            const status =
-              r.status === 200 ? (
-                <i className={styles.invocationSuccess + ' fa fa-check'} />
-              ) : (
-                <i className={styles.invocationFailure + ' fa fa-times'} />
-              );
+            const status = verifySuccessStatus(r.status) ? (
+              <i className={styles.invocationSuccess + ' fa fa-check'} />
+            ) : (
+              <i className={styles.invocationFailure + ' fa fa-times'} />
+            );
 
             // Insert cells corresponding to all rows
             invocationColumns.forEach(col => {
               const getCellContent = () => {
-                let conditionalClassname = styles.tableCellCenterAligned;
+                let conditionalClassname =
+                  styles.tableCellCenterAlignedOverflow;
                 const cellIndex = `${curTriggerName}-${col}-${rowIndex}`;
                 if (expandedRow === cellIndex) {
-                  conditionalClassname = styles.tableCellCenterAlignedExpanded;
+                  conditionalClassname = styles.tableCellExpanded;
                 }
                 if (r[col] === null) {
                   return (
@@ -282,8 +283,10 @@ const ViewRows = ({
                   return status;
                 }
                 if (col === 'created_at') {
-                  const formattedDate = new Date(r.created_at).toUTCString();
-                  return formattedDate;
+                  const formattedDate = convertDateTimeToLocale(r.created_at);
+                  return (
+                    <div className={conditionalClassname}>{formattedDate}</div>
+                  );
                 }
                 const content =
                   r[col] === undefined ? 'NULL' : r[col].toString();
@@ -304,6 +307,7 @@ const ViewRows = ({
                     data={invocationRowsData}
                     columns={invocationGridHeadings}
                     defaultPageSize={currentRow.logs.length}
+                    minRows={0}
                     showPagination={false}
                     SubComponent={logRow => {
                       const finalIndex = logRow.index;

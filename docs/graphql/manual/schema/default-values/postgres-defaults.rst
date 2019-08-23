@@ -24,7 +24,7 @@ Edit the ``created_at`` field and set its Default value as the SQL function ``no
 
 Open the console and head to ``Data -> article -> Modify``:
 
-.. image:: ../../../../img/graphql/manual/schema/add-default-value.png
+.. thumbnail:: ../../../../img/graphql/manual/schema/add-default-value.png
 
 .. admonition:: To set an auto-incrementing default value
 
@@ -49,7 +49,7 @@ Step 2: Run an insert mutation
 Now if you do not pass the ``created_at`` field value while running an insert mutation on the ``article`` table, its
 value will be set automatically by Postgres.
 
-.. image:: ../../../../img/graphql/manual/schema/default-value-response.png
+.. thumbnail:: ../../../../img/graphql/manual/schema/default-value-response.png
 
 Also see
 --------

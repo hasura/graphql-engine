@@ -38,7 +38,7 @@ const setOffset = offset => ({ type: SET_OFFSET, offset });
 const setNextPage = () => ({ type: SET_NEXTPAGE });
 const setPrevPage = () => ({ type: SET_PREVPAGE });
 
-const runQuery = triggerSchema => {
+const runQuery = () => {
   return (dispatch, getState) => {
     const state = getState().triggers.view.curFilter;
     const finalWhereClauses = state.where.$and.filter(w => {

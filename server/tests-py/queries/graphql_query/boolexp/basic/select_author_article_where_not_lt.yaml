@@ -1,5 +1,5 @@
 - description: Select author and their articles
-  url: /v1alpha1/graphql
+  url: /v1/graphql
   status: 200
   response: &response
     data:
@@ -32,7 +32,7 @@
         }
       }
 - description: Select author and their articles
-  url: /v1alpha1/graphql
+  url: /v1/graphql
   status: 200
   response:
     <<: *response

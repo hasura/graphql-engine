@@ -1,0 +1,4 @@
+{
+  "presets": ["stage-0", "env", "react"],
+  "plugins": ["transform-class-properties", "transform-react-remove-prop-types", "istanbul"]
+}

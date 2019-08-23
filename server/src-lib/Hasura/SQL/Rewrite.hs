@@ -87,6 +87,10 @@ uFromItem fromItem = case fromItem of
     S.FISimple t <$> mapM addAlias alM
   S.FIIden iden ->
     S.FIIden <$> return iden
+  S.FIFunc f args alM ->
+    S.FIFunc f args <$> mapM addAlias alM
+  S.FIUnnest args als cols ->
+    S.FIUnnest <$> mapM uSqlExp args <*> addAlias als <*> mapM uSqlExp cols
   S.FISelect isLateral sel al -> do
     -- we are kind of ignoring if we have to reset
     -- idens to empty based on correlation
@@ -94,6 +98,11 @@ uFromItem fromItem = case fromItem of
     newSel <- restoringIdens $ uSelect sel
     newAls <- addAlias al
     return $ S.FISelect isLateral newSel newAls
+  S.FIValues (S.ValuesExp tups) als mCols -> do
+    newValExp <- fmap S.ValuesExp $
+                 forM tups $ \(S.TupleExp ts) ->
+                               S.TupleExp <$> mapM uSqlExp ts
+    return $ S.FIValues newValExp als mCols
   S.FIJoin joinExp ->
     S.FIJoin <$> uJoinExp joinExp
 
@@ -116,10 +125,13 @@ uBoolExp = restoringIdens . \case
   S.BENot b -> S.BENot <$> uBoolExp b
   S.BECompare op left right ->
     S.BECompare <$> return op <*> uSqlExp left <*> uSqlExp right
+  S.BECompareAny op left right ->
+    S.BECompareAny <$> return op <*> uSqlExp left <*> uSqlExp right
   S.BENull e -> S.BENull <$> uSqlExp e
   S.BENotNull e -> S.BENotNull <$> uSqlExp e
   S.BEExists sel -> S.BEExists <$> uSelect sel
   S.BEIN left exps -> S.BEIN <$> uSqlExp left <*> mapM uSqlExp exps
+  S.BEExp e -> S.BEExp <$> uSqlExp e
 
 uOrderBy :: S.OrderByExp -> Uniq S.OrderByExp
 uOrderBy (S.OrderByExp ordByItems) =
@@ -167,6 +179,8 @@ uSqlExp = restoringIdens . \case
   S.SEExcluded t                ->
     S.SEExcluded <$> return t
   S.SEArray l                   ->
+    S.SEArray <$> mapM uSqlExp l
+  S.SETuple (S.TupleExp l)     ->
     S.SEArray <$> mapM uSqlExp l
   S.SECount cty                 -> return $ S.SECount cty
   where

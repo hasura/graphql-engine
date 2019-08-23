@@ -32,7 +32,7 @@ response:
   returning:
   - product_id: 2
     name: Product 2
-    price: 16.5
+    price: '16.5000'
 query:
   type: update
   args:

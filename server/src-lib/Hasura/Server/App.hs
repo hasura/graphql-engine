@@ -4,49 +4,57 @@
 
 module Hasura.Server.App where
 
-import           Control.Arrow                          ((***))
 import           Control.Concurrent.MVar
+import           Control.Exception                      (IOException, try)
 import           Data.Aeson                             hiding (json)
+import           Data.Int                               (Int64)
 import           Data.IORef
 import           Data.Time.Clock                        (UTCTime,
                                                          getCurrentTime)
+import           Data.Time.Clock.POSIX                  (getPOSIXTime)
+import           Network.Mime                           (defaultMimeLookup)
 import           Network.Wai                            (requestHeaders,
                                                          strictRequestBody)
+import           System.Exit                            (exitFailure)
+import           System.FilePath                        (joinPath, takeFileName)
 import           Web.Spock.Core
 
 import qualified Data.ByteString.Lazy                   as BL
-#ifdef LocalConsole
-import qualified Data.FileEmbed                         as FE
-#endif
 import qualified Data.HashMap.Strict                    as M
+import qualified Data.HashSet                           as S
 import qualified Data.Text                              as T
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
 import qualified Network.Wai                            as Wai
 import qualified Network.Wai.Handler.WebSockets         as WS
 import qualified Network.WebSockets                     as WS
+import qualified System.Metrics                         as EKG
+import qualified System.Metrics.Json                    as EKG
 import qualified Text.Mustache                          as M
 import qualified Text.Mustache.Compile                  as M
 
 import qualified Database.PG.Query                      as Q
+import qualified Hasura.GraphQL.Execute                 as E
+import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Explain                 as GE
-import qualified Hasura.GraphQL.Schema                  as GS
 import qualified Hasura.GraphQL.Transport.HTTP          as GH
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Transport.WebSocket     as WS
 import qualified Hasura.Logging                         as L
+import qualified Hasura.Server.PGDump                   as PGD
 
-import           Hasura.GraphQL.RemoteServer
+import           Hasura.EncJSON
 import           Hasura.Prelude                         hiding (get, put)
 import           Hasura.RQL.DDL.Schema.Table
-import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                     (AuthMode (..),
                                                          getUserInfo)
+import           Hasura.Server.Config                   (runGetConfig)
+import           Hasura.Server.Context
+import           Hasura.Server.Cors
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
-import           Hasura.Server.Middleware               (corsMiddleware,
-                                                         mkDefaultCorsPolicy)
+import           Hasura.Server.Middleware               (corsMiddleware)
 import           Hasura.Server.Query
 import           Hasura.Server.Utils
 import           Hasura.Server.Version
@@ -55,62 +63,119 @@ import           Hasura.SQL.Types
 consoleTmplt :: M.Template
 consoleTmplt = $(M.embedSingleTemplate "src-rsr/console.html")
 
-isAccessKeySet :: AuthMode -> T.Text
-isAccessKeySet AMNoAuth = "false"
-isAccessKeySet _        = "true"
+boolToText :: Bool -> T.Text
+boolToText = bool "false" "true"
 
-#ifdef LocalConsole
-consoleAssetsLoc :: Text
-consoleAssetsLoc = "/static"
-#else
-consoleAssetsLoc :: Text
-consoleAssetsLoc =
-  "https://storage.googleapis.com/hasura-graphql-engine/console/" <> consoleVersion
-#endif
+isAdminSecretSet :: AuthMode -> T.Text
+isAdminSecretSet AMNoAuth = boolToText False
+isAdminSecretSet _        = boolToText True
 
-mkConsoleHTML :: T.Text -> AuthMode -> Either String T.Text
-mkConsoleHTML path authMode =
-  bool (Left errMsg) (Right res) $ null errs
+data SchemaCacheRef
+  = SchemaCacheRef
+  { _scrLock     :: MVar ()
+  , _scrCache    :: IORef (SchemaCache, SchemaCacheVer)
+  -- an action to run when schemacache changes
+  , _scrOnChange :: IO ()
+  }
+
+getSCFromRef :: SchemaCacheRef -> IO SchemaCache
+getSCFromRef scRef = fst <$> readIORef (_scrCache scRef)
+
+logInconsObjs :: L.Logger -> [InconsistentMetadataObj] -> IO ()
+logInconsObjs logger objs =
+  unless (null objs) $ L.unLogger logger $ mkInconsMetadataLog objs
+
+withSCUpdate
+  :: (MonadIO m, MonadError e m)
+  => SchemaCacheRef -> L.Logger -> m (a, SchemaCache) -> m a
+withSCUpdate scr logger action = do
+  acquireLock
+  (res, newSC) <- action `catchError` onError
+  liftIO $ do
+    -- update schemacache in IO reference
+    modifyIORef' cacheRef $
+      \(_, prevVer) -> (newSC, incSchemaCacheVer prevVer)
+    -- log any inconsistent objects
+    logInconsObjs logger $ scInconsistentObjs newSC
+    onChange
+  releaseLock
+  return res
   where
-    (errs, res) = M.checkedSubstitute consoleTmplt $
-                  object [ "consoleAssetsLoc" .= consoleAssetsLoc
-                         , "isAccessKeySet" .= isAccessKeySet authMode
-                         , "consolePath" .= consolePath
-                         ]
-    consolePath = case path of
-      "" -> "/console"
-      r  -> "/console/" <> r
-
-    errMsg = "console template rendering failed: " ++ show errs
+    SchemaCacheRef lk cacheRef onChange = scr
+    onError e   = releaseLock >> throwError e
+    acquireLock = liftIO $ takeMVar lk
+    releaseLock = liftIO $ putMVar lk ()
 
 data ServerCtx
   = ServerCtx
-  { scIsolation :: Q.TxIsolation
-  , scPGPool    :: Q.PGPool
-  , scLogger    :: L.Logger
-  , scCacheRef  :: IORef SchemaCache
-  , scCacheLock :: MVar ()
-  , scAuthMode  :: AuthMode
-  , scManager   :: HTTP.Manager
+  { scPGExecCtx       :: !PGExecCtx
+  , scConnInfo        :: !Q.ConnInfo
+  , scLogger          :: !L.Logger
+  , scCacheRef        :: !SchemaCacheRef
+  , scAuthMode        :: !AuthMode
+  , scManager         :: !HTTP.Manager
+  , scSQLGenCtx       :: !SQLGenCtx
+  , scEnabledAPIs     :: !(S.HashSet API)
+  , scInstanceId      :: !InstanceId
+  , scPlanCache       :: !E.PlanCache
+  , scLQState         :: !EL.LiveQueriesState
+  , scEnableAllowlist :: !Bool
+  , scEkgStore        :: !EKG.Store
   }
 
 data HandlerCtx
   = HandlerCtx
-  { hcServerCtx  :: ServerCtx
-  , hcReqBody    :: BL.ByteString
-  , hcUser       :: UserInfo
-  , hcReqHeaders :: [N.Header]
+  { hcServerCtx  :: !ServerCtx
+  , hcUser       :: !UserInfo
+  , hcReqHeaders :: ![N.Header]
+  , hcRequestId  :: !RequestId
   }
 
 type Handler = ExceptT QErr (ReaderT HandlerCtx IO)
 
+data APIResp
+  = JSONResp !(HttpResponse EncJSON)
+  | RawResp  !(HttpResponse BL.ByteString)
+
+apiRespToLBS :: APIResp -> BL.ByteString
+apiRespToLBS = \case
+  JSONResp (HttpResponse j _) -> encJToLBS j
+  RawResp (HttpResponse b _)  -> b
+
+data APIHandler a
+  = AHGet !(Handler APIResp)
+  | AHPost !(a -> Handler APIResp)
+
+mkGetHandler :: Handler APIResp -> APIHandler ()
+mkGetHandler = AHGet
+
+mkPostHandler :: (a -> Handler APIResp) -> APIHandler a
+mkPostHandler = AHPost
+
+mkAPIRespHandler :: (a -> Handler (HttpResponse EncJSON)) -> (a -> Handler APIResp)
+mkAPIRespHandler = (fmap . fmap) JSONResp
+
+isMetadataEnabled :: ServerCtx -> Bool
+isMetadataEnabled sc = S.member METADATA $ scEnabledAPIs sc
+
+isGraphQLEnabled :: ServerCtx -> Bool
+isGraphQLEnabled sc = S.member GRAPHQL $ scEnabledAPIs sc
+
+isPGDumpEnabled :: ServerCtx -> Bool
+isPGDumpEnabled sc = S.member PGDUMP $ scEnabledAPIs sc
+
+isConfigEnabled :: ServerCtx -> Bool
+isConfigEnabled sc = S.member CONFIG $ scEnabledAPIs sc
+
+isDeveloperAPIEnabled :: ServerCtx -> Bool
+isDeveloperAPIEnabled sc = S.member DEVELOPER $ scEnabledAPIs sc
+
 -- {-# SCC parseBody #-}
-parseBody :: (FromJSON a) => Handler a
-parseBody = do
-  reqBody <- hcReqBody <$> ask
-  case decode' reqBody of
-    Just jVal -> decodeValue jVal
-    Nothing   -> throw400 InvalidJSON "invalid json"
+parseBody :: (FromJSON a, MonadError QErr m) => BL.ByteString -> m a
+parseBody reqBody =
+  case eitherDecode' reqBody of
+    Left e     -> throw400 InvalidJSON (T.pack e)
+    Right jVal -> decodeValue jVal
 
 onlyAdmin :: Handler ()
 onlyAdmin = do
@@ -122,133 +187,221 @@ buildQCtx ::  Handler QCtx
 buildQCtx = do
   scRef    <- scCacheRef . hcServerCtx <$> ask
   userInfo <- asks hcUser
-  cache <- liftIO $ readIORef scRef
-  return $ QCtx userInfo cache
+  cache <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
+  sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
+  return $ QCtx userInfo cache sqlGenCtx
 
 logResult
   :: (MonadIO m)
-  => Maybe UserInfo -> Wai.Request -> BL.ByteString -> ServerCtx
-  -> Either QErr BL.ByteString -> Maybe (UTCTime, UTCTime)
+  => L.Logger
+  -> Maybe UserInfo
+  -> RequestId
+  -> Wai.Request
+  -> Maybe Value
+  -> Either QErr BL.ByteString
+  -> Maybe (UTCTime, UTCTime)
   -> m ()
-logResult userInfoM req reqBody sc res qTime =
-  liftIO $ logger $ mkAccessLog userInfoM req (reqBody, res) qTime
-  where
-    logger = L.unLogger $ scLogger sc
+logResult logger userInfoM reqId httpReq req res qTime = do
+  let logline = case res of
+        Right res' -> mkHttpAccessLog userInfoM reqId httpReq res' qTime
+        Left e     -> mkHttpErrorLog userInfoM reqId httpReq e req qTime
+  liftIO $ L.unLogger logger logline
+
+logSuccess
+  :: (MonadIO m)
+  => L.Logger
+  -> Maybe UserInfo
+  -> RequestId
+  -> Wai.Request
+  -> BL.ByteString
+  -> Maybe (UTCTime, UTCTime)
+  -> m ()
+logSuccess logger userInfoM reqId httpReq res qTime =
+  liftIO $ L.unLogger logger $ mkHttpAccessLog userInfoM reqId httpReq res qTime
 
 logError
-  :: MonadIO m
-  => Maybe UserInfo -> Wai.Request
-  -> BL.ByteString -> ServerCtx -> QErr -> m ()
-logError userInfoM req reqBody sc qErr =
-  logResult userInfoM req reqBody sc (Left qErr) Nothing
+  :: (MonadIO m)
+  => L.Logger
+  -> Maybe UserInfo
+  -> RequestId
+  -> Wai.Request
+  -> Maybe Value
+  -> QErr -> m ()
+logError logger userInfoM reqId httpReq req qErr =
+  liftIO $ L.unLogger logger $ mkHttpErrorLog userInfoM reqId httpReq qErr req Nothing
 
 mkSpockAction
-  :: (MonadIO m)
+  :: (MonadIO m, FromJSON a, ToJSON a)
   => (Bool -> QErr -> Value)
+  -> (QErr -> QErr)
   -> ServerCtx
-  -> Handler BL.ByteString
+  -> APIHandler a
   -> ActionT m ()
-mkSpockAction qErrEncoder serverCtx handler = do
+mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
   req <- request
   reqBody <- liftIO $ strictRequestBody req
-  let headers  = requestHeaders req
+  let headers = requestHeaders req
       authMode = scAuthMode serverCtx
       manager = scManager serverCtx
+      -- convert ByteString to Maybe Value for logging
+      reqTxt = Just $ String $ bsToTxt $ BL.toStrict reqBody
 
+  requestId <- getRequestId headers
   userInfoE <- liftIO $ runExceptT $ getUserInfo logger manager headers authMode
-  userInfo <- either (logAndThrow req reqBody False) return userInfoE
+  userInfo  <- either (logErrorAndResp Nothing requestId req reqTxt False . qErrModifier)
+               return userInfoE
 
-  let handlerState = HandlerCtx serverCtx reqBody userInfo headers
+  let handlerState = HandlerCtx serverCtx userInfo headers requestId
+      curRole = userRole userInfo
 
   t1 <- liftIO getCurrentTime -- for measuring response time purposes
-  result <- liftIO $ runReaderT (runExceptT handler) handlerState
+
+  (result, q) <- case apiHandler of
+    AHGet handler -> do
+      res <- liftIO $ runReaderT (runExceptT handler) handlerState
+      return (res, Nothing)
+    AHPost handler -> do
+      parsedReqE <- runExceptT $ parseBody reqBody
+      parsedReq  <- either (logErrorAndResp (Just userInfo) requestId req reqTxt (isAdmin curRole) . qErrModifier) return parsedReqE
+      res <- liftIO $ runReaderT (runExceptT $ handler parsedReq) handlerState
+      return (res, Just parsedReq)
+
   t2 <- liftIO getCurrentTime -- for measuring response time purposes
 
-  -- log result
-  logResult (Just userInfo) req reqBody serverCtx result $ Just (t1, t2)
-  either (qErrToResp $ userRole userInfo == adminRole) resToResp result
+  -- apply the error modifier
+  let modResult = fmapL qErrModifier result
+
+  -- log and return result
+  case modResult of
+    Left err  -> logErrorAndResp (Just userInfo) requestId req (toJSON <$> q) (isAdmin curRole) err
+    Right res -> logSuccessAndResp (Just userInfo) requestId req res (Just (t1, t2))
 
   where
     logger = scLogger serverCtx
-    -- encode error response
-    qErrToResp :: (MonadIO m) => Bool -> QErr -> ActionCtxT ctx m b
-    qErrToResp includeInternal qErr = do
+
+    logErrorAndResp
+      :: (MonadIO m)
+      => Maybe UserInfo -> RequestId -> Wai.Request -> Maybe Value -> Bool -> QErr -> ActionCtxT ctx m a
+    logErrorAndResp userInfo reqId req reqBody includeInternal qErr = do
+      logError logger userInfo reqId req reqBody qErr
       setStatus $ qeStatus qErr
       json $ qErrEncoder includeInternal qErr
 
-    logAndThrow req reqBody includeInternal qErr = do
-      logError Nothing req reqBody serverCtx qErr
-      qErrToResp includeInternal qErr
+    logSuccessAndResp userInfo reqId req result qTime = do
+      logSuccess logger userInfo reqId req (apiRespToLBS result) qTime
+      case result of
+        JSONResp (HttpResponse j h) -> do
+          uncurry setHeader jsonHeader
+          uncurry setHeader (requestIdHeader, unRequestId reqId)
+          mapM_ (mapM_ (uncurry setHeader . unHeader)) h
+          lazyBytes $ encJToLBS j
+        RawResp (HttpResponse b h) -> do
+          uncurry setHeader (requestIdHeader, unRequestId reqId)
+          mapM_ (mapM_ (uncurry setHeader . unHeader)) h
+          lazyBytes b
 
-    resToResp resp = do
-      uncurry setHeader jsonHeader
-      lazyBytes resp
-
-withLock :: (MonadIO m, MonadError e m)
-         => MVar () -> m a -> m a
-withLock lk action = do
-  acquireLock
-  res <- action `catchError` onError
-  releaseLock
-  return res
-  where
-    onError e   = releaseLock >> throwError e
-    acquireLock = liftIO $ takeMVar lk
-    releaseLock = liftIO $ putMVar lk ()
-
-v1QueryHandler :: RQLQuery -> Handler BL.ByteString
+v1QueryHandler :: RQLQuery -> Handler (HttpResponse EncJSON)
 v1QueryHandler query = do
-  lk <- scCacheLock . hcServerCtx <$> ask
-  bool (fst <$> dbAction) (withLock lk dbActionReload) $
-    queryNeedsReload query
+  scRef <- scCacheRef . hcServerCtx <$> ask
+  logger <- scLogger . hcServerCtx <$> ask
+  res <- bool (fst <$> dbAction) (withSCUpdate scRef logger dbAction) $
+         queryNeedsReload query
+  return $ HttpResponse res Nothing
   where
     -- Hit postgres
     dbAction = do
       userInfo <- asks hcUser
       scRef <- scCacheRef . hcServerCtx <$> ask
-      schemaCache <- liftIO $ readIORef scRef
+      schemaCache <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
       httpMgr <- scManager . hcServerCtx <$> ask
-      pool <- scPGPool . hcServerCtx <$> ask
-      isoL <- scIsolation . hcServerCtx <$> ask
-      runQuery pool isoL userInfo schemaCache httpMgr query
+      sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
+      pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
+      instanceId <- scInstanceId . hcServerCtx <$> ask
+      runQuery pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx query
 
-    -- Also update the schema cache
-    dbActionReload = do
-      (resp, newSc) <- dbAction
-      scRef <- scCacheRef . hcServerCtx <$> ask
-      httpMgr <- scManager . hcServerCtx <$> ask
-      --FIXME: should we be fetching the remote schema again? if not how do we get the remote schema?
-      newGCtxMap <- GS.mkGCtxMap (scTables newSc)
-      (mergedGCtxMap, defGCtx) <-
-        mergeSchemas (scRemoteResolvers newSc) newGCtxMap httpMgr
-      let newSc' =
-            newSc { scGCtxMap = mergedGCtxMap, scDefaultRemoteGCtx = defGCtx }
-      liftIO $ writeIORef scRef newSc'
-      return resp
-
-v1Alpha1GQHandler :: GH.GraphQLRequest -> Handler BL.ByteString
+v1Alpha1GQHandler :: GH.GQLReqUnparsed -> Handler (HttpResponse EncJSON)
 v1Alpha1GQHandler query = do
   userInfo <- asks hcUser
-  reqBody <- asks hcReqBody
   reqHeaders <- asks hcReqHeaders
   manager <- scManager . hcServerCtx <$> ask
   scRef <- scCacheRef . hcServerCtx <$> ask
-  sc <- liftIO $ readIORef scRef
-  pool <- scPGPool . hcServerCtx <$> ask
-  isoL <- scIsolation . hcServerCtx <$> ask
-  GH.runGQ pool isoL userInfo sc manager reqHeaders query reqBody
+  (sc, scVer) <- liftIO $ readIORef $ _scrCache scRef
+  pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
+  sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
+  planCache <- scPlanCache . hcServerCtx <$> ask
+  enableAL  <- scEnableAllowlist . hcServerCtx <$> ask
+  logger    <- scLogger . hcServerCtx <$> ask
+  requestId <- asks hcRequestId
+  let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx planCache
+                sc scVer manager enableAL
+  flip runReaderT execCtx $ GH.runGQ requestId userInfo reqHeaders query
 
-gqlExplainHandler :: GE.GQLExplain -> Handler BL.ByteString
+v1GQHandler
+  :: GH.GQLReqUnparsed
+  -> Handler (HttpResponse EncJSON)
+v1GQHandler = v1Alpha1GQHandler
+
+gqlExplainHandler :: GE.GQLExplain -> Handler (HttpResponse EncJSON)
 gqlExplainHandler query = do
   onlyAdmin
   scRef <- scCacheRef . hcServerCtx <$> ask
-  sc <- liftIO $ readIORef scRef
-  pool <- scPGPool . hcServerCtx <$> ask
-  isoL <- scIsolation . hcServerCtx <$> ask
-  GE.explainGQLQuery pool isoL sc query
+  sc <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
+  pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
+  sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
+  enableAL <- scEnableAllowlist . hcServerCtx <$> ask
+  res <- GE.explainGQLQuery pgExecCtx sc sqlGenCtx enableAL query
+  return $ HttpResponse res Nothing
+
+v1Alpha1PGDumpHandler :: PGD.PGDumpReqBody -> Handler APIResp
+v1Alpha1PGDumpHandler b = do
+  onlyAdmin
+  ci <- scConnInfo . hcServerCtx <$> ask
+  output <- PGD.execPGDump b ci
+  return $ RawResp $ HttpResponse output (Just [Header sqlHeader])
+
+consoleAssetsHandler :: L.Logger -> Text -> FilePath -> ActionT IO ()
+consoleAssetsHandler logger dir path = do
+  -- '..' in paths need not be handed as it is resolved in the url by
+  -- spock's routing. we get the expanded path.
+  eFileContents <- liftIO $ try $ BL.readFile $
+    joinPath [T.unpack dir, path]
+  either onError onSuccess eFileContents
+  where
+    onSuccess c = do
+      mapM_ (uncurry setHeader) headers
+      lazyBytes c
+    onError :: IOException -> ActionT IO ()
+    onError = raiseGenericApiError logger . err404 NotFound . T.pack . show
+    fn = T.pack $ takeFileName path
+    -- set gzip header if the filename ends with .gz
+    (fileName, encHeader) = case T.stripSuffix ".gz" fn of
+      Just v  -> (v, [gzipHeader])
+      Nothing -> (fn, [])
+    mimeType = bsToTxt $ defaultMimeLookup fileName
+    headers = ("Content-Type", mimeType) : encHeader
+
+mkConsoleHTML :: T.Text -> AuthMode -> Bool -> Maybe Text -> Either String T.Text
+mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
+  bool (Left errMsg) (Right res) $ null errs
+  where
+    (errs, res) = M.checkedSubstitute consoleTmplt $
+      -- variables required to render the template
+      object [ "isAdminSecretSet" .= isAdminSecretSet authMode
+             , "consolePath" .= consolePath
+             , "enableTelemetry" .= boolToText enableTelemetry
+             , "cdnAssets" .= boolToText (isNothing consoleAssetsDir)
+             , "assetsVersion" .= consoleVersion
+             , "serverVersion" .= currentVersion
+             ]
+    consolePath = case path of
+      "" -> "/console"
+      r  -> "/console/" <> r
+    errMsg = "console template rendering failed: " ++ show errs
+
 
 newtype QueryParser
-  = QueryParser { getQueryParser :: QualifiedTable -> Handler RQLQuery }
+  = QueryParser
+  { getQueryParser :: QualifiedTable -> Object -> Handler RQLQuery }
 
 queryParsers :: M.HashMap T.Text QueryParser
 queryParsers =
@@ -261,138 +414,207 @@ queryParsers =
   ]
   where
     mkQueryParser f =
-      QueryParser $ \qt -> do
-      obj <- parseBody
+      QueryParser $ \qt obj -> do
       let val = Object $ M.insert "table" (toJSON qt) obj
       q <- decodeValue val
       return $ f q
 
-legacyQueryHandler :: TableName -> T.Text -> Handler BL.ByteString
-legacyQueryHandler tn queryType =
+legacyQueryHandler :: TableName -> T.Text -> Object
+                   -> Handler (HttpResponse EncJSON)
+legacyQueryHandler tn queryType req =
   case M.lookup queryType queryParsers of
-    Just queryParser -> getQueryParser queryParser qt >>= v1QueryHandler
+    Just queryParser -> getQueryParser queryParser qt req >>= v1QueryHandler
     Nothing          -> throw404 "No such resource exists"
   where
-    qt = QualifiedTable publicSchema tn
+    qt = QualifiedObject publicSchema tn
 
+initErrExit :: QErr -> IO a
+initErrExit e = do
+  putStrLn $
+    "failed to build schema-cache because of inconsistent metadata: "
+    <> T.unpack (qeError e)
+  exitFailure
 
 mkWaiApp
   :: Q.TxIsolation
   -> L.LoggerCtx
+  -> SQLGenCtx
+  -> Bool
   -> Q.PGPool
+  -> Q.ConnInfo
   -> HTTP.Manager
   -> AuthMode
   -> CorsConfig
   -> Bool
-  -> IO (Wai.Application, IORef SchemaCache)
-mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg enableConsole = do
-    cacheRef <- do
-      pgResp <- runExceptT $
-        peelRun emptySchemaCache adminUserInfo httpManager pool Q.Serializable $ do
-        liftTx $ Q.catchE defaultTxErrorHandler initStateTx
-        buildSchemaCache
-      either initErrExit return pgResp >>= newIORef . snd
+  -> Maybe Text
+  -> Bool
+  -> InstanceId
+  -> S.HashSet API
+  -> EL.LQOpts
+  -> IO (Wai.Application, SchemaCacheRef, Maybe UTCTime)
+mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
+         enableConsole consoleAssetsDir enableTelemetry instanceId apis lqOpts = do
+
+    let pgExecCtx = PGExecCtx pool isoLevel
+        pgExecCtxSer = PGExecCtx pool Q.Serializable
+    (cacheRef, cacheBuiltTime) <- do
+      pgResp <- runExceptT $ peelRun emptySchemaCache adminUserInfo
+                httpManager sqlGenCtx pgExecCtxSer $ do
+                  buildSchemaCache
+                  liftTx fetchLastUpdate
+      (time, sc) <- either initErrExit return pgResp
+      scRef <- newIORef (sc, initSchemaCacheVer)
+      return (scRef, snd <$> time)
 
     cacheLock <- newMVar ()
+    planCache <- E.initPlanCache
 
-    let serverCtx =
-          ServerCtx isoLevel pool (L.mkLogger loggerCtx) cacheRef
-          cacheLock mode httpManager
+    let corsPolicy = mkDefaultCorsPolicy corsCfg
+        logger = L.mkLogger loggerCtx
+
+    lqState <- EL.initLiveQueriesState lqOpts pgExecCtx
+    wsServerEnv <- WS.createWSServerEnv logger pgExecCtx lqState cacheRef
+                   httpManager corsPolicy sqlGenCtx enableAL planCache
+
+    ekgStore <- EKG.newStore
+
+    let schemaCacheRef =
+          SchemaCacheRef cacheLock cacheRef (E.clearPlanCache planCache)
+        serverCtx = ServerCtx pgExecCtx ci logger
+                    schemaCacheRef mode httpManager
+                    sqlGenCtx apis instanceId planCache
+                    lqState enableAL ekgStore
+
+    when (isDeveloperAPIEnabled serverCtx) $ do
+      EKG.registerGcMetrics ekgStore
+      EKG.registerCounter "ekg.server_timestamp_ms" getTimeMs ekgStore
 
     spockApp <- spockAsApp $ spockT id $
                 httpApp corsCfg serverCtx enableConsole
+                  consoleAssetsDir enableTelemetry
 
-    let runTx tx = runExceptT $ runLazyTx pool isoLevel tx
-
-    wsServerEnv <- WS.createWSServerEnv (scLogger serverCtx) httpManager cacheRef runTx
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
-    return (WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp, cacheRef)
+    return ( WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp
+           , schemaCacheRef
+           , cacheBuiltTime
+           )
+  where
+    getTimeMs :: IO Int64
+    getTimeMs = (round . (* 1000)) `fmap` getPOSIXTime
 
-httpApp :: CorsConfig -> ServerCtx -> Bool -> SpockT IO ()
-httpApp corsCfg serverCtx enableConsole = do
-    liftIO $ putStrLn "HasuraDB is now waiting for connections"
-
+httpApp :: CorsConfig -> ServerCtx -> Bool -> Maybe Text -> Bool -> SpockT IO ()
+httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
     -- cors middleware
-    unless (ccDisabled corsCfg) $
-      middleware $ corsMiddleware (mkDefaultCorsPolicy $ ccDomain corsCfg)
+    unless (isCorsDisabled corsCfg) $
+      middleware $ corsMiddleware (mkDefaultCorsPolicy corsCfg)
 
     -- API Console and Root Dir
-    when enableConsole serveApiConsole
+    when (enableConsole && enableMetadata) serveApiConsole
+
+    -- Health check endpoint
+    get "healthz" $ do
+      sc <- liftIO $ getSCFromRef $ scCacheRef serverCtx
+      if null $ scInconsistentObjs sc
+        then setStatus N.status200 >> lazyBytes "OK"
+        else setStatus N.status500 >> lazyBytes "ERROR"
 
     get "v1/version" $ do
       uncurry setHeader jsonHeader
       lazyBytes $ encode $ object [ "version" .= currentVersion ]
 
-    get    ("v1/template" <//> var) tmpltGetOrDeleteH
-    post   ("v1/template" <//> var) tmpltPutOrPostH
-    put    ("v1/template" <//> var) tmpltPutOrPostH
-    delete ("v1/template" <//> var) tmpltGetOrDeleteH
+    when enableMetadata $ do
 
-    post "v1/query" $ mkSpockAction encodeQErr serverCtx $ do
-      query <- parseBody
-      v1QueryHandler query
+      post "v1/query" $ mkSpockAction encodeQErr id serverCtx $
+        mkPostHandler $ mkAPIRespHandler v1QueryHandler
 
-    post "v1alpha1/graphql/explain" $ mkSpockAction encodeQErr serverCtx $ do
-      expQuery <- parseBody
-      gqlExplainHandler expQuery
+      post ("api/1/table" <//> var <//> var) $ \tableName queryType ->
+        mkSpockAction encodeQErr id serverCtx $ mkPostHandler $
+          mkAPIRespHandler $ legacyQueryHandler (TableName tableName) queryType
 
-    post "v1alpha1/graphql" $ mkSpockAction GH.encodeGQErr serverCtx $ do
-      query <- parseBody
-      v1Alpha1GQHandler query
+    when enablePGDump $
+      post "v1alpha1/pg_dump" $ mkSpockAction encodeQErr id serverCtx $
+        mkPostHandler v1Alpha1PGDumpHandler
 
-    -- get "v1alpha1/graphql/schema" $
-    --   mkSpockAction encodeQErr serverCtx v1Alpha1GQSchemaHandler
+    when enableConfig $
+      get "v1alpha1/config" $ mkSpockAction encodeQErr id serverCtx $
+        mkGetHandler $ do
+          onlyAdmin
+          let res = encJFromJValue $ runGetConfig (scAuthMode serverCtx)
+          return $ JSONResp $ HttpResponse res Nothing
 
-    post ("api/1/table" <//> var <//> var) $ \tableName queryType ->
-      mkSpockAction encodeQErr serverCtx $
-      legacyQueryHandler (TableName tableName) queryType
+    when enableGraphQL $ do
+      post "v1alpha1/graphql/explain" gqlExplainAction
 
-    hookAny GET $ \_ -> do
+      post "v1alpha1/graphql" $ mkSpockAction GH.encodeGQErr id serverCtx $
+        mkPostHandler $ mkAPIRespHandler v1Alpha1GQHandler
+
+      post "v1/graphql/explain" gqlExplainAction
+
+      post "v1/graphql" $ mkSpockAction GH.encodeGQErr allMod200 serverCtx $
+        mkPostHandler $ mkAPIRespHandler v1GQHandler
+
+    when (isDeveloperAPIEnabled serverCtx) $ do
+      get "dev/ekg" $ mkSpockAction encodeQErr id serverCtx $
+        mkGetHandler $ do
+          onlyAdmin
+          respJ <- liftIO $ EKG.sampleAll $ scEkgStore serverCtx
+          return $ JSONResp $ HttpResponse (encJFromJValue $ EKG.sampleToJson respJ) Nothing
+      get "dev/plan_cache" $ mkSpockAction encodeQErr id serverCtx $
+        mkGetHandler $ do
+          onlyAdmin
+          respJ <- liftIO $ E.dumpPlanCache $ scPlanCache serverCtx
+          return $ JSONResp $ HttpResponse (encJFromJValue respJ) Nothing
+      get "dev/subscriptions" $ mkSpockAction encodeQErr id serverCtx $
+        mkGetHandler $ do
+          onlyAdmin
+          respJ <- liftIO $ EL.dumpLiveQueriesState False $ scLQState serverCtx
+          return $ JSONResp $ HttpResponse (encJFromJValue respJ) Nothing
+      get "dev/subscriptions/extended" $ mkSpockAction encodeQErr id serverCtx $
+        mkGetHandler $ do
+          onlyAdmin
+          respJ <- liftIO $ EL.dumpLiveQueriesState True $ scLQState serverCtx
+          return $ JSONResp $ HttpResponse (encJFromJValue respJ) Nothing
+
+    forM_ [GET,POST] $ \m -> hookAny m $ \_ -> do
       let qErr = err404 NotFound "resource does not exist"
-      raiseGenericApiError qErr
+      raiseGenericApiError logger qErr
 
   where
-    tmpltGetOrDeleteH tmpltName = do
-      tmpltArgs <- tmpltArgsFromQueryParams
-      mkSpockAction encodeQErr serverCtx $ mkQTemplateAction tmpltName tmpltArgs
+    logger = scLogger serverCtx
 
-    tmpltPutOrPostH tmpltName = do
-      tmpltArgs <- tmpltArgsFromQueryParams
-      mkSpockAction encodeQErr serverCtx $ do
-        bodyTmpltArgs <- parseBody
-        mkQTemplateAction tmpltName $ M.union bodyTmpltArgs tmpltArgs
+    -- all graphql errors should be of type 200
+    allMod200 qe = qe { qeStatus = N.status200 }
 
-    tmpltArgsFromQueryParams = do
-      qparams <- params
-      return $ M.fromList $ flip map qparams $
-        TemplateParam *** String
+    gqlExplainAction =
+      mkSpockAction encodeQErr id serverCtx $ mkPostHandler $
+        mkAPIRespHandler gqlExplainHandler
 
-    mkQTemplateAction tmpltName tmpltArgs =
-      v1QueryHandler $ RQExecuteQueryTemplate $
-      ExecQueryTemplate (TQueryName tmpltName) tmpltArgs
-
-    raiseGenericApiError qErr = do
-      req <- request
-      reqBody <- liftIO $ strictRequestBody req
-      logError Nothing req reqBody serverCtx qErr
-      uncurry setHeader jsonHeader
-      setStatus $ qeStatus qErr
-      lazyBytes $ encode qErr
+    enableGraphQL = isGraphQLEnabled serverCtx
+    enableMetadata = isMetadataEnabled serverCtx
+    enablePGDump = isPGDumpEnabled serverCtx
+    enableConfig = isConfigEnabled serverCtx
 
     serveApiConsole = do
+      -- redirect / to /console
       get root $ redirect "console"
-      get ("console" <//> wildcard) $ \path ->
-        either (raiseGenericApiError . err500 Unexpected . T.pack) html $
-          mkConsoleHTML path $ scAuthMode serverCtx
 
-#ifdef LocalConsole
-      get "static/main.js" $ do
-        setHeader "Content-Type" "text/javascript;charset=UTF-8"
-        bytes $(FE.embedFile "../console/static/dist/main.js")
-      get "static/main.css" $ do
-        setHeader "Content-Type" "text/css;charset=UTF-8"
-        bytes $(FE.embedFile "../console/static/dist/main.css")
-      get "static/vendor.js" $ do
-        setHeader "Content-Type" "text/javascript;charset=UTF-8"
-        bytes $(FE.embedFile "../console/static/dist/vendor.js")
-#endif
+      -- serve static files if consoleAssetsDir is set
+      onJust consoleAssetsDir $ \dir ->
+        get ("console/assets" <//> wildcard) $ \path ->
+          consoleAssetsHandler logger dir (T.unpack path)
+
+      -- serve console html
+      get ("console" <//> wildcard) $ \path ->
+        either (raiseGenericApiError logger . err500 Unexpected . T.pack) html $
+        mkConsoleHTML path (scAuthMode serverCtx) enableTelemetry consoleAssetsDir
+
+raiseGenericApiError :: L.Logger -> QErr -> ActionT IO ()
+raiseGenericApiError logger qErr = do
+  req <- request
+  reqBody <- liftIO $ strictRequestBody req
+  let reqTxt = toJSON $ String $ bsToTxt $ BL.toStrict reqBody
+  reqId <- getRequestId $ requestHeaders req
+  logError logger Nothing reqId req (Just reqTxt) qErr
+  uncurry setHeader jsonHeader
+  setStatus $ qeStatus qErr
+  lazyBytes $ encode qErr

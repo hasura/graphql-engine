@@ -6,7 +6,21 @@ Event trigger samples
   :depth: 1
   :local:
 
-Here are a few sample apps built using Hasura event triggers:
+
+Boilerplates
+^^^^^^^^^^^^
+
+Here are few boilerplates you can use to build and deploy event triggers on different cloud providers:
+
+* Source code: https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers
+
+There are 2 types of boilerplates:
+
+**Echo**
+Returns the event payload with some augmented data. Helps you in understanding the event payload and parsing it.
+
+**Mutation**
+Makes a mutation based on the event payload. Helps in understanding database access in event trigger.
 
 Push Notifications
 ^^^^^^^^^^^^^^^^^^
@@ -15,7 +29,7 @@ Here's a `notification demo app <https://serverless-push.demo.hasura.app/>`_ sho
 notifications using Hasura event triggers and FCM.
 
 * Video: https://www.youtube.com/watch?v=nuSHkzE2-zo&feature=youtu.be
-* Source code: https://github.com/hasura/graphql-engine/tree/master/community/examples/serverless-push
+* Source code: https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/serverless-push
 
 Data Transformations (ETL)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -23,4 +37,4 @@ Here's a `serverless ETL demo app <https://serverless-etl.demo.hasura.app/>`_ bu
 Algolia search.
 
 * Video: https://youtu.be/kWVEBWdEVAA
-* Source code: https://github.com/hasura/graphql-engine/tree/master/community/examples/serverless-etl
+* Source code: https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/serverless-etl

@@ -4,8 +4,6 @@ const hasuraConfig = require('../hasuraconfig');
 const host = hasuraConfig.appHost;
 const port = hasuraConfig.port[process.env.NODE_ENV || 'development'];
 
-// require('babel-polyfill');
-
 const environment = {
   development: {
     isProduction: false,

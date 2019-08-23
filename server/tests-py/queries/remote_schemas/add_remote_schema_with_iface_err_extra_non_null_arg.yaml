@@ -1,0 +1,16 @@
+description: Add a remote schema with a field of object implementing the interface having an extra non-null arg
+url: /v1/query
+status: 400
+response:
+  path: $.args
+  error: |-
+    Object field argument 'Droid'."id"("extraArg":) is of required type Int!, but is not provided by Interface field 'Character'."id"
+  code: remote-schema-error
+query:
+  type: add_remote_schema
+  args:
+    name: err-unknown-types
+    definition:
+      url: http://localhost:5000/iface-graphql-err-extra-non-null-arg
+      headers: []
+      forward_client_headers: true

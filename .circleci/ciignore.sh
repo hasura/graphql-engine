@@ -10,8 +10,8 @@
 set -eo pipefail
 ROOT="$(readlink -f ${BASH_SOURCE[0]%/*}/../)"
 
-# succeed until the script is fixed: https://github.com/hasura/graphql-engine/issues/1161
-exit
+# make build directory
+mkdir -p /build/ciignore
 
 # always build tagged builds
 if [[ ! -z "$CIRCLE_TAG" ]]; then
@@ -19,9 +19,9 @@ if [[ ! -z "$CIRCLE_TAG" ]]; then
     exit
 fi
 
-# always build default branch
-if [[ "$CIRCLE_BRANCH" == "master" ]]; then
-    echo "Skipping check for master branch"
+# always build release branch
+if [[ "$CIRCLE_BRANCH" = "release-"* ]]; then
+    echo "Skipping check for release branch"
     exit
 fi
 
@@ -30,8 +30,7 @@ if [[ ! -a "$ROOT/.ciignore" ]]; then
 	  exit # If .ciignore doesn't exists, just quit this script
 fi
 
-# Check CIRCLE_COMPARE_URL first and if its not set, check for diff with master.
-    
+# get the diff
 if [[ ! -z "$CIRCLE_COMPARE_URL" ]]; then
     # CIRCLE_COMPARE_URL is not empty, use it to get the diff
     if [[ $CIRCLE_COMPARE_URL = *"commit"* ]]; then
@@ -41,8 +40,12 @@ if [[ ! -z "$CIRCLE_COMPARE_URL" ]]; then
     fi
     echo "Diff: $COMMIT_RANGE"
     changes="$(git diff $COMMIT_RANGE --name-only)"
+elif [[ "$CIRCLE_BRANCH" == "master" ]]; then
+    # CIRCLE_COMPARE_URL is not set, but branch is master, diff with last commit
+    echo "Diff: HEAD~1"
+    changes="$(git diff HEAD~1 --name-only)"
 else
-    # CIRCLE_COMPARE_URL is not set, diff with origin/master
+    # CIRCLE_COMPARE_URL is not set, branch is not master, diff with origin/master
     echo "Diff: origin/master..HEAD"
     changes="$(git diff-tree --no-commit-id --name-only -r origin/master..HEAD)"
 fi
@@ -72,5 +75,6 @@ if [[ ${#changes[@]} -gt 0 ]]; then
 	  exit
 fi
 
-echo "Only ignored files are present in commits, no need to build, fail the job"
-exit 1
+echo "Only ignored files are present in commits, build is not required, write the skip_job file"
+echo "true" > /build/ciignore/skip_job.txt
+exit

@@ -1,0 +1,1351 @@
+@import url('https://fonts.googleapis.com/css?family=Raleway:300,400,600,700,800');
+@import url('https://fonts.googleapis.com/css?family=Open+Sans:300,400,600');
+@import url('https://fonts.googleapis.com/css?family=Roboto:400,500,600,700');
+body
+{
+  font-size: 16px;
+  font-family: 'Roboto'
+}
+.carousel-indicators .active
+{
+  background-color: #250687 !important;
+}
+.wd100
+{
+  width: 100%;
+  float: left;
+}
+.noPadd
+{
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+.mb-20
+{
+  margin-bottom: 20px;
+}
+.boxShadow
+{
+  -webkit-box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.3);
+  -moz-box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.3);
+  box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.3);
+}
+.blueBgColor
+{
+  background-color: #372476;
+}
+.yellowBgColor
+{
+  background-color: #fdecda;
+}
+.darkGrayBgColor
+{
+  background-color: #222;
+}
+.lightGrayBgColor
+{
+  background-color: #f7f7f7;
+}
+.whiteBgColor
+{
+  background-color: #fff;
+}
+.gradientBgColor
+{
+  background-color: #372476;
+  /* Safari 4-5, Chrome 1-9 */
+  background: linear-gradient(#372476, #3b173b);
+  background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#372476), to(#3b173b));
+  /* Safari 5.1, Chrome 10+ */
+  background: -webkit-linear-gradient(top, #372476, #3b173b);
+  /* Firefox 3.6+ */
+  background: -moz-linear-gradient(top, #372476, #3b173b);
+  /* IE 10 */
+  background: -ms-linear-gradient(top, #372476, #3b173b);
+  /* Opera 11.10+ */
+  background: -o-linear-gradient(top, #372476, #3b173b);
+}
+.commonSectionWrapper
+{
+  padding: 70px 0;
+}
+.noClick {
+  pointer-events: none;
+}
+.pageHeader
+{
+  font-family: 'Raleway';
+  font-size: 40px;
+  color: #7a4fa1;
+  line-height: normal;
+  font-weight: 600;
+}
+.sectionHeader
+{
+  font-family: 'Raleway';
+  font-size: 28px;
+  color: #2b0785;
+  line-height: 1.4;
+  font-weight: 600;
+}
+.sectionSubHeader
+{
+  font-family: 'Raleway';
+  font-size: 22px;
+  color: #7a4fa1;
+  line-height: 1.4;
+  font-weight: 400;
+}
+.sectionDescription
+{
+  font-family: 'Roboto';
+  font-size: 16px;
+  color: #7a4fa1;
+  font-weight: 300;
+  color: #505050;
+}
+ul
+{
+  padding-inline-start: 0px;
+}
+.sectionDescriptionSmall
+{
+  font-family: 'Roboto';
+  font-size: 14px;
+  color: #7a4fa1;
+  font-weight: 300;
+  color: #8a8a8a;
+}
+.displayFlex
+{
+  display: flex;
+  align-items: center;
+}
+.whiteLineSeperator
+{
+  width: 16px;
+  height: 4px;
+  background-color: #fff;
+  margin-bottom: 20px;
+}
+.purpleLineSeperator
+{
+  width: 16px;
+  height: 4px;
+  background-color: #2b0785;
+  margin-bottom: 20px;
+}
+.commonBtn
+{
+  padding-top: 10px;
+  button
+  {
+    background-color: #542683;
+    color: #fff;
+    width: 260px;
+    padding-left: 10px;
+    height: 50px;
+    border: 1px solid #542683;
+    position: relative;
+    text-align: left;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    font-family: 'raleway';
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.6px;
+    img
+    {
+      display: inline-block;
+      margin-left: 20px;
+      width: 16px;
+      position: absolute;
+      right: 10px;
+      top: 19px;
+    }
+  }
+  button:hover
+  {
+    // border: 1px solid #ff724b;
+    background-color: #471f75;
+  }
+  button:focus
+  {
+    outline: none;
+  }
+}
+.gradientBtn
+{
+  text-align: center;
+  button
+  {
+    border: 1px solid #ff724b;
+    padding: 10px 30px;
+    border-radius: 5px;
+    font-size: 14px;
+    color: #ff724b;
+    background-color: #fff;
+    font-family: 'raleway';
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.6px;
+  }
+  button:hover
+  {
+    background-color: #f8f8f8;
+  }
+  button:focus
+  {
+    outline: none;
+  }
+}
+.notifyHeader
+{
+  font-weight: 600;
+  margin-top: 30px;
+}
+.notifyWrapper input {
+  width: 63%;
+  border: 0;
+  border-bottom: 2px solid #fff;
+  height: 45px;
+  background-color: transparent;
+  color: #fff;
+  opacity: 0.6;
+}
+.notifyWrapper button {
+    border-radius: 25px;
+    background-color: transparent;
+    padding: 10px 15px;
+    border: 0;
+    width: 32%;
+    color: #fff;
+    font-family: 'Raleway';
+    font-size: 12px;
+    font-weight: 600;
+    height: 45px;
+    letter-spacing: 2px;
+    margin-left: 4%;
+    border: 2px solid #fff;
+}
+.notifyWrapper button:hover {
+  background-color: #fff;
+  color: #2b0785;
+}
+.notifyWrapper button:focus, .notifyWrapper input:focus {
+  outline: none;
+}
+.upArrow
+{
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid #fff;
+  display: none;
+}
+.subscribe_form {
+  input {
+    background-color: #353535;
+    color: #7F7F7F;
+    width: 60%;
+    border: 0;
+    border-radius: 5px;
+    height: 40px;
+    padding-left: 10px;
+    font-size: 14px;
+    position: relative;
+    display: inline-block;
+  }
+  input:focus
+  {
+    outline: none;
+  }
+  button {
+    display: inline-block;
+    width: 30%;
+    margin-left: 2%;
+    text-align: center;
+    line-height: 32px;
+    height: 40px;
+    font-size: 14px;
+    font-family: 'Raleway';
+    font-weight: 600;
+    -webkit-letter-spacing: 1px;
+    -moz-letter-spacing: 1px;
+    -ms-letter-spacing: 1px;
+    letter-spacing: 1px;
+    border: 1px solid #FFCA27;
+    border-radius: 5px;
+    background-color: #4767a1 !important;
+    border-color: #4767a1 !important;
+    color: #fff !important;
+    &:hover
+    {
+      background-color: #3b5f93 !important;
+      border-color: #3b5f93 !important;
+    }
+    &:focus
+    {
+      outline: none;
+    }
+  }
+}
+.headerWrapper
+{
+  padding: 30px 0;
+  padding-bottom: 0;
+  .navbarDefault
+  {
+    background-color: transparent;
+    border: 0;
+    margin-bottom: -1px;
+    .navbarHeader
+    {
+      flex: 1;
+      .navbarToggle
+      {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+      }
+    }
+
+  }
+  .logoWrapper
+  {
+    display: inline-block;
+    flex: 1;
+    img
+    {
+      width: 140px;
+      display: inline-block;
+    }
+  }
+  .navBarWrapper
+  {
+    li
+    {
+      padding: 10px 20px;
+      position: relative;
+      .upArrow
+      {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: -2px;
+      }
+      a
+      {
+        font-family: 'Raleway';
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        padding: 0;
+        color: #ffffff !important;
+        opacity: 0.5;
+        &:hover
+        {
+          background-color: transparent !important;
+          opacity: 1;
+          outline: none;
+          color: #ffffff !important;
+        }
+        &:focus
+        {
+          background-color: transparent;
+          outline: none;
+        }
+      }
+      .dropdownMenu
+      {
+        width: 460px;
+        border-radius: 2px;
+        top: 42px;
+        padding: 15px 10px;
+        border: 0 !important;
+        .dropdownMenuBgImg
+        {
+          position: absolute;
+          left: 0;
+          top: 0;
+          height: 100%;
+          overflow: hidden;
+          img
+          {
+            height: 100%;
+          }
+        }
+        .menuTitle
+        {
+          font-family: 'Roboto';
+          font-size: 24px;
+          font-weight: bold;
+          color: #2b0785;
+          line-height: 1.17;
+          padding-bottom: 15px;
+        }
+        .dropdownUl
+        {
+          a
+          {
+            li
+            {
+              padding: 13px 0;
+              padding-left: 35px;
+              border-bottom: 1px solid #ededed;
+            }
+          }
+          li
+          {
+            padding: 13px 0;
+            border-bottom: 1px solid #ededed;
+            list-style-type: none;
+            padding-left: 35px;
+            color: #2b0785;
+            cursor: pointer;
+            background-repeat: no-repeat;
+            background-size: 21px 21px;
+            background-position: left;
+            a
+            {
+              color: #2b0785;
+              opacity: 1;
+            }
+            .circle
+            {
+              width: 5px;
+              height: 5px;
+              background-color: #909090;
+              border-radius: 50%;
+              margin: 0 5px;
+            }
+            span
+            {
+              font-size: 10px;
+              color: #909090;
+              text-transform: inherit;
+            }
+          }
+          a:hover
+          {
+            color: #505050;
+            font-weight: 500;
+            text-decoration: none;
+          }
+          li:hover
+          {
+            color: #505050;
+            font-weight: 700;
+            a
+            {
+              color: #505050 !important;
+              font-weight: 700;
+            }
+          }
+          .comingSoonHover, .comingSoonHover:hover
+          {
+            color: #909090 !important;
+            font-weight: normal;
+            // cursor: not-allowed;
+            pointer-events: none;
+            opacity: 0.5 !important;
+            span
+            {
+              color: #909090 !important;
+              font-weight: normal;
+
+            }
+          }
+        }
+      }
+    }
+    .open
+    {
+      a {
+        opacity: 1 !important;
+      }
+      .upArrow
+      {
+        display: block;
+      }
+    }
+
+    .active
+    {
+      a, span
+      {
+        background-color: transparent;
+        opacity: 1;
+        border-bottom: 1px solid #fff;
+        color: #fff;
+        &:hover
+        {
+          background-color: transparent;
+          color: #ffffff;
+        }
+      }
+    }
+  }
+}
+.reactBg
+{
+  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/react-purple.svg');
+  &:hover
+  {
+    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/react-original.svg');
+  }
+}
+.vueBg
+{
+  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/vue-purple.svg');
+  &:hover
+  {
+    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/vue-original.svg');
+  }
+}
+.angularBg
+{
+  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/angular-purple.svg');
+  &:hover
+  {
+    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/angular-original.svg');
+  }
+}
+.elmBg
+{
+  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/elm-purple.svg');
+  &:hover
+  {
+    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/elm-original.jpg');
+  }
+}
+.reBg
+{
+  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/reasonml-purple.svg');
+  &:hover
+  {
+    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/reasonml-original.svg');
+  }
+}
+.hasuraBg
+{
+  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/hasura-purple.svg');
+  &:hover
+  {
+    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/hasura-original.svg');
+  }
+}
+.postgresBg
+{
+  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/postgres-purple.svg');
+  &:hover
+  {
+    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/postgres-original.svg');
+  }
+}
+.iosBg
+{
+  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/ios-purple.svg');
+  &:hover
+  {
+    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/ios-original.png');
+  }
+}
+.androidBg
+{
+  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/android-purple.svg');
+  &:hover
+  {
+    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/android-original.svg');
+  }
+}
+.flutterBg
+{
+  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/flutter-purple.svg');
+  &:hover
+  {
+    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/flutter-original.svg');
+  }
+}
+.reactDisableBg
+{
+  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/react-disable.svg');
+}
+.vueDisableBg
+{
+  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/vue-disable.svg');
+}
+.angularDisableBg
+{
+  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/angular-disable.svg');
+}
+.elmDisableBg
+{
+  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/elm-disable.svg');
+}
+.reDisableBg
+{
+  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/reasonml-disable.svg');
+}
+.hasuraDisableBg
+{
+  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/hasura-disable.svg');
+}
+.postgresDisableBg
+{
+  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/postgres-disable.svg');
+}
+.iosDisableBg
+{
+  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/ios-disable.svg');
+}
+.androidDisableBg
+{
+  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/android-disable.svg');
+}
+.flutterDisableBg
+{
+  background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/flutter-disable.svg');
+}
+.navbar-default .navbar-nav>.open>a, .navbar-default .navbar-nav>.open>a:focus, .navbar-default .navbar-nav>.open>a:hover
+{
+  background-color: transparent !important;
+  color: #fff !important;
+}
+.navbar-default .navbar-toggle:focus, .navbar-default .navbar-toggle:hover
+{
+  background-color: transparent !important;
+}
+.flexBoxWrapper
+{
+  display: flex;
+  list-style: none;
+  flex-wrap: wrap;
+  clear: both;
+  .flexContainer
+  {
+    display: flex;
+    .flexList
+    {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      .flexAlign
+      {
+        flex: 1 0 auto;
+      }
+    }
+  }
+}
+.topBannerWrapper
+{
+  display: flex;
+  align-items: center;
+  .pageHeader
+  {
+    color: #fff;
+    padding-bottom: 20px;
+  }
+  .sectionHeader
+  {
+    color: #fff;
+    padding-bottom: 20px;
+  }
+  .sectionDescription
+  {
+    color: #fff;
+    width: 90%;
+    letter-spacing: 1px;
+    padding-bottom: 20px;
+    a {
+      text-decoration: none
+    }
+  }
+  .topBannerImg
+  {
+    text-align: center;
+    img
+    {
+      width: 100%;
+      display: inline-block;
+    }
+  }
+}
+.footerWrapper
+{
+  padding: 20px 0px;
+  .socialWrapper
+  {
+    text-align: center;
+    .socialIcon
+    {
+      display: inline-block;
+      padding: 0px 10px;
+      img
+      {
+        width: 50px;
+        display: inline-block;
+        opacity: 0.7;
+      }
+      img:hover
+      {
+        opacity: 1;
+      }
+    }
+  }
+  .sectionDescription
+  {
+    text-align: center;
+    padding-bottom: 15px;
+    color: #fff;
+    i
+    {
+      color: #f93c18;
+    }
+    a
+    {
+      color: #fff;
+    }
+    a:hover
+    {
+      color: #f93c18;
+    }
+  }
+  .sectionDescriptionSmall
+  {
+    padding-top: 20px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 400;
+    text-align: center;
+  }
+}
+
+/* Tutorial section */
+.tutorialWrapper
+{
+  .sectionHeader
+  {
+    padding-bottom: 40px;
+  }
+  .tutorailsHeaderWrapper
+  {
+    background-color: #fff;
+    height: 60px;
+    width: calc(100% - 8px);
+    display: flex;
+    align-items: center;
+    padding: 15px 0;
+    position: relative;
+    margin-bottom: 8px;
+    .tutorialBgImg
+    {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+    .tutorialHeader
+    {
+      padding: 0 25px;
+      font-family: 'Roboto';
+      font-size: 20px;
+      font-weight: 500;
+      color: #2b0785;
+      span
+      {
+        font-size: 16px;
+        font-weight: 400;
+      }
+    }
+  }
+  .tutorialListWrapper
+  {
+    text-align: left;
+    .disabledList
+    {
+      cursor: not-allowed;
+    }
+    .listTutorial, .disabledList
+    {
+      width: calc(33.33% - 8px);
+      background-color: #fff;
+      border-radius: 2px;
+      display: inline-block;
+      margin-bottom: 8px;
+      padding: 15px 20px;
+      text-align: center;
+      margin-right: 8px;
+      border-radius: 2px;
+      background-repeat: no-repeat;
+      background-size: 70px 70px;
+      background-position: center;
+      transition: all .2s ease-out;
+      &:hover
+      {
+        transition: all .2s ease-out;
+      }
+      .tutorialIconWrapper
+      {
+        min-height: 70px;
+        position: relative;
+        img
+        {
+          max-height: 50px;
+          min-height: 50px;
+          display: inline-block;
+          flex: 1;
+        }
+        .comingSoon
+        {
+          font-size: 10px;
+          color: #909090;
+          position: absolute;
+          left: 50%;
+          bottom: -10px;
+          transform: translateX(-50%);
+          padding-top: 5px;
+          width: 60px;
+        }
+      }
+    }
+    .listTutorial:hover
+    {
+      box-shadow: 0 3px 10px 0 rgba(0, 0, 0, 0.16);
+    }
+  }
+}
+/* What will learn section */
+.willLearnWrapper
+{
+  .sectionHeader
+  {
+    padding-bottom: 20px;
+  }
+  .sectionDescription
+  {
+    width: 50%;
+    padding-bottom: 40px;
+  }
+  .willLearnTutorial
+  {
+    .willLearnList
+    {
+      border-radius: 2px;
+      box-shadow: 0 3px 10px 0 rgba(0, 0, 0, 0.16);
+      background-color: #ffffff;
+      padding-bottom: 10px;
+      .willLearnHeader
+      {
+        border-radius: 2px;
+        height: 60px;
+        box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.16);
+        background-color: #ffffff;
+        margin-bottom: 8px;
+        font-family: 'Roboto';
+        font-size: 20px;
+        font-weight: 500;
+        padding: 0 24px;
+        display: flex;
+        align-items: center;
+        color: #2b0785;
+        span
+        {
+          font-size: 16px;
+          font-weight: 400;
+          margin-left: 6px;
+        }
+      }
+      .listWrapper
+      {
+        display: flex;
+        padding: 10px 0;
+        .tick
+        {
+          padding-right: 8px;
+          img
+          {
+            width: 20px;
+          }
+        }
+        .sectionDescription
+        {
+          width: 100%;
+          padding-bottom: 0;
+        }
+
+      }
+    }
+  }
+}
+/* Footer section update */
+.footer_wrapper
+{
+  width: 100%;
+  float: left;
+  .logo_icon
+  {
+    padding-top: 10px;
+    text-align: left;
+    padding-left: 15px;
+    img
+    {
+      max-width: 120px;
+      display: inline-block;
+    }
+  }
+  .footer_section
+  {
+    .footer_header
+    {
+      font-size: 15px;
+      font-family: 'Raleway';
+      font-weight: 600;
+      letter-spacing: 1px;
+      color: #7D7D7D;
+      padding-bottom: 20px;
+      padding-top: 10px;
+    }
+    .footer_social_wrapper
+    {
+      padding-bottom: 35px;
+      display: flex;
+      align-items: center;
+      .social_icons
+      {
+        display: inline-block;
+        padding-right: 25px;
+				i
+				{
+					font-size: 25px;
+					color: #6A6A6A;
+				}
+				i:hover
+				{
+					color: #fff;
+				}
+        img
+        {
+          width: 30px;
+        }
+        .discordIcon
+        {
+          background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/discord-gray.svg');
+          width: 27px;
+          height: 20px;
+          background-repeat: no-repeat;
+        }
+        .discordIcon:hover
+        {
+          background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/discord-white.svg');
+        }
+      }
+    }
+    .footer_email
+    {
+      position: relative;
+      .email_input
+      {
+        background-color: #353535;
+        border: 0;
+        border-radius: 5px;
+        width: 90%;
+        height: 40px;
+        color: #7F7F7F;
+        padding-left: 10px;
+        font-size: 14px;
+        position: relative;
+      }
+      .footer_arrow
+      {
+        position: absolute;
+        top: 5px;
+        right: 10px;
+        width: 30px;
+        cursor: pointer;
+      }
+      .email_input:focus
+      {
+        outline: none;
+      }
+    }
+    .footer_links
+    {
+      font-size: 14px;
+      font-family: 'Open Sans';
+      font-weight: 600;
+      padding-bottom: 15px;
+      color: #CECECE;
+      a
+      {
+        color: #7D7D7D;
+        cursor: pointer;
+      }
+      a:hover, a:focus
+      {
+        color: #fff;
+        text-decoration: none;
+      }
+    }
+  }
+}
+.copy_text
+{
+  padding-top: 50px;
+	text-align: center;
+	color: #FFF;
+  clear: both;
+  font-size: 12px;
+}
+@media (max-width: 767px)
+{
+  .commonSectionWrapper
+  {
+    padding: 30px 0;
+  }
+  .pageHeader
+  {
+    font-size: 30px;
+  }
+  .sectionHeader
+  {
+    font-size: 22px;
+  }
+  .whiteLineSeperator, .purpleLineSeperator
+  {
+    margin: 0 auto;
+    margin-bottom: 20px;
+  }
+  .subscribe_form {
+    button
+    {
+      font-size: 12px;
+    }
+  }
+  .headerWrapper
+  {
+    padding-top: 15px;
+    .navbarDefault
+    {
+      .navbarHeader
+      {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+    }
+    .navBarWrapper
+    {
+      li
+      {
+        padding: 10px 20px;
+        .dropdownMenu
+        {
+          width: 100%;
+          float: left;
+          background-color: #fff;
+          position: relative;
+          top: 10px;
+          .menuTitle
+          {
+            padding-bottom: 0;
+          }
+          .dropdownMenuBgImg
+          {
+            display: none;
+          }
+          .purpleLineSeperator
+          {
+            margin: 20px;
+            margin-left: 0;
+          }
+        }
+      }
+      .active
+      {
+        a
+        {
+          border-bottom: 0;
+        }
+      }
+    }
+    .logoWrapper
+    {
+      text-align: left;
+      padding-left: 15px;
+      img
+      {
+        display: inline-block;
+      }
+    }
+  }
+  .topBannerWrapper
+  {
+    display: block;
+    .pageHeader
+    {
+      text-align: center;
+      padding: 0 15px;
+      padding-bottom: 20px;
+    }
+    .sectionHeader
+    {
+      text-align: center;
+    }
+    .sectionDescription
+    {
+      text-align: center;
+      width: 100%;
+      padding: 0 15px;
+      padding-bottom: 20px;
+    }
+    .commonBtn
+    {
+      text-align: center;
+      display: flex;
+      justify-content: center;
+    }
+    .topBannerImg
+    {
+      padding: 30px 0px;
+      text-align: center;
+      img
+      {
+        width: 70%;
+        display: inline-block;
+      }
+    }
+  }
+  .tutorialWrapper
+  {
+    .sectionHeader
+    {
+      text-align: center;
+      padding-bottom: 0;
+    }
+    .tutorailsHeaderWrapper
+    {
+      margin-top: 30px;
+      .tutorialHeader
+      {
+        font-size: 16px;
+        padding: 0 15px;
+        span
+        {
+          font-size: 12px;
+        }
+      }
+    }
+    .tutorialListWrapper
+    {
+      .listTutorial
+      {
+        padding: 15px 10px;
+        .tutorialIconWrapper
+        {
+          .comingSoon
+          {
+            font-size: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding-top: 5px;
+            width: 60px;
+          }
+        }
+      }
+    }
+  }
+  .willLearnWrapper
+  {
+    .sectionHeader
+    {
+      text-align: center;
+    }
+    .sectionDescription
+    {
+      width: 100%;
+      text-align: left;
+      padding-bottom: 0;
+    }
+    .willLearnTutorial
+    {
+      .willLearnList
+      {
+        margin-top: 30px;
+        .willLearnHeader
+        {
+          font-size: 16px;
+          padding: 0 15px;
+          span
+          {
+            font-size: 12px;
+          }
+        }
+      }
+    }
+  }
+  .notifyWrapper
+  {
+    text-align: center;
+    input
+    {
+      width: 100%;
+      display: block;
+      margin-bottom: 20px;
+    }
+    button
+    {
+      width: auto;
+      padding: 10px 25px;
+    }
+  }
+  .footer_wrapper
+  {
+    .logo_icon
+    {
+      padding-top: 0;
+      text-align: center;
+      padding-left: 0;
+    }
+    .footer_section
+    {
+      padding-top: 15px;
+      text-align: center;
+      .footer_header
+      {
+        padding-bottom: 10px;
+        text-align: center;
+      }
+      .footer_links
+      {
+        padding-bottom: 10px;
+        text-align: center;
+      }
+      .footer_social_wrapper
+      {
+        padding-bottom: 25px;
+        justify-content: center;
+        .social_icons
+        {
+          padding-right: 10px;
+        }
+      }
+      .footer_email
+      {
+        .footer_arrow
+        {
+          right: 20px;
+        }
+      }
+    }
+  }
+  .copy_text
+  {
+    padding-top: 30px;
+  }
+}
+@media (min-width: 768px) and (max-width: 991px)
+{
+  .tutorialWrapper
+  {
+    .sectionHeader
+    {
+      padding-bottom: 0;
+    }
+    .tutorailsHeaderWrapper
+    {
+      margin-top: 30px;
+    }
+    .tutorialListWrapper
+    {
+      .listTutorial
+      {
+        .tutorialIconWrapper
+        {
+          .comingSoon
+          {
+            font-size: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding-top: 5px;
+            width: 60px;
+          }
+        }
+      }
+    }
+  }
+  .willLearnWrapper
+  {
+    .sectionHeader
+    {
+      text-align: left;
+    }
+    .sectionDescription
+    {
+      width: 75%;
+      text-align: left;
+      padding-bottom: 0;
+    }
+    .willLearnTutorial
+    {
+      .willLearnList
+      {
+        margin-top: 30px;
+        .listWrapper
+        {
+          .sectionDescription
+          {
+            text-align: left;
+          }
+        }
+      }
+    }
+  }
+  .footer_wrapper
+  {
+    .logo_icon
+    {
+      padding-top: 0;
+      text-align: center;
+      padding-left: 0;
+    }
+  }
+
+  .footer_section
+  {
+    padding-top: 20px;
+    text-align: center;
+    .footer_header
+    {
+      padding-bottom: 15px;
+      text-align: center;
+    }
+    .footer_links
+    {
+      padding-bottom: 10px;
+      text-align: center;
+    }
+    .footer_social_wrapper
+    {
+      padding-bottom: 25px;
+      justify-content: center;
+      .social_icons
+      {
+        padding-right: 5px;
+      }
+    }
+    .footer_email
+    {
+      .footer_arrow
+      {
+        right: 20px;
+      }
+    }
+  }
+  .copy_text
+  {
+    padding-top: 30px;
+  }
+}

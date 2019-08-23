@@ -70,11 +70,15 @@ deploy_console() {
     echo "deploying console"
 
     cd "$ROOT/console"
-    export VERSION=$(../scripts/get-version-circleci.sh)
+    export VERSION=$(../scripts/get-console-assets-version.sh)
     export DIST_PATH="/build/_console_output"
-    make gzip-assets
-    make gcloud-cp-stable
-    make gcloud-set-metadata
+    local GS_BUCKET_ROOT="gs://graphql-engine-cdn.hasura.io/console/assets/$VERSION"
+    # assets are at /build/_console_output/assets/versioned, already gzipped
+    gsutil cp "$DIST_PATH/assets/versioned/main.js.gz" "$GS_BUCKET_ROOT/main.js.gz"
+    gsutil cp "$DIST_PATH/assets/versioned/main.css.gz" "$GS_BUCKET_ROOT/main.css.gz"
+    gsutil cp "$DIST_PATH/assets/versioned/vendor.js.gz" "$GS_BUCKET_ROOT/vendor.js.gz"
+    gsutil setmeta -h "Content-Encoding: gzip" "$GS_BUCKET_ROOT/*"
+
     unset VERSION
     unset DIST_PATH
 }
@@ -101,6 +105,12 @@ setup_gcloud() {
     echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
     gcloud auth activate-service-account --key-file=${HOME}/gcloud-service-key.json
     gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
+}
+
+# push the server binary to google cloud storage
+push_server_binary() {
+    gsutil cp /build/_server_output/graphql-engine \
+              gs://graphql-engine-cdn.hasura.io/server/latest/linux-amd64
 }
 
 # skip deploy for pull requests
@@ -134,6 +144,7 @@ deploy_console
 deploy_server
 if [[ ! -z "$CIRCLE_TAG" ]]; then
     deploy_server_latest
+    push_server_binary
     build_and_push_cli_migrations_image
     CHANGELOG_TEXT=$(changelog server)
     CHANGELOG_TEXT+=$(changelog cli)

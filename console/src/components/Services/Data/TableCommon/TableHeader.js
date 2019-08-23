@@ -1,6 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
+import { changeTableOrViewName } from '../TableModify/ModifyActions';
+import EditableHeading from '../../../Common/EditableHeading/EditableHeading';
+import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
+import { tabNameMap } from '../utils';
 
 const TableHeader = ({
   tableName,
@@ -8,56 +12,65 @@ const TableHeader = ({
   count,
   migrationMode,
   currentSchema,
+  dispatch,
 }) => {
-  const styles = require('./Table.scss');
+  const styles = require('../../../Common/TableCommon/Table.scss');
   let capitalised = tabName;
   capitalised = capitalised[0].toUpperCase() + capitalised.slice(1);
   let showCount = '';
   if (!(count === null || count === undefined)) {
     showCount = '(' + count + ')';
   }
-  let activeTab;
-  if (tabName === 'view') {
-    activeTab = 'Browse Rows';
-  } else if (tabName === 'insert') {
-    activeTab = 'Insert Row';
-  } else if (tabName === 'modify') {
-    activeTab = 'Modify';
-  } else if (tabName === 'relationships') {
-    activeTab = 'Relationships';
-  } else if (tabName === 'permissions') {
-    activeTab = 'Permissions';
-  }
+  const activeTab = tabNameMap[tabName];
+
+  const saveTableNameChange = newName => {
+    dispatch(changeTableOrViewName(true, tableName, newName));
+  };
+
+  const getBreadCrumbs = () => {
+    return [
+      {
+        title: 'Data',
+        url: '/data',
+      },
+      {
+        title: 'Schema',
+        url: '/data/schema/',
+      },
+      {
+        title: currentSchema,
+        url: '/data/schema/' + currentSchema,
+      },
+      {
+        title: tableName,
+        url:
+          '/data/schema/' + currentSchema + '/tables/' + tableName + '/browse',
+      },
+      {
+        title: activeTab,
+        url: null,
+      },
+    ];
+  };
+
   return (
     <div>
       <Helmet title={capitalised + ' - ' + tableName + ' - Data | Hasura'} />
       <div className={styles.subHeader}>
-        <div className={styles.dataBreadCrumb}>
-          You are here: <Link to={'/data/schema/' + currentSchema}>Data</Link>{' '}
-          <i className="fa fa-angle-right" aria-hidden="true" />{' '}
-          <Link to={'/data/schema/' + currentSchema}>Schema</Link>{' '}
-          <i className="fa fa-angle-right" aria-hidden="true" />{' '}
-          <Link to={'/data/schema/' + currentSchema}>{currentSchema}</Link>{' '}
-          <i className="fa fa-angle-right" aria-hidden="true" />{' '}
-          <Link
-            to={
-              '/data/schema/' +
-              currentSchema +
-              '/tables/' +
-              tableName +
-              '/browse'
-            }
-          >
-            {tableName}
-          </Link>{' '}
-          <i className="fa fa-angle-right" aria-hidden="true" /> {activeTab}
-        </div>
-        <h2 className={styles.heading_text}>{tableName}</h2>
+        <BreadCrumb breadCrumbs={getBreadCrumbs()} />
+        <EditableHeading
+          currentValue={tableName}
+          save={saveTableNameChange}
+          loading={false}
+          editable={tabName === 'modify'}
+          dispatch={dispatch}
+          property="table"
+        />
         <div className={styles.nav}>
           <ul className="nav nav-pills">
             <li
               role="presentation"
-              className={tabName === 'view' ? styles.active : ''}
+              className={tabName === 'browse' ? styles.active : ''}
             >
               <Link
                 to={
@@ -140,19 +153,6 @@ const TableHeader = ({
                 data-test="table-permissions"
               >
                 Permissions
-              </Link>
-            </li>
-            <li role="presentation" className={'hide'}>
-              <Link
-                to={
-                  '/data/schema/' +
-                  currentSchema +
-                  '/tables/' +
-                  tableName +
-                  '/permissions'
-                }
-              >
-                <button className="btn btn-xs btn-warning">Try out APIs</button>
               </Link>
             </li>
           </ul>

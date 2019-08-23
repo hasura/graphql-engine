@@ -1,0 +1,16 @@
+description: Add a remote schema with a field of an object not having the argument of the same field in interface
+url: /v1/query
+status: 400
+response:
+  path: $.args
+  error: |-
+    Interface field argument 'Character'."id"("ifaceArg":) required, but Object field 'Droid'."id" does not provide it
+  code: remote-schema-error
+query:
+  type: add_remote_schema
+  args:
+    name: err-missing-arg
+    definition:
+      url: http://localhost:5000/iface-graphql-err-missing-arg
+      headers: []
+      forward_client_headers: true

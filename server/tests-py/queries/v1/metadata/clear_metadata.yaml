@@ -11,7 +11,9 @@
   url: /v1/query
   status: 200
   response:
-    query_templates: []
+    allowlist: []
+    functions: []
+    query_collections: []
     tables: []
     remote_schemas: []
   query:

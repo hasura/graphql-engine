@@ -1,0 +1,64 @@
+<html lang="en-us">
+  <head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-59768903-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-59768903-1');
+    </script>
+    <link rel="icon" type="image/png" href="./favicon.png" />
+    <title>GraphiQL Online with Headers | Built by Hasura</title>
+    <meta name="title" content="GraphiQL Online with Headers | Built by Hasura" />
+    <meta name="description" content="An online version of GraphiQL. Manage headers easily. Test your GraphQL servers" />
+    <script>
+      window.__env = {
+        graphqlEndpoint: 'https://learn.hasura.io/graphql',
+        callbackUrl: 'https://learn.hasura.io/graphql/graphiql/callback',
+        headers: '',
+        variables: '',
+        query: ''
+      };
+    </script>
+  </head>
+  <body>
+    <style>
+    .mainContent {
+      display: 'none';
+      opacity: 0;
+      transition: opacity .20s linear;
+    }
+    .mainContent.show {
+      display: 'block';
+      opacity: 1;
+      transition: opacity .20s linear;
+    }
+    </style>
+
+    <div id="loading">
+      <div class="page-loading" style="
+      min-height: 100vh;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      font-family: sans-serif;
+      justify-content: center;
+      ">
+        <span class="" style="
+        font-size: 2em;
+        margin-top: -3em;
+        color: #848484;
+        ">
+        Loading...
+      </span>
+      </div>
+    </div>
+    <div id="content" class="mainContent"></div>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
+
+    <link rel="stylesheet" href="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/graphiql/main.css" charset="UTF-8"/>
+    <script src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/graphiql/vendor.js" charset="UTF-8"></script>
+    <script src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/graphiql/main.js" charset="UTF-8"></script>
+
+  </body>
+</html>

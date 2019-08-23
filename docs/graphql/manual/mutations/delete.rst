@@ -6,7 +6,10 @@ Delete mutation
   :depth: 1
   :local:
 
-Here’s the schema for the delete mutation field for a table ``article``:
+Auto-generated delete mutation schema
+-------------------------------------
+
+**For example**, the auto-generated schema for the delete mutation field for a table ``article`` looks like this:
 
 .. code-block:: graphql
 
@@ -26,7 +29,15 @@ As you can see from the schema:
 
 - ``where`` argument is compulsory to filter rows to be deleted. See :doc:`Filter queries <../queries/query-filters>`
   for filtering options. Objects can be deleted based on filters on their own fields or those in their nested objects.
+  The ``{}`` expression can be used to delete all rows.
 - You can return the number of affected rows and the affected objects (with nested objects) in the response.
+
+See the :ref:`delete mutation API reference <delete_syntax>` for the full specifications
+
+.. note::
+
+  If a table is not in the ``public`` Postgres schema, the delete mutation field will be of the format
+  ``delete_<schema_name>_<table_name>``.
 
 Delete based on an object's fields
 ----------------------------------
@@ -71,6 +82,33 @@ Delete based on a nested object's fields
       "data": {
         "delete_authors_articles": {
           "affected_rows": 2
+        }
+      }
+    }
+
+Delete all objects
+------------------
+
+You can delete all objects in a table using the ``{}`` expression as the ``where`` argument. ``{}`` basically
+evaluates to ``true`` for all objects
+
+**Example:** Delete all articles:
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation delete_all_articles {
+      delete_article (
+        where: {}
+      ) {
+        affected_rows
+      }
+    }
+  :response:
+    {
+      "data": {
+        "delete_article": {
+          "affected_rows": 20
         }
       }
     }

@@ -1,0 +1,81 @@
+descriptions: Execute pg_dump on public schema
+url: /v1alpha1/pg_dump
+status: 200
+query:
+  opts:
+  - -O
+  - -x
+  - --schema-only
+  - --schema
+  - public
+  clean_output: true
+# response on postgres 9.4 and 9.5
+response_9: |
+  CREATE TABLE public.articles (
+      id integer NOT NULL,
+      author_id integer NOT NULL,
+      title text NOT NULL,
+      body text NOT NULL
+  );
+  CREATE SEQUENCE public.articles_id_seq
+      START WITH 1
+      INCREMENT BY 1
+      NO MINVALUE
+      NO MAXVALUE
+      CACHE 1;
+  ALTER SEQUENCE public.articles_id_seq OWNED BY public.articles.id;
+  CREATE TABLE public.authors (
+      id integer NOT NULL,
+      name text NOT NULL
+  );
+  CREATE SEQUENCE public.authors_id_seq
+      START WITH 1
+      INCREMENT BY 1
+      NO MINVALUE
+      NO MAXVALUE
+      CACHE 1;
+  ALTER SEQUENCE public.authors_id_seq OWNED BY public.authors.id;
+  ALTER TABLE ONLY public.articles ALTER COLUMN id SET DEFAULT nextval('public.articles_id_seq'::regclass);
+  ALTER TABLE ONLY public.authors ALTER COLUMN id SET DEFAULT nextval('public.authors_id_seq'::regclass);
+  ALTER TABLE ONLY public.articles
+      ADD CONSTRAINT articles_pkey PRIMARY KEY (id);
+  ALTER TABLE ONLY public.authors
+      ADD CONSTRAINT authors_pkey PRIMARY KEY (id);
+  ALTER TABLE ONLY public.articles
+      ADD CONSTRAINT articles_author_id_fkey FOREIGN KEY (author_id) REFERENCES public.authors(id);
+# response on postgres 10 and 11
+response_10_11: |
+  CREATE TABLE public.articles (
+      id integer NOT NULL,
+      author_id integer NOT NULL,
+      title text NOT NULL,
+      body text NOT NULL
+  );
+  CREATE SEQUENCE public.articles_id_seq
+      AS integer
+      START WITH 1
+      INCREMENT BY 1
+      NO MINVALUE
+      NO MAXVALUE
+      CACHE 1;
+  ALTER SEQUENCE public.articles_id_seq OWNED BY public.articles.id;
+  CREATE TABLE public.authors (
+      id integer NOT NULL,
+      name text NOT NULL
+  );
+  CREATE SEQUENCE public.authors_id_seq
+      AS integer
+      START WITH 1
+      INCREMENT BY 1
+      NO MINVALUE
+      NO MAXVALUE
+      CACHE 1;
+  ALTER SEQUENCE public.authors_id_seq OWNED BY public.authors.id;
+  ALTER TABLE ONLY public.articles ALTER COLUMN id SET DEFAULT nextval('public.articles_id_seq'::regclass);
+  ALTER TABLE ONLY public.authors ALTER COLUMN id SET DEFAULT nextval('public.authors_id_seq'::regclass);
+  ALTER TABLE ONLY public.articles
+      ADD CONSTRAINT articles_pkey PRIMARY KEY (id);
+  ALTER TABLE ONLY public.authors
+      ADD CONSTRAINT authors_pkey PRIMARY KEY (id);
+  ALTER TABLE ONLY public.articles
+      ADD CONSTRAINT articles_author_id_fkey FOREIGN KEY (author_id) REFERENCES public.authors(id);

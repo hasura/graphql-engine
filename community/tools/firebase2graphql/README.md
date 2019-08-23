@@ -203,16 +203,16 @@ npm install -g firebase2graphql
 
 ## Usage
 
-**Without access key**
+**Without admin secret**
 
 ```
 firebase2graphql https://hge.herokuapp.com -d ./path/to/db.json
 ```
 
-**With access key**
+**With admin secret**
 
 ```
-firebase2graphql https://hge.herokuapp.com -k <access-key> -d ./path/to/db.json
+firebase2graphql https://hge.herokuapp.com -s <admin-secret> -d ./path/to/db.json
 ```
 
 ## Command

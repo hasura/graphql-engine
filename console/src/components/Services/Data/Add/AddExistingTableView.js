@@ -15,7 +15,7 @@ class AddExistingTableView extends Component {
 
   render() {
     const { dispatch, ongoingRequest, lastError, lastSuccess } = this.props;
-    const styles = require('../TableCommon/Table.scss');
+    const styles = require('../../../Common/TableCommon/Table.scss');
 
     let alert = null;
     if (ongoingRequest) {
@@ -47,7 +47,7 @@ class AddExistingTableView extends Component {
     return (
       <div
         className={
-          'container-fluid ' + styles.main_wrapper + ' ' + styles.padd_top
+          'container-fluid ' + styles.clear_fix + ' ' + styles.padd_top
         }
       >
         <Helmet title="Add Existing Table/View - Data | Hasura" />

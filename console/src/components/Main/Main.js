@@ -4,79 +4,104 @@ import { Link } from 'react-router';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import globals from '../../Globals';
 import * as tooltip from './Tooltips';
-import 'react-toggle/style.css';
 import Spinner from '../Common/Spinner/Spinner';
-import { loadServerVersion, checkServerUpdates } from './Actions';
-import './NotificationOverrides.css';
-import semverCheck from '../../helpers/semver';
-
-const semver = require('semver');
+import {
+  loadServerVersion,
+  fetchServerConfig,
+  loadLatestServerVersion,
+  featureCompatibilityInit,
+} from './Actions';
+import { loadConsoleTelemetryOpts } from '../../telemetry/Actions.js';
+import {
+  loadInconsistentObjects,
+  redirectToMetadataStatus,
+} from '../Services/Metadata/Actions';
 
 import {
   getLoveConsentState,
   setLoveConsentState,
-} from '../Common/localStorageManager';
+} from './loveConsentLocalStorage';
+
+import { versionGT, FT_JWT_ANALYZER } from '../../helpers/versionUtils';
 
 class Main extends React.Component {
   constructor(props) {
     super(props);
+
     this.state = {
-      showBannerNotification: false,
-      showEvents: false,
-      showSchemaStitch: false,
+      showUpdateNotification: false,
+      loveConsentState: getLoveConsentState(),
     };
 
-    this.state.loveConsentState = getLoveConsentState();
     this.handleBodyClick = this.handleBodyClick.bind(this);
   }
+
   componentDidMount() {
     const { dispatch } = this.props;
+
     document
       .querySelector('body')
       .addEventListener('click', this.handleBodyClick);
+
     dispatch(loadServerVersion()).then(() => {
-      dispatch(checkServerUpdates()).then(() => {
-        let isUpdateAvailable = false;
-        try {
-          this.checkEventsTab().then(() => {
-            this.checkSchemaStitch();
-          });
-          isUpdateAvailable = semver.gt(
-            this.props.latestServerVersion,
-            this.props.serverVersion
-          );
-          const isClosedBefore = window.localStorage.getItem(
-            this.props.latestServerVersion + '_BANNER_NOTIFICATION_CLOSED'
-          );
-          if (isClosedBefore === 'true') {
-            isUpdateAvailable = false;
-            this.setState({ showBannerNotification: false });
-          } else {
-            this.setState({ showBannerNotification: isUpdateAvailable });
-          }
-        } catch (e) {
-          console.error(e);
-        }
+      dispatch(featureCompatibilityInit());
+
+      dispatch(loadInconsistentObjects()).then(() => {
+        this.handleMetadataRedirect();
+      });
+
+      dispatch(loadConsoleTelemetryOpts());
+
+      dispatch(loadLatestServerVersion()).then(() => {
+        this.setShowUpdateNotification();
       });
     });
   }
-  checkSchemaStitch() {
-    const showSchemaStitch = semverCheck(
-      'schemaStitching',
-      this.props.serverVersion
-    );
-    if (showSchemaStitch) {
-      this.setState({ ...this.state, showSchemaStitch: true });
+
+  componentWillReceiveProps(nextProps) {
+    const {
+      [FT_JWT_ANALYZER]: currJwtAnalyzerCompatibility,
+    } = this.props.featuresCompatibility;
+    const {
+      [FT_JWT_ANALYZER]: nextJwtAnalyzerCompatibility,
+    } = nextProps.featuresCompatibility;
+
+    if (
+      currJwtAnalyzerCompatibility !== nextJwtAnalyzerCompatibility &&
+      nextJwtAnalyzerCompatibility
+    ) {
+      this.fetchServerConfig();
     }
-    return Promise.resolve();
   }
-  checkEventsTab() {
-    const showEvents = semverCheck('eventsTab', this.props.serverVersion);
-    if (showEvents) {
-      this.setState({ showEvents: true });
+
+  setShowUpdateNotification() {
+    const { latestServerVersion, serverVersion } = this.props;
+
+    try {
+      const isClosedBefore = window.localStorage.getItem(
+        latestServerVersion + '_BANNER_NOTIFICATION_CLOSED'
+      );
+
+      if (isClosedBefore !== 'true') {
+        const isUpdateAvailable = versionGT(latestServerVersion, serverVersion);
+
+        if (isUpdateAvailable) {
+          this.setState({
+            showUpdateNotification: true,
+          });
+        }
+      }
+    } catch (e) {
+      console.error(e);
     }
-    return Promise.resolve();
   }
+
+  fetchServerConfig() {
+    const { dispatch } = this.props;
+
+    dispatch(fetchServerConfig());
+  }
+
   handleBodyClick(e) {
     const heartDropDownOpen = document.querySelectorAll(
       '#dropdown_wrapper.open'
@@ -88,26 +113,34 @@ class Main extends React.Component {
       document.getElementById('dropdown_wrapper').classList.remove('open');
     }
   }
+
   handleDropdownToggle() {
     document.getElementById('dropdown_wrapper').classList.toggle('open');
   }
+
+  handleMetadataRedirect() {
+    if (this.props.metadata.inconsistentObjects.length > 0) {
+      this.props.dispatch(redirectToMetadataStatus());
+    }
+  }
+
   closeLoveIcon() {
     const s = {
       isDismissed: true,
     };
     setLoveConsentState(s);
     this.setState({
-      ...this.state,
       loveConsentState: { ...getLoveConsentState() },
     });
   }
+
   closeUpdateBanner() {
     const { latestServerVersion } = this.props;
     window.localStorage.setItem(
       latestServerVersion + '_BANNER_NOTIFICATION_CLOSED',
       'true'
     );
-    this.setState({ showBannerNotification: false });
+    this.setState({ showUpdateNotification: false });
   }
 
   render() {
@@ -118,56 +151,272 @@ class Main extends React.Component {
       currentSchema,
       serverVersion,
       latestServerVersion,
+      metadata,
     } = this.props;
+
     const styles = require('./Main.scss');
+
     const appPrefix = '';
-    const logo = require('./white-logo.svg');
-    const github = require('./Github.svg');
-    const discord = require('./Discord.svg');
-    const mail = require('./mail.svg');
-    const docs = require('./logo.svg');
-    const pixHeart = require('./pix-heart.svg');
+
+    const logo = require('./images/white-logo.svg');
+    const github = require('./images/Github.svg');
+    const discord = require('./images/Discord.svg');
+    const mail = require('./images/mail.svg');
+    const docs = require('./images/docs-logo.svg');
+    const about = require('./images/console-logo.svg');
+    const pixHeart = require('./images/pix-heart.svg');
+
     const currentLocation = location.pathname;
     const currentActiveBlock = currentLocation.split('/')[1];
 
-    const sidebarClass = styles.sidebar;
+    const getMainContent = () => {
+      let mainContent = null;
 
-    let mainContent = null;
-    if (migrationModeProgress) {
-      mainContent = (
-        <div>
-          {' '}
-          <Spinner />{' '}
+      if (!migrationModeProgress) {
+        mainContent = children && React.cloneElement(children);
+      } else {
+        mainContent = (
+          <div>
+            {' '}
+            <Spinner />{' '}
+          </div>
+        );
+      }
+      return mainContent;
+    };
+
+    const getMetadataSelectedMarker = () => {
+      let metadataSelectedMarker = null;
+
+      if (currentActiveBlock === 'metadata') {
+        metadataSelectedMarker = <span className={styles.selected} />;
+      }
+
+      return metadataSelectedMarker;
+    };
+
+    const getMetadataIcon = () => {
+      if (metadata.inconsistentObjects.length === 0) {
+        return <i className={styles.question + ' fa fa-cog'} />;
+      }
+      return (
+        <div className={styles.question}>
+          <i className={'fa fa-cog'} />
+          <div className={styles.overlappingExclamation}>
+            <div className={styles.iconWhiteBackground} />
+            <div>
+              <i className={'fa fa-exclamation-circle'} />
+            </div>
+          </div>
         </div>
       );
-    } else {
-      mainContent = children && React.cloneElement(children);
-    }
-    let accessKeyHtml = null;
-    if (
-      !globals.isAccessKeySet &&
-      (globals.accessKey === '' || globals.accessKey === null)
-    ) {
-      accessKeyHtml = (
-        <div className={styles.secureSection}>
-          <OverlayTrigger placement="left" overlay={tooltip.secureEndpoint}>
-            <a href="https://docs.hasura.io/1.0/graphql/manual/deployment/securing-graphql-endpoint.html">
-              <i
-                className={
-                  styles.padd_small_right + ' fa fa-exclamation-triangle'
-                }
-              />
-              Secure your endpoint
-            </a>
-          </OverlayTrigger>
-        </div>
-      );
-    }
+    };
+
+    const getAdminSecretSection = () => {
+      let adminSecretHtml = null;
+
+      if (
+        !globals.isAdminSecretSet &&
+        (globals.adminSecret === '' || globals.adminSecret === null)
+      ) {
+        adminSecretHtml = (
+          <div className={styles.secureSection}>
+            <OverlayTrigger placement="left" overlay={tooltip.secureEndpoint}>
+              <a href="https://docs.hasura.io/1.0/graphql/manual/deployment/securing-graphql-endpoint.html">
+                <i
+                  className={
+                    styles.padd_small_right + ' fa fa-exclamation-triangle'
+                  }
+                />
+                Secure your endpoint
+              </a>
+            </OverlayTrigger>
+          </div>
+        );
+      }
+      return adminSecretHtml;
+    };
+
+    const getUpdateNotification = () => {
+      let updateNotificationHtml = null;
+
+      if (this.state.showUpdateNotification) {
+        updateNotificationHtml = (
+          <div>
+            <div className={styles.phantom} />{' '}
+            {/* phantom div to prevent overlapping of banner with content. */}
+            <div className={styles.updateBannerWrapper}>
+              <div className={styles.updateBanner}>
+                <span> Hey there! A new server version </span>
+                <span className={styles.versionUpdateText}>
+                  {' '}
+                  {latestServerVersion}
+                </span>
+                <span> is available </span>
+                <span className={styles.middot}> &middot; </span>
+                <a
+                  href={
+                    'https://github.com/hasura/graphql-engine/releases/tag/' +
+                    latestServerVersion
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <span>View Changelog</span>
+                </a>
+                <span className={styles.middot}> &middot; </span>
+                <a
+                  className={styles.updateLink}
+                  href="https://docs.hasura.io/1.0/graphql/manual/deployment/updating.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <span>Update Now</span>
+                </a>
+                <span
+                  className={styles.updateBannerClose}
+                  onClick={this.closeUpdateBanner.bind(this)}
+                >
+                  <i className={'fa fa-times'} />
+                </span>
+              </div>
+            </div>
+          </div>
+        );
+      }
+      return updateNotificationHtml;
+    };
+
+    const getLoveSection = () => {
+      let loveSectionHtml = null;
+
+      if (!this.state.loveConsentState.isDismissed) {
+        loveSectionHtml = [
+          <div
+            key="main_love_1"
+            className={styles.shareSection + ' dropdown-toggle'}
+            aria-expanded="false"
+            onClick={this.handleDropdownToggle.bind(this)}
+          >
+            <img
+              className={'img-responsive'}
+              src={pixHeart}
+              alt={'pix Heart'}
+            />
+            {/* <i className={styles.heart + ' fa fa-heart'} /> */}
+          </div>,
+          <ul
+            key="main_love_2"
+            className={'dropdown-menu ' + styles.dropdown_menu}
+          >
+            <div className={styles.dropdown_menu_container}>
+              <div className={styles.closeDropDown}>
+                <i
+                  className="fa fa-close"
+                  onClick={this.closeLoveIcon.bind(this)}
+                />
+                {/*
+                        <img
+                          className={'img-responsive'}
+                          src={closeIcon}
+                          alt={'closeIcon'}
+                          onClick={this.closeLoveIcon.bind(this)}
+                        />
+                        */}
+              </div>
+              {/*
+                      <div className={styles.arrow_up_dropdown} />
+                      <div className={styles.graphqlHeartText}>
+                        Love GraphQL Engine? Shout it from the rooftops!
+                        <br />
+                        Or just spread the word{' '}
+                        <span role="img" aria-label="smile">
+                          😊
+                        </span>
+                      </div>
+                      */}
+              <div className={styles.displayFlex}>
+                <li className={styles.pixelText1}>
+                  Roses are red, <br />
+                  Violets are blue;
+                  <br />
+                  Star us on GitHub,
+                  <br />
+                  To make our <i className={'fa fa-heart'} /> go wooooo!
+                </li>
+                <li className={'dropdown-item'}>
+                  <a
+                    href="https://github.com/hasura/graphql-engine"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <div className={styles.socialIcon}>
+                      <img
+                        className="img img-responsive"
+                        src={`${globals.assetsPath}/common/img/githubicon.png`}
+                        alt={'GitHub'}
+                      />
+                    </div>
+                    <div className={styles.pixelText}>
+                      <i className="fa fa-star" />
+                      &nbsp; Star
+                    </div>
+                  </a>
+                  {/*
+                          <div className={styles.gitHubBtn}>
+                            <iframe
+                              title="github"
+                              src="https://ghbtns.com/github-btn.html?user=hasura&repo=graphql-engine&type=star&count=true"
+                              frameBorder="0"
+                              scrolling="0"
+                              width="100px"
+                              height="30px"
+                            />
+                          </div>
+                          */}
+                </li>
+                <li className={'dropdown-item '}>
+                  <a
+                    href="https://twitter.com/intent/tweet?hashtags=graphql,postgres&text=Just%20deployed%20a%20GraphQL%20backend%20with%20@HasuraHQ!%20%E2%9D%A4%EF%B8%8F%20%F0%9F%9A%80%0Ahttps://github.com/hasura/graphql-engine%0A"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <div className={styles.socialIcon}>
+                      <img
+                        className="img img-responsive"
+                        src={`${globals.assetsPath}/common/img/twittericon.png`}
+                        alt={'Twitter'}
+                      />
+                    </div>
+                    <div className={styles.pixelText}>
+                      <i className="fa fa-twitter" />
+                      &nbsp; Tweet
+                    </div>
+                  </a>
+                </li>
+              </div>
+            </div>
+          </ul>,
+        ];
+      }
+
+      return loveSectionHtml;
+    };
+
+    const getHelpDropdownPosStyle = () => {
+      let helpDropdownPosStyle = '';
+
+      if (this.state.loveConsentState.isDismissed) {
+        helpDropdownPosStyle = styles.help_dropdown_menu_heart_dismissed;
+      }
+
+      return helpDropdownPosStyle;
+    };
 
     return (
       <div className={styles.container}>
         <div className={styles.flexRow}>
-          <div className={sidebarClass}>
+          <div className={styles.sidebar}>
             <div className={styles.header_logo_wrapper}>
               <div className={styles.logoParent}>
                 <div className={styles.logo}>
@@ -228,65 +477,60 @@ class Main extends React.Component {
                     </Link>
                   </li>
                 </OverlayTrigger>
-                {this.state.showSchemaStitch ? (
-                  <OverlayTrigger
-                    placement="right"
-                    overlay={tooltip.customresolver}
-                  >
-                    <li>
-                      <Link
-                        className={
-                          currentActiveBlock === 'remote-schemas'
-                            ? styles.navSideBarActive
-                            : ''
-                        }
-                        to={appPrefix + '/remote-schemas'}
-                      >
-                        <div className={styles.iconCenter}>
-                          <i
-                            title="Remote Schemas"
-                            className="fa fa-plug"
-                            aria-hidden="true"
-                          />
-                        </div>
-                        <p>Remote Schemas</p>
-                      </Link>
-                    </li>
-                  </OverlayTrigger>
-                ) : null}
-                {this.state.showEvents ? (
-                  <OverlayTrigger placement="right" overlay={tooltip.events}>
-                    <li>
-                      <Link
-                        className={
-                          currentActiveBlock === 'events'
-                            ? styles.navSideBarActive
-                            : ''
-                        }
-                        to={appPrefix + '/events'}
-                      >
-                        <div className={styles.iconCenter}>
-                          <i
-                            title="Events"
-                            className="fa fa-cloud"
-                            aria-hidden="true"
-                          />
-                        </div>
-                        <p>Events</p>
-                      </Link>
-                    </li>
-                  </OverlayTrigger>
-                ) : null}
+                <OverlayTrigger
+                  placement="right"
+                  overlay={tooltip.customresolver}
+                >
+                  <li>
+                    <Link
+                      className={
+                        currentActiveBlock === 'remote-schemas'
+                          ? styles.navSideBarActive
+                          : ''
+                      }
+                      to={appPrefix + '/remote-schemas/manage/schemas'}
+                    >
+                      <div className={styles.iconCenter}>
+                        <i
+                          title="Remote Schemas"
+                          className="fa fa-plug"
+                          aria-hidden="true"
+                        />
+                      </div>
+                      <p>Remote Schemas</p>
+                    </Link>
+                  </li>
+                </OverlayTrigger>
+                <OverlayTrigger placement="right" overlay={tooltip.events}>
+                  <li>
+                    <Link
+                      className={
+                        currentActiveBlock === 'events'
+                          ? styles.navSideBarActive
+                          : ''
+                      }
+                      to={appPrefix + '/events/manage/triggers'}
+                    >
+                      <div className={styles.iconCenter}>
+                        <i
+                          title="Events"
+                          className="fa fa-cloud"
+                          aria-hidden="true"
+                        />
+                      </div>
+                      <p>Events</p>
+                    </Link>
+                  </li>
+                </OverlayTrigger>
               </ul>
             </div>
             <div id="dropdown_wrapper" className={styles.clusterInfoWrapper}>
-              {accessKeyHtml}
+              {getAdminSecretSection()}
+
               <Link to="/metadata">
                 <div className={styles.helpSection + ' ' + styles.settingsIcon}>
-                  <i className={styles.question + ' fa fa-cog'} />
-                  {currentActiveBlock === 'metadata' ? (
-                    <span className={styles.selected} />
-                  ) : null}
+                  {getMetadataIcon()}
+                  {getMetadataSelectedMarker()}
                 </div>
               </Link>
               <div className={styles.supportSection}>
@@ -304,9 +548,7 @@ class Main extends React.Component {
                     'dropdown-menu ' +
                     styles.help_dropdown_menu +
                     ' ' +
-                    (this.state.loveConsentState.isDismissed
-                      ? styles.help_dropdown_menu_heart_consented
-                      : '')
+                    getHelpDropdownPosStyle()
                   }
                   aria-labelledby="help"
                 >
@@ -363,168 +605,29 @@ class Main extends React.Component {
                         <span>Head to docs</span>
                       </a>
                     </li>
+                    <li className={'dropdown-item'}>
+                      <Link to="/about">
+                        <img
+                          className={'img-responsive'}
+                          src={about}
+                          alt={'about'}
+                        />
+                        <span>About</span>
+                      </Link>
+                    </li>
                   </div>
                 </ul>
               </div>
-              {!this.state.loveConsentState.isDismissed
-                ? [
-                  <div
-                    key="main_love_1"
-                    className={styles.shareSection + ' dropdown-toggle'}
-                    aria-expanded="false"
-                    onClick={this.handleDropdownToggle.bind(this)}
-                  >
-                    <img
-                      className={'img-responsive'}
-                      src={pixHeart}
-                      alt={'pix Heart'}
-                    />
-                    {/* <i className={styles.heart + ' fa fa-heart'} /> */}
-                  </div>,
-                  <ul
-                    key="main_love_2"
-                    className={'dropdown-menu ' + styles.dropdown_menu}
-                  >
-                    <div className={styles.dropdown_menu_container}>
-                      <div className={styles.closeDropDown}>
-                        <i
-                          className="fa fa-close"
-                          onClick={this.closeLoveIcon.bind(this)}
-                        />
-                        {/*
-                        <img
-                          className={'img-responsive'}
-                          src={closeIcon}
-                          alt={'closeIcon'}
-                          onClick={this.closeLoveIcon.bind(this)}
-                        />
-                        */}
-                      </div>
-                      {/*
-                      <div className={styles.arrow_up_dropdown} />
-                      <div className={styles.graphqlHeartText}>
-                        Love GraphQL Engine? Shout it from the rooftops!
-                        <br />
-                        Or just spread the word{' '}
-                        <span role="img" aria-label="smile">
-                          😊
-                        </span>
-                      </div>
-                      */}
-                      <div className={styles.displayFlex}>
-                        <li className={styles.pixelText1}>
-                            Roses are red, <br />
-                            Violets are blue;
-                          <br />
-                            Star us on Github,
-                          <br />
-                            To make our <i className={'fa fa-heart'} /> go
-                            wooooo!
-                        </li>
-                        <li className={'dropdown-item'}>
-                          <a
-                            href="https://github.com/hasura/graphql-engine"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <div className={styles.socialIcon}>
-                              <img
-                                className="img img-responsive"
-                                src={
-                                  'https://storage.googleapis.com/hasura-graphql-engine/console/assets/githubicon.png'
-                                }
-                                alt={'Github'}
-                              />
-                            </div>
-                            <div className={styles.pixelText}>
-                              <i className="fa fa-star" />
-                                &nbsp; Star
-                            </div>
-                          </a>
-                          {/*
-                          <div className={styles.gitHubBtn}>
-                            <iframe
-                              title="github"
-                              src="https://ghbtns.com/github-btn.html?user=hasura&repo=graphql-engine&type=star&count=true"
-                              frameBorder="0"
-                              scrolling="0"
-                              width="100px"
-                              height="30px"
-                            />
-                          </div>
-                          */}
-                        </li>
-                        <li className={'dropdown-item '}>
-                          <a
-                            href="https://twitter.com/intent/tweet?hashtags=graphql,postgres&text=Just%20deployed%20a%20GraphQL%20backend%20with%20@HasuraHQ!%20%E2%9D%A4%EF%B8%8F%20%F0%9F%9A%80%0Ahttps://github.com//hasura/graphql-engine%0A"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <div className={styles.socialIcon}>
-                              <img
-                                className="img img-responsive"
-                                src={
-                                  'https://storage.googleapis.com/hasura-graphql-engine/console/assets/twittericon.png'
-                                }
-                                alt={'Twitter'}
-                              />
-                            </div>
-                            <div className={styles.pixelText}>
-                              <i className="fa fa-twitter" />
-                                &nbsp; Tweet
-                            </div>
-                          </a>
-                        </li>
-                      </div>
-                    </div>
-                  </ul>,
-                ]
-                : null}
+
+              {getLoveSection()}
             </div>
           </div>
-          <div className={styles.main + ' container-fluid'}>{mainContent}</div>
-          {this.state.showBannerNotification ? (
-            <div>
-              <div className={styles.phantom} />{' '}
-              {/* phantom div to prevent overlapping of banner with content. */}
-              <div className={styles.updateBannerWrapper}>
-                <div className={styles.updateBanner}>
-                  <span> Hey there! A new server version </span>
-                  <span className={styles.versionUpdateText}>
-                    {' '}
-                    {latestServerVersion}
-                  </span>
-                  <span> is available </span>
-                  <span className={styles.middot}> &middot; </span>
-                  <a
-                    href={
-                      'https://github.com/hasura/graphql-engine/releases/tag/' +
-                      latestServerVersion
-                    }
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <span>View Changelog</span>
-                  </a>
-                  <span className={styles.middot}> &middot; </span>
-                  <a
-                    className={styles.updateLink}
-                    href="https://docs.hasura.io/1.0/graphql/manual/deployment/updating.html"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <span>Update Now</span>
-                  </a>
-                  <span
-                    className={styles.updateBannerClose}
-                    onClick={this.closeUpdateBanner.bind(this)}
-                  >
-                    <i className={'fa fa-times'} />
-                  </span>
-                </div>
-              </div>
-            </div>
-          ) : null}
+
+          <div className={styles.main + ' container-fluid'}>
+            {getMainContent()}
+          </div>
+
+          {getUpdateNotification()}
         </div>
       </div>
     );
@@ -537,6 +640,7 @@ const mapStateToProps = (state, ownProps) => {
     header: { ...state.header },
     pathname: ownProps.location.pathname,
     currentSchema: state.tables.currentSchema,
+    metadata: state.metadata,
   };
 };
 

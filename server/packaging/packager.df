@@ -1,7 +1,7 @@
-FROM hasura/haskell-docker-packager:1.1
-MAINTAINER vamshi@34cross.in
+FROM hasura/haskell-docker-packager:20190731
+MAINTAINER vamshi@hasura.io
 
-RUN apt-get update && apt-get install -y libpq5 upx ca-certificates \
+RUN apt-get update && apt-get install -y libpq5 upx \
  && update-ca-certificates \
  && mkdir -p /usr/src/busybox/rootfs/etc/ssl/certs \
  && cp -L /etc/ssl/certs/* /usr/src/busybox/rootfs/etc/ssl/certs/ \

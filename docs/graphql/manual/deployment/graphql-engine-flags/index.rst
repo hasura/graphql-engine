@@ -18,9 +18,10 @@ Use cases
 
 The following are a few configuration use cases:
 
-- :ref:`add-access-key`
-- :ref:`cli-with-access-key`
+- :ref:`add-admin-secret`
+- :ref:`cli-with-admin-secret`
 - :ref:`configure-cors`
+- :ref:`console-assets-on-server`
 
 .. toctree::
    :hidden:

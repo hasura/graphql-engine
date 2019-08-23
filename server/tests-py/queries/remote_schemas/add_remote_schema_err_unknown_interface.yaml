@@ -1,0 +1,16 @@
+description: Add a remote schema with an object implementing unknown interface
+url: /v1/query
+status: 400
+response:
+  path: $.args
+  error: |-
+    Could not find interface 'UnknownIFace' implemented by Object type 'Droid'
+  code: remote-schema-error
+query:
+  type: add_remote_schema
+  args:
+    name: err-unknown-iface
+    definition:
+      url: http://localhost:5000/iface-graphql-err-unknown-iface
+      headers: []
+      forward_client_headers: true

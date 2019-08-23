@@ -7,13 +7,11 @@ args:
     table:
       schema: public
       name: author
-    
-- type: run_sql
-  args:
-    sql: |
-      drop table article
 
 - type: run_sql
   args:
     sql: |
-      drop table author
+      DROP TABLE article;
+      DROP TABLE post;
+      DROP TABLE author;
+    cascade: true
