@@ -19,6 +19,10 @@ spec:
           image: hasura/graphql-engine:v1.0.0-beta.4
           ports:
             - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080         
           # The following environment variables will contain the database host,
           # user and password to connect to the PostgreSQL instance.
           command:
