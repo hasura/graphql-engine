@@ -462,10 +462,7 @@ class AddTable extends Component {
                 placement="right"
                 overlay={tooltip.primaryKeyDescription}
               >
-                <i
-                  className={`fa fa-question-circle ${styles.iClickable}`}
-                  aria-hidden="true"
-                />
+                <i className={'fa fa-question-circle'} aria-hidden="true" />
               </OverlayTrigger>{' '}
               &nbsp; &nbsp;
             </h4>
@@ -482,10 +479,7 @@ class AddTable extends Component {
                 placement="right"
                 overlay={tooltip.foreignKeyDescription}
               >
-                <i
-                  className={`fa fa-question-circle ${styles.iClickable}`}
-                  aria-hidden="true"
-                />
+                <i className={'fa fa-question-circle'} aria-hidden="true" />
               </OverlayTrigger>{' '}
               &nbsp; &nbsp;
             </h4>
@@ -507,10 +501,7 @@ class AddTable extends Component {
                 placement="right"
                 overlay={tooltip.uniqueKeyDescription}
               >
-                <i
-                  className={`fa fa-question-circle ${styles.iClickable}`}
-                  aria-hidden="true"
-                />
+                <i className={'fa fa-question-circle'} aria-hidden="true" />
               </OverlayTrigger>{' '}
               &nbsp; &nbsp;
             </h4>
