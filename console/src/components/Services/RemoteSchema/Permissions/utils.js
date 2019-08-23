@@ -1,5 +1,7 @@
+import { permissionState } from '../state';
 import { getUnderlyingType } from '../graphqlUtils';
 import { isObjectType } from 'graphql';
+import { getTypeFields } from '../graphqlUtils';
 
 export const generateCreatePermQuery = (state, remoteSchemaName) => {
 
@@ -24,8 +26,21 @@ export const generateCreatePermQuery = (state, remoteSchemaName) => {
 
 };
 
-export const parseRemoteRelPermDefinition = (payload, objectTypes) => {
+export const parseRemoteRelPermDefinition = (payload, rootTypes, objectTypes, nonObjectTypes) => {
+
+  if (!payload) {
+    const newAllowedTypes = {};
+    Object.keys(rootTypes).forEach(rt => {
+      newAllowedTypes[rootTypes[rt]] = getTypeFields(rootTypes[rt], objectTypes, nonObjectTypes);
+    });
+    return {
+      ...permissionState.editState,
+      allowedTypes: newAllowedTypes,
+    };
+  }
+
   const { definition, role } = payload;
+
   const allowedTypes = {};
 
   Object.keys(definition).forEach(allowedType => {
@@ -36,12 +51,6 @@ export const parseRemoteRelPermDefinition = (payload, objectTypes) => {
     definition[allowedType].forEach(selectedFeldName => {
       selectedFields[selectedFeldName] = true
     });
-
-    console.log('=================================');
-    console.log(objectTypes);
-    console.log(allowedType)
-    console.log(objectTypes[allowedType])
-    console.log('=================================');
 
     const graphqlType = getUnderlyingType(objectTypes[allowedType]);
     Object.keys(graphqlType._fields).forEach(field => {

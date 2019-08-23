@@ -1,6 +1,7 @@
 import { permissionState } from '../state';
 import { generateCreatePermQuery } from './utils';
 import { showErrorNotification } from '../../Common/Notification';
+import { parseRemoteRelPermDefinition } from './utils';
 import requestAction from '../../../../utils/requestAction';
 import endpoints from '../../../../Endpoints';
 
@@ -23,6 +24,16 @@ export const setPermissionTypes = (types, index) => ({
   types,
   index,
 });
+
+const SET_CURRENT_PERMISSION_EDIT = '@remoteSchema/SET_CURRENT_PERMISSION_EDIT';
+export const setCurrentPermissionEdit = (perm, editType) => ({
+  type: SET_CURRENT_PERMISSION_EDIT,
+  perm,
+  editType
+})
+
+const CLOSE_PERMISSION_EDIT = '@remoteSchema/CLOSE_PERMISSION_EDIT';
+export const closePermissionEdit = () => ({ type: CLOSE_PERMISSION_EDIT});
 
 const CREATE_REMOTE_SCHEMA_PERMISSION_SUCCESS =
   '@remoteSchema/CREATE_REMOTE_SCHEMA_PERMISSION_SUCCESS';
@@ -73,7 +84,6 @@ export const createRemoteSchemaPermission = (index, successCb, failureCb) => {
 };
 
 const reducer = (state = permissionState, action) => {
-  const newRolePermissions = {haha: 'haha'};
 
   switch (action.type) {
     case SET_CURRENT_REMOTE_SCHEMA:
@@ -83,17 +93,21 @@ const reducer = (state = permissionState, action) => {
       };
 
     case SET_PERMISSION_ROLE:
-      newRolePermissions[action.index].role = action.role;
       return {
         ...state,
-        rolePermissions: newRolePermissions,
+        editState: {
+          ...state.editState,
+          role: action.role
+        }
       };
 
     case SET_PERMISSION_TYPES:
-      newRolePermissions[action.index].allowedTypes = action.types;
       return {
         ...state,
-        rolePermissions: newRolePermissions,
+        editState: {
+          ...state.editState,
+          allowedTypes: action.allowedTypes
+        }
       };
 
     case CREATE_REMOTE_SCHEMA_PERMISSION_SUCCESS:
@@ -101,6 +115,24 @@ const reducer = (state = permissionState, action) => {
         ...state,
         isFetching: false,
       };
+
+    case SET_CURRENT_PERMISSION_EDIT:
+      return {
+        ...state,
+        editState: {
+          ...action.perm,
+          isEditing: true,
+          editType: action.editType
+        }
+      }
+
+    case CLOSE_PERMISSION_EDIT:
+      return {
+        ...state,
+        editState: {
+          ...permissionState.editState
+        }
+      }
 
     default:
       return {

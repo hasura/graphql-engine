@@ -32,22 +32,24 @@ const addState = {
   },
 };
 
-const defaultEditState = {
-  role: '',
-  allowedTypes: {},
-  allowAll: false,
-};
-
 const permissionState = {
-  existingPermissions: [{
-    remote_schema_name: 'mahSchema',
-    definition: {
-      query: ['a', 'b']
+  existingPermissions: [
+    {
+      role: 'mahRole',
+      definition: {
+        'query_root': ['users', 'article'],
+        'users': ['id', 'name', 'articles'],
+        'article': ['id', 'title']
+      }
     }
-  }],
+  ],
+  existingRoles: [],
   editState: {
-    ...defaultEditState,
-    isEditting: false
+    role: '',
+    allowedTypes: {},
+    allowAll: false,
+    isEditing: false,
+    editType: '',
   },
   currentRemoteSchemaName: '',
   ...asyncState,

@@ -9,6 +9,8 @@ import {
   setPermissionRole,
   setPermissionTypes,
   createRemoteSchemaPermission,
+  setCurrentPermissionEdit ,
+  closePermissionEdit 
 } from './Actions';
 import { parseRemoteRelPermDefinition } from './utils';
 
@@ -17,10 +19,11 @@ const roleList = ['role1', 'role2', 'anonymous'];
 const Permissions = props => {
 
   const {
-    permissions: { rolePermissions },
+    permissions: { editState, existingPermissions },
     remoteSchemaName,
     adminHeaders,
     remoteSchemasList,
+    dispatch
   } = props;
 
   const currentRemoteSchema = remoteSchemasList.find(
@@ -43,6 +46,7 @@ const Permissions = props => {
       </div>
     );
   }
+
   const rootTypes = { query: '', mutation: '', subscription: '' };
   const queryTypeName = schema._queryType.name;
   rootTypes.query = queryTypeName;
@@ -100,128 +104,130 @@ const Permissions = props => {
       />
     ),
   };
-
-  const getPermissionsTableHead = () => {
-    const headings = ['Actions', 'Role', ...Object.keys(rootTypes)];
-    return <PermTableHeader headings={headings} />;
-  };
-
-  const getPermissionsTableBody = () => {
-    const dispatchRoleNameChange = e => {
-      dispatch(permSetRoleName(e.target.value));
+  const getPermissionsTable = () => {
+    const getPermissionsTableHead = () => {
+      const headings = ['Actions', 'Role', ...Object.keys(rootTypes)];
+      return <PermTableHeader headings={headings} />;
     };
 
-    const getEditLink = () => {
-      return (
-        <span className={styles.editPermsLink}>
-          <i className="fa fa-pencil" aria-hidden="true" />
-        </span>
-      );
-    };
+    const getPermissionsTableBody = () => {
+      const dispatchRoleNameChange = e => {
+        dispatch(permSetRoleName(e.target.value));
+      };
 
-    const getRootTypes = (role, isNewRole) => {
-      return Object.keys(rootTypes).map(rootType => {
-        const dispatchOpenEdit = rt => () => {
-          if (isNewRole && permissionsState.newRole !== '') {
-            // TODO ON EDIT
-          } else if (role !== '') {
-            // TODO ON EDIT
-          } else {
-            document.getElementById('newRoleInput').focus();
+      const getEditLink = () => {
+        return (
+          <span className={styles.editPermsLink}>
+            <i className="fa fa-pencil" aria-hidden="true" />
+          </span>
+        );
+      };
+
+      const getRootTypes = (role, isNewRole) => {
+        return Object.keys(rootTypes).map(rootType => {
+          const dispatchOpenEdit = rt => () => {
+            if (isNewRole && editState.role !== '') {
+              const perm = parseRemoteRelPermDefinition(null, rootTypes, objectTypes)
+              dispatch(setCurrentPermissionEdit(perm, rt));
+            } else if (role !== '') {
+              const perm = parseRemoteRelPermDefinition(existingPermissions.find(p => p.role === role), rootTypes, objectTypes);
+              dispatch(setCurrentPermissionEdit(perm, rt))
+            } else {
+              document.getElementById('newRoleInput').focus();
+            }
+          };
+
+          const dispatchCloseEdit = () => {
+            dispatch(closePermissionEdit());
+          };
+
+          const isEditAllowed = role !== 'admin';
+          const isCurrEdit = role ===  editState.role;
+            
+
+          let editLink = '';
+          let className = '';
+          let onClick = () => {};
+          if (isEditAllowed) {
+            editLink = getEditLink();
+
+            className += styles.clickableCell;
+            onClick = dispatchOpenEdit(rootType);
+            if (isCurrEdit) {
+              onClick = dispatchCloseEdit;
+              className += ` ${styles.currEdit}`;
+            }
           }
+
+          const getRoleQueryPermission = rt => {
+            let _permission;
+
+            const rolePermissions = {};
+
+            if (role === 'admin') {
+              _permission = permissionsSymbols.fullAccess;
+            } else {
+              _permission = permissionsSymbols.noAccess;
+            }
+            return _permission;
+          };
+
+          return {
+            name: rootType,
+            className,
+            editLink,
+            onClick,
+            permSymbol: getRoleQueryPermission(rootType),
+          };
+        });
+      }
+
+
+      const _roleList = ['admin'].concat(roleList);
+
+      // roles wrapper
+      const roles = _roleList.map(role => {
+        const _roleProps = {};
+        _roleProps.name = role;
+        _roleProps.dispatchBulkSelect = e => {
+          const isChecked = e.target.checked;
+          const selectedRole = e.target.getAttribute('data-role');
+          //dispatch
         };
-
-        const dispatchCloseEdit = () => {
-        };
-
-        const isEditAllowed = role !== 'admin';
-        const isCurrEdit = false;
-          
-
-        let editLink = '';
-        let className = '';
-        let onClick = () => {};
-        if (isEditAllowed) {
-          editLink = getEditLink();
-
-          className += styles.clickableCell;
-          onClick = dispatchOpenEdit(rootType);
-          if (isCurrEdit) {
-            onClick = dispatchCloseEdit;
-            className += ` ${styles.currEdit}`;
-          }
-        }
-
-        const getRoleQueryPermission = rt => {
-          let _permission;
-
-          const rolePermissions = {};
-
-          if (role === 'admin') {
-            _permission = permissionsSymbols.fullAccess;
-          } else {
-            _permission = permissionsSymbols.noAccess;
-          }
-          return _permission;
-        };
-
-        return {
-          name: rootType,
-          className,
-          editLink,
-          onClick,
-          permSymbol: getRoleQueryPermission(rootType),
-        };
+        _roleProps.bulkCheck = false
+        return _roleProps;
       });
+      return (
+        <PermTableBody
+          rolePermissions={roles}
+          dispatchRoleNameChange={dispatchRoleNameChange}
+          getPermTypes={getRootTypes}
+        />
+      )
     }
 
-
-    const _roleList = ['admin'].concat(roleList);
-
-    // roles wrapper
-    const roles = _roleList.map(role => {
-      const _roleProps = {};
-      _roleProps.name = role;
-      _roleProps.dispatchBulkSelect = e => {
-        const isChecked = e.target.checked;
-        const selectedRole = e.target.getAttribute('data-role');
-        //dispatch
-      };
-      _roleProps.bulkCheck = false
-      return _roleProps;
-    });
     return (
-      <PermTableBody
-        rolePermissions={roles}
-        dispatchRoleNameChange={dispatchRoleNameChange}
-        getPermTypes={getRootTypes}
-      />
-    )
+      <table className={`table table-bordered ${styles.permissionsTable}`}>
+        {getPermissionsTableHead()}
+        {getPermissionsTableBody()}
+      </table>
+    );
   }
 
   return (
-    <table className={`table table-bordered ${styles.permissionsTable}`}>
-      {getPermissionsTableHead()}
-      {getPermissionsTableBody()}
-    </table>
+    <div>
+      {getPermissionsTable()}
+      <div className={`${styles.add_mar_bottom}`}>
+        <PermissionsEditor
+          editState={editState}
+          objectTypes={objectTypes}
+          nonObjectTypes={nonObjectTypes}
+          rootTypes={rootTypes}
+          dispatch={props.dispatch}
+        />
+      </div>
+    </div>
   )
-
-  const numPermissions = rolePermissions.length;
-  return rolePermissions.map((rp, index) => {
-    return (
-      <PermissionsEditor
-        permission={rp}
-        objectTypes={objectTypes}
-        nonObjectTypes={nonObjectTypes}
-        key={index}
-        index={index}
-        numPermissions={numPermissions}
-        isLast={index === numPermissions - 1}
-        rootTypes={rootTypes}
-        dispatch={props.dispatch}
-      />
-    );
-  });
 };
 
 export default Permissions;
