@@ -24,6 +24,7 @@ module Hasura.GraphQL.Execute.LiveQuery
   , subsOpFromPGAST
   ) where
 
+import           Control.Lens
 import           Data.Has
 
 import qualified Control.Concurrent.STM                       as STM
@@ -32,7 +33,6 @@ import qualified Data.HashMap.Strict                          as Map
 import qualified Data.HashSet                                 as Set
 import qualified Data.Text                                    as T
 import qualified Database.PG.Query                            as Q
-import qualified Database.PG.Query.Connection                 as Q
 import qualified Language.GraphQL.Draft.Syntax                as G
 
 import qualified Hasura.GraphQL.Execute.LiveQuery.Fallback    as LQF
@@ -49,6 +49,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DML.Select                        (asSingleRowJsonResp)
 import           Hasura.RQL.Types
 
+import           Hasura.SQL.Error
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
@@ -272,7 +273,7 @@ validateAnnVarValsOnPg pgExecCtx annVarVals = do
   let valSel = mkValidationSel $ Map.elems annVarVals
 
   Q.Discard _ <- runTx' $ liftTx $
-    Q.rawQE valPgErrHandler (Q.fromBuilder $ toSQL valSel) [] False
+    Q.rawQE dataExnErrHandler (Q.fromBuilder $ toSQL valSel) [] False
   return $ fmap (txtEncodedPGVal . pstValue) annVarVals
 
   where
@@ -283,27 +284,9 @@ validateAnnVarValsOnPg pgExecCtx annVarVals = do
       res <- liftIO $ runExceptT (runLazyTx' pgExecCtx tx)
       liftEither res
 
--- | The error handler that is used to errors in the validation SQL.
--- It tries to specifically read few PG error codes which indicate
--- that the format of the value provided for a type is incorrect
-valPgErrHandler :: Q.PGTxErr -> QErr
-valPgErrHandler txErr =
-  fromMaybe (defaultTxErrorHandler txErr) $ do
-    stmtErr <- Q.getPGStmtErr txErr
-    codeMsg <- getPGCodeMsg stmtErr
-    (qErrCode, qErrMsg) <- extractError codeMsg
-    return $ err400 qErrCode qErrMsg
-  where
-    getPGCodeMsg pged =
-      (,) <$> Q.edStatusCode pged <*> Q.edMessage pged
-    extractError = \case
-      -- invalid text representation
-      ("22P02", msg) -> return (DataException, msg)
-      -- invalid parameter value
-      ("22023", msg) -> return (DataException, msg)
-      -- invalid input values
-      ("22007", msg) -> return (DataException, msg)
-      _              -> Nothing
+    -- Explicitly look for the class of errors raised when the format of a value provided
+    -- for a type is incorrect.
+    dataExnErrHandler = mkTxErrorHandler (has _PGDataException)
 
 -- | Use the existing plan with new variables and session variables
 -- to create a live query operation

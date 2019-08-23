@@ -1,5 +1,19 @@
 -- | Functions and datatypes for interpreting Postgres errors.
-module Hasura.SQL.Error where
+module Hasura.SQL.Error
+  ( PGErrorType(..)
+  , _PGDataException
+  , _PGIntegrityConstraintViolation
+  , _PGSyntaxErrorOrAccessRuleViolation
+  , pgErrorType
+
+  , PGErrorCode(..)
+  , _PGErrorGeneric
+  , _PGErrorSpecific
+
+  , PGDataException(..)
+  , PGIntegrityConstraintViolation(..)
+  , PGSyntaxErrorOrAccessRuleViolation(..)
+  ) where
 
 import           Hasura.Prelude
 
@@ -11,62 +25,64 @@ import qualified Database.PG.Query.Connection as Q
 -- | The top-level error code type. Errors in Postgres are divided into different /classes/, which
 -- are further subdivided into individual error codes. Even if a particular status code is not known
 -- to the application, it’s possible to determine its class and handle it appropriately.
-data PgErrorType
-  = PgDataException !(Maybe (PgErrorCode PgDataException))
-  | PgIntegrityConstraintViolation !(Maybe (PgErrorCode PgIntegrityConstraintViolation))
-  | PgSyntaxErrorOrAccessRuleViolation !(Maybe (PgErrorCode PgSyntaxErrorOrAccessRuleViolation))
+data PGErrorType
+  = PGDataException !(Maybe (PGErrorCode PGDataException))
+  | PGIntegrityConstraintViolation !(Maybe (PGErrorCode PGIntegrityConstraintViolation))
+  | PGSyntaxErrorOrAccessRuleViolation !(Maybe (PGErrorCode PGSyntaxErrorOrAccessRuleViolation))
   deriving (Show, Eq)
 
-data PgErrorCode a
-  = PgErrorGeneric
+data PGErrorCode a
+  = PGErrorGeneric
   -- ^ represents errors that have the non-specific @000@ status code
-  | PgErrorSpecific !a
+  | PGErrorSpecific !a
   -- ^ represents errors with a known, more specific status code
   deriving (Show, Eq, Functor)
 
-data PgDataException
-  = PgInvalidDatetimeFormat
-  | PgInvalidParameterValue
-  | PgInvalidTextRepresentation
+data PGDataException
+  = PGInvalidDatetimeFormat
+  | PGInvalidParameterValue
+  | PGInvalidEscapeSequence
+  | PGInvalidTextRepresentation
   deriving (Show, Eq)
 
-data PgIntegrityConstraintViolation
-  = PgRestrictViolation
-  | PgNotNullViolation
-  | PgForeignKeyViolation
-  | PgUniqueViolation
-  | PgCheckViolation
-  | PgExclusionViolation
+data PGIntegrityConstraintViolation
+  = PGRestrictViolation
+  | PGNotNullViolation
+  | PGForeignKeyViolation
+  | PGUniqueViolation
+  | PGCheckViolation
+  | PGExclusionViolation
   deriving (Show, Eq)
 
-data PgSyntaxErrorOrAccessRuleViolation
-  = PgUndefinedObject
-  | PgInvalidColumnReference
+data PGSyntaxErrorOrAccessRuleViolation
+  = PGUndefinedObject
+  | PGInvalidColumnReference
   deriving (Show, Eq)
 
-$(makePrisms ''PgErrorType)
-$(makePrisms ''PgErrorCode)
+$(makePrisms ''PGErrorType)
+$(makePrisms ''PGErrorCode)
 
-pgErrorType :: Q.PGStmtErrDetail -> Maybe PgErrorType
+pgErrorType :: Q.PGStmtErrDetail -> Maybe PGErrorType
 pgErrorType errorDetails = parseTypes =<< Q.edStatusCode errorDetails
   where
     parseTypes fullCodeText = choice
-      [ withClass "22" PgDataException
-        [ code "007" PgInvalidDatetimeFormat
-        , code "023" PgInvalidParameterValue
-        , code "P02" PgInvalidTextRepresentation
+      [ withClass "22" PGDataException
+        [ code "007" PGInvalidDatetimeFormat
+        , code "023" PGInvalidParameterValue
+        , code "025" PGInvalidEscapeSequence
+        , code "P02" PGInvalidTextRepresentation
         ]
-      , withClass "23" PgIntegrityConstraintViolation
-        [ code "001" PgRestrictViolation
-        , code "502" PgNotNullViolation
-        , code "503" PgForeignKeyViolation
-        , code "505" PgUniqueViolation
-        , code "514" PgCheckViolation
-        , code "P01" PgExclusionViolation
+      , withClass "23" PGIntegrityConstraintViolation
+        [ code "001" PGRestrictViolation
+        , code "502" PGNotNullViolation
+        , code "503" PGForeignKeyViolation
+        , code "505" PGUniqueViolation
+        , code "514" PGCheckViolation
+        , code "P01" PGExclusionViolation
         ]
-      , withClass "42" PgSyntaxErrorOrAccessRuleViolation
-        [ code "704" PgUndefinedObject
-        , code "P10" PgInvalidColumnReference
+      , withClass "42" PGSyntaxErrorOrAccessRuleViolation
+        [ code "704" PGUndefinedObject
+        , code "P10" PGInvalidColumnReference
         ]
       ]
       where
@@ -76,20 +92,6 @@ pgErrorType errorDetails = parseTypes =<< Q.edStatusCode errorDetails
         withClass expectedClassText mkClass codes =
           guard (classText == expectedClassText) $> mkClass (choice codes)
 
-        code :: T.Text -> a -> Maybe (PgErrorCode a)
+        code :: T.Text -> a -> Maybe (PGErrorCode a)
         code expectedCodeText codeValue =
-          guard (codeText == expectedCodeText) $> PgErrorSpecific codeValue
-
-pgErrorToText :: Q.PGStmtErrDetail -> T.Text
-pgErrorToText errorDetail =
-  fromMaybe "postgres error" (Q.edMessage errorDetail)
-    <> maybe "" formatDescription (Q.edDescription errorDetail)
-    <> maybe "" formatHint (Q.edHint errorDetail)
-  where
-    formatDescription description = ";\n" <> prefixLines "  " description
-    formatHint hint = "\n  hint: " <> prefixLinesExceptFirst "    " hint
-
-    prefixLinesExceptFirst prefix content =
-      T.intercalate ("\n" <> prefix) (T.lines content)
-    prefixLines prefix content =
-      prefix <> prefixLinesExceptFirst prefix content
+          guard (codeText == expectedCodeText) $> PGErrorSpecific codeValue

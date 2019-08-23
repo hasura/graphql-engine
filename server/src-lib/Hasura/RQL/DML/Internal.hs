@@ -1,22 +1,22 @@
 module Hasura.RQL.DML.Internal where
 
-import qualified Database.PG.Query            as Q
-import qualified Database.PG.Query.Connection as Q
-import qualified Hasura.SQL.DML               as S
+import qualified Database.PG.Query   as Q
+import qualified Hasura.SQL.DML      as S
 
 import           Hasura.Prelude
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
+import           Hasura.SQL.Error
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
 import           Control.Lens
 import           Data.Aeson.Types
 
-import qualified Data.HashMap.Strict          as M
-import qualified Data.HashSet                 as HS
-import qualified Data.Sequence                as DS
-import qualified Data.Text                    as T
+import qualified Data.HashMap.Strict as M
+import qualified Data.HashSet        as HS
+import qualified Data.Sequence       as DS
+import qualified Data.Text           as T
 
 newtype DMLP1 a
   = DMLP1 {unDMLP1 :: StateT (DS.Seq Q.PrepArg) P1 a}
@@ -262,11 +262,13 @@ convBoolExp cim spi be sessVarBldr prepValBldr = do
           (S.mkTypeAnn $ PGTypeArray scalarType)
 
 dmlTxErrorHandler :: Q.PGTxErr -> QErr
-dmlTxErrorHandler p2Res =
-  case err of
-    Nothing          -> defaultTxErrorHandler p2Res
-    Just (code, msg) -> err400 code msg
-  where err = simplifyError p2Res
+dmlTxErrorHandler = mkTxErrorHandler $ \case
+  PGIntegrityConstraintViolation _ -> True
+  PGDataException _ -> True
+  PGSyntaxErrorOrAccessRuleViolation (Just (PGErrorSpecific code)) -> code `elem`
+    [ PGUndefinedObject
+    , PGInvalidColumnReference ]
+  _ -> False
 
 toJSONableExp :: Bool -> PGColumnType -> S.SQLExp -> S.SQLExp
 toJSONableExp strfyNum colTy expn
@@ -288,45 +290,6 @@ validateHeaders depHeaders = do
   forM_ depHeaders $ \hdr ->
     unless (hdr `elem` map T.toLower headers) $
     throw400 NotFound $ hdr <<> " header is expected but not found"
-
-simplifyError :: Q.PGTxErr -> Maybe (Code, T.Text)
-simplifyError txErr = do
-  stmtErr <- Q.getPGStmtErr txErr
-  codeMsg <- getPGCodeMsg stmtErr
-  extractError codeMsg
-  where
-    getPGCodeMsg pged =
-      (,) <$> Q.edStatusCode pged <*> Q.edMessage pged
-    extractError = \case
-      -- restrict violation
-      ("23001", msg) ->
-        return (ConstraintViolation, "Can not delete or update due to data being referred. " <> msg)
-      -- not null violation
-      ("23502", msg) ->
-        return (ConstraintViolation, "Not-NULL violation. " <> msg)
-      -- foreign key violation
-      ("23503", msg) ->
-        return  (ConstraintViolation, "Foreign key violation. " <> msg)
-      -- unique violation
-      ("23505", msg) ->
-        return  (ConstraintViolation, "Uniqueness violation. " <> msg)
-      -- check violation
-      ("23514", msg) ->
-        return (PermissionError, "Check constraint violation. " <> msg)
-      -- invalid text representation
-      ("22P02", msg) -> return (DataException, msg)
-      -- invalid parameter value
-      ("22023", msg) -> return (DataException, msg)
-      -- no unique constraint on the columns
-      ("42P10", _)   ->
-        return (ConstraintError, "there is no unique or exclusion constraint on target column(s)")
-      -- no constraint
-      ("42704", msg) -> return (ConstraintError, msg)
-      -- invalid input values
-      ("22007", msg) -> return (DataException, msg)
-      -- invalid escape sequence
-      ("22025", msg) -> return (BadRequest, msg)
-      _              -> Nothing
 
 -- validate limit and offset int values
 onlyPositiveInt :: MonadError QErr m => Int -> m ()
