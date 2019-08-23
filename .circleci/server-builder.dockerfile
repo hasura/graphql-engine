@@ -4,7 +4,7 @@ FROM debian:stretch-20190228-slim
 
 ARG docker_ver="17.09.0-ce"
 ARG resolver="lts-13.20"
-ARG stack_ver="1.9.3"
+ARG stack_ver="2.1.3"
 ARG postgres_ver="11"
 
 # Install GNU make, curl, git and docker client. Required to build the server
