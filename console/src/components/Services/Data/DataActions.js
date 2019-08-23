@@ -152,18 +152,68 @@ const initQueries = {
         'return_type_name',
         'return_type_type',
         'returns_set',
+        {
+          name: 'return_table_info',
+          columns: ['table_schema', 'table_name'],
+        },
       ],
+      // this tacky hack is because, after much toil
+      // I find no way to definitively distinguish a built
+      // in PostGreSQL function from a user defined one.
+      // So resorting to a list of the built-ins
       where: {
-        // TODO: set correct where
-        function_schema: '',
-        has_variadic: false,
-        returns_set: true,
-        return_type_type: {
-          $ilike: '%composite%',
-        },
-        function_type: {
-          $ilike: '%volatile%',
-        },
+        $and: [
+          {
+            function_name: {
+              $nin: [
+                'digest',
+                'hmac',
+                'crypt',
+                'gen_salt',
+                'encrypt',
+                'decrypt',
+                'encrypt_iv',
+                'decrypt_iv',
+                'gen_random_bytes',
+                'gen_random_uuid',
+                'pgp_sym_encrypt',
+                'pgp_sym_encrypt_bytea',
+                'pgp_sym_decrypt',
+                'pgp_sym_decrypt_bytea',
+                'pgp_pub_encrypt',
+                'pgp_pub_encrypt_bytea',
+                'pgp_pub_decrypt',
+                'pgp_pub_decrypt_bytea',
+                'pgp_key_id',
+                'armor',
+                'dearmor',
+                'pgp_armor_headers',
+              ],
+            },
+          },
+          {
+            $not: {
+              function_schema: '',
+              has_variadic: false,
+              returns_set: true,
+              return_type_type: {
+                $ilike: '%composite%',
+              },
+              $or: [
+                {
+                  function_type: {
+                    $ilike: '%stable%',
+                  },
+                },
+                {
+                  function_type: {
+                    $ilike: '%immutable%',
+                  },
+                },
+              ],
+            },
+          },
+        ],
       },
     },
   },
@@ -352,6 +402,24 @@ const fetchDataInit = () => (dispatch, getState) => {
   );
 };
 
+const functionSetDifference = (a, b) => {
+  let i,
+    j;
+  const diff = [];
+
+  for (i = 0; i < a.length; i++) {
+    let omit = false;
+    for (j = 0; j < b.length; j++) {
+      if (a[i].function_name === b[j].function_name) {
+        omit = true;
+        break;
+      }
+    }
+    if (!omit) diff.push(a[i]);
+  }
+  return diff;
+};
+
 const fetchFunctionInit = () => (dispatch, getState) => {
   const url = Endpoints.getSchema;
   const body = {
@@ -375,10 +443,14 @@ const fetchFunctionInit = () => (dispatch, getState) => {
     headers: dataHeaders(getState),
     body: JSON.stringify(body),
   };
+
   return dispatch(requestAction(url, options)).then(
     data => {
+      // RQL is not powerful enough to do the table join needed to make the set of untrackable
+      // functions, so we do it on the client side.
+      const cleaned = functionSetDifference(data[1], data[0]);
       dispatch({ type: LOAD_FUNCTIONS, data: data[0] });
-      dispatch({ type: LOAD_NON_TRACKABLE_FUNCTIONS, data: data[1] });
+      dispatch({ type: LOAD_NON_TRACKABLE_FUNCTIONS, data: cleaned });
       let consistentFunctions = data[2];
       const { inconsistentObjects } = getState().metadata;
       if (inconsistentObjects.length > 0) {
@@ -748,6 +820,7 @@ export {
   fetchSchemaList,
   fetchDataInit,
   fetchFunctionInit,
+  functionSetDifference,
   updateCurrentSchema,
   ADMIN_SECRET_ERROR,
   UPDATE_DATA_HEADERS,

@@ -617,7 +617,7 @@ class Schema extends Component {
           {getUntrackedTablesSection()}
           {getUntrackedRelationsSection()}
           {getUntrackedFunctionsSection()}
-          {false && getNonTrackableFunctionsSection()}
+          {getNonTrackableFunctionsSection()}
         </div>
       </div>
     );
