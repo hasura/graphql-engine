@@ -345,10 +345,16 @@ decodeHeader logenv headerInfos (hdrName, hdrVal)
      decodeBS = TE.decodeUtf8With TE.lenientDecode
 
 addDefaultHeaders :: [HTTP.Header] -> [HTTP.Header]
-addDefaultHeaders hdrs = hdrs ++
-  [ (CI.mk "Content-Type", "application/json")
-  , (CI.mk "User-Agent", "hasura-graphql-engine/" <> T.encodeUtf8 currentVersion)
-  ]
+addDefaultHeaders hdrs = defaultHeaders <> rmDefaultHeaders hdrs
+  where
+    rmDefaultHeaders = filter (not . isDefaultHeader)
+
+    isDefaultHeader (hdrName, _) = hdrName `elem` (map fst defaultHeaders)
+
+    defaultHeaders =
+      [ (CI.mk "Content-Type", "application/json")
+      , (CI.mk "User-Agent", "hasura-graphql-engine/" <> T.encodeUtf8 currentVersion)
+      ]
 
 mkInvo
   :: EventPayload -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf]
