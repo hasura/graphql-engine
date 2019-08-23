@@ -17,6 +17,7 @@ const addState = {
   manualUrl: '',
   envName: null,
   headers: [],
+  timeoutConf: '',
   name: '',
   forwardClientHeaders: false,
   ...asyncState,
@@ -27,6 +28,7 @@ const addState = {
     originalHeaders: [],
     originalUrl: '',
     originalEnvUrl: '',
+    originalTimeoutConf: '',
     originalForwardClientHeaders: false,
   },
 };
