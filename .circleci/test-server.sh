@@ -448,7 +448,7 @@ pytest -n  1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" 
 kill_hge_servers
 unset HASURA_GRAPHQL_ENABLE_COMPRESSION
 
-run_hge_with_args server --enable-compression
+run_hge_with_args serve --enable-compression
 wait_for_port 8080
 
 pytest -n  1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-compression test_compression.py
