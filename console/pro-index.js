@@ -7,6 +7,8 @@ import {
 
 import GraphiQLWrapper from './src/components/Services/ApiExplorer/GraphiQLWrapper/GraphiQLWrapper';
 
+import { CONSOLE_ADMIN_SECRET } from './src/components/AppState';
+
 // import utility functions
 
 import { loadMigrationStatus } from './src/components/Main/Actions';
@@ -86,6 +88,8 @@ import mainState from './src/components/Main/State';
 import { changeRequestHeader } from './src/components/Services/ApiExplorer/Actions';
 import validateLogin from './src/utils/validateLogin';
 
+import DragFoldTable from './src/components/Common/TableCommon/DragFoldTable';
+
 const filterQueryScss = require('./src/components/Common/FilterQuery/FilterQuery.scss');
 const tableScss = require('./src/components/Common/TableCommon/Table.scss');
 
@@ -145,6 +149,10 @@ export {
   showInfoNotification,
   showWarningNotification,
 };
+
+export { DragFoldTable };
+
+export { CONSOLE_ADMIN_SECRET };
 
 // export styles
 export { filterQueryScss, tableScss };
