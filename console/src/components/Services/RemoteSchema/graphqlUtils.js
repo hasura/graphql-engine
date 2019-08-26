@@ -18,7 +18,6 @@ export const useIntrospectionSchema = (endpoint, headers) => {
       method: 'POST',
       headers: {
         ...headers,
-        'x-hasura-admin-secret': 'advancedbitch'
       },
       body: JSON.stringify({ query: getIntrospectionQuery() }),
     })
