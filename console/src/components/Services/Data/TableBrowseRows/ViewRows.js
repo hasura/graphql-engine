@@ -87,7 +87,7 @@ const ViewRows = ({
       _curRelName &&
       parentTableSchema &&
       parentTableSchema.relationships.find(
-        r => r.name === _curRelName && r.rel_type === 'object'
+        r => r.rel_name === _curRelName && r.rel_type === 'object'
       )
     ) {
       // Am I an obj_rel for my parent?
@@ -106,10 +106,69 @@ const ViewRows = ({
   const getGridHeadings = (_columns, _relationships) => {
     const _gridHeadings = [];
 
+    const getColWidth = (header, contentRows = []) => {
+      const MAX_WIDTH = 600;
+      const HEADER_PADDING = 42;
+      const CONTENT_PADDING = 18;
+      const HEADER_FONT = 'bold 16px Gudea';
+      const CONTENT_FONT = '14px Gudea';
+
+      const getTextWidth = (text, font) => {
+        // Doesn't work well with non-monospace fonts
+        // const CHAR_WIDTH = 8;
+        // return text.length * CHAR_WIDTH;
+
+        // if given, use cached canvas for better performance
+        // else, create new canvas
+        const canvas =
+          getTextWidth.canvas ||
+          (getTextWidth.canvas = document.createElement('canvas'));
+
+        const context = canvas.getContext('2d');
+        context.font = font;
+
+        const metrics = context.measureText(text);
+        return metrics.width;
+      };
+
+      let maxContentWidth = 0;
+      for (let i = 0; i < contentRows.length; i++) {
+        if (contentRows[i] !== undefined && contentRows[i][header] !== null) {
+          const content = contentRows[i][header];
+
+          let contentString;
+          if (content === null || content === undefined) {
+            contentString = 'NULL';
+          } else if (typeof content === 'object') {
+            contentString = JSON.stringify(content, null, 4);
+          } else {
+            contentString = content.toString();
+          }
+
+          const currLength = getTextWidth(contentString, CONTENT_FONT);
+
+          if (currLength > maxContentWidth) {
+            maxContentWidth = currLength;
+          }
+        }
+      }
+
+      const maxContentCellWidth = maxContentWidth + CONTENT_PADDING;
+
+      const headerCellWidth =
+        getTextWidth(header, HEADER_FONT) + HEADER_PADDING;
+
+      return Math.min(
+        MAX_WIDTH,
+        Math.max(maxContentCellWidth, headerCellWidth)
+      );
+    };
+
     _gridHeadings.push({
       Header: '',
       accessor: 'tableRowActionButtons',
       id: 'tableRowActionButtons',
+      width: 152,
     });
 
     _columns.map(col => {
@@ -137,6 +196,7 @@ const ViewRows = ({
         accessor: columnName,
         id: columnName,
         foldable: true,
+        width: getColWidth(columnName, curRows),
       });
     });
 
@@ -152,6 +212,7 @@ const ViewRows = ({
         accessor: relName,
         id: relName,
         foldable: true,
+        width: getColWidth(relName),
       });
     });
 
@@ -423,13 +484,10 @@ const ViewRows = ({
           } else if (rowColumnValue === undefined) {
             cellValue = 'NULL';
             cellTitle = cellValue;
-          } else if (col.data_type === 'json' || col.data_type === 'jsonb') {
-            cellValue = JSON.stringify(rowColumnValue);
+          } else if (typeof rowColumnValue === 'object') {
+            cellValue = JSON.stringify(rowColumnValue, null, 4);
             cellTitle = cellValue;
           } else {
-            /*
-             * This will render [object Object] if the state is not common data types
-             * */
             cellValue = rowColumnValue.toString();
             cellTitle = cellValue;
           }
@@ -596,10 +654,13 @@ const ViewRows = ({
         const rel = tableSchema.relationships.find(r => r.rel_name === cq.name);
 
         if (rel) {
+          const isObjectRel = rel.rel_type === 'object';
+
           let childRows = curRows[0][cq.name];
-          if (rel.rel_type === 'object') {
+          if (isObjectRel) {
             childRows = [childRows];
           }
+
           // Find the name of this childTable using the rel
           return (
             <ViewRows
@@ -753,7 +814,7 @@ const ViewRows = ({
 
     return (
       <DragFoldTable
-        className="-highlight"
+        className="-highlight -fit-content"
         data={_gridRows}
         columns={_gridHeadings}
         resizable
@@ -762,8 +823,8 @@ const ViewRows = ({
         minRows={0}
         getTheadThProps={getTheadThProps}
         getResizerProps={getResizerProps}
-        showPagination={count > curFilter.limit}
-        defaultPageSize={Math.min(curFilter.limit, count)}
+        showPagination={!isSingleRow}
+        pageSize={curFilter.limit}
         pages={Math.ceil(count / curFilter.limit)}
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
@@ -781,8 +842,7 @@ const ViewRows = ({
   return (
     <div className={isVisible ? '' : 'hide '}>
       {getFilterQuery()}
-      <hr />
-      <div className="row">
+      <div className={`row ${styles.add_mar_top}`}>
         <div className="col-xs-12">
           <div className={styles.tableContainer}>{renderTableBody()}</div>
           <br />

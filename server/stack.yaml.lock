@@ -95,6 +95,13 @@ packages:
       sha256: 86140298020f68bb09d07b26a6a6f1666fc3a02715d7986b09150727247a1a84
   original:
     hackage: Spock-core-0.13.0.0
+- completed:
+    hackage: monad-validate-1.2.0.0@sha256:9850f408431098b28806dd464b6825a88a0b56c84f380d7fe0454c1df9d6f881,3505
+    pantry-tree:
+      size: 713
+      sha256: 8e049bd12ce2bd470909578f2ee8eb80b89d5ff88860afa30e29dd4eafecfa3e
+  original:
+    hackage: monad-validate-1.2.0.0
 snapshots:
 - completed:
     size: 498167

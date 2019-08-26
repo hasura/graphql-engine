@@ -1,8 +1,25 @@
-module Hasura.RQL.Types.Catalog where
+-- | Types that represent the raw data stored in the catalog. See also: the module documentation for
+-- "Hasura.RQL.DDL.Schema".
+module Hasura.RQL.Types.Catalog
+  ( CatalogMetadata(..)
+
+  , CatalogTable(..)
+  , CatalogTableInfo(..)
+
+  , CatalogRelation(..)
+  , CatalogPermission(..)
+  , CatalogEventTrigger(..)
+  , CatalogFunction(..)
+  ) where
 
 import           Hasura.Prelude
 
+import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
+
 import           Hasura.RQL.DDL.Schema.Function
+import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
@@ -11,15 +28,21 @@ import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCache
 import           Hasura.SQL.Types
 
-import           Data.Aeson
-import           Data.Aeson.Casing
-import           Data.Aeson.TH
+data CatalogTableInfo
+  = CatalogTableInfo
+  { _ctiColumns           :: ![PGRawColumnInfo]
+  , _ctiConstraints       :: ![ConstraintName]
+  , _ctiPrimaryKeyColumns :: ![PGCol]
+  , _ctiViewInfo          :: !(Maybe ViewInfo)
+  } deriving (Show, Eq)
+$(deriveJSON (aesonDrop 4 snakeCase) ''CatalogTableInfo)
 
 data CatalogTable
   = CatalogTable
-  { _ctTable         :: !QualifiedTable
-  , _ctSystemDefined :: !Bool
-  , _ctInfo          :: !(Maybe TableInfo)
+  { _ctName            :: !QualifiedTable
+  , _ctIsSystemDefined :: !Bool
+  , _ctIsEnum          :: !Bool
+  , _ctInfo            :: !(Maybe CatalogTableInfo)
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogTable)
 

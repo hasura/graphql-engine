@@ -4,9 +4,9 @@ set -euo pipefail
 ### Functions
 
 stop_services() {
-   kill -INT $HGE_PIDS || true
+   kill -s INT $HGE_PIDS || true
    kill $WH_PID || true
-   kill -INT $WHC_PID || true
+   kill -s INT $WHC_PID || true
 }
 
 time_elapsed(){
@@ -94,7 +94,7 @@ combine_all_hpc_reports() {
 }
 
 kill_hge_servers() {
-	kill -INT $HGE_PIDS || true
+	kill -s INT $HGE_PIDS || true
 	wait $HGE_PIDS || true
 	HGE_PIDS=""
 }
