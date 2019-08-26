@@ -22,7 +22,7 @@ type OpExp = OpExpG UnresolvedVal
 
 parseOpExps
   :: (MonadError QErr m)
-  => PGColType -> AnnInpVal -> m [OpExp]
+  => PGColumnType -> AnnInpVal -> m [OpExp]
 parseOpExps colTy annVal = do
   opExpsM <- flip withObjectM annVal $ \nt objM -> forM objM $ \obj ->
     forM (OMap.toList obj) $ \(k, v) ->
@@ -56,8 +56,8 @@ parseOpExps colTy annVal = do
       "_contained_in" -> fmap AContainedIn <$> asOpRhs v
       "_has_key"      -> fmap AHasKey <$> asOpRhs v
 
-      "_has_keys_any" -> fmap AHasKeysAny <$> asPGArray PGText v
-      "_has_keys_all" -> fmap AHasKeysAll <$> asPGArray PGText v
+      "_has_keys_any" -> fmap AHasKeysAny <$> asPGArray (PGColumnScalar PGText) v
+      "_has_keys_all" -> fmap AHasKeysAll <$> asPGArray (PGColumnScalar PGText) v
 
       -- geometry/geography type related operators
       "_st_contains"   -> fmap ASTContains <$> asOpRhs v
@@ -77,13 +77,18 @@ parseOpExps colTy annVal = do
           <> showName k
   return $ catMaybes $ fromMaybe [] opExpsM
   where
-    asOpRhs = fmap (fmap UVPG) . asPGColValM
+    asOpRhs = fmap (fmap UVPG) . asPGColumnValueM
 
     asPGArray rhsTy v = do
-      valsM <- parseMany asPGColVal v
+      valsM <- parseMany asPGColumnValue v
       forM valsM $ \vals -> do
-        let arrayExp = S.SEArray $ map (txtEncoder . _apvValue) vals
-        return $ UVSQL $ S.SETyAnn arrayExp $ S.mkTypeAnn $ PgTypeArray rhsTy
+        let arrayExp = S.SEArray $ map (txtEncoder . pstValue . _apvValue) vals
+        return $ UVSQL $ S.SETyAnn arrayExp $ S.mkTypeAnn $
+          -- Safe here because asPGColumnValue ensured all the values are of the right type, but if the
+          -- list is empty, we don’t actually have a scalar type to use, so we need to use
+          -- unsafePGColumnToRepresentation to create it. (It would be nice to refactor things to
+          -- somehow get rid of this.)
+          PGTypeArray (unsafePGColumnToRepresentation rhsTy)
 
     resolveIsNull v = case _aivValue v of
       AGScalar _ Nothing -> return Nothing
@@ -95,18 +100,18 @@ parseOpExps colTy annVal = do
     parseAsSTDWithinObj obj = do
       distanceVal <- onNothing (OMap.lookup "distance" obj) $
                 throw500 "expected \"distance\" input field in st_d_within"
-      dist <- UVPG <$> asPGColVal distanceVal
+      dist <- UVPG <$> asPGColumnValue distanceVal
       fromVal <- onNothing (OMap.lookup "from" obj) $
                 throw500 "expected \"from\" input field in st_d_within"
-      from <- UVPG <$> asPGColVal fromVal
+      from <- UVPG <$> asPGColumnValue fromVal
       case colTy of
-        PGGeography -> do
+        PGColumnScalar PGGeography -> do
           useSpheroidVal <-
             onNothing (OMap.lookup "use_spheroid" obj) $
             throw500 "expected \"use_spheroid\" input field in st_d_within"
-          useSpheroid <- UVPG <$> asPGColVal useSpheroidVal
+          useSpheroid <- UVPG <$> asPGColumnValue useSpheroidVal
           return $ ASTDWithinGeog $ DWithinGeogOp dist from useSpheroid
-        PGGeometry ->
+        PGColumnScalar PGGeometry ->
           return $ ASTDWithinGeom $ DWithinGeomOp dist from
         _ -> throw500 "expected PGGeometry/PGGeography column for st_d_within"
 
@@ -117,7 +122,7 @@ parseCastExpression =
   withObjectM $ \_ objM -> forM objM $ \obj -> do
     targetExps <- forM (OMap.toList obj) $ \(targetTypeName, castedComparisonExpressionInput) -> do
       let targetType = txtToPgColTy $ G.unName targetTypeName
-      castedComparisonExpressions <- parseOpExps targetType castedComparisonExpressionInput
+      castedComparisonExpressions <- parseOpExps (PGColumnScalar targetType) castedComparisonExpressionInput
       return (targetType, castedComparisonExpressions)
     return $ Map.fromList targetExps
 

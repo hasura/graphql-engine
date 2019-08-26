@@ -49,7 +49,7 @@ data AnnAggOrdBy
   deriving (Show, Eq)
 
 data AnnObColG v
-  = AOCPG !PGColInfo
+  = AOCPG !PGColumnInfo
   | AOCObj !RelInfo !(AnnBoolExp v) !(AnnObColG v)
   | AOCAgg !RelInfo !(AnnBoolExp v) !AnnAggOrdBy
   deriving (Show, Eq)
@@ -121,7 +121,7 @@ data ColOp
   } deriving (Show, Eq)
 
 data AnnFldG v
-  = FCol !PGColInfo !(Maybe ColOp)
+  = FCol !PGColumnInfo !(Maybe ColOp)
   | FObj !(ObjSelG v)
   | FArr !(ArrSelG v)
   | FExp !T.Text
