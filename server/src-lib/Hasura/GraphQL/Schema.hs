@@ -37,13 +37,13 @@ import           Hasura.SQL.Types
 import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Function
+import           Hasura.GraphQL.Schema.Merge
 import           Hasura.GraphQL.Schema.Mutation.Common
 import           Hasura.GraphQL.Schema.Mutation.Delete
 import           Hasura.GraphQL.Schema.Mutation.Insert
 import           Hasura.GraphQL.Schema.Mutation.Update
 import           Hasura.GraphQL.Schema.OrderBy
 import           Hasura.GraphQL.Schema.Select
-import           Hasura.GraphQL.Schema.Merge
 
 getInsPerm :: TableInfo PGColumnInfo -> RoleName -> Maybe InsPermInfo
 getInsPerm tabInfo role
@@ -375,8 +375,9 @@ getRootFldsRole' tn primCols constraints fields funcs insM selM updM delM viM =
       , g fi
       )
 
-    mkFuncArgItemSeq fi = Seq.fromList $
-      procFuncArgs (fiInputArgs fi) $ \_ t -> FuncArgItem $ G.Name t
+    mkFuncArgItemSeq fi = Seq.fromList $ procFuncArgs (fiInputArgs fi)
+                          $ \fa t -> FuncArgItem (G.Name t) $
+                                     getFuncArgNameTxt <$> faName fa
 
 
 getSelPermission :: TableInfo PGColumnInfo -> RoleName -> Maybe SelPermInfo

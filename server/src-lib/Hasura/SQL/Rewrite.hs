@@ -184,6 +184,8 @@ uSqlExp = restoringIdens . \case
   S.SETuple (S.TupleExp l)     ->
     S.SEArray <$> mapM uSqlExp l
   S.SECount cty                 -> return $ S.SECount cty
+  S.SEFnArg idenM val           ->
+    S.SEFnArg idenM <$> uSqlExp val
   where
     uQual = \case
       S.QualIden iden -> S.QualIden <$> getIden iden

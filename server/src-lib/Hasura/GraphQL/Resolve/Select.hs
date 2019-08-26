@@ -413,13 +413,26 @@ convertAggSelect opCtx fld =
 
 parseFunctionArgs
   ::( MonadError QErr m)
-  => FuncArgSeq -> AnnInpVal -> m [UnresolvedVal]
-parseFunctionArgs argSeq val = fmap catMaybes $
-  flip withObject val $ \_ obj ->
-    fmap toList $ forM argSeq $ \(FuncArgItem argName) ->
-      forM (OMap.lookup argName obj) $ fmap (maybe nullSQL UVPG) . asPGColumnValueM
+  => FuncArgSeq -> AnnInpVal -> m [RS.FunctionArgExpG UnresolvedVal]
+parseFunctionArgs argSeq val = do
+  resolvedArgs <- fmap catMaybes $
+    flip withObject val $ \_ obj ->
+      forM argList $ \(FuncArgItem argName mSqlName) ->
+        forM (OMap.lookup argName obj) $
+        fmap (RS.FunctionArgExp mSqlName . maybe nullSQL UVPG) . asPGColumnValueM
+  return $
+    -- If all arguments are given then use positional notation
+    -- since a positional argument cannot follow a named argument
+    if length resolvedArgs == length argList then
+      -- Remove argument names to use positional notation
+      map removeArgName resolvedArgs
+    else
+      -- By default, resolvedArgs will have argument names
+      resolvedArgs
   where
     nullSQL = UVSQL $ S.SEUnsafe "NULL"
+    argList = toList argSeq
+    removeArgName fae = fae{RS._faeName = Nothing}
 
 fromFuncQueryField
   :: (MonadError QErr m)

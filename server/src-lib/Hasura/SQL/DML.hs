@@ -121,8 +121,7 @@ mkSelFromExp isLateral sel tn =
     alias = Alias $ toIden tn
 
 mkFuncFromItem :: QualifiedFunction -> [SQLExp] -> FromItem
-mkFuncFromItem qf args =
-  FIFunc qf args Nothing
+mkFuncFromItem qf args = FIFunc qf args Nothing
 
 mkRowExp :: [Extractor] -> SQLExp
 mkRowExp extrs = let
@@ -284,6 +283,7 @@ data SQLExp
   | SEArray ![SQLExp]
   | SETuple !TupleExp
   | SECount !CountType
+  | SEFnArg !(Maybe Iden) !SQLExp
   deriving (Show, Eq, Data)
 
 withTyAnn :: PGScalarType -> SQLExp -> SQLExp
@@ -346,6 +346,11 @@ instance ToSQL SQLExp where
                          <> (", " <+> exps) <> TB.char ']'
   toSQL (SETuple tup) = toSQL tup
   toSQL (SECount ty) = "COUNT" <> paren (toSQL ty)
+  -- https://www.postgresql.org/docs/current/sql-syntax-calling-funcs.html
+  toSQL (SEFnArg argM val) =
+    case argM of
+      Nothing  -> toSQL val
+      Just arg -> toSQL arg <-> "=>" <-> toSQL val
 
 intToSQLExp :: Int -> SQLExp
 intToSQLExp =

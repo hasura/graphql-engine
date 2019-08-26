@@ -275,10 +275,18 @@ type AnnSimpleSel = AnnSimpleSelG S.SQLExp
 type AnnAggSelG v = AnnSelG (TableAggFldsG v) v
 type AnnAggSel = AnnAggSelG S.SQLExp
 
+data FunctionArgExpG a
+  = FunctionArgExp
+  { _faeName  :: !(Maybe Text)
+  , _faeValue :: !a
+  } deriving (Show, Eq, Functor, Foldable, Traversable)
+
+type FunctionArgExp = FunctionArgExpG S.SQLExp
+
 data AnnFnSelG s v
   = AnnFnSel
   { _afFn     :: !QualifiedFunction
-  , _afFnArgs :: ![v]
+  , _afFnArgs :: ![FunctionArgExpG v]
   , _afSelect :: !s
   } deriving (Show, Eq)
 
@@ -287,7 +295,7 @@ traverseAnnFnSel
   => (a -> f b) -> (v -> f w)
   -> AnnFnSelG a v -> f (AnnFnSelG b w)
 traverseAnnFnSel fs fv (AnnFnSel fn fnArgs s) =
-  AnnFnSel fn <$> traverse fv fnArgs <*> fs s
+  AnnFnSel fn <$> (traverse . traverse) fv fnArgs <*> fs s
 
 type AnnFnSelSimpleG v = AnnFnSelG (AnnSimpleSelG v) v
 type AnnFnSelSimple = AnnFnSelSimpleG S.SQLExp
