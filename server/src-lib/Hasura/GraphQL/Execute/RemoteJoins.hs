@@ -11,7 +11,6 @@ module Hasura.GraphQL.Execute.RemoteJoins
   , parseGQRespValue
   , extractRemoteRelArguments
   , produceBatch
-  , produceBatches
   , joinResults
   , emptyResp
   , rebuildFieldStrippingRemoteRels
@@ -22,6 +21,7 @@ import           Control.Arrow                          (first)
 import           Control.Lens
 import           Data.Scientific
 import           Data.String
+import           Data.Traversable
 import           Data.Validation
 import           Hasura.SQL.Types
 import           Data.List
@@ -157,15 +157,13 @@ rebuildFieldStrippingRemoteRels ::
      VQ.Field -> Maybe (VQ.Field, NonEmpty RemoteRelField)
 -- TODO consider passing just relevant fields (_fSelSet and _fAlias?) from Field here and modify Field in caller
 rebuildFieldStrippingRemoteRels =
-  extract . flip runState mempty . rebuild 0 mempty
+  traverse NE.nonEmpty . flip runState mempty . rebuild 0 mempty
   where
-    extract (field, remoteRelFields) =
-      fmap (field, ) (NE.nonEmpty remoteRelFields)
     -- TODO refactor for clarity
     rebuild idx0 parentPath field0 = do
       selSetEithers <-
-        traverse
-          (\(idx, subfield) ->
+        for (zip [0..] (toList (_fSelSet field0))) $
+          \(idx, subfield) ->
              case _fRemoteRel subfield of
                Nothing -> fmap Right (rebuild idx thisPath subfield)
                Just remoteField -> do
@@ -182,25 +180,20 @@ rebuildFieldStrippingRemoteRels =
                                map
                                  G.unName
                                  (filter
-                                    (\name ->
-                                       notElem
-                                         name
-                                         (map _fName (toList (_fSelSet field0))))
+                                    (`notElem` fmap _fName (_fSelSet field0))
                                     (map
                                        (G.Name . getFieldNameTxt)
                                        (toList
                                           (rtrHasuraFields
                                              (rmfRemoteRelationship remoteField)))))
-                           })
-          (zip [0..] (toList (_fSelSet field0)))
+                           }
       let fields = rights selSetEithers
       pure
         field0
           { _fSelSet =
               Seq.fromList $
                 selSetEithers >>= \case
-                  Right field -> pure field
-                    where _ = _fAlias field
+                  Right field -> [field]
                   Left remoteField ->
                     mapMaybe
                       (\name ->
@@ -236,6 +229,7 @@ joinResults :: GQRespValue
             -> GQRespValue
 joinResults hasuraValue0 =
   foldl' (uncurry . insertBatchResults) hasuraValue0 . map (fmap jsonToGQRespVal)
+  
   where
     jsonToGQRespVal = either mkErr id . parseGQRespValue
     mkErr = appendJoinError emptyResp . ("joinResults: eitherDecode: " <>) . fromString
@@ -243,6 +237,7 @@ joinResults hasuraValue0 =
 emptyResp :: GQRespValue
 emptyResp = GQRespValue OJ.empty VB.empty
 
+-- TODO it's not clear which error conditions here represent internal errors (i.e. bugs)...
 -- | Insert at path, index the value in the larger structure.
 insertBatchResults ::
      GQRespValue
@@ -400,17 +395,6 @@ peelOffNestedFields topNames topValue = foldM peel topValue (NE.drop 1 topNames)
             "No " <> show key <> " in " <> show value <> " from " <> 
             show topValue <> " with " <> show topNames
 
--- | Produce the set of remote relationship batch requests.
-produceBatches ::
-     G.OperationType
-  -> [( RemoteRelField
-    , RemoteSchemaInfo
-    , BatchInputs)]
-  -> [Batch]
-produceBatches opType =
-  fmap
-    (\(remoteRelField, remoteSchemaInfo, rows) ->
-       produceBatch opType remoteSchemaInfo remoteRelField rows)
 
 -- TODO document all of this
 data Batch =
