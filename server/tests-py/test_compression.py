@@ -2,7 +2,9 @@
 
 import pytest
 import yaml
+import json
 import jsondiff
+import brotli
 
 from super_classes import DefaultTestSelectQueries
 from validate import json_ordered
@@ -31,67 +33,63 @@ class TestCompression(DefaultTestSelectQueries):
             conf = yaml.safe_load(c)
             return conf['url'], conf['query'], conf['response']
 
+    def _assert_status_code_200(self, resp):
+        assert resp.status_code == 200, resp.status_code
+
     def _assert_encoding(self, headers, encoding):
         assert 'Content-Encoding' in headers, headers
         assert headers['Content-Encoding'] == encoding, headers
 
-    def _assert_gzip(self, headers):
-        self._assert_encoding(headers, 'gzip')
-
-    def _assert_brotli(self, headers):
-        self._assert_encoding(headers, 'br')
-
-    def _assert_resp(self, resp, exp_resp):
-        json_resp = resp.json()
+    def _assert_resp(self, json_resp, exp_resp):
         assert json_ordered(json_resp) == json_ordered(exp_resp), yaml.dump({
             'response': json_resp,
             'expected': exp_resp,
             'diff': jsondiff.diff(exp_resp, json_resp)
         })
 
+    def _assert_gzip(self, resp, exp_resp):
+        self._assert_status_code_200(resp)
+        self._assert_encoding(resp.headers, 'gzip')
+        json_resp = resp.json()
+        self._assert_resp(json_resp, exp_resp)
+
+    def _assert_brotli(self, resp, exp_resp):
+        self._assert_status_code_200(resp)
+        self._assert_encoding(resp.headers, 'br')
+        json_resp = json.loads(brotli.decompress(resp.content))
+        self._assert_resp(json_resp, exp_resp)
+
     def test_gzip_compression_graphql(self, hge_ctx):
         url, q, exp_resp = self._get_config(self.dir() + '/graphql_query.yaml')
         resp = self._make_post(hge_ctx, url, q, self.gzip_header)
-        assert resp.status_code == 200, resp.json()
-        self._assert_gzip(resp.headers)
-        self._assert_resp(resp, exp_resp)
+        self._assert_gzip(resp, exp_resp)
 
     def test_gzip_compression_v1_query(self, hge_ctx):
         url, q, exp_resp = self._get_config(self.dir() + '/v1_query.yaml')
         resp = self._make_post(hge_ctx, url, q, self.gzip_header)
-        assert resp.status_code == 200, resp.json()
-        self._assert_gzip(resp.headers)
-        self._assert_resp(resp, exp_resp)
+        self._assert_gzip(resp, exp_resp)
 
     def test_brotli_compression_graphql(self, hge_ctx):
         url, q, exp_resp = self._get_config(self.dir() + '/graphql_query.yaml')
         resp = self._make_post(hge_ctx, url, q, self.brotli_header)
-        assert resp.status_code == 200, resp.json()
-        self._assert_brotli(resp.headers)
-        self._assert_resp(resp, exp_resp)
+        self._assert_brotli(resp, exp_resp)
 
     def test_brotli_compression_v1_query(self, hge_ctx):
         url, q, exp_resp = self._get_config(self.dir() + '/v1_query.yaml')
         resp = self._make_post(hge_ctx, url, q, self.brotli_header)
-        assert resp.status_code == 200, resp.json()
-        self._assert_brotli(resp.headers)
-        self._assert_resp(resp, exp_resp)
+        self._assert_brotli(resp, exp_resp)
 
 
     # If gzip and brotli encoding are requested the server prefers brotli
     def test_gzip_brotli_graphql_query(self, hge_ctx):
         url, q, exp_resp = self._get_config(self.dir() + '/graphql_query.yaml')
         resp = self._make_post(hge_ctx, url, q, self.gzip_brotli_header)
-        assert resp.status_code == 200, resp.json()
-        self._assert_brotli(resp.headers)
-        self._assert_resp(resp, exp_resp)
+        self._assert_brotli(resp, exp_resp)
 
     def test_gzip_brotli_v1_query(self, hge_ctx):
         url, q, exp_resp = self._get_config(self.dir() + '/v1_query.yaml')
         resp = self._make_post(hge_ctx, url, q, self.gzip_brotli_header)
-        assert resp.status_code == 200, resp.json()
-        self._assert_brotli(resp.headers)
-        self._assert_resp(resp, exp_resp)
+        self._assert_brotli(resp, exp_resp)
 
     @classmethod
     def dir(cls):
