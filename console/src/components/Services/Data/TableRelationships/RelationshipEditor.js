@@ -4,7 +4,10 @@ import Button from '../../../Common/Button/Button';
 import { deleteRelMigrate, saveRenameRelationship } from './Actions';
 import { showErrorNotification } from '../../Common/Notification';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
+import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
+
 import styles from '../TableModify/ModifyTable.scss';
+import tableStyles from '../../../Common/TableCommon/TableStyles.scss';
 
 class RelationshipEditor extends React.Component {
   constructor(props) {
@@ -50,9 +53,9 @@ class RelationshipEditor extends React.Component {
     if (!gqlPattern.test(text)) {
       return dispatch(
         showErrorNotification(
-          gqlRelErrorNotif[4],
+          gqlRelErrorNotif[3],
           gqlRelErrorNotif[1],
-          gqlRelErrorNotif[3]
+          gqlRelErrorNotif[2]
         )
       );
     }
@@ -71,7 +74,11 @@ class RelationshipEditor extends React.Component {
     const { text, isEditting } = this.state;
     const { relName } = relConfig;
 
-    const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
+    const gqlCompatibilityWarning = !gqlPattern.test(relName) ? (
+      <span className={styles.add_mar_left_small}>
+        <GqlCompatibilityWarning />
+      </span>
+    ) : null;
 
     const onDelete = e => {
       e.preventDefault();
@@ -91,7 +98,7 @@ class RelationshipEditor extends React.Component {
           Edit
         </Button>
         &nbsp;
-        <b>{relName}</b>
+        <b>{relName}</b> {gqlCompatibilityWarning}
         <div className={tableStyles.relationshipTopPadding}>
           {getRelDef(relConfig)}
         </div>

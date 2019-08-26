@@ -16,7 +16,7 @@ import           Data.Has
 import           Hasura.GraphQL.Utils
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
-import           Hasura.GraphQL.Resolve.ContextTypes (FieldMap)
+import           Hasura.GraphQL.Resolve.Types (FieldMap)
 
 getFieldInfo
   :: ( MonadError QErr m)

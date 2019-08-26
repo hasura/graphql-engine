@@ -322,6 +322,8 @@ simplifyError txErr = do
       ("42704", msg) -> return (ConstraintError, msg)
       -- invalid input values
       ("22007", msg) -> return (DataException, msg)
+      -- invalid escape sequence
+      ("22025", msg) -> return (BadRequest, msg)
       _              -> Nothing
 
 -- validate limit and offset int values

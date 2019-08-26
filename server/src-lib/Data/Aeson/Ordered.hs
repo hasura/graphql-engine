@@ -10,7 +10,8 @@
 module Data.Aeson.Ordered
   ( Value(..)
   , Object
-  , Data.Aeson.Ordered.union
+  , Array
+  , Data.Aeson.Ordered.safeUnion
   , value
   , decode
   , Data.Aeson.Ordered.toList
@@ -88,8 +89,8 @@ newtype Object = Object_ { unObject_ :: InsOrdHashMap Text Value}
   deriving (Eq, Read, Show, Typeable, Data, Generic)
 
 -- | Union the keys, ordered, in two maps, erroring on duplicates.
-union :: Object -> Object -> Either String Object
-union (Object_ x) (Object_ y) =
+safeUnion :: Object -> Object -> Either String Object
+safeUnion (Object_ x) (Object_ y) =
   fmap
     Object_
     (traverse

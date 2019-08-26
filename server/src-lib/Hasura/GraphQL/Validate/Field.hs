@@ -19,7 +19,7 @@ import qualified Data.Sequence.NonEmpty              as NE
 import qualified Data.Text                           as T
 import qualified Language.GraphQL.Draft.Syntax       as G
 
-import           Hasura.GraphQL.Resolve.ContextTypes
+import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Validate.Context
 import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Types
@@ -49,6 +49,8 @@ type ArgsMap = Map.HashMap G.Name AnnInpVal
 
 type SelSet = Seq.Seq Field
 
+-- N.B. This is a tree via 'SelSet'
+-- | https://graphql.github.io/graphql-spec/June2018/#sec-Language.Fields 
 data Field
   = Field
   { _fAlias     :: !G.Alias

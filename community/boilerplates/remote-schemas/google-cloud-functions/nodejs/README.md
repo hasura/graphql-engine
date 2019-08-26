@@ -33,7 +33,7 @@ $ cd graphql-engine/community/boilerplates/remote-schemas/google-cloud-functions
 Start a local development server (you may need to install dependencies from npm):
 
 ```bash
-$ npm i --no-save apollo-server express
+$ npm i --no-save apollo-server
 $ node localDev.js
 
 Output:

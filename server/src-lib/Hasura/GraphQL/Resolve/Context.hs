@@ -1,24 +1,14 @@
 module Hasura.GraphQL.Resolve.Context
-  ( FieldMap
-  , RelationInfoMap
-  , FuncArgItem(..)
-  , OrdByCtx
-  , OrdByItemMap
+  ( FuncArgItem(..)
   , OrdByItem(..)
-  , FuncArgSeq
-  , PGColArgMap
   , UpdPermForIns(..)
   , InsCtx(..)
-  , InsCtxMap
   , RespTx
   , LazyRespTx
   , AnnPGVal(..)
-  , PrepFn
   , UnresolvedVal(..)
   , resolveValPrep
   , resolveValTxt
-  , AnnBoolExpUnresolved
-  , partialSQLExpToUnresolvedVal
   , InsertTxConflictCtx(..)
   , getFldInfo
   , getPGColInfo
@@ -37,66 +27,27 @@ module Hasura.GraphQL.Resolve.Context
   , withSelSet
   , fieldAsPath
   , module Hasura.GraphQL.Utils
+  , module Hasura.GraphQL.Resolve.Types
   ) where
 
 import           Data.Has
 import           Hasura.Prelude
 
-import qualified Data.Aeson                          as J
-import qualified Data.Aeson.Casing                   as J
-import qualified Data.Aeson.TH                       as J
-import qualified Data.HashMap.Strict                 as Map
-import qualified Data.Sequence                       as Seq
-import qualified Database.PG.Query                   as Q
-import qualified Language.GraphQL.Draft.Syntax       as G
+import qualified Data.HashMap.Strict           as Map
+import qualified Data.Sequence                 as Seq
+import qualified Database.PG.Query             as Q
+import qualified Language.GraphQL.Draft.Syntax as G
 
-import           Hasura.GraphQL.Resolve.ContextTypes
-
+import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Utils
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
+import           Hasura.RQL.DML.Internal       (sessVarFromCurrentSetting)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-import           Hasura.RQL.DML.Internal             (sessVarFromCurrentSetting)
-
-import qualified Hasura.SQL.DML                      as S
-
-data InsResp
-  = InsResp
-  { _irAffectedRows :: !Int
-  , _irResponse     :: !(Maybe J.Object)
-  } deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''InsResp)
-
-data AnnPGVal
-  = AnnPGVal
-  { _apvVariable   :: !(Maybe G.Variable)
-  , _apvIsNullable :: !Bool
-  , _apvType       :: !PGColType
-  , _apvValue      :: !PGColValue
-  } deriving (Show, Eq)
-
-type PrepFn m = AnnPGVal -> m S.SQLExp
-
--- lifts PartialSQLExp to UnresolvedVal
-partialSQLExpToUnresolvedVal :: PartialSQLExp -> UnresolvedVal
-partialSQLExpToUnresolvedVal = \case
-  PSESessVar ty sessVar -> UVSessVar ty sessVar
-  PSESQLExp s           -> UVSQL s
-
--- A value that will be converted to an sql expression eventually
-data UnresolvedVal
-  -- From a session variable
-  = UVSessVar !PgType !SessVar
-  -- This is postgres
-  | UVPG !AnnPGVal
-  -- This is a full resolved sql expression
-  | UVSQL !S.SQLExp
-  deriving (Show, Eq)
-
-type AnnBoolExpUnresolved = AnnBoolExp UnresolvedVal
+import qualified Hasura.SQL.DML                as S
 
 getFldInfo
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)

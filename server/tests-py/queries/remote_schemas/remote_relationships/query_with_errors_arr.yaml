@@ -1,6 +1,8 @@
 description: Remote relationship GraphQL query with errors
 url: /v1/graphql
 status: 200
+# Since errorMsg in not non-null we should both return a valid result as well
+# as propogate the error the remote server raised.
 response:
   data:
     profiles:
@@ -19,6 +21,32 @@ response:
         messagesNestedArgs:
           - msg: Another alice
             errorMsg: null
+  errors: &id001
+  - locations:
+    - column: 71
+      line: 1
+    message: intentional-error
+    path:
+    - hasura_array_idx_0
+    - 0
+    - errorMsg
+  - locations:
+    - column: 154
+      line: 1
+    message: intentional-error
+    path:
+    - hasura_array_idx_1
+    - 0
+    - errorMsg
+  - locations:
+    - column: 237
+      line: 1
+    message: intentional-error
+    path:
+    - hasura_array_idx_2
+    - 0
+    - errorMsg
+
 query:
   query: |
     query {
