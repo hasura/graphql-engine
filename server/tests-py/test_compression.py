@@ -17,6 +17,8 @@ class TestCompression(DefaultTestSelectQueries):
     gzip_brotli_header = {'Accept-Encoding': 'gzip, br'}
 
     def _make_post(self, hge_ctx, u, q, h):
+        if hge_ctx.hge_key is not None:
+            h['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
         resp = hge_ctx.http.post(
             hge_ctx.hge_url + u,
             json=q,
