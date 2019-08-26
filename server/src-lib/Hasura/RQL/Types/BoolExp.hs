@@ -20,6 +20,7 @@ module Hasura.RQL.Types.BoolExp
        , AnnBoolExpFldSQL
        , AnnBoolExpSQL
        , PartialSQLExp(..)
+       , mkTypedSessionVar
        , isStaticValue
        , AnnBoolExpFldPartialSQL
        , AnnBoolExpPartialSQL
@@ -30,6 +31,7 @@ module Hasura.RQL.Types.BoolExp
        ) where
 
 import           Hasura.Prelude
+import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Permission
 import qualified Hasura.SQL.DML              as S
@@ -121,7 +123,7 @@ data DWithinGeogOp a =
   } deriving (Show, Eq, Functor, Foldable, Traversable, Data)
 $(deriveJSON (aesonDrop 6 snakeCase) ''DWithinGeogOp)
 
-type CastExp a = M.HashMap PGColType [OpExpG a]
+type CastExp a = M.HashMap PGScalarType [OpExpG a]
 
 data OpExpG a
   = ACast !(CastExp a)
@@ -236,7 +238,7 @@ opExpToJPair f = \case
     opExpsToJSON = object . map (opExpToJPair f)
 
 data AnnBoolExpFld a
-  = AVCol !PGColInfo ![OpExpG a]
+  = AVCol !PGColumnInfo ![OpExpG a]
   | AVRel !RelInfo !(AnnBoolExp a)
   deriving (Show, Eq, Functor, Foldable, Traversable)
 
@@ -280,9 +282,13 @@ type PreSetCols = M.HashMap PGCol S.SQLExp
 
 -- doesn't resolve the session variable
 data PartialSQLExp
-  = PSESessVar !PgType !SessVar
+  = PSESessVar !(PGType PGScalarType) !SessVar
   | PSESQLExp !S.SQLExp
   deriving (Show, Eq, Data)
+
+mkTypedSessionVar :: PGType PGColumnType -> SessVar -> PartialSQLExp
+mkTypedSessionVar columnType =
+  PSESessVar (unsafePGColumnToRepresentation <$> columnType)
 
 instance ToJSON PartialSQLExp where
   toJSON = \case

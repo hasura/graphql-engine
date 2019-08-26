@@ -105,7 +105,7 @@ input table_insert_input {
 -}
 
 mkInsInp
-  :: QualifiedTable -> [PGColInfo] -> RelationInfoMap -> InpObjTyInfo
+  :: QualifiedTable -> [PGColumnInfo] -> RelationInfoMap -> InpObjTyInfo
 mkInsInp tn insCols relInfoMap =
   mkHsraInpTyInfo (Just desc) (mkInsInpTy tn) $ fromInpValL $
   map mkPGColInp insCols <> relInps
@@ -177,11 +177,11 @@ mkInsMutFld tn isUpsertable =
     onConflictArg =
       InpValInfo (Just onConflictDesc) "on_conflict" Nothing $ G.toGT $ mkOnConflictInpTy tn
 
-mkConstriantTy :: QualifiedTable -> [ConstraintName] -> EnumTyInfo
-mkConstriantTy tn cons = enumTyInfo
+mkConstraintTy :: QualifiedTable -> [ConstraintName] -> EnumTyInfo
+mkConstraintTy tn cons = enumTyInfo
   where
     enumTyInfo = mkHsraEnumTyInfo (Just desc) (mkConstraintInpTy tn) $
-                 mapFromL _eviVal $ map mkConstraintEnumVal cons
+      EnumValuesSynthetic . mapFromL _eviVal $ map mkConstraintEnumVal cons
 
     desc = G.Description $
       "unique or primary key constraints on table " <>> tn
@@ -194,15 +194,15 @@ mkUpdColumnTy :: QualifiedTable -> [PGCol] -> EnumTyInfo
 mkUpdColumnTy tn cols = enumTyInfo
   where
     enumTyInfo = mkHsraEnumTyInfo (Just desc) (mkUpdColumnInpTy tn) $
-                 mapFromL _eviVal $ map mkColumnEnumVal cols
+      EnumValuesSynthetic . mapFromL _eviVal $ map mkColumnEnumVal cols
 
     desc = G.Description $
       "update columns of table " <>> tn
 
 mkConflictActionTy :: Bool -> EnumTyInfo
 mkConflictActionTy updAllowed =
-  mkHsraEnumTyInfo (Just desc) conflictActionTy $ mapFromL _eviVal $
-  [enumValIgnore] <> bool [] [enumValUpdate] updAllowed
+  mkHsraEnumTyInfo (Just desc) conflictActionTy $
+    EnumValuesSynthetic . mapFromL _eviVal $ [enumValIgnore] <> bool [] [enumValUpdate] updAllowed
   where
     desc = G.Description "conflict action"
     enumValIgnore = EnumValInfo (Just "ignore the insert on this row")
@@ -216,7 +216,7 @@ mkOnConflictTypes tn uniqueOrPrimaryCons cols =
   bool [] tyInfos
   where
     tyInfos = [ TIEnum $ mkConflictActionTy isUpdAllowed
-              , TIEnum $ mkConstriantTy tn uniqueOrPrimaryCons
+              , TIEnum $ mkConstraintTy tn uniqueOrPrimaryCons
               , TIEnum $ mkUpdColumnTy tn cols
               , TIInpObj $ mkOnConflictInp tn
               ]

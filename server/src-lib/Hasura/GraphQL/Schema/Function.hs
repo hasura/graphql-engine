@@ -36,7 +36,7 @@ input function_args {
 
 procFuncArgs
   :: Seq.Seq FunctionArg
-  -> (PGColType -> Text -> a) -> [a]
+  -> (PGScalarType -> Text -> a) -> [a]
 procFuncArgs argSeq f =
   fst $ foldl mkItem ([], 1::Int) argSeq
   where
