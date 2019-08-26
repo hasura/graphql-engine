@@ -501,6 +501,7 @@ unlockAllEvents =
   Q.unitQE defaultTxErrorHandler [Q.sql|
           UPDATE hdb_catalog.event_log
           SET locked = 'f'
+          WHERE locked = 't'
           |] () False
 
 toInt64 :: (Integral a) => a -> Int64
