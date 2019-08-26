@@ -293,7 +293,7 @@ onStart serverEnv wsConn (StartMsg opId q) =
             scVer
             httpMgr
             enableAL
-    case getSubscriptionPlan execPlans
+    case getSubscriptionPlans execPlans
       -- When not a subscription operation
           of
       Nothing -> do
@@ -342,30 +342,36 @@ onStart serverEnv wsConn (StartMsg opId q) =
         sendCompleted (Just requestId)
       Just subPlans ->
         case subPlans of
-          [] -> preExecErr requestId (err500 Unexpected "subscription has no plan")
+          [] -> do
+            preExecErr requestId (err500 Unexpected "subscription has no plan")
+            sendCompleted (Just requestId)
           [x] -> do
             logOpEv ODStarted (Just requestId)
             execSubscription requestId q x
-          _ -> preExecErr requestId (err500 Unexpected "only one subscription plan expected")
+          _ -> do
+            preExecErr
+              requestId
+              (err500 Unexpected "only one subscription plan expected")
+            sendCompleted (Just requestId)
     return ()
   where
-    getSubscriptionPlan plans =
+    getSubscriptionPlans plans =
       let subPlans = map (getSubPlan . getLeafPlan) plans
        in case catMaybes subPlans of
             [] -> Nothing
             x  -> Just x
-       where
-         getLeafPlan =
-           \case
-             E.Leaf resolvedPlan ->
-               case resolvedPlan of
-                 E.ExPHasura operation -> Just operation
-                 E.ExPRemote _         -> Nothing
-             _ -> Nothing
-         getSubPlan =
-           \case
-             Just (E.ExOpSubs p) -> Just p
-             _ -> Nothing
+      where
+        getLeafPlan =
+          \case
+            E.Leaf resolvedPlan ->
+              case resolvedPlan of
+                E.ExPHasura operation -> Just operation
+                E.ExPRemote _         -> Nothing
+            _ -> Nothing
+        getSubPlan =
+          \case
+            Just (E.ExOpSubs p) -> Just p
+            _ -> Nothing
     execSubscription ::
          RequestId -> GQLReqUnparsed -> LQ.LiveQueryOp -> ExceptT () IO ()
     execSubscription reqId query lqOp = do
@@ -392,13 +398,15 @@ onStart serverEnv wsConn (StartMsg opId q) =
       -> [H.Header]
       -> VQ.RemoteTopField
       -> m EncJSON
-    runRemoteGQ execCtx reqId userInfo reqHdrs topField = do
+    runRemoteGQ execCtx reqId userInfo reqHdrs topField
       -- if it's not a subscription, use HTTP to execute the query on the remote
       -- server
       -- try to parse the (apollo protocol) websocket frame and get only the
       -- payload
+     = do
       when (rtqOperationType topField == G.OperationTypeSubscription) $
-        throwError $ err400 NotSupported "subscription to remote server is not supported"
+        throwError $
+        err400 NotSupported "subscription to remote server is not supported"
       resp <-
         let (rsi, fields) = remoteTopQueryEither topField
          in runExceptT $
@@ -411,13 +419,6 @@ onStart serverEnv wsConn (StartMsg opId q) =
               rsi
               fields
       liftEither (fmap _hrBody resp)
-
-    -- sendRemoteResp reqId resp =
-    --   case J.eitherDecodeStrict (encJToBS resp) of
-    --     Left e    -> postExecErr reqId $ invalidGqlErr $ T.pack e
-    --     Right res -> sendMsg wsConn $ SMData $ DataMsg opId (GRRemote res)
-    -- invalidGqlErr err =
-    --   err500 Unexpected $ "Failed parsing GraphQL response from remote: " <> err
     WSServerEnv logger pgExecCtx lqMap gCtxMapRef httpMgr _ sqlGenCtx planCache _ enableAL =
       serverEnv
     WSConnData userInfoR opMap errRespTy = WS.getData wsConn
@@ -456,8 +457,7 @@ onStart serverEnv wsConn (StartMsg opId q) =
               ERTGraphqlCompliant -> J.object ["errors" J..= [errFn False qErr]]
       sendMsg wsConn $ SMErr $ ErrorMsg opId err
     sendGenericResp encJson =
-      sendMsg wsConn $
-      SMData $ DataMsg opId $ GRHasura $ GQGeneric encJson
+      sendMsg wsConn $ SMData $ DataMsg opId $ GRHasura $ GQGeneric encJson
     withComplete :: ExceptT () IO () -> ExceptT () IO a
     withComplete action = do
       action
