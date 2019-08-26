@@ -112,7 +112,7 @@ type OrdByCtx = Map.HashMap G.NamedType OrdByItemMap
 data FuncArgItem
   = FuncArgItem
   { _faiInputArgName :: !G.Name
-  , _faiSqlArgName   :: !(Maybe Text)
+  , _faiSqlArgName   :: !(Maybe FunctionArgName)
   } deriving (Show, Eq)
 
 type FuncArgSeq = Seq.Seq FuncArgItem

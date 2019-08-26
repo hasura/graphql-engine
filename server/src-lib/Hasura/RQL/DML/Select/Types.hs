@@ -277,7 +277,7 @@ type AnnAggSel = AnnAggSelG S.SQLExp
 
 data FunctionArgExpG a
   = FunctionArgExp
-  { _faeName  :: !(Maybe Text)
+  { _faeName  :: !(Maybe FunctionArgName)
   , _faeValue :: !a
   } deriving (Show, Eq, Functor, Foldable, Traversable)
 

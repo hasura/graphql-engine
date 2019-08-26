@@ -720,7 +720,8 @@ mkFuncSelectWith f annFn =
                          }
     frmItem = S.mkFuncFromItem qf $ map mkFnArgExp fnArgs
 
-    mkFnArgExp (FunctionArgExp mName val) = S.SEFnArg (Iden <$> mName) val
+    mkFnArgExp (FunctionArgExp mName val) =
+      S.SEFnArg (Iden . getFuncArgNameTxt <$> mName) val
 
     newTabFrom = (_asnFrom annSel) {_tfIden = Just $ toIden funcAls}
 

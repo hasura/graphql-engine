@@ -17,7 +17,7 @@ module Hasura.GraphQL.Schema
   , checkSchemaConflicts
   ) where
 
-import           Control.Lens.Extended          hiding (op)
+import           Control.Lens.Extended                 hiding (op)
 
 import qualified Data.HashMap.Strict                   as Map
 import qualified Data.HashSet                          as Set
@@ -376,8 +376,7 @@ getRootFldsRole' tn primCols constraints fields funcs insM selM updM delM viM =
       )
 
     mkFuncArgItemSeq fi = Seq.fromList $ procFuncArgs (fiInputArgs fi)
-                          $ \fa t -> FuncArgItem (G.Name t) $
-                                     getFuncArgNameTxt <$> faName fa
+                          $ \fa t -> FuncArgItem (G.Name t) $ faName fa
 
 
 getSelPermission :: TableInfo PGColumnInfo -> RoleName -> Maybe SelPermInfo
@@ -637,7 +636,7 @@ instance Monoid TyAgg where
 -- | A role-specific mapping from root field names to allowed operations.
 data RootFields
   = RootFields
-  { rootQueryFields :: !(Map.HashMap G.Name (QueryCtx, ObjFldInfo))
+  { rootQueryFields    :: !(Map.HashMap G.Name (QueryCtx, ObjFldInfo))
   , rootMutationFields :: !(Map.HashMap G.Name (MutationCtx, ObjFldInfo))
   } deriving (Show, Eq)
 

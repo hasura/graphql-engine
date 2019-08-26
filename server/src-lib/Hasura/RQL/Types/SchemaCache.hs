@@ -355,10 +355,6 @@ funcTypToTxt FTSTABLE    = "STABLE"
 instance Show FunctionType where
   show = T.unpack . funcTypToTxt
 
-newtype FunctionArgName =
-  FunctionArgName { getFuncArgNameTxt :: T.Text}
-  deriving (Show, Eq, ToJSON)
-
 data FunctionArg
   = FunctionArg
   { faName :: !(Maybe FunctionArgName)
