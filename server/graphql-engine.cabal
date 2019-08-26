@@ -359,6 +359,7 @@ executable graphql-engine
                      , wreq
                      , string-conversions
                      , uuid
+                     , unix
 
   other-modules:       Ops
                      , Migrate
