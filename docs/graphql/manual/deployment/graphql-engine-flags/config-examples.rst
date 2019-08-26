@@ -170,15 +170,15 @@ HTTP Compression
 ----------------
 
 To enable compressing responses from Hasura GraphQL Engine, pass the ``--enable-compression`` flag or
-set ``HASURA_GRAPHQL_ENABLE_COMPRESSION`` environment variable to ``true``.
+set the ``HASURA_GRAPHQL_ENABLE_COMPRESSION`` environment variable to ``true``.
 Only responses from ``/v1/query`` and ``/v1/graphql`` endpoints are compressed.
-The server looks for ``Accept-Encoding`` header in request.
-If header contains ``br`` then the server uses `Brotli <https://en.wikipedia.org/wiki/Brotli>`__ compression else if header contains
+The server looks for the ``Accept-Encoding`` header in request.
+If the header contains ``br`` then the server uses `Brotli <https://en.wikipedia.org/wiki/Brotli>`__ compression else if the header contains
 ``gzip`` then the server uses `Gzip <https://en.wikipedia.org/wiki/Gzip>`__ compression.
 If both values are present then the server prefers ``Brotli`` over ``Gzip``.
-Also, the server sets ``Content-Encoding`` response header value to ``br`` if ``Brotli`` or ``gzip`` if ``Gzip``.
+Also, the server sets the ``Content-Encoding`` response header value to ``br`` if ``Brotli`` or ``gzip`` if ``Gzip``.
 
-Run server in this mode using following docker command:
+Run the server in this mode using following docker command:
 
 .. code-block:: bash
 
