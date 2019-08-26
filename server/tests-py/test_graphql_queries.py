@@ -402,6 +402,10 @@ class TestGraphQLQueryFunctions(DefaultTestSelectQueries):
     def test_search_posts_aggregate(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/query_search_posts_aggregate.yaml")
 
+    @pytest.mark.parametrize("transport", ['http', 'websocket'])
+    def test_query_get_users(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/query_get_users.yaml", transport)
+
     def test_alter_function_error(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/alter_function_error.yaml')
 
