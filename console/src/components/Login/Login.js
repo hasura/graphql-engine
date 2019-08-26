@@ -59,7 +59,6 @@ const Login = ({ dispatch }) => {
       errorCallback,
       dispatch,
     });
-
   };
 
   return (
@@ -93,19 +92,16 @@ const Login = ({ dispatch }) => {
                   {loginText}
                 </Button>
               </div>
-              <div className={`${styles.display_flex} ${styles.add_pad_left}`}>
-                <input
-                  type="checkbox"
-                  checked={shouldPersist}
-                  onChange={toggleShouldPersist}
-                  className={`${styles.add_mar_right_small} ${
-                    styles.remove_margin_top
-                  } ${styles.cursorPointer}`}
-                />
-                <label
-                  className={`${styles.cursorPointer}`}
-                  onClick={toggleShouldPersist}
-                >
+              <div className={styles.add_pad_left}>
+                <label className={`${styles.cursorPointer}`}>
+                  <input
+                    type="checkbox"
+                    checked={shouldPersist}
+                    onChange={toggleShouldPersist}
+                    className={`${styles.add_mar_right_small} ${
+                      styles.remove_margin_top
+                    } ${styles.cursorPointer}`}
+                  />
                   Remember in this browser
                 </label>
               </div>
