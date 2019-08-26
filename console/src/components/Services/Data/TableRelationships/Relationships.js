@@ -516,7 +516,7 @@ const mapStateToProps = (state, ownProps) => ({
   migrationMode: state.main.migrationMode,
   featuresCompatibility: state.main.featuresCompatibility,
   schemaList: state.tables.schemaList,
-  remoteSchemas: state.customResolverData.listData.resolvers.map(r => r.name),
+  remoteSchemas: state.remoteSchemas.listData.remoteSchemas.map(r => r.name),
   ...state.tables.modify,
 });
 
