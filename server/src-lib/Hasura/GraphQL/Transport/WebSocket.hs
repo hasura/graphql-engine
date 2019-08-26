@@ -29,6 +29,8 @@ import           Control.Concurrent                          (threadDelay)
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging
+
+import           Hasura.GraphQL.Transport.HTTP               (mergeResponseData)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
@@ -48,7 +50,6 @@ import           Hasura.Server.Utils                         (RequestId,
 import qualified Hasura.GraphQL.Execute                      as E
 import qualified Hasura.GraphQL.Execute.LiveQuery            as LQ
 import qualified Hasura.GraphQL.Execute.Query                as E
-import qualified Hasura.GraphQL.Transport.HTTP               as HTTP (mergeResponseData)
 import qualified Language.GraphQL.Draft.Syntax               as G
 
 type OperationMap
@@ -304,8 +305,8 @@ onStart serverEnv wsConn (StartMsg opId q) =
               case execPlan of
                 E.Leaf plan ->
                   case plan of
-                    E.ExPHasura op ->
-                      case op of
+                    E.ExPHasura operation ->
+                      case operation of
                         E.ExOpQuery opTx genSql ->
                           fmap (\res -> encJFromAssocList [("data", res)]) $
                           execQueryOrMut requestId q genSql $
@@ -329,7 +330,7 @@ onStart serverEnv wsConn (StartMsg opId q) =
         case results of
           Left err -> postExecErr requestId err
           Right results' -> do
-            let mergedResponse = HTTP.mergeResponseData results' True
+            let mergedResponse = mergeResponseData results'
             case mergedResponse of
               Left e ->
                 postExecErr requestId $
@@ -337,8 +338,8 @@ onStart serverEnv wsConn (StartMsg opId q) =
                   UnexpectedPayload
                   ("could not merge data from results: " <> T.pack e)
               Right resp -> do
-                sendSuccResp resp
-                sendCompleted (Just requestId)
+                sendGenericResp resp
+        sendCompleted (Just requestId)
       Just subPlans ->
         case subPlans of
           [] -> preExecErr requestId (err500 Unexpected "subscription has no plan")
@@ -358,8 +359,8 @@ onStart serverEnv wsConn (StartMsg opId q) =
            \case
              E.Leaf resolvedPlan ->
                case resolvedPlan of
-                 E.ExPHasura op -> Just op
-                 E.ExPRemote _  -> Nothing
+                 E.ExPHasura operation -> Just operation
+                 E.ExPRemote _         -> Nothing
              _ -> Nothing
          getSubPlan =
            \case
@@ -454,9 +455,9 @@ onStart serverEnv wsConn (StartMsg opId q) =
               ERTLegacy -> errFn False qErr
               ERTGraphqlCompliant -> J.object ["errors" J..= [errFn False qErr]]
       sendMsg wsConn $ SMErr $ ErrorMsg opId err
-    sendSuccResp encJson =
+    sendGenericResp encJson =
       sendMsg wsConn $
-      SMData $ DataMsg opId $ GRHasura $ GQSuccess $ encJToLBS encJson
+      SMData $ DataMsg opId $ GRHasura $ GQGeneric encJson
     withComplete :: ExceptT () IO () -> ExceptT () IO a
     withComplete action = do
       action
@@ -526,7 +527,7 @@ logWSEvent (L.Logger logger) wsConn wsEv = do
       ERejected _ -> True
       EConnErr _  -> True
       EClosed     -> False
-      EOperation op -> case _odOperationType op of
+      EOperation operation -> case _odOperationType operation of
         ODStarted    -> False
         ODProtoErr _ -> True
         ODQueryErr _ -> True

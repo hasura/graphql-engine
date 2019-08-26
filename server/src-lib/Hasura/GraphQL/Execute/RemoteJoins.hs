@@ -1,12 +1,13 @@
 {-# LANGUAGE DisambiguateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns           #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Hasura.GraphQL.Execute.RemoteJoins
   ( Batch(..)
   , BatchInputs(..)
   , RemoteRelField(..)
-  , GQRespValue(..)
-  , gqrespValueToValue
+  , GQRespValue(..), gqRespData, gqRespErrors
+  , encodeGQRespValue
   , parseGQRespValue
   , extractRemoteRelArguments
   , produceBatch
@@ -20,6 +21,7 @@ module Hasura.GraphQL.Execute.RemoteJoins
 import           Control.Arrow                          (first)
 import           Control.Lens
 import           Data.Scientific
+import           Data.String
 import           Data.Validation
 import           Hasura.SQL.Types
 import           Data.List
@@ -37,6 +39,8 @@ import qualified Data.Sequence                          as Seq
 import qualified Data.String.Conversions                as CS
 import qualified Data.Text                              as T
 import qualified Data.Vector                            as V
+import qualified VectorBuilder.Builder                  as VB 
+import qualified VectorBuilder.Vector                   as VB
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Hasura.GraphQL.Validate                as VQ
 
@@ -48,43 +52,67 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Value
 
 -- | https://graphql.github.io/graphql-spec/June2018/#sec-Response-Format
+--
+-- NOTE: this type and parseGQRespValue are a lax representation of the spec,
+-- since...
+--   - remote GraphQL servers may not conform strictly, and...
+--   - we use this type as an accumulator.
+--
+-- Ideally we'd have something correct by construction for hasura results
+-- someplace.
 data GQRespValue =
   GQRespValue
-  { gqRespData   :: Maybe OJ.Object
-  , gqRespErrors :: Maybe [OJ.Value]
-  } deriving (Show, Eq)
+  { _gqRespData   :: OJ.Object
+  -- ^ 'OJ.empty' (corresponding to the invalid `"data": {}`) indicates an error.
+  , _gqRespErrors :: VB.Builder OJ.Value
+  -- ^ An 'OJ.Array', but with efficient cons and concatenation. Null indicates
+  -- query success.
+  }
+-- TODO consider unifying this type with Hasura.GraphQL.Transport.HTTP.Protocol.
 
-parseGQRespValue :: OJ.Value -> Either String GQRespValue
-parseGQRespValue =
-  \case
-    OJ.Object obj -> do
-      gqRespData <-
-        case OJ.lookup "data" obj of
-          Nothing -> pure Nothing
-          Just (OJ.Object dobj) -> pure (Just dobj)
-          Just _ -> Left "expected object for GraphQL data response"
-      gqRespErrors <-
-        case OJ.lookup "errors" obj of
-          Nothing -> pure Nothing
-          Just (OJ.Array vec) -> pure (Just (toList vec))
-          Just _ -> Left "expected array for GraphQL error response"
-      pure (GQRespValue {gqRespData, gqRespErrors})
-    _ -> Left "expected object for GraphQL response"
+makeLenses ''GQRespValue
 
-gqrespValueToValue :: GQRespValue -> OJ.Value
-gqrespValueToValue (GQRespValue mdata' merrors) =
-  OJ.Object
-    (OJ.fromList
-       (concat
-          [ [("data", OJ.Object data') | Just data' <- [mdata']]
-          , [ ("errors", OJ.Array (V.fromList errors))
-            | Just errors <- [merrors]
-            ]
-          ]))
+parseGQRespValue :: EncJSON -> Either String GQRespValue
+parseGQRespValue = OJ.eitherDecode . encJToLBS >=> \case
+  OJ.Object obj -> do
+    _gqRespData <-
+      case OJ.lookup "data" obj of
+        -- "an error was encountered before execution began":
+        Nothing -> pure OJ.empty
+        -- "an error was encountered during the execution that prevented a valid response":
+        Just OJ.Null -> pure OJ.empty
+        Just (OJ.Object dobj) -> pure dobj
+        Just _ -> Left "expected object or null for GraphQL data response"
+    _gqRespErrors <-
+      case OJ.lookup "errors" obj of
+        Nothing -> pure VB.empty
+        Just (OJ.Array vec) -> pure $ VB.vector vec
+        Just _ -> Left "expected array for GraphQL error response"
+    pure (GQRespValue {_gqRespData, _gqRespErrors})
+  _ -> Left "expected object for GraphQL response"
 
-data GQJoinError =  GQJoinError !T.Text
-  deriving (Show, Eq)
+encodeGQRespValue :: GQRespValue -> EncJSON
+encodeGQRespValue GQRespValue{..} = OJ.toEncJSON $ OJ.Object $ OJ.fromList $
+  -- "If the data entry in the response is not present, the errors entry in the
+  -- response must not be empty. It must contain at least one error. "
+  if _gqRespData == OJ.empty && not anyErrors
+    then
+      let msg = "Somehow did not accumulate any errors or data from graphql queries"
+       in [("errors", OJ.Array $ V.singleton $ gQJoinErrorToValue msg)]
+    else
+      -- NOTE: "If an error was encountered during the execution that prevented
+      -- a valid response, the data entry in the response should be null."
+      -- TODO it's not clear to me how we can enforce that here or if we should try.
+      ("data", OJ.Object _gqRespData) :
+      [("errors", OJ.Array gqRespErrorsV) | anyErrors ]
+  where 
+    gqRespErrorsV = VB.build _gqRespErrors
+    anyErrors = not $ V.null gqRespErrorsV
 
+newtype GQJoinError =  GQJoinError T.Text
+  deriving (Show, Eq, IsString, Monoid, Semigroup)
+
+-- | https://graphql.github.io/graphql-spec/June2018/#sec-Errors  "Error result format"
 gQJoinErrorToValue :: GQJoinError -> OJ.Value
 gQJoinErrorToValue (GQJoinError msg) =
   OJ.Object (OJ.fromList [("message", OJ.String msg)])
@@ -202,43 +230,52 @@ neededHasuraFields
   :: RemoteField -> [FieldName]
 neededHasuraFields = toList . rtrHasuraFields . rmfRemoteRelationship
 
--- | Join the data from the original hasura with the remote values.
+-- | Join the data returned from the original hasura request with the remote values.
 joinResults :: GQRespValue
             -> [(Batch, EncJSON)]
             -> GQRespValue
 joinResults hasuraValue0 =
-  foldl (uncurry . insertBatchResults) hasuraValue0 . map (fmap f)
+  foldl' (uncurry . insertBatchResults) hasuraValue0 . map (fmap jsonToGQRespVal)
   where
-    f encJson =
-      case OJ.eitherDecode (encJToLBS encJson) >>= parseGQRespValue of
-        Left err ->
-          appendJoinError emptyResp (GQJoinError $ "joinResults: eitherDecode: " <> T.pack err)
-        Right gqResp@(GQRespValue Nothing _merrors) ->
-          appendJoinError gqResp $ GQJoinError "could not find join key"
-        Right gqResp -> gqResp
+    jsonToGQRespVal = either mkErr id . parseGQRespValue
+    mkErr = appendJoinError emptyResp . ("joinResults: eitherDecode: " <>) . fromString
 
 emptyResp :: GQRespValue
-emptyResp = GQRespValue Nothing Nothing
+emptyResp = GQRespValue OJ.empty VB.empty
 
 -- | Insert at path, index the value in the larger structure.
 insertBatchResults ::
      GQRespValue
+  -- ^ Original hasura response with accumulated remote responses
   -> Batch
   -> GQRespValue
   -> GQRespValue
-insertBatchResults hasuraResp Batch{..} remoteResp =
-  case inHashmap batchRelFieldPath hasuraData0 remoteData0 of
-    Left err  -> appendJoinError hasuraResp (GQJoinError (T.pack err))
-    Right val -> GQRespValue (Just (fst val)) (gqRespErrors hasuraResp)
+insertBatchResults accumResp Batch{..} remoteResp =
+  -- It's not clear what to do about errors here, or when to short-circuit so
+  -- try to do as much computation as possible for now:
+  case remoteDataE of
+    Left err -> appendJoinError accumResp err
+    Right remoteData0 -> do
+      case inHashmap batchRelFieldPath accumData0 remoteData0 of
+        Left err  -> appendJoinError accumRespWithRemoteErrs err
+        Right (val, _) -> set gqRespData val accumRespWithRemoteErrs
   where
-    hasuraData0 = fromMaybe OJ.empty (gqRespData hasuraResp)
+    accumRespWithRemoteErrs = gqRespErrors <>~ _gqRespErrors remoteResp $ accumResp 
+    accumData0 = _gqRespData accumResp
     -- The 'sortOn' below is not strictly necessary by the spec, but
     -- implementations may not guarantee order of results matching
     -- order of query.
     -- Since remote results are aliased by keys of the form 'remote_result_1', 'remote_result_2',
     -- we can sort by the keys for a ordered list
-    remoteData0 =
-      maybe mempty (map snd . sortOn fst . OJ.toList) (gqRespData remoteResp)
+    -- On error, we short-circuit
+    -- TODO look again at this...
+    remoteDataE = let indexedRemotes = map getIdxRemote $ OJ.toList $ _gqRespData remoteResp
+                  in case any isNothing indexedRemotes of
+                       True -> Left "couldn't parse all remote results"
+                       False -> Right $ map snd $ sortOn fst $ catMaybes indexedRemotes
+
+    getIdxRemote (remoteAlias, value) = let idxStr = stripPrefix "hasura_array_idx_" (T.unpack remoteAlias)
+                                  in (, value) <$> (join $ readMaybe <$> idxStr :: Maybe Int)
 
     cardinality = biCardinality batchInputs
 
@@ -247,11 +284,11 @@ insertBatchResults hasuraResp Batch{..} remoteResp =
       -> OJ.Object
       -> [OJ.Value]
       -- ^ The remote result data with no keys, only the values sorted by key
-      -> Either String (OJ.Object, [OJ.Value])
-    inHashmap (RelFieldPath p) hasuraData remoteDataVals = case p of
+      -> Either GQJoinError (OJ.Object, [OJ.Value])
+    inHashmap (RelFieldPath p) accumData remoteDataVals = case p of
       Seq.Empty ->
         case remoteDataVals of
-          [] -> Left $ err <> showHashO hasuraData
+          [] -> Left $ err <> showHashO accumData
             where err = case cardinality of
                           One -> "Expected one remote object but got none, while traversing "
                           Many -> "Expected many objects but got none, while traversing "
@@ -259,20 +296,18 @@ insertBatchResults hasuraResp Batch{..} remoteResp =
           (remoteDataVal:rest)
             | cardinality == One && not (null rest) ->
                 Left $
-                  "Expected one remote object but got many, while traversing " <> showHashO hasuraData
+                  "Expected one remote object but got many, while traversing " <> showHashO accumData
             | otherwise ->
-                Right
-                  ( spliceRemote remoteDataVal hasuraData
-                  , rest)
+                (, rest) <$> spliceRemote remoteDataVal accumData
 
       ((idx, G.Alias (G.Name key)) Seq.:<| rest) ->
-        case OJ.lookup key hasuraData of
+        case OJ.lookup key accumData of
           Nothing ->
             Left $
-              "Couldn't find expected key " <> show key <> " in " <> showHashO hasuraData <>
-              ", while traversing " <> showHashO hasuraData0
+              "Couldn't find expected key " <> fromString (show key) <> " in " <> showHashO accumData <>
+              ", while traversing " <> showHashO accumData0
           Just currentValue ->
-            first (\newValue -> OJ.insert (idx, key) newValue hasuraData)
+            first (\newValue -> OJ.insert (idx, key) newValue accumData)
               <$> inValue rest currentValue remoteDataVals
 
     -- TODO Brandon note:
@@ -284,18 +319,19 @@ insertBatchResults hasuraResp Batch{..} remoteResp =
          Seq.Seq (Int, G.Alias)
       -> OJ.Value
       -> [OJ.Value]
-      -> Either String (OJ.Value, [OJ.Value])
+      -> Either GQJoinError (OJ.Value, [OJ.Value])
     inValue path currentValue remoteDataVals =
       case currentValue of
-        OJ.Object hasuraData ->
+        OJ.Object accumData ->
           first OJ.Object <$>
-            inHashmap (RelFieldPath path) hasuraData remoteDataVals
+            inHashmap (RelFieldPath path) accumData remoteDataVals
 
-        OJ.Array hasuraRowValues -> first (OJ.Array . Vec.fromList) <$>
-          let foldHasuraRowObjs f = foldM (withObj f) ([], remoteDataVals) hasuraRowValues
-              withObj f tup (OJ.Object hasuraData) = f tup hasuraData
-              withObj _ _    hasuraRowValue = Left $
-                "expected array of objects in " <> showHash hasuraRowValue
+        OJ.Array hasuraRowValues -> first (OJ.Array . Vec.fromList . reverse) <$>
+          let foldHasuraRowObjs f = foldM f_onObj ([], remoteDataVals) hasuraRowValues
+                where
+                  f_onObj tup (OJ.Object accumData) = f tup accumData
+                  f_onObj _    hasuraRowValue = Left $
+                    "expected array of objects in " <> showHash hasuraRowValue
            in case path of
                 -- TODO Brandon note:
                 -- do we need to assert something about the Right.snd of the result here?
@@ -303,27 +339,24 @@ insertBatchResults hasuraResp Batch{..} remoteResp =
                 Seq.Empty ->
                   case cardinality of
                     Many -> foldHasuraRowObjs $
-                      \(hasuraRowsSoFar, remainingRemotes) hasuraData ->
+                      \(hasuraRowsSoFar, remainingRemotes) accumData ->
                          case remainingRemotes of
                            [] ->
                              Left $
-                               "no remote objects left for joining at " <> showHashO hasuraData
-                           (remoteDataVal:rest) ->
-                             Right
-                               -- TODO bad time complexity; cons then reverse instead?:
-                               ( hasuraRowsSoFar <>
-                                 [ OJ.Object $ spliceRemote remoteDataVal hasuraData ]
-                               , rest)
+                               "no remote objects left for joining at " <> showHashO accumData
+                           (remoteDataVal:rest) -> do
+                             spliced <- spliceRemote remoteDataVal accumData
+                             pure
+                               (OJ.Object spliced : hasuraRowsSoFar , rest)
                     One ->
                       Left "Cardinality mismatch: found array in hasura value, but expected object"
 
                 nonEmptyPath -> foldHasuraRowObjs $
-                  \(hasuraRowsSoFar, remainingRemotes) hasuraData ->
-                               -- TODO bad time complexity; cons then reverse instead?:
-                     first (\hasuraRowHash'-> hasuraRowsSoFar <> [OJ.Object hasuraRowHash']) <$>
+                  \(hasuraRowsSoFar, remainingRemotes) accumData ->
+                     first (\hasuraRowHash'-> OJ.Object hasuraRowHash' : hasuraRowsSoFar) <$>
                        inHashmap
                          (RelFieldPath nonEmptyPath)
-                         hasuraData
+                         accumData
                          remainingRemotes
 
         OJ.Null -> Right (OJ.Null, remoteDataVals)
@@ -333,45 +366,39 @@ insertBatchResults hasuraResp Batch{..} remoteResp =
 
     -- splice the remote result into the hasura result with the proper key (and
     -- at the right index), removing phantom fields
-    spliceRemote remoteDataVal hasuraData =
-      foldl' (flip OJ.delete)
-             (OJ.insert
-                (batchRelationshipKeyIndex, batchRelationshipKeyToMake)
-                (peelOffNestedFields batchNestedFields remoteDataVal)
-                hasuraData)
-             batchPhantoms
+    spliceRemote remoteDataVal accumData = do
+      peeledValue <- peelOffNestedFields batchNestedFields remoteDataVal
+      pure $
+        -- TODO Brandon note:
+        -- document rrPhantomFields/batchPhantoms so that we can understand if or why it's okay that the OJ.delete might silently be a noop here:
+        foldl' (flip OJ.delete)
+                -- TODO Brandon note:
+                -- document why we know OJ.insert might not silently clobber an existing field in accumData; e.g. with an assertion here, or directing reader to someplace validation is performed
+               (OJ.insert
+                  (batchRelationshipKeyIndex, batchRelationshipKeyToMake)
+                  peeledValue
+                  accumData)
+               batchPhantoms
 
     -- logging helpers:
-    showHash = show . OJ.toEncJSON
+    showHash = fromString . show . OJ.toEncJSON
     showHashO = showHash . OJ.Object
 
 
 -- | The drop 1 in here is dropping the first level of nesting. The
 -- top field is already aliased to e.g. foo_idx_1, and that layer is
 -- already peeled off. So here we are just peeling nested fields.
-peelOffNestedFields :: NonEmpty G.Name -> OJ.Value -> OJ.Value
-peelOffNestedFields = go . NE.drop 1
+peelOffNestedFields :: MonadError GQJoinError m => NonEmpty G.Name -> OJ.Value -> m OJ.Value
+peelOffNestedFields topNames topValue = foldM peel topValue (NE.drop 1 topNames)
   where
-    go [] value = value
-    go (G.Name key:rest) value =
+    peel value (G.Name key) = 
       case value of
-        OJ.Object hashmap ->
-          case OJ.lookup key hashmap of
-            -- TODO: Return proper error
-            Nothing     -> OJ.Null
-              -- Left $ GQJoinError
-              --   (T.pack ("No " <> show key <> " in " <> show value <> " from " <>
-              --    show toplevel <>
-              --    " with " <>
-              --    show xs))
-            Just value' -> go rest value'
-        _ -> OJ.Null
-            -- TODO: Return proper error
-          -- Left $ GQJoinError
-          --   (T.pack ("No! " <> show key <> " in " <> show value <> " from " <>
-          --    show toplevel <>
-          --    " with " <>
-          --    show xs))
+        OJ.Object (OJ.lookup key -> Just value') -> -- NOTE: ViewPatterns
+          pure value'
+        _ -> 
+          throwError $ fromString $
+            "No " <> show key <> " in " <> show value <> " from " <> 
+            show topValue <> " with " <> show topNames
 
 -- | Produce the set of remote relationship batch requests.
 produceBatches ::
@@ -548,59 +575,24 @@ toAnnGValue =
 
 -- | Extract from the Hasura results the remote relationship arguments.
 extractRemoteRelArguments ::
-     RemoteSchemaMap
-  -> EncJSON
+     EncJSON
   -> [RemoteRelField]
-  -> Either GQRespValue ( GQRespValue , [ BatchInputs ])
-extractRemoteRelArguments remoteSchemaMap hasuraJson rels =
-  -- TODO refactor with MonadError
-  case OJ.eitherDecode (encJToLBS hasuraJson) >>= parseGQRespValue of
-    Left err ->
-      Left $
-      appendJoinError emptyResp (GQJoinError ("decode error: " <> T.pack err))
-    Right gqResp@(GQRespValue mdata _merrors) ->
-      case mdata of
-        Nothing ->
-          Left $
-          appendJoinError
-            gqResp
-            (GQJoinError ("no hasura data to extract for join"))
-        Just value -> do
-          let hashE =
-                execStateT
-                  (extractFromResult One keyedRemotes (OJ.Object value))
-                  mempty
-          case hashE of
-            Left err -> Left $ appendJoinError gqResp err
-            Right hash -> do
-              remotes <-
-                Map.traverseWithKey
-                  (\key rows ->
-                     case Map.lookup key keyedMap of
-                       Nothing ->
-                         Left $
-                         appendJoinError
-                           gqResp
-                           (GQJoinError
-                              "failed to associate remote key with remote")
-                       Just remoteRel ->
-                         case Map.lookup
-                                (rtrRemoteSchema
-                                   (rmfRemoteRelationship
-                                      (rrRemoteField remoteRel)))
-                                remoteSchemaMap of
-                           Just remoteSchemaCtx ->
-                             pure (remoteRel, (rscInfo remoteSchemaCtx), rows)
-                           Nothing ->
-                             Left $
-                             appendJoinError
-                               gqResp
-                               (GQJoinError "could not find remote schema info"))
-                  hash
-              pure (gqResp, map (\(_, _, batchInputs ) -> batchInputs) $ Map.elems remotes)
+  -> ( GQRespValue , [ BatchInputs ])
+     -- ^ Errors are accumulated in GQRespValue. [BatchInputs] may be empty.
+extractRemoteRelArguments hasuraJson rels =
+  case parseGQRespValue hasuraJson of
+    Left (fromString-> err) ->
+      (appendJoinError emptyResp $ "decode error: " <> err, [])
+    Right gqResp@GQRespValue{..} -> do
+      let hashE =
+            execStateT
+              (extractFromResult One keyedRemotes (OJ.Object _gqRespData))
+              mempty
+      case hashE of
+        Left err -> (appendJoinError gqResp err, [])
+        Right hash -> (gqResp, Map.elems hash)
   where
     keyedRemotes = zip (fmap RemoteRelKey [0 ..]) rels
-    keyedMap = Map.fromList (toList keyedRemotes)
 
 data BatchInputs =
   BatchInputs
@@ -656,9 +648,9 @@ extractFromResult cardinality keyedRemotes value =
                Nothing ->
                  lift
                    (Left $
-                      GQJoinError
-                        ("Expected key " <> key <> " at this position: " <>
-                         (T.pack (show (OJ.toEncJSON value))))))
+                      fromString $
+                        "Expected key " <> T.unpack key <> " at this position: " <>
+                          show (OJ.toEncJSON value)))
           mempty
           (Map.toList candidates)
       mapM_
@@ -685,7 +677,7 @@ extractFromResult cardinality keyedRemotes value =
              outerHashmap
              keys)
         mempty
-        (toList (fmap peelRemoteKeys keyedRemotes))
+        (fmap peelRemoteKeys keyedRemotes)
 
 -- | Peel one layer of expected keys from the remote to be looked up
 -- at the current level of the result object.
@@ -823,9 +815,5 @@ pgcolvalueToGValue colVal = case colVal of
   PGValUnknown t -> pure $ G.VString $ G.StringValue t
 
 appendJoinError :: GQRespValue -> GQJoinError -> GQRespValue
-appendJoinError resp err =
-  resp
-    { gqRespData = gqRespData resp
-    , gqRespErrors =
-        pure (gQJoinErrorToValue err : fromMaybe mempty (gqRespErrors resp))
-    }
+appendJoinError resp err = 
+  gqRespErrors <>~ (VB.singleton $ gQJoinErrorToValue err) $ resp

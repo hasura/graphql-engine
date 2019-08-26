@@ -34,6 +34,8 @@ newtype EncJSON
 
 instance Show EncJSON where show = S8.unpack . encJToBS
 
+instance Eq EncJSON where a == b = show a == show b
+
 instance Q.FromCol EncJSON where
   fromCol = fmap encJFromBS . Q.fromCol
 

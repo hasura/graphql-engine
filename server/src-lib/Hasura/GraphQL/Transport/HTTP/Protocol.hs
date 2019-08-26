@@ -86,6 +86,7 @@ data GQResp
   = GQSuccess !BL.ByteString
   | GQPreExecError ![J.Value]
   | GQExecError ![J.Value]
+  | GQGeneric  !EncJSON
   deriving (Show, Eq)
 
 isExecError :: GQResp -> Bool
@@ -94,11 +95,12 @@ isExecError = \case
   _             -> False
 
 encodeGQResp :: GQResp -> EncJSON
-encodeGQResp gqResp =
-  encJFromAssocList $ case gqResp of
-    GQSuccess r      -> [("data", encJFromLBS r)]
-    GQPreExecError e -> [("errors", encJFromJValue e)]
-    GQExecError e    -> [("data", "null"), ("errors", encJFromJValue e)]
+encodeGQResp = \case
+  GQSuccess r      -> encJFromAssocList [("data", encJFromLBS r)]
+  GQPreExecError e -> encJFromAssocList [("errors", encJFromJValue e)]
+  GQExecError e    -> encJFromAssocList [("data", "null"), ("errors", encJFromJValue e)]
+  GQGeneric j -> j
+
 
 -- | Represents GraphQL response from a remote server
 data RemoteGqlResp

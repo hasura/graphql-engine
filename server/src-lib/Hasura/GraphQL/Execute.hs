@@ -233,7 +233,7 @@ getExecPlan pgExecCtx planCache userInfo@UserInfo{..} sqlGenCtx enableAL sc scVe
                     --      , "cursors = " ++ show (fmap rrRelFieldPath cursors)
                     --      ])
                     (queryTx, _planM, genSql) <- getQueryOp newHasuraField
-                    pure $ Tree (ExPHasura $ ExOpQuery queryTx (Just genSql)) $
+                    Tree (ExPHasura $ ExOpQuery queryTx (Just genSql)) <$>
                       mkUnresolvedPlans remoteRelFields
               VQ.HasuraTopSubscription fld -> do
                 (lqOp, _planM) <-
@@ -243,8 +243,8 @@ getExecPlan pgExecCtx planCache userInfo@UserInfo{..} sqlGenCtx enableAL sc scVe
                 -- mapM_ (addPlanToCache . EP.RPSubs) planM
                 pure $ Leaf . ExPHasura $ ExOpSubs lqOp
 
-    mkUnresolvedPlans :: NonEmpty RemoteRelField -> NonEmpty QExecPlanUnresolved
-    mkUnresolvedPlans = fmap (\remoteRelField -> QExecPlanUnresolved remoteRelField  (getRsi remoteRelField))
+    mkUnresolvedPlans :: MonadError QErr m => NonEmpty RemoteRelField -> m (NonEmpty QExecPlanUnresolved)
+    mkUnresolvedPlans = traverse (\remoteRelField -> QExecPlanUnresolved remoteRelField <$> getRsi remoteRelField)
       where
         getRsi remoteRel =
           case Map.lookup
@@ -252,7 +252,8 @@ getExecPlan pgExecCtx planCache userInfo@UserInfo{..} sqlGenCtx enableAL sc scVe
                     (rmfRemoteRelationship
                        (rrRemoteField remoteRel)))
                  (scRemoteSchemas sc) of
-            Just remoteSchemaCtx -> rscInfo remoteSchemaCtx
+            Just remoteSchemaCtx -> pure $ rscInfo remoteSchemaCtx
+            Nothing -> throw500 "could not find remote schema info"
 
 -- Monad for resolving a hasura query/mutation
 type E m =
