@@ -12,10 +12,9 @@ export const setCurrentRemoteSchema = currentRemoteSchemaName => ({
 });
 
 const SET_PERMISSION_ROLE = '@remoteSchema/SET_PERMISSION_ROLE';
-export const setPermissionRole = (role, index) => ({
+export const setPermissionRole = (role) => ({
   type: SET_PERMISSION_ROLE,
   role,
-  index,
 });
 
 const SET_PERMISSION_TYPES = '@remoteSchema/SET_PERMISSION_TYPES';
@@ -41,13 +40,13 @@ const CREATE_REMOTE_SCHEMA_PERMISSION_FAILURE =
 
 const CREATE_REMOTE_SCHEMA_PERMISSION =
   '@remoteSchema/CREATE_REMOTE_SCHEMA_PERMISSION';
-export const createRemoteSchemaPermission = (index, successCb, failureCb) => {
+export const createRemoteSchemaPermission = (successCb, failureCb) => {
   return (dispatch, getState) => {
     dispatch({ type: CREATE_REMOTE_SCHEMA_PERMISSION });
     const permsState = getState().remoteSchemas.permissions;
-    const rolePermState = permsState.rolePermissions[index];
+    const editState = permsState.editState;
     const remoteSchemaName = permsState.currentRemoteSchemaName;
-    if (!rolePermState.role) {
+    if (!editState.role) {
       return dispatch(
         showErrorNotification(
           'Saving permission failed',
@@ -55,7 +54,17 @@ export const createRemoteSchemaPermission = (index, successCb, failureCb) => {
         )
       );
     }
-    const query = generateCreatePermQuery(rolePermState, remoteSchemaName);
+
+    if (getState().tables.allRoles.includes(editState.role)) {
+      return dispatch(
+        showErrorNotification(
+          'Saving permission failed',
+          'This role name already exists'
+        )
+      );
+    }
+
+    const query = generateCreatePermQuery(editState, remoteSchemaName);
     const headers = getState().tables.dataHeaders;
     return dispatch(
       requestAction(endpoints.query, {

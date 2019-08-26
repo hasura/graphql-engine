@@ -81,6 +81,7 @@ const mapStateToProps = state => {
     remoteSchemasList: state.remoteSchemas.listData.remoteSchemas,
     permissions: state.remoteSchemas.permissions,
     adminHeaders: state.tables.dataHeaders,
+    rolesList: state.tables.allRoles
   };
 };
 

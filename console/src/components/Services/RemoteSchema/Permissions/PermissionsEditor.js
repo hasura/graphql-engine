@@ -24,7 +24,9 @@ const PermissionsEditor = ({
   }
 
   const getSaveButtons = () => {
-    const onSave = () => {};
+    const onSave = () => {
+      dispatch(createRemoteSchemaPermission());
+    };
     const onRemove = () => {};
     return (
       <div className={`${styles.display_flex} ${styles.add_mar_bottom}`}>
@@ -47,10 +49,6 @@ const PermissionsEditor = ({
     )
   };
 
-  
-  console.log('Adding type ========================');
-  console.log(editState.allowedTypes);
-  console.log('======================================');
 
   const allowedTypes = Object.keys(editState.allowedTypes).map(at => {
     const fieldToggleCallback = (fieldName, isChecked) => {
@@ -82,9 +80,6 @@ const PermissionsEditor = ({
         JSON.stringify(editState.allowedTypes)
       );
       delete newAllowedTypes[at];
-      console.log('Removing type ========================');
-      console.log(editState.allowedTypes);
-      console.log('======================================');
       Object.keys(editState.allowedTypes).forEach(_at => {
         Object.keys(editState.allowedTypes[_at]).forEach(field => {
           if (editState.allowedTypes[_at][field].typeName === at) {

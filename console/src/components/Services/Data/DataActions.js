@@ -56,6 +56,12 @@ const MAKE_REQUEST = 'ModifyTable/MAKE_REQUEST';
 const REQUEST_SUCCESS = 'ModifyTable/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'ModifyTable/REQUEST_ERROR';
 
+export const SET_ALL_ROLES = 'Data/SET_ALL_ROLES';
+export const setAllRoles = (roles) => ({
+  type: SET_ALL_ROLES,
+  roles
+});
+
 const initQueries = {
   schemaList: {
     type: 'select',
@@ -598,6 +604,35 @@ const fetchColumnTypeInfo = () => {
   };
 };
 
+export const fetchRoleList = () => (dispatch, getState) => {
+  const query = {
+    type: 'select',
+    args: {
+      table: {
+        schema: 'hdb_catalog',
+        name: 'hdb_permission_agg'
+      },
+      columns: ["role_name"],
+    }
+  };
+  const options = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify(query),
+  };
+
+  return dispatch(requestAction(Endpoints.query, options)).then(
+    data => {
+      const allRoles = [...new Set(data.map(r => r.role_name))]
+      dispatch(setAllRoles(allRoles));
+    },
+    error => {
+      console.error('Failed to load roles ' + JSON.stringify(error));
+    }
+  );
+}
+
 /* ******************************************************* */
 const dataReducer = (state = defaultState, action) => {
   // eslint-disable-line no-unused-vars
@@ -728,6 +763,11 @@ const dataReducer = (state = defaultState, action) => {
         columnTypeCasts: { ...defaultState.columnTypeCasts },
         columnDataTypeInfoErr: defaultState.columnDataTypeInfoErr,
       };
+    case SET_ALL_ROLES:
+      return {
+        ...state,
+        allRoles: action.roles
+      }    
     default:
       return state;
   }

@@ -26,7 +26,7 @@ export const generateCreatePermQuery = (state, remoteSchemaName) => {
 
 };
 
-export const parseRemoteRelPermDefinition = (payload, rootTypes, objectTypes, nonObjectTypes) => {
+export const parseRemoteRelPermDefinition = (payload, rootTypes, objectTypes, nonObjectTypes, roleName) => {
 
   if (!payload) {
     const newAllowedTypes = {};
@@ -36,6 +36,7 @@ export const parseRemoteRelPermDefinition = (payload, rootTypes, objectTypes, no
     return {
       ...permissionState.editState,
       allowedTypes: newAllowedTypes,
+      role: roleName
     };
   }
 

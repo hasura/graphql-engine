@@ -13,8 +13,7 @@ import {
   closePermissionEdit 
 } from './Actions';
 import { parseRemoteRelPermDefinition } from './utils';
-
-const roleList = ['role1', 'role2', 'anonymous'];
+import { fetchRoleList } from '../../Data/DataActions';
 
 const Permissions = props => {
 
@@ -23,7 +22,8 @@ const Permissions = props => {
     remoteSchemaName,
     adminHeaders,
     remoteSchemasList,
-    dispatch
+    dispatch,
+    rolesList
   } = props;
 
   const currentRemoteSchema = remoteSchemasList.find(
@@ -34,6 +34,10 @@ const Permissions = props => {
     currentRemoteSchema.definition.url,
     adminHeaders
   );
+
+  React.useEffect(() => {
+    dispatch(fetchRoleList());
+  }, []);
 
   if (loading) return 'Loading...';
 
@@ -112,7 +116,7 @@ const Permissions = props => {
 
     const getPermissionsTableBody = () => {
       const dispatchRoleNameChange = e => {
-        dispatch(permSetRoleName(e.target.value));
+        dispatch(setPermissionRole(e.target.value));
       };
 
       const getEditLink = () => {
@@ -126,11 +130,11 @@ const Permissions = props => {
       const getRootTypes = (role, isNewRole) => {
         return Object.keys(rootTypes).map(rootType => {
           const dispatchOpenEdit = rt => () => {
-            if (isNewRole && editState.role !== '') {
-              const perm = parseRemoteRelPermDefinition(null, rootTypes, objectTypes)
+            if (isNewRole && !!editState.role) {
+              const perm = parseRemoteRelPermDefinition(null, rootTypes, objectTypes, nonObjectTypes, editState.role);
               dispatch(setCurrentPermissionEdit(perm, rt));
-            } else if (role !== '') {
-              const perm = parseRemoteRelPermDefinition(existingPermissions.find(p => p.role === role), rootTypes, objectTypes);
+            } else if (!!role) {
+              const perm = parseRemoteRelPermDefinition(existingPermissions.find(p => p.role === role), rootTypes, objectTypes, nonObjectTypes);
               dispatch(setCurrentPermissionEdit(perm, rt))
             } else {
               document.getElementById('newRoleInput').focus();
@@ -183,7 +187,7 @@ const Permissions = props => {
       }
 
 
-      const _roleList = ['admin'].concat(roleList);
+      const _roleList = ['admin'].concat(rolesList);
 
       // roles wrapper
       const roles = _roleList.map(role => {
@@ -224,6 +228,7 @@ const Permissions = props => {
           nonObjectTypes={nonObjectTypes}
           rootTypes={rootTypes}
           dispatch={props.dispatch}
+          rolesList={rolesList}
         />
       </div>
     </div>
