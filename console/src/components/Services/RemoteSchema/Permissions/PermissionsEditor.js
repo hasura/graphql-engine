@@ -9,6 +9,7 @@ import {
   createRemoteSchemaPermission,
 } from './Actions';
 import Button from '../../../Common/Button/Button';
+import { getExpandedTypes } from './utils';
 
 const PermissionsEditor = ({
   editState,
@@ -23,11 +24,15 @@ const PermissionsEditor = ({
     return null;
   }
 
-  const getSaveButtons = () => {
+  const getActionButtons = () => {
     const onSave = () => {
       dispatch(createRemoteSchemaPermission());
     };
+
     const onRemove = () => {};
+
+    const onCancel = () => {};
+
     return (
       <div className={`${styles.display_flex} ${styles.add_mar_bottom}`}>
         <Button
@@ -44,11 +49,19 @@ const PermissionsEditor = ({
         >
           Remove
         </Button>
-
+        <Button
+          onClick={onCancel}
+          className={`${styles.add_mar_right}`}
+          color="white"
+        >
+          Cancel
+        </Button>
       </div>
     )
   };
 
+
+  const expandedTypes = getExpandedTypes(editState.allowedTypes, rootTypes, editState.editType);
 
   const allowedTypes = Object.keys(editState.allowedTypes).map(at => {
     const fieldToggleCallback = (fieldName, isChecked) => {
@@ -97,7 +110,7 @@ const PermissionsEditor = ({
           fields={editState.allowedTypes[at]}
           fieldToggleCallback={fieldToggleCallback}
           isRootType={isRootType}
-          isTypeExpanded={!isRootType}
+          isTypeExpanded={!!expandedTypes[at]}
           typeRemovalCallback={typeRemovalCallback}
         />
       </div>
@@ -111,6 +124,7 @@ const PermissionsEditor = ({
       </div>
       <div
         className={`${styles.remoteSchemaPermSelector} ${styles.add_padding}`}
+        key={editState.editType}
       >
         {allowedTypes}
       </div>
@@ -120,7 +134,7 @@ const PermissionsEditor = ({
   return (
     <div className={styles.activeEdit}>
       {permSelector}
-      {getSaveButtons()}
+      {getActionButtons()}
     </div>
   );
 };

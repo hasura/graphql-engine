@@ -71,3 +71,24 @@ export const parseRemoteRelPermDefinition = (payload, rootTypes, objectTypes, no
   };
 
 };
+
+
+export const getExpandedTypes = (allowedTypes, rootTypes, editType) => {
+
+  const expandedTypes = {};
+
+  const expandTypes = (currentTypeName) => {
+    console.log(currentTypeName);
+    expandedTypes[currentTypeName] = true;
+    Object.keys(allowedTypes[currentTypeName]).forEach(fieldName => {
+      const allowedType = allowedTypes[currentTypeName][fieldName];
+      if (allowedType.isChecked && !allowedType.isScalar) {
+        expandTypes(allowedTypes[currentTypeName][fieldName].typeName)
+      }
+    });
+  };
+
+  expandTypes(rootTypes[editType]);
+
+  return expandedTypes;
+};

@@ -35,9 +35,10 @@ const addState = {
 const permissionState = {
   existingPermissions: [
     {
-      role: 'mahRole',
+      role: 'awsdfas',
       definition: {
         'query_root': ['users', 'article'],
+        'mutation_root': [],
         'users': ['id', 'name', 'articles'],
         'article': ['id', 'title']
       }
