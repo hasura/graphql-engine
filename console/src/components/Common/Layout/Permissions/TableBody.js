@@ -5,28 +5,31 @@ const TableBody = ({
   rolePermissions,
   dispatchRoleNameChange,
   getPermTypes,
+  supportBulk
 }) => {
   const getTableRow = (rolePermission, isNewRole = false) => {
     const rowCells = [];
 
     // bulk select checkbox
-    if (rolePermission.name === 'admin' || isNewRole) {
-      rowCells.push(<td key="empty-admin-cell" />);
-    } else {
-      rowCells.push(
-        <td key={-1}>
-          <div>
-            <input
-              onChange={rolePermission.dispatchBulkSelect}
-              checked={rolePermission.bulkCheck}
-              data-role={rolePermission.name}
-              title="Select for bulk actions"
-              type="checkbox"
-            />
-            {/*{deleteIcon}*/}
-          </div>
-        </td>
-      );
+    if (supportBulk) {
+      if (rolePermission.name === 'admin' || isNewRole) {
+        rowCells.push(<td key="empty-admin-cell" />);
+      } else {
+        rowCells.push(
+          <td key={-1}>
+            <div>
+              <input
+                onChange={rolePermission.dispatchBulkSelect}
+                checked={rolePermission.bulkCheck}
+                data-role={rolePermission.name}
+                title="Select for bulk actions"
+                type="checkbox"
+              />
+              {/*{deleteIcon}*/}
+            </div>
+          </td>
+        );
+      }
     }
 
     // role name or role textbox

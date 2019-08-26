@@ -403,6 +403,7 @@ class Permissions extends Component {
             getPermTypes={getQueryTypes}
             viewPermissionsNote={getViewPermissionNote()}
             legend={getPermissionsLegend()}
+            supportBulk
           />
         );
       };

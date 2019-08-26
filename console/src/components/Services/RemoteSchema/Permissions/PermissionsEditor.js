@@ -8,6 +8,7 @@ import {
   setPermissionTypes,
   createRemoteSchemaPermission,
 } from './Actions';
+import Button from '../../../Common/Button/Button';
 
 const PermissionsEditor = ({
   editState,
@@ -21,6 +22,28 @@ const PermissionsEditor = ({
   if (!editState.isEditing) {
     return null;
   }
+
+  const getSaveButtons = () => {
+    const onSave = () => {};
+    const onRemove = () => {};
+    return (
+      <div className={styles.display_flex}>
+        <Button
+          onClick={onSave}
+          className={`${styles.add_mar_right}`}
+        >
+          Save
+        </Button>
+        <Button
+          onClick={onRemove}
+          className={`${styles.add_mar_right}`}
+        >
+          Return
+        </Button>
+
+      </div>
+    )
+  };
 
   const allowedTypes = Object.keys(editState.allowedTypes).map(at => {
     const fieldToggleCallback = (fieldName, isChecked) => {

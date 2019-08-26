@@ -4,7 +4,7 @@ import { useIntrospectionSchema } from '../graphqlUtils';
 import PermissionsEditor from './PermissionsEditor';
 import PermTableHeader from '../../../Common/Layout/Permissions/TableHeader';
 import PermTableBody from '../../../Common/Layout/Permissions/TableBody';
-import styles from '../../Data/TableModify/ModifyTable.scss';
+import styles from '../../../Common/Layout/Permissions/PermissionStyles';
 import {
   setPermissionRole,
   setPermissionTypes,
@@ -106,7 +106,7 @@ const Permissions = props => {
   };
   const getPermissionsTable = () => {
     const getPermissionsTableHead = () => {
-      const headings = ['Actions', 'Role', ...Object.keys(rootTypes)];
+      const headings = ['Role', ...Object.keys(rootTypes)];
       return <PermTableHeader headings={headings} />;
     };
 
