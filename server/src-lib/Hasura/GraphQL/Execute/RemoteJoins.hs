@@ -253,9 +253,12 @@ insertBatchResults ::
 insertBatchResults accumResp Batch{..} remoteResp =
   -- It's not clear what to do about errors here, or when to short-circuit so
   -- try to do as much computation as possible for now:
-  case inHashmap batchRelFieldPath accumData0 remoteData0 of
-    Left err  -> appendJoinError accumRespWithRemoteErrs err
-    Right (val, _) -> set gqRespData val accumRespWithRemoteErrs
+  case remoteDataE of
+    Left err -> appendJoinError accumResp err
+    Right remoteData0 -> do
+      case inHashmap batchRelFieldPath accumData0 remoteData0 of
+        Left err  -> appendJoinError accumRespWithRemoteErrs err
+        Right (val, _) -> set gqRespData val accumRespWithRemoteErrs
   where
     accumRespWithRemoteErrs = gqRespErrors <>~ _gqRespErrors remoteResp $ accumResp 
     accumData0 = _gqRespData accumResp
@@ -264,9 +267,15 @@ insertBatchResults accumResp Batch{..} remoteResp =
     -- order of query.
     -- Since remote results are aliased by keys of the form 'remote_result_1', 'remote_result_2',
     -- we can sort by the keys for a ordered list
+    -- On error, we short-circuit
     -- TODO look again at this...
-    remoteData0 =
-      map snd $ sortOn fst $ OJ.toList $ _gqRespData remoteResp
+    remoteDataE = let indexedRemotes = map getIdxRemote $ OJ.toList $ _gqRespData remoteResp
+                  in case any isNothing indexedRemotes of
+                       True -> Left "couldn't parse all remote results"
+                       False -> Right $ map snd $ sortOn fst $ catMaybes indexedRemotes
+
+    getIdxRemote (remoteAlias, value) = let idxStr = stripPrefix "hasura_array_idx_" (T.unpack remoteAlias)
+                                  in (, value) <$> (join $ readMaybe <$> idxStr :: Maybe Int)
 
     cardinality = biCardinality batchInputs
 
