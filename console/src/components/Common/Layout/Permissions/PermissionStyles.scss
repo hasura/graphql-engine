@@ -1,3 +1,5 @@
+@import '../../Common.scss';
+
 .permissionsTable {
   width: 85%;
 
@@ -11,11 +13,11 @@
     font-weight: bold;
   }
 
-  td:first-child, th:first-child {
-    border-right: 4px double #ddd;
-    font-weight: bold;
-    width: 10%;
-  }
+  // td:first-child, th:first-child {
+  //   border-right: 4px double #ddd;
+  //   font-weight: bold;
+  //   width: 10%;
+  // }
 
   td:nth-child(2) {
     overflow: auto;
@@ -54,6 +56,12 @@
   }
 }
 
+.permTableChild {
+  overflow: auto !important;
+  max-width: 250px !important;
+  width: 250px !important;
+}
+
 .permissionsLegend {
   font-size: 12px;
   margin-right: 5px;
@@ -75,7 +83,9 @@
 }
 
 .permissionSymbolNA,
+
 .permissionSymbolFA,
+
 .permissionSymbolPA {
   font-size: 16px;
 }

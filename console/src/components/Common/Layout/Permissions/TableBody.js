@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from '../../../Services/Data/TableModify/ModifyTable.scss';
+import styles from './PermissionStyles.scss';
 
 const TableBody = ({
   rolePermissions,
@@ -16,7 +16,9 @@ const TableBody = ({
         rowCells.push(<td key="empty-admin-cell" />);
       } else {
         rowCells.push(
-          <td key={-1}>
+          <td
+            key={-1}
+          >
             <div>
               <input
                 onChange={rolePermission.dispatchBulkSelect}
@@ -35,7 +37,9 @@ const TableBody = ({
     // role name or role textbox
     if (isNewRole) {
       rowCells.push(
-        <td key={'role-textbox'}>
+        <td
+          key={'role-textbox'}
+        >
           <input
             id="newRoleInput"
             className={`form-control ${styles.newRoleInput}`}

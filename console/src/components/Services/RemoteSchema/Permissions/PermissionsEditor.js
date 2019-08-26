@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import styles from '../RemoteSchema.scss';
+import styles from '../../../Common/Layout/Permissions/PermissionStyles.scss';
 import { getTypeFields } from '../graphqlUtils';
 import GraphQLType from './GraphQLType';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
@@ -27,23 +27,30 @@ const PermissionsEditor = ({
     const onSave = () => {};
     const onRemove = () => {};
     return (
-      <div className={styles.display_flex}>
+      <div className={`${styles.display_flex} ${styles.add_mar_bottom}`}>
         <Button
           onClick={onSave}
           className={`${styles.add_mar_right}`}
+          color="yellow"
         >
           Save
         </Button>
         <Button
           onClick={onRemove}
           className={`${styles.add_mar_right}`}
+          color="red"
         >
-          Return
+          Remove
         </Button>
 
       </div>
     )
   };
+
+  
+  console.log('Adding type ========================');
+  console.log(editState.allowedTypes);
+  console.log('======================================');
 
   const allowedTypes = Object.keys(editState.allowedTypes).map(at => {
     const fieldToggleCallback = (fieldName, isChecked) => {
@@ -75,6 +82,9 @@ const PermissionsEditor = ({
         JSON.stringify(editState.allowedTypes)
       );
       delete newAllowedTypes[at];
+      console.log('Removing type ========================');
+      console.log(editState.allowedTypes);
+      console.log('======================================');
       Object.keys(editState.allowedTypes).forEach(_at => {
         Object.keys(editState.allowedTypes[_at]).forEach(field => {
           if (editState.allowedTypes[_at][field].typeName === at) {
@@ -113,8 +123,9 @@ const PermissionsEditor = ({
   );
 
   return (
-    <div>
+    <div className={styles.activeEdit}>
       {permSelector}
+      {getSaveButtons()}
     </div>
   );
 };

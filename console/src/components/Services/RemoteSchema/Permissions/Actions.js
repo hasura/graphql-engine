@@ -19,10 +19,9 @@ export const setPermissionRole = (role, index) => ({
 });
 
 const SET_PERMISSION_TYPES = '@remoteSchema/SET_PERMISSION_TYPES';
-export const setPermissionTypes = (types, index) => ({
+export const setPermissionTypes = (allowedTypes) => ({
   type: SET_PERMISSION_TYPES,
-  types,
-  index,
+  allowedTypes
 });
 
 const SET_CURRENT_PERMISSION_EDIT = '@remoteSchema/SET_CURRENT_PERMISSION_EDIT';

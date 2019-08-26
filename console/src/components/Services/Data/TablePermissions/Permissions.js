@@ -43,6 +43,7 @@ import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleTogg
 import EnhancedInput from '../../../Common/InputChecker/InputChecker';
 import PermTableHeader from '../../../Common/Layout/Permissions/TableHeader';
 import PermTableBody from '../../../Common/Layout/Permissions/TableBody';
+import styles from '../../../Common/Layout/Permissions/PermissionStyles.scss';
 
 import { setTable } from '../DataActions';
 import { getIngForm, getEdForm, escapeRegExp } from '../utils';
@@ -98,8 +99,6 @@ class Permissions extends Component {
       // throw a 404 exception
       throw new NotFoundError();
     }
-
-    const styles = require('../TableModify/ModifyTable.scss');
 
     const getAllRoles = allTableSchemas => {
       const _allRoles = [];

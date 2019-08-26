@@ -4,7 +4,7 @@ import { useIntrospectionSchema } from '../graphqlUtils';
 import PermissionsEditor from './PermissionsEditor';
 import PermTableHeader from '../../../Common/Layout/Permissions/TableHeader';
 import PermTableBody from '../../../Common/Layout/Permissions/TableBody';
-import styles from '../../../Common/Layout/Permissions/PermissionStyles';
+import styles from '../../../Common/Layout/Permissions/PermissionStyles.scss';
 import {
   setPermissionRole,
   setPermissionTypes,
