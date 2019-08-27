@@ -142,7 +142,7 @@ jobs:
   # changes only contains files in .ciignore
   check_build_worthiness:
     docker:
-    - image: hasura/graphql-engine-cli-builder:v0.3
+    - image: hasura/graphql-engine-cli-builder:v0.4
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
@@ -269,7 +269,7 @@ jobs:
 
   test_cli_with_last_release:
     docker:
-    - image: hasura/graphql-engine-cli-builder:v0.3
+    - image: hasura/graphql-engine-cli-builder:v0.4
     - image: circleci/postgres:10-alpine
       environment:
         POSTGRES_USER: gql_test
@@ -302,7 +302,7 @@ jobs:
   # test and build cli
   test_and_build_cli:
     docker:
-    - image: hasura/graphql-engine-cli-builder:v0.3
+    - image: hasura/graphql-engine-cli-builder:v0.4
     - image: circleci/postgres:10-alpine
       environment:
         POSTGRES_USER: gql_test
