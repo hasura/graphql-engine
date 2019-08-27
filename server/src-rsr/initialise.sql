@@ -283,6 +283,7 @@ CREATE TABLE hdb_catalog.event_log
 );
 
 CREATE INDEX ON hdb_catalog.event_log (trigger_name);
+CREATE INDEX ON hdb_catalog.event_log (locked);
 
 CREATE TABLE hdb_catalog.event_invocation_logs
 (
