@@ -103,6 +103,16 @@ setAsSystemDefinedFor16 =
              AND  table_name = 'hdb_query_collection';
            |]
 
+setAsSystemDefinedFor20 :: (MonadTx m) => m ()
+setAsSystemDefinedFor20 =
+  liftTx $ Q.catchE defaultTxErrorHandler $
+  Q.multiQ [Q.sql|
+            UPDATE hdb_catalog.hdb_table
+            SET is_system_defined = 'true'
+            WHERE table_schema = 'hdb_catalog'
+             AND table_name = 'remote_schema_permissions';
+           |]
+
 getCatalogVersion
   :: (MonadTx m)
   => m T.Text
@@ -310,11 +320,11 @@ from15To16 = do
   Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
     $(Q.sqlFromFile "src-rsr/migrate_from_15_to_16.sql")
   -- Migrate metadata
-  migrateMetadata False migrateMetadataFrom13
+  migrateMetadata False migrateMetadataFor16
   -- Set as system defined
   setAsSystemDefinedFor16
   where
-    migrateMetadataFrom13 =
+    migrateMetadataFor16 =
       $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_15_to_16.yaml" :: Q (TExp RQLQuery)))
 
 from16To17 :: MonadTx m => m ()
@@ -344,12 +354,27 @@ from18To19 = do
     $(Q.sqlFromFile "src-rsr/migrate_from_18_to_19.sql")
   return ()
 
-from19To20 :: MonadTx m => m ()
+from19To20
+  :: ( MonadTx m
+     , HasHttpManager m
+     , HasSQLGenCtx m
+     , CacheRWM m
+     , UserInfoM m
+     , MonadIO m
+     )
+  => m ()
 from19To20 = do
   -- Migrate database
   Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
     $(Q.sqlFromFile "src-rsr/migrate_from_19_to_20.sql")
+
+  migrateMetadata False migrateMetadataFor20
+  -- Set as system defined
+  setAsSystemDefinedFor20
   return ()
+  where
+    migrateMetadataFor20 =
+      $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_19_to_20.yaml" :: Q (TExp RQLQuery)))
 
 migrateCatalog
   :: ( MonadTx m
