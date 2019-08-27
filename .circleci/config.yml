@@ -398,7 +398,7 @@ jobs:
   # test console
   test_console:
     docker:
-    - image: hasura/graphql-engine-console-builder:v0.3
+    - image: hasura/graphql-engine-console-builder:v0.4
       environment:
         CYPRESS_KEY: 983be0db-0f19-40cc-bfc4-194fcacd85e1
         GHCRTS: -N1
@@ -435,7 +435,7 @@ jobs:
   # test server upgrade from last version to current build
   test_server_upgrade:
     docker:
-    - image: hasura/graphql-engine-upgrade-tester:v0.4
+    - image: hasura/graphql-engine-upgrade-tester:v0.5
       environment:
         HASURA_GRAPHQL_DATABASE_URL: postgres://gql_test:@localhost:5432/gql_test
     - image: circleci/postgres:10-alpine
