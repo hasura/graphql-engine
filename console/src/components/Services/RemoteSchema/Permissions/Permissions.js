@@ -127,10 +127,10 @@ const Permissions = props => {
         );
       };
 
-      const getRootTypes = (role, isNewRole) => {
+      const getRootTypes = (role = editState.role, isNewRole) => {
         return Object.keys(rootTypes).map(rootType => {
           const dispatchOpenEdit = rt => () => {
-            if (isNewRole && !!editState.role) {
+            if (isNewRole && !!role) {
               const perm = parseRemoteRelPermDefinition(null, rootTypes, objectTypes, nonObjectTypes, editState.role);
               dispatch(setCurrentPermissionEdit(perm, rt));
             } else if (!!role) {
@@ -146,9 +146,8 @@ const Permissions = props => {
           };
 
           const isEditAllowed = role !== 'admin';
-          const isCurrEdit = role ===  editState.role;
+          const isCurrEdit = role === editState.role && editState.editType === rootType;
             
-
           let editLink = '';
           let className = '';
           let onClick = () => {};

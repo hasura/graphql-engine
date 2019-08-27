@@ -41,7 +41,7 @@ const fetchRemoteSchemas = () => {
             name: 'remote_schemas',
             schema: 'hdb_catalog',
           },
-          columns: ['*'],
+          columns: ['*.*'],
           order_by: [{ column: 'name', type: 'asc', nulls: 'last' }],
         },
       }),

@@ -3,6 +3,7 @@ import React from 'react';
 import { Route, IndexRedirect } from 'react-router';
 import { rightContainerConnector } from '../../Common/Layout';
 import globals from '../../../Globals';
+import { REMOTE_SCHEMA_PERMISSIONS_SUPPORT } from '../../../helpers/versionUtils'; 
 import {
   remoteSchemaPageConnector,
   landingConnector,
@@ -84,6 +85,13 @@ const fetchInitialData = ({ dispatch }) => {
 };
 
 const getRemoteSchemaRouter = (connect, store, composeOnEnterHooks) => {
+  const supportRemoteSchemaPerms = !!(globals.featuresCompatibility && globals.featuresCompatibility[REMOTE_SCHEMA_PERMISSIONS_SUPPORT]);
+  const permissionsRoute = supportRemoteSchemaPerms ? (
+    <Route
+      path=":remoteSchemaName/permissions"
+      component={permissionsConnector(connect)}
+    />
+  ) : null
   return (
     <Route
       path="remote-schemas"
@@ -108,10 +116,7 @@ const getRemoteSchemaRouter = (connect, store, composeOnEnterHooks) => {
           path=":remoteSchemaName/modify"
           component={editConnector(connect)}
         />
-        <Route
-          path=":remoteSchemaName/permissions"
-          component={permissionsConnector(connect)}
-        />
+        {permissionsRoute}
       </Route>
     </Route>
   );
