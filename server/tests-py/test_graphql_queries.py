@@ -439,3 +439,30 @@ class TestGraphQLQueryFunctions(DefaultTestSelectQueries):
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/functions'
+
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+class TestGraphQLQueryEnums(DefaultTestSelectQueries):
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/enums'
+
+    def test_introspect(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/introspect.yaml', transport)
+
+    def test_select_enum_field(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_enum_field.yaml', transport)
+
+    def test_select_where_enum_eq(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_where_enum_eq.yaml', transport)
+
+    def test_select_where_enum_eq_bad_value(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_where_enum_eq_bad_value.yaml', transport)
+
+    def test_select_where_enum_eq_string(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_where_enum_eq_string.yaml', transport)
+
+    def test_select_where_enum_eq_variable(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_where_enum_eq_variable.yaml', transport)
+
+    def test_select_where_enum_eq_variable_bad_value(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_where_enum_eq_variable_bad_value.yaml', transport)

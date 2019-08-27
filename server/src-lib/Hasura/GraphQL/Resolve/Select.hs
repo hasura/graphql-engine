@@ -115,7 +115,7 @@ parseTableArgs args = do
   ordByExpML <- withArgM args "order_by" parseOrderBy
   let ordByExpM = NE.nonEmpty =<< ordByExpML
   limitExpM  <- withArgM args "limit" parseLimit
-  offsetExpM <- withArgM args "offset" $ asPGColVal >=> txtConverter
+  offsetExpM <- withArgM args "offset" $ asPGColumnValue >=> txtConverter
   distOnColsML <- withArgM args "distinct_on" parseColumns
   let distOnColsM = NE.nonEmpty =<< distOnColsML
   mapM_ (validateDistOn ordByExpM) distOnColsM
@@ -255,7 +255,7 @@ parseOrderByEnum = \case
 
 parseLimit :: ( MonadError QErr m ) => AnnInpVal -> m Int
 parseLimit v = do
-  pgColVal <- _apvValue <$> asPGColVal v
+  pgColVal <- pstValue . _apvValue <$> asPGColumnValue v
   limit <- maybe noIntErr return $ pgColValueToInt pgColVal
   -- validate int value
   onlyPositiveInt limit
@@ -273,7 +273,7 @@ pgColValToBoolExp
 pgColValToBoolExp colArgMap colValMap = do
   colExps <- forM colVals $ \(name, val) ->
     BoolFld <$> do
-      opExp <- AEQ True . UVPG <$> asPGColVal val
+      opExp <- AEQ True . UVPG <$> asPGColumnValue val
       colInfo <- onNothing (Map.lookup name colArgMap) $
         throw500 $ "column name " <> showName name
         <> " not found in column arguments map"
@@ -341,7 +341,7 @@ convertCount args = do
   maybe (return S.CTStar) (mkCType isDistinct) columnsM
   where
     parseDistinct v = do
-      val <- _apvValue <$> asPGColVal v
+      val <- pstValue . _apvValue <$> asPGColumnValue v
       case val of
         PGValBoolean b -> return b
         _              ->
@@ -417,7 +417,7 @@ parseFunctionArgs
 parseFunctionArgs argSeq val = fmap catMaybes $
   flip withObject val $ \_ obj ->
     fmap toList $ forM argSeq $ \(FuncArgItem argName) ->
-      forM (OMap.lookup argName obj) $ fmap (maybe nullSQL UVPG) . asPGColValM
+      forM (OMap.lookup argName obj) $ fmap (maybe nullSQL UVPG) . asPGColumnValueM
   where
     nullSQL = UVSQL $ S.SEUnsafe "NULL"
 

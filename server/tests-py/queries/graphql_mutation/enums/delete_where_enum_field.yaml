@@ -1,0 +1,21 @@
+description: Test deleting records filtered by an enum reference
+url: /v1/graphql
+status: 200
+response:
+  data:
+    delete_users:
+      affected_rows: 1
+      returning:
+      - name: Alyssa
+        favorite_color: red
+query:
+  query: |
+    mutation {
+      delete_users(where: {favorite_color: {_eq: red}}) {
+        affected_rows
+        returning {
+          name
+          favorite_color
+        }
+      }
+    }

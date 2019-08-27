@@ -1,4 +1,6 @@
 import React from 'react';
+import globals from '../../../../Globals';
+import { REMOTE_SCHEMA_TIMEOUT_CONF_SUPPORT } from '../../../../helpers/versionUtils';
 import PropTypes from 'prop-types';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
@@ -36,42 +38,92 @@ class Common extends React.Component {
   render() {
     const styles = require('../RemoteSchema.scss');
 
-    const { name, manualUrl, envName, forwardClientHeaders } = this.props;
+    const {
+      name,
+      manualUrl,
+      envName,
+      timeoutConf,
+      forwardClientHeaders,
+    } = this.props;
     const { isModify, id } = this.props.editState;
 
     const isDisabled = id >= 0 && !isModify;
     const urlRequired = !manualUrl && !envName;
 
-    const graphqlurl = (
-      <Tooltip id="tooltip-cascade">
-        Remote GraphQL server’s URL. E.g. https://my-domain/v1/graphql
-      </Tooltip>
-    );
+    const tooltips = {
+      graphqlurl: (
+        <Tooltip id="tooltip-cascade">
+          Remote GraphQL server’s URL. E.g. https://my-domain/v1/graphql
+        </Tooltip>
+      ),
+      clientHeaderForward: (
+        <Tooltip id="tooltip-cascade">
+          Toggle forwarding headers sent by the client app in the request to
+          your remote GraphQL server
+        </Tooltip>
+      ),
+      additionalHeaders: (
+        <Tooltip id="tooltip-cascade">
+          Custom headers to be sent to the remote GraphQL server
+        </Tooltip>
+      ),
+      schema: (
+        <Tooltip id="tooltip-cascade">
+          Give this GraphQL schema a friendly name.
+        </Tooltip>
+      ),
+      timeoutConf: (
+        <Tooltip id="tooltip-cascade">
+          Configure timeout for your remote GraphQL server. Defaults to 60
+          seconds.
+        </Tooltip>
+      ),
+    };
 
-    const clientHeaderForward = (
-      <Tooltip id="tooltip-cascade">
-        Toggle forwarding headers sent by the client app in the request to your
-        remote GraphQL server
-      </Tooltip>
-    );
+    const getTimeoutSection = () => {
+      const supportTimeoutConf =
+        globals.featuresCompatibility &&
+        globals.featuresCompatibility[REMOTE_SCHEMA_TIMEOUT_CONF_SUPPORT];
 
-    const additionalHeaders = (
-      <Tooltip id="tooltip-cascade">
-        Custom headers to be sent to the remote GraphQL server
-      </Tooltip>
-    );
+      if (!supportTimeoutConf) {
+        return null;
+      }
 
-    const schema = (
-      <Tooltip id="tooltip-cascade">
-        Give this GraphQL schema a friendly name.
-      </Tooltip>
-    );
+      return (
+        <React.Fragment>
+          <div className={styles.subheading_text}>
+            GraphQL server timeout
+            <OverlayTrigger placement="right" overlay={tooltips.timeoutConf}>
+              <i className="fa fa-question-circle" aria-hidden="true" />
+            </OverlayTrigger>
+          </div>
+          <label
+            className={
+              styles.inputLabel + ' radio-inline ' + styles.padd_left_remove
+            }
+          >
+            <input
+              className={'form-control'}
+              type="text"
+              placeholder="Timeout in seconds"
+              value={timeoutConf}
+              data-key="timeoutConf"
+              onChange={this.handleInputChange.bind(this)}
+              disabled={isDisabled}
+              data-test="remote-schema-timeout-conf"
+              pattern="^\d+$"
+              title="Only non negative integers are allowed"
+            />
+          </label>
+        </React.Fragment>
+      );
+    };
 
     return (
       <div className={styles.CommonWrapper}>
         <div className={styles.subheading_text + ' ' + styles.addPaddTop}>
           Remote Schema name *
-          <OverlayTrigger placement="right" overlay={schema}>
+          <OverlayTrigger placement="right" overlay={tooltips.schema}>
             <i className="fa fa-question-circle" aria-hidden="true" />
           </OverlayTrigger>
         </div>
@@ -95,12 +147,12 @@ class Common extends React.Component {
           />
         </label>
         <hr />
-        <h4 className={styles.subheading_text}>
+        <div className={styles.subheading_text}>
           GraphQL server URL *
-          <OverlayTrigger placement="right" overlay={graphqlurl}>
+          <OverlayTrigger placement="right" overlay={tooltips.graphqlurl}>
             <i className="fa fa-question-circle" aria-hidden="true" />
           </OverlayTrigger>
-        </h4>
+        </div>
         <div className={styles.wd_300}>
           <DropdownButton
             dropdownOptions={[
@@ -152,13 +204,19 @@ class Common extends React.Component {
             />
             <span>Forward all headers from client</span>
           </label>
-          <OverlayTrigger placement="right" overlay={clientHeaderForward}>
+          <OverlayTrigger
+            placement="right"
+            overlay={tooltips.clientHeaderForward}
+          >
             <i className="fa fa-question-circle" aria-hidden="true" />
           </OverlayTrigger>
         </div>
         <div className={styles.subheading_text + ' ' + styles.font_normal}>
           Additional headers:
-          <OverlayTrigger placement="right" overlay={additionalHeaders}>
+          <OverlayTrigger
+            placement="right"
+            overlay={tooltips.additionalHeaders}
+          >
             <i className="fa fa-question-circle" aria-hidden="true" />
           </OverlayTrigger>
         </div>
@@ -174,6 +232,8 @@ class Common extends React.Component {
           placeHolderText={this.getPlaceHolderText.bind(this)}
           keyInputPlaceholder="header name"
         />
+        <hr />
+        {getTimeoutSection()}
       </div>
     );
   }

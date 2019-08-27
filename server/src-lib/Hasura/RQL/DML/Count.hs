@@ -63,7 +63,7 @@ mkSQLCount (CountQueryP1 tn (permFltr, mWc) mDistCols) =
 validateCountQWith
   :: (UserInfoM m, QErrM m, CacheRM m)
   => SessVarBldr m
-  -> (PGColType -> Value -> m S.SQLExp)
+  -> (PGColumnType -> Value -> m S.SQLExp)
   -> CountQuery
   -> m CountQueryP1
 validateCountQWith sessVarBldr prepValBldr (CountQuery qt mDistCols mWhere) = do
@@ -73,7 +73,7 @@ validateCountQWith sessVarBldr prepValBldr (CountQuery qt mDistCols mWhere) = do
   selPerm <- modifyErr (<> selNecessaryMsg) $
              askSelPermInfo tableInfo
 
-  let colInfoMap = tiFieldInfoMap tableInfo
+  let colInfoMap = _tiFieldInfoMap tableInfo
 
   forM_ mDistCols $ \distCols -> do
     let distColAsrns = [ checkSelOnCol selPerm
