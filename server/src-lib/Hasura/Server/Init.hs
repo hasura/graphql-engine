@@ -557,7 +557,7 @@ corsDomainEnv =
 enableConsoleEnv :: (String, String)
 enableConsoleEnv =
   ( "HASURA_GRAPHQL_ENABLE_CONSOLE"
-  , "Enable API Console"
+  , "Enable API Console (default: false)"
   )
 
 enableTelemetryEnv :: (String, String)
@@ -613,7 +613,7 @@ logLevelEnv =
 enableCompressionEnv :: (String, String)
 enableCompressionEnv =
   ( "HASURA_GRAPHQL_ENABLE_COMPRESSION"
-  , "Enable brotli/gzip compression for responses from '/v1/query' and '/v1/graphql' endpoints"
+  , "Enable brotli/gzip compression for responses from '/v1/query' and '/v1/graphql' endpoints (default: false)"
   )
 
 parseRawConnInfo :: Parser RawConnInfo

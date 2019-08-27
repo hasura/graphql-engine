@@ -25,21 +25,19 @@ compressionTypeToTxt CTGZip   = "gzip"
 compressionTypeToTxt CTBrotli = "brotli"
 
 compressResponse
-  :: Bool
-  -> NH.RequestHeaders
+  :: NH.RequestHeaders
   -> BL.ByteString
   -> (BL.ByteString, Maybe (Text, Text), Maybe CompressionType)
-compressResponse False _ resp                     = (resp, Nothing, Nothing)
-compressResponse True reqHeaders unCompressedResp =
-  let compressionTypeM = getRequiredCompression reqHeaders
+compressResponse reqHeaders unCompressedResp =
+  let compressionTypeM = getRequestedCompression reqHeaders
       appendCompressionType (res, headerM) = (res, headerM, compressionTypeM)
   in appendCompressionType $ case compressionTypeM of
        Just CTBrotli -> (BR.compress unCompressedResp, Just brHeader)
        Just CTGZip   -> (GZ.compress unCompressedResp, Just gzipHeader)
        Nothing       -> (unCompressedResp, Nothing)
 
-getRequiredCompression :: NH.RequestHeaders -> Maybe CompressionType
-getRequiredCompression reqHeaders
+getRequestedCompression :: NH.RequestHeaders -> Maybe CompressionType
+getRequestedCompression reqHeaders
   | "br" `elem` acceptEncodingVals   = Just CTBrotli
   | "gzip" `elem` acceptEncodingVals = Just CTGZip
   | otherwise                        = Nothing

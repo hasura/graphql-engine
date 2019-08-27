@@ -280,8 +280,7 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
       let reqIdHeader = (requestIdHeader, unRequestId reqId)
           reqHeaders = requestHeaders req
           (compressedResp, mEncodingHeader, mCompressionType) =
-            compressResponse (scEnableCompression serverCtx) reqHeaders $
-            apiRespToLBS result
+            possiblyCompressResp reqHeaders $ apiRespToLBS result
           encodingHeader = maybe [] pure mEncodingHeader
       logSuccess logger userInfo reqId req compressedResp qTime mCompressionType
       case result of
@@ -300,6 +299,11 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
     mkHeaders (Just h) = map unHeader h
 
     setHeaders = mapM_ (uncurry setHeader)
+
+    possiblyCompressResp reqHeaders resp =
+      if scEnableCompression serverCtx then
+        compressResponse reqHeaders resp
+      else (resp, Nothing, Nothing)
 
 v1QueryHandler :: RQLQuery -> Handler (HttpResponse EncJSON)
 v1QueryHandler query = do

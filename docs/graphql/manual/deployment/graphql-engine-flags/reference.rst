@@ -72,7 +72,7 @@ For ``serve`` sub-command these are the flags and ENV variables available:
 
    * - ``--enable-console <true|false>``
      - ``HASURA_GRAPHQL_ENABLE_CONSOLE``
-     - Enable the Hasura Console (served by the server on ``/`` and ``/console``)
+     - Enable the Hasura Console (served by the server on ``/`` and ``/console``) (default: false)
 
    * - ``--admin-secret <ADMIN_SECRET_KEY>``
      - ``HASURA_GRAPHQL_ADMIN_SECRET``
@@ -198,7 +198,7 @@ For ``serve`` sub-command these are the flags and ENV variables available:
 
    * - ``--enable-compression``
      - ``HASURA_GRAPHQL_ENABLE_COMPRESSION``
-     - Enable brotli/gzip compression for responses from ``/v1/query`` and ``/v1/graphql`` endpoints.
+     - Enable brotli/gzip compression for responses from ``/v1/query`` and ``/v1/graphql`` endpoints (default: false).
 
 .. note::
 
