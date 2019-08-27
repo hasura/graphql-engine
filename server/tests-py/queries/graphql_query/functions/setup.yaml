@@ -117,14 +117,14 @@ args:
 - type: run_sql
   args:
     sql: |
-      CREATE FUNCTION get_users(search text, lim integer default 2 , "isAdmin" boolean default false)
+      CREATE FUNCTION get_users(search text, integer default 10, "isAdmin" boolean default false)
       RETURNS SETOF "user" AS $$
           SELECT *
           FROM "user"
           WHERE
             name ilike ('%' || search || '%')
             AND is_admin = "isAdmin"
-          LIMIT lim
+          LIMIT $2
       $$ LANGUAGE sql STABLE;
 
 - type: track_table

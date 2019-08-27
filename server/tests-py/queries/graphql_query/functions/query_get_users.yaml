@@ -13,7 +13,7 @@ response:
 query:
   query: |
     query {
-      get_users(args: {search: "Blake", isAdmin: true}){
+      get_users(args: {search: "Blake", arg_1: 2, isAdmin: true}){
         id
         name
         is_admin

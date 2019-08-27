@@ -14,6 +14,7 @@ module Hasura.GraphQL.Resolve.Select
   ) where
 
 import           Control.Arrow                     (first)
+import           Data.Foldable                     (foldlM)
 import           Data.Has
 import           Data.Parser.JSONPath
 import           Hasura.Prelude
@@ -415,24 +416,39 @@ parseFunctionArgs
   ::( MonadError QErr m)
   => FuncArgSeq -> AnnInpVal -> m [RS.FunctionArgExpG UnresolvedVal]
 parseFunctionArgs argSeq val = do
-  resolvedArgs <- fmap catMaybes $
+  (_, intSeqM, resolvedArgsM) <-
     flip withObject val $ \_ obj ->
-      forM argList $ \(FuncArgItem argName mSqlName) ->
-        forM (OMap.lookup argName obj) $
-        fmap (RS.FunctionArgExp mSqlName . maybe nullSQL UVPG) . asPGColumnValueM
-  return $
-    -- If all arguments are given then use positional notation
-    -- since a positional argument cannot follow a named argument
-    if length resolvedArgs == length argList then
-      -- Remove argument names to use positional notation
-      map removeArgName resolvedArgs
-    else
-      -- By default, resolvedArgs will have argument names
-      resolvedArgs
+        foldlM (go obj) (0 :: Int, [], []) argList
+  let resolvedArgs = catMaybes resolvedArgsM
+      positionalArgs = map removeArgName resolvedArgs
+      intSeq = catMaybes intSeqM
+
+     -- If all arguments are named then use resolved arguments
+  if | allNamed -> return resolvedArgs
+     -- If all arguments are given then use positional notation
+     | length resolvedArgs == length argList -> return positionalArgs
+     -- Logic followed: Each element in argSeq will get a sequential
+     -- Int starting from 1. intSeqM :: [Maybe Int] is of integer sequence
+     -- of resolved arguments and intSeq :: [Int] is integer sequence with
+     -- omitted arguments. If any of intSeq is greater than it's length then
+     -- omitted items are not set of last arguments
+     | otherwise ->
+       if any (> length intSeq) intSeq then
+         throw400 NotSupported "Only set of last arguments can be omitted"
+       else return positionalArgs
   where
     nullSQL = UVSQL $ S.SEUnsafe "NULL"
     argList = toList argSeq
+    allNamed = all (isJust . _faiSqlArgName) argList
     removeArgName fae = fae{RS._faeName = Nothing}
+
+    go obj (i, ints, args) (FuncArgItem argName mSqlName) = do
+      argValM <- forM (OMap.lookup argName obj) $
+        fmap (RS.FunctionArgExp mSqlName . maybe nullSQL UVPG) . asPGColumnValueM
+      let incInt = i + 1
+          incIntM = maybe Nothing (const $ Just incInt) argValM
+      pure (i+1, ints <> pure incIntM, args <> pure argValM)
+
 
 fromFuncQueryField
   :: (MonadError QErr m)

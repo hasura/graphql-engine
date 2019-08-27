@@ -295,7 +295,7 @@ traverseAnnFnSel
   => (a -> f b) -> (v -> f w)
   -> AnnFnSelG a v -> f (AnnFnSelG b w)
 traverseAnnFnSel fs fv (AnnFnSel fn fnArgs s) =
-  AnnFnSel fn <$> (traverse . traverse) fv fnArgs <*> fs s
+  AnnFnSel fn <$> traverse (traverse fv) fnArgs <*> fs s
 
 type AnnFnSelSimpleG v = AnnFnSelG (AnnSimpleSelG v) v
 type AnnFnSelSimple = AnnFnSelSimpleG S.SQLExp
