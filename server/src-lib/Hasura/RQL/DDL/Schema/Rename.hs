@@ -8,6 +8,9 @@ module Hasura.RQL.DDL.Schema.Rename
   )
 where
 
+import           Control.Arrow                      ((***))
+import           Control.Lens.Combinators
+import           Control.Lens.Operators
 import           Hasura.Prelude
 import qualified Hasura.RQL.DDL.EventTrigger        as DS
 import           Hasura.RQL.DDL.Permission
@@ -278,20 +281,9 @@ updateCols qt rf permSpec =
         \col -> if col == oCol then nCol else col
 
 updateTableInBoolExp :: RenameTable -> BoolExp -> BoolExp
-updateTableInBoolExp rt@(oldQT, newQT) (BoolExp bExp) = BoolExp $
-  case bExp of
-    BoolAnd exps -> BoolAnd $ procExps exps
-    BoolOr  exps -> BoolOr $ procExps exps
-    BoolNot e    -> BoolNot $ updateTableInBoolExp' e
-    BoolFld fld  -> BoolFld fld
-    BoolExists (GExists refqt wh) ->
-      let updWhereExp = updateTableInBoolExp' wh
-      in BoolExists $
-         if refqt == oldQT then GExists newQT updWhereExp
-         else GExists refqt updWhereExp
-  where
-    updateTableInBoolExp' = unBoolExp . updateTableInBoolExp rt . BoolExp
-    procExps = map updateTableInBoolExp'
+updateTableInBoolExp (oldQT, newQT) =
+  over _Wrapped . transform $ (_BoolExists . geTable) %~ \rqfQT ->
+    if rqfQT == oldQT then newQT else rqfQT
 
 updateFieldInBoolExp
   :: (QErrM m, CacheRM m)

@@ -5,6 +5,10 @@ module Hasura.RQL.Types.BoolExp
        , parseGBoolExp
        , GExists(..)
 
+       , geWhere
+       , geTable
+       , _BoolExists
+
        , DWithinGeomOp(..)
        , DWithinGeogOp(..)
        , CastExp
@@ -37,6 +41,8 @@ import           Hasura.RQL.Types.Permission
 import qualified Hasura.SQL.DML              as S
 import           Hasura.SQL.Types
 
+import           Control.Lens.Plated
+import           Control.Lens.TH
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.Internal
@@ -50,7 +56,9 @@ data GExists a
   = GExists
   { _geTable :: !QualifiedTable
   , _geWhere :: !(GBoolExp a)
-  } deriving (Show, Eq, Lift, Functor, Foldable, Traversable)
+  } deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Data)
+
+instance (Data a) => Plated (GExists a)
 
 gExistsToJSON :: (a -> (Text, Value)) -> GExists a -> Value
 gExistsToJSON f (GExists qt wh) =
@@ -73,7 +81,9 @@ data GBoolExp a
   | BoolNot !(GBoolExp a)
   | BoolExists !(GExists a)
   | BoolFld !a
-  deriving (Show, Eq, Lift, Functor, Foldable, Traversable)
+  deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Data)
+
+instance (Data a) => Plated (GBoolExp a)
 
 gBoolExpTrue :: GBoolExp a
 gBoolExpTrue = BoolAnd []
@@ -325,3 +335,6 @@ isStaticValue :: PartialSQLExp -> Bool
 isStaticValue = \case
   PSESessVar _ _ -> False
   PSESQLExp _    -> True
+
+makeLenses ''GExists
+makePrisms ''GBoolExp
