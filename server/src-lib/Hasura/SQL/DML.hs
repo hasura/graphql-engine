@@ -312,7 +312,7 @@ instance ToSQL SQLExp where
   toSQL (SEPrep argNumber) =
     TB.char '$' <> fromString (show argNumber)
   toSQL SENull =
-    TB.text "null"
+    TB.text "NULL"
   toSQL (SELit tv) =
     TB.text $ pgFmtLit tv
   toSQL (SEUnsafe t) =

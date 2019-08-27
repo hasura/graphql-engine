@@ -403,7 +403,7 @@ mkColCompExp qual lhsCol = mkCompExp (mkQCol lhsCol)
 
         applySTIntersects = applySQLFn "ST_Intersects"
 
-        withSQLNull = fromMaybe (S.SEUnsafe "NULL")
+        withSQLNull = fromMaybe S.SENull
 
         mkCastsExp casts =
           sqlAll . flip map (M.toList casts) $ \(targetType, operations) ->

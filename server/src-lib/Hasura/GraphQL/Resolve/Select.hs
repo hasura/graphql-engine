@@ -419,7 +419,7 @@ parseFunctionArgs argSeq val = fmap catMaybes $
     fmap toList $ forM argSeq $ \(FuncArgItem argName) ->
       forM (OMap.lookup argName obj) $ fmap (maybe nullSQL UVPG) . asPGColumnValueM
   where
-    nullSQL = UVSQL $ S.SEUnsafe "NULL"
+    nullSQL = UVSQL S.SENull
 
 fromFuncQueryField
   :: (MonadError QErr m)

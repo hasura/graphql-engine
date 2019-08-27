@@ -182,7 +182,7 @@ binEncoder colVal = case colVal of
 
 txtEncoder :: PGScalarValue -> S.SQLExp
 txtEncoder colVal = case txtEncodedPGVal colVal of
-  TENull  -> S.SEUnsafe "NULL"
+  TENull  -> S.SENull
   TELit t -> S.SELit t
 
 toPrepParam :: Int -> PGScalarType -> S.SQLExp

@@ -61,7 +61,7 @@ convertRowObj val =
   flip withObject val $ \_ obj ->
   forM (OMap.toList obj) $ \(k, v) -> do
     prepExpM <- fmap UVPG <$> asPGColumnValueM v
-    let prepExp = fromMaybe (UVSQL $ S.SEUnsafe "NULL") prepExpM
+    let prepExp = fromMaybe (UVSQL S.SENull) prepExpM
     return (PGCol $ G.unName k, prepExp)
 
 type ApplySQLOp =  (PGCol, S.SQLExp) -> S.SQLExp
