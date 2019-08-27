@@ -65,7 +65,7 @@ const RemoteSchemaSubSidebar = ({
               data-test={d.name}
             >
               <i
-                className={styles.tableIcon + ' fa fa-table'}
+                className={styles.tableIcon + ' fa fa-code-fork'}
                 aria-hidden="true"
               />
               {d.name}

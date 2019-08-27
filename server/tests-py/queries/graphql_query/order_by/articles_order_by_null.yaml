@@ -1,0 +1,23 @@
+description: Fetch articles by using null values in order_by
+url: /v1/graphql
+status: 200
+response:
+  data:
+    article:
+    - title: Article 1
+    - title: Article 2
+    - title: Article 3
+query:
+  variables:
+    author_order_by: null
+  query: |
+    query ($order_by: order_by, $author_order_by: author_order_by){
+      article(
+        order_by: [ {id: $order_by}
+                  , {author: $author_order_by}
+                  , {author: {articles_aggregate: {count: $order_by}}}
+                  ]
+      ){
+        title
+      }
+    }

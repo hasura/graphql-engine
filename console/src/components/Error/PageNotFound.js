@@ -9,7 +9,7 @@ export class NotFoundError extends Error {}
 
 class PageNotFound extends Component {
   render() {
-    const errorImage = require('./error-logo.png');
+    const errorImage = require('./hasura_icon_green.png');
     const styles = require('./ErrorPage.scss');
 
     const { resetCallback } = this.props;

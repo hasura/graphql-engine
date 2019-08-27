@@ -24,6 +24,7 @@ module Hasura.GraphQL.Execute.LiveQuery
   , subsOpFromPGAST
   ) where
 
+import           Control.Lens
 import           Data.Has
 
 import qualified Control.Concurrent.STM                       as STM
@@ -32,7 +33,6 @@ import qualified Data.HashMap.Strict                          as Map
 import qualified Data.HashSet                                 as Set
 import qualified Data.Text                                    as T
 import qualified Database.PG.Query                            as Q
-import qualified Database.PG.Query.Connection                 as Q
 import qualified Language.GraphQL.Draft.Syntax                as G
 
 import qualified Hasura.GraphQL.Execute.LiveQuery.Fallback    as LQF
@@ -49,6 +49,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DML.Select                        (asSingleRowJsonResp)
 import           Hasura.RQL.Types
 
+import           Hasura.SQL.Error
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
@@ -166,18 +167,18 @@ toMultiplexedQueryVar
   => GR.UnresolvedVal -> m S.SQLExp
 toMultiplexedQueryVar = \case
   GR.UVPG annPGVal ->
-    let GR.AnnPGVal varM isNullable colTy colVal = annPGVal
+    let GR.AnnPGVal varM isNullable _ colVal = annPGVal
     in case (varM, isNullable) of
       -- we don't check for nullability as
       -- this is only used for reusable plans
       -- the check has to be made before this
       (Just var, _) -> do
-        modify $ Map.insert var (colTy, colVal)
-        return $ fromResVars (PgTypeSimple colTy)
+        modify $ Map.insert var colVal
+        return $ fromResVars (PGTypeScalar $ pstType colVal)
           [ "variables"
           , G.unName $ G.unVariable var
           ]
-      _             -> return $ toTxtValue colTy colVal
+      _             -> return $ toTxtValue colVal
   GR.UVSessVar ty sessVar ->
     return $ fromResVars ty [ "user", T.toLower sessVar]
   GR.UVSQL sqlExp -> return sqlExp
@@ -198,19 +199,19 @@ subsOpFromPGAST
      , MonadIO m
      )
 
-  -- | to validate arguments
   => PGExecCtx
+  -- ^ to validate arguments
 
-  -- | used as part of an identifier in the underlying live query systems
-  -- to avoid unnecessary load on Postgres where possible
   -> GH.GQLReqUnparsed
+  -- ^ used as part of an identifier in the underlying live query systems
+  -- to avoid unnecessary load on Postgres where possible
 
-  -- | variable definitions as seen in the subscription, needed in
-  -- checking whether the subscription can be multiplexed or not
   -> [G.VariableDefinition]
+  -- ^ variable definitions as seen in the subscription, needed in
+  -- checking whether the subscription can be multiplexed or not
 
-  -- | The alias and the partially processed live query field
   -> (G.Alias, GR.QueryRootFldUnresolved)
+  -- ^ The alias and the partially processed live query field
 
   -> m (LiveQueryOp, Maybe SubsPlan)
 subsOpFromPGAST pgExecCtx reqUnparsed varDefs (fldAls, astUnresolved) = do
@@ -272,38 +273,20 @@ validateAnnVarValsOnPg pgExecCtx annVarVals = do
   let valSel = mkValidationSel $ Map.elems annVarVals
 
   Q.Discard _ <- runTx' $ liftTx $
-    Q.rawQE valPgErrHandler (Q.fromBuilder $ toSQL valSel) [] False
-  return $ fmap (txtEncodedPGVal . snd) annVarVals
+    Q.rawQE dataExnErrHandler (Q.fromBuilder $ toSQL valSel) [] False
+  return $ fmap (txtEncodedPGVal . pstValue) annVarVals
 
   where
-    mkExtrs = map (flip S.Extractor Nothing . uncurry toTxtValue)
+    mkExtrs = map (flip S.Extractor Nothing . toTxtValue)
     mkValidationSel vars =
       S.mkSelect { S.selExtr = mkExtrs vars }
     runTx' tx = do
       res <- liftIO $ runExceptT (runLazyTx' pgExecCtx tx)
       liftEither res
 
--- | The error handler that is used to errors in the validation SQL.
--- It tries to specifically read few PG error codes which indicate
--- that the format of the value provided for a type is incorrect
-valPgErrHandler :: Q.PGTxErr -> QErr
-valPgErrHandler txErr =
-  fromMaybe (defaultTxErrorHandler txErr) $ do
-    stmtErr <- Q.getPGStmtErr txErr
-    codeMsg <- getPGCodeMsg stmtErr
-    (qErrCode, qErrMsg) <- extractError codeMsg
-    return $ err400 qErrCode qErrMsg
-  where
-    getPGCodeMsg pged =
-      (,) <$> Q.edStatusCode pged <*> Q.edMessage pged
-    extractError = \case
-      -- invalid text representation
-      ("22P02", msg) -> return (DataException, msg)
-      -- invalid parameter value
-      ("22023", msg) -> return (DataException, msg)
-      -- invalid input values
-      ("22007", msg) -> return (DataException, msg)
-      _              -> Nothing
+    -- Explicitly look for the class of errors raised when the format of a value provided
+    -- for a type is incorrect.
+    dataExnErrHandler = mkTxErrorHandler (has _PGDataException)
 
 -- | Use the existing plan with new variables and session variables
 -- to create a live query operation
