@@ -47,7 +47,7 @@ const Permissions = props => {
     return (
       <div>
         <p>
-          Error. <a onClick={introspect}>Retry </a>
+          Error introspecting remote schema. <a onClick={introspect}>Try again.</a>
         </p>
       </div>
     );
