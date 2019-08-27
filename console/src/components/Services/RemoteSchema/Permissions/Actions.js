@@ -75,7 +75,8 @@ export const createRemoteSchemaPermission = (successCb, failureCb) => {
     ).then(
       data => {
         dispatch({ type: CREATE_REMOTE_SCHEMA_PERMISSION_SUCCESS });
-        alert('Success!! (temporary alert message)');
+        dispatch(fetchRemoteSchemaPermissions());
+        dispatch(closePermissionEdit());
         if (successCb) {
           successCb(data);
         }
@@ -90,6 +91,37 @@ export const createRemoteSchemaPermission = (successCb, failureCb) => {
     );
   };
 };
+
+const SET_REMOTE_SCHEMA_PERMISSIONS = '@remoteSchema/SET_REMOTE_SCHEMA_PERMISSIONS';
+const setRemoteSchemaPermissions = (perms) => ({
+  type: SET_REMOTE_SCHEMA_PERMISSIONS,
+  perms
+});
+
+export const fetchRemoteSchemaPermissions = () => (dispatch, getState) => {
+  const query = {
+    "type": "select",
+    "args": {
+      "table": {
+        "schema": "hdb_catalog",
+        "name": "remote_schema_permissions"
+      },
+      "columns": ["*.*"]
+    }
+  };
+  const options = {
+    method: 'POST',
+    headers: getState().tables.dataHeaders,
+    body: JSON.stringify(query),
+  };
+  return dispatch(requestAction(endpoints.query, options))
+    .then(data => {
+      dispatch(setRemoteSchemaPermissions(data));
+    })
+    .catch (err => {
+      console.error(error);
+    })
+}
 
 const reducer = (state = permissionState, action) => {
 
@@ -141,6 +173,12 @@ const reducer = (state = permissionState, action) => {
           ...permissionState.editState
         }
       }
+
+    case SET_REMOTE_SCHEMA_PERMISSIONS:
+      return {
+        ...state,
+        existingPermissions: action.perms
+      };
 
     default:
       return {

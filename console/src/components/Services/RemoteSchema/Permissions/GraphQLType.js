@@ -16,7 +16,7 @@ const GraphQLType = ({
   const removeTypeButton = !isRootType && (
     <div>
       <i
-        className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
+        className={`${styles.fontAwosomeClose} fa-lg fa fa-times ${styles.cursorPointer}`}
         data-test={`remove-type-${typeName}`}
         onClick={typeRemovalCallback}
       />
@@ -27,17 +27,17 @@ const GraphQLType = ({
     const onClick = isExpanded ? collapseType : expandType;
     return (
       <div
-        className={`${styles.display_flex} ${styles.add_mar_bottom_mid} ${
-          styles.cursorPointer
-        }`}
+        className={`${styles.display_flex} ${styles.add_mar_bottom_mid}`}
         onClick={onClick}
       >
-        <i
-          className={`fa fa-chevron-${isExpanded ? 'down' : 'right'} ${
-            styles.add_mar_right_mid
-          }`}
-        />
-        <b className={`${styles.add_mar_right_mid}`}>{typeName}</b>
+        <div className={`${styles.cursorPointer}`}>
+          <i
+            className={`fa fa-chevron-${isExpanded ? 'down' : 'right'} ${
+              styles.add_mar_right_mid
+            }`}
+          />
+          <b className={`${styles.add_mar_right_mid}`}>{typeName}</b>
+        </div>
         {removeTypeButton}
       </div>
     );

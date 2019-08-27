@@ -10,7 +10,8 @@ import {
   setPermissionTypes,
   createRemoteSchemaPermission,
   setCurrentPermissionEdit ,
-  closePermissionEdit 
+  closePermissionEdit,
+  fetchRemoteSchemaPermissions
 } from './Actions';
 import { parseRemoteRelPermDefinition } from './utils';
 import { fetchRoleList } from '../../Data/DataActions';
@@ -37,6 +38,7 @@ const Permissions = props => {
 
   React.useEffect(() => {
     dispatch(fetchRoleList());
+    dispatch(fetchRemoteSchemaPermissions());
   }, []);
 
   if (loading) return 'Loading...';
@@ -185,8 +187,8 @@ const Permissions = props => {
         });
       }
 
-
-      const _roleList = ['admin'].concat(rolesList);
+      const uniqueRolesList = ['admin', ...rolesList, ...existingPermissions.map(ep => ep.role)];
+      const _roleList = [...new Set(uniqueRolesList)];
 
       // roles wrapper
       const roles = _roleList.map(role => {

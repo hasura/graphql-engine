@@ -6,6 +6,7 @@ import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import {
   setPermissionRole,
   setPermissionTypes,
+  closePermissionEdit,
   createRemoteSchemaPermission,
 } from './Actions';
 import Button from '../../../Common/Button/Button';
@@ -25,13 +26,16 @@ const PermissionsEditor = ({
   }
 
   const getActionButtons = () => {
+
     const onSave = () => {
       dispatch(createRemoteSchemaPermission());
     };
 
     const onRemove = () => {};
 
-    const onCancel = () => {};
+    const onCancel = () => {
+      dispatch(closePermissionEdit());
+    };
 
     return (
       <div className={`${styles.display_flex} ${styles.add_mar_bottom}`}>

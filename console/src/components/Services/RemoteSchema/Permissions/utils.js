@@ -12,7 +12,7 @@ export const generateCreatePermQuery = (state, remoteSchemaName) => {
     args: {
       remote_schema: remoteSchemaName,
       role,
-      definition: {},
+      definition: [],
     },
   };
 
@@ -20,7 +20,15 @@ export const generateCreatePermQuery = (state, remoteSchemaName) => {
     payload.args.definition[allowedType] = Object.keys(
       allowedTypes[allowedType]
     ).filter(fieldName => allowedTypes[allowedType][fieldName].isChecked);
+    payload.args.definition.push({
+      type: allowedType,
+      fields: Object.keys(
+        allowedTypes[allowedType]
+      ).filter(fieldName => allowedTypes[allowedType][fieldName].isChecked)
+    })
   });
+
+  console.log(payload);
 
   return payload;
 
@@ -44,16 +52,16 @@ export const parseRemoteRelPermDefinition = (payload, rootTypes, objectTypes, no
 
   const allowedTypes = {};
 
-  Object.keys(definition).forEach(allowedType => {
-
+  definition.forEach(allowedType => {
+    const allowedTypeName = allowedType.type
     const fieldMetaData = {};
     const selectedFields = {};
 
-    definition[allowedType].forEach(selectedFeldName => {
+    allowedType.fields.forEach(selectedFeldName => {
       selectedFields[selectedFeldName] = true
     });
 
-    const graphqlType = getUnderlyingType(objectTypes[allowedType]);
+    const graphqlType = getUnderlyingType(objectTypes[allowedTypeName]);
     Object.keys(graphqlType._fields).forEach(field => {
       const returningType = getUnderlyingType(graphqlType._fields[field].type);
       fieldMetaData[field] = {
@@ -62,7 +70,7 @@ export const parseRemoteRelPermDefinition = (payload, rootTypes, objectTypes, no
         isScalar: !isObjectType(returningType)
       }
     })
-    allowedTypes[allowedType] = fieldMetaData;
+    allowedTypes[allowedTypeName] = fieldMetaData;
   })
 
   return {
@@ -78,7 +86,6 @@ export const getExpandedTypes = (allowedTypes, rootTypes, editType) => {
   const expandedTypes = {};
 
   const expandTypes = (currentTypeName) => {
-    console.log(currentTypeName);
     expandedTypes[currentTypeName] = true;
     Object.keys(allowedTypes[currentTypeName]).forEach(fieldName => {
       const allowedType = allowedTypes[currentTypeName][fieldName];
