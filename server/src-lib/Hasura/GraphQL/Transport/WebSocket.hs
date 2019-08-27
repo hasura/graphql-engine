@@ -296,7 +296,7 @@ onStart serverEnv wsConn (StartMsg opId q) =
     case getSubscriptionPlans execPlans
       -- When not a subscription operation
           of
-      Nothing -> do
+      [] -> do
         logOpEv ODStarted (Just requestId)
         results <-
           liftIO $
@@ -340,26 +340,19 @@ onStart serverEnv wsConn (StartMsg opId q) =
               Right resp -> do
                 sendGenericResp resp
         sendCompleted (Just requestId)
-      Just subPlans ->
-        case subPlans of
-          [] -> do
-            preExecErr requestId (err500 Unexpected "subscription has no plan")
-            sendCompleted (Just requestId)
-          [x] -> do
-            logOpEv ODStarted (Just requestId)
-            execSubscription requestId q x
-          _ -> do
-            preExecErr
-              requestId
-              (err500 Unexpected "only one subscription plan expected")
-            sendCompleted (Just requestId)
+      [subscriptionPlan] -> do
+        logOpEv ODStarted (Just requestId)
+        execSubscription requestId q subscriptionPlan
+      _ -> do
+        preExecErr
+          requestId
+          (err500 Unexpected "only one subscription plan expected, got many")
+        sendCompleted (Just requestId)
     return ()
   where
     getSubscriptionPlans plans =
       let subPlans = map (getSubPlan . getLeafPlan) plans
-       in case catMaybes subPlans of
-            [] -> Nothing
-            x  -> Just x
+       in catMaybes subPlans
       where
         getLeafPlan =
           \case
