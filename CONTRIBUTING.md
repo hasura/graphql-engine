@@ -5,7 +5,23 @@
 However, for those individuals who want a bit more guidance on the best way to contribute to the project, read on. This document will cover what we're looking for. By addressing the points below, the chances that we
 can quickly merge or address your contributions will increase.
 
-## Overview
+## Table of contents
+
+[1. Repo overview ](#overview)
+
+[2. First time contributors welcome! ](#first-timers)
+
+[3. Areas for contributing ](#areas)
+
+[4. Ways of contributing ](#ways)
+
+[5. Commit messages ](#commit-messages)
+
+[6. Translations ](#translations)
+
+
+<a name="overview"></a>
+## 1. Repo overview
 
 [hasura/graphql-engine](https://github.com/hasura/graphql-engine) is a mono-repo
 consisting of 3 components. Each has their own contributing guides:
@@ -20,13 +36,15 @@ All of the three components have a single version, denoted by either the git tag
 
 For all contributions, a CLA (Contributor License Agreement) needs to be signed [here](https://cla-assistant.io/hasura/graphql-engine) before (or after) the pull request has been submitted. A bot will prompt contributors to sign the CLA via a pull request comment, if necessary.
 
-## First time contributors welcome!
+<a name="first-timers"></a>
+## 2. First time contributors welcome!
 
 We appreciate first time contributors and we are happy to assist you in getting started. In case of questions, just reach out to us!
 
 You find all issues suitable for first time contributors [here](https://github.com/hasura/graphql-engine/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22).
 
-## Areas for contributing
+<a name="areas"></a>
+## 3. Areas for contributing
 
 Of course, we appreciate contributions to all components of Hasura. However, we have identified three areas that are particularly suitable for open source contributions.
 
@@ -53,15 +71,23 @@ Since we launched our [learn page](https://learn.hasura.io/), we are happy about
 
 The README of the learn repository can be found [here](https://github.com/hasura/graphql-engine/tree/master/community/learn).
 
-Apart from the learn content, we have identified three other ways of contributing with community content:
+Apart from the learn content, we have identified three other ways of contributing with technical community content:
 
-- [boilerplates](community/boilerplates)
+- [Boilerplates](https://github.com/hasura/graphql-engine/tree/master/community/boilerplates)
 
-- [examples](community/examples) 
+- [Sample apps](https://github.com/hasura/graphql-engine/tree/master/community/sample-apps) 
 
-- [tools](community/tools) 
+- [Tools](community/tools) 
 
 Feel free to submit a pull request if you have something to add even if it's not related to the three sections above.
+
+#### Translations
+
+If you feel it would be useful to have certain community content (CONTRIBUTING.md, README.md, blogposts etc.) translated into another language, please reach out to us.
+
+#### Technical writer program
+
+If you are interested in writing a blogpost, there is more information on our technical writer program in our [community wiki](https://github.com/hasura/graphql-engine/wiki/Community).
 
 ### Hasura CLI
 
@@ -69,7 +95,8 @@ We have some issues on the CLI that are suitable for open source contributions. 
 
 The README of the CLI repository can be found [here](https://github.com/hasura/graphql-engine/tree/master/cli).
 
-## Ways of contributing
+<a name="ways"></a>
+## 4. Ways of contributing
 
 ### Reporting an Issue
 
@@ -92,7 +119,8 @@ The README of the CLI repository can be found [here](https://github.com/hasura/g
 
 - Rebase master with your branch before submitting a pull request.
 
-## Commit messages
+<a name="commit-messages"></a>
+## 5. Commit messages
 
 - The first line should be a summary of the changes, not exceeding 50
   characters, followed by an optional body which has more details about the
@@ -105,7 +133,8 @@ The README of the CLI repository can be found [here](https://github.com/hasura/g
 
 - Don't add a period/dot (.) at the end of the summary line.
 
-## Translations
+<a name="translations"></a>
+## 6. Translations
 
 This document is available in the following translations:
 
