@@ -8,7 +8,6 @@ import           System.Environment            (lookupEnv)
 import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
 import qualified Data.Aeson.TH                 as J
-import qualified Data.HashMap.Strict           as Map
 import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
@@ -65,13 +64,19 @@ newtype RemoteSchemaNameQuery
 
 $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''RemoteSchemaNameQuery)
 
-type PermTypeMap = Map.HashMap G.NamedType [G.Name]
+data RemoteTypePerm
+  = RemoteTypePerm
+  { rtpType   :: G.NamedType
+  , rtpFields :: [G.Name]
+  } deriving (Show, Eq, Lift)
+
+$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''RemoteTypePerm)
 
 data RemoteSchemaPermissions
   = RemoteSchemaPermissions
   { rsPermRemoteSchema :: RemoteSchemaName
   , rsPermRole         :: RoleName
-  , rsPermDefinition   :: PermTypeMap
+  , rsPermDefinition   :: [RemoteTypePerm]
   } deriving (Show, Eq, Lift)
 
 $(J.deriveJSON (J.aesonDrop 6 J.snakeCase) ''RemoteSchemaPermissions)

@@ -20,6 +20,8 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson                    as J
 import qualified Data.HashMap.Strict           as Map
+import qualified Data.List                     as List
+import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 import qualified Hasura.GraphQL.Validate.Types as VT
 
@@ -204,17 +206,30 @@ validateRemoteSchemaPermissions remoteSchemaPerm = do
        (scRemoteSchemas sc) of
     Nothing  -> throw400 RemoteSchemaError "No such remote schema"
     Just remoteSchemaCtx -> do
-      newTypes <- validateTypes (rsPermDefinition remoteSchemaPerm) (GC._rgTypes $ rscGCtx remoteSchemaCtx)
+      newTypes <- do
+        checkUniqueTypes (rsPermDefinition remoteSchemaPerm)
+        validateTypes (rsPermDefinition remoteSchemaPerm) (GC._rgTypes $ rscGCtx remoteSchemaCtx)
       newGCtx <- updateRemoteGCtxFromTypes newTypes (rscGCtx remoteSchemaCtx)
       pure $ remoteSchemaCtx { rscGCtx = newGCtx }
 
-validateTypes :: (QErrM m) => PermTypeMap -> VT.TypeMap -> m VT.TypeMap
-validateTypes permTypes allTypes = do
+checkUniqueTypes :: (QErrM m) => [RemoteTypePerm] -> m ()
+checkUniqueTypes typePerms = do
+  let types = map rtpType typePerms
+      nubbedTypes = List.nub types
+  if types /= nubbedTypes
+    then throw400 InvalidParams $
+         "duplicate types found in permission specification: " <>
+         (T.pack . show) (types \\ nubbedTypes)
+    else pure ()
+
+validateTypes :: (QErrM m) => [RemoteTypePerm] -> VT.TypeMap -> m VT.TypeMap
+validateTypes typePerms allTypes = do
   eitherTypeMap <- runValidateT validateTypes'
   case eitherTypeMap of
     Left errs     -> throw400 Unexpected (mconcat errs)
     Right typeMap -> pure typeMap
   where
+    typePermMap = Map.fromList $ map (\(RemoteTypePerm ty flds) -> (ty, flds)) typePerms
     validateTypes' :: (MonadValidate [Text] m) => m VT.TypeMap
     validateTypes' = do
       Map.traverseWithKey
@@ -222,7 +237,7 @@ validateTypes permTypes allTypes = do
            -- only TIObj and TIInpObj can be permissioned, other types pass-thru
            case typeInfo of
              VT.TIObj objTy ->
-               case Map.lookup namedType permTypes of
+               case Map.lookup namedType typePermMap of
                  Nothing -> pure $ VT.TIObj objTy {VT._otiFields = Map.empty}
                  Just permFields -> do
                    newFields <-
@@ -230,7 +245,7 @@ validateTypes permTypes allTypes = do
                    pure $
                      VT.TIObj objTy {VT._otiFields = Map.fromList newFields}
              VT.TIInpObj inpObjTy ->
-               case Map.lookup namedType permTypes of
+               case Map.lookup namedType typePermMap of
                  Nothing ->
                    pure $ VT.TIInpObj inpObjTy {VT._iotiFields = Map.empty}
                  Just permArgs -> do
