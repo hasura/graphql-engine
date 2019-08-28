@@ -38,9 +38,7 @@ import qualified Data.HashMap.Strict.InsOrd             as OHM
 import qualified Data.Sequence                          as Seq
 import qualified Data.String.Conversions                as CS
 import qualified Data.Text                              as T
-import qualified Data.Vector                            as V
 import qualified VectorBuilder.Builder                  as VB 
-import qualified VectorBuilder.Vector                   as VB
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Hasura.GraphQL.Validate                as VQ
 
@@ -50,72 +48,6 @@ import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Value
-
--- | https://graphql.github.io/graphql-spec/June2018/#sec-Response-Format
---
--- NOTE: this type and parseGQRespValue are a lax representation of the spec,
--- since...
---   - remote GraphQL servers may not conform strictly, and...
---   - we use this type as an accumulator.
---
--- Ideally we'd have something correct by construction for hasura results
--- someplace.
-data GQRespValue =
-  GQRespValue
-  { _gqRespData   :: OJ.Object
-  -- ^ 'OJ.empty' (corresponding to the invalid `"data": {}`) indicates an error.
-  , _gqRespErrors :: VB.Builder OJ.Value
-  -- ^ An 'OJ.Array', but with efficient cons and concatenation. Null indicates
-  -- query success.
-  }
--- TODO consider unifying this type with Hasura.GraphQL.Transport.HTTP.Protocol.
-
-makeLenses ''GQRespValue
-
-parseGQRespValue :: EncJSON -> Either String GQRespValue
-parseGQRespValue = OJ.eitherDecode . encJToLBS >=> \case
-  OJ.Object obj -> do
-    _gqRespData <-
-      case OJ.lookup "data" obj of
-        -- "an error was encountered before execution began":
-        Nothing -> pure OJ.empty
-        -- "an error was encountered during the execution that prevented a valid response":
-        Just OJ.Null -> pure OJ.empty
-        Just (OJ.Object dobj) -> pure dobj
-        Just _ -> Left "expected object or null for GraphQL data response"
-    _gqRespErrors <-
-      case OJ.lookup "errors" obj of
-        Nothing -> pure VB.empty
-        Just (OJ.Array vec) -> pure $ VB.vector vec
-        Just _ -> Left "expected array for GraphQL error response"
-    pure (GQRespValue {_gqRespData, _gqRespErrors})
-  _ -> Left "expected object for GraphQL response"
-
-encodeGQRespValue :: GQRespValue -> EncJSON
-encodeGQRespValue GQRespValue{..} = OJ.toEncJSON $ OJ.Object $ OJ.fromList $
-  -- "If the data entry in the response is not present, the errors entry in the
-  -- response must not be empty. It must contain at least one error. "
-  if _gqRespData == OJ.empty && not anyErrors
-    then
-      let msg = "Somehow did not accumulate any errors or data from graphql queries"
-       in [("errors", OJ.Array $ V.singleton $ gQJoinErrorToValue msg)]
-    else
-      -- NOTE: "If an error was encountered during the execution that prevented
-      -- a valid response, the data entry in the response should be null."
-      -- TODO it's not clear to me how we can enforce that here or if we should try.
-      ("data", OJ.Object _gqRespData) :
-      [("errors", OJ.Array gqRespErrorsV) | anyErrors ]
-  where 
-    gqRespErrorsV = VB.build _gqRespErrors
-    anyErrors = not $ V.null gqRespErrorsV
-
-newtype GQJoinError =  GQJoinError T.Text
-  deriving (Show, Eq, IsString, Monoid, Semigroup)
-
--- | https://graphql.github.io/graphql-spec/June2018/#sec-Errors  "Error result format"
-gQJoinErrorToValue :: GQJoinError -> OJ.Value
-gQJoinErrorToValue (GQJoinError msg) =
-  OJ.Object (OJ.fromList [("message", OJ.String msg)])
 
 newtype RemoteRelKey =
   RemoteRelKey Int
@@ -816,4 +748,4 @@ pgcolvalueToGValue colVal = case colVal of
 
 appendJoinError :: GQRespValue -> GQJoinError -> GQRespValue
 appendJoinError resp err = 
-  gqRespErrors <>~ (VB.singleton $ gQJoinErrorToValue err) $ resp
+  gqRespErrors <>~ (VB.singleton $ gqJoinErrorToValue err) $ resp
