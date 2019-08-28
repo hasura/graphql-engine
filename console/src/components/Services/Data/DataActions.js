@@ -220,7 +220,9 @@ const setUntrackedRelations = () => (dispatch, getState) => {
 };
 
 const loadSchema = configOptions => {
+
   return (dispatch, getState) => {
+
     const url = Endpoints.getSchema;
 
     let allSchemas = getState().tables.allSchemas;

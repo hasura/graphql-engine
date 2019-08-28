@@ -4,12 +4,17 @@ import TableHeader from '../TableCommon/TableHeader';
 
 import { getAllDataTypeMap } from '../Common/utils';
 
+import { TABLE_ENUMS_SUPPORT } from '../../../../helpers/versionUtils';
+import globals from '../../../../Globals';
+
 import {
   deleteTableSql,
   untrackTableSql,
   RESET,
   setUniqueKeys,
+  setTableAsEnum
 } from '../TableModify/ModifyActions';
+import { isTableEnumCompatible } from '../utils';
 import {
   setTable,
   fetchColumnTypeInfo,
@@ -20,6 +25,7 @@ import ColumnEditorList from './ColumnEditorList';
 import ColumnCreator from './ColumnCreator';
 import PrimaryKeyEditor from './PrimaryKeyEditor';
 import TableCommentEditor from './TableCommentEditor';
+import EnumsSection from '../Common/ReusableComponents/EnumsSection';
 import ForeignKeyEditor from './ForeignKeyEditor';
 import UniqueKeyEditor from './UniqueKeyEditor';
 import TriggerEditorList from './TriggerEditorList';
@@ -54,6 +60,7 @@ class ModifyTable extends React.Component {
       uniqueKeyModify,
       columnDefaultFunctions,
       schemaList,
+      tableEnum
     } = this.props;
 
     const dataTypeIndexMap = getAllDataTypeMap(dataTypes);
@@ -101,6 +108,23 @@ class ModifyTable extends React.Component {
         Delete table
       </Button>
     );
+
+    const getEnumsSection = () => {
+      const supportEnums = globals.featuresCompatibility && globals.featuresCompatibility[TABLE_ENUMS_SUPPORT];
+      const toggleEnum = () => dispatch(setTableAsEnum(tableSchema.is_enum));
+      return supportEnums ? (
+        <React.Fragment> 
+          <EnumsSection
+            isEnum={tableSchema.is_enum}
+            toggleEnum={toggleEnum}
+            isEnumsCompatible ={isTableEnumCompatible(tableSchema)}
+            styles={styles}
+            loading={tableEnum.loading}
+          />
+          <hr />
+        </React.Fragment> 
+      ) : null;
+    };
 
     // if (tableSchema.primary_key.columns > 0) {}
     return (
@@ -178,6 +202,7 @@ class ModifyTable extends React.Component {
             <h4 className={styles.subheading_text}>Triggers</h4>
             <TriggerEditorList tableSchema={tableSchema} dispatch={dispatch} />
             <hr />
+            {getEnumsSection()}
             {untrackBtn}
             {deleteBtn}
             <br />

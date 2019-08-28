@@ -23,6 +23,7 @@ const defaultState = {
   lastError: null,
   internalError: null,
   lastSuccess: null,
+  isEnum: false
 };
 
 export default defaultState;

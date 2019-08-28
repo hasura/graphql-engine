@@ -1,3 +1,7 @@
+import globals from '../../../Globals';
+console.log(globals);
+import { TABLE_ENUMS_SUPPORT } from '../../../helpers/versionUtils';
+
 export const INTEGER = 'integer';
 export const SERIAL = 'serial';
 export const BIGINT = 'bigint';
@@ -32,6 +36,8 @@ export const getPlaceholder = type => {
       return type;
   }
 };
+
+const supportEnums = globals.featuresCompatibility && globals.featuresCompatibility[TABLE_ENUMS_SUPPORT];
 
 export const tabNameMap = {
   browse: 'Browse Rows',
@@ -228,6 +234,11 @@ export const fetchTrackedTableListQuery = options => {
       order_by: [{ column: 'table_name', type: 'asc' }],
     },
   };
+
+  if (supportEnums) {
+    query.args.columns.push('is_enum');
+  }
+
   if (
     (options.schemas && options.schemas.length !== 0) ||
     (options.tables && options.tables.length !== 0)
@@ -356,6 +367,7 @@ FROM
 };
 
 export const fetchTableListQuery = options => {
+
   const whereQuery = generateWhereClause(options);
 
   // TODO: optimise this. Multiple OUTER JOINS causes data bloating
@@ -503,6 +515,10 @@ export const mergeLoadSchemaData = (
       view_info: _viewInfo,
     };
 
+    if (supportEnums) {
+      _mergedInfo['is_enum'] = trackedTableInfo.is_enum;
+    }
+
     _mergedTableData.push(_mergedInfo);
   });
 
@@ -627,3 +643,29 @@ const postgresFunctionTester = /.*\(\)$/gm;
 
 export const isPostgresFunction = str =>
   new RegExp(postgresFunctionTester).test(str);
+
+// You can either pass the tableSchema to this or a list of columns
+export const isTableEnumCompatible = (tableSchema, tableColumns) => {
+  if (tableSchema) {
+    const numTableCols = tableSchema.columns.length;
+    if (numTableCols === 1) {
+      return tableSchema.columns[0].data_type === "text";
+    } else if (numTableCols === 2) {
+      return tableSchema.columns[0].data_type === "text" && tableSchema.columns[1].data_type === "text";
+    } else {
+      return false;
+    }
+  } else {
+    const numTableCols = tableColumns.length;
+    if (numTableCols === 1) {
+      console.log('numCols 1');
+      console.log(tableColumns);
+      return tableColumns[0].type === "text";
+    } else if (numTableCols === 2) {
+      console.log('numCols 2');
+      return tableColumns[0].type === "text" && tableColumns[1].type === "text";
+    } else {
+      return false;
+    }
+  }
+};
