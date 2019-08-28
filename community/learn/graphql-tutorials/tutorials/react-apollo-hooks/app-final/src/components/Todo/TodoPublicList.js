@@ -8,10 +8,20 @@ const TodoPublicList = props => {
     olderTodosAvailable: props.latestTodo ? true : false,
     newTodosCount: 0,
     error: false,
-    todos: [],
-    oldestTodoId: props.latestTodo ? props.latestTodo.id + 1 : 0,
-    newestTodoId: props.latestTodo ? props.latestTodo.id : 0
+    todos: []
   });
+
+  let numTodos = state.todos.length;
+  let oldestTodoId = numTodos
+    ? state.todos[numTodos - 1].id
+    : props.latestTodo
+      ? props.latestTodo.id + 1
+      : 0;
+  let newestTodoId = numTodos
+    ? state.todos[0].id
+    : props.latestTodo
+      ? props.latestTodo.id
+      : 0;
 
   const client = useApolloClient();
 
@@ -21,12 +31,11 @@ const TodoPublicList = props => {
 
   useEffect(
     () => {
-      if (props.latestTodo && props.latestTodo.id > state.newestTodoId) {
-        setState({
-          ...state,
-          newestTodoId: props.latestTodo.id,
-          newTodosCount: state.newTodosCount + 1
+      if (props.latestTodo && props.latestTodo.id > newestTodoId) {
+        setState(prevState => {
+          return { ...prevState, newTodosCount: prevState.newTodosCount + 1 };
         });
+        newestTodoId = props.latestTodo.id;
       }
     },
     [props.latestTodo]
@@ -52,21 +61,24 @@ const TodoPublicList = props => {
 
     const { error, data } = await client.query({
       query: GET_OLD_PUBLIC_TODOS,
-      variables: { oldestTodoId: state.oldestTodoId }
+      variables: { oldestTodoId: oldestTodoId }
     });
 
     if (data.todos.length) {
-      setState({
-        ...state,
-        oldestTodoId: data.todos[data.todos.length - 1].id,
-        todos: [...state.todos, ...data.todos]
+      setState(prevState => {
+        return { ...prevState, todos: [...prevState.todos, ...data.todos] };
       });
+      oldestTodoId = data.todos[data.todos.length - 1].id;
     } else {
-      setState({ ...state, olderTodosAvailable: false });
+      setState(prevState => {
+        return { ...prevState, olderTodosAvailable: false };
+      });
     }
     if (error) {
       console.error(error);
-      setState({ ...state, error: true });
+      setState(prevState => {
+        return { ...prevState, error: true };
+      });
     }
   };
 
@@ -95,16 +107,20 @@ const TodoPublicList = props => {
     });
 
     if (data) {
-      setState({
-        ...state,
-        newestTodoId: data.todos[0].id,
-        todos: [...data.todos, ...state.todos],
-        newTodosCount: 0
+      setState(prevState => {
+        return {
+          ...prevState,
+          todos: [...data.todos, ...prevState.todos],
+          newTodosCount: 0
+        };
       });
+      newestTodoId = data.todos[0].id;
     }
     if (error) {
       console.error(error);
-      setState({ ...state, error: true });
+      setState(prevState => {
+        return { ...prevState, error: true };
+      });
     }
   };
 

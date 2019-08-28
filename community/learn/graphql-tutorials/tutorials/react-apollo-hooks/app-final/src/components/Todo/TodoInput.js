@@ -43,7 +43,6 @@ const TodoInput = ({ isPublic = false }) => {
 
   const resetInput = () => {
     setTodoInput("");
-    // input.focus();
   };
 
   const [addTodo, { loading }] = useMutation(ADD_TODO, {
@@ -63,7 +62,6 @@ const TodoInput = ({ isPublic = false }) => {
         className="input"
         value={todoInput}
         placeholder="What needs to be done?"
-        disabled={loading}
         ref={n => (input = n)}
         onChange={e => setTodoInput(e.target.value)}
       />
