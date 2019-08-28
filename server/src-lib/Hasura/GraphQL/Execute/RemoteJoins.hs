@@ -124,12 +124,10 @@ newtype RemoteRelKey =
 data RemoteRelField =
   RemoteRelField
     { rrRemoteField   :: !RemoteField
-    , rrField         :: !Field
-    -- ^ TODO Dedupe data since (_fRemoteRel rrField) == Just rrRemoteField
-    -- maybe we need to just unpack part of the Field here (DuplicateRecordNames could help here)
+    , rrArguments     :: !ArgsMap
+    , rrSelSet        :: !SelSet
     , rrRelFieldPath  :: !RelFieldPath
     , rrAlias         :: !G.Alias
-    -- ^ TODO similar to comment above ^ is rrAlias always a derivative of rrField?
     , rrAliasIndex    :: !Int
     , rrPhantomFields :: ![Text]
     }
@@ -155,11 +153,9 @@ newtype ArrayIndex =
 -- point back to them.
 rebuildFieldStrippingRemoteRels ::
      VQ.Field -> Maybe (VQ.Field, NonEmpty RemoteRelField)
--- TODO consider passing just relevant fields (_fSelSet and _fAlias?) from Field here and modify Field in caller
 rebuildFieldStrippingRemoteRels =
   traverse NE.nonEmpty . flip runState mempty . rebuild 0 mempty
   where
-    -- TODO refactor for clarity
     rebuild idx0 parentPath field0 = do
       selSetEithers <-
         for (zip [0..] (toList (_fSelSet field0))) $
@@ -172,7 +168,8 @@ rebuildFieldStrippingRemoteRels =
                  where remoteRelField =
                          RemoteRelField
                            { rrRemoteField = remoteField
-                           , rrField = subfield
+                           , rrArguments = _fArguments subfield
+                           , rrSelSet = _fSelSet subfield
                            , rrRelFieldPath = thisPath
                            , rrAlias = _fAlias subfield
                            , rrAliasIndex = idx
@@ -181,11 +178,7 @@ rebuildFieldStrippingRemoteRels =
                                  G.unName
                                  (filter
                                     (`notElem` fmap _fName (_fSelSet field0))
-                                    (map
-                                       (G.Name . getFieldNameTxt)
-                                       (toList
-                                          (rtrHasuraFields
-                                             (rmfRemoteRelationship remoteField)))))
+                                    (hasuraFieldNames remoteField))
                            }
       let fields = rights selSetEithers
       pure
@@ -209,14 +202,12 @@ rebuildFieldStrippingRemoteRels =
                                      , _fSelSet = mempty
                                      , _fRemoteRel = Nothing
                                      }))
-                      (map
-                         (G.Name . getFieldNameTxt)
-                         (toList
-                            (rtrHasuraFields
-                               (rmfRemoteRelationship remoteField))))
+                      (hasuraFieldNames remoteField)
           }
       where
         thisPath = parentPath <> RelFieldPath (pure (idx0, _fAlias field0))
+        hasuraFieldNames = 
+          map (G.Name . getFieldNameTxt) . toList . rtrHasuraFields . rmfRemoteRelationship
 
 -- | Get a list of fields needed from a hasura result.
 neededHasuraFields
@@ -263,7 +254,6 @@ insertBatchResults accumResp Batch{..} remoteResp =
     -- Since remote results are aliased by keys of the form 'remote_result_1', 'remote_result_2',
     -- we can sort by the keys for a ordered list
     -- On error, we short-circuit
-    -- TODO look again at this...
     remoteDataE = let indexedRemotes = map getIdxRemote $ OJ.toList $ _gqRespData remoteResp
                   in case any isNothing indexedRemotes of
                        True -> Left "couldn't parse all remote results"
@@ -430,9 +420,9 @@ produceBatch rtqOperationType rtqRemoteSchemaInfo RemoteRelField{..} batchInputs
     rtqFields =
       flip map indexedRows $ \(i, variables) ->
          fieldCallsToField
-           (_fArguments rrField)
+           rrArguments
            variables
-           (_fSelSet rrField)
+           rrSelSet
            (Just (arrayIndexAlias i))
            (rtrRemoteFields remoteRelationship)
     indexedRows = zip (map ArrayIndex [0 :: Int ..]) $ toList $ biRows batchInputs
@@ -646,7 +636,6 @@ extractFromResult cardinality keyedRemotes value =
                 (BatchInputs {biRows = pure (Map.fromList (toList row))
                              ,biCardinality = cardinality})))
         (Map.toList remotesRows)
-    -- TODO is there actually an invariant to be checked here?
     _ -> pure ()
   where
     candidates ::
