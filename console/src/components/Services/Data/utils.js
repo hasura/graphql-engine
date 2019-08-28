@@ -458,6 +458,8 @@ export const mergeLoadSchemaData = (
   const _mergedTableData = [];
 
   infoSchemaTableData.forEach(infoSchemaTableInfo => {
+    console.log(infoSchemaTableInfo);
+    console.log(hdbTableData);
     const _tableSchema = infoSchemaTableInfo.table_schema;
     const _tableName = infoSchemaTableInfo.table_name;
 
@@ -514,7 +516,7 @@ export const mergeLoadSchemaData = (
       view_info: _viewInfo,
     };
 
-    if (supportEnums) {
+    if (_isTableTracked && supportEnums) {
       _mergedInfo['is_enum'] = trackedTableInfo.is_enum;
     }
 
@@ -645,7 +647,9 @@ export const isPostgresFunction = str =>
 
 // You can either pass the tableSchema to this or a list of columns
 export const isTableEnumCompatible = (tableSchema, tableColumns) => {
+
   if (tableSchema) {
+
     const numTableCols = tableSchema.columns.length;
     if (numTableCols === 1) {
       return tableSchema.columns[0].data_type === "text";
@@ -654,8 +658,11 @@ export const isTableEnumCompatible = (tableSchema, tableColumns) => {
     } else {
       return false;
     }
+
   } else {
+
     const numTableCols = tableColumns.length;
+
     if (numTableCols === 1) {
       return tableColumns[0].type === "text";
     } else if (numTableCols === 2) {
@@ -663,5 +670,6 @@ export const isTableEnumCompatible = (tableSchema, tableColumns) => {
     } else {
       return false;
     }
+
   }
 };

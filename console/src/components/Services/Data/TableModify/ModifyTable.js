@@ -111,8 +111,11 @@ class ModifyTable extends React.Component {
 
     const getEnumsSection = () => {
       const supportEnums = globals.featuresCompatibility && globals.featuresCompatibility[TABLE_ENUMS_SUPPORT];
+      if (!supportEnums) return null;
+
       const toggleEnum = () => dispatch(setTableAsEnum(tableSchema.is_enum));
-      return supportEnums ? (
+
+      return (
         <React.Fragment> 
           <EnumsSection
             isEnum={tableSchema.is_enum}
@@ -123,7 +126,8 @@ class ModifyTable extends React.Component {
           />
           <hr />
         </React.Fragment> 
-      ) : null;
+      );
+
     };
 
     // if (tableSchema.primary_key.columns > 0) {}
