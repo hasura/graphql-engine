@@ -6,6 +6,8 @@ module Hasura.GraphQL.Schema.OrderBy
   , mkTabAggOpOrdByInpObjs
   ) where
 
+import           Control.Arrow                 ((&&&))
+
 import qualified Data.HashMap.Strict           as Map
 import qualified Language.GraphQL.Draft.Syntax as G
 
@@ -62,8 +64,8 @@ input table_<op>_order_by {
 
 mkTabAggOpOrdByInpObjs
   :: QualifiedTable
-  -> ([ColumnField], [G.Name])
-  -> ([ColumnField], [G.Name])
+  -> ([PGColumnInfo], [G.Name])
+  -> ([PGColumnInfo], [G.Name])
   -> [InpObjTyInfo]
 mkTabAggOpOrdByInpObjs tn (numCols, numAggOps) (compCols, compAggOps) =
   mapMaybe (mkInpObjTyM numCols) numAggOps
@@ -78,7 +80,7 @@ mkTabAggOpOrdByInpObjs tn (numCols, numAggOps) (compCols, compAggOps) =
       mkHsraInpTyInfo (Just $ mkDesc op) (mkTabAggOpOrdByTy tn op) $
       fromInpValL $ map mkColInpVal cols
 
-    mkColInpVal c = InpValInfo Nothing (_cfName c) Nothing $ G.toGT
+    mkColInpVal ci = InpValInfo Nothing (pgiName ci) Nothing $ G.toGT
                     ordByTy
 
 mkTabAggOrdByTy :: QualifiedTable -> G.NamedType
@@ -94,8 +96,8 @@ count: order_by
 
 mkTabAggOrdByInpObj
   :: QualifiedTable
-  -> ([ColumnField], [G.Name])
-  -> ([ColumnField], [G.Name])
+  -> ([PGColumnInfo], [G.Name])
+  -> ([PGColumnInfo], [G.Name])
   -> InpObjTyInfo
 mkTabAggOrdByInpObj tn (numCols, numAggOps) (compCols, compAggOps) =
   mkHsraInpTyInfo (Just desc) (mkTabAggOrdByTy tn) $ fromInpValL $
@@ -145,8 +147,8 @@ mkOrdByInpObj tn selFlds = (inpObjTy, ordByCtx)
     objRels = relFltr ObjRel
     arrRels = relFltr ArrRel
 
-    mkColOrdBy (ColumnField _ name) =
-      InpValInfo Nothing name Nothing $ G.toGT ordByTy
+    mkColOrdBy columnInfo =
+      InpValInfo Nothing (pgiName columnInfo) Nothing $ G.toGT ordByTy
     mkObjRelOrdBy (ri, _, _, _, _, _) =
       InpValInfo Nothing (mkRelName $ riName ri) Nothing $
       G.toGT $ mkOrdByTy $ riRTable ri
@@ -158,10 +160,7 @@ mkOrdByInpObj tn selFlds = (inpObjTy, ordByCtx)
 
     ordByCtx = Map.singleton namedTy $ Map.fromList $
                colOrdBys <> relOrdBys <> arrRelOrdBys
-    colOrdBys = flip map pgColFlds $ \(ColumnField ci name) ->
-                                    ( name
-                                    , OBIPGCol ci
-                                    )
+    colOrdBys = map (pgiName &&& OBIPGCol) pgColFlds
     relOrdBys = flip map objRels $ \(ri, _, _, fltr, _, _) ->
                                      ( mkRelName $ riName ri
                                      , OBIRel ri fltr

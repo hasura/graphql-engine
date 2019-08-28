@@ -127,7 +127,7 @@ parseTableArgs colGNameMap args = do
           initOrdBys = take colsLen $ toList ordBys
           initOrdByCols = flip mapMaybe initOrdBys $ \ob ->
             case obiColumn ob of
-              RS.AOCPG ci -> Just $ pgiName ci
+              RS.AOCPG ci -> Just $ pgiColumn ci
               _           -> Nothing
           isValid = (colsLen == length initOrdByCols)
                     && all (`elem` initOrdByCols) (toList cols)
@@ -240,7 +240,7 @@ parseAggOrdBy colGNameMap f annObj =
             (_, enumValM) <- asEnumValM eVal
             forM enumValM $ \enumVal -> do
               (ordTy, nullsOrd) <- parseOrderByEnum enumVal
-              col <- pgiName <$> resolvePGCol colGNameMap colName
+              col <- pgiColumn <$> resolvePGCol colGNameMap colName
               let aobCol = f $ RS.AAOOp opT col
               return $ mkOrdByItemG ordTy aobCol nullsOrd
 
@@ -337,7 +337,7 @@ parseColumns allColFldMap val =
   flip withArray val $ \_ vals ->
     forM vals $ \v -> do
       (_, G.EnumValue enumVal) <- asEnumVal v
-      pgiName <$> resolvePGCol allColFldMap enumVal
+      pgiColumn <$> resolvePGCol allColFldMap enumVal
 
 convertCount :: MonadError QErr m => PGColGNameMap -> ArgsMap -> m S.CountType
 convertCount colGNameMap args = do
@@ -365,7 +365,7 @@ convertColFlds colGNameMap ty selSet = fmap toFields $
   withSelSet selSet $ \fld ->
     case _fName fld of
       "__typename" -> return $ RS.PCFExp $ G.unName $ G.unNamedType ty
-      n            -> (RS.PCFCol . pgiName) <$> resolvePGCol colGNameMap n
+      n            -> (RS.PCFCol . pgiColumn) <$> resolvePGCol colGNameMap n
 
 convertAggFld
   :: (Monad m, MonadError QErr m)

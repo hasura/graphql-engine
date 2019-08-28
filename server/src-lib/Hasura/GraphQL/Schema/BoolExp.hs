@@ -228,7 +228,7 @@ mkBoolExpInp tn fields =
       ]
 
     mkFldExpInp = \case
-      Left (ColumnField (PGColumnInfo _ colTy _) name) ->
+      Left (PGColumnInfo _ name colTy _) ->
         mk name (mkCompExpTy colTy)
       Right (RelInfo relName _ _ remTab _, _, _, _, _, _) ->
         mk (mkRelName relName) (mkBoolExpTy remTab)

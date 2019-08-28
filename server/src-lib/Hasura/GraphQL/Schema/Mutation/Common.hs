@@ -14,9 +14,9 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-mkPGColInp :: ColumnField -> InpValInfo
-mkPGColInp (ColumnField ci name) =
-  InpValInfo Nothing name Nothing $ G.toGT $ mkColumnType $ pgiType ci
+mkPGColInp :: PGColumnInfo -> InpValInfo
+mkPGColInp ci =
+  InpValInfo Nothing (pgiName ci) Nothing $ G.toGT $ mkColumnType $ pgiType ci
 
 -- table_mutation_response
 mkMutRespTy :: QualifiedTable -> G.NamedType

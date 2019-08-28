@@ -4,6 +4,11 @@ module Hasura.RQL.Types.Column
   , _PGColumnEnumReference
   , isScalarColumnWhere
 
+  , onlyIntCols
+  , onlyNumCols
+  , onlyJSONBCols
+  , onlyComparableCols
+
   , parsePGScalarValue
   , parsePGScalarValues
   , unsafePGColumnToRepresentation
@@ -20,16 +25,17 @@ module Hasura.RQL.Types.Column
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict        as M
-import qualified Data.Text                  as T
+import qualified Data.HashMap.Strict           as M
+import qualified Data.Text                     as T
+import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Control.Lens.TH
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax (Lift)
+import           Language.Haskell.TH.Syntax    (Lift)
 
-import           Hasura.RQL.Instances       ()
+import           Hasura.RQL.Instances          ()
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
@@ -129,12 +135,26 @@ $(deriveJSON (aesonDrop 4 snakeCase) ''PGRawColumnInfo)
 -- schema information to produce a 'PGColumnType'.
 data PGColumnInfo
   = PGColumnInfo
-  { pgiName       :: !PGCol
+  { pgiColumn     :: !PGCol
+  , pgiName       :: !G.Name
+  -- ^ field name exposed in GraphQL interface
   , pgiType       :: !PGColumnType
   , pgiIsNullable :: !Bool
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 3 snakeCase) ''PGColumnInfo)
 
+onlyIntCols :: [PGColumnInfo] -> [PGColumnInfo]
+onlyIntCols = filter (isScalarColumnWhere isIntegerType . pgiType)
+
+onlyNumCols :: [PGColumnInfo] -> [PGColumnInfo]
+onlyNumCols = filter (isScalarColumnWhere isNumType . pgiType)
+
+onlyJSONBCols :: [PGColumnInfo] -> [PGColumnInfo]
+onlyJSONBCols = filter (isScalarColumnWhere (== PGJSONB) . pgiType)
+
+onlyComparableCols :: [PGColumnInfo] -> [PGColumnInfo]
+onlyComparableCols = filter (isScalarColumnWhere isComparableType . pgiType)
+
 getColInfos :: [PGCol] -> [PGColumnInfo] -> [PGColumnInfo]
 getColInfos cols allColInfos =
-  flip filter allColInfos $ \ci -> pgiName ci `elem` cols
+  flip filter allColInfos $ \ci -> pgiColumn ci `elem` cols

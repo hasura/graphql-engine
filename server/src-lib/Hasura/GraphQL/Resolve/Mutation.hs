@@ -62,7 +62,7 @@ convertRowObj colGNameMap val =
   flip withObject val $ \_ obj ->
   forM (OMap.toList obj) $ \(k, v) -> do
     prepExpM <- fmap UVPG <$> asPGColumnValueM v
-    pgCol <- pgiName <$> resolvePGCol colGNameMap k
+    pgCol <- pgiColumn <$> resolvePGCol colGNameMap k
     let prepExp = fromMaybe (UVSQL $ S.SEUnsafe "NULL") prepExpM
     return (pgCol, prepExp)
 
@@ -86,7 +86,7 @@ convObjWithOp
 convObjWithOp colGNameMap opFn val =
   flip withObject val $ \_ obj -> forM (OMap.toList obj) $ \(k, v) -> do
   colVal <- pstValue . _apvValue <$> asPGColumnValue v
-  pgCol <- pgiName <$> resolvePGCol colGNameMap k
+  pgCol <- pgiColumn <$> resolvePGCol colGNameMap k
   -- TODO: why are we using txtEncoder here?
   let encVal = txtEncoder colVal
       sqlExp = opFn (pgCol, encVal)
@@ -98,7 +98,7 @@ convDeleteAtPathObj
 convDeleteAtPathObj colGNameMap val =
   flip withObject val $ \_ obj -> forM (OMap.toList obj) $ \(k, v) -> do
     vals <- flip withArray v $ \_ annVals -> mapM asPGColumnValue annVals
-    pgCol <- pgiName <$> resolvePGCol colGNameMap k
+    pgCol <- pgiColumn <$> resolvePGCol colGNameMap k
     let valExps = map (txtEncoder . pstValue . _apvValue) vals
         annEncVal = S.SETyAnn (S.SEArray valExps) S.textArrTypeAnn
         sqlExp = S.SEOpApp S.jsonbDeleteAtPathOp

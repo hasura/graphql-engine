@@ -133,7 +133,7 @@ instance DQuote FieldName where
   dquoteTxt (FieldName c) = c
 
 fromPGCol :: PGCol -> FieldName
-fromPGCol (PGCol c) = FieldName c
+fromPGCol c = FieldName $ getPGColTxt c
 
 fromRel :: RelName -> FieldName
 fromRel = FieldName . relNameToTxt

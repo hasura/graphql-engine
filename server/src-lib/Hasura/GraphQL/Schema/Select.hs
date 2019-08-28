@@ -57,11 +57,11 @@ mkPGColParams colType
       [ (G.Name "path", InpValInfo (Just pathDesc) "path" Nothing $ G.toGT $ mkScalarTy PGText) ]
   | otherwise = Map.empty
 
-mkPGColFld :: ColumnField -> ObjFldInfo
-mkPGColFld (ColumnField colInfo name) =
-  mkHsraObjFldInfo Nothing name (mkPGColParams colTy) ty
+mkPGColFld :: PGColumnInfo -> ObjFldInfo
+mkPGColFld colInfo =
+  mkHsraObjFldInfo Nothing (pgiName colInfo) (mkPGColParams colTy) ty
   where
-    PGColumnInfo _ colTy isNullable = colInfo
+    PGColumnInfo _ _ colTy isNullable = colInfo
     ty = bool notNullTy nullTy isNullable
     columnType = mkColumnType colTy
     notNullTy = G.toGT $ G.toNT columnType
@@ -181,8 +181,8 @@ type table_aggregate_fields{
 -}
 mkTableAggFldsObj
   :: QualifiedTable
-  -> ([ColumnField], [G.Name])
-  -> ([ColumnField], [G.Name])
+  -> ([PGColumnInfo], [G.Name])
+  -> ([PGColumnInfo], [G.Name])
   -> ObjTyInfo
 mkTableAggFldsObj tn (numCols, numAggOps) (compCols, compAggOps) =
   mkHsraObjTyInfo (Just desc) (mkTableAggFldsTy tn) Set.empty $ mapFromL _fiName $
@@ -218,7 +218,7 @@ mkTableColAggFldsObj
   :: QualifiedTable
   -> G.Name
   -> (PGColumnType -> G.NamedType)
-  -> [ColumnField]
+  -> [PGColumnInfo]
   -> ObjTyInfo
 mkTableColAggFldsObj tn op f cols =
   mkHsraObjTyInfo (Just desc) (mkTableColAggFldsTy op tn) Set.empty $ mapFromL _fiName $
@@ -226,8 +226,8 @@ mkTableColAggFldsObj tn op f cols =
   where
     desc = G.Description $ "aggregate " <> G.unName op <> " on columns"
 
-    mkColObjFld (ColumnField ci name) = mkHsraObjFldInfo Nothing name Map.empty $
-                                     G.toGT $ f $ pgiType ci
+    mkColObjFld ci = mkHsraObjFldInfo Nothing (pgiName ci) Map.empty $
+                     G.toGT $ f $ pgiType ci
 
 {-
 
@@ -255,7 +255,7 @@ table_by_pk(
   coln: valuen!
 ): table
 -}
-mkSelFldPKey :: Maybe G.Name -> QualifiedTable -> [ColumnField] -> ObjFldInfo
+mkSelFldPKey :: Maybe G.Name -> QualifiedTable -> [PGColumnInfo] -> ObjFldInfo
 mkSelFldPKey mCustomName tn cols =
   mkHsraObjFldInfo (Just desc) fldName args ty
   where
@@ -264,9 +264,9 @@ mkSelFldPKey mCustomName tn cols =
     fldName = fromMaybe (mkTableByPkName tn) mCustomName
     args = fromInpValL $ map colInpVal cols
     ty = G.toGT $ mkTableTy tn
-    colInpVal (ColumnField ci name) =
-      InpValInfo Nothing name Nothing $ G.toGT $ G.toNT $ mkColumnType $
-      pgiType ci
+    colInpVal ci =
+      InpValInfo Nothing (pgiName ci) Nothing $
+      G.toGT $ G.toNT $ mkColumnType $ pgiType ci
 
 {-
 

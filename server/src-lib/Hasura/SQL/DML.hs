@@ -341,7 +341,7 @@ instance ToSQL SQLExp where
     "END"
   toSQL (SEBool be) = toSQL be
   toSQL (SEExcluded t) = "EXCLUDED."
-                         <> toSQL (PGCol t)
+                         <> toSQL (Iden t)
   toSQL (SEArray exps) = "ARRAY" <> TB.char '['
                          <> (", " <+> exps) <> TB.char ']'
   toSQL (SETuple tup) = toSQL tup

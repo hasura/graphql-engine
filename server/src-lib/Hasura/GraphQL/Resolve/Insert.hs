@@ -112,7 +112,7 @@ traverseInsObj rim allColMap (gName, annVal) defVal@(AnnInsObj cols objRels arrR
       (_, WithScalarType scalarType maybeScalarValue) <- asPGColumnTypeAndValueM annVal
       columnInfo <- onNothing (Map.lookup gName allColMap) $
                  throw500 "column not found in PGColGNameMap"
-      let columnName = pgiName columnInfo
+      let columnName = pgiColumn columnInfo
           scalarValue = fromMaybe (PGNull scalarType) maybeScalarValue
       pure $ AnnInsObj ((columnName, WithScalarType scalarType scalarValue):cols) objRels arrRels
 
@@ -249,9 +249,9 @@ fetchFromColVals
   -> m [(a, WithScalarType PGScalarValue)]
 fetchFromColVals colVal reqCols f =
   forM reqCols $ \ci -> do
-    let valM = Map.lookup (pgiName ci) colVal
+    let valM = Map.lookup (pgiColumn ci) colVal
     val <- onNothing valM $ throw500 $ "column "
-           <> pgiName ci <<> " not found in given colVal"
+           <> pgiColumn ci <<> " not found in given colVal"
     pgColVal <- parsePGScalarValue (pgiType ci) val
     return (f ci, pgColVal)
 
@@ -316,7 +316,7 @@ insertObjRel strfyNum role objRelIns =
     MutateResp aRows colVals <- decodeEncJSON resp
     colValM <- asSingleObject colVals
     colVal <- onNothing colValM $ throw400 NotSupported errMsg
-    retColsWithVals <- fetchFromColVals colVal rColInfos pgiName
+    retColsWithVals <- fetchFromColVals colVal rColInfos pgiColumn
     let c = mergeListsWith mapCols retColsWithVals
           (\(_, rCol) (col, _) -> rCol == col)
           (\(lCol, _) (_, cVal) -> (lCol, cVal))
@@ -411,7 +411,7 @@ insertObj strfyNum role tn singleObjIns addCols = do
 
     withArrRels colValM = do
       colVal <- onNothing colValM $ throw400 NotSupported cannotInsArrRelErr
-      arrDepColsWithVal <- fetchFromColVals colVal arrRelDepCols pgiName
+      arrDepColsWithVal <- fetchFromColVals colVal arrRelDepCols pgiColumn
 
       arrInsARows <- forM arrRels $ insertArrRel strfyNum role arrDepColsWithVal
 
@@ -528,7 +528,7 @@ getInsCtx tn = do
   ctxMap <- asks getter
   insCtx <- onNothing (Map.lookup tn ctxMap) $
     throw500 $ "table " <> tn <<> " not found"
-  let defValMap = fmap PSESQLExp $ S.mkColDefValMap $ map pgiName $
+  let defValMap = fmap PSESQLExp $ S.mkColDefValMap $ map pgiColumn $
                   Map.elems $ icAllCols insCtx
       setCols = icSet insCtx
   return $ insCtx {icSet = Map.union setCols defValMap}

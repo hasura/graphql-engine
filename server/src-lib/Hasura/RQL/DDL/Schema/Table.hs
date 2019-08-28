@@ -242,6 +242,7 @@ processTableChanges ti tableDiff = do
 
   where
     TableDiff mNewName droppedCols addedCols alteredCols _ constraints = tableDiff
+    customFields = maybe M.empty _tcCustomColumnFields $ _tiCustomConfig ti
     replaceConstraints tn = flip modTableInCache tn $ \tInfo ->
       return $ tInfo {_tiUniqOrPrimConstraints = constraints}
 
@@ -259,14 +260,14 @@ processTableChanges ti tableDiff = do
             <<> " in table " <> tn <<>
             " as a relationship with the name already exists"
           _ -> do
-            info <- processColumnInfoUsingCache tn rawInfo
+            info <- processColumnInfoUsingCache tn customFields rawInfo
             addColToCache colName info tn
 
     procAlteredCols sc tn = fmap or $ forM alteredCols $
       \( PGRawColumnInfo oldName oldType _ _
        , newRawInfo@(PGRawColumnInfo newName newType _ _) ) -> do
         let performColumnUpdate = do
-              newInfo <- processColumnInfoUsingCache tn newRawInfo
+              newInfo <- processColumnInfoUsingCache tn customFields newRawInfo
               updColInCache newName newInfo tn
 
         if | oldName /= newName -> renameColInCatalog oldName newName tn ti $> True
@@ -361,8 +362,11 @@ buildTableCache = processTableCache <=< buildRawTableCache
     processTableCache :: TableCache PGRawColumnInfo -> m (TableCache PGColumnInfo)
     processTableCache rawTables = fmap (M.mapMaybe id) . for rawTables $ \rawInfo -> do
       let tableName = _tiName rawInfo
+          customFields = maybe M.empty _tcCustomColumnFields $
+                         rawInfo ^. tiCustomConfig
       withTable tableName $ rawInfo
-        & tiFieldInfoMap.traverse._FIColumn %%~ processColumnInfo enumTables tableName
+        & tiFieldInfoMap.traverse._FIColumn %%~
+          processColumnInfo enumTables customFields tableName
       where
         enumTables = M.mapMaybe _tiEnumValues rawTables
 
@@ -371,16 +375,22 @@ buildTableCache = processTableCache <=< buildRawTableCache
 processColumnInfo
   :: (QErrM m)
   => M.HashMap QualifiedTable EnumValues -- ^ known enum tables
+  -> CustomColumnFields -- ^ customised graphql names
   -> QualifiedTable -- ^ the table this column belongs to
   -> PGRawColumnInfo -- ^ the column’s raw information
   -> m PGColumnInfo
-processColumnInfo enumTables tableName rawInfo = do
+processColumnInfo enumTables customFields tableName rawInfo = do
   resolvedType <- resolveColumnType
   pure PGColumnInfo
-    { pgiName = prciName rawInfo
+    { pgiColumn = pgCol
+    , pgiName = graphqlName
     , pgiType = resolvedType
-    , pgiIsNullable = prciIsNullable rawInfo }
+    , pgiIsNullable = prciIsNullable rawInfo
+    }
   where
+    pgCol = prciName rawInfo
+    graphqlName = maybe (G.Name $ getPGColTxt pgCol)
+                   unGraphQLName $ M.lookup pgCol customFields
     resolveColumnType =
       case prciReferences rawInfo of
         -- no referenced tables? definitely not an enum
@@ -400,7 +410,12 @@ processColumnInfo enumTables tableName rawInfo = do
 
 -- | Like 'processColumnInfo', but uses the information in the current schema cache to resolve a
 -- column’s type.
-processColumnInfoUsingCache :: (CacheRM m, QErrM m) => QualifiedTable -> PGRawColumnInfo -> m PGColumnInfo
-processColumnInfoUsingCache tableName rawInfo = do
+processColumnInfoUsingCache
+  :: (CacheRM m, QErrM m)
+  => QualifiedTable
+  -> CustomColumnFields
+  -> PGRawColumnInfo
+  -> m PGColumnInfo
+processColumnInfoUsingCache tableName customFields rawInfo = do
   tables <- scTables <$> askSchemaCache
-  processColumnInfo (M.mapMaybe _tiEnumValues tables) tableName rawInfo
+  processColumnInfo (M.mapMaybe _tiEnumValues tables) customFields tableName rawInfo
