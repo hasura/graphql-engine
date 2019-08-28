@@ -7,4 +7,5 @@ args:
       DROP TABLE post cascade;
       DROP TABLE test cascade;
       DROP TABLE integer_column cascade;
+      DROP TABLE "user" cascade;
     cascade: true
