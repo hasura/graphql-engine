@@ -44,6 +44,8 @@ tyMismatch expectedTy v =
   getAnnInpValKind (_aivValue v) <> " for value of type " <>
   G.showGT (_aivType v)
 
+-- Note: This currently must be manually kept in sync with 'mkReusableVariableTypes' from
+-- "Hasura.GraphQL.Validate"! It should be possible to merge them if we do #2801.
 asPGColumnTypeAndValueM
   :: (MonadError QErr m)
   => AnnInpVal

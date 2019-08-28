@@ -2,22 +2,23 @@ module Hasura.GraphQL.Validate
   ( validateGQ
   , showVars
   , RootSelSet(..)
+  , SelSet
+  , Field(..)
   , getTypedOp
-  , QueryParts (..)
+  , QueryParts(..)
   , getQueryParts
-  , getAnnVarVals
 
   , isQueryInAllowlist
 
-  , VarPGTypes
-  , AnnPGVarVals
-  , getAnnPGVarVals
-  , Field(..)
-  , SelSet
+  , ReusableVariableTypes
+  , ReusableVariableValues
+  , validateVariablesForReuse
   ) where
 
-import           Data.Has
 import           Hasura.Prelude
+
+import           Data.Aeson
+import           Data.Has
 
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashSet                           as HS
@@ -69,81 +70,90 @@ getTypedOp opNameM selSets opDefs =
       throwVE $ "exactly one operation has to be present " <>
       "in the document when operationName is not specified"
 
--- For all the variables defined there will be a value in the final map
+-- | For all the variables defined there will be a value in the final map
 -- If no default, not in variables and nullable, then null value
-getAnnVarVals
-  :: ( MonadReader r m, Has TypeMap r
-     , MonadError QErr m
-     )
-  => [G.VariableDefinition]
-  -> VariableValues
-  -> m AnnVarVals
-getAnnVarVals varDefsL inpVals = withPathK "variableValues" $ do
-
+validateVariables
+  :: (MonadReader r m, Has TypeMap r, MonadError QErr m)
+  => [G.VariableDefinition] -> VariableValues -> m AnnVarVals
+validateVariables varDefsL inpVals = withPathK "variableValues" $ do
   varDefs <- onLeft (mkMapWith G._vdVariable varDefsL) $ \dups ->
     throwVE $ "the following variables are defined more than once: " <>
     showVars dups
 
   let unexpectedVars = filter (not . (`Map.member` varDefs)) $ Map.keys inpVals
-
   unless (null unexpectedVars) $
     throwVE $ "unexpected variables in variableValues: " <>
     showVars unexpectedVars
 
-  forM varDefs $ \(G.VariableDefinition var ty defM) -> do
-    let baseTy = getBaseTy ty
-    baseTyInfo <- getTyInfoVE baseTy
-    -- check that the variable is defined on input types
-    when (isObjTy baseTyInfo) $ throwVE $ objTyErrMsg baseTy
-
-    let defM' = bool (defM <|> Just G.VCNull) defM $ G.isNotNull ty
-    annDefM <- withPathK "defaultValue" $
-               mapM (validateInputValue constValueParser ty) defM'
-    let inpValM = Map.lookup var inpVals
-    annInpValM <- withPathK (G.unName $ G.unVariable var) $
-                  mapM (validateInputValue jsonParser ty) inpValM
-    let varValM = annInpValM <|> annDefM
-    onNothing varValM $ throwVE $
-      "expecting a value for non-nullable variable: " <>
-      showVars [var] <>
-      " of type: " <> G.showGT ty <>
-      " in variableValues"
+  traverse validateVariable varDefs
   where
-    objTyErrMsg namedTy =
-      "variables can only be defined on input types"
-      <> "(enums, scalars, input objects), but "
-      <> showNamedTy namedTy <> " is an object type"
+    validateVariable (G.VariableDefinition var ty defM) = do
+      let baseTy = getBaseTy ty
+      baseTyInfo <- getTyInfoVE baseTy
+      -- check that the variable is defined on input types
+      when (isObjTy baseTyInfo) $ throwVE $
+        "variables can only be defined on input types"
+        <> "(enums, scalars, input objects), but "
+        <> showNamedTy baseTy <> " is an object type"
+
+      let defM' = bool (defM <|> Just G.VCNull) defM $ G.isNotNull ty
+      annDefM <- withPathK "defaultValue" $
+                 mapM (validateInputValue constValueParser ty) defM'
+      let inpValM = Map.lookup var inpVals
+      annInpValM <- withPathK (G.unName $ G.unVariable var) $
+                    mapM (validateInputValue jsonParser ty) inpValM
+      let varValM = annInpValM <|> annDefM
+      onNothing varValM $ throwVE $
+        "expecting a value for non-nullable variable: " <>
+        showVars [var] <>
+        " of type: " <> G.showGT ty <>
+        " in variableValues"
+
 
 showVars :: (Functor f, Foldable f) => f G.Variable -> Text
 showVars = showNames . fmap G.unVariable
 
-type VarPGTypes = Map.HashMap G.Variable PGColumnType
-type AnnPGVarVals = Map.HashMap G.Variable (WithScalarType PGScalarValue)
+-- | Returned by 'validateGQ' when a query’s variables are sufficiently simple that this query is
+-- eligible to be /reused/, which means that the resolved SQL query will not change even if any of
+-- its variable values change. This is used to determine which query plans can be cached.
+newtype ReusableVariableTypes = ReusableVariableTypes (Map.HashMap G.Variable PGColumnType)
+  deriving (Show, Eq, ToJSON)
+type ReusableVariableValues = Map.HashMap G.Variable (WithScalarType PGScalarValue)
 
--- this is in similar spirit to getAnnVarVals, however
--- here it is much simpler and can get rid of typemap requirement
--- combine the two if possible
-getAnnPGVarVals
+mkReusableVariableTypes :: [G.VariableDefinition] -> AnnVarVals -> Maybe ReusableVariableTypes
+mkReusableVariableTypes varDefs inputValues = ReusableVariableTypes <$> do
+  -- If any of the variables are nullable, this query isn’t reusable, since a null variable used
+  -- in a condition like {_eq: $var} removes the condition entirely, requiring different SQL.
+  guard (not $ any (G.isNullable . G._vdType) varDefs)
+
+  -- Note: This currently must be manually kept in sync with 'asPGColumnTypeAndValueM' from
+  -- "Hasura.GraphQL.Resolve.InputValue"! It should be possible to merge them if we do #2801.
+  for inputValues $ \inputValue -> case _aivValue inputValue of
+    AGScalar pgType _                   -> Just $ PGColumnScalar pgType
+    AGEnum _ (AGEReference reference _) -> Just $ PGColumnEnumReference reference
+    _                                   -> Nothing
+
+-- | This is similar in spirit to 'validateVariables' but uses preexisting 'ReusableVariableTypes'
+-- information to parse Postgres values directly for use with a reusable query plan. (Ideally, it
+-- would be nice to be able to share more of the logic instead of duplicating it.)
+validateVariablesForReuse
   :: (MonadError QErr m)
-  => VarPGTypes
-  -> Maybe VariableValues
-  -> m AnnPGVarVals
-getAnnPGVarVals varTypes varValsM =
-  flip Map.traverseWithKey varTypes $ \varName varType -> do
-    let unexpectedVars = filter
-          (not . (`Map.member` varTypes)) $ Map.keys varVals
+  => ReusableVariableTypes -> Maybe VariableValues -> m ReusableVariableValues
+validateVariablesForReuse (ReusableVariableTypes varTypes) varValsM =
+  withPathK "variableValues" $ do
+    let unexpectedVars = filter (not . (`Map.member` varTypes)) $ Map.keys varVals
     unless (null unexpectedVars) $
-      throwVE $ "unexpected variables in variableValues: " <>
-      showVars unexpectedVars
-    varVal <- onNothing (Map.lookup varName varVals) $
-      throwVE $ "expecting a value for non-nullable variable: " <>
-      showVars [varName] <>
-      -- TODO: we don't have the graphql type
-      -- " of type: " <> T.pack (show varType) <>
-      " in variableValues"
-    parsePGScalarValue varType varVal
-  where
-    varVals = fromMaybe Map.empty varValsM
+      throwVE $ "unexpected variables: " <> showVars unexpectedVars
+
+    flip Map.traverseWithKey varTypes $ \varName varType ->
+      withPathK (G.unName $ G.unVariable varName) $ do
+        varVal <- onNothing (Map.lookup varName varVals) $
+          throwVE "expected a value for non-nullable variable"
+          -- TODO: we don't have the graphql type
+          -- <> " of type: " <> T.pack (show varType)
+        parsePGScalarValue varType varVal
+    where
+      varVals = fromMaybe Map.empty varValsM
 
 validateFrag
   :: (MonadError QErr m, MonadReader r m, Has TypeMap r)
@@ -167,14 +177,15 @@ validateGQ
   :: (MonadError QErr m, MonadReader GCtx m)
   -- => GraphQLRequest
   => QueryParts
-  -> m RootSelSet
+  -> m (RootSelSet, Maybe ReusableVariableTypes)
 validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
 
   ctx <- ask
 
   -- annotate the variables of this operation
-  annVarVals <- getAnnVarVals (G._todVariableDefinitions opDef) $
-                fromMaybe Map.empty varValsM
+  let varDefs = G._todVariableDefinitions opDef
+  annVarVals <- validateVariables varDefs $ fromMaybe Map.empty varValsM
+  let reusableTypes = mkReusableVariableTypes varDefs annVarVals
 
   -- annotate the fragments
   fragDefs <- onLeft (mkMapWith G._fdName fragDefsL) $ \dups ->
@@ -188,7 +199,7 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
   selSet <- flip runReaderT valCtx $ denormSelSet [] opRoot $
             G._todSelectionSet opDef
 
-  case G._todType opDef of
+  rootSelSet <- case G._todType opDef of
     G.OperationTypeQuery -> return $ RQuery selSet
     G.OperationTypeMutation -> return $ RMutation selSet
     G.OperationTypeSubscription ->
@@ -198,6 +209,8 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
           unless (null rst) $
             throwVE "subscription must select only one top level field"
           return $ RSubscription fld
+
+  pure (rootSelSet, reusableTypes)
 
 isQueryInAllowlist :: GQLExecDoc -> HS.HashSet GQLQuery -> Bool
 isQueryInAllowlist q = HS.member gqlQuery

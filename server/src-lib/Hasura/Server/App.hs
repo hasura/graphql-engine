@@ -458,7 +458,7 @@ mkWaiApp
   -> Bool
   -> InstanceId
   -> S.HashSet API
-  -> EL.LQOpts
+  -> EL.LiveQueriesOptions
   -> IO HasuraApp
 mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
          enableConsole consoleAssetsDir enableTelemetry instanceId apis lqOpts = do

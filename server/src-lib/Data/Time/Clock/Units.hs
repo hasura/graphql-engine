@@ -1,7 +1,7 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DerivingVia #-}
-{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE DataKinds           #-}
+{-# LANGUAGE DerivingVia         #-}
+{-# LANGUAGE TypeOperators       #-}
 
 {-| Types for time intervals of various units. Each newtype wraps 'DiffTime', but they have
 different 'Num' instances. The intent is to use the record selectors to write literals with
@@ -39,11 +39,11 @@ module Data.Time.Clock.Units
   , Nanoseconds(..)
   ) where
 
-import Prelude
+import           Prelude
 
-import Data.Proxy
-import Data.Time.Clock
-import GHC.TypeLits
+import           Data.Proxy
+import           Data.Time.Clock
+import           GHC.TypeLits
 
 type Seconds = DiffTime
 

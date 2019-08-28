@@ -12,7 +12,6 @@ import qualified Data.Aeson                             as J
 import qualified Data.ByteString                        as B
 import qualified Data.ByteString.Lazy                   as LBS
 import qualified Data.HashMap.Strict                    as Map
-import qualified Data.HashSet                           as Set
 import qualified Data.IntMap                            as IntMap
 import qualified Data.TByteString                       as TBS
 import qualified Data.Text                              as T
@@ -63,18 +62,12 @@ instance J.ToJSON RootFieldPlan where
     RFPRaw encJson     -> J.toJSON $ TBS.fromBS encJson
     RFPPostgres pgPlan -> J.toJSON pgPlan
 
-type VariableTypes = Map.HashMap G.Variable PGColumnType
-
-data QueryPlan
-  = QueryPlan
-  { _qpVariables :: ![G.VariableDefinition]
-  , _qpFldPlans  :: ![(G.Alias, RootFieldPlan)]
-  }
+type FieldPlans = [(G.Alias, RootFieldPlan)]
 
 data ReusableQueryPlan
   = ReusableQueryPlan
-  { _rqpVariableTypes :: !VariableTypes
-  , _rqpFldPlans      :: ![(G.Alias, RootFieldPlan)]
+  { _rqpVariableTypes :: !GV.ReusableVariableTypes
+  , _rqpFldPlans      :: !FieldPlans
   }
 
 instance J.ToJSON ReusableQueryPlan where
@@ -83,32 +76,9 @@ instance J.ToJSON ReusableQueryPlan where
              , "field_plans"     J..= fldPlans
              ]
 
-getReusablePlan :: QueryPlan -> Maybe ReusableQueryPlan
-getReusablePlan (QueryPlan vars fldPlans) =
-  if all fldPlanReusable $ map snd fldPlans
-  then Just $ ReusableQueryPlan varTypes fldPlans
-  else Nothing
-  where
-    allVars = Set.fromList $ map G._vdVariable vars
-
-    -- this is quite aggressive, we can improve this by
-    -- computing used variables in each field
-    allUsed fldPlanVars =
-      Set.null $ Set.difference allVars $ Set.fromList fldPlanVars
-
-    fldPlanReusable = \case
-      RFPRaw _           -> True
-      RFPPostgres pgPlan -> allUsed $ Map.keys $ _ppVariables pgPlan
-
-    varTypesOfPlan = \case
-      RFPRaw _           -> mempty
-      RFPPostgres pgPlan -> snd <$> _ppVariables pgPlan
-
-    varTypes = Map.unions $ map (varTypesOfPlan . snd) fldPlans
-
 withPlan
   :: (MonadError QErr m)
-  => UserVars -> PGPlan -> GV.AnnPGVarVals -> m PreparedSql
+  => UserVars -> PGPlan -> GV.ReusableVariableValues -> m PreparedSql
 withPlan usrVars (PGPlan q reqVars prepMap) annVars = do
   prepMap' <- foldM getVar prepMap (Map.toList reqVars)
   let args = withUserVars usrVars $ IntMap.elems prepMap'
@@ -125,9 +95,9 @@ withPlan usrVars (PGPlan q reqVars prepMap) annVars = do
 mkCurPlanTx
   :: (MonadError QErr m)
   => UserVars
-  -> QueryPlan
+  -> FieldPlans
   -> m (LazyRespTx, GeneratedSqlMap)
-mkCurPlanTx usrVars (QueryPlan _ fldPlans) = do
+mkCurPlanTx usrVars fldPlans = do
   -- generate the SQL and prepared vars or the bytestring
   resolved <- forM fldPlans $ \(alias, fldPlan) -> do
     fldResp <- case fldPlan of
@@ -160,8 +130,8 @@ getVarArgNum
 getVarArgNum var colTy = do
   PlanningSt curArgNum vars prepped <- get
   case Map.lookup var vars of
-    Just argNum -> return $ fst argNum
-    Nothing     -> do
+    Just (argNum, _) -> pure argNum
+    Nothing             -> do
       put $ PlanningSt (curArgNum + 1)
         (Map.insert var (curArgNum, colTy) vars) prepped
       return curArgNum
@@ -186,10 +156,11 @@ prepareWithPlan
   => UnresolvedVal -> m S.SQLExp
 prepareWithPlan = \case
   R.UVPG annPGVal -> do
-    let AnnPGVal varM isNullable colTy colVal = annPGVal
-    argNum <- case (varM, isNullable) of
-      (Just var, False) -> getVarArgNum var colTy
-      _                 -> getNextArgNum
+    let AnnPGVal varM _ colTy colVal = annPGVal
+    argNum <- case varM of
+      -- TODO: Use reusability information?
+      Just var -> getVarArgNum var colTy
+      Nothing  -> getNextArgNum
     addPrepArg argNum $ toBinaryValue colVal
     return $ toPrepParam argNum (pstType colVal)
 
@@ -216,10 +187,10 @@ convertQuerySelSet
      , Has SQLGenCtx r
      , Has UserInfo r
      )
-  => [G.VariableDefinition]
+  => Maybe GV.ReusableVariableTypes
   -> V.SelSet
   -> m (LazyRespTx, Maybe ReusableQueryPlan, GeneratedSqlMap)
-convertQuerySelSet varDefs fields = do
+convertQuerySelSet varTypes fields = do
   usrVars <- asks (userVars . getter)
   fldPlans <- forM (toList fields) $ \fld -> do
     fldPlan <- case V._fName fld of
@@ -233,10 +204,9 @@ convertQuerySelSet varDefs fields = do
           prepareWithPlan unresolvedAst
         return $ RFPPostgres $ PGPlan (R.toPGQuery q) vars prepped
     return (V._fAlias fld, fldPlan)
-  let queryPlan     = QueryPlan varDefs fldPlans
-      reusablePlanM = getReusablePlan queryPlan
-  (tx, sql) <- mkCurPlanTx usrVars queryPlan
-  return (tx, reusablePlanM, sql)
+  let reusablePlan = ReusableQueryPlan <$> varTypes <*> pure fldPlans
+  (tx, sql) <- mkCurPlanTx usrVars fldPlans
+  return (tx, reusablePlan, sql)
 
 -- use the existing plan and new variables to create a pg query
 queryOpFromPlan
@@ -246,7 +216,7 @@ queryOpFromPlan
   -> ReusableQueryPlan
   -> m (LazyRespTx, GeneratedSqlMap)
 queryOpFromPlan usrVars varValsM (ReusableQueryPlan varTypes fldPlans) = do
-  validatedVars <- GV.getAnnPGVarVals varTypes varValsM
+  validatedVars <- GV.validateVariablesForReuse varTypes varValsM
   -- generate the SQL and prepared vars or the bytestring
   resolved <- forM fldPlans $ \(alias, fldPlan) ->
     (alias,) <$> case fldPlan of
