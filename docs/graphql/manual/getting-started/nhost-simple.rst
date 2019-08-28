@@ -6,19 +6,13 @@ Quickstart with Nhost
   :depth: 1
   :local:
 
-
-Page for Nhost free trail.
-
-- PostgreSQL
-- Hasura GraphQL Engline
-- Authentication
-- Storage
-
-This guide will help you get Hasura GraphQL engine and Postgres running on `Nhost's 30 days free trail <https://nhost.io/pricing#free>`_.
+This guide will help you get Hasura GraphQL Engine and Postgres running.
 It is the easiest and fastest way of trying Hasura out.
 
-If you'd like to link this to an existing database, please head to this guide instead:
-:doc:`Using an existing database on Heroku <../deployment/heroku/using-existing-heroku-database>`.
+Nhost also gives you authentication and storage to your project.
+
+.. note::
+   Want to try Hasura with an existing database? Go to :doc:`Getting started with an existing database <./using-existing-database>`.
 
 Deploy to Nhost
 ----------------
