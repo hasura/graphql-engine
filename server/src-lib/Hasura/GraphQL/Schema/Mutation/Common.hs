@@ -16,7 +16,7 @@ import           Hasura.SQL.Types
 
 mkPGColInp :: ColField -> InpValInfo
 mkPGColInp (ColField ci name) =
-  InpValInfo Nothing name Nothing $ G.toGT $ mkScalarTy $ pgiType ci
+  InpValInfo Nothing name Nothing $ G.toGT $ mkColumnType $ pgiType ci
 
 -- table_mutation_response
 mkMutRespTy :: QualifiedTable -> G.NamedType

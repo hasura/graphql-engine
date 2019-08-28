@@ -42,13 +42,13 @@ data RawFuncInfo
   , rfiReturnTypeName   :: !T.Text
   , rfiReturnTypeType   :: !PGTypType
   , rfiReturnsSet       :: !Bool
-  , rfiInputArgTypes    :: ![PGColType]
+  , rfiInputArgTypes    :: ![PGScalarType]
   , rfiInputArgNames    :: ![T.Text]
   , rfiReturnsTable     :: !Bool
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''RawFuncInfo)
 
-mkFunctionArgs :: [PGColType] -> [T.Text] -> [FunctionArg]
+mkFunctionArgs :: [PGScalarType] -> [T.Text] -> [FunctionArg]
 mkFunctionArgs tys argNames =
   bool withNames withNoNames $ null argNames
   where
@@ -85,7 +85,7 @@ mkFunctionInfo qf rawFuncInfo = do
   validateFuncArgs funcArgs
 
   let funcArgsSeq = Seq.fromList funcArgs
-      dep = SchemaDependency (SOTable retTable) "table"
+      dep = SchemaDependency (SOTable retTable) DRTable
       retTable = QualifiedObject retSn (TableName retN)
   return $ FunctionInfo qf False funTy funcArgsSeq retTable [dep]
   where

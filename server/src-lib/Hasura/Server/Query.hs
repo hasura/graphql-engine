@@ -18,8 +18,7 @@ import           Hasura.RQL.DDL.QueryCollection
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Relationship.Rename
 import           Hasura.RQL.DDL.RemoteSchema
-import           Hasura.RQL.DDL.Schema.Function
-import           Hasura.RQL.DDL.Schema.Table
+import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.DML.Count
 import           Hasura.RQL.DML.Delete
 import           Hasura.RQL.DML.Insert
@@ -35,6 +34,7 @@ data RQLQueryV1
   = RQAddExistingTableOrView !TrackTable
   | RQTrackTable !TrackTable
   | RQUntrackTable !UntrackTable
+  | RQSetTableIsEnum !SetTableIsEnum
 
   | RQTrackFunction !TrackFunction
   | RQUntrackFunction !UnTrackFunction
@@ -231,6 +231,7 @@ queryNeedsReload (RQV1 qi) = case qi of
   RQUntrackTable _                -> True
   RQTrackFunction _               -> True
   RQUntrackFunction _             -> True
+  RQSetTableIsEnum _              -> True
 
   RQCreateObjectRelationship _    -> True
   RQCreateArrayRelationship  _    -> True
@@ -312,6 +313,7 @@ runQueryV1M = \case
   RQAddExistingTableOrView q   -> runTrackTableQ q
   RQTrackTable q               -> runTrackTableQ q
   RQUntrackTable q             -> runUntrackTableQ q
+  RQSetTableIsEnum q           -> runSetExistingTableIsEnumQ q
 
   RQTrackFunction q            -> runTrackFunc q
   RQUntrackFunction q          -> runUntrackFunc q
@@ -370,7 +372,9 @@ runQueryV1M = \case
   RQBulk qs                    -> encJFromList <$> indexedMapM runQueryM qs
 
 runQueryV2M
-  :: (CacheRWM m, UserInfoM m, MonadTx m)
+  :: ( CacheRWM m, UserInfoM m, MonadTx m
+     , MonadIO m, HasHttpManager m, HasSQLGenCtx m
+     )
   => RQLQueryV2
   -> m EncJSON
 runQueryV2M = \case

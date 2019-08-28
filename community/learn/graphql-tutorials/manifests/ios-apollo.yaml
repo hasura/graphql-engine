@@ -25,6 +25,22 @@ spec:
       - image: hasura/base-git-image:0.7
         imagePullPolicy: IfNotPresent
         name: ios-apollo
+        env:
+        - name: GATSBY_ALGOLIA_APP_ID
+          valueFrom:
+            secretKeyRef:
+              name: hasura-secret
+              key: algoliaAppId
+        - name: GATSBY_ALGOLIA_SEARCH_KEY
+          valueFrom:
+            secretKeyRef:
+              name: hasura-secret
+              key: algoliaSearchKey
+        - name: ALGOLIA_ADMIN_KEY
+          valueFrom:
+            secretKeyRef:
+              name: hasura-secret
+              key: algoliaAdminKey
         ports:
         - containerPort: 8080
           protocol: TCP

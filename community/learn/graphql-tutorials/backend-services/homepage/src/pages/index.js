@@ -15,10 +15,10 @@ class Index extends React.Component {
         <Header/>
         <TopBanner/>
         <Tutorials/>
-        <Featured/>
-        <WillLearn/>
         <Testimonials/>
+        <WillLearn/>
         <SubscribeNewsletter/>
+        <Featured/>
         <Footer/>
       </div>
     );

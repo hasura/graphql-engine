@@ -47,14 +47,14 @@ import qualified Hasura.RQL.DDL.Permission.Internal as DP
 import qualified Hasura.RQL.DDL.QueryCollection     as DQC
 import qualified Hasura.RQL.DDL.Relationship        as DR
 import qualified Hasura.RQL.DDL.RemoteSchema        as DRS
-import qualified Hasura.RQL.DDL.Schema.Function     as DF
-import qualified Hasura.RQL.DDL.Schema.Table        as DT
+import qualified Hasura.RQL.DDL.Schema              as DS
 import qualified Hasura.RQL.Types.EventTrigger      as DTS
 import qualified Hasura.RQL.Types.RemoteSchema      as TRS
 
 data TableMeta
   = TableMeta
   { _tmTable               :: !QualifiedTable
+  , _tmIsEnum              :: !Bool
   , _tmConfiguration       :: !(Maybe TableConfig)
   , _tmObjectRelationships :: ![DR.ObjRelDef]
   , _tmArrayRelationships  :: ![DR.ArrRelDef]
@@ -65,9 +65,9 @@ data TableMeta
   , _tmEventTriggers       :: ![DTS.EventTriggerConf]
   } deriving (Show, Eq, Lift)
 
-mkTableMeta :: QualifiedTable -> Maybe TableConfig -> TableMeta
-mkTableMeta qt configM =
-  TableMeta qt configM [] [] [] [] [] [] []
+mkTableMeta :: QualifiedTable -> Bool -> Maybe TableConfig -> TableMeta
+mkTableMeta qt isEnum configM =
+  TableMeta qt isEnum configM [] [] [] [] [] [] []
 
 makeLenses ''TableMeta
 
@@ -79,6 +79,7 @@ instance FromJSON TableMeta where
 
     TableMeta
      <$> o .: tableKey
+     <*> o .:? isEnumKey .!= False
      <*> o .:? configKey .!= Nothing
      <*> o .:? orKey .!= []
      <*> o .:? arKey .!= []
@@ -90,6 +91,7 @@ instance FromJSON TableMeta where
 
     where
       tableKey = "table"
+      isEnumKey = "is_enum"
       configKey = "configuration"
       orKey = "object_relationships"
       arKey = "array_relationships"
@@ -103,8 +105,8 @@ instance FromJSON TableMeta where
         HS.fromList (M.keys o) `HS.difference` expectedKeySet
 
       expectedKeySet =
-        HS.fromList [ tableKey, orKey, arKey, ipKey
-                    , spKey, upKey, dpKey, etKey
+        HS.fromList [ tableKey, isEnumKey, orKey, arKey
+                    , ipKey, spKey, upKey, dpKey, etKey
                     ]
 
   parseJSON _ =
@@ -139,7 +141,7 @@ runClearMetadata
 runClearMetadata _ = do
   adminOnly
   liftTx clearMetadata
-  DT.buildSchemaCacheStrict
+  DS.buildSchemaCacheStrict
   return successMsg
 
 data ReplaceMetadata
@@ -223,15 +225,16 @@ applyQP2
 applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = do
 
   liftTx clearMetadata
-  DT.buildSchemaCacheStrict
+  DS.buildSchemaCacheStrict
 
   withPathK "tables" $ do
 
     -- tables and views
-    indexedForM_ tables $ \table -> do
-      let tableName = table ^. tmTable
-          config = table ^. tmConfiguration
-      void $ DT.trackExistingTableOrViewP2 tableName config False
+    indexedForM_ tables $ \tableMeta -> do
+      let tableName = tableMeta ^. tmTable
+          isEnum = tableMeta ^. tmIsEnum
+          configM = tableMeta ^. tmConfiguration
+      void $ DS.trackExistingTableOrViewP2 tableName isEnum configM
 
     -- Relationships
     indexedForM_ tables $ \table -> do
@@ -262,7 +265,7 @@ applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = 
 
   -- sql functions
   withPathK "functions" $
-    indexedMapM_ (void . DF.trackFunctionP2) functions
+    indexedMapM_ (void . DS.trackFunctionP2) functions
 
   -- query collections
   withPathK "query_collections" $
@@ -293,7 +296,7 @@ applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = 
     processPerms tabInfo perms =
       indexedForM_ perms $ \permDef -> do
         permInfo <- DP.addPermP1 tabInfo permDef
-        DP.addPermP2 (tiName tabInfo) permDef permInfo
+        DP.addPermP2 (_tiName tabInfo) permDef permInfo
 
 runReplaceMetadata
   :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
@@ -316,11 +319,11 @@ $(deriveToJSON defaultOptions ''ExportMetadata)
 fetchMetadata :: Q.TxE QErr ReplaceMetadata
 fetchMetadata = do
   tables <- Q.catchE defaultTxErrorHandler fetchTables
-  let tableMetaMap = M.fromList $ flip map tables $
-                     \(sn, tn, mConfig) ->
-                       let qt = QualifiedObject sn tn
-                           mConfigVal = Q.getAltJ <$> mConfig
-                       in (qt, mkTableMeta qt mConfigVal)
+  let tableMetaMap = M.fromList . flip map tables $
+        \(schema, name, isEnum, maybeConfig) ->
+          let qualifiedName = QualifiedObject schema name
+              configuration = Q.getAltJ <$> maybeConfig
+          in (qualifiedName, mkTableMeta qualifiedName isEnum configuration)
 
   -- Fetch all the relationships
   relationships <- Q.catchE defaultTxErrorHandler fetchRelationships
@@ -392,9 +395,9 @@ fetchMetadata = do
 
     fetchTables =
       Q.listQ [Q.sql|
-                SELECT table_schema, table_name, configuration
+                SELECT table_schema, table_name, is_enum, configuration
                 FROM hdb_catalog.hdb_table
-                WHERE is_system_defined = 'false'
+                 WHERE is_system_defined = 'false'
                     |] () False
 
     fetchRelationships =
@@ -446,7 +449,7 @@ runReloadMetadata
   => ReloadMetadata -> m EncJSON
 runReloadMetadata _ = do
   adminOnly
-  DT.buildSchemaCache
+  DS.buildSchemaCache
   return successMsg
 
 data DumpInternalState
@@ -508,9 +511,8 @@ runDropInconsistentMetadata _ = do
 
 purgeMetadataObj :: MonadTx m => MetadataObjId -> m ()
 purgeMetadataObj = liftTx . \case
-  (MOTable qt) ->
-    Q.catchE defaultTxErrorHandler $ DT.delTableFromCatalog qt
-  (MOFunction qf)                 -> DF.delFunctionFromCatalog qf
+  (MOTable qt)                    -> DS.deleteTableFromCatalog qt
+  (MOFunction qf)                 -> DS.delFunctionFromCatalog qf
   (MORemoteSchema rsn)            -> DRS.removeRemoteSchemaFromCatalog rsn
   (MOTableObj qt (MTORel rn _))   -> DR.delRelFromCatalog qt rn
   (MOTableObj qt (MTOPerm rn pt)) -> DP.dropPermFromCatalog qt rn pt
