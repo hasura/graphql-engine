@@ -30,7 +30,7 @@ import           Control.Concurrent                          (threadDelay)
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging
 
-import           Hasura.GraphQL.Transport.HTTP               (mergeResponseData)
+import           Hasura.GraphQL.Transport.HTTP               (getMergedGQResp)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
@@ -330,7 +330,7 @@ onStart serverEnv wsConn (StartMsg opId q) =
         case results of
           Left err -> postExecErr requestId err
           Right results' -> do
-            let mergedResponse = mergeResponseData results'
+            let mergedResponse = getMergedGQResp results'
             case mergedResponse of
               Left e ->
                 postExecErr requestId $
@@ -449,8 +449,8 @@ onStart serverEnv wsConn (StartMsg opId q) =
               ERTLegacy -> errFn False qErr
               ERTGraphqlCompliant -> J.object ["errors" J..= [errFn False qErr]]
       sendMsg wsConn $ SMErr $ ErrorMsg opId err
-    sendGenericResp encJson =
-      sendMsg wsConn $ SMData $ DataMsg opId $ GRHasura $ GQGeneric encJson
+    sendGenericResp gqResp=
+      sendMsg wsConn $ SMData $ DataMsg opId $ GRHasura $ GQGeneric gqResp
     withComplete :: ExceptT () IO () -> ExceptT () IO a
     withComplete action = do
       action
