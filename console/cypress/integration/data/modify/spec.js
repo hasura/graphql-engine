@@ -50,18 +50,19 @@ export const passMTRenameTable = () => {
     .clear()
     .type(getTableName(3, testName));
   cy.get(getElementFromAlias('heading-edit-table-save')).click();
-  cy.wait(25000);
+  cy.wait(15000);
   validateCT(getTableName(3, testName), 'success');
   cy.get(getElementFromAlias('heading-edit-table')).click();
   cy.get(getElementFromAlias('heading-edit-table-input'))
     .clear()
     .type(getTableName(0, testName));
   cy.get(getElementFromAlias('heading-edit-table-save')).click();
-  cy.wait(25000);
+  cy.wait(15000);
   validateCT(getTableName(0, testName), 'success');
 };
 
 export const passMTRenameColumn = () => {
+  cy.wait(10000);
   cy.get(getElementFromAlias('modify-table-edit-column-0')).click();
   cy.get(getElementFromAlias('edit-col-name'))
     .clear()
@@ -233,8 +234,7 @@ export const passRemoveUniqueKey = () => {
 };
 
 export const passMTDeleteCol = () => {
-  // cy.get(getElementFromAlias(`edit-${getColName(0)}`)).click();
-  // cy.wait(500);
+  cy.get(getElementFromAlias('modify-table-edit-column-1')).click();
   cy.get(getElementFromAlias('modify-table-column-1-remove')).click();
   cy.on('window:alert', str => {
     expect(str === 'Are you sure you want to delete?').to.be.true;

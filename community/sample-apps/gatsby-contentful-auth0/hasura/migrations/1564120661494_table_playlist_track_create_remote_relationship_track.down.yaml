@@ -1,0 +1,6 @@
+- args:
+    name: track
+    table:
+      name: playlist_track
+      schema: public
+  type: delete_remote_relationship

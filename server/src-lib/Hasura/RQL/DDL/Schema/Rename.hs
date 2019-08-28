@@ -1,3 +1,6 @@
+-- | Functions for mutating the catalog (with integrity checking) to incorporate schema changes
+-- discovered after applying a user-supplied SQL query. None of these functions modify the schema
+-- cache, so it must be reloaded after the catalog is updated.
 module Hasura.RQL.DDL.Schema.Rename
   ( renameTableInCatalog
   , renameColInCatalog
@@ -36,14 +39,9 @@ data RenameField
 type RenameTable = (QualifiedTable, QualifiedTable)
 
 otherDeps :: QErrM m => Text -> SchemaObjId -> m ()
-otherDeps errMsg = \case
-  SOQTemplate name ->
-    throw400 NotSupported $
-      "found dependant query template " <> name <<> "; " <> errMsg
-  d                ->
-      throw500 $ "unexpected dependancy "
-        <> reportSchemaObj d <> "; " <> errMsg
-
+otherDeps errMsg d =
+  throw500 $ "unexpected dependancy "
+    <> reportSchemaObj d <> "; " <> errMsg
 
 renameTableInCatalog
   :: (MonadTx m, CacheRM m)
@@ -75,7 +73,7 @@ renameTableInCatalog newQT oldQT = do
 
 renameColInCatalog
   :: (MonadTx m, CacheRM m)
-  => PGCol -> PGCol -> QualifiedTable -> TableInfo -> m ()
+  => PGCol -> PGCol -> QualifiedTable -> TableInfo PGColumnInfo -> m ()
 renameColInCatalog oCol nCol qt ti = do
   sc <- askSchemaCache
   -- Check if any relation exists with new column name
@@ -95,7 +93,7 @@ renameColInCatalog oCol nCol qt ti = do
   where
     errMsg = "cannot rename column " <> oCol <<> " to " <>> nCol
     assertFldNotExists =
-      case M.lookup (fromPGCol oCol) $ tiFieldInfoMap ti of
+      case M.lookup (fromPGCol oCol) $ _tiFieldInfoMap ti of
         Just (FIRelationship _) ->
           throw400 AlreadyExists $ "cannot rename column " <> oCol
           <<> " to " <> nCol <<> " in table " <> qt <<>
@@ -174,7 +172,7 @@ updateArrRelDef qt rn (oldQT, newQT) = do
 updatePermFlds :: (MonadTx m, CacheRM m)
   => QualifiedTable -> RoleName -> PermType -> RenameField -> m ()
 updatePermFlds refQT rn pt rf = do
-  Q.AltJ pDef <- liftTx fetchPermDef
+  pDef <- fmap fst $ liftTx $ fetchPermDef refQT rn pt
   case pt of
     PTInsert -> do
       perm <- decodeValue pDef
@@ -188,18 +186,6 @@ updatePermFlds refQT rn pt rf = do
     PTDelete -> do
       perm <- decodeValue pDef
       updateDelPermFlds refQT rf rn perm
-  where
-    QualifiedObject sn tn = refQT
-    fetchPermDef =
-      runIdentity . Q.getRow <$>
-        Q.withQE defaultTxErrorHandler [Q.sql|
-                  SELECT perm_def::json
-                    FROM hdb_catalog.hdb_permission
-                   WHERE table_schema = $1
-                     AND table_name = $2
-                     AND role_name = $3
-                     AND perm_type = $4
-                 |] (sn, tn, rn, permTypeToCode pt) True
 
 updateInsPermFlds
   :: (MonadTx m, CacheRM m)

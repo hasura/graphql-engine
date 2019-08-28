@@ -953,13 +953,17 @@
 }
 
 .secureSection {
-  // background-color: #545a6c;
-
   padding: 15px;
 
   a {
-    color: white;
+    //color: #FFC627;
+    color: #FFFFFF;
     text-decoration: none;
+  }
+
+  .secureSectionSymbol {
+    //color: #FFC627 !important;
+    color: inherit !important;
   }
 }
 

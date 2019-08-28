@@ -1,0 +1,11 @@
+psycopg2-binary
+sqlalchemy
+pytest
+pytest-xdist
+requests
+pyyaml
+websocket-client
+pyjwt >= 1.5.3
+jsondiff
+cryptography
+graphene

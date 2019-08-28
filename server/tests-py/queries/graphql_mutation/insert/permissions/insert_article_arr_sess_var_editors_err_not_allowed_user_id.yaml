@@ -1,0 +1,30 @@
+description: Editor inserts article data for a not allowed user-id
+url: /v1alpha1/graphql
+status: 400
+headers:
+  X-Hasura-Role: editor
+  X-Hasura-Allowed-User-Ids: '{1,3,4}'
+response:
+  errors:
+  - extensions:
+      path: $.selectionSet.insert_article.args.objects
+      code: permission-error
+    message: Check constraint violation. insert check constraint failed
+query:
+  query: |
+    mutation insert_article {
+      insert_article (
+        objects: [
+          {
+            title: "Article 4",
+            content: "Sample article content 4",
+            author_id: 2
+          },
+        ]
+      ) {
+        returning {
+          title
+          content
+        }
+      }
+    }

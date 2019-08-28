@@ -1,6 +1,8 @@
 # vuetify-vuex-todo-graphql
 A simple Todo PWA (Progressive Web App) inspired by [TodoMVC](http://todomvc.com), [Vue.js](https://vuejs.org), [Vuex](https://vuex.vuejs.org) and [Vuetify](https://vuetifyjs.com) technologies, forked from [davidgararo/vuetify-todo-pwa](https://github.com/davidgaroro/vuetify-todo-pwa), adding Hasura GraphQL integration
 
+[![Edit vuetify-vuex-todo-graphql](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/github/hasura/graphql-engine/tree/master/community/sample-apps/vuetify-vuex-todo-graphql?fontsize=14)
+
 # Tutorial
 
 - Deploy Postgres and GraphQL Engine on Heroku:

@@ -6,6 +6,10 @@ metaDescription: "Integrate React Apollo Subscription Component to watch for cha
 
 import GithubLink from "../../src/GithubLink.js";
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/vg6BLT11RAs" />
+
 So let's define the graphql subscription to be used.
 
 Open `src/screens/UsersScreen.js` and add the following code, below the other imports

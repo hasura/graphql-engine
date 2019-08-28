@@ -98,8 +98,11 @@ const saveRenameRelationship = (oldName, newName, tableName, callback) => {
 };
 
 const generateRelationshipsQuery = relMeta => {
+  let _upQuery;
+  let _downQuery;
+
   if (relMeta.isObjRel) {
-    const upQuery = {
+    _upQuery = {
       type: 'create_object_relationship',
       args: {
         name: relMeta.relName,
@@ -114,8 +117,8 @@ const generateRelationshipsQuery = relMeta => {
       lcol: column,
       rcol: relMeta.rcol[index],
     }));
-    if (columnMaps.length === 1) {
-      upQuery.args.using = {
+    if (columnMaps.length === 1 && !relMeta.isUnique) {
+      _upQuery.args.using = {
         foreign_key_constraint_on: relMeta.lcol[0],
       };
     } else {
@@ -123,7 +126,7 @@ const generateRelationshipsQuery = relMeta => {
         ...accumulator,
         [val.lcol]: val.rcol,
       });
-      upQuery.args.using = {
+      _upQuery.args.using = {
         manual_configuration: {
           remote_table: {
             name: relMeta.rTable,
@@ -133,63 +136,66 @@ const generateRelationshipsQuery = relMeta => {
         },
       };
     }
-    const downQuery = {
+
+    _downQuery = {
       type: 'drop_relationship',
       args: {
         table: { name: relMeta.lTable, schema: relMeta.lSchema },
         relationship: relMeta.relName,
       },
     };
-    return { upQuery, downQuery };
-  }
-  const upQuery = {
-    type: 'create_array_relationship',
-    args: {
-      name: relMeta.relName,
-      table: {
-        name: relMeta.lTable,
-        schema: relMeta.lSchema,
-      },
-      using: {},
-    },
-  };
-  const columnMaps = relMeta.rcol.map((column, index) => ({
-    rcol: column,
-    lcol: relMeta.lcol[index],
-  }));
-  if (columnMaps.length === 1) {
-    upQuery.args.using = {
-      foreign_key_constraint_on: {
-        table: {
-          name: relMeta.rTable,
-          schema: relMeta.rSchema,
-        },
-        column: relMeta.rcol[0],
-      },
-    };
   } else {
-    const columnReducer = (accumulator, val) => ({
-      ...accumulator,
-      [val.lcol]: val.rcol,
-    });
-    upQuery.args.using = {
-      manual_configuration: {
-        remote_table: {
-          name: relMeta.rTable,
-          schema: relMeta.rSchema,
+    _upQuery = {
+      type: 'create_array_relationship',
+      args: {
+        name: relMeta.relName,
+        table: {
+          name: relMeta.lTable,
+          schema: relMeta.lSchema,
         },
-        column_mapping: columnMaps.reduce(columnReducer, {}),
+        using: {},
+      },
+    };
+    const columnMaps = relMeta.rcol.map((column, index) => ({
+      rcol: column,
+      lcol: relMeta.lcol[index],
+    }));
+    if (columnMaps.length === 1) {
+      _upQuery.args.using = {
+        foreign_key_constraint_on: {
+          table: {
+            name: relMeta.rTable,
+            schema: relMeta.rSchema,
+          },
+          column: relMeta.rcol[0],
+        },
+      };
+    } else {
+      const columnReducer = (accumulator, val) => ({
+        ...accumulator,
+        [val.lcol]: val.rcol,
+      });
+      _upQuery.args.using = {
+        manual_configuration: {
+          remote_table: {
+            name: relMeta.rTable,
+            schema: relMeta.rSchema,
+          },
+          column_mapping: columnMaps.reduce(columnReducer, {}),
+        },
+      };
+    }
+
+    _downQuery = {
+      type: 'drop_relationship',
+      args: {
+        table: { name: relMeta.lTable, schema: relMeta.lSchema },
+        relationship: relMeta.relName,
       },
     };
   }
-  const downQuery = {
-    type: 'drop_relationship',
-    args: {
-      table: { name: relMeta.lTable, schema: relMeta.lSchema },
-      relationship: relMeta.relName,
-    },
-  };
-  return { upQuery, downQuery };
+
+  return { upQuery: _upQuery, downQuery: _downQuery };
 };
 
 const deleteRelMigrate = relMeta => (dispatch, getState) => {
@@ -238,6 +244,7 @@ const addRelNewFromStateMigrate = () => (dispatch, getState) => {
     rcol: state.rcol,
     rTable: state.rTable,
     rSchema: state.rSchema,
+    isUnique: state.isUnique,
   });
   const relChangesUp = [upQuery];
   const relChangesDown = [downQuery];
@@ -370,9 +377,7 @@ const addRelViewMigrate = (tableSchema, toggleEditor) => (
     dispatch(
       showErrorNotification(
         'Error adding relationship!',
-        'Please select a name for the relationship',
-        '',
-        { custom: 'Relationship name cannot be empty' }
+        'Relationship name cannot be empty'
       )
     );
   } else if (!gqlPattern.test(relName)) {
@@ -380,8 +385,7 @@ const addRelViewMigrate = (tableSchema, toggleEditor) => (
       showErrorNotification(
         gqlRelErrorNotif[0],
         gqlRelErrorNotif[1],
-        gqlRelErrorNotif[2],
-        gqlRelErrorNotif[3]
+        gqlRelErrorNotif[2]
       )
     );
   } else {

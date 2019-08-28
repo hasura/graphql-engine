@@ -44,6 +44,7 @@ const setFeaturesCompatibility = data => ({
 const featureCompatibilityInit = () => {
   return (dispatch, getState) => {
     const { serverVersion } = getState().main;
+
     if (!serverVersion) {
       return;
     }

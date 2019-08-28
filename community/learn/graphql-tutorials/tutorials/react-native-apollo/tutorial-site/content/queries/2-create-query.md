@@ -6,6 +6,10 @@ metaDescription: "We will use the Apollo Client Query component from react-apoll
 
 import GithubLink from "../../src/GithubLink.js";
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/qWcIXZ15FFw" />
+
 In this section, we will implement GraphQL Queries and integrate with the react native UI.
 With Apollo Client, you can send queries in 2 different ways.
 

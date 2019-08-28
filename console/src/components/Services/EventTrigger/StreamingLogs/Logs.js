@@ -28,6 +28,7 @@ import * as tooltip from '../Common/Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import { convertDateTimeToLocale } from '../utils';
 import Button from '../../../Common/Button/Button';
+import { NotFoundError } from '../../../Error/PageNotFound';
 
 class StreamingLogs extends Component {
   constructor(props) {
@@ -106,18 +107,16 @@ class StreamingLogs extends Component {
   }
 
   render() {
-    const {
-      triggerName,
-      migrationMode,
-      log,
-      count,
-      dispatch,
-      triggerList,
-    } = this.props;
+    const { triggerName, log, count, dispatch, triggerList } = this.props;
 
     const styles = require('../TableCommon/EventTable.scss');
 
+    // check if trigger exists
     const currentTrigger = triggerList.find(s => s.name === triggerName);
+    if (!currentTrigger) {
+      // throw a 404 exception
+      throw new NotFoundError();
+    }
 
     const invocationColumns = [
       'redeliver',
@@ -346,7 +345,6 @@ class StreamingLogs extends Component {
           dispatch={dispatch}
           triggerName={triggerName}
           tabName="logs"
-          migrationMode={migrationMode}
         />
         <br />
         <div className={'hide'}>
@@ -447,7 +445,6 @@ class StreamingLogs extends Component {
 StreamingLogs.propTypes = {
   log: PropTypes.object,
   currentTableSchema: PropTypes.array.isRequired,
-  migrationMode: PropTypes.bool.isRequired,
   dispatch: PropTypes.func.isRequired,
   triggerList: PropTypes.array.isRequired,
 };
@@ -457,7 +454,6 @@ const mapStateToProps = (state, ownProps) => {
     ...state.triggers,
     serverVersion: state.main.serverVersion,
     triggerName: ownProps.params.trigger,
-    migrationMode: state.main.migrationMode,
     currentSchema: state.tables.currentSchema,
     triggerList: state.triggers.triggerList,
   };

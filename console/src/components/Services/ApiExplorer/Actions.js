@@ -146,11 +146,7 @@ const changeRequestParams = newParams => {
 
 const createWsClient = (url, headers) => {
   const gqlUrl = new URL(url);
-  const windowUrl = new URL(window.location);
-  let websocketProtocol = 'ws';
-  if (gqlUrl.protocol === 'https:' && windowUrl.protocol === 'https:') {
-    websocketProtocol = 'wss';
-  }
+  const websocketProtocol = gqlUrl.protocol === 'https:' ? 'wss' : 'ws';
   const headersFinal = getHeadersAsJSON(headers);
   const graphqlUrl = `${websocketProtocol}://${url.split('//')[1]}`;
   const client = new SubscriptionClient(graphqlUrl, {

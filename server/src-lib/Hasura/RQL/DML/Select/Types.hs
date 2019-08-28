@@ -49,7 +49,7 @@ data AnnAggOrdBy
   deriving (Show, Eq)
 
 data AnnObColG v
-  = AOCPG !PGColInfo
+  = AOCPG !PGColumnInfo
   | AOCObj !RelInfo !(AnnBoolExp v) !(AnnObColG v)
   | AOCAgg !RelInfo !(AnnBoolExp v) !AnnAggOrdBy
   deriving (Show, Eq)
@@ -121,7 +121,7 @@ data ColOp
   } deriving (Show, Eq)
 
 data AnnFldG v
-  = FCol !PGColInfo !(Maybe ColOp)
+  = FCol !PGColumnInfo !(Maybe ColOp)
   | FObj !(ObjSelG v)
   | FArr !(ArrSelG v)
   | FExp !T.Text
@@ -389,3 +389,10 @@ mergeArrNodes lNode rNode =
   where
     ArrNode lExtrs colMapping lBN = lNode
     ArrNode rExtrs _          rBN = rNode
+
+data ArrNodeInfo
+  = ArrNodeInfo
+  { _aniAlias            :: !S.Alias
+  , _aniPrefix           :: !Iden
+  , _aniSubQueryRequired :: !Bool
+  } deriving (Show, Eq)

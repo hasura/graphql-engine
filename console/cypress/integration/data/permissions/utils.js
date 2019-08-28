@@ -17,20 +17,16 @@ export const savePermission = () => {
   // cy.get('.notification-success').click();
 };
 
-export const permNoCheck = (tableName, query, first) => {
-  // first is the insert in case of tables and select in case of views
-  // During first, the gridcell will not be named properly;
+export const permNoCheck = (tableName, query) => {
   // click on the query type to edit permission
-  cy.get(
-    getElementFromAlias(`${query === first ? '' : 'role0'}-${query}`)
-  ).click();
+  cy.get(getElementFromAlias(`role0-${query}`)).click();
   // check the custom check textbox
   // cy.get(getElementFromAlias('toggle-row-permission')).click();
   cy.get(getElementFromAlias('without-checks')).click();
   // set filter { }
   // Toggle all columns in case
   if (query === 'select' || query === 'update') {
-    cy.get(getElementFromAlias('toggle-col-permission')).click();
+    // cy.get(getElementFromAlias('toggle-col-permission')).click();
     cy.get(getElementFromAlias('toggle-all-col-btn')).click();
   }
   if (query === 'insert' || query === 'update') {
@@ -106,7 +102,7 @@ export const testPermissions = (tableName, check, isView) => {
   const first = isView ? 'select' : 'insert';
   if (check === 'none') {
     allQueryTypes.forEach(query => {
-      permNoCheck(tableName, query, first);
+      permNoCheck(tableName, query);
     });
   } else {
     allQueryTypes.forEach(query => {

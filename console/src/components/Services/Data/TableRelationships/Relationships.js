@@ -21,6 +21,7 @@ import Button from '../../../Common/Button/Button';
 import AddManualRelationship from './AddManualRelationship';
 import suggestedRelationshipsRaw from './autoRelations';
 import RelationshipEditor from './RelationshipEditor';
+import { NotFoundError } from '../../../Error/PageNotFound';
 
 const addRelationshipCellView = (
   dispatch,
@@ -50,9 +51,7 @@ const addRelationshipCellView = (
       dispatch(
         showErrorNotification(
           'Error adding relationship!',
-          'Please select a name for the relationship',
-          '',
-          { custom: 'Relationship name cannot be empty' }
+          'Relationship name cannot be empty'
         )
       );
       return false;
@@ -61,8 +60,7 @@ const addRelationshipCellView = (
         showErrorNotification(
           gqlRelErrorNotif[0],
           gqlRelErrorNotif[1],
-          gqlRelErrorNotif[2],
-          gqlRelErrorNotif[3]
+          gqlRelErrorNotif[2]
         )
       );
       return false;
@@ -328,6 +326,12 @@ class Relationships extends Component {
     const tableSchema = allSchemas.find(
       t => t.table_name === tableName && t.table_schema === currentSchema
     );
+
+    if (!tableSchema) {
+      // throw a 404 exception
+      throw new NotFoundError();
+    }
+
     let alert = null;
     if (ongoingRequest) {
       alert = (

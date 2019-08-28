@@ -1,19 +1,5 @@
 @import "../Common.scss";
 
-$bgColor: #f9f9f9;
-
-.container {
-  margin: 10px 0;
-}
-
-.count {
-  display: inline-block;
-  max-height: 34px;
-  padding: 5px 20px;
-  margin-left: 10px;
-  border-radius: 4px;
-}
-
 .queryBox {
   box-sizing: border-box;
   position: relative;
@@ -45,66 +31,5 @@ $bgColor: #f9f9f9;
       cursor: pointer;
       color: #888;
     }
-
-    .descending {
-      padding-left: 10px;
-
-      input {
-        margin-right: 5px;
-      }
-      margin-right: 10px;
-    }
   }
-}
-
-.inline {
-  display: inline-block;
-}
-
-.runQuery {
-  margin-left: 0px;
-  margin-bottom: 20px;
-
-  :global(.form-control):focus {
-    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 0px rgba(102, 175, 233, 0.6);
-  }
-
-  :global(.input-group) {
-    margin-top: -24px;
-    margin-right: 10px;
-
-    input {
-      max-width: 60px;
-    }
-  }
-
-  nav {
-    display: inline-block;
-  }
-
-  button {
-    margin-top: -24px;
-    margin-right: 15px;
-  }
-}
-
-.filterOptions {
-  margin-top: 10px;
-  background: $bgColor;
-  // padding: 20px;
-}
-
-.pagination {
-  margin: 0;
-}
-
-.boxHeading {
-  top: -0.55em;
-  line-height: 1.1em;
-  background: $bgColor;
-  display: inline-block;
-  position: absolute;
-  padding: 0 10px;
-  color: #929292;
-  font-weight: normal;
 }

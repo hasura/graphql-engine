@@ -12,6 +12,14 @@ import {
 import { ordinalColSort } from '../utils';
 import { defaultDataTypeToCast } from '../constants';
 
+import {
+  getDefaultFunctionsOptions,
+  inferDefaultValues,
+} from '../Common/utils';
+
+import gqlPattern from '../Common/GraphQLValidation';
+import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
+
 import styles from './ModifyTable.scss';
 
 const ColumnEditorList = ({
@@ -21,6 +29,7 @@ const ColumnEditorList = ({
   dispatch,
   validTypeCasts,
   dataTypeIndexMap,
+  columnDefaultFunctions,
 }) => {
   const tableName = tableSchema.table_name;
 
@@ -65,16 +74,17 @@ const ColumnEditorList = ({
           : false,
       // uniqueConstraint: columnUniqueConstraints[colName],
       default: col.column_default || '',
+      comment: col.comment || '',
     };
 
-    const onSubmit = () => {
-      dispatch(saveColumnChangesSql(colName, col));
+    const onSubmit = toggleEditor => {
+      dispatch(saveColumnChangesSql(colName, col, toggleEditor));
     };
 
     const onDelete = () => {
       const isOk = confirm('Are you sure you want to delete?');
       if (isOk) {
-        dispatch(deleteColumnSql(tableName, colName, col));
+        dispatch(deleteColumnSql(col, tableSchema));
       }
     };
 
@@ -85,11 +95,21 @@ const ColumnEditorList = ({
       }
       const isOk = window.confirm(confirmMessage);
       if (isOk) {
-        dispatch(deleteColumnSql(tableName, colName, col));
+        dispatch(deleteColumnSql(col, tableSchema));
       }
     };
 
+    const gqlCompatibilityWarning = () => {
+      return !gqlPattern.test(colName) ? (
+        <span className={styles.add_mar_left_small}>
+          <GqlCompatibilityWarning />
+        </span>
+      ) : null;
+    };
+
     const keyProperties = () => {
+      const propertiesDisplay = [];
+
       const propertiesList = [];
 
       propertiesList.push(columnProperties.display_type_name);
@@ -112,13 +132,23 @@ const ColumnEditorList = ({
 
       const keyPropertiesString = propertiesList.join(', ');
 
-      return <i>{keyPropertiesString && `- ${keyPropertiesString}`}</i>;
+      propertiesDisplay.push(<i key={'props'}>{keyPropertiesString}</i>);
+
+      propertiesDisplay.push(<br key={'br1'} />);
+
+      propertiesDisplay.push(
+        <span key={'comment'} className={styles.text_gray}>
+          {columnProperties.comment && `${columnProperties.comment}`}
+        </span>
+      );
+
+      return propertiesDisplay;
     };
 
     const collapsedLabel = () => {
       return (
         <div key={colName}>
-          <b>{colName}</b> {keyProperties()}
+          <b>{colName}</b> {gqlCompatibilityWarning()} - {keyProperties()}
         </div>
       );
     };
@@ -131,28 +161,61 @@ const ColumnEditorList = ({
       );
     };
 
+    /* If the dataTypeIndexMap is not loaded, then just load the current type information
+     * */
+
     const getValidTypeCasts = udtName => {
       const lowerUdtName = udtName.toLowerCase();
       if (lowerUdtName in validTypeCasts) {
         return validTypeCasts[lowerUdtName];
       }
-      return [
-        ...dataTypeIndexMap[lowerUdtName],
-        ...dataTypeIndexMap[defaultDataTypeToCast],
-      ];
+      if (dataTypeIndexMap && dataTypeIndexMap[lowerUdtName]) {
+        return [
+          ...dataTypeIndexMap[lowerUdtName],
+          ...dataTypeIndexMap[defaultDataTypeToCast],
+        ];
+      }
+      return [lowerUdtName, lowerUdtName, ''];
     };
+
+    const getValidDefaultTypes = udtName => {
+      const lowerUdtName = udtName.toLowerCase();
+      let defaultOptions = [];
+      if (lowerUdtName in columnDefaultFunctions) {
+        defaultOptions = columnDefaultFunctions[lowerUdtName];
+      } else {
+        defaultOptions = inferDefaultValues(
+          columnDefaultFunctions,
+          validTypeCasts
+        )(lowerUdtName);
+      }
+
+      return getDefaultFunctionsOptions(defaultOptions);
+    };
+
+    /*
+     * Alter type options contains a list of items and its valid castable types
+     * [
+     *  "Data type",
+     *  "User friendly name of the data type",
+     *  "Description of the data type",
+     *  "Comma seperated castable data types",
+     *  "Comma seperated user friendly names of the castable data types",
+     *  "Colon seperated user friendly description of the castable data types"
+     *  ]
+     * */
 
     const colEditorExpanded = () => {
       return (
         <ColumnEditor
           alterTypeOptions={getValidTypeCasts(col.udt_name)}
+          defaultOptions={getValidDefaultTypes(col.udt_name)}
           column={col}
           onSubmit={onSubmit}
           onDelete={safeOnDelete}
           tableName={tableName}
           dispatch={dispatch}
           currentSchema={currentSchema}
-          columnComment={col.comment}
           columnProperties={columnProperties}
           selectedProperties={columnEdit}
           editColumn={editColumn}

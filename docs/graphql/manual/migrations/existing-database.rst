@@ -59,9 +59,9 @@ Hasura migrations. You can commit this directory to version control.
 .. note::
 
    In case there is an admin secret set, you can set it as an environment
-   variable ``HASURA_GRAPHQL_ADMIN_SECRET=<your-admin-secret`` on the local
+   variable ``HASURA_GRAPHQL_ADMIN_SECRET=<your-admin-secret>`` on the local
    machine and the the CLI will use it. You can also use it as a flag to CLI:
-   ``--admin-secret "<your-admin-secret>"``.
+   ``--admin-secret '<your-admin-secret>'``.
 
 Step 3: Initialize the migrations as per your current state
 -----------------------------------------------------------
@@ -89,7 +89,15 @@ about the format of migration files, check out the :ref:`migration_file_format`.
 
 .. note::
 
-  Migration version cannot be "0". i.e. the files cannot be of the form ``0_<something>.up.yaml``
+  If you need to export other schemas along with ``public``, you can name them using the
+  ``--schema`` flag. 
+  
+  For example, to export schemas ``public``, ``schema1`` and ``schema2``,
+  execute the following command:
+
+  .. code-block:: bash
+
+     hasura migrate create "init" --from-server --schema "public" --schema "schema1" --schema "schema2"
 
 Step 4: Use the console from the CLI
 ------------------------------------

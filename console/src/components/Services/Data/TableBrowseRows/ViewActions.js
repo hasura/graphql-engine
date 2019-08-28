@@ -12,7 +12,6 @@ import dataHeaders from '../Common/Headers';
 /* ****************** View actions *************/
 const V_SET_DEFAULTS = 'ViewTable/V_SET_DEFAULTS';
 const V_REQUEST_SUCCESS = 'ViewTable/V_REQUEST_SUCCESS';
-const V_REQUEST_ERROR = 'ViewTable/V_REQUEST_ERROR';
 const V_EXPAND_REL = 'ViewTable/V_EXPAND_REL';
 const V_CLOSE_REL = 'ViewTable/V_CLOSE_REL';
 const V_SET_ACTIVE = 'ViewTable/V_SET_ACTIVE';
@@ -101,7 +100,12 @@ const vMakeRequest = () => {
         }
       },
       error => {
-        dispatch({ type: V_REQUEST_ERROR, data: error });
+        Promise.all([
+          dispatch(
+            showErrorNotification('Browse query failed!', error.error, error)
+          ),
+          dispatch({ type: V_REQUEST_PROGRESS, data: false }),
+        ]);
       }
     );
   };
@@ -195,9 +199,7 @@ const deleteItem = pkClause => {
         );
       },
       err => {
-        dispatch(
-          showErrorNotification('Deleting row failed!', err.error, reqBody, err)
-        );
+        dispatch(showErrorNotification('Deleting row failed!', err.error, err));
       }
     );
   };

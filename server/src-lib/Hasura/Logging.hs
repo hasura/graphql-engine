@@ -4,7 +4,10 @@ module Hasura.Logging
   ( LoggerSettings(..)
   , defaultLoggerSettings
   , EngineLog(..)
-  , EngineLogType
+  , EngineLogType(..)
+  , defaultEnabledLogTypes
+  , alwaysOnLogTypes
+  , userAllowedLogTypes
   , ToEngineLog(..)
   , debugT
   , debugBS
@@ -25,6 +28,7 @@ import qualified Data.Aeson.Casing     as J
 import qualified Data.Aeson.TH         as J
 import qualified Data.ByteString       as B
 import qualified Data.ByteString.Lazy  as BL
+import qualified Data.HashSet          as Set
 import qualified Data.TByteString      as TBS
 import qualified Data.Text             as T
 import qualified Data.Time.Clock       as Time
@@ -32,13 +36,64 @@ import qualified Data.Time.Format      as Format
 import qualified Data.Time.LocalTime   as Time
 import qualified System.Log.FastLogger as FL
 
+import           Hasura.Server.Utils   (hyphenate)
+
 newtype FormattedTime
   = FormattedTime { _unFormattedTime :: Text }
   deriving (Show, Eq, J.ToJSON)
 
-newtype EngineLogType
-  = EngineLogType { _unEngineLogType :: Text }
-  deriving (Show, Eq, J.ToJSON, J.FromJSON, IsString)
+data EngineLogType
+  = ELTHttpLog
+  | ELTWebsocketLog
+  | ELTWebhookLog
+  | ELTQueryLog
+  | ELTStartup
+  -- internal log types
+  | ELTPgClient
+  | ELTMetadata
+  | ELTJwkRefreshLog
+  | ELTTelemetryLog
+  | ELTEventTrigger
+  | ELTWsServer
+  | ELTSchemaSyncThread
+  | ELTUnstructured
+  deriving (Show, Eq, Generic)
+
+instance Hashable EngineLogType
+
+$(J.deriveJSON J.defaultOptions {
+     J.constructorTagModifier = hyphenate . drop 3
+     } ''EngineLogType)
+
+-- | Log types that can't be disabled/enabled by the user, they are always
+-- enabled
+alwaysOnLogTypes :: Set.HashSet EngineLogType
+alwaysOnLogTypes = Set.fromList
+  [ ELTPgClient
+  , ELTMetadata
+  , ELTJwkRefreshLog
+  , ELTTelemetryLog
+  , ELTEventTrigger
+  , ELTWsServer
+  , ELTSchemaSyncThread
+  , ELTUnstructured
+  ]
+
+-- the default enabled log-types
+defaultEnabledLogTypes :: Set.HashSet EngineLogType
+defaultEnabledLogTypes =
+  Set.union alwaysOnLogTypes $
+  Set.fromList [ELTStartup, ELTHttpLog, ELTWebhookLog, ELTWebsocketLog]
+
+-- log types that can be set by the user
+userAllowedLogTypes :: [EngineLogType]
+userAllowedLogTypes =
+  [ ELTStartup
+  , ELTHttpLog
+  , ELTWebhookLog
+  , ELTWebsocketLog
+  , ELTQueryLog
+  ]
 
 data LogLevel
   = LevelDebug
@@ -81,16 +136,17 @@ debugLBS = UnstructuredLog . TBS.fromLBS
 
 instance ToEngineLog UnstructuredLog where
   toEngineLog (UnstructuredLog t) =
-    (LevelDebug, "unstructured", J.toJSON t)
+    (LevelDebug, ELTUnstructured, J.toJSON t)
 
 class ToEngineLog a where
   toEngineLog :: a -> (LogLevel, EngineLogType, J.Value)
 
 data LoggerCtx
   = LoggerCtx
-  { _lcLoggerSet  :: !FL.LoggerSet
-  , _lcLogLevel   :: !LogLevel
-  , _lcTimeGetter :: !(IO FormattedTime)
+  { _lcLoggerSet       :: !FL.LoggerSet
+  , _lcLogLevel        :: !LogLevel
+  , _lcTimeGetter      :: !(IO FormattedTime)
+  , _lcEnabledLogTypes :: !(Set.HashSet EngineLogType)
   }
 
 data LoggerSettings
@@ -101,9 +157,9 @@ data LoggerSettings
   , _lsLevel           :: !LogLevel
   } deriving (Show, Eq)
 
-defaultLoggerSettings :: Bool -> LoggerSettings
+defaultLoggerSettings :: Bool -> LogLevel -> LoggerSettings
 defaultLoggerSettings isCached =
-  LoggerSettings isCached Nothing LevelInfo
+  LoggerSettings isCached Nothing
 
 getFormattedTime :: Maybe Time.TimeZone -> IO FormattedTime
 getFormattedTime tzM = do
@@ -116,11 +172,11 @@ getFormattedTime tzM = do
     format = "%FT%H:%M:%S%3Q%z"
     -- format = Format.iso8601DateFormat (Just "%H:%M:%S")
 
-mkLoggerCtx :: LoggerSettings -> IO LoggerCtx
-mkLoggerCtx (LoggerSettings cacheTime tzM logLevel) = do
+mkLoggerCtx :: LoggerSettings -> Set.HashSet EngineLogType -> IO LoggerCtx
+mkLoggerCtx (LoggerSettings cacheTime tzM logLevel) enabledLogs = do
   loggerSet <- FL.newStdoutLoggerSet FL.defaultBufSize
   timeGetter <- bool (return $ getFormattedTime tzM) cachedTimeGetter cacheTime
-  return $ LoggerCtx loggerSet logLevel timeGetter
+  return $ LoggerCtx loggerSet logLevel timeGetter enabledLogs
   where
     cachedTimeGetter =
       Auto.mkAutoUpdate Auto.defaultUpdateSettings {
@@ -134,9 +190,9 @@ cleanLoggerCtx =
 newtype Logger = Logger { unLogger :: forall a. (ToEngineLog a) => a -> IO () }
 
 mkLogger :: LoggerCtx -> Logger
-mkLogger (LoggerCtx loggerSet serverLogLevel timeGetter) = Logger $ \l -> do
+mkLogger (LoggerCtx loggerSet serverLogLevel timeGetter enabledLogTypes) = Logger $ \l -> do
   localTime <- timeGetter
   let (logLevel, logTy, logDet) = toEngineLog l
-  when (logLevel >= serverLogLevel) $
+  when (logLevel >= serverLogLevel && logTy `Set.member` enabledLogTypes) $
     FL.pushLogStrLn loggerSet $ FL.toLogStr $
     J.encode $ EngineLog localTime logLevel logTy logDet

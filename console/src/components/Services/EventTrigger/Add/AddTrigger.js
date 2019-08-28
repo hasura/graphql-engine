@@ -27,7 +27,7 @@ import {
   loadTableList,
 } from './AddActions';
 import { listDuplicate } from '../../../../utils/data';
-import { showErrorNotification } from '../Notification';
+import { showErrorNotification } from '../../Common/Notification';
 import { createTrigger } from './AddActions';
 
 import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
@@ -146,7 +146,7 @@ class AddTrigger extends Component {
       this.props.dispatch(createTrigger());
     } else {
       this.props.dispatch(
-        showErrorNotification('Error creating trigger!', errorMsg, '', {
+        showErrorNotification('Error creating trigger!', errorMsg, {
           custom: customMsg,
         })
       );

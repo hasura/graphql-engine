@@ -3,6 +3,8 @@
 A demo application to showcase real-time capabilities of [Hasura GraphQL
 Engine](https://github.com/hasura/graphql-engine).
 
+[![Edit realtime-poll](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/github/hasura/graphql-engine/tree/master/community/sample-apps/realtime-poll?fontsize=14)
+
 The Realtime Poll application is built using React and is powered by Hasura
 GraphQL Engine over Postgres. It has an interface for users to cast vote on a
 poll and the results are updated in the on-screen bar chart, in real-time.
@@ -25,7 +27,7 @@ hosted on GitHub pages and the Postgres+GraphQL Engine is running on Postgres.
 - Clone this repo:
   ```bash
   git clone https://github.com/hasura/graphql-engine
-  cd graphql-engine/community/examples/realtime-poll
+  cd graphql-engine/community/sample-apps/realtime-poll
   ```
 - [Install Hasura CLI](https://docs.hasura.io/1.0/graphql/manual/hasura-cli/install-hasura-cli.html)
 - Goto `hasura/` and edit `config.yaml`:

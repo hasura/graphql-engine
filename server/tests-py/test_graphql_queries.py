@@ -50,6 +50,10 @@ class TestGraphQLQueryBasic(DefaultTestSelectQueries):
         transport = 'http'
         check_query_f(hge_ctx, self.dir() + "/nested_select_with_foreign_key_alter.yaml", transport)
 
+    def test_select_query_invalid_escape_sequence(self, hge_ctx, transport):
+        transport = 'http'
+        check_query_f(hge_ctx, self.dir() + "/select_query_invalid_escape_sequence.yaml", transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/basic'
@@ -89,6 +93,9 @@ class TestGraphQLQueryAggPerm(DefaultTestSelectQueries):
 
     def test_author_articles_agg_fail(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/author_articles_agg_fail.yaml', transport)
+
+    def test_author_post_agg_order_by(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/author_post_agg_order_by.yaml', transport)
 
     @classmethod
     def dir(cls):
@@ -250,6 +257,15 @@ class TestGraphqlQueryPermissions(DefaultTestSelectQueries):
     def test_user_query_auction(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/user_query_auction.yaml', transport)
 
+    def test_jsonb_has_all(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/jsonb_has_all.yaml', transport)
+
+    def test_jsonb_has_any(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/jsonb_has_any.yaml', transport)
+
+    def test_in_and_nin(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/in_and_nin.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/permissions'
@@ -324,6 +340,15 @@ class TestGraphQLQueryBoolExpPostGIS(DefaultTestSelectQueries):
     def test_query_geography_spatial_ops(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/query_geography_spatial_ops.yaml', transport)
 
+    def test_query_cast_geometry_to_geography(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_cast_geometry_to_geography.yaml', transport)
+
+    def test_query_cast_geography_to_geometry(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_cast_geography_to_geometry.yaml', transport)
+
+    def test_query_illegal_cast_is_not_allowed(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_illegal_cast_is_not_allowed.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/boolexp/postgis'
@@ -338,6 +363,9 @@ class TestGraphQLQueryOrderBy(DefaultTestSelectQueries):
 
     def test_articles_order_by_rel_author_rel_contact_phone(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/articles_order_by_rel_author_rel_contact_phone.yaml', transport)
+
+    def test_articles_order_by_null(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/articles_order_by_null.yaml', transport)
 
     def test_album_order_by_tracks_count(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/album_order_by_tracks_count.yaml', transport)
@@ -389,3 +417,30 @@ class TestGraphQLQueryFunctions(DefaultTestSelectQueries):
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/functions'
+
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+class TestGraphQLQueryEnums(DefaultTestSelectQueries):
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/enums'
+
+    def test_introspect(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/introspect.yaml', transport)
+
+    def test_select_enum_field(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_enum_field.yaml', transport)
+
+    def test_select_where_enum_eq(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_where_enum_eq.yaml', transport)
+
+    def test_select_where_enum_eq_bad_value(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_where_enum_eq_bad_value.yaml', transport)
+
+    def test_select_where_enum_eq_string(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_where_enum_eq_string.yaml', transport)
+
+    def test_select_where_enum_eq_variable(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_where_enum_eq_variable.yaml', transport)
+
+    def test_select_where_enum_eq_variable_bad_value(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_where_enum_eq_variable_bad_value.yaml', transport)

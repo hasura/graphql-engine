@@ -1,8 +1,14 @@
 import { aggCategory, pgCategoryCode } from './PgInfo';
 
+const commonlyUsedFunctions = ['now', 'gen_random_uuid', 'random'];
+
+const getParanthesized = name => {
+  return `${name}()`;
+};
+
 const splitDbRow = row => {
   /* Splits comma seperated type names
-   * Splits comma seperated type display names
+   * Splits comma seperated type user friendly type names
    * Splits comma seperated type descriptions
    * */
   return {
@@ -57,6 +63,39 @@ const getDataTypeInfo = (row, categoryInfo, colId, cached = {}) => {
     }
   });
   return { typInfo: currTypeObj, typValueMap: columnTypeValueMap };
+};
+
+const getDefaultFunctionsOptions = (funcs, identifier) => {
+  const defaultValues = [
+    {
+      title: 'All Functions',
+      suggestions: [],
+    },
+  ];
+  funcs.forEach((f, i) => {
+    const funcVal = getParanthesized(f);
+    const suggestionObj = {
+      value: funcVal,
+      label: funcVal,
+      description: funcVal,
+      key: i,
+      colIdentifier: identifier,
+      title: 'All Functions',
+    };
+    if (commonlyUsedFunctions.indexOf(f) !== -1) {
+      if (defaultValues.length === 1) {
+        defaultValues.push({
+          title: 'Frequently Used Functions',
+          suggestions: [],
+        });
+      }
+      defaultValues[1].suggestions.push(suggestionObj);
+    } else {
+      defaultValues[0].suggestions.push(suggestionObj);
+    }
+  });
+  /* Reversing the array just so that if frequently used types were present, they come first */
+  return defaultValues.reverse();
 };
 
 /*
@@ -136,10 +175,41 @@ const getDefaultValue = column => {
   return ('default' in column && column.default.value) || '';
 };
 
+const getRecommendedTypeCasts = (dataType, typeCasts) => {
+  return (dataType in typeCasts && typeCasts[dataType][3].split(',')) || [];
+};
+
+const inferDefaultValues = (defaultFuncs, typeCasts) => {
+  let defaultValues = [];
+  const visitedType = {};
+  /* Current type is the type for which default values needs to be computed
+   * Algorithm:
+   *  Look for the types which the current type can be casted to
+   *  Try to find the default values for the right type and accumulate it to an array
+   * */
+  const computeDefaultValues = currentType => {
+    visitedType[currentType] = true;
+    /* Retrieve the recommended type casts for the current type */
+    const validRightCasts = getRecommendedTypeCasts(currentType, typeCasts);
+    validRightCasts.forEach(v => {
+      if (!visitedType[v]) {
+        if (v in defaultFuncs) {
+          visitedType[v] = true;
+          defaultValues = [...defaultValues, ...defaultFuncs[v]];
+        }
+      }
+    });
+    return defaultValues;
+  };
+  return computeDefaultValues;
+};
+
 export {
   getDataOptions,
   getPlaceholder,
   getDefaultValue,
   getDataTypeInfo,
   getAllDataTypeMap,
+  getDefaultFunctionsOptions,
+  inferDefaultValues,
 };

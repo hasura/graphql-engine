@@ -1,0 +1,8 @@
+type: bulk
+args:
+
+- type: run_sql
+  args:
+    sql: |
+      DELETE FROM users;
+      SELECT setval('users_id_seq', 1, FALSE);
