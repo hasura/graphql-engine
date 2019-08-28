@@ -565,6 +565,6 @@ pollQuery metrics batchSize pgExecCtx handler = do
           let fldAlsT = G.unName $ G.unAlias alias
               respLbs = encJToLBS $ encJFromAssocList $
                         pure $ (,) fldAlsT respEnc
-              resp = GQSuccess respLbs
+              resp = GQSuccess $ encJFromLBS respLbs
               respHash = mkRespHash respLbs
           in (resp, Just respHash,) <$> Map.lookup respId candidateSnapshotMap

@@ -308,11 +308,11 @@ onStart serverEnv wsConn (StartMsg opId q) =
                     E.ExPHasura operation ->
                       case operation of
                         E.ExOpQuery opTx genSql ->
-                          fmap (\res -> encJFromAssocList [("data", res)]) $
+                          fmap (encodeGQResp . GQSuccess) $
                           execQueryOrMut requestId q genSql $
                           runLazyTx' pgExecCtx opTx
                         E.ExOpMutation opTx ->
-                          fmap (\res -> encJFromAssocList [("data", res)]) $
+                          fmap (encodeGQResp . GQSuccess) $
                           execQueryOrMut requestId q Nothing $
                           runLazyTx pgExecCtx $ withUserInfo userInfo opTx
                         E.ExOpSubs {} ->

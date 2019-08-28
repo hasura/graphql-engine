@@ -117,7 +117,7 @@ runHasuraGQ reqId query userInfo resolvedOp = do
       throw400 UnexpectedPayload
       "subscriptions are not supported over HTTP, use websockets instead"
   resp <- liftEither respE
-  return $ encodeGQResp $ GQSuccess $ encJToLBS resp
+  return $ encodeGQResp $ GQSuccess resp
 
 
 getMergedGQResp :: [EncJSON] -> Either String GQRespValue

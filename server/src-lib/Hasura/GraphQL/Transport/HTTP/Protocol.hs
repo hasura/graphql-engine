@@ -33,7 +33,6 @@ import           Language.GraphQL.Draft.Instances ()
 import qualified Data.Aeson                       as J
 import qualified Data.Aeson.Casing                as J
 import qualified Data.Aeson.TH                    as J
-import qualified Data.ByteString.Lazy             as BL
 import qualified Data.HashMap.Strict              as Map
 import qualified Language.GraphQL.Draft.Parser    as G
 import qualified Language.GraphQL.Draft.Syntax    as G
@@ -159,7 +158,7 @@ gqJoinErrorToValue (GQJoinError msg) =
   OJ.Object (OJ.fromList [("message", OJ.String msg)])
 
 data GQResp
-  = GQSuccess !BL.ByteString
+  = GQSuccess !EncJSON
   | GQPreExecError ![J.Value]
   | GQExecError ![J.Value]
   | GQGeneric  !GQRespValue
@@ -171,7 +170,7 @@ isExecError = \case
 
 encodeGQResp :: GQResp -> EncJSON
 encodeGQResp = \case
-  GQSuccess r      -> encJFromAssocList [("data", encJFromLBS r)]
+  GQSuccess r      -> encJFromAssocList [("data", r)]
   GQPreExecError e -> encJFromAssocList [("errors", encJFromJValue e)]
   GQExecError e    -> encJFromAssocList [("data", "null"), ("errors", encJFromJValue e)]
   GQGeneric v -> encodeGQRespValue v
