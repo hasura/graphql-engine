@@ -14,7 +14,7 @@ const EnumsSection = ({ isEnum, toggleEnum, styles, isEnumsCompatible, loading }
       return (
         <div className={`${styles.add_mar_top}`}>
           <WarningIcon customStyle={styles.add_mar_right_small}/>
-          <i>This table seems to be in an inconsistent state since it has been marked as enum and changes have been made to the table schema. Please unmark it as enum for everything to work as expected.</i>
+          <i>This table seems to be in an inconsistent state because it has been marked as enum and changes have been made to the table schema. Please unmark it as enum for everything to work as expected.</i>
         </div>
       )
     }
