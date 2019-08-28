@@ -26,7 +26,7 @@ const EnumsSection = ({ isEnum, toggleEnum, styles, isEnumsCompatible, loading }
       <h4 className={`${styles.subheading_text}`}>
         Mark table as enum
       </h4> 
-      <label className={`${styles.display_flex} ${!isEnumsCompatible ? styles.cursorNotAllowed : ''}`} title={title} data-toggle="tooltip">
+      <label className={`${styles.display_flex} ${!isEnumsCompatible ? styles.cursorNotAllowed : styles.cursorPointer}`} title={title} data-toggle="tooltip">
         <span className={styles.add_mar_right_mid}> This table has enum values </span>
         <Toggle
           checked={isEnum}
