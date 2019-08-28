@@ -134,11 +134,9 @@ buildGCtxMap = do
   GS.buildGCtxMapPG
   sc <- askSchemaCache
   let gCtxMap = scGCtxMap sc
-  -- Stitch remote schemas
-  (mergedGCtxMap, defGCtx) <- mergeSchemas (scRemoteSchemas sc) (scRemoteSchemasWithRole sc) gCtxMap
-  writeSchemaCache sc { scGCtxMap = mergedGCtxMap
-                      , scDefaultRemoteGCtx = defGCtx
-                      }
+  -- add remote schemas
+  mergedGCtxMap <- mergeSchemas (scRemoteSchemas sc) (scRemoteSchemasWithRole sc) gCtxMap
+  writeSchemaCache sc { scGCtxMap = mergedGCtxMap }
 
 addRemoteSchemaToCatalog
   :: AddRemoteSchemaQuery

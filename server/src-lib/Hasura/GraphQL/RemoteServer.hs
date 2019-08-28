@@ -1,5 +1,3 @@
-{-# LANGUAGE ViewPatterns #-}
-
 module Hasura.GraphQL.RemoteServer where
 
 import           Control.Exception             (try)
@@ -101,42 +99,48 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _ timeout) =
       Left _  -> J.object ["raw_body" J..= bsToTxt (BL.toStrict bs)]
 
 mergeSchemas
-  :: (MonadError QErr m)
+  :: (QErrM m)
   => RemoteSchemaMap
   -> RemoteSchemasWithRole
   -> GS.GCtxMap
-  -- the merged GCtxMap and the default GCtx without roles
-  -> m (GS.GCtxMap, GS.GCtx)
-mergeSchemas rmSchemaMap rmSchemaMapWithRole gCtxMap = do
-  def <- mkDefaultRemoteGCtx remoteSchemas
-  merged <- mergeRoleRemoteSchemas gCtxMap rmSchemaMapWithRole
-  return (merged, def)
+  -> m GS.GCtxMap
+mergeSchemas rmSchemaMap rmSchemaMapWithRole initGCtxMap = do
+  merged <- mergeRoleRemoteSchemas initGCtxMap rmSchemaMapWithRole
+  remotes <- combineRemoteGCtx remoteSchemas
+  finalMerged <- addRemoteSchemaToAdminRole merged remotes
+  return finalMerged
   where
     remoteSchemas = map rscGCtx $ Map.elems rmSchemaMap
 
-mkDefaultRemoteGCtx
+combineRemoteGCtx
   :: (MonadError QErr m)
   => [GC.RemoteGCtx] -> m GS.GCtx
-mkDefaultRemoteGCtx =
-  foldlM (\combG -> mergeGCtx combG . convRemoteGCtx) GC.emptyGCtx
+combineRemoteGCtx =
+  foldlM (\accumGCtx -> mergeGCtx accumGCtx . convRemoteGCtx) GC.emptyGCtx
 
--- merge a remote schema `gCtx` into current `gCtxMap`
+addRemoteSchemaToAdminRole :: (MonadError QErr m) => GS.GCtxMap -> GS.GCtx -> m GS.GCtxMap
+addRemoteSchemaToAdminRole initGCtxMap remoteGCtx = do
+  let adminGCtx = fromMaybe GC.emptyGCtx $ Map.lookup adminRole initGCtxMap
+  merged <- mergeGCtx adminGCtx remoteGCtx
+  pure $ Map.insert adminRole merged initGCtxMap
+
+-- assertion: GCtxMap here is pure GCtxMapPG i.e. no remote schemas
 mergeRoleRemoteSchemas
   :: (MonadError QErr m)
   => GS.GCtxMap
   -> RemoteSchemasWithRole
   -> m GS.GCtxMap
-mergeRoleRemoteSchemas gCtxMap (Map.toList -> roleSchemas) = do
-  res <-
-    forM roleSchemas $ \((role, _rsName), rsCtx) -> do
-      let mergeWith = mergeRoleSchemaWith role rsCtx
-          roleSchemaM = Map.lookup role gCtxMap
-      maybe (mergeWith GC.emptyGCtx) mergeWith roleSchemaM
-  return $ Map.fromList res
+mergeRoleRemoteSchemas initGCtxMap roleRemoteSchemas = do
+  Map.traverseWithKey
+    (\role roleGCtx -> do
+       roleSchema <- getCombinedRemoteSchemaGCtxForRole role
+       mergeGCtx roleGCtx roleSchema)
+    initGCtxMap
   where
-    mergeRoleSchemaWith role rsCtx initGCtx = do
-      updatedGCtx <- mergeGCtx initGCtx (convRemoteGCtx $ rscGCtx rsCtx)
-      pure (role, updatedGCtx)
+    getCombinedRemoteSchemaGCtxForRole role =
+      combineRemoteGCtx $
+      map (rscGCtx . snd) $
+      filter (\((role', _), _) -> role == role') (Map.toList roleRemoteSchemas)
 
 mergeGCtx
   :: (MonadError QErr m)

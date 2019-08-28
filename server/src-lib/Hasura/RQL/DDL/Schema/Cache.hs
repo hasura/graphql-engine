@@ -161,10 +161,9 @@ buildSchemaCacheWithOptions withSetup = do
       withSchemaObject_ mkInconsObj $ do
         rsCtx <- addRemoteSchemaP2Setup rs
         sc <- askSchemaCache
-        let defGCtx = scDefaultRemoteGCtx sc
-            rGCtx = convRemoteGCtx $ rscGCtx rsCtx
-        mergedDefGCtx <- mergeGCtx defGCtx rGCtx
-        writeSchemaCache sc { scDefaultRemoteGCtx = mergedDefGCtx }
+        let rGCtx = convRemoteGCtx $ rscGCtx rsCtx
+        mergedGCtxMap <- addRemoteSchemaToAdminRole (scGCtxMap sc) rGCtx
+        writeSchemaCache sc { scGCtxMap = mergedGCtxMap }
 
 -- | Rebuilds the schema cache. If an object with the given object id became newly inconsistent,
 -- raises an error about it specifically. Otherwise, raises a generic metadata inconsistency error.

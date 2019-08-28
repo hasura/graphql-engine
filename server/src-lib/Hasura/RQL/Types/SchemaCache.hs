@@ -110,6 +110,8 @@ module Hasura.RQL.Types.SchemaCache
        , delFunctionFromCache
 
        , replaceAllowlist
+
+       , getAdminGCtx
        ) where
 
 import qualified Hasura.GraphQL.Context            as GC
@@ -432,7 +434,6 @@ data SchemaCache
   , scRemoteSchemasWithRole :: !RemoteSchemasWithRole
   , scAllowlist             :: !(HS.HashSet GQLQuery)
   , scGCtxMap               :: !GC.GCtxMap
-  , scDefaultRemoteGCtx     :: !GC.GCtx
   , scDepMap                :: !DepMap
   , scInconsistentObjs      :: ![InconsistentMetadataObj]
   } deriving (Show, Eq)
@@ -470,7 +471,6 @@ emptySchemaCache =
   , scRemoteSchemasWithRole = M.empty
   , scAllowlist  = HS.empty
   , scGCtxMap  = M.empty
-  , scDefaultRemoteGCtx  = GC.emptyGCtx
   , scDepMap    = M.empty
   , scInconsistentObjs  = []
   }
@@ -793,3 +793,8 @@ getDependentObjsWith f sc objId =
     induces (SOTable tn1) (SOTableObj tn2 _) = tn1 == tn2
     induces objId1 objId2                    = objId1 == objId2
     -- allDeps = toList $ fromMaybe HS.empty $ M.lookup objId $ scDepMap sc
+
+getAdminGCtx :: SchemaCache -> GC.GCtx
+getAdminGCtx sc = do
+  maybe GC.emptyGCtx id $
+    M.lookup adminRole (scGCtxMap sc)

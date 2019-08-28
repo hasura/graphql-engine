@@ -140,7 +140,7 @@ trackFunctionP2 :: (QErrM m, CacheRWM m, MonadTx m)
                 => QualifiedFunction -> m EncJSON
 trackFunctionP2 qf = do
   sc <- askSchemaCache
-  let defGCtx = scDefaultRemoteGCtx sc
+  let defGCtx = getAdminGCtx sc
       funcNameGQL = GS.qualObjectToName qf
   -- check function name is in compliance with GraphQL spec
   unless (isValidName funcNameGQL) $ throw400 NotSupported $

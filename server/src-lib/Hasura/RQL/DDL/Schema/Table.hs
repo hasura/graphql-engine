@@ -94,7 +94,7 @@ trackExistingTableOrViewP2
   => TrackTable -> m EncJSON
 trackExistingTableOrViewP2 (TrackTable tableName isEnum) = do
   sc <- askSchemaCache
-  let defGCtx = scDefaultRemoteGCtx sc
+  let defGCtx = getAdminGCtx sc
   GS.checkConflictingNode defGCtx $ GS.qualObjectToName tableName
   saveTableToCatalog tableName isEnum
   buildSchemaCacheFor (MOTable tableName)
@@ -177,7 +177,7 @@ processTableChanges ti tableDiff = do
 
       withNewTabName newTN = do
         let tnGQL = GS.qualObjectToName newTN
-            defGCtx = scDefaultRemoteGCtx sc
+            defGCtx = getAdminGCtx sc
         -- check for GraphQL schema conflicts on new name
         GS.checkConflictingNode defGCtx tnGQL
         void $ procAlteredCols sc tn
