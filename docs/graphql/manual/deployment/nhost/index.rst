@@ -17,12 +17,12 @@ A Nhost project includes a database with Hasura. It also includes authentication
 Change Hasura GraphQL settings
 ------------------------------------------
 
-- Go to your Nhost project.
-- Click on Settings in the left menu
-- Click on "Hasura" to expand and see your current settings for Hasura GraphQL engine
-- Click "Edit" in the bottom left corner
-- Edit your settings
-- Click Save
+1. Go to your Nhost project.
+2. Click on Settings in the left menu
+3. Click on "Hasura" to expand and see your current settings for Hasura GraphQL engine
+4. Click "Edit" in the bottom left corner
+5. Edit your settings
+6. Click Save
 
 You can change the following settings:
 
