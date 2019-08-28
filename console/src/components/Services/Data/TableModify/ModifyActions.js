@@ -2100,7 +2100,7 @@ export const setTableAsEnum = (previousIsEnum, successCallback, failureCallback)
     '_' +
     currentTable +
     '_set_enum_' +
-    previousIsEnum;
+    !previousIsEnum;
 
   const action = !previousIsEnum ? 'Setting' : 'Unsetting';
 

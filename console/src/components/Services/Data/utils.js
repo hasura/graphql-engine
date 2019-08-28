@@ -1,5 +1,4 @@
 import globals from '../../../Globals';
-console.log(globals);
 import { TABLE_ENUMS_SUPPORT } from '../../../helpers/versionUtils';
 
 export const INTEGER = 'integer';
@@ -658,11 +657,8 @@ export const isTableEnumCompatible = (tableSchema, tableColumns) => {
   } else {
     const numTableCols = tableColumns.length;
     if (numTableCols === 1) {
-      console.log('numCols 1');
-      console.log(tableColumns);
       return tableColumns[0].type === "text";
     } else if (numTableCols === 2) {
-      console.log('numCols 2');
       return tableColumns[0].type === "text" && tableColumns[1].type === "text";
     } else {
       return false;

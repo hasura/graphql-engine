@@ -12,7 +12,7 @@ const featureLaunchVersions = {
   [RELOAD_METADATA_API_CHANGE]: 'v1.0.0-beta.3',
   [FT_JWT_ANALYZER]: 'v1.0.0-beta.3',
   [REMOTE_SCHEMA_TIMEOUT_CONF_SUPPORT]: 'v1.0.0-beta.5',
-  [TABLE_ENUMS_SUPPORT]: 'v1.0.0-beta.5'
+  [TABLE_ENUMS_SUPPORT]: 'v1.0.0-beta.6'
 };
 
 export const getFeaturesCompatibility = serverVersion => {
