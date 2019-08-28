@@ -1,14 +1,26 @@
-@import "../../../Common/TableCommon/ReactTableOverrides.css";
+@import '../../../Common/TableCommon/ReactTableOverrides.css';
 
 .eventsTableBody .ReactTable .rt-table .rt-thead .rt-tr .rt-th:first-child {
   min-width: 75px;
 }
 
-.eventsTableBody .ReactTable .rt-table .rt-tbody .rt-tr-group .rt-tr.-odd .rt-td:first-child {
+.eventsTableBody
+  .ReactTable
+  .rt-table
+  .rt-tbody
+  .rt-tr-group
+  .rt-tr.-odd
+  .rt-td:first-child {
   min-width: 75px;
 }
 
-.eventsTableBody .ReactTable .rt-table .rt-tbody .rt-tr-group .rt-tr.-even .rt-td:first-child {
+.eventsTableBody
+  .ReactTable
+  .rt-table
+  .rt-tbody
+  .rt-tr-group
+  .rt-tr.-even
+  .rt-td:first-child {
   min-width: 75px;
 }
 
@@ -37,12 +49,6 @@
 }
 .processedEventsTable .invocationsFailure {
   color: red;
-}
-.streamingLogs .ReactTable {
-  // max-height: 350px;
-}
-.streamingLogs .ReactTable .rt-thead.-header {
-  // display: none;
 }
 .streamingLogs .ReactTable .rt-table .rt-thead .rt-tr .rt-th:nth-child(2) {
   width: 100px;

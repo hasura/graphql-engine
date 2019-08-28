@@ -20,6 +20,12 @@ args:
         ('article 1 by author 1', 'content for article 1', 1),
         ('article 2 by author 1', 'content for article 2', 1),
         ('article 1 by author 2', 'content for article 3', 2);
+      create table test(
+        id serial primary key,
+        name text not null,
+        bool_col boolean not null default false
+      );
+      insert into test (name) values ('name_1'), ('name_2');
 
 - type: track_table
   args:
@@ -84,3 +90,34 @@ args:
       - content
       - author_id
       check: {}
+
+#test table
+- type: track_table
+  args:
+    name: test
+    schema: public
+
+- type: create_select_permission
+  args:
+    table: test
+    role: user
+    permission:
+      columns:
+      - id
+      - name
+      filter:
+        id: X-Hasura-User-Id
+        bool_col: true
+
+- type: create_insert_permission
+  args:
+    table: test
+    role: user
+    permission:
+      columns:
+      - id
+      - name
+      check:
+        id: X-Hasura-User-Id
+      set:
+        bool_col: true

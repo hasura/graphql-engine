@@ -451,7 +451,7 @@ serveCmdFooter =
         , "Max event threads"
         )
       , ( "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
-        , "Postgres events polling interval"
+        , "Postgres events polling interval in milliseconds"
         )
       ]
 
@@ -656,11 +656,11 @@ connInfoErrModifier :: String -> String
 connInfoErrModifier s = "Fatal Error : " ++ s
 
 mkConnInfo ::RawConnInfo -> Either String Q.ConnInfo
-mkConnInfo (RawConnInfo mHost mPort mUser pass mURL mDB opts mRetries) =
+mkConnInfo (RawConnInfo mHost mPort mUser password mURL mDB opts mRetries) =
   case (mHost, mPort, mUser, mDB, mURL) of
 
     (Just host, Just port, Just user, Just db, Nothing) ->
-      return $ Q.ConnInfo host port user pass db opts retries
+      return $ Q.ConnInfo host port user password db opts retries
 
     (_, _, _, _, Just dbURL) -> maybe (throwError invalidUrlMsg)
                                 withRetries $ parseDatabaseUrl dbURL opts

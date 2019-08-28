@@ -224,7 +224,8 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
 -- Monad for resolving a hasura query/mutation
 type E m =
   ReaderT ( UserInfo
-          , OpCtxMap
+          , QueryCtxMap
+          , MutationCtxMap
           , TypeMap
           , FieldMap
           , OrdByCtx
@@ -241,10 +242,11 @@ runE
   -> m a
 runE ctx sqlGenCtx userInfo action = do
   res <- runExceptT $ runReaderT action
-    (userInfo, opCtxMap, typeMap, fldMap, ordByCtx, insCtxMap, sqlGenCtx)
+    (userInfo, queryCtxMap, mutationCtxMap, typeMap, fldMap, ordByCtx, insCtxMap, sqlGenCtx)
   either throwError return res
   where
-    opCtxMap = _gOpCtxMap ctx
+    queryCtxMap = _gQueryCtxMap ctx
+    mutationCtxMap = _gMutationCtxMap ctx
     typeMap = _gTypes ctx
     fldMap = _gFields ctx
     ordByCtx = _gOrdByCtx ctx
@@ -268,7 +270,7 @@ resolveMutSelSet
   :: ( MonadError QErr m
      , MonadReader r m
      , Has UserInfo r
-     , Has OpCtxMap r
+     , Has MutationCtxMap r
      , Has FieldMap r
      , Has OrdByCtx r
      , Has SQLGenCtx r
@@ -308,7 +310,7 @@ getMutOp ctx sqlGenCtx userInfo selSet =
 getSubsOpM
   :: ( MonadError QErr m
      , MonadReader r m
-     , Has OpCtxMap r
+     , Has QueryCtxMap r
      , Has FieldMap r
      , Has OrdByCtx r
      , Has SQLGenCtx r
@@ -371,21 +373,30 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
                    , Map.fromList userInfoToHdrs
                    , Map.fromList clientHdrs
                    ]
-      finalHdrs  = foldr Map.union Map.empty hdrMaps
-      options    = wreqOptions manager (Map.toList finalHdrs)
+      headers  = Map.toList $ foldr Map.union Map.empty hdrMaps
+      finalHeaders = addDefaultHeaders headers
+  initReqE <- liftIO $ try $ HTTP.parseRequest (show url)
+  initReq <- either httpThrow pure initReqE
+  let req = initReq
+           { HTTP.method = "POST"
+           , HTTP.requestHeaders = finalHeaders
+           , HTTP.requestBody = HTTP.RequestBodyLBS (J.encode q)
+           , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
+           }
 
-  -- log the graphql query
   liftIO $ logGraphqlQuery logger $ QueryLog q Nothing reqId
-  res  <- liftIO $ try $ Wreq.postWith options (show url) (J.toJSON q)
+  res  <- liftIO $ try $ HTTP.httpLbs req manager
   resp <- either httpThrow return res
-  let cookieHdr = getCookieHdr (resp ^? Wreq.responseHeader "Set-Cookie")
-      respHdrs  = Just $ mkRespHeaders cookieHdr
+  let cookieHdrs = getCookieHdr (resp ^.. Wreq.responseHeader "Set-Cookie")
+      respHdrs  = Just $ mkRespHeaders cookieHdrs
   return $ HttpResponse (encJFromLBS $ resp ^. Wreq.responseBody) respHdrs
 
   where
-    RemoteSchemaInfo url hdrConf fwdClientHdrs = rsi
+    RemoteSchemaInfo url hdrConf fwdClientHdrs timeout = rsi
     httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
-    httpThrow err = throw500 $ T.pack . show $ err
+    httpThrow = \case
+      HTTP.HttpExceptionRequest _req content -> throw500 $ T.pack . show $ content
+      HTTP.InvalidUrlException _url reason -> throw500 $ T.pack . show $ reason
 
     userInfoToHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
                      userInfoToList userInfo
@@ -396,7 +407,7 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
       in map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
          filter (not . isUserVar . fst) txHdrs
 
-    getCookieHdr = maybe [] (\h -> [("Set-Cookie", h)])
+    getCookieHdr = fmap (\h -> ("Set-Cookie", h))
 
     mkRespHeaders hdrs =
       map (\(k, v) -> Header (bsToTxt $ CI.original k, bsToTxt v)) hdrs

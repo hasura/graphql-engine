@@ -5,4 +5,5 @@ args:
     sql: |
       drop table article;
       drop table author;
+      drop table test;
     cascade: true
