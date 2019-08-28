@@ -458,8 +458,6 @@ export const mergeLoadSchemaData = (
   const _mergedTableData = [];
 
   infoSchemaTableData.forEach(infoSchemaTableInfo => {
-    console.log(infoSchemaTableInfo);
-    console.log(hdbTableData);
     const _tableSchema = infoSchemaTableInfo.table_schema;
     const _tableName = infoSchemaTableInfo.table_name;
 
