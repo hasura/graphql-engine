@@ -357,8 +357,9 @@ instance Show FunctionType where
 
 data FunctionArg
   = FunctionArg
-  { faName :: !(Maybe FunctionArgName)
-  , faType :: !PGScalarType
+  { faName       :: !(Maybe FunctionArgName)
+  , faType       :: !PGScalarType
+  , faHasDefault :: !Bool
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionArg)

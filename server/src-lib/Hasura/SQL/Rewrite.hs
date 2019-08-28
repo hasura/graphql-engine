@@ -181,11 +181,10 @@ uSqlExp = restoringIdens . \case
     S.SEExcluded <$> return t
   S.SEArray l                   ->
     S.SEArray <$> mapM uSqlExp l
-  S.SETuple (S.TupleExp l)     ->
+  S.SETuple (S.TupleExp l)      ->
     S.SEArray <$> mapM uSqlExp l
   S.SECount cty                 -> return $ S.SECount cty
-  S.SEFnArg idenM val           ->
-    S.SEFnArg idenM <$> uSqlExp val
+  S.SENamedArg arg val          -> S.SENamedArg arg <$> uSqlExp val
   where
     uQual = \case
       S.QualIden iden -> S.QualIden <$> getIden iden

@@ -113,6 +113,7 @@ data FuncArgItem
   = FuncArgItem
   { _faiInputArgName :: !G.Name
   , _faiSqlArgName   :: !(Maybe FunctionArgName)
+  , _faiHasDefault   :: !Bool
   } deriving (Show, Eq)
 
 type FuncArgSeq = Seq.Seq FuncArgItem

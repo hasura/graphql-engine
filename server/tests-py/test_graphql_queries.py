@@ -410,6 +410,10 @@ class TestGraphQLQueryFunctions(DefaultTestSelectQueries):
     def test_query_get_users_arguments_error(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/query_get_users_arguments_error.yaml", transport)
 
+    @pytest.mark.parametrize("transport", ['http', 'websocket'])
+    def test_query_get_users_default_arguments_error(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/query_get_users_default_arguments_error.yaml", transport)
+
     def test_alter_function_error(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/alter_function_error.yaml')
 

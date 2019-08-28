@@ -13,8 +13,6 @@ module Hasura.GraphQL.Resolve.Select
   , toPGQuery
   ) where
 
-import           Control.Arrow                     (first)
-import           Data.Foldable                     (foldlM)
 import           Data.Has
 import           Data.Parser.JSONPath
 import           Hasura.Prelude
@@ -414,41 +412,28 @@ convertAggSelect opCtx fld =
 
 parseFunctionArgs
   ::( MonadError QErr m)
-  => FuncArgSeq -> AnnInpVal -> m [RS.FunctionArgExpG UnresolvedVal]
-parseFunctionArgs argSeq val = do
-  (_, intSeqM, resolvedArgsM) <-
-    flip withObject val $ \_ obj ->
-        foldlM (go obj) (0 :: Int, [], []) argList
-  let resolvedArgs = catMaybes resolvedArgsM
-      positionalArgs = map removeArgName resolvedArgs
-      intSeq = catMaybes intSeqM
-
-     -- If all arguments are named then use resolved arguments
-  if | allNamed -> return resolvedArgs
-     -- If all arguments are given then use positional notation
-     | length resolvedArgs == length argList -> return positionalArgs
-     -- Logic followed: Each element in argSeq will get a sequential
-     -- Int starting from 1. intSeqM :: [Maybe Int] is of integer sequence
-     -- of resolved arguments and intSeq :: [Int] is integer sequence with
-     -- omitted arguments. If any of intSeq is greater than it's length then
-     -- omitted items are not set of last arguments
-     | otherwise ->
-       if any (> length intSeq) intSeq then
-         throw400 NotSupported "Only set of last arguments can be omitted"
-       else return positionalArgs
+  => FuncArgSeq
+  -> AnnInpVal
+  -> m (RS.FunctionArgsExpG UnresolvedVal)
+parseFunctionArgs argSeq val = flip withObject val $ \_ obj -> do
+  (positionalArgs, argsLeft) <- spanMaybeM (parsePositionalArg obj) argSeq
+  namedArgs <- Map.fromList . catMaybes <$> traverse (parseNamedArg obj) argsLeft
+  pure $ RS.FunctionArgsExp positionalArgs namedArgs
   where
-    nullSQL = UVSQL $ S.SEUnsafe "NULL"
-    argList = toList argSeq
-    allNamed = all (isJust . _faiSqlArgName) argList
-    removeArgName fae = fae{RS._faeName = Nothing}
+    parsePositionalArg obj (FuncArgItem gqlName _ _) =
+      maybe (pure Nothing) (fmap Just . parseArg) $ OMap.lookup gqlName obj
 
-    go obj (i, ints, args) (FuncArgItem argName mSqlName) = do
-      argValM <- forM (OMap.lookup argName obj) $
-        fmap (RS.FunctionArgExp mSqlName . maybe nullSQL UVPG) . asPGColumnValueM
-      let incInt = i + 1
-          incIntM = maybe Nothing (const $ Just incInt) argValM
-      pure (i+1, ints <> pure incIntM, args <> pure argValM)
+    parseArg = fmap (maybe (UVSQL S.SENull) UVPG) . asPGColumnValueM
 
+    parseNamedArg obj (FuncArgItem gqlName maybeSqlName hasDefault) =
+      case OMap.lookup gqlName obj of
+        Just argInpVal -> case maybeSqlName of
+          Just sqlName -> Just . (getFuncArgNameTxt sqlName,) <$> parseArg argInpVal
+          Nothing -> throw400 NotSupported
+                     "Only last set of positional arguments can be omitted"
+        Nothing -> if not hasDefault then
+                     throw400 NotSupported "Non default arguments cannot be omitted"
+                   else pure Nothing
 
 fromFuncQueryField
   :: (MonadError QErr m)
@@ -458,7 +443,7 @@ fromFuncQueryField
   -> m (RS.AnnFnSelG s UnresolvedVal)
 fromFuncQueryField fn qf argSeq fld = fieldAsPath fld $ do
   funcArgsM <- withArgM (_fArguments fld) "args" $ parseFunctionArgs argSeq
-  let funcArgs = fromMaybe [] funcArgsM
+  let funcArgs = fromMaybe RS.emptyFunctionArgsExp funcArgsM
   RS.AnnFnSel qf funcArgs <$> fn fld
 
 convertFuncQuerySimple
