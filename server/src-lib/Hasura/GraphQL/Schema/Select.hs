@@ -57,8 +57,8 @@ mkPGColParams colType
       [ (G.Name "path", InpValInfo (Just pathDesc) "path" Nothing $ G.toGT $ mkScalarTy PGText) ]
   | otherwise = Map.empty
 
-mkPGColFld :: ColField -> ObjFldInfo
-mkPGColFld (ColField colInfo name) =
+mkPGColFld :: ColumnField -> ObjFldInfo
+mkPGColFld (ColumnField colInfo name) =
   mkHsraObjFldInfo Nothing name (mkPGColParams colTy) ty
   where
     PGColumnInfo _ colTy isNullable = colInfo
@@ -181,8 +181,8 @@ type table_aggregate_fields{
 -}
 mkTableAggFldsObj
   :: QualifiedTable
-  -> ([ColField], [G.Name])
-  -> ([ColField], [G.Name])
+  -> ([ColumnField], [G.Name])
+  -> ([ColumnField], [G.Name])
   -> ObjTyInfo
 mkTableAggFldsObj tn (numCols, numAggOps) (compCols, compAggOps) =
   mkHsraObjTyInfo (Just desc) (mkTableAggFldsTy tn) Set.empty $ mapFromL _fiName $
@@ -218,7 +218,7 @@ mkTableColAggFldsObj
   :: QualifiedTable
   -> G.Name
   -> (PGColumnType -> G.NamedType)
-  -> [ColField]
+  -> [ColumnField]
   -> ObjTyInfo
 mkTableColAggFldsObj tn op f cols =
   mkHsraObjTyInfo (Just desc) (mkTableColAggFldsTy op tn) Set.empty $ mapFromL _fiName $
@@ -226,7 +226,7 @@ mkTableColAggFldsObj tn op f cols =
   where
     desc = G.Description $ "aggregate " <> G.unName op <> " on columns"
 
-    mkColObjFld (ColField ci name) = mkHsraObjFldInfo Nothing name Map.empty $
+    mkColObjFld (ColumnField ci name) = mkHsraObjFldInfo Nothing name Map.empty $
                                      G.toGT $ f $ pgiType ci
 
 {-
@@ -255,7 +255,7 @@ table_by_pk(
   coln: valuen!
 ): table
 -}
-mkSelFldPKey :: Maybe G.Name -> QualifiedTable -> [ColField] -> ObjFldInfo
+mkSelFldPKey :: Maybe G.Name -> QualifiedTable -> [ColumnField] -> ObjFldInfo
 mkSelFldPKey mCustomName tn cols =
   mkHsraObjFldInfo (Just desc) fldName args ty
   where
@@ -264,7 +264,7 @@ mkSelFldPKey mCustomName tn cols =
     fldName = fromMaybe (mkTableByPkName tn) mCustomName
     args = fromInpValL $ map colInpVal cols
     ty = G.toGT $ mkTableTy tn
-    colInpVal (ColField ci name) =
+    colInpVal (ColumnField ci name) =
       InpValInfo Nothing name Nothing $ G.toGT $ G.toNT $ mkColumnType $
       pgiType ci
 

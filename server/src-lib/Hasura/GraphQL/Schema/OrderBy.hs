@@ -62,8 +62,8 @@ input table_<op>_order_by {
 
 mkTabAggOpOrdByInpObjs
   :: QualifiedTable
-  -> ([ColField], [G.Name])
-  -> ([ColField], [G.Name])
+  -> ([ColumnField], [G.Name])
+  -> ([ColumnField], [G.Name])
   -> [InpObjTyInfo]
 mkTabAggOpOrdByInpObjs tn (numCols, numAggOps) (compCols, compAggOps) =
   mapMaybe (mkInpObjTyM numCols) numAggOps
@@ -94,8 +94,8 @@ count: order_by
 
 mkTabAggOrdByInpObj
   :: QualifiedTable
-  -> ([ColField], [G.Name])
-  -> ([ColField], [G.Name])
+  -> ([ColumnField], [G.Name])
+  -> ([ColumnField], [G.Name])
   -> InpObjTyInfo
 mkTabAggOrdByInpObj tn (numCols, numAggOps) (compCols, compAggOps) =
   mkHsraInpTyInfo (Just desc) (mkTabAggOrdByTy tn) $ fromInpValL $
@@ -145,7 +145,7 @@ mkOrdByInpObj tn selFlds = (inpObjTy, ordByCtx)
     objRels = relFltr ObjRel
     arrRels = relFltr ArrRel
 
-    mkColOrdBy (ColField _ name) =
+    mkColOrdBy (ColumnField _ name) =
       InpValInfo Nothing name Nothing $ G.toGT ordByTy
     mkObjRelOrdBy (ri, _, _, _, _, _) =
       InpValInfo Nothing (mkRelName $ riName ri) Nothing $
@@ -158,7 +158,7 @@ mkOrdByInpObj tn selFlds = (inpObjTy, ordByCtx)
 
     ordByCtx = Map.singleton namedTy $ Map.fromList $
                colOrdBys <> relOrdBys <> arrRelOrdBys
-    colOrdBys = flip map pgColFlds $ \(ColField ci name) ->
+    colOrdBys = flip map pgColFlds $ \(ColumnField ci name) ->
                                     ( name
                                     , OBIPGCol ci
                                     )

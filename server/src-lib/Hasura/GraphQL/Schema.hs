@@ -64,7 +64,7 @@ getTabInfo tc t =
 isValidObjectName :: (ToTxt a) => QualifiedObject a -> Bool
 isValidObjectName = isValidName . qualObjectToName
 
-isValidCol :: ColField -> Bool
+isValidCol :: ColumnField -> Bool
 isValidCol = isValidName . _cfName
 
 isValidRel :: ToTxt a => RelName -> QualifiedObject a -> Bool
@@ -75,7 +75,7 @@ upsertable uniqueOrPrimaryCons isUpsertAllowed isAView =
   not (null uniqueOrPrimaryCons) && isUpsertAllowed && not isAView
 
 getValidCols
-  :: FieldInfoMap PGColumnInfo -> Maybe CustomColFields -> [ColField]
+  :: FieldInfoMap PGColumnInfo -> Maybe CustomColumnFields -> [ColumnField]
 getValidCols fim = filter isValidCol . mkColumnFields cols
   where
     cols = fst $ partitionFieldInfos $ Map.elems fim
@@ -90,7 +90,7 @@ mkValidConstraints =
   filter (isValidName . G.Name . getConstraintTxt)
 
 isRelNullable
-  :: FieldInfoMap PGColumnInfo -> RelInfo -> Maybe CustomColFields -> Bool
+  :: FieldInfoMap PGColumnInfo -> RelInfo -> Maybe CustomColumnFields -> Bool
 isRelNullable fim ri ccfM = isNullable
   where
     lCols = map fst $ riMapping ri
@@ -98,9 +98,9 @@ isRelNullable fim ri ccfM = isNullable
     lColInfos = getColInfos lCols $ map _cfPGCol allCols
     isNullable = any pgiIsNullable lColInfos
 
-mkPGColGNameMap :: [ColField] -> PGColGNameMap
+mkPGColGNameMap :: [ColumnField] -> PGColGNameMap
 mkPGColGNameMap colFlds = Map.fromList $
-  flip map colFlds $ \(ColField ci name) -> (name, ci)
+  flip map colFlds $ \(ColumnField ci name) -> (name, ci)
 
 numAggOps :: [G.Name]
 numAggOps = [ "sum", "avg", "stddev", "stddev_samp", "stddev_pop"
@@ -116,11 +116,11 @@ isAggFld = flip elem (numAggOps <> compAggOps)
 mkGCtxRole'
   :: QualifiedTable
   -- insert permission
-  -> Maybe ([ColField], RelationInfoMap)
+  -> Maybe ([ColumnField], RelationInfoMap)
   -- select permission
   -> Maybe (Bool, [SelField])
   -- update cols
-  -> Maybe [ColField]
+  -> Maybe [ColumnField]
   -- delete cols
   -> Maybe ()
   -- ^ delete cols
@@ -183,7 +183,7 @@ mkGCtxRole' tn insPermM selPermM updColFldsM
 
     -- helper
     mkColFldMap ty cols = Map.fromList $ flip map cols $
-      \(ColField ci name) -> ((ty, name), Left ci)
+      \(ColumnField ci name) -> ((ty, name), Left ci)
 
     -- insert input type
     insInpObjM = uncurry (mkInsInp tn) <$> insPermM
@@ -222,7 +222,7 @@ mkGCtxRole' tn insPermM selPermM updColFldsM
     -- helper
     mkFldMap ty = Map.fromList . concatMap (mkFld ty)
     mkFld ty = \case
-      Left (ColField ci name) -> [((ty, name), Left ci)]
+      Left (ColumnField ci name) -> [((ty, name), Left ci)]
       Right (ri, allowAgg, colGNameMap, perm, lim, _) ->
         let relFld = ( (ty, mkRelName $ riName ri)
                      , Right $ RelFld ri False colGNameMap perm lim
@@ -294,13 +294,13 @@ mkGCtxRole' tn insPermM selPermM updColFldsM
 
 getRootFldsRole'
   :: QualifiedTable
-  -> [ColField]
+  -> [ColumnField]
   -> [ConstraintName]
   -> FieldInfoMap PGColumnInfo
   -> [FunctionInfo]
   -> Maybe ([T.Text], Bool) -- insert perm
   -> Maybe (AnnBoolExpPartialSQL, Maybe Int, [T.Text], Bool) -- select filter
-  -> Maybe ([ColField], PreSetColsPartial, AnnBoolExpPartialSQL, [T.Text]) -- update filter
+  -> Maybe ([ColumnField], PreSetColsPartial, AnnBoolExpPartialSQL, [T.Text]) -- update filter
   -> Maybe (AnnBoolExpPartialSQL, [T.Text]) -- delete filter
   -> Maybe ViewInfo
   -> Maybe TableConfig -- custom config
@@ -324,8 +324,8 @@ getRootFldsRole' tn primCols constraints fields funcs insM
     }
   where
     mCustomRootFields = _tcCustomRootFields <$> mTableConfig
-    mCustomColFields = _tcCustomColumnFields <$> mTableConfig
-    colGNameMap = mkPGColGNameMap $ getValidCols fields mCustomColFields
+    mCustomColumnFields = _tcCustomColumnFields <$> mTableConfig
+    colGNameMap = mkPGColGNameMap $ getValidCols fields mCustomColumnFields
 
     makeFieldMap = mapFromL (_fiName . snd)
     allCols = getCols fields
@@ -408,7 +408,7 @@ getSelPerm
   -- all the fields of a table
   -> FieldInfoMap PGColumnInfo
   -- custom column field names
-  -> Maybe CustomColFields
+  -> Maybe CustomColumnFields
   -- role and its permission
   -> RoleName -> SelPermInfo
   -> m (Bool, [SelField])
@@ -446,7 +446,7 @@ mkInsCtx
   => RoleName
   -> TableCache PGColumnInfo
   -> FieldInfoMap PGColumnInfo
-  -> Maybe CustomColFields
+  -> Maybe CustomColumnFields
   -> InsPermInfo
   -> Maybe UpdPermInfo
   -> m InsCtx
@@ -480,7 +480,7 @@ mkAdminInsCtx
   => QualifiedTable
   -> TableCache PGColumnInfo
   -> FieldInfoMap PGColumnInfo
-  -> Maybe CustomColFields
+  -> Maybe CustomColumnFields
   -> m InsCtx
 mkAdminInsCtx tn tc fields ccfM = do
   relTupsM <- forM rels $ \relInfo -> do
@@ -504,7 +504,7 @@ mkAdminInsCtx tn tc fields ccfM = do
 mkAdminSelFlds
   :: MonadError QErr m
   => FieldInfoMap PGColumnInfo
-  -> Maybe CustomColFields
+  -> Maybe CustomColumnFields
   -> TableCache PGColumnInfo
   -> m [SelField]
 mkAdminSelFlds fields customColFlds tableCache = do
@@ -529,23 +529,23 @@ mkAdminSelFlds fields customColFlds tableCache = do
     colSelFlds = map Left colFlds
     validRels = getValidRels fields
 
-mkColumnFields :: [PGColumnInfo] -> Maybe CustomColFields -> [ColField]
+mkColumnFields :: [PGColumnInfo] -> Maybe CustomColumnFields -> [ColumnField]
 mkColumnFields colInfos = \case
   Nothing -> map mkDefColFld colInfos
   Just customColFlds -> mkCustomFlds customColFlds
   where
-    mkDefColFld ci = ColField ci $ G.Name $ getPGColTxt $ pgiName ci
+    mkDefColFld ci = ColumnField ci $ G.Name $ getPGColTxt $ pgiName ci
     mkCustomFlds ccf = flip map colInfos $
       \ci -> case Map.lookup (pgiName ci) ccf of
         Nothing                 -> mkDefColFld ci
-        Just (GraphQLName name) -> ColField ci name
+        Just (GraphQLName name) -> ColumnField ci name
 
 mkGCtxRole
   :: (MonadError QErr m)
   => TableCache PGColumnInfo
   -> QualifiedTable
   -> FieldInfoMap PGColumnInfo
-  -> [ColField]
+  -> [ColumnField]
   -> [ConstraintName]
   -> [FunctionInfo]
   -> Maybe ViewInfo
@@ -582,7 +582,7 @@ mkGCtxRole tableCache tn fields pColFlds constraints funcs viM
 
 getRootFldsRole
   :: QualifiedTable
-  -> [ColField]
+  -> [ColumnField]
   -> [ConstraintName]
   -> FieldInfoMap PGColumnInfo
   -> [FunctionInfo]

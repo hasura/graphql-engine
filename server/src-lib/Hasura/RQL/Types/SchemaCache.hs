@@ -331,7 +331,7 @@ mutableView qt f mVI operation =
 data TableConfig
   = TableConfig
   { _tcCustomRootFields   :: !GC.TableCustomRootFields
-  , _tcCustomColumnFields :: !CustomColFields
+  , _tcCustomColumnFields :: !CustomColumnFields
   } deriving (Show, Eq, Lift)
 $(deriveJSON (aesonDrop 3 snakeCase) ''TableConfig)
 

@@ -1,5 +1,5 @@
 module Hasura.GraphQL.Schema.Common
-  ( ColField(..)
+  ( ColumnField(..)
   , onlyIntCols
   , onlyNumCols
   , onlyJSONBCols
@@ -31,25 +31,25 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-data ColField
-  = ColField
+data ColumnField
+  = ColumnField
   { _cfPGCol :: !PGColumnInfo
   , _cfName  :: !G.Name
   } deriving (Show, Eq)
 
-onlyIntCols :: [ColField] -> [ColField]
+onlyIntCols :: [ColumnField] -> [ColumnField]
 onlyIntCols = filter (isScalarColumnWhere isIntegerType . pgiType . _cfPGCol)
 
-onlyNumCols :: [ColField] -> [ColField]
+onlyNumCols :: [ColumnField] -> [ColumnField]
 onlyNumCols = filter (isScalarColumnWhere isNumType . pgiType . _cfPGCol)
 
-onlyJSONBCols :: [ColField] -> [ColField]
+onlyJSONBCols :: [ColumnField] -> [ColumnField]
 onlyJSONBCols = filter (isScalarColumnWhere (== PGJSONB) . pgiType . _cfPGCol)
 
-onlyComparableCols :: [ColField] -> [ColField]
+onlyComparableCols :: [ColumnField] -> [ColumnField]
 onlyComparableCols = filter (isScalarColumnWhere isComparableType . pgiType . _cfPGCol)
 
-type SelField = Either ColField
+type SelField = Either ColumnField
                 ( RelInfo
                 , Bool
                 , PGColGNameMap

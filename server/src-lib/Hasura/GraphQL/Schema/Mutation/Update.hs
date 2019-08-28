@@ -29,7 +29,7 @@ input table_set_input {
 }
 -}
 mkUpdSetInp
-  :: QualifiedTable -> [ColField] -> InpObjTyInfo
+  :: QualifiedTable -> [ColumnField] -> InpObjTyInfo
 mkUpdSetInp tn cols  =
   mkHsraInpTyInfo (Just desc) (mkUpdSetTy tn) $
     fromInpValL $ map mkPGColInp cols
@@ -52,7 +52,7 @@ input table_inc_input {
 -}
 
 mkUpdIncInp
-  :: QualifiedTable -> Maybe [ColField] -> Maybe InpObjTyInfo
+  :: QualifiedTable -> Maybe [ColumnField] -> Maybe InpObjTyInfo
 mkUpdIncInp tn = maybe Nothing mkType
   where
     mkType cols = let intCols = onlyIntCols cols
@@ -140,7 +140,7 @@ deleteAtPathDesc = "delete the field or element with specified path"
                    <> " (for JSON arrays, negative integers count from the end)"
 
 mkUpdJSONOpInp
-  :: QualifiedTable -> [ColField] -> [InpObjTyInfo]
+  :: QualifiedTable -> [ColumnField] -> [InpObjTyInfo]
 mkUpdJSONOpInp tn cols = bool inpObjs [] $ null jsonbCols
   where
     jsonbCols = onlyJSONBCols cols
@@ -190,7 +190,7 @@ update_table(
 
 -}
 
-mkIncInpVal :: QualifiedTable -> [ColField] -> Maybe InpValInfo
+mkIncInpVal :: QualifiedTable -> [ColumnField] -> Maybe InpValInfo
 mkIncInpVal tn cols = bool (Just incArg) Nothing $ null intCols
   where
     intCols = onlyIntCols cols
@@ -198,7 +198,7 @@ mkIncInpVal tn cols = bool (Just incArg) Nothing $ null intCols
     incArg =
       InpValInfo (Just incArgDesc) "_inc" Nothing $ G.toGT $ mkUpdIncTy tn
 
-mkJSONOpInpVals :: QualifiedTable -> [ColField] -> [InpValInfo]
+mkJSONOpInpVals :: QualifiedTable -> [ColumnField] -> [InpValInfo]
 mkJSONOpInpVals tn cols = bool jsonbOpArgs [] $ null jsonbCols
   where
     jsonbCols = onlyJSONBCols cols
@@ -222,7 +222,7 @@ mkJSONOpInpVals tn cols = bool jsonbOpArgs [] $ null jsonbCols
       InpValInfo (Just deleteAtPathDesc) deleteAtPathOp Nothing $
       G.toGT $ mkJSONOpTy tn deleteAtPathOp
 
-mkUpdMutFld :: Maybe G.Name -> QualifiedTable -> [ColField] -> ObjFldInfo
+mkUpdMutFld :: Maybe G.Name -> QualifiedTable -> [ColumnField] -> ObjFldInfo
 mkUpdMutFld mCustomName tn cols =
   mkHsraObjFldInfo (Just desc) fldName (fromInpValL inputValues) $
     G.toGT $ mkMutRespTy tn
