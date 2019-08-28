@@ -9,7 +9,10 @@ Run Hasura GraphQL engine on Nhost
 Getting started
 ------------------------------------------
 
-To deploy a follow the :doc:`Nhost quickstart guide <../../getting-started/nhost-simple>`.
+To deploy a Nhost project with Hasura follow the :doc:`Nhost quickstart guide <../../getting-started/nhost-simple>`.
+
+A Nhost project includes a database with Hasura. It also includes authentication and storage integrated with the same permission system used by Hasura.
+
 
 Change Hasura GraphQL settings
 ------------------------------------------

@@ -17,14 +17,14 @@ Nhost also gives you authentication and storage to your project.
 Deploy to Nhost
 ----------------
 
-Sign up on Nhost and create a project: `Sign up <https://app.nhost.io/register>`_. Sign up is free. No credit card required.
+`Sign up <https://app.nhost.io/register>`_ on Nhost and create a project. Sign up is free. No credit card required.
 
 .. thumbnail:: ../../../img/graphql/manual/getting-started/nhost-create-project.png
 
 Open the Hasura console
 -----------------------
 
-That's it!  Click on the Hasura Console URL and use your admin secret (`HASURA_GRAPHQL_ADMIN_SECERT`) to login.
+Click on the Hasura Console URL and use your admin secret (`HASURA_GRAPHQL_ADMIN_SECERT`) to login.
 You should now see the Hasura console.
 
 .. thumbnail:: ../../../img/graphql/manual/getting-started/nhost-go-to-hasura-console.png
