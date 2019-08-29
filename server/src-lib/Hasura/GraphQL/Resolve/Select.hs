@@ -71,7 +71,7 @@ fromSelSet fldTy flds =
         case fldInfo of
           Left colInfo ->
             RS.FCol colInfo <$> argsToColOp (_fArguments fld)
-          Right (RelFld relInfo isAgg colGNameMap tableFilter tableLimit) -> do
+          Right (RelationshipField relInfo isAgg colGNameMap tableFilter tableLimit) -> do
             let relTN = riRTable relInfo
                 colMapping = riMapping relInfo
                 rn = riName relInfo

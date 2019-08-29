@@ -42,7 +42,7 @@ data CatalogTable
   { _ctName            :: !QualifiedTable
   , _ctIsSystemDefined :: !Bool
   , _ctIsEnum          :: !Bool
-  , _ctConfiguration   :: !(Maybe TableConfig)
+  , _ctConfiguration   :: !TableConfig
   , _ctInfo            :: !(Maybe CatalogTableInfo)
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogTable)

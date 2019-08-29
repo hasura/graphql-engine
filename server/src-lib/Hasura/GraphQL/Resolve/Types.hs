@@ -100,8 +100,8 @@ data OpCtx
 -- used in resolvers
 type PGColGNameMap = Map.HashMap G.Name PGColumnInfo
 
-data RelFld
-  = RelFld
+data RelationshipField
+  = RelationshipField
   { _rfInfo       :: !RelInfo
   , _rfIsAgg      :: !Bool
   , _rfCols       :: !PGColGNameMap
@@ -111,7 +111,7 @@ data RelFld
 
 type FieldMap
   = Map.HashMap (G.NamedType, G.Name)
-    (Either PGColumnInfo RelFld)
+    (Either PGColumnInfo RelationshipField)
 
 -- order by context
 data OrdByItem

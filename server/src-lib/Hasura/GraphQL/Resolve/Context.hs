@@ -53,7 +53,7 @@ import qualified Hasura.SQL.DML                as S
 getFldInfo
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
   => G.NamedType -> G.Name
-  -> m (Either PGColumnInfo RelFld)
+  -> m (Either PGColumnInfo RelationshipField)
 getFldInfo nt n = do
   fldMap <- asks getter
   onNothing (Map.lookup (nt,n) fldMap) $

@@ -55,7 +55,7 @@ data TableMeta
   = TableMeta
   { _tmTable               :: !QualifiedTable
   , _tmIsEnum              :: !Bool
-  , _tmConfiguration       :: !(Maybe TableConfig)
+  , _tmConfiguration       :: !(TableConfig)
   , _tmObjectRelationships :: ![DR.ObjRelDef]
   , _tmArrayRelationships  :: ![DR.ArrRelDef]
   , _tmInsertPermissions   :: ![DP.InsPermDef]
@@ -65,9 +65,9 @@ data TableMeta
   , _tmEventTriggers       :: ![DTS.EventTriggerConf]
   } deriving (Show, Eq, Lift)
 
-mkTableMeta :: QualifiedTable -> Bool -> Maybe TableConfig -> TableMeta
-mkTableMeta qt isEnum configM =
-  TableMeta qt isEnum configM [] [] [] [] [] [] []
+mkTableMeta :: QualifiedTable -> Bool -> TableConfig -> TableMeta
+mkTableMeta qt isEnum config =
+  TableMeta qt isEnum config [] [] [] [] [] [] []
 
 makeLenses ''TableMeta
 
@@ -80,7 +80,7 @@ instance FromJSON TableMeta where
     TableMeta
      <$> o .: tableKey
      <*> o .:? isEnumKey .!= False
-     <*> o .:? configKey .!= Nothing
+     <*> o .:? configKey .!= noTableConfig
      <*> o .:? orKey .!= []
      <*> o .:? arKey .!= []
      <*> o .:? ipKey .!= []
@@ -233,8 +233,8 @@ applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = 
     indexedForM_ tables $ \tableMeta -> do
       let tableName = tableMeta ^. tmTable
           isEnum = tableMeta ^. tmIsEnum
-          configM = tableMeta ^. tmConfiguration
-      void $ DS.trackExistingTableOrViewP2 tableName isEnum configM
+          config = tableMeta ^. tmConfiguration
+      void $ DS.trackExistingTableOrViewP2 tableName isEnum config
 
     -- Relationships
     indexedForM_ tables $ \table -> do
@@ -322,7 +322,7 @@ fetchMetadata = do
   let tableMetaMap = M.fromList . flip map tables $
         \(schema, name, isEnum, maybeConfig) ->
           let qualifiedName = QualifiedObject schema name
-              configuration = Q.getAltJ <$> maybeConfig
+              configuration = maybe noTableConfig Q.getAltJ maybeConfig
           in (qualifiedName, mkTableMeta qualifiedName isEnum configuration)
 
   -- Fetch all the relationships
@@ -395,7 +395,7 @@ fetchMetadata = do
 
     fetchTables =
       Q.listQ [Q.sql|
-                SELECT table_schema, table_name, is_enum, configuration
+                SELECT table_schema, table_name, is_enum, configuration::json
                 FROM hdb_catalog.hdb_table
                  WHERE is_system_defined = 'false'
                     |] () False

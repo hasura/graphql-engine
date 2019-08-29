@@ -224,10 +224,10 @@ mkGCtxRole' tn insPermM selPermM updColsM
       Left ci -> [((ty, pgiName ci), Left ci)]
       Right (ri, allowAgg, colGNameMap, perm, lim, _) ->
         let relFld = ( (ty, mkRelName $ riName ri)
-                     , Right $ RelFld ri False colGNameMap perm lim
+                     , Right $ RelationshipField ri False colGNameMap perm lim
                      )
             aggRelFld = ( (ty, mkAggRelName $ riName ri)
-                        , Right $ RelFld ri True colGNameMap perm lim
+                        , Right $ RelationshipField ri True colGNameMap perm lim
                         )
         in case riType ri of
           ObjRel -> [relFld]
@@ -302,10 +302,10 @@ getRootFldsRole'
   -> Maybe ([PGColumnInfo], PreSetColsPartial, AnnBoolExpPartialSQL, [T.Text]) -- update filter
   -> Maybe (AnnBoolExpPartialSQL, [T.Text]) -- delete filter
   -> Maybe ViewInfo
-  -> Maybe TableConfig -- custom config
+  -> TableConfig -- custom config
   -> RootFields
 getRootFldsRole' tn primCols constraints fields funcs insM
-                 selM updM delM viM mTableConfig =
+                 selM updM delM viM tableConfig =
   RootFields
     { rootQueryFields = makeFieldMap
         $  funcQueries
@@ -322,7 +322,7 @@ getRootFldsRole' tn primCols constraints fields funcs insM
         ]
     }
   where
-    mCustomRootFields = _tcCustomRootFields <$> mTableConfig
+    customRootFields = _tcCustomRootFields tableConfig
     colGNameMap = mkPGColGNameMap $ getValidCols fields
 
     makeFieldMap = mapFromL (_fiName . snd)
@@ -334,7 +334,7 @@ getRootFldsRole' tn primCols constraints fields funcs insM
     mutHelper f getDet mutM =
       bool Nothing (getDet <$> mutM) $ isMutable f viM
 
-    getCustomNameWith = getCustomName mCustomRootFields
+    getCustomNameWith = flip getCustomName customRootFields
 
     insCustName = getCustomNameWith _tcrfInsert
     getInsDet (hdrs, upsertPerm) =
@@ -528,7 +528,7 @@ mkGCtxRole
   -> [FunctionInfo]
   -> Maybe ViewInfo
   -> Maybe EnumValues
-  -> Maybe TableConfig
+  -> TableConfig
   -> RoleName
   -> RolePermInfo
   -> m (TyAgg, RootFields, InsCtxMap)
@@ -562,7 +562,7 @@ getRootFldsRole
   -> [FunctionInfo]
   -> Maybe ViewInfo
   -> RolePermInfo
-  -> Maybe TableConfig
+  -> TableConfig
   -> RootFields
 getRootFldsRole tn pCols constraints fields funcs viM (RolePermInfo insM selM updM delM)=
   getRootFldsRole' tn pCols constraints fields funcs

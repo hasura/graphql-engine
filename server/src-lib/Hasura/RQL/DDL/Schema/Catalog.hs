@@ -24,15 +24,15 @@ fetchCatalogData = liftTx $ Q.getAltJ . runIdentity . Q.getRow <$> Q.withQE defa
   $(Q.sqlFromFile "src-rsr/catalog_metadata.sql") () True
 
 saveTableToCatalog :: (MonadTx m)
-  => QualifiedTable -> Bool -> Maybe TableConfig -> m ()
-saveTableToCatalog (QualifiedObject sn tn) isEnum configM = liftTx $
+  => QualifiedTable -> Bool -> TableConfig -> m ()
+saveTableToCatalog (QualifiedObject sn tn) isEnum config = liftTx $
   Q.unitQE defaultTxErrorHandler [Q.sql|
     INSERT INTO "hdb_catalog"."hdb_table"
       (table_schema, table_name, is_enum, configuration)
     VALUES ($1, $2, $3, $4)
   |] (sn, tn, isEnum, configVal) False
   where
-    configVal = Q.AltJ . toJSON <$> configM
+    configVal = Q.AltJ $ toJSON config
 
 updateTableIsEnumInCatalog :: (MonadTx m) => QualifiedTable -> Bool -> m ()
 updateTableIsEnumInCatalog (QualifiedObject sn tn) isEnum = liftTx $
@@ -41,15 +41,15 @@ updateTableIsEnumInCatalog (QualifiedObject sn tn) isEnum = liftTx $
       WHERE table_schema = $1 AND table_name = $2
     |] (sn, tn, isEnum) False
 
-updateTableConfig :: (MonadTx m) => QualifiedTable -> Maybe TableConfig -> m ()
-updateTableConfig (QualifiedObject sn tn) configM = liftTx $
+updateTableConfig :: (MonadTx m) => QualifiedTable -> TableConfig -> m ()
+updateTableConfig (QualifiedObject sn tn) config = liftTx $
   Q.unitQE defaultTxErrorHandler [Q.sql|
            UPDATE "hdb_catalog"."hdb_table"
               SET configuration = $1
             WHERE table_schema = $2 AND table_name = $3
                 |] (configVal, sn, tn) False
   where
-    configVal = Q.AltJ . toJSON <$> configM
+    configVal = Q.AltJ $ toJSON config
 
 deleteTableFromCatalog :: (MonadTx m) => QualifiedTable -> m ()
 deleteTableFromCatalog (QualifiedObject sn tn) = liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|

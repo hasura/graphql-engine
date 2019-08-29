@@ -116,12 +116,12 @@ validateTableConfig tableInfo (TableConfig rootFlds colFlds) =
 
 trackExistingTableOrViewP2
   :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
-  => QualifiedTable -> Bool -> Maybe TableConfig -> m EncJSON
-trackExistingTableOrViewP2 tableName isEnum configM = do
+  => QualifiedTable -> Bool -> TableConfig -> m EncJSON
+trackExistingTableOrViewP2 tableName isEnum config = do
   sc <- askSchemaCache
   let defGCtx = scDefaultRemoteGCtx sc
   GS.checkConflictingNode defGCtx $ GS.qualObjectToName tableName
-  saveTableToCatalog tableName isEnum configM
+  saveTableToCatalog tableName isEnum config
   buildSchemaCacheFor (MOTable tableName)
   return successMsg
 
@@ -130,34 +130,34 @@ runTrackTableQ
   => TrackTable -> m EncJSON
 runTrackTableQ (TrackTable qt isEnum) = do
   trackExistingTableOrViewP1 qt
-  trackExistingTableOrViewP2 qt isEnum Nothing
+  trackExistingTableOrViewP2 qt isEnum noTableConfig
 
 data TrackTableV2
   = TrackTableV2
   { ttv2Table         :: !TrackTable
-  , ttv2Configuration :: !(Maybe TableConfig)
+  , ttv2Configuration :: !TableConfig
   } deriving (Show, Eq, Lift)
 $(deriveJSON (aesonDrop 4 snakeCase) ''TrackTableV2)
 
 runTrackTableV2Q
   :: (QErrM m, CacheRWM m, MonadTx m, UserInfoM m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
   => TrackTableV2 -> m EncJSON
-runTrackTableV2Q (TrackTableV2 (TrackTable qt isEnum) configM) = do
+runTrackTableV2Q (TrackTableV2 (TrackTable qt isEnum) config) = do
   sc <- askSchemaCache
   let tableCache = scTables sc
   case (M.lookup qt tableCache) of
     Nothing -> do
       trackExistingTableOrViewP1 qt
-      trackExistingTableOrViewP2 qt isEnum configM
+      trackExistingTableOrViewP2 qt isEnum config
     Just ti -> do
       -- validate table config
-      mapM_ (validateTableConfig ti) configM
+      validateTableConfig ti config
       -- modify cache with new table configuration
-      let newTableInfo = ti {_tiCustomConfig = configM}
+      let newTableInfo = ti {_tiCustomConfig = config}
           newTableCache = M.insert qt newTableInfo tableCache
       writeSchemaCache sc {scTables = newTableCache}
       -- update catalog with new configuration
-      liftTx $ updateTableConfig qt configM
+      liftTx $ updateTableConfig qt config
       return successMsg
 
 runSetExistingTableIsEnumQ
@@ -242,7 +242,7 @@ processTableChanges ti tableDiff = do
 
   where
     TableDiff mNewName droppedCols addedCols alteredCols _ constraints = tableDiff
-    customFields = maybe M.empty _tcCustomColumnFields $ _tiCustomConfig ti
+    customFields = _tcCustomColumnFields $ _tiCustomConfig ti
     replaceConstraints tn = flip modTableInCache tn $ \tInfo ->
       return $ tInfo {_tiUniqOrPrimConstraints = constraints}
 
@@ -326,7 +326,7 @@ buildTableCache = processTableCache <=< buildRawTableCache
     -- Step 1: Build the raw table cache from metadata information.
     buildRawTableCache :: [CatalogTable] -> m (TableCache PGRawColumnInfo)
     buildRawTableCache catalogTables = fmap (M.fromList . catMaybes) . for catalogTables $
-      \(CatalogTable name isSystemDefined isEnum maybeConfig maybeInfo) -> withTable name $ do
+      \(CatalogTable name isSystemDefined isEnum config maybeInfo) -> withTable name $ do
         catalogInfo <- onNothing maybeInfo $
           throw400 NotExists $ "no such table/view exists in postgres: " <>> name
 
@@ -350,11 +350,11 @@ buildTableCache = processTableCache <=< buildRawTableCache
               , _tiViewInfo = viewInfo
               , _tiEventTriggerInfoMap = mempty
               , _tiEnumValues = maybeEnumValues
-              , _tiCustomConfig = maybeConfig
+              , _tiCustomConfig = config
               }
 
         -- validate tableConfig
-        mapM_ (validateTableConfig info) maybeConfig
+        validateTableConfig info config
         pure (name, info)
 
     -- Step 2: Process the raw table cache to replace Postgres column types with logical column
@@ -362,8 +362,7 @@ buildTableCache = processTableCache <=< buildRawTableCache
     processTableCache :: TableCache PGRawColumnInfo -> m (TableCache PGColumnInfo)
     processTableCache rawTables = fmap (M.mapMaybe id) . for rawTables $ \rawInfo -> do
       let tableName = _tiName rawInfo
-          customFields = maybe M.empty _tcCustomColumnFields $
-                         rawInfo ^. tiCustomConfig
+          customFields = _tcCustomColumnFields $ _tiCustomConfig rawInfo
       withTable tableName $ rawInfo
         & tiFieldInfoMap.traverse._FIColumn %%~
           processColumnInfo enumTables customFields tableName

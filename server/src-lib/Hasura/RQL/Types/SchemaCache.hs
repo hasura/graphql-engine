@@ -8,6 +8,7 @@ module Hasura.RQL.Types.SchemaCache
        , incSchemaCacheVer
        , emptySchemaCache
        , TableConfig(..)
+       , noTableConfig
 
        , TableCache
        , modTableCache
@@ -333,7 +334,18 @@ data TableConfig
   { _tcCustomRootFields   :: !GC.TableCustomRootFields
   , _tcCustomColumnFields :: !CustomColumnFields
   } deriving (Show, Eq, Lift)
-$(deriveJSON (aesonDrop 3 snakeCase) ''TableConfig)
+$(deriveToJSON (aesonDrop 3 snakeCase) ''TableConfig)
+
+noTableConfig :: TableConfig
+noTableConfig =
+  TableConfig GC.emptyCustomRootFields M.empty
+
+instance FromJSON TableConfig where
+  parseJSON Null = pure noTableConfig
+  parseJSON v    = flip (withObject "TableConfig") v $ \obj -> do
+    customRootFields <- obj .: "custom_root_fields"
+    customColumnFields <- obj .: "custom_column_fields"
+    pure $ TableConfig customRootFields customColumnFields
 
 data TableInfo columnInfo
   = TableInfo
@@ -346,7 +358,7 @@ data TableInfo columnInfo
   , _tiViewInfo              :: !(Maybe ViewInfo)
   , _tiEventTriggerInfoMap   :: !EventTriggerInfoMap
   , _tiEnumValues            :: !(Maybe EnumValues)
-  , _tiCustomConfig          :: !(Maybe TableConfig)
+  , _tiCustomConfig          :: !TableConfig
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
 $(makeLenses ''TableInfo)

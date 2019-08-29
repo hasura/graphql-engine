@@ -139,7 +139,7 @@ parseColExp nt n val = do
     Left pgColInfo -> do
       opExps <- parseOpExps (pgiType pgColInfo) val
       return $ AVCol pgColInfo opExps
-    Right (RelFld relInfo _ _ permExp _)-> do
+    Right (RelationshipField relInfo _ _ permExp _)-> do
       relBoolExp <- parseBoolExp val
       return $ AVRel relInfo $ andAnnBoolExps relBoolExp $
         fmapAnnBoolExp partialSQLExpToUnresolvedVal permExp

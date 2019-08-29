@@ -89,8 +89,19 @@ data TableCustomRootFields
   } deriving (Show, Eq, Lift)
 $(deriveJSON (aesonDrop 5 snakeCase) ''TableCustomRootFields)
 
+emptyCustomRootFields :: TableCustomRootFields
+emptyCustomRootFields =
+  TableCustomRootFields
+  { _tcrfSelect          = Nothing
+  , _tcrfSelectByPk      = Nothing
+  , _tcrfSelectAggregate = Nothing
+  , _tcrfInsert          = Nothing
+  , _tcrfUpdate          = Nothing
+  , _tcrfDelete          = Nothing
+  }
+
 getCustomName
-  :: Maybe TableCustomRootFields
-  -> (TableCustomRootFields -> Maybe GraphQLName)
+  :: (TableCustomRootFields -> Maybe GraphQLName)
+  -> TableCustomRootFields
   -> Maybe G.Name
-getCustomName customFieldsM f = customFieldsM >>= (fmap unGraphQLName . f)
+getCustomName f = fmap unGraphQLName . f

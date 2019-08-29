@@ -103,12 +103,12 @@ array_relationship_aggregate(
 object_relationship: remote_table
 
 -}
-mkRelFld
+mkRelationshipField
   :: Bool
   -> RelInfo
   -> Bool
   -> [ObjFldInfo]
-mkRelFld allowAgg (RelInfo rn rTy _ remTab isManual) isNullable = case rTy of
+mkRelationshipField allowAgg (RelInfo rn rTy _ remTab isManual) isNullable = case rTy of
   ArrRel -> bool [arrRelFld] [arrRelFld, aggArrRelFld] allowAgg
   ObjRel -> [objRelFld]
   where
@@ -141,9 +141,9 @@ mkTableObj
 mkTableObj tn allowedFlds =
   mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) TLHasuraType
   where
-    flds = concatMap (either (pure . mkPGColFld) mkRelFld') allowedFlds
-    mkRelFld' (relInfo, allowAgg, _, _, _, isNullable) =
-      mkRelFld allowAgg relInfo isNullable
+    flds = concatMap (either (pure . mkPGColFld) mkRelationshipField') allowedFlds
+    mkRelationshipField' (relInfo, allowAgg, _, _, _, isNullable) =
+      mkRelationshipField allowAgg relInfo isNullable
     desc = G.Description $ "columns and relationships of " <>> tn
 
 {-
