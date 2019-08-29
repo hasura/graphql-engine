@@ -21,6 +21,8 @@ module Hasura.RQL.Types.Common
        , unNonEmptyText
        , adminText
        , rootText
+
+       , FunctionArgName(..)
        ) where
 
 import           Hasura.Prelude
@@ -174,3 +176,7 @@ data ForeignKey
 $(deriveJSON (aesonDrop 3 snakeCase) ''ForeignKey)
 
 instance Hashable ForeignKey
+
+newtype FunctionArgName =
+  FunctionArgName { getFuncArgNameTxt :: T.Text}
+  deriving (Show, Eq, ToJSON)
