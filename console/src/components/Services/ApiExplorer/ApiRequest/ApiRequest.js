@@ -8,7 +8,7 @@ import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
 import ModalWrapper from '../../../Common/Modal/ModalWrapper';
 
-import { parseAuthHeader } from './utils';
+import { getGraphiQLHeadersFromLocalStorage, parseAuthHeader } from './utils';
 
 import {
   changeRequestHeader,
@@ -16,6 +16,7 @@ import {
   focusHeaderTextbox,
   unfocusTypingHeader,
   verifyJWTToken,
+  setHeadersBulk,
 } from '../Actions';
 
 import globals from '../../../../Globals';
@@ -31,8 +32,6 @@ import {
   setHeadersSectionIsOpen,
   setGraphiQLHeadersInLocalStorage,
 } from './utils';
-
-import { handleHeaderInit } from '../../../Login/Actions';
 
 import styles from '../ApiExplorer.scss';
 
@@ -78,7 +77,40 @@ class ApiRequest extends Component {
   }
 
   componentDidMount() {
-    this.props.dispatch(handleHeaderInit());
+    const handleHeaderInit = () => {
+      // move to utils
+      const getDefaultGraphiqlHeaders = () => {
+        return [
+          {
+            key: 'content-type',
+            value: 'application/json',
+            isActive: true,
+            isNewHeader: false,
+            isDisabled: false,
+          },
+        ];
+      };
+
+      const graphiqlHeaders =
+        getGraphiQLHeadersFromLocalStorage() || getDefaultGraphiqlHeaders();
+
+      // add an empty placeholder header
+      graphiqlHeaders.push({
+        key: '',
+        value: '',
+        isActive: true,
+        isNewHeader: true,
+        isDisabled: false,
+      });
+
+      // persist headers to local storage
+      setGraphiQLHeadersInLocalStorage(graphiqlHeaders);
+
+      // set headers in redux
+      this.props.dispatch(setHeadersBulk(graphiqlHeaders));
+    };
+
+    handleHeaderInit();
   }
 
   onAnalyzeBearerClose() {
@@ -700,6 +732,7 @@ ApiRequest.propTypes = {
   method: PropTypes.string.isRequired,
   url: PropTypes.string.isRequired,
   headers: PropTypes.array,
+  dataHeaders: PropTypes.array,
   params: PropTypes.string,
   dispatch: PropTypes.func.isRequired,
   explorerData: PropTypes.object.isRequired,

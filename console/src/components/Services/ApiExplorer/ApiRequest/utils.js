@@ -1,3 +1,10 @@
+import globals from '../../../../Globals';
+import { loadAdminSecretState } from '../../../AppState';
+import {
+  ADMIN_SECRET_HEADER_KEY,
+  SERVER_CONSOLE_MODE,
+} from '../../../../constants';
+
 export const setEndPointSectionIsOpen = isOpen => {
   window.localStorage.setItem('ApiExplorer:EndpointSectionIsOpen', isOpen);
 };
@@ -27,15 +34,36 @@ export const getHeadersSectionIsOpen = () => {
 };
 
 export const setGraphiQLHeadersInLocalStorage = headers => {
-  // filter empty & admin secret headers
-  const filteredHeaders = headers.filter(
-    h => h.key && h.key.toLowerCase() !== 'x-hasura-admin-secret'
-  );
+  // filter empty headers
+  const validHeaders = headers.filter(h => h.key);
+
+  // remove admin-secret value
+  const maskedHeaders = validHeaders.map(h => {
+    if (h.key.toLowerCase() !== 'x-hasura-admin-secret') {
+      h.value = 'xxx';
+    }
+
+    return h;
+  });
 
   window.localStorage.setItem(
     'HASURA_CONSOLE_GRAPHIQL_HEADERS',
-    JSON.stringify(filteredHeaders)
+    JSON.stringify(maskedHeaders)
   );
+};
+
+export const getAdminSecret = () => (dispatch, getState) => {
+  let adminSecret = null;
+  if (globals.consoleMode === SERVER_CONSOLE_MODE && globals.isAdminSecretSet) {
+    const adminSecretFromLS = loadAdminSecretState();
+    const adminSecretInRedux = getState().dataHeaders[ADMIN_SECRET_HEADER_KEY];
+
+    adminSecret = adminSecretFromLS || adminSecretInRedux;
+  } else {
+    adminSecret = globals.adminSecret;
+  }
+
+  return adminSecret;
 };
 
 export const getGraphiQLHeadersFromLocalStorage = () => {
@@ -47,6 +75,15 @@ export const getGraphiQLHeadersFromLocalStorage = () => {
   if (headersString) {
     try {
       headers = JSON.parse(headersString);
+
+      // add admin-secret value
+      headers = headers.map(h => {
+        if (h.key.toLowerCase() !== ADMIN_SECRET_HEADER_KEY) {
+          h.value = getAdminSecret();
+        }
+
+        return h;
+      });
     } catch (_) {
       console.error('Failed parsing headers from local storage');
     }

@@ -1,14 +1,7 @@
 import Endpoints, { globalCookiePolicy } from '../../Endpoints';
-import globals from '../../Globals';
 import { updateDataHeaders } from '../Services/Data/DataActions';
-import { saveAdminSecretState, loadAdminSecretState } from '../AppState';
-import {
-  getGraphiQLHeadersFromLocalStorage,
-  setGraphiQLHeadersInLocalStorage,
-} from '../Services/ApiExplorer/ApiRequest/utils';
-import { setHeadersBulk } from '../Services/ApiExplorer/Actions';
-
-const adminSecretKeyString = `x-hasura-${globals.adminSecretLabel}`;
+import { saveAdminSecretState } from '../AppState';
+import { ADMIN_SECRET_HEADER_KEY } from '../../constants';
 
 export const verifyLogin = ({
   adminSecret,
@@ -22,7 +15,7 @@ export const verifyLogin = ({
     credentials: globalCookiePolicy,
     method: 'POST',
     headers: {
-      [adminSecretKeyString]: adminSecret,
+      [ADMIN_SECRET_HEADER_KEY]: adminSecret,
       'content-type': 'application/json',
     },
     body: JSON.stringify({
@@ -48,7 +41,7 @@ export const verifyLogin = ({
           dispatch(
             updateDataHeaders({
               'content-type': 'application/json',
-              [adminSecretKeyString]: adminSecret,
+              [ADMIN_SECRET_HEADER_KEY]: adminSecret,
             })
           );
         }
@@ -63,58 +56,4 @@ export const verifyLogin = ({
       console.error(error);
       errorCallback(error);
     });
-};
-
-export const handleHeaderInit = () => (dispatch, getState) => {
-  const getDefaultGraphiqlHeaders = () => {
-    return [
-      {
-        key: 'content-type',
-        value: 'application/json',
-        isActive: true,
-        isNewHeader: false,
-        isDisabled: false,
-      },
-    ];
-  };
-
-  const graphiqlHeaders =
-    getGraphiQLHeadersFromLocalStorage() || getDefaultGraphiqlHeaders();
-
-  let adminSecret = null;
-  if (globals.consoleMode === 'server' && globals.isAdminSecretSet) {
-    const adminSecretFromLS = loadAdminSecretState();
-    const adminSecretInRedux = getState().tables.dataHeaders[
-      adminSecretKeyString
-    ];
-
-    adminSecret = adminSecretFromLS || adminSecretInRedux;
-  } else {
-    adminSecret = globals.adminSecret;
-  }
-
-  if (adminSecret) {
-    graphiqlHeaders.push({
-      key: adminSecretKeyString,
-      value: adminSecret,
-      isActive: true,
-      isNewHeader: false,
-      isDisabled: true,
-    });
-  }
-
-  // add an empty placeholder header
-  graphiqlHeaders.push({
-    key: '',
-    value: '',
-    isActive: true,
-    isNewHeader: true,
-    isDisabled: false,
-  });
-
-  // persist headers to local storage
-  setGraphiQLHeadersInLocalStorage(graphiqlHeaders);
-
-  // set headers in redux
-  dispatch(setHeadersBulk(graphiqlHeaders));
 };

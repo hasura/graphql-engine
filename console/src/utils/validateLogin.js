@@ -1,12 +1,9 @@
-import {
-  loadAdminSecretState,
-  clearAdminSecretState,
-} from '../components/AppState';
+import { clearAdminSecretState } from '../components/AppState';
 import globals from '../Globals';
 
 import { verifyLogin } from '../components/Login/Actions';
 
-import { SERVER_CONSOLE_MODE } from '../constants';
+import { getAdminSecret } from '../components/Services/ApiExplorer/ApiRequest/utils';
 
 const validateLogin = ({ dispatch }) => {
   return (nextState, replaceState, cb) => {
@@ -27,10 +24,7 @@ const validateLogin = ({ dispatch }) => {
         cb();
       };
 
-      const adminSecret =
-        globals.consoleMode === SERVER_CONSOLE_MODE
-          ? loadAdminSecretState()
-          : globals.adminSecret;
+      const adminSecret = getAdminSecret();
 
       verifyLogin({
         adminSecret,
