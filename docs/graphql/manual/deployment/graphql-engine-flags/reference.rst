@@ -98,7 +98,7 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
    * - ``--unauthorized-role <ROLE>``
      - ``HASURA_GRAPHQL_UNAUTHORIZED_ROLE``
      - Unauthorized role, used when access-key is not sent in access-key only
-       mode or the "authorization" header is absent in JWT mode.
+       mode or the ``Authorization`` header is absent in JWT mode.
        Example: ``anonymous``. Now whenever the "authorization" header is
        absent, the request's role will default to ``anonymous``.
 

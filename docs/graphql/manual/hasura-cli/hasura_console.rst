@@ -32,10 +32,10 @@ Options
 ::
 
       --address string        address to serve console and migration API from (default "localhost")
-      --admin-secret string   admin secret for Hasura GraphQL Engine
+      --admin-secret string   admin secret for Hasura GraphQL engine
       --api-port string       port for serving migrate api (default "9693")
       --console-port string   port for serving console (default "9695")
-      --endpoint string       http(s) endpoint for Hasura GraphQL Engine
+      --endpoint string       http(s) endpoint for Hasura GraphQL engine
   -h, --help                  help for console
       --no-browser            do not automatically open console in browser
       --static-dir string     directory where static assets mentioned in the console html template can be served from

@@ -90,4 +90,4 @@ the existing metadata with the one of that instance.
 The ``curl`` based API calls can be easily integrated with your CI/CD workflows.
 In case you need an automated way of applying/importing the metadata, take a
 look at the :doc:`CLI-Migrations <auto-apply-migrations>` Docker image, which
-can start the GraphQL Engine after automatically importing a mounted metadata file. 
+can start the GraphQL engine after automatically importing a mounted metadata file. 

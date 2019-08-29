@@ -51,7 +51,7 @@ Deploying
 These are some sample deployment instructions while creating a new app.
 
 Step 1: Create an app with **--stack=container**
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Use the `Heroku CLI <https://devcenter.heroku.com/articles/heroku-cli>`_ to create a new Heroku app. Let's call
 the app ``graphql-on-postgres``.
@@ -85,8 +85,8 @@ Create the Postgres add-on in your Heroku app.
     Created postgresql-angular-20334 as DATABASE_URL
     Use heroku addons:docs heroku-postgresql to view documentation
 
-Step 3: `git push` to deploy
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Step 3: **git push** to deploy
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Remember to change ``HEROKU_GIT_REMOTE`` to your git remote below. In our case:
 ``https://git.heroku.com/graphql-on-postgres.git``.
 

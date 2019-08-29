@@ -27,7 +27,7 @@ upsert request in case of conflicts.
 .. admonition:: Fetching Postgres constraint names
 
   You can fetch the name of unique or primary key constraints by querying the ``information_schema.table_constraints``
-  table. The GraphQL Engine will automatically generate constraint names as enum values for ``constraint`` (try
+  table. The GraphQL engine will automatically generate constraint names as enum values for ``constraint`` (try
   autocompleting in GraphiQL). Typically, the constraint is automatically named as ``<table-name>_<column-name>_key``.
 
 
@@ -82,7 +82,7 @@ The ``published_on`` column is left unchanged as it wasn't present in ``update_c
 
 Ignore request on conflict
 --------------------------
-If ``update_columns`` is an **empty array** then the GraphQL Engine ignores changes on conflict. Insert a new object into
+If ``update_columns`` is an **empty array** then the GraphQL engine ignores changes on conflict. Insert a new object into
 the author table or, if the unique constraint ``author_name_key`` is violated, ignore the request.
 
 .. graphiql::

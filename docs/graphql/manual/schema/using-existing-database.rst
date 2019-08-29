@@ -1,5 +1,5 @@
 Setting up a GraphQL schema using an existing database
-====================================================
+======================================================
 
 .. contents:: Table of contents
   :backlinks: none

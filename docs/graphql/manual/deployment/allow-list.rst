@@ -84,7 +84,7 @@ The following are the recommended best practises for enabling/disabling allow-li
 
 * **In development instances**: During development or in dev instances, disable allow-list (*default setting*)
   to allow complete access to the GraphQL schema. Add/remove queries in the allow-list and then export the
-  metadata for version-control (*so you can apply other instances to it*).
+  metadata for version-control (*so you can apply it to other instances*).
 
 * **In CI/CD instances**: Enable the allow-list for testing. 
 

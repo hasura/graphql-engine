@@ -1,4 +1,4 @@
-Hasura GraphQL Engine One-click App on DigitalOcean Marketplace
+Hasura GraphQL engine One-click App on DigitalOcean Marketplace
 ===============================================================
 
 .. contents:: Table of contents
@@ -6,7 +6,7 @@ Hasura GraphQL Engine One-click App on DigitalOcean Marketplace
   :depth: 1
   :local:
 
-The Hasura GraphQL Engine is available as a One-click app on the DigitalOcean
+The Hasura GraphQL engine is available as a One-click app on the DigitalOcean
 Marketplace. It is packed with a `Postgres <https://www.postgresql.org/>`__
 database and `Caddy <https://caddyserver.com/>`__ webserver for easy and
 automatic HTTPS using `Let's Encrypt <https://letsencrypt.org/>`__.
@@ -17,7 +17,7 @@ Quickstart
 1. Create a Hasura One-click Droplet
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Click the button below to create a new Hasura GraphQL Engine Droplet through
+Click the button below to create a new Hasura GraphQL engine Droplet through
 the DigitalOcean Marketplace. For first time users, the link also contains a
 referral code with gives you $100 over days. A $5 droplet is good enough to
 support most workloads. (``Ctrl+Click`` to open in a new tab)
@@ -31,7 +31,7 @@ support most workloads. (``Ctrl+Click`` to open in a new tab)
 2. Open console
 ~~~~~~~~~~~~~~~
 
-Once the Hasura GraphQL Engine Droplet is ready, you can visit the Droplet IP to
+Once the Hasura GraphQL engine Droplet is ready, you can visit the Droplet IP to
 open the Hasura console, where you can create tables, explore GraphQL APIs etc.
 Note that it might take 1 or 2 minutes for everything to start running.
 
@@ -217,7 +217,7 @@ Go to ``https://<your_domain>/console`` to visit the Hasura console.
 Updating to the latest version
 ------------------------------
 
-When a new version of the GraphQL Engine is released, you can upgrade to it by just
+When a new version of the GraphQL engine is released, you can upgrade to it by just
 changing the version tag in ``docker-compose.yaml``. You can find the latest
 releases on the `GitHub releases page
 <https://github.com/hasura/graphql-engine/releases>`__.

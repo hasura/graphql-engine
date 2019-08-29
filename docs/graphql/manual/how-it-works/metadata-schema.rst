@@ -18,7 +18,7 @@ initializes a few tables under it as described below.
 **hdb_catalog** schema
 ----------------------
 
-This schema is created by the Hasura GraphQL Engine to manage its internal state. Whenever a
+This schema is created by the Hasura GraphQL engine to manage its internal state. Whenever a
 table/permission/relationship is created/updated using the Hasura console or the metadata API, the Hasura GraphQL engine
 captures that information and stores it in the corresponding tables.
 

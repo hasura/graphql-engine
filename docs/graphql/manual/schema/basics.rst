@@ -88,10 +88,9 @@ API references for the full specifications.
 
 You can insert some sample data into the tables using the ``Insert Row`` tab of the created tables.
 
-Try basic GraphQL queries
+Try out basic GraphQL queries
 -------------------------
-At this point, you should be able to try out basic GraphQL queries/mutations on the newly created tables using the
-console in the ``GraphiQL`` tab (*you may want to add some sample data into the tables first*).
+At this point, you should be able to try out basic GraphQL queries/mutations on the newly created tables from the GraphiQL tab in the console (*you may want to add some sample data into the tables first*).
 
 Here are a couple of examples:
 

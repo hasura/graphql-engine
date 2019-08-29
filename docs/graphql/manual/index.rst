@@ -1,6 +1,6 @@
-.. title:: Hasura GraphQL Engine Documentation
+.. title:: Hasura GraphQL engine Documentation
 
-Hasura GraphQL Engine documentation
+Hasura GraphQL engine documentation
 ===================================
 
 .. contents:: Table of contents

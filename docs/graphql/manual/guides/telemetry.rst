@@ -8,7 +8,7 @@ Telemetry Guide/FAQ
   :depth: 1
   :local:
 
-The Hasura GraphQL Engine collects anonymous telemetry data that helps the
+The Hasura GraphQL engine collects anonymous telemetry data that helps the
 Hasura team in understanding how the product is being used and in deciding
 what to focus on next.
 

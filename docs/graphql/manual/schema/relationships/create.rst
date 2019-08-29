@@ -186,7 +186,7 @@ Let us now create an ``object relationship`` called ``avg_rating`` from the ``au
 ``author_avg_rating`` view using a manual relationship:
 
 Step 1: Open the manual relationship section
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Open the console and navigate to the ``Data -> author -> Relationships`` tab.
 - Click on the ``Configure`` button:

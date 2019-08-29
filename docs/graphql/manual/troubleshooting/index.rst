@@ -1,4 +1,4 @@
-Troubleshooting Hasura GraphQL Engine errors
+Troubleshooting Hasura GraphQL engine errors
 ============================================
 
 .. contents:: Table of contents
@@ -15,7 +15,7 @@ defined on them using the Hasura GraphQL engine. See :doc:`Hasura GraphQL metada
 for information on how this internal state is maintained. It is highly recommended doing any modifications to the
 database schema only through the Hasura console to avoid corrupting the GraphQL engine's state.
 
-Following are the list of error messages returned by the GraphQL Engine when it encounters an inconsistent state:
+Following are the list of error messages returned by the GraphQL engine when it encounters an inconsistent state:
 
 Error: no such table/view exists in postgres
 --------------------------------------------
@@ -64,7 +64,7 @@ Let's say we have tables called ``article`` and ``author`` as follows:
 .. thumbnail:: ../../../img/graphql/manual/troubleshooting/author_article.jpg
   :alt: article author schema 
 
-Using the console if you have created a relationship nameed ``author`` from the ``article`` table to
+Using the console if you have created a relationship named ``author`` from the ``article`` table to
 the ``author`` table, the Hasura GraphQL engine will create a special field ``author`` in the ``article`` table in its
 internal state. This field will be available via the GraphQL interface.
 

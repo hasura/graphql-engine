@@ -1,4 +1,4 @@
-Hasura GraphQL Engine on Google Cloud Platform with Kubernetes Engine and Cloud SQL
+Hasura GraphQL engine on Google Cloud Platform with Kubernetes engine and Cloud SQL
 ===================================================================================
 
 .. contents:: Table of contents
@@ -7,7 +7,7 @@ Hasura GraphQL Engine on Google Cloud Platform with Kubernetes Engine and Cloud 
   :local:
 
 This is a guide on deploying the Hasura GraphQL engine on the `Google Cloud Platform
-<https://cloud.google.com/>`__ using `Kuberentes Engine
+<https://cloud.google.com/>`__ using `Kuberentes engine
 <https://cloud.google.com/kubernetes-engine/>`__ to run Hasura and PosgreSQL
 backed by `Cloud SQL <https://cloud.google.com/sql/>`__. 
 
@@ -61,7 +61,7 @@ Make sure you substitute ``[PASSWORD]`` with a strong password.
 Create a Kubernetes Cluster
 ---------------------------
 
-Before creating the cluster, we need to enable the Kubernetes Engine API. Visit
+Before creating the cluster, we need to enable the Kubernetes engine API. Visit
 the below link in a browser to enable the API. Replace ``hasura`` at the end
 of the URL with your project name, in case you're not using the same name. Note
 that, you will need a billing account added to the project to enable the API.

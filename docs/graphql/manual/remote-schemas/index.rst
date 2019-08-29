@@ -65,14 +65,14 @@ started is to use one of our boilerplates:
 Step 2: Merge remote schema
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To merge your remote schema with the GraphQL Engine's auto-generated schema, head to the ``Remote Schemas`` tab of the console and click on the ``Add`` button.
+To merge your remote schema with the GraphQL engine's auto-generated schema, head to the ``Remote Schemas`` tab of the console and click on the ``Add`` button.
 
 .. thumbnail:: ../../../img/graphql/manual/business-logic/add-remote-schemas-interface.png
 
 
 You need to enter the following information:
 
-- **Remote Schema name**: an alias for the remote schema that must be unique on an instance of the GraphQL Engine.
+- **Remote Schema name**: an alias for the remote schema that must be unique on an instance of the GraphQL engine.
 - **GraphQL server URL**: the endpoint at which your remote GraphQL server is available. This value can be entered
   manually or by specifying an environment variable that contains this information.
 
@@ -91,7 +91,7 @@ You need to enter the following information:
 
     **Example**: Let's say your remote GraphQL server needs a ``X-Api-Key`` as a header. As this value contains
     sensitive data (like API key in this example), you can configure the name of an environment variable which will hold
-    the value. This environment variable needs to be present when you start the GraphQL Engine. When Hasura sends
+    the value. This environment variable needs to be present when you start the GraphQL engine. When Hasura sends
     requests to your remote server, it will pick up the value from this environment variable.
 
 .. admonition:: Using environment variables
@@ -133,7 +133,7 @@ Extending the auto-generated GraphQL schema fields
 
 For some use cases, you may need to extend the GraphQL schema fields exposed by the Hasura GraphQL engine
 (*and not merely augment as we have done above*) with a custom schema/server. To support them, you can use
-community tooling to write your own client-facing GraphQL gateway that interacts with the GraphQL Engine.
+community tooling to write your own client-facing GraphQL gateway that interacts with the GraphQL engine.
 
 .. note::
 

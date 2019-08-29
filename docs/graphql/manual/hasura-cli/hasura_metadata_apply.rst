@@ -20,7 +20,7 @@ Examples
 
 ::
 
-    # Apply Hasura GraphQL Engine metadata present in metadata.[yaml|json] file:
+    # Apply Hasura GraphQL engine metadata present in metadata.[yaml|json] file:
     hasura metadata apply
 
 Options
@@ -28,8 +28,8 @@ Options
 
 ::
 
-      --admin-secret string   admin secret for Hasura GraphQL Engine
-      --endpoint string       http(s) endpoint for Hasura GraphQL Engine
+      --admin-secret string   admin secret for Hasura GraphQL engine
+      --endpoint string       http(s) endpoint for Hasura GraphQL engine
   -h, --help                  help for apply
 
 Options inherited from parent commands

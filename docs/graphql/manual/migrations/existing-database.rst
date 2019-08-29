@@ -18,7 +18,7 @@ To use migrations effectively, the console on the server (which is served at
 served by CLI. Otherwise, changes could be made through the server console and
 they will not be tracked by migrations.
 
-So, the first step is to disable the console served by the GraphQL Engine server. In
+So, the first step is to disable the console served by the GraphQL engine server. In
 order to do that, remove the ``--enable-console`` flag from the command that starts
 the server or set the following environment variable to false:
 

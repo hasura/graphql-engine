@@ -24,7 +24,7 @@ Trying out access control
 -------------------------
 
 If you just want to see role-based access control in action, you need not set up or integrate your
-auth service with GraphQL Engine. You can just:
+auth service with GraphQL engine. You can just:
 
 * Define permission rules for a table for a role.
 

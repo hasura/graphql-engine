@@ -1,6 +1,6 @@
 .. _deploy_azure_ci_pg:
 
-Hasura GraphQL Engine on Azure with Container Instances and Postgres
+Hasura GraphQL engine on Azure with Container Instances and Postgres
 ====================================================================
 
 .. contents:: Table of contents

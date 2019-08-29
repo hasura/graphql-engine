@@ -10,7 +10,7 @@ Introduction
 ------------
 
 Access control rules in Hasura are defined at a role, table and action (*insert, update, select, delete*)
-level granularly:
+level granularity:
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/permission-rule-granularity.png
 

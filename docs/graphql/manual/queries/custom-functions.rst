@@ -337,7 +337,7 @@ function-based queries.
 Using argument default values for custom functions
 **************************************************
 
-If you omit an argument in the ``args`` input field then the GraphQL Engine executes the SQL function without the argument.
+If you omit an argument in the ``args`` input field then the GraphQL engine executes the SQL function without the argument.
 Hence, the function will use the default value of that argument set in its definition.
 
 **For example:** In the above :ref:`PostGIS functions example <custom_functions_postgis>`, the function
