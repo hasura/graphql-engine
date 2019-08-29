@@ -276,7 +276,7 @@ class TestAddRemoteSchemaTbls:
         q = {'query': '{ wassup }'}
         hdrs = {
             'x-hasura-test': 'xyzz',
-            'x-hasura-role': 'user',
+            'x-hasura-role': 'admin',
             'x-hasura-user-id': 'abcd1234',
             'content-type': 'application/json',
             'Authorization': 'Bearer abcdef',
