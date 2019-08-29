@@ -13,6 +13,7 @@ module Hasura.RQL.DDL.RemoteSchema
   , runAddRemoteSchemaPermissions
   , runAddRemoteSchemaPermissionsP1
   , runAddRemoteSchemaPermissionsP2Setup
+  , runDropRemoteSchemaPermissions
   ) where
 
 import           Hasura.EncJSON
@@ -292,3 +293,45 @@ addRemoteSchemaPermissionsToCatalog (RemoteSchemaPermissions rsName rsRole rsDef
       (remote_schema, role, definition)
       VALUES ($1, $2, $3)
   |] (rsName, rsRole, Q.AltJ $ J.toJSON rsDef) True
+
+runDropRemoteSchemaPermissions
+  :: ( QErrM m, UserInfoM m
+     , CacheRWM m, MonadTx m
+     )
+  => DropRemoteSchemaPermissions -> m EncJSON
+runDropRemoteSchemaPermissions q = do
+  adminOnly
+  dropRemoteSchemaPermissionsP1 q
+  dropRemoteSchemaPermissionsP2 q
+  pure successMsg
+
+dropRemoteSchemaPermissionsP1 ::
+     (QErrM m, CacheRWM m, MonadTx m) => DropRemoteSchemaPermissions -> m ()
+dropRemoteSchemaPermissionsP1 (DropRemoteSchemaPermissions remoteSchema role) = do
+  sc <- askSchemaCache
+  let roleSchemas = scRemoteSchemasWithRole sc
+  void $ onNothing
+    (Map.lookup (role, remoteSchema) roleSchemas)
+    (throw400 NotFound ("role: " <> roleNameToTxt role <> " not found for remote schema"))
+
+dropRemoteSchemaPermissionsP2 ::
+     (QErrM m, CacheRWM m, MonadTx m) => DropRemoteSchemaPermissions -> m ()
+dropRemoteSchemaPermissionsP2 q = do
+  dropRemoteSchemaPermissionsP2Setup q
+  dropRemoteSchemaPermissionsP2FromCatalog q
+
+dropRemoteSchemaPermissionsP2Setup ::
+     (QErrM m, CacheRWM m) => DropRemoteSchemaPermissions -> m ()
+dropRemoteSchemaPermissionsP2Setup (DropRemoteSchemaPermissions remoteSchema role) = do
+  sc <- askSchemaCache
+  let roleSchemas = scRemoteSchemasWithRole sc
+      updatedRoleSchemas = Map.delete (role, remoteSchema) roleSchemas
+  writeSchemaCache sc { scRemoteSchemasWithRole = updatedRoleSchemas }
+
+dropRemoteSchemaPermissionsP2FromCatalog ::
+     (MonadTx m) => DropRemoteSchemaPermissions -> m ()
+dropRemoteSchemaPermissionsP2FromCatalog (DropRemoteSchemaPermissions remoteSchema role) = do
+  liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
+    DELETE FROM hdb_catalog.remote_schema_permissions
+      WHERE remote_schema = $1 AND role = $2
+  |] (remoteSchema, role) True

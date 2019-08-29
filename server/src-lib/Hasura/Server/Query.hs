@@ -69,6 +69,7 @@ data RQLQuery
   | RQRemoveRemoteSchema !RemoteSchemaNameQuery
   | RQReloadRemoteSchema !RemoteSchemaNameQuery
   | RQAddRemoteSchemaPermissions !RemoteSchemaPermissions
+  | RQDropRemoteSchemaPermissions !DropRemoteSchemaPermissions
 
   | RQCreateEventTrigger !CreateEventTriggerQuery
   | RQDeleteEventTrigger !DeleteEventTriggerQuery
@@ -206,6 +207,7 @@ queryNeedsReload qi = case qi of
   RQRemoveRemoteSchema _          -> True
   RQReloadRemoteSchema _          -> True
   RQAddRemoteSchemaPermissions _  -> True
+  RQDropRemoteSchemaPermissions _ -> True
 
   RQCreateEventTrigger _          -> True
   RQDeleteEventTrigger _          -> True
@@ -281,6 +283,7 @@ runQueryM rq =
       RQReloadRemoteSchema q       -> runReloadRemoteSchema q
 
       RQAddRemoteSchemaPermissions q       -> runAddRemoteSchemaPermissions q
+      RQDropRemoteSchemaPermissions q       -> runDropRemoteSchemaPermissions q
 
       RQCreateEventTrigger q       -> runCreateEventTriggerQuery q
       RQDeleteEventTrigger q       -> runDeleteEventTriggerQuery q

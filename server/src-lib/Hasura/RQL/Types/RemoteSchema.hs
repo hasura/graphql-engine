@@ -113,3 +113,11 @@ validateRemoteSchemaDef (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs mTimeout) =
     hdrs = fromMaybe [] hdrC
 
     timeout = fromMaybe 60 mTimeout
+
+data DropRemoteSchemaPermissions
+  = DropRemoteSchemaPermissions
+  { drsPermRemoteSchema :: RemoteSchemaName
+  , drsPermRole         :: RoleName
+  } deriving (Show, Eq, Lift)
+
+$(J.deriveJSON (J.aesonDrop 7 J.snakeCase) ''DropRemoteSchemaPermissions)
