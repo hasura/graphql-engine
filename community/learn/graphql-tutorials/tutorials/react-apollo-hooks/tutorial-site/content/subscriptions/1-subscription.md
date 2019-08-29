@@ -1,13 +1,10 @@
 ---
 title: "Subscription"
-metaTitle: "Set up GraphQL Subscriptions using Apollo Client | GraphQL React Apollo Tutorial"
+metaTitle: "Set up GraphQL Subscriptions using Apollo Client | GraphQL React Apollo Hooks Tutorial"
 metaDescription: "You will learn how to configure GraphQL Subscriptions using React Apollo Client by installing dependencies like apollo-link-ws, subscriptions-transport-ws. This will also have authorization token setup"
 ---
 
 import GithubLink from "../../src/GithubLink.js";
-import YoutubeEmbed from "../../src/YoutubeEmbed.js";
-
-<YoutubeEmbed link="https://www.youtube.com/embed/yZmVWeyoW_4" />
 
 When we had initially set up Apollo, we used Apollo Boost to install the required dependencies. But subscriptions is an advanced use case which Apollo Boost does not support. So we have to install more dependencies to set up subscriptions.
 
@@ -21,7 +18,7 @@ Now we need to update our `ApolloClient` instance to point to the subscription s
 
 Open `src/components/App.js` and update the following imports:
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo/app-final/src/components/App.js" text="src/components/App.js" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo-hooks/app-final/src/components/App.js" text="src/components/App.js" />
 
 ```javascript
 - import { HttpLink } from 'apollo-link-http';

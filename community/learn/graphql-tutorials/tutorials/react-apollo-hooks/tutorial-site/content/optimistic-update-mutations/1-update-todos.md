@@ -1,12 +1,8 @@
 ---
 title: "Update todos - mutation"
-metaTitle: "Mutation to update todos | GraphQL React Apollo Tutorial"
+metaTitle: "Mutation to update todos | GraphQL React Apollo Hooks Tutorial"
 metaDescription: "GraphQL Mutation to update existing personal todos. Try the mutation in GraphiQL, passing the Authorization token to mark a todo as completed"
 ---
-
-import YoutubeEmbed from "../../src/YoutubeEmbed.js";
-
-<YoutubeEmbed link="https://www.youtube.com/embed/SD_CZ-7Bam4" />
 
 In this part of the tutorial, you will learn how to mark an existing todo as completed by using GraphQL Mutations.
 

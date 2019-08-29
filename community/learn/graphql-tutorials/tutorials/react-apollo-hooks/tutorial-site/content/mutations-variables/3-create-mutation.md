@@ -1,51 +1,35 @@
 ---
 title: "Run mutation, update cache"
-metaTitle: "Apollo Mutation Component | GraphQL React Apollo Tutorial"
-metaDescription: "We will use the Apollo Client Mutation component from react-apollo in React app as an example to insert new data and update cache locally using readQuery and writeQuery."
+metaTitle: "Apollo useMutation React hook | GraphQL React Apollo Hooks Tutorial"
+metaDescription: "We will use the Apollo Client useMutation from @apollo/react-hooks in React app as an example to insert new data and update cache locally using readQuery and writeQuery."
 ---
 
-import YoutubeEmbed from "../../src/YoutubeEmbed.js";
-
-<YoutubeEmbed link="https://www.youtube.com/embed/ZgMblvlIg28" />
-
-### Apollo React Mutation Component
+### Apollo useMutation React hook
 Now let's do the integration part. Open `src/components/Todo/TodoInput.js` and add the following code below the other imports:
 
-```javscript
-import { Mutation } from "react-apollo";
+```javascript
+import { useMutation } from "@apollo/react-hooks";
 ```
 
-We are importing the `Mutation` component from `react-apollo` and the graphql query we defined above to fetch the todo data.
+We are importing the `useMutation` React hook from `@apollo/react-hooks` and the graphql query we defined above to fetch the todo data.
 
-Now, we will wrap the component with `Mutation` passing our graphql mutation constant that we imported. Add the following code:
+Now, we will use the `useMutation` React hook passing our graphql mutation constant that we imported. Add the following code:
 
 ```javascript
 const TodoInput = ({isPublic=false}) => {
-+ return (
-+  <Mutation mutation={ADD_TODO}>
-+    {(addTodo, { loading, data }) => {
-      return (
-        <form className="formInput" onSubmit={(e) => {
-          e.preventDefault();
-        }}>
-          <input
-            className="input"
-            placeholder="What needs to be done?"
-          />
-          <i className="inputMarker fa fa-angle-right" />
-        </form>
-      );
-+    }}
-+  </Mutation>
-+ );
+  
++ const [addTodo, { loading }] = useMutation(ADD_TODO);
+
+return (
+  ...
+)
+
 };
 ```
 
-In the `<Mutation>` component defined above, the first argument of the render prop function is the mutate function; (addTodo) in this case. Read more about the mutate function [here](https://www.apollographql.com/docs/react/essentials/mutations.html#render-prop)
+In the `useMutation` React hook defined above, the first argument of the result tuple is the mutate function; (addTodo) in this case. Read more about the mutate function [here](https://www.apollographql.com/docs/react/essentials/mutations/#result)
 
 The mutate function optionally takes variables, optimisticResponse, refetchQueries, and update; You are going to make use of the `update` function later.
-
-We'll get back to what the render props do a little later below. 
 
 We need to handle the change event so that when the user types something on the input box, we update the state.
 
@@ -63,10 +47,10 @@ const TodoInput = ({isPublic = false}) => {
 +  let input;
 
 +  const [todoInput, setTodoInput] = useState('');
+
+   const [addTodo, { loading }] = useMutation(ADD_TODO);
+ 
    return (
-     <Mutation mutation={ADD_TODO}>
-       {(addTodo, {loading, data}) => {
-         return (
            <form className="formInput" onSubmit={(e) => {
              e.preventDefault();
            }}>
@@ -79,18 +63,13 @@ const TodoInput = ({isPublic = false}) => {
              />
              <i className="inputMarker fa fa-angle-right" />
            </form>
-         )
-       }}
-     </Mutation>
-   );
+         );
 };
 ```
 
 Now let's handle the form submit to invoke the mutation.
 
 ```javascript
-  <Mutation mutation={ADD_TODO}>
-    {(addTodo, {loading, data}) => {
       return (
         <form className="formInput" onSubmit={(e) => {
           e.preventDefault();
@@ -105,9 +84,7 @@ Now let's handle the form submit to invoke the mutation.
           />
           <i className="inputMarker fa fa-angle-right" />
         </form>
-      )
-    }}
-  </Mutation>
+      );
 ```
 
 We are passing the mutate function (`addTodo`) to our form submit handler.
@@ -120,11 +97,11 @@ The `update` function comes in handy to update the cache for this mutation. It c
 
 Let's implement `update` for the above mutation.
 
-We pass the update function as a prop.
+We pass the update function as an option to `useMutation`.
 
 ```javascript
--    <Mutation mutation={ADD_TODO}>
-+    <Mutation mutation={ADD_TODO} update={updateCache}>
+-    const [addTodo, { loading }] = useMutation(ADD_TODO);
++    const [addTodo, { loading }] = useMutation(ADD_TODO, {update: updateCache});
 ```
 
 We need to fetch the current list of todos from the cache. So let's import the query that we used in the previous steps.
@@ -140,6 +117,7 @@ const TodoInput = ({isPublic = false}) => {
   let input;
 
   const [todoInput, setTodoInput] = useState('');
+  
 +  const updateCache = (cache, {data}) => {
 +    // If this is for the public feed, do nothing
 +    if (isPublic) {
@@ -158,6 +136,9 @@ const TodoInput = ({isPublic = false}) => {
 +      data: {todos: [newTodo, ...existingTodos.todos]}
 +    });
 +  };
+
+  const [addTodo, { loading }] = useMutation(ADD_TODO, {update: updateCache});
+  
    return (
     ...
    );
@@ -190,18 +171,21 @@ We have already done the mutation to the graphql server using the mutate functio
 
 We concatenate our new todo from our mutation with the list of existing todos and write the query back to the cache with cache.writeQuery
 
-Now, the TodoPrivateList component wrapped with the `Query` component will get the updated todo list as it is automatically subscribed to the store.
+Now, the TodoPrivateList component using the `useQuery` React hook will get the updated todo list as it is automatically subscribed to the store.
 
 Great! That was actually easy :)
 
 Let's wrap this by adding a function to clear the input value once the mutation is successful.
 
 ```javascript
--  <Mutation mutation={ADD_TODO} update={updateCache}>
-+  <Mutation mutation={ADD_TODO} update={updateCache} onCompleted={resetInput}>
+-  const [addTodo, { loading }] = useMutation(ADD_TODO, {update: updateCache});
++  const [addTodo, { loading }] = useMutation(ADD_TODO, {
++    update: updateCache,
++    onCompleted: resetInput
++  });
 ```
 
-We pass a function called `resetInput` to the `onCompleted` prop which will be called once the mutation is completed. The function definition looks like this:
+We pass a function called `resetInput` to the `onCompleted` option which will be called once the mutation is completed. The function definition looks like this:
 
 ```javascript
 const TodoInput = ({isPublic = false}) => {
@@ -215,8 +199,12 @@ const TodoInput = ({isPublic = false}) => {
 
 +  const resetInput = () => {
 +    setTodoInput('');
-+    input.focus();
 +  };
+
+  const [addTodo, { loading }] = useMutation(ADD_TODO, {
+    update: updateCache,
+    onCompleted: resetInput
+  });
 
   return (
     ...

@@ -1,13 +1,10 @@
 ---
 title: Writing data - Mutations
-metaTitle: "GraphQL Mutations to insert data | GraphQL React Apollo Tutorial"
+metaTitle: "GraphQL Mutations to insert data | GraphQL React Apollo Hooks Tutorial"
 metaDescription: "Try out GraphQL Mutation using GraphiQL. A GraphQL mutation example with dynamic arguments and variables to insert data"
 ---
 
 import {Link} from "gatsby";
-import YoutubeEmbed from "../../src/YoutubeEmbed.js";
-
-<YoutubeEmbed link="https://www.youtube.com/embed/VDMT95aoA8Q" />
 
 These are the concepts you should know before you attack mutations (haha):
 - <Link to="/intro-to-graphql/2-fetching-data-queries#graphiql">Using GraphiQL</Link>

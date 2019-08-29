@@ -1,22 +1,19 @@
 ---
 title: "Fetch public todos - subscription"
-metaTitle: "Fetch public todos using Subscription | GraphQL React Apollo Tutorial"
+metaTitle: "Fetch public todos using Subscription | GraphQL React Apollo Hooks Tutorial"
 metaDescription: "You will learn how to make use of GraphQL Subscriptions to get notified whenever a new todo comes in React app"
 ---
 
 import GithubLink from "../../src/GithubLink.js";
-import YoutubeEmbed from "../../src/YoutubeEmbed.js";
-
-<YoutubeEmbed link="https://www.youtube.com/embed/Kero00_8bfk" />
 
 Let's define the graphql query to be used:
 
 Open `src/components/Todo/TodoPublicList.js` and add the following imports.
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo/app-final/src/components/Todo/TodoPublicList.js" text="src/components/Todo/TodoPublicList.js" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo-hooks/app-final/src/components/Todo/TodoPublicList.js" text="src/components/Todo/TodoPublicList.js" />
 
 ```javascript
-import React, { Component, Fragment } from 'react';
+import React, { useState, Fragment } from 'react';
 + import gql from 'graphql-tag';
 
 import TaskItem from "./TaskItem";
@@ -25,12 +22,12 @@ import TaskItem from "./TaskItem";
 Now let's define the subscription query to get notified about new public todos
 
 ```javascript
-import React, { Component, Fragment } from 'react';
+import React, { useState, Fragment } from 'react';
 import gql from 'graphql-tag';
 
 import TaskItem from "./TaskItem";
 
-class TodoPublicList extends Component {
+const TodoPublicList = props => {
   ...
 }
 
@@ -48,16 +45,16 @@ export default TodoPublicList;
 ```
 
 Also lets add a functional component which uses this subscription query.
-Import `Subscription` from `react-apollo` to get started.
+Import `useSubscription` from `@apollo/react-hooks` to get started.
 
 ```javascript
 import React, { Component, Fragment } from 'react';
-+ import {Subscription} from 'react-apollo';
++ import { useSubscription } from "@apollo/react-hooks";
 import gql from 'graphql-tag';
 
 import TaskItem from "./TaskItem";
 
-class TodoPublicList extends Component {
+const TodoPublicList = props => {
   ...
 }
 
@@ -72,19 +69,14 @@ const NOTIFY_NEW_PUBLIC_TODOS = gql`
 `;
 
 + const TodoPublicListSubscription = () => {
-+  return (
-+    <Subscription subscription={NOTIFY_NEW_PUBLIC_TODOS}>
-+      {({loading, error, data}) => {
-+        if (loading) {
-+          return (<span>Loading...</span>);
-+        }
-+        if (error) {
-+          return (<span>Error</span>);
-+        }
-+        return {};
-+      }}
-+    </Subscription>
-+  );
++   const { loading, error, data } = useSubscription(NOTIFY_NEW_PUBLIC_TODOS);
++   if (loading) {
++     return <span>Loading...</span>;
++   }
++   if (error) {
++     return <span>Error</span>;
++   }
++   return {};
 + };
 
 export default TodoPublicList;
@@ -100,24 +92,19 @@ Right now we don't return anything when new data comes in. We already have the T
 
 ```javascript
  const TodoPublicListSubscription = () => {
-  return (
-    <Subscription subscription={NOTIFY_NEW_PUBLIC_TODOS}>
-      {({loading, error, data}) => {
-        if (loading) {
-          return (<span>Loading...</span>);
-        }
-        if (error) {
-          return (<span>Error</span>);
-        }
--       return {};
-+       return (<TodoPublicList latestTodo={data.todos.length ? data.todos[0] : null} />);
-      }}
-    </Subscription>
-  );
- };
+  const { loading, error, data } = useSubscription(NOTIFY_NEW_PUBLIC_TODOS);
+  if (loading) {
+    return <span>Loading...</span>;
+  }
+  if (error) {
+    return <span>Error</span>;
+  }
+-  return {};
++  return (<TodoPublicList latestTodo={data.todos.length ? data.todos[0] : null} />);
+};
 ```
 
-We would like to now return the new TodoPublicListSubscription component which has the Subscription component integrated.
+We would like to now return the new TodoPublicListSubscription component which has the `useSubscription` React hook integrated.
 
 ```javascript
 - export default TodoPublicList;

@@ -1,27 +1,27 @@
 ---
 title: "Handle loading/errors"
-metaTitle: "Apollo Query Component Error Handling | GraphQL React Apollo Tutorial"
-metaDescription: "We will handle the GraphQL loading and error states in React app using the Apollo Query Component render props - loading and error "
+metaTitle: "Apollo useQuery React hook Error Handling | GraphQL React Apollo Hooks Tutorial"
+metaDescription: "We will handle the GraphQL loading and error states in React app using the Apollo useQuery React hook properties - loading and error "
 ---
 
-As we saw in the previous step, Apollo injected props into the component’s render prop function. Among them `loading` and `error` are common ones that you will need to handle in your app.
+As we saw in the previous step, Apollo returned a result object with properties . Among them `loading` and `error` are common ones that you will need to handle in your app.
 
-Now let's go back to the `<Query>` component that you wrote in the previous step.
+Now let's go back to the `useQuery` React hook that you wrote in the previous step.
 
 ```javascript
 
-  <Query query={GET_MY_TODOS}>
-    {({ loading, error, data, client}) => {
-      if (loading) {
-        return (<div>Loading...</div>);
-      }
-      if (error) {
-        console.error(error);
-        return (<div>Error!</div>);
-      }
-      return (<TodoPrivateList client={client} todos={data.todos} />);
-    }}
-  </Query>
+  const TodoPrivateListQuery = () => {
+  const { loading, error, data } = useQuery(GET_MY_TODOS);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+  if (error) {
+    console.error(error);
+    return <div>Error!</div>;
+  }
+  return <TodoPrivateList todos={data.todos} />;
+};
 
 ```
 

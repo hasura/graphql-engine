@@ -1,6 +1,6 @@
 ---
 title: "Optimistic UI updates after mutations"
-metaTitle: "Optimistic UI updates after mutations | GraphQL React Apollo Tutorial"
+metaTitle: "Optimistic UI updates after mutations | GraphQL React Apollo Hooks Tutorial"
 metaDescription: "We will use the Apollo Client Optimistic Response to perform UI updates after a GraphQL mutation in the React app"
 ---
 
@@ -14,7 +14,7 @@ use optimistic updates when we run mutations!
 We will learn the following concepts:
 
 - Creating a GraphQL mutation
-- Using the `<Mutation>` component
+- Using the `useMutation` React hook
 - Integrating Optimistic UI Updates
 - Capturing loading/finished/error states
 

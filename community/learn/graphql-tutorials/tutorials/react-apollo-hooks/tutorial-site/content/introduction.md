@@ -1,6 +1,6 @@
 ---
 title: "Course introduction"
-metaTitle: "Course Introduction | GraphQL React Apollo Tutorial"
+metaTitle: "Course Introduction | GraphQL React Apollo Hooks Tutorial"
 metaDescription: "A powerful and concise tutorial that will introduce you to GraphQL and integrating GraphQL into your React app with Apollo, in the shortest amount of time possible."
 ---
 
@@ -33,7 +33,7 @@ https://learn-hasura-todo-app.netlify.com/
 ## Will this course teach React concepts as well?
 No, we will be simulating a scenario where we already have a GraphQL API and the basic UI of a React app built. Our task in this scenario is to integrate the GraphQL APIs into our react app to build a complete and working app.
 
-If you're new to React, we recommend going through this [official tutorial](https://reactjs.org/tutorial/tutorial.html) and then coming back here!
+If you're new to Hooks in React, we recommend going through the [official docs](https://reactjs.org/docs/hooks-intro.html) and then coming back here!
 
 ## What do I need to take this tutorial?
 You need to have npm/yarn & node 8+ running.
@@ -43,6 +43,8 @@ Less than 2 hours
 
 ## Other courses
 
-**Frontend**: GraphQL for: [Vue](https://learn.hasura.io/graphql/vue), [React Native](https://learn.hasura.io/graphql/react-native), [iOS](https://learn.hasura.io/graphql/ios)
+**Frontend**: GraphQL for: [Vue](https://learn.hasura.io/graphql/vue), [Angular](https://learn.hasura.io/graphql/angular-apollo), [Elm](https://learn.hasura.io/graphql/elm-graphql), [ReasonReact](https://learn.hasura.io/graphql/reason-react-apollo)
+
+**Mobile**: GraphQL for: [React Native](https://learn.hasura.io/graphql/react-native), [iOS](https://learn.hasura.io/graphql/ios), [Android](https://learn.hasura.io/graphql/android), [Flutter](https://learn.hasura.io/graphql/flutter-graphql)
 
 **Backend**: [Building a realtime GraphQL backend with Hasura](https://learn.hasura.io/graphql/hasura) in 30 mins (ideal for frontend, backend or fullstack developers)

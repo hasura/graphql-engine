@@ -1,6 +1,6 @@
 ---
 title: "Intro to GraphQL"
-metaTitle: "Intro to GraphQL | GraphQL React Apollo Tutorial"
+metaTitle: "Intro to GraphQL | GraphQL React Apollo Hooks Tutorial"
 metaDescription: "What is GraphQL? GraphQL is a specification for how to talk to an API. This part also covers GraphQL vs REST with an example and takes you over benefits of GraphQL"
 ---
 

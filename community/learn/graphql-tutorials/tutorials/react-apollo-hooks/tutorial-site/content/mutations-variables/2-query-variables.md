@@ -1,6 +1,6 @@
 ---
 title: "Query Variables"
-metaTitle: "Passing GraphQL Variables in Queries | GraphQL React Apollo Tutorial"
+metaTitle: "Passing GraphQL Variables in Queries | GraphQL React Apollo Hooks Tutorial"
 metaDescription: "An Example of passing variables in GraphQL context and usage of Apollo GraphQL Mutation variables in React app."
 ---
 
@@ -14,7 +14,7 @@ So let's define the graphql mutation to be used.
 
 Open `src/components/Todo/TodoInput.js` and add the following code:
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo/app-final/src/components/Todo/TodoInput.js" text="src/components/Todo/TodoInput.js" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo-hooks/app-final/src/components/Todo/TodoInput.js" text="src/components/Todo/TodoInput.js" />
 
 ```javascript
 import React from 'react';

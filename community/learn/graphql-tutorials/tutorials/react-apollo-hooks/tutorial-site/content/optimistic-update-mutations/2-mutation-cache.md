@@ -1,13 +1,10 @@
 ---
 title: "Mutation and update cache"
-metaTitle: "Apollo client.mutate for GraphQL mutation update | GraphQL React Apollo Tutorial"
-metaDescription: "We will use the Apollo client.mutate from withApollo HOC from react-apollo as an example to modify existing data and update cache locally using readQuery and writeQuery and handle optimisticResponse"
+metaTitle: "Apollo client.mutate for GraphQL mutation update | GraphQL React Apollo Hooks Tutorial"
+metaDescription: "We will use the Apollo useMutation React hook from @apollo/react-hooks as an example to modify existing data and update cache locally using readQuery and writeQuery and handle optimisticResponse"
 ---
 
 import GithubLink from "../../src/GithubLink.js";
-import YoutubeEmbed from "../../src/YoutubeEmbed.js";
-
-<YoutubeEmbed link="https://www.youtube.com/embed/lXIQxuSZ588" />
 
 Now let's do the integration part. Open `src/components/Todo/TodoItem.js` and add the following code below the other imports:
 
@@ -16,7 +13,7 @@ Now let's do the integration part. Open `src/components/Todo/TodoItem.js` and ad
 ```
 Let's define the graphql mutation to update the completed status of the todo
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo/app-final/src/components/Todo/TodoItem.js" text="src/components/Todo/TodoItem.js" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo-hooks/app-final/src/components/Todo/TodoItem.js" text="src/components/Todo/TodoItem.js" />
 
 ```javascript
 const TodoItem = ({index, todo}) => {
@@ -45,34 +42,46 @@ export default TodoItem;
 
 ```
 
-### Apollo client.mutate
-We need to call `client.mutate` to make the mutation. To make sure we have access to `client`, we wrap our TodoItem component with `withApollo` like below:
+### Apollo useMutation React hook
+We need to use `useMutation` React hook to make the mutation.
 
 ```javascript
   import React from 'react';
-+ import {withApollo} from 'react-apollo';
++ import { useMutation } from "@apollo/react-hooks";
   import gql from 'graphql-tag';
 
   const TodoItem = ({index, todo}) => {
-  };
+    const removeTodo = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
 
-- export default TodoItem;
-+ export default withApollo(TodoItem);
+    const TOGGLE_TODO = gql`
+    mutation toggleTodo($id: Int!, $isCompleted: Boolean!) {
+      update_todos(
+        where: { id: { _eq: $id } }
+        _set: { is_completed: $isCompleted }
+      ) {
+        affected_rows
+      }
+    }
+  `;
+
++ const [toggleTodoMutation] = useMutation(TOGGLE_TODO);
+
+  return (
+    ...
+  );
+ };
+
+ export default TodoItem;
 ```
 
-`withApollo` will inject the `client` prop to the TodoItem component. Let's add it to the props list
-
-```javascript
--  const TodoItem = ({index, todo}) => {
-+  const TodoItem = ({index, todo, client}) => {
-```
-
-We already have the onChange handler toggleTodo for the input. Let's update the function to make a mutation.
+We already have the onChange handler toggleTodo for the input. Let's update the function to make a use of `toggleTodoMutation` mutate function.
 
 ```javascript
   const toggleTodo = () => {
-+    client.mutate({
-+      mutation: TOGGLE_TODO,
++    toggleTodoMutation({
 +      variables: {id: todo.id, isCompleted: !todo.is_completed},
 +      optimisticResponse: {},
 +    });
@@ -89,15 +98,14 @@ Now let's add the code for `update` function.
 
 ```javascript
   const toggleTodo = () => {
-    client.mutate({
-      mutation: TOGGLE_TODO,
+    toggleTodoMutation({
       variables: {id: todo.id, isCompleted: !todo.is_completed},
       optimisticResponse: {},
 +      update: (cache) => {
 +        const existingTodos = cache.readQuery({ query: GET_MY_TODOS });
 +        const newTodos = existingTodos.todos.map(t => {
 +          if (t.id === todo.id) {
-+            return({...t, is_completed: !t.is_completed});
++            return {...t, is_completed: !t.is_completed};
 +          } else {
 +            return t;
 +          }

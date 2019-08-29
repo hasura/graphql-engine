@@ -1,6 +1,6 @@
 ---
 title: "Tutorial & boilerplate setup"
-metaTitle: "Todo app react boilerplate setup | GraphQL React Apollo Tutorial"
+metaTitle: "Todo app react boilerplate setup | GraphQL React Apollo Hooks Tutorial"
 metaDescription: "The GraphQL backend is already ready. The task is to convert the static UI into a working realtime app in React.js"
 ---
 
@@ -13,7 +13,7 @@ Our task will be to convert the "static" UI into a working realtime app.
 
 ### Download and run the boilerplate
 
-1. Download the boilerplate from https://learn.hasura.io/graphql/react/boilerplate.zip
+1. Download the boilerplate from https://learn.hasura.io/graphql/react-hooks/boilerplate.zip
 2. Unzip and make sure you're in the `app-boilerplate` directory
 3. Install dependencies and run the "static" app
     - `npm install`

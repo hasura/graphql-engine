@@ -1,7 +1,7 @@
 ---
 title: "Set up a GraphQL client with Apollo"
-metaTitle: "Apollo Client GraphQL Setup | GraphQL React Apollo Tutorial"
-metaDescription: "You will learn how to configure Apollo Client in React by installing dependencies like react-apollo, apollo-client, apollo-link-http, apollo-cache-inmemory"
+metaTitle: "Apollo Client GraphQL Setup | GraphQL React Apollo Hooks Tutorial"
+metaDescription: "You will learn how to configure Apollo Client in React by installing dependencies like apollo-boost @apollo/react-hooks apollo-link-ws"
 ---
 
 import GithubLink from "../src/GithubLink.js";
@@ -11,17 +11,17 @@ import YoutubeEmbed from "../src/YoutubeEmbed.js";
 
 Apollo gives a neat abstraction layer and an interface to your GraphQL server. You don't need to worry about constructing your queries with request body, headers and options, that you might have done with `axios` or `fetch` say. You can directly write queries and mutations in GraphQL and they will automatically be sent to your server via your apollo client instance.
 
-### React Apollo Installation
+### React Apollo Hooks Installation
 Let's get started by installing apollo client & peer graphql dependencies:
 
 ```bash
-$ npm install --save apollo-client react-apollo apollo-cache-inmemory apollo-link-http graphql graphql-tag
+$ npm install apollo-boost @apollo/react-hooks graphql
 ```
 
 ### Create Apollo Client Instance
 Open `src/components/App.js` and add the following imports at the top:
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo/app-final/src/components/App.js" text="src/components/App.js" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo-hooks/app-final/src/components/App.js" text="src/components/App.js" />
 
 ```javascript
 import React from 'react';
@@ -34,7 +34,7 @@ import OnlineUsersWrapper from './OnlineUsers/OnlineUsersWrapper';
 + import ApolloClient from 'apollo-client';
 + import { InMemoryCache } from 'apollo-cache-inmemory';
 + import { HttpLink } from 'apollo-link-http';
-+ import { ApolloProvider } from 'react-apollo';
++ import { ApolloProvider } from '@apollo/react-hooks';
 
 const App = ({auth}) => {
   return (
@@ -68,7 +68,7 @@ These are the required apollo dependencies to get started. Now let's define a fu
 import ApolloClient from 'apollo-client';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { HttpLink } from 'apollo-link-http';
-import { ApolloProvider } from 'react-apollo';
+import { ApolloProvider } from '@apollo/react-hooks';
 
 + const createApolloClient = (authToken) => {
 +  return new ApolloClient({
