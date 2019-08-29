@@ -1,7 +1,7 @@
-import React from 'react';
+import React from "react";
 
-import TodoInput from './TodoInput';
-import TodoPublicList from './TodoPublicList';
+import TodoInput from "./TodoInput";
+import TodoPublicList from "./TodoPublicList";
 
 const TodoPublicWrapper = () => {
   return (

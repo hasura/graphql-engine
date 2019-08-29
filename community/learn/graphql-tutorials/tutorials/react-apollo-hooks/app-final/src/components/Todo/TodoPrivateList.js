@@ -5,6 +5,20 @@ import gql from "graphql-tag";
 import TodoItem from "./TodoItem";
 import TodoFilters from "./TodoFilters";
 
+const GET_MY_TODOS = gql`
+  query getMyTodos {
+    todos(
+      where: { is_public: { _eq: false } }
+      order_by: { created_at: desc }
+    ) {
+      id
+      title
+      created_at
+      is_completed
+    }
+  }
+`;
+
 // Remove all the todos that are completed
 const CLEAR_COMPLETED = gql`
   mutation clearCompleted {
@@ -72,20 +86,6 @@ const TodoPrivateList = props => {
     </Fragment>
   );
 };
-
-const GET_MY_TODOS = gql`
-  query getMyTodos {
-    todos(
-      where: { is_public: { _eq: false } }
-      order_by: { created_at: desc }
-    ) {
-      id
-      title
-      created_at
-      is_completed
-    }
-  }
-`;
 
 const TodoPrivateListQuery = () => {
   const { loading, error, data } = useQuery(GET_MY_TODOS);

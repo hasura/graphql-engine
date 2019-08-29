@@ -1,11 +1,11 @@
-import React from 'react';
+import React from "react";
 
-import Header from './Header';
-import TodoPrivateWrapper from './Todo/TodoPrivateWrapper';
-import TodoPublicWrapper from './Todo/TodoPublicWrapper';
-import OnlineUsersWrapper from './OnlineUsers/OnlineUsersWrapper';
+import Header from "./Header";
+import TodoPrivateWrapper from "./Todo/TodoPrivateWrapper";
+import TodoPublicWrapper from "./Todo/TodoPublicWrapper";
+import OnlineUsersWrapper from "./OnlineUsers/OnlineUsersWrapper";
 
-const App = ({auth}) => {
+const App = ({ auth }) => {
   return (
     <div>
       <Header logoutHandler={auth.logout} />

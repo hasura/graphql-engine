@@ -1,149 +1,143 @@
-import React from 'react';
-import auth0 from 'auth0-js';
+import React, { useEffect, useState } from "react";
+import auth0 from "auth0-js";
 
-import history from '../../utils/history';
-import {AUTH_CONFIG} from './auth0-variables';
-import App from '../App';
-import Callback from './Callback';
-import Login from './Login';
+import history from "../../utils/history";
+import { AUTH_CONFIG } from "./auth0-variables";
+import App from "../App";
+import Callback from "./Callback";
+import Login from "./Login";
 
-export default class Auth0Wrapper extends React.Component {
-  auth0 = new auth0.WebAuth({
+function Auth0Wrapper(props) {
+  const auth0Val = new auth0.WebAuth({
     domain: AUTH_CONFIG.domain,
     clientID: AUTH_CONFIG.clientId,
     redirectUri: AUTH_CONFIG.callbackUrl,
     audience: `https://${AUTH_CONFIG.domain}/userinfo`,
-    responseType: 'token id_token',
-    scope: 'openid profile'
+    responseType: "token id_token",
+    scope: "openid profile"
   });
 
-  constructor() {
-    super();
-    this.login = this.login.bind(this);
-    this.logout = this.logout.bind(this);
-    this.handleAuthentication = this.handleAuthentication.bind(this);
-    this.isExpired = this.isExpired.bind(this);
-    this.getAccessToken = this.getAccessToken.bind(this);
-    this.getIdToken = this.getIdToken.bind(this);
-    this.renewSession = this.renewSession.bind(this);
+  const [state, setState] = useState({
+    isAuthenticated: false, // This can be true, false, 'loading'
+    idToken: null
+  });
 
-    this.state = {
-      isAuthenticated: false, // This can be true, false, 'loading'
-      idToken: null
-    };
-  }
+  let accessToken, idToken, expiresAt;
 
-  login() {
-    this.auth0.authorize();
-  }
+  const login = () => {
+    auth0Val.authorize();
+  };
 
-  handleAuthentication = () => {
-    this.setState({isAuthenticated: 'loading'});
+  const handleAuthentication = () => {
+    setState({ isAuthenticated: "loading" });
 
-    this.auth0.parseHash((err, authResult) => {
+    auth0Val.parseHash((err, authResult) => {
       if (authResult && authResult.accessToken && authResult.idToken) {
-        this.setSession(authResult);
+        setSession(authResult);
       } else if (err) {
-        this.logout();
+        logout();
         console.error(err);
         alert(`Error: ${err.error} - ${err.errorDescription}`);
       }
     });
   };
 
-  getAccessToken() {
-    return this.accessToken;
-  }
+  const getAccessToken = () => {
+    return accessToken;
+  };
 
-  getIdToken() {
-    return this.idToken;
-  }
+  const getIdToken = () => {
+    return idToken;
+  };
 
-  setSession(authResult) {
+  const setSession = authResult => {
     // Set isLoggedIn flag in localStorage
-    localStorage.setItem('isLoggedIn', 'true');
+    localStorage.setItem("isLoggedIn", "true");
 
     // Set the time that the access token will expire at
-    let expiresAt = (authResult.expiresIn * 1000) + new Date().getTime();
-    this.accessToken = authResult.accessToken;
-    this.idToken = authResult.idToken;
-    this.expiresAt = expiresAt;
+    let expiresAtTime = authResult.expiresIn * 1000 + new Date().getTime();
+    accessToken = authResult.accessToken;
+    idToken = authResult.idToken;
+    expiresAt = expiresAtTime;
 
     // navigate to the home route
-    history.replace('/');
-    this.setState({
+    history.replace("/");
+    setState({
       isAuthenticated: true,
       idToken: authResult.idToken
     });
-  }
+  };
 
-  renewSession() {
-    this.setState({isAuthenticated: 'loading'});
+  const renewSession = () => {
+    setState({ isAuthenticated: "loading" });
 
-    this.auth0.checkSession({}, (err, authResult) => {
-       if (authResult && authResult.accessToken && authResult.idToken) {
-         this.setSession(authResult);
-       } else if (err) {
-         this.logout();
-         console.log(err);
-         alert(`Could not get a new token (${err.error}: ${err.error_description}).`);
-       }
+    auth0Val.checkSession({}, (err, authResult) => {
+      if (authResult && authResult.accessToken && authResult.idToken) {
+        setSession(authResult);
+      } else if (err) {
+        logout();
+        console.log(err);
+        alert(
+          `Could not get a new token (${err.error}: ${err.error_description}).`
+        );
+      }
     });
-  }
+  };
 
-  logout() {
+  const logout = () => {
     // Remove tokens and expiry time
-    this.accessToken = null;
-    this.idToken = null;
-    this.expiresAt = 0;
+    accessToken = null;
+    idToken = null;
+    expiresAt = 0;
 
     // Remove isLoggedIn flag from localStorage
-    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem("isLoggedIn");
 
-    this.auth0.logout({
+    auth0Val.logout({
       return_to: window.location.origin
     });
 
     // navigate to the home route
-    history.replace('/');
-    this.setState({
+    history.replace("/");
+    setState({
       isAuthenticated: false,
       idToken: null
     });
   }
 
-  isExpired () {
+  const isExpired = () => {
     // Check whether the current time is past the
     // access token's expiry time
-    let expiresAt = this.expiresAt;
-    return new Date().getTime() > expiresAt;
-  }
+    let expiresAtTime = expiresAt;
+    return new Date().getTime() > expiresAtTime;
+  };
 
-  componentDidMount() {
-    // If this is a callback URL then do the right things
-    const location = this.props.location;
-    if (location && location.pathname.startsWith('/callback') && /access_token|id_token|error/.test(location.hash)) {
-      this.handleAuthentication();
+  useEffect(() => {
+    const location = props.location;
+    if (
+      location &&
+      location.pathname.startsWith("/callback") &&
+      /access_token|id_token|error/.test(location.hash)
+    ) {
+      handleAuthentication();
       return;
     }
 
     // On first load, check if we are already logged in and get the idTokens and things
-    if(localStorage.getItem('isLoggedIn') === 'true') {
-      this.renewSession();
+    if (localStorage.getItem("isLoggedIn") === "true") {
+      renewSession();
       return;
     }
+  }, []);
+
+  if (state.isAuthenticated === "loading") {
+    return <Callback {...props} />;
   }
 
-  render() {
-    if (this.state.isAuthenticated === 'loading') {
-      return (<Callback {...this.props} />);
-    }
-
-    if (!this.state.isAuthenticated) {
-      return (<Login loginHandler={this.login} />);
-    }
-
-    return (<App {...this.props} auth={{...this.state, login: this.login, logout: this.logout}} />);
+  if (!state.isAuthenticated) {
+    return <Login loginHandler={login} />;
   }
 
+  return <App {...props} auth={{ ...state, login: login, logout: logout }} />;
 }
+export default Auth0Wrapper
