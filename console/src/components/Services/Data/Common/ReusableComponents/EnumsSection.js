@@ -22,9 +22,10 @@ const EnumsSection = ({ isEnum, toggleEnum, styles, isEnumsCompatible, loading }
   };
 
   const getCompatibilityNote = () => {
+    const docsUrl = "https://docs.hasura.io/1.0/graphql/manual/schema/enums.html#option-2-using-a-reference-table";
     return (
       <div>
-        <i>The table must be enum compatible before you can add it as an enum. <a href="">Read more.</a></i>
+        <i>The table must be enum compatible before you can add it as an enum. <a href={docsUrl} target="_blank" rel="noopener noreferrer">Read more.</a></i>
       </div>
     )
   };
