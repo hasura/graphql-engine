@@ -37,12 +37,14 @@ class TestCreateRemoteRelationship:
     def transact(self, hge_ctx, graphql_service):
         print("In setup method")
         graphql_service.start()
-        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup.yaml')
-        assert st_code == 200, resp
-        yield
-        st_code, resp = hge_ctx.v1q_f(self.dir() + 'teardown.yaml')
-        assert st_code == 200, resp
-        graphql_service.stop()
+        try:
+            st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup.yaml')
+            assert st_code == 200, resp
+            yield
+            st_code, resp = hge_ctx.v1q_f(self.dir() + 'teardown.yaml')
+            assert st_code == 200, resp
+        finally:
+            graphql_service.stop()
 
     def test_create_valid(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
@@ -108,12 +110,14 @@ class TestDeleteRemoteRelationship:
     def transact(self, hge_ctx, graphql_service):
         print("In setup method")
         graphql_service.start()
-        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup.yaml')
-        assert st_code == 200, resp
-        yield
-        st_code, resp = hge_ctx.v1q_f(self.dir() + 'teardown.yaml')
-        assert st_code == 200, resp
-        graphql_service.stop()
+        try:
+            st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup.yaml')
+            assert st_code == 200, resp
+            yield
+            st_code, resp = hge_ctx.v1q_f(self.dir() + 'teardown.yaml')
+            assert st_code == 200, resp
+        finally:
+            graphql_service.stop()
 
     def test_delete(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
@@ -138,12 +142,14 @@ class TestUpdateRemoteRelationship:
     def transact(self, hge_ctx, graphql_service):
         print("In setup method")
         graphql_service.start()
-        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup.yaml')
-        assert st_code == 200, resp
-        yield
-        st_code, resp = hge_ctx.v1q_f(self.dir() + 'teardown.yaml')
-        assert st_code == 200, resp
-        graphql_service.stop()
+        try:
+            st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup.yaml')
+            assert st_code == 200, resp
+            yield
+            st_code, resp = hge_ctx.v1q_f(self.dir() + 'teardown.yaml')
+            assert st_code == 200, resp
+        finally:
+            graphql_service.stop()
 
     def test_update(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
@@ -164,14 +170,16 @@ class TestExecution:
     def transact(self, hge_ctx, graphql_service):
         print("In setup method")
         graphql_service.start()
-        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup.yaml')
-        assert st_code == 200, resp
-        # st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_all_relationships.yaml')
-        # assert st_code == 200, resp
-        yield
-        st_code, resp = hge_ctx.v1q_f(self.dir() + 'teardown.yaml')
-        assert st_code == 200, resp
-        graphql_service.stop()
+        try:
+            st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup.yaml')
+            assert st_code == 200, resp
+            # st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_all_relationships.yaml')
+            # assert st_code == 200, resp
+            yield
+            st_code, resp = hge_ctx.v1q_f(self.dir() + 'teardown.yaml')
+            assert st_code == 200, resp
+        finally:
+            graphql_service.stop()
 
     def test_basic_mixed(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + 'basic_mixed.yaml', transport)
@@ -257,16 +265,18 @@ class TestDeepExecution:
     def transact(self, hge_ctx, graphql_service):
         print("In setup method")
         graphql_service.start()
-        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup.yaml')
-        assert st_code == 200, resp
-        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_address.yaml')
-        assert st_code == 200, resp
-        yield
-        st_code, resp = hge_ctx.v1q_f(self.dir() + 'teardown_address.yaml')
-        assert st_code == 200, resp
-        st_code, resp = hge_ctx.v1q_f(self.dir() + 'teardown.yaml')
-        assert st_code == 200, resp
-        graphql_service.stop()
+        try:
+            st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup.yaml')
+            assert st_code == 200, resp
+            st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_address.yaml')
+            assert st_code == 200, resp
+            yield
+            st_code, resp = hge_ctx.v1q_f(self.dir() + 'teardown_address.yaml')
+            assert st_code == 200, resp
+            st_code, resp = hge_ctx.v1q_f(self.dir() + 'teardown.yaml')
+            assert st_code == 200, resp
+        finally:
+            graphql_service.stop()
 
     def test_with_deep_object(self, hge_ctx, transport):
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
@@ -302,12 +312,14 @@ class TestExecutionWithPermissions:
     def transact(self, hge_ctx, graphql_service):
         print("In setup method")
         graphql_service.start()
-        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_with_permissions.yaml')
-        assert st_code == 200, resp
-        yield
-        st_code, resp = hge_ctx.v1q_f(self.dir() + 'teardown.yaml')
-        assert st_code == 200, resp
-        graphql_service.stop()
+        try:
+            st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_with_permissions.yaml')
+            assert st_code == 200, resp
+            yield
+            st_code, resp = hge_ctx.v1q_f(self.dir() + 'teardown.yaml')
+            assert st_code == 200, resp
+        finally:
+            graphql_service.stop()
 
     def test_basic_relationship(self, hge_ctx, transport):
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')

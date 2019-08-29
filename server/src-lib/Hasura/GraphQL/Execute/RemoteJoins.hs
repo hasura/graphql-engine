@@ -11,7 +11,6 @@ module Hasura.GraphQL.Execute.RemoteJoins
   , parseGQRespValue
   , extractRemoteRelArguments
   , produceBatch
-  , produceBatches
   , joinResults
   , emptyResp
   , rebuildFieldStrippingRemoteRels
@@ -22,6 +21,7 @@ import           Control.Arrow                          (first)
 import           Control.Lens
 import           Data.Scientific
 import           Data.String
+import           Data.Traversable
 import           Data.Validation
 import           Hasura.SQL.Types
 import           Data.List
@@ -56,12 +56,10 @@ newtype RemoteRelKey =
 data RemoteRelField =
   RemoteRelField
     { rrRemoteField   :: !RemoteField
-    , rrField         :: !Field
-    -- ^ TODO Dedupe data since (_fRemoteRel rrField) == Just rrRemoteField
-    -- maybe we need to just unpack part of the Field here (DuplicateRecordNames could help here)
+    , rrArguments     :: !ArgsMap
+    , rrSelSet        :: !SelSet
     , rrRelFieldPath  :: !RelFieldPath
     , rrAlias         :: !G.Alias
-    -- ^ TODO similar to comment above ^ is rrAlias always a derivative of rrField?
     , rrAliasIndex    :: !Int
     , rrPhantomFields :: ![Text]
     }
@@ -87,17 +85,13 @@ newtype ArrayIndex =
 -- point back to them.
 rebuildFieldStrippingRemoteRels ::
      VQ.Field -> Maybe (VQ.Field, NonEmpty RemoteRelField)
--- TODO consider passing just relevant fields (_fSelSet and _fAlias?) from Field here and modify Field in caller
 rebuildFieldStrippingRemoteRels =
-  extract . flip runState mempty . rebuild 0 mempty
+  traverse NE.nonEmpty . flip runState mempty . rebuild 0 mempty
   where
-    extract (field, remoteRelFields) =
-      fmap (field, ) (NE.nonEmpty remoteRelFields)
-    -- TODO refactor for clarity
     rebuild idx0 parentPath field0 = do
       selSetEithers <-
-        traverse
-          (\(idx, subfield) ->
+        for (zip [0..] (toList (_fSelSet field0))) $
+          \(idx, subfield) ->
              case _fRemoteRel subfield of
                Nothing -> fmap Right (rebuild idx thisPath subfield)
                Just remoteField -> do
@@ -106,7 +100,8 @@ rebuildFieldStrippingRemoteRels =
                  where remoteRelField =
                          RemoteRelField
                            { rrRemoteField = remoteField
-                           , rrField = subfield
+                           , rrArguments = _fArguments subfield
+                           , rrSelSet = _fSelSet subfield
                            , rrRelFieldPath = thisPath
                            , rrAlias = _fAlias subfield
                            , rrAliasIndex = idx
@@ -114,25 +109,16 @@ rebuildFieldStrippingRemoteRels =
                                map
                                  G.unName
                                  (filter
-                                    (\name ->
-                                       notElem
-                                         name
-                                         (map _fName (toList (_fSelSet field0))))
-                                    (map
-                                       (G.Name . getFieldNameTxt)
-                                       (toList
-                                          (rtrHasuraFields
-                                             (rmfRemoteRelationship remoteField)))))
-                           })
-          (zip [0..] (toList (_fSelSet field0)))
+                                    (`notElem` fmap _fName (_fSelSet field0))
+                                    (hasuraFieldNames remoteField))
+                           }
       let fields = rights selSetEithers
       pure
         field0
           { _fSelSet =
               Seq.fromList $
                 selSetEithers >>= \case
-                  Right field -> pure field
-                    where _ = _fAlias field
+                  Right field -> [field]
                   Left remoteField ->
                     mapMaybe
                       (\name ->
@@ -148,14 +134,12 @@ rebuildFieldStrippingRemoteRels =
                                      , _fSelSet = mempty
                                      , _fRemoteRel = Nothing
                                      }))
-                      (map
-                         (G.Name . getFieldNameTxt)
-                         (toList
-                            (rtrHasuraFields
-                               (rmfRemoteRelationship remoteField))))
+                      (hasuraFieldNames remoteField)
           }
       where
         thisPath = parentPath <> RelFieldPath (pure (idx0, _fAlias field0))
+        hasuraFieldNames = 
+          map (G.Name . getFieldNameTxt) . toList . rtrHasuraFields . rmfRemoteRelationship
 
 -- | Get a list of fields needed from a hasura result.
 neededHasuraFields
@@ -168,6 +152,7 @@ joinResults :: GQRespValue
             -> GQRespValue
 joinResults hasuraValue0 =
   foldl' (uncurry . insertBatchResults) hasuraValue0 . map (fmap jsonToGQRespVal)
+  
   where
     jsonToGQRespVal = either mkErr id . parseGQRespValue
     mkErr = appendJoinError emptyResp . ("joinResults: eitherDecode: " <>) . fromString
@@ -175,6 +160,7 @@ joinResults hasuraValue0 =
 emptyResp :: GQRespValue
 emptyResp = GQRespValue OJ.empty VB.empty
 
+-- TODO it's not clear which error conditions here represent internal errors (i.e. bugs)...
 -- | Insert at path, index the value in the larger structure.
 insertBatchResults ::
      GQRespValue
@@ -200,7 +186,6 @@ insertBatchResults accumResp Batch{..} remoteResp =
     -- Since remote results are aliased by keys of the form 'remote_result_1', 'remote_result_2',
     -- we can sort by the keys for a ordered list
     -- On error, we short-circuit
-    -- TODO look again at this...
     remoteDataE = let indexedRemotes = map getIdxRemote $ OJ.toList $ _gqRespData remoteResp
                   in case any isNothing indexedRemotes of
                        True -> Left "couldn't parse all remote results"
@@ -332,17 +317,6 @@ peelOffNestedFields topNames topValue = foldM peel topValue (NE.drop 1 topNames)
             "No " <> show key <> " in " <> show value <> " from " <> 
             show topValue <> " with " <> show topNames
 
--- | Produce the set of remote relationship batch requests.
-produceBatches ::
-     G.OperationType
-  -> [( RemoteRelField
-    , RemoteSchemaInfo
-    , BatchInputs)]
-  -> [Batch]
-produceBatches opType =
-  fmap
-    (\(remoteRelField, remoteSchemaInfo, rows) ->
-       produceBatch opType remoteSchemaInfo remoteRelField rows)
 
 -- TODO document all of this
 data Batch =
@@ -378,9 +352,9 @@ produceBatch rtqOperationType rtqRemoteSchemaInfo RemoteRelField{..} batchInputs
     rtqFields =
       flip map indexedRows $ \(i, variables) ->
          fieldCallsToField
-           (_fArguments rrField)
+           rrArguments
            variables
-           (_fSelSet rrField)
+           rrSelSet
            (Just (arrayIndexAlias i))
            (rtrRemoteFields remoteRelationship)
     indexedRows = zip (map ArrayIndex [0 :: Int ..]) $ toList $ biRows batchInputs
@@ -594,7 +568,6 @@ extractFromResult cardinality keyedRemotes value =
                 (BatchInputs {biRows = pure (Map.fromList (toList row))
                              ,biCardinality = cardinality})))
         (Map.toList remotesRows)
-    -- TODO is there actually an invariant to be checked here?
     _ -> pure ()
   where
     candidates ::
