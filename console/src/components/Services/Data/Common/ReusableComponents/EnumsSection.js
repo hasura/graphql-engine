@@ -14,11 +14,19 @@ const EnumsSection = ({ isEnum, toggleEnum, styles, isEnumsCompatible, loading }
       return (
         <div className={`${styles.add_mar_top}`}>
           <WarningIcon customStyle={styles.add_mar_right_small}/>
-          <i>This table seems to be in an inconsistent state because it has been marked as enum and changes have been made to the table schema. Please unmark it as enum for everything to work as expected.</i>
+          <i>This table seems to be in an inconsistent state because enum-incompatible changes have been made to the table schema after marking it as an enum. Please unmark it for everything to work as expected.</i>
         </div>
       )
     }
     return null;
+  };
+
+  const getCompatibilityNote = () => {
+    return (
+      <div>
+        <i>The table must be enum compatible before you can add it as an enum. <a href="">Read more.</a></i>
+      </div>
+    )
   };
 
   return (
@@ -26,18 +34,22 @@ const EnumsSection = ({ isEnum, toggleEnum, styles, isEnumsCompatible, loading }
       <h4 className={`${styles.subheading_text}`}>
         Mark table as enum
       </h4> 
-      <label className={`${styles.display_flex} ${!isEnumsCompatible ? styles.cursorNotAllowed : styles.cursorPointer}`} title={title} data-toggle="tooltip">
+      <div
+        className={`${styles.display_flex} ${styles.add_mar_bottom}`}
+        title={title}
+        data-toggle="tooltip"
+      >
         <span className={styles.add_mar_right_mid}> This table has enum values </span>
         <Toggle
           checked={isEnum}
           icons={false}
           onChange={toggleEnum}
-          disabled={(!isEnumsCompatible || loading) && !isEnum}
         />
-      </label>
+      </div>
+      {getCompatibilityNote()}
       {getInconsistencyNote()}
     </div>
-  )
+  );
 
 };
 

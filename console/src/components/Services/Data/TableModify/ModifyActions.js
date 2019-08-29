@@ -2068,13 +2068,14 @@ const removeUniqueKey = (index, tableName, existingConstraints, callback) => {
 
 export const setTableAsEnum = (previousIsEnum, successCallback, failureCallback) => (dispatch, getState) => {
 
-  dispatch({ type: TOGGLE_ENUM});
 
   let isOk = window.confirm(`Are you sure you want to ${previousIsEnum ? 'un' : ''}mark this table as enum?`);
 
   if (!isOk) {
     return;
   }
+
+  dispatch({ type: TOGGLE_ENUM});
 
   const { currentTable, currentSchema } = getState().tables;
   const { allSchemas } = getState().tables;

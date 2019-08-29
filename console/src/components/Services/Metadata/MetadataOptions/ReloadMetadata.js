@@ -18,7 +18,8 @@ class ReloadMetadata extends Component {
     const { dispatch } = this.props;
     const { isReloading } = this.state;
     const metaDataStyles = require('../Metadata.scss');
-    const reloadMetadataAndLoadInconsistentMetadata = () => {
+    const reloadMetadataAndLoadInconsistentMetadata = (e) => {
+      e.preventDefault();
       this.setState({ isReloading: true });
       dispatch(
         reloadMetadata(
@@ -41,10 +42,11 @@ class ReloadMetadata extends Component {
         <Button
           data-test="data-reload-metadata"
           color="white"
-          size="sm"
+          size={"sm"}
+          disabled={this.state.isReloading}
           onClick={reloadMetadataAndLoadInconsistentMetadata}
         >
-          {buttonText}
+          {this.props.buttonText || buttonText}
         </Button>
       </div>
     );
