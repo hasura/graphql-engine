@@ -61,7 +61,6 @@ import           Hasura.SQL.Types
 import qualified Database.PG.Query                  as Q
 import qualified Hasura.SQL.DML                     as S
 
-import           Control.Arrow                      (first)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH

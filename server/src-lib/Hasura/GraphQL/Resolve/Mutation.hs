@@ -5,7 +5,6 @@ module Hasura.GraphQL.Resolve.Mutation
   , buildEmptyMutResp
   ) where
 
-import           Control.Arrow                     (second)
 import           Data.Has
 import           Hasura.Prelude
 

@@ -363,7 +363,8 @@ SELECT
         ORDER BY pat.ordinality ASC
       ) q
    ) AS input_arg_types,
-  to_json(COALESCE(p.proargnames, ARRAY [] :: text [])) AS input_arg_names
+  to_json(COALESCE(p.proargnames, ARRAY [] :: text [])) AS input_arg_names,
+  p.pronargdefaults AS default_args
 FROM
   pg_proc p
   JOIN pg_namespace pn ON (pn.oid = p.pronamespace)
@@ -544,6 +545,7 @@ CREATE VIEW hdb_catalog.hdb_function_info_agg AS (
                   returns_set,
                   input_arg_types,
                   input_arg_names,
+                  default_args,
                   exists(
                     SELECT
                       1
