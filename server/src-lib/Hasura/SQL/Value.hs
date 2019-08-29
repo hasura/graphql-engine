@@ -1,7 +1,7 @@
 module Hasura.SQL.Value
   ( PGScalarValue(..)
   , pgColValueToInt
-  , withGeoVal
+  , withConstructorFn
   , parsePGValue
 
   , TxtEncodedPGVal
@@ -30,12 +30,26 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson.Text            as AE
 import qualified Data.Aeson.Types           as AT
+import qualified Data.ByteString            as B
 import qualified Data.Text                  as T
+import qualified Data.Text.Conversions      as TC
 import qualified Data.Text.Encoding         as TE
 import qualified Data.Text.Lazy             as TL
 
 import qualified Database.PostgreSQL.LibPQ  as PQ
 import qualified PostgreSQL.Binary.Encoding as PE
+
+newtype RasterWKB
+  = RasterWKB { getRasterWKB :: TC.Base16 B.ByteString }
+  deriving (Show, Eq)
+
+instance FromJSON RasterWKB where
+  parseJSON = \case
+    String t -> case TC.fromText t of
+      Just v  -> return $ RasterWKB v
+      Nothing -> fail
+        "invalid hexadecimal representation of raster well known binary format"
+    _        -> fail "expecting String for raster"
 
 --  Binary value. Used in prepared sq
 data PGScalarValue
@@ -56,6 +70,7 @@ data PGScalarValue
   | PGValJSON !Q.JSON
   | PGValJSONB !Q.JSONB
   | PGValGeo !GeometryWithCRS
+  | PGValRaster !RasterWKB
   | PGValUnknown !T.Text
   deriving (Show, Eq)
 
@@ -65,15 +80,17 @@ pgColValueToInt (PGValSmallInt i) = Just $ fromIntegral i
 pgColValueToInt (PGValBigInt i)   = Just $ fromIntegral i
 pgColValueToInt _                 = Nothing
 
-withGeoVal :: PGScalarType -> S.SQLExp -> S.SQLExp
-withGeoVal ty v
+withConstructorFn :: PGScalarType -> S.SQLExp -> S.SQLExp
+withConstructorFn ty v
   | isGeoType ty = S.SEFnApp "ST_GeomFromGeoJSON" [v] Nothing
+  | ty == PGRaster = S.SEFnApp "ST_RastFromHexWKB" [v] Nothing
   | otherwise = v
 
 parsePGValue :: PGScalarType -> Value -> AT.Parser PGScalarValue
 parsePGValue ty val = case (ty, val) of
   (_          , Null)     -> pure $ PGNull ty
   (PGUnknown _, String t) -> pure $ PGValUnknown t
+  (PGRaster   , _)        -> parseTyped -- strictly parse raster value
   (_          , String t) -> parseTyped <|> pure (PGValUnknown t)
   (_          , _)        -> parseTyped
   where
@@ -97,7 +114,9 @@ parsePGValue ty val = case (ty, val) of
       PGJSONB -> PGValJSONB . Q.JSONB <$> parseJSON val
       PGGeometry -> PGValGeo <$> parseJSON val
       PGGeography -> PGValGeo <$> parseJSON val
-      PGUnknown tyName -> fail $ "A string is expected for type : " ++ T.unpack tyName
+      PGRaster -> PGValRaster <$> parseJSON val
+      PGUnknown tyName ->
+        fail $ "A string is expected for type : " ++ T.unpack tyName
 
 data TxtEncodedPGVal
   = TENull
@@ -136,6 +155,7 @@ txtEncodedPGVal colVal = case colVal of
     AE.encodeToLazyText j
   PGValGeo o    -> TELit $ TL.toStrict $
     AE.encodeToLazyText o
+  PGValRaster r -> TELit $ TC.toText $ getRasterWKB r
   PGValUnknown t -> TELit t
 
 binEncoder :: PGScalarValue -> Q.PrepArg
@@ -157,18 +177,20 @@ binEncoder colVal = case colVal of
   PGValJSON u -> Q.toPrepVal u
   PGValJSONB u -> Q.toPrepVal u
   PGValGeo o -> Q.toPrepVal $ TL.toStrict $ AE.encodeToLazyText o
+  PGValRaster r -> Q.toPrepVal $ TC.toText $ getRasterWKB r
   PGValUnknown t -> (PTI.auto, Just (TE.encodeUtf8 t, PQ.Text))
 
 txtEncoder :: PGScalarValue -> S.SQLExp
 txtEncoder colVal = case txtEncodedPGVal colVal of
-  TENull  -> S.SEUnsafe "NULL"
+  TENull  -> S.SENull
   TELit t -> S.SELit t
 
 toPrepParam :: Int -> PGScalarType -> S.SQLExp
-toPrepParam i ty = withGeoVal ty $ S.SEPrep i
+toPrepParam i ty = withConstructorFn ty $ S.SEPrep i
 
 toBinaryValue :: WithScalarType PGScalarValue -> Q.PrepArg
 toBinaryValue = binEncoder . pstValue
 
 toTxtValue :: WithScalarType PGScalarValue -> S.SQLExp
-toTxtValue (WithScalarType ty val) = S.withTyAnn ty . withGeoVal ty $ txtEncoder val
+toTxtValue (WithScalarType ty val) =
+  S.withTyAnn ty . withConstructorFn ty $ txtEncoder val

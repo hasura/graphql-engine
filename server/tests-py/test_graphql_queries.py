@@ -354,6 +354,28 @@ class TestGraphQLQueryBoolExpPostGIS(DefaultTestSelectQueries):
         return 'queries/graphql_query/boolexp/postgis'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
+class TestGraphQLQueryBoolExpRaster(DefaultTestSelectQueries):
+
+    def test_query_st_intersects_geom_nband(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_st_intersects_geom_nband.yaml', transport)
+
+    def test_query_st_intersects_geom_nband_no_rows(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_st_intersects_geom_nband_no_rows.yaml', transport)
+
+    def test_query_st_intersects_rast(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_st_intersects_rast.yaml', transport)
+
+    def test_query_st_intersects_rast_no_rows(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_st_intersects_rast_no_rows.yaml', transport)
+
+    def test_query_st_intersects_rast_fail(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_st_intersects_rast_fail.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/boolexp/raster'
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphQLQueryOrderBy(DefaultTestSelectQueries):
     def test_articles_order_by_without_id(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/articles_order_by_without_id.yaml', transport)
