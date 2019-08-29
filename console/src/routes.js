@@ -19,7 +19,7 @@ import { eventRouterUtils } from './components/Services/EventTrigger';
 
 import { getRemoteSchemaRouter } from './components/Services/RemoteSchema';
 
-import generatedApiExplorer from './components/Services/ApiExplorer/ApiExplorerGenerator';
+import generatedApiExplorer from './components/Services/ApiExplorer/ApiExplorer';
 
 import generatedVoyagerConnector from './components/Services/VoyagerView/VoyagerView';
 
