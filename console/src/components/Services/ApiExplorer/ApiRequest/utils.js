@@ -27,11 +27,32 @@ export const getHeadersSectionIsOpen = () => {
 };
 
 export const setGraphiQLHeadersInLocalStorage = headers => {
-  window.localStorage.setItem('HASURA_CONSOLE_GRAPHIQL_HEADERS', headers);
+  // filter empty & admin secret headers
+  const filteredHeaders = headers.filter(
+    h => h.key && h.key.toLowerCase() !== 'x-hasura-admin-secret'
+  );
+
+  window.localStorage.setItem(
+    'HASURA_CONSOLE_GRAPHIQL_HEADERS',
+    JSON.stringify(filteredHeaders)
+  );
 };
 
 export const getGraphiQLHeadersFromLocalStorage = () => {
-  return window.localStorage.getItem('HASURA_CONSOLE_GRAPHIQL_HEADERS');
+  const headersString = window.localStorage.getItem(
+    'HASURA_CONSOLE_GRAPHIQL_HEADERS'
+  );
+
+  let headers = null;
+  if (headersString) {
+    try {
+      headers = JSON.parse(headersString);
+    } catch (_) {
+      console.error('Failed parsing headers from local storage');
+    }
+  }
+
+  return headers;
 };
 
 export const parseAuthHeader = header => {

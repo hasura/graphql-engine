@@ -230,15 +230,7 @@ class ApiRequest extends Component {
           const index = parseInt(e.target.getAttribute('data-header-id'), 10);
           this.props
             .dispatch(removeRequestHeader(index))
-            .then(r =>
-              setGraphiQLHeadersInLocalStorage(
-                JSON.stringify(
-                  r.filter(
-                    h => h.key.toLowerCase() !== `x-hasura-${globals.adminSecretLabel}`
-                  )
-                )
-              )
-            );
+            .then(r => setGraphiQLHeadersInLocalStorage(r));
         };
 
         const onHeaderValueChanged = e => {
@@ -247,15 +239,7 @@ class ApiRequest extends Component {
           const newValue = e.target.value;
           this.props
             .dispatch(changeRequestHeader(index, key, newValue, false))
-            .then(r =>
-              setGraphiQLHeadersInLocalStorage(
-                JSON.stringify(
-                  r.filter(
-                    h => h.key.toLowerCase() !== `x-hasura-${globals.adminSecretLabel}`
-                  )
-                )
-              )
-            );
+            .then(r => setGraphiQLHeadersInLocalStorage(r));
         };
 
         const onShowAdminSecretClicked = () => {
