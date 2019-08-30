@@ -13,7 +13,6 @@ module Hasura.GraphQL.Resolve.Select
   , toPGQuery
   ) where
 
-import           Control.Arrow                     (first)
 import           Data.Has
 import           Data.Parser.JSONPath
 import           Hasura.Prelude
@@ -413,13 +412,28 @@ convertAggSelect opCtx fld =
 
 parseFunctionArgs
   ::( MonadError QErr m)
-  => FuncArgSeq -> AnnInpVal -> m [UnresolvedVal]
-parseFunctionArgs argSeq val = fmap catMaybes $
-  flip withObject val $ \_ obj ->
-    fmap toList $ forM argSeq $ \(FuncArgItem argName) ->
-      forM (OMap.lookup argName obj) $ fmap (maybe nullSQL UVPG) . asPGColumnValueM
+  => FuncArgSeq
+  -> AnnInpVal
+  -> m (RS.FunctionArgsExpG UnresolvedVal)
+parseFunctionArgs argSeq val = flip withObject val $ \_ obj -> do
+  (positionalArgs, argsLeft) <- spanMaybeM (parsePositionalArg obj) argSeq
+  namedArgs <- Map.fromList . catMaybes <$> traverse (parseNamedArg obj) argsLeft
+  pure $ RS.FunctionArgsExp positionalArgs namedArgs
   where
-    nullSQL = UVSQL $ S.SEUnsafe "NULL"
+    parsePositionalArg obj (FuncArgItem gqlName _ _) =
+      maybe (pure Nothing) (fmap Just . parseArg) $ OMap.lookup gqlName obj
+
+    parseArg = fmap (maybe (UVSQL S.SENull) UVPG) . asPGColumnValueM
+
+    parseNamedArg obj (FuncArgItem gqlName maybeSqlName hasDefault) =
+      case OMap.lookup gqlName obj of
+        Just argInpVal -> case maybeSqlName of
+          Just sqlName -> Just . (getFuncArgNameTxt sqlName,) <$> parseArg argInpVal
+          Nothing -> throw400 NotSupported
+                     "Only last set of positional arguments can be omitted"
+        Nothing -> if not hasDefault then
+                     throw400 NotSupported "Non default arguments cannot be omitted"
+                   else pure Nothing
 
 fromFuncQueryField
   :: (MonadError QErr m)
@@ -429,7 +443,7 @@ fromFuncQueryField
   -> m (RS.AnnFnSelG s UnresolvedVal)
 fromFuncQueryField fn qf argSeq fld = fieldAsPath fld $ do
   funcArgsM <- withArgM (_fArguments fld) "args" $ parseFunctionArgs argSeq
-  let funcArgs = fromMaybe [] funcArgsM
+  let funcArgs = fromMaybe RS.emptyFunctionArgsExp funcArgsM
   RS.AnnFnSel qf funcArgs <$> fn fld
 
 convertFuncQuerySimple

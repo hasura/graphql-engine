@@ -9,16 +9,16 @@ There are three different series:
 
 - [React](https://learn.hasura.io/graphql/react)
 - [Vue](https://learn.hasura.io/graphql/vue)
-- Angular (coming soon)
-- Elm (coming soon)
-- ReasonML (coming soon)
+- [Angular](https://learn.hasura.io/graphql/angular-apollo)
+- [Elm](https://learn.hasura.io/graphql/elm-graphql)
+- [ReasonML](https://learn.hasura.io/graphql/reason-react-apollo)
 
 #### Mobile
 
 - [React Native](https://learn.hasura.io/graphql/react-native)
 - [iOS](https://learn.hasura.io/graphql/ios)
 - [Android](https://learn.hasura.io/graphql/android)
-- Flutter (coming soon)
+- [Flutter](https://learn.hasura.io/graphql/flutter-graphql)
 
 #### Backend
 

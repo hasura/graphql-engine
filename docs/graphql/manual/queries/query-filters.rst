@@ -1508,3 +1508,157 @@ Columns of type ``geography`` are more accurate, but they don’t support as man
   .. code-block:: sql
 
     CREATE INDEX cities_location_geography ON cities USING GIST ((location::geography));
+
+Intersect operators on RASTER columns
+-------------------------------------
+
+Intersect operators on columns with ``raster`` type are supported.
+Refer to `Postgis docs <https://postgis.net/docs/RT_ST_Intersects.html>`__ to know more about intersect functions on ``raster`` columns.
+Please submit a feature request via `github <https://github.com/hasura/graphql-engine>`__ if you want support for more functions.
+
+Example: _st_intersects_rast
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Filter the raster values which intersect the input raster value.
+
+Executes the following SQL function:
+
+.. code-block:: sql
+
+   boolean ST_Intersects( raster <raster-col> , raster <raster-value> );
+
+
+.. graphiql::
+  :view_only:
+  :query:
+   query getIntersectingValues ($rast: raster){
+     dummy_rast(where: {rast: {_st_intersects_rast: $rast}}){
+       rid
+       rast
+     }
+   }
+  :response:
+   {
+     "data": {
+       "dummy_rast": [
+         {
+           "rid": 1,
+           "rast": "01000001009A9999999999E93F9A9999999999E9BF000000000000F0BF000000000000104000000000000000000000000000000000E610000005000500440000010101000101010101010101010101010101010001010100"
+         },
+         {
+           "rid": 2,
+           "rast": "0100000100166C8E335B91F13FE2385B00285EF6BF360EE40064EBFFBF8D033900D9FA134000000000000000000000000000000000E610000005000500440000000101010001010101010101010101010101000101010000"
+         }
+       ]
+     }
+   }
+  :variables:
+   {
+     "rast": "0100000100000000000000004000000000000000C00000000000000000000000000000084000000000000000000000000000000000E610000001000100440001"
+   }
+
+Example: _st_intersects_geom_nband
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Filter the raster values which intersect the input geometry value and optional band number.
+
+Executes the following SQL function:
+
+.. code-block:: sql
+
+   boolean ST_Intersects( raster <raster-col> , geometry geommin , integer nband=NULL );
+
+
+.. graphiql::
+  :view_only:
+  :query:
+    query getIntersectingValues ($point: geometry!){
+      dummy_rast(where: {rast: {_st_intersects_geom_nband: {geommin: $point}}}){
+        rid
+        rast
+      }
+    }
+  :response:
+   {
+     "data": {
+       "dummy_rast": [
+         {
+           "rid": 1,
+           "rast": "01000001009A9999999999E93F9A9999999999E9BF000000000000F0BF000000000000104000000000000000000000000000000000E610000005000500440000010101000101010101010101010101010101010001010100"
+         },
+         {
+           "rid": 2,
+           "rast": "0100000100166C8E335B91F13FE2385B00285EF6BF360EE40064EBFFBF8D033900D9FA134000000000000000000000000000000000E610000005000500440000000101010001010101010101010101010101000101010000"
+         }
+       ]
+     }
+   }
+  :variables:
+   {
+     "point": {
+       "type": "Point",
+       "coordinates": [
+         1,
+         2
+       ],
+       "crs": {
+         "type": "name",
+         "properties": {
+           "name": "urn:ogc:def:crs:EPSG::4326"
+         }
+       }
+     }
+   }
+
+Example: _st_intersects_nband_geom
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Filter the raster values (with specified band number) which intersect the input geometry value.
+
+Executes the following SQL function:
+
+.. code-block:: sql
+
+   boolean ST_Intersects( raster <raster-col> , integer nband , geometry geommin );
+
+
+.. graphiql::
+  :view_only:
+  :query:
+    query getIntersectingValues ($point: geometry!){
+      dummy_rast(where: {rast: {_st_intersects_nband_geom: {nband: 5 geommin: $point}}}){
+        rid
+        rast
+      }
+    }
+  :response:
+   {
+     "data": {
+       "dummy_rast": [
+         {
+           "rid": 1,
+           "rast": "01000001009A9999999999E93F9A9999999999E9BF000000000000F0BF000000000000104000000000000000000000000000000000E610000005000500440000010101000101010101010101010101010101010001010100"
+         },
+         {
+           "rid": 2,
+           "rast": "0100000100166C8E335B91F13FE2385B00285EF6BF360EE40064EBFFBF8D033900D9FA134000000000000000000000000000000000E610000005000500440000000101010001010101010101010101010101000101010000"
+         }
+       ]
+     }
+   }
+  :variables:
+   {
+     "point": {
+       "type": "Point",
+       "coordinates": [
+         1,
+         2
+       ],
+       "crs": {
+         "type": "name",
+         "properties": {
+           "name": "urn:ogc:def:crs:EPSG::4326"
+         }
+       }
+     }
+   }

@@ -67,7 +67,12 @@ parseOpExps colTy annVal = do
       "_st_overlaps"   -> fmap ASTOverlaps <$> asOpRhs v
       "_st_touches"    -> fmap ASTTouches <$> asOpRhs v
       "_st_within"     -> fmap ASTWithin <$> asOpRhs v
-      "_st_d_within"   -> asObjectM v >>= mapM parseAsSTDWithinObj
+      "_st_d_within"   -> parseAsObjectM v parseAsSTDWithinObj
+
+      -- raster type related operators
+      "_st_intersects_rast"       -> fmap ASTIntersectsRast <$> asOpRhs v
+      "_st_intersects_nband_geom" -> parseAsObjectM v parseAsSTIntersectsNbandGeomObj
+      "_st_intersects_geom_nband" -> parseAsObjectM v parseAsSTIntersectsGeomNbandObj
 
       _ ->
         throw500
@@ -78,6 +83,8 @@ parseOpExps colTy annVal = do
   return $ catMaybes $ fromMaybe [] opExpsM
   where
     asOpRhs = fmap (fmap UVPG) . asPGColumnValueM
+
+    parseAsObjectM v f = asObjectM v >>= mapM f
 
     asPGArray rhsTy v = do
       valsM <- parseMany asPGColumnValue v
@@ -114,6 +121,23 @@ parseOpExps colTy annVal = do
         PGColumnScalar PGGeometry ->
           return $ ASTDWithinGeom $ DWithinGeomOp dist from
         _ -> throw500 "expected PGGeometry/PGGeography column for st_d_within"
+
+    parseAsSTIntersectsNbandGeomObj obj = do
+      nbandVal <- onNothing (OMap.lookup "nband" obj) $
+                  throw500 "expected \"nband\" input field"
+      nband <- UVPG <$> asPGColumnValue nbandVal
+      geommin <- parseGeommin obj
+      return $ ASTIntersectsNbandGeom $ STIntersectsNbandGeommin nband geommin
+
+    parseAsSTIntersectsGeomNbandObj obj = do
+      nbandMM <- (fmap . fmap) UVPG <$> mapM asPGColumnValueM (OMap.lookup "nband" obj)
+      geommin <- parseGeommin obj
+      return $ ASTIntersectsGeomNband $ STIntersectsGeomminNband geommin $ join nbandMM
+
+    parseGeommin obj = do
+      geomminVal <- onNothing (OMap.lookup "geommin" obj) $
+                    throw500 "expected \"geommin\" input field"
+      UVPG <$> asPGColumnValue geomminVal
 
 parseCastExpression
   :: (MonadError QErr m)

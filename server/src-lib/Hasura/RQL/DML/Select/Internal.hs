@@ -6,7 +6,6 @@ module Hasura.RQL.DML.Select.Internal
   )
 where
 
-import           Control.Arrow               ((&&&))
 import           Data.List                   (delete, sort)
 import           Instances.TH.Lift           ()
 
@@ -718,7 +717,10 @@ mkFuncSelectWith f annFn =
     funcSel = S.mkSelect { S.selFrom = Just $ S.FromExp [frmItem]
                          , S.selExtr = [S.Extractor S.SEStar Nothing]
                          }
-    frmItem = S.mkFuncFromItem qf fnArgs
+    frmItem = S.mkFuncFromItem qf $ mkSQLFunctionArgs fnArgs
+
+    mkSQLFunctionArgs (FunctionArgsExp positional named) =
+      S.FunctionArgs positional named
 
     newTabFrom = (_asnFrom annSel) {_tfIden = Just $ toIden funcAls}
 
