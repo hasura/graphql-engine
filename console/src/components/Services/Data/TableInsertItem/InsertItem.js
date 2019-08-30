@@ -7,6 +7,7 @@ import { setTable } from '../DataActions';
 import JsonInput from '../../../Common/CustomInputTypes/JsonInput';
 import TextInput from '../../../Common/CustomInputTypes/TextInput';
 import Button from '../../../Common/Button/Button';
+import ReloadEnumValuesButton from '../Common/ReusableComponents/ReloadEnumValuesButton';
 import { getPlaceholder, BOOLEAN, JSONB, JSONDTYPE, TEXT } from '../utils';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
@@ -325,6 +326,10 @@ class InsertItem extends Component {
               >
                 Clear
               </Button>
+              <ReloadEnumValuesButton
+                dispatch={dispatch}
+                isEnum={currentTable.is_enum}
+              />
             </form>
           </div>
           <div className="col-xs-3">{alert}</div>
