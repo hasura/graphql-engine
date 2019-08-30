@@ -11,6 +11,7 @@ import qualified Data.Text                     as T
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
+import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Types
 
 data TableObjId
@@ -23,10 +24,18 @@ data TableObjId
 
 instance Hashable TableObjId
 
+data RemoteSchemaObjId
+  = RSOPerm !RoleName
+  deriving (Show, Eq, Generic)
+
+instance Hashable RemoteSchemaObjId
+
 data SchemaObjId
   = SOTable !QualifiedTable
   | SOTableObj !QualifiedTable !TableObjId
   | SOFunction !QualifiedFunction
+  | SORemoteSchema !RemoteSchemaName
+  | SORemoteSchemaObj !RemoteSchemaName !RemoteSchemaObjId
    deriving (Eq, Generic)
 
 instance Hashable SchemaObjId
@@ -45,6 +54,8 @@ reportSchemaObj (SOTableObj tn (TOPerm rn pt)) =
   <> "." <> permTypeToCode pt
 reportSchemaObj (SOTableObj tn (TOTrigger trn )) =
   "event-trigger " <> qualObjectToText tn <> "." <> triggerNameToTxt trn
+reportSchemaObj (SORemoteSchema remoteSchemaName) = "remote schema " <> unNonEmptyText (unRemoteSchemaName remoteSchemaName)
+reportSchemaObj (SORemoteSchemaObj remoteSchemaName (RSOPerm role)) = "permission " <> unNonEmptyText (unRemoteSchemaName remoteSchemaName) <> "." <> roleNameToTxt role
 
 instance Show SchemaObjId where
   show soi = T.unpack $ reportSchemaObj soi
@@ -69,6 +80,7 @@ data DependencyReason
   | DRSessionVariable
   | DRPayload
   | DRParent
+  | DRRemoteSchema
   deriving (Show, Eq, Generic)
 
 instance Hashable DependencyReason
@@ -88,6 +100,7 @@ reasonToTxt = \case
   DRSessionVariable -> "session_variable"
   DRPayload         -> "payload"
   DRParent          -> "parent"
+  DRRemoteSchema -> "remote_schema"
 
 instance ToJSON DependencyReason where
   toJSON = String . reasonToTxt

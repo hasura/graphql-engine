@@ -97,6 +97,8 @@ module Hasura.RQL.Types.SchemaCache
        , mkColDep
        , getDependentObjs
        , getDependentObjsWith
+       , modDepMapInCache
+       , addToDepMap
 
        , FunctionType(..)
        , FunctionArg(..)

@@ -106,9 +106,37 @@ removeRemoteSchemaP2
   => RemoteSchemaName
   -> m EncJSON
 removeRemoteSchemaP2 rsn = do
+  dropRemoteSchemaDirectDeps rsn
   delRemoteSchemaFromCache rsn
   liftTx $ removeRemoteSchemaFromCatalog rsn
   return successMsg
+
+dropRemoteSchemaDirectDeps
+  :: ( CacheRWM m
+     , MonadTx m
+     )
+  => RemoteSchemaName
+  -> m ()
+dropRemoteSchemaDirectDeps rsn = do
+  sc <- askSchemaCache
+  let depObjs = getDependentObjs sc objId
+      permDeps = catMaybes $ map getPermObj depObjs
+  mapM_ dropRemoteSchemaPermDep permDeps
+  where
+    objId = SORemoteSchema rsn
+    getPermObj = \case
+      obj@(SORemoteSchemaObj _(RSOPerm _)) -> Just obj
+      _ -> Nothing
+
+dropRemoteSchemaPermDep
+  :: ( CacheRWM m
+     , MonadTx m
+     )
+  => SchemaObjId
+  -> m ()
+dropRemoteSchemaPermDep = \case
+  SORemoteSchemaObj rsn (RSOPerm role) -> dropRemoteSchemaPermissionsP2 (DropRemoteSchemaPermissions rsn role)
+  _ -> throw500 "unexpected dependency found while dropping remote schema"
 
 runReloadRemoteSchema
   :: ( QErrM m, UserInfoM m , CacheRWM m
@@ -191,11 +219,15 @@ runAddRemoteSchemaPermissionsP2 rsPerm rsCtx = do
 
 runAddRemoteSchemaPermissionsP2Setup
   :: (QErrM m, CacheRWM m) => RemoteSchemaPermissions -> RemoteSchemaCtx -> m ()
-runAddRemoteSchemaPermissionsP2Setup RemoteSchemaPermissions{..} rsCtx = do
+runAddRemoteSchemaPermissionsP2Setup (RemoteSchemaPermissions remoteSchema role _def) rsCtx = do
   sc <- askSchemaCache
+  modDepMapInCache (addToDepMap schObjId deps)
   let rmSchemaWithRoles = scRemoteSchemasWithRole sc
-      newSchemasWithRoles = Map.insert (rsPermRole, rsPermRemoteSchema) rsCtx rmSchemaWithRoles
+      newSchemasWithRoles = Map.insert (role, remoteSchema) rsCtx rmSchemaWithRoles
   writeSchemaCache sc { scRemoteSchemasWithRole = newSchemasWithRoles }
+  where
+    schObjId = SORemoteSchemaObj remoteSchema (RSOPerm role)
+    deps = [SchemaDependency (SORemoteSchema remoteSchema) DRRemoteSchema]
 
 validateRemoteSchemaPermissions :: (QErrM m, CacheRM m) => RemoteSchemaPermissions -> m RemoteSchemaCtx
 validateRemoteSchemaPermissions remoteSchemaPerm = do
