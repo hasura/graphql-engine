@@ -8,7 +8,7 @@ module Hasura.RQL.Types.SchemaCache
        , incSchemaCacheVer
        , emptySchemaCache
        , TableConfig(..)
-       , noTableConfig
+       , emptyTableConfig
 
        , TableCache
        , modTableCache
@@ -31,7 +31,7 @@ module Hasura.RQL.Types.SchemaCache
        , TableConstraint(..)
        , ConstraintType(..)
        , ViewInfo(..)
-       , checkForFldConfilct
+       , checkForFieldConflict
        , isMutable
        , mutableView
        , isUniqueOrPrimary
@@ -331,21 +331,20 @@ mutableView qt f mVI operation =
 
 data TableConfig
   = TableConfig
-  { _tcCustomRootFields   :: !GC.TableCustomRootFields
-  , _tcCustomColumnFields :: !CustomColumnFields
+  { _tcCustomRootFields  :: !GC.TableCustomRootFields
+  , _tcCustomColumnNames :: !CustomColumnNames
   } deriving (Show, Eq, Lift)
 $(deriveToJSON (aesonDrop 3 snakeCase) ''TableConfig)
 
-noTableConfig :: TableConfig
-noTableConfig =
+emptyTableConfig :: TableConfig
+emptyTableConfig =
   TableConfig GC.emptyCustomRootFields M.empty
 
 instance FromJSON TableConfig where
-  parseJSON Null = pure noTableConfig
-  parseJSON v    = flip (withObject "TableConfig") v $ \obj -> do
-    customRootFields <- obj .: "custom_root_fields"
-    customColumnFields <- obj .: "custom_column_fields"
-    pure $ TableConfig customRootFields customColumnFields
+  parseJSON = withObject "TableConfig" $ \obj -> do
+    customRootFields <- obj .:? "custom_root_fields" .!= GC.emptyCustomRootFields
+    customColumnNames <- obj .:? "custom_column_names" .!= M.empty
+    pure $ TableConfig customRootFields customColumnNames
 
 data TableInfo columnInfo
   = TableInfo
@@ -363,12 +362,12 @@ data TableInfo columnInfo
 $(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
 $(makeLenses ''TableInfo)
 
-checkForFldConfilct
+checkForFieldConflict
   :: (MonadError QErr m)
   => TableInfo a
   -> FieldName
   -> m ()
-checkForFldConfilct tabInfo f =
+checkForFieldConflict tabInfo f =
   case M.lookup f (_tiFieldInfoMap tabInfo) of
     Just _ -> throw400 AlreadyExists $ mconcat
       [ "column/relationship " <>> f

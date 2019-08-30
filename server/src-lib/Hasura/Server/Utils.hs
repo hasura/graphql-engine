@@ -254,16 +254,16 @@ applyFirst f [x]    = [f x]
 applyFirst f (x:xs) = f x: xs
 
 -- | The version integer
-data VersionInt
+data APIVersion
   = VIVersion1
   | VIVersion2
   deriving (Show, Eq, Lift)
 
-instance ToJSON VersionInt where
+instance ToJSON APIVersion where
   toJSON VIVersion1 = toJSON @Int 1
   toJSON VIVersion2 = toJSON @Int 2
 
-instance FromJSON VersionInt where
+instance FromJSON APIVersion where
   parseJSON v = do
     verInt :: Int <- parseJSON v
     case verInt of

@@ -11,7 +11,6 @@ module Hasura.GraphQL.Schema
   , RelationInfoMap
   , isAggFld
   , qualObjectToName
-  , validateCustomRootFlds
   , ppGCtx
 
   , checkConflictingNode
@@ -222,14 +221,15 @@ mkGCtxRole' tn insPermM selPermM updColsM
     mkFldMap ty = Map.fromList . concatMap (mkFld ty)
     mkFld ty = \case
       Left ci -> [((ty, pgiName ci), Left ci)]
-      Right (ri, allowAgg, colGNameMap, perm, lim, _) ->
-        let relFld = ( (ty, mkRelName $ riName ri)
-                     , Right $ RelationshipField ri False colGNameMap perm lim
+      Right (RelationshipFieldInfo relInfo allowAgg cols permFilter permLimit _) ->
+        let relationshipName = riName relInfo
+            relFld = ( (ty, mkRelName relationshipName)
+                     , Right $ RelationshipField relInfo False cols permFilter permLimit
                      )
-            aggRelFld = ( (ty, mkAggRelName $ riName ri)
-                        , Right $ RelationshipField ri True colGNameMap perm lim
+            aggRelFld = ( (ty, mkAggRelName relationshipName)
+                        , Right $ RelationshipField relInfo True cols permFilter permLimit
                         )
-        in case riType ri of
+        in case riType relInfo of
           ObjRel -> [relFld]
           ArrRel -> bool [relFld] [relFld, aggRelFld] allowAgg
 
@@ -417,13 +417,14 @@ getSelPerm tableCache fields role selPermInfo = do
           remTableColGNameMap =
             mkPGColGNameMap $ getValidCols remTableFlds
       return $ flip fmap remTableSelPermM $
-        \rmSelPermM -> Right ( relInfo
-                             , spiAllowAgg rmSelPermM
-                             , remTableColGNameMap
-                             , spiFilter rmSelPermM
-                             , spiLimit rmSelPermM
-                             , isRelNullable fields relInfo
-                             )
+        \rmSelPermM -> Right RelationshipFieldInfo
+                             { _rfiInfo       = relInfo
+                             , _rfiAllowAgg   = spiAllowAgg rmSelPermM
+                             , _rfiColumns    = remTableColGNameMap
+                             , _rfiPermFilter = spiFilter rmSelPermM
+                             , _rfiPermLimit  = spiLimit rmSelPermM
+                             , _rfiIsNullable = isRelNullable fields relInfo
+                             }
 
   return (spiAllowAgg selPermInfo, cols <> relFlds)
   where
@@ -505,13 +506,15 @@ mkAdminSelFlds fields tableCache = do
     let remoteTableFlds = _tiFieldInfoMap remoteTableInfo
         remoteTableColGNameMap =
           mkPGColGNameMap $ getValidCols remoteTableFlds
-    return $ Right ( relInfo
-                   , True
-                   , remoteTableColGNameMap
-                   , noFilter
-                   , Nothing
-                   , isRelNullable fields relInfo
-                   )
+    return $ Right RelationshipFieldInfo
+                   { _rfiInfo       = relInfo
+                   , _rfiAllowAgg   = True
+                   , _rfiColumns    = remoteTableColGNameMap
+                   , _rfiPermFilter = noFilter
+                   , _rfiPermLimit  = Nothing
+                   , _rfiIsNullable = isRelNullable fields relInfo
+                   }
+
   return $ colSelFlds <> relSelFlds
   where
     cols = getValidCols fields
@@ -615,18 +618,6 @@ mkGCtxMapTable tableCache funcCache tabInfo = do
 
 noFilter :: AnnBoolExpPartialSQL
 noFilter = annBoolExpTrue
-
-validateCustomRootFlds
-  :: (MonadError QErr m)
-  => GCtx
-  -> TableCustomRootFields
-  -> m ()
-validateCustomRootFlds defRemoteGCtx rootFlds =
-  forM_ rootFldNames $ checkConflictingNode defRemoteGCtx
-  where
-    TableCustomRootFields sel selByPk selAgg ins upd del = rootFlds
-    rootFldNames = map unGraphQLName $
-                   catMaybes [sel, selByPk, selAgg, ins, upd, del]
 
 mkGCtxMap
   :: (MonadError QErr m)

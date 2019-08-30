@@ -142,31 +142,38 @@ mkOrdByInpObj tn selFlds = (inpObjTy, ordByCtx)
       "ordering options when selecting data from " <>> tn
 
     pgColFlds = lefts selFlds
-    relFltr ty = flip filter (rights selFlds) $ \(ri, _, _, _, _, _) ->
-      riType ri == ty
+    relFltr ty = flip filter (rights selFlds) $
+                 \rf -> riType (_rfiInfo rf) == ty
     objRels = relFltr ObjRel
     arrRels = relFltr ArrRel
 
     mkColOrdBy columnInfo =
       InpValInfo Nothing (pgiName columnInfo) Nothing $ G.toGT ordByTy
-    mkObjRelOrdBy (ri, _, _, _, _, _) =
-      InpValInfo Nothing (mkRelName $ riName ri) Nothing $
-      G.toGT $ mkOrdByTy $ riRTable ri
+    mkObjRelOrdBy relationshipField =
+      let ri = _rfiInfo relationshipField
+      in InpValInfo Nothing (mkRelName $ riName ri) Nothing $
+         G.toGT $ mkOrdByTy $ riRTable ri
 
-    mkArrRelAggOrdBy (ri, isAggAllowed, _, _, _, _) =
-      let ivi = InpValInfo Nothing (mkAggRelName $ riName ri) Nothing $
+    mkArrRelAggOrdBy relationshipField =
+      let ri = _rfiInfo relationshipField
+          isAggAllowed = _rfiAllowAgg relationshipField
+          ivi = InpValInfo Nothing (mkAggRelName $ riName ri) Nothing $
             G.toGT $ mkTabAggOrdByTy $ riRTable ri
       in bool Nothing (Just ivi) isAggAllowed
 
     ordByCtx = Map.singleton namedTy $ Map.fromList $
                colOrdBys <> relOrdBys <> arrRelOrdBys
     colOrdBys = map (pgiName &&& OBIPGCol) pgColFlds
-    relOrdBys = flip map objRels $ \(ri, _, _, fltr, _, _) ->
-                                     ( mkRelName $ riName ri
-                                     , OBIRel ri fltr
-                                     )
+    relOrdBys = flip map objRels $
+                \relationshipField ->
+                  let ri = _rfiInfo relationshipField
+                      fltr = _rfiPermFilter relationshipField
+                  in ( mkRelName $ riName ri
+                     , OBIRel ri fltr
+                     )
+
     arrRelOrdBys = flip mapMaybe arrRels $
-                   \(ri, isAggAllowed, colGNameMap, fltr, _, _) ->
+                   \(RelationshipFieldInfo ri isAggAllowed colGNameMap fltr _ _) ->
                      let obItem = ( mkAggRelName $ riName ri
                                   , OBIAgg ri colGNameMap fltr
                                   )

@@ -75,7 +75,7 @@ validateObjRel
   -> m ()
 validateObjRel qt (RelDef rn ru _) = do
   tabInfo <- askTabInfo qt
-  checkForFldConfilct tabInfo (fromRel rn)
+  checkForFieldConflict tabInfo (fromRel rn)
   let fim = _tiFieldInfoMap tabInfo
   case ru of
     RUFKeyOn cn                      -> assertPGCol fim "" cn
@@ -153,7 +153,7 @@ validateArrRel
   => QualifiedTable -> ArrRelDef -> m ()
 validateArrRel qt (RelDef rn ru _) = do
   tabInfo <- askTabInfo qt
-  checkForFldConfilct tabInfo (fromRel rn)
+  checkForFieldConflict tabInfo (fromRel rn)
   let fim = _tiFieldInfoMap tabInfo
   case ru of
     RUFKeyOn (ArrRelUsingFKeyOn remoteQt rcn) -> do

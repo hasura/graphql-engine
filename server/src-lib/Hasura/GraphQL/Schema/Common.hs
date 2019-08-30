@@ -3,11 +3,12 @@ module Hasura.GraphQL.Schema.Common
   , addTypeSuffix
   , fromInpValL
 
+  , RelationshipFieldInfo(..)
+  , SelField
+
   , mkColumnType
   , mkRelName
   , mkAggRelName
-
-  , SelField
 
   , mkTableTy
   , mkTableEnumType
@@ -25,14 +26,17 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-type SelField = Either PGColumnInfo
-                ( RelInfo
-                , Bool
-                , PGColGNameMap
-                , AnnBoolExpPartialSQL
-                , Maybe Int
-                , Bool
-                )
+data RelationshipFieldInfo
+  = RelationshipFieldInfo
+  { _rfiInfo       :: !RelInfo
+  , _rfiAllowAgg   :: !Bool
+  , _rfiColumns    :: !PGColGNameMap
+  , _rfiPermFilter :: !AnnBoolExpPartialSQL
+  , _rfiPermLimit  :: !(Maybe Int)
+  , _rfiIsNullable :: !Bool
+  } deriving (Show, Eq)
+
+type SelField = Either PGColumnInfo RelationshipFieldInfo
 
 qualObjectToName :: (ToTxt a) => QualifiedObject a -> G.Name
 qualObjectToName = G.Name . snakeCaseQualObject

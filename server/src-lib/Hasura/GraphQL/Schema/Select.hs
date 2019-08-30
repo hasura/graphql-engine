@@ -142,7 +142,7 @@ mkTableObj tn allowedFlds =
   mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) TLHasuraType
   where
     flds = concatMap (either (pure . mkPGColFld) mkRelationshipField') allowedFlds
-    mkRelationshipField' (relInfo, allowAgg, _, _, _, isNullable) =
+    mkRelationshipField' (RelationshipFieldInfo relInfo allowAgg _ _ _ isNullable) =
       mkRelationshipField allowAgg relInfo isNullable
     desc = G.Description $ "columns and relationships of " <>> tn
 

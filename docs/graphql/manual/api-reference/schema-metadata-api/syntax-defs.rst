@@ -468,9 +468,9 @@ CollectionQuery
        "query": String
    }
 
-.. _CustomColumnFields:
+.. _CustomColumnNames:
 
-CustomColumnFields
+CustomColumnNames
 ^^^^^^^^^^^^^^^^^^
 A JSONObject_ of Postgres column name to GraphQL name mapping
 

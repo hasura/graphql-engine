@@ -130,7 +130,7 @@ Add a table/view ``author``:
               "update": "UpdateAuthors",
               "delete": "DeleteAuthors"
            },
-           "custom_column_fields": {
+           "custom_column_names": {
               "id": "authorId"
            }
         }
@@ -174,9 +174,9 @@ Table Config
      - true
      - :ref:`Custom Root Fields <custom_root_fields>`
      - Customise the root fields
-   * - custom_column_fields
+   * - custom_column_names
      - true
-     - :ref:`CustomColumnFields`
+     - :ref:`CustomColumnNames`
      - Customise the column fields
 
 .. _custom_root_fields:

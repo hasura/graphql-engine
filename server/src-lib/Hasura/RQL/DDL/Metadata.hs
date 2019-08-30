@@ -80,7 +80,7 @@ instance FromJSON TableMeta where
     TableMeta
      <$> o .: tableKey
      <*> o .:? isEnumKey .!= False
-     <*> o .:? configKey .!= noTableConfig
+     <*> o .:? configKey .!= emptyTableConfig
      <*> o .:? orKey .!= []
      <*> o .:? arKey .!= []
      <*> o .:? ipKey .!= []
@@ -322,7 +322,7 @@ fetchMetadata = do
   let tableMetaMap = M.fromList . flip map tables $
         \(schema, name, isEnum, maybeConfig) ->
           let qualifiedName = QualifiedObject schema name
-              configuration = maybe noTableConfig Q.getAltJ maybeConfig
+              configuration = maybe emptyTableConfig Q.getAltJ maybeConfig
           in (qualifiedName, mkTableMeta qualifiedName isEnum configuration)
 
   -- Fetch all the relationships

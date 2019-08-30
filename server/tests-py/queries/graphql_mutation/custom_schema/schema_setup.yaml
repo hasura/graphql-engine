@@ -25,7 +25,7 @@ args:
         insert: AddAuthors
         update: UpdateAuthors
         delete: DeleteAuthors
-      custom_column_fields:
+      custom_column_names:
         id: AuthorId
 
 - type: track_table
@@ -37,7 +37,7 @@ args:
         insert: AddArticles
         update: UpdateArticles
         delete: DeleteArticles
-      custom_column_fields:
+      custom_column_names:
         id: ArticleId
         author_id: AuthorId
 

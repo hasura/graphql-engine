@@ -109,9 +109,9 @@ data RelationshipField
   , _rfPermLimit  :: !(Maybe Int)
   } deriving (Show, Eq)
 
-type FieldMap
-  = Map.HashMap (G.NamedType, G.Name)
-    (Either PGColumnInfo RelationshipField)
+type FieldMap =
+  Map.HashMap (G.NamedType, G.Name)
+  (Either PGColumnInfo RelationshipField)
 
 -- order by context
 data OrdByItem

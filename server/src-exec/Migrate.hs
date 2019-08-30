@@ -365,7 +365,7 @@ from22To23 =
   liftTx $ Q.catchE defaultTxErrorHandler $
   Q.multiQ [Q.sql|
             ALTER TABLE hdb_catalog.hdb_table
-            ADD COLUMN configuration JSONB;
+            ADD COLUMN configuration JSONB NOT NULL DEFAULT '{}'::jsonb;
            |]
 
 migrateCatalog

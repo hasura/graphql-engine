@@ -34,6 +34,7 @@ import           Hasura.Server.Utils           (duplicates)
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query             as Q
+import qualified Hasura.GraphQL.Context        as GC
 import qualified Hasura.GraphQL.Schema         as GS
 import qualified Language.GraphQL.Draft.Syntax as G
 
@@ -95,6 +96,18 @@ trackExistingTableOrViewP1 qt = do
   when (M.member qf $ scFunctions rawSchemaCache) $
     throw400 NotSupported $ "function with name " <> qt <<> " already exists"
 
+validateCustomRootFlds
+  :: (MonadError QErr m)
+  => GS.GCtx
+  -> GC.TableCustomRootFields
+  -> m ()
+validateCustomRootFlds defRemoteGCtx rootFlds =
+  forM_ rootFldNames $ GS.checkConflictingNode defRemoteGCtx
+  where
+    GC.TableCustomRootFields sel selByPk selAgg ins upd del = rootFlds
+    rootFldNames = map unGraphQLName $
+                   catMaybes [sel, selByPk, selAgg, ins, upd, del]
+
 validateTableConfig
   :: (QErrM m, CacheRM m)
   => TableInfo a -> TableConfig -> m ()
@@ -103,12 +116,12 @@ validateTableConfig tableInfo (TableConfig rootFlds colFlds) =
     withPathK "custom_root_fields" $ do
       sc <- askSchemaCache
       let defRemoteGCtx = scDefaultRemoteGCtx sc
-      GS.validateCustomRootFlds defRemoteGCtx rootFlds
-    withPathK "custom_column_fields" $
+      validateCustomRootFlds defRemoteGCtx rootFlds
+    withPathK "custom_column_names" $
       forM_ (M.toList colFlds) $ \(col, GraphQLName customName) -> do
         void $ askPGColInfo (_tiFieldInfoMap tableInfo) col ""
         withPathK (getPGColTxt col) $
-          checkForFldConfilct tableInfo $ FieldName $ G.unName customName
+          checkForFieldConflict tableInfo $ FieldName $ G.unName customName
         when (not $ null duplicateNames) $ throw400 NotSupported $
           "the following names are duplicated: " <> showNames duplicateNames
   where
@@ -130,7 +143,7 @@ runTrackTableQ
   => TrackTable -> m EncJSON
 runTrackTableQ (TrackTable qt isEnum) = do
   trackExistingTableOrViewP1 qt
-  trackExistingTableOrViewP2 qt isEnum noTableConfig
+  trackExistingTableOrViewP2 qt isEnum emptyTableConfig
 
 data TrackTableV2
   = TrackTableV2
@@ -242,7 +255,7 @@ processTableChanges ti tableDiff = do
 
   where
     TableDiff mNewName droppedCols addedCols alteredCols _ constraints = tableDiff
-    customFields = _tcCustomColumnFields $ _tiCustomConfig ti
+    customFields = _tcCustomColumnNames $ _tiCustomConfig ti
     replaceConstraints tn = flip modTableInCache tn $ \tInfo ->
       return $ tInfo {_tiUniqOrPrimConstraints = constraints}
 
@@ -362,7 +375,7 @@ buildTableCache = processTableCache <=< buildRawTableCache
     processTableCache :: TableCache PGRawColumnInfo -> m (TableCache PGColumnInfo)
     processTableCache rawTables = fmap (M.mapMaybe id) . for rawTables $ \rawInfo -> do
       let tableName = _tiName rawInfo
-          customFields = _tcCustomColumnFields $ _tiCustomConfig rawInfo
+          customFields = _tcCustomColumnNames $ _tiCustomConfig rawInfo
       withTable tableName $ rawInfo
         & tiFieldInfoMap.traverse._FIColumn %%~
           processColumnInfo enumTables customFields tableName
@@ -374,7 +387,7 @@ buildTableCache = processTableCache <=< buildRawTableCache
 processColumnInfo
   :: (QErrM m)
   => M.HashMap QualifiedTable EnumValues -- ^ known enum tables
-  -> CustomColumnFields -- ^ customised graphql names
+  -> CustomColumnNames -- ^ customised graphql names
   -> QualifiedTable -- ^ the table this column belongs to
   -> PGRawColumnInfo -- ^ the column’s raw information
   -> m PGColumnInfo
@@ -412,7 +425,7 @@ processColumnInfo enumTables customFields tableName rawInfo = do
 processColumnInfoUsingCache
   :: (CacheRM m, QErrM m)
   => QualifiedTable
-  -> CustomColumnFields
+  -> CustomColumnNames
   -> PGRawColumnInfo
   -> m PGColumnInfo
 processColumnInfoUsingCache tableName customFields rawInfo = do
