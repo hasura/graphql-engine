@@ -1,5 +1,5 @@
 import React from 'react';
-import ReloadEnumMetadata  from '../../../Metadata/MetadataOptions/ReloadMetadata';
+import ReloadEnumMetadata from '../../../Metadata/MetadataOptions/ReloadMetadata';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
 import styles from '../../../../Common/Common.scss';
@@ -9,16 +9,19 @@ const ReloadEnumValuesButton = ({ isEnum, dispatch, tooltipStyle }) => {
 
   const tooltip = (
     <Tooltip id="tooltip-reload-enum-metadata">
-      Reload enum values in your GraphQL schema after inserting, updating or deleting enum values
+      Reload enum values in your GraphQL schema after inserting, updating or
+      deleting enum values
     </Tooltip>
   );
 
   return (
     <React.Fragment>
-      <ReloadEnumMetadata buttonText="Reload enum values" dispatch={dispatch}/>
+      <ReloadEnumMetadata buttonText="Reload enum values" dispatch={dispatch} />
       <OverlayTrigger overlay={tooltip} placement="right">
         <i
-          className={`fa fa-info-circle ${styles.cursorPointer} ${tooltipStyle || ''}`}
+          className={`fa fa-info-circle ${
+            styles.cursorPointer
+          } ${tooltipStyle || ''}`}
           aria-hidden="true"
         />
       </OverlayTrigger>

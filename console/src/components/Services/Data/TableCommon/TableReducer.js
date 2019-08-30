@@ -24,7 +24,7 @@ import {
   SET_UNIQUE_KEYS,
   TOGGLE_ENUM,
   TOGGLE_ENUM_SUCCESS,
-  TOGGLE_ENUM_FAILURE
+  TOGGLE_ENUM_FAILURE,
 } from '../TableModify/ModifyActions';
 
 // TABLE RELATIONSHIPS
@@ -593,24 +593,24 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       return {
         ...modifyState,
         tableEnum: {
-          loading: true
-        }
-      }
+          loading: true,
+        },
+      };
     case TOGGLE_ENUM_FAILURE:
       return {
         ...modifyState,
         tableEnum: {
           loading: false,
-          error: action.error
-        }
-      }
+          error: action.error,
+        },
+      };
     case TOGGLE_ENUM_SUCCESS:
       return {
         ...modifyState,
         tableEnum: {
           loading: false,
-        }
-      }
+        },
+      };
     default:
       return modifyState;
   }
