@@ -267,6 +267,7 @@ data PGScalarType
   | PGJSONB
   | PGGeometry
   | PGGeography
+  | PGRaster
   | PGUnknown !T.Text
   deriving (Show, Eq, Lift, Generic, Data)
 
@@ -293,6 +294,7 @@ instance ToSQL PGScalarType where
     PGJSONB       -> "jsonb"
     PGGeometry    -> "geometry"
     PGGeography   -> "geography"
+    PGRaster      -> "raster"
     PGUnknown t   -> TB.text t
 
 instance ToJSON PGScalarType where
@@ -351,6 +353,8 @@ txtToPgColTy t = case t of
 
   "geometry"                 -> PGGeometry
   "geography"                -> PGGeography
+
+  "raster"                   -> PGRaster
   _                          -> PGUnknown t
 
 
@@ -379,6 +383,8 @@ pgTypeOid PGJSONB       = PTI.jsonb
 -- we are using the ST_GeomFromGeoJSON($i) instead of $i
 pgTypeOid PGGeometry    = PTI.text
 pgTypeOid PGGeography   = PTI.text
+-- we are using the ST_RastFromHexWKB($i) instead of $i
+pgTypeOid PGRaster      = PTI.text
 pgTypeOid (PGUnknown _) = PTI.auto
 
 isIntegerType :: PGScalarType -> Bool

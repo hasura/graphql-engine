@@ -10,7 +10,6 @@ module Hasura.Server.Auth.JWT
   , defaultClaimNs
   ) where
 
-import           Control.Arrow                   (first)
 import           Control.Exception               (try)
 import           Control.Lens
 import           Control.Monad                   (when)

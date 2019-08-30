@@ -47,7 +47,7 @@ query AllTodos {
 ```
 
 4. Hit `ctrl + enter` or `cmd + enter` (mac) or click on the ▶️ icon to run the GraphQL query
-5. On the right, you should see a list of users by their names that are in the system!
+5. On the right, you should see a list of every user's to-dos that are in the system!
 
 <b><a href="https://learn.hasura.io/graphql/graphiql" target="_blank">Try it out in GraphiQL</a></b>
 
@@ -103,7 +103,7 @@ query {
 
 ## Adding parameters (arguments) to GraphQL queries
 
-In most API calls, you usually use paramters. For example, to specify what data you're fetching.
+In most API calls, you usually use parameters. For example, to specify what data you're fetching.
 If you're familiar with making `GET` calls, you would have used a query parameter. For example,
 to fetch only 10 todos you might have made this API call: `GET /api/todos?limit=10`.
 
