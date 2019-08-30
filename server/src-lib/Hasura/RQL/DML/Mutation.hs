@@ -27,7 +27,7 @@ data Mutation
   { _mTable    :: !QualifiedTable
   , _mQuery    :: !(S.CTE, DS.Seq Q.PrepArg)
   , _mFields   :: !MutFlds
-  , _mCols     :: ![PGColInfo]
+  , _mCols     :: ![PGColumnInfo]
   , _mStrfyNum :: !Bool
   } deriving (Show, Eq)
 
@@ -57,7 +57,7 @@ mutateAndSel (Mutation qt q mutFlds allCols strfyNum) = do
 
 mutateAndFetchCols
   :: QualifiedTable
-  -> [PGColInfo]
+  -> [PGColumnInfo]
   -> (S.CTE, DS.Seq Q.PrepArg)
   -> Bool
   -> Q.TxE QErr MutateResp
@@ -89,7 +89,7 @@ mutateAndFetchCols qt cols (cte, p) strfyNum =
 
 mkSelCTEFromColVals
   :: MonadError QErr m
-  => QualifiedTable -> [PGColInfo] -> [ColVals] -> m S.CTE
+  => QualifiedTable -> [PGColumnInfo] -> [ColVals] -> m S.CTE
 mkSelCTEFromColVals qt allCols colVals =
   S.CTESelect <$> case colVals of
     [] -> return selNoRows
@@ -108,7 +108,7 @@ mkSelCTEFromColVals qt allCols colVals =
         let pgCol = pgiName ci
         val <- onNothing (Map.lookup pgCol colVal) $
           throw500 $ "column " <> pgCol <<> " not found in returning values"
-        runAesonParser (convToTxt (pgiType ci)) val
+        toTxtValue <$> parsePGScalarValue (pgiType ci) val
 
     selNoRows =
       S.mkSelect { S.selExtr = [S.selectStar]

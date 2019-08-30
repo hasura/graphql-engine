@@ -224,7 +224,8 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
 -- Monad for resolving a hasura query/mutation
 type E m =
   ReaderT ( UserInfo
-          , OpCtxMap
+          , QueryCtxMap
+          , MutationCtxMap
           , TypeMap
           , FieldMap
           , OrdByCtx
@@ -241,10 +242,11 @@ runE
   -> m a
 runE ctx sqlGenCtx userInfo action = do
   res <- runExceptT $ runReaderT action
-    (userInfo, opCtxMap, typeMap, fldMap, ordByCtx, insCtxMap, sqlGenCtx)
+    (userInfo, queryCtxMap, mutationCtxMap, typeMap, fldMap, ordByCtx, insCtxMap, sqlGenCtx)
   either throwError return res
   where
-    opCtxMap = _gOpCtxMap ctx
+    queryCtxMap = _gQueryCtxMap ctx
+    mutationCtxMap = _gMutationCtxMap ctx
     typeMap = _gTypes ctx
     fldMap = _gFields ctx
     ordByCtx = _gOrdByCtx ctx
@@ -268,7 +270,7 @@ resolveMutSelSet
   :: ( MonadError QErr m
      , MonadReader r m
      , Has UserInfo r
-     , Has OpCtxMap r
+     , Has MutationCtxMap r
      , Has FieldMap r
      , Has OrdByCtx r
      , Has SQLGenCtx r
@@ -308,7 +310,7 @@ getMutOp ctx sqlGenCtx userInfo selSet =
 getSubsOpM
   :: ( MonadError QErr m
      , MonadReader r m
-     , Has OpCtxMap r
+     , Has QueryCtxMap r
      , Has FieldMap r
      , Has OrdByCtx r
      , Has SQLGenCtx r

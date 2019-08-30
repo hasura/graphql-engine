@@ -19,6 +19,8 @@ import qualified Data.Text                       as T
 import qualified Data.Vector                     as V
 import qualified Language.GraphQL.Draft.Syntax   as G
 
+import qualified Hasura.RQL.Types                as RQL
+
 import           Hasura.GraphQL.Utils
 import           Hasura.GraphQL.Validate.Context
 import           Hasura.GraphQL.Validate.Types
@@ -249,21 +251,27 @@ validateNamedTypeVal inpValParser (nullability, nt) val = do
       fmap (AGObject nt) . mapM (validateObject inpValParser ioti)
     TIEnum eti ->
       withParsed gType (getEnum inpValParser) val $
-      fmap (AGEnum nt) . mapM (validateEnum eti)
+      fmap (AGEnum nt) . validateEnum eti
     TIScalar (ScalarTyInfo _ pgColTy _) ->
       withParsed gType (getScalar inpValParser) val $
       fmap (AGScalar pgColTy) . mapM (validateScalar pgColTy)
   where
     throwUnexpTypeErr ty = throw500 $ "unexpected " <> ty <> " type info for: "
       <> showNamedTy nt
-    validateEnum enumTyInfo enumVal  =
-      if Map.member enumVal (_etiValues enumTyInfo)
-      then return enumVal
-      else throwVE $ "unexpected value " <>
-           showName (G.unEnumValue enumVal) <>
-           " for enum: " <> showNamedTy nt
-    validateScalar pgColTy =
-      runAesonParser (parsePGValue pgColTy)
+
+    validateEnum enumTyInfo maybeEnumValue = case (_etiValues enumTyInfo, maybeEnumValue) of
+      (EnumValuesSynthetic _, Nothing) -> pure $ AGESynthetic Nothing
+      (EnumValuesReference reference, Nothing) -> pure $ AGEReference reference Nothing
+      (EnumValuesSynthetic values, Just enumValue)
+        | Map.member enumValue values -> pure $ AGESynthetic (Just enumValue)
+      (EnumValuesReference reference@(EnumReference _ values), Just enumValue)
+        | rqlEnumValue <- RQL.EnumValue . G.unName $ G.unEnumValue enumValue
+        , Map.member rqlEnumValue values
+        -> pure $ AGEReference reference (Just rqlEnumValue)
+      (_, Just enumValue) -> throwVE $
+        "unexpected value " <> showName (G.unEnumValue enumValue) <> " for enum: " <> showNamedTy nt
+
+    validateScalar pgColTy = runAesonParser (parsePGValue pgColTy)
     gType = G.TypeNamed nullability nt
 
 validateList
