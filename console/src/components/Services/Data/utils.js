@@ -36,8 +36,6 @@ export const getPlaceholder = type => {
   }
 };
 
-const supportEnums = globals.featuresCompatibility && globals.featuresCompatibility[TABLE_ENUMS_SUPPORT];
-
 export const tabNameMap = {
   browse: 'Browse Rows',
   insert: 'Insert Row',
@@ -234,6 +232,9 @@ export const fetchTrackedTableListQuery = options => {
     },
   };
 
+  const supportEnums =
+    globals.featuresCompatibility &&
+    globals.featuresCompatibility[TABLE_ENUMS_SUPPORT];
   if (supportEnums) {
     query.args.columns.push('is_enum');
   }
@@ -366,7 +367,6 @@ FROM
 };
 
 export const fetchTableListQuery = options => {
-
   const whereQuery = generateWhereClause(options);
 
   // TODO: optimise this. Multiple OUTER JOINS causes data bloating
@@ -479,12 +479,14 @@ export const mergeLoadSchemaData = (
     let _uniqueConstraints = [];
     let _fkConstraints = [];
     let _refFkConstraints = [];
+    let _isEnum = false;
 
     if (_isTableTracked) {
       _primaryKey = trackedTableInfo.primary_key;
       _relationships = trackedTableInfo.relationships;
       _permissions = trackedTableInfo.permissions;
       _uniqueConstraints = trackedTableInfo.unique_constraints;
+      _isEnum = trackedTableInfo.is_enum;
 
       _fkConstraints = fkData.filter(
         fk => fk.table_schema === _tableSchema && fk.table_name === _tableName
@@ -512,11 +514,8 @@ export const mergeLoadSchemaData = (
       foreign_key_constraints: _fkConstraints,
       opp_foreign_key_constraints: _refFkConstraints,
       view_info: _viewInfo,
+      is_enum: _isEnum,
     };
-
-    if (_isTableTracked && supportEnums) {
-      _mergedInfo['is_enum'] = trackedTableInfo.is_enum;
-    }
 
     _mergedTableData.push(_mergedInfo);
   });
@@ -642,32 +641,3 @@ const postgresFunctionTester = /.*\(\)$/gm;
 
 export const isPostgresFunction = str =>
   new RegExp(postgresFunctionTester).test(str);
-
-// You can either pass the tableSchema to this or a list of columns
-export const isTableEnumCompatible = (tableSchema, tableColumns) => {
-
-  if (tableSchema) {
-
-    const numTableCols = tableSchema.columns.length;
-    if (numTableCols === 1) {
-      return tableSchema.columns[0].data_type === "text";
-    } else if (numTableCols === 2) {
-      return tableSchema.columns[0].data_type === "text" && tableSchema.columns[1].data_type === "text";
-    } else {
-      return false;
-    }
-
-  } else {
-
-    const numTableCols = tableColumns.length;
-
-    if (numTableCols === 1) {
-      return tableColumns[0].type === "text";
-    } else if (numTableCols === 2) {
-      return tableColumns[0].type === "text" && tableColumns[1].type === "text";
-    } else {
-      return false;
-    }
-
-  }
-};

@@ -330,8 +330,11 @@ class InsertItem extends Component {
                 data-test="clear-button"
               >
                 Clear
-              </Button> 
-              <ReloadEnumValuesButton dispatch={dispatch} isEnum={currentTable.is_enum} />
+              </Button>
+              <ReloadEnumValuesButton
+                dispatch={dispatch}
+                isEnum={currentTable.is_enum}
+              />
             </form>
           </div>
           <div className="col-xs-3">{alert}</div>

@@ -28,7 +28,7 @@ export const WarningIcon = ({ customStyle }) => {
       }`}
       aria-hidden="true"
     />
-  )
-}
+  );
+};
 
 export default WarningSymbol;

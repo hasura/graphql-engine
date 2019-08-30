@@ -1,57 +1,72 @@
 import React from 'react';
 import Toggle from 'react-toggle';
-import { WarningIcon } from '../../../../Common/WarningSymbol/WarningSymbol';
+import styles from '../../../../Common/Common.scss';
 
-const EnumsSection = ({ isEnum, toggleEnum, styles, isEnumsCompatible, loading }) => {
+const enumCompatibilityDocsUrl =
+  'https://docs.hasura.io/1.0/graphql/manual/schema/enums.html#create-an-enum-table';
 
-  let title = !isEnumsCompatible ? "Only the tables with exactly one or exactly two columns of type text can be marked as enums" : undefined;
+export const EnumTableModifyWarning = ({ isEnum }) => {
+  if (!isEnum) {
+    return null;
+  }
+
+  return (
+    <div className={styles.add_mar_bottom}>
+      <i>
+        * This table is set as an enum. Modifying it may cause your Hasura
+        metadata to become inconsistent.
+        <br />
+        <a
+          href={enumCompatibilityDocsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          See enum table requirements.
+        </a>
+      </i>
+    </div>
+  );
+};
+
+const EnumsSection = ({ isEnum, toggleEnum, loading }) => {
+  let title;
   if (loading) {
     title = 'Please wait...';
   }
 
-  const getInconsistencyNote = () => {
-    if (!isEnumsCompatible && isEnum) {
-      return (
-        <div className={`${styles.add_mar_top}`}>
-          <WarningIcon customStyle={styles.add_mar_right_small}/>
-          <i>This table seems to be in an inconsistent state because enum-incompatible changes have been made to the table schema after marking it as an enum. Please unmark it for everything to work as expected.</i>
-        </div>
-      )
-    }
-    return null;
-  };
-
   const getCompatibilityNote = () => {
-    const docsUrl = "https://docs.hasura.io/1.0/graphql/manual/schema/enums.html#option-2-using-a-reference-table";
     return (
       <div>
-        <i>The table must be enum compatible before you can add it as an enum. <a href={docsUrl} target="_blank" rel="noopener noreferrer">Read more.</a></i>
+        <i>
+          * The table must meet some requirements for you to set it as an enum.{' '}
+          <a
+            href={enumCompatibilityDocsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            See requirements.
+          </a>
+        </i>
       </div>
-    )
+    );
   };
 
   return (
     <div>
-      <h4 className={`${styles.subheading_text}`}>
-        Mark table as enum
-      </h4> 
+      <h4 className={`${styles.subheading_text}`}>Set table as enum</h4>
       <div
         className={`${styles.display_flex} ${styles.add_mar_bottom}`}
         title={title}
         data-toggle="tooltip"
       >
-        <span className={styles.add_mar_right_mid}> This table has enum values </span>
-        <Toggle
-          checked={isEnum}
-          icons={false}
-          onChange={toggleEnum}
-        />
+        <span className={styles.add_mar_right_mid}>
+          Expose the table values as GraphQL enums
+        </span>
+        <Toggle checked={isEnum} icons={false} onChange={toggleEnum} />
       </div>
       {getCompatibilityNote()}
-      {getInconsistencyNote()}
     </div>
   );
-
 };
 
 export default EnumsSection;

@@ -8,6 +8,8 @@ import JsonInput from '../../../Common/CustomInputTypes/JsonInput';
 import TextInput from '../../../Common/CustomInputTypes/TextInput';
 import Button from '../../../Common/Button/Button';
 
+import ReloadEnumValuesButton from '../Common/ReusableComponents/ReloadEnumValuesButton';
+
 import {
   getPlaceholder,
   INTEGER,
@@ -69,9 +71,12 @@ class EditItem extends Component {
     }
 
     const styles = require('../../../Common/TableCommon/Table.scss');
-    const columns = schemas.find(
+
+    const currentTable = schemas.find(
       x => x.table_name === tableName && x.table_schema === currentSchema
-    ).columns;
+    );
+
+    const columns = currentTable.columns;
 
     const refs = {};
     const elements = columns.map((col, i) => {
@@ -244,6 +249,10 @@ class EditItem extends Component {
               >
                 {buttonText}
               </Button>
+              <ReloadEnumValuesButton
+                dispatch={dispatch}
+                isEnum={currentTable.is_enum}
+              />
             </form>
           </div>
           <div className="col-xs-3">{alert}</div>
