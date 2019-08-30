@@ -80,16 +80,16 @@ getTriggerSql op trn qt allCols strfyNum spec =
       ]
     renderOldDataExp op2 scs =
       case op2 of
-        INSERT -> S.SEUnsafe "NULL"
+        INSERT -> S.SENull
         UPDATE -> getRowExpression OLD scs
         DELETE -> getRowExpression OLD scs
-        MANUAL -> S.SEUnsafe "NULL"
+        MANUAL -> S.SENull
     renderNewDataExp op2 scs =
       case op2 of
         INSERT -> getRowExpression NEW scs
         UPDATE -> getRowExpression NEW scs
-        DELETE -> S.SEUnsafe "NULL"
-        MANUAL -> S.SEUnsafe "NULL"
+        DELETE -> S.SENull
+        MANUAL -> S.SENull
     getRowExpression opVar scs =
       case scs of
         SubCStar -> applyRowToJson $ S.SEUnsafe $ opToTxt opVar

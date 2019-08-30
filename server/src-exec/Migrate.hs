@@ -19,7 +19,7 @@ import qualified Data.Yaml.TH               as Y
 import qualified Database.PG.Query          as Q
 
 curCatalogVer :: T.Text
-curCatalogVer = "22"
+curCatalogVer = "23"
 
 migrateMetadata
   :: ( MonadTx m
@@ -103,8 +103,8 @@ setAsSystemDefinedFor16 =
              AND  table_name = 'hdb_query_collection';
            |]
 
-setAsSystemDefinedFor22 :: (MonadTx m) => m ()
-setAsSystemDefinedFor22 =
+setAsSystemDefinedFor23 :: (MonadTx m) => m ()
+setAsSystemDefinedFor23 =
   liftTx $ Q.catchE defaultTxErrorHandler $
   Q.multiQ [Q.sql|
             UPDATE hdb_catalog.hdb_table
@@ -364,7 +364,13 @@ from20To21 :: (MonadTx m) => m ()
 from20To21 = liftTx $ Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "CREATE INDEX ON hdb_catalog.event_log (locked)" () False
 
-from21To22
+from21To22 :: (MonadTx m) => m ()
+from21To22 = do
+  Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
+    $(Q.sqlFromFile "src-rsr/migrate_from_21_to_22.sql")
+  pure ()
+
+from22To23
   :: ( MonadTx m
      , HasHttpManager m
      , HasSQLGenCtx m
@@ -373,18 +379,18 @@ from21To22
      , MonadIO m
      )
   => m ()
-from21To22 = do
+from22To23 = do
   -- Migrate database
   Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
-    $(Q.sqlFromFile "src-rsr/migrate_from_21_to_22.sql")
+    $(Q.sqlFromFile "src-rsr/migrate_from_22_to_23.sql")
 
-  migrateMetadata False migrateMetadataFor22
+  migrateMetadata False migrateMetadataFor23
   -- Set as system defined
-  setAsSystemDefinedFor22
+  setAsSystemDefinedFor23
   return ()
   where
-    migrateMetadataFor22 =
-      $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_21_to_22.yaml" :: Q (TExp RQLQuery)))
+    migrateMetadataFor23 =
+      $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_22_to_23.yaml" :: Q (TExp RQLQuery)))
 
 migrateCatalog
   :: ( MonadTx m
@@ -429,6 +435,7 @@ migrateCatalog migrationTime = migrateFrom =<< getCatalogVersion
           , ("19", from19To20)
           , ("20", from20To21)
           , ("21", from21To22)
+          , ("22", from22To23)
           ]
 
     postMigrate = do
