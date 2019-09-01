@@ -83,7 +83,7 @@ mkSelArgs tn =
   ]
   where
     whereDesc   = "filter the rows returned"
-    limitDesc   = "limit the nuber of rows returned"
+    limitDesc   = "limit the number of rows returned"
     offsetDesc  = "skip the first n rows. Use only with order_by"
     orderByDesc = "sort the rows by one or more columns"
     distinctDesc = "distinct select on columns"
