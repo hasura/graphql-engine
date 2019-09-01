@@ -26,8 +26,7 @@ import qualified Hasura.GraphQL.Validate.Field          as V
 import qualified Hasura.SQL.DML                         as S
 
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Resolve.Context
+import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Select                  (asSingleRowJsonResp)
@@ -35,7 +34,7 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-type PlanVariables = Map.HashMap G.Variable (Int, PGColType)
+type PlanVariables = Map.HashMap G.Variable (Int, PGColumnType)
 type PrepArgMap = IntMap.IntMap Q.PrepArg
 
 data PGPlan
@@ -64,7 +63,7 @@ instance J.ToJSON RootFieldPlan where
     RFPRaw encJson     -> J.toJSON $ TBS.fromBS encJson
     RFPPostgres pgPlan -> J.toJSON pgPlan
 
-type VariableTypes = Map.HashMap G.Variable PGColType
+type VariableTypes = Map.HashMap G.Variable PGColumnType
 
 data QueryPlan
   = QueryPlan
@@ -80,7 +79,7 @@ data ReusableQueryPlan
 
 instance J.ToJSON ReusableQueryPlan where
   toJSON (ReusableQueryPlan varTypes fldPlans) =
-    J.object [ "variables"       J..= show varTypes
+    J.object [ "variables"       J..= varTypes
              , "field_plans"     J..= fldPlans
              ]
 
@@ -117,9 +116,9 @@ withPlan usrVars (PGPlan q reqVars prepMap) annVars = do
   where
     getVar accum (var, (prepNo, _)) = do
       let varName = G.unName $ G.unVariable var
-      (_, colVal) <- onNothing (Map.lookup var annVars) $
+      colVal <- onNothing (Map.lookup var annVars) $
         throw500 $ "missing variable in annVars : " <> varName
-      let prepVal = binEncoder colVal
+      let prepVal = toBinaryValue colVal
       return $ IntMap.insert prepNo prepVal accum
 
 -- turn the current plan into a transaction
@@ -157,7 +156,7 @@ initPlanningSt =
 
 getVarArgNum
   :: (MonadState PlanningSt m)
-  => G.Variable -> PGColType -> m Int
+  => G.Variable -> PGColumnType -> m Int
 getVarArgNum var colTy = do
   PlanningSt curArgNum vars prepped <- get
   case Map.lookup var vars of
@@ -191,15 +190,17 @@ prepareWithPlan = \case
     argNum <- case (varM, isNullable) of
       (Just var, False) -> getVarArgNum var colTy
       _                 -> getNextArgNum
-    addPrepArg argNum $ binEncoder colVal
-    return $ toPrepParam argNum colTy
+    addPrepArg argNum $ toBinaryValue colVal
+    return $ toPrepParam argNum (pstType colVal)
+
   R.UVSessVar ty sessVar -> do
     let sessVarVal =
           S.SEOpApp (S.SQLOp "->>")
           [S.SEPrep 1, S.SELit $ T.toLower sessVar]
     return $ flip S.SETyAnn (S.mkTypeAnn ty) $ case ty of
-      PgTypeSimple colTy -> withGeoVal colTy sessVarVal
-      PgTypeArray _      -> sessVarVal
+      PGTypeScalar colTy -> withConstructorFn colTy sessVarVal
+      PGTypeArray _      -> sessVarVal
+
   R.UVSQL sqlExp -> return sqlExp
 
 queryRootName :: Text
@@ -209,7 +210,7 @@ convertQuerySelSet
   :: ( MonadError QErr m
      , MonadReader r m
      , Has TypeMap r
-     , Has OpCtxMap r
+     , Has QueryCtxMap r
      , Has FieldMap r
      , Has OrdByCtx r
      , Has SQLGenCtx r

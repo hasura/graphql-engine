@@ -1,22 +1,22 @@
 module Hasura.RQL.DML.Internal where
 
-import qualified Database.PG.Query            as Q
-import qualified Database.PG.Query.Connection as Q
-import qualified Hasura.SQL.DML               as S
+import qualified Database.PG.Query   as Q
+import qualified Hasura.SQL.DML      as S
 
 import           Hasura.Prelude
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
+import           Hasura.SQL.Error
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
 import           Control.Lens
 import           Data.Aeson.Types
 
-import qualified Data.HashMap.Strict          as M
-import qualified Data.HashSet                 as HS
-import qualified Data.Sequence                as DS
-import qualified Data.Text                    as T
+import qualified Data.HashMap.Strict as M
+import qualified Data.HashSet        as HS
+import qualified Data.Sequence       as DS
+import qualified Data.Text           as T
 
 newtype DMLP1 a
   = DMLP1 {unDMLP1 :: StateT (DS.Seq Q.PrepArg) P1 a}
@@ -41,13 +41,13 @@ instance UserInfoM DMLP1 where
 instance HasSQLGenCtx DMLP1 where
   askSQLGenCtx = DMLP1 $ lift askSQLGenCtx
 
-mkAdminRolePermInfo :: TableInfo -> RolePermInfo
+mkAdminRolePermInfo :: TableInfo PGColumnInfo -> RolePermInfo
 mkAdminRolePermInfo ti =
   RolePermInfo (Just i) (Just s) (Just u) (Just d)
   where
-    pgCols = map pgiName $ getCols $ tiFieldInfoMap ti
+    pgCols = map pgiName $ getCols $ _tiFieldInfoMap ti
 
-    tn = tiName ti
+    tn = _tiName ti
     i = InsPermInfo (HS.fromList pgCols) tn annBoolExpTrue M.empty []
     s = SelPermInfo (HS.fromList pgCols) tn annBoolExpTrue
         Nothing True []
@@ -57,14 +57,14 @@ mkAdminRolePermInfo ti =
 askPermInfo'
   :: (UserInfoM m)
   => PermAccessor c
-  -> TableInfo
+  -> TableInfo PGColumnInfo
   -> m (Maybe c)
 askPermInfo' pa tableInfo = do
   roleName <- askCurRole
   let mrpi = getRolePermInfo roleName
   return $ mrpi >>= (^. permAccToLens pa)
   where
-    rpim = tiRolePermInfoMap tableInfo
+    rpim = _tiRolePermInfoMap tableInfo
     getRolePermInfo roleName
       | roleName == adminRole = Just $ mkAdminRolePermInfo tableInfo
       | otherwise             = M.lookup roleName rpim
@@ -72,7 +72,7 @@ askPermInfo' pa tableInfo = do
 askPermInfo
   :: (UserInfoM m, QErrM m)
   => PermAccessor c
-  -> TableInfo
+  -> TableInfo PGColumnInfo
   -> m c
 askPermInfo pa tableInfo = do
   roleName <- askCurRole
@@ -80,38 +80,38 @@ askPermInfo pa tableInfo = do
   case mPermInfo of
     Just c  -> return c
     Nothing -> throw400 PermissionDenied $ mconcat
-      [ pt <> " on " <>> tiName tableInfo
+      [ pt <> " on " <>> _tiName tableInfo
       , " for role " <>> roleName
       , " is not allowed. "
       ]
   where
     pt = permTypeToCode $ permAccToType pa
 
-isTabUpdatable :: RoleName -> TableInfo -> Bool
+isTabUpdatable :: RoleName -> TableInfo PGColumnInfo -> Bool
 isTabUpdatable role ti
   | role == adminRole = True
   | otherwise = isJust $ M.lookup role rpim >>= _permUpd
   where
-    rpim = tiRolePermInfoMap ti
+    rpim = _tiRolePermInfoMap ti
 
 askInsPermInfo
   :: (UserInfoM m, QErrM m)
-  => TableInfo -> m InsPermInfo
+  => TableInfo PGColumnInfo -> m InsPermInfo
 askInsPermInfo = askPermInfo PAInsert
 
 askSelPermInfo
   :: (UserInfoM m, QErrM m)
-  => TableInfo -> m SelPermInfo
+  => TableInfo PGColumnInfo -> m SelPermInfo
 askSelPermInfo = askPermInfo PASelect
 
 askUpdPermInfo
   :: (UserInfoM m, QErrM m)
-  => TableInfo -> m UpdPermInfo
+  => TableInfo PGColumnInfo -> m UpdPermInfo
 askUpdPermInfo = askPermInfo PAUpdate
 
 askDelPermInfo
   :: (UserInfoM m, QErrM m)
-  => TableInfo -> m DelPermInfo
+  => TableInfo PGColumnInfo -> m DelPermInfo
 askDelPermInfo = askPermInfo PADelete
 
 verifyAsrns :: (MonadError QErr m) => [a -> m ()] -> [a] -> m ()
@@ -142,27 +142,27 @@ checkPermOnCol pt allowedCols pgCol = do
         ]
 
 binRHSBuilder
-  :: PGColType -> Value -> DMLP1 S.SQLExp
+  :: PGColumnType -> Value -> DMLP1 S.SQLExp
 binRHSBuilder colType val = do
   preparedArgs <- get
-  binVal <- runAesonParser (convToBin colType) val
-  put (preparedArgs DS.|> binVal)
-  return $ toPrepParam (DS.length preparedArgs + 1) colType
+  scalarValue <- parsePGScalarValue colType val
+  put (preparedArgs DS.|> toBinaryValue scalarValue)
+  return $ toPrepParam (DS.length preparedArgs + 1) (pstType scalarValue)
 
 fetchRelTabInfo
   :: (QErrM m, CacheRM m)
   => QualifiedTable
-  -> m TableInfo
+  -> m (TableInfo PGColumnInfo)
 fetchRelTabInfo refTabName =
   -- Internal error
   modifyErrAndSet500 ("foreign " <> ) $ askTabInfo refTabName
 
-type SessVarBldr m = PgType -> SessVar -> m S.SQLExp
+type SessVarBldr m = PGType PGScalarType -> SessVar -> m S.SQLExp
 
 fetchRelDet
   :: (UserInfoM m, QErrM m, CacheRM m)
   => RelName -> QualifiedTable
-  -> m (FieldInfoMap, SelPermInfo)
+  -> m (FieldInfoMap PGColumnInfo, SelPermInfo)
 fetchRelDet relName refTabName = do
   roleName <- askCurRole
   -- Internal error
@@ -171,7 +171,7 @@ fetchRelDet relName refTabName = do
   refSelPerm <- modifyErr (relPermErr refTabName roleName) $
                 askSelPermInfo refTabInfo
 
-  return (tiFieldInfoMap refTabInfo, refSelPerm)
+  return (_tiFieldInfoMap refTabInfo, refSelPerm)
   where
     relPermErr rTable roleName _ =
       mconcat
@@ -188,7 +188,7 @@ checkOnColExp
   -> AnnBoolExpFldSQL
   -> m AnnBoolExpFldSQL
 checkOnColExp spi sessVarBldr annFld = case annFld of
-  AVCol (PGColInfo cn _ _) _ -> do
+  AVCol (PGColumnInfo cn _ _) _ -> do
     checkSelOnCol spi cn
     return annFld
   AVRel relInfo nesAnn -> do
@@ -215,16 +215,16 @@ convPartialSQLExp f = \case
   PSESessVar colTy sessVar -> f colTy sessVar
 
 sessVarFromCurrentSetting
-  :: (Applicative f) => PgType -> SessVar -> f S.SQLExp
+  :: (Applicative f) => PGType PGScalarType -> SessVar -> f S.SQLExp
 sessVarFromCurrentSetting pgType sessVar =
   pure $ sessVarFromCurrentSetting' pgType sessVar
 
-sessVarFromCurrentSetting' :: PgType -> SessVar -> S.SQLExp
+sessVarFromCurrentSetting' :: PGType PGScalarType -> SessVar -> S.SQLExp
 sessVarFromCurrentSetting' ty sessVar =
   flip S.SETyAnn (S.mkTypeAnn ty) $
   case ty of
-    PgTypeSimple baseTy -> withGeoVal baseTy sessVarVal
-    PgTypeArray _       -> sessVarVal
+    PGTypeScalar baseTy -> withConstructorFn baseTy sessVarVal
+    PGTypeArray _       -> sessVarVal
   where
     curSess = S.SEUnsafe "current_setting('hasura.user')::json"
     sessVarVal = S.SEOpApp (S.SQLOp "->>")
@@ -241,41 +241,45 @@ checkSelPerm spi sessVarBldr =
 
 convBoolExp
   :: (UserInfoM m, QErrM m, CacheRM m)
-  => FieldInfoMap
+  => FieldInfoMap PGColumnInfo
   -> SelPermInfo
   -> BoolExp
   -> SessVarBldr m
-  -> (PGColType -> Value -> m S.SQLExp)
+  -> (PGColumnType -> Value -> m S.SQLExp)
   -> m AnnBoolExpSQL
 convBoolExp cim spi be sessVarBldr prepValBldr = do
   abe <- annBoolExp rhsParser cim be
   checkSelPerm spi sessVarBldr abe
   where
     rhsParser pgType val = case pgType of
-      PgTypeSimple ty  -> prepValBldr ty val
-      PgTypeArray ofTy -> do
-        -- for arrays we don't use the prepared builder
+      PGTypeScalar ty  -> prepValBldr ty val
+      PGTypeArray ofTy -> do
+        -- for arrays, we don't use the prepared builder
         vals <- runAesonParser parseJSON val
-        arrayExp <- S.SEArray <$> indexedForM vals (txtRHSBuilder ofTy)
-        return $ S.SETyAnn arrayExp $ S.mkTypeAnn pgType
+        WithScalarType scalarType scalarValues <- parsePGScalarValues ofTy vals
+        return $ S.SETyAnn
+          (S.SEArray $ map (toTxtValue . WithScalarType scalarType) scalarValues)
+          (S.mkTypeAnn $ PGTypeArray scalarType)
 
 dmlTxErrorHandler :: Q.PGTxErr -> QErr
-dmlTxErrorHandler p2Res =
-  case err of
-    Nothing          -> defaultTxErrorHandler p2Res
-    Just (code, msg) -> err400 code msg
-  where err = simplifyError p2Res
+dmlTxErrorHandler = mkTxErrorHandler $ \case
+  PGIntegrityConstraintViolation _ -> True
+  PGDataException _ -> True
+  PGSyntaxErrorOrAccessRuleViolation (Just (PGErrorSpecific code)) -> code `elem`
+    [ PGUndefinedObject
+    , PGInvalidColumnReference ]
+  _ -> False
 
-toJSONableExp :: Bool -> PGColType -> S.SQLExp -> S.SQLExp
+toJSONableExp :: Bool -> PGColumnType -> S.SQLExp -> S.SQLExp
 toJSONableExp strfyNum colTy expn
-  | colTy == PGGeometry || colTy == PGGeography =
+  | isScalarColumnWhere isGeoType colTy =
       S.SEFnApp "ST_AsGeoJSON"
       [ expn
       , S.SEUnsafe "15" -- max decimal digits
       , S.SEUnsafe "4"  -- to print out crs
       ] Nothing
       `S.SETyAnn` S.jsonTypeAnn
-  | isBigNum colTy && strfyNum =
+  | isScalarColumnWhere isBigNum colTy && strfyNum =
       expn `S.SETyAnn` S.textTypeAnn
   | otherwise = expn
 
@@ -286,43 +290,6 @@ validateHeaders depHeaders = do
   forM_ depHeaders $ \hdr ->
     unless (hdr `elem` map T.toLower headers) $
     throw400 NotFound $ hdr <<> " header is expected but not found"
-
-simplifyError :: Q.PGTxErr -> Maybe (Code, T.Text)
-simplifyError txErr = do
-  stmtErr <- Q.getPGStmtErr txErr
-  codeMsg <- getPGCodeMsg stmtErr
-  extractError codeMsg
-  where
-    getPGCodeMsg pged =
-      (,) <$> Q.edStatusCode pged <*> Q.edMessage pged
-    extractError = \case
-      -- restrict violation
-      ("23001", msg) ->
-        return (ConstraintViolation, "Can not delete or update due to data being referred. " <> msg)
-      -- not null violation
-      ("23502", msg) ->
-        return (ConstraintViolation, "Not-NULL violation. " <> msg)
-      -- foreign key violation
-      ("23503", msg) ->
-        return  (ConstraintViolation, "Foreign key violation. " <> msg)
-      -- unique violation
-      ("23505", msg) ->
-        return  (ConstraintViolation, "Uniqueness violation. " <> msg)
-      -- check violation
-      ("23514", msg) ->
-        return (PermissionError, "Check constraint violation. " <> msg)
-      -- invalid text representation
-      ("22P02", msg) -> return (DataException, msg)
-      -- invalid parameter value
-      ("22023", msg) -> return (DataException, msg)
-      -- no unique constraint on the columns
-      ("42P10", _)   ->
-        return (ConstraintError, "there is no unique or exclusion constraint on target column(s)")
-      -- no constraint
-      ("42704", msg) -> return (ConstraintError, msg)
-      -- invalid input values
-      ("22007", msg) -> return (DataException, msg)
-      _              -> Nothing
 
 -- validate limit and offset int values
 onlyPositiveInt :: MonadError QErr m => Int -> m ()

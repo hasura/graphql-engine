@@ -1,0 +1,14 @@
+description: Test validation of enum input values
+url: /v1/graphql
+status: 200
+response:
+  errors:
+  - message: 'unexpected value "not_a_real_color" for enum: ''colors_enum'''
+    extensions:
+      code: validation-failed
+      path: $.selectionSet.users.args.where.favorite_color._eq
+query:
+  query: |
+    {
+      users(where: { favorite_color: { _eq: not_a_real_color }}) { name }
+    }
