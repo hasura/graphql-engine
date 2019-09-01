@@ -34,7 +34,7 @@ type alias OnlineUsersOptionalArguments =
 {-| fetch data from the table: "online\_users"
 
   - distinct\_on - distinct select on columns
-  - limit - limit the nuber of rows returned
+  - limit - limit the number of rows returned
   - offset - skip the first n rows. Use only with order\_by
   - order\_by - sort the rows by one or more columns
   - where\_ - filter the rows returned
