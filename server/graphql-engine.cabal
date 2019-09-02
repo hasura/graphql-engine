@@ -146,29 +146,39 @@ library
                      , mime-types >= 0.1
 
   exposed-modules:     Hasura.Prelude
+--                      , Hasura.Logging
+--                      , Hasura.EncJSON
+                     , Hasura.App
+                     , Hasura.App.Ops
+
                      , Hasura.Logging
-                     , Hasura.EncJSON
-                     , Hasura.Db
-                     , Hasura.Cache
+                     , Hasura.HTTP
 
                      , Hasura.Server.App
                      , Hasura.Server.Auth
-                     , Hasura.Server.Auth.JWT
                      , Hasura.Server.Init
+                     , Hasura.Server.Query
+                     , Hasura.Server.Utils
+                     , Hasura.Server.Version
+
+                     , Hasura.RQL.Types
+                     , Hasura.RQL.DDL.Metadata
+
+  other-modules:       Hasura.EncJSON
+                     , Hasura.Db
+                     , Hasura.Cache
+
+                     , Hasura.Server.Auth.JWT
                      , Hasura.Server.Context
                      , Hasura.Server.Middleware
                      , Hasura.Server.Logging
-                     , Hasura.Server.Query
-                     , Hasura.Server.Utils
                      , Hasura.Server.Cors
-                     , Hasura.Server.Version
                      , Hasura.Server.CheckUpdates
                      , Hasura.Server.Telemetry
                      , Hasura.Server.SchemaUpdate
                      , Hasura.Server.PGDump
                      , Hasura.Server.Config
 
-                     , Hasura.RQL.Types
                      , Hasura.RQL.Instances
                      , Hasura.RQL.Types.SchemaCache
                      , Hasura.RQL.Types.SchemaCacheTypes
@@ -193,7 +203,6 @@ library
                      , Hasura.RQL.DDL.Schema.Rename
                      , Hasura.RQL.DDL.Schema.Function
                      , Hasura.RQL.DDL.Schema.Diff
-                     , Hasura.RQL.DDL.Metadata
                      , Hasura.RQL.DDL.Utils
                      , Hasura.RQL.DDL.EventTrigger
                      , Hasura.RQL.DDL.Headers
@@ -257,8 +266,6 @@ library
                      , Hasura.Events.Lib
                      , Hasura.Events.HTTP
 
-                     , Hasura.HTTP
-
                      , Data.Text.Extended
                      , Data.Aeson.Extended
                      , Data.Sequence.NonEmpty
@@ -274,9 +281,7 @@ library
                      , Hasura.SQL.Rewrite
                      , Network.URI.Extended
 
-                     , Hasura.App.Ops
                      , Hasura.App.Migrate
-                     , Hasura.App
 
   other-modules:       Hasura.Server.Auth.JWT.Internal
                      , Hasura.Server.Auth.JWT.Logging
@@ -345,6 +350,10 @@ executable graphql-engine
   hs-source-dirs:    src-exec
   build-depends:     base
                    , graphql-engine
+                   , pg-client
+                   , text
+                   , bytestring
+
 
   if flag(developer)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries
