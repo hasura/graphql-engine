@@ -126,7 +126,7 @@ Next, we need to tell Hasura that this table represents an enum.
 Setting a table as an enum table
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Once we have a table which satisfies the conditions for an enum table as described :ref:`above <enum_compatibility>`,
+Once we have a table which satisfies the conditions for an enum table as described :ref:`above <create_enum_table>`,
 we need to tell Hasura that this table represents an enum.
 
 We can do that by passing ``true`` for the ``is_enum`` option of the :ref:`track_table` API, or we can
