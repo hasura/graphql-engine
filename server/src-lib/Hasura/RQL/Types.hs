@@ -41,6 +41,7 @@ import           Hasura.Db                     as R
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.Types.BoolExp      as R
+import           Hasura.RQL.Types.Column       as R
 import           Hasura.RQL.Types.Common       as R
 import           Hasura.RQL.Types.DML          as R
 import           Hasura.RQL.Types.Error        as R
@@ -60,9 +61,9 @@ import qualified Network.HTTP.Client           as HTTP
 
 getFieldInfoMap
   :: QualifiedTable
-  -> SchemaCache -> Maybe FieldInfoMap
+  -> SchemaCache -> Maybe (FieldInfoMap PGColumnInfo)
 getFieldInfoMap tn =
-  fmap tiFieldInfoMap . M.lookup tn . scTables
+  fmap _tiFieldInfoMap . M.lookup tn . scTables
 
 data QCtx
   = QCtx
@@ -85,7 +86,7 @@ class (Monad m) => UserInfoM m where
 
 askTabInfo
   :: (QErrM m, CacheRM m)
-  => QualifiedTable -> m TableInfo
+  => QualifiedTable -> m (TableInfo PGColumnInfo)
 askTabInfo tabName = do
   rawSchemaCache <- askSchemaCache
   liftMaybe (err400 NotExists errMsg) $ M.lookup tabName $ scTables rawSchemaCache
@@ -94,11 +95,11 @@ askTabInfo tabName = do
 
 askTabInfoFromTrigger
   :: (QErrM m, CacheRM m)
-  => TriggerName -> m TableInfo
+  => TriggerName -> m (TableInfo PGColumnInfo)
 askTabInfoFromTrigger trn = do
   sc <- askSchemaCache
   let tabInfos = M.elems $ scTables sc
-  liftMaybe (err400 NotExists errMsg) $ find (isJust.M.lookup trn.tiEventTriggerInfoMap) tabInfos
+  liftMaybe (err400 NotExists errMsg) $ find (isJust.M.lookup trn._tiEventTriggerInfoMap) tabInfos
   where
     errMsg = "event trigger " <> triggerNameToTxt trn <<> " does not exist"
 
@@ -107,7 +108,7 @@ askEventTriggerInfo
   => TriggerName -> m EventTriggerInfo
 askEventTriggerInfo trn = do
   ti <- askTabInfoFromTrigger trn
-  let etim = tiEventTriggerInfoMap ti
+  let etim = _tiEventTriggerInfoMap ti
   liftMaybe (err400 NotExists errMsg) $ M.lookup trn etim
   where
     errMsg = "event trigger " <> triggerNameToTxt trn <<> " does not exist"
@@ -164,7 +165,7 @@ liftP1WithQCtx r m =
 
 askFieldInfoMap
   :: (QErrM m, CacheRM m)
-  => QualifiedTable -> m FieldInfoMap
+  => QualifiedTable -> m (FieldInfoMap PGColumnInfo)
 askFieldInfoMap tabName = do
   mFieldInfoMap <- getFieldInfoMap tabName <$> askSchemaCache
   maybe (throw400 NotExists errMsg) return mFieldInfoMap
@@ -173,19 +174,19 @@ askFieldInfoMap tabName = do
 
 askPGType
   :: (MonadError QErr m)
-  => FieldInfoMap
+  => FieldInfoMap PGColumnInfo
   -> PGCol
   -> T.Text
-  -> m PGColType
+  -> m PGColumnType
 askPGType m c msg =
   pgiType <$> askPGColInfo m c msg
 
 askPGColInfo
   :: (MonadError QErr m)
-  => FieldInfoMap
+  => FieldInfoMap columnInfo
   -> PGCol
   -> T.Text
-  -> m PGColInfo
+  -> m columnInfo
 askPGColInfo m c msg = do
   colInfo <- modifyErr ("column " <>) $
              askFieldInfo m (fromPGCol c)
@@ -200,16 +201,16 @@ askPGColInfo m c msg = do
       ]
 
 assertPGCol :: (MonadError QErr m)
-            => FieldInfoMap
+            => FieldInfoMap columnInfo
             -> T.Text
             -> PGCol
             -> m ()
 assertPGCol m msg c = do
-  _ <- askPGType m c msg
+  _ <- askPGColInfo m c msg
   return ()
 
 askRelType :: (MonadError QErr m)
-           => FieldInfoMap
+           => FieldInfoMap columnInfo
            -> RelName
            -> T.Text
            -> m RelInfo
@@ -226,9 +227,9 @@ askRelType m r msg = do
       ]
 
 askFieldInfo :: (MonadError QErr m)
-           => FieldInfoMap
+           => FieldInfoMap columnInfo
            -> FieldName
-           -> m FieldInfo
+           -> m (FieldInfo columnInfo)
 askFieldInfo m f =
   case M.lookup f m of
   Just colInfo -> return colInfo

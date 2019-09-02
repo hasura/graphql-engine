@@ -36,7 +36,7 @@ data AnnUpdG v
   -- however the session variable can still be
   -- converted as desired
   , uqp1MutFlds :: !(MutFldsG v)
-  , uqp1AllCols :: ![PGColInfo]
+  , uqp1AllCols :: ![PGColumnInfo]
   } deriving (Show, Eq)
 
 traverseAnnUpd
@@ -67,9 +67,9 @@ mkUpdateCTE (AnnUpd tn setExps (permFltr, wc) _ _) =
 
 convInc
   :: (QErrM m)
-  => (PGColType -> Value -> m S.SQLExp)
+  => (PGColumnType -> Value -> m S.SQLExp)
   -> PGCol
-  -> PGColType
+  -> PGColumnType
   -> Value
   -> m (PGCol, S.SQLExp)
 convInc f col colType val = do
@@ -78,9 +78,9 @@ convInc f col colType val = do
 
 convMul
   :: (QErrM m)
-  => (PGColType -> Value -> m S.SQLExp)
+  => (PGColumnType -> Value -> m S.SQLExp)
   -> PGCol
-  -> PGColType
+  -> PGColumnType
   -> Value
   -> m (PGCol, S.SQLExp)
 convMul f col colType val = do
@@ -89,25 +89,25 @@ convMul f col colType val = do
 
 convSet
   :: (QErrM m)
-  => (PGColType -> Value -> m S.SQLExp)
+  => (PGColumnType -> Value -> m S.SQLExp)
   -> PGCol
-  -> PGColType
+  -> PGColumnType
   -> Value
   -> m (PGCol, S.SQLExp)
 convSet f col colType val = do
   prepExp <- f colType val
   return (col, prepExp)
 
-convDefault :: (Monad m) => PGCol -> PGColType -> () -> m (PGCol, S.SQLExp)
+convDefault :: (Monad m) => PGCol -> PGColumnType -> () -> m (PGCol, S.SQLExp)
 convDefault col _ _ = return (col, S.SEUnsafe "DEFAULT")
 
 convOp
   :: (UserInfoM m, QErrM m)
-  => FieldInfoMap
+  => FieldInfoMap PGColumnInfo
   -> [PGCol]
   -> UpdPermInfo
   -> [(PGCol, a)]
-  -> (PGCol -> PGColType -> a -> m (PGCol, S.SQLExp))
+  -> (PGCol -> PGColumnType -> a -> m (PGCol, S.SQLExp))
   -> m [(PGCol, S.SQLExp)]
 convOp fieldInfoMap preSetCols updPerm objs conv =
   forM objs $ \(pgCol, a) -> do
@@ -129,7 +129,7 @@ convOp fieldInfoMap preSetCols updPerm objs conv =
 validateUpdateQueryWith
   :: (UserInfoM m, QErrM m, CacheRM m)
   => SessVarBldr m
-  -> (PGColType -> Value -> m S.SQLExp)
+  -> (PGColumnType -> Value -> m S.SQLExp)
   -> UpdateQuery
   -> m AnnUpd
 validateUpdateQueryWith sessVarBldr prepValBldr uq = do
@@ -138,7 +138,7 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
 
   -- If it is view then check if it is updatable
   mutableView tableName viIsUpdatable
-    (tiViewInfo tableInfo) "updatable"
+    (_tiViewInfo tableInfo) "updatable"
 
   -- Check if the role has update permissions
   updPerm <- askUpdPermInfo tableInfo
@@ -150,7 +150,7 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
   selPerm <- modifyErr (<> selNecessaryMsg) $
              askSelPermInfo tableInfo
 
-  let fieldInfoMap = tiFieldInfoMap tableInfo
+  let fieldInfoMap = _tiFieldInfoMap tableInfo
       allCols = getCols fieldInfoMap
       preSetObj = upiSet updPerm
       preSetCols = M.keys preSetObj

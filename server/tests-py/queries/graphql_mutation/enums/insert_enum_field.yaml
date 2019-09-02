@@ -1,0 +1,24 @@
+description: Test inserting a record that references an enum table
+url: /v1/graphql
+status: 200
+response:
+  data:
+    insert_users:
+      returning:
+      - name: Matthew
+        favorite_color: yellow
+      - name: Robby
+        favorite_color: purple
+query:
+  query: |
+    mutation {
+      insert_users(objects: [
+        { name: "Matthew", favorite_color: yellow },
+        { name: "Robby", favorite_color: purple }
+      ]) {
+        returning {
+          name
+          favorite_color
+        }
+      }
+    }

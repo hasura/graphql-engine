@@ -20,7 +20,6 @@ main =  do
     HCServe serveOptions -> do
       initCtx <- initialiseCtx hgeCmd rci Nothing
       runHGEServer serveOptions initCtx Nothing Nothing Nothing
-
     HCExport -> do
       initCtx <- initialiseCtx hgeCmd rci Nothing
       res <- runTx' initCtx fetchMetadata

@@ -624,3 +624,14 @@ class TestNonEmptyText:
     @classmethod
     def dir(cls):
         return "queries/v1/non_empty_text"
+
+class TestSetTableIsEnum(DefaultTestQueries):
+    @classmethod
+    def dir(cls):
+        return 'queries/v1/set_table_is_enum'
+
+    def test_add_and_remove(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/add_and_remove.yaml')
+
+    def test_add_invalid(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/add_invalid.yaml')
