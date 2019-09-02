@@ -102,6 +102,16 @@ the following restrictions:
     ('moderator', 'Users with the privilege to ban users'),
     ('administrator', 'Users with the privilege to set users’ roles');
 
+
+.. admonition:: Creating an enum table from a native PG enum
+
+  You can create a table containing the values of a PG enum by executing the following SQL:
+
+  .. code-block:: sql
+
+    CREATE TABLE "<my_enum_table>" (value TEXT PRIMARY KEY);
+    INSERT INTO "<my_enum_table>" (value) (SELECT unnest(enum_range(NULL::"<my_enum>")))::text);
+
 Next, we need to tell Hasura that this table represents an enum.
 
 Setting a table as an enum table
