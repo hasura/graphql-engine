@@ -73,8 +73,8 @@ This works alright, but it doesn’t prevent us from inserting nonsensical value
 
 which we certainly don’t want. Hence we should create an enum to restrict the allowed values.
 
-Creating an enum table
-^^^^^^^^^^^^^^^^^^^^^^
+Creating an enum compatible table
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To represent an enum, we’re going to create an _`enum table`, which for Hasura’s purposes is any table that meets
 the following restrictions:
@@ -103,12 +103,14 @@ the following restrictions:
 Next, we need to tell Hasura that this table represents an enum.
 
 Setting a table as an enum table
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Once we have a table which satisfies the conditions for an enum table as described above, we need to tell Hasura
-that this table represents an enum. We can do that by passing ``true`` for the
-``is_enum`` option of the :ref:`track_table` API, or we can use the :ref:`set_table_is_enum` API to change whether or
-not an already-tracked table should be used as an enum.
+Once we have a table which satisfies the conditions for an enum table as described above, we need to tell
+Hasura that this table represents an enum.
+
+We can do that by passing ``true`` for the ``is_enum`` option of the :ref:`track_table` API, or we can
+use the :ref:`set_table_is_enum` API to change whether or not an already-tracked table should be used
+as an enum.
 
 **For example**:
 
