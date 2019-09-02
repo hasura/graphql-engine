@@ -24,33 +24,34 @@ module Hasura.RQL.DDL.Metadata
   , runDropInconsistentMetadata
   ) where
 
-import           Control.Lens                       hiding ((.=))
+import           Control.Lens                        hiding ((.=))
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax         (Lift)
+import           Language.Haskell.TH.Syntax          (Lift)
 
-import qualified Data.HashMap.Strict                as M
-import qualified Data.HashSet                       as HS
-import qualified Data.List                          as L
-import qualified Data.Text                          as T
+import qualified Data.HashMap.Strict                 as M
+import qualified Data.HashSet                        as HS
+import qualified Data.List                           as L
+import qualified Data.Text                           as T
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Database.PG.Query                  as Q
-import qualified Hasura.RQL.DDL.EventTrigger        as DE
-import qualified Hasura.RQL.DDL.Permission          as DP
-import qualified Hasura.RQL.DDL.Permission.Internal as DP
-import qualified Hasura.RQL.DDL.QueryCollection     as DQC
-import qualified Hasura.RQL.DDL.Relationship        as DR
-import qualified Hasura.RQL.DDL.RemoteSchema        as DRS
-import qualified Hasura.RQL.DDL.Schema.Function     as DF
-import qualified Hasura.RQL.DDL.Schema.Table        as DT
-import qualified Hasura.RQL.Types.EventTrigger      as DTS
-import qualified Hasura.RQL.Types.RemoteSchema      as TRS
+import qualified Database.PG.Query                   as Q
+import qualified Hasura.RQL.DDL.EventTrigger         as DE
+import qualified Hasura.RQL.DDL.Permission           as DP
+import qualified Hasura.RQL.DDL.Permission.Internal  as DP
+import qualified Hasura.RQL.DDL.QueryCollection      as DQC
+import qualified Hasura.RQL.DDL.Relationship         as DR
+import qualified Hasura.RQL.DDL.RemoteSchema         as DRS
+import qualified Hasura.RQL.DDL.Schema.Function      as DF
+import qualified Hasura.RQL.DDL.Schema.Table         as DT
+import qualified Hasura.RQL.Types.EventTrigger       as DTS
+import qualified Hasura.RQL.Types.RemoteRelationship as TRR
+import qualified Hasura.RQL.Types.RemoteSchema       as TRS
 
 data TableMeta
   = TableMeta
@@ -142,11 +143,12 @@ runClearMetadata _ = do
 
 data ReplaceMetadata
   = ReplaceMetadata
-  { aqTables           :: ![TableMeta]
-  , aqFunctions        :: !(Maybe [QualifiedFunction])
-  , aqRemoteSchemas    :: !(Maybe [TRS.AddRemoteSchemaQuery])
-  , aqQueryCollections :: !(Maybe [DQC.CreateCollection])
-  , aqAllowlist        :: !(Maybe [DQC.CollectionReq])
+  { aqTables              :: ![TableMeta]
+  , aqFunctions           :: !(Maybe [QualifiedFunction])
+  , aqRemoteSchemas       :: !(Maybe [TRS.AddRemoteSchemaQuery])
+  , aqQueryCollections    :: !(Maybe [DQC.CreateCollection])
+  , aqAllowlist           :: !(Maybe [DQC.CollectionReq])
+  , aqRemoteRelationships :: !(Maybe [TRR.RemoteRelationship])
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ReplaceMetadata)
@@ -154,7 +156,7 @@ $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ReplaceMetadata)
 applyQP1
   :: (QErrM m, UserInfoM m)
   => ReplaceMetadata -> m ()
-applyQP1 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = do
+applyQP1 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist mRemoteRels) = do
 
   adminOnly
 
@@ -195,6 +197,11 @@ applyQP1 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = 
     withPathK "allowlist" $
         checkMultipleDecls "allow list" $ map DQC._crCollection allowlist
 
+  onJust mRemoteRels $ \remoteRels ->
+    withPathK "remote_relationships" $
+        checkMultipleDecls "remote relationships" $
+        map (\rel -> (TRR.rtrName rel, TRR.rtrTable rel)) remoteRels
+
   where
     withTableName qt = withPathK (qualObjectToText qt)
     functions = fromMaybe [] mFunctions
@@ -218,7 +225,7 @@ applyQP2
      )
   => ReplaceMetadata
   -> m EncJSON
-applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = do
+applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist mRemoteRels) = do
 
   liftTx clearMetadata
   DT.buildSchemaCacheStrict
@@ -279,6 +286,11 @@ applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = 
 
   -- build GraphQL Context with Remote schemas
   DRS.buildGCtxMap
+
+  -- remote relationships
+  onJust mRemoteRels $ \remoteRels ->
+    withPathK "remote_relationships" $
+      indexedMapM_ (void . DR.runCreateRemoteRelationship) remoteRels
 
   return successMsg
 
@@ -347,7 +359,7 @@ fetchMetadata = do
   functions <- map (uncurry QualifiedObject) <$>
     Q.catchE defaultTxErrorHandler fetchFunctions
 
-  -- fetch all custom resolvers
+  -- fetch all remote schemas
   schemas <- DRS.fetchRemoteSchemas
 
   -- fetch all collections
@@ -356,8 +368,11 @@ fetchMetadata = do
   -- fetch allow list
   allowlist <- map DQC.CollectionReq <$> DQC.fetchAllowlist
 
+  -- fetch all remote relationships
+  remoteRels <- Q.catchE defaultTxErrorHandler fetchRemoteRelationships
+
   return $ ReplaceMetadata (M.elems postRelMap) (Just functions)
-                           (Just schemas) (Just collections) (Just allowlist)
+                           (Just schemas) (Just collections) (Just allowlist) (Just remoteRels)
 
   where
 
@@ -408,11 +423,18 @@ fetchMetadata = do
               SELECT e.schema_name, e.table_name, e.configuration::json
                FROM hdb_catalog.event_triggers e
               |] () False
+
     fetchFunctions =
       Q.listQ [Q.sql|
                 SELECT function_schema, function_name
                 FROM hdb_catalog.hdb_function
                 WHERE is_system_defined = 'false'
+                    |] () False
+
+    fetchRemoteRelationships =
+      map (Q.getAltJ . runIdentity) <$> Q.listQ [Q.sql|
+                SELECT configuration::json
+                FROM hdb_catalog.hdb_remote_relationship
                     |] () False
 
 runExportMetadata
