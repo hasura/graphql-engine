@@ -100,9 +100,17 @@ the following restrictions:
     ('moderator', 'Users with the privilege to ban users'),
     ('administrator', 'Users with the privilege to set users’ roles');
 
-Next, we need to tell Hasura that this table represents an enum. We can do that by passing ``true`` for the
+Next, we need to tell Hasura that this table represents an enum.
+
+Setting table as enum
+^^^^^^^^^^^^^^^^^^^^^
+
+Once we have a table which satisfies the conditions for an enum table as described above, we need to tell Hasura
+that this table represents an enum. We can do that by passing ``true`` for the
 ``is_enum`` option of the :ref:`track_table` API, or we can use the :ref:`set_table_is_enum` API to change whether or
-not an already-tracked table should be used as an enum:
+not an already-tracked table should be used as an enum.
+
+**For example**:
 
 .. code-block:: http
 
@@ -126,7 +134,7 @@ Using an enum table
 
 To set a field of a table as an enum, we need to set a reference from it to the enum table via a foreign key.
 
-**For example**, to update our ``users`` table to reference the `user_role`` enum table:
+**For example**, to update our ``users`` table to reference the ``user_role`` enum table:
 
 .. code-block:: sql
 
