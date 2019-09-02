@@ -102,8 +102,8 @@ the following restrictions:
 
 Next, we need to tell Hasura that this table represents an enum.
 
-Setting table as enum
-^^^^^^^^^^^^^^^^^^^^^
+Setting a table as an enum table
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 
 
 Once we have a table which satisfies the conditions for an enum table as described above, we need to tell Hasura
 that this table represents an enum. We can do that by passing ``true`` for the
