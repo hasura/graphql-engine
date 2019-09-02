@@ -8,7 +8,7 @@ import GithubLink from '../../src/GithubLink.js'
 
 In this section, we will implement GraphQL Queries and integrate with the ios app UI. 
 
-### Create `.graphql` files with your queries or mutations
+### Create .graphql files with your queries or mutations
 
 Apollo iOS generates code from queries and mutations contained in `.graphql` files in your target.
 

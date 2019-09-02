@@ -5,8 +5,9 @@ const config = {
 		"gaTrackingId": "UA-59768903-1"
 	},
 	"header": {
-		"logo": "https://graphql-engine-cdn.hasura.io/img/hasura_icon_white.svg",
-		"title": "/ graphql / vue",
+		"logo": "https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/logo.png",
+		"logoLink": "https://learn.hasura.io",
+		"title": "<a href='https://learn.hasura.io'>/ graphql </a><a href='https://learn.hasura.io/graphql/vue'>/ vue</a>",
 		"githubUrl": "https://github.com/hasura/graphql-engine",
 		"helpUrl": "https://discordapp.com/invite/vBPpJkS",
 		"tweetText": "Check out this GraphQL course for Vue developers by @HasuraHQ https://learn.hasura.io/graphql/vue",
@@ -14,6 +15,13 @@ const config = {
 			"text": "hasura.io",
 			"link": "https://hasura.io"
 		}],
+		"search": {
+			"enabled": true,
+			"indexName": "learn-vue-apollo",
+			"algoliaAppId": process.env.GATSBY_ALGOLIA_APP_ID,
+			"algoliaSearchKey": process.env.GATSBY_ALGOLIA_SEARCH_KEY,
+			"algoliaAdminKey": process.env.ALGOLIA_ADMIN_KEY
+		}
 	},
 	"sidebar": {
 		"forcedNavOrder": [
@@ -27,7 +35,7 @@ const config = {
     		"/subscriptions",
     		"/realtime-feed",
     		"/what-next"
-    		],
+    	],
 		"links": [
 			{
 			"text": "Hasura Docs",
@@ -37,7 +45,9 @@ const config = {
 			"text": "GraphQL Docs",
 			"link": "https://graphql.org/learn"
 			}
-		]
+		],
+		"frontline": false,
+		"ignoreIndex": true
 	},
 	"siteMetadata": {
 		"title": "2 hour GraphQL course for Vue developers | Hasura",

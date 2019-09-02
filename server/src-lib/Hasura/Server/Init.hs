@@ -14,16 +14,14 @@ import qualified Data.ByteString.Lazy.Char8       as BLC
 import qualified Data.HashSet                     as Set
 import qualified Data.String                      as DataString
 import qualified Data.Text                        as T
-import qualified Data.UUID                        as UUID
-import qualified Data.UUID.V4                     as UUID
 import qualified Hasura.GraphQL.Execute.LiveQuery as LQ
 import qualified Hasura.Logging                   as L
 import qualified Text.PrettyPrint.ANSI.Leijen     as PP
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types                 ( RoleName (..)
-                                                  , SchemaCache (..)
-                                                  , mkNonEmptyText )
+import           Hasura.RQL.Types                 (RoleName (..),
+                                                   SchemaCache (..),
+                                                   mkNonEmptyText)
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
 import           Hasura.Server.Logging
@@ -31,10 +29,10 @@ import           Hasura.Server.Utils
 
 newtype InstanceId
   = InstanceId { getInstanceId :: Text }
-  deriving (Show, Eq, J.ToJSON, J.FromJSON)
+  deriving (Show, Eq, J.ToJSON, J.FromJSON, Q.FromCol, Q.ToPrepArg)
 
-mkInstanceId :: IO InstanceId
-mkInstanceId = InstanceId . UUID.toText <$> UUID.nextRandom
+generateInstanceId :: IO InstanceId
+generateInstanceId = InstanceId <$> generateFingerprint
 
 data StartupTimeInfo
   = StartupTimeInfo
@@ -169,7 +167,7 @@ instance FromEnv AdminSecret where
 
 instance FromEnv RoleName where
   fromEnv string = case mkNonEmptyText (T.pack string) of
-    Nothing -> Left "empty string not allowed"
+    Nothing     -> Left "empty string not allowed"
     Just neText -> Right $ RoleName neText
 
 instance FromEnv Bool where
@@ -453,7 +451,7 @@ serveCmdFooter =
         , "Max event threads"
         )
       , ( "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
-        , "Postgres events polling interval"
+        , "Postgres events polling interval in milliseconds"
         )
       ]
 
@@ -658,11 +656,11 @@ connInfoErrModifier :: String -> String
 connInfoErrModifier s = "Fatal Error : " ++ s
 
 mkConnInfo ::RawConnInfo -> Either String Q.ConnInfo
-mkConnInfo (RawConnInfo mHost mPort mUser pass mURL mDB opts mRetries) =
+mkConnInfo (RawConnInfo mHost mPort mUser password mURL mDB opts mRetries) =
   case (mHost, mPort, mUser, mDB, mURL) of
 
     (Just host, Just port, Just user, Just db, Nothing) ->
-      return $ Q.ConnInfo host port user pass db opts retries
+      return $ Q.ConnInfo host port user password db opts retries
 
     (_, _, _, _, Just dbURL) -> maybe (throwError invalidUrlMsg)
                                 withRetries $ parseDatabaseUrl dbURL opts

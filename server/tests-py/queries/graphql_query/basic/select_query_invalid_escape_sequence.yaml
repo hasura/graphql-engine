@@ -1,0 +1,18 @@
+description: GraphQL query with invalid escape sequence
+url: /v1/graphql
+status: 200
+response:
+  errors:
+  - extensions:
+      code: bad-request
+      path: $
+    message: |-
+      LIKE pattern must not end with escape character
+query:
+  query: |
+    query {
+      person(where: {name: {_like: "John\\"}}) {
+        id
+        name
+      }
+    }

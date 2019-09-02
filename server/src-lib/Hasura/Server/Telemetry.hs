@@ -19,6 +19,7 @@ import           Hasura.HTTP
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import           Hasura.Server.Init
 import           Hasura.Server.Version
 
 import qualified CI
@@ -57,6 +58,7 @@ data Metrics
   = Metrics
   { _mtTables        :: !Int
   , _mtViews         :: !Int
+  , _mtEnumTables    :: !Int
   , _mtRelationships :: !RelationshipMetric
   , _mtPermissions   :: !PermissionMetric
   , _mtEventTriggers :: !Int
@@ -68,7 +70,7 @@ $(A.deriveJSON (A.aesonDrop 3 A.snakeCase) ''Metrics)
 data HasuraTelemetry
   = HasuraTelemetry
   { _htDbUid       :: !Text
-  , _htInstanceUid :: !Text
+  , _htInstanceUid :: !InstanceId
   , _htVersion     :: !Text
   , _htCi          :: !(Maybe CI.CI)
   , _htMetrics     :: !Metrics
@@ -85,7 +87,7 @@ $(A.deriveJSON (A.aesonDrop 3 A.snakeCase) ''TelemetryPayload)
 telemetryUrl :: Text
 telemetryUrl = "https://telemetry.hasura.io/v1/http"
 
-mkPayload :: Text -> Text -> Text -> Metrics -> IO TelemetryPayload
+mkPayload :: Text -> InstanceId -> Text -> Metrics -> IO TelemetryPayload
 mkPayload dbId instanceId version metrics = do
   ci <- CI.getCI
   return $ TelemetryPayload topic $
@@ -96,9 +98,10 @@ runTelemetry
   :: Logger
   -> HTTP.Manager
   -> IORef (SchemaCache, SchemaCacheVer)
-  -> (Text, Text)
+  -> Text
+  -> InstanceId
   -> IO ()
-runTelemetry (Logger logger) manager cacheRef (dbId, instanceId) = do
+runTelemetry (Logger logger) manager cacheRef dbId instanceId = do
   let options = wreqOptions manager []
   forever $ do
     schemaCache <- fmap fst $ readIORef cacheRef
@@ -126,12 +129,13 @@ runTelemetry (Logger logger) manager cacheRef (dbId, instanceId) = do
 
 computeMetrics :: SchemaCache -> Metrics
 computeMetrics sc =
-  let nTables = Map.size $ Map.filter (isNothing . tiViewInfo) usrTbls
-      nViews  = Map.size $ Map.filter (isJust . tiViewInfo) usrTbls
-      allRels = join $ Map.elems $ Map.map relsOfTbl usrTbls
+  let nTables = countUserTables (isNothing . _tiViewInfo)
+      nViews = countUserTables (isJust . _tiViewInfo)
+      nEnumTables = countUserTables (isJust . _tiEnumValues)
+      allRels = join $ Map.elems $ Map.map relsOfTbl userTables
       (manualRels, autoRels) = partition riIsManual allRels
       relMetrics = RelationshipMetric (length manualRels) (length autoRels)
-      rolePerms = join $ Map.elems $ Map.map permsOfTbl usrTbls
+      rolePerms = join $ Map.elems $ Map.map permsOfTbl userTables
       nRoles = length $ nub $ fst <$> rolePerms
       allPerms = snd <$> rolePerms
       insPerms = calcPerms _permIns allPerms
@@ -141,23 +145,24 @@ computeMetrics sc =
       permMetrics =
         PermissionMetric selPerms insPerms updPerms delPerms nRoles
       evtTriggers = Map.size $ Map.filter (not . Map.null)
-                    $ Map.map tiEventTriggerInfoMap usrTbls
+                    $ Map.map _tiEventTriggerInfoMap userTables
       rmSchemas   = Map.size $ scRemoteSchemas sc
       funcs = Map.size $ Map.filter (not . fiSystemDefined) $ scFunctions sc
 
-  in Metrics nTables nViews relMetrics permMetrics evtTriggers rmSchemas funcs
+  in Metrics nTables nViews nEnumTables relMetrics permMetrics evtTriggers rmSchemas funcs
 
   where
-    usrTbls = Map.filter (not . tiSystemDefined) $ scTables sc
+    userTables = Map.filter (not . _tiSystemDefined) $ scTables sc
+    countUserTables predicate = length . filter predicate $ Map.elems userTables
 
     calcPerms :: (RolePermInfo -> Maybe a) -> [RolePermInfo] -> Int
     calcPerms fn perms = length $ catMaybes $ map fn perms
 
-    relsOfTbl :: TableInfo -> [RelInfo]
-    relsOfTbl = rights . Map.elems . Map.map fieldInfoToEither . tiFieldInfoMap
+    relsOfTbl :: TableInfo PGColumnInfo -> [RelInfo]
+    relsOfTbl = rights . Map.elems . Map.map fieldInfoToEither . _tiFieldInfoMap
 
-    permsOfTbl :: TableInfo -> [(RoleName, RolePermInfo)]
-    permsOfTbl = Map.toList . tiRolePermInfoMap
+    permsOfTbl :: TableInfo PGColumnInfo -> [(RoleName, RolePermInfo)]
+    permsOfTbl = Map.toList . _tiRolePermInfoMap
 
 
 getDbId :: Q.TxE QErr Text

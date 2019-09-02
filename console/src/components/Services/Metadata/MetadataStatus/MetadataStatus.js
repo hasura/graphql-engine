@@ -99,8 +99,8 @@ const MetadataStatus = ({ dispatch, metadata }) => {
       })
       .catch(e => {
         // todo error handling
-        console.error(e);
-        dispatch(showErrorNotification('Error reloading metadata'));
+        console.error('reloadMetadata error: ', e);
+        dispatch(showErrorNotification('Error reloading metadata', null, e));
       });
   };
 

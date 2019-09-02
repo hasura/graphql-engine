@@ -16,8 +16,7 @@ import           Hasura.RQL.DDL.QueryCollection
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Relationship.Rename
 import           Hasura.RQL.DDL.RemoteSchema
-import           Hasura.RQL.DDL.Schema.Function
-import           Hasura.RQL.DDL.Schema.Table
+import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.DML.Count
 import           Hasura.RQL.DML.Delete
 import           Hasura.RQL.DML.Insert
@@ -33,6 +32,7 @@ data RQLQuery
   = RQAddExistingTableOrView !TrackTable
   | RQTrackTable !TrackTable
   | RQUntrackTable !UntrackTable
+  | RQSetTableIsEnum !SetTableIsEnum
 
   | RQTrackFunction !TrackFunction
   | RQUntrackFunction !UnTrackFunction
@@ -121,27 +121,21 @@ instance HasSQLGenCtx Run where
 
 fetchLastUpdate :: Q.TxE QErr (Maybe (InstanceId, UTCTime))
 fetchLastUpdate = do
-  l <- Q.listQE defaultTxErrorHandler
+  Q.withQE defaultTxErrorHandler
     [Q.sql|
        SELECT instance_id::text, occurred_at
        FROM hdb_catalog.hdb_schema_update_event
        ORDER BY occurred_at DESC LIMIT 1
           |] () True
-  case l of
-    []           -> return Nothing
-    [(instId, occurredAt)] ->
-      return $ Just (InstanceId instId, occurredAt)
-    -- never happens
-    _            -> throw500 "more than one row returned by query"
 
 recordSchemaUpdate :: InstanceId -> Q.TxE QErr ()
 recordSchemaUpdate instanceId =
   liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
-             INSERT INTO
-                  hdb_catalog.hdb_schema_update_event
-                  (instance_id, occurred_at)
-             VALUES ($1::uuid, DEFAULT)
-            |] (Identity $ getInstanceId instanceId) True
+             INSERT INTO hdb_catalog.hdb_schema_update_event
+               (instance_id, occurred_at) VALUES ($1::uuid, DEFAULT)
+             ON CONFLICT ((occurred_at IS NOT NULL))
+             DO UPDATE SET instance_id = $1::uuid, occurred_at = DEFAULT
+            |] (Identity instanceId) True
 
 peelRun
   :: SchemaCache
@@ -179,6 +173,7 @@ queryNeedsReload qi = case qi of
   RQUntrackTable _                -> True
   RQTrackFunction _               -> True
   RQUntrackFunction _             -> True
+  RQSetTableIsEnum _              -> True
 
   RQCreateObjectRelationship _    -> True
   RQCreateArrayRelationship  _    -> True
@@ -248,6 +243,7 @@ runQueryM rq =
       RQAddExistingTableOrView q   -> runTrackTableQ q
       RQTrackTable q               -> runTrackTableQ q
       RQUntrackTable q             -> runUntrackTableQ q
+      RQSetTableIsEnum q           -> runSetExistingTableIsEnumQ q
 
       RQTrackFunction q            -> runTrackFunc q
       RQUntrackFunction q          -> runUntrackFunc q

@@ -455,7 +455,9 @@ class PermissionBuilder extends React.Component {
         input = inputBox();
         suggestion = jsonSuggestion();
       } else if (valueType === 'column') {
-        input = renderSelect(dispatchInput, value, tableColumns);
+        input = wrapDoubleQuotes(
+          renderSelect(dispatchInput, value, tableColumns)
+        );
       } else {
         input = wrapDoubleQuotes(inputBox());
         suggestion = sessionVariableSuggestion();
