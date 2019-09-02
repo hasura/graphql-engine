@@ -13,6 +13,8 @@ Enums in a database
 
 In a relational database such as Postgres, an enum type field in a table can be defined in two ways:
 
+.. _native_pg_enum:
+
 Using `native Postgres enum types <https://www.postgresql.org/docs/current/datatype-enum.html>`__
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -22,6 +24,8 @@ supported by transactional DDL), and values cannot be removed from an enum at al
 and recreating it (which cannot be done if the enum is in use by *any* tables, views, or functions). Therefore,
 native enum types should only be used for enums that are guaranteed to *never* change, such as days of the
 week.
+
+.. _reference_table_enum:
 
 Using `foreign-key references <https://www.postgresql.org/docs/current/tutorial-fk.html>`__ to a single-column table
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -38,11 +42,15 @@ a transaction).
 Enums in the Hasura GraphQL engine
 ----------------------------------
 
-Given the limitations of native Postgres enum types (as listed above), Hasura currently only generates GraphQL enum
-types for enums defined using the second approach (i.e. referenced tables). You may use native Postgres enum types in
-your database schema, but they will essentially be treated like text fields in the generated GraphQL schema. Therefore,
-this guide focuses primarily on modeling an enum using a reference table, but you may still use native Postgres enum
-types to help maintain data consistency in your database.
+Given the limitations of native Postgres enum types (as described :ref:`above <native_pg_enum>`), Hasura
+currently only generates GraphQL enum types for enums defined using the
+:ref:`referenced tables <reference_table_enum>` approach.
+
+You may use native Postgres enum types in your database schema, but they will essentially be treated like text
+fields in the generated GraphQL schema. Therefore, this guide focuses primarily on modeling an enum using a
+reference table, but you may still use native Postgres enum types to help maintain data consistency in your
+database. You can always create a table with the values of a Postgres enum as shown in the
+:ref:`section below <create_enum_table_from_pg_enum>`.
 
 **Example:** Let’s say we have a database that tracks user information, and users may only have one of three specific
 roles: user, moderator, or administrator. To represent that, we might have a ``users`` table with the following schema:
@@ -73,7 +81,7 @@ This works alright, but it doesn’t prevent us from inserting nonsensical value
 
 which we certainly don’t want. Hence we should create an enum to restrict the allowed values.
 
-.. _enum_compatibility:
+.. _create_enum_table:
 
 Creating an enum compatible table
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -102,6 +110,7 @@ the following restrictions:
     ('moderator', 'Users with the privilege to ban users'),
     ('administrator', 'Users with the privilege to set users’ roles');
 
+.. _create_enum_table_from_pg_enum:
 
 .. admonition:: Creating an enum table from a native PG enum
 

@@ -3,7 +3,7 @@ import Toggle from 'react-toggle';
 import styles from '../../../../Common/Common.scss';
 
 const enumCompatibilityDocsUrl =
-  'https://docs.hasura.io/1.0/graphql/manual/schema/enums.html#enum-compatibility';
+  'https://docs.hasura.io/1.0/graphql/manual/schema/enums.html#create-enum-table';
 
 export const EnumTableModifyWarning = ({ isEnum }) => {
   if (!isEnum) {
