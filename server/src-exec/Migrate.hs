@@ -4,19 +4,24 @@ module Migrate
   )
 where
 
-import           Data.Time.Clock            (UTCTime)
-import           Language.Haskell.TH.Syntax (Q, TExp, unTypeQ)
+import           Data.Time.Clock               (UTCTime)
+import           Language.Haskell.TH.Syntax    (Q, TExp, unTypeQ)
 
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
 import           Hasura.Server.Query
 
-import qualified Data.Aeson                 as A
-import qualified Data.Text                  as T
-import qualified Data.Yaml.TH               as Y
+import qualified Data.Aeson                    as A
+import qualified Data.Text                     as T
+import qualified Data.Yaml.TH                  as Y
 
-import qualified Database.PG.Query          as Q
+import qualified Data.HashMap.Strict           as Map
+import qualified Database.PG.Query             as Q
+
+import           Hasura.GraphQL.Context
+import qualified Hasura.GraphQL.Validate.Types as VT
+import           Hasura.RQL.DDL.RemoteSchema   (addRemoteSchemaPermissionsToCatalog)
 
 curCatalogVer :: T.Text
 curCatalogVer = "23"
@@ -379,18 +384,76 @@ from22To23
      , MonadIO m
      )
   => m ()
-from22To23 = do
+from22To23
   -- Migrate database
-  Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
-    $(Q.sqlFromFile "src-rsr/migrate_from_22_to_23.sql")
-
+ = do
+  Q.Discard () <-
+    liftTx $
+    Q.multiQE
+      defaultTxErrorHandler
+      $(Q.sqlFromFile "src-rsr/migrate_from_22_to_23.sql")
+  allRoles <- liftTx $ getAllRoles
+  buildSchemaCacheStrict
+  sc <- askSchemaCache
+  let remoteSchemas = Map.toList (scRemoteSchemas sc)
+      remoteSchemaPermissions =
+        concat $
+        map
+          (\(name, ctx) ->
+             map (uncurryPerm . (, name, getTypePerms ctx)) allRoles)
+          remoteSchemas
+  liftTx $ mapM_ addRemoteSchemaPermissionsToCatalog remoteSchemaPermissions
   migrateMetadata False migrateMetadataFor23
-  -- Set as system defined
   setAsSystemDefinedFor23
   return ()
   where
     migrateMetadataFor23 =
-      $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_22_to_23.yaml" :: Q (TExp RQLQuery)))
+      $(unTypeQ
+          (Y.decodeFile "src-rsr/migrate_metadata_from_22_to_23.yaml" :: Q (TExp RQLQuery)))
+    getAllRoles =
+      map runIdentity <$>
+      Q.listQE
+        defaultTxErrorHandler
+        [Q.sql| SELECT distinct(role_name)
+                FROM hdb_catalog.hdb_permission_agg
+        |] () False
+    -- try using lenses?
+    getTypePerms remoteCtx =
+      let objTypes = getObjTy (rscGCtx remoteCtx)
+          inpObjTypes = getInpObjTy (rscGCtx remoteCtx)
+       in convObjTypesToPermType objTypes <>
+          convInpObjTypesToPermType inpObjTypes
+      where
+        getObjTy rGCtx =
+          let types = Map.elems (_rgTypes rGCtx)
+           in mapMaybe
+                (\tyInfo ->
+                   case tyInfo of
+                     VT.TIObj objTy -> Just objTy
+                     _              -> Nothing)
+                types
+        getInpObjTy rGCtx =
+          let types = Map.elems (_rgTypes rGCtx)
+           in mapMaybe
+                (\tyInfo ->
+                   case tyInfo of
+                     VT.TIInpObj inpObjTy -> Just inpObjTy
+                     _                    -> Nothing)
+                types
+        convObjTypesToPermType =
+          map
+            (\objTy ->
+               let name = (VT._otiName objTy)
+                   fields = Map.keys (VT._otiFields objTy)
+                in RemoteTypePerm name fields)
+        convInpObjTypesToPermType =
+          map
+            (\inpObjTy ->
+               let name = (VT._iotiName inpObjTy)
+                   fields = Map.keys (VT._iotiFields inpObjTy)
+                in RemoteTypePerm name fields)
+    uncurryPerm (role, rsName, permDef) =
+      RemoteSchemaPermissions rsName role permDef
 
 migrateCatalog
   :: ( MonadTx m

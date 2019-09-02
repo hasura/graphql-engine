@@ -13,6 +13,7 @@ module Hasura.RQL.DDL.RemoteSchema
   , runAddRemoteSchemaPermissions
   , runAddRemoteSchemaPermissionsP1
   , runAddRemoteSchemaPermissionsP2Setup
+  , addRemoteSchemaPermissionsToCatalog
   , runDropRemoteSchemaPermissions
   ) where
 
