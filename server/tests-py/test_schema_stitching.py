@@ -453,13 +453,40 @@ class TestRemoteSchemaTimeout:
         # wait for graphql server to finish else teardown throws
         time.sleep(6)
 
-#    def test_remote_query_variables(self, hge_ctx):
-#        pass
-#    def test_add_schema_url_from_env(self, hge_ctx):
-#        pass
-#    def test_add_schema_header_from_env(self, hge_ctx):
-#        pass
 
+class TestRemoteSchemaPermissions:
+    dir = 'queries/remote_schemas/permissions/'
+    teardown = {"type": "remove_remote_schema", "args": {"name": "simple"}}
+
+    @pytest.fixture(autouse=True)
+    def transact(self, hge_ctx):
+        q = mk_add_remote_q('simple', 'http://localhost:5000/user-graphql')
+        st_code, resp = hge_ctx.v1q(q)
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q(self.teardown)
+        assert st_code == 200, resp
+
+    def test_no_roles(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + 'basic_fail.yaml')
+
+    def test_basic(self, hge_ctx):
+        # make perm query
+        st_code, resp = hge_ctx.v1q_f(self.dir + 'setup.yaml')
+        assert st_code == 200, resp
+        # make good query
+        check_query_f(hge_ctx, self.dir + 'basic_success.yaml')
+        # make bad query
+        check_query_f(hge_ctx, self.dir + 'basic_fail_2.yaml')
+
+    def test_remove_perm(self, hge_ctx):
+        # make perm query
+        st_code, resp = hge_ctx.v1q_f(self.dir + 'setup.yaml')
+        assert st_code == 200, resp
+        # remove perm query
+        st_code, resp = hge_ctx.v1q_f(self.dir + 'teardown.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir + 'basic_fail.yaml')
 
 def _map(f, l):
     return list(map(f, l))

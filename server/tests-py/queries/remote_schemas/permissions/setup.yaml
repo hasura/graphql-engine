@@ -1,0 +1,14 @@
+type: add_remote_schema_permissions
+args:
+  remote_schema: simple
+  role: user
+  definition:
+    - type: UserQuery
+      fields:
+        - user
+    - type: User
+      fields:
+        - id
+        - username
+
+
