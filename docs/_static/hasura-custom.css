@@ -186,6 +186,10 @@ ul {
   position: relative;
 }
 
+#docs-content span.target {
+  font-style: italic;
+}
+
 /*** random overrides ***/
 
 .wy-plain-list-decimal ol,

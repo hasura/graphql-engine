@@ -6,7 +6,7 @@ import jwt from 'jsonwebtoken';
 import TextAreaWithCopy from '../../../Common/TextAreaWithCopy/TextAreaWithCopy';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
-import ModalWrapper from '../../../Common/ModalWrapper';
+import ModalWrapper from '../../../Common/Modal/ModalWrapper';
 
 import { parseAuthHeader } from './utils';
 
@@ -613,8 +613,8 @@ class ApiRequest extends Component {
             claimData =
               claimFormat === 'stringified_json'
                 ? generateValidNameSpaceData(
-                    JSON.parse(payload[claimNameSpace])
-                  )
+                  JSON.parse(payload[claimNameSpace])
+                )
                 : generateValidNameSpaceData(payload[claimNameSpace]);
           } catch (e) {
             console.error(e);

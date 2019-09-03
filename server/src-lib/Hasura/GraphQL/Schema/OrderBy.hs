@@ -21,8 +21,8 @@ ordByTy = G.NamedType "order_by"
 
 ordByEnumTy :: EnumTyInfo
 ordByEnumTy =
-  mkHsraEnumTyInfo (Just desc) ordByTy $ mapFromL _eviVal $
-  map mkEnumVal enumVals
+  mkHsraEnumTyInfo (Just desc) ordByTy $
+    EnumValuesSynthetic . mapFromL _eviVal $ map mkEnumVal enumVals
   where
     desc = G.Description "column ordering options"
     mkEnumVal (n, d) =

@@ -7,3 +7,6 @@ test-server-output
 test-server-flags-output
 .vscode
 .idea
+
+# Test artifacts
+*.tix

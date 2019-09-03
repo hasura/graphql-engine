@@ -30,7 +30,7 @@ import qualified Database.PG.Query              as Q
 import qualified Hasura.SQL.DML                 as S
 
 convSelCol :: (UserInfoM m, QErrM m, CacheRM m)
-           => FieldInfoMap
+           => FieldInfoMap PGColumnInfo
            -> SelPermInfo
            -> SelCol
            -> m [ExtCol]
@@ -50,7 +50,7 @@ convSelCol fieldInfoMap spi (SCStar wildcard) =
 
 convWildcard
   :: (UserInfoM m, QErrM m, CacheRM m)
-  => FieldInfoMap
+  => FieldInfoMap PGColumnInfo
   -> SelPermInfo
   -> Wildcard
   -> m [ExtCol]
@@ -71,14 +71,14 @@ convWildcard fieldInfoMap (SelPermInfo cols _ _ _ _ _) wildcard =
       mRelSelPerm <- askPermInfo' PASelect relTabInfo
 
       forM mRelSelPerm $ \rspi -> do
-        rExtCols <- convWildcard (tiFieldInfoMap relTabInfo) rspi wc
+        rExtCols <- convWildcard (_tiFieldInfoMap relTabInfo) rspi wc
         return $ ECRel relName Nothing $
           SelectG rExtCols Nothing Nothing Nothing Nothing
 
     relExtCols wc = mapM (mkRelCol wc) relColInfos
 
 resolveStar :: (UserInfoM m, QErrM m, CacheRM m)
-            => FieldInfoMap
+            => FieldInfoMap PGColumnInfo
             -> SelPermInfo
             -> SelectQ
             -> m SelectQExt
@@ -105,7 +105,7 @@ resolveStar fim spi (SelectG selCols mWh mOb mLt mOf) = do
 convOrderByElem
   :: (UserInfoM m, QErrM m, CacheRM m)
   => SessVarBldr m
-  -> (FieldInfoMap, SelPermInfo)
+  -> (FieldInfoMap PGColumnInfo, SelPermInfo)
   -> OrderByCol
   -> m AnnObCol
 convOrderByElem sessVarBldr (flds, spi) = \case
@@ -115,7 +115,7 @@ convOrderByElem sessVarBldr (flds, spi) = \case
       FIColumn colInfo -> do
         checkSelOnCol spi (pgiName colInfo)
         let ty = pgiType colInfo
-        if ty == PGGeography || ty == PGGeometry
+        if isScalarColumnWhere isGeoType ty
           then throw400 UnexpectedPayload $ mconcat
            [ fldName <<> " has type 'geometry'"
            , " and cannot be used in order_by"
@@ -145,11 +145,11 @@ convOrderByElem sessVarBldr (flds, spi) = \case
 
 convSelectQ
   :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
-  => FieldInfoMap  -- Table information of current table
+  => FieldInfoMap PGColumnInfo  -- Table information of current table
   -> SelPermInfo   -- Additional select permission info
   -> SelectQExt     -- Given Select Query
   -> SessVarBldr m
-  -> (PGColType -> Value -> m S.SQLExp)
+  -> (PGColumnType -> Value -> m S.SQLExp)
   -> m AnnSimpleSel
 convSelectQ fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
 
@@ -200,10 +200,10 @@ convSelectQ fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
 
 convExtSimple
   :: (UserInfoM m, QErrM m)
-  => FieldInfoMap
+  => FieldInfoMap PGColumnInfo
   -> SelPermInfo
   -> PGCol
-  -> m PGColInfo
+  -> m PGColumnInfo
 convExtSimple fieldInfoMap selPermInfo pgCol = do
   checkSelOnCol selPermInfo pgCol
   askPGColInfo fieldInfoMap pgCol relWhenPGErr
@@ -212,12 +212,12 @@ convExtSimple fieldInfoMap selPermInfo pgCol = do
 
 convExtRel
   :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
-  => FieldInfoMap
+  => FieldInfoMap PGColumnInfo
   -> RelName
   -> Maybe RelName
   -> SelectQExt
   -> SessVarBldr m
-  -> (PGColType -> Value -> m S.SQLExp)
+  -> (PGColumnType -> Value -> m S.SQLExp)
   -> m (Either ObjSel ArrSel)
 convExtRel fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
   -- Point to the name key
@@ -250,15 +250,15 @@ convExtRel fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
 convSelectQuery
   :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
   => SessVarBldr m
-  -> (PGColType -> Value -> m S.SQLExp)
+  -> (PGColumnType -> Value -> m S.SQLExp)
   -> SelectQuery
   -> m AnnSimpleSel
 convSelectQuery sessVarBldr prepArgBuilder (DMLQuery qt selQ) = do
   tabInfo     <- withPathK "table" $ askTabInfo qt
   selPermInfo <- askSelPermInfo tabInfo
-  extSelQ <- resolveStar (tiFieldInfoMap tabInfo) selPermInfo selQ
+  extSelQ <- resolveStar (_tiFieldInfoMap tabInfo) selPermInfo selQ
   validateHeaders $ spiRequiredHeaders selPermInfo
-  convSelectQ (tiFieldInfoMap tabInfo) selPermInfo
+  convSelectQ (_tiFieldInfoMap tabInfo) selPermInfo
     extSelQ sessVarBldr prepArgBuilder
 
 mkFuncSelectSimple

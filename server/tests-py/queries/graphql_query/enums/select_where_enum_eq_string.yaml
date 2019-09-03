@@ -1,0 +1,14 @@
+description: Test enum input values cannot be string literals
+url: /v1/graphql
+status: 200
+response:
+  errors:
+  - message: expecting an enum
+    extensions:
+      code: validation-failed
+      path: $.selectionSet.users.args.where.favorite_color._eq
+query:
+  query: |
+    {
+      users(where: { favorite_color: { _eq: "not_a_real_color" }}) { name }
+    }

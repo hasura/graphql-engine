@@ -61,7 +61,6 @@ import           Hasura.SQL.Types
 import qualified Database.PG.Query                  as Q
 import qualified Hasura.SQL.DML                     as S
 
-import           Control.Arrow                      (first)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -108,20 +107,20 @@ dropView vn =
 
 procSetObj
   :: (QErrM m)
-  => TableInfo -> Maybe ColVals
+  => TableInfo PGColumnInfo -> Maybe ColVals
   -> m (PreSetColsPartial, [Text], [SchemaDependency])
 procSetObj ti mObj = do
   (setColTups, deps) <- withPathK "set" $
     fmap unzip $ forM (HM.toList setObj) $ \(pgCol, val) -> do
       ty <- askPGType fieldInfoMap pgCol $
         "column " <> pgCol <<> " not found in table " <>> tn
-      sqlExp <- valueParser (PgTypeSimple ty) val
+      sqlExp <- valueParser (PGTypeScalar ty) val
       let dep = mkColDep (getDepReason sqlExp) tn pgCol
       return ((pgCol, sqlExp), dep)
   return (HM.fromList setColTups, depHeaders, deps)
   where
-    fieldInfoMap = tiFieldInfoMap ti
-    tn = tiName ti
+    fieldInfoMap = _tiFieldInfoMap ti
+    tn = _tiName ti
     setObj = fromMaybe mempty mObj
     depHeaders = getDepHeadersFromVal $ Object $
       HM.fromList $ map (first getPGColTxt) $ HM.toList setObj
@@ -130,7 +129,7 @@ procSetObj ti mObj = do
 
 buildInsPermInfo
   :: (QErrM m, CacheRM m)
-  => TableInfo
+  => TableInfo PGColumnInfo
   -> PermDef InsPerm
   -> m (WithDeps InsPermInfo)
 buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) =
@@ -148,8 +147,8 @@ buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) =
       insColsWithoutPresets = insCols \\ HM.keys setColsSQL
   return (InsPermInfo (HS.fromList insColsWithoutPresets) vn be setColsSQL reqHdrs, deps)
   where
-    fieldInfoMap = tiFieldInfoMap tabInfo
-    tn = tiName tabInfo
+    fieldInfoMap = _tiFieldInfoMap tabInfo
+    tn = _tiName tabInfo
     vn = buildViewName tn rn PTInsert
     allCols = map pgiName $ getCols fieldInfoMap
     insCols = fromMaybe allCols $ convColSpec fieldInfoMap <$> mCols
@@ -213,7 +212,7 @@ $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''SelPerm)
 
 buildSelPermInfo
   :: (QErrM m, CacheRM m)
-  => TableInfo
+  => TableInfo PGColumnInfo
   -> SelPerm
   -> m (WithDeps SelPermInfo)
 buildSelPermInfo tabInfo sp = do
@@ -235,8 +234,8 @@ buildSelPermInfo tabInfo sp = do
   return (SelPermInfo (HS.fromList pgCols) tn be mLimit allowAgg depHeaders, deps)
 
   where
-    tn = tiName tabInfo
-    fieldInfoMap = tiFieldInfoMap tabInfo
+    tn = _tiName tabInfo
+    fieldInfoMap = _tiFieldInfoMap tabInfo
     allowAgg = or $ spAllowAggregations sp
     autoInferredErr = "permissions for relationships are automatically inferred"
 
@@ -283,7 +282,7 @@ type CreateUpdPerm = CreatePerm UpdPerm
 
 buildUpdPermInfo
   :: (QErrM m, CacheRM m)
-  => TableInfo
+  => TableInfo PGColumnInfo
   -> UpdPerm
   -> m (WithDeps UpdPermInfo)
 buildUpdPermInfo tabInfo (UpdPerm colSpec set fltr) = do
@@ -305,8 +304,8 @@ buildUpdPermInfo tabInfo (UpdPerm colSpec set fltr) = do
   return (UpdPermInfo (HS.fromList updColsWithoutPreSets) tn be setColsSQL reqHeaders, deps)
 
   where
-    tn = tiName tabInfo
-    fieldInfoMap = tiFieldInfoMap tabInfo
+    tn = _tiName tabInfo
+    fieldInfoMap = _tiFieldInfoMap tabInfo
     updCols     = convColSpec fieldInfoMap colSpec
     relInUpdErr = "relationships can't be used in update"
 
@@ -347,7 +346,7 @@ type CreateDelPerm = CreatePerm DelPerm
 
 buildDelPermInfo
   :: (QErrM m, CacheRM m)
-  => TableInfo
+  => TableInfo PGColumnInfo
   -> DelPerm
   -> m (WithDeps DelPermInfo)
 buildDelPermInfo tabInfo (DelPerm fltr) = do
@@ -357,8 +356,8 @@ buildDelPermInfo tabInfo (DelPerm fltr) = do
       depHeaders = getDependentHeaders fltr
   return (DelPermInfo tn be depHeaders, deps)
   where
-    tn = tiName tabInfo
-    fieldInfoMap = tiFieldInfoMap tabInfo
+    tn = _tiName tabInfo
+    fieldInfoMap = _tiFieldInfoMap tabInfo
 
 type DropDelPerm = DropPerm DelPerm
 

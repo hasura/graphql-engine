@@ -12,16 +12,24 @@ import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types.Permission
 
+-- | A /GraphQL context/, aka the final output of GraphQL schema generation. Used to both validate
+-- incoming queries and respond to introspection queries.
+--
+-- Combines information from 'TyAgg', 'RootFields', and 'InsCtxMap' datatypes and adds a bit more on
+-- top. Constructed via the 'mkGCtx' smart constructor.
 data GCtx
   = GCtx
-  { _gTypes     :: !TypeMap
-  , _gFields    :: !FieldMap
-  , _gOrdByCtx  :: !OrdByCtx
-  , _gQueryRoot :: !ObjTyInfo
-  , _gMutRoot   :: !(Maybe ObjTyInfo)
-  , _gSubRoot   :: !(Maybe ObjTyInfo)
-  , _gOpCtxMap  :: !OpCtxMap
-  , _gInsCtxMap :: !InsCtxMap
+  -- GraphQL type information
+  { _gTypes          :: !TypeMap
+  , _gFields         :: !FieldMap
+  , _gQueryRoot      :: !ObjTyInfo
+  , _gMutRoot        :: !(Maybe ObjTyInfo)
+  , _gSubRoot        :: !(Maybe ObjTyInfo)
+  -- Postgres type information
+  , _gOrdByCtx       :: !OrdByCtx
+  , _gQueryCtxMap    :: !QueryCtxMap
+  , _gMutationCtxMap :: !MutationCtxMap
+  , _gInsCtxMap      :: !InsCtxMap
   } deriving (Show, Eq)
 
 data RemoteGCtx
@@ -60,8 +68,7 @@ emptyGCtx =
   let queryRoot = mkQueryRootTyInfo []
       allTys    = mkTyInfoMap $ TIObj queryRoot:defaultTypes
   -- for now subscription root is query root
-  in GCtx allTys mempty mempty queryRoot Nothing Nothing
-     mempty mempty
+  in GCtx allTys mempty queryRoot Nothing Nothing mempty mempty mempty mempty
 
 defaultTypes :: [TypeInfo]
 defaultTypes = $(fromSchemaDocQ defaultSchema TLHasuraType)
