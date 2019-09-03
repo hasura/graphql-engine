@@ -15,6 +15,7 @@ module Hasura.RQL.DDL.RemoteSchema
   , runAddRemoteSchemaPermissionsP2Setup
   , addRemoteSchemaPermissionsToCatalog
   , runDropRemoteSchemaPermissions
+  , fetchRemoteSchemaPerms
   ) where
 
 import           Hasura.EncJSON
@@ -364,3 +365,13 @@ dropRemoteSchemaPermissionsP2FromCatalog (DropRemoteSchemaPermissions remoteSche
     DELETE FROM hdb_catalog.remote_schema_permissions
       WHERE remote_schema = $1 AND role = $2
   |] (remoteSchema, role) True
+
+fetchRemoteSchemaPerms :: Q.TxE QErr [RemoteSchemaPermissions]
+fetchRemoteSchemaPerms =
+  map uncurryRow <$> Q.listQE defaultTxErrorHandler
+    [Q.sql|
+     SELECT remote_schema, role, definition::json
+       FROM hdb_catalog.remote_schema_permissions
+     |] () True
+  where
+    uncurryRow (name, role, Q.AltJ def) = RemoteSchemaPermissions name role def

@@ -49,7 +49,6 @@ import qualified Hasura.RQL.DDL.Relationship        as DR
 import qualified Hasura.RQL.DDL.RemoteSchema        as DRS
 import qualified Hasura.RQL.DDL.Schema              as DS
 import qualified Hasura.RQL.Types.EventTrigger      as DTS
-import qualified Hasura.RQL.Types.RemoteSchema      as TRS
 
 data TableMeta
   = TableMeta
@@ -111,6 +110,24 @@ instance FromJSON TableMeta where
 
 $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''TableMeta)
 
+data RemoteSchemaPermMeta
+  = RemoteSchemaPermMeta
+  { rspmRole       :: RoleName
+  , rspmDefinition :: [RemoteTypePerm]
+  } deriving (Show, Eq, Lift)
+
+$(deriveJSON (aesonDrop 4 snakeCase) ''RemoteSchemaPermMeta)
+
+data RemoteSchemaMeta
+  = RemoteSchemaMeta
+  { rsmName        :: !RemoteSchemaName
+  , rsmDefinition  :: !RemoteSchemaDef
+  , rsmComment     :: !(Maybe Text)
+  , rsmPermissions :: !(Maybe [RemoteSchemaPermMeta]) -- this is a Maybe for backward compatibility
+  } deriving (Show, Eq, Lift)
+
+$(deriveJSON (aesonDrop 3 snakeCase) ''RemoteSchemaMeta)
+
 data ClearMetadata
   = ClearMetadata
   deriving (Show, Eq, Lift)
@@ -126,6 +143,7 @@ clearMetadata = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "DELETE FROM hdb_catalog.hdb_relationship WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.event_triggers" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_table WHERE is_system_defined <> 'true'" () False
+  Q.unitQ "DELETE FROM hdb_catalog.remote_schema_permissions" () False
   Q.unitQ "DELETE FROM hdb_catalog.remote_schemas" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_allowlist" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_query_collection WHERE is_system_defined <> 'true'" () False
@@ -145,7 +163,7 @@ data ReplaceMetadata
   = ReplaceMetadata
   { aqTables           :: ![TableMeta]
   , aqFunctions        :: !(Maybe [QualifiedFunction])
-  , aqRemoteSchemas    :: !(Maybe [TRS.AddRemoteSchemaQuery])
+  , aqRemoteSchemas    :: !(Maybe [RemoteSchemaMeta])
   , aqQueryCollections :: !(Maybe [DQC.CreateCollection])
   , aqAllowlist        :: !(Maybe [DQC.CollectionReq])
   } deriving (Show, Eq, Lift)
@@ -186,7 +204,7 @@ applyQP1 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = 
 
   onJust mSchemas $ \schemas ->
       withPathK "remote_schemas" $
-        checkMultipleDecls "remote schemas" $ map TRS._arsqName schemas
+        checkMultipleDecls "remote schemas" $ map rsmName schemas
 
   onJust mCollections $ \collections ->
     withPathK "query_collections" $
@@ -279,8 +297,10 @@ applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = 
   -- remote schemas
   onJust mSchemas $ \schemas ->
     withPathK "remote_schemas" $
-      indexedMapM_ (void . DRS.addRemoteSchemaP2) schemas
-
+    indexedForM_ schemas $ \schemaMeta -> do
+      void . DRS.addRemoteSchemaP2 . getAddQueryFromMeta $ schemaMeta
+      mapM_ DRS.runAddRemoteSchemaPermissions . getPermQueryFromMeta $
+        schemaMeta
   -- build GraphQL Context with Remote schemas
   DRS.buildGCtxMap
 
@@ -294,6 +314,15 @@ applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = 
       indexedForM_ perms $ \permDef -> do
         permInfo <- DP.addPermP1 tabInfo permDef
         DP.addPermP2 (_tiName tabInfo) permDef permInfo
+    getAddQueryFromMeta (RemoteSchemaMeta name def commentM _permsM) =
+      AddRemoteSchemaQuery name def commentM
+    getPermQueryFromMeta (RemoteSchemaMeta name _def _commentM permsM) =
+      maybe
+        []
+        (map
+           (\(RemoteSchemaPermMeta role permDef) ->
+              RemoteSchemaPermissions name role permDef))
+        permsM
 
 runReplaceMetadata
   :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
@@ -352,18 +381,23 @@ fetchMetadata = do
   functions <- map (uncurry QualifiedObject) <$>
     Q.catchE defaultTxErrorHandler fetchFunctions
 
-  -- fetch all custom resolvers
-  schemas <- DRS.fetchRemoteSchemas
-
+  -- fetch all remote schemas
+  remoteSchemas <- DRS.fetchRemoteSchemas
+    -- fetch all remote schema perms
+  remoteSchemaPerms <- DRS.fetchRemoteSchemaPerms
+  let remoteSchemaMetas = joinRemoteSchemaMeta remoteSchemas remoteSchemaPerms
   -- fetch all collections
   collections <- DQC.fetchAllCollections
 
   -- fetch allow list
   allowlist <- map DQC.CollectionReq <$> DQC.fetchAllowlist
-
-  return $ ReplaceMetadata (M.elems postRelMap) (Just functions)
-                           (Just schemas) (Just collections) (Just allowlist)
-
+  return $
+    ReplaceMetadata
+      (M.elems postRelMap)
+      (Just functions)
+      (Just remoteSchemaMetas)
+      (Just collections)
+      (Just allowlist)
   where
 
     modMetaMap l xs = do
@@ -419,6 +453,19 @@ fetchMetadata = do
                 FROM hdb_catalog.hdb_function
                 WHERE is_system_defined = 'false'
                     |] () False
+    joinRemoteSchemaMeta schemas perms =
+      flip map schemas $ \(AddRemoteSchemaQuery name def comment) ->
+        RemoteSchemaMeta
+          name
+          def
+          comment
+          (Just
+             (mapMaybe
+                (\(RemoteSchemaPermissions name' role permDef) ->
+                   if name == name'
+                     then Just (RemoteSchemaPermMeta role permDef)
+                     else Nothing)
+                perms))
 
 runExportMetadata
   :: (QErrM m, UserInfoM m, MonadTx m)
