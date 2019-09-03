@@ -20,11 +20,11 @@ Aliases can be used to return a certain selection of objects based on any filter
         }
         topTwoArticles: articles(order_by: {rating: desc}, limit: 2) {
             title
-                rating
+            rating
         }
         worstArticle: articles(order_by: {rating: asc}, limit: 1) {
-                title
-                rating
+            title
+            rating
         }
     }
   :response:
