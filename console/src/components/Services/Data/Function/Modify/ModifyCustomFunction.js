@@ -24,6 +24,7 @@ import {
 
 import { SET_SQL } from '../../RawSQL/Actions';
 import { NotFoundError } from '../../../../Error/PageNotFound';
+import getConfirmation from '../../../../Common/GetConfirmation/GetConfirmation';
 
 class ModifyCustomFunction extends React.Component {
   constructor() {
@@ -84,27 +85,31 @@ class ModifyCustomFunction extends React.Component {
 
   handleUntrackCustomFunction(e) {
     e.preventDefault();
-    this.props.dispatch(unTrackCustomFunction());
+
+    const functionName = this.props.functions.functionName;
+
+    const confirmMessage = `This will remove the function "${functionName}" from your GraphQL schema`;
+    const isOk = getConfirmation(confirmMessage);
+    if (isOk) {
+      this.props.dispatch(unTrackCustomFunction());
+    }
   }
 
   handleDeleteCustomFunction(e) {
     e.preventDefault();
 
-    const a = prompt(
-      'Are you absolutely sure?\nThis action cannot be undone. This will permanently delete function. Please type "DELETE" (in caps, without quotes) to confirm.\n'
-    );
+    const functionName = this.props.functions.functionName;
 
-    try {
-      if (a && typeof a === 'string' && a.trim() === 'DELETE') {
+    const confirmMessage = `This will permanently delete the function "${functionName}" from your database`;
+    const isOk = getConfirmation(confirmMessage, true, functionName);
+
+    if (isOk) {
+      try {
         this.updateDeleteConfirmationError(null);
         this.props.dispatch(deleteFunctionSql());
-      } else {
-        // Input didn't match
-        // Show an error message right next to the button
-        this.updateDeleteConfirmationError('user confirmation error!');
+      } catch (err) {
+        console.error('Delete custom function error: ', err);
       }
-    } catch (err) {
-      console.error(err);
     }
   }
 
@@ -143,10 +148,7 @@ class ModifyCustomFunction extends React.Component {
           <Button
             color="white"
             className={styles.add_mar_right}
-            onClick={e => {
-              e.preventDefault();
-              this.handleUntrackCustomFunction(e);
-            }}
+            onClick={this.handleUntrackCustomFunction}
             disabled={isRequesting || isDeleting || isUntracking}
             data-test={'custom-function-edit-untrack-btn'}
           >
@@ -154,10 +156,7 @@ class ModifyCustomFunction extends React.Component {
           </Button>
           <Button
             color="red"
-            onClick={e => {
-              e.preventDefault();
-              this.handleDeleteCustomFunction(e);
-            }}
+            onClick={this.handleDeleteCustomFunction}
             data-test={'custom-function-edit-delete-btn'}
             disabled={isRequesting || isDeleting || isUntracking}
           >
