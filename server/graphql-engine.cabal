@@ -94,6 +94,7 @@ library
                      -- String related
                      , case-insensitive
                      , string-conversions
+                     , text-conversions
 
                      -- Http client
                      , wreq

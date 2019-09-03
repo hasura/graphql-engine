@@ -17,7 +17,7 @@ module Hasura.GraphQL.Schema
   , checkSchemaConflicts
   ) where
 
-import           Control.Lens.Extended          hiding (op)
+import           Control.Lens.Extended                 hiding (op)
 
 import qualified Data.HashMap.Strict                   as Map
 import qualified Data.HashSet                          as Set
@@ -37,13 +37,13 @@ import           Hasura.SQL.Types
 import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Function
+import           Hasura.GraphQL.Schema.Merge
 import           Hasura.GraphQL.Schema.Mutation.Common
 import           Hasura.GraphQL.Schema.Mutation.Delete
 import           Hasura.GraphQL.Schema.Mutation.Insert
 import           Hasura.GraphQL.Schema.Mutation.Update
 import           Hasura.GraphQL.Schema.OrderBy
 import           Hasura.GraphQL.Schema.Select
-import           Hasura.GraphQL.Schema.Merge
 
 getInsPerm :: TableInfo PGColumnInfo -> RoleName -> Maybe InsPermInfo
 getInsPerm tabInfo role
@@ -375,8 +375,8 @@ getRootFldsRole' tn primCols constraints fields funcs insM selM updM delM viM =
       , g fi
       )
 
-    mkFuncArgItemSeq fi = Seq.fromList $
-      procFuncArgs (fiInputArgs fi) $ \_ t -> FuncArgItem $ G.Name t
+    mkFuncArgItemSeq fi = Seq.fromList $ procFuncArgs (fiInputArgs fi)
+                          $ \fa t -> FuncArgItem (G.Name t) (faName fa) (faHasDefault fa)
 
 
 getSelPermission :: TableInfo PGColumnInfo -> RoleName -> Maybe SelPermInfo
@@ -636,7 +636,7 @@ instance Monoid TyAgg where
 -- | A role-specific mapping from root field names to allowed operations.
 data RootFields
   = RootFields
-  { rootQueryFields :: !(Map.HashMap G.Name (QueryCtx, ObjFldInfo))
+  { rootQueryFields    :: !(Map.HashMap G.Name (QueryCtx, ObjFldInfo))
   , rootMutationFields :: !(Map.HashMap G.Name (MutationCtx, ObjFldInfo))
   } deriving (Show, Eq)
 
@@ -661,6 +661,7 @@ mkGCtx tyAgg (RootFields queryFields mutationFields) insCtxMap =
                             , TIEnum <$> ordByEnumTyM
                             ] <>
                   scalarTys <> compTys <> defaultTypes <> wiredInGeoInputTypes
+                  <> wiredInRastInputTypes
   -- for now subscription root is query root
   in GCtx allTys fldInfos queryRoot mutRootM subRootM ordByEnums
      (Map.map fst queryFields) (Map.map fst mutationFields) insCtxMap
@@ -687,6 +688,17 @@ mkGCtx tyAgg (RootFields queryFields mutationFields) insCtxMap =
         -- operations even if just one of the two appears in the schema
         then Set.union (Set.fromList [PGColumnScalar PGGeometry, PGColumnScalar PGGeography]) colTys
         else colTys
-    allScalarTypes = (allComparableTypes ^.. folded._PGColumnScalar) <> scalars
+
+    additionalScalars =
+      Set.fromList
+        -- raster comparison expression needs geometry input
+      (guard anyRasterTypes *> pure PGGeometry)
+
+    allScalarTypes = (allComparableTypes ^.. folded._PGColumnScalar)
+                     <> additionalScalars <> scalars
 
     wiredInGeoInputTypes = guard anyGeoTypes *> map TIInpObj geoInputTypes
+
+    anyRasterTypes = any (isScalarColumnWhere (== PGRaster)) colTys
+    wiredInRastInputTypes = guard anyRasterTypes *>
+                            map TIInpObj rasterIntersectsInputTypes

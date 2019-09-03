@@ -94,3 +94,45 @@ args:
   args:
     name: my_add
     schema: public
+
+# test functions having multiple defaults
+- type: run_sql
+  args:
+    sql: |
+       CREATE TABLE "user" (
+         id SERIAL PRIMARY KEY,
+         name TEXT NOT NULL,
+         is_admin BOOLEAN DEFAULT FALSE
+       );
+
+- type: run_sql
+  args:
+    sql: |
+       INSERT INTO "user" (name, is_admin) VALUES
+         ('Starke Blake', true)
+       , ('Bellamy Blake', true)
+       , ('Dora Blake', true)
+       ;
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE FUNCTION get_users(search text, integer default 10, boolean default false)
+      RETURNS SETOF "user" AS $$
+          SELECT *
+          FROM "user"
+          WHERE
+            name ilike ('%' || search || '%')
+            AND is_admin = $3
+          LIMIT $2
+      $$ LANGUAGE sql STABLE;
+
+- type: track_table
+  args:
+    name: user
+    schema: public
+
+- type: track_function
+  args:
+    name: get_users
+    schema: public

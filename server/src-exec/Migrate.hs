@@ -19,7 +19,7 @@ import qualified Data.Yaml.TH               as Y
 import qualified Database.PG.Query          as Q
 
 curCatalogVer :: T.Text
-curCatalogVer = "21"
+curCatalogVer = "22"
 
 migrateMetadata
   :: ( MonadTx m
@@ -354,6 +354,12 @@ from20To21 :: (MonadTx m) => m ()
 from20To21 = liftTx $ Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "CREATE INDEX ON hdb_catalog.event_log (locked)" () False
 
+from21To22 :: (MonadTx m) => m ()
+from21To22 = do
+  Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
+    $(Q.sqlFromFile "src-rsr/migrate_from_21_to_22.sql")
+  pure ()
+
 migrateCatalog
   :: ( MonadTx m
      , CacheRWM m
@@ -396,6 +402,7 @@ migrateCatalog migrationTime = migrateFrom =<< getCatalogVersion
           , ("18", from18To19)
           , ("19", from19To20)
           , ("20", from20To21)
+          , ("21", from21To22)
           ]
 
     postMigrate = do
