@@ -95,7 +95,7 @@ the following restrictions:
 2. Optionally, the table may have a second column, also of type ``text``, which will be used as a description of each
    value in the generated GraphQL schema.
 3. The table may not contain any other columns.
-4. The table must contain atleast 1 row.
+4. The table must contain at least 1 row.
 
 **For example**, to create an enum that represents our user roles, we would create the following table:
 
@@ -219,7 +219,7 @@ a string:
 Enums and migrations
 ^^^^^^^^^^^^^^^^^^^^
 
-As enum tables have a requirement to contain atleast 1 row, it is necessary to have a migration which inserts
+As enum tables have a requirement to contain at least 1 row, it is necessary to have a migration which inserts
 values into an enum table. Otherwise while applying migrations an error would be thrown while trying to set the
 table as an enum.
 
