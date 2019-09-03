@@ -585,10 +585,10 @@ buildGCtxMapPG = do
   gCtxMap <- mkGCtxMap (scTables sc) (scFunctions sc)
   writeSchemaCache sc { scGCtxMap = gCtxMap }
 
-getGCtx :: (QErrM m) => RoleName -> GCtxMap -> m GCtx
+getGCtx :: RoleName -> GCtxMap -> GCtx
 getGCtx rn ctxMap = do
   -- lookup role or return empty
-  pure $ fromMaybe emptyGCtx $ Map.lookup rn ctxMap
+  maybe emptyGCtx id $ Map.lookup rn ctxMap
 
 -- pretty print GCtx
 ppGCtx :: GCtx -> String

@@ -127,7 +127,7 @@ getExecPlanPartial userInfo sc enableAL req = do
   -- check if query is in allowlist
   when enableAL checkQueryInAllowlist
 
-  (gCtx, _)  <- flip runStateT sc $ getGCtx role gCtxRoleMap
+  let gCtx = getGCtx role gCtxRoleMap
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
 
   let opDef = VQ.qpOpDef queryParts
