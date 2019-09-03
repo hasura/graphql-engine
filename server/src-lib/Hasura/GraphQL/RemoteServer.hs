@@ -131,16 +131,13 @@ mergeRoleRemoteSchemas
   -> RemoteSchemasWithRole
   -> m GS.GCtxMap
 mergeRoleRemoteSchemas initGCtxMap roleRemoteSchemas = do
-  Map.traverseWithKey
-    (\role roleGCtx -> do
-       roleSchema <- getCombinedRemoteSchemaGCtxForRole role
-       mergeGCtx roleGCtx roleSchema)
+  foldM
+    (\acc ((role, _rsName), remoteCtx) -> do
+       let roleGCtx = convRemoteGCtx (rscGCtx remoteCtx)
+       merged <- mergeGCtx (GS.getGCtx role acc) roleGCtx
+       pure $ Map.insert role merged acc)
     initGCtxMap
-  where
-    getCombinedRemoteSchemaGCtxForRole role =
-      combineRemoteGCtx $
-      map (rscGCtx . snd) $
-      filter (\((role', _), _) -> role == role') (Map.toList roleRemoteSchemas)
+    (Map.toList roleRemoteSchemas)
 
 mergeGCtx
   :: (MonadError QErr m)
