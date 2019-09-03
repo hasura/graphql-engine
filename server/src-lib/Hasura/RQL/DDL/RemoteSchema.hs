@@ -217,8 +217,8 @@ runAddRemoteSchemaPermissionsP2 rsPerm rsCtx = do
 runAddRemoteSchemaPermissionsP2Setup
   :: (QErrM m, CacheRWM m) => RemoteSchemaPermissions -> RemoteSchemaCtx -> m ()
 runAddRemoteSchemaPermissionsP2Setup (RemoteSchemaPermissions rsName role _def) rsCtx = do
-  sc <- askSchemaCache
   modDepMapInCache (addToDepMap schObjId deps)
+  sc <- askSchemaCache
   let rmSchemaWithRoles = scRemoteSchemasWithRole sc
       newSchemasWithRoles = Map.insert (role, rsName) rsCtx rmSchemaWithRoles
   writeSchemaCache sc { scRemoteSchemasWithRole = newSchemasWithRoles }
