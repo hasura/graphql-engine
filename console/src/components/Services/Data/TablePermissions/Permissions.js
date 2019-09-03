@@ -278,14 +278,10 @@ class Permissions extends Component {
 
         const getPermissionsTableRow = (role, newPermRow = null) => {
           const dispatchOpenEdit = queryType => () => {
-            if (newPermRow && permissionsState.newRole !== '') {
-              dispatch(
-                permOpenEdit(tableSchema, permissionsState.newRole, queryType)
-              );
-            } else if (role !== '') {
-              dispatch(permOpenEdit(tableSchema, role, queryType));
-            } else {
+            if (role === '') {
               document.getElementById('new-role-input').focus();
+            } else {
+              dispatch(permOpenEdit(tableSchema, role, queryType));
             }
           };
 

@@ -23,7 +23,7 @@ const TriggerEditorList = ({ tableSchema, dispatch }) => {
     const triggerName = trigger.trigger_name;
 
     const onDelete = () => {
-      const confirmMessage = `This will permanently delete the trigger "${triggerName}" from your table`;
+      const confirmMessage = `This will permanently delete the trigger "${triggerName}" from this table`;
       const isOk = getConfirmation(confirmMessage, true, triggerName);
       if (isOk) {
         dispatch(deleteTrigger(trigger, tableSchema));

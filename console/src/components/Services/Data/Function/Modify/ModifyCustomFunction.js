@@ -34,6 +34,14 @@ class ModifyCustomFunction extends React.Component {
       deleteConfirmationError: null,
       funcFetchCompleted: false,
     };
+
+    this.loadRunSQLAndLoadPage = this.loadRunSQLAndLoadPage.bind(this);
+    this.handleUntrackCustomFunction = this.handleUntrackCustomFunction.bind(
+      this
+    );
+    this.handleDeleteCustomFunction = this.handleDeleteCustomFunction.bind(
+      this
+    );
   }
 
   componentDidMount() {
@@ -88,7 +96,7 @@ class ModifyCustomFunction extends React.Component {
 
     const functionName = this.props.functions.functionName;
 
-    const confirmMessage = `This will remove the function "${functionName}" from your GraphQL schema`;
+    const confirmMessage = `This will remove the function "${functionName}" from the GraphQL schema`;
     const isOk = getConfirmation(confirmMessage);
     if (isOk) {
       this.props.dispatch(unTrackCustomFunction());
@@ -100,7 +108,7 @@ class ModifyCustomFunction extends React.Component {
 
     const functionName = this.props.functions.functionName;
 
-    const confirmMessage = `This will permanently delete the function "${functionName}" from your database`;
+    const confirmMessage = `This will permanently delete the function "${functionName}" from the database`;
     const isOk = getConfirmation(confirmMessage, true, functionName);
 
     if (isOk) {
@@ -141,7 +149,7 @@ class ModifyCustomFunction extends React.Component {
             color="yellow"
             className={styles.add_mar_right}
             data-test={'custom-function-edit-modify-btn'}
-            onClick={this.loadRunSQLAndLoadPage.bind(this)}
+            onClick={this.loadRunSQLAndLoadPage}
           >
             Modify
           </Button>

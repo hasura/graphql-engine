@@ -38,7 +38,7 @@ import {
 } from './utils';
 
 const DELETE_PK_WARNING =
-  'Without a Primary key there is no way to uniquely identify a row of a table';
+  'Without a primary key there is no way to uniquely identify a row of a table';
 
 const VIEW_DEF_REQUEST_SUCCESS = 'ModifyTable/VIEW_DEF_REQUEST_SUCCESS';
 const VIEW_DEF_REQUEST_ERROR = 'ModifyTable/VIEW_DEF_REQUEST_ERROR';

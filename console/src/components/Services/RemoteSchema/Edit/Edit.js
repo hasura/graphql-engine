@@ -85,10 +85,10 @@ class Edit extends React.Component {
   handleDeleteRemoteSchema(e) {
     e.preventDefault();
 
-    const confirmMessage = `This will remove access to the remote GraphQL schema "${
-      this.props.params.remoteSchemaName
-    }" from your GraphQL schema`;
-    const isOk = getConfirmation(confirmMessage);
+    const remoteSchemaName = this.props.params.remoteSchemaName;
+
+    const confirmMessage = `This will remove the remote GraphQL schema "${remoteSchemaName}" from your GraphQL schema`;
+    const isOk = getConfirmation(confirmMessage, true, remoteSchemaName);
     if (isOk) {
       try {
         this.props.dispatch(deleteRemoteSchema());

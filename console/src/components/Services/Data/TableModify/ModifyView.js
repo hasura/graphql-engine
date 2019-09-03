@@ -122,7 +122,7 @@ class ModifyView extends Component {
         color="white"
         size="sm"
         onClick={() => {
-          const confirmMessage = `This will remove the view "${tableName}" from your GraphQL schema`;
+          const confirmMessage = `This will remove the view "${tableName}" from the GraphQL schema`;
           const isOk = getConfirmation(confirmMessage);
           if (isOk) {
             dispatch(untrackTableSql(tableName));
@@ -140,7 +140,7 @@ class ModifyView extends Component {
         color="red"
         size="sm"
         onClick={() => {
-          const confirmMessage = `This will permanently delete the view "${tableName}" from your database`;
+          const confirmMessage = `This will permanently delete the view "${tableName}" from the database`;
           const isOk = getConfirmation(confirmMessage, true, tableName);
           if (isOk) {
             dispatch(deleteViewSql(tableName));

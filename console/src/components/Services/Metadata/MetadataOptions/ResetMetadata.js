@@ -25,7 +25,7 @@ class ResetMetadata extends Component {
       e.preventDefault();
 
       const confirmMessage =
-        "This will permanently reset GraphQL engine's configuration and you will need to start from scratch";
+        'This will permanently reset the GraphQL schema configuration and you will need to start from scratch';
       const isOk = getConfirmation(confirmMessage, true);
       if (!isOk) {
         return;

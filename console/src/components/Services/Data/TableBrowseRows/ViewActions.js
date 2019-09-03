@@ -168,7 +168,7 @@ const fetchManualTriggers = tableName => {
 const deleteItem = pkClause => {
   return (dispatch, getState) => {
     const confirmMessage =
-      'This will permanently delete this row from your table';
+      'This will permanently delete this row from this table';
     const isOk = getConfirmation(confirmMessage);
     if (!isOk) {
       return;

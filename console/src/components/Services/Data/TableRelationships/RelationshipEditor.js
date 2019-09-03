@@ -86,7 +86,7 @@ class RelationshipEditor extends React.Component {
     const onDelete = e => {
       e.preventDefault();
 
-      const confirmMessage = `This will permanently remove the relationship "${relName}"`;
+      const confirmMessage = `This will delete the relationship "${relName}" from this table`;
       const isOk = getConfirmation(confirmMessage);
       if (isOk) {
         dispatch(deleteRelMigrate(relConfig));

@@ -83,18 +83,11 @@ const ColumnEditorList = ({
     };
 
     const onDelete = () => {
-      const confirmMessage = `This will permanently delete the column "${colName}" from the table`;
-      const isOk = getConfirmation(confirmMessage);
-      if (isOk) {
-        dispatch(deleteColumnSql(col, tableSchema, true, colName));
-      }
-    };
-
-    const safeOnDelete = () => {
-      let confirmMessage = `This will permanently delete the column "${colName}" from the table`;
+      let confirmMessage = `This will permanently delete the column "${colName}" from this table`;
       if (columnProperties.pkConstraint) {
         confirmMessage = DELETE_PK_WARNING;
       }
+
       const isOk = getConfirmation(confirmMessage, true, colName);
       if (isOk) {
         dispatch(deleteColumnSql(col, tableSchema));
@@ -214,7 +207,6 @@ const ColumnEditorList = ({
           defaultOptions={getValidDefaultTypes(col.udt_name)}
           column={col}
           onSubmit={onSubmit}
-          onDelete={safeOnDelete}
           tableName={tableName}
           dispatch={dispatch}
           currentSchema={currentSchema}

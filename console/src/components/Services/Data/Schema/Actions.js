@@ -80,7 +80,7 @@ export const deleteCurrentSchema = (successCb, errorCb) => {
       );
     }
 
-    const confirmMessage = `This will permanently delete the Postgres schema "${currentSchema}" from your database`;
+    const confirmMessage = `This will permanently delete the Postgres schema "${currentSchema}" from the database`;
     const isOk = getConfirmation(confirmMessage, true, currentSchema);
     if (!isOk) {
       return;
