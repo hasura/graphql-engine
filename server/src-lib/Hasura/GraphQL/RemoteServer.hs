@@ -106,9 +106,8 @@ mergeSchemas
   -> m GS.GCtxMap
 mergeSchemas rmSchemaMap rmSchemaMapWithRole initGCtxMap = do
   merged <- mergeRoleRemoteSchemas initGCtxMap rmSchemaMapWithRole
-  remotes <- combineRemoteGCtx remoteSchemas
-  finalMerged <- addRemoteSchemaToAdminRole merged remotes
-  return finalMerged
+  allRemotesGCtx <- combineRemoteGCtx remoteSchemas
+  addRemoteSchemaToAdminRole merged allRemotesGCtx
   where
     remoteSchemas = map rscGCtx $ Map.elems rmSchemaMap
 

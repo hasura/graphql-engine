@@ -795,5 +795,5 @@ getDependentObjsWith f sc objId =
 
 getAdminGCtx :: SchemaCache -> GC.GCtx
 getAdminGCtx sc = do
-  maybe GC.emptyGCtx id $
+  fromMaybe GC.emptyGCtx $
     M.lookup adminRole (scGCtxMap sc)

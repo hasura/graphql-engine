@@ -588,7 +588,7 @@ buildGCtxMapPG = do
 getGCtx :: RoleName -> GCtxMap -> GCtx
 getGCtx rn ctxMap = do
   -- lookup role or return empty
-  maybe emptyGCtx id $ Map.lookup rn ctxMap
+  fromMaybe emptyGCtx $ Map.lookup rn ctxMap
 
 -- pretty print GCtx
 ppGCtx :: GCtx -> String

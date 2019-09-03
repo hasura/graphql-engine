@@ -397,15 +397,13 @@ from22To23
   sc <- askSchemaCache
   let remoteSchemas = Map.toList (scRemoteSchemas sc)
       remoteSchemaPermissions =
-        concat $
-        map
+        concatMap
           (\(name, ctx) ->
              map (uncurryPerm . (, name, getTypePerms ctx)) allRoles)
           remoteSchemas
   liftTx $ mapM_ addRemoteSchemaPermissionsToCatalog remoteSchemaPermissions
   migrateMetadata False migrateMetadataFor23
   setAsSystemDefinedFor23
-  return ()
   where
     migrateMetadataFor23 =
       $(unTypeQ
@@ -426,32 +424,26 @@ from22To23
       where
         getObjTy rGCtx =
           let types = Map.elems (_rgTypes rGCtx)
-           in mapMaybe
-                (\tyInfo ->
-                   case tyInfo of
-                     VT.TIObj objTy -> Just objTy
-                     _              -> Nothing)
-                types
+           in flip mapMaybe types $ \tyInfo ->
+                case tyInfo of
+                  VT.TIObj objTy -> Just objTy
+                  _              -> Nothing
         getInpObjTy rGCtx =
           let types = Map.elems (_rgTypes rGCtx)
-           in mapMaybe
-                (\tyInfo ->
-                   case tyInfo of
-                     VT.TIInpObj inpObjTy -> Just inpObjTy
-                     _                    -> Nothing)
-                types
-        convObjTypesToPermType =
-          map
-            (\objTy ->
-               let name = (VT._otiName objTy)
-                   fields = Map.keys (VT._otiFields objTy)
-                in RemoteTypePerm name fields)
-        convInpObjTypesToPermType =
-          map
-            (\inpObjTy ->
-               let name = (VT._iotiName inpObjTy)
-                   fields = Map.keys (VT._iotiFields inpObjTy)
-                in RemoteTypePerm name fields)
+           in flip mapMaybe types $ \tyInfo ->
+                case tyInfo of
+                  VT.TIInpObj inpObjTy -> Just inpObjTy
+                  _                    -> Nothing
+        convObjTypesToPermType objTypes =
+          flip map objTypes $ \objTy ->
+            let name = (VT._otiName objTy)
+                fields = Map.keys (VT._otiFields objTy)
+             in RemoteTypePerm name fields
+        convInpObjTypesToPermType inpObjTypes =
+          flip map inpObjTypes $ \inpObjTy ->
+            let name = (VT._iotiName inpObjTy)
+                fields = Map.keys (VT._iotiFields inpObjTy)
+             in RemoteTypePerm name fields
     uncurryPerm (role, rsName, permDef) =
       RemoteSchemaPermissions rsName role permDef
 
