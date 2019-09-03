@@ -213,8 +213,8 @@ Insert an object and get a nested object in response
       }
     }
 
-Insert related data through relationships
------------------------------------------
+Insert an object along with its related objects through relationships
+---------------------------------------------------------------------
 **Example:** Insert an ``author``, their ``address`` and an ``article``.
 
 Let's say an ``author`` has an ``object relationship`` called ``address`` to the ``addresses`` table and an ``array relationship`` called ``articles`` to the ``articles`` table.
@@ -226,20 +226,27 @@ Let's say an ``author`` has an ``object relationship`` called ``address`` to the
       insert_authors
         (objects: [
           {
-            id: 11,
+            id: 26,
             name: "John",
             address: {
               data: {
-                id: 12,
+                id: 27,
                 location: "San Francisco"
               }
             },
             articles: {
-              data: {
-                id: 13,
-                title: "GraphQL Guide",
-                content: "Let's see what we can do with GraphQL"
-              }
+              data: [
+                {
+                  id: 28,
+                  title: "GraphQL Guide",
+                  content: "Let's see what we can do with GraphQL"
+                },
+                {
+                  id: 29,
+                  title: "Authentication Guide",
+                  content: "Let's look at best practices for authentication"
+                }
+              ]
             }
           }
         ]
@@ -248,11 +255,15 @@ Let's say an ``author`` has an ``object relationship`` called ``address`` to the
         returning {
           id
           name
+          address_id
           address {
+            id
             location
           }
           articles {
+            id
             title
+            author_id
           }
         }
       }
@@ -261,19 +272,28 @@ Let's say an ``author`` has an ``object relationship`` called ``address`` to the
     {
       "data": {
         "insert_authors": {
-          "affected_rows": 3,
+          "affected_rows": 4,
           "returning": [
             {
               "address": {
-                "location": "San Francisco"
+                "location": "San Francisco",
+                "id": 27
               },
+              "address_id": 27,
               "name": "John",
               "articles": [
                 {
+                  "author_id": 26,
+                  "id": 28,
                   "title": "GraphQL Guide"
+                },
+                {
+                  "author_id": 26,
+                  "id": 29,
+                  "title": "Authentication Guide"
                 }
               ],
-              "id": 11
+              "id": 26
             }
           ]
         }
