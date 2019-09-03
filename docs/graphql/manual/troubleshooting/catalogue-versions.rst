@@ -1,6 +1,6 @@
 .. _hasura_catalogue_versions:
 
-Hasura GraphQL engine metadata schema
+Catalogue versions
 =====================================
 
 .. contents:: Table of contents
