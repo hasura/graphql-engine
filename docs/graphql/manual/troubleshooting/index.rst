@@ -107,3 +107,9 @@ Solution
 - Delete the row from ``hdb_permission`` table where the column ``table_name`` has the value same as the table
   mentioned in the error and the column ``perm_def`` involves the missing column.
 - Restart GraphQL engine to verify.
+
+.. toctree::
+  :maxdepth: 1
+  :hidden:
+
+  Catalogue versions <catalogue-versions>
