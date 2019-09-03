@@ -14,7 +14,7 @@ import {
 
 import styles from './ModifyTable.scss';
 
-import { handleDelete } from '../../../../handleDelete';
+import getConfirmation from '../../../Common/GetConfirmation/GetConfirmation';
 
 const PrimaryKeyEditor = ({
   tableSchema,
@@ -101,16 +101,10 @@ const PrimaryKeyEditor = ({
   // remove
   const onRemove = () => {
     if (pkConstraintName) {
-      const confirmMessage = DELETE_PK_WARNING;
-      const a = handleDelete(confirmMessage);
-      if (
-        a === true ||
-        (a && typeof a === 'string' && a.trim() === 'DELETE PRIMARY KEY')
-      ) {
+      const isOk = getConfirmation(DELETE_PK_WARNING);
+      if (isOk) {
         dispatch(setPrimaryKeys(['']));
         onSave(null, true);
-      } else {
-        return dispatch(showSuccessNotification('No changes'));
       }
     }
   };

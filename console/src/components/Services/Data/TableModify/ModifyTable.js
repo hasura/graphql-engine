@@ -33,8 +33,7 @@ import TriggerEditorList from './TriggerEditorList';
 import styles from './ModifyTable.scss';
 import { NotFoundError } from '../../../Error/PageNotFound';
 
-import { showSuccessNotification } from '../../Common/Notification';
-import { handleDelete } from '../../../../handleDelete';
+import getConfirmation from '../../../Common/GetConfirmation/GetConfirmation';
 
 class ModifyTable extends React.Component {
   componentDidMount() {
@@ -85,15 +84,10 @@ class ModifyTable extends React.Component {
         color="white"
         size="sm"
         onClick={() => {
-          const confirmMessage = `Are you absolutely sure?\nThis will untrack the table ${tableName}.\n`;
-          const a = handleDelete(confirmMessage);
-          if (
-            a === true ||
-            (a && typeof a === 'string' && a.trim() === 'UNTRACK')
-          ) {
+          const confirmMessage = `This will remove the table "${tableName}" from your GraphQL schema`;
+          const isOk = getConfirmation(confirmMessage);
+          if (isOk) {
             dispatch(untrackTableSql(tableName));
-          } else {
-            return dispatch(showSuccessNotification('No changes'));
           }
         }}
         data-test="untrack-table"
@@ -108,12 +102,10 @@ class ModifyTable extends React.Component {
         color="red"
         size="sm"
         onClick={() => {
-          const confirmMessage = `Are you absolutely sure?\nThis action cannot be undone. This will permanently delete the table ${tableName}. Please type table name(case sensitive) to confirm.\n`;
-          const a = handleDelete(confirmMessage, true);
-          if (a && typeof a === 'string' && a.trim() === tableName) {
+          const confirmMessage = `This will permanently delete the table "${tableName}" from your database`;
+          const isOk = getConfirmation(confirmMessage, true, tableName);
+          if (isOk) {
             dispatch(deleteTableSql(tableName, tableSchema));
-          } else {
-            return dispatch(showSuccessNotification('No changes'));
           }
         }}
         data-test="delete-table"

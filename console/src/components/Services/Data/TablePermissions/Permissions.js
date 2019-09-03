@@ -57,8 +57,7 @@ import Button from '../../../Common/Button/Button';
 import { defaultPresetsState } from '../DataState';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
-import { handleDelete } from '../../../../handleDelete';
-import { showSuccessNotification } from '../../Common/Notification';
+import getConfirmation from '../../../Common/GetConfirmation/GetConfirmation';
 
 class Permissions extends Component {
   constructor() {
@@ -1645,15 +1644,10 @@ class Permissions extends Component {
 
         const dispatchRemoveAccess = () => {
           const confirmMessage =
-            'Are you absolutely sure?\nThis action cannot be undone. This will permanently delete the permissions.';
-          const a = handleDelete(confirmMessage);
-          if (
-            a === true ||
-            (a && typeof a === 'string' && a.trim() === 'DELETE')
-          ) {
+            'This will permanently delete the currently set permissions';
+          const isOk = getConfirmation(confirmMessage);
+          if (isOk) {
             dispatch(permChangePermissions(permChangeTypes.delete));
-          } else {
-            return dispatch(showSuccessNotification('No changes'));
           }
         };
 

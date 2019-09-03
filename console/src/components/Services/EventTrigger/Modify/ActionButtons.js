@@ -1,16 +1,13 @@
 import React from 'react';
 import { deleteTrigger } from '../EventActions';
 import Button from '../../../Common/Button/Button';
-import { handleDelete } from '../../../../handleDelete';
-import { showSuccessNotification } from '../../Common/Notification';
+import getConfirmation from '../../../Common/GetConfirmation/GetConfirmation';
 
 const verifyDeleteTrigger = (triggerName, dispatch) => {
-  const confirmMessage = `Are you absolutely sure?\nThis action cannot be undone. This will permanently delete the trigger ${triggerName}.`;
-  const a = handleDelete(confirmMessage);
-  if (a === true || (a && typeof a === 'string' && a.trim() === 'DELETE')) {
+  const confirmMessage = `This will permanently delete the event trigger "${triggerName}"`;
+  const isOk = getConfirmation(confirmMessage, true, triggerName);
+  if (isOk) {
     dispatch(deleteTrigger(triggerName));
-  } else {
-    return dispatch(showSuccessNotification('No changes'));
   }
 };
 

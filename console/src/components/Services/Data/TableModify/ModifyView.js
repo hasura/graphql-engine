@@ -14,7 +14,7 @@ import { setTable } from '../DataActions';
 import Button from '../../../Common/Button/Button';
 import { NotFoundError } from '../../../Error/PageNotFound';
 
-import { handleDelete } from '../../../../handleDelete';
+import getConfirmation from '../../../Common/GetConfirmation/GetConfirmation';
 
 class ModifyView extends Component {
   componentDidMount() {
@@ -139,12 +139,9 @@ class ModifyView extends Component {
         color="red"
         size="sm"
         onClick={() => {
-          const confirmMessage = `Are you absolutely sure?\nThis action cannot be undone. This will permanently delete the view ${tableName}.\n`;
-          const a = handleDelete(confirmMessage);
-          if (
-            a === true ||
-            (a && typeof a === 'string' && a.trim() === 'DELETE')
-          ) {
+          const confirmMessage = `This will permanently delete the view "${tableName}" from your database`;
+          const isOk = getConfirmation(confirmMessage, true, tableName);
+          if (isOk) {
             dispatch(deleteViewSql(tableName));
           }
         }}

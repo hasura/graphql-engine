@@ -9,8 +9,7 @@ import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/Gql
 import styles from '../TableModify/ModifyTable.scss';
 import tableStyles from '../../../Common/TableCommon/TableStyles.scss';
 
-import { handleDelete } from '../../../../handleDelete';
-import { showSuccessNotification } from '../../Common/Notification';
+import getConfirmation from '../../../Common/GetConfirmation/GetConfirmation';
 
 class RelationshipEditor extends React.Component {
   constructor(props) {
@@ -75,6 +74,7 @@ class RelationshipEditor extends React.Component {
   render() {
     const { dispatch, relConfig } = this.props;
     const { text, isEditting } = this.state;
+
     const { relName } = relConfig;
 
     const gqlCompatibilityWarning = !gqlPattern.test(relName) ? (
@@ -86,14 +86,10 @@ class RelationshipEditor extends React.Component {
     const onDelete = e => {
       e.preventDefault();
 
-      const confirmMessage = `Are you absolutely sure?\nThis action cannot be undone. This will permanently remove the relationship ${
-        relConfig.relName
-      }`;
-      const a = handleDelete(confirmMessage);
-      if (a === true || (a && typeof a === 'string' && a.trim() === 'REMOVE')) {
+      const confirmMessage = `This will permanently remove the relationship "${relName}"`;
+      const isOk = getConfirmation(confirmMessage);
+      if (isOk) {
         dispatch(deleteRelMigrate(relConfig));
-      } else {
-        return dispatch(showSuccessNotification('No changes'));
       }
     };
     const collapsed = () => (

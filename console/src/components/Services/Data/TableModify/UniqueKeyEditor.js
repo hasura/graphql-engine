@@ -8,7 +8,7 @@ import {
 } from '../Common/ReusableComponents/utils';
 import { saveUniqueKey, removeUniqueKey } from './ModifyActions';
 
-import { handleDelete } from '../../../../handleDelete';
+import getConfirmation from '../../../Common/GetConfirmation/GetConfirmation';
 
 const UniqueKeyEditor = ({
   uniqueKeys,
@@ -105,13 +105,8 @@ const UniqueKeyEditor = ({
     let removeFunc;
     if (!isLast) {
       removeFunc = toggle => {
-        const confirmMessage =
-          'Are you absolutely sure?\nThis will remove this unique key constraint.';
-        const a = handleDelete(confirmMessage);
-        if (
-          a === true ||
-          (a && typeof a === 'string' && a.trim() === 'REMOVE')
-        ) {
+        const isOk = getConfirmation();
+        if (isOk) {
           dispatch(
             removeUniqueKey(
               i,
