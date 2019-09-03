@@ -164,8 +164,8 @@ To set a field of a table as an enum, we need to set a reference from it to the 
   ALTER TABLE users ADD CONSTRAINT
     users_role_fkey FOREIGN KEY (role) REFERENCES user_role;
 
-Make queries using enum values
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Making queries using enum values
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Once a table has been tracked as an enum, the GraphQL schema will be updated to expose the values of the
 table as GraphQL enum values i.e. only the exposed values will be permitted for all fields referencing to it.
