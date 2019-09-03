@@ -393,21 +393,30 @@ from22To23
       defaultTxErrorHandler
       $(Q.sqlFromFile "src-rsr/migrate_from_22_to_23.sql")
   allRoles <- liftTx $ getAllRoles
-  buildSchemaCacheStrict
-  sc <- askSchemaCache
-  let remoteSchemas = Map.toList (scRemoteSchemas sc)
-      remoteSchemaPermissions =
-        concatMap
-          (\(name, ctx) ->
-             map (uncurryPerm . (, name, getTypePerms ctx)) allRoles)
-          remoteSchemas
-  liftTx $ mapM_ addRemoteSchemaPermissionsToCatalog remoteSchemaPermissions
+  remoteSchemaCount::Int <- liftTx $ getRemoteSchemaCount
+  when (remoteSchemaCount > 0) $ do
+    buildSchemaCacheStrict
+    sc <- askSchemaCache
+    let remoteSchemas = Map.toList (scRemoteSchemas sc)
+        remoteSchemaPermissions =
+          concatMap
+            (\(name, ctx) ->
+               map (uncurryPerm . (, name, getTypePerms ctx)) allRoles)
+            remoteSchemas
+    liftTx $ mapM_ addRemoteSchemaPermissionsToCatalog remoteSchemaPermissions
   migrateMetadata False migrateMetadataFor23
   setAsSystemDefinedFor23
   where
     migrateMetadataFor23 =
       $(unTypeQ
           (Y.decodeFile "src-rsr/migrate_metadata_from_22_to_23.yaml" :: Q (TExp RQLQuery)))
+    getRemoteSchemaCount =
+      runIdentity . Q.getRow <$>
+      Q.withQE
+        defaultTxErrorHandler
+        [Q.sql| SELECT count(*)
+                FROM hdb_catalog.remote_schemas
+        |] () False
     getAllRoles =
       map runIdentity <$>
       Q.listQE
