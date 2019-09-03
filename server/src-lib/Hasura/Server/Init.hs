@@ -660,13 +660,14 @@ connInfoErrModifier s = "Fatal Error : " ++ s
 
 mkConnInfo :: RawConnInfo -> Either String Q.ConnInfo
 mkConnInfo (RawConnInfo mHost mPort mUser password mURL mDB opts mRetries) =
+  Q.ConnInfo retries <$>
   case (mHost, mPort, mUser, mDB, mURL) of
 
     (Just host, Just port, Just user, Just db, Nothing) ->
-      return $ Q.CIOptions $ Q.ConnOptions host port user password db opts retries
+      return $ Q.CDOptions $ Q.ConnOptions host port user password db opts
 
     (_, _, _, _, Just dbURL) ->
-      return $ Q.CIDatabaseURI retries $ TE.encodeUtf8 $ T.pack dbURL
+      return $ Q.CDDatabaseURI $ TE.encodeUtf8 $ T.pack dbURL
     _ -> throwError $ "Invalid options. "
                     ++ "Expecting all database connection params "
                     ++ "(host, port, user, dbname, password) or "
@@ -959,21 +960,21 @@ parseLogLevel = optional $
 
 -- Init logging related
 connInfoToLog :: Q.ConnInfo -> StartupLog
-connInfoToLog ci =
+connInfoToLog connInfo =
   StartupLog L.LevelInfo "postgres_connection" infoVal
   where
-    infoVal = case ci of
-      Q.CIDatabaseURI retries uri -> mkDBUriLog retries $
-                                     T.unpack $ bsToTxt uri
-      Q.CIOptions co              ->
+    Q.ConnInfo retries details = connInfo
+    infoVal = case details of
+      Q.CDDatabaseURI uri -> mkDBUriLog $ T.unpack $ bsToTxt uri
+      Q.CDOptions co      ->
         J.object [ "host" J..= Q.connHost co
                  , "port" J..= Q.connPort co
                  , "user" J..= Q.connUser co
                  , "database" J..= Q.connDatabase co
-                 , "retries" J..= Q.connRetries co
+                 , "retries" J..= retries
                  ]
 
-    mkDBUriLog retries uri =
+    mkDBUriLog uri =
       case show <$> parseURI uri of
         Nothing -> J.object
           [ "error" J..= ("parsing database url failed" :: String)]
