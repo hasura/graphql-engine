@@ -52,14 +52,14 @@ Args syntax
    * - is_enum
      - false
      - Boolean
-     - When set to ``true``, creates the table as an :ref:`enum table <enum table>`.
+     - When set to ``true``, creates the table as an :ref:`enum table <create_enum_table>`.
 
 .. _set_table_is_enum:
 
 set_table_is_enum
 -----------------
 
-``set_table_is_enum`` sets whether an already-tracked table should be used as an :ref:`enum table <enum table>`.
+``set_table_is_enum`` sets whether an already-tracked table should be used as an :ref:`enum table <create_enum_table>`.
 
 Use table ``user_role`` as an enum table:
 

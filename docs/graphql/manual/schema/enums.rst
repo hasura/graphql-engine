@@ -49,7 +49,7 @@ currently only generates GraphQL enum types for enums defined using the
 You may use native Postgres enum types in your database schema, but they will essentially be treated like text
 fields in the generated GraphQL schema. Therefore, this guide focuses primarily on modeling an enum using a
 reference table, but you may still use native Postgres enum types to help maintain data consistency in your
-database. You can always create a table with the values of a Postgres enum as shown in the
+database. You can always choose to create a table with the values of a Postgres enum as shown in the
 :ref:`section below <create_enum_table_from_pg_enum>`.
 
 **Example:** Let’s say we have a database that tracks user information, and users may only have one of three specific
@@ -95,6 +95,7 @@ the following restrictions:
 2. Optionally, the table may have a second column, also of type ``text``, which will be used as a description of each
    value in the generated GraphQL schema.
 3. The table may not contain any other columns.
+4. The table must contain atleast 1 row.
 
 **For example**, to create an enum that represents our user roles, we would create the following table:
 
@@ -129,33 +130,29 @@ Setting a table as an enum table
 Once we have a table which satisfies the conditions for an enum table as described :ref:`above <create_enum_table>`,
 we need to tell Hasura that this table represents an enum.
 
-We can do that by passing ``true`` for the ``is_enum`` option of the :ref:`track_table` API, or we can
-use the :ref:`set_table_is_enum` API to change whether or not an already-tracked table should be used
-as an enum.
+.. rst-class:: api_tabs
+.. tabs::
 
-**For example**:
+  .. tab:: Console
 
-.. code-block:: http
+    Head to the ``Modify`` tab of the table and toggle the switch in the
+    ``Set table as enum`` section:
 
-  POST /v1/query HTTP/1.1
-  Content-Type: application/json
-  X-Hasura-Role: admin
+    .. thumbnail:: ../../../img/graphql/manual/schema/enum-set.png
 
-  {
-    "type": "track_table",
-    "args": {
-      "table": {
-        "schema": "public",
-        "name": "user_role"
-      },
-      "is_enum": true
-    }
-  }
+  .. tab:: API
+
+    A table can be set as an enum via the following 2 methods:
+
+    - passing ``true`` for the ``is_enum`` option of the :ref:`track_table` API while tracking a table
+    - using the :ref:`set_table_is_enum` API to change whether or not an already-tracked table should be used as
+      an enum
 
 Using an enum table
 ^^^^^^^^^^^^^^^^^^^
 
-To set a field of a table as an enum, we need to set a reference from it to the enum table via a foreign key.
+To set a field of a table as an enum in the GraphQL schema, we need to set a reference from it to the enum table
+via a foreign key.
 
 **For example**, to update our ``users`` table to reference the ``user_role`` enum table:
 
@@ -218,6 +215,25 @@ a string:
         ]
       }
     }
+
+Enums and migrations
+^^^^^^^^^^^^^^^^^^^^
+
+As enum tables have a requirement to contain atleast 1 row, it is necessary to have a migration which inserts
+values into an enum table. Otherwise while applying migrations an error would be thrown while trying to set the
+table as an enum.
+
+The migration which inserts values into an enum table needs to be between the migration creating the table
+and the migration setting it as an enum.
+
+This can be achieved via the console by performing the following steps while setting up an enum table:
+
+1. Create the enum table
+2. Use the ``RawSQL`` tab of the console to insert the enum values into the table and mark the insert as a migration
+3. Set the table as an enum
+
+You can also :doc:`manually create migration files <../migrations/advanced/writing-migrations-manually>` to achieve
+this.
 
 Current limitations
 ^^^^^^^^^^^^^^^^^^^
