@@ -1,7 +1,7 @@
 .. _hasura_catalogue_versions:
 
 Catalogue versions
-=====================================
+==================
 
 .. contents:: Table of contents
   :backlinks: none
