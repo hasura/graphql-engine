@@ -7,13 +7,14 @@ import 'react-toggle/style.css';
 import '../../../Common/ReactToggle/ReactToggleOverrides.css';
 
 import { updateMigrationModeStatus } from '../../../Main/Actions';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 const Migrations = ({ dispatch, migrationMode }) => {
   const styles = require('./Migrations.scss');
 
   const handleMigrationModeToggle = () => {
-    const isConfirm = window.confirm('Are you sure?');
-    if (isConfirm) {
+    const isOk = getConfirmation();
+    if (isOk) {
       dispatch(updateMigrationModeStatus());
     }
   };

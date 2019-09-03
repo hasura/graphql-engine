@@ -28,6 +28,7 @@ import {
 
 import { isPostgresFunction } from '../utils';
 import { sqlEscapeText } from '../../../Common/utils/sqlUtils';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 import {
   fetchColumnCastsQuery,
@@ -2070,9 +2071,10 @@ export const toggleTableAsEnum = (isEnum, successCallback, failureCallback) => (
   dispatch,
   getState
 ) => {
-  const isOk = window.confirm(
-    `Are you sure you want to ${isEnum ? 'un' : ''}set this table as an enum?`
-  );
+  const confirmMessage = `This will ${
+    isEnum ? 'un' : ''
+  }set this table as an enum`;
+  const isOk = getConfirmation(confirmMessage);
   if (!isOk) {
     return;
   }

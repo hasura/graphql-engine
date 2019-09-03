@@ -87,7 +87,7 @@ const PrimaryKeyEditor = ({
   // save
   const onSave = (e, confirmed) => {
     if (pkConstraintName && pkModify.length === 1 && !confirmed) {
-      const isOk = window.confirm(DELETE_PK_WARNING);
+      const isOk = getConfirmation(DELETE_PK_WARNING);
       if (!isOk) {
         setPkEditState();
         return dispatch(showSuccessNotification('No changes'));

@@ -84,7 +84,6 @@ const RawSQL = ({
       if (!isMigration && globals.consoleMode === 'cli') {
         // if migration is not checked, check if is schema modification
         if (isSchemaModification(sql)) {
-          // const confirmation = window.confirm('Your SQL Statement has a schema modifying command. Are you sure its not a migration?');
           dispatch(modalOpen());
           const confirmation = false;
           if (confirmation) {

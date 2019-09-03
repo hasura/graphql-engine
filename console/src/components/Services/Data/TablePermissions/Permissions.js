@@ -300,10 +300,9 @@ class Permissions extends Component {
           };
 
           // const dispatchDeletePermission = () => {
-          //   const isConfirm = window.confirm(
-          //     'Are you sure you want to delete the permission for role ' + role + '?'
-          //   );
-          //   if (isConfirm) {
+          //   const confirmMessage = `This will delete the currently set permissions for role "${role}"`;
+          //   const isOk = getConfirmation(confirmMessage);
+          //   if (isOk) {
           //     dispatch(permRemoveRole(tableSchema, role));
           //   }
           // };
@@ -494,14 +493,14 @@ class Permissions extends Component {
     };
 
     const getBulkSection = tableSchema => {
-      if (!permissionsState.bulkSelect.length) {
+      const bulkSelectedRoles = permissionsState.bulkSelect;
+
+      if (!bulkSelectedRoles.length) {
         return;
       }
 
       const getSelectedRoles = () => {
-        const bulkSelect = permissionsState.bulkSelect;
-
-        return bulkSelect.map(r => {
+        return bulkSelectedRoles.map(r => {
           return (
             <span key={r} className={styles.add_pad_right}>
               <b>{r}</b>{' '}
@@ -511,7 +510,10 @@ class Permissions extends Component {
       };
 
       const handleBulkRemoveClick = () => {
-        if (window.confirm('Are you sure?')) {
+        const confirmMessage =
+          'This will remove all currently set permissions for the selected role(s)';
+        const isOk = getConfirmation(confirmMessage);
+        if (isOk) {
           dispatch(permRemoveMultipleRoles(tableSchema));
         }
       };
@@ -1488,7 +1490,9 @@ class Permissions extends Component {
         // };
 
         const applySameBulk = () => {
-          if (window.confirm('Are you sure?')) {
+          const confirmMessage = 'This will overwrite any existing permissions';
+          const isOk = getConfirmation(confirmMessage);
+          if (isOk) {
             dispatch(applySamePermissionsBulk(tableSchema));
           }
         };

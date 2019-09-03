@@ -122,7 +122,8 @@ class ModifyView extends Component {
         color="white"
         size="sm"
         onClick={() => {
-          const isOk = confirm('Are you sure to untrack?');
+          const confirmMessage = `This will remove the view "${tableName}" from your GraphQL schema`;
+          const isOk = getConfirmation(confirmMessage);
           if (isOk) {
             dispatch(untrackTableSql(tableName));
           }

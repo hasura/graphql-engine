@@ -27,38 +27,39 @@ class ResetMetadata extends Component {
       const confirmMessage =
         "This will permanently reset GraphQL engine's configuration and you will need to start from scratch";
       const isOk = getConfirmation(confirmMessage, true);
-      if (isOk) {
-        this.setState({ isResetting: true });
-
-        const url = Endpoints.query;
-
-        const requestBody = {
-          type: 'clear_metadata',
-          args: {},
-        };
-        const options = {
-          method: 'POST',
-          credentials: globalCookiePolicy,
-          headers: {
-            ...this.props.dataHeaders,
-          },
-          body: JSON.stringify(requestBody),
-        };
-
-        fetch(url, options).then(response => {
-          response.json().then(data => {
-            this.setState({ isResetting: false });
-
-            if (response.ok) {
-              dispatch(showSuccessNotification('Metadata reset successfully!'));
-            } else {
-              dispatch(
-                showErrorNotification('Metadata reset failed', null, data)
-              );
-            }
-          });
-        });
+      if (!isOk) {
+        return;
       }
+
+      this.setState({ isResetting: true });
+
+      const url = Endpoints.query;
+      const requestBody = {
+        type: 'clear_metadata',
+        args: {},
+      };
+      const options = {
+        method: 'POST',
+        credentials: globalCookiePolicy,
+        headers: {
+          ...this.props.dataHeaders,
+        },
+        body: JSON.stringify(requestBody),
+      };
+
+      fetch(url, options).then(response => {
+        response.json().then(data => {
+          this.setState({ isResetting: false });
+
+          if (response.ok) {
+            dispatch(showSuccessNotification('Metadata reset successfully!'));
+          } else {
+            dispatch(
+              showErrorNotification('Metadata reset failed', null, data)
+            );
+          }
+        });
+      });
     };
 
     return (
