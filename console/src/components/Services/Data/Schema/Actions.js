@@ -76,7 +76,7 @@ export const deleteCurrentSchema = (successCb, errorCb) => {
 
     if (currentSchema === 'public') {
       return dispatch(
-        showErrorNotification('Dropping public schema is not supported')
+        showErrorNotification('Dropping "public" schema is not supported')
       );
     }
 

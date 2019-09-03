@@ -183,6 +183,11 @@ class Schema extends Component {
           const handleCreateClick = () => {
             const schemaName = schemaNameEdit.trim();
 
+            if (!schemaName) {
+              document.getElementById('schema-name-input').focus();
+              return;
+            }
+
             const successCb = () => {
               dispatch(updateCurrentSchema(schemaName));
 
@@ -216,6 +221,7 @@ class Schema extends Component {
             <div className={styles.display_inline + ' ' + styles.add_mar_left}>
               <div className={styles.display_inline}>
                 <input
+                  id="schema-name-input"
                   type="text"
                   value={schemaNameEdit}
                   onChange={handleSchemaNameChange}
