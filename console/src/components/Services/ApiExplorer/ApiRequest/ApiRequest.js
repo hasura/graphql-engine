@@ -161,8 +161,7 @@ class ApiRequest extends Component {
   render() {
     const { isAnalyzingToken, tokenInfo, analyzingHeaderRow } = this.state;
 
-    // const { is_jwt_set: isJWTSet = false } = this.props.serverConfig;
-    const isJWTSet = true;
+    const { is_jwt_set: isJWTSet = false } = this.props.serverConfig;
 
     const {
       error: tokenAnalyzeError,
