@@ -80,7 +80,6 @@ data DependencyReason
   | DRSessionVariable
   | DRPayload
   | DRParent
-  | DRRemoteSchema
   deriving (Show, Eq, Generic)
 
 instance Hashable DependencyReason
@@ -100,7 +99,6 @@ reasonToTxt = \case
   DRSessionVariable -> "session_variable"
   DRPayload         -> "payload"
   DRParent          -> "parent"
-  DRRemoteSchema -> "remote_schema"
 
 instance ToJSON DependencyReason where
   toJSON = String . reasonToTxt

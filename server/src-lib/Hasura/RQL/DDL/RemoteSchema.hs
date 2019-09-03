@@ -121,13 +121,9 @@ dropRemoteSchemaDirectDeps
 dropRemoteSchemaDirectDeps rsn = do
   sc <- askSchemaCache
   let depObjs = getDependentObjs sc objId
-      permDeps = catMaybes $ map getPermObj depObjs
-  mapM_ dropRemoteSchemaPermDep permDeps
+  mapM_ dropRemoteSchemaPermDep depObjs
   where
     objId = SORemoteSchema rsn
-    getPermObj = \case
-      obj@(SORemoteSchemaObj _(RSOPerm _)) -> Just obj
-      _ -> Nothing
 
 dropRemoteSchemaPermDep
   :: ( CacheRWM m
@@ -220,15 +216,15 @@ runAddRemoteSchemaPermissionsP2 rsPerm rsCtx = do
 
 runAddRemoteSchemaPermissionsP2Setup
   :: (QErrM m, CacheRWM m) => RemoteSchemaPermissions -> RemoteSchemaCtx -> m ()
-runAddRemoteSchemaPermissionsP2Setup (RemoteSchemaPermissions remoteSchema role _def) rsCtx = do
+runAddRemoteSchemaPermissionsP2Setup (RemoteSchemaPermissions rsName role _def) rsCtx = do
   sc <- askSchemaCache
   modDepMapInCache (addToDepMap schObjId deps)
   let rmSchemaWithRoles = scRemoteSchemasWithRole sc
-      newSchemasWithRoles = Map.insert (role, remoteSchema) rsCtx rmSchemaWithRoles
+      newSchemasWithRoles = Map.insert (role, rsName) rsCtx rmSchemaWithRoles
   writeSchemaCache sc { scRemoteSchemasWithRole = newSchemasWithRoles }
   where
-    schObjId = SORemoteSchemaObj remoteSchema (RSOPerm role)
-    deps = [SchemaDependency (SORemoteSchema remoteSchema) DRRemoteSchema]
+    schObjId = SORemoteSchemaObj rsName (RSOPerm role)
+    deps = [SchemaDependency (SORemoteSchema rsName ) DRParent]
 
 validateRemoteSchemaPermissions :: (QErrM m, CacheRM m) => RemoteSchemaPermissions -> m RemoteSchemaCtx
 validateRemoteSchemaPermissions remoteSchemaPerm = do
