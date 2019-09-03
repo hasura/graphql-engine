@@ -139,11 +139,6 @@ data APIResp
   = JSONResp !(HttpResponse EncJSON)
   | RawResp  !(HttpResponse BL.ByteString)
 
-apiRespToLBS :: APIResp -> BL.ByteString
-apiRespToLBS = \case
-  JSONResp (HttpResponse j _) -> encJToLBS j
-  RawResp (HttpResponse b _)  -> b
-
 data APIHandler a
   = AHGet !(Handler APIResp)
   | AHPost !(a -> Handler APIResp)
@@ -276,29 +271,25 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
       setStatus $ qeStatus qErr
       json $ qErrEncoder includeInternal qErr
 
-    logSuccessAndResp userInfo reqId req result qTime = do
-      let reqIdHeader = (requestIdHeader, unRequestId reqId)
-          reqHeaders = requestHeaders req
-          (compressedResp, mEncodingHeader, mCompressionType) =
-            possiblyCompressResp reqHeaders $ apiRespToLBS result
-          encodingHeader = maybe [] pure mEncodingHeader
-      logSuccess logger userInfo reqId req compressedResp qTime mCompressionType
+    logSuccessAndResp userInfo reqId req result qTime =
       case result of
-        JSONResp (HttpResponse _ h) -> do
-          let responseHeaders = [jsonHeader, reqIdHeader]
-                                <> mkHeaders h <> encodingHeader
-          setHeaders responseHeaders
-          lazyBytes compressedResp
-        RawResp (HttpResponse _ h) -> do
-          let responseHeaders = pure reqIdHeader <> mkHeaders h
-                                <> encodingHeader
-          setHeaders responseHeaders
-          lazyBytes compressedResp
+        JSONResp (HttpResponse encJson h) ->
+          possiblyCompressedLazyBytes userInfo reqId req qTime (encJToLBS encJson) $
+            pure jsonHeader <> mkHeaders h
+        RawResp (HttpResponse rawBytes h) ->
+          possiblyCompressedLazyBytes userInfo reqId req qTime rawBytes $ mkHeaders h
 
-    mkHeaders Nothing  = []
-    mkHeaders (Just h) = map unHeader h
+    possiblyCompressedLazyBytes userInfo reqId req qTime respBytes respHeaders = do
+      let (compressedResp, mEncodingHeader, mCompressionType) =
+            possiblyCompressResp (requestHeaders req) respBytes
+          encodingHeader = maybe [] pure mEncodingHeader
+          reqIdHeader = (requestIdHeader, unRequestId reqId)
+          allRespHeaders = pure reqIdHeader <> encodingHeader <> respHeaders
+      logSuccess logger userInfo reqId req compressedResp qTime mCompressionType
+      mapM_ (uncurry setHeader) allRespHeaders
+      lazyBytes compressedResp
 
-    setHeaders = mapM_ (uncurry setHeader)
+    mkHeaders = maybe [] (map unHeader)
 
     possiblyCompressResp reqHeaders resp =
       if scEnableCompression serverCtx then
