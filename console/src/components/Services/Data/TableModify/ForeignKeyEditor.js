@@ -13,7 +13,7 @@ import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import ForeignKeySelector from '../Common/ReusableComponents/ForeignKeySelector';
 import { updateSchemaInfo } from '../DataActions';
 
-import getConfirmation from '../../../Common/GetConfirmation/GetConfirmation';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 const ForeignKeyEditor = ({
   tableSchema,

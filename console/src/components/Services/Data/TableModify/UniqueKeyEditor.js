@@ -8,7 +8,7 @@ import {
 } from '../Common/ReusableComponents/utils';
 import { saveUniqueKey, removeUniqueKey } from './ModifyActions';
 
-import getConfirmation from '../../../Common/GetConfirmation/GetConfirmation';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 const UniqueKeyEditor = ({
   uniqueKeys,

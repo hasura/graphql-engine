@@ -9,7 +9,7 @@ import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/Gql
 import styles from '../TableModify/ModifyTable.scss';
 import tableStyles from '../../../Common/TableCommon/TableStyles.scss';
 
-import getConfirmation from '../../../Common/GetConfirmation/GetConfirmation';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 class RelationshipEditor extends React.Component {
   constructor(props) {

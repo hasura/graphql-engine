@@ -57,7 +57,7 @@ import Button from '../../../Common/Button/Button';
 import { defaultPresetsState } from '../DataState';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
-import getConfirmation from '../../../Common/GetConfirmation/GetConfirmation';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 class Permissions extends Component {
   constructor() {

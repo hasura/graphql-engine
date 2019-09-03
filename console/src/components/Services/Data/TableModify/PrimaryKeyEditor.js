@@ -14,7 +14,7 @@ import {
 
 import styles from './ModifyTable.scss';
 
-import getConfirmation from '../../../Common/GetConfirmation/GetConfirmation';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 const PrimaryKeyEditor = ({
   tableSchema,

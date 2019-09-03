@@ -21,7 +21,7 @@ import { appPrefix, pageTitle } from '../constants';
 import { NotFoundError } from '../../../Error/PageNotFound';
 
 import globals from '../../../../Globals';
-import getConfirmation from '../../../Common/GetConfirmation/GetConfirmation';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 

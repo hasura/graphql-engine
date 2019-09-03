@@ -1,7 +1,7 @@
 import React from 'react';
 import { deleteTrigger } from '../EventActions';
 import Button from '../../../Common/Button/Button';
-import getConfirmation from '../../../Common/GetConfirmation/GetConfirmation';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 const verifyDeleteTrigger = (triggerName, dispatch) => {
   const confirmMessage = `This will permanently delete the event trigger "${triggerName}"`;

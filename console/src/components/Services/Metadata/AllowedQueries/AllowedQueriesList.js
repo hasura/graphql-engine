@@ -11,7 +11,7 @@ import {
 } from '../Actions';
 import Button from '../../../Common/Button/Button';
 
-import getConfirmation from '../../../Common/GetConfirmation/GetConfirmation';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 class AllowedQueriesList extends React.Component {
   constructor(props) {

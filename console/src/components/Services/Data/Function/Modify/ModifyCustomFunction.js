@@ -24,7 +24,7 @@ import {
 
 import { SET_SQL } from '../../RawSQL/Actions';
 import { NotFoundError } from '../../../../Error/PageNotFound';
-import getConfirmation from '../../../../Common/GetConfirmation/GetConfirmation';
+import { getConfirmation } from '../../../../Common/utils/jsUtils';
 
 class ModifyCustomFunction extends React.Component {
   constructor() {

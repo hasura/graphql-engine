@@ -33,7 +33,7 @@ import TriggerEditorList from './TriggerEditorList';
 import styles from './ModifyTable.scss';
 import { NotFoundError } from '../../../Error/PageNotFound';
 
-import getConfirmation from '../../../Common/GetConfirmation/GetConfirmation';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 class ModifyTable extends React.Component {
   componentDidMount() {

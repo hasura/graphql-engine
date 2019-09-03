@@ -9,7 +9,7 @@ import {
   showSuccessNotification,
   showErrorNotification,
 } from '../../Common/Notification';
-import getConfirmation from '../../../Common/GetConfirmation/GetConfirmation';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 class ResetMetadata extends Component {
   constructor() {
