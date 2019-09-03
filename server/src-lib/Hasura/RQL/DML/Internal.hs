@@ -223,7 +223,7 @@ sessVarFromCurrentSetting' :: PGType PGScalarType -> SessVar -> S.SQLExp
 sessVarFromCurrentSetting' ty sessVar =
   flip S.SETyAnn (S.mkTypeAnn ty) $
   case ty of
-    PGTypeScalar baseTy -> withGeoVal baseTy sessVarVal
+    PGTypeScalar baseTy -> withConstructorFn baseTy sessVarVal
     PGTypeArray _       -> sessVarVal
   where
     curSess = S.SEUnsafe "current_setting('hasura.user')::json"

@@ -62,7 +62,7 @@ convertRowObj colGNameMap val =
   forM (OMap.toList obj) $ \(k, v) -> do
     prepExpM <- fmap UVPG <$> asPGColumnValueM v
     pgCol <- pgiColumn <$> resolvePGCol colGNameMap k
-    let prepExp = fromMaybe (UVSQL $ S.SEUnsafe "NULL") prepExpM
+    let prepExp = fromMaybe (UVSQL S.SENull) prepExpM
     return (pgCol, prepExp)
 
 type ApplySQLOp =  (PGCol, S.SQLExp) -> S.SQLExp

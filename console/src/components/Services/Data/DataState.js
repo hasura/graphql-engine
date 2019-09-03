@@ -90,6 +90,9 @@ const defaultModifyState = {
     rel: null,
     perm: '',
   },
+  tableEnum: {
+    loading: false
+  },
   columnEdit: {},
   pkEdit: [''],
   pkModify: [''],
