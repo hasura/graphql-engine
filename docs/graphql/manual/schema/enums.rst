@@ -216,8 +216,8 @@ a string:
       }
     }
 
-Caveat with migrations
-^^^^^^^^^^^^^^^^^^^^^^
+Caveat on migrations
+^^^^^^^^^^^^^^^^^^^^
 
 As enum tables have a requirement to contain atleast 1 row, it is necessary to have a migration which inserts
 values into an enum table. Otherwise while applying migrations an error would be thrown while trying to set the
