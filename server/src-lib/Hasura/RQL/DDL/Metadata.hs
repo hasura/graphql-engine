@@ -105,8 +105,8 @@ instance FromJSON TableMeta where
         HS.fromList (M.keys o) `HS.difference` expectedKeySet
 
       expectedKeySet =
-        HS.fromList [ tableKey, isEnumKey, orKey, arKey
-                    , ipKey, spKey, upKey, dpKey, etKey
+        HS.fromList [ tableKey, isEnumKey, configKey, orKey
+                    , arKey , ipKey, spKey, upKey, dpKey, etKey
                     ]
 
   parseJSON _ =
