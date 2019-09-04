@@ -3,7 +3,7 @@ Filter query results / search queries
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 2
+  :depth: 1
   :local:
 
 You can use the ``where`` argument in your queries to filter results based on some field’s values (even
