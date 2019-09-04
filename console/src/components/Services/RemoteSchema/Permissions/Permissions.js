@@ -19,7 +19,7 @@ import { fetchRoleList } from '../../Data/DataActions';
 const Permissions = props => {
 
   const {
-    permissions: { editState, existingPermissions },
+    permissions: { editState, existingPermissions, isFetching },
     remoteSchemaName,
     adminHeaders,
     remoteSchemasList,
@@ -230,6 +230,7 @@ const Permissions = props => {
           rootTypes={rootTypes}
           dispatch={props.dispatch}
           rolesList={rolesList}
+          isFetching={isFetching}
         />
       </div>
     </div>

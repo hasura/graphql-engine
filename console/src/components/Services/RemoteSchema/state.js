@@ -43,6 +43,7 @@ const permissionState = {
     allowAll: false,
     isEditing: false,
     editType: '',
+    isNew: true
   },
   currentRemoteSchemaName: '',
   ...asyncState,

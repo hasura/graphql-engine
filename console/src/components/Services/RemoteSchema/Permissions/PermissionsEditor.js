@@ -8,6 +8,7 @@ import {
   setPermissionTypes,
   closePermissionEdit,
   createRemoteSchemaPermission,
+  deleteRemoteSchemaPermission 
 } from './Actions';
 import Button from '../../../Common/Button/Button';
 import { getExpandedTypes } from './utils';
@@ -31,10 +32,25 @@ const PermissionsEditor = ({
       dispatch(createRemoteSchemaPermission());
     };
 
-    const onRemove = () => {};
+    const onRemove = () => {
+      dispatch(deleteRemoteSchemaPermission());
+    };
 
     const onCancel = () => {
       dispatch(closePermissionEdit());
+    };
+
+    const getRemoveButton = () => {
+      if (editState.isNew) return;
+      return (
+        <Button
+          onClick={onRemove}
+          className={`${styles.add_mar_right}`}
+          color="red"
+        >
+          Remove
+        </Button>
+      );
     };
 
     return (
@@ -46,13 +62,7 @@ const PermissionsEditor = ({
         >
           Save
         </Button>
-        <Button
-          onClick={onRemove}
-          className={`${styles.add_mar_right}`}
-          color="red"
-        >
-          Remove
-        </Button>
+        {getRemoveButton()}
         <Button
           onClick={onCancel}
           className={`${styles.add_mar_right}`}

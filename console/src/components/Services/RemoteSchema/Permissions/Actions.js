@@ -1,5 +1,5 @@
 import { permissionState } from '../state';
-import { generateCreatePermQuery } from './utils';
+import { generateCreatePermQuery, generateDropPermQuery } from './utils';
 import { showErrorNotification } from '../../Common/Notification';
 import { parseRemoteRelPermDefinition } from './utils';
 import requestAction from '../../../../utils/requestAction';
@@ -32,6 +32,47 @@ export const setCurrentPermissionEdit = (perm, editType) => ({
 
 const CLOSE_PERMISSION_EDIT = '@remoteSchema/CLOSE_PERMISSION_EDIT';
 export const closePermissionEdit = () => ({ type: CLOSE_PERMISSION_EDIT});
+
+const DROP_REMOTE_SCHEMA_PERMISSION = '@remoteSchema/DROP_REMOTE_SCHEMA_PERMISSION';
+const DROP_REMOTE_SCHEMA_PERMISSION_SUCCESS = '@remoteSchema/DROP_REMOTE_SCHEMA_PERMISSION_SUCCESS';
+const DROP_REMOTE_SCHEMA_PERMISSION_FAILURE = '@remoteSchema/DROP_REMOTE_SCHEMA_PERMISSION_FAILURE'
+
+export const deleteRemoteSchemaPermission = (successCb, failureCb) => {
+  return (dispatch, getState) => {
+    const permState = getState().remoteSchemas.permissions;
+    const { editState, currentRemoteSchemaName } = permState;
+    const query = generateDropPermQuery(editState.role, currentRemoteSchemaName);
+    const headers = getState().tables.dataHeaders;
+
+    const isOk = window.confirm('Are you absolutely sure?');
+    if (!isOk) return;
+
+    dispatch({type: DROP_REMOTE_SCHEMA_PERMISSION});
+    return dispatch(
+      requestAction(endpoints.query, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(query),
+      })
+    ).then(
+      data => {
+        dispatch({ type: DROP_REMOTE_SCHEMA_PERMISSION_SUCCESS});
+        dispatch(fetchRemoteSchemaPermissions());
+        dispatch(closePermissionEdit());
+        if (successCb) {
+          successCb(data);
+        }
+      },
+      error => {
+        console.error(error);
+        dispatch({ type: DROP_REMOTE_SCHEMA_PERMISSION_FAILURE, error });
+        if (failureCb) {
+          failureCb(error);
+        }
+      }
+    );
+  }
+}
 
 const CREATE_REMOTE_SCHEMA_PERMISSION_SUCCESS =
   '@remoteSchema/CREATE_REMOTE_SCHEMA_PERMISSION_SUCCESS';
@@ -150,11 +191,36 @@ const reducer = (state = permissionState, action) => {
         }
       };
 
+
+    case CREATE_REMOTE_SCHEMA_PERMISSION:
+      return {
+        ...state,
+        isFetching: true,
+      };
+
     case CREATE_REMOTE_SCHEMA_PERMISSION_SUCCESS:
       return {
         ...state,
         isFetching: false,
       };
+
+    case DROP_REMOTE_SCHEMA_PERMISSION:
+      return {
+        ...state,
+        isFetching: true
+      }
+
+    case DROP_REMOTE_SCHEMA_PERMISSION_SUCCESS:
+      return {
+        ...state,
+        isFetching: false
+      }    
+
+    case DROP_REMOTE_SCHEMA_PERMISSION_FAILURE:
+      return {
+        ...state,
+        isFetching: false
+      }    
 
     case SET_CURRENT_PERMISSION_EDIT:
       return {

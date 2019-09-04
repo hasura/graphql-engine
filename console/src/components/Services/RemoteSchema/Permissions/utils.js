@@ -3,10 +3,25 @@ import { getUnderlyingType } from '../graphqlUtils';
 import { isObjectType } from 'graphql';
 import { getTypeFields } from '../graphqlUtils';
 
+export const generateDropPermQuery = (role, remoteSchemaName) => {
+  return {
+    type: "drop_remote_schema_permissions",
+    args: {
+      remote_schema: remoteSchemaName,
+      role
+    }
+  }
+};
+
 export const generateCreatePermQuery = (state, remoteSchemaName) => {
 
-  const { role, allowedTypes } = state;
+  const { role, allowedTypes, isNew } = state;
 
+  const bulkQueryArgs = [];
+
+  if (!isNew) {
+    bulkQueryArgs.push(generateDropPermQuery(role, remoteSchemaName));
+  }
   const payload = {
     type: 'add_remote_schema_permissions',
     args: {
@@ -28,9 +43,12 @@ export const generateCreatePermQuery = (state, remoteSchemaName) => {
     })
   });
 
-  console.log(payload);
+  bulkQueryArgs.push(payload);
 
-  return payload;
+  return {
+    type: 'bulk',
+    args: bulkQueryArgs
+  };
 
 };
 
@@ -44,7 +62,8 @@ export const parseRemoteRelPermDefinition = (payload, rootTypes, objectTypes, no
     return {
       ...permissionState.editState,
       allowedTypes: newAllowedTypes,
-      role: roleName
+      role: roleName,
+      isNew: true,
     };
   }
 
@@ -75,11 +94,11 @@ export const parseRemoteRelPermDefinition = (payload, rootTypes, objectTypes, no
 
   return {
     role,
-    allowedTypes
+    allowedTypes,
+    isNew: false
   };
 
 };
-
 
 export const getExpandedTypes = (allowedTypes, rootTypes, editType) => {
 
