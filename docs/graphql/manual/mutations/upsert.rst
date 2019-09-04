@@ -31,9 +31,9 @@ upsert request in case of conflicts.
   autocompleting in GraphiQL). Typically, the constraint is automatically named as ``<table-name>_<column-name>_key``.
 
 Upsert is not a substitute for update
--------------------------------------
+------------------------------------- 
 
-The upsert functionality is somethimes confused with the update functionality. However, they work slightly differently. An upsert mutation is used in the case when it's not clear if the respective row is already present in the database. If it's known that the row is present in the database, ``update`` is the functionality to use.
+The upsert functionality is sometimes confused with the update functionality. However, they work slightly differently. An upsert mutation is used in the case when it's not clear if the respective row is already present in the database. If it's known that the row is present in the database, ``update`` is the functionality to use.
 
 For an upsert, **all columns need to be passed**. 
 
