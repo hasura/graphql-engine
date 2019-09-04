@@ -385,3 +385,24 @@ class TestGraphqlDeletePermissions(DefaultTestMutations):
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/delete/permissions"
+
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+class TestGraphQLMutateEnums(DefaultTestMutations):
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_mutation/enums'
+
+    def test_insert_enum_field(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/insert_enum_field.yaml', transport)
+
+    def test_insert_enum_field_bad_value(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/insert_enum_field_bad_value.yaml', transport)
+
+    def test_update_enum_field(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/update_enum_field.yaml', transport)
+
+    def test_update_where_enum_field(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/update_where_enum_field.yaml', transport)
+
+    def test_delete_where_enum_field(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/delete_where_enum_field.yaml', transport)

@@ -29,7 +29,6 @@ import           Hasura.SQL.Types
 
 import qualified Database.PG.Query   as Q
 
-import           Control.Arrow       ((***))
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
@@ -40,8 +39,9 @@ data PGColMeta
   = PGColMeta
   { pcmColumnName      :: !PGCol
   , pcmOrdinalPosition :: !Int
-  , pcmDataType        :: !PGColType
+  , pcmDataType        :: !PGScalarType
   , pcmIsNullable      :: !Bool
+  , pcmReferences      :: ![QualifiedTable]
   , pcmDescription     :: !(Maybe PGDescription)
   } deriving (Show, Eq)
 
@@ -89,8 +89,8 @@ data TableDiff
   = TableDiff
   { _tdNewName         :: !(Maybe QualifiedTable)
   , _tdDroppedCols     :: ![PGCol]
-  , _tdAddedCols       :: ![PGColInfo]
-  , _tdAlteredCols     :: ![(PGColInfo, PGColInfo)]
+  , _tdAddedCols       :: ![PGRawColumnInfo]
+  , _tdAlteredCols     :: ![(PGRawColumnInfo, PGRawColumnInfo)]
   , _tdDroppedFKeyCons :: ![ConstraintName]
   -- The final list of uniq/primary constraint names
   -- used for generating types on_conflict clauses
@@ -121,8 +121,8 @@ getTableDiff oldtm newtm =
 
     existingCols = getOverlap pcmOrdinalPosition oldCols newCols
 
-    pcmToPci (PGColMeta colName _ colType isNullable descM)
-      = PGColInfo colName colType isNullable descM
+    pcmToPci (PGColMeta colName _ colType isNullable references descM)
+      = PGRawColumnInfo colName colType isNullable references descM
 
     alteredCols =
       flip map (filter (uncurry (/=)) existingCols) $ pcmToPci *** pcmToPci
@@ -142,7 +142,7 @@ getTableDiff oldtm newtm =
 
 getTableChangeDeps
   :: (QErrM m, CacheRWM m)
-  => TableInfo -> TableDiff -> m [SchemaObjId]
+  => TableInfo PGColumnInfo -> TableDiff -> m [SchemaObjId]
 getTableChangeDeps ti tableDiff = do
   sc <- askSchemaCache
   -- for all the dropped columns
@@ -155,7 +155,7 @@ getTableChangeDeps ti tableDiff = do
     return $ getDependentObjs sc objId
   return $ droppedConsDeps <> droppedColDeps
   where
-    tn = tiName ti
+    tn = _tiName ti
     TableDiff _ droppedCols _ _ droppedFKeyConstraints _ _ = tableDiff
 
 data SchemaDiff

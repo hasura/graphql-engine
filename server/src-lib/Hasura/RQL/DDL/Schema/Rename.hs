@@ -1,3 +1,6 @@
+-- | Functions for mutating the catalog (with integrity checking) to incorporate schema changes
+-- discovered after applying a user-supplied SQL query. None of these functions modify the schema
+-- cache, so it must be reloaded after the catalog is updated.
 module Hasura.RQL.DDL.Schema.Rename
   ( renameTableInCatalog
   , renameColInCatalog
@@ -5,7 +8,6 @@ module Hasura.RQL.DDL.Schema.Rename
   )
 where
 
-import           Control.Arrow                      ((***))
 import           Hasura.Prelude
 import qualified Hasura.RQL.DDL.EventTrigger        as DS
 import           Hasura.RQL.DDL.Permission
@@ -70,7 +72,7 @@ renameTableInCatalog newQT oldQT = do
 
 renameColInCatalog
   :: (MonadTx m, CacheRM m)
-  => PGCol -> PGCol -> QualifiedTable -> TableInfo -> m ()
+  => PGCol -> PGCol -> QualifiedTable -> TableInfo PGColumnInfo -> m ()
 renameColInCatalog oCol nCol qt ti = do
   sc <- askSchemaCache
   -- Check if any relation exists with new column name
@@ -90,7 +92,7 @@ renameColInCatalog oCol nCol qt ti = do
   where
     errMsg = "cannot rename column " <> oCol <<> " to " <>> nCol
     assertFldNotExists =
-      case M.lookup (fromPGCol oCol) $ tiFieldInfoMap ti of
+      case M.lookup (fromPGCol oCol) $ _tiFieldInfoMap ti of
         Just (FIRelationship _) ->
           throw400 AlreadyExists $ "cannot rename column " <> oCol
           <<> " to " <> nCol <<> " in table " <> qt <<>

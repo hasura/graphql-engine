@@ -14,25 +14,10 @@ CREATE TABLE hdb_catalog.hdb_table
     table_schema TEXT,
     table_name TEXT,
     is_system_defined boolean default false,
+    is_enum boolean NOT NULL DEFAULT false,
 
     PRIMARY KEY (table_schema, table_name)
 );
-
-CREATE FUNCTION hdb_catalog.hdb_table_oid_check() RETURNS trigger AS
-$function$
-  BEGIN
-    IF (EXISTS (SELECT 1 FROM information_schema.tables st WHERE st.table_schema = NEW.table_schema AND st.table_name = NEW.table_name)) THEN
-      return NEW;
-    ELSE
-      RAISE foreign_key_violation using message = 'table_schema, table_name not in information_schema.tables';
-      return NULL;
-    END IF;
-  END;
-$function$
-LANGUAGE plpgsql;
-
-CREATE TRIGGER hdb_table_oid_check BEFORE INSERT OR UPDATE ON hdb_catalog.hdb_table
-       FOR EACH ROW EXECUTE PROCEDURE hdb_catalog.hdb_table_oid_check();
 
 CREATE TABLE hdb_catalog.hdb_relationship
 (
@@ -83,7 +68,9 @@ SELECT
     min(q.ref_table) :: text as ref_table,
     json_object_agg(ac.attname, afc.attname) as column_mapping,
     min(q.confupdtype) :: text as on_update,
-    min(q.confdeltype) :: text as on_delete
+    min(q.confdeltype) :: text as on_delete,
+    json_agg(ac.attname) as columns,
+    json_agg(afc.attname) as ref_columns
 FROM
     (SELECT
         ctn.nspname AS table_schema,
@@ -296,6 +283,7 @@ CREATE TABLE hdb_catalog.event_log
 );
 
 CREATE INDEX ON hdb_catalog.event_log (trigger_name);
+CREATE INDEX ON hdb_catalog.event_log (locked);
 
 CREATE TABLE hdb_catalog.event_invocation_logs
 (
@@ -375,7 +363,8 @@ SELECT
         ORDER BY pat.ordinality ASC
       ) q
    ) AS input_arg_types,
-  to_json(COALESCE(p.proargnames, ARRAY [] :: text [])) AS input_arg_names
+  to_json(COALESCE(p.proargnames, ARRAY [] :: text [])) AS input_arg_names,
+  p.pronargdefaults AS default_args
 FROM
   pg_proc p
   JOIN pg_namespace pn ON (pn.oid = p.pronamespace)
@@ -433,6 +422,41 @@ CREATE TRIGGER hdb_schema_update_event_notifier AFTER INSERT OR UPDATE ON
   hdb_catalog.hdb_schema_update_event FOR EACH ROW EXECUTE PROCEDURE
   hdb_catalog.hdb_schema_update_event_notifier();
 
+CREATE VIEW hdb_catalog.hdb_column AS
+     WITH primary_key_references AS (
+            SELECT fkey.table_schema           AS src_table_schema
+                 , fkey.table_name             AS src_table_name
+                 , fkey.columns->>0            AS src_column_name
+                 , json_agg(json_build_object(
+                     'schema', fkey.ref_table_table_schema,
+                     'name', fkey.ref_table
+                   )) AS ref_tables
+              FROM hdb_catalog.hdb_foreign_key_constraint AS fkey
+              JOIN hdb_catalog.hdb_primary_key            AS pkey
+                    ON pkey.table_schema   = fkey.ref_table_table_schema
+                   AND pkey.table_name     = fkey.ref_table
+                   AND pkey.columns::jsonb = fkey.ref_columns::jsonb
+             WHERE json_array_length(fkey.columns) = 1
+          GROUP BY fkey.table_schema
+                 , fkey.table_name
+                 , fkey.columns->>0)
+   SELECT columns.table_schema
+        , columns.table_name
+        , columns.column_name AS name
+        , columns.udt_name AS type
+        , columns.is_nullable
+        , columns.ordinal_position
+        , coalesce(pkey_refs.ref_tables, '[]') AS primary_key_references
+        , col_description(pg_class.oid, columns.ordinal_position) AS description
+     FROM information_schema.columns
+LEFT JOIN primary_key_references AS pkey_refs
+           ON columns.table_schema = pkey_refs.src_table_schema
+          AND columns.table_name   = pkey_refs.src_table_name
+          AND columns.column_name  = pkey_refs.src_column_name
+LEFT JOIN pg_class ON pg_class.relname = columns.table_name
+LEFT JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
+          AND pg_namespace.nspname = columns.table_schema;
+
 CREATE VIEW hdb_catalog.hdb_table_info_agg AS (
 select
   tables.table_name as table_name,
@@ -450,22 +474,15 @@ from
       c.table_schema,
       json_agg(
         json_build_object(
-          'name',
-          column_name,
-          'type',
-          udt_name,
-          'is_nullable',
-          is_nullable :: boolean,
-          'description',
-          col_description(pc.oid, c.ordinal_position)
+          'name', name,
+          'type', type,
+          'is_nullable', is_nullable :: boolean,
+          'references', primary_key_references,
+          'description', description
         )
       ) as columns
     from
-      information_schema.columns c
-      left join pg_class pc on pc.relname = c.table_name
-      left join pg_namespace pn on ( pn.oid = pc.relnamespace
-                                    and pn.nspname = c.table_schema
-                                   )
+      hdb_catalog.hdb_column c
     group by
       c.table_schema,
       c.table_name
@@ -549,6 +566,7 @@ CREATE VIEW hdb_catalog.hdb_function_info_agg AS (
                   returns_set,
                   input_arg_types,
                   input_arg_names,
+                  default_args,
                   exists(
                     SELECT
                       1

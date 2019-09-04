@@ -23,26 +23,17 @@ FROM
       table_schema,
       table_name,
       json_agg(
-        (
-          SELECT
-            r
-          FROM
-            (
-              SELECT
-                column_name,
-                udt_name AS data_type,
-                ordinal_position,
-                is_nullable :: boolean,
-                col_description(pc.oid, ordinal_position) AS description
-            ) r
+        json_build_object(
+          'column_name', name,
+          'data_type', type,
+          'is_nullable', is_nullable :: boolean,
+          'ordinal_position', ordinal_position,
+          'references', primary_key_references,
+          'description', description
         )
       ) as columns
     FROM
-      information_schema.columns
-        left join pg_class pc on pc.relname = table_name
-        left join pg_namespace pn on ( pn.oid = pc.relnamespace
-                                      and pn.nspname = table_schema
-                                     )
+      hdb_catalog.hdb_column
     GROUP BY
       table_schema,
       table_name

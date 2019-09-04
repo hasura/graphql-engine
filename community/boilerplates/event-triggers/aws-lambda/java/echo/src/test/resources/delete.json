@@ -1,0 +1,18 @@
+{
+  "table": {
+    "name": "notes"
+  },
+  "event": {
+    "op": "DELETE",
+    "data": {
+      "new": {
+        "id": 2,
+        "note": "b"
+      },
+      "old": {
+        "id": 1,
+        "note": "a"
+      }
+    }
+  }
+}

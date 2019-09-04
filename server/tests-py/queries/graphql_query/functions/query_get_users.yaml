@@ -1,0 +1,21 @@
+description: Query from users table using get_users function
+url: /v1/graphql
+status: 200
+response:
+  data:
+    get_users:
+    - id: 1
+      name: Starke Blake
+      is_admin: true
+    - id: 2
+      name: Bellamy Blake
+      is_admin: true
+query:
+  query: |
+    query {
+      get_users(args: {search: "Blake", arg_1: 2, arg_2: true}){
+        id
+        name
+        is_admin
+      }
+    }

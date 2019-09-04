@@ -120,9 +120,8 @@ mkSelFromExp isLateral sel tn =
   where
     alias = Alias $ toIden tn
 
-mkFuncFromItem :: QualifiedFunction -> [SQLExp] -> FromItem
-mkFuncFromItem qf args =
-  FIFunc qf args Nothing
+mkFuncFromItem :: QualifiedFunction -> FunctionArgs -> FromItem
+mkFuncFromItem qf args = FIFunc qf args Nothing
 
 mkRowExp :: [Extractor] -> SQLExp
 mkRowExp extrs = let
@@ -225,23 +224,23 @@ newtype TypeAnn
   = TypeAnn {unTypeAnn :: T.Text}
   deriving (Show, Eq, Data)
 
-mkTypeAnn :: PgType -> TypeAnn
-mkTypeAnn = TypeAnn . T.pack . show
+mkTypeAnn :: PGType PGScalarType -> TypeAnn
+mkTypeAnn = TypeAnn . toSQLTxt
 
 intTypeAnn :: TypeAnn
-intTypeAnn = mkTypeAnn $ PgTypeSimple PGInteger
+intTypeAnn = mkTypeAnn $ PGTypeScalar PGInteger
 
 textTypeAnn :: TypeAnn
-textTypeAnn = mkTypeAnn $ PgTypeSimple PGText
+textTypeAnn = mkTypeAnn $ PGTypeScalar PGText
 
 textArrTypeAnn :: TypeAnn
-textArrTypeAnn = mkTypeAnn $ PgTypeArray PGText
+textArrTypeAnn = mkTypeAnn $ PGTypeArray PGText
 
 jsonTypeAnn :: TypeAnn
-jsonTypeAnn = mkTypeAnn $ PgTypeSimple PGJSON
+jsonTypeAnn = mkTypeAnn $ PGTypeScalar PGJSON
 
 jsonbTypeAnn :: TypeAnn
-jsonbTypeAnn = mkTypeAnn $ PgTypeSimple PGJSONB
+jsonbTypeAnn = mkTypeAnn $ PGTypeScalar PGJSONB
 
 data CountType
   = CTStar
@@ -266,6 +265,7 @@ instance ToSQL TupleExp where
 
 data SQLExp
   = SEPrep !Int
+  | SENull
   | SELit !T.Text
   | SEUnsafe !T.Text
   | SESelect !Select
@@ -283,10 +283,11 @@ data SQLExp
   | SEArray ![SQLExp]
   | SETuple !TupleExp
   | SECount !CountType
+  | SENamedArg !Iden !SQLExp
   deriving (Show, Eq, Data)
 
-withTyAnn :: PGColType -> SQLExp -> SQLExp
-withTyAnn colTy v = SETyAnn v $ TypeAnn $ T.pack $ show colTy
+withTyAnn :: PGScalarType -> SQLExp -> SQLExp
+withTyAnn colTy v = SETyAnn v . mkTypeAnn $ PGTypeScalar colTy
 
 instance J.ToJSON SQLExp where
   toJSON = J.toJSON . toSQLTxt
@@ -310,6 +311,8 @@ countStar = SECount CTStar
 instance ToSQL SQLExp where
   toSQL (SEPrep argNumber) =
     TB.char '$' <> fromString (show argNumber)
+  toSQL SENull =
+    TB.text "NULL"
   toSQL (SELit tv) =
     TB.text $ pgFmtLit tv
   toSQL (SEUnsafe t) =
@@ -343,6 +346,8 @@ instance ToSQL SQLExp where
                          <> (", " <+> exps) <> TB.char ']'
   toSQL (SETuple tup) = toSQL tup
   toSQL (SECount ty) = "COUNT" <> paren (toSQL ty)
+  -- https://www.postgresql.org/docs/current/sql-syntax-calling-funcs.html
+  toSQL (SENamedArg arg val) = toSQL arg <-> "=>" <-> toSQL val
 
 intToSQLExp :: Int -> SQLExp
 intToSQLExp =
@@ -401,10 +406,22 @@ instance ToSQL DistinctExpr where
   toSQL (DistinctOn exps) =
     "DISTINCT ON" <-> paren ("," <+> exps)
 
+data FunctionArgs
+  = FunctionArgs
+  { fasPostional :: ![SQLExp]
+  , fasNamed     :: !(HM.HashMap Text SQLExp)
+  } deriving (Show, Eq, Data)
+
+instance ToSQL FunctionArgs where
+  toSQL (FunctionArgs positionalArgs namedArgsMap) =
+    let namedArgs = flip map (HM.toList namedArgsMap) $
+                    \(argName, argVal) -> SENamedArg (Iden argName) argVal
+    in paren $ ", " <+> (positionalArgs <> namedArgs)
+
 data FromItem
   = FISimple !QualifiedTable !(Maybe Alias)
   | FIIden !Iden
-  | FIFunc !QualifiedFunction ![SQLExp] !(Maybe Alias)
+  | FIFunc !QualifiedFunction !FunctionArgs !(Maybe Alias)
   | FIUnnest ![SQLExp] !Alias ![SQLExp]
   | FISelect !Lateral !Select !Alias
   | FIValues !ValuesExp !Alias !(Maybe [PGCol])
@@ -427,7 +444,7 @@ instance ToSQL FromItem where
   toSQL (FIIden iden) =
     toSQL iden
   toSQL (FIFunc qf args mal) =
-    toSQL qf <> paren (", " <+> args) <-> toSQL mal
+    toSQL qf <> toSQL args <-> toSQL mal
   -- unnest(expressions) alias(columns)
   toSQL (FIUnnest args als cols) =
     "UNNEST" <> paren (", " <+> args) <-> toSQL als <> paren (", " <+> cols)

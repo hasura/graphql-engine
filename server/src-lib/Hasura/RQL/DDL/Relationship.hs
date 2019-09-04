@@ -35,14 +35,14 @@ import           Instances.TH.Lift                 ()
 
 validateManualConfig
   :: (QErrM m, CacheRM m)
-  => FieldInfoMap
+  => FieldInfoMap PGColumnInfo
   -> RelManualConfig
   -> m ()
 validateManualConfig fim rm = do
   let colMapping = M.toList $ rmColumns rm
       remoteQt = rmTable rm
   remoteTabInfo <- askTabInfo remoteQt
-  let remoteFim = tiFieldInfoMap remoteTabInfo
+  let remoteFim = _tiFieldInfoMap remoteTabInfo
   forM_ colMapping $ \(lCol, rCol) -> do
     assertPGCol fim "" lCol
     assertPGCol remoteFim "" rCol
@@ -70,14 +70,14 @@ persistRel (QualifiedObject sn tn) rn relType relDef comment =
 
 checkForFldConfilct
   :: (MonadError QErr m)
-  => TableInfo
+  => TableInfo PGColumnInfo
   -> FieldName
   -> m ()
 checkForFldConfilct tabInfo f =
-  case HM.lookup f (tiFieldInfoMap tabInfo) of
+  case HM.lookup f (_tiFieldInfoMap tabInfo) of
     Just _ -> throw400 AlreadyExists $ mconcat
       [ "column/relationship " <>> f
-      , " of table " <>> tiName tabInfo
+      , " of table " <>> _tiName tabInfo
       , " already exists"
       ]
     Nothing -> return ()
@@ -90,7 +90,7 @@ validateObjRel
 validateObjRel qt (RelDef rn ru _) = do
   tabInfo <- askTabInfo qt
   checkForFldConfilct tabInfo (fromRel rn)
-  let fim = tiFieldInfoMap tabInfo
+  let fim = _tiFieldInfoMap tabInfo
   case ru of
     RUFKeyOn cn                      -> assertPGCol fim "" cn
     RUManual (ObjRelManualConfig rm) -> validateManualConfig fim rm
@@ -168,11 +168,11 @@ validateArrRel
 validateArrRel qt (RelDef rn ru _) = do
   tabInfo <- askTabInfo qt
   checkForFldConfilct tabInfo (fromRel rn)
-  let fim = tiFieldInfoMap tabInfo
+  let fim = _tiFieldInfoMap tabInfo
   case ru of
     RUFKeyOn (ArrRelUsingFKeyOn remoteQt rcn) -> do
       remoteTabInfo <- askTabInfo remoteQt
-      let rfim = tiFieldInfoMap remoteTabInfo
+      let rfim = _tiFieldInfoMap remoteTabInfo
       -- Check if 'using' column exists
       assertPGCol rfim "" rcn
     RUManual (ArrRelManualConfig rm) ->
@@ -229,7 +229,7 @@ dropRelP1 :: (UserInfoM m, QErrM m, CacheRM m) => DropRel -> m [SchemaObjId]
 dropRelP1 (DropRel qt rn cascade) = do
   adminOnly
   tabInfo <- askTabInfo qt
-  _       <- askRelType (tiFieldInfoMap tabInfo) rn ""
+  _       <- askRelType (_tiFieldInfoMap tabInfo) rn ""
   sc      <- askSchemaCache
   let depObjs = getDependentObjs sc relObjId
   when (depObjs /= [] && not (or cascade)) $ reportDeps depObjs
@@ -279,7 +279,7 @@ validateRelP1
 validateRelP1 qt rn = do
   adminOnly
   tabInfo <- askTabInfo qt
-  askRelType (tiFieldInfoMap tabInfo) rn ""
+  askRelType (_tiFieldInfoMap tabInfo) rn ""
 
 setRelCommentP2
   :: (QErrM m, MonadTx m)
