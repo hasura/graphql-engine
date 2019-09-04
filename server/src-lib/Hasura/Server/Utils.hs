@@ -60,6 +60,9 @@ userIdHeader = "x-hasura-user-id"
 requestIdHeader :: T.Text
 requestIdHeader = "x-request-id"
 
+clientNameHeader :: Text
+clientNameHeader = "Hasura-Client-Name"
+
 getRequestHeader :: B.ByteString -> [HTTP.Header] -> Maybe B.ByteString
 getRequestHeader hdrName hdrs = snd <$> mHeader
   where
@@ -71,6 +74,11 @@ getRequestId headers =
   case getRequestHeader (txtToBs requestIdHeader) headers  of
     Nothing    -> RequestId <$> liftIO generateFingerprint
     Just reqId -> return $ RequestId $ bsToTxt reqId
+
+-- | gets the `Hasura-Client-Name` header and returns it. This is logged as
+-- well, useful in analyzing logs
+getClientName :: [HTTP.Header] -> Maybe Text
+getClientName = fmap bsToTxt . getRequestHeader (txtToBs clientNameHeader)
 
 -- Parsing postgres database url
 -- from: https://github.com/futurice/postgresql-simple-url/

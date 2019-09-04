@@ -144,6 +144,8 @@ data OperationLog
   , olQueryExecutionTime :: !(Maybe Double)
   , olQuery              :: !(Maybe Value)
   , olError              :: !(Maybe Value)
+  , olClientName         :: !(Maybe Text)
+  -- ^ Client Name from `Hasura-Client-Name` header
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 2 snakeCase) ''OperationLog)
 
@@ -165,13 +167,16 @@ instance L.ToEngineLog HttpLog where
     (logLevel, ELTHttpLog, toJSON accessLog)
 
 mkHttpAccessLog
-  :: Maybe UserInfo -- may not have been resolved
+  :: Maybe UserInfo
+  -- ^ Maybe because it may not have been resolved
   -> RequestId
   -> Wai.Request
   -> BL.ByteString
+  -> Maybe Text
+  -- ^ Client Name from `Hasura-Client-Name` header
   -> Maybe (UTCTime, UTCTime)
   -> HttpLog
-mkHttpAccessLog userInfoM reqId req res mTimeT =
+mkHttpAccessLog userInfoM reqId req res clientName mTimeT =
   let http = HttpInfoLog
              { hlStatus       = status
              , hlMethod       = bsToTxt $ Wai.requestMethod req
@@ -186,6 +191,7 @@ mkHttpAccessLog userInfoM reqId req res mTimeT =
            , olQueryExecutionTime = respTime
            , olQuery = Nothing
            , olError = Nothing
+           , olClientName = clientName
            }
   in HttpLog L.LevelInfo $ HttpAccessLog http op
   where
@@ -194,14 +200,17 @@ mkHttpAccessLog userInfoM reqId req res mTimeT =
     respTime = computeTimeDiff mTimeT
 
 mkHttpErrorLog
-  :: Maybe UserInfo -- may not have been resolved
+  :: Maybe UserInfo
+  -- ^ Maybe because it may not have been resolved
   -> RequestId
   -> Wai.Request
   -> QErr
   -> Maybe Value
+  -> Maybe Text
+  -- ^ Client Name from `Hasura-Client-Name` header
   -> Maybe (UTCTime, UTCTime)
   -> HttpLog
-mkHttpErrorLog userInfoM reqId req err query mTimeT =
+mkHttpErrorLog userInfoM reqId req err query clientName mTimeT =
   let http = HttpInfoLog
              { hlStatus       = status
              , hlMethod       = bsToTxt $ Wai.requestMethod req
@@ -216,6 +225,7 @@ mkHttpErrorLog userInfoM reqId req err query mTimeT =
            , olQueryExecutionTime = respTime
            , olQuery = toJSON <$> query
            , olError = Just $ toJSON err
+           , olClientName = clientName
            }
   in HttpLog L.LevelError $ HttpAccessLog http op
   where

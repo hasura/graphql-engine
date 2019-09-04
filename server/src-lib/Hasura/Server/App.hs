@@ -212,12 +212,14 @@ logResult
   -> Wai.Request
   -> Maybe Value
   -> Either QErr BL.ByteString
+  -> Maybe Text
+  -- ^ Client Name from `Hasura-Client-Name` header
   -> Maybe (UTCTime, UTCTime)
   -> m ()
-logResult logger userInfoM reqId httpReq req res qTime = do
+logResult logger userInfoM reqId httpReq req res clientName qTime = do
   let logline = case res of
-        Right res' -> mkHttpAccessLog userInfoM reqId httpReq res' qTime
-        Left e     -> mkHttpErrorLog userInfoM reqId httpReq e req qTime
+        Right res' -> mkHttpAccessLog userInfoM reqId httpReq res' clientName qTime
+        Left e     -> mkHttpErrorLog userInfoM reqId httpReq e req clientName qTime
   liftIO $ L.unLogger logger logline
 
 logSuccess
@@ -227,10 +229,12 @@ logSuccess
   -> RequestId
   -> Wai.Request
   -> BL.ByteString
+  -> Maybe Text
+  -- ^ Client Name from `Hasura-Client-Name` header
   -> Maybe (UTCTime, UTCTime)
   -> m ()
-logSuccess logger userInfoM reqId httpReq res qTime =
-  liftIO $ L.unLogger logger $ mkHttpAccessLog userInfoM reqId httpReq res qTime
+logSuccess logger userInfoM reqId httpReq res clientName qTime =
+  liftIO $ L.unLogger logger $ mkHttpAccessLog userInfoM reqId httpReq res clientName qTime
 
 logError
   :: (MonadIO m)
@@ -239,9 +243,12 @@ logError
   -> RequestId
   -> Wai.Request
   -> Maybe Value
-  -> QErr -> m ()
-logError logger userInfoM reqId httpReq req qErr =
-  liftIO $ L.unLogger logger $ mkHttpErrorLog userInfoM reqId httpReq qErr req Nothing
+  -> QErr
+  -> Maybe Text
+  -- ^ Client Name from `Hasura-Client-Name` header
+  -> m ()
+logError logger userInfoM reqId httpReq req qErr clientName =
+  liftIO $ L.unLogger logger $ mkHttpErrorLog userInfoM reqId httpReq qErr req clientName Nothing
 
 mkSpockAction
   :: (MonadIO m, FromJSON a, ToJSON a)
@@ -262,12 +269,14 @@ mkSpockAction serverCtx userAuthMiddleware qErrEncoder qErrModifier apiHandler =
       manager = scManager serverCtx
       -- convert ByteString to Maybe Value for logging
       reqTxt = Just $ String $ bsToTxt $ BL.toStrict reqBody
+      clientName = getClientName headers
 
   requestId <- getRequestId headers
+
   -- default to @getUserInfo@ if no user-auth middleware is passed
   let resolveUserInfo = fromMaybe getUserInfo userAuthMiddleware
   userInfoE <- liftIO $ runExceptT $ resolveUserInfo logger manager headers authMode
-  userInfo  <- either (logErrorAndResp Nothing requestId req reqTxt False . qErrModifier)
+  userInfo  <- either (logErrorAndResp Nothing requestId req reqTxt False clientName . qErrModifier)
                return userInfoE
 
   let handlerState = HandlerCtx serverCtx userInfo headers requestId
@@ -281,7 +290,8 @@ mkSpockAction serverCtx userAuthMiddleware qErrEncoder qErrModifier apiHandler =
       return (res, Nothing)
     AHPost handler -> do
       parsedReqE <- runExceptT $ parseBody reqBody
-      parsedReq  <- either (logErrorAndResp (Just userInfo) requestId req reqTxt (isAdmin curRole) . qErrModifier) return parsedReqE
+      parsedReq  <- onLeft parsedReqE $
+                    (logErrorAndResp (Just userInfo) requestId req reqTxt (isAdmin curRole) clientName . qErrModifier)
       res <- liftIO $ runReaderT (runExceptT $ handler parsedReq) handlerState
       return (res, Just parsedReq)
 
@@ -292,22 +302,23 @@ mkSpockAction serverCtx userAuthMiddleware qErrEncoder qErrModifier apiHandler =
 
   -- log and return result
   case modResult of
-    Left err  -> logErrorAndResp (Just userInfo) requestId req (toJSON <$> q) (isAdmin curRole) err
-    Right res -> logSuccessAndResp (Just userInfo) requestId req res (Just (t1, t2))
+    Left err  -> logErrorAndResp (Just userInfo) requestId req (toJSON <$> q) (isAdmin curRole) clientName err
+    Right res -> logSuccessAndResp (Just userInfo) requestId req res clientName (Just (t1, t2))
 
   where
     logger = scLogger serverCtx
 
     logErrorAndResp
       :: (MonadIO m)
-      => Maybe UserInfo -> RequestId -> Wai.Request -> Maybe Value -> Bool -> QErr -> ActionCtxT ctx m a
-    logErrorAndResp userInfo reqId req reqBody includeInternal qErr = do
-      logError logger userInfo reqId req reqBody qErr
+      => Maybe UserInfo -> RequestId -> Wai.Request -> Maybe Value -> Bool
+      -> Maybe Text -> QErr -> ActionCtxT ctx m a
+    logErrorAndResp userInfo reqId req reqBody includeInternal clientName qErr = do
+      logError logger userInfo reqId req reqBody qErr clientName
       setStatus $ qeStatus qErr
       json $ qErrEncoder includeInternal qErr
 
-    logSuccessAndResp userInfo reqId req result qTime = do
-      logSuccess logger userInfo reqId req (apiRespToLBS result) qTime
+    logSuccessAndResp userInfo reqId req result clientName qTime = do
+      logSuccess logger userInfo reqId req (apiRespToLBS result) clientName qTime
       case result of
         JSONResp (HttpResponse j h) -> do
           uncurry setHeader jsonHeader
@@ -668,7 +679,8 @@ raiseGenericApiError logger qErr = do
   reqBody <- liftIO $ strictRequestBody req
   let reqTxt = toJSON $ String $ bsToTxt $ BL.toStrict reqBody
   reqId <- getRequestId $ requestHeaders req
-  logError logger Nothing reqId req (Just reqTxt) qErr
+  let clientName = getClientName $ requestHeaders req
+  logError logger Nothing reqId req (Just reqTxt) qErr clientName
   uncurry setHeader jsonHeader
   setStatus $ qeStatus qErr
   lazyBytes $ encode qErr
