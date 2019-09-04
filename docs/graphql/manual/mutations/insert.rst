@@ -215,7 +215,7 @@ Insert an object and get a nested object in response
 
 Insert an object along with its related objects through relationships
 ---------------------------------------------------------------------
-**Example:** Insert an ``author``, their ``address`` and an ``article``.
+**Example:** Insert an ``author`` along with their ``address`` and a few ``articles``.
 
 Let's say an ``author`` has an ``object relationship`` called ``address`` to the ``addresses`` table and an ``array relationship`` called ``articles`` to the ``articles`` table.
 
@@ -275,25 +275,25 @@ Let's say an ``author`` has an ``object relationship`` called ``address`` to the
           "affected_rows": 4,
           "returning": [
             {
-              "address": {
-                "location": "San Francisco",
-                "id": 27
-              },
-              "address_id": 27,
+              "id": 26,
               "name": "John",
+              "address_id": 27,
+              "address": {
+                "id": 27,
+                "location": "San Francisco"
+              },            
               "articles": [
                 {
-                  "author_id": 26,
                   "id": 28,
-                  "title": "GraphQL Guide"
+                  "title": "GraphQL Guide",
+                  "author_id": 26
                 },
                 {
-                  "author_id": 26,
                   "id": 29,
-                  "title": "Authentication Guide"
+                  "title": "Authentication Guide",
+                  "author_id": 26,
                 }
-              ],
-              "id": 26
+              ]
             }
           ]
         }
@@ -302,13 +302,15 @@ Let's say an ``author`` has an ``object relationship`` called ``address`` to the
 
 **How it works**
 
-An insert mutation is processed as follows:
+A nested insert mutation is processed as follows:
 
-1. The object relationships are inserted, i.e. in this case, the address is inserted and its ``id`` is collected in this step. 
+1. The object relationships are inserted first, i.e. in this case, the address is inserted and its ``id`` is collected in     this step. 
 
-2. The author is now inserted with the ``address_id`` being set to the ``id`` of the address that was inserted. Because of this, it is not allowed to pass ``address_id`` in the author object if you are also providing data for the address relationship. The ``id`` of the author is collected in this step.
+2. The parent object is inserted next. i.e. in this case, the author is now inserted with the ``address_id`` being set to the ``id`` of the address that was inserted. Because of this, it is not allowed to pass ``address_id`` in the author object if you are also providing data for the address relationship. 
 
-3. The array relationships are now inserted. The ``author_id`` of the article(s) will be set to the author's ``id`` collected in the step 2. Hence, it's not possible to specify ``article_id`` in the data for the articles relationship.
+   The ``id`` of the author is collected in this step.
+
+3. The array relationships are inserted at the end. i.e. in this case, the articles are now inserted with their ``author_id`` set to the author's ``id`` collected in the step 2. Hence, it's not possible to specify ``author_id`` in the data for the articles relationship.
 
 Insert an object with a JSONB column
 ------------------------------------
