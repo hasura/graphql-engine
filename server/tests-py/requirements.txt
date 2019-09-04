@@ -34,3 +34,4 @@ wcwidth==0.1.7
 websocket-client==0.56.0
 zipp==0.5.1
 brotlipy==0.7.0
+ruamel.yaml==0.14.12

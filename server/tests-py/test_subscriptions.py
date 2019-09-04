@@ -3,7 +3,7 @@
 import pytest
 import json
 import queue
-import yaml
+import ruamel.yaml as yaml
 
 from super_classes import GraphQLEngineTest
 
