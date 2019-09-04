@@ -1,5 +1,3 @@
-{-# LANGUAGE ViewPatterns #-}
-
 module Hasura.GraphQL.RemoteServer where
 
 import           Control.Exception             (try)
@@ -7,6 +5,7 @@ import           Control.Lens                  ((^.))
 import           Data.Aeson                    ((.:), (.:?))
 import           Data.FileEmbed                (embedStringFile)
 import           Data.Foldable                 (foldlM)
+import           Hasura.HTTP
 import           Hasura.Prelude
 
 import qualified Data.Aeson                    as J
@@ -21,7 +20,6 @@ import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.HTTP.Client           as HTTP
 import qualified Network.Wreq                  as Wreq
 
-import           Hasura.HTTP                   (wreqOptions)
 import           Hasura.RQL.DDL.Headers        (getHeadersFromConf)
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils           (httpExceptToJSON)
@@ -39,12 +37,21 @@ fetchRemoteSchema
   -> RemoteSchemaName
   -> RemoteSchemaInfo
   -> m GC.RemoteGCtx
-fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _) = do
+fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _ timeout) = do
   headers <- getHeadersFromConf headerConf
   let hdrs = flip map headers $
              \(hn, hv) -> (CI.mk . T.encodeUtf8 $ hn, T.encodeUtf8 hv)
-      options = wreqOptions manager hdrs
-  res  <- liftIO $ try $ Wreq.postWith options (show url) introspectionQuery
+      hdrsWithDefaults = addDefaultHeaders hdrs
+
+  initReqE <- liftIO $ try $ HTTP.parseRequest (show url)
+  initReq <- either throwHttpErr pure initReqE
+  let req = initReq
+           { HTTP.method = "POST"
+           , HTTP.requestHeaders = hdrsWithDefaults
+           , HTTP.requestBody = HTTP.RequestBodyLBS introspectionQuery
+           , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
+           }
+  res  <- liftIO $ try $ HTTP.httpLbs req manager
   resp <- either throwHttpErr return res
 
   let respData = resp ^. Wreq.responseBody
@@ -92,42 +99,44 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _) = do
       Left _  -> J.object ["raw_body" J..= bsToTxt (BL.toStrict bs)]
 
 mergeSchemas
-  :: (MonadError QErr m)
+  :: (QErrM m)
   => RemoteSchemaMap
   -> RemoteSchemasWithRole
   -> GS.GCtxMap
-  -- the merged GCtxMap and the default GCtx without roles
-  -> m (GS.GCtxMap, GS.GCtx)
-mergeSchemas rmSchemaMap rmSchemaMapWithRole gCtxMap = do
-  def <- mkDefaultRemoteGCtx remoteSchemas
-  merged <- mergeRoleRemoteSchemas gCtxMap rmSchemaMapWithRole
-  return (merged, def)
+  -> m GS.GCtxMap
+mergeSchemas rmSchemaMap rmSchemaMapWithRole initGCtxMap = do
+  merged <- mergeRoleRemoteSchemas initGCtxMap rmSchemaMapWithRole
+  allRemotesGCtx <- combineRemoteGCtx remoteSchemas
+  addRemoteSchemaToAdminRole merged allRemotesGCtx
   where
     remoteSchemas = map rscGCtx $ Map.elems rmSchemaMap
 
-mkDefaultRemoteGCtx
+combineRemoteGCtx
   :: (MonadError QErr m)
   => [GC.RemoteGCtx] -> m GS.GCtx
-mkDefaultRemoteGCtx =
-  foldlM (\combG -> mergeGCtx combG . convRemoteGCtx) GS.emptyGCtx
+combineRemoteGCtx =
+  foldlM (\accumGCtx -> mergeGCtx accumGCtx . convRemoteGCtx) GC.emptyGCtx
 
--- merge a remote schema `gCtx` into current `gCtxMap`
+addRemoteSchemaToAdminRole :: (MonadError QErr m) => GS.GCtxMap -> GS.GCtx -> m GS.GCtxMap
+addRemoteSchemaToAdminRole initGCtxMap remoteGCtx = do
+  let adminGCtx = fromMaybe GC.emptyGCtx $ Map.lookup adminRole initGCtxMap
+  merged <- mergeGCtx adminGCtx remoteGCtx
+  pure $ Map.insert adminRole merged initGCtxMap
+
+-- assertion: GCtxMap here is pure GCtxMapPG i.e. no remote schemas
 mergeRoleRemoteSchemas
   :: (MonadError QErr m)
   => GS.GCtxMap
   -> RemoteSchemasWithRole
   -> m GS.GCtxMap
-mergeRoleRemoteSchemas gCtxMap (Map.toList -> roleSchemas) = do
-  res <-
-    forM roleSchemas $ \((role, _rsName), rsCtx) -> do
-      let mergeWith = mergeRoleSchemaWith role rsCtx
-          roleSchemaM = Map.lookup role gCtxMap
-      maybe (mergeWith GS.emptyGCtx) mergeWith roleSchemaM
-  return $ Map.fromList res
-  where
-    mergeRoleSchemaWith role rsCtx initGCtx = do
-      updatedGCtx <- mergeGCtx initGCtx (convRemoteGCtx $ rscGCtx rsCtx)
-      pure (role, updatedGCtx)
+mergeRoleRemoteSchemas initGCtxMap roleRemoteSchemas = do
+  foldM
+    (\acc ((role, _rsName), remoteCtx) -> do
+       let roleGCtx = convRemoteGCtx (rscGCtx remoteCtx)
+       merged <- mergeGCtx (GS.getGCtx role acc) roleGCtx
+       pure $ Map.insert role merged acc)
+    initGCtxMap
+    (Map.toList roleRemoteSchemas)
 
 mergeGCtx
   :: (MonadError QErr m)
@@ -151,7 +160,7 @@ mergeGCtx gCtx rmMergedGCtx = do
 
 convRemoteGCtx :: GC.RemoteGCtx -> GS.GCtx
 convRemoteGCtx rmGCtx =
-  GS.emptyGCtx { GS._gTypes     = GC._rgTypes rmGCtx
+  GC.emptyGCtx { GS._gTypes     = GC._rgTypes rmGCtx
                , GS._gQueryRoot = GC._rgQueryRoot rmGCtx
                , GS._gMutRoot   = GC._rgMutationRoot rmGCtx
                , GS._gSubRoot   = GC._rgSubscriptionRoot rmGCtx

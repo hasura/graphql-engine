@@ -1,0 +1,10 @@
+<form class="formInput" (submit)="addTodo($event)">
+    <input 
+      class="input"
+      placeholder="What needs to be done?"
+      (disabled)= "loading"
+      [(ngModel)]="todoInput"
+      [ngModelOptions]="{standalone: true}" 
+    />
+    <i class="inputMarker fa fa-angle-right"></i>
+  </form>

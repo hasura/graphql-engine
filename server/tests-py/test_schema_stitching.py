@@ -6,13 +6,14 @@ import yaml
 import json
 import queue
 import requests
+import time
 
 import pytest
 
 from validate import check_query_f, check_query
 
 
-def mk_add_remote_q(name, url, headers=None, client_hdrs=False):
+def mk_add_remote_q(name, url, headers=None, client_hdrs=False, timeout=None):
     return {
         "type": "add_remote_schema",
         "args": {
@@ -21,7 +22,8 @@ def mk_add_remote_q(name, url, headers=None, client_hdrs=False):
             "definition": {
                 "url": url,
                 "headers": headers,
-                "forward_client_headers": client_hdrs
+                "forward_client_headers": client_hdrs,
+                "timeout_seconds": timeout
             }
         }
     }
@@ -274,7 +276,7 @@ class TestAddRemoteSchemaTbls:
         q = {'query': '{ wassup }'}
         hdrs = {
             'x-hasura-test': 'xyzz',
-            'x-hasura-role': 'user',
+            'x-hasura-role': 'admin',
             'x-hasura-user-id': 'abcd1234',
             'content-type': 'application/json',
             'Authorization': 'Bearer abcdef',
@@ -434,14 +436,57 @@ class TestAddRemoteSchemaCompareRootQueryFields:
                 compare_flds(fldH, fldR)
             assert has_fld[fldR['name']], 'Field ' + fldR['name'] + ' in the remote shema root query type not found in Hasura schema'
 
+class TestRemoteSchemaTimeout:
+    dir = 'queries/remote_schemas'
+    teardown = {"type": "clear_metadata", "args": {}}
 
-#    def test_remote_query_variables(self, hge_ctx):
-#        pass
-#    def test_add_schema_url_from_env(self, hge_ctx):
-#        pass
-#    def test_add_schema_header_from_env(self, hge_ctx):
-#        pass
+    @pytest.fixture(autouse=True)
+    def transact(self, hge_ctx):
+        q = mk_add_remote_q('simple 1', 'http://localhost:5000/hello-graphql', timeout = 5)
+        st_code, resp = hge_ctx.v1q(q)
+        assert st_code == 200, resp
+        yield
+        hge_ctx.v1q(self.teardown)
 
+    def test_remote_query_timeout(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/basic_timeout_query.yaml')
+        # wait for graphql server to finish else teardown throws
+        time.sleep(6)
+
+
+class TestRemoteSchemaPermissions:
+    dir = 'queries/remote_schemas/permissions/'
+    teardown = {"type": "remove_remote_schema", "args": {"name": "simple"}}
+
+    @pytest.fixture(autouse=True)
+    def transact(self, hge_ctx):
+        q = mk_add_remote_q('simple', 'http://localhost:5000/user-graphql')
+        st_code, resp = hge_ctx.v1q(q)
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q(self.teardown)
+        assert st_code == 200, resp
+
+    def test_no_roles(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + 'basic_fail.yaml')
+
+    def test_basic(self, hge_ctx):
+        # make perm query
+        st_code, resp = hge_ctx.v1q_f(self.dir + 'setup.yaml')
+        assert st_code == 200, resp
+        # make good query
+        check_query_f(hge_ctx, self.dir + 'basic_success.yaml')
+        # make bad query
+        check_query_f(hge_ctx, self.dir + 'basic_fail_2.yaml')
+
+    def test_remove_perm(self, hge_ctx):
+        # make perm query
+        st_code, resp = hge_ctx.v1q_f(self.dir + 'setup.yaml')
+        assert st_code == 200, resp
+        # remove perm query
+        st_code, resp = hge_ctx.v1q_f(self.dir + 'teardown.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir + 'basic_fail.yaml')
 
 def _map(f, l):
     return list(map(f, l))

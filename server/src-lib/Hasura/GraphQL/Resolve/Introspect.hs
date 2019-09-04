@@ -6,19 +6,20 @@ module Hasura.GraphQL.Resolve.Introspect
 import           Data.Has
 import           Hasura.Prelude
 
-import qualified Data.Aeson                        as J
-import qualified Data.HashMap.Strict               as Map
-import qualified Data.HashSet                      as Set
-import qualified Data.Text                         as T
-import qualified Language.GraphQL.Draft.Syntax     as G
+import qualified Data.Aeson                         as J
+import qualified Data.HashMap.Strict                as Map
+import qualified Data.HashSet                       as Set
+import qualified Data.Text                          as T
+import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
-import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Context
 import           Hasura.GraphQL.Validate.Field
+import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
 data TypeKind
@@ -163,7 +164,7 @@ enumTypeR (EnumTyInfo descM n vals _) fld =
     "name"        -> retJ $ namedTyToTxt n
     "description" -> retJ $ fmap G.unDescription descM
     "enumValues"  -> fmap J.toJSON $ mapM (enumValueR subFld) $
-                     sortOn _eviVal $ Map.elems vals
+                     sortOn _eviVal $ Map.elems (normalizeEnumValues vals)
     _             -> return J.Null
 
 -- 4.5.2.6
@@ -339,7 +340,7 @@ typeR
   => Field -> m J.Value
 typeR fld = do
   name <- withArg args "name" $ \arg -> do
-    pgColVal <- _apvValue <$> asPGColVal arg
+    pgColVal <- pstValue . _apvValue <$> asPGColumnValue arg
     case pgColVal of
       PGValText t -> return t
       _           -> throw500 "expecting string for name arg of __type"

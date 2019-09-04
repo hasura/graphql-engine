@@ -16,8 +16,7 @@ import           Hasura.RQL.DDL.QueryCollection
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Relationship.Rename
 import           Hasura.RQL.DDL.RemoteSchema
-import           Hasura.RQL.DDL.Schema.Function
-import           Hasura.RQL.DDL.Schema.Table
+import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.DML.Count
 import           Hasura.RQL.DML.Delete
 import           Hasura.RQL.DML.Insert
@@ -33,6 +32,7 @@ data RQLQuery
   = RQAddExistingTableOrView !TrackTable
   | RQTrackTable !TrackTable
   | RQUntrackTable !UntrackTable
+  | RQSetTableIsEnum !SetTableIsEnum
 
   | RQTrackFunction !TrackFunction
   | RQUntrackFunction !UnTrackFunction
@@ -69,6 +69,7 @@ data RQLQuery
   | RQRemoveRemoteSchema !RemoteSchemaNameQuery
   | RQReloadRemoteSchema !RemoteSchemaNameQuery
   | RQAddRemoteSchemaPermissions !RemoteSchemaPermissions
+  | RQDropRemoteSchemaPermissions !DropRemoteSchemaPermissions
 
   | RQCreateEventTrigger !CreateEventTriggerQuery
   | RQDeleteEventTrigger !DeleteEventTriggerQuery
@@ -174,6 +175,7 @@ queryNeedsReload qi = case qi of
   RQUntrackTable _                -> True
   RQTrackFunction _               -> True
   RQUntrackFunction _             -> True
+  RQSetTableIsEnum _              -> True
 
   RQCreateObjectRelationship _    -> True
   RQCreateArrayRelationship  _    -> True
@@ -205,6 +207,7 @@ queryNeedsReload qi = case qi of
   RQRemoveRemoteSchema _          -> True
   RQReloadRemoteSchema _          -> True
   RQAddRemoteSchemaPermissions _  -> True
+  RQDropRemoteSchemaPermissions _ -> True
 
   RQCreateEventTrigger _          -> True
   RQDeleteEventTrigger _          -> True
@@ -244,6 +247,7 @@ runQueryM rq =
       RQAddExistingTableOrView q   -> runTrackTableQ q
       RQTrackTable q               -> runTrackTableQ q
       RQUntrackTable q             -> runUntrackTableQ q
+      RQSetTableIsEnum q           -> runSetExistingTableIsEnumQ q
 
       RQTrackFunction q            -> runTrackFunc q
       RQUntrackFunction q          -> runUntrackFunc q
@@ -279,6 +283,7 @@ runQueryM rq =
       RQReloadRemoteSchema q       -> runReloadRemoteSchema q
 
       RQAddRemoteSchemaPermissions q       -> runAddRemoteSchemaPermissions q
+      RQDropRemoteSchemaPermissions q       -> runDropRemoteSchemaPermissions q
 
       RQCreateEventTrigger q       -> runCreateEventTriggerQuery q
       RQDeleteEventTrigger q       -> runDeleteEventTriggerQuery q

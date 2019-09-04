@@ -39,7 +39,7 @@ data InsertQueryP1
   , iqp1Tuples   :: ![[S.SQLExp]]
   , iqp1Conflict :: !(Maybe ConflictClauseP1)
   , iqp1MutFlds  :: !MutFlds
-  , iqp1AllCols  :: ![PGColInfo]
+  , iqp1AllCols  :: ![PGColumnInfo]
   } deriving (Show, Eq)
 
 mkInsertCTE :: InsertQueryP1 -> S.CTE
@@ -62,20 +62,12 @@ toSQLConflict conflict = case conflict of
       Column pgCols -> S.SQLColumn pgCols
       Constraint cn -> S.SQLConstraint cn
 
-getInsertDeps
-  :: InsertQueryP1 -> [SchemaDependency]
-getInsertDeps (InsertQueryP1 tn _ _ _ _ mutFlds _) =
-  mkParentDep tn : retDeps
-  where
-    retDeps = map (mkColDep "untyped" tn . fst) $
-              pgColsFromMutFlds mutFlds
-
 convObj
   :: (UserInfoM m, QErrM m)
-  => (PGColType -> Value -> m S.SQLExp)
+  => (PGColumnType -> Value -> m S.SQLExp)
   -> HM.HashMap PGCol S.SQLExp
   -> HM.HashMap PGCol S.SQLExp
-  -> FieldInfoMap
+  -> FieldInfoMap PGColumnInfo
   -> InsObj
   -> m ([PGCol], [S.SQLExp])
 convObj prepFn defInsVals setInsVals fieldInfoMap insObj = do
@@ -107,7 +99,7 @@ validateInpCols inpCols updColsPerm = forM_ inpCols $ \inpCol ->
 buildConflictClause
   :: (UserInfoM m, QErrM m)
   => SessVarBldr m
-  -> TableInfo
+  -> TableInfo PGColumnInfo
   -> [PGCol]
   -> OnConflict
   -> m ConflictClauseP1
@@ -139,8 +131,8 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
     (Just _, Just _, _)             -> throw400 UnexpectedPayload
       "'constraint' and 'constraint_on' cannot be set at a time"
   where
-    fieldInfoMap = tiFieldInfoMap tableInfo
-    toSQLBool = toSQLBoolExp (S.mkQual $ tiName tableInfo)
+    fieldInfoMap = _tiFieldInfoMap tableInfo
+    toSQLBool = toSQLBoolExp (S.mkQual $ _tiName tableInfo)
 
     validateCols c = do
       let targetcols = getPGCols c
@@ -148,11 +140,11 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
         \pgCol -> askPGType fieldInfoMap pgCol ""
 
     validateConstraint c = do
-      let tableConsNames = tiUniqOrPrimConstraints tableInfo
+      let tableConsNames = _tiUniqOrPrimConstraints tableInfo
       withPathK "constraint" $
        unless (c `elem` tableConsNames) $
        throw400 Unexpected $ "constraint " <> getConstraintTxt c
-                   <<> " for table " <> tiName tableInfo
+                   <<> " for table " <> _tiName tableInfo
                    <<> " does not exist"
 
     getUpdPerm = do
@@ -168,7 +160,7 @@ convInsertQuery
   :: (UserInfoM m, QErrM m, CacheRM m)
   => (Value -> m [InsObj])
   -> SessVarBldr m
-  -> (PGColType -> Value -> m S.SQLExp)
+  -> (PGColumnType -> Value -> m S.SQLExp)
   -> InsertQuery
   -> m InsertQueryP1
 convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRetCols) = do
@@ -180,7 +172,7 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
 
   -- If table is view then check if it is insertable
   mutableView tableName viIsInsertable
-    (tiViewInfo tableInfo) "insertable"
+    (_tiViewInfo tableInfo) "insertable"
 
   -- Check if the role has insert permissions
   insPerm   <- askInsPermInfo tableInfo
@@ -188,7 +180,7 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
   -- Check if all dependent headers are present
   validateHeaders $ ipiRequiredHeaders insPerm
 
-  let fieldInfoMap = tiFieldInfoMap tableInfo
+  let fieldInfoMap = _tiFieldInfoMap tableInfo
       setInsVals = ipiSet insPerm
 
   -- convert the returning cols into sql returing exp

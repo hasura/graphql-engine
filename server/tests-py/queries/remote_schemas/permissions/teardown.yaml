@@ -1,0 +1,4 @@
+type: drop_remote_schema_permissions
+args:
+  remote_schema: simple
+  role: user

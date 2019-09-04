@@ -67,7 +67,7 @@ const TableBody = ({
           data-test={`${rolePermission.name || ''}-${permType.name}`}
         >
           {permType.permSymbol}
-          {permType.editLink}
+          {permType.editIcon}
         </td>
       );
     });

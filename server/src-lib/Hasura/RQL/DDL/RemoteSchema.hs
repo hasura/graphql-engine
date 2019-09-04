@@ -13,6 +13,8 @@ module Hasura.RQL.DDL.RemoteSchema
   , runAddRemoteSchemaPermissions
   , runAddRemoteSchemaPermissionsP1
   , runAddRemoteSchemaPermissionsP2Setup
+  , addRemoteSchemaPermissionsToCatalog
+  , runDropRemoteSchemaPermissions
   ) where
 
 import           Hasura.EncJSON
@@ -105,9 +107,33 @@ removeRemoteSchemaP2
   => RemoteSchemaName
   -> m EncJSON
 removeRemoteSchemaP2 rsn = do
+  dropRemoteSchemaDirectDeps rsn
   delRemoteSchemaFromCache rsn
   liftTx $ removeRemoteSchemaFromCatalog rsn
   return successMsg
+
+dropRemoteSchemaDirectDeps
+  :: ( CacheRWM m
+     , MonadTx m
+     )
+  => RemoteSchemaName
+  -> m ()
+dropRemoteSchemaDirectDeps rsn = do
+  sc <- askSchemaCache
+  let depObjs = getDependentObjs sc objId
+  mapM_ dropRemoteSchemaPermDep depObjs
+  where
+    objId = SORemoteSchema rsn
+
+dropRemoteSchemaPermDep
+  :: ( CacheRWM m
+     , MonadTx m
+     )
+  => SchemaObjId
+  -> m ()
+dropRemoteSchemaPermDep = \case
+  SORemoteSchemaObj rsn (RSOPerm role) -> dropRemoteSchemaPermissionsP2 (DropRemoteSchemaPermissions rsn role)
+  _ -> throw500 "unexpected dependency found while dropping remote schema"
 
 runReloadRemoteSchema
   :: ( QErrM m, UserInfoM m , CacheRWM m
@@ -134,11 +160,9 @@ buildGCtxMap = do
   GS.buildGCtxMapPG
   sc <- askSchemaCache
   let gCtxMap = scGCtxMap sc
-  -- Stitch remote schemas
-  (mergedGCtxMap, defGCtx) <- mergeSchemas (scRemoteSchemas sc) (scRemoteSchemasWithRole sc) gCtxMap
-  writeSchemaCache sc { scGCtxMap = mergedGCtxMap
-                      , scDefaultRemoteGCtx = defGCtx
-                      }
+  -- add remote schemas
+  mergedGCtxMap <- mergeSchemas (scRemoteSchemas sc) (scRemoteSchemasWithRole sc) gCtxMap
+  writeSchemaCache sc { scGCtxMap = mergedGCtxMap }
 
 addRemoteSchemaToCatalog
   :: AddRemoteSchemaQuery
@@ -192,11 +216,15 @@ runAddRemoteSchemaPermissionsP2 rsPerm rsCtx = do
 
 runAddRemoteSchemaPermissionsP2Setup
   :: (QErrM m, CacheRWM m) => RemoteSchemaPermissions -> RemoteSchemaCtx -> m ()
-runAddRemoteSchemaPermissionsP2Setup RemoteSchemaPermissions{..} rsCtx = do
+runAddRemoteSchemaPermissionsP2Setup (RemoteSchemaPermissions rsName role _def) rsCtx = do
+  modDepMapInCache (addToDepMap schObjId deps)
   sc <- askSchemaCache
   let rmSchemaWithRoles = scRemoteSchemasWithRole sc
-      newSchemasWithRoles = Map.insert (rsPermRole, rsPermRemoteSchema) rsCtx rmSchemaWithRoles
+      newSchemasWithRoles = Map.insert (role, rsName) rsCtx rmSchemaWithRoles
   writeSchemaCache sc { scRemoteSchemasWithRole = newSchemasWithRoles }
+  where
+    schObjId = SORemoteSchemaObj rsName (RSOPerm role)
+    deps = [SchemaDependency (SORemoteSchema rsName ) DRParent]
 
 validateRemoteSchemaPermissions :: (QErrM m, CacheRM m) => RemoteSchemaPermissions -> m RemoteSchemaCtx
 validateRemoteSchemaPermissions remoteSchemaPerm = do
@@ -294,3 +322,45 @@ addRemoteSchemaPermissionsToCatalog (RemoteSchemaPermissions rsName rsRole rsDef
       (remote_schema, role, definition)
       VALUES ($1, $2, $3)
   |] (rsName, rsRole, Q.AltJ $ J.toJSON rsDef) True
+
+runDropRemoteSchemaPermissions
+  :: ( QErrM m, UserInfoM m
+     , CacheRWM m, MonadTx m
+     )
+  => DropRemoteSchemaPermissions -> m EncJSON
+runDropRemoteSchemaPermissions q = do
+  adminOnly
+  dropRemoteSchemaPermissionsP1 q
+  dropRemoteSchemaPermissionsP2 q
+  pure successMsg
+
+dropRemoteSchemaPermissionsP1 ::
+     (QErrM m, CacheRWM m, MonadTx m) => DropRemoteSchemaPermissions -> m ()
+dropRemoteSchemaPermissionsP1 (DropRemoteSchemaPermissions remoteSchema role) = do
+  sc <- askSchemaCache
+  let roleSchemas = scRemoteSchemasWithRole sc
+  void $ onNothing
+    (Map.lookup (role, remoteSchema) roleSchemas)
+    (throw400 NotFound ("role: " <> roleNameToTxt role <> " not found for remote schema"))
+
+dropRemoteSchemaPermissionsP2 ::
+     (QErrM m, CacheRWM m, MonadTx m) => DropRemoteSchemaPermissions -> m ()
+dropRemoteSchemaPermissionsP2 q = do
+  dropRemoteSchemaPermissionsP2Setup q
+  dropRemoteSchemaPermissionsP2FromCatalog q
+
+dropRemoteSchemaPermissionsP2Setup ::
+     (QErrM m, CacheRWM m) => DropRemoteSchemaPermissions -> m ()
+dropRemoteSchemaPermissionsP2Setup (DropRemoteSchemaPermissions remoteSchema role) = do
+  sc <- askSchemaCache
+  let roleSchemas = scRemoteSchemasWithRole sc
+      updatedRoleSchemas = Map.delete (role, remoteSchema) roleSchemas
+  writeSchemaCache sc { scRemoteSchemasWithRole = updatedRoleSchemas }
+
+dropRemoteSchemaPermissionsP2FromCatalog ::
+     (MonadTx m) => DropRemoteSchemaPermissions -> m ()
+dropRemoteSchemaPermissionsP2FromCatalog (DropRemoteSchemaPermissions remoteSchema role) = do
+  liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
+    DELETE FROM hdb_catalog.remote_schema_permissions
+      WHERE remote_schema = $1 AND role = $2
+  |] (remoteSchema, role) True

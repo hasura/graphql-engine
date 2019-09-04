@@ -31,7 +31,7 @@ data Select
     , selOrderBy  :: !(Maybe OrderByExp)
     , selLimit    :: !(Maybe LimitExp)
     , selOffset   :: !(Maybe OffsetExp)
-    } deriving (Show, Eq)
+    } deriving (Show, Eq, Data)
 
 mkSelect :: Select
 mkSelect = Select Nothing [] Nothing
@@ -40,7 +40,7 @@ mkSelect = Select Nothing [] Nothing
 
 newtype LimitExp
   = LimitExp SQLExp
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data)
 
 instance ToSQL LimitExp where
   toSQL (LimitExp se) =
@@ -48,7 +48,7 @@ instance ToSQL LimitExp where
 
 newtype OffsetExp
   = OffsetExp SQLExp
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data)
 
 instance ToSQL OffsetExp where
   toSQL (OffsetExp se) =
@@ -56,14 +56,14 @@ instance ToSQL OffsetExp where
 
 newtype OrderByExp
   = OrderByExp [OrderByItem]
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data)
 
 data OrderByItem
   = OrderByItem
     { oColumn :: !SQLExp
     , oType   :: !(Maybe OrderType)
     , oNulls  :: !(Maybe NullsOrder)
-    } deriving (Show, Eq)
+    } deriving (Show, Eq, Data)
 
 instance ToSQL OrderByItem where
   toSQL (OrderByItem e ot no) =
@@ -71,7 +71,7 @@ instance ToSQL OrderByItem where
 
 data OrderType = OTAsc
                | OTDesc
-               deriving (Show, Eq, Lift)
+               deriving (Show, Eq, Lift, Data)
 
 instance ToSQL OrderType where
   toSQL OTAsc  = "ASC"
@@ -80,7 +80,7 @@ instance ToSQL OrderType where
 data NullsOrder
   = NFirst
   | NLast
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq, Lift, Data)
 
 instance ToSQL NullsOrder where
   toSQL NFirst = "NULLS FIRST"
@@ -92,7 +92,7 @@ instance ToSQL OrderByExp where
 
 newtype GroupByExp
   = GroupByExp [SQLExp]
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data)
 
 instance ToSQL GroupByExp where
   toSQL (GroupByExp idens) =
@@ -100,7 +100,7 @@ instance ToSQL GroupByExp where
 
 newtype FromExp
   = FromExp [FromItem]
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data)
 
 instance ToSQL FromExp where
   toSQL (FromExp items) =
@@ -120,9 +120,8 @@ mkSelFromExp isLateral sel tn =
   where
     alias = Alias $ toIden tn
 
-mkFuncFromItem :: QualifiedFunction -> [SQLExp] -> FromItem
-mkFuncFromItem qf args =
-  FIFunc qf args Nothing
+mkFuncFromItem :: QualifiedFunction -> FunctionArgs -> FromItem
+mkFuncFromItem qf args = FIFunc qf args Nothing
 
 mkRowExp :: [Extractor] -> SQLExp
 mkRowExp extrs = let
@@ -141,7 +140,7 @@ mkRowExp extrs = let
 
 newtype HavingExp
   = HavingExp BoolExp
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data)
 
 instance ToSQL HavingExp where
   toSQL (HavingExp be) =
@@ -149,7 +148,7 @@ instance ToSQL HavingExp where
 
 newtype WhereFrag
   = WhereFrag { getWFBoolExp :: BoolExp }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data)
 
 instance ToSQL WhereFrag where
   toSQL (WhereFrag be) =
@@ -178,7 +177,7 @@ data Qual
   = QualIden !Iden
   | QualTable !QualifiedTable
   | QualVar !T.Text
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data)
 
 mkQual :: QualifiedTable -> Qual
 mkQual = QualTable
@@ -193,7 +192,7 @@ mkQIden q t = QIden (QualIden (toIden q)) (toIden t)
 
 data QIden
   = QIden !Qual !Iden
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data)
 
 instance ToSQL QIden where
   toSQL (QIden qual iden) =
@@ -201,7 +200,7 @@ instance ToSQL QIden where
 
 newtype SQLOp
   = SQLOp {sqlOpTxt :: T.Text}
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data)
 
 incOp :: SQLOp
 incOp = SQLOp "+"
@@ -223,31 +222,31 @@ jsonbDeleteAtPathOp = SQLOp "#-"
 
 newtype TypeAnn
   = TypeAnn {unTypeAnn :: T.Text}
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data)
 
-mkTypeAnn :: PgType -> TypeAnn
-mkTypeAnn = TypeAnn . T.pack . show
+mkTypeAnn :: PGType PGScalarType -> TypeAnn
+mkTypeAnn = TypeAnn . toSQLTxt
 
 intTypeAnn :: TypeAnn
-intTypeAnn = mkTypeAnn $ PgTypeSimple PGInteger
+intTypeAnn = mkTypeAnn $ PGTypeScalar PGInteger
 
 textTypeAnn :: TypeAnn
-textTypeAnn = mkTypeAnn $ PgTypeSimple PGText
+textTypeAnn = mkTypeAnn $ PGTypeScalar PGText
 
 textArrTypeAnn :: TypeAnn
-textArrTypeAnn = mkTypeAnn $ PgTypeArray PGText
+textArrTypeAnn = mkTypeAnn $ PGTypeArray PGText
 
 jsonTypeAnn :: TypeAnn
-jsonTypeAnn = mkTypeAnn $ PgTypeSimple PGJSON
+jsonTypeAnn = mkTypeAnn $ PGTypeScalar PGJSON
 
 jsonbTypeAnn :: TypeAnn
-jsonbTypeAnn = mkTypeAnn $ PgTypeSimple PGJSONB
+jsonbTypeAnn = mkTypeAnn $ PGTypeScalar PGJSONB
 
 data CountType
   = CTStar
   | CTSimple ![PGCol]
   | CTDistinct ![PGCol]
-  deriving(Show, Eq)
+  deriving(Show, Eq, Data)
 
 instance ToSQL CountType where
   toSQL CTStar            = "*"
@@ -258,7 +257,7 @@ instance ToSQL CountType where
 
 newtype TupleExp
   = TupleExp [SQLExp]
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data)
 
 instance ToSQL TupleExp where
   toSQL (TupleExp exps) =
@@ -266,6 +265,7 @@ instance ToSQL TupleExp where
 
 data SQLExp
   = SEPrep !Int
+  | SENull
   | SELit !T.Text
   | SEUnsafe !T.Text
   | SESelect !Select
@@ -283,17 +283,18 @@ data SQLExp
   | SEArray ![SQLExp]
   | SETuple !TupleExp
   | SECount !CountType
-  deriving (Show, Eq)
+  | SENamedArg !Iden !SQLExp
+  deriving (Show, Eq, Data)
 
-withTyAnn :: PGColType -> SQLExp -> SQLExp
-withTyAnn colTy v = SETyAnn v $ TypeAnn $ T.pack $ show colTy
+withTyAnn :: PGScalarType -> SQLExp -> SQLExp
+withTyAnn colTy v = SETyAnn v . mkTypeAnn $ PGTypeScalar colTy
 
 instance J.ToJSON SQLExp where
   toJSON = J.toJSON . toSQLTxt
 
 newtype Alias
   = Alias { getAlias :: Iden }
-  deriving (Show, Eq, Hashable)
+  deriving (Show, Eq, Hashable, Data)
 
 instance IsIden Alias where
   toIden (Alias iden) = iden
@@ -310,6 +311,8 @@ countStar = SECount CTStar
 instance ToSQL SQLExp where
   toSQL (SEPrep argNumber) =
     TB.char '$' <> fromString (show argNumber)
+  toSQL SENull =
+    TB.text "NULL"
   toSQL (SELit tv) =
     TB.text $ pgFmtLit tv
   toSQL (SEUnsafe t) =
@@ -343,13 +346,15 @@ instance ToSQL SQLExp where
                          <> (", " <+> exps) <> TB.char ']'
   toSQL (SETuple tup) = toSQL tup
   toSQL (SECount ty) = "COUNT" <> paren (toSQL ty)
+  -- https://www.postgresql.org/docs/current/sql-syntax-calling-funcs.html
+  toSQL (SENamedArg arg val) = toSQL arg <-> "=>" <-> toSQL val
 
 intToSQLExp :: Int -> SQLExp
 intToSQLExp =
   SEUnsafe . T.pack . show
 
 data Extractor = Extractor !SQLExp !(Maybe Alias)
-               deriving (Show, Eq)
+               deriving (Show, Eq, Data)
 
 mkSQLOpExp
   :: SQLOp
@@ -394,22 +399,34 @@ instance ToSQL Extractor where
 data DistinctExpr
   = DistinctSimple
   | DistinctOn ![SQLExp]
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data)
 
 instance ToSQL DistinctExpr where
   toSQL DistinctSimple    = "DISTINCT"
   toSQL (DistinctOn exps) =
     "DISTINCT ON" <-> paren ("," <+> exps)
 
+data FunctionArgs
+  = FunctionArgs
+  { fasPostional :: ![SQLExp]
+  , fasNamed     :: !(HM.HashMap Text SQLExp)
+  } deriving (Show, Eq, Data)
+
+instance ToSQL FunctionArgs where
+  toSQL (FunctionArgs positionalArgs namedArgsMap) =
+    let namedArgs = flip map (HM.toList namedArgsMap) $
+                    \(argName, argVal) -> SENamedArg (Iden argName) argVal
+    in paren $ ", " <+> (positionalArgs <> namedArgs)
+
 data FromItem
   = FISimple !QualifiedTable !(Maybe Alias)
   | FIIden !Iden
-  | FIFunc !QualifiedFunction ![SQLExp] !(Maybe Alias)
+  | FIFunc !QualifiedFunction !FunctionArgs !(Maybe Alias)
   | FIUnnest ![SQLExp] !Alias ![SQLExp]
   | FISelect !Lateral !Select !Alias
   | FIValues !ValuesExp !Alias !(Maybe [PGCol])
   | FIJoin !JoinExpr
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data)
 
 mkSelFromItem :: Select -> Alias -> FromItem
 mkSelFromItem = FISelect (Lateral False)
@@ -427,7 +444,7 @@ instance ToSQL FromItem where
   toSQL (FIIden iden) =
     toSQL iden
   toSQL (FIFunc qf args mal) =
-    toSQL qf <> paren (", " <+> args) <-> toSQL mal
+    toSQL qf <> toSQL args <-> toSQL mal
   -- unnest(expressions) alias(columns)
   toSQL (FIUnnest args als cols) =
     "UNNEST" <> paren (", " <+> args) <-> toSQL als <> paren (", " <+> cols)
@@ -440,7 +457,7 @@ instance ToSQL FromItem where
     toSQL je
 
 newtype Lateral = Lateral Bool
-             deriving (Show, Eq)
+             deriving (Show, Eq, Data)
 
 instance ToSQL Lateral where
   toSQL (Lateral True)  = "LATERAL"
@@ -452,7 +469,7 @@ data JoinExpr
   , tjeType  :: !JoinType
   , tjeRight :: !FromItem
   , tjeJC    :: !JoinCond
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Data)
 
 instance ToSQL JoinExpr where
   toSQL je =
@@ -466,7 +483,7 @@ data JoinType
   | LeftOuter
   | RightOuter
   | FullOuter
-  deriving (Eq, Show)
+  deriving (Eq, Show, Data)
 
 instance ToSQL JoinType where
   toSQL Inner      = "INNER JOIN"
@@ -477,7 +494,7 @@ instance ToSQL JoinType where
 data JoinCond
   = JoinOn !BoolExp
   | JoinUsing ![PGCol]
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data)
 
 instance ToSQL JoinCond where
   toSQL (JoinOn be) =
@@ -498,7 +515,7 @@ data BoolExp
   | BEExists !Select
   | BEIN !SQLExp ![SQLExp]
   | BEExp !SQLExp
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data)
 
 -- removes extraneous 'AND true's
 simplifyBoolExp :: BoolExp -> BoolExp
@@ -552,7 +569,7 @@ instance ToSQL BoolExp where
 
 data BinOp = AndOp
            | OrOp
-           deriving (Show, Eq)
+           deriving (Show, Eq, Data)
 
 instance ToSQL BinOp where
   toSQL AndOp = "AND"
@@ -578,7 +595,7 @@ data CompareOp
   | SHasKey
   | SHasKeysAny
   | SHasKeysAll
-  deriving (Eq)
+  deriving (Eq, Data)
 
 instance Show CompareOp where
   show = \case
@@ -722,7 +739,7 @@ instance ToSQL SQLConflict where
 
 newtype ValuesExp
   = ValuesExp [TupleExp]
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data)
 
 instance ToSQL ValuesExp where
   toSQL (ValuesExp tuples) =

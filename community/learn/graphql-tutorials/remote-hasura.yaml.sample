@@ -70,6 +70,11 @@ spec:
       path: ./community/learn/graphql-tutorials/tutorials/reason-react-apollo/tutorial-site
     name: reason-react-apollo
   - containers:
+    - dockerfile: ./community/learn/graphql-tutorials/tutorials/angular-apollo/tutorial-site/Dockerfile
+      name: angular-apollo
+      path: ./community/learn/graphql-tutorials/tutorials/angular-apollo/tutorial-site
+    name: angular-apollo
+  - containers:
     - dockerfile: ./community/learn/graphql-tutorials/tutorials/flutter-graphql/tutorial-site/Dockerfile
       name: flutter-graphql
       path: ./community/learn/graphql-tutorials/tutorials/flutter-graphql/tutorial-site

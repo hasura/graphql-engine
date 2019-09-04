@@ -4,22 +4,27 @@ module Migrate
   )
 where
 
-import           Data.Time.Clock             (UTCTime)
-import           Language.Haskell.TH.Syntax  (Q, TExp, unTypeQ)
+import           Data.Time.Clock               (UTCTime)
+import           Language.Haskell.TH.Syntax    (Q, TExp, unTypeQ)
 
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Schema.Table
+import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
 import           Hasura.Server.Query
 
-import qualified Data.Aeson                  as A
-import qualified Data.Text                   as T
-import qualified Data.Yaml.TH                as Y
+import qualified Data.Aeson                    as A
+import qualified Data.Text                     as T
+import qualified Data.Yaml.TH                  as Y
 
-import qualified Database.PG.Query           as Q
+import qualified Data.HashMap.Strict           as Map
+import qualified Database.PG.Query             as Q
+
+import           Hasura.GraphQL.Context
+import qualified Hasura.GraphQL.Validate.Types as VT
+import           Hasura.RQL.DDL.RemoteSchema   (addRemoteSchemaPermissionsToCatalog)
 
 curCatalogVer :: T.Text
-curCatalogVer = "20"
+curCatalogVer = "23"
 
 migrateMetadata
   :: ( MonadTx m
@@ -103,8 +108,8 @@ setAsSystemDefinedFor16 =
              AND  table_name = 'hdb_query_collection';
            |]
 
-setAsSystemDefinedFor20 :: (MonadTx m) => m ()
-setAsSystemDefinedFor20 =
+setAsSystemDefinedFor23 :: (MonadTx m) => m ()
+setAsSystemDefinedFor23 =
   liftTx $ Q.catchE defaultTxErrorHandler $
   Q.multiQ [Q.sql|
             UPDATE hdb_catalog.hdb_table
@@ -354,7 +359,23 @@ from18To19 = do
     $(Q.sqlFromFile "src-rsr/migrate_from_18_to_19.sql")
   return ()
 
-from19To20
+from19To20 :: (MonadTx m) => m ()
+from19To20 = do
+  Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
+    $(Q.sqlFromFile "src-rsr/migrate_from_19_to_20.sql")
+  pure ()
+
+from20To21 :: (MonadTx m) => m ()
+from20To21 = liftTx $ Q.catchE defaultTxErrorHandler $ do
+  Q.unitQ "CREATE INDEX ON hdb_catalog.event_log (locked)" () False
+
+from21To22 :: (MonadTx m) => m ()
+from21To22 = do
+  Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
+    $(Q.sqlFromFile "src-rsr/migrate_from_21_to_22.sql")
+  pure ()
+
+from22To23
   :: ( MonadTx m
      , HasHttpManager m
      , HasSQLGenCtx m
@@ -363,18 +384,77 @@ from19To20
      , MonadIO m
      )
   => m ()
-from19To20 = do
+from22To23
   -- Migrate database
-  Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
-    $(Q.sqlFromFile "src-rsr/migrate_from_19_to_20.sql")
-
-  migrateMetadata False migrateMetadataFor20
-  -- Set as system defined
-  setAsSystemDefinedFor20
-  return ()
+ = do
+  Q.Discard () <-
+    liftTx $
+    Q.multiQE
+      defaultTxErrorHandler
+      $(Q.sqlFromFile "src-rsr/migrate_from_22_to_23.sql")
+  allRoles <- liftTx $ getAllRoles
+  remoteSchemaCount::Int <- liftTx $ getRemoteSchemaCount
+  when (remoteSchemaCount > 0) $ do
+    buildSchemaCacheStrict
+    sc <- askSchemaCache
+    let remoteSchemas = Map.toList (scRemoteSchemas sc)
+        remoteSchemaPermissions =
+          concatMap
+            (\(name, ctx) ->
+               map (uncurryPerm . (, name, getTypePerms ctx)) allRoles)
+            remoteSchemas
+    liftTx $ mapM_ addRemoteSchemaPermissionsToCatalog remoteSchemaPermissions
+  migrateMetadata False migrateMetadataFor23
+  setAsSystemDefinedFor23
   where
-    migrateMetadataFor20 =
-      $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_19_to_20.yaml" :: Q (TExp RQLQuery)))
+    migrateMetadataFor23 =
+      $(unTypeQ
+          (Y.decodeFile "src-rsr/migrate_metadata_from_22_to_23.yaml" :: Q (TExp RQLQuery)))
+    getRemoteSchemaCount =
+      runIdentity . Q.getRow <$>
+      Q.withQE
+        defaultTxErrorHandler
+        [Q.sql| SELECT count(*)
+                FROM hdb_catalog.remote_schemas
+        |] () False
+    getAllRoles =
+      map runIdentity <$>
+      Q.listQE
+        defaultTxErrorHandler
+        [Q.sql| SELECT distinct(role_name)
+                FROM hdb_catalog.hdb_permission_agg
+        |] () False
+    -- try using lenses?
+    getTypePerms remoteCtx =
+      let objTypes = getObjTy (rscGCtx remoteCtx)
+          inpObjTypes = getInpObjTy (rscGCtx remoteCtx)
+       in convObjTypesToPermType objTypes <>
+          convInpObjTypesToPermType inpObjTypes
+      where
+        getObjTy rGCtx =
+          let types = Map.elems (_rgTypes rGCtx)
+           in flip mapMaybe types $ \tyInfo ->
+                case tyInfo of
+                  VT.TIObj objTy -> Just objTy
+                  _              -> Nothing
+        getInpObjTy rGCtx =
+          let types = Map.elems (_rgTypes rGCtx)
+           in flip mapMaybe types $ \tyInfo ->
+                case tyInfo of
+                  VT.TIInpObj inpObjTy -> Just inpObjTy
+                  _                    -> Nothing
+        convObjTypesToPermType objTypes =
+          flip map objTypes $ \objTy ->
+            let name = (VT._otiName objTy)
+                fields = Map.keys (VT._otiFields objTy)
+             in RemoteTypePerm name fields
+        convInpObjTypesToPermType inpObjTypes =
+          flip map inpObjTypes $ \inpObjTy ->
+            let name = (VT._iotiName inpObjTy)
+                fields = Map.keys (VT._iotiFields inpObjTy)
+             in RemoteTypePerm name fields
+    uncurryPerm (role, rsName, permDef) =
+      RemoteSchemaPermissions rsName role permDef
 
 migrateCatalog
   :: ( MonadTx m
@@ -385,73 +465,42 @@ migrateCatalog
      , HasSQLGenCtx m
      )
   => UTCTime -> m String
-migrateCatalog migrationTime = do
-  preVer <- getCatalogVersion
-  if | preVer == curCatalogVer ->
-         return $ "already at the latest version. current version: "
-                   <> show curCatalogVer
-     | preVer == "0.8" -> from08ToCurrent
-     | preVer == "1"   -> from1ToCurrent
-     | preVer == "2"   -> from2ToCurrent
-     | preVer == "3"   -> from3ToCurrent
-     | preVer == "4"   -> from4ToCurrent
-     | preVer == "5"   -> from5ToCurrent
-     | preVer == "6"   -> from6ToCurrent
-     | preVer == "7"   -> from7ToCurrent
-     | preVer == "8"   -> from8ToCurrent
-     | preVer == "9"   -> from9ToCurrent
-     | preVer == "10"  -> from10ToCurrent
-     | preVer == "11"  -> from11ToCurrent
-     | preVer == "12"  -> from12ToCurrent
-     | preVer == "13"  -> from13ToCurrent
-     | preVer == "14"  -> from14ToCurrent
-     | preVer == "15"  -> from15ToCurrent
-     | preVer == "16"  -> from16ToCurrent
-     | preVer == "17"  -> from17ToCurrent
-     | preVer == "18"  -> from18ToCurrent
-     | preVer == "19"  -> from19ToCurrent
-     | otherwise -> throw400 NotSupported $
-                    "unsupported version : " <> preVer
+migrateCatalog migrationTime = migrateFrom =<< getCatalogVersion
   where
-    from19ToCurrent = from19To20 >> postMigrate
-
-    from18ToCurrent = from18To19 >> from19ToCurrent
-
-    from17ToCurrent = from17To18 >> from18ToCurrent
-
-    from16ToCurrent = from16To17 >> from17ToCurrent
-
-    from15ToCurrent = from15To16 >> from16ToCurrent
-
-    from14ToCurrent = from14To15 >> from15ToCurrent
-
-    from13ToCurrent = from13To14 >> from14ToCurrent
-
-    from12ToCurrent = from12To13 >> from13ToCurrent
-
-    from11ToCurrent = from11To12 >> from12ToCurrent
-
-    from10ToCurrent = from10To11 >> from11ToCurrent
-
-    from9ToCurrent = from9To10 >> from10ToCurrent
-
-    from8ToCurrent = from8To9 >> from9ToCurrent
-
-    from7ToCurrent = from7To8 >> from8ToCurrent
-
-    from6ToCurrent = from6To7 >> from7ToCurrent
-
-    from5ToCurrent = from5To6 >> from6ToCurrent
-
-    from4ToCurrent = from4To5 >> from5ToCurrent
-
-    from3ToCurrent = from3To4 >> from4ToCurrent
-
-    from2ToCurrent = from2To3 >> from3ToCurrent
-
-    from1ToCurrent = from1To2 >> from2ToCurrent
-
-    from08ToCurrent = from08To1 >> from1ToCurrent
+    migrateFrom previousVersion
+      | previousVersion == curCatalogVer =
+          return $ "already at the latest version. current version: " <> show curCatalogVer
+      | [] <- neededMigrations =
+          throw400 NotSupported $ "unsupported version : " <> previousVersion
+      | otherwise =
+          traverse_ snd neededMigrations >> postMigrate
+      where
+        neededMigrations = dropWhile ((/= previousVersion) . fst) migrations
+        migrations =
+          [ ("0.8", from08To1)
+          , ("1", from1To2)
+          , ("2", from2To3)
+          , ("3", from3To4)
+          , ("4", from4To5)
+          , ("5", from5To6)
+          , ("6", from6To7)
+          , ("7", from7To8)
+          , ("8", from8To9)
+          , ("9", from9To10)
+          , ("10", from10To11)
+          , ("11", from11To12)
+          , ("12", from12To13)
+          , ("13", from13To14)
+          , ("14", from14To15)
+          , ("15", from15To16)
+          , ("16", from16To17)
+          , ("17", from17To18)
+          , ("18", from18To19)
+          , ("19", from19To20)
+          , ("20", from20To21)
+          , ("21", from21To22)
+          , ("22", from22To23)
+          ]
 
     postMigrate = do
        -- update the catalog version
