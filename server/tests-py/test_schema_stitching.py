@@ -6,13 +6,14 @@ import yaml
 import json
 import queue
 import requests
+import time
 
 import pytest
 
 from validate import check_query_f, check_query
 
 
-def mk_add_remote_q(name, url, headers=None, client_hdrs=False):
+def mk_add_remote_q(name, url, headers=None, client_hdrs=False, timeout=None):
     return {
         "type": "add_remote_schema",
         "args": {
@@ -21,7 +22,8 @@ def mk_add_remote_q(name, url, headers=None, client_hdrs=False):
             "definition": {
                 "url": url,
                 "headers": headers,
-                "forward_client_headers": client_hdrs
+                "forward_client_headers": client_hdrs,
+                "timeout_seconds": timeout
             }
         }
     }
@@ -434,6 +436,22 @@ class TestAddRemoteSchemaCompareRootQueryFields:
                 compare_flds(fldH, fldR)
             assert has_fld[fldR['name']], 'Field ' + fldR['name'] + ' in the remote shema root query type not found in Hasura schema'
 
+class TestRemoteSchemaTimeout:
+    dir = 'queries/remote_schemas'
+    teardown = {"type": "clear_metadata", "args": {}}
+
+    @pytest.fixture(autouse=True)
+    def transact(self, hge_ctx):
+        q = mk_add_remote_q('simple 1', 'http://localhost:5000/hello-graphql', timeout = 5)
+        st_code, resp = hge_ctx.v1q(q)
+        assert st_code == 200, resp
+        yield
+        hge_ctx.v1q(self.teardown)
+
+    def test_remote_query_timeout(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/basic_timeout_query.yaml')
+        # wait for graphql server to finish else teardown throws
+        time.sleep(6)
 
 #    def test_remote_query_variables(self, hge_ctx):
 #        pass

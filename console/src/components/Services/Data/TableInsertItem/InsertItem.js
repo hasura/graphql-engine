@@ -7,9 +7,8 @@ import { setTable } from '../DataActions';
 import JsonInput from '../../../Common/CustomInputTypes/JsonInput';
 import TextInput from '../../../Common/CustomInputTypes/TextInput';
 import Button from '../../../Common/Button/Button';
+import ReloadEnumValuesButton from '../Common/ReusableComponents/ReloadEnumValuesButton';
 import { getPlaceholder, BOOLEAN, JSONB, JSONDTYPE, TEXT } from '../utils';
-
-import { getParentNodeByClass } from '../../../../utils/domFunctions';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
 
@@ -81,12 +80,9 @@ class InsertItem extends Component {
       refs[colName] = { valueNode: null, nullNode: null, defaultNode: null };
       const inputRef = node => (refs[colName].valueNode = node);
       const clicker = e => {
-        const checkboxLabel = getParentNodeByClass(e.target, 'radio-inline');
-        if (checkboxLabel) {
-          checkboxLabel.click();
-        } else {
-          e.target.parentNode.click();
-        }
+        e.target
+          .closest('.radio-inline')
+          .querySelector('input[type="radio"]').checked = true;
         e.target.focus();
       };
 
@@ -330,6 +326,10 @@ class InsertItem extends Component {
               >
                 Clear
               </Button>
+              <ReloadEnumValuesButton
+                dispatch={dispatch}
+                isEnum={currentTable.is_enum}
+              />
             </form>
           </div>
           <div className="col-xs-3">{alert}</div>

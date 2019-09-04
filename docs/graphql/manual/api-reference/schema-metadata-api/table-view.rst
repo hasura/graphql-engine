@@ -49,6 +49,57 @@ Args syntax
      - true
      - :ref:`TableName <TableName>`
      - Name of the table
+   * - is_enum
+     - false
+     - Boolean
+     - When set to ``true``, creates the table as an :ref:`enum table <create_enum_table>`.
+
+.. _set_table_is_enum:
+
+set_table_is_enum
+-----------------
+
+``set_table_is_enum`` sets whether an already-tracked table should be used as an :ref:`enum table <create_enum_table>`.
+
+Use table ``user_role`` as an enum table:
+
+.. code-block:: http
+
+  POST /v1/query HTTP/1.1
+  Content-Type: application/json
+  X-Hasura-Role: admin
+
+  {
+    "type": "set_table_is_enum",
+    "args": {
+      "table": {
+        "schema": "public",
+        "name": "user_role"
+      },
+      "is_enum": true
+    }
+  }
+
+.. _set_table_is_enum_syntax:
+
+Args syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - table
+     - true
+     - :ref:`TableName <TableName>`
+     - Name of the table
+   * - is_enum
+     - true
+     - Boolean
+     - Whether or not the table should be used as an :ref:`enum table <enum table>`.
 
 .. _untrack_table:
 
@@ -76,7 +127,7 @@ Remove a table/view ``author``:
        }
    }
 
-    
+
 .. _untrack_table_syntax:
 
 Args syntax

@@ -7,7 +7,7 @@ import Helmet from 'react-helmet';
 
 class RuntimeError extends Component {
   render() {
-    const errorImage = require('./error-logo.png');
+    const errorImage = require('./hasura_icon_green.png');
     const styles = require('./ErrorPage.scss');
 
     const { resetCallback, error } = this.props;

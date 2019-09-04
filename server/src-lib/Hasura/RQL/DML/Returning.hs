@@ -50,24 +50,24 @@ hasNestedFld = any isNestedMutFld
       FArr _ -> True
       _      -> False
 
-pgColsFromMutFld :: MutFld -> [(PGCol, PGColType)]
+pgColsFromMutFld :: MutFld -> [(PGCol, PGColumnType)]
 pgColsFromMutFld = \case
   MCount -> []
   MExp _ -> []
   MRet selFlds ->
     flip mapMaybe selFlds $ \(_, annFld) -> case annFld of
-    FCol (PGColInfo col colTy _) _ -> Just (col, colTy)
-    _                              -> Nothing
+    FCol (PGColumnInfo col colTy _) _ -> Just (col, colTy)
+    _                                 -> Nothing
 
-pgColsFromMutFlds :: MutFlds -> [(PGCol, PGColType)]
+pgColsFromMutFlds :: MutFlds -> [(PGCol, PGColumnType)]
 pgColsFromMutFlds = concatMap (pgColsFromMutFld . snd)
 
-pgColsToSelFlds :: [PGColInfo] -> [(FieldName, AnnFld)]
+pgColsToSelFlds :: [PGColumnInfo] -> [(FieldName, AnnFld)]
 pgColsToSelFlds cols =
   flip map cols $
   \pgColInfo -> (fromPGCol $ pgiName pgColInfo, FCol pgColInfo Nothing)
 
-mkDefaultMutFlds :: Maybe [PGColInfo] -> MutFlds
+mkDefaultMutFlds :: Maybe [PGColumnInfo] -> MutFlds
 mkDefaultMutFlds = \case
   Nothing   -> mutFlds
   Just cols -> ("returning", MRet $ pgColsToSelFlds cols):mutFlds
@@ -111,10 +111,10 @@ mkSelWith qt cte mutFlds singleObj strfyNum =
 
 checkRetCols
   :: (UserInfoM m, QErrM m)
-  => FieldInfoMap
+  => FieldInfoMap PGColumnInfo
   -> SelPermInfo
   -> [PGCol]
-  -> m [PGColInfo]
+  -> m [PGColumnInfo]
 checkRetCols fieldInfoMap selPermInfo cols = do
   mapM_ (checkSelOnCol selPermInfo) cols
   forM cols $ \col -> askPGColInfo fieldInfoMap col relInRetErr

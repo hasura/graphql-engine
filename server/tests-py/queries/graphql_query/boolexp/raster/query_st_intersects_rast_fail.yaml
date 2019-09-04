@@ -1,0 +1,20 @@
+description: Fetch raster values which intersects the input raster
+url: /v1/graphql
+status: 200
+response:
+  errors:
+  - extensions:
+      path: "$.variableValues.rast"
+      code: parse-failed
+    message: invalid hexadecimal representation of raster well known binary format
+
+query:
+  variables:
+    rast: 'this is invalid raster value'
+  query: |
+    query ($rast: raster){
+      dummy_rast(where: {rast: {_st_intersects_rast: $rast}}){
+        rid
+        rast
+      }
+    }

@@ -432,6 +432,40 @@ Operator
          field-name : {_st_d_within: {distance: Float, from: Value} }
        }
 
+**Intersect Operators on RASTER columns:**
+
+- ``_st_intersects_rast``
+
+Executes ``boolean ST_Intersects( raster <raster-column> , raster <input-raster> )``
+
+.. parsed-literal ::
+
+   { _st_intersects_rast: raster }
+
+
+- ``_st_intersects_nband_geom``
+
+Executes ``boolean ST_Intersects( raster <raster-column> , integer nband , geometry geommin )``
+
+This accepts ``st_intersects_nband_geom_input`` input object
+
+.. parsed-literal ::
+
+   { _st_intersects_nband_geom: {nband: Integer! geommin: geometry!}
+
+
+
+- ``_st_intersects_geom_nband``
+
+Executes ``boolean ST_Intersects( raster <raster-column> , geometry geommin , integer nband = NULL )``
+
+This accepts ``st_intersects_geom_nband_input`` input object
+
+.. parsed-literal ::
+
+   { _st_intersects_geom_nband: {geommin: geometry! nband: Integer }
+
+
 .. _CastExp:
 
 CastExp
