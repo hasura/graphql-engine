@@ -320,7 +320,7 @@ checkNewInconsistentMeta originalInconsMeta currentInconsMeta =
   where
     newInconsMetaObjects = getDifference _moId currentInconsMeta originalInconsMeta
 
--- This is for dropping direct and indirect deps (when cascade: true) during run_sql
+-- This is used for run_sql only. Hence, only postgres related dependencies are handled here.
 purgeDependentObject :: (CacheRWM m, MonadTx m) => SchemaObjId -> m ()
 purgeDependentObject schemaObjId = case schemaObjId of
   (SOTableObj tn (TOPerm rn pt)) -> do
