@@ -1,4 +1,4 @@
-@import '../../Common.scss';
+@import "../../../Services/Data/TableModify/ModifyTable.scss";
 
 .permissionsTable {
   width: 85%;
@@ -13,14 +13,14 @@
     font-weight: bold;
   }
 
-  // td:first-child, th:first-child {
-  //   border-right: 4px double #ddd;
-  //   font-weight: bold;
-  //   width: 10%;
-  // }
+  td:last-child, th:last-child {
+    border-left: 4px double #ddd;
+    width: 10%;
+  }
 
-  td:nth-child(2) {
+  td:first-child, th:first-child {
     overflow: auto;
+    border-right: 4px double #ddd;
     max-width: 250px;
     width: 250px;
   }
@@ -30,36 +30,40 @@
   //  margin-left: 10px;
   //}
 
-  .editPermsLink {
-    font-size: 12px;
-    position: absolute;
-    right: 10px;
-    color: #337ab7;
-    cursor: pointer;
-  }
-
   .bulkSelect {
     margin-right: 10px !important;
   }
 
+  // TODO: make common with Roles page
   .clickableCell {
     cursor: pointer;
+    
+    .editPermsIcon {
+      font-size: 12px;
+      position: absolute;
+      right: 10px;
+      color: #337ab7;
+      cursor: pointer;
+      display: none;
+    }
   }
 
   .clickableCell:hover {
-    background-color: #efefef;
+    background-color: #ebf7de;
+
+    .editPermsIcon {
+      display: inline-block;
+    }
   }
 
   .currEdit, .currEdit:hover {
     background-color: #FFF3D5;
     color: #FD9540;
-  }
-}
 
-.permTableChild {
-  overflow: auto !important;
-  max-width: 250px !important;
-  width: 250px !important;
+    .editPermsIcon {
+      display: inline-block;
+    }
+  }
 }
 
 .permissionsLegend {
@@ -74,39 +78,29 @@
   }
 }
 
-.permissionSymbolNA {
-  color: firebrick;
+.newRoleInput {
+  margin-left: 20px;
+  width: calc(100% - 40px);
+  height: 30px;
 }
 
-.permissionSymbolFA {
-  color: green;
+.fkSelect {
+  max-width: 200px;
 }
 
-.permissionSymbolNA,
-
-.permissionSymbolFA,
-
-.permissionSymbolPA {
-  font-size: 16px;
-}
-
-.applyBulkPermissions {
+.fkInEdit {
   display: inline-block;
+  width: 47%;
 }
 
-.samePermissionRole {
+.limitInput {
   display: inline-block;
-  width: auto;
-  height: auto;
+  width: 100px;
+  margin-left: 15px;
+  height: 25px;
 }
 
 .activeEdit {
-  padding: 10px;
-  background: #fff;
-  border: 1px solid #ccc;
-  margin-bottom: 15px;
-  // overflow: auto;
-
   .editPermsHeading {
     font-weight: bold;
     font-size: 16px;
@@ -166,14 +160,6 @@
             input {
               width: 100%;
             }
-          }
-        }
-
-        .set_warning {
-          margin-left: 25px;
-
-          .danger_text {
-            color: red;
           }
         }
       }

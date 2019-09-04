@@ -41,6 +41,7 @@ import TableHeader from '../TableCommon/TableHeader';
 import ViewHeader from '../TableBrowseRows/ViewHeader';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 import EnhancedInput from '../../../Common/InputChecker/InputChecker';
+import styles from '../../../Common/Layout/Permissions/PermissionStyles.scss';
 
 import { setTable } from '../DataActions';
 import { getIngForm, getEdForm, escapeRegExp } from '../utils';
@@ -130,8 +131,6 @@ class Permissions extends Component {
       // throw a 404 exception
       throw new NotFoundError();
     }
-
-    const styles = require('./Permissions.scss');
 
     const addTooltip = (text, tooltip) => {
       return (
