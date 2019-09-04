@@ -558,3 +558,4 @@ purgeMetadataObj = liftTx . \case
   (MOTableObj qt (MTORel rn _))   -> DR.delRelFromCatalog qt rn
   (MOTableObj qt (MTOPerm rn pt)) -> DP.dropPermFromCatalog qt rn pt
   (MOTableObj _ (MTOTrigger trn)) -> DE.delEventTriggerFromCatalog trn
+  (MORemoteSchemaObj rsName (RMORole role)) -> DRS.dropRemoteSchemaPermissionsFromCatalog rsName role

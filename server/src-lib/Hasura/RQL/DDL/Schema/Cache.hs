@@ -139,10 +139,7 @@ buildSchemaCacheWithOptions withSetup = do
   -- remote schemas
   forM_ remoteSchemas resolveSingleRemoteSchema
   -- add remote schema permissions
-  forM_ rsPermissions $ \rsPerm -> do
-    rsCtx <- runAddRemoteSchemaPermissionsP1 rsPerm
-    runAddRemoteSchemaPermissionsP2Setup rsPerm rsCtx
-
+  forM_ rsPermissions applyRemoteSchemaPerm
   where
     permHelper setup sqlGenCtx qt rn pDef pa = do
       qCtx <- mkAdminQCtx sqlGenCtx <$> askSchemaCache
@@ -164,6 +161,14 @@ buildSchemaCacheWithOptions withSetup = do
         let rGCtx = convRemoteGCtx $ rscGCtx rsCtx
         mergedGCtxMap <- addRemoteSchemaToAdminRole (scGCtxMap sc) rGCtx
         writeSchemaCache sc { scGCtxMap = mergedGCtxMap }
+
+    applyRemoteSchemaPerm rsPerm = do
+      let RemoteSchemaPermissions rsName role _ = rsPerm
+          inconsObj = InconsistentMetadataObj (MORemoteSchemaObj rsName (RMORole role))
+                      MOTRemotePerm (toJSON rsPerm)
+      withSchemaObject_ inconsObj $ do
+        rsCtx <- runAddRemoteSchemaPermissionsP1 rsPerm
+        runAddRemoteSchemaPermissionsP2Setup rsPerm rsCtx
 
 -- | Rebuilds the schema cache. If an object with the given object id became newly inconsistent,
 -- raises an error about it specifically. Otherwise, raises a generic metadata inconsistency error.
