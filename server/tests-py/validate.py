@@ -170,17 +170,18 @@ def check_query(hge_ctx, conf, transport='http', add_auth=True):
 
     assert transport in ['websocket', 'http'], "Unknown transport type " + transport
     if transport == 'websocket':
-        assert 'response' in conf
-        assert conf['url'].endswith('/graphql')
-        print('running on websocket')
-        return validate_gql_ws_q(
-            hge_ctx,
-            conf['url'],
-            conf['query'],
-            headers,
-            conf['response'],
-            True
-        )
+        if conf['url'].endswith('/graphql'):
+            print('running on websocket')
+            return validate_gql_ws_q(
+                hge_ctx,
+                conf['url'],
+                conf['query'],
+                headers,
+                conf.get('response'),
+                True
+            )
+        else:
+            print("Skipping, since this is RQL?", conf)
     elif transport == 'http':
         print('running on http')
         return validate_http_anyq(hge_ctx, conf['url'], conf['query'], headers,
@@ -210,21 +211,23 @@ def validate_gql_ws_q(hge_ctx, endpoint, query, headers, exp_http_response, retr
         else:
             assert resp['type'] in ['data', 'error'], resp
 
-    if 'errors' in exp_http_response or 'error' in exp_http_response:
-        assert resp['type'] in ['data', 'error'], resp
-    else:
-        assert resp['type'] == 'data', resp
+    # We may not care about the response in this test:
+    if exp_http_response:
+        if 'errors' in exp_http_response or 'error' in exp_http_response:
+            assert resp['type'] in ['data', 'error'], resp
+        else:
+            assert resp['type'] == 'data', resp
 
-    exp_ws_response = exp_http_response
+        exp_ws_response = exp_http_response
 
-    assert 'payload' in resp, resp
-    assert resp['payload'] == exp_ws_response, yaml.dump({
-        'response': resp['payload'],
-        'expected': exp_ws_response,
-        'diff': jsondiff.diff(exp_ws_response, resp['payload'])
-    })
-    resp_done = next(query_resp)
-    assert resp_done['type'] == 'complete'
+        assert 'payload' in resp, resp
+        assert resp['payload'] == exp_ws_response, yaml.dump({
+            'response': resp['payload'],
+            'expected': exp_ws_response,
+            'diff': jsondiff.diff(exp_ws_response, resp['payload'])
+        })
+        resp_done = next(query_resp)
+        assert resp_done['type'] == 'complete'
     return resp['payload']
 
 
@@ -233,6 +236,7 @@ def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response):
     print(headers)
     assert code == exp_code, resp
     print('http resp: ', resp)
+    # We may not care about the response in this test:
     if exp_response:
         assert json_ordered(resp) == json_ordered(exp_response), yaml.dump({
             'response': resp,
