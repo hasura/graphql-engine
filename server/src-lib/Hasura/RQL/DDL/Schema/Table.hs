@@ -279,11 +279,11 @@ buildTableCache = processTableCache <=< buildRawTableCache
     -- Step 1: Build the raw table cache from metadata information.
     buildRawTableCache :: [CatalogTable] -> m (TableCache PGRawColumnInfo)
     buildRawTableCache catalogTables = fmap (M.fromList . catMaybes) . for catalogTables $
-      \(CatalogTable name isSystemDefined isEnum maybeDesc maybeInfo) -> withTable name $ do
+      \(CatalogTable name isSystemDefined isEnum maybeInfo) -> withTable name $ do
         catalogInfo <- onNothing maybeInfo $
           throw400 NotExists $ "no such table/view exists in postgres: " <>> name
 
-        let CatalogTableInfo columns constraints primaryKeyColumnNames viewInfo = catalogInfo
+        let CatalogTableInfo columns constraints primaryKeyColumnNames viewInfo maybeDesc = catalogInfo
             columnFields = M.fromList . flip map columns $ \column ->
               (fromPGCol $ prciName column, FIColumn column)
 
