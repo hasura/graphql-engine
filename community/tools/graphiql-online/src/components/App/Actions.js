@@ -5,12 +5,45 @@ const DONE_REQUEST = 'App/DONE_REQUEST';
 const FAILED_REQUEST = 'App/FAILED_REQUEST';
 const ERROR_REQUEST = 'App/ERROR_REQUEST';
 const CONNECTION_FAILED = 'App/CONNECTION_FAILED';
-const CLOSE_MODAL = 'App/CLOSE_MODAL';
-const NOTIF_EXPANDED = 'App/NOTIF_EXPANDED';
-const NOTIF_MSG = 'App/NOTIF_MSG';
 
-const notifExpand = isExpanded => ({ type: NOTIF_EXPANDED, data: isExpanded });
-const notifMsg = finalMsg => ({ type: NOTIF_MSG, data: finalMsg });
+/**
+ * Global notification function
+ * options: type default, description
+ * level: string info, {success, error, warning, info}
+ * position: string br, {tr, tl, tc, br, bl, bc}
+ * title: string null
+ * message: string null
+ * autoDismiss: integer 5, set to 0 to not auto-dismiss
+ * dismissible: bool true, set if user can dismiss notification
+ * action: object null, action button with label string and callback function
+ * children: element/string, null, add custom element, over-rides action
+ * onAdd: function, null, called when notification is successfully created, 1st argument is the notification
+ * onRemove: function, null, same as onAdd
+ * uid: integer/string, null, unique identifier to the notification, same uid will not be shown again
+ */
+const showNotification = ({
+  level = 'info',
+  position = 'tr',
+  ...options
+} = {}) => {
+  return dispatch => {
+    if (level === 'success') {
+      dispatch(Notifications.removeAll());
+    }
+
+    dispatch(
+      Notifications.show(
+        {
+          position,
+          autoDismiss: ['error', 'warning'].includes(level) ? 0 : 5,
+          dismissible: ['error', 'warning'].includes(level) ? 'button' : 'both',
+          ...options,
+        },
+        level
+      )
+    );
+  };
+};
 
 const progressBarReducer = (state = defaultState, action) => {
   switch (action.type) {
@@ -61,24 +94,6 @@ const progressBarReducer = (state = defaultState, action) => {
         error: true,
         connectionFailed: true,
       };
-
-    case CLOSE_MODAL:
-      return {
-        ...state,
-        modalOpen: false,
-      };
-
-    case NOTIF_EXPANDED:
-      return {
-        ...state,
-        isNotifExpanded: action.data,
-      };
-    case NOTIF_MSG:
-      return {
-        ...state,
-        notifMsg: action.data,
-      };
-
     default:
       return state;
   }
@@ -90,9 +105,6 @@ export {
   DONE_REQUEST,
   FAILED_REQUEST,
   ERROR_REQUEST,
-  CLOSE_MODAL,
   CONNECTION_FAILED,
-  NOTIF_EXPANDED,
-  notifExpand,
-  notifMsg,
+  showNotification,
 };

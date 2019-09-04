@@ -28,7 +28,7 @@ mkSelColumnTy :: QualifiedTable -> [PGCol] -> EnumTyInfo
 mkSelColumnTy tn cols = enumTyInfo
   where
     enumTyInfo = mkHsraEnumTyInfo (Just desc) (mkSelColumnInpTy tn) $
-                 mapFromL _eviVal $ map mkColumnEnumVal cols
+      EnumValuesSynthetic . mapFromL _eviVal $ map mkColumnEnumVal cols
 
     desc = G.Description $
       "select columns of table " <>> tn
@@ -39,8 +39,7 @@ mkSelColumnInpTy tn =
   G.NamedType $ qualObjectToName tn <> "_select_column"
 
 mkTableAggFldsTy :: QualifiedTable -> G.NamedType
-mkTableAggFldsTy tn =
-  G.NamedType $ qualObjectToName tn <> "_aggregate_fields"
+mkTableAggFldsTy = addTypeSuffix "_aggregate_fields" . mkTableTy
 
 mkTableColAggFldsTy :: G.Name -> QualifiedTable -> G.NamedType
 mkTableColAggFldsTy op tn =
@@ -50,27 +49,23 @@ mkTableByPkName :: QualifiedTable -> G.Name
 mkTableByPkName tn = qualObjectToName tn <> "_by_pk"
 
 -- Support argument params for PG columns
-mkPGColParams :: PGColType -> ParamMap
-mkPGColParams = \case
-  PGJSONB -> jsonParams
-  PGJSON  -> jsonParams
-  _       -> Map.empty
-  where
-    pathDesc = "JSON select path"
-    jsonParams = Map.fromList
-      [ (G.Name "path", InpValInfo (Just pathDesc) "path" Nothing $
-          G.toGT $ mkScalarTy PGText)
-      ]
+mkPGColParams :: PGColumnType -> ParamMap
+mkPGColParams colType
+  | isScalarColumnWhere isJSONType colType =
+    let pathDesc = "JSON select path"
+    in Map.fromList
+      [ (G.Name "path", InpValInfo (Just pathDesc) "path" Nothing $ G.toGT $ mkScalarTy PGText) ]
+  | otherwise = Map.empty
 
-mkPGColFld :: PGColInfo -> ObjFldInfo
-mkPGColFld (PGColInfo colName colTy isNullable) =
+mkPGColFld :: PGColumnInfo -> ObjFldInfo
+mkPGColFld (PGColumnInfo colName colTy isNullable) =
   mkHsraObjFldInfo Nothing n (mkPGColParams colTy) ty
   where
     n  = G.Name $ getPGColTxt colName
     ty = bool notNullTy nullTy isNullable
-    scalarTy = mkScalarTy colTy
-    notNullTy = G.toGT $ G.toNT scalarTy
-    nullTy = G.toGT scalarTy
+    columnType = mkColumnType colTy
+    notNullTy = G.toGT $ G.toNT columnType
+    nullTy = G.toGT columnType
 
 -- where: table_bool_exp
 -- limit: Int
@@ -222,8 +217,8 @@ type table_<agg-op>_fields{
 mkTableColAggFldsObj
   :: QualifiedTable
   -> G.Name
-  -> (PGColType -> G.NamedType)
-  -> [PGColInfo]
+  -> (PGColumnType -> G.NamedType)
+  -> [PGColumnInfo]
   -> ObjTyInfo
 mkTableColAggFldsObj tn op f cols =
   mkHsraObjTyInfo (Just desc) (mkTableColAggFldsTy op tn) Set.empty $ mapFromL _fiName $
@@ -263,7 +258,7 @@ table_by_pk(
 ): table
 -}
 mkSelFldPKey
-  :: QualifiedTable -> [PGColInfo]
+  :: QualifiedTable -> [PGColumnInfo]
   -> ObjFldInfo
 mkSelFldPKey tn cols =
   mkHsraObjFldInfo (Just desc) fldName args ty
@@ -273,8 +268,8 @@ mkSelFldPKey tn cols =
     fldName = mkTableByPkName tn
     args = fromInpValL $ map colInpVal cols
     ty = G.toGT $ mkTableTy tn
-    colInpVal (PGColInfo n typ _) =
-      InpValInfo Nothing (mkColName n) Nothing $ G.toGT $ G.toNT $ mkScalarTy typ
+    colInpVal (PGColumnInfo n typ _) =
+      InpValInfo Nothing (mkColName n) Nothing $ G.toGT $ G.toNT $ mkColumnType typ
 
 {-
 

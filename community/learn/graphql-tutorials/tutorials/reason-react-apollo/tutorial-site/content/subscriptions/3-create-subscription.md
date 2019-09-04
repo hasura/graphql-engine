@@ -69,7 +69,8 @@ let make = () => {
 +        }
 +        | Data(data) => {
 -          let onlineUsers = Array.map(u => <UserItem user={u}/>, sampleUsers);
-+          let onlineUsers = Array.map(u => <UserItem user={u}/>, data##online_users);
++          let onlineUsers = data##online_users->Belt.Array.keepMap(x => x##user)
++           |> Array.map(u => <UserItem user=u />);
 -          let onlineUsersTitle = "Online users - " ++ string_of_int(Array.length(sampleUsers));
 +          let onlineUsersTitle = "Online users - " ++ string_of_int(Array.length(data##online_users));
           <div className="onlineUsersWrapper">

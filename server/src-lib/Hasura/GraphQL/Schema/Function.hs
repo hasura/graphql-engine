@@ -36,18 +36,18 @@ input function_args {
 
 procFuncArgs
   :: Seq.Seq FunctionArg
-  -> (PGColType -> Text -> a) -> [a]
+  -> (FunctionArg -> Text -> a) -> [a]
 procFuncArgs argSeq f =
   fst $ foldl mkItem ([], 1::Int) argSeq
   where
-    mkItem (items, argNo) (FunctionArg nameM ty) =
-      case nameM of
+    mkItem (items, argNo) fa =
+      case faName fa of
         Just argName ->
           let argT = getFuncArgNameTxt argName
-          in (items <> pure (f ty argT), argNo)
+          in (items <> pure (f fa argT), argNo)
         Nothing ->
           let argT = "arg_" <> T.pack (show argNo)
-          in (items <> pure (f ty argT), argNo + 1)
+          in (items <> pure (f fa argT), argNo + 1)
 
 mkFuncArgsInp :: FunctionInfo -> Maybe InpObjTyInfo
 mkFuncArgsInp funcInfo =
@@ -62,9 +62,9 @@ mkFuncArgsInp funcInfo =
 
     argInps = procFuncArgs funcArgs mkInpVal
 
-    mkInpVal ty t =
+    mkInpVal fa t =
       InpValInfo Nothing (G.Name t) Nothing $
-      G.toGT $ mkScalarTy ty
+      G.toGT $ mkScalarTy $ faType fa
 
 {-
 
