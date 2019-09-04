@@ -30,7 +30,7 @@ input table_set_input {
 }
 -}
 mkUpdSetInp
-  :: QualifiedTable -> [PGColInfo] -> InpObjTyInfo
+  :: QualifiedTable -> [PGColumnInfo] -> InpObjTyInfo
 mkUpdSetInp tn cols  =
   mkHsraInpTyInfo (Just desc) (mkUpdSetTy tn) $
     fromInpValL $ map mkPGColInp cols
@@ -53,7 +53,7 @@ input table_inc_input {
 -}
 
 mkUpdIncInp
-  :: QualifiedTable -> Maybe [PGColInfo] -> Maybe InpObjTyInfo
+  :: QualifiedTable -> Maybe [PGColumnInfo] -> Maybe InpObjTyInfo
 mkUpdIncInp tn = maybe Nothing mkType
   where
     mkType cols = let intCols = onlyIntCols cols
@@ -141,7 +141,7 @@ deleteAtPathDesc = "delete the field or element with specified path"
                    <> " (for JSON arrays, negative integers count from the end)"
 
 mkUpdJSONOpInp
-  :: QualifiedTable -> [PGColInfo] -> [InpObjTyInfo]
+  :: QualifiedTable -> [PGColumnInfo] -> [InpObjTyInfo]
 mkUpdJSONOpInp tn cols = bool inpObjs [] $ null jsonbCols
   where
     jsonbCols = onlyJSONBCols cols
@@ -191,7 +191,7 @@ update_table(
 
 -}
 
-mkIncInpVal :: QualifiedTable -> [PGColInfo] -> Maybe InpValInfo
+mkIncInpVal :: QualifiedTable -> [PGColumnInfo] -> Maybe InpValInfo
 mkIncInpVal tn cols = bool (Just incArg) Nothing $ null intCols
   where
     intCols = onlyIntCols cols
@@ -199,7 +199,7 @@ mkIncInpVal tn cols = bool (Just incArg) Nothing $ null intCols
     incArg =
       InpValInfo (Just incArgDesc) "_inc" Nothing $ G.toGT $ mkUpdIncTy tn
 
-mkJSONOpInpVals :: QualifiedTable -> [PGColInfo] -> [InpValInfo]
+mkJSONOpInpVals :: QualifiedTable -> [PGColumnInfo] -> [InpValInfo]
 mkJSONOpInpVals tn cols = bool jsonbOpArgs [] $ null jsonbCols
   where
     jsonbCols = onlyJSONBCols cols
@@ -224,7 +224,7 @@ mkJSONOpInpVals tn cols = bool jsonbOpArgs [] $ null jsonbCols
       G.toGT $ mkJSONOpTy tn deleteAtPathOp
 
 mkUpdMutFld
-  :: QualifiedTable -> [PGColInfo] -> ObjFldInfo
+  :: QualifiedTable -> [PGColumnInfo] -> ObjFldInfo
 mkUpdMutFld tn cols =
   mkHsraObjFldInfo (Just desc) fldName (fromInpValL inputValues) $
     G.toGT $ mkMutRespTy tn

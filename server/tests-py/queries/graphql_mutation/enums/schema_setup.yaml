@@ -1,0 +1,28 @@
+type: bulk
+args:
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE colors
+        ( value text PRIMARY KEY
+        , comment text );
+      INSERT INTO colors (value, comment) VALUES
+        ('red',    '#FF0000'),
+        ('green',  '#00FF00'),
+        ('blue',   '#0000FF'),
+        ('orange', '#FFFF00'),
+        ('yellow', '#00FFFF'),
+        ('purple', '#FF00FF');
+
+      CREATE TABLE users
+        ( id serial PRIMARY KEY
+        , name text NOT NULL
+        , favorite_color text NOT NULL REFERENCES colors );
+
+- type: track_table
+  args:
+    table: colors
+    is_enum: true
+- type: track_table
+  args: users
