@@ -213,27 +213,40 @@ Insert an object and get a nested object in response
       }
     }
 
+Insert an object along with its related objects through relationships
+---------------------------------------------------------------------
+**Example:** Insert an ``author`` along with their ``address`` and a few ``articles``.
 
-Insert an object and its nested object in the same mutation
------------------------------------------------------------
-**Example:** Insert a new ``article`` object with its ``author`` and return the inserted article object with its author
-in the response
+Let's say an ``author`` has an ``object relationship`` called ``address`` to the ``addresses`` table and an ``array relationship`` called ``articles`` to the ``articles`` table.
 
 .. graphiql::
   :view_only:
   :query:
-    mutation insert_article {
-      insert_article(
-        objects: [
+    mutation insertData {
+      insert_authors
+        (objects: [
           {
-            id: 21,
-            title: "Article 1",
-            content: "Sample article content",
-            author: {
+            id: 26,
+            name: "John",
+            address: {
               data: {
-                id: 11,
-                name: "Cory"
+                id: 27,
+                location: "San Francisco"
               }
+            },
+            articles: {
+              data: [
+                {
+                  id: 28,
+                  title: "GraphQL Guide",
+                  content: "Let's see what we can do with GraphQL"
+                },
+                {
+                  id: 29,
+                  title: "Authentication Guide",
+                  content: "Let's look at best practices for authentication"
+                }
+              ]
             }
           }
         ]
@@ -241,10 +254,16 @@ in the response
         affected_rows
         returning {
           id
-          title
-          author {
+          name
+          address_id
+          address {
             id
-            name
+            location
+          }
+          articles {
+            id
+            title
+            author_id
           }
         }
       }
@@ -252,21 +271,46 @@ in the response
   :response:
     {
       "data": {
-        "insert_article": {
-          "affected_rows": 2,
+        "insert_authors": {
+          "affected_rows": 4,
           "returning": [
             {
-              "id": 21,
-              "title": "Article 1",
-              "author": {
-                "id": 11,
-                "name": "Cory"
-              }
+              "id": 26,
+              "name": "John",
+              "address_id": 27,
+              "address": {
+                "id": 27,
+                "location": "San Francisco"
+              },            
+              "articles": [
+                {
+                  "id": 28,
+                  "title": "GraphQL Guide",
+                  "author_id": 26
+                },
+                {
+                  "id": 29,
+                  "title": "Authentication Guide",
+                  "author_id": 26,
+                }
+              ]
             }
           ]
         }
       }
     }
+
+**How it works**
+
+A nested insert mutation is processed as follows:
+
+1. The object relationships are inserted first, i.e. in this case, the address is inserted and its ``id`` is collected in     this step. 
+
+2. The parent object is inserted next. i.e. in this case, the author is now inserted with the ``address_id`` being set to the ``id`` of the address that was inserted. Because of this, it is not allowed to pass ``address_id`` in the author object if you are also providing data for the address relationship. 
+
+   The ``id`` of the author is collected in this step.
+
+3. The array relationships are inserted at the end. i.e. in this case, the articles are now inserted with their ``author_id`` set to the author's ``id`` collected in the step 2. Hence, it's not possible to specify ``author_id`` in the data for the articles relationship.
 
 Insert an object with a JSONB column
 ------------------------------------
