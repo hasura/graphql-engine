@@ -19,6 +19,7 @@ module Hasura.GraphQL.Transport.WebSocket.Server
   , createWSServer
   , closeAll
   , createServerApp
+  , shutdown
   ) where
 
 import qualified Control.Concurrent.Async as A
@@ -106,13 +107,18 @@ data WSServer a
   = WSServer
   { _wssLogger  :: L.Logger
   , _wssConnMap :: ConnMap a
+  , _wssShutdown :: STM.TChan ()
   }
 
 createWSServer :: L.Logger -> STM.STM (WSServer a)
-createWSServer logger = WSServer logger <$> STMMap.new
+createWSServer logger = WSServer logger <$> STMMap.new <*> STM.newTChan
+
+shutdown :: WSServer a -> IO ()
+shutdown (WSServer _ _ shutdownChan) =
+  STM.atomically $ STM.writeTChan shutdownChan ()
 
 closeAll :: WSServer a -> BL.ByteString -> IO ()
-closeAll (WSServer (L.Logger writeLog) connMap) msg = do
+closeAll (WSServer (L.Logger writeLog) connMap _) msg = do
   writeLog $ L.debugT "closing all connections"
   conns <- STM.atomically $ do
     conns <- ListT.toList $ STMMap.listT connMap
@@ -146,7 +152,9 @@ createServerApp
   -> WSHandlers a
   -- aka WS.ServerApp
   -> WS.PendingConnection -> IO ()
-createServerApp (WSServer logger@(L.Logger writeLog) connMap) wsHandlers pendingConn = do
+createServerApp app@(WSServer logger@(L.Logger writeLog) connMap shutdownChan) wsHandlers
+                pendingConn = do
+
   wsId <- WSId <$> UUID.nextRandom
   writeLog $ WSLog wsId EConnectionRequest
   let reqHead = WS.pendingRequest pendingConn
@@ -176,12 +184,16 @@ createServerApp (WSServer logger@(L.Logger writeLog) connMap) wsHandlers pending
         WS.sendTextData conn msg
         writeLog $ WSLog wsId $ EMessageSent $ TBS.fromLBS msg
 
+      closeRef <- A.async $ do
+        _ <- STM.atomically $ STM.readTChan shutdownChan
+        closeAll app "shutting server down"
+
       keepAliveRefM <- forM keepAliveM $ \action -> A.async $ action wsConn
       onJwtExpiryRefM <- forM onJwtExpiryM $ \action -> A.async $ action wsConn
 
       -- terminates on WS.ConnectionException and JWT expiry
       let waitOnRefs = catMaybes [keepAliveRefM, onJwtExpiryRefM]
-                       <> [rcvRef, sendRef]
+                       <> [rcvRef, sendRef, closeRef]
       res <- try $ A.waitAnyCancel waitOnRefs
 
       case res of

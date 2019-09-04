@@ -30,8 +30,9 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
 import           Hasura.RQL.Types           (SQLGenCtx (..), SchemaCache (..),
                                              adminUserInfo, emptySchemaCache)
-import           Hasura.Server.App          (SchemaCacheRef (..), getSCFromRef,
-                                             logInconsObjs, mkWaiApp)
+import           Hasura.Server.App          (HasuraApp(..), SchemaCacheRef (..),
+                                             getSCFromRef, logInconsObjs,
+                                             mkWaiApp)
 import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates (checkForUpdates)
 import           Hasura.Server.Init
@@ -149,7 +150,7 @@ main =  do
       -- safe init catalog
       dbId <- initialise pool sqlGenCtx logger httpManager
 
-      (app, cacheRef, cacheInitTime) <-
+      HasuraApp app cacheRef cacheInitTime shutdownApp <-
         mkWaiApp isoL loggerCtx sqlGenCtx enableAL pool ci httpManager am
           corsCfg enableConsole consoleAssetsDir enableTelemetry
           instanceId enabledAPIs lqOpts
@@ -165,7 +166,7 @@ main =  do
       let warpSettings = Warp.setPort port
                        . Warp.setHost host
                        . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
-                       . Warp.setInstallShutdownHandler (shutdownHandler logger)
+                       . Warp.setInstallShutdownHandler (shutdownHandler logger shutdownApp)
                        $ Warp.defaultSettings
 
       maxEvThrds <- getFromEnv defaultMaxEventThreads "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
@@ -282,10 +283,18 @@ main =  do
     -- requests is already implemented in Warp, and is triggered by invoking the 'closeSocket' callback.
     -- We only catch the SIGTERM signal once, that is, if the user hits CTRL-C once again, we terminate
     -- the process immediately.
-    shutdownHandler :: Logger -> IO () -> IO ()
-    shutdownHandler  (Logger logger) closeSocket =
-      void $ Signals.installHandler Signals.sigTERM (Signals.CatchOnce $ closeSocket >> logShutdown) Nothing
+    shutdownHandler :: Logger -> IO () -> IO () -> IO ()
+    shutdownHandler (Logger logger) shutdownApp closeSocket =
+      void $ Signals.installHandler
+        Signals.sigTERM
+        (Signals.CatchOnce shutdownSequence)
+        Nothing
      where
+      shutdownSequence = do
+        closeSocket
+        shutdownApp
+        logShutdown
+
       logShutdown = logger $
         mkGenericStrLog LevelInfo "server" "gracefully shutting down server"
 
