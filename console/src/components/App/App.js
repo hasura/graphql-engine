@@ -11,7 +11,7 @@ import { showTelemetryNotification } from '../../telemetry/Notifications';
 class App extends Component {
   componentDidMount() {
     // Hide the loader once the react component is ready.
-    // NOTE: This will execute only onces (since this is parent component for all other component).
+    // NOTE: This will execute only once (since this is the parent component for all other components).
     const className = document.getElementById('content').className;
     document.getElementById('content').className = className + ' show';
     document.getElementById('loading').style.display = 'none';

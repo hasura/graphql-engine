@@ -5,10 +5,10 @@ where
 import           Hasura.Prelude
 
 import           Hasura.Logging
-import           Hasura.RQL.DDL.Schema.Table (buildSCWithoutSetup)
+import           Hasura.RQL.DDL.Schema     (buildSchemaCacheWithoutSetup)
 import           Hasura.RQL.Types
-import           Hasura.Server.App           (SchemaCacheRef (..), withSCUpdate)
-import           Hasura.Server.Init          (InstanceId (..))
+import           Hasura.Server.App         (SchemaCacheRef (..), withSCUpdate)
+import           Hasura.Server.Init        (InstanceId (..))
 import           Hasura.Server.Logging
 import           Hasura.Server.Query
 
@@ -16,13 +16,13 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
-import qualified Control.Concurrent          as C
-import qualified Control.Concurrent.STM      as STM
-import qualified Data.Text                   as T
-import qualified Data.Time                   as UTC
-import qualified Database.PG.Query           as PG
-import qualified Database.PostgreSQL.LibPQ   as PQ
-import qualified Network.HTTP.Client         as HTTP
+import qualified Control.Concurrent        as C
+import qualified Control.Concurrent.STM    as STM
+import qualified Data.Text                 as T
+import qualified Data.Time                 as UTC
+import qualified Database.PG.Query         as PG
+import qualified Database.PostgreSQL.LibPQ as PQ
+import qualified Network.HTTP.Client       as HTTP
 
 pgChannel :: PG.PGChannel
 pgChannel = "hasura_schema_update"
@@ -204,7 +204,7 @@ refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef threadType msg = d
   -- Reload schema cache from catalog
   resE <- liftIO $ runExceptT $ withSCUpdate cacheRef logger $
            peelRun emptySchemaCache adminUserInfo
-           httpManager sqlGenCtx (PGExecCtx pool PG.Serializable) buildSCWithoutSetup
+           httpManager sqlGenCtx (PGExecCtx pool PG.Serializable) buildSchemaCacheWithoutSetup
   case resE of
     Left e -> logError logger threadType $ TEQueryError e
     Right _ ->

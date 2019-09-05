@@ -32,6 +32,7 @@ extra-deps:
 
 - reroute-0.5.0.0
 - Spock-core-0.13.0.0
+- monad-validate-1.2.0.0
 
 # Override default flag values for local packages and extra-deps
 flags: {}

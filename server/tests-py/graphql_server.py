@@ -10,6 +10,8 @@ from webserver import RequestHandler, WebServer, MkHandlers, Response
 
 from enum import Enum
 
+import time
+
 def mkJSONResp(graphql_result):
     return Response(HTTPStatus.OK, graphql_result.to_dict(),
                     {'Content-Type': 'application/json'})
@@ -25,7 +27,13 @@ class HelloWorldHandler(RequestHandler):
 class Hello(graphene.ObjectType):
     hello = graphene.String(arg=graphene.String(default_value="world"))
 
+    delayedHello = graphene.String(arg=graphene.String(default_value="world"))
+
     def resolve_hello(self, info, arg):
+        return "Hello " + arg
+
+    def resolve_delayedHello(self, info, arg):
+        time.sleep(10)
         return "Hello " + arg
 
 hello_schema = graphene.Schema(query=Hello, subscription=Hello)

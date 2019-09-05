@@ -1,0 +1,57 @@
+description: Test introspecting enum types
+url: /v1/graphql
+status: 200
+response:
+  data:
+    colors:
+      name: colors_enum
+      kind: ENUM
+      enumValues:
+      - name: blue
+        description: '#0000FF'
+      - name: green
+        description: '#00FF00'
+      - name: orange
+        description: '#FFFF00'
+      - name: purple
+        description: '#FF00FF'
+      - name: red
+        description: '#FF0000'
+      - name: yellow
+        description: '#00FFFF'
+    users:
+      fields:
+      - name: favorite_color
+        type:
+          ofType:
+            name: colors_enum
+      - name: id
+        type:
+          ofType:
+            name: Int
+      - name: name
+        type:
+          ofType:
+            name: String
+query:
+  query: |
+    {
+      colors: __type(name: "colors_enum") {
+        name
+        kind
+        enumValues {
+          name
+          description
+        }
+      }
+      users: __type(name: "users") {
+        fields {
+          name
+          type {
+            ofType {
+              name
+            }
+          }
+        }
+      }
+    }

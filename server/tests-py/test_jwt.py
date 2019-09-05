@@ -284,7 +284,7 @@ class TestSubscriptionJwtExpiry(object):
             'x-hasura-default-role': 'user',
             'x-hasura-allowed-roles': ['user'],
         })
-        exp = curr_time + timedelta(seconds=5)
+        exp = curr_time + timedelta(seconds=4)
         self.claims['exp'] = round(exp.timestamp())
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
         payload = {

@@ -66,7 +66,7 @@ run_hge_with_flags() {
 }
 
 kill_hge() {
-  kill $HGE_PID || true
+  kill -s INT $HGE_PID || true
   wait $HGE_PID || true
 }
 
