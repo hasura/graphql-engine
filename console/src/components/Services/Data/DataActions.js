@@ -612,7 +612,7 @@ export const fetchRoleList = () => (dispatch, getState) => {
         schema: 'hdb_catalog',
         name: 'hdb_permission_agg'
       },
-      columns: ["role_name"],
+      columns: ['role_name'],
     }
   };
   const options = {
@@ -643,7 +643,7 @@ export const fetchRoleList = () => (dispatch, getState) => {
       console.error('Failed to load roles ' + JSON.stringify(error));
     }
   );
-}
+};
 
 /* ******************************************************* */
 const dataReducer = (state = defaultState, action) => {
@@ -779,7 +779,7 @@ const dataReducer = (state = defaultState, action) => {
       return {
         ...state,
         allRoles: action.roles
-      }    
+      };
     default:
       return state;
   }

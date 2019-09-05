@@ -107,11 +107,11 @@ const filterInconsistentMetadataObject = (
       const roles = objects;
 
       if (inconsistentObject.type === 'remote_schema_permission') {
-        return roles.filter(r => inconsistentObject.definition.role !== r)
+        return roles.filter(r => inconsistentObject.definition.role !== r);
       }
 
       if (permissionTypes.includes(inconsistentObject.type)) {
-        return roles.filter(r => r !== inconsistentObject.definition.role)
+        return roles.filter(r => r !== inconsistentObject.definition.role);
       }
 
       return roles;

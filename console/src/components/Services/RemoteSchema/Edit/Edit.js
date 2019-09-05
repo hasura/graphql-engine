@@ -119,7 +119,6 @@ class Edit extends React.Component {
   }
 
   render() {
-
     console.log(globals);
 
     const currentRemoteSchema = this.props.allRemoteSchemas.find(

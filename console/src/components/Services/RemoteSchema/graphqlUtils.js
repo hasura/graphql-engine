@@ -6,6 +6,15 @@ import {
   isObjectType,
 } from 'graphql';
 
+let introspectionSchemaCache = {};
+export const clearIntrospectionSchemaCache = (remoteSchemaName) => {
+  if (remoteSchemaName) {
+    delete introspectionSchemaCache[remoteSchemaName];
+  } else {
+    introspectionSchemaCache = {};
+  }
+};
+
 export const useIntrospectionSchema = (endpoint, headers, remoteSchemaName) => {
   const [schema, setSchema] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -30,7 +39,7 @@ export const useIntrospectionSchema = (endpoint, headers, remoteSchemaName) => {
       .then(response => {
         const clientSchema = buildClientSchema(response.data);
         setSchema(clientSchema);
-        introspectionSchemaCache[remoteSchemaName] = clientSchema
+        introspectionSchemaCache[remoteSchemaName] = clientSchema;
         setLoading(false);
       })
       .catch(err => {
@@ -72,13 +81,4 @@ export const getTypeFields = (typeName, objectTypes) => {
     });
   }
   return fields;
-};
-
-let introspectionSchemaCache = {};
-export const clearIntrospectionSchemaCache = (remoteSchemaName) => {
-  if (remoteSchemaName) {
-    delete introspectionSchemaCache[remoteSchemaName]
-  } else {
-    introspectionSchemaCache = {};
-  }
 };

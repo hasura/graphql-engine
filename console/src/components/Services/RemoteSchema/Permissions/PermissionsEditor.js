@@ -1,14 +1,12 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import styles from '../../../Common/Layout/Permissions/PermissionStyles.scss';
 import { getTypeFields } from '../graphqlUtils';
 import GraphQLType from './GraphQLType';
-import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import {
-  setPermissionRole,
   setPermissionTypes,
   closePermissionEdit,
   createRemoteSchemaPermission,
-  deleteRemoteSchemaPermission 
+  deleteRemoteSchemaPermission
 } from './Actions';
 import Button from '../../../Common/Button/Button';
 import { getExpandedTypes } from './utils';
@@ -18,16 +16,13 @@ const PermissionsEditor = ({
   objectTypes,
   nonObjectTypes,
   rootTypes,
-  isLast,
   dispatch,
 }) => {
-
   if (!editState.isEditing) {
     return null;
   }
 
   const getActionButtons = () => {
-
     const onSave = () => {
       dispatch(createRemoteSchemaPermission());
     };
@@ -71,7 +66,7 @@ const PermissionsEditor = ({
           Cancel
         </Button>
       </div>
-    )
+    );
   };
 
 

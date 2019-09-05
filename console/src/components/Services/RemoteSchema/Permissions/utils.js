@@ -5,16 +5,15 @@ import { getTypeFields } from '../graphqlUtils';
 
 export const generateDropPermQuery = (role, remoteSchemaName) => {
   return {
-    type: "drop_remote_schema_permissions",
+    type: 'drop_remote_schema_permissions',
     args: {
       remote_schema: remoteSchemaName,
       role
     }
-  }
+  };
 };
 
 export const generateCreatePermQuery = (state, remoteSchemaName) => {
-
   const { role, allowedTypes, isNew } = state;
 
   const bulkQueryArgs = [];
@@ -40,7 +39,7 @@ export const generateCreatePermQuery = (state, remoteSchemaName) => {
       fields: Object.keys(
         allowedTypes[allowedType]
       ).filter(fieldName => allowedTypes[allowedType][fieldName].isChecked)
-    })
+    });
   });
 
   bulkQueryArgs.push(payload);
@@ -49,11 +48,9 @@ export const generateCreatePermQuery = (state, remoteSchemaName) => {
     type: 'bulk',
     args: bulkQueryArgs
   };
-
 };
 
 export const parseRemoteRelPermDefinition = (payload, rootTypes, objectTypes, nonObjectTypes, roleName) => {
-
   if (!payload) {
     const newAllowedTypes = {};
     Object.keys(rootTypes).forEach(rt => {
@@ -72,12 +69,12 @@ export const parseRemoteRelPermDefinition = (payload, rootTypes, objectTypes, no
   const allowedTypes = {};
 
   definition.forEach(allowedType => {
-    const allowedTypeName = allowedType.type
+    const allowedTypeName = allowedType.type;
     const fieldMetaData = {};
     const selectedFields = {};
 
     allowedType.fields.forEach(selectedFeldName => {
-      selectedFields[selectedFeldName] = true
+      selectedFields[selectedFeldName] = true;
     });
 
     const graphqlType = getUnderlyingType(objectTypes[allowedTypeName]);
@@ -87,21 +84,19 @@ export const parseRemoteRelPermDefinition = (payload, rootTypes, objectTypes, no
         isChecked: !!selectedFields[field],
         typeName: returningType.name,
         isScalar: !isObjectType(returningType)
-      }
-    })
+      };
+    });
     allowedTypes[allowedTypeName] = fieldMetaData;
-  })
+  });
 
   return {
     role,
     allowedTypes,
     isNew: false
   };
-
 };
 
 export const getExpandedTypes = (allowedTypes, rootTypes, editType) => {
-
   const expandedTypes = {};
 
   const expandTypes = (currentTypeName) => {
@@ -109,7 +104,7 @@ export const getExpandedTypes = (allowedTypes, rootTypes, editType) => {
     Object.keys(allowedTypes[currentTypeName]).forEach(fieldName => {
       const allowedType = allowedTypes[currentTypeName][fieldName];
       if (allowedType.isChecked && !allowedType.isScalar) {
-        expandTypes(allowedTypes[currentTypeName][fieldName].typeName)
+        expandTypes(allowedTypes[currentTypeName][fieldName].typeName);
       }
     });
   };

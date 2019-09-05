@@ -70,7 +70,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
               definition = `remote schema named "${name}" at ${url}`;
             } else if (ico.type === 'remote_schema_permission') {
               name = `${ico.definition.role}-permission`;
-              definition = `permission for role "${ico.definition.role}" on remote schema "${ico.definition.remote_schema}"`
+              definition = `permission for role "${ico.definition.role}" on remote schema "${ico.definition.remote_schema}"`;
             }
             return (
               <tr key={_i}>

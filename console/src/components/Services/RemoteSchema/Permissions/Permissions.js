@@ -8,16 +8,13 @@ import Spinner from '../../../Common/Spinner/Spinner';
 import styles from '../../../Common/Layout/Permissions/PermissionStyles.scss';
 import {
   setPermissionRole,
-  setPermissionTypes,
-  createRemoteSchemaPermission,
-  setCurrentPermissionEdit ,
+  setCurrentPermissionEdit,
   closePermissionEdit,
 } from './Actions';
 import { parseRemoteRelPermDefinition } from './utils';
 import { fetchRoleList } from '../../Data/DataActions';
 
 const Permissions = props => {
-
   const {
     permissions: { editState, isFetching },
     remoteSchemaName,
@@ -136,9 +133,9 @@ const Permissions = props => {
             if (isNewRole && !!role) {
               const perm = parseRemoteRelPermDefinition(null, rootTypes, objectTypes, nonObjectTypes, editState.role);
               dispatch(setCurrentPermissionEdit(perm, rt));
-            } else if (!!role) {
+            } else if (role) {
               const perm = parseRemoteRelPermDefinition(existingPermissions.find(p => p.role === role), rootTypes, objectTypes, nonObjectTypes);
-              dispatch(setCurrentPermissionEdit(perm, rt))
+              dispatch(setCurrentPermissionEdit(perm, rt));
             } else {
               document.getElementById('newRoleInput').focus();
             }
@@ -150,7 +147,7 @@ const Permissions = props => {
 
           const isEditAllowed = role !== 'admin';
           const isCurrEdit = role === editState.role && editState.editType === rootType;
-            
+
           let editLink = '';
           let className = '';
           let onClick = () => {};
@@ -165,10 +162,8 @@ const Permissions = props => {
             }
           }
 
-          const getRoleQueryPermission = rt => {
+          const getRoleQueryPermission = () => {
             let _permission;
-
-            const rolePermissions = {};
 
             if (role === 'admin') {
               _permission = permissionsSymbols.fullAccess;
@@ -186,7 +181,7 @@ const Permissions = props => {
             permSymbol: getRoleQueryPermission(rootType),
           };
         });
-      }
+      };
 
       const uniqueRolesList = ['admin', ...rolesList, ...existingPermissions.map(ep => ep.role)];
       const _roleList = [...new Set(uniqueRolesList)];
@@ -196,11 +191,8 @@ const Permissions = props => {
         const _roleProps = {};
         _roleProps.name = role;
         _roleProps.dispatchBulkSelect = e => {
-          const isChecked = e.target.checked;
-          const selectedRole = e.target.getAttribute('data-role');
-          //dispatch
         };
-        _roleProps.bulkCheck = false
+        _roleProps.bulkCheck = false;
         return _roleProps;
       });
       return (
@@ -209,8 +201,8 @@ const Permissions = props => {
           dispatchRoleNameChange={dispatchRoleNameChange}
           getPermTypes={getRootTypes}
         />
-      )
-    }
+      );
+    };
 
     return (
       <table className={`table table-bordered ${styles.permissionsTable}`}>
@@ -218,7 +210,7 @@ const Permissions = props => {
         {getPermissionsTableBody()}
       </table>
     );
-  }
+  };
 
   return (
     <div>
@@ -235,7 +227,7 @@ const Permissions = props => {
         />
       </div>
     </div>
-  )
+  );
 };
 
 export default Permissions;
