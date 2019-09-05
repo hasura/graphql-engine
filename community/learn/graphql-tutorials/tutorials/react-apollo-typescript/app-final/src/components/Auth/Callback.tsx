@@ -1,8 +1,7 @@
 import * as React from 'react';
 import loading from "./loading.svg";
 
-class Callback extends React.Component {
-  render() {
+const Callback = () => {
     const style = {
       position: "absolute",
       display: "flex",
@@ -21,7 +20,6 @@ class Callback extends React.Component {
         <img src={loading} alt="loading" />
       </div>
     );
-  }
-}
+};
 
 export default Callback;
