@@ -15,6 +15,8 @@ module Hasura.RQL.DDL.RemoteSchema
   , runAddRemoteSchemaPermissionsP2Setup
   , addRemoteSchemaPermissionsToCatalog
   , runDropRemoteSchemaPermissions
+  , fetchRemoteSchemaPerms
+  , dropRemoteSchemaPermissionsFromCatalog
   ) where
 
 import           Hasura.EncJSON
@@ -345,22 +347,32 @@ dropRemoteSchemaPermissionsP1 (DropRemoteSchemaPermissions remoteSchema role) = 
 
 dropRemoteSchemaPermissionsP2 ::
      (QErrM m, CacheRWM m, MonadTx m) => DropRemoteSchemaPermissions -> m ()
-dropRemoteSchemaPermissionsP2 q = do
+dropRemoteSchemaPermissionsP2 q@(DropRemoteSchemaPermissions rsName role)= do
   dropRemoteSchemaPermissionsP2Setup q
-  dropRemoteSchemaPermissionsP2FromCatalog q
+  dropRemoteSchemaPermissionsFromCatalog rsName role
 
 dropRemoteSchemaPermissionsP2Setup ::
      (QErrM m, CacheRWM m) => DropRemoteSchemaPermissions -> m ()
-dropRemoteSchemaPermissionsP2Setup (DropRemoteSchemaPermissions remoteSchema role) = do
+dropRemoteSchemaPermissionsP2Setup (DropRemoteSchemaPermissions rsName role) = do
   sc <- askSchemaCache
   let roleSchemas = scRemoteSchemasWithRole sc
-      updatedRoleSchemas = Map.delete (role, remoteSchema) roleSchemas
+      updatedRoleSchemas = Map.delete (role, rsName) roleSchemas
   writeSchemaCache sc { scRemoteSchemasWithRole = updatedRoleSchemas }
 
-dropRemoteSchemaPermissionsP2FromCatalog ::
-     (MonadTx m) => DropRemoteSchemaPermissions -> m ()
-dropRemoteSchemaPermissionsP2FromCatalog (DropRemoteSchemaPermissions remoteSchema role) = do
+dropRemoteSchemaPermissionsFromCatalog ::
+     (MonadTx m) => RemoteSchemaName -> RoleName -> m ()
+dropRemoteSchemaPermissionsFromCatalog rsName role = do
   liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
     DELETE FROM hdb_catalog.remote_schema_permissions
       WHERE remote_schema = $1 AND role = $2
-  |] (remoteSchema, role) True
+  |] (rsName, role) True
+
+fetchRemoteSchemaPerms :: Q.TxE QErr [RemoteSchemaPermissions]
+fetchRemoteSchemaPerms =
+  map uncurryRow <$> Q.listQE defaultTxErrorHandler
+    [Q.sql|
+     SELECT remote_schema, role, definition::json
+       FROM hdb_catalog.remote_schema_permissions
+     |] () True
+  where
+    uncurryRow (name, role, Q.AltJ def) = RemoteSchemaPermissions name role def
