@@ -10,14 +10,14 @@ packages:
       sha256: 0ef7cf19d08caa11c690a732f14e4b7159c46cdda1d9e66dceb6d4bedd9fd9c1
     name: pg-client
     version: 0.1.0
-    git: https://github.com/rakeshkky/pg-client-hs.git
+    git: https://github.com/hasura/pg-client-hs.git
     pantry-tree:
       size: 1107
       sha256: 8d5502889184e1b751d55c4b7d0e10985711284c6fae0b40cf7cb171949f0ccf
-    commit: 503fef0e0d27f4093833e6055e7f3f65d9f914dc
+    commit: 1eb97c11f52b360ce7f796d9427dc294ce8e45fc
   original:
-    git: https://github.com/rakeshkky/pg-client-hs.git
-    commit: 503fef0e0d27f4093833e6055e7f3f65d9f914dc
+    git: https://github.com/hasura/pg-client-hs.git
+    commit: 1eb97c11f52b360ce7f796d9427dc294ce8e45fc
 - completed:
     cabal-file:
       size: 3295
