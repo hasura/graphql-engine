@@ -4,6 +4,7 @@ import { showErrorNotification } from '../../Common/Notification';
 import { parseRemoteRelPermDefinition } from './utils';
 import requestAction from '../../../../utils/requestAction';
 import endpoints from '../../../../Endpoints';
+import { fetchRemoteSchemas } from '../Actions';
 
 const SET_CURRENT_REMOTE_SCHEMA = '@remoteSchema/SET_CURRENT_REMOTE_SCHEMA';
 export const setCurrentRemoteSchema = currentRemoteSchemaName => ({
@@ -57,7 +58,7 @@ export const deleteRemoteSchemaPermission = (successCb, failureCb) => {
     ).then(
       data => {
         dispatch({ type: DROP_REMOTE_SCHEMA_PERMISSION_SUCCESS});
-        dispatch(fetchRemoteSchemaPermissions());
+        dispatch(fetchRemoteSchemas());
         dispatch(closePermissionEdit());
         if (successCb) {
           successCb(data);
@@ -116,7 +117,7 @@ export const createRemoteSchemaPermission = (successCb, failureCb) => {
     ).then(
       data => {
         dispatch({ type: CREATE_REMOTE_SCHEMA_PERMISSION_SUCCESS });
-        dispatch(fetchRemoteSchemaPermissions());
+        dispatch(fetchRemoteSchemas());
         dispatch(closePermissionEdit());
         if (successCb) {
           successCb(data);
@@ -138,31 +139,6 @@ const setRemoteSchemaPermissions = (perms) => ({
   type: SET_REMOTE_SCHEMA_PERMISSIONS,
   perms
 });
-
-export const fetchRemoteSchemaPermissions = () => (dispatch, getState) => {
-  const query = {
-    "type": "select",
-    "args": {
-      "table": {
-        "schema": "hdb_catalog",
-        "name": "remote_schema_permissions"
-      },
-      "columns": ["*.*"]
-    }
-  };
-  const options = {
-    method: 'POST',
-    headers: getState().tables.dataHeaders,
-    body: JSON.stringify(query),
-  };
-  return dispatch(requestAction(endpoints.query, options))
-    .then(data => {
-      dispatch(setRemoteSchemaPermissions(data));
-    })
-    .catch (err => {
-      console.error(error);
-    })
-}
 
 const reducer = (state = permissionState, action) => {
 

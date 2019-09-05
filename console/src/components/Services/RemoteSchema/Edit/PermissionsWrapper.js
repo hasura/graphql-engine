@@ -27,6 +27,9 @@ const PermissionsWrapper = props => {
     };
   }, [remoteSchemaName]);
 
+  const currentRemoteSchemaData = props.remoteSchemasList.find(r => r.name === remoteSchemaName);
+  const remoteSchemaPermissions = currentRemoteSchemaData.permissions || [];
+
   const breadCrumbs = [
     {
       title: 'Remote schemas',
@@ -70,7 +73,11 @@ const PermissionsWrapper = props => {
         showLoader={false}
       />
       <div className={`${styles.add_pad_top} ${styles.add_pad_bottom}`}>
-        <Permissions remoteSchemaName={remoteSchemaName} {...props} />
+        <Permissions
+          remoteSchemaName={remoteSchemaName}
+          existingPermissions={remoteSchemaPermissions}
+          {...props}
+        />
       </div>
     </div>
   );

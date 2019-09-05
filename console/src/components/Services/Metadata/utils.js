@@ -91,7 +91,31 @@ const filterInconsistentMetadataObject = (
         );
       }
 
+      if (inconsistentObject.type === 'remote_schema_permission') {
+        return remoteSchemas.map(r => {
+          const consistentRemoteSchema = {
+            ...r,
+            permissions: r.permissions.filter(p => p.role !== inconsistentObject.definition.role)
+          };
+          return consistentRemoteSchema;
+        });
+      }
+
       return remoteSchemas;
+
+    case 'roles':
+      const roles = objects;
+
+      if (inconsistentObject.type === 'remote_schema_permission') {
+        return roles.filter(r => inconsistentObject.definition.role !== r)
+      }
+
+      if (permissionTypes.includes(inconsistentObject.type)) {
+        return roles.filter(r => r !== inconsistentObject.definition.role)
+      }
+
+      return roles;
+
     default:
       return objects;
   }

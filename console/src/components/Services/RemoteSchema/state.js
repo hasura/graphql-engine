@@ -35,8 +35,6 @@ const addState = {
 };
 
 const permissionState = {
-  existingPermissions: [],
-  existingRoles: [],
   editState: {
     role: '',
     allowedTypes: {},

@@ -11,7 +11,6 @@ import {
   createRemoteSchemaPermission,
   setCurrentPermissionEdit ,
   closePermissionEdit,
-  fetchRemoteSchemaPermissions
 } from './Actions';
 import { parseRemoteRelPermDefinition } from './utils';
 import { fetchRoleList } from '../../Data/DataActions';
@@ -19,12 +18,13 @@ import { fetchRoleList } from '../../Data/DataActions';
 const Permissions = props => {
 
   const {
-    permissions: { editState, existingPermissions, isFetching },
+    permissions: { editState, isFetching },
     remoteSchemaName,
     adminHeaders,
     remoteSchemasList,
     dispatch,
-    rolesList
+    rolesList,
+    existingPermissions
   } = props;
 
   const currentRemoteSchema = remoteSchemasList.find(
@@ -38,7 +38,6 @@ const Permissions = props => {
 
   React.useEffect(() => {
     dispatch(fetchRoleList());
-    dispatch(fetchRemoteSchemaPermissions());
   }, []);
 
   if (loading) return 'Loading...';

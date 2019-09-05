@@ -624,8 +624,20 @@ export const fetchRoleList = () => (dispatch, getState) => {
 
   return dispatch(requestAction(Endpoints.query, options)).then(
     data => {
-      const allRoles = [...new Set(data.map(r => r.role_name))]
-      dispatch(setAllRoles(allRoles));
+      const allRoles = [...new Set(data.map(r => r.role_name))];
+      const { inconsistentObjects } = getState().metadata;
+
+      let consistentRoles = [...allRoles];
+
+      if (inconsistentObjects.length > 0) {
+        consistentRoles = filterInconsistentMetadataObjects(
+          allRoles,
+          inconsistentObjects,
+          'roles'
+        );
+      }
+
+      dispatch(setAllRoles(consistentRoles));
     },
     error => {
       console.error('Failed to load roles ' + JSON.stringify(error));
