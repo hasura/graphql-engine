@@ -3,7 +3,7 @@ Paginate query results
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
 The operators ``limit`` and ``offset`` are used for pagination.

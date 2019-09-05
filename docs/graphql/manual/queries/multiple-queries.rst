@@ -3,7 +3,7 @@ Multiple queries in a request
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
 If multiple queries are part of the same request, **they are executed parallelly**, the individual responses are
