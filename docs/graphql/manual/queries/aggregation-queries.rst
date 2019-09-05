@@ -3,7 +3,7 @@ Aggregation queries
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
 You can fetch aggregations on columns along with nodes using an aggregation query.
