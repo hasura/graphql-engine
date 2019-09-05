@@ -213,6 +213,8 @@ Insert an object and get a nested object in response
       }
     }
 
+.. _nested_inserts:
+
 Insert an object along with its related objects through relationships
 ---------------------------------------------------------------------
 **Example:** Insert an ``author`` along with their ``address`` and a few ``articles``.
