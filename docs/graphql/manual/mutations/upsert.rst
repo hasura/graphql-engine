@@ -34,7 +34,7 @@ below.
 
     SELECT * FROM "information_schema"."table_constraints" WHERE table_name='<table>' AND table_schema='<schema>';
 
-  GraphQL Engine will automatically generate constraint names as enum values for the ``constraint`` field *(try
+  GraphQL engine will automatically generate constraint names as enum values for the ``constraint`` field *(try
   autocompleting in GraphiQL)*. Typically, the constraint is automatically named as ``<table-name>_<column-name>_key``.
 
 Upsert is not a substitute for update
