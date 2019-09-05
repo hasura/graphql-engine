@@ -19,7 +19,6 @@ module Hasura.GraphQL.Transport.WebSocket.Server
   , createWSServer
   , closeAll
   , createServerApp
-  , shutdown
   ) where
 
 import qualified Control.Concurrent.Async as A
@@ -107,18 +106,13 @@ data WSServer a
   = WSServer
   { _wssLogger  :: L.Logger
   , _wssConnMap :: ConnMap a
-  , _wssShutdown :: STM.TVar Bool
   }
 
 createWSServer :: L.Logger -> STM.STM (WSServer a)
-createWSServer logger = WSServer logger <$> STMMap.new <*> STM.newTVar False
-
-shutdown :: WSServer a -> IO ()
-shutdown (WSServer _ _ shutdownVar) =
-  STM.atomically $ STM.writeTVar shutdownVar True
+createWSServer logger = WSServer logger <$> STMMap.new
 
 closeAll :: WSServer a -> BL.ByteString -> IO ()
-closeAll (WSServer (L.Logger writeLog) connMap _) msg = do
+closeAll (WSServer (L.Logger writeLog) connMap) msg = do
   writeLog $ L.debugT "closing all connections"
   conns <- STM.atomically $ do
     conns <- ListT.toList $ STMMap.listT connMap
@@ -152,8 +146,7 @@ createServerApp
   -> WSHandlers a
   -- aka WS.ServerApp
   -> WS.PendingConnection -> IO ()
-createServerApp app@(WSServer logger@(L.Logger writeLog) connMap shutdownVar) wsHandlers
-                pendingConn = do
+createServerApp (WSServer logger@(L.Logger writeLog) connMap) wsHandlers pendingConn = do
 
   wsId <- WSId <$> UUID.nextRandom
   writeLog $ WSLog wsId EConnectionRequest
@@ -184,19 +177,12 @@ createServerApp app@(WSServer logger@(L.Logger writeLog) connMap shutdownVar) ws
         WS.sendTextData conn msg
         writeLog $ WSLog wsId $ EMessageSent $ TBS.fromLBS msg
 
-      closeRef <- A.async $ do
-        void $ STM.atomically $ do
-          continue <- STM.readTVar shutdownVar
-          guard continue
-          STM.retry
-        closeAll app "shutting server down"
-
       keepAliveRefM <- forM keepAliveM $ \action -> A.async $ action wsConn
       onJwtExpiryRefM <- forM onJwtExpiryM $ \action -> A.async $ action wsConn
 
       -- terminates on WS.ConnectionException and JWT expiry
       let waitOnRefs = catMaybes [keepAliveRefM, onJwtExpiryRefM]
-                       <> [rcvRef, sendRef, closeRef]
+                       <> [rcvRef, sendRef]
       res <- try $ A.waitAnyCancel waitOnRefs
 
       case res of
