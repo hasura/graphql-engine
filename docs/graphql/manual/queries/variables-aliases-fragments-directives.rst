@@ -47,7 +47,8 @@ In order to make a query re-usable, it can be made dynamic by using variables.
 Using aliases
 -------------
 
-Aliases can be used to return a certain selection of objects based on any filter criteria (e.g. ``order_by``, ``limit`` etc.), and with any name.
+Aliases can be used to return objects with a different name than their field name. This is especially useful while
+fetching the same type of objects with different arguments in the same query.
 
 **Example:** First, fetch all articles. Second, fetch the two top-rated articles. Third, fetch the worst-rated article:
 
@@ -113,7 +114,8 @@ Aliases can be used to return a certain selection of objects based on any filter
 Using fragments
 ---------------
 
-Sometimes, queries can get long and confusing. A fragment is a set of fields with any chosen name. This fragment can then be used to represent the defined set.
+Sometimes, queries can get long and confusing. A fragment is a set of fields with any chosen name. This fragment
+can then be used to represent the defined set.
 
 **Example:** Creating a fragment for a set of ``article`` fields (``id`` and ``title``) and using it in a query:
 
@@ -168,7 +170,8 @@ Sometimes, queries can get long and confusing. A fragment is a set of fields wit
 Using directives
 ----------------
 
-Directives make it possible to include or skip a field based on a boolean expression passed as a query variable.
+Directives make it possible to include or skip a field based on a boolean expression passed as a query
+variable.
 
 @include(if: Boolean)
 ^^^^^^^^^^^^^^^^^^^^^
