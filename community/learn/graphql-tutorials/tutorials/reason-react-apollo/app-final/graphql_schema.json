@@ -1572,7 +1572,7 @@
                     "name": "Int",
                     "ofType": null
                   },
-                  "description": "limit the nuber of rows returned"
+                  "description": "limit the number of rows returned"
                 },
                 {
                   "name": "offset",
@@ -1663,7 +1663,7 @@
                     "name": "Int",
                     "ofType": null
                   },
-                  "description": "limit the nuber of rows returned"
+                  "description": "limit the number of rows returned"
                 },
                 {
                   "name": "offset",
@@ -1781,7 +1781,7 @@
                     "name": "Int",
                     "ofType": null
                   },
-                  "description": "limit the nuber of rows returned"
+                  "description": "limit the number of rows returned"
                 },
                 {
                   "name": "offset",
@@ -1910,7 +1910,7 @@
                     "name": "Int",
                     "ofType": null
                   },
-                  "description": "limit the nuber of rows returned"
+                  "description": "limit the number of rows returned"
                 },
                 {
                   "name": "offset",
@@ -2001,7 +2001,7 @@
                     "name": "Int",
                     "ofType": null
                   },
-                  "description": "limit the nuber of rows returned"
+                  "description": "limit the number of rows returned"
                 },
                 {
                   "name": "offset",
@@ -2119,7 +2119,7 @@
                     "name": "Int",
                     "ofType": null
                   },
-                  "description": "limit the nuber of rows returned"
+                  "description": "limit the number of rows returned"
                 },
                 {
                   "name": "offset",
@@ -3216,7 +3216,7 @@
                     "name": "Int",
                     "ofType": null
                   },
-                  "description": "limit the nuber of rows returned"
+                  "description": "limit the number of rows returned"
                 },
                 {
                   "name": "offset",
