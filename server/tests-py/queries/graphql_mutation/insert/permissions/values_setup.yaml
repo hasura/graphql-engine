@@ -44,3 +44,10 @@ args:
       name: Resident 6
       age: 22
 
+#Insert users
+- type: run_sql
+  args:
+    sql: |
+      insert into "user" (name, is_admin)
+        values ('user_1', false), ('user_2', true)
+      ;
