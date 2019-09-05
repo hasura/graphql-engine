@@ -1,0 +1,21 @@
+description: Insert data into account table as a user who is a non-admin
+url: /v1/graphql
+status: 200
+headers:
+  X-Hasura-Role: user
+  X-Hasura-User-Id: '1'
+response:
+  errors:
+  - extensions:
+      path: "$.selectionSet.insert_account.args.objects"
+      code: permission-error
+    message: Check constraint violation. insert check constraint failed
+query:
+  query: |
+    mutation{
+      insert_account(
+        objects: {account_no: 1}
+      ){
+        affected_rows
+      }
+    }
