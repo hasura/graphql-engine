@@ -170,7 +170,7 @@ data WSServerEnv
   , _wseQueryCache      :: !E.PlanCache
   , _wseServer          :: !WSServer
   , _wseEnableAllowlist :: !Bool
-  , _wseServerStatus        :: !(STM.TVar ServerStatus)
+  , _wseServerStatus    :: !(STM.TVar ServerStatus)
   }
 
 onConn :: L.Logger -> CorsPolicy -> STM.TVar ServerStatus -> WS.OnConnH WSConnData
