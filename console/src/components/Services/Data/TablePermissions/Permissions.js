@@ -251,6 +251,7 @@ class Permissions extends Component {
       };
 
       const getPermissionsTableHead = () => {
+
         const _permissionsHead = [];
 
         // push role head
@@ -272,6 +273,7 @@ class Permissions extends Component {
       };
 
       const getPermissionsTableBody = () => {
+
         const _permissionsRowsHtml = [];
 
         const getPermissionsTableRow = (role, newPermRow = null) => {

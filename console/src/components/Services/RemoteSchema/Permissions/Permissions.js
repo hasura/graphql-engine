@@ -4,6 +4,7 @@ import { useIntrospectionSchema } from '../graphqlUtils';
 import PermissionsEditor from './PermissionsEditor';
 import PermTableHeader from '../../../Common/Layout/Permissions/TableHeader';
 import PermTableBody from '../../../Common/Layout/Permissions/TableBody';
+import Spinner from '../../../Common/Spinner/Spinner';
 import styles from '../../../Common/Layout/Permissions/PermissionStyles.scss';
 import {
   setPermissionRole,
@@ -33,14 +34,15 @@ const Permissions = props => {
 
   const { schema, loading, error, introspect } = useIntrospectionSchema(
     currentRemoteSchema.definition.url,
-    adminHeaders
+    adminHeaders,
+    remoteSchemaName
   );
 
   React.useEffect(() => {
     dispatch(fetchRoleList());
   }, []);
 
-  if (loading) return 'Loading...';
+  if (loading) return <Spinner />;
 
   if (error) {
     return (

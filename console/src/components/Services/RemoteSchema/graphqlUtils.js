@@ -6,25 +6,31 @@ import {
   isObjectType,
 } from 'graphql';
 
-export const useIntrospectionSchema = (endpoint, headers) => {
+export const useIntrospectionSchema = (endpoint, headers, remoteSchemaName) => {
   const [schema, setSchema] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const introspectSchema = () => {
+    if (introspectionSchemaCache[remoteSchemaName]) {
+      setSchema(introspectionSchemaCache[remoteSchemaName]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     fetch(endpoint, {
       method: 'POST',
       headers: {
         ...headers,
-        'x-hasura-admin-secret': 'advancedbitch'
       },
       body: JSON.stringify({ query: getIntrospectionQuery() }),
     })
       .then(r => r.json())
       .then(response => {
-        setSchema(buildClientSchema(response.data));
+        const clientSchema = buildClientSchema(response.data);
+        setSchema(clientSchema);
+        introspectionSchemaCache[remoteSchemaName] = clientSchema
         setLoading(false);
       })
       .catch(err => {
@@ -66,4 +72,13 @@ export const getTypeFields = (typeName, objectTypes) => {
     });
   }
   return fields;
+};
+
+let introspectionSchemaCache = {};
+export const clearIntrospectionSchemaCache = (remoteSchemaName) => {
+  if (remoteSchemaName) {
+    delete introspectionSchemaCache[remoteSchemaName]
+  } else {
+    introspectionSchemaCache = {};
+  }
 };

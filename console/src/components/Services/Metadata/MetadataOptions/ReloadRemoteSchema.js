@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Button from '../../../Common/Button/Button';
 import { reloadRemoteSchema } from '../Actions';
-
+import { clearIntrospectionSchemaCache } from '../../RemoteSchema/graphqlUtils';
 import {
   showSuccessNotification,
   showErrorNotification,
@@ -25,6 +25,7 @@ class ReloadRemoteSchema extends Component {
           remoteSchemaName,
           () => {
             dispatch(showSuccessNotification('Remote schema reloaded'));
+            clearIntrospectionSchemaCache(remoteSchemaName);
             this.setState({ isReloading: false });
           },
           error => {

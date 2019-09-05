@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import Button from '../../../Common/Button/Button';
+import { clearIntrospectionSchemaCache } from '../../RemoteSchema/graphqlUtils';
 
 import {
   showSuccessNotification,
@@ -58,6 +59,7 @@ class ResetMetadata extends Component {
                     this.props.dispatch(
                       showSuccessNotification('Metadata reset successfully!')
                     );
+                    clearIntrospectionSchemaCache();
                   } else {
                     const parsedErrorMsg = data;
                     this.props.dispatch(

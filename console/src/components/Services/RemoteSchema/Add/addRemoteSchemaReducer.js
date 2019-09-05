@@ -7,6 +7,7 @@ import requestAction from '../../../../utils/requestAction';
 import dataHeaders from '../../Data/Common/Headers';
 import { push } from 'react-router-redux';
 import { fetchRemoteSchemas } from '../Actions';
+import { clearIntrospectionSchemaCache } from '../graphqlUtils';
 
 import { generateHeaderSyms } from '../../../Common/Layout/ReusableHeader/HeaderReducer';
 import { makeRequest } from '../Actions';
@@ -290,6 +291,7 @@ const deleteRemoteSchema = () => {
         dispatch(push(prefixUrl)),
         dispatch(fetchRemoteSchemas()),
       ]);
+      clearIntrospectionSchemaCache(currState.editState.originalName);
     };
     const customOnError = error => {
       Promise.all([dispatch({ type: DELETE_REMOTE_SCHEMA_FAIL, data: error })]);

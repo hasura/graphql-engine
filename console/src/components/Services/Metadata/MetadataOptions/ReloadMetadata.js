@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Button from '../../../Common/Button/Button';
 import { reloadMetadata } from '../Actions';
-
+import { clearIntrospectionSchemaCache } from '../../RemoteSchema/graphqlUtils';
 import {
   showSuccessNotification,
   showErrorNotification,
@@ -24,6 +24,7 @@ class ReloadMetadata extends Component {
         reloadMetadata(
           () => {
             dispatch(showSuccessNotification('Metadata reloaded'));
+            clearIntrospectionSchemaCache();
             this.setState({ isReloading: false });
           },
           err => {
