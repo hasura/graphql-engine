@@ -224,8 +224,8 @@ onConn (L.Logger logger) corsPolicy sStatusVar wsId requestHead = do
       _                   ->
         throw404 "only '/v1/graphql', '/v1alpha1/graphql' are supported on websockets"
 
-    assertAcceptingConns ShuttingDown = throw500 "server is shuting down"
-    assertAcceptingConns _ = pure ()
+    assertAcceptingConns ShuttingDown = throw500 "server is shutting down"
+    assertAcceptingConns AcceptingConns = pure ()
 
     getOrigin =
       find ((==) "Origin" . fst) (WS.requestHeaders requestHead)
