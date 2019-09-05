@@ -107,15 +107,15 @@ data WSServer a
   = WSServer
   { _wssLogger  :: L.Logger
   , _wssConnMap :: ConnMap a
-  , _wssShutdown :: STM.TChan ()
+  , _wssShutdown :: STM.TVar Bool
   }
 
 createWSServer :: L.Logger -> STM.STM (WSServer a)
-createWSServer logger = WSServer logger <$> STMMap.new <*> STM.newTChan
+createWSServer logger = WSServer logger <$> STMMap.new <*> STM.newTVar False
 
 shutdown :: WSServer a -> IO ()
-shutdown (WSServer _ _ shutdownChan) =
-  STM.atomically $ STM.writeTChan shutdownChan ()
+shutdown (WSServer _ _ shutdownVar) =
+  STM.atomically $ STM.writeTVar shutdownVar True
 
 closeAll :: WSServer a -> BL.ByteString -> IO ()
 closeAll (WSServer (L.Logger writeLog) connMap _) msg = do
@@ -152,7 +152,7 @@ createServerApp
   -> WSHandlers a
   -- aka WS.ServerApp
   -> WS.PendingConnection -> IO ()
-createServerApp app@(WSServer logger@(L.Logger writeLog) connMap shutdownChan) wsHandlers
+createServerApp app@(WSServer logger@(L.Logger writeLog) connMap shutdownVar) wsHandlers
                 pendingConn = do
 
   wsId <- WSId <$> UUID.nextRandom
@@ -185,7 +185,10 @@ createServerApp app@(WSServer logger@(L.Logger writeLog) connMap shutdownChan) w
         writeLog $ WSLog wsId $ EMessageSent $ TBS.fromLBS msg
 
       closeRef <- A.async $ do
-        _ <- STM.atomically $ STM.readTChan shutdownChan
+        void $ STM.atomically $ do
+          continue <- STM.readTVar shutdownVar
+          guard continue
+          STM.retry
         closeAll app "shutting server down"
 
       keepAliveRefM <- forM keepAliveM $ \action -> A.async $ action wsConn
