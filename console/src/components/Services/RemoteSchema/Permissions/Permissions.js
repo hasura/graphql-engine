@@ -6,9 +6,7 @@ import PermTableHeader from '../../../Common/Permissions/TableHeader';
 import PermTableBody from '../../../Common/Permissions/TableBody';
 import Spinner from '../../../Common/Spinner/Spinner';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
-import {
-  permissionsSymbols
-} from '../../../Common/Permissions/PermissionSymbols';
+import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbols';
 import {
   setPermissionRole,
   setCurrentPermissionEdit,
@@ -25,7 +23,7 @@ const Permissions = props => {
     remoteSchemasList,
     dispatch,
     rolesList,
-    existingPermissions
+    existingPermissions,
   } = props;
 
   const currentRemoteSchema = remoteSchemasList.find(
@@ -48,7 +46,8 @@ const Permissions = props => {
     return (
       <div>
         <p>
-          Error introspecting remote schema. <a onClick={introspect}>Try again.</a>
+          Error introspecting remote schema.{' '}
+          <a onClick={introspect}>Try again.</a>
         </p>
       </div>
     );
@@ -114,10 +113,21 @@ const Permissions = props => {
         return Object.keys(rootTypes).map(rootType => {
           const dispatchOpenEdit = rt => () => {
             if (isNewRole && !!role) {
-              const perm = parseRemoteRelPermDefinition(null, rootTypes, objectTypes, nonObjectTypes, editState.role);
+              const perm = parseRemoteRelPermDefinition(
+                null,
+                rootTypes,
+                objectTypes,
+                nonObjectTypes,
+                editState.role
+              );
               dispatch(setCurrentPermissionEdit(perm, rt));
             } else if (role) {
-              const perm = parseRemoteRelPermDefinition(existingPermissions.find(p => p.role === role), rootTypes, objectTypes, nonObjectTypes);
+              const perm = parseRemoteRelPermDefinition(
+                existingPermissions.find(p => p.role === role),
+                rootTypes,
+                objectTypes,
+                nonObjectTypes
+              );
               dispatch(setCurrentPermissionEdit(perm, rt));
             } else {
               document.getElementById('new-role-input').focus();
@@ -129,7 +139,11 @@ const Permissions = props => {
           };
 
           const isEditAllowed = role !== 'admin';
-          const isCurrEdit = role === editState.role && editState.editType === rootType;
+          const isCurrEdit =
+            editState.editType === rootType &&
+            (isNewRole
+              ? editState.isNew && editState.newRole === role
+              : editState.role === role);
 
           let editIcon = '';
           let className = '';
@@ -145,19 +159,29 @@ const Permissions = props => {
             }
           }
 
-          const getRoleQueryPermission = (rt) => {
+          const getRoleQueryPermission = rt => {
             let _permission;
             if (role === 'admin') {
               _permission = permissionsSymbols.fullAccess;
             } else if (isNewRole) {
-              _permission = permissionsSymbols.noAccess
+              _permission = permissionsSymbols.noAccess;
             } else {
-              const existingPerm = existingPermissions.find(p => p.role === role);
+              const existingPerm = existingPermissions.find(
+                p => p.role === role
+              );
               if (!existingPerm) {
                 _permission = permissionsSymbols.noAccess;
               } else {
-                const perm = parseRemoteRelPermDefinition(existingPerm, rootTypes, objectTypes, nonObjectTypes);
-                _permission = permissionsSymbols[getRootTypeAccess(rt, perm.allowedTypes, objectTypes)];
+                const perm = parseRemoteRelPermDefinition(
+                  existingPerm,
+                  rootTypes,
+                  objectTypes,
+                  nonObjectTypes
+                );
+                _permission =
+                  permissionsSymbols[
+                    getRootTypeAccess(rt, perm.allowedTypes, objectTypes)
+                  ];
               }
             }
             return _permission;
@@ -174,9 +198,12 @@ const Permissions = props => {
         });
       };
 
-      const uniqueRolesList = ['admin', ...rolesList, ...existingPermissions.map(ep => ep.role)];
+      const uniqueRolesList = [
+        'admin',
+        ...rolesList,
+        ...existingPermissions.map(ep => ep.role),
+      ];
       const _roleList = [...new Set(uniqueRolesList)];
-
 
       const rolePermissions = _roleList.map(r => {
         return {
@@ -186,9 +213,9 @@ const Permissions = props => {
       });
 
       rolePermissions.push({
-        roleName: editState.role,
-        permTypes: getRootTypes(editState.role, true),
-        isNewRole: true
+        roleName: editState.newRole,
+        permTypes: getRootTypes(editState.newRole, true),
+        isNewRole: true,
       });
 
       return (
@@ -198,7 +225,6 @@ const Permissions = props => {
         />
       );
     };
-
 
     const getPermissionsLegend = () => (
       <div>
@@ -218,7 +244,7 @@ const Permissions = props => {
 
     return (
       <div>
-
+        {getPermissionsLegend()}
         <table className={`table table-bordered ${styles.permissionsTable}`}>
           {getPermissionsTableHead()}
           {getPermissionsTableBody()}

@@ -8,13 +8,13 @@ export const generateDropPermQuery = (role, remoteSchemaName) => {
     type: 'drop_remote_schema_permissions',
     args: {
       remote_schema: remoteSchemaName,
-      role
-    }
+      role,
+    },
   };
 };
 
 export const generateCreatePermQuery = (state, remoteSchemaName) => {
-  const { role, allowedTypes, isNew } = state;
+  const { role, allowedTypes, isNew, newRole } = state;
 
   const bulkQueryArgs = [];
 
@@ -25,7 +25,7 @@ export const generateCreatePermQuery = (state, remoteSchemaName) => {
     type: 'add_remote_schema_permissions',
     args: {
       remote_schema: remoteSchemaName,
-      role,
+      role: isNew ? newRole : role,
       definition: [],
     },
   };
@@ -36,9 +36,9 @@ export const generateCreatePermQuery = (state, remoteSchemaName) => {
     ).filter(fieldName => allowedTypes[allowedType][fieldName].isChecked);
     payload.args.definition.push({
       type: allowedType,
-      fields: Object.keys(
-        allowedTypes[allowedType]
-      ).filter(fieldName => allowedTypes[allowedType][fieldName].isChecked)
+      fields: Object.keys(allowedTypes[allowedType]).filter(
+        fieldName => allowedTypes[allowedType][fieldName].isChecked
+      ),
     });
   });
 
@@ -46,15 +46,25 @@ export const generateCreatePermQuery = (state, remoteSchemaName) => {
 
   return {
     type: 'bulk',
-    args: bulkQueryArgs
+    args: bulkQueryArgs,
   };
 };
 
-export const parseRemoteRelPermDefinition = (payload, rootTypes, objectTypes, nonObjectTypes, roleName) => {
+export const parseRemoteRelPermDefinition = (
+  payload,
+  rootTypes,
+  objectTypes,
+  nonObjectTypes,
+  roleName
+) => {
   if (!payload) {
     const newAllowedTypes = {};
     Object.keys(rootTypes).forEach(rt => {
-      newAllowedTypes[rootTypes[rt]] = getTypeFields(rootTypes[rt], objectTypes, nonObjectTypes);
+      newAllowedTypes[rootTypes[rt]] = getTypeFields(
+        rootTypes[rt],
+        objectTypes,
+        nonObjectTypes
+      );
     });
     return {
       ...permissionState.editState,
@@ -83,7 +93,7 @@ export const parseRemoteRelPermDefinition = (payload, rootTypes, objectTypes, no
       fieldMetaData[field] = {
         isChecked: !!selectedFields[field],
         typeName: returningType.name,
-        isScalar: !isObjectType(returningType)
+        isScalar: !isObjectType(returningType),
       };
     });
     allowedTypes[allowedTypeName] = fieldMetaData;
@@ -92,14 +102,14 @@ export const parseRemoteRelPermDefinition = (payload, rootTypes, objectTypes, no
   return {
     role,
     allowedTypes,
-    isNew: false
+    isNew: false,
   };
 };
 
 export const getExpandedTypes = (allowedTypes, rootTypes, editType) => {
   const expandedTypes = {};
 
-  const expandTypes = (currentTypeName) => {
+  const expandTypes = currentTypeName => {
     expandedTypes[currentTypeName] = true;
     Object.keys(allowedTypes[currentTypeName]).forEach(fieldName => {
       const allowedType = allowedTypes[currentTypeName][fieldName];
@@ -117,15 +127,14 @@ export const getExpandedTypes = (allowedTypes, rootTypes, editType) => {
 };
 
 export const isTypeFullAccess = (typeName, allowedTypes, objectTypes) => {
-
   if (!allowedTypes[typeName]) return false;
 
   const currentTypeSelected = allowedTypes[typeName];
   const currentTypeOriginal = objectTypes[typeName];
 
   const allTypeFields = Object.keys(currentTypeOriginal._fields);
-  for (var i = allTypeFields.length - 1; i >= 0; i--) {
 
+  for (let i = allTypeFields.length - 1; i >= 0; i--) {
     const currentField = currentTypeSelected[allTypeFields[i]];
 
     if (!currentField) {
@@ -136,30 +145,37 @@ export const isTypeFullAccess = (typeName, allowedTypes, objectTypes) => {
       return false;
     }
 
-    if (!currentField.isScalar) return getRoleQueryAccess();
+    if (!currentField.isScalar) {
+      const typeAccess = isTypeFullAccess(
+        currentField.typeName,
+        allowedTypes,
+        objectTypes
+      );
+      if (!typeAccess) {
+        return false;
+      }
+    }
   }
 
   return true;
-
-}
+};
 
 export const getRootTypeAccess = (rootType, allowedTypes, objectTypes) => {
-  let accessLabels = {
+  const accessLabels = {
     '-1': 'noAccess',
-    '0': 'partialAccess',
-    '1': 'fullAccess'
-  }
+    0: 'partialAccess',
+    1: 'fullAccess',
+  };
 
   let access = -1;
 
   if (allowedTypes[rootType]) {
-    access = 0
-  };
+    access = 0;
+  }
 
   if (isTypeFullAccess(rootType, allowedTypes, objectTypes)) {
-    access = 1
+    access = 1;
   }
 
   return accessLabels[access];
-
-}
+};

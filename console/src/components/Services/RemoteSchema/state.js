@@ -37,11 +37,12 @@ const addState = {
 const permissionState = {
   editState: {
     role: '',
+    newRole: '',
     allowedTypes: {},
     allowAll: false,
     isEditing: false,
     editType: '',
-    isNew: true
+    isNew: true,
   },
   currentRemoteSchemaName: '',
   ...asyncState,

@@ -12,36 +12,42 @@ export const setCurrentRemoteSchema = currentRemoteSchemaName => ({
 });
 
 const SET_PERMISSION_ROLE = '@remoteSchema/SET_PERMISSION_ROLE';
-export const setPermissionRole = (role) => ({
+export const setPermissionRole = role => ({
   type: SET_PERMISSION_ROLE,
   role,
 });
 
 const SET_PERMISSION_TYPES = '@remoteSchema/SET_PERMISSION_TYPES';
-export const setPermissionTypes = (allowedTypes) => ({
+export const setPermissionTypes = allowedTypes => ({
   type: SET_PERMISSION_TYPES,
-  allowedTypes
+  allowedTypes,
 });
 
 const SET_CURRENT_PERMISSION_EDIT = '@remoteSchema/SET_CURRENT_PERMISSION_EDIT';
 export const setCurrentPermissionEdit = (perm, editType) => ({
   type: SET_CURRENT_PERMISSION_EDIT,
   perm,
-  editType
+  editType,
 });
 
 const CLOSE_PERMISSION_EDIT = '@remoteSchema/CLOSE_PERMISSION_EDIT';
 export const closePermissionEdit = () => ({ type: CLOSE_PERMISSION_EDIT });
 
-const DROP_REMOTE_SCHEMA_PERMISSION = '@remoteSchema/DROP_REMOTE_SCHEMA_PERMISSION';
-const DROP_REMOTE_SCHEMA_PERMISSION_SUCCESS = '@remoteSchema/DROP_REMOTE_SCHEMA_PERMISSION_SUCCESS';
-const DROP_REMOTE_SCHEMA_PERMISSION_FAILURE = '@remoteSchema/DROP_REMOTE_SCHEMA_PERMISSION_FAILURE';
+const DROP_REMOTE_SCHEMA_PERMISSION =
+  '@remoteSchema/DROP_REMOTE_SCHEMA_PERMISSION';
+const DROP_REMOTE_SCHEMA_PERMISSION_SUCCESS =
+  '@remoteSchema/DROP_REMOTE_SCHEMA_PERMISSION_SUCCESS';
+const DROP_REMOTE_SCHEMA_PERMISSION_FAILURE =
+  '@remoteSchema/DROP_REMOTE_SCHEMA_PERMISSION_FAILURE';
 
 export const deleteRemoteSchemaPermission = (successCb, failureCb) => {
   return (dispatch, getState) => {
     const permState = getState().remoteSchemas.permissions;
     const { editState, currentRemoteSchemaName } = permState;
-    const query = generateDropPermQuery(editState.role, currentRemoteSchemaName);
+    const query = generateDropPermQuery(
+      editState.role,
+      currentRemoteSchemaName
+    );
     const headers = getState().tables.dataHeaders;
 
     const isOk = window.confirm('Are you absolutely sure?');
@@ -96,13 +102,15 @@ export const createRemoteSchemaPermission = (successCb, failureCb) => {
       );
     }
 
-    if (getState().tables.allRoles.includes(editState.role)) {
-      return dispatch(
-        showErrorNotification(
-          'Saving permission failed',
-          'This role name already exists'
-        )
-      );
+    if (editState.isNew) {
+      if (getState().tables.allRoles.includes(editState.role)) {
+        return dispatch(
+          showErrorNotification(
+            'Saving permission failed',
+            'This role name already exists'
+          )
+        );
+      }
     }
 
     const query = generateCreatePermQuery(editState, remoteSchemaName);
@@ -146,8 +154,8 @@ const reducer = (state = permissionState, action) => {
         ...state,
         editState: {
           ...state.editState,
-          role: action.role
-        }
+          newRole: action.role,
+        },
       };
 
     case SET_PERMISSION_TYPES:
@@ -155,10 +163,9 @@ const reducer = (state = permissionState, action) => {
         ...state,
         editState: {
           ...state.editState,
-          allowedTypes: action.allowedTypes
-        }
+          allowedTypes: action.allowedTypes,
+        },
       };
-
 
     case CREATE_REMOTE_SCHEMA_PERMISSION:
       return {
@@ -175,19 +182,19 @@ const reducer = (state = permissionState, action) => {
     case DROP_REMOTE_SCHEMA_PERMISSION:
       return {
         ...state,
-        isFetching: true
+        isFetching: true,
       };
 
     case DROP_REMOTE_SCHEMA_PERMISSION_SUCCESS:
       return {
         ...state,
-        isFetching: false
+        isFetching: false,
       };
 
     case DROP_REMOTE_SCHEMA_PERMISSION_FAILURE:
       return {
         ...state,
-        isFetching: false
+        isFetching: false,
       };
 
     case SET_CURRENT_PERMISSION_EDIT:
@@ -196,16 +203,16 @@ const reducer = (state = permissionState, action) => {
         editState: {
           ...action.perm,
           isEditing: true,
-          editType: action.editType
-        }
+          editType: action.editType,
+        },
       };
 
     case CLOSE_PERMISSION_EDIT:
       return {
         ...state,
         editState: {
-          ...permissionState.editState
-        }
+          ...permissionState.editState,
+        },
       };
 
     default:
