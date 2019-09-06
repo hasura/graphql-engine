@@ -156,8 +156,6 @@ mkWsErrorLog :: Maybe UserVars -> WsConnInfo -> WSEvent -> WSLog
 mkWsErrorLog uv ci ev =
   WSLog L.LevelError $ WSLogInfo uv ci ev
 
-data ServerStatus = AcceptingConns | ShuttingDown
-
 data WSServerEnv
   = WSServerEnv
   { _wseLogger          :: !L.Logger
@@ -170,15 +168,12 @@ data WSServerEnv
   , _wseQueryCache      :: !E.PlanCache
   , _wseServer          :: !WSServer
   , _wseEnableAllowlist :: !Bool
-  , _wseServerStatus    :: !(STM.TVar ServerStatus)
   }
 
-onConn :: L.Logger -> CorsPolicy -> STM.TVar ServerStatus -> WS.OnConnH WSConnData
-onConn (L.Logger logger) corsPolicy sStatusVar wsId requestHead = do
-  serverStatus <- STM.atomically $ STM.readTVar sStatusVar
+onConn :: L.Logger -> CorsPolicy -> WS.OnConnH WSConnData
+onConn (L.Logger logger) corsPolicy wsId requestHead = do
   res <- runExceptT $ do
     errType <- checkPath
-    assertAcceptingConns serverStatus
     let reqHdrs = WS.requestHeaders requestHead
     headers <- maybe (return reqHdrs) (flip enforceCors reqHdrs . snd) getOrigin
     return (WsHeaders $ filterWsHeaders headers, errType)
@@ -223,9 +218,6 @@ onConn (L.Logger logger) corsPolicy sStatusVar wsId requestHead = do
       "/v1/graphql"       -> return ERTGraphqlCompliant
       _                   ->
         throw404 "only '/v1/graphql', '/v1alpha1/graphql' are supported on websockets"
-
-    assertAcceptingConns ShuttingDown = throw500 "server is shutting down"
-    assertAcceptingConns AcceptingConns = pure ()
 
     getOrigin =
       find ((==) "Origin" . fst) (WS.requestHeaders requestHead)
@@ -343,7 +335,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       "Failed parsing GraphQL response from remote: " <> err
 
     WSServerEnv logger pgExecCtx lqMap gCtxMapRef httpMgr _ sqlGenCtx planCache
-      _ enableAL _ = serverEnv
+      _ enableAL = serverEnv
 
     WSConnData userInfoR opMap errRespTy = WS.getData wsConn
 
@@ -528,10 +520,9 @@ createWSServerEnv
 createWSServerEnv logger pgExecCtx lqState cacheRef httpManager
   corsPolicy sqlGenCtx enableAL planCache = do
   wsServer <- STM.atomically $ WS.createWSServer logger
-  shutdownVar <- STM.atomically $ STM.newTVar AcceptingConns
   return $
     WSServerEnv logger pgExecCtx lqState cacheRef httpManager corsPolicy
-    sqlGenCtx planCache wsServer enableAL shutdownVar
+    sqlGenCtx planCache wsServer enableAL
 
 createWSServerApp :: AuthMode -> WSServerEnv -> WS.ServerApp
 createWSServerApp authMode serverEnv =
@@ -539,11 +530,9 @@ createWSServerApp authMode serverEnv =
   where
     handlers =
       WS.WSHandlers
-      (onConn (_wseLogger serverEnv) (_wseCorsPolicy serverEnv) (_wseServerStatus serverEnv))
+      (onConn (_wseLogger serverEnv) (_wseCorsPolicy serverEnv))
       (onMessage authMode serverEnv)
       (onClose (_wseLogger serverEnv) $ _wseLiveQMap serverEnv)
 
 stopWSServerApp :: WSServerEnv -> IO ()
-stopWSServerApp wsEnv = do
-  STM.atomically $ STM.writeTVar (_wseServerStatus wsEnv) ShuttingDown
-  WS.closeAll (_wseServer wsEnv) "shutting server down"
+stopWSServerApp wsEnv = WS.shutdown (_wseServer wsEnv)

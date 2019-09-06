@@ -19,6 +19,7 @@ module Hasura.GraphQL.Transport.WebSocket.Server
   , createWSServer
   , closeAll
   , createServerApp
+  , shutdown
   ) where
 
 import qualified Control.Concurrent.Async as A
@@ -102,17 +103,20 @@ sendMsg wsConn msg =
 
 type ConnMap a = STMMap.Map WSId (WSConn a)
 
+data ServerStatus = AcceptingConns | ShuttingDown
+
 data WSServer a
   = WSServer
   { _wssLogger  :: L.Logger
   , _wssConnMap :: ConnMap a
+  , _wssShutdown :: !(STM.TVar ServerStatus)
   }
 
 createWSServer :: L.Logger -> STM.STM (WSServer a)
-createWSServer logger = WSServer logger <$> STMMap.new
+createWSServer logger = WSServer logger <$> STMMap.new <*> STM.newTVar AcceptingConns
 
 closeAll :: WSServer a -> BL.ByteString -> IO ()
-closeAll (WSServer (L.Logger writeLog) connMap) msg = do
+closeAll (WSServer (L.Logger writeLog) connMap _) msg = do
   writeLog $ L.debugT "closing all connections"
   conns <- STM.atomically $ do
     conns <- ListT.toList $ STMMap.listT connMap
@@ -145,14 +149,28 @@ createServerApp
   -- user provided handlers
   -> WSHandlers a
   -- aka WS.ServerApp
-  -> WS.PendingConnection -> IO ()
-createServerApp (WSServer logger@(L.Logger writeLog) connMap) wsHandlers pendingConn = do
+  -> WS.PendingConnection
+  -> IO ()
+createServerApp (WSServer logger@(L.Logger writeLog) connMap shutdownVar) wsHandlers
+                pendingConn = do
 
-  wsId <- WSId <$> UUID.nextRandom
-  writeLog $ WSLog wsId EConnectionRequest
-  let reqHead = WS.pendingRequest pendingConn
-  onConnRes <- _hOnConn wsHandlers wsId reqHead
-  either (onReject wsId) (onAccept wsId) onConnRes
+    wsId <- WSId <$> UUID.nextRandom
+    writeLog $ WSLog wsId EConnectionRequest
+    serverStatus <- STM.readTVarIO shutdownVar
+    case serverStatus of
+      AcceptingConns -> do
+        let reqHead = WS.pendingRequest pendingConn
+        onConnRes <- _hOnConn wsHandlers wsId reqHead
+        either (onReject wsId) (onAccept wsId) onConnRes
+
+      ShuttingDown ->
+        onReject
+          wsId
+          (WS.RejectRequest 503
+                            "Service Unavailable"
+                            [("Retry-After", "0")]
+                            "Server is shutting down"
+          )
 
   where
     onReject wsId rejectRequest = do
@@ -198,3 +216,9 @@ createServerApp (WSServer logger@(L.Logger writeLog) connMap) wsHandlers pending
       STM.atomically $ STMMap.delete (_wcConnId wsConn) connMap
       _hOnClose wsHandlers wsConn
       writeLog $ WSLog (_wcConnId wsConn) EClosed
+
+
+shutdown :: WSServer a -> IO ()
+shutdown wsServer = do
+  STM.atomically $ STM.writeTVar (_wssShutdown wsServer) ShuttingDown
+  closeAll wsServer "shutting server down"
