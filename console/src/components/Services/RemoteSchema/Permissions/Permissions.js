@@ -53,7 +53,7 @@ const Permissions = props => {
     );
   }
 
-  const rootTypes = { query: '', mutation: '', subscription: '' };
+  const rootTypes = {};
   const queryTypeName = schema._queryType.name;
   rootTypes.query = queryTypeName;
 
@@ -143,7 +143,7 @@ const Permissions = props => {
           const isCurrEdit =
             editState.editType === rootType &&
             (isNewRole
-              ? editState.isNew && editState.newRole === role
+              ? editState.isNew && editState.newRole === role && !editState.role
               : editState.role === role);
 
           let editIcon = '';

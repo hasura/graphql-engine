@@ -25,7 +25,7 @@ export const generateCreatePermQuery = (state, remoteSchemaName) => {
     type: 'add_remote_schema_permissions',
     args: {
       remote_schema: remoteSchemaName,
-      role: isNew ? newRole : role,
+      role: newRole || role,
       definition: [],
     },
   };
@@ -131,7 +131,12 @@ export const getExpandedTypes = (allowedTypes, rootTypes, editType) => {
   return expandedTypes;
 };
 
-export const isTypeFullAccess = (typeName, allowedTypes, objectTypes, cache) => {
+export const isTypeFullAccess = (
+  typeName,
+  allowedTypes,
+  objectTypes,
+  cache
+) => {
   cache[typeName] = true;
   if (!allowedTypes[typeName]) return false;
 
@@ -183,7 +188,9 @@ export const getRootTypeAccess = (rootType, allowedTypes, objectTypes) => {
   }
 
   let traversedTypesCache = {};
-  if (isTypeFullAccess(rootType, allowedTypes, objectTypes, traversedTypesCache)) {
+  if (
+    isTypeFullAccess(rootType, allowedTypes, objectTypes, traversedTypesCache)
+  ) {
     access = 1;
   }
 

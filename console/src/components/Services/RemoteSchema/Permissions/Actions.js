@@ -93,17 +93,17 @@ export const createRemoteSchemaPermission = (successCb, failureCb) => {
     const permsState = getState().remoteSchemas.permissions;
     const editState = permsState.editState;
     const remoteSchemaName = permsState.currentRemoteSchemaName;
-    if (!editState.role) {
-      return dispatch(
-        showErrorNotification(
-          'Saving permission failed',
-          'Please enter a role name'
-        )
-      );
-    }
 
     if (editState.isNew) {
-      if (getState().tables.allRoles.includes(editState.role)) {
+      if (!editState.newRole && !editState.role) {
+        return dispatch(
+          showErrorNotification(
+            'Saving permission failed',
+            'Please enter a role name'
+          )
+        );
+      }
+      if (getState().tables.allRoles.includes(editState.newRole)) {
         return dispatch(
           showErrorNotification(
             'Saving permission failed',
