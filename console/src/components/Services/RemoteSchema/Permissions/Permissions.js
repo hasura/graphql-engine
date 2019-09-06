@@ -118,7 +118,7 @@ const Permissions = props => {
                 rootTypes,
                 objectTypes,
                 nonObjectTypes,
-                editState.role
+                editState.newRole
               );
               dispatch(setCurrentPermissionEdit(perm, rt));
             } else if (role) {
@@ -126,7 +126,8 @@ const Permissions = props => {
                 existingPermissions.find(p => p.role === role),
                 rootTypes,
                 objectTypes,
-                nonObjectTypes
+                nonObjectTypes,
+                role
               );
               dispatch(setCurrentPermissionEdit(perm, rt));
             } else {

@@ -66,12 +66,17 @@ export const parseRemoteRelPermDefinition = (
         nonObjectTypes
       );
     });
-    return {
+    const parsedDef = {
       ...permissionState.editState,
       allowedTypes: newAllowedTypes,
-      role: roleName,
       isNew: true,
     };
+    if (payload === null) {
+      parsedDef.newRole = roleName;
+    } else {
+      parsedDef.role = roleName;
+    }
+    return parsedDef;
   }
 
   const { definition, role } = payload;
@@ -126,7 +131,8 @@ export const getExpandedTypes = (allowedTypes, rootTypes, editType) => {
   return expandedTypes;
 };
 
-export const isTypeFullAccess = (typeName, allowedTypes, objectTypes) => {
+export const isTypeFullAccess = (typeName, allowedTypes, objectTypes, cache) => {
+  cache[typeName] = true;
   if (!allowedTypes[typeName]) return false;
 
   const currentTypeSelected = allowedTypes[typeName];
@@ -146,13 +152,16 @@ export const isTypeFullAccess = (typeName, allowedTypes, objectTypes) => {
     }
 
     if (!currentField.isScalar) {
-      const typeAccess = isTypeFullAccess(
-        currentField.typeName,
-        allowedTypes,
-        objectTypes
-      );
-      if (!typeAccess) {
-        return false;
+      if (!cache[currentField.typeName]) {
+        const typeAccess = isTypeFullAccess(
+          currentField.typeName,
+          allowedTypes,
+          objectTypes,
+          cache
+        );
+        if (!typeAccess) {
+          return false;
+        }
       }
     }
   }
@@ -173,9 +182,11 @@ export const getRootTypeAccess = (rootType, allowedTypes, objectTypes) => {
     access = 0;
   }
 
-  if (isTypeFullAccess(rootType, allowedTypes, objectTypes)) {
+  let traversedTypesCache = {};
+  if (isTypeFullAccess(rootType, allowedTypes, objectTypes, traversedTypesCache)) {
     access = 1;
   }
 
+  traversedTypesCache = {};
   return accessLabels[access];
 };
