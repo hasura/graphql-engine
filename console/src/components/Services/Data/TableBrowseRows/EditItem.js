@@ -4,7 +4,11 @@ import TableHeader from '../TableCommon/TableHeader';
 import { editItem, E_ONGOING_REQ } from './EditActions';
 import globals from '../../../../Globals';
 import { modalClose } from './EditActions';
+import JsonInput from '../../../Common/CustomInputTypes/JsonInput';
+import TextInput from '../../../Common/CustomInputTypes/TextInput';
 import Button from '../../../Common/Button/Button';
+
+import ReloadEnumValuesButton from '../Common/ReusableComponents/ReloadEnumValuesButton';
 
 import {
   getPlaceholder,
@@ -14,10 +18,11 @@ import {
   DATE,
   BOOLEAN,
   UUID,
-  JSONDTYPE,
-  JSONB,
   TIMESTAMP,
   TIMETZ,
+  JSONB,
+  JSONDTYPE,
+  TEXT,
 } from '../utils';
 // import RichTextEditor from 'react-rte';
 import { replace } from 'react-router-redux';
@@ -66,7 +71,12 @@ class EditItem extends Component {
     }
 
     const styles = require('../../../Common/TableCommon/Table.scss');
-    const columns = schemas.find(x => x.table_name === tableName).columns;
+
+    const currentTable = schemas.find(
+      x => x.table_name === tableName && x.table_schema === currentSchema
+    );
+
+    const columns = currentTable.columns;
 
     const refs = {};
     const elements = columns.map((col, i) => {
@@ -77,186 +87,65 @@ class EditItem extends Component {
         refs[colName].valueNode = node;
       };
       const clicker = e => {
-        e.target.parentNode.click();
+        e.target
+          .closest('.radio-inline')
+          .querySelector('input[type="radio"]').checked = true;
         e.target.focus();
+      };
+
+      const standardEditProps = {
+        className: `form-control ${styles.insertBox}`,
+        onClick: clicker,
+        ref: inputRef,
+        'data-test': `typed-input-${i}`,
+        type: 'text',
+        defaultValue: oldItem[colName],
       };
 
       // Text type
       let typedInput = (
-        <input
-          placeholder={getPlaceholder(colType)}
-          type="text"
-          className={'form-control ' + styles.insertBox}
-          onClick={clicker}
-          ref={inputRef}
-          defaultValue={oldItem[colName]}
-          data-test={`typed-input-${i}`}
-        />
+        <input {...standardEditProps} placeholder={getPlaceholder(colType)} />
       );
 
-      // Integer
-      if (colType === INTEGER) {
-        typedInput = (
-          <input
-            placeholder={getPlaceholder(colType)}
-            type="text"
-            className={'form-control ' + styles.insertBox}
-            onClick={clicker}
-            ref={inputRef}
-            defaultValue={oldItem[colName]}
-            data-test={`typed-input-${i}`}
-          />
-        );
-      } else if (colType === BIGINT) {
-        typedInput = (
-          <input
-            placeholder={getPlaceholder(colType)}
-            type="text"
-            className={'form-control ' + styles.insertBox}
-            onClick={clicker}
-            ref={inputRef}
-            defaultValue={oldItem[colName]}
-            data-test={`typed-input-${i}`}
-          />
-        );
-      } else if (colType === NUMERIC) {
-        typedInput = (
-          <input
-            placeholder={getPlaceholder(colType)}
-            type="text"
-            className={'form-control ' + styles.insertBox}
-            onClick={clicker}
-            ref={inputRef}
-            defaultValue={oldItem[colName]}
-            data-test={`typed-input-${i}`}
-          />
-        );
-      } else if (colType === TIMESTAMP) {
-        typedInput = (
-          <input
-            placeholder={getPlaceholder(colType)}
-            type="text"
-            className={'form-control ' + styles.insertBox}
-            onClick={clicker}
-            ref={inputRef}
-            defaultValue={oldItem[colName]}
-            data-test={`typed-input-${i}`}
-          />
-        );
-      } else if (colType === DATE) {
-        typedInput = (
-          <input
-            placeholder={getPlaceholder(colType)}
-            type="text"
-            className={'form-control ' + styles.insertBox}
-            onClick={clicker}
-            ref={inputRef}
-            defaultValue={oldItem[colName]}
-            data-test={`typed-input-${i}`}
-          />
-        );
-      } else if (colType === TIMETZ) {
-        typedInput = (
-          <input
-            placeholder={getPlaceholder(colType)}
-            type="text"
-            className={'form-control ' + styles.insertBox}
-            onClick={clicker}
-            ref={inputRef}
-            defaultValue={oldItem[colName]}
-            data-test={`typed-input-${i}`}
-          />
-        );
-      } else if (colType === JSONDTYPE || colType === JSONB) {
-        typedInput = (
-          <input
-            placeholder={getPlaceholder(colType)}
-            type="text"
-            className={'form-control ' + styles.insertBox}
-            onClick={clicker}
-            ref={inputRef}
-            defaultValue={JSON.stringify(oldItem[colName])}
-            data-test={`typed-input-${i}`}
-          />
-        );
-      } else if (colType === BOOLEAN) {
-        typedInput = (
-          <select
-            className="form-control"
-            onClick={clicker}
-            ref={inputRef}
-            defaultValue={JSON.stringify(oldItem[colName])}
-            onClick={e => {
-              e.target.parentNode.parentNode.click();
-              e.target.focus();
-            }}
-            data-test={`typed-input-${i}`}
-          >
-            <option value="true">True</option>
-            <option value="false">False</option>
-          </select>
-        );
-      } else if (colType === UUID) {
-        typedInput = (
-          <input
-            placeholder={getPlaceholder(colType)}
-            type="text"
-            className={'form-control ' + styles.insertBox}
-            onClick={clicker}
-            ref={inputRef}
-            defaultValue={oldItem[colName]}
-            data-test={`typed-input-${i}`}
-          />
-        );
-      } else {
-        // everything else is text.
-        // find value to be shown. rich text editor vs clone
-        let defaultValue = '';
-        let currentValue = '';
-        if (
-          this.state.editorColumnMap[colName] === null ||
-          this.state.editorColumnMap[colName] === undefined
-        ) {
-          defaultValue = oldItem[colName];
-        } else if (this.state.editorColumnMap[colName] !== null) {
-          defaultValue = this.state.editorColumnMap[colName];
-          currentValue = this.state.editorColumnMap[colName];
-        }
-        if (currentValue !== '') {
+      switch (colType) {
+        case INTEGER:
+        case BIGINT:
+        case NUMERIC:
+        case TIMESTAMP:
+        case DATE:
+        case TIMETZ:
+        case UUID:
+          break;
+        case JSONB:
+        case JSONDTYPE:
           typedInput = (
-            <span>
-              <input
-                placeholder={'text'}
-                type="text"
-                className={'form-control ' + styles.insertBox}
-                onClick={clicker}
-                ref={inputRef}
-                onChange={e => {
-                  this.onTextChange(e, colName);
-                }}
-                value={currentValue}
-                data-test={`typed-input-${i}`}
-              />
-            </span>
+            <JsonInput
+              standardProps={{
+                ...standardEditProps,
+                defaultValue: JSON.stringify(oldItem[colName]),
+              }}
+              placeholderProp={getPlaceholder(colType)}
+            />
           );
-        } else {
+          break;
+        case TEXT:
           typedInput = (
-            <span>
-              <input
-                placeholder={'text'}
-                type="text"
-                className={'form-control ' + styles.insertBox}
-                onClick={clicker}
-                ref={inputRef}
-                onChange={e => {
-                  this.onTextChange(e, colName);
-                }}
-                value={defaultValue}
-                data-test={`typed-input-${i}`}
-              />
-            </span>
+            <TextInput
+              standardProps={{ ...standardEditProps }}
+              placeholderProp={getPlaceholder(colType)}
+            />
           );
-        }
+          break;
+        case BOOLEAN:
+          typedInput = (
+            <select {...standardEditProps}>
+              <option value="true">True</option>
+              <option value="false">False</option>
+            </select>
+          );
+          break;
+        default:
+          break;
       }
 
       return (
@@ -350,7 +239,10 @@ class EditItem extends Component {
                       // default
                       return;
                     } else {
-                      inputValues[colName] = refs[colName].valueNode.value; // TypedInput is an input inside a div
+                      inputValues[colName] =
+                        refs[colName].valueNode.props !== undefined
+                          ? refs[colName].valueNode.props.value
+                          : refs[colName].valueNode.value;
                     }
                   });
                   dispatch(editItem(tableName, inputValues));
@@ -359,6 +251,10 @@ class EditItem extends Component {
               >
                 {buttonText}
               </Button>
+              <ReloadEnumValuesButton
+                dispatch={dispatch}
+                isEnum={currentTable.is_enum}
+              />
             </form>
           </div>
           <div className="col-xs-3">{alert}</div>

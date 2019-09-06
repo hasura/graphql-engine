@@ -6,41 +6,16 @@ import {
   setRetryTimeout,
   showValidationError,
 } from './Actions';
-import Tooltip from './Tooltip';
-
-import semverCheck from '../../../../helpers/semver';
+import Tooltip from '../../../Common/Tooltip/Tooltip';
 
 class RetryConfEditor extends React.Component {
-  state = {
-    supportRetryTimeout: false,
-  };
-
-  componentDidMount() {
-    if (this.props.serverVersion) {
-      this.checkRetryTimeoutSupport(this.props.serverVersion);
-    }
-  }
-
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.serverVersion !== this.props.serverVersion) {
-      this.checkRetryTimeoutSupport(this.props.serverVersion);
-    }
-  }
-
   setValues = () => {
     const { dispatch } = this.props;
     const retryConf = this.props.retryConf || {};
     dispatch(setRetryNum(retryConf.num_retries || 0));
     dispatch(setRetryInterval(retryConf.interval_sec || 10));
-    if (this.state.supportRetryTimeout) {
-      dispatch(setRetryTimeout(retryConf.timeout_sec || 60));
-    }
+    dispatch(setRetryTimeout(retryConf.timeout_sec || 60));
   };
-
-  checkRetryTimeoutSupport(version) {
-    const supportRetryTimeout = semverCheck('triggerRetryTimeout', version);
-    this.setState({ supportRetryTimeout });
-  }
 
   validateAndSave = () => {
     const {
@@ -69,20 +44,19 @@ class RetryConfEditor extends React.Component {
     }
     dispatch(setRetryInterval(iRetryInterval));
 
-    if (this.state.supportRetryTimeout) {
-      if (isNaN(iTimeout) || iTimeout <= 0) {
-        dispatch(showValidationError('Timeout must be a positive number!'));
-        return;
-      }
-      dispatch(setRetryTimeout(iTimeout));
+    if (isNaN(iTimeout) || iTimeout <= 0) {
+      dispatch(showValidationError('Timeout must be a positive number!'));
+      return;
     }
+    dispatch(setRetryTimeout(iTimeout));
+
     this.props.save();
   };
 
   render() {
-    const { styles, dispatch, modifyTrigger, save } = this.props;
+    const { styles, dispatch, modifyTrigger } = this.props;
     const retryConf = this.props.retryConf || {};
-    const { supportRetryTimeout } = this.state;
+
     const collapsed = () => (
       <div className={styles.modifyOps}>
         <div className={styles.modifyOpsCollapsedContent1}>
@@ -101,16 +75,12 @@ class RetryConfEditor extends React.Component {
             {retryConf.interval_sec || 10}
           </div>
         </div>
-        {supportRetryTimeout && (
-          <div className={styles.modifyOpsCollapsedContent1}>
-            <div className={'col-md-4 ' + styles.padd_remove}>
-              Timeout (sec):
-            </div>
-            <div className={'col-md-12 ' + styles.padd_remove}>
-              {retryConf.timeout_sec || 60}
-            </div>
+        <div className={styles.modifyOpsCollapsedContent1}>
+          <div className={'col-md-4 ' + styles.padd_remove}>Timeout (sec):</div>
+          <div className={'col-md-12 ' + styles.padd_remove}>
+            {retryConf.timeout_sec || 60}
           </div>
-        )}
+        </div>
       </div>
     );
 
@@ -146,23 +116,21 @@ class RetryConfEditor extends React.Component {
             />
           </div>
         </div>
-        {this.state.supportRetryTimeout && (
-          <div className={styles.modifyOpsCollapsedContent1}>
-            <div className={`col-md-4 ${styles.padd_remove}`}>
-              Timeout (sec):&nbsp;
-            </div>
-            <div className="col-md-12">
-              <input
-                type="text"
-                className={`${styles.input} form-control ${
-                  styles.add_mar_right
-                } ${styles.modifyRetryConfTextbox}`}
-                value={modifyTrigger.retryConf.timeout}
-                onChange={e => dispatch(setRetryTimeout(e.target.value))}
-              />
-            </div>
+        <div className={styles.modifyOpsCollapsedContent1}>
+          <div className={`col-md-4 ${styles.padd_remove}`}>
+            Timeout (sec):&nbsp;
           </div>
-        )}
+          <div className="col-md-12">
+            <input
+              type="text"
+              className={`${styles.input} form-control ${
+                styles.add_mar_right
+              } ${styles.modifyRetryConfTextbox}`}
+              value={modifyTrigger.retryConf.timeout}
+              onChange={e => dispatch(setRetryTimeout(e.target.value))}
+            />
+          </div>
+        </div>
       </div>
     );
 

@@ -43,7 +43,7 @@ Execute the following command. For the endpoint referred here, let's say you've
 deployed the GraphQL engine on Heroku, then this endpoint is:
 ``https://my-graphql.herokuapp.com``. In case you've deployed this using Docker,
 the URL might be ``http://xx.xx.xx.xx:8080``. This endpoint should not contain
-the ``v1alpha1/graphql`` API path. It should just be the hostname and any
+the ``v1/graphql`` API path. It should just be the hostname and any
 sub-path if it is configured that way. 
 
 .. code-block:: bash
@@ -59,9 +59,9 @@ Hasura migrations. You can commit this directory to version control.
 .. note::
 
    In case there is an admin secret set, you can set it as an environment
-   variable ``HASURA_GRAPHQL_ADMIN_SECRET=<your-admin-secret`` on the local
+   variable ``HASURA_GRAPHQL_ADMIN_SECRET=<your-admin-secret>`` on the local
    machine and the the CLI will use it. You can also use it as a flag to CLI:
-   ``--admin-secret "<your-admin-secret>"``.
+   ``--admin-secret '<your-admin-secret>'``.
 
 Step 3: Initialize the migrations as per your current state
 -----------------------------------------------------------
@@ -71,12 +71,14 @@ metadata from server:
 
 .. code-block:: bash
 
+   # (available after version v1.0.0-alpha45)
    # create migration files (note that this will only export public schema from postgres)
    hasura migrate create "init" --from-server
 
    # note down the version
    # mark the migration as applied on this server
    hasura migrate apply --version "<version>" --skip-execution
+
 
 This command will create a new "migration" under the ``migrations`` directory
 with the file name as ``<timestamp(version)>_init.up.yaml``. This file will
@@ -87,7 +89,15 @@ about the format of migration files, check out the :ref:`migration_file_format`.
 
 .. note::
 
-  Migration version cannot be "0". i.e. the files cannot be of the form ``0_<something>.up.yaml``
+  If you need to export other schemas along with ``public``, you can name them using the
+  ``--schema`` flag. 
+  
+  For example, to export schemas ``public``, ``schema1`` and ``schema2``,
+  execute the following command:
+
+  .. code-block:: bash
+
+     hasura migrate create "init" --from-server --schema "public" --schema "schema1" --schema "schema2"
 
 Step 4: Use the console from the CLI
 ------------------------------------

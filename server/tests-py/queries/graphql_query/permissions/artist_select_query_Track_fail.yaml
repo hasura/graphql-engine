@@ -1,6 +1,6 @@
 description: Artist can only select his/her tracks. Without sending header (Error)
-url: /v1alpha1/graphql
-status: 400
+url: /v1/graphql
+status: 200
 headers:
   X-Hasura-Role: Artist
 response:

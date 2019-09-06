@@ -70,11 +70,15 @@ deploy_console() {
     echo "deploying console"
 
     cd "$ROOT/console"
-    export VERSION=$(../scripts/get-version-circleci.sh)
+    export VERSION=$(../scripts/get-console-assets-version.sh)
     export DIST_PATH="/build/_console_output"
-    make gzip-assets
-    make gcloud-cp-stable
-    make gcloud-set-metadata
+    local GS_BUCKET_ROOT="gs://graphql-engine-cdn.hasura.io/console/assets/$VERSION"
+    # assets are at /build/_console_output/assets/versioned, already gzipped
+    gsutil cp "$DIST_PATH/assets/versioned/main.js.gz" "$GS_BUCKET_ROOT/main.js.gz"
+    gsutil cp "$DIST_PATH/assets/versioned/main.css.gz" "$GS_BUCKET_ROOT/main.css.gz"
+    gsutil cp "$DIST_PATH/assets/versioned/vendor.js.gz" "$GS_BUCKET_ROOT/vendor.js.gz"
+    gsutil setmeta -h "Content-Encoding: gzip" "$GS_BUCKET_ROOT/*"
+
     unset VERSION
     unset DIST_PATH
 }
@@ -82,10 +86,15 @@ deploy_console() {
 # build and push container for auto-migrations
 build_and_push_cli_migrations_image() {
     IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations"
+    LATEST_IMAGE_TAG="hasura/graphql-engine:latest.cli-migrations"
     cd "$ROOT/scripts/cli-migrations"
     cp /build/_cli_output/binaries/cli-hasura-linux-amd64 .
     docker build -t "$IMAGE_TAG" .
     docker push "$IMAGE_TAG"
+
+    # push latest.cli-migrations tag
+    docker tag "$IMAGE_TAG" "$LATEST_IMAGE_TAG"
+    docker push "$LATEST_IMAGE_TAG"
 }
 
 # copy docker-compose-https manifests to gcr for digital ocean one-click app
@@ -106,7 +115,7 @@ setup_gcloud() {
 # push the server binary to google cloud storage
 push_server_binary() {
     gsutil cp /build/_server_output/graphql-engine \
-              gs://graphql-engine-cdn.hasura.io/server/latest/linux-amd64  
+              gs://graphql-engine-cdn.hasura.io/server/latest/linux-amd64
 }
 
 # skip deploy for pull requests

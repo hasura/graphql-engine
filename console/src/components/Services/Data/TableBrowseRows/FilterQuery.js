@@ -23,6 +23,7 @@ import {
 } from './FilterActions.js';
 import { setDefaultQuery, runQuery, setOffset } from './FilterActions';
 import Button from '../../../Common/Button/Button';
+import ReloadEnumValuesButton from '../Common/ReusableComponents/ReloadEnumValuesButton';
 
 const renderCols = (colName, tableSchema, onChange, usage, key) => {
   const columns = tableSchema.columns.map(c => c.column_name);
@@ -176,8 +177,9 @@ class FilterQuery extends Component {
   render() {
     const { dispatch, whereAnd, tableSchema, orderBy } = this.props; // eslint-disable-line no-unused-vars
     const styles = require('../../../Common/FilterQuery/FilterQuery.scss');
+
     return (
-      <div className={styles.filterOptions}>
+      <div className={styles.add_mar_top}>
         <form
           onSubmit={e => {
             e.preventDefault();
@@ -209,9 +211,15 @@ class FilterQuery extends Component {
               color="yellow"
               size="sm"
               data-test="run-query"
+              className={styles.add_mar_right}
             >
               Run query
             </Button>
+            <ReloadEnumValuesButton
+              dispatch={dispatch}
+              isEnum={tableSchema.is_enum}
+              tooltipStyle={styles.add_mar_left_mid}
+            />
             {/* <div className={styles.count + ' alert alert-info'}><i>Total <b>{tableName}</b> rows in the database for current query: {count} </i></div> */}
           </div>
         </form>

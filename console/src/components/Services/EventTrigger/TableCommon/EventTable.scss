@@ -16,14 +16,6 @@
   }
 }
 
-.advancedOperations {
-  hr {
-    margin-top: 10px;
-    margin-bottom: 10px;
-  }
-  margin-bottom: 10px;
-}
-
 .retryLabel {
   display: block;
 }
@@ -36,7 +28,21 @@
   display: flex;
   align-items: center;
 }
-
+.tabletdCenter
+{
+  height: 21px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tableArrowCenter
+{
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+}
 .invocationsSection {
   margin-top: 20px;
 
@@ -52,7 +58,6 @@
   .invocationSuccess {
     color: #28a745
   }
-
   .invocationFailure {
     color: red;
   }
@@ -73,7 +78,6 @@
   .invocationSuccess {
     color: #28a745;
   }
-
   .invocationFailure {
     color: red;
   }
@@ -134,7 +138,7 @@
 }
 
 .redeliverModal {
-  width: 60%;
+  width: 75%;
 }
 
 .redeliverEventSection {

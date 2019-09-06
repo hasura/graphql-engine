@@ -1,21 +1,25 @@
 import React from 'react';
 
 /* This function sets the styling to the way the relationship looks, for eg: article.id -> user.user_id */
-export const getRelDef = (isObjRel, _lCol, _rCol, lTable, _rTable) => {
-  const rTable = _rTable.name ? _rTable.name : _rTable;
+export const getRelDef = relMeta => {
+  const lcol =
+    relMeta.lcol.length > 1
+      ? '( ' + relMeta.lcol.join(', ') + ' )'
+      : relMeta.lcol[0];
+  const rcol =
+    relMeta.rcol.length > 1
+      ? '( ' + relMeta.rcol.join(', ') + ' )'
+      : relMeta.rcol[0];
 
-  const lCol = _lCol.length > 1 ? '( ' + _lCol.join(', ') + ' )' : _lCol[0];
-  const rCol = _rCol.length > 1 ? '( ' + _rCol.join(', ') + ' )' : _rCol[0];
-
-  return isObjRel ? (
+  return relMeta.isObjRel ? (
     <span>
-      {lTable} . {lCol} &nbsp;&rarr;&nbsp;
-      {rTable} . {rCol}
+      {relMeta.lTable} . {lcol} &nbsp;&rarr;&nbsp;
+      {relMeta.rTable} . {rcol}
     </span>
   ) : (
     <span>
-      {rTable} . {rCol} &nbsp;&rarr;&nbsp;
-      {lTable} . {lCol}
+      {relMeta.rTable} . {rcol} &nbsp;&rarr;&nbsp;
+      {relMeta.lTable} . {lcol}
     </span>
   );
 };

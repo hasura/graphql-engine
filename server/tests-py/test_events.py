@@ -563,3 +563,21 @@ class TestSessionVariables(object):
         st_code, resp = delete(hge_ctx, table, where_exp)
         assert st_code == 200, resp
         check_event(hge_ctx, evts_webhook, "t1_all", table, "DELETE", exp_ev_data)
+
+
+class TestManualEvents(object):
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, hge_ctx, evts_webhook):
+        print("In setup method")
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/manual_events/setup.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/manual_events/teardown.yaml')
+        assert st_code == 200, resp
+
+    def test_basic(self, hge_ctx, evts_webhook):
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/manual_events/enabled.yaml')
+        assert st_code == 200, resp
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/manual_events/disabled.yaml')
+        assert st_code == 400, resp

@@ -13,10 +13,10 @@ const getSQLValue = value => {
   return sqlValue.replace(/['"]+/g, '');
 };
 
-const parseCreateSQL = (sql, allowFunction) => {
+const parseCreateSQL = sql => {
   const _objects = [];
 
-  const regExp = allowFunction ? createSQLRegex : createSQLRegexNoFunction;
+  const regExp = createSQLRegex;
 
   const matches = sql.match(new RegExp(regExp, 'gmi'));
   if (matches) {

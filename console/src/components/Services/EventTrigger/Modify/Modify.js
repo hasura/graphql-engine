@@ -3,7 +3,6 @@ import TableHeader from '../TableCommon/TableHeader';
 import styles from './ModifyEvent.scss';
 
 import { getTableColumns } from '../utils';
-import _push from '../push';
 
 import Info from './Info';
 import WebhookEditor from './WebhookEditor';
@@ -12,20 +11,29 @@ import RetryConfEditor from './RetryConfEditor';
 import HeadersEditor from './HeadersEditor';
 import ActionButtons from './ActionButtons';
 
-import { save, setDefaults } from './Actions';
+import { save, setDefaults, RESET_MODIFY_STATE } from './Actions';
+
+import { NotFoundError } from '../../../Error/PageNotFound';
 
 class Modify extends React.Component {
   componentDidMount() {
-    this.props.dispatch(setDefaults());
+    const { dispatch } = this.props;
+    dispatch(setDefaults());
   }
+
+  componentWillUnmount() {
+    const { dispatch } = this.props;
+    dispatch({
+      type: RESET_MODIFY_STATE,
+    });
+  }
+
   render() {
     const {
       modifyTriggerName,
       modifyTrigger,
       triggerList,
-      migrationMode,
       dispatch,
-      tableSchemas,
     } = this.props;
 
     const currentTrigger = triggerList.find(
@@ -33,8 +41,8 @@ class Modify extends React.Component {
     );
 
     if (!currentTrigger) {
-      dispatch(_push('/events/manage'));
-      return null;
+      // throw a 404 exception
+      throw new NotFoundError();
     }
 
     const {
@@ -45,26 +53,19 @@ class Modify extends React.Component {
       retry_conf,
     } = currentTrigger.configuration;
 
-    const currentTableSchema = tableSchemas.find(
-      tableSchema =>
-        tableSchema.table_name === currentTrigger.table_name &&
-        tableSchema.table_schema === currentTrigger.schema_name
-    );
-
     return (
       <div className={styles.containerWhole + ' container-fluid'}>
         <TableHeader
           dispatch={dispatch}
           triggerName={modifyTriggerName}
           tabName="modify"
-          migrationMode={migrationMode}
         />
         <br />
         <div className={styles.container}>
           <Info
             triggerName={currentTrigger.name}
             tableName={currentTrigger.table_name}
-            schemaName={currentTrigger.schema_name}
+            schemaName={currentTrigger.table_schema}
             styles={styles}
           />
           <WebhookEditor
@@ -78,7 +79,7 @@ class Modify extends React.Component {
           />
           <OperationEditor
             definition={definition}
-            allTableColumns={getTableColumns(currentTableSchema)}
+            allTableColumns={getTableColumns(currentTrigger)}
             dispatch={dispatch}
             modifyTrigger={modifyTrigger}
             newDefinition={null}

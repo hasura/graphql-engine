@@ -1,0 +1,20 @@
+description: Query as admin. Allowlist is not enforced.
+url: /v1/graphql
+status: 200
+response:
+  data:
+    user:
+    - id: 2
+      account_id: 2
+      company: null
+      name: reckler
+query:
+  query: |
+    query {
+      user(where: {company: {_is_null: true}}){
+        id
+        account_id
+        company
+        name
+      }
+    }

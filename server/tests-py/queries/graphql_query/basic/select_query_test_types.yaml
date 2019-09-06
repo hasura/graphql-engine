@@ -1,5 +1,5 @@
 description: GraphQL query to test different data types of Postgres
-url: /v1alpha1/graphql
+url: /v1/graphql
 status: 200
 response:
   data:

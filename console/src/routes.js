@@ -5,26 +5,32 @@ import { connect } from 'react-redux';
 
 import { App, Main, PageNotFound } from 'components';
 
+import globals from './Globals';
+
+import validateLogin from './utils/validateLogin';
+
+import { composeOnEnterHooks } from 'utils/router';
+
+import { loadMigrationStatus } from './components/Main/Actions';
+
 import { dataRouterUtils } from './components/Services/Data';
 
 import { eventRouterUtils } from './components/Services/EventTrigger';
 
-import { getCustomResolverRouter } from './components/Services/CustomResolver';
-
-import { loadMigrationStatus } from './components/Main/Actions';
-
-import { composeOnEnterHooks } from 'utils/router';
+import { getRemoteSchemaRouter } from './components/Services/RemoteSchema';
 
 import generatedApiExplorer from './components/Services/ApiExplorer/ApiExplorerGenerator';
+
+import generatedVoyagerConnector from './components/Services/VoyagerView/VoyagerView';
+
+import about from './components/Services/About/About';
 
 import generatedLoginConnector from './components/Login/Login';
 
 import metadataContainer from './components/Services/Metadata/Container';
-import metadataOptionsContainer from './components/Services/Metadata/MetadataOptions';
-import metadataStatusContainer from './components/Services/Metadata/MetadataStatus';
-import globals from './Globals';
-
-import validateLogin from './utils/validateLogin';
+import metadataOptionsContainer from './components/Services/Metadata/MetadataOptions/MetadataOptions';
+import metadataStatusContainer from './components/Services/Metadata/MetadataStatus/MetadataStatus';
+import allowedQueriesContainer from './components/Services/Metadata/AllowedQueries/AllowedQueries';
 
 const routes = store => {
   // load hasuractl migration status
@@ -71,7 +77,7 @@ const routes = store => {
   );
   const eventRouter = _eventRouterUtils.makeEventRouter;
 
-  const customResolverRouter = getCustomResolverRouter(
+  const remoteSchemaRouter = getRemoteSchemaRouter(
     connect,
     store,
     composeOnEnterHooks
@@ -91,6 +97,11 @@ const routes = store => {
             path="api-explorer"
             component={generatedApiExplorer(connect)}
           />
+          <Route
+            path="voyager-view"
+            component={generatedVoyagerConnector(connect)}
+          />
+          <Route path="about" component={about(connect)} />
           <Route path="metadata" component={metadataContainer(connect)}>
             <IndexRedirect to="actions" />
             <Route path="status" component={metadataStatusContainer(connect)} />
@@ -98,10 +109,14 @@ const routes = store => {
               path="actions"
               component={metadataOptionsContainer(connect)}
             />
+            <Route
+              path="allowed-queries"
+              component={allowedQueriesContainer(connect)}
+            />
           </Route>
           {dataRouter}
           {eventRouter}
-          {customResolverRouter}
+          {remoteSchemaRouter}
         </Route>
       </Route>
       <Route path="404" component={PageNotFound} status="404" />

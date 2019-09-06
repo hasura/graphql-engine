@@ -1,6 +1,12 @@
 import React from 'react';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
 
+export const manualTriggerInfo = (
+  <Tooltip id="tooltip-manual-trigger-description">
+    Selecting this option will let you invoke this trigger from Data Broeser
+  </Tooltip>
+);
+
 export const triggerNameDescription = (
   <Tooltip id="tooltip-trigger-name-description">
     Trigger name can be alphanumeric and can contain underscores and hyphens
@@ -9,7 +15,13 @@ export const triggerNameDescription = (
 
 export const operationsDescription = (
   <Tooltip id="tooltip-operations-description">
-    Trigger on these operations on the table
+    Trigger event on these table operations
+  </Tooltip>
+);
+
+export const manualOperationsDescription = (
+  <Tooltip id="tooltip-manual-operations-description">
+    Trigger manually from table data browser in console
   </Tooltip>
 );
 

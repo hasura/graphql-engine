@@ -1,6 +1,6 @@
 description: Query aggregations on article with user role (Error)
-url: /v1alpha1/graphql
-status: 400
+url: /v1/graphql
+status: 200
 response:
   errors:
   - extensions:
@@ -13,8 +13,8 @@ headers:
 query:
   query: |
     query {
-      article_agg{
-        agg{
+      article_agg {
+        agg {
           count
         }
       }

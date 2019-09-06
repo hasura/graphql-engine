@@ -7,7 +7,7 @@ const messaging = firebase.messaging();
 const screens = ['#loading-screen', '#permission-screen', '#input-screen', '#waiting-screen'];
 
 // Replace with HGE_URL
-const HGE_URL = '/v1alpha1/graphql';
+const HGE_URL = '/v1/graphql';
 
 function showScreen(name) {
   for (screen of screens) {
@@ -149,5 +149,5 @@ $( document ).ready(function() {
     }
   });
 
-  $('#hge-console-link').attr('href', HGE_URL.replace('v1alpha1/graphql', 'console'));
+  $('#hge-console-link').attr('href', HGE_URL.replace('v1/graphql', 'console'));
 });

@@ -69,7 +69,7 @@ const insertData = async (insertOrder, sampleData, tables, url, headers) => {
   try {
     const response = await query({
       query: mutation,
-      endpoint: `${url}/v1alpha1/graphql`,
+      endpoint: `${url}/v1/graphql`,
       variables,
       headers,
     });

@@ -6,7 +6,7 @@ import {
   setWebhookUrlType,
   showValidationError,
 } from './Actions';
-import Tooltip from './Tooltip';
+import Tooltip from '../../../Common/Tooltip/Tooltip';
 
 class WebhookEditor extends React.Component {
   setValues = () => {
@@ -81,6 +81,11 @@ class WebhookEditor extends React.Component {
           }
           testId="webhook"
         />
+        <br />
+        <small>
+          Note: Specifying the webhook URL via an environmental variable is
+          recommended if you have different URLs for multiple environments.
+        </small>
       </div>
     );
 

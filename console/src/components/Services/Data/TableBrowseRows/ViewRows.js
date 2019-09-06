@@ -1,8 +1,11 @@
 import React from 'react';
-import { Link } from 'react-router';
 import 'react-table/react-table.css';
 import '../../../Common/TableCommon/ReactTableOverrides.css';
 import DragFoldTable from '../../../Common/TableCommon/DragFoldTable';
+
+import Dropdown from '../../../Common/Dropdown/Dropdown';
+
+import InvokeManualTrigger from '../../EventTrigger/Common/InvokeManualTrigger/InvokeManualTrigger';
 
 import {
   vExpandRel,
@@ -51,8 +54,24 @@ const ViewRows = ({
   isView,
   count,
   expandedRow,
+  manualTriggers = [],
+  updateInvocationRow,
+  updateInvocationFunction,
+  triggeredRow,
+  triggeredFunction,
 }) => {
   const styles = require('../../../Common/TableCommon/Table.scss');
+
+  // Invoke manual trigger status
+  const invokeTrigger = (trigger, row) => {
+    updateInvocationRow(row);
+    updateInvocationFunction(trigger);
+  };
+
+  const onCloseInvokeTrigger = () => {
+    updateInvocationRow(-1);
+    updateInvocationFunction(null);
+  };
 
   const checkIfSingleRow = _curRelName => {
     let _isSingleRow = false;
@@ -68,7 +87,7 @@ const ViewRows = ({
       _curRelName &&
       parentTableSchema &&
       parentTableSchema.relationships.find(
-        r => r.name === _curRelName && r.rel_type === 'object'
+        r => r.rel_name === _curRelName && r.rel_type === 'object'
       )
     ) {
       // Am I an obj_rel for my parent?
@@ -87,10 +106,69 @@ const ViewRows = ({
   const getGridHeadings = (_columns, _relationships) => {
     const _gridHeadings = [];
 
+    const getColWidth = (header, contentRows = []) => {
+      const MAX_WIDTH = 600;
+      const HEADER_PADDING = 42;
+      const CONTENT_PADDING = 18;
+      const HEADER_FONT = 'bold 16px Gudea';
+      const CONTENT_FONT = '14px Gudea';
+
+      const getTextWidth = (text, font) => {
+        // Doesn't work well with non-monospace fonts
+        // const CHAR_WIDTH = 8;
+        // return text.length * CHAR_WIDTH;
+
+        // if given, use cached canvas for better performance
+        // else, create new canvas
+        const canvas =
+          getTextWidth.canvas ||
+          (getTextWidth.canvas = document.createElement('canvas'));
+
+        const context = canvas.getContext('2d');
+        context.font = font;
+
+        const metrics = context.measureText(text);
+        return metrics.width;
+      };
+
+      let maxContentWidth = 0;
+      for (let i = 0; i < contentRows.length; i++) {
+        if (contentRows[i] !== undefined && contentRows[i][header] !== null) {
+          const content = contentRows[i][header];
+
+          let contentString;
+          if (content === null || content === undefined) {
+            contentString = 'NULL';
+          } else if (typeof content === 'object') {
+            contentString = JSON.stringify(content, null, 4);
+          } else {
+            contentString = content.toString();
+          }
+
+          const currLength = getTextWidth(contentString, CONTENT_FONT);
+
+          if (currLength > maxContentWidth) {
+            maxContentWidth = currLength;
+          }
+        }
+      }
+
+      const maxContentCellWidth = maxContentWidth + CONTENT_PADDING;
+
+      const headerCellWidth =
+        getTextWidth(header, HEADER_FONT) + HEADER_PADDING;
+
+      return Math.min(
+        MAX_WIDTH,
+        Math.max(maxContentCellWidth, headerCellWidth)
+      );
+    };
+
     _gridHeadings.push({
       Header: '',
-      accessor: 'actions',
-      id: 'actions',
+      accessor: 'tableRowActionButtons',
+      id: 'tableRowActionButtons',
+      width: 152,
     });
 
     _columns.map(col => {
@@ -118,6 +196,7 @@ const ViewRows = ({
         accessor: columnName,
         id: columnName,
         foldable: true,
+        width: getColWidth(columnName, curRows),
       });
     });
 
@@ -133,6 +212,7 @@ const ViewRows = ({
         accessor: relName,
         id: relName,
         foldable: true,
+        width: getColWidth(relName),
       });
     });
 
@@ -169,6 +249,7 @@ const ViewRows = ({
         let cloneButton;
         let deleteButton;
         let expandButton;
+        let manualTriggersButton;
 
         const getActionButton = (
           type,
@@ -186,9 +267,7 @@ const ViewRows = ({
 
           return (
             <Button
-              className={
-                styles.tableActionBtn + ' ' + styles.add_mar_right_small
-              }
+              className={styles.add_mar_right_small}
               color="white"
               size="xs"
               onClick={disabled ? disabledOnClick : handleClick}
@@ -284,6 +363,68 @@ const ViewRows = ({
           );
         };
 
+        const getManualTriggersButton = () => {
+          if (!manualTriggers.length) {
+            return;
+          }
+
+          const triggerOptions = manualTriggers.map(m => {
+            return {
+              content: (
+                <div>
+                  <Button
+                    color="white"
+                    size="xs"
+                    data-test={`run_manual_trigger_${m.name}`}
+                    onClick={() =>
+                      invokeTrigger.apply(undefined, [m.name, rowIndex])
+                    }
+                  >
+                    Invoke
+                  </Button>
+                  {`${m.name}`}
+                </div>
+              ),
+            };
+          });
+
+          const triggerIcon = <i className="fa fa-caret-square-o-right" />;
+          const triggerTitle = 'Invoke event trigger';
+
+          const triggerBtn = getActionButton(
+            'trigger',
+            triggerIcon,
+            triggerTitle,
+            () => {}
+          );
+
+          const invokeManualTrigger = r =>
+            triggeredRow === rowIndex && (
+              <InvokeManualTrigger
+                args={r}
+                name={`${triggeredFunction}`}
+                onClose={onCloseInvokeTrigger}
+                key={`invoke_function_${triggeredFunction}`}
+                identifier={`invoke_function_${triggeredFunction}`}
+              />
+            );
+
+          return (
+            <div className={styles.display_inline}>
+              <Dropdown
+                testId={`data_browse_rows_trigger_${rowIndex}`}
+                options={triggerOptions}
+                position="right"
+                key={`invoke_data_dropdown_${rowIndex}`}
+                keyPrefix={`invoke_data_dropdown_${rowIndex}`}
+              >
+                {triggerBtn}
+              </Dropdown>
+              {invokeManualTrigger(row)}
+            </div>
+          );
+        };
+
         const showActionBtns = !_isSingleRow && !isView;
 
         if (showActionBtns) {
@@ -296,23 +437,40 @@ const ViewRows = ({
 
         // eslint-disable-next-line prefer-const
         expandButton = getExpandButton();
+        // eslint-disable-next-line prefer-const
+        manualTriggersButton = getManualTriggersButton();
 
         return (
-          <div className={styles.tableCellCenterAligned}>
+          <div key={rowIndex} className={styles.tableCellCenterAligned}>
             {cloneButton}
             {editButton}
             {deleteButton}
             {expandButton}
+            {manualTriggersButton}
           </div>
         );
       };
 
       // Insert Edit, Delete, Clone in a cell
-      newRow.actions = getActionButtons();
+      newRow.tableRowActionButtons = getActionButtons();
 
       // Insert column cells
       _tableSchema.columns.forEach(col => {
         const columnName = col.column_name;
+
+        /* Row is a JSON object with `key` as the column name in the db
+         * and `value` as corresponding column value of the column in the database,
+         * Ex: author table with the following schema:
+         *  id int Primary key,
+         *  name text,
+         *  address json
+         *  `row`:
+         *    {
+         *      id: 1,
+         *      name: "Hasura",
+         *      address: {Hello: "World", Foo: "Bar"}
+         *    }
+         * */
 
         const getColCellContent = () => {
           const rowColumnValue = row[columnName];
@@ -326,8 +484,8 @@ const ViewRows = ({
           } else if (rowColumnValue === undefined) {
             cellValue = 'NULL';
             cellTitle = cellValue;
-          } else if (col.data_type === 'json' || col.data_type === 'jsonb') {
-            cellValue = JSON.stringify(rowColumnValue);
+          } else if (typeof rowColumnValue === 'object') {
+            cellValue = JSON.stringify(rowColumnValue, null, 4);
             cellTitle = cellValue;
           } else {
             cellValue = rowColumnValue.toString();
@@ -409,7 +567,9 @@ const ViewRows = ({
   };
 
   const curRelName = curPath.length > 0 ? curPath.slice(-1)[0] : null;
-  const tableSchema = schemas.find(x => x.table_name === curTableName);
+  const tableSchema = schemas.find(
+    x => x.table_name === curTableName && x.table_schema === currentSchema
+  );
 
   const tableColumnsSorted = tableSchema.columns.sort(ordinalColSort);
   const tableRelationships = tableSchema.relationships;
@@ -460,28 +620,6 @@ const ViewRows = ({
     return _filterQuery;
   };
 
-  // If no primary key
-  const getPrimaryKeyMsg = () => {
-    const _primaryKeyMsg = [];
-
-    if (!hasPrimaryKey) {
-      if (!isView) {
-        _primaryKeyMsg.push(
-          <div key="primaryKeyMsg" className="row">
-            <div className="col-xs-12">
-              <div className="alert alert-warning" role="alert">
-                There is no unique identifier (primary Key) for a row. You need
-                at-least one primary key to allow editing, Please use{' '}
-                <Link to="/data/sql">Raw SQL</Link> to make one or more column
-                as primary key.
-              </div>
-            </div>
-          </div>
-        );
-      }
-    }
-  };
-
   // If query object has expanded columns
   const getChildComponent = () => {
     let _childComponent = null;
@@ -516,10 +654,13 @@ const ViewRows = ({
         const rel = tableSchema.relationships.find(r => r.rel_name === cq.name);
 
         if (rel) {
+          const isObjectRel = rel.rel_type === 'object';
+
           let childRows = curRows[0][cq.name];
-          if (rel.rel_type === 'object') {
+          if (isObjectRel) {
             childRows = [childRows];
           }
+
           // Find the name of this childTable using the rel
           return (
             <ViewRows
@@ -673,7 +814,7 @@ const ViewRows = ({
 
     return (
       <DragFoldTable
-        className="-highlight"
+        className="-highlight -fit-content"
         data={_gridRows}
         columns={_gridHeadings}
         resizable
@@ -682,8 +823,8 @@ const ViewRows = ({
         minRows={0}
         getTheadThProps={getTheadThProps}
         getResizerProps={getResizerProps}
-        showPagination={count > curFilter.limit}
-        defaultPageSize={Math.min(curFilter.limit, count)}
+        showPagination={!isSingleRow}
+        pageSize={curFilter.limit}
         pages={Math.ceil(count / curFilter.limit)}
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
@@ -701,9 +842,7 @@ const ViewRows = ({
   return (
     <div className={isVisible ? '' : 'hide '}>
       {getFilterQuery()}
-      <hr />
-      {getPrimaryKeyMsg()}
-      <div className="row">
+      <div className={`row ${styles.add_mar_top}`}>
         <div className="col-xs-12">
           <div className={styles.tableContainer}>{renderTableBody()}</div>
           <br />

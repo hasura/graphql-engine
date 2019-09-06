@@ -8,7 +8,8 @@ const hasuractlUrl = hasuractlApiHost + ':' + hasuractlApiPort;
 
 const Endpoints = {
   getSchema: `${baseUrl}/v1/query`,
-  graphQLUrl: `${baseUrl}/v1alpha1/graphql`,
+  serverConfig: `${baseUrl}/v1alpha1/config`,
+  graphQLUrl: `${baseUrl}/v1/graphql`,
   schemaChange: `${baseUrl}/v1/query`,
   query: `${baseUrl}/v1/query`,
   rawSQL: `${baseUrl}/v1/query`,

@@ -4,6 +4,41 @@
   display: inline-block;
 }
 
+.analyzerBearerModal {
+  width: 768px;
+}
+.analyzerLabel {
+  text-transform: uppercase;
+	margin: 0;
+	font-size: 12px;
+	color: #000;
+	zoom: 1;
+	border-bottom: 1px solid rgba(155,155,155,0.5);
+	line-height: 2.5;
+	padding-bottom: 2px;
+  .token_validity {
+    font-size: 14px;
+    .invalid_jwt_icon {
+      // cursor: pointer;
+      color: #dc3545;
+    }
+    .valid_jwt_token {
+      // cursor: pointer;
+      color: #28a745;
+    }
+  }
+  span {
+    color: #979797;
+    margin-left: 5px;
+    display: inline-block;
+  }
+}
+.jwt_verification_fail_message {
+  background-color: #e53935;
+  padding: 10px 10px;
+  color: #ffffff;
+  border-radius: 5px;
+}
 .width_80 {
   width: 80%;
 }
@@ -45,10 +80,6 @@
 
 .requestInFocus {
 
-}
-
-.cursorNotAllowed {
-  cursor: not-allowed;
 }
 
 .apiExplorerWrapper {
@@ -272,13 +303,21 @@
     display: inline-block;
   }
 
-  .showAdminSecret {
+  .showAdminSecret, .showInspector {
     cursor: pointer;
     padding-right: 8px;
     font-size: 16px;
     float: left;
     display: inline-block;
   }
+
+  .showInspectorLoading {
+    cursor: pointer;
+    font-size: 16px;
+    float: left;
+    display: inline-block;
+  }
+
   .apiRequestWrapper {
     margin-top: 20px;
     .headerWrapper {

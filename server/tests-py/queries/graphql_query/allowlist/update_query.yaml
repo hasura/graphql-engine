@@ -1,0 +1,45 @@
+- description: Delete query from collection
+  url: /v1/query
+  status: 200
+  query:
+    type: drop_query_from_collection
+    args:
+      collection_name: collection_1
+      query_name: query_1
+
+- description: Add query to collection
+  url: /v1/query
+  status: 200
+  query:
+    type: add_query_to_collection
+    args:
+      collection_name: collection_1
+      query_name: query_1
+      query: |
+        query {
+          user{
+            id
+            name
+          }
+        }
+
+- description: Query as user
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+  response:
+    data:
+      user:
+      - id: 1
+        name: clarke
+      - id: 2
+        name: reckler
+  query:
+    query: |
+      query {
+        user{
+          id
+          name
+        }
+      }

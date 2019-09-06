@@ -56,6 +56,9 @@ ADMIN_SECRET=xyz
 IS_ADMIN_SECRET_SET=true
 CONSOLE_MODE=server
 URL_PREFIX=/
+ASSETS_PATH=https://graphql-engine-cdn.hasura.io/console/assets
+ASSETS_VERSION=channel/beta/v1.0
+CDN_ASSETS=true
 ```
 
 Note that `CONSOLE_MODE` is set to `server`. In this mode, **migrations** will be disabled and the corresponding functionality on the console will be hidden. If you are looking to add/tweak functionality related to migrations, check out [Development with Hasura CLI](#development-with-hasura-cli-cli-mode).
@@ -133,6 +136,9 @@ Tests are written using [Cypress](https://www.cypress.io/).
 
 You can use the [Redux DevTools Extension](http://extension.remotedev.io/) to inspect and debug the Redux store.
 It should automatically connect to the Redux store when started in development mode.
+
+By default [redux-logger](https://www.npmjs.com/package/redux-logger) is enabled to assist in development.
+You can disable it if you wish by commenting out the `createLogger` line in `src/client.js`
 
 ### Run Tests
 

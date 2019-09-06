@@ -1,8 +1,12 @@
+{- |
+Description: Create/delete SQL functions to/from Hasura metadata.
+-}
+
 module Hasura.RQL.DDL.Schema.Function where
 
+import           Hasura.EncJSON
 import           Hasura.GraphQL.Utils          (isValidName, showNames)
 import           Hasura.Prelude
-import           Hasura.EncJSON
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -38,21 +42,29 @@ data RawFuncInfo
   , rfiReturnTypeName   :: !T.Text
   , rfiReturnTypeType   :: !PGTypType
   , rfiReturnsSet       :: !Bool
-  , rfiInputArgTypes    :: ![PGColType]
+  , rfiInputArgTypes    :: ![PGScalarType]
   , rfiInputArgNames    :: ![T.Text]
+  , rfiDefaultArgs      :: !Int
   , rfiReturnsTable     :: !Bool
   } deriving (Show, Eq)
-$(deriveFromJSON (aesonDrop 3 snakeCase) ''RawFuncInfo)
+$(deriveJSON (aesonDrop 3 snakeCase) ''RawFuncInfo)
 
-mkFunctionArgs :: [PGColType] -> [T.Text] -> [FunctionArg]
-mkFunctionArgs tys argNames =
+mkFunctionArgs :: Int -> [PGScalarType] -> [T.Text] -> [FunctionArg]
+mkFunctionArgs defArgsNo tys argNames =
   bool withNames withNoNames $ null argNames
   where
-    withNoNames = flip map tys $ \ty -> FunctionArg Nothing ty
-    withNames = zipWith mkArg argNames tys
+    hasDefaultBoolSeq = replicate (length argNames - defArgsNo) False
+                        -- only last arguments can have default expression
+                        <> replicate defArgsNo True
 
-    mkArg "" ty = FunctionArg Nothing ty
-    mkArg n  ty = flip FunctionArg ty $ Just $ FunctionArgName n
+    tysWithHasDefault = zip tys hasDefaultBoolSeq
+
+    withNoNames = flip map tysWithHasDefault $
+                  \(ty, hasDef) -> FunctionArg Nothing ty hasDef
+    withNames = zipWith mkArg argNames tysWithHasDefault
+
+    mkArg "" (ty, hasDef) = FunctionArg Nothing ty hasDef
+    mkArg n  (ty, hasDef) = FunctionArg (Just $ FunctionArgName n) ty hasDef
 
 validateFuncArgs :: MonadError QErr m => [FunctionArg] -> m ()
 validateFuncArgs args =
@@ -63,7 +75,8 @@ validateFuncArgs args =
     funcArgsText = mapMaybe (fmap getFuncArgNameTxt . faName) args
     invalidArgs = filter (not . isValidName) $ map G.Name funcArgsText
 
-mkFunctionInfo :: QualifiedFunction -> RawFuncInfo -> Q.TxE QErr FunctionInfo
+mkFunctionInfo
+  :: QErrM m => QualifiedFunction -> RawFuncInfo -> m FunctionInfo
 mkFunctionInfo qf rawFuncInfo = do
   -- throw error if function has variadic arguments
   when hasVariadic $ throw400 NotSupported "function with \"VARIADIC\" parameters are not supported"
@@ -76,32 +89,17 @@ mkFunctionInfo qf rawFuncInfo = do
   -- throw error if function type is VOLATILE
   when (funTy == FTVOLATILE) $ throw400 NotSupported "function of type \"VOLATILE\" is not supported now"
 
-  let funcArgs = mkFunctionArgs inpArgTyps inpArgNames
+  let funcArgs = mkFunctionArgs defArgsNo inpArgTyps inpArgNames
   validateFuncArgs funcArgs
 
   let funcArgsSeq = Seq.fromList funcArgs
-      dep = SchemaDependency (SOTable retTable) "table"
+      dep = SchemaDependency (SOTable retTable) DRTable
       retTable = QualifiedObject retSn (TableName retN)
   return $ FunctionInfo qf False funTy funcArgsSeq retTable [dep]
   where
     RawFuncInfo hasVariadic funTy retSn retN retTyTyp
-                retSet inpArgTyps inpArgNames returnsTab
+                retSet inpArgTyps inpArgNames defArgsNo returnsTab
                 = rawFuncInfo
-
--- Build function info
-getFunctionInfo :: QualifiedFunction -> Q.TxE QErr FunctionInfo
-getFunctionInfo qf@(QualifiedObject sn fn) = do
-  -- fetch function details
-  funcData <- Q.catchE defaultTxErrorHandler $
-              Q.listQ $(Q.sqlFromFile "src-rsr/function_info.sql") (sn, fn) True
-
-  case funcData of
-    []                              ->
-      throw400 NotExists $ "no such function exists in postgres : " <>> qf
-    [Identity (Q.AltJ rawFuncInfo)] -> mkFunctionInfo qf rawFuncInfo
-    _                               ->
-      throw400 NotSupported $
-      "function " <> qf <<> " is overloaded. Overloaded functions are not supported"
 
 saveFunctionToCatalog :: QualifiedFunction -> Bool -> Q.TxE QErr ()
 saveFunctionToCatalog (QualifiedObject sn fn) isSystemDefined =
@@ -122,6 +120,9 @@ newtype TrackFunction
   { tfName :: QualifiedFunction}
   deriving (Show, Eq, FromJSON, ToJSON, Lift)
 
+-- | Track function, Phase 1:
+-- Validate function tracking operation. Fails if function is already being
+-- tracked, or if a table with the same name is being tracked.
 trackFunctionP1
   :: (CacheRM m, UserInfoM m, QErrM m) => TrackFunction -> m ()
 trackFunctionP1 (TrackFunction qf) = do
@@ -129,11 +130,14 @@ trackFunctionP1 (TrackFunction qf) = do
   rawSchemaCache <- askSchemaCache
   when (M.member qf $ scFunctions rawSchemaCache) $
     throw400 AlreadyTracked $ "function already tracked : " <>> qf
+  let qt = fmap (TableName . getFunctionTxt) qf
+  when (M.member qt $ scTables rawSchemaCache) $
+    throw400 NotSupported $ "table with name " <> qf <<> " already exists"
 
 trackFunctionP2Setup :: (QErrM m, CacheRWM m, MonadTx m)
-                     => QualifiedFunction -> m ()
-trackFunctionP2Setup qf = do
-  fi <- withPathK "name" $ liftTx $ getFunctionInfo qf
+                     => QualifiedFunction -> RawFuncInfo -> m ()
+trackFunctionP2Setup qf rawfi = do
+  fi <- mkFunctionInfo qf rawfi
   let retTable = fiReturnType fi
       err = err400 NotExists $ "table " <> retTable <<> " is not tracked"
   sc <- askSchemaCache
@@ -151,9 +155,28 @@ trackFunctionP2 qf = do
     "function name " <> qf <<> " is not in compliance with GraphQL spec"
   -- check for conflicts in remote schema
   GS.checkConflictingNode defGCtx funcNameGQL
-  trackFunctionP2Setup qf
+
+  -- fetch function info
+  functionInfos <- liftTx fetchFuncDets
+  rawfi <- case functionInfos of
+    []      ->
+      throw400 NotExists $ "no such function exists in postgres : " <>> qf
+    [rawfi] -> return rawfi
+    _       ->
+      throw400 NotSupported $
+      "function " <> qf <<> " is overloaded. Overloaded functions are not supported"
+  trackFunctionP2Setup qf rawfi
   liftTx $ saveFunctionToCatalog qf False
   return successMsg
+  where
+    QualifiedObject sn fn = qf
+    fetchFuncDets = map (Q.getAltJ . runIdentity) <$>
+      Q.listQE defaultTxErrorHandler [Q.sql|
+            SELECT function_info
+              FROM hdb_catalog.hdb_function_info_agg
+             WHERE function_schema = $1
+               AND function_name = $2
+           |] (sn, fn) True
 
 runTrackFunc
   :: ( QErrM m, CacheRWM m, MonadTx m

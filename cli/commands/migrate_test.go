@@ -12,8 +12,11 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/Masterminds/semver"
+
 	"github.com/hasura/graphql-engine/cli/migrate"
 	mt "github.com/hasura/graphql-engine/cli/migrate/testing"
+	"github.com/hasura/graphql-engine/cli/version"
 	_ "github.com/lib/pq"
 	"github.com/parnurzeal/gorequest"
 	"github.com/stretchr/testify/assert"
@@ -27,9 +30,10 @@ var ravenVersions = []mt.Version{
 	{Image: "hasura/graphql-engine:190d78e", Cmd: []string{"raven", "serve", "--database-url"}, ExposedPort: 8080},
 }
 
-var testMetadata = map[string][]byte{
-	"metadata": []byte(`functions: []
-query_templates: []
+var testMetadataPrev = map[string][]byte{
+	"metadata": []byte(`allowlist: []
+functions: []
+query_collections: []
 remote_schemas: []
 tables:
 - array_relationships: []
@@ -41,8 +45,33 @@ tables:
   table: test
   update_permissions: []
 `),
-	"empty-metadata": []byte(`functions: []
-query_templates: []
+	"empty-metadata": []byte(`allowlist: []
+functions: []
+query_collections: []
+remote_schemas: []
+tables: []
+`),
+}
+
+var testMetadataCurrent = map[string][]byte{
+	"metadata": []byte(`allowlist: []
+functions: []
+query_collections: []
+remote_schemas: []
+tables:
+- array_relationships: []
+  delete_permissions: []
+  event_triggers: []
+  insert_permissions: []
+  is_enum: false
+  object_relationships: []
+  select_permissions: []
+  table: test
+  update_permissions: []
+`),
+	"empty-metadata": []byte(`allowlist: []
+functions: []
+query_collections: []
 remote_schemas: []
 tables: []
 `),
@@ -119,6 +148,13 @@ func TestMigrateCmd(t *testing.T) {
 }
 
 func testMigrate(t *testing.T, endpoint *url.URL, migrationsDir string) {
+	versionCtx := version.New()
+	v, err := version.FetchServerVersion(endpoint.String())
+	if err != nil {
+		t.Fatal(err)
+	}
+	versionCtx.SetServerVersion(v)
+
 	metadataFile := filepath.Join(migrationsDir, "metadata.yaml")
 	// Create 1_create_table_test.up.sql which creates table test
 	mustWriteFile(t, migrationsDir, "1_create_table_test.up.sql", `CREATE TABLE "test"("id" serial NOT NULL, PRIMARY KEY ("id") )`)
@@ -208,15 +244,15 @@ func testMigrate(t *testing.T, endpoint *url.URL, migrationsDir string) {
 	testMigrateApply(t, endpoint, migrationsDir, "", "", "", "")
 
 	testMetadataExport(t, metadataFile, endpoint)
-	compareMetadata(t, metadataFile, testMetadata["metadata"])
+	compareMetadata(t, metadataFile, "metadata", versionCtx.ServerSemver)
 
 	testMetadataApply(t, metadataFile, endpoint)
 	testMetadataExport(t, metadataFile, endpoint)
-	compareMetadata(t, metadataFile, testMetadata["metadata"])
+	compareMetadata(t, metadataFile, "metadata", versionCtx.ServerSemver)
 
 	testMetadataReset(t, metadataFile, endpoint)
 	testMetadataExport(t, metadataFile, endpoint)
-	compareMetadata(t, metadataFile, testMetadata["empty-metadata"])
+	compareMetadata(t, metadataFile, "empty-metadata", versionCtx.ServerSemver)
 }
 
 func mustWriteFile(t testing.TB, dir, file string, body string) {
@@ -225,7 +261,17 @@ func mustWriteFile(t testing.TB, dir, file string, body string) {
 	}
 }
 
-func compareMetadata(t testing.TB, metadataFile string, actualData []byte) {
+func compareMetadata(t testing.TB, metadataFile string, actualType string, serverVersion *semver.Version) {
+	var actualData []byte
+	c, err := semver.NewConstraint("<= v1.0.0-beta.5")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if serverVersion == nil || !c.Check(serverVersion) {
+		actualData = testMetadataCurrent[actualType]
+	} else {
+		actualData = testMetadataPrev[actualType]
+	}
 	data, err := ioutil.ReadFile(metadataFile)
 	if err != nil {
 		t.Fatalf("error reading metadata %s", err)

@@ -2,6 +2,8 @@
 
 Boilerplate to get started with Nextjs, Hasura GraphQL engine as CMS and postgres as database using this awesome library: [withData](https://github.com/adamsoffer/next-apollo).
 
+[![Edit nextjs-postgres-graphql](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/github/hasura/graphql-engine/tree/master/community/sample-apps/nextjs-postgres-graphql?fontsize=14)
+
 ![Nextjs Postgres GraphQL](./assets/nextjs-postgres-graphql.png)
 
 # Tutorial
@@ -48,7 +50,7 @@ Boilerplate to get started with Nextjs, Hasura GraphQL engine as CMS and postgre
   // can also be a function that accepts a `context` object (SSR only) and returns a config
   const config = {
     link: new HttpLink({
-      uri: 'https://my-app.herokuapp.com/v1alpha1/graphql', // <- Configure GraphQL Server URL (must be absolute)
+      uri: 'https://my-app.herokuapp.com/v1/graphql', // <- Configure GraphQL Server URL (must be absolute)
     })
   }
 

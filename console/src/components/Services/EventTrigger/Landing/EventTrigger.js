@@ -19,11 +19,11 @@ class EventTrigger extends Component {
     super(props);
     // Initialize this table
     const dispatch = this.props.dispatch;
-    dispatch(loadTriggers());
+    dispatch(loadTriggers([]));
   }
 
   render() {
-    const { migrationMode, dispatch, listingTrigger } = this.props;
+    const { dispatch, listingTrigger } = this.props;
 
     const styles = require('../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
 
@@ -32,9 +32,8 @@ class EventTrigger extends Component {
     affected_rows
   }
 }`;
-
+    const showIntroSection = !listingTrigger.length;
     const getIntroSection = () => {
-      const showIntroSection = !listingTrigger.length;
       if (!showIntroSection) {
         return null;
       }
@@ -43,7 +42,7 @@ class EventTrigger extends Component {
         <div>
           <TopicDescription
             title="What are Event Triggers?"
-            imgUrl="https://storage.googleapis.com/hasura-graphql-engine/console/assets/event-trigger.png"
+            imgUrl={`${globals.assetsPath}/common/img/event-trigger.png`}
             imgAlt="Event Triggers"
             description="Hasura can be used to create event triggers on tables. An Event Trigger atomically captures events (insert, update, delete) on a specified table and then reliably calls a webhook that can carry out any custom logic."
           />
@@ -53,29 +52,23 @@ class EventTrigger extends Component {
     };
 
     const getAddBtn = () => {
-      let addBtn = null;
+      const handleClick = e => {
+        e.preventDefault();
 
-      if (migrationMode) {
-        const handleClick = e => {
-          e.preventDefault();
+        dispatch(push(`${appPrefix}/manage/triggers/add`));
+      };
 
-          dispatch(push(`${appPrefix}/manage/triggers/add`));
-        };
-
-        addBtn = (
-          <Button
-            data-test="data-create-trigger"
-            color="yellow"
-            size="sm"
-            className={styles.add_mar_left}
-            onClick={handleClick}
-          >
-            Add
-          </Button>
-        );
-      }
-
-      return addBtn;
+      return (
+        <Button
+          data-test="data-create-trigger"
+          color="yellow"
+          size="sm"
+          className={styles.add_mar_left}
+          onClick={handleClick}
+        >
+          Create
+        </Button>
+      );
     };
 
     const footerEvent = (
@@ -113,6 +106,7 @@ class EventTrigger extends Component {
             MicrosoftAzureLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/azure-functions/nodejs"
             awsLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/aws-lambda/nodejs8"
             adMoreLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/"
+            isAvailable={showIntroSection}
           />
         </div>
       </div>
@@ -122,9 +116,7 @@ class EventTrigger extends Component {
 
 EventTrigger.propTypes = {
   schema: PropTypes.array.isRequired,
-  untracked: PropTypes.array.isRequired,
   untrackedRelations: PropTypes.array.isRequired,
-  migrationMode: PropTypes.bool.isRequired,
   currentSchema: PropTypes.string.isRequired,
   dispatch: PropTypes.func.isRequired,
 };
@@ -132,8 +124,6 @@ EventTrigger.propTypes = {
 const mapStateToProps = state => ({
   schema: state.tables.allSchemas,
   schemaList: state.tables.schemaList,
-  untracked: state.tables.untrackedSchemas,
-  migrationMode: state.main.migrationMode,
   untrackedRelations: state.tables.untrackedRelations,
   currentSchema: state.tables.currentSchema,
   listingTrigger: state.triggers.listingTrigger,

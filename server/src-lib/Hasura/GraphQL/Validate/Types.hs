@@ -1,10 +1,15 @@
 module Hasura.GraphQL.Validate.Types
   ( InpValInfo(..)
   , ParamMap
+
   , ObjFldInfo(..)
+  , mkHsraObjFldInfo
   , ObjFieldMap
+
   , ObjTyInfo(..)
   , mkObjTyInfo
+  , mkHsraObjTyInfo
+
   , IFaceTyInfo(..)
   , IFacesSet
   , UnionTyInfo(..)
@@ -12,11 +17,20 @@ module Hasura.GraphQL.Validate.Types
   , FragDefMap
   , AnnVarVals
   , AnnInpVal(..)
+
   , EnumTyInfo(..)
+  , mkHsraEnumTyInfo
+
+  , EnumValuesInfo(..)
+  , normalizeEnumValues
   , EnumValInfo(..)
   , InpObjFldMap
   , InpObjTyInfo(..)
+  , mkHsraInpTyInfo
+
   , ScalarTyInfo(..)
+  , mkHsraScalarTyInfo
+
   , DirectiveInfo(..)
   , AsObjType(..)
   , defaultDirectives
@@ -40,14 +54,15 @@ module Hasura.GraphQL.Validate.Types
   , TypeLoc (..)
   , typeEq
   , AnnGValue(..)
+  , AnnGEnumValue(..)
   , AnnGObject
   , hasNullVal
   , getAnnInpValKind
+  , stripTypenames
   , module Hasura.GraphQL.Utils
   ) where
 
 import           Hasura.Prelude
-import           Instances.TH.Lift             ()
 
 import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
@@ -60,14 +75,15 @@ import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Language.GraphQL.Draft.TH     as G
 import qualified Language.Haskell.TH.Syntax    as TH
 
+import qualified Hasura.RQL.Types.Column       as RQL
+
 import           Hasura.GraphQL.Utils
 import           Hasura.RQL.Instances          ()
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
--- | Typeclass for equating relevant properties of various GraphQL types
--- | defined below
+-- | Typeclass for equating relevant properties of various GraphQL types defined below
 class EquatableGType a where
   type EqProps a
   getEqProps :: a -> EqProps a
@@ -86,24 +102,50 @@ fromEnumValDef :: G.EnumValueDefinition -> EnumValInfo
 fromEnumValDef (G.EnumValueDefinition descM val _) =
   EnumValInfo descM val False
 
+data EnumValuesInfo
+  = EnumValuesSynthetic !(Map.HashMap G.EnumValue EnumValInfo)
+  -- ^ Values for an enum that exists only in the GraphQL schema and does not have any external
+  -- source of truth.
+  | EnumValuesReference !RQL.EnumReference
+  -- ^ Values for an enum that is backed by an enum table reference (see "Hasura.RQL.Schema.Enum").
+  deriving (Show, Eq, TH.Lift)
+
+normalizeEnumValues :: EnumValuesInfo -> Map.HashMap G.EnumValue EnumValInfo
+normalizeEnumValues = \case
+  EnumValuesSynthetic values -> values
+  EnumValuesReference (RQL.EnumReference _ values) ->
+    mapFromL _eviVal . flip map (Map.toList values) $
+      \(RQL.EnumValue name, RQL.EnumValueInfo maybeDescription) -> EnumValInfo
+        { _eviVal = G.EnumValue $ G.Name name
+        , _eviDesc = G.Description <$> maybeDescription
+        , _eviIsDeprecated = False }
+
 data EnumTyInfo
   = EnumTyInfo
   { _etiDesc   :: !(Maybe G.Description)
   , _etiName   :: !G.NamedType
-  , _etiValues :: !(Map.HashMap G.EnumValue EnumValInfo)
+  , _etiValues :: !EnumValuesInfo
   , _etiLoc    :: !TypeLoc
   } deriving (Show, Eq, TH.Lift)
 
 instance EquatableGType EnumTyInfo where
   type EqProps EnumTyInfo = (G.NamedType, Map.HashMap G.EnumValue EnumValInfo)
-  getEqProps ety = (,) (_etiName ety) (_etiValues ety)
+  getEqProps ety = (,) (_etiName ety) (normalizeEnumValues $ _etiValues ety)
 
 fromEnumTyDef :: G.EnumTypeDefinition -> TypeLoc -> EnumTyInfo
 fromEnumTyDef (G.EnumTypeDefinition descM n _ valDefs) loc =
-  EnumTyInfo descM (G.NamedType n) enumVals loc
+  EnumTyInfo descM (G.NamedType n) (EnumValuesSynthetic enumVals) loc
   where
     enumVals = Map.fromList
       [(G._evdName valDef, fromEnumValDef valDef) | valDef <- valDefs]
+
+mkHsraEnumTyInfo
+  :: Maybe G.Description
+  -> G.NamedType
+  -> EnumValuesInfo
+  -> EnumTyInfo
+mkHsraEnumTyInfo descM ty enumVals =
+  EnumTyInfo descM ty enumVals TLHasuraType
 
 data InpValInfo
   = InpValInfo
@@ -125,8 +167,8 @@ type ParamMap = Map.HashMap G.Name InpValInfo
 
 -- | location of the type: a hasura type or a remote type
 data TypeLoc
-  = HasuraType
-  | RemoteType RemoteSchemaName RemoteSchemaInfo
+  = TLHasuraType
+  | TLRemoteType !RemoteSchemaName !RemoteSchemaInfo
   deriving (Show, Eq, TH.Lift, Generic)
 
 instance Hashable TypeLoc
@@ -149,6 +191,15 @@ fromFldDef (G.FieldDefinition descM n args ty _) loc =
   ObjFldInfo descM n params ty loc
   where
     params = Map.fromList [(G._ivdName arg, fromInpValDef arg) | arg <- args]
+
+mkHsraObjFldInfo
+  :: Maybe G.Description
+  -> G.Name
+  -> ParamMap
+  -> G.GType
+  -> ObjFldInfo
+mkHsraObjFldInfo descM name params ty =
+  ObjFldInfo descM name params ty TLHasuraType
 
 type ObjFieldMap = Map.HashMap G.Name ObjFldInfo
 
@@ -182,7 +233,18 @@ mkObjTyInfo descM ty iFaces flds loc =
   ObjTyInfo descM ty iFaces $ Map.insert (_fiName newFld) newFld flds
   where newFld = typenameFld loc
 
-mkIFaceTyInfo :: Maybe G.Description -> G.NamedType -> Map.HashMap G.Name ObjFldInfo -> TypeLoc -> IFaceTyInfo
+mkHsraObjTyInfo
+  :: Maybe G.Description
+  -> G.NamedType
+  -> IFacesSet
+  -> ObjFieldMap
+  -> ObjTyInfo
+mkHsraObjTyInfo descM ty implIFaces flds =
+  mkObjTyInfo descM ty implIFaces flds TLHasuraType
+
+mkIFaceTyInfo
+  :: Maybe G.Description -> G.NamedType
+  -> Map.HashMap G.Name ObjFldInfo -> TypeLoc -> IFaceTyInfo
 mkIFaceTyInfo descM ty flds loc =
   IFaceTyInfo descM ty $ Map.insert (_fiName newFld) newFld flds
   where newFld = typenameFld loc
@@ -231,7 +293,7 @@ type MemberTypes = Set.HashSet G.NamedType
 data UnionTyInfo
   = UnionTyInfo
   { _utiDesc        :: !(Maybe G.Description)
-  , _utiName        :: !(G.NamedType)
+  , _utiName        :: !G.NamedType
   , _utiMemberTypes :: !MemberTypes
   } deriving (Show, Eq, TH.Lift)
 
@@ -272,15 +334,26 @@ fromInpObjTyDef (G.InputObjectTypeDefinition descM n _ inpFlds) loc =
     fldMap = Map.fromList
       [(G._ivdName inpFld, fromInpValDef inpFld) | inpFld <- inpFlds]
 
+mkHsraInpTyInfo
+  :: Maybe G.Description
+  -> G.NamedType
+  -> InpObjFldMap
+  -> InpObjTyInfo
+mkHsraInpTyInfo descM ty flds =
+  InpObjTyInfo descM ty flds TLHasuraType
+
 data ScalarTyInfo
   = ScalarTyInfo
   { _stiDesc :: !(Maybe G.Description)
-  , _stiType :: !PGColType
+  , _stiType :: !PGScalarType
   , _stiLoc  :: !TypeLoc
   } deriving (Show, Eq, TH.Lift)
 
+mkHsraScalarTyInfo :: PGScalarType -> ScalarTyInfo
+mkHsraScalarTyInfo ty = ScalarTyInfo Nothing ty TLHasuraType
+
 instance EquatableGType ScalarTyInfo where
-  type EqProps ScalarTyInfo = PGColType
+  type EqProps ScalarTyInfo = PGScalarType
   getEqProps = _stiType
 
 fromScalarTyDef
@@ -376,7 +449,7 @@ showSPTxt :: SchemaPath -> Text
 showSPTxt p = showSPTxt' p <> showSP p
 
 validateIFace :: MonadError Text f => IFaceTyInfo -> f ()
-validateIFace (IFaceTyInfo _ n flds) = do
+validateIFace (IFaceTyInfo _ n flds) =
   when (isFldListEmpty flds) $ throwError $ "List of fields cannot be empty for interface " <> showNamedTy n
 
 validateObj :: TypeMap -> ObjTyInfo -> Either Text ()
@@ -473,7 +546,7 @@ validateIsSubType tyMap subFldTy supFldTy = do
       subTyInfo <- extrTyInfo tyMap subTy
       supTyInfo <- extrTyInfo tyMap supTy
       isSubTypeBase subTyInfo supTyInfo
-    (G.TypeList _ (G.ListType sub), G.TypeList _ (G.ListType sup) ) -> do
+    (G.TypeList _ (G.ListType sub), G.TypeList _ (G.ListType sup) ) ->
       validateIsSubType tyMap sub sup
     _ -> throwError $ showIsListTy subFldTy <> " Type " <> G.showGT subFldTy <>
       " cannot be a sub-type of " <> showIsListTy supFldTy <> " Type " <> G.showGT supFldTy
@@ -494,16 +567,16 @@ isSubTypeBase subTyInfo supTyInfo = case (subTyInfo,supTyInfo) of
     notSubTyErr = throwError $ "Type " <> showTy subTyInfo <> " is not a sub type of " <> showTy supTyInfo
 
 -- map postgres types to builtin scalars
-pgColTyToScalar :: PGColType -> Text
+pgColTyToScalar :: PGScalarType -> Text
 pgColTyToScalar = \case
   PGInteger -> "Int"
   PGBoolean -> "Boolean"
   PGFloat   -> "Float"
   PGText    -> "String"
   PGVarchar -> "String"
-  t         -> T.pack $ show t
+  t         -> toSQLTxt t
 
-mkScalarTy :: PGColType -> G.NamedType
+mkScalarTy :: PGScalarType -> G.NamedType
 mkScalarTy =
   G.NamedType . G.Name . pgColTyToScalar
 
@@ -607,9 +680,15 @@ data AnnInpVal
 
 type AnnGObject = OMap.InsOrdHashMap G.Name AnnInpVal
 
+-- | See 'EnumValuesInfo' for information about what these cases mean.
+data AnnGEnumValue
+  = AGESynthetic !(Maybe G.EnumValue)
+  | AGEReference !RQL.EnumReference !(Maybe RQL.EnumValue)
+  deriving (Show, Eq)
+
 data AnnGValue
-  = AGScalar !PGColType !(Maybe PGColValue)
-  | AGEnum !G.NamedType !(Maybe G.EnumValue)
+  = AGScalar !PGScalarType !(Maybe PGScalarValue)
+  | AGEnum !G.NamedType !AnnGEnumValue
   | AGObject !G.NamedType !(Maybe AnnGObject)
   | AGArray !G.ListType !(Maybe [AnnInpVal])
   deriving (Show, Eq)
@@ -626,11 +705,12 @@ instance J.ToJSON AnnGValue where
 
 hasNullVal :: AnnGValue -> Bool
 hasNullVal = \case
-  AGScalar _ Nothing -> True
-  AGEnum _ Nothing   -> True
-  AGObject _ Nothing -> True
-  AGArray _ Nothing  -> True
-  _                  -> False
+  AGScalar _ Nothing                -> True
+  AGEnum _ (AGESynthetic Nothing)   -> True
+  AGEnum _ (AGEReference _ Nothing) -> True
+  AGObject _ Nothing                -> True
+  AGArray _ Nothing                 -> True
+  _                                 -> False
 
 getAnnInpValKind :: AnnGValue -> Text
 getAnnInpValKind = \case
@@ -638,3 +718,30 @@ getAnnInpValKind = \case
   AGEnum _ _   -> "enum"
   AGObject _ _ -> "object"
   AGArray _ _  -> "array"
+
+stripTypenames :: [G.ExecutableDefinition] -> [G.ExecutableDefinition]
+stripTypenames = map filterExecDef
+  where
+    filterExecDef = \case
+      G.ExecutableDefinitionOperation opDef  ->
+        G.ExecutableDefinitionOperation $ filterOpDef opDef
+      G.ExecutableDefinitionFragment fragDef ->
+        let newSelset = filterSelSet $ G._fdSelectionSet fragDef
+        in G.ExecutableDefinitionFragment fragDef{G._fdSelectionSet = newSelset}
+
+    filterOpDef  = \case
+      G.OperationDefinitionTyped typeOpDef ->
+        let newSelset = filterSelSet $ G._todSelectionSet typeOpDef
+        in G.OperationDefinitionTyped typeOpDef{G._todSelectionSet = newSelset}
+      G.OperationDefinitionUnTyped selset ->
+        G.OperationDefinitionUnTyped $ filterSelSet selset
+
+    filterSelSet = mapMaybe filterSel
+    filterSel s = case s of
+      G.SelectionField f ->
+        if G._fName f == "__typename"
+        then Nothing
+        else
+          let newSelset = filterSelSet $ G._fSelectionSet f
+          in Just $ G.SelectionField  f{G._fSelectionSet = newSelset}
+      _                  -> Just s

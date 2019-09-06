@@ -29,7 +29,7 @@ function create (initialState) {
     return forward(operation);
   })
   const httpLink = new HttpLink({
-      uri: 'https://my-app.herokuapp.com/v1alpha1/graphql', // Server URL (must be absolute)
+      uri: 'https://my-app.herokuapp.com/v1/graphql', // Server URL (must be absolute)
       credentials: 'same-origin' // Additional fetch() options like `credentials` or `headers`
   })
   return new ApolloClient({

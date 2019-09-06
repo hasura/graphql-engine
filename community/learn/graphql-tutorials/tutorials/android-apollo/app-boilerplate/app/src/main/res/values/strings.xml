@@ -1,0 +1,43 @@
+<resources>
+    <string name="app_name">Todo</string>
+    <string name="title_todos">Todos</string>
+    <string name="title_feed_public">Feed</string>
+    <string name="title_online">Online</string>
+
+    <string name="refresh">Refresh the access_token</string>
+    <string name="login">Log in</string>
+    <string name="logout">Logout</string>
+
+    <string name="com_auth0_client_id">P38qnFo1lFAQJrzkun--wEzqljVNGcWW</string>
+    <string name="com_auth0_domain">graphql-tutorials.auth0.com</string>
+    <string name="title_public_feed">Public Feed</string>
+    <string name="title_online_users">Total Online Users</string>
+    <string name="request_credentials_title">Authenticate to continue</string>
+
+
+    <string name="empty_list">You do not have any tasks yet!</string>
+    <string name="action_settings">Settings</string>
+    <string name="task_name">Task Name</string>
+    <string name="your_task_name">Name</string>
+    <string name="task_description">Task Description</string>
+    <string name="your_description">Description</string>
+    <string name="add_task">Add</string>
+    <string name="sample_name">sample task</string>
+    <string name="sample_description">sample_description</string>
+    <string name="save">SAVE</string>
+    <string name="all">ALL</string>
+    <string name="completed">COMPLETED</string>
+    <string name="active">ACTIVE</string>
+
+    <string name="button_completed">Remove Completed</string>
+    <string name="button_load_more">Load More</string>
+
+
+    <string name="input_todos_hint">Add new private todo</string>
+    <string name="input_public_feed_hint">Add new public todo</string>
+    <string name="view_notification_title">View</string>
+    <string name="notification_message">New tasks available</string>
+    <string name="app_title">Todo App</string>
+    <string name="app_subtitle">Welcome to GraphQL tutorial app</string>
+    <string name="copyright_text">by Hasura.io</string>
+</resources>

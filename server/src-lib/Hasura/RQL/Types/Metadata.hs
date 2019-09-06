@@ -15,17 +15,16 @@ data MetadataObjType
   = MOTTable
   | MOTRel !RelType
   | MOTPerm !PermType
-  | MOTQTemplate
   | MOTEventTrigger
   | MOTFunction
   | MOTRemoteSchema
-  deriving (Eq)
+  deriving (Eq, Generic)
+instance Hashable MetadataObjType
 
 instance Show MetadataObjType where
   show MOTTable        = "table"
   show (MOTRel ty)     = T.unpack (relTypeToTxt ty) <> "_relation"
   show (MOTPerm ty)    = show ty <> "_permission"
-  show MOTQTemplate    = "query_template"
   show MOTEventTrigger = "event_trigger"
   show MOTFunction     = "function"
   show MOTRemoteSchema = "remote_schema"
@@ -38,17 +37,14 @@ data TableMetadataObjId
   | MTOPerm !RoleName !PermType
   | MTOTrigger !TriggerName
   deriving (Show, Eq, Generic)
-
 instance Hashable TableMetadataObjId
 
 data MetadataObjId
   = MOTable !QualifiedTable
-  | MOQTemplate !TQueryName
   | MOFunction !QualifiedFunction
   | MORemoteSchema !RemoteSchemaName
   | MOTableObj !QualifiedTable !TableMetadataObjId
   deriving (Show, Eq, Generic)
-
 instance Hashable MetadataObjId
 
 data InconsistentMetadataObj
@@ -57,7 +53,8 @@ data InconsistentMetadataObj
   , _moType   :: !MetadataObjType
   , _moDef    :: !Value
   , _moReason :: !T.Text
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Generic)
+instance Hashable InconsistentMetadataObj
 
 instance ToJSON InconsistentMetadataObj where
   toJSON (InconsistentMetadataObj _ ty info rsn) =

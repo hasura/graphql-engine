@@ -10,6 +10,8 @@ from webserver import RequestHandler, WebServer, MkHandlers, Response
 
 from enum import Enum
 
+import time
+
 def mkJSONResp(graphql_result):
     return Response(HTTPStatus.OK, graphql_result.to_dict(),
                     {'Content-Type': 'application/json'})
@@ -25,7 +27,13 @@ class HelloWorldHandler(RequestHandler):
 class Hello(graphene.ObjectType):
     hello = graphene.String(arg=graphene.String(default_value="world"))
 
+    delayedHello = graphene.String(arg=graphene.String(default_value="world"))
+
     def resolve_hello(self, info, arg):
+        return "Hello " + arg
+
+    def resolve_delayedHello(self, info, arg):
+        time.sleep(10)
         return "Hello " + arg
 
 hello_schema = graphene.Schema(query=Hello, subscription=Hello)
@@ -169,7 +177,30 @@ class PersonGraphQL(RequestHandler):
         res = person_schema.execute(req.json['query'])
         return mkJSONResp(res)
 
-#GraphQL server with interfaces
+# GraphQL server that returns Set-Cookie response header
+class SampleAuth(graphene.ObjectType):
+    hello = graphene.String(arg=graphene.String(default_value="world"))
+
+    def resolve_hello(self, info, arg):
+        return "Hello " + arg
+
+sample_auth_schema = graphene.Schema(query=SampleAuth,
+                                     subscription=SampleAuth)
+
+class SampleAuthGraphQL(RequestHandler):
+    def get(self, request):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+
+    def post(self, request):
+        if not request.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = sample_auth_schema.execute(request.json['query'])
+        resp = mkJSONResp(res)
+        resp.headers['Set-Cookie'] = 'abcd'
+        resp.headers['Custom-Header'] = 'custom-value'
+        return resp
+
+# GraphQL server with interfaces
 
 class Character(graphene.Interface):
     id = graphene.ID(required=True)
@@ -567,15 +598,15 @@ class EchoGraphQL(RequestHandler):
         if not req.json:
             return Response(HTTPStatus.BAD_REQUEST)
         res = echo_schema.execute(req.json['query'])
-        respDict = res.to_dict()
-        typesList = respDict.get('data',{}).get('__schema',{}).get('types',None)
+        resp_dict = res.to_dict()
+        types_list = resp_dict.get('data',{}).get('__schema',{}).get('types', None)
         #Hack around enum default_value serialization issue: https://github.com/graphql-python/graphql-core/issues/166
-        if typesList is not None:
-            for t in filter(lambda ty: ty['name'] == 'EchoQuery', typesList):
+        if types_list is not None:
+            for t in filter(lambda ty: ty['name'] == 'EchoQuery', types_list):
                 for f in filter(lambda fld: fld['name'] == 'echo', t['fields']):
                     for a in filter(lambda arg: arg['name'] == 'enumInput', f['args']):
                         a['defaultValue'] = 'RED'
-        return Response(HTTPStatus.OK, respDict,
+        return Response(HTTPStatus.OK, resp_dict,
                     {'Content-Type': 'application/json'})
 
 
@@ -584,12 +615,12 @@ class HeaderTest(graphene.ObjectType):
 
     def resolve_wassup(self, info, arg):
         headers = info.context
-        print('recvd headers: ', headers)
         if not (headers.get_all('x-hasura-test') == ['abcd'] and
                 headers.get_all('x-hasura-role') == ['user'] and
                 headers.get_all('x-hasura-user-id') == ['abcd1234'] and
+                headers.get_all('content-type') == ['application/json'] and
                 headers.get_all('Authorization') == ['Bearer abcdef']):
-            raise Exception('headers dont match')
+            raise Exception('headers dont match. Received: ' + headers)
 
         return "Hello " + arg
 
@@ -626,7 +657,8 @@ handlers = MkHandlers({
     '/union-graphql-err-wrapped-type' : UnionGraphQLSchemaErrWrappedType,
     '/default-value-echo-graphql' : EchoGraphQL,
     '/person-graphql': PersonGraphQL,
-    '/header-graphql': HeaderTestGraphQL
+    '/header-graphql': HeaderTestGraphQL,
+    '/auth-graphql': SampleAuthGraphQL,
 })
 
 

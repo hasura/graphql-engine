@@ -6,13 +6,17 @@ const envObj = `apiHost: '${process.env.API_HOST}',
         nodeEnv: '${process.env.NODE_ENV}',
         urlPrefix: '${process.env.URL_PREFIX}',
         enableTelemetry: ${process.env.ENABLE_TELEMETRY},
+        assetsPath: '${process.env.ASSETS_PATH}',
+        assetsVersion: '${process.env.ASSETS_VERSION}',
+        serverVersion: '${process.env.SERVER_VERSION}',
+        cdnAssets: ${process.env.CDN_ASSETS},
 `;
 
 let appendObj;
 
 if (process.env.ADMIN_SECRET !== undefined) {
   appendObj = `
-  adminSecret: '${process.env.ADMIN_SECRET}`;
+  adminSecret: '${process.env.ADMIN_SECRET}'`;
 } else {
   // ADMIN_SECRET is undefined
   if (process.env.IS_ADMIN_SECRET_SET !== undefined) {

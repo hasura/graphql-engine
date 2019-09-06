@@ -7,6 +7,8 @@ module Hasura.GraphQL.Validate
   , getQueryParts
   , getAnnVarVals
 
+  , isQueryInAllowlist
+
   , VarPGTypes
   , AnnPGVarVals
   , getAnnPGVarVals
@@ -18,6 +20,7 @@ import           Data.Has
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                    as Map
+import qualified Data.HashSet                           as HS
 import qualified Data.Sequence                          as Seq
 import qualified Language.GraphQL.Draft.Syntax          as G
 
@@ -28,9 +31,10 @@ import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.QueryCollection
 
-import           Hasura.SQL.Types (PGColType)
-import           Hasura.SQL.Value (PGColValue, parsePGValue)
+import           Hasura.SQL.Types                       (WithScalarType)
+import           Hasura.SQL.Value                       (PGScalarValue)
 
 data QueryParts
   = QueryParts
@@ -113,8 +117,8 @@ getAnnVarVals varDefsL inpVals = withPathK "variableValues" $ do
 showVars :: (Functor f, Foldable f) => f G.Variable -> Text
 showVars = showNames . fmap G.unVariable
 
-type VarPGTypes = Map.HashMap G.Variable PGColType
-type AnnPGVarVals = Map.HashMap G.Variable (PGColType, PGColValue)
+type VarPGTypes = Map.HashMap G.Variable PGColumnType
+type AnnPGVarVals = Map.HashMap G.Variable (WithScalarType PGScalarValue)
 
 -- this is in similar spirit to getAnnVarVals, however
 -- here it is much simpler and can get rid of typemap requirement
@@ -137,7 +141,7 @@ getAnnPGVarVals varTypes varValsM =
       -- TODO: we don't have the graphql type
       -- " of type: " <> T.pack (show varType) <>
       " in variableValues"
-    (varType,) <$> runAesonParser (parsePGValue varType) varVal
+    parsePGScalarValue varType varVal
   where
     varVals = fromMaybe Map.empty varValsM
 
@@ -194,6 +198,12 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
           unless (null rst) $
             throwVE "subscription must select only one top level field"
           return $ RSubscription fld
+
+isQueryInAllowlist :: GQLExecDoc -> HS.HashSet GQLQuery -> Bool
+isQueryInAllowlist q = HS.member gqlQuery
+  where
+    gqlQuery = GQLQuery $ G.ExecutableDocument $ stripTypenames $
+               unGQLExecDoc q
 
 getQueryParts
   :: ( MonadError QErr m, MonadReader GCtx m)

@@ -7,8 +7,7 @@ import Tabs from 'react-bootstrap/lib/Tabs';
 import Tab from 'react-bootstrap/lib/Tab';
 import RedeliverEvent from '../TableCommon/RedeliverEvent';
 import TableHeader from '../TableCommon/TableHeader';
-import semverCheck from '../../../../helpers/semver';
-import parseRowData from './util';
+import { parseRowData, verifySuccessStatus } from '../utils';
 import {
   loadEventLogs,
   setTrigger,
@@ -29,6 +28,7 @@ import * as tooltip from '../Common/Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import { convertDateTimeToLocale } from '../utils';
 import Button from '../../../Common/Button/Button';
+import { NotFoundError } from '../../../Error/PageNotFound';
 
 class StreamingLogs extends Component {
   constructor(props) {
@@ -38,40 +38,17 @@ class StreamingLogs extends Component {
       intervalId: null,
       filtered: [],
       filterAll: '',
-      showRedeliver: false,
     };
     this.refreshData = this.refreshData.bind(this);
     this.filterAll = this.filterAll.bind(this);
     this.props.dispatch(setTrigger(this.props.triggerName));
   }
   componentDidMount() {
-    if (this.props.serverVersion) {
-      this.checkSemVer(this.props.serverVersion);
-    }
     this.props.dispatch(setTrigger(this.props.triggerName));
     this.props.dispatch(loadEventLogs(this.props.triggerName));
   }
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.serverVersion !== this.props.serverVersion) {
-      this.checkSemVer(nextProps.serverVersion);
-    }
-  }
   componentWillUnmount() {
     this.props.dispatch(vSetDefaults());
-  }
-  checkSemVer(version) {
-    let showRedeliver = false;
-    try {
-      showRedeliver = semverCheck('eventRedeliver', version);
-      if (showRedeliver) {
-        this.setState({ showRedeliver: true });
-      } else {
-        this.setState({ showRedeliver: false });
-      }
-    } catch (e) {
-      console.error(e);
-      this.setState({ showRedeliver: false });
-    }
   }
   handleNewerEvents() {
     // get the first element
@@ -130,16 +107,16 @@ class StreamingLogs extends Component {
   }
 
   render() {
-    const {
-      triggerName,
-      migrationMode,
-      log,
-      tableSchemas,
-      count,
-      dispatch,
-    } = this.props;
+    const { triggerName, log, count, dispatch, triggerList } = this.props;
 
     const styles = require('../TableCommon/EventTable.scss');
+
+    // check if trigger exists
+    const currentTrigger = triggerList.find(s => s.name === triggerName);
+    if (!currentTrigger) {
+      // throw a 404 exception
+      throw new NotFoundError();
+    }
 
     const invocationColumns = [
       'redeliver',
@@ -153,12 +130,10 @@ class StreamingLogs extends Component {
 
     const invocationGridHeadings = [];
     invocationColumns.map(column => {
-      if (!(column === 'redeliver' && !this.state.showRedeliver)) {
-        invocationGridHeadings.push({
-          Header: column,
-          accessor: column,
-        });
-      }
+      invocationGridHeadings.push({
+        Header: column,
+        accessor: column,
+      });
     });
 
     const invocationRowsData = [];
@@ -168,7 +143,8 @@ class StreamingLogs extends Component {
       const newRow = {};
 
       const status =
-        r.status === 200 ? (
+        // 2xx is success
+        verifySuccessStatus(r.status) ? (
           <i className={styles.invocationSuccess + ' fa fa-check'} />
         ) : (
           <i className={styles.invocationFailure + ' fa fa-times'} />
@@ -178,7 +154,7 @@ class StreamingLogs extends Component {
       responseData.push(parseRowData(r, 'response'));
 
       const getCellContent = col => {
-        const conditionalClassname = styles.tableCellCenterAligned;
+        const conditionalClassname = styles.tableCellCenterAlignedOverflow;
         if (r[col] === null) {
           return (
             <div className={conditionalClassname}>
@@ -204,13 +180,7 @@ class StreamingLogs extends Component {
           );
         }
         if (col === 'primary_key') {
-          const tableName = requestData[i].data.table.name;
-          const tableSchema = requestData[i].data.table.schema;
-          const tableData = tableSchemas.filter(
-            row =>
-              row.table_name === tableName && row.table_schema === tableSchema
-          );
-          const primaryKey = tableData[0].primary_key.columns; // handle all primary keys
+          const primaryKey = currentTrigger.primary_key.columns; // handle all primary keys
           const pkHtml = [];
           primaryKey.map(pk => {
             const newPrimaryKeyData = requestData[i].data.event.data.new
@@ -229,7 +199,7 @@ class StreamingLogs extends Component {
             </div>
           );
         }
-        if (col === 'redeliver' && this.state.showRedeliver) {
+        if (col === 'redeliver') {
           return (
             <div className={conditionalClassname}>
               <i
@@ -323,7 +293,7 @@ class StreamingLogs extends Component {
                   {finalResponse.status_code
                     ? [
                       'Status Code: ',
-                      finalResponse.status_code === 200 ? (
+                      verifySuccessStatus(finalResponse.status_code) ? (
                         <i
                           className={
                             styles.invocationSuccess + ' fa fa-check'
@@ -375,7 +345,6 @@ class StreamingLogs extends Component {
           dispatch={dispatch}
           triggerName={triggerName}
           tabName="logs"
-          migrationMode={migrationMode}
         />
         <br />
         <div className={'hide'}>
@@ -476,9 +445,8 @@ class StreamingLogs extends Component {
 StreamingLogs.propTypes = {
   log: PropTypes.object,
   currentTableSchema: PropTypes.array.isRequired,
-  migrationMode: PropTypes.bool.isRequired,
-  allSchemas: PropTypes.array.isRequired,
   dispatch: PropTypes.func.isRequired,
+  triggerList: PropTypes.array.isRequired,
 };
 
 const mapStateToProps = (state, ownProps) => {
@@ -486,9 +454,8 @@ const mapStateToProps = (state, ownProps) => {
     ...state.triggers,
     serverVersion: state.main.serverVersion,
     triggerName: ownProps.params.trigger,
-    migrationMode: state.main.migrationMode,
     currentSchema: state.tables.currentSchema,
-    allSchemas: state.tables.allSchemas,
+    triggerList: state.triggers.triggerList,
   };
 };
 

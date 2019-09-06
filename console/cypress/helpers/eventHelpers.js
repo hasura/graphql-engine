@@ -1,9 +1,9 @@
 export const baseUrl = Cypress.config('baseUrl');
 export const queryTypes = ['insert', 'update', 'delete'];
 export const getTriggerName = (i, testName = '') =>
-  `apic_test_trigger_${testName}_${i}`;
+  `Apic_test_trigger_${testName}_${i}`;
 export const getTableName = (i, testName = '') =>
-  `apic_test_table_${testName}_${i}`;
+  `Apic_test_table_${testName}_${i}`;
 export const getWebhookURL = () => 'http://httpbin.org/post';
 export const getNoOfRetries = () => '5';
 export const getIntervalSeconds = () => '10';

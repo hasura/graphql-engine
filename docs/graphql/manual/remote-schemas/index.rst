@@ -42,7 +42,7 @@ a union of top-level nodes from each of the sub-schemas.
 
   If you are looking for adding authorization & access control for your
   app users to the GraphQL APIs that are auto-generated via Hasura, head to
-  :doc:`Authorization / Access control <../auth/index>`
+  :doc:`../auth/index`
 
 Adding a remote schema
 ----------------------
@@ -108,7 +108,7 @@ Step 3: Make queries to the remote server from Hasura
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Now you can head to the ``GraphiQL`` tab and make queries to your remote server from Hasura.
 
-You can query your remote server by making requests to the Hasura GraphQL endpoint (``/v1alpha1/graphql``).
+You can query your remote server by making requests to the Hasura GraphQL endpoint (``/v1/graphql``).
 
 Points to remember
 ------------------
@@ -119,6 +119,17 @@ Remote schema fields nomenclature
 - Top-level field names need to be unique across all merged schemas (*case-sensitive match*).
 - Types with the *exact same name and structure* will be merged. But types with the *same name but different
   structure* will result in type conflicts.
+
+
+Schema refreshing
+^^^^^^^^^^^^^^^^^
+
+For versions <= ``v1.0.0-beta.2``, GraphQL schema of each added remote server is refreshed every time a
+metadata modifying operation like adding tables/functions, defining relationships/permissions etc. is done.
+
+From ``v1.0.0-beta.3`` onwards, a remote server's GraphQL schema is cached and refreshed only when user
+explicitly reloads remote schema by clicking the ``Reload`` button on console or
+by making :doc:`reload_remote_schema<../api-reference/schema-metadata-api/remote-schemas>` metadata API request
 
 
 Current limitations
@@ -140,7 +151,7 @@ community tooling to write your own client-facing GraphQL gateway that interacts
 .. note::
 
   **Adding an additional layer on top of Hasura GraphQL engine significantly impacts the performance provided by
-  it out of the box** (*by as much as 4x*). If you need any help with remodeling these kind of use cases to use the
+  it out of the box** (*by as much as 4x*). If you need any help with remodelling these kind of use cases to use the
   built-in remote schemas feature, please get in touch with us on `Discord <https://discord.gg/vBPpJkS>`__.
 
 
@@ -169,6 +180,13 @@ will selected.
    ``x-hasura-admin-secret`` is sent, then all ``x-hasura-*`` values from the
    client are respected, otherwise they are ignored.
 
+Cookie header from your remote GraphQL servers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``Set-Cookie`` headers from your remote schema servers are sent back to the
+client over HTTP transport. **Over websocket transport there exists no means
+to send headers after a query/mutation and hence ``Set-Cookie`` headers are
+not sent to the client.** Use HTTP transport if your remote servers set cookies.
+
 
 Bypassing Hasura's authorization system for remote schema queries
 -----------------------------------------------------------------
@@ -188,7 +206,7 @@ Hasura. However a similar solution can achieved by the following workarounds:
 Bypassing webhook authorization
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you have a :doc:`webhook authorization setup <../auth/webhook>`, in the normal scenario, your authorization
+If you have a :doc:`webhook authorization setup <../auth/authentication/webhook>`, in the normal scenario, your authorization
 webhook would return ``200`` on success and ``401`` if it is either unable to authorize the current request or if
 the authorization information is absent (like cookie, authorization header etc.)
 
@@ -202,7 +220,7 @@ To bypass the webhook auth:
 Bypassing JWT authorization
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you have a :doc:`JWT authorization setup <../auth/jwt>`, to bypass the JWT auth:
+If you have a :doc:`JWT authorization setup <../auth/authentication/jwt>`, to bypass the JWT auth:
 
 - your authentication server should generate a static JWT token for ``anonymous`` i.e. unauthenticated users.
 - when adding the remote schema, check the ``Forward all headers from client`` option so that the remote server

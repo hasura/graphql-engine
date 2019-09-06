@@ -12,11 +12,11 @@ import { split } from "apollo-link";
 import VueApollo from "vue-apollo";
 // Http endpoint
 const httpLink = new HttpLink({
-  uri: "https://realtime-chat.demo.hasura.app/v1alpha1/graphql"
+  uri: "https://realtime-chat.demo.hasura.app/v1/graphql"
 })
 
 const wsLink = new WebSocketLink({
-  uri: "wss://realtime-chat.demo.hasura.app/v1alpha1/graphql",
+  uri: "wss://realtime-chat.demo.hasura.app/v1/graphql",
   options: {
     reconnect: true
   }

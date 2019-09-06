@@ -1,4 +1,8 @@
-import { getElementFromAlias, baseUrl } from '../../../helpers/dataHelpers';
+import {
+  getElementFromAlias,
+  baseUrl,
+  tableColumnTypeSelector,
+} from '../../../helpers/dataHelpers';
 
 import {
   setMetaData,
@@ -17,7 +21,10 @@ export const Createtable = (name, dict) => {
   const values = Object.keys(dict).map(k => dict[k]);
   for (let i = 0; i < keys.length; i += 1) {
     cy.get(getElementFromAlias(`column-${i}`)).type(keys[i]);
-    cy.get(getElementFromAlias(`col-type-${i}`)).select(values[i]);
+    tableColumnTypeSelector(`col-type-${i}`);
+    cy.get(getElementFromAlias(`data_test_column_type_value_${values[i]}`))
+      .first()
+      .click();
   }
   cy.get(getElementFromAlias('primary-key-select-0')).select('id');
   cy.get(getElementFromAlias('table-create')).click();
@@ -32,21 +39,21 @@ export const Createtable = (name, dict) => {
 
 export const passVCreateTables = () => {
   cy.get(getElementFromAlias('data-create-table')).click();
-  Createtable('author', { id: 'Integer', name: 'Text' });
+  Createtable('author', { id: 'integer', name: 'text' });
   cy.get(getElementFromAlias('sidebar-add-table')).click();
   Createtable('article', {
-    id: 'Integer',
-    title: 'Text',
-    Content: 'Text',
-    author_id: 'Integer',
-    rating: 'Integer',
+    id: 'integer',
+    title: 'text',
+    Content: 'text',
+    author_id: 'integer',
+    rating: 'integer',
   });
   cy.get(getElementFromAlias('sidebar-add-table')).click();
   Createtable('comment', {
-    id: 'Integer',
-    user_id: 'Integer',
-    article_id: 'Integer',
-    comment: 'Text',
+    id: 'integer',
+    user_id: 'integer',
+    article_id: 'integer',
+    comment: 'text',
   });
 };
 
@@ -59,10 +66,7 @@ export const passVCreateViews = () => {
 };
 
 export const passTrackTable = () => {
-  cy.get('a')
-    .contains('Data')
-    .last()
-    .click();
+  cy.visit('/data');
   cy.wait(7000);
   cy.get(
     getElementFromAlias('add-track-table-author_average_rating_vt')
@@ -374,22 +378,18 @@ export const passVAddManualObjRel = () => {
   cy.wait(2000);
   cy.get(getElementFromAlias('table-relationships')).click();
   cy.wait(2000);
-  cy.get(getElementFromAlias('rel-type')).select('object_rel');
+  cy.get(getElementFromAlias('create-edit-manual-rel')).click();
+  cy.get(getElementFromAlias('manual-relationship-type')).select('object');
   cy.get("input[placeholder='Enter relationship name']").type('author');
-  cy.get('select')
-    .find('option')
-    .contains('Current Column')
-    .parent()
-    .select('id');
-  cy.get('select')
-    .find('option')
-    .contains('Remote Table')
-    .parent()
-    .select('author_table_vt');
-  cy.get('select')
-    .last()
-    .select('id');
-  cy.get(getElementFromAlias('view-add-relationship')).click();
+  cy.get(getElementFromAlias('manual-relationship-ref-schema')).select(
+    'public'
+  );
+  cy.get(getElementFromAlias('manual-relationship-ref-table')).select(
+    'author_table_vt'
+  );
+  cy.get(getElementFromAlias('manual-relationship-lcol-0')).select('id');
+  cy.get(getElementFromAlias('manual-relationship-rcol-0')).select('id');
+  cy.get(getElementFromAlias('create-manual-rel-save')).click();
   cy.wait(7000);
   validateColumn(
     'author_average_rating_vt',

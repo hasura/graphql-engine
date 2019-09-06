@@ -9,6 +9,7 @@ const generatedApiExplorer = connect => {
       dataApiExplorerData: { ...state.dataApiExplorer },
       dataHeaders: state.tables.dataHeaders,
       tables: state.tables.allSchemas,
+      serverConfig: state.main.serverConfig ? state.main.serverConfig.data : {},
     };
   };
   return connect(mapStateToProps)(ApiExplorer);

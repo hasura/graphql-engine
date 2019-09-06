@@ -1,6 +1,6 @@
 <html lang="en-us">
   <head>
-    <link rel="icon" type="image/svg+xml" href="https://graphql-engine-cdn.hasura.io/img/hasura_icon_green.svg" />
+    <link rel="icon" type="image/png" href="https://graphql-engine-cdn.hasura.io/console/assets/common/img/favicon_green.png" />
     <script>
       window.__env = {
         apiHost: {{.apiHost}},
@@ -16,7 +16,8 @@
         urlPrefix: "/",
         consoleMode: "cli",
         cliUUID: {{.cliUUID}},
-        enableTelemetry: {{.enableTelemetry}}
+        enableTelemetry: {{.enableTelemetry}},
+        serverVersion: "{{.serverVersion}}",
       };
     </script>
   </head>
@@ -54,8 +55,20 @@
     </div>
     <div id="content" class="mainContent"></div>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
-    <link rel="stylesheet" href="https://storage.googleapis.com/hasura-graphql-engine/console/{{.assetsVersion}}/main.css" charset="UTF-8"/>
-    <script src="https://storage.googleapis.com/hasura-graphql-engine/console/{{.assetsVersion}}/vendor.js" charset="UTF-8"></script>
-    <script src="https://storage.googleapis.com/hasura-graphql-engine/console/{{.assetsVersion}}/main.js" charset="UTF-8"></script>
+
+    {{ if .cliStaticDir }}
+
+    <link rel="stylesheet" href="/static/main.css" charset="UTF-8"/>
+    <script src="/static/vendor.js" charset="UTF-8"></script>
+    <script src="/static/main.js" charset="UTF-8"></script>
+
+    {{ else }}
+
+    <link rel="stylesheet" href="https://graphql-engine-cdn.hasura.io/console/assets/{{.assetsVersion}}/main.css.gz" charset="UTF-8"/>
+    <script src="https://graphql-engine-cdn.hasura.io/console/assets/{{.assetsVersion}}/vendor.js.gz" charset="UTF-8"></script>
+    <script src="https://graphql-engine-cdn.hasura.io/console/assets/{{.assetsVersion}}/main.js.gz" charset="UTF-8"></script>
+
+   {{ end }}
+
   </body>
 </html>

@@ -82,6 +82,8 @@ You don't need to integrate your UI with auth0 for testing. You call follow the 
 
 **Save this JWT token value so that we can use it later to test authorization using the Hasura console.**
 
+**Note**: In case the above method gives an error, try disabling OIDC Conformant setting (https://auth0.com/docs/api-auth/tutorials/adoption/oidc-conformant) under Advanced Settings -> OAuth.
+
 Configure Hasura to use Auth0 Keys
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -143,7 +145,7 @@ Add Access Control Rules via Hasura Console
 Auth0 is configured and ready to be used in the application. You can now setup access control rules that
 will automatically get applied whenever a client makes a graphql query with the Auth0 token.
 
-Refer :doc:`../../auth/basics` for more information.
+Refer :doc:`../../auth/authorization/basics` for more information.
 
 To test this out, add an access control rule that uses ``x-hasura-user-id`` for the role ``user``.
 Then make a GraphQL query or a mutation, with the Authorization token from the :ref:`previous step <test-auth0>`

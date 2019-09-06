@@ -3,101 +3,240 @@ Enum type fields
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
-Enum type fields can only take a value from a fixed set of allowed values.
+Enum type fields are restricted to a fixed set of allowed values.
 
-In a relational database such as Postgres, an enum type field in a table can be defined by:
+Enums in a database
+-------------------
 
-- using native database enum types
-- setting a foreign-key to a reference table which contains the list of allowed values.
+In a relational database such as Postgres, an enum type field in a table can be defined in two ways:
 
-`Postgres Enum types <https://www.postgresql.org/docs/current/datatype-enum.html>`__ are not easily mutable. Hence
-they should be used only for enums which are not going to change over time. e.g. measurement units, days of the
-week, etc.
+.. _native_pg_enum:
 
-For enums whose values are dynamic and will require updates, the reference table approach is recommended. e.g. list
-of tags, list of teams, etc.
+Using `native Postgres enum types <https://www.postgresql.org/docs/current/datatype-enum.html>`__
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. admonition:: Current limitations
+While the most obvious solution, native enum types have significant drawbacks: they are not easily mutable.
+New values cannot be added to an enum inside a transaction (that is, ``ALTER TYPE ... ADD VALUE`` is not
+supported by transactional DDL), and values cannot be removed from an enum at all without completely dropping
+and recreating it (which cannot be done if the enum is in use by *any* tables, views, or functions). Therefore,
+native enum types should only be used for enums that are guaranteed to *never* change, such as days of the
+week.
 
-  Hasura currently does not generate GraphQL enums. This feature is being worked upon. Hence this guide is currently
-  only tailored towards helping you maintain data consistency in your database
+.. _reference_table_enum:
 
+Using `foreign-key references <https://www.postgresql.org/docs/current/tutorial-fk.html>`__ to a single-column table
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**For example**, let's say we have a table ``magazine`` with fields ``(id, title, issue_month, issue_year)``
-and we would like to restrict the values of the ``issue_month`` field to just the months of the year (i.e. January,
-February, and so on).
+This approach represents an enum using ordinary relational database concepts. The enum type is represented by a
+table, and the values of the enum are rows in the table. Columns in other tables that use the enum are ordinary
+foreign-key references to the enum table.
 
-The following are the approaches we can use to achieve this:
+For enums with values that are dynamic and may require updates, such as a list of tags or user roles, this
+approach is strongly recommended. Modifying an enum defined this way is easy: simply insert, update, or delete
+rows in the enum table (and updates or deletes can even be cascaded to references, and they may be done within
+a transaction).
 
-Option 1: Using native Postgres enum type
------------------------------------------
+Enums in the Hasura GraphQL engine
+----------------------------------
 
-Create a Postgres enum type
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Given the limitations of native Postgres enum types (as described :ref:`above <native_pg_enum>`), Hasura
+currently only generates GraphQL enum types for enums defined using the
+:ref:`referenced tables <reference_table_enum>` approach.
 
-Open the Hasura console and head to the ``Data -> SQL`` interface.
+You may use native Postgres enum types in your database schema, but they will essentially be treated like text
+fields in the generated GraphQL schema. Therefore, this guide focuses primarily on modeling an enum using a
+reference table, but you may still use native Postgres enum types to help maintain data consistency in your
+database. You can always choose to create a table with the values of a Postgres enum as shown in the
+:ref:`section below <create_enum_table_from_pg_enum>`.
 
-Run the following SQL statement:
+**Example:** Let’s say we have a database that tracks user information, and users may only have one of three specific
+roles: user, moderator, or administrator. To represent that, we might have a ``users`` table with the following schema:
 
 .. code-block:: sql
 
-  CREATE TYPE month AS ENUM ('January', 'February', 'March', 'and so on...');
-
-Set column type as the Postgres enum type
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Run the following SQL statement if the table doesn't yet exist:
-
-.. code-block:: sql
-  :emphasize-lines: 4
-
-  CREATE TABLE magazine(
+  CREATE TABLE users (
     id serial PRIMARY KEY,
-    title text NOT NULL,
-    issue_month month,
-    issue_year integer
+    name text NOT NULL,
+    role text NOT NULL
   );
 
-If table exists, run the following SQL statement:
+Now we can insert some users into our database:
 
 .. code-block:: sql
 
-  ALTER TABLE magazine
-    ALTER COLUMN issue_month TYPE month using issue_month::month;
+  INSERT INTO users (name, role) VALUES
+    ('Alyssa', 'administrator'),
+    ('Ben', 'moderator'),
+    ('Gerald', 'user');
 
+This works alright, but it doesn’t prevent us from inserting nonsensical values for ``role``, such as
 
-Now the ``issue_month`` field can only take values from the months of the year.
+.. code-block:: sql
 
-See `Postgres Enum types documentation <https://www.postgresql.org/docs/current/datatype-enum.html>`__ for more info.
+  INSERT INTO users (name, role) VALUES
+    ('Hal', 'spaghetti');
 
-Option 2: Using a reference table
----------------------------------
+which we certainly don’t want. Hence we should create an enum to restrict the allowed values.
 
-Create a reference table for the enum
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. _create_enum_table:
 
-Open the Hasura console and head to the ``Data -> Create table`` interface.
+Creating an enum compatible table
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Create a table ``months_of_the_year`` with just one column ``month``, which is the primary key:
+To represent an enum, we’re going to create an _`enum table`, which for Hasura’s purposes is any table that meets
+the following restrictions:
 
-.. thumbnail:: ../../../img/graphql/manual/schema/enum-create-ref-table.png
+1. The table must have a single-column primary key of type ``text``. The values of this column are the legal values
+   of the enum, and they must all be `valid GraphQL enum value names
+   <https://graphql.github.io/graphql-spec/June2018/#EnumValue>`__.
+2. Optionally, the table may have a second column, also of type ``text``, which will be used as a description of each
+   value in the generated GraphQL schema.
+3. The table may not contain any other columns.
+4. The table must contain at least 1 row.
 
-Add the allowed enum values to the reference table
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**For example**, to create an enum that represents our user roles, we would create the following table:
 
-Head to the ``GraphiQL`` tab of the console and run an insert mutation to insert the allowed enum values:
+.. code-block:: sql
 
-.. thumbnail:: ../../../img/graphql/manual/schema/enum-insert-ref-values.png
+  CREATE TABLE user_role (
+    value text PRIMARY KEY,
+    comment text
+  );
 
-Add a foreign-key constraint to the reference table
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  INSERT INTO user_role (value, comment) VALUES
+    ('user', 'Ordinary users'),
+    ('moderator', 'Users with the privilege to ban users'),
+    ('administrator', 'Users with the privilege to set users’ roles');
 
-Head to the ``Data -> magazine -> Modify`` tab of the console and set a foreign-key to the ``months_of_the_year`` table
-using the fields: ``issue_month -> months_of_the_year :: month``:
+.. _create_enum_table_from_pg_enum:
 
-.. thumbnail:: ../../../img/graphql/manual/schema/enum-set-foreign-key.png
+.. admonition:: Creating an enum table from a native PG enum
 
-Now the ``issue_month`` field can only take values from the months of the year.
+  You can create a table containing the values of a PG enum by executing the following SQL:
+
+  .. code-block:: sql
+
+    CREATE TABLE "<my_enum_table>" (value TEXT PRIMARY KEY);
+    INSERT INTO "<my_enum_table>" (value) (SELECT unnest(enum_range(NULL::"<my_enum>")))::text);
+
+Next, we need to tell Hasura that this table represents an enum.
+
+Setting a table as an enum table
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Once we have a table which satisfies the conditions for an enum table as described :ref:`above <create_enum_table>`,
+we need to tell Hasura that this table represents an enum.
+
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    Head to the ``Modify`` tab of the table and toggle the switch in the
+    ``Set table as enum`` section:
+
+    .. thumbnail:: ../../../img/graphql/manual/schema/enum-set.png
+
+  .. tab:: API
+
+    A table can be set as an enum via the following 2 methods:
+
+    - passing ``true`` for the ``is_enum`` option of the :ref:`track_table` API while tracking a table
+    - using the :ref:`set_table_is_enum` API to change whether or not an already-tracked table should be used as
+      an enum
+
+Using an enum table
+^^^^^^^^^^^^^^^^^^^
+
+To set a field of a table as an enum in the GraphQL schema, we need to set a reference from it to the enum table
+via a foreign key.
+
+**For example**, to update our ``users`` table to reference the ``user_role`` enum table:
+
+.. code-block:: sql
+
+  ALTER TABLE users ADD CONSTRAINT
+    users_role_fkey FOREIGN KEY (role) REFERENCES user_role;
+
+Making queries using enum values
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Once a table has been tracked as an enum, the GraphQL schema will be updated to expose the values of the
+table as GraphQL enum values i.e. only the exposed values will be permitted for all fields referencing to it.
+
+**For example**, the ``role`` column of the ``users`` table only permits the values in the ``user_role`` table:
+
+.. code-block:: graphql
+
+  type users {
+    id: Int!
+    name: String!
+    role: user_role_enum!
+  }
+
+  enum user_role_enum {
+    "Users with the privilege to set users’ roles"
+    administrator
+
+    "Users with the privilege to ban users"
+    moderator
+
+    "Ordinary users"
+    user
+  }
+
+When making queries that filter on the ``role`` column, use the name of the enum value directly rather than providing
+a string:
+
+.. graphiql::
+  :view_only:
+  :query:
+    {
+      users(
+        where: {
+          role: {_eq: administrator}
+        }
+      ) {
+        id
+        name
+      }
+    }
+  :response:
+    {
+      "data": {
+        "users": [
+          {
+            "id": 1,
+            "name": "Alyssa"
+          }
+        ]
+      }
+    }
+
+Enums and migrations
+^^^^^^^^^^^^^^^^^^^^
+
+As enum tables have a requirement to contain at least 1 row, it is necessary to have a migration which inserts
+values into an enum table. Otherwise while applying migrations an error would be thrown while trying to set the
+table as an enum.
+
+The migration which inserts values into an enum table needs to be between the migration creating the table
+and the migration setting it as an enum.
+
+This can be achieved via the console by performing the following steps while setting up an enum table:
+
+1. Create the enum table
+2. Use the ``RawSQL`` tab of the console to insert the enum values into the table and mark the insert as a migration
+3. Set the table as an enum
+
+You can also :doc:`manually create migration files <../migrations/advanced/writing-migrations-manually>` to achieve
+this.
+
+Current limitations
+^^^^^^^^^^^^^^^^^^^
+
+Currently, Hasura does not automatically detect changes to the contents of enum tables, so the GraphQL schema will
+only be updated after manually reloading metadata after inserting, updating, or deleting rows from an enum table.

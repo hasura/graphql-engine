@@ -46,7 +46,7 @@ The GraphQL Endpoint will be:
 
 .. code-block:: bash
 
-   http://<your_droplet_ip>/v1alpha1/graphql
+   http://<your_droplet_ip>/v1/graphql
 
 
 A Postgres database is also provisioned on the Droplet. Using the console, you

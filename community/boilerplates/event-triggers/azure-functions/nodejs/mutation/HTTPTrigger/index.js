@@ -25,7 +25,7 @@ module.exports = function (context, req) {
         const qv = {noteId: data.old.id, data: data.old.note};
         const hgeResponse = query({
               query: MUTATION_NOTE_REVISION,
-              endpoint: HGE_ENDPOINT + '/v1alpha1/graphql',
+              endpoint: HGE_ENDPOINT + '/v1/graphql',
               variables: qv,
               headers: {
                 'x-hasura-admin-secret': ADMIN_SECRET

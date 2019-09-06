@@ -1,0 +1,30 @@
+type: bulk
+args:
+
+#Drop relationship first
+- type: drop_relationship
+  args:
+    relationship: articles
+    table:
+      schema: public
+      name: author
+    
+- type: run_sql
+  args:
+    sql: |
+      drop table article
+
+- type: run_sql
+  args:
+    sql: |
+      drop table author
+
+- type: run_sql
+  args:
+    sql: |
+      drop table "user"
+
+#- type: run_sql
+#  args:
+#    sql: |
+#      drop type inventory_item

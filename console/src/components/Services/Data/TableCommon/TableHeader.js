@@ -1,9 +1,9 @@
 import React from 'react';
-import globals from '../../../../Globals';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
 import { changeTableOrViewName } from '../TableModify/ModifyActions';
 import EditableHeading from '../../../Common/EditableHeading/EditableHeading';
+import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 import { tabNameMap } from '../utils';
 
 const TableHeader = ({
@@ -13,7 +13,6 @@ const TableHeader = ({
   migrationMode,
   currentSchema,
   dispatch,
-  allowRename,
 }) => {
   const styles = require('../../../Common/TableCommon/Table.scss');
   let capitalised = tabName;
@@ -24,57 +23,46 @@ const TableHeader = ({
   }
   const activeTab = tabNameMap[tabName];
 
-  const tableRenameCallback = newName => {
-    const currentPath = window.location.pathname.replace(
-      new RegExp(globals.urlPrefix, 'g'),
-      ''
-    );
-    const newPath = currentPath.replace(
-      /(\/schema\/.*)\/tables\/(\w*)(\/.*)?/,
-      `$1/tables/${newName}$3`
-    );
-    window.location.replace(
-      `${window.location.origin}${globals.urlPrefix}${newPath}`
-    );
+  const saveTableNameChange = newName => {
+    dispatch(changeTableOrViewName(true, tableName, newName));
   };
 
-  const saveTableNameChange = newName => {
-    dispatch(
-      changeTableOrViewName(true, tableName, newName, () =>
-        tableRenameCallback(newName)
-      )
-    );
+  const getBreadCrumbs = () => {
+    return [
+      {
+        title: 'Data',
+        url: '/data',
+      },
+      {
+        title: 'Schema',
+        url: '/data/schema/',
+      },
+      {
+        title: currentSchema,
+        url: '/data/schema/' + currentSchema,
+      },
+      {
+        title: tableName,
+        url:
+          '/data/schema/' + currentSchema + '/tables/' + tableName + '/browse',
+      },
+      {
+        title: activeTab,
+        url: null,
+      },
+    ];
   };
 
   return (
     <div>
       <Helmet title={capitalised + ' - ' + tableName + ' - Data | Hasura'} />
       <div className={styles.subHeader}>
-        <div className={styles.dataBreadCrumb}>
-          You are here: <Link to={'/data/schema/' + currentSchema}>Data</Link>{' '}
-          <i className="fa fa-angle-right" aria-hidden="true" />{' '}
-          <Link to={'/data/schema/' + currentSchema}>Schema</Link>{' '}
-          <i className="fa fa-angle-right" aria-hidden="true" />{' '}
-          <Link to={'/data/schema/' + currentSchema}>{currentSchema}</Link>{' '}
-          <i className="fa fa-angle-right" aria-hidden="true" />{' '}
-          <Link
-            to={
-              '/data/schema/' +
-              currentSchema +
-              '/tables/' +
-              tableName +
-              '/browse'
-            }
-          >
-            {tableName}
-          </Link>{' '}
-          <i className="fa fa-angle-right" aria-hidden="true" /> {activeTab}
-        </div>
+        <BreadCrumb breadCrumbs={getBreadCrumbs()} />
         <EditableHeading
           currentValue={tableName}
           save={saveTableNameChange}
           loading={false}
-          editable={tabName === 'modify' && allowRename}
+          editable={tabName === 'modify'}
           dispatch={dispatch}
           property="table"
         />

@@ -69,6 +69,8 @@ class ApiRequestWrapper extends Component {
           headerFocus={this.props.headerFocus}
           urlParams={this.props.urlParams}
           serverVersion={this.props.serverVersion}
+          consoleUrl={this.props.consoleUrl}
+          serverConfig={this.props.serverConfig}
         />
 
         {getAPIResponseSection()}
@@ -88,6 +90,7 @@ ApiRequestWrapper.propTypes = {
   numberOfTables: PropTypes.number,
   headerFocus: PropTypes.bool.isRequired,
   urlParams: PropTypes.bool.isRequired,
+  consoleUrl: PropTypes.string.isRequired,
 };
 
 export default ApiRequestWrapper;

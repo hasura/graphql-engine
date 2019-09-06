@@ -1,5 +1,5 @@
 description: Query data from geom_table using postgis ops in bool exp and polygon value as input argument
-url: /v1alpha1/graphql
+url: /v1/graphql
 status: 200
 response:
   data:

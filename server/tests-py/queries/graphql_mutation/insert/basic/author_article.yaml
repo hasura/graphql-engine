@@ -1,6 +1,6 @@
 #Inserting author data
 - description: Inserts author data via GraphQL mutation
-  url: /v1alpha1/graphql
+  url: /v1/graphql
   response:
     data:
       insert_author:
@@ -32,7 +32,7 @@
 
 #Inserting empty objects
 - description: Inserts empty objects via GraphQL mutation
-  url: /v1alpha1/graphql
+  url: /v1/graphql
   status: 200
   response:
     data:
@@ -55,7 +55,7 @@
 
 #Inserting article data
 - description: Inserts article data via GraphQL mutation
-  url: /v1alpha1/graphql
+  url: /v1/graphql
   response:
     data:
       insert_article:

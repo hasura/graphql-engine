@@ -3,8 +3,7 @@ import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
 import AceEditor from 'react-ace';
 import 'brace/mode/sql';
-import Modal from 'react-bootstrap/lib/Modal';
-import ModalButton from 'react-bootstrap/lib/Button';
+import Modal from '../../../Common/Modal/Modal';
 import Button from '../../../Common/Button/Button';
 import { parseCreateSQL } from './utils';
 
@@ -19,7 +18,6 @@ import {
 } from './Actions';
 import { modalOpen, modalClose } from './Actions';
 import globals from '../../../../Globals';
-import semverCheck from '../../../../helpers/semver';
 import './AceEditorFix.css';
 
 const RawSQL = ({
@@ -36,7 +34,6 @@ const RawSQL = ({
   isMigrationChecked,
   isTableTrackChecked,
   migrationMode,
-  serverVersion,
   allSchemas,
 }) => {
   const styles = require('../../../Common/TableCommon/Table.scss');
@@ -49,21 +46,18 @@ const RawSQL = ({
   );
   const migrationTip = (
     <Tooltip id="tooltip-migration">
-      Modifications to the database schema should be tracked as migrations
+      Create a migration file with the SQL statement
     </Tooltip>
   );
   const migrationNameTip = (
     <Tooltip id="tooltip-migration">
-      Change the name of the generated migration file. Default:
-      'run_sql_migration'
+      Name of the generated migration file. Default: 'run_sql_migration'
     </Tooltip>
   );
-  const trackTableTip = _hasFunctionSupport => (
+  const trackTableTip = () => (
     <Tooltip id="tooltip-tracktable">
-      {`If you are creating a table/view${
-        _hasFunctionSupport ? '/function' : ''
-      }, checking this will also expose them
-      over the GraphQL API`}
+      If you are creating a table/view/function, checking this will also expose
+      them over the GraphQL API
     </Tooltip>
   );
 
@@ -84,7 +78,7 @@ const RawSQL = ({
       const isMigration = checkboxElem ? checkboxElem.checked : false;
       const textboxElem = document.getElementById('migration-name');
       let migrationName = textboxElem ? textboxElem.value : '';
-      if (migrationName.length === 0) {
+      if (isMigration && migrationName.length === 0) {
         migrationName = 'run_sql_migration';
       }
       if (!isMigration && globals.consoleMode === 'cli') {
@@ -135,12 +129,7 @@ const RawSQL = ({
     );
   }
 
-  const hasFunctionSupport = semverCheck(
-    'customFunctionSection',
-    serverVersion
-  );
-
-  const getMigrationModal = () => {
+  const getMigrationWarningModal = () => {
     const onModalClose = () => {
       dispatch(modalClose());
     };
@@ -152,30 +141,22 @@ const RawSQL = ({
     };
 
     return (
-      <Modal show={isModalOpen} onHide={onModalClose.bind(this)}>
-        <Modal.Header closeModalButton>
-          <Modal.Title>Run SQL</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <div className="content-fluid">
-            <div className="row">
-              <div className="col-xs-12">
-                Your SQL Statement is most likely modifying the database schema.
-                Are you sure its not a migration?
-              </div>
+      <Modal
+        show={isModalOpen}
+        title={'Run SQL'}
+        onClose={onModalClose}
+        onSubmit={onConfirmNoMigration}
+        submitText={'Yes, i confirm'}
+        submitTestId={'not-migration-confirm'}
+      >
+        <div className="content-fluid">
+          <div className="row">
+            <div className="col-xs-12">
+              Your SQL Statement is most likely modifying the database schema.
+              Are you sure its not a migration?
             </div>
           </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <ModalButton onClick={onModalClose}>Cancel</ModalButton>
-          <ModalButton
-            onClick={onConfirmNoMigration}
-            bsStyle="primary"
-            data-test="not-migration-confirm"
-          >
-            Yes, i confirm
-          </ModalButton>
-        </Modal.Footer>
+        </div>
       </Modal>
     );
   };
@@ -228,14 +209,13 @@ const RawSQL = ({
 
     return (
       <div className={styles.add_mar_top}>
-        <h4>SQL:</h4>
         <AceEditor
           data-test="sql-test-editor"
           mode="sql"
           theme="github"
           name="raw_sql"
           value={sql}
-          minLines={8}
+          minLines={15}
           maxLines={100}
           width="100%"
           showPrintMargin={false}
@@ -276,9 +256,7 @@ const RawSQL = ({
 
       resultTable = (
         <div
-          className={`${styles.addCol} col-xs-12 ${styles.padd_left_remove} ${
-            styles.add_mar_top
-          }`}
+          className={`${styles.addCol} col-xs-12 ${styles.padd_left_remove}`}
         >
           <h4 className={styles.subheading_text}>SQL Result:</h4>
           <div className={styles.tableContainer}>
@@ -304,33 +282,20 @@ const RawSQL = ({
 
   const getNotesSection = () => {
     return (
-      <div>
-        <b>Notes</b>
-        <ul className={styles.remove_ul_left + ' ' + styles.add_mar_top_small}>
-          <li>
-            You can create views, alter tables and just about run any SQL
-            statements directly on the database.
-          </li>
-          <li>
-            Multiple SQL statements can be separated by semicolons,{' '}
-            <code>;</code>, however, only the result of the last SQL statement
-            will be returned.
-          </li>
-          <li>
-            Multiple SQL statements will be run as a transaction. i.e. if any
-            statement fails, none of the statements will be applied.
-          </li>
-          <li>
-            If you are creating a Table/View
-            {hasFunctionSupport ? '/Function' : ''} using Raw SQL, checking the{' '}
-            <b>Track this</b> checkbox will also expose it over the GraphQL API.
-          </li>
-          <li>
-            If migrations are enabled, down migrations will not be generated for
-            statements run using Raw SQL.
-          </li>
-        </ul>
-      </div>
+      <ul>
+        <li>
+          You can create views, alter tables or just about run any SQL
+          statements directly on the database.
+        </li>
+        <li>
+          Multiple SQL statements can be separated by semicolons, <code>;</code>
+          , however, only the result of the last SQL statement will be returned.
+        </li>
+        <li>
+          Multiple SQL statements will be run as a transaction. i.e. if any
+          statement fails, none of the statements will be applied.
+        </li>
+      </ul>
     );
   };
 
@@ -381,10 +346,7 @@ const RawSQL = ({
           />
           Track this
         </label>
-        <OverlayTrigger
-          placement="right"
-          overlay={trackTableTip(hasFunctionSupport)}
-        >
+        <OverlayTrigger placement="right" overlay={trackTableTip()}>
           <i
             className={`${styles.add_mar_left_small} fa fa-info-circle`}
             aria-hidden="true"
@@ -454,6 +416,14 @@ const RawSQL = ({
                   aria-hidden="true"
                 />
               </OverlayTrigger>
+              <div
+                className={styles.add_mar_top_small + ' ' + styles.text_gray}
+              >
+                <i>
+                  Note: down migration will not be generated for statements run
+                  using Raw SQL.
+                </i>
+              </div>
             </div>
           </div>
         );
@@ -501,23 +471,33 @@ const RawSQL = ({
         <div className="clearfix" />
       </div>
       <div className={styles.add_mar_top}>
-        <div className={`${styles.addCol} col-xs-8 ${styles.padd_left_remove}`}>
-          {getNotesSection()}
+        <div>
+          <div className={`${styles.padd_left_remove} col-xs-8`}>
+            {getNotesSection()}
+          </div>
 
-          {getSQLSection()}
+          <div className={`${styles.padd_left_remove} col-xs-10`}>
+            {getSQLSection()}
+          </div>
 
-          {getTrackThisSection()}
-          {getMetadataCascadeSection()}
-          {getMigrationSection()}
+          <div
+            className={`${styles.padd_left_remove} ${
+              styles.add_mar_bottom
+            } col-xs-8`}
+          >
+            {getTrackThisSection()}
+            {getMetadataCascadeSection()}
+            {getMigrationSection()}
 
-          {getRunButton()}
+            {getRunButton()}
+          </div>
         </div>
         <div className="hidden col-xs-4">{alert}</div>
       </div>
 
-      {getMigrationModal()}
+      {getMigrationWarningModal()}
 
-      <div className={styles.add_mar_top}>{getResultTable()}</div>
+      <div className={styles.add_mar_bottom}>{getResultTable()}</div>
     </div>
   );
 };

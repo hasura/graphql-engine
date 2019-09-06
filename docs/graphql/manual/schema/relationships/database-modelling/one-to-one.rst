@@ -19,7 +19,7 @@ Say we have the following two tables in our database schema:
 
   passport_info (
     id INT PRIMARY KEY,
-    owner_id INT
+    owner_id INT NOT NULL
     passport_number TEXT
     ...
   )
@@ -49,12 +49,6 @@ To access the nested objects via the GraphQL API, :doc:`create the following rel
 
 - Object relationship, ``passport_info`` from ``author`` table using  ``id -> passport_info :: owner_id``
 - Object relationship, ``owner`` from ``passport_info`` table using ``owner_id -> author :: id``
-
-.. note::
-
-  Currently the console suggests an array relationship from ``author`` to ``passport_info`` table as it doesn't
-  detect the unique constraint on ``owner_id``. This will be fixed soon. For now, you can :ref:`create the
-  object relationship manually <relationships-without-fkey>` without using the foreign-key.
 
 Query using relationships
 -------------------------
@@ -101,7 +95,7 @@ We can now:
       }
 
 
-- fetch a list of passport_info with their ``owner``:
+- fetch a list of passport_infos with their ``owner``:
 
   .. graphiql::
     :view_only:
@@ -139,3 +133,18 @@ We can now:
           ]
         }
       }
+
+Current limitations with nested mutations
+-----------------------------------------
+
+With one-to-one relationships, currently nested mutations will work only in one of the two directions.
+
+In our example, inserting a ``passport_info`` with their nested ``owner`` will work seamlessly but trying to
+insert an ``author`` with their nested ``passport_info`` will throw a constraint violation error.
+
+This is due to the way Hasura GraphQL engine currently handles nested mutations (described in detail
+:ref:`here <nested_inserts>`). As nested object relations are inserted before the parent, the ``passport_info``
+will be attempted to be inserted first and the value of its ``owner_id`` will be attempted to be set as the
+``id`` of the ``author``. Due to this, based on whether the ``owner_id`` of ``passport_info`` is nullable or not, a
+``Not-NULL violation`` error will be thrown either for the ``owner_id`` field of ``passport_info`` or the ``id``
+field of ``author``.

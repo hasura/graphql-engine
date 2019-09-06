@@ -64,7 +64,7 @@ class Editor extends React.Component {
         data-test={`${service}-${property}-save`}
         disabled={isProcessing}
       >
-        Save
+        {this.props.saveButtonText || 'Save'}
       </Button>
     );
   };
@@ -82,7 +82,7 @@ class Editor extends React.Component {
         data-test={`${service}-${property}-remove`}
         disabled={isProcessing}
       >
-        Remove
+        {this.props.removeButtonText || 'Remove'}
       </Button>
     );
   };
@@ -139,7 +139,7 @@ class Editor extends React.Component {
           {editorLabel}
         </div>
         {editorContent}
-        {actionButtons}
+        <div className={styles.add_mar_top_small}>{actionButtons}</div>
       </div>
     );
   }

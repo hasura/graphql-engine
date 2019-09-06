@@ -18,6 +18,7 @@ import {
 } from './FilterActions';
 import { ordinalColSort, convertDateTimeToLocale } from '../utils';
 import '../TableCommon/EventReactTableOverrides.css';
+import { verifySuccessStatus } from '../utils';
 
 const ViewRows = ({
   curTriggerName,
@@ -98,7 +99,7 @@ const ViewRows = ({
       // Insert cells corresponding to all rows
       sortedColumns.forEach(col => {
         const getCellContent = () => {
-          let conditionalClassname = styles.tableCellCenterAligned;
+          let conditionalClassname = styles.tableCellCenterAlignedOverflow;
           const cellIndex = `${curTriggerName}-${col}-${rowIndex}`;
           if (expandedRow === cellIndex) {
             conditionalClassname = styles.tableCellExpanded;
@@ -256,17 +257,17 @@ const ViewRows = ({
           const invocationRowsData = [];
           currentRow.logs.map((r, rowIndex) => {
             const newRow = {};
-            const status =
-              r.status === 200 ? (
-                <i className={styles.invocationSuccess + ' fa fa-check'} />
-              ) : (
-                <i className={styles.invocationFailure + ' fa fa-times'} />
-              );
+            const status = verifySuccessStatus(r.status) ? (
+              <i className={styles.invocationSuccess + ' fa fa-check'} />
+            ) : (
+              <i className={styles.invocationFailure + ' fa fa-times'} />
+            );
 
             // Insert cells corresponding to all rows
             invocationColumns.forEach(col => {
               const getCellContent = () => {
-                let conditionalClassname = styles.tableCellCenterAligned;
+                let conditionalClassname =
+                  styles.tableCellCenterAlignedOverflow;
                 const cellIndex = `${curTriggerName}-${col}-${rowIndex}`;
                 if (expandedRow === cellIndex) {
                   conditionalClassname = styles.tableCellExpanded;
@@ -283,7 +284,9 @@ const ViewRows = ({
                 }
                 if (col === 'created_at') {
                   const formattedDate = convertDateTimeToLocale(r.created_at);
-                  return formattedDate;
+                  return (
+                    <div className={conditionalClassname}>{formattedDate}</div>
+                  );
                 }
                 const content =
                   r[col] === undefined ? 'NULL' : r[col].toString();

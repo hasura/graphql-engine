@@ -21,7 +21,18 @@ spec:
         app: caddy
     spec:
       containers:
-      - image: abiosoft/caddy:0.11.5
+      - image: hasura/caddy-cf:latest
+        env:
+        - name: CLOUDFLARE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              key: cloudflareAPIKey
+              name: hasura-secret
+        - name: CLOUDFLARE_EMAIL
+          valueFrom:
+            secretKeyRef:
+              key: cloudflareEmail
+              name: hasura-secret
         command:
         - caddy
         - -conf
@@ -38,7 +49,7 @@ spec:
         volumeMounts:
         - name: caddy-certs-volume
           mountPath: /root/.caddy
-        - name: caddy-config 
+        - name: caddy-config
           mountPath: /caddy-config
       volumes:
       - name: caddy-certs-volume
@@ -79,4 +90,4 @@ spec:
   resources:
     requests:
       storage: 1Gi
-  storageClassName: do-block-storage
+  storageClassName: standard

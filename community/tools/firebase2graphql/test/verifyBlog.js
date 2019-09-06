@@ -20,7 +20,7 @@ query {
 const verifyDataImport = () => {
   query({
     query: complexQuery,
-    endpoint: `${process.env.TEST_HGE_URL}/v1alpha1/graphql`,
+    endpoint: `${process.env.TEST_HGE_URL}/v1/graphql`,
     headers: {'x-hasura-admin-secret': process.env.TEST_X_HASURA_ADMIN_SECRET},
   }).then(response => {
     if (

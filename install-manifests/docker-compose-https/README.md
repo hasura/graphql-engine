@@ -15,7 +15,7 @@ This Docker Compose setup runs [Hasura GraphQL Engine](https://github.com/hasura
 - Edit `docker-compose.yaml` and change `HASURA_GRAPHQL_ADMIN_SECRET` to something secure
 - `docker-compose up -d`
 
-GraphQL endpoint will be `https://<your-domain.com>/v1alpha1/graphql`
+GraphQL endpoint will be `https://<your-domain.com>/v1/graphql`
 Console will be available on `https://<your-domain.com>/console`
 
 ## Connecting to External Postgres

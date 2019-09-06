@@ -1,5 +1,5 @@
 description: Update mutation on author
-url: /v1alpha1/graphql
+url: /v1/graphql
 response:
   data:
     update_article:

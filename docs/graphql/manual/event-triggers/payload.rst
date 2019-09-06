@@ -53,7 +53,7 @@ JSON payload
      - Key-value pairs of session variables (i.e. "x-hasura-\*" variables) and their values. NULL if no session variables found.
    * - op-name
      - OpName_
-     - Name of the operation. Can only be "INSERT", "UPDATE" or "DELETE"
+     - Name of the operation. Can only be "INSERT", "UPDATE", "DELETE", "MANUAL"
    * - column-values
      - Object_
      - Key-value pairs of column name and their values of the table
@@ -90,6 +90,11 @@ JSON payload
 
   - ``event.data.old`` will contain the row that is deleted
   - ``event.data.new`` will be ``null``
+
+- MANUAL
+
+  - ``event.data.old`` will be ``null``
+  - ``event.data.new`` will contain the current row
 
 **For example**:
 
@@ -144,7 +149,7 @@ OpName
 
 .. parsed-literal::
 
-   "INSERT" | "UPDATE" | "DELETE"
+   "INSERT" | "UPDATE" | "DELETE" | "MANUAL"
 
 Webhook response structure
 --------------------------

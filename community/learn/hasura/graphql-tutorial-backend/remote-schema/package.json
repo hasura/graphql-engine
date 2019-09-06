@@ -1,0 +1,19 @@
+{
+  "name": "sample-remote-schema",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "apollo-server": "^2.2.2",
+    "graphql": "^14.0.2",
+    "graphql-tag": "^2.10.1",
+    "jsonwebtoken": "^8.5.1",
+    "node-fetch": "^2.5.0"
+  }
+}

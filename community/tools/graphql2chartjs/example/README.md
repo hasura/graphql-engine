@@ -8,7 +8,7 @@ The app directory has the React app that is already set up with a backend.
 
 ## Migrations (Hasura migrations)
 
-The hasura directory contains the migrations for the Hasura GraphQL Engine backend that is setup at https://graphql2chartjs.hasura.app and has a GraphQL endpoint https://graphqlchartjs.hasura.app/v1alpha1/graphql
+The hasura directory contains the migrations for the Hasura GraphQL Engine backend that is setup at https://graphql2chartjs.hasura.app and has a GraphQL endpoint https://graphqlchartjs.hasura.app/v1/graphql
 
 ## Scripts
 

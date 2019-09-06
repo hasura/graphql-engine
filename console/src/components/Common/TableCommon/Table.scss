@@ -6,7 +6,8 @@
 
 .tableContainer {
   overflow: auto;
-  //margin-top: 25px;
+  width: 95%;
+  padding-right: 5px; // removes scrollbar if width is enough
 }
 
 .schemaWrapper {
@@ -28,20 +29,6 @@
       font-weight: bold;
     }
   }
-}
-
-.aceBlock {
-  max-height: 300px;
-  position: relative;
-  margin-top: 10px;
-}
-
-.aceBlockExpand {
-  position: absolute;
-  top: -25px;
-  right: 5px;
-  z-index: 1;
-  cursor: pointer;
 }
 
 .viewRowsContainer {
@@ -76,18 +63,18 @@
 .table {
   width: auto;
 
-  thead {
-    background: #333;
-    color: #ddd;
+  tr:nth-child(even) {
+    background: #f4f4f4
   }
 
   th {
-    min-width: 100px;
+    //min-width: 100px;
     font-weight: 300;
   }
 
-  td {
-    max-width: 300px;
+  tbody > tr > td {
+    padding: 4px 8px;
+    max-width: 600px;
     white-space: pre;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -141,33 +128,16 @@ a.expanded {
     display: inline-block;
   }
 
-  .remove_ul_left {
-
-  }
-
   .select {
     display: inline-block;
     width: 300px;
     height: 34px;
   }
 
-  .select200 {
-    width: 200px;
-  }
-
   .defaultWidth {
     width: 200px;
     margin-right: 0px;
   }
-}
-
-.iClickable {
-}
-
-.iClickable:hover {
-  cursor: pointer;
-  color: #b85c27;
-  transition: 0.2s;
 }
 
 .insertBox {
@@ -202,16 +172,14 @@ a.expanded {
 
 .tableCellCenterAligned {
   text-align: center;
+  overflow: unset !important;
+}
+
+.tableCellCenterAlignedOverflow {
+  text-align: center;
+  overflow: hidden !important;
 }
 
 .tableCellExpanded {
-  white-space: normal;
+  white-space: pre-wrap;
 }
-
-.tableActionBtn {
-  i {
-    padding-top: 3px;
-    padding-bottom: 3px;
-  }
-}
-

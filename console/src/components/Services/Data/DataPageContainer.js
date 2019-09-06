@@ -1,19 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router';
-import _push from './push';
 import globals from '../../../Globals';
 
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 import DataSubSidebar from './DataSubSidebar';
 
-import {
-  loadSchema,
-  loadUntrackedSchema,
-  loadUntrackedRelations,
-  UPDATE_CURRENT_SCHEMA,
-  fetchFunctionInit,
-} from './DataActions';
+import { updateCurrentSchema } from './DataActions';
+import { NotFoundError } from '../../Error/PageNotFound';
 
 const sectionPrefix = '/data';
 
@@ -26,6 +20,13 @@ const DataPageContainer = ({
   dispatch,
 }) => {
   const styles = require('../../Common/TableCommon/Table.scss');
+
+  if (!schemaList.map(s => s.schema_name).includes(currentSchema)) {
+    dispatch(updateCurrentSchema('public', false));
+
+    // throw a 404 exception
+    throw new NotFoundError();
+  }
 
   const currentLocation = location.pathname;
 
@@ -46,15 +47,15 @@ const DataPageContainer = ({
   }
 
   const handleSchemaChange = e => {
-    const updatedSchema = e.target.value;
-    dispatch(_push(`/schema/${updatedSchema}`));
-    Promise.all([
-      dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: updatedSchema }),
-      dispatch(loadSchema()),
-      dispatch(loadUntrackedSchema()),
-      dispatch(loadUntrackedRelations()),
-      dispatch(fetchFunctionInit()),
-    ]);
+    dispatch(updateCurrentSchema(e.target.value));
+  };
+
+  const getSchemaOptions = () => {
+    return schemaList.map(s => (
+      <option key={s.schema_name} value={s.schema_name}>
+        {s.schema_name}
+      </option>
+    ));
   };
 
   const sidebarContent = (
@@ -75,11 +76,7 @@ const DataPageContainer = ({
                 value={currentSchema}
                 className={styles.changeSchema + ' form-control'}
               >
-                {schemaList.map(s => (
-                  <option key={s.schema_name} value={s.schema_name}>
-                    {s.schema_name}
-                  </option>
-                ))}
+                {getSchemaOptions()}
               </select>
             </div>
           </div>

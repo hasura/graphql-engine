@@ -1,0 +1,55 @@
+- args:
+    functions: []
+    query_templates: []
+    remote_schemas:
+    - comment: null
+      definition:
+        forward_client_headers: false
+        headers: []
+        url: null
+        url_from_env: TIC_TAC_REMOTE_SCHEMA_URL
+      name: tic-tac-toe
+    tables:
+    - array_relationships: []
+      delete_permissions: []
+      event_triggers: []
+      insert_permissions: []
+      object_relationships:
+      - comment: null
+        name: user
+        using:
+          foreign_key_constraint_on: user_id
+      select_permissions: []
+      table: move
+      update_permissions: []
+    - array_relationships: []
+      delete_permissions: []
+      event_triggers: []
+      insert_permissions: []
+      object_relationships: []
+      select_permissions: []
+      table: user
+      update_permissions: []
+    - array_relationships:
+      - comment: null
+        name: moves
+        using:
+          foreign_key_constraint_on:
+            column: board_id
+            table: move
+      delete_permissions: []
+      event_triggers: []
+      insert_permissions: []
+      object_relationships:
+      - comment: null
+        name: user1
+        using:
+          foreign_key_constraint_on: user_1_id
+      - comment: null
+        name: user2
+        using:
+          foreign_key_constraint_on: user_2_id
+      select_permissions: []
+      table: board
+      update_permissions: []
+  type: replace_metadata

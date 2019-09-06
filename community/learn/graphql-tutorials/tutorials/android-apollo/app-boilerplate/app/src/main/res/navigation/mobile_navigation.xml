@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/navigation_todos">
+
+    <fragment
+            android:id="@+id/navigation_todos"
+            android:name="com.hasura.todo.Todo.ui.todos.TodosFragment"
+            android:label="@string/title_todos"
+    />
+
+    <fragment
+            android:id="@+id/navigation_feed_public"
+            android:name="com.hasura.todo.Todo.ui.feed.FeedFragment"
+            android:label="@string/title_feed_public"
+    />
+
+    <fragment
+            android:id="@+id/navigation_online"
+            android:name="com.hasura.todo.Todo.ui.online.OnlineFragment"
+            android:label="@string/title_online"
+    />
+</navigation>

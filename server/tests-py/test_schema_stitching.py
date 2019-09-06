@@ -6,13 +6,14 @@ import yaml
 import json
 import queue
 import requests
+import time
 
 import pytest
 
 from validate import check_query_f, check_query
 
 
-def mk_add_remote_q(name, url, headers=None, client_hdrs=False):
+def mk_add_remote_q(name, url, headers=None, client_hdrs=False, timeout=None):
     return {
         "type": "add_remote_schema",
         "args": {
@@ -21,7 +22,8 @@ def mk_add_remote_q(name, url, headers=None, client_hdrs=False):
             "definition": {
                 "url": url,
                 "headers": headers,
-                "forward_client_headers": client_hdrs
+                "forward_client_headers": client_hdrs,
+                "timeout_seconds": timeout
             }
         }
     }
@@ -31,6 +33,14 @@ def mk_delete_remote_q(name):
         "type" : "remove_remote_schema",
         "args" : {
             "name": name
+        }
+    }
+
+def mk_reload_remote_q(name):
+    return {
+        "type" : "reload_remote_schema",
+        "args" : {
+            "name" : name
         }
     }
 
@@ -68,6 +78,7 @@ class TestRemoteSchemaBasic:
     def test_introspection_as_user(self, hge_ctx):
         check_query_f(hge_ctx, 'queries/graphql_introspection/introspection_user_role.yaml')
 
+
     def test_remote_query(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/basic_query.yaml')
 
@@ -81,12 +92,25 @@ class TestRemoteSchemaBasic:
         assert st_code == 400
         assert resp['code'] == 'remote-schema-conflicts'
 
+    def test_remove_schema_error(self, hge_ctx):
+        """remove remote schema which is not added"""
+        q = mk_delete_remote_q('random name')
+        st_code, resp = hge_ctx.v1q(q)
+        assert st_code == 400
+        assert resp['code'] == 'not-exists'
+
+    def test_reload_remote_schema(self, hge_ctx):
+        """reload a remote schema"""
+        q = mk_reload_remote_q('simple 1')
+        st_code, resp = hge_ctx.v1q(q)
+        assert st_code == 200
+
     def test_add_second_remote_schema(self, hge_ctx):
         """add 2 remote schemas with different node and types"""
         q = mk_add_remote_q('my remote', 'http://localhost:5000/user-graphql')
         st_code, resp = hge_ctx.v1q(q)
         assert st_code == 200, resp
-        hge_ctx.v1q({"type": "remove_remote_schema", "args": {"name": "my remote"}})
+        st_code, resp = hge_ctx.v1q(mk_delete_remote_q('my remote'))
         assert st_code == 200, resp
 
     def test_add_remote_schema_with_interfaces(self, hge_ctx):
@@ -95,8 +119,7 @@ class TestRemoteSchemaBasic:
         st_code, resp = hge_ctx.v1q(q)
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir + '/character_interface_query.yaml')
-        hge_ctx.v1q({"type": "remove_remote_schema",
-                     "args": {"name": "my remote interface one"}})
+        st_code, resp = hge_ctx.v1q(mk_delete_remote_q('my remote interface one'))
         assert st_code == 200, resp
 
     def test_add_remote_schema_with_interface_err_empty_fields_list(self, hge_ctx):
@@ -218,8 +241,8 @@ class TestAddRemoteSchemaTbls:
     def test_add_schema_duplicate_name(self, hge_ctx):
         q = mk_add_remote_q('simple2-graphql', 'http://localhost:5000/country-graphql')
         st_code, resp = hge_ctx.v1q(q)
-        assert st_code == 500, resp
-        assert resp['code'] == 'unexpected'
+        assert st_code == 400, resp
+        assert resp['code'] == 'already-exists'
 
     def test_add_schema_same_type_containing_same_scalar(self, hge_ctx):
         """
@@ -255,7 +278,8 @@ class TestAddRemoteSchemaTbls:
             'x-hasura-test': 'xyzz',
             'x-hasura-role': 'user',
             'x-hasura-user-id': 'abcd1234',
-            'Authorization': 'Bearer abcdef'
+            'content-type': 'application/json',
+            'Authorization': 'Bearer abcdef',
         }
         if hge_ctx.hge_key:
             hdrs['x-hasura-admin-secret'] = hge_ctx.hge_key
@@ -299,11 +323,34 @@ class TestRemoteSchemaQueriesOverWebsocket:
         }
         """
         query_id = ws_client.gen_id()
-        resp = ws_client.send_query({'query': query},query_id = query_id,timeout=5)
+        resp = ws_client.send_query({'query': query}, query_id=query_id,
+                                    timeout=5)
         try:
             ev = next(resp)
             assert ev['type'] == 'data' and ev['id'] == query_id, ev
-            assert ev['payload']['data']['data']['user']['username'] == 'john'
+            assert ev['payload']['data']['user']['username'] == 'john'
+        finally:
+            ws_client.stop(query_id)
+
+    def test_remote_query_error(self, ws_client):
+        query = """
+        query {
+          user(id: 2) {
+            blah
+            username
+          }
+        }
+        """
+        query_id = ws_client.gen_id()
+        resp = ws_client.send_query({'query': query}, query_id=query_id,
+                                    timeout=5)
+        try:
+            ev = next(resp)
+            print(ev)
+            assert ev['type'] == 'data' and ev['id'] == query_id, ev
+            assert 'errors' in ev['payload']
+            assert ev['payload']['errors'][0]['message'] == \
+                'Cannot query field "blah" on type "User".'
         finally:
             ws_client.stop(query_id)
 
@@ -319,14 +366,41 @@ class TestRemoteSchemaQueriesOverWebsocket:
         }
         """
         query_id = ws_client.gen_id()
-        resp = ws_client.send_query({'query': query},query_id = query_id,timeout=5)
+        resp = ws_client.send_query({'query': query}, query_id=query_id,
+                                    timeout=5)
         try:
             ev = next(resp)
             assert ev['type'] == 'data' and ev['id'] == query_id, ev
-            assert ev['payload']['data']['data']['createUser']['user']['id'] == 42
-            assert ev['payload']['data']['data']['createUser']['user']['username'] == 'foobar'
+            assert ev['payload']['data']['createUser']['user']['id'] == 42
+            assert ev['payload']['data']['createUser']['user']['username'] == 'foobar'
         finally:
             ws_client.stop(query_id)
+
+
+class TestRemoteSchemaResponseHeaders():
+    teardown = {"type": "clear_metadata", "args": {}}
+    dir = 'queries/remote_schemas'
+
+    @pytest.fixture(autouse=True)
+    def transact(self, hge_ctx):
+        q = mk_add_remote_q('sample-auth', 'http://localhost:5000/auth-graphql')
+        st_code, resp = hge_ctx.v1q(q)
+        assert st_code == 200, resp
+        yield
+        hge_ctx.v1q(self.teardown)
+
+    def test_response_headers_from_remote(self, hge_ctx):
+        headers = {}
+        if hge_ctx.hge_key:
+            headers = {'x-hasura-admin-secret': hge_ctx.hge_key}
+        q = {'query': 'query { hello (arg: "me") }'}
+        resp = hge_ctx.http.post(hge_ctx.hge_url + '/v1/graphql', json=q,
+                                 headers=headers)
+        assert resp.status_code == 200
+        assert ('Set-Cookie' in resp.headers and
+                resp.headers['Set-Cookie'] == 'abcd')
+        res = resp.json()
+        assert res['data']['hello'] == "Hello me"
 
 
 class TestAddRemoteSchemaCompareRootQueryFields:
@@ -362,6 +436,22 @@ class TestAddRemoteSchemaCompareRootQueryFields:
                 compare_flds(fldH, fldR)
             assert has_fld[fldR['name']], 'Field ' + fldR['name'] + ' in the remote shema root query type not found in Hasura schema'
 
+class TestRemoteSchemaTimeout:
+    dir = 'queries/remote_schemas'
+    teardown = {"type": "clear_metadata", "args": {}}
+
+    @pytest.fixture(autouse=True)
+    def transact(self, hge_ctx):
+        q = mk_add_remote_q('simple 1', 'http://localhost:5000/hello-graphql', timeout = 5)
+        st_code, resp = hge_ctx.v1q(q)
+        assert st_code == 200, resp
+        yield
+        hge_ctx.v1q(self.teardown)
+
+    def test_remote_query_timeout(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/basic_timeout_query.yaml')
+        # wait for graphql server to finish else teardown throws
+        time.sleep(6)
 
 #    def test_remote_query_variables(self, hge_ctx):
 #        pass

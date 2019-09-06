@@ -1,0 +1,75 @@
+@import "../Common.scss";
+
+.data_dropdown_wrapper {
+  display: inline-block;
+  width: 100%;
+
+  .dataDropdown {
+    position: relative;
+    width: 100%;
+
+    .dropdown_wrapper {
+      border-radius: 5px;
+      width: auto;
+      position: absolute;
+      padding-inline-start: 0px;
+      box-shadow: 7px 7px 20px 0 rgba(0, 0, 0, 0.32);
+      background-color: #ffffff;
+      color: yellow;
+      -webkit-padding-start: 0px;
+      z-index: 10;
+
+      li {
+        display: flex;
+        align-items: center;
+        list-style-type: none;
+        color: #303030;
+        text-align: left;
+        padding: 10px 15px;
+        border-bottom: 1px solid #ededed;
+
+        button {
+          margin-right: 5px;
+        }
+        
+        // &:hover {
+        //   background-color: #eee;
+        // }
+      }
+
+      li:last-child {
+        border-bottom: none;
+      }
+    }
+
+    .dropdownRight {
+      top: -12px;
+      left: 35px;
+    }
+
+    .dropdownBottom {
+      top: 32px;
+      left: 0;
+    }
+
+    .dropdownRight:before,
+    .dropdownBottom:before {
+    	content: "";
+    	position: absolute;
+    	border: solid 5px transparent;
+      z-index: 10000;
+    }
+
+    .dropdownRight:before {
+      border-right-color: white;
+      left: -10px;
+      top: 17px;
+    }
+
+    .dropdownBottom:before {
+      border-bottom-color: white;
+      top: -10px;
+      left: 20px;
+    }
+  }
+}

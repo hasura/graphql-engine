@@ -1,5 +1,3 @@
-{-# LANGUAGE QuasiQuotes #-}
-
 module Hasura.RQL.DDL.Metadata
   ( TableMeta
 
@@ -43,21 +41,20 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query                  as Q
-import qualified Hasura.GraphQL.Schema              as GS
 import qualified Hasura.RQL.DDL.EventTrigger        as DE
 import qualified Hasura.RQL.DDL.Permission          as DP
 import qualified Hasura.RQL.DDL.Permission.Internal as DP
-import qualified Hasura.RQL.DDL.QueryTemplate       as DQ
+import qualified Hasura.RQL.DDL.QueryCollection     as DQC
 import qualified Hasura.RQL.DDL.Relationship        as DR
 import qualified Hasura.RQL.DDL.RemoteSchema        as DRS
-import qualified Hasura.RQL.DDL.Schema.Function     as DF
-import qualified Hasura.RQL.DDL.Schema.Table        as DT
+import qualified Hasura.RQL.DDL.Schema              as DS
 import qualified Hasura.RQL.Types.EventTrigger      as DTS
 import qualified Hasura.RQL.Types.RemoteSchema      as TRS
 
 data TableMeta
   = TableMeta
   { _tmTable               :: !QualifiedTable
+  , _tmIsEnum              :: !Bool
   , _tmObjectRelationships :: ![DR.ObjRelDef]
   , _tmArrayRelationships  :: ![DR.ArrRelDef]
   , _tmInsertPermissions   :: ![DP.InsPermDef]
@@ -67,9 +64,9 @@ data TableMeta
   , _tmEventTriggers       :: ![DTS.EventTriggerConf]
   } deriving (Show, Eq, Lift)
 
-mkTableMeta :: QualifiedTable -> TableMeta
-mkTableMeta qt =
-  TableMeta qt [] [] [] [] [] [] []
+mkTableMeta :: QualifiedTable -> Bool -> TableMeta
+mkTableMeta qt isEnum =
+  TableMeta qt isEnum [] [] [] [] [] [] []
 
 makeLenses ''TableMeta
 
@@ -81,6 +78,7 @@ instance FromJSON TableMeta where
 
     TableMeta
      <$> o .: tableKey
+     <*> o .:? isEnumKey .!= False
      <*> o .:? orKey .!= []
      <*> o .:? arKey .!= []
      <*> o .:? ipKey .!= []
@@ -91,6 +89,7 @@ instance FromJSON TableMeta where
 
     where
       tableKey = "table"
+      isEnumKey = "is_enum"
       orKey = "object_relationships"
       arKey = "array_relationships"
       ipKey = "insert_permissions"
@@ -103,8 +102,8 @@ instance FromJSON TableMeta where
         HS.fromList (M.keys o) `HS.difference` expectedKeySet
 
       expectedKeySet =
-        HS.fromList [ tableKey, orKey, arKey, ipKey
-                    , spKey, upKey, dpKey, etKey
+        HS.fromList [ tableKey, isEnumKey, orKey, arKey
+                    , ipKey, spKey, upKey, dpKey, etKey
                     ]
 
   parseJSON _ =
@@ -122,13 +121,14 @@ instance FromJSON ClearMetadata where
 
 clearMetadata :: Q.TxE QErr ()
 clearMetadata = Q.catchE defaultTxErrorHandler $ do
-  Q.unitQ "DELETE FROM hdb_catalog.hdb_query_template WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_function WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_permission WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_relationship WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.event_triggers" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_table WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.remote_schemas" () False
+  Q.unitQ "DELETE FROM hdb_catalog.hdb_allowlist" () False
+  Q.unitQ "DELETE FROM hdb_catalog.hdb_query_collection WHERE is_system_defined <> 'true'" () False
 
 runClearMetadata
   :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
@@ -138,15 +138,16 @@ runClearMetadata
 runClearMetadata _ = do
   adminOnly
   liftTx clearMetadata
-  DT.buildSchemaCacheStrict
+  DS.buildSchemaCacheStrict
   return successMsg
 
 data ReplaceMetadata
   = ReplaceMetadata
-  { aqTables         :: ![TableMeta]
-  , aqQueryTemplates :: ![DQ.CreateQueryTemplate]
-  , aqFunctions      :: !(Maybe [QualifiedFunction])
-  , aqRemoteSchemas  :: !(Maybe [TRS.AddRemoteSchemaQuery])
+  { aqTables           :: ![TableMeta]
+  , aqFunctions        :: !(Maybe [QualifiedFunction])
+  , aqRemoteSchemas    :: !(Maybe [TRS.AddRemoteSchemaQuery])
+  , aqQueryCollections :: !(Maybe [DQC.CreateCollection])
+  , aqAllowlist        :: !(Maybe [DQC.CollectionReq])
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ReplaceMetadata)
@@ -154,7 +155,7 @@ $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ReplaceMetadata)
 applyQP1
   :: (QErrM m, UserInfoM m)
   => ReplaceMetadata -> m ()
-applyQP1 (ReplaceMetadata tables templates mFunctions mSchemas) = do
+applyQP1 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = do
 
   adminOnly
 
@@ -180,15 +181,20 @@ applyQP1 (ReplaceMetadata tables templates mFunctions mSchemas) = do
       checkMultipleDecls "delete permissions" delPerms
       checkMultipleDecls "event triggers" eventTriggers
 
-  withPathK "queryTemplates" $
-    checkMultipleDecls "query templates" $ map DQ.cqtName templates
-
   withPathK "functions" $
     checkMultipleDecls "functions" functions
 
   onJust mSchemas $ \schemas ->
       withPathK "remote_schemas" $
         checkMultipleDecls "remote schemas" $ map TRS._arsqName schemas
+
+  onJust mCollections $ \collections ->
+    withPathK "query_collections" $
+        checkMultipleDecls "query collections" $ map DQC._ccName collections
+
+  onJust mAllowlist $ \allowlist ->
+    withPathK "allowlist" $
+        checkMultipleDecls "allow list" $ map DQC._crCollection allowlist
 
   where
     withTableName qt = withPathK (qualObjectToText qt)
@@ -213,16 +219,19 @@ applyQP2
      )
   => ReplaceMetadata
   -> m EncJSON
-applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas) = do
+applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = do
 
   liftTx clearMetadata
-  DT.buildSchemaCacheStrict
+  DS.buildSchemaCacheStrict
 
   withPathK "tables" $ do
 
     -- tables and views
-    indexedForM_ (map _tmTable tables) $ \tableName ->
-      void $ DT.trackExistingTableOrViewP2 tableName False
+    indexedForM_ tables $ \tableMeta -> do
+      let trackQuery = DS.TrackTable
+            { DS.tName = tableMeta ^. tmTable
+            , DS.tIsEnum = tableMeta ^. tmIsEnum }
+      void $ DS.trackExistingTableOrViewP2 trackQuery
 
     -- Relationships
     indexedForM_ tables $ \table -> do
@@ -251,39 +260,40 @@ applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas) = do
         indexedForM_ (table ^. tmEventTriggers) $ \etc ->
         DE.subTableP2 (table ^. tmTable) False etc
 
-  -- query templates
-  withPathK "queryTemplates" $
-    indexedForM_ templates $ \template -> do
-      qti <- DQ.createQueryTemplateP1 template
-      void $ DQ.createQueryTemplateP2 template qti
-
   -- sql functions
   withPathK "functions" $
-    indexedMapM_ (void . DF.trackFunctionP2) functions
+    indexedMapM_ (void . DS.trackFunctionP2) functions
+
+  -- query collections
+  withPathK "query_collections" $
+    indexedForM_ collections $ \c -> do
+    liftTx $ DQC.addCollectionToCatalog c
+
+  -- allow list
+  withPathK "allowlist" $ do
+    indexedForM_ allowlist $ \(DQC.CollectionReq name) -> do
+      liftTx $ DQC.addCollectionToAllowlistCatalog name
+    -- add to cache
+    DQC.refreshAllowlist
 
   -- remote schemas
   onJust mSchemas $ \schemas ->
     withPathK "remote_schemas" $
-      indexedForM_ schemas $ \conf ->
-        void $ DRS.addRemoteSchemaP1 conf
-               >>= DRS.addRemoteSchemaP2 conf
+      indexedMapM_ (void . DRS.addRemoteSchemaP2) schemas
 
-  -- build GraphQL Context
-  sc <- GS.updateSCWithGCtx =<< askSchemaCache
-
-  -- resolve remote schemas
-  httpMgr <- askHttpManager
-  newSc <- DRS.resolveRemoteSchemas sc httpMgr
-  writeSchemaCache newSc
+  -- build GraphQL Context with Remote schemas
+  DRS.buildGCtxMap
 
   return successMsg
 
   where
     functions = fromMaybe [] mFunctions
+    collections = fromMaybe [] mCollections
+    allowlist = fromMaybe [] mAllowlist
     processPerms tabInfo perms =
       indexedForM_ perms $ \permDef -> do
         permInfo <- DP.addPermP1 tabInfo permDef
-        DP.addPermP2 (tiName tabInfo) permDef permInfo
+        DP.addPermP2 (_tiName tabInfo) permDef permInfo
 
 runReplaceMetadata
   :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
@@ -306,8 +316,9 @@ $(deriveToJSON defaultOptions ''ExportMetadata)
 fetchMetadata :: Q.TxE QErr ReplaceMetadata
 fetchMetadata = do
   tables <- Q.catchE defaultTxErrorHandler fetchTables
-  let qts          = map (uncurry QualifiedObject) tables
-      tableMetaMap = M.fromList $ zip qts $ map mkTableMeta qts
+  let tableMetaMap = M.fromList . flip map tables $ \(schema, name, isEnum) ->
+        let qualifiedName = QualifiedObject schema name
+        in (qualifiedName, mkTableMeta qualifiedName isEnum)
 
   -- Fetch all the relationships
   relationships <- Q.catchE defaultTxErrorHandler fetchRelationships
@@ -323,13 +334,6 @@ fetchMetadata = do
   selPermDefs <- mkPermDefs PTSelect permissions
   updPermDefs <- mkPermDefs PTUpdate permissions
   delPermDefs <- mkPermDefs PTDelete permissions
-
-  -- Fetch all the query templates
-  qTmpltRows <- Q.catchE defaultTxErrorHandler fetchQTemplates
-
-  qTmpltDefs <- forM qTmpltRows $ \(qtn, Q.AltJ qtDefVal, mComment) -> do
-    qtDef <- decodeValue qtDefVal
-    return $ DQ.CreateQueryTemplate qtn qtDef mComment
 
   -- Fetch all event triggers
   eventTriggers <- Q.catchE defaultTxErrorHandler fetchEventTriggers
@@ -351,8 +355,14 @@ fetchMetadata = do
   -- fetch all custom resolvers
   schemas <- DRS.fetchRemoteSchemas
 
-  return $ ReplaceMetadata (M.elems postRelMap) qTmpltDefs
-                            (Just functions) (Just schemas)
+  -- fetch all collections
+  collections <- DQC.fetchAllCollections
+
+  -- fetch allow list
+  allowlist <- map DQC.CollectionReq <$> DQC.fetchAllowlist
+
+  return $ ReplaceMetadata (M.elems postRelMap) (Just functions)
+                           (Just schemas) (Just collections) (Just allowlist)
 
   where
 
@@ -380,7 +390,7 @@ fetchMetadata = do
 
     fetchTables =
       Q.listQ [Q.sql|
-                SELECT table_schema, table_name from hdb_catalog.hdb_table
+                SELECT table_schema, table_name, is_enum from hdb_catalog.hdb_table
                  WHERE is_system_defined = 'false'
                     |] () False
 
@@ -398,12 +408,6 @@ fetchMetadata = do
                  WHERE is_system_defined = 'false'
                     |] () False
 
-    fetchQTemplates =
-      Q.listQ [Q.sql|
-                SELECT template_name, template_defn :: json, comment
-                  FROM hdb_catalog.hdb_query_template
-                 WHERE is_system_defined = 'false'
-                  |] () False
     fetchEventTriggers =
      Q.listQ [Q.sql|
               SELECT e.schema_name, e.table_name, e.configuration::json
@@ -439,7 +443,7 @@ runReloadMetadata
   => ReloadMetadata -> m EncJSON
 runReloadMetadata _ = do
   adminOnly
-  DT.buildSchemaCache
+  DS.buildSchemaCache
   return successMsg
 
 data DumpInternalState
@@ -501,11 +505,9 @@ runDropInconsistentMetadata _ = do
 
 purgeMetadataObj :: MonadTx m => MetadataObjId -> m ()
 purgeMetadataObj = liftTx . \case
-  (MOTable qt) ->
-    Q.catchE defaultTxErrorHandler $ DT.delTableFromCatalog qt
-  (MOFunction qf)                 -> DF.delFunctionFromCatalog qf
+  (MOTable qt)                    -> DS.deleteTableFromCatalog qt
+  (MOFunction qf)                 -> DS.delFunctionFromCatalog qf
   (MORemoteSchema rsn)            -> DRS.removeRemoteSchemaFromCatalog rsn
-  (MOQTemplate qtn)               -> DQ.delQTemplateFromCatalog qtn
   (MOTableObj qt (MTORel rn _))   -> DR.delRelFromCatalog qt rn
   (MOTableObj qt (MTOPerm rn pt)) -> DP.dropPermFromCatalog qt rn pt
   (MOTableObj _ (MTOTrigger trn)) -> DE.delEventTriggerFromCatalog trn

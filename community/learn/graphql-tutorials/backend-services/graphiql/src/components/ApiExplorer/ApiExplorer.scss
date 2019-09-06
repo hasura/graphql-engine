@@ -816,10 +816,10 @@ label
 }
 
 .common_checkbox:checked + .common_checkbox_label:before {
-    content: url('./tick.png');
-    background: #FFCA27;
-    color: #fff;
-    padding-top: 4px;
+  content: url('./tick.png');
+  background: #FFCA27;
+  color: #fff;
+  padding-top: 4px;
 }
 
 .authPanelSubHeadings {
@@ -865,3 +865,58 @@ label
     }
   }
 }
+
+.loginTabs {
+  display: flex;
+  flex-direction: column;
+}
+
+.loginTabsHeader {
+  display: flex;
+  align-items: center;
+  height: 60px;
+}
+
+.loginFormWrapper {
+  margin-top: 20px;
+}
+
+.loginTabActive {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0.5;
+  border-bottom: solid;
+  border-bottom-color: #5f5f5f;
+  padding-bottom: 5px;
+  cursor: pointer;
+  font-weight: bold;
+} 
+
+.loginTabInactive {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0.5;
+  padding-bottom: 5px;
+  cursor: pointer;
+}
+
+.loginFormElement {
+  margin-bottom: 20px;
+}
+
+.formTextbox {
+  width: 300px;
+}
+
+
+
+
+
+
+
+
+
+
+

@@ -44,7 +44,7 @@ Execute the following command. For the endpoint referred here, let's say you've
 deployed the GraphQL engine on Heroku, then this endpoint is:
 ``https://my-graphql.herokuapp.com``. In case you've deployed this using Docker,
 the URL might be ``http://xx.xx.xx.xx:8080``. This endpoint should not contain
-the ``v1alpha1/graphql`` API path. It should just be the hostname and any
+the ``v1/graphql`` API path. It should just be the hostname and any
 sub-path if it is configured that way. 
 
 .. code-block:: bash

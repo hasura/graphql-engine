@@ -3,7 +3,7 @@
 FROM debian:stretch-20190228-slim
 
 ARG docker_ver="17.09.0-ce"
-ARG resolver="lts-13.12"
+ARG resolver="lts-13.20"
 ARG stack_ver="1.9.3"
 ARG postgres_ver="11"
 
@@ -28,3 +28,5 @@ RUN apt-get -y update \
     && rm -rf /usr/share/doc/ \
     && rm -rf /usr/share/man/ \
     && rm -rf /usr/share/locale/
+
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8

@@ -1,4 +1,8 @@
-import { baseUrl, getElementFromAlias } from '../../../helpers/dataHelpers';
+import {
+  baseUrl,
+  getElementFromAlias,
+  tableColumnTypeSelector,
+} from '../../../helpers/dataHelpers';
 
 import {
   setMetaData,
@@ -28,7 +32,11 @@ export const Createtable = (name, fields) => {
   for (const key in fields) {
     if (fields.hasOwnProperty(key)) {
       cy.get(getElementFromAlias(`column-${i}`)).type(key);
-      cy.get(getElementFromAlias(`col-type-${i}`)).select(fields[key]);
+      tableColumnTypeSelector(`col-type-${i}`);
+      cy.get(getElementFromAlias(`data_test_column_type_value_${fields[key]}`))
+        .first()
+        .click();
+      // cy.get(getElementFromAlias(`col-type-${i}`)).select(fields[key]);
       i++;
     }
   }
@@ -75,19 +83,19 @@ export const Createtable = (name, fields) => {
 };
 
 export const passRTCreateTables = () => {
-  Createtable('author', { id: 'Integer', name: 'Text' });
+  Createtable('author', { id: 'integer', name: 'text' });
   Createtable('article', {
-    id: 'Integer',
-    title: 'Text',
-    Content: 'Text',
-    author_id: 'Integer',
-    rating: 'Integer',
+    id: 'integer',
+    title: 'text',
+    Content: 'text',
+    author_id: 'integer',
+    rating: 'integer',
   });
   Createtable('comment', {
-    id: 'Integer',
-    user_id: 'Integer',
-    article_id: 'Integer',
-    comment: 'Text',
+    id: 'integer',
+    user_id: 'integer',
+    article_id: 'integer',
+    comment: 'text',
   });
 };
 
@@ -116,15 +124,18 @@ export const passRTDeleteTables = () => {
 export const passRTAddManualObjRel = () => {
   cy.get(getElementFromAlias('article_table_rt')).click();
   cy.get(getElementFromAlias('table-relationships')).click();
-  cy.get(getElementFromAlias('add-manual-relationship')).click();
-  cy.get(getElementFromAlias('rel-type')).select('Object Relationship');
-  cy.get(getElementFromAlias('rel-name')).type('author');
-  cy.get(getElementFromAlias('current-col')).select('author_id');
-  cy.get(getElementFromAlias('remote-table')).select('author_table_rt');
-  cy.get(getElementFromAlias('remote-table-col')).select('id');
-  cy.get(getElementFromAlias('table-add-manual-relationship'))
-    .last()
-    .click();
+  cy.get(getElementFromAlias('create-edit-manual-rel')).click();
+  cy.get(getElementFromAlias('manual-relationship-type')).select('object');
+  cy.get("input[placeholder='Enter relationship name']").type('author');
+  cy.get(getElementFromAlias('manual-relationship-ref-schema')).select(
+    'public'
+  );
+  cy.get(getElementFromAlias('manual-relationship-ref-table')).select(
+    'author_table_rt'
+  );
+  cy.get(getElementFromAlias('manual-relationship-lcol-0')).select('author_id');
+  cy.get(getElementFromAlias('manual-relationship-rcol-0')).select('id');
+  cy.get(getElementFromAlias('create-manual-rel-save')).click();
   cy.wait(15000);
   validateColumn(
     'article_table_rt',
@@ -136,16 +147,20 @@ export const passRTAddManualObjRel = () => {
 export const passRTAddManualArrayRel = () => {
   cy.get(getElementFromAlias('article_table_rt')).click();
   cy.get(getElementFromAlias('table-relationships')).click();
-  cy.get(getElementFromAlias('add-manual-relationship')).click();
-  cy.get(getElementFromAlias('rel-type')).select('Array Relationship');
-  cy.get(getElementFromAlias('rel-name')).type('comments');
-  cy.get(getElementFromAlias('current-col')).select('id');
-  cy.get(getElementFromAlias('remote-table')).select('comment_table_rt');
-  cy.get(getElementFromAlias('remote-table-col')).select('article_id');
-  cy.get(getElementFromAlias('table-add-manual-relationship'))
-    .contains('Add')
-    .last()
-    .click();
+  cy.get(getElementFromAlias('create-edit-manual-rel')).click();
+  cy.get(getElementFromAlias('manual-relationship-type')).select('array');
+  cy.get("input[placeholder='Enter relationship name']").type('comments');
+  cy.get(getElementFromAlias('manual-relationship-ref-schema')).select(
+    'public'
+  );
+  cy.get(getElementFromAlias('manual-relationship-ref-table')).select(
+    'comment_table_rt'
+  );
+  cy.get(getElementFromAlias('manual-relationship-lcol-0')).select('id');
+  cy.get(getElementFromAlias('manual-relationship-rcol-0')).select(
+    'article_id'
+  );
+  cy.get(getElementFromAlias('create-manual-rel-save')).click();
   cy.wait(15000);
   validateColumn(
     'article_table_rt',
@@ -266,8 +281,6 @@ export const failRTAddSuggestedRel = () => {
     .clear()
     .type('author');
   cy.get(getElementFromAlias('arr-rel-save-0')).click();
-  cy.wait(15000);
-  // cy.get('.notification-error');
   cy.wait(15000);
   delRel('article_table_rt', 'author');
 };

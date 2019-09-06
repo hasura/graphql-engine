@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import { isReactNative } from './utils';
+import CustomAuth from './CustomAuth'
 
 class ApiRequestDetails extends Component {
   login() {
@@ -15,7 +17,7 @@ class ApiRequestDetails extends Component {
 
     const styles = require('./ApiExplorer.scss');
 
-    const loginButton = (
+    let loginButton = (
       <button
         id="qsLoginBtn"
         className={'btn btn-primary'}
@@ -25,7 +27,13 @@ class ApiRequestDetails extends Component {
       </button>
     );
 
-    const logoutButton = (
+    const isCustomAuth = isReactNative();
+
+    if (isCustomAuth) {
+      loginButton = <CustomAuth />
+    }
+
+    let logoutButton = (
       <button
         id="qsLogoutBtn"
         className={'btn btn-danger'}
@@ -34,6 +42,18 @@ class ApiRequestDetails extends Component {
         Log Out
       </button>
     );
+
+    if (isCustomAuth) {
+      logoutButton = (
+        <button
+          id="qsLogoutBtn"
+          className={'btn btn-danger'}
+          onClick={this.logout.bind(this)}
+        >
+          Log Out
+        </button>
+      );
+    }
 
     const loginOverlay = (
       <div className={styles.overlay}>

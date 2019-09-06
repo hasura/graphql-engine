@@ -10,7 +10,7 @@ module.exports = function (user, context, cb) {
       query: `
         mutation($userId: String!, $nickname: String) {
           insert_users(
-            objects: [{ auth0_id: $userId, name: $nickname }]
+            objects: [{ id: $userId, name: $nickname }]
             on_conflict: {
               constraint: users_pkey
               update_columns: [last_seen, name]

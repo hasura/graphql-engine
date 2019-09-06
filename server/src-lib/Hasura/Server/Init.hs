@@ -3,33 +3,46 @@ module Hasura.Server.Init where
 
 import qualified Database.PG.Query                as Q
 
-import           Options.Applicative
-
 import qualified Data.Aeson                       as J
+import qualified Data.Aeson.Casing                as J
+import qualified Data.Aeson.TH                    as J
+import qualified Data.ByteString.Lazy.Char8       as BLC
 import qualified Data.HashSet                     as Set
 import qualified Data.String                      as DataString
 import qualified Data.Text                        as T
-import qualified Data.UUID                        as UUID
-import qualified Data.UUID.V4                     as UUID
+import qualified Data.Text.Encoding               as TE
+import qualified Text.PrettyPrint.ANSI.Leijen     as PP
+
+import           Data.Char                        (toLower)
+import           Network.Wai.Handler.Warp         (HostPreference)
+import           Options.Applicative
+
 import qualified Hasura.GraphQL.Execute.LiveQuery as LQ
 import qualified Hasura.Logging                   as L
-import qualified Text.PrettyPrint.ANSI.Leijen     as PP
 
 import           Hasura.Prelude
 import           Hasura.RQL.Types                 (RoleName (..),
-                                                   SchemaCache (..))
+                                                   SchemaCache (..),
+                                                   mkNonEmptyText)
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
 import           Hasura.Server.Logging
 import           Hasura.Server.Utils
-import           Network.Wai.Handler.Warp
+import           Network.URI                      (parseURI)
 
 newtype InstanceId
-  = InstanceId {getInstanceId :: T.Text}
-    deriving (Show, Eq, J.ToJSON, J.FromJSON)
+  = InstanceId { getInstanceId :: Text }
+  deriving (Show, Eq, J.ToJSON, J.FromJSON, Q.FromCol, Q.ToPrepArg)
 
-mkInstanceId :: IO InstanceId
-mkInstanceId = (InstanceId . UUID.toText) <$> UUID.nextRandom
+generateInstanceId :: IO InstanceId
+generateInstanceId = InstanceId <$> generateFingerprint
+
+data StartupTimeInfo
+  = StartupTimeInfo
+  { _stiMessage   :: !Text
+  , _stiTimeTaken :: !Double
+  }
+$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''StartupTimeInfo)
 
 data RawConnParams
   = RawConnParams
@@ -49,10 +62,11 @@ data RawServeOptions
   , rsoTxIso              :: !(Maybe Q.TxIsolation)
   , rsoAdminSecret        :: !(Maybe AdminSecret)
   , rsoAuthHook           :: !RawAuthHook
-  , rsoJwtSecret          :: !(Maybe Text)
+  , rsoJwtSecret          :: !(Maybe JWTConfig)
   , rsoUnAuthRole         :: !(Maybe RoleName)
   , rsoCorsConfig         :: !(Maybe CorsConfig)
   , rsoEnableConsole      :: !Bool
+  , rsoConsoleAssetsDir   :: !(Maybe Text)
   , rsoEnableTelemetry    :: !(Maybe Bool)
   , rsoWsReadCookie       :: !Bool
   , rsoStringifyNum       :: !Bool
@@ -60,24 +74,31 @@ data RawServeOptions
   , rsoMxRefetchInt       :: !(Maybe LQ.RefetchInterval)
   , rsoMxBatchSize        :: !(Maybe LQ.BatchSize)
   , rsoFallbackRefetchInt :: !(Maybe LQ.RefetchInterval)
+  , rsoEnableAllowlist    :: !Bool
+  , rsoEnabledLogTypes    :: !(Maybe [L.EngineLogType])
+  , rsoLogLevel           :: !(Maybe L.LogLevel)
   } deriving (Show, Eq)
 
 data ServeOptions
   = ServeOptions
-  { soPort            :: !Int
-  , soHost            :: !HostPreference
-  , soConnParams      :: !Q.ConnParams
-  , soTxIso           :: !Q.TxIsolation
-  , soAdminSecret     :: !(Maybe AdminSecret)
-  , soAuthHook        :: !(Maybe AuthHook)
-  , soJwtSecret       :: !(Maybe Text)
-  , soUnAuthRole      :: !(Maybe RoleName)
-  , soCorsConfig      :: !CorsConfig
-  , soEnableConsole   :: !Bool
-  , soEnableTelemetry :: !Bool
-  , soStringifyNum    :: !Bool
-  , soEnabledAPIs     :: !(Set.HashSet API)
-  , soLiveQueryOpts   :: !LQ.LQOpts
+  { soPort             :: !Int
+  , soHost             :: !HostPreference
+  , soConnParams       :: !Q.ConnParams
+  , soTxIso            :: !Q.TxIsolation
+  , soAdminSecret      :: !(Maybe AdminSecret)
+  , soAuthHook         :: !(Maybe AuthHook)
+  , soJwtSecret        :: !(Maybe JWTConfig)
+  , soUnAuthRole       :: !(Maybe RoleName)
+  , soCorsConfig       :: !CorsConfig
+  , soEnableConsole    :: !Bool
+  , soConsoleAssetsDir :: !(Maybe Text)
+  , soEnableTelemetry  :: !Bool
+  , soStringifyNum     :: !Bool
+  , soEnabledAPIs      :: !(Set.HashSet API)
+  , soLiveQueryOpts    :: !LQ.LQOpts
+  , soEnableAllowlist  :: !Bool
+  , soEnabledLogTypes  :: !(Set.HashSet L.EngineLogType)
+  , soLogLevel         :: !L.LogLevel
   } deriving (Show, Eq)
 
 data RawConnInfo =
@@ -105,7 +126,10 @@ data API
   | GRAPHQL
   | PGDUMP
   | DEVELOPER
+  | CONFIG
   deriving (Show, Eq, Read, Generic)
+$(J.deriveJSON (J.defaultOptions { J.constructorTagModifier = map toLower })
+  ''API)
 
 instance Hashable API
 
@@ -145,7 +169,9 @@ instance FromEnv AdminSecret where
   fromEnv = Right . AdminSecret . T.pack
 
 instance FromEnv RoleName where
-  fromEnv = Right . RoleName . T.pack
+  fromEnv string = case mkNonEmptyText (T.pack string) of
+    Nothing     -> Left "empty string not allowed"
+    Just neText -> Right $ RoleName neText
 
 instance FromEnv Bool where
   fromEnv = parseStrAsBool
@@ -165,10 +191,19 @@ instance FromEnv LQ.BatchSize where
 instance FromEnv LQ.RefetchInterval where
   fromEnv = fmap LQ.refetchIntervalFromMilli . readEither
 
+instance FromEnv JWTConfig where
+  fromEnv = readJson
+
+instance FromEnv [L.EngineLogType] where
+  fromEnv = readLogTypes
+
+instance FromEnv L.LogLevel where
+  fromEnv = readLogLevel
+
 parseStrAsBool :: String -> Either String Bool
 parseStrAsBool t
-  | t `elem` truthVals = Right True
-  | t `elem` falseVals = Right False
+  | map toLower t `elem` truthVals = Right True
+  | map toLower t `elem` falseVals = Right False
   | otherwise = Left errMsg
   where
     truthVals = ["true", "t", "yes", "y"]
@@ -181,10 +216,10 @@ parseStrAsBool t
 readIsoLevel :: String -> Either String Q.TxIsolation
 readIsoLevel isoS =
   case isoS of
-    "read-comitted" -> return Q.ReadCommitted
+    "read-committed" -> return Q.ReadCommitted
     "repeatable-read" -> return Q.RepeatableRead
-    "serializable" -> return Q.ReadCommitted
-    _ -> Left "Only expecting read-comitted / repeatable-read / serializable"
+    "serializable" -> return Q.Serializable
+    _ -> Left "Only expecting read-committed / repeatable-read / serializable"
 
 type WithEnv a = ReaderT Env (ExceptT String Identity) a
 
@@ -223,6 +258,10 @@ withEnvBool bVal envVar =
       mEnvVal <- considerEnv envVar
       maybe (return False) return mEnvVal
 
+withEnvJwtConf :: Maybe JWTConfig -> String -> WithEnv (Maybe JWTConfig)
+withEnvJwtConf jVal envVar =
+  maybe (considerEnv envVar) returnJust jVal
+
 mkHGEOptions :: RawHGEOptions -> WithEnv HGEOptions
 mkHGEOptions (HGEOptionsG rawConnInfo rawCmd) =
   HGEOptionsG <$> connInfo <*> cmd
@@ -254,29 +293,34 @@ mkServeOptions rso = do
           withEnv (rsoHost rso) (fst serveHostEnv)
 
   connParams <- mkConnParams $ rsoConnParams rso
-  txIso <- fromMaybe Q.ReadCommitted <$>
-           withEnv (rsoTxIso rso) (fst txIsoEnv)
+  txIso <- fromMaybe Q.ReadCommitted <$> withEnv (rsoTxIso rso) (fst txIsoEnv)
   adminScrt <- withEnvs (rsoAdminSecret rso) $ map fst [adminSecretEnv, accessKeyEnv]
   authHook <- mkAuthHook $ rsoAuthHook rso
-  jwtSecret <- withEnv (rsoJwtSecret rso) $ fst jwtSecretEnv
+  jwtSecret <- withEnvJwtConf (rsoJwtSecret rso) $ fst jwtSecretEnv
   unAuthRole <- withEnv (rsoUnAuthRole rso) $ fst unAuthRoleEnv
   corsCfg <- mkCorsConfig $ rsoCorsConfig rso
   enableConsole <- withEnvBool (rsoEnableConsole rso) $
                    fst enableConsoleEnv
+  consoleAssetsDir <- withEnv (rsoConsoleAssetsDir rso) (fst consoleAssetsDirEnv)
   enableTelemetry <- fromMaybe True <$>
                      withEnv (rsoEnableTelemetry rso) (fst enableTelemetryEnv)
   strfyNum <- withEnvBool (rsoStringifyNum rso) $ fst stringifyNumEnv
   enabledAPIs <- Set.fromList . fromMaybe defaultAPIs <$>
                      withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
   lqOpts <- mkLQOpts
+  enableAL <- withEnvBool (rsoEnableAllowlist rso) $ fst enableAllowlistEnv
+  enabledLogs <- Set.fromList . fromMaybe (Set.toList L.defaultEnabledLogTypes) <$>
+                 withEnv (rsoEnabledLogTypes rso) (fst enabledLogsEnv)
+  serverLogLevel <- fromMaybe L.LevelInfo <$> withEnv (rsoLogLevel rso) (fst logLevelEnv)
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
-                        unAuthRole corsCfg enableConsole
-                        enableTelemetry strfyNum enabledAPIs lqOpts
+                        unAuthRole corsCfg enableConsole consoleAssetsDir
+                        enableTelemetry strfyNum enabledAPIs lqOpts enableAL
+                        enabledLogs serverLogLevel
   where
 #ifdef DeveloperAPIs
-    defaultAPIs = [METADATA,GRAPHQL,PGDUMP,DEVELOPER]
+    defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
 #else
-    defaultAPIs = [METADATA,GRAPHQL,PGDUMP]
+    defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG]
 #endif
     mkConnParams (RawConnParams s c i p) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
@@ -397,12 +441,12 @@ serveCmdFooter =
 
     envVarDoc = mkEnvVarDoc $ envVars <> eventEnvs
     envVars =
-      [ databaseUrlEnv, retriesNumEnv, servePortEnv, serveHostEnv,
-        pgStripesEnv, pgConnsEnv, pgTimeoutEnv
-      , pgUsePrepareEnv, txIsoEnv, adminSecretEnv
-      , accessKeyEnv, authHookEnv, authHookModeEnv
+      [ databaseUrlEnv, retriesNumEnv, servePortEnv, serveHostEnv
+      , pgStripesEnv, pgConnsEnv, pgTimeoutEnv, pgUsePrepareEnv, txIsoEnv
+      , adminSecretEnv , accessKeyEnv, authHookEnv, authHookModeEnv
       , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, enableConsoleEnv
       , enableTelemetryEnv, wsReadCookieEnv, stringifyNumEnv, enabledAPIsEnv
+      , enableAllowlistEnv, enabledLogsEnv, logLevelEnv
       ]
 
     eventEnvs =
@@ -410,7 +454,7 @@ serveCmdFooter =
         , "Max event threads"
         )
       , ( "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
-        , "Postgres events polling interval"
+        , "Postgres events polling interval in milliseconds"
         )
       ]
 
@@ -435,13 +479,14 @@ serveHostEnv =
 pgConnsEnv :: (String, String)
 pgConnsEnv =
   ( "HASURA_GRAPHQL_PG_CONNECTIONS"
-  , "Number of conns that need to be opened to Postgres (default: 50)"
+  , "Number of connections per stripe that need to be opened to Postgres (default: 50)"
   )
 
 pgStripesEnv :: (String, String)
 pgStripesEnv =
   ( "HASURA_GRAPHQL_PG_STRIPES"
-  , "Number of conns that need to be opened to Postgres (default: 1)")
+  , "Number of stripes (distinct sub-pools) to maintain with Postgres (default: 1)"
+  )
 
 pgTimeoutEnv :: (String, String)
 pgTimeoutEnv =
@@ -536,7 +581,29 @@ stringifyNumEnv =
 enabledAPIsEnv :: (String, String)
 enabledAPIsEnv =
   ( "HASURA_GRAPHQL_ENABLED_APIS"
-  , "List of comma separated list of allowed APIs. (default: metadata,graphql,pgdump)"
+  , "Comma separated list of enabled APIs. (default: metadata,graphql,pgdump,config)"
+  )
+
+consoleAssetsDirEnv :: (String, String)
+consoleAssetsDirEnv =
+  ( "HASURA_GRAPHQL_CONSOLE_ASSETS_DIR"
+  , "A directory from which static assets required for console is served at"
+  ++ "'/console/assets' path. Can be set to '/srv/console-assets' on the"
+  ++ " default docker image to disable loading assets from CDN."
+  )
+
+enabledLogsEnv :: (String, String)
+enabledLogsEnv =
+  ( "HASURA_GRAPHQL_ENABLED_LOG_TYPES"
+  , "Comma separated list of enabled log types "
+    <> "(default: startup,http-log,webhook-log,websocket-log)"
+    <> "(all: startup,http-log,webhook-log,websocket-log,query-log)"
+  )
+
+logLevelEnv :: (String, String)
+logLevelEnv =
+  ( "HASURA_GRAPHQL_LOG_LEVEL"
+  , "Server log level (default: info) (all: error, warn, info, debug)"
   )
 
 parseRawConnInfo :: Parser RawConnInfo
@@ -591,24 +658,22 @@ parseRawConnInfo =
 connInfoErrModifier :: String -> String
 connInfoErrModifier s = "Fatal Error : " ++ s
 
-mkConnInfo ::RawConnInfo -> Either String Q.ConnInfo
-mkConnInfo (RawConnInfo mHost mPort mUser pass mURL mDB opts mRetries) =
+mkConnInfo :: RawConnInfo -> Either String Q.ConnInfo
+mkConnInfo (RawConnInfo mHost mPort mUser password mURL mDB opts mRetries) =
+  Q.ConnInfo retries <$>
   case (mHost, mPort, mUser, mDB, mURL) of
 
     (Just host, Just port, Just user, Just db, Nothing) ->
-      return $ Q.ConnInfo host port user pass db opts retries
+      return $ Q.CDOptions $ Q.ConnOptions host port user password db opts
 
-    (_, _, _, _, Just dbURL) -> maybe (throwError invalidUrlMsg)
-                                withRetries $ parseDatabaseUrl dbURL opts
+    (_, _, _, _, Just dbURL) ->
+      return $ Q.CDDatabaseURI $ TE.encodeUtf8 $ T.pack dbURL
     _ -> throwError $ "Invalid options. "
                     ++ "Expecting all database connection params "
                     ++ "(host, port, user, dbname, password) or "
                     ++ "database-url (HASURA_GRAPHQL_DATABASE_URL)"
   where
     retries = fromMaybe 1 mRetries
-    withRetries ci = return $ ci{Q.connRetries = retries}
-    invalidUrlMsg = "Invalid database-url (HASURA_GRAPHQL_DATABASE_URL). "
-                    ++ "Example postgres://foo:bar@example.com:2345/database"
 
 parseTxIsolation :: Parser (Maybe Q.TxIsolation)
 parseTxIsolation = optional $
@@ -692,11 +757,36 @@ readHookType tyS =
 readAPIs :: String -> Either String [API]
 readAPIs = mapM readAPI . T.splitOn "," . T.pack
   where readAPI si = case T.toUpper $ T.strip si of
-          "METADATA" -> Right METADATA
-          "GRAPHQL"  -> Right GRAPHQL
-          "PGDUMP"   -> Right PGDUMP
+          "METADATA"  -> Right METADATA
+          "GRAPHQL"   -> Right GRAPHQL
+          "PGDUMP"    -> Right PGDUMP
           "DEVELOPER" -> Right DEVELOPER
-          _          -> Left "Only expecting list of comma separated API types metadata,graphql,pgdump,developer"
+          "CONFIG"    -> Right CONFIG
+          _            -> Left "Only expecting list of comma separated API types metadata,graphql,pgdump,developer,config"
+
+readLogTypes :: String -> Either String [L.EngineLogType]
+readLogTypes = mapM readLogType . T.splitOn "," . T.pack
+  where readLogType si = case T.toLower $ T.strip si of
+          "startup"       -> Right L.ELTStartup
+          "http-log"      -> Right L.ELTHttpLog
+          "webhook-log"   -> Right L.ELTWebhookLog
+          "websocket-log" -> Right L.ELTWebsocketLog
+          "query-log"     -> Right L.ELTQueryLog
+          _               -> Left $ "Valid list of comma-separated log types: "
+                             <> BLC.unpack (J.encode L.userAllowedLogTypes)
+
+readLogLevel :: String -> Either String L.LogLevel
+readLogLevel s = case T.toLower $ T.strip $ T.pack s of
+  "debug" -> Right L.LevelDebug
+  "info"  -> Right L.LevelInfo
+  "warn"  -> Right L.LevelWarn
+  "error" -> Right L.LevelError
+  _       -> Left "Valid log levels: debug, info, warn or error"
+
+
+readJson :: (J.FromJSON a) => String -> Either String a
+readJson = J.eitherDecodeStrict . txtToBs . T.pack
+
 
 parseWebHook :: Parser RawAuthHook
 parseWebHook =
@@ -714,14 +804,14 @@ parseWebHook =
                     help (snd authHookModeEnv)
                   )
 
-
-parseJwtSecret :: Parser (Maybe Text)
+parseJwtSecret :: Parser (Maybe JWTConfig)
 parseJwtSecret =
-  optional $ strOption
-             ( long "jwt-secret" <>
-               metavar "<JSON CONFIG>" <>
-               help (snd jwtSecretEnv)
-             )
+  optional $
+    option (eitherReader readJson)
+    ( long "jwt-secret" <>
+      metavar "<JSON CONFIG>" <>
+      help (snd jwtSecretEnv)
+    )
 
 jwtSecretHelp :: String
 jwtSecretHelp = "The JSON containing type and the JWK used for verifying. e.g: "
@@ -729,11 +819,13 @@ jwtSecretHelp = "The JSON containing type and the JWK used for verifying. e.g: "
               <> "`{\"type\": \"RS256\", \"key\": \"<your-PEM-RSA-public-key>\", \"claims_namespace\": \"<optional-custom-claims-key-name>\"}`"
 
 parseUnAuthRole :: Parser (Maybe RoleName)
-parseUnAuthRole = optional $
-  RoleName <$> strOption ( long "unauthorized-role" <>
-                          metavar "<ROLE>" <>
-                          help (snd unAuthRoleEnv)
-                        )
+parseUnAuthRole = fmap mkRoleName $ optional $
+  strOption ( long "unauthorized-role" <>
+              metavar "<ROLE>" <>
+              help (snd unAuthRoleEnv)
+            )
+  where
+    mkRoleName mText = mText >>= (fmap RoleName . mkNonEmptyText)
 
 parseCorsConfig :: Parser (Maybe CorsConfig)
 parseCorsConfig = mapCC <$> disableCors <*> corsDomain
@@ -758,6 +850,13 @@ parseEnableConsole =
   switch ( long "enable-console" <>
            help (snd enableConsoleEnv)
          )
+
+parseConsoleAssetsDir :: Parser (Maybe Text)
+parseConsoleAssetsDir = optional $
+    option (eitherReader fromEnv)
+      ( long "console-assets-dir" <>
+        help (snd consoleAssetsDirEnv)
+      )
 
 parseEnableTelemetry :: Parser (Maybe Bool)
 parseEnableTelemetry = optional $
@@ -803,18 +902,30 @@ parseMxBatchSize =
       help (snd mxBatchSizeEnv)
     )
 
+parseEnableAllowlist :: Parser Bool
+parseEnableAllowlist =
+  switch ( long "enable-allowlist" <>
+           help (snd enableAllowlistEnv)
+         )
+
 mxRefetchDelayEnv :: (String, String)
 mxRefetchDelayEnv =
   ( "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL"
-  , "results will only be sent once in this interval (in milliseconds) for \\
-    \live queries which can be multiplexed. Default: 1000 (1sec)"
+  , "results will only be sent once in this interval (in milliseconds) for "
+  <> "live queries which can be multiplexed. Default: 1000 (1sec)"
   )
 
 mxBatchSizeEnv :: (String, String)
 mxBatchSizeEnv =
   ( "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE"
-  , "multiplexed live queries are split into batches of the specified \\
-    \size. Default 100. "
+  , "multiplexed live queries are split into batches of the specified "
+  <> "size. Default 100. "
+  )
+
+enableAllowlistEnv :: (String, String)
+enableAllowlistEnv =
+  ( "HASURA_GRAPHQL_ENABLE_ALLOWLIST"
+  , "Only accept allowed GraphQL queries"
   )
 
 parseFallbackRefetchInt :: Parser (Maybe LQ.RefetchInterval)
@@ -829,41 +940,81 @@ parseFallbackRefetchInt =
 fallbackRefetchDelayEnv :: (String, String)
 fallbackRefetchDelayEnv =
   ( "HASURA_GRAPHQL_LIVE_QUERIES_FALLBACK_REFETCH_INTERVAL"
-  , "results will only be sent once in this interval (in milliseconds) for \\
-    \live queries which cannot be multiplexed. Default: 1000 (1sec)"
+  , "results will only be sent once in this interval (in milliseconds) for "
+  <> "live queries which cannot be multiplexed. Default: 1000 (1sec)"
   )
+
+parseEnabledLogs :: Parser (Maybe [L.EngineLogType])
+parseEnabledLogs = optional $
+  option (eitherReader readLogTypes)
+         ( long "enabled-log-types" <>
+           help (snd enabledLogsEnv)
+         )
+
+parseLogLevel :: Parser (Maybe L.LogLevel)
+parseLogLevel = optional $
+  option (eitherReader readLogLevel)
+         ( long "log-level" <>
+           help (snd logLevelEnv)
+         )
 
 -- Init logging related
 connInfoToLog :: Q.ConnInfo -> StartupLog
-connInfoToLog (Q.ConnInfo host port user _ db _ retries) =
+connInfoToLog connInfo =
   StartupLog L.LevelInfo "postgres_connection" infoVal
   where
-    infoVal = J.object [ "host" J..= host
-                       , "port" J..= port
-                       , "user" J..= user
-                       , "database" J..= db
-                       , "retries" J..= retries
-                       ]
+    Q.ConnInfo retries details = connInfo
+    infoVal = case details of
+      Q.CDDatabaseURI uri -> mkDBUriLog $ T.unpack $ bsToTxt uri
+      Q.CDOptions co      ->
+        J.object [ "host" J..= Q.connHost co
+                 , "port" J..= Q.connPort co
+                 , "user" J..= Q.connUser co
+                 , "database" J..= Q.connDatabase co
+                 , "retries" J..= retries
+                 ]
+
+    mkDBUriLog uri =
+      case show <$> parseURI uri of
+        Nothing -> J.object
+          [ "error" J..= ("parsing database url failed" :: String)]
+        Just s  -> J.object
+          [ "retries" J..= retries
+          , "database_url" J..= s
+          ]
 
 serveOptsToLog :: ServeOptions -> StartupLog
 serveOptsToLog so =
-  StartupLog L.LevelInfo "serve_options" infoVal
+  StartupLog L.LevelInfo "server_configuration" infoVal
   where
     infoVal = J.object [ "port" J..= soPort so
+                       , "server_host" J..= show (soHost so)
+                       , "transaction_isolation" J..= show (soTxIso so)
                        , "admin_secret_set" J..= isJust (soAdminSecret so)
                        , "auth_hook" J..= (ahUrl <$> soAuthHook so)
                        , "auth_hook_mode" J..= (show . ahType <$> soAuthHook so)
+                       , "jwt_secret" J..= (J.toJSON <$> soJwtSecret so)
                        , "unauth_role" J..= soUnAuthRole so
                        , "cors_config" J..= soCorsConfig so
                        , "enable_console" J..= soEnableConsole so
+                       , "console_assets_dir" J..= soConsoleAssetsDir so
                        , "enable_telemetry" J..= soEnableTelemetry so
                        , "use_prepared_statements" J..= (Q.cpAllowPrepare . soConnParams) so
                        , "stringify_numeric_types" J..= soStringifyNum so
+                       , "enabled_apis" J..= soEnabledAPIs so
+                       , "live_query_options" J..= soLiveQueryOpts so
+                       , "enable_allowlist" J..= soEnableAllowlist so
+                       , "enabled_log_types" J..= soEnabledLogTypes so
+                       , "log_level" J..= soLogLevel so
                        ]
 
-mkGenericStrLog :: T.Text -> String -> StartupLog
-mkGenericStrLog k msg =
-  StartupLog L.LevelInfo k $ J.toJSON msg
+mkGenericStrLog :: L.LogLevel -> T.Text -> String -> StartupLog
+mkGenericStrLog logLevel k msg =
+  StartupLog logLevel k $ J.toJSON msg
+
+mkGenericLog :: (J.ToJSON a) => L.LogLevel -> Text -> a -> StartupLog
+mkGenericLog logLevel k msg =
+  StartupLog logLevel k $ J.toJSON msg
 
 inconsistentMetadataLog :: SchemaCache -> StartupLog
 inconsistentMetadataLog sc =

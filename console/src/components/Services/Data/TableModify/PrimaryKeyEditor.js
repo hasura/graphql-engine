@@ -7,6 +7,10 @@ import {
 import PrimaryKeySelector from '../Common/ReusableComponents/PrimaryKeySelector';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import { showSuccessNotification } from '../../Common/Notification';
+import {
+  getUkeyPkeyConfig,
+  getKeyDef,
+} from '../Common/ReusableComponents/utils';
 
 import styles from './ModifyTable.scss';
 
@@ -41,15 +45,9 @@ const PrimaryKeyEditor = ({
   // label next to the button when the editor is collapsed
   let pkConfigText;
   if (tableSchema.primary_key) {
-    let pkColumnsText = tablePrimaryKeyColumns.join(', ');
-    if (tablePrimaryKeyColumns.length > 1) {
-      pkColumnsText = `( ${pkColumnsText} )`;
-    }
-
-    pkConfigText = (
-      <span>
-        <b>{pkColumnsText}</b> - <i>{pkConstraintName}</i>
-      </span>
+    pkConfigText = getKeyDef(
+      getUkeyPkeyConfig(tablePrimaryKeyColumns),
+      pkConstraintName
     );
   }
 

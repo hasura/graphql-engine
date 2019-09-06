@@ -49,7 +49,7 @@ data AnnAggOrdBy
   deriving (Show, Eq)
 
 data AnnObColG v
-  = AOCPG !PGColInfo
+  = AOCPG !PGColumnInfo
   | AOCObj !RelInfo !(AnnBoolExp v) !(AnnObColG v)
   | AOCAgg !RelInfo !(AnnBoolExp v) !AnnAggOrdBy
   deriving (Show, Eq)
@@ -121,7 +121,7 @@ data ColOp
   } deriving (Show, Eq)
 
 data AnnFldG v
-  = FCol !PGColInfo !(Maybe ColOp)
+  = FCol !PGColumnInfo !(Maybe ColOp)
   | FObj !(ObjSelG v)
   | FArr !(ArrSelG v)
   | FExp !T.Text
@@ -275,10 +275,21 @@ type AnnSimpleSel = AnnSimpleSelG S.SQLExp
 type AnnAggSelG v = AnnSelG (TableAggFldsG v) v
 type AnnAggSel = AnnAggSelG S.SQLExp
 
+data FunctionArgsExpG a
+  = FunctionArgsExp
+  { _faePositional :: ![a]
+  , _faeNamed      :: !(HM.HashMap Text a)
+  } deriving (Show, Eq, Functor, Foldable, Traversable)
+
+emptyFunctionArgsExp :: FunctionArgsExpG a
+emptyFunctionArgsExp = FunctionArgsExp [] HM.empty
+
+type FunctionArgExp = FunctionArgsExpG S.SQLExp
+
 data AnnFnSelG s v
   = AnnFnSel
   { _afFn     :: !QualifiedFunction
-  , _afFnArgs :: ![v]
+  , _afFnArgs :: !(FunctionArgsExpG v)
   , _afSelect :: !s
   } deriving (Show, Eq)
 
@@ -389,3 +400,10 @@ mergeArrNodes lNode rNode =
   where
     ArrNode lExtrs colMapping lBN = lNode
     ArrNode rExtrs _          rBN = rNode
+
+data ArrNodeInfo
+  = ArrNodeInfo
+  { _aniAlias            :: !S.Alias
+  , _aniPrefix           :: !Iden
+  , _aniSubQueryRequired :: !Bool
+  } deriving (Show, Eq)

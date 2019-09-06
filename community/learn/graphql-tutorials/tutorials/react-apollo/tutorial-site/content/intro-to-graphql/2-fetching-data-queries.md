@@ -1,5 +1,7 @@
 ---
 title: Fetching data - Queries
+metaTitle: "GraphQL Queries to fetch data | GraphQL React Apollo Tutorial"
+metaDescription: "Try out GraphQL Query using GraphiQL. A GraphQL query example with parameters, arguments and variables to fetch data dynamically"
 ---
 
 import YoutubeEmbed from "../../src/YoutubeEmbed.js";
@@ -7,7 +9,9 @@ import YoutubeEmbed from "../../src/YoutubeEmbed.js";
 <YoutubeEmbed link="https://www.youtube.com/embed/mE1Jgvn4k1g" />
 
 <a name="graphiql"></a>
+
 ## Try out GraphQL queries
+
 For this tutorial we've set up a GraphQL API for you. The most common
 way to browse a GraphQL API is to use GraphiQL. GraphiQL is a tool
 built by Facebook, (pronounced "graphical") that makes it easy to explore
@@ -17,7 +21,7 @@ When you connect GraphiQL to a GraphQL endpoint, it
 queries the server for its GraphQL schema and gives you a UI to browse
 and test queries, and that powers its amazing autocomplete!
 
-![GraphiQL demo](./graphiql.gif)
+![GraphiQL demo](https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-react/graphiql.gif)
 
 Tools like GraphiQL make GraphQL APIs really easy
 to use and integrate APIs in your app without requiring
@@ -44,7 +48,7 @@ use a tool like GraphiQL to explore and test your GraphQL queries.
      name
    }
  }
- ```
+```
 
 4. Hit `ctrl + enter` or `cmd + enter` (mac) or click on the ▶️ icon to run the GraphQL query
 5. On the right, you should see a list of users by their names that are in the system!
@@ -60,7 +64,7 @@ that you see on the right hand side.
 Our todo app has users, todos and information about users that are currently online.
 This is what our API "schema" looks like:
 
-![Schema](./schema.png)
+![Schema](https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-react/schema.png)
 
 As you can see, it is a "graph" like schema where all the 3 models are linked to each other.
 
@@ -105,7 +109,7 @@ and their profile information (which is just their name for now):
 
 ## Adding parameters (arguments) to GraphQL queries
 
-In most API calls, you usually use paramters. For example, to specify what data you're fetching.
+In most API calls, you usually use parameters. For example, to specify what data you're fetching.
 If you're familiar with making `GET` calls, you would have used a query parameter. For example,
 to fetch only 10 todos you might have made this API call: `GET /api/todos?limit=10`.
 

@@ -55,19 +55,24 @@
     width: 10px;
   }
 }
-
-.popupWrapper {
-  box-shadow: 0 0 14px 0 rgba(0, 0, 0, 0.16);
-  background-color: #ffffff;
-  width: 540px;
-  position: absolute;
+.popupWrapperPos {
+  top: 60px;
+  left: 524px;
+}
+.popupWrapper
+{
   bottom: 0px;
   left: 244px;
+}
+.popupWrapper, .popupWrapperPos {
+  box-shadow: 0 0 14px 0 rgba(0, 0, 0, 0.16);
+  background-color: #ffffff;
+  position: absolute;
+  width: 540px;
   z-index: 1;
   border-radius: 10px;
   padding: 20px;
   cursor: default;
-
   .descriptionText {
     text-align: left;
     padding-bottom: 15px;

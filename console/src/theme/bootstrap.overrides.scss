@@ -7,6 +7,22 @@
 .hljs{display:block;overflow-x:auto;padding:0.5em;background:#F0F0F0}.hljs,.hljs-subst{color:#444}.hljs-comment{color:#888888}.hljs-keyword,.hljs-attribute,.hljs-selector-tag,.hljs-meta-keyword,.hljs-doctag,.hljs-name{font-weight:bold}.hljs-type,.hljs-string,.hljs-number,.hljs-selector-id,.hljs-selector-class,.hljs-quote,.hljs-template-tag,.hljs-deletion{color:#880000}.hljs-title,.hljs-section{color:#880000;font-weight:bold}.hljs-regexp,.hljs-symbol,.hljs-variable,.hljs-template-variable,.hljs-link,.hljs-selector-attr,.hljs-selector-pseudo{color:#BC6060}.hljs-literal{color:#78A960}.hljs-built_in,.hljs-bullet,.hljs-code,.hljs-addition{color:#397300}.hljs-meta{color:#1f7199}.hljs-meta-string{color:#4d99bf}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:bold}
 /* */
 
+// react select overrides: start
+.modify_select__control {
+  min-height: 30px !important;
+  max-height: 30px !important;
+}
+
+.add_table_column_selector__control, .add_table_default_value_selector__control  {
+  min-height: 34px !important;
+  max-height: 34px !important;
+}
+
+.react-selectable__single-value, .react-selectable__placeholder, .react-selectable__indicator.react-selectable__dropdown-indicator {
+  margin-top: -2px;
+}
+// react select overrides: end
+
 input[type="radio"], input[type="checkbox"] {
   margin: 0 5px 0px 0px;
 }
@@ -108,6 +124,35 @@ select.form-control {
   padding-right: 0 !important;
 }
 
+#invokeEventTrigger {
+  .modal-content {
+    min-height: 100px;
+    .modal-header
+    {
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+    .modal-body
+    {
+      padding: 20px;
+    }
+  }
+}
+#redeliverModal
+{
+  .modal-content
+  {
+    .modal-header
+    {
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+    .modal-body
+    {
+      padding: 20px;
+    }
+  }
+}
 .generateCodeWrapper {
   width: 65% !important;
 
@@ -212,6 +257,33 @@ select.form-control {
             min-height: 150px;
             border: 1px solid #ccc;
             border-radius: 5px;
+          }
+        }
+      }
+    }
+  }
+}
+.invocationClass
+{
+  clear: both;
+  .rt-table
+  {
+    .rt-tbody
+    {
+      .rt-tr-group
+      {
+        .rt-tr
+        {
+          .rt-td
+          {
+            .rt-expander
+            {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              height: 21px;
+              width: 13px;
+            }
           }
         }
       }

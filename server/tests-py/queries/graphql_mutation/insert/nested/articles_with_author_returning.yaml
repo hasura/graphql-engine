@@ -1,5 +1,5 @@
 description: Insert article along with author and returning author with articles as relationship
-url: /v1alpha1/graphql
+url: /v1/graphql
 status: 200
 response:
   data:

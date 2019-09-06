@@ -1,6 +1,6 @@
 description: Insert article while upserting (do nothing) it's author (Error)
-url: /v1alpha1/graphql
-status: 400
+url: /v1/graphql
+status: 200
 query:
   query: |
    mutation article_author{

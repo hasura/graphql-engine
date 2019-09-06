@@ -24,7 +24,7 @@ This Docker Compose setup runs [Hasura GraphQL Engine](https://github.com/hasura
 
 ## Important endpoints
 
-- GraphQL endpoint will be `http://localhost:8080/v1alpha1/graphql`
+- GraphQL endpoint will be `http://localhost:8080/v1/graphql`
 - Hasura Console will be available on `http://localhost:8080/console`
 - pgAdmin will be available on `http://localhost:5050`
 
