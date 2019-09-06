@@ -5,7 +5,7 @@ const TableHeader = ({ headings }) => {
     <thead>
       <tr>
         {headings.map((heading, index) => (
-          <td key={index}>{heading}</td>
+          <th key={index}>{heading}</th>
         ))}
       </tr>
     </thead>

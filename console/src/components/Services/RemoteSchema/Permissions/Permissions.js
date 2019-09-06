@@ -2,10 +2,13 @@ import React from 'react';
 import { isObjectType } from 'graphql';
 import { useIntrospectionSchema } from '../graphqlUtils';
 import PermissionsEditor from './PermissionsEditor';
-import PermTableHeader from '../../../Common/Layout/Permissions/TableHeader';
-import PermTableBody from '../../../Common/Layout/Permissions/TableBody';
+import PermTableHeader from '../../../Common/Permissions/TableHeader';
+import PermTableBody from '../../../Common/Permissions/TableBody';
 import Spinner from '../../../Common/Spinner/Spinner';
-import styles from '../../../Common/Layout/Permissions/PermissionStyles.scss';
+import styles from '../../../Common/Permissions/PermissionStyles.scss';
+import {
+  permissionsSymbols
+} from '../../../Common/Permissions/PermissionSymbols';
 import {
   setPermissionRole,
   setCurrentPermissionEdit,
@@ -88,26 +91,6 @@ const Permissions = props => {
       }
     });
 
-  const permissionsSymbols = {
-    fullAccess: (
-      <i
-        className={'fa fa-check ' + styles.permissionSymbolFA}
-        aria-hidden="true"
-      />
-    ),
-    noAccess: (
-      <i
-        className={'fa fa-times ' + styles.permissionSymbolNA}
-        aria-hidden="true"
-      />
-    ),
-    partialAccess: (
-      <i
-        className={'fa fa-filter ' + styles.permissionSymbolPA}
-        aria-hidden="true"
-      />
-    ),
-  };
   const getPermissionsTable = () => {
     const getPermissionsTableHead = () => {
       const headings = ['Role', ...Object.keys(rootTypes)];
@@ -119,7 +102,7 @@ const Permissions = props => {
         dispatch(setPermissionRole(e.target.value));
       };
 
-      const getEditLink = () => {
+      const getEditIcon = () => {
         return (
           <span className={styles.editPermsLink}>
             <i className="fa fa-pencil" aria-hidden="true" />
@@ -127,7 +110,7 @@ const Permissions = props => {
         );
       };
 
-      const getRootTypes = (role = editState.role, isNewRole) => {
+      const getRootTypes = (role, isNewRole) => {
         return Object.keys(rootTypes).map(rootType => {
           const dispatchOpenEdit = rt => () => {
             if (isNewRole && !!role) {
@@ -137,7 +120,7 @@ const Permissions = props => {
               const perm = parseRemoteRelPermDefinition(existingPermissions.find(p => p.role === role), rootTypes, objectTypes, nonObjectTypes);
               dispatch(setCurrentPermissionEdit(perm, rt));
             } else {
-              document.getElementById('newRoleInput').focus();
+              document.getElementById('new-role-input').focus();
             }
           };
 
@@ -148,11 +131,11 @@ const Permissions = props => {
           const isEditAllowed = role !== 'admin';
           const isCurrEdit = role === editState.role && editState.editType === rootType;
 
-          let editLink = '';
+          let editIcon = '';
           let className = '';
           let onClick = () => {};
           if (isEditAllowed) {
-            editLink = getEditLink();
+            editIcon = getEditIcon();
 
             className += styles.clickableCell;
             onClick = dispatchOpenEdit(rootType);
@@ -162,7 +145,7 @@ const Permissions = props => {
             }
           }
 
-          const getRoleQueryPermission = () => {
+          const getRoleQueryPermission = (r, rt) => {
             let _permission;
 
             if (role === 'admin') {
@@ -174,11 +157,12 @@ const Permissions = props => {
           };
 
           return {
-            name: rootType,
+            permType: rootType,
             className,
-            editLink,
+            editIcon: editIcon,
             onClick,
-            permSymbol: getRoleQueryPermission(rootType),
+            dataTest: `${role}-${rootType}`,
+            access: getRoleQueryPermission(role, rootType),
           };
         });
       };
@@ -186,29 +170,53 @@ const Permissions = props => {
       const uniqueRolesList = ['admin', ...rolesList, ...existingPermissions.map(ep => ep.role)];
       const _roleList = [...new Set(uniqueRolesList)];
 
-      // roles wrapper
-      const roles = _roleList.map(role => {
-        const _roleProps = {};
-        _roleProps.name = role;
-        _roleProps.dispatchBulkSelect = e => {
-        };
-        _roleProps.bulkCheck = false;
-        return _roleProps;
-      });
+
+      const rolePermissions = _roleList.map(r => {
+        return {
+          roleName: r,
+          permTypes: getRootTypes(r, false),
+        }
+      })
+
+      rolePermissions.push({
+        roleName: editState.role,
+        permTypes: getRootTypes(editState.role, true),
+        isNewRole: true
+      })
+
       return (
         <PermTableBody
-          rolePermissions={roles}
+          rolePermissions={rolePermissions}
           dispatchRoleNameChange={dispatchRoleNameChange}
-          getPermTypes={getRootTypes}
         />
       );
     };
 
+
+    const getPermissionsLegend = () => (
+      <div>
+        <div className={styles.permissionsLegend}>
+          <span className={styles.permissionsLegendValue}>
+            {permissionsSymbols.fullAccess} : full access
+          </span>
+          <span className={styles.permissionsLegendValue}>
+            {permissionsSymbols.noAccess} : no access
+          </span>
+          <span className={styles.permissionsLegendValue}>
+            {permissionsSymbols.partialAccess} : partial access
+          </span>
+        </div>
+      </div>
+    );
+
     return (
-      <table className={`table table-bordered ${styles.permissionsTable}`}>
-        {getPermissionsTableHead()}
-        {getPermissionsTableBody()}
-      </table>
+      <div>
+
+        <table className={`table table-bordered ${styles.permissionsTable}`}>
+          {getPermissionsTableHead()}
+          {getPermissionsTableBody()}
+        </table>
+      </div>
     );
   };
 

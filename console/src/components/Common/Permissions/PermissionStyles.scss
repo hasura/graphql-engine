@@ -1,4 +1,4 @@
-@import "../../../Services/Data/TableModify/ModifyTable.scss";
+@import "../../Services/Data/TableModify/ModifyTable.scss";
 
 .permissionsTable {
   width: 85%;
@@ -165,4 +165,18 @@
       }
     }
   }
+}
+
+.permissionSymbolNA {
+  color: firebrick;
+}
+
+.permissionSymbolFA {
+  color: green;
+}
+
+.permissionSymbolNA,
+.permissionSymbolFA,
+.permissionSymbolPA {
+  font-size: 16px;
 }

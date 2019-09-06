@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from '../../../Common/Layout/Permissions/PermissionStyles.scss';
+import styles from '../../../Common/Permissions/PermissionStyles.scss';
 import { getTypeFields } from '../graphqlUtils';
 import GraphQLType from './GraphQLType';
 import {

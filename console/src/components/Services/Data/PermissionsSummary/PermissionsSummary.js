@@ -18,12 +18,12 @@ import {
   getSchemaTables,
   getTrackedTables,
 } from '../../../Common/utils/pgUtils';
+import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbols';
 
 import { updateSchemaInfo } from '../DataActions';
 import { copyRolePermissions, permOpenEdit } from '../TablePermissions/Actions';
 
 import {
-  permissionsSymbols,
   getAllRoles,
   getPermissionFilterString,
   getPermissionColumnAccessSummary,

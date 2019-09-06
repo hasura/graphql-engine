@@ -41,13 +41,15 @@ import TableHeader from '../TableCommon/TableHeader';
 import ViewHeader from '../TableBrowseRows/ViewHeader';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 import EnhancedInput from '../../../Common/InputChecker/InputChecker';
-import styles from '../../../Common/Layout/Permissions/PermissionStyles.scss';
+import PermTableHeader from '../../../Common/Permissions/TableHeader';
+import PermTableBody from '../../../Common/Permissions/TableBody';
+import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbols';
+import styles from '../../../Common/Permissions/PermissionStyles.scss';
 
 import { setTable } from '../DataActions';
 import { getIngForm, getEdForm, escapeRegExp } from '../utils';
 import { allOperators, getLegacyOperator } from './PermissionBuilder/utils';
 import {
-  permissionsSymbols,
   getAllRoles,
   getPermissionFilterString,
   getPermissionColumnAccessSummary,
@@ -251,30 +253,34 @@ class Permissions extends Component {
       };
 
       const getPermissionsTableHead = () => {
-        const _permissionsHead = [];
-
-        // push role head
-        _permissionsHead.push(<th key={-2}>Role</th>);
-
-        // push action heads
-        queryTypes.forEach((queryType, i) => {
-          _permissionsHead.push(<th key={i}>{queryType}</th>);
-        });
-
-        // push bulk actions head
-        _permissionsHead.push(<th key={-1} />);
-
+        const headings = ['Role', ...queryTypes, '']
         return (
-          <thead>
-            <tr>{_permissionsHead}</tr>
-          </thead>
+          <PermTableHeader headings={headings} />
         );
       };
 
       const getPermissionsTableBody = () => {
-        const _permissionsRowsHtml = [];
 
-        const getPermissionsTableRow = (role, newPermRow = null) => {
+        const getBulkCheckbox = (role, isNewRole) => {
+
+          const dispatchBulkSelect = e => {
+            const isChecked = e.target.checked;
+            const selectedRole = e.target.getAttribute('data-role');
+            dispatch(permSetBulkSelect(isChecked, selectedRole));
+          };
+
+          return {
+            showCheckbox: !( role === 'admin' || isNewRole),
+            bulkSelect: permissionsState.bulkSelect,
+            onChange: dispatchBulkSelect,
+            role,
+            isNewRole,
+            checked: permissionsState.bulkSelect.filter(e => e === role).length,
+          }
+        }
+
+        const getQueryTypes = (role, newPermRow) => {
+
           const dispatchOpenEdit = queryType => () => {
             if (newPermRow && permissionsState.newRole !== '') {
               dispatch(
@@ -291,11 +297,6 @@ class Permissions extends Component {
             dispatch(permCloseEdit());
           };
 
-          const dispatchBulkSelect = e => {
-            const isChecked = e.target.checked;
-            const selectedRole = e.target.getAttribute('data-role');
-            dispatch(permSetBulkSelect(isChecked, selectedRole));
-          };
 
           // const dispatchDeletePermission = () => {
           //   const isConfirm = window.confirm(
@@ -363,34 +364,8 @@ class Permissions extends Component {
 
             return _permission;
           };
-
-          const _permissionsRowHtml = [];
-
-          // push role value
-          if (!newPermRow) {
-            _permissionsRowHtml.push(<th key={-2}>{role}</th>);
-          } else {
-            const dispatchRoleNameChange = e => {
-              dispatch(permSetRoleName(e.target.value));
-            };
-
-            _permissionsRowHtml.push(
-              <th key={-2}>
-                <input
-                  id="new-role-input"
-                  className={`form-control ${styles.newRoleInput}`}
-                  onChange={dispatchRoleNameChange}
-                  type="text"
-                  placeholder="Enter new role"
-                  value={role}
-                  data-test="role-textbox"
-                />
-              </th>
-            );
-          }
-
-          // push action permission value
-          queryTypes.forEach((queryType, i) => {
+          
+          return queryTypes.map(queryType => {
             const isEditAllowed = role !== 'admin';
             const isCurrEdit =
               permissionsState.role === role &&
@@ -411,72 +386,45 @@ class Permissions extends Component {
               }
             }
 
-            _permissionsRowHtml.push(
-              <td
-                key={i}
-                className={className}
-                onClick={onClick}
-                title="Edit permissions"
-                data-test={`${role}-${queryType}`}
-              >
-                {getRoleQueryPermission(queryType)}
-                {editIcon}
-              </td>
-            );
-          });
-
-          // push bulk action value
-          if (role === 'admin' || role === '') {
-            _permissionsRowHtml.push(<td key={-1} />);
-          } else {
-            const bulkSelect = permissionsState.bulkSelect;
-
-            // const deleteIcon = (
-            //   <i
-            //     onClick={dispatchDeletePermission}
-            //     className={styles.permissionDelete + ' fa fa-close'}
-            //     title="Remove all permissions"
-            //     aria-hidden="true"
-            //   />
-            // );
-
-            _permissionsRowHtml.push(
-              <td key={-1}>
-                <div>
-                  <input
-                    onChange={dispatchBulkSelect}
-                    checked={bulkSelect.filter(e => e === role).length}
-                    data-role={role}
-                    title="Select for bulk actions"
-                    type="checkbox"
-                  />
-                  {/*{deleteIcon}*/}
-                </div>
-              </td>
-            );
-          }
-
-          return _permissionsRowHtml;
-        };
+            return ({
+              className,
+              permType: queryType,
+              onClick,
+              dataTest: `${role}-${queryType}`,
+              access: getRoleQueryPermission(queryType),
+              editIcon
+            })
+          }) 
+        }
 
         // add admin to roles
         const _roleList = ['admin'].concat(roleList);
 
-        // add existing roles rows
-        _roleList.forEach((role, i) => {
-          _permissionsRowsHtml.push(
-            <tr key={i}>{getPermissionsTableRow(role)}</tr>
-          );
-        });
+        const _rolePermissions = _roleList.map(r => {
+          return {
+            roleName: r,
+            permTypes: getQueryTypes(r),
+            bulkSection: getBulkCheckbox(r, false),
+          }
+        })
 
-        // add new role row
-        _permissionsRowsHtml.push(
-          <tr key="newPerm">
-            {getPermissionsTableRow(permissionsState.newRole, true)}
-          </tr>
-        );
+        _rolePermissions.push({
+          roleName: permissionsState.newRole,
+          permTypes: getQueryTypes(permissionsState.newRole, true),
+          bulkSection: getBulkCheckbox(permissionsState.newRole, true),
+          isNewRole: true
+        })
 
-        return <tbody>{_permissionsRowsHtml}</tbody>;
+        const dispatchRoleNameChange = e => {
+          dispatch(permSetRoleName(e.target.value));
+        };
+
+        return (
+          <PermTableBody
+            rolePermissions={_rolePermissions}
+            dispatchRoleNameChange={dispatchRoleNameChange}
+          />
+        )
       };
 
       return (
