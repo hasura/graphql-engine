@@ -317,12 +317,10 @@ applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = 
     getAddQueryFromMeta (RemoteSchemaMeta name def commentM _permsM) =
       AddRemoteSchemaQuery name def commentM
     getPermQueryFromMeta (RemoteSchemaMeta name _def _commentM permsM) =
-      maybe
-        []
-        (map
-           (\(RemoteSchemaPermMeta role permDef) ->
-              RemoteSchemaPermissions name role permDef))
-        permsM
+      maybe [] (map fromPermMeta) permsM
+      where
+        fromPermMeta (RemoteSchemaPermMeta role permDef) =
+          RemoteSchemaPermissions name role permDef
 
 runReplaceMetadata
   :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
@@ -453,19 +451,16 @@ fetchMetadata = do
                 FROM hdb_catalog.hdb_function
                 WHERE is_system_defined = 'false'
                     |] () False
+
     joinRemoteSchemaMeta schemas perms =
       flip map schemas $ \(AddRemoteSchemaQuery name def comment) ->
-        RemoteSchemaMeta
-          name
-          def
-          comment
-          (Just
-             (mapMaybe
-                (\(RemoteSchemaPermissions name' role permDef) ->
-                   if name == name'
-                     then Just (RemoteSchemaPermMeta role permDef)
-                     else Nothing)
-                perms))
+        RemoteSchemaMeta name def comment (getPermMeta name perms)
+      where
+        getPermMeta rsName allPerms = pure $ flip mapMaybe allPerms $
+          \(RemoteSchemaPermissions rsName' role permDef) ->
+            if rsName == rsName'
+            then Just (RemoteSchemaPermMeta role permDef)
+            else Nothing
 
 runExportMetadata
   :: (QErrM m, UserInfoM m, MonadTx m)
@@ -558,4 +553,5 @@ purgeMetadataObj = liftTx . \case
   (MOTableObj qt (MTORel rn _))   -> DR.delRelFromCatalog qt rn
   (MOTableObj qt (MTOPerm rn pt)) -> DP.dropPermFromCatalog qt rn pt
   (MOTableObj _ (MTOTrigger trn)) -> DE.delEventTriggerFromCatalog trn
-  (MORemoteSchemaObj rsName (RMORole role)) -> DRS.dropRemoteSchemaPermissionsFromCatalog rsName role
+  (MORemoteSchemaObj rsName (RMOPerm role)) ->
+    DRS.dropRemoteSchemaPermissionsFromCatalog rsName role

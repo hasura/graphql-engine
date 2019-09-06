@@ -42,7 +42,7 @@ data TableMetadataObjId
 instance Hashable TableMetadataObjId
 
 data RemoteMetadataObjId
-  = RMORole !RoleName
+  = RMOPerm !RoleName
   deriving (Show, Eq, Generic)
 instance Hashable RemoteMetadataObjId
 
