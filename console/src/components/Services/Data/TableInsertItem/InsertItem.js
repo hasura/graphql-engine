@@ -50,15 +50,18 @@ class InsertItem extends Component {
       ongoingRequest,
       lastError,
       lastSuccess,
+      count,
       dispatch,
     } = this.props;
 
     const styles = require('../../../Common/TableCommon/Table.scss');
-    // check if table exists
+
     const currentTable = findTable(
       schemas,
       generateTableDef(tableName, currentSchema)
     );
+
+    // check if table exists
     if (!currentTable) {
       // throw a 404 exception
       throw new NotFoundError();
@@ -73,6 +76,7 @@ class InsertItem extends Component {
       const colType = col.data_type;
       const hasDefault = col.column_default && col.column_default.trim() !== '';
       const isNullable = col.is_nullable && col.is_nullable !== 'NO';
+      const isIdentity = col.is_identity && col.is_identity !== 'NO';
       const isAutoIncrement = isColumnAutoIncrement(col);
 
       refs[colName] = { valueNode: null, nullNode: null, defaultNode: null };
@@ -98,9 +102,10 @@ class InsertItem extends Component {
 
           const textValue = typeof val === 'string' ? val : e.target.value;
 
-          const radioToSelectWhenEmpty = hasDefault
-            ? refs[colName].defaultNode
-            : refs[colName].nullNode;
+          const radioToSelectWhenEmpty =
+            hasDefault || isIdentity
+              ? refs[colName].defaultNode
+              : refs[colName].nullNode;
           refs[colName].insertRadioNode.checked = !!textValue.length;
           radioToSelectWhenEmpty.checked = !textValue.length;
         },
@@ -208,14 +213,14 @@ class InsertItem extends Component {
           </label>
           <label className={styles.radioLabel + ' radio-inline'}>
             <input
-              disabled={!hasDefault}
               type="radio"
               ref={node => {
                 refs[colName].defaultNode = node;
               }}
               name={colName + '-value'}
               value="option3"
-              defaultChecked={hasDefault}
+              disabled={!hasDefault && !isIdentity}
+              defaultChecked={hasDefault || isIdentity}
               data-test={`typed-input-default-${i}`}
             />
             <span className={styles.radioSpan}>Default</span>
@@ -250,6 +255,7 @@ class InsertItem extends Component {
     return (
       <div className={styles.container + ' container-fluid'}>
         <TableHeader
+          count={count}
           dispatch={dispatch}
           tableName={tableName}
           tabName="insert"
@@ -339,8 +345,8 @@ InsertItem.propTypes = {
   ongoingRequest: PropTypes.bool.isRequired,
   lastSuccess: PropTypes.object,
   lastError: PropTypes.object,
-  isModalOpen: PropTypes.bool,
   migrationMode: PropTypes.bool.isRequired,
+  count: PropTypes.number,
   dispatch: PropTypes.func.isRequired,
 };
 

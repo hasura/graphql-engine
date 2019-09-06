@@ -15,11 +15,12 @@ const TableHeader = ({
   dispatch,
 }) => {
   const styles = require('../../../Common/TableCommon/Table.scss');
-  let capitalised = tabName;
-  capitalised = capitalised[0].toUpperCase() + capitalised.slice(1);
-  let showCount = '';
+
+  const capitalisedTabName = tabName[0].toUpperCase() + tabName.slice(1);
+
+  let countDisplay = '';
   if (!(count === null || count === undefined)) {
-    showCount = '(' + count + ')';
+    countDisplay = '(' + count + ')';
   }
   const activeTab = tabNameMap[tabName];
 
@@ -55,7 +56,9 @@ const TableHeader = ({
 
   return (
     <div>
-      <Helmet title={capitalised + ' - ' + tableName + ' - Data | Hasura'} />
+      <Helmet
+        title={capitalisedTabName + ' - ' + tableName + ' - Data | Hasura'}
+      />
       <div className={styles.subHeader}>
         <BreadCrumb breadCrumbs={getBreadCrumbs()} />
         <EditableHeading
@@ -82,12 +85,14 @@ const TableHeader = ({
                 }
                 data-test="table-browse-rows"
               >
-                Browse Rows {showCount}
+                Browse Rows {countDisplay}
               </Link>
             </li>
             <li
               role="presentation"
-              className={tabName === 'insert' ? styles.active : ''}
+              className={
+                tabName === 'insert' || tabName === 'edit' ? styles.active : ''
+              }
             >
               <Link
                 to={
@@ -99,7 +104,7 @@ const TableHeader = ({
                 }
                 data-test="table-insert-rows"
               >
-                Insert Row
+                {tabName === 'edit' ? 'Edit' : 'Insert'} Row
               </Link>
             </li>
             {migrationMode ? (

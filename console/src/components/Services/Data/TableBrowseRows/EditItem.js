@@ -12,6 +12,7 @@ import { ordinalColSort } from '../utils';
 import { replace } from 'react-router-redux';
 import globals from '../../../../Globals';
 import { E_ONGOING_REQ, editItem } from './EditActions';
+import { findTable, generateTableDef } from '../../../Common/utils/pgUtils';
 
 class EditItem extends Component {
   constructor() {
@@ -29,6 +30,7 @@ class EditItem extends Component {
       ongoingRequest,
       lastError,
       lastSuccess,
+      count,
       dispatch,
     } = this.props;
 
@@ -45,17 +47,21 @@ class EditItem extends Component {
 
     const styles = require('../../../Common/TableCommon/Table.scss');
 
-    const currentTable = schemas.find(
-      x => x.table_name === tableName && x.table_schema === currentSchema
+    const currentTable = findTable(
+      schemas,
+      generateTableDef(tableName, currentSchema)
     );
 
     const columns = currentTable.columns.sort(ordinalColSort);
 
     const refs = {};
+
     const elements = columns.map((col, i) => {
       const colName = col.column_name;
       const colType = col.data_type;
       const hasDefault = col.column_default && col.column_default.trim() !== '';
+      const isNullable = col.is_nullable && col.is_nullable !== 'NO';
+      const isIdentity = col.is_identity && col.is_identity !== 'NO';
 
       refs[colName] = { valueNode: null, nullNode: null, defaultNode: null };
       const inputRef = node => (refs[colName].valueNode = node);
@@ -138,6 +144,7 @@ class EditItem extends Component {
               ref={node => {
                 refs[colName].nullNode = node;
               }}
+              disabled={!isNullable}
               name={colName + '-value'}
               value="NULL"
               defaultChecked={oldItem[colName] === null}
@@ -152,6 +159,8 @@ class EditItem extends Component {
               }}
               name={colName + '-value'}
               value="option3"
+              disabled={!hasDefault && !isIdentity}
+              defaultChecked={isIdentity}
             />
             <span className={styles.radioSpan}>Default</span>
           </label>
@@ -185,9 +194,10 @@ class EditItem extends Component {
     return (
       <div className={styles.container + ' container-fluid'}>
         <TableHeader
+          count={count}
           dispatch={dispatch}
           tableName={tableName}
-          tabName="insert"
+          tabName="edit"
           migrationMode={migrationMode}
           currentSchema={currentSchema}
         />
@@ -248,6 +258,7 @@ EditItem.propTypes = {
   lastSuccess: PropTypes.object,
   lastError: PropTypes.object,
   migrationMode: PropTypes.bool.isRequired,
+  count: PropTypes.number,
   dispatch: PropTypes.func.isRequired,
 };
 
