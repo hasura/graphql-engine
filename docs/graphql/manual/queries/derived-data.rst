@@ -3,7 +3,7 @@ Derived data in queries
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
 GraphQL’s "select" query language is designed to be simple yet powerful. But there are certain
