@@ -34,6 +34,7 @@ import qualified Data.UUID.V4             as UUID
 import qualified ListT
 import qualified Network.WebSockets       as WS
 import qualified StmContainers.Map        as STMMap
+import           Data.Word                (Word16)
 
 import           Control.Exception        (try)
 import qualified Hasura.Logging           as L
@@ -91,9 +92,18 @@ getWSId :: WSConn a -> WSId
 getWSId = _wcConnId
 
 closeConn :: WSConn a -> BL.ByteString -> IO ()
-closeConn wsConn bs = do
+closeConn wsConn bs = closeConnWithCode wsConn 1000 bs -- 1000 is "normal close"
+
+
+-- | Closes a connection with code 1012, which means "Server is restarting"
+-- good clients will implement a retry logic with a backoff of a few seconds
+forceConnReconnect :: WSConn a -> BL.ByteString -> IO ()
+forceConnReconnect wsConn bs = closeConnWithCode wsConn 1012 bs
+
+closeConnWithCode :: WSConn a -> Word16 -> BL.ByteString -> IO ()
+closeConnWithCode wsConn code bs = do
   (L.unLogger . _wcLogger) wsConn $ WSLog (_wcConnId wsConn) $ ECloseSent $ TBS.fromLBS bs
-  WS.sendClose (_wcConnRaw wsConn) bs
+  WS.sendCloseCode (_wcConnRaw wsConn) code bs
 
 -- writes to a queue instead of the raw connection
 -- so that sendMsg doesn't block
@@ -116,13 +126,16 @@ createWSServer :: L.Logger -> STM.STM (WSServer a)
 createWSServer logger = WSServer logger <$> STMMap.new <*> STM.newTVar AcceptingConns
 
 closeAll :: WSServer a -> BL.ByteString -> IO ()
-closeAll (WSServer (L.Logger writeLog) connMap _) msg = do
+closeAll wsServer msg = closeAllWith wsServer (flip closeConn) msg
+
+closeAllWith :: WSServer a -> (BL.ByteString -> WSConn a -> IO ()) -> BL.ByteString -> IO ()
+closeAllWith (WSServer (L.Logger writeLog) connMap _) closer msg = do
   writeLog $ L.debugT "closing all connections"
   conns <- STM.atomically $ do
     conns <- ListT.toList $ STMMap.listT connMap
     STMMap.reset connMap
     return conns
-  void $ A.mapConcurrently (flip closeConn msg . snd) conns
+  void $ A.mapConcurrently (closer msg . snd) conns
 
 data AcceptWith a
   = AcceptWith
@@ -221,4 +234,4 @@ createServerApp (WSServer logger@(L.Logger writeLog) connMap shutdownVar) wsHand
 shutdown :: WSServer a -> IO ()
 shutdown wsServer = do
   STM.atomically $ STM.writeTVar (_wssShutdown wsServer) ShuttingDown
-  closeAll wsServer "shutting server down"
+  closeAllWith wsServer (flip forceConnReconnect) "shutting server down"
