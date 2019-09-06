@@ -14,7 +14,7 @@ import {
   setCurrentPermissionEdit,
   closePermissionEdit,
 } from './Actions';
-import { parseRemoteRelPermDefinition } from './utils';
+import { parseRemoteRelPermDefinition, getRootTypeAccess } from './utils';
 import { fetchRoleList } from '../../Data/DataActions';
 
 const Permissions = props => {
@@ -104,7 +104,7 @@ const Permissions = props => {
 
       const getEditIcon = () => {
         return (
-          <span className={styles.editPermsLink}>
+          <span className={styles.editPermsIcon}>
             <i className="fa fa-pencil" aria-hidden="true" />
           </span>
         );
@@ -145,12 +145,20 @@ const Permissions = props => {
             }
           }
 
-          const getRoleQueryPermission = (r, rt) => {
+          const getRoleQueryPermission = (rt) => {
             let _permission;
             if (role === 'admin') {
               _permission = permissionsSymbols.fullAccess;
+            } else if (isNewRole) {
+              _permission = permissionsSymbols.noAccess
             } else {
-              _permission = permissionsSymbols.noAccess;
+              const existingPerm = existingPermissions.find(p => p.role === role);
+              if (!existingPerm) {
+                _permission = permissionsSymbols.noAccess;
+              } else {
+                const perm = parseRemoteRelPermDefinition(existingPerm, rootTypes, objectTypes, nonObjectTypes);
+                _permission = permissionsSymbols[getRootTypeAccess(rt, perm.allowedTypes, objectTypes)];
+              }
             }
             return _permission;
           };
@@ -161,7 +169,7 @@ const Permissions = props => {
             editIcon: editIcon,
             onClick,
             dataTest: `${role}-${rootType}`,
-            access: getRoleQueryPermission(role, rootType),
+            access: getRoleQueryPermission(rootTypes[rootType]),
           };
         });
       };

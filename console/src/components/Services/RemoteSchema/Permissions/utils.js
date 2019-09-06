@@ -104,7 +104,9 @@ export const getExpandedTypes = (allowedTypes, rootTypes, editType) => {
     Object.keys(allowedTypes[currentTypeName]).forEach(fieldName => {
       const allowedType = allowedTypes[currentTypeName][fieldName];
       if (allowedType.isChecked && !allowedType.isScalar) {
-        expandTypes(allowedTypes[currentTypeName][fieldName].typeName);
+        if (!expandedTypes[allowedTypes[currentTypeName][fieldName].typeName]) {
+          expandTypes(allowedTypes[currentTypeName][fieldName].typeName);
+        }
       }
     });
   };
@@ -113,3 +115,51 @@ export const getExpandedTypes = (allowedTypes, rootTypes, editType) => {
 
   return expandedTypes;
 };
+
+export const isTypeFullAccess = (typeName, allowedTypes, objectTypes) => {
+
+  if (!allowedTypes[typeName]) return false;
+
+  const currentTypeSelected = allowedTypes[typeName];
+  const currentTypeOriginal = objectTypes[typeName];
+
+  const allTypeFields = Object.keys(currentTypeOriginal._fields);
+  for (var i = allTypeFields.length - 1; i >= 0; i--) {
+
+    const currentField = currentTypeSelected[allTypeFields[i]];
+
+    if (!currentField) {
+      return false;
+    }
+
+    if (!currentField.isChecked) {
+      return false;
+    }
+
+    if (!currentField.isScalar) return getRoleQueryAccess();
+  }
+
+  return true;
+
+}
+
+export const getRootTypeAccess = (rootType, allowedTypes, objectTypes) => {
+  let accessLabels = {
+    '-1': 'noAccess',
+    '0': 'partialAccess',
+    '1': 'fullAccess'
+  }
+
+  let access = -1;
+
+  if (allowedTypes[rootType]) {
+    access = 0
+  };
+
+  if (isTypeFullAccess(rootType, allowedTypes, objectTypes)) {
+    access = 1
+  }
+
+  return accessLabels[access];
+
+}

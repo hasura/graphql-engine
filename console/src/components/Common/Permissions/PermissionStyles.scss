@@ -13,11 +13,6 @@
     font-weight: bold;
   }
 
-  td:last-child, th:last-child {
-    border-left: 4px double #ddd;
-    width: 10%;
-  }
-
   td:first-child, th:first-child {
     overflow: auto;
     border-right: 4px double #ddd;
@@ -179,4 +174,9 @@
 .permissionSymbolFA,
 .permissionSymbolPA {
   font-size: 16px;
+}
+
+.bulkSelectCell {
+  border-left: 4px double #ddd;
+  width: 10%;
 }

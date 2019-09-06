@@ -50,6 +50,7 @@ const TableRow = ({
       rowCells.push(
         <td
           key={-1}
+          className={styles.bulkSelectCell}
         >
           <input
             onChange={bulkSection.onChange}
@@ -64,7 +65,7 @@ const TableRow = ({
       );
     } else {
       rowCells.push(
-        <td key="empty-bulk-select" />
+        <td key="empty-bulk-select" className={styles.bulkSelectCell} />
       );
     }
   }
