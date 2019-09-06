@@ -147,7 +147,6 @@ const Permissions = props => {
 
           const getRoleQueryPermission = (r, rt) => {
             let _permission;
-
             if (role === 'admin') {
               _permission = permissionsSymbols.fullAccess;
             } else {
@@ -175,14 +174,14 @@ const Permissions = props => {
         return {
           roleName: r,
           permTypes: getRootTypes(r, false),
-        }
-      })
+        };
+      });
 
       rolePermissions.push({
         roleName: editState.role,
         permTypes: getRootTypes(editState.role, true),
         isNewRole: true
-      })
+      });
 
       return (
         <PermTableBody

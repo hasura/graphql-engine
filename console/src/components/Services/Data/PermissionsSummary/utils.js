@@ -1,6 +1,3 @@
-import React from 'react';
-import styles from './PermissionsSummary.scss';
-
 export const getAllRoles = allTableSchemas => {
   const _allRoles = [];
 

@@ -8,8 +8,7 @@ const TableRow = ({
   isNewRole,
   dispatchRoleNameChange
 }) => {
-
-  const rowCells = []
+  const rowCells = [];
 
   if (isNewRole) {
     rowCells.push(
@@ -31,7 +30,7 @@ const TableRow = ({
     rowCells.push(<th key={'role-textbox'}>{roleName}</th>);
   }
 
-  permTypes.forEach((p, i) => {
+  permTypes.forEach((p) => {
     rowCells.push(
       <td
         key={p.dataTest}
@@ -43,8 +42,8 @@ const TableRow = ({
         {p.access}
         {p.editIcon}
       </td>
-    )
-  })
+    );
+  });
 
   if (bulkSection) {
     if (bulkSection.showCheckbox) {
@@ -52,28 +51,27 @@ const TableRow = ({
         <td
           key={-1}
         >
-            <input
-              onChange={bulkSection.onChange}
-              className={styles.cursorPointer}
-              checked={bulkSection.checked}
-              data-role={bulkSection.role}
-              title="Select for bulk actions"
-              type="checkbox"
-            />
-            {/*{deleteIcon}*/}
+          <input
+            onChange={bulkSection.onChange}
+            className={styles.cursorPointer}
+            checked={bulkSection.checked}
+            data-role={bulkSection.role}
+            title="Select for bulk actions"
+            type="checkbox"
+          />
+          {/*{deleteIcon}*/}
         </td>
-      )
+      );
     } else {
       rowCells.push(
         <td key="empty-bulk-select" />
-      )
-
+      );
     }
   }
 
   return (
     <tr>{rowCells}</tr>
-  )
+  );
 };
 
 export default TableRow;

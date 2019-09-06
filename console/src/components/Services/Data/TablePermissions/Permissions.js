@@ -253,16 +253,14 @@ class Permissions extends Component {
       };
 
       const getPermissionsTableHead = () => {
-        const headings = ['Role', ...queryTypes, '']
+        const headings = ['Role', ...queryTypes, ''];
         return (
           <PermTableHeader headings={headings} />
         );
       };
 
       const getPermissionsTableBody = () => {
-
         const getBulkCheckbox = (role, isNewRole) => {
-
           const dispatchBulkSelect = e => {
             const isChecked = e.target.checked;
             const selectedRole = e.target.getAttribute('data-role');
@@ -270,17 +268,16 @@ class Permissions extends Component {
           };
 
           return {
-            showCheckbox: !( role === 'admin' || isNewRole),
+            showCheckbox: !(role === 'admin' || isNewRole),
             bulkSelect: permissionsState.bulkSelect,
             onChange: dispatchBulkSelect,
             role,
             isNewRole,
             checked: permissionsState.bulkSelect.filter(e => e === role).length,
-          }
-        }
+          };
+        };
 
         const getQueryTypes = (role, newPermRow) => {
-
           const dispatchOpenEdit = queryType => () => {
             if (newPermRow && permissionsState.newRole !== '') {
               dispatch(
@@ -364,7 +361,7 @@ class Permissions extends Component {
 
             return _permission;
           };
-          
+
           return queryTypes.map(queryType => {
             const isEditAllowed = role !== 'admin';
             const isCurrEdit =
@@ -393,9 +390,9 @@ class Permissions extends Component {
               dataTest: `${role}-${queryType}`,
               access: getRoleQueryPermission(queryType),
               editIcon
-            })
-          }) 
-        }
+            });
+          });
+        };
 
         // add admin to roles
         const _roleList = ['admin'].concat(roleList);
@@ -405,15 +402,15 @@ class Permissions extends Component {
             roleName: r,
             permTypes: getQueryTypes(r),
             bulkSection: getBulkCheckbox(r, false),
-          }
-        })
+          };
+        });
 
         _rolePermissions.push({
           roleName: permissionsState.newRole,
           permTypes: getQueryTypes(permissionsState.newRole, true),
           bulkSection: getBulkCheckbox(permissionsState.newRole, true),
           isNewRole: true
-        })
+        });
 
         const dispatchRoleNameChange = e => {
           dispatch(permSetRoleName(e.target.value));
@@ -424,7 +421,7 @@ class Permissions extends Component {
             rolePermissions={_rolePermissions}
             dispatchRoleNameChange={dispatchRoleNameChange}
           />
-        )
+        );
       };
 
       return (
