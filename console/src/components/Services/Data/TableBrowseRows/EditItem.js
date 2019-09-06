@@ -63,6 +63,8 @@ class EditItem extends Component {
       const isNullable = col.is_nullable && col.is_nullable !== 'NO';
       const isIdentity = col.is_identity && col.is_identity !== 'NO';
 
+      const prevValue = oldItem[colName];
+
       refs[colName] = { valueNode: null, nullNode: null, defaultNode: null };
       const inputRef = node => (refs[colName].valueNode = node);
 
@@ -76,7 +78,7 @@ class EditItem extends Component {
       const standardEditProps = {
         className: `form-control ${styles.insertBox}`,
         'data-test': `typed-input-${i}`,
-        defaultValue: oldItem[colName],
+        defaultValue: prevValue,
         ref: inputRef,
         type: 'text',
         onClick: clicker,
@@ -90,6 +92,18 @@ class EditItem extends Component {
         <input {...standardEditProps} placeholder={placeHolder} />
       );
 
+      if (typeof prevValue === 'object') {
+        typedInput = (
+          <JsonInput
+            standardProps={{
+              ...standardEditProps,
+              defaultValue: JSON.stringify(prevValue),
+            }}
+            placeholderProp={getPlaceholder(colType)}
+          />
+        );
+      }
+
       switch (colType) {
         case JSONB:
         case JSONDTYPE:
@@ -97,7 +111,7 @@ class EditItem extends Component {
             <JsonInput
               standardProps={{
                 ...standardEditProps,
-                defaultValue: JSON.stringify(oldItem[colName]),
+                defaultValue: JSON.stringify(prevValue),
               }}
               placeholderProp={getPlaceholder(colType)}
             />
@@ -147,7 +161,7 @@ class EditItem extends Component {
               disabled={!isNullable}
               name={colName + '-value'}
               value="NULL"
-              defaultChecked={oldItem[colName] === null}
+              defaultChecked={prevValue === null}
             />
             <span className={styles.radioSpan}>NULL</span>
           </label>
