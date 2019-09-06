@@ -46,11 +46,10 @@ import PermTableBody from '../../../Common/Permissions/TableBody';
 import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbols';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
 
-import { setTable } from '../DataActions';
+import { setTable, fetchRoleList } from '../DataActions';
 import { getIngForm, getEdForm, escapeRegExp } from '../utils';
 import { allOperators, getLegacyOperator } from './PermissionBuilder/utils';
 import {
-  getAllRoles,
   getPermissionFilterString,
   getPermissionColumnAccessSummary,
   getTablePermissionsByRoles,
@@ -80,6 +79,7 @@ class Permissions extends Component {
   componentDidMount() {
     this.props.dispatch({ type: RESET });
     this.props.dispatch(setTable(this.props.tableName));
+    this.props.dispatch(fetchRoleList());
   }
 
   componentDidUpdate(prevProps) {
@@ -254,9 +254,7 @@ class Permissions extends Component {
 
       const getPermissionsTableHead = () => {
         const headings = ['Role', ...queryTypes, ''];
-        return (
-          <PermTableHeader headings={headings} />
-        );
+        return <PermTableHeader headings={headings} />;
       };
 
       const getPermissionsTableBody = () => {
@@ -293,7 +291,6 @@ class Permissions extends Component {
           const dispatchCloseEdit = () => {
             dispatch(permCloseEdit());
           };
-
 
           // const dispatchDeletePermission = () => {
           //   const isConfirm = window.confirm(
@@ -383,14 +380,14 @@ class Permissions extends Component {
               }
             }
 
-            return ({
+            return {
               className,
               permType: queryType,
               onClick,
               dataTest: `${role}-${queryType}`,
               access: getRoleQueryPermission(queryType),
-              editIcon
-            });
+              editIcon,
+            };
           });
         };
 
@@ -409,7 +406,7 @@ class Permissions extends Component {
           roleName: permissionsState.newRole,
           permTypes: getQueryTypes(permissionsState.newRole, true),
           bulkSection: getBulkCheckbox(permissionsState.newRole, true),
-          isNewRole: true
+          isNewRole: true,
         });
 
         const dispatchRoleNameChange = e => {
@@ -1731,7 +1728,7 @@ class Permissions extends Component {
       }
     }
 
-    const allRolesList = getAllRoles(allSchemas);
+    const allRolesList = this.props.allRoles;
 
     return (
       <div className={styles.container}>
@@ -1772,6 +1769,7 @@ const mapStateToProps = (state, ownProps) => ({
   tableName: ownProps.params.table,
   tableType: ownProps.route.tableType,
   allSchemas: state.tables.allSchemas,
+  allRoles: state.tables.allRoles,
   migrationMode: state.main.migrationMode,
   currentSchema: state.tables.currentSchema,
   serverVersion: state.main.serverVersion ? state.main.serverVersion : '',

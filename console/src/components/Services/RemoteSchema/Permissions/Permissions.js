@@ -199,12 +199,7 @@ const Permissions = props => {
         });
       };
 
-      const uniqueRolesList = [
-        'admin',
-        ...rolesList,
-        ...existingPermissions.map(ep => ep.role),
-      ];
-      const _roleList = [...new Set(uniqueRolesList)];
+      const _roleList = ['admin', ...rolesList];
 
       const rolePermissions = _roleList.map(r => {
         return {
