@@ -1,16 +1,21 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import TableHeader from '../TableCommon/TableHeader';
-import { insertItem, I_RESET } from './InsertActions';
-import { ordinalColSort } from '../utils';
-import { setTable } from '../DataActions';
 import JsonInput from '../../../Common/CustomInputTypes/JsonInput';
 import TextInput from '../../../Common/CustomInputTypes/TextInput';
 import Button from '../../../Common/Button/Button';
 import ReloadEnumValuesButton from '../Common/ReusableComponents/ReloadEnumValuesButton';
 import { getPlaceholder, BOOLEAN, JSONB, JSONDTYPE, TEXT } from '../utils';
+import { ordinalColSort } from '../utils';
 
+import { insertItem, I_RESET } from './InsertActions';
+import { setTable } from '../DataActions';
 import { NotFoundError } from '../../../Error/PageNotFound';
+import {
+  findTable,
+  generateTableDef,
+  isColumnAutoIncrement,
+} from '../../../Common/utils/pgUtils';
 
 class InsertItem extends Component {
   constructor() {
@@ -38,47 +43,41 @@ class InsertItem extends Component {
   render() {
     const {
       tableName,
+      currentSchema,
       clone,
       schemas,
-      currentSchema,
       migrationMode,
       ongoingRequest,
       lastError,
       lastSuccess,
-      count,
       dispatch,
     } = this.props;
 
     const styles = require('../../../Common/TableCommon/Table.scss');
     // check if table exists
-    const currentTable = schemas.find(
-      s => s.table_name === tableName && s.table_schema === currentSchema
+    const currentTable = findTable(
+      schemas,
+      generateTableDef(tableName, currentSchema)
     );
     if (!currentTable) {
       // throw a 404 exception
       throw new NotFoundError();
     }
 
-    const isColumnAutoIncrement = column => {
-      return (
-        column.column_default ===
-        "nextval('" + tableName + '_' + column.column_name + "_seq'::regclass)"
-      );
-    };
+    const columns = currentTable.columns.sort(ordinalColSort);
 
-    const _columns = schemas.find(
-      x => x.table_name === tableName && x.table_schema === currentSchema
-    ).columns;
     const refs = {};
-    const columns = _columns.sort(ordinalColSort);
 
     const elements = columns.map((col, i) => {
       const colName = col.column_name;
+      const colType = col.data_type;
       const hasDefault = col.column_default && col.column_default.trim() !== '';
       const isNullable = col.is_nullable && col.is_nullable !== 'NO';
+      const isAutoIncrement = isColumnAutoIncrement(col);
 
       refs[colName] = { valueNode: null, nullNode: null, defaultNode: null };
       const inputRef = node => (refs[colName].valueNode = node);
+
       const clicker = e => {
         e.target
           .closest('.radio-inline')
@@ -86,12 +85,12 @@ class InsertItem extends Component {
         e.target.focus();
       };
 
-      const isAutoIncrement = isColumnAutoIncrement(col);
-
       const standardInputProps = {
         className: `form-control ${styles.insertBox}`,
         'data-test': `typed-input-${i}`,
         defaultValue: clone && colName in clone ? clone[colName] : '',
+        ref: inputRef,
+        type: 'text',
         onClick: clicker,
         onChange: (e, val) => {
           if (isAutoIncrement) return;
@@ -123,11 +122,8 @@ class InsertItem extends Component {
           }
         },
         placeholder: 'text',
-        ref: inputRef,
-        type: 'text',
       };
 
-      const colType = col.data_type;
       const placeHolder = hasDefault
         ? col.column_default
         : getPlaceholder(colType);
@@ -155,21 +151,14 @@ class InsertItem extends Component {
         case TEXT:
           typedInput = (
             <TextInput
-              standardProps={standardInputProps}
+              standardProps={{ ...standardInputProps }}
               placeholderProp={getPlaceholder(colType)}
             />
           );
           break;
         case BOOLEAN:
           typedInput = (
-            <select
-              {...standardInputProps}
-              onClick={e => {
-                e.target.parentNode.parentNode.click();
-                e.target.focus();
-              }}
-              defaultValue={placeHolder}
-            >
+            <select {...standardInputProps} defaultValue={placeHolder}>
               <option value="" disabled>
                 -- bool --
               </option>
@@ -236,12 +225,14 @@ class InsertItem extends Component {
     });
 
     let alert = null;
+    let buttonText = this.state.insertedRows > 0 ? 'Insert Again' : 'Save';
     if (ongoingRequest) {
       alert = (
         <div className="hidden alert alert-warning" role="alert">
           Inserting...
         </div>
       );
+      buttonText = 'Saving...';
     } else if (lastError) {
       alert = (
         <div className="hidden alert alert-danger" role="alert">
@@ -259,7 +250,6 @@ class InsertItem extends Component {
     return (
       <div className={styles.container + ' container-fluid'}>
         <TableHeader
-          count={count}
           dispatch={dispatch}
           tableName={tableName}
           tabName="insert"
@@ -298,7 +288,7 @@ class InsertItem extends Component {
                 }}
                 data-test="insert-save-button"
               >
-                {this.state.insertedRows > 0 ? 'Insert Again' : 'Save'}
+                {buttonText}
               </Button>
               <Button
                 color="white"
@@ -346,12 +336,11 @@ InsertItem.propTypes = {
   currentSchema: PropTypes.string.isRequired,
   clone: PropTypes.object,
   schemas: PropTypes.array.isRequired,
-  migrationMode: PropTypes.bool.isRequired,
   ongoingRequest: PropTypes.bool.isRequired,
   lastSuccess: PropTypes.object,
   lastError: PropTypes.object,
   isModalOpen: PropTypes.bool,
-  count: PropTypes.number,
+  migrationMode: PropTypes.bool.isRequired,
   dispatch: PropTypes.func.isRequired,
 };
 

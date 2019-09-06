@@ -1,50 +1,23 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import TableHeader from '../TableCommon/TableHeader';
-import { editItem, E_ONGOING_REQ } from './EditActions';
-import globals from '../../../../Globals';
-import { modalClose } from './EditActions';
 import JsonInput from '../../../Common/CustomInputTypes/JsonInput';
 import TextInput from '../../../Common/CustomInputTypes/TextInput';
 import Button from '../../../Common/Button/Button';
-
 import ReloadEnumValuesButton from '../Common/ReusableComponents/ReloadEnumValuesButton';
+import { getPlaceholder, BOOLEAN, JSONB, JSONDTYPE, TEXT } from '../utils';
+import { ordinalColSort } from '../utils';
 
-import {
-  getPlaceholder,
-  INTEGER,
-  BIGINT,
-  NUMERIC,
-  DATE,
-  BOOLEAN,
-  UUID,
-  TIMESTAMP,
-  TIMETZ,
-  JSONB,
-  JSONDTYPE,
-  TEXT,
-} from '../utils';
 // import RichTextEditor from 'react-rte';
 import { replace } from 'react-router-redux';
+import globals from '../../../../Globals';
+import { E_ONGOING_REQ, editItem } from './EditActions';
 
 class EditItem extends Component {
   constructor() {
     super();
     this.state = { insertedRows: 0, editorColumnMap: {}, currentColumn: null };
   }
-
-  onTextChange = (e, colName) => {
-    this.setState({
-      editorColumnMap: {
-        ...this.state.editorColumnMap,
-        [colName]: e.target.value,
-      },
-    });
-  };
-
-  onModalClose = () => {
-    this.props.dispatch(modalClose());
-  };
 
   render() {
     const {
@@ -76,16 +49,17 @@ class EditItem extends Component {
       x => x.table_name === tableName && x.table_schema === currentSchema
     );
 
-    const columns = currentTable.columns;
+    const columns = currentTable.columns.sort(ordinalColSort);
 
     const refs = {};
     const elements = columns.map((col, i) => {
       const colName = col.column_name;
       const colType = col.data_type;
+      const hasDefault = col.column_default && col.column_default.trim() !== '';
+
       refs[colName] = { valueNode: null, nullNode: null, defaultNode: null };
-      const inputRef = node => {
-        refs[colName].valueNode = node;
-      };
+      const inputRef = node => (refs[colName].valueNode = node);
+
       const clicker = e => {
         e.target
           .closest('.radio-inline')
@@ -95,27 +69,22 @@ class EditItem extends Component {
 
       const standardEditProps = {
         className: `form-control ${styles.insertBox}`,
-        onClick: clicker,
-        ref: inputRef,
         'data-test': `typed-input-${i}`,
-        type: 'text',
         defaultValue: oldItem[colName],
+        ref: inputRef,
+        type: 'text',
+        onClick: clicker,
       };
 
-      // Text type
+      const placeHolder = hasDefault
+        ? col.column_default
+        : getPlaceholder(colType);
+
       let typedInput = (
-        <input {...standardEditProps} placeholder={getPlaceholder(colType)} />
+        <input {...standardEditProps} placeholder={placeHolder} />
       );
 
       switch (colType) {
-        case INTEGER:
-        case BIGINT:
-        case NUMERIC:
-        case TIMESTAMP:
-        case DATE:
-        case TIMETZ:
-        case UUID:
-          break;
         case JSONB:
         case JSONDTYPE:
           typedInput = (
@@ -139,6 +108,9 @@ class EditItem extends Component {
         case BOOLEAN:
           typedInput = (
             <select {...standardEditProps}>
+              <option value="" disabled>
+                -- bool --
+              </option>
               <option value="true">True</option>
               <option value="false">False</option>
             </select>
@@ -168,7 +140,7 @@ class EditItem extends Component {
               }}
               name={colName + '-value'}
               value="NULL"
-              defaultChecked={oldItem[colName] === null ? true : false}
+              defaultChecked={oldItem[colName] === null}
             />
             <span className={styles.radioSpan}>NULL</span>
           </label>
@@ -209,6 +181,7 @@ class EditItem extends Component {
         </div>
       );
     }
+
     return (
       <div className={styles.container + ' container-fluid'}>
         <TableHeader
@@ -221,7 +194,7 @@ class EditItem extends Component {
         <br />
         <div className={styles.insertContainer + ' container-fluid'}>
           <div className="col-xs-9">
-            <form className="form-horizontal">
+            <form id="updateForm" className="form-horizontal">
               {elements}
               <Button
                 type="submit"
@@ -247,7 +220,7 @@ class EditItem extends Component {
                   });
                   dispatch(editItem(tableName, inputValues));
                 }}
-                data-test="save-button"
+                data-test="edit-save-button"
               >
                 {buttonText}
               </Button>
