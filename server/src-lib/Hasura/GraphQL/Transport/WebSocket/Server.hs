@@ -94,7 +94,6 @@ getWSId = _wcConnId
 closeConn :: WSConn a -> BL.ByteString -> IO ()
 closeConn wsConn bs = closeConnWithCode wsConn 1000 bs -- 1000 is "normal close"
 
-
 -- | Closes a connection with code 1012, which means "Server is restarting"
 -- good clients will implement a retry logic with a backoff of a few seconds
 forceConnReconnect :: WSConn a -> BL.ByteString -> IO ()
@@ -167,23 +166,23 @@ createServerApp
 createServerApp (WSServer logger@(L.Logger writeLog) connMap shutdownVar) wsHandlers
                 pendingConn = do
 
-    wsId <- WSId <$> UUID.nextRandom
-    writeLog $ WSLog wsId EConnectionRequest
-    serverStatus <- STM.readTVarIO shutdownVar
-    case serverStatus of
-      AcceptingConns -> do
-        let reqHead = WS.pendingRequest pendingConn
-        onConnRes <- _hOnConn wsHandlers wsId reqHead
-        either (onReject wsId) (onAccept wsId) onConnRes
+  wsId <- WSId <$> UUID.nextRandom
+  writeLog $ WSLog wsId EConnectionRequest
+  serverStatus <- STM.readTVarIO shutdownVar
+  case serverStatus of
+    AcceptingConns -> do
+      let reqHead = WS.pendingRequest pendingConn
+      onConnRes <- _hOnConn wsHandlers wsId reqHead
+      either (onReject wsId) (onAccept wsId) onConnRes
 
-      ShuttingDown ->
-        onReject
-          wsId
-          (WS.RejectRequest 503
-                            "Service Unavailable"
-                            [("Retry-After", "0")]
-                            "Server is shutting down"
-          )
+    ShuttingDown ->
+      onReject
+        wsId
+        (WS.RejectRequest 503
+                          "Service Unavailable"
+                          [("Retry-After", "0")]
+                          "Server is shutting down"
+        )
 
   where
     onReject wsId rejectRequest = do
