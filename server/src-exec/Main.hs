@@ -141,6 +141,7 @@ main =  do
       am <- either (printErrExit . T.unpack) return authModeRes
 
       ci <- procConnInfo rci
+
       -- log postgres connection info
       unLogger logger $ connInfoToLog ci
 
