@@ -10,6 +10,7 @@ import           Data.Has
 
 import qualified Data.Aeson                             as J
 import qualified Data.ByteString                        as B
+import qualified Data.ByteString.Base64                 as B64
 import qualified Data.ByteString.Lazy                   as LBS
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashSet                           as Set
@@ -265,11 +266,11 @@ data PreparedSql
 -- | Required to log in `query-log`
 instance J.ToJSON PreparedSql where
   toJSON (PreparedSql q prepArgs) =
-      J.object [ "query" J..= Q.getQueryText q
-               , "prepared_arguments" J..= fmap prepArgsJVal prepArgs
-               ]
+    J.object [ "query" J..= Q.getQueryText q
+             , "prepared_arguments" J..= map prepArgsJVal prepArgs
+             ]
     where
-      prepArgsJVal (_, arg) = fmap (bsToTxt . fst) arg
+      prepArgsJVal (_, arg) = fmap (bsToTxt . B64.encode . fst) arg
 
 -- | Intermediate reperesentation of a computed SQL statement and prepared
 -- arguments, or a raw bytestring (mostly, for introspection responses)
