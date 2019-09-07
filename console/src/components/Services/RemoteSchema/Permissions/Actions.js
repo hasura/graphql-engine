@@ -40,6 +40,9 @@ const DROP_REMOTE_SCHEMA_PERMISSION_SUCCESS =
 const DROP_REMOTE_SCHEMA_PERMISSION_FAILURE =
   '@remoteSchema/DROP_REMOTE_SCHEMA_PERMISSION_FAILURE';
 
+const RESET_PERMISSIONS_STATE = '@remoteSchema/RESET_PERMISSIONS_STATE';
+export const resetPermState = () => ({ type: RESET_PERMISSIONS_STATE });
+
 export const deleteRemoteSchemaPermission = (successCb, failureCb) => {
   return (dispatch, getState) => {
     const permState = getState().remoteSchemas.permissions;
@@ -214,6 +217,9 @@ const reducer = (state = permissionState, action) => {
           ...permissionState.editState,
         },
       };
+
+    case RESET_PERMISSIONS_STATE:
+      return JSON.parse(JSON.stringify(permissionState));
 
     default:
       return {

@@ -11,6 +11,7 @@ import {
   setPermissionRole,
   setCurrentPermissionEdit,
   closePermissionEdit,
+  resetPermState
 } from './Actions';
 import { parseRemoteRelPermDefinition, getRootTypeAccess } from './utils';
 import { fetchRoleList } from '../../Data/DataActions';
@@ -38,6 +39,9 @@ const Permissions = props => {
 
   React.useEffect(() => {
     dispatch(fetchRoleList());
+    return () => {
+      dispatch(resetPermState());
+    };
   }, []);
 
   if (loading) return <Spinner />;
