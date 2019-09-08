@@ -4,7 +4,7 @@ import {
   defaultPresetsState,
 } from '../DataState';
 import { getEdForm, getIngForm } from '../utils';
-import { makeMigrationCall } from '../DataActions';
+import { makeMigrationCall, fetchRoleList } from '../DataActions';
 import dataHeaders from '../Common/Headers';
 import { globalCookiePolicy } from '../../../../Endpoints';
 import requestAction from '../../../../utils/requestAction';
@@ -341,6 +341,9 @@ const permRemoveRole = (tableSchema, roleName) => {
       dispatch(permSetRoleName(''));
       // close edit box
       dispatch(permCloseEdit());
+
+      // fetch all roles
+      dispatch(fetchRoleList());
     };
     const customOnError = () => {};
 
@@ -410,6 +413,8 @@ const permRemoveMultipleRoles = tableSchema => {
       dispatch(permCloseEdit());
       // reset checkbox selections
       dispatch({ type: PERM_RESET_BULK_SELECT });
+      // fetch all roles
+      dispatch(fetchRoleList());
     };
     const customOnError = () => {};
 
@@ -537,6 +542,8 @@ const applySamePermissionsBulk = tableSchema => {
       dispatch(permCloseEdit());
       // reset checkbox selections
       dispatch({ type: PERM_RESET_APPLY_SAME });
+      // fetch all roles
+      dispatch(fetchRoleList());
     };
     const customOnError = () => {};
 
@@ -650,7 +657,11 @@ const copyRolePermissions = (
     const successMsg = 'Permissions copied';
     const errorMsg = 'Permissions copy failed';
 
-    const customOnSuccess = onSuccess;
+    const customOnSuccess = () => {
+      onSuccess();
+      // fetch all roles
+      dispatch(fetchRoleList());
+    };
     const customOnError = () => {};
 
     makeMigrationCall(
@@ -780,6 +791,9 @@ const permChangePermissions = changeType => {
       dispatch(permSetRoleName(''));
       // close edit box
       dispatch(permCloseEdit());
+
+      // fetch all roles
+      dispatch(fetchRoleList());
     };
     const customOnError = () => {};
 

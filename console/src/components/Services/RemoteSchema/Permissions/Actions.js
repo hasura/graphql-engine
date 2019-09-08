@@ -4,6 +4,7 @@ import { showErrorNotification } from '../../Common/Notification';
 import requestAction from '../../../../utils/requestAction';
 import endpoints from '../../../../Endpoints';
 import { fetchRemoteSchemas } from '../Actions';
+import { fetchRoleList } from '../../Data/DataActions';
 
 const SET_CURRENT_REMOTE_SCHEMA = '@remoteSchema/SET_CURRENT_REMOTE_SCHEMA';
 export const setCurrentRemoteSchema = currentRemoteSchemaName => ({
@@ -67,6 +68,7 @@ export const deleteRemoteSchemaPermission = (successCb, failureCb) => {
       data => {
         dispatch({ type: DROP_REMOTE_SCHEMA_PERMISSION_SUCCESS });
         dispatch(fetchRemoteSchemas());
+        dispatch(fetchRoleList());
         dispatch(closePermissionEdit());
         if (successCb) {
           successCb(data);
@@ -128,6 +130,7 @@ export const createRemoteSchemaPermission = (successCb, failureCb) => {
       data => {
         dispatch({ type: CREATE_REMOTE_SCHEMA_PERMISSION_SUCCESS });
         dispatch(fetchRemoteSchemas());
+        dispatch(fetchRoleList());
         dispatch(closePermissionEdit());
         if (successCb) {
           successCb(data);
