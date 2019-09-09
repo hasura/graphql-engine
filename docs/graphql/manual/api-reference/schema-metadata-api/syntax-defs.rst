@@ -203,7 +203,7 @@ BoolExp
 .. parsed-literal::
    :class: haskell-pre
 
-   AndExp_ | OrExp_ | NotExp_ | TrueExp_ | ColumnExp_
+   AndExp_ | OrExp_ | NotExp_ | ExistsExp_ | TrueExp_ | ColumnExp_
 
 AndExp
 ^^^^^^
@@ -235,6 +235,18 @@ NotExp
        "$not" : BoolExp_
    }
 
+ExistsExp
+^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   {
+       "$exists" : {
+            "_table": TableName_,
+            "_where": BoolExp_
+       }
+   }
 
 TrueExp
 ^^^^^^^

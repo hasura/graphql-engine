@@ -3,6 +3,11 @@ module Hasura.RQL.Types.BoolExp
        , gBoolExpTrue
        , gBoolExpToJSON
        , parseGBoolExp
+       , GExists(..)
+
+       , geWhere
+       , geTable
+       , _BoolExists
 
        , DWithinGeomOp(..)
        , DWithinGeogOp(..)
@@ -29,7 +34,6 @@ module Hasura.RQL.Types.BoolExp
 
        , PreSetCols
        , PreSetColsPartial
-       , foldBoolExp
        ) where
 
 import           Hasura.Prelude
@@ -39,6 +43,8 @@ import           Hasura.RQL.Types.Permission
 import qualified Hasura.SQL.DML              as S
 import           Hasura.SQL.Types
 
+import           Control.Lens.Plated
+import           Control.Lens.TH
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.Internal
@@ -48,12 +54,38 @@ import qualified Data.HashMap.Strict         as M
 import           Instances.TH.Lift           ()
 import           Language.Haskell.TH.Syntax  (Lift)
 
+data GExists a
+  = GExists
+  { _geTable :: !QualifiedTable
+  , _geWhere :: !(GBoolExp a)
+  } deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Data)
+
+instance (Data a) => Plated (GExists a)
+
+gExistsToJSON :: (a -> (Text, Value)) -> GExists a -> Value
+gExistsToJSON f (GExists qt wh) =
+  object [ "_table" .= qt
+         , "_where" .= gBoolExpToJSON f wh
+         ]
+
+parseGExists
+  :: ((Text, Value) -> J.Parser a) -> Value -> J.Parser (GExists a)
+parseGExists f = \case
+  Object o -> do
+    qt <- o .: "_table"
+    wh <- o .: "_where"
+    GExists qt <$> parseGBoolExp f wh
+  _ -> fail "expecting an Object for _exists expression"
+
 data GBoolExp a
   = BoolAnd ![GBoolExp a]
   | BoolOr  ![GBoolExp a]
   | BoolNot !(GBoolExp a)
+  | BoolExists !(GExists a)
   | BoolFld !a
-  deriving (Show, Eq, Lift, Functor, Foldable, Traversable)
+  deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Data)
+
+instance (Data a) => Plated (GBoolExp a)
 
 gBoolExpTrue :: GBoolExp a
 gBoolExpTrue = BoolAnd []
@@ -74,6 +106,7 @@ gBoolExpToJSON f be = case be of
       BoolAnd bExps -> "_and" .= map (gBoolExpToJSON f) bExps
       BoolOr bExps  -> "_or" .= map (gBoolExpToJSON f) bExps
       BoolNot bExp  -> "_not" .= gBoolExpToJSON f bExp
+      BoolExists bExists -> "_exists" .= gExistsToJSON f bExists
       BoolFld a     ->  f a
 
 
@@ -82,33 +115,20 @@ parseGBoolExp
 parseGBoolExp f = \case
   Object o -> do
     boolExps <- forM (M.toList o) $ \(k, v) -> if
-      | k == "$or"  -> BoolOr  <$> parseGBoolExpL v <?> Key k
-      | k == "_or"  -> BoolOr  <$> parseGBoolExpL v <?> Key k
-      | k == "$and" -> BoolAnd <$> parseGBoolExpL v <?> Key k
-      | k == "_and" -> BoolAnd <$> parseGBoolExpL v <?> Key k
-      | k == "$not" -> BoolNot <$> parseGBoolExp f v <?> Key k
-      | k == "_not" -> BoolNot <$> parseGBoolExp f v <?> Key k
-      | otherwise   -> BoolFld <$> f (k, v)
+      | k == "$or"     -> BoolOr  <$> parseGBoolExpL v <?> Key k
+      | k == "_or"     -> BoolOr  <$> parseGBoolExpL v <?> Key k
+      | k == "$and"    -> BoolAnd <$> parseGBoolExpL v <?> Key k
+      | k == "_and"    -> BoolAnd <$> parseGBoolExpL v <?> Key k
+      | k == "$not"    -> BoolNot <$> parseGBoolExp f v <?> Key k
+      | k == "_not"    -> BoolNot <$> parseGBoolExp f v <?> Key k
+      | k == "$exists" -> BoolExists <$> parseGExists f v <?> Key k
+      | k == "_exists" -> BoolExists <$> parseGExists f v <?> Key k
+      | otherwise      -> BoolFld <$> f (k, v)
     return $ BoolAnd boolExps
   _ -> fail "expecting an Object for boolean exp"
   where
     parseGBoolExpL v =
       parseJSON v >>= mapM (parseGBoolExp f)
-
-foldBoolExp :: (Monad m)
-            => (a -> m S.BoolExp)
-            -> GBoolExp a
-            -> m S.BoolExp
-foldBoolExp f (BoolAnd bes) = do
-  sqlBExps <- mapM (foldBoolExp f) bes
-  return $ foldr (S.BEBin S.AndOp) (S.BELit True) sqlBExps
-foldBoolExp f (BoolOr bes)  = do
-  sqlBExps <- mapM (foldBoolExp f) bes
-  return $ foldr (S.BEBin S.OrOp) (S.BELit False) sqlBExps
-foldBoolExp f (BoolNot notExp) =
-  S.BENot <$> foldBoolExp f notExp
-foldBoolExp f (BoolFld ce)  =
-  f ce
 
 data DWithinGeomOp a =
   DWithinGeomOp
@@ -339,3 +359,6 @@ isStaticValue :: PartialSQLExp -> Bool
 isStaticValue = \case
   PSESessVar _ _ -> False
   PSESQLExp _    -> True
+
+makeLenses ''GExists
+makePrisms ''GBoolExp

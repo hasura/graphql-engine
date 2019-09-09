@@ -178,7 +178,7 @@ procBoolExp
   => QualifiedTable -> FieldInfoMap PGColumnInfo -> BoolExp
   -> m (AnnBoolExpPartialSQL, [SchemaDependency])
 procBoolExp tn fieldInfoMap be = do
-  abe <- annBoolExp valueParser fieldInfoMap be
+  abe <- annBoolExp valueParser fieldInfoMap $ unBoolExp be
   let deps = getBoolExpDeps tn abe
   return (abe, deps)
 
