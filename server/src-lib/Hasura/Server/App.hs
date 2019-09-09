@@ -1,6 +1,7 @@
-{-# LANGUAGE CPP        #-}
-{-# LANGUAGE DataKinds  #-}
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE CPP          #-}
+{-# LANGUAGE DataKinds    #-}
+{-# LANGUAGE RankNTypes   #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Hasura.Server.App where
 
@@ -45,6 +46,7 @@ import qualified Hasura.Server.PGDump                   as PGD
 
 import           Hasura.EncJSON
 import           Hasura.Prelude                         hiding (get, put)
+import           Hasura.RQL.DDL.RemoteSchema            (mkCacheForRemoteSchema)
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                     (AuthMode (..),
@@ -341,6 +343,28 @@ v1GQHandler
   -> Handler (HttpResponse EncJSON)
 v1GQHandler = v1Alpha1GQHandler
 
+-- only exposes remote schema
+v1GQProxyHandler
+  :: RemoteSchemaName
+  -> GH.GQLReqUnparsed
+  -> Handler (HttpResponse EncJSON)
+v1GQProxyHandler rsName query = do
+  userInfo <- asks hcUser
+  reqHeaders <- asks hcReqHeaders
+  manager <- scManager . hcServerCtx <$> ask
+  scRef <- scCacheRef . hcServerCtx <$> ask
+  (sc, scVer) <- liftIO $ readIORef $ _scrCache scRef
+  pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
+  sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
+  planCache <- scPlanCache . hcServerCtx <$> ask
+  enableAL  <- scEnableAllowlist . hcServerCtx <$> ask
+  logger    <- scLogger . hcServerCtx <$> ask
+  requestId <- asks hcRequestId
+  newsc  <- mkCacheForRemoteSchema sc rsName
+  let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx planCache
+                newsc scVer manager enableAL
+  flip runReaderT execCtx $ GH.runGQ requestId userInfo reqHeaders query
+
 gqlExplainHandler :: GE.GQLExplain -> Handler (HttpResponse EncJSON)
 gqlExplainHandler query = do
   onlyAdmin
@@ -552,6 +576,10 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
 
       post "v1/graphql" $ mkSpockAction GH.encodeGQErr allMod200 serverCtx $
         mkPostHandler $ mkAPIRespHandler v1GQHandler
+
+      post ("v1/graphql/proxy" <//> var) $ \(RemoteSchemaName -> remoteSchemaName) ->
+        mkSpockAction GH.encodeGQErr allMod200 serverCtx $
+        mkPostHandler $ mkAPIRespHandler $ v1GQProxyHandler remoteSchemaName
 
     when (isDeveloperAPIEnabled serverCtx) $ do
       get "dev/ekg" $ mkSpockAction encodeQErr id serverCtx $
