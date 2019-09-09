@@ -18,6 +18,7 @@ import {
   validateCTrigger,
   validateInsert,
 } from '../../validators/validators';
+import { setPromptValue } from '../../../helpers/common';
 
 const testName = 'ctr'; // create trigger
 
@@ -188,12 +189,12 @@ export const deleteCTTestTable = () => {
   //   Go to the modify section of the table
   cy.visit(`/data/schema/public/tables/${getTableName(0, testName)}/modify`);
   //   Click on delete
+  setPromptValue(getTableName(0, testName));
   cy.get(getElementFromAlias('delete-table')).click();
   //   Confirm
-  cy.on('window:confirm', str => {
-    expect(str === 'Are you sure?').to.be.true;
-    return true;
-  });
+  cy.window()
+    .its('prompt')
+    .should('be.called');
   cy.wait(7000);
   //   Match the URL
   cy.url().should('eq', `${baseUrl}/data/schema/public`);

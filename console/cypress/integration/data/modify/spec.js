@@ -11,6 +11,7 @@ import {
   validateCT,
   validateColumn,
 } from '../../validators/validators';
+import { setPromptValue } from '../../../helpers/common';
 
 const testName = 'mod';
 
@@ -249,6 +250,7 @@ export const passMTDeleteCol = () => {
 };
 
 export const passMTDeleteTableCancel = () => {
+  // TODO
   cy.get(getElementFromAlias('delete-table')).click();
   cy.on('window:confirm', () => false);
   cy.url().should(
@@ -260,8 +262,11 @@ export const passMTDeleteTableCancel = () => {
 };
 
 export const passMTDeleteTable = () => {
+  setPromptValue(getTableName(0, testName));
   cy.get(getElementFromAlias('delete-table')).click();
-  cy.on('window:confirm', () => true);
+  cy.window()
+    .its('prompt')
+    .should('be.called');
   cy.wait(5000);
   cy.url().should('eq', `${baseUrl}/data/schema/public`);
   validateCT(getTableName(0, testName), 'failure');
@@ -345,11 +350,11 @@ export const Checkviewtabledelete = () => {
     `${baseUrl}/data/schema/public/views/author_average_rating_mod/browse`
   );
   cy.get(getElementFromAlias('table-modify')).click();
+  setPromptValue('author_average_rating_mod');
   cy.get(getElementFromAlias('delete-view')).click();
-  cy.on('window:confirm', str => {
-    expect(str === 'Are you sure?').to.be.true;
-    return true;
-  });
+  cy.window()
+    .its('prompt')
+    .should('be.called');
 
   cy.wait(7000);
   validateCT('author_average_rating_mod', 'failure');

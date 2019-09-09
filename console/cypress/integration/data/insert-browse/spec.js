@@ -13,6 +13,7 @@ import {
   setMetaData,
   validateCT,
 } from '../../validators/validators';
+import { setPromptValue } from '../../../helpers/common';
 
 const numOfDataTypes = dataTypes.length;
 const testName = 'ib';
@@ -295,44 +296,47 @@ export const deleteBITestTable = () => {
   // Go to the modify section of the table
   cy.get(getElementFromAlias('table-modify')).click();
   cy.wait(2000);
+  setPromptValue(getTableName(2, testName));
   // Click on delete
   cy.get(getElementFromAlias('delete-table')).click();
   // Confirm
-  cy.on('window:confirm', str => {
-    expect(str === 'Are you sure?').to.be.true;
-    return true;
-  });
+  cy.window()
+    .its('prompt')
+    .should('be.called');
   cy.wait(7000);
   // Match the URL
   cy.url().should('eq', `${baseUrl}/data/schema/public`);
   validateCT(getTableName(2, testName), 'failure');
+
   cy.get(getElementFromAlias(getTableName(1, testName))).click();
   // Go to the modify section of the table
   cy.get(getElementFromAlias('table-modify')).click();
   cy.wait(2000);
+  setPromptValue(getTableName(1, testName));
   // Click on delete
   cy.get(getElementFromAlias('delete-table')).click();
   // Confirm
-  cy.on('window:confirm', str => {
-    expect(str === 'Are you sure?').to.be.true;
-    return true;
-  });
+  cy.window()
+    .its('prompt')
+    .should('be.called');
   cy.wait(7000);
   // Match the URL
   cy.url().should('eq', `${baseUrl}/data/schema/public`);
   validateCT(getTableName(1, testName), 'failure');
+
   cy.get(getElementFromAlias(getTableName(0, testName))).click();
   // Go to the modify section of the table
   cy.get(getElementFromAlias('table-modify')).click();
+  setPromptValue(getTableName(0, testName));
   cy.wait(2000);
   // Click on delete
   cy.get(getElementFromAlias('delete-table')).click();
   // Confirm
-  cy.on('window:confirm', str => {
-    expect(str === 'Are you sure?').to.be.true;
-    return true;
-  });
+  cy.window()
+    .its('prompt')
+    .should('be.called');
   cy.wait(7000);
+
   // Match the URL
   cy.url().should('eq', `${baseUrl}/data/schema/public`);
   validateCT(getTableName(0, testName), 'failure');
