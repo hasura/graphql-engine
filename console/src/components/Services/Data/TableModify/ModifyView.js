@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import AceEditor from 'react-ace';
-import ViewHeader from '../TableBrowseRows/ViewHeader';
+import TableHeader from '../TableCommon/TableHeader';
 import {
   fetchViewDefinition,
   deleteViewSql,
@@ -150,11 +150,10 @@ class ModifyView extends Component {
 
     return (
       <div className={styles.container + ' container-fluid'}>
-        <ViewHeader
+        <TableHeader
           dispatch={dispatch}
-          tableName={tableName}
+          table={tableSchema}
           tabName="modify"
-          currentSchema={currentSchema}
           migrationMode={migrationMode}
         />
         <br />
