@@ -165,12 +165,9 @@ runTrackTableV2Q (TrackTableV2 (TrackTable qt isEnum) config) = do
     Just ti -> do
       -- validate table config
       validateTableConfig ti config
-      -- modify cache with new table configuration
-      let newTableInfo = ti {_tiCustomConfig = config}
-          newTableCache = M.insert qt newTableInfo tableCache
-      writeSchemaCache sc {scTables = newTableCache}
       -- update catalog with new configuration
-      liftTx $ updateTableConfig qt config
+      updateTableConfig qt config
+      buildSchemaCacheFor (MOTable qt)
       return successMsg
 
 runSetExistingTableIsEnumQ
