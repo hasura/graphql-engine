@@ -61,6 +61,7 @@ library
                      , wai
                      , postgresql-binary
                      , process
+                     , validation
 
                      -- Encoder related
                      , uuid
@@ -184,6 +185,7 @@ library
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.QueryCollection
                      , Hasura.RQL.Types.RemoteSchema
+                     , Hasura.RQL.Types.RemoteRelationship
                      , Hasura.RQL.DDL.Deps
                      , Hasura.RQL.DDL.Permission.Internal
                      , Hasura.RQL.DDL.Permission.Triggers
@@ -204,6 +206,8 @@ library
                      , Hasura.RQL.DDL.EventTrigger
                      , Hasura.RQL.DDL.Headers
                      , Hasura.RQL.DDL.RemoteSchema
+                     , Hasura.RQL.DDL.RemoteRelationship
+                     , Hasura.RQL.DDL.RemoteRelationship.Validate
                      , Hasura.RQL.DDL.QueryCollection
                      , Hasura.RQL.DML.Delete
                      , Hasura.RQL.DML.Internal

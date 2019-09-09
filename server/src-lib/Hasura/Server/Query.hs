@@ -15,6 +15,7 @@ import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.QueryCollection
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Relationship.Rename
+import           Hasura.RQL.DDL.RemoteRelationship
 import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.DML.Count
@@ -64,11 +65,16 @@ data RQLQuery
   | RQCount !CountQuery
   | RQBulk ![RQLQuery]
 
-  -- schema-stitching, custom resolver related
+  -- remote schema related
   | RQAddRemoteSchema !AddRemoteSchemaQuery
   | RQRemoveRemoteSchema !RemoteSchemaNameQuery
   | RQReloadRemoteSchema !RemoteSchemaNameQuery
 
+  | RQCreateRemoteRelationship !RemoteRelationship
+  -- | RQUpdateRemoteRelationship !RemoteRelationship
+  -- | RQDeleteRemoteRelationship !DeleteRemoteRelationship
+
+  -- event trigger related
   | RQCreateEventTrigger !CreateEventTriggerQuery
   | RQDeleteEventTrigger !DeleteEventTriggerQuery
   | RQRedeliverEvent     !RedeliverEventQuery
@@ -205,6 +211,8 @@ queryNeedsReload qi = case qi of
   RQRemoveRemoteSchema _          -> True
   RQReloadRemoteSchema _          -> True
 
+  RQCreateRemoteRelationship _    -> True
+
   RQCreateEventTrigger _          -> True
   RQDeleteEventTrigger _          -> True
   RQRedeliverEvent _              -> False
@@ -277,6 +285,8 @@ runQueryM rq =
       RQAddRemoteSchema    q       -> runAddRemoteSchema q
       RQRemoveRemoteSchema q       -> runRemoveRemoteSchema q
       RQReloadRemoteSchema q       -> runReloadRemoteSchema q
+
+      RQCreateRemoteRelationship q -> runCreateRemoteRelationship q
 
       RQCreateEventTrigger q       -> runCreateEventTriggerQuery q
       RQDeleteEventTrigger q       -> runDeleteEventTriggerQuery q
