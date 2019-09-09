@@ -321,8 +321,8 @@ v1QueryHandler query = do
       instanceId <- scInstanceId . hcServerCtx <$> ask
       runQuery pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx query
 
-v1Alpha1GQHandler :: GH.GQLReqUnparsed -> Handler (HttpResponse EncJSON)
-v1Alpha1GQHandler query = do
+v1Alpha1GQHandler :: (SchemaCache -> Handler SchemaCache) -> GH.GQLReqUnparsed -> Handler (HttpResponse EncJSON)
+v1Alpha1GQHandler scModifier query = do
   userInfo <- asks hcUser
   reqHeaders <- asks hcReqHeaders
   manager <- scManager . hcServerCtx <$> ask
@@ -334,36 +334,22 @@ v1Alpha1GQHandler query = do
   enableAL  <- scEnableAllowlist . hcServerCtx <$> ask
   logger    <- scLogger . hcServerCtx <$> ask
   requestId <- asks hcRequestId
+  sc' <- scModifier sc
   let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx planCache
-                sc scVer manager enableAL
+                sc' scVer manager enableAL
   flip runReaderT execCtx $ GH.runGQ requestId userInfo reqHeaders query
 
 v1GQHandler
   :: GH.GQLReqUnparsed
   -> Handler (HttpResponse EncJSON)
-v1GQHandler = v1Alpha1GQHandler
+v1GQHandler = v1Alpha1GQHandler pure
 
 -- only exposes remote schema
-v1GQProxyHandler
+v1GQRemoteHandler
   :: RemoteSchemaName
   -> GH.GQLReqUnparsed
   -> Handler (HttpResponse EncJSON)
-v1GQProxyHandler rsName query = do
-  userInfo <- asks hcUser
-  reqHeaders <- asks hcReqHeaders
-  manager <- scManager . hcServerCtx <$> ask
-  scRef <- scCacheRef . hcServerCtx <$> ask
-  (sc, scVer) <- liftIO $ readIORef $ _scrCache scRef
-  pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
-  sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
-  planCache <- scPlanCache . hcServerCtx <$> ask
-  enableAL  <- scEnableAllowlist . hcServerCtx <$> ask
-  logger    <- scLogger . hcServerCtx <$> ask
-  requestId <- asks hcRequestId
-  newsc  <- mkCacheForRemoteSchema sc rsName
-  let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx planCache
-                newsc scVer manager enableAL
-  flip runReaderT execCtx $ GH.runGQ requestId userInfo reqHeaders query
+v1GQRemoteHandler rsName = v1Alpha1GQHandler (flip mkCacheForRemoteSchema rsName)
 
 gqlExplainHandler :: GE.GQLExplain -> Handler (HttpResponse EncJSON)
 gqlExplainHandler query = do
@@ -570,16 +556,16 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       post "v1alpha1/graphql/explain" gqlExplainAction
 
       post "v1alpha1/graphql" $ mkSpockAction GH.encodeGQErr id serverCtx $
-        mkPostHandler $ mkAPIRespHandler v1Alpha1GQHandler
+        mkPostHandler $ mkAPIRespHandler $ v1Alpha1GQHandler pure
 
       post "v1/graphql/explain" gqlExplainAction
 
       post "v1/graphql" $ mkSpockAction GH.encodeGQErr allMod200 serverCtx $
         mkPostHandler $ mkAPIRespHandler v1GQHandler
 
-      post ("v1/graphql/proxy" <//> var) $ \(RemoteSchemaName -> remoteSchemaName) ->
+      post ("v1/graphql/remote" <//> var) $ \(RemoteSchemaName -> remoteSchemaName) ->
         mkSpockAction GH.encodeGQErr allMod200 serverCtx $
-        mkPostHandler $ mkAPIRespHandler $ v1GQProxyHandler remoteSchemaName
+        mkPostHandler $ mkAPIRespHandler $ v1GQRemoteHandler remoteSchemaName
 
     when (isDeveloperAPIEnabled serverCtx) $ do
       get "dev/ekg" $ mkSpockAction encodeQErr id serverCtx $
