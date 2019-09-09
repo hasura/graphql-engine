@@ -210,10 +210,9 @@ class EditItem extends Component {
         <TableHeader
           count={count}
           dispatch={dispatch}
-          tableName={tableName}
+          table={currentTable}
           tabName="edit"
           migrationMode={migrationMode}
-          currentSchema={currentSchema}
         />
         <br />
         <div className={styles.insertContainer + ' container-fluid'}>
