@@ -100,14 +100,14 @@ without losing any visible quality.
 - Use the `thumbnail` directive for images to allow click-to-zoom.
 
 ### Syntax
-- Ensure heading underlines are the same length as the headings. Short underlines will throw Warnings during builds.
-- While adding code-blocks ensure the right language type is set. Sometimes adding placeholders breaks the language's
-syntax in which case you'll have to set the language type to `none` to avoid Warnings during builds.
+- Ensure heading underlines are the same length as the headings. Short underlines will throw warnings during builds.
+- While adding code blocks ensure the right language type is set. Sometimes adding placeholders breaks the language's
+syntax in which case you'll have to set the language type to `none` to avoid warnings during builds.
 
 ### Pre-commit checks
 - Just before committing your changes, delete your local `_build` folder completely and then build docs again. Scan 
-the output and look for any syntax Warnings (e.g. title underline too short, Could not lex literal block, etc.). 
-Ideally there should not be any syntax Warnings that are being thrown.
+the output and look for any syntax warnings (e.g. title underline too short, could not lex literal block, etc.). 
+Ideally there should not be any syntax warnings that are being thrown.
 
 ## Notes
 - Docs are currently deployed manually. Changes will not reflect immediately after a PR gets merged.
