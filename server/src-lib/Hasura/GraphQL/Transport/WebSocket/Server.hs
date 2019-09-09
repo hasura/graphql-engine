@@ -187,59 +187,72 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers pe
   writeLog $ WSLog wsId EConnectionRequest
   status <- STM.readTVarIO serverStatus
   case status of
-    AcceptingConns connMap -> do
+    AcceptingConns _ -> do
       let reqHead = WS.pendingRequest pendingConn
       onConnRes <- _hOnConn wsHandlers wsId reqHead
-      either (onReject wsId) (onAccept connMap wsId) onConnRes
+      either (onReject wsId) (onAccept wsId) onConnRes
 
     ShuttingDown ->
-      onReject
-        wsId
-        (WS.RejectRequest 503
-                          "Service Unavailable"
-                          [("Retry-After", "0")]
-                          "Server is shutting down"
-        )
+      onReject wsId shuttingDownReject
 
   where
+    shuttingDownReject =
+      WS.RejectRequest 503
+                        "Service Unavailable"
+                        [("Retry-After", "0")]
+                        "Server is shutting down"
+
     onReject wsId rejectRequest = do
       WS.rejectRequestWith pendingConn rejectRequest
       writeLog $ WSLog wsId ERejected
 
-    onAccept connMap wsId (AcceptWith a acceptWithParams keepAliveM onJwtExpiryM) = do
+    onAccept wsId (AcceptWith a acceptWithParams keepAliveM onJwtExpiryM) = do
       conn  <- WS.acceptRequestWith pendingConn acceptWithParams
       writeLog $ WSLog wsId EAccepted
-
       sendQ <- STM.newTQueueIO
       let wsConn = WSConn wsId logger conn sendQ a
-      STM.atomically $ STMMap.insert wsConn wsId connMap
 
-      rcvRef  <- A.async $ forever $ do
-        msg <- WS.receiveData conn
-        writeLog $ WSLog wsId $ EMessageReceived $ TBS.fromLBS msg
-        _hOnMessage wsHandlers wsConn msg
+      status <- STM.atomically $ do
+        status <- STM.readTVar serverStatus
+        case status of
+          ShuttingDown -> pure ()
+          AcceptingConns connMap -> STMMap.insert wsConn wsId connMap
+        return status
 
-      sendRef <- A.async $ forever $ do
-        msg <- STM.atomically $ STM.readTQueue sendQ
-        WS.sendTextData conn msg
-        writeLog $ WSLog wsId $ EMessageSent $ TBS.fromLBS msg
+      case status of
+        ShuttingDown -> do
+          -- Bad luck, we were in the process of shutting the server down but a new
+          -- connection was accepted. Let's just close it politely
+          forceConnReconnect wsConn "shutting server down"
+          _hOnClose wsHandlers wsConn
 
-      keepAliveRefM <- forM keepAliveM $ \action -> A.async $ action wsConn
-      onJwtExpiryRefM <- forM onJwtExpiryM $ \action -> A.async $ action wsConn
+        AcceptingConns connMap -> do
+          rcvRef  <- A.async $ forever $ do
+            msg <- WS.receiveData conn
+            writeLog $ WSLog wsId $ EMessageReceived $ TBS.fromLBS msg
+            _hOnMessage wsHandlers wsConn msg
 
-      -- terminates on WS.ConnectionException and JWT expiry
-      let waitOnRefs = catMaybes [keepAliveRefM, onJwtExpiryRefM]
-                       <> [rcvRef, sendRef]
-      res <- try $ A.waitAnyCancel waitOnRefs
+          sendRef <- A.async $ forever $ do
+            msg <- STM.atomically $ STM.readTQueue sendQ
+            WS.sendTextData conn msg
+            writeLog $ WSLog wsId $ EMessageSent $ TBS.fromLBS msg
 
-      case res of
-        Left ( _ :: WS.ConnectionException) -> do
-          writeLog $ WSLog (_wcConnId wsConn) ECloseReceived
-          onConnClose connMap wsConn
-        -- this will happen when jwt is expired
-        Right _ -> do
-          writeLog $ WSLog (_wcConnId wsConn) EJwtExpired
-          onConnClose connMap wsConn
+          keepAliveRefM <- forM keepAliveM $ \action -> A.async $ action wsConn
+          onJwtExpiryRefM <- forM onJwtExpiryM $ \action -> A.async $ action wsConn
+
+          -- terminates on WS.ConnectionException and JWT expiry
+          let waitOnRefs = catMaybes [keepAliveRefM, onJwtExpiryRefM]
+                           <> [rcvRef, sendRef]
+          res <- try $ A.waitAnyCancel waitOnRefs
+
+          case res of
+            Left ( _ :: WS.ConnectionException) -> do
+              writeLog $ WSLog (_wcConnId wsConn) ECloseReceived
+              onConnClose connMap wsConn
+            -- this will happen when jwt is expired
+            Right _ -> do
+              writeLog $ WSLog (_wcConnId wsConn) EJwtExpired
+              onConnClose connMap wsConn
 
     onConnClose connMap wsConn = do
       STM.atomically $ STMMap.delete (_wcConnId wsConn) connMap
