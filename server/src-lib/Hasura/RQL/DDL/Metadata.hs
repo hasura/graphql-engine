@@ -379,11 +379,7 @@ fetchMetadata = do
   functions <- map (uncurry QualifiedObject) <$>
     Q.catchE defaultTxErrorHandler fetchFunctions
 
-  -- fetch all remote schemas
-  remoteSchemas <- DRS.fetchRemoteSchemas
-    -- fetch all remote schema perms
-  remoteSchemaPerms <- DRS.fetchRemoteSchemaPerms
-  let remoteSchemaMetas = joinRemoteSchemaMeta remoteSchemas remoteSchemaPerms
+  remoteSchemaMetas <- fetchRemoteSchemaMeta
   -- fetch all collections
   collections <- DQC.fetchAllCollections
 
@@ -445,6 +441,7 @@ fetchMetadata = do
               SELECT e.schema_name, e.table_name, e.configuration::json
                FROM hdb_catalog.event_triggers e
               |] () False
+
     fetchFunctions =
       Q.listQ [Q.sql|
                 SELECT function_schema, function_name
@@ -452,15 +449,20 @@ fetchMetadata = do
                 WHERE is_system_defined = 'false'
                     |] () False
 
-    joinRemoteSchemaMeta schemas perms =
-      flip map schemas $ \(AddRemoteSchemaQuery name def comment) ->
-        RemoteSchemaMeta name def comment (getPermMeta name perms)
+    fetchRemoteSchemaMeta =
+      map uncurryRSMeta <$> Q.listQE defaultTxErrorHandler
+      [Q.sql|
+       SELECT rs.name, rs.definition::json, rs.comment, rsp.perms::json
+        FROM hdb_catalog.remote_schemas rs
+        LEFT JOIN (
+          SELECT remote_schema, json_agg(json_build_object ('role', role, 'definition', definition)) as perms
+          FROM hdb_catalog.remote_schema_permissions rsp
+          GROUP BY remote_schema
+          ) rsp
+        ON rs.name = rsp.remote_schema
+        |] () False
       where
-        getPermMeta rsName allPerms = pure $ flip mapMaybe allPerms $
-          \(RemoteSchemaPermissions rsName' role permDef) ->
-            if rsName == rsName'
-            then Just (RemoteSchemaPermMeta role permDef)
-            else Nothing
+        uncurryRSMeta (name, Q.AltJ def, comment, Q.AltJ perms) = RemoteSchemaMeta name def comment perms
 
 runExportMetadata
   :: (QErrM m, UserInfoM m, MonadTx m)
