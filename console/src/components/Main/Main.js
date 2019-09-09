@@ -430,7 +430,7 @@ class Main extends React.Component {
       path,
       isDefault = false
     ) => {
-      const itemTooltip = <Tooltip>{tooltipText}</Tooltip>;
+      const itemTooltip = <Tooltip id={tooltipText}>{tooltipText}</Tooltip>;
 
       const block = getPathRoot(path);
 
