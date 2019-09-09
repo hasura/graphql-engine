@@ -78,13 +78,13 @@ export const getTrackedTables = tables => {
 };
 
 export const isColumnAutoIncrement = column => {
+  const columnDefault = column.column_default;
+
+  const autoIncrementDefaultRegex = /^nextval\('(.*)_seq'::regclass\)$/;
+
   return (
-    column.column_default ===
-    "nextval('" +
-      column.table_name +
-      '_' +
-      column.column_name +
-      "_seq'::regclass)"
+    columnDefault &&
+    columnDefault.match(new RegExp(autoIncrementDefaultRegex, 'gi'))
   );
 };
 
