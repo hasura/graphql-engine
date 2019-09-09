@@ -77,7 +77,7 @@ const Login = ({ dispatch }) => {
                     onChange={onAdminSecretChange}
                     className={styles.form_input + ' form-control'}
                     type="password"
-                    placeholder={`Enter ${globals.adminSecretLabel}`}
+                    placeholder={'Enter admin-secret'}
                     name="password"
                   />
                 </div>

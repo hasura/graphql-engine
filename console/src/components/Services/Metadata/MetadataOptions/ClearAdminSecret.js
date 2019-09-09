@@ -30,7 +30,7 @@ class ClearAdminSecret extends Component {
             if (globals.isAdminSecretSet || globals.adminSecret) {
               clearAdminSecretState();
               this.props.dispatch(
-                showSuccessNotification(`Cleared ${globals.adminSecretLabel}`)
+                showSuccessNotification('Cleared admin-secret')
               );
               this.setState({ isClearing: false });
               this.props.router.push('/login');
@@ -38,9 +38,7 @@ class ClearAdminSecret extends Component {
               this.setState({ isClearing: false });
               const errorMessage = (
                 <div style={{ padding: '5px' }}>
-                  <div style={{ fontSize: '13px' }}>
-                    No {globals.adminSecretLabel} set
-                  </div>
+                  <div style={{ fontSize: '13px' }}>No admin-secret set</div>
                   <br />
                   <div style={{ fontSize: '13px' }}>
                     Please look for <code>{CONSOLE_ADMIN_SECRET}</code> key
@@ -54,7 +52,7 @@ class ClearAdminSecret extends Component {
         >
           {this.state.isClearing
             ? 'Clearing...'
-            : `Clear ${globals.adminSecretLabel} (logout)`}
+            : 'Clear admin-secret (logout)'}
         </Button>
       </div>
     );

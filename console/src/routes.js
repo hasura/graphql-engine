@@ -31,30 +31,38 @@ import metadataContainer from './components/Services/Metadata/Container';
 import metadataOptionsContainer from './components/Services/Metadata/MetadataOptions/MetadataOptions';
 import metadataStatusContainer from './components/Services/Metadata/MetadataStatus/MetadataStatus';
 import allowedQueriesContainer from './components/Services/Metadata/AllowedQueries/AllowedQueries';
+import { showErrorNotification } from './components/Services/Common/Notification';
 
 const routes = store => {
   // load hasuractl migration status
   const requireMigrationStatus = (nextState, replaceState, cb) => {
+    const { dispatch } = store;
+
     if (globals.consoleMode === 'cli') {
-      store.dispatch(loadMigrationStatus()).then(
+      dispatch(loadMigrationStatus()).then(
         () => {
           cb();
         },
         r => {
           if (r.code === 'data_api_error') {
             if (globals.adminSecret) {
-              alert('Hasura CLI: ' + r.message);
+              dispatch(showErrorNotification('Error', null, r));
             } else {
-              alert(
-                `Looks like CLI is not configured with the ${
-                  globals.adminSecretLabel
-                }. Please configure and try again`
+              dispatch(
+                showErrorNotification(
+                  'Missing admin-secret',
+                  'Seems like your Hasura GraphQL engine instance has an admin-secret configured. Run console with ' +
+                    'the admin-secret using: "hasura console --admin-secret=<your-admin-secret>"'
+                )
               );
             }
           } else {
-            alert(
-              'Hasura console is not able to reach your Hasura GraphQL engine instance. Please ensure that your ' +
-                'instance is running and the endpoint is configured correctly.'
+            dispatch(
+              showErrorNotification(
+                'Connection error',
+                'Hasura console is not able to reach your Hasura GraphQL engine instance. Please ensure that your ' +
+                  'instance is running and the endpoint is configured correctly.'
+              )
             );
           }
         }

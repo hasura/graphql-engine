@@ -39,7 +39,7 @@ export const setGraphiQLHeadersInLocalStorage = headers => {
 
   // remove admin-secret value
   const maskedHeaders = validHeaders.map(h => {
-    if (h.key.toLowerCase() !== 'x-hasura-admin-secret') {
+    if (h.key.toLowerCase() === ADMIN_SECRET_HEADER_KEY) {
       h.value = 'xxx';
     }
 
@@ -56,7 +56,7 @@ export const getAdminSecret = () => (dispatch, getState) => {
   let adminSecret = null;
   if (globals.consoleMode === SERVER_CONSOLE_MODE && globals.isAdminSecretSet) {
     const adminSecretFromLS = loadAdminSecretState();
-    const adminSecretInRedux = getState().dataHeaders[ADMIN_SECRET_HEADER_KEY];
+    const adminSecretInRedux = getState().main.adminSecret;
 
     adminSecret = adminSecretFromLS || adminSecretInRedux;
   } else {
@@ -78,7 +78,7 @@ export const getGraphiQLHeadersFromLocalStorage = () => {
 
       // add admin-secret value
       headers = headers.map(h => {
-        if (h.key.toLowerCase() !== ADMIN_SECRET_HEADER_KEY) {
+        if (h.key.toLowerCase() === ADMIN_SECRET_HEADER_KEY) {
           h.value = getAdminSecret();
         }
 

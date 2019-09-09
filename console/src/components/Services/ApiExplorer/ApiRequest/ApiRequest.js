@@ -19,8 +19,6 @@ import {
   setHeadersBulk,
 } from '../Actions';
 
-import globals from '../../../../Globals';
-
 import GraphiQLWrapper from '../GraphiQLWrapper/GraphiQLWrapper';
 
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
@@ -34,6 +32,7 @@ import {
 } from './utils';
 
 import styles from '../ApiExplorer.scss';
+import { ADMIN_SECRET_HEADER_KEY } from '../../../../constants';
 
 const inspectJWTTooltip = (
   <Tooltip id="tooltip-inspect-jwt">Decode JWT</Tooltip>
@@ -280,7 +279,7 @@ class ApiRequest extends Component {
 
         return headers.map((header, i) => {
           const isAdminSecret =
-            header.key.toLowerCase() === `x-hasura-${globals.adminSecretLabel}`;
+            header.key.toLowerCase() === ADMIN_SECRET_HEADER_KEY;
 
           const getHeaderActiveCheckBox = () => {
             let headerActiveCheckbox = null;

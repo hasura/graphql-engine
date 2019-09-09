@@ -11,6 +11,7 @@ import { execute } from 'apollo-link';
 
 import { getHeadersAsJSON } from './utils';
 import { saveAppState, clearState } from '../../AppState.js';
+import { ADMIN_SECRET_HEADER_KEY } from '../../../constants';
 
 const CHANGE_TAB = 'ApiExplorer/CHANGE_TAB';
 const CHANGE_API_SELECTION = 'ApiExplorer/CHANGE_API_SELECTION';
@@ -217,8 +218,7 @@ const analyzeFetcher = (url, headers) => {
       const lHead = t.toLowerCase();
       if (
         lHead.slice(0, 'x-hasura-'.length) === 'x-hasura-' &&
-        lHead !== 'x-hasura-access-key' &&
-        lHead !== 'x-hasura-admin-secret'
+        lHead !== ADMIN_SECRET_HEADER_KEY
       ) {
         user[lHead] = reqHeaders[t];
         delete reqHeaders[t];

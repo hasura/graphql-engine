@@ -12,6 +12,7 @@ import {
 } from 'components/App/Actions';
 
 import { LOGIN_IN_PROGRESS, LOGIN_ERROR } from 'components/Main/Actions';
+import { ADMIN_SECRET_HEADER_KEY } from '../constants';
 
 const requestAction = (
   url,
@@ -63,9 +64,7 @@ const requestAction = (
                   type: UPDATE_DATA_HEADERS,
                   data: {
                     'content-type': 'application/json',
-                    [`x-hasura-${
-                      globals.adminSecretLabel
-                    }`]: globals.adminSecret,
+                    [ADMIN_SECRET_HEADER_KEY]: globals.adminSecret,
                   },
                 });
                 dispatch({ type: LOGIN_IN_PROGRESS, data: false });

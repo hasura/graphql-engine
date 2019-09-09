@@ -2,6 +2,7 @@ import Endpoints, { globalCookiePolicy } from '../../Endpoints';
 import { updateDataHeaders } from '../Services/Data/DataActions';
 import { saveAdminSecretState } from '../AppState';
 import { ADMIN_SECRET_HEADER_KEY } from '../../constants';
+import { SET_ADMIN_SECRET } from '../Main/Actions';
 
 export const verifyLogin = ({
   adminSecret,
@@ -35,9 +36,18 @@ export const verifyLogin = ({
     .then(response => {
       if (response.status === 200) {
         if (adminSecret) {
+          // set admin secret to local storage
           if (shouldPersist) {
             saveAdminSecretState(adminSecret);
           }
+
+          // set admin secret in redux
+          dispatch({
+            type: SET_ADMIN_SECRET,
+            data: adminSecret,
+          });
+
+          // set data headers in redux
           dispatch(
             updateDataHeaders({
               'content-type': 'application/json',

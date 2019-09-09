@@ -1,4 +1,3 @@
-import globals from '../../../../Globals';
 import React from 'react';
 import ExportMetadata from './ExportMetadata';
 import ImportMetadata from './ImportMetadata';
@@ -69,16 +68,12 @@ const MetadataOptions = props => {
       clearSecretSection = (
         <div>
           <div key="access_key_reset_1" className={styles.intro_note}>
-            <h4>Clear {globals.adminSecretLabel} (logout)</h4>
+            <h4>Clear admin-secret (logout)</h4>
 
             <div className={styles.content_width}>
-              The console caches the {globals.adminSecretLabel} (
-              {globals.adminSecretLabel === 'access-key'
-                ? 'HASURA_GRAPHQL_ACCESS_KEY'
-                : 'HASURA_GRAPHQL_ADMIN_SECRET'}
-              ) in the browser. You can clear this cache to force a prompt for
-              the {globals.adminSecretLabel} when the console is accessed next
-              using this browser.
+              The console caches the admin-secret (HASURA_GRAPHQL_ADMIN_SECRET)
+              in the browser. You can clear this cache to force a prompt for the
+              admin-secret when the console is accessed next using this browser.
             </div>
           </div>
 
