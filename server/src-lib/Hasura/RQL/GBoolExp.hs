@@ -330,7 +330,7 @@ convColRhs tableQual = \case
     let bExps = map (mkColCompExp tableQual cn) opExps
     return $ foldr (S.BEBin S.AndOp) (S.BELit True) bExps
 
-  AVRel (RelInfo _ _ colMapping relTN _) nesAnn -> do
+  AVRel (RelInfo _ _ colMapping relTN _ _) nesAnn -> do
     -- Convert the where clause on the relationship
     curVarNum <- get
     put $ curVarNum + 1

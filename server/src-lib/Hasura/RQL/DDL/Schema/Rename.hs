@@ -153,9 +153,9 @@ updateObjRelDef qt rn (oldQT, newQT) = do
   oldDef :: ObjRelUsing <- decodeValue oldDefV
   let newDef = case oldDef of
         RUFKeyOn _ -> oldDef
-        RUManual (ObjRelManualConfig (RelManualConfig dbQT rmCols)) ->
+        RUManual (ObjRelManualConfig dbQT rmCols insOrd) ->
           let updQT = bool oldQT newQT $ oldQT == dbQT
-          in RUManual $ ObjRelManualConfig $ RelManualConfig updQT rmCols
+          in RUManual $ ObjRelManualConfig updQT rmCols insOrd
   liftTx $ updateRel qt rn $ toJSON newDef
 
 updateArrRelDef
@@ -168,9 +168,9 @@ updateArrRelDef qt rn (oldQT, newQT) = do
         RUFKeyOn (ArrRelUsingFKeyOn dbQT c) ->
           let updQT = getUpdQT dbQT
           in RUFKeyOn $ ArrRelUsingFKeyOn updQT c
-        RUManual (ArrRelManualConfig (RelManualConfig dbQT rmCols)) ->
+        RUManual (ArrRelManualConfig dbQT rmCols) ->
           let updQT = getUpdQT dbQT
-          in RUManual $ ArrRelManualConfig $ RelManualConfig updQT rmCols
+          in RUManual $ ArrRelManualConfig updQT rmCols
   liftTx $ updateRel qt rn $ toJSON newDef
   where
     getUpdQT dbQT = bool oldQT newQT $ oldQT == dbQT
@@ -373,9 +373,8 @@ updateColInObjRel
   -> RenameCol -> ObjRelUsing -> ObjRelUsing
 updateColInObjRel fromQT toQT rnCol = \case
   RUFKeyOn col -> RUFKeyOn $ getNewCol rnCol fromQT col
-  RUManual (ObjRelManualConfig manConfig) ->
-    RUManual $ ObjRelManualConfig $
-    updateRelManualConfig fromQT toQT rnCol manConfig
+  RUManual manConfig ->
+    RUManual $ updateObjRelManualConfig fromQT toQT rnCol manConfig
 
 updateColInArrRel
   :: QualifiedTable -> QualifiedTable
@@ -384,9 +383,8 @@ updateColInArrRel fromQT toQT rnCol = \case
   RUFKeyOn (ArrRelUsingFKeyOn t c) ->
     let updCol = getNewCol rnCol toQT c
     in RUFKeyOn $ ArrRelUsingFKeyOn t updCol
-  RUManual (ArrRelManualConfig manConfig) ->
-    RUManual $ ArrRelManualConfig $
-    updateRelManualConfig fromQT toQT rnCol manConfig
+  RUManual manConfig ->
+    RUManual $ updateArrRelManualConfig fromQT toQT rnCol manConfig
 
 type ColMap = Map.Map PGCol PGCol
 
@@ -397,13 +395,21 @@ getNewCol rnCol qt col =
   where
     RenameItem opQT oCol nCol = rnCol
 
-updateRelManualConfig
+updateObjRelManualConfig
   :: QualifiedTable -> QualifiedTable
-  -> RenameCol -> RelManualConfig -> RelManualConfig
-updateRelManualConfig fromQT toQT rnCol manConfig =
-  RelManualConfig tn $ updateColMap fromQT toQT rnCol colMap
+  -> RenameCol -> ObjRelManualConfig -> ObjRelManualConfig
+updateObjRelManualConfig fromQT toQT rnCol manConfig =
+  ObjRelManualConfig tn (updateColMap fromQT toQT rnCol colMap) insOrd
   where
-    RelManualConfig tn colMap = manConfig
+    ObjRelManualConfig tn colMap insOrd = manConfig
+
+updateArrRelManualConfig
+  :: QualifiedTable -> QualifiedTable
+  -> RenameCol -> ArrRelManualConfig -> ArrRelManualConfig
+updateArrRelManualConfig fromQT toQT rnCol manConfig =
+  ArrRelManualConfig tn $ updateColMap fromQT toQT rnCol colMap
+  where
+    ArrRelManualConfig tn colMap = manConfig
 
 updateColMap
   :: QualifiedTable -> QualifiedTable

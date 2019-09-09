@@ -39,9 +39,8 @@ convSelCol _ _ (SCExtSimple cn) =
 convSelCol fieldInfoMap _ (SCExtRel rn malias selQ) = do
   -- Point to the name key
   let pgWhenRelErr = "only relationships can be expanded"
-  relInfo <- withPathK "name" $
+  relTab <- fmap riRTable $ withPathK "name" $
     askRelType fieldInfoMap rn pgWhenRelErr
-  let (RelInfo _ _ _ relTab _) = relInfo
   (rfim, rspi) <- fetchRelDet rn relTab
   resolvedSelQ <- resolveStar rfim rspi selQ
   return [ECRel rn malias resolvedSelQ]
@@ -223,7 +222,7 @@ convExtRel fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
   -- Point to the name key
   relInfo <- withPathK "name" $
     askRelType fieldInfoMap relName pgWhenRelErr
-  let (RelInfo _ relTy colMapping relTab _) = relInfo
+  let (RelInfo _ relTy colMapping relTab _ _) = relInfo
   (relCIM, relSPI) <- fetchRelDet relName relTab
   annSel <- convSelectQ relCIM relSPI selQ sessVarBldr prepValBldr
   case relTy of

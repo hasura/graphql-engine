@@ -64,7 +64,7 @@ data RelIns a
   = RelIns
   { _riAnnIns  :: !a
   , _riRelInfo :: !RelInfo
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Functor)
 
 type ObjRelIns = RelIns SingleObjIns
 type ArrRelIns = RelIns MultiObjIns
@@ -333,14 +333,14 @@ decodeEncJSON =
   either (throw500 . T.pack) decodeValue .
   J.eitherDecode . encJToLBS
 
--- | insert an array relationship and return affected rows
-insertArrRel
+-- | insert a `after_parent` relationship item and return affected rows
+insertPostInsertRel
   :: Bool
   -> RoleName
   -> [PGColWithValue]
   -> ArrRelIns
   -> Q.TxE QErr Int
-insertArrRel strfyNum role resCols arrRelIns =
+insertPostInsertRel strfyNum role resCols postInsRel =
     withPathK relNameTxt $ do
     let addCols = mergeListsWith resCols colMapping
                (\(col, _) (lCol, _) -> col == lCol)
@@ -349,9 +349,9 @@ insertArrRel strfyNum role resCols arrRelIns =
     resBS <- insertMultipleObjects strfyNum role tn multiObjIns addCols mutFlds "data"
     resObj <- decodeEncJSON resBS
     onNothing (Map.lookup ("affected_rows" :: T.Text) resObj) $
-      throw500 "affected_rows not returned in array rel insert"
+      throw500 "affected_rows not returned in post insert rel"
   where
-    RelIns multiObjIns relInfo = arrRelIns
+    RelIns multiObjIns relInfo = postInsRel
     colMapping = riMapping relInfo
     tn = riRTable relInfo
     relNameTxt = relNameToTxt $ riName relInfo
@@ -367,15 +367,15 @@ insertObj
   -> Q.TxE QErr (Int, CTEExp)
 insertObj strfyNum role tn singleObjIns addCols = do
   -- validate insert
-  validateInsert (map fst cols) (map _riRelInfo objRels) $ map fst addCols
+  validateInsert (map fst cols) (map _riRelInfo preInsObjRels) $ map fst addCols
 
-  -- insert all object relations and fetch this insert dependent column values
-  objInsRes <- forM objRels $ insertObjRel strfyNum role
+  -- insert all pre-insert object relations and fetch this insert dependent column values
+  preInsObjRelRes <- forM preInsObjRels $ insertObjRel strfyNum role
 
   -- prepare final insert columns
-  let objRelAffRows = sum $ map fst objInsRes
-      objRelDeterminedCols = concatMap snd objInsRes
-      finalInsCols = cols <> objRelDeterminedCols <> addCols
+  let preInsObjRelAffRows = sum $ map fst preInsObjRelRes
+      preInsObjRelDeterminedCols = concatMap snd preInsObjRelRes
+      finalInsCols = cols <> preInsObjRelDeterminedCols <> addCols
 
   -- prepare insert query as with expression
   (CTEExp cte insPArgs, ccM) <-
@@ -386,27 +386,34 @@ insertObj strfyNum role tn singleObjIns addCols = do
   colValM <- asSingleObject colVals
   cteExp <- mkSelCTE tn allCols colValM
 
-  arrRelAffRows <- bool (withArrRels colValM) (return 0) $ null arrRels
-  let totAffRows = objRelAffRows + affRows + arrRelAffRows
+  postInsRelAffRows <- bool (withPostInsertRels colValM) (return 0) $ null allPostInsRels
+  let totAffRows = preInsObjRelAffRows + affRows + postInsRelAffRows
 
   return (totAffRows, cteExp)
   where
     AnnIns annObj onConflictM vn allCols defVals = singleObjIns
     AnnInsObj cols objRels arrRels = annObj
+    (preInsObjRels, postInsObjRels) = foldl goObjRels ([], []) objRels
+    goObjRels (preIns, postIns) objRel =
+      case riInsertOrder $ _riRelInfo objRel of
+        RIOBeforeParent -> (preIns <> pure objRel, postIns)
+        RIOAfterParent  -> (preIns, postIns <> pure objRel)
 
-    arrRelDepCols = flip getColInfos allCols $
-      concatMap (map fst . riMapping . _riRelInfo) arrRels
+    allPostInsRels = arrRels <> map (fmap singleToMulti) postInsObjRels
 
-    withArrRels colValM = do
+    postInsRelDepCols = flip getColInfos allCols $
+      concatMap (map fst . riMapping . _riRelInfo) allPostInsRels
+
+    withPostInsertRels colValM = do
       colVal <- onNothing colValM $ throw400 NotSupported cannotInsArrRelErr
-      arrDepColsWithVal <- fetchFromColVals colVal arrRelDepCols pgiName
+      postInsDepColsWithVal <- fetchFromColVals colVal postInsRelDepCols pgiName
 
-      arrInsARows <- forM arrRels $ insertArrRel strfyNum role arrDepColsWithVal
+      postInsARows <- forM allPostInsRels $ insertPostInsertRel strfyNum role postInsDepColsWithVal
 
-      return $ sum arrInsARows
+      return $ sum postInsARows
 
     cannotInsArrRelErr =
-      "cannot proceed to insert array relations since insert to table "
+      "cannot proceed to insert relations since insert to table "
       <> tn <<> " affects zero rows"
 
 
