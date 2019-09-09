@@ -38,7 +38,6 @@ import {
 
 import PermissionBuilder from './PermissionBuilder/PermissionBuilder';
 import TableHeader from '../TableCommon/TableHeader';
-import ViewHeader from '../TableBrowseRows/ViewHeader';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 import EnhancedInput from '../../../Common/InputChecker/InputChecker';
 
@@ -176,33 +175,14 @@ class Permissions extends Component {
     };
 
     const getHeader = tableSchema => {
-      const getViewHeader = () => {
-        return (
-          <ViewHeader
-            dispatch={dispatch}
-            tableName={tableName}
-            tabName="permissions"
-            migrationMode={migrationMode}
-            currentSchema={currentSchema}
-          />
-        );
-      };
-
-      const getTableHeader = () => {
-        return (
-          <TableHeader
-            dispatch={dispatch}
-            tableName={tableName}
-            tabName="permissions"
-            migrationMode={migrationMode}
-            currentSchema={currentSchema}
-          />
-        );
-      };
-
-      const isView = tableSchema.view_info;
-
-      return isView ? getViewHeader() : getTableHeader();
+      return (
+        <TableHeader
+          dispatch={dispatch}
+          table={tableSchema}
+          tabName="permissions"
+          migrationMode={migrationMode}
+        />
+      );
     };
 
     const getPermissionsTable = (tableSchema, queryTypes, roleList) => {
