@@ -13,14 +13,22 @@ export const generateDropPermQuery = (role, remoteSchemaName) => {
   };
 };
 
-export const generateCreatePermQuery = (state, remoteSchemaName) => {
-  const { role, allowedTypes, isNew, newRole } = state;
+export const generateCreatePermQuery = (
+  state,
+  remoteSchemaName,
+  isExisting
+) => {
+  const { role, allowedTypes, newRole } = state;
 
-  const bulkQueryArgs = [];
-
-  if (!isNew) {
-    bulkQueryArgs.push(generateDropPermQuery(role, remoteSchemaName));
+  if (isExisting) {
+    return {
+      type: 'add_remote_schema_permissions',
+      args: {
+        ...state,
+      },
+    };
   }
+
   const payload = {
     type: 'add_remote_schema_permissions',
     args: {
@@ -31,9 +39,6 @@ export const generateCreatePermQuery = (state, remoteSchemaName) => {
   };
 
   Object.keys(allowedTypes).forEach(allowedType => {
-    payload.args.definition[allowedType] = Object.keys(
-      allowedTypes[allowedType]
-    ).filter(fieldName => allowedTypes[allowedType][fieldName].isChecked);
     payload.args.definition.push({
       type: allowedType,
       fields: Object.keys(allowedTypes[allowedType]).filter(
@@ -42,12 +47,7 @@ export const generateCreatePermQuery = (state, remoteSchemaName) => {
     });
   });
 
-  bulkQueryArgs.push(payload);
-
-  return {
-    type: 'bulk',
-    args: bulkQueryArgs,
-  };
+  return payload;
 };
 
 export const parseRemoteRelPermDefinition = (

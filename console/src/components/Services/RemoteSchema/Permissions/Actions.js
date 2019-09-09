@@ -1,10 +1,9 @@
 import { permissionState } from '../state';
 import { generateCreatePermQuery, generateDropPermQuery } from './utils';
 import { showErrorNotification } from '../../Common/Notification';
-import requestAction from '../../../../utils/requestAction';
-import endpoints from '../../../../Endpoints';
 import { fetchRemoteSchemas } from '../Actions';
 import { fetchRoleList } from '../../Data/DataActions';
+import { makeRequest } from '../Actions';
 
 const SET_CURRENT_REMOTE_SCHEMA = '@remoteSchema/SET_CURRENT_REMOTE_SCHEMA';
 export const setCurrentRemoteSchema = currentRemoteSchemaName => ({
@@ -48,39 +47,62 @@ export const deleteRemoteSchemaPermission = (successCb, failureCb) => {
   return (dispatch, getState) => {
     const permState = getState().remoteSchemas.permissions;
     const { editState, currentRemoteSchemaName } = permState;
-    const query = generateDropPermQuery(
-      editState.role,
-      currentRemoteSchemaName
+    const upQuery = [
+      generateDropPermQuery(editState.role, currentRemoteSchemaName),
+    ];
+
+    const existingPermissions = getState().remoteSchemas.listData.remoteSchemas.find(
+      r => r.name === currentRemoteSchemaName
     );
-    const headers = getState().tables.dataHeaders;
+    const existingRolePerm = existingPermissions.permissions.find(
+      p => p.role === editState.role
+    );
+
+    const downQuery = [
+      generateCreatePermQuery(existingRolePerm, currentRemoteSchemaName, true),
+    ];
 
     const isOk = window.confirm('Are you absolutely sure?');
     if (!isOk) return;
 
     dispatch({ type: DROP_REMOTE_SCHEMA_PERMISSION });
-    return dispatch(
-      requestAction(endpoints.query, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(query),
-      })
-    ).then(
-      data => {
-        dispatch({ type: DROP_REMOTE_SCHEMA_PERMISSION_SUCCESS });
-        dispatch(fetchRemoteSchemas());
-        dispatch(fetchRoleList());
-        dispatch(closePermissionEdit());
-        if (successCb) {
-          successCb(data);
-        }
-      },
-      error => {
-        console.error(error);
-        dispatch({ type: DROP_REMOTE_SCHEMA_PERMISSION_FAILURE, error });
-        if (failureCb) {
-          failureCb(error);
-        }
+
+    const migrationName = `drop_remote_schema_${currentRemoteSchemaName}_permission_${
+      editState.role
+    }`;
+
+    const customOnSuccess = () => {
+      dispatch({ type: DROP_REMOTE_SCHEMA_PERMISSION_SUCCESS });
+      dispatch(fetchRemoteSchemas());
+      dispatch(fetchRoleList());
+      dispatch(closePermissionEdit());
+      if (successCb) {
+        successCb();
       }
+    };
+
+    const customOnError = () => {
+      dispatch({ type: DROP_REMOTE_SCHEMA_PERMISSION_FAILURE });
+      if (failureCb) {
+        failureCb();
+      }
+    };
+
+    const requestMsg = 'Deleting permission...';
+    const successMsg = 'Deleting permission successful';
+    const errorMsg = 'Deleting permission failed';
+
+    return dispatch(
+      makeRequest(
+        upQuery,
+        downQuery,
+        migrationName,
+        customOnSuccess,
+        customOnError,
+        requestMsg,
+        successMsg,
+        errorMsg
+      )
     );
   };
 };
@@ -94,10 +116,16 @@ const CREATE_REMOTE_SCHEMA_PERMISSION =
   '@remoteSchema/CREATE_REMOTE_SCHEMA_PERMISSION';
 export const createRemoteSchemaPermission = (successCb, failureCb) => {
   return (dispatch, getState) => {
-    dispatch({ type: CREATE_REMOTE_SCHEMA_PERMISSION });
     const permsState = getState().remoteSchemas.permissions;
     const editState = permsState.editState;
     const remoteSchemaName = permsState.currentRemoteSchemaName;
+
+    const existingPermissions = getState().remoteSchemas.listData.remoteSchemas.find(
+      r => r.name === remoteSchemaName
+    );
+    const existingRolePerm = existingPermissions.permissions.find(
+      p => p.role === editState.role
+    );
 
     if (editState.isNew) {
       if (!editState.newRole && !editState.role) {
@@ -118,31 +146,66 @@ export const createRemoteSchemaPermission = (successCb, failureCb) => {
       }
     }
 
-    const query = generateCreatePermQuery(editState, remoteSchemaName);
-    const headers = getState().tables.dataHeaders;
-    return dispatch(
-      requestAction(endpoints.query, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(query),
-      })
-    ).then(
-      data => {
-        dispatch({ type: CREATE_REMOTE_SCHEMA_PERMISSION_SUCCESS });
-        dispatch(fetchRemoteSchemas());
-        dispatch(fetchRoleList());
-        dispatch(closePermissionEdit());
-        if (successCb) {
-          successCb(data);
-        }
-      },
-      error => {
-        console.error(error);
-        dispatch({ type: CREATE_REMOTE_SCHEMA_PERMISSION_FAILURE, error });
-        if (failureCb) {
-          failureCb(error);
-        }
+    const createQuery = generateCreatePermQuery(
+      editState,
+      remoteSchemaName,
+      false
+    );
+
+    const downQuery = [];
+    const upQuery = [];
+
+    if (editState.isNew) {
+      upQuery.push(createQuery);
+      downQuery.push(
+        generateDropPermQuery(editState.newRole, remoteSchemaName)
+      );
+    } else {
+      upQuery.push(generateDropPermQuery(editState.role, remoteSchemaName));
+      upQuery.push(createQuery);
+      downQuery.push(
+        generateCreatePermQuery(existingRolePerm, remoteSchemaName, true)
+      );
+    }
+
+    const migrationName = `create_remote_schema_${remoteSchemaName}_permission_${editState.newRole ||
+      editState.role}`;
+    const customOnSuccess = () => {
+      dispatch({ type: CREATE_REMOTE_SCHEMA_PERMISSION_SUCCESS });
+      dispatch(fetchRemoteSchemas());
+      dispatch(fetchRoleList());
+      dispatch(closePermissionEdit());
+      if (successCb) {
+        successCb();
       }
+    };
+
+    const customOnError = () => {
+      dispatch({ type: CREATE_REMOTE_SCHEMA_PERMISSION_FAILURE });
+      if (failureCb) {
+        failureCb();
+      }
+    };
+
+    const permAction = editState.isNew ? 'Creating' : 'Updating';
+
+    const requestMsg = `${permAction} permission...`;
+    const successMsg = `${permAction} permission successful`;
+    const errorMsg = `${permAction} permission failed`;
+
+    dispatch({ type: CREATE_REMOTE_SCHEMA_PERMISSION });
+
+    return dispatch(
+      makeRequest(
+        upQuery,
+        downQuery,
+        migrationName,
+        customOnSuccess,
+        customOnError,
+        requestMsg,
+        successMsg,
+        errorMsg
+      )
     );
   };
 };

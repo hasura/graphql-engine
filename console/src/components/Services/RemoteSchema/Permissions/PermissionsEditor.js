@@ -6,7 +6,7 @@ import {
   setPermissionTypes,
   closePermissionEdit,
   createRemoteSchemaPermission,
-  deleteRemoteSchemaPermission
+  deleteRemoteSchemaPermission,
 } from './Actions';
 import Button from '../../../Common/Button/Button';
 import { getExpandedTypes } from './utils';
@@ -17,6 +17,7 @@ const PermissionsEditor = ({
   nonObjectTypes,
   rootTypes,
   dispatch,
+  isFetching,
 }) => {
   if (!editState.isEditing) {
     return null;
@@ -42,6 +43,7 @@ const PermissionsEditor = ({
           onClick={onRemove}
           className={`${styles.add_mar_right}`}
           color="red"
+          disabled={isFetching}
         >
           Remove
         </Button>
@@ -54,6 +56,7 @@ const PermissionsEditor = ({
           onClick={onSave}
           className={`${styles.add_mar_right}`}
           color="yellow"
+          disabled={isFetching}
         >
           Save
         </Button>
@@ -69,8 +72,11 @@ const PermissionsEditor = ({
     );
   };
 
-
-  const expandedTypes = getExpandedTypes(editState.allowedTypes, rootTypes, editState.editType);
+  const expandedTypes = getExpandedTypes(
+    editState.allowedTypes,
+    rootTypes,
+    editState.editType
+  );
 
   const allowedTypes = Object.keys(editState.allowedTypes).map(at => {
     const fieldToggleCallback = (fieldName, isChecked) => {
