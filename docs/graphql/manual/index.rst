@@ -30,3 +30,4 @@ The Hasura GraphQL engine lets you setup a GraphQL server and event triggers ove
   How it works <how-it-works/index>
   Troubleshooting <troubleshooting/index>
   guides/index
+  security-disclosure/index
