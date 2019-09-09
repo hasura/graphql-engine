@@ -291,7 +291,7 @@ processAnnOrderByCol pfx parAls arrRelCtx strfyNum = \case
        , OBNNothing
        )
   -- "pfx.or.relname"."pfx.ob.or.relname.rest" AS "pfx.ob.or.relname.rest"
-  AOCObj (RelInfo rn _ colMapping relTab _) relFltr rest ->
+  AOCObj (RelInfo rn _ colMapping relTab _ _) relFltr rest ->
     let relPfx  = mkObjRelTableAls pfx rn
         ((nesAls, nesCol), ordByNode) =
           processAnnOrderByCol relPfx ordByFldName emptyArrRelCtx strfyNum rest
@@ -311,7 +311,7 @@ processAnnOrderByCol pfx parAls arrRelCtx strfyNum = \case
     in ( (nesAls, qualCol)
        , OBNObjNode rn relNode
        )
-  AOCAgg (RelInfo rn _ colMapping relTab _ ) relFltr annAggOb ->
+  AOCAgg (RelInfo rn _ colMapping relTab _ _) relFltr annAggOb ->
     let ArrNodeInfo arrAls arrPfx _ =
           mkArrNodeInfo pfx parAls arrRelCtx $ ANIAggOrdBy rn
         fldName = mkAggObFld annAggOb

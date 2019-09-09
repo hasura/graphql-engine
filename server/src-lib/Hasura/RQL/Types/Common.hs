@@ -4,6 +4,7 @@ module Hasura.RQL.Types.Common
        , RelType(..)
        , rootRelName
        , relTypeToTxt
+       , RelInsertOrd(..)
        , RelInfo(..)
 
        , FieldName(..)
@@ -106,15 +107,26 @@ instance Q.FromCol RelType where
   fromCol bs = flip Q.fromColHelper bs $ PD.enum $ \case
     "object" -> Just ObjRel
     "array"  -> Just ArrRel
-    _   -> Nothing
+    _        -> Nothing
+
+data RelInsertOrd
+  = RIOBeforeParent
+  | RIOAfterParent
+  deriving (Show, Eq, Lift)
+$(deriveJSON
+  defaultOptions { constructorTagModifier = snakeCase . drop 3
+                 , allNullaryToStringTag = True
+                 }
+   ''RelInsertOrd)
 
 data RelInfo
   = RelInfo
-  { riName     :: !RelName
-  , riType     :: !RelType
-  , riMapping  :: ![(PGCol, PGCol)]
-  , riRTable   :: !QualifiedTable
-  , riIsManual :: !Bool
+  { riName        :: !RelName
+  , riType        :: !RelType
+  , riMapping     :: ![(PGCol, PGCol)]
+  , riRTable      :: !QualifiedTable
+  , riIsManual    :: !Bool
+  , riInsertOrder :: !RelInsertOrd
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''RelInfo)

@@ -71,7 +71,7 @@ isValidRel rn rt = isValidName (mkRelName rn) && isValidObjectName rt
 isValidField :: FieldInfo PGColumnInfo -> Bool
 isValidField = \case
   FIColumn (PGColumnInfo col _ _) -> isValidCol col
-  FIRelationship (RelInfo rn _ _ remTab _) -> isValidRel rn remTab
+  FIRelationship (RelInfo rn _ _ remTab _ _) -> isValidRel rn remTab
 
 upsertable :: [ConstraintName] -> Bool -> Bool -> Bool
 upsertable uniqueOrPrimaryCons isUpsertAllowed isAView =

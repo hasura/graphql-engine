@@ -36,14 +36,13 @@ import           Instances.TH.Lift                 ()
 validateManualConfig
   :: (QErrM m, CacheRM m)
   => FieldInfoMap PGColumnInfo
-  -> RelManualConfig
+  -> QualifiedTable
+  -> M.Map PGCol PGCol
   -> m ()
-validateManualConfig fim rm = do
-  let colMapping = M.toList $ rmColumns rm
-      remoteQt = rmTable rm
+validateManualConfig fim remoteQt colMapping = do
   remoteTabInfo <- askTabInfo remoteQt
   let remoteFim = _tiFieldInfoMap remoteTabInfo
-  forM_ colMapping $ \(lCol, rCol) -> do
+  forM_ (M.toList colMapping) $ \(lCol, rCol) -> do
     assertPGCol fim "" lCol
     assertPGCol remoteFim "" rCol
     -- lColType <- askPGType fim lCol ""
@@ -92,8 +91,9 @@ validateObjRel qt (RelDef rn ru _) = do
   checkForFldConfilct tabInfo (fromRel rn)
   let fim = _tiFieldInfoMap tabInfo
   case ru of
-    RUFKeyOn cn                      -> assertPGCol fim "" cn
-    RUManual (ObjRelManualConfig rm) -> validateManualConfig fim rm
+    RUFKeyOn cn                                         -> assertPGCol fim "" cn
+    RUManual (ObjRelManualConfig table columnMapping _) ->
+      validateManualConfig fim table columnMapping
 
 createObjRelP1
   :: (UserInfoM m, QErrM m, CacheRM m)
@@ -108,12 +108,11 @@ objRelP2Setup
   => QualifiedTable -> HS.HashSet ForeignKey -> RelDef ObjRelUsing -> m ()
 objRelP2Setup qt fkeys (RelDef rn ru _) = do
   (relInfo, deps) <- case ru of
-    RUManual (ObjRelManualConfig rm) -> do
-      let refqt = rmTable rm
-          (lCols, rCols) = unzip $ M.toList $ rmColumns rm
+    RUManual (ObjRelManualConfig refqt colMapping insertOrd) -> do
+      let (lCols, rCols) = unzip $ M.toList colMapping
           deps  = map (\c -> SchemaDependency (SOTableObj qt $ TOCol c) DRLeftColumn) lCols
                   <> map (\c -> SchemaDependency (SOTableObj refqt $ TOCol c) DRRightColumn) rCols
-      return (RelInfo rn ObjRel (zip lCols rCols) refqt True, deps)
+      return (RelInfo rn ObjRel (zip lCols rCols) refqt True insertOrd, deps)
     RUFKeyOn cn -> do
       -- TODO: validation should account for this too
       ForeignKey _ refqt _ consName colMap <-
@@ -128,7 +127,7 @@ objRelP2Setup qt fkeys (RelDef rn ru _) = do
                  ]
           colMapping = HM.toList colMap
       void $ askTabInfo refqt
-      return (RelInfo rn ObjRel colMapping refqt False, deps)
+      return (RelInfo rn ObjRel colMapping refqt False RIOBeforeParent, deps)
   addRelToCache rn relInfo deps qt
 
 objRelP2
@@ -175,20 +174,19 @@ validateArrRel qt (RelDef rn ru _) = do
       let rfim = _tiFieldInfoMap remoteTabInfo
       -- Check if 'using' column exists
       assertPGCol rfim "" rcn
-    RUManual (ArrRelManualConfig rm) ->
-      validateManualConfig fim rm
+    RUManual (ArrRelManualConfig table columnMapping) ->
+      validateManualConfig fim table columnMapping
 
 arrRelP2Setup
   :: (QErrM m, CacheRWM m)
   => QualifiedTable -> HS.HashSet ForeignKey -> ArrRelDef -> m ()
 arrRelP2Setup qt fkeys (RelDef rn ru _) = do
   (relInfo, deps) <- case ru of
-    RUManual (ArrRelManualConfig rm) -> do
-      let refqt = rmTable rm
-          (lCols, rCols) = unzip $ M.toList $ rmColumns rm
+    RUManual (ArrRelManualConfig refqt colMapping) -> do
+      let (lCols, rCols) = unzip $ M.toList colMapping
           deps  = map (\c -> SchemaDependency (SOTableObj qt $ TOCol c) DRLeftColumn) lCols
                   <> map (\c -> SchemaDependency (SOTableObj refqt $ TOCol c) DRRightColumn) rCols
-      return (RelInfo rn ArrRel (zip lCols rCols) refqt True, deps)
+      return (RelInfo rn ArrRel (zip lCols rCols) refqt True defaultInsertOrd, deps)
     RUFKeyOn (ArrRelUsingFKeyOn refqt refCol) -> do
       -- TODO: validation should account for this too
       ForeignKey _ _ _ consName colMap <- getRequiredFkey refCol fkeys $
@@ -201,8 +199,11 @@ arrRelP2Setup qt fkeys (RelDef rn ru _) = do
                  , SchemaDependency (SOTable refqt) DRRemoteTable
                  ]
           mapping = HM.toList colMap
-      return (RelInfo rn ArrRel (map swap mapping) refqt False, deps)
+      return (RelInfo rn ArrRel (map swap mapping) refqt False defaultInsertOrd, deps)
   addRelToCache rn relInfo deps qt
+  where
+    -- always array relations are inserted after parent
+    defaultInsertOrd = RIOAfterParent
 
 arrRelP2
   :: (QErrM m, CacheRWM m, MonadTx m)

@@ -16,8 +16,8 @@ import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashSet                  as Set
 import qualified Language.GraphQL.Draft.Syntax as G
 
-import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.BoolExp
+import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.OrderBy
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
@@ -108,7 +108,7 @@ mkRelFld
   -> RelInfo
   -> Bool
   -> [ObjFldInfo]
-mkRelFld allowAgg (RelInfo rn rTy _ remTab isManual) isNullable = case rTy of
+mkRelFld allowAgg (RelInfo rn rTy _ remTab isManual _) isNullable = case rTy of
   ArrRel -> bool [arrRelFld] [arrRelFld, aggArrRelFld] allowAgg
   ObjRel -> [objRelFld]
   where

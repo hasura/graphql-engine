@@ -32,23 +32,47 @@ instance (ToJSON a) => ToAesonPairs (RelDef a) where
   , "comment" .= rc
   ]
 
-data RelManualConfig
-  = RelManualConfig
-  { rmTable   :: !QualifiedTable
-  , rmColumns :: !(M.Map PGCol PGCol)
+data ObjRelManualConfig
+  = ObjRelManualConfig
+  { _ormTable          :: !QualifiedTable
+  , _ormColumns        :: !(M.Map PGCol PGCol)
+  , _ormInsertionOrder :: !RelInsertOrd
   } deriving (Show, Eq, Lift)
 
-instance FromJSON RelManualConfig where
+instance FromJSON ObjRelManualConfig where
   parseJSON (Object v) =
-    RelManualConfig
+    ObjRelManualConfig
+    <$> v .:  "remote_table"
+    <*> v .:  "column_mapping"
+    <*> v .:! "insertion_order" .!= RIOBeforeParent
+
+  parseJSON _ =
+    fail "manual_configuration should be an object"
+
+instance ToJSON ObjRelManualConfig where
+  toJSON (ObjRelManualConfig qt cm rio) =
+    object [ "remote_table" .= qt
+           , "column_mapping" .= cm
+           , "insertion_order" .= rio
+           ]
+
+data ArrRelManualConfig
+  = ArrRelManualConfig
+  { _armTable   :: !QualifiedTable
+  , _armColumns :: !(M.Map PGCol PGCol)
+  } deriving (Show, Eq, Lift)
+
+instance FromJSON ArrRelManualConfig where
+  parseJSON (Object v) =
+    ArrRelManualConfig
     <$> v .:  "remote_table"
     <*> v .:  "column_mapping"
 
   parseJSON _ =
     fail "manual_configuration should be an object"
 
-instance ToJSON RelManualConfig where
-  toJSON (RelManualConfig qt cm) =
+instance ToJSON ArrRelManualConfig where
+  toJSON (ArrRelManualConfig qt cm ) =
     object [ "remote_table" .= qt
            , "column_mapping" .= cm
            ]
@@ -77,10 +101,6 @@ instance (FromJSON a, FromJSON b) => FromJSON (RelUsing a b) where
   parseJSON _ =
     fail "using should be an object"
 
-newtype ArrRelManualConfig =
-  ArrRelManualConfig { getArrRelMapping :: RelManualConfig }
-  deriving (Show, Eq, FromJSON, ToJSON, Lift)
-
 data ArrRelUsingFKeyOn
   = ArrRelUsingFKeyOn
   { arufTable  :: !QualifiedTable
@@ -92,10 +112,6 @@ $(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''ArrRelUsingFKeyOn
 type ArrRelUsing = RelUsing ArrRelUsingFKeyOn ArrRelManualConfig
 type ArrRelDef = RelDef ArrRelUsing
 type CreateArrRel = WithTable ArrRelDef
-
-newtype ObjRelManualConfig =
-  ObjRelManualConfig { getObjRelMapping :: RelManualConfig }
-  deriving (Show, Eq, FromJSON, ToJSON, Lift)
 
 type ObjRelUsing = RelUsing PGCol ObjRelManualConfig
 type ObjRelDef = RelDef ObjRelUsing
