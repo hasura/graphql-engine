@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import endpoints from '../../../Endpoints';
 import {
   buildClientSchema,
   getIntrospectionQuery,
@@ -7,7 +8,7 @@ import {
 } from 'graphql';
 
 let introspectionSchemaCache = {};
-export const clearIntrospectionSchemaCache = (remoteSchemaName) => {
+export const clearIntrospectionSchemaCache = remoteSchemaName => {
   if (remoteSchemaName) {
     delete introspectionSchemaCache[remoteSchemaName];
   } else {
@@ -15,7 +16,11 @@ export const clearIntrospectionSchemaCache = (remoteSchemaName) => {
   }
 };
 
-export const useIntrospectionSchema = (endpoint, headers, remoteSchemaName) => {
+const getProxyEndpoint = remoteSchemaName => {
+  return `${endpoints.graphQLUrl}/proxy/${remoteSchemaName}`;
+};
+
+export const useIntrospectionSchema = (remoteSchemaName, headers) => {
   const [schema, setSchema] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -28,7 +33,7 @@ export const useIntrospectionSchema = (endpoint, headers, remoteSchemaName) => {
     }
     setLoading(true);
     setError(null);
-    fetch(endpoint, {
+    fetch(getProxyEndpoint(remoteSchemaName), {
       method: 'POST',
       headers: {
         ...headers,

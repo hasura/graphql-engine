@@ -11,7 +11,7 @@ import {
   setPermissionRole,
   setCurrentPermissionEdit,
   closePermissionEdit,
-  resetPermState
+  resetPermState,
 } from './Actions';
 import { parseRemoteRelPermDefinition, getRootTypeAccess } from './utils';
 import { fetchRoleList } from '../../Data/DataActions';
@@ -21,20 +21,14 @@ const Permissions = props => {
     permissions: { editState, isFetching },
     remoteSchemaName,
     adminHeaders,
-    remoteSchemasList,
     dispatch,
     rolesList,
     existingPermissions,
   } = props;
 
-  const currentRemoteSchema = remoteSchemasList.find(
-    r => r.name === remoteSchemaName
-  );
-
   const { schema, loading, error, introspect } = useIntrospectionSchema(
-    currentRemoteSchema.definition.url,
-    adminHeaders,
-    remoteSchemaName
+    remoteSchemaName,
+    adminHeaders
   );
 
   React.useEffect(() => {
