@@ -223,7 +223,7 @@ sessVarFromCurrentSetting' :: PGType PGScalarType -> SessVar -> S.SQLExp
 sessVarFromCurrentSetting' ty sessVar =
   flip S.SETyAnn (S.mkTypeAnn ty) $
   case ty of
-    PGTypeScalar baseTy -> withGeoVal baseTy sessVarVal
+    PGTypeScalar baseTy -> withConstructorFn baseTy sessVarVal
     PGTypeArray _       -> sessVarVal
   where
     curSess = S.SEUnsafe "current_setting('hasura.user')::json"
@@ -248,7 +248,7 @@ convBoolExp
   -> (PGColumnType -> Value -> m S.SQLExp)
   -> m AnnBoolExpSQL
 convBoolExp cim spi be sessVarBldr prepValBldr = do
-  abe <- annBoolExp rhsParser cim be
+  abe <- annBoolExp rhsParser cim $ unBoolExp be
   checkSelPerm spi sessVarBldr abe
   where
     rhsParser pgType val = case pgType of
