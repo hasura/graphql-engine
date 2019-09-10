@@ -111,20 +111,20 @@ withSCUpdate scr logger action = do
 
 data ServerCtx
   = ServerCtx
-  { scPGExecCtx           :: !PGExecCtx
-  , scConnInfo            :: !Q.ConnInfo
-  , scLogger              :: !L.Logger
-  , scCacheRef            :: !SchemaCacheRef
-  , scAuthMode            :: !AuthMode
-  , scManager             :: !HTTP.Manager
-  , scSQLGenCtx           :: !SQLGenCtx
-  , scEnabledAPIs         :: !(S.HashSet API)
-  , scInstanceId          :: !InstanceId
-  , scPlanCache           :: !E.PlanCache
-  , scLQState             :: !EL.LiveQueriesState
-  , scEnableAllowlist     :: !Bool
-  , scEkgStore            :: !EKG.Store
-  , scEnabledFeatureFlags :: ![FeatureFlag]
+  { scPGExecCtx       :: !PGExecCtx
+  , scConnInfo        :: !Q.ConnInfo
+  , scLogger          :: !L.Logger
+  , scCacheRef        :: !SchemaCacheRef
+  , scAuthMode        :: !AuthMode
+  , scManager         :: !HTTP.Manager
+  , scSQLGenCtx       :: !SQLGenCtx
+  , scEnabledAPIs     :: !(S.HashSet API)
+  , scInstanceId      :: !InstanceId
+  , scPlanCache       :: !E.PlanCache
+  , scLQState         :: !EL.LiveQueriesState
+  , scEnableAllowlist :: !Bool
+  , scEkgStore        :: !EKG.Store
+  , scFeatureFlags    :: !FeatureFlags
   }
 
 data HandlerCtx
@@ -463,7 +463,7 @@ mkWaiApp
   -> InstanceId
   -> S.HashSet API
   -> EL.LQOpts
-  -> [FeatureFlag]
+  -> FeatureFlags
   -> IO (Wai.Application, SchemaCacheRef, Maybe UTCTime)
 mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
          enableConsole consoleAssetsDir enableTelemetry instanceId apis lqOpts featureFlags = do

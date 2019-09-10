@@ -16,6 +16,7 @@ import qualified Data.ByteString.Lazy.Char8       as BLC
 import qualified Data.HashSet                     as Set
 import qualified Data.String                      as DataString
 import qualified Data.Text                        as T
+import qualified Data.Vector                      as V
 import qualified Hasura.GraphQL.Execute.LiveQuery as LQ
 import qualified Hasura.Logging                   as L
 import qualified Text.PrettyPrint.ANSI.Leijen     as PP
@@ -80,34 +81,37 @@ data RawServeOptions
   , rsoEnableRemotePerms  :: !Bool
   } deriving (Show, Eq)
 
-data FeatureFlag = RemotePermsFeatureFlag
+data FeatureFlags =
+  FeatureFlags
+  { ffRemoteSchemaPerms :: !Bool
+  }
   deriving (Show, Eq)
 
-instance J.ToJSON FeatureFlag where
-  toJSON = \case
-    RemotePermsFeatureFlag -> J.String "remote_schema_permissions"
+instance J.ToJSON FeatureFlags where
+  toJSON (FeatureFlags enableRemoteSchemaPerms) = J.Array $
+    bool V.empty (V.singleton $ J.String "remote_schema_permissions") enableRemoteSchemaPerms
 
 data ServeOptions
   = ServeOptions
-  { soPort                :: !Int
-  , soHost                :: !HostPreference
-  , soConnParams          :: !Q.ConnParams
-  , soTxIso               :: !Q.TxIsolation
-  , soAdminSecret         :: !(Maybe AdminSecret)
-  , soAuthHook            :: !(Maybe AuthHook)
-  , soJwtSecret           :: !(Maybe JWTConfig)
-  , soUnAuthRole          :: !(Maybe RoleName)
-  , soCorsConfig          :: !CorsConfig
-  , soEnableConsole       :: !Bool
-  , soConsoleAssetsDir    :: !(Maybe Text)
-  , soEnableTelemetry     :: !Bool
-  , soStringifyNum        :: !Bool
-  , soEnabledAPIs         :: !(Set.HashSet API)
-  , soLiveQueryOpts       :: !LQ.LQOpts
-  , soEnableAllowlist     :: !Bool
-  , soEnabledLogTypes     :: !(Set.HashSet L.EngineLogType)
-  , soLogLevel            :: !L.LogLevel
-  , soEnabledFeatureFlags :: ![FeatureFlag]
+  { soPort             :: !Int
+  , soHost             :: !HostPreference
+  , soConnParams       :: !Q.ConnParams
+  , soTxIso            :: !Q.TxIsolation
+  , soAdminSecret      :: !(Maybe AdminSecret)
+  , soAuthHook         :: !(Maybe AuthHook)
+  , soJwtSecret        :: !(Maybe JWTConfig)
+  , soUnAuthRole       :: !(Maybe RoleName)
+  , soCorsConfig       :: !CorsConfig
+  , soEnableConsole    :: !Bool
+  , soConsoleAssetsDir :: !(Maybe Text)
+  , soEnableTelemetry  :: !Bool
+  , soStringifyNum     :: !Bool
+  , soEnabledAPIs      :: !(Set.HashSet API)
+  , soLiveQueryOpts    :: !LQ.LQOpts
+  , soEnableAllowlist  :: !Bool
+  , soEnabledLogTypes  :: !(Set.HashSet L.EngineLogType)
+  , soLogLevel         :: !L.LogLevel
+  , soFeatureFlags     :: !FeatureFlags
   } deriving (Show, Eq)
 
 data RawConnInfo =
@@ -321,9 +325,8 @@ mkServeOptions RawServeOptions{..}= do
   enabledLogs <- Set.fromList . fromMaybe (Set.toList L.defaultEnabledLogTypes) <$>
                  withEnv rsoEnabledLogTypes (fst enabledLogsEnv)
   serverLogLevel <- fromMaybe L.LevelInfo <$> withEnv rsoLogLevel (fst logLevelEnv)
-  enableRemotePerms <- bool Nothing (Just RemotePermsFeatureFlag) <$>
+  enabledFeatureFlags <- FeatureFlags <$>
                        withEnvBool rsoEnableRemotePerms (fst enableRemotePermsEnv)
-  let enabledFeatureFlags = catMaybes [enableRemotePerms]
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
@@ -1019,7 +1022,7 @@ serveOptsToLog ServeOptions{..} =
                        , "enable_allowlist" J..= soEnableAllowlist
                        , "enabled_log_types" J..= soEnabledLogTypes
                        , "log_level" J..= soLogLevel
-                       , "enabled_feature_flags" J..= soEnabledFeatureFlags
+                       , "enabled_feature_flags" J..= soFeatureFlags
                        ]
 
 mkGenericStrLog :: L.LogLevel -> T.Text -> String -> StartupLog
