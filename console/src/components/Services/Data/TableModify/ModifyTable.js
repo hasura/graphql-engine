@@ -135,10 +135,9 @@ class ModifyTable extends React.Component {
       <div className={`${styles.container} container-fluid`}>
         <TableHeader
           dispatch={dispatch}
-          tableName={tableName}
+          table={tableSchema}
           tabName="modify"
           migrationMode={migrationMode}
-          currentSchema={currentSchema}
         />
         <br />
         <div className={`container-fluid ${styles.padd_left_remove}`}>
