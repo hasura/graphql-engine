@@ -10,6 +10,7 @@ import {
 import { setMetaData } from '../../validators/validators';
 
 import { testPermissions, permRemove, createView, trackView } from './utils';
+import { setPromptValue } from '../../../helpers/common';
 
 const testName = 'perm';
 
@@ -118,7 +119,11 @@ export const passPTDeleteTable = () => {
   // Go to modify table
   cy.get(getElementFromAlias('table-modify')).click();
   // Delete table
+  setPromptValue(getTableName(0, testName));
   cy.get(getElementFromAlias('delete-table')).click();
+  cy.window()
+    .its('prompt')
+    .should('be.called');
   cy.wait(7000);
 };
 

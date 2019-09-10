@@ -33,6 +33,8 @@ import TriggerEditorList from './TriggerEditorList';
 import styles from './ModifyTable.scss';
 import { NotFoundError } from '../../../Error/PageNotFound';
 
+import { getConfirmation } from '../../../Common/utils/jsUtils';
+
 class ModifyTable extends React.Component {
   componentDidMount() {
     const { dispatch } = this.props;
@@ -82,7 +84,8 @@ class ModifyTable extends React.Component {
         color="white"
         size="sm"
         onClick={() => {
-          const isOk = confirm('Are you sure?');
+          const confirmMessage = `This will remove the table "${tableName}" from the GraphQL schema`;
+          const isOk = getConfirmation(confirmMessage);
           if (isOk) {
             dispatch(untrackTableSql(tableName));
           }
@@ -99,7 +102,8 @@ class ModifyTable extends React.Component {
         color="red"
         size="sm"
         onClick={() => {
-          const isOk = confirm('Are you sure?');
+          const confirmMessage = `This will permanently delete the table "${tableName}" from the database`;
+          const isOk = getConfirmation(confirmMessage, true, tableName);
           if (isOk) {
             dispatch(deleteTableSql(tableName, tableSchema));
           }

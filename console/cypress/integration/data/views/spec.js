@@ -11,6 +11,7 @@ import {
   validateColumn,
   validateView,
 } from '../../validators/validators';
+import { setPromptValue } from '../../../helpers/common';
 
 const userId = 5555;
 
@@ -416,10 +417,11 @@ export const passVDeleteRelationships = () => {
 
 export const passVDeleteView = () => {
   cy.get(getElementFromAlias('table-modify')).click();
+  setPromptValue('author_average_rating_vt');
   cy.get(getElementFromAlias('delete-view')).click();
-  cy.on('window:confirm', str => {
-    expect(str === 'Are you sure').to.be.true;
-  });
+  cy.window()
+    .its('prompt')
+    .should('be.called');
   cy.wait(7000);
   // cy.get('.notification-error');
   validateView('author_average_rating_vt', 'failure');
@@ -428,10 +430,11 @@ export const passVDeleteView = () => {
 export const Deletetable = name => {
   cy.get(getElementFromAlias(name)).click();
   cy.get(getElementFromAlias('table-modify')).click();
+  setPromptValue(name);
   cy.get(getElementFromAlias('delete-table')).click();
-  cy.on('window:alert', str => {
-    expect(str === 'Are you sure?').to.be.true;
-  });
+  cy.window()
+    .its('prompt')
+    .should('be.called');
   cy.wait(7000);
   validateCT(name, 'failure');
   cy.wait(7000);
