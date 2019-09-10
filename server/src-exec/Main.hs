@@ -1,4 +1,3 @@
-{-# LANGUAGE TypeApplications #-}
 module Main where
 
 import           Migrate                    (migrateCatalog)
@@ -22,6 +21,7 @@ import qualified Data.Yaml                  as Y
 import qualified Network.HTTP.Client        as HTTP
 import qualified Network.HTTP.Client.TLS    as HTTP
 import qualified Network.Wai.Handler.Warp   as Warp
+import qualified System.Posix.Signals       as Signals
 
 import           Hasura.Db
 import           Hasura.Events.Lib
@@ -30,8 +30,9 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
 import           Hasura.RQL.Types           (SQLGenCtx (..), SchemaCache (..),
                                              adminUserInfo, emptySchemaCache)
-import           Hasura.Server.App          (SchemaCacheRef (..), getSCFromRef,
-                                             logInconsObjs, mkWaiApp)
+import           Hasura.Server.App          (HasuraApp(..), SchemaCacheRef (..),
+                                             getSCFromRef, logInconsObjs,
+                                             mkWaiApp)
 import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates (checkForUpdates)
 import           Hasura.Server.Init
@@ -86,6 +87,8 @@ parseHGECommand =
                 <*> parseMxBatchSize
                 <*> parseFallbackRefetchInt
                 <*> parseEnableAllowlist
+                <*> parseEnabledLogs
+                <*> parseLogLevel
 
 
 parseArgs :: IO HGEOptions
@@ -117,20 +120,21 @@ main =  do
   (HGEOptionsG rci hgeCmd) <- parseArgs
   -- global http manager
   httpManager <- HTTP.newManager HTTP.tlsManagerSettings
-  loggerCtx   <- mkLoggerCtx $ defaultLoggerSettings True
-  instanceId <- mkInstanceId
-  let logger = mkLogger loggerCtx
-      pgLogger = mkPGLogger logger
+  instanceId  <- generateInstanceId
   case hgeCmd of
     HCServe so@(ServeOptions port host cp isoL mAdminSecret mAuthHook
                 mJwtSecret mUnAuthRole corsCfg enableConsole consoleAssetsDir
-                enableTelemetry strfyNum enabledAPIs lqOpts enableAL) -> do
+                enableTelemetry strfyNum enabledAPIs lqOpts enableAL
+                enabledLogs serverLogLevel) -> do
+
       let sqlGenCtx = SQLGenCtx strfyNum
+
+      (loggerCtx, logger, pgLogger) <- mkLoggers enabledLogs serverLogLevel
 
       initTime <- Clock.getCurrentTime
       -- log serve options
       unLogger logger $ serveOptsToLog so
-      hloggerCtx  <- mkLoggerCtx $ defaultLoggerSettings False
+      hloggerCtx  <- mkLoggerCtx (defaultLoggerSettings False serverLogLevel) enabledLogs
 
       authModeRes <- runExceptT $ mkAuthMode mAdminSecret mAuthHook mJwtSecret
                                              mUnAuthRole httpManager loggerCtx
@@ -138,15 +142,16 @@ main =  do
       am <- either (printErrExit . T.unpack) return authModeRes
 
       ci <- procConnInfo rci
+
       -- log postgres connection info
       unLogger logger $ connInfoToLog ci
 
       pool <- Q.initPGPool ci cp pgLogger
 
       -- safe init catalog
-      initRes <- initialise pool sqlGenCtx logger httpManager
+      dbId <- initialise pool sqlGenCtx logger httpManager
 
-      (app, cacheRef, cacheInitTime) <-
+      HasuraApp app cacheRef cacheInitTime shutdownApp <-
         mkWaiApp isoL loggerCtx sqlGenCtx enableAL pool ci httpManager am
           corsCfg enableConsole consoleAssetsDir enableTelemetry
           instanceId enabledAPIs lqOpts
@@ -159,7 +164,11 @@ main =  do
       startSchemaSync sqlGenCtx pool logger httpManager
                       cacheRef instanceId cacheInitTime
 
-      let warpSettings = Warp.setPort port $ Warp.setHost host Warp.defaultSettings
+      let warpSettings = Warp.setPort port
+                       . Warp.setHost host
+                       . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
+                       . Warp.setInstallShutdownHandler (shutdownHandler logger shutdownApp)
+                       $ Warp.defaultSettings
 
       maxEvThrds <- getFromEnv defaultMaxEventThreads "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
       evFetchMilliSec  <- getFromEnv defaultFetchIntervalMilliSec "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
@@ -170,7 +179,7 @@ main =  do
       eventEngineCtx <- atomically $ initEventEngineCtx maxEvThrds evFetchMilliSec
       let scRef = _scrCache cacheRef
       unLogger logger $
-        mkGenericStrLog "event_triggers" "starting workers"
+        mkGenericStrLog LevelInfo "event_triggers" "starting workers"
       void $ C.forkIO $ processEventQueue hloggerCtx logEnvHeaders
         httpManager pool scRef eventEngineCtx
 
@@ -179,27 +188,29 @@ main =  do
 
       -- start a background thread for telemetry
       when enableTelemetry $ do
-        unLogger logger $ mkGenericStrLog "telemetry" telemetryNotice
-        void $ C.forkIO $ runTelemetry logger httpManager scRef initRes
+        unLogger logger $ mkGenericStrLog LevelInfo "telemetry" telemetryNotice
+        void $ C.forkIO $ runTelemetry logger httpManager scRef dbId instanceId
 
       finishTime <- Clock.getCurrentTime
       let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime
-      unLogger logger $
-        mkGenericStrLog "server" $
-        "starting API server, took " <> show @Double apiInitTime <> "s"
+      unLogger logger $ mkGenericLog LevelInfo "server" $
+        StartupTimeInfo "starting API server" apiInitTime
       Warp.runSettings warpSettings app
 
     HCExport -> do
+      (_, _, pgLogger) <- mkLoggers defaultEnabledLogTypes LevelInfo
       ci <- procConnInfo rci
       res <- runTx' pgLogger ci fetchMetadata
       either printErrJExit printJSON res
 
     HCClean -> do
+      (_, _, pgLogger) <- mkLoggers defaultEnabledLogTypes LevelInfo
       ci <- procConnInfo rci
       res <- runTx' pgLogger ci cleanCatalog
       either printErrJExit (const cleanSuccess) res
 
     HCExecute -> do
+      (_, _, pgLogger) <- mkLoggers defaultEnabledLogTypes LevelInfo
       queryBs <- BL.getContents
       ci <- procConnInfo rci
       let sqlGenCtx = SQLGenCtx False
@@ -209,6 +220,12 @@ main =  do
 
     HCVersion -> putStrLn $ "Hasura GraphQL Engine: " ++ T.unpack currentVersion
   where
+
+    mkLoggers enabledLogs logLevel = do
+      loggerCtx <- mkLoggerCtx (defaultLoggerSettings True logLevel) enabledLogs
+      let logger = mkLogger loggerCtx
+          pgLogger = mkPGLogger logger
+      return (loggerCtx, logger, pgLogger)
 
     runTx pool tx =
       runExceptT $ Q.runTx pool (Q.Serializable, Nothing) tx
@@ -235,26 +252,21 @@ main =  do
       -- initialise the catalog
       initRes <- runAsAdmin pool sqlGenCtx httpMgr $
                  initCatalogSafe currentTime
-      either printErrJExit (logger . mkGenericStrLog "db_init") initRes
+      either printErrJExit (logger . mkGenericStrLog LevelInfo "db_init") initRes
 
       -- migrate catalog if necessary
       migRes <- runAsAdmin pool sqlGenCtx httpMgr $
                 migrateCatalog currentTime
-      either printErrJExit (logger . mkGenericStrLog "db_migrate") migRes
+      either printErrJExit (logger . mkGenericStrLog LevelInfo "db_migrate") migRes
 
-      -- generate and retrieve uuids
-      getUniqIds pool
+      -- retrieve database id
+      eDbId <- runTx pool getDbId
+      either printErrJExit return eDbId
 
     prepareEvents pool (Logger logger) = do
-      logger $ mkGenericStrLog "event_triggers" "preparing data"
+      logger $ mkGenericStrLog LevelInfo "event_triggers" "preparing data"
       res <- runTx pool unlockAllEvents
       either printErrJExit return res
-
-    getUniqIds pool = do
-      eDbId <- runTx pool getDbId
-      dbId <- either printErrJExit return eDbId
-      fp <- liftIO generateFingerprint
-      return (dbId, fp)
 
     getFromEnv :: (Read a) => a -> String -> IO a
     getFromEnv defaults env = do
@@ -268,6 +280,24 @@ main =  do
     cleanSuccess =
       putStrLn "successfully cleaned graphql-engine related data"
 
+    -- | Catches the SIGTERM signal and initiates a graceful shutdown. Graceful shutdown for regular HTTP
+    -- requests is already implemented in Warp, and is triggered by invoking the 'closeSocket' callback.
+    -- We only catch the SIGTERM signal once, that is, if the user hits CTRL-C once again, we terminate
+    -- the process immediately.
+    shutdownHandler :: Logger -> IO () -> IO () -> IO ()
+    shutdownHandler (Logger logger) shutdownApp closeSocket =
+      void $ Signals.installHandler
+        Signals.sigTERM
+        (Signals.CatchOnce shutdownSequence)
+        Nothing
+     where
+      shutdownSequence = do
+        closeSocket
+        shutdownApp
+        logShutdown
+
+      logShutdown = logger $
+        mkGenericStrLog LevelInfo "server" "gracefully shutting down server"
 
 telemetryNotice :: String
 telemetryNotice =

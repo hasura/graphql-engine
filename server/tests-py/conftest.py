@@ -73,6 +73,15 @@ def pytest_addoption(parser):
         help="Run Test cases with allowlist queries enabled"
     )
 
+    parser.addoption(
+        "--test-logging",
+        action="store_true",
+        default=False,
+        required=False,
+        help="Run testcases for logging"
+    )
+
+
 #By default,
 #1) Set default parallelism to one
 #2) Set test grouping to by filename (--dist=loadfile)
@@ -140,9 +149,12 @@ def hge_ctx(request):
             hge_jwt_conf=hge_jwt_conf,
             ws_read_cookie=ws_read_cookie,
             metadata_disabled=metadata_disabled,
-            hge_scale_url=hge_scale_url
+            hge_scale_url=hge_scale_url,
         )
     except HGECtxError as e:
+        assert False, "Error from hge_cxt: " + str(e)
+        # TODO this breaks things (https://github.com/pytest-dev/pytest-xdist/issues/86)
+        #      so at least make sure the real error gets printed (above)
         pytest.exit(str(e))
 
     yield hge_ctx  # provide the fixture value

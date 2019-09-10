@@ -19,6 +19,7 @@ module Hasura.GraphQL.Transport.WebSocket.Server
   , createWSServer
   , closeAll
   , createServerApp
+  , shutdown
   ) where
 
 import qualified Control.Concurrent.Async as A
@@ -33,6 +34,7 @@ import qualified Data.UUID.V4             as UUID
 import qualified ListT
 import qualified Network.WebSockets       as WS
 import qualified StmContainers.Map        as STMMap
+import           Data.Word                (Word16)
 
 import           Control.Exception        (try)
 import qualified Hasura.Logging           as L
@@ -72,7 +74,7 @@ $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''WSLog)
 
 instance L.ToEngineLog WSLog where
   toEngineLog wsLog =
-    (L.LevelDebug, "ws-server", J.toJSON wsLog)
+    (L.LevelDebug, L.ELTWsServer, J.toJSON wsLog)
 
 data WSConn a
   = WSConn
@@ -90,9 +92,17 @@ getWSId :: WSConn a -> WSId
 getWSId = _wcConnId
 
 closeConn :: WSConn a -> BL.ByteString -> IO ()
-closeConn wsConn bs = do
+closeConn wsConn bs = closeConnWithCode wsConn 1000 bs -- 1000 is "normal close"
+
+-- | Closes a connection with code 1012, which means "Server is restarting"
+-- good clients will implement a retry logic with a backoff of a few seconds
+forceConnReconnect :: WSConn a -> BL.ByteString -> IO ()
+forceConnReconnect wsConn bs = closeConnWithCode wsConn 1012 bs
+
+closeConnWithCode :: WSConn a -> Word16 -> BL.ByteString -> IO ()
+closeConnWithCode wsConn code bs = do
   (L.unLogger . _wcLogger) wsConn $ WSLog (_wcConnId wsConn) $ ECloseSent $ TBS.fromLBS bs
-  WS.sendClose (_wcConnRaw wsConn) bs
+  WS.sendCloseCode (_wcConnRaw wsConn) code bs
 
 -- writes to a queue instead of the raw connection
 -- so that sendMsg doesn't block
@@ -102,23 +112,48 @@ sendMsg wsConn msg =
 
 type ConnMap a = STMMap.Map WSId (WSConn a)
 
+data ServerStatus a
+  = AcceptingConns !(ConnMap a)
+  | ShuttingDown
+
 data WSServer a
   = WSServer
-  { _wssLogger  :: L.Logger
-  , _wssConnMap :: ConnMap a
+  { _wssLogger   :: L.Logger
+  , _wssStatus :: !(STM.TVar (ServerStatus a))
   }
 
 createWSServer :: L.Logger -> STM.STM (WSServer a)
-createWSServer logger = WSServer logger <$> STMMap.new
+createWSServer logger = do
+  connMap <- STMMap.new
+  serverStatus <- STM.newTVar (AcceptingConns connMap)
+  return $ WSServer logger serverStatus
 
 closeAll :: WSServer a -> BL.ByteString -> IO ()
-closeAll (WSServer (L.Logger writeLog) connMap) msg = do
+closeAll (WSServer (L.Logger writeLog) serverStatus) msg = do
   writeLog $ L.debugT "closing all connections"
-  conns <- STM.atomically $ do
-    conns <- ListT.toList $ STMMap.listT connMap
-    STMMap.reset connMap
-    return conns
-  void $ A.mapConcurrently (flip closeConn msg . snd) conns
+  conns <- STM.atomically $ flushConnMap serverStatus
+  closeAllWith (flip closeConn) msg conns
+
+closeAllWith
+  :: (BL.ByteString -> WSConn a -> IO ())
+  -> BL.ByteString
+  -> [(WSId, WSConn a)]
+  -> IO ()
+closeAllWith closer msg conns =
+  void $ A.mapConcurrently (closer msg . snd) conns
+
+-- | Resets the current connections map to an empty one if the server is
+-- running and returns the list of connections that were in the map
+-- before flushing it.
+flushConnMap :: STM.TVar (ServerStatus a) -> STM.STM [(WSId, WSConn a)]
+flushConnMap serverStatus = do
+  status <- STM.readTVar serverStatus
+  case status of
+    AcceptingConns connMap -> do
+        conns <- ListT.toList $ STMMap.listT connMap
+        STMMap.reset connMap
+        return conns
+    ShuttingDown -> return []
 
 data AcceptWith a
   = AcceptWith
@@ -145,15 +180,28 @@ createServerApp
   -- user provided handlers
   -> WSHandlers a
   -- aka WS.ServerApp
-  -> WS.PendingConnection -> IO ()
-createServerApp (WSServer logger@(L.Logger writeLog) connMap) wsHandlers pendingConn = do
+  -> WS.PendingConnection
+  -> IO ()
+createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers pendingConn = do
   wsId <- WSId <$> UUID.nextRandom
   writeLog $ WSLog wsId EConnectionRequest
-  let reqHead = WS.pendingRequest pendingConn
-  onConnRes <- _hOnConn wsHandlers wsId reqHead
-  either (onReject wsId) (onAccept wsId) onConnRes
+  status <- STM.readTVarIO serverStatus
+  case status of
+    AcceptingConns _ -> do
+      let reqHead = WS.pendingRequest pendingConn
+      onConnRes <- _hOnConn wsHandlers wsId reqHead
+      either (onReject wsId) (onAccept wsId) onConnRes
+
+    ShuttingDown ->
+      onReject wsId shuttingDownReject
 
   where
+    shuttingDownReject =
+      WS.RejectRequest 503
+                        "Service Unavailable"
+                        [("Retry-After", "0")]
+                        "Server is shutting down"
+
     onReject wsId rejectRequest = do
       WS.rejectRequestWith pendingConn rejectRequest
       writeLog $ WSLog wsId ERejected
@@ -161,39 +209,62 @@ createServerApp (WSServer logger@(L.Logger writeLog) connMap) wsHandlers pending
     onAccept wsId (AcceptWith a acceptWithParams keepAliveM onJwtExpiryM) = do
       conn  <- WS.acceptRequestWith pendingConn acceptWithParams
       writeLog $ WSLog wsId EAccepted
-
       sendQ <- STM.newTQueueIO
       let wsConn = WSConn wsId logger conn sendQ a
-      STM.atomically $ STMMap.insert wsConn wsId connMap
 
-      rcvRef  <- A.async $ forever $ do
-        msg <- WS.receiveData conn
-        writeLog $ WSLog wsId $ EMessageReceived $ TBS.fromLBS msg
-        _hOnMessage wsHandlers wsConn msg
+      status <- STM.atomically $ do
+        status <- STM.readTVar serverStatus
+        case status of
+          ShuttingDown -> pure ()
+          AcceptingConns connMap -> STMMap.insert wsConn wsId connMap
+        return status
 
-      sendRef <- A.async $ forever $ do
-        msg <- STM.atomically $ STM.readTQueue sendQ
-        WS.sendTextData conn msg
-        writeLog $ WSLog wsId $ EMessageSent $ TBS.fromLBS msg
+      case status of
+        ShuttingDown -> do
+          -- Bad luck, we were in the process of shutting the server down but a new
+          -- connection was accepted. Let's just close it politely
+          forceConnReconnect wsConn "shutting server down"
+          _hOnClose wsHandlers wsConn
 
-      keepAliveRefM <- forM keepAliveM $ \action -> A.async $ action wsConn
-      onJwtExpiryRefM <- forM onJwtExpiryM $ \action -> A.async $ action wsConn
+        AcceptingConns connMap -> do
+          rcvRef  <- A.async $ forever $ do
+            msg <- WS.receiveData conn
+            writeLog $ WSLog wsId $ EMessageReceived $ TBS.fromLBS msg
+            _hOnMessage wsHandlers wsConn msg
 
-      -- terminates on WS.ConnectionException and JWT expiry
-      let waitOnRefs = catMaybes [keepAliveRefM, onJwtExpiryRefM]
-                       <> [rcvRef, sendRef]
-      res <- try $ A.waitAnyCancel waitOnRefs
+          sendRef <- A.async $ forever $ do
+            msg <- STM.atomically $ STM.readTQueue sendQ
+            WS.sendTextData conn msg
+            writeLog $ WSLog wsId $ EMessageSent $ TBS.fromLBS msg
 
-      case res of
-        Left ( _ :: WS.ConnectionException) -> do
-          writeLog $ WSLog (_wcConnId wsConn) ECloseReceived
-          onConnClose wsConn
-        -- this will happen when jwt is expired
-        Right _ -> do
-          writeLog $ WSLog (_wcConnId wsConn) EJwtExpired
-          onConnClose wsConn
+          keepAliveRefM <- forM keepAliveM $ \action -> A.async $ action wsConn
+          onJwtExpiryRefM <- forM onJwtExpiryM $ \action -> A.async $ action wsConn
 
-    onConnClose wsConn = do
+          -- terminates on WS.ConnectionException and JWT expiry
+          let waitOnRefs = catMaybes [keepAliveRefM, onJwtExpiryRefM]
+                           <> [rcvRef, sendRef]
+          res <- try $ A.waitAnyCancel waitOnRefs
+
+          case res of
+            Left ( _ :: WS.ConnectionException) -> do
+              writeLog $ WSLog (_wcConnId wsConn) ECloseReceived
+              onConnClose connMap wsConn
+            -- this will happen when jwt is expired
+            Right _ -> do
+              writeLog $ WSLog (_wcConnId wsConn) EJwtExpired
+              onConnClose connMap wsConn
+
+    onConnClose connMap wsConn = do
       STM.atomically $ STMMap.delete (_wcConnId wsConn) connMap
       _hOnClose wsHandlers wsConn
       writeLog $ WSLog (_wcConnId wsConn) EClosed
+
+
+shutdown :: WSServer a -> IO ()
+shutdown (WSServer (L.Logger writeLog) serverStatus) = do
+  writeLog $ L.debugT "Shutting websockets server down"
+  conns <- STM.atomically $ do
+    conns <- flushConnMap serverStatus
+    STM.writeTVar serverStatus ShuttingDown
+    return conns
+  closeAllWith (flip forceConnReconnect) "shutting server down" conns

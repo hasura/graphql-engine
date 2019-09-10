@@ -3,7 +3,7 @@ Distinct query results
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
 You can fetch rows with only distinct values of a column using the ``distinct_on`` argument.

@@ -1,3 +1,4 @@
+.hasura-dev-python-venv
 npm-debug.log
 *.temp
 *.DS_Store
@@ -6,3 +7,6 @@ test-server-output
 test-server-flags-output
 .vscode
 .idea
+
+# Test artifacts
+*.tix

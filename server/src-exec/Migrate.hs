@@ -4,22 +4,22 @@ module Migrate
   )
 where
 
-import           Data.Time.Clock             (UTCTime)
-import           Language.Haskell.TH.Syntax  (Q, TExp, unTypeQ)
+import           Data.Time.Clock            (UTCTime)
+import           Language.Haskell.TH.Syntax (Q, TExp, unTypeQ)
 
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Schema.Table
+import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
 import           Hasura.Server.Query
 
-import qualified Data.Aeson                  as A
-import qualified Data.Text                   as T
-import qualified Data.Yaml.TH                as Y
+import qualified Data.Aeson                 as A
+import qualified Data.Text                  as T
+import qualified Data.Yaml.TH               as Y
 
-import qualified Database.PG.Query           as Q
+import qualified Database.PG.Query          as Q
 
 curCatalogVer :: T.Text
-curCatalogVer = "17"
+curCatalogVer = "22"
 
 migrateMetadata
   :: ( MonadTx m
@@ -327,6 +327,39 @@ from16To17 =
              AND  table_name = 'hdb_allowlist';
            |]
 
+from17To18 :: MonadTx m => m ()
+from17To18 =
+  liftTx $ Q.catchE defaultTxErrorHandler $
+  Q.multiQ [Q.sql|
+            DELETE FROM hdb_catalog.hdb_table
+            WHERE table_schema = 'hdb_catalog'
+              AND table_name = 'hdb_query_template';
+            DROP table hdb_catalog.hdb_query_template
+           |]
+
+from18To19 :: MonadTx m => m ()
+from18To19 = do
+  -- Migrate database
+  Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
+    $(Q.sqlFromFile "src-rsr/migrate_from_18_to_19.sql")
+  return ()
+
+from19To20 :: (MonadTx m) => m ()
+from19To20 = do
+  Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
+    $(Q.sqlFromFile "src-rsr/migrate_from_19_to_20.sql")
+  pure ()
+
+from20To21 :: (MonadTx m) => m ()
+from20To21 = liftTx $ Q.catchE defaultTxErrorHandler $ do
+  Q.unitQ "CREATE INDEX ON hdb_catalog.event_log (locked)" () False
+
+from21To22 :: (MonadTx m) => m ()
+from21To22 = do
+  Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
+    $(Q.sqlFromFile "src-rsr/migrate_from_21_to_22.sql")
+  pure ()
+
 migrateCatalog
   :: ( MonadTx m
      , CacheRWM m
@@ -336,64 +369,41 @@ migrateCatalog
      , HasSQLGenCtx m
      )
   => UTCTime -> m String
-migrateCatalog migrationTime = do
-  preVer <- getCatalogVersion
-  if | preVer == curCatalogVer ->
-         return $ "already at the latest version. current version: "
-                   <> show curCatalogVer
-     | preVer == "0.8" -> from08ToCurrent
-     | preVer == "1"   -> from1ToCurrent
-     | preVer == "2"   -> from2ToCurrent
-     | preVer == "3"   -> from3ToCurrent
-     | preVer == "4"   -> from4ToCurrent
-     | preVer == "5"   -> from5ToCurrent
-     | preVer == "6"   -> from6ToCurrent
-     | preVer == "7"   -> from7ToCurrent
-     | preVer == "8"   -> from8ToCurrent
-     | preVer == "9"   -> from9ToCurrent
-     | preVer == "10"  -> from10ToCurrent
-     | preVer == "11"  -> from11ToCurrent
-     | preVer == "12"  -> from12ToCurrent
-     | preVer == "13"  -> from13ToCurrent
-     | preVer == "14"  -> from14ToCurrent
-     | preVer == "15"  -> from15ToCurrent
-     | preVer == "16"  -> from16ToCurrent
-     | otherwise -> throw400 NotSupported $
-                    "unsupported version : " <> preVer
+migrateCatalog migrationTime = migrateFrom =<< getCatalogVersion
   where
-    from16ToCurrent = from16To17 >> postMigrate
-
-    from15ToCurrent = from15To16 >> from16ToCurrent
-
-    from14ToCurrent = from14To15 >> from15ToCurrent
-
-    from13ToCurrent = from13To14 >> from14ToCurrent
-
-    from12ToCurrent = from12To13 >> from13ToCurrent
-
-    from11ToCurrent = from11To12 >> from12ToCurrent
-
-    from10ToCurrent = from10To11 >> from11ToCurrent
-
-    from9ToCurrent = from9To10 >> from10ToCurrent
-
-    from8ToCurrent = from8To9 >> from9ToCurrent
-
-    from7ToCurrent = from7To8 >> from8ToCurrent
-
-    from6ToCurrent = from6To7 >> from7ToCurrent
-
-    from5ToCurrent = from5To6 >> from6ToCurrent
-
-    from4ToCurrent = from4To5 >> from5ToCurrent
-
-    from3ToCurrent = from3To4 >> from4ToCurrent
-
-    from2ToCurrent = from2To3 >> from3ToCurrent
-
-    from1ToCurrent = from1To2 >> from2ToCurrent
-
-    from08ToCurrent = from08To1 >> from1ToCurrent
+    migrateFrom previousVersion
+      | previousVersion == curCatalogVer =
+          return $ "already at the latest version. current version: " <> show curCatalogVer
+      | [] <- neededMigrations =
+          throw400 NotSupported $ "unsupported version : " <> previousVersion
+      | otherwise =
+          traverse_ snd neededMigrations >> postMigrate
+      where
+        neededMigrations = dropWhile ((/= previousVersion) . fst) migrations
+        migrations =
+          [ ("0.8", from08To1)
+          , ("1", from1To2)
+          , ("2", from2To3)
+          , ("3", from3To4)
+          , ("4", from4To5)
+          , ("5", from5To6)
+          , ("6", from6To7)
+          , ("7", from7To8)
+          , ("8", from8To9)
+          , ("9", from9To10)
+          , ("10", from10To11)
+          , ("11", from11To12)
+          , ("12", from12To13)
+          , ("13", from13To14)
+          , ("14", from14To15)
+          , ("15", from15To16)
+          , ("16", from16To17)
+          , ("17", from17To18)
+          , ("18", from18To19)
+          , ("19", from19To20)
+          , ("20", from20To21)
+          , ("21", from21To22)
+          ]
 
     postMigrate = do
        -- update the catalog version

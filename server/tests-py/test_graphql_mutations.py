@@ -123,6 +123,30 @@ class TestGraphqlInsertPermission(DefaultTestMutations):
     def test_blog_on_conflict_update_preset(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/blog_on_conflict_update_preset.yaml")
 
+    def test_arr_sess_var_insert_article_as_editor_allowed_user_id(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/insert_article_arr_sess_var_editor_allowed_user_id.yaml")
+
+    def test_arr_sess_var_insert_article_as_editor_err_not_allowed_user_id(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/insert_article_arr_sess_var_editors_err_not_allowed_user_id.yaml")
+
+    def test_seller_insert_computer_json_has_keys_all(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/seller_insert_computer_has_keys_all_pass.yaml")
+
+    def test_seller_insert_computer_json_has_keys_all_err(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/seller_insert_computer_has_keys_all_fail.yaml")
+
+    def test_developer_insert_computer_json_has_keys_any(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/developer_insert_has_keys_any_pass.yaml")
+
+    def test_developer_insert_computer_json_has_keys_any_err(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/developer_insert_has_keys_any_fail.yaml")
+
+    def test_user_insert_account_success(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/user_insert_account_success.yaml")
+
+    def test_user_insert_account_fail(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/user_insert_account_fail.yaml")
+
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/insert/permissions"
@@ -314,6 +338,11 @@ class TestGraphqlUpdatePermissions(DefaultTestMutations):
     def test_user_update_resident_preset_session_var(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/user_update_resident_preset_session_var.yaml', transport)
 
+    def test_user_account_update_success(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/user_account_update_success.yaml')
+
+    def test_user_account_update_no_rows(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/user_account_update_no_rows.yaml')
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/update/permissions"
@@ -358,6 +387,38 @@ class TestGraphqlDeletePermissions(DefaultTestMutations):
     def test_resident_delete_without_select_perm_fail(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/resident_delete_without_select_perm_fail.yaml")
 
+    def test_agent_delete_perm_arr_sess_var(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/agent_delete_perm_arr_sess_var.yaml")
+
+    def test_agent_delete_perm_arr_sess_var_fail(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/agent_delete_perm_arr_sess_var_fail.yaml")
+
+    def test_user_delete_account_success(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/user_delete_account_success.yaml")
+
+    def test_user_delete_account_no_rows(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/user_delete_account_no_rows.yaml")
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/delete/permissions"
+
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+class TestGraphQLMutateEnums(DefaultTestMutations):
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_mutation/enums'
+
+    def test_insert_enum_field(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/insert_enum_field.yaml', transport)
+
+    def test_insert_enum_field_bad_value(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/insert_enum_field_bad_value.yaml', transport)
+
+    def test_update_enum_field(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/update_enum_field.yaml', transport)
+
+    def test_update_where_enum_field(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/update_where_enum_field.yaml', transport)
+
+    def test_delete_where_enum_field(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/delete_where_enum_field.yaml', transport)

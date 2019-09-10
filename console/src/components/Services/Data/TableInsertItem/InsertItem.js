@@ -1,16 +1,21 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import TableHeader from '../TableCommon/TableHeader';
-import { insertItem, I_RESET } from './InsertActions';
-import { ordinalColSort } from '../utils';
-import { setTable } from '../DataActions';
 import JsonInput from '../../../Common/CustomInputTypes/JsonInput';
+import TextInput from '../../../Common/CustomInputTypes/TextInput';
 import Button from '../../../Common/Button/Button';
-import { getPlaceholder, BOOLEAN, JSONB, JSONDTYPE } from '../utils';
+import ReloadEnumValuesButton from '../Common/ReusableComponents/ReloadEnumValuesButton';
+import { getPlaceholder, BOOLEAN, JSONB, JSONDTYPE, TEXT } from '../utils';
+import { ordinalColSort } from '../utils';
 
-import { getParentNodeByClass } from '../../../../utils/domFunctions';
-
+import { insertItem, I_RESET } from './InsertActions';
+import { setTable } from '../DataActions';
 import { NotFoundError } from '../../../Error/PageNotFound';
+import {
+  findTable,
+  generateTableDef,
+  isColumnAutoIncrement,
+} from '../../../Common/utils/pgUtils';
 
 class InsertItem extends Component {
   constructor() {
@@ -28,8 +33,8 @@ class InsertItem extends Component {
 
   nextInsert() {
     // when use state object remember to do it inside a class method.
-    // Since the state variable lifecycle is tired to the instance of the class
-    // and making this change using an anonymous function will case errors.
+    // Since the state variable lifecycle is tied to the instance of the class
+    // and making this change using an anonymous function will cause errors.
     this.setState({
       insertedRows: this.state.insertedRows + 1,
     });
@@ -38,9 +43,9 @@ class InsertItem extends Component {
   render() {
     const {
       tableName,
+      currentSchema,
       clone,
       schemas,
-      currentSchema,
       migrationMode,
       ongoingRequest,
       lastError,
@@ -50,50 +55,46 @@ class InsertItem extends Component {
     } = this.props;
 
     const styles = require('../../../Common/TableCommon/Table.scss');
-    // check if table exists
-    const currentTable = schemas.find(
-      s => s.table_name === tableName && s.table_schema === currentSchema
+
+    const currentTable = findTable(
+      schemas,
+      generateTableDef(tableName, currentSchema)
     );
+
+    // check if table exists
     if (!currentTable) {
       // throw a 404 exception
       throw new NotFoundError();
     }
 
-    const _columns = schemas.find(
-      x => x.table_name === tableName && x.table_schema === currentSchema
-    ).columns;
+    const columns = currentTable.columns.sort(ordinalColSort);
+
     const refs = {};
-    const columns = _columns.sort(ordinalColSort);
 
     const elements = columns.map((col, i) => {
       const colName = col.column_name;
+      const colType = col.data_type;
       const hasDefault = col.column_default && col.column_default.trim() !== '';
       const isNullable = col.is_nullable && col.is_nullable !== 'NO';
+      const isIdentity = col.is_identity && col.is_identity !== 'NO';
+      const isAutoIncrement = isColumnAutoIncrement(col);
 
       refs[colName] = { valueNode: null, nullNode: null, defaultNode: null };
       const inputRef = node => (refs[colName].valueNode = node);
+
       const clicker = e => {
-        const checkboxLabel = getParentNodeByClass(e.target, 'radio-inline');
-        if (checkboxLabel) {
-          checkboxLabel.click();
-        } else {
-          e.target.parentNode.click();
-        }
+        e.target
+          .closest('.radio-inline')
+          .querySelector('input[type="radio"]').checked = true;
         e.target.focus();
       };
-      const colDefault = col.column_default;
-      let isAutoIncrement = false;
-      if (
-        colDefault ===
-        "nextval('" + tableName + '_' + colName + "_seq'::regclass)"
-      ) {
-        isAutoIncrement = true;
-      }
 
       const standardInputProps = {
         className: `form-control ${styles.insertBox}`,
         'data-test': `typed-input-${i}`,
         defaultValue: clone && colName in clone ? clone[colName] : '',
+        ref: inputRef,
+        type: 'text',
         onClick: clicker,
         onChange: (e, val) => {
           if (isAutoIncrement) return;
@@ -101,9 +102,10 @@ class InsertItem extends Component {
 
           const textValue = typeof val === 'string' ? val : e.target.value;
 
-          const radioToSelectWhenEmpty = hasDefault
-            ? refs[colName].defaultNode
-            : refs[colName].nullNode;
+          const radioToSelectWhenEmpty =
+            hasDefault || isIdentity
+              ? refs[colName].defaultNode
+              : refs[colName].nullNode;
           refs[colName].insertRadioNode.checked = !!textValue.length;
           radioToSelectWhenEmpty.checked = !textValue.length;
         },
@@ -125,11 +127,8 @@ class InsertItem extends Component {
           }
         },
         placeholder: 'text',
-        ref: inputRef,
-        type: 'text',
       };
 
-      const colType = col.data_type;
       const placeHolder = hasDefault
         ? col.column_default
         : getPlaceholder(colType);
@@ -144,34 +143,37 @@ class InsertItem extends Component {
         );
       }
 
-      if (colType === JSONDTYPE || colType === JSONB) {
-        // JSON/JSONB
-        typedInput = (
-          <JsonInput
-            standardProps={standardInputProps}
-            placeholderProp={getPlaceholder(colType)}
-          />
-        );
-      }
-
-      if (colType === BOOLEAN) {
-        // Boolean
-        typedInput = (
-          <select
-            {...standardInputProps}
-            onClick={e => {
-              e.target.parentNode.parentNode.click();
-              e.target.focus();
-            }}
-            defaultValue={placeHolder}
-          >
-            <option value="" disabled>
-              -- bool --
-            </option>
-            <option value="true">True</option>
-            <option value="false">False</option>
-          </select>
-        );
+      switch (colType) {
+        case JSONB:
+        case JSONDTYPE:
+          typedInput = (
+            <JsonInput
+              standardProps={standardInputProps}
+              placeholderProp={getPlaceholder(colType)}
+            />
+          );
+          break;
+        case TEXT:
+          typedInput = (
+            <TextInput
+              standardProps={{ ...standardInputProps }}
+              placeholderProp={getPlaceholder(colType)}
+            />
+          );
+          break;
+        case BOOLEAN:
+          typedInput = (
+            <select {...standardInputProps} defaultValue={placeHolder}>
+              <option value="" disabled>
+                -- bool --
+              </option>
+              <option value="true">True</option>
+              <option value="false">False</option>
+            </select>
+          );
+          break;
+        default:
+          break;
       }
 
       return (
@@ -211,14 +213,14 @@ class InsertItem extends Component {
           </label>
           <label className={styles.radioLabel + ' radio-inline'}>
             <input
-              disabled={!hasDefault}
               type="radio"
               ref={node => {
                 refs[colName].defaultNode = node;
               }}
               name={colName + '-value'}
               value="option3"
-              defaultChecked={hasDefault}
+              disabled={!hasDefault && !isIdentity}
+              defaultChecked={hasDefault || isIdentity}
               data-test={`typed-input-default-${i}`}
             />
             <span className={styles.radioSpan}>Default</span>
@@ -228,12 +230,14 @@ class InsertItem extends Component {
     });
 
     let alert = null;
+    let buttonText = this.state.insertedRows > 0 ? 'Insert Again' : 'Save';
     if (ongoingRequest) {
       alert = (
         <div className="hidden alert alert-warning" role="alert">
           Inserting...
         </div>
       );
+      buttonText = 'Saving...';
     } else if (lastError) {
       alert = (
         <div className="hidden alert alert-danger" role="alert">
@@ -253,10 +257,9 @@ class InsertItem extends Component {
         <TableHeader
           count={count}
           dispatch={dispatch}
-          tableName={tableName}
+          table={currentTable}
           tabName="insert"
           migrationMode={migrationMode}
-          currentSchema={currentSchema}
         />
         <br />
         <div className={styles.insertContainer + ' container-fluid'}>
@@ -290,7 +293,7 @@ class InsertItem extends Component {
                 }}
                 data-test="insert-save-button"
               >
-                {this.state.insertedRows > 0 ? 'Insert Again' : 'Save'}
+                {buttonText}
               </Button>
               <Button
                 color="white"
@@ -318,6 +321,10 @@ class InsertItem extends Component {
               >
                 Clear
               </Button>
+              <ReloadEnumValuesButton
+                dispatch={dispatch}
+                isEnum={currentTable.is_enum}
+              />
             </form>
           </div>
           <div className="col-xs-3">{alert}</div>
@@ -334,11 +341,10 @@ InsertItem.propTypes = {
   currentSchema: PropTypes.string.isRequired,
   clone: PropTypes.object,
   schemas: PropTypes.array.isRequired,
-  migrationMode: PropTypes.bool.isRequired,
   ongoingRequest: PropTypes.bool.isRequired,
   lastSuccess: PropTypes.object,
   lastError: PropTypes.object,
-  isModalOpen: PropTypes.bool,
+  migrationMode: PropTypes.bool.isRequired,
   count: PropTypes.number,
   dispatch: PropTypes.func.isRequired,
 };

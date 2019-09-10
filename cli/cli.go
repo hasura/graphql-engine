@@ -21,7 +21,7 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/gofrs/uuid"
 	"github.com/hasura/graphql-engine/cli/version"
-	colorable "github.com/mattn/go-colorable"
+	"github.com/mattn/go-colorable"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -170,6 +170,9 @@ type ExecutionContext struct {
 
 	// LogLevel indicates the logrus default logging level
 	LogLevel string
+
+	// NoColor indicates if the outputs shouldn't be colorized
+	NoColor bool
 
 	// Telemetry collects the telemetry data throughout the execution
 	Telemetry *telemetry.Data
@@ -343,12 +346,20 @@ func (ec *ExecutionContext) Spin(message string) {
 func (ec *ExecutionContext) setupLogger() {
 	if ec.Logger == nil {
 		logger := logrus.New()
+
 		logger.Formatter = &logrus.TextFormatter{
 			ForceColors:      true,
 			DisableTimestamp: true,
 		}
 		logger.Out = colorable.NewColorableStdout()
 		ec.Logger = logger
+	}
+
+	if ec.NoColor {
+		ec.Logger.Formatter = &logrus.TextFormatter{
+			DisableColors:    true,
+			DisableTimestamp: true,
+		}
 	}
 
 	if ec.LogLevel != "" {

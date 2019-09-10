@@ -1,9 +1,11 @@
 module Hasura.GraphQL.Resolve.InputValue
   ( withNotNull
   , tyMismatch
-  , asPGColValM
-  , asPGColVal
+  , asPGColumnTypeAndValueM
+  , asPGColumnValueM
+  , asPGColumnValue
   , asEnumVal
+  , asEnumValM
   , withObject
   , asObject
   , withObjectM
@@ -18,12 +20,14 @@ module Hasura.GraphQL.Resolve.InputValue
 
 import           Hasura.Prelude
 
-import qualified Data.Text                      as T
 import qualified Language.GraphQL.Draft.Syntax  as G
+
+import qualified Hasura.RQL.Types               as RQL
 
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
 withNotNull
@@ -40,36 +44,43 @@ tyMismatch expectedTy v =
   getAnnInpValKind (_aivValue v) <> " for value of type " <>
   G.showGT (_aivType v)
 
-asPGColValM
+asPGColumnTypeAndValueM
   :: (MonadError QErr m)
-  => AnnInpVal -> m (Maybe AnnPGVal)
-asPGColValM annInpVal = case val of
-  AGScalar colTy valM ->
-    return $ fmap (AnnPGVal varM (G.isNullable ty) colTy) valM
-  _                   ->
-    tyMismatch "pgvalue" annInpVal
-  where
-    AnnInpVal ty varM val = annInpVal
+  => AnnInpVal
+  -> m (PGColumnType, WithScalarType (Maybe PGScalarValue))
+asPGColumnTypeAndValueM v = case _aivValue v of
+  AGScalar colTy val -> pure (PGColumnScalar colTy, WithScalarType colTy val)
+  AGEnum _ (AGEReference reference maybeValue) -> do
+    let maybeScalarValue = PGValText . RQL.getEnumValue <$> maybeValue
+    pure (PGColumnEnumReference reference, WithScalarType PGText maybeScalarValue)
+  _ -> tyMismatch "pgvalue" v
 
-asPGColVal
-  :: (MonadError QErr m)
-  => AnnInpVal -> m AnnPGVal
-asPGColVal v = case _aivValue v of
-  AGScalar colTy (Just val) ->
-    return $ AnnPGVal (_aivVariable v) (G.isNullable (_aivType v)) colTy val
-  AGScalar colTy Nothing    ->
-    throw500 $ "unexpected null for ty "
-    <> T.pack (show colTy)
-  _            -> tyMismatch "pgvalue" v
+asPGColumnTypeAndAnnValueM :: (MonadError QErr m) => AnnInpVal -> m (PGColumnType, Maybe AnnPGVal)
+asPGColumnTypeAndAnnValueM v = do
+  (columnType, scalarValueM) <- asPGColumnTypeAndValueM v
+  let mkAnnPGColVal = AnnPGVal (_aivVariable v) (G.isNullable (_aivType v)) columnType
+  pure (columnType, mkAnnPGColVal <$> sequence scalarValueM)
 
-asEnumVal
-  :: (MonadError QErr m)
-  => AnnInpVal -> m (G.NamedType, G.EnumValue)
-asEnumVal v = case _aivValue v of
-  AGEnum ty (Just val) -> return (ty, val)
-  AGEnum ty Nothing ->
-    throw500 $ "unexpected null for ty " <> showNamedTy ty
-  _              -> tyMismatch "enum" v
+asPGColumnValueM :: (MonadError QErr m) => AnnInpVal -> m (Maybe AnnPGVal)
+asPGColumnValueM = fmap snd . asPGColumnTypeAndAnnValueM
+
+asPGColumnValue :: (MonadError QErr m) => AnnInpVal -> m AnnPGVal
+asPGColumnValue v = do
+  (columnType, annPGValM) <- asPGColumnTypeAndAnnValueM v
+  onNothing annPGValM $ throw500 ("unexpected null for type " <>> columnType)
+
+-- | Note: only handles “synthetic” enums (see 'EnumValuesInfo'). Enum table references are handled
+-- by 'asPGColumnTypeAndValueM' and its variants.
+asEnumVal :: (MonadError QErr m) => AnnInpVal -> m (G.NamedType, G.EnumValue)
+asEnumVal = asEnumValM >=> \case
+  (ty, Just val) -> pure (ty, val)
+  (ty, Nothing)  -> throw500 $ "unexpected null for ty " <> showNamedTy ty
+
+-- | Like 'asEnumVal', only handles “synthetic” enums.
+asEnumValM :: (MonadError QErr m) => AnnInpVal -> m (G.NamedType, Maybe G.EnumValue)
+asEnumValM v = case _aivValue v of
+  AGEnum ty (AGESynthetic valM) -> return (ty, valM)
+  _                             -> tyMismatch "enum" v
 
 withObject
   :: (MonadError QErr m)
@@ -128,7 +139,7 @@ parseMany fn v = case _aivValue v of
 
 onlyText
   :: (MonadError QErr m)
-  => PGColValue -> m Text
+  => PGScalarValue -> m Text
 onlyText = \case
   PGValText t -> return t
   PGValVarchar t -> return t
@@ -138,12 +149,12 @@ asPGColText
   :: (MonadError QErr m)
   => AnnInpVal -> m Text
 asPGColText val = do
-  pgColVal <- _apvValue <$> asPGColVal val
+  pgColVal <- pstValue . _apvValue <$> asPGColumnValue val
   onlyText pgColVal
 
 asPGColTextM
   :: (MonadError QErr m)
   => AnnInpVal -> m (Maybe Text)
 asPGColTextM val = do
-  pgColValM <- fmap _apvValue <$> asPGColValM val
+  pgColValM <- fmap (pstValue . _apvValue) <$> asPGColumnValueM val
   mapM onlyText pgColValM

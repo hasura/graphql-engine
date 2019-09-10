@@ -3,7 +3,7 @@ Sort query results
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
 Results from your query can be sorted by using the ``order_by`` argument. The argument can be used to sort nested

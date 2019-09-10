@@ -15,10 +15,10 @@ from validate import check_query
 
 
 if not pytest.config.getoption('--hge-jwt-key-file'):
-    pytest.skip('--hge-jwt-key-file is missing, skipping JWT basic tests', allow_module_level=True)
+    pytest.skip('--hge-jwt-key-file is missing, skipping JWT tests', allow_module_level=True)
 
 if not pytest.config.getoption('--hge-jwt-conf'):
-    pytest.skip('--hge-jwt-key-conf is missing, skipping JWT basic tests', allow_module_level=True)
+    pytest.skip('--hge-jwt-key-conf is missing, skipping JWT tests', allow_module_level=True)
 
 def get_claims_fmt(raw_conf):
     conf = json.loads(raw_conf)
@@ -199,6 +199,40 @@ class TestJWTBasic():
             self.conf['status'] = 400
         check_query(hge_ctx, self.conf, add_auth=False)
 
+    def test_jwt_no_audience_in_conf(self, hge_ctx, endpoint):
+        jwt_conf = json.loads(hge_ctx.hge_jwt_conf)
+        if 'audience' in jwt_conf:
+            pytest.skip('audience present in conf, skipping testing no audience')
+
+        self.claims['https://hasura.io/jwt/claims'] = mk_claims(hge_ctx.hge_jwt_conf, {
+            'x-hasura-user-id': '1',
+            'x-hasura-default-role': 'user',
+            'x-hasura-allowed-roles': ['user'],
+        })
+
+        self.claims['aud'] = 'hasura-test-suite'
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        self.conf['headers']['Authorization'] = 'Bearer ' + token
+        self.conf['url'] = endpoint
+        check_query(hge_ctx, self.conf, add_auth=False)
+
+    def test_jwt_no_issuer_in_conf(self, hge_ctx, endpoint):
+        jwt_conf = json.loads(hge_ctx.hge_jwt_conf)
+        if 'issuer' in jwt_conf:
+            pytest.skip('issuer present in conf, skipping testing no issuer')
+
+        self.claims['https://hasura.io/jwt/claims'] = mk_claims(hge_ctx.hge_jwt_conf, {
+            'x-hasura-user-id': '1',
+            'x-hasura-default-role': 'user',
+            'x-hasura-allowed-roles': ['user'],
+        })
+
+        self.claims['iss'] = 'rubbish-issuer'
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        self.conf['headers']['Authorization'] = 'Bearer ' + token
+        self.conf['url'] = endpoint
+        check_query(hge_ctx, self.conf, add_auth=False)
+
     @pytest.fixture(autouse=True)
     def transact(self, setup):
         self.dir = 'queries/graphql_query/permissions'
@@ -250,7 +284,7 @@ class TestSubscriptionJwtExpiry(object):
             'x-hasura-default-role': 'user',
             'x-hasura-allowed-roles': ['user'],
         })
-        exp = curr_time + timedelta(seconds=5)
+        exp = curr_time + timedelta(seconds=4)
         self.claims['exp'] = round(exp.timestamp())
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
         payload = {
@@ -259,5 +293,151 @@ class TestSubscriptionJwtExpiry(object):
             }
         }
         init_ws_conn(hge_ctx, ws_client, payload)
-        time.sleep(5)
+        time.sleep(6)
         assert ws_client.remote_closed == True, ws_client.remote_closed
+
+
+@pytest.mark.parametrize('endpoint', ['/v1/graphql', '/v1alpha1/graphql'])
+class TestJwtAudienceCheck():
+    def test_jwt_valid_audience(self, hge_ctx, endpoint):
+        jwt_conf = json.loads(hge_ctx.hge_jwt_conf)
+        if 'audience' not in jwt_conf:
+            pytest.skip('audience not present in conf, skipping testing audience')
+
+        audience = jwt_conf['audience']
+        audience = audience if isinstance(audience, str) else audience[0]
+        self.claims['https://hasura.io/jwt/claims'] = mk_claims(hge_ctx.hge_jwt_conf, {
+            'x-hasura-user-id': '1',
+            'x-hasura-default-role': 'user',
+            'x-hasura-allowed-roles': ['user'],
+        })
+        self.claims['aud'] = audience
+
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        self.conf['headers']['Authorization'] = 'Bearer ' + token
+        check_query(hge_ctx, self.conf, add_auth=False)
+
+    def test_jwt_invalid_audience(self, hge_ctx, endpoint):
+        jwt_conf = json.loads(hge_ctx.hge_jwt_conf)
+        if 'audience' not in jwt_conf:
+            pytest.skip('audience not present in conf, skipping testing audience')
+
+        self.claims['https://hasura.io/jwt/claims'] = mk_claims(hge_ctx.hge_jwt_conf, {
+            'x-hasura-user-id': '1',
+            'x-hasura-default-role': 'user',
+            'x-hasura-allowed-roles': ['user'],
+        })
+        self.claims['aud'] = 'rubbish_audience'
+
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        self.conf['headers']['Authorization'] = 'Bearer ' + token
+        self.conf['response'] = {
+            'errors': [{
+                'extensions': {
+                    'code': 'invalid-jwt',
+                    'path': '$'
+                },
+                'message': 'Could not verify JWT: JWTNotInAudience'
+            }]
+        }
+        self.conf['url'] = endpoint
+        if endpoint == '/v1/graphql':
+            self.conf['status'] = 200
+        if endpoint == '/v1alpha1/graphql':
+            self.conf['status'] = 400
+        check_query(hge_ctx, self.conf, add_auth=False)
+
+    @pytest.fixture(autouse=True)
+    def transact(self, setup):
+        self.dir = 'queries/graphql_query/permissions'
+        with open(self.dir + '/user_select_query_unpublished_articles.yaml') as c:
+            self.conf = yaml.safe_load(c)
+        curr_time = datetime.now()
+        exp_time = curr_time + timedelta(hours=1)
+        self.claims = {
+            'sub': '1234567890',
+            'name': 'John Doe',
+            'iat': math.floor(curr_time.timestamp()),
+            'exp': math.floor(exp_time.timestamp())
+        }
+
+    @pytest.fixture(scope='class')
+    def setup(self, request, hge_ctx):
+        self.dir = 'queries/graphql_query/permissions'
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        assert st_code == 200, resp
+
+@pytest.mark.parametrize('endpoint', ['/v1/graphql', '/v1alpha1/graphql'])
+class TestJwtIssuerCheck():
+    def test_jwt_valid_issuer(self, hge_ctx, endpoint):
+        jwt_conf = json.loads(hge_ctx.hge_jwt_conf)
+        if 'issuer' not in jwt_conf:
+            pytest.skip('issuer not present in conf, skipping testing issuer')
+
+        issuer = jwt_conf['issuer']
+        self.claims['https://hasura.io/jwt/claims'] = mk_claims(hge_ctx.hge_jwt_conf, {
+            'x-hasura-user-id': '1',
+            'x-hasura-default-role': 'user',
+            'x-hasura-allowed-roles': ['user'],
+        })
+        self.claims['iss'] = issuer
+
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        self.conf['headers']['Authorization'] = 'Bearer ' + token
+        check_query(hge_ctx, self.conf, add_auth=False)
+
+    def test_jwt_invalid_issuer(self, hge_ctx, endpoint):
+        jwt_conf = json.loads(hge_ctx.hge_jwt_conf)
+        if 'issuer' not in jwt_conf:
+            pytest.skip('issuer not present in conf, skipping testing issuer')
+
+        self.claims['https://hasura.io/jwt/claims'] = mk_claims(hge_ctx.hge_jwt_conf, {
+            'x-hasura-user-id': '1',
+            'x-hasura-default-role': 'user',
+            'x-hasura-allowed-roles': ['user'],
+        })
+        self.claims['iss'] = 'rubbish_issuer'
+
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        self.conf['headers']['Authorization'] = 'Bearer ' + token
+        self.conf['response'] = {
+            'errors': [{
+                'extensions': {
+                    'code': 'invalid-jwt',
+                    'path': '$'
+                },
+                'message': 'Could not verify JWT: JWTNotInIssuer'
+            }]
+        }
+        self.conf['url'] = endpoint
+        if endpoint == '/v1/graphql':
+            self.conf['status'] = 200
+        if endpoint == '/v1alpha1/graphql':
+            self.conf['status'] = 400
+        check_query(hge_ctx, self.conf, add_auth=False)
+
+    @pytest.fixture(autouse=True)
+    def transact(self, setup):
+        self.dir = 'queries/graphql_query/permissions'
+        with open(self.dir + '/user_select_query_unpublished_articles.yaml') as c:
+            self.conf = yaml.safe_load(c)
+        curr_time = datetime.now()
+        exp_time = curr_time + timedelta(hours=1)
+        self.claims = {
+            'sub': '1234567890',
+            'name': 'John Doe',
+            'iat': math.floor(curr_time.timestamp()),
+            'exp': math.floor(exp_time.timestamp())
+        }
+
+    @pytest.fixture(scope='class')
+    def setup(self, request, hge_ctx):
+        self.dir = 'queries/graphql_query/permissions'
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        assert st_code == 200, resp

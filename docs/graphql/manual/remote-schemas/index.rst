@@ -65,7 +65,9 @@ started is to use one of our boilerplates:
 Step 2: Merge remote schema
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To merge your remote schema with the GraphQL engine's auto-generated schema, head to the ``Remote Schemas`` tab of the console and click on the ``Add`` button.
+To merge your remote schema with the GraphQL engine's auto-generated schema:
+
+Head to the ``Remote Schemas`` tab of the console and click on the ``Add`` button.
 
 .. thumbnail:: ../../../img/graphql/manual/business-logic/add-remote-schemas-interface.png
 
@@ -117,6 +119,17 @@ Remote schema fields nomenclature
 - Top-level field names need to be unique across all merged schemas (*case-sensitive match*).
 - Types with the *exact same name and structure* will be merged. But types with the *same name but different
   structure* will result in type conflicts.
+
+
+Schema refreshing
+^^^^^^^^^^^^^^^^^
+
+For versions <= ``v1.0.0-beta.2``, GraphQL schema of each added remote server is refreshed every time a
+metadata modifying operation like adding tables/functions, defining relationships/permissions etc. is done.
+
+From ``v1.0.0-beta.3`` onwards, a remote server's GraphQL schema is cached and refreshed only when user
+explicitly reloads remote schema by clicking the ``Reload`` button on the console or
+by making a :doc:`reload_remote_schema<../api-reference/schema-metadata-api/remote-schemas>` metadata API request
 
 
 Current limitations

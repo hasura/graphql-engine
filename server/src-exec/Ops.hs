@@ -10,7 +10,7 @@ import           Migrate                      (curCatalogVer)
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Schema.Table
+import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
 import           Hasura.Server.Query
 import           Hasura.SQL.Types
@@ -123,7 +123,6 @@ setAllAsSystemDefined = liftTx $ Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "UPDATE hdb_catalog.hdb_table SET is_system_defined = 'true'" () False
   Q.unitQ "UPDATE hdb_catalog.hdb_relationship SET is_system_defined = 'true'" () False
   Q.unitQ "UPDATE hdb_catalog.hdb_permission SET is_system_defined = 'true'" () False
-  Q.unitQ "UPDATE hdb_catalog.hdb_query_template SET is_system_defined = 'true'" () False
 
 cleanCatalog :: (MonadTx m) => m ()
 cleanCatalog = liftTx $ Q.catchE defaultTxErrorHandler $ do

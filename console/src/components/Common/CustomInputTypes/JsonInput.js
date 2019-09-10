@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import AceEditor from 'react-ace';
 
-const styles = require('./JsonInput.scss');
+import 'brace/mode/markdown';
+import 'brace/theme/github';
+
+const styles = require('./CustomInput.scss');
 
 const NORMALKEY = 'normal';
 const JSONKEY = 'json';
@@ -112,28 +115,32 @@ const JsonInput = props => {
         value={data}
         onChange={handleInputChangeAndPropagate}
         onKeyUp={handleKeyUpEvent}
-        className={allProps.className + ' ' + styles.jsonNormalInput}
+        className={allProps.className + ' ' + styles.normalInput}
       />
     );
   };
 
   const editor = editorType === JSONKEY ? getJsonEditor() : getNormalEditor();
 
+  const toggleIcon = (
+    <i
+      key="icon_json_editor"
+      className={
+        'fa ' +
+        styles.modeToggleButton +
+        (editorType === JSONKEY ? ' fa-compress' : ' fa-expand')
+      }
+      onClick={() => updateState(toggleEditorType)}
+      title={
+        (editorType === JSONKEY ? 'Collapse' : 'Expand') + ' (Ctrl + Space)'
+      }
+    />
+  );
+
   return (
     <span className="json_input_editor">
       <label>{editor}</label>
-      <i
-        key="icon_json_editor"
-        className={
-          'fa ' +
-          styles.jsonToggleButton +
-          (editorType === JSONKEY ? ' fa-compress' : ' fa-expand')
-        }
-        onClick={() => updateState(toggleEditorType)}
-        title={
-          (editorType === JSONKEY ? 'Collapse' : 'Expand') + '(Ctrl + Space)'
-        }
-      />
+      {toggleIcon}
     </span>
   );
 };

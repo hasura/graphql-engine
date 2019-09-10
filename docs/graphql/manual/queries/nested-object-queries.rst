@@ -3,7 +3,7 @@ Nested object queries
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
 You can use the object (one-to-one) or array (one-to-many) :doc:`relationships <../schema/relationships/index>` defined

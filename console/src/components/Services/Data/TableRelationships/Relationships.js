@@ -51,8 +51,7 @@ const addRelationshipCellView = (
       dispatch(
         showErrorNotification(
           'Error adding relationship!',
-          'Please select a name for the relationship',
-          { custom: 'Relationship name cannot be empty' }
+          'Relationship name cannot be empty'
         )
       );
       return false;
@@ -61,7 +60,7 @@ const addRelationshipCellView = (
         showErrorNotification(
           gqlRelErrorNotif[0],
           gqlRelErrorNotif[1],
-          gqlRelErrorNotif[3]
+          gqlRelErrorNotif[2]
         )
       );
       return false;
@@ -423,9 +422,8 @@ class Relationships extends Component {
       <div className={`${styles.container} container-fluid`}>
         <TableHeader
           dispatch={dispatch}
-          tableName={tableName}
+          table={tableSchema}
           tabName="relationships"
-          currentSchema={currentSchema}
           migrationMode={migrationMode}
         />
         <br />

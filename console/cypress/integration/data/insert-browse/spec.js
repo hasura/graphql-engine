@@ -413,7 +413,7 @@ export const passEditButton = () => {
     '{selectall}{del}'
   );
   cy.get(getElementFromAlias(`typed-input-${textIndex}`)).type('new-text');
-  cy.get(getElementFromAlias('save-button')).click();
+  cy.get(getElementFromAlias('edit-save-button')).click();
   // cy.get('h4').contains('Edited!', { timeout: 7000 });
   // cy.get('.notification-error');
   cy.wait(7000);

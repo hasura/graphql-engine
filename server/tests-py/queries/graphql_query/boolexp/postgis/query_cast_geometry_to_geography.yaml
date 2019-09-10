@@ -1,0 +1,26 @@
+description: Test casting from PostGIS geometry to geography in condition
+url: /v1/graphql
+status: 200
+response:
+  data:
+    geog_as_geom_table:
+    - name: London
+    - name: Paris
+query:
+  query: |
+    {
+      geog_as_geom_table(where: {
+        geom_col: {
+          _cast: {
+            geography: {
+              _st_d_within: {
+                distance: 1000000
+                from: { type: "Point", coordinates: [1, 50] }
+              }
+            }
+          }
+        }
+      }){
+        name
+      }
+    }

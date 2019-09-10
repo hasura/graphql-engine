@@ -15,13 +15,6 @@
   text-align: center;
 }
 
-.limitInput {
-  display: inline-block;
-  width: 100px;
-  margin-left: 15px;
-  height: 25px;
-}
-
 .colEditor {
   :global(.form-control):focus {
     box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 0 rgba(102, 175, 233, 0.6);
@@ -33,12 +26,6 @@
   }
 }
 
-.newRoleInput {
-  margin-left: 20px;
-  width: calc(100% - 40px);
-  height: 30px;
-}
-
 .input {
   margin-right: 10px;
 }
@@ -47,51 +34,12 @@
   margin-right: 10px;
 }
 
-.column_type_select {
-  width: 200px;
-  font-size: 12px;
-}
-
 .modifyMinWidth {
   min-width: 735px;
 }
 
-.leftIndent {
-  padding-left: 0;
-  margin-left: 0 !important;
-  margin-right: 0 !important;
-
-  .insertRatio {
-    .paddRight {
-      select {
-        width: 150px;
-        display: inline-block;
-        margin: 0 10px;
-        height: 28px;
-      }
-    }
-  }
-}
-
 hr {
   clear: both;
-}
-
-.removeBtnPadding {
-  padding-left: 66px;
-}
-
-.fkSelect {
-  max-width: 200px;
-}
-
-.fkInEdit {
-  display: inline-block;
-  width: 47%;
-}
-
-.fkInEditLeft {
-  margin-right: 1%;
 }
 
 .nullable {
@@ -114,223 +62,10 @@ hr {
   margin-left: 5px;
 }
 
-.relBlockInline {
-  display: inline-block;
-  width: 16%;
-}
-
-.relBlockLeft {
-  text-align: right;
-  padding-right: 10px;
-}
-
-.relBlockRight {
-  width: 30%;
-}
-
-.radioWrapperAccess {
-  background-color: #F2F4F6;
-  padding: 20px;
-  clear: both;
-  border-radius: 5px;
-}
-
-.greenCircle, .redCircle {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  margin-left: 10px;
-}
-
-.greenCircle {
-  background-color: #73ca45;
-}
-
-.redCircle {
-  background-color: #fd886b;
-}
-
-.quickDefaultsPadd {
-  padding-bottom: 5px;
-}
-
-.quickDefaultsLeft {
-  padding-left: 5px;
-}
-
-.permissionsTable {
-  width: 85%;
-
-  td, th {
-    text-align: center;
-    vertical-align: middle !important;
-    position: relative;
-  }
-
-  thead {
-    font-weight: bold;
-  }
-
-  td:first-child, th:first-child {
-    border-right: 4px double #ddd;
-    font-weight: bold;
-    width: 10%;
-  }
-
-  td:nth-child(2) {
-    overflow: auto;
-    max-width: 250px;
-    width: 250px;
-  }
-
-  //.permissionDelete {
-  //  cursor: pointer;
-  //  margin-left: 10px;
-  //}
-
-  .editPermsLink {
-    font-size: 12px;
-    position: absolute;
-    right: 10px;
-    color: #337ab7;
-    cursor: pointer;
-  }
-
-  .bulkSelect {
-    margin-right: 10px !important;
-  }
-
-  .clickableCell {
-    cursor: pointer;
-  }
-
-  .clickableCell:hover {
-    background-color: #efefef;
-  }
-
-  .currEdit, .currEdit:hover {
-    background-color: #FFF3D5;
-    color: #FD9540;
-  }
-}
-
-.permissionsLegend {
-  font-size: 12px;
-  margin-right: 5px;
-  margin-bottom: 20px;
-  //float: right;
-  //clear: both;
-
-  .permissionsLegendValue {
-    margin-right: 15px;
-  }
-}
-
-.permissionSymbolNA {
-  color: firebrick;
-}
-
-.permissionSymbolFA {
-  color: green;
-}
-
-.permissionSymbolNA,
-.permissionSymbolFA,
-.permissionSymbolPA {
-  font-size: 16px;
-}
-
-.applyBulkPermissions {
-  display: inline-block;
-}
-
-.samePermissionRole {
-  display: inline-block;
-  width: auto;
-  height: auto;
-}
-
 .activeEdit {
   padding: 10px;
   background: #fff;
   border: 1px solid #ccc;
   margin-bottom: 15px;
   // overflow: auto;
-
-  .editPermsHeading {
-    font-weight: bold;
-    font-size: 16px;
-    margin-bottom: 20px;
-    word-wrap: break-word;
-  }
-
-  .sectionStatus {
-    font-weight: normal;
-  }
-
-  .editPermsSection {
-    margin: 5px;
-    padding: 10px;
-    word-wrap: break-word;
-
-    .columnListElement {
-      float: left;
-      margin-right: 50px;
-    }
-
-    .form_permission_insert_set_wrapper {
-      .permission_insert_set_wrapper {
-        .configure_insert_set_checkbox {
-          position: relative;
-          display: block;
-          margin-top: 10px;
-          margin-bottom: 10px;
-
-          label {
-            cursor: pointer;
-            min-height: 20px;
-            font-weight: normal;
-
-            input:not([disabled]) {
-              cursor: pointer;
-            }
-          }
-        }
-
-        .insertSetConfigRow {
-          margin: 10px 0px;
-          display: flex;
-          align-items: center;
-
-          .input_element_wrapper {
-            width: 20%;
-
-            i {
-              cursor: pointer;
-            }
-
-            select {
-              width: 100%;
-            }
-
-            input {
-              width: 100%;
-            }
-          }
-        }
-
-        .set_warning {
-          margin-left: 25px;
-
-          .danger_text {
-            color: red;
-          }
-        }
-      }
-    }
-  }
-}
-
-.chevron_mar_right {
-  margin-right: 5px;
 }

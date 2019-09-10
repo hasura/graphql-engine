@@ -4,11 +4,15 @@ import TableHeader from '../TableCommon/TableHeader';
 
 import { getAllDataTypeMap } from '../Common/utils';
 
+import { TABLE_ENUMS_SUPPORT } from '../../../../helpers/versionUtils';
+import globals from '../../../../Globals';
+
 import {
   deleteTableSql,
   untrackTableSql,
   RESET,
   setUniqueKeys,
+  toggleTableAsEnum,
 } from '../TableModify/ModifyActions';
 import {
   setTable,
@@ -20,8 +24,12 @@ import ColumnEditorList from './ColumnEditorList';
 import ColumnCreator from './ColumnCreator';
 import PrimaryKeyEditor from './PrimaryKeyEditor';
 import TableCommentEditor from './TableCommentEditor';
+import EnumsSection, {
+  EnumTableModifyWarning,
+} from '../Common/ReusableComponents/EnumsSection';
 import ForeignKeyEditor from './ForeignKeyEditor';
 import UniqueKeyEditor from './UniqueKeyEditor';
+import TriggerEditorList from './TriggerEditorList';
 import styles from './ModifyTable.scss';
 import { NotFoundError } from '../../../Error/PageNotFound';
 
@@ -53,6 +61,7 @@ class ModifyTable extends React.Component {
       uniqueKeyModify,
       columnDefaultFunctions,
       schemaList,
+      tableEnum,
     } = this.props;
 
     const dataTypeIndexMap = getAllDataTypeMap(dataTypes);
@@ -73,7 +82,7 @@ class ModifyTable extends React.Component {
         color="white"
         size="sm"
         onClick={() => {
-          const isOk = confirm('Are you sure to untrack?');
+          const isOk = confirm('Are you sure?');
           if (isOk) {
             dispatch(untrackTableSql(tableName));
           }
@@ -101,15 +110,34 @@ class ModifyTable extends React.Component {
       </Button>
     );
 
+    const getEnumsSection = () => {
+      const supportEnums =
+        globals.featuresCompatibility &&
+        globals.featuresCompatibility[TABLE_ENUMS_SUPPORT];
+      if (!supportEnums) return null;
+
+      const toggleEnum = () => dispatch(toggleTableAsEnum(tableSchema.is_enum));
+
+      return (
+        <React.Fragment>
+          <EnumsSection
+            isEnum={tableSchema.is_enum}
+            toggleEnum={toggleEnum}
+            loading={tableEnum.loading}
+          />
+          <hr />
+        </React.Fragment>
+      );
+    };
+
     // if (tableSchema.primary_key.columns > 0) {}
     return (
       <div className={`${styles.container} container-fluid`}>
         <TableHeader
           dispatch={dispatch}
-          tableName={tableName}
+          table={tableSchema}
           tabName="modify"
           migrationMode={migrationMode}
-          currentSchema={currentSchema}
         />
         <br />
         <div className={`container-fluid ${styles.padd_left_remove}`}>
@@ -126,6 +154,7 @@ class ModifyTable extends React.Component {
               isTable
               dispatch={dispatch}
             />
+            <EnumTableModifyWarning isEnum={tableSchema.is_enum} />
             <h4 className={styles.subheading_text}>Columns</h4>
             <ColumnEditorList
               validTypeCasts={validTypeCasts}
@@ -174,6 +203,10 @@ class ModifyTable extends React.Component {
               setUniqueKeys={setUniqueKeys}
             />
             <hr />
+            <h4 className={styles.subheading_text}>Triggers</h4>
+            <TriggerEditorList tableSchema={tableSchema} dispatch={dispatch} />
+            <hr />
+            {getEnumsSection()}
             {untrackBtn}
             {deleteBtn}
             <br />

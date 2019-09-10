@@ -1,107 +1,125 @@
 import React from 'react';
 import AceEditor from 'react-ace';
 import { showNotification } from '../../App/Actions';
-import { notifExpand, notifMsg } from '../../App/Actions';
 import Button from '../../Common/Button/Button';
 
-const styles = require('../../Common/TableCommon/Table.scss');
+import './Notification/NotificationOverrides.css';
+
+const styles = require('./Notification/Notification.scss');
+
+const getNotificationDetails = (detailsJson, children = null) => {
+  return (
+    <div className={'notification-details'}>
+      <AceEditor
+        readOnly
+        showPrintMargin={false}
+        mode="json"
+        showGutter={false}
+        theme="github"
+        name="notification-details"
+        value={JSON.stringify(detailsJson, null, 4)}
+        minLines={1}
+        maxLines={25}
+        width="100%"
+      />
+      {children}
+    </div>
+  );
+};
 
 const showErrorNotification = (title, message, error) => {
-  let modMessage;
-  let refreshBtn;
-
-  if (
-    error &&
-    error.message &&
-    (error.message.error === 'postgres query error' ||
-      error.message.error === 'query execution failed')
-  ) {
-    if (error.message.internal) {
-      modMessage =
-        error.message.code + ': ' + error.message.internal.error.message;
-    } else {
-      modMessage = error.code + ': ' + error.message.error;
-    }
-  } else if (error && 'info' in error) {
-    modMessage = error.info;
-  } else if (error && 'message' in error) {
-    if (error.code) {
-      if (error.message.error) {
-        modMessage = error.message.error.message;
+  const getErrorMessage = () => {
+    let notificationMessage;
+    if (
+      error &&
+      error.message &&
+      (error.message.error === 'postgres query error' ||
+        error.message.error === 'query execution failed')
+    ) {
+      if (error.message.internal) {
+        notificationMessage =
+          error.message.code + ': ' + error.message.internal.error.message;
       } else {
-        modMessage = error.message;
+        notificationMessage = error.code + ': ' + error.message.error;
       }
-    } else if (error && error.message && 'code' in error.message) {
-      modMessage = error.message.code + ' : ' + message;
+    } else if (error && 'info' in error) {
+      notificationMessage = error.info;
+    } else if (error && 'message' in error) {
+      if (error.code) {
+        if (error.message.error) {
+          notificationMessage = error.message.error.message;
+        } else {
+          notificationMessage = error.message;
+        }
+      } else if (error && error.message && 'code' in error.message) {
+        notificationMessage = error.message.code + ' : ' + message;
+      } else {
+        notificationMessage = error.code;
+      }
+    } else if (error && 'internal' in error && 'error' in error.internal) {
+      notificationMessage = error.code + ' : ' + error.internal.error.message;
+    } else if (error && 'custom' in error) {
+      notificationMessage = error.custom;
+    } else if (
+      error &&
+      'code' in error &&
+      'error' in error &&
+      'path' in error
+    ) {
+      // Data API error
+      notificationMessage = error.error;
     } else {
-      modMessage = error.code;
+      notificationMessage = error ? error : message;
     }
-  } else if (error && 'internal' in error && 'error' in error.internal) {
-    modMessage = error.code + ' : ' + error.internal.error.message;
-  } else if (error && 'custom' in error) {
-    modMessage = error.custom;
-  } else if (error && 'code' in error && 'error' in error && 'path' in error) {
-    // Data API error
-    modMessage = error.error;
-  } else {
-    modMessage = error ? error : message;
-  }
 
-  let finalJson = error ? error.message : null;
+    return notificationMessage;
+  };
 
-  if (error && 'action' in error) {
-    refreshBtn = (
-      <Button
-        className={styles.add_mar_top_small}
-        color="yellow"
-        size="sm"
-        onClick={e => {
-          e.preventDefault();
-          window.location.reload();
-        }}
-      >
-        Refresh Console
-      </Button>
-    );
-    finalJson = error.action;
-  } else if (error && 'internal' in error) {
-    finalJson = error.internal;
-  }
+  const getRefreshBtn = () => {
+    let refreshBtn;
+    if (error && 'action' in error) {
+      refreshBtn = (
+        <Button
+          className={styles.add_mar_top_small}
+          color="yellow"
+          size="sm"
+          onClick={e => {
+            e.preventDefault();
+            window.location.reload();
+          }}
+        >
+          Refresh Console
+        </Button>
+      );
+    }
+
+    return refreshBtn;
+  };
+
+  const getErrorJson = () => {
+    let errorJson;
+
+    if (error && 'action' in error) {
+      errorJson = error.action;
+    } else if (error && 'internal' in error) {
+      errorJson = error.internal;
+    } else if (error && 'message' in error) {
+      errorJson = error.message;
+    }
+
+    return errorJson;
+  };
+
+  const errorMessage = getErrorMessage();
+  const errorJson = getErrorJson();
 
   return dispatch => {
-    const expandClicked = finalMsg => {
-      // trigger a modal with a bigger view
-      dispatch(notifExpand(true));
-      dispatch(notifMsg(JSON.stringify(finalMsg, null, 4)));
-    };
-
     const getNotificationAction = () => {
       let action = null;
 
-      if (finalJson) {
-        const notification = [
-          <div className={styles.aceBlock}>
-            <i
-              onClick={e => {
-                e.preventDefault();
-                expandClicked(finalJson);
-              }}
-              className={styles.aceBlockExpand + ' fa fa-expand'}
-            />
-            <AceEditor
-              readOnly
-              showPrintMargin={false}
-              mode="json"
-              showGutter={false}
-              theme="github"
-              name="notification-response"
-              value={JSON.stringify(finalJson, null, 4)}
-              minLines={1}
-              maxLines={15}
-              width="100%"
-            />
-            {refreshBtn}
-          </div>,
+      if (errorJson) {
+        const errorDetails = [
+          getNotificationDetails(errorJson, getRefreshBtn()),
         ];
 
         action = {
@@ -110,10 +128,10 @@ const showErrorNotification = (title, message, error) => {
             dispatch(
               showNotification({
                 level: 'error',
+                position: 'br', // HACK: to avoid expansion of existing notifications
                 title,
-                message: modMessage,
-                dismissible: 'button',
-                children: notification,
+                message: errorMessage,
+                children: errorDetails,
               })
             );
           },
@@ -127,7 +145,7 @@ const showErrorNotification = (title, message, error) => {
       showNotification({
         level: 'error',
         title,
-        message: modMessage,
+        message: errorMessage,
         action: getNotificationAction(),
       })
     );
@@ -160,22 +178,7 @@ const showInfoNotification = title => {
 const showWarningNotification = (title, message, dataObj) => {
   const children = [];
   if (dataObj) {
-    children.push(
-      <div className={styles.aceBlock}>
-        <AceEditor
-          readOnly
-          showPrintMargin={false}
-          mode="json"
-          showGutter={false}
-          theme="github"
-          name="notification-response"
-          value={JSON.stringify(dataObj, null, 4)}
-          minLines={1}
-          maxLines={15}
-          width="100%"
-        />
-      </div>
-    );
+    children.push(getNotificationDetails(dataObj));
   }
 
   return dispatch => {

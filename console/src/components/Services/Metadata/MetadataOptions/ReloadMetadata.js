@@ -11,23 +11,33 @@ import {
 class ReloadMetadata extends Component {
   constructor() {
     super();
-    this.state = {};
-    this.state.isReloading = false;
+
+    this.state = {
+      isReloading: false,
+    };
   }
+
   render() {
     const { dispatch } = this.props;
     const { isReloading } = this.state;
+
     const metaDataStyles = require('../Metadata.scss');
-    const reloadMetadataAndLoadInconsistentMetadata = () => {
+
+    const reloadMetadataAndLoadInconsistentMetadata = e => {
+      e.preventDefault();
+
       this.setState({ isReloading: true });
+
       dispatch(
         reloadMetadata(
           () => {
             dispatch(showSuccessNotification('Metadata reloaded'));
             this.setState({ isReloading: false });
           },
-          () => {
-            dispatch(showErrorNotification('Error reloading metadata'));
+          err => {
+            dispatch(
+              showErrorNotification('Error reloading metadata', null, err)
+            );
             this.setState({ isReloading: false });
           }
         )
@@ -40,9 +50,10 @@ class ReloadMetadata extends Component {
           data-test="data-reload-metadata"
           color="white"
           size="sm"
+          disabled={this.state.isReloading}
           onClick={reloadMetadataAndLoadInconsistentMetadata}
         >
-          {buttonText}
+          {this.props.buttonText || buttonText}
         </Button>
       </div>
     );
@@ -51,7 +62,7 @@ class ReloadMetadata extends Component {
 
 ReloadMetadata.propTypes = {
   dispatch: PropTypes.func.isRequired,
-  dataHeaders: PropTypes.object.isRequired,
+  buttonText: PropTypes.string,
 };
 
 export default ReloadMetadata;

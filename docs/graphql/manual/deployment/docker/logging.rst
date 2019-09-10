@@ -21,5 +21,8 @@ GraphQL engine container:
   {"timestamp":"2018-10-09T11:20:32.054+0000", "level":"info", "type":"http-log", "detail":{"status":200, "query_hash":"01640c6dd131826cff44308111ed40d7fbd1cbed", "http_version":"HTTP/1.1", "query_execution_time":3.0177627e-2, "request_id":null, "url":"/v1/graphql", "user":{"x-hasura-role":"admin"}, "ip":"127.0.0.1", "response_size":209329, "method":"POST", "detail":null}}
   ...
 
+**See:**
 
-See https://docs.docker.com/config/containers/logging for more details on logging in Docker.
+- https://docs.docker.com/config/containers/logging for more details on logging in Docker.
+
+- :doc:`../logging` for more details on Hasura logs.

@@ -125,6 +125,8 @@ uBoolExp = restoringIdens . \case
   S.BENot b -> S.BENot <$> uBoolExp b
   S.BECompare op left right ->
     S.BECompare <$> return op <*> uSqlExp left <*> uSqlExp right
+  S.BECompareAny op left right ->
+    S.BECompareAny <$> return op <*> uSqlExp left <*> uSqlExp right
   S.BENull e -> S.BENull <$> uSqlExp e
   S.BENotNull e -> S.BENotNull <$> uSqlExp e
   S.BEExists sel -> S.BEExists <$> uSelect sel
@@ -144,6 +146,7 @@ uOrderBy (S.OrderByExp ordByItems) =
 uSqlExp :: S.SQLExp -> Uniq S.SQLExp
 uSqlExp = restoringIdens . \case
   S.SEPrep i                    -> return $ S.SEPrep i
+  S.SENull                      -> return S.SENull
   S.SELit t                     -> return $ S.SELit t
   S.SEUnsafe t                  -> return $ S.SEUnsafe t
   S.SESelect s                  -> S.SESelect <$> uSelect s
@@ -178,9 +181,10 @@ uSqlExp = restoringIdens . \case
     S.SEExcluded <$> return t
   S.SEArray l                   ->
     S.SEArray <$> mapM uSqlExp l
-  S.SETuple (S.TupleExp l)     ->
+  S.SETuple (S.TupleExp l)      ->
     S.SEArray <$> mapM uSqlExp l
   S.SECount cty                 -> return $ S.SECount cty
+  S.SENamedArg arg val          -> S.SENamedArg arg <$> uSqlExp val
   where
     uQual = \case
       S.QualIden iden -> S.QualIden <$> getIden iden

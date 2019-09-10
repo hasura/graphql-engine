@@ -1,0 +1,9 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      DROP TABLE employees;
+      DROP TABLE weekdays;
+      DROP TABLE colors;
+    cascade: true

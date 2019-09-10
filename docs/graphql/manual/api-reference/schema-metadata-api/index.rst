@@ -160,6 +160,18 @@ The various types of queries are listed in the following table:
      - :ref:`invoke_event_trigger_args <invoke_event_trigger_syntax>`
      - Invoke a trigger manually
 
+   * - :ref:`add_remote_schema`
+     - :ref:`add_remote_schema_args <add_remote_schema_syntax>`
+     - Add a remote GraphQL server as a remote schema
+
+   * - :ref:`remove_remote_schema`
+     - :ref:`remove_remote_schema_args <remove_remote_schema_syntax>`
+     - Remove an existing remote schema
+
+   * - :ref:`reload_remote_schema`
+     - :ref:`reload_remote_schema_args <reload_remote_schema_syntax>`
+     - Reload schema of an existing remote schema
+
    * - :ref:`export_metadata`
      - :ref:`Empty Object`
      - Export the current metadata
@@ -216,6 +228,7 @@ The various types of queries are listed in the following table:
 - :doc:`Relationships <relationship>`
 - :doc:`Permissions <permission>`
 - :doc:`Event Triggers <event-triggers>`
+- :doc:`Remote Schemas <remote-schemas>`
 - :doc:`Query Collections <query-collections>`
 - :doc:`Manage Metadata <manage-metadata>`
 
@@ -298,6 +311,7 @@ See :doc:`../../deployment/graphql-engine-flags/reference` for info on setting t
   Relationships <relationship>
   Permissions <permission>
   Event Triggers <event-triggers>
+  Remote Schemas <remote-schemas>
   Query Collections <query-collections>
   Manage Metadata <manage-metadata>
-  Syntax definitions <syntax-defs>
+  Common syntax definitions <syntax-defs>

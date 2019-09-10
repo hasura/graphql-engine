@@ -60,7 +60,8 @@ Install
      - id: windows
        content: |
 
-         Download the binary ``cli-hasura-windows-amd64.exe`` from the GitHub release page: https://github.com/hasura/graphql-engine/releases.
+         Download the binary ``cli-hasura-windows-amd64.exe`` available under ``Assets`` of the latest release
+         from the GitHub release page: https://github.com/hasura/graphql-engine/releases
 
          Rename the downloaded file to ``hasura``.
 

@@ -112,16 +112,15 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
             dispatch(
               showErrorNotification(
                 'SQL execution failed!',
-                'Something is wrong. Data sent back an invalid response json.',
+                'Something is wrong. Received an invalid response json.',
                 parsedErrorMsg
               )
             );
             dispatch({
               type: REQUEST_ERROR,
-              data:
-                'Something is wrong. Data sent back an invalid response json.',
+              data: 'Something is wrong. Received an invalid response json.',
             });
-            console.err('Error with response', err);
+            console.err('RunSQL error: ', err);
           }
         );
         return;

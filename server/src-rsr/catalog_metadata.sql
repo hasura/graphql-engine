@@ -3,7 +3,6 @@ select
     'tables', tables.items,
     'relations', relations.items,
     'permissions', permissions.items,
-    'query_templates', query_templates.items,
     'event_triggers', event_triggers.items,
     'remote_schemas', remote_schemas.items,
     'functions', functions.items,
@@ -15,38 +14,28 @@ from
     select
       coalesce(json_agg(
         json_build_object(
-          'table',
-          json_build_object(
+          'name', json_build_object(
             'name', ht.table_name,
             'schema', ht.table_schema
           ),
-          'system_defined', ht.is_system_defined,
-          'info', tables.info
+          'is_enum', ht.is_enum,
+          'is_system_defined', ht.is_system_defined,
+          'info', t.info
         )
       ), '[]') as items
-    from
-      hdb_catalog.hdb_table as ht
-      left outer join (
-        select
-          table_schema,
-          table_name,
-          json_build_object(
-            'name',
-            json_build_object(
-              'schema', table_schema,
-              'name', table_name
-            ),
-            'columns', columns,
-            'primary_key_columns', primary_key_columns,
-            'constraints', constraints,
-            'view_info', view_info
-          ) as info
-        from
-          hdb_catalog.hdb_table_info_agg
-      ) as tables on (
-        tables.table_schema = ht.table_schema
-        and tables.table_name = ht.table_name
-      )
+    from hdb_catalog.hdb_table as ht
+    left outer join (
+      select
+        table_schema,
+        table_name,
+        jsonb_build_object(
+          'columns', columns,
+          'primary_key_columns', primary_key_columns,
+          'constraints', constraints,
+          'view_info', view_info
+        ) as info
+      from hdb_catalog.hdb_table_info_agg
+    ) as t using (table_schema, table_name)
   ) as tables,
   (
     select
@@ -90,20 +79,6 @@ from
     from
       hdb_catalog.hdb_permission
   ) as permissions,
-  (
-    select
-      coalesce(
-        json_agg(
-          json_build_object(
-            'name', template_name,
-            'def', template_defn :: json
-          )
-        ),
-        '[]'
-      ) as items
-    from
-      hdb_catalog.hdb_query_template
-  ) as query_templates,
   (
     select
       coalesce(

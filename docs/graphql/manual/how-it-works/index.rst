@@ -51,7 +51,7 @@ Resolvers
 ---------
 
 The Hasura GraphQL engine does not have any resolvers. The Hasura GraphQL engine is actually a compiler that compiles
-your GraphQL query into an SQL query.
+your GraphQL query into an efficient SQL query.
 
 Hasura's GraphQL syntax is also optimized to expose the power of the underlying SQL so that you can make powerful
 queries via GraphQL.

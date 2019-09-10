@@ -14,10 +14,8 @@ import { loadMigrationStatus } from '../../Main/Actions';
 import returnMigrateUrl from './Common/getMigrateUrl';
 import globals from '../../../Globals';
 import push from './push';
-import {
-  filterInconsistentMetadata,
-  loadInconsistentObjects,
-} from '../Metadata/Actions';
+import { loadInconsistentObjects } from '../Metadata/Actions';
+import { filterInconsistentMetadataObjects } from '../Metadata/utils';
 import { replace } from 'react-router-redux';
 import { getEventTriggersQuery } from './utils';
 
@@ -73,7 +71,7 @@ const loadTriggers = triggerNames => (dispatch, getState) => {
       const { inconsistentObjects } = getState().metadata;
       let consistentTriggers;
       if (inconsistentObjects.length > 1) {
-        consistentTriggers = filterInconsistentMetadata(
+        consistentTriggers = filterInconsistentMetadataObjects(
           triggerData,
           inconsistentObjects,
           'events'

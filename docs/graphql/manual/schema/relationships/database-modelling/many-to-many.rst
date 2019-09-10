@@ -40,9 +40,9 @@ This ``many-to-many`` relationship can be established in the database by:
    .. code-block:: sql
 
       article_tag (
-        id INT PRIMARY KEY
         article_id INT
         tag_id INT
+        PRIMARY KEY (article_id, tag_id)
         ...
       )
 
