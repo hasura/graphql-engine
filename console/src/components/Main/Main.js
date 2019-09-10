@@ -111,14 +111,17 @@ class Main extends React.Component {
   }
 
   handleBodyClick(e) {
+    const heartDropDown = document.getElementById('dropdown_wrapper');
     const heartDropDownOpen = document.querySelectorAll(
       '#dropdown_wrapper.open'
     );
+
     if (
-      !document.getElementById('dropdown_wrapper').contains(e.target) &&
+      heartDropDown &&
+      !heartDropDown.contains(e.target) &&
       heartDropDownOpen.length !== 0
     ) {
-      document.getElementById('dropdown_wrapper').classList.remove('open');
+      heartDropDown.classList.remove('open');
     }
   }
 
