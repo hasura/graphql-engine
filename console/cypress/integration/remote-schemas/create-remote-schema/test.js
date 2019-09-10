@@ -10,7 +10,7 @@ import {
   failRSDuplicateSchemaName,
   failRSDuplicateSchemaNodes,
   deleteSimpleRemoteSchema,
-  deleteSimpleRemoteSchemaFailUserConfirmationError,
+  // deleteSimpleRemoteSchemaFailUserConfirmationError,
   failWithRemoteSchemaEnvUrl,
   failWithRemoteSchemaEnvHeader,
   passWithRemoteSchemaHeader,
@@ -46,10 +46,10 @@ export const runCreateRemoteSchemaTableTests = () => {
       'Fails to add remote schema which is already added',
       failRSDuplicateSchemaNodes
     );
-    it(
-      'Delete simple remote schema fail due to user confirmation error',
-      deleteSimpleRemoteSchemaFailUserConfirmationError
-    );
+    // it(
+    //   'Delete simple remote schema fail due to user confirmation error',
+    //   deleteSimpleRemoteSchemaFailUserConfirmationError
+    // );
     it('Delete simple remote schema', deleteSimpleRemoteSchema);
     it('Create remote schema with url from env', failWithRemoteSchemaEnvUrl);
     it(

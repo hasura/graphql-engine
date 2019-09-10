@@ -8,6 +8,7 @@ import {
 } from '../../../helpers/remoteSchemaHelpers';
 
 import { validateRS } from '../../validators/validators';
+import { setPromptValue } from '../../../helpers/common';
 
 const testName = 'rs';
 
@@ -109,15 +110,8 @@ export const deleteSimpleRemoteSchemaFailUserConfirmationError = () => {
 };
 
 export const deleteSimpleRemoteSchema = () => {
-  // Are you absolutely sure?\nThis action cannot be undone. This will permanently delete stitched GraphQL schema. Please type "DELETE" (in caps, without quotes) to confirm.\n
-  cy.visit(
-    `remote-schemas/manage/${getRemoteSchemaName(1, testName)}/details`,
-    {
-      onBeforeLoad(win) {
-        cy.stub(win, 'prompt').returns('DELETE');
-      },
-    }
-  );
+  cy.visit(`remote-schemas/manage/${getRemoteSchemaName(1, testName)}/details`);
+  setPromptValue(getRemoteSchemaName(1, testName));
 
   cy.get(getElementFromAlias('remote-schemas-modify')).click();
   cy.wait(5000);
