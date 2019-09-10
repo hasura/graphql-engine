@@ -8,7 +8,11 @@ import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
 import ModalWrapper from '../../../Common/Modal/ModalWrapper';
 
-import { getGraphiQLHeadersFromLocalStorage, parseAuthHeader } from './utils';
+import {
+  getGraphiQLHeadersFromLocalStorage,
+  parseAuthHeader,
+  getDefaultGraphiqlHeaders,
+} from './utils';
 
 import {
   changeRequestHeader,
@@ -77,19 +81,6 @@ class ApiRequest extends Component {
 
   componentDidMount() {
     const handleHeaderInit = () => {
-      // move to utils
-      const getDefaultGraphiqlHeaders = () => {
-        return [
-          {
-            key: 'content-type',
-            value: 'application/json',
-            isActive: true,
-            isNewHeader: false,
-            isDisabled: false,
-          },
-        ];
-      };
-
       const graphiqlHeaders =
         getGraphiQLHeadersFromLocalStorage() || getDefaultGraphiqlHeaders();
 

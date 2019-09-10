@@ -52,11 +52,12 @@ export const setGraphiQLHeadersInLocalStorage = headers => {
   );
 };
 
-export const getAdminSecret = () => (dispatch, getState) => {
+export const getAdminSecret = () => {
   let adminSecret = null;
   if (globals.consoleMode === SERVER_CONSOLE_MODE && globals.isAdminSecretSet) {
     const adminSecretFromLS = loadAdminSecretState();
-    const adminSecretInRedux = getState().main.adminSecret;
+    const adminSecretInRedux = ''; // TODO
+    // const adminSecretInRedux = getState().main.adminSecret;
 
     adminSecret = adminSecretFromLS || adminSecretInRedux;
   } else {
@@ -87,6 +88,31 @@ export const getGraphiQLHeadersFromLocalStorage = () => {
     } catch (_) {
       console.error('Failed parsing headers from local storage');
     }
+  }
+
+  return headers;
+};
+
+export const getDefaultGraphiqlHeaders = () => {
+  const headers = [];
+
+  headers.push({
+    key: 'content-type',
+    value: 'application/json',
+    isActive: true,
+    isNewHeader: false,
+    isDisabled: false,
+  });
+
+  const adminSecret = getAdminSecret();
+  if (adminSecret) {
+    headers.push({
+      key: ADMIN_SECRET_HEADER_KEY,
+      value: adminSecret,
+      isActive: true,
+      isNewHeader: false,
+      isDisabled: false,
+    });
   }
 
   return headers;

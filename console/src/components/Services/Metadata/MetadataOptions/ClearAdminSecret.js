@@ -28,7 +28,7 @@ class ClearAdminSecret extends Component {
             e.preventDefault();
             this.setState({ isClearing: true });
             if (globals.isAdminSecretSet || globals.adminSecret) {
-              clearAdminSecretState();
+              this.props.dispatch(clearAdminSecretState());
               this.props.dispatch(
                 showSuccessNotification('Cleared admin-secret')
               );

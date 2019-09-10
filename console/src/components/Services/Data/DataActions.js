@@ -48,10 +48,6 @@ const SET_CONSISTENT_SCHEMA = 'Data/SET_CONSISTENT_SCHEMA';
 const SET_CONSISTENT_FUNCTIONS = 'Data/SET_CONSISTENT_FUNCTIONS';
 
 const UPDATE_DATA_HEADERS = 'Data/UPDATE_DATA_HEADERS';
-const updateDataHeaders = headers => ({
-  type: UPDATE_DATA_HEADERS,
-  data: headers,
-});
 
 const FETCH_COLUMN_TYPE_INFO = 'Data/FETCH_COLUMN_TYPE_INFO';
 const FETCH_COLUMN_TYPE_INFO_FAIL = 'Data/FETCH_COLUMN_TYPE_INFO_FAIL';
@@ -764,5 +760,4 @@ export {
   fetchColumnTypeInfo,
   RESET_COLUMN_TYPE_INFO,
   setUntrackedRelations,
-  updateDataHeaders,
 };
