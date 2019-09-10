@@ -14,5 +14,5 @@ export const setPromptValue = value => {
 
   cy.reload();
 
-  cy.wait(3000);
+  cy.wait(7000);
 };
