@@ -171,13 +171,13 @@ export const deleteCTTestTrigger = () => {
   cy.visit(`/events/manage/triggers/${getTriggerName(0, testName)}/processed`);
   //  click on settings tab
   cy.get(getElementFromAlias('trigger-modify')).click();
+  setPromptValue(getTriggerName(0, testName));
   //  Click on delete
   cy.get(getElementFromAlias('delete-trigger')).click();
   //  Confirm
-  cy.on('window:confirm', str => {
-    expect(str === 'Are you sure?').to.be.true;
-    return true;
-  });
+  cy.window()
+    .its('prompt')
+    .should('be.called');
   cy.wait(7000);
   //  Match the URL
   cy.url().should('eq', `${baseUrl}/events/manage/triggers`);
