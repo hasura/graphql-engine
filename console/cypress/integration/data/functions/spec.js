@@ -44,7 +44,6 @@ export const createCustomFunctionSuccess = () => {
 };
 
 export const unTrackFunction = () => {
-  // Are you absolutely sure?\nThis action cannot be undone. This will permanently delete stitched GraphQL schema. Please type "DELETE" (in caps, without quotes) to confirm.\n
   cy.visit(`data/schema/public/functions/${getCustomFunctionName(1)}/modify`);
   cy.wait(5000);
   cy.get(getElementFromAlias('custom-function-edit-untrack-btn')).click();
@@ -54,12 +53,6 @@ export const unTrackFunction = () => {
 };
 
 export const trackFunction = () => {
-  // Are you absolutely sure?\nThis action cannot be undone. This will permanently delete stitched GraphQL schema. Please type "DELETE" (in caps, without quotes) to confirm.\n
-  /*
-  cy.visit(
-    `data/schema/public/functions/${getCustomFunctionName(1)}/modify`,
-  );
-  */
   cy.get(
     getElementFromAlias(`add-track-function-${getCustomFunctionName(1)}`)
   ).should('exist');
@@ -72,10 +65,7 @@ export const trackFunction = () => {
 };
 
 export const verifyPermissionTab = () => {
-  // Are you absolutely sure?\nThis action cannot be undone. This will permanently delete stitched GraphQL schema. Please type "DELETE" (in caps, without quotes) to confirm.\n
-  cy.visit(
-    `data/schema/public/functions/${getCustomFunctionName(1)}/permissions`
-  );
+  cy.get(getElementFromAlias('functions-data-permissions')).click();
   cy.wait(5000);
   cy.get(getElementFromAlias('custom-function-permission-link')).should(
     'exist'
@@ -84,8 +74,7 @@ export const verifyPermissionTab = () => {
 };
 
 export const deleteCustomFunction = () => {
-  // Are you absolutely sure?\nThis action cannot be undone. This will permanently delete stitched GraphQL schema. Please type "DELETE" (in caps, without quotes) to confirm.\n
-  cy.visit(`data/schema/public/functions/${getCustomFunctionName(1)}/modify`);
+  cy.get(getElementFromAlias('functions-data-modify')).click();
 
   setPromptValue(getCustomFunctionName(1));
 

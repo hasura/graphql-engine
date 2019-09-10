@@ -187,7 +187,8 @@ export const deleteCTTestTrigger = () => {
 
 export const deleteCTTestTable = () => {
   //   Go to the modify section of the table
-  cy.visit(`/data/schema/public/tables/${getTableName(0, testName)}/modify`);
+  cy.visit(`/data/schema/public/tables/${getTableName(0, testName)}/browse`);
+  cy.get(getElementFromAlias('table-modify')).click();
   //   Click on delete
   setPromptValue(getTableName(0, testName));
   cy.get(getElementFromAlias('delete-table')).click();
