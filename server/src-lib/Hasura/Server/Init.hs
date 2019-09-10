@@ -53,13 +53,6 @@ data RawConnParams
 
 type RawAuthHook = AuthHookG (Maybe T.Text) (Maybe AuthHookType)
 
-data RemotePermFeatureFlag = RemotePermEnabled | RemotePermDisabled
-  deriving (Show, Eq)
-
-instance J.ToJSON RemotePermFeatureFlag where
-  toJSON = \case
-    RemotePermDisabled -> J.Bool False
-    RemotePermEnabled -> J.Bool True
 
 data RawServeOptions
   = RawServeOptions
@@ -87,27 +80,34 @@ data RawServeOptions
   , rsoEnableRemotePerms  :: !Bool
   } deriving (Show, Eq)
 
+data FeatureFlag = RemotePermsFeatureFlag
+  deriving (Show, Eq)
+
+instance J.ToJSON FeatureFlag where
+  toJSON = \case
+    RemotePermsFeatureFlag -> J.String "remote_schema_permissions"
+
 data ServeOptions
   = ServeOptions
-  { soPort              :: !Int
-  , soHost              :: !HostPreference
-  , soConnParams        :: !Q.ConnParams
-  , soTxIso             :: !Q.TxIsolation
-  , soAdminSecret       :: !(Maybe AdminSecret)
-  , soAuthHook          :: !(Maybe AuthHook)
-  , soJwtSecret         :: !(Maybe JWTConfig)
-  , soUnAuthRole        :: !(Maybe RoleName)
-  , soCorsConfig        :: !CorsConfig
-  , soEnableConsole     :: !Bool
-  , soConsoleAssetsDir  :: !(Maybe Text)
-  , soEnableTelemetry   :: !Bool
-  , soStringifyNum      :: !Bool
-  , soEnabledAPIs       :: !(Set.HashSet API)
-  , soLiveQueryOpts     :: !LQ.LQOpts
-  , soEnableAllowlist   :: !Bool
-  , soEnabledLogTypes   :: !(Set.HashSet L.EngineLogType)
-  , soLogLevel          :: !L.LogLevel
-  , soEnableRemotePerms :: !RemotePermFeatureFlag
+  { soPort                :: !Int
+  , soHost                :: !HostPreference
+  , soConnParams          :: !Q.ConnParams
+  , soTxIso               :: !Q.TxIsolation
+  , soAdminSecret         :: !(Maybe AdminSecret)
+  , soAuthHook            :: !(Maybe AuthHook)
+  , soJwtSecret           :: !(Maybe JWTConfig)
+  , soUnAuthRole          :: !(Maybe RoleName)
+  , soCorsConfig          :: !CorsConfig
+  , soEnableConsole       :: !Bool
+  , soConsoleAssetsDir    :: !(Maybe Text)
+  , soEnableTelemetry     :: !Bool
+  , soStringifyNum        :: !Bool
+  , soEnabledAPIs         :: !(Set.HashSet API)
+  , soLiveQueryOpts       :: !LQ.LQOpts
+  , soEnableAllowlist     :: !Bool
+  , soEnabledLogTypes     :: !(Set.HashSet L.EngineLogType)
+  , soLogLevel            :: !L.LogLevel
+  , soEnabledFeatureFlags :: ![FeatureFlag]
   } deriving (Show, Eq)
 
 data RawConnInfo =
@@ -208,9 +208,6 @@ instance FromEnv [L.EngineLogType] where
 
 instance FromEnv L.LogLevel where
   fromEnv = readLogLevel
-
-instance FromEnv RemotePermFeatureFlag where
-  fromEnv flagStr = fmap (\b -> if b then RemotePermEnabled else RemotePermDisabled ) $ parseStrAsBool flagStr
 
 parseStrAsBool :: String -> Either String Bool
 parseStrAsBool t
@@ -324,11 +321,13 @@ mkServeOptions RawServeOptions{..}= do
   enabledLogs <- Set.fromList . fromMaybe (Set.toList L.defaultEnabledLogTypes) <$>
                  withEnv rsoEnabledLogTypes (fst enabledLogsEnv)
   serverLogLevel <- fromMaybe L.LevelInfo <$> withEnv rsoLogLevel (fst logLevelEnv)
-  enableRemotePerms <- bool RemotePermDisabled RemotePermEnabled <$> withEnvBool rsoEnableRemotePerms (fst enableRemotePermsEnv)
+  enableRemotePerms <- bool Nothing (Just RemotePermsFeatureFlag) <$>
+                       withEnvBool rsoEnableRemotePerms (fst enableRemotePermsEnv)
+  let enabledFeatureFlags = catMaybes [enableRemotePerms]
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
-                        enabledLogs serverLogLevel enableRemotePerms
+                        enabledLogs serverLogLevel enabledFeatureFlags
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -1020,7 +1019,7 @@ serveOptsToLog ServeOptions{..} =
                        , "enable_allowlist" J..= soEnableAllowlist
                        , "enabled_log_types" J..= soEnabledLogTypes
                        , "log_level" J..= soLogLevel
-                       , "enable_remote_permissions" J..= soEnableRemotePerms
+                       , "enabled_feature_flags" J..= soEnabledFeatureFlags
                        ]
 
 mkGenericStrLog :: L.LogLevel -> T.Text -> String -> StartupLog

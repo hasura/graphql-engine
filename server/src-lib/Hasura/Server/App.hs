@@ -108,21 +108,23 @@ withSCUpdate scr logger action = do
     acquireLock = liftIO $ takeMVar lk
     releaseLock = liftIO $ putMVar lk ()
 
+
 data ServerCtx
   = ServerCtx
-  { scPGExecCtx       :: !PGExecCtx
-  , scConnInfo        :: !Q.ConnInfo
-  , scLogger          :: !L.Logger
-  , scCacheRef        :: !SchemaCacheRef
-  , scAuthMode        :: !AuthMode
-  , scManager         :: !HTTP.Manager
-  , scSQLGenCtx       :: !SQLGenCtx
-  , scEnabledAPIs     :: !(S.HashSet API)
-  , scInstanceId      :: !InstanceId
-  , scPlanCache       :: !E.PlanCache
-  , scLQState         :: !EL.LiveQueriesState
-  , scEnableAllowlist :: !Bool
-  , scEkgStore        :: !EKG.Store
+  { scPGExecCtx           :: !PGExecCtx
+  , scConnInfo            :: !Q.ConnInfo
+  , scLogger              :: !L.Logger
+  , scCacheRef            :: !SchemaCacheRef
+  , scAuthMode            :: !AuthMode
+  , scManager             :: !HTTP.Manager
+  , scSQLGenCtx           :: !SQLGenCtx
+  , scEnabledAPIs         :: !(S.HashSet API)
+  , scInstanceId          :: !InstanceId
+  , scPlanCache           :: !E.PlanCache
+  , scLQState             :: !EL.LiveQueriesState
+  , scEnableAllowlist     :: !Bool
+  , scEkgStore            :: !EKG.Store
+  , scEnabledFeatureFlags :: ![FeatureFlag]
   }
 
 data HandlerCtx
@@ -461,9 +463,10 @@ mkWaiApp
   -> InstanceId
   -> S.HashSet API
   -> EL.LQOpts
+  -> [FeatureFlag]
   -> IO (Wai.Application, SchemaCacheRef, Maybe UTCTime)
 mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
-         enableConsole consoleAssetsDir enableTelemetry instanceId apis lqOpts = do
+         enableConsole consoleAssetsDir enableTelemetry instanceId apis lqOpts featureFlags = do
 
     let pgExecCtx = PGExecCtx pool isoLevel
         pgExecCtxSer = PGExecCtx pool Q.Serializable
@@ -493,7 +496,7 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
         serverCtx = ServerCtx pgExecCtx ci logger
                     schemaCacheRef mode httpManager
                     sqlGenCtx apis instanceId planCache
-                    lqState enableAL ekgStore
+                    lqState enableAL ekgStore featureFlags
 
     when (isDeveloperAPIEnabled serverCtx) $ do
       EKG.registerGcMetrics ekgStore
