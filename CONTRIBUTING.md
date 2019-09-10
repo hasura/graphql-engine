@@ -87,7 +87,7 @@ If you would like to contribute to the community by
 
 - organizing a workshop
 
-check out our [community wiki](https://github.com/hasura/graphql-engine/wiki/Community-Wiki#community-guide).
+check out our [community wiki](https://github.com/hasura/graphql-engine/wiki/Community-Wiki).
 
 Feel free to submit a pull request if you have something to add even if it's not related to anything mentioned above.
 
