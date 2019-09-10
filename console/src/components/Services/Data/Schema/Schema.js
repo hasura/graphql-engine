@@ -37,6 +37,7 @@ import { createNewSchema, deleteCurrentSchema } from './Actions';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 import gqlPattern from '../Common/GraphQLValidation';
 import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
+import { displayTableName } from '../../../Common/utils/pgUtils';
 
 class Schema extends Component {
   constructor(props) {
@@ -371,7 +372,7 @@ class Schema extends Component {
                   Track
                 </Button>
               </div>
-              <div className={styles.display_inline}>{table.table_name}</div>
+              <div className={styles.display_inline}>{displayTableName(table)}</div>
               {gqlCompatibilityWarning}
             </div>
           );

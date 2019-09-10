@@ -67,6 +67,7 @@ const ColumnEditorList = ({
         col.data_type !== 'USER-DEFINED' ? col.data_type : col.udt_name,
       type: col.udt_name,
       isNullable: col.is_nullable === 'YES',
+      isIdentity: col.is_identity === 'YES',
       pkConstraint: columnPKConstraints[colName],
       isUnique:
         (columnPKConstraints[colName] && pkLength === 1) ||
@@ -115,6 +116,10 @@ const ColumnEditorList = ({
 
       if (columnProperties.isUnique) {
         propertiesList.push('unique');
+      }
+
+      if (columnProperties.isIdentity) {
+        propertiesList.push('identity');
       }
 
       if (columnProperties.isNullable) {
