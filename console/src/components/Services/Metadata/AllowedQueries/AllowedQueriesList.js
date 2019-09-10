@@ -11,6 +11,8 @@ import {
 } from '../Actions';
 import Button from '../../../Common/Button/Button';
 
+import { getConfirmation } from '../../../Common/utils/jsUtils';
+
 class AllowedQueriesList extends React.Component {
   constructor(props) {
     super(props);
@@ -30,27 +32,29 @@ class AllowedQueriesList extends React.Component {
       }
 
       return allowedQueries.map((query, i) => {
+        const queryName = query.name;
+
         const collapsedLabel = () => (
           <div>
-            <b>{query.name}</b>
+            <b>{queryName}</b>
           </div>
         );
 
         const expandedLabel = collapsedLabel;
 
         const queryEditorExpanded = () => {
-          const modifiedQuery = modifiedQueries[query.name] || { ...query };
+          const modifiedQuery = modifiedQueries[queryName] || { ...query };
 
           const handleNameChange = e => {
             const newModifiedQueries = { ...modifiedQueries };
-            newModifiedQueries[query.name].name = e.target.value;
+            newModifiedQueries[queryName].name = e.target.value;
 
             this.setState({ modifiedQueries: newModifiedQueries });
           };
 
           const handleQueryChange = val => {
             const newModifiedQueries = { ...modifiedQueries };
-            newModifiedQueries[query.name].query = val;
+            newModifiedQueries[queryName].query = val;
 
             this.setState({ modifiedQueries: newModifiedQueries });
           };
@@ -92,34 +96,34 @@ class AllowedQueriesList extends React.Component {
 
         const editorExpandCallback = () => {
           const newModifiedQueries = { ...modifiedQueries };
-          newModifiedQueries[query.name] = { ...query };
+          newModifiedQueries[queryName] = { ...query };
 
           this.setState({ modifiedQueries: newModifiedQueries });
         };
 
         const editorCollapseCallback = () => {
           const newModifiedQueries = { ...modifiedQueries };
-          delete newModifiedQueries[query.name];
+          delete newModifiedQueries[queryName];
 
           this.setState({ modifiedQueries: newModifiedQueries });
         };
 
         const onSubmit = () => {
-          dispatch(updateAllowedQuery(query.name, modifiedQueries[query.name]));
+          dispatch(updateAllowedQuery(queryName, modifiedQueries[queryName]));
         };
 
         const onDelete = () => {
-          const isOk = window.confirm('Are you sure?');
-
+          const confirmMessage = `This will delete the query "${queryName}" from the allow-list`;
+          const isOk = getConfirmation(confirmMessage);
           if (isOk) {
             const isLastQuery = allowedQueries.length === 1;
 
-            dispatch(deleteAllowedQuery(query.name, isLastQuery));
+            dispatch(deleteAllowedQuery(queryName, isLastQuery));
           }
         };
 
         return (
-          <div key={query.name}>
+          <div key={queryName}>
             <ExpandableEditor
               editorExpanded={queryEditorExpanded}
               property={`query-${i}`}
@@ -139,8 +143,9 @@ class AllowedQueriesList extends React.Component {
 
     const getDeleteAllBtn = () => {
       const handleDeleteAll = () => {
-        const isOk = window.confirm('Are you sure?');
-
+        const confirmMessage =
+          'This will delete all queries from the allow-list';
+        const isOk = getConfirmation(confirmMessage, true);
         if (isOk) {
           dispatch(deleteAllowList());
         }

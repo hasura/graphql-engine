@@ -18,6 +18,7 @@ import {
   validateCTrigger,
   validateInsert,
 } from '../../validators/validators';
+import { setPromptValue } from '../../../helpers/common';
 
 const testName = 'ctr'; // create trigger
 
@@ -170,13 +171,13 @@ export const deleteCTTestTrigger = () => {
   cy.visit(`/events/manage/triggers/${getTriggerName(0, testName)}/processed`);
   //  click on settings tab
   cy.get(getElementFromAlias('trigger-modify')).click();
+  setPromptValue(getTriggerName(0, testName));
   //  Click on delete
   cy.get(getElementFromAlias('delete-trigger')).click();
   //  Confirm
-  cy.on('window:confirm', str => {
-    expect(str === 'Are you sure?').to.be.true;
-    return true;
-  });
+  cy.window()
+    .its('prompt')
+    .should('be.called');
   cy.wait(7000);
   //  Match the URL
   cy.url().should('eq', `${baseUrl}/events/manage/triggers`);
@@ -186,14 +187,15 @@ export const deleteCTTestTrigger = () => {
 
 export const deleteCTTestTable = () => {
   //   Go to the modify section of the table
-  cy.visit(`/data/schema/public/tables/${getTableName(0, testName)}/modify`);
+  cy.visit(`/data/schema/public/tables/${getTableName(0, testName)}/browse`);
+  cy.get(getElementFromAlias('table-modify')).click();
   //   Click on delete
+  setPromptValue(getTableName(0, testName));
   cy.get(getElementFromAlias('delete-table')).click();
   //   Confirm
-  cy.on('window:confirm', str => {
-    expect(str === 'Are you sure?').to.be.true;
-    return true;
-  });
+  cy.window()
+    .its('prompt')
+    .should('be.called');
   cy.wait(7000);
   //   Match the URL
   cy.url().should('eq', `${baseUrl}/data/schema/public`);
