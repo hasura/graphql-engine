@@ -250,14 +250,8 @@ export const passWithEditRemoteSchema = () => {
 };
 
 export const deleteRemoteSchema = () => {
-  cy.visit(
-    `remote-schemas/manage/${getRemoteSchemaName(5, testName)}/details`,
-    {
-      onBeforeLoad(win) {
-        cy.stub(win, 'prompt').returns('DELETE');
-      },
-    }
-  );
+  cy.visit(`remote-schemas/manage/${getRemoteSchemaName(5, testName)}/details`);
+  setPromptValue(getRemoteSchemaName(5, testName));
 
   cy.get(getElementFromAlias('remote-schemas-modify')).click();
   cy.wait(5000);
