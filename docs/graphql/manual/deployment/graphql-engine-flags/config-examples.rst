@@ -176,7 +176,7 @@ The server looks for the ``Accept-Encoding`` header in request.
 If the header contains ``br`` then the server uses `Brotli <https://en.wikipedia.org/wiki/Brotli>`__ compression else if the header contains
 ``gzip`` then the server uses `Gzip <https://en.wikipedia.org/wiki/Gzip>`__ compression.
 If both values are present then the server prefers ``Brotli`` over ``Gzip``.
-Also, the server sets the ``Content-Encoding`` response header value to ``br`` if ``Brotli`` or ``gzip`` if ``Gzip``.
+Also, the server sets the ``Content-Encoding`` response header value to ``br`` for ``Brotli`` compression or ``gzip`` for ``Gzip`` compression.
 
 Run the server in this mode using following docker command:
 
