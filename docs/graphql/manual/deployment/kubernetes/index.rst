@@ -49,7 +49,7 @@ Examples of ``HASURA_GRAPHQL_DATABASE_URL``:
     You can check the :doc:`logs <logging>` to see if the database credentials are proper and if Hasura is able
     to connect to the database.
 
-  - The Hasura GraphQL engine needs to access permissions to your Postgres database as described in
+  - The Hasura GraphQL engine needs access permissions on your Postgres database as described in
     :doc:`Postgres permissions <../postgres-permissions>`.
 
 

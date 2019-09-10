@@ -7,7 +7,7 @@ API Reference - Query / Subscription
   :local:
 
 Query / subscription syntax
--------------------------
+---------------------------
 
 .. code-block:: none
 

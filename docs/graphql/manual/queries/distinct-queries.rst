@@ -57,7 +57,7 @@ Fetch results with distinct values of a particular field
            {
              "id": 5,
              "name": "Kamila",
-             "department": "engineering",
+             "department": "Engineering",
              "salary": 4325
            },
            {

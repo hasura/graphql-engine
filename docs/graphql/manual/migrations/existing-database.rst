@@ -11,7 +11,7 @@ instance and now want to start using migrations to help you track the database
 and GraphQL schema changes.
 
 Step 0: Disable console on the server
----------------------------------
+-------------------------------------
 
 To use migrations effectively, the console on the server (which is served at
 ``/console``) should be disabled and all changes must go through the console
@@ -122,7 +122,7 @@ in the ``migrations/`` directory in your project.
    Migrations are only created when using the console through CLI.
 
 Step 6: Apply the migrations on another instance of the GraphQL engine
-------------------------------------------------------------------
+----------------------------------------------------------------------
 
 Apply all migrations present in the ``migrations/`` directory on a new
 instance at ``http://another-graphql-instance.herokuapp.com``:
@@ -138,7 +138,7 @@ GraphQL engine after automatically applying the migrations which are
 mounted into a directory.  
 
 Step 7: Check the status of migrations
-----------------------------------
+--------------------------------------
 
 .. code-block:: bash
 

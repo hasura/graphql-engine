@@ -1,5 +1,5 @@
 How Hasura migrations work
-===========================
+==========================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -35,7 +35,7 @@ Migrations
 ----------
 
 While metadata can be exported as a single file as a representation of the state
-of Hasura, you might want a more granular step-by-step checkpoint on the
+of Hasura, you might want more granular step-by-step checkpoints on the
 evolution of the state. You might also want to track the Postgres schema changes
 through Hasura's migration system.
 

@@ -926,7 +926,7 @@ Fetch a list of articles rated more than 4 or published after "01/01/2018":
 Filter nested objects
 ---------------------
 
-The ``where`` argument can be used in **array relationships** as well as to filter the nested objects.
+The ``where`` argument can be used in **array relationships** as well to filter the nested objects.
 **Object relationships** have only one nested object and hence they do not expose the ``where`` argument.
 
 Example:
@@ -1076,7 +1076,7 @@ Fetch all articles whose author's name starts with "A":
     }
 
 
-Fetch if **any** of the nested objects defined via an array relationship satisfies a condition
+Fetch if **any** of the nested objects defined via an array relationship satisfy a condition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Example:
@@ -1157,7 +1157,7 @@ Fetch all authors which have written at least one article which is rated 1:
 Fetch if **all** of the nested objects defined via an array relationship satisfy a condition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-As by default a row is returned if any of the nested objects satisfy a condition. To achieve the above, we need to frame
+By default a row is returned if any of the nested objects satisfy a condition. To achieve the above, we need to frame
 the ``where`` expression as ``{_not: {inverse-of-condition}}``. This reads as: fetch if not (any of the nested objects
 satisfy the inverted condition) i.e. all of the nested objects satisfy the condition.
 
@@ -1258,7 +1258,7 @@ Fetch all authors which have all of their articles published i.e. have ``{is_pub
 Fetch if **none** of the nested objects defined via an array relationship satisfy a condition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-As by default a row is returned if any of the nested objects satisfy a condition. To achieve the above, we need to frame
+By default a row is returned if any of the nested objects satisfy a condition. To achieve the above, we need to frame
 the ``where`` expression as ``{_not: {condition}}``. This reads as: fetch if not (any of the nested objects
 satisfy the condition) i.e. none of the nested objects satisy the condition.
 

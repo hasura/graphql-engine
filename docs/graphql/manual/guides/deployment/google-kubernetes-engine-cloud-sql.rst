@@ -79,7 +79,7 @@ in the ``asia-south1-a`` zone with 1 node.
           --num-nodes 1 --project hasura
 
 Set up Cloud SQL Proxy Credentials
----------------------------------
+----------------------------------
 
 In order to connect to the Cloud SQL instance, we need to set up a proxy that will
 forward connections from Hasura to the database instance. For that purpose, the
@@ -116,7 +116,7 @@ Create another secret with the database username and password (use the
            --from-literal=username=postgres --from-literal=password=[PASSWORD]
 
 Deploy the Hasura GraphQL engine
-----------------------------
+--------------------------------
 
 Download the ``deployment.yaml`` file:
 

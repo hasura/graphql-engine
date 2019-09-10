@@ -130,7 +130,7 @@ care of when switching to subscriptions.
 
 .. admonition:: Caveat
 
-  If not all 3 changes are made, **it works like a query instead of a subscription**
+  If all the 3 changes are not made, **it works like a query instead of a subscription**
   since the code that sets up apollo-link doesn't work.
 
   .. code-block:: js

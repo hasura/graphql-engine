@@ -28,8 +28,8 @@ Exporting Hasura metadata
 
   .. tab:: Console
 
-     1. Click on the settings gear icon at the top right corner of the console screen.
-     2. In the Settings page that open, click on the ``Export Metadata`` button.
+     1. Click on the settings (⚙) icon at the top right corner of the console screen.
+     2. In the Hasura metadata actions page that opens, click on the ``Export Metadata`` button.
      3. This will prompt a file download for ``metadata.json``. Save the file. 
 
   .. tab:: API
@@ -50,16 +50,17 @@ Exporting Hasura metadata
 Importing Hasura metadata
 -------------------------
 
-The exported metadata can be imported on another instance of Hasura to replicate
-the metadata. The import can be done on the same instance and it will overwrite
-the existing metadata with the one of that instance.
+You can apply exported metadata from one Hasura GraphQL engine instance to another. You can also apply an older or
+modified version of an instance's metadata onto itself.
+
+Importing completely replaces the metadata on that instance. ie: you lose any metadata that was already present
 
 .. rst-class:: api_tabs
 .. tabs::
 
   .. tab:: Console
 
-     1. Click on the settings gear icon at the top right corner of the console screen.
+     1. Click on the settings (⚙) icon at the top right corner of the console screen.
      2. Click on ``Import Metadata`` button.
      3. Choose a ``metadata.json`` file that was exported earlier.
      4. A notification should appear indicating the success or error.
@@ -75,7 +76,7 @@ the existing metadata with the one of that instance.
         curl -d'{"type":"replace_metadata", "args":'$(cat metadata.json)'}' http://localhost:8080/v1/query
 
      This command will read the ``metadata.json`` file and makes a POST request to
-     replace the metadata. If the admin secret is set, add ``-H
+     replace the metadata. If an admin secret is set, add ``-H
      'X-Hasura-Admin-Secret: <your-admin-secret>'`` as the API is an admin-only
      API.
 

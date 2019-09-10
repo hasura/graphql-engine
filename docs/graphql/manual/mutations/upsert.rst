@@ -161,7 +161,7 @@ You can specify the ``on_conflict`` clause while inserting nested objects:
 
   - In case of an array relationship, the parent upsert does not affect any rows (i.e. ``update_columns: []`` for parent
     and a conflict occurs)
-  - In case of an object relationship, nested object upsert does not affect any row (i.e. ``update_columns: []`` for
+  - In case of an object relationship, the nested object upsert does not affect any row (i.e. ``update_columns: []`` for
     nested object and a conflict occurs)
 
   To allow upserting in these cases, set ``update_columns: [<conflict-column>]``. By doing this, in case of a

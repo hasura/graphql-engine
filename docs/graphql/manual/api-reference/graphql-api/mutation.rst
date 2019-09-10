@@ -9,7 +9,7 @@ API Reference - Mutation
 .. _insert_upsert_syntax:
 
 Insert / upsert syntax
---------------------
+----------------------
 
 .. code-block:: none
 

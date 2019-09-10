@@ -196,7 +196,7 @@ Visit the following URL for the Hasura console:
 
    http://<dns-name-label>.westus.azurecontainer.io/console
 
-Replace the ``<dns-name-label>`` with the label given earlier.
+Replace ``<dns-name-label>`` with the label given earlier.
 
 .. image:: https://storage.googleapis.com/graphql-engine-cdn.hasura.io/main-repo/img/azure_arm_aci_console_graphiql.png
    :class: no-shadow

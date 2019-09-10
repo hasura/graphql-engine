@@ -41,8 +41,8 @@ to be able to push to this app.
    $ heroku git:remote -a <hasura-heroku>
    $ heroku stack:set container -a <hasura-heroku>
 
-Step 3: ``git push`` to deploy the latest Hasura GraphQL engine
------------------------------------------------------------
+Step 3: **git push** to deploy the latest Hasura GraphQL engine
+---------------------------------------------------------------
 
 When you ``git push`` to deploy, the Heroku app will get updated with the latest changes:
 
@@ -51,7 +51,7 @@ When you ``git push`` to deploy, the Heroku app will get updated with the latest
    $ git push heroku master
 
 Deploy a specific version of the Hasura GraphQL engine
---------------------------------------------------
+------------------------------------------------------
 
 Head to the ``Dockerfile`` in the git repo you cloned in step 1.
 Change the ``FROM`` line to the specific version you want. A list of all releases can be found

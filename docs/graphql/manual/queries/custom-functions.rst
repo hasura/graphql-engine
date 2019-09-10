@@ -46,7 +46,7 @@ Custom SQL functions can be created using SQL which can be run in the Hasura con
 Querying custom functions using GraphQL queries
 -----------------------------------------------
 
-Let's see how we can query custom functions using a GraphQL query as in the below examples:
+Let's see how we can query custom functions using a GraphQL query as via the below examples:
 
 Example: Text-search functions
 ******************************

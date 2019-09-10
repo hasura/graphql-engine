@@ -271,7 +271,7 @@ Error codes
    :header-rows: 1
 
 Disabling schema / metadata API
------------------------------
+-------------------------------
 
 Since this API can be used to make changes to the GraphQL schema, it can be
 disabled, especially in production deployments.

@@ -12,7 +12,7 @@ changes.
 
 
 Step 0: Disable the console on the server
----------------------------------
+-----------------------------------------
 
 To use migrations effectively, the console on the server (which is served at
 ``/console``) should be disabled and all changes must go through the console
@@ -65,7 +65,7 @@ Hasura migrations. You can commit this directory to version control.
    ``--admin-secret "<your-admin-secret>"``.
 
 Step 3: Open the console from the CLI
------------------------------
+-------------------------------------
 
 Instead of using the console at ``http://my-graphql.herokuapp.com/console`` you
 should now use the console by running: 
@@ -82,7 +82,7 @@ As you use the Hasura console UI to make changes to your schema, migration files
 are automatically generated in the ``migrations/`` directory in your project. 
 
 Step 5: Apply the migrations on another instance of the GraphQL engine
-------------------------------------------------------------------
+----------------------------------------------------------------------
 
 Apply all migrations present in the ``migrations/`` directory on a new
 instance at ``http://another-graphql-instance.herokuapp.com``:
@@ -98,7 +98,7 @@ GraphQL engine after automatically applying the migrations which are
 mounted into a directory.
 
 Step 6: Check the status of migrations
-----------------------------------
+--------------------------------------
 
 .. code-block:: bash
 
