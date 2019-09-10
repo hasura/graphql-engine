@@ -235,11 +235,12 @@ export const passRemoveUniqueKey = () => {
 };
 
 export const passMTDeleteCol = () => {
+  setPromptValue(getColName(0));
   cy.get(getElementFromAlias('modify-table-edit-column-1')).click();
   cy.get(getElementFromAlias('modify-table-column-1-remove')).click();
-  cy.on('window:alert', str => {
-    expect(str === 'Are you sure you want to delete?').to.be.true;
-  });
+  cy.window()
+    .its('prompt')
+    .should('be.called');
   cy.wait(5000);
   // cy.get('.notification-success').click();
   cy.url().should(
@@ -250,9 +251,11 @@ export const passMTDeleteCol = () => {
 };
 
 export const passMTDeleteTableCancel = () => {
-  // TODO
+  setPromptValue(null);
   cy.get(getElementFromAlias('delete-table')).click();
-  cy.on('window:confirm', () => false);
+  cy.window()
+    .its('prompt')
+    .should('be.called');
   cy.url().should(
     'eq',
     `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`

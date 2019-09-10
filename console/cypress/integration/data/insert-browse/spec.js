@@ -495,7 +495,10 @@ export const passDeleteRow = () => {
   cy.wait(5000);
   cy.get(getElementFromAlias('row-delete-button-0')).click();
   cy.on('window:confirm', str => {
-    expect(str === 'Permanently delete this row?').to.be.true;
+    expect(
+      str.indexOf('This will permanently delete this row from this table') !==
+        -1
+    ).to.be.true;
   });
   // cy.get('.notification-error');
   cy.wait(14000);
