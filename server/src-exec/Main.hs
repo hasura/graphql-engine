@@ -88,6 +88,7 @@ parseHGECommand =
                 <*> parseEnableAllowlist
                 <*> parseEnabledLogs
                 <*> parseLogLevel
+                <*> parseEnableRemotePerms
 
 
 parseArgs :: IO HGEOptions
@@ -124,7 +125,7 @@ main =  do
     HCServe so@(ServeOptions port host cp isoL mAdminSecret mAuthHook
                 mJwtSecret mUnAuthRole corsCfg enableConsole consoleAssetsDir
                 enableTelemetry strfyNum enabledAPIs lqOpts enableAL
-                enabledLogs serverLogLevel) -> do
+                enabledLogs serverLogLevel enableRemotePerms) -> do
 
       let sqlGenCtx = SQLGenCtx strfyNum
 

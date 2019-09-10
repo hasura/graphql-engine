@@ -1,4 +1,6 @@
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP             #-}
+{-# LANGUAGE RecordWildCards #-}
+
 module Hasura.Server.Init where
 
 import qualified Database.PG.Query                as Q
@@ -51,6 +53,14 @@ data RawConnParams
 
 type RawAuthHook = AuthHookG (Maybe T.Text) (Maybe AuthHookType)
 
+data RemotePermFeatureFlag = RemotePermEnabled | RemotePermDisabled
+  deriving (Show, Eq)
+
+instance J.ToJSON RemotePermFeatureFlag where
+  toJSON = \case
+    RemotePermDisabled -> J.Bool False
+    RemotePermEnabled -> J.Bool True
+
 data RawServeOptions
   = RawServeOptions
   { rsoPort               :: !(Maybe Int)
@@ -74,28 +84,30 @@ data RawServeOptions
   , rsoEnableAllowlist    :: !Bool
   , rsoEnabledLogTypes    :: !(Maybe [L.EngineLogType])
   , rsoLogLevel           :: !(Maybe L.LogLevel)
+  , rsoEnableRemotePerms  :: !Bool
   } deriving (Show, Eq)
 
 data ServeOptions
   = ServeOptions
-  { soPort             :: !Int
-  , soHost             :: !HostPreference
-  , soConnParams       :: !Q.ConnParams
-  , soTxIso            :: !Q.TxIsolation
-  , soAdminSecret      :: !(Maybe AdminSecret)
-  , soAuthHook         :: !(Maybe AuthHook)
-  , soJwtSecret        :: !(Maybe JWTConfig)
-  , soUnAuthRole       :: !(Maybe RoleName)
-  , soCorsConfig       :: !CorsConfig
-  , soEnableConsole    :: !Bool
-  , soConsoleAssetsDir :: !(Maybe Text)
-  , soEnableTelemetry  :: !Bool
-  , soStringifyNum     :: !Bool
-  , soEnabledAPIs      :: !(Set.HashSet API)
-  , soLiveQueryOpts    :: !LQ.LQOpts
-  , soEnableAllowlist  :: !Bool
-  , soEnabledLogTypes  :: !(Set.HashSet L.EngineLogType)
-  , soLogLevel         :: !L.LogLevel
+  { soPort              :: !Int
+  , soHost              :: !HostPreference
+  , soConnParams        :: !Q.ConnParams
+  , soTxIso             :: !Q.TxIsolation
+  , soAdminSecret       :: !(Maybe AdminSecret)
+  , soAuthHook          :: !(Maybe AuthHook)
+  , soJwtSecret         :: !(Maybe JWTConfig)
+  , soUnAuthRole        :: !(Maybe RoleName)
+  , soCorsConfig        :: !CorsConfig
+  , soEnableConsole     :: !Bool
+  , soConsoleAssetsDir  :: !(Maybe Text)
+  , soEnableTelemetry   :: !Bool
+  , soStringifyNum      :: !Bool
+  , soEnabledAPIs       :: !(Set.HashSet API)
+  , soLiveQueryOpts     :: !LQ.LQOpts
+  , soEnableAllowlist   :: !Bool
+  , soEnabledLogTypes   :: !(Set.HashSet L.EngineLogType)
+  , soLogLevel          :: !L.LogLevel
+  , soEnableRemotePerms :: !RemotePermFeatureFlag
   } deriving (Show, Eq)
 
 data RawConnInfo =
@@ -197,6 +209,9 @@ instance FromEnv [L.EngineLogType] where
 instance FromEnv L.LogLevel where
   fromEnv = readLogLevel
 
+instance FromEnv RemotePermFeatureFlag where
+  fromEnv flagStr = fmap (\b -> if b then RemotePermEnabled else RemotePermDisabled ) $ parseStrAsBool flagStr
+
 parseStrAsBool :: String -> Either String Bool
 parseStrAsBool t
   | map toLower t `elem` truthVals = Right True
@@ -283,36 +298,37 @@ mkRawConnInfo rawConnInfo = do
     retries = connRetries rawConnInfo
 
 mkServeOptions :: RawServeOptions -> WithEnv ServeOptions
-mkServeOptions rso = do
+mkServeOptions RawServeOptions{..}= do
   port <- fromMaybe 8080 <$>
-          withEnv (rsoPort rso) (fst servePortEnv)
+          withEnv rsoPort (fst servePortEnv)
   host <- fromMaybe "*" <$>
-          withEnv (rsoHost rso) (fst serveHostEnv)
+          withEnv rsoHost (fst serveHostEnv)
 
-  connParams <- mkConnParams $ rsoConnParams rso
-  txIso <- fromMaybe Q.ReadCommitted <$> withEnv (rsoTxIso rso) (fst txIsoEnv)
-  adminScrt <- withEnvs (rsoAdminSecret rso) $ map fst [adminSecretEnv, accessKeyEnv]
-  authHook <- mkAuthHook $ rsoAuthHook rso
-  jwtSecret <- withEnvJwtConf (rsoJwtSecret rso) $ fst jwtSecretEnv
-  unAuthRole <- withEnv (rsoUnAuthRole rso) $ fst unAuthRoleEnv
-  corsCfg <- mkCorsConfig $ rsoCorsConfig rso
-  enableConsole <- withEnvBool (rsoEnableConsole rso) $
+  connParams <- mkConnParams $ rsoConnParams
+  txIso <- fromMaybe Q.ReadCommitted <$> withEnv rsoTxIso (fst txIsoEnv)
+  adminScrt <- withEnvs rsoAdminSecret $ map fst [adminSecretEnv, accessKeyEnv]
+  authHook <- mkAuthHook rsoAuthHook
+  jwtSecret <- withEnvJwtConf rsoJwtSecret  $ fst jwtSecretEnv
+  unAuthRole <- withEnv rsoUnAuthRole $ fst unAuthRoleEnv
+  corsCfg <- mkCorsConfig rsoCorsConfig
+  enableConsole <- withEnvBool rsoEnableConsole $
                    fst enableConsoleEnv
-  consoleAssetsDir <- withEnv (rsoConsoleAssetsDir rso) (fst consoleAssetsDirEnv)
+  consoleAssetsDir <- withEnv rsoConsoleAssetsDir (fst consoleAssetsDirEnv)
   enableTelemetry <- fromMaybe True <$>
-                     withEnv (rsoEnableTelemetry rso) (fst enableTelemetryEnv)
-  strfyNum <- withEnvBool (rsoStringifyNum rso) $ fst stringifyNumEnv
+                     withEnv rsoEnableTelemetry (fst enableTelemetryEnv)
+  strfyNum <- withEnvBool rsoStringifyNum $ fst stringifyNumEnv
   enabledAPIs <- Set.fromList . fromMaybe defaultAPIs <$>
-                     withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
+                     withEnv rsoEnabledAPIs (fst enabledAPIsEnv)
   lqOpts <- mkLQOpts
-  enableAL <- withEnvBool (rsoEnableAllowlist rso) $ fst enableAllowlistEnv
+  enableAL <- withEnvBool rsoEnableAllowlist $ fst enableAllowlistEnv
   enabledLogs <- Set.fromList . fromMaybe (Set.toList L.defaultEnabledLogTypes) <$>
-                 withEnv (rsoEnabledLogTypes rso) (fst enabledLogsEnv)
-  serverLogLevel <- fromMaybe L.LevelInfo <$> withEnv (rsoLogLevel rso) (fst logLevelEnv)
+                 withEnv rsoEnabledLogTypes (fst enabledLogsEnv)
+  serverLogLevel <- fromMaybe L.LevelInfo <$> withEnv rsoLogLevel (fst logLevelEnv)
+  enableRemotePerms <- bool RemotePermDisabled RemotePermEnabled <$> withEnvBool rsoEnableRemotePerms (fst enableRemotePermsEnv)
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
-                        enabledLogs serverLogLevel
+                        enabledLogs serverLogLevel enableRemotePerms
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -339,7 +355,7 @@ mkServeOptions rso = do
 
     mkCorsConfig mCfg = do
       corsCfg <- fromMaybe CCAllowAll <$> withEnv mCfg (fst corsDomainEnv)
-      readCookVal <- withEnvBool (rsoWsReadCookie rso) (fst wsReadCookieEnv)
+      readCookVal <- withEnvBool rsoWsReadCookie (fst wsReadCookieEnv)
       wsReadCookie <- case (isCorsDisabled corsCfg, readCookVal) of
         (True, _)      -> return readCookVal
         (False, True)  -> throwError $ fst wsReadCookieEnv
@@ -350,11 +366,11 @@ mkServeOptions rso = do
         _            -> corsCfg
 
     mkLQOpts = do
-      mxRefetchIntM <- withEnv (rsoMxRefetchInt rso) $
+      mxRefetchIntM <- withEnv rsoMxRefetchInt $
                        fst mxRefetchDelayEnv
-      mxBatchSizeM <- withEnv (rsoMxBatchSize rso) $
+      mxBatchSizeM <- withEnv rsoMxBatchSize $
                       fst mxBatchSizeEnv
-      fallbackRefetchIntM <- withEnv (rsoFallbackRefetchInt rso) $
+      fallbackRefetchIntM <- withEnv rsoFallbackRefetchInt $
                              fst fallbackRefetchDelayEnv
       return $ LQ.mkLQOpts (LQ.mkMxOpts mxBatchSizeM mxRefetchIntM)
         (LQ.mkFallbackOpts fallbackRefetchIntM)
@@ -601,6 +617,12 @@ logLevelEnv :: (String, String)
 logLevelEnv =
   ( "HASURA_GRAPHQL_LOG_LEVEL"
   , "Server log level (default: info) (all: error, warn, info, debug)"
+  )
+
+enableRemotePermsEnv :: (String, String)
+enableRemotePermsEnv =
+  ( "HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS"
+  , "Feature flag for remote schema permissions (default: false)"
   )
 
 parseRawConnInfo :: Parser RawConnInfo
@@ -957,6 +979,12 @@ parseLogLevel = optional $
            help (snd logLevelEnv)
          )
 
+parseEnableRemotePerms :: Parser Bool
+parseEnableRemotePerms =
+  switch ( long "enable-remote-schema-permissions" <>
+           help (snd enableRemotePermsEnv)
+         )
+
 -- Init logging related
 connInfoToLog :: Q.ConnInfo -> StartupLog
 connInfoToLog (Q.ConnInfo host port user _ db _ retries) =
@@ -970,28 +998,29 @@ connInfoToLog (Q.ConnInfo host port user _ db _ retries) =
                        ]
 
 serveOptsToLog :: ServeOptions -> StartupLog
-serveOptsToLog so =
+serveOptsToLog ServeOptions{..} =
   StartupLog L.LevelInfo "server_configuration" infoVal
   where
-    infoVal = J.object [ "port" J..= soPort so
-                       , "server_host" J..= show (soHost so)
-                       , "transaction_isolation" J..= show (soTxIso so)
-                       , "admin_secret_set" J..= isJust (soAdminSecret so)
-                       , "auth_hook" J..= (ahUrl <$> soAuthHook so)
-                       , "auth_hook_mode" J..= (show . ahType <$> soAuthHook so)
-                       , "jwt_secret" J..= (J.toJSON <$> soJwtSecret so)
-                       , "unauth_role" J..= soUnAuthRole so
-                       , "cors_config" J..= soCorsConfig so
-                       , "enable_console" J..= soEnableConsole so
-                       , "console_assets_dir" J..= soConsoleAssetsDir so
-                       , "enable_telemetry" J..= soEnableTelemetry so
-                       , "use_prepared_statements" J..= (Q.cpAllowPrepare . soConnParams) so
-                       , "stringify_numeric_types" J..= soStringifyNum so
-                       , "enabled_apis" J..= soEnabledAPIs so
-                       , "live_query_options" J..= soLiveQueryOpts so
-                       , "enable_allowlist" J..= soEnableAllowlist so
-                       , "enabled_log_types" J..= soEnabledLogTypes so
-                       , "log_level" J..= soLogLevel so
+    infoVal = J.object [ "port" J..= soPort
+                       , "server_host" J..= show soHost
+                       , "transaction_isolation" J..= show soTxIso
+                       , "admin_secret_set" J..= isJust soAdminSecret
+                       , "auth_hook" J..= (ahUrl <$> soAuthHook)
+                       , "auth_hook_mode" J..= (show . ahType <$> soAuthHook)
+                       , "jwt_secret" J..= (J.toJSON <$> soJwtSecret)
+                       , "unauth_role" J..= soUnAuthRole
+                       , "cors_config" J..= soCorsConfig
+                       , "enable_console" J..= soEnableConsole
+                       , "console_assets_dir" J..= soConsoleAssetsDir
+                       , "enable_telemetry" J..= soEnableTelemetry
+                       , "use_prepared_statements" J..= Q.cpAllowPrepare soConnParams
+                       , "stringify_numeric_types" J..= soStringifyNum
+                       , "enabled_apis" J..= soEnabledAPIs
+                       , "live_query_options" J..= soLiveQueryOpts
+                       , "enable_allowlist" J..= soEnableAllowlist
+                       , "enabled_log_types" J..= soEnabledLogTypes
+                       , "log_level" J..= soLogLevel
+                       , "enable_remote_permissions" J..= soEnableRemotePerms
                        ]
 
 mkGenericStrLog :: L.LogLevel -> T.Text -> String -> StartupLog
