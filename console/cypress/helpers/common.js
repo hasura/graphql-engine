@@ -13,4 +13,6 @@ export const setPromptValue = value => {
   });
 
   cy.reload();
+
+  cy.wait(2000);
 };

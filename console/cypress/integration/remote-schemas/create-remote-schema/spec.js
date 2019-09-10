@@ -104,7 +104,7 @@ export const deleteSimpleRemoteSchemaFailUserConfirmationError = () => {
     `${baseUrl}/remote-schemas/manage/${getRemoteSchemaName(
       1,
       testName
-    )}/details`
+    )}/modify`
   );
   // cy.get(getElementFromAlias('delete-confirmation-error')).should('exist');
   cy.wait(5000);
