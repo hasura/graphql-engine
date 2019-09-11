@@ -123,7 +123,6 @@ addRemoteSchemaToAdminRole initGCtxMap remoteGCtx = do
   merged <- mergeGCtx adminGCtx remoteGCtx
   pure $ Map.insert adminRole merged initGCtxMap
 
--- assertion: GCtxMap here is pure GCtxMapPG i.e. no remote schemas
 mergeRoleRemoteSchemas
   :: (MonadError QErr m)
   => GS.GCtxMap
@@ -131,12 +130,14 @@ mergeRoleRemoteSchemas
   -> m GS.GCtxMap
 mergeRoleRemoteSchemas initGCtxMap roleRemoteSchemas = do
   foldM
-    (\acc ((role, _rsName), remoteCtx) -> do
-       let roleGCtx = convRemoteGCtx (rscGCtx remoteCtx)
-       merged <- mergeGCtx (GS.getGCtx role acc) roleGCtx
-       pure $ Map.insert role merged acc)
+    mergeAcc
     initGCtxMap
     (Map.toList roleRemoteSchemas)
+  where
+    mergeAcc acc ((role, _), remoteCtx) = do
+       let roleGCtx = convRemoteGCtx (rscGCtx remoteCtx)
+       merged <- mergeGCtx (GS.getGCtx role acc) roleGCtx
+       pure $ Map.insert role merged acc
 
 mergeGCtx
   :: (MonadError QErr m)

@@ -6,6 +6,7 @@ module Hasura.RQL.DDL.RemoteSchema
   , removeRemoteSchemaFromCatalog
   , runReloadRemoteSchema
   , buildGCtxMap
+  , mkCacheForRemoteSchema
   , fetchRemoteSchemas
   , addRemoteSchemaP1
   , addRemoteSchemaP2Setup
@@ -165,6 +166,23 @@ buildGCtxMap = do
   -- add remote schemas
   mergedGCtxMap <- mergeSchemas (scRemoteSchemas sc) (scRemoteSchemasWithRole sc) gCtxMap
   writeSchemaCache sc { scGCtxMap = mergedGCtxMap }
+
+mkCacheForRemoteSchema
+  :: (QErrM m) => SchemaCache -> RemoteSchemaName -> m SchemaCache
+mkCacheForRemoteSchema sc rsName = do
+  let remoteSchemaMap =
+        maybe Map.empty (Map.singleton rsName) $
+        Map.lookup rsName (scRemoteSchemas sc)
+      remoteSchemaRoleMap =
+        flip Map.filterWithKey (scRemoteSchemasWithRole sc) $ \(_, name) _ ->
+          name == rsName
+  mergedGCtxMap <-
+    mergeSchemas remoteSchemaMap remoteSchemaRoleMap Map.empty
+  pure emptySchemaCache
+    { scRemoteSchemas = remoteSchemaMap
+    , scRemoteSchemasWithRole = remoteSchemaRoleMap
+    , scGCtxMap = mergedGCtxMap
+    }
 
 addRemoteSchemaToCatalog
   :: AddRemoteSchemaQuery

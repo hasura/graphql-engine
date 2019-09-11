@@ -1,6 +1,7 @@
-{-# LANGUAGE CPP        #-}
-{-# LANGUAGE DataKinds  #-}
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE CPP          #-}
+{-# LANGUAGE DataKinds    #-}
+{-# LANGUAGE RankNTypes   #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Hasura.Server.App where
 
@@ -45,6 +46,7 @@ import qualified Hasura.Server.PGDump                   as PGD
 
 import           Hasura.EncJSON
 import           Hasura.Prelude                         hiding (get, put)
+import           Hasura.RQL.DDL.RemoteSchema            (mkCacheForRemoteSchema)
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                     (AuthMode (..),
@@ -106,6 +108,7 @@ withSCUpdate scr logger action = do
     acquireLock = liftIO $ takeMVar lk
     releaseLock = liftIO $ putMVar lk ()
 
+
 data ServerCtx
   = ServerCtx
   { scPGExecCtx       :: !PGExecCtx
@@ -121,6 +124,7 @@ data ServerCtx
   , scLQState         :: !EL.LiveQueriesState
   , scEnableAllowlist :: !Bool
   , scEkgStore        :: !EKG.Store
+  , scFeatureFlags    :: !FeatureFlags
   }
 
 data HandlerCtx
@@ -319,8 +323,8 @@ v1QueryHandler query = do
       instanceId <- scInstanceId . hcServerCtx <$> ask
       runQuery pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx query
 
-v1Alpha1GQHandler :: GH.GQLReqUnparsed -> Handler (HttpResponse EncJSON)
-v1Alpha1GQHandler query = do
+v1Alpha1GQHandler :: (SchemaCache -> Handler SchemaCache) -> GH.GQLReqUnparsed -> Handler (HttpResponse EncJSON)
+v1Alpha1GQHandler scModifier query = do
   userInfo <- asks hcUser
   reqHeaders <- asks hcReqHeaders
   manager <- scManager . hcServerCtx <$> ask
@@ -332,14 +336,22 @@ v1Alpha1GQHandler query = do
   enableAL  <- scEnableAllowlist . hcServerCtx <$> ask
   logger    <- scLogger . hcServerCtx <$> ask
   requestId <- asks hcRequestId
+  sc' <- scModifier sc
   let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx planCache
-                sc scVer manager enableAL
+                sc' scVer manager enableAL
   flip runReaderT execCtx $ GH.runGQ requestId userInfo reqHeaders query
 
 v1GQHandler
   :: GH.GQLReqUnparsed
   -> Handler (HttpResponse EncJSON)
-v1GQHandler = v1Alpha1GQHandler
+v1GQHandler = v1Alpha1GQHandler pure
+
+-- only exposes remote schema
+v1GQRemoteHandler
+  :: RemoteSchemaName
+  -> GH.GQLReqUnparsed
+  -> Handler (HttpResponse EncJSON)
+v1GQRemoteHandler rsName = v1Alpha1GQHandler (flip mkCacheForRemoteSchema rsName)
 
 gqlExplainHandler :: GE.GQLExplain -> Handler (HttpResponse EncJSON)
 gqlExplainHandler query = do
@@ -451,9 +463,10 @@ mkWaiApp
   -> InstanceId
   -> S.HashSet API
   -> EL.LQOpts
+  -> FeatureFlags
   -> IO (Wai.Application, SchemaCacheRef, Maybe UTCTime)
 mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
-         enableConsole consoleAssetsDir enableTelemetry instanceId apis lqOpts = do
+         enableConsole consoleAssetsDir enableTelemetry instanceId apis lqOpts featureFlags = do
 
     let pgExecCtx = PGExecCtx pool isoLevel
         pgExecCtxSer = PGExecCtx pool Q.Serializable
@@ -483,7 +496,7 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
         serverCtx = ServerCtx pgExecCtx ci logger
                     schemaCacheRef mode httpManager
                     sqlGenCtx apis instanceId planCache
-                    lqState enableAL ekgStore
+                    lqState enableAL ekgStore featureFlags
 
     when (isDeveloperAPIEnabled serverCtx) $ do
       EKG.registerGcMetrics ekgStore
@@ -546,12 +559,16 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       post "v1alpha1/graphql/explain" gqlExplainAction
 
       post "v1alpha1/graphql" $ mkSpockAction GH.encodeGQErr id serverCtx $
-        mkPostHandler $ mkAPIRespHandler v1Alpha1GQHandler
+        mkPostHandler $ mkAPIRespHandler $ v1Alpha1GQHandler pure
 
       post "v1/graphql/explain" gqlExplainAction
 
       post "v1/graphql" $ mkSpockAction GH.encodeGQErr allMod200 serverCtx $
         mkPostHandler $ mkAPIRespHandler v1GQHandler
+
+      post ("v1/graphql/remote" <//> var) $ \(RemoteSchemaName -> remoteSchemaName) ->
+        mkSpockAction GH.encodeGQErr allMod200 serverCtx $
+        mkPostHandler $ mkAPIRespHandler $ v1GQRemoteHandler remoteSchemaName
 
     when (isDeveloperAPIEnabled serverCtx) $ do
       get "dev/ekg" $ mkSpockAction encodeQErr id serverCtx $

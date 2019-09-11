@@ -88,6 +88,7 @@ parseHGECommand =
                 <*> parseEnableAllowlist
                 <*> parseEnabledLogs
                 <*> parseLogLevel
+                <*> parseEnableRemotePerms
 
 
 parseArgs :: IO HGEOptions
@@ -124,7 +125,7 @@ main =  do
     HCServe so@(ServeOptions port host cp isoL mAdminSecret mAuthHook
                 mJwtSecret mUnAuthRole corsCfg enableConsole consoleAssetsDir
                 enableTelemetry strfyNum enabledAPIs lqOpts enableAL
-                enabledLogs serverLogLevel) -> do
+                enabledLogs serverLogLevel enabledFeatureFlags) -> do
 
       let sqlGenCtx = SQLGenCtx strfyNum
 
@@ -152,7 +153,8 @@ main =  do
       (app, cacheRef, cacheInitTime) <-
         mkWaiApp isoL loggerCtx sqlGenCtx enableAL pool ci httpManager am
           corsCfg enableConsole consoleAssetsDir enableTelemetry
-          instanceId enabledAPIs lqOpts
+          instanceId enabledAPIs lqOpts enabledFeatureFlags
+
 
       -- log inconsistent schema objects
       inconsObjs <- scInconsistentObjs <$> getSCFromRef cacheRef
