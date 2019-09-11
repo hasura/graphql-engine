@@ -272,6 +272,7 @@ library
                      , Data.TByteString
                      , Data.HashMap.Strict.InsOrd.Extended
                      , Data.Parser.JSONPath
+                     , Data.Time.Clock.Units
 
                      , Hasura.SQL.DML
                      , Hasura.SQL.Error
