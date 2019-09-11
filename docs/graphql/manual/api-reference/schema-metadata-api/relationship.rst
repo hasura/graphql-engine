@@ -27,9 +27,9 @@ create_object_relationship
 --------------------------
 
 ``create_object_relationship`` is used to create an object relationship on a
-table. There cannot be an existing column or relationship with the same name. 
+table. There cannot be an existing column or relationship with the same name.
 
-There are 2 ways in which you can create an object relationship.
+There are 3 ways in which you can create an object relationship.
 
 1. Using foreign key constraint on a column
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -54,23 +54,49 @@ Create an ``object relationship`` ``author`` on ``article`` *table*,  *using* th
        }
    }
 
+2. One-to-One object relationship using foreign key constraint
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A one-to-one object relationship can be created using foreign key constraint
+on remote table's column. The condition is that the remote table's column alone
+should have either ``primary key`` or ``unique`` constraint.
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type": "create_object_relationship",
+       "args": {
+           "table": "article",
+           "name": "config",
+           "using": {
+               "foreign_key_constraint_on" : {
+                   "table": "article_config",
+                   "column": "article_id"
+               }
+           }
+       }
+   }
 
 .. _manual_obj_relationship:
 
-2. Manual configuration
+3. Manual configuration
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 This is an advanced feature which is mostly used to define relationships on or
 to views. We cannot rely on foreign key constraints as they are not valid to or
 from views. So, when using manual configuration, we have to specify the remote
 table and how columns in this table are mapped to the columns of the
-remote table. 
+remote table.
 
 Let's say we have a view called ``article_detail`` which has three columns
 ``article_id`` and ``view_count`` and ``average_rating``. We can now define an
 object relationship called ``article_detail`` on the ``article`` table as
-follows: 
- 
+follows:
+
 .. code-block:: http
 
    POST /v1/query HTTP/1.1
@@ -88,6 +114,36 @@ follows:
                    "column_mapping" : {
                        "id" : "article_id"
                    }
+               }
+           }
+       }
+   }
+
+If we want to define a one-to-one object relationship using manual configuration
+then we've to specify ``insertion_order`` as ``after_parent`` in ``manual_configuration``.
+``insertion_order`` is the order in which the object relationship inserted
+in a nested insert in respect of the parent. It expects either ``before_parent`` or
+``after_parent`` string value. It is optional and by default it is ``before_parent`` which
+indicates many-to-one relationship.
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type": "create_object_relationship",
+       "args": {
+           "table": "article",
+           "name": "article_detail",
+           "using": {
+               "manual_configuration" : {
+                   "remote_table" : "article_detail",
+                   "column_mapping" : {
+                       "id" : "article_id"
+                   },
+                   "insertion_order": "after_parent"
                }
            }
        }
@@ -145,7 +201,7 @@ ObjRelUsing
      - Description
    * - foreign_key_constraint_on
      - false
-     - :ref:`PGColumn <PGColumn>`
+     - :ref:`PGColumn <PGColumn>` or ObjRelUsingFKeyOn_
      - The column with foreign key constraint
    * - manual_configuration
      - false
@@ -155,8 +211,26 @@ ObjRelUsing
 .. note::
 
    There has to be at least one and only one of ``foreign_key_constraint_on``
-   and ``manual_mapping``. 
+   and ``manual_mapping``.
 
+ObjRelUsingFKeyOn
+&&&&&&&&&&&&&&&&&
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - table
+     - true
+     - :ref:`TableName`
+     - Name of the remote table
+   * - column
+     - true
+     - :ref:`PGColumn`
+     - Name of the column of the remote table with foreign key constraint
 
 ObjRelUsingManualMapping
 &&&&&&&&&&&&&&&&&&&&&&&&
@@ -176,6 +250,10 @@ ObjRelUsingManualMapping
      - true
      - Object (:ref:`PGColumn` : :ref:`PGColumn`)
      - Mapping of columns from current table to remote table
+   * - insertion_order
+     - false
+     - String (``before_parent`` or ``after_parent``)
+     - Insertion order in nested inserts (default: ``before_parent``)
 
 .. _create_array_relationship:
 
@@ -183,7 +261,7 @@ create_array_relationship
 -------------------------
 
 ``create_array_relationship`` is used to create an array relationship on a
-table. There cannot be an existing column or relationship with the same name. 
+table. There cannot be an existing column or relationship with the same name.
 
 There are 2 ways in which you can create an array relationship.
 
@@ -356,7 +434,7 @@ drop_relationship
 a table. If there are other objects dependent on this relationship like
 permissions and query templates, etc., the query will fail and report the dependencies
 unless ``cascade`` is set to ``true``. If ``cascade`` is set to ``true``, the
-dependent objects are also dropped. 
+dependent objects are also dropped.
 
 An example:
 
@@ -410,7 +488,7 @@ set_relationship_comment
 ------------------------
 
 ``set_relationship_comment`` is used to set/update the comment on a
-relationship. Setting the comment to ``null`` removes it. 
+relationship. Setting the comment to ``null`` removes it.
 
 An example:
 
