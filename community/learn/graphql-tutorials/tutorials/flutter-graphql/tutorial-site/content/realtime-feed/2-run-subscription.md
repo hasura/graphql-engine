@@ -50,7 +50,6 @@ And initialize \_client in initState method.
 +  }
 ```
 
-<<<<<<< HEAD
 To add new public feed we need to run a mutation on press of our `Post` button i.e. CustomButton.
 
 ```dart
@@ -96,11 +95,7 @@ To add new public feed we need to run a mutation on press of our `Post` button i
         ),
 ```
 
-# Now wrap custom button i.e `New Notification` in subscription widget.
-
-Now let's wrap the subscription
-
-> > > > > > > 480b34ea5e0aa0402e8e0ee2957e9e03404adc1b
+Now wrap custom button i.e `New Notification` in subscription widget.
 
 ```dart
 + Subscription(
@@ -124,7 +119,6 @@ Now let's wrap the subscription
                    print("loading");
                  },
                  height: 50,
-<<<<<<< HEAD
 -                text: "New Notification",
 +                 text: " $_newTodoCount New Notification",
                  width: MediaQuery.of(context).size.width / 2,
@@ -137,18 +131,6 @@ Now let's wrap the subscription
 +           }
 +         },
 +       ),
-=======
-                 text: " $_newTodoCount New Notification",
-                 width: MediaQuery.of(context).size.width / 2,
-               );
--              } else
--               return SizedBox();
--           } else {
--             return SizedBox();
--           }
--         },
--       )
->>>>>>> 480b34ea5e0aa0402e8e0ee2957e9e03404adc1b
 ```
 
 The `fetchNewNotification` does the following:

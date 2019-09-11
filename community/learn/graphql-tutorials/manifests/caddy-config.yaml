@@ -137,11 +137,8 @@ data:
 
       proxy /graphql/reason-react-apollo reason-react-apollo
 
-<<<<<<< HEAD
-=======
       proxy /graphql/angular-apollo angular-apollo
 
->>>>>>> 480b34ea5e0aa0402e8e0ee2957e9e03404adc1b
       proxy /graphql/flutter-graphql flutter-graphql
 
       proxy /graphql hasura/v1/graphql {
