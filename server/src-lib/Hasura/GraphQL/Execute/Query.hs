@@ -10,7 +10,6 @@ import           Data.Has
 
 import qualified Data.Aeson                             as J
 import qualified Data.ByteString                        as B
-import qualified Data.ByteString.Base64                 as B64
 import qualified Data.ByteString.Lazy                   as LBS
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashSet                           as Set
@@ -36,7 +35,7 @@ import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
 type PlanVariables = Map.HashMap G.Variable (Int, PGColumnType)
-type PrepArgMap = IntMap.IntMap Q.PrepArg
+type PrepArgMap = IntMap.IntMap (Q.PrepArg, PGScalarValue)
 
 data PGPlan
   = PGPlan
@@ -119,7 +118,7 @@ withPlan usrVars (PGPlan q reqVars prepMap) annVars = do
       let varName = G.unName $ G.unVariable var
       colVal <- onNothing (Map.lookup var annVars) $
         throw500 $ "missing variable in annVars : " <> varName
-      let prepVal = toBinaryValue colVal
+      let prepVal = (toBinaryValue colVal, pstValue colVal)
       return $ IntMap.insert prepNo prepVal accum
 
 -- turn the current plan into a transaction
@@ -140,9 +139,11 @@ mkCurPlanTx usrVars (QueryPlan _ fldPlans) = do
 
   return (mkLazyRespTx resolved, mkGeneratedSqlMap resolved)
 
-withUserVars :: UserVars -> [Q.PrepArg] -> [Q.PrepArg]
-withUserVars usrVars l =
-  Q.toPrepVal (Q.AltJ usrVars):l
+withUserVars :: UserVars -> [(Q.PrepArg, PGScalarValue)] -> [(Q.PrepArg, PGScalarValue)]
+withUserVars usrVars list =
+  let usrVarsAsPgScalar = PGValJSON $ Q.JSON $ J.toJSON usrVars
+      prepArg = Q.toPrepVal (Q.AltJ usrVars)
+  in (prepArg, usrVarsAsPgScalar):list
 
 data PlanningSt
   = PlanningSt
@@ -169,7 +170,7 @@ getVarArgNum var colTy = do
 
 addPrepArg
   :: (MonadState PlanningSt m)
-  => Int -> Q.PrepArg -> m ()
+  => Int -> (Q.PrepArg, PGScalarValue) -> m ()
 addPrepArg argNum arg = do
   PlanningSt curArgNum vars prepped <- get
   put $ PlanningSt curArgNum vars $ IntMap.insert argNum arg prepped
@@ -191,7 +192,7 @@ prepareWithPlan = \case
     argNum <- case (varM, isNullable) of
       (Just var, False) -> getVarArgNum var colTy
       _                 -> getNextArgNum
-    addPrepArg argNum $ toBinaryValue colVal
+    addPrepArg argNum $ (toBinaryValue colVal, pstValue colVal)
     return $ toPrepParam argNum (pstType colVal)
 
   R.UVSessVar ty sessVar -> do
@@ -260,17 +261,15 @@ queryOpFromPlan usrVars varValsM (ReusableQueryPlan varTypes fldPlans) = do
 data PreparedSql
   = PreparedSql
   { _psQuery    :: !Q.Query
-  , _psPrepArgs :: ![Q.PrepArg]
+  , _psPrepArgs :: ![(Q.PrepArg, PGScalarValue)]
   }
 
 -- | Required to log in `query-log`
 instance J.ToJSON PreparedSql where
   toJSON (PreparedSql q prepArgs) =
     J.object [ "query" J..= Q.getQueryText q
-             , "prepared_arguments" J..= map prepArgsJVal prepArgs
+             , "prepared_arguments" J..= map (txtEncodedPGVal . snd) prepArgs
              ]
-    where
-      prepArgsJVal (_, arg) = fmap (bsToTxt . B64.encode . fst) arg
 
 -- | Intermediate reperesentation of a computed SQL statement and prepared
 -- arguments, or a raw bytestring (mostly, for introspection responses)
@@ -290,7 +289,7 @@ mkLazyRespTx resolved =
   fmap encJFromAssocList $ forM resolved $ \(alias, node) -> do
     resp <- case node of
       RRRaw bs                   -> return $ encJFromBS bs
-      RRSql (PreparedSql q args) -> liftTx $ asSingleRowJsonResp q args
+      RRSql (PreparedSql q args) -> liftTx $ asSingleRowJsonResp q (map fst args)
     return (G.unName $ G.unAlias alias, resp)
 
 mkGeneratedSqlMap :: [(G.Alias, ResolvedQuery)] -> GeneratedSqlMap
