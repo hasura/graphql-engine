@@ -1,16 +1,16 @@
 import * as React from 'react'
 
-type Todo = {
-  id: number,
-  title: string,
-  is_completed?: boolean,
-  is_public?: boolean,
-  user: { name: string }
+import { Todos } from '../../generated/graphql';
+
+type User = {
+  user: {
+    name: string
+  }
 }
 
 interface TaskItemState {
   index: number,
-  todo: Todo
+  todo: Partial<Todos> & User
 }
 
 const TaskItem = ({index, todo} : TaskItemState) => {

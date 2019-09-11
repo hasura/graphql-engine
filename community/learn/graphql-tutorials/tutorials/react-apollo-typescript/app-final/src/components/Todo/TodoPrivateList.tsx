@@ -7,7 +7,8 @@ import TodoFilters from "./TodoFilters";
 
 import { 
   GetMyTodosQuery,
-  ClearCompletedMutation
+  ClearCompletedMutation,
+  Todos
 } from '../../generated/graphql';
 
 const GET_MY_TODOS = gql`
@@ -28,13 +29,6 @@ const CLEAR_COMPLETED = gql`
     }
   }
 `;
-
-type Todo = {
-  id: number,
-  title: string,
-  created_at: string,
-  is_completed: boolean
-};
 
 const TodoPrivateList = () => {
 
@@ -63,12 +57,12 @@ const TodoPrivateList = () => {
 
   let filteredTodos = data.todos;
   if (filter === "active") {
-    filteredTodos = data.todos.filter(todo => todo.is_completed !== true);
+    filteredTodos = data.todos.filter((todo: Partial<Todos>) => todo.is_completed !== true);
   } else if (filter === "completed") {
-    filteredTodos = data.todos.filter(todo => todo.is_completed === true);
+    filteredTodos = data.todos.filter((todo: Partial<Todos>) => todo.is_completed === true);
   }
 
-  const todoList = filteredTodos.map((todo: Todo, index: number) => (
+  const todoList = filteredTodos.map((todo: Partial<Todos>, index: number) => (
     <TodoItem
       key={'item'+index}
       index={index}

@@ -5,18 +5,12 @@ import { GET_MY_TODOS } from './TodoPrivateList';
 import { 
   GetMyTodosQuery,
   RemoveTodoMutationFn,
+  Todos
 } from '../../generated/graphql';
-
-type TodoItem = {
-  id: number,
-  title: string,
-  created_at: string,
-  is_completed: boolean
-};
 
 interface TodoItemType {
   index: number,
-  todo: TodoItem
+  todo: Partial<Todos>
 };
 
 const TOGGLE_TODO = gql`
@@ -102,10 +96,10 @@ const TodoItem = ({index, todo}: TodoItemType) => {
           <input
             checked={todo.is_completed}
             type="checkbox"
-            id={todo.id.toString()}
+            id={todo.id!.toString()}
             onChange={() => toggleTodo()}
           />
-          <label htmlFor={todo.id.toString()}/>
+          <label htmlFor={todo.id!.toString()}/>
         </div>
       </div>
 

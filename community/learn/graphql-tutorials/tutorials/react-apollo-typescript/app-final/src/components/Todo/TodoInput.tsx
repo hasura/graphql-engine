@@ -11,7 +11,6 @@ import { GetMyTodosQuery, Insert_TodosMutation, Insert_TodosMutationVariables } 
       returning {
         id
         title
-        created_at
         is_completed
       }
     }

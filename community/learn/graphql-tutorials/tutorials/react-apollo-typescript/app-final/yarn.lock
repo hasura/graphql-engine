@@ -10,28 +10,6 @@
     ts-invariant "^0.4.4"
     tslib "^1.10.0"
 
-"@apollo/react-components@^3.1.0-beta.0":
-  version "3.1.0-beta.0"
-  resolved "https://registry.yarnpkg.com/@apollo/react-components/-/react-components-3.1.0-beta.0.tgz#6801be8ba32827fb373c545d598371c8a63bdd44"
-  integrity sha512-5/iFCOfpFdF6wBKSR9sItZTQsQLg8dkNwbEMY2RJl43U+zFAxhpgIWR6CK8Ms4MDZBRIfArAUPnQ0JLowv9Slg==
-  dependencies:
-    "@apollo/react-common" "^3.1.0-beta.0"
-    "@apollo/react-hooks" "^3.1.0-beta.0"
-    prop-types "^15.7.2"
-    ts-invariant "^0.4.4"
-    tslib "^1.10.0"
-
-"@apollo/react-hoc@^3.1.0-beta.0":
-  version "3.1.0-beta.0"
-  resolved "https://registry.yarnpkg.com/@apollo/react-hoc/-/react-hoc-3.1.0-beta.0.tgz#0bcc4d0d0711d4f1a01a82062714cda97af99520"
-  integrity sha512-Tk0IFrTj+0sbO8NNcj2TJKa34MOiYmD0NpbjDkFTJBy8YlsQU1MiNCdb81bwD2x+yqCfrPkx8MZJm133MaDoxw==
-  dependencies:
-    "@apollo/react-common" "^3.1.0-beta.0"
-    "@apollo/react-components" "^3.1.0-beta.0"
-    hoist-non-react-statics "^3.3.0"
-    ts-invariant "^0.4.4"
-    tslib "^1.10.0"
-
 "@apollo/react-hooks@^3.1.0-beta.0":
   version "3.1.0-beta.0"
   resolved "https://registry.yarnpkg.com/@apollo/react-hooks/-/react-hooks-3.1.0-beta.0.tgz#51ea15513f5d65567a68543d4c7f69f77f898adf"
@@ -40,15 +18,6 @@
     "@apollo/react-common" "^3.1.0-beta.0"
     "@wry/equality" "^0.1.9"
     ts-invariant "^0.4.4"
-    tslib "^1.10.0"
-
-"@apollo/react-ssr@^3.1.0-beta.0":
-  version "3.1.0-beta.0"
-  resolved "https://registry.yarnpkg.com/@apollo/react-ssr/-/react-ssr-3.1.0-beta.0.tgz#43b44b8d724147670bff5da25ef7db2caa0aed6f"
-  integrity sha512-xJQUNYT1KZbCOK8+jReH1NBJHd+mW5ZuypFGpvqbrc4hCBa6QY5iA5NDDLJg82T7dBSRlir+0SlNQjXS2+w1mQ==
-  dependencies:
-    "@apollo/react-common" "^3.1.0-beta.0"
-    "@apollo/react-hooks" "^3.1.0-beta.0"
     tslib "^1.10.0"
 
 "@auth0/auth0-spa-js@^1.2.3":
@@ -5181,7 +5150,7 @@ hmac-drbg@^1.0.0:
     minimalistic-assert "^1.0.0"
     minimalistic-crypto-utils "^1.0.1"
 
-hoist-non-react-statics@^3.1.0, hoist-non-react-statics@^3.3.0:
+hoist-non-react-statics@^3.1.0:
   version "3.3.0"
   resolved "https://registry.yarnpkg.com/hoist-non-react-statics/-/hoist-non-react-statics-3.3.0.tgz#b09178f0122184fb95acf525daaecb4d8f45958b"
   integrity sha512-0XsbTXxgiaCDYDIWFcwkmerZPSwywfUqYmwT4jzewKTQSWoE6FCMoUVOeBJWK3E/CrWbxRG3m5GzY4lnIwGRBA==
@@ -8905,17 +8874,6 @@ rc@^1.2.7:
     ini "~1.3.0"
     minimist "^1.2.0"
     strip-json-comments "~2.0.1"
-
-react-apollo@^3.1.0-beta.0:
-  version "3.1.0-beta.0"
-  resolved "https://registry.yarnpkg.com/react-apollo/-/react-apollo-3.1.0-beta.0.tgz#a0fb528721223463bb89ed18e6739f439e171887"
-  integrity sha512-6Ub9MCwXLb+FWOR0CIE0vntpXi8xAZU8ozq4MxWAL6iEIGhxyRUHXa4RZHsXRabIHXcu4LJPS5pmLlhzPhUtDA==
-  dependencies:
-    "@apollo/react-common" "^3.1.0-beta.0"
-    "@apollo/react-components" "^3.1.0-beta.0"
-    "@apollo/react-hoc" "^3.1.0-beta.0"
-    "@apollo/react-hooks" "^3.1.0-beta.0"
-    "@apollo/react-ssr" "^3.1.0-beta.0"
 
 react-app-polyfill@^1.0.2:
   version "1.0.2"

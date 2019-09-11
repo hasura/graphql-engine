@@ -5,8 +5,7 @@ import TodoFilters from "./TodoFilters";
 type Todo = {
   id: number,
   title: string,
-  is_completed: boolean,
-  is_public: boolean
+  is_completed: boolean
 };
 
 const TodoPrivateList = () => {
@@ -17,14 +16,12 @@ const TodoPrivateList = () => {
     {
       id: 1,
       title: "This is private todo 1",
-      is_completed: true,
-      is_public: false
+      is_completed: true
     },
     {
       id: 2,
       title: "This is private todo 2",
-      is_completed: false,
-      is_public: false
+      is_completed: false
     }
   ];
 
@@ -37,9 +34,9 @@ const TodoPrivateList = () => {
 
   let filteredTodos = todos;
   if (filter === "active") {
-    filteredTodos = todos.filter(todo => todo.is_completed !== true);
+    filteredTodos = todos.filter((todo: Todo) => todo.is_completed !== true);
   } else if (filter === "completed") {
-    filteredTodos = todos.filter(todo => todo.is_completed === true);
+    filteredTodos = todos.filter((todo: Todo) => todo.is_completed === true);
   }
 
   const todoList = filteredTodos.map((todo: Todo, index: number) => (

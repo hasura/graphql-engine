@@ -28,10 +28,10 @@ const TodoItem = ({index, todo}: TodoItemType) => {
           <input
             checked={todo.is_completed}
             type="checkbox"
-            id={todo.id.toString()}
+            id={todo.id!.toString()}
             onChange={() => toggleTodo()}
           />
-          <label htmlFor={todo.id.toString()}/>
+          <label htmlFor={todo.id!.toString()}/>
         </div>
       </div>
 

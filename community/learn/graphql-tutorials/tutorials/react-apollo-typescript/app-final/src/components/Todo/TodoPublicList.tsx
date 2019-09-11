@@ -5,18 +5,16 @@ import TaskItem from "./TaskItem";
 
 import { 
   GetOldPublicTodosQuery,
-  GetOldPublicTodosQueryVariables
+  GetOldPublicTodosQueryVariables,
+  Todos
 } from '../../generated/graphql';
 
-type TodoItem = {
-  id: number,
-  title: string,
-  created_at: string,
+type User = {
   user: { name: string }
-}
+};
 
 type publicListProps = {
-  latestTodo: TodoItem | null
+  latestTodo: (Partial<Todos> & User) | null
 }
 
 const TodoPublicList = (props: publicListProps) => {
@@ -25,8 +23,8 @@ const TodoPublicList = (props: publicListProps) => {
   const [error, setError] = useState(false);
   const [todos, setTodos] = useState<GetOldPublicTodosQuery["todos"]>([]);
 
-  let oldestTodoId = useRef(props.latestTodo ? props.latestTodo.id + 1 : 0);
-  let newestTodoId = useRef(props.latestTodo ? props.latestTodo.id : 0);
+  let oldestTodoId = useRef(props.latestTodo && props.latestTodo.id ? props.latestTodo.id + 1 : 0);
+  let newestTodoId = useRef(props.latestTodo && props.latestTodo.id ? props.latestTodo.id : 0);
   if(todos && todos.length) {
     oldestTodoId.current = todos[todos.length - 1].id
     newestTodoId.current = todos[0].id;
@@ -124,9 +122,9 @@ const TodoPublicList = (props: publicListProps) => {
 
   useEffect(
     () => {
-      if (props.latestTodo && props.latestTodo.id > newestTodoId.current) {
+      if (props.latestTodo && props.latestTodo.id! > newestTodoId.current) {
         setNewTodosCount(n => n + 1);
-        newestTodoId.current = props.latestTodo.id;
+        newestTodoId.current = props.latestTodo.id!;
       }
     },
     [props.latestTodo]
