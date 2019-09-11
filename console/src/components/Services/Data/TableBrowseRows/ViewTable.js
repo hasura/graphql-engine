@@ -10,7 +10,6 @@ import {
 } from './ViewActions';
 import { setTable } from '../DataActions';
 import TableHeader from '../TableCommon/TableHeader';
-import ViewHeader from './ViewHeader';
 import ViewRows from './ViewRows';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
@@ -142,7 +141,6 @@ class ViewTable extends Component {
   render() {
     const {
       tableName,
-      tableComment,
       schemas,
       query,
       curFilter,
@@ -207,31 +205,20 @@ class ViewTable extends Component {
     );
 
     // Choose the right nav bar header thing
-    const header = isView ? (
-      <ViewHeader
-        dispatch={dispatch}
-        tableName={tableName}
-        tabName="browse"
-        tableComment={tableComment}
-        migrationMode={migrationMode}
-        currentSchema={currentSchema}
-      />
-    ) : (
+    const header = (
       <TableHeader
         count={count}
         dispatch={dispatch}
-        tableName={tableName}
-        tableComment={tableComment}
+        table={tableSchema}
         tabName="browse"
         migrationMode={migrationMode}
-        currentSchema={currentSchema}
       />
     );
 
     let comment = null;
     if (tableSchema.comment) {
       comment = (
-        <div className={styles.mar_bottom}>
+        <div className={styles.add_mar_top}>
           <div className={styles.commentText + ' alert alert-warning'}>
             {tableSchema.comment}
           </div>
@@ -242,7 +229,6 @@ class ViewTable extends Component {
     return (
       <div>
         {header}
-        <br />
         {comment}
         <div>{viewRows}</div>
       </div>

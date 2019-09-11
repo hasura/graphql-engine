@@ -5,6 +5,7 @@ import           Control.Lens                  ((^.))
 import           Data.Aeson                    ((.:), (.:?))
 import           Data.FileEmbed                (embedStringFile)
 import           Data.Foldable                 (foldlM)
+import           Hasura.HTTP
 import           Hasura.Prelude
 
 import qualified Data.Aeson                    as J
@@ -19,7 +20,6 @@ import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.HTTP.Client           as HTTP
 import qualified Network.Wreq                  as Wreq
 
-import           Hasura.HTTP                   (wreqOptions)
 import           Hasura.RQL.DDL.Headers        (getHeadersFromConf)
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils           (httpExceptToJSON)
@@ -37,12 +37,21 @@ fetchRemoteSchema
   -> RemoteSchemaName
   -> RemoteSchemaInfo
   -> m GC.RemoteGCtx
-fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _) = do
+fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _ timeout) = do
   headers <- getHeadersFromConf headerConf
   let hdrs = flip map headers $
              \(hn, hv) -> (CI.mk . T.encodeUtf8 $ hn, T.encodeUtf8 hv)
-      options = wreqOptions manager hdrs
-  res  <- liftIO $ try $ Wreq.postWith options (show url) introspectionQuery
+      hdrsWithDefaults = addDefaultHeaders hdrs
+
+  initReqE <- liftIO $ try $ HTTP.parseRequest (show url)
+  initReq <- either throwHttpErr pure initReqE
+  let req = initReq
+           { HTTP.method = "POST"
+           , HTTP.requestHeaders = hdrsWithDefaults
+           , HTTP.requestBody = HTTP.RequestBodyLBS introspectionQuery
+           , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
+           }
+  res  <- liftIO $ try $ HTTP.httpLbs req manager
   resp <- either throwHttpErr return res
 
   let respData = resp ^. Wreq.responseBody
@@ -106,7 +115,7 @@ mkDefaultRemoteGCtx
   :: (MonadError QErr m)
   => [GC.RemoteGCtx] -> m GS.GCtx
 mkDefaultRemoteGCtx =
-  foldlM (\combG -> mergeGCtx combG . convRemoteGCtx) GS.emptyGCtx
+  foldlM (\combG -> mergeGCtx combG . convRemoteGCtx) GC.emptyGCtx
 
 -- merge a remote schema `gCtx` into current `gCtxMap`
 mergeRemoteSchema
@@ -142,7 +151,7 @@ mergeGCtx gCtx rmMergedGCtx = do
 
 convRemoteGCtx :: GC.RemoteGCtx -> GS.GCtx
 convRemoteGCtx rmGCtx =
-  GS.emptyGCtx { GS._gTypes     = GC._rgTypes rmGCtx
+  GC.emptyGCtx { GS._gTypes     = GC._rgTypes rmGCtx
                , GS._gQueryRoot = GC._rgQueryRoot rmGCtx
                , GS._gMutRoot   = GC._rgMutationRoot rmGCtx
                , GS._gSubRoot   = GC._rgSubscriptionRoot rmGCtx

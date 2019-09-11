@@ -27,6 +27,8 @@ import {
 } from '../Common/ReusableComponents/utils';
 
 import { isPostgresFunction } from '../utils';
+import { sqlEscapeText } from '../../../Common/utils/sqlUtils';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 import {
   fetchColumnCastsQuery,
@@ -36,7 +38,7 @@ import {
 } from './utils';
 
 const DELETE_PK_WARNING =
-  'Without a Primary key there is no way to uniquely identify a row of a table. Are you sure?';
+  'Without a primary key there is no way to uniquely identify a row of a table';
 
 const VIEW_DEF_REQUEST_SUCCESS = 'ModifyTable/VIEW_DEF_REQUEST_SUCCESS';
 const VIEW_DEF_REQUEST_ERROR = 'ModifyTable/VIEW_DEF_REQUEST_ERROR';
@@ -64,8 +66,19 @@ const FETCH_COLUMN_TYPE_CASTS_FAIL = 'ModifyTable/FETCH_COLUMN_TYPE_CASTS_FAIL';
 const SET_UNIQUE_KEYS = 'ModifyTable/SET_UNIQUE_KEYS';
 const SAVE_UNIQUE_KEY = 'ModifyTable/SAVE_UNIQUE_KEY';
 const REMOVE_UNIQUE_KEY = 'ModifyTable/REMOVE_UNIQUE_KEY';
+const TOGGLE_ENUM = 'ModifyTable/TOGGLE_ENUM';
+const TOGGLE_ENUM_SUCCESS = 'ModifyTable/TOGGLE_ENUM_SUCCESS';
+const TOGGLE_ENUM_FAILURE = 'ModifyTable/TOGGLE_ENUM_FAILURE';
 
 const RESET = 'ModifyTable/RESET';
+
+const toggleEnumSuccess = () => ({
+  type: TOGGLE_ENUM_SUCCESS,
+});
+
+const toggleEnumFailure = () => ({
+  type: TOGGLE_ENUM_FAILURE,
+});
 
 const setForeignKeys = fks => ({
   type: SET_FOREIGN_KEYS,
@@ -318,14 +331,14 @@ const saveForeignKeys = (index, tableSchema, columns) => {
           alter table "${schemaName}"."${tableName}" drop constraint "${generatedConstraintName}",
           add constraint "${constraintName}" 
           foreign key (${Object.keys(oldConstraint.column_mapping)
-            .map(lc => `"${lc}"`)
-            .join(', ')}) 
+    .map(lc => `"${lc}"`)
+    .join(', ')}) 
           references "${oldConstraint.ref_table_table_schema}"."${
-        oldConstraint.ref_table
-      }"
+  oldConstraint.ref_table
+}"
           (${Object.values(oldConstraint.column_mapping)
-            .map(rc => `"${rc}"`)
-            .join(', ')}) 
+    .map(rc => `"${rc}"`)
+    .join(', ')}) 
           on update ${pgConfTypes[oldConstraint.on_update]}
           on delete ${pgConfTypes[oldConstraint.on_delete]};
         `;
@@ -475,7 +488,7 @@ const setUniqueKeys = keys => ({
   keys,
 });
 
-const changeTableOrViewName = (isTable, oldName, newName) => {
+const changeTableName = (oldName, newName, isTable) => {
   return (dispatch, getState) => {
     const property = isTable ? 'table' : 'view';
 
@@ -583,13 +596,13 @@ const deleteTrigger = (trigger, table) => {
 
     downMigrationSql += `CREATE TRIGGER "${triggerName}"
 ${trigger.action_timing} ${
-      trigger.event_manipulation
-    } ON "${tableSchema}"."${tableName}"
+  trigger.event_manipulation
+} ON "${tableSchema}"."${tableName}"
 FOR EACH ${trigger.action_orientation} ${trigger.action_statement};`;
 
     if (trigger.comment) {
       downMigrationSql += `COMMENT ON TRIGGER "${triggerName}" ON "${tableSchema}"."${tableName}" 
-IS '${trigger.comment}';`;
+IS ${sqlEscapeText(trigger.comment)};`;
     }
     const migrationDown = [
       {
@@ -1020,9 +1033,7 @@ const deleteColumnSql = (column, tableSchema) => {
             '"' +
             ' ' +
             'IS ' +
-            "'" +
-            comment +
-            "'",
+            sqlEscapeText(comment),
         },
       });
     }
@@ -1300,7 +1311,7 @@ const saveTableCommentSql = isTable => {
     const commentUpQuery =
       updatedComment === ''
         ? commentQueryBase + 'NULL'
-        : commentQueryBase + "'" + updatedComment + "'";
+        : commentQueryBase + sqlEscapeText(updatedComment);
 
     const commentDownQuery = commentQueryBase + 'NULL';
     const schemaChangesUp = [
@@ -1447,24 +1458,24 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     const schemaChangesUp =
       originalColType !== colType
         ? [
-            {
-              type: 'run_sql',
-              args: {
-                sql: columnChangesUpQuery,
-              },
+          {
+            type: 'run_sql',
+            args: {
+              sql: columnChangesUpQuery,
             },
-          ]
+          },
+        ]
         : [];
     const schemaChangesDown =
       originalColType !== colType
         ? [
-            {
-              type: 'run_sql',
-              args: {
-                sql: columnChangesDownQuery,
-              },
+          {
+            type: 'run_sql',
+            args: {
+              sql: columnChangesDownQuery,
             },
-          ]
+          },
+        ]
         : [];
 
     /* column default up/down migration */
@@ -1838,9 +1849,8 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
       colName +
       '"' +
       ' IS ' +
-      "'" +
-      comment +
-      "'";
+      sqlEscapeText(comment);
+
     const columnCommentDownQuery =
       'COMMENT ON COLUMN ' +
       '"' +
@@ -1855,9 +1865,7 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
       colName +
       '"' +
       ' IS ' +
-      "'" +
-      originalColComment +
-      "'";
+      sqlEscapeText(originalColComment);
 
     // check if comment is unchanged and then do an update. if not skip
     if (originalColComment !== comment.trim()) {
@@ -2059,6 +2067,97 @@ const removeUniqueKey = (index, tableName, existingConstraints, callback) => {
   };
 };
 
+export const toggleTableAsEnum = (isEnum, successCallback, failureCallback) => (
+  dispatch,
+  getState
+) => {
+  const confirmMessage = `This will ${
+    isEnum ? 'un' : ''
+  }set this table as an enum`;
+  const isOk = getConfirmation(confirmMessage);
+  if (!isOk) {
+    return;
+  }
+
+  dispatch({ type: TOGGLE_ENUM });
+
+  const { currentTable, currentSchema } = getState().tables;
+  const { allSchemas } = getState().tables;
+
+  const getEnumQuery = is_enum => ({
+    type: 'set_table_is_enum',
+    args: {
+      table: {
+        schema: currentSchema,
+        name: currentTable,
+      },
+      is_enum,
+    },
+  });
+
+  const upQuery = [getEnumQuery(!isEnum)];
+  const downQuery = [getEnumQuery(isEnum)];
+
+  const migrationName =
+    'alter_table_' +
+    currentSchema +
+    '_' +
+    currentTable +
+    '_set_enum_' +
+    !isEnum;
+
+  const action = !isEnum ? 'Setting' : 'Unsetting';
+
+  const requestMsg = `${action} table as enum...`;
+  const successMsg = `${action} table as enum successful`;
+  const errorMsg = `${action} table as enum failed`;
+
+  const customOnSuccess = () => {
+    // success callback
+    if (successCallback) {
+      successCallback();
+    }
+
+    dispatch(toggleEnumSuccess());
+
+    const newAllSchemas = allSchemas.map(schema => {
+      if (
+        schema.table_name === currentTable &&
+        schema.table_schema === currentSchema
+      ) {
+        return {
+          ...schema,
+          is_enum: !isEnum,
+        };
+      }
+      return schema;
+    });
+
+    dispatch({ type: LOAD_SCHEMA, allSchemas: newAllSchemas });
+  };
+
+  const customOnError = () => {
+    dispatch(toggleEnumFailure());
+
+    if (failureCallback) {
+      failureCallback();
+    }
+  };
+
+  makeMigrationCall(
+    dispatch,
+    getState,
+    upQuery,
+    downQuery,
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg
+  );
+};
+
 const saveUniqueKey = (
   index,
   tableName,
@@ -2185,7 +2284,10 @@ export {
   SET_FOREIGN_KEYS,
   RESET,
   SET_UNIQUE_KEYS,
-  changeTableOrViewName,
+  TOGGLE_ENUM,
+  TOGGLE_ENUM_SUCCESS,
+  TOGGLE_ENUM_FAILURE,
+  changeTableName,
   fetchViewDefinition,
   handleMigrationErrors,
   saveColumnChangesSql,
@@ -2215,4 +2317,6 @@ export {
   removeUniqueKey,
   saveUniqueKey,
   deleteTrigger,
+  toggleEnumSuccess,
+  toggleEnumFailure,
 };

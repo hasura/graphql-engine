@@ -5,7 +5,6 @@ module Hasura.GraphQL.Resolve.Mutation
   , buildEmptyMutResp
   ) where
 
-import           Control.Arrow                     (second)
 import           Data.Has
 import           Hasura.Prelude
 
@@ -18,11 +17,10 @@ import qualified Hasura.RQL.DML.Delete             as RD
 import qualified Hasura.RQL.DML.Returning          as RR
 import qualified Hasura.RQL.DML.Update             as RU
 
-import qualified Hasura.SQL.DML                    as S
 import qualified Hasura.RQL.DML.Select             as RS
+import qualified Hasura.SQL.DML                    as S
 
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
@@ -32,13 +30,6 @@ import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-
--- withPrepFn
---   :: (MonadReader r m)
---   => PrepFn m -> ReaderT (r, PrepFn m) m a -> m a
--- withPrepFn fn m = do
---   r <- ask
---   runReaderT m (r, fn)
 
 convertMutResp
   :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
@@ -68,8 +59,8 @@ convertRowObj
 convertRowObj val =
   flip withObject val $ \_ obj ->
   forM (OMap.toList obj) $ \(k, v) -> do
-    prepExpM <- fmap UVPG <$> asPGColValM v
-    let prepExp = fromMaybe (UVSQL $ S.SEUnsafe "NULL") prepExpM
+    prepExpM <- fmap UVPG <$> asPGColumnValueM v
+    let prepExp = fromMaybe (UVSQL S.SENull) prepExpM
     return (PGCol $ G.unName k, prepExp)
 
 type ApplySQLOp =  (PGCol, S.SQLExp) -> S.SQLExp
@@ -91,7 +82,7 @@ convObjWithOp
   => ApplySQLOp -> AnnInpVal -> m [(PGCol, UnresolvedVal)]
 convObjWithOp opFn val =
   flip withObject val $ \_ obj -> forM (OMap.toList obj) $ \(k, v) -> do
-  colVal <- _apvValue <$> asPGColVal v
+  colVal <- pstValue . _apvValue <$> asPGColumnValue v
   let pgCol = PGCol $ G.unName k
       -- TODO: why are we using txtEncoder here?
       encVal = txtEncoder colVal
@@ -103,8 +94,8 @@ convDeleteAtPathObj
   => AnnInpVal -> m [(PGCol, UnresolvedVal)]
 convDeleteAtPathObj val =
   flip withObject val $ \_ obj -> forM (OMap.toList obj) $ \(k, v) -> do
-    vals <- flip withArray v $ \_ annVals -> mapM asPGColVal annVals
-    let valExps = map (txtEncoder . _apvValue) vals
+    vals <- flip withArray v $ \_ annVals -> mapM asPGColumnValue annVals
+    let valExps = map (txtEncoder . pstValue . _apvValue) vals
         pgCol = PGCol $ G.unName k
         annEncVal = S.SETyAnn (S.SEArray valExps) S.textArrTypeAnn
         sqlExp = S.SEOpApp S.jsonbDeleteAtPathOp

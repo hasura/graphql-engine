@@ -1,0 +1,26 @@
+description: Fetch raster values which intersects the input geometry
+url: /v1/graphql
+status: 200
+response:
+  data:
+    dummy_rast: []
+
+query:
+  variables:
+    point:
+      type: Point
+      coordinates:
+      - 4
+      - 4
+      crs:
+        type: name
+        properties:
+          name: urn:ogc:def:crs:EPSG::4326
+
+  query: |
+    query ($point: geometry!){
+      dummy_rast(where: {rast: {_st_intersects_geom_nband: {geommin: $point}}}){
+        rid
+        rast
+      }
+    }

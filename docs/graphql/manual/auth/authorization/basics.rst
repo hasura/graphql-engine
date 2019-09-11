@@ -85,8 +85,8 @@ as shown below:
 .. thumbnail:: ../../../../img/graphql/manual/auth/permission-basics-simple-example.png
 
 
-This permission rule reads as "*For the role* ``user`` *, table* `` *and operation* ``select``/``query``*,
-allow access to those rows where the value in the* ``id`` *column is the same as the value in the*
+This permission rule reads as: "*For the role* ``user`` *, table* ``author`` *and operation* ``select``/``query``,
+allow access to those rows where the value in the ``id`` *column is the same as the value in the*
 ``X-Hasura-User-ID`` *session variable*".
 
 Run a query **with** access control

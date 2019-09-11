@@ -10,6 +10,7 @@ import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { setTable } from '../DataActions.js';
 
 import { isPostgresFunction } from '../utils';
+import { sqlEscapeText } from '../../../Common/utils/sqlUtils';
 
 const SET_DEFAULTS = 'AddTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddTable/SET_TABLENAME';
@@ -294,9 +295,8 @@ const createTableSql = () => {
         tableName +
         '"' +
         ' IS ' +
-        "'" +
-        state.tableComment +
-        "';";
+        sqlEscapeText(state.tableComment) +
+        ';';
     }
 
     if (columnSpecificSql.length) {

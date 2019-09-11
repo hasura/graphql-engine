@@ -5,7 +5,6 @@ where
 import           Data.Has
 import           Hasura.EncJSON
 import           Hasura.Prelude
-import           Hasura.Server.Utils
 
 import qualified Data.Aeson                        as J
 import qualified Data.Aeson.Casing                 as J
@@ -19,7 +18,6 @@ import qualified Language.GraphQL.Draft.Syntax     as G
 import qualified Database.PG.Query                 as Q
 import qualified Hasura.RQL.DML.Insert             as RI
 import qualified Hasura.RQL.DML.Returning          as RR
-import qualified Hasura.RQL.GBoolExp               as RB
 
 import qualified Hasura.SQL.DML                    as S
 
@@ -49,7 +47,7 @@ data AnnIns a
   { _aiInsObj         :: !a
   , _aiConflictClause :: !(Maybe RI.ConflictClauseP1)
   , _aiView           :: !QualifiedTable
-  , _aiTableCols      :: ![PGColInfo]
+  , _aiTableCols      :: ![PGColumnInfo]
   , _aiDefVals        :: !(Map.HashMap PGCol S.SQLExp)
   } deriving (Show, Eq, Functor, Foldable, Traversable)
 
@@ -71,7 +69,7 @@ data RelIns a
 type ObjRelIns = RelIns SingleObjIns
 type ArrRelIns = RelIns MultiObjIns
 
-type PGColWithValue = (PGCol, PGColValue)
+type PGColWithValue = (PGCol, WithScalarType PGScalarValue)
 
 data CTEExp
   = CTEExp
@@ -81,7 +79,7 @@ data CTEExp
 
 data AnnInsObj
   = AnnInsObj
-  { _aioColumns :: ![(PGCol, PGColType, PGColValue)]
+  { _aioColumns :: ![PGColWithValue]
   , _aioObjRels :: ![ObjRelIns]
   , _aioArrRels :: ![ArrRelIns]
   } deriving (Show, Eq)
@@ -104,12 +102,17 @@ traverseInsObj
   -> m AnnInsObj
 traverseInsObj rim (gName, annVal) defVal@(AnnInsObj cols objRels arrRels) =
   case _aivValue annVal of
-    AGScalar colty mColVal -> do
-      let col = PGCol $ G.unName gName
-          colVal = fromMaybe (PGNull colty) mColVal
-      return (AnnInsObj ((col, colty, colVal):cols) objRels arrRels)
+    AGScalar{} -> parseValue
+    AGEnum{}   -> parseValue
+    _          -> parseObject
+  where
+    parseValue = do
+      (_, WithScalarType scalarType maybeScalarValue) <- asPGColumnTypeAndValueM annVal
+      let columnName = PGCol $ G.unName gName
+          scalarValue = fromMaybe (PGNull scalarType) maybeScalarValue
+      pure $ AnnInsObj ((columnName, WithScalarType scalarType scalarValue):cols) objRels arrRels
 
-    _ -> do
+    parseObject = do
       objM <- asObjectM annVal
       -- if relational insert input is 'null' then ignore
       -- return default value
@@ -124,8 +127,7 @@ traverseInsObj rim (gName, annVal) defVal@(AnnInsObj cols objRels arrRels) =
 
         let rTable = riRTable relInfo
         InsCtx rtView rtCols rtDefVals rtRelInfoMap rtUpdPerm <- getInsCtx rTable
-        rtDefValsRes <- mapM (convPartialSQLExp sessVarFromCurrentSetting)
-                        rtDefVals
+        rtDefValsRes <- mapM (convPartialSQLExp sessVarFromCurrentSetting) rtDefVals
 
         withPathK (G.unName gName) $ case riType relInfo of
           ObjRel -> do
@@ -185,11 +187,11 @@ parseOnConflict tn updFiltrM val = withPathK "on_conflict" $
 
 toSQLExps
   :: (MonadError QErr m, MonadState PrepArgs m)
-  => [(PGCol, PGColType, PGColValue)]
+  => [PGColWithValue]
   -> m [(PGCol, S.SQLExp)]
 toSQLExps cols =
-  forM cols $ \(c, ty, v) -> do
-    prepExp <- prepareColVal ty v
+  forM cols $ \(c, v) -> do
+    prepExp <- prepareColVal v
     return (c, prepExp)
 
 mkSQLRow :: Map.HashMap PGCol S.SQLExp -> [(PGCol, S.SQLExp)] -> [S.SQLExp]
@@ -200,7 +202,7 @@ mkInsertQ
   :: MonadError QErr m
   => QualifiedTable
   -> Maybe RI.ConflictClauseP1
-  -> [(PGCol, PGColType, PGColValue)]
+  -> [PGColWithValue]
   -> [PGCol]
   -> Map.HashMap PGCol S.SQLExp
   -> RoleName
@@ -230,21 +232,21 @@ asSingleObject = \case
 fetchFromColVals
   :: MonadError QErr m
   => ColVals
-  -> [PGColInfo]
-  -> (PGColInfo -> a)
-  -> m [(a, PGColValue)]
+  -> [PGColumnInfo]
+  -> (PGColumnInfo -> a)
+  -> m [(a, WithScalarType PGScalarValue)]
 fetchFromColVals colVal reqCols f =
   forM reqCols $ \ci -> do
     let valM = Map.lookup (pgiName ci) colVal
     val <- onNothing valM $ throw500 $ "column "
            <> pgiName ci <<> " not found in given colVal"
-    pgColVal <- RB.pgValParser (pgiType ci) val
+    pgColVal <- parsePGScalarValue (pgiType ci) val
     return (f ci, pgColVal)
 
 mkSelCTE
   :: MonadError QErr m
   => QualifiedTable
-  -> [PGColInfo]
+  -> [PGColumnInfo]
   -> Maybe ColVals
   -> m CTEExp
 mkSelCTE tn allCols colValM = do
@@ -365,7 +367,7 @@ insertObj
   -> Q.TxE QErr (Int, CTEExp)
 insertObj strfyNum role tn singleObjIns addCols = do
   -- validate insert
-  validateInsert (map _1 cols) (map _riRelInfo objRels) $ map fst addCols
+  validateInsert (map fst cols) (map _riRelInfo objRels) $ map fst addCols
 
   -- insert all object relations and fetch this insert dependent column values
   objInsRes <- forM objRels $ insertObjRel strfyNum role
@@ -373,9 +375,7 @@ insertObj strfyNum role tn singleObjIns addCols = do
   -- prepare final insert columns
   let objRelAffRows = sum $ map fst objInsRes
       objRelDeterminedCols = concatMap snd objInsRes
-      objRelInsCols = mkPGColWithTypeAndVal allCols objRelDeterminedCols
-      addInsCols = mkPGColWithTypeAndVal allCols addCols
-      finalInsCols =  cols <> objRelInsCols <> addInsCols
+      finalInsCols = cols <> objRelDeterminedCols <> addCols
 
   -- prepare insert query as with expression
   (CTEExp cte insPArgs, ccM) <-
@@ -435,10 +435,9 @@ insertMultipleObjects strfyNum role tn multiObjIns addCols mutFlds errP =
     -- insert all column rows at one go
     withoutRelsInsert = withErrPath $ do
       indexedForM_ insCols $ \insCol ->
-        validateInsert (map _1 insCol) [] $ map fst addCols
+        validateInsert (map fst insCol) [] $ map fst addCols
 
-      let addColsWithType = mkPGColWithTypeAndVal tableColInfos addCols
-          withAddCols = flip map insCols $ union addColsWithType
+      let withAddCols = flip map insCols $ union addCols
           tableCols = map pgiName tableColInfos
 
       (sqlRows, prepArgs) <- flip runStateT Seq.Empty $ do
@@ -533,10 +532,3 @@ mergeListsWith [] _ _ _ = []
 mergeListsWith (x:xs) l b f = case find (b x) l of
   Nothing -> mergeListsWith xs l b f
   Just y  ->  f x y : mergeListsWith xs l b f
-
-mkPGColWithTypeAndVal :: [PGColInfo] -> [PGColWithValue]
-                      -> [(PGCol, PGColType, PGColValue)]
-mkPGColWithTypeAndVal pgColInfos pgColWithVal =
-    mergeListsWith pgColInfos pgColWithVal
-    (\ci (c, _) -> pgiName ci == c)
-    (\ci (c, v) -> (c, pgiType ci, v))

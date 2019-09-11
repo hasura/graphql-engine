@@ -20,21 +20,16 @@ FROM
       table_schema,
       table_name,
       json_agg(
-        (
-          SELECT
-            r
-          FROM
-            (
-              SELECT
-                column_name,
-                udt_name AS data_type,
-                ordinal_position,
-                is_nullable :: boolean
-            ) r
+        json_build_object(
+          'column_name', name,
+          'data_type', type,
+          'is_nullable', is_nullable :: boolean,
+          'ordinal_position', ordinal_position,
+          'references', primary_key_references
         )
       ) as columns
     FROM
-      information_schema.columns
+      hdb_catalog.hdb_column
     GROUP BY
       table_schema,
       table_name

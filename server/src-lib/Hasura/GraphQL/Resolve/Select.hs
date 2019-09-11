@@ -13,7 +13,6 @@ module Hasura.GraphQL.Resolve.Select
   , toPGQuery
   ) where
 
-import           Control.Arrow                     (first)
 import           Data.Has
 import           Data.Parser.JSONPath
 import           Hasura.Prelude
@@ -28,7 +27,6 @@ import qualified Database.PG.Query                 as Q
 import qualified Hasura.RQL.DML.Select             as RS
 import qualified Hasura.SQL.DML                    as S
 
-import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
@@ -116,7 +114,7 @@ parseTableArgs args = do
   ordByExpML <- withArgM args "order_by" parseOrderBy
   let ordByExpM = NE.nonEmpty =<< ordByExpML
   limitExpM  <- withArgM args "limit" parseLimit
-  offsetExpM <- withArgM args "offset" $ asPGColVal >=> txtConverter
+  offsetExpM <- withArgM args "offset" $ asPGColumnValue >=> txtConverter
   distOnColsML <- withArgM args "distinct_on" parseColumns
   let distOnColsM = NE.nonEmpty =<< distOnColsML
   mapM_ (validateDistOn ordByExpM) distOnColsM
@@ -194,18 +192,23 @@ getAnnObItems f nt obj = do
     case ordByItem of
       OBIPGCol ci -> do
         let aobCol = f $ RS.AOCPG ci
-        (_, enumVal) <- asEnumVal v
-        (ordTy, nullsOrd) <- parseOrderByEnum enumVal
-        return [mkOrdByItemG ordTy aobCol nullsOrd]
+        (_, enumValM) <- asEnumValM v
+        ordByItemM <- forM enumValM $ \enumVal -> do
+          (ordTy, nullsOrd) <- parseOrderByEnum enumVal
+          return $ mkOrdByItemG ordTy aobCol nullsOrd
+        return $ maybe [] pure ordByItemM
+
       OBIRel ri fltr -> do
         let unresolvedFltr = fmapAnnBoolExp partialSQLExpToUnresolvedVal fltr
         let annObColFn = f . RS.AOCObj ri unresolvedFltr
-        withObject (getAnnObItems annObColFn) v
+        flip withObjectM v $ \nameTy objM ->
+          maybe (pure []) (getAnnObItems annObColFn nameTy) objM
 
       OBIAgg ri fltr -> do
         let unresolvedFltr = fmapAnnBoolExp partialSQLExpToUnresolvedVal fltr
         let aobColFn = f . RS.AOCAgg ri unresolvedFltr
-        flip withObject v $ \_ o -> parseAggOrdBy aobColFn o
+        flip withObjectM v $ \_ objM ->
+          maybe (pure []) (parseAggOrdBy aobColFn) objM
 
 mkOrdByItemG :: S.OrderType -> a -> S.NullsOrder -> OrderByItemG a
 mkOrdByItemG ordTy aobCol nullsOrd =
@@ -220,19 +223,20 @@ parseAggOrdBy f annObj =
   fmap concat <$> forM (OMap.toList annObj) $ \(op, obVal) ->
     case op of
       "count" -> do
-        (ordTy, nullsOrd) <- parseAsEnum obVal
-        return [mkOrdByItemG ordTy (f RS.AAOCount) nullsOrd]
+        (_, enumValM) <- asEnumValM obVal
+        ordByItemM <- forM enumValM $ \enumVal -> do
+          (ordTy, nullsOrd) <- parseOrderByEnum enumVal
+          return $ mkOrdByItemG ordTy (f RS.AAOCount) nullsOrd
+        return $ maybe [] pure ordByItemM
 
       G.Name opT ->
-        flip withObject obVal $ \_ opObObj ->
+        flip withObject obVal $ \_ opObObj -> fmap catMaybes $
           forM (OMap.toList opObObj) $ \(col, eVal) -> do
-            (ordTy, nullsOrd) <- parseAsEnum eVal
-            let aobCol = f $ RS.AAOOp opT $ PGCol $ G.unName col
-            return $ mkOrdByItemG ordTy aobCol nullsOrd
-  where
-    parseAsEnum v = do
-      (_, enumVal) <- asEnumVal v
-      parseOrderByEnum enumVal
+            (_, enumValM) <- asEnumValM eVal
+            forM enumValM $ \enumVal -> do
+              (ordTy, nullsOrd) <- parseOrderByEnum enumVal
+              let aobCol = f $ RS.AAOOp opT $ PGCol $ G.unName col
+              return $ mkOrdByItemG ordTy aobCol nullsOrd
 
 parseOrderByEnum
   :: (MonadError QErr m)
@@ -250,7 +254,7 @@ parseOrderByEnum = \case
 
 parseLimit :: ( MonadError QErr m ) => AnnInpVal -> m Int
 parseLimit v = do
-  pgColVal <- _apvValue <$> asPGColVal v
+  pgColVal <- pstValue . _apvValue <$> asPGColumnValue v
   limit <- maybe noIntErr return $ pgColValueToInt pgColVal
   -- validate int value
   onlyPositiveInt limit
@@ -268,7 +272,7 @@ pgColValToBoolExp
 pgColValToBoolExp colArgMap colValMap = do
   colExps <- forM colVals $ \(name, val) ->
     BoolFld <$> do
-      opExp <- AEQ True . UVPG <$> asPGColVal val
+      opExp <- AEQ True . UVPG <$> asPGColumnValue val
       colInfo <- onNothing (Map.lookup name colArgMap) $
         throw500 $ "column name " <> showName name
         <> " not found in column arguments map"
@@ -336,7 +340,7 @@ convertCount args = do
   maybe (return S.CTStar) (mkCType isDistinct) columnsM
   where
     parseDistinct v = do
-      val <- _apvValue <$> asPGColVal v
+      val <- pstValue . _apvValue <$> asPGColumnValue v
       case val of
         PGValBoolean b -> return b
         _              ->
@@ -408,13 +412,28 @@ convertAggSelect opCtx fld =
 
 parseFunctionArgs
   ::( MonadError QErr m)
-  => FuncArgSeq -> AnnInpVal -> m [UnresolvedVal]
-parseFunctionArgs argSeq val = fmap catMaybes $
-  flip withObject val $ \_ obj ->
-    fmap toList $ forM argSeq $ \(FuncArgItem argName) ->
-      forM (OMap.lookup argName obj) $ fmap (maybe nullSQL UVPG) . asPGColValM
+  => FuncArgSeq
+  -> AnnInpVal
+  -> m (RS.FunctionArgsExpG UnresolvedVal)
+parseFunctionArgs argSeq val = flip withObject val $ \_ obj -> do
+  (positionalArgs, argsLeft) <- spanMaybeM (parsePositionalArg obj) argSeq
+  namedArgs <- Map.fromList . catMaybes <$> traverse (parseNamedArg obj) argsLeft
+  pure $ RS.FunctionArgsExp positionalArgs namedArgs
   where
-    nullSQL = UVSQL $ S.SEUnsafe "NULL"
+    parsePositionalArg obj (FuncArgItem gqlName _ _) =
+      maybe (pure Nothing) (fmap Just . parseArg) $ OMap.lookup gqlName obj
+
+    parseArg = fmap (maybe (UVSQL S.SENull) UVPG) . asPGColumnValueM
+
+    parseNamedArg obj (FuncArgItem gqlName maybeSqlName hasDefault) =
+      case OMap.lookup gqlName obj of
+        Just argInpVal -> case maybeSqlName of
+          Just sqlName -> Just . (getFuncArgNameTxt sqlName,) <$> parseArg argInpVal
+          Nothing -> throw400 NotSupported
+                     "Only last set of positional arguments can be omitted"
+        Nothing -> if not hasDefault then
+                     throw400 NotSupported "Non default arguments cannot be omitted"
+                   else pure Nothing
 
 fromFuncQueryField
   :: (MonadError QErr m)
@@ -424,7 +443,7 @@ fromFuncQueryField
   -> m (RS.AnnFnSelG s UnresolvedVal)
 fromFuncQueryField fn qf argSeq fld = fieldAsPath fld $ do
   funcArgsM <- withArgM (_fArguments fld) "args" $ parseFunctionArgs argSeq
-  let funcArgs = fromMaybe [] funcArgsM
+  let funcArgs = fromMaybe RS.emptyFunctionArgsExp funcArgsM
   RS.AnnFnSel qf funcArgs <$> fn fld
 
 convertFuncQuerySimple
