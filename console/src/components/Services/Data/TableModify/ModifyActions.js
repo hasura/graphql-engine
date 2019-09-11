@@ -28,6 +28,7 @@ import {
 
 import { isPostgresFunction } from '../utils';
 import { sqlEscapeText } from '../../../Common/utils/sqlUtils';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 import {
   fetchColumnCastsQuery,
@@ -37,7 +38,7 @@ import {
 } from './utils';
 
 const DELETE_PK_WARNING =
-  'Without a Primary key there is no way to uniquely identify a row of a table. Are you sure?';
+  'Without a primary key there is no way to uniquely identify a row of a table';
 
 const VIEW_DEF_REQUEST_SUCCESS = 'ModifyTable/VIEW_DEF_REQUEST_SUCCESS';
 const VIEW_DEF_REQUEST_ERROR = 'ModifyTable/VIEW_DEF_REQUEST_ERROR';
@@ -487,7 +488,7 @@ const setUniqueKeys = keys => ({
   keys,
 });
 
-const changeTableOrViewName = (isTable, oldName, newName) => {
+const changeTableName = (oldName, newName, isTable) => {
   return (dispatch, getState) => {
     const property = isTable ? 'table' : 'view';
 
@@ -2070,9 +2071,10 @@ export const toggleTableAsEnum = (isEnum, successCallback, failureCallback) => (
   dispatch,
   getState
 ) => {
-  const isOk = window.confirm(
-    `Are you sure you want to ${isEnum ? 'un' : ''}set this table as an enum?`
-  );
+  const confirmMessage = `This will ${
+    isEnum ? 'un' : ''
+  }set this table as an enum`;
+  const isOk = getConfirmation(confirmMessage);
   if (!isOk) {
     return;
   }
@@ -2285,7 +2287,7 @@ export {
   TOGGLE_ENUM,
   TOGGLE_ENUM_SUCCESS,
   TOGGLE_ENUM_FAILURE,
-  changeTableOrViewName,
+  changeTableName,
   fetchViewDefinition,
   handleMigrationErrors,
   saveColumnChangesSql,
