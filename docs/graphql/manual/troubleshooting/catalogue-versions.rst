@@ -8,10 +8,15 @@ Catalogue versions
   :depth: 2
   :local:
 
-This page lists all the catalogue versions and how to downgrade across them.
-
 Catalogue versions
 ------------------
+
+The Hasura GraphQL engine maintains its metadata state in a "catalogue". 
+It is an isolated schema in Postgres, and it has the name ``hdb_catalog``. Its schema is versioned. 
+It is delicate to change. Any changes to the "catalogue" by outside influence may potentially make it inconsistent and thus the Hasura GraphQL engine may stop functioning or crash.
+
+Hasura version - catalogue version
+----------------------------------
 
 +---------------------+---------------------+
 | Hasura version      | Catalogue version   |

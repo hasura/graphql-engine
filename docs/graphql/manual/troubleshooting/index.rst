@@ -113,3 +113,18 @@ Solution
   :hidden:
 
   Catalogue versions <catalogue-versions>
+
+Error: cannot continue due to new inconsistent metadata
+---------------------------------------
+
+Any updates to the server may have catalogue version bumps. The server automatically migrates the catalogue to the latest version on startup. 
+The migration may fail if the previous state is inconsistent. 
+
+Solution
+^^^^^^^^
+
+- Start the older version of the server
+- Clear inconsistencies
+- Start the newer version
+
+Read :doc:`here <../troubleshooting/catalogue-versions>` about what catalogue versions are and how it's possible to downgrade across them.

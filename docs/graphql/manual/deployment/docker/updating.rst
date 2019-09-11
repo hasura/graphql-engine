@@ -37,3 +37,8 @@ you should change it to:
 .. raw:: html
 
    <code>docker run hasura/graphql-engine:<span class="latest-release-tag">latest</span> ...</code>
+
+.. note::
+  Updates to the server may result in catalogue version bumps. In this case, it's required to
+  downgrade to an older version and fix inconsistencies. Read :doc:`here <../../troubleshooting/catalogue-versions>`
+  more about catalogue versions and how to downgrade across them.

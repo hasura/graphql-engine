@@ -68,3 +68,8 @@ at https://github.com/hasura/graphql-engine/releases.
    ...
 
 Change ``v1.0.0-alpha01`` to ``v1.0.0-alpha02`` for example, and then ``git push heroku master`` to deploy.
+
+.. note::
+  Updates to the server may result in catalogue version bumps. In this case, it's required to
+  downgrade to an older version and fix inconsistencies. Read :doc:`here <../../troubleshooting/catalogue-versions>`
+  more about catalogue versions and how to downgrade across them.
