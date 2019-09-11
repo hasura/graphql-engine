@@ -27,13 +27,7 @@ curCatalogVer :: T.Text
 curCatalogVer = "23"
 
 migrateMetadata
-  :: ( MonadTx m
-     , HasHttpManager m
-     , CacheRWM m
-     , UserInfoM m
-     , MonadIO m
-     , HasSQLGenCtx m
-     )
+  :: ( UserInfoM m, CacheBuildM m )
   => Bool -> RQLQuery -> m ()
 migrateMetadata buildSC rqlQuery = do
   -- Build schema cache from 'hdb_catalog' only if current
@@ -139,13 +133,7 @@ from08To1 = liftTx $ Q.catchE defaultTxErrorHandler $ do
                 |] () False
 
 from1To2
-  :: ( MonadTx m
-     , HasHttpManager m
-     , HasSQLGenCtx m
-     , CacheRWM m
-     , UserInfoM m
-     , MonadIO m
-     )
+  :: (UserInfoM m, CacheBuildM m)
   => m ()
 from1To2 = do
   -- Migrate database
@@ -167,13 +155,7 @@ from2To3 = liftTx $ Q.catchE defaultTxErrorHandler $ do
 
 -- custom resolver
 from4To5
-  :: ( MonadTx m
-     , HasHttpManager m
-     , HasSQLGenCtx m
-     , CacheRWM m
-     , UserInfoM m
-     , MonadIO m
-     )
+  :: (UserInfoM m, CacheBuildM m)
   => m ()
 from4To5 = do
   Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
@@ -226,13 +208,7 @@ from6To7 = liftTx $ do
   return ()
 
 from7To8
-  :: ( MonadTx m
-     , HasHttpManager m
-     , HasSQLGenCtx m
-     , CacheRWM m
-     , UserInfoM m
-     , MonadIO m
-     )
+  :: (UserInfoM m, CacheBuildM m)
   => m ()
 from7To8 = do
   -- Migrate database
@@ -249,13 +225,7 @@ from7To8 = do
 
 -- alter hdb_version table and track it (telemetry changes)
 from8To9
-  :: ( MonadTx m
-     , HasHttpManager m
-     , HasSQLGenCtx m
-     , CacheRWM m
-     , UserInfoM m
-     , MonadIO m
-     )
+  :: (UserInfoM m, CacheBuildM m)
   => m ()
 from8To9 = do
   Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
@@ -312,13 +282,7 @@ from14To15 = liftTx $ do
   return ()
 
 from15To16
-  :: ( MonadTx m
-     , HasHttpManager m
-     , HasSQLGenCtx m
-     , CacheRWM m
-     , UserInfoM m
-     , MonadIO m
-     )
+  :: (UserInfoM m, CacheBuildM m)
   => m ()
 from15To16 = do
   -- Migrate database
@@ -376,13 +340,7 @@ from21To22 = do
   pure ()
 
 from22To23
-  :: ( MonadTx m
-     , HasHttpManager m
-     , HasSQLGenCtx m
-     , CacheRWM m
-     , UserInfoM m
-     , MonadIO m
-     )
+  :: (UserInfoM m, CacheBuildM m)
   => m ()
 from22To23
   -- Migrate database
@@ -457,13 +415,7 @@ from22To23
       RemoteSchemaPermissions rsName role permDef
 
 migrateCatalog
-  :: ( MonadTx m
-     , CacheRWM m
-     , MonadIO m
-     , UserInfoM m
-     , HasHttpManager m
-     , HasSQLGenCtx m
-     )
+  :: (UserInfoM m, CacheBuildM m)
   => UTCTime -> m String
 migrateCatalog migrationTime = migrateFrom =<< getCatalogVersion
   where

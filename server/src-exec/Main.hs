@@ -125,7 +125,7 @@ main =  do
     HCServe so@(ServeOptions port host cp isoL mAdminSecret mAuthHook
                 mJwtSecret mUnAuthRole corsCfg enableConsole consoleAssetsDir
                 enableTelemetry strfyNum enabledAPIs lqOpts enableAL
-                enabledLogs serverLogLevel enabledFeatureFlags) -> do
+                enabledLogs serverLogLevel featureFlags) -> do
 
       let sqlGenCtx = SQLGenCtx strfyNum
 
@@ -148,12 +148,12 @@ main =  do
       pool <- Q.initPGPool ci cp pgLogger
 
       -- safe init catalog
-      dbId <- initialise pool sqlGenCtx logger httpManager
+      dbId <- initialise pool sqlGenCtx logger httpManager featureFlags
 
       (app, cacheRef, cacheInitTime) <-
         mkWaiApp isoL loggerCtx sqlGenCtx enableAL pool ci httpManager am
           corsCfg enableConsole consoleAssetsDir enableTelemetry
-          instanceId enabledAPIs lqOpts enabledFeatureFlags
+          instanceId enabledAPIs lqOpts featureFlags
 
 
       -- log inconsistent schema objects
@@ -161,7 +161,7 @@ main =  do
       logInconsObjs logger inconsObjs
 
       -- start a background thread for schema sync
-      startSchemaSync sqlGenCtx pool logger httpManager
+      startSchemaSync sqlGenCtx pool logger httpManager featureFlags
                       cacheRef instanceId cacheInitTime
 
       let warpSettings = Warp.setPort port
@@ -215,12 +215,13 @@ main =  do
       ci <- procConnInfo rci
       let sqlGenCtx = SQLGenCtx False
       pool <- getMinimalPool pgLogger ci
-      res <- runAsAdmin pool sqlGenCtx httpManager $ execQuery queryBs
+      featureFlags <- getFeatureFlags
+      res <- runAsAdmin pool sqlGenCtx httpManager featureFlags $ execQuery queryBs
       either printErrJExit BLC.putStrLn res
 
     HCVersion -> putStrLn $ "Hasura GraphQL Engine: " ++ T.unpack currentVersion
   where
-
+    getFeatureFlags = undefined
     mkLoggers enabledLogs logLevel = do
       loggerCtx <- mkLoggerCtx (defaultLoggerSettings True logLevel) enabledLogs
       let logger = mkLogger loggerCtx
@@ -234,9 +235,9 @@ main =  do
       pool <- getMinimalPool pgLogger ci
       runExceptT $ Q.runTx pool (Q.Serializable, Nothing) tx
 
-    runAsAdmin pool sqlGenCtx httpManager m = do
+    runAsAdmin pool sqlGenCtx httpManager featureFlags m = do
       res  <- runExceptT $ peelRun emptySchemaCache adminUserInfo
-              httpManager sqlGenCtx (PGExecCtx pool Q.Serializable) m
+              httpManager sqlGenCtx (PGExecCtx pool Q.Serializable) featureFlags m
       return $ fmap fst res
 
     procConnInfo rci =
@@ -247,15 +248,15 @@ main =  do
       let connParams = Q.defaultConnParams { Q.cpConns = 1 }
       Q.initPGPool ci connParams pgLogger
 
-    initialise pool sqlGenCtx (Logger logger) httpMgr = do
+    initialise pool sqlGenCtx (Logger logger) httpMgr featureFlags = do
       currentTime <- getCurrentTime
       -- initialise the catalog
-      initRes <- runAsAdmin pool sqlGenCtx httpMgr $
+      initRes <- runAsAdmin pool sqlGenCtx httpMgr featureFlags $
                  initCatalogSafe currentTime
       either printErrJExit (logger . mkGenericStrLog LevelInfo "db_init") initRes
 
       -- migrate catalog if necessary
-      migRes <- runAsAdmin pool sqlGenCtx httpMgr $
+      migRes <- runAsAdmin pool sqlGenCtx httpMgr featureFlags $
                 migrateCatalog currentTime
       either printErrJExit (logger . mkGenericStrLog LevelInfo "db_migrate") migRes
 

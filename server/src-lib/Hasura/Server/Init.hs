@@ -16,13 +16,13 @@ import qualified Data.ByteString.Lazy.Char8       as BLC
 import qualified Data.HashSet                     as Set
 import qualified Data.String                      as DataString
 import qualified Data.Text                        as T
-import qualified Data.Vector                      as V
 import qualified Hasura.GraphQL.Execute.LiveQuery as LQ
 import qualified Hasura.Logging                   as L
 import qualified Text.PrettyPrint.ANSI.Leijen     as PP
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types                 (RoleName (..),
+import           Hasura.RQL.Types                 (FeatureFlags (..),
+                                                   RoleName (..),
                                                    SchemaCache (..),
                                                    mkNonEmptyText)
 import           Hasura.Server.Auth
@@ -80,16 +80,6 @@ data RawServeOptions
   , rsoLogLevel           :: !(Maybe L.LogLevel)
   , rsoEnableRemotePerms  :: !Bool
   } deriving (Show, Eq)
-
-data FeatureFlags =
-  FeatureFlags
-  { ffRemoteSchemaPerms :: !Bool
-  }
-  deriving (Show, Eq)
-
-instance J.ToJSON FeatureFlags where
-  toJSON (FeatureFlags enableRemoteSchemaPerms) = J.Array $
-    bool V.empty (V.singleton $ J.String "remote_schema_permissions") enableRemoteSchemaPerms
 
 data ServeOptions
   = ServeOptions

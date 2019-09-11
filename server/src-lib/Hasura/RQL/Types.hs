@@ -15,6 +15,9 @@ module Hasura.RQL.Types
        , SQLGenCtx(..)
        , HasSQLGenCtx(..)
 
+       , FeatureFlags(..)
+       , HasFeatureFlags(..)
+
        , QCtx(..)
        , HasQCtx(..)
        , mkAdminQCtx
@@ -56,8 +59,10 @@ import           Hasura.SQL.Types
 
 import qualified Hasura.GraphQL.Context            as GC
 
+import qualified Data.Aeson                        as J
 import qualified Data.HashMap.Strict               as M
 import qualified Data.Text                         as T
+import qualified Data.Vector                       as V
 import qualified Network.HTTP.Client               as HTTP
 
 getFieldInfoMap
@@ -136,6 +141,19 @@ newtype SQLGenCtx
 
 class (Monad m) => HasSQLGenCtx m where
   askSQLGenCtx :: m SQLGenCtx
+
+data FeatureFlags =
+  FeatureFlags
+  { ffRemoteSchemaPerms :: !Bool
+  }
+  deriving (Show, Eq)
+
+instance J.ToJSON FeatureFlags where
+  toJSON (FeatureFlags enableRemoteSchemaPerms) = J.Array $
+    bool V.empty (V.singleton $ J.String "remote_schema_permissions") enableRemoteSchemaPerms
+
+class (Monad m) => HasFeatureFlags m where
+  askFeatureFlags :: m FeatureFlags
 
 type ER e r = ExceptT e (Reader r)
 type P1 = ER QErr QCtx
