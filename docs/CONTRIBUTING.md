@@ -18,7 +18,7 @@ change/task that requires modifications in some component of GraphQL engine and 
 
 Feel free to open pull requests to address these issues or to add/fix  docs features/content, even if a 
 corresponding issue doesn't exist. If you are unsure about whether to go ahead and work on something like 
-the latter, please get in touch with the maintainers in the `GraphQL Engine`->`contrib` channel in the 
+the latter, please get in touch with the maintainers in the `GraphQL engine`->`contrib` channel in the 
 community [Discord](https://discord.gg/vBPpJkS).
 
 ## Setup requirements
@@ -101,6 +101,7 @@ without losing any visible quality.
 
 ### Syntax
 - Ensure heading underlines are the same length as the headings. Short underlines will throw warnings during builds.
+- Use bold in headings in place of string literals for aesthetics (i.e. ** in place of ``)
 - While adding code blocks ensure the right language type is set. Sometimes adding placeholders breaks the language's
 syntax in which case you'll have to set the language type to `none` to avoid warnings during builds.
 

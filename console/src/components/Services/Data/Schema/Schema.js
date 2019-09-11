@@ -372,7 +372,9 @@ class Schema extends Component {
                   Track
                 </Button>
               </div>
-              <div className={styles.display_inline}>{displayTableName(table)}</div>
+              <div className={styles.display_inline}>
+                {displayTableName(table)}
+              </div>
               {gqlCompatibilityWarning}
             </div>
           );
