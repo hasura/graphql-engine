@@ -106,7 +106,7 @@ Solution
 - Connect to the database and switch to the ``hdb_catalog`` schema.
 - Delete the row from the ``hdb_permission`` table where the column ``table_name`` has the same value as the table
   mentioned in the error and the column ``perm_def`` involves the missing column.
-- Restart GraphQL engine to verify.
+- Restart the GraphQL engine to verify.
 
 .. toctree::
   :maxdepth: 1
