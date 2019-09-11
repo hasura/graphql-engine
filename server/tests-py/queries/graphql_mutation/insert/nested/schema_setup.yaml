@@ -49,3 +49,40 @@ args:
         table: article
         column: author_id
 
+# Article Config table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE article_config (
+        id SERIAL PRIMARY KEY,
+        article_id INTEGER UNIQUE REFERENCES article(id),
+        last_updated TIMESTAMP NOT NULL DEFAULT NOW(),
+        likes INTEGER NOT NULL DEFAULT 0
+      )
+- type: track_table
+  args:
+    name: article_config
+    schema: public
+
+# Create one-to-one object relationships
+- type: create_object_relationship
+  args:
+    table: article
+    name: config_fkey
+    using:
+      foreign_key_constraint_on:
+        table: article_config
+        column: article_id
+
+- type: create_object_relationship
+  args:
+    table: article
+    name: config_manual
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: article_config
+        column_mapping:
+          id: article_id
+        insertion_order: after_parent

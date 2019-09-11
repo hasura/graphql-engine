@@ -5,6 +5,9 @@ args:
 - type: run_sql
   args:
     sql: |
+      delete from article_config;
+      SELECT setval('article_config_id_seq', 1, FALSE);
+
       delete from article;
       SELECT setval('article_id_seq', 1, FALSE);
 

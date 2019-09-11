@@ -1,0 +1,49 @@
+description: Insert articles with their configuration using fkey one-to-one relationship
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    mutation {
+      insert_article(
+        objects: [
+          {
+            title: "Inserting article with config"
+            content: "Config article content"
+            config_fkey:{
+              data: {likes: 1}
+            }
+            author: {
+              data: {name: "Dummy author"}
+            }
+          }
+        ]
+      ){
+        affected_rows
+        returning{
+          title
+          content
+          config_fkey{
+            id
+            likes
+          }
+          author{
+            id
+            name
+          }
+        }
+      }
+    }
+
+response:
+  data:
+    insert_article:
+      affected_rows: 3
+      returning:
+      - content: Config article content
+        config_fkey:
+          id: 1
+          likes: 1
+        author:
+          name: Dummy author
+          id: 3
+        title: Inserting article with config

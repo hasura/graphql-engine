@@ -242,6 +242,12 @@ class TestGraphqlNestedInserts(DefaultTestMutations):
     def test_articles_with_author_returning(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/articles_with_author_returning.yaml")
 
+    def test_articles_with_config_one_to_one_fkey(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/articles_with_config_one_to_one_fkey.yaml")
+
+    def test_articles_with_config_one_to_one_manual(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/articles_with_config_one_to_one_manual.yaml")
+
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/insert/nested"
