@@ -1,0 +1,17 @@
+description: Test querying a table that references an enum table and filtering on enum equality
+url: /v1/graphql
+status: 200
+response:
+  data:
+    like_red:
+    - name: Alyssa
+    like_blue:
+    - name: Ben
+    like_green: []
+query:
+  query: |
+    {
+      like_red:   users(where: { favorite_color: { _eq: red   }}) { name }
+      like_blue:  users(where: { favorite_color: { _eq: blue  }}) { name }
+      like_green: users(where: { favorite_color: { _eq: green }}) { name }
+    }

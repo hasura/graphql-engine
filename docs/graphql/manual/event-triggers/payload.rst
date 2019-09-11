@@ -50,7 +50,7 @@ JSON payload
      - Description
    * - session-variables
      - Object_ or NULL
-     - Key-value pairs of session variables (i.e. "x-hasura-\*" variables) and their values. NULL if no session variables found.
+     - Key-value pairs of session variables (i.e. "x-hasura-\*" variables) and their values (NULL if no session variables found)
    * - op-name
      - OpName_
      - Name of the operation. Can only be "INSERT", "UPDATE", "DELETE", "MANUAL"

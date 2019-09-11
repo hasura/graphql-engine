@@ -1,12 +1,12 @@
 module Hasura.GraphQL.Schema.BoolExp
   ( geoInputTypes
+  , rasterIntersectsInputTypes
   , mkCompExpInp
 
   , mkBoolExpTy
   , mkBoolExpInp
   ) where
 
-import qualified Data.Text                     as T
 import qualified Data.HashMap.Strict           as Map
 import qualified Language.GraphQL.Draft.Syntax as G
 
@@ -16,19 +16,14 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-mkCompExpTy :: PGColType -> G.NamedType
-mkCompExpTy =
-  G.NamedType . mkCompExpName
+typeToDescription :: G.NamedType -> G.Description
+typeToDescription = G.Description . G.unName . G.unNamedType
 
-mkCompExpName :: PGColType -> G.Name
-mkCompExpName pgColTy =
-  G.Name $ T.pack (show pgColTy) <> "_comparison_exp"
+mkCompExpTy :: PGColumnType -> G.NamedType
+mkCompExpTy = addTypeSuffix "_comparison_exp" . mkColumnType
 
-mkCastExpName :: PGColType -> G.Name
-mkCastExpName pgColTy = G.Name $ T.pack (show pgColTy) <> "_cast_exp"
-
-mkCastExpTy :: PGColType -> G.NamedType
-mkCastExpTy = G.NamedType . mkCastExpName
+mkCastExpTy :: PGColumnType -> G.NamedType
+mkCastExpTy = addTypeSuffix "_cast_exp" . mkColumnType
 
 -- TODO(shahidhk) this should ideally be st_d_within_geometry
 {-
@@ -53,52 +48,54 @@ stDWithinGeographyInpTy = G.NamedType "st_d_within_geography_input"
 
 -- | Makes an input type declaration for the @_cast@ field of a comparison expression.
 -- (Currently only used for casting between geometry and geography types.)
-mkCastExpressionInputType :: PGColType -> [PGColType] -> InpObjTyInfo
+mkCastExpressionInputType :: PGColumnType -> [PGColumnType] -> InpObjTyInfo
 mkCastExpressionInputType sourceType targetTypes =
   mkHsraInpTyInfo (Just description) (mkCastExpTy sourceType) (fromInpValL targetFields)
   where
     description = mconcat
       [ "Expression to compare the result of casting a column of type "
-      , G.Description (T.pack $ show sourceType)
+      , typeToDescription $ mkColumnType sourceType
       , ". Multiple cast targets are combined with logical 'AND'."
       ]
     targetFields = map targetField targetTypes
     targetField targetType = InpValInfo
       Nothing
-      (G.Name . T.pack $ show targetType)
+      (G.unNamedType $ mkColumnType targetType)
       Nothing
       (G.toGT $ mkCompExpTy targetType)
 
 --- | make compare expression input type
-mkCompExpInp :: PGColType -> InpObjTyInfo
+mkCompExpInp :: PGColumnType -> InpObjTyInfo
 mkCompExpInp colTy =
   InpObjTyInfo (Just tyDesc) (mkCompExpTy colTy) (fromInpValL $ concat
-  [ map (mk colScalarTy) typedOps
-  , map (mk $ G.toLT $ G.toNT colScalarTy) listOps
-  , bool [] (map (mk $ mkScalarTy PGText) stringOps) isStringTy
-  , bool [] (map jsonbOpToInpVal jsonbOps) isJsonbTy
-  , bool [] (stDWithinGeoOpInpVal stDWithinGeometryInpTy :
-             map geoOpToInpVal (geoOps ++ geomOps)) isGeometryType
-  , bool [] (stDWithinGeoOpInpVal stDWithinGeographyInpTy :
-             map geoOpToInpVal geoOps) isGeographyType
+  [ map (mk colGqlType) eqOps
+  , guard (isScalarWhere (/= PGRaster)) *> map (mk colGqlType) compOps
+  , map (mk $ G.toLT $ G.toNT colGqlType) listOps
+  , guard (isScalarWhere isStringType) *> map (mk $ mkScalarTy PGText) stringOps
+  , guard (isScalarWhere (== PGJSONB)) *> map opToInpVal jsonbOps
+  , guard (isScalarWhere (== PGGeometry)) *>
+      (stDWithinGeoOpInpVal stDWithinGeometryInpTy : map geoOpToInpVal (geoOps ++ geomOps))
+  , guard (isScalarWhere (== PGGeography)) *>
+      (stDWithinGeoOpInpVal stDWithinGeographyInpTy : map geoOpToInpVal geoOps)
   , [InpValInfo Nothing "_is_null" Nothing $ G.TypeNamed (G.Nullability True) $ G.NamedType "Boolean"]
-  , maybeToList castOpInputValue
+  , castOpInputValues
+  , guard (isScalarWhere (== PGRaster)) *> map opToInpVal rasterOps
   ]) TLHasuraType
   where
-    tyDesc = mconcat
-      [ "expression to compare columns of type "
-      , G.Description (T.pack $ show colTy)
-      , ". All fields are combined with logical 'AND'."
-      ]
-    isStringTy = case colTy of
-      PGVarchar -> True
-      PGText    -> True
-      _         -> False
+    colGqlType = mkColumnType colTy
+    colTyDesc = typeToDescription colGqlType
+    tyDesc =
+      "expression to compare columns of type " <> colTyDesc
+        <> ". All fields are combined with logical 'AND'."
+    isScalarWhere = flip isScalarColumnWhere colTy
     mk t n = InpValInfo Nothing n Nothing $ G.toGT t
-    colScalarTy = mkScalarTy colTy
+
     -- colScalarListTy = GA.GTList colGTy
-    typedOps =
-       ["_eq", "_neq", "_gt", "_lt", "_gte", "_lte"]
+    eqOps =
+       ["_eq", "_neq"]
+    compOps =
+      ["_gt", "_lt", "_gte", "_lte"]
+
     listOps =
       [ "_in", "_nin" ]
     -- TODO
@@ -109,10 +106,8 @@ mkCompExpInp colTy =
       , "_similar", "_nsimilar"
       ]
 
-    isJsonbTy = case colTy of
-      PGJSONB -> True
-      _       -> False
-    jsonbOpToInpVal (op, ty, desc) = InpValInfo (Just desc) op Nothing ty
+    opToInpVal (opName, ty, desc) = InpValInfo (Just desc) opName Nothing ty
+
     jsonbOps =
       [ ( "_contains"
         , G.toGT $ mkScalarTy PGJSONB
@@ -136,9 +131,9 @@ mkCompExpInp colTy =
         )
       ]
 
-    castOpInputValue =
+    castOpInputValues =
       -- currently, only geometry/geography types support casting
-      guard (isGeoType colTy) $>
+      guard (isScalarWhere isGeoType) $>
         InpValInfo Nothing "_cast" Nothing (G.toGT $ mkCastExpTy colTy)
 
     stDWithinGeoOpInpVal ty =
@@ -146,20 +141,8 @@ mkCompExpInp colTy =
     stDWithinGeoDesc =
       "is the column within a distance from a " <> colTyDesc <> " value"
 
-    -- Geometry related ops
-    isGeometryType = case colTy of
-      PGGeometry -> True
-      _          -> False
-
-    -- Geography related ops
-    isGeographyType = case colTy of
-      PGGeography -> True
-      _           -> False
-
-    geoOpToInpVal (op, desc) =
-      InpValInfo (Just desc) op Nothing $ G.toGT $ mkScalarTy colTy
-
-    colTyDesc = G.Description $ T.pack $ show colTy
+    geoOpToInpVal (opName, desc) =
+      InpValInfo (Just desc) opName Nothing $ G.toGT colGqlType
 
     -- operators applicable only to geometry types
     geomOps :: [(G.Name, G.Description)]
@@ -193,16 +176,33 @@ mkCompExpInp colTy =
         )
       ]
 
+    -- raster related operators
+    rasterOps =
+      [
+        ( "_st_intersects_rast"
+        , G.toGT $ mkScalarTy PGRaster
+        , boolFnMsg <> "ST_Intersects(raster <raster-col>, raster <raster-input>)"
+        )
+      , ( "_st_intersects_nband_geom"
+        , G.toGT stIntersectsNbandGeomInputTy
+        , boolFnMsg <> "ST_Intersects(raster <raster-col>, integer nband, geometry geommin)"
+        )
+      , ( "_st_intersects_geom_nband"
+        , G.toGT stIntersectsGeomNbandInputTy
+        , boolFnMsg <> "ST_Intersects(raster <raster-col> , geometry geommin, integer nband=NULL)"
+        )
+      ]
+
+    boolFnMsg = "evaluates the following boolean Postgres function; "
+
 geoInputTypes :: [InpObjTyInfo]
 geoInputTypes =
   [ stDWithinGeometryInputType
   , stDWithinGeographyInputType
-  , castGeometryInputType
-  , castGeographyInputType
+  , mkCastExpressionInputType (PGColumnScalar PGGeometry) [PGColumnScalar PGGeography]
+  , mkCastExpressionInputType (PGColumnScalar PGGeography) [PGColumnScalar PGGeometry]
   ]
-
   where
-
     stDWithinGeometryInputType =
       mkHsraInpTyInfo Nothing stDWithinGeometryInpTy $ fromInpValL
       [ InpValInfo Nothing "from" Nothing $ G.toGT $ G.toNT $ mkScalarTy PGGeometry
@@ -216,8 +216,33 @@ geoInputTypes =
         Nothing "use_spheroid" (Just $ G.VCBoolean True) $ G.toGT $ mkScalarTy PGBoolean
       ]
 
-    castGeometryInputType = mkCastExpressionInputType PGGeometry [PGGeography]
-    castGeographyInputType = mkCastExpressionInputType PGGeography [PGGeometry]
+stIntersectsNbandGeomInputTy :: G.NamedType
+stIntersectsNbandGeomInputTy = G.NamedType "st_intersects_nband_geom_input"
+
+stIntersectsGeomNbandInputTy :: G.NamedType
+stIntersectsGeomNbandInputTy = G.NamedType "st_intersects_geom_nband_input"
+
+rasterIntersectsInputTypes :: [InpObjTyInfo]
+rasterIntersectsInputTypes =
+  [ stIntersectsNbandGeomInput
+  , stIntersectsGeomNbandInput
+  ]
+  where
+    stIntersectsNbandGeomInput =
+      mkHsraInpTyInfo Nothing stIntersectsNbandGeomInputTy $ fromInpValL
+      [ InpValInfo Nothing "nband" Nothing $
+        G.toGT $ G.toNT $ mkScalarTy PGInteger
+      , InpValInfo Nothing "geommin" Nothing $
+        G.toGT $ G.toNT $ mkScalarTy PGGeometry
+      ]
+
+    stIntersectsGeomNbandInput =
+      mkHsraInpTyInfo Nothing stIntersectsGeomNbandInputTy $ fromInpValL
+      [ InpValInfo Nothing "geommin" Nothing $
+        G.toGT $ G.toNT $ mkScalarTy PGGeometry
+      , InpValInfo Nothing "nband" Nothing $
+        G.toGT $ mkScalarTy PGInteger
+      ]
 
 mkBoolExpName :: QualifiedTable -> G.Name
 mkBoolExpName tn =
@@ -258,7 +283,7 @@ mkBoolExpInp tn fields =
       ]
 
     mkFldExpInp = \case
-      Left (PGColInfo colName colTy _) ->
+      Left (PGColumnInfo colName colTy _) ->
         mk (mkColName colName) (mkCompExpTy colTy)
       Right (RelInfo relName _ _ remTab _, _, _, _, _) ->
         mk (mkRelName relName) (mkBoolExpTy remTab)

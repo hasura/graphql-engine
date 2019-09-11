@@ -55,7 +55,7 @@ getTriggerSql
   :: Ops
   -> TriggerName
   -> QualifiedTable
-  -> [PGColInfo]
+  -> [PGColumnInfo]
   -> Bool
   -> SubscribeOpSpec
   -> Maybe T.Text
@@ -80,16 +80,16 @@ getTriggerSql op trn qt allCols strfyNum spec =
       ]
     renderOldDataExp op2 scs =
       case op2 of
-        INSERT -> S.SEUnsafe "NULL"
+        INSERT -> S.SENull
         UPDATE -> getRowExpression OLD scs
         DELETE -> getRowExpression OLD scs
-        MANUAL -> S.SEUnsafe "NULL"
+        MANUAL -> S.SENull
     renderNewDataExp op2 scs =
       case op2 of
         INSERT -> getRowExpression NEW scs
         UPDATE -> getRowExpression NEW scs
-        DELETE -> S.SEUnsafe "NULL"
-        MANUAL -> S.SEUnsafe "NULL"
+        DELETE -> S.SENull
+        MANUAL -> S.SENull
     getRowExpression opVar scs =
       case scs of
         SubCStar -> applyRowToJson $ S.SEUnsafe $ opToTxt opVar
@@ -118,7 +118,7 @@ getTriggerSql op trn qt allCols strfyNum spec =
 mkAllTriggersQ
   :: TriggerName
   -> QualifiedTable
-  -> [PGColInfo]
+  -> [PGColumnInfo]
   -> Bool
   -> TriggerOpsDef
   -> Q.TxE QErr ()
@@ -133,7 +133,7 @@ mkAllTriggersQ trn qt allCols strfyNum fullspec = do
 mkTriggerQ
   :: TriggerName
   -> QualifiedTable
-  -> [PGColInfo]
+  -> [PGColumnInfo]
   -> Bool
   -> Ops
   -> SubscribeOpSpec
@@ -151,7 +151,7 @@ delTriggerQ trn = mapM_ (\op -> Q.unitQE
 
 addEventTriggerToCatalog
   :: QualifiedTable
-  -> [PGColInfo]
+  -> [PGColumnInfo]
   -> Bool
   -> EventTriggerConf
   -> Q.TxE QErr ()
@@ -179,7 +179,7 @@ delEventTriggerFromCatalog trn = do
 
 updateEventTriggerToCatalog
   :: QualifiedTable
-  -> [PGColInfo]
+  -> [PGColumnInfo]
   -> Bool
   -> EventTriggerConf
   -> Q.TxE QErr ()
@@ -228,7 +228,7 @@ subTableP1 (CreateEventTriggerQuery name qt insert update delete enableManual re
   -- can only replace for same table
   when replace $ do
     ti' <- askTabInfoFromTrigger name
-    when (tiName ti' /= tiName ti) $ throw400 NotSupported "cannot replace table or schema for trigger"
+    when (_tiName ti' /= _tiName ti) $ throw400 NotSupported "cannot replace table or schema for trigger"
 
   assertCols ti insert
   assertCols ti update
@@ -242,7 +242,7 @@ subTableP1 (CreateEventTriggerQuery name qt insert update delete enableManual re
       let cols = sosColumns sos
       case cols of
         SubCStar         -> return ()
-        SubCArray pgcols -> forM_ pgcols (assertPGCol (tiFieldInfoMap ti) "")
+        SubCArray pgcols -> forM_ pgcols (assertPGCol (_tiFieldInfoMap ti) "")
 
 --(QErrM m, CacheRWM m, MonadTx m, MonadIO m)
 
@@ -258,7 +258,7 @@ subTableP2Setup qt (EventTriggerConf name def webhook webhookFromEnv rconf mhead
   webhookInfo <- getWebhookInfoFromConf webhookConf
   headerInfos <- getHeaderInfosFromConf headerConfs
   let eTrigInfo = EventTriggerInfo name def rconf webhookInfo headerInfos
-      tabDep = SchemaDependency (SOTable qt) "parent"
+      tabDep = SchemaDependency (SOTable qt) DRParent
   addEventTriggerToCache qt eTrigInfo (tabDep:getTrigDefDeps qt def)
 
 getTrigDefDeps :: QualifiedTable -> TriggerOpsDef -> [SchemaDependency]
@@ -272,10 +272,10 @@ getTrigDefDeps qt (TriggerOpsDef mIns mUpd mDel _) =
     subsOpSpecDeps os =
       let cols = getColsFromSub $ sosColumns os
           colDeps = flip map cols $ \col ->
-            SchemaDependency (SOTableObj qt (TOCol col)) "column"
+            SchemaDependency (SOTableObj qt (TOCol col)) DRColumn
           payload = maybe [] getColsFromSub (sosPayload os)
           payloadDeps = flip map payload $ \col ->
-            SchemaDependency (SOTableObj qt (TOCol col)) "payload"
+            SchemaDependency (SOTableObj qt (TOCol col)) DRPayload
         in colDeps <> payloadDeps
     getColsFromSub sc = case sc of
       SubCStar         -> []
@@ -285,7 +285,7 @@ subTableP2
   :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasSQLGenCtx m)
   => QualifiedTable -> Bool -> EventTriggerConf -> m ()
 subTableP2 qt replace etc = do
-  allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
+  allCols <- getCols . _tiFieldInfoMap <$> askTabInfo qt
   strfyNum <- stringifyNum <$> askSQLGenCtx
   if replace
     then do
@@ -309,7 +309,7 @@ unsubTableP1
 unsubTableP1 (DeleteEventTriggerQuery name)  = do
   adminOnly
   ti <- askTabInfoFromTrigger name
-  return $ tiName ti
+  return $ _tiName ti
 
 unsubTableP2
   :: (QErrM m, CacheRWM m, MonadTx m)
@@ -363,7 +363,7 @@ runInvokeEventTrigger (InvokeEventTriggerQuery name payload) = do
   trigInfo <- askEventTriggerInfo name
   assertManual $ etiOpsDef trigInfo
   ti  <- askTabInfoFromTrigger name
-  eid <-liftTx $ insertManualEvent (tiName ti) name payload
+  eid <-liftTx $ insertManualEvent (_tiName ti) name payload
   return $ encJFromJValue $ object ["event_id" .= eid]
   where
     assertManual (TriggerOpsDef _ _ _ man) = case man of

@@ -38,6 +38,27 @@ const ForeignKeySelector = ({
       dispatch(setForeignKeys(newFks));
       dispatch(updateSchemaInfo({ schemas: [event.target.value] }));
     };
+
+    const getRefSchemaOptions = () => {
+      const options = [];
+
+      options.push(
+        <option key={-1} value={''} disabled>
+          {'-- reference schema --'}
+        </option>
+      );
+
+      schemaList.forEach((rs, j) => {
+        options.push(
+          <option key={j} value={rs}>
+            {rs}
+          </option>
+        );
+      });
+
+      return options;
+    };
+
     return (
       <div className={`${styles.add_mar_bottom}`}>
         <div className={`${styles.add_mar_bottom_mid}`}>
@@ -49,18 +70,7 @@ const ForeignKeySelector = ({
           data-test={`foreign-key-ref-schema-${index}`}
           onChange={dispatchSetRefSchema}
         >
-          {// default unselected option
-            refSchemaName === '' && (
-              <option value={''} disabled>
-                {'-- reference schema --'}
-              </option>
-            )}
-          {// all reference schema options
-            schemaList.map((rs, j) => (
-              <option key={j} value={rs}>
-                {rs}
-              </option>
-            ))}
+          {getRefSchemaOptions()}
         </select>
       </div>
     );
@@ -92,6 +102,29 @@ const ForeignKeySelector = ({
       dispatch(setForeignKeys(newFks));
     };
 
+    const getRefTableOptions = () => {
+      const options = [];
+
+      options.push(
+        <option key={-1} value={''} disabled>
+          {'-- reference table --'}
+        </option>
+      );
+
+      // all reference table options
+      Object.keys(refTables)
+        .sort()
+        .forEach((rt, i) => {
+          options.push(
+            <option key={i} value={rt}>
+              {rt}
+            </option>
+          );
+        });
+
+      return options;
+    };
+
     return (
       <div className={`${styles.add_mar_bottom}`}>
         <div className={`${styles.add_mar_bottom_mid}`}>
@@ -104,20 +137,7 @@ const ForeignKeySelector = ({
           onChange={dispatchSetRefTable}
           disabled={!refSchemaName}
         >
-          {// default unselected option
-            refTableName === '' && (
-              <option value={''} disabled>
-                {'-- reference table --'}
-              </option>
-            )}
-          {// all reference table options
-            Object.keys(refTables)
-              .sort()
-              .map((rt, j) => (
-                <option key={j} value={rt}>
-                  {rt}
-                </option>
-              ))}
+          {getRefTableOptions()}
         </select>
       </div>
     );
@@ -304,10 +324,7 @@ const ForeignKeySelector = ({
           <div className={`${styles.add_mar_bottom_mid}`}>
             <b>On Update Violation:</b>&nbsp; &nbsp;
             <OverlayTrigger placement="right" overlay={fkViolationOnUpdate}>
-              <i
-                className={`fa fa-question-circle ${styles.iClickable}`}
-                aria-hidden="true"
-              />
+              <i className={'fa fa-question-circle'} aria-hidden="true" />
             </OverlayTrigger>{' '}
             &nbsp; &nbsp;
           </div>
@@ -317,10 +334,7 @@ const ForeignKeySelector = ({
           <div className={`${styles.add_mar_bottom_mid}`}>
             <b>On Delete Violation:</b>&nbsp; &nbsp;
             <OverlayTrigger placement="right" overlay={fkViolationOnDelete}>
-              <i
-                className={`fa fa-question-circle ${styles.iClickable}`}
-                aria-hidden="true"
-              />
+              <i className={'fa fa-question-circle'} aria-hidden="true" />
             </OverlayTrigger>{' '}
             &nbsp; &nbsp;
           </div>

@@ -22,6 +22,9 @@ import {
   FETCH_COLUMN_TYPE_CASTS_FAIL,
   RESET,
   SET_UNIQUE_KEYS,
+  TOGGLE_ENUM,
+  TOGGLE_ENUM_SUCCESS,
+  TOGGLE_ENUM_FAILURE,
 } from '../TableModify/ModifyActions';
 
 // TABLE RELATIONSHIPS
@@ -330,7 +333,6 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       };
 
     case PERM_SET_FILTER_SAME_AS:
-    case PERM_SET_FILTER:
       return {
         ...modifyState,
         permissionsState: {
@@ -340,6 +342,19 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
             action.filter
           ),
           custom_checked: false,
+        },
+      };
+
+    case PERM_SET_FILTER:
+      return {
+        ...modifyState,
+        permissionsState: {
+          ...updatePermissionsState(
+            modifyState.permissionsState,
+            getFilterKey(modifyState.permissionsState.query),
+            action.filter
+          ),
+          // custom_checked: true,
         },
       };
 
@@ -573,6 +588,28 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       return {
         ...modifyState,
         uniqueKeyModify: action.keys,
+      };
+    case TOGGLE_ENUM:
+      return {
+        ...modifyState,
+        tableEnum: {
+          loading: true,
+        },
+      };
+    case TOGGLE_ENUM_FAILURE:
+      return {
+        ...modifyState,
+        tableEnum: {
+          loading: false,
+          error: action.error,
+        },
+      };
+    case TOGGLE_ENUM_SUCCESS:
+      return {
+        ...modifyState,
+        tableEnum: {
+          loading: false,
+        },
       };
     default:
       return modifyState;
