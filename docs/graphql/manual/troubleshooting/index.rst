@@ -115,7 +115,7 @@ Solution
   Catalogue versions <catalogue-versions>
 
 Error: cannot continue due to new inconsistent metadata
----------------------------------------
+-------------------------------------------------------
 
 Any updates to the server may have catalogue version bumps. The server automatically migrates the catalogue to the latest version on startup. 
 The migration may fail if the previous state is inconsistent. 
