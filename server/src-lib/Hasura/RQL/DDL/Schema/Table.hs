@@ -190,7 +190,7 @@ processTableChanges ti tableDiff = do
   where
     TableDiff mNewName droppedCols addedCols alteredCols _ constraints = tableDiff
     replaceConstraints tn = flip modTableInCache tn $ \tInfo ->
-      return $ tInfo {_tiUniqOrPrimConstraints = constraints}
+      return $ tInfo {_tiConstraints = constraints}
 
     procDroppedCols tn =
       forM_ droppedCols $ \droppedCol ->
@@ -276,12 +276,13 @@ buildTableCache = processTableCache <=< buildRawTableCache
         catalogInfo <- onNothing maybeInfo $
           throw400 NotExists $ "no such table/view exists in postgres: " <>> name
 
-        let CatalogTableInfo columns constraints primaryKeyColumnNames viewInfo = catalogInfo
+        let CatalogTableInfo columns rawConstraints viewInfo = catalogInfo
             columnFields = M.fromList . flip map columns $ \column ->
               (fromPGCol $ prciName column, FIColumn column)
+            constraints = rawConstraintsToTableConstraints rawConstraints
 
             primaryKeyColumns = flip filter columns $ \column ->
-              prciName column `elem` primaryKeyColumnNames
+              prciName column `elem` getPrimarykeyColumns constraints
             fetchEnumValues = fetchAndValidateEnumValues name primaryKeyColumns columns
 
         maybeEnumValues <- if isEnum then Just <$> fetchEnumValues else pure Nothing
@@ -291,8 +292,7 @@ buildTableCache = processTableCache <=< buildRawTableCache
               , _tiSystemDefined = isSystemDefined
               , _tiFieldInfoMap = columnFields
               , _tiRolePermInfoMap = mempty
-              , _tiUniqOrPrimConstraints = constraints
-              , _tiPrimaryKeyCols = primaryKeyColumnNames
+              , _tiConstraints = constraints
               , _tiViewInfo = viewInfo
               , _tiEventTriggerInfoMap = mempty
               , _tiEnumValues = maybeEnumValues }

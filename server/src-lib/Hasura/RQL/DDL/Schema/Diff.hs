@@ -48,9 +48,8 @@ $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''PGColMeta)
 
 data ConstraintMeta
   = ConstraintMeta
-  { cmName :: !ConstraintName
-  , cmOid  :: !Int
-  , cmType :: !ConstraintType
+  { cmOid        :: !Int
+  , cmConstraint :: !RawConstraint
   } deriving (Show, Eq)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ConstraintMeta)
@@ -93,7 +92,7 @@ data TableDiff
   -- The final list of uniq/primary constraint names
   -- used for generating types on_conflict clauses
   -- TODO: this ideally should't be part of TableDiff
-  , _tdUniqOrPriCons   :: ![ConstraintName]
+  , _tdUniqOrPriCons   :: !TableConstraints
   } deriving (Show, Eq)
 
 getTableDiff :: TableMeta -> TableMeta -> TableDiff
@@ -105,8 +104,8 @@ getTableDiff oldtm newtm =
     oldCols = tmColumns oldtm
     newCols = tmColumns newtm
 
-    uniqueOrPrimaryCons =
-      [cmName cm | cm <- tmConstraints newtm, isUniqueOrPrimary (cmType cm)]
+    uniqueOrPrimaryCons = rawConstraintsToTableConstraints
+                          [cmConstraint cm | cm <- tmConstraints newtm]
 
     droppedCols =
       map pcmColumnName $ getDifference pcmOrdinalPosition oldCols newCols

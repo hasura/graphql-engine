@@ -30,10 +30,9 @@ import           Hasura.SQL.Types
 
 data CatalogTableInfo
   = CatalogTableInfo
-  { _ctiColumns           :: ![PGRawColumnInfo]
-  , _ctiConstraints       :: ![ConstraintName]
-  , _ctiPrimaryKeyColumns :: ![PGCol]
-  , _ctiViewInfo          :: !(Maybe ViewInfo)
+  { _ctiColumns     :: ![PGRawColumnInfo]
+  , _ctiConstraints :: ![RawConstraint]
+  , _ctiViewInfo    :: !(Maybe ViewInfo)
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 4 snakeCase) ''CatalogTableInfo)
 

@@ -43,17 +43,36 @@ FROM
       tc.table_name,
       json_agg(
         json_build_object(
-          'name',
-          tc.constraint_name,
           'oid',
-          r.oid :: integer,
-          'type',
-          tc.constraint_type
+          tc.constraint_oid :: integer,
+          'constraint',
+          json_build_object(
+            'name', tc.constraint_name,
+            'type', tc.constraint_type,
+            'columns', tc.columns
+          )
         )
       ) as constraints
     FROM
-      information_schema.table_constraints tc
-      JOIN pg_catalog.pg_constraint r ON tc.constraint_name = r.conname
+      (
+        SELECT
+          table_schema,
+          table_name,
+          constraint_name,
+          constraint_oid,
+          'PRIMARY KEY' AS constraint_type,
+          columns
+        FROM hdb_catalog.hdb_primary_key
+        UNION ALL
+        SELECT
+          table_schema,
+          table_name,
+          constraint_name,
+          constraint_oid,
+          'UNIQUE' AS constraint_type,
+          columns
+          FROM hdb_catalog.hdb_unique_constraint
+      ) tc
     GROUP BY
       table_schema,
       table_name

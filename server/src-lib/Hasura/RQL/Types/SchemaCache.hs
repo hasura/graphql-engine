@@ -19,19 +19,20 @@ module Hasura.RQL.Types.SchemaCache
        , tiSystemDefined
        , tiFieldInfoMap
        , tiRolePermInfoMap
-       , tiUniqOrPrimConstraints
-       , tiPrimaryKeyCols
+       , tiConstraints
        , tiViewInfo
        , tiEventTriggerInfoMap
        , tiEnumValues
 
-       , TableConstraint(..)
        , ConstraintType(..)
        , ViewInfo(..)
        , isMutable
        , mutableView
-       , isUniqueOrPrimary
-       , isForeignKey
+
+       , TableConstraints(..)
+       , getPrimarykeyColumns
+       , getConstraintNames
+       , rawConstraintsToTableConstraints
 
        , RemoteSchemaCtx(..)
        , RemoteSchemaMap
@@ -124,9 +125,10 @@ import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCacheTypes
+import           Hasura.Server.Utils
 import           Hasura.SQL.Types
 
-import           Control.Lens
+import           Control.Lens                      hiding ((.=))
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -258,53 +260,6 @@ $(deriveToJSON (aesonDrop 3 snakeCase) ''EventTriggerInfo)
 
 type EventTriggerInfoMap = M.HashMap TriggerName EventTriggerInfo
 
-data ConstraintType
-  = CTCHECK
-  | CTFOREIGNKEY
-  | CTPRIMARYKEY
-  | CTUNIQUE
-  deriving Eq
-
-constraintTyToTxt :: ConstraintType -> T.Text
-constraintTyToTxt ty = case ty of
-  CTCHECK      -> "CHECK"
-  CTFOREIGNKEY -> "FOREIGN KEY"
-  CTPRIMARYKEY -> "PRIMARY KEY"
-  CTUNIQUE     -> "UNIQUE"
-
-instance Show ConstraintType where
-  show = T.unpack . constraintTyToTxt
-
-instance FromJSON ConstraintType where
-  parseJSON = withText "ConstraintType" $ \case
-    "CHECK"       -> return CTCHECK
-    "FOREIGN KEY" -> return CTFOREIGNKEY
-    "PRIMARY KEY" -> return CTPRIMARYKEY
-    "UNIQUE"      -> return CTUNIQUE
-    c             -> fail $ "unexpected ConstraintType: " <> T.unpack c
-
-instance ToJSON ConstraintType where
-  toJSON = String . constraintTyToTxt
-
-isUniqueOrPrimary :: ConstraintType -> Bool
-isUniqueOrPrimary = \case
-  CTPRIMARYKEY -> True
-  CTUNIQUE     -> True
-  _            -> False
-
-isForeignKey :: ConstraintType -> Bool
-isForeignKey = \case
-  CTFOREIGNKEY -> True
-  _            -> False
-
-data TableConstraint
-  = TableConstraint
-  { tcType :: !ConstraintType
-  , tcName :: !ConstraintName
-  } deriving (Show, Eq)
-
-$(deriveJSON (aesonDrop 2 snakeCase) ''TableConstraint)
-
 data ViewInfo
   = ViewInfo
   { viIsUpdatable  :: !Bool
@@ -325,17 +280,44 @@ mutableView qt f mVI operation =
   unless (isMutable f mVI) $ throw400 NotSupported $
   "view " <> qt <<> " is not " <> operation
 
+data TableConstraints
+  = TableConstraints
+  { _tcPrimaryKey :: !(M.HashMap ConstraintName [PGCol])
+  , _tcUnique     :: !(M.HashMap ConstraintName [PGCol])
+  } deriving (Show, Eq)
+
+instance ToJSON TableConstraints where
+  toJSON (TableConstraints pkeys uniques) =
+    toJSON $ toRaw CTPRIMARYKEY pkeys <> toRaw CTUNIQUE uniques
+    where
+      toRaw constraintType constraintMap = flip map (M.toList constraintMap) $
+        \(name, cols) -> RawConstraint name constraintType cols
+
+getPrimarykeyColumns :: TableConstraints -> [PGCol]
+getPrimarykeyColumns = distinct . concat . M.elems . _tcPrimaryKey
+
+getConstraintNames :: TableConstraints -> [ConstraintName]
+getConstraintNames (TableConstraints primaryKeys unique) =
+  M.keys primaryKeys <> M.keys unique
+
+rawConstraintsToTableConstraints :: [RawConstraint] -> TableConstraints
+rawConstraintsToTableConstraints rawConstraints =
+  TableConstraints (mkMap primaryKeys) (mkMap uniques)
+  where
+    primaryKeys = filter ((== CTPRIMARYKEY) . _rcType) rawConstraints
+    uniques = filter ((== CTUNIQUE) . _rcType) rawConstraints
+    mkMap = M.fromList . map (\rc -> (_rcName rc, _rcColumns rc))
+
 data TableInfo columnInfo
   = TableInfo
-  { _tiName                  :: !QualifiedTable
-  , _tiSystemDefined         :: !Bool
-  , _tiFieldInfoMap          :: !(FieldInfoMap columnInfo)
-  , _tiRolePermInfoMap       :: !RolePermInfoMap
-  , _tiUniqOrPrimConstraints :: ![ConstraintName]
-  , _tiPrimaryKeyCols        :: ![PGCol]
-  , _tiViewInfo              :: !(Maybe ViewInfo)
-  , _tiEventTriggerInfoMap   :: !EventTriggerInfoMap
-  , _tiEnumValues            :: !(Maybe EnumValues)
+  { _tiName                :: !QualifiedTable
+  , _tiSystemDefined       :: !Bool
+  , _tiFieldInfoMap        :: !(FieldInfoMap columnInfo)
+  , _tiRolePermInfoMap     :: !RolePermInfoMap
+  , _tiConstraints         :: !TableConstraints
+  , _tiViewInfo            :: !(Maybe ViewInfo)
+  , _tiEventTriggerInfoMap :: !EventTriggerInfoMap
+  , _tiEnumValues          :: !(Maybe EnumValues)
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
 $(makeLenses ''TableInfo)

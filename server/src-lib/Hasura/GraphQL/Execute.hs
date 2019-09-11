@@ -24,7 +24,6 @@ import           Data.Has
 import qualified Data.Aeson                             as J
 import qualified Data.CaseInsensitive                   as CI
 import qualified Data.HashMap.Strict                    as Map
-import qualified Data.HashSet                           as Set
 import qualified Data.String.Conversions                as CS
 import qualified Data.Text                              as T
 import qualified Language.GraphQL.Draft.Syntax          as G
@@ -44,7 +43,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.Server.Context
-import           Hasura.Server.Utils                    (RequestId,
+import           Hasura.Server.Utils                    (RequestId, distinct,
                                                          filterRequestHeaders)
 
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
@@ -82,7 +81,7 @@ data ExecutionCtx
 assertSameLocationNodes
   :: (MonadError QErr m) => [VT.TypeLoc] -> m VT.TypeLoc
 assertSameLocationNodes typeLocs =
-  case Set.toList (Set.fromList typeLocs) of
+  case distinct typeLocs of
     -- this shouldn't happen
     []    -> return VT.TLHasuraType
     [loc] -> return loc
@@ -409,5 +408,5 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
 
     getCookieHdr = fmap (\h -> ("Set-Cookie", h))
 
-    mkRespHeaders hdrs =
-      map (\(k, v) -> Header (bsToTxt $ CI.original k, bsToTxt v)) hdrs
+    mkRespHeaders =
+      map (\(k, v) -> Header (bsToTxt $ CI.original k, bsToTxt v))

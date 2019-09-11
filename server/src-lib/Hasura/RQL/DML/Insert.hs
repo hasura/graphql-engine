@@ -140,7 +140,7 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
         \pgCol -> askPGType fieldInfoMap pgCol ""
 
     validateConstraint c = do
-      let tableConsNames = _tiUniqOrPrimConstraints tableInfo
+      let tableConsNames = getConstraintNames $ _tiConstraints tableInfo
       withPathK "constraint" $
        unless (c `elem` tableConsNames) $
        throw400 Unexpected $ "constraint " <> getConstraintTxt c

@@ -91,7 +91,10 @@ validateObjRel qt (RelDef rn ru _) = do
   checkForFldConfilct tabInfo (fromRel rn)
   let fim = _tiFieldInfoMap tabInfo
   case ru of
-    RUFKeyOn cn                                         -> assertPGCol fim "" cn
+    RUFKeyOn (ORUFColumn cn)                           -> assertPGCol fim "" cn
+    RUFKeyOn (ORUFRemoteTable refqt col) -> do
+      refFieldInfo <- _tiFieldInfoMap <$> askTabInfo refqt
+      assertPGCol refFieldInfo "" col
     RUManual (ObjRelManualConfig table columnMapping _) ->
       validateManualConfig fim table columnMapping
 
@@ -113,7 +116,8 @@ objRelP2Setup qt fkeys (RelDef rn ru _) = do
           deps  = map (\c -> SchemaDependency (SOTableObj qt $ TOCol c) DRLeftColumn) lCols
                   <> map (\c -> SchemaDependency (SOTableObj refqt $ TOCol c) DRRightColumn) rCols
       return (RelInfo rn ObjRel (zip lCols rCols) refqt True insertOrd, deps)
-    RUFKeyOn cn -> do
+
+    RUFKeyOn (ORUFColumn cn) -> do
       -- TODO: validation should account for this too
       ForeignKey _ refqt _ consName colMap <-
         getRequiredFkey cn fkeys $ \fk -> _fkTable fk == qt
@@ -128,7 +132,31 @@ objRelP2Setup qt fkeys (RelDef rn ru _) = do
           colMapping = HM.toList colMap
       void $ askTabInfo refqt
       return (RelInfo rn ObjRel colMapping refqt False RIOBeforeParent, deps)
+
+    -- One to One object relationship
+    RUFKeyOn (ORUFRemoteTable refqt refCol) -> do
+      ForeignKey _ _ _ consName colMap <- getRequiredFkey refCol fkeys $
+        \fk -> _fkTable fk == refqt && _fkRefTable fk == qt
+
+      -- Reference column alone should be primary key or unique
+      refConstraints <- _tiConstraints <$> askTabInfo refqt
+      unless (isDistinctColumn refCol refConstraints) $ throw400 NotSupported $
+        "column " <> refCol <<> " alone is neither primary key nor unique"
+
+      let deps = [ SchemaDependency (SOTableObj refqt $ TOCons consName) DRRemoteFkey
+                 , SchemaDependency (SOTableObj refqt $ TOCol refCol) DRUsingColumn
+                 -- we don't need to necessarily track the remote table like we did in
+                 -- case of obj relationships as the remote table is indirectly
+                 -- tracked by tracking the constraint name and 'using_col'
+                 , SchemaDependency (SOTable refqt) DRRemoteTable
+                 ]
+          mapping = HM.toList colMap
+      return (RelInfo rn ObjRel (map swap mapping) refqt False RIOAfterParent, deps)
   addRelToCache rn relInfo deps qt
+
+isDistinctColumn :: PGCol -> TableConstraints -> Bool
+isDistinctColumn col (TableConstraints primaryKeys uniques) =
+  any (== [col]) $ HM.elems primaryKeys <> HM.elems uniques
 
 objRelP2
   :: ( QErrM m
@@ -139,7 +167,7 @@ objRelP2
   -> ObjRelDef
   -> m ()
 objRelP2 qt rd@(RelDef rn ru comment) = do
-  fkeys <- liftTx $ fetchTableFkeys qt
+  fkeys <- liftTx $ (<>) <$> fetchTableFkeys qt <*> fetchFkeysAsRemoteTable qt
   objRelP2Setup qt fkeys rd
   liftTx $ persistRel qt rn ObjRel (toJSON ru) comment
 

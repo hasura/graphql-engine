@@ -89,9 +89,9 @@ getValidCols = fst . validPartitionFieldInfoMap
 getValidRels :: FieldInfoMap PGColumnInfo -> [RelInfo]
 getValidRels = snd . validPartitionFieldInfoMap
 
-mkValidConstraints :: [ConstraintName] -> [ConstraintName]
-mkValidConstraints =
-  filter (isValidName . G.Name . getConstraintTxt)
+mkValidConstraintNames :: TableConstraints -> [ConstraintName]
+mkValidConstraintNames =
+  filter (isValidName . G.Name . getConstraintTxt) . getConstraintNames
 
 isRelNullable :: FieldInfoMap PGColumnInfo -> RelInfo -> Bool
 isRelNullable fim ri = isNullable
@@ -544,8 +544,9 @@ mkGCtxMapTable tableCache funcCache tabInfo = do
       adminInsCtxMap = Map.singleton tn adminInsCtx
   return $ Map.insert adminRole (adminCtx, adminRootFlds, adminInsCtxMap) m
   where
-    TableInfo tn _ fields rolePerms constraints pkeyCols viewInfo _ enumValues = tabInfo
-    validConstraints = mkValidConstraints constraints
+    TableInfo tn _ fields rolePerms constraints viewInfo _ enumValues = tabInfo
+    validConstraints = mkValidConstraintNames constraints
+    pkeyCols = getPrimarykeyColumns constraints
     colInfos = getValidCols fields
     validColNames = map pgiName colInfos
     pkeyColInfos = getColInfos pkeyCols colInfos

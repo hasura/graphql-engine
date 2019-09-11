@@ -152,11 +152,16 @@ updateObjRelDef qt rn (oldQT, newQT) = do
   oldDefV <- liftTx $ getRelDef qt rn
   oldDef :: ObjRelUsing <- decodeValue oldDefV
   let newDef = case oldDef of
-        RUFKeyOn _ -> oldDef
+        RUFKeyOn (ORUFColumn _) -> oldDef
+        RUFKeyOn (ORUFRemoteTable dbQT col) ->
+          let updQT = getUpdQT dbQT
+          in RUFKeyOn $ ORUFRemoteTable updQT col
         RUManual (ObjRelManualConfig dbQT rmCols insOrd) ->
-          let updQT = bool oldQT newQT $ oldQT == dbQT
+          let updQT = getUpdQT dbQT
           in RUManual $ ObjRelManualConfig updQT rmCols insOrd
   liftTx $ updateRel qt rn $ toJSON newDef
+  where
+    getUpdQT dbQT = bool oldQT newQT $ oldQT == dbQT
 
 updateArrRelDef
   :: (MonadTx m)
@@ -372,7 +377,10 @@ updateColInObjRel
   :: QualifiedTable -> QualifiedTable
   -> RenameCol -> ObjRelUsing -> ObjRelUsing
 updateColInObjRel fromQT toQT rnCol = \case
-  RUFKeyOn col -> RUFKeyOn $ getNewCol rnCol fromQT col
+  RUFKeyOn (ORUFColumn col) -> RUFKeyOn $ ORUFColumn $ getNewCol rnCol fromQT col
+  RUFKeyOn (ORUFRemoteTable t c) ->
+    let updCol = getNewCol rnCol fromQT c
+    in RUFKeyOn $ ORUFRemoteTable t updCol
   RUManual manConfig ->
     RUManual $ updateObjRelManualConfig fromQT toQT rnCol manConfig
 

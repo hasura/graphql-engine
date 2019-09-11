@@ -24,6 +24,9 @@ module Hasura.RQL.Types.Common
        , rootText
 
        , FunctionArgName(..)
+
+       , ConstraintType(..)
+       , RawConstraint(..)
        ) where
 
 import           Hasura.Prelude
@@ -192,3 +195,39 @@ instance Hashable ForeignKey
 newtype FunctionArgName =
   FunctionArgName { getFuncArgNameTxt :: T.Text}
   deriving (Show, Eq, ToJSON)
+
+data ConstraintType
+  = CTCHECK
+  | CTFOREIGNKEY
+  | CTPRIMARYKEY
+  | CTUNIQUE
+  deriving Eq
+
+constraintTyToTxt :: ConstraintType -> T.Text
+constraintTyToTxt ty = case ty of
+  CTCHECK      -> "CHECK"
+  CTFOREIGNKEY -> "FOREIGN KEY"
+  CTPRIMARYKEY -> "PRIMARY KEY"
+  CTUNIQUE     -> "UNIQUE"
+
+instance Show ConstraintType where
+  show = T.unpack . constraintTyToTxt
+
+instance FromJSON ConstraintType where
+  parseJSON = withText "ConstraintType" $ \case
+    "CHECK"       -> return CTCHECK
+    "FOREIGN KEY" -> return CTFOREIGNKEY
+    "PRIMARY KEY" -> return CTPRIMARYKEY
+    "UNIQUE"      -> return CTUNIQUE
+    c             -> fail $ "unexpected ConstraintType: " <> T.unpack c
+
+instance ToJSON ConstraintType where
+  toJSON = String . constraintTyToTxt
+
+data RawConstraint
+  = RawConstraint
+  { _rcName    :: !ConstraintName
+  , _rcType    :: !ConstraintType
+  , _rcColumns :: ![PGCol]
+  } deriving (Show, Eq)
+$(deriveJSON (aesonDrop 3 snakeCase) ''RawConstraint)

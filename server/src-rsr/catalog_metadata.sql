@@ -30,7 +30,6 @@ from
         table_name,
         jsonb_build_object(
           'columns', columns,
-          'primary_key_columns', primary_key_columns,
           'constraints', constraints,
           'view_info', view_info
         ) as info

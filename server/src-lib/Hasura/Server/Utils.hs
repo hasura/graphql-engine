@@ -108,6 +108,10 @@ duplicates = mapMaybe greaterThanOne . group . sort
   where
     greaterThanOne l = bool Nothing (Just $ head l) $ length l > 1
 
+-- distinct items
+distinct :: (Hashable a, Eq a) => [a] -> [a]
+distinct = Set.toList . Set.fromList
+
 _1 :: (a, b, c) -> a
 _1 (x, _, _) = x
 

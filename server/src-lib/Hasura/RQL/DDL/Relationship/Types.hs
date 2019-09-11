@@ -113,9 +113,27 @@ type ArrRelUsing = RelUsing ArrRelUsingFKeyOn ArrRelManualConfig
 type ArrRelDef = RelDef ArrRelUsing
 type CreateArrRel = WithTable ArrRelDef
 
-type ObjRelUsing = RelUsing PGCol ObjRelManualConfig
-type ObjRelDef = RelDef ObjRelUsing
+data ObjRelUsingFKeyOn
+  = ORUFColumn !PGCol
+  | ORUFRemoteTable !QualifiedTable !PGCol
+  deriving (Show, Eq, Lift)
 
+instance FromJSON ObjRelUsingFKeyOn where
+  parseJSON v@(String _) = ORUFColumn <$> parseJSON v
+  parseJSON (Object o) = ORUFRemoteTable
+                         <$> o .: "table"
+                         <*> o .: "column"
+  parseJSON _ = fail "expecting either String or Object"
+
+instance ToJSON ObjRelUsingFKeyOn where
+  toJSON (ORUFColumn column) = toJSON column
+  toJSON (ORUFRemoteTable tableName column) =
+    object [ "table" .= tableName
+           , "column" .= column
+           ]
+
+type ObjRelUsing = RelUsing ObjRelUsingFKeyOn ObjRelManualConfig
+type ObjRelDef = RelDef ObjRelUsing
 type CreateObjRel = WithTable ObjRelDef
 
 data DropRel
