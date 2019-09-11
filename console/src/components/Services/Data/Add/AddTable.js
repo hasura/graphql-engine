@@ -447,6 +447,7 @@ class AddTable extends Component {
               onColNullableChange={this.onColNullableChange}
               onColUniqueChange={this.onColUniqueChange}
               setColDefaultValue={this.setColDefaultValue}
+              dispatch={dispatch}
             />
             <div>
               <FrequentlyUsedColumnSelector

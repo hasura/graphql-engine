@@ -9,6 +9,7 @@ webpack-stats.json
 npm-debug.log
 *.swp
 coverage
+lib
 .idea/*
 test
 **/.tern-port

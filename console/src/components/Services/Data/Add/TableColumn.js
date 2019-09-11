@@ -2,10 +2,18 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
+import globals from '../../../../Globals';
+import { GRAPHQL_ALIASING_SUPPORT } from '../../../../helpers/versionUtils';
 import { commonDataTypes } from '../utils';
 import { getDataOptions, inferDefaultValues } from '../Common/utils';
 
 import TableColumnDefault from './TableColumnDefault';
+
+import { make as TableColumnAlias } from './TableColumnAlias.bs';
+
+const supportAliasing =
+  globals.featuresCompatibility &&
+  globals.featuresCompatibility[GRAPHQL_ALIASING_SUPPORT];
 
 /* Custom style object for searchable select box */
 const customSelectBoxStyles = {
@@ -36,6 +44,7 @@ const TableColumn = props => {
     columnDefaultFunctions,
     columnTypeCasts,
     uniqueKeys,
+    dispatch,
   } = props;
 
   let isColumnUnique = false;
@@ -109,6 +118,12 @@ const TableColumn = props => {
           placeholder="column_type"
         />
       </span>
+      <TableColumnAlias
+        alias={column.alias}
+        index={i}
+        dispatch={dispatch}
+        support={supportAliasing}
+      />
       <span className={`${styles.inputDefault} ${styles.defaultWidth}`}>
         <TableColumnDefault
           onChange={setColDefaultValue}

@@ -14,7 +14,7 @@
   "scripts": {
     "start": "concurrently --kill-others \"npm run start-prod\"",
     "start-prod": "better-npm-run start-prod",
-    "build": "webpack --progress -p --colors --display-error-details --config webpack/prod.config.js",
+    "build": "npm run bs-build && webpack --progress -p --colors --display-error-details --config webpack/prod.config.js",
     "server-build": "npm run build && mkdir -p static/dist/versioned && cp static/dist/*.js static/dist/*.css static/dist/versioned/ && rm static/dist/versioned/*.gz && gzip -r -f static/dist/versioned",
     "build-unused": "webpack --verbose --colors --display-error-details --config webpack/prod.config.js --json | webpack-unused -s src",
     "postinstall": "webpack --display-error-details --config webpack/prod.config.js",
@@ -22,6 +22,8 @@
     "start-dev": "better-npm-run start-dev",
     "watch-client": "better-npm-run watch-client",
     "dev": "concurrently --kill-others \"npm run watch-client\" \"npm run start-dev\" ",
+    "bs-watch": "bsb -make-world -w",
+    "bs-build": "bsb -make-world",
     "precommit": "lint-staged",
     "cypress": "cypress open",
     "test": "cypress run --spec 'cypress/integration/**/**/test.js' --key $CYPRESS_KEY --parallel --record"
@@ -96,6 +98,7 @@
     "react-table": "^6.8.6",
     "react-tabs": "^2.1.0",
     "react-toggle": "^4.0.2",
+    "reason-react": "^0.7.0",
     "redux": "^4.0.0",
     "redux-logger": "^3.0.6",
     "redux-thunk": "^2.2.0",
@@ -135,6 +138,7 @@
     "better-npm-run": "^0.1.0",
     "bootstrap-loader": "^2.2.0",
     "bootstrap-sass": "^3.3.7",
+    "bs-platform": "^5.0.6",
     "clean-webpack-plugin": "^0.1.17",
     "concurrently": "^3.5.0",
     "css-loader": "^0.28.11",

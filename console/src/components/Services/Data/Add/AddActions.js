@@ -12,12 +12,15 @@ import { setTable } from '../DataActions.js';
 import { isPostgresFunction } from '../utils';
 import { sqlEscapeText } from '../../../Common/utils/sqlUtils';
 
+import { _SET_COLUMN_ALIAS } from './AddActions.bs';
+
 const SET_DEFAULTS = 'AddTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddTable/SET_TABLENAME';
 const SET_TABLECOMMENT = 'AddTable/SET_TABLECOMMENT';
 const REMOVE_COLUMN = 'AddTable/REMOVE_COLUMN';
 const SET_COLUMNS_BULK = 'AddTable/SET_COLUMNS_BULK';
 const SET_COLNAME = 'AddTable/SET_COLNAME';
+const SET_COL_ALIAS = 'AddTable/SET_COL_ALIAS';
 const SET_COLTYPE = 'AddTable/SET_COLTYPE';
 const SET_COLDEFAULT = 'AddTable/SET_COLDEFAULT';
 const REMOVE_COLDEFAULT = 'AddTable/REMOVE_COLDEFAULT';
@@ -41,6 +44,7 @@ const RESET_VALIDATION_ERROR = 'AddTable/RESET_VALIDATION_ERROR';
 
 const setDefaults = () => ({ type: SET_DEFAULTS });
 const setTableName = value => ({ type: SET_TABLENAME, value });
+const setColAlias = (alias, index) => ({ type: SET_COL_ALIAS, alias, index });
 const setTableComment = value => ({ type: SET_TABLECOMMENT, value });
 const removeColumn = i => ({ type: REMOVE_COLUMN, index: i });
 const setColName = (name, index, isNull) => ({
@@ -512,6 +516,15 @@ const addTableReducerCore = (state = defaultState, action) => {
           ...state.columns.slice(k + 1),
         ],
       };
+    case SET_COL_ALIAS:
+      return {
+        ...state,
+        columns: [
+          ...state.columns.slice(0, action.index),
+          { ...state.columns[action.index], alias: action.alias },
+          ...state.columns.slice(action.index + 1),
+        ],
+      };
     case SET_COLUNIQUE:
       const colInd = action.index;
       return {
@@ -520,6 +533,15 @@ const addTableReducerCore = (state = defaultState, action) => {
           ...state.columns.slice(0, colInd),
           { ...state.columns[colInd], unique: action.isUnique },
           ...state.columns.slice(colInd + 1),
+        ],
+      };
+    case _SET_COLUMN_ALIAS:
+      return {
+        ...state,
+        columns: [
+          ...state.columns.slice(0, action.index),
+          { ...state.columns[action.index], alias: action.alias },
+          ...state.columns.slice(action.index + 1),
         ],
       };
     case ADD_COL:
@@ -594,6 +616,7 @@ export {
   setTableComment,
   removeColumn,
   setColName,
+  setColAlias,
   setColType,
   setColNullable,
   setColUnique,
