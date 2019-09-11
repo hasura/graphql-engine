@@ -14,7 +14,6 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Validate.Types
-import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Permission
 
 -- | A /GraphQL context/, aka the final output of GraphQL schema generation. Used to both validate
@@ -80,12 +79,12 @@ emptyGCtx =
 
 data TableCustomRootFields
   = TableCustomRootFields
-  { _tcrfSelect          :: !(Maybe GraphQLName)
-  , _tcrfSelectByPk      :: !(Maybe GraphQLName)
-  , _tcrfSelectAggregate :: !(Maybe GraphQLName)
-  , _tcrfInsert          :: !(Maybe GraphQLName)
-  , _tcrfUpdate          :: !(Maybe GraphQLName)
-  , _tcrfDelete          :: !(Maybe GraphQLName)
+  { _tcrfSelect          :: !(Maybe G.Name)
+  , _tcrfSelectByPk      :: !(Maybe G.Name)
+  , _tcrfSelectAggregate :: !(Maybe G.Name)
+  , _tcrfInsert          :: !(Maybe G.Name)
+  , _tcrfUpdate          :: !(Maybe G.Name)
+  , _tcrfDelete          :: !(Maybe G.Name)
   } deriving (Show, Eq, Lift)
 $(deriveJSON (aesonDrop 5 snakeCase) ''TableCustomRootFields)
 
@@ -99,9 +98,3 @@ emptyCustomRootFields =
   , _tcrfUpdate          = Nothing
   , _tcrfDelete          = Nothing
   }
-
-getCustomName
-  :: (TableCustomRootFields -> Maybe GraphQLName)
-  -> TableCustomRootFields
-  -> Maybe G.Name
-getCustomName f = fmap unGraphQLName . f

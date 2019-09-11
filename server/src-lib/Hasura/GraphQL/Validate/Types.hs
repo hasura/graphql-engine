@@ -652,7 +652,7 @@ defaultDirectives =
   where
     mkDirective n = DirectiveInfo Nothing n args dirLocs
     args = Map.singleton "if" $ InpValInfo Nothing "if" Nothing $
-           G.TypeNamed (G.Nullability False) $ G.NamedType $ G.Name "Boolean"
+           G.TypeNamed (G.Nullability False) $ mkScalarTy PGBoolean
     dirLocs = map G.DLExecutable
               [G.EDLFIELD, G.EDLFRAGMENT_SPREAD, G.EDLINLINE_FRAGMENT]
 

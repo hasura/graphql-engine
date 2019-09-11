@@ -61,13 +61,13 @@ getTabInfo tc t =
      throw500 $ "table not found: " <>> t
 
 isValidObjectName :: (ToTxt a) => QualifiedObject a -> Bool
-isValidObjectName = isValidName . qualObjectToName
+isValidObjectName = G.isValidName . qualObjectToName
 
 isValidCol :: PGColumnInfo -> Bool
-isValidCol = isValidName . pgiName
+isValidCol = G.isValidName . pgiName
 
 isValidRel :: ToTxt a => RelName -> QualifiedObject a -> Bool
-isValidRel rn rt = isValidName (mkRelName rn) && isValidObjectName rt
+isValidRel rn rt = G.isValidName (mkRelName rn) && isValidObjectName rt
 
 upsertable :: [ConstraintName] -> Bool -> Bool -> Bool
 upsertable uniqueOrPrimaryCons isUpsertAllowed isAView =
@@ -86,7 +86,7 @@ getValidRels = filter isValidRel' . snd . partitionFieldInfos . Map.elems
 
 mkValidConstraints :: [ConstraintName] -> [ConstraintName]
 mkValidConstraints =
-  filter (isValidName . G.Name . getConstraintTxt)
+  filter (G.isValidName . G.Name . getConstraintTxt)
 
 isRelNullable
   :: FieldInfoMap PGColumnInfo -> RelInfo -> Bool
@@ -334,7 +334,7 @@ getRootFldsRole' tn primCols constraints fields funcs insM
     mutHelper f getDet mutM =
       bool Nothing (getDet <$> mutM) $ isMutable f viM
 
-    getCustomNameWith = flip getCustomName customRootFields
+    getCustomNameWith f = f customRootFields
 
     insCustName = getCustomNameWith _tcrfInsert
     getInsDet (hdrs, upsertPerm) =

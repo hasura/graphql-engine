@@ -15,7 +15,6 @@ module Hasura.RQL.Types.Common
        , ColVals
        , MutateResp(..)
        , ForeignKey(..)
-       , GraphQLName(..)
        , CustomColumnNames
 
        , NonEmptyText
@@ -27,7 +26,6 @@ module Hasura.RQL.Types.Common
        , FunctionArgName(..)
        ) where
 
-import           Hasura.GraphQL.Utils          (isValidName)
 import           Hasura.Prelude
 import           Hasura.SQL.Types
 
@@ -186,15 +184,4 @@ newtype FunctionArgName =
   FunctionArgName { getFuncArgNameTxt :: T.Text}
   deriving (Show, Eq, ToJSON)
 
-newtype GraphQLName
-  = GraphQLName {unGraphQLName :: G.Name}
-  deriving (Show, Eq, Lift, ToJSON)
-
-instance FromJSON GraphQLName where
-  parseJSON = withText "GraphQLName" $ \t -> do
-    let gName = G.Name t
-    if not $ isValidName gName then
-      fail $ T.unpack t <> " is not valid GraphQL name"
-    else return $ GraphQLName gName
-
-type CustomColumnNames = HM.HashMap PGCol GraphQLName
+type CustomColumnNames = HM.HashMap PGCol G.Name

@@ -105,8 +105,7 @@ validateCustomRootFlds defRemoteGCtx rootFlds =
   forM_ rootFldNames $ GS.checkConflictingNode defRemoteGCtx
   where
     GC.TableCustomRootFields sel selByPk selAgg ins upd del = rootFlds
-    rootFldNames = map unGraphQLName $
-                   catMaybes [sel, selByPk, selAgg, ins, upd, del]
+    rootFldNames = catMaybes [sel, selByPk, selAgg, ins, upd, del]
 
 validateTableConfig
   :: (QErrM m, CacheRM m)
@@ -118,14 +117,14 @@ validateTableConfig tableInfo (TableConfig rootFlds colFlds) =
       let defRemoteGCtx = scDefaultRemoteGCtx sc
       validateCustomRootFlds defRemoteGCtx rootFlds
     withPathK "custom_column_names" $
-      forM_ (M.toList colFlds) $ \(col, GraphQLName customName) -> do
+      forM_ (M.toList colFlds) $ \(col, customName) -> do
         void $ askPGColInfo (_tiFieldInfoMap tableInfo) col ""
         withPathK (getPGColTxt col) $
           checkForFieldConflict tableInfo $ FieldName $ G.unName customName
         when (not $ null duplicateNames) $ throw400 NotSupported $
           "the following names are duplicated: " <> showNames duplicateNames
   where
-    duplicateNames = duplicates $ map unGraphQLName $ M.elems colFlds
+    duplicateNames = duplicates $ M.elems colFlds
 
 trackExistingTableOrViewP2
   :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
@@ -398,8 +397,8 @@ processColumnInfo enumTables customFields tableName rawInfo = do
     }
   where
     pgCol = prciName rawInfo
-    graphqlName = maybe (G.Name $ getPGColTxt pgCol)
-                   unGraphQLName $ M.lookup pgCol customFields
+    graphqlName = fromMaybe (G.Name $ getPGColTxt pgCol) $
+                  M.lookup pgCol customFields
     resolveColumnType =
       case prciReferences rawInfo of
         -- no referenced tables? definitely not an enum
