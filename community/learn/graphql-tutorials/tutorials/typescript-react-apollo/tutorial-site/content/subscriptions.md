@@ -27,7 +27,7 @@ The goal is to update every few seconds from the client that you are online. Ide
 
 Open `src/components/OnlineUsers/OnlineUsersWrapper.tsx` and add the following imports.
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo-typescript/app-final/src/components/OnlineUsers/OnlineUsersWrapper.tsx" text="src/components/OnlineUsers/OnlineUsersWrapper.tsx" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/typescript-react-apollo/app-final/src/components/OnlineUsers/OnlineUsersWrapper.tsx" text="src/components/OnlineUsers/OnlineUsersWrapper.tsx" />
 
 ```javascript
 

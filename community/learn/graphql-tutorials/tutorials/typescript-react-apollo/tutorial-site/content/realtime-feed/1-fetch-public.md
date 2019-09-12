@@ -8,7 +8,7 @@ import GithubLink from "../../src/GithubLink.js";
 
 Open `src/components/Todo/TodoPublicList.tsx` and add the following imports.
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo-typescript/app-final/src/components/Todo/TodoPublicList.tsx" text="src/components/Todo/TodoPublicList.tsx" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/typescript-react-apollo/app-final/src/components/Todo/TodoPublicList.tsx" text="src/components/Todo/TodoPublicList.tsx" />
 
 ```javascript
 

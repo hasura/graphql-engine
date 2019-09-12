@@ -15,7 +15,7 @@ Now let's do the integration part. Open `src/components/Todo/TodoItem.tsx` and a
 ```
 Let's define the graphql mutation to update the completed status of the todo
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo-typescript/app-final/src/components/Todo/TodoItem.tsx" text="src/components/Todo/TodoItem.tsx" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/typescript-react-apollo/app-final/src/components/Todo/TodoItem.tsx" text="src/components/Todo/TodoItem.tsx" />
 
 ```javascript
   

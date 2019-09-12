@@ -10,7 +10,7 @@ So let's define the graphql subscription to be used.
 
 Open `src/components/OnlineUsers/OnlineUsersWrapper.tsx` and add the following code, below the other imports
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo-typescript/app-final/src/components/OnlineUsers/OnlineUsersWrapper.tsx" text="src/components/OnlineUsers/OnlineUsersWrapper.tsx" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/typescript-react-apollo/app-final/src/components/OnlineUsers/OnlineUsersWrapper.tsx" text="src/components/OnlineUsers/OnlineUsersWrapper.tsx" />
 
 ```javascript
 
@@ -160,7 +160,7 @@ Finally, we will remove the explicit usage of `any` by importing the types of `O
 
 And now open `src/components/OnlineUsers/OnlineUser.tsx`
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo-typescript/app-final/src/components/OnlineUsers/OnlineUser.tsx" text="src/components/OnlineUsers/OnlineUser.tsx" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/typescript-react-apollo/app-final/src/components/OnlineUsers/OnlineUser.tsx" text="src/components/OnlineUsers/OnlineUser.tsx" />
 
 ```javascript
 

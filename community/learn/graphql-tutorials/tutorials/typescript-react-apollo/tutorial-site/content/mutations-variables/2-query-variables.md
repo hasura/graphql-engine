@@ -14,7 +14,7 @@ So let's define the graphql mutation to be used.
 
 Open `src/components/Todo/TodoInput.tsx` and add the following code:
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo-typescript/app-final/src/components/Todo/TodoInput.tsx" text="src/components/Todo/TodoInput.tsx" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/typescript-react-apollo/app-final/src/components/Todo/TodoInput.tsx" text="src/components/Todo/TodoInput.tsx" />
 
 ```javascript
 

@@ -18,7 +18,7 @@ Now we need to update our `ApolloClient` instance to point to the subscription s
 
 Open `src/components/App.tsx` and update the following imports:
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo-typescript/app-final/src/components/App.tsx" text="src/components/App.tsx" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/typescript-react-apollo/app-final/src/components/App.tsx" text="src/components/App.tsx" />
 
 ```javascript
   import ApolloClient from 'apollo-client';

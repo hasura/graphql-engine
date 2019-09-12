@@ -21,7 +21,7 @@ After the modules are installed, we will configure the code generator specifying
 
 Create a new file `codegen.js` in the root directory and copy the contents below into this file.
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo-typescript/app-final/codegen.js" text="codegen.js" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/typescript-react-apollo/app-final/codegen.js" text="codegen.js" />
 
 ```javascript
 module.exports = {

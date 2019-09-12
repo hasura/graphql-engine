@@ -80,10 +80,10 @@ spec:
       path: ./community/learn/graphql-tutorials/tutorials/flutter-graphql/tutorial-site
     name: flutter-graphql
   - containers:
-    - dockerfile: ./community/learn/graphql-tutorials/tutorials/react-apollo-typescript/tutorial-site/Dockerfile
-      name: react-apollo-typescript
-      path: ./community/learn/graphql-tutorials/tutorials/react-apollo-typescript/tutorial-site
-    name: react-apollo-typescript
+    - dockerfile: ./community/learn/graphql-tutorials/tutorials/typescript-react-apollo/tutorial-site/Dockerfile
+      name: typescript-react-apollo
+      path: ./community/learn/graphql-tutorials/tutorials/typescript-react-apollo/tutorial-site
+    name: typescript-react-apollo
   manifests:
     helm: {}
     path: ./community/learn/graphql-tutorials/manifests

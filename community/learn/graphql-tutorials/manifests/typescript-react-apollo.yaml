@@ -3,14 +3,14 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: react-apollo-typescript
-  name: react-apollo-typescript
+    app: typescript-react-apollo
+  name: typescript-react-apollo
   namespace: default
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: react-apollo-typescript
+      app: typescript-react-apollo
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -19,12 +19,12 @@ spec:
   template:
     metadata:
       labels:
-        app: react-apollo-typescript
+        app: typescript-react-apollo
     spec:
       containers:
       - image: hasura/base-git-image:0.7
         imagePullPolicy: IfNotPresent
-        name: react-apollo-typescript
+        name: typescript-react-apollo
         env:
         - name: GATSBY_ALGOLIA_APP_ID
           valueFrom:
@@ -46,15 +46,15 @@ spec:
           protocol: TCP
         #readinessProbe:
         #  httpGet:
-        #    path: /graphql/react-apollo-typescript/introduction
+        #    path: /graphql/typescript-react-apollo/introduction
         #    port: 8080
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: react-apollo-typescript
-  name: react-apollo-typescript
+    app: typescript-react-apollo
+  name: typescript-react-apollo
   namespace: default
 spec:
   ports:
@@ -62,5 +62,5 @@ spec:
     protocol: TCP
     targetPort: 8080
   selector:
-    app: react-apollo-typescript
+    app: typescript-react-apollo
   type: ClusterIP

@@ -9,7 +9,7 @@ Our task will be to convert the "static" UI into a working realtime app.
 
 ### Download and run the boilerplate
 
-1. Download the boilerplate from https://learn.hasura.io/graphql/react-apollo-typescript/boilerplate.zip
+1. Download the boilerplate from https://learn.hasura.io/graphql/typescript-react-apollo/boilerplate.zip
 2. Unzip and make sure you're in the `app-boilerplate` directory
 3. Install dependencies and run the "static" app
     - `npm install`
