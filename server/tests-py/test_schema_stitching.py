@@ -488,6 +488,34 @@ class TestRemoteSchemaPermissions:
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir + 'basic_fail.yaml')
 
+class TestRemoteSchemaPermissionsDisabled:
+    dir = 'queries/remote_schemas/permissions/'
+    teardown = {"type": "remove_remote_schema", "args": {"name": "simple"}}
+
+    @pytest.fixture(autouse=True)
+    def transact(self, hge_ctx):
+        q = mk_add_remote_q('simple', 'http://localhost:5000/user-graphql')
+        st_code, resp = hge_ctx.v1q(q)
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q(self.teardown)
+        assert st_code == 200, resp
+
+    def test_add(self, hge_ctx):
+        # make perm query
+        st_code, resp = hge_ctx.v1q_f(self.dir + 'setup.yaml')
+        assert st_code == 404, resp
+
+    def test_drop(self, hge_ctx):
+        # remove perm query
+        st_code, resp = hge_ctx.v1q_f(self.dir + 'teardown.yaml')
+        assert st_code == 404, resp
+
+    def test_no_roles(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + 'basic_success.yaml')
+
+
+
 def _map(f, l):
     return list(map(f, l))
 
