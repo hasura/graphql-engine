@@ -351,7 +351,7 @@ const createTableSql = () => {
           schema: currentSchema,
           configuration: {
             custom_root_fields: state.aliases,
-            custom_column_fields: columnAliases,
+            custom_column_names: columnAliases,
           },
         },
       });
