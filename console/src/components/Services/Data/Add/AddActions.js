@@ -1,5 +1,8 @@
 import defaultState from './AddState';
 
+import globals from '../../../../Globals';
+import { GRAPHQL_ALIASING_SUPPORT } from '../../../../helpers/versionUtils';
+
 import _push from '../push';
 import { updateSchemaInfo, makeMigrationCall } from '../DataActions';
 import {
@@ -12,7 +15,11 @@ import { setTable } from '../DataActions.js';
 import { isPostgresFunction } from '../utils';
 import { sqlEscapeText } from '../../../Common/utils/sqlUtils';
 
-import { _SET_COLUMN_ALIAS } from './AddActions.bs';
+import { _SET_COLUMN_ALIAS, _SET_ROOT_FIELD_ALIAS } from './AddActions.bs';
+
+const SUPPORT_ALIASING =
+  globals.featuresCompatibility &&
+  globals.featuresCompatibility[GRAPHQL_ALIASING_SUPPORT];
 
 const SET_DEFAULTS = 'AddTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddTable/SET_TABLENAME';
@@ -329,13 +336,34 @@ const createTableSql = () => {
       args: { sql: sqlCreateTable },
     });
 
-    upQueryArgs.push({
-      type: 'add_existing_table_or_view',
-      args: {
-        name: tableName,
-        schema: currentSchema,
-      },
-    });
+    if (SUPPORT_ALIASING) {
+      const columnAliases = {};
+      currentCols
+        .filter(c => !!c.alias)
+        .forEach(c => {
+          columnAliases[c.name] = c.alias;
+        });
+      upQueryArgs.push({
+        type: 'track_table',
+        version: 2,
+        args: {
+          table: tableName,
+          schema: currentSchema,
+          configuration: {
+            custom_root_fields: state.aliases,
+            custom_column_fields: columnAliases,
+          },
+        },
+      });
+    } else {
+      upQueryArgs.push({
+        type: 'add_existing_table_or_view',
+        args: {
+          name: tableName,
+          schema: currentSchema,
+        },
+      });
+    }
 
     const upQuery = {
       type: 'bulk',
@@ -543,6 +571,14 @@ const addTableReducerCore = (state = defaultState, action) => {
           { ...state.columns[action.index], alias: action.alias },
           ...state.columns.slice(action.index + 1),
         ],
+      };
+    case _SET_ROOT_FIELD_ALIAS:
+      return {
+        ...state,
+        aliases: {
+          ...state.aliases,
+          [action.field]: action.alias,
+        },
       };
     case ADD_COL:
       return { ...state, columns: [...state.columns, { name: '', type: '' }] };

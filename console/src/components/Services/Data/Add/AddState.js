@@ -18,6 +18,7 @@ const defaultState = {
     },
   ],
   uniqueKeys: [[]],
+  aliases: {},
   fkToggled: null,
   ongoingRequest: false,
   lastError: null,

@@ -1,6 +1,8 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Helmet from 'react-helmet';
+import globals from '../../../../Globals';
+import { GRAPHQL_ALIASING_SUPPORT } from '../../../../helpers/versionUtils';
 
 import Button from '../../../Common/Button/Button';
 import PrimaryKeySelector from '../Common/ReusableComponents/PrimaryKeySelector';
@@ -16,6 +18,8 @@ import TableComment from './TableComment';
 
 import * as tooltip from './Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+
+import { make as TableAlias } from './TableAliasWrapper.bs';
 
 import {
   setTableName,
@@ -57,6 +61,10 @@ import styles from '../../../Common/TableCommon/Table.scss';
  *  4) Comment Input
  *  5) Add Table button
  * */
+
+const SUPPORT_ALIASING =
+  globals.featuresCompatibility &&
+  globals.featuresCompatibility[GRAPHQL_ALIASING_SUPPORT];
 
 class AddTable extends Component {
   constructor(props) {
@@ -402,6 +410,7 @@ class AddTable extends Component {
       schemaList,
       columnDefaultFunctions,
       columnTypeCasts,
+      aliases,
     } = this.props;
     const getCreateBtnText = () => {
       let createBtnText = 'Add Table';
@@ -415,6 +424,35 @@ class AddTable extends Component {
         createBtnText = 'Created! Redirecting...';
       }
       return createBtnText;
+    };
+
+    const getAliasingSection = () => {
+      if (!SUPPORT_ALIASING) return null;
+      return (
+        <div>
+          <h4 className={styles.subheading_text}>
+            GraphQL Aliases&nbsp; &nbsp;
+            <OverlayTrigger
+              placement="right"
+              overlay={tooltip.graphqlTableAlias}
+            >
+              <i className={'fa fa-question-circle'} aria-hidden="true" />
+            </OverlayTrigger>{' '}
+            &nbsp; &nbsp;
+          </h4>
+          <TableAlias
+            tableName={tableName || ''}
+            select={aliases.select || ''}
+            selectByPk={aliases.select_by_pk || ''}
+            selectAgg={aliases.select_aggregate || ''}
+            insert={aliases.insert || ''}
+            update={aliases.update || ''}
+            delete={aliases.delete || ''}
+            dispatch={dispatch}
+          />
+          <hr />
+        </div>
+      );
     };
 
     return (
@@ -447,6 +485,7 @@ class AddTable extends Component {
               onColNullableChange={this.onColNullableChange}
               onColUniqueChange={this.onColUniqueChange}
               setColDefaultValue={this.setColDefaultValue}
+              supportAliasing={SUPPORT_ALIASING}
               dispatch={dispatch}
             />
             <div>
@@ -518,6 +557,7 @@ class AddTable extends Component {
             <hr />
             <TableComment onChange={this.onTableCommentChange} />
             <hr />
+            {getAliasingSection()}
             <Button
               type="submit"
               onClick={this.validateAndSubmit}

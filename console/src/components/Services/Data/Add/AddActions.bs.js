@@ -2,6 +2,9 @@
 
 'use strict';
 
+const $$Array = require('bs-platform/lib/js/array.js');
+const Curry = require('bs-platform/lib/js/curry.js');
+
 const _SET_COLUMN_ALIAS = 'AddTable/SET_COL_ALIAS';
 
 function setColumnAlias(alias, index) {
@@ -14,7 +17,46 @@ function setColumnAlias(alias, index) {
 
 const _SET_ROOT_FIELD_ALIAS = 'AddTable/SET_ROOT_FIELD_ALIAS';
 
+const rootFieldTypes = /* array */ [
+  'select',
+  'select_by_pk',
+  'select_aggregate',
+  'insert',
+  'update',
+  'delete',
+];
+
+function setRootFieldAlias(field, alias) {
+  return {
+    type: _SET_ROOT_FIELD_ALIAS,
+    field: field,
+    alias: alias,
+  };
+}
+
+function setDefaultAliases(tableName, dispatch) {
+  $$Array.iteri((param, rootFieldType) => {
+    if ('select'.includes(rootFieldType)) {
+      return Curry._1(
+        dispatch,
+        setRootFieldAlias(
+          rootFieldType,
+          rootFieldType.replace('select', tableName)
+        )
+      );
+    }
+    return Curry._1(
+      dispatch,
+      setRootFieldAlias(rootFieldType, rootFieldType + ('_' + tableName))
+    );
+  }, rootFieldTypes);
+  return /* () */ 0;
+}
+
 exports._SET_COLUMN_ALIAS = _SET_COLUMN_ALIAS;
 exports.setColumnAlias = setColumnAlias;
 exports._SET_ROOT_FIELD_ALIAS = _SET_ROOT_FIELD_ALIAS;
+exports.rootFieldTypes = rootFieldTypes;
+exports.setRootFieldAlias = setRootFieldAlias;
+exports.setDefaultAliases = setDefaultAliases;
 /* No side effect */

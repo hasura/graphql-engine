@@ -33,3 +33,9 @@ export const uniqueKeyDescription = (
 export const dataTypeDescription = description => (
   <Tooltip id="tooltip-datatype-description">{description}</Tooltip>
 );
+
+export const graphqlTableAlias = (
+  <Tooltip id="tooltip-graphql-table-alias">
+    Alias the root fields associated with this table
+  </Tooltip>
+);

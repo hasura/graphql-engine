@@ -24,6 +24,10 @@ export const getFeaturesCompatibility = serverVersion => {
 
   try {
     Object.keys(featureLaunchVersions).forEach(feature => {
+      console.log('==================================');
+      console.log(feature);
+      console.log(isPullRequest);
+      console.log('==================================');
       featuresCompatibility[feature] =
         isPullRequest ||
         semver.satisfies(featureLaunchVersions[feature], '<=' + serverVersion);
