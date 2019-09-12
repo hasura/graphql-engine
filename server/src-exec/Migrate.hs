@@ -4,24 +4,19 @@ module Migrate
   )
 where
 
-import           Data.Time.Clock               (UTCTime)
-import           Language.Haskell.TH.Syntax    (Q, TExp, unTypeQ)
+import           Data.Time.Clock            (UTCTime)
+import           Language.Haskell.TH.Syntax (Q, TExp, unTypeQ)
 
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
 import           Hasura.Server.Query
 
-import qualified Data.Aeson                    as A
-import qualified Data.Text                     as T
-import qualified Data.Yaml.TH                  as Y
+import qualified Data.Aeson                 as A
+import qualified Data.Text                  as T
+import qualified Data.Yaml.TH               as Y
 
-import qualified Data.HashMap.Strict           as Map
-import qualified Database.PG.Query             as Q
-
-import           Hasura.GraphQL.Context
-import qualified Hasura.GraphQL.Validate.Types as VT
-import           Hasura.RQL.DDL.RemoteSchema   (addRemoteSchemaPermissionsToCatalog)
+import qualified Database.PG.Query          as Q
 
 curCatalogVer :: T.Text
 curCatalogVer = "23"
@@ -350,69 +345,12 @@ from22To23
     Q.multiQE
       defaultTxErrorHandler
       $(Q.sqlFromFile "src-rsr/migrate_from_22_to_23.sql")
-  allRoles <- liftTx $ getAllRoles
-  remoteSchemaCount::Int <- liftTx $ getRemoteSchemaCount
-  when (remoteSchemaCount > 0) $ do
-    buildSchemaCacheStrict
-    sc <- askSchemaCache
-    let remoteSchemas = Map.toList (scRemoteSchemas sc)
-        remoteSchemaPermissions =
-          concatMap
-            (\(name, ctx) ->
-               map (uncurryPerm . (, name, getTypePerms ctx)) allRoles)
-            remoteSchemas
-    liftTx $ mapM_ addRemoteSchemaPermissionsToCatalog remoteSchemaPermissions
   migrateMetadata False migrateMetadataFor23
   setAsSystemDefinedFor23
   where
     migrateMetadataFor23 =
       $(unTypeQ
           (Y.decodeFile "src-rsr/migrate_metadata_from_22_to_23.yaml" :: Q (TExp RQLQuery)))
-    getRemoteSchemaCount =
-      runIdentity . Q.getRow <$>
-      Q.withQE
-        defaultTxErrorHandler
-        [Q.sql| SELECT count(*)
-                FROM hdb_catalog.remote_schemas
-        |] () False
-    getAllRoles =
-      map runIdentity <$>
-      Q.listQE
-        defaultTxErrorHandler
-        [Q.sql| SELECT distinct(role_name)
-                FROM hdb_catalog.hdb_permission_agg
-        |] () False
-    -- try using lenses?
-    getTypePerms remoteCtx =
-      let objTypes = getObjTy (rscGCtx remoteCtx)
-          inpObjTypes = getInpObjTy (rscGCtx remoteCtx)
-       in convObjTypesToPermType objTypes <>
-          convInpObjTypesToPermType inpObjTypes
-      where
-        getObjTy rGCtx =
-          let types = Map.elems (_rgTypes rGCtx)
-           in flip mapMaybe types $ \tyInfo ->
-                case tyInfo of
-                  VT.TIObj objTy -> Just objTy
-                  _              -> Nothing
-        getInpObjTy rGCtx =
-          let types = Map.elems (_rgTypes rGCtx)
-           in flip mapMaybe types $ \tyInfo ->
-                case tyInfo of
-                  VT.TIInpObj inpObjTy -> Just inpObjTy
-                  _                    -> Nothing
-        convObjTypesToPermType objTypes =
-          flip map objTypes $ \objTy ->
-            let name = (VT._otiName objTy)
-                fields = Map.keys (VT._otiFields objTy)
-             in RemoteTypePerm name fields
-        convInpObjTypesToPermType inpObjTypes =
-          flip map inpObjTypes $ \inpObjTy ->
-            let name = (VT._iotiName inpObjTy)
-                fields = Map.keys (VT._iotiFields inpObjTy)
-             in RemoteTypePerm name fields
-    uncurryPerm (role, rsName, permDef) =
-      RemoteSchemaPermissions rsName role permDef
 
 migrateCatalog
   :: (UserInfoM m, CacheBuildM m)
