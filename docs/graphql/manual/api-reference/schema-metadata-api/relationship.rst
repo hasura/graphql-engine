@@ -31,8 +31,8 @@ table. There cannot be an existing column or relationship with the same name.
 
 There are 3 ways in which you can create an object relationship.
 
-1. Using foreign key constraint on a column
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+1. Many-to-One object relationship using a foreign key constraint on a column
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Create an ``object relationship`` ``author`` on ``article`` *table*,  *using* the
 *foreign_key_constraint_on* the ``author_id`` column:
@@ -54,11 +54,11 @@ Create an ``object relationship`` ``author`` on ``article`` *table*,  *using* th
        }
    }
 
-2. One-to-One object relationship using foreign key constraint
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2. One-to-One object relationship using a foreign key constraint on the remote table's column
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A one-to-one object relationship can be created using foreign key constraint
-on remote table's column. The condition is that the remote table's column alone
+A one-to-one object relationship can be created using a foreign key constraint
+on the remote table's column. The condition is that the remote table's column alone
 should have either ``primary key`` or ``unique`` constraint.
 
 .. code-block:: http
@@ -119,12 +119,12 @@ follows:
        }
    }
 
-If we want to define a one-to-one object relationship using manual configuration
-then we've to specify ``insertion_order`` as ``after_parent`` in ``manual_configuration``.
+To define a one-to-one object relationship manually, we have to specify ``after_parent``
+for ``insertion_order`` in ``manual_configuration``.
 ``insertion_order`` is the order in which the object relationship inserted
 in a nested insert in respect of the parent. It expects either ``before_parent`` or
-``after_parent`` string value. It is optional and by default it is ``before_parent`` which
-indicates many-to-one relationship.
+``after_parent`` string value. It is optional, but by default it is ``before_parent``,
+which defines a many-to-one relationship.
 
 .. code-block:: http
 
