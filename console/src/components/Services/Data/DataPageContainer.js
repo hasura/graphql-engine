@@ -12,7 +12,6 @@ import { NotFoundError } from '../../Error/PageNotFound';
 const sectionPrefix = '/data';
 
 const DataPageContainer = ({
-  schema,
   currentSchema,
   schemaList,
   children,
@@ -81,12 +80,7 @@ const DataPageContainer = ({
             </div>
           </div>
         </Link>
-        <DataSubSidebar
-          location={location}
-          schema={schema}
-          currentSchema={currentSchema}
-          dispatch={dispatch}
-        />
+        <DataSubSidebar location={location} />
       </li>
       <li
         role="presentation"
@@ -117,7 +111,6 @@ const DataPageContainer = ({
 
 const mapStateToProps = state => {
   return {
-    schema: state.tables.allSchemas,
     schemaList: state.tables.schemaList,
     currentSchema: state.tables.currentSchema,
   };
