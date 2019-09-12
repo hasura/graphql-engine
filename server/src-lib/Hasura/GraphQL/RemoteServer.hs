@@ -101,15 +101,15 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _ timeout) =
 mergeSchemas
   :: (QErrM m)
   => RemoteSchemaMap
-  -> RemoteSchemasWithRole
+  -> RemoteSchemaRoleMap
   -> GS.GCtxMap
   -> m GS.GCtxMap
-mergeSchemas rmSchemaMap rmSchemaMapWithRole initGCtxMap = do
-  merged <- mergeRoleRemoteSchemas initGCtxMap rmSchemaMapWithRole
+mergeSchemas rsMap rsRoleMap initGCtxMap = do
+  merged <- mergeRoleRemoteSchemas initGCtxMap rsRoleMap
   allRemotesGCtx <- combineRemoteGCtx remoteSchemas
   addRemoteSchemaToAdminRole merged allRemotesGCtx
   where
-    remoteSchemas = map rscGCtx $ Map.elems rmSchemaMap
+    remoteSchemas = map rscGCtx $ Map.elems rsMap
 
 combineRemoteGCtx
   :: (MonadError QErr m)
@@ -126,7 +126,7 @@ addRemoteSchemaToAdminRole initGCtxMap remoteGCtx = do
 mergeRoleRemoteSchemas
   :: (MonadError QErr m)
   => GS.GCtxMap
-  -> RemoteSchemasWithRole
+  -> RemoteSchemaRoleMap
   -> m GS.GCtxMap
 mergeRoleRemoteSchemas initGCtxMap roleRemoteSchemas = do
   foldM

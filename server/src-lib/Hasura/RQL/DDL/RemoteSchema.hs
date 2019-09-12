@@ -162,7 +162,7 @@ buildGCtxMap = do
   sc <- askSchemaCache
   let gCtxMap = scGCtxMap sc
   -- add remote schemas
-  mergedGCtxMap <- mergeSchemas (scRemoteSchemas sc) (scRemoteSchemasWithRole sc) gCtxMap
+  mergedGCtxMap <- mergeSchemas (scRemoteSchemas sc) (scRemoteSchemaRoleMap sc) gCtxMap
   writeSchemaCache sc { scGCtxMap = mergedGCtxMap }
 
 mkCacheForRemoteSchema
@@ -172,13 +172,13 @@ mkCacheForRemoteSchema sc rsName = do
         maybe Map.empty (Map.singleton rsName) $
         Map.lookup rsName (scRemoteSchemas sc)
       remoteSchemaRoleMap =
-        flip Map.filterWithKey (scRemoteSchemasWithRole sc) $ \(_, name) _ ->
+        flip Map.filterWithKey (scRemoteSchemaRoleMap sc) $ \(_, name) _ ->
           name == rsName
   mergedGCtxMap <-
     mergeSchemas remoteSchemaMap remoteSchemaRoleMap Map.empty
   pure emptySchemaCache
     { scRemoteSchemas = remoteSchemaMap
-    , scRemoteSchemasWithRole = remoteSchemaRoleMap
+    , scRemoteSchemaRoleMap = remoteSchemaRoleMap
     , scGCtxMap = mergedGCtxMap
     }
 
@@ -252,9 +252,9 @@ runAddRemoteSchemaPermissionsP2Setup (RemoteSchemaPermissions rsName role _def) 
   withRSPermFlagCheck False $ do
     modDepMapInCache (addToDepMap schObjId deps)
     sc <- askSchemaCache
-    let rmSchemaWithRoles = scRemoteSchemasWithRole sc
-        newSchemasWithRoles = Map.insert (role, rsName) rsCtx rmSchemaWithRoles
-    writeSchemaCache sc {scRemoteSchemasWithRole = newSchemasWithRoles}
+    let rsRoleMap = scRemoteSchemaRoleMap sc
+        rsRoleMapNew = Map.insert (role, rsName) rsCtx rsRoleMap
+    writeSchemaCache sc {scRemoteSchemaRoleMap = rsRoleMapNew}
   where
     schObjId = SORemoteSchemaObj rsName (RSOPerm role)
     deps = [SchemaDependency (SORemoteSchema rsName) DRParent]
@@ -374,7 +374,7 @@ dropRemoteSchemaPermissionsP1 ::
      (QErrM m, CacheRM m, MonadTx m) => DropRemoteSchemaPermissions -> m ()
 dropRemoteSchemaPermissionsP1 (DropRemoteSchemaPermissions remoteSchema role) = do
   sc <- askSchemaCache
-  let roleSchemas = scRemoteSchemasWithRole sc
+  let roleSchemas = scRemoteSchemaRoleMap sc
   void $ onNothing
     (Map.lookup (role, remoteSchema) roleSchemas)
     (throw400 NotFound ("role: " <> roleNameToTxt role <> " not found for remote schema"))
@@ -389,9 +389,9 @@ dropRemoteSchemaPermissionsP2Setup ::
      (QErrM m, CacheRWM m, HasFeatureFlags m) => DropRemoteSchemaPermissions -> m ()
 dropRemoteSchemaPermissionsP2Setup (DropRemoteSchemaPermissions rsName role) = withRSPermFlagCheck False $ do
   sc <- askSchemaCache
-  let roleSchemas = scRemoteSchemasWithRole sc
-      updatedRoleSchemas = Map.delete (role, rsName) roleSchemas
-  writeSchemaCache sc { scRemoteSchemasWithRole = updatedRoleSchemas }
+  let roleSchemas = scRemoteSchemaRoleMap sc
+      updatedRoleMap = Map.delete (role, rsName) roleSchemas
+  writeSchemaCache sc { scRemoteSchemaRoleMap = updatedRoleMap }
 
 dropRemoteSchemaPermissionsFromCatalog ::
      (MonadTx m) => RemoteSchemaName -> RoleName -> m ()

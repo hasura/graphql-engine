@@ -35,7 +35,7 @@ module Hasura.RQL.Types.SchemaCache
 
        , RemoteSchemaCtx(..)
        , RemoteSchemaMap
-       , RemoteSchemasWithRole
+       , RemoteSchemaRoleMap
        , addRemoteSchemaToCache
        , delRemoteSchemaFromCache
 
@@ -395,7 +395,7 @@ instance ToJSON RemoteSchemaCtx where
   toJSON = toJSON . rscInfo
 
 type RemoteSchemaMap = M.HashMap RemoteSchemaName RemoteSchemaCtx
-type RemoteSchemasWithRole = M.HashMap (RoleName, RemoteSchemaName) RemoteSchemaCtx
+type RemoteSchemaRoleMap = M.HashMap (RoleName, RemoteSchemaName) RemoteSchemaCtx
 
 type DepMap = M.HashMap SchemaObjId (HS.HashSet SchemaDependency)
 
@@ -427,14 +427,14 @@ incSchemaCacheVer (SchemaCacheVer prev) =
 
 data SchemaCache
   = SchemaCache
-  { scTables                :: !(TableCache PGColumnInfo)
-  , scFunctions             :: !FunctionCache
-  , scRemoteSchemas         :: !RemoteSchemaMap
-  , scRemoteSchemasWithRole :: !RemoteSchemasWithRole
-  , scAllowlist             :: !(HS.HashSet GQLQuery)
-  , scGCtxMap               :: !GC.GCtxMap
-  , scDepMap                :: !DepMap
-  , scInconsistentObjs      :: ![InconsistentMetadataObj]
+  { scTables              :: !(TableCache PGColumnInfo)
+  , scFunctions           :: !FunctionCache
+  , scRemoteSchemas       :: !RemoteSchemaMap
+  , scRemoteSchemaRoleMap :: !RemoteSchemaRoleMap
+  , scAllowlist           :: !(HS.HashSet GQLQuery)
+  , scGCtxMap             :: !GC.GCtxMap
+  , scDepMap              :: !DepMap
+  , scInconsistentObjs    :: ![InconsistentMetadataObj]
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
@@ -467,7 +467,7 @@ emptySchemaCache =
   { scTables       = M.empty
   , scFunctions = M.empty
   , scRemoteSchemas = M.empty
-  , scRemoteSchemasWithRole = M.empty
+  , scRemoteSchemaRoleMap = M.empty
   , scAllowlist  = HS.empty
   , scGCtxMap  = M.empty
   , scDepMap    = M.empty
