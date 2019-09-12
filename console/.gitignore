@@ -14,3 +14,4 @@ lib
 test
 **/.tern-port
 **.bs.js
+.bsb.lock

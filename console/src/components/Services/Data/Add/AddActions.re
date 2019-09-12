@@ -11,7 +11,7 @@ let setColumnAlias: (string, int) => _SET_COLUMN_ALIAS_ACTION
   = (alias, index) => {
     {
       "type": _SET_COLUMN_ALIAS,
-      "alias": alias,
+      "alias": Js.String.trim(alias),
       "index": index
     }
   };
@@ -32,7 +32,7 @@ let setRootFieldAlias: (string, string) => _SET_ROOT_FIELD_ALIAS_ACTION
     {
       "type": _SET_ROOT_FIELD_ALIAS,
       "field": field,
-      "alias": alias
+      "alias": Js.String.trim(alias)
     }
   };
 
