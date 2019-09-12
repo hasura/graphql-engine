@@ -1,4 +1,5 @@
 open AddActions;
+open CommonUtils;
 
 [@react.component]
 let make = (~alias: option(string), ~index: int, ~support: bool, ~dispatch) => {
@@ -26,7 +27,7 @@ let make = (~alias: option(string), ~index: int, ~support: bool, ~dispatch) => {
       | None => ""
     };
 
-    <span className={styles##inputDefault ++ " " ++ styles##defaultWidth}>
+    <span className={getClassName("inputDefault", styles) ++ " " ++ getClassName("defaultWidth", styles)}>
       <input
         type_="text"
         className={" form-control"}

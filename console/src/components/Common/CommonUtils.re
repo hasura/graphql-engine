@@ -1,6 +1,6 @@
 let commonStyles: Js.Dict.t(string) = [%raw "require('./Common.scss')" ];
 
-let getStyle = (className, customStyles) => {
+let getClassName = (className, customStyles) => {
   switch (customStyles) {
     | Some(styles) => {
       switch(Js.Dict.get(styles, className)) {

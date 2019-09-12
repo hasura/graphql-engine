@@ -33,13 +33,13 @@ let make = (
 
   let getQuerySection = () => {
     let toggleQueryExpanded = (_) => dispatch(SetQueryExpanded(!state.queryExpanded));
-    <div className=getStyle("add_mar_bottom_mid", None)>
+    <div className=getClassName("add_mar_bottom_mid", None)>
       <div
-        className={getStyle("add_mar_bottom_small", None) ++ " " ++ getStyle("display_flex", None) ++ " " ++ getStyle("cursorPointer", None)}
+        className={getClassName("add_mar_bottom_small", None) ++ " " ++ getClassName("display_flex", None) ++ " " ++ getClassName("cursorPointer", None)}
         onClick={toggleQueryExpanded}
       >
         <i
-          className={"fa fa-chevron-" ++ (state.queryExpanded ? "down " : "right ") ++ getStyle("add_mar_right", None)}
+          className={"fa fa-chevron-" ++ (state.queryExpanded ? "down " : "right ") ++ getClassName("add_mar_right", None)}
         />
         <b> {ReasonReact.string("Query and Subscription")} </b>
       </div>
@@ -47,9 +47,9 @@ let make = (
         state.queryExpanded
         ?
         (
-          <div className={getStyle("add_pad_left", None) ++ " " ++ getStyle("add_pad_right", None)}>
-            <div className={getStyle("display_flex", None) ++ " row " ++ getStyle("add_mar_bottom_small", None)}>
-              <div className={getStyle("add_mar_right", None) ++ " col-md-3"}>
+          <div className={getClassName("add_pad_left", None) ++ " " ++ getClassName("add_pad_right", None)}>
+            <div className={getClassName("display_flex", None) ++ " row " ++ getClassName("add_mar_bottom_small", None)}>
+              <div className={getClassName("add_mar_right", None) ++ " col-md-3"}>
                 {ReasonReact.string("Select")}
               </div>
               <div className={"col-md-2"}>
@@ -61,8 +61,8 @@ let make = (
                 />
               </div>
             </div>
-            <div className={getStyle("display_flex", None) ++ " row " ++ getStyle("add_mar_bottom_small", None)}>
-              <div className={getStyle("add_mar_right", None) ++ " col-md-3"}>
+            <div className={getClassName("display_flex", None) ++ " row " ++ getClassName("add_mar_bottom_small", None)}>
+              <div className={getClassName("add_mar_right", None) ++ " col-md-3"}>
                 {ReasonReact.string("Select by PK")}
               </div>
               <div className={"col-md-2"}>
@@ -74,8 +74,8 @@ let make = (
                 />
               </div>
             </div>
-            <div className={getStyle("display_flex", None) ++ " row " ++ getStyle("add_mar_bottom_small", None)}>
-              <div className={getStyle("add_mar_right", None) ++ " col-md-3"}>
+            <div className={getClassName("display_flex", None) ++ " row " ++ getClassName("add_mar_bottom_small", None)}>
+              <div className={getClassName("add_mar_right", None) ++ " col-md-3"}>
                 {ReasonReact.string("Select Aggregate")}
               </div>
               <div className={"col-md-2"}>
@@ -97,13 +97,13 @@ let make = (
 
   let getMutationSection = () => {
     let toggleMutationExpanded = (_) => dispatch(SetMutationExpanded(!state.mutationExpanded));
-    <div className={getStyle("add_mar_bottom", None)}>
+    <div className={getClassName("add_mar_bottom", None)}>
       <div
-        className={getStyle("add_mar_bottom_small", None) ++ " " ++ getStyle("display_flex", None) ++ " " ++ getStyle("cursorPointer", None)}
+        className={getClassName("add_mar_bottom_small", None) ++ " " ++ getClassName("display_flex", None) ++ " " ++ getClassName("cursorPointer", None)}
         onClick={toggleMutationExpanded}
       >
         <i
-          className={"fa fa-chevron-" ++ (state.mutationExpanded ? "down " : "right ") ++ getStyle("add_mar_right", None)}
+          className={"fa fa-chevron-" ++ (state.mutationExpanded ? "down " : "right ") ++ getClassName("add_mar_right", None)}
         />
         <b> {ReasonReact.string("Mutation")} </b>
       </div>
@@ -111,9 +111,9 @@ let make = (
         state.mutationExpanded
         ?
         (
-          <div className={getStyle("add_pad_left", None) ++ " " ++ getStyle("add_pad_right", None)}>
-            <div className={getStyle("display_flex", None) ++ " row " ++ getStyle("add_mar_bottom_small", None)}>
-              <div className={getStyle("add_mar_right", None) ++ " col-md-3"}>
+          <div className={getClassName("add_pad_left", None) ++ " " ++ getClassName("add_pad_right", None)}>
+            <div className={getClassName("display_flex", None) ++ " row " ++ getClassName("add_mar_bottom_small", None)}>
+              <div className={getClassName("add_mar_right", None) ++ " col-md-3"}>
                 {ReasonReact.string("Insert")}
               </div>
               <div className={"col-md-2"}>
@@ -125,8 +125,8 @@ let make = (
                 />
               </div>
             </div>
-            <div className={getStyle("display_flex", None) ++ " row " ++ getStyle("add_mar_bottom_small", None)}>
-              <div className={getStyle("add_mar_right", None) ++ " col-md-3"}>
+            <div className={getClassName("display_flex", None) ++ " row " ++ getClassName("add_mar_bottom_small", None)}>
+              <div className={getClassName("add_mar_right", None) ++ " col-md-3"}>
                 {ReasonReact.string("Update")}
               </div>
               <div className={"col-md-2"}>
@@ -138,8 +138,8 @@ let make = (
                 />
               </div>
             </div>
-            <div className={getStyle("display_flex", None) ++ " row " ++ getStyle("add_mar_bottom_small", None)}>
-              <div className={getStyle("add_mar_right", None) ++ " col-md-3"}>
+            <div className={getClassName("display_flex", None) ++ " row " ++ getClassName("add_mar_bottom_small", None)}>
+              <div className={getClassName("add_mar_right", None) ++ " col-md-3"}>
                 {ReasonReact.string("Delete")}
               </div>
               <div className={"col-md-2"}>
@@ -160,7 +160,7 @@ let make = (
   };
 
   <div>
-    <div className={getStyle("add_mar_bottom_mid", None)}>
+    <div className={getClassName("add_mar_bottom_mid", None)}>
       {getQuerySection()}
       {getMutationSection()}
     </div>
