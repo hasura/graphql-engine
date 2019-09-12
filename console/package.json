@@ -36,7 +36,8 @@
     "*.{js,json,css,md}": [
       "prettier --single-quote --trailing-comma es5 --write",
       "git add"
-    ]
+    ],
+    "*.bs.js": []
   },
   "betterScripts": {
     "start-prod": {

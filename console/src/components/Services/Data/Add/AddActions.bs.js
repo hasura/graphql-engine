@@ -12,6 +12,9 @@ function setColumnAlias(alias, index) {
   };
 }
 
+const _SET_ROOT_FIELD_ALIAS = 'AddTable/SET_ROOT_FIELD_ALIAS';
+
 exports._SET_COLUMN_ALIAS = _SET_COLUMN_ALIAS;
 exports.setColumnAlias = setColumnAlias;
+exports._SET_ROOT_FIELD_ALIAS = _SET_ROOT_FIELD_ALIAS;
 /* No side effect */

@@ -1,2 +1,3 @@
 webpack/*
 src/utils.js
+src/*.bs.js

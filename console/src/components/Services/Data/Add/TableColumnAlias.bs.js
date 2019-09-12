@@ -12,31 +12,21 @@ function TableColumnAlias(Props) {
   const support = Props.support;
   const dispatch = Props.dispatch;
   if (support) {
-    const styles = require('../../../Common/TableCommon/Table.scss');
+    const styles = (require('../../../Common/TableCommon/Table.scss'));
     const onAliasChange = function ($$event) {
       $$event.preventDefault();
-      return Curry._1(
-        dispatch,
-        AddActions$GraphqlEngineConsole.setColumnAlias(
-          $$event.target.value,
-          index
-        )
-      );
+      return Curry._1(dispatch, AddActions$GraphqlEngineConsole.setColumnAlias($$event.target.value, index));
     };
     const aliasValue = alias !== undefined ? alias : '';
-    return React.createElement(
-      'span',
-      {
-        className: styles.inputDefault + (' ' + styles.defaultWidth),
-      },
-      React.createElement('input', {
-        className: ' form-control',
-        placeholder: 'column_alias',
-        type: 'text',
-        value: aliasValue,
-        onChange: onAliasChange,
-      })
-    );
+    return React.createElement('span', {
+      className: styles.inputDefault + (' ' + styles.defaultWidth)
+    }, React.createElement('input', {
+      className: ' form-control',
+      placeholder: 'column_alias',
+      type: 'text',
+      value: aliasValue,
+      onChange: onAliasChange
+    }));
   }
   return null;
 }
