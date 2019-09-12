@@ -1,14 +1,14 @@
 .. _auto_apply_migrations:
 
-Auto-apply migrations/metadata when server starts
-=================================================
+Auto-apply migrations/metadata when the server starts
+=====================================================
 
 .. contents:: Table of contents
   :backlinks: none
   :depth: 1
   :local:
 
-Hasura ships a special docker container which can be used to
+Hasura ships a special Docker container which can be used to
 automatically apply migrations/metadata when the server starts:
 
 .. code-block:: bash
@@ -17,16 +17,16 @@ automatically apply migrations/metadata when the server starts:
 
 .. note::
 
-   This container image includes Hasura CLI at ``/bin/hasura-cli`` and can be
+   This container image includes the Hasura CLI at ``/bin/hasura-cli`` and can be
    used for running any other CI/CD scripts in your workflow.
 
 Applying migrations
 -------------------
 
-The ``migrations`` directory created by Hasura CLI (the one next to 
-``config.yaml``) can be mounted at ``/hasura-migrations`` path of this docker
+The ``migrations`` directory created by the Hasura CLI (the one next to 
+``config.yaml``) can be mounted at the ``/hasura-migrations`` path of this Docker
 container and the container's entry point script will apply the migrations before
-starting the server. If no directory is mounted at the designated path, server
+starting the server. If no directory is mounted at the designated path, the server
 will start ignoring migrations.
 
 If you want to mount the migrations directory at some location other than
@@ -37,7 +37,7 @@ If you want to mount the migrations directory at some location other than
    HASURA_GRAPHQL_MIGRATIONS_DIR=/custom-path-for-migrations
 
 Once the migrations are applied, the container resumes operation as a normal
-Hasura GraphQL Engine server.
+Hasura GraphQL engine server.
 
 Example:
 

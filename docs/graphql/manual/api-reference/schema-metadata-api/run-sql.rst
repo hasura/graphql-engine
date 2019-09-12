@@ -20,11 +20,11 @@ returned.
 
   This is an admin-only query, i.e. the query can only be executed by a
   request having ``X-Hasura-Role: admin``. This can be set by passing
-  ``X-Hasura-Admin-Secret`` or by setting the right role in Webhook/JWT
+  ``X-Hasura-Admin-Secret`` or by setting the right role in webhook/JWT
   authorization mode.
 
   This is deliberate as it is hard to enforce any sort of permissions on arbitrary SQL. If
-  you find yourselves in the need of using ``run_sql`` to run custom DML queries,
+  you find yourself in the need of using ``run_sql`` to run custom DML queries,
   consider creating a view. You can now define permissions on that particular view
   for various roles.
 
@@ -50,11 +50,11 @@ An example:
    }
 
 While ``run_sql`` lets you run any SQL, it tries to ensure that the Hasura GraphQL engine's
-state (relationships, permissions etc.) is consistent. i.e., you
+state (relationships, permissions etc.) is consistent i.e. you
 cannot drop a column on which any metadata is dependent on (say a permission or
 a relationship). The effects, however, can be cascaded.
 
-Example:- If we were to drop 'bio' column from the author table (let's say
+Example: If we were to drop the 'bio' column from the author table (let's say
 the column is used in some permission), you would see an error.
 
 .. code-block:: http
@@ -108,8 +108,8 @@ We can however, cascade these changes.
 
 With the above query, the dependent permission is also dropped.
 
-Example:- If we were to drop a foreign key constraint from the article table
-(let's say the column involved in foreign key is used to define a relationship),
+Example: If we were to drop a foreign key constraint from the article table
+(let's say the column involved in the foreign key is used to define a relationship),
 you would see an error.
 
 .. code-block:: http
@@ -176,10 +176,10 @@ In case of 1, 2 and 3 the dependent objects (if any) can be dropped using ``casc
 However, when altering type of columns, if any objects are affected, the change
 cannot be cascaded. So, those dependent objects have to be manually dropped before
 executing the SQL statement. Dropping SQL functions will cascade the functions in
-metadata even without using ``cascade`` since no other objects dependant on them.
+metadata even without using ``cascade`` since no other objects depend on them.
 Overloading tracked SQL functions is not allowed.
 
-Set ``check_metadata_consistency`` field to ``false`` to force server to not consider metadata dependencies.
+Set ``check_metadata_consistency`` field to ``false`` to force the server to not consider metadata dependencies.
 
 .. _run_sql_syntax:
 

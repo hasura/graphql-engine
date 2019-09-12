@@ -293,7 +293,7 @@ class TestSubscriptionJwtExpiry(object):
             }
         }
         init_ws_conn(hge_ctx, ws_client, payload)
-        time.sleep(5)
+        time.sleep(6)
         assert ws_client.remote_closed == True, ws_client.remote_closed
 
 
