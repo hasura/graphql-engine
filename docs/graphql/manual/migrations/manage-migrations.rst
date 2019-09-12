@@ -1,7 +1,7 @@
 .. _postgres_schema_metadata:
 
-Managing Postgres schema and Hasura metadata
-============================================
+Managing Postgres schema and Hasura migrations
+==============================================
 
 .. contents:: Table of contents
   :backlinks: none
