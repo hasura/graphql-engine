@@ -13,3 +13,4 @@ lib
 .idea/*
 test
 **/.tern-port
+**.bs.js
