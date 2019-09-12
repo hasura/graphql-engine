@@ -14,14 +14,14 @@ So let's define the graphql mutation to be used.
 
 Open `src/components/Todo/TodoInput.tsx` and add the following code:
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo/app-final/src/components/Todo/TodoInput.tsx" text="src/components/Todo/TodoInput.tsx" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo-typescript/app-final/src/components/Todo/TodoInput.tsx" text="src/components/Todo/TodoInput.tsx" />
 
 ```javascript
 
   import * as React from 'react';
 + import gql from 'graphql-tag';
 + const ADD_TODO = gql `
-+   mutation ($todo: String!, $isPublic: Boolean!) {
++   mutation insert_todos($todo: String!, $isPublic: Boolean!) {
 +     insert_todos(objects: {title: $todo, is_public: $isPublic}) {
 +       affected_rows
 +       returning {

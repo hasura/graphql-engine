@@ -60,7 +60,8 @@ Now let's handle the form submit to invoke the mutation.
 We are passing the mutate function (`addTodo`) to our form submit handler.
 The mutate function's first argument would be the mutation query's options, such as variables etc. We are now passing the variables required for the mutation. 
 
-The mutation has been integrated and the new todos will be inserted into the database. But the UI doesn't know that a new todo has been added. We need a way to tell Apollo Client to update the query for the list of todos.
+The mutation has been integrated and the new todos will be inserted into the database. But the UI doesn't know that a new todo has been added. If you add a todo and refresh the page you can see the changes. But we would like to do it without a page refresh. We will be using the cache for that.
+We need a way to tell Apollo Client to update the query for the list of todos.
 
 ### Apollo React Mutation Update
 The `update` function comes in handy to update the cache for this mutation. It comes with utility functions such as `readQuery` and `writeQuery` that helps in reading from and writing to the cache.

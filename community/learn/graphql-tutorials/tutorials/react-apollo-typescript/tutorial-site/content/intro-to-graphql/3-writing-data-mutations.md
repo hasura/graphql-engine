@@ -1,6 +1,6 @@
 ---
 title: Writing data - Mutations
-metaTitle: "GraphQL Mutations to insert data | GraphQL React Apollo Tutorial"
+metaTitle: "GraphQL Mutations to insert data | GraphQL React Apollo Typescript Tutorial"
 metaDescription: "Try out GraphQL Mutation using GraphiQL. A GraphQL mutation example with dynamic arguments and variables to insert data"
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "Architecture"
-metaTitle: "GraphQL Architecture | GraphQL React Apollo Tutorial"
+metaTitle: "GraphQL Architecture | GraphQL React Apollo Typescript Tutorial"
 metaDescription: "Learn about the architecture of GraphQL, GraphQL over HTTP, the client server model with an example of http request"
 ---
 

@@ -9,7 +9,7 @@ In this part of the tutorial, you will learn how to create new todos by using Gr
 Let's define a graphql mutation to perform insert into todos.
 
 ```graphql
-mutation ($todo: String!, $isPublic: Boolean!) {
+mutation insert_todos($todo: String!, $isPublic: Boolean!) {
   insert_todos(objects: {title: $todo, is_public: $isPublic}) {
     affected_rows
     returning {

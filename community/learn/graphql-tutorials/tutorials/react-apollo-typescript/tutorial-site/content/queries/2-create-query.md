@@ -20,7 +20,7 @@ Great! Now let's define the graphql query to be used:
 
 Open `src/components/Todo/TodoPrivateList.tsx` and add the following code:
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo/app-final/src/components/Todo/TodoPrivateList.tsx" text="src/components/Todo/TodoPrivateList.tsx" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo-typescript/app-final/src/components/Todo/TodoPrivateList.tsx" text="src/components/Todo/TodoPrivateList.tsx" />
 
 ```javascript
   import React, { Fragment, useState } from "react";

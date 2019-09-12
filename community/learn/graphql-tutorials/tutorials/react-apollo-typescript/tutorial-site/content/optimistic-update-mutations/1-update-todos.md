@@ -1,6 +1,6 @@
 ---
 title: "Update todos - mutation"
-metaTitle: "Mutation to update todos | GraphQL React Apollo Tutorial"
+metaTitle: "Mutation to update todos | GraphQL React Apollo Typescript Tutorial"
 metaDescription: "GraphQL Mutation to update existing personal todos. Try the mutation in GraphiQL, passing the Authorization token to mark a todo as completed"
 ---
 

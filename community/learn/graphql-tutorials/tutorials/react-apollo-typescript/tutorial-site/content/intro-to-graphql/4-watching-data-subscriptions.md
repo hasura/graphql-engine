@@ -1,6 +1,6 @@
 ---
 title: Watching data - Subscriptions
-metaTitle: "GraphQL Subscriptions for realtime data | GraphQL React Apollo Tutorial"
+metaTitle: "GraphQL Subscriptions for realtime data | GraphQL React Apollo Typescript Tutorial"
 metaDescription: "Try out GraphQL Subscription using GraphiQL. A GraphQL subscriptions example to fetch live data pushed over websockets "
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "Mutations & Query variables"
-metaTitle: "Integrate Mutations with Query Variables | GraphQL React Apollo Tutorial"
+metaTitle: "Integrate Mutations with Query Variables | GraphQL React Apollo Typescript Tutorial"
 metaDescription: "Integrate GraphQL Mutations to create new personal todos using the Mutation Component and handle loading and error states"
 ---
 
@@ -10,7 +10,7 @@ their task list.
 We will learn the following concepts:
 
 - Creating a GraphQL mutation
-- Using the `<Mutation>` component
+- Using the `useMutation` hook
 - Capturing loading/finished/error states
 
 Let's get started!

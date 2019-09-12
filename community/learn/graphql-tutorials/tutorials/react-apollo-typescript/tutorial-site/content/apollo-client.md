@@ -18,7 +18,7 @@ $ yarn add apollo-client @apollo/react-hooks apollo-cache-inmemory apollo-link-h
 ### Create Apollo Client Instance
 Open `src/components/App.tsx` and add the following imports at the top:
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo/app-final/src/components/App.tsx" text="src/components/App.tsx" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo-typescript/app-final/src/components/App.tsx" text="src/components/App.tsx" />
 
 ```javascript
 import * as React from 'react';

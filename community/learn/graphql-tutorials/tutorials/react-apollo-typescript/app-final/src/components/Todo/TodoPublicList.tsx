@@ -6,15 +6,14 @@ import TaskItem from "./TaskItem";
 import { 
   GetOldPublicTodosQuery,
   GetOldPublicTodosQueryVariables,
+  GetNewPublicTodosQuery,
+  GetNewPublicTodosQueryVariables,
+  NotifyNewPublicTodosSubscription,
   Todos
 } from '../../generated/graphql';
 
-type User = {
-  user: { name: string }
-};
-
 type publicListProps = {
-  latestTodo: (Partial<Todos> & User) | null
+  latestTodo: Partial<Todos> | null
 }
 
 const TodoPublicList = (props: publicListProps) => {
@@ -43,9 +42,6 @@ const TodoPublicList = (props: publicListProps) => {
           id
           title
           created_at
-          user {
-            name
-          }
         }
       }
     `;
@@ -90,7 +86,7 @@ const TodoPublicList = (props: publicListProps) => {
       }
     `;
 
-    const { data, networkStatus } = await client.query({
+    const { data, networkStatus } = await client.query<GetNewPublicTodosQuery, GetNewPublicTodosQueryVariables>({
       query: GET_NEW_PUBLIC_TODOS,
       variables: {
         latestVisibleId: newestTodoId.current
@@ -99,7 +95,6 @@ const TodoPublicList = (props: publicListProps) => {
 
     if (data && data.todos) {
       setTodos(prevState => {
-        console.log(prevState);
         if(prevState) {
           return [...data.todos, ...prevState]
         } else {
@@ -171,15 +166,18 @@ const TodoPublicListSubscription = () => {
       ) {
         id
         created_at
+        user {
+          name
+        }
       }
     }
   `;
 
-  const { loading, error, data } = useSubscription(NOTIFY_NEW_PUBLIC_TODOS);
+  const { loading, error, data } = useSubscription<NotifyNewPublicTodosSubscription>(NOTIFY_NEW_PUBLIC_TODOS);
   if (loading) {
     return <span>Loading...</span>;
   }
-  if (error) {
+  if (error || !data) {
     return <span>Error</span>;
   }
   return (

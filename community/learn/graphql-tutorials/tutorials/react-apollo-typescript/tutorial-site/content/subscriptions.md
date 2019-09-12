@@ -1,6 +1,6 @@
 ---
 title: "Subscriptions to show online users"
-metaTitle: "Update last seen of user with Mutation | GraphQL React Apollo Tutorial"
+metaTitle: "Update last seen of user with Mutation | GraphQL React Apollo Typescript Tutorial"
 metaDescription: "GraphQL Mutation to update last seen of user to make them available online. Use setInterval to trigger mutation every few seconds "
 ---
 
@@ -25,77 +25,67 @@ We have to make this change to see yourself online first. Remember that you are 
 
 The goal is to update every few seconds from the client that you are online. Ideally you should do this after you have successfully authenticated with Auth0. So let's update some code to handle this. 
 
-Open `src/components/OnlineUsers/OnlineUsersWrapper.js` and add the following imports and set the client prop in the constructor
+Open `src/components/OnlineUsers/OnlineUsersWrapper.tsx` and add the following imports.
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo/app-final/src/components/OnlineUsers/OnlineUsersWrapper.js" text="src/components/OnlineUsers/OnlineUsersWrapper.js" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo-typescript/app-final/src/components/OnlineUsers/OnlineUsersWrapper.tsx" text="src/components/OnlineUsers/OnlineUsersWrapper.tsx" />
 
 ```javascript
+
++ import React from "react";
 + import gql from "graphql-tag";
-+ import {withApollo} from 'react-apollo';
-class OnlineUsersWrapper extends Component {
-- constructor() {
-+ constructor(props) {
--   super();
-+   super(props);
-+   this.client = props.client;
+  import OnlineUser from "./OnlineUser";
 
-    this.state = {
-      onlineUsers: [
-        { name: "someUser1" },
-        { name: "someUser2" }
-      ]
-    };
-  }
 ```
-
-Update the export by wrapping the OnlineUsersWrapper component with `withApollo`
+Now let's define the GraphQL mutation to update the last seen time of the user.
 
 ```javascript
-- export default OnlineUsersWrapper;
-+ export default withApollo(OnlineUsersWrapper);
+
+  import React from "react";
+  import gql from "graphql-tag";
+  import OnlineUser from "./OnlineUser";
+
++ const UPDATE_LASTSEEN_MUTATION=gql`
++   mutation updateLastSeen ($now: timestamptz!) {
++     update_users(where: {}, _set: {last_seen: $now}) {
++       affected_rows
++     }
++   }
++ `;
+
 ```
 
-In `componentDidMount`, we will create a `setInterval` to update the last_seen of the user every 30 seconds.
+As we did in previous steps, we will pass the above mutation to `useMutation` hook.
 
 ```javascript
-class OnlineUsersWrapper extends Component {
-  constructor(props) {
-    super(props);
-    this.client = props.client;
-  }
-+ componentDidMount() {
-+   // Every 30s, run a mutation to tell the backend that you're online
-+   this.onlineIndicator = setInterval(() => this.updateLastSeen(), 30000);
-+ }
+
+  import React from "react";
+  import gql from "graphql-tag";
++ import { useMutation } from "@apollo/react-hooks";
+  ...
+  const OnlineUsersWrapper = () => {
+
++   const [updateLastSeen] = useMutation(UPDATE_LASTSEEN_MUTATION);
+
 ```
 
-Now let's write the definition of the `updateLastSeen`.
+We will need to trigger this mutation every 30 seconds.
+
+We are going to make use of `useEffect` to implement this side effect.
+In `useEffect`, we will create a `setInterval` to update the last_seen of the user every 30 seconds.
 
 ```javascript
-class OnlineUsersWrapper extends Component {
-  constructor(props) {
-    super(props);
-    this.client = props.client;
-  }
-+  updateLastSeen() {
-+    // Use the apollo client to run a mutation to update the last_seen value
-+    const UPDATE_LASTSEEN_MUTATION=gql`
-+      mutation updateLastSeen ($now: timestamptz!) {
-+        update_users(where: {}, _set: {last_seen: $now}) {
-+          affected_rows
-+        }
-+      }`;
-+    this.client.mutate({
-+      mutation: UPDATE_LASTSEEN_MUTATION,
-+      variables: {now: (new Date()).toISOString()}
-+    });
-+  }
-  componentDidMount() {
-    // Every 30s, run a mutation to tell the backend that you're online
-    this.onlineIndicator = setInterval(() => this.updateLastSeen(), 30000);
-  }
+
+  const OnlineUsersWrapper = () => {
+
+    const [updateLastSeen] = useMutation(UPDATE_LASTSEEN_MUTATION);
+    
++   useEffect(() => {
++     const onlineIndicator = setInterval(() => updateLastSeen({variables: { now: (new Date()).toISOString()}}), 30000);
++     return () => clearInterval(onlineIndicator);
++   });
+
 ```
 
-Again, we are making use of `client.mutate` to update the `users` table of the database.
+Again, we are making use of the mutation to update the `users` table of the database.
 
 Great! Now the metadata about whether the user is online will be available in the backend. Let's now do the integration to display realtime data of online users.
