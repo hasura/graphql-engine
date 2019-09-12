@@ -32,7 +32,6 @@ import           Data.Aeson
 import qualified Hasura.GraphQL.Schema              as GS
 
 import           Hasura.Db
-import           Hasura.GraphQL.RemoteServer
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Permission
@@ -156,11 +155,7 @@ buildSchemaCacheWithOptions withSetup = do
           mkInconsObj = InconsistentMetadataObj (MORemoteSchema name)
                         MOTRemoteSchema (toJSON rs)
       withSchemaObject_ mkInconsObj $ do
-        rsCtx <- addRemoteSchemaP2Setup rs
-        sc <- askSchemaCache
-        let rGCtx = convRemoteGCtx $ rscGCtx rsCtx
-        mergedGCtxMap <- addRemoteSchemaToAdminRole (scGCtxMap sc) rGCtx
-        writeSchemaCache sc { scGCtxMap = mergedGCtxMap }
+        void $ addRemoteSchemaP2Setup rs
 
     applyRemoteSchemaPerm rsPerm = do
       -- ideally we need not check for feature flag here

@@ -43,6 +43,7 @@ runAddRemoteSchema
   :: ( QErrM m, UserInfoM m
      , CacheRWM m, MonadTx m
      , MonadIO m, HasHttpManager m
+     , HasFeatureFlags m
      )
   => AddRemoteSchemaQuery -> m EncJSON
 runAddRemoteSchema q = do
@@ -60,15 +61,17 @@ addRemoteSchemaP1 name = do
     throw400 AlreadyExists $ "remote schema with name "
     <> name <<> " already exists"
 
-addRemoteSchemaP2Setup
-  :: (QErrM m, CacheRWM m, MonadIO m, HasHttpManager m)
-  => AddRemoteSchemaQuery -> m RemoteSchemaCtx
+addRemoteSchemaP2Setup ::
+     (QErrM m, CacheRWM m, MonadIO m, HasHttpManager m, HasFeatureFlags m)
+  => AddRemoteSchemaQuery
+  -> m RemoteSchemaCtx
 addRemoteSchemaP2Setup q = do
   httpMgr <- askHttpManager
+  remotePermsEnabled <- ffRemoteSchemaPerms <$> askFeatureFlags
   rsi <- validateRemoteSchemaDef def
   gCtx <- fetchRemoteSchema httpMgr name rsi
   let rsCtx = RemoteSchemaCtx name gCtx rsi
-  addRemoteSchemaToCache rsCtx
+  addRemoteSchemaToCache rsCtx remotePermsEnabled
   return rsCtx
   where
     AddRemoteSchemaQuery name def _ = q
@@ -77,7 +80,9 @@ addRemoteSchemaP2
   :: ( QErrM m
      , CacheRWM m
      , MonadTx m
-     , MonadIO m, HasHttpManager m
+     , MonadIO m
+     , HasHttpManager m
+     , HasFeatureFlags m
      )
   => AddRemoteSchemaQuery
   -> m EncJSON
@@ -138,19 +143,20 @@ dropRemoteSchemaPermDep = \case
 
 runReloadRemoteSchema
   :: ( QErrM m, UserInfoM m , CacheRWM m
-     , MonadIO m, HasHttpManager m
+     , MonadIO m, HasHttpManager m, HasFeatureFlags m
      )
   => RemoteSchemaNameQuery -> m EncJSON
 runReloadRemoteSchema (RemoteSchemaNameQuery name) = do
   adminOnly
   rmSchemas <- scRemoteSchemas <$> askSchemaCache
+  remotePermsEnabled <- ffRemoteSchemaPerms <$> askFeatureFlags
   rsi <- fmap rscInfo $ onNothing (Map.lookup name rmSchemas) $
          throw400 NotExists $ "remote schema with name "
          <> name <<> " does not exist"
   httpMgr <- askHttpManager
   gCtx <- fetchRemoteSchema httpMgr name rsi
   delRemoteSchemaFromCache name
-  addRemoteSchemaToCache $ RemoteSchemaCtx name gCtx rsi
+  addRemoteSchemaToCache (RemoteSchemaCtx name gCtx rsi) remotePermsEnabled
   return successMsg
 
 -- | build GraphQL schema

@@ -1,5 +1,6 @@
-{-# LANGUAGE GADTs      #-}
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE GADTs          #-}
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE RankNTypes     #-}
 
 module Hasura.RQL.Types.SchemaCache
        ( SchemaCache(..)
@@ -742,18 +743,26 @@ delPermFromCache pa rn tn = do
     schObjId = SOTableObj tn $ TOPerm rn $ permAccToType pa
 
 addRemoteSchemaToCache
-  :: (QErrM m, CacheRWM m) => RemoteSchemaCtx -> m ()
-addRemoteSchemaToCache rmCtx = do
+  :: (QErrM m, CacheRWM m) => RemoteSchemaCtx -> Bool -> m ()
+addRemoteSchemaToCache rmCtx@RemoteSchemaCtx {rscName} permsEnabled = do
   sc <- askSchemaCache
   let rmSchemas = scRemoteSchemas sc
-      name = rscName rmCtx
+      rsRoleMap = scRemoteSchemaRoleMap sc
   -- ideally, remote schema shouldn't present in cache
   -- if present unexpected 500 is thrown
-  onJust (M.lookup name rmSchemas) $ const $
-    throw500 $ "remote schema with name " <> name
-    <<> " already found in cache"
-  writeSchemaCache sc
-    {scRemoteSchemas = M.insert name rmCtx rmSchemas}
+  onJust (M.lookup rscName rmSchemas) $
+    const $
+    throw500 $
+    "remote schema with name " <> rscName <<> " already found in cache"
+  let roleMap =
+        if permsEnabled
+          then M.empty
+          else foldl mkRoleMap M.empty (M.keys $ scGCtxMap sc)
+  writeSchemaCache sc { scRemoteSchemas = M.insert rscName rmCtx rmSchemas
+                      , scRemoteSchemaRoleMap = M.union rsRoleMap roleMap
+                      }
+  where
+    mkRoleMap acc role = M.insert (role, rscName) rmCtx acc
 
 delRemoteSchemaFromCache
   :: (QErrM m, CacheRWM m) => RemoteSchemaName -> m ()
