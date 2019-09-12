@@ -21,7 +21,7 @@ We will explore the fundamentals of GraphQL and the things that make GraphQL esp
 - Integrating GraphQL mutations with query variables to handle form input
 - Updating local state after a GraphQL mutation (form input) using Apollo cache
 - Optimistic updates to local state and UI after GraphQL mutations for a slick UX
-- Using subscriptions with subscription components
+- Using subscriptions with a subscriptions hook
 - Building a real-time feed with notifications using mutations and subscriptions
 
 ## What will we be building?
@@ -29,6 +29,8 @@ We will be building a realtime todo app using authenticated GraphQL APIs.
 
 Try this deployed version of the app to see what we'll be building:
 https://learn-hasura-todo-app.netlify.com/
+
+This app uses functional components with hooks usage throughout.
 
 ## Will this course teach React concepts as well?
 No, we will be simulating a scenario where we already have a GraphQL API and the basic UI of a React app built. Our task in this scenario is to integrate the GraphQL APIs into our react app to build a complete and working app.

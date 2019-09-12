@@ -1,7 +1,7 @@
 ---
 title: "Mutations & Query variables"
 metaTitle: "Integrate Mutations with Query Variables | GraphQL React Apollo Typescript Tutorial"
-metaDescription: "Integrate GraphQL Mutations to create new personal todos using the Mutation Component and handle loading and error states"
+metaDescription: "Integrate GraphQL Mutations to create new personal todos using the useMutation hook and handle loading and error states"
 ---
 
 Now, let's add the ability for our users to create new todos and add them to
