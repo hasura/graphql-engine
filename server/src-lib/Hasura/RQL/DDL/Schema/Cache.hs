@@ -163,10 +163,14 @@ buildSchemaCacheWithOptions withSetup = do
         writeSchemaCache sc { scGCtxMap = mergedGCtxMap }
 
     applyRemoteSchemaPerm rsPerm = do
+      -- ideally we need not check for feature flag here
+      -- but `runAddRemoteSchemaPermissionsP1` does not check for feature flag
+      -- as it returns non-unit and we don't want to throw from there
+      featureFlags <- askFeatureFlags
       let RemoteSchemaPermissions rsName role _ = rsPerm
           inconsObj = InconsistentMetadataObj (MORemoteSchemaObj rsName (RMOPerm role))
                       MOTRemotePerm (toJSON rsPerm)
-      withSchemaObject_ inconsObj $ do
+      withSchemaObject_ inconsObj $ when (ffRemoteSchemaPerms featureFlags) $ do
         rsCtx <- runAddRemoteSchemaPermissionsP1 rsPerm
         runAddRemoteSchemaPermissionsP2Setup rsPerm rsCtx
 

@@ -283,8 +283,8 @@ runQueryM rq =
       RQRemoveRemoteSchema q       -> runRemoveRemoteSchema q
       RQReloadRemoteSchema q       -> runReloadRemoteSchema q
 
-      RQAddRemoteSchemaPermissions q       -> runAddRemoteSchemaPermissions q
-      RQDropRemoteSchemaPermissions q       -> runDropRemoteSchemaPermissions q
+      RQAddRemoteSchemaPermissions q  -> runAddRemoteSchemaPermissions q
+      RQDropRemoteSchemaPermissions q -> runDropRemoteSchemaPermissions q
 
       RQCreateEventTrigger q       -> runCreateEventTriggerQuery q
       RQDeleteEventTrigger q       -> runDeleteEventTriggerQuery q

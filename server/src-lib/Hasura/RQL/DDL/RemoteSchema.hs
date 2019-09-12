@@ -129,13 +129,11 @@ dropRemoteSchemaDirectDeps rsn = do
     objId = SORemoteSchema rsn
 
 dropRemoteSchemaPermDep
-  :: ( CacheRWM m
-     , MonadTx m
-     )
+  :: ( MonadTx m )
   => SchemaObjId
   -> m ()
 dropRemoteSchemaPermDep = \case
-  SORemoteSchemaObj rsn (RSOPerm role) -> dropRemoteSchemaPermissionsP2 (DropRemoteSchemaPermissions rsn role)
+  SORemoteSchemaObj rsn (RSOPerm role) -> dropRemoteSchemaPermissionsFromCatalog rsn role
   _ -> throw500 "unexpected dependency found while dropping remote schema"
 
 runReloadRemoteSchema
@@ -212,15 +210,23 @@ fetchRemoteSchemas =
   where
     fromRow (n, Q.AltJ def, comm) = AddRemoteSchemaQuery n def comm
 
-runAddRemoteSchemaPermissions
-  :: ( QErrM m, UserInfoM m
-     , CacheRWM m, MonadTx m
-     )
-  => RemoteSchemaPermissions -> m EncJSON
-runAddRemoteSchemaPermissions q = do
+withRSPermFlagCheck :: (QErrM m, HasFeatureFlags m) => Bool -> m () -> m ()
+withRSPermFlagCheck strict action = do
+   featureFlags <- askFeatureFlags
+   if (ffRemoteSchemaPerms featureFlags)
+     then
+     action
+     else
+     when strict $ throw404 "remote schema permissions are not enabled"
+
+runAddRemoteSchemaPermissions ::
+     (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, HasFeatureFlags m)
+  => RemoteSchemaPermissions
+  -> m EncJSON
+runAddRemoteSchemaPermissions q = withRSPermFlagCheck True (do
   adminOnly
   newRSCtx <- runAddRemoteSchemaPermissionsP1 q
-  runAddRemoteSchemaPermissionsP2 q newRSCtx
+  runAddRemoteSchemaPermissionsP2 q newRSCtx) >>
   pure successMsg
 
 runAddRemoteSchemaPermissionsP1
@@ -228,23 +234,30 @@ runAddRemoteSchemaPermissionsP1
 runAddRemoteSchemaPermissionsP1 remoteSchemaPermission = do
   validateRemoteSchemaPermissions remoteSchemaPermission
 
-runAddRemoteSchemaPermissionsP2
-  :: (QErrM m, CacheRWM m, MonadTx m) => RemoteSchemaPermissions -> RemoteSchemaCtx -> m ()
-runAddRemoteSchemaPermissionsP2 rsPerm rsCtx = do
+runAddRemoteSchemaPermissionsP2 ::
+     (QErrM m, CacheRWM m, MonadTx m, HasFeatureFlags m)
+  => RemoteSchemaPermissions
+  -> RemoteSchemaCtx
+  -> m ()
+runAddRemoteSchemaPermissionsP2 rsPerm rsCtx = withRSPermFlagCheck False $ do
   runAddRemoteSchemaPermissionsP2Setup rsPerm rsCtx
   liftTx $ addRemoteSchemaPermissionsToCatalog rsPerm
 
-runAddRemoteSchemaPermissionsP2Setup
-  :: (QErrM m, CacheRWM m) => RemoteSchemaPermissions -> RemoteSchemaCtx -> m ()
-runAddRemoteSchemaPermissionsP2Setup (RemoteSchemaPermissions rsName role _def) rsCtx = do
-  modDepMapInCache (addToDepMap schObjId deps)
-  sc <- askSchemaCache
-  let rmSchemaWithRoles = scRemoteSchemasWithRole sc
-      newSchemasWithRoles = Map.insert (role, rsName) rsCtx rmSchemaWithRoles
-  writeSchemaCache sc { scRemoteSchemasWithRole = newSchemasWithRoles }
+runAddRemoteSchemaPermissionsP2Setup ::
+     (QErrM m, CacheRWM m, HasFeatureFlags m)
+  => RemoteSchemaPermissions
+  -> RemoteSchemaCtx
+  -> m ()
+runAddRemoteSchemaPermissionsP2Setup (RemoteSchemaPermissions rsName role _def) rsCtx =
+  withRSPermFlagCheck False $ do
+    modDepMapInCache (addToDepMap schObjId deps)
+    sc <- askSchemaCache
+    let rmSchemaWithRoles = scRemoteSchemasWithRole sc
+        newSchemasWithRoles = Map.insert (role, rsName) rsCtx rmSchemaWithRoles
+    writeSchemaCache sc {scRemoteSchemasWithRole = newSchemasWithRoles}
   where
     schObjId = SORemoteSchemaObj rsName (RSOPerm role)
-    deps = [SchemaDependency (SORemoteSchema rsName ) DRParent]
+    deps = [SchemaDependency (SORemoteSchema rsName) DRParent]
 
 validateRemoteSchemaPermissions :: (QErrM m, CacheRM m) => RemoteSchemaPermissions -> m RemoteSchemaCtx
 validateRemoteSchemaPermissions remoteSchemaPerm = do
@@ -345,17 +358,20 @@ addRemoteSchemaPermissionsToCatalog (RemoteSchemaPermissions rsName rsRole rsDef
 
 runDropRemoteSchemaPermissions
   :: ( QErrM m, UserInfoM m
-     , CacheRWM m, MonadTx m
+     , CacheRWM m, MonadTx m, HasFeatureFlags m
      )
   => DropRemoteSchemaPermissions -> m EncJSON
-runDropRemoteSchemaPermissions q = do
+runDropRemoteSchemaPermissions q = withRSPermFlagCheck True (do
   adminOnly
+  featureFlags <- askFeatureFlags
+  unless (ffRemoteSchemaPerms featureFlags) $
+    throw404 "remote schema permissions are not enabled"
   dropRemoteSchemaPermissionsP1 q
-  dropRemoteSchemaPermissionsP2 q
+  dropRemoteSchemaPermissionsP2 q) >>
   pure successMsg
 
 dropRemoteSchemaPermissionsP1 ::
-     (QErrM m, CacheRWM m, MonadTx m) => DropRemoteSchemaPermissions -> m ()
+     (QErrM m, CacheRM m, MonadTx m) => DropRemoteSchemaPermissions -> m ()
 dropRemoteSchemaPermissionsP1 (DropRemoteSchemaPermissions remoteSchema role) = do
   sc <- askSchemaCache
   let roleSchemas = scRemoteSchemasWithRole sc
@@ -364,14 +380,14 @@ dropRemoteSchemaPermissionsP1 (DropRemoteSchemaPermissions remoteSchema role) = 
     (throw400 NotFound ("role: " <> roleNameToTxt role <> " not found for remote schema"))
 
 dropRemoteSchemaPermissionsP2 ::
-     (QErrM m, CacheRWM m, MonadTx m) => DropRemoteSchemaPermissions -> m ()
-dropRemoteSchemaPermissionsP2 q@(DropRemoteSchemaPermissions rsName role)= do
+     (QErrM m, CacheRWM m, MonadTx m, HasFeatureFlags m) => DropRemoteSchemaPermissions -> m ()
+dropRemoteSchemaPermissionsP2 q@(DropRemoteSchemaPermissions rsName role) = withRSPermFlagCheck False $ do
   dropRemoteSchemaPermissionsP2Setup q
   dropRemoteSchemaPermissionsFromCatalog rsName role
 
 dropRemoteSchemaPermissionsP2Setup ::
-     (QErrM m, CacheRWM m) => DropRemoteSchemaPermissions -> m ()
-dropRemoteSchemaPermissionsP2Setup (DropRemoteSchemaPermissions rsName role) = do
+     (QErrM m, CacheRWM m, HasFeatureFlags m) => DropRemoteSchemaPermissions -> m ()
+dropRemoteSchemaPermissionsP2Setup (DropRemoteSchemaPermissions rsName role) = withRSPermFlagCheck False $ do
   sc <- askSchemaCache
   let roleSchemas = scRemoteSchemasWithRole sc
       updatedRoleSchemas = Map.delete (role, rsName) roleSchemas
