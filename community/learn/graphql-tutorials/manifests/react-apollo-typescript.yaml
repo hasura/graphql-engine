@@ -44,10 +44,10 @@ spec:
         ports:
         - containerPort: 8080
           protocol: TCP
-        readinessProbe:
-          httpGet:
-            path: /graphql/react-apollo-typescript/introduction
-            port: 8080
+        #readinessProbe:
+        #  httpGet:
+        #    path: /graphql/react-apollo-typescript/introduction
+        #    port: 8080
 ---
 apiVersion: v1
 kind: Service
