@@ -1,13 +1,13 @@
 const config = {
 	"gatsby": {
-		"pathPrefix": "/graphql/react",
+		"pathPrefix": "/graphql/react-apollo-typescript",
 		"siteUrl": "https://learn.hasura.io",
 		"gaTrackingId": "UA-59768903-1"
 	},
 	"header": {
 		"logo": "https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/logo.png",
 		"logoLink": "https://learn.hasura.io",
-		"title": "<a href='https://learn.hasura.io'>/ graphql </a><a href='https://learn.hasura.io/graphql/react'>/ react-typescript</a>",
+		"title": "<a href='https://learn.hasura.io'>/ graphql </a><a href='https://learn.hasura.io/graphql/react-apollo-typescript'>/ react-apollo-typescript</a>",
 		"githubUrl": "https://github.com/hasura/graphql-engine",
 		"helpUrl": "https://discordapp.com/invite/vBPpJkS",
 		"tweetText": "Check out this GraphQL course for React, Typescript developers by @HasuraHQ https://learn.hasura.io/graphql/react-apollo-typescript",
@@ -16,7 +16,7 @@ const config = {
 			"link": "https://hasura.io"
 		}],
 		"search": {
-			"enabled": false,
+			"enabled": true,
 			"indexName": "learn-react-apollo-typescript",
 			"algoliaAppId": process.env.GATSBY_ALGOLIA_APP_ID,
 			"algoliaSearchKey": process.env.GATSBY_ALGOLIA_SEARCH_KEY,
