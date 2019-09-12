@@ -288,7 +288,7 @@ data TableConstraints
 
 instance ToJSON TableConstraints where
   toJSON (TableConstraints pkeys uniques) =
-    toJSON $ toRaw CTPRIMARYKEY pkeys <> toRaw CTUNIQUE uniques
+    toJSON $ toRaw CtPrimaryKey pkeys <> toRaw CtUnique uniques
     where
       toRaw constraintType constraintMap = flip map (M.toList constraintMap) $
         \(name, cols) -> RawConstraint name constraintType cols
@@ -304,8 +304,8 @@ rawConstraintsToTableConstraints :: [RawConstraint] -> TableConstraints
 rawConstraintsToTableConstraints rawConstraints =
   TableConstraints (mkMap primaryKeys) (mkMap uniques)
   where
-    primaryKeys = filter ((== CTPRIMARYKEY) . _rcType) rawConstraints
-    uniques = filter ((== CTUNIQUE) . _rcType) rawConstraints
+    primaryKeys = filter ((== CtPrimaryKey) . _rcType) rawConstraints
+    uniques = filter ((== CtUnique) . _rcType) rawConstraints
     mkMap = M.fromList . map (\rc -> (_rcName rc, _rcColumns rc))
 
 data TableInfo columnInfo

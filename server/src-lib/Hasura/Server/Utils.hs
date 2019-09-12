@@ -2,7 +2,7 @@ module Hasura.Server.Utils where
 
 import           Data.Aeson
 import           Data.Char
-import           Data.List                  (find)
+import           Data.List                  (find, nub)
 import           Data.Time.Clock
 import           System.Environment
 import           System.Exit
@@ -108,9 +108,9 @@ duplicates = mapMaybe greaterThanOne . group . sort
   where
     greaterThanOne l = bool Nothing (Just $ head l) $ length l > 1
 
--- distinct items
-distinct :: (Hashable a, Eq a) => [a] -> [a]
-distinct = Set.toList . Set.fromList
+-- distinct items, an alias to `nub` function
+distinct :: Eq a => [a] -> [a]
+distinct = nub
 
 _1 :: (a, b, c) -> a
 _1 (x, _, _) = x

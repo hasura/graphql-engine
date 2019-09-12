@@ -197,28 +197,25 @@ newtype FunctionArgName =
   deriving (Show, Eq, ToJSON)
 
 data ConstraintType
-  = CTCHECK
-  | CTFOREIGNKEY
-  | CTPRIMARYKEY
-  | CTUNIQUE
-  deriving Eq
+  = CtCheck
+  | CtForeignKey
+  | CtPrimaryKey
+  | CtUnique
+  deriving (Show, Eq)
 
 constraintTyToTxt :: ConstraintType -> T.Text
 constraintTyToTxt ty = case ty of
-  CTCHECK      -> "CHECK"
-  CTFOREIGNKEY -> "FOREIGN KEY"
-  CTPRIMARYKEY -> "PRIMARY KEY"
-  CTUNIQUE     -> "UNIQUE"
-
-instance Show ConstraintType where
-  show = T.unpack . constraintTyToTxt
+  CtCheck      -> "CHECK"
+  CtForeignKey -> "FOREIGN KEY"
+  CtPrimaryKey -> "PRIMARY KEY"
+  CtUnique     -> "UNIQUE"
 
 instance FromJSON ConstraintType where
   parseJSON = withText "ConstraintType" $ \case
-    "CHECK"       -> return CTCHECK
-    "FOREIGN KEY" -> return CTFOREIGNKEY
-    "PRIMARY KEY" -> return CTPRIMARYKEY
-    "UNIQUE"      -> return CTUNIQUE
+    "CHECK"       -> return CtCheck
+    "FOREIGN KEY" -> return CtForeignKey
+    "PRIMARY KEY" -> return CtPrimaryKey
+    "UNIQUE"      -> return CtUnique
     c             -> fail $ "unexpected ConstraintType: " <> T.unpack c
 
 instance ToJSON ConstraintType where
