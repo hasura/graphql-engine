@@ -22,7 +22,7 @@ spec:
         app: typescript-react-apollo
     spec:
       containers:
-      - image: hasura/base-git-image:0.7
+      - image: hasura/typescript-react-apollo:0.1
         imagePullPolicy: IfNotPresent
         name: typescript-react-apollo
         env:
