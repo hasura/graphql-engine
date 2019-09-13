@@ -26,7 +26,7 @@
     "bs-build": "bsb -make-world",
     "precommit": "lint-staged",
     "cypress": "cypress open",
-    "test": "cypress run --spec 'cypress/integration/**/**/test.js' --key $CYPRESS_KEY --parallel --record"
+    "test": "npm run bs-build && cypress run --spec 'cypress/integration/**/**/test.js' --key $CYPRESS_KEY --parallel --record"
   },
   "lint-staged": {
     "*.js": [
