@@ -24,14 +24,14 @@ packages:
       sha256: 09bad175e8ccb1fec5ddbc94d95d18b4206ac4481cf3749e42ffbaac90bc4a37
     name: graphql-parser
     version: 0.1.0.0
-    git: https://github.com/rakeshkky/graphql-parser-hs.git
+    git: https://github.com/hasura/graphql-parser-hs.git
     pantry-tree:
       size: 1826
       sha256: 4ac0632e9f0e2c386b056ac078cf04fd4c211f683c0fee51e767da913d7d4764
-    commit: 4d1b4473a9bd36a622efd9c07e52f2e05fdc8f1a
+    commit: f3d9b645efd9adb143e2ad4c6b73bded1578a4e9
   original:
-    git: https://github.com/rakeshkky/graphql-parser-hs.git
-    commit: 4d1b4473a9bd36a622efd9c07e52f2e05fdc8f1a
+    git: https://github.com/hasura/graphql-parser-hs.git
+    commit: f3d9b645efd9adb143e2ad4c6b73bded1578a4e9
 - completed:
     cabal-file:
       size: 1253
