@@ -22,15 +22,15 @@ Unique name for event trigger.
 
 **Schema/Table**
 
-The postgres schema and table name on which event trigger needs to be created.
+The postgres schema and table name on which the event trigger needs to be created.
 
 **Trigger Operations**
 
-The table operation on which event trigger will be invoked.
+The table operation on which the event trigger will be invoked.
 
 **Webhook URL**
 
-The HTTP(s) URL which will be called with event payload on configured operation. Must be a ``POST`` handler. This URL
+The HTTP(s) URL which will be called with the event payload on configured operation. Must be a ``POST`` handler. This URL
 can be entered manually or can be picked up from an environment variable (*the environment variable needs to be set
 before using it for this configuration*).
 
@@ -42,8 +42,8 @@ Advanced Settings
 Listen columns for update
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Update operations are special because you may want to trigger webhook only if specific columns have changed in a row.
-Choose the columns here which you want the update operation to listen on.
+Update operations are special because you may want to trigger a webhook only if specific columns have changed in a row.
+Choose the columns here which you want the update operation to listen to.
 
 If a column is not selected here, then an update to that column will not trigger the webhook.
 
@@ -67,5 +67,5 @@ Each header has 3 parameters:
 1. ``Key``: Name of the header e.g. Authorization or X-My-Header.
 2. ``Type``: One of ``static`` or ``from env variable``. ``static`` means the value provided in the ``Value`` field is
    the raw value of the header. ``from env variable`` means the value provided in the ``Value`` field is the name of
-   the environment variable in the GraphQL Engine which will be resolved before sending the header.
-3. ``Value``: The value of the header. Either static value or name of an environment variable.
+   the environment variable in the GraphQL engine which will be resolved before sending the header.
+3. ``Value``: The value of the header. Either a static value or the name of an environment variable.

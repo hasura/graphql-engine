@@ -6,7 +6,7 @@ import jwt from 'jsonwebtoken';
 import TextAreaWithCopy from '../../../Common/TextAreaWithCopy/TextAreaWithCopy';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
-import ModalWrapper from '../../../Common/Modal/ModalWrapper';
+import Modal from '../../../Common/Modal/Modal';
 
 import { parseAuthHeader } from './utils';
 
@@ -613,8 +613,8 @@ class ApiRequest extends Component {
             claimData =
               claimFormat === 'stringified_json'
                 ? generateValidNameSpaceData(
-                  JSON.parse(payload[claimNameSpace])
-                )
+                    JSON.parse(payload[claimNameSpace])
+                  )
                 : generateValidNameSpaceData(payload[claimNameSpace]);
           } catch (e) {
             console.error(e);
@@ -682,18 +682,18 @@ class ApiRequest extends Component {
       };
 
       return (
-        <ModalWrapper
+        <Modal
           show={
             isAnalyzingToken &&
             tokenAnalyzeResp &&
             Object.keys(tokenAnalyzeResp).length > 0
           }
-          onHide={this.onAnalyzeBearerClose}
-          dialogClassName={styles.analyzerBearerModal}
+          onClose={this.onAnalyzeBearerClose}
+          customClass={styles.analyzerBearerModal}
           title={tokenAnalyzeError ? 'Error decoding JWT' : 'Decoded JWT'}
         >
           {getAnalyzeBearerBody()}
-        </ModalWrapper>
+        </Modal>
       );
     };
 

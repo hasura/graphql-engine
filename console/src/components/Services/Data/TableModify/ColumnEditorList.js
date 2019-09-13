@@ -21,6 +21,7 @@ import gqlPattern from '../Common/GraphQLValidation';
 import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
 
 import styles from './ModifyTable.scss';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 const ColumnEditorList = ({
   tableSchema,
@@ -83,18 +84,12 @@ const ColumnEditorList = ({
     };
 
     const onDelete = () => {
-      const isOk = confirm('Are you sure you want to delete?');
-      if (isOk) {
-        dispatch(deleteColumnSql(col, tableSchema));
-      }
-    };
-
-    const safeOnDelete = () => {
-      let confirmMessage = 'Are you sure you want to delete?';
+      let confirmMessage = `This will permanently delete the column "${colName}" from this table`;
       if (columnProperties.pkConstraint) {
         confirmMessage = DELETE_PK_WARNING;
       }
-      const isOk = window.confirm(confirmMessage);
+
+      const isOk = getConfirmation(confirmMessage, true, colName);
       if (isOk) {
         dispatch(deleteColumnSql(col, tableSchema));
       }
@@ -217,7 +212,6 @@ const ColumnEditorList = ({
           defaultOptions={getValidDefaultTypes(col.udt_name)}
           column={col}
           onSubmit={onSubmit}
-          onDelete={safeOnDelete}
           tableName={tableName}
           dispatch={dispatch}
           currentSchema={currentSchema}

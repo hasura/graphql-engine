@@ -14,6 +14,8 @@ import { setTable } from '../DataActions';
 import Button from '../../../Common/Button/Button';
 import { NotFoundError } from '../../../Error/PageNotFound';
 
+import { getConfirmation } from '../../../Common/utils/jsUtils';
+
 class ModifyView extends Component {
   componentDidMount() {
     const { dispatch } = this.props;
@@ -120,7 +122,8 @@ class ModifyView extends Component {
         color="white"
         size="sm"
         onClick={() => {
-          const isOk = confirm('Are you sure to untrack?');
+          const confirmMessage = `This will remove the view "${tableName}" from the GraphQL schema`;
+          const isOk = getConfirmation(confirmMessage);
           if (isOk) {
             dispatch(untrackTableSql(tableName));
           }
@@ -137,7 +140,8 @@ class ModifyView extends Component {
         color="red"
         size="sm"
         onClick={() => {
-          const isOk = confirm('Are you sure');
+          const confirmMessage = `This will permanently delete the view "${tableName}" from the database`;
+          const isOk = getConfirmation(confirmMessage, true, tableName);
           if (isOk) {
             dispatch(deleteViewSql(tableName));
           }

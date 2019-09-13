@@ -3,10 +3,11 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import Globals from 'Globals';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 class ApiCollectionPanel extends Component {
   onClearHistoryClicked = () => {
-    const isOk = window.confirm(`Are you sure you want to delete history?`);
+    const isOk = getConfirmation();
     if (isOk) {
       this.props.clearHistoryCallback();
     }

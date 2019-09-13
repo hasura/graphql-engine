@@ -84,7 +84,6 @@ const RawSQL = ({
       if (!isMigration && globals.consoleMode === 'cli') {
         // if migration is not checked, check if is schema modification
         if (isSchemaModification(sql)) {
-          // const confirmation = window.confirm('Your SQL Statement has a schema modifying command. Are you sure its not a migration?');
           dispatch(modalOpen());
           const confirmation = false;
           if (confirmation) {
@@ -302,19 +301,21 @@ const RawSQL = ({
   const getMetadataCascadeSection = () => {
     return (
       <div className={styles.add_mar_top_small}>
-        <input
-          checked={isCascadeChecked}
-          className={styles.add_mar_right_small}
-          id="cascade-checkbox"
-          type="checkbox"
-          onChange={() => {
-            dispatch({
-              type: SET_CASCADE_CHECKED,
-              data: !isCascadeChecked,
-            });
-          }}
-        />
-        Cascade metadata
+        <label>
+          <input
+            checked={isCascadeChecked}
+            className={styles.add_mar_right_small}
+            id="cascade-checkbox"
+            type="checkbox"
+            onChange={() => {
+              dispatch({
+                type: SET_CASCADE_CHECKED,
+                data: !isCascadeChecked,
+              });
+            }}
+          />
+          Cascade metadata
+        </label>
         <OverlayTrigger placement="right" overlay={cascadeTip}>
           <i
             className={`${styles.add_mar_left_small} fa fa-info-circle`}
@@ -369,15 +370,17 @@ const RawSQL = ({
 
       return (
         <div>
-          <input
-            checked={isMigrationChecked}
-            className={styles.add_mar_right_small}
-            id="migration-checkbox"
-            type="checkbox"
-            onChange={dispatchIsMigration}
-            data-test="raw-sql-migration-check"
-          />
-          This is a migration
+          <label>
+            <input
+              checked={isMigrationChecked}
+              className={styles.add_mar_right_small}
+              id="migration-checkbox"
+              type="checkbox"
+              onChange={dispatchIsMigration}
+              data-test="raw-sql-migration-check"
+            />
+            This is a migration
+          </label>
           <OverlayTrigger placement="right" overlay={migrationTip}>
             <i
               className={`${styles.add_mar_left_small} fa fa-info-circle`}
