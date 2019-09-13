@@ -121,9 +121,9 @@ follows:
 
 To define a one-to-one object relationship manually, we have to specify ``after_parent``
 for ``insertion_order`` in ``manual_configuration``.
-``insertion_order`` is the order in which the object relationship inserted
-in a nested insert in respect of the parent. It expects either ``before_parent`` or
-``after_parent`` string value. It is optional, but by default it is ``before_parent``,
+``insertion_order`` is the order in which the object relationship is inserted
+in a nested insert in respect of the parent. It expects either the ``before_parent`` or
+the ``after_parent`` string value. It is optional, but by default it is ``before_parent``,
 which defines a many-to-one relationship.
 
 .. code-block:: http
