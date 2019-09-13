@@ -68,10 +68,11 @@ addRemoteSchemaP2Setup ::
 addRemoteSchemaP2Setup q = do
   httpMgr <- askHttpManager
   remotePermsEnabled <- ffRemoteSchemaPerms <$> askFeatureFlags
+  let remotePerms = if remotePermsEnabled then Just Map.empty else Nothing
   rsi <- validateRemoteSchemaDef def
   gCtx <- fetchRemoteSchema httpMgr name rsi
-  let rsCtx = RemoteSchemaCtx name gCtx rsi
-  addRemoteSchemaToCache rsCtx remotePermsEnabled
+  let rsCtx = RemoteSchemaCtx name gCtx rsi remotePerms
+  addRemoteSchemaToCache rsCtx
   return rsCtx
   where
     AddRemoteSchemaQuery name def _ = q
@@ -150,13 +151,14 @@ runReloadRemoteSchema (RemoteSchemaNameQuery name) = do
   adminOnly
   rmSchemas <- scRemoteSchemas <$> askSchemaCache
   remotePermsEnabled <- ffRemoteSchemaPerms <$> askFeatureFlags
+  let remotePerms = if remotePermsEnabled then Just Map.empty else Nothing
   rsi <- fmap rscInfo $ onNothing (Map.lookup name rmSchemas) $
          throw400 NotExists $ "remote schema with name "
          <> name <<> " does not exist"
   httpMgr <- askHttpManager
   gCtx <- fetchRemoteSchema httpMgr name rsi
   delRemoteSchemaFromCache name
-  addRemoteSchemaToCache (RemoteSchemaCtx name gCtx rsi) remotePermsEnabled
+  addRemoteSchemaToCache $ RemoteSchemaCtx name gCtx rsi remotePerms
   return successMsg
 
 -- | build GraphQL schema
@@ -168,8 +170,11 @@ buildGCtxMap = do
   sc <- askSchemaCache
   let gCtxMap = scGCtxMap sc
   -- add remote schemas
-  mergedGCtxMap <- mergeSchemas (scRemoteSchemas sc) (scRemoteSchemaRoleMap sc) gCtxMap
-  writeSchemaCache sc { scGCtxMap = mergedGCtxMap }
+  mergedGCtxMap <- mergeRemoteSchemas (scRemoteSchemas sc) gCtxMap
+  allRemotesGCtx <- mkAllRemoteGCtx (scRemoteSchemas sc)
+  writeSchemaCache sc { scGCtxMap = mergedGCtxMap
+                      , scAllRemoteGCtx = allRemotesGCtx
+                      }
 
 mkCacheForRemoteSchema
   :: (QErrM m) => SchemaCache -> RemoteSchemaName -> m SchemaCache
@@ -177,14 +182,10 @@ mkCacheForRemoteSchema sc rsName = do
   let remoteSchemaMap =
         maybe Map.empty (Map.singleton rsName) $
         Map.lookup rsName (scRemoteSchemas sc)
-      remoteSchemaRoleMap =
-        flip Map.filterWithKey (scRemoteSchemaRoleMap sc) $ \(_, name) _ ->
-          name == rsName
   mergedGCtxMap <-
-    mergeSchemas remoteSchemaMap remoteSchemaRoleMap Map.empty
+    mergeRemoteSchemas remoteSchemaMap Map.empty
   pure emptySchemaCache
     { scRemoteSchemas = remoteSchemaMap
-    , scRemoteSchemaRoleMap = remoteSchemaRoleMap
     , scGCtxMap = mergedGCtxMap
     }
 
@@ -231,41 +232,52 @@ runAddRemoteSchemaPermissions ::
   -> m EncJSON
 runAddRemoteSchemaPermissions q = withRSPermFlagCheck True (do
   adminOnly
-  newRSCtx <- runAddRemoteSchemaPermissionsP1 q
-  runAddRemoteSchemaPermissionsP2 q newRSCtx) >>
+  newRGCtx <- runAddRemoteSchemaPermissionsP1 q
+  runAddRemoteSchemaPermissionsP2 q newRGCtx) >>
   pure successMsg
 
 runAddRemoteSchemaPermissionsP1
-  :: (QErrM m, CacheRM m) => RemoteSchemaPermissions -> m RemoteSchemaCtx
+  :: (QErrM m, CacheRM m) => RemoteSchemaPermissions -> m GC.RemoteGCtx
 runAddRemoteSchemaPermissionsP1 remoteSchemaPermission = do
   validateRemoteSchemaPermissions remoteSchemaPermission
 
 runAddRemoteSchemaPermissionsP2 ::
      (QErrM m, CacheRWM m, MonadTx m, HasFeatureFlags m)
   => RemoteSchemaPermissions
-  -> RemoteSchemaCtx
+  -> GC.RemoteGCtx
   -> m ()
-runAddRemoteSchemaPermissionsP2 rsPerm rsCtx = withRSPermFlagCheck False $ do
-  runAddRemoteSchemaPermissionsP2Setup rsPerm rsCtx
+runAddRemoteSchemaPermissionsP2 rsPerm rGCtx = withRSPermFlagCheck False $ do
+  runAddRemoteSchemaPermissionsP2Setup rsPerm rGCtx
   liftTx $ addRemoteSchemaPermissionsToCatalog rsPerm
 
 runAddRemoteSchemaPermissionsP2Setup ::
      (QErrM m, CacheRWM m, HasFeatureFlags m)
   => RemoteSchemaPermissions
-  -> RemoteSchemaCtx
+  -> GC.RemoteGCtx
   -> m ()
-runAddRemoteSchemaPermissionsP2Setup (RemoteSchemaPermissions rsName role _def) rsCtx =
+runAddRemoteSchemaPermissionsP2Setup (RemoteSchemaPermissions rsName role _def) rGCtx =
   withRSPermFlagCheck False $ do
-    modDepMapInCache (addToDepMap schObjId deps)
     sc <- askSchemaCache
-    let rsRoleMap = scRemoteSchemaRoleMap sc
-        rsRoleMapNew = Map.insert (role, rsName) rsCtx rsRoleMap
-    writeSchemaCache sc {scRemoteSchemaRoleMap = rsRoleMapNew}
+    let remoteSchemas = scRemoteSchemas sc
+    rsCtx <-
+      onNothing
+        (Map.lookup rsName remoteSchemas)
+        (throw400
+           NotFound
+           ("remote schema " <> remoteSchemaNameToText rsName <> " not found"))
+    newPerms <-
+      case rscPerms rsCtx of
+        Nothing      -> throw500 ("remote schema permissions are disabled")
+        Just roleMap -> pure $ Map.insert role rGCtx roleMap
+    let newRSCtx = rsCtx {rscPerms = pure newPerms}
+    writeSchemaCache
+      sc {scRemoteSchemas = Map.insert rsName newRSCtx remoteSchemas}
+    modDepMapInCache (addToDepMap schObjId deps)
   where
     schObjId = SORemoteSchemaObj rsName (RSOPerm role)
     deps = [SchemaDependency (SORemoteSchema rsName) DRParent]
 
-validateRemoteSchemaPermissions :: (QErrM m, CacheRM m) => RemoteSchemaPermissions -> m RemoteSchemaCtx
+validateRemoteSchemaPermissions :: (QErrM m, CacheRM m) => RemoteSchemaPermissions -> m GC.RemoteGCtx
 validateRemoteSchemaPermissions remoteSchemaPerm = do
   sc <- askSchemaCache
   case Map.lookup
@@ -276,8 +288,7 @@ validateRemoteSchemaPermissions remoteSchemaPerm = do
       newTypes <- do
         checkUniqueTypes (rsPermDefinition remoteSchemaPerm)
         validateTypes (rsPermDefinition remoteSchemaPerm) (GC._rgTypes $ rscGCtx remoteSchemaCtx)
-      newGCtx <- updateRemoteGCtxFromTypes newTypes (rscGCtx remoteSchemaCtx)
-      pure $ remoteSchemaCtx { rscGCtx = newGCtx }
+      updateRemoteGCtxFromTypes newTypes (rscGCtx remoteSchemaCtx)
 
 checkUniqueTypes :: (QErrM m) => [RemoteTypePerm] -> m ()
 checkUniqueTypes typePerms = do
@@ -378,12 +389,25 @@ runDropRemoteSchemaPermissions q = withRSPermFlagCheck True (do
 
 dropRemoteSchemaPermissionsP1 ::
      (QErrM m, CacheRM m, MonadTx m) => DropRemoteSchemaPermissions -> m ()
-dropRemoteSchemaPermissionsP1 (DropRemoteSchemaPermissions remoteSchema role) = do
+dropRemoteSchemaPermissionsP1 (DropRemoteSchemaPermissions rsName role) = do
   sc <- askSchemaCache
-  let roleSchemas = scRemoteSchemaRoleMap sc
-  void $ onNothing
-    (Map.lookup (role, remoteSchema) roleSchemas)
-    (throw400 NotFound ("role: " <> roleNameToTxt role <> " not found for remote schema"))
+  let remoteSchemas = scRemoteSchemas sc
+  rsCtx <-
+    onNothing
+      (Map.lookup rsName remoteSchemas)
+      (throw400
+         NotFound
+         ("remote schema " <> remoteSchemaNameToText rsName <> " not found"))
+  case rscPerms rsCtx of
+    Nothing -> throw400 Disabled ("remote schema permissions are disabled")
+    Just roleMap ->
+      void $
+      onNothing
+        (Map.lookup role roleMap)
+        (throw400
+           NotFound
+           ("role: " <> roleNameToTxt role <> " not found for remote schema " <>
+            remoteSchemaNameToText rsName))
 
 dropRemoteSchemaPermissionsP2 ::
      (QErrM m, CacheRWM m, MonadTx m, HasFeatureFlags m) => DropRemoteSchemaPermissions -> m ()
@@ -395,9 +419,18 @@ dropRemoteSchemaPermissionsP2Setup ::
      (QErrM m, CacheRWM m, HasFeatureFlags m) => DropRemoteSchemaPermissions -> m ()
 dropRemoteSchemaPermissionsP2Setup (DropRemoteSchemaPermissions rsName role) = withRSPermFlagCheck False $ do
   sc <- askSchemaCache
-  let roleSchemas = scRemoteSchemaRoleMap sc
-      updatedRoleMap = Map.delete (role, rsName) roleSchemas
-  writeSchemaCache sc { scRemoteSchemaRoleMap = updatedRoleMap }
+  let remoteSchemas = scRemoteSchemas sc
+  rsCtx <-
+    onNothing
+      (Map.lookup rsName remoteSchemas)
+      (throw400
+         NotFound
+         ("remote schema " <> remoteSchemaNameToText rsName <> " not found"))
+  newPerms <- case rscPerms rsCtx of
+    Nothing      -> throw500 ("remote schema permissions are disabled")
+    Just roleMap -> pure $ Map.delete role roleMap
+  let newRSCtx = rsCtx { rscPerms = pure newPerms }
+  writeSchemaCache sc { scRemoteSchemas = Map.insert rsName newRSCtx remoteSchemas}
 
 dropRemoteSchemaPermissionsFromCatalog ::
      (MonadTx m) => RemoteSchemaName -> RoleName -> m ()

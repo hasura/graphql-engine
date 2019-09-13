@@ -1,7 +1,7 @@
 module Hasura.RQL.Types.RemoteSchema where
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Common       (NonEmptyText)
+import           Hasura.RQL.Types.Common       (NonEmptyText, unNonEmptyText)
 import           Language.Haskell.TH.Syntax    (Lift)
 import           System.Environment            (lookupEnv)
 
@@ -26,6 +26,9 @@ newtype RemoteSchemaName
   deriving ( Show, Eq, Lift, Hashable, J.ToJSON, J.ToJSONKey
            , J.FromJSON, Q.ToPrepArg, Q.FromCol, DQuote
            )
+
+remoteSchemaNameToText :: RemoteSchemaName -> Text
+remoteSchemaNameToText = unNonEmptyText . unRemoteSchemaName
 
 data RemoteSchemaInfo
   = RemoteSchemaInfo

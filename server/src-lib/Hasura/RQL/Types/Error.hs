@@ -87,6 +87,7 @@ data Code
   | RemoteSchemaConflicts
   -- Websocket/Subscription errors
   | StartFailed
+  | Disabled
   deriving (Eq)
 
 instance Show Code where
@@ -125,6 +126,7 @@ instance Show Code where
     RemoteSchemaError     -> "remote-schema-error"
     RemoteSchemaConflicts -> "remote-schema-conflicts"
     StartFailed           -> "start-failed"
+    Disabled              -> "disabled"
 
 data QErr
   = QErr
