@@ -216,12 +216,23 @@ export const boolOperators = Object.keys(boolOperatorsInfo);
 
 const columnOperators = Object.keys(columnOperatorsInfo);
 
-export const allOperators = boolOperators.concat(columnOperators);
+export const existsOperator = '_exists';
+
+export const allOperators = boolOperators
+  .concat(columnOperators)
+  .concat([existsOperator]);
+
+export const TABLE_KEY = '_table';
+export const WHERE_KEY = '_where';
 
 /* Util functions */
 
 export const isBoolOperator = operator => {
   return boolOperators.includes(operator);
+};
+
+export const isExistsOperator = operator => {
+  return operator === existsOperator;
 };
 
 export const isArrayBoolOperator = operator => {
