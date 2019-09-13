@@ -13,6 +13,7 @@ import {
   RESET,
   setUniqueKeys,
   toggleTableAsEnum,
+  SUPPORT_ALIASING
 } from '../TableModify/ModifyActions';
 import {
   setTable,
@@ -28,6 +29,7 @@ import EnumsSection, {
   EnumTableModifyWarning,
 } from '../Common/ReusableComponents/EnumsSection';
 import ForeignKeyEditor from './ForeignKeyEditor';
+import { make as AliasEditor } from './AliasEditor.bs';
 import UniqueKeyEditor from './UniqueKeyEditor';
 import TriggerEditorList from './TriggerEditorList';
 import styles from './ModifyTable.scss';
@@ -64,6 +66,7 @@ class ModifyTable extends React.Component {
       columnDefaultFunctions,
       schemaList,
       tableEnum,
+      aliasEdit
     } = this.props;
 
     const dataTypeIndexMap = getAllDataTypeMap(dataTypes);
@@ -134,6 +137,23 @@ class ModifyTable extends React.Component {
       );
     };
 
+    const getRootFieldAliasesSection = () => {
+      if (!SUPPORT_ALIASING) return null;
+      return (
+        <AliasEditor
+          tableName={tableName}
+          existingAliases={tableSchema.configuration.custom_root_fields}
+          dispatch={dispatch}
+          select={aliasEdit.select || ''}
+          selectByPk={aliasEdit.select_by_pk || ''}
+          selectAgg={aliasEdit.select_aggregate || ''}
+          insert={aliasEdit.insert || ''}
+          update={aliasEdit.update || ''}
+          delete={aliasEdit.delete || ''}
+        />
+      );
+    };
+
     // if (tableSchema.primary_key.columns > 0) {}
     return (
       <div className={`${styles.container} container-fluid`}>
@@ -179,6 +199,8 @@ class ModifyTable extends React.Component {
               columnDefaultFunctions={columnDefaultFunctions}
             />
             <hr />
+            <h4 className={styles.subheading_text}>GraphQL Aliases</h4>
+            {getRootFieldAliasesSection()}
             <h4 className={styles.subheading_text}>Primary Key</h4>
             <PrimaryKeyEditor
               tableSchema={tableSchema}

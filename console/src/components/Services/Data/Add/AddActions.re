@@ -39,7 +39,7 @@ let setRootFieldAlias: (string, string) => _SET_ROOT_FIELD_ALIAS_ACTION
 let setDefaultAliases = (tableName, dispatch) => {
   Array.iteri(
     (_, rootFieldType) => {
-      if (Js.String.includes(rootFieldType, "select")) {
+      if (Js.String.includes("select", rootFieldType)) {
         dispatch(
           setRootFieldAlias(rootFieldType, Js.String.replace("select", tableName, rootFieldType))
         )

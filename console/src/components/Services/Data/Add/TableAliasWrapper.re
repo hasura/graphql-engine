@@ -70,6 +70,7 @@ let make = (
           onChange("delete", ReactEvent.Form.target(e)##value);
         }
       }
+      expanded=false
     />
   </div>
 

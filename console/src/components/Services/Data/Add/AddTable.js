@@ -1,8 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Helmet from 'react-helmet';
-import globals from '../../../../Globals';
-import { GRAPHQL_ALIASING_SUPPORT } from '../../../../helpers/versionUtils';
+import { SUPPORT_ALIASING } from './AddActions';
 
 import Button from '../../../Common/Button/Button';
 import PrimaryKeySelector from '../Common/ReusableComponents/PrimaryKeySelector';
@@ -61,10 +60,6 @@ import styles from '../../../Common/TableCommon/Table.scss';
  *  4) Comment Input
  *  5) Add Table button
  * */
-
-const SUPPORT_ALIASING =
-  globals.featuresCompatibility &&
-  globals.featuresCompatibility[GRAPHQL_ALIASING_SUPPORT];
 
 class AddTable extends Component {
   constructor(props) {

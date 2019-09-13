@@ -23,13 +23,30 @@ let make = (
   ~update: string,
   ~updateOnChange,
   ~delete: string,
-  ~deleteOnChange
+  ~deleteOnChange,
+  ~expanded: bool
 ) => {
 
   let (state, dispatch) = React.useReducer((curState, action) => switch(action) {
     | SetQueryExpanded(expanded) => {{ ...curState, queryExpanded: expanded }};
     | SetMutationExpanded(expanded) => {{ ...curState, mutationExpanded: expanded }}
-  }, { queryExpanded: false, mutationExpanded: false });
+  }, { queryExpanded: expanded, mutationExpanded: expanded });
+
+  let getRow = (label, value, onChange) => {
+    <div className={getClassName("display_flex", None) ++ " row " ++ getClassName("add_mar_bottom_small", None)}>
+      <div className={getClassName("add_mar_right", None) ++ " col-md-3"}>
+        {ReasonReact.string(label)}
+      </div>
+      <div className={"col-md-3"}>
+        <input
+          type_="text"
+          value=value
+          className="form-control"
+          onChange={onChange}
+        />
+      </div>
+    </div>
+  };
 
   let getQuerySection = () => {
     let toggleQueryExpanded = (_) => dispatch(SetQueryExpanded(!state.queryExpanded));
@@ -48,45 +65,9 @@ let make = (
         ?
         (
           <div className={getClassName("add_pad_left", None) ++ " " ++ getClassName("add_pad_right", None)}>
-            <div className={getClassName("display_flex", None) ++ " row " ++ getClassName("add_mar_bottom_small", None)}>
-              <div className={getClassName("add_mar_right", None) ++ " col-md-3"}>
-                {ReasonReact.string("Select")}
-              </div>
-              <div className={"col-md-2"}>
-                <input
-                  type_="text"
-                  value=select
-                  className="form-control"
-                  onChange={selectOnChange}
-                />
-              </div>
-            </div>
-            <div className={getClassName("display_flex", None) ++ " row " ++ getClassName("add_mar_bottom_small", None)}>
-              <div className={getClassName("add_mar_right", None) ++ " col-md-3"}>
-                {ReasonReact.string("Select by PK")}
-              </div>
-              <div className={"col-md-2"}>
-                <input
-                  type_="text"
-                  value=selectByPk
-                  className="form-control"
-                  onChange={selectByPkOnChange}
-                />
-              </div>
-            </div>
-            <div className={getClassName("display_flex", None) ++ " row " ++ getClassName("add_mar_bottom_small", None)}>
-              <div className={getClassName("add_mar_right", None) ++ " col-md-3"}>
-                {ReasonReact.string("Select Aggregate")}
-              </div>
-              <div className={"col-md-2"}>
-                <input
-                  type_="text"
-                  value=selectAgg
-                  className="form-control"
-                  onChange={selectAggOnChange}
-                />
-              </div>
-            </div>
+            {getRow("Select", select, selectOnChange)}
+            {getRow("Select by PK", selectByPk, selectByPkOnChange)}
+            {getRow("Select Aggregate", selectAgg, selectAggOnChange)}
           </div>
         )
         :
@@ -112,45 +93,9 @@ let make = (
         ?
         (
           <div className={getClassName("add_pad_left", None) ++ " " ++ getClassName("add_pad_right", None)}>
-            <div className={getClassName("display_flex", None) ++ " row " ++ getClassName("add_mar_bottom_small", None)}>
-              <div className={getClassName("add_mar_right", None) ++ " col-md-3"}>
-                {ReasonReact.string("Insert")}
-              </div>
-              <div className={"col-md-2"}>
-                <input
-                  type_="text"
-                  value=insert
-                  className="form-control"
-                  onChange={insertOnChange}
-                />
-              </div>
-            </div>
-            <div className={getClassName("display_flex", None) ++ " row " ++ getClassName("add_mar_bottom_small", None)}>
-              <div className={getClassName("add_mar_right", None) ++ " col-md-3"}>
-                {ReasonReact.string("Update")}
-              </div>
-              <div className={"col-md-2"}>
-                <input
-                  type_="text"
-                  value=update
-                  className="form-control"
-                  onChange={updateOnChange}
-                />
-              </div>
-            </div>
-            <div className={getClassName("display_flex", None) ++ " row " ++ getClassName("add_mar_bottom_small", None)}>
-              <div className={getClassName("add_mar_right", None) ++ " col-md-3"}>
-                {ReasonReact.string("Delete")}
-              </div>
-              <div className={"col-md-2"}>
-                <input
-                  type_="text"
-                  value=delete
-                  className="form-control"
-                  onChange={deleteOnChange}
-                />
-              </div>
-            </div>
+            {getRow("Insert", insert, insertOnChange)}
+            {getRow("Update", update, updateOnChange)}
+            {getRow("Delete", delete, deleteOnChange)}
           </div>
         )
         :

@@ -94,6 +94,14 @@ const defaultModifyState = {
     loading: false,
   },
   columnEdit: {},
+  aliasEdit: {
+    select: '',
+    select_by_pk: '',
+    select_aggregate: '',
+    insert: '',
+    update: '',
+    delete: '',
+  },
   pkEdit: [''],
   pkModify: [''],
   fkModify: [

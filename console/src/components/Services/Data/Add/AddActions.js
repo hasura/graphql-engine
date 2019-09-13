@@ -17,7 +17,7 @@ import { sqlEscapeText } from '../../../Common/utils/sqlUtils';
 
 import { _SET_COLUMN_ALIAS, _SET_ROOT_FIELD_ALIAS } from './AddActions.bs';
 
-const SUPPORT_ALIASING =
+export const SUPPORT_ALIASING =
   globals.featuresCompatibility &&
   globals.featuresCompatibility[GRAPHQL_ALIASING_SUPPORT];
 
@@ -343,6 +343,12 @@ const createTableSql = () => {
         .forEach(c => {
           columnAliases[c.name] = c.alias;
         });
+      const rootFieldAliases = {};
+      Object.keys(state.aliases).forEach(a => {
+        if (state.aliases[a]) {
+          rootFieldAliases[a] = state.aliases[a];
+        }
+      });
       upQueryArgs.push({
         type: 'track_table',
         version: 2,
@@ -350,7 +356,7 @@ const createTableSql = () => {
           table: tableName,
           schema: currentSchema,
           configuration: {
-            custom_root_fields: state.aliases,
+            custom_root_fields: rootFieldAliases,
             custom_column_names: columnAliases,
           },
         },

@@ -8,10 +8,16 @@ FLG -nostdlib -color always
 FLG -w -30-40+6+7+27+32..39+44+45+101
 S /home/wawhal/oss/graphql/graphql-engine/console/node_modules/reason-react/lib/ocaml
 B /home/wawhal/oss/graphql/graphql-engine/console/node_modules/reason-react/lib/ocaml
+S src/components/Services/Data/Common
+B lib/bs/src/components/Services/Data/Common
 S src/components/Services/Data/Common/ReusableComponents
 B lib/bs/src/components/Services/Data/Common/ReusableComponents
+S src/components/Services/Data/TableModify
+B lib/bs/src/components/Services/Data/TableModify
 S src/components/Services/Data/Add
 B lib/bs/src/components/Services/Data/Add
 S src/components/Common
 B lib/bs/src/components/Common
+S src/components/Common/Layout/ExpandableEditor
+B lib/bs/src/components/Common/Layout/ExpandableEditor
 ####BSB GENERATED: NO EDIT}

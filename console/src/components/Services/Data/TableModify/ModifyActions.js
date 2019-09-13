@@ -37,6 +37,13 @@ import {
   getDropPkSql,
 } from './utils';
 
+import globals from '../../../../Globals';
+import { GRAPHQL_ALIASING_SUPPORT } from '../../../../helpers/versionUtils';
+
+export const SUPPORT_ALIASING =
+  globals.featuresCompatibility &&
+  globals.featuresCompatibility[GRAPHQL_ALIASING_SUPPORT];
+
 const DELETE_PK_WARNING =
   'Without a primary key there is no way to uniquely identify a row of a table';
 
