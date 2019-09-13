@@ -9,8 +9,10 @@ their task list.
 
 We will learn the following concepts:
 
+- The `Insert Todo` mutation 
 - Creating a GraphQL mutation
 - Using the `useMutation` hook
 - Capturing loading/finished/error states
+- Mapping types
 
 Let's get started!

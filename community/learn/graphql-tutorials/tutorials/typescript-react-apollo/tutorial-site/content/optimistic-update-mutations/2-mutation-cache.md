@@ -56,7 +56,7 @@ And now, let's use the hook inside the TodoItem component.
 
 ```
 
-We already have the onChange handler toggleTodo for the input. Let's update the function to trigger the mutation.
+We already have the onChange handler toggleTodo for the input. Let's update the function to trigger the mutation. As we saw earlier, the `mutate` function takes optional arguments like variables and update. In addition, it also accepts `optimisticResponse` to update the UI before the actual result arrives.
 
 ```javascript
   const toggleTodo = () => {

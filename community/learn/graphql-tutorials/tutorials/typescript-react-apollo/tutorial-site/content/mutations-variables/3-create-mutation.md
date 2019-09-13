@@ -24,9 +24,7 @@ We are importing the `useMutation` hook from `@apollo/react-hooks` and passing i
 
 In the `useMutation` hook defined above, the first property of the result object is the mutate function; (addTodo) in this case. Read more about the mutate function [here](https://www.apollographql.com/docs/react/essentials/mutations.html)
 
-The mutate function optionally takes variables, optimisticResponse, refetchQueries, and update; You are going to make use of the `update` function later.
-
-We'll get back to what each of these properties do a little later below. 
+The mutate function optionally takes variables and update among other arguments; You are going to make use of the `update` function later.
 
 Now let's handle the form submit to invoke the mutation.
 

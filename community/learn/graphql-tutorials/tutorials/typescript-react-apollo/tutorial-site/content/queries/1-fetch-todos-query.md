@@ -16,10 +16,15 @@ query getMyTodos {
 }
 ```
 
-[Try](https://learn.hasura.io/graphql/graphiql) this query in GraphiQL against the application database to see what the response looks like.
+[Try this query in GraphiQL](https://learn.hasura.io/graphql/graphiql) against the application database to see what the response looks like.
 
 **Note**: You need to pass the `Authorization: Bearer <token>` header before querying to get the results. The token is auto-filled in the UI after logging in via Auth0.
 
 This query is the actual graphql query that we will be using in our react app and hence test this out to make sure it works as expected.
+
+What does this query do? 
+------------------------
+The query fetches `todos` with a simple condition; `is_public` must be false. We sort the todos descending by its `created_at` time according to the schema. We specify which fields we need for the todos node.
+
 
 Let's now integrate this graphql query into our react app.

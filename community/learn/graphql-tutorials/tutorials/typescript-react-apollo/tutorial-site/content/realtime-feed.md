@@ -7,4 +7,6 @@ metaDescription: "You will learn how to make a realtime feed that captures publi
 In this section, you will:
 
 - Make a realtime feed that captures public todos added by other people
+- Using subscriptions as a notification system
 - Complete the functionality for the rest of the app
+- Mapping types

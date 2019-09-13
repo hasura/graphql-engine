@@ -1,10 +1,10 @@
 import * as React from 'react';
 import gql from 'graphql-tag';
-import { useMutation } from '@apollo/react-hooks';
+import { useMutation } from "@apollo/react-hooks";
 import { GET_MY_TODOS } from './TodoPrivateList';
 import { GetMyTodosQuery, Insert_TodosMutation, Insert_TodosMutationVariables } from '../../generated/graphql';
 
- const ADD_TODO = gql `
+const ADD_TODO = gql `
   mutation insert_todos($todo: String!, $isPublic: Boolean!) {
     insert_todos(objects: {title: $todo, is_public: $isPublic}) {
       affected_rows
@@ -15,7 +15,7 @@ import { GetMyTodosQuery, Insert_TodosMutation, Insert_TodosMutationVariables } 
       }
     }
   }
- `;
+`;
 
 const TodoInput = ({isPublic=false}) => {
   const [todoInput, setTodoInput] = React.useState('');
@@ -23,10 +23,10 @@ const TodoInput = ({isPublic=false}) => {
   return (
     <form className="formInput" onSubmit={(e) => {
       e.preventDefault();
-      addTodo(
-        {
-          variables: {todo: todoInput, isPublic },
-          update(cache, { data }) {
+      // add todo
+      addTodo({
+        variables: {todo: todoInput, isPublic },
+        update(cache, { data }) {
             // do not update cache for public feed
             if (isPublic || !data) {
               return null;
@@ -40,8 +40,7 @@ const TodoInput = ({isPublic=false}) => {
               data: {todos: [newTodo, ...existingTodos]}
             });
           }
-        }
-      );
+      });
       setTodoInput('');
     }}>
       <input

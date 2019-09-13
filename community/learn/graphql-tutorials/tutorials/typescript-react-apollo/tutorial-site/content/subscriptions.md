@@ -23,7 +23,7 @@ We need to tell the server that the user who is logged in is online. We have to 
 
 We have to make this change to see yourself online first. Remember that you are already logged in, registered your data in the server, but not updated your `last_seen` value.?
 
-The goal is to update every few seconds from the client that you are online. Ideally you should do this after you have successfully authenticated with Auth0. So let's update some code to handle this. 
+The goal is to update every few seconds from the client that you are online. Ideally you should do this after you have successfully authenticated the user. So let's update some code to handle this. 
 
 Open `src/components/OnlineUsers/OnlineUsersWrapper.tsx` and add the following imports.
 

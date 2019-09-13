@@ -1,9 +1,7 @@
 import React, { useEffect } from "react";
 import gql from "graphql-tag";
 import { useMutation, useSubscription } from "@apollo/react-hooks";
-
 import { UpdateLastSeenMutation, GetOnlineUsersSubscription, Online_Users } from '../../generated/graphql';
-
 import OnlineUser from "./OnlineUser";
 
 const UPDATE_LASTSEEN_MUTATION=gql`

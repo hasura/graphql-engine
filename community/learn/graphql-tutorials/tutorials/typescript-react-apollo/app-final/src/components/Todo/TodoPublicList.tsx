@@ -1,9 +1,9 @@
-import React, { Fragment, useState, useEffect, useRef } from "react";
+import React, { Fragment, useState, useRef, useEffect } from "react";
 import { useSubscription, useApolloClient } from "@apollo/react-hooks";
 import gql from "graphql-tag";
 import TaskItem from "./TaskItem";
 
-import { 
+import {
   GetOldPublicTodosQuery,
   GetOldPublicTodosQueryVariables,
   GetNewPublicTodosQuery,
@@ -13,7 +13,7 @@ import {
 } from '../../generated/graphql';
 
 type publicListProps = {
-  latestTodo: Partial<Todos> | null
+  latestTodo?: Partial<Todos> | null
 }
 
 const TodoPublicList = (props: publicListProps) => {
@@ -42,6 +42,9 @@ const TodoPublicList = (props: publicListProps) => {
           id
           title
           created_at
+          user {
+            name
+          }
         }
       }
     `;
@@ -50,7 +53,6 @@ const TodoPublicList = (props: publicListProps) => {
       query: GET_OLD_PUBLIC_TODOS,
       variables: { oldestTodoId: oldestTodoId.current }
     });
-
     if (data.todos && data.todos.length) {
       setTodos(prevTodos => {
         if(prevTodos) {
@@ -166,9 +168,6 @@ const TodoPublicListSubscription = () => {
       ) {
         id
         created_at
-        user {
-          name
-        }
       }
     }
   `;

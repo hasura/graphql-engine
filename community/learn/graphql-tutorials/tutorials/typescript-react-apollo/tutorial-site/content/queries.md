@@ -7,7 +7,9 @@ metaDescription: "Integrate GraphQL Queries in React app to fetch personal todo 
 Let's integrate a GraphQL query to show the user their personal task list.
 We will learn the following concepts:
 
-- Fetching data with queries using `useQuery` hook
-- Handle loading/error state
+- The `Fetch Todos` Query
+- Using the query to load data using `useQuery` hooks
+- Handle loading/error states
+- Mapping types
 
 Let's get started!

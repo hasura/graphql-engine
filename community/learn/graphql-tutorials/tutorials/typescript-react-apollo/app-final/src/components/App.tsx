@@ -29,7 +29,7 @@ import { useAuth0 } from "./Auth/react-auth0-spa";
   });
  };
 
-const App = ({idToken}:{idToken: string}) => {
+const App = ({idToken}:{idToken:string}) => {
   const { loading, logout  } = useAuth0();
   if(loading || !idToken) {
     return (<div>Loading...</div>);

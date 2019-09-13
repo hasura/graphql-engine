@@ -47,10 +47,6 @@ Open `src/components/Todo/TodoPrivateList.tsx` and add the following code:
 
 We have now written the graphql query as a javascript constant using the `gql` parser function. This function is used to parse the plain string as a graphql query.
 
-What does this query do? 
-------------------------
-The query fetches `todos` with a simple condition; `is_public` must be false. We sort the todos descending by its `created_at` time according to the schema. We specify which fields we need for the todos node.
-
 The query is now ready, let's integrate it with our react code.
 
 ```javascript

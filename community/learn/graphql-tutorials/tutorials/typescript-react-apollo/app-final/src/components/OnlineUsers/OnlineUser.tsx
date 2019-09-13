@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Online_Users } from '../../generated/graphql';
 
-const OnlineUser = ({user}: Online_Users) => {
+const OnlineUser = ({user}:Online_Users) => {
   return (
     <div className="userInfo">
       <div className="userImg">

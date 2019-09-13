@@ -13,9 +13,11 @@ use optimistic updates when we run mutations!
 
 We will learn the following concepts:
 
+- The `Toggle Todo` Mutation
 - Creating a GraphQL mutation
 - Using the `useMutation` hook 
 - Integrating Optimistic UI Updates
 - Capturing loading/finished/error states
+- Mapping types
 
 Let's get started!
