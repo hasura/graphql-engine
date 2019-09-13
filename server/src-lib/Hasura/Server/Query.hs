@@ -96,6 +96,7 @@ data RQLQueryV1
 
 data RQLQueryV2
   = RQV2TrackTable !TrackTableV2
+  | RQV2SetTableCustomFields !SetTableCustomFields
   deriving (Show, Eq, Lift)
 
 data RQLQuery
@@ -266,7 +267,8 @@ queryNeedsReload (RQV1 qi) = case qi of
 
   RQBulk qs                       -> any queryNeedsReload qs
 queryNeedsReload (RQV2 qi) = case qi of
-  RQV2TrackTable _ -> True
+  RQV2TrackTable _           -> True
+  RQV2SetTableCustomFields _ -> True
 
 runQueryM
   :: ( QErrM m, CacheRWM m, UserInfoM m, MonadTx m
@@ -346,4 +348,5 @@ runQueryM rq =
       RQBulk qs                    -> encJFromList <$> indexedMapM runQueryM qs
 
     runQueryV2M = \case
-      RQV2TrackTable q -> runTrackTableV2Q q
+      RQV2TrackTable q           -> runTrackTableV2Q q
+      RQV2SetTableCustomFields q -> runSetTableCustomFieldsQV2 q

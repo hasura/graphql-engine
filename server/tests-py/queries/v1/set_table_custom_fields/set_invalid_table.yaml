@@ -1,0 +1,18 @@
+description: Set custom fields of table which does not exist
+url: /v1/query
+status: 400
+response:
+  path: "$.args"
+  error: table "author1" does not exist
+  code: not-exists
+query:
+  type: set_table_custom_fields
+  version: 2
+  args:
+    table: author1
+    custom_root_fields:
+      select: Authors
+      select_by_pk: Author
+    custom_column_names:
+      id: AuthorId
+      name: AuthorName

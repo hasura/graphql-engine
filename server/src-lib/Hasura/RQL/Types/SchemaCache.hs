@@ -342,10 +342,10 @@ emptyTableConfig =
   TableConfig GC.emptyCustomRootFields M.empty
 
 instance FromJSON TableConfig where
-  parseJSON = withObject "TableConfig" $ \obj -> do
-    customRootFields <- obj .:? "custom_root_fields" .!= GC.emptyCustomRootFields
-    customColumnNames <- obj .:? "custom_column_names" .!= M.empty
-    pure $ TableConfig customRootFields customColumnNames
+  parseJSON = withObject "TableConfig" $ \obj ->
+    TableConfig
+    <$> obj .:? "custom_root_fields" .!= GC.emptyCustomRootFields
+    <*> obj .:? "custom_column_names" .!= M.empty
 
 data TableInfo columnInfo
   = TableInfo
