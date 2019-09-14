@@ -70,31 +70,22 @@ mkMultiplexedQuery baseQuery =
 -- referring correctly to the values from '_subs' temporary table
 -- The variables are at _subs.result_vars.variables and
 -- session variables at _subs.result_vars.user
-toMultiplexedQueryVar
-  :: (MonadState GV.ReusableVariableValues m)
-  => GR.UnresolvedVal -> m S.SQLExp
+toMultiplexedQueryVar :: (MonadState GV.ReusableVariableValues m) => GR.UnresolvedVal -> m S.SQLExp
 toMultiplexedQueryVar = \case
   GR.UVPG annPGVal ->
-    let GR.AnnPGVal varM isNullable _ colVal = annPGVal
-    in case (varM, isNullable) of
-      -- we don't check for nullability as
-      -- this is only used for reusable plans
-      -- the check has to be made before this
-      (Just var, _) -> do
+    let GR.AnnPGVal varM _ colVal = annPGVal
+    in case varM of
+      Just var -> do
         modify $ Map.insert var colVal
-        return $ fromResVars (PGTypeScalar $ pstType colVal)
-          [ "variables"
-          , G.unName $ G.unVariable var
-          ]
-      _             -> return $ toTxtValue colVal
-  GR.UVSessVar ty sessVar ->
-    return $ fromResVars ty [ "user", T.toLower sessVar]
-  GR.UVSQL sqlExp -> return sqlExp
+        pure $ fromResVars (PGTypeScalar $ pstType colVal)
+          ["variables", G.unName $ G.unVariable var]
+      Nothing -> return $ toTxtValue colVal
+  GR.UVSessVar ty sessVar -> pure $ fromResVars ty ["user", T.toLower sessVar]
+  GR.UVSQL sqlExp -> pure sqlExp
   where
     fromResVars ty jPath =
       flip S.SETyAnn (S.mkTypeAnn ty) $ S.SEOpApp (S.SQLOp "#>>")
-      [ S.SEQIden $ S.QIden (S.QualIden $ Iden "_subs")
-        (Iden "result_vars")
+      [ S.SEQIden $ S.QIden (S.QualIden $ Iden "_subs") (Iden "result_vars")
       , S.SEArray $ map S.SELit jPath
       ]
 
@@ -179,9 +170,8 @@ buildLiveQueryPlan
 buildLiveQueryPlan pgExecCtx fieldAlias astUnresolved varTypes = do
   userInfo <- asks getter
 
-  (astResolved, annVarVals) <-
-    flip runStateT mempty $ GR.traverseQueryRootFldAST
-    toMultiplexedQueryVar astUnresolved
+  (astResolved, annVarVals) <- flip runStateT mempty $
+    GR.traverseQueryRootFldAST toMultiplexedQueryVar astUnresolved
   let pgQuery = mkMultiplexedQuery $ GR.toPGQuery astResolved
       parameterizedPlan = ParameterizedLiveQueryPlan (userRole userInfo) fieldAlias pgQuery
 

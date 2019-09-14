@@ -303,6 +303,7 @@ library
                       EmptyCase
                       FlexibleContexts
                       FlexibleInstances
+                      FunctionalDependencies
                       GeneralizedNewtypeDeriving
                       InstanceSigs
                       LambdaCase
@@ -311,6 +312,7 @@ library
                       NoImplicitPrelude
                       OverloadedStrings
                       QuasiQuotes
+                      RankNTypes
                       ScopedTypeVariables
                       TemplateHaskell
                       TupleSections
@@ -345,6 +347,7 @@ executable graphql-engine
                       EmptyCase
                       FlexibleContexts
                       FlexibleInstances
+                      FunctionalDependencies
                       GeneralizedNewtypeDeriving
                       InstanceSigs
                       LambdaCase
@@ -353,6 +356,7 @@ executable graphql-engine
                       NoImplicitPrelude
                       OverloadedStrings
                       QuasiQuotes
+                      RankNTypes
                       ScopedTypeVariables
                       TemplateHaskell
                       TupleSections

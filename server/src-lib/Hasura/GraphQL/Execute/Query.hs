@@ -33,7 +33,7 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-type PlanVariables = Map.HashMap G.Variable (Int, PGColumnType)
+type PlanVariables = Map.HashMap G.Variable Int
 type PrepArgMap = IntMap.IntMap Q.PrepArg
 
 data PGPlan
@@ -66,7 +66,7 @@ type FieldPlans = [(G.Alias, RootFieldPlan)]
 
 data ReusableQueryPlan
   = ReusableQueryPlan
-  { _rqpVariableTypes :: !GV.ReusableVariableTypes
+  { _rqpVariableTypes :: !ReusableVariableTypes
   , _rqpFldPlans      :: !FieldPlans
   }
 
@@ -78,13 +78,13 @@ instance J.ToJSON ReusableQueryPlan where
 
 withPlan
   :: (MonadError QErr m)
-  => UserVars -> PGPlan -> GV.ReusableVariableValues -> m PreparedSql
+  => UserVars -> PGPlan -> ReusableVariableValues -> m PreparedSql
 withPlan usrVars (PGPlan q reqVars prepMap) annVars = do
   prepMap' <- foldM getVar prepMap (Map.toList reqVars)
   let args = withUserVars usrVars $ IntMap.elems prepMap'
   return $ PreparedSql q args
   where
-    getVar accum (var, (prepNo, _)) = do
+    getVar accum (var, prepNo) = do
       let varName = G.unName $ G.unVariable var
       colVal <- onNothing (Map.lookup var annVars) $
         throw500 $ "missing variable in annVars : " <> varName
@@ -124,42 +124,32 @@ initPlanningSt :: PlanningSt
 initPlanningSt =
   PlanningSt 2 Map.empty IntMap.empty
 
-getVarArgNum
-  :: (MonadState PlanningSt m)
-  => G.Variable -> PGColumnType -> m Int
-getVarArgNum var colTy = do
+getVarArgNum :: (MonadState PlanningSt m) => G.Variable -> m Int
+getVarArgNum var = do
   PlanningSt curArgNum vars prepped <- get
   case Map.lookup var vars of
-    Just (argNum, _) -> pure argNum
-    Nothing             -> do
-      put $ PlanningSt (curArgNum + 1)
-        (Map.insert var (curArgNum, colTy) vars) prepped
-      return curArgNum
+    Just argNum -> pure argNum
+    Nothing -> do
+      put $ PlanningSt (curArgNum + 1) (Map.insert var curArgNum vars) prepped
+      pure curArgNum
 
-addPrepArg
-  :: (MonadState PlanningSt m)
-  => Int -> Q.PrepArg -> m ()
+addPrepArg :: (MonadState PlanningSt m) => Int -> Q.PrepArg -> m ()
 addPrepArg argNum arg = do
   PlanningSt curArgNum vars prepped <- get
   put $ PlanningSt curArgNum vars $ IntMap.insert argNum arg prepped
 
-getNextArgNum
-  :: (MonadState PlanningSt m)
-  => m Int
+getNextArgNum :: (MonadState PlanningSt m) => m Int
 getNextArgNum = do
   PlanningSt curArgNum vars prepped <- get
   put $ PlanningSt (curArgNum + 1) vars prepped
   return curArgNum
 
-prepareWithPlan
-  :: (MonadState PlanningSt m)
-  => UnresolvedVal -> m S.SQLExp
+prepareWithPlan :: (MonadState PlanningSt m) => UnresolvedVal -> m S.SQLExp
 prepareWithPlan = \case
   R.UVPG annPGVal -> do
-    let AnnPGVal varM _ colTy colVal = annPGVal
+    let AnnPGVal varM _ colVal = annPGVal
     argNum <- case varM of
-      -- TODO: Use reusability information?
-      Just var -> getVarArgNum var colTy
+      Just var -> getVarArgNum var
       Nothing  -> getNextArgNum
     addPrepArg argNum $ toBinaryValue colVal
     return $ toPrepParam argNum (pstType colVal)
@@ -187,26 +177,24 @@ convertQuerySelSet
      , Has SQLGenCtx r
      , Has UserInfo r
      )
-  => Maybe GV.ReusableVariableTypes
-  -> V.SelSet
+  => V.SelSet
   -> m (LazyRespTx, Maybe ReusableQueryPlan, GeneratedSqlMap)
-convertQuerySelSet varTypes fields = do
+convertQuerySelSet fields = do
   usrVars <- asks (userVars . getter)
-  fldPlans <- forM (toList fields) $ \fld -> do
+  (fldPlans, varTypes) <- runResolveT . forM (toList fields) $ \fld -> do
     fldPlan <- case V._fName fld of
       "__type"     -> fldPlanFromJ <$> R.typeR fld
       "__schema"   -> fldPlanFromJ <$> R.schemaR fld
-      "__typename" -> return $ fldPlanFromJ queryRootName
+      "__typename" -> pure $ fldPlanFromJ queryRootName
       _            -> do
         unresolvedAst <- R.queryFldToPGAST fld
-        (q, PlanningSt _ vars prepped) <-
-          flip runStateT initPlanningSt $ R.traverseQueryRootFldAST
-          prepareWithPlan unresolvedAst
-        return $ RFPPostgres $ PGPlan (R.toPGQuery q) vars prepped
-    return (V._fAlias fld, fldPlan)
+        (q, PlanningSt _ vars prepped) <- flip runStateT initPlanningSt $
+          R.traverseQueryRootFldAST prepareWithPlan unresolvedAst
+        pure . RFPPostgres $ PGPlan (R.toPGQuery q) vars prepped
+    pure (V._fAlias fld, fldPlan)
   let reusablePlan = ReusableQueryPlan <$> varTypes <*> pure fldPlans
   (tx, sql) <- mkCurPlanTx usrVars fldPlans
-  return (tx, reusablePlan, sql)
+  pure (tx, reusablePlan, sql)
 
 -- use the existing plan and new variables to create a pg query
 queryOpFromPlan

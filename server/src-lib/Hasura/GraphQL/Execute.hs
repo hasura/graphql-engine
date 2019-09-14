@@ -112,8 +112,7 @@ gatherTypeLocs gCtx nodes =
       in maybe qr (Map.union qr) mr
 
 -- This is for when the graphql query is validated
-type ExecPlanPartial
-  = GQExecPlan (GCtx, VQ.RootSelSet, Maybe VQ.ReusableVariableTypes)
+type ExecPlanPartial = GQExecPlan (GCtx, VQ.RootSelSet)
 
 getExecPlanPartial
   :: (MonadError QErr m)
@@ -140,8 +139,8 @@ getExecPlanPartial userInfo sc enableAL req = do
 
   case typeLoc of
     VT.TLHasuraType -> do
-      (rootSelSet, varTypes) <- runReaderT (VQ.validateGQ queryParts) gCtx
-      return $ GExPHasura (gCtx, rootSelSet, varTypes)
+      rootSelSet <- runReaderT (VQ.validateGQ queryParts) gCtx
+      return $ GExPHasura (gCtx, rootSelSet)
     VT.TLRemoteType _ rsi ->
       return $ GExPRemote rsi opDef
   where
@@ -205,16 +204,16 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
     noExistingPlan = do
       req <- toParsed reqUnparsed
       partialExecPlan <- getExecPlanPartial userInfo sc enableAL req
-      forM partialExecPlan $ \(gCtx, rootSelSet, varTypes) ->
+      forM partialExecPlan $ \(gCtx, rootSelSet) ->
         case rootSelSet of
           VQ.RMutation selSet ->
             ExOpMutation <$> getMutOp gCtx sqlGenCtx userInfo selSet
           VQ.RQuery selSet -> do
-            (queryTx, plan, genSql) <- getQueryOp gCtx sqlGenCtx userInfo selSet varTypes
+            (queryTx, plan, genSql) <- getQueryOp gCtx sqlGenCtx userInfo selSet
             traverse_ (addPlanToCache . EP.RPQuery) plan
             return $ ExOpQuery queryTx (Just genSql)
           VQ.RSubscription fld -> do
-            (lqOp, plan) <- getSubsOp pgExecCtx gCtx sqlGenCtx userInfo varTypes fld
+            (lqOp, plan) <- getSubsOp pgExecCtx gCtx sqlGenCtx userInfo fld
             traverse_ (addPlanToCache . EP.RPSubs) plan
             return $ ExOpSubs lqOp
 
@@ -255,10 +254,9 @@ getQueryOp
   -> SQLGenCtx
   -> UserInfo
   -> VQ.SelSet
-  -> Maybe VQ.ReusableVariableTypes
   -> m (LazyRespTx, Maybe EQ.ReusableQueryPlan, EQ.GeneratedSqlMap)
-getQueryOp gCtx sqlGenCtx userInfo fields varTypes =
-  runE gCtx sqlGenCtx userInfo $ EQ.convertQuerySelSet varTypes fields
+getQueryOp gCtx sqlGenCtx userInfo fields =
+  runE gCtx sqlGenCtx userInfo $ EQ.convertQuerySelSet fields
 
 mutationRootName :: Text
 mutationRootName = "mutation_root"
@@ -279,7 +277,7 @@ resolveMutSelSet fields = do
   aliasedTxs <- forM (toList fields) $ \fld -> do
     fldRespTx <- case VQ._fName fld of
       "__typename" -> return $ return $ encJFromJValue mutationRootName
-      _            -> liftTx <$> GR.mutFldToTx fld
+      _            -> fmap liftTx . evalResolveT $ GR.mutFldToTx fld
     return (G.unName $ G.unAlias $ VQ._fAlias fld, fldRespTx)
 
   -- combines all transactions into a single transaction
@@ -315,15 +313,14 @@ getSubsOpM
      , MonadIO m
      )
   => PGExecCtx
-  -> Maybe VQ.ReusableVariableTypes
   -> VQ.Field
   -> m (EL.LiveQueryPlan, Maybe EL.ReusableLiveQueryPlan)
-getSubsOpM pgExecCtx varTypes fld =
+getSubsOpM pgExecCtx fld =
   case VQ._fName fld of
     "__typename" ->
       throwVE "you cannot create a subscription on '__typename' field"
     _            -> do
-      astUnresolved <- GR.queryFldToPGAST fld
+      (astUnresolved, varTypes) <- runResolveT $ GR.queryFldToPGAST fld
       EL.buildLiveQueryPlan pgExecCtx (VQ._fAlias fld) astUnresolved varTypes
 
 getSubsOp
@@ -334,11 +331,10 @@ getSubsOp
   -> GCtx
   -> SQLGenCtx
   -> UserInfo
-  -> Maybe VQ.ReusableVariableTypes
   -> VQ.Field
   -> m (EL.LiveQueryPlan, Maybe EL.ReusableLiveQueryPlan)
-getSubsOp pgExecCtx gCtx sqlGenCtx userInfo varTypes fld =
-  runE gCtx sqlGenCtx userInfo $ getSubsOpM pgExecCtx varTypes fld
+getSubsOp pgExecCtx gCtx sqlGenCtx userInfo fld =
+  runE gCtx sqlGenCtx userInfo $ getSubsOpM pgExecCtx fld
 
 execRemoteGQ
   :: ( MonadIO m

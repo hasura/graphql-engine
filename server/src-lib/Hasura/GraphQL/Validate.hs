@@ -8,16 +8,15 @@ module Hasura.GraphQL.Validate
   , QueryParts(..)
   , getQueryParts
 
-  , isQueryInAllowlist
-
-  , ReusableVariableTypes
+  , ReusableVariableTypes(..)
   , ReusableVariableValues
   , validateVariablesForReuse
+
+  , isQueryInAllowlist
   ) where
 
 import           Hasura.Prelude
 
-import           Data.Aeson
 import           Data.Has
 
 import qualified Data.HashMap.Strict                    as Map
@@ -33,9 +32,6 @@ import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.QueryCollection
-
-import           Hasura.SQL.Types                       (WithScalarType)
-import           Hasura.SQL.Value                       (PGScalarValue)
 
 data QueryParts
   = QueryParts
@@ -113,26 +109,6 @@ validateVariables varDefsL inpVals = withPathK "variableValues" $ do
 showVars :: (Functor f, Foldable f) => f G.Variable -> Text
 showVars = showNames . fmap G.unVariable
 
--- | Returned by 'validateGQ' when a query’s variables are sufficiently simple that this query is
--- eligible to be /reused/, which means that the resolved SQL query will not change even if any of
--- its variable values change. This is used to determine which query plans can be cached.
-newtype ReusableVariableTypes = ReusableVariableTypes (Map.HashMap G.Variable PGColumnType)
-  deriving (Show, Eq, ToJSON)
-type ReusableVariableValues = Map.HashMap G.Variable (WithScalarType PGScalarValue)
-
-mkReusableVariableTypes :: [G.VariableDefinition] -> AnnVarVals -> Maybe ReusableVariableTypes
-mkReusableVariableTypes varDefs inputValues = ReusableVariableTypes <$> do
-  -- If any of the variables are nullable, this query isn’t reusable, since a null variable used
-  -- in a condition like {_eq: $var} removes the condition entirely, requiring different SQL.
-  guard (not $ any (G.isNullable . G._vdType) varDefs)
-
-  -- Note: This currently must be manually kept in sync with 'asPGColumnTypeAndValueM' from
-  -- "Hasura.GraphQL.Resolve.InputValue"! It should be possible to merge them if we do #2801.
-  for inputValues $ \inputValue -> case _aivValue inputValue of
-    AGScalar pgType _                   -> Just $ PGColumnScalar pgType
-    AGEnum _ (AGEReference reference _) -> Just $ PGColumnEnumReference reference
-    _                                   -> Nothing
-
 -- | This is similar in spirit to 'validateVariables' but uses preexisting 'ReusableVariableTypes'
 -- information to parse Postgres values directly for use with a reusable query plan. (Ideally, it
 -- would be nice to be able to share more of the logic instead of duplicating it.)
@@ -172,20 +148,12 @@ data RootSelSet
   | RSubscription !Field
   deriving (Show, Eq)
 
--- {-# SCC validateGQ #-}
-validateGQ
-  :: (MonadError QErr m, MonadReader GCtx m)
-  -- => GraphQLRequest
-  => QueryParts
-  -> m (RootSelSet, Maybe ReusableVariableTypes)
+validateGQ :: (MonadError QErr m, MonadReader GCtx m) => QueryParts -> m RootSelSet
 validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
-
   ctx <- ask
 
   -- annotate the variables of this operation
-  let varDefs = G._todVariableDefinitions opDef
-  annVarVals <- validateVariables varDefs $ fromMaybe Map.empty varValsM
-  let reusableTypes = mkReusableVariableTypes varDefs annVarVals
+  annVarVals <- validateVariables (G._todVariableDefinitions opDef) $ fromMaybe Map.empty varValsM
 
   -- annotate the fragments
   fragDefs <- onLeft (mkMapWith G._fdName fragDefsL) $ \dups ->
@@ -199,7 +167,7 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
   selSet <- flip runReaderT valCtx $ denormSelSet [] opRoot $
             G._todSelectionSet opDef
 
-  rootSelSet <- case G._todType opDef of
+  case G._todType opDef of
     G.OperationTypeQuery -> return $ RQuery selSet
     G.OperationTypeMutation -> return $ RMutation selSet
     G.OperationTypeSubscription ->
@@ -209,8 +177,6 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
           unless (null rst) $
             throwVE "subscription must select only one top level field"
           return $ RSubscription fld
-
-  pure (rootSelSet, reusableTypes)
 
 isQueryInAllowlist :: GQLExecDoc -> HS.HashSet GQLQuery -> Bool
 isQueryInAllowlist q = HS.member gqlQuery
