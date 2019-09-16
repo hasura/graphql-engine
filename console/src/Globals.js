@@ -48,6 +48,7 @@ const globals = {
   featuresCompatibility: window.__env.serverVersion
     ? getFeaturesCompatibility(window.__env.serverVersion)
     : null,
+  featureFlags: window.__env.featureFlags ? window.__env.featureFlags : {},
 };
 
 // set defaults

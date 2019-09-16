@@ -26,11 +26,16 @@ const Permissions = props => {
     existingPermissions,
   } = props;
 
+  // introspect remote schema
   const { schema, loading, error, introspect } = useIntrospectionSchema(
     remoteSchemaName,
     adminHeaders
   );
 
+  // show loading indicator while introspecting
+  if (loading) return <Spinner />;
+
+  // fetch roles list on mount
   React.useEffect(() => {
     dispatch(fetchRoleList());
     return () => {
@@ -38,8 +43,7 @@ const Permissions = props => {
     };
   }, []);
 
-  if (loading) return <Spinner />;
-
+  // show error if introspection fails
   if (error) {
     return (
       <div>
@@ -51,6 +55,7 @@ const Permissions = props => {
     );
   }
 
+  // get the available rootTypes
   const rootTypes = {};
   const queryTypeName = schema._queryType.name;
   rootTypes.query = queryTypeName;
@@ -65,6 +70,7 @@ const Permissions = props => {
     : '';
   if (subscriptionTypeName) rootTypes.subscription = subscriptionTypeName;
 
+  // get all available objectTypes
   const objectTypes = {};
   const nonObjectTypes = {};
   objectTypes[queryTypeName] = schema._typeMap[queryTypeName];
@@ -88,12 +94,15 @@ const Permissions = props => {
       }
     });
 
+  // get permissions table
   const getPermissionsTable = () => {
+    // get header of the permissions table
     const getPermissionsTableHead = () => {
       const headings = ['Role', ...Object.keys(rootTypes)];
       return <PermTableHeader headings={headings} />;
     };
 
+    // get body of the permissions table
     const getPermissionsTableBody = () => {
       const dispatchRoleNameChange = e => {
         dispatch(setPermissionRole(e.target.value));
@@ -107,6 +116,7 @@ const Permissions = props => {
         );
       };
 
+      // get root types for a given role
       const getRootTypes = (role, isNewRole) => {
         return Object.keys(rootTypes).map(rootType => {
           const dispatchOpenEdit = rt => () => {
@@ -197,8 +207,8 @@ const Permissions = props => {
         });
       };
 
+      // form rolesList and permissions metadata associated with each role
       const _roleList = ['admin', ...rolesList];
-
       const rolePermissions = _roleList.map(r => {
         return {
           roleName: r,
@@ -206,12 +216,14 @@ const Permissions = props => {
         };
       });
 
+      // push permissions metadata associated with the new role
       rolePermissions.push({
         roleName: editState.newRole,
         permTypes: getRootTypes(editState.newRole, true),
         isNewRole: true,
       });
 
+      // form permissions table body based on the roles and their metadata
       return (
         <PermTableBody
           rolePermissions={rolePermissions}
@@ -220,6 +232,7 @@ const Permissions = props => {
       );
     };
 
+    // get permissions legend that shows the meaning of each access icon
     const getPermissionsLegend = () => (
       <div>
         <div className={styles.permissionsLegend}>
@@ -236,6 +249,7 @@ const Permissions = props => {
       </div>
     );
 
+    // return JSX
     return (
       <div>
         {getPermissionsLegend()}

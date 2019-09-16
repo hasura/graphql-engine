@@ -23,6 +23,7 @@ const PermissionsEditor = ({
     return null;
   }
 
+  // get action buttons
   const getActionButtons = () => {
     const onSave = () => {
       dispatch(createRemoteSchemaPermission());
@@ -72,13 +73,16 @@ const PermissionsEditor = ({
     );
   };
 
+  // get the expanded types based on the selected role and query type
   const expandedTypes = getExpandedTypes(
     editState.allowedTypes,
     rootTypes,
     editState.editType
   );
 
+  // get allowed types
   const allowedTypes = Object.keys(editState.allowedTypes).map(at => {
+    // on field toggle
     const fieldToggleCallback = (fieldName, isChecked) => {
       const newAllowedTypes = JSON.parse(
         JSON.stringify(editState.allowedTypes)
@@ -99,10 +103,12 @@ const PermissionsEditor = ({
       dispatch(setPermissionTypes(newAllowedTypes));
     };
 
+    // is the current type a root type
     const isRootType = ['query', 'mutation', 'subscription'].some(
       rt => rootTypes[rt] === at
     );
 
+    // on removing an allowed type
     const typeRemovalCallback = () => {
       const newAllowedTypes = JSON.parse(
         JSON.stringify(editState.allowedTypes)

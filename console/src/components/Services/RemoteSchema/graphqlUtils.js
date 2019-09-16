@@ -7,6 +7,7 @@ import {
   isObjectType,
 } from 'graphql';
 
+// local cache where introspection schema is cached
 let introspectionSchemaCache = {};
 export const clearIntrospectionSchemaCache = remoteSchemaName => {
   if (remoteSchemaName) {
@@ -16,21 +17,26 @@ export const clearIntrospectionSchemaCache = remoteSchemaName => {
   }
 };
 
+// get graphql introspection proxy endpoint
 const getProxyEndpoint = remoteSchemaName => {
   return `${endpoints.graphQLUrl}/proxy/${remoteSchemaName}`;
 };
 
+// custom hook for introspecting remote schema
 export const useIntrospectionSchema = (remoteSchemaName, headers) => {
   const [schema, setSchema] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const introspectSchema = () => {
+    // if the introspection result is present in cache, skip introspection
     if (introspectionSchemaCache[remoteSchemaName]) {
       setSchema(introspectionSchemaCache[remoteSchemaName]);
       setLoading(false);
       return;
     }
+
+    // perform introspection
     setLoading(true);
     setError(null);
     fetch(getProxyEndpoint(remoteSchemaName), {
@@ -64,6 +70,7 @@ export const useIntrospectionSchema = (remoteSchemaName, headers) => {
   };
 };
 
+// get underlying GraphQL type if it is wrapped type
 export const getUnderlyingType = t => {
   let currentType = t;
   while (isWrappingType(currentType)) {
@@ -72,6 +79,7 @@ export const getUnderlyingType = t => {
   return currentType;
 };
 
+// get fields of a type from the graphql schema
 export const getTypeFields = (typeName, objectTypes) => {
   const fields = {};
   if (objectTypes[typeName]) {

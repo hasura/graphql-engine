@@ -9,20 +9,25 @@ const GraphQLType = ({
   isRootType,
   isTypeExpanded,
 }) => {
+  // state variable of type collapsed or expanded
   const [isExpanded, setExpansion] = useState(isTypeExpanded);
   const expandType = () => setExpansion(true);
   const collapseType = () => setExpansion(false);
 
+  // remove button
   const removeTypeButton = !isRootType && (
     <div>
       <i
-        className={`${styles.fontAwosomeClose} fa-lg fa fa-times ${styles.cursorPointer}`}
+        className={`${styles.fontAwosomeClose} fa-lg fa fa-times ${
+          styles.cursorPointer
+        }`}
         data-test={`remove-type-${typeName}`}
         onClick={typeRemovalCallback}
       />
     </div>
   );
 
+  // typename along with chevron right/down
   const getTypeName = () => {
     const onClick = isExpanded ? collapseType : expandType;
     return (
@@ -43,6 +48,7 @@ const GraphQLType = ({
     );
   };
 
+  // checkboxes for fields of a type
   const getFieldsCheckbox = () => {
     if (!isExpanded) return null;
     return (

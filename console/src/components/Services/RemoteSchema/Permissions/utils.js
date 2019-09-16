@@ -3,6 +3,7 @@ import { getUnderlyingType } from '../graphqlUtils';
 import { isObjectType } from 'graphql';
 import { getTypeFields } from '../graphqlUtils';
 
+// generate the query to drop a remote schema permission
 export const generateDropPermQuery = (role, remoteSchemaName) => {
   return {
     type: 'drop_remote_schema_permissions',
@@ -13,6 +14,7 @@ export const generateDropPermQuery = (role, remoteSchemaName) => {
   };
 };
 
+// generate the query to create a remote schema permission
 export const generateCreatePermQuery = (
   state,
   remoteSchemaName,
@@ -50,6 +52,7 @@ export const generateCreatePermQuery = (
   return payload;
 };
 
+// transform server's remote schema perm definition into the local state definition
 export const parseRemoteRelPermDefinition = (
   payload,
   rootTypes,
@@ -111,6 +114,7 @@ export const parseRemoteRelPermDefinition = (
   };
 };
 
+// get the current expanded types based on the allowed types and the type of selected role and quer type
 export const getExpandedTypes = (allowedTypes, rootTypes, editType) => {
   const expandedTypes = {};
 
@@ -131,6 +135,7 @@ export const getExpandedTypes = (allowedTypes, rootTypes, editType) => {
   return expandedTypes;
 };
 
+// looking at the state and a given typename, figure out if there is full access to this type
 export const isTypeFullAccess = (
   typeName,
   allowedTypes,
@@ -174,6 +179,7 @@ export const isTypeFullAccess = (
   return true;
 };
 
+// get full/partial/no access to a root type
 export const getRootTypeAccess = (rootType, allowedTypes, objectTypes) => {
   const accessLabels = {
     '-1': 'noAccess',
