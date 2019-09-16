@@ -1,7 +1,8 @@
-{-# LANGUAGE CPP          #-}
-{-# LANGUAGE DataKinds    #-}
-{-# LANGUAGE RankNTypes   #-}
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE CPP             #-}
+{-# LANGUAGE DataKinds       #-}
+{-# LANGUAGE RankNTypes      #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ViewPatterns    #-}
 
 module Hasura.Server.App where
 
@@ -394,7 +395,7 @@ consoleAssetsHandler logger dir path = do
     headers = ("Content-Type", mimeType) : encHeader
 
 mkConsoleHTML :: T.Text -> AuthMode -> Bool -> Maybe Text -> FeatureFlags -> Either String T.Text
-mkConsoleHTML path authMode enableTelemetry consoleAssetsDir featureFlags =
+mkConsoleHTML path authMode enableTelemetry consoleAssetsDir FeatureFlags{..} =
   bool (Left errMsg) (Right res) $ null errs
   where
     (errs, res) = M.checkedSubstitute consoleTmplt $
@@ -405,7 +406,7 @@ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir featureFlags =
              , "cdnAssets" .= boolToText (isNothing consoleAssetsDir)
              , "assetsVersion" .= consoleVersion
              , "serverVersion" .= currentVersion
-             , "featureFlags" .= featureFlags
+             , "enableRemoteSchemaPermissions" .=  boolToText ffRemoteSchemaPermissions
              ]
     consolePath = case path of
       "" -> "/console"
