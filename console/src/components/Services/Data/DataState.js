@@ -33,7 +33,6 @@ const defaultPermissionsState = {
   limitEnabled: true,
   bulkSelect: [],
   applySamePermissions: [],
-  tableSchemas: [],
 };
 
 const defaultPresetsState = {
