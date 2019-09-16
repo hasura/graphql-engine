@@ -8,6 +8,8 @@ import {
 } from '../Common/ReusableComponents/utils';
 import { saveUniqueKey, removeUniqueKey } from './ModifyActions';
 
+import { getConfirmation } from '../../../Common/utils/jsUtils';
+
 const UniqueKeyEditor = ({
   uniqueKeys,
   tableSchema,
@@ -103,20 +105,17 @@ const UniqueKeyEditor = ({
     let removeFunc;
     if (!isLast) {
       removeFunc = toggle => {
-        const isOk = window.confirm(
-          'Are you sure you want to remove this unique key constraint?'
-        );
-        if (!isOk) {
-          return;
+        const isOk = getConfirmation();
+        if (isOk) {
+          dispatch(
+            removeUniqueKey(
+              i,
+              tableSchema.table_name,
+              existingConstraints,
+              toggle
+            )
+          );
         }
-        dispatch(
-          removeUniqueKey(
-            i,
-            tableSchema.table_name,
-            existingConstraints,
-            toggle
-          )
-        );
       };
     }
 

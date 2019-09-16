@@ -40,20 +40,20 @@ This ``many-to-many`` relationship can be established in the database by:
    .. code-block:: sql
 
       article_tag (
-        id INT PRIMARY KEY
         article_id INT
         tag_id INT
+        PRIMARY KEY (article_id, tag_id)
         ...
       )
 
-2. Adding **foreign-key constraints** from the ``article_tag`` table to:
+2. Adding **foreign key constraints** from the ``article_tag`` table to:
 
    - the ``article`` table using the ``article_id`` and ``id`` columns of the tables respectively
    - the ``tag`` table using the ``tag_id`` and ``id`` columns of the tables respectively
 
 
 The table ``article_tag`` sits between the two tables involved in the many-to-many relationship and captures possible
-permutations of their association via the foreign-keys.
+permutations of their association via the foreign keys.
 
 Set up GraphQL relationships
 ----------------------------
@@ -279,8 +279,8 @@ query using relationships created on these views:
 
 Now :doc:`create the following relationships <../create>`:
 
-- Array relationship, ``tags`` from ``article`` table using  ``article_tags_view :: article_id -> id``
-- Array relationship, ``articles`` from ``tag`` table using  ``tag_articles_view :: tag_id -> id``
+- Array relationship, ``tags`` from the ``article`` table using  ``article_tags_view :: article_id -> id``
+- Array relationship, ``articles`` from the ``tag`` table using  ``tag_articles_view :: tag_id -> id``
 
 We can now:
 

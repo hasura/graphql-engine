@@ -37,6 +37,7 @@ import { createNewSchema, deleteCurrentSchema } from './Actions';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 import gqlPattern from '../Common/GraphQLValidation';
 import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
+import { displayTableName } from '../../../Common/utils/pgUtils';
 
 class Schema extends Component {
   constructor(props) {
@@ -183,6 +184,11 @@ class Schema extends Component {
           const handleCreateClick = () => {
             const schemaName = schemaNameEdit.trim();
 
+            if (!schemaName) {
+              document.getElementById('schema-name-input').focus();
+              return;
+            }
+
             const successCb = () => {
               dispatch(updateCurrentSchema(schemaName));
 
@@ -216,6 +222,7 @@ class Schema extends Component {
             <div className={styles.display_inline + ' ' + styles.add_mar_left}>
               <div className={styles.display_inline}>
                 <input
+                  id="schema-name-input"
                   type="text"
                   value={schemaNameEdit}
                   onChange={handleSchemaNameChange}
@@ -365,7 +372,9 @@ class Schema extends Component {
                   Track
                 </Button>
               </div>
-              <div className={styles.display_inline}>{table.table_name}</div>
+              <div className={styles.display_inline}>
+                {displayTableName(table)}
+              </div>
               {gqlCompatibilityWarning}
             </div>
           );

@@ -7,9 +7,11 @@ export const PGTypes = {
   dateTime: [
     'timestamp',
     'timestamp with time zone',
+    'timestamp without time zone',
     'date',
     'time',
     'time with time zone',
+    'time without time zone',
     'interval',
   ],
   geometry: ['geometry'],

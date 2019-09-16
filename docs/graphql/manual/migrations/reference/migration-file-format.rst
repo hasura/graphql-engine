@@ -28,7 +28,7 @@ or a YAML file.
 YAML files
 ----------
 
-Each ``up`` or ``down`` YAML file contains Hasura Metadata API actions to be
+Each ``up`` or ``down`` YAML file contains Hasura metadata API actions to be
 executed for that particular migration. The file should have a list of such API
 actions, which is represented with a ``-`` in YAML. Here is an example file:
 
@@ -62,7 +62,7 @@ actions, which is represented with a ``-`` in YAML. Here is an example file:
        sql: |
          DROP TABLE "public"."author"
 
-Each one of the actions in these files are actually Hasura Metadata API calls,
+Each one of the actions in these files are actually Hasura metadata API calls,
 which are executed in **sequence** when the migration is applied. You can find
 all the metadata actions that are available in the :ref:`API reference <Query>`.
 
@@ -77,5 +77,5 @@ SQL Files
 
 As the name indicates, an SQL file can contain SQL statements which are executed
 on the apply step of the migration. There can be an ``up`` SQL and a ``down``
-SQL file. The SQL file is executed first if it is present in an up migration and
+SQL file. The SQL file is executed first if it is present in an up migration and the
 YAML file is executed first in a down migration.

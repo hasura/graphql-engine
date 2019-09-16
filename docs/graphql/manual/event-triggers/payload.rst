@@ -50,7 +50,7 @@ JSON payload
      - Description
    * - session-variables
      - Object_ or NULL
-     - Key-value pairs of session variables (i.e. "x-hasura-\*" variables) and their values. NULL if no session variables found.
+     - Key-value pairs of session variables (i.e. "x-hasura-\*" variables) and their values (NULL if no session variables found)
    * - op-name
      - OpName_
      - Name of the operation. Can only be "INSERT", "UPDATE", "DELETE", "MANUAL"
@@ -95,6 +95,13 @@ JSON payload
 
   - ``event.data.old`` will be ``null``
   - ``event.data.new`` will contain the current row
+
+.. note::
+
+   In case of ``UPDATE``, the events are delivered only if new data is distinct from
+   old data. The `composite type comparison <https://www.postgresql.org/docs/current/functions-comparisons.html#COMPOSITE-TYPE-COMPARISON>`__
+   is used to compare the old and new rows. If rows contain columns, which cannot be
+   compared using ``<>`` operator, then internal binary representation of rows by Postgres is compared.
 
 **For example**:
 

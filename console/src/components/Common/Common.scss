@@ -1356,6 +1356,10 @@ code {
   width: 325px;
 }
 
+.cursorNotAllowed {
+  cursor: not-allowed;
+}
+
 /* container height subtracting top header and bottom scroll bar */
 $mainContainerHeight: calc(100vh - 50px - 25px);
 

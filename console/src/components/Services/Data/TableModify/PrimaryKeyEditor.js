@@ -14,6 +14,8 @@ import {
 
 import styles from './ModifyTable.scss';
 
+import { getConfirmation } from '../../../Common/utils/jsUtils';
+
 const PrimaryKeyEditor = ({
   tableSchema,
   pkModify,
@@ -85,7 +87,7 @@ const PrimaryKeyEditor = ({
   // save
   const onSave = (e, confirmed) => {
     if (pkConstraintName && pkModify.length === 1 && !confirmed) {
-      const isOk = window.confirm(DELETE_PK_WARNING);
+      const isOk = getConfirmation(DELETE_PK_WARNING);
       if (!isOk) {
         setPkEditState();
         return dispatch(showSuccessNotification('No changes'));
@@ -98,15 +100,13 @@ const PrimaryKeyEditor = ({
 
   // remove
   const onRemove = () => {
-    let isOk;
     if (pkConstraintName) {
-      isOk = window.confirm(DELETE_PK_WARNING);
-      if (!isOk) {
-        return dispatch(showSuccessNotification('No changes'));
+      const isOk = getConfirmation(DELETE_PK_WARNING);
+      if (isOk) {
+        dispatch(setPrimaryKeys(['']));
+        onSave(null, true);
       }
     }
-    dispatch(setPrimaryKeys(['']));
-    onSave(null, isOk);
   };
 
   // Toggle button text when the editor is expanded and collapsed

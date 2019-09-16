@@ -8,6 +8,7 @@ import {
   showErrorNotification,
 } from '../../Common/Notification';
 import dataHeaders from '../Common/Headers';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 /* ****************** View actions *************/
 const V_SET_DEFAULTS = 'ProcessedEvents/V_SET_DEFAULTS';
@@ -159,10 +160,12 @@ const vMakeRequest = () => {
 
 const deleteItem = pkClause => {
   return (dispatch, getState) => {
-    const isOk = confirm('Permanently delete this row?');
+    const confirmMessage = 'This will permanently delete this row';
+    const isOk = getConfirmation(confirmMessage);
     if (!isOk) {
       return;
     }
+
     const state = getState();
     const url = Endpoints.query;
     const reqBody = {

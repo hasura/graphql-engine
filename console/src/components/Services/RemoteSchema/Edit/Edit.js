@@ -21,6 +21,7 @@ import { appPrefix, pageTitle } from '../constants';
 import { NotFoundError } from '../../../Error/PageNotFound';
 
 import globals from '../../../../Globals';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
@@ -84,26 +85,17 @@ class Edit extends React.Component {
   handleDeleteRemoteSchema(e) {
     e.preventDefault();
 
-    const a = prompt(
-      'Are you absolutely sure?\nThis action cannot be undone. This will permanently delete stitched GraphQL schema. Please type "DELETE" (in caps, without quotes) to confirm.\n'
-    );
+    const remoteSchemaName = this.props.params.remoteSchemaName;
 
-    try {
-      if (a && typeof a === 'string' && a.trim() === 'DELETE') {
-        this.updateDeleteConfirmationError(null);
+    const confirmMessage = `This will remove the remote GraphQL schema "${remoteSchemaName}" from your GraphQL schema`;
+    const isOk = getConfirmation(confirmMessage, true, remoteSchemaName);
+    if (isOk) {
+      try {
         this.props.dispatch(deleteRemoteSchema());
-      } else {
-        // Input didn't match
-        // Show an error message right next to the button
-        this.updateDeleteConfirmationError('user confirmation error!');
+      } catch (err) {
+        console.error(err);
       }
-    } catch (err) {
-      console.error(err);
     }
-  }
-
-  updateDeleteConfirmationError(data) {
-    this.setState({ deleteConfirmationError: data });
   }
 
   modifyClick() {

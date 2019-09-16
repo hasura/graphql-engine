@@ -448,6 +448,14 @@ initErrExit e = do
     <> T.unpack (qeError e)
   exitFailure
 
+data HasuraApp
+  = HasuraApp
+  { _hapApplication    :: !Wai.Application
+  , _hapSchemaRef      :: !SchemaCacheRef
+  , _hapCacheBuildTime :: !(Maybe UTCTime)
+  , _hapShutdown       :: !(IO ())
+  }
+
 mkWaiApp
   :: Q.TxIsolation
   -> L.LoggerCtx
@@ -465,7 +473,7 @@ mkWaiApp
   -> S.HashSet API
   -> EL.LQOpts
   -> FeatureFlags
-  -> IO (Wai.Application, SchemaCacheRef, Maybe UTCTime)
+  -> IO HasuraApp
 mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
          enableConsole consoleAssetsDir enableTelemetry instanceId apis lqOpts featureFlags = do
 
@@ -508,10 +516,13 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
                   consoleAssetsDir enableTelemetry
 
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
-    return ( WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp
-           , schemaCacheRef
-           , cacheBuiltTime
-           )
+        stopWSServer = WS.stopWSServerApp wsServerEnv
+
+    return $ HasuraApp
+      (WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp)
+      schemaCacheRef
+      cacheBuiltTime
+      stopWSServer
   where
     getTimeMs :: IO Int64
     getTimeMs = (round . (* 1000)) `fmap` getPOSIXTime
