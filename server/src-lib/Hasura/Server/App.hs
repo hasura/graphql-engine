@@ -352,7 +352,7 @@ v1GQRemoteHandler
   :: RemoteSchemaName
   -> GH.GQLReqUnparsed
   -> Handler (HttpResponse EncJSON)
-v1GQRemoteHandler rsName = v1Alpha1GQHandler (flip mkCacheForRemoteSchema rsName)
+v1GQRemoteHandler rsName = v1Alpha1GQHandler (flip mkCacheForRemoteSchema rsName . scRemoteSchemas)
 
 gqlExplainHandler :: GE.GQLExplain -> Handler (HttpResponse EncJSON)
 gqlExplainHandler query = do

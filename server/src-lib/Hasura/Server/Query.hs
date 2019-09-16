@@ -1,5 +1,6 @@
 module Hasura.Server.Query where
 
+import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -112,16 +113,16 @@ newtype Run a
            )
 
 instance UserInfoM Run where
-  askUserInfo = asks (\(userInfo, _, _, _) -> userInfo)
+  askUserInfo = asks (^. _1)
 
 instance HasHttpManager Run where
-  askHttpManager = asks (\(_, httpManager, _, _) -> httpManager)
+  askHttpManager = asks (^. _2)
 
 instance HasSQLGenCtx Run where
-  askSQLGenCtx = asks (\(_, _, sqlGenCtx, _) -> sqlGenCtx)
+  askSQLGenCtx = asks (^. _3)
 
 instance HasFeatureFlags Run where
-  askFeatureFlags = asks (\(_, _, _, featureFlags) -> featureFlags)
+  askFeatureFlags = asks (^. _4)
 
 fetchLastUpdate :: Q.TxE QErr (Maybe (InstanceId, UTCTime))
 fetchLastUpdate = do

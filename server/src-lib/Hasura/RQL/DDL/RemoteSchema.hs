@@ -177,15 +177,15 @@ buildGCtxMap = do
                       }
 
 mkCacheForRemoteSchema
-  :: (QErrM m) => SchemaCache -> RemoteSchemaName -> m SchemaCache
-mkCacheForRemoteSchema sc rsName = do
-  let remoteSchemaMap =
+  :: (QErrM m) => RemoteSchemaMap -> RemoteSchemaName -> m SchemaCache
+mkCacheForRemoteSchema rsMap rsName = do
+  let newRSMap =
         maybe Map.empty (Map.singleton rsName) $
-        Map.lookup rsName (scRemoteSchemas sc)
+        Map.lookup rsName rsMap
   mergedGCtxMap <-
-    mergeRemoteSchemas remoteSchemaMap Map.empty
+    mergeRemoteSchemas newRSMap Map.empty
   pure emptySchemaCache
-    { scRemoteSchemas = remoteSchemaMap
+    { scRemoteSchemas = newRSMap
     , scGCtxMap = mergedGCtxMap
     }
 
