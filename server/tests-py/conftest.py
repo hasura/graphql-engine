@@ -81,6 +81,12 @@ def pytest_addoption(parser):
         help="Run testcases for logging"
     )
 
+    parser.addoption(
+        "--enable-remote-schema-permissions",
+        action="store_true",
+        help="Run Test cases with remote schema permissions"
+    )
+
 
 #By default,
 #1) Set default parallelism to one

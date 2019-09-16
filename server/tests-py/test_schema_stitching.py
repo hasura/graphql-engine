@@ -453,7 +453,8 @@ class TestRemoteSchemaTimeout:
         # wait for graphql server to finish else teardown throws
         time.sleep(6)
 
-
+@pytest.mark.skipif(not pytest.config.getoption("--enable-remote-schema-permissions"),
+                    reason="flag --enable-remote-schema-permissions is not set. Cannot run tests for remote schema permissions")
 class TestRemoteSchemaPermissions:
     dir = 'queries/remote_schemas/permissions/'
     teardown = {"type": "remove_remote_schema", "args": {"name": "simple"}}
@@ -488,6 +489,8 @@ class TestRemoteSchemaPermissions:
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir + 'basic_fail.yaml')
 
+@pytest.mark.skipif(pytest.config.getoption("--enable-remote-schema-permissions"),
+                    reason="flag --enable-remote-schema-permissions is set. Cannot run tests for remote schema permissions when disabled")
 class TestRemoteSchemaPermissionsDisabled:
     dir = 'queries/remote_schemas/permissions/'
     teardown = {"type": "remove_remote_schema", "args": {"name": "simple"}}
