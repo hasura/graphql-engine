@@ -183,11 +183,13 @@ mkCacheForRemoteSchema rsMap rsName = do
         maybe Map.empty (Map.singleton rsName) $
         Map.lookup rsName rsMap
   mergedGCtxMap <-
-    mergeRemoteSchemas newRSMap Map.empty
+    mergeRemoteSchemas newRSMap initGCtxMap
   pure emptySchemaCache
     { scRemoteSchemas = newRSMap
     , scGCtxMap = mergedGCtxMap
     }
+  where
+    initGCtxMap = Map.singleton adminRole GC.emptyGCtx
 
 addRemoteSchemaToCatalog
   :: AddRemoteSchemaQuery
