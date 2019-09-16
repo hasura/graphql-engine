@@ -36,7 +36,6 @@ module Hasura.RQL.Types.SchemaCache
 
        , RemoteSchemaCtx(..)
        , RemoteSchemaMap
-       , RemoteSchemaPermsDisabled(..)
        , addRemoteSchemaToCache
        , delRemoteSchemaFromCache
 
@@ -385,9 +384,6 @@ $(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionInfo)
 
 type TableCache columnInfo = M.HashMap QualifiedTable (TableInfo columnInfo) -- info of all tables
 type FunctionCache = M.HashMap QualifiedFunction FunctionInfo -- info of all functions
-
-data RemoteSchemaPermsDisabled = RemoteSchemaPermsDisabled
-  deriving (Show, Eq)
 
 data RemoteSchemaCtx
   = RemoteSchemaCtx
