@@ -30,7 +30,7 @@ data PGTypType
   | PTDOMAIN
   | PTENUM
   | PTRANGE
-  | PTPSUEDO
+  | PTPSEUDO
   deriving (Show, Eq)
 $(deriveJSON defaultOptions{constructorTagModifier = drop 2} ''PGTypType)
 
