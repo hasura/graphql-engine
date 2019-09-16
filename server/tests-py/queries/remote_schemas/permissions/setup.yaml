@@ -3,6 +3,7 @@ args:
   remote_schema: simple
   role: user
   definition:
+    allowed_objects:
     - type: UserQuery
       fields:
         - user

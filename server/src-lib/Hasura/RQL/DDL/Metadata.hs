@@ -113,7 +113,7 @@ $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''TableMeta)
 data RemoteSchemaPermMeta
   = RemoteSchemaPermMeta
   { rspmRole       :: RoleName
-  , rspmDefinition :: [RemoteTypePerm]
+  , rspmDefinition :: RemoteSchemaPermDef
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 4 snakeCase) ''RemoteSchemaPermMeta)

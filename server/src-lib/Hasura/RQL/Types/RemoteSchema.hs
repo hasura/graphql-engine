@@ -69,19 +69,27 @@ newtype RemoteSchemaNameQuery
 
 $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''RemoteSchemaNameQuery)
 
-data RemoteTypePerm
-  = RemoteTypePerm
-  { rtpType   :: G.NamedType
-  , rtpFields :: [G.Name]
+data RemoteAllowedFields
+  = RemoteAllowedFields
+  { rafType   :: G.NamedType
+  , rafFields :: [G.Name]
   } deriving (Show, Eq, Lift)
 
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''RemoteTypePerm)
+$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''RemoteAllowedFields)
+
+data RemoteSchemaPermDef
+ = RemoteSchemaPermDef
+ { rspdAllowedObjects      :: [RemoteAllowedFields]
+ , rspdAllowedInputObjects :: [RemoteAllowedFields]
+ } deriving (Show, Eq, Lift)
+
+$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''RemoteSchemaPermDef)
 
 data RemoteSchemaPermissions
   = RemoteSchemaPermissions
   { rsPermRemoteSchema :: RemoteSchemaName
   , rsPermRole         :: RoleName
-  , rsPermDefinition   :: [RemoteTypePerm]
+  , rsPermDefinition   :: RemoteSchemaPermDef
   } deriving (Show, Eq, Lift)
 
 $(J.deriveJSON (J.aesonDrop 6 J.snakeCase) ''RemoteSchemaPermissions)

@@ -280,19 +280,24 @@ runAddRemoteSchemaPermissionsP2Setup (RemoteSchemaPermissions rsName role _def) 
 validateRemoteSchemaPermissions :: (QErrM m, CacheRM m) => RemoteSchemaPermissions -> m GC.RemoteGCtx
 validateRemoteSchemaPermissions remoteSchemaPerm = do
   sc <- askSchemaCache
-  case Map.lookup
-       (rsPermRemoteSchema remoteSchemaPerm)
-       (scRemoteSchemas sc) of
-    Nothing  -> throw400 RemoteSchemaError "No such remote schema"
+  case Map.lookup (rsPermRemoteSchema remoteSchemaPerm) (scRemoteSchemas sc) of
+    Nothing -> throw400 RemoteSchemaError "No such remote schema"
     Just remoteSchemaCtx -> do
-      newTypes <- do
-        checkUniqueTypes (rsPermDefinition remoteSchemaPerm)
-        validateTypes (rsPermDefinition remoteSchemaPerm) (GC._rgTypes $ rscGCtx remoteSchemaCtx)
+      newTypes <-
+        do assertUniqueTypes
+             (rsPermDefinition remoteSchemaPerm)
+           validateTypes
+             (rsPermDefinition remoteSchemaPerm)
+             (GC._rgTypes $ rscGCtx remoteSchemaCtx)
       updateRemoteGCtxFromTypes newTypes (rscGCtx remoteSchemaCtx)
+  where
+    assertUniqueTypes RemoteSchemaPermDef {..} =
+      checkDuplicateTypes rspdAllowedObjects >>
+      checkDuplicateTypes rspdAllowedInputObjects
 
-checkUniqueTypes :: (QErrM m) => [RemoteTypePerm] -> m ()
-checkUniqueTypes typePerms = do
-  let types = map rtpType typePerms
+checkDuplicateTypes :: (QErrM m) => [RemoteAllowedFields] -> m ()
+checkDuplicateTypes typePerms = do
+  let types = map rafType typePerms
       nubbedTypes = List.nub types
   if types /= nubbedTypes
     then throw400 InvalidParams $
@@ -300,30 +305,49 @@ checkUniqueTypes typePerms = do
          (T.pack . show) (types \\ nubbedTypes)
     else pure ()
 
-validateTypes :: (QErrM m) => [RemoteTypePerm] -> VT.TypeMap -> m VT.TypeMap
-validateTypes typePerms allTypes = do
-  eitherTypeMap <- runValidateT validateTypes'
+-- only TIObj and TIInpObj can be permissioned, other types pass-thru
+validateTypes :: (QErrM m) => RemoteSchemaPermDef -> VT.TypeMap -> m VT.TypeMap
+validateTypes permDef allTypes = do
+  eitherTypeMap <-
+    runValidateT $ do
+      modTypeMap <- validateObjectTypes allTypes (rspdAllowedObjects permDef)
+      validateInputObjectTypes modTypeMap (rspdAllowedInputObjects permDef)
   case eitherTypeMap of
     Left errs     -> throw400 Unexpected (mconcat errs)
     Right typeMap -> pure typeMap
   where
-    typePermMap = Map.fromList $ map (\(RemoteTypePerm ty flds) -> (ty, flds)) typePerms
-    validateTypes' :: (MonadValidate [Text] m) => m VT.TypeMap
-    validateTypes' = do
+    toFieldMap =
+      Map.fromList . map (\(RemoteAllowedFields ty flds) -> (ty, flds))
+    validateObjectTypes ::
+         (MonadValidate [Text] m)
+      => VT.TypeMap
+      -> [RemoteAllowedFields]
+      -> m VT.TypeMap
+    validateObjectTypes initTypes allowedFields = do
       Map.traverseWithKey
         (\namedType typeInfo ->
-           -- only TIObj and TIInpObj can be permissioned, other types pass-thru
            case typeInfo of
              VT.TIObj objTy ->
-               case Map.lookup namedType typePermMap of
+               case Map.lookup namedType (toFieldMap allowedFields) of
                  Nothing -> pure $ VT.TIObj objTy {VT._otiFields = Map.empty}
                  Just permFields -> do
                    newFields <-
                      applyPerms namedType permFields (VT._otiFields objTy)
                    pure $
                      VT.TIObj objTy {VT._otiFields = Map.fromList newFields}
+             otherType -> pure otherType)
+        initTypes
+    validateInputObjectTypes ::
+         (MonadValidate [Text] m)
+      => VT.TypeMap
+      -> [RemoteAllowedFields]
+      -> m VT.TypeMap
+    validateInputObjectTypes initTypes allowedFields = do
+      Map.traverseWithKey
+        (\namedType typeInfo ->
+           case typeInfo of
              VT.TIInpObj inpObjTy ->
-               case Map.lookup namedType typePermMap of
+               case Map.lookup namedType (toFieldMap allowedFields) of
                  Nothing ->
                    pure $ VT.TIInpObj inpObjTy {VT._iotiFields = Map.empty}
                  Just permArgs -> do
@@ -333,7 +357,7 @@ validateTypes typePerms allTypes = do
                      VT.TIInpObj
                        inpObjTy {VT._iotiFields = Map.fromList newFields}
              otherType -> pure otherType)
-        allTypes
+        initTypes
     applyPerms namedType permFields allFields =
       traverse
         (\fieldName ->
