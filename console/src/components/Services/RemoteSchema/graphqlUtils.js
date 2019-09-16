@@ -19,7 +19,7 @@ export const clearIntrospectionSchemaCache = remoteSchemaName => {
 
 // get graphql introspection proxy endpoint
 const getProxyEndpoint = remoteSchemaName => {
-  return `${endpoints.graphQLUrl}/proxy/${remoteSchemaName}`;
+  return `${endpoints.graphQLUrl}/remote/${remoteSchemaName}`;
 };
 
 // custom hook for introspecting remote schema

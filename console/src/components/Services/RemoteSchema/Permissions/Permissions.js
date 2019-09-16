@@ -32,9 +32,6 @@ const Permissions = props => {
     adminHeaders
   );
 
-  // show loading indicator while introspecting
-  if (loading) return <Spinner />;
-
   // fetch roles list on mount
   React.useEffect(() => {
     dispatch(fetchRoleList());
@@ -42,6 +39,9 @@ const Permissions = props => {
       dispatch(resetPermState());
     };
   }, []);
+
+  // show loading indicator while introspecting
+  if (loading) return <Spinner />;
 
   // show error if introspection fails
   if (error) {
