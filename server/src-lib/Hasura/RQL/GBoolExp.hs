@@ -276,10 +276,22 @@ annBoolExp
   :: (QErrM m, CacheRM m)
   => OpRhsParser m v
   -> FieldInfoMap PGColumnInfo
-  -> BoolExp
+  -> GBoolExp ColExp
   -> m (AnnBoolExp v)
-annBoolExp rhsParser fim (BoolExp boolExp) =
-  traverse (annColExp rhsParser fim) boolExp
+annBoolExp rhsParser fim boolExp =
+  case boolExp of
+    BoolAnd exps -> BoolAnd <$> procExps exps
+    BoolOr exps  -> BoolOr <$> procExps exps
+    BoolNot e    -> BoolNot <$> annBoolExp rhsParser fim e
+    BoolExists (GExists refqt whereExp) ->
+      withPathK "_exists" $ do
+        refFields <- withPathK "_table" $ askFieldInfoMap refqt
+        annWhereExp <- withPathK "_where" $
+                       annBoolExp rhsParser refFields whereExp
+        return $ BoolExists $ GExists refqt annWhereExp
+    BoolFld fld -> BoolFld <$> annColExp rhsParser fim fld
+  where
+    procExps = mapM (annBoolExp rhsParser fim)
 
 annColExp
   :: (QErrM m, CacheRM m)
@@ -297,7 +309,8 @@ annColExp rhsParser colInfoMap (ColExp fieldName colVal) = do
     FIRelationship relInfo -> do
       relBoolExp      <- decodeValue colVal
       relFieldInfoMap <- askFieldInfoMap $ riRTable relInfo
-      annRelBoolExp   <- annBoolExp rhsParser relFieldInfoMap relBoolExp
+      annRelBoolExp   <- annBoolExp rhsParser relFieldInfoMap $
+                         unBoolExp relBoolExp
       return $ AVRel relInfo annRelBoolExp
 
 toSQLBoolExp
@@ -335,6 +348,28 @@ convColRhs tableQual = \case
     return $ S.mkExists (S.FISimple relTN $ Just $ S.Alias newIden) innerBoolExp
   where
     mkQCol q = S.SEQIden . S.QIden q . toIden
+
+foldExists :: GExists AnnBoolExpFldSQL -> State Word64 S.BoolExp
+foldExists (GExists qt wh) = do
+  whereExp <- foldBoolExp (convColRhs (S.QualTable qt)) wh
+  return $ S.mkExists (S.FISimple qt Nothing) whereExp
+
+foldBoolExp
+  :: (AnnBoolExpFldSQL -> State Word64 S.BoolExp)
+  -> AnnBoolExpSQL
+  -> State Word64 S.BoolExp
+foldBoolExp f = \case
+  BoolAnd bes           -> do
+    sqlBExps <- mapM (foldBoolExp f) bes
+    return $ foldr (S.BEBin S.AndOp) (S.BELit True) sqlBExps
+
+  BoolOr bes           -> do
+    sqlBExps <- mapM (foldBoolExp f) bes
+    return $ foldr (S.BEBin S.OrOp) (S.BELit False) sqlBExps
+
+  BoolNot notExp       -> S.BENot <$> foldBoolExp f notExp
+  BoolExists existsExp -> foldExists existsExp
+  BoolFld ce           -> f ce
 
 mkColCompExp
   :: S.Qual -> PGCol -> OpExpG S.SQLExp -> S.BoolExp
@@ -433,5 +468,13 @@ getColExpDeps tn = \case
     in pd : getBoolExpDeps relTN relBoolExp
 
 getBoolExpDeps :: QualifiedTable -> AnnBoolExpPartialSQL -> [SchemaDependency]
-getBoolExpDeps tn =
-  foldr (\annFld deps -> getColExpDeps tn annFld <> deps) []
+getBoolExpDeps tn = \case
+  BoolAnd exps -> procExps exps
+  BoolOr exps  -> procExps exps
+  BoolNot e    -> getBoolExpDeps tn e
+  BoolExists (GExists refqt whereExp) ->
+    let tableDep = SchemaDependency (SOTable refqt) DRRemoteTable
+    in tableDep:getBoolExpDeps refqt whereExp
+  BoolFld fld  -> getColExpDeps tn fld
+  where
+    procExps = concatMap (getBoolExpDeps tn)

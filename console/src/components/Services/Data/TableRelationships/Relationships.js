@@ -422,9 +422,8 @@ class Relationships extends Component {
       <div className={`${styles.container} container-fluid`}>
         <TableHeader
           dispatch={dispatch}
-          tableName={tableName}
+          table={tableSchema}
           tabName="relationships"
-          currentSchema={currentSchema}
           migrationMode={migrationMode}
         />
         <br />

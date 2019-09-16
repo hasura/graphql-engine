@@ -62,4 +62,4 @@ the list of enabled APIs.
    --enabled-apis="graphql,metadata"
    HASURA_GRAPHQL_ENABLED_APIS="graphql,metadata"
 
-See :doc:`../deployment/graphql-engine-flags/reference` for info on setting the above flag/env var
+See :doc:`../deployment/graphql-engine-flags/reference` for info on setting the above flag/env var.

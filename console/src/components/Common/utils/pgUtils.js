@@ -77,6 +77,17 @@ export const getTrackedTables = tables => {
   return tables.filter(t => t.is_table_tracked);
 };
 
+export const isColumnAutoIncrement = column => {
+  const columnDefault = column.column_default;
+
+  const autoIncrementDefaultRegex = /^nextval\('(.*)_seq'::regclass\)$/;
+
+  return (
+    columnDefault &&
+    columnDefault.match(new RegExp(autoIncrementDefaultRegex, 'gi'))
+  );
+};
+
 /*** Table/View permissions utils ***/
 export const getTablePermissions = (table, role = null, action = null) => {
   let tablePermissions = table.permissions;

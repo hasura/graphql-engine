@@ -210,10 +210,10 @@ class TestUpdateEvtQuery(object):
     def test_update_basic(self, hge_ctx, evts_webhook):
         table = {"schema": "hge_tests", "name": "test_t1"}
 
-        init_row = {"c1": 1, "c2": "hello"}
+        init_row = {"c1": 1, "c2": "hello", "c3": {"name": "clarke"}}
         exp_ev_data = {
             "old": None,
-            "new": {"c1": 1, "c2": "hello"}
+            "new": {"c1": 1, "c2": "hello", "c3": {"name": "clarke"}}
         }
         st_code, resp = insert(hge_ctx, table, init_row)
         assert st_code == 200, resp
@@ -229,10 +229,20 @@ class TestUpdateEvtQuery(object):
             check_event(hge_ctx, evts_webhook, "t1_cols", table, "UPDATE", exp_ev_data, webhook_path = "/new")
 
         where_exp = {"c1": 1}
+        set_exp = {"c3": {"name": "bellamy"}}
+        exp_ev_data = {
+            "old": {"c1": 1, "c2": "world", "c3": {"name": "clarke"}},
+            "new": {"c1": 1, "c2": "world", "c3": {"name": "bellamy"}}
+        }
+        st_code, resp = update(hge_ctx, table, where_exp, set_exp)
+        assert st_code == 200, resp
+        check_event(hge_ctx, evts_webhook, "t1_cols", table, "UPDATE", exp_ev_data, webhook_path ="/new")
+
+        where_exp = {"c1": 1}
         set_exp = {"c1": 2}
         exp_ev_data = {
-            "old": {"c1": 1, "c2": "world"},
-            "new": {"c1": 2, "c2": "world"}
+            "old": {"c1": 1, "c2": "world", "c3": {"name": "bellamy"}},
+            "new": {"c1": 2, "c2": "world", "c3": {"name": "bellamy"}}
         }
         st_code, resp = update(hge_ctx, table, where_exp, set_exp)
         assert st_code == 200, resp
@@ -240,7 +250,7 @@ class TestUpdateEvtQuery(object):
 
         where_exp = {"c1": 2}
         exp_ev_data = {
-            "old": {"c1": 2, "c2": "world"},
+            "old": {"c1": 2, "c2": "world", "c3": {"name": "bellamy"}},
             "new": None
         }
         st_code, resp = delete(hge_ctx, table, where_exp)

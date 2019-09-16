@@ -1,9 +1,12 @@
 import React from 'react';
 import { deleteTrigger } from '../EventActions';
 import Button from '../../../Common/Button/Button';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 const verifyDeleteTrigger = (triggerName, dispatch) => {
-  if (confirm('Are you sure?')) {
+  const confirmMessage = `This will permanently delete the event trigger "${triggerName}"`;
+  const isOk = getConfirmation(confirmMessage, true, triggerName);
+  if (isOk) {
     dispatch(deleteTrigger(triggerName));
   }
 };

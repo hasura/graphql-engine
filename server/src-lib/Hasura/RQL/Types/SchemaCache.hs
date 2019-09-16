@@ -241,6 +241,7 @@ data RolePermInfo
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 5 snakeCase) ''RolePermInfo)
+
 makeLenses ''RolePermInfo
 
 type RolePermInfoMap = M.HashMap RoleName RolePermInfo

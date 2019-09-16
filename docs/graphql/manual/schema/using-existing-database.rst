@@ -1,5 +1,5 @@
-Setting up GraphQL schema using an existing database
-====================================================
+Setting up a GraphQL schema using an existing database
+======================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -70,7 +70,7 @@ To track all the foreign-keys of all tables in the database:
   In case a field with the generated name already exists, a new name will be generated of the form:
   ``camel case of (singular/plural of foreignTableName + _by_ + foreignKeyColumnName)``
 
-  Note that, **this is just  an arbitrary naming convention** chosen by Hasura to ensure generation of unique
+  Note that, **this is just  an arbitrary naming convention** chosen by Hasura to ensure the generation of unique
   relationship names. You can choose to rename your relationships to anything you wish. You can **change the
   relationship names** with a name of your choice as shown in :doc:`relationships/rename`.
 

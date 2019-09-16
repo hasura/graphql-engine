@@ -91,7 +91,7 @@ const defaultModifyState = {
     perm: '',
   },
   tableEnum: {
-    loading: false
+    loading: false,
   },
   columnEdit: {},
   pkEdit: [''],
