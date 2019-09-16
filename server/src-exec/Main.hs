@@ -1,3 +1,5 @@
+{-# LANGUAGE NamedFieldPuns #-}
+
 module Main where
 
 import           Migrate                    (migrateCatalog)
@@ -30,9 +32,9 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
 import           Hasura.RQL.Types           (SQLGenCtx (..), SchemaCache (..),
                                              adminUserInfo, emptySchemaCache)
-import           Hasura.Server.App          (HasuraApp(..), SchemaCacheRef (..),
-                                             getSCFromRef, logInconsObjs,
-                                             mkWaiApp)
+import           Hasura.Server.App          (HasuraApp (..),
+                                             SchemaCacheRef (..), getSCFromRef,
+                                             logInconsObjs, mkWaiApp)
 import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates (checkForUpdates)
 import           Hasura.Server.Init
@@ -61,7 +63,7 @@ parseHGECommand =
           ( progDesc "Export graphql-engine's metadata to stdout" ))
         <> command "clean" (info (pure  HCClean)
           ( progDesc "Clean graphql-engine's metadata to start afresh" ))
-        <> command "execute" (info (pure  HCExecute)
+        <> command "execute" (info (helper <*> (HCExecute <$> serveOpts))
           ( progDesc "Execute a query" ))
         <> command "version" (info (pure  HCVersion)
           (progDesc "Prints the version of GraphQL Engine"))
@@ -211,19 +213,18 @@ main =  do
       res <- runTx' pgLogger ci cleanCatalog
       either printErrJExit (const cleanSuccess) res
 
-    HCExecute -> do
+    HCExecute ServeOptions{soFeatureFlags} -> do
       (_, _, pgLogger) <- mkLoggers defaultEnabledLogTypes LevelInfo
       queryBs <- BL.getContents
       ci <- procConnInfo rci
       let sqlGenCtx = SQLGenCtx False
+          featureFlags = soFeatureFlags
       pool <- getMinimalPool pgLogger ci
-      featureFlags <- getFeatureFlags
       res <- runAsAdmin pool sqlGenCtx httpManager featureFlags $ execQuery queryBs
       either printErrJExit BLC.putStrLn res
 
     HCVersion -> putStrLn $ "Hasura GraphQL Engine: " ++ T.unpack currentVersion
   where
-    getFeatureFlags = undefined
     mkLoggers enabledLogs logLevel = do
       loggerCtx <- mkLoggerCtx (defaultLoggerSettings True logLevel) enabledLogs
       let logger = mkLogger loggerCtx

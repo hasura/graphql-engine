@@ -123,7 +123,7 @@ data HGECommandG a
   = HCServe !a
   | HCExport
   | HCClean
-  | HCExecute
+  | HCExecute !a
   | HCVersion
   deriving (Show, Eq)
 
@@ -274,11 +274,11 @@ mkHGEOptions (HGEOptionsG rawConnInfo rawCmd) =
   where
     connInfo = mkRawConnInfo rawConnInfo
     cmd = case rawCmd of
-      HCServe rso -> HCServe <$> mkServeOptions rso
-      HCExport    -> return HCExport
-      HCClean     -> return HCClean
-      HCExecute   -> return HCExecute
-      HCVersion   -> return HCVersion
+      HCServe rso   -> HCServe <$> mkServeOptions rso
+      HCExport      -> return HCExport
+      HCClean       -> return HCClean
+      HCExecute rso -> HCExecute <$> mkServeOptions rso
+      HCVersion     -> return HCVersion
 
 mkRawConnInfo :: RawConnInfo -> WithEnv RawConnInfo
 mkRawConnInfo rawConnInfo = do
@@ -292,7 +292,7 @@ mkRawConnInfo rawConnInfo = do
     retries = connRetries rawConnInfo
 
 mkServeOptions :: RawServeOptions -> WithEnv ServeOptions
-mkServeOptions RawServeOptions{..}= do
+mkServeOptions rso@RawServeOptions{..}= do
   port <- fromMaybe 8080 <$>
           withEnv rsoPort (fst servePortEnv)
   host <- fromMaybe "*" <$>
@@ -318,8 +318,7 @@ mkServeOptions RawServeOptions{..}= do
   enabledLogs <- Set.fromList . fromMaybe (Set.toList L.defaultEnabledLogTypes) <$>
                  withEnv rsoEnabledLogTypes (fst enabledLogsEnv)
   serverLogLevel <- fromMaybe L.LevelInfo <$> withEnv rsoLogLevel (fst logLevelEnv)
-  enabledFeatureFlags <- FeatureFlags <$>
-                       withEnvBool rsoEnableRemotePerms (fst enableRemotePermsEnv)
+  enabledFeatureFlags <- getFeatureFlags rso
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
@@ -370,6 +369,10 @@ mkServeOptions RawServeOptions{..}= do
       return $ LQ.mkLQOpts (LQ.mkMxOpts mxBatchSizeM mxRefetchIntM)
         (LQ.mkFallbackOpts fallbackRefetchIntM)
 
+
+getFeatureFlags :: RawServeOptions -> WithEnv FeatureFlags
+getFeatureFlags RawServeOptions{..} = do
+   FeatureFlags <$> withEnvBool rsoEnableRemotePerms (fst enableRemotePermsEnv)
 
 mkExamplesDoc :: [[String]] -> PP.Doc
 mkExamplesDoc exampleLines =
