@@ -67,7 +67,7 @@ addRemoteSchemaP2Setup ::
   -> m RemoteSchemaCtx
 addRemoteSchemaP2Setup q = do
   httpMgr <- askHttpManager
-  remotePermsEnabled <- ffRemoteSchemaPerms <$> askFeatureFlags
+  remotePermsEnabled <- ffRemoteSchemaPermissions <$> askFeatureFlags
   let remotePerms = if remotePermsEnabled then Just Map.empty else Nothing
   rsi <- validateRemoteSchemaDef def
   gCtx <- fetchRemoteSchema httpMgr name rsi
@@ -150,7 +150,7 @@ runReloadRemoteSchema
 runReloadRemoteSchema (RemoteSchemaNameQuery name) = do
   adminOnly
   rmSchemas <- scRemoteSchemas <$> askSchemaCache
-  remotePermsEnabled <- ffRemoteSchemaPerms <$> askFeatureFlags
+  remotePermsEnabled <- ffRemoteSchemaPermissions <$> askFeatureFlags
   let remotePerms = if remotePermsEnabled then Just Map.empty else Nothing
   rsi <- fmap rscInfo $ onNothing (Map.lookup name rmSchemas) $
          throw400 NotExists $ "remote schema with name "
@@ -220,7 +220,7 @@ fetchRemoteSchemas =
 withRSPermFlagCheck :: (QErrM m, HasFeatureFlags m) => Bool -> m () -> m ()
 withRSPermFlagCheck strict action = do
    featureFlags <- askFeatureFlags
-   if (ffRemoteSchemaPerms featureFlags)
+   if (ffRemoteSchemaPermissions featureFlags)
      then
      action
      else
@@ -405,7 +405,7 @@ runDropRemoteSchemaPermissions
 runDropRemoteSchemaPermissions q = withRSPermFlagCheck True (do
   adminOnly
   featureFlags <- askFeatureFlags
-  unless (ffRemoteSchemaPerms featureFlags) $
+  unless (ffRemoteSchemaPermissions featureFlags) $
     throw404 "remote schema permissions are not enabled"
   dropRemoteSchemaPermissionsP1 q
   dropRemoteSchemaPermissionsP2 q) >>

@@ -393,8 +393,8 @@ consoleAssetsHandler logger dir path = do
     mimeType = bsToTxt $ defaultMimeLookup fileName
     headers = ("Content-Type", mimeType) : encHeader
 
-mkConsoleHTML :: T.Text -> AuthMode -> Bool -> Maybe Text -> Either String T.Text
-mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
+mkConsoleHTML :: T.Text -> AuthMode -> Bool -> Maybe Text -> FeatureFlags -> Either String T.Text
+mkConsoleHTML path authMode enableTelemetry consoleAssetsDir featureFlags =
   bool (Left errMsg) (Right res) $ null errs
   where
     (errs, res) = M.checkedSubstitute consoleTmplt $
@@ -405,6 +405,7 @@ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
              , "cdnAssets" .= boolToText (isNothing consoleAssetsDir)
              , "assetsVersion" .= consoleVersion
              , "serverVersion" .= currentVersion
+             , "featureFlags" .= featureFlags
              ]
     consolePath = case path of
       "" -> "/console"
@@ -513,7 +514,7 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
 
     spockApp <- spockAsApp $ spockT id $
                 httpApp corsCfg serverCtx enableConsole
-                  consoleAssetsDir enableTelemetry
+                  consoleAssetsDir enableTelemetry featureFlags
 
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
         stopWSServer = WS.stopWSServerApp wsServerEnv
@@ -527,8 +528,8 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
     getTimeMs :: IO Int64
     getTimeMs = (round . (* 1000)) `fmap` getPOSIXTime
 
-httpApp :: CorsConfig -> ServerCtx -> Bool -> Maybe Text -> Bool -> SpockT IO ()
-httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
+httpApp :: CorsConfig -> ServerCtx -> Bool -> Maybe Text -> Bool -> FeatureFlags -> SpockT IO ()
+httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry featureFlags = do
     -- cors middleware
     unless (isCorsDisabled corsCfg) $
       middleware $ corsMiddleware (mkDefaultCorsPolicy corsCfg)
@@ -636,6 +637,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       get ("console" <//> wildcard) $ \path ->
         either (raiseGenericApiError logger . err500 Unexpected . T.pack) html $
         mkConsoleHTML path (scAuthMode serverCtx) enableTelemetry consoleAssetsDir
+          featureFlags
 
 raiseGenericApiError :: L.Logger -> QErr -> ActionT IO ()
 raiseGenericApiError logger qErr = do

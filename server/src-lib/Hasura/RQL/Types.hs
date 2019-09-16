@@ -59,10 +59,10 @@ import           Hasura.SQL.Types
 
 import qualified Hasura.GraphQL.Context            as GC
 
-import qualified Data.Aeson                        as J
+import qualified Data.Aeson.Casing                 as J
+import qualified Data.Aeson.TH                     as J
 import qualified Data.HashMap.Strict               as M
 import qualified Data.Text                         as T
-import qualified Data.Vector                       as V
 import qualified Network.HTTP.Client               as HTTP
 
 getFieldInfoMap
@@ -70,6 +70,13 @@ getFieldInfoMap
   -> SchemaCache -> Maybe (FieldInfoMap PGColumnInfo)
 getFieldInfoMap tn =
   fmap _tiFieldInfoMap . M.lookup tn . scTables
+
+data FeatureFlags =
+  FeatureFlags
+  { ffRemoteSchemaPermissions :: !Bool
+  } deriving (Show, Eq)
+
+$(J.deriveToJSON (J.aesonDrop 2 J.snakeCase) ''FeatureFlags)
 
 data QCtx
   = QCtx
@@ -141,16 +148,6 @@ newtype SQLGenCtx
 
 class (Monad m) => HasSQLGenCtx m where
   askSQLGenCtx :: m SQLGenCtx
-
-data FeatureFlags =
-  FeatureFlags
-  { ffRemoteSchemaPerms :: !Bool
-  }
-  deriving (Show, Eq)
-
-instance J.ToJSON FeatureFlags where
-  toJSON (FeatureFlags enableRemoteSchemaPerms) = J.Array $
-    bool V.empty (V.singleton $ J.String "remote_schema_permissions") enableRemoteSchemaPerms
 
 class (Monad m) => HasFeatureFlags m where
   askFeatureFlags :: m FeatureFlags

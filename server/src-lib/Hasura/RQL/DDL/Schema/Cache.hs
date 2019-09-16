@@ -165,7 +165,7 @@ buildSchemaCacheWithOptions withSetup = do
       let RemoteSchemaPermissions rsName role _ = rsPerm
           inconsObj = InconsistentMetadataObj (MORemoteSchemaObj rsName (RMOPerm role))
                       MOTRemotePerm (toJSON rsPerm)
-      withSchemaObject_ inconsObj $ when (ffRemoteSchemaPerms featureFlags) $ do
+      withSchemaObject_ inconsObj $ when (ffRemoteSchemaPermissions featureFlags) $ do
         rsCtx <- runAddRemoteSchemaPermissionsP1 rsPerm
         runAddRemoteSchemaPermissionsP2Setup rsPerm rsCtx
 
