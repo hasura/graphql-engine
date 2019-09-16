@@ -217,6 +217,10 @@ Insert an object and get a nested object in response
 
 Insert an object along with its related objects through relationships
 ---------------------------------------------------------------------
+
+One-to-many relationship
+^^^^^^^^^^^^^^^^^^^^^^^^
+
 **Example:** Insert an ``author`` along with their ``address`` and a few ``articles``.
 
 Let's say an ``author`` has an ``object relationship`` called ``address`` to the ``addresses`` table and an ``array relationship`` called ``articles`` to the ``articles`` table.
@@ -313,6 +317,110 @@ A nested insert mutation is processed as follows:
    The ``id`` of the author is collected in this step.
 
 3. The array relationships are inserted at the end. i.e. in this case, the articles are now inserted with their ``author_id`` set to the author's ``id`` collected in the step 2. Hence, it's not possible to specify ``author_id`` in the data for the articles relationship.
+
+Many-to-many relationship
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Example:** Insert an ``article`` along with two ``tags``.
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation insertArticle {
+      insert_articles(objects: [
+        {
+          id: 34,
+          title: "How to make fajitas",
+          content: "Guide on making the best fajitas in the world",
+          author_id: 3,
+          article_tags: {
+            data: [
+              {
+                tag: {
+                  data: {
+                    id: 25,
+                    label: "Recipes"
+                  },
+                  on_conflict: {
+                    constraint: tags_pkey,
+                    update_columns: [label]
+                  }
+                }
+              },
+              {
+                tag: {
+                  data: {
+                    id: 26,
+                    label: "Cooking"
+                  },
+                  on_conflict: {
+                    constraint: tags_pkey,
+                    update_columns: [label]
+                  }
+                }
+              }  
+            ]
+          }
+        }
+      ]) {
+        affected_rows
+        returning {
+          id
+          title
+          content
+          author_id
+          article_tags {
+            tag {
+              label
+            }
+          }
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "insert_articles": {
+          "affected_rows": 5,
+          "returning": [
+            {
+              "author_id": 3,
+              "article_tags": [
+                {
+                  "tag": {
+                    "label": "Recipes"
+                  }
+                },
+                {
+                  "tag": {
+                    "label": "Cooking"
+                  }
+                }
+              ],
+              "content": "Guide on making the best fajitas in the world",
+              "id": 34,
+              "title": "How to make fajitas"
+            }
+          ]
+        }
+      }
+    }
+
+**How it works**
+
+1. The parent object is inserted first i.e. in this case, the ``article`` is inserted.
+
+   The ``id`` of the article is collected in this step.
+
+2. The object relationships (from the perspective of article_tags) are inserted now i.e. in this case, the tags are now inserted.
+
+   The ``ids`` of the tags are collected in this step.
+
+3. The array relationships are inserted at the end i.e. in this case, the article_tags are now inserted with their ``article_id`` set to the article's ``id`` collected in the step 1. The ``tag_id`` is set to the tag's ``id`` collected in the step 2. Hence, it’s not possible to specify ``article_id`` and ``tag_id`` in the data for the article_tags relationship.
+
+**on_conflict**
+
+``on_conflict`` can be passed as an argument in a nested insert statement. In our example, we say that if the primary key (``id``) already exists, we update the ``label`` of this respective tag.
 
 Insert an object with a JSONB column
 ------------------------------------
