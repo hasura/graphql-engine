@@ -216,11 +216,11 @@ export const boolOperators = Object.keys(boolOperatorsInfo);
 
 const columnOperators = Object.keys(columnOperatorsInfo);
 
-export const existsOperator = '_exists';
+export const existOperators = ['_exists'];
 
 export const allOperators = boolOperators
   .concat(columnOperators)
-  .concat([existsOperator]);
+  .concat(existOperators);
 
 export const TABLE_KEY = '_table';
 export const WHERE_KEY = '_where';
@@ -231,8 +231,8 @@ export const isBoolOperator = operator => {
   return boolOperators.includes(operator);
 };
 
-export const isExistsOperator = operator => {
-  return operator === existsOperator;
+export const isExistOperator = operator => {
+  return existOperators.includes(operator);
 };
 
 export const isArrayBoolOperator = operator => {

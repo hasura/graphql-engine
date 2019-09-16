@@ -16,8 +16,8 @@ import {
   boolOperators,
   PGTypes,
   PGTypesOperators,
-  existsOperator,
-  isExistsOperator,
+  existOperators,
+  isExistOperator,
   TABLE_KEY,
   WHERE_KEY,
 } from './utils';
@@ -85,7 +85,7 @@ class PermissionBuilder extends React.Component {
       } else if (isBoolOperator(operator)) {
         const newPath = pathSplit.slice(1).join('.');
         _missingSchemas = findMissingSchemas(newPath, currTable);
-      } else if (isExistsOperator(operator)) {
+      } else if (isExistOperator(operator)) {
         if (pathSplit[1] === WHERE_KEY) {
           const newPath = pathSplit.slice(2).join('.');
           // TODO: this has to be the existsTable and not currTable
@@ -355,7 +355,7 @@ class PermissionBuilder extends React.Component {
         );
       } else if (isColumnOperator(operator)) {
         _boolExp = getColumnOperatorFilter(operator, value);
-      } else if (isExistsOperator(operator)) {
+      } else if (isExistOperator(operator)) {
         _boolExp = getExistsOperatorFilter(
           operator,
           value,
@@ -892,7 +892,7 @@ class PermissionBuilder extends React.Component {
 
       const operatorOptions = boolOperators
         .concat(['---'])
-        .concat([existsOperator])
+        .concat(existOperators)
         .concat(['---'])
         .concat(columnOptions);
 
@@ -925,7 +925,7 @@ class PermissionBuilder extends React.Component {
             schemaList,
             newPrefix
           );
-        } else if (isExistsOperator(operation)) {
+        } else if (isExistOperator(operation)) {
           _boolExpValue = renderExistsExp(
             dispatchFunc,
             operation,
