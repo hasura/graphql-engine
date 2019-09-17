@@ -14,6 +14,7 @@ import qualified Data.Text.Encoding               as TE
 import qualified Text.PrettyPrint.ANSI.Leijen     as PP
 
 import           Data.Char                        (toLower)
+import           Data.Time.Clock.Units            (milliseconds)
 import           Network.Wai.Handler.Warp         (HostPreference)
 import           Options.Applicative
 
@@ -95,7 +96,7 @@ data ServeOptions
   , soEnableTelemetry  :: !Bool
   , soStringifyNum     :: !Bool
   , soEnabledAPIs      :: !(Set.HashSet API)
-  , soLiveQueryOpts    :: !LQ.LQOpts
+  , soLiveQueryOpts    :: !LQ.LiveQueriesOptions
   , soEnableAllowlist  :: !Bool
   , soEnabledLogTypes  :: !(Set.HashSet L.EngineLogType)
   , soLogLevel         :: !L.LogLevel
@@ -186,10 +187,10 @@ instance FromEnv [API] where
   fromEnv = readAPIs
 
 instance FromEnv LQ.BatchSize where
-  fromEnv = fmap LQ.mkBatchSize . readEither
+  fromEnv = fmap LQ.BatchSize . readEither
 
 instance FromEnv LQ.RefetchInterval where
-  fromEnv = fmap LQ.refetchIntervalFromMilli . readEither
+  fromEnv = fmap (LQ.RefetchInterval . milliseconds . fromInteger) . readEither
 
 instance FromEnv JWTConfig where
   fromEnv = readJson
@@ -353,14 +354,9 @@ mkServeOptions rso = do
         _            -> corsCfg
 
     mkLQOpts = do
-      mxRefetchIntM <- withEnv (rsoMxRefetchInt rso) $
-                       fst mxRefetchDelayEnv
-      mxBatchSizeM <- withEnv (rsoMxBatchSize rso) $
-                      fst mxBatchSizeEnv
-      fallbackRefetchIntM <- withEnv (rsoFallbackRefetchInt rso) $
-                             fst fallbackRefetchDelayEnv
-      return $ LQ.mkLQOpts (LQ.mkMxOpts mxBatchSizeM mxRefetchIntM)
-        (LQ.mkFallbackOpts fallbackRefetchIntM)
+      mxRefetchIntM <- withEnv (rsoMxRefetchInt rso) $ fst mxRefetchDelayEnv
+      mxBatchSizeM <- withEnv (rsoMxBatchSize rso) $ fst mxBatchSizeEnv
+      return $ LQ.mkLiveQueriesOptions mxBatchSizeM mxRefetchIntM
 
 
 mkExamplesDoc :: [[String]] -> PP.Doc

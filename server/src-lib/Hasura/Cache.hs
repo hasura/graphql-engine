@@ -1,3 +1,6 @@
+{-| An in-memory, unbounded, capability-local cache implementation. By making the cache
+capability-local, data may be recomputed up to once per capability (which usually means up to once
+per OS thread), but write contention from multiple threads is unlikely. -}
 module Hasura.Cache
   ( UnboundedCache
   , initCache
