@@ -2,6 +2,7 @@ package commands
 
 import (
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/metadata"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -16,8 +17,7 @@ on those tables.`
 func newMetadataExportCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
 	opts := &metadataExportOptions{
-		EC:         ec,
-		actionType: "export",
+		EC: ec,
 	}
 
 	metadataExportCmd := &cobra.Command{
@@ -59,14 +59,22 @@ func newMetadataExportCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 type metadataExportOptions struct {
 	EC *cli.ExecutionContext
-
-	actionType string
 }
 
 func (o *metadataExportOptions) run() error {
-	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version)
+	config, err := metadata.New(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Version)
 	if err != nil {
 		return err
 	}
-	return executeMetadata(o.actionType, migrateDrv, o.EC)
+
+	metadataPath, err := o.EC.GetMetadataFilePath("yaml")
+	if err != nil {
+		return errors.Wrap(err, "cannot save metadata")
+	}
+
+	err = config.SetMetadataPath(metadataPath, false)
+	if err != nil {
+		return errors.Wrap(err, "cannot save metadata")
+	}
+	return config.Export()
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/migrate"
+	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -109,7 +110,7 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 
 	var migrateDrv *migrate.Migrate
 	if o.sqlServer || o.metaDataServer {
-		migrateDrv, err = newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version)
+		migrateDrv, err = util.NewMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version)
 		if err != nil {
 			return 0, errors.Wrap(err, "cannot create migrate instance")
 		}
