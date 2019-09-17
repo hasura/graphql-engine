@@ -5,6 +5,7 @@ import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 
 import styles from './ModifyTable.scss';
 import { deleteTrigger } from './ModifyActions';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 const TriggerEditorList = ({ tableSchema, dispatch }) => {
   const triggers = tableSchema.triggers;
@@ -22,7 +23,8 @@ const TriggerEditorList = ({ tableSchema, dispatch }) => {
     const triggerName = trigger.trigger_name;
 
     const onDelete = () => {
-      const isOk = confirm('Are you sure you want to delete?');
+      const confirmMessage = `This will permanently delete the trigger "${triggerName}" from this table`;
+      const isOk = getConfirmation(confirmMessage, true, triggerName);
       if (isOk) {
         dispatch(deleteTrigger(trigger, tableSchema));
       }

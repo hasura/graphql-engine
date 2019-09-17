@@ -16,7 +16,7 @@ import           Data.Foldable
 import           Data.List.NonEmpty            (NonEmpty (..))
 import           Data.Validation
 import           Hasura.GraphQL.Validate.Types
-import           Hasura.Prelude
+import           Hasura.Prelude                hiding (first)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -37,13 +37,14 @@ data ValidationError
   | TableFieldNonexistent !QualifiedTable !FieldName
   | ExpectedTypeButGot !G.GType !G.GType
   | InvalidType !G.GType!T.Text
-  | InvalidVariable G.Variable (HM.HashMap G.Variable FieldInfo)
+  | InvalidVariable G.Variable (HM.HashMap G.Variable (FieldInfo PGColumnInfo))
   | NullNotAllowedHere
   | ForeignRelationshipsNotAllowedInRemoteVariable !RelInfo
   | RemoteFieldsNotAllowedInArguments !RemoteField
   | UnsupportedArgumentType G.Value
   | InvalidGTypeForStripping !G.GType
   | UnsupportedMultipleElementLists
+  | UnsupportedEnum
   deriving (Show, Eq)
 
 -- | Get a validation for the remote relationship proposal.
@@ -63,7 +64,7 @@ getCreateRemoteRelationshipValidation createRemoteRelationship = do
 validateRelationship ::
      RemoteRelationship
   -> GC.GCtx
-  -> HM.HashMap QualifiedTable TableInfo
+  -> HM.HashMap QualifiedTable (TableInfo PGColumnInfo)
   -> Either (NonEmpty ValidationError) (RemoteField, TypeMap)
 validateRelationship remoteRelationship gctx tables = do
   case HM.lookup tableName tables of
@@ -74,7 +75,7 @@ validateRelationship remoteRelationship gctx tables = do
           HM.fromList
           (traverse
              (\fieldName ->
-                case HM.lookup fieldName (tiFieldInfoMap table) of
+                case HM.lookup fieldName (_tiFieldInfoMap table) of
                   Nothing ->
                     Left (pure (TableFieldNonexistent tableName fieldName))
                   Just fieldInfo -> pure (fieldName, fieldInfo))
@@ -292,7 +293,7 @@ lookupField name objFldInfo = viaObject objFldInfo
 validateRemoteArguments ::
      HM.HashMap G.Name InpValInfo
   -> HM.HashMap G.Name G.Value
-  -> HM.HashMap G.Variable FieldInfo
+  -> HM.HashMap G.Variable (FieldInfo PGColumnInfo)
   -> HM.HashMap G.NamedType TypeInfo
   -> Validation (NonEmpty ValidationError) ()
 validateRemoteArguments expectedArguments providedArguments permittedVariables types = do
@@ -320,7 +321,7 @@ validateRemoteArguments expectedArguments providedArguments permittedVariables t
 
 -- | Validate a value against a type.
 validateType ::
-     HM.HashMap G.Variable FieldInfo
+     HM.HashMap G.Variable (FieldInfo PGColumnInfo)
   -> G.Value
   -> G.GType
   -> HM.HashMap G.NamedType TypeInfo
@@ -396,11 +397,13 @@ assertListType actualType =
 
 -- | Convert a field info to a named type, if possible.
 fieldInfoToNamedType ::
-     FieldInfo
+     (FieldInfo PGColumnInfo)
   -> Validation (NonEmpty ValidationError) G.NamedType
 fieldInfoToNamedType =
   \case
-    FIColumn pgColInfo -> pure (mkScalarTy (pgiType pgColInfo))
+    FIColumn colInfo -> case pgiType colInfo of
+      PGColumnScalar scalarType -> pure $ mkScalarTy scalarType
+      _                         -> Failure $ pure UnsupportedEnum
     FIRelationship relInfo ->
       Failure (pure (ForeignRelationshipsNotAllowedInRemoteVariable relInfo))
     FIRemote remoteField ->

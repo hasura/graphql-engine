@@ -1,6 +1,6 @@
 .. _deploy_azure_ci_pg:
 
-Hasura GraphQL Engine on Azure with Container Instances and Postgres
+Hasura GraphQL engine on Azure with Container Instances and Postgres
 ====================================================================
 
 .. contents:: Table of contents
@@ -8,7 +8,7 @@ Hasura GraphQL Engine on Azure with Container Instances and Postgres
   :depth: 1
   :local:
 
-This guide talks about how to deploy Hasura GraphQL Engine on `Azure
+This guide talks about how to deploy the Hasura GraphQL engine on `Azure
 <https://azure.microsoft.com>`__ using `Container Instances
 <https://azure.microsoft.com/en-us/services/container-instances/>`__ with `Azure
 Database for PostgreSQL server <https://azure.microsoft.com/en-us/services/postgresql/>`__.
@@ -31,7 +31,7 @@ All resources mentioned in this guide can be deployed using the one-click button
        :target: https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json
      
      (This button takes you to the Azure Portal, you might want to :kbd:`Ctrl+Click` to
-     open it in a new tab. Read more about this Resource Manager Template `here <https://github.com/hasura/graphql-engine/tree/master/install-manifests/azure-container-with-pg>`__.)
+     open it in a new tab. Read more about this Resource Manager Template `here <https://github.com/hasura/graphql-engine/tree/master/install-manifests/azure-container-with-pg>`__).
 
   .. tab:: With an existing Postgres Server
 
@@ -42,19 +42,19 @@ All resources mentioned in this guide can be deployed using the one-click button
        :target: https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container%2fazuredeploy.json
      
      (This button takes you to the Azure Portal, you might want to :kbd:`Ctrl+Click` to
-     open it in a new tab. Read more about this Resource Manager Template `here <https://github.com/hasura/graphql-engine/tree/master/install-manifests/azure-container>`__.)
+     open it in a new tab. Read more about this Resource Manager Template `here <https://github.com/hasura/graphql-engine/tree/master/install-manifests/azure-container>`__).
 
 
 Pre-requisites
 --------------
 
-- Valid Azure Subscription with billing enabled or credits. (`click
-  here <https://azure.microsoft.com/en-us/free/>`__ for a free trial)
+- Valid Azure Subscription with billing enabled or credits (`click
+  here <https://azure.microsoft.com/en-us/free/>`__ for a free trial).
 - `Azure CLI <https://docs.microsoft.com/en-us/cli/azure/install-azure-cli>`_.
 
-The actions mentioned below can be executed using Azure Portal and Azure CLI. But,
+The actions mentioned below can be executed using the Azure Portal and the Azure CLI. But,
 for the sake of simplicity in documentation, we are going to use Azure CLI, so
-that commands can be easily copy pasted and executed.
+that commands can be easily copy-pasted and executed.
 
 Once the CLI is installed, login to your Azure account:
 
@@ -97,8 +97,8 @@ Once the resource group is created, we create a Postgres server instance:
 
    Choose a unique name for ``<server_name>``. Also choose a strong password for
    ``<server_admin_password>``, including uppercase, lowercase and numeric characters.
-   This will be required later to connect to the database.
-   (Make sure you escape the special characters depending on your shell.)
+   This will be required later to connect to the database
+   (make sure you escape the special characters depending on your shell).
 
 Note down the hostname. It will be shown as below in the output:
 
@@ -178,7 +178,7 @@ Open the Hasura Console
 -----------------------
 
 That's it! Once the deployment is complete, navigate to the container instance's
-IP or hostname to open Hasura console:
+IP or hostname to open the Hasura console:
 
 .. code-block:: bash
 
@@ -187,10 +187,10 @@ IP or hostname to open Hasura console:
       --query "{FQDN:ipAddress.fqdn,ProvisioningState:provisioningState}" \
       --out table
 
-Output will contain the FQDN in the format
+The output will contain the FQDN in the format
 ``<dns-name-label>.westus.azurecontainer.io``.
 
-Visit the following URL for the Hasura Console:
+Visit the following URL for the Hasura console:
 
 .. code:: 
 
@@ -202,7 +202,7 @@ Replace ``<dns-name-label>`` with the label given earlier.
    :class: no-shadow
    :alt: Hasura console
 
-You can create tables and test your GraphQL queries here. Checkout :ref:`Making
+You can create tables and test your GraphQL queries here. Check out :ref:`Making
 your first GraphQL Query <first_graphql_query>` for a detailed guide.
 
 Troubleshooting
@@ -221,7 +221,7 @@ the database allow connection for Azure services.
 Checking logs
 ^^^^^^^^^^^^^
 
-If the console is not loading, you might want to check logs and see if something
+If the console is not loading, you might want to check the logs and see if something
 is wrong:
 
 .. code-block:: bash

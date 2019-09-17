@@ -1,6 +1,6 @@
 {-# LANGUAGE DisambiguateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns           #-}
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE ViewPatterns             #-}
 
 module Hasura.GraphQL.Execute.RemoteJoins
   ( Batch(..)
@@ -19,28 +19,28 @@ module Hasura.GraphQL.Execute.RemoteJoins
 
 import           Control.Arrow                          (first)
 import           Control.Lens
-import           Data.Scientific
-import           Data.String
-import           Data.Traversable
-import           Data.Validation
-import           Hasura.SQL.Types
 import           Data.List
 import           Data.List.NonEmpty                     (NonEmpty (..))
+import           Data.Scientific
+import           Data.String
 import           Data.Time
+import           Data.Traversable
+import           Data.Validation
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.SQL.Time
+import           Hasura.SQL.Types
 
-import qualified Data.List.NonEmpty                     as NE
-import qualified Data.Vector                            as Vec
 import qualified Data.Aeson.Ordered                     as OJ
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OHM
+import qualified Data.List.NonEmpty                     as NE
 import qualified Data.Sequence                          as Seq
 import qualified Data.String.Conversions                as CS
 import qualified Data.Text                              as T
-import qualified VectorBuilder.Builder                  as VB 
-import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Data.Vector                            as Vec
 import qualified Hasura.GraphQL.Validate                as VQ
+import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified VectorBuilder.Builder                  as VB
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Transport.HTTP.Protocol
@@ -138,7 +138,7 @@ rebuildFieldStrippingRemoteRels =
           }
       where
         thisPath = parentPath <> RelFieldPath (pure (idx0, _fAlias field0))
-        hasuraFieldNames = 
+        hasuraFieldNames =
           map (G.Name . getFieldNameTxt) . toList . rtrHasuraFields . rmfRemoteRelationship
 
 -- | Get a list of fields needed from a hasura result.
@@ -152,7 +152,7 @@ joinResults :: GQRespValue
             -> GQRespValue
 joinResults hasuraValue0 =
   foldl' (uncurry . insertBatchResults) hasuraValue0 . map (fmap jsonToGQRespVal)
-  
+
   where
     jsonToGQRespVal = either mkErr id . parseGQRespValue
     mkErr = appendJoinError emptyResp . ("joinResults: eitherDecode: " <>) . fromString
@@ -175,10 +175,10 @@ insertBatchResults accumResp Batch{..} remoteResp =
     Left err -> appendJoinError accumResp err
     Right remoteData0 -> do
       case inHashmap batchRelFieldPath accumData0 remoteData0 of
-        Left err  -> appendJoinError accumRespWithRemoteErrs err
+        Left err       -> appendJoinError accumRespWithRemoteErrs err
         Right (val, _) -> set gqRespData val accumRespWithRemoteErrs
   where
-    accumRespWithRemoteErrs = gqRespErrors <>~ _gqRespErrors remoteResp $ accumResp 
+    accumRespWithRemoteErrs = gqRespErrors <>~ _gqRespErrors remoteResp $ accumResp
     accumData0 = _gqRespData accumResp
     -- The 'sortOn' below is not strictly necessary by the spec, but
     -- implementations may not guarantee order of results matching
@@ -308,13 +308,13 @@ insertBatchResults accumResp Batch{..} remoteResp =
 peelOffNestedFields :: MonadError GQJoinError m => NonEmpty G.Name -> OJ.Value -> m OJ.Value
 peelOffNestedFields topNames topValue = foldM peel topValue (NE.drop 1 topNames)
   where
-    peel value (G.Name key) = 
+    peel value (G.Name key) =
       case value of
         OJ.Object (OJ.lookup key -> Just value') -> -- NOTE: ViewPatterns
           pure value'
-        _ -> 
+        _ ->
           throwError $ fromString $
-            "No " <> show key <> " in " <> show value <> " from " <> 
+            "No " <> show key <> " in " <> show value <> " from " <>
             show topValue <> " with " <> show topNames
 
 
@@ -495,7 +495,7 @@ extractRemoteRelArguments hasuraJson rels =
               (extractFromResult One keyedRemotes (OJ.Object _gqRespData))
               mempty
       case hashE of
-        Left err -> (appendJoinError gqResp err, [])
+        Left err   -> (appendJoinError gqResp err, [])
         Right hash -> (gqResp, Map.elems hash)
   where
     keyedRemotes = zip (fmap RemoteRelKey [0 ..]) rels
@@ -665,7 +665,7 @@ fieldToField VQ.Field{..} = do
     traverse fieldToField _fSelSet
   _fDirectives <- pure []
   _fAlias      <- pure (Just _fAlias)
-  pure $ 
+  pure $
     G.Field{..}
 
 makeArgument :: (G.Name, AnnInpVal) -> Either Text G.Argument
@@ -677,12 +677,12 @@ annInpValToValue :: AnnInpVal -> Either Text G.Value
 annInpValToValue = annGValueToValue . _aivValue
 
 annGValueToValue :: AnnGValue -> Either Text G.Value
-annGValueToValue = fromMaybe (pure G.VNull) . 
+annGValueToValue = fromMaybe (pure G.VNull) .
   \case
-    AGScalar _ty mv -> 
+    AGScalar _ty mv ->
       pgcolvalueToGValue <$> mv
-    AGEnum _ mval ->
-      pure . G.VEnum <$> mval
+    AGEnum _ _enumVal ->
+      pure (Left "enum not supported")
     AGObject _ mobj ->
       flip fmap mobj $ \obj -> do
         fields <-
@@ -695,7 +695,7 @@ annGValueToValue = fromMaybe (pure G.VNull) .
     AGArray _ mvs ->
       fmap (G.VList . G.ListValueG) . traverse annInpValToValue <$> mvs
 
-pgcolvalueToGValue :: PGColValue -> Either Text G.Value
+pgcolvalueToGValue :: PGScalarValue -> Either Text G.Value
 pgcolvalueToGValue colVal = case colVal of
   PGValInteger i  -> pure $ G.VInt $ fromIntegral i
   PGValSmallInt i -> pure $ G.VInt $ fromIntegral i
@@ -717,8 +717,9 @@ pgcolvalueToGValue colVal = case colVal of
   PGValJSON {}    -> Left "PGValJSON: cannot convert"
   PGValJSONB {}  -> Left "PGValJSONB: cannot convert"
   PGValGeo {}    -> Left "PGValGeo: cannot convert"
+  PGValRaster {} -> Left "PGValRaster: cannot convert"
   PGValUnknown t -> pure $ G.VString $ G.StringValue t
 
 appendJoinError :: GQRespValue -> GQJoinError -> GQRespValue
-appendJoinError resp err = 
+appendJoinError resp err =
   gqRespErrors <>~ (VB.singleton $ gqJoinErrorToValue err) $ resp

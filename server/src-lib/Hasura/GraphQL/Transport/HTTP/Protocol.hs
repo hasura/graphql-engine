@@ -1,5 +1,4 @@
-{-# LANGUAGE NamedFieldPuns           #-}
-
+{-# LANGUAGE NamedFieldPuns  #-}
 module Hasura.GraphQL.Transport.HTTP.Protocol
   ( GQLReq(..)
   , GQLReqUnparsed
@@ -22,23 +21,23 @@ module Hasura.GraphQL.Transport.HTTP.Protocol
   , GQJoinError(..), gqJoinErrorToValue
   ) where
 
+import           Control.Lens
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Control.Lens
 
 import           Language.GraphQL.Draft.Instances ()
 
 import qualified Data.Aeson                       as J
 import qualified Data.Aeson.Casing                as J
+import qualified Data.Aeson.Ordered               as OJ
 import qualified Data.Aeson.TH                    as J
 import qualified Data.HashMap.Strict              as Map
+import qualified Data.Vector                      as V
 import qualified Language.GraphQL.Draft.Parser    as G
 import qualified Language.GraphQL.Draft.Syntax    as G
-import qualified Data.Aeson.Ordered               as OJ
 import qualified VectorBuilder.Builder            as VB
-import qualified Data.Vector                      as V
 import qualified VectorBuilder.Vector             as VB
 
 newtype GQLExecDoc

@@ -18,22 +18,46 @@ Convert insert mutation to upsert
   Only tables with **update** permissions are **upsertable**. i.e. a table's update permissions are respected
   before updating an existing row in case of a conflict.
 
-To convert an :doc:`insert mutation <insert>` into an upsert, you need to specify a unique or primary key constraint
-and the columns to be updated in the case of a violation of that constraint using the ``on_conflict`` argument. You can
-specify a constraint using the ``constraint`` field and choose the columns to update using the
-``update_columns`` field of the argument. The value of the ``update_columns`` field determines the behaviour of the
-upsert request in case of conflicts.
+To convert an :doc:`insert mutation <insert>` into an upsert, you need to use the ``on_conflict`` argument to specify:
+
+- a unique or primary key constraint using the ``constraint`` field, and
+- the columns to be updated in the case of a violation of that constraint using the ``update_columns`` field.
+
+The value of the ``update_columns`` field determines the behaviour of the upsert request as shown via the use cases
+below.
 
 .. admonition:: Fetching Postgres constraint names
 
-  You can fetch the name of unique or primary key constraints by querying the ``information_schema.table_constraints``
-  table. GraphQL Engine will automatically generate constraint names as enum values for ``constraint`` (try
-  autocompleting in GraphiQL). Typically, the constraint is automatically named as ``<table-name>_<column-name>_key``.
+  You can fetch details of unique or primary key constraints on a table by running the following SQL:
+
+  .. code-block:: sql
+
+    SELECT * FROM "information_schema"."table_constraints" WHERE table_name='<table>' AND table_schema='<schema>';
+
+  GraphQL engine will automatically generate constraint names as enum values for the ``constraint`` field *(try
+  autocompleting in GraphiQL)*. Typically, the constraint is automatically named as ``<table-name>_<column-name>_key``.
+
+Upsert is not a substitute for update
+-------------------------------------
+
+The upsert functionality is sometimes confused with the update functionality. However, they work slightly
+differently. An upsert mutation is used in the case when it's not clear if the respective row is already present
+in the database. If it's known that the row is present in the database, ``update`` is the functionality to use.
+
+For an upsert, **all columns need to be passed**. 
+
+**How it works**
+
+1. Postgres tries to insert a row (hence all the columns need to be present) 
+
+2. If this fails because of some constraint, it updates the specified columns
+
+If not all columns are present, an error like ``NULL value unexpected for <not-specified-column>`` can occur.
 
 
 Update selected columns on conflict
 -----------------------------------
-Insert a new object in the ``article`` table or, if the primary key constraint, ``article_pkey``, is violated, update
+Insert a new object in the ``article`` table or, if the primary key constraint ``article_pkey`` is violated, update
 the columns specified in ``update_columns``:
 
 .. graphiql::
@@ -82,8 +106,8 @@ The ``published_on`` column is left unchanged as it wasn't present in ``update_c
 
 Ignore request on conflict
 --------------------------
-If ``update_columns`` is an **empty array** then GraphQL Engine ignore changes on conflict. Insert a new object into
-the author table or, if the unique constraint, ``author_name_key``, is violated, ignore the request
+If ``update_columns`` is an **empty array** then the GraphQL engine ignores changes on conflict. Insert a new object into
+the author table or, if the unique constraint ``author_name_key`` is violated, ignore the request.
 
 .. graphiql::
   :view_only:
@@ -115,7 +139,7 @@ In this case, the insert mutation is ignored because there is a conflict and ``u
 
 Upsert in nested mutations
 --------------------------
-You can specify ``on_conflict`` clause while inserting nested objects
+You can specify the ``on_conflict`` clause while inserting nested objects:
 
 .. graphiql::
   :view_only:
@@ -159,9 +183,9 @@ You can specify ``on_conflict`` clause while inserting nested objects
 
   Nested upserts will fail when:
 
-  - In case of an array relationship, parent upsert does not affect any rows (i.e. ``update_columns: []`` for parent
+  - In case of an array relationship, the parent upsert does not affect any rows (i.e. ``update_columns: []`` for parent
     and a conflict occurs)
-  - In case of an object relationship, nested object upsert does not affect any row (i.e. ``update_columns: []`` for
+  - In case of an object relationship, the nested object upsert does not affect any row (i.e. ``update_columns: []`` for
     nested object and a conflict occurs)
 
   To allow upserting in these cases, set ``update_columns: [<conflict-column>]``. By doing this, in case of a

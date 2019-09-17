@@ -28,7 +28,7 @@ import           Hasura.SQL.Value
 
 -- data ScalarInfo
 --   = SIBuiltin !GBuiltin
---   | SICustom !PGColType
+--   | SICustom !PGScalarType
 --   deriving (Show, Eq)
 
 -- data GBuiltin

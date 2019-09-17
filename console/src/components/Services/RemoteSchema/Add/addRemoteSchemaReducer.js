@@ -21,12 +21,15 @@ const prefixUrl = globals.urlPrefix + appPrefix;
 const MANUAL_URL_CHANGED = '@addRemoteSchema/MANUAL_URL_CHANGED';
 const ENV_URL_CHANGED = '@addRemoteSchema/ENV_URL_CHANGED';
 const NAME_CHANGED = '@addRemoteSchema/NAME_CHANGED';
+const TIMEOUT_CONF_CHANGED = '@addRemoteSchema/TIMEOUT_CONF_CHANGED';
 // const HEADER_CHANGED = '@addRemoteSchema/HEADER_CHANGED';
 const ADDING_REMOTE_SCHEMA = '@addRemoteSchema/ADDING_REMOTE_SCHEMA';
 const ADD_REMOTE_SCHEMA_FAIL = '@addRemoteSchema/ADD_REMOTE_SCHEMA_FAIL';
 const RESET = '@addRemoteSchema/RESET';
-const FETCHING_INDIV_REMOTE_SCHEMA = '@addRemoteSchema/FETCHING_INDIV_REMOTE_SCHEMA';
-const REMOTE_SCHEMA_FETCH_SUCCESS = '@addRemoteSchema/REMOTE_SCHEMA_FETCH_SUCCESS';
+const FETCHING_INDIV_REMOTE_SCHEMA =
+  '@addRemoteSchema/FETCHING_INDIV_REMOTE_SCHEMA';
+const REMOTE_SCHEMA_FETCH_SUCCESS =
+  '@addRemoteSchema/REMOTE_SCHEMA_FETCH_SUCCESS';
 const REMOTE_SCHEMA_FETCH_FAIL = '@addRemoteSchema/REMOTE_SCHEMA_FETCH_FAIL';
 
 const DELETING_REMOTE_SCHEMA = '@addRemoteSchema/DELETING_REMOTE_SCHEMA';
@@ -47,6 +50,7 @@ const inputEventMap = {
   name: NAME_CHANGED,
   envName: ENV_URL_CHANGED,
   manualUrl: MANUAL_URL_CHANGED,
+  timeoutConf: TIMEOUT_CONF_CHANGED,
 };
 
 /* Action creators */
@@ -54,7 +58,7 @@ const inputChange = (type, data) => {
   return dispatch => dispatch({ type: inputEventMap[type], data });
 };
 
-const getHeaderEvents = generateHeaderSyms('CUSTOM_REMOTE_SCHEMA');
+const getHeaderEvents = generateHeaderSyms('REMOTE_SCHEMA');
 /* */
 
 const getReqHeader = headers => {
@@ -139,12 +143,17 @@ const addRemoteSchema = () => {
   return (dispatch, getState) => {
     const currState = getState().remoteSchemas.addData;
     // const url = Endpoints.getSchema;
+
+    let timeoutSeconds = parseInt(currState.timeoutConf, 10);
+    if (isNaN(timeoutSeconds)) timeoutSeconds = 60;
+
     const resolveObj = {
       name: currState.name.trim().replace(/ +/g, ''),
       definition: {
         url: currState.manualUrl,
         url_from_env: currState.envName,
         headers: [],
+        timeout_seconds: timeoutSeconds,
         forward_client_headers: currState.forwardClientHeaders,
       },
     };
@@ -152,6 +161,7 @@ const addRemoteSchema = () => {
     resolveObj.definition.headers = [
       ...getReqHeader(getState().remoteSchemas.headerData.headers),
     ];
+
     if (resolveObj.definition.url) {
       delete resolveObj.definition.url_from_env;
     } else {
@@ -316,11 +326,18 @@ const modifyRemoteSchema = () => {
         name: currState.editState.originalName,
       },
     };
+
+    let newTimeout = parseInt(currState.timeoutConf, 10);
+    let oldTimeout = parseInt(currState.editState.originalTimeoutConf, 10);
+    if (isNaN(newTimeout)) newTimeout = 60;
+    if (isNaN(oldTimeout)) oldTimeout = 60;
+
     const resolveObj = {
       name: remoteSchemaName,
       definition: {
         url: currState.manualUrl,
         url_from_env: currState.envName,
+        timeout_seconds: newTimeout,
         forward_client_headers: currState.forwardClientHeaders,
         headers: [],
       },
@@ -351,11 +368,13 @@ const modifyRemoteSchema = () => {
         name: remoteSchemaName,
       },
     };
+
     const resolveDownObj = {
       name: currState.editState.originalName,
       definition: {
         url: currState.editState.originalUrl,
         url_from_env: currState.editState.originalEnvUrl,
+        timeout_seconds: oldTimeout,
         headers: [],
         forward_client_headers:
           currState.editState.originalForwardClientHeaders,
@@ -377,6 +396,7 @@ const modifyRemoteSchema = () => {
         ...resolveDownObj,
       },
     };
+
     downQueryArgs.push(deleteRemoteSchemaDown);
     downQueryArgs.push(createRemoteSchemaDown);
     // End of down
@@ -389,6 +409,7 @@ const modifyRemoteSchema = () => {
       type: 'bulk',
       args: downQueryArgs,
     };
+
     const requestMsg = 'Modifying remote schema...';
     const successMsg = 'Remote schema modified';
     const errorMsg = 'Modify remote schema failed';
@@ -441,6 +462,11 @@ const addRemoteSchemaReducer = (state = addState, action) => {
         envName: action.data,
         manualUrl: null,
       };
+    case TIMEOUT_CONF_CHANGED:
+      return {
+        ...state,
+        timeoutConf: action.data,
+      };
     case ADDING_REMOTE_SCHEMA:
       return {
         ...state,
@@ -480,6 +506,9 @@ const addRemoteSchemaReducer = (state = addState, action) => {
         manualUrl: action.data[0].definition.url || null,
         envName: action.data[0].definition.url_from_env || null,
         headers: action.data[0].definition.headers || [],
+        timeoutConf: action.data[0].definition.timeout_seconds
+          ? action.data[0].definition.timeout_seconds.toString()
+          : '60',
         forwardClientHeaders: action.data[0].definition.forward_client_headers,
         editState: {
           ...state,

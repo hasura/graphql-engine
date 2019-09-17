@@ -1,0 +1,18 @@
+description: Test querying a table that references an enum table
+url: /v1/graphql
+status: 200
+response:
+  data:
+    users:
+    - name: Alyssa
+      favorite_color: red
+    - name: Ben
+      favorite_color: blue
+query:
+  query: |
+    {
+      users {
+        name
+        favorite_color
+      }
+    }

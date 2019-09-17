@@ -60,13 +60,12 @@ Install
      - id: windows
        content: |
 
-         Download the binary ``cli-hasura-windows-amd64.exe`` from GitHub release page: https://github.com/hasura/graphql-engine/releases
+         Download the binary ``cli-hasura-windows-amd64.exe`` available under ``Assets`` of the latest release
+         from the GitHub release page: https://github.com/hasura/graphql-engine/releases
 
          Rename the downloaded file to ``hasura``.
 
 (Optional) Add shell completion
 -------------------------------
 
-To add command auto completion in the shell
-
-Refer to :ref:`hasura completion <hasura_completion>`
+To add command auto completion in the shell, refer to :ref:`hasura completion <hasura_completion>`.

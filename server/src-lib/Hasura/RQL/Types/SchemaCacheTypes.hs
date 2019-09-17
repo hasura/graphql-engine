@@ -62,10 +62,51 @@ instance ToJSON SchemaObjId where
 instance ToJSONKey SchemaObjId where
   toJSONKey = toJSONKeyText reportSchemaObj
 
+data DependencyReason
+  = DRTable
+  | DRColumn
+  | DRRemoteTable
+  | DRLeftColumn
+  | DRRightColumn
+  | DRUsingColumn
+  | DRFkey
+  | DRRemoteFkey
+  | DRUntyped
+  | DROnType
+  | DRSessionVariable
+  | DRPayload
+  | DRParent
+  | DRRemoteSchema
+  | DRRemoteRelationship
+  deriving (Show, Eq, Generic)
+
+instance Hashable DependencyReason
+
+reasonToTxt :: DependencyReason -> Text
+reasonToTxt = \case
+  DRTable           -> "table"
+  DRColumn          -> "column"
+  DRRemoteTable     -> "remote_table"
+  DRLeftColumn      -> "left_column"
+  DRRightColumn     -> "right_column"
+  DRUsingColumn     -> "using_column"
+  DRFkey            -> "fkey"
+  DRRemoteFkey      -> "remote_fkey"
+  DRUntyped         -> "untyped"
+  DROnType          -> "on_type"
+  DRSessionVariable -> "session_variable"
+  DRPayload         -> "payload"
+  DRParent          -> "parent"
+  DRRemoteSchema    -> "remote_schema"
+  DRRemoteRelationship    -> "remote_relationship"
+
+instance ToJSON DependencyReason where
+  toJSON = String . reasonToTxt
+
 data SchemaDependency
   = SchemaDependency
   { sdObjId  :: !SchemaObjId
-  , sdReason :: !T.Text
+  , sdReason :: !DependencyReason
   } deriving (Show, Eq, Generic)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaDependency)

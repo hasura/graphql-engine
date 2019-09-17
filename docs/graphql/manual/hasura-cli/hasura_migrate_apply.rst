@@ -3,13 +3,13 @@
 Hasura CLI: hasura migrate apply
 --------------------------------
 
-Apply migrations on the database
+Apply migrations on the database.
 
 Synopsis
 ~~~~~~~~
 
 
-Apply migrations on the database
+Apply migrations on the database.
 
 ::
 
@@ -20,9 +20,9 @@ Options
 
 ::
 
-      --admin-secret string   admin secret for Hasura GraphQL Engine
+      --admin-secret string   admin secret for Hasura GraphQL engine
       --down string           apply all or N down migration steps
-      --endpoint string       http(s) endpoint for Hasura GraphQL Engine
+      --endpoint string       http(s) endpoint for Hasura GraphQL engine
   -h, --help                  help for apply
       --skip-execution        skip executing the migration action, but mark them as applied
       --type string           type of migration (up, down) to be used with version flag (default "up")

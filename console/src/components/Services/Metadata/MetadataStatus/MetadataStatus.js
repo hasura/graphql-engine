@@ -10,6 +10,7 @@ import metaDataStyles from '../Metadata.scss';
 import styles from '../../../Common/TableCommon/Table.scss';
 import CheckIcon from '../../../Common/Icons/Check';
 import CrossIcon from '../../../Common/Icons/Cross';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 const MetadataStatus = ({ dispatch, metadata }) => {
   const [shouldShowErrorBanner, toggleErrorBanner] = useState(true);
@@ -84,9 +85,9 @@ const MetadataStatus = ({ dispatch, metadata }) => {
   };
 
   const verifyAndDropAll = () => {
-    const isOk = window.confirm(
-      'Are you sure? This will drop all the inconsistent parts of your metadata. This action is irreversible.'
-    );
+    const confirmMessage =
+      'This will drop all the inconsistent objects in your metadata. This action is irreversible.';
+    const isOk = getConfirmation(confirmMessage);
     if (isOk) {
       dispatch(dropInconsistentObjects());
     }

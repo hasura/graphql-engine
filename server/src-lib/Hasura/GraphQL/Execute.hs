@@ -1,6 +1,5 @@
 {-# LANGUAGE DisambiguateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns           #-}
-
 module Hasura.GraphQL.Execute
   ( QExecPlanResolved(..)
   , QExecPlanUnresolved(..)
@@ -61,11 +60,10 @@ import           Hasura.Server.Utils                    (RequestId,
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Plan            as EP
 import qualified Hasura.GraphQL.Execute.Query           as EQ
-import           Hasura.GraphQL.Logging
+import           Hasura.GraphQL.Execute.RemoteJoins
 import qualified Hasura.GraphQL.Resolve                 as GR
 import qualified Hasura.GraphQL.Validate                as VQ
 import qualified Hasura.Logging                         as L
-import Hasura.GraphQL.Execute.RemoteJoins
 
 data QExecPlanPartial
   = ExPHasuraPartial !(GCtx, VQ.HasuraTopField, [G.VariableDefinition])
@@ -203,24 +201,25 @@ getExecPlan pgExecCtx planCache userInfo@UserInfo{..} sqlGenCtx enableAL sc scVe
       forM partialExecPlans $ \partialExecPlan ->
         case partialExecPlan of
           ExPRemotePartial r -> pure (Leaf $ ExPRemote r)
-          ExPHasuraPartial (GCtx{..}, rootSelSet, varDefs) -> do
-            let runE' :: (MonadError QErr m) => E m a -> m a
-                runE' action = do
-                  res <- runExceptT $ runReaderT action
-                    (userInfo, _gOpCtxMap, _gTypes, _gFields, _gOrdByCtx, _gInsCtxMap, sqlGenCtx)
-                  either throwError return res
+          ExPHasuraPartial (gCtx, rootSelSet, varDefs) -> do
+            -- let runE' :: (MonadError QErr m) => E m a -> m a
+            --     runE' action = do
+            --       res <- runExceptT $ runReaderT action
+            --         (userInfo, _gQueryCtxMap, _gTypes, _gFields, _gOrdByCtx, _gInsCtxMap)
+            --       either throwError return res
 
-                getQueryOp = runE' . EQ.convertQuerySelSet varDefs . pure
+                -- getQueryOp = runE' . EQ.convertQuerySelSet varDefs . pure
 
             case rootSelSet of
               VQ.HasuraTopMutation field ->
                 Leaf . ExPHasura . ExOpMutation <$>
-                (runE' $ resolveMutSelSet $ pure field)
+                (getMutOp gCtx sqlGenCtx userInfo (Seq.singleton field))
 
               VQ.HasuraTopQuery originalField -> do
                 case rebuildFieldStrippingRemoteRels originalField of
                   Nothing -> do
-                    (queryTx, _planM, genSql) <- getQueryOp originalField
+                    (queryTx, _planM, genSql) <- getQueryOp gCtx sqlGenCtx
+                                                 userInfo (Seq.singleton originalField) varDefs
 
                     -- TODO: How to cache query for each field?
                     -- mapM_ (addPlanToCache . EP.RPQuery) planM
@@ -232,12 +231,14 @@ getExecPlan pgExecCtx planCache userInfo@UserInfo{..} sqlGenCtx enableAL sc scVe
                     --      , "newField = " ++ show newField
                     --      , "cursors = " ++ show (fmap rrRelFieldPath cursors)
                     --      ])
-                    (queryTx, _planM, genSql) <- getQueryOp newHasuraField
+                    (queryTx, _planM, genSql) <- getQueryOp gCtx sqlGenCtx
+                                                 userInfo (Seq.singleton newHasuraField) varDefs
+
                     Tree (ExPHasura $ ExOpQuery queryTx (Just genSql)) <$>
                       mkUnresolvedPlans remoteRelFields
               VQ.HasuraTopSubscription fld -> do
-                (lqOp, _planM) <-
-                  runE' $ getSubsOpM pgExecCtx reqUnparsed varDefs fld
+                (lqOp, _planM) <- getSubsOp pgExecCtx gCtx sqlGenCtx
+                                  userInfo reqUnparsed varDefs fld
 
                 -- TODO: How to cache query for each field?
                 -- mapM_ (addPlanToCache . EP.RPSubs) planM
@@ -258,13 +259,44 @@ getExecPlan pgExecCtx planCache userInfo@UserInfo{..} sqlGenCtx enableAL sc scVe
 -- Monad for resolving a hasura query/mutation
 type E m =
   ReaderT ( UserInfo
-          , OpCtxMap
+          , QueryCtxMap
+          , MutationCtxMap
           , TypeMap
           , FieldMap
           , OrdByCtx
           , InsCtxMap
           , SQLGenCtx
           ) (ExceptT QErr m)
+
+runE
+  :: (MonadError QErr m)
+  => GCtx
+  -> SQLGenCtx
+  -> UserInfo
+  -> E m a
+  -> m a
+runE ctx sqlGenCtx userInfo action = do
+  res <- runExceptT $ runReaderT action
+    (userInfo, queryCtxMap, mutationCtxMap, typeMap, fldMap, ordByCtx, insCtxMap, sqlGenCtx)
+  either throwError return res
+  where
+    queryCtxMap = _gQueryCtxMap ctx
+    mutationCtxMap = _gMutationCtxMap ctx
+    typeMap = _gTypes ctx
+    fldMap = _gFields ctx
+    ordByCtx = _gOrdByCtx ctx
+    insCtxMap = _gInsCtxMap ctx
+
+getQueryOp
+  :: (MonadError QErr m)
+  => GCtx
+  -> SQLGenCtx
+  -> UserInfo
+  -> VQ.SelSet
+  -> [G.VariableDefinition]
+  -> m (LazyRespTx, Maybe EQ.ReusableQueryPlan, EQ.GeneratedSqlMap)
+getQueryOp gCtx sqlGenCtx userInfo fields varDefs =
+  runE gCtx sqlGenCtx userInfo $ EQ.convertQuerySelSet varDefs fields
 
 mutationRootName :: Text
 mutationRootName = "mutation_root"
@@ -273,7 +305,7 @@ resolveMutSelSet
   :: ( MonadError QErr m
      , MonadReader r m
      , Has UserInfo r
-     , Has OpCtxMap r
+     , Has MutationCtxMap r
      , Has FieldMap r
      , Has OrdByCtx r
      , Has SQLGenCtx r
@@ -300,10 +332,20 @@ resolveMutSelSet fields = do
       fmap encJFromAssocList $
         forM aliasedTxs sequence
 
+getMutOp
+  :: (MonadError QErr m)
+  => GCtx
+  -> SQLGenCtx
+  -> UserInfo
+  -> VQ.SelSet
+  -> m LazyRespTx
+getMutOp ctx sqlGenCtx userInfo selSet =
+  runE ctx sqlGenCtx userInfo $ resolveMutSelSet selSet
+
 getSubsOpM
   :: ( MonadError QErr m
      , MonadReader r m
-     , Has OpCtxMap r
+     , Has QueryCtxMap r
      , Has FieldMap r
      , Has OrdByCtx r
      , Has SQLGenCtx r
@@ -323,6 +365,21 @@ getSubsOpM pgExecCtx req varDefs fld =
       astUnresolved <- GR.queryFldToPGAST fld
       EL.subsOpFromPGAST pgExecCtx req varDefs (VQ._fAlias fld, astUnresolved)
 
+getSubsOp
+  :: ( MonadError QErr m
+     , MonadIO m
+     )
+  => PGExecCtx
+  -> GCtx
+  -> SQLGenCtx
+  -> UserInfo
+  -> GQLReqUnparsed
+  -> [G.VariableDefinition]
+  -> VQ.Field
+  -> m (EL.LiveQueryOp, Maybe EL.SubsPlan)
+getSubsOp pgExecCtx gCtx sqlGenCtx userInfo req varDefs fld =
+  runE gCtx sqlGenCtx userInfo $ getSubsOpM pgExecCtx req varDefs fld
+
 execRemoteGQ
   :: ( MonadIO m
      , MonadError QErr m
@@ -335,20 +392,23 @@ execRemoteGQ
   -> RemoteSchemaInfo
   -> Either GQLReqUnparsed [Field]
   -> m (HttpResponse EncJSON)
-execRemoteGQ reqId userInfo reqHdrs opType rsi bsOrField = do
-  ExecutionCtx{_ecxLogger, _ecxHttpManager} <- ask
+execRemoteGQ _reqId userInfo reqHdrs opType rsi bsOrField = do
+  execCtx <- ask
+  let _logger  = _ecxLogger execCtx
+      manager = _ecxHttpManager execCtx
   hdrs <- getHeadersFromConf hdrConf
   let confHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
       clientHdrs = bool [] filteredHeaders fwdClientHdrs
       -- filter out duplicate headers
       -- priority: conf headers > resolved userinfo vars > client headers
-      hdrMaps =
-        [ Map.fromList confHdrs
-        , Map.fromList userInfoToHdrs
-        , Map.fromList clientHdrs
-        ]
-      finalHdrs = foldr Map.union Map.empty hdrMaps -- mconcat
-      options = wreqOptions _ecxHttpManager (Map.toList finalHdrs)
+      hdrMaps    = [ Map.fromList confHdrs
+                   , Map.fromList userInfoToHdrs
+                   , Map.fromList clientHdrs
+                   ]
+      headers  = Map.toList $ foldr Map.union Map.empty hdrMaps
+      finalHeaders = addDefaultHeaders headers
+  initReqE <- liftIO $ try $ HTTP.parseRequest (show url)
+  initReq <- either httpThrow pure initReqE
   jsonbytes <-
     case bsOrField of
       Right field -> do
@@ -356,24 +416,38 @@ execRemoteGQ reqId userInfo reqHdrs opType rsi bsOrField = do
         let jsonbytes = encJToLBS (encJFromJValue gqlReq)
         pure jsonbytes
       Left unparsedQuery -> do
-        liftIO $ logGraphqlQuery _ecxLogger $ QueryLog unparsedQuery Nothing reqId
+        -- liftIO $ logGraphqlQuery logger $ QueryLog unparsedQuery Nothing reqId
         pure (J.encode $ J.toJSON unparsedQuery)
-  res <- liftIO $ try $ Wreq.postWith options (show url) jsonbytes
+  let req = initReq
+           { HTTP.method = "POST"
+           , HTTP.requestHeaders = finalHeaders
+           , HTTP.requestBody = HTTP.RequestBodyLBS jsonbytes
+           , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
+           }
+
+  -- TODO: Log here!!!
+  -- liftIO $ logGraphqlQuery logger $ QueryLog q Nothing reqId
+  res  <- liftIO $ try $ HTTP.httpLbs req manager
   resp <- either httpThrow return res
-  let cookieHdr = getCookieHdr (resp ^? Wreq.responseHeader "Set-Cookie")
-      respHdrs = Just $ mkRespHeaders cookieHdr
+  let cookieHdrs = getCookieHdr (resp ^.. Wreq.responseHeader "Set-Cookie")
+      respHdrs  = Just $ mkRespHeaders cookieHdrs
   return $ HttpResponse (encJFromLBS $ resp ^. Wreq.responseBody) respHdrs
   where
-    (RemoteSchemaInfo url hdrConf fwdClientHdrs) = rsi
+    RemoteSchemaInfo url hdrConf fwdClientHdrs timeout = rsi
     httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
-    httpThrow err = throw500 $ T.pack . show $ err
-    userInfoToHdrs =
-      map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $ userInfoToList userInfo
+    httpThrow = \case
+      HTTP.HttpExceptionRequest _req content -> throw500 $ T.pack . show $ content
+      HTTP.InvalidUrlException _url reason -> throw500 $ T.pack . show $ reason
+
+    userInfoToHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
+                     userInfoToList userInfo
     filteredHeaders = filterUserVars $ filterRequestHeaders reqHdrs
     filterUserVars hdrs =
       let txHdrs = map (\(n, v) -> (bsToTxt $ CI.original n, bsToTxt v)) hdrs
-       in map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
-          filter (not . isUserVar . fst) txHdrs
-    getCookieHdr = maybe [] (\h -> [("Set-Cookie", h)])
+      in map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
+         filter (not . isUserVar . fst) txHdrs
+
+    getCookieHdr = fmap (\h -> ("Set-Cookie", h))
+
     mkRespHeaders hdrs =
       map (\(k, v) -> Header (bsToTxt $ CI.original k, bsToTxt v)) hdrs

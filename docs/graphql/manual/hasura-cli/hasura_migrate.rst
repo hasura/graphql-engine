@@ -3,13 +3,13 @@
 Hasura CLI: hasura migrate
 --------------------------
 
-Manage migrations on the database
+Manage migrations on the database.
 
 Synopsis
 ~~~~~~~~
 
 
-Manage migrations on the database
+Manage migrations on the database.
 
 Options
 ~~~~~~~
@@ -30,7 +30,7 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* :ref:`hasura <hasura>` 	 - Hasura GraphQL Engine command line tool
+* :ref:`hasura <hasura>` 	 - Hasura GraphQL engine command line tool
 * :ref:`hasura migrate apply <hasura_migrate_apply>` 	 - Apply migrations on the database
 * :ref:`hasura migrate create <hasura_migrate_create>` 	 - Create files required for a migration
 * :ref:`hasura migrate status <hasura_migrate_status>` 	 - Display current status of migrations on a database

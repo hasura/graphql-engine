@@ -15,8 +15,9 @@ rebuild-ghc-options: true
 
 # Packages to be pulled from upstream that are not in the resolver (e.g., acme-missiles-0.3)
 extra-deps:
+# use https URLs so that build systems can clone these repos
 - git: https://github.com/hasura/pg-client-hs.git
-  commit: 16f27a134f12c4f24fee19d57f0ca179bdb4135b
+  commit: 1eb97c11f52b360ce7f796d9427dc294ce8e45fc
 - git: https://github.com/hasura/graphql-parser-hs.git
   commit: 1ccdbb4c4d743b679f3141992df39feaee971640
 - git: https://github.com/hasura/ci-info-hs.git
@@ -29,9 +30,9 @@ extra-deps:
 - primitive-extras-0.7.1
 - stm-hamt-1.2.0.2
 - stm-containers-1.1.0.4
-
 - reroute-0.5.0.0
 - Spock-core-0.13.0.0
+- monad-validate-1.2.0.0
 
 # Override default flag values for local packages and extra-deps
 flags: {}

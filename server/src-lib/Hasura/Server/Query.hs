@@ -16,8 +16,7 @@ import           Hasura.RQL.DDL.QueryCollection
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Relationship.Rename
 import           Hasura.RQL.DDL.RemoteSchema
-import           Hasura.RQL.DDL.Schema.Function
-import           Hasura.RQL.DDL.Schema.Table
+import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.DML.Count
 import           Hasura.RQL.DML.Delete
 import           Hasura.RQL.DML.Insert
@@ -33,6 +32,7 @@ data RQLQuery
   = RQAddExistingTableOrView !TrackTable
   | RQTrackTable !TrackTable
   | RQUntrackTable !UntrackTable
+  | RQSetTableIsEnum !SetTableIsEnum
 
   | RQTrackFunction !TrackFunction
   | RQUntrackFunction !UnTrackFunction
@@ -177,6 +177,7 @@ queryNeedsReload qi = case qi of
   RQUntrackTable _                -> True
   RQTrackFunction _               -> True
   RQUntrackFunction _             -> True
+  RQSetTableIsEnum _              -> True
 
   RQCreateObjectRelationship _    -> True
   RQCreateArrayRelationship  _    -> True
@@ -250,6 +251,7 @@ runQueryM rq =
       RQAddExistingTableOrView q   -> runTrackTableQ q
       RQTrackTable q               -> runTrackTableQ q
       RQUntrackTable q             -> runUntrackTableQ q
+      RQSetTableIsEnum q           -> runSetExistingTableIsEnumQ q
 
       RQTrackFunction q            -> runTrackFunc q
       RQUntrackFunction q          -> runUntrackFunc q

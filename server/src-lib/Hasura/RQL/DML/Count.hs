@@ -1,6 +1,5 @@
 module Hasura.RQL.DML.Count
   ( CountQueryP1(..)
-  , getCountDeps
   , validateCountQWith
   , validateCountQ
   , runCount
@@ -29,16 +28,6 @@ data CountQueryP1
   , cqp1Where    :: !(AnnBoolExpSQL, Maybe AnnBoolExpSQL)
   , cqp1Distinct :: !(Maybe [PGCol])
   } deriving (Show, Eq)
-
-getCountDeps
-  :: CountQueryP1 -> [SchemaDependency]
-getCountDeps (CountQueryP1 tn (_, mWc) mDistCols) =
-  mkParentDep tn
-  : fromMaybe [] whereDeps
-  <> fromMaybe [] distDeps
-  where
-    distDeps   = map (mkColDep "untyped" tn) <$> mDistCols
-    whereDeps   = getBoolExpDeps tn <$> mWc
 
 mkSQLCount
   :: CountQueryP1 -> S.Select
@@ -74,7 +63,7 @@ mkSQLCount (CountQueryP1 tn (permFltr, mWc) mDistCols) =
 validateCountQWith
   :: (UserInfoM m, QErrM m, CacheRM m)
   => SessVarBldr m
-  -> (PGColType -> Value -> m S.SQLExp)
+  -> (PGColumnType -> Value -> m S.SQLExp)
   -> CountQuery
   -> m CountQueryP1
 validateCountQWith sessVarBldr prepValBldr (CountQuery qt mDistCols mWhere) = do
@@ -84,7 +73,7 @@ validateCountQWith sessVarBldr prepValBldr (CountQuery qt mDistCols mWhere) = do
   selPerm <- modifyErr (<> selNecessaryMsg) $
              askSelPermInfo tableInfo
 
-  let colInfoMap = tiFieldInfoMap tableInfo
+  let colInfoMap = _tiFieldInfoMap tableInfo
 
   forM_ mDistCols $ \distCols -> do
     let distColAsrns = [ checkSelOnCol selPerm
