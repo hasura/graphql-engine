@@ -3,13 +3,13 @@
 Hasura CLI: hasura migrate status
 ---------------------------------
 
-Display current status of migrations on a database
+Display current status of migrations on a database.
 
 Synopsis
 ~~~~~~~~
 
 
-Display current status of migrations on a database
+Display current status of migrations on a database.
 
 ::
 
@@ -20,8 +20,8 @@ Options
 
 ::
 
-      --admin-secret string   admin secret for Hasura GraphQL Engine
-      --endpoint string       http(s) endpoint for Hasura GraphQL Engine
+      --admin-secret string   admin secret for Hasura GraphQL engine
+      --endpoint string       http(s) endpoint for Hasura GraphQL engine
   -h, --help                  help for status
 
 Options inherited from parent commands

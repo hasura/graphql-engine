@@ -15,9 +15,12 @@ module Hasura.GraphQL.Schema.Common
   , mkTableAggTy
 
   , mkColumnEnumVal
+  , mkDescriptionWith
+  , mkDescription
   ) where
 
 import qualified Data.HashMap.Strict           as Map
+import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Hasura.GraphQL.Validate.Types
@@ -63,3 +66,11 @@ mkTableAggTy = addTypeSuffix "_aggregate" . mkTableTy
 mkColumnEnumVal :: PGCol -> EnumValInfo
 mkColumnEnumVal (PGCol col) =
   EnumValInfo (Just "column name") (G.EnumValue $ G.Name col) False
+
+mkDescriptionWith :: Maybe PGDescription -> Text -> G.Description
+mkDescriptionWith descM defaultTxt = G.Description $ case descM of
+  Nothing                      -> defaultTxt
+  Just (PGDescription descTxt) -> T.unlines [descTxt, "\n", defaultTxt]
+
+mkDescription :: PGDescription -> G.Description
+mkDescription = G.Description . getPGDescription

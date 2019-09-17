@@ -16,8 +16,8 @@ import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashSet                  as Set
 import qualified Language.GraphQL.Draft.Syntax as G
 
-import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.BoolExp
+import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.OrderBy
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
@@ -58,9 +58,10 @@ mkPGColParams colType
   | otherwise = Map.empty
 
 mkPGColFld :: PGColumnInfo -> ObjFldInfo
-mkPGColFld (PGColumnInfo colName colTy isNullable) =
-  mkHsraObjFldInfo Nothing n (mkPGColParams colTy) ty
+mkPGColFld (PGColumnInfo colName colTy isNullable pgDesc) =
+  mkHsraObjFldInfo desc n (mkPGColParams colTy) ty
   where
+    desc = (G.Description . getPGDescription) <$> pgDesc
     n  = G.Name $ getPGColTxt colName
     ty = bool notNullTy nullTy isNullable
     columnType = mkColumnType colTy
@@ -83,7 +84,7 @@ mkSelArgs tn =
   ]
   where
     whereDesc   = "filter the rows returned"
-    limitDesc   = "limit the nuber of rows returned"
+    limitDesc   = "limit the number of rows returned"
     offsetDesc  = "skip the first n rows. Use only with order_by"
     orderByDesc = "sort the rows by one or more columns"
     distinctDesc = "distinct select on columns"
@@ -136,15 +137,16 @@ type table {
 -}
 mkTableObj
   :: QualifiedTable
+  -> Maybe PGDescription
   -> [SelField]
   -> ObjTyInfo
-mkTableObj tn allowedFlds =
+mkTableObj tn descM allowedFlds =
   mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) TLHasuraType
   where
     flds = concatMap (either (pure . mkPGColFld) mkRelFld') allowedFlds
     mkRelFld' (relInfo, allowAgg, _, _, isNullable) =
       mkRelFld allowAgg relInfo isNullable
-    desc = G.Description $ "columns and relationships of " <>> tn
+    desc = mkDescriptionWith descM $ "columns and relationships of " <>> tn
 
 {-
 type table_aggregate {
@@ -268,8 +270,9 @@ mkSelFldPKey tn cols =
     fldName = mkTableByPkName tn
     args = fromInpValL $ map colInpVal cols
     ty = G.toGT $ mkTableTy tn
-    colInpVal (PGColumnInfo n typ _) =
-      InpValInfo Nothing (mkColName n) Nothing $ G.toGT $ G.toNT $ mkColumnType typ
+    colInpVal (PGColumnInfo n typ _ descM) =
+      InpValInfo (mkDescription <$> descM)
+      (mkColName n) Nothing $ G.toGT $ G.toNT $ mkColumnType typ
 
 {-
 

@@ -188,7 +188,8 @@ checkOnColExp
   -> AnnBoolExpFldSQL
   -> m AnnBoolExpFldSQL
 checkOnColExp spi sessVarBldr annFld = case annFld of
-  AVCol (PGColumnInfo cn _ _) _ -> do
+  AVCol colInfo _ -> do
+    let cn = pgiName colInfo
     checkSelOnCol spi cn
     return annFld
   AVRel relInfo nesAnn -> do
@@ -248,7 +249,7 @@ convBoolExp
   -> (PGColumnType -> Value -> m S.SQLExp)
   -> m AnnBoolExpSQL
 convBoolExp cim spi be sessVarBldr prepValBldr = do
-  abe <- annBoolExp rhsParser cim be
+  abe <- annBoolExp rhsParser cim $ unBoolExp be
   checkSelPerm spi sessVarBldr abe
   where
     rhsParser pgType val = case pgType of

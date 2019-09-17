@@ -4,14 +4,13 @@ metaTitle: "Sync new todos in public feed | GraphQL Flutter Tutorial"
 metaDescription: "You will learn how to sync new todos added by other people in the public feed by fetching older and newer data using GraphQL Queries"
 ---
 
-
 In the previous section, we made a button that shows up only when there are new public todos in the database. Now lets make this button functional i.e. on pressing this button, newer todos should be fetched from the backend, synced with the local todos and the button must be dismissed.
 
 Go to `lib/data/feed_fetch.dart`, and add following query strings in it.
 
 ```dart
 +  static String loadMoreTodos = """ query loadMoreTodos (\$oldestTodoId: Int!) {
-+       todos (where: { is_public: { _eq: true}, id: {_lt: \$oldestTodoId}}, limit: 7, order_by: { 
++       todos (where: { is_public: { _eq: true}, id: {_lt: \$oldestTodoId}}, limit: 7, order_by: {
 +             created_at: desc }) {
 +         id
 +         title
@@ -22,7 +21,8 @@ Go to `lib/data/feed_fetch.dart`, and add following query strings in it.
 +       }
 +     }""";
 + static String newTodos = """query newTodos (\$latestVisibleId: Int!) {
-+      todos(where: { is_public: { _eq: true}, id: {_gt: \$latestVisibleId}}, order_by: { created_at: +      desc }) {
++      todos(where: { is_public: { _eq: true}, id: {_gt: \$latestVisibleId}}, order_by: { created_at:
++      desc }) {
 +        id
 +        title
 +        created_at
@@ -37,7 +37,7 @@ Now, whenever we navigate to feeds tab, we want current todos and on pressing ne
 
 Let's update our code accordingly step by step
 
-First let's fetch current todos and new notification todos.
+First let's fetch current todos and new notification todos in `lib/screens/tabs/dashboard/feeds.dart`
 
 ```dart
         Subscription(
@@ -53,7 +53,7 @@ First let's fetch current todos and new notification todos.
 
               if (_previousId != 0) {
                 _newTodoCount = _newTodoCount + (_newId - _previousId);
-              } 
+              }
 +              else {
 +                _lastLatestFeedId = _newId;
 +                _client
@@ -78,6 +78,7 @@ First let's fetch current todos and new notification todos.
               if (_newTodoCount != 0) {
                 return CustomButton(
                   onTap: () {
+-                     print("loading");
 +                    _client
 +                       .query(
 +                     QueryOptions(
@@ -153,6 +154,7 @@ Now let's add functionality to our load more button by again using `_client.quer
           width: MediaQuery.of(context).size.width / 3,
         )
 ```
+
 And yes to add new public todo, you can follow same as adding private todo.
 
 With this, your fully functional realtime todo app is ready.
