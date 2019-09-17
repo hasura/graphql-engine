@@ -26,7 +26,6 @@ import {
   findTable,
   generateTableDef,
   getSchemaName,
-  getSchemaTables,
   getTrackedTables,
   getColumnType,
   getTableColumn,
@@ -34,9 +33,9 @@ import {
   getTableColumnNames,
   getTableRelationshipNames,
   getTableRelationship,
-  getTableName,
   getTableSchema,
   getQualifiedTableDef,
+  getSchemaTableNames,
 } from '../../../../Common/utils/pgUtils';
 
 import {
@@ -754,9 +753,7 @@ class PermissionBuilder extends React.Component {
         dispatchFunc(generateTableDef(val, selectedSchema));
       };
 
-      const tableNames = getSchemaTables(tableSchemas, selectedSchema).map(t =>
-        getTableName(t)
-      );
+      const tableNames = getSchemaTableNames(tableSchemas, selectedSchema);
 
       const schemaNames = schemaList.map(s => getSchemaName(s));
 

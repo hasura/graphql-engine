@@ -216,3 +216,7 @@ export const getSchemaName = schema => {
 export const getSchemaTables = (allTables, tableSchema) => {
   return allTables.filter(t => getTableSchema(t) === tableSchema);
 };
+
+export const getSchemaTableNames = (allTables, tableSchema) => {
+  return getSchemaTables(allTables, tableSchema).map(t => getTableName(t));
+};
