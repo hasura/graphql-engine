@@ -71,7 +71,7 @@ export function isJsonString(str) {
   return true;
 }
 
-export function getAllJsonPaths(json, prefix = '') {
+export function getAllJsonPaths(json, leafKeys = [], prefix = '') {
   const _paths = [];
 
   const addPrefix = subPath => {
@@ -79,7 +79,7 @@ export function getAllJsonPaths(json, prefix = '') {
   };
 
   const handleSubJson = (subJson, newPrefix) => {
-    const subPaths = getAllJsonPaths(subJson, newPrefix);
+    const subPaths = getAllJsonPaths(subJson, leafKeys, newPrefix);
 
     subPaths.forEach(subPath => {
       _paths.push(subPath);
@@ -90,13 +90,17 @@ export function getAllJsonPaths(json, prefix = '') {
     }
   };
 
-  if (json instanceof Array) {
+  if (isArray(json)) {
     json.forEach((subJson, i) => {
       handleSubJson(subJson, addPrefix(i.toString()));
     });
-  } else if (json instanceof Object) {
+  } else if (isObject(json)) {
     Object.keys(json).forEach(key => {
-      handleSubJson(json[key], addPrefix(key));
+      if (leafKeys.includes(key)) {
+        _paths.push({ [addPrefix(key)]: json[key] });
+      } else {
+        handleSubJson(json[key], addPrefix(key));
+      }
     });
   } else {
     _paths.push(addPrefix(json));

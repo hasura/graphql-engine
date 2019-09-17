@@ -41,6 +41,8 @@ import {
 import {
   isJsonString,
   getAllJsonPaths,
+  isString,
+  isObject,
 } from '../../../../Common/utils/jsUtils';
 
 class PermissionBuilder extends React.Component {
@@ -69,44 +71,54 @@ class PermissionBuilder extends React.Component {
     }
   }
 
-  loadMissingSchemas() {
-    const { tableDef, loadSchemasFunc, filter } = this.props;
+  loadMissingSchemas(
+    tableDef = this.props.tableDef,
+    filter = this.props.filter
+  ) {
+    const { loadSchemasFunc } = this.props;
 
     const findMissingSchemas = (path, currTable) => {
       let _missingSchemas = [];
+
+      let value;
+      if (isObject(path)) {
+        value = Object.values(path)[0];
+        path = Object.keys(path)[0];
+      }
+
+      const getNewPath = newPath => {
+        return value ? { [newPath]: value } : newPath;
+      };
 
       const pathSplit = path.split('.');
 
       const operator = pathSplit[0];
 
       if (isArrayBoolOperator(operator)) {
-        const newPath = pathSplit.slice(2).join('.');
+        const newPath = getNewPath(pathSplit.slice(2).join('.'));
         _missingSchemas = findMissingSchemas(newPath, currTable);
       } else if (isBoolOperator(operator)) {
-        const newPath = pathSplit.slice(1).join('.');
+        const newPath = getNewPath(pathSplit.slice(1).join('.'));
         _missingSchemas = findMissingSchemas(newPath, currTable);
       } else if (isExistOperator(operator)) {
-        if (pathSplit[1] === WHERE_KEY) {
-          const newPath = pathSplit.slice(2).join('.');
-          // TODO: this has to be the existsTable and not currTable
-          _missingSchemas = findMissingSchemas(newPath, currTable);
-        } else if (
-          pathSplit[1] === TABLE_KEY &&
-          pathSplit[2] === 'schema' &&
-          pathSplit[3]
-        ) {
-          const { allTableSchemas } = this.props;
+        const existTableDef = isString(value[TABLE_KEY])
+          ? generateTableDef(value[TABLE_KEY])
+          : value[TABLE_KEY];
+        const existTableSchema = existTableDef.schema;
 
-          const existsTableSchema = pathSplit[3];
+        const existWhere = value[WHERE_KEY];
+
+        if (existTableSchema) {
+          const { allTableSchemas } = this.props;
 
           const allSchemaNames = allTableSchemas.map(t => getTableSchema(t));
 
-          if (!allSchemaNames.includes(existsTableSchema)) {
-            _missingSchemas.push(existsTableSchema);
+          if (!allSchemaNames.includes(existTableSchema)) {
+            _missingSchemas.push(existTableSchema);
           }
-        } else {
-          // no missing schemas
         }
+
+        this.loadMissingSchemas(existTableDef, JSON.stringify(existWhere));
       } else if (isColumnOperator(operator)) {
         // no missing schemas
       } else {
@@ -129,7 +141,7 @@ class PermissionBuilder extends React.Component {
             _missingSchemas.push(refTable.schema);
           }
 
-          const newPath = pathSplit.slice(1).join('.');
+          const newPath = getNewPath(pathSplit.slice(1).join('.'));
           _missingSchemas.push(...findMissingSchemas(newPath, refTable));
         } else {
           // no missing schemas
@@ -140,15 +152,13 @@ class PermissionBuilder extends React.Component {
     };
 
     const missingSchemas = [];
-    const paths = getAllJsonPaths(JSON.parse(filter || '{}'));
+    const paths = getAllJsonPaths(JSON.parse(filter || '{}'), existOperators);
 
-    for (let i = 0; i < paths.length; i++) {
-      const path = paths[i];
-
+    paths.forEach(path => {
       const subMissingSchemas = findMissingSchemas(path, tableDef);
 
       missingSchemas.push(...subMissingSchemas);
-    }
+    });
 
     if (missingSchemas.length > 0) {
       loadSchemasFunc(missingSchemas);
@@ -752,16 +762,12 @@ class PermissionBuilder extends React.Component {
 
       const schemaNames = schemaList.map(s => getSchemaName(s));
 
-      const schemaSelect = renderSelect(
-        schemaSelectDispatchFunc,
-        selectedSchema,
-        schemaNames
+      const schemaSelect = wrapDoubleQuotes(
+        renderSelect(schemaSelectDispatchFunc, selectedSchema, schemaNames)
       );
 
-      const tableSelect = renderSelect(
-        tableSelectDispatchFunc,
-        selectedTable,
-        tableNames
+      const tableSelect = wrapDoubleQuotes(
+        renderSelect(tableSelectDispatchFunc, selectedTable, tableNames)
       );
 
       const _tableExp = [
@@ -789,7 +795,9 @@ class PermissionBuilder extends React.Component {
         dispatchFunc({ prefix: addToPrefix(prefix, WHERE_KEY), value: val });
       };
 
-      const existsOpTable = expression[TABLE_KEY];
+      const existsOpTable = isString(expression[TABLE_KEY])
+        ? generateTableDef(expression[TABLE_KEY])
+        : expression[TABLE_KEY];
       const existsOpWhere = expression[WHERE_KEY];
 
       const tableSelect = renderTableSelect(
