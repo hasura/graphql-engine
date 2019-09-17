@@ -1,10 +1,12 @@
 import React from 'react';
 
-export const Disabled = () => {
+const Disabled = () => {
   return (
     <div>
       This feature is disabled.{' '}
-      <a href="https://docs.hasura.io">Read more...</a> to enable
+      <a href="https://docs.hasura.io">Read more...</a>
     </div>
   );
 };
+
+export default Disabled;

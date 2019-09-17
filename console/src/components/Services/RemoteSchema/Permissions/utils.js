@@ -1,3 +1,4 @@
+import globals from '../../../../Globals';
 import { permissionState } from '../state';
 import { getUnderlyingType } from '../graphqlUtils';
 import { isObjectType } from 'graphql';
@@ -202,4 +203,8 @@ export const getRootTypeAccess = (rootType, allowedTypes, objectTypes) => {
 
   traversedTypesCache = {};
   return accessLabels[access];
+};
+
+export const isRemoteSchemaPermissionsEnabled = () => {
+  return !!globals.enableRemoteSchemaPermissions;
 };

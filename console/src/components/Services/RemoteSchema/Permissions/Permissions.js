@@ -2,6 +2,7 @@ import React from 'react';
 import { isObjectType } from 'graphql';
 import { useIntrospectionSchema } from '../graphqlUtils';
 import PermissionsEditor from './PermissionsEditor';
+import PermissionsDisabled from './Disabled';
 import PermTableHeader from '../../../Common/Permissions/TableHeader';
 import PermTableBody from '../../../Common/Permissions/TableBody';
 import Spinner from '../../../Common/Spinner/Spinner';
@@ -13,7 +14,11 @@ import {
   closePermissionEdit,
   resetPermState,
 } from './Actions';
-import { parseRemoteRelPermDefinition, getRootTypeAccess } from './utils';
+import {
+  parseRemoteRelPermDefinition,
+  getRootTypeAccess,
+  isRemoteSchemaPermissionsEnabled,
+} from './utils';
 import { fetchRoleList } from '../../Data/DataActions';
 
 const Permissions = props => {
@@ -39,6 +44,10 @@ const Permissions = props => {
       dispatch(resetPermState());
     };
   }, []);
+
+  if (!isRemoteSchemaPermissionsEnabled()) {
+    return <PermissionsDisabled />;
+  }
 
   // show loading indicator while introspecting
   if (loading) return <Spinner />;
