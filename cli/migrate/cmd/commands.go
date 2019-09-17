@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 
 	"github.com/ghodss/yaml"
@@ -22,7 +23,7 @@ const (
 var ext = []string{sqlFile, yamlFile}
 
 type CreateOptions struct {
-	Version   int64
+	Version   string
 	Directory string
 	Name      string
 	MetaUp    []byte
@@ -32,12 +33,13 @@ type CreateOptions struct {
 }
 
 func New(version int64, name, directory string) *CreateOptions {
+	v := strconv.FormatInt(version, 10)
 	if runtime.GOOS == "windows" {
 		directory = strings.TrimPrefix(directory, "/")
 	}
 	return &CreateOptions{
-		Version:   version,
-		Directory: directory,
+		Version:   v,
+		Directory: filepath.Join(directory, fmt.Sprintf("%s_%s", v, name)),
 		Name:      name,
 	}
 }
@@ -112,8 +114,6 @@ func (c *CreateOptions) SetSQLDown(data string) error {
 }
 
 func (c *CreateOptions) Create() error {
-	fileName := fmt.Sprintf("%v_%v.", c.Version, c.Name)
-	base := filepath.Join(c.Directory, fileName)
 	err := os.MkdirAll(c.Directory, os.ModePerm)
 	if err != nil {
 		return err
@@ -126,7 +126,7 @@ func (c *CreateOptions) Create() error {
 
 	if c.MetaUp != nil {
 		// Create MetaUp
-		err = createFile(base+"up.yaml", c.MetaUp)
+		err = createFile(filepath.Join(c.Directory, "up.yaml"), c.MetaUp)
 		if err != nil {
 			return err
 		}
@@ -134,7 +134,7 @@ func (c *CreateOptions) Create() error {
 
 	if c.MetaDown != nil {
 		// Create MetaDown
-		err = createFile(base+"down.yaml", c.MetaDown)
+		err = createFile(filepath.Join(c.Directory, "down.yaml"), c.MetaDown)
 		if err != nil {
 			return err
 		}
@@ -142,7 +142,7 @@ func (c *CreateOptions) Create() error {
 
 	if c.SQLUp != nil {
 		// Create SQLUp
-		err = createFile(base+"up.sql", c.SQLUp)
+		err = createFile(filepath.Join(c.Directory, "up.sql"), c.SQLUp)
 		if err != nil {
 			return err
 		}
@@ -150,7 +150,7 @@ func (c *CreateOptions) Create() error {
 
 	if c.SQLDown != nil {
 		// Create SQLDown
-		err = createFile(base+"down.sql", c.SQLDown)
+		err = createFile(filepath.Join(c.Directory, "down.sql"), c.SQLDown)
 		if err != nil {
 			return err
 		}
@@ -159,30 +159,7 @@ func (c *CreateOptions) Create() error {
 }
 
 func (c *CreateOptions) Delete() error {
-	count := 0
-	fileName := fmt.Sprintf("%v_", c.Version)
-	// scan directory
-	files, err := ioutil.ReadDir(c.Directory)
-	if err != nil {
-		return err
-	}
-
-	for _, fi := range files {
-		if !fi.IsDir() {
-			if strings.HasPrefix(fi.Name(), fileName) {
-				base := filepath.Join(c.Directory, fi.Name())
-				err = deleteFile(base)
-				if err != nil {
-					return err
-				}
-				count = count + 1
-			}
-		}
-	}
-	if count == 0 {
-		return errors.New("Cannot find any migration file")
-	}
-	return nil
+	return deleteFile(c.Directory)
 }
 
 func createFile(fname string, data []byte) error {
@@ -201,8 +178,7 @@ func createFile(fname string, data []byte) error {
 }
 
 func deleteFile(fname string) error {
-	err := os.RemoveAll(fname)
-	return err
+	return os.RemoveAll(fname)
 }
 
 func GotoCmd(m *migrate.Migrate, v uint64, direction string) error {

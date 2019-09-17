@@ -59,12 +59,6 @@ func (f *File) Open(url string, logger *log.Logger) (source.Driver, error) {
 		p = strings.TrimPrefix(p, "/")
 	}
 
-	// scan directory
-	files, err := ioutil.ReadDir(p)
-	if err != nil {
-		return nil, err
-	}
-
 	nf := &File{
 		url:        url,
 		logger:     logger,
@@ -72,22 +66,41 @@ func (f *File) Open(url string, logger *log.Logger) (source.Driver, error) {
 		migrations: source.NewMigrations(),
 	}
 
-	for _, fi := range files {
-		if !fi.IsDir() {
-			m, err := source.DefaultParse(fi.Name(), p)
-			if err != nil {
-				continue // ignore files that we can't parse
-			}
-			ok, err := source.IsEmptyFile(m, p)
-			if err != nil {
-				return nil, err
-			}
-			if !ok {
-				continue
-			}
-			err = nf.migrations.Append(m)
+	folders, err := ioutil.ReadDir(p)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, fo := range folders {
+		if fo.IsDir() {
+			dirName := fo.Name()
+			dirPath := filepath.Join(p, dirName)
+			files, err := ioutil.ReadDir(dirPath)
 			if err != nil {
 				return nil, err
+			}
+
+			for _, fi := range files {
+				if fi.IsDir() {
+					continue
+				}
+				fileName := fmt.Sprintf("%s.%s", dirName, fi.Name())
+				m, err := source.DefaultParse(fileName)
+				if err != nil {
+					continue // ignore files that we can't parse
+				}
+				m.Raw = filepath.Join(dirName, fi.Name())
+				ok, err := source.IsEmptyFile(m, p)
+				if err != nil {
+					return nil, err
+				}
+				if !ok {
+					continue
+				}
+				err = nf.migrations.Append(m)
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 	}
