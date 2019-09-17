@@ -1,5 +1,5 @@
 import React from 'react';
-import { isEqual } from './jsUtils';
+import { isEqual, isString } from './jsUtils';
 
 /*** Table/View utils ***/
 
@@ -31,6 +31,10 @@ export const generateTableDef = (
 
 export const getTableDef = table => {
   return generateTableDef(getTableName(table), getTableSchema(table));
+};
+
+export const getQualifiedTableDef = tableDef => {
+  return isString(tableDef) ? generateTableDef(tableDef) : tableDef;
 };
 
 export const getTableNameWithSchema = (tableDef, wrapDoubleQuotes = false) => {

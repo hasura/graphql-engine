@@ -36,12 +36,12 @@ import {
   getTableRelationship,
   getTableName,
   getTableSchema,
+  getQualifiedTableDef,
 } from '../../../../Common/utils/pgUtils';
 
 import {
   isJsonString,
   getAllJsonPaths,
-  isString,
   isObject,
 } from '../../../../Common/utils/jsUtils';
 
@@ -101,9 +101,7 @@ class PermissionBuilder extends React.Component {
         const newPath = getNewPath(pathSplit.slice(1).join('.'));
         _missingSchemas = findMissingSchemas(newPath, currTable);
       } else if (isExistOperator(operator)) {
-        const existTableDef = isString(value[TABLE_KEY])
-          ? generateTableDef(value[TABLE_KEY])
-          : value[TABLE_KEY];
+        const existTableDef = getQualifiedTableDef(value[TABLE_KEY]);
         const existTableSchema = existTableDef.schema;
 
         const existWhere = value[WHERE_KEY];
@@ -795,9 +793,7 @@ class PermissionBuilder extends React.Component {
         dispatchFunc({ prefix: addToPrefix(prefix, WHERE_KEY), value: val });
       };
 
-      const existsOpTable = isString(expression[TABLE_KEY])
-        ? generateTableDef(expression[TABLE_KEY])
-        : expression[TABLE_KEY];
+      const existsOpTable = getQualifiedTableDef(expression[TABLE_KEY]);
       const existsOpWhere = expression[WHERE_KEY];
 
       const tableSelect = renderTableSelect(
