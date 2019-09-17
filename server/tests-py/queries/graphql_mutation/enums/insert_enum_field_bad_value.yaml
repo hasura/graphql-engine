@@ -1,0 +1,19 @@
+description: Test inserting a record with an invalid enum value
+url: /v1/graphql
+status: 200
+response:
+  errors:
+  - message: 'unexpected value "not_a_real_color" for enum: ''colors_enum'''
+    extensions:
+      code: validation-failed
+      path: $.selectionSet.insert_users.args.objects[0].favorite_color
+query:
+  query: |
+    mutation {
+      insert_users(objects: [{ name: "Matthew", favorite_color: not_a_real_color }]) {
+        returning {
+          name
+          favorite_color
+        }
+      }
+    }

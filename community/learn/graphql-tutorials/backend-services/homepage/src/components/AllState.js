@@ -21,6 +21,13 @@ const frontendTutorial = [
     disableBgClassName: 'angularDisableBg',
   },
   {
+    name: 'Typescript',
+    url: 'https://learn.hasura.io/graphql/typescript-react-apollo',
+    comingSoon: false,
+    bgClassName: 'typescriptBg',
+    disableBgClassName: 'typescriptDisableBg',
+  },
+  {
     name: 'Elm',
     url: 'https://learn.hasura.io/graphql/elm-graphql',
     comingSoon: false,

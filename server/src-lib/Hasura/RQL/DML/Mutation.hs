@@ -6,10 +6,15 @@ module Hasura.RQL.DML.Mutation
   )
 where
 
+import           Hasura.Prelude
+
+import qualified Data.HashMap.Strict      as Map
 import qualified Data.Sequence            as DS
+import qualified Database.PG.Query        as Q
+
+import qualified Hasura.SQL.DML           as S
 
 import           Hasura.EncJSON
-import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Returning
 import           Hasura.RQL.DML.Select
@@ -18,16 +23,12 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-import qualified Data.HashMap.Strict      as Map
-import qualified Database.PG.Query        as Q
-import qualified Hasura.SQL.DML           as S
-
 data Mutation
   = Mutation
   { _mTable    :: !QualifiedTable
   , _mQuery    :: !(S.CTE, DS.Seq Q.PrepArg)
   , _mFields   :: !MutFlds
-  , _mCols     :: ![PGColInfo]
+  , _mCols     :: ![PGColumnInfo]
   , _mStrfyNum :: !Bool
   } deriving (Show, Eq)
 
@@ -57,7 +58,7 @@ mutateAndSel (Mutation qt q mutFlds allCols strfyNum) = do
 
 mutateAndFetchCols
   :: QualifiedTable
-  -> [PGColInfo]
+  -> [PGColumnInfo]
   -> (S.CTE, DS.Seq Q.PrepArg)
   -> Bool
   -> Q.TxE QErr MutateResp
@@ -88,8 +89,8 @@ mutateAndFetchCols qt cols (cte, p) strfyNum =
              AnnSelG selFlds tabFrom tabPerm noTableArgs strfyNum
 
 mkSelCTEFromColVals
-  :: MonadError QErr m
-  => QualifiedTable -> [PGColInfo] -> [ColVals] -> m S.CTE
+  :: (MonadError QErr m)
+  => QualifiedTable -> [PGColumnInfo] -> [ColVals] -> m S.CTE
 mkSelCTEFromColVals qt allCols colVals =
   S.CTESelect <$> case colVals of
     [] -> return selNoRows
@@ -108,7 +109,7 @@ mkSelCTEFromColVals qt allCols colVals =
         let pgCol = pgiName ci
         val <- onNothing (Map.lookup pgCol colVal) $
           throw500 $ "column " <> pgCol <<> " not found in returning values"
-        runAesonParser (convToTxt (pgiType ci)) val
+        toTxtValue <$> parsePGScalarValue (pgiType ci) val
 
     selNoRows =
       S.mkSelect { S.selExtr = [S.selectStar]

@@ -9,7 +9,7 @@
               Backend
             </a>
             &nbsp; | &nbsp;
-            <a href="https://github.com/hasura/graphql-engine/tree/master/community/examples/realtime-chat-vue" target="_blank" rel="noopener noreferrer">
+            <a href="https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/realtime-chat-vue" target="_blank" rel="noopener noreferrer">
               Source
             </a>
             &nbsp; | &nbsp;

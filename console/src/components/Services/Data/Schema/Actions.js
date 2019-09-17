@@ -1,6 +1,7 @@
 import gqlPattern, { gqlSchemaErrorNotif } from '../Common/GraphQLValidation';
 import { showErrorNotification } from '../../Common/Notification';
 import { makeMigrationCall, fetchSchemaList } from '../DataActions';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 const getDropSchemaSql = schemaName => `drop schema "${schemaName}" cascade;`;
 
@@ -75,14 +76,12 @@ export const deleteCurrentSchema = (successCb, errorCb) => {
 
     if (currentSchema === 'public') {
       return dispatch(
-        showErrorNotification('Dropping public schema is not supported')
+        showErrorNotification('Dropping "public" schema is not supported')
       );
     }
 
-    const isOk = window.confirm(
-      `Are you sure you want to delete the postgres schema: "${currentSchema}"`
-    );
-
+    const confirmMessage = `This will permanently delete the Postgres schema "${currentSchema}" from the database`;
+    const isOk = getConfirmation(confirmMessage, true, currentSchema);
     if (!isOk) {
       return;
     }

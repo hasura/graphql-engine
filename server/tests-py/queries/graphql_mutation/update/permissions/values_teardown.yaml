@@ -15,3 +15,9 @@ args:
 
       DELETE from resident;
       SELECT setval('resident_id_seq', 1, FALSE);
+
+      delete from "user";
+      SELECT setval('"user_id_seq"', 1, FALSE);
+
+      delete from "account";
+      SELECT setval('"account_id_seq"', 1, FALSE);

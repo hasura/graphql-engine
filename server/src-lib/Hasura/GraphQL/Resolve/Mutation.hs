@@ -5,7 +5,6 @@ module Hasura.GraphQL.Resolve.Mutation
   , buildEmptyMutResp
   ) where
 
-import           Control.Arrow                     (second)
 import           Data.Has
 import           Hasura.Prelude
 
@@ -18,8 +17,8 @@ import qualified Hasura.RQL.DML.Delete             as RD
 import qualified Hasura.RQL.DML.Returning          as RR
 import qualified Hasura.RQL.DML.Update             as RU
 
-import qualified Hasura.SQL.DML                    as S
 import qualified Hasura.RQL.DML.Select             as RS
+import qualified Hasura.SQL.DML                    as S
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Resolve.BoolExp
@@ -33,7 +32,7 @@ import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
 convertMutResp
-  :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
+  :: ( MonadResolve m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )
   => G.NamedType -> SelSet -> m (RR.MutFldsG UnresolvedVal)
@@ -54,14 +53,14 @@ convertMutResp ty selSet =
       UVSQL sqlExp -> pure $ UVSQL sqlExp
 
 convertRowObj
-  :: (MonadError QErr m)
+  :: (MonadResolve m)
   => AnnInpVal
   -> m [(PGCol, UnresolvedVal)]
 convertRowObj val =
   flip withObject val $ \_ obj ->
   forM (OMap.toList obj) $ \(k, v) -> do
-    prepExpM <- fmap UVPG <$> asPGColValM v
-    let prepExp = fromMaybe (UVSQL $ S.SEUnsafe "NULL") prepExpM
+    prepExpM <- fmap mkParameterizablePGValue <$> asPGColumnValueM v
+    let prepExp = fromMaybe (UVSQL S.SENull) prepExpM
     return (PGCol $ G.unName k, prepExp)
 
 type ApplySQLOp =  (PGCol, S.SQLExp) -> S.SQLExp
@@ -79,24 +78,24 @@ lhsExpOp op annTy (col, e) =
     annExp = S.SETyAnn e annTy
 
 convObjWithOp
-  :: (MonadError QErr m)
+  :: (MonadResolve m)
   => ApplySQLOp -> AnnInpVal -> m [(PGCol, UnresolvedVal)]
 convObjWithOp opFn val =
   flip withObject val $ \_ obj -> forM (OMap.toList obj) $ \(k, v) -> do
-  colVal <- _apvValue <$> asPGColVal v
+  colVal <- openOpaqueValue =<< asPGColumnValue v
   let pgCol = PGCol $ G.unName k
       -- TODO: why are we using txtEncoder here?
-      encVal = txtEncoder colVal
+      encVal = txtEncoder . pstValue $ _apvValue colVal
       sqlExp = opFn (pgCol, encVal)
   return (pgCol, UVSQL sqlExp)
 
 convDeleteAtPathObj
-  :: (MonadError QErr m)
+  :: (MonadResolve m)
   => AnnInpVal -> m [(PGCol, UnresolvedVal)]
 convDeleteAtPathObj val =
   flip withObject val $ \_ obj -> forM (OMap.toList obj) $ \(k, v) -> do
-    vals <- flip withArray v $ \_ annVals -> mapM asPGColVal annVals
-    let valExps = map (txtEncoder . _apvValue) vals
+    vals <- traverse (openOpaqueValue <=< asPGColumnValue) =<< asArray v
+    let valExps = map (txtEncoder . pstValue . _apvValue) vals
         pgCol = PGCol $ G.unName k
         annEncVal = S.SETyAnn (S.SEArray valExps) S.textArrTypeAnn
         sqlExp = S.SEOpApp S.jsonbDeleteAtPathOp
@@ -104,7 +103,7 @@ convDeleteAtPathObj val =
     return (pgCol, UVSQL sqlExp)
 
 convertUpdateP1
-  :: ( MonadError QErr m
+  :: ( MonadResolve m
      , MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )
@@ -160,7 +159,7 @@ convertUpdateP1 opCtx fld = do
     args = _fArguments fld
 
 convertUpdate
-  :: ( MonadError QErr m
+  :: ( MonadResolve m
      , MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )
@@ -181,7 +180,7 @@ convertUpdate opCtx fld = do
   bool whenNonEmptyItems whenEmptyItems $ null $ RU.uqp1SetExps annUpdResolved
 
 convertDelete
-  :: ( MonadError QErr m
+  :: ( MonadResolve m
      , MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )

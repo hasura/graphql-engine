@@ -16,8 +16,8 @@ import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashSet                  as Set
 import qualified Language.GraphQL.Draft.Syntax as G
 
-import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.BoolExp
+import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.OrderBy
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
@@ -28,7 +28,7 @@ mkSelColumnTy :: QualifiedTable -> [PGCol] -> EnumTyInfo
 mkSelColumnTy tn cols = enumTyInfo
   where
     enumTyInfo = mkHsraEnumTyInfo (Just desc) (mkSelColumnInpTy tn) $
-                 mapFromL _eviVal $ map mkColumnEnumVal cols
+      EnumValuesSynthetic . mapFromL _eviVal $ map mkColumnEnumVal cols
 
     desc = G.Description $
       "select columns of table " <>> tn
@@ -39,8 +39,7 @@ mkSelColumnInpTy tn =
   G.NamedType $ qualObjectToName tn <> "_select_column"
 
 mkTableAggFldsTy :: QualifiedTable -> G.NamedType
-mkTableAggFldsTy tn =
-  G.NamedType $ qualObjectToName tn <> "_aggregate_fields"
+mkTableAggFldsTy = addTypeSuffix "_aggregate_fields" . mkTableTy
 
 mkTableColAggFldsTy :: G.Name -> QualifiedTable -> G.NamedType
 mkTableColAggFldsTy op tn =
@@ -50,27 +49,24 @@ mkTableByPkName :: QualifiedTable -> G.Name
 mkTableByPkName tn = qualObjectToName tn <> "_by_pk"
 
 -- Support argument params for PG columns
-mkPGColParams :: PGColType -> ParamMap
-mkPGColParams = \case
-  PGJSONB -> jsonParams
-  PGJSON  -> jsonParams
-  _       -> Map.empty
-  where
-    pathDesc = "JSON select path"
-    jsonParams = Map.fromList
-      [ (G.Name "path", InpValInfo (Just pathDesc) "path" Nothing $
-          G.toGT $ mkScalarTy PGText)
-      ]
+mkPGColParams :: PGColumnType -> ParamMap
+mkPGColParams colType
+  | isScalarColumnWhere isJSONType colType =
+    let pathDesc = "JSON select path"
+    in Map.fromList
+      [ (G.Name "path", InpValInfo (Just pathDesc) "path" Nothing $ G.toGT $ mkScalarTy PGText) ]
+  | otherwise = Map.empty
 
-mkPGColFld :: PGColInfo -> ObjFldInfo
-mkPGColFld (PGColInfo colName colTy isNullable) =
-  mkHsraObjFldInfo Nothing n (mkPGColParams colTy) ty
+mkPGColFld :: PGColumnInfo -> ObjFldInfo
+mkPGColFld (PGColumnInfo colName colTy isNullable pgDesc) =
+  mkHsraObjFldInfo desc n (mkPGColParams colTy) ty
   where
+    desc = (G.Description . getPGDescription) <$> pgDesc
     n  = G.Name $ getPGColTxt colName
     ty = bool notNullTy nullTy isNullable
-    scalarTy = mkScalarTy colTy
-    notNullTy = G.toGT $ G.toNT scalarTy
-    nullTy = G.toGT scalarTy
+    columnType = mkColumnType colTy
+    notNullTy = G.toGT $ G.toNT columnType
+    nullTy = G.toGT columnType
 
 -- where: table_bool_exp
 -- limit: Int
@@ -88,7 +84,7 @@ mkSelArgs tn =
   ]
   where
     whereDesc   = "filter the rows returned"
-    limitDesc   = "limit the nuber of rows returned"
+    limitDesc   = "limit the number of rows returned"
     offsetDesc  = "skip the first n rows. Use only with order_by"
     orderByDesc = "sort the rows by one or more columns"
     distinctDesc = "distinct select on columns"
@@ -141,15 +137,16 @@ type table {
 -}
 mkTableObj
   :: QualifiedTable
+  -> Maybe PGDescription
   -> [SelField]
   -> ObjTyInfo
-mkTableObj tn allowedFlds =
+mkTableObj tn descM allowedFlds =
   mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) TLHasuraType
   where
     flds = concatMap (either (pure . mkPGColFld) mkRelFld') allowedFlds
     mkRelFld' (relInfo, allowAgg, _, _, isNullable) =
       mkRelFld allowAgg relInfo isNullable
-    desc = G.Description $ "columns and relationships of " <>> tn
+    desc = mkDescriptionWith descM $ "columns and relationships of " <>> tn
 
 {-
 type table_aggregate {
@@ -222,8 +219,8 @@ type table_<agg-op>_fields{
 mkTableColAggFldsObj
   :: QualifiedTable
   -> G.Name
-  -> (PGColType -> G.NamedType)
-  -> [PGColInfo]
+  -> (PGColumnType -> G.NamedType)
+  -> [PGColumnInfo]
   -> ObjTyInfo
 mkTableColAggFldsObj tn op f cols =
   mkHsraObjTyInfo (Just desc) (mkTableColAggFldsTy op tn) Set.empty $ mapFromL _fiName $
@@ -263,7 +260,7 @@ table_by_pk(
 ): table
 -}
 mkSelFldPKey
-  :: QualifiedTable -> [PGColInfo]
+  :: QualifiedTable -> [PGColumnInfo]
   -> ObjFldInfo
 mkSelFldPKey tn cols =
   mkHsraObjFldInfo (Just desc) fldName args ty
@@ -273,8 +270,9 @@ mkSelFldPKey tn cols =
     fldName = mkTableByPkName tn
     args = fromInpValL $ map colInpVal cols
     ty = G.toGT $ mkTableTy tn
-    colInpVal (PGColInfo n typ _) =
-      InpValInfo Nothing (mkColName n) Nothing $ G.toGT $ G.toNT $ mkScalarTy typ
+    colInpVal (PGColumnInfo n typ _ descM) =
+      InpValInfo (mkDescription <$> descM)
+      (mkColName n) Nothing $ G.toGT $ G.toNT $ mkColumnType typ
 
 {-
 
