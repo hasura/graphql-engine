@@ -1,7 +1,8 @@
-{-# LANGUAGE CPP          #-}
-{-# LANGUAGE DataKinds    #-}
-{-# LANGUAGE RankNTypes   #-}
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE CPP             #-}
+{-# LANGUAGE DataKinds       #-}
+{-# LANGUAGE RankNTypes      #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ViewPatterns    #-}
 
 module Hasura.Server.App where
 
@@ -321,7 +322,8 @@ v1QueryHandler query = do
       sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
       pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
       instanceId <- scInstanceId . hcServerCtx <$> ask
-      runQuery pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx query
+      featureFlags <- scFeatureFlags . hcServerCtx <$> ask
+      runQuery pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx featureFlags query
 
 v1Alpha1GQHandler :: (SchemaCache -> Handler SchemaCache) -> GH.GQLReqUnparsed -> Handler (HttpResponse EncJSON)
 v1Alpha1GQHandler scModifier query = do
@@ -351,7 +353,7 @@ v1GQRemoteHandler
   :: RemoteSchemaName
   -> GH.GQLReqUnparsed
   -> Handler (HttpResponse EncJSON)
-v1GQRemoteHandler rsName = v1Alpha1GQHandler (flip mkCacheForRemoteSchema rsName)
+v1GQRemoteHandler rsName = v1Alpha1GQHandler (flip mkCacheForRemoteSchema rsName . scRemoteSchemas)
 
 gqlExplainHandler :: GE.GQLExplain -> Handler (HttpResponse EncJSON)
 gqlExplainHandler query = do
@@ -392,8 +394,8 @@ consoleAssetsHandler logger dir path = do
     mimeType = bsToTxt $ defaultMimeLookup fileName
     headers = ("Content-Type", mimeType) : encHeader
 
-mkConsoleHTML :: T.Text -> AuthMode -> Bool -> Maybe Text -> Either String T.Text
-mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
+mkConsoleHTML :: T.Text -> AuthMode -> Bool -> Maybe Text -> FeatureFlags -> Either String T.Text
+mkConsoleHTML path authMode enableTelemetry consoleAssetsDir FeatureFlags{..} =
   bool (Left errMsg) (Right res) $ null errs
   where
     (errs, res) = M.checkedSubstitute consoleTmplt $
@@ -404,6 +406,7 @@ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
              , "cdnAssets" .= boolToText (isNothing consoleAssetsDir)
              , "assetsVersion" .= consoleVersion
              , "serverVersion" .= currentVersion
+             , "enableRemoteSchemaPermissions" .=  boolToText ffRemoteSchemaPermissions
              ]
     consolePath = case path of
       "" -> "/console"
@@ -447,6 +450,14 @@ initErrExit e = do
     <> T.unpack (qeError e)
   exitFailure
 
+data HasuraApp
+  = HasuraApp
+  { _hapApplication    :: !Wai.Application
+  , _hapSchemaRef      :: !SchemaCacheRef
+  , _hapCacheBuildTime :: !(Maybe UTCTime)
+  , _hapShutdown       :: !(IO ())
+  }
+
 mkWaiApp
   :: Q.TxIsolation
   -> L.LoggerCtx
@@ -464,7 +475,7 @@ mkWaiApp
   -> S.HashSet API
   -> EL.LQOpts
   -> FeatureFlags
-  -> IO (Wai.Application, SchemaCacheRef, Maybe UTCTime)
+  -> IO HasuraApp
 mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
          enableConsole consoleAssetsDir enableTelemetry instanceId apis lqOpts featureFlags = do
 
@@ -472,7 +483,7 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
         pgExecCtxSer = PGExecCtx pool Q.Serializable
     (cacheRef, cacheBuiltTime) <- do
       pgResp <- runExceptT $ peelRun emptySchemaCache adminUserInfo
-                httpManager sqlGenCtx pgExecCtxSer $ do
+                httpManager sqlGenCtx pgExecCtxSer featureFlags $ do
                   buildSchemaCache
                   liftTx fetchLastUpdate
       (time, sc) <- either initErrExit return pgResp
@@ -504,19 +515,22 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
 
     spockApp <- spockAsApp $ spockT id $
                 httpApp corsCfg serverCtx enableConsole
-                  consoleAssetsDir enableTelemetry
+                  consoleAssetsDir enableTelemetry featureFlags
 
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
-    return ( WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp
-           , schemaCacheRef
-           , cacheBuiltTime
-           )
+        stopWSServer = WS.stopWSServerApp wsServerEnv
+
+    return $ HasuraApp
+      (WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp)
+      schemaCacheRef
+      cacheBuiltTime
+      stopWSServer
   where
     getTimeMs :: IO Int64
     getTimeMs = (round . (* 1000)) `fmap` getPOSIXTime
 
-httpApp :: CorsConfig -> ServerCtx -> Bool -> Maybe Text -> Bool -> SpockT IO ()
-httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
+httpApp :: CorsConfig -> ServerCtx -> Bool -> Maybe Text -> Bool -> FeatureFlags -> SpockT IO ()
+httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry featureFlags = do
     -- cors middleware
     unless (isCorsDisabled corsCfg) $
       middleware $ corsMiddleware (mkDefaultCorsPolicy corsCfg)
@@ -624,6 +638,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       get ("console" <//> wildcard) $ \path ->
         either (raiseGenericApiError logger . err500 Unexpected . T.pack) html $
         mkConsoleHTML path (scAuthMode serverCtx) enableTelemetry consoleAssetsDir
+          featureFlags
 
 raiseGenericApiError :: L.Logger -> QErr -> ActionT IO ()
 raiseGenericApiError logger qErr = do

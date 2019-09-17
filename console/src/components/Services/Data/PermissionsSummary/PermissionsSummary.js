@@ -19,6 +19,7 @@ import {
   getTrackedTables,
 } from '../../../Common/utils/pgUtils';
 import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbols';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 import { updateSchemaInfo } from '../DataActions';
 import { copyRolePermissions, permOpenEdit } from '../TablePermissions/Actions';
@@ -770,7 +771,9 @@ class PermissionsSummary extends Component {
           return;
         }
 
-        if (window.confirm('Are you sure?')) {
+        const confirmMessage = 'This will overwrite any existing permissions';
+        const isOk = getConfirmation(confirmMessage);
+        if (isOk) {
           const onSuccess = () => {
             this.setState({ copyState: { ...this.initState.copyState } });
           };

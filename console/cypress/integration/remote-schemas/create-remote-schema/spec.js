@@ -8,6 +8,7 @@ import {
 } from '../../../helpers/remoteSchemaHelpers';
 
 import { validateRS } from '../../validators/validators';
+import { setPromptValue } from '../../../helpers/common';
 
 const testName = 'rs';
 
@@ -87,45 +88,39 @@ export const failRSDuplicateSchemaNodes = () => {
 };
 
 export const deleteSimpleRemoteSchemaFailUserConfirmationError = () => {
-  cy.visit(
-    `remote-schemas/manage/${getRemoteSchemaName(1, testName)}/details`,
-    {
-      onBeforeLoad(win) {
-        cy.stub(win, 'prompt').returns('InvalidInput');
-      },
-    }
-  );
+  cy.visit(`remote-schemas/manage/${getRemoteSchemaName(1, testName)}/details`);
 
   cy.get(getElementFromAlias('remote-schemas-modify')).click();
   cy.wait(5000);
+  setPromptValue(null);
   cy.get(getElementFromAlias('remote-schema-edit-delete-btn')).click();
   cy.wait(5000);
   cy.window()
     .its('prompt')
     .should('be.called');
 
-  cy.get(getElementFromAlias('delete-confirmation-error')).should('exist');
+  cy.url().should(
+    'eq',
+    `${baseUrl}/remote-schemas/manage/${getRemoteSchemaName(
+      1,
+      testName
+    )}/modify`
+  );
+  // cy.get(getElementFromAlias('delete-confirmation-error')).should('exist');
   cy.wait(5000);
 };
 
 export const deleteSimpleRemoteSchema = () => {
-  // Are you absolutely sure?\nThis action cannot be undone. This will permanently delete stitched GraphQL schema. Please type "DELETE" (in caps, without quotes) to confirm.\n
-  cy.visit(
-    `remote-schemas/manage/${getRemoteSchemaName(1, testName)}/details`,
-    {
-      onBeforeLoad(win) {
-        cy.stub(win, 'prompt').returns('DELETE');
-      },
-    }
-  );
+  cy.visit(`remote-schemas/manage/${getRemoteSchemaName(1, testName)}/details`);
 
   cy.get(getElementFromAlias('remote-schemas-modify')).click();
   cy.wait(5000);
+  setPromptValue(getRemoteSchemaName(1, testName));
   cy.get(getElementFromAlias('remote-schema-edit-delete-btn')).click();
-  cy.wait(5000);
   cy.window()
     .its('prompt')
     .should('be.called');
+  cy.wait(5000);
   cy.get(getElementFromAlias('delete-confirmation-error')).should('not.exist');
   cy.wait(5000);
 };
@@ -256,22 +251,16 @@ export const passWithEditRemoteSchema = () => {
 };
 
 export const deleteRemoteSchema = () => {
-  cy.visit(
-    `remote-schemas/manage/${getRemoteSchemaName(5, testName)}/details`,
-    {
-      onBeforeLoad(win) {
-        cy.stub(win, 'prompt').returns('DELETE');
-      },
-    }
-  );
+  cy.visit(`remote-schemas/manage/${getRemoteSchemaName(5, testName)}/details`);
 
   cy.get(getElementFromAlias('remote-schemas-modify')).click();
   cy.wait(5000);
+  setPromptValue(getRemoteSchemaName(5, testName));
   cy.get(getElementFromAlias('remote-schema-edit-delete-btn')).click();
-  cy.wait(5000);
   cy.window()
     .its('prompt')
     .should('be.called');
+  cy.wait(5000);
 
   cy.get(getElementFromAlias('delete-confirmation-error')).should('not.exist');
 };

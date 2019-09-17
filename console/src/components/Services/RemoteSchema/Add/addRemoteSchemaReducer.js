@@ -59,7 +59,7 @@ const inputChange = (type, data) => {
   return dispatch => dispatch({ type: inputEventMap[type], data });
 };
 
-const getHeaderEvents = generateHeaderSyms('CUSTOM_REMOTE_SCHEMA');
+const getHeaderEvents = generateHeaderSyms('REMOTE_SCHEMA');
 /* */
 
 const getReqHeader = headers => {
@@ -162,6 +162,7 @@ const addRemoteSchema = () => {
     resolveObj.definition.headers = [
       ...getReqHeader(getState().remoteSchemas.headerData.headers),
     ];
+
     if (resolveObj.definition.url) {
       delete resolveObj.definition.url_from_env;
     } else {

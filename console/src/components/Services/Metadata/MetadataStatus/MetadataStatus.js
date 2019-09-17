@@ -10,6 +10,7 @@ import metaDataStyles from '../Metadata.scss';
 import styles from '../../../Common/TableCommon/Table.scss';
 import CheckIcon from '../../../Common/Icons/Check';
 import CrossIcon from '../../../Common/Icons/Cross';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 const MetadataStatus = ({ dispatch, metadata }) => {
   const [shouldShowErrorBanner, toggleErrorBanner] = useState(true);
@@ -70,7 +71,9 @@ const MetadataStatus = ({ dispatch, metadata }) => {
               definition = `remote schema named "${name}" at ${url}`;
             } else if (ico.type === 'remote_schema_permission') {
               name = `${ico.definition.role}-permission`;
-              definition = `permission for role "${ico.definition.role}" on remote schema "${ico.definition.remote_schema}"`;
+              definition = `permission for role "${
+                ico.definition.role
+              }" on remote schema "${ico.definition.remote_schema}"`;
             }
             return (
               <tr key={_i}>
@@ -87,9 +90,9 @@ const MetadataStatus = ({ dispatch, metadata }) => {
   };
 
   const verifyAndDropAll = () => {
-    const isOk = window.confirm(
-      'Are you sure? This will drop all the inconsistent parts of your metadata. This action is irreversible.'
-    );
+    const confirmMessage =
+      'This will drop all the inconsistent objects in your metadata. This action is irreversible.';
+    const isOk = getConfirmation(confirmMessage);
     if (isOk) {
       dispatch(dropInconsistentObjects());
     }

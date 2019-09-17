@@ -5,10 +5,6 @@ module Hasura.Server.Init where
 
 import qualified Database.PG.Query                as Q
 
-import           Data.Char                        (toLower)
-import           Network.Wai.Handler.Warp         (HostPreference)
-import           Options.Applicative
-
 import qualified Data.Aeson                       as J
 import qualified Data.Aeson.Casing                as J
 import qualified Data.Aeson.TH                    as J
@@ -16,19 +12,26 @@ import qualified Data.ByteString.Lazy.Char8       as BLC
 import qualified Data.HashSet                     as Set
 import qualified Data.String                      as DataString
 import qualified Data.Text                        as T
-import qualified Data.Vector                      as V
-import qualified Hasura.GraphQL.Execute.LiveQuery as LQ
-import qualified Hasura.Logging                   as L
+import qualified Data.Text.Encoding               as TE
 import qualified Text.PrettyPrint.ANSI.Leijen     as PP
 
+import           Data.Char                        (toLower)
+import           Network.Wai.Handler.Warp         (HostPreference)
+import           Options.Applicative
+
+import qualified Hasura.GraphQL.Execute.LiveQuery as LQ
+import qualified Hasura.Logging                   as L
+
 import           Hasura.Prelude
-import           Hasura.RQL.Types                 (RoleName (..),
+import           Hasura.RQL.Types                 (FeatureFlags (..),
+                                                   RoleName (..),
                                                    SchemaCache (..),
                                                    mkNonEmptyText)
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
 import           Hasura.Server.Logging
 import           Hasura.Server.Utils
+import           Network.URI                      (parseURI)
 
 newtype InstanceId
   = InstanceId { getInstanceId :: Text }
@@ -81,16 +84,6 @@ data RawServeOptions
   , rsoEnableRemotePerms  :: !Bool
   } deriving (Show, Eq)
 
-data FeatureFlags =
-  FeatureFlags
-  { ffRemoteSchemaPerms :: !Bool
-  }
-  deriving (Show, Eq)
-
-instance J.ToJSON FeatureFlags where
-  toJSON (FeatureFlags enableRemoteSchemaPerms) = J.Array $
-    bool V.empty (V.singleton $ J.String "remote_schema_permissions") enableRemoteSchemaPerms
-
 data ServeOptions
   = ServeOptions
   { soPort             :: !Int
@@ -130,7 +123,7 @@ data HGECommandG a
   = HCServe !a
   | HCExport
   | HCClean
-  | HCExecute
+  | HCExecute !a
   | HCVersion
   deriving (Show, Eq)
 
@@ -281,11 +274,11 @@ mkHGEOptions (HGEOptionsG rawConnInfo rawCmd) =
   where
     connInfo = mkRawConnInfo rawConnInfo
     cmd = case rawCmd of
-      HCServe rso -> HCServe <$> mkServeOptions rso
-      HCExport    -> return HCExport
-      HCClean     -> return HCClean
-      HCExecute   -> return HCExecute
-      HCVersion   -> return HCVersion
+      HCServe rso   -> HCServe <$> mkServeOptions rso
+      HCExport      -> return HCExport
+      HCClean       -> return HCClean
+      HCExecute rso -> HCExecute <$> mkServeOptions rso
+      HCVersion     -> return HCVersion
 
 mkRawConnInfo :: RawConnInfo -> WithEnv RawConnInfo
 mkRawConnInfo rawConnInfo = do
@@ -299,7 +292,7 @@ mkRawConnInfo rawConnInfo = do
     retries = connRetries rawConnInfo
 
 mkServeOptions :: RawServeOptions -> WithEnv ServeOptions
-mkServeOptions RawServeOptions{..}= do
+mkServeOptions rso@RawServeOptions{..}= do
   port <- fromMaybe 8080 <$>
           withEnv rsoPort (fst servePortEnv)
   host <- fromMaybe "*" <$>
@@ -325,8 +318,7 @@ mkServeOptions RawServeOptions{..}= do
   enabledLogs <- Set.fromList . fromMaybe (Set.toList L.defaultEnabledLogTypes) <$>
                  withEnv rsoEnabledLogTypes (fst enabledLogsEnv)
   serverLogLevel <- fromMaybe L.LevelInfo <$> withEnv rsoLogLevel (fst logLevelEnv)
-  enabledFeatureFlags <- FeatureFlags <$>
-                       withEnvBool rsoEnableRemotePerms (fst enableRemotePermsEnv)
+  enabledFeatureFlags <- getFeatureFlags rso
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
@@ -377,6 +369,10 @@ mkServeOptions RawServeOptions{..}= do
       return $ LQ.mkLQOpts (LQ.mkMxOpts mxBatchSizeM mxRefetchIntM)
         (LQ.mkFallbackOpts fallbackRefetchIntM)
 
+
+getFeatureFlags :: RawServeOptions -> WithEnv FeatureFlags
+getFeatureFlags RawServeOptions{..} = do
+   FeatureFlags <$> withEnvBool rsoEnableRemotePerms (fst enableRemotePermsEnv)
 
 mkExamplesDoc :: [[String]] -> PP.Doc
 mkExamplesDoc exampleLines =
@@ -679,24 +675,22 @@ parseRawConnInfo =
 connInfoErrModifier :: String -> String
 connInfoErrModifier s = "Fatal Error : " ++ s
 
-mkConnInfo ::RawConnInfo -> Either String Q.ConnInfo
+mkConnInfo :: RawConnInfo -> Either String Q.ConnInfo
 mkConnInfo (RawConnInfo mHost mPort mUser password mURL mDB opts mRetries) =
+  Q.ConnInfo retries <$>
   case (mHost, mPort, mUser, mDB, mURL) of
 
     (Just host, Just port, Just user, Just db, Nothing) ->
-      return $ Q.ConnInfo host port user password db opts retries
+      return $ Q.CDOptions $ Q.ConnOptions host port user password db opts
 
-    (_, _, _, _, Just dbURL) -> maybe (throwError invalidUrlMsg)
-                                withRetries $ parseDatabaseUrl dbURL opts
+    (_, _, _, _, Just dbURL) ->
+      return $ Q.CDDatabaseURI $ TE.encodeUtf8 $ T.pack dbURL
     _ -> throwError $ "Invalid options. "
                     ++ "Expecting all database connection params "
                     ++ "(host, port, user, dbname, password) or "
                     ++ "database-url (HASURA_GRAPHQL_DATABASE_URL)"
   where
     retries = fromMaybe 1 mRetries
-    withRetries ci = return $ ci{Q.connRetries = retries}
-    invalidUrlMsg = "Invalid database-url (HASURA_GRAPHQL_DATABASE_URL). "
-                    ++ "Example postgres://foo:bar@example.com:2345/database"
 
 parseTxIsolation :: Parser (Maybe Q.TxIsolation)
 parseTxIsolation = optional $
@@ -989,15 +983,28 @@ parseEnableRemotePerms =
 
 -- Init logging related
 connInfoToLog :: Q.ConnInfo -> StartupLog
-connInfoToLog (Q.ConnInfo host port user _ db _ retries) =
+connInfoToLog connInfo =
   StartupLog L.LevelInfo "postgres_connection" infoVal
   where
-    infoVal = J.object [ "host" J..= host
-                       , "port" J..= port
-                       , "user" J..= user
-                       , "database" J..= db
-                       , "retries" J..= retries
-                       ]
+    Q.ConnInfo retries details = connInfo
+    infoVal = case details of
+      Q.CDDatabaseURI uri -> mkDBUriLog $ T.unpack $ bsToTxt uri
+      Q.CDOptions co      ->
+        J.object [ "host" J..= Q.connHost co
+                 , "port" J..= Q.connPort co
+                 , "user" J..= Q.connUser co
+                 , "database" J..= Q.connDatabase co
+                 , "retries" J..= retries
+                 ]
+
+    mkDBUriLog uri =
+      case show <$> parseURI uri of
+        Nothing -> J.object
+          [ "error" J..= ("parsing database url failed" :: String)]
+        Just s  -> J.object
+          [ "retries" J..= retries
+          , "database_url" J..= s
+          ]
 
 serveOptsToLog :: ServeOptions -> StartupLog
 serveOptsToLog ServeOptions{..} =

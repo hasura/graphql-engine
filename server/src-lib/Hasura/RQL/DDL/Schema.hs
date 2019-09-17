@@ -62,7 +62,7 @@ data RunSQL
 $(deriveJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''RunSQL)
 
 runRunSQL
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
+  :: (QErrM m, UserInfoM m, CacheBuildM m)
   => RunSQL -> m EncJSON
 runRunSQL (RunSQL t cascade mChkMDCnstcy) = do
   adminOnly

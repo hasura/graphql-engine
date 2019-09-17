@@ -135,6 +135,7 @@ const getBasePermissionsState = (tableSchema, role, query) => {
   const rolePermissions = tableSchema.permissions.find(
     p => p.role_name === role
   );
+
   if (rolePermissions) {
     Object.keys(rolePermissions.permissions).forEach(q => {
       const localPresets = [];

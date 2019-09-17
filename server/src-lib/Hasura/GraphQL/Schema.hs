@@ -585,10 +585,12 @@ buildGCtxMapPG = do
   gCtxMap <- mkGCtxMap (scTables sc) (scFunctions sc)
   writeSchemaCache sc { scGCtxMap = gCtxMap }
 
-getGCtx :: RoleName -> GCtxMap -> GCtx
+getGCtx :: (CacheRM m) => RoleName -> GCtxMap -> m GCtx
 getGCtx rn ctxMap = do
-  -- lookup role or return empty
-  fromMaybe emptyGCtx $ Map.lookup rn ctxMap
+  sc <- askSchemaCache
+  -- lookup role or return allRemoteGCtx
+  -- allRemotesGCtx is empty if remote perms are enabled
+  pure $ fromMaybe (scAllRemoteGCtx sc) $ Map.lookup rn ctxMap
 
 -- pretty print GCtx
 ppGCtx :: GCtx -> String

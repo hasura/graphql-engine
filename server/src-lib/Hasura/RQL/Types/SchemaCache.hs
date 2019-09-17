@@ -1,5 +1,6 @@
-{-# LANGUAGE GADTs      #-}
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE GADTs          #-}
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE RankNTypes     #-}
 
 module Hasura.RQL.Types.SchemaCache
        ( SchemaCache(..)
@@ -35,7 +36,6 @@ module Hasura.RQL.Types.SchemaCache
 
        , RemoteSchemaCtx(..)
        , RemoteSchemaMap
-       , RemoteSchemasWithRole
        , addRemoteSchemaToCache
        , delRemoteSchemaFromCache
 
@@ -245,6 +245,7 @@ data RolePermInfo
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 5 snakeCase) ''RolePermInfo)
+
 makeLenses ''RolePermInfo
 
 type RolePermInfoMap = M.HashMap RoleName RolePermInfo
@@ -386,16 +387,17 @@ type FunctionCache = M.HashMap QualifiedFunction FunctionInfo -- info of all fun
 
 data RemoteSchemaCtx
   = RemoteSchemaCtx
-  { rscName :: !RemoteSchemaName
-  , rscGCtx :: !GC.RemoteGCtx
-  , rscInfo :: !RemoteSchemaInfo
+  { rscName  :: !RemoteSchemaName
+  , rscGCtx  :: !GC.RemoteGCtx
+  , rscInfo  :: !RemoteSchemaInfo
+  , rscPerms :: !(Maybe RemoteSchemaRoleMap) -- Nothing implies perms are disabled i.e.open access
   } deriving (Show, Eq)
 
 instance ToJSON RemoteSchemaCtx where
   toJSON = toJSON . rscInfo
 
 type RemoteSchemaMap = M.HashMap RemoteSchemaName RemoteSchemaCtx
-type RemoteSchemasWithRole = M.HashMap (RoleName, RemoteSchemaName) RemoteSchemaCtx
+type RemoteSchemaRoleMap = M.HashMap RoleName GC.RemoteGCtx
 
 type DepMap = M.HashMap SchemaObjId (HS.HashSet SchemaDependency)
 
@@ -427,14 +429,14 @@ incSchemaCacheVer (SchemaCacheVer prev) =
 
 data SchemaCache
   = SchemaCache
-  { scTables                :: !(TableCache PGColumnInfo)
-  , scFunctions             :: !FunctionCache
-  , scRemoteSchemas         :: !RemoteSchemaMap
-  , scRemoteSchemasWithRole :: !RemoteSchemasWithRole
-  , scAllowlist             :: !(HS.HashSet GQLQuery)
-  , scGCtxMap               :: !GC.GCtxMap
-  , scDepMap                :: !DepMap
-  , scInconsistentObjs      :: ![InconsistentMetadataObj]
+  { scTables           :: !(TableCache PGColumnInfo)
+  , scFunctions        :: !FunctionCache
+  , scRemoteSchemas    :: !RemoteSchemaMap
+  , scAllowlist        :: !(HS.HashSet GQLQuery)
+  , scGCtxMap          :: !GC.GCtxMap
+  , scAllRemoteGCtx    :: !GC.GCtx
+  , scDepMap           :: !DepMap
+  , scInconsistentObjs :: ![InconsistentMetadataObj]
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
@@ -467,9 +469,9 @@ emptySchemaCache =
   { scTables       = M.empty
   , scFunctions = M.empty
   , scRemoteSchemas = M.empty
-  , scRemoteSchemasWithRole = M.empty
   , scAllowlist  = HS.empty
   , scGCtxMap  = M.empty
+  , scAllRemoteGCtx = GC.emptyGCtx
   , scDepMap    = M.empty
   , scInconsistentObjs  = []
   }
@@ -743,17 +745,16 @@ delPermFromCache pa rn tn = do
 
 addRemoteSchemaToCache
   :: (QErrM m, CacheRWM m) => RemoteSchemaCtx -> m ()
-addRemoteSchemaToCache rmCtx = do
+addRemoteSchemaToCache rmCtx@RemoteSchemaCtx {rscName} = do
   sc <- askSchemaCache
   let rmSchemas = scRemoteSchemas sc
-      name = rscName rmCtx
   -- ideally, remote schema shouldn't present in cache
   -- if present unexpected 500 is thrown
-  onJust (M.lookup name rmSchemas) $ const $
-    throw500 $ "remote schema with name " <> name
-    <<> " already found in cache"
-  writeSchemaCache sc
-    {scRemoteSchemas = M.insert name rmCtx rmSchemas}
+  onJust (M.lookup rscName rmSchemas) $
+    const $
+    throw500 $
+    "remote schema with name " <> rscName <<> " already found in cache"
+  writeSchemaCache sc { scRemoteSchemas = M.insert rscName rmCtx rmSchemas }
 
 delRemoteSchemaFromCache
   :: (QErrM m, CacheRWM m) => RemoteSchemaName -> m ()

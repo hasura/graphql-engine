@@ -1,7 +1,7 @@
 module Hasura.RQL.Types.RemoteSchema where
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Common       (NonEmptyText)
+import           Hasura.RQL.Types.Common       (NonEmptyText, unNonEmptyText)
 import           Language.Haskell.TH.Syntax    (Lift)
 import           System.Environment            (lookupEnv)
 
@@ -26,6 +26,9 @@ newtype RemoteSchemaName
   deriving ( Show, Eq, Lift, Hashable, J.ToJSON, J.ToJSONKey
            , J.FromJSON, Q.ToPrepArg, Q.FromCol, DQuote
            )
+
+remoteSchemaNameToText :: RemoteSchemaName -> Text
+remoteSchemaNameToText = unNonEmptyText . unRemoteSchemaName
 
 data RemoteSchemaInfo
   = RemoteSchemaInfo
@@ -66,19 +69,34 @@ newtype RemoteSchemaNameQuery
 
 $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''RemoteSchemaNameQuery)
 
-data RemoteTypePerm
-  = RemoteTypePerm
-  { rtpType   :: G.NamedType
-  , rtpFields :: [G.Name]
+data RemoteAllowedFields
+  = RemoteAllowedFields
+  { rafType   :: G.NamedType
+  , rafFields :: [G.Name]
   } deriving (Show, Eq, Lift)
 
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''RemoteTypePerm)
+$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''RemoteAllowedFields)
+
+data RemoteSchemaPermDef
+ = RemoteSchemaPermDef
+ { rspdAllowedObjects      :: [RemoteAllowedFields]
+ , rspdAllowedInputObjects :: [RemoteAllowedFields]
+ } deriving (Show, Eq, Lift)
+
+$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''RemoteSchemaPermDef)
+
+instance J.FromJSON RemoteSchemaPermDef where
+  parseJSON (J.Object o) = do
+    allowedObjects <- o J..:? "allowed_objects" J..!= []
+    allowedInputObjects <- o J..:? "allowed_input_objects" J..!= []
+    pure $ RemoteSchemaPermDef allowedObjects allowedInputObjects
+  parseJSON _ = fail "expecting ab object"
 
 data RemoteSchemaPermissions
   = RemoteSchemaPermissions
   { rsPermRemoteSchema :: RemoteSchemaName
   , rsPermRole         :: RoleName
-  , rsPermDefinition   :: [RemoteTypePerm]
+  , rsPermDefinition   :: RemoteSchemaPermDef
   } deriving (Show, Eq, Lift)
 
 $(J.deriveJSON (J.aesonDrop 6 J.snakeCase) ''RemoteSchemaPermissions)

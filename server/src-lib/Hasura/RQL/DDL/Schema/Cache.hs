@@ -32,7 +32,6 @@ import           Data.Aeson
 import qualified Hasura.GraphQL.Schema              as GS
 
 import           Hasura.Db
-import           Hasura.GraphQL.RemoteServer
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Permission
@@ -49,7 +48,7 @@ import           Hasura.RQL.Types.Catalog
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.SQL.Types
 
-type CacheBuildM m = (CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
+type CacheBuildM m = (CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m, HasFeatureFlags m)
 
 buildSchemaCache :: (CacheBuildM m) => m ()
 buildSchemaCache = buildSchemaCacheWithOptions True
@@ -156,17 +155,17 @@ buildSchemaCacheWithOptions withSetup = do
           mkInconsObj = InconsistentMetadataObj (MORemoteSchema name)
                         MOTRemoteSchema (toJSON rs)
       withSchemaObject_ mkInconsObj $ do
-        rsCtx <- addRemoteSchemaP2Setup rs
-        sc <- askSchemaCache
-        let rGCtx = convRemoteGCtx $ rscGCtx rsCtx
-        mergedGCtxMap <- addRemoteSchemaToAdminRole (scGCtxMap sc) rGCtx
-        writeSchemaCache sc { scGCtxMap = mergedGCtxMap }
+        void $ addRemoteSchemaP2Setup rs
 
     applyRemoteSchemaPerm rsPerm = do
+      -- ideally we need not check for feature flag here
+      -- but `runAddRemoteSchemaPermissionsP1` does not check for feature flag
+      -- as it returns non-unit and we don't want to throw from there
+      featureFlags <- askFeatureFlags
       let RemoteSchemaPermissions rsName role _ = rsPerm
           inconsObj = InconsistentMetadataObj (MORemoteSchemaObj rsName (RMOPerm role))
                       MOTRemotePerm (toJSON rsPerm)
-      withSchemaObject_ inconsObj $ do
+      withSchemaObject_ inconsObj $ when (ffRemoteSchemaPermissions featureFlags) $ do
         rsCtx <- runAddRemoteSchemaPermissionsP1 rsPerm
         runAddRemoteSchemaPermissionsP2Setup rsPerm rsCtx
 

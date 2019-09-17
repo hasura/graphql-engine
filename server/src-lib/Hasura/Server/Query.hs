@@ -1,5 +1,6 @@
 module Hasura.Server.Query where
 
+import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -24,7 +25,6 @@ import           Hasura.RQL.DML.Select
 import           Hasura.RQL.DML.Update
 import           Hasura.RQL.Types
 import           Hasura.Server.Init                 (InstanceId (..))
-import           Hasura.Server.Utils
 
 import qualified Database.PG.Query                  as Q
 
@@ -101,11 +101,11 @@ $(deriveJSON
   ''RQLQuery)
 
 newtype Run a
-  = Run {unRun :: StateT SchemaCache (ReaderT (UserInfo, HTTP.Manager, SQLGenCtx) (LazyTx QErr)) a}
+  = Run {unRun :: StateT SchemaCache (ReaderT (UserInfo, HTTP.Manager, SQLGenCtx, FeatureFlags) (LazyTx QErr)) a}
   deriving ( Functor, Applicative, Monad
            , MonadError QErr
            , MonadState SchemaCache
-           , MonadReader (UserInfo, HTTP.Manager, SQLGenCtx)
+           , MonadReader (UserInfo, HTTP.Manager, SQLGenCtx, FeatureFlags)
            , CacheRM
            , CacheRWM
            , MonadTx
@@ -113,13 +113,16 @@ newtype Run a
            )
 
 instance UserInfoM Run where
-  askUserInfo = asks _1
+  askUserInfo = asks (^. _1)
 
 instance HasHttpManager Run where
-  askHttpManager = asks _2
+  askHttpManager = asks (^. _2)
 
 instance HasSQLGenCtx Run where
-  askSQLGenCtx = asks _3
+  askSQLGenCtx = asks (^. _3)
+
+instance HasFeatureFlags Run where
+  askFeatureFlags = asks (^. _4)
 
 fetchLastUpdate :: Q.TxE QErr (Maybe (InstanceId, UTCTime))
 fetchLastUpdate = do
@@ -145,20 +148,21 @@ peelRun
   -> HTTP.Manager
   -> SQLGenCtx
   -> PGExecCtx
+  -> FeatureFlags
   -> Run a -> ExceptT QErr IO (a, SchemaCache)
-peelRun sc userInfo httMgr sqlGenCtx pgExecCtx (Run m) =
+peelRun sc userInfo httMgr sqlGenCtx pgExecCtx featureFlags (Run m) =
   runLazyTx pgExecCtx $ withUserInfo userInfo lazyTx
   where
-    lazyTx = runReaderT (runStateT m sc) (userInfo, httMgr, sqlGenCtx)
+    lazyTx = runReaderT (runStateT m sc) (userInfo, httMgr, sqlGenCtx, featureFlags)
 
 runQuery
   :: (MonadIO m, MonadError QErr m)
   => PGExecCtx -> InstanceId
   -> UserInfo -> SchemaCache -> HTTP.Manager
-  -> SQLGenCtx -> RQLQuery -> m (EncJSON, SchemaCache)
-runQuery pgExecCtx instanceId userInfo sc hMgr sqlGenCtx query = do
+  -> SQLGenCtx -> FeatureFlags -> RQLQuery -> m (EncJSON, SchemaCache)
+runQuery pgExecCtx instanceId userInfo sc hMgr sqlGenCtx featureFlags query = do
   resE <- liftIO $ runExceptT $
-    peelRun sc userInfo hMgr sqlGenCtx pgExecCtx $ runQueryM query
+    peelRun sc userInfo hMgr sqlGenCtx pgExecCtx featureFlags $ runQueryM query
   either throwError withReload resE
   where
     withReload r = do
@@ -233,9 +237,7 @@ queryNeedsReload qi = case qi of
   RQBulk qs                       -> any queryNeedsReload qs
 
 runQueryM
-  :: ( QErrM m, CacheRWM m, UserInfoM m, MonadTx m
-     , MonadIO m, HasHttpManager m, HasSQLGenCtx m
-     )
+  :: ( QErrM m, UserInfoM m, CacheBuildM m )
   => RQLQuery
   -> m EncJSON
 runQueryM rq =
@@ -282,8 +284,8 @@ runQueryM rq =
       RQRemoveRemoteSchema q       -> runRemoveRemoteSchema q
       RQReloadRemoteSchema q       -> runReloadRemoteSchema q
 
-      RQAddRemoteSchemaPermissions q       -> runAddRemoteSchemaPermissions q
-      RQDropRemoteSchemaPermissions q       -> runDropRemoteSchemaPermissions q
+      RQAddRemoteSchemaPermissions q  -> runAddRemoteSchemaPermissions q
+      RQDropRemoteSchemaPermissions q -> runDropRemoteSchemaPermissions q
 
       RQCreateEventTrigger q       -> runCreateEventTriggerQuery q
       RQDeleteEventTrigger q       -> runDeleteEventTriggerQuery q

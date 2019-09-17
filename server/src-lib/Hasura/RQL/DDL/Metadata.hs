@@ -113,7 +113,7 @@ $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''TableMeta)
 data RemoteSchemaPermMeta
   = RemoteSchemaPermMeta
   { rspmRole       :: RoleName
-  , rspmDefinition :: [RemoteTypePerm]
+  , rspmDefinition :: RemoteSchemaPermDef
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 4 snakeCase) ''RemoteSchemaPermMeta)
@@ -149,9 +149,7 @@ clearMetadata = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "DELETE FROM hdb_catalog.hdb_query_collection WHERE is_system_defined <> 'true'" () False
 
 runClearMetadata
-  :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
-     , MonadIO m, HasHttpManager m, HasSQLGenCtx m
-     )
+  :: ( QErrM m, UserInfoM m, DS.CacheBuildM m )
   => ClearMetadata -> m EncJSON
 runClearMetadata _ = do
   adminOnly
@@ -228,13 +226,7 @@ applyQP1 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = 
       l L.\\ HS.toList (HS.fromList l)
 
 applyQP2
-  :: ( UserInfoM m
-     , CacheRWM m
-     , MonadTx m
-     , MonadIO m
-     , HasHttpManager m
-     , HasSQLGenCtx m
-     )
+  :: ( UserInfoM m, DS.CacheBuildM m)
   => ReplaceMetadata
   -> m EncJSON
 applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = do
@@ -323,9 +315,7 @@ applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = 
           RemoteSchemaPermissions name role permDef
 
 runReplaceMetadata
-  :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
-     , MonadIO m, HasHttpManager m, HasSQLGenCtx m
-     )
+  :: ( QErrM m, UserInfoM m, DS.CacheBuildM m )
   => ReplaceMetadata -> m EncJSON
 runReplaceMetadata q = do
   applyQP1 q
@@ -481,9 +471,7 @@ instance FromJSON ReloadMetadata where
 $(deriveToJSON defaultOptions ''ReloadMetadata)
 
 runReloadMetadata
-  :: ( QErrM m, UserInfoM m, CacheRWM m
-     , MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m
-     )
+  :: ( QErrM m, UserInfoM m, DS.CacheBuildM m )
   => ReloadMetadata -> m EncJSON
 runReloadMetadata _ = do
   adminOnly

@@ -48,7 +48,8 @@ execPGDump b ci = do
         ExitSuccess   -> Right $ CS.cs (clean stdOut)
         ExitFailure _ -> Left $ CS.cs stdErr
 
-    opts = Q.pgConnString ci : "--encoding=utf8" : prbOpts b
+    connString = T.unpack $ bsToTxt $ Q.pgConnString $ Q.ciDetails ci
+    opts = connString : "--encoding=utf8" : prbOpts b
 
     clean str
       | fromMaybe False (prbCleanOutput b) =

@@ -98,46 +98,64 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _ timeout) =
       Right a -> J.object ["response" J..= (a :: J.Value)]
       Left _  -> J.object ["raw_body" J..= bsToTxt (BL.toStrict bs)]
 
-mergeSchemas
+-- assert: initGCtxMap must be GCtxMapPG i.e. no remote schemas
+mergeRemoteSchemas
   :: (QErrM m)
   => RemoteSchemaMap
-  -> RemoteSchemasWithRole
   -> GS.GCtxMap
   -> m GS.GCtxMap
-mergeSchemas rmSchemaMap rmSchemaMapWithRole initGCtxMap = do
-  merged <- mergeRoleRemoteSchemas initGCtxMap rmSchemaMapWithRole
-  allRemotesGCtx <- combineRemoteGCtx remoteSchemas
-  addRemoteSchemaToAdminRole merged allRemotesGCtx
-  where
-    remoteSchemas = map rscGCtx $ Map.elems rmSchemaMap
+mergeRemoteSchemas rsMap initGCtxMap = do
+  let modRSMap = addAdminRoleToRemoteSchemas rsMap
+  mergeRoleRemoteSchemas initGCtxMap modRSMap
 
-combineRemoteGCtx
+-- This is required to give access to remote schemas on any role
+-- When permissions are enabled it returns emptyGCtx, when disabled it returns all remote adminGCtx
+mkAllRemoteGCtx
   :: (MonadError QErr m)
-  => [GC.RemoteGCtx] -> m GS.GCtx
-combineRemoteGCtx =
-  foldlM (\accumGCtx -> mergeGCtx accumGCtx . convRemoteGCtx) GC.emptyGCtx
+  => RemoteSchemaMap -> m GS.GCtx
+mkAllRemoteGCtx =
+  foldlM
+    (\accumGCtx rsCtx -> do
+       let gctx =
+             maybe
+               (convRemoteGCtx $ rscGCtx rsCtx) -- when perms are disabled, add adminGCtx
+               (const GC.emptyGCtx) -- when perms are enabled, add emptyGCtx
+               (rscPerms rsCtx)
+       mergeGCtx accumGCtx gctx)
+    GC.emptyGCtx
 
-addRemoteSchemaToAdminRole :: (MonadError QErr m) => GS.GCtxMap -> GS.GCtx -> m GS.GCtxMap
-addRemoteSchemaToAdminRole initGCtxMap remoteGCtx = do
-  let adminGCtx = fromMaybe GC.emptyGCtx $ Map.lookup adminRole initGCtxMap
-  merged <- mergeGCtx adminGCtx remoteGCtx
-  pure $ Map.insert adminRole merged initGCtxMap
+addAdminRoleToRemoteSchemas ::
+    RemoteSchemaMap -> RemoteSchemaMap
+addAdminRoleToRemoteSchemas =
+  Map.map
+    (\rsCtx ->
+       let adminGCtx = rscGCtx rsCtx
+           modPerms = fmap (Map.insert adminRole adminGCtx) (rscPerms rsCtx)
+        in rsCtx {rscPerms = modPerms})
 
 mergeRoleRemoteSchemas
   :: (MonadError QErr m)
   => GS.GCtxMap
-  -> RemoteSchemasWithRole
+  -> RemoteSchemaMap
   -> m GS.GCtxMap
-mergeRoleRemoteSchemas initGCtxMap roleRemoteSchemas = do
-  foldM
-    mergeAcc
+mergeRoleRemoteSchemas initGCtxMap rsMap = do
+  foldlM
+    (\accGCtxMap rsCtx ->
+       case rscPerms rsCtx of
+         Nothing -> mapM (flip mergeGCtx (getGCtxFromCtx rsCtx)) accGCtxMap
+         Just roleMap ->
+           foldlM
+             applyRolePerms
+             accGCtxMap
+             (Map.toList roleMap))
     initGCtxMap
-    (Map.toList roleRemoteSchemas)
+    rsMap
   where
-    mergeAcc acc ((role, _), remoteCtx) = do
-       let roleGCtx = convRemoteGCtx (rscGCtx remoteCtx)
-       merged <- mergeGCtx (GS.getGCtx role acc) roleGCtx
-       pure $ Map.insert role merged acc
+    getGCtxFromCtx = convRemoteGCtx . rscGCtx
+    applyRolePerms gCtxMap (role, rsGCtx) = do
+      let initRoleGCtx = fromMaybe GC.emptyGCtx $ Map.lookup role gCtxMap
+      mergedRoleGCtx <- mergeGCtx initRoleGCtx (convRemoteGCtx rsGCtx)
+      pure $ Map.insert role mergedRoleGCtx gCtxMap
 
 mergeGCtx
   :: (MonadError QErr m)

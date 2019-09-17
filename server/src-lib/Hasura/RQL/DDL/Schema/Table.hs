@@ -90,7 +90,7 @@ trackExistingTableOrViewP1 TrackTable { tName = vn } = do
     throw400 NotSupported $ "function with name " <> vn <<> " already exists"
 
 trackExistingTableOrViewP2
-  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
+  :: (QErrM m, CacheBuildM m)
   => TrackTable -> m EncJSON
 trackExistingTableOrViewP2 (TrackTable tableName isEnum) = do
   sc <- askSchemaCache
@@ -101,14 +101,14 @@ trackExistingTableOrViewP2 (TrackTable tableName isEnum) = do
   return successMsg
 
 runTrackTableQ
-  :: (QErrM m, CacheRWM m, MonadTx m, UserInfoM m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
+  :: (QErrM m, UserInfoM m, CacheBuildM m)
   => TrackTable -> m EncJSON
 runTrackTableQ q = do
   trackExistingTableOrViewP1 q
   trackExistingTableOrViewP2 q
 
 runSetExistingTableIsEnumQ
-  :: (QErrM m, CacheRWM m, MonadTx m, UserInfoM m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
+  :: (QErrM m, UserInfoM m, CacheBuildM m)
   => SetTableIsEnum -> m EncJSON
 runSetExistingTableIsEnumQ (SetTableIsEnum tableName isEnum) = do
   adminOnly

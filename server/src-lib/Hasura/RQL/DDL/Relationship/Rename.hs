@@ -6,22 +6,15 @@ import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Relationship       (validateRelP1)
 import           Hasura.RQL.DDL.Relationship.Types
-import           Hasura.RQL.DDL.Schema             (buildSchemaCache,
-                                                    renameRelInCatalog,
-                                                    withNewInconsistentObjsCheck)
+import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 import qualified Data.HashMap.Strict               as HM
 
 renameRelP2
-  :: ( QErrM m
-     , MonadTx m
-     , CacheRWM m
-     , MonadIO m
-     , HasHttpManager m
-     , HasSQLGenCtx m
-     )
+  :: ( QErrM m, CacheBuildM m)
+
   => QualifiedTable -> RelName -> RelInfo -> m ()
 renameRelP2 qt newRN relInfo = withNewInconsistentObjsCheck $ do
   tabInfo <- askTabInfo qt
@@ -41,12 +34,8 @@ renameRelP2 qt newRN relInfo = withNewInconsistentObjsCheck $ do
 
 runRenameRel
   :: ( QErrM m
-     , CacheRWM m
-     , MonadTx m
      , UserInfoM m
-     , MonadIO m
-     , HasHttpManager m
-     , HasSQLGenCtx m
+     , CacheBuildM m
      )
   => RenameRel -> m EncJSON
 runRenameRel defn = do
