@@ -13,7 +13,7 @@ const cloneQuery = (query) => {
   return JSON.parse(JSON.stringify(query));
 };
 
-export default (serverEndpoint, headers, config) => {
+export default (serverEndpoint, httpClient, config) => {
 
   const getTableSchema = (resource) => {
     let tableName;
@@ -203,7 +203,7 @@ export default (serverEndpoint, headers, config) => {
       if (Array.isArray(response[0])) {
         response[0].forEach((res) => {
           res[DEFAULT_PRIMARY_KEY] = res[primaryKey];
-        })
+        });
       } else {
         response[0][DEFAULT_PRIMARY_KEY] = response[0][primaryKey];
       }
@@ -268,7 +268,13 @@ export default (serverEndpoint, headers, config) => {
     );
 
     options.method = 'POST';
-    options.headers = headers;
+    if (typeof (httpClient) === 'function') { // support httpClient argument
+      return httpClient(serverEndpoint + '/v1/query', options).then(response =>
+        convertHTTPResponse(response.json, type, resource, params)
+      );
+    }
+
+    options.headers = httpClient; // backwards compatible static header object
     return fetch(serverEndpoint + '/v1/query', options).then(function (response) {
       return response.json().then((data) => {
         return convertHTTPResponse(data, type, resource, params);
