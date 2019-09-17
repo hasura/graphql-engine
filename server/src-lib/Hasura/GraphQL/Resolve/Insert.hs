@@ -85,7 +85,7 @@ data AnnInsObj
   } deriving (Show, Eq)
 
 mkAnnInsObj
-  :: (MonadError QErr m, Has InsCtxMap r, MonadReader r m)
+  :: (MonadResolve m, Has InsCtxMap r, MonadReader r m)
   => RelationInfoMap
   -> AnnGObject
   -> m AnnInsObj
@@ -95,7 +95,7 @@ mkAnnInsObj relInfoMap annObj =
     emptyInsObj = AnnInsObj [] [] []
 
 traverseInsObj
-  :: (MonadError QErr m, Has InsCtxMap r, MonadReader r m)
+  :: (MonadResolve m, Has InsCtxMap r, MonadReader r m)
   => RelationInfoMap
   -> (G.Name, AnnInpVal)
   -> AnnInsObj
@@ -109,7 +109,7 @@ traverseInsObj rim (gName, annVal) defVal@(AnnInsObj cols objRels arrRels) =
     parseValue = do
       (_, WithScalarType scalarType maybeScalarValue) <- asPGColumnTypeAndValueM annVal
       let columnName = PGCol $ G.unName gName
-          scalarValue = fromMaybe (PGNull scalarType) maybeScalarValue
+      scalarValue <- maybe (pure $ PGNull scalarType) openOpaqueValue maybeScalarValue
       pure $ AnnInsObj ((columnName, WithScalarType scalarType scalarValue):cols) objRels arrRels
 
     parseObject = do
@@ -154,7 +154,7 @@ traverseInsObj rim (gName, annVal) defVal@(AnnInsObj cols objRels arrRels) =
             bool withNonEmptyArrData (return defVal) $ null arrDataVals
 
 parseOnConflict
-  :: (MonadError QErr m)
+  :: (MonadResolve m)
   => QualifiedTable -> Maybe UpdPermForIns
   -> AnnInpVal -> m RI.ConflictClauseP1
 parseOnConflict tn updFiltrM val = withPathK "on_conflict" $
@@ -474,7 +474,7 @@ prefixErrPath fld =
   withPathK "selectionSet" . fieldAsPath fld . withPathK "args"
 
 convertInsert
-  :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
+  :: ( MonadResolve m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r, Has InsCtxMap r
      )
   => RoleName
@@ -492,7 +492,7 @@ convertInsert role tn fld = prefixErrPath fld $ do
   where
     withNonEmptyObjs annVals mutFlds = do
       InsCtx vn tableCols defValMap relInfoMap updPerm <- getInsCtx tn
-      annObjs <- mapM asObject annVals
+      annObjs <- traverse asObject annVals
       annInsObjs <- forM annObjs $ mkAnnInsObj relInfoMap
       conflictClauseM <- forM onConflictM $ parseOnConflict tn updPerm
       defValMapRes <- mapM (convPartialSQLExp sessVarFromCurrentSetting)

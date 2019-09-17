@@ -70,7 +70,7 @@ isValidRel rn rt = isValidName (mkRelName rn) && isValidObjectName rt
 
 isValidField :: FieldInfo PGColumnInfo -> Bool
 isValidField = \case
-  FIColumn (PGColumnInfo col _ _) -> isValidCol col
+  FIColumn colInfo -> isValidCol $ pgiName colInfo
   FIRelationship (RelInfo rn _ _ remTab _) -> isValidRel rn remTab
 
 upsertable :: [ConstraintName] -> Bool -> Bool -> Bool
@@ -114,8 +114,11 @@ isAggFld = flip elem (numAggOps <> compAggOps)
 
 mkGCtxRole'
   :: QualifiedTable
+  -- Postgres description
+  -> Maybe PGDescription
+  -- insert permission
   -> Maybe ([PGColumnInfo], RelationInfoMap)
-  -- ^ insert permission
+  -- select permission
   -> Maybe (Bool, [SelField])
   -- ^ select permission
   -> Maybe [PGColumnInfo]
@@ -132,7 +135,7 @@ mkGCtxRole'
   -> Maybe EnumValues
   -- ^ present iff this table is an enum table (see "Hasura.RQL.Schema.Enum")
   -> TyAgg
-mkGCtxRole' tn insPermM selPermM updColsM
+mkGCtxRole' tn descM insPermM selPermM updColsM
             delPermM pkeyCols constraints viM funcs enumValuesM =
 
   TyAgg (mkTyInfoMap allTypes) fieldMap scalars ordByCtx
@@ -244,7 +247,7 @@ mkGCtxRole' tn insPermM selPermM updColsM
             && any (`isMutable` viM) [viIsInsertable, viIsUpdatable, viIsDeletable]
 
     -- table obj
-    selObjM = mkTableObj tn <$> selFldsM
+    selObjM = mkTableObj tn descM <$> selFldsM
 
     -- aggregate objs and order by inputs
     (aggObjs, aggOrdByInps) = case selPermM of
@@ -372,7 +375,7 @@ getRootFldsRole' tn primCols constraints fields funcs insM selM updM delM viM =
     funcFldHelper f g pFltr pLimit hdrs =
       flip map funcs $ \fi ->
       ( f . FuncQOpCtx tn hdrs pFltr pLimit (fiName fi) $ mkFuncArgItemSeq fi
-      , g fi
+      , g fi $ fiDescription fi
       )
 
     mkFuncArgItemSeq fi = Seq.fromList $ procFuncArgs (fiInputArgs fi)
@@ -470,6 +473,7 @@ mkGCtxRole
   :: (MonadError QErr m)
   => TableCache PGColumnInfo
   -> QualifiedTable
+  -> Maybe PGDescription
   -> FieldInfoMap PGColumnInfo
   -> [PGCol]
   -> [ConstraintName]
@@ -479,7 +483,7 @@ mkGCtxRole
   -> RoleName
   -> RolePermInfo
   -> m (TyAgg, RootFields, InsCtxMap)
-mkGCtxRole tableCache tn fields pCols constraints funcs viM enumValuesM role permInfo = do
+mkGCtxRole tableCache tn descM fields pCols constraints funcs viM enumValuesM role permInfo = do
   selPermM <- mapM (getSelPerm tableCache fields role) $ _permSel permInfo
   tabInsInfoM <- forM (_permIns permInfo) $ \ipi -> do
     ctx <- mkInsCtx role tableCache fields ipi $ _permUpd permInfo
@@ -489,7 +493,7 @@ mkGCtxRole tableCache tn fields pCols constraints funcs viM enumValuesM role per
   let insPermM = snd <$> tabInsInfoM
       insCtxM = fst <$> tabInsInfoM
       updColsM = filterColInfos . upiCols <$> _permUpd permInfo
-      tyAgg = mkGCtxRole' tn insPermM selPermM updColsM
+      tyAgg = mkGCtxRole' tn descM insPermM selPermM updColsM
               (void $ _permDel permInfo) pColInfos constraints viM funcs enumValuesM
       rootFlds = getRootFldsRole tn pCols constraints fields funcs viM permInfo
       insCtxMap = maybe Map.empty (Map.singleton tn) insCtxM
@@ -535,16 +539,16 @@ mkGCtxMapTable
   -> m (Map.HashMap RoleName (TyAgg, RootFields, InsCtxMap))
 mkGCtxMapTable tableCache funcCache tabInfo = do
   m <- Map.traverseWithKey
-       (mkGCtxRole tableCache tn fields pkeyCols validConstraints tabFuncs viewInfo enumValues)
+       (mkGCtxRole tableCache tn descM fields pkeyCols validConstraints tabFuncs viewInfo enumValues)
        rolePerms
   adminInsCtx <- mkAdminInsCtx tn tableCache fields
-  let adminCtx = mkGCtxRole' tn (Just (colInfos, icRelations adminInsCtx))
+  let adminCtx = mkGCtxRole' tn descM (Just (colInfos, icRelations adminInsCtx))
                  (Just (True, selFlds)) (Just colInfos) (Just ())
                  pkeyColInfos validConstraints viewInfo tabFuncs enumValues
       adminInsCtxMap = Map.singleton tn adminInsCtx
   return $ Map.insert adminRole (adminCtx, adminRootFlds, adminInsCtxMap) m
   where
-    TableInfo tn _ fields rolePerms constraints pkeyCols viewInfo _ enumValues = tabInfo
+    TableInfo tn descM _ fields rolePerms constraints pkeyCols viewInfo _ enumValues = tabInfo
     validConstraints = mkValidConstraints constraints
     colInfos = getValidCols fields
     validColNames = map pgiName colInfos
