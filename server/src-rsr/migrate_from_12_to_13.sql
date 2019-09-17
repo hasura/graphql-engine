@@ -33,7 +33,7 @@ SELECT
     WHEN ((rt.typtype) :: text = ('d' :: character(1)) :: text) THEN 'DOMAIN' :: text
     WHEN ((rt.typtype) :: text = ('e' :: character(1)) :: text) THEN 'ENUM' :: text
     WHEN ((rt.typtype) :: text = ('r' :: character(1)) :: text) THEN 'RANGE' :: text
-    WHEN ((rt.typtype) :: text = ('p' :: character(1)) :: text) THEN 'PSUEDO' :: text
+    WHEN ((rt.typtype) :: text = ('p' :: character(1)) :: text) THEN 'PSEUDO' :: text
     ELSE NULL :: text
   END AS return_type_type,
   p.proretset AS returns_set,

@@ -59,6 +59,9 @@ module Hasura.GraphQL.Validate.Types
   , hasNullVal
   , getAnnInpValKind
   , stripTypenames
+
+  , ReusableVariableTypes(..)
+  , ReusableVariableValues
   , module Hasura.GraphQL.Utils
   ) where
 
@@ -745,3 +748,10 @@ stripTypenames = map filterExecDef
           let newSelset = filterSelSet $ G._fSelectionSet f
           in Just $ G.SelectionField  f{G._fSelectionSet = newSelset}
       _                  -> Just s
+
+-- | Used by 'Hasura.GraphQL.Validate.validateVariablesForReuse' to parse new sets of variables for
+-- reusable query plans; see also 'Hasura.GraphQL.Resolve.Types.QueryReusability'.
+newtype ReusableVariableTypes
+  = ReusableVariableTypes { unReusableVarTypes :: Map.HashMap G.Variable RQL.PGColumnType }
+  deriving (Show, Eq, Semigroup, Monoid, J.ToJSON)
+type ReusableVariableValues = Map.HashMap G.Variable (WithScalarType PGScalarValue)
