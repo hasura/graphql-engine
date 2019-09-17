@@ -13,9 +13,21 @@ static String fetchNewNotification = """subscription fetchNewNotification {
   }
 }
 """;
++ static String addPublicTodo = """mutation (\$title: String!){
++    insert_todos (
++      objects: [{
++        title: \$title,
++        is_public: true
++      }]
++    ){
++      returning {
++        id
++      }
++    }
++  }""";
 ```
 
-Now wrap custom button i.e `New Notification` in subscription widget. But before that, add following variables in your `_FeedsState` class.
+Add following variables in your `_FeedsState` class inside `lib/screens/tabs/dashboard/feeds.dart`.
 
 ```dart
 +  static int _lastLatestFeedId;
@@ -38,7 +50,52 @@ And initialize \_client in initState method.
 +  }
 ```
 
-Now let's wrap the subscription
+To add new public feed we need to run a mutation on press of our `Post` button i.e. CustomButton.
+
+```dart
++       Mutation(
++        options: MutationOptions(document: FeedFetch.addPublicTodo),
++        builder: (
++          RunMutation runMutation,
++          QueryResult result,
++        ) {
+-            Padding(
++            return Padding(
+              padding: const EdgeInsets.all(18.0),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Expanded(
+                    child: TextFormField(
+                      controller: _controller,
+                      decoration: InputDecoration(
+                        labelText: "Say something ...",
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: CustomButton(
+                      width: 90,
+                      height: 50,
+                      onTap: () {
++                       runMutation({"title": _controller.text});
+-                       feedList.addFeed("You", _controller.text);
+                        _controller.clear();
+                        FocusScope.of(context).requestFocus(new FocusNode());
+                      },
+                      text: "Post",
+                    ),
+                  )
+                ],
+              ),
++            );
++         },
+        ),
+```
+
+Now wrap custom button i.e `New Notification` in subscription widget.
 
 ```dart
 + Subscription(
@@ -62,16 +119,18 @@ Now let's wrap the subscription
                    print("loading");
                  },
                  height: 50,
-                 text: " $_newTodoCount New Notification",
+-                text: "New Notification",
++                 text: " $_newTodoCount New Notification",
                  width: MediaQuery.of(context).size.width / 2,
-               );
--              } else
--               return SizedBox();
--           } else {
--             return SizedBox();
--           }
--         },
--       )
+-               ),
++              );
++              } else
++               return SizedBox();
++           } else {
++             return SizedBox();
++           }
++         },
++       ),
 ```
 
 The `fetchNewNotification` does the following:

@@ -19,11 +19,14 @@ const Index = ({ authors } ) => {
       query={ query }
       fetchPolicy={ 'cache-and-network' }
     >
-      {({ loading, data: { author:authors }}) => {
+      {({ loading, data, error }) => {
+        if(error) {
+          return (<div>Error..</div>);
+        }
         return (
           <div>
             <h1>My Authors </h1>
-            <AuthorList authors={authors} />
+            <AuthorList authors={data ? data.author: []} />
           </div>
         );
       }}
