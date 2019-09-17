@@ -16,6 +16,7 @@ module Hasura.RQL.Types.SchemaCache
 
        , TableInfo(..)
        , tiName
+       , tiDescription
        , tiSystemDefined
        , tiFieldInfoMap
        , tiRolePermInfoMap
