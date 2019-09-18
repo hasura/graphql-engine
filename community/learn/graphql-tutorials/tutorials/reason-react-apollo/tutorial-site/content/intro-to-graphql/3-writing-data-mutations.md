@@ -89,7 +89,7 @@ Now that we know how to parametrise using query variables, let's use that:
 
 ```graphql
 # The parametrised GraphQL mutation
-mutation($todo: insert_todo_input!){
+mutation($todo: todos_insert_input!){
   insert_todos(objects: [$todo]) {
     returning {
       id
