@@ -19,5 +19,5 @@ args:
     name: simple2-graphql
     comment: testing
     definition:
-      url: http://localhost:5000/user-graphql
+      url: ${REMOTE_GRAPHQL_ROOT_URL}/user-graphql
       forward_client_headers: false

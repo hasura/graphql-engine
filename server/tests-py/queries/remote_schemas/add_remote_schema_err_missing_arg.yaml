@@ -11,6 +11,6 @@ query:
   args:
     name: err-missing-arg
     definition:
-      url: http://localhost:5000/iface-graphql-err-missing-arg
+      url: ${REMOTE_GRAPHQL_ROOT_URL}/iface-graphql-err-missing-arg
       headers: []
       forward_client_headers: true

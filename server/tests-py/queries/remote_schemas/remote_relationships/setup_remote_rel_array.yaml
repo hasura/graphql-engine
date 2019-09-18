@@ -1,0 +1,13 @@
+type: create_remote_relationship
+args:
+  name: usersNestedArr
+  table: messages
+  hasura_fields:
+    - profile_id
+  remote_schema: prefixer-proxy
+  remote_field:
+    prefixer_proxy_users:
+      arguments:
+        where:
+          id:
+            _in: [$profile_id]

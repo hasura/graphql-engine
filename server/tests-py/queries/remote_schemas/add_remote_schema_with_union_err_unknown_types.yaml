@@ -11,6 +11,6 @@ query:
   args:
     name: err-unknown-types
     definition:
-      url: http://localhost:5000/union-graphql-err-unknown-types
+      url: ${REMOTE_GRAPHQL_ROOT_URL}/union-graphql-err-unknown-types
       headers: []
       forward_client_headers: true

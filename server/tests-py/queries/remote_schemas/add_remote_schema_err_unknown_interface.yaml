@@ -11,6 +11,6 @@ query:
   args:
     name: err-unknown-iface
     definition:
-      url: http://localhost:5000/iface-graphql-err-unknown-iface
+      url: ${REMOTE_GRAPHQL_ROOT_URL}/iface-graphql-err-unknown-iface
       headers: []
       forward_client_headers: true

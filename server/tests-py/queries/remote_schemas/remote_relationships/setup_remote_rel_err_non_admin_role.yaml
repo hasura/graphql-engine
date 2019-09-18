@@ -1,0 +1,22 @@
+description: Create remote relationship error non-admin role
+url: /v1/query
+status: 400  
+headers:
+  X-Hasura-User-Id: '1'
+  X-Hasura-Role: user  
+response:
+  path: $.args
+  error: 'restricted access : admin only'
+  code: access-denied
+query:
+  type: create_remote_relationship
+  args:
+    name: userBasic
+    table: profiles
+    hasura_fields:
+      - id
+    remote_schema: user
+    remote_field:
+      user:
+        arguments:
+          id: $id

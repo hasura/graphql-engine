@@ -1,0 +1,11 @@
+type: create_remote_relationship
+args:
+  name: InvalidHasuraField
+  table: profiles
+  hasura_fields:
+    - id_wrong
+  remote_schema: user
+  remote_field:
+    user:
+      arguments:
+        id: "$id_wrong"

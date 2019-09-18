@@ -11,6 +11,6 @@ query:
   args:
     name: err-unknown-types
     definition:
-      url: http://localhost:5000/iface-graphql-err-wrong-field-type
+      url: ${REMOTE_GRAPHQL_ROOT_URL}/iface-graphql-err-wrong-field-type
       headers: []
       forward_client_headers: true
