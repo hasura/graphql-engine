@@ -32,7 +32,7 @@ In the dashboard, navigate to ``Rules``. Add the following rules to add our cust
 
     function (user, context, callback) {
       const namespace = "https://hasura.io/jwt/claims";
-      context.idToken[namespace] = 
+      context.accessToken[namespace] = 
         { 
           'x-hasura-default-role': 'user',
           // do some custom logic to decide allowed roles
