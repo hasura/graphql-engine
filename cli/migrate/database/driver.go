@@ -102,6 +102,8 @@ type Driver interface {
 
 	Read(version uint64) (ok bool)
 
+	Squash(migration io.Reader, fileType string, ret chan<- interface{}) error
+
 	SettingsDriver
 
 	MetadataDriver

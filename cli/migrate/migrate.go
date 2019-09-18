@@ -339,6 +339,41 @@ func (m *Migrate) Query(data []interface{}) error {
 	return m.databaseDrv.Query(data)
 }
 
+func (m *Migrate) Squash(version uint64) (interface{}, interface{}, error) {
+	mode, err := m.databaseDrv.GetSetting("migration_mode")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if mode != "true" {
+		return nil, nil, ErrNoMigrationMode
+	}
+
+	retUp := make(chan interface{}, m.PrefetchMigrations)
+	go m.squashUp(version, retUp)
+
+	retDown := make(chan interface{}, m.PrefetchMigrations)
+	go m.squashDown(version, retDown)
+
+	dataUp := make(chan interface{}, m.PrefetchMigrations)
+	dataDown := make(chan interface{}, m.PrefetchMigrations)
+	err = m.squashMigrations(retUp, retDown, dataUp, dataDown)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	up := make([]interface{}, 0)
+	for r := range dataUp {
+		up = append(up, r)
+	}
+
+	down := make([]interface{}, 0)
+	for r := range dataDown {
+		down = append(down, r)
+	}
+	return up, down, nil
+}
+
 // Migrate looks at the currently active migration version,
 // then migrates either up or down to the specified version.
 func (m *Migrate) Migrate(version uint64, direction string) error {
@@ -457,8 +492,152 @@ func (m *Migrate) Down() error {
 
 // Reset resets public schema and hasuradb metadata
 func (m *Migrate) Reset() (err error) {
-	err = m.databaseDrv.Reset()
-	return
+	return m.databaseDrv.Reset()
+}
+
+func (m *Migrate) squashUp(version uint64, ret chan<- interface{}) {
+	defer close(ret)
+	currentVersion := version
+	count := int64(0)
+	limit := int64(-1)
+	if m.stop() {
+		return
+	}
+
+	for limit == -1 {
+		if currentVersion == version {
+			if err := m.versionUpExists(version); err != nil {
+				ret <- err
+				return
+			}
+
+			migr, err := m.newMigration(version, int64(version))
+			if err != nil {
+				ret <- err
+				return
+			}
+			ret <- migr
+			go migr.Buffer()
+
+			migr, err = m.metanewMigration(version, int64(version))
+			if err != nil {
+				ret <- err
+				return
+			}
+			ret <- migr
+			go migr.Buffer()
+			count++
+		}
+
+		// apply next migration
+		next, err := m.sourceDrv.Next(currentVersion)
+		if os.IsNotExist(err) {
+			// no limit, but no migrations applied?
+			if count == 0 {
+				ret <- ErrNoChange
+				return
+			}
+
+			if limit == -1 {
+				return
+			}
+		}
+
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		// Check if next files exists (yaml or sql)
+		if err = m.versionUpExists(next); err != nil {
+			ret <- err
+			return
+		}
+
+		migr, err := m.newMigration(next, int64(next))
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		ret <- migr
+		go migr.Buffer()
+
+		migr, err = m.metanewMigration(next, int64(next))
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		ret <- migr
+		go migr.Buffer()
+		currentVersion = next
+		count++
+	}
+}
+
+func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
+	defer close(ret)
+
+	from, _, err := m.databaseDrv.Version()
+	if err != nil {
+		ret <- err
+		return
+	}
+
+	for {
+		if m.stop() {
+			return
+		}
+
+		err = m.versionDownExists(suint64(from))
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		prev, ok := m.databaseDrv.Prev(suint64(from))
+		if !ok {
+			migr, err := m.metanewMigration(suint64(from), -1)
+			if err != nil {
+				ret <- err
+				return
+			}
+			ret <- migr
+			go migr.Buffer()
+
+			migr, err = m.newMigration(suint64(from), -1)
+			if err != nil {
+				ret <- err
+				return
+			}
+			ret <- migr
+			go migr.Buffer()
+		}
+
+		if from == int64(version) {
+			return
+		}
+
+		migr, err := m.metanewMigration(suint64(from), int64(prev))
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		ret <- migr
+		go migr.Buffer()
+
+		migr, err = m.newMigration(suint64(from), int64(prev))
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		ret <- migr
+		go migr.Buffer()
+		from = int64(prev)
+	}
 }
 
 // read reads either up or down migrations from source `from` to `to`.
@@ -480,7 +659,7 @@ func (m *Migrate) read(version uint64, direction string, ret chan<- interface{})
 			return
 		}
 
-		// Check if next version exiss (yaml or sql)
+		// Check if next version exists (yaml or sql)
 		if err := m.versionUpExists(version); err != nil {
 			ret <- err
 			return
@@ -827,6 +1006,44 @@ func (m *Migrate) runMigrations(ret <-chan interface{}) error {
 					if err := m.databaseDrv.RemoveVersion(version); err != nil {
 						return err
 					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (m *Migrate) squashMigrations(retUp <-chan interface{}, retDown <-chan interface{}, dataUp chan<- interface{}, dataDown chan<- interface{}) error {
+	defer close(dataUp)
+	defer close(dataDown)
+	for r := range retUp {
+		if m.stop() {
+			return nil
+		}
+		switch r.(type) {
+		case error:
+			return r.(error)
+		case *Migration:
+			migr := r.(*Migration)
+			if migr.Body != nil {
+				if err := m.databaseDrv.Squash(migr.BufferedBody, migr.FileType, dataUp); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	for r := range retDown {
+		if m.stop() {
+			return nil
+		}
+		switch r.(type) {
+		case error:
+			return r.(error)
+		case *Migration:
+			migr := r.(*Migration)
+			if migr.Body != nil {
+				if err := m.databaseDrv.Squash(migr.BufferedBody, migr.FileType, dataDown); err != nil {
+					return err
 				}
 			}
 		}
