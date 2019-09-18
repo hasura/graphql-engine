@@ -8,6 +8,7 @@ Let's integrate a GraphQL query to show the user their personal task list.
 We will learn the following concepts:
 
 - Fetching data with queries
+- Using the `useQuery` hook
 - Handle loading/error state
 
 Let's get started!

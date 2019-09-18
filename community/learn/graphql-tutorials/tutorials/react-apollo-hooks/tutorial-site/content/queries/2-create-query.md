@@ -1,7 +1,7 @@
 ---
-title: "useQuery React hook"
+title: "useQuery hook"
 metaTitle: "Apollo useQuery React hook | GraphQL React Apollo Hooks Tutorial"
-metaDescription: "We will use the Apollo Client useQuery React hook from @apollo/react-hooks."
+metaDescription: "We will use the Apollo Client useQuery React hook from @apollo/react-hooks to make GraphQL queries"
 ---
 
 import GithubLink from "../../src/GithubLink.js";

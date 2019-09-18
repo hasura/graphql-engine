@@ -22,7 +22,7 @@ spec:
         app: react-apollo-hooks
     spec:
       containers:
-      - image: hasura/react-apollo-hooks:0.1
+      - image: hasura/react-apollo-hooks:0.2
         imagePullPolicy: IfNotPresent
         name: react-apollo-hooks
         env:

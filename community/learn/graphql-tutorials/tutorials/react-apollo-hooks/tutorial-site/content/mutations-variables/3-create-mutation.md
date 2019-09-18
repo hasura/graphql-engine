@@ -1,5 +1,5 @@
 ---
-title: "Run mutation, update cache"
+title: "useMutation Hook, Update Cache"
 metaTitle: "Apollo useMutation React hook | GraphQL React Apollo Hooks Tutorial"
 metaDescription: "We will use the Apollo Client useMutation from @apollo/react-hooks in React app as an example to insert new data and update cache locally using readQuery and writeQuery."
 ---

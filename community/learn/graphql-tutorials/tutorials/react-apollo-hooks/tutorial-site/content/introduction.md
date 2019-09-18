@@ -21,7 +21,7 @@ We will explore the fundamentals of GraphQL and the things that make GraphQL esp
 - Integrating GraphQL mutations with query variables to handle form input
 - Updating local state after a GraphQL mutation (form input) using Apollo cache
 - Optimistic updates to local state and UI after GraphQL mutations for a slick UX
-- Using subscriptions with subscription components
+- Using subscriptions with subscription hooks
 - Building a real-time feed with notifications using mutations and subscriptions
 
 ## What will we be building?
