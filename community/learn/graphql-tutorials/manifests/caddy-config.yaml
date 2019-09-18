@@ -14,6 +14,10 @@ data:
       }
 
       redir 301 {
+        /graphql/react-apollo-hooks/boilerplate.zip https://graphql-engine-cdn.hasura.io/learn-hasura/boilerplates/react-apollo-hooks/boilerplate.zip
+      }
+
+      redir 301 {
         /graphql/react-native/boilerplate.zip https://graphql-engine-cdn.hasura.io/learn-hasura/boilerplates/react-native/react-native-boilerplate.zip
       }
 
@@ -47,6 +51,10 @@ data:
 
       redir 301 {
         /graphql/typescript-react-apollo/boilerplate.zip https://graphql-engine-cdn.hasura.io/learn-hasura/boilerplates/typescript-react-apollo/boilerplate.zip
+      }
+
+      redir 301 {
+        /graphql/react-apollo-hooks/ /graphql/react-apollo-hooks/introduction
       }
 
       redir 301 {
@@ -132,6 +140,8 @@ data:
       proxy /graphql/hasura hasura-backend
 
       proxy /graphql/typescript-react-apollo typescript-react-apollo
+
+      proxy /graphql/react-apollo-hooks react-apollo-hooks
 
       proxy /graphql/react-native react-native-apollo
 

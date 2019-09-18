@@ -84,6 +84,11 @@ spec:
       name: typescript-react-apollo
       path: ./community/learn/graphql-tutorials/tutorials/typescript-react-apollo/tutorial-site
     name: typescript-react-apollo
+  - containers:
+    - dockerfile: ./community/learn/graphql-tutorials/tutorials/react-apollo-hooks/tutorial-site/Dockerfile
+      name: react-apollo-hooks
+      path: ./community/learn/graphql-tutorials/tutorials/react-apollo-hooks/tutorial-site
+    name: react-apollo-hooks
   manifests:
     helm: {}
     path: ./community/learn/graphql-tutorials/manifests
