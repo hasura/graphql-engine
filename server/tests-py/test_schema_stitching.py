@@ -7,6 +7,8 @@ import pytest
 
 from validate import check_query_f, check_query
 
+pytestmark = pytest.mark.usefixtures('remote_gql_server')
+
 def add_remote(hge_ctx, name, url, headers=None, client_hdrs=False, timeout=None):
     query = mk_add_remote_q(name, url, headers, client_hdrs, timeout)
     st_code, resp = hge_ctx.v1q(query)
@@ -310,7 +312,6 @@ class TestAddRemoteSchemaTbls:
         assert st_code == 200, resp
 
 
-@pytest.mark.usefixtures('remote_gql_server')
 class TestRemoteSchemaQueriesOverWebsocket:
     dir = 'queries/remote_schemas'
     teardown = {"type": "clear_metadata", "args": {}}
@@ -459,7 +460,7 @@ class TestRemoteSchemaTimeout:
         st_code, resp = hge_ctx.v1q(q)
         assert st_code == 200, resp
         yield
-        delete_remote('simple 1')
+        delete_remote(hge_ctx, 'simple 1')
 
     def test_remote_query_timeout(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/basic_timeout_query.yaml')
