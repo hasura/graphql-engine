@@ -192,21 +192,22 @@ class TestSubscriptionLiveQueries(object):
             conf = yaml.safe_load(c)
 
         queryTmplt = """
-        subscription {
-          hge_tests_live_query_{0}: hge_tests_test_t2(order_by: {c1: desc}, limit: 1) {
+        subscription ($result_limit: Int!) {
+          hge_tests_live_query_{0}: hge_tests_test_t2(order_by: {c1: asc}, limit: $result_limit) {
             c1,
             c2
           }
         }
         """
 
+        queries = [(0, 1), (1, 2), (2, 2)]
         liveQs = []
-        for i in [0,1,2]:
+        for i, resultLimit in queries:
             query = queryTmplt.replace('{0}',str(i))
             headers={}
             if hge_ctx.hge_key is not None:
                 headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
-            subscrPayload = { 'query': query }
+            subscrPayload = { 'query': query, 'variables': { 'result_limit': resultLimit } }
             respLive = ws_client.send_query(subscrPayload, query_id='live_'+str(i), headers=headers, timeout=15)
             liveQs.append(respLive)
             ev = next(respLive)
@@ -230,16 +231,22 @@ class TestSubscriptionLiveQueries(object):
             ev = next(mutResp)
             assert ev['type'] == 'complete' and ev['id'] == 'mutation_'+str(index), ev
 
-            for i, respLive in enumerate(liveQs):
+            for (i, resultLimit), respLive in zip(queries, liveQs):
                 ev = next(respLive)
                 assert ev['type'] == 'data', ev
                 assert ev['id'] == 'live_' + str(i), ev
-                assert ev['payload']['data'] == {
-                    'hge_tests_live_query_'+str(i): expected_resp[step['name']]['returning'] if 'returning' in expected_resp[
-                        step['name']] else []
-                }, ev['payload']['data']
 
-        for i in [0,1,2]:
+                expectedReturnedResponse = []
+                if 'live_response' in step:
+                    expectedReturnedResponse = json.loads(step['live_response'])
+                elif 'returning' in expected_resp[step['name']]:
+                    expectedReturnedResponse = expected_resp[step['name']]['returning']
+                expectedLimitedResponse = expectedReturnedResponse[:resultLimit]
+                expectedLiveResponse = { 'hge_tests_live_query_'+str(i): expectedLimitedResponse }
+
+                assert ev['payload']['data'] == expectedLiveResponse, ev['payload']['data']
+
+        for i, _ in queries:
             # stop live operation
             frame = {
                 'id': 'live_'+str(i),

@@ -32,7 +32,7 @@ import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
 convertMutResp
-  :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
+  :: ( MonadResolve m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )
   => G.NamedType -> SelSet -> m (RR.MutFldsG UnresolvedVal)
@@ -53,13 +53,13 @@ convertMutResp ty selSet =
       UVSQL sqlExp -> pure $ UVSQL sqlExp
 
 convertRowObj
-  :: (MonadError QErr m)
+  :: (MonadResolve m)
   => AnnInpVal
   -> m [(PGCol, UnresolvedVal)]
 convertRowObj val =
   flip withObject val $ \_ obj ->
   forM (OMap.toList obj) $ \(k, v) -> do
-    prepExpM <- fmap UVPG <$> asPGColumnValueM v
+    prepExpM <- fmap mkParameterizablePGValue <$> asPGColumnValueM v
     let prepExp = fromMaybe (UVSQL S.SENull) prepExpM
     return (PGCol $ G.unName k, prepExp)
 
@@ -78,23 +78,23 @@ lhsExpOp op annTy (col, e) =
     annExp = S.SETyAnn e annTy
 
 convObjWithOp
-  :: (MonadError QErr m)
+  :: (MonadResolve m)
   => ApplySQLOp -> AnnInpVal -> m [(PGCol, UnresolvedVal)]
 convObjWithOp opFn val =
   flip withObject val $ \_ obj -> forM (OMap.toList obj) $ \(k, v) -> do
-  colVal <- pstValue . _apvValue <$> asPGColumnValue v
+  colVal <- openOpaqueValue =<< asPGColumnValue v
   let pgCol = PGCol $ G.unName k
       -- TODO: why are we using txtEncoder here?
-      encVal = txtEncoder colVal
+      encVal = txtEncoder . pstValue $ _apvValue colVal
       sqlExp = opFn (pgCol, encVal)
   return (pgCol, UVSQL sqlExp)
 
 convDeleteAtPathObj
-  :: (MonadError QErr m)
+  :: (MonadResolve m)
   => AnnInpVal -> m [(PGCol, UnresolvedVal)]
 convDeleteAtPathObj val =
   flip withObject val $ \_ obj -> forM (OMap.toList obj) $ \(k, v) -> do
-    vals <- flip withArray v $ \_ annVals -> mapM asPGColumnValue annVals
+    vals <- traverse (openOpaqueValue <=< asPGColumnValue) =<< asArray v
     let valExps = map (txtEncoder . pstValue . _apvValue) vals
         pgCol = PGCol $ G.unName k
         annEncVal = S.SETyAnn (S.SEArray valExps) S.textArrTypeAnn
@@ -103,7 +103,7 @@ convDeleteAtPathObj val =
     return (pgCol, UVSQL sqlExp)
 
 convertUpdateP1
-  :: ( MonadError QErr m
+  :: ( MonadResolve m
      , MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )
@@ -159,7 +159,7 @@ convertUpdateP1 opCtx fld = do
     args = _fArguments fld
 
 convertUpdate
-  :: ( MonadError QErr m
+  :: ( MonadResolve m
      , MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )
@@ -180,7 +180,7 @@ convertUpdate opCtx fld = do
   bool whenNonEmptyItems whenEmptyItems $ null $ RU.uqp1SetExps annUpdResolved
 
 convertDelete
-  :: ( MonadError QErr m
+  :: ( MonadResolve m
      , MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )

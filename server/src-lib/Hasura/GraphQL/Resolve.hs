@@ -42,7 +42,7 @@ validateHdrs userInfo hdrs = do
     throw400 NotFound $ hdr <<> " header is expected but not found"
 
 queryFldToPGAST
-  :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
+  :: ( MonadResolve m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r, Has UserInfo r
      , Has QueryCtxMap r
      )
@@ -69,7 +69,7 @@ queryFldToPGAST fld = do
       RS.convertFuncQueryAgg ctx fld
 
 queryFldToSQL
-  :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
+  :: ( MonadResolve m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r, Has UserInfo r
      , Has QueryCtxMap r
      )
@@ -85,7 +85,7 @@ queryFldToSQL fn fld = do
   return $ RS.toPGQuery resolvedAST
 
 mutFldToTx
-  :: ( MonadError QErr m
+  :: ( MonadResolve m
      , MonadReader r m
      , Has UserInfo r
      , Has MutationCtxMap r
@@ -112,7 +112,7 @@ mutFldToTx fld = do
       RM.convertDelete ctx fld
 
 getOpCtx
-  :: ( MonadError QErr m
+  :: ( MonadResolve m
      , MonadReader r m
      , Has (OpCtxMap a) r
      )

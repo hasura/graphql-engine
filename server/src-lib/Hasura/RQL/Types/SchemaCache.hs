@@ -16,6 +16,7 @@ module Hasura.RQL.Types.SchemaCache
 
        , TableInfo(..)
        , tiName
+       , tiDescription
        , tiSystemDefined
        , tiFieldInfoMap
        , tiRolePermInfoMap
@@ -107,6 +108,7 @@ module Hasura.RQL.Types.SchemaCache
        , addFunctionToCache
        , askFunctionInfo
        , delFunctionFromCache
+       , updateFunctionDescription
 
        , replaceAllowlist
        ) where
@@ -328,6 +330,7 @@ mutableView qt f mVI operation =
 data TableInfo columnInfo
   = TableInfo
   { _tiName                  :: !QualifiedTable
+  , _tiDescription           :: !(Maybe PGDescription)
   , _tiSystemDefined         :: !Bool
   , _tiFieldInfoMap          :: !(FieldInfoMap columnInfo)
   , _tiRolePermInfoMap       :: !RolePermInfoMap
@@ -373,6 +376,7 @@ data FunctionInfo
   , fiInputArgs     :: !(Seq.Seq FunctionArg)
   , fiReturnType    :: !QualifiedTable
   , fiDeps          :: ![SchemaDependency]
+  , fiDescription   :: !(Maybe PGDescription)
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionInfo)
@@ -663,16 +667,24 @@ delFunctionFromCache
   :: (QErrM m, CacheRWM m)
   => QualifiedFunction -> m ()
 delFunctionFromCache qf = do
+  void $ askFunctionInfo qf
   sc <- askSchemaCache
   let functionCache = scFunctions sc
-  case M.lookup qf functionCache of
-    Nothing -> throw500 $ "function does not exist in cache " <>> qf
-    Just _ -> do
-      let newFunctionCache = M.delete qf functionCache
-      writeSchemaCache $ sc {scFunctions = newFunctionCache}
+      newFunctionCache = M.delete qf functionCache
+  writeSchemaCache $ sc {scFunctions = newFunctionCache}
   modDepMapInCache (removeFromDepMap objId)
   where
     objId = SOFunction qf
+
+updateFunctionDescription
+  :: (QErrM m, CacheRWM m)
+  => QualifiedFunction -> Maybe PGDescription -> m ()
+updateFunctionDescription qf descM = do
+  fi <- askFunctionInfo qf
+  sc <- askSchemaCache
+  let newFuncInfo = fi{fiDescription = descM}
+      newFuncCache = M.insert qf newFuncInfo $ scFunctions sc
+  writeSchemaCache sc{scFunctions = newFuncCache}
 
 addPermToCache
   :: (QErrM m, CacheRWM m)

@@ -66,18 +66,31 @@ func (f *File) Open(url string, logger *log.Logger) (source.Driver, error) {
 		migrations: source.NewMigrations(),
 	}
 
-	folders, err := ioutil.ReadDir(p)
+	err = nf.Scan()
 	if err != nil {
 		return nil, err
+	}
+	return nf, nil
+}
+
+func (f *File) Close() error {
+	// nothing do to here
+	return nil
+}
+
+func (f *File) Scan() error {
+	folders, err := ioutil.ReadDir(f.path)
+	if err != nil {
+		return err
 	}
 
 	for _, fo := range folders {
 		if fo.IsDir() {
 			dirName := fo.Name()
-			dirPath := filepath.Join(p, dirName)
+			dirPath := filepath.Join(f.path, dirName)
 			files, err := ioutil.ReadDir(dirPath)
 			if err != nil {
-				return nil, err
+				return err
 			}
 
 			for _, fi := range files {
@@ -90,25 +103,20 @@ func (f *File) Open(url string, logger *log.Logger) (source.Driver, error) {
 					continue // ignore files that we can't parse
 				}
 				m.Raw = filepath.Join(dirName, fi.Name())
-				ok, err := source.IsEmptyFile(m, p)
+				ok, err := source.IsEmptyFile(m, f.path)
 				if err != nil {
-					return nil, err
+					return err
 				}
 				if !ok {
 					continue
 				}
-				err = nf.migrations.Append(m)
+				err = f.migrations.Append(m)
 				if err != nil {
-					return nil, err
+					return err
 				}
 			}
 		}
 	}
-	return nf, nil
-}
-
-func (f *File) Close() error {
-	// nothing do to here
 	return nil
 }
 
