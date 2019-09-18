@@ -30,7 +30,7 @@ data PGTypType
   | PTDOMAIN
   | PTENUM
   | PTRANGE
-  | PTPSUEDO
+  | PTPSEUDO
   deriving (Show, Eq)
 $(deriveJSON defaultOptions{constructorTagModifier = drop 2} ''PGTypType)
 
@@ -46,6 +46,7 @@ data RawFuncInfo
   , rfiInputArgNames    :: ![T.Text]
   , rfiDefaultArgs      :: !Int
   , rfiReturnsTable     :: !Bool
+  , rfiDescription      :: !(Maybe PGDescription)
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''RawFuncInfo)
 
@@ -95,10 +96,10 @@ mkFunctionInfo qf rawFuncInfo = do
   let funcArgsSeq = Seq.fromList funcArgs
       dep = SchemaDependency (SOTable retTable) DRTable
       retTable = QualifiedObject retSn (TableName retN)
-  return $ FunctionInfo qf False funTy funcArgsSeq retTable [dep]
+  return $ FunctionInfo qf False funTy funcArgsSeq retTable [dep] descM
   where
-    RawFuncInfo hasVariadic funTy retSn retN retTyTyp
-                retSet inpArgTyps inpArgNames defArgsNo returnsTab
+    RawFuncInfo hasVariadic funTy retSn retN retTyTyp retSet
+                inpArgTyps inpArgNames defArgsNo returnsTab descM
                 = rawFuncInfo
 
 saveFunctionToCatalog :: QualifiedFunction -> Bool -> Q.TxE QErr ()

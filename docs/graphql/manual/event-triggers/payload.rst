@@ -96,6 +96,13 @@ JSON payload
   - ``event.data.old`` will be ``null``
   - ``event.data.new`` will contain the current row
 
+.. note::
+
+   In case of ``UPDATE``, the events are delivered only if new data is distinct from
+   old data. The `composite type comparison <https://www.postgresql.org/docs/current/functions-comparisons.html#COMPOSITE-TYPE-COMPARISON>`__
+   is used to compare the old and new rows. If rows contain columns, which cannot be
+   compared using ``<>`` operator, then internal binary representation of rows by Postgres is compared.
+
 **For example**:
 
 .. code-block:: json

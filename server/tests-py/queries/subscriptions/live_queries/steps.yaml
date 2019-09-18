@@ -16,6 +16,10 @@
         {
           "c1": 1,
           "c2": "test1"
+        },
+        {
+          "c1": 2,
+          "c2": "test2"
         }
       ]
     }
@@ -26,6 +30,10 @@
           {
             "c1": 1,
             "c2": "test1"
+          },
+          {
+            "c1": 2,
+            "c2": "test2"
           }
         ]
       }
@@ -57,12 +65,23 @@
         ]
       }
     }
+  live_response: |
+    [
+      {
+        "c1": 1,
+        "c2": "test11"
+      },
+      {
+        "c1": 2,
+        "c2": "test2"
+      }
+    ]
 -
   description: Delete mutation
   name: delete_hge_tests_test_t2
   query: |
     mutation delete_test_t2 {
-      delete_hge_tests_test_t2(where: {c1: {_eq: 1}}) {
+      delete_hge_tests_test_t2(where: {c1: {_in: [1, 2]}}) {
         affected_rows
       }
     }
@@ -70,6 +89,6 @@
   response: |
     {
       "delete_hge_tests_test_t2": {
-        "affected_rows": 1
+        "affected_rows": 2
       }
     }

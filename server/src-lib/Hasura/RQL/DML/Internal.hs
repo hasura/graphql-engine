@@ -188,7 +188,8 @@ checkOnColExp
   -> AnnBoolExpFldSQL
   -> m AnnBoolExpFldSQL
 checkOnColExp spi sessVarBldr annFld = case annFld of
-  AVCol (PGColumnInfo cn _ _ _) _ -> do
+  AVCol colInfo _ -> do
+    let cn = pgiColumn colInfo
     checkSelOnCol spi cn
     return annFld
   AVRel relInfo nesAnn -> do

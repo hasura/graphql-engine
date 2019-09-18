@@ -59,9 +59,10 @@ mkPGColParams colType
 
 mkPGColFld :: PGColumnInfo -> ObjFldInfo
 mkPGColFld colInfo =
-  mkHsraObjFldInfo Nothing (pgiName colInfo) (mkPGColParams colTy) ty
+  mkHsraObjFldInfo desc name (mkPGColParams colTy) ty
   where
-    PGColumnInfo _ _ colTy isNullable = colInfo
+    PGColumnInfo _ name colTy isNullable pgDesc = colInfo
+    desc = (G.Description . getPGDescription) <$> pgDesc
     ty = bool notNullTy nullTy isNullable
     columnType = mkColumnType colTy
     notNullTy = G.toGT $ G.toNT columnType
@@ -136,15 +137,16 @@ type table {
 -}
 mkTableObj
   :: QualifiedTable
+  -> Maybe PGDescription
   -> [SelField]
   -> ObjTyInfo
-mkTableObj tn allowedFlds =
+mkTableObj tn descM allowedFlds =
   mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) TLHasuraType
   where
     flds = concatMap (either (pure . mkPGColFld) mkRelationshipField') allowedFlds
     mkRelationshipField' (RelationshipFieldInfo relInfo allowAgg _ _ _ isNullable) =
       mkRelationshipField allowAgg relInfo isNullable
-    desc = G.Description $ "columns and relationships of " <>> tn
+    desc = mkDescriptionWith descM $ "columns and relationships of " <>> tn
 
 {-
 type table_aggregate {
@@ -265,8 +267,8 @@ mkSelFldPKey mCustomName tn cols =
     args = fromInpValL $ map colInpVal cols
     ty = G.toGT $ mkTableTy tn
     colInpVal ci =
-      InpValInfo Nothing (pgiName ci) Nothing $
-      G.toGT $ G.toNT $ mkColumnType $ pgiType ci
+      InpValInfo (mkDescription <$> pgiDescription ci) (pgiName ci)
+      Nothing $ G.toGT $ G.toNT $ mkColumnType $ pgiType ci
 
 {-
 

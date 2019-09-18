@@ -251,6 +251,9 @@ processTableChanges ti tableDiff = do
   let tn = _tiName ti
       withOldTabName = do
         replaceConstraints tn
+        -- replace description
+        replaceDescription tn
+        -- for all the dropped columns
         procDroppedCols tn
         procAddedCols tn
         procAlteredCols sc tn
@@ -268,10 +271,13 @@ processTableChanges ti tableDiff = do
   maybe withOldTabName withNewTabName mNewName
 
   where
-    TableDiff mNewName droppedCols addedCols alteredCols _ constraints = tableDiff
+    TableDiff mNewName droppedCols addedCols alteredCols _ constraints descM = tableDiff
     customFields = _tcCustomColumnNames $ _tiCustomConfig ti
     replaceConstraints tn = flip modTableInCache tn $ \tInfo ->
       return $ tInfo {_tiUniqOrPrimConstraints = constraints}
+
+    replaceDescription tn = flip modTableInCache tn $ \tInfo ->
+      return $ tInfo {_tiDescription = descM}
 
     procDroppedCols tn =
       forM_ droppedCols $ \droppedCol ->
@@ -280,7 +286,8 @@ processTableChanges ti tableDiff = do
 
     procAddedCols tn =
       -- In the newly added columns check that there is no conflict with relationships
-      forM_ addedCols $ \rawInfo@(PGRawColumnInfo colName _ _ _) ->
+      forM_ addedCols $ \rawInfo -> do
+        let colName = prciName rawInfo
         case M.lookup (fromPGCol colName) $ _tiFieldInfoMap ti of
           Just (FIRelationship _) ->
             throw400 AlreadyExists $ "cannot add column " <> colName
@@ -291,8 +298,8 @@ processTableChanges ti tableDiff = do
             addColToCache colName info tn
 
     procAlteredCols sc tn = fmap or $ forM alteredCols $
-      \( PGRawColumnInfo oldName oldType _ _
-       , newRawInfo@(PGRawColumnInfo newName newType _ _) ) -> do
+      \( PGRawColumnInfo oldName oldType _ _ _
+       , newRawInfo@(PGRawColumnInfo newName newType _ _ _) ) -> do
         let performColumnUpdate = do
               newInfo <- processColumnInfoUsingCache tn customFields newRawInfo
               updColInCache newName newInfo tn
@@ -357,7 +364,7 @@ buildTableCache = processTableCache <=< buildRawTableCache
         catalogInfo <- onNothing maybeInfo $
           throw400 NotExists $ "no such table/view exists in postgres: " <>> name
 
-        let CatalogTableInfo columns constraints primaryKeyColumnNames viewInfo = catalogInfo
+        let CatalogTableInfo columns constraints primaryKeyColumnNames viewInfo maybeDesc = catalogInfo
             columnFields = M.fromList . flip map columns $ \column ->
               (fromPGCol $ prciName column, FIColumn column)
 
@@ -378,6 +385,7 @@ buildTableCache = processTableCache <=< buildRawTableCache
               , _tiEventTriggerInfoMap = mempty
               , _tiEnumValues = maybeEnumValues
               , _tiCustomConfig = config
+              , _tiDescription = maybeDesc
               }
 
         -- validate tableConfig
@@ -412,6 +420,7 @@ processColumnInfo enumTables customFields tableName rawInfo = do
     , pgiName = graphqlName
     , pgiType = resolvedType
     , pgiIsNullable = prciIsNullable rawInfo
+    , pgiDescription = prciDescription rawInfo
     }
   where
     pgCol = prciName rawInfo
