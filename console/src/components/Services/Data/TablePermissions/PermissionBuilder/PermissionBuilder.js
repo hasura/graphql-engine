@@ -44,6 +44,9 @@ import {
   isObject,
 } from '../../../../Common/utils/jsUtils';
 
+import { EXISTS_PERMISSION_SUPPORT } from '../../../../../helpers/versionUtils';
+import globals from '../../../../../Globals';
+
 class PermissionBuilder extends React.Component {
   static propTypes = {
     allTableSchemas: PropTypes.array.isRequired,
@@ -891,11 +894,20 @@ class PermissionBuilder extends React.Component {
 
       const columnOptions = tableColumnNames.concat(tableRelationshipNames);
 
-      const operatorOptions = boolOperators
-        .concat(['---'])
-        .concat(existOperators)
-        .concat(['---'])
-        .concat(columnOptions);
+      const existsSupported =
+        globals.featuresCompatibility &&
+        globals.featuresCompatibility[EXISTS_PERMISSION_SUPPORT];
+
+      let operatorOptions;
+      if (existsSupported) {
+        operatorOptions = boolOperators
+          .concat(['---'])
+          .concat(existOperators)
+          .concat(['---'])
+          .concat(columnOptions);
+      } else {
+        operatorOptions = boolOperators.concat(['---']).concat(columnOptions);
+      }
 
       const _boolExpKey = renderSelect(
         dispatchOperationSelect,
