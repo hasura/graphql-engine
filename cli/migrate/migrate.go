@@ -578,7 +578,7 @@ func (m *Migrate) squashUp(version uint64, ret chan<- interface{}) {
 func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
 	defer close(ret)
 
-	from, _, err := m.databaseDrv.Version()
+	from, err := m.sourceDrv.GetLocalVersion()
 	if err != nil {
 		ret <- err
 		return
@@ -589,15 +589,15 @@ func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
 			return
 		}
 
-		err = m.versionDownExists(suint64(from))
+		err = m.versionDownExists(from)
 		if err != nil {
 			ret <- err
 			return
 		}
 
-		prev, ok := m.databaseDrv.Prev(suint64(from))
-		if !ok {
-			migr, err := m.metanewMigration(suint64(from), -1)
+		prev, err := m.sourceDrv.Prev(from)
+		if err != nil {
+			migr, err := m.metanewMigration(from, -1)
 			if err != nil {
 				ret <- err
 				return
@@ -605,7 +605,7 @@ func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
 			ret <- migr
 			go migr.Buffer()
 
-			migr, err = m.newMigration(suint64(from), -1)
+			migr, err = m.newMigration(from, -1)
 			if err != nil {
 				ret <- err
 				return
@@ -614,11 +614,11 @@ func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
 			go migr.Buffer()
 		}
 
-		if from == int64(version) {
+		if from == version {
 			return
 		}
 
-		migr, err := m.metanewMigration(suint64(from), int64(prev))
+		migr, err := m.metanewMigration(from, int64(prev))
 		if err != nil {
 			ret <- err
 			return
@@ -627,7 +627,7 @@ func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
 		ret <- migr
 		go migr.Buffer()
 
-		migr, err = m.newMigration(suint64(from), int64(prev))
+		migr, err = m.newMigration(from, int64(prev))
 		if err != nil {
 			ret <- err
 			return
@@ -635,7 +635,7 @@ func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
 
 		ret <- migr
 		go migr.Buffer()
-		from = int64(prev)
+		from = prev
 	}
 }
 
