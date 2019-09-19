@@ -1,0 +1,27 @@
+description: Insert into author table with on conflict update
+url: /v1/graphql
+status: 200
+response:
+  data:
+    AddAuthors:
+      affected_rows: 1
+      returning:
+      - AuthorId: 1
+        name: Author 1 updated
+query:
+  query: |
+    mutation {
+      AddAuthors(
+        objects: [{AuthorId: 1, name: "Author 1 updated"}]
+        on_conflict: {
+          constraint: author_pkey
+          update_columns: [AuthorId, name]
+        }
+      ){
+        affected_rows
+        returning{
+          AuthorId
+          name
+        }
+      }
+    }

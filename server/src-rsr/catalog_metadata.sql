@@ -20,6 +20,7 @@ from
           ),
           'is_enum', ht.is_enum,
           'is_system_defined', ht.is_system_defined,
+          'configuration', ht.configuration,
           'info', t.info
         )
       ), '[]') as items

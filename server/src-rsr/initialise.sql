@@ -13,6 +13,7 @@ CREATE TABLE hdb_catalog.hdb_table
 (
     table_schema TEXT,
     table_name TEXT,
+    configuration JSONB,
     is_system_defined boolean default false,
     is_enum boolean NOT NULL DEFAULT false,
 
