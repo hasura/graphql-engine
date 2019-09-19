@@ -394,8 +394,8 @@ addRemoteSchemaPermissionsToCatalog
   -> Q.TxE QErr ()
 addRemoteSchemaPermissionsToCatalog (RemoteSchemaPermissions rsName rsRole rsDef) =
   Q.unitQE defaultTxErrorHandler [Q.sql|
-    INSERT into hdb_catalog.remote_schema_permissions
-      (remote_schema, role, definition)
+    INSERT into hdb_catalog.hdb_remote_schema_permission
+      (remote_schema, role_name, definition)
       VALUES ($1, $2, $3)
   |] (rsName, rsRole, Q.AltJ $ J.toJSON rsDef) True
 
@@ -462,16 +462,16 @@ dropRemoteSchemaPermissionsFromCatalog ::
      (MonadTx m) => RemoteSchemaName -> RoleName -> m ()
 dropRemoteSchemaPermissionsFromCatalog rsName role = do
   liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
-    DELETE FROM hdb_catalog.remote_schema_permissions
-      WHERE remote_schema = $1 AND role = $2
+    DELETE FROM hdb_catalog.hdb_remote_schema_permission
+      WHERE remote_schema = $1 AND role_name = $2
   |] (rsName, role) True
 
 fetchRemoteSchemaPerms :: Q.TxE QErr [RemoteSchemaPermissions]
 fetchRemoteSchemaPerms =
   map uncurryRow <$> Q.listQE defaultTxErrorHandler
     [Q.sql|
-     SELECT remote_schema, role, definition::json
-       FROM hdb_catalog.remote_schema_permissions
+     SELECT remote_schema, role_name, definition::json
+       FROM hdb_catalog.hdb_remote_schema_permission
      |] () True
   where
     uncurryRow (name, role, Q.AltJ def) = RemoteSchemaPermissions name role def

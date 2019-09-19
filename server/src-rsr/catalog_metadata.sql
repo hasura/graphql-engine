@@ -181,12 +181,12 @@ from
         json_agg(
           json_build_object(
             'remote_schema', remote_schema,
-            'role', role,
+            'role', role_name,
             'definition', definition :: json
           )
         ),
         '[]'
       ) as items
       from
-          hdb_catalog.remote_schema_permissions
+          hdb_catalog.hdb_remote_schema_permission
   ) as remote_schema_permissions

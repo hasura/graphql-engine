@@ -288,14 +288,19 @@ args:
 - type: track_table
   args:
     schema: hdb_catalog
-    name: remote_schema_permissions
+    name: hdb_remote_schema_permission
+
+- type: track_table
+  args:
+    name: hdb_roles
+    schema: hdb_catalog
 
 - type: create_object_relationship
   args:
     name: remote_schema_info
     table:
       schema: hdb_catalog
-      name: remote_schema_permissions
+      name: hdb_remote_schema_permission
     using:
       foreign_key_constraint_on: remote_schema
 
@@ -309,5 +314,33 @@ args:
       foreign_key_constraint_on:
         table:
           schema: hdb_catalog
-          name: remote_schema_permissions
+          name: hdb_remote_schema_permission
         column: remote_schema
+
+- type: create_array_relationship
+  args:
+    name: table_permissions
+    table:
+      schema: hdb_catalog
+      name: hdb_roles
+    using:
+      manual_configuration:
+        remote_table:
+          schema: hdb_catalog
+          name: hdb_permission_agg
+        column_mapping:
+          role_name : role_name
+
+- type: create_array_relationship
+  args:
+    name: remote_schema_permissions
+    table:
+      schema: hdb_catalog
+      name: hdb_roles
+    using:
+      manual_configuration:
+        remote_table:
+          schema: hdb_catalog
+          name: hdb_remote_schema_permission
+        column_mapping:
+          role_name : role_name

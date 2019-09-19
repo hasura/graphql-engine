@@ -38,7 +38,6 @@ import qualified Database.PG.Query          as Q
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 import qualified PostgreSQL.Binary.Decoding as PD
-import qualified Web.Internal.HttpApiData   as W
 
 newtype NonEmptyText = NonEmptyText {unNonEmptyText :: T.Text}
   deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg, DQuote)
@@ -61,9 +60,6 @@ instance FromJSONKey NonEmptyText where
 instance Q.FromCol NonEmptyText where
   fromCol bs = mkNonEmptyText <$> Q.fromCol bs
     >>= maybe (Left "empty string not allowed") Right
-
-instance W.FromHttpApiData NonEmptyText where
-  parseUrlPiece txt = maybe (Left "found empty text") Right $ mkNonEmptyText txt
 
 adminText :: NonEmptyText
 adminText = NonEmptyText "admin"

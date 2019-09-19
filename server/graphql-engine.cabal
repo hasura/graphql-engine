@@ -90,7 +90,6 @@ library
 
                      -- URL parser related
                      , network-uri
-                     , http-api-data >= 0.4
 
                      -- String related
                      , case-insensitive

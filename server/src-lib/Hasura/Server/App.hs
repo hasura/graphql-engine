@@ -2,7 +2,6 @@
 {-# LANGUAGE DataKinds       #-}
 {-# LANGUAGE RankNTypes      #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE ViewPatterns    #-}
 
 module Hasura.Server.App where
 
@@ -47,7 +46,6 @@ import qualified Hasura.Server.PGDump                   as PGD
 
 import           Hasura.EncJSON
 import           Hasura.Prelude                         hiding (get, put)
-import           Hasura.RQL.DDL.RemoteSchema            (mkCacheForRemoteSchema)
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                     (AuthMode (..),
@@ -325,8 +323,8 @@ v1QueryHandler query = do
       featureFlags <- scFeatureFlags . hcServerCtx <$> ask
       runQuery pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx featureFlags query
 
-v1Alpha1GQHandler :: (SchemaCache -> Handler SchemaCache) -> GH.GQLReqUnparsed -> Handler (HttpResponse EncJSON)
-v1Alpha1GQHandler scModifier query = do
+v1Alpha1GQHandler :: GH.GQLReqUnparsed -> Handler (HttpResponse EncJSON)
+v1Alpha1GQHandler query = do
   userInfo <- asks hcUser
   reqHeaders <- asks hcReqHeaders
   manager <- scManager . hcServerCtx <$> ask
@@ -338,22 +336,14 @@ v1Alpha1GQHandler scModifier query = do
   enableAL  <- scEnableAllowlist . hcServerCtx <$> ask
   logger    <- scLogger . hcServerCtx <$> ask
   requestId <- asks hcRequestId
-  sc' <- scModifier sc
   let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx planCache
-                sc' scVer manager enableAL
+                sc scVer manager enableAL
   flip runReaderT execCtx $ GH.runGQ requestId userInfo reqHeaders query
 
 v1GQHandler
   :: GH.GQLReqUnparsed
   -> Handler (HttpResponse EncJSON)
-v1GQHandler = v1Alpha1GQHandler pure
-
--- only exposes remote schema
-v1GQRemoteHandler
-  :: RemoteSchemaName
-  -> GH.GQLReqUnparsed
-  -> Handler (HttpResponse EncJSON)
-v1GQRemoteHandler rsName = v1Alpha1GQHandler (flip mkCacheForRemoteSchema rsName . scRemoteSchemas)
+v1GQHandler = v1Alpha1GQHandler
 
 gqlExplainHandler :: GE.GQLExplain -> Handler (HttpResponse EncJSON)
 gqlExplainHandler query = do
@@ -573,16 +563,12 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry feature
       post "v1alpha1/graphql/explain" gqlExplainAction
 
       post "v1alpha1/graphql" $ mkSpockAction GH.encodeGQErr id serverCtx $
-        mkPostHandler $ mkAPIRespHandler $ v1Alpha1GQHandler pure
+        mkPostHandler $ mkAPIRespHandler v1Alpha1GQHandler
 
       post "v1/graphql/explain" gqlExplainAction
 
       post "v1/graphql" $ mkSpockAction GH.encodeGQErr allMod200 serverCtx $
         mkPostHandler $ mkAPIRespHandler v1GQHandler
-
-      post ("v1/graphql/remote" <//> var) $ \(RemoteSchemaName -> remoteSchemaName) ->
-        mkSpockAction GH.encodeGQErr allMod200 serverCtx $
-        mkPostHandler $ mkAPIRespHandler $ v1GQRemoteHandler remoteSchemaName
 
     when (isDeveloperAPIEnabled serverCtx) $ do
       get "dev/ekg" $ mkSpockAction encodeQErr id serverCtx $

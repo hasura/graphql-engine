@@ -143,7 +143,7 @@ clearMetadata = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "DELETE FROM hdb_catalog.hdb_relationship WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.event_triggers" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_table WHERE is_system_defined <> 'true'" () False
-  Q.unitQ "DELETE FROM hdb_catalog.remote_schema_permissions" () False
+  Q.unitQ "DELETE FROM hdb_catalog.hdb_remote_schema_permission" () False
   Q.unitQ "DELETE FROM hdb_catalog.remote_schemas" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_allowlist" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_query_collection WHERE is_system_defined <> 'true'" () False
@@ -445,8 +445,8 @@ fetchMetadata = do
        SELECT rs.name, rs.definition::json, rs.comment, rsp.perms::json
         FROM hdb_catalog.remote_schemas rs
         LEFT JOIN (
-          SELECT remote_schema, json_agg(json_build_object ('role', role, 'definition', definition)) as perms
-          FROM hdb_catalog.remote_schema_permissions rsp
+          SELECT remote_schema, json_agg(json_build_object ('role', role_name, 'definition', definition)) as perms
+          FROM hdb_catalog.hdb_remote_schema_permission rsp
           GROUP BY remote_schema
           ) rsp
         ON rs.name = rsp.remote_schema

@@ -47,6 +47,17 @@ CREATE TABLE hdb_catalog.hdb_permission
     FOREIGN KEY (table_schema, table_name) REFERENCES hdb_catalog.hdb_table(table_schema, table_name) ON UPDATE CASCADE
 );
 
+CREATE VIEW hdb_catalog.hdb_permission_agg AS
+  SELECT
+    table_schema,
+    table_name,
+    role_name,
+    json_object_agg(perm_type, perm_def) as permissions
+    FROM
+        hdb_catalog.hdb_permission
+   GROUP BY
+    table_schema, table_name, role_name;
+
 CREATE VIEW hdb_catalog.hdb_foreign_key_constraint AS
 SELECT
     q.table_schema :: text,
@@ -597,34 +608,16 @@ CREATE TABLE hdb_catalog.hdb_allowlist
     REFERENCES hdb_catalog.hdb_query_collection(collection_name)
 );
 
-CREATE TABLE hdb_catalog.remote_schema_permissions
+CREATE TABLE hdb_catalog.hdb_remote_schema_permission
 (
   remote_schema TEXT,
-  role TEXT,
+  role_name TEXT,
   definition JSONB NOT NULL,
-  PRIMARY KEY (remote_schema, role),
+  PRIMARY KEY (remote_schema, role_name),
   FOREIGN KEY (remote_schema) REFERENCES hdb_catalog.remote_schemas(name) ON UPDATE CASCADE
 );
 
-CREATE VIEW hdb_catalog.hdb_permission_agg AS
-( SELECT
-    table_schema,
-    table_name,
-    null as remote_schema,
-    role_name,
-    json_object_agg(perm_type, perm_def) as permissions
-  FROM
-    hdb_catalog.hdb_permission
-  GROUP BY
-    table_schema, table_name, role_name
-)
-UNION ALL
-( SELECT
-    null as table_schema,
-    null as table_name,
-    remote_schema,
-    role as role_name,
-    definition::json as permissions
-  FROM
-    hdb_catalog.remote_schema_permissions
-);
+CREATE VIEW hdb_catalog.hdb_roles AS
+  (SELECT DISTINCT(role_name) FROM hdb_catalog.hdb_permission_agg)
+  UNION
+  (SELECT DISTINCT(role_name) FROM hdb_catalog.hdb_remote_schema_permission);

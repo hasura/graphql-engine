@@ -90,7 +90,7 @@ instance J.FromJSON RemoteSchemaPermDef where
     allowedObjects <- o J..:? "allowed_objects" J..!= []
     allowedInputObjects <- o J..:? "allowed_input_objects" J..!= []
     pure $ RemoteSchemaPermDef allowedObjects allowedInputObjects
-  parseJSON _ = fail "expecting ab object"
+  parseJSON _ = fail "expecting an object"
 
 data RemoteSchemaPermissions
   = RemoteSchemaPermissions
