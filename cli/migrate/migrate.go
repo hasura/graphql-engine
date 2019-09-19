@@ -356,19 +356,26 @@ func (m *Migrate) Squash(version uint64) (interface{}, interface{}, error) {
 
 	dataUp := make(chan interface{}, m.PrefetchMigrations)
 	dataDown := make(chan interface{}, m.PrefetchMigrations)
-	err = m.squashMigrations(retUp, retDown, dataUp, dataDown)
-	if err != nil {
-		return nil, nil, err
-	}
+	go m.squashMigrations(retUp, retDown, dataUp, dataDown)
 
 	up := make([]interface{}, 0)
 	for r := range dataUp {
-		up = append(up, r)
+		switch r.(type) {
+		case error:
+			return nil, nil, err
+		case interface{}:
+			up = append(up, r)
+		}
 	}
 
 	down := make([]interface{}, 0)
 	for r := range dataDown {
-		down = append(down, r)
+		switch r.(type) {
+		case error:
+			return nil, nil, err
+		case interface{}:
+			down = append(down, r)
+		}
 	}
 	return up, down, nil
 }
@@ -1013,40 +1020,47 @@ func (m *Migrate) runMigrations(ret <-chan interface{}) error {
 }
 
 func (m *Migrate) squashMigrations(retUp <-chan interface{}, retDown <-chan interface{}, dataUp chan<- interface{}, dataDown chan<- interface{}) error {
-	defer close(dataUp)
-	defer close(dataDown)
-	for r := range retUp {
-		if m.stop() {
-			return nil
-		}
-		switch r.(type) {
-		case error:
-			return r.(error)
-		case *Migration:
-			migr := r.(*Migration)
-			if migr.Body != nil {
-				if err := m.databaseDrv.Squash(migr.BufferedBody, migr.FileType, dataUp); err != nil {
-					return err
+	go func() {
+		defer close(dataUp)
+
+		for r := range retUp {
+			if m.stop() {
+				return
+			}
+			switch r.(type) {
+			case error:
+				dataUp <- r.(error)
+			case *Migration:
+				migr := r.(*Migration)
+				if migr.Body != nil {
+					if err := m.databaseDrv.Squash(migr.BufferedBody, migr.FileType, dataUp); err != nil {
+						dataUp <- err
+					}
 				}
 			}
 		}
-	}
-	for r := range retDown {
-		if m.stop() {
-			return nil
-		}
-		switch r.(type) {
-		case error:
-			return r.(error)
-		case *Migration:
-			migr := r.(*Migration)
-			if migr.Body != nil {
-				if err := m.databaseDrv.Squash(migr.BufferedBody, migr.FileType, dataDown); err != nil {
-					return err
+	}()
+
+	go func() {
+		defer close(dataDown)
+
+		for r := range retDown {
+			if m.stop() {
+				return
+			}
+			switch r.(type) {
+			case error:
+				dataDown <- r.(error)
+			case *Migration:
+				migr := r.(*Migration)
+				if migr.Body != nil {
+					if err := m.databaseDrv.Squash(migr.BufferedBody, migr.FileType, dataDown); err != nil {
+						dataDown <- err
+					}
 				}
 			}
 		}
-	}
+	}()
 	return nil
 }
 

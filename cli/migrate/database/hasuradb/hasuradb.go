@@ -272,7 +272,8 @@ func (h *HasuraDB) Squash(migration io.Reader, fileType string, ret chan<- inter
 		if body == "" {
 			break
 		}
-		t := HasuraInterfaceQuery{
+		var t interface{}
+		t = HasuraInterfaceQuery{
 			Type: "run_sql",
 			Args: HasuraArgs{
 				SQL: string(body),
