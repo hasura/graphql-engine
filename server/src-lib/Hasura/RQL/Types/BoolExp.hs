@@ -344,7 +344,7 @@ instance ToJSON AnnBoolExpPartialSQL where
     where
       f annFld = case annFld of
         AVCol pci opExps ->
-          ( getPGColTxt $ pgiName pci
+          ( getPGColTxt $ pgiColumn pci
           , toJSON (pci, map opExpSToJSON opExps)
           )
         AVRel ri relBoolExp ->

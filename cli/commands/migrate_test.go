@@ -40,6 +40,7 @@ tables:
   delete_permissions: []
   event_triggers: []
   insert_permissions: []
+  is_enum: false
   object_relationships: []
   select_permissions: []
   table: test
@@ -60,6 +61,15 @@ query_collections: []
 remote_schemas: []
 tables:
 - array_relationships: []
+  configuration:
+    custom_column_names: {}
+    custom_root_fields:
+      delete: null
+      insert: null
+      select: null
+      select_aggregate: null
+      select_by_pk: null
+      update: null
   delete_permissions: []
   event_triggers: []
   insert_permissions: []
@@ -263,7 +273,7 @@ func mustWriteFile(t testing.TB, dir, file string, body string) {
 
 func compareMetadata(t testing.TB, metadataFile string, actualType string, serverVersion *semver.Version) {
 	var actualData []byte
-	c, err := semver.NewConstraint("<= v1.0.0-beta.5")
+	c, err := semver.NewConstraint("<= v1.0.0-beta.6")
 	if err != nil {
 		t.Fatal(err)
 	}

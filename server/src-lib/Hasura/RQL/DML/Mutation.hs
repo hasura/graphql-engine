@@ -70,7 +70,7 @@ mutateAndFetchCols qt cols (cte, p) strfyNum =
     tabFrom = TableFrom qt $ Just aliasIden
     tabPerm = TablePerm annBoolExpTrue Nothing
     selFlds = flip map cols $
-              \ci -> (fromPGCol $ pgiName ci, FCol ci Nothing)
+              \ci -> (fromPGCol $ pgiColumn ci, FCol ci Nothing)
 
     sql = toSQL selectWith
     selectWith = S.SelectWith [(S.Alias aliasIden, cte)] select
@@ -103,10 +103,10 @@ mkSelCTEFromColVals qt allCols colVals =
         }
   where
     tableAls = S.Alias $ Iden $ snakeCaseQualObject qt
-    colNames = map pgiName allCols
+    colNames = map pgiColumn allCols
     mkTupsFromColVal colVal =
       fmap S.TupleExp $ forM allCols $ \ci -> do
-        let pgCol = pgiName ci
+        let pgCol = pgiColumn ci
         val <- onNothing (Map.lookup pgCol colVal) $
           throw500 $ "column " <> pgCol <<> " not found in returning values"
         toTxtValue <$> parsePGScalarValue (pgiType ci) val
