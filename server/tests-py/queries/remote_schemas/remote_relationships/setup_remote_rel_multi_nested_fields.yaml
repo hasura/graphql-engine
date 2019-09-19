@@ -1,0 +1,31 @@
+type: create_remote_relationship
+args:
+  name: article_article_nested
+  remote_schema: prefixer-proxy
+  table:
+    schema: public
+    name: articles
+  remote_field:
+    prefixer_proxy_authors:
+      arguments:
+        where:
+          id:
+            _eq: $author_id
+      field:
+        articles:
+          arguments:
+            where:
+              id:
+                _eq: $id
+          field:
+            author:
+              arguments: {}
+              field:
+                user:
+                  arguments: {}
+                  field:
+                    profile:
+                      arguments: {}
+  hasura_fields:
+  - author_id
+  - id

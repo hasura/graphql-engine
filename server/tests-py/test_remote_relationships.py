@@ -70,6 +70,9 @@ class TestCreateRemoteRelationship:
     def test_create_nested_fields(self, validate_v1q_f):
         validate_v1q_f('setup_remote_rel_nested_fields.yaml')
 
+    def test_create_multi_nested_fields(self, validate_v1q_f):
+        validate_v1q_f('setup_remote_rel_multi_nested_fields.yaml')
+
     def test_create_multiple_hasura_fields(self, validate_v1q_f):
         validate_v1q_f('setup_remote_rel_multiple_fields.yaml')
 
