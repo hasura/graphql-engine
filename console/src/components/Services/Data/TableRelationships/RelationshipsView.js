@@ -8,6 +8,9 @@ import { setTable, UPDATE_REMOTE_SCHEMA_MANUAL_REL } from '../DataActions';
 import AddManualRelationship from './AddManualRelationship';
 import RelationshipEditor from './RelationshipEditor';
 import { NotFoundError } from '../../../Error/PageNotFound';
+import globals from '../../../../Globals';
+import { FT_REMOTE_RELATIONSHIPS } from '../../../../helpers/versionUtils';
+import RemoteRelationships from './RemoteRelationships/RemoteRelationships';
 
 class RelationshipsView extends Component {
   componentDidMount() {
@@ -34,6 +37,8 @@ class RelationshipsView extends Component {
       currentSchema,
       migrationMode,
       schemaList,
+      remoteRelationships,
+      remoteSchemas,
     } = this.props;
     const styles = require('../TableModify/ModifyTable.scss');
     const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
@@ -133,6 +138,28 @@ class RelationshipsView extends Component {
       );
     }
 
+    const remoteRelationshipsSection = () => {
+      if (
+        !(
+          globals.featuresCompatibility &&
+          globals.featuresCompatibility[FT_REMOTE_RELATIONSHIPS]
+        )
+      ) {
+        return null;
+      }
+      return (
+        <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
+          <h4 className={styles.subheading_text}>Remote Relationships</h4>
+          <RemoteRelationships
+            remoteRelationships={remoteRelationships}
+            dispatch={dispatch}
+            tableSchema={tableSchema}
+            remoteSchemas={remoteSchemas}
+          />
+        </div>
+      );
+    };
+
     return (
       <div className={`${styles.container} container-fluid`}>
         <ViewHeader
@@ -157,6 +184,7 @@ class RelationshipsView extends Component {
             />
             <hr />
           </div>
+          {remoteRelationshipsSection()}
         </div>
         <div className={`${styles.fixed} hidden`}>{alert}</div>
       </div>
@@ -176,6 +204,8 @@ RelationshipsView.propTypes = {
   lastSuccess: PropTypes.bool,
   dispatch: PropTypes.func.isRequired,
   serverVersion: PropTypes.string,
+  remoteSchemas: PropTypes.array.isRequired,
+  featuresCompatibility: PropTypes.object,
 };
 
 const mapStateToProps = (state, ownProps) => ({
@@ -185,6 +215,7 @@ const mapStateToProps = (state, ownProps) => ({
   migrationMode: state.main.migrationMode,
   serverVersion: state.main.serverVersion,
   schemaList: state.tables.schemaList,
+  remoteSchemas: state.remoteSchemas.listData.remoteSchemas.map(r => r.name),
   ...state.tables.modify,
 });
 
