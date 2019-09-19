@@ -42,31 +42,27 @@ runGQ reqId userInfo reqHdrs req = do
         E.Tree resolvedPlan unresolvedPlansNE -> do
           let unresolvedPlans = toList unresolvedPlansNE -- it's safe to convert here
           HttpResponse initJson _ <- runLeafPlan resolvedPlan
-          let remoteRels =
-                map
-                  (\(E.QExecPlanUnresolved remoteRelField _) -> remoteRelField)
-                  unresolvedPlans
           let (initValue, remoteBatchInputs) =
-                E.extractRemoteRelArguments
-                  initJson
-                  remoteRels
+                E.extractRemoteRelArguments initJson $
+                  map E.remoteRelField unresolvedPlans
 
-          let joinParamsPartial = E.JoinParams G.OperationTypeQuery -- TODO: getOpType
-              resolvedPlansWithBatches =
-                zipWith (E.mkQuery . joinParamsPartial) remoteBatchInputs unresolvedPlans 
-                  -- TODO ^ can we be sure we're not throwing away a tail of either of these lists?
-          results <-
-            traverse
-              (\(batch, resolvedSubPlan) -> do
-                 HttpResponse res _ <- runLeafPlan resolvedSubPlan
-                 pure (batch, res))
-              resolvedPlansWithBatches
+          -- TODO This zip may discard some unresolvedPlans when permissions
+          -- come into play. It's not totally clear to me if this is correct,
+          -- or how it works. Can use Data.Align for safer zips, but it seems like 
+          -- 'extractRemoteRelArguments' should be returning the zipped data.
+          let batchesRemotePlans =
+                -- TODO pass 'G.OperationType' properly when we support mutations, etc.
+                zipWith (E.mkQuery G.OperationTypeQuery) remoteBatchInputs unresolvedPlans 
+
+          results <- forM batchesRemotePlans $
+            traverse (fmap _hrBody . runLeafPlan . E.ExPRemote)
+
           pure $
             HttpResponse
                  (E.encodeGQRespValue
-                    (E.joinResults initValue $ toList results))
+                    (E.joinResults initValue results))
               Nothing
-  let mergedRespResult = mergeResponseData (toList (fmap _hrBody results))
+  let mergedRespResult = mergeResponseData (fmap _hrBody results)
   case mergedRespResult of
     Left e ->
       throw400
@@ -75,22 +71,18 @@ runGQ reqId userInfo reqHdrs req = do
     Right mergedResp ->
       pure (HttpResponse mergedResp (foldMap _hrHeaders results))
   where
-    runLeafPlan plan =
-      case plan of
-        E.ExPHasura resolvedOp -> do
-          hasuraJson <- runHasuraGQ reqId req userInfo resolvedOp
-          pure (HttpResponse hasuraJson Nothing)
-        E.ExPRemote rt -> do
-          let (rsi, fields) = remoteTopQueryEither rt
-          resp@(HttpResponse _res _) <-
-            E.execRemoteGQ
-              reqId
-              userInfo
-              reqHdrs
-              (rtqOperationType rt)
-              rsi
-              fields
-          return resp
+    runLeafPlan = \case
+      E.ExPHasura resolvedOp -> do
+        hasuraJson <- runHasuraGQ reqId req userInfo resolvedOp
+        pure (HttpResponse hasuraJson Nothing)
+      E.ExPRemote RemoteTopField{..} ->
+        E.execRemoteGQ
+          reqId
+          userInfo
+          reqHdrs
+          rtqOperationType
+          rtqRemoteSchemaInfo
+          (Right rtqFields)
 
 runHasuraGQ
   :: ( MonadIO m
@@ -120,13 +112,13 @@ runHasuraGQ reqId query userInfo resolvedOp = do
   return $ encodeGQResp $ GQSuccess resp
 
 
-getMergedGQResp :: [EncJSON] -> Either String GQRespValue
+getMergedGQResp :: Traversable t=> t EncJSON -> Either String GQRespValue
 getMergedGQResp =
   mergeGQResp <=< traverse E.parseGQRespValue
   where mergeGQResp = flip foldM E.emptyResp $ \respAcc E.GQRespValue{..} ->
           respAcc & E.gqRespErrors <>~ _gqRespErrors
                   & mapMOf E.gqRespData (OJ.safeUnion _gqRespData)
 
-mergeResponseData :: [EncJSON] -> Either String EncJSON
+mergeResponseData :: Traversable t=> t EncJSON -> Either String EncJSON
 mergeResponseData =
   fmap E.encodeGQRespValue . getMergedGQResp

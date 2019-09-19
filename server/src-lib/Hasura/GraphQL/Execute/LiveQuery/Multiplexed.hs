@@ -259,6 +259,7 @@ data MxOpCtx
   , _mocAlias     :: !G.Alias
   , _mocQuery     :: !Q.Query
   }
+  deriving Show
 
 instance J.ToJSON MxOpCtx where
   toJSON (MxOpCtx lqGroup als q) =

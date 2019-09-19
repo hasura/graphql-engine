@@ -261,6 +261,7 @@ data PreparedSql
   { _psQuery    :: !Q.Query
   , _psPrepArgs :: ![Q.PrepArg]
   }
+  deriving Show
 
 -- | Required to log in `query-log`
 instance J.ToJSON PreparedSql where

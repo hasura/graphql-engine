@@ -392,26 +392,24 @@ onStart serverEnv wsConn (StartMsg opId q) =
       -> [H.Header]
       -> VQ.RemoteTopField
       -> m EncJSON
-    runRemoteGQ execCtx reqId userInfo reqHdrs topField
+    runRemoteGQ execCtx reqId userInfo reqHdrs RemoteTopField{..}
       -- if it's not a subscription, use HTTP to execute the query on the remote
       -- server
       -- try to parse the (apollo protocol) websocket frame and get only the
       -- payload
      = do
-      when (rtqOperationType topField == G.OperationTypeSubscription) $
+      when (rtqOperationType == G.OperationTypeSubscription) $
         throwError $
         err400 NotSupported "subscription to remote server is not supported"
-      resp <-
-        let (rsi, fields) = remoteTopQueryEither topField
-         in runExceptT $
-            flip runReaderT execCtx $
-            E.execRemoteGQ
-              reqId
-              userInfo
-              reqHdrs
-              (rtqOperationType topField)
-              rsi
-              fields
+      resp <- runExceptT $
+              flip runReaderT execCtx $
+              E.execRemoteGQ
+                reqId
+                userInfo
+                reqHdrs
+                rtqOperationType
+                rtqRemoteSchemaInfo
+                (Right rtqFields)
       liftEither (fmap _hrBody resp)
     WSServerEnv logger pgExecCtx lqMap gCtxMapRef httpMgr _ sqlGenCtx planCache _ enableAL =
       serverEnv

@@ -326,3 +326,10 @@ class TestExecutionWithPermissions:
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'basic_relationship_with_permissions1.yaml', transport)
         check_query_f(hge_ctx, self.dir() + 'basic_relationship_with_permissions2.yaml', transport)
+
+    # Test queries that combine several remote relationships, nested in
+    # different ways, variously filtering different bits using permissions.
+    def test_complex_multiple_joins(self, hge_ctx, transport):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_multiple_remote_rel.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'complex_multiple_joins.yaml', transport)

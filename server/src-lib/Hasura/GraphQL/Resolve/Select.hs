@@ -95,13 +95,11 @@ fromAggSelSet
      )
   => G.NamedType -> SelSet -> m TableAggFlds
 fromAggSelSet fldTy selSet = fmap toFields $
-  withSelSet selSet $ \f -> do
-    let fTy = _fType f
-        fSelSet = _fSelSet f
-    case _fName f of
+  withSelSet selSet $ \Field{..} -> 
+    case _fName of
       "__typename" -> return $ RS.TAFExp $ G.unName $ G.unNamedType fldTy
-      "aggregate"  -> RS.TAFAgg <$> convertAggFld fTy fSelSet
-      "nodes"      -> RS.TAFNodes <$> fromSelSet fTy fSelSet
+      "aggregate"  -> RS.TAFAgg <$> convertAggFld _fType _fSelSet
+      "nodes"      -> RS.TAFNodes <$> fromSelSet _fType _fSelSet
       G.Name t     -> throw500 $ "unexpected field in _agg node: " <> t
 
 type TableArgs = RS.TableArgsG UnresolvedVal
@@ -366,14 +364,12 @@ convertAggFld
   :: (Monad m, MonadError QErr m)
   => G.NamedType -> SelSet -> m RS.AggFlds
 convertAggFld ty selSet = fmap toFields $
-  withSelSet selSet $ \fld -> do
-    let fType = _fType fld
-        fSelSet = _fSelSet fld
-    case _fName fld of
+  withSelSet selSet $ \Field{..} ->
+    case _fName of
       "__typename" -> return $ RS.AFExp $ G.unName $ G.unNamedType ty
-      "count"      -> RS.AFCount <$> convertCount (_fArguments fld)
+      "count"      -> RS.AFCount <$> convertCount _fArguments
       n            -> do
-        colFlds <- convertColFlds fType fSelSet
+        colFlds <- convertColFlds _fType _fSelSet
         unless (isAggFld n) $ throwInvalidFld n
         return $ RS.AFOp $ RS.AggOp (G.unName n) colFlds
   where

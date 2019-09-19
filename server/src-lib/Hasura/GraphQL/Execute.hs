@@ -20,8 +20,6 @@ module Hasura.GraphQL.Execute
 
   , ExecutionCtx(..)
 
-  , JoinParams(..)
-  , Joinable
   , mkQuery
   ) where
 
@@ -82,25 +80,31 @@ data QExecPlanResolved
   = ExPHasura !ExecOp
   | ExPRemote !VQ.RemoteTopField
   -- | ExPMixed !ExecOp (NonEmpty RemoteRelField)
+  deriving Show
 
-class Joinable a where
-  mkQuery :: JoinParams -> a -> (Batch, QExecPlanResolved)
 
-instance Joinable QExecPlanUnresolved where
-  mkQuery joinParams unresolvedPlan
-    = let batch = produceBatch opType remoteSchemaInfo remoteRelField rows
-          batchQuery = batchRemoteTopQuery batch
-      in (batch, ExPRemote batchQuery)
-    where
-      JoinParams opType rows = joinParams
-      QExecPlanUnresolved remoteRelField remoteSchemaInfo = unresolvedPlan
-
--- data JoinConfiguration = JoinConfiguration
-
-data JoinParams = JoinParams G.OperationType BatchInputs
+mkQuery :: G.OperationType -> BatchInputs -> QExecPlanUnresolved -> (Batch, VQ.RemoteTopField)
+mkQuery rtqOperationType BatchInputs{..} QExecPlanUnresolved{..}  =
+  let RemoteRelField{..} = remoteRelField
+      indexedRows = enumerateRowAliases $ toList biRows
+      rtqFields =
+        flip map indexedRows $ \(alias, variables) ->
+           fieldCallsToField
+             rrArguments
+             variables
+             rrSelSet
+             alias
+             (rtrRemoteFields $ rmfRemoteRelationship rrRemoteField)
+   in (produceBatch remoteRelField biCardinality, VQ.RemoteTopField{..})
+    
 
 data QExecPlan = Leaf QExecPlanResolved | Tree QExecPlanResolved (NonEmpty QExecPlanUnresolved)
-data QExecPlanUnresolved = QExecPlanUnresolved RemoteRelField RemoteSchemaInfo
+  deriving Show
+data QExecPlanUnresolved 
+  = QExecPlanUnresolved 
+  { remoteRelField      :: RemoteRelField
+  , rtqRemoteSchemaInfo :: RemoteSchemaInfo
+  } deriving Show
 
 -- | Execution context
 data ExecutionCtx
@@ -160,6 +164,7 @@ data ExecOp
   = ExOpQuery !LazyRespTx !(Maybe EQ.GeneratedSqlMap)
   | ExOpMutation !LazyRespTx
   | ExOpSubs !EL.LiveQueryOp
+  deriving Show
 
 getOpTypeFromExecOp :: ExecOp -> G.OperationType
 getOpTypeFromExecOp = \case

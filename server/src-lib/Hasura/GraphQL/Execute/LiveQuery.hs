@@ -99,6 +99,7 @@ initLiveQueriesState (LQOpts mxOpts fallbackOpts) pgExecCtx = do
 data LiveQueryOp
   = LQMultiplexed !LQM.MxOp
   | LQFallback !LQF.FallbackOp
+  deriving Show
 
 data LiveQueryId
   = LQIMultiplexed !LQM.LiveQueryId
