@@ -7,7 +7,7 @@ response:
       code: validation-failed
       path: $.selectionSet.author.args.where.id._unexpected
     message: |-
-      field "_unexpected" not found in type: 'integer_comparison_exp'
+      field "_unexpected" not found in type: 'Int_comparison_exp'
 query:
   query: |
     query {

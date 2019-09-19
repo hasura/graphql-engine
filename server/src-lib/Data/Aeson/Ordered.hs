@@ -44,7 +44,7 @@ import           Data.Vector                      (Vector)
 import qualified Data.Vector                      as V
 import           GHC.Generics
 import           Hasura.EncJSON
-import           Hasura.Prelude
+import           Hasura.Prelude                   hiding (empty, first, second)
 -- import           Prelude                          hiding (error, undefined)
 
 --------------------------------------------------------------------------------

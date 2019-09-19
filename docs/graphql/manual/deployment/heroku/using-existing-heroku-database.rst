@@ -25,7 +25,7 @@ Deploy Hasura on Heroku by clicking on this button:
   :class: no-shadow
   :target: https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku
 
-Follow the Heroku instructions to deploy, check if the Hasura console loads up when you **View app** and then head
+Follow the Heroku instructions to deploy, check if the Hasura console loads up when you click on **View app** and then head
 to the **Manage App** screen on your Heroku dashboard.
 
 This will deploy Hasura with a free Postgres add-on automatically provisioned.
@@ -47,8 +47,8 @@ if you want to secure your endpoint.
 
 .. note::
 
-  Hasura GraphQL engine needs access permissions to your Postgres database as described in
-  :doc:`Postgres permissions <../postgres-permissions>`
+  The Hasura GraphQL engine needs access permissions to your Postgres database as described in
+  :doc:`Postgres permissions <../postgres-permissions>`.
 
 Step 4: Track tables and relationships
 --------------------------------------

@@ -20,7 +20,9 @@ data MetadataObjType
   | MOTFunction
   | MOTRemoteSchema
   | MOTRemoteRelationship
-  deriving (Eq)
+  deriving (Eq, Generic)
+
+instance Hashable MetadataObjType
 
 instance Show MetadataObjType where
   show MOTTable              = "table"
@@ -40,7 +42,6 @@ data TableMetadataObjId
   | MTOEventTrigger !TriggerName
   | MTORemoteRelationship !RemoteRelationshipName
   deriving (Show, Eq, Generic)
-
 instance Hashable TableMetadataObjId
 
 data MetadataObjId
@@ -49,7 +50,6 @@ data MetadataObjId
   | MORemoteSchema !RemoteSchemaName
   | MOTableObj !QualifiedTable !TableMetadataObjId
   deriving (Show, Eq, Generic)
-
 instance Hashable MetadataObjId
 
 data InconsistentMetadataObj
@@ -58,7 +58,8 @@ data InconsistentMetadataObj
   , _moType   :: !MetadataObjType
   , _moDef    :: !Value
   , _moReason :: !T.Text
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Generic)
+instance Hashable InconsistentMetadataObj
 
 instance ToJSON InconsistentMetadataObj where
   toJSON (InconsistentMetadataObj _ ty info rsn) =

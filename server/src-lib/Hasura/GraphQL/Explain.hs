@@ -61,8 +61,8 @@ resolveVal userInfo = \case
   RS.UVSessVar ty sessVar -> do
     sessVarVal <- S.SELit <$> getSessVarVal userInfo sessVar
     return $ flip S.SETyAnn (S.mkTypeAnn ty) $ case ty of
-      PgTypeSimple colTy -> withGeoVal colTy sessVarVal
-      PgTypeArray _      -> sessVarVal
+      PGTypeScalar colTy -> withConstructorFn colTy sessVarVal
+      PGTypeArray _      -> sessVarVal
   RS.UVSQL sqlExp -> return sqlExp
 
 getSessVarVal
@@ -87,7 +87,7 @@ explainField userInfo gCtx sqlGenCtx fld =
     "__typename" -> return $ FieldPlan fName Nothing Nothing
     _            -> do
       unresolvedAST <-
-        runExplain (opCtxMap, userInfo, fldMap, orderByCtx, sqlGenCtx) $
+        runExplain (queryCtxMap, userInfo, fldMap, orderByCtx, sqlGenCtx) $
         RS.queryFldToPGAST fld
       resolvedAST <- RS.traverseQueryRootFldAST (resolveVal userInfo)
                      unresolvedAST
@@ -99,7 +99,7 @@ explainField userInfo gCtx sqlGenCtx fld =
   where
     fName = GV._fName fld
 
-    opCtxMap = _gOpCtxMap gCtx
+    queryCtxMap = _gQueryCtxMap gCtx
     fldMap = _gFields gCtx
     orderByCtx = _gOrdByCtx gCtx
 

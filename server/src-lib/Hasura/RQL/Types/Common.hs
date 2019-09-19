@@ -1,6 +1,5 @@
 module Hasura.RQL.Types.Common
-       ( PGColInfo(..)
-       , RelName(..)
+       ( RelName(..)
        , relNameToTxt
        , RelType(..)
        , rootRelName
@@ -23,6 +22,8 @@ module Hasura.RQL.Types.Common
        , unNonEmptyText
        , adminText
        , rootText
+
+       , FunctionArgName(..)
        ) where
 
 import           Hasura.Prelude
@@ -40,15 +41,6 @@ import qualified Language.GraphQL.Draft.Syntax as G
 import           Language.Haskell.TH.Syntax    (Lift)
 import qualified Language.Haskell.TH.Syntax    as TH
 import qualified PostgreSQL.Binary.Decoding    as PD
-
-data PGColInfo
-  = PGColInfo
-  { pgiName       :: !PGCol
-  , pgiType       :: !PGColType
-  , pgiIsNullable :: !Bool
-  } deriving (Show, Eq)
-
-$(deriveJSON (aesonDrop 3 snakeCase) ''PGColInfo)
 
 newtype NonEmptyText = NonEmptyText {unNonEmptyText :: T.Text}
   deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg, DQuote)
@@ -132,7 +124,7 @@ $(deriveToJSON (aesonDrop 2 snakeCase) ''RelInfo)
 
 newtype FieldName
   = FieldName { getFieldNameTxt :: T.Text }
-  deriving (Show, Eq, Ord, Hashable, FromJSON, ToJSON, FromJSONKey, ToJSONKey, Lift)
+  deriving (Show, Eq, Ord, Hashable, FromJSON, ToJSON, FromJSONKey, ToJSONKey, Lift, Data)
 
 instance IsIden FieldName where
   toIden (FieldName f) = Iden f
@@ -188,6 +180,10 @@ $(deriveJSON (aesonDrop 3 snakeCase) ''ForeignKey)
 
 instance Hashable ForeignKey
 
+newtype FunctionArgName =
+  FunctionArgName { getFuncArgNameTxt :: T.Text}
+  deriving (Show, Eq, ToJSON)
+
 data InpValInfo
   = InpValInfo
   { _iviDesc   :: !(Maybe G.Description)
@@ -200,8 +196,7 @@ instance EquatableGType InpValInfo where
   type EqProps InpValInfo = (G.Name, G.GType)
   getEqProps ity = (,) (_iviName ity) (_iviType ity)
 
--- | Typeclass for equating relevant properties of various GraphQL types
--- | defined below
+-- | Typeclass for equating relevant properties of various GraphQL types defined below
 class EquatableGType a where
   type EqProps a
   getEqProps :: a -> EqProps a

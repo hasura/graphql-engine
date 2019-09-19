@@ -6,8 +6,8 @@ module Hasura.GraphQL.Schema.OrderBy
   , mkTabAggOpOrdByInpObjs
   ) where
 
-import qualified Data.HashMap.Strict           as Map
 import           Control.Lens                  (preview)
+import qualified Data.HashMap.Strict           as Map
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Hasura.GraphQL.Resolve.Types
@@ -22,8 +22,8 @@ ordByTy = G.NamedType "order_by"
 
 ordByEnumTy :: EnumTyInfo
 ordByEnumTy =
-  mkHsraEnumTyInfo (Just desc) ordByTy $ mapFromL _eviVal $
-  map mkEnumVal enumVals
+  mkHsraEnumTyInfo (Just desc) ordByTy $
+    EnumValuesSynthetic . mapFromL _eviVal $ map mkEnumVal enumVals
   where
     desc = G.Description "column ordering options"
     mkEnumVal (n, d) =
@@ -140,8 +140,8 @@ mkOrdByInpObj tn selFlds = (inpObjTy, ordByCtx)
     desc = G.Description $
       "ordering options when selecting data from " <>> tn
 
-    pgCols = mapMaybe (preview _SelFldCol) selFlds
-    relFltr ty = flip filter (mapMaybe (preview _SelFldRel) selFlds) $ \(ri, _, _, _, _) -> 
+    pgCols = lookupPGCols selFlds
+    relFltr ty = flip filter (lookupRels selFlds) $ \(ri, _, _, _, _) ->
       riType ri == ty
     objRels = relFltr ObjRel
     arrRels = relFltr ArrRel
@@ -172,3 +172,7 @@ mkOrdByInpObj tn selFlds = (inpObjTy, ordByCtx)
                                   , OBIAgg ri fltr
                                   )
                      in bool Nothing (Just obItem) isAggAllowed
+
+    lookupPGCols = mapMaybe (preview _SelFldCol)
+
+    lookupRels = mapMaybe (preview _SelFldRel)

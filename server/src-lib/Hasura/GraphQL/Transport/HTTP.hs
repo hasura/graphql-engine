@@ -1,5 +1,6 @@
 module Hasura.GraphQL.Transport.HTTP
   ( runGQ
+  , getMergedGQResp
   ) where
 
 import           Control.Lens
@@ -116,13 +117,16 @@ runHasuraGQ reqId query userInfo resolvedOp = do
       throw400 UnexpectedPayload
       "subscriptions are not supported over HTTP, use websockets instead"
   resp <- liftEither respE
-  return $ encodeGQResp $ GQSuccess $ encJToLBS resp
+  return $ encodeGQResp $ GQSuccess resp
 
--- | Merge the list of response objects by the @data@ key.
-mergeResponseData :: [EncJSON] -> Either String EncJSON
-mergeResponseData =
-  fmap E.encodeGQRespValue . mergeGQResp <=< traverse E.parseGQRespValue
 
+getMergedGQResp :: [EncJSON] -> Either String GQRespValue
+getMergedGQResp =
+  mergeGQResp <=< traverse E.parseGQRespValue
   where mergeGQResp = flip foldM E.emptyResp $ \respAcc E.GQRespValue{..} ->
           respAcc & E.gqRespErrors <>~ _gqRespErrors
                   & mapMOf E.gqRespData (OJ.safeUnion _gqRespData)
+
+mergeResponseData :: [EncJSON] -> Either String EncJSON
+mergeResponseData =
+  fmap E.encodeGQRespValue . getMergedGQResp

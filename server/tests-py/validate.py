@@ -221,7 +221,7 @@ def validate_gql_ws_q(hge_ctx, endpoint, query, headers, exp_http_response, retr
     assert resp['payload'] == exp_ws_response, yaml.dump({
         'response': resp['payload'],
         'expected': exp_ws_response,
-        'diff': jsondiff.diff(exp_ws_response, resp['payload'])
+        'diff': jsondiff.diff(json.dumps(exp_ws_response), json.dumps(resp['payload']))
     })
     resp_done = next(query_resp)
     assert resp_done['type'] == 'complete'

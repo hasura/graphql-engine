@@ -3,21 +3,38 @@ module Hasura.GraphQL.Resolve.Types where
 import           Hasura.Prelude
 
 import           Control.Lens
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.Sequence                 as Seq
-import qualified Data.Text                     as T
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.HashMap.Strict                 as Map
+import qualified Data.Sequence                       as Seq
+import qualified Data.Text                           as T
+import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Hasura.RQL.Types.BoolExp
+import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-import qualified Hasura.SQL.DML                as S
+import qualified Hasura.SQL.DML                      as S
 
-type OpCtxMap = Map.HashMap G.Name OpCtx
+data QueryCtx
+  = QCSelect !SelOpCtx
+  | QCSelectPkey !SelPkOpCtx
+  | QCSelectAgg !SelOpCtx
+  | QCFuncQuery !FuncQOpCtx
+  | QCFuncAggQuery !FuncQOpCtx
+  deriving (Show, Eq)
+
+data MutationCtx
+  = MCInsert !InsOpCtx
+  | MCUpdate !UpdOpCtx
+  | MCDelete !DelOpCtx
+  deriving (Show, Eq)
+
+type OpCtxMap a = Map.HashMap G.Name a
+type QueryCtxMap = OpCtxMap QueryCtx
+type MutationCtxMap = OpCtxMap MutationCtx
 
 data InsOpCtx
   = InsOpCtx
@@ -33,7 +50,7 @@ data SelOpCtx
   , _socLimit   :: !(Maybe Int)
   } deriving (Show, Eq)
 
-type PGColArgMap = Map.HashMap G.Name PGColInfo
+type PGColArgMap = Map.HashMap G.Name PGColumnInfo
 
 data SelPkOpCtx
   = SelPkOpCtx
@@ -43,9 +60,12 @@ data SelPkOpCtx
   , _spocArgMap  :: !PGColArgMap
   } deriving (Show, Eq)
 
-newtype FuncArgItem
-  = FuncArgItem {getArgName :: G.Name}
-  deriving (Show, Eq)
+data FuncArgItem
+  = FuncArgItem
+  { _faiInputArgName :: !G.Name
+  , _faiSqlArgName   :: !(Maybe FunctionArgName)
+  , _faiHasDefault   :: !Bool
+  } deriving (Show, Eq)
 
 type FuncArgSeq = Seq.Seq FuncArgItem
 
@@ -65,7 +85,7 @@ data UpdOpCtx
   , _uocHeaders    :: ![T.Text]
   , _uocFilter     :: !AnnBoolExpPartialSQL
   , _uocPresetCols :: !PreSetColsPartial
-  , _uocAllCols    :: ![PGColInfo]
+  , _uocAllCols    :: ![PGColumnInfo]
   } deriving (Show, Eq)
 
 data DelOpCtx
@@ -73,7 +93,7 @@ data DelOpCtx
   { _docTable   :: !QualifiedTable
   , _docHeaders :: ![T.Text]
   , _docFilter  :: !AnnBoolExpPartialSQL
-  , _docAllCols :: ![PGColInfo]
+  , _docAllCols :: ![PGColumnInfo]
   } deriving (Show, Eq)
 
 data OpCtx
@@ -88,7 +108,7 @@ data OpCtx
   deriving (Show, Eq)
 
 data TypedField
-  = FldCol PGColInfo
+  = FldCol PGColumnInfo
   | FldRel (RelInfo, Bool, AnnBoolExpPartialSQL, Maybe Int)
   | FldRemote RemoteField
   deriving (Show, Eq)
@@ -101,7 +121,7 @@ type FieldMap
 
 -- order by context
 data OrdByItem
-  = OBIPGCol !PGColInfo
+  = OBIPGCol !PGColumnInfo
   | OBIRel !RelInfo !AnnBoolExpPartialSQL
   | OBIAgg !RelInfo !AnnBoolExpPartialSQL
   deriving (Show, Eq)
@@ -123,7 +143,7 @@ data UpdPermForIns
 data InsCtx
   = InsCtx
   { icView      :: !QualifiedTable
-  , icAllCols   :: ![PGColInfo]
+  , icAllCols   :: ![PGColumnInfo]
   , icSet       :: !PreSetColsPartial
   , icRelations :: !RelationInfoMap
   , icUpdPerm   :: !(Maybe UpdPermForIns)
@@ -135,8 +155,12 @@ data AnnPGVal
   = AnnPGVal
   { _apvVariable   :: !(Maybe G.Variable)
   , _apvIsNullable :: !Bool
-  , _apvType       :: !PGColType
-  , _apvValue      :: !PGColValue
+  , _apvType       :: !PGColumnType
+  -- ^ Note: '_apvValue' is a @'WithScalarType' 'PGScalarValue'@, so it includes its type as a
+  -- 'PGScalarType'. However, we /also/ need to keep the original 'PGColumnType' information around
+  -- in case we need to re-parse a new value with its type because we’re reusing a cached query
+  -- plan.
+  , _apvValue      :: !(WithScalarType PGScalarValue)
   } deriving (Show, Eq)
 
 type PrepFn m = AnnPGVal -> m S.SQLExp
@@ -150,7 +174,7 @@ partialSQLExpToUnresolvedVal = \case
 -- A value that will be converted to an sql expression eventually
 data UnresolvedVal
   -- From a session variable
-  = UVSessVar !PgType !SessVar
+  = UVSessVar !(PGType PGScalarType) !SessVar
   -- This is postgres
   | UVPG !AnnPGVal
   -- This is a full resolved sql expression

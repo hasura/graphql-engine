@@ -223,9 +223,9 @@ pollQuery pgExecCtx (LQHandler respTx respTV curOpsTV newOpsTV) = do
 
   resOrErr <- runExceptT $ runLazyTx pgExecCtx respTx
 
-  let (resp, respHashM) = case encJToLBS <$> resOrErr of
+  let (resp, respHashM) = case resOrErr of
         Left e    -> (GQExecError [encodeGQErr False e], Nothing)
-        Right lbs -> (GQSuccess lbs, Just $ mkRespHash lbs)
+        Right encJson -> (GQSuccess encJson, Just $ mkRespHash $ encJToLBS encJson)
 
   -- extract the current and new operations
   (curOps, newOps) <- STM.atomically $ do

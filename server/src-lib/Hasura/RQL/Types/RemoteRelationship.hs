@@ -1,9 +1,5 @@
 {-# LANGUAGE DisambiguateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns           #-}
-{-# LANGUAGE RecordWildCards          #-}
-
--- |
-
 module Hasura.RQL.Types.RemoteRelationship where
 
 import           Data.Aeson.Casing
@@ -54,17 +50,17 @@ parseObjectFieldsToGValue hashMap =
   traverse
     (\(key, value) -> do
        name <- parseJSON (A.String key)
-       parsedValue <- parseValue value
+       parsedValue <- parseValueAsGValue value
        pure G.ObjectFieldG {_ofName = name, _ofValue = parsedValue})
     (HM.toList hashMap)
 
-parseValue :: A.Value -> AT.Parser G.Value
-parseValue =
+parseValueAsGValue :: A.Value -> AT.Parser G.Value
+parseValueAsGValue =
   \case
     A.Object obj ->
       fmap (G.VObject . G.ObjectValueG) (parseObjectFieldsToGValue obj)
     A.Array array ->
-      fmap (G.VList . G.ListValueG . toList) (traverse parseValue array)
+      fmap (G.VList . G.ListValueG . toList) (traverse parseValueAsGValue array)
     A.String text ->
       case T.uncons text of
         Just ('$', rest)

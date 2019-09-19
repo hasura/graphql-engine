@@ -1,3 +1,6 @@
+import globals from '../../../Globals';
+import { TABLE_ENUMS_SUPPORT } from '../../../helpers/versionUtils';
+
 export const INTEGER = 'integer';
 export const SERIAL = 'serial';
 export const BIGINT = 'bigint';
@@ -36,6 +39,7 @@ export const getPlaceholder = type => {
 export const tabNameMap = {
   browse: 'Browse Rows',
   insert: 'Insert Row',
+  edit: 'Edit Row',
   modify: 'Modify',
   relationships: 'Relationships',
   permissions: 'Permissions',
@@ -228,6 +232,14 @@ export const fetchTrackedTableListQuery = options => {
       order_by: [{ column: 'table_name', type: 'asc' }],
     },
   };
+
+  const supportEnums =
+    globals.featuresCompatibility &&
+    globals.featuresCompatibility[TABLE_ENUMS_SUPPORT];
+  if (supportEnums) {
+    query.args.columns.push('is_enum');
+  }
+
   if (
     (options.schemas && options.schemas.length !== 0) ||
     (options.tables && options.tables.length !== 0)
@@ -508,12 +520,14 @@ export const mergeLoadSchemaData = (
     let _fkConstraints = [];
     let _refFkConstraints = [];
     let _remoteRelationships = [];
+    let _isEnum = false;
 
     if (_isTableTracked) {
       _primaryKey = trackedTableInfo.primary_key;
       _relationships = trackedTableInfo.relationships;
       _permissions = trackedTableInfo.permissions;
       _uniqueConstraints = trackedTableInfo.unique_constraints;
+      _isEnum = trackedTableInfo.is_enum;
 
       _fkConstraints = fkData.filter(
         fk => fk.table_schema === _tableSchema && fk.table_name === _tableName
@@ -547,6 +561,7 @@ export const mergeLoadSchemaData = (
       opp_foreign_key_constraints: _refFkConstraints,
       view_info: _viewInfo,
       remote_relationships: _remoteRelationships,
+      is_enum: _isEnum,
     };
 
     _mergedTableData.push(_mergedInfo);

@@ -4,8 +4,6 @@ const appConfig = require('../appconfig');
 const host = appConfig.appHost;
 const port = appConfig.port[process.env.NODE_ENV || 'development'];
 
-// require('babel-polyfill');
-
 const environment = {
   development: {
     isProduction: false,

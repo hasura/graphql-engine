@@ -16,6 +16,7 @@
     query_collections: []
     tables: []
     remote_schemas: []
+    remote_relationships: []
   query:
     type: export_metadata
     args: {}

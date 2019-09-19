@@ -10,7 +10,7 @@ This is a guide to help you set up a basic authorization architecture for your G
 that you first check out :doc:`roles-variables` and :doc:`permission-rules`
 that will be referred to throughout this guide.
 
-Here are some examples of common use-cases.
+Here are some examples of common use cases.
 
 Anonymous (not logged in) users
 -------------------------------
@@ -38,7 +38,7 @@ Logged-in users
 - Set up a permission for insert/select/update/delete that uses said column. E.g.:
   ``author_id: {_eq: "X-Hasura-User-Id"}`` for an article table.
 - Note that the ``X-Hasura-User-Id`` is a :doc:`dynamic session variable<./roles-variables>` that comes in from
-  your :doc:`auth webhook's <../authentication/webhook>` response, or as a request as a header if you're testing.
+  your :doc:`auth webhook's <../authentication/webhook>` response, or as a request header if you're testing.
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/user-select-graphiql.png
    :class: no-shadow
@@ -125,9 +125,9 @@ Sometimes your data/user model requires that:
 * Users can have multiple roles.
 * Each role has access to different parts of your database schema. 
 
-If you have the information about roles and how they map to your data in the same database as the one configured with GraphQL Engine, you can leverage relationships to define permissions that effectively control access to data and the operations each role is allowed to perform. 
+If you have the information about roles and how they map to your data in the same database as the one configured with the GraphQL engine, you can leverage relationships to define permissions that effectively control access to data and the operations each role is allowed to perform. 
 
-To understand how this works, let's model the roles and corresponding permissions in the context of a blog app wth the following roles:
+To understand how this works, let's model the roles and corresponding permissions in the context of a blog app with the following roles:
 
 * ``author``: Users with this role can submit **their own** articles. 
 
@@ -193,25 +193,25 @@ Permissions
 ^^^^^^^^^^^
 The following is an example summary of the access control requirements for the ``articles`` table based on the above schema:
 
-+----------------+-------------+--------+--------+--------+--------+--------+
-+ Columns of     | author               | reviewer        | editor          |
-+ the ``article``+-------------+--------+--------+--------+--------+--------+
-| table          | insert      | select | update | select | update | select |
-+================+=============+========+========+========+========+========+
-| id             | ✔️          | ✔️     | ❌     | ✔️     | ❌     | ✔️     |
-+----------------+-------------+--------+--------+--------+--------+--------+
-| title          | ✔️          | ✔️     | ✔️     | ✔️     | ✔️     | ✔️     |
-+----------------+-------------+--------+--------+--------+--------+--------+
-| author_id      | ✔️ :sup:`*` | ✔️     | ❌     | ✔️     | ❌     | ✔️     | 
-+----------------+-------------+--------+--------+--------+--------+--------+
-| is_reviewed    | ❌          | ✔️     | ✔️     | ✔️     | ✔️     | ✔️     | 
-+----------------+-------------+--------+--------+--------+--------+--------+
-| review_comment | ❌          | ✔️     | ✔️     | ✔️     | ❌     | ✔️     | 
-+----------------+-------------+--------+--------+--------+--------+--------+
-| is_published   | ❌          | ✔️     | ❌     | ✔️     | ✔️     | ✔️     |
-+----------------+-------------+--------+--------+--------+--------+--------+
-|editor_rating   | ❌          | ❌     | ❌     | ❌     | ✔️     | ✔️     |
-+----------------+-------------+--------+--------+--------+--------+--------+
++-----------------+------------+--------+--------+--------+--------+--------+
+| Columns of      | author              | reviewer        | editor          |
++ the ``article`` +------------+--------+--------+--------+--------+--------+
+| table           | insert     | select | update | select | update | select |
++=================+============+========+========+========+========+========+
+| id              | ✔          | ✔      | ✖      | ✔      | ✖      | ✔      |
++-----------------+------------+--------+--------+--------+--------+--------+
+| title           | ✔          | ✔      | ✔      | ✔      | ✔      | ✔      |
++-----------------+------------+--------+--------+--------+--------+--------+
+| author_id       | ✔ :sup:`*` | ✔      | ✖      | ✔      | ✖      | ✔      |
++-----------------+------------+--------+--------+--------+--------+--------+
+| is_reviewed     | ✖          | ✔      | ✔      | ✔      | ✔      | ✔      |
++-----------------+------------+--------+--------+--------+--------+--------+
+| review_comment  | ✖          | ✔      | ✔      | ✔      | ✖      | ✔      |
++-----------------+------------+--------+--------+--------+--------+--------+
+| is_published    | ✖          | ✔      | ✖      | ✔      | ✔      | ✔      |
++-----------------+------------+--------+--------+--------+--------+--------+
+|editor_rating    | ✖          | ✖      | ✖      | ✖      | ✔      | ✔      |
++-----------------+------------+--------+--------+--------+--------+--------+
 
 :sup:`*` *Additional restriction required to ensure that a user with the role* ``author`` *can submit only their own article i.e.* ``author_id`` *should be the same as the user's id*.
 
@@ -223,7 +223,7 @@ Permissions for role ``author``
 
 * **Allow users with the role** ``author`` **to insert only their own articles**
   
-  For this permission rule, we'll make use of two features of the GraphQL Engine's permissions system:
+  For this permission rule, we'll make use of two features of the GraphQL engine's permissions system:
 
   a) :ref:`Column-level permissions<col-level-permissions>`: Restrict access to certain columns only.
   
@@ -252,7 +252,7 @@ Permissions for role ``reviewer``
 
   .. thumbnail:: ../../../../img/graphql/manual/auth/multirole-example-reviewer-update.png
 
-  The array-relationship based permission rule in the above image reads as "*if the ID of any of reviewers assigned to this article is equal to the user's ID i.e. the* ``X-Hasura-User-Id`` *session-variable's value, allow access to it*". The columns' access is restricted using the column-level permissions highlighted above.
+  The array-relationship based permission rule in the above image reads as "*if the ID of any reviewer assigned to this article is equal to the user's ID i.e. the* ``X-Hasura-User-Id`` *session-variable's value, allow access to it*". The columns' access is restricted using the column-level permissions highlighted above.
 
 * **Allow users with the role** ``reviewer`` **to select articles assigned to them for reviews**
 
