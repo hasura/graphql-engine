@@ -402,6 +402,25 @@ class TestGraphqlDeletePermissions(DefaultTestMutations):
     def dir(cls):
         return "queries/graphql_mutation/delete/permissions"
 
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+class TestGraphqlMutationCustomSchema(DefaultTestMutations):
+
+    def test_insert_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/insert_author.yaml', transport)
+
+    def test_insert_article_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/insert_article_author.yaml', transport)
+
+    def test_update_article(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/update_article.yaml', transport)
+
+    def test_delete_article(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/delete_article.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return "queries/graphql_mutation/custom_schema"
+
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 class TestGraphQLMutateEnums(DefaultTestMutations):
     @classmethod

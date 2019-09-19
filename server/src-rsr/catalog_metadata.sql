@@ -20,6 +20,7 @@ from
           ),
           'is_enum', ht.is_enum,
           'is_system_defined', ht.is_system_defined,
+          'configuration', ht.configuration,
           'info', t.info
         )
       ), '[]') as items
@@ -29,6 +30,7 @@ from
         table_schema,
         table_name,
         jsonb_build_object(
+          'description', description,
           'columns', columns,
           'primary_key_columns', primary_key_columns,
           'constraints', constraints,

@@ -399,22 +399,22 @@ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
     errMsg = "console template rendering failed: " ++ show errs
 
 
-newtype QueryParser
-  = QueryParser
-  { getQueryParser :: QualifiedTable -> Object -> Handler RQLQuery }
+newtype LegacyQueryParser
+  = LegacyQueryParser
+  { getLegacyQueryParser :: QualifiedTable -> Object -> Handler RQLQueryV1 }
 
-queryParsers :: M.HashMap T.Text QueryParser
+queryParsers :: M.HashMap T.Text LegacyQueryParser
 queryParsers =
   M.fromList
-  [ ("select", mkQueryParser RQSelect)
-  , ("insert", mkQueryParser RQInsert)
-  , ("update", mkQueryParser RQUpdate)
-  , ("delete", mkQueryParser RQDelete)
-  , ("count", mkQueryParser RQCount)
+  [ ("select", mkLegacyQueryParser RQSelect)
+  , ("insert", mkLegacyQueryParser RQInsert)
+  , ("update", mkLegacyQueryParser RQUpdate)
+  , ("delete", mkLegacyQueryParser RQDelete)
+  , ("count", mkLegacyQueryParser RQCount)
   ]
   where
-    mkQueryParser f =
-      QueryParser $ \qt obj -> do
+    mkLegacyQueryParser f =
+      LegacyQueryParser $ \qt obj -> do
       let val = Object $ M.insert "table" (toJSON qt) obj
       q <- decodeValue val
       return $ f q
@@ -423,7 +423,7 @@ legacyQueryHandler :: TableName -> T.Text -> Object
                    -> Handler (HttpResponse EncJSON)
 legacyQueryHandler tn queryType req =
   case M.lookup queryType queryParsers of
-    Just queryParser -> getQueryParser queryParser qt req >>= v1QueryHandler
+    Just queryParser -> getLegacyQueryParser queryParser qt req >>= (v1QueryHandler . RQV1)
     Nothing          -> throw404 "No such resource exists"
   where
     qt = QualifiedObject publicSchema tn
@@ -458,7 +458,7 @@ mkWaiApp
   -> Bool
   -> InstanceId
   -> S.HashSet API
-  -> EL.LQOpts
+  -> EL.LiveQueriesOptions
   -> IO HasuraApp
 mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
          enableConsole consoleAssetsDir enableTelemetry instanceId apis lqOpts = do

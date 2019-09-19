@@ -44,7 +44,7 @@ newtype PlanCache
 
 data ReusablePlan
   = RPQuery !EQ.ReusableQueryPlan
-  | RPSubs !LQ.SubsPlan
+  | RPSubs !LQ.ReusableLiveQueryPlan
 
 instance J.ToJSON ReusablePlan where
   toJSON = \case

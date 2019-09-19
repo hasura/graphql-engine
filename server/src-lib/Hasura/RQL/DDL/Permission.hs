@@ -150,7 +150,7 @@ buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) =
     fieldInfoMap = _tiFieldInfoMap tabInfo
     tn = _tiName tabInfo
     vn = buildViewName tn rn PTInsert
-    allCols = map pgiName $ getCols fieldInfoMap
+    allCols = map pgiColumn $ getCols fieldInfoMap
     insCols = fromMaybe allCols $ convColSpec fieldInfoMap <$> mCols
 
 buildInsInfra :: QualifiedTable -> InsPermInfo -> Q.TxE QErr ()
