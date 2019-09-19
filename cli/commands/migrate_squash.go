@@ -1,10 +1,8 @@
 package commands
 
 import (
-	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
 	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -17,7 +15,7 @@ func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	migrateSquashCmd := &cobra.Command{
 		Use:          "squash",
-		Short:        "Display current status of migrations on a database",
+		Short:        "",
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
@@ -25,17 +23,22 @@ func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.EC.Spin("Squashing migrations...")
+			opts.version = getTime()
 			err := opts.run()
 			opts.EC.Spinner.Stop()
 			if err != nil {
 				return err
 			}
+			opts.EC.Logger.WithFields(log.Fields{
+				"version": opts.version,
+				"name":    opts.name,
+			}).Info("Migrations files created")
 			return nil
 		},
 	}
 
 	f := migrateSquashCmd.Flags()
-	f.Uint64Var(&opts.version, "version", 0, "squash from this version number")
+	f.Uint64Var(&opts.from, "from", 0, "squash from this version number")
 	f.StringVar(&opts.name, "name", "default_squash", "name of the migration")
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
@@ -53,8 +56,9 @@ func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
 type migrateSquashOptions struct {
 	EC *cli.ExecutionContext
 
-	version uint64
+	from    uint64
 	name    string
+	version int64
 }
 
 func (o *migrateSquashOptions) run() error {
@@ -62,32 +66,5 @@ func (o *migrateSquashOptions) run() error {
 	if err != nil {
 		return err
 	}
-	up, down, err := migrateDrv.Squash(o.version)
-	if err != nil {
-		return errors.Wrap(err, "cannot squash migration")
-	}
-
-	byteUp, err := yaml.Marshal(up)
-	if err != nil {
-		return errors.Wrap(err, "cannot unmarshall up query")
-	}
-
-	byteDown, err := yaml.Marshal(down)
-	if err != nil {
-		return errors.Wrap(err, "cannot unmarshall down query")
-	}
-	timestamp := getTime()
-	createOptions := mig.New(timestamp, o.name, o.EC.MigrationDir)
-	createOptions.MetaUp = byteUp
-	createOptions.MetaDown = byteDown
-
-	err = createOptions.Create()
-	if err != nil {
-		return errors.Wrap(err, "cannot create migration")
-	}
-	o.EC.Logger.WithFields(log.Fields{
-		"version": timestamp,
-		"name":    o.name,
-	}).Info("Migrations files created")
-	return nil
+	return mig.SquashCmd(migrateDrv, o.from, o.version, o.name, o.EC.MigrationDir)
 }

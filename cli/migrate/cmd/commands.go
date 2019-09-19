@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -13,6 +12,7 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli/migrate"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -203,4 +203,30 @@ func DownCmd(m *migrate.Migrate, limit int64) error {
 
 func ResetCmd(m *migrate.Migrate) error {
 	return m.Reset()
+}
+
+func SquashCmd(m *migrate.Migrate, from uint64, version int64, name, directory string) error {
+	up, down, err := m.Squash(from)
+	if err != nil {
+		return err
+	}
+
+	byteUp, err := yaml.Marshal(up)
+	if err != nil {
+		return errors.Wrap(err, "cannot unmarshall up query")
+	}
+
+	byteDown, err := yaml.Marshal(down)
+	if err != nil {
+		return errors.Wrap(err, "cannot unmarshall down query")
+	}
+	createOptions := New(version, name, directory)
+	createOptions.MetaUp = byteUp
+	createOptions.MetaDown = byteDown
+
+	err = createOptions.Create()
+	if err != nil {
+		return errors.Wrap(err, "cannot create migration")
+	}
+	return nil
 }

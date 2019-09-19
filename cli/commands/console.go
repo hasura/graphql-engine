@@ -193,6 +193,10 @@ func (r *cRouter) setRoutes(migrationDir, metadataFile string, logger *logrus.Lo
 			{
 				settingsAPIs.Any("", api.SettingsAPI)
 			}
+			squashAPIs := migrateAPIs.Group("/squash")
+			{
+				squashAPIs.POST("/create", api.SquashCreateAPI)
+			}
 			migrateAPIs.Any("", api.MigrateAPI)
 		}
 		// Migrate api endpoints and middleware

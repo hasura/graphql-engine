@@ -72,7 +72,6 @@ func MigrateAPI(c *gin.Context) {
 		}
 
 		startTime := time.Now()
-		// Convert to Millisecond
 		timestamp := startTime.UnixNano() / int64(time.Millisecond)
 
 		createOptions := cmd.New(timestamp, request.Name, sourceURL.Path)
