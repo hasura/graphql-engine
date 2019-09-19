@@ -23,6 +23,7 @@ import RemoteRelationships from './RemoteRelationships/RemoteRelationships';
 import suggestedRelationshipsRaw from './autoRelations';
 import RelationshipEditor from './RelationshipEditor';
 import { NotFoundError } from '../../../Error/PageNotFound';
+import { fetchRemoteSchemas } from '../../RemoteSchema/Actions';
 
 const addRelationshipCellView = (
   dispatch,
@@ -318,6 +319,7 @@ const Relationships = ({
 }) => {
   useEffect(() => {
     dispatch(setTable(tableName));
+    dispatch(fetchRemoteSchemas());
   }, []);
   const styles = require('../TableModify/ModifyTable.scss');
   const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
@@ -438,9 +440,8 @@ const Relationships = ({
     <div className={`${styles.container} container-fluid`}>
       <TableHeader
         dispatch={dispatch}
-        tableName={tableName}
+        table={tableSchema}
         tabName="relationships"
-        currentSchema={currentSchema}
         migrationMode={migrationMode}
       />
       <br />
