@@ -1,3 +1,5 @@
+{-# LANGUAGE Rank2Types      #-}
+{-# LANGUAGE RankNTypes      #-}
 {-# LANGUAGE RecordWildCards #-}
 module Hasura.App where
 
@@ -11,7 +13,6 @@ import           System.Exit                (exitFailure)
 import qualified Control.Concurrent         as C
 import qualified Data.Aeson                 as A
 import qualified Data.ByteString.Char8      as BC
-import qualified Data.ByteString.Lazy       as BL
 import qualified Data.ByteString.Lazy.Char8 as BLC
 import qualified Data.Text                  as T
 import qualified Data.Time.Clock            as Clock
@@ -27,7 +28,6 @@ import           Hasura.Db
 import           Hasura.Events.Lib
 import           Hasura.Logging
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
 import           Hasura.RQL.Types           (QErr, SQLGenCtx (..),
                                              SchemaCache (..), adminUserInfo,
                                              emptySchemaCache)
@@ -42,7 +42,6 @@ import           Hasura.Server.Logging
 import           Hasura.Server.Query        (RQLQuery, Run, peelRun)
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
-import           Hasura.Server.Version      (currentVersion)
 
 import qualified Database.PG.Query          as Q
 
@@ -119,35 +118,37 @@ mkPGLogger (Logger logger) (Q.PLERetryMsg msg) =
 
 
 -- | most of the required types for initializing graphql-engine
-data InitCtx
+data InitCtx a
   = InitCtx
   { _icHttpManager :: !HTTP.Manager
   , _icInstanceId  :: !InstanceId
   , _icDbUid       :: !Text
-  , _icLoggers     :: !Loggers
+  , _icLoggers     :: !(Loggers a)
   , _icConnInfo    :: !Q.ConnInfo
   , _icPgPool      :: !Q.PGPool
   }
 
--- | Collection of the LoggerCtx, the regular Logger and the PGLogger
-data Loggers
+-- | Collection of the LoggerCtx, the regular Logger and the PGLogger, and HttpLogger
+-- TODO: better naming?
+data Loggers a
   = Loggers
-  { _loggersLoggerCtx :: !LoggerCtx
-  , _loggersLogger    :: !Logger
-  , _loggersPgLogger  :: !Q.PGLogger
+  { _lsLoggerCtx  :: !LoggerCtx
+  , _lsLogger     :: !Logger
+  , _lsPgLogger   :: !Q.PGLogger
+  , _lsHttpLogger :: !(HttpLogger a)
   }
 
 -- | a separate function to create the initialization context because some of
 -- these contexts might be used by external functions
-initialiseCtx :: HGECommand -> RawConnInfo -> Maybe LogCallbackFunction -> IO InitCtx
-initialiseCtx hgeCmd rci logCallback = do
+initialiseCtx :: (ToEngineLog a) => HGECommand -> RawConnInfo -> Maybe LogCallbackFunction -> (HttpLogger a) -> IO (InitCtx a)
+initialiseCtx hgeCmd rci logCallback httpLogger = do
   -- global http manager
   httpManager <- HTTP.newManager HTTP.tlsManagerSettings
   instanceId <- generateInstanceId
   connInfo <- procConnInfo
-  (loggerThings, pool) <- case hgeCmd of
+  (loggers, pool) <- case hgeCmd of
     HCServe ServeOptions{..} -> do
-      l@(Loggers _ logger pgLogger) <- mkLoggers soEnabledLogTypes soLogLevel
+      l@(Loggers _ logger pgLogger _) <- mkLoggers soEnabledLogTypes soLogLevel
       let sqlGenCtx = SQLGenCtx soStringifyNum
       -- log postgres connection info
       unLogger logger $ connInfoToLog connInfo
@@ -159,7 +160,7 @@ initialiseCtx hgeCmd rci logCallback = do
       return (l, pool)
 
     _ -> do
-      l@(Loggers _ _ pgLogger) <- mkLoggers defaultEnabledLogTypes LevelInfo
+      l@(Loggers _ _ pgLogger _) <- mkLoggers defaultEnabledLogTypes LevelInfo
       pool <- getMinimalPool pgLogger connInfo
       return (l, pool)
 
@@ -167,7 +168,7 @@ initialiseCtx hgeCmd rci logCallback = do
   eDbId <- runExceptT $ Q.runTx pool (Q.Serializable, Nothing) getDbId
   dbId <- either printErrJExit return eDbId
 
-  return $ InitCtx httpManager instanceId dbId loggerThings connInfo pool
+  return $ InitCtx httpManager instanceId dbId loggers connInfo pool
   where
     initialise pool sqlGenCtx (Logger logger) = do
       currentTime <- getCurrentTime
@@ -190,14 +191,14 @@ initialiseCtx hgeCmd rci logCallback = do
       loggerCtx <- mkLoggerCtx (defaultLoggerSettings True logLevel) enabledLogs logCallback
       let logger = mkLogger loggerCtx
           pgLogger = mkPGLogger logger
-      return $ Loggers loggerCtx logger pgLogger
+      return $ Loggers loggerCtx logger pgLogger httpLogger
 
 
-runHGEServer :: ServeOptions -> InitCtx -> Maybe UserAuthMiddleware -> Maybe (HasuraMiddleware RQLQuery) -> Maybe ConsoleRenderer -> IO ()
+runHGEServer :: (ToEngineLog a) => ServeOptions -> InitCtx a -> Maybe UserAuthMiddleware -> Maybe (HasuraMiddleware RQLQuery) -> Maybe ConsoleRenderer -> IO ()
 runHGEServer so@(ServeOptions port host _ isoL mAdminSecret mAuthHook mJwtSecret mUnAuthRole corsCfg enableConsole consoleAssetsDir enableTelemetry strfyNum enabledAPIs lqOpts enableAL _ _) (InitCtx httpManager instanceId dbId loggers connInfo pgPool) authMiddleware metadataMiddleware renderConsole = do
   let sqlGenCtx = SQLGenCtx strfyNum
 
-  let Loggers loggerCtx logger _ = loggers
+  let Loggers loggerCtx logger _ httpLogger = loggers
 
   initTime <- Clock.getCurrentTime
   -- log serve options
@@ -211,7 +212,7 @@ runHGEServer so@(ServeOptions port host _ isoL mAdminSecret mAuthHook mJwtSecret
 
 
   (app, cacheRef, cacheInitTime) <-
-    mkWaiApp isoL loggerCtx sqlGenCtx enableAL pgPool connInfo httpManager
+    mkWaiApp isoL loggerCtx httpLogger sqlGenCtx enableAL pgPool connInfo httpManager
       authMode corsCfg enableConsole consoleAssetsDir enableTelemetry
       instanceId enabledAPIs lqOpts authMiddleware metadataMiddleware renderConsole
 
@@ -290,43 +291,6 @@ runAsAdmin pool sqlGenCtx m = do
   res  <- runExceptT $ peelRun emptySchemaCache adminUserInfo
           httpManager sqlGenCtx (PGExecCtx pool Q.Serializable) m
   return $ fmap fst res
-
-
-handleCommand
-  :: HGECommand
-  -> InitCtx
-  -> Maybe UserAuthMiddleware
-  -> Maybe (HasuraMiddleware RQLQuery)
-  -> Maybe ConsoleRenderer
-  -> IO ()
-handleCommand hgeCmd initCtx@(InitCtx _ _ _ _ _ pgPool)
-  authMiddleware metadataMiddleware renderConsole =
-
-  case hgeCmd of
-    HCServe so -> runHGEServer so initCtx authMiddleware metadataMiddleware renderConsole
-    HCExport -> do
-      res <- runTx' fetchMetadata
-      either printErrJExit printJSON res
-
-    HCClean -> do
-      res <- runTx' cleanCatalog
-      either printErrJExit (const cleanSuccess) res
-
-    HCExecute -> do
-      queryBs <- BL.getContents
-      let sqlGenCtx = SQLGenCtx False
-      res <- runAsAdmin pgPool sqlGenCtx $ execQuery queryBs
-      either printErrJExit BLC.putStrLn res
-
-    HCVersion -> putStrLn $ "Hasura GraphQL Engine: " ++ T.unpack currentVersion
-  where
-    runTx' :: Q.TxE QErr a -> IO (Either QErr a)
-    runTx' tx =
-      runExceptT $ Q.runTx pgPool (Q.Serializable, Nothing) tx
-
-    cleanSuccess =
-      putStrLn "successfully cleaned graphql-engine related data"
-
 
 telemetryNotice :: String
 telemetryNotice =

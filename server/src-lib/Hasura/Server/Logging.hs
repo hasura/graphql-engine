@@ -1,13 +1,19 @@
+{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE RankNTypes #-}
 -- This is taken from wai-logger and customised for our use
 
 module Hasura.Server.Logging
   ( StartupLog(..)
   , PGLog(..)
   , mkInconsMetadataLog
-  , mkHttpAccessLog
-  , mkHttpErrorLog
+  , mkHttpAccessLogContext
+  , mkHttpErrorLogContext
+  , mkHttpLog
+  , HttpLogger
+  , HttpInfoLog(..)
+  , OperationLog(..)
+  , HttpLogContext(..)
   , WebHookLog(..)
-  , WebHookLogger
   , HttpException
   ) where
 
@@ -114,8 +120,6 @@ instance ToJSON WebHookLog where
            , "response" .= whlResponse whl
            ]
 
-type WebHookLogger = WebHookLog -> IO ()
-
 -- | Log information about the HTTP request
 data HttpInfoLog
   = HttpInfoLog
@@ -124,10 +128,12 @@ data HttpInfoLog
   , hlSource      :: !T.Text
   , hlPath        :: !T.Text
   , hlHttpVersion :: !N.HttpVersion
+  , hlHeaders     :: ![N.Header]
+  -- ^ all the request headers
   } deriving (Show, Eq)
 
 instance ToJSON HttpInfoLog where
-  toJSON (HttpInfoLog st met src path hv) =
+  toJSON (HttpInfoLog st met src path hv _) =
     object [ "status" .= N.statusCode st
            , "method" .= met
            , "ip" .= src
@@ -144,45 +150,33 @@ data OperationLog
   , olQueryExecutionTime :: !(Maybe Double)
   , olQuery              :: !(Maybe Value)
   , olError              :: !(Maybe Value)
-  , olClientName         :: !(Maybe Text)
-  -- ^ Client Name from `Hasura-Client-Name` header
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 2 snakeCase) ''OperationLog)
 
-data HttpAccessLog
-  = HttpAccessLog
-  { halHttpInfo  :: !HttpInfoLog
-  , halOperation :: !OperationLog
+data HttpLogContext
+  = HttpLogContext
+  { hlcHttpInfo  :: !HttpInfoLog
+  , hlcOperation :: !OperationLog
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 3 snakeCase) ''HttpAccessLog)
+$(deriveToJSON (aesonDrop 3 snakeCase) ''HttpLogContext)
 
-data HttpLog
-  = HttpLog
-  { _hlLogLevel :: !L.LogLevel
-  , _hlLogLing  :: !HttpAccessLog
-  }
-
-instance L.ToEngineLog HttpLog where
-  toEngineLog (HttpLog logLevel accessLog) =
-    (logLevel, ELTHttpLog, toJSON accessLog)
-
-mkHttpAccessLog
+mkHttpAccessLogContext
   :: Maybe UserInfo
   -- ^ Maybe because it may not have been resolved
   -> RequestId
   -> Wai.Request
   -> BL.ByteString
-  -> Maybe Text
-  -- ^ Client Name from `Hasura-Client-Name` header
   -> Maybe (UTCTime, UTCTime)
-  -> HttpLog
-mkHttpAccessLog userInfoM reqId req res clientName mTimeT =
+  -> [N.Header]
+  -> HttpLogContext
+mkHttpAccessLogContext userInfoM reqId req res mTimeT headers =
   let http = HttpInfoLog
-             { hlStatus       = status
-             , hlMethod       = bsToTxt $ Wai.requestMethod req
-             , hlSource       = bsToTxt $ getSourceFromFallback req
-             , hlPath         = bsToTxt $ Wai.rawPathInfo req
-             , hlHttpVersion  = Wai.httpVersion req
+             { hlStatus      = status
+             , hlMethod      = bsToTxt $ Wai.requestMethod req
+             , hlSource      = bsToTxt $ getSourceFromFallback req
+             , hlPath        = bsToTxt $ Wai.rawPathInfo req
+             , hlHttpVersion = Wai.httpVersion req
+             , hlHeaders     = headers
              }
       op = OperationLog
            { olRequestId    = reqId
@@ -191,32 +185,31 @@ mkHttpAccessLog userInfoM reqId req res clientName mTimeT =
            , olQueryExecutionTime = respTime
            , olQuery = Nothing
            , olError = Nothing
-           , olClientName = clientName
            }
-  in HttpLog L.LevelInfo $ HttpAccessLog http op
+  in HttpLogContext http op
   where
     status = N.status200
     respSize = Just $ BL.length res
     respTime = computeTimeDiff mTimeT
 
-mkHttpErrorLog
+mkHttpErrorLogContext
   :: Maybe UserInfo
   -- ^ Maybe because it may not have been resolved
   -> RequestId
   -> Wai.Request
   -> QErr
   -> Maybe Value
-  -> Maybe Text
-  -- ^ Client Name from `Hasura-Client-Name` header
   -> Maybe (UTCTime, UTCTime)
-  -> HttpLog
-mkHttpErrorLog userInfoM reqId req err query clientName mTimeT =
+  -> [N.Header]
+  -> HttpLogContext
+mkHttpErrorLogContext userInfoM reqId req err query mTimeT headers =
   let http = HttpInfoLog
-             { hlStatus       = status
-             , hlMethod       = bsToTxt $ Wai.requestMethod req
-             , hlSource       = bsToTxt $ getSourceFromFallback req
-             , hlPath         = bsToTxt $ Wai.rawPathInfo req
-             , hlHttpVersion  = Wai.httpVersion req
+             { hlStatus      = status
+             , hlMethod      = bsToTxt $ Wai.requestMethod req
+             , hlSource      = bsToTxt $ getSourceFromFallback req
+             , hlPath        = bsToTxt $ Wai.rawPathInfo req
+             , hlHttpVersion = Wai.httpVersion req
+             , hlHeaders     = headers
              }
       op = OperationLog
            { olRequestId    = reqId
@@ -225,13 +218,30 @@ mkHttpErrorLog userInfoM reqId req err query clientName mTimeT =
            , olQueryExecutionTime = respTime
            , olQuery = toJSON <$> query
            , olError = Just $ toJSON err
-           , olClientName = clientName
            }
-  in HttpLog L.LevelError $ HttpAccessLog http op
+  in HttpLogContext http op
   where
     status = qeStatus err
     respSize = Just $ BL.length $ encode err
     respTime = computeTimeDiff mTimeT
+
+type HttpLogger a = (L.ToEngineLog a) => HttpLogContext -> a
+
+data HttpLog
+  = HttpLog
+  { _hlLogLevel :: !L.LogLevel
+  , _hlLogLine  :: !HttpLogContext
+  }
+
+instance L.ToEngineLog HttpLog where
+  toEngineLog (HttpLog logLevel logLine) =
+    (logLevel, ELTHttpLog, toJSON logLine)
+
+mkHttpLog :: HttpLogContext -> HttpLog
+mkHttpLog httpLogCtx =
+  let isError = isJust $ olError $ hlcOperation httpLogCtx
+      logLevel = bool L.LevelInfo L.LevelError isError
+  in HttpLog logLevel httpLogCtx
 
 computeTimeDiff :: Maybe (UTCTime, UTCTime) -> Maybe Double
 computeTimeDiff = fmap (realToFrac . uncurry (flip diffUTCTime))

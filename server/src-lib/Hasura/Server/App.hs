@@ -204,55 +204,40 @@ buildQCtx = do
   sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
   return $ QCtx userInfo cache sqlGenCtx
 
-logResult
-  :: (MonadIO m)
-  => L.Logger
-  -> Maybe UserInfo
-  -> RequestId
-  -> Wai.Request
-  -> Maybe Value
-  -> Either QErr BL.ByteString
-  -> Maybe Text
-  -- ^ Client Name from `Hasura-Client-Name` header
-  -> Maybe (UTCTime, UTCTime)
-  -> m ()
-logResult logger userInfoM reqId httpReq req res clientName qTime = do
-  let logline = case res of
-        Right res' -> mkHttpAccessLog userInfoM reqId httpReq res' clientName qTime
-        Left e     -> mkHttpErrorLog userInfoM reqId httpReq e req clientName qTime
-  liftIO $ L.unLogger logger logline
-
 logSuccess
-  :: (MonadIO m)
+  :: (MonadIO m, L.ToEngineLog a)
   => L.Logger
+  -> HttpLogger a
   -> Maybe UserInfo
   -> RequestId
   -> Wai.Request
   -> BL.ByteString
-  -> Maybe Text
-  -- ^ Client Name from `Hasura-Client-Name` header
   -> Maybe (UTCTime, UTCTime)
+  -> [N.Header]
   -> m ()
-logSuccess logger userInfoM reqId httpReq res clientName qTime =
-  liftIO $ L.unLogger logger $ mkHttpAccessLog userInfoM reqId httpReq res clientName qTime
+logSuccess logger httpLogger userInfoM reqId httpReq res qTime headers =
+  liftIO $ L.unLogger logger $ httpLogger $
+    mkHttpAccessLogContext userInfoM reqId httpReq res qTime headers
 
 logError
-  :: (MonadIO m)
+  :: (MonadIO m, L.ToEngineLog a)
   => L.Logger
+  -> HttpLogger a
   -> Maybe UserInfo
   -> RequestId
   -> Wai.Request
   -> Maybe Value
   -> QErr
-  -> Maybe Text
-  -- ^ Client Name from `Hasura-Client-Name` header
+  -> [N.Header]
   -> m ()
-logError logger userInfoM reqId httpReq req qErr clientName =
-  liftIO $ L.unLogger logger $ mkHttpErrorLog userInfoM reqId httpReq qErr req clientName Nothing
+logError logger httpLogger userInfoM reqId httpReq req qErr headers =
+  liftIO $ L.unLogger logger $ httpLogger $
+    mkHttpErrorLogContext userInfoM reqId httpReq qErr req Nothing headers
 
 mkSpockAction
-  :: (MonadIO m, FromJSON a, ToJSON a)
+  :: (MonadIO m, FromJSON a, ToJSON a, L.ToEngineLog b)
   => ServerCtx
+  -> HttpLogger b
   -> Maybe UserAuthMiddleware
   -- -> Maybe (HasuraMiddleware RQLQuery)
   -> (Bool -> QErr -> Value)
@@ -261,7 +246,7 @@ mkSpockAction
   -- ^ `QErr` modifier
   -> APIHandler a
   -> ActionT m ()
-mkSpockAction serverCtx userAuthMiddleware qErrEncoder qErrModifier apiHandler = do
+mkSpockAction serverCtx httpLogger userAuthMiddleware qErrEncoder qErrModifier apiHandler = do
   req <- request
   reqBody <- liftIO $ strictRequestBody req
   let headers = requestHeaders req
@@ -269,14 +254,13 @@ mkSpockAction serverCtx userAuthMiddleware qErrEncoder qErrModifier apiHandler =
       manager = scManager serverCtx
       -- convert ByteString to Maybe Value for logging
       reqTxt = Just $ String $ bsToTxt $ BL.toStrict reqBody
-      clientName = getClientName headers
 
   requestId <- getRequestId headers
 
   -- default to @getUserInfo@ if no user-auth middleware is passed
   let resolveUserInfo = fromMaybe getUserInfo userAuthMiddleware
   userInfoE <- liftIO $ runExceptT $ resolveUserInfo logger manager headers authMode
-  userInfo  <- either (logErrorAndResp Nothing requestId req reqTxt False clientName . qErrModifier)
+  userInfo  <- either (logErrorAndResp Nothing requestId req reqTxt False headers . qErrModifier)
                return userInfoE
 
   let handlerState = HandlerCtx serverCtx userInfo headers requestId
@@ -291,7 +275,7 @@ mkSpockAction serverCtx userAuthMiddleware qErrEncoder qErrModifier apiHandler =
     AHPost handler -> do
       parsedReqE <- runExceptT $ parseBody reqBody
       parsedReq  <- onLeft parsedReqE $
-                    (logErrorAndResp (Just userInfo) requestId req reqTxt (isAdmin curRole) clientName . qErrModifier)
+                    (logErrorAndResp (Just userInfo) requestId req reqTxt (isAdmin curRole) headers . qErrModifier)
       res <- liftIO $ runReaderT (runExceptT $ handler parsedReq) handlerState
       return (res, Just parsedReq)
 
@@ -302,8 +286,8 @@ mkSpockAction serverCtx userAuthMiddleware qErrEncoder qErrModifier apiHandler =
 
   -- log and return result
   case modResult of
-    Left err  -> logErrorAndResp (Just userInfo) requestId req (toJSON <$> q) (isAdmin curRole) clientName err
-    Right res -> logSuccessAndResp (Just userInfo) requestId req res clientName (Just (t1, t2))
+    Left err  -> logErrorAndResp (Just userInfo) requestId req (toJSON <$> q) (isAdmin curRole) headers err
+    Right res -> logSuccessAndResp (Just userInfo) requestId req res (Just (t1, t2)) headers
 
   where
     logger = scLogger serverCtx
@@ -311,14 +295,14 @@ mkSpockAction serverCtx userAuthMiddleware qErrEncoder qErrModifier apiHandler =
     logErrorAndResp
       :: (MonadIO m)
       => Maybe UserInfo -> RequestId -> Wai.Request -> Maybe Value -> Bool
-      -> Maybe Text -> QErr -> ActionCtxT ctx m a
-    logErrorAndResp userInfo reqId req reqBody includeInternal clientName qErr = do
-      logError logger userInfo reqId req reqBody qErr clientName
+      -> [N.Header] -> QErr -> ActionCtxT ctx m a
+    logErrorAndResp userInfo reqId req reqBody includeInternal headers qErr = do
+      logError logger httpLogger userInfo reqId req reqBody qErr headers
       setStatus $ qeStatus qErr
       json $ qErrEncoder includeInternal qErr
 
-    logSuccessAndResp userInfo reqId req result clientName qTime = do
-      logSuccess logger userInfo reqId req (apiRespToLBS result) clientName qTime
+    logSuccessAndResp userInfo reqId req result qTime headers = do
+      logSuccess logger httpLogger userInfo reqId req (apiRespToLBS result) qTime headers
       case result of
         JSONResp (HttpResponse j h) -> do
           uncurry setHeader jsonHeader
@@ -391,19 +375,21 @@ v1Alpha1PGDumpHandler b = do
   output <- PGD.execPGDump b ci
   return $ RawResp $ HttpResponse output (Just [Header sqlHeader])
 
-consoleAssetsHandler :: L.Logger -> Text -> FilePath -> ActionT IO ()
-consoleAssetsHandler logger dir path = do
+consoleAssetsHandler :: (L.ToEngineLog a) => L.Logger -> HttpLogger a -> Text -> FilePath -> ActionT IO ()
+consoleAssetsHandler logger httpLogger dir path = do
+  req <- request
+  let reqHeaders = requestHeaders req
   -- '..' in paths need not be handed as it is resolved in the url by
   -- spock's routing. we get the expanded path.
   eFileContents <- liftIO $ try $ BL.readFile $
     joinPath [T.unpack dir, path]
-  either onError onSuccess eFileContents
+  either (onError reqHeaders) onSuccess eFileContents
   where
     onSuccess c = do
       mapM_ (uncurry setHeader) headers
       lazyBytes c
-    onError :: IOException -> ActionT IO ()
-    onError = raiseGenericApiError logger . err404 NotFound . T.pack . show
+    onError :: [N.Header] -> IOException -> ActionT IO ()
+    onError hdrs = raiseGenericApiError logger httpLogger hdrs . err404 NotFound . T.pack . show
     fn = T.pack $ takeFileName path
     -- set gzip header if the filename ends with .gz
     (fileName, encHeader) = case T.stripSuffix ".gz" fn of
@@ -479,8 +465,10 @@ initErrExit e = do
   exitFailure
 
 mkWaiApp
-  :: Q.TxIsolation
+  :: (L.ToEngineLog a)
+  => Q.TxIsolation
   -> L.LoggerCtx
+  -> HttpLogger a
   -> SQLGenCtx
   -> Bool
   -> Q.PGPool
@@ -498,7 +486,7 @@ mkWaiApp
   -> Maybe (HasuraMiddleware RQLQuery)
   -> Maybe ConsoleRenderer
   -> IO (Wai.Application, SchemaCacheRef, Maybe UTCTime)
-mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
+mkWaiApp isoLevel loggerCtx httpLogger sqlGenCtx enableAL pool ci httpManager mode corsCfg
          enableConsole consoleAssetsDir enableTelemetry instanceId apis
          lqOpts authMiddleware metadataMiddleware renderConsole = do
     let pgExecCtx = PGExecCtx pool isoLevel
@@ -536,7 +524,7 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
       EKG.registerCounter "ekg.server_timestamp_ms" getTimeMs ekgStore
 
     spockApp <- spockAsApp $ spockT id $
-                httpApp corsCfg serverCtx enableConsole
+                httpApp corsCfg serverCtx httpLogger enableConsole
                   consoleAssetsDir enableTelemetry authMiddleware metadataMiddleware renderConsole
 
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
@@ -549,8 +537,10 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
     getTimeMs = (round . (* 1000)) `fmap` getPOSIXTime
 
 httpApp
-  :: CorsConfig
+  :: (L.ToEngineLog a)
+  => CorsConfig
   -> ServerCtx
+  -> HttpLogger a
   -> Bool
   -> Maybe Text
   -> Bool
@@ -560,7 +550,7 @@ httpApp
   -- this can be extended to take a `HashMap (HttpMethod, Path) (HasuraMiddleware a)`
   -> Maybe ConsoleRenderer
   -> SpockT IO ()
-httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry
+httpApp corsCfg serverCtx httpLogger enableConsole consoleAssetsDir enableTelemetry
         authMiddleware metadataMiddleware consoleRenderer = do
 
     -- cors middleware
@@ -587,7 +577,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry
         mkPostHandler $ mkAPIRespHandler (v1QueryHandler metadataMiddleware)
 
       post ("api/1/table" <//> var <//> var) $ \tableName queryType ->
-        mkSpockAction serverCtx authMiddleware encodeQErr id $ mkPostHandler $
+        mkSpockAction serverCtx httpLogger authMiddleware encodeQErr id $ mkPostHandler $
           mkAPIRespHandler $ legacyQueryHandler metadataMiddleware (TableName tableName) queryType
 
     when enablePGDump $
@@ -635,14 +625,16 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry
           return $ JSONResp $ HttpResponse (encJFromJValue respJ) Nothing
 
     forM_ [GET,POST] $ \m -> hookAny m $ \_ -> do
+      req <- request
+      let headers = requestHeaders req
       let qErr = err404 NotFound "resource does not exist"
-      raiseGenericApiError logger qErr
+      raiseGenericApiError logger httpLogger headers qErr
 
   where
     logger = scLogger serverCtx
 
     spockAction :: (FromJSON a, ToJSON a) => (Bool -> QErr -> Value) -> (QErr -> QErr) -> APIHandler a -> ActionT IO ()
-    spockAction = mkSpockAction serverCtx authMiddleware
+    spockAction = mkSpockAction serverCtx httpLogger authMiddleware
 
     -- all graphql errors should be of type 200
     allMod200 qe = qe { qeStatus = N.status200 }
@@ -663,24 +655,25 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry
       -- serve static files if consoleAssetsDir is set
       onJust consoleAssetsDir $ \dir ->
         get ("console/assets" <//> wildcard) $ \path ->
-          consoleAssetsHandler logger dir (T.unpack path)
+          consoleAssetsHandler logger httpLogger dir (T.unpack path)
 
       -- serve console html
       get ("console" <//> wildcard) $ \path -> do
+        req <- request
+        let headers = requestHeaders req
         let authMode = scAuthMode serverCtx
         let consoleHtml = maybe (mkConsoleHTML path authMode enableTelemetry consoleAssetsDir)
                                 (\cr -> unConsoleRenderer cr path authMode enableTelemetry consoleAssetsDir)
                                 consoleRenderer
-        either (raiseGenericApiError logger . err500 Unexpected . T.pack) html consoleHtml
+        either (raiseGenericApiError logger httpLogger headers . err500 Unexpected . T.pack) html consoleHtml
 
-raiseGenericApiError :: L.Logger -> QErr -> ActionT IO ()
-raiseGenericApiError logger qErr = do
+raiseGenericApiError :: (L.ToEngineLog a) => L.Logger -> HttpLogger a -> [N.Header] -> QErr -> ActionT IO ()
+raiseGenericApiError logger httpLogger headers qErr = do
   req <- request
   reqBody <- liftIO $ strictRequestBody req
   let reqTxt = toJSON $ String $ bsToTxt $ BL.toStrict reqBody
   reqId <- getRequestId $ requestHeaders req
-  let clientName = getClientName $ requestHeaders req
-  logError logger Nothing reqId req (Just reqTxt) qErr clientName
+  logError logger httpLogger Nothing reqId req (Just reqTxt) qErr headers
   uncurry setHeader jsonHeader
   setStatus $ qeStatus qErr
   lazyBytes $ encode qErr

@@ -163,6 +163,7 @@ library
                      , Hasura.Server.Query
                      , Hasura.Server.Utils
                      , Hasura.Server.Version
+                     , Hasura.Server.Logging
 
                      , Hasura.RQL.Types
                      , Hasura.RQL.DDL.Metadata
@@ -174,7 +175,6 @@ library
                      , Hasura.Server.Auth.JWT
                      , Hasura.Server.Context
                      , Hasura.Server.Middleware
-                     , Hasura.Server.Logging
                      , Hasura.Server.Cors
                      , Hasura.Server.CheckUpdates
                      , Hasura.Server.Telemetry
