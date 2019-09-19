@@ -1,4 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ViewPatterns    #-}
 
 module Hasura.RQL.DDL.RemoteSchema
   ( runAddRemoteSchema
@@ -18,26 +19,31 @@ module Hasura.RQL.DDL.RemoteSchema
   , runDropRemoteSchemaPermissions
   , fetchRemoteSchemaPerms
   , dropRemoteSchemaPermissionsFromCatalog
+  , runIntrospectRemoteSchema
   ) where
 
 import           Hasura.EncJSON
+import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
 
-import qualified Data.Aeson                    as J
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.List                     as List
-import qualified Data.Text                     as T
-import qualified Database.PG.Query             as Q
-import qualified Hasura.GraphQL.Validate.Types as VT
+import qualified Data.Aeson                             as J
+import qualified Data.HashMap.Strict                    as Map
+import qualified Data.List                              as List
+import qualified Data.Sequence                          as Seq
+import qualified Data.Text                              as T
+import qualified Database.PG.Query                      as Q
 
 import           Control.Monad.Validate
 import           Hasura.GraphQL.RemoteServer
-import           Hasura.GraphQL.Utils
+import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Hasura.GraphQL.Context        as GC
-import qualified Hasura.GraphQL.Schema         as GS
+import qualified Hasura.GraphQL.Context                 as GC
+import qualified Hasura.GraphQL.Resolve.Introspect      as RI
+import qualified Hasura.GraphQL.Schema                  as GS
+import qualified Hasura.GraphQL.Validate                as VQ
+import qualified Hasura.GraphQL.Validate.Types          as VT
 
 runAddRemoteSchema
   :: ( QErrM m, UserInfoM m
@@ -475,3 +481,33 @@ fetchRemoteSchemaPerms =
      |] () True
   where
     uncurryRow (name, role, Q.AltJ def) = RemoteSchemaPermissions name role def
+
+runIntrospectRemoteSchema :: (UserInfoM m, CacheRM m, QErrM m) => RemoteSchemaNameQuery -> m EncJSON
+runIntrospectRemoteSchema (RemoteSchemaNameQuery rsName) = do
+  adminOnly
+  sc <- askSchemaCache
+  introspectionReq <-
+    onNothing (J.decode introspectionQuery) $
+    throw500 "could not decode introspection query"
+  req <- toParsed introspectionReq
+  rGCtx <-
+    case Map.lookup rsName (scRemoteSchemas sc) of
+      Nothing ->
+        throw400 NotExists $
+        "remote schema: " <> remoteSchemaNameToText rsName <> " not found"
+      Just rCtx -> mergeGCtx (convRemoteGCtx $ rscGCtx rCtx) GC.emptyGCtx
+      -- ^ merge with emptyGCtx to get default query fields
+  queryParts <- flip runReaderT rGCtx $ VQ.getQueryParts req
+  rootSelSet <- flip runReaderT rGCtx $ VQ.validateGQ queryParts
+  schemaField <-
+    case rootSelSet of
+      VQ.RQuery (Seq.viewl -> selSet) -> getSchemaField selSet
+      _ -> throw500 "expected query for introspection"
+  introRes <- flip runReaderT rGCtx $ RI.schemaR schemaField
+  pure $ encJFromJValue introRes
+  where
+    getSchemaField =
+      \case
+        Seq.EmptyL -> throw500 "found empty when looking for __schema field"
+        (f Seq.:< Seq.Empty) -> pure f
+        _ -> throw500 "expected __schema field, found many fields"
