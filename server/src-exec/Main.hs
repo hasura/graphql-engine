@@ -30,9 +30,9 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
 import           Hasura.RQL.Types           (SQLGenCtx (..), SchemaCache (..),
                                              adminUserInfo, emptySchemaCache)
-import           Hasura.Server.App          (HasuraApp(..), SchemaCacheRef (..),
-                                             getSCFromRef, logInconsObjs,
-                                             mkWaiApp)
+import           Hasura.Server.App          (HasuraApp (..),
+                                             SchemaCacheRef (..), getSCFromRef,
+                                             logInconsObjs, mkWaiApp)
 import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates (checkForUpdates)
 import           Hasura.Server.Init
@@ -89,7 +89,6 @@ parseHGECommand =
                 <*> parseEnableAllowlist
                 <*> parseEnabledLogs
                 <*> parseLogLevel
-                <*> parseEnableCompression
 
 
 parseArgs :: IO HGEOptions
@@ -126,7 +125,7 @@ main =  do
     HCServe so@(ServeOptions port host cp isoL mAdminSecret mAuthHook
                 mJwtSecret mUnAuthRole corsCfg enableConsole consoleAssetsDir
                 enableTelemetry strfyNum enabledAPIs lqOpts enableAL
-                enabledLogs serverLogLevel enableCompression) -> do
+                enabledLogs serverLogLevel) -> do
 
       let sqlGenCtx = SQLGenCtx strfyNum
 
@@ -155,7 +154,7 @@ main =  do
       HasuraApp app cacheRef cacheInitTime shutdownApp <-
         mkWaiApp isoL loggerCtx sqlGenCtx enableAL pool ci httpManager am
           corsCfg enableConsole consoleAssetsDir enableTelemetry
-          instanceId enabledAPIs lqOpts enableCompression
+          instanceId enabledAPIs lqOpts
 
       -- log inconsistent schema objects
       inconsObjs <- scInconsistentObjs <$> getSCFromRef cacheRef

@@ -81,14 +81,6 @@ def pytest_addoption(parser):
         help="Run testcases for logging"
     )
 
-    parser.addoption(
-        "--test-compression",
-        action="store_true",
-        default=False,
-        required=False,
-        help="Run testcases for compression"
-    )
-
 
 #By default,
 #1) Set default parallelism to one

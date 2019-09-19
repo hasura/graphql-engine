@@ -435,28 +435,6 @@ kill_hge_servers
 
 # end verbose logging tests
 
-# compression tests
-echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH COMPRESSION ########>\n"
-TEST_TYPE="compression"
-export HASURA_GRAPHQL_ENABLE_COMPRESSION=true
-
-run_hge_with_args serve
-wait_for_port 8080
-
-pytest -n  1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-compression test_compression.py
-
-kill_hge_servers
-unset HASURA_GRAPHQL_ENABLE_COMPRESSION
-
-run_hge_with_args serve --enable-compression
-wait_for_port 8080
-
-pytest -n  1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-compression test_compression.py
-
-kill_hge_servers
-
-# end compression tests
-
 # webhook tests
 
 if [ $EUID != 0 ] ; then

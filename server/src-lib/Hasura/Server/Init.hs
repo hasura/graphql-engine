@@ -78,30 +78,28 @@ data RawServeOptions
   , rsoEnableAllowlist    :: !Bool
   , rsoEnabledLogTypes    :: !(Maybe [L.EngineLogType])
   , rsoLogLevel           :: !(Maybe L.LogLevel)
-  , rsoEnableCompression  :: !Bool
   } deriving (Show, Eq)
 
 data ServeOptions
   = ServeOptions
-  { soPort              :: !Int
-  , soHost              :: !HostPreference
-  , soConnParams        :: !Q.ConnParams
-  , soTxIso             :: !Q.TxIsolation
-  , soAdminSecret       :: !(Maybe AdminSecret)
-  , soAuthHook          :: !(Maybe AuthHook)
-  , soJwtSecret         :: !(Maybe JWTConfig)
-  , soUnAuthRole        :: !(Maybe RoleName)
-  , soCorsConfig        :: !CorsConfig
-  , soEnableConsole     :: !Bool
-  , soConsoleAssetsDir  :: !(Maybe Text)
-  , soEnableTelemetry   :: !Bool
-  , soStringifyNum      :: !Bool
-  , soEnabledAPIs       :: !(Set.HashSet API)
-  , soLiveQueryOpts     :: !LQ.LiveQueriesOptions
-  , soEnableAllowlist   :: !Bool
-  , soEnabledLogTypes   :: !(Set.HashSet L.EngineLogType)
-  , soLogLevel          :: !L.LogLevel
-  , soEnableCompression :: !Bool
+  { soPort             :: !Int
+  , soHost             :: !HostPreference
+  , soConnParams       :: !Q.ConnParams
+  , soTxIso            :: !Q.TxIsolation
+  , soAdminSecret      :: !(Maybe AdminSecret)
+  , soAuthHook         :: !(Maybe AuthHook)
+  , soJwtSecret        :: !(Maybe JWTConfig)
+  , soUnAuthRole       :: !(Maybe RoleName)
+  , soCorsConfig       :: !CorsConfig
+  , soEnableConsole    :: !Bool
+  , soConsoleAssetsDir :: !(Maybe Text)
+  , soEnableTelemetry  :: !Bool
+  , soStringifyNum     :: !Bool
+  , soEnabledAPIs      :: !(Set.HashSet API)
+  , soLiveQueryOpts    :: !LQ.LiveQueriesOptions
+  , soEnableAllowlist  :: !Bool
+  , soEnabledLogTypes  :: !(Set.HashSet L.EngineLogType)
+  , soLogLevel         :: !L.LogLevel
   } deriving (Show, Eq)
 
 data RawConnInfo =
@@ -315,12 +313,10 @@ mkServeOptions rso = do
   enabledLogs <- Set.fromList . fromMaybe (Set.toList L.defaultEnabledLogTypes) <$>
                  withEnv (rsoEnabledLogTypes rso) (fst enabledLogsEnv)
   serverLogLevel <- fromMaybe L.LevelInfo <$> withEnv (rsoLogLevel rso) (fst logLevelEnv)
-  enableCompression <- withEnvBool (rsoEnableCompression rso) $
-                       fst enableCompressionEnv
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
-                        enabledLogs serverLogLevel enableCompression
+                        enabledLogs serverLogLevel
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -449,7 +445,7 @@ serveCmdFooter =
       , adminSecretEnv , accessKeyEnv, authHookEnv, authHookModeEnv
       , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, enableConsoleEnv
       , enableTelemetryEnv, wsReadCookieEnv, stringifyNumEnv, enabledAPIsEnv
-      , enableAllowlistEnv, enabledLogsEnv, logLevelEnv, enableCompressionEnv
+      , enableAllowlistEnv, enabledLogsEnv, logLevelEnv
       ]
 
     eventEnvs =
@@ -607,12 +603,6 @@ logLevelEnv :: (String, String)
 logLevelEnv =
   ( "HASURA_GRAPHQL_LOG_LEVEL"
   , "Server log level (default: info) (all: error, warn, info, debug)"
-  )
-
-enableCompressionEnv :: (String, String)
-enableCompressionEnv =
-  ( "HASURA_GRAPHQL_ENABLE_COMPRESSION"
-  , "Enable brotli/gzip compression for responses from '/v1/query' and '/v1/graphql' endpoints (default: false)"
   )
 
 parseRawConnInfo :: Parser RawConnInfo
@@ -967,12 +957,6 @@ parseLogLevel = optional $
            help (snd logLevelEnv)
          )
 
-parseEnableCompression :: Parser Bool
-parseEnableCompression =
-  switch ( long "enable-compression" <>
-           help (snd enableCompressionEnv)
-         )
-
 -- Init logging related
 connInfoToLog :: Q.ConnInfo -> StartupLog
 connInfoToLog connInfo =
@@ -1021,7 +1005,6 @@ serveOptsToLog so =
                        , "enable_allowlist" J..= soEnableAllowlist so
                        , "enabled_log_types" J..= soEnabledLogTypes so
                        , "log_level" J..= soLogLevel so
-                       , "enable_compression" J..= soEnableCompression so
                        ]
 
 mkGenericStrLog :: L.LogLevel -> T.Text -> String -> StartupLog

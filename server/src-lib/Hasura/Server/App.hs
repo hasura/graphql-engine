@@ -109,20 +109,19 @@ withSCUpdate scr logger action = do
 
 data ServerCtx
   = ServerCtx
-  { scPGExecCtx         :: !PGExecCtx
-  , scConnInfo          :: !Q.ConnInfo
-  , scLogger            :: !L.Logger
-  , scCacheRef          :: !SchemaCacheRef
-  , scAuthMode          :: !AuthMode
-  , scManager           :: !HTTP.Manager
-  , scSQLGenCtx         :: !SQLGenCtx
-  , scEnabledAPIs       :: !(S.HashSet API)
-  , scInstanceId        :: !InstanceId
-  , scPlanCache         :: !E.PlanCache
-  , scLQState           :: !EL.LiveQueriesState
-  , scEnableAllowlist   :: !Bool
-  , scEkgStore          :: !EKG.Store
-  , scEnableCompression :: !Bool
+  { scPGExecCtx       :: !PGExecCtx
+  , scConnInfo        :: !Q.ConnInfo
+  , scLogger          :: !L.Logger
+  , scCacheRef        :: !SchemaCacheRef
+  , scAuthMode        :: !AuthMode
+  , scManager         :: !HTTP.Manager
+  , scSQLGenCtx       :: !SQLGenCtx
+  , scEnabledAPIs     :: !(S.HashSet API)
+  , scInstanceId      :: !InstanceId
+  , scPlanCache       :: !E.PlanCache
+  , scLQState         :: !EL.LiveQueriesState
+  , scEnableAllowlist :: !Bool
+  , scEkgStore        :: !EKG.Store
   }
 
 data HandlerCtx
@@ -281,7 +280,7 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
 
     possiblyCompressedLazyBytes userInfo reqId req qTime respBytes respHeaders = do
       let (compressedResp, mEncodingHeader, mCompressionType) =
-            possiblyCompressResp (requestHeaders req) respBytes
+            compressResponse (requestHeaders req) respBytes
           encodingHeader = maybe [] pure mEncodingHeader
           reqIdHeader = (requestIdHeader, unRequestId reqId)
           allRespHeaders = pure reqIdHeader <> encodingHeader <> respHeaders
@@ -290,11 +289,6 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
       lazyBytes compressedResp
 
     mkHeaders = maybe [] (map unHeader)
-
-    possiblyCompressResp reqHeaders resp =
-      if scEnableCompression serverCtx then
-        compressResponse reqHeaders resp
-      else (resp, Nothing, Nothing)
 
 v1QueryHandler :: RQLQuery -> Handler (HttpResponse EncJSON)
 v1QueryHandler query = do
@@ -455,11 +449,10 @@ mkWaiApp
   -> InstanceId
   -> S.HashSet API
   -> EL.LiveQueriesOptions
-  -> Bool
   -> IO HasuraApp
 mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode
          corsCfg enableConsole consoleAssetsDir enableTelemetry
-         instanceId apis lqOpts enableCompression = do
+         instanceId apis lqOpts = do
 
     let pgExecCtx = PGExecCtx pool isoLevel
         pgExecCtxSer = PGExecCtx pool Q.Serializable
@@ -489,7 +482,7 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode
         serverCtx = ServerCtx pgExecCtx ci logger
                     schemaCacheRef mode httpManager
                     sqlGenCtx apis instanceId planCache
-                    lqState enableAL ekgStore enableCompression
+                    lqState enableAL ekgStore
 
     when (isDeveloperAPIEnabled serverCtx) $ do
       EKG.registerGcMetrics ekgStore

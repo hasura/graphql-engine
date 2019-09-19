@@ -196,10 +196,6 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
      - Set the logging level. Default: ``info``. Options: ``debug``, ``info``,
        ``warn``, ``error``.
 
-   * - ``--enable-compression``
-     - ``HASURA_GRAPHQL_ENABLE_COMPRESSION``
-     - Enable brotli/gzip compression for responses from ``/v1/query`` and ``/v1/graphql`` endpoints. Default: ``false``
-
 .. note::
 
   When the equivalent flags for environment variables are used, the flags will take precedence.

@@ -7,9 +7,6 @@ import jsondiff
 from super_classes import DefaultTestSelectQueries
 from validate import json_ordered
 
-if not pytest.config.getoption("--test-compression"):
-    pytest.skip("--test-logging missing, skipping tests", allow_module_level=True)
-
 class TestCompression(DefaultTestSelectQueries):
 
     gzip_header = {'Accept-Encoding': 'gzip'}
