@@ -490,7 +490,7 @@ class TestRemoteSchemaPermissions(TestGraphqlQueryPermissions):
     rs_dir = 'queries/remote_schemas/permissions/'
     teardown = {"type": "remove_remote_schema", "args": {"name": "simple"}}
 
-    @pytest.fixture(autouse=True)
+    @pytest.fixture(autouse=True, scope='class')
     def transact(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f('queries/graphql_query/permissions/setup.yaml')
         assert st_code == 200, resp
