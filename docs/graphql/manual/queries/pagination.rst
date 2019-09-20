@@ -192,7 +192,7 @@ Limit results in a nested object
 Fetch aggregate count with limited results in the same query
 ------------------------------------------
 
-``count`` (as part of aggregations) can be used to do pagination.
+``count`` (*as part of aggregations*) can be used along with `limit` based pagination in the same query. This information can be used to calculate the total number of pages.
 
 **Example:** Fetch a list of articles where a certain condition is true and get their count. Then limit the number of articles to display.
 
