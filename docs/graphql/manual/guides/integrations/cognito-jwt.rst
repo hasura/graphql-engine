@@ -8,7 +8,7 @@ Using AWS Cognito for authentication
   :depth: 1
   :local:
 
-You can use Cognito in both JWT mode and webhook mode.
+Cognito can be used in both JWT mode and webhook mode.
 
-- For JWT, take a look at this blog post: https://blog.hasura.io/hasura-authentication-explained/#cognito.
-- For webhook, you’ll need to write a thin wrapper/webhook that implements the spec in https://docs.hasura.io/1.0/graphql/manual/auth/authentication/webhook.html#spec-for-the-webhook. You can also use boilerplates from https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/auth-webhooks to write this webhook.
+- For JWT, `this blog post <https://blog.hasura.io/hasura-authentication-explained/#cognito>`__ contains more information.
+- For webhook, a thin wrapper/webhook that implements `this spec <https://docs.hasura.io/1.0/graphql/manual/auth/authentication/webhook.html#spec-for-the-webhook>`__ needs to be written. Boilerplates to write this webhook can be found `here <https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/auth-webhooks>`__.
