@@ -457,7 +457,7 @@ class TestRemoteSchemaTimeout:
 
 @pytest.mark.skipif(not pytest.config.getoption("--enable-remote-schema-permissions"),
                     reason="flag --enable-remote-schema-permissions is not set. Cannot run tests for remote schema permissions")
-class TestCreateRemoteSchemaPermissions():
+class TestRemoteSchemaPermissionsBasic():
     rs_dir = 'queries/remote_schemas/permissions/'
     teardown = {"type": "remove_remote_schema", "args": {"name": "simple"}}
 
@@ -505,11 +505,18 @@ class TestRemoteSchemaPermissions(TestGraphqlQueryPermissions):
         st_code, resp = hge_ctx.v1q(self.teardown)
         assert st_code == 200, resp
 
-    def test_basic(self, hge_ctx, transport):
-        # make good query
-        check_query_f(hge_ctx, self.rs_dir + 'basic_success.yaml')
-        # make bad query
-        check_query_f(hge_ctx, self.rs_dir + 'basic_fail_2.yaml')
+    def test_no_access(self, hge_ctx, transport):
+        pass
+
+    def test_restricted_mutation(self, hge_ctx, transport):
+        pass
+
+    def test_common_role(self, hge_ctx, transport):
+        pass
+
+    def test_new_role(self, hge_ctx, transport):
+        pass
+
 
 @pytest.mark.skipif(pytest.config.getoption("--enable-remote-schema-permissions"),
                     reason="flag --enable-remote-schema-permissions is set. Cannot run tests for remote schema permissions when disabled")
