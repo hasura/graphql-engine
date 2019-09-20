@@ -1,8 +1,16 @@
 package commands
 
 import (
+	"bytes"
+	"fmt"
+	"strconv"
+	"strings"
+	"text/tabwriter"
+
 	"github.com/hasura/graphql-engine/cli"
 	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
+	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -22,17 +30,11 @@ func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			opts.EC.Spin("Squashing migrations...")
 			opts.version = getTime()
 			err := opts.run()
-			opts.EC.Spinner.Stop()
 			if err != nil {
 				return err
 			}
-			opts.EC.Logger.WithFields(log.Fields{
-				"version": opts.version,
-				"name":    opts.name,
-			}).Info("Migrations files created")
 			return nil
 		},
 	}
@@ -62,9 +64,69 @@ type migrateSquashOptions struct {
 }
 
 func (o *migrateSquashOptions) run() error {
+	o.EC.Spin("Squashing migrations...")
+	defer o.EC.Spinner.Stop()
 	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version, true)
 	if err != nil {
 		return err
 	}
-	return mig.SquashCmd(migrateDrv, o.from, o.version, o.name, o.EC.MigrationDir)
+
+	versions, err := mig.SquashCmd(migrateDrv, o.from, o.version, o.name, o.EC.MigrationDir)
+	o.EC.Spinner.Stop()
+	if err != nil {
+		return err
+	}
+
+	o.EC.Logger.WithFields(log.Fields{
+		"version": o.version,
+		"name":    o.name,
+	}).Info("Migrations files created")
+
+	ok := ask2confirmDeleteMigrations(versions, o.EC.Logger)
+	if !ok {
+		return nil
+	}
+
+	for _, v := range versions {
+		delOptions := mig.CreateOptions{
+			Version:   strconv.FormatInt(v, 10),
+			Directory: o.EC.MigrationDir,
+		}
+		err = delOptions.Delete()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func ask2confirmDeleteMigrations(versions []int64, log *logrus.Logger) bool {
+	var s string
+
+	out := new(tabwriter.Writer)
+	buf := &bytes.Buffer{}
+	out.Init(buf, 0, 8, 2, ' ', 0)
+	w := util.NewPrefixWriter(out)
+	w.Write(util.LEVEL_0, "VERSION\n")
+	for _, version := range versions {
+		w.Write(util.LEVEL_0, "%d\n",
+			version,
+		)
+	}
+	out.Flush()
+	fmt.Println(buf.String())
+	log.Infof("Do you want to delete the above list of squashed migrations? (y/N)")
+	_, err := fmt.Scan(&s)
+	if err != nil {
+		log.Error("unable to take input, skipping deleting files")
+		return false
+	}
+
+	s = strings.TrimSpace(s)
+	s = strings.ToLower(s)
+
+	if s == "y" || s == "yes" {
+		return true
+	}
+	return false
 }

@@ -338,14 +338,15 @@ func (m *Migrate) Query(data []interface{}) error {
 	return m.databaseDrv.Query(data)
 }
 
-func (m *Migrate) Squash(version uint64) (interface{}, interface{}, error) {
+func (m *Migrate) Squash(version uint64) (versions []int64, up []interface{}, down []interface{}, err error) {
 	mode, err := m.databaseDrv.GetSetting("migration_mode")
 	if err != nil {
-		return nil, nil, err
+		return
 	}
 
 	if mode != "true" {
-		return nil, nil, ErrNoMigrationMode
+		err = ErrNoMigrationMode
+		return
 	}
 
 	retUp := make(chan interface{}, m.PrefetchMigrations)
@@ -356,28 +357,33 @@ func (m *Migrate) Squash(version uint64) (interface{}, interface{}, error) {
 
 	dataUp := make(chan interface{}, m.PrefetchMigrations)
 	dataDown := make(chan interface{}, m.PrefetchMigrations)
-	go m.squashMigrations(retUp, retDown, dataUp, dataDown)
+	retVersions := make(chan int64, m.PrefetchMigrations)
+	go m.squashMigrations(retUp, retDown, dataUp, dataDown, retVersions)
 
-	up := make([]interface{}, 0)
 	for r := range dataUp {
 		switch r.(type) {
 		case error:
-			return nil, nil, err
+			err = r.(error)
+			return
 		case interface{}:
 			up = append(up, r)
 		}
 	}
 
-	down := make([]interface{}, 0)
 	for r := range dataDown {
 		switch r.(type) {
 		case error:
-			return nil, nil, err
+			err = r.(error)
+			return
 		case interface{}:
 			down = append(down, r)
 		}
 	}
-	return up, down, nil
+
+	for r := range retVersions {
+		versions = append(versions, r)
+	}
+	return
 }
 
 // Migrate looks at the currently active migration version,
@@ -1019,9 +1025,11 @@ func (m *Migrate) runMigrations(ret <-chan interface{}) error {
 	return nil
 }
 
-func (m *Migrate) squashMigrations(retUp <-chan interface{}, retDown <-chan interface{}, dataUp chan<- interface{}, dataDown chan<- interface{}) error {
+func (m *Migrate) squashMigrations(retUp <-chan interface{}, retDown <-chan interface{}, dataUp chan<- interface{}, dataDown chan<- interface{}, versions chan<- int64) error {
+	var latestVersion int64
 	go func() {
 		defer close(dataUp)
+		defer close(versions)
 
 		for r := range retUp {
 			if m.stop() {
@@ -1036,6 +1044,12 @@ func (m *Migrate) squashMigrations(retUp <-chan interface{}, retDown <-chan inte
 					if err := m.databaseDrv.Squash(migr.BufferedBody, migr.FileType, dataUp); err != nil {
 						dataUp <- err
 					}
+				}
+
+				version := int64(migr.Version)
+				if version == migr.TargetVersion && version != latestVersion {
+					versions <- version
+					latestVersion = version
 				}
 			}
 		}

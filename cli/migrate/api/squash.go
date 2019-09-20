@@ -46,7 +46,13 @@ func SquashCreateAPI(c *gin.Context) {
 		return
 	}
 	request.setDefaults()
-	err := cmd.SquashCmd(t, request.From, request.version, request.Name, sourceURL.Path)
+	// Rescan file system
+	err := t.ReScan()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
+		return
+	}
+	versions, err := cmd.SquashCmd(t, request.From, request.version, request.Name, sourceURL.Path)
 	if err != nil {
 		if strings.HasPrefix(err.Error(), DataAPIError) {
 			c.JSON(http.StatusBadRequest, &Response{Code: "data_api_error", Message: strings.TrimPrefix(err.Error(), DataAPIError)})
@@ -62,5 +68,5 @@ func SquashCreateAPI(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"version": request.version})
+	c.JSON(http.StatusOK, gin.H{"version": request.version, "squashed_migrations": versions})
 }

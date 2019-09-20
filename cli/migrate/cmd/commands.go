@@ -39,7 +39,7 @@ func New(version int64, name, directory string) *CreateOptions {
 	}
 	return &CreateOptions{
 		Version:   v,
-		Directory: filepath.Join(directory, fmt.Sprintf("%s_%s", v, name)),
+		Directory: directory,
 		Name:      name,
 	}
 }
@@ -114,7 +114,8 @@ func (c *CreateOptions) SetSQLDown(data string) error {
 }
 
 func (c *CreateOptions) Create() error {
-	err := os.MkdirAll(c.Directory, os.ModePerm)
+	path := filepath.Join(c.Directory, fmt.Sprintf("%s_%s", c.Version, c.Name))
+	err := os.MkdirAll(path, os.ModePerm)
 	if err != nil {
 		return err
 	}
@@ -126,7 +127,7 @@ func (c *CreateOptions) Create() error {
 
 	if c.MetaUp != nil {
 		// Create MetaUp
-		err = createFile(filepath.Join(c.Directory, "up.yaml"), c.MetaUp)
+		err = createFile(filepath.Join(path, "up.yaml"), c.MetaUp)
 		if err != nil {
 			return err
 		}
@@ -134,7 +135,7 @@ func (c *CreateOptions) Create() error {
 
 	if c.MetaDown != nil {
 		// Create MetaDown
-		err = createFile(filepath.Join(c.Directory, "down.yaml"), c.MetaDown)
+		err = createFile(filepath.Join(path, "down.yaml"), c.MetaDown)
 		if err != nil {
 			return err
 		}
@@ -142,7 +143,7 @@ func (c *CreateOptions) Create() error {
 
 	if c.SQLUp != nil {
 		// Create SQLUp
-		err = createFile(filepath.Join(c.Directory, "up.sql"), c.SQLUp)
+		err = createFile(filepath.Join(path, "up.sql"), c.SQLUp)
 		if err != nil {
 			return err
 		}
@@ -150,7 +151,7 @@ func (c *CreateOptions) Create() error {
 
 	if c.SQLDown != nil {
 		// Create SQLDown
-		err = createFile(filepath.Join(c.Directory, "down.sql"), c.SQLDown)
+		err = createFile(filepath.Join(path, "down.sql"), c.SQLDown)
 		if err != nil {
 			return err
 		}
@@ -159,7 +160,25 @@ func (c *CreateOptions) Create() error {
 }
 
 func (c *CreateOptions) Delete() error {
-	return deleteFile(c.Directory)
+	files, err := ioutil.ReadDir(c.Directory)
+	if err != nil {
+		return err
+	}
+
+	for _, fi := range files {
+		if strings.HasPrefix(fi.Name(), fmt.Sprintf("%s_", c.Version)) {
+			if fi.IsDir() {
+				path := filepath.Join(c.Directory, fi.Name())
+				return deleteFile(path)
+			}
+			path := filepath.Join(c.Directory, fi.Name())
+			err := deleteFile(path)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func createFile(fname string, data []byte) error {
@@ -205,20 +224,20 @@ func ResetCmd(m *migrate.Migrate) error {
 	return m.Reset()
 }
 
-func SquashCmd(m *migrate.Migrate, from uint64, version int64, name, directory string) error {
-	up, down, err := m.Squash(from)
+func SquashCmd(m *migrate.Migrate, from uint64, version int64, name, directory string) (versions []int64, err error) {
+	versions, up, down, err := m.Squash(from)
 	if err != nil {
-		return err
+		return
 	}
 
 	byteUp, err := yaml.Marshal(up)
 	if err != nil {
-		return errors.Wrap(err, "cannot unmarshall up query")
+		return versions, errors.Wrap(err, "cannot unmarshall up query")
 	}
 
 	byteDown, err := yaml.Marshal(down)
 	if err != nil {
-		return errors.Wrap(err, "cannot unmarshall down query")
+		return versions, errors.Wrap(err, "cannot unmarshall down query")
 	}
 	createOptions := New(version, name, directory)
 	createOptions.MetaUp = byteUp
@@ -226,7 +245,8 @@ func SquashCmd(m *migrate.Migrate, from uint64, version int64, name, directory s
 
 	err = createOptions.Create()
 	if err != nil {
-		return errors.Wrap(err, "cannot create migration")
+		return versions, errors.Wrap(err, "cannot create migration")
 	}
-	return nil
+
+	return
 }
