@@ -528,10 +528,6 @@ kill_hge_servers
 
 # end allowlist queries test
 
-unset HASURA_GRAPHQL_AUTH_HOOK
-unset HASURA_GRAPHQL_AUTH_HOOK_MODE
-unset HASURA_GRAPHQL_ADMIN_SECRET
-
 # remote schema permissions test
 echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH REMOTE SCHEMA PERMISSIONS ########>\n"
 TEST_TYPE="enable-remote-schema-permissions"
@@ -544,6 +540,8 @@ wait_for_port 8080
 pytest -n  1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --enable-remote-schema-permissions test_schema_stitching.py
 
 kill_hge_servers
+
+unset HASURA_GRAPHQL_ADMIN_SECRET
 
 # horizontal scale test
 echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH HORIZONTAL SCALING ########>\n"
