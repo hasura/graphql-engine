@@ -189,8 +189,8 @@ Limit results in a nested object
       }
     }
 
-Fetch aggregate count with limited results
-------------------------------------------
+Fetch aggregate count with limited results in the same query
+------------------------------------------------------------
 
 ``count`` (as part of aggregations) can be used to do pagination.
 
@@ -205,7 +205,7 @@ Fetch aggregate count with limited results
           totalCount: count
         }
       }
-      articles (where: $where limit: 10 order_by: {rating: desc}) {
+      articles (where: $where limit: 3 order_by: {rating: desc}) {
         id
         title
       }
@@ -215,25 +215,21 @@ Fetch aggregate count with limited results
       "data": {
         "articles_aggregate": {
           "aggregate": {
-            "totalCount": 8
+            "totalCount": 10
           }
         },
         "articles": [
-          {
-            "id": 33,
-            "title": "How to make fajitas"
-          },
           {
             "id": 31,
             "title": "How to make fajitas"
           },
           {
-            "id": 32,
-            "title": "How to make fajitas"
-          },
-          {
             "id": 2,
             "title": "How to climb mount everest"
+          },
+          {
+            "id": 44,
+            "title": "Birthday surprises"
           }
         ]
       }
