@@ -19,7 +19,6 @@ const UPDATE_MIGRATION_MODE_PROGRESS = 'Main/UPDATE_MIGRATION_MODE_PROGRESS';
 const EXPORT_METADATA_SUCCESS = 'Main/EXPORT_METADATA_SUCCESS';
 const EXPORT_METADATA_ERROR = 'Main/EXPORT_METADATA_ERROR';
 const UPDATE_ADMIN_SECRET_INPUT = 'Main/UPDATE_ADMIN_SECRET_INPUT';
-const SET_ADMIN_SECRET = 'Main/SET_ADMIN_SECRET';
 const LOGIN_IN_PROGRESS = 'Main/LOGIN_IN_PROGRESS';
 const LOGIN_ERROR = 'Main/LOGIN_ERROR';
 
@@ -253,8 +252,6 @@ const mainReducer = (state = defaultState, action) => {
       return { ...state, migrationMode: !currentMode };
     case UPDATE_ADMIN_SECRET_INPUT:
       return { ...state, adminSecretInput: action.data };
-    case SET_ADMIN_SECRET:
-      return { ...state, adminSecret: action.data };
     case LOGIN_IN_PROGRESS:
       return { ...state, loginInProgress: action.data };
     case LOGIN_ERROR:
@@ -303,7 +300,6 @@ export {
   UPDATE_MIGRATION_STATUS_SUCCESS,
   UPDATE_MIGRATION_STATUS_ERROR,
   UPDATE_ADMIN_SECRET_INPUT,
-  SET_ADMIN_SECRET,
   loadMigrationStatus,
   updateMigrationModeStatus,
   LOGIN_IN_PROGRESS,

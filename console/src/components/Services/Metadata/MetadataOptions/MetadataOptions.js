@@ -4,7 +4,7 @@ import ImportMetadata from './ImportMetadata';
 import ReloadMetadata from './ReloadMetadata';
 import ResetMetadata from './ResetMetadata';
 import ClearAdminSecret from './ClearAdminSecret';
-import { CONSOLE_ADMIN_SECRET } from '../../../AppState';
+import { getAdminSecret } from '../../ApiExplorer/ApiRequest/utils';
 
 const MetadataOptions = props => {
   const styles = require('../Metadata.scss');
@@ -64,7 +64,9 @@ const MetadataOptions = props => {
   const getClearSecretSection = () => {
     let clearSecretSection = null;
 
-    if (window.localStorage[CONSOLE_ADMIN_SECRET]) {
+    const adminSecret = getAdminSecret();
+
+    if (adminSecret) {
       clearSecretSection = (
         <div>
           <div key="access_key_reset_1" className={styles.intro_note}>

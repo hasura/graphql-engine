@@ -33,38 +33,39 @@ export const getHeadersSectionIsOpen = () => {
   return isOpen ? isOpen === 'true' : defaultIsOpen;
 };
 
+export const getAdminSecret = () => {
+  let adminSecret = null;
+  if (globals.consoleMode === SERVER_CONSOLE_MODE && globals.isAdminSecretSet) {
+    const adminSecretFromLS = loadAdminSecretState();
+    const adminSecretInGlobals = globals.adminSecret;
+
+    adminSecret = adminSecretFromLS || adminSecretInGlobals;
+  } else {
+    adminSecret = globals.adminSecret;
+  }
+
+  return adminSecret;
+};
+
 export const setGraphiQLHeadersInLocalStorage = headers => {
   // filter empty headers
   const validHeaders = headers.filter(h => h.key);
 
   // remove admin-secret value
   const maskedHeaders = validHeaders.map(h => {
+    const maskedHeader = { ...h };
+
     if (h.key.toLowerCase() === ADMIN_SECRET_HEADER_KEY) {
-      h.value = 'xxx';
+      maskedHeader.value = 'xxx';
     }
 
-    return h;
+    return maskedHeader;
   });
 
   window.localStorage.setItem(
     'HASURA_CONSOLE_GRAPHIQL_HEADERS',
     JSON.stringify(maskedHeaders)
   );
-};
-
-export const getAdminSecret = () => {
-  let adminSecret = null;
-  if (globals.consoleMode === SERVER_CONSOLE_MODE && globals.isAdminSecretSet) {
-    const adminSecretFromLS = loadAdminSecretState();
-    const adminSecretInRedux = ''; // TODO
-    // const adminSecretInRedux = getState().main.adminSecret;
-
-    adminSecret = adminSecretFromLS || adminSecretInRedux;
-  } else {
-    adminSecret = globals.adminSecret;
-  }
-
-  return adminSecret;
 };
 
 export const getGraphiQLHeadersFromLocalStorage = () => {
@@ -79,11 +80,13 @@ export const getGraphiQLHeadersFromLocalStorage = () => {
 
       // add admin-secret value
       headers = headers.map(h => {
+        const unmaskedHeader = { ...h };
+
         if (h.key.toLowerCase() === ADMIN_SECRET_HEADER_KEY) {
-          h.value = getAdminSecret();
+          unmaskedHeader.value = getAdminSecret();
         }
 
-        return h;
+        return unmaskedHeader;
       });
     } catch (_) {
       console.error('Failed parsing headers from local storage');

@@ -226,10 +226,7 @@ class Main extends React.Component {
     const getAdminSecretSection = () => {
       let adminSecretHtml = null;
 
-      if (
-        !globals.isAdminSecretSet &&
-        (globals.adminSecret === '' || globals.adminSecret === null)
-      ) {
+      if (!(globals.isAdminSecretSet || globals.adminSecret)) {
         adminSecretHtml = (
           <div className={styles.secureSection}>
             <a

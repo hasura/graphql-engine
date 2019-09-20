@@ -2,8 +2,8 @@ import Endpoints, { globalCookiePolicy } from '../../Endpoints';
 import { UPDATE_DATA_HEADERS } from '../Services/Data/DataActions';
 import { saveAdminSecretState } from '../AppState';
 import { ADMIN_SECRET_HEADER_KEY } from '../../constants';
-import { SET_ADMIN_SECRET } from '../Main/Actions';
 import requestAction from '../../utils/requestAction';
+import globals from '../../Globals';
 
 export const verifyLogin = ({
   adminSecret,
@@ -42,11 +42,8 @@ export const verifyLogin = ({
           saveAdminSecretState(adminSecret);
         }
 
-        // set admin secret in redux
-        dispatch({
-          type: SET_ADMIN_SECRET,
-          data: adminSecret,
-        });
+        // set admin secret in globals
+        globals.adminSecret = adminSecret;
 
         // set data headers in redux
         dispatch({

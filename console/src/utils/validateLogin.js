@@ -18,6 +18,7 @@ const validateLogin = ({ dispatch }) => {
 
       const validationFailureCallback = () => {
         clearAdminSecretState();
+
         if (nextState.location.pathname !== '/login') {
           replaceState('/login');
         }
