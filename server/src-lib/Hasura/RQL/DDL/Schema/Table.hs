@@ -116,8 +116,8 @@ validateTableConfig
 validateTableConfig tableInfo (TableConfig rootFlds colFlds) = do
     withPathK "custom_root_fields" $ do
       sc <- askSchemaCache
-      let allRemoteGCtx = scAllRemoteGCtx sc
-      validateCustomRootFlds allRemoteGCtx rootFlds
+      let adminGCtx = getAdminGCtx sc
+      validateCustomRootFlds adminGCtx rootFlds
     withPathK "custom_column_names" $
       forM_ (M.toList colFlds) $ \(col, customName) -> do
         void $ askPGColInfo (_tiFieldInfoMap tableInfo) col ""
