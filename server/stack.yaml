@@ -34,6 +34,8 @@ extra-deps:
 - Spock-core-0.13.0.0
 - monad-validate-1.2.0.0
 
+- brotli-0.0.0.0
+
 # Override default flag values for local packages and extra-deps
 flags: {}
 
@@ -57,3 +59,7 @@ extra-package-dbs: []
 
 # Allow a newer minor version of GHC than the snapshot specifies
 # compiler-check: newer-minor
+
+docker:
+  enable: false
+  repo: 'hasura/stack-build'
