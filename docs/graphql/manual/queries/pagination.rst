@@ -188,3 +188,53 @@ Limit results in a nested object
         ]
       }
     }
+
+Fetch aggregate count with limited results
+------------------------------------------
+
+``count`` (as part of aggregations) can be used to do pagination.
+
+**Example:** Fetch a list of articles where a certain condition is true and get their count. Then limit the number of articles to display.
+
+.. graphiql::
+  :view_only:
+  :query:
+    query articles ($where: articles_bool_exp!) {
+      articles_aggregate(where: $where) {
+        aggregate {
+          totalCount: count
+        }
+      }
+      articles (where: $where limit: 10 order_by: {rating: desc}) {
+        id
+        title
+      }
+    }
+  :response:
+    {
+      "data": {
+        "articles_aggregate": {
+          "aggregate": {
+            "totalCount": 8
+          }
+        },
+        "articles": [
+          {
+            "id": 33,
+            "title": "How to make fajitas"
+          },
+          {
+            "id": 31,
+            "title": "How to make fajitas"
+          },
+          {
+            "id": 32,
+            "title": "How to make fajitas"
+          },
+          {
+            "id": 2,
+            "title": "How to climb mount everest"
+          }
+        ]
+      }
+    }

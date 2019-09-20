@@ -182,22 +182,3 @@ and articles.
         ]
       }
     }
-
-Use aggregate for pagination
---------------------------------
-
-Until the time when the pagination spec will be introduced, ``count`` (part of aggregations) can be used as a workaround to do pagination, like in the following example:
-
-.. code-block:: graphql
-
-  query articles ($where: articles_bool_exp!) {
-    articles_aggregate(where: $where) {
-      aggregate {
-        totalCount: count
-      }
-    }
-    articles (where: $where limit: 10 order_by: {rating: desc}) {
-      id
-      title
-    }
-  }
