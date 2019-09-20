@@ -189,7 +189,7 @@ Limit results in a nested object
       }
     }
 
-Fetch aggregate count with limited results
+Fetch aggregate count with limited results in the same query
 ------------------------------------------
 
 ``count`` (as part of aggregations) can be used to do pagination.
