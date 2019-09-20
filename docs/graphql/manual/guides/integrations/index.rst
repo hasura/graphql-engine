@@ -20,5 +20,5 @@ Guides: Integration/migration tutorials
   :hidden:
 
   Auth0 JWT Integration <auth0-jwt>
-  Using AWS Cognito for authentication in JWT mode <cognito-jwt>
+  Using AWS Cognito for authentication <cognito-jwt>
   Subscriptions using apollo-client <apollo-subscriptions>

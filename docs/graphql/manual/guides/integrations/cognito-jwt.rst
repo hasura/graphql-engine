@@ -1,7 +1,7 @@
 .. _cognito_jwt:
 
-Using AWS Cognito for authentication in JWT mode
-================================================
+Using AWS Cognito for authentication
+====================================
 
 .. contents:: Table of contents
   :backlinks: none
