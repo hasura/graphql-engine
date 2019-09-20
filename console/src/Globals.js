@@ -28,7 +28,7 @@ const globals = {
   adminSecret: window.__env.adminSecret || null, // will be updated after login/logout
   isAdminSecretSet: window.__env.isAdminSecretSet || false,
   consoleMode: window.__env.consoleMode || SERVER_CONSOLE_MODE,
-  urlPrefix: stripTrailingSlash(window.__env.urlPrefix) || '/',
+  urlPrefix: stripTrailingSlash(window.__env.urlPrefix) || '',
   enableTelemetry: window.__env.enableTelemetry,
   telemetryTopic:
     window.__env.nodeEnv !== 'development' ? 'console' : 'console_test',
