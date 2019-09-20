@@ -79,6 +79,7 @@ func (f *File) Close() error {
 }
 
 func (f *File) Scan() error {
+	f.migrations = source.NewMigrations()
 	folders, err := ioutil.ReadDir(f.path)
 	if err != nil {
 		return err
@@ -86,6 +87,7 @@ func (f *File) Scan() error {
 
 	for _, fo := range folders {
 		if fo.IsDir() {
+			// v2 migrate
 			dirName := fo.Name()
 			dirPath := filepath.Join(f.path, dirName)
 			files, err := ioutil.ReadDir(dirPath)
@@ -114,6 +116,24 @@ func (f *File) Scan() error {
 				if err != nil {
 					return err
 				}
+			}
+		} else {
+			// v1 migrate
+			m, err := source.DefaultParse(fo.Name())
+			if err != nil {
+				continue // ignore files that we can't parse
+			}
+			m.Raw = fo.Name()
+			ok, err := source.IsEmptyFile(m, f.path)
+			if err != nil {
+				return err
+			}
+			if !ok {
+				continue
+			}
+			err = f.migrations.Append(m)
+			if err != nil {
+				return err
 			}
 		}
 	}
