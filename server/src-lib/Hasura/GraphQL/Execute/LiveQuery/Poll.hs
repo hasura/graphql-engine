@@ -39,15 +39,10 @@ import qualified Data.HashMap.Strict                      as Map
 import qualified Data.Time.Clock                          as Clock
 import qualified Data.UUID                                as UUID
 import qualified Data.UUID.V4                             as UUID
-import qualified Database.PG.Query                        as Q
 import qualified Language.GraphQL.Draft.Syntax            as G
 import qualified ListT
 import qualified StmContainers.Map                        as STMMap
 import qualified System.Metrics.Distribution              as Metrics
-
--- remove these when array encoding is merged
-import qualified Database.PG.Query.PTI                    as PTI
-import qualified PostgreSQL.Binary.Encoding               as PE
 
 import           Data.List.Split                          (chunksOf)
 
@@ -103,23 +98,6 @@ data Cohort
   -- result changed, then merge them in the map of existing subscribers
   }
 
-newtype CohortId = CohortId { unCohortId :: UUID.UUID }
-  deriving (Show, Eq, Hashable, Q.FromCol)
-
-newCohortId :: IO CohortId
-newCohortId = CohortId <$> UUID.nextRandom
-
-data CohortVariables
-  = CohortVariables
-  { _cvSessionVariables :: !UserVars
-  , _cvQueryVariables   :: !ValidatedQueryVariables
-  } deriving (Show, Eq, Generic)
-instance Hashable CohortVariables
-
-instance J.ToJSON CohortVariables where
-  toJSON (CohortVariables sessionVars queryVars) =
-    J.object ["user" J..= sessionVars, "variables" J..= queryVars]
-
 -- | A hash used to determine if the result changed without having to keep the entire result in
 -- memory. Using a cryptographic hash ensures that a hash collision is almost impossible: with 256
 -- bits, even if a subscription changes once per second for an entire year, the probability of a
@@ -157,7 +135,7 @@ dumpCohortMap cohortMap = do
       curOpIds <- TMap.toList curOps
       newOpIds <- TMap.toList newOps
       return $ J.object
-        [ "resp_id" J..= unCohortId respId
+        [ "resp_id" J..= respId
         , "current_ops" J..= map fst curOpIds
         , "new_ops" J..= map fst newOpIds
         , "previous_result_hash" J..= prevResHash
@@ -292,23 +270,6 @@ dumpPollerMap extended lqMap =
       , "max" J..= Metrics.max stats
       ]
 
-newtype CohortIdArray = CohortIdArray { unCohortIdArray :: [CohortId] }
-  deriving (Show, Eq)
-
-instance Q.ToPrepArg CohortIdArray where
-  toPrepVal (CohortIdArray l) = Q.toPrepValHelper PTI.unknown encoder $ map unCohortId l
-    where
-      encoder = PE.array 2950 . PE.dimensionArray foldl' (PE.encodingArray . PE.uuid)
-
-newtype CohortVariablesArray = CohortVariablesArray { unCohortVariablesArray :: [CohortVariables] }
-  deriving (Show, Eq)
-
-instance Q.ToPrepArg CohortVariablesArray where
-  toPrepVal (CohortVariablesArray l) =
-    Q.toPrepValHelper PTI.unknown encoder (map J.toJSON l)
-    where
-      encoder = PE.array 114 . PE.dimensionArray foldl' (PE.encodingArray . PE.json_ast)
-
 -- | Where the magic happens: the top-level action run periodically by each active 'Poller'.
 pollQuery
   :: RefetchMetrics
@@ -332,8 +293,7 @@ pollQuery metrics batchSize pgExecCtx pgQuery handler = do
     realToFrac $ Clock.diffUTCTime snapshotFinish procInit
   flip A.mapConcurrently_ queryVarsBatches $ \queryVars -> do
     queryInit <- Clock.getCurrentTime
-    mxRes <- runExceptT . runLazyTx' pgExecCtx . liftTx $ Q.listQE defaultTxErrorHandler
-               (unMultiplexedQuery pgQuery) (mkMxQueryPrepArgs queryVars) True
+    mxRes <- runExceptT . runLazyTx' pgExecCtx $ executeMultiplexedQuery pgQuery queryVars
     queryFinish <- Clock.getCurrentTime
     Metrics.add (_rmQuery metrics) $
       realToFrac $ Clock.diffUTCTime queryFinish queryInit
@@ -364,10 +324,6 @@ pollQuery metrics batchSize pgExecCtx pgQuery handler = do
 
     getQueryVars cohortSnapshotMap =
       Map.toList $ fmap _csVariables cohortSnapshotMap
-
-    mkMxQueryPrepArgs l =
-      let (respIdL, respVarL) = unzip l
-      in (CohortIdArray respIdL, CohortVariablesArray respVarL)
 
     getCohortOperations cohortSnapshotMap = \case
       Left e ->

@@ -3,8 +3,12 @@
 module Hasura.GraphQL.Execute.LiveQuery.Plan
   ( MultiplexedQuery
   , mkMultiplexedQuery
-  , unMultiplexedQuery
   , toMultiplexedQueryVar
+
+  , CohortId
+  , newCohortId
+  , CohortVariables(..)
+  , executeMultiplexedQuery
 
   , LiveQueryPlan(..)
   , ParameterizedLiveQueryPlan(..)
@@ -12,6 +16,9 @@ module Hasura.GraphQL.Execute.LiveQuery.Plan
   , ValidatedQueryVariables
   , buildLiveQueryPlan
   , reuseLiveQueryPlan
+
+  , LiveQueryPlanExplanation
+  , explainLiveQueryPlan
   ) where
 
 import           Hasura.Prelude
@@ -21,11 +28,17 @@ import qualified Data.Aeson.Extended                    as J
 import qualified Data.Aeson.TH                          as J
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.Text                              as T
+import qualified Data.UUID.V4                           as UUID
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 
+-- remove these when array encoding is merged
+import qualified Database.PG.Query.PTI                  as PTI
+import qualified PostgreSQL.Binary.Encoding             as PE
+
 import           Control.Lens
 import           Data.Has
+import           Data.UUID                              (UUID)
 
 import qualified Hasura.GraphQL.Resolve                 as GR
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
@@ -33,6 +46,7 @@ import qualified Hasura.GraphQL.Validate                as GV
 import qualified Hasura.SQL.DML                         as S
 
 import           Hasura.Db
+import           Hasura.EncJSON
 import           Hasura.RQL.Types
 import           Hasura.SQL.Error
 import           Hasura.SQL.Types
@@ -89,6 +103,49 @@ toMultiplexedQueryVar = \case
       , S.SEArray $ map S.SELit jPath
       ]
 
+newtype CohortId = CohortId { unCohortId :: UUID }
+  deriving (Show, Eq, Hashable, J.ToJSON, Q.FromCol)
+
+newCohortId :: (MonadIO m) => m CohortId
+newCohortId = CohortId <$> liftIO UUID.nextRandom
+
+data CohortVariables
+  = CohortVariables
+  { _cvSessionVariables :: !UserVars
+  , _cvQueryVariables   :: !ValidatedQueryVariables
+  } deriving (Show, Eq, Generic)
+instance Hashable CohortVariables
+
+instance J.ToJSON CohortVariables where
+  toJSON (CohortVariables sessionVars queryVars) =
+    J.object ["user" J..= sessionVars, "variables" J..= queryVars]
+
+-- These types exist only to use the Postgres array encoding.
+newtype CohortIdArray = CohortIdArray { unCohortIdArray :: [CohortId] }
+  deriving (Show, Eq)
+instance Q.ToPrepArg CohortIdArray where
+  toPrepVal (CohortIdArray l) = Q.toPrepValHelper PTI.unknown encoder $ map unCohortId l
+    where
+      encoder = PE.array 2950 . PE.dimensionArray foldl' (PE.encodingArray . PE.uuid)
+newtype CohortVariablesArray = CohortVariablesArray { unCohortVariablesArray :: [CohortVariables] }
+  deriving (Show, Eq)
+instance Q.ToPrepArg CohortVariablesArray where
+  toPrepVal (CohortVariablesArray l) =
+    Q.toPrepValHelper PTI.unknown encoder (map J.toJSON l)
+    where
+      encoder = PE.array 114 . PE.dimensionArray foldl' (PE.encodingArray . PE.json_ast)
+
+executeMultiplexedQuery
+  :: (MonadTx m) => MultiplexedQuery -> [(CohortId, CohortVariables)] -> m [(CohortId, EncJSON)]
+executeMultiplexedQuery (MultiplexedQuery query) = executeQuery query
+
+-- | Internal; used by both 'executeMultiplexedQuery' and 'explainLiveQueryPlan'.
+executeQuery :: (MonadTx m, Q.FromRow a) => Q.Query -> [(CohortId, CohortVariables)] -> m [a]
+executeQuery query cohorts =
+  let (cohortIds, cohortVars) = unzip cohorts
+      preparedArgs = (CohortIdArray cohortIds, CohortVariablesArray cohortVars)
+  in liftTx $ Q.listQE defaultTxErrorHandler query preparedArgs True
+
 -- -------------------------------------------------------------------------------------------------
 -- Variable validation
 
@@ -135,8 +192,7 @@ validateQueryVariables pgExecCtx annVarVals = do
 data LiveQueryPlan
   = LiveQueryPlan
   { _lqpParameterizedPlan :: !ParameterizedLiveQueryPlan
-  , _lqpSessionVariables  :: !UserVars
-  , _lqpQueryVariables    :: !ValidatedQueryVariables
+  , _lqpVariables         :: !CohortVariables
   }
 
 data ParameterizedLiveQueryPlan
@@ -180,7 +236,7 @@ buildLiveQueryPlan pgExecCtx fieldAlias astUnresolved varTypes = do
   -- an invalid value for a variable for one instance of the
   -- subscription will take down the entire multiplexed query
   validatedVars <- validateQueryVariables pgExecCtx annVarVals
-  let plan = LiveQueryPlan parameterizedPlan (userVars userInfo) validatedVars
+  let plan = LiveQueryPlan parameterizedPlan (CohortVariables (userVars userInfo) validatedVars)
       reusablePlan = ReusableLiveQueryPlan parameterizedPlan <$> varTypes
   pure (plan, reusablePlan)
 
@@ -195,4 +251,20 @@ reuseLiveQueryPlan pgExecCtx sessionVars queryVars reusablePlan = do
   let ReusableLiveQueryPlan parameterizedPlan varTypes = reusablePlan
   annVarVals <- GV.validateVariablesForReuse varTypes queryVars
   validatedVars <- validateQueryVariables pgExecCtx annVarVals
-  pure $ LiveQueryPlan parameterizedPlan sessionVars validatedVars
+  pure $ LiveQueryPlan parameterizedPlan (CohortVariables sessionVars validatedVars)
+
+data LiveQueryPlanExplanation
+  = LiveQueryPlanExplanation
+  { _lqpeSql  :: !Text
+  , _lqpePlan :: ![Text]
+  } deriving (Show)
+$(J.deriveToJSON (J.aesonDrop 5 J.snakeCase) ''LiveQueryPlanExplanation)
+
+explainLiveQueryPlan :: (MonadTx m, MonadIO m) => LiveQueryPlan -> m LiveQueryPlanExplanation
+explainLiveQueryPlan plan = do
+  let parameterizedPlan = _lqpParameterizedPlan plan
+      queryText = Q.getQueryText . unMultiplexedQuery $ _plqpQuery parameterizedPlan
+      explainQuery = Q.fromText $ "EXPLAIN (FORMAT TEXT) " <> queryText
+  cohortId <- newCohortId
+  explanationLines <- map runIdentity <$> executeQuery explainQuery [(cohortId, _lqpVariables plan)]
+  pure $ LiveQueryPlanExplanation queryText explanationLines

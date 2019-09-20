@@ -93,6 +93,9 @@ module Hasura.GraphQL.Execute.LiveQuery
   , reuseLiveQueryPlan
   , buildLiveQueryPlan
 
+  , LiveQueryPlanExplanation
+  , explainLiveQueryPlan
+
   , LiveQueriesState
   , initLiveQueriesState
   , dumpLiveQueriesState
