@@ -12,6 +12,8 @@ import pytest
 
 from validate import check_query_f, check_query
 
+from test_graphql_queries import TestGraphqlQueryPermissions
+
 
 def mk_add_remote_q(name, url, headers=None, client_hdrs=False, timeout=None):
     return {
@@ -455,8 +457,8 @@ class TestRemoteSchemaTimeout:
 
 @pytest.mark.skipif(not pytest.config.getoption("--enable-remote-schema-permissions"),
                     reason="flag --enable-remote-schema-permissions is not set. Cannot run tests for remote schema permissions")
-class TestRemoteSchemaPermissions:
-    dir = 'queries/remote_schemas/permissions/'
+class TestCreateRemoteSchemaPermissions():
+    rs_dir = 'queries/remote_schemas/permissions/'
     teardown = {"type": "remove_remote_schema", "args": {"name": "simple"}}
 
     @pytest.fixture(autouse=True)
@@ -469,25 +471,45 @@ class TestRemoteSchemaPermissions:
         assert st_code == 200, resp
 
     def test_no_roles(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir + 'basic_fail.yaml')
+        check_query_f(hge_ctx, self.rs_dir + 'basic_fail.yaml')
 
     def test_basic(self, hge_ctx):
-        # make perm query
-        st_code, resp = hge_ctx.v1q_f(self.dir + 'setup.yaml')
+        st_code, resp = hge_ctx.v1q_f(self.rs_dir + 'setup.yaml')
         assert st_code == 200, resp
         # make good query
-        check_query_f(hge_ctx, self.dir + 'basic_success.yaml')
+        check_query_f(hge_ctx, self.rs_dir + 'basic_success.yaml')
         # make bad query
-        check_query_f(hge_ctx, self.dir + 'basic_fail_2.yaml')
+        check_query_f(hge_ctx, self.rs_dir + 'basic_fail_2.yaml')
+        st_code, resp = hge_ctx.v1q_f(self.rs_dir + 'teardown.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.rs_dir + 'basic_fail.yaml')
 
-    def test_remove_perm(self, hge_ctx):
-        # make perm query
-        st_code, resp = hge_ctx.v1q_f(self.dir + 'setup.yaml')
+@pytest.mark.skipif(not pytest.config.getoption("--enable-remote-schema-permissions"),
+                    reason="flag --enable-remote-schema-permissions is not set. Cannot run tests for remote schema permissions")
+class TestRemoteSchemaPermissions(TestGraphqlQueryPermissions):
+    rs_dir = 'queries/remote_schemas/permissions/'
+    teardown = {"type": "remove_remote_schema", "args": {"name": "simple"}}
+
+    @pytest.fixture(autouse=True)
+    def transact(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f('queries/graphql_query/permissions/setup.yaml')
         assert st_code == 200, resp
-        # remove perm query
-        st_code, resp = hge_ctx.v1q_f(self.dir + 'teardown.yaml')
+        q = mk_add_remote_q('simple', 'http://localhost:5000/user-graphql')
+        st_code, resp = hge_ctx.v1q(q)
         assert st_code == 200, resp
-        check_query_f(hge_ctx, self.dir + 'basic_fail.yaml')
+        st_code, resp = hge_ctx.v1q_f(self.rs_dir + 'setup.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f('queries/graphql_query/permissions/teardown.yaml')
+        assert st_code == 200, resp
+        st_code, resp = hge_ctx.v1q(self.teardown)
+        assert st_code == 200, resp
+
+    def test_basic(self, hge_ctx, transport):
+        # make good query
+        check_query_f(hge_ctx, self.rs_dir + 'basic_success.yaml')
+        # make bad query
+        check_query_f(hge_ctx, self.rs_dir + 'basic_fail_2.yaml')
 
 @pytest.mark.skipif(pytest.config.getoption("--enable-remote-schema-permissions"),
                     reason="flag --enable-remote-schema-permissions is set. Cannot run tests for remote schema permissions when disabled")
