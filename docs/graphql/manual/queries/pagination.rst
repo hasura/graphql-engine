@@ -205,7 +205,7 @@ Fetch aggregate count with limited results in the same query
           totalCount: count
         }
       }
-      articles (where: $where limit: 10 order_by: {rating: desc}) {
+      articles (where: $where limit: 4 order_by: {rating: desc}) {
         id
         title
       }
