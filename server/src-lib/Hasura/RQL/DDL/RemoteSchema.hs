@@ -272,7 +272,7 @@ runAddRemoteSchemaPermissionsP2Setup (RemoteSchemaPermissions rsName role _def) 
         (Map.lookup rsName remoteSchemas)
         (throw400
            NotFound
-           ("remote schema " <> remoteSchemaNameToText rsName <> " not found"))
+           ("remote schema " <> remoteSchemaNameToTxt rsName <> " not found"))
     newPerms <-
       case rscPerms rsCtx of
         Nothing      -> throw500 ("remote schema permissions are disabled")
@@ -429,7 +429,7 @@ dropRemoteSchemaPermissionsP1 (DropRemoteSchemaPermissions rsName role) = do
       (Map.lookup rsName remoteSchemas)
       (throw400
          NotFound
-         ("remote schema " <> remoteSchemaNameToText rsName <> " not found"))
+         ("remote schema " <> remoteSchemaNameToTxt rsName <> " not found"))
   case rscPerms rsCtx of
     Nothing -> throw400 Disabled ("remote schema permissions are disabled")
     Just roleMap ->
@@ -439,7 +439,7 @@ dropRemoteSchemaPermissionsP1 (DropRemoteSchemaPermissions rsName role) = do
         (throw400
            NotFound
            ("role: " <> roleNameToTxt role <> " not found for remote schema " <>
-            remoteSchemaNameToText rsName))
+            remoteSchemaNameToTxt rsName))
 
 dropRemoteSchemaPermissionsP2 ::
      (QErrM m, CacheRWM m, MonadTx m, HasFeatureFlags m) => DropRemoteSchemaPermissions -> m ()
@@ -457,7 +457,7 @@ dropRemoteSchemaPermissionsP2Setup (DropRemoteSchemaPermissions rsName role) = w
       (Map.lookup rsName remoteSchemas)
       (throw400
          NotFound
-         ("remote schema " <> remoteSchemaNameToText rsName <> " not found"))
+         ("remote schema " <> remoteSchemaNameToTxt rsName <> " not found"))
   newPerms <- case rscPerms rsCtx of
     Nothing      -> throw500 ("remote schema permissions are disabled")
     Just roleMap -> pure $ Map.delete role roleMap
@@ -494,7 +494,7 @@ runIntrospectRemoteSchema (RemoteSchemaNameQuery rsName) = do
     case Map.lookup rsName (scRemoteSchemas sc) of
       Nothing ->
         throw400 NotExists $
-        "remote schema: " <> remoteSchemaNameToText rsName <> " not found"
+        "remote schema: " <> remoteSchemaNameToTxt rsName <> " not found"
       Just rCtx -> mergeGCtx (convRemoteGCtx $ rscGCtx rCtx) GC.emptyGCtx
       -- ^ merge with emptyGCtx to get default query fields
   queryParts <- flip runReaderT rGCtx $ VQ.getQueryParts req

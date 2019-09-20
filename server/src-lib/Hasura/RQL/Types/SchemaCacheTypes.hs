@@ -54,8 +54,8 @@ reportSchemaObj (SOTableObj tn (TOPerm rn pt)) =
   <> "." <> permTypeToCode pt
 reportSchemaObj (SOTableObj tn (TOTrigger trn )) =
   "event-trigger " <> qualObjectToText tn <> "." <> triggerNameToTxt trn
-reportSchemaObj (SORemoteSchema remoteSchemaName) = "remote schema " <> unNonEmptyText (unRemoteSchemaName remoteSchemaName)
-reportSchemaObj (SORemoteSchemaObj remoteSchemaName (RSOPerm role)) = "permission " <> unNonEmptyText (unRemoteSchemaName remoteSchemaName) <> "." <> roleNameToTxt role
+reportSchemaObj (SORemoteSchema rsName) = "remote schema " <> remoteSchemaNameToTxt rsName
+reportSchemaObj (SORemoteSchemaObj rsName (RSOPerm role)) = "permission " <> remoteSchemaNameToTxt rsName <> "." <> roleNameToTxt role
 
 instance Show SchemaObjId where
   show soi = T.unpack $ reportSchemaObj soi

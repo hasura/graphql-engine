@@ -27,8 +27,8 @@ newtype RemoteSchemaName
            , J.FromJSON, Q.ToPrepArg, Q.FromCol, DQuote
            )
 
-remoteSchemaNameToText :: RemoteSchemaName -> Text
-remoteSchemaNameToText = unNonEmptyText . unRemoteSchemaName
+remoteSchemaNameToTxt :: RemoteSchemaName -> Text
+remoteSchemaNameToTxt = unNonEmptyText . unRemoteSchemaName
 
 data RemoteSchemaInfo
   = RemoteSchemaInfo
