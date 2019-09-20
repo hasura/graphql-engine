@@ -6,7 +6,7 @@ module Hasura.GraphQL.Schema.Mutation.Update
   , mkUpdMutFld
   ) where
 
-import qualified Language.GraphQL.Draft.Syntax        as G
+import qualified Language.GraphQL.Draft.Syntax         as G
 
 import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
@@ -162,20 +162,20 @@ mkUpdJSONOpInp tn cols = bool inpObjs [] $ null jsonbCols
     deleteKeyInpObj =
       mkHsraInpTyInfo (Just deleteKeyDesc) (mkJSONOpTy tn deleteKeyOp) $
       fromInpValL $ map deleteKeyInpVal jsonbColNames
-    deleteKeyInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) Nothing $
-      G.toGT $ G.NamedType "String"
+    deleteKeyInpVal n =
+      InpValInfo Nothing n Nothing $ G.toGT $ G.NamedType "String"
 
     deleteElemInpObj =
       mkHsraInpTyInfo (Just deleteElemDesc) (mkJSONOpTy tn deleteElemOp) $
       fromInpValL $ map deleteElemInpVal jsonbColNames
-    deleteElemInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) Nothing $
-      G.toGT $ G.NamedType "Int"
+    deleteElemInpVal n =
+      InpValInfo Nothing n Nothing $ G.toGT $ G.NamedType "Int"
 
     deleteAtPathInpObj =
       mkHsraInpTyInfo (Just deleteAtPathDesc) (mkJSONOpTy tn deleteAtPathOp) $
       fromInpValL $ map deleteAtPathInpVal jsonbColNames
-    deleteAtPathInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) Nothing $
-      G.toGT $ G.toLT $ G.NamedType "String"
+    deleteAtPathInpVal n =
+      InpValInfo Nothing n Nothing $ G.toGT $ G.toLT $ G.NamedType "String"
 
 {-
 
@@ -223,9 +223,8 @@ mkJSONOpInpVals tn cols = bool jsonbOpArgs [] $ null jsonbCols
       InpValInfo (Just deleteAtPathDesc) deleteAtPathOp Nothing $
       G.toGT $ mkJSONOpTy tn deleteAtPathOp
 
-mkUpdMutFld
-  :: QualifiedTable -> [PGColumnInfo] -> ObjFldInfo
-mkUpdMutFld tn cols =
+mkUpdMutFld :: Maybe G.Name -> QualifiedTable -> [PGColumnInfo] -> ObjFldInfo
+mkUpdMutFld mCustomName tn cols =
   mkHsraObjFldInfo (Just desc) fldName (fromInpValL inputValues) $
     G.toGT $ mkMutRespTy tn
   where
@@ -233,7 +232,8 @@ mkUpdMutFld tn cols =
                   <> mkJSONOpInpVals tn cols
     desc = G.Description $ "update data of the table: " <>> tn
 
-    fldName = "update_" <> qualObjectToName tn
+    defFldName = "update_" <> qualObjectToName tn
+    fldName = fromMaybe defFldName mCustomName
 
     filterArgDesc = "filter the rows which have to be updated"
     filterArg =

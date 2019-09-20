@@ -146,6 +146,10 @@ library
                      , filepath >= 1.4
                      , mime-types >= 0.1
 
+                     -- HTTP compression
+                     , zlib
+                     , brotli
+
   exposed-modules:     Hasura.Prelude
                      , Hasura.Logging
                      , Hasura.EncJSON
@@ -168,6 +172,7 @@ library
                      , Hasura.Server.SchemaUpdate
                      , Hasura.Server.PGDump
                      , Hasura.Server.Config
+                     , Hasura.Server.Compression
 
                      , Hasura.RQL.Types
                      , Hasura.RQL.Instances

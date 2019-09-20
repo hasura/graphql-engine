@@ -1,0 +1,23 @@
+type: bulk
+args:
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE author (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        age INTEGER
+      );
+
+      INSERT INTO author (name, age) VALUES
+        ('Clarke',  23),
+        ('Bellamy', NULL);
+
+- type: track_table
+  version: 2
+  args:
+    table: author
+    configuration:
+      custom_root_fields:
+        select: Authors

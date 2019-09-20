@@ -1,0 +1,11 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE test (id serial primary key, name text);
+      INSERT INTO test (name) values ('Gzip'), ('Brotli'), ('Nothing');
+- type: track_table
+  args:
+    schema: public
+    name: test
