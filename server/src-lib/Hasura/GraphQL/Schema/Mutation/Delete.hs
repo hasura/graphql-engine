@@ -19,15 +19,15 @@ delete_table(
 
 -}
 
-mkDelMutFld
-  :: QualifiedTable -> ObjFldInfo
-mkDelMutFld tn =
+mkDelMutFld :: Maybe G.Name -> QualifiedTable -> ObjFldInfo
+mkDelMutFld mCustomName tn =
   mkHsraObjFldInfo (Just desc) fldName (fromInpValL [filterArg]) $
     G.toGT $ mkMutRespTy tn
   where
     desc = G.Description $ "delete data from the table: " <>> tn
 
-    fldName = "delete_" <> qualObjectToName tn
+    defFldName = "delete_" <> qualObjectToName tn
+    fldName = fromMaybe defFldName mCustomName
 
     filterArgDesc = "filter the rows which have to be deleted"
     filterArg =

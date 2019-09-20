@@ -9,7 +9,8 @@ module Hasura.GraphQL.Transport.HTTP.Protocol
   , VariableValues
   , encodeGQErr
   , encodeGQResp
-  , GQResp(..)
+  , GQResult(..)
+  , GQResponse
   , isExecError
   , RemoteGqlResp(..)
   , GraphqlResponse(..)
@@ -82,18 +83,20 @@ encodeGQErr :: Bool -> QErr -> J.Value
 encodeGQErr includeInternal qErr =
   J.object [ "errors" J..= [encodeGQLErr includeInternal qErr]]
 
-data GQResp
-  = GQSuccess !BL.ByteString
+data GQResult a
+  = GQSuccess !a
   | GQPreExecError ![J.Value]
   | GQExecError ![J.Value]
-  deriving (Show, Eq)
+  deriving (Show, Eq, Functor, Foldable, Traversable)
 
-isExecError :: GQResp -> Bool
+type GQResponse = GQResult BL.ByteString
+
+isExecError :: GQResult a -> Bool
 isExecError = \case
   GQExecError _ -> True
   _             -> False
 
-encodeGQResp :: GQResp -> EncJSON
+encodeGQResp :: GQResponse -> EncJSON
 encodeGQResp gqResp =
   encJFromAssocList $ case gqResp of
     GQSuccess r      -> [("data", encJFromLBS r)]
@@ -118,7 +121,7 @@ encodeRemoteGqlResp (RemoteGqlResp d e ex) =
 
 -- | Represents a proper GraphQL response
 data GraphqlResponse
-  = GRHasura !GQResp
+  = GRHasura !GQResponse
   | GRRemote !RemoteGqlResp
 
 encodeGraphqlResponse :: GraphqlResponse -> EncJSON

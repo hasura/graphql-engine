@@ -82,7 +82,7 @@ runRunSQL (RunSQL t cascade mChkMDCnstcy) = do
     isAltrDropReplace = either throwErr return . matchRegex regex False
       where
         throwErr s = throw500 $ "compiling regex failed: " <> T.pack s
-        regex = "alter|drop|replace|create function"
+        regex = "alter|drop|replace|create function|comment on"
 
 data RunSQLRes
   = RunSQLRes

@@ -10,6 +10,7 @@ languages, frameworks and deployment runtimes:
 
 - nodejs: [aws](aws-lambda/nodejs), [azure](azure-functions/nodejs), [google](google-cloud-functions/nodejs)
 - python: [zeit](zeit-now/python)
+- [rust](https://github.com/ronanyeah/rust-hasura)
 
 Typical use-cases:
 

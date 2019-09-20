@@ -91,14 +91,14 @@ mkFuncArgs funInfo =
     funcInpArgs = bool [funcInpArg] [] $ null funcArgs
 
 mkFuncQueryFld
-  :: FunctionInfo -> ObjFldInfo
-mkFuncQueryFld funInfo =
+  :: FunctionInfo -> Maybe PGDescription -> ObjFldInfo
+mkFuncQueryFld funInfo descM =
   mkHsraObjFldInfo (Just desc) fldName (mkFuncArgs funInfo) ty
   where
     retTable = fiReturnType funInfo
     funcName = fiName funInfo
 
-    desc = G.Description $ "execute function " <> funcName
+    desc = mkDescriptionWith descM $ "execute function " <> funcName
            <<> " which returns " <>> retTable
     fldName = qualObjectToName funcName
 
@@ -116,14 +116,14 @@ function_aggregate(
 -}
 
 mkFuncAggQueryFld
-  :: FunctionInfo -> ObjFldInfo
-mkFuncAggQueryFld funInfo =
+  :: FunctionInfo -> Maybe PGDescription -> ObjFldInfo
+mkFuncAggQueryFld funInfo descM =
   mkHsraObjFldInfo (Just desc) fldName (mkFuncArgs funInfo) ty
   where
     funcName = fiName funInfo
     retTable = fiReturnType funInfo
 
-    desc = G.Description $ "execute function " <> funcName
+    desc = mkDescriptionWith descM $ "execute function " <> funcName
            <<> " and query aggregates on result of table type "
            <>> retTable
 

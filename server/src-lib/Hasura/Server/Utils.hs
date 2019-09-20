@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeApplications #-}
 module Hasura.Server.Utils where
 
 import           Data.Aeson
@@ -40,6 +41,9 @@ htmlHeader = ("Content-Type", "text/html; charset=utf-8")
 
 gzipHeader :: (T.Text, T.Text)
 gzipHeader = ("Content-Encoding", "gzip")
+
+brHeader :: (T.Text, T.Text)
+brHeader = ("Content-Encoding", "br")
 
 userRoleHeader :: T.Text
 userRoleHeader = "x-hasura-role"
@@ -197,7 +201,6 @@ filterResponseHeaders =
 
 filterHeaders :: Set.HashSet HTTP.HeaderName -> [HTTP.Header] -> [HTTP.Header]
 filterHeaders list = filter (\(n, _) -> not $ n `Set.member` list)
-
 
 hyphenate :: String -> String
 hyphenate = u . applyFirst toLower

@@ -263,7 +263,7 @@ data SelCol
 instance FromJSON SelCol where
   parseJSON (String s) =
     case AT.parseOnly parseWildcard s of
-    Left _  -> return $ SCExtSimple $ PGCol s
+    Left _  -> SCExtSimple <$> parseJSON (String s)
     Right x -> return $ SCStar x
   parseJSON v@(Object o) =
     SCExtRel

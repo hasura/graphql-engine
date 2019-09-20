@@ -46,6 +46,14 @@ data:
       }
 
       redir 301 {
+        /graphql/typescript-react-apollo/boilerplate.zip https://graphql-engine-cdn.hasura.io/learn-hasura/boilerplates/typescript-react-apollo/boilerplate.zip
+      }
+
+      redir 301 {
+        /graphql/typescript-react-apollo/ /graphql/typescript-react-apollo/introduction
+      }
+
+      redir 301 {
         /graphql/angular-apollo/ /graphql/angular-apollo/introduction
       }
 
@@ -122,6 +130,8 @@ data:
       }
 
       proxy /graphql/hasura hasura-backend
+
+      proxy /graphql/typescript-react-apollo typescript-react-apollo
 
       proxy /graphql/react-native react-native-apollo
 

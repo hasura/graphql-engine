@@ -16,6 +16,7 @@ import qualified Data.Text.Encoding               as TE
 import qualified Text.PrettyPrint.ANSI.Leijen     as PP
 
 import           Data.Char                        (toLower)
+import           Data.Time.Clock.Units            (milliseconds)
 import           Network.Wai.Handler.Warp         (HostPreference)
 import           Options.Applicative
 
@@ -100,7 +101,7 @@ data ServeOptions
   , soEnableTelemetry  :: !Bool
   , soStringifyNum     :: !Bool
   , soEnabledAPIs      :: !(Set.HashSet API)
-  , soLiveQueryOpts    :: !LQ.LQOpts
+  , soLiveQueryOpts    :: !LQ.LiveQueriesOptions
   , soEnableAllowlist  :: !Bool
   , soEnabledLogTypes  :: !(Set.HashSet L.EngineLogType)
   , soLogLevel         :: !L.LogLevel
@@ -192,10 +193,10 @@ instance FromEnv [API] where
   fromEnv = readAPIs
 
 instance FromEnv LQ.BatchSize where
-  fromEnv = fmap LQ.mkBatchSize . readEither
+  fromEnv = fmap LQ.BatchSize . readEither
 
 instance FromEnv LQ.RefetchInterval where
-  fromEnv = fmap LQ.refetchIntervalFromMilli . readEither
+  fromEnv = fmap (LQ.RefetchInterval . milliseconds . fromInteger) . readEither
 
 instance FromEnv JWTConfig where
   fromEnv = readJson
@@ -360,14 +361,9 @@ mkServeOptions rso@RawServeOptions{..}= do
         _            -> corsCfg
 
     mkLQOpts = do
-      mxRefetchIntM <- withEnv rsoMxRefetchInt $
-                       fst mxRefetchDelayEnv
-      mxBatchSizeM <- withEnv rsoMxBatchSize $
-                      fst mxBatchSizeEnv
-      fallbackRefetchIntM <- withEnv rsoFallbackRefetchInt $
-                             fst fallbackRefetchDelayEnv
-      return $ LQ.mkLQOpts (LQ.mkMxOpts mxBatchSizeM mxRefetchIntM)
-        (LQ.mkFallbackOpts fallbackRefetchIntM)
+      mxRefetchIntM <- withEnv rsoMxRefetchInt $ fst mxRefetchDelayEnv
+      mxBatchSizeM <- withEnv rsoMxBatchSize $ fst mxBatchSizeEnv
+      return $ LQ.mkLiveQueriesOptions mxBatchSizeM mxRefetchIntM
 
 
 getFeatureFlags :: RawServeOptions -> WithEnv FeatureFlags
@@ -447,6 +443,9 @@ serveCmdFooter =
         ]
       , [ "# Start GraphQL Engine with telemetry enabled/disabled"
         , "graphql-engine --database-url <database-url> serve --enable-telemetry true|false"
+        ]
+      , [ "# Start GraphQL Engine with HTTP compression enabled for '/v1/query' and '/v1/graphql' endpoints"
+        , "graphql-engine --database-url <database-url> serve --enable-compression"
         ]
       ]
 
@@ -564,7 +563,7 @@ corsDomainEnv =
 enableConsoleEnv :: (String, String)
 enableConsoleEnv =
   ( "HASURA_GRAPHQL_ENABLE_CONSOLE"
-  , "Enable API Console"
+  , "Enable API Console (default: false)"
   )
 
 enableTelemetryEnv :: (String, String)
