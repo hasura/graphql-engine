@@ -19,12 +19,14 @@ module Hasura.RQL.Types
        , HasQCtx(..)
        , mkAdminQCtx
        , askTabInfo
+       , isTableTracked
        , askFieldInfoMap
        , askPGType
        , assertPGCol
        , askRelType
        , askFieldInfo
        , askPGColInfo
+       , askComputedColumnInfo
        , askCurRole
        , askEventTriggerInfo
        , askTabInfoFromTrigger
@@ -92,6 +94,10 @@ askTabInfo tabName = do
   liftMaybe (err400 NotExists errMsg) $ M.lookup tabName $ scTables rawSchemaCache
   where
     errMsg = "table " <> tabName <<> " does not exist"
+
+isTableTracked :: SchemaCache -> QualifiedTable -> Bool
+isTableTracked sc qt =
+  isJust $ M.lookup qt $ scTables sc
 
 askTabInfoFromTrigger
   :: (QErrM m, CacheRM m)
@@ -188,16 +194,37 @@ askPGColInfo
   -> T.Text
   -> m columnInfo
 askPGColInfo m c msg = do
-  colInfo <- modifyErr ("column " <>) $
+  fieldInfo <- modifyErr ("column " <>) $
              askFieldInfo m (fromPGCol c)
-  case colInfo of
-    (FIColumn pgColInfo) ->
-      return pgColInfo
-    _                      ->
+  case fieldInfo of
+    (FIColumn pgColInfo) -> pure pgColInfo
+    (FIRelationship   _) -> throwErr "relationship"
+    (FIComputedColumn _) -> throwErr "computed column"
+  where
+    throwErr fieldType =
       throwError $ err400 UnexpectedPayload $ mconcat
       [ "expecting a postgres column; but, "
-      , c <<> " is a relationship; "
+      , c <<> " is a " <> fieldType <> "; "
       , msg
+      ]
+
+askComputedColumnInfo
+  :: (MonadError QErr m)
+  => FieldInfoMap columnInfo
+  -> ComputedColumnName
+  -> m ComputedColumnInfo
+askComputedColumnInfo fields computedColumn = do
+  fieldInfo <- modifyErr ("computed column " <>) $
+               askFieldInfo fields $ fromComputedColumn computedColumn
+  case fieldInfo of
+    (FIColumn           _) -> throwErr "column"
+    (FIRelationship     _) -> throwErr "relationship"
+    (FIComputedColumn cci) -> pure cci
+  where
+    throwErr fieldType =
+      throwError $ err400 UnexpectedPayload $ mconcat
+      [ "expecting a computed column; but, "
+      , computedColumn <<> " is a " <> fieldType <> "; "
       ]
 
 assertPGCol :: (MonadError QErr m)

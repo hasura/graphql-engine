@@ -2,6 +2,7 @@
 
 module Hasura.GraphQL.Resolve.Types where
 
+import           Control.Lens.TH
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict           as Map
@@ -113,9 +114,34 @@ data RelationshipField
   , _rfPermLimit  :: !(Maybe Int)
   } deriving (Show, Eq)
 
-type FieldMap =
-  Map.HashMap (G.NamedType, G.Name)
-  (Either PGColumnInfo RelationshipField)
+data ComputedColumnTable
+  = ComputedColumnTable
+  { _cctTable      :: !QualifiedTable
+  , _cctCols       :: !PGColGNameMap
+  , _cctPermFilter :: !AnnBoolExpPartialSQL
+  , _cctPermLimit  :: !(Maybe Int)
+  } deriving (Show, Eq)
+
+data ComputedColumnField
+  = CCTScalar !PGScalarType
+  | CCTTable !ComputedColumnTable
+  deriving (Show, Eq)
+
+data ComputedColumnFieldInfo
+  = ComputedColumnFieldInfo
+  { _ccfinfoName     :: !ComputedColumnName
+  , _ccfinfoFunction :: !ComputedColumnFunction
+  , _ccfinfoArgSeq   :: !FuncArgSeq
+  , _ccfinfoField    :: !ComputedColumnField
+  } deriving (Show, Eq)
+
+data ResolveField
+  = RFPGColumn !PGColumnInfo
+  | RFRelationship !RelationshipField
+  | RFComputedColumn !ComputedColumnFieldInfo
+  deriving (Show, Eq)
+
+type FieldMap = Map.HashMap (G.NamedType, G.Name) ResolveField
 
 -- order by context
 data OrdByItem
@@ -236,3 +262,6 @@ runResolveT = fmap (fmap getVarTypes) . flip runStateT mempty . unResolveT
 
 evalResolveT :: (Monad m) => ResolveT m a -> m a
 evalResolveT = flip evalStateT mempty . unResolveT
+
+-- template haskell related
+$(makePrisms ''ResolveField)

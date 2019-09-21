@@ -1,5 +1,6 @@
 module Hasura.Server.Query where
 
+import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -11,6 +12,7 @@ import qualified Network.HTTP.Client                as HTTP
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
+import           Hasura.RQL.DDL.ComputedColumn
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
@@ -44,6 +46,11 @@ data RQLQueryV1
   | RQDropRelationship !DropRel
   | RQSetRelationshipComment !SetRelComment
   | RQRenameRelationship !RenameRel
+
+  -- computed columns related
+
+  | RQAddComputedColumn !AddComputedColumn
+  | RQDropComputedColumn !DropComputedColumn
 
   | RQCreateInsertPermission !CreateInsPerm
   | RQCreateSelectPermission !CreateSelPerm
@@ -150,13 +157,13 @@ newtype Run a
            )
 
 instance UserInfoM Run where
-  askUserInfo = asks _1
+  askUserInfo = asks (^. _1)
 
 instance HasHttpManager Run where
-  askHttpManager = asks _2
+  askHttpManager = asks (^. _2)
 
 instance HasSQLGenCtx Run where
-  askSQLGenCtx = asks _3
+  askSQLGenCtx = asks (^. _3)
 
 fetchLastUpdate :: Q.TxE QErr (Maybe (InstanceId, UTCTime))
 fetchLastUpdate = do
@@ -219,6 +226,9 @@ queryNeedsReload (RQV1 qi) = case qi of
   RQDropRelationship  _           -> True
   RQSetRelationshipComment  _     -> False
   RQRenameRelationship _          -> True
+
+  RQAddComputedColumn _           -> True
+  RQDropComputedColumn _          -> True
 
   RQCreateInsertPermission _      -> True
   RQCreateSelectPermission _      -> True
@@ -299,6 +309,9 @@ runQueryM rq =
       RQDropRelationship  q        -> runDropRel q
       RQSetRelationshipComment  q  -> runSetRelComment q
       RQRenameRelationship q       -> runRenameRel q
+
+      RQAddComputedColumn q        -> runAddComputedColumn q
+      RQDropComputedColumn q       -> runDropComputedColumn q
 
       RQCreateInsertPermission q   -> runCreatePerm q
       RQCreateSelectPermission q   -> runCreatePerm q

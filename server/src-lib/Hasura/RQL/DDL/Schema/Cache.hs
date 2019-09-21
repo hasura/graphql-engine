@@ -33,6 +33,7 @@ import qualified Hasura.GraphQL.Schema              as GS
 
 import           Hasura.Db
 import           Hasura.GraphQL.RemoteServer
+import           Hasura.RQL.DDL.ComputedColumn
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Permission
@@ -68,6 +69,7 @@ buildSchemaCacheWithOptions withSetup = do
   -- fetch all catalog metadata
   CatalogMetadata tables relationships permissions
     eventTriggers remoteSchemas functions fkeys' allowlistDefs
+    computedColumns
     <- liftTx fetchCatalogData
 
   let fkeys = HS.fromList fkeys'
@@ -120,18 +122,30 @@ buildSchemaCacheWithOptions withSetup = do
         mkAllTriggersQ trn qt allCols (stringifyNum sqlGenCtx) (etcDefinition etc)
 
   -- sql functions
-  forM_ functions $ \(CatalogFunction qf rawfiM) -> do
+  forM_ functions $ \(CatalogFunction qf funcDefs) -> do
     let def = toJSON $ TrackFunction qf
         mkInconsObj =
           InconsistentMetadataObj (MOFunction qf) MOTFunction def
     modifyErr (\e -> "function " <> qf <<> "; " <> e) $
       withSchemaObject_ mkInconsObj $ do
-      rawfi <- onNothing rawfiM $
-        throw400 NotExists $ "no such function exists in postgres : " <>> qf
+      rawfi <- handleMultipleFunctions qf funcDefs
       trackFunctionP2Setup qf rawfi
 
   -- allow list
   replaceAllowlist $ concatMap _cdQueries allowlistDefs
+
+  -- computedColumns
+  forM_ computedColumns $ \(CatalogComputedColumn column funcDefs) -> do
+    let AddComputedColumn qt name def comment = column
+        qf = _ccdFunction def
+        mkInconsObj =
+          InconsistentMetadataObj (MOTableObj qt $ MTOComputedColumn name)
+          MOTComputedColumn $ toJSON column
+    modifyErr (\e -> "computed column " <> name <<> "; " <> e) $
+      withSchemaObject_ mkInconsObj $ do
+      rawfi <- handleMultipleFunctions qf funcDefs
+      addComputedColumnP2Setup qt name def rawfi comment
+
 
   -- build GraphQL context with tables and functions
   GS.buildGCtxMapPG

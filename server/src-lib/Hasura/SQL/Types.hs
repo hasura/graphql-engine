@@ -53,8 +53,13 @@ module Hasura.SQL.Types
   , PGScalarType(..)
   , WithScalarType(..)
   , PGType(..)
-  , txtToPgColTy
+  , textToPGScalarTy
   , pgTypeOid
+
+  , PGTypType(..)
+  , QualifiedPGType(..)
+  , isBaseType
+  , typeToTable
   )
 where
 
@@ -64,6 +69,7 @@ import qualified Database.PG.Query.PTI      as PTI
 import           Hasura.Prelude
 
 import           Data.Aeson
+import           Data.Aeson.Casing
 import           Data.Aeson.Encoding        (text)
 import           Data.Aeson.TH
 import           Data.Aeson.Types           (toJSONKeyText)
@@ -368,8 +374,8 @@ instance ToJSONKey PGScalarType where
 instance DQuote PGScalarType where
   dquoteTxt = toSQLTxt
 
-txtToPgColTy :: Text -> PGScalarType
-txtToPgColTy t = case t of
+textToPGScalarTy :: Text -> PGScalarType
+textToPGScalarTy t = case t of
   "serial"                   -> PGSerial
   "bigserial"                -> PGBigSerial
 
@@ -421,7 +427,7 @@ txtToPgColTy t = case t of
 
 
 instance FromJSON PGScalarType where
-  parseJSON (String t) = return $ txtToPgColTy t
+  parseJSON (String t) = return $ textToPGScalarTy t
   parseJSON _          = fail "Expecting a string for PGScalarType"
 
 pgTypeOid :: PGScalarType -> PQ.Oid
@@ -520,3 +526,49 @@ instance (ToSQL a) => ToSQL (PGType a) where
     PGTypeScalar ty -> toSQL ty
     -- typename array is an sql standard way of declaring types
     PGTypeArray ty -> toSQL ty <> " array"
+
+data PGTypType
+  = PTBASE
+  | PTCOMPOSITE
+  | PTDOMAIN
+  | PTENUM
+  | PTRANGE
+  | PTPSEUDO
+  | PTUnknown !T.Text
+  deriving (Show, Eq)
+
+instance FromJSON PGTypType where
+  parseJSON = withText "postgresTypeType" $
+    \t -> pure $ case t of
+      "b" -> PTBASE
+      "c" -> PTCOMPOSITE
+      "d" -> PTDOMAIN
+      "e" -> PTENUM
+      "r" -> PTRANGE
+      "p" -> PTPSEUDO
+      _   -> PTUnknown t
+
+$(deriveToJSON
+  defaultOptions{constructorTagModifier = drop 2}
+  ''PGTypType
+ )
+
+data QualifiedPGType
+  = QualifiedPGType
+  { _qptSchema :: !SchemaName
+  , _qptName   :: !PGScalarType
+  , _qptType   :: !PGTypType
+  } deriving (Show, Eq)
+$(deriveJSON (aesonDrop 4 snakeCase) ''QualifiedPGType)
+
+isBaseType :: QualifiedPGType -> Bool
+isBaseType (QualifiedPGType _ n ty) =
+  notUnknown && (ty == PTBASE)
+  where
+    notUnknown = case n of
+      PGUnknown _ -> False
+      _           -> True
+
+typeToTable :: QualifiedPGType -> QualifiedTable
+typeToTable (QualifiedPGType sch n _) =
+  QualifiedObject sch $ TableName $ toSQLTxt n

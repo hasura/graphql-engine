@@ -55,6 +55,34 @@ argsToColOp args = maybe (return Nothing) toOp $ Map.lookup "path" args
 
 type AnnFlds = RS.AnnFldsG UnresolvedVal
 
+fromComputedColumnField
+  :: ( MonadResolve m, MonadReader r m, Has FieldMap r
+     , Has OrdByCtx r, Has SQLGenCtx r
+     )
+  => ComputedColumnFieldInfo -> Field -> m (RS.ComputedColSel UnresolvedVal)
+fromComputedColumnField fieldInfo fld = fieldAsPath fld $ do
+  funcArgsM <- withArgM (_fArguments fld) "args" $ parseFunctionArgs argSeq
+  let funcArgs = fromMaybe RS.emptyFunctionArgsExp funcArgsM
+      argsWithTableArgument = withTableArgument funcArgs
+  case returnField of
+    CCTScalar scalarTy -> do
+      colOpM <- argsToColOp $ _fArguments fld
+      pure $ RS.CCSScalar $
+        RS.ComputedColScalarSel qf argsWithTableArgument scalarTy colOpM
+    CCTTable (ComputedColumnTable _ cols permFilter permLimit) -> do
+      let functionFrom = RS.FromFunction qf argsWithTableArgument
+      RS.CCSTable <$> fromField functionFrom cols permFilter permLimit fld
+  where
+    ComputedColumnFieldInfo _ function argSeq returnField = fieldInfo
+    ComputedColumnFunction qf _ tableArg _ = function
+    withTableArgument resolvedArgs =
+      let RS.FunctionArgsExp positional named = RS.AEInput <$> resolvedArgs
+      in case tableArg of
+        FTAFirstArgument -> RS.FunctionArgsExp
+                            (RS.AETableRow:positional) named
+        FTAName argName  -> RS.FunctionArgsExp positional $
+                            Map.insert (getFuncArgNameTxt argName) RS.AETableRow named
+
 fromSelSet
   :: ( MonadResolve m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
@@ -69,9 +97,11 @@ fromSelSet fldTy flds =
       _ -> do
         fldInfo <- getFldInfo fldTy fldName
         case fldInfo of
-          Left colInfo ->
+          RFPGColumn colInfo ->
             RS.FCol colInfo <$> argsToColOp (_fArguments fld)
-          Right (RelationshipField relInfo isAgg colGNameMap tableFilter tableLimit) -> do
+          RFComputedColumn fieldInfo ->
+            RS.FComputedCol <$> fromComputedColumnField fieldInfo fld
+          RFRelationship (RelationshipField relInfo isAgg colGNameMap tableFilter tableLimit) -> do
             let relTN = riRTable relInfo
                 colMapping = riMapping relInfo
                 rn = riName relInfo
@@ -79,7 +109,7 @@ fromSelSet fldTy flds =
               aggSel <- fromAggField relTN colGNameMap tableFilter tableLimit fld
               return $ RS.FArr $ RS.ASAgg $ RS.AnnRelG rn colMapping aggSel
             else do
-              annSel <- fromField relTN colGNameMap tableFilter tableLimit fld
+              annSel <- fromField (RS.FromTable relTN) colGNameMap tableFilter tableLimit fld
               let annRel = RS.AnnRelG rn colMapping annSel
               return $ case riType relInfo of
                 ObjRel -> RS.FObj annRel
@@ -140,19 +170,18 @@ fromField
   :: ( MonadResolve m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )
-  => QualifiedTable
+  => RS.SelectFromG UnresolvedVal
   -> PGColGNameMap
   -> AnnBoolExpPartialSQL
   -> Maybe Int
   -> Field -> m AnnSimpleSelect
-fromField tn colGNameMap permFilter permLimitM fld = fieldAsPath fld $ do
+fromField selFrom colGNameMap permFilter permLimitM fld = fieldAsPath fld $ do
   tableArgs <- parseTableArgs colGNameMap args
   annFlds   <- fromSelSet (_fType fld) $ _fSelSet fld
   let unresolvedPermFltr = fmapAnnBoolExp partialSQLExpToUnresolvedVal permFilter
-  let tabFrom = RS.TableFrom tn Nothing
-      tabPerm = RS.TablePerm unresolvedPermFltr permLimitM
+  let tabPerm = RS.TablePerm unresolvedPermFltr permLimitM
   strfyNum <- stringifyNum <$> asks getter
-  return $ RS.AnnSelG annFlds tabFrom tabPerm tableArgs strfyNum
+  return $ RS.AnnSelG annFlds selFrom tabPerm tableArgs strfyNum
   where
     args = _fArguments fld
 
@@ -296,7 +325,7 @@ fromFieldByPKey
 fromFieldByPKey tn colArgMap permFilter fld = fieldAsPath fld $ do
   boolExp <- pgColValToBoolExp colArgMap $ _fArguments fld
   annFlds <- fromSelSet fldTy $ _fSelSet fld
-  let tabFrom = RS.TableFrom tn Nothing
+  let tabFrom = RS.FromTable tn
       unresolvedPermFltr = fmapAnnBoolExp partialSQLExpToUnresolvedVal
                            permFilter
       tabPerm = RS.TablePerm unresolvedPermFltr Nothing
@@ -313,7 +342,7 @@ convertSelect
   => SelOpCtx -> Field -> m QueryRootFldUnresolved
 convertSelect opCtx fld =
   withPathK "selectionSet" $ QRFSimple <$>
-  fromField qt colGNameMap permFilter permLimit fld
+  fromField (RS.FromTable qt) colGNameMap permFilter permLimit fld
   where
     SelOpCtx qt _ colGNameMap permFilter permLimit = opCtx
 
@@ -398,7 +427,7 @@ fromAggField tn colGNameMap permFilter permLimit fld = fieldAsPath fld $ do
   aggSelFlds  <- fromAggSelSet colGNameMap (_fType fld) (_fSelSet fld)
   let unresolvedPermFltr =
         fmapAnnBoolExp partialSQLExpToUnresolvedVal permFilter
-  let tabFrom = RS.TableFrom tn Nothing
+  let tabFrom = RS.FromTable tn
       tabPerm = RS.TablePerm unresolvedPermFltr permLimit
   strfyNum <- stringifyNum <$> asks getter
   return $ RS.AnnSelG aggSelFlds tabFrom tabPerm tableArgs strfyNum
@@ -463,7 +492,7 @@ convertFuncQuerySimple
   => FuncQOpCtx -> Field -> m QueryRootFldUnresolved
 convertFuncQuerySimple funcOpCtx fld =
   withPathK "selectionSet" $ QRFFnSimple <$>
-    fromFuncQueryField (fromField qt colGNameMap permFilter permLimit) qf argSeq fld
+    fromFuncQueryField (fromField (RS.FromTable qt) colGNameMap permFilter permLimit) qf argSeq fld
   where
     FuncQOpCtx qt _ colGNameMap permFilter permLimit qf argSeq = funcOpCtx
 

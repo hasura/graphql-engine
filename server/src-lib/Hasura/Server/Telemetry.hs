@@ -159,7 +159,7 @@ computeMetrics sc =
     calcPerms fn perms = length $ catMaybes $ map fn perms
 
     relsOfTbl :: TableInfo PGColumnInfo -> [RelInfo]
-    relsOfTbl = rights . Map.elems . Map.map fieldInfoToEither . _tiFieldInfoMap
+    relsOfTbl = getRels . _tiFieldInfoMap
 
     permsOfTbl :: TableInfo PGColumnInfo -> [(RoleName, RolePermInfo)]
     permsOfTbl = Map.toList . _tiRolePermInfoMap

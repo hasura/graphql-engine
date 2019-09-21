@@ -336,31 +336,30 @@ SELECT
 
   pg_get_functiondef(p.oid) AS function_definition,
 
-  rtn.nspname::text AS return_type_schema,
-  rt.typname::text AS return_type_name,
-
-  CASE
-    WHEN ((rt.typtype) :: text = ('b' :: character(1)) :: text) THEN 'BASE' :: text
-    WHEN ((rt.typtype) :: text = ('c' :: character(1)) :: text) THEN 'COMPOSITE' :: text
-    WHEN ((rt.typtype) :: text = ('d' :: character(1)) :: text) THEN 'DOMAIN' :: text
-    WHEN ((rt.typtype) :: text = ('e' :: character(1)) :: text) THEN 'ENUM' :: text
-    WHEN ((rt.typtype) :: text = ('r' :: character(1)) :: text) THEN 'RANGE' :: text
-    WHEN ((rt.typtype) :: text = ('p' :: character(1)) :: text) THEN 'PSEUDO' :: text
-    ELSE NULL :: text
-  END AS return_type_type,
+  rtn.nspname::text as return_type_schema,
+  rt.typname::text as return_type_name,
+  rt.typtype::text as return_type_type,
   p.proretset AS returns_set,
   ( SELECT
-      COALESCE(json_agg(q.type_name), '[]')
+      COALESCE(json_agg(
+        json_build_object('schema', q."schema",
+                          'name', q."name",
+                          'type', q."type"
+                         )
+      ), '[]')
     FROM
       (
         SELECT
-          pt.typname AS type_name,
+          pt.typname AS "name",
+          pns.nspname AS "schema",
+          pt.typtype AS "type",
           pat.ordinality
         FROM
           unnest(
             COALESCE(p.proallargtypes, (p.proargtypes) :: oid [])
           ) WITH ORDINALITY pat(oid, ordinality)
           LEFT JOIN pg_type pt ON ((pt.oid = pat.oid))
+          LEFT JOIN pg_namespace pns ON (pt.typnamespace = pns.oid)
         ORDER BY pat.ordinality ASC
       ) q
    ) AS input_arg_types,
@@ -629,4 +628,16 @@ CREATE TABLE hdb_catalog.hdb_allowlist
 (
   collection_name TEXT UNIQUE
     REFERENCES hdb_catalog.hdb_query_collection(collection_name)
+);
+
+CREATE TABLE hdb_catalog.hdb_computed_column
+(
+  table_schema TEXT,
+  table_name TEXT,
+  computed_column_name TEXT,
+  definition JSONB NOT NULL,
+  comment TEXT NULL,
+
+  PRIMARY KEY (table_schema, table_name, computed_column_name),
+  FOREIGN KEY (table_schema, table_name) REFERENCES hdb_catalog.hdb_table(table_schema, table_name) ON UPDATE CASCADE
 );

@@ -371,7 +371,7 @@ fromScalarTyDef (G.ScalarTypeDefinition descM n _) loc =
       "Float"   -> return PGFloat
       "String"  -> return PGText
       "Boolean" -> return PGBoolean
-      _         -> return $ txtToPgColTy $ G.unName n
+      _         -> return $ textToPGScalarTy $ G.unName n
 
 data TypeInfo
   = TIScalar !ScalarTyInfo

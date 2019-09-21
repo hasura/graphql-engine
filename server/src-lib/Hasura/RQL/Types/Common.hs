@@ -24,6 +24,14 @@ module Hasura.RQL.Types.Common
        , rootText
 
        , FunctionArgName(..)
+       , FunctionArg(..)
+
+       , ComputedColumnName(..)
+       , fromComputedColumn
+       , FunctionTableArgument(..)
+       , ComputedColumnReturn(..)
+       , ComputedColumnFunction(..)
+       , ComputedColumnInfo(..)
        ) where
 
 import           Hasura.Prelude
@@ -37,6 +45,7 @@ import           Instances.TH.Lift             ()
 import           Language.Haskell.TH.Syntax    (Lift)
 
 import qualified Data.HashMap.Strict           as HM
+import qualified Data.Sequence                 as Seq
 import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
@@ -182,6 +191,58 @@ instance Hashable ForeignKey
 
 newtype FunctionArgName =
   FunctionArgName { getFuncArgNameTxt :: T.Text}
-  deriving (Show, Eq, ToJSON)
+  deriving (Show, Eq, ToJSON, FromJSON, Lift, DQuote, IsString)
 
 type CustomColumnNames = HM.HashMap PGCol G.Name
+
+data FunctionArg
+  = FunctionArg
+  { faName       :: !(Maybe FunctionArgName)
+  , faType       :: !QualifiedPGType
+  , faHasDefault :: !Bool
+  } deriving (Show, Eq)
+$(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionArg)
+
+newtype ComputedColumnName =
+  ComputedColumnName { unComputedColumnName :: Text}
+  deriving (Show, Eq, Lift, FromJSON, ToJSON, Q.ToPrepArg, DQuote, Hashable)
+
+fromComputedColumn :: ComputedColumnName -> FieldName
+fromComputedColumn = FieldName . unComputedColumnName
+
+data FunctionTableArgument
+  = FTAFirstArgument
+  | FTAName !FunctionArgName
+  deriving (Show, Eq)
+
+instance ToJSON FunctionTableArgument where
+  toJSON FTAFirstArgument  = String "first_argument"
+  toJSON (FTAName argName) = object ["name" .= argName]
+
+data ComputedColumnReturn
+  = CCRScalar !PGScalarType
+  | CCRSetofTable !QualifiedTable
+  deriving (Show, Eq)
+$(deriveToJSON defaultOptions { constructorTagModifier = snakeCase . drop 3
+                              , sumEncoding = TaggedObject "type" "info"
+                              }
+   ''ComputedColumnReturn
+ )
+
+data ComputedColumnFunction
+  = ComputedColumnFunction
+  { _ccfName          :: !QualifiedFunction
+  , _ccfInputArgs     :: !(Seq.Seq FunctionArg)
+  , _ccfTableArgument :: !FunctionTableArgument
+  , _ccfDescription   :: !(Maybe PGDescription)
+  } deriving (Show, Eq)
+$(deriveToJSON (aesonDrop 4 snakeCase) ''ComputedColumnFunction)
+
+data ComputedColumnInfo
+  = ComputedColumnInfo
+  { _cciName       :: !ComputedColumnName
+  , _cciFunction   :: !ComputedColumnFunction
+  , _cciReturnType :: !ComputedColumnReturn
+  , _cciComment    :: !(Maybe T.Text)
+  } deriving (Show, Eq)
+$(deriveToJSON (aesonDrop 4 snakeCase) ''ComputedColumnInfo)

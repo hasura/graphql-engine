@@ -7,7 +7,8 @@ select
     'remote_schemas', remote_schemas.items,
     'functions', functions.items,
     'foreign_keys', foreign_keys.items,
-    'allowlist_collections', allowlist.item
+    'allowlist_collections', allowlist.item,
+    'computed_columns', computed_column.items
   )
 from
   (
@@ -128,15 +129,17 @@ from
               'schema', hf.function_schema,
               'name', hf.function_name
             ),
-            'info', function_info
+            'info', hf_agg.function_info
           ) as info
         from
           hdb_catalog.hdb_function hf
-        left outer join
-            hdb_catalog.hdb_function_info_agg hf_agg on
-            ( hf_agg.function_name = hf.function_name
-              and hf_agg.function_schema = hf.function_schema
-            )
+        left join lateral
+            (
+              select coalesce(json_agg(function_info), '[]') as function_info
+              from hdb_catalog.hdb_function_info_agg
+               where function_name = hf.function_name
+                     and function_schema = hf.function_schema
+            ) hf_agg on 'true'
       ) as q
    ) as functions,
   (
@@ -175,4 +178,36 @@ from
     left outer join
          hdb_catalog.hdb_query_collection hqc
          on (hqc.collection_name = ha.collection_name)
-  ) as allowlist
+  ) as allowlist,
+  (
+    select
+      coalesce(json_agg(
+        json_build_object('computed_column', cc.computed_column,
+                          'function_info', fi.function_info
+                         )
+      ), '[]') as items
+    from
+      (
+        select json_build_object(
+          'table', jsonb_build_object('name', table_name,'schema', table_schema),
+          'name', computed_column_name,
+          'definition', definition,
+          'comment', comment
+        ) as computed_column,
+          case
+            when (definition::jsonb -> 'function')::jsonb ->> 'name' is null then definition::jsonb ->> 'function'
+            else (definition::jsonb -> 'function')::jsonb ->> 'name'
+          end as function_name,
+          case
+            when (definition::jsonb -> 'function')::jsonb ->> 'schema' is null then 'public'
+            else (definition::jsonb -> 'function')::jsonb ->> 'schema'
+          end as function_schema
+        from hdb_catalog.hdb_computed_column
+      ) cc
+    left join lateral
+      (
+        select coalesce(json_agg(function_info), '[]') as function_info
+        from hdb_catalog.hdb_function_info_agg
+        where function_name = cc.function_name and function_schema = cc.function_schema
+      ) fi on 'true'
+  ) as computed_column

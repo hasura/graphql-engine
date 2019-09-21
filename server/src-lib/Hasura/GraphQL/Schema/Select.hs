@@ -16,6 +16,7 @@ import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashSet                  as Set
 import qualified Language.GraphQL.Draft.Syntax as G
 
+import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.OrderBy
@@ -67,6 +68,28 @@ mkPGColFld colInfo =
     columnType = mkColumnType colTy
     notNullTy = G.toGT $ G.toNT columnType
     nullTy = G.toGT columnType
+
+mkComputedColFld :: ComputedColumnFieldInfo -> ObjFldInfo
+mkComputedColFld fieldInfo =
+  uncurry (mkHsraObjFldInfo desc fieldName) $ case field of
+    CCTScalar scalarTy    ->
+      let inputParams = mkPGColParams (PGColumnScalar scalarTy)
+                        <> fromInpValL [funcInpArg]
+      in (inputParams, G.toGT $ mkScalarTy scalarTy)
+    CCTTable compColtable ->
+      let table = _cctTable compColtable
+      in ( fromInpValL $ funcInpArg:mkSelArgs table
+         , G.toGT $ G.toLT $ G.toNT $ mkTableTy table
+         )
+  where
+    desc = Just $ G.Description $ "evaluating computed column " <>> name
+    fieldName = mkComputedColumnName name
+    ComputedColumnFieldInfo name function _ field = fieldInfo
+    qf = _ccfName function
+
+    funcArgDesc = G.Description $ "input parameters for function " <>> qf
+    funcInpArg = InpValInfo (Just funcArgDesc) "args" Nothing $
+                 G.toGT $ G.toNT $ mkFuncArgsTy qf
 
 -- where: table_bool_exp
 -- limit: Int
@@ -143,7 +166,10 @@ mkTableObj
 mkTableObj tn descM allowedFlds =
   mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) TLHasuraType
   where
-    flds = concatMap (either (pure . mkPGColFld) mkRelationshipField') allowedFlds
+    flds = pgColFlds <> relFlds <> compColFlds
+    pgColFlds = map mkPGColFld $ getPGColumnFields allowedFlds
+    relFlds = concatMap mkRelationshipField' $ getRelationshipFields allowedFlds
+    compColFlds = map mkComputedColFld $ getComputedColumnFields allowedFlds
     mkRelationshipField' (RelationshipFieldInfo relInfo allowAgg _ _ _ isNullable) =
       mkRelationshipField allowAgg relInfo isNullable
     desc = mkDescriptionWith descM $ "columns and relationships of " <>> tn

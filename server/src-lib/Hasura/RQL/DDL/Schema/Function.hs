@@ -20,37 +20,26 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 import qualified Data.HashMap.Strict           as M
 import qualified Data.Sequence                 as Seq
-import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 
-
-data PGTypType
-  = PTBASE
-  | PTCOMPOSITE
-  | PTDOMAIN
-  | PTENUM
-  | PTRANGE
-  | PTPSEUDO
-  deriving (Show, Eq)
-$(deriveJSON defaultOptions{constructorTagModifier = drop 2} ''PGTypType)
 
 data RawFuncInfo
   = RawFuncInfo
   { rfiHasVariadic      :: !Bool
   , rfiFunctionType     :: !FunctionType
   , rfiReturnTypeSchema :: !SchemaName
-  , rfiReturnTypeName   :: !T.Text
+  , rfiReturnTypeName   :: !PGScalarType
   , rfiReturnTypeType   :: !PGTypType
   , rfiReturnsSet       :: !Bool
-  , rfiInputArgTypes    :: ![PGScalarType]
-  , rfiInputArgNames    :: ![T.Text]
+  , rfiInputArgTypes    :: ![QualifiedPGType]
+  , rfiInputArgNames    :: ![FunctionArgName]
   , rfiDefaultArgs      :: !Int
   , rfiReturnsTable     :: !Bool
   , rfiDescription      :: !(Maybe PGDescription)
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''RawFuncInfo)
 
-mkFunctionArgs :: Int -> [PGScalarType] -> [T.Text] -> [FunctionArg]
+mkFunctionArgs :: Int -> [QualifiedPGType] -> [FunctionArgName] -> [FunctionArg]
 mkFunctionArgs defArgsNo tys argNames =
   bool withNames withNoNames $ null argNames
   where
@@ -65,7 +54,7 @@ mkFunctionArgs defArgsNo tys argNames =
     withNames = zipWith mkArg argNames tysWithHasDefault
 
     mkArg "" (ty, hasDef) = FunctionArg Nothing ty hasDef
-    mkArg n  (ty, hasDef) = FunctionArg (Just $ FunctionArgName n) ty hasDef
+    mkArg n  (ty, hasDef) = FunctionArg (Just n) ty hasDef
 
 validateFuncArgs :: MonadError QErr m => [FunctionArg] -> m ()
 validateFuncArgs args =
@@ -82,7 +71,7 @@ mkFunctionInfo qf rawFuncInfo = do
   -- throw error if function has variadic arguments
   when hasVariadic $ throw400 NotSupported "function with \"VARIADIC\" parameters are not supported"
   -- throw error if return type is not composite type
-  when (retTyTyp /= PTCOMPOSITE) $ throw400 NotSupported "function does not return a \"COMPOSITE\" type"
+  when (retTyType /= PTCOMPOSITE) $ throw400 NotSupported "function does not return a \"COMPOSITE\" type"
   -- throw error if function do not returns SETOF
   unless retSet $ throw400 NotSupported "function does not return a SETOF"
   -- throw error if return type is not a valid table
@@ -95,12 +84,13 @@ mkFunctionInfo qf rawFuncInfo = do
 
   let funcArgsSeq = Seq.fromList funcArgs
       dep = SchemaDependency (SOTable retTable) DRTable
-      retTable = QualifiedObject retSn (TableName retN)
+      retTable = typeToTable returnType
   return $ FunctionInfo qf False funTy funcArgsSeq retTable [dep] descM
   where
-    RawFuncInfo hasVariadic funTy retSn retN retTyTyp retSet
+    RawFuncInfo hasVariadic funTy rtSN retN retTyType retSet
                 inpArgTyps inpArgNames defArgsNo returnsTab descM
                 = rawFuncInfo
+    returnType = QualifiedPGType rtSN retN retTyType
 
 saveFunctionToCatalog :: QualifiedFunction -> Bool -> Q.TxE QErr ()
 saveFunctionToCatalog (QualifiedObject sn fn) isSystemDefined =
@@ -158,26 +148,31 @@ trackFunctionP2 qf = do
   GS.checkConflictingNode defGCtx funcNameGQL
 
   -- fetch function info
-  functionInfos <- liftTx fetchFuncDets
-  rawfi <- case functionInfos of
-    []      ->
-      throw400 NotExists $ "no such function exists in postgres : " <>> qf
-    [rawfi] -> return rawfi
-    _       ->
-      throw400 NotSupported $
-      "function " <> qf <<> " is overloaded. Overloaded functions are not supported"
+  rawfi <- fetchRawFunctioInfo qf
   trackFunctionP2Setup qf rawfi
   liftTx $ saveFunctionToCatalog qf False
   return successMsg
+
+handleMultipleFunctions :: (QErrM m) => QualifiedFunction -> [a] -> m a
+handleMultipleFunctions qf = \case
+  []      ->
+    throw400 NotExists $ "no such function exists in postgres : " <>> qf
+  [fi] -> return fi
+  _       ->
+    throw400 NotSupported $
+    "function " <> qf <<> " is overloaded. Overloaded functions are not supported"
+
+fetchRawFunctioInfo :: MonadTx m => QualifiedFunction -> m RawFuncInfo
+fetchRawFunctioInfo qf@(QualifiedObject sn fn) = do
+  handleMultipleFunctions qf =<< map (Q.getAltJ . runIdentity) <$> fetchFromDatabase
   where
-    QualifiedObject sn fn = qf
-    fetchFuncDets = map (Q.getAltJ . runIdentity) <$>
+    fetchFromDatabase = liftTx $
       Q.listQE defaultTxErrorHandler [Q.sql|
-            SELECT function_info
-              FROM hdb_catalog.hdb_function_info_agg
-             WHERE function_schema = $1
-               AND function_name = $2
-           |] (sn, fn) True
+           SELECT function_info
+             FROM hdb_catalog.hdb_function_info_agg
+            WHERE function_schema = $1
+              AND function_name = $2
+          |] (sn, fn) True
 
 runTrackFunc
   :: ( QErrM m, CacheRWM m, MonadTx m
