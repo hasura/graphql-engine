@@ -12,6 +12,7 @@ import {
   getGraphiQLHeadersFromLocalStorage,
   parseAuthHeader,
   getDefaultGraphiqlHeaders,
+  getAdminSecret,
 } from './utils';
 
 import {
@@ -83,6 +84,21 @@ class ApiRequest extends Component {
     const handleHeaderInit = () => {
       const graphiqlHeaders =
         getGraphiQLHeadersFromLocalStorage() || getDefaultGraphiqlHeaders();
+
+      // add inactive admin secret header if not already present
+      const adminSecret = getAdminSecret();
+      if (adminSecret) {
+        const headerKeys = graphiqlHeaders.map(h => h.key);
+        if (!headerKeys.includes(ADMIN_SECRET_HEADER_KEY)) {
+          graphiqlHeaders.push({
+            key: ADMIN_SECRET_HEADER_KEY,
+            value: adminSecret,
+            isActive: false,
+            isNewHeader: false,
+            isDisabled: false,
+          });
+        }
+      }
 
       // add an empty placeholder header
       graphiqlHeaders.push({

@@ -107,17 +107,6 @@ export const getDefaultGraphiqlHeaders = () => {
     isDisabled: false,
   });
 
-  const adminSecret = getAdminSecret();
-  if (adminSecret) {
-    headers.push({
-      key: ADMIN_SECRET_HEADER_KEY,
-      value: adminSecret,
-      isActive: true,
-      isNewHeader: false,
-      isDisabled: false,
-    });
-  }
-
   return headers;
 };
 
