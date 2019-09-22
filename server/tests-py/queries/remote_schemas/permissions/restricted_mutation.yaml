@@ -1,0 +1,43 @@
+- description: Simple GraphQL query
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: developer
+  response:
+    errors:
+      - message: "field \"id\" not found in type: 'UserInput'"
+        extensions:
+          code: validation-failed
+          path: $.selectionSet.user
+  query:
+    query: |
+      mutation {
+        createUserFromObj(userInput: {id: 5, username: "random"}) {
+          user {
+            id
+            username
+          }
+        }
+      }
+
+- description: Simple GraphQL mutation
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: developer
+  response:
+    data:
+      createUserFromObj:
+        user:
+          id: 4
+          username: random
+  query:
+    query: |
+      mutation {
+        createUserFromObj(userInput: {username: "random"}) {
+          user {
+            id
+            username
+          }
+        }
+      }

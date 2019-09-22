@@ -461,6 +461,7 @@ class TestRemoteSchemaPermissionsBasic():
     rs_dir = 'queries/remote_schemas/permissions/'
     teardown = {"type": "remove_remote_schema", "args": {"name": "simple"}}
 
+    drop_perms = {"type": "drop_remote_schema_permissions", "args": {"remote_schema": "simple", "role": "user"}}
     @pytest.fixture(autouse=True)
     def transact(self, hge_ctx):
         q = mk_add_remote_q('simple', 'http://localhost:5000/user-graphql')
@@ -480,7 +481,7 @@ class TestRemoteSchemaPermissionsBasic():
         check_query_f(hge_ctx, self.rs_dir + 'basic_success.yaml')
         # make bad query
         check_query_f(hge_ctx, self.rs_dir + 'basic_fail_2.yaml')
-        st_code, resp = hge_ctx.v1q_f(self.rs_dir + 'teardown.yaml')
+        st_code, resp = hge_ctx.v1q_f(self.drop_perms)
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.rs_dir + 'basic_fail.yaml')
 
@@ -488,34 +489,33 @@ class TestRemoteSchemaPermissionsBasic():
                     reason="flag --enable-remote-schema-permissions is not set. Cannot run tests for remote schema permissions")
 class TestRemoteSchemaPermissions(TestGraphqlQueryPermissions):
     rs_dir = 'queries/remote_schemas/permissions/'
-    teardown = {"type": "remove_remote_schema", "args": {"name": "simple"}}
 
     @pytest.fixture(autouse=True, scope='class')
     def transact(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f('queries/graphql_query/permissions/setup.yaml')
-        assert st_code == 200, resp
-        q = mk_add_remote_q('simple', 'http://localhost:5000/user-graphql')
-        st_code, resp = hge_ctx.v1q(q)
         assert st_code == 200, resp
         st_code, resp = hge_ctx.v1q_f(self.rs_dir + 'setup.yaml')
         assert st_code == 200, resp
         yield
         st_code, resp = hge_ctx.v1q_f('queries/graphql_query/permissions/teardown.yaml')
         assert st_code == 200, resp
-        st_code, resp = hge_ctx.v1q(self.teardown)
+        st_code, resp = hge_ctx.v1q_f(self.rs_dir + 'teardown.yaml')
         assert st_code == 200, resp
 
     def test_no_access(self, hge_ctx, transport):
-        pass
+        check_query_f(hge_ctx, self.rs_dir + 'noaccess.yaml')
 
-    def test_restricted_mutation(self, hge_ctx, transport):
-        pass
+    # TODO: Uncomment after remote schema validation in RJ
+    # def test_restricted_mutation(self, hge_ctx, transport):
+    #     check_query_f(hge_ctx, self.rs_dir + 'restricted_mutation.yaml')
 
-    def test_common_role(self, hge_ctx, transport):
-        pass
+    def test_table_role(self, hge_ctx, transport):
+        st_code, resp = hge_ctx.v1q_f(self.rs_dir + 'setup_table.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.rs_dir + 'table_permissions.yaml')
+        st_code, resp = hge_ctx.v1q_f(self.rs_dir + 'teardown_table.yaml')
+        assert st_code == 200, resp
 
-    def test_new_role(self, hge_ctx, transport):
-        pass
 
 
 @pytest.mark.skipif(pytest.config.getoption("--enable-remote-schema-permissions"),
