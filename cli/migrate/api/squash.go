@@ -3,18 +3,24 @@ package api
 import (
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hasura/graphql-engine/cli/migrate"
 	"github.com/hasura/graphql-engine/cli/migrate/cmd"
+	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
 )
 
 type squashCreateRequest struct {
 	Name    string `json:"name"`
 	From    uint64 `json:"from"`
 	version int64
+}
+
+type squashDeleteRequest struct {
+	Versions []int64 `json:"migrations"`
 }
 
 func (s *squashCreateRequest) setDefaults() {
@@ -69,4 +75,34 @@ func SquashCreateAPI(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"version": request.version, "squashed_migrations": versions})
+}
+
+func SquashDeleteAPI(c *gin.Context) {
+	sourcePtr, ok := c.Get("filedir")
+	if !ok {
+		return
+	}
+
+	sourceURL := sourcePtr.(*url.URL)
+
+	var request squashDeleteRequest
+	// Bind Request body to Request struct
+	if c.BindJSON(&request) != nil {
+		c.JSON(500, &Response{Code: "internal_error", Message: "Something went wrong"})
+		return
+	}
+
+	for _, v := range request.Versions {
+		delOptions := mig.CreateOptions{
+			Version:   strconv.FormatInt(v, 10),
+			Directory: sourceURL.Path,
+		}
+		err := delOptions.Delete()
+		if err != nil {
+			c.JSON(500, &Response{Code: "internal_error", Message: "Something went wrong"})
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Migrations deleted"})
 }

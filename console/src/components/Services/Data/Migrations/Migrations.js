@@ -1,16 +1,28 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
-
+import Table from 'react-bootstrap/lib/Table';
 import Toggle from 'react-toggle';
-import 'react-toggle/style.css';
-import '../../../Common/ReactToggle/ReactToggleOverrides.css';
 
+import 'react-toggle/style.css';
+
+import Button from '../../../Common/Button/Button';
+import '../../../Common/ReactToggle/ReactToggleOverrides.css';
 import { updateMigrationModeStatus } from '../../../Main/Actions';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import fetchMigrationStatus, { squashMigrations } from './Actions';
 
 const Migrations = ({ dispatch, migrationMode }) => {
   const styles = require('./Migrations.scss');
+
+  const [migrationStatus, setMigrationStatus] = useState({
+    migrations: [],
+    status: {},
+  });
+
+  useEffect(() => {
+    dispatch(fetchMigrationStatus(setMigrationStatus));
+  }, []);
 
   const handleMigrationModeToggle = () => {
     const isOk = getConfirmation();
@@ -41,6 +53,73 @@ const Migrations = ({ dispatch, migrationMode }) => {
     );
   };
 
+  const getMigrationStatusSection = () => {
+    const _rows = [];
+
+    migrationStatus.migrations.forEach((migration, rowIndex) => {
+      const getActionButtons = () => {
+        const getActionButton = (type, icon, title, handleClick) => {
+          return (
+            <Button
+              className={styles.add_mar_right_small}
+              color="white"
+              size="xs"
+              onClick={handleClick}
+              title={title}
+              data-test={`row-${type}-button-${rowIndex}`}
+            >
+              {icon}
+            </Button>
+          );
+        };
+
+        const getSquashButton = () => {
+          const squashIcon = <i className="fa fa-compress" />;
+
+          const handleSquashClick = () => {
+            dispatch(squashMigrations(migration, setMigrationStatus));
+          };
+
+          const squashTitle = 'Squash Migrations';
+
+          return getActionButton(
+            'squash',
+            squashIcon,
+            squashTitle,
+            handleSquashClick
+          );
+        };
+
+        const squashButton = getSquashButton();
+        return (
+          <div key={rowIndex} className={styles.tableCellCenterAligned}>
+            {squashButton}
+          </div>
+        );
+      };
+
+      _rows.push(
+        <tr>
+          <td>{migration}</td>
+          <td>
+            {migrationStatus.status[migration] &&
+            migrationStatus.status[migration].source_status
+              ? 'Present'
+              : 'Not Present'}
+          </td>
+          <td>
+            {migrationStatus.status[migration] &&
+            migrationStatus.status[migration].database_status
+              ? 'Present'
+              : 'Not Present'}
+          </td>
+          <td>{getActionButtons()}</td>
+        </tr>
+      );
+    });
+    return _rows;
+  };
+
   return (
     <div
       className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top}`}
@@ -68,6 +147,25 @@ const Migrations = ({ dispatch, migrationMode }) => {
           </label>
         </div>
       </div>
+      <div className={`${styles.subHeader} ${styles.add_mar_top}`}>
+        <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
+          Migration Status
+        </h2>
+        <div className="clearfix" />
+      </div>
+      <div className={styles.add_mar_top}>
+        <Table striped bordered hover>
+          <thead>
+            <tr>
+              <th>Version</th>
+              <th>Source Status</th>
+              <th>Database Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>{getMigrationStatusSection()}</tbody>
+        </Table>
+      </div>
     </div>
   );
 };
@@ -78,7 +176,6 @@ Migrations.propTypes = {
 };
 
 const mapStateToProps = state => ({
-  ...state.rawSQL,
   migrationMode: state.main.migrationMode,
 });
 

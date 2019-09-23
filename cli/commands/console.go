@@ -196,6 +196,7 @@ func (r *cRouter) setRoutes(migrationDir, metadataFile string, logger *logrus.Lo
 			squashAPIs := migrateAPIs.Group("/squash")
 			{
 				squashAPIs.POST("/create", api.SquashCreateAPI)
+				squashAPIs.POST("/delete", api.SquashDeleteAPI)
 			}
 			migrateAPIs.Any("", api.MigrateAPI)
 		}

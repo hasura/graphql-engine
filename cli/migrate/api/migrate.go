@@ -56,6 +56,12 @@ func MigrateAPI(c *gin.Context) {
 	// Switch on request method
 	switch c.Request.Method {
 	case "GET":
+		// Rescan file system
+		err := t.ReScan()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
+			return
+		}
 		status, err := t.GetStatus()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: "Something went wrong"})
