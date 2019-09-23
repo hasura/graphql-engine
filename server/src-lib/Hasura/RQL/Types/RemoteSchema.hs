@@ -80,7 +80,8 @@ $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''RemoteAllowedFields)
 data RemoteSchemaPermDef
  = RemoteSchemaPermDef
  { rspdAllowedObjects      :: [RemoteAllowedFields]
- , rspdAllowedInputObjects :: [RemoteAllowedFields]
+ -- TODO: Uncomment after remote schema validation in RJ
+ -- , rspdAllowedInputObjects :: [RemoteAllowedFields]
  } deriving (Show, Eq, Lift)
 
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''RemoteSchemaPermDef)
@@ -88,8 +89,10 @@ $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''RemoteSchemaPermDef)
 instance J.FromJSON RemoteSchemaPermDef where
   parseJSON (J.Object o) = do
     allowedObjects <- o J..:? "allowed_objects" J..!= []
-    allowedInputObjects <- o J..:? "allowed_input_objects" J..!= []
-    pure $ RemoteSchemaPermDef allowedObjects allowedInputObjects
+    -- TODO: Uncomment after remote schema validation in RJ
+    -- allowedInputObjects <- o J..:? "allowed_input_objects" J..!= []
+    -- pure $ RemoteSchemaPermDef allowedObjects allowedInputObjects
+    pure $ RemoteSchemaPermDef allowedObjects
   parseJSON _ = fail "expecting an object"
 
 data RemoteSchemaPermissions

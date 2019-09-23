@@ -300,8 +300,8 @@ validateRemoteSchemaPermissions remoteSchemaPerm = do
       updateRemoteGCtxFromTypes newTypes (rscGCtx remoteSchemaCtx)
   where
     assertUniqueTypes RemoteSchemaPermDef {..} =
-      checkDuplicateTypes rspdAllowedObjects >>
-      checkDuplicateTypes rspdAllowedInputObjects
+      checkDuplicateTypes rspdAllowedObjects
+      -- checkDuplicateTypes rspdAllowedInputObjects
 
 checkDuplicateTypes :: (QErrM m) => [RemoteAllowedFields] -> m ()
 checkDuplicateTypes typePerms = do
@@ -319,7 +319,9 @@ validateTypes permDef allTypes = do
   eitherTypeMap <-
     runValidateT $ do
       modTypeMap <- validateObjectTypes allTypes (rspdAllowedObjects permDef)
-      validateInputObjectTypes modTypeMap (rspdAllowedInputObjects permDef)
+      pure modTypeMap
+      -- TODO: Uncomment after remote schema validation in RJ
+      -- validateInputObjectTypes modTypeMap (rspdAllowedInputObjects permDef)
   case eitherTypeMap of
     Left errs     -> throw400 Unexpected (mconcat errs)
     Right typeMap -> pure typeMap
@@ -345,12 +347,12 @@ validateTypes permDef allTypes = do
                      VT.TIObj objTy {VT._otiFields = Map.fromList newFields}
              otherType -> pure otherType)
         initTypes
-    validateInputObjectTypes ::
+    _validateInputObjectTypes ::
          (MonadValidate [Text] m)
       => VT.TypeMap
       -> [RemoteAllowedFields]
       -> m VT.TypeMap
-    validateInputObjectTypes initTypes allowedFields = do
+    _validateInputObjectTypes initTypes allowedFields = do
       Map.traverseWithKey
         (\namedType typeInfo ->
            case typeInfo of
