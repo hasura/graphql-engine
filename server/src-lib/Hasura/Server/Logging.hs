@@ -14,29 +14,30 @@ module Hasura.Server.Logging
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.Bits             (shift, (.&.))
-import           Data.ByteString.Char8 (ByteString)
-import           Data.Int              (Int64)
-import           Data.List             (find)
+import           Data.Bits                 (shift, (.&.))
+import           Data.ByteString.Char8     (ByteString)
+import           Data.Int                  (Int64)
+import           Data.List                 (find)
 import           Data.Time.Clock
-import           Data.Word             (Word32)
-import           Network.Socket        (SockAddr (..))
-import           System.ByteOrder      (ByteOrder (..), byteOrder)
-import           Text.Printf           (printf)
+import           Data.Word                 (Word32)
+import           Network.Socket            (SockAddr (..))
+import           System.ByteOrder          (ByteOrder (..), byteOrder)
+import           Text.Printf               (printf)
 
-import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.Lazy  as BL
-import qualified Data.Text             as T
-import qualified Network.HTTP.Types    as N
-import qualified Network.Wai           as Wai
+import qualified Data.ByteString.Char8     as BS
+import qualified Data.ByteString.Lazy      as BL
+import qualified Data.Text                 as T
+import qualified Network.HTTP.Types        as N
+import qualified Network.Wai               as Wai
 
 import           Hasura.HTTP
-import           Hasura.Logging        (EngineLogType (..))
+import           Hasura.Logging            (EngineLogType (..))
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import           Hasura.Server.Compression
 import           Hasura.Server.Utils
 
-import qualified Hasura.Logging        as L
+import qualified Hasura.Logging            as L
 
 data StartupLog
   = StartupLog
@@ -124,15 +125,17 @@ data HttpInfoLog
   , hlSource      :: !T.Text
   , hlPath        :: !T.Text
   , hlHttpVersion :: !N.HttpVersion
+  , hlCompression :: !(Maybe CompressionType)
   } deriving (Show, Eq)
 
 instance ToJSON HttpInfoLog where
-  toJSON (HttpInfoLog st met src path hv) =
+  toJSON (HttpInfoLog st met src path hv compressTypeM) =
     object [ "status" .= N.statusCode st
            , "method" .= met
            , "ip" .= src
            , "url" .= path
            , "http_version" .= show hv
+           , "content_encoding" .= (compressionTypeToTxt <$> compressTypeM)
            ]
 
 -- | Information about a GraphQL/Hasura metadata operation over HTTP
@@ -170,14 +173,16 @@ mkHttpAccessLog
   -> Wai.Request
   -> BL.ByteString
   -> Maybe (UTCTime, UTCTime)
+  -> Maybe CompressionType
   -> HttpLog
-mkHttpAccessLog userInfoM reqId req res mTimeT =
+mkHttpAccessLog userInfoM reqId req res mTimeT compressTypeM =
   let http = HttpInfoLog
              { hlStatus       = status
              , hlMethod       = bsToTxt $ Wai.requestMethod req
              , hlSource       = bsToTxt $ getSourceFromFallback req
              , hlPath         = bsToTxt $ Wai.rawPathInfo req
              , hlHttpVersion  = Wai.httpVersion req
+             , hlCompression  = compressTypeM
              }
       op = OperationLog
            { olRequestId    = reqId
@@ -200,14 +205,16 @@ mkHttpErrorLog
   -> QErr
   -> Maybe Value
   -> Maybe (UTCTime, UTCTime)
+  -> Maybe CompressionType
   -> HttpLog
-mkHttpErrorLog userInfoM reqId req err query mTimeT =
+mkHttpErrorLog userInfoM reqId req err query mTimeT compressTypeM =
   let http = HttpInfoLog
              { hlStatus       = status
              , hlMethod       = bsToTxt $ Wai.requestMethod req
              , hlSource       = bsToTxt $ getSourceFromFallback req
              , hlPath         = bsToTxt $ Wai.rawPathInfo req
              , hlHttpVersion  = Wai.httpVersion req
+             , hlCompression  = compressTypeM
              }
       op = OperationLog
            { olRequestId    = reqId

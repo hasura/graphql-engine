@@ -433,6 +433,9 @@ serveCmdFooter =
       , [ "# Start GraphQL Engine with telemetry enabled/disabled"
         , "graphql-engine --database-url <database-url> serve --enable-telemetry true|false"
         ]
+      , [ "# Start GraphQL Engine with HTTP compression enabled for '/v1/query' and '/v1/graphql' endpoints"
+        , "graphql-engine --database-url <database-url> serve --enable-compression"
+        ]
       ]
 
     envVarDoc = mkEnvVarDoc $ envVars <> eventEnvs
@@ -549,7 +552,7 @@ corsDomainEnv =
 enableConsoleEnv :: (String, String)
 enableConsoleEnv =
   ( "HASURA_GRAPHQL_ENABLE_CONSOLE"
-  , "Enable API Console"
+  , "Enable API Console (default: false)"
   )
 
 enableTelemetryEnv :: (String, String)

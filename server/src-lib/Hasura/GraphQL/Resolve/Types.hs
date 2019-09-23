@@ -48,6 +48,7 @@ data SelOpCtx
   = SelOpCtx
   { _socTable   :: !QualifiedTable
   , _socHeaders :: ![T.Text]
+  , _socAllCols :: !PGColGNameMap
   , _socFilter  :: !AnnBoolExpPartialSQL
   , _socLimit   :: !(Maybe Int)
   } deriving (Show, Eq)
@@ -64,6 +65,7 @@ data FuncQOpCtx
   = FuncQOpCtx
   { _fqocTable    :: !QualifiedTable
   , _fqocHeaders  :: ![T.Text]
+  , _fqocAllCols  :: !PGColGNameMap
   , _fqocFilter   :: !AnnBoolExpPartialSQL
   , _fqocLimit    :: !(Maybe Int)
   , _fqocFunction :: !QualifiedFunction
@@ -74,9 +76,9 @@ data UpdOpCtx
   = UpdOpCtx
   { _uocTable      :: !QualifiedTable
   , _uocHeaders    :: ![T.Text]
+  , _uocAllCols    :: !PGColGNameMap
   , _uocFilter     :: !AnnBoolExpPartialSQL
   , _uocPresetCols :: !PreSetColsPartial
-  , _uocAllCols    :: ![PGColumnInfo]
   } deriving (Show, Eq)
 
 data DelOpCtx
@@ -98,15 +100,28 @@ data OpCtx
   | OCDelete !DelOpCtx
   deriving (Show, Eq)
 
-type FieldMap
-  = Map.HashMap (G.NamedType, G.Name)
-    (Either PGColumnInfo (RelInfo, Bool, AnnBoolExpPartialSQL, Maybe Int))
+-- (custom name | generated name) -> PG column info
+-- used in resolvers
+type PGColGNameMap = Map.HashMap G.Name PGColumnInfo
+
+data RelationshipField
+  = RelationshipField
+  { _rfInfo       :: !RelInfo
+  , _rfIsAgg      :: !Bool
+  , _rfCols       :: !PGColGNameMap
+  , _rfPermFilter :: !AnnBoolExpPartialSQL
+  , _rfPermLimit  :: !(Maybe Int)
+  } deriving (Show, Eq)
+
+type FieldMap =
+  Map.HashMap (G.NamedType, G.Name)
+  (Either PGColumnInfo RelationshipField)
 
 -- order by context
 data OrdByItem
   = OBIPGCol !PGColumnInfo
   | OBIRel !RelInfo !AnnBoolExpPartialSQL
-  | OBIAgg !RelInfo !AnnBoolExpPartialSQL
+  | OBIAgg !RelInfo !PGColGNameMap !AnnBoolExpPartialSQL
   deriving (Show, Eq)
 
 type OrdByItemMap = Map.HashMap G.Name OrdByItem
@@ -135,7 +150,7 @@ data UpdPermForIns
 data InsCtx
   = InsCtx
   { icView      :: !QualifiedTable
-  , icAllCols   :: ![PGColumnInfo]
+  , icAllCols   :: !PGColGNameMap
   , icSet       :: !PreSetColsPartial
   , icRelations :: !RelationInfoMap
   , icUpdPerm   :: !(Maybe UpdPermForIns)

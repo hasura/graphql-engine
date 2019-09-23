@@ -7,6 +7,8 @@ module Hasura.RQL.Types.SchemaCache
        , initSchemaCacheVer
        , incSchemaCacheVer
        , emptySchemaCache
+       , TableConfig(..)
+       , emptyTableConfig
 
        , TableCache
        , modTableCache
@@ -25,10 +27,12 @@ module Hasura.RQL.Types.SchemaCache
        , tiViewInfo
        , tiEventTriggerInfoMap
        , tiEnumValues
+       , tiCustomConfig
 
        , TableConstraint(..)
        , ConstraintType(..)
        , ViewInfo(..)
+       , checkForFieldConflict
        , isMutable
        , mutableView
        , isUniqueOrPrimary
@@ -132,6 +136,7 @@ import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Language.Haskell.TH.Syntax        (Lift)
 
 import qualified Data.HashMap.Strict               as M
 import qualified Data.HashSet                      as HS
@@ -327,6 +332,23 @@ mutableView qt f mVI operation =
   unless (isMutable f mVI) $ throw400 NotSupported $
   "view " <> qt <<> " is not " <> operation
 
+data TableConfig
+  = TableConfig
+  { _tcCustomRootFields  :: !GC.TableCustomRootFields
+  , _tcCustomColumnNames :: !CustomColumnNames
+  } deriving (Show, Eq, Lift)
+$(deriveToJSON (aesonDrop 3 snakeCase) ''TableConfig)
+
+emptyTableConfig :: TableConfig
+emptyTableConfig =
+  TableConfig GC.emptyCustomRootFields M.empty
+
+instance FromJSON TableConfig where
+  parseJSON = withObject "TableConfig" $ \obj ->
+    TableConfig
+    <$> obj .:? "custom_root_fields" .!= GC.emptyCustomRootFields
+    <*> obj .:? "custom_column_names" .!= M.empty
+
 data TableInfo columnInfo
   = TableInfo
   { _tiName                  :: !QualifiedTable
@@ -339,9 +361,24 @@ data TableInfo columnInfo
   , _tiViewInfo              :: !(Maybe ViewInfo)
   , _tiEventTriggerInfoMap   :: !EventTriggerInfoMap
   , _tiEnumValues            :: !(Maybe EnumValues)
+  , _tiCustomConfig          :: !TableConfig
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
 $(makeLenses ''TableInfo)
+
+checkForFieldConflict
+  :: (MonadError QErr m)
+  => TableInfo a
+  -> FieldName
+  -> m ()
+checkForFieldConflict tabInfo f =
+  case M.lookup f (_tiFieldInfoMap tabInfo) of
+    Just _ -> throw400 AlreadyExists $ mconcat
+      [ "column/relationship " <>> f
+      , " of table " <>> _tiName tabInfo
+      , " already exists"
+      ]
+    Nothing -> return ()
 
 data FunctionType
   = FTVOLATILE
@@ -401,13 +438,6 @@ type DepMap = M.HashMap SchemaObjId (HS.HashSet SchemaDependency)
 addToDepMap :: SchemaObjId -> [SchemaDependency] -> DepMap -> DepMap
 addToDepMap schObj deps =
   M.insert schObj (HS.fromList deps)
-
-  -- M.unionWith HS.union objDepMap
-  -- where
-  --   objDepMap = M.fromList
-  --     [ (dep, HS.singleton $ SchemaDependency schObj reason)
-  --     | (SchemaDependency dep reason) <- deps
-  --     ]
 
 removeFromDepMap :: SchemaObjId -> DepMap -> DepMap
 removeFromDepMap =
