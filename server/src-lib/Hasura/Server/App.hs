@@ -1,3 +1,5 @@
+-- test comment
+
 {-# LANGUAGE CPP        #-}
 {-# LANGUAGE DataKinds  #-}
 {-# LANGUAGE RankNTypes #-}
