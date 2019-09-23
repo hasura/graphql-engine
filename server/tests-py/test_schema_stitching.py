@@ -474,15 +474,17 @@ class TestRemoteSchemaPermissionsBasic():
         check_query_f(hge_ctx, self.rs_dir + 'basic_fail.yaml')
 
     def test_basic(self, hge_ctx):
-        st_code, resp = hge_ctx.v1q_f(self.rs_dir + 'setup_perm.yaml')
-        assert st_code == 200, resp
-        # make good query
-        check_query_f(hge_ctx, self.rs_dir + 'basic_success.yaml')
-        # make bad query
-        check_query_f(hge_ctx, self.rs_dir + 'basic_fail_2.yaml')
-        st_code, resp = hge_ctx.v1q_f(self.rs_dir + 'teardown_perm.yaml')
-        assert st_code == 200, resp
-        check_query_f(hge_ctx, self.rs_dir + 'basic_fail.yaml')
+        try:
+            st_code, resp = hge_ctx.v1q_f(self.rs_dir + 'setup_perm.yaml')
+            assert st_code == 200, resp
+            # make good query
+            check_query_f(hge_ctx, self.rs_dir + 'basic_success.yaml')
+            # make bad query
+            check_query_f(hge_ctx, self.rs_dir + 'basic_fail_2.yaml')
+        finally:
+            st_code, resp = hge_ctx.v1q_f(self.rs_dir + 'teardown_perm.yaml')
+            assert st_code == 200, resp
+            check_query_f(hge_ctx, self.rs_dir + 'basic_fail.yaml')
 
 @pytest.mark.skipif(not pytest.config.getoption("--enable-remote-schema-permissions"),
                     reason="flag --enable-remote-schema-permissions is not set. Cannot run tests for remote schema permissions")
@@ -509,13 +511,13 @@ class TestRemoteSchemaPermissions(TestGraphqlQueryPermissions):
     #     check_query_f(hge_ctx, self.rs_dir + 'restricted_mutation.yaml')
 
     def test_table_role(self, hge_ctx, transport):
-        st_code, resp = hge_ctx.v1q_f(self.rs_dir + 'setup_table.yaml')
-        assert st_code == 200, resp
-        check_query_f(hge_ctx, self.rs_dir + 'table_permissions.yaml')
-        st_code, resp = hge_ctx.v1q_f(self.rs_dir + 'teardown_table.yaml')
-        assert st_code == 200, resp
-
-
+        try:
+            st_code, resp = hge_ctx.v1q_f(self.rs_dir + 'setup_table.yaml')
+            assert st_code == 200, resp
+            check_query_f(hge_ctx, self.rs_dir + 'table_permissions.yaml')
+        finally:
+            st_code, resp = hge_ctx.v1q_f(self.rs_dir + 'teardown_table.yaml')
+            assert st_code == 200, resp
 
 @pytest.mark.skipif(pytest.config.getoption("--enable-remote-schema-permissions"),
                     reason="flag --enable-remote-schema-permissions is set. Cannot run tests for remote schema permissions when disabled")
@@ -544,7 +546,6 @@ class TestRemoteSchemaPermissionsDisabled:
 
     def test_no_roles(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + 'basic_success.yaml')
-
 
 
 def _map(f, l):
