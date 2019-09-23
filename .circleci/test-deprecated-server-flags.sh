@@ -61,7 +61,7 @@ run_hge_with_flags() {
     fail_if_port_busy 8080
     set -x
     stdbuf -o0 "$GRAPHQL_ENGINE" serve $*  > "$OUTPUT_FOLDER/graphql-engine.log" & HGE_PID=$!
-    sleep 2
+    sleep 4
     set +x
     wait_for_port 8080
 }
