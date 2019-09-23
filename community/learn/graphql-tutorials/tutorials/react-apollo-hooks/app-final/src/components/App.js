@@ -10,6 +10,8 @@ import { WebSocketLink } from "apollo-link-ws";
 import { InMemoryCache } from "apollo-cache-inmemory";
 import { ApolloProvider } from "@apollo/react-hooks";
 
+import { useAuth0 } from "./Auth/react-auth0-spa";
+
 const createApolloClient = authToken => {
   return new ApolloClient({
     link: new WebSocketLink({
@@ -27,12 +29,16 @@ const createApolloClient = authToken => {
   });
 };
 
-const App = ({ auth }) => {
-  const client = createApolloClient(auth.idToken);
+const App = ({ idToken }) => {
+  const { loading, logout } = useAuth0();
+  if (loading || !idToken) {
+    return <div>Loading...</div>;
+  }
+  const client = createApolloClient(idToken);
   return (
     <ApolloProvider client={client}>
       <div>
-        <Header logoutHandler={auth.logout} />
+        <Header logoutHandler={logout} />
         <div className="container-fluid p-left-right-0">
           <div className="col-xs-12 col-md-9 p-left-right-0">
             <div className="col-xs-12 col-md-6 sliderMenu p-30">

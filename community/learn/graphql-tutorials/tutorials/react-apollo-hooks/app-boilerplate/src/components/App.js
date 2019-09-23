@@ -5,10 +5,16 @@ import TodoPrivateWrapper from "./Todo/TodoPrivateWrapper";
 import TodoPublicWrapper from "./Todo/TodoPublicWrapper";
 import OnlineUsersWrapper from "./OnlineUsers/OnlineUsersWrapper";
 
-const App = ({ auth }) => {
+import { useAuth0 } from "./Auth/react-auth0-spa";
+
+const App = ({ idToken }) => {
+  const { loading, logout } = useAuth0();
+  if (loading) {
+    return <div>Loading...</div>;
+  }
   return (
     <div>
-      <Header logoutHandler={auth.logout} />
+      <Header logoutHandler={logout} />
       <div className="container-fluid p-left-right-0">
         <div className="col-xs-12 col-md-9 p-left-right-0">
           <div className="col-xs-12 col-md-6 sliderMenu p-30">

@@ -5,9 +5,6 @@ metaDescription: "You will learn how to configure Apollo Client in React by inst
 ---
 
 import GithubLink from "../src/GithubLink.js";
-import YoutubeEmbed from "../src/YoutubeEmbed.js";
-
-<YoutubeEmbed link="https://www.youtube.com/embed/m3IAzTwoUUM" />
 
 Apollo gives a neat abstraction layer and an interface to your GraphQL server. You don't need to worry about constructing your queries with request body, headers and options, that you might have done with `axios` or `fetch` say. You can directly write queries and mutations in GraphQL and they will automatically be sent to your server via your apollo client instance.
 
@@ -36,10 +33,16 @@ import OnlineUsersWrapper from './OnlineUsers/OnlineUsersWrapper';
 + import { HttpLink } from 'apollo-link-http';
 + import { ApolloProvider } from '@apollo/react-hooks';
 
-const App = ({auth}) => {
+import { useAuth0 } from "./Auth/react-auth0-spa";
+
+const App = ({ idToken }) => {
+  const { loading, logout } = useAuth0();
+  if (loading) {
+    return <div>Loading...</div>;
+  }
   return (
     <div>
-      <Header logoutHandler={auth.logout} />
+      <Header logoutHandler={logout} />
       <div className="container-fluid p-left-right-0">
         <div className="col-xs-12 col-md-9 p-left-right-0">
           <div className="col-xs-12 col-md-6 sliderMenu p-30">
@@ -85,8 +88,12 @@ import { ApolloProvider } from '@apollo/react-hooks';
 Create the apollo client inside `App` and pass the client prop to `<ApolloProvider>` component.
 
 ```javascript
-const App = ({auth}) => {
-+  const client = createApolloClient(auth.idToken);
+const App = ({ idToken }) => {
+  const { loading, logout } = useAuth0();
+  if (loading) {
+    return <div>Loading...</div>;
+  }
++  const client = createApolloClient(idToken);
    return (
 +    <ApolloProvider client={client}>
        <div>
