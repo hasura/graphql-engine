@@ -196,30 +196,26 @@ stripValue remoteRelationshipName types gtype value = do
     G.VBoolean {} -> pure Nothing
     G.VNull {} -> pure Nothing
     G.VEnum {} -> pure Nothing
-    G.VList (G.ListValueG values) ->
-      case values of
-        []       -> pure Nothing
-        [gvalue] -> stripList remoteRelationshipName types gtype gvalue
-        _        -> lift (Left UnsupportedMultipleElementLists)
+    G.VList {} -> pure Nothing
     G.VObject (G.unObjectValue -> keypairs) ->
       fmap Just (stripObject remoteRelationshipName types gtype keypairs)
 
 -- | Produce a new type for the list, or strip it entirely.
-stripList ::
-     RemoteRelationship
-  -> HM.HashMap G.NamedType TypeInfo
-  -> G.GType
-  -> G.Value
-  -> StateT (HM.HashMap G.NamedType TypeInfo) (Either ValidationError) (Maybe G.GType)
-stripList remoteRelationshipName types originalOuterGType value =
-  case originalOuterGType of
-    G.TypeList nullability (G.ListType innerGType) -> do
-      maybeNewInnerGType <- stripValue remoteRelationshipName types innerGType value
-      pure
-        (fmap
-           (\newGType -> G.TypeList nullability (G.ListType newGType))
-           maybeNewInnerGType)
-    _ -> lift (Left (InvalidGTypeForStripping originalOuterGType))
+-- stripList ::
+--      RemoteRelationship
+--   -> HM.HashMap G.NamedType TypeInfo
+--   -> G.GType
+--   -> G.Value
+--   -> StateT (HM.HashMap G.NamedType TypeInfo) (Either ValidationError) (Maybe G.GType)
+-- stripList remoteRelationshipName types originalOuterGType value =
+--   case originalOuterGType of
+--     G.TypeList nullability (G.ListType innerGType) -> do
+--       maybeNewInnerGType <- stripValue remoteRelationshipName types innerGType value
+--       pure
+--         (fmap
+--            (\newGType -> G.TypeList nullability (G.ListType newGType))
+--            maybeNewInnerGType)
+--     _ -> lift (Left (InvalidGTypeForStripping originalOuterGType))
 
 -- | Produce a new type for the given InpValInfo, modified by
 -- 'stripInMap'. Objects can't be deleted entirely, just keys of an
@@ -331,16 +327,12 @@ validateType permittedVariables value expectedGType types =
     G.VString {} -> assertType (G.toGT $ mkScalarTy PGText) expectedGType
     v@(G.VEnum _) -> Failure (pure (UnsupportedArgumentType v))
     G.VList (G.unListValue -> values) -> do
-      case values of
-        []  -> pure ()
-        [_] -> pure ()
-        _   -> Failure (pure UnsupportedMultipleElementLists)
       (assertListType expectedGType)
       (flip
          traverse_
          values
          (\val ->
-            validateType permittedVariables val (unwrapTy expectedGType) types))
+            validateType permittedVariables val (peelListType expectedGType) types))
       pure ()
     G.VObject (G.unObjectValue -> values) ->
       flip
@@ -373,7 +365,7 @@ assertType actualType expectedType = do
      (Failure (pure $ ExpectedTypeButGot expectedType actualType)))
   -- if list type then check over unwrapped type, else check base types
   if isListType actualType
-    then assertType (unwrapTy actualType) (unwrapTy expectedType)
+    then assertType (peelListType actualType) (peelListType expectedType)
     else (when
             (getBaseTy actualType /= getBaseTy expectedType)
             (Failure (pure $ ExpectedTypeButGot expectedType actualType)))
@@ -405,8 +397,8 @@ isListType =
     G.TypeNamed {} -> False
     G.TypeList {} -> True
 
-unwrapTy :: G.GType -> G.GType
-unwrapTy =
+peelListType :: G.GType -> G.GType
+peelListType =
   \case
     G.TypeList _ lt -> G.unListType lt
     nt -> nt
