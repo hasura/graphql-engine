@@ -18,3 +18,11 @@ let getClassName = (className, customStyles) => {
     }
   }
 };
+
+let fromOptionString = (optionVal) => switch(optionVal) {
+  | Some(value) => value
+  | None => ""
+};
+
+let isUndefined: 'a => bool = (value) => [%raw "value === undefined"];
+let isNull: 'a => bool = (value) => [%raw "value === null"];

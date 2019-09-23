@@ -2,99 +2,88 @@
 open ModifyActions;
 open CommonUtils;
 
+// TODO typed dispatch
+
 [@react.component]
 let make = (
   ~tableName,
-  ~select,
-  ~selectByPk,
-  ~selectAgg,
-  ~insert,
-  ~update,
-  ~delete,
+  ~schemaName,
   ~dispatch,
-  ~existingAliases: Js.Dict.t(string)
+  ~existingAliases,
+  ~existingColNames,
+  ~newAliases,
+  ~save
 ) => {
 
   let onChange = (field, alias) => {
     dispatch(modifyRootFields(field, alias));
   };
 
-  let collapsedContent = () => {
-
-    let getRow = (label, property) => {
-
-      let aliasValue = switch(Js.Dict.get(existingAliases, property)) {
-        | Some(value) => value 
-        | None => ""
-      };
-
-      <div className={"row " ++ getClassName("add_mar_bottom_mid", None)}>
-        <div className="col-md-3">
-          <b>{ReasonReact.string(label)}</b>
-        </div>
-        <div className="col-md-3">
-          <input
-            value={aliasValue}
-            disabled=true
-            placeholder={"unset"}
-            readOnly=true
-            className={"form-control"}
-          />
-        </div>
-      </div>
-    };
-
-    <div>
-      {getRow("Select", "select")}
-      {getRow("Select by PK", "select_by_pk")}
-      {getRow("Select Aggregate", "select_aggregate")}
-      {getRow("Insert", "insert")}
-      {getRow("Update", "update")}
-      {getRow("Delete", "delete")}
-    </div>
-  };
-
-  let expandedContent = () => {
+  let content = (cRootFieldAliases, disabled) => {
     <TableAlias
-      tableName={tableName}
-      select={select}
+      select={cRootFieldAliases##select}
       selectOnChange={
         (e) => {
           onChange("select", ReactEvent.Form.target(e)##value);
         }
       }
-      selectByPk={selectByPk}
+      selectByPk={cRootFieldAliases##select_by_pk}
       selectByPkOnChange={
         (e) => {
           onChange("select_by_pk", ReactEvent.Form.target(e)##value);
         }
       }
-      selectAgg={selectAgg}
+      selectAgg={cRootFieldAliases##select_aggregate}
       selectAggOnChange={
         (e) => {
           onChange("select_aggregate", ReactEvent.Form.target(e)##value);
         }
       }
-      insert={insert}
+      insert={cRootFieldAliases##insert}
       insertOnChange={
         (e) => {
           onChange("insert", ReactEvent.Form.target(e)##value);
         }
       }
-      update={update}
+      update={cRootFieldAliases##update}
       updateOnChange={
         (e) => {
           onChange("update", ReactEvent.Form.target(e)##value);
         }
       }
-      delete={delete}
+      delete={cRootFieldAliases##delete}
       deleteOnChange={
         (e) => {
           onChange("delete", ReactEvent.Form.target(e)##value);
         }
       }
       expanded={true}
+      disabled={disabled}
     />
+  };
+
+  let editorExpanded = () => content(newAliases, false);
+  let editorCollapsed = () => content(existingAliases, true);
+
+  let expandCallback = () => {
+    onChange("select", existingAliases##select);
+    onChange("select_by_pk", existingAliases##select_by_pk);
+    onChange("select_aggregate", existingAliases##select_aggregate);
+    onChange("insert", existingAliases##insert);
+    onChange("update", existingAliases##update);
+    onChange("delete", existingAliases##delete);
+  };
+
+  let saveFunc = (toggle) => {
+    let (upQueries, downQueries) = generateAliasingQuery(
+      newAliases,
+      existingColNames,
+      existingAliases,
+      existingColNames,
+      tableName,
+      schemaName
+    );
+    save(upQueries, downQueries, toggle);
   };
 
   <div>
@@ -102,8 +91,10 @@ let make = (
       isCollapsable={true}
       property="root-field-alias"
       service="modify-table"
-      editorExpanded=expandedContent
-      editorCollapsed=collapsedContent
+      editorExpanded
+      editorCollapsed
+      expandCallback
+      saveFunc
     />
   </div>
 

@@ -33,7 +33,6 @@ let make = (
 
   <div>
     <TableAlias
-      tableName={tableName}
       select={select}
       selectOnChange={
         (e) => {
@@ -71,6 +70,7 @@ let make = (
         }
       }
       expanded=false
+      disabled=false
     />
   </div>
 

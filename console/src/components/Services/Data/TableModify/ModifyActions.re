@@ -14,3 +14,34 @@ let modifyRootFields = (field, alias) => {
     "alias": alias
   }
 };
+
+let generateAliasingQuery = (
+  newRootFields,
+  newColumnNames,
+  oldRootFields,
+  oldColumnNames,
+  tableName,
+  schemaName
+) => {
+
+  let generateQuery = (cRootFields, cColumnNames) => {
+    {
+      "type": "set_table_custom_fields",
+      "version": 2,
+      "args": {
+        "table": {
+          "name": tableName,
+          "schema": schemaName
+        },
+        "custom_root_fields": cRootFields,
+        "custom_column_names": cColumnNames
+      }
+    }
+  };
+
+  let upQuery = [| generateQuery(newRootFields, newColumnNames) |];
+  let downQuery = [| generateQuery(oldRootFields, oldColumnNames) |];
+
+  (upQuery, downQuery);
+
+};

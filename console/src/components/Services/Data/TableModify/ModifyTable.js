@@ -13,7 +13,8 @@ import {
   RESET,
   setUniqueKeys,
   toggleTableAsEnum,
-  SUPPORT_ALIASING
+  SUPPORT_ALIASING,
+  saveTableRootFields,
 } from '../TableModify/ModifyActions';
 import {
   setTable,
@@ -66,7 +67,7 @@ class ModifyTable extends React.Component {
       columnDefaultFunctions,
       schemaList,
       tableEnum,
-      aliasEdit
+      aliasEdit,
     } = this.props;
 
     const dataTypeIndexMap = getAllDataTypeMap(dataTypes);
@@ -139,17 +140,28 @@ class ModifyTable extends React.Component {
 
     const getRootFieldAliasesSection = () => {
       if (!SUPPORT_ALIASING) return null;
+      const tableAliasEdit = {
+        select: aliasEdit.select || '',
+        select_by_pk: aliasEdit.select_by_pk || '',
+        select_aggregate: aliasEdit.select_aggregate || '',
+        insert: aliasEdit.insert || '',
+        update: aliasEdit.update || '',
+        delete: aliasEdit.delete || '',
+      };
+
+      const save = (upQueries, downQueries, successCb) => {
+        dispatch(saveTableRootFields(upQueries, downQueries, successCb));
+      };
+
       return (
         <AliasEditor
           tableName={tableName}
+          schemaName={currentSchema}
+          newAliases={tableAliasEdit}
           existingAliases={tableSchema.configuration.custom_root_fields}
+          existingColNames={tableSchema.configuration.custom_column_names}
           dispatch={dispatch}
-          select={aliasEdit.select || ''}
-          selectByPk={aliasEdit.select_by_pk || ''}
-          selectAgg={aliasEdit.select_aggregate || ''}
-          insert={aliasEdit.insert || ''}
-          update={aliasEdit.update || ''}
-          delete={aliasEdit.delete || ''}
+          save={save}
         />
       );
     };

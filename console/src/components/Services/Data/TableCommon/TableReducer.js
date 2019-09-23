@@ -26,6 +26,7 @@ import {
   TOGGLE_ENUM_SUCCESS,
   TOGGLE_ENUM_FAILURE,
 } from '../TableModify/ModifyActions';
+import { _MODIFY_ROOT_FIELD_ALIASES } from '../TableModify/ModifyActions.bs';
 
 // TABLE RELATIONSHIPS
 
@@ -609,6 +610,14 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         ...modifyState,
         tableEnum: {
           loading: false,
+        },
+      };
+    case _MODIFY_ROOT_FIELD_ALIASES:
+      return {
+        ...modifyState,
+        aliasEdit: {
+          ...modifyState.aliasEdit,
+          [action.field]: action.alias.trim(),
         },
       };
     default:

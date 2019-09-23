@@ -134,6 +134,43 @@ const resetPrimaryKeys = () => ({
   type: RESET_PRIMARY_KEY,
 });
 
+export const saveTableRootFields = (
+  upQueries,
+  downQueries,
+  successCb,
+  failuerCb
+) => (dispatch, getState) => {
+  const { currentTable, currentSchema } = getState().tables;
+
+  const migrationName = `set_custom_root_fields_${currentSchema}.${currentTable}`;
+  const requestMsg = 'Setting GraphQL aliases...';
+  const successMsg = 'GraphQL Aliases set successfully';
+  const errorMsg = 'Setting GraphQL aliases failed';
+  const customOnSuccess = () => {
+    if (successCb) {
+      successCb();
+    }
+  };
+  const customOnError = err => {
+    if (failuerCb) {
+      failuerCb(err);
+    }
+  };
+
+  makeMigrationCall(
+    dispatch,
+    getState,
+    upQueries,
+    downQueries,
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg
+  );
+};
+
 const savePrimaryKeys = (tableName, schemaName, constraintName) => {
   return (dispatch, getState) => {
     dispatch({ type: SAVE_FOREIGN_KEY });

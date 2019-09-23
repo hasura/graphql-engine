@@ -11,7 +11,6 @@ type action =
 
 [@react.component]
 let make = (
-  ~tableName: string,
   ~select: string,
   ~selectOnChange,
   ~selectByPk: string,
@@ -24,7 +23,8 @@ let make = (
   ~updateOnChange,
   ~delete: string,
   ~deleteOnChange,
-  ~expanded: bool
+  ~expanded: bool,
+  ~disabled: bool
 ) => {
 
   let (state, dispatch) = React.useReducer((curState, action) => switch(action) {
@@ -40,9 +40,11 @@ let make = (
       <div className={"col-md-3"}>
         <input
           type_="text"
-          value=value
+          value={value}
+          placeholder={disabled ? "unset" : ""}
           className="form-control"
           onChange={onChange}
+          disabled={disabled}
         />
       </div>
     </div>
