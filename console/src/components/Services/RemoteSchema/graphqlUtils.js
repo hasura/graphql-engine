@@ -1,11 +1,6 @@
 import { useEffect, useState } from 'react';
 import endpoints from '../../../Endpoints';
-import {
-  buildClientSchema,
-  getIntrospectionQuery,
-  isWrappingType,
-  isObjectType,
-} from 'graphql';
+import { buildClientSchema, isWrappingType, isObjectType } from 'graphql';
 
 // local cache where introspection schema is cached
 let introspectionSchemaCache = {};
@@ -18,8 +13,13 @@ export const clearIntrospectionSchemaCache = remoteSchemaName => {
 };
 
 // get graphql introspection proxy endpoint
-const getProxyEndpoint = remoteSchemaName => {
-  return `${endpoints.graphQLUrl}/remote/${remoteSchemaName}`;
+const getIntrospectionQuery = remoteSchemaName => {
+  return {
+    type: 'introspect_remote_schema',
+    args: {
+      name: remoteSchemaName,
+    },
+  };
 };
 
 // custom hook for introspecting remote schema
@@ -39,12 +39,12 @@ export const useIntrospectionSchema = (remoteSchemaName, headers) => {
     // perform introspection
     setLoading(true);
     setError(null);
-    fetch(getProxyEndpoint(remoteSchemaName), {
+    fetch(endpoints.query, {
       method: 'POST',
       headers: {
         ...headers,
       },
-      body: JSON.stringify({ query: getIntrospectionQuery() }),
+      body: JSON.stringify(getIntrospectionQuery(remoteSchemaName)),
     })
       .then(r => r.json())
       .then(response => {

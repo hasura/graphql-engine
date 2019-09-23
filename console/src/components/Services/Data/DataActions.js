@@ -57,9 +57,9 @@ const REQUEST_SUCCESS = 'ModifyTable/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'ModifyTable/REQUEST_ERROR';
 
 export const SET_ALL_ROLES = 'Data/SET_ALL_ROLES';
-export const setAllRoles = (roles) => ({
+export const setAllRoles = roles => ({
   type: SET_ALL_ROLES,
-  roles
+  roles,
 });
 
 const initQueries = {
@@ -610,10 +610,10 @@ export const fetchRoleList = () => (dispatch, getState) => {
     args: {
       table: {
         schema: 'hdb_catalog',
-        name: 'hdb_permission_agg'
+        name: 'hdb_roles',
       },
       columns: ['role_name'],
-    }
+    },
   };
   const options = {
     credentials: globalCookiePolicy,
@@ -778,7 +778,7 @@ const dataReducer = (state = defaultState, action) => {
     case SET_ALL_ROLES:
       return {
         ...state,
-        allRoles: action.roles
+        allRoles: action.roles,
       };
     default:
       return state;
