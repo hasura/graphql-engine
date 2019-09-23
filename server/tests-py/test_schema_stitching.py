@@ -461,7 +461,6 @@ class TestRemoteSchemaPermissionsBasic():
     rs_dir = 'queries/remote_schemas/permissions/'
     teardown = {"type": "remove_remote_schema", "args": {"name": "simple"}}
 
-    drop_perms = {"type": "drop_remote_schema_permissions", "args": {"remote_schema": "simple", "role": "user"}}
     @pytest.fixture(autouse=True)
     def transact(self, hge_ctx):
         q = mk_add_remote_q('simple', 'http://localhost:5000/user-graphql')
@@ -475,13 +474,13 @@ class TestRemoteSchemaPermissionsBasic():
         check_query_f(hge_ctx, self.rs_dir + 'basic_fail.yaml')
 
     def test_basic(self, hge_ctx):
-        st_code, resp = hge_ctx.v1q_f(self.rs_dir + 'setup.yaml')
+        st_code, resp = hge_ctx.v1q_f(self.rs_dir + 'setup_perm.yaml')
         assert st_code == 200, resp
         # make good query
         check_query_f(hge_ctx, self.rs_dir + 'basic_success.yaml')
         # make bad query
         check_query_f(hge_ctx, self.rs_dir + 'basic_fail_2.yaml')
-        st_code, resp = hge_ctx.v1q_f(self.drop_perms)
+        st_code, resp = hge_ctx.v1q_f(self.rs_dir + 'teardown_perm.yaml')
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.rs_dir + 'basic_fail.yaml')
 
@@ -535,12 +534,12 @@ class TestRemoteSchemaPermissionsDisabled:
 
     def test_add(self, hge_ctx):
         # make perm query
-        st_code, resp = hge_ctx.v1q_f(self.dir + 'setup.yaml')
+        st_code, resp = hge_ctx.v1q_f(self.dir + 'setup_perm.yaml')
         assert st_code == 404, resp
 
     def test_drop(self, hge_ctx):
         # remove perm query
-        st_code, resp = hge_ctx.v1q_f(self.dir + 'teardown.yaml')
+        st_code, resp = hge_ctx.v1q_f(self.dir + 'teardown_perm.yaml')
         assert st_code == 404, resp
 
     def test_no_roles(self, hge_ctx):
