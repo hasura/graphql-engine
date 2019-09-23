@@ -76,7 +76,6 @@ class TestCreateRemoteRelationship:
     def test_create_multiple_hasura_fields(self, validate_v1q_f):
         validate_v1q_f('setup_remote_rel_multiple_fields.yaml')
 
-    @pytest.mark.xfail(reason="Refer https://github.com/tirumaraiselvan/graphql-engine/issues/53")
     def test_create_arg_with_arr_struture(self, validate_v1q_f):
         validate_v1q_f('setup_remote_rel_arg_with_arr_structure.yaml')
 
