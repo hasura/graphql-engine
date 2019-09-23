@@ -202,6 +202,106 @@ Update based on a nested object's fields
       }
     }
 
+Update relationships
+--------------------
+
+One-to-one relationship
+^^^^^^^^^^^^^^^^^^^^^^^
+
+**Example:** Update an author's address:
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation updateAddress {
+      update_addresses(
+        where: {authors: {id: {_eq: 1}}},
+        _set: {location: "Berlin"}
+      )	{
+        returning {
+          id
+          location
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "update_addresses": {
+          "affected_rows": 1
+        }
+      }
+    }
+
+One-to-many relationship
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Example:** Update an author's articles:
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation updateArticle {
+      update_articles(
+        where: {author_id: {_eq: 2}},
+        _set: {is_published: true}
+      ) {
+        affected_rows
+      }
+    }
+  :response:
+    {
+      "data": {
+        "update_articles": {
+          "affected_rows": 4
+        }
+      }
+    }
+
+Many-to-many relationship
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In order to update a many-to-many relationship, it's required to use two mutations (one to delete the relationship and one to insert a new one) in one transaction.
+
+**Example:** Update an articles's tags:
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation updateAddress {
+      delete_article_tags(
+        where: {tag_id: {_eq: 21}}
+      ) {
+        affected_rows
+      }
+      insert_article_tags(
+        objects: [
+          {
+            article_id: 31,
+            tag: {
+              data: {
+                id: 42,
+                label: "Cooking"
+              }
+            }
+          }
+        ]
+      ) {
+        affected_rows
+      }
+    }
+  :response:
+    {
+      "data": {
+        "delete_article_tags": {
+          "affected_rows": 1
+        },
+        "insert_article_tags": {
+          "affected_rows": 2
+        }
+      }
+    }
+
 Update all objects
 ------------------
 
@@ -229,7 +329,6 @@ evaluates to ``true`` for all objects.
         }
       }
     }
-
 
 Increment **int** columns
 -------------------------
