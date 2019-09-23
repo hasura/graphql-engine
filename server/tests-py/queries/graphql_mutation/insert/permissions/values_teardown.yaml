@@ -21,3 +21,6 @@ args:
 
       delete from "Company";
       SELECT setval('"Company_id_seq"', 1, FALSE);
+
+      delete from "user";
+      SELECT setval('"user_id_seq"', 1, FALSE);

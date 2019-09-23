@@ -2,27 +2,41 @@
 {-# LANGUAGE RankNTypes #-}
 
 module Hasura.RQL.Types.SchemaCache
-       ( TableCache
-       , SchemaCache(..)
+       ( SchemaCache(..)
        , SchemaCacheVer
        , initSchemaCacheVer
        , incSchemaCacheVer
        , emptySchemaCache
-       , TableInfo(..)
-       , TableConstraint(..)
-       , ConstraintType(..)
-       , ViewInfo(..)
-       , isMutable
-       , mutableView
-       , onlyIntCols
-       , onlyNumCols
-       , onlyJSONBCols
-       , onlyComparableCols
-       , isUniqueOrPrimary
-       , isForeignKey
+       , TableConfig(..)
+       , emptyTableConfig
+
+       , TableCache
+       , modTableCache
        , addTableToCache
        , modTableInCache
        , delTableFromCache
+
+       , TableInfo(..)
+       , tiName
+       , tiDescription
+       , tiSystemDefined
+       , tiFieldInfoMap
+       , tiRolePermInfoMap
+       , tiUniqOrPrimConstraints
+       , tiPrimaryKeyCols
+       , tiViewInfo
+       , tiEventTriggerInfoMap
+       , tiEnumValues
+       , tiCustomConfig
+
+       , TableConstraint(..)
+       , ConstraintType(..)
+       , ViewInfo(..)
+       , checkForFieldConflict
+       , isMutable
+       , mutableView
+       , isUniqueOrPrimary
+       , isForeignKey
 
        , RemoteSchemaCtx(..)
        , RemoteSchemaMap
@@ -36,17 +50,16 @@ module Hasura.RQL.Types.SchemaCache
 
        , FieldInfoMap
        , FieldInfo(..)
+       , _FIColumn
+       , _FIRelationship
        , fieldInfoToEither
        , partitionFieldInfos
        , partitionFieldInfosWith
        , getCols
        , getRels
 
-       , PGColInfo(..)
        , isPGColInfo
-       , getColInfos
        , RelInfo(..)
-       -- , addFldToCache
        , addColToCache
        , addRelToCache
 
@@ -82,6 +95,7 @@ module Hasura.RQL.Types.SchemaCache
        , SchemaObjId(..)
        , reportSchemaObj
        , reportSchemaObjs
+       , DependencyReason(..)
        , SchemaDependency(..)
        , mkParentDep
        , mkColDep
@@ -98,6 +112,7 @@ module Hasura.RQL.Types.SchemaCache
        , addFunctionToCache
        , askFunctionInfo
        , delFunctionFromCache
+       , updateFunctionDescription
 
        , replaceAllowlist
        ) where
@@ -106,6 +121,7 @@ import qualified Hasura.GraphQL.Context            as GC
 
 import           Hasura.Prelude
 import           Hasura.RQL.Types.BoolExp
+import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
@@ -120,6 +136,7 @@ import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Language.Haskell.TH.Syntax        (Lift)
 
 import qualified Data.HashMap.Strict               as M
 import qualified Data.HashSet                      as HS
@@ -130,64 +147,48 @@ reportSchemaObjs :: [SchemaObjId] -> T.Text
 reportSchemaObjs = T.intercalate ", " . map reportSchemaObj
 
 mkParentDep :: QualifiedTable -> SchemaDependency
-mkParentDep tn = SchemaDependency (SOTable tn) "table"
+mkParentDep tn = SchemaDependency (SOTable tn) DRTable
 
-mkColDep :: T.Text -> QualifiedTable -> PGCol -> SchemaDependency
+mkColDep :: DependencyReason -> QualifiedTable -> PGCol -> SchemaDependency
 mkColDep reason tn col =
   flip SchemaDependency reason . SOTableObj tn $ TOCol col
 
-onlyIntCols :: [PGColInfo] -> [PGColInfo]
-onlyIntCols = filter (isIntegerType . pgiType)
-
-onlyNumCols :: [PGColInfo] -> [PGColInfo]
-onlyNumCols = filter (isNumType . pgiType)
-
-onlyJSONBCols :: [PGColInfo] -> [PGColInfo]
-onlyJSONBCols = filter (isJSONBType . pgiType)
-
-onlyComparableCols :: [PGColInfo] -> [PGColInfo]
-onlyComparableCols = filter (isComparableType . pgiType)
-
-getColInfos :: [PGCol] -> [PGColInfo] -> [PGColInfo]
-getColInfos cols allColInfos =
-  flip filter allColInfos $ \ci -> pgiName ci `elem` cols
-
 type WithDeps a = (a, [SchemaDependency])
 
-data FieldInfo
-  = FIColumn !PGColInfo
+data FieldInfo columnInfo
+  = FIColumn !columnInfo
   | FIRelationship !RelInfo
   deriving (Show, Eq)
-
 $(deriveToJSON
   defaultOptions { constructorTagModifier = snakeCase . drop 2
                  , sumEncoding = TaggedObject "type" "detail"
                  }
   ''FieldInfo)
+$(makePrisms ''FieldInfo)
 
-fieldInfoToEither :: FieldInfo -> Either PGColInfo RelInfo
+fieldInfoToEither :: FieldInfo columnInfo -> Either columnInfo RelInfo
 fieldInfoToEither (FIColumn l)       = Left l
 fieldInfoToEither (FIRelationship r) = Right r
 
-partitionFieldInfos :: [FieldInfo] -> ([PGColInfo], [RelInfo])
+partitionFieldInfos :: [FieldInfo columnInfo] -> ([columnInfo], [RelInfo])
 partitionFieldInfos = partitionFieldInfosWith (id, id)
 
-partitionFieldInfosWith :: (PGColInfo -> a, RelInfo -> b)
-                        -> [FieldInfo] -> ([a], [b])
+partitionFieldInfosWith :: (columnInfo -> a, RelInfo -> b)
+                        -> [FieldInfo columnInfo] -> ([a], [b])
 partitionFieldInfosWith fns =
   partitionEithers . map (biMapEither fns . fieldInfoToEither)
   where
     biMapEither (f1, f2) = either (Left . f1) (Right . f2)
 
-type FieldInfoMap = M.HashMap FieldName FieldInfo
+type FieldInfoMap columnInfo = M.HashMap FieldName (FieldInfo columnInfo)
 
-getCols :: FieldInfoMap -> [PGColInfo]
+getCols :: FieldInfoMap columnInfo -> [columnInfo]
 getCols fim = lefts $ map fieldInfoToEither $ M.elems fim
 
-getRels :: FieldInfoMap -> [RelInfo]
+getRels :: FieldInfoMap columnInfo -> [RelInfo]
 getRels fim = rights $ map fieldInfoToEither $ M.elems fim
 
-isPGColInfo :: FieldInfo -> Bool
+isPGColInfo :: FieldInfo columnInfo -> Bool
 isPGColInfo (FIColumn _) = True
 isPGColInfo _            = False
 
@@ -246,6 +247,7 @@ data RolePermInfo
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 5 snakeCase) ''RolePermInfo)
+
 makeLenses ''RolePermInfo
 
 type RolePermInfoMap = M.HashMap RoleName RolePermInfo
@@ -330,32 +332,53 @@ mutableView qt f mVI operation =
   unless (isMutable f mVI) $ throw400 NotSupported $
   "view " <> qt <<> " is not " <> operation
 
-data TableInfo
+data TableConfig
+  = TableConfig
+  { _tcCustomRootFields  :: !GC.TableCustomRootFields
+  , _tcCustomColumnNames :: !CustomColumnNames
+  } deriving (Show, Eq, Lift)
+$(deriveToJSON (aesonDrop 3 snakeCase) ''TableConfig)
+
+emptyTableConfig :: TableConfig
+emptyTableConfig =
+  TableConfig GC.emptyCustomRootFields M.empty
+
+instance FromJSON TableConfig where
+  parseJSON = withObject "TableConfig" $ \obj ->
+    TableConfig
+    <$> obj .:? "custom_root_fields" .!= GC.emptyCustomRootFields
+    <*> obj .:? "custom_column_names" .!= M.empty
+
+data TableInfo columnInfo
   = TableInfo
-  { tiName                  :: !QualifiedTable
-  , tiSystemDefined         :: !Bool
-  , tiFieldInfoMap          :: !FieldInfoMap
-  , tiRolePermInfoMap       :: !RolePermInfoMap
-  , tiUniqOrPrimConstraints :: ![ConstraintName]
-  , tiPrimaryKeyCols        :: ![PGCol]
-  , tiViewInfo              :: !(Maybe ViewInfo)
-  , tiEventTriggerInfoMap   :: !EventTriggerInfoMap
+  { _tiName                  :: !QualifiedTable
+  , _tiDescription           :: !(Maybe PGDescription)
+  , _tiSystemDefined         :: !Bool
+  , _tiFieldInfoMap          :: !(FieldInfoMap columnInfo)
+  , _tiRolePermInfoMap       :: !RolePermInfoMap
+  , _tiUniqOrPrimConstraints :: ![ConstraintName]
+  , _tiPrimaryKeyCols        :: ![PGCol]
+  , _tiViewInfo              :: !(Maybe ViewInfo)
+  , _tiEventTriggerInfoMap   :: !EventTriggerInfoMap
+  , _tiEnumValues            :: !(Maybe EnumValues)
+  , _tiCustomConfig          :: !TableConfig
   } deriving (Show, Eq)
-
 $(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
+$(makeLenses ''TableInfo)
 
-instance FromJSON TableInfo where
-  parseJSON = withObject "TableInfo" $ \o -> do
-    name <- o .: "name"
-    columns <- o .: "columns"
-    pkeyCols <- o .: "primary_key_columns"
-    constraints <- o .: "constraints"
-    viewInfoM <- o .:? "view_info"
-    isSystemDefined <- o .:? "is_system_defined" .!= False
-    let colMap = M.fromList $ flip map columns $
-                 \c -> (fromPGCol $ pgiName c, FIColumn c)
-    return $ TableInfo name isSystemDefined colMap mempty
-                       constraints pkeyCols viewInfoM mempty
+checkForFieldConflict
+  :: (MonadError QErr m)
+  => TableInfo a
+  -> FieldName
+  -> m ()
+checkForFieldConflict tabInfo f =
+  case M.lookup f (_tiFieldInfoMap tabInfo) of
+    Just _ -> throw400 AlreadyExists $ mconcat
+      [ "column/relationship " <>> f
+      , " of table " <>> _tiName tabInfo
+      , " already exists"
+      ]
+    Nothing -> return ()
 
 data FunctionType
   = FTVOLATILE
@@ -373,15 +396,12 @@ funcTypToTxt FTSTABLE    = "STABLE"
 instance Show FunctionType where
   show = T.unpack . funcTypToTxt
 
-newtype FunctionArgName =
-  FunctionArgName { getFuncArgNameTxt :: T.Text}
-  deriving (Show, Eq, ToJSON)
-
 data FunctionArg
   = FunctionArg
-  { faName :: !(Maybe FunctionArgName)
-  , faType :: !PGColType
-  } deriving(Show, Eq)
+  { faName       :: !(Maybe FunctionArgName)
+  , faType       :: !PGScalarType
+  , faHasDefault :: !Bool
+  } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionArg)
 
@@ -393,11 +413,12 @@ data FunctionInfo
   , fiInputArgs     :: !(Seq.Seq FunctionArg)
   , fiReturnType    :: !QualifiedTable
   , fiDeps          :: ![SchemaDependency]
+  , fiDescription   :: !(Maybe PGDescription)
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionInfo)
 
-type TableCache = M.HashMap QualifiedTable TableInfo -- info of all tables
+type TableCache columnInfo = M.HashMap QualifiedTable (TableInfo columnInfo) -- info of all tables
 type FunctionCache = M.HashMap QualifiedFunction FunctionInfo -- info of all functions
 
 data RemoteSchemaCtx
@@ -418,13 +439,6 @@ addToDepMap :: SchemaObjId -> [SchemaDependency] -> DepMap -> DepMap
 addToDepMap schObj deps =
   M.insert schObj (HS.fromList deps)
 
-  -- M.unionWith HS.union objDepMap
-  -- where
-  --   objDepMap = M.fromList
-  --     [ (dep, HS.singleton $ SchemaDependency schObj reason)
-  --     | (SchemaDependency dep reason) <- deps
-  --     ]
-
 removeFromDepMap :: SchemaObjId -> DepMap -> DepMap
 removeFromDepMap =
   M.delete
@@ -442,7 +456,7 @@ incSchemaCacheVer (SchemaCacheVer prev) =
 
 data SchemaCache
   = SchemaCache
-  { scTables            :: !TableCache
+  { scTables            :: !(TableCache PGColumnInfo)
   , scFunctions         :: !FunctionCache
   , scRemoteSchemas     :: !RemoteSchemaMap
   , scAllowlist         :: !(HS.HashSet GQLQuery)
@@ -465,16 +479,12 @@ modDepMapInCache f = do
   writeSchemaCache $ sc { scDepMap = f (scDepMap sc)}
 
 class (Monad m) => CacheRM m where
-
-  -- Get the schema cache
   askSchemaCache :: m SchemaCache
 
 instance (Monad m) => CacheRM (StateT SchemaCache m) where
   askSchemaCache = get
 
 class (CacheRM m) => CacheRWM m where
-
-  -- Get the schema cache
   writeSchemaCache :: SchemaCache -> m ()
 
 instance (Monad m) => CacheRWM (StateT SchemaCache m) where
@@ -485,19 +495,19 @@ emptySchemaCache =
   SchemaCache M.empty M.empty M.empty
               HS.empty M.empty GC.emptyGCtx mempty []
 
-modTableCache :: (CacheRWM m) => TableCache -> m ()
+modTableCache :: (CacheRWM m) => TableCache PGColumnInfo -> m ()
 modTableCache tc = do
   sc <- askSchemaCache
   writeSchemaCache $ sc { scTables = tc }
 
 addTableToCache :: (QErrM m, CacheRWM m)
-                => TableInfo -> m ()
+                => TableInfo PGColumnInfo -> m ()
 addTableToCache ti = do
   sc <- askSchemaCache
   assertTableNotExists tn sc
   modTableCache $ M.insert tn ti $ scTables sc
   where
-    tn = tiName ti
+    tn = _tiName ti
 
 delTableFromCache :: (QErrM m, CacheRWM m)
                   => QualifiedTable -> m ()
@@ -513,7 +523,7 @@ delTableFromCache tn = do
 getTableInfoFromCache :: (QErrM m)
                       => QualifiedTable
                       -> SchemaCache
-                      -> m TableInfo
+                      -> m (TableInfo PGColumnInfo)
 getTableInfoFromCache tn sc =
   case M.lookup tn (scTables sc) of
     Nothing -> throw500 $ "table not found in cache : " <>> tn
@@ -529,7 +539,7 @@ assertTableNotExists tn sc =
     Just _  -> throw500 $ "table exists in cache : " <>> tn
 
 modTableInCache :: (QErrM m, CacheRWM m)
-                => (TableInfo -> m TableInfo)
+                => (TableInfo PGColumnInfo -> m (TableInfo PGColumnInfo))
                 -> QualifiedTable
                 -> m ()
 modTableInCache f tn = do
@@ -540,7 +550,7 @@ modTableInCache f tn = do
 
 addColToCache
   :: (QErrM m, CacheRWM m)
-  => PGCol -> PGColInfo
+  => PGCol -> PGColumnInfo
   -> QualifiedTable -> m ()
 addColToCache cn ci =
   addFldToCache (fromPGCol cn) (FIColumn ci)
@@ -557,17 +567,17 @@ addRelToCache rn ri deps tn = do
 
 addFldToCache
   :: (QErrM m, CacheRWM m)
-  => FieldName -> FieldInfo
+  => FieldName -> FieldInfo PGColumnInfo
   -> QualifiedTable -> m ()
 addFldToCache fn fi =
   modTableInCache modFieldInfoMap
   where
     modFieldInfoMap ti = do
-      let fim = tiFieldInfoMap ti
+      let fim = _tiFieldInfoMap ti
       case M.lookup fn fim of
         Just _  -> throw500 "field already exists "
         Nothing -> return $
-          ti { tiFieldInfoMap = M.insert fn fi fim }
+          ti { _tiFieldInfoMap = M.insert fn fi fim }
 
 delFldFromCache :: (QErrM m, CacheRWM m)
                 => FieldName -> QualifiedTable -> m ()
@@ -575,10 +585,10 @@ delFldFromCache fn =
   modTableInCache modFieldInfoMap
   where
     modFieldInfoMap ti = do
-      let fim = tiFieldInfoMap ti
+      let fim = _tiFieldInfoMap ti
       case M.lookup fn fim of
         Just _  -> return $
-          ti { tiFieldInfoMap = M.delete fn fim }
+          ti { _tiFieldInfoMap = M.delete fn fim }
         Nothing -> throw500 "field does not exist"
 
 delColFromCache :: (QErrM m, CacheRWM m)
@@ -596,7 +606,7 @@ delRelFromCache rn tn = do
 
 updColInCache
   :: (QErrM m, CacheRWM m)
-  => PGCol -> PGColInfo
+  => PGCol -> PGColumnInfo
   -> QualifiedTable -> m ()
 updColInCache cn ci tn = do
   delColFromCache cn tn
@@ -638,8 +648,8 @@ addEventTriggerToCache qt eti deps = do
   where
     trn = etiName eti
     modEventTriggerInfo ti = do
-      let etim = tiEventTriggerInfoMap ti
-      return $ ti { tiEventTriggerInfoMap = M.insert trn eti etim}
+      let etim = _tiEventTriggerInfoMap ti
+      return $ ti { _tiEventTriggerInfoMap = M.insert trn eti etim}
     schObjId = SOTableObj qt $ TOTrigger trn
 
 delEventTriggerFromCache
@@ -652,8 +662,8 @@ delEventTriggerFromCache qt trn = do
   modDepMapInCache (removeFromDepMap schObjId)
   where
     modEventTriggerInfo ti = do
-      let etim = tiEventTriggerInfoMap ti
-      return $ ti { tiEventTriggerInfoMap = M.delete trn etim }
+      let etim = _tiEventTriggerInfoMap ti
+      return $ ti { _tiEventTriggerInfoMap = M.delete trn etim }
     schObjId = SOTableObj qt $ TOTrigger trn
 
 addFunctionToCache
@@ -687,16 +697,24 @@ delFunctionFromCache
   :: (QErrM m, CacheRWM m)
   => QualifiedFunction -> m ()
 delFunctionFromCache qf = do
+  void $ askFunctionInfo qf
   sc <- askSchemaCache
   let functionCache = scFunctions sc
-  case M.lookup qf functionCache of
-    Nothing -> throw500 $ "function does not exist in cache " <>> qf
-    Just _ -> do
-      let newFunctionCache = M.delete qf functionCache
-      writeSchemaCache $ sc {scFunctions = newFunctionCache}
+      newFunctionCache = M.delete qf functionCache
+  writeSchemaCache $ sc {scFunctions = newFunctionCache}
   modDepMapInCache (removeFromDepMap objId)
   where
     objId = SOFunction qf
+
+updateFunctionDescription
+  :: (QErrM m, CacheRWM m)
+  => QualifiedFunction -> Maybe PGDescription -> m ()
+updateFunctionDescription qf descM = do
+  fi <- askFunctionInfo qf
+  sc <- askSchemaCache
+  let newFuncInfo = fi{fiDescription = descM}
+      newFuncCache = M.insert qf newFuncInfo $ scFunctions sc
+  writeSchemaCache sc{scFunctions = newFuncCache}
 
 addPermToCache
   :: (QErrM m, CacheRWM m)
@@ -712,11 +730,11 @@ addPermToCache tn rn pa i deps = do
   where
     paL = permAccToLens pa
     modRolePermInfo ti = do
-      let rpim = tiRolePermInfoMap ti
+      let rpim = _tiRolePermInfoMap ti
           rpi  = fromMaybe mkRolePermInfo $ M.lookup rn rpim
           newRPI = rpi & paL ?~ i
       assertPermNotExists pa rpi
-      return $ ti { tiRolePermInfoMap = M.insert rn newRPI rpim }
+      return $ ti { _tiRolePermInfoMap = M.insert rn newRPI rpim }
     schObjId = SOTableObj tn $ TOPerm rn $ permAccToType pa
 
 assertPermNotExists
@@ -745,11 +763,11 @@ delPermFromCache pa rn tn = do
   where
     paL = permAccToLens pa
     modRolePermInfo ti = do
-      let rpim = tiRolePermInfoMap ti
+      let rpim = _tiRolePermInfoMap ti
           rpi  = fromMaybe mkRolePermInfo $ M.lookup rn rpim
       assertPermExists pa rpi
       let newRPI = rpi & paL .~ Nothing
-      return $ ti { tiRolePermInfoMap = M.insert rn newRPI rpim }
+      return $ ti { _tiRolePermInfoMap = M.insert rn newRPI rpim }
     schObjId = SOTableObj tn $ TOPerm rn $ permAccToType pa
 
 addRemoteSchemaToCache
@@ -791,7 +809,7 @@ getDependentObjs :: SchemaCache -> SchemaObjId -> [SchemaObjId]
 getDependentObjs = getDependentObjsWith (const True)
 
 getDependentObjsWith
-  :: (T.Text -> Bool) -> SchemaCache -> SchemaObjId -> [SchemaObjId]
+  :: (DependencyReason -> Bool) -> SchemaCache -> SchemaObjId -> [SchemaObjId]
 getDependentObjsWith f sc objId =
   -- [ sdObjId sd | sd <- filter (f . sdReason) allDeps]
   map fst $ filter (isDependency . snd) $ M.toList $ scDepMap sc

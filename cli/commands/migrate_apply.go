@@ -39,7 +39,7 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	f.StringVar(&opts.upMigration, "up", "", "apply all or N up migration steps")
 	f.StringVar(&opts.downMigration, "down", "", "apply all or N down migration steps")
-	f.StringVar(&opts.versionMigration, "version", "", "migrate the database to a specific version")
+	f.StringVar(&opts.versionMigration, "version", "", "only apply this particular migration")
 	f.StringVar(&opts.migrationType, "type", "up", "type of migration (up, down) to be used with version flag")
 	f.BoolVar(&opts.skipExecution, "skip-execution", false, "skip executing the migration action, but mark them as applied")
 
@@ -71,7 +71,7 @@ func (o *migrateApplyOptions) run() error {
 		return errors.Wrap(err, "error validating flags")
 	}
 
-	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version)
+	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version, true)
 	if err != nil {
 		return err
 	}

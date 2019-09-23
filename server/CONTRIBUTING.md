@@ -8,8 +8,16 @@ own machine and how to contribute.
 - [stack](https://docs.haskellstack.org/en/stable/README/#how-to-install)
 - [Node.js](https://nodejs.org/en/) (>= v8.9)
 - npm >= 5.7
+- brotli
 - libpq-dev
 - python >= 3.5 with pip3
+
+The Brotli can be installed from source using `git`, `cmake` and `pkgconf` on Debian with:
+
+    $ apt-get -y update \
+      && apt-get -y install git cmake pkgconf \
+      && git clone https://github.com/google/brotli.git && cd brotli && mkdir out && cd out && ../configure-cmake \
+      && make && make test && make install && ldconfig
 
 The last two prerequisites can be installed on Debian with:
 

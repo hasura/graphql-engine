@@ -12,6 +12,7 @@ import qualified Language.GraphQL.Draft.Syntax          as G
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
+import           Hasura.GraphQL.Resolve.Types
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
@@ -61,8 +62,8 @@ resolveVal userInfo = \case
   RS.UVSessVar ty sessVar -> do
     sessVarVal <- S.SELit <$> getSessVarVal userInfo sessVar
     return $ flip S.SETyAnn (S.mkTypeAnn ty) $ case ty of
-      PgTypeSimple colTy -> withGeoVal colTy sessVarVal
-      PgTypeArray _      -> sessVarVal
+      PGTypeScalar colTy -> withConstructorFn colTy sessVarVal
+      PGTypeArray _      -> sessVarVal
   RS.UVSQL sqlExp -> return sqlExp
 
 getSessVarVal
@@ -87,8 +88,8 @@ explainField userInfo gCtx sqlGenCtx fld =
     "__typename" -> return $ FieldPlan fName Nothing Nothing
     _            -> do
       unresolvedAST <-
-        runExplain (opCtxMap, userInfo, fldMap, orderByCtx, sqlGenCtx) $
-        RS.queryFldToPGAST fld
+        runExplain (queryCtxMap, userInfo, fldMap, orderByCtx, sqlGenCtx) $
+          evalResolveT $ RS.queryFldToPGAST fld
       resolvedAST <- RS.traverseQueryRootFldAST (resolveVal userInfo)
                      unresolvedAST
       let txtSQL = Q.getQueryText $ RS.toPGQuery resolvedAST
@@ -99,7 +100,7 @@ explainField userInfo gCtx sqlGenCtx fld =
   where
     fName = GV._fName fld
 
-    opCtxMap = _gOpCtxMap gCtx
+    queryCtxMap = _gQueryCtxMap gCtx
     fldMap = _gFields gCtx
     orderByCtx = _gOrdByCtx gCtx
 
@@ -114,7 +115,7 @@ explainGQLQuery
 explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw) = do
   execPlan <- E.getExecPlanPartial userInfo sc enableAL query
   (gCtx, rootSelSet) <- case execPlan of
-    E.GExPHasura (gCtx, rootSelSet, _) ->
+    E.GExPHasura (gCtx, rootSelSet) ->
       return (gCtx, rootSelSet)
     E.GExPRemote _ _  ->
       throw400 InvalidParams "only hasura queries can be explained"

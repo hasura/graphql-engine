@@ -103,7 +103,7 @@ class Chat extends React.Component {
               Backend
             </a>
             &nbsp; | &nbsp;
-            <a href="https://github.com/hasura/graphql-engine/tree/master/community/examples/realtime-chat" target="_blank" rel="noopener noreferrer">
+            <a href="https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/realtime-chat" target="_blank" rel="noopener noreferrer">
               Source
             </a>
             &nbsp; | &nbsp;

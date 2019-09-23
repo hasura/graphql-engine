@@ -1,16 +1,9 @@
 # Contributing to Hasura graphql-engine
 
-*First*: if you're unsure or afraid of anything, just ask, or submit the issue or
-pull request anyway. You won't be yelled at for giving your best effort. The
-worst that can happen is that you'll be politely asked to change something. We
-appreciate any contributions, and we don't want a wall of rules to get in
-the way of that.
+*First*: if you feel insecure about how to start contributing, feel free to ask us on our [Discord channel](https://discordapp.com/invite/hasura), in the #contrib channel or as a DM to Marion (@marion#9554). You can also just go ahead with your contribution and we'll give you feedback. Don't worry - the worst that can happen is that you'll be politely asked to change something. We appreciate any contributions, and we don't want a wall of rules to stand in the way of that. 
 
-However, for those individuals who want a bit more guidance on the best way to
-contribute to the project, read on. This document will cover what we're looking
-for. By addressing all the points we're looking for, the chances that we
+However, for those individuals who want a bit more guidance on the best way to contribute to the project, read on. This document will cover what we're looking for. By addressing the points below, the chances that we
 can quickly merge or address your contributions will increase.
-
 
 ## Overview
 
@@ -18,48 +11,80 @@ can quickly merge or address your contributions will increase.
 consisting of 3 components. Each has their own contributing guides:
 
 1. [Server (Haskell)](server/CONTRIBUTING.md)
+
 2. [CLI (Go)](cli/CONTRIBUTING.md)
+
 3. [Console (JavaScript)](console/README.md#contributing-to-hasura-console)
 
-All of the three components have a single version, denoted by either the git
-tag or a combination of branch name and git commit SHA.
+All of the three components have a single version, denoted by either the git tag or a combination of branch name and git commit SHA.
 
 For all contributions, a CLA (Contributor License Agreement) needs to be signed [here](https://cla-assistant.io/hasura/graphql-engine) before (or after) the pull request has been submitted. A bot will prompt contributors to sign the CLA via a pull request comment, if necessary.
 
+## First time contributors welcome!
+
+We appreciate first time contributors and we are happy to assist you in getting started. In case of questions, just reach out to us!
+
+You find all issues suitable for first time contributors [here](https://github.com/hasura/graphql-engine/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22).
+
+## Areas for contributing
+
+Of course, we appreciate contributions to all components of Hasura. However, we have identified three areas that are particularly suitable for open source contributions.
 
 ### Docs
 
-Contributing guide for docs can be found at [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md).
+Our goal is to keep our docs comprehensive and updated. If you would like to help us in doing so, we are greatful for any kind of contribution:
+
+- Report missing content
+
+- Fix errors in existing docs
+
+- Help us in adding to the docs
+
+The contributing guide for docs can be found at [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md).
+
 
 ### Community content
 
-There is no specific contributing guide for community content. Anything that can
-help GraphQL Engine community/users can go into the section. We have identified
-[boilerplates](community/boilerplates), [examples](community/examples) and
-[tools](community/tools) as primary candidates. Feel free to submit a pull
-request if you have something to add (not necessarily belonging to the
-aforementioned sections).
+Since we launched our [learn page](https://learn.hasura.io/), we are happy about contributions:
 
-## Issues
+- Fix errors in existing learn tutorials
+
+- Add new tutorials (please reach out to us if you have ideas to avoid duplicate word)
+
+The README of the learn repository can be found [here](https://github.com/hasura/graphql-engine/tree/master/community/learn).
+
+Apart from the learn content, we have identified three other ways of contributing with community content:
+
+- [boilerplates](community/boilerplates)
+
+- [examples](community/examples) 
+
+- [tools](community/tools) 
+
+Feel free to submit a pull request if you have something to add even if it's not related to the three sections above.
+
+### Hasura CLI
+
+We have some issues on the CLI that are suitable for open source contributions. If you know Go or if you would like to learn it by doing, check out the following [issues](https://github.com/hasura/graphql-engine/issues?q=is%3Aopen+is%3Aissue+label%3Ac%2Fcli+label%3A%22help+wanted%22).
+
+The README of the CLI repository can be found [here](https://github.com/hasura/graphql-engine/tree/master/cli).
+
+## Ways of contributing
 
 ### Reporting an Issue
 
-- Make sure you test against the latest released version. It is possible that we
-  may have already fixed the bug you're experiencing.
+- Make sure you test against the latest released version. It is possible that we may have already fixed the bug you're experiencing.
 
 - Provide steps to reproduce the issue, including Postgres version,
-  graphql-engine version and the provider you are running on (Heroku, Docker,
-  etc.).
+  graphql-engine version and the provider you are running on (Heroku, Docker, etc.).
 
 - Please include logs of the server, if relevant.
 
-
-## Common guidelines
+### Working on an issue
 
 - Please make sure there is an issue associated with the work that you're doing.
 
-- If you're working on an issue, please comment that you are doing so to prevent
-  duplicate work by others also.
+- If you're working on an issue, please comment that you are doing so to prevent duplicate work by others also.
 
 - Squash your commits and refer to the issue using `fix #<issue-no>` or `close
   #<issue-no>` in the commit message, at the end.
@@ -71,7 +96,7 @@ aforementioned sections).
 
 - The first line should be a summary of the changes, not exceeding 50
   characters, followed by an optional body which has more details about the
-  changes. Refer [to this link](https://github.com/erlang/otp/wiki/writing-good-commit-messages)
+  changes. Refer to [this link](https://github.com/erlang/otp/wiki/writing-good-commit-messages)
   for more information on writing good commit messages.
 
 - Use the imperative present tense: "add/fix/change", not "added/fixed/changed" nor "adds/fixes/changes".

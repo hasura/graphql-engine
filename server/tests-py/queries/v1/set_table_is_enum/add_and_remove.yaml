@@ -1,0 +1,128 @@
+- description: Mark a valid enum table as an enum
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: set_table_is_enum
+    args:
+      table: weekdays
+      is_enum: true
+
+- description: Check that marking a table as an enum changed the schema
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      weekdays:
+        name: weekdays_enum
+        kind: ENUM
+        enumValues:
+        - name: friday
+          description: null
+        - name: monday
+          description: null
+        - name: saturday
+          description: null
+        - name: sunday
+          description: null
+        - name: thursday
+          description: null
+        - name: tuesday
+          description: null
+        - name: wednesday
+          description: null
+      employees:
+        fields:
+        - name: favorite_color
+          type:
+            ofType:
+              name: colors_enum
+        - name: gets_paid_on
+          type:
+            ofType:
+              name: weekdays_enum
+        - name: id
+          type:
+            ofType:
+              name: Int
+        - name: name
+          type:
+            ofType:
+              name: String
+  query:
+    query: |
+      {
+        weekdays: __type(name: "weekdays_enum") {
+          name
+          kind
+          enumValues {
+            name
+            description
+          }
+        }
+        employees: __type(name: "employees") {
+          fields {
+            name
+            type {
+              ofType {
+                name
+              }
+            }
+          }
+        }
+      }
+
+- description: Mark an existing enum table as not an enum
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: set_table_is_enum
+    args:
+      table: colors
+      is_enum: false
+
+- description: Check that marking a table as not an enum changed the schema
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      colors: null
+      employees:
+        fields:
+        - name: favorite_color
+          type:
+            ofType:
+              name: String
+        - name: gets_paid_on
+          type:
+            ofType:
+              name: weekdays_enum
+        - name: id
+          type:
+            ofType:
+              name: Int
+        - name: name
+          type:
+            ofType:
+              name: String
+  query:
+    query: |
+      {
+        colors: __type(name: "colors_enum") {
+          name
+          kind
+        }
+        employees: __type(name: "employees") {
+          fields {
+            name
+            type {
+              ofType {
+                name
+              }
+            }
+          }
+        }
+      }

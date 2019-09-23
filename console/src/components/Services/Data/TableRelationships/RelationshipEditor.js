@@ -9,6 +9,8 @@ import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/Gql
 import styles from '../TableModify/ModifyTable.scss';
 import tableStyles from '../../../Common/TableCommon/TableStyles.scss';
 
+import { getConfirmation } from '../../../Common/utils/jsUtils';
+
 class RelationshipEditor extends React.Component {
   constructor(props) {
     super(props);
@@ -72,6 +74,7 @@ class RelationshipEditor extends React.Component {
   render() {
     const { dispatch, relConfig } = this.props;
     const { text, isEditting } = this.state;
+
     const { relName } = relConfig;
 
     const gqlCompatibilityWarning = !gqlPattern.test(relName) ? (
@@ -82,7 +85,9 @@ class RelationshipEditor extends React.Component {
 
     const onDelete = e => {
       e.preventDefault();
-      const isOk = confirm('Are you sure?');
+
+      const confirmMessage = `This will delete the relationship "${relName}" from this table`;
+      const isOk = getConfirmation(confirmMessage);
       if (isOk) {
         dispatch(deleteRelMigrate(relConfig));
       }

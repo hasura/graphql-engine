@@ -1,8 +1,12 @@
 module Hasura.GraphQL.Context where
 
-import           Data.Aeson
-import           Data.Has
 import           Hasura.Prelude
+
+import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
+import           Data.Has
+import           Language.Haskell.TH.Syntax    (Lift)
 
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashSet                  as Set
@@ -12,16 +16,24 @@ import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types.Permission
 
+-- | A /GraphQL context/, aka the final output of GraphQL schema generation. Used to both validate
+-- incoming queries and respond to introspection queries.
+--
+-- Combines information from 'TyAgg', 'RootFields', and 'InsCtxMap' datatypes and adds a bit more on
+-- top. Constructed via the 'mkGCtx' smart constructor.
 data GCtx
   = GCtx
-  { _gTypes     :: !TypeMap
-  , _gFields    :: !FieldMap
-  , _gOrdByCtx  :: !OrdByCtx
-  , _gQueryRoot :: !ObjTyInfo
-  , _gMutRoot   :: !(Maybe ObjTyInfo)
-  , _gSubRoot   :: !(Maybe ObjTyInfo)
-  , _gOpCtxMap  :: !OpCtxMap
-  , _gInsCtxMap :: !InsCtxMap
+  -- GraphQL type information
+  { _gTypes          :: !TypeMap
+  , _gFields         :: !FieldMap
+  , _gQueryRoot      :: !ObjTyInfo
+  , _gMutRoot        :: !(Maybe ObjTyInfo)
+  , _gSubRoot        :: !(Maybe ObjTyInfo)
+  -- Postgres type information
+  , _gOrdByCtx       :: !OrdByCtx
+  , _gQueryCtxMap    :: !QueryCtxMap
+  , _gMutationCtxMap :: !MutationCtxMap
+  , _gInsCtxMap      :: !InsCtxMap
   } deriving (Show, Eq)
 
 data RemoteGCtx
@@ -55,13 +67,34 @@ mkQueryRootTyInfo flds =
       InpValInfo (Just "name of the type") "name" Nothing
       $ G.toGT $ G.toNT $ G.NamedType "String"
 
+defaultTypes :: [TypeInfo]
+defaultTypes = $(fromSchemaDocQ defaultSchema TLHasuraType)
+
 emptyGCtx :: GCtx
 emptyGCtx =
   let queryRoot = mkQueryRootTyInfo []
       allTys    = mkTyInfoMap $ TIObj queryRoot:defaultTypes
   -- for now subscription root is query root
-  in GCtx allTys mempty mempty queryRoot Nothing Nothing
-     mempty mempty
+  in GCtx allTys mempty queryRoot Nothing Nothing mempty mempty mempty mempty
 
-defaultTypes :: [TypeInfo]
-defaultTypes = $(fromSchemaDocQ defaultSchema TLHasuraType)
+data TableCustomRootFields
+  = TableCustomRootFields
+  { _tcrfSelect          :: !(Maybe G.Name)
+  , _tcrfSelectByPk      :: !(Maybe G.Name)
+  , _tcrfSelectAggregate :: !(Maybe G.Name)
+  , _tcrfInsert          :: !(Maybe G.Name)
+  , _tcrfUpdate          :: !(Maybe G.Name)
+  , _tcrfDelete          :: !(Maybe G.Name)
+  } deriving (Show, Eq, Lift)
+$(deriveJSON (aesonDrop 5 snakeCase) ''TableCustomRootFields)
+
+emptyCustomRootFields :: TableCustomRootFields
+emptyCustomRootFields =
+  TableCustomRootFields
+  { _tcrfSelect          = Nothing
+  , _tcrfSelectByPk      = Nothing
+  , _tcrfSelectAggregate = Nothing
+  , _tcrfInsert          = Nothing
+  , _tcrfUpdate          = Nothing
+  , _tcrfDelete          = Nothing
+  }

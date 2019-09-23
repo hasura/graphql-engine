@@ -35,14 +35,14 @@ import           Instances.TH.Lift                 ()
 
 validateManualConfig
   :: (QErrM m, CacheRM m)
-  => FieldInfoMap
+  => FieldInfoMap PGColumnInfo
   -> RelManualConfig
   -> m ()
 validateManualConfig fim rm = do
   let colMapping = M.toList $ rmColumns rm
       remoteQt = rmTable rm
   remoteTabInfo <- askTabInfo remoteQt
-  let remoteFim = tiFieldInfoMap remoteTabInfo
+  let remoteFim = _tiFieldInfoMap remoteTabInfo
   forM_ colMapping $ \(lCol, rCol) -> do
     assertPGCol fim "" lCol
     assertPGCol remoteFim "" rCol
@@ -68,20 +68,6 @@ persistRel (QualifiedObject sn tn) rn relType relDef comment =
            VALUES ($1, $2, $3, $4, $5 :: jsonb, $6)
                 |] (sn, tn, rn, relTypeToTxt relType, Q.AltJ relDef, comment) True
 
-checkForFldConfilct
-  :: (MonadError QErr m)
-  => TableInfo
-  -> FieldName
-  -> m ()
-checkForFldConfilct tabInfo f =
-  case HM.lookup f (tiFieldInfoMap tabInfo) of
-    Just _ -> throw400 AlreadyExists $ mconcat
-      [ "column/relationship " <>> f
-      , " of table " <>> tiName tabInfo
-      , " already exists"
-      ]
-    Nothing -> return ()
-
 validateObjRel
   :: (QErrM m, CacheRM m)
   => QualifiedTable
@@ -89,8 +75,8 @@ validateObjRel
   -> m ()
 validateObjRel qt (RelDef rn ru _) = do
   tabInfo <- askTabInfo qt
-  checkForFldConfilct tabInfo (fromRel rn)
-  let fim = tiFieldInfoMap tabInfo
+  checkForFieldConflict tabInfo (fromRel rn)
+  let fim = _tiFieldInfoMap tabInfo
   case ru of
     RUFKeyOn cn                      -> assertPGCol fim "" cn
     RUManual (ObjRelManualConfig rm) -> validateManualConfig fim rm
@@ -111,20 +97,20 @@ objRelP2Setup qt fkeys (RelDef rn ru _) = do
     RUManual (ObjRelManualConfig rm) -> do
       let refqt = rmTable rm
           (lCols, rCols) = unzip $ M.toList $ rmColumns rm
-          deps  = map (\c -> SchemaDependency (SOTableObj qt $ TOCol c) "lcol") lCols
-                  <> map (\c -> SchemaDependency (SOTableObj refqt $ TOCol c) "rcol") rCols
+          deps  = map (\c -> SchemaDependency (SOTableObj qt $ TOCol c) DRLeftColumn) lCols
+                  <> map (\c -> SchemaDependency (SOTableObj refqt $ TOCol c) DRRightColumn) rCols
       return (RelInfo rn ObjRel (zip lCols rCols) refqt True, deps)
     RUFKeyOn cn -> do
       -- TODO: validation should account for this too
       ForeignKey _ refqt _ consName colMap <-
         getRequiredFkey cn fkeys $ \fk -> _fkTable fk == qt
 
-      let deps = [ SchemaDependency (SOTableObj qt $ TOCons consName) "fkey"
-                 , SchemaDependency (SOTableObj qt $ TOCol cn) "using_col"
+      let deps = [ SchemaDependency (SOTableObj qt $ TOCons consName) DRFkey
+                 , SchemaDependency (SOTableObj qt $ TOCol cn) DRUsingColumn
                  -- this needs to be added explicitly to handle the remote table
                  -- being untracked. In this case, neither the using_col nor
                  -- the constraint name will help.
-                 , SchemaDependency (SOTable refqt) "remote_table"
+                 , SchemaDependency (SOTable refqt) DRRemoteTable
                  ]
           colMapping = HM.toList colMap
       void $ askTabInfo refqt
@@ -167,12 +153,12 @@ validateArrRel
   => QualifiedTable -> ArrRelDef -> m ()
 validateArrRel qt (RelDef rn ru _) = do
   tabInfo <- askTabInfo qt
-  checkForFldConfilct tabInfo (fromRel rn)
-  let fim = tiFieldInfoMap tabInfo
+  checkForFieldConflict tabInfo (fromRel rn)
+  let fim = _tiFieldInfoMap tabInfo
   case ru of
     RUFKeyOn (ArrRelUsingFKeyOn remoteQt rcn) -> do
       remoteTabInfo <- askTabInfo remoteQt
-      let rfim = tiFieldInfoMap remoteTabInfo
+      let rfim = _tiFieldInfoMap remoteTabInfo
       -- Check if 'using' column exists
       assertPGCol rfim "" rcn
     RUManual (ArrRelManualConfig rm) ->
@@ -186,19 +172,19 @@ arrRelP2Setup qt fkeys (RelDef rn ru _) = do
     RUManual (ArrRelManualConfig rm) -> do
       let refqt = rmTable rm
           (lCols, rCols) = unzip $ M.toList $ rmColumns rm
-          deps  = map (\c -> SchemaDependency (SOTableObj qt $ TOCol c) "lcol") lCols
-                  <> map (\c -> SchemaDependency (SOTableObj refqt $ TOCol c) "rcol") rCols
+          deps  = map (\c -> SchemaDependency (SOTableObj qt $ TOCol c) DRLeftColumn) lCols
+                  <> map (\c -> SchemaDependency (SOTableObj refqt $ TOCol c) DRRightColumn) rCols
       return (RelInfo rn ArrRel (zip lCols rCols) refqt True, deps)
     RUFKeyOn (ArrRelUsingFKeyOn refqt refCol) -> do
       -- TODO: validation should account for this too
       ForeignKey _ _ _ consName colMap <- getRequiredFkey refCol fkeys $
         \fk -> _fkTable fk == refqt && _fkRefTable fk == qt
-      let deps = [ SchemaDependency (SOTableObj refqt $ TOCons consName) "remote_fkey"
-                 , SchemaDependency (SOTableObj refqt $ TOCol refCol) "using_col"
+      let deps = [ SchemaDependency (SOTableObj refqt $ TOCons consName) DRRemoteFkey
+                 , SchemaDependency (SOTableObj refqt $ TOCol refCol) DRUsingColumn
                  -- we don't need to necessarily track the remote table like we did in
                  -- case of obj relationships as the remote table is indirectly
                  -- tracked by tracking the constraint name and 'using_col'
-                 , SchemaDependency (SOTable refqt) "remote_table"
+                 , SchemaDependency (SOTable refqt) DRRemoteTable
                  ]
           mapping = HM.toList colMap
       return (RelInfo rn ArrRel (map swap mapping) refqt False, deps)
@@ -229,7 +215,7 @@ dropRelP1 :: (UserInfoM m, QErrM m, CacheRM m) => DropRel -> m [SchemaObjId]
 dropRelP1 (DropRel qt rn cascade) = do
   adminOnly
   tabInfo <- askTabInfo qt
-  _       <- askRelType (tiFieldInfoMap tabInfo) rn ""
+  _       <- askRelType (_tiFieldInfoMap tabInfo) rn ""
   sc      <- askSchemaCache
   let depObjs = getDependentObjs sc relObjId
   when (depObjs /= [] && not (or cascade)) $ reportDeps depObjs
@@ -279,7 +265,7 @@ validateRelP1
 validateRelP1 qt rn = do
   adminOnly
   tabInfo <- askTabInfo qt
-  askRelType (tiFieldInfoMap tabInfo) rn ""
+  askRelType (_tiFieldInfoMap tabInfo) rn ""
 
 setRelCommentP2
   :: (QErrM m, MonadTx m)

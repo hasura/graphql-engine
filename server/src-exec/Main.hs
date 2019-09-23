@@ -21,6 +21,7 @@ import qualified Data.Yaml                  as Y
 import qualified Network.HTTP.Client        as HTTP
 import qualified Network.HTTP.Client.TLS    as HTTP
 import qualified Network.Wai.Handler.Warp   as Warp
+import qualified System.Posix.Signals       as Signals
 
 import           Hasura.Db
 import           Hasura.Events.Lib
@@ -29,7 +30,8 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
 import           Hasura.RQL.Types           (SQLGenCtx (..), SchemaCache (..),
                                              adminUserInfo, emptySchemaCache)
-import           Hasura.Server.App          (SchemaCacheRef (..), getSCFromRef,
+import           Hasura.Server.App          (HasuraApp (..),
+                                             SchemaCacheRef (..), getSCFromRef,
                                              logInconsObjs, mkWaiApp)
 import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates (checkForUpdates)
@@ -140,6 +142,7 @@ main =  do
       am <- either (printErrExit . T.unpack) return authModeRes
 
       ci <- procConnInfo rci
+
       -- log postgres connection info
       unLogger logger $ connInfoToLog ci
 
@@ -148,7 +151,7 @@ main =  do
       -- safe init catalog
       dbId <- initialise pool sqlGenCtx logger httpManager
 
-      (app, cacheRef, cacheInitTime) <-
+      HasuraApp app cacheRef cacheInitTime shutdownApp <-
         mkWaiApp isoL loggerCtx sqlGenCtx enableAL pool ci httpManager am
           corsCfg enableConsole consoleAssetsDir enableTelemetry
           instanceId enabledAPIs lqOpts
@@ -161,7 +164,11 @@ main =  do
       startSchemaSync sqlGenCtx pool logger httpManager
                       cacheRef instanceId cacheInitTime
 
-      let warpSettings = Warp.setPort port $ Warp.setHost host Warp.defaultSettings
+      let warpSettings = Warp.setPort port
+                       . Warp.setHost host
+                       . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
+                       . Warp.setInstallShutdownHandler (shutdownHandler logger shutdownApp)
+                       $ Warp.defaultSettings
 
       maxEvThrds <- getFromEnv defaultMaxEventThreads "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
       evFetchMilliSec  <- getFromEnv defaultFetchIntervalMilliSec "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
@@ -273,6 +280,24 @@ main =  do
     cleanSuccess =
       putStrLn "successfully cleaned graphql-engine related data"
 
+    -- | Catches the SIGTERM signal and initiates a graceful shutdown. Graceful shutdown for regular HTTP
+    -- requests is already implemented in Warp, and is triggered by invoking the 'closeSocket' callback.
+    -- We only catch the SIGTERM signal once, that is, if the user hits CTRL-C once again, we terminate
+    -- the process immediately.
+    shutdownHandler :: Logger -> IO () -> IO () -> IO ()
+    shutdownHandler (Logger logger) shutdownApp closeSocket =
+      void $ Signals.installHandler
+        Signals.sigTERM
+        (Signals.CatchOnce shutdownSequence)
+        Nothing
+     where
+      shutdownSequence = do
+        closeSocket
+        shutdownApp
+        logShutdown
+
+      logShutdown = logger $
+        mkGenericStrLog LevelInfo "server" "gracefully shutting down server"
 
 telemetryNotice :: String
 telemetryNotice =

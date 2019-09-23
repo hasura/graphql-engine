@@ -6,7 +6,6 @@ module Hasura.RQL.DML.Select.Internal
   )
 where
 
-import           Control.Arrow               ((&&&))
 import           Data.List                   (delete, sort)
 import           Instances.TH.Lift           ()
 
@@ -203,13 +202,13 @@ buildJsonObject pfx parAls arrRelCtx strfyNum flds =
                                ANIField (fldAls, arrSel)
         in S.mkQIdenExp arrPfx fldAls
 
-    toSQLCol :: PGColInfo -> Maybe ColOp -> S.SQLExp
+    toSQLCol :: PGColumnInfo -> Maybe ColOp -> S.SQLExp
     toSQLCol col colOpM =
       toJSONableExp strfyNum (pgiType col) $ case colOpM of
         Nothing              -> colNameExp
         Just (ColOp op cExp) -> S.mkSQLOpExp op colNameExp cExp
       where
-        colNameExp = S.mkQIdenExp (mkBaseTableAls pfx) $ pgiName col
+        colNameExp = S.mkQIdenExp (mkBaseTableAls pfx) $ pgiColumn col
 
 -- uses row_to_json to build a json object
 withRowToJSON
@@ -286,8 +285,8 @@ processAnnOrderByCol
 processAnnOrderByCol pfx parAls arrRelCtx strfyNum = \case
   AOCPG colInfo ->
     let
-      qualCol  = S.mkQIdenExp (mkBaseTableAls pfx) (toIden $ pgiName colInfo)
-      obColAls = mkBaseTableColAls pfx $ pgiName colInfo
+      qualCol  = S.mkQIdenExp (mkBaseTableAls pfx) (toIden $ pgiColumn colInfo)
+      obColAls = mkBaseTableColAls pfx $ pgiColumn colInfo
     in ( (S.Alias obColAls, qualCol)
        , OBNNothing
        )
@@ -718,7 +717,10 @@ mkFuncSelectWith f annFn =
     funcSel = S.mkSelect { S.selFrom = Just $ S.FromExp [frmItem]
                          , S.selExtr = [S.Extractor S.SEStar Nothing]
                          }
-    frmItem = S.mkFuncFromItem qf fnArgs
+    frmItem = S.mkFuncFromItem qf $ mkSQLFunctionArgs fnArgs
+
+    mkSQLFunctionArgs (FunctionArgsExp positional named) =
+      S.FunctionArgs positional named
 
     newTabFrom = (_asnFrom annSel) {_tfIden = Just $ toIden funcAls}
 

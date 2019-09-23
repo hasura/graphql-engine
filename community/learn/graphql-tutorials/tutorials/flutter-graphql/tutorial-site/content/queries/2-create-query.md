@@ -41,11 +41,9 @@ The query fetches `todos` with a simple condition : `is_public` which must be fa
 
 As you see, we have explicitly mentioned that `is_public` must be false. But in order to reuse this query for private and public todos, we must parameterize this query using `query variables`. Lets define a boolean query variable called `is_public`. The GraphQL query would fetch public todos if `is_public` is true and personal todos if `is_public` is false, which in code is represented as follows:
 
-```graphql
-query
- - query getMyTodos {
- + getTodos(\$is_public: Boolean!)
-  {
+```dart
+ - static String fetchAll = “”"query getMyTodos {
+ + static String fetchAll = “”"query getTodos(\$is_public: Boolean!){
  - todos(where: { is_public: { _eq: false} },
  + todos(where: { is_public: { _eq: \$is_public} },
    order_by: { created_at: desc }) {
@@ -53,8 +51,8 @@ query
     id
     title
     is_completed
-  }
-}
++  }
+}"""
 ```
 
 Cool! The query is now ready, let's integrate it. Currently, we are just using some dummy data. Let us remove this dummy data and create the UI based on our GraphQL response.
@@ -78,7 +76,8 @@ Expanded(
 +             }
 +             final List<LazyCacheMap> todos =
 +                 (result.data['todos'] as List<dynamic>).cast<LazyCacheMap>();
-              return ListView.builder(
+-             child: ListView.builder(
++             return ListView.builder(
 -               itemCount: todoList.list.length,
 +               itemCount: todos.length,
                 itemBuilder: (context, index) {
@@ -86,8 +85,8 @@ Expanded(
                   return TodoItemTile(
 -                   item: todoList.list[index],
 +                   item: TodoItem.fromElements(responseData["id"],
-+                       responseData['title'], responseData['is_completed'])
--                   delete: () {
++                       responseData['title'], responseData['is_completed']),
+                    delete: () {
 -                      setState(() {
 -                       todoList.removeTodo(todoList.list[index].id);
 -                     });
@@ -99,7 +98,8 @@ Expanded(
                     },
                   );
                 },
-          );,
+-         ),
++         );
 +       }
 +      ),
 ```

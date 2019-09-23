@@ -6,8 +6,8 @@ module Hasura.GraphQL.Schema.Mutation.Insert
   , mkOnConflictTypes
   ) where
 
-import qualified Data.HashMap.Strict                  as Map
-import qualified Language.GraphQL.Draft.Syntax        as G
+import qualified Data.HashMap.Strict                   as Map
+import qualified Language.GraphQL.Draft.Syntax         as G
 
 import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Schema.Common
@@ -105,7 +105,7 @@ input table_insert_input {
 -}
 
 mkInsInp
-  :: QualifiedTable -> [PGColInfo] -> RelationInfoMap -> InpObjTyInfo
+  :: QualifiedTable -> [PGColumnInfo] -> RelationInfoMap -> InpObjTyInfo
 mkInsInp tn insCols relInfoMap =
   mkHsraInpTyInfo (Just desc) (mkInsInpTy tn) $ fromInpValL $
   map mkPGColInp insCols <> relInps
@@ -154,9 +154,8 @@ insert_table(
   ): table_mutation_response!
 -}
 
-mkInsMutFld
-  :: QualifiedTable -> Bool -> ObjFldInfo
-mkInsMutFld tn isUpsertable =
+mkInsMutFld :: Maybe G.Name -> QualifiedTable -> Bool -> ObjFldInfo
+mkInsMutFld mCustomName tn isUpsertable =
   mkHsraObjFldInfo (Just desc) fldName (fromInpValL inputVals) $
     G.toGT $ mkMutRespTy tn
   where
@@ -164,7 +163,8 @@ mkInsMutFld tn isUpsertable =
     desc = G.Description $
       "insert data into the table: " <>> tn
 
-    fldName = "insert_" <> qualObjectToName tn
+    defFldName = "insert_" <> qualObjectToName tn
+    fldName = fromMaybe defFldName mCustomName
 
     objsArgDesc = "the rows to be inserted"
     objectsArg =
@@ -174,14 +174,14 @@ mkInsMutFld tn isUpsertable =
     onConflictInpVal = bool Nothing (Just onConflictArg) isUpsertable
 
     onConflictDesc = "on conflict condition"
-    onConflictArg =
-      InpValInfo (Just onConflictDesc) "on_conflict" Nothing $ G.toGT $ mkOnConflictInpTy tn
+    onConflictArg = InpValInfo (Just onConflictDesc) "on_conflict"
+                    Nothing $ G.toGT $ mkOnConflictInpTy tn
 
-mkConstriantTy :: QualifiedTable -> [ConstraintName] -> EnumTyInfo
-mkConstriantTy tn cons = enumTyInfo
+mkConstraintTy :: QualifiedTable -> [ConstraintName] -> EnumTyInfo
+mkConstraintTy tn cons = enumTyInfo
   where
     enumTyInfo = mkHsraEnumTyInfo (Just desc) (mkConstraintInpTy tn) $
-                 mapFromL _eviVal $ map mkConstraintEnumVal cons
+      EnumValuesSynthetic . mapFromL _eviVal $ map mkConstraintEnumVal cons
 
     desc = G.Description $
       "unique or primary key constraints on table " <>> tn
@@ -190,19 +190,19 @@ mkConstriantTy tn cons = enumTyInfo
       EnumValInfo (Just "unique or primary key constraint")
       (G.EnumValue $ G.Name n) False
 
-mkUpdColumnTy :: QualifiedTable -> [PGCol] -> EnumTyInfo
+mkUpdColumnTy :: QualifiedTable -> [G.Name] -> EnumTyInfo
 mkUpdColumnTy tn cols = enumTyInfo
   where
     enumTyInfo = mkHsraEnumTyInfo (Just desc) (mkUpdColumnInpTy tn) $
-                 mapFromL _eviVal $ map mkColumnEnumVal cols
+      EnumValuesSynthetic . mapFromL _eviVal $ map mkColumnEnumVal cols
 
     desc = G.Description $
       "update columns of table " <>> tn
 
 mkConflictActionTy :: Bool -> EnumTyInfo
 mkConflictActionTy updAllowed =
-  mkHsraEnumTyInfo (Just desc) conflictActionTy $ mapFromL _eviVal $
-  [enumValIgnore] <> bool [] [enumValUpdate] updAllowed
+  mkHsraEnumTyInfo (Just desc) conflictActionTy $
+    EnumValuesSynthetic . mapFromL _eviVal $ [enumValIgnore] <> bool [] [enumValUpdate] updAllowed
   where
     desc = G.Description "conflict action"
     enumValIgnore = EnumValInfo (Just "ignore the insert on this row")
@@ -211,12 +211,12 @@ mkConflictActionTy updAllowed =
                     (G.EnumValue "update") False
 
 mkOnConflictTypes
-  :: QualifiedTable -> [ConstraintName] -> [PGCol] -> Bool -> [TypeInfo]
+  :: QualifiedTable -> [ConstraintName] -> [G.Name] -> Bool -> [TypeInfo]
 mkOnConflictTypes tn uniqueOrPrimaryCons cols =
   bool [] tyInfos
   where
     tyInfos = [ TIEnum $ mkConflictActionTy isUpdAllowed
-              , TIEnum $ mkConstriantTy tn uniqueOrPrimaryCons
+              , TIEnum $ mkConstraintTy tn uniqueOrPrimaryCons
               , TIEnum $ mkUpdColumnTy tn cols
               , TIInpObj $ mkOnConflictInp tn
               ]

@@ -18,9 +18,16 @@ CREATE OR REPLACE function hdb_views.{{QUALIFIED_TRIGGER_NAME}}() RETURNS trigge
       'old', {{OLD_PAYLOAD_EXPRESSION}},
       'new', {{NEW_PAYLOAD_EXPRESSION}}
     );
-    IF (TG_OP <> 'UPDATE') OR (_old <> _new) THEN
-      PERFORM hdb_catalog.insert_event_log(CAST(TG_TABLE_SCHEMA AS text), CAST(TG_TABLE_NAME AS text), CAST('{{NAME}}' AS text), TG_OP, _data);
-    END IF;
+    BEGIN
+      IF (TG_OP <> 'UPDATE') OR (_old <> _new) THEN
+        PERFORM hdb_catalog.insert_event_log(CAST(TG_TABLE_SCHEMA AS text), CAST(TG_TABLE_NAME AS text), CAST('{{NAME}}' AS text), TG_OP, _data);
+      END IF;
+      EXCEPTION WHEN undefined_function THEN
+        IF (TG_OP <> 'UPDATE') OR (_old *<> _new) THEN
+          PERFORM hdb_catalog.insert_event_log(CAST(TG_TABLE_SCHEMA AS text), CAST(TG_TABLE_NAME AS text), CAST('{{NAME}}' AS text), TG_OP, _data);
+        END IF;
+    END;
+
     RETURN NULL;
   END;
 $$;

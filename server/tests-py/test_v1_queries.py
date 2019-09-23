@@ -510,6 +510,14 @@ class TestRunSQL(DefaultTestQueries):
     def test_sql_rename_table_and_column(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/sql_rename_table_and_column.yaml')
 
+    def test_sql_alter_test_bool_col(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/sql_alter_test_bool_col.yaml')
+        hge_ctx.may_skip_test_teardown = True
+
+    def test_sql_alter_test_id(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/sql_alter_test_id.yaml')
+        hge_ctx.may_skip_test_teardown = True
+
     @classmethod
     def dir(cls):
         return "queries/v1/run_sql"
@@ -616,3 +624,25 @@ class TestNonEmptyText:
     @classmethod
     def dir(cls):
         return "queries/v1/non_empty_text"
+
+class TestSetTableIsEnum(DefaultTestQueries):
+    @classmethod
+    def dir(cls):
+        return 'queries/v1/set_table_is_enum'
+
+    def test_add_and_remove(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/add_and_remove.yaml')
+
+    def test_add_invalid(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/add_invalid.yaml')
+
+class TestSetTableCustomFields(DefaultTestQueries):
+    @classmethod
+    def dir(cls):
+        return 'queries/v1/set_table_custom_fields'
+
+    def test_set_and_unset(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/set_and_unset.yaml')
+
+    def test_set_invalid_table(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/set_invalid_table.yaml')

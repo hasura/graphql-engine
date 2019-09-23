@@ -1,0 +1,11 @@
+type: bulk
+args:
+
+- type: insert
+  args:
+    table: users
+    objects:
+    - name: Alyssa
+      favorite_color: red
+    - name: Ben
+      favorite_color: blue

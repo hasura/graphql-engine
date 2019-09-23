@@ -119,6 +119,7 @@ func New(sourceUrl string, databaseUrl string, cmd bool, logger *log.Logger) (*M
 	if logger == nil {
 		logger = log.New()
 	}
+	m.Logger = logger
 
 	sourceDrv, err := source.Open(sourceUrl, logger)
 	if err != nil {
@@ -150,19 +151,17 @@ func newCommon(cmd bool) *Migrate {
 }
 
 func (m *Migrate) ReScan() error {
-	sourceDrv, err := source.Open(m.sourceURL, m.Logger)
+	err := m.sourceDrv.Scan()
 	if err != nil {
 		m.Logger.Debug(err)
 		return err
 	}
-	m.sourceDrv = sourceDrv
 
-	databaseDrv, err := database.Open(m.databaseURL, m.isCMD, m.Logger)
+	err = m.databaseDrv.Scan()
 	if err != nil {
 		m.Logger.Debug(err)
 		return err
 	}
-	m.databaseDrv = databaseDrv
 
 	err = m.calculateStatus()
 	if err != nil {
@@ -1096,11 +1095,13 @@ func (m *Migrate) unlock() error {
 	m.isLockedMu.Lock()
 	defer m.isLockedMu.Unlock()
 
+	defer func() {
+		m.isLocked = false
+	}()
+
 	if err := m.databaseDrv.UnLock(); err != nil {
 		return err
 	}
-
-	m.isLocked = false
 	return nil
 }
 

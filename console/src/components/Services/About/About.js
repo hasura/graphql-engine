@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import Helmet from 'react-helmet';
 
 import Endpoints from '../../../Endpoints';
 
@@ -110,13 +111,10 @@ class About extends Component {
     };
 
     return (
-      <div
-        className={`container-fluid ${styles.add_mar_top}  ${styles.add_mar_left}`}
-      >
+      <div className={`container-fluid ${styles.full_container}`}>
         <div className={styles.subHeader}>
-          <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
-            About
-          </h2>
+          <Helmet title={'About | Hasura'} />
+          <h2 className={styles.headerText}>About</h2>
           <div className={styles.wd60}>
             <div className={styles.add_mar_top}>
               {getServerVersionSection()}

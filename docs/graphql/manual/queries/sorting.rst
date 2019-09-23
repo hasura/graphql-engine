@@ -3,14 +3,14 @@ Sort query results
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
 Results from your query can be sorted by using the ``order_by`` argument. The argument can be used to sort nested
 objects too.
 
-The sort order (ascending vs. descending) is set by specifying ``asc`` or ``desc``
-enum value for the column name in the ``order_by`` input object e.g. ``{name: desc}``.
+The sort order (ascending vs. descending) is set by specifying the ``asc`` or ``desc``
+enum value for the column name in the ``order_by`` input object, e.g. ``{name: desc}``.
 
 By default, for ascending ordering ``null`` values are returned at the end of the results and for descending
 ordering ``null`` values are returned at the start of the results. ``null`` values can be fetched first on
@@ -29,7 +29,7 @@ The following are example queries for different sorting use cases:
 Sorting objects
 ---------------
 
-**Example:** Fetch list of authors sorted by their names in an ascending order:
+**Example:** Fetch a list of authors sorted by their names in an ascending order:
 
 .. graphiql::
   :view_only:
@@ -160,11 +160,11 @@ Sorting based on nested object's fields
 ---------------------------------------
 Only **columns from object relationships** and **aggregates from array relationships** can be used for sorting.
 
-For Object relationships
+For object relationships
 ^^^^^^^^^^^^^^^^^^^^^^^^
 For object relationships only columns can be used for sorting.
 
-**Example:** Fetch a list of articles that are sorted by their author's ids in descending:
+**Example:** Fetch a list of articles that are sorted by their author's ids in descending order:
 
 .. graphiql::
   :view_only:
@@ -217,7 +217,7 @@ For object relationships only columns can be used for sorting.
       }
     }
 
-For Array relationships
+For array relationships
 ^^^^^^^^^^^^^^^^^^^^^^^
 For array relationships only aggregates can be used for sorting.
 
