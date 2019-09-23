@@ -37,12 +37,14 @@ export const generateCreatePermQuery = (
     args: {
       remote_schema: remoteSchemaName,
       role: newRole || role,
-      definition: [],
+      definition: {
+        allowed_objects: [],
+      },
     },
   };
 
   Object.keys(allowedTypes).forEach(allowedType => {
-    payload.args.definition.push({
+    payload.args.definition.allowed_objects.push({
       type: allowedType,
       fields: Object.keys(allowedTypes[allowedType]).filter(
         fieldName => allowedTypes[allowedType][fieldName].isChecked

@@ -83,7 +83,8 @@ const PermissionsEditor = ({
   // get allowed types
   const allowedTypes = Object.keys(editState.allowedTypes).map(at => {
     // on field toggle
-    const fieldToggleCallback = (fieldName, isChecked) => {
+    const fieldToggleCallback = (fieldName, isChecked, allowNested) => {
+      if (!allowNested) return;
       const newAllowedTypes = JSON.parse(
         JSON.stringify(editState.allowedTypes)
       );
