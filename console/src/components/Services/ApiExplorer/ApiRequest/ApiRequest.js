@@ -427,7 +427,7 @@ class ApiRequest extends Component {
               } else {
                 analyzeIcon = (
                   <i
-                    className={styles.showInspector + ' fa fa-plus-square-o'}
+                    className={styles.showInspector + ' fa fa-user-secret'}
                     token={token}
                     data-header-index={i}
                     onClick={this.analyzeBearerToken}
@@ -639,8 +639,8 @@ class ApiRequest extends Component {
             claimData =
               claimFormat === 'stringified_json'
                 ? generateValidNameSpaceData(
-                  JSON.parse(payload[claimNameSpace])
-                )
+                    JSON.parse(payload[claimNameSpace])
+                  )
                 : generateValidNameSpaceData(payload[claimNameSpace]);
           } catch (e) {
             console.error(e);
