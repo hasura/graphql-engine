@@ -190,9 +190,8 @@ runSetTableCustomFieldsQV2
   => SetTableCustomFields -> m EncJSON
 runSetTableCustomFieldsQV2 (SetTableCustomFields tableName rootFields columnNames) = do
   adminOnly
-  tableInfo <- askTabInfo tableName
+  void $ askTabInfo tableName
   let tableConfig = TableConfig rootFields columnNames
-  validateTableConfig tableInfo tableConfig
   updateTableConfig tableName tableConfig
   buildSchemaCacheFor (MOTable tableName)
   return successMsg
