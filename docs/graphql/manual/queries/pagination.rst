@@ -189,10 +189,11 @@ Limit results in a nested object
       }
     }
 
-Fetch aggregate count with limited results in the same query
-------------------------------------------
+Fetch limited results along with aggregated data on all results in the same query
+---------------------------------------------------------------------------------
 
-``count`` (*as part of aggregations*) can be used along with `limit` based pagination in the same query. This information can be used to calculate the total number of pages.
+Sometimes, a subset of data is needed along with some aggregated information on all the data.
+The total count can be returned along with a page of results. The count can then be used to calculate the number of pages based on the limit that is set.
 
 **Example:** Fetch a list of articles where a certain condition is true and get their count. Then limit the number of articles to display.
 
@@ -238,3 +239,7 @@ Fetch aggregate count with limited results in the same query
         ]
       }
     }
+
+.. note::
+
+  If this is done with subscriptions, two subscriptions are required, as it's not possible to have two top level fields in the same subscription.
