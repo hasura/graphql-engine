@@ -122,12 +122,13 @@ parsePGScalarValues columnType values = do
 -- 'pcirReferences' field and other table data to eventually resolve the type to a 'PGColumnType'.
 data PGRawColumnInfo
   = PGRawColumnInfo
-  { prciName       :: !PGCol
-  , prciType       :: !PGScalarType
-  , prciIsNullable :: !Bool
-  , prciReferences :: ![QualifiedTable]
+  { prciName        :: !PGCol
+  , prciType        :: !PGScalarType
+  , prciIsNullable  :: !Bool
+  , prciReferences  :: ![QualifiedTable]
   -- ^ only stores single-column references to primary key of foreign tables (used for detecting
   -- references to enum tables)
+  , prciDescription :: !(Maybe PGDescription)
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 4 snakeCase) ''PGRawColumnInfo)
 
@@ -135,11 +136,12 @@ $(deriveJSON (aesonDrop 4 snakeCase) ''PGRawColumnInfo)
 -- schema information to produce a 'PGColumnType'.
 data PGColumnInfo
   = PGColumnInfo
-  { pgiColumn     :: !PGCol
-  , pgiName       :: !G.Name
+  { pgiColumn      :: !PGCol
+  , pgiName        :: !G.Name
   -- ^ field name exposed in GraphQL interface
-  , pgiType       :: !PGColumnType
-  , pgiIsNullable :: !Bool
+  , pgiType        :: !PGColumnType
+  , pgiIsNullable  :: !Bool
+  , pgiDescription :: !(Maybe PGDescription)
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 3 snakeCase) ''PGColumnInfo)
 

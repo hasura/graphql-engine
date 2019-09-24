@@ -6,6 +6,7 @@ export const REMOTE_SCHEMA_TIMEOUT_CONF_SUPPORT =
   'remoteSchemaTimeoutConfSupport';
 export const TABLE_ENUMS_SUPPORT = 'tableEnumsSupport';
 export const GRAPHQL_ALIASING_SUPPORT = 'tableColumnAliasing';
+export const EXISTS_PERMISSION_SUPPORT = 'existsPermissionSupport';
 
 // list of feature launch versions
 const featureLaunchVersions = {
@@ -15,6 +16,7 @@ const featureLaunchVersions = {
   [REMOTE_SCHEMA_TIMEOUT_CONF_SUPPORT]: 'v1.0.0-beta.5',
   [TABLE_ENUMS_SUPPORT]: 'v1.0.0-beta.6',
   [GRAPHQL_ALIASING_SUPPORT]: 'v1.0.0-beta.8',
+  [EXISTS_PERMISSION_SUPPORT]: 'v1.0.0-beta.7',
 };
 
 export const getFeaturesCompatibility = serverVersion => {
@@ -24,10 +26,6 @@ export const getFeaturesCompatibility = serverVersion => {
 
   try {
     Object.keys(featureLaunchVersions).forEach(feature => {
-      console.log('==================================');
-      console.log(feature);
-      console.log(isPullRequest);
-      console.log('==================================');
       featuresCompatibility[feature] =
         isPullRequest ||
         semver.satisfies(featureLaunchVersions[feature], '<=' + serverVersion);

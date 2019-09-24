@@ -14,6 +14,8 @@ module Hasura.SQL.Types
   , snakeCaseTable
   , QualifiedFunction
 
+  , PGDescription(..)
+
   , PGCol
   , getPGColTxt
   , showPGCols
@@ -285,6 +287,10 @@ snakeCaseTable (QualifiedObject sn tn) =
   getSchemaTxt sn <> "_" <> getTableTxt tn
 
 type QualifiedFunction = QualifiedObject FunctionName
+
+newtype PGDescription
+  = PGDescription { getPGDescription :: T.Text }
+  deriving (Show, Eq, FromJSON, ToJSON, Q.FromCol)
 
 newtype PGCol
   = PGCol { getPGColTxt :: T.Text }

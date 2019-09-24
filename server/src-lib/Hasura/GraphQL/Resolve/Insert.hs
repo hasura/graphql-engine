@@ -85,7 +85,7 @@ data AnnInsObj
   } deriving (Show, Eq)
 
 mkAnnInsObj
-  :: (MonadError QErr m, Has InsCtxMap r, MonadReader r m)
+  :: (MonadResolve m, Has InsCtxMap r, MonadReader r m)
   => RelationInfoMap
   -> PGColGNameMap
   -> AnnGObject
@@ -96,7 +96,7 @@ mkAnnInsObj relInfoMap allColMap annObj =
     emptyInsObj = AnnInsObj [] [] []
 
 traverseInsObj
-  :: (MonadError QErr m, Has InsCtxMap r, MonadReader r m)
+  :: (MonadResolve m, Has InsCtxMap r, MonadReader r m)
   => RelationInfoMap
   -> PGColGNameMap
   -> (G.Name, AnnInpVal)
@@ -113,7 +113,7 @@ traverseInsObj rim allColMap (gName, annVal) defVal@(AnnInsObj cols objRels arrR
       columnInfo <- onNothing (Map.lookup gName allColMap) $
                  throw500 "column not found in PGColGNameMap"
       let columnName = pgiColumn columnInfo
-          scalarValue = fromMaybe (PGNull scalarType) maybeScalarValue
+      scalarValue <- maybe (pure $ PGNull scalarType) openOpaqueValue maybeScalarValue
       pure $ AnnInsObj ((columnName, WithScalarType scalarType scalarValue):cols) objRels arrRels
 
     parseObject = do
@@ -159,7 +159,7 @@ traverseInsObj rim allColMap (gName, annVal) defVal@(AnnInsObj cols objRels arrR
             bool withNonEmptyArrData (return defVal) $ null arrDataVals
 
 parseOnConflict
-  :: (MonadError QErr m)
+  :: (MonadResolve m)
   => QualifiedTable
   -> Maybe UpdPermForIns
   -> PGColGNameMap
@@ -486,7 +486,7 @@ prefixErrPath fld =
   withPathK "selectionSet" . fieldAsPath fld . withPathK "args"
 
 convertInsert
-  :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
+  :: ( MonadResolve m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r, Has InsCtxMap r
      )
   => RoleName

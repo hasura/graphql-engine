@@ -43,6 +43,9 @@ htmlHeader = ("Content-Type", "text/html; charset=utf-8")
 gzipHeader :: (T.Text, T.Text)
 gzipHeader = ("Content-Encoding", "gzip")
 
+brHeader :: (T.Text, T.Text)
+brHeader = ("Content-Encoding", "br")
+
 userRoleHeader :: T.Text
 userRoleHeader = "x-hasura-role"
 

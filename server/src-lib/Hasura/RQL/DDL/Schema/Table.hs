@@ -13,6 +13,9 @@ module Hasura.RQL.DDL.Schema.Table
   , SetTableIsEnum(..)
   , runSetExistingTableIsEnumQ
 
+  , SetTableCustomFields(..)
+  , runSetTableCustomFieldsQV2
+
   , buildTableCache
   , delTableAndDirectDeps
   , processTableChanges
@@ -110,8 +113,7 @@ validateCustomRootFlds defRemoteGCtx rootFlds =
 validateTableConfig
   :: (QErrM m, CacheRM m)
   => TableInfo a -> TableConfig -> m ()
-validateTableConfig tableInfo (TableConfig rootFlds colFlds) =
-  withPathK "configuration" $ do
+validateTableConfig tableInfo (TableConfig rootFlds colFlds) = do
     withPathK "custom_root_fields" $ do
       sc <- askSchemaCache
       let defRemoteGCtx = scDefaultRemoteGCtx sc
@@ -155,19 +157,8 @@ runTrackTableV2Q
   :: (QErrM m, CacheRWM m, MonadTx m, UserInfoM m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
   => TrackTableV2 -> m EncJSON
 runTrackTableV2Q (TrackTableV2 (TrackTable qt isEnum) config) = do
-  sc <- askSchemaCache
-  let tableCache = scTables sc
-  case (M.lookup qt tableCache) of
-    Nothing -> do
-      trackExistingTableOrViewP1 qt
-      trackExistingTableOrViewP2 qt isEnum config
-    Just ti -> do
-      -- validate table config
-      validateTableConfig ti config
-      -- update catalog with new configuration
-      updateTableConfig qt config
-      buildSchemaCacheFor (MOTable qt)
-      return successMsg
+  trackExistingTableOrViewP1 qt
+  trackExistingTableOrViewP2 qt isEnum config
 
 runSetExistingTableIsEnumQ
   :: (QErrM m, CacheRWM m, MonadTx m, UserInfoM m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
@@ -176,6 +167,33 @@ runSetExistingTableIsEnumQ (SetTableIsEnum tableName isEnum) = do
   adminOnly
   void $ askTabInfo tableName -- assert that table is tracked
   updateTableIsEnumInCatalog tableName isEnum
+  buildSchemaCacheFor (MOTable tableName)
+  return successMsg
+
+data SetTableCustomFields
+  = SetTableCustomFields
+  { _stcfTable             :: !QualifiedTable
+  , _stcfCustomRootFields  :: !GC.TableCustomRootFields
+  , _stcfCustomColumnNames :: !CustomColumnNames
+  } deriving (Show, Eq, Lift)
+$(deriveToJSON (aesonDrop 5 snakeCase) ''SetTableCustomFields)
+
+instance FromJSON SetTableCustomFields where
+  parseJSON = withObject "SetTableCustomFields" $ \o ->
+    SetTableCustomFields
+    <$> o .: "table"
+    <*> o .:? "custom_root_fields" .!= GC.emptyCustomRootFields
+    <*> o .:? "custom_column_names" .!= M.empty
+
+runSetTableCustomFieldsQV2
+  :: (QErrM m, CacheRWM m, MonadTx m, UserInfoM m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
+  => SetTableCustomFields -> m EncJSON
+runSetTableCustomFieldsQV2 (SetTableCustomFields tableName rootFields columnNames) = do
+  adminOnly
+  tableInfo <- askTabInfo tableName
+  let tableConfig = TableConfig rootFields columnNames
+  validateTableConfig tableInfo tableConfig
+  updateTableConfig tableName tableConfig
   buildSchemaCacheFor (MOTable tableName)
   return successMsg
 
@@ -233,6 +251,9 @@ processTableChanges ti tableDiff = do
   let tn = _tiName ti
       withOldTabName = do
         replaceConstraints tn
+        -- replace description
+        replaceDescription tn
+        -- for all the dropped columns
         procDroppedCols tn
         procAddedCols tn
         procAlteredCols sc tn
@@ -250,10 +271,13 @@ processTableChanges ti tableDiff = do
   maybe withOldTabName withNewTabName mNewName
 
   where
-    TableDiff mNewName droppedCols addedCols alteredCols _ constraints = tableDiff
+    TableDiff mNewName droppedCols addedCols alteredCols _ constraints descM = tableDiff
     customFields = _tcCustomColumnNames $ _tiCustomConfig ti
     replaceConstraints tn = flip modTableInCache tn $ \tInfo ->
       return $ tInfo {_tiUniqOrPrimConstraints = constraints}
+
+    replaceDescription tn = flip modTableInCache tn $ \tInfo ->
+      return $ tInfo {_tiDescription = descM}
 
     procDroppedCols tn =
       forM_ droppedCols $ \droppedCol ->
@@ -262,7 +286,8 @@ processTableChanges ti tableDiff = do
 
     procAddedCols tn =
       -- In the newly added columns check that there is no conflict with relationships
-      forM_ addedCols $ \rawInfo@(PGRawColumnInfo colName _ _ _) ->
+      forM_ addedCols $ \rawInfo -> do
+        let colName = prciName rawInfo
         case M.lookup (fromPGCol colName) $ _tiFieldInfoMap ti of
           Just (FIRelationship _) ->
             throw400 AlreadyExists $ "cannot add column " <> colName
@@ -273,8 +298,8 @@ processTableChanges ti tableDiff = do
             addColToCache colName info tn
 
     procAlteredCols sc tn = fmap or $ forM alteredCols $
-      \( PGRawColumnInfo oldName oldType _ _
-       , newRawInfo@(PGRawColumnInfo newName newType _ _) ) -> do
+      \( PGRawColumnInfo oldName oldType _ _ _
+       , newRawInfo@(PGRawColumnInfo newName newType _ _ _) ) -> do
         let performColumnUpdate = do
               newInfo <- processColumnInfoUsingCache tn customFields newRawInfo
               updColInCache newName newInfo tn
@@ -339,7 +364,7 @@ buildTableCache = processTableCache <=< buildRawTableCache
         catalogInfo <- onNothing maybeInfo $
           throw400 NotExists $ "no such table/view exists in postgres: " <>> name
 
-        let CatalogTableInfo columns constraints primaryKeyColumnNames viewInfo = catalogInfo
+        let CatalogTableInfo columns constraints primaryKeyColumnNames viewInfo maybeDesc = catalogInfo
             columnFields = M.fromList . flip map columns $ \column ->
               (fromPGCol $ prciName column, FIColumn column)
 
@@ -360,10 +385,11 @@ buildTableCache = processTableCache <=< buildRawTableCache
               , _tiEventTriggerInfoMap = mempty
               , _tiEnumValues = maybeEnumValues
               , _tiCustomConfig = config
+              , _tiDescription = maybeDesc
               }
 
         -- validate tableConfig
-        validateTableConfig info config
+        withPathK "configuration" $ validateTableConfig info config
         pure (name, info)
 
     -- Step 2: Process the raw table cache to replace Postgres column types with logical column
@@ -394,6 +420,7 @@ processColumnInfo enumTables customFields tableName rawInfo = do
     , pgiName = graphqlName
     , pgiType = resolvedType
     , pgiIsNullable = prciIsNullable rawInfo
+    , pgiDescription = prciDescription rawInfo
     }
   where
     pgCol = prciName rawInfo

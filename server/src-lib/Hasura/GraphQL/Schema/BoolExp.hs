@@ -283,7 +283,7 @@ mkBoolExpInp tn fields =
       ]
 
     mkFldExpInp = \case
-      Left (PGColumnInfo _ name colTy _) ->
+      Left (PGColumnInfo _ name colTy _ _) ->
         mk name (mkCompExpTy colTy)
       Right relationshipField ->
         let relationshipName = riName $ _rfiInfo relationshipField
