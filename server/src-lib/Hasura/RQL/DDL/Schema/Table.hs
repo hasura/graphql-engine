@@ -190,9 +190,8 @@ runSetTableCustomFieldsQV2
   => SetTableCustomFields -> m EncJSON
 runSetTableCustomFieldsQV2 (SetTableCustomFields tableName rootFields columnNames) = do
   adminOnly
-  tableInfo <- askTabInfo tableName
+  void $ askTabInfo tableName
   let tableConfig = TableConfig rootFields columnNames
-  validateTableConfig tableInfo tableConfig
   updateTableConfig tableName tableConfig
   buildSchemaCacheFor (MOTable tableName)
   return successMsg
@@ -249,30 +248,31 @@ processTableChanges ti tableDiff = do
   -- process dropped/added columns, because schema reload happens eventually
   sc <- askSchemaCache
   let tn = _tiName ti
-      withOldTabName = do
+      withOldTabName ccn = do
         replaceConstraints tn
         -- replace description
         replaceDescription tn
         -- for all the dropped columns
         procDroppedCols tn
-        procAddedCols tn
-        procAlteredCols sc tn
+        procAddedCols ccn tn
+        procAlteredCols sc ccn tn
 
-      withNewTabName newTN = do
+      withNewTabName ccn newTN = do
         let tnGQL = GS.qualObjectToName newTN
             defGCtx = scDefaultRemoteGCtx sc
         -- check for GraphQL schema conflicts on new name
         GS.checkConflictingNode defGCtx tnGQL
-        void $ procAlteredCols sc tn
+        void $ procAlteredCols sc ccn tn
         -- update new table in catalog
         renameTableInCatalog newTN tn
         return True
 
-  maybe withOldTabName withNewTabName mNewName
+  -- Drop custom column names for dropped columns
+  customColumnNames <- possiblyDropCustomColumnNames tn
+  maybe (withOldTabName customColumnNames) (withNewTabName customColumnNames) mNewName
 
   where
     TableDiff mNewName droppedCols addedCols alteredCols _ constraints descM = tableDiff
-    customFields = _tcCustomColumnNames $ _tiCustomConfig ti
     replaceConstraints tn = flip modTableInCache tn $ \tInfo ->
       return $ tInfo {_tiUniqOrPrimConstraints = constraints}
 
@@ -284,7 +284,20 @@ processTableChanges ti tableDiff = do
         -- Drop the column from the cache
         delColFromCache droppedCol tn
 
-    procAddedCols tn =
+    possiblyDropCustomColumnNames tn = do
+      let TableConfig customFields customColumnNames = _tiCustomConfig ti
+          modifiedCustomColumnNames = foldl (flip M.delete) customColumnNames droppedCols
+      if modifiedCustomColumnNames == customColumnNames then
+        pure customColumnNames
+      else do
+        let updatedTableConfig =
+              TableConfig customFields modifiedCustomColumnNames
+        flip modTableInCache tn $ \tInfo ->
+          pure $ tInfo{_tiCustomConfig = updatedTableConfig}
+        liftTx $ updateTableConfig tn updatedTableConfig
+        pure modifiedCustomColumnNames
+
+    procAddedCols customColumnNames tn =
       -- In the newly added columns check that there is no conflict with relationships
       forM_ addedCols $ \rawInfo -> do
         let colName = prciName rawInfo
@@ -294,14 +307,14 @@ processTableChanges ti tableDiff = do
             <<> " in table " <> tn <<>
             " as a relationship with the name already exists"
           _ -> do
-            info <- processColumnInfoUsingCache tn customFields rawInfo
+            info <- processColumnInfoUsingCache tn customColumnNames rawInfo
             addColToCache colName info tn
 
-    procAlteredCols sc tn = fmap or $ forM alteredCols $
+    procAlteredCols sc customColumnNames tn = fmap or $ forM alteredCols $
       \( PGRawColumnInfo oldName oldType _ _ _
        , newRawInfo@(PGRawColumnInfo newName newType _ _ _) ) -> do
         let performColumnUpdate = do
-              newInfo <- processColumnInfoUsingCache tn customFields newRawInfo
+              newInfo <- processColumnInfoUsingCache tn customColumnNames newRawInfo
               updColInCache newName newInfo tn
 
         if | oldName /= newName -> renameColInCatalog oldName newName tn ti $> True
@@ -403,6 +416,7 @@ buildTableCache = processTableCache <=< buildRawTableCache
           processColumnInfo enumTables customFields tableName
       where
         enumTables = M.mapMaybe _tiEnumValues rawTables
+
 
 -- | “Processes” a 'PGRawColumnInfo' into a 'PGColumnInfo' by resolving its type using a map of known
 -- enum tables.
