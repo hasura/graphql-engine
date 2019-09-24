@@ -6,6 +6,7 @@ import random
 from datetime import datetime
 import sys
 import os
+import socket
 
 def pytest_addoption(parser):
     parser.addoption(
@@ -87,49 +88,45 @@ def pytest_addoption(parser):
 #2) Set test grouping to by filename (--dist=loadfile)
 def pytest_cmdline_preparse(config, args):
     worker = os.environ.get('PYTEST_XDIST_WORKER')
-    if 'xdist' in sys.modules and not worker:  # pytest-xdist plugin
+    if 'xdist' in sys.modules and not worker and 'no:xdist' not in args:  # pytest-xdist plugin
         num = 1
         args[:] = ["-n" + str(num),"--dist=loadfile"] + args
 
 
 def pytest_configure(config):
     if is_master(config):
-        config.hge_ctx_gql_server = HGECtxGQLServer()
         if not config.getoption('--hge-urls'):
             print("hge-urls should be specified")
         if not config.getoption('--pg-urls'):
             print("pg-urls should be specified")
         config.hge_url_list = config.getoption('--hge-urls')
         config.pg_url_list =  config.getoption('--pg-urls')
-        if config.getoption('-n', default=None):
-            xdist_threads = config.getoption('-n')
-            assert xdist_threads <= len(config.hge_url_list), "Not enough hge_urls specified, Required " + str(xdist_threads) + ", got " + str(len(config.hge_url_list))
-            assert xdist_threads <= len(config.pg_url_list), "Not enough pg_urls specified, Required " + str(xdist_threads) + ", got " + str(len(config.pg_url_list))
+        test_threads = config.getoption('-n', default=1)
+        assert test_threads <= len(config.hge_url_list), "Not enough hge_urls specified, Required " + str(test_threads) + ", got " + str(len(config.hge_url_list))
+        assert test_threads <= len(config.pg_url_list), "Not enough pg_urls specified, Required " + str(test_threads) + ", got " + str(len(config.pg_url_list))
+        config.remote_gql_port_list = get_unused_ports(5000, test_threads)
 
     random.seed(datetime.now())
+    # Reset the environment variable which is to be set only by fixture remote_gql_server
+    os.environ.pop('REMOTE_GRAPHQL_ROOT_URL', None)
 
 @pytest.hookimpl(optionalhook=True)
 def pytest_configure_node(node):
-    node.slaveinput["hge-url"] = node.config.hge_url_list.pop()
-    node.slaveinput["pg-url"] = node.config.pg_url_list.pop()
+    for attr in ['hge_url', 'pg_url', 'remote_gql_port']:
+        node.slaveinput[attr] = getattr(node.config, attr + '_list').pop()
 
-def pytest_unconfigure(config):
-        config.hge_ctx_gql_server.teardown()
+def get_conf(config, attr):
+    if is_master(config):
+        return getattr(config, attr + '_list')[0]
+    else:
+        return config.slaveinput[attr]
 
 @pytest.fixture(scope='module')
 def hge_ctx(request):
     config = request.config
     print("create hge_ctx")
-    if is_master(config):
-        hge_url = config.hge_url_list[0]
-    else:
-        hge_url = config.slaveinput["hge-url"]
-
-    if is_master(config):
-        pg_url = config.pg_url_list[0]
-    else:
-        pg_url = config.slaveinput["pg-url"]
-
+    hge_url = get_conf(config, 'hge_url')
+    pg_url = get_conf(config, 'pg_url')
     hge_key = config.getoption('--hge-key')
     hge_webhook = config.getoption('--hge-webhook')
     webhook_insecure = config.getoption('--test-webhook-insecure')
@@ -140,16 +137,16 @@ def hge_ctx(request):
     hge_scale_url = config.getoption('--test-hge-scale-url')
     try:
         hge_ctx = HGECtx(
-            hge_url=hge_url,
-            pg_url=pg_url,
-            hge_key=hge_key,
-            hge_webhook=hge_webhook,
-            webhook_insecure=webhook_insecure,
-            hge_jwt_key_file=hge_jwt_key_file,
-            hge_jwt_conf=hge_jwt_conf,
-            ws_read_cookie=ws_read_cookie,
-            metadata_disabled=metadata_disabled,
-            hge_scale_url=hge_scale_url,
+            hge_url = hge_url,
+            pg_url = pg_url,
+            hge_key = hge_key,
+            hge_webhook = hge_webhook,
+            webhook_insecure = webhook_insecure,
+            hge_jwt_key_file = hge_jwt_key_file,
+            hge_jwt_conf = hge_jwt_conf,
+            ws_read_cookie = ws_read_cookie,
+            metadata_disabled = metadata_disabled,
+            hge_scale_url = hge_scale_url,
         )
     except HGECtxError as e:
         assert False, "Error from hge_cxt: " + str(e)
@@ -162,15 +159,24 @@ def hge_ctx(request):
     hge_ctx.teardown()
     time.sleep(1)
 
+@pytest.fixture(scope='module')
+def remote_gql_server(request, hge_ctx):
+    """Sets up the remote GraphQL server needed for tests with remote servers"""
+    port = get_conf(request.config, 'remote_gql_port')
+
+    remote_gql_server = HGECtxGQLServer(hge_ctx, '127.0.0.1', port)
+    # Set environmental variable
+    os.environ['REMOTE_GRAPHQL_ROOT_URL'] = remote_gql_server.root_url
+    yield remote_gql_server
+    remote_gql_server.teardown()
+    del os.environ['REMOTE_GRAPHQL_ROOT_URL']
+
 @pytest.fixture(scope='class')
 def evts_webhook(request):
     webhook_httpd = EvtsWebhookServer(server_address=('127.0.0.1', 5592))
-    web_server = threading.Thread(target=webhook_httpd.serve_forever)
-    web_server.start()
+    web_server = start_webserver(webhook_httpd)
     yield webhook_httpd
-    webhook_httpd.shutdown()
-    webhook_httpd.server_close()
-    web_server.join()
+    stop_webserver(web_server)
 
 @pytest.fixture(scope='class')
 def ws_client(request, hge_ctx):
@@ -189,6 +195,36 @@ def setup_ctrl(request, hge_ctx):
     yield setup_ctrl
     hge_ctx.may_skip_test_teardown = False
     request.cls().do_teardown(setup_ctrl, hge_ctx)
+
+def start_webserver(httpd):
+    webserver = threading.Thread(target=httpd.serve_forever)
+    webserver.httpd = httpd
+    webserver.start()
+    return webserver
+
+def stop_webserver(webserver):
+    webserver.httpd.shutdown()
+    webserver.httpd.server_close()
+    webserver.join()
+
+def get_unused_ports(start, count):
+    ports = []
+    for i in range(0, count):
+        port = get_unused_port(start)
+        ports.append(port)
+        start = port + 1
+    return ports
+
+def is_port_open(port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        res = sock.connect_ex(('127.0.0.1', port))
+        return res == 0
+
+def get_unused_port(start):
+    if is_port_open(start):
+        return get_unused_port(start + 1)
+    else:
+        return start
 
 def is_master(config):
     """True if the code running the given pytest.config object is running in a xdist master

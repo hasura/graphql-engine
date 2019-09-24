@@ -26,8 +26,8 @@
   status: 200
   headers:
     X-Hasura-Role: user5
-    X-Hasura-Protected-Jsons: |-
-      {}
+    X-Hasura-Json-Required-Keys: |-
+      {location}
   response:
     data:
       jsonb_table: []

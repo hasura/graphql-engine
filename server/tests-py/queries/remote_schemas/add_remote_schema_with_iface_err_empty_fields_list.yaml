@@ -11,6 +11,6 @@ query:
   args:
     name: err-unknown-types
     definition:
-      url: http://localhost:5000/iface-graphql-err-empty-field-list
+      url: ${REMOTE_GRAPHQL_ROOT_URL}/iface-graphql-err-empty-field-list
       headers: []
       forward_client_headers: true

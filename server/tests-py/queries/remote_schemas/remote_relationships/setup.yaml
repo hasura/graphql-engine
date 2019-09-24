@@ -1,0 +1,174 @@
+type: bulk
+args:
+
+- type: run_sql
+  args:
+    sql: |
+      create table users (
+          id serial primary key,
+          provider text not null
+      );
+
+      create table profiles (
+          id integer primary key references users(id),
+          name text not null,
+          alias text not null unique,
+          internal jsonb
+      );
+
+      create table messages (
+          id serial primary key,
+          profile_id integer not null references profiles(id),
+          message text
+      );
+
+      create table authors (
+          id serial primary key,
+          alias text unique not null references profiles(alias),
+          user_id integer not null references users(id),
+          biography text
+      );
+
+      create table articles (
+          id serial primary key,
+          author_id integer not null references authors(id),
+          title text not null,
+          info jsonb
+          );
+- type: track_table
+  args:
+    schema: public
+    name: users
+- type: track_table
+  args:
+    schema: public
+    name: profiles
+- type: track_table
+  args:
+    schema: public
+    name: messages
+- type: track_table
+  args:
+    schema: public
+    name: authors
+- type: track_table
+  args:
+    schema: public
+    name: articles
+#Object relationship
+- type: create_object_relationship
+  args:
+    table: articles
+    name: author
+    using:
+      foreign_key_constraint_on: author_id
+- type: create_object_relationship
+  args:
+    table: authors
+    name: user
+    using:
+      foreign_key_constraint_on: user_id
+- type: create_object_relationship
+  args:
+    table: messages
+    name: profile
+    using:
+      foreign_key_constraint_on: profile_id
+- type: create_object_relationship
+  args:
+    table: profiles
+    name: user
+    using:
+      foreign_key_constraint_on: id
+- type: create_object_relationship
+  args:
+    name: profile
+    table:
+      name: users
+      schema: public
+    using:
+      manual_configuration:
+        remote_table:
+          name: profiles
+          schema: public
+        column_mapping:
+          id: id
+#Array relationships
+- type: create_array_relationship
+  args:
+    table: profiles
+    name: messages
+    using:
+      foreign_key_constraint_on:
+        table: messages
+        column: profile_id
+#Array relationships
+- type: create_array_relationship
+  args:
+    table: authors
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: articles
+        column: author_id
+- type: run_sql
+  args:
+    sql: |
+      insert into users (id, provider) values
+      (1,'provider1' ),
+      (2,'provider2'),
+      (3,'provider1');
+
+      insert into profiles (id, name, alias) values
+      (1, 'Jane', 'jane-the-great' ),
+      (2, 'John', 'john-the-stunner'),
+      (3, 'Joe', 'awesome-joe' );
+
+      insert into messages (profile_id, message) values
+      (1, '(from table) You win' ),
+      (2, '(from table) You lose');
+
+      insert into authors (alias, user_id, biography) values
+      ('jane-the-great', 1, 'Bio of Jane' ),
+      ('awesome-joe', 3, 'Bio of Joe');
+
+      insert into articles (author_id, title) values
+      (1, 'janes-novel-first-volume'),
+      (1, 'janes-novel-second-volume'),
+      (2, 'joes-first-series-of-stories'),
+      (2, 'joes-second-series-of-stories'),
+      (2, 'joes-third-series-of-stories')
+
+- type: create_select_permission
+  args:
+    role: user
+    table:
+      name: profiles
+      schema: public
+    permission:
+      columns:
+      - alias
+      - name
+      - id
+      filter:
+        id:
+          _eq: X-Hasura-User-Id
+      limit: null
+      allow_aggregations: false
+
+#user2 do not have select permission on column id
+- type: create_select_permission
+  args:
+    role: user2
+    table:
+      name: profiles
+      schema: public
+    permission:
+      columns:
+      - alias
+      - name
+      filter:
+        id:
+          _eq: X-Hasura-User-Id
+      limit: null
+      allow_aggregations: false

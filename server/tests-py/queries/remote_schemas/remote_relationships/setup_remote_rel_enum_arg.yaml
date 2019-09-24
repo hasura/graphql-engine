@@ -1,0 +1,16 @@
+type: create_remote_relationship
+args:
+  name: messagesAndBoolExp
+  table: authors
+  hasura_fields:
+    - user_id
+    - alias
+  remote_schema: prefixer-proxy
+  remote_field:
+    prefixer_proxy_messages:
+      arguments:
+        where:
+          profile_id:
+            _eq: $user_id
+        order_by:
+          id: asc

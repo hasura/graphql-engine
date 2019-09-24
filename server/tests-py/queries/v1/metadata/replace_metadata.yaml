@@ -10,7 +10,7 @@ query:
     - name: test
       comment: testing replace metadata with remote schemas
       definition:
-        url: http://localhost:5000/hello-graphql
+        url: ${REMOTE_GRAPHQL_ROOT_URL}/hello-graphql
         forward_client_headers: false
     tables:
     - table: author

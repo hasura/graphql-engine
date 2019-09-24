@@ -8,4 +8,4 @@ websocket-client
 pyjwt >= 1.5.3
 jsondiff
 cryptography
-graphene
+graphene==3.0.dev20190817210753

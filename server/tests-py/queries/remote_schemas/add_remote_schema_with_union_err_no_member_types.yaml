@@ -11,6 +11,6 @@ query:
   args:
     name: err-no-mem-types
     definition:
-      url: http://localhost:5000/union-graphql-err-no-member-types
+      url: ${REMOTE_GRAPHQL_ROOT_URL}/union-graphql-err-no-member-types
       headers: []
       forward_client_headers: true

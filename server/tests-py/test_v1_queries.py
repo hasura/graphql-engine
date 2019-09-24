@@ -1,6 +1,7 @@
 import yaml
 from validate import check_query_f
 from super_classes import DefaultTestSelectQueries, DefaultTestQueries, DefaultTestMutations
+import pytest
 
 class TestDropNoColsTable:
     def test_drop_no_cols_table(self, hge_ctx):
@@ -455,7 +456,7 @@ class TestV1Delete(DefaultTestQueries):
     def dir(cls):
         return "queries/v1/delete"
 
-
+@pytest.mark.usefixtures('remote_gql_server')
 class TestMetadata(DefaultTestQueries):
 
     def test_reload_metadata(self, hge_ctx):

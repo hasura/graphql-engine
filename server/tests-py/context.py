@@ -10,17 +10,16 @@ import queue
 import socket
 import subprocess
 import time
-import uuid
 import string
 import random
 
-import yaml
 import requests
 import websocket
 from sqlalchemy import create_engine
 from sqlalchemy.schema import MetaData
 import graphql_server
 import graphql
+import yaml_utils
 
 
 class HGECtxError(Exception):
@@ -219,11 +218,13 @@ class EvtsWebhookServer(http.server.HTTPServer):
         self.evt_trggr_web_server.join()
 
 class HGECtxGQLServer:
-    def __init__(self):
+    def __init__(self, hge_ctx, host, port):
         # start the graphql server
-        self.graphql_server = graphql_server.create_server('127.0.0.1', 5000)
+        self.graphql_server = graphql_server.create_server(hge_ctx.hge_url + '/v1/graphql',
+            hge_ctx.hge_key, host, port)
         self.gql_srvr_thread = threading.Thread(target=self.graphql_server.serve_forever)
         self.gql_srvr_thread.start()
+        self.root_url =  'http://' + host + ":" + str(port)
 
     def teardown(self):
         graphql_server.stop_server(self.graphql_server)
@@ -300,7 +301,7 @@ class HGECtx:
 
     def v1q_f(self, fn):
         with open(fn) as f:
-            return self.v1q(yaml.safe_load(f))
+            return self.v1q(yaml_utils.load(f))
 
     def teardown(self):
         self.http.close()

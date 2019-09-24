@@ -8,6 +8,7 @@ import jsondiff
 import jwt
 import random
 import time
+import yaml_utils
 
 from context import GQLWsClient
 
@@ -74,7 +75,7 @@ def test_forbidden_when_admin_secret_reqd(hge_ctx, conf):
     # Test without admin secret
     code, resp = hge_ctx.anyq(conf['url'], conf['query'], headers)
     #assert code in [401,404], "\n" + yaml.dump({
-    assert code in status, "\n" + yaml.dump({
+    assert code in status, "\n" + yaml_utils.dump({
         "expected": "Should be access denied as admin secret is not provided",
         "actual": {
             "code": code,
@@ -86,7 +87,7 @@ def test_forbidden_when_admin_secret_reqd(hge_ctx, conf):
     headers['X-Hasura-Admin-Secret'] = base64.b64encode(os.urandom(30))
     code, resp = hge_ctx.anyq(conf['url'], conf['query'], headers)
     #assert code in [401,404], "\n" + yaml.dump({
-    assert code in status, "\n" + yaml.dump({
+    assert code in status, "\n" + yaml_utils.dump({
         "expected": "Should be access denied as an incorrect admin secret is provided",
         "actual": {
             "code": code,
@@ -107,7 +108,7 @@ def test_forbidden_webhook(hge_ctx, conf):
     h = {'Authorization': 'Bearer ' + base64.b64encode(base64.b64encode(os.urandom(30))).decode('utf-8')}
     code, resp = hge_ctx.anyq(conf['url'], conf['query'], h)
     #assert code in [401,404], "\n" + yaml.dump({
-    assert code in status, "\n" + yaml.dump({
+    assert code in status, "\n" + yaml_utils.dump({
         "expected": "Should be access denied as it is denied from webhook",
         "actual": {
             "code": code,
@@ -218,7 +219,7 @@ def validate_gql_ws_q(hge_ctx, endpoint, query, headers, exp_http_response, retr
     exp_ws_response = exp_http_response
 
     assert 'payload' in resp, resp
-    assert resp['payload'] == exp_ws_response, yaml.dump({
+    assert resp['payload'] == exp_ws_response, yaml_utils.dump({
         'response': resp['payload'],
         'expected': exp_ws_response,
         'diff': jsondiff.diff(exp_ws_response, resp['payload'])
@@ -234,7 +235,7 @@ def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response):
     assert code == exp_code, resp
     print('http resp: ', resp)
     if exp_response:
-        assert json_ordered(resp) == json_ordered(exp_response), yaml.dump({
+        assert json_ordered(resp) == json_ordered(exp_response), yaml_utils.dump({
             'response': resp,
             'expected': exp_response,
             'diff': jsondiff.diff(exp_response, resp)
@@ -246,7 +247,7 @@ def check_query_f(hge_ctx, f, transport='http', add_auth=True):
     hge_ctx.may_skip_test_teardown = False
     print ("transport="+transport)
     with open(f) as c:
-        conf = yaml.safe_load(c)
+        conf = yaml_utils.load(c)
         if isinstance(conf, list):
             for sconf in conf:
                 check_query(hge_ctx, sconf, transport, add_auth)
