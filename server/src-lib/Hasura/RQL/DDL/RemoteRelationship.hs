@@ -1,4 +1,4 @@
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Hasura.RQL.DDL.RemoteRelationship
   ( runCreateRemoteRelationship
@@ -6,14 +6,12 @@ module Hasura.RQL.DDL.RemoteRelationship
   )
 where
 
-import           Hasura.GraphQL.Validate.Types
-
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.RemoteRelationship.Validate
 import           Hasura.RQL.Types
 
-import qualified Data.HashMap.Strict                        as HM
+import qualified Data.HashMap.Strict                        as Map
 import qualified Data.Text                                  as T
 import           Instances.TH.Lift                          ()
 
@@ -21,22 +19,21 @@ runCreateRemoteRelationship ::
      (MonadTx m, CacheRWM m, UserInfoM m) => RemoteRelationship -> m EncJSON
 runCreateRemoteRelationship remoteRelationship = do
   adminOnly
-  (_remoteField, _additionalTypesMap) <-
-    runCreateRemoteRelationshipP1 remoteRelationship
+  _remoteField <- runCreateRemoteRelationshipP1 remoteRelationship
   pure successMsg
 
 runCreateRemoteRelationshipP1 ::
-     (MonadTx m, CacheRM m) => RemoteRelationship -> m (RemoteField, TypeMap)
-runCreateRemoteRelationshipP1 remoteRelationship = do
+     (MonadTx m, CacheRM m) => RemoteRelationship -> m RemoteField
+runCreateRemoteRelationshipP1 remoteRel@RemoteRelationship{..}= do
   sc <- askSchemaCache
-  case HM.lookup
-         (rtrRemoteSchema remoteRelationship)
+  case Map.lookup
+         rrRemoteSchema
          (scRemoteSchemas sc) of
-    Just {} -> do
+    Just rsCtx -> do
+      tableInfo <- onNothing (Map.lookup rrTable $ scTables sc) $ throw400 NotFound "table not found"
       validation <-
-        getCreateRemoteRelationshipValidation remoteRelationship
+        getCreateRemoteRelationshipValidation remoteRel rsCtx tableInfo
       case validation of
-        Left err -> throw400 RemoteSchemaError (T.pack (show err))
-        Right (remoteField, additionalTypesMap) ->
-          pure (remoteField, additionalTypesMap)
+        Left err          -> throw400 RemoteSchemaError (T.pack (show err))
+        Right remoteField -> pure remoteField
     Nothing -> throw400 RemoteSchemaError "No such remote schema"
