@@ -14,7 +14,9 @@ const WarningSymbol = ({
   return (
     <div className={styles.display_inline}>
       <OverlayTrigger placement={tooltipPlacement} overlay={tooltip}>
-        <WarningIcon customStyle={customStyle} />
+        <span>
+          <WarningIcon customStyle={customStyle} />
+        </span>
       </OverlayTrigger>
     </div>
   );
