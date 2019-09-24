@@ -37,6 +37,8 @@ import           Hasura.SQL.Types
 import qualified Data.Aeson.Ordered                     as OJ
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OHM
+-- Any Map with ordered 'elems' or 'toAscList' will do here:
+import qualified Data.IntMap.Strict                     as IntMap
 import qualified Data.List.NonEmpty                     as NE
 import qualified Data.Sequence                          as Seq
 import qualified Data.String.Conversions                as CS
@@ -478,10 +480,10 @@ toAnnGValue =
                  (\(G.ObjectFieldG key val) -> (key, valueConstToAnnInpVal val))
                  keys)))
 
--- throwaway; used internally in extractRemoteRelArguments.
-newtype RemoteRelKey =
-  RemoteRelKey Int
-  deriving (Eq, Ord, Show, Hashable, Enum)
+-- | We use this in 'extractRemoteRelArguments' for bookkeeping while
+-- preserving the order of the @[RemoteRelField]@ input.
+type RemoteRelKey = Int
+type RemoteRelKeyMap = IntMap.IntMap
 
 -- | Extract from the Hasura results the remote relationship arguments.
 extractRemoteRelArguments ::
@@ -496,52 +498,53 @@ extractRemoteRelArguments hasuraJson rels =
     Left (fromString-> err) ->
       (appendJoinError emptyResp $ "decode error: " <> err, [])
     Right gqResp@GQRespValue{..} -> do
-      let hashE = Map.elems <$>
+      let bisE = IntMap.elems <$> -- N.B. elems in ascending RemoteRelKey order
             execStateT (go One (keyRemotes rels) (OJ.Object _gqRespData)) mempty
-      case hashE of
+      case bisE of
         Left err  -> (appendJoinError gqResp err, [])
         Right bis -> (gqResp, bis)
   where
     keyRemotes = 
-      zip [RemoteRelKey 0 ..] .
+      zip [(0::RemoteRelKey) ..] .
         map (\r-> (rrRelFieldPath r, rtrHasuraFields $ rmfRemoteRelationship $ rrRemoteField r))
 
     -- insert into map, accumulating from the left on duplicates
-    insertWithCons m k v = Map.insertWith (<>) k (pure v) m
+    insertWithCons  m k v =    Map.insertWith (<>) k (pure v) m
+    insertWithConsI m k v = IntMap.insertWith (<>) k (pure v) m
 
     go :: Cardinality
        -> [(RemoteRelKey, (RelFieldPath, Set FieldName))]
        -> OJ.Value
-       -> StateT (Map.HashMap RemoteRelKey BatchInputs) (Either GQJoinError) ()
+       -> StateT (RemoteRelKeyMap BatchInputs) (Either GQJoinError) ()
     go biCardinality keyedRemotes hasuraResp =
       case hasuraResp of
         OJ.Array values -> mapM_ (go Many keyedRemotes) values
-        OJ.Object hashmap -> do
-          remotesRows :: Map.HashMap RemoteRelKey [(G.Variable, G.ValueConst)] <-
+        OJ.Object hasuraRespObj -> do
+          remotesRows :: RemoteRelKeyMap [(G.Variable, G.ValueConst)] <-
             foldM
-              (\result (key, remotes) ->
-                 case OJ.lookup key hashmap of
+              (\remoteRows (key, remotes) ->
+                 case OJ.lookup key hasuraRespObj of
                    Just subvalue -> do
                      let (remoteRelKeys, unfinishedKeyedRemotes) =
-                           partitionEithers (toList remotes)
+                           partitionEithers remotes
                      go biCardinality unfinishedKeyedRemotes subvalue
                      pure
                        (foldl'
-                          (\result' remoteRelKey ->
-                             insertWithCons result' remoteRelKey
-                              ( G.Variable (G.Name key)
-                                -- TODO: Pay attention to variable naming wrt. aliasing.
-                              , valueToValueConst subvalue)
+                          (\remoteRows' remoteRelKey ->
+                             insertWithConsI remoteRows' remoteRelKey
+                               -- TODO: Pay attention to variable naming wrt. aliasing.
+                               (G.Variable (G.Name key), valueToValueConst subvalue)
                           )
-                          result
+                          remoteRows
                           remoteRelKeys)
                    Nothing -> throwError $ fromString $
-                    "Expected key " <> T.unpack key <> " at this position: " <> show (OJ.toEncJSON hasuraResp)
+                     "Expected key " <> T.unpack key <> " at this position: " <> 
+                     show (OJ.toEncJSON hasuraResp)
               )
               mempty
               (Map.toList $ foldCandidates keyedRemotes)
 
-          modify $ Map.unionWith (flip (<>)) $
+          modify $ IntMap.unionWith (flip (<>)) $
             fmap ((\biRows -> BatchInputs{..}) . pure . Map.fromList) remotesRows
 
         -- scalar values are the base case; assert no remotes left:
@@ -550,34 +553,31 @@ extractRemoteRelArguments hasuraJson rels =
         -- ...otherwise this is an internal error (I think):
         _ -> when (not $ null keyedRemotes) $
                throwError $ fromString $
-                 "In extractRemoteRelArguments expected empty keyedRemotes, got: " <> show keyedRemotes
+                 "In extractRemoteRelArguments expected empty keyedRemotes, got: " <> 
+                 show keyedRemotes
 
     -- NOTE: RemoteRelKey is just passed through in these two functions in a
     -- way that's convenient for our `partitionEithers` above:
     foldCandidates
-      :: [(RemoteRelKey, (RelFieldPath, Set FieldName))]
-      -> Map.HashMap Text (NonEmpty (Either RemoteRelKey (RemoteRelKey, (RelFieldPath, Set FieldName))))
+      :: [(remoteRelKey, (RelFieldPath, Set FieldName))]
+      -> Map.HashMap Text [Either remoteRelKey (remoteRelKey, (RelFieldPath, Set FieldName))]
     foldCandidates =
       foldl' (uncurry . insertWithCons) mempty . concatMap peelRemoteKeys
 
-    -- TODO understand and document this better:
     -- Peel one layer of expected keys from the remote to be looked up at the
     -- current level of the result object.
-    --
     peelRemoteKeys 
-      :: (RemoteRelKey, (RelFieldPath, Set FieldName)) 
-      -> [(Text, Either RemoteRelKey (RemoteRelKey, (RelFieldPath, Set FieldName)))]
+      :: (remoteRelKey, (RelFieldPath, Set FieldName)) 
+      -> [(Text, Either remoteRelKey (remoteRelKey, (RelFieldPath, Set FieldName)))]
     peelRemoteKeys (remoteRelKey, (relFieldPath, hasuraFields)) =
-      -- For each hasura field name...
-      map unconsUpdatingRelPath (toList hasuraFields)
-      where
-        unconsUpdatingRelPath =
-          case relFieldPath of
-            -- ...if we've reached the end of the path, associate the hasura field with the remote
-            RelFieldPath Seq.Empty -> 
-              \fn -> (getFieldNameTxt fn, Left remoteRelKey)
-            RelFieldPath ((_, G.Alias (G.Name key)) Seq.:<| xs) -> 
-              \_  -> (key,                Right (remoteRelKey, (RelFieldPath xs, hasuraFields)))
+      case relFieldPath of
+        -- ...if we've reached the end of the path, associate each hasura field with the remote:
+        RelFieldPath Seq.Empty -> 
+          map (\fn -> (getFieldNameTxt fn, Left remoteRelKey)) $ toList hasuraFields
+        -- ...otherwise peel off path layer and return unfinished keyed remotes:
+        RelFieldPath ((_, G.Alias (G.Name key)) Seq.:<| xs) -> 
+          pure (key, Right (remoteRelKey, (RelFieldPath xs, hasuraFields)))
+
 
 data BatchInputs =
   BatchInputs
@@ -585,9 +585,9 @@ data BatchInputs =
       -- ^ The results from hasura that are required to make the requests to
       -- satisfy the remote joins. 
       --
-      -- Each element of the 'Seq' corresponds to a top-level selection in the
-      -- remote query. The map key corresponds to the @hasura_fields@ from the 
-      -- @create_remote_relationship@ configuration.
+      -- Each element of the 'Seq' corresponds to an ordered top-level
+      -- selection in the remote query. The map key corresponds to the
+      -- @hasura_fields@ from the @create_remote_relationship@ configuration.
     , biCardinality :: Cardinality
     -- ^ Used for validation in 'insertBatchResults'.
     --
