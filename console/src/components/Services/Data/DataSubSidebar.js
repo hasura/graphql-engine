@@ -8,6 +8,7 @@ import GqlCompatibilityWarning from '../../Common/GqlCompatibilityWarning/GqlCom
 import {
   displayTableName,
   getFunctionName,
+  getSchemaTables,
   getTableName,
 } from '../../Common/utils/pgUtils';
 import {
@@ -20,23 +21,11 @@ class DataSubSidebar extends React.Component {
   constructor() {
     super();
 
-    this.tableSearch = this.tableSearch.bind(this);
     this.state = {
-      trackedTables: [],
       searchInput: '',
     };
-  }
 
-  static getDerivedStateFromProps(props) {
-    const { currentSchema, schema } = props;
-
-    const trackedTables = schema.filter(
-      table => table.is_table_tracked && table.table_schema === currentSchema
-    );
-
-    return {
-      trackedTables: trackedTables,
-    };
+    this.tableSearch = this.tableSearch.bind(this);
   }
 
   shouldComponentUpdate(nextProps) {
@@ -60,23 +49,27 @@ class DataSubSidebar extends React.Component {
     const functionSymbol = require('../../Common/Layout/LeftSubSidebar/function.svg');
     const functionSymbolActive = require('../../Common/Layout/LeftSubSidebar/function_active.svg');
     const {
-      functionsList,
       currentTable,
       currentSchema,
       migrationMode,
       location,
       currentFunction,
+      trackedFunctions,
+      allSchemas,
     } = this.props;
 
-    const { trackedTables, searchInput } = this.state;
+    const { searchInput } = this.state;
 
-    const trackedTablesLength = trackedTables.length;
+    const trackedTablesInSchema = getSchemaTables(
+      allSchemas,
+      currentSchema
+    ).filter(table => table.is_table_tracked);
 
-    const tableList = trackedTables.filter(t =>
+    const filteredTableList = trackedTablesInSchema.filter(t =>
       getTableName(t).includes(searchInput)
     );
 
-    const listedFunctions = functionsList.filter(f =>
+    const filteredFunctionsList = trackedFunctions.filter(f =>
       getFunctionName(f).includes(searchInput)
     );
 
@@ -93,57 +86,56 @@ class DataSubSidebar extends React.Component {
     };
 
     const getChildList = () => {
-      let tableLinks = [
-        <li className={styles.noChildren} key="no-tables-1">
-          <i>No tables/views available</i>
-        </li>,
-      ];
-
-      const tables = {};
-      tableList.map(t => {
-        if (t.is_table_tracked) {
-          tables[getTableName(t)] = t;
-        }
-      });
+      let childList;
 
       const currentLocation = location.pathname;
 
-      if (tableList && tableList.length) {
-        tableLinks = Object.keys(tables)
-          .sort()
-          .map((tableName, i) => {
-            const table = tables[tableName];
+      let tableLinks;
+      if (filteredTableList && filteredTableList.length) {
+        const filteredTablesObject = {};
+        filteredTableList.forEach(t => {
+          filteredTablesObject[getTableName(t)] = t;
+        });
 
-            let activeTableClass = '';
-            if (
-              tableName === currentTable &&
-              currentLocation.indexOf(currentTable) !== -1
-            ) {
-              activeTableClass = styles.activeTable;
-            }
+        const sortedTableNames = Object.keys(filteredTablesObject).sort();
 
-            let gqlCompatibilityWarning = null;
-            if (!gqlPattern.test(tableName)) {
-              gqlCompatibilityWarning = (
-                <span className={styles.add_mar_left_mid}>
-                  <GqlCompatibilityWarning />
-                </span>
-              );
-            }
+        tableLinks = sortedTableNames.map((tableName, i) => {
+          const table = filteredTablesObject[tableName];
 
-            return (
-              <li className={activeTableClass} key={i}>
-                <Link to={getTableBrowseRoute(table)} data-test={tableName}>
-                  <i
-                    className={styles.tableIcon + ' fa fa-table'}
-                    aria-hidden="true"
-                  />
-                  {displayTableName(table)}
-                </Link>
-                {gqlCompatibilityWarning}
-              </li>
+          const isActive =
+            tableName === currentTable && currentLocation.includes(tableName);
+
+          let gqlCompatibilityWarning = null;
+          if (!gqlPattern.test(tableName)) {
+            gqlCompatibilityWarning = (
+              <span className={styles.add_mar_left_mid}>
+                <GqlCompatibilityWarning />
+              </span>
             );
-          });
+          }
+
+          return (
+            <li
+              className={isActive ? styles.activeLink : ''}
+              key={'table ' + i}
+            >
+              <Link to={getTableBrowseRoute(table)} data-test={tableName}>
+                <i
+                  className={styles.tableIcon + ' fa fa-table'}
+                  aria-hidden="true"
+                />
+                {displayTableName(table)}
+              </Link>
+              {gqlCompatibilityWarning}
+            </li>
+          );
+        });
+      } else {
+        tableLinks = [
+          <li className={styles.noChildren} key="no-tables-1">
+            <i>No tables/views available</i>
+          </li>,
+        ];
       }
 
       const dividerHr = [
@@ -152,48 +144,57 @@ class DataSubSidebar extends React.Component {
         </li>,
       ];
 
-      // If the listedFunctions is non empty
-      if (listedFunctions.length > 0) {
-        const functionHtml = listedFunctions.map((func, i) => {
-          const funcName = getFunctionName(func);
-          const isActive = funcName === currentFunction;
+      if (filteredFunctionsList && filteredFunctionsList.length > 0) {
+        const filteredFunctionsObject = {};
+        filteredFunctionsList.forEach(f => {
+          filteredFunctionsObject[getFunctionName(f)] = f;
+        });
+
+        const sortedFunctionNames = Object.keys(filteredFunctionsObject).sort();
+
+        const functionLinks = sortedFunctionNames.map((funcName, i) => {
+          const func = filteredFunctionsObject[funcName];
+
+          const isActive =
+            funcName === currentFunction && currentLocation.includes(funcName);
 
           return (
-            <li className={isActive ? styles.activeTable : ''} key={'fn ' + i}>
+            <li className={isActive ? styles.activeLink : ''} key={'fn ' + i}>
               <Link to={getFunctionModifyRoute(func)} data-test={funcName}>
-                <div
-                  className={styles.display_inline + ' ' + styles.functionIcon}
-                >
-                  <img src={isActive ? functionSymbolActive : functionSymbol} />
-                </div>
-                {getFunctionName(func)}
+                <img
+                  src={isActive ? functionSymbolActive : functionSymbol}
+                  className={styles.functionIcon}
+                />
+                <span>{funcName}</span>
               </Link>
             </li>
           );
         });
 
-        tableLinks = [...tableLinks, ...dividerHr, ...functionHtml];
+        childList = [...tableLinks, ...dividerHr, ...functionLinks];
       } else if (
-        functionsList.length !== listedFunctions.length &&
-        listedFunctions.length === 0
+        trackedFunctions.length > 0 &&
+        filteredFunctionsList.length === 0
       ) {
-        const noFunctionResult = [
-          <li className={styles.noChildren}>
+        const noFunctionsMsg = [
+          <li className={styles.noChildren} key="no-fns-1">
             <i>No matching functions available</i>
           </li>,
         ];
 
-        tableLinks = [...tableLinks, ...dividerHr, ...noFunctionResult];
+        childList = [...tableLinks, ...dividerHr, ...noFunctionsMsg];
+      } else {
+        childList = [...tableLinks];
       }
 
-      return tableLinks;
+      return childList;
     };
 
     return (
       <LeftSubSidebar
         showAddBtn={migrationMode}
         searchInput={getSearchInput()}
-        heading={`Tables (${trackedTablesLength})`}
+        heading={`Tables (${trackedTablesInSchema.length})`}
         addLink={getSchemaAddTableRoute(currentSchema)}
         addLabel={'Add Table'}
         addTestString={'sidebar-add-table'}
@@ -207,10 +208,12 @@ class DataSubSidebar extends React.Component {
 
 const mapStateToProps = state => {
   return {
-    currentTable: state.tables.currentTable,
     migrationMode: state.main.migrationMode,
-    functionsList: state.tables.trackedFunctions,
+    trackedFunctions: state.tables.trackedFunctions,
     currentFunction: state.functions.functionName,
+    allSchemas: state.tables.allSchemas,
+    currentTable: state.tables.currentTable,
+    currentSchema: state.tables.currentSchema,
     serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
     metadata: state.metadata,
   };

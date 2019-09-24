@@ -46,7 +46,6 @@ import {
 
 import {
   PERM_OPEN_EDIT,
-  PERM_ADD_TABLE_SCHEMAS,
   PERM_SET_FILTER,
   PERM_SET_FILTER_SAME_AS,
   PERM_TOGGLE_COLUMN,
@@ -260,22 +259,9 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         ...modifyState,
         permissionsState: {
           ...permState,
-          tableSchemas: schemas,
         },
         prevPermissionState: {
           ...permState,
-        },
-      };
-
-    case PERM_ADD_TABLE_SCHEMAS:
-      return {
-        ...modifyState,
-        permissionsState: {
-          ...modifyState.permissionsState,
-          tableSchemas: [
-            ...modifyState.permissionsState.tableSchemas,
-            ...action.schemas,
-          ],
         },
       };
 

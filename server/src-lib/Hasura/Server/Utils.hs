@@ -1,9 +1,11 @@
+{-# LANGUAGE TypeApplications #-}
 module Hasura.Server.Utils where
 
 import           Data.Aeson
 import           Data.Char
 import           Data.List                  (find)
 import           Data.Time.Clock
+import           Language.Haskell.TH.Syntax (Lift)
 import           System.Environment
 import           System.Exit
 import           System.Process
@@ -40,6 +42,9 @@ htmlHeader = ("Content-Type", "text/html; charset=utf-8")
 
 gzipHeader :: (T.Text, T.Text)
 gzipHeader = ("Content-Encoding", "gzip")
+
+brHeader :: (T.Text, T.Text)
+brHeader = ("Content-Encoding", "br")
 
 userRoleHeader :: T.Text
 userRoleHeader = "x-hasura-role"
@@ -198,7 +203,6 @@ filterResponseHeaders =
 filterHeaders :: Set.HashSet HTTP.HeaderName -> [HTTP.Header] -> [HTTP.Header]
 filterHeaders list = filter (\(n, _) -> not $ n `Set.member` list)
 
-
 hyphenate :: String -> String
 hyphenate = u . applyFirst toLower
     where u []                 = []
@@ -209,3 +213,21 @@ applyFirst :: (Char -> Char) -> String -> String
 applyFirst _ []     = []
 applyFirst f [x]    = [f x]
 applyFirst f (x:xs) = f x: xs
+
+-- | The version integer
+data APIVersion
+  = VIVersion1
+  | VIVersion2
+  deriving (Show, Eq, Lift)
+
+instance ToJSON APIVersion where
+  toJSON VIVersion1 = toJSON @Int 1
+  toJSON VIVersion2 = toJSON @Int 2
+
+instance FromJSON APIVersion where
+  parseJSON v = do
+    verInt :: Int <- parseJSON v
+    case verInt of
+      1 -> return VIVersion1
+      2 -> return VIVersion2
+      i -> fail $ "expected 1 or 2, encountered " ++ show i

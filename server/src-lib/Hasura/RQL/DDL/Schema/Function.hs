@@ -5,7 +5,7 @@ Description: Create/delete SQL functions to/from Hasura metadata.
 module Hasura.RQL.DDL.Schema.Function where
 
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Utils          (isValidName, showNames)
+import           Hasura.GraphQL.Utils          (showNames)
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -74,7 +74,7 @@ validateFuncArgs args =
     <> " are not in compliance with GraphQL spec"
   where
     funcArgsText = mapMaybe (fmap getFuncArgNameTxt . faName) args
-    invalidArgs = filter (not . isValidName) $ map G.Name funcArgsText
+    invalidArgs = filter (not . G.isValidName) $ map G.Name funcArgsText
 
 mkFunctionInfo
   :: QErrM m => QualifiedFunction -> RawFuncInfo -> m FunctionInfo
@@ -152,7 +152,7 @@ trackFunctionP2 qf = do
   let defGCtx = scDefaultRemoteGCtx sc
       funcNameGQL = GS.qualObjectToName qf
   -- check function name is in compliance with GraphQL spec
-  unless (isValidName funcNameGQL) $ throw400 NotSupported $
+  unless (G.isValidName funcNameGQL) $ throw400 NotSupported $
     "function name " <> qf <<> " is not in compliance with GraphQL spec"
   -- check for conflicts in remote schema
   GS.checkConflictingNode defGCtx funcNameGQL

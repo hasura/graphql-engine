@@ -72,7 +72,7 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
 
    * - ``--enable-console <true|false>``
      - ``HASURA_GRAPHQL_ENABLE_CONSOLE``
-     - Enable the Hasura Console (served by the server on ``/`` and ``/console``)
+     - Enable the Hasura Console (served by the server on ``/`` and ``/console``) (default: false)
 
    * - ``--admin-secret <ADMIN_SECRET_KEY>``
      - ``HASURA_GRAPHQL_ADMIN_SECRET``
@@ -173,13 +173,13 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
 
    * - ``--live-queries-multiplexed-batch-size``
      - ``HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE``
-     - Multiplexed live queries are split into batches of the specified size. Default: 100 
+     - Multiplexed live queries are split into batches of the specified size. Default: 100
 
    * - ``--enable-allowlist``
      - ``HASURA_GRAPHQL_ENABLE_ALLOWLIST``
      - Restrict queries allowed to be executed by the GraphQL engine to those that are part of the configured
        allow-list. Default: ``false`` *(Available for versions > v1.0.0-beta.1)*
-  
+
    * - ``--console-assets-dir``
      - ``HASURA_GRAPHQL_CONSOLE_ASSETS_DIR``
      - Set the value to ``/srv/console-assets`` for the console to load assets from the server itself

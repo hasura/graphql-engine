@@ -25,7 +25,6 @@ import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Hasura.Db
-import           Hasura.GraphQL.Utils
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Types
@@ -96,7 +95,7 @@ fetchAndValidateEnumValues tableName primaryKeyColumns columnInfos =
 
         -- https://graphql.github.io/graphql-spec/June2018/#EnumValue
         isValidEnumName name =
-          isValidName name && name `notElem` ["true", "false", "null"]
+          G.isValidName name && name `notElem` ["true", "false", "null"]
 
     showErrors :: [EnumTableIntegrityError] -> T.Text
     showErrors allErrors =
