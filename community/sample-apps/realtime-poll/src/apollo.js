@@ -9,7 +9,7 @@ import { getMainDefinition } from 'apollo-utilities';
 
 import { InMemoryCache } from 'apollo-cache-inmemory';
 
-export const HASURA_GRAPHQL_ENGINE_HOSTNAME = 'hasura-pro-demo.herokuapp.com';
+export const HASURA_GRAPHQL_ENGINE_HOSTNAME = 'realtime-poll.demo.hasura.app';
 
 const scheme = (proto) => {
   return window.location.protocol === 'https:' ? `${proto}s` : proto;
