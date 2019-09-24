@@ -15,7 +15,7 @@ Open `src/data/online_fetch.dart` and add the following code.
 +     }
 +   }
 + }
-""";
++ """;
 ```
 
 Open `screens/tabs/dashboard/online.dart`
@@ -33,20 +33,21 @@ Now, Wrap the ListView with `Subscription` widget passing GraphQL subscription s
 +           if (payload != null) {
 -            Expanded(
 +             return Expanded(
-+               child: ListView.builder(
+                child: ListView.builder(
 -                 itemCount: onlineList.list.length,
 +                 itemCount: payload['online_users'].length,
                   itemBuilder: (context, index) {
                     return Card(
                       child: ListTile(
-                       title: Text(
 -                           title: Text(onlineList.list[index]),
++                           title: Text(
 +                           payload['online_users'][index]['user']['name']),
                       ),
                     );
                   },
                 ),
-              );
+-               ),
++              );
 +            } else {
 +             return Text("Fetching Online Users");
 +           }

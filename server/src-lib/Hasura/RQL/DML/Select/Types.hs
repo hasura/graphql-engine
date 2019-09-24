@@ -35,8 +35,8 @@ instance FromJSON ExtCol where
     <$> o .:  "name"
     <*> o .:? "alias"
     <*> parseJSON v
-  parseJSON (String s) =
-    return $ ECSimple $ PGCol s
+  parseJSON v@(String _) =
+    ECSimple <$> parseJSON v
   parseJSON _ =
     fail $ mconcat
     [ "A column should either be a string or an "
@@ -275,10 +275,21 @@ type AnnSimpleSel = AnnSimpleSelG S.SQLExp
 type AnnAggSelG v = AnnSelG (TableAggFldsG v) v
 type AnnAggSel = AnnAggSelG S.SQLExp
 
+data FunctionArgsExpG a
+  = FunctionArgsExp
+  { _faePositional :: ![a]
+  , _faeNamed      :: !(HM.HashMap Text a)
+  } deriving (Show, Eq, Functor, Foldable, Traversable)
+
+emptyFunctionArgsExp :: FunctionArgsExpG a
+emptyFunctionArgsExp = FunctionArgsExp [] HM.empty
+
+type FunctionArgExp = FunctionArgsExpG S.SQLExp
+
 data AnnFnSelG s v
   = AnnFnSel
   { _afFn     :: !QualifiedFunction
-  , _afFnArgs :: ![v]
+  , _afFnArgs :: !(FunctionArgsExpG v)
   , _afSelect :: !s
   } deriving (Show, Eq)
 

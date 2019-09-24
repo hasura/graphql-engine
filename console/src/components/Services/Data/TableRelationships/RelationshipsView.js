@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import ViewHeader from '../TableBrowseRows/ViewHeader';
+import TableHeader from '../TableCommon/TableHeader';
 import { RESET } from '../TableModify/ModifyActions';
 import { findAllFromRel } from '../utils';
 import { getObjArrRelList } from './utils';
@@ -135,11 +135,10 @@ class RelationshipsView extends Component {
 
     return (
       <div className={`${styles.container} container-fluid`}>
-        <ViewHeader
+        <TableHeader
           dispatch={dispatch}
-          tableName={tableName}
+          table={tableSchema}
           tabName="relationships"
-          currentSchema={currentSchema}
           migrationMode={migrationMode}
         />
         <br />

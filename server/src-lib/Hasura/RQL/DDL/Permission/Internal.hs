@@ -42,7 +42,7 @@ instance ToJSON PermColSpec where
 
 convColSpec :: FieldInfoMap PGColumnInfo -> PermColSpec -> [PGCol]
 convColSpec _ (PCCols cols) = cols
-convColSpec cim PCStar      = map pgiName $ getCols cim
+convColSpec cim PCStar      = map pgiColumn $ getCols cim
 
 assertPermNotDefined
   :: (MonadError QErr m)
@@ -178,7 +178,7 @@ procBoolExp
   => QualifiedTable -> FieldInfoMap PGColumnInfo -> BoolExp
   -> m (AnnBoolExpPartialSQL, [SchemaDependency])
 procBoolExp tn fieldInfoMap be = do
-  abe <- annBoolExp valueParser fieldInfoMap be
+  abe <- annBoolExp valueParser fieldInfoMap $ unBoolExp be
   let deps = getBoolExpDeps tn abe
   return (abe, deps)
 

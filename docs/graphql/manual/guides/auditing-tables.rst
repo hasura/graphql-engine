@@ -7,9 +7,9 @@ Auditing actions on tables in Postgres
   :local:
 
 Typically audit logging is added to some of the tables to comply with various certifications.
-You may want to capture the user information (role and the session variables) for every change in Postgres that is done through graphql-engine.
+You may want to capture the user information (role and the session variables) for every change in Postgres that is done through the GraphQL engine.
 
-For every mutation, hasura roughly executes the following transaction:
+For every mutation, Hasura roughly executes the following transaction:
 
 .. code-block:: sql
 

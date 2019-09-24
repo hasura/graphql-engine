@@ -80,16 +80,16 @@ getTriggerSql op trn qt allCols strfyNum spec =
       ]
     renderOldDataExp op2 scs =
       case op2 of
-        INSERT -> S.SEUnsafe "NULL"
+        INSERT -> S.SENull
         UPDATE -> getRowExpression OLD scs
         DELETE -> getRowExpression OLD scs
-        MANUAL -> S.SEUnsafe "NULL"
+        MANUAL -> S.SENull
     renderNewDataExp op2 scs =
       case op2 of
         INSERT -> getRowExpression NEW scs
         UPDATE -> getRowExpression NEW scs
-        DELETE -> S.SEUnsafe "NULL"
-        MANUAL -> S.SEUnsafe "NULL"
+        DELETE -> S.SENull
+        MANUAL -> S.SENull
     getRowExpression opVar scs =
       case scs of
         SubCStar -> applyRowToJson $ S.SEUnsafe $ opToTxt opVar
@@ -101,7 +101,7 @@ getTriggerSql op trn qt allCols strfyNum spec =
     applyRow e = S.SEFnApp "row" [e] Nothing
     toExtr = flip S.Extractor Nothing
     mkQId opVar colInfo = toJSONableExp strfyNum (pgiType colInfo) $
-      S.SEQIden $ S.QIden (opToQual opVar) $ toIden $ pgiName colInfo
+      S.SEQIden $ S.QIden (opToQual opVar) $ toIden $ pgiColumn colInfo
 
     opToQual = S.QualVar . opToTxt
     opToTxt = T.pack . show

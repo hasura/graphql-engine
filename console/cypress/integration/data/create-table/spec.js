@@ -6,6 +6,7 @@ import {
   baseUrl,
 } from '../../../helpers/dataHelpers';
 import { setMetaData, validateCT } from '../../validators/validators';
+import { setPromptValue } from '../../../helpers/common';
 
 const testName = 'ct';
 
@@ -231,34 +232,33 @@ export const failCTDuplicateTable = () => {
   // cy.get('.notification-error');
 };
 
-export const deleteCTTestTable = () => {
+const deleteTable = tableName => {
+  cy.get(getElementFromAlias(tableName)).click();
+  cy.get(getElementFromAlias('table-modify')).click();
+
+  setPromptValue(tableName);
+
+  //   Click on delete
+  cy.get(getElementFromAlias('delete-table')).click();
+  //   Confirm
+  cy.window()
+    .its('prompt')
+    .should('be.called');
+
+  cy.wait(5000);
+  validateCT(tableName, 'failure');
+};
+
+export const deleteCTTestTables = () => {
   //   Go to the modify section of the second table
-  cy.get(getElementFromAlias(`${getTableName(1, testName)}`)).click();
-  cy.get(getElementFromAlias('table-modify')).click();
-  //   Click on delete
-  cy.get(getElementFromAlias('delete-table')).click();
-  //   Confirm
-  cy.on('window:confirm', str => {
-    expect(str === 'Are you sure?').to.be.true;
-    return true;
-  });
-  cy.wait(5000);
-  validateCT(getTableName(1, testName), 'failure');
+  const secondTableName = getTableName(1, testName);
+  deleteTable(secondTableName);
   //   Go to the modify section of the first table
-  cy.get(getElementFromAlias(`${getTableName(0, testName)}`)).click();
-  cy.get(getElementFromAlias('table-modify')).click();
-  //   Click on delete
-  cy.get(getElementFromAlias('delete-table')).click();
-  //   Confirm
-  cy.on('window:confirm', str => {
-    expect(str === 'Are you sure?').to.be.true;
-    return true;
-  });
-  cy.wait(5000);
+  const firstTableName = getTableName(0, testName);
+  deleteTable(firstTableName);
+
   //Match the URL
   cy.url().should('eq', `${baseUrl}/data/schema/public`);
-  //   Validate
-  validateCT(getTableName(0, testName), 'failure');
 };
 
 export const setValidationMetaData = () => {

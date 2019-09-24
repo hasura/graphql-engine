@@ -16,15 +16,15 @@ import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashSet                  as Set
 import qualified Language.GraphQL.Draft.Syntax as G
 
-import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.BoolExp
+import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.OrderBy
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-mkSelColumnTy :: QualifiedTable -> [PGCol] -> EnumTyInfo
+mkSelColumnTy :: QualifiedTable -> [G.Name] -> EnumTyInfo
 mkSelColumnTy tn cols = enumTyInfo
   where
     enumTyInfo = mkHsraEnumTyInfo (Just desc) (mkSelColumnInpTy tn) $
@@ -58,10 +58,11 @@ mkPGColParams colType
   | otherwise = Map.empty
 
 mkPGColFld :: PGColumnInfo -> ObjFldInfo
-mkPGColFld (PGColumnInfo colName colTy isNullable) =
-  mkHsraObjFldInfo Nothing n (mkPGColParams colTy) ty
+mkPGColFld colInfo =
+  mkHsraObjFldInfo desc name (mkPGColParams colTy) ty
   where
-    n  = G.Name $ getPGColTxt colName
+    PGColumnInfo _ name colTy isNullable pgDesc = colInfo
+    desc = (G.Description . getPGDescription) <$> pgDesc
     ty = bool notNullTy nullTy isNullable
     columnType = mkColumnType colTy
     notNullTy = G.toGT $ G.toNT columnType
@@ -83,7 +84,7 @@ mkSelArgs tn =
   ]
   where
     whereDesc   = "filter the rows returned"
-    limitDesc   = "limit the nuber of rows returned"
+    limitDesc   = "limit the number of rows returned"
     offsetDesc  = "skip the first n rows. Use only with order_by"
     orderByDesc = "sort the rows by one or more columns"
     distinctDesc = "distinct select on columns"
@@ -103,12 +104,12 @@ array_relationship_aggregate(
 object_relationship: remote_table
 
 -}
-mkRelFld
+mkRelationshipField
   :: Bool
   -> RelInfo
   -> Bool
   -> [ObjFldInfo]
-mkRelFld allowAgg (RelInfo rn rTy _ remTab isManual) isNullable = case rTy of
+mkRelationshipField allowAgg (RelInfo rn rTy _ remTab isManual) isNullable = case rTy of
   ArrRel -> bool [arrRelFld] [arrRelFld, aggArrRelFld] allowAgg
   ObjRel -> [objRelFld]
   where
@@ -136,15 +137,16 @@ type table {
 -}
 mkTableObj
   :: QualifiedTable
+  -> Maybe PGDescription
   -> [SelField]
   -> ObjTyInfo
-mkTableObj tn allowedFlds =
+mkTableObj tn descM allowedFlds =
   mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) TLHasuraType
   where
-    flds = concatMap (either (pure . mkPGColFld) mkRelFld') allowedFlds
-    mkRelFld' (relInfo, allowAgg, _, _, isNullable) =
-      mkRelFld allowAgg relInfo isNullable
-    desc = G.Description $ "columns and relationships of " <>> tn
+    flds = concatMap (either (pure . mkPGColFld) mkRelationshipField') allowedFlds
+    mkRelationshipField' (RelationshipFieldInfo relInfo allowAgg _ _ _ isNullable) =
+      mkRelationshipField allowAgg relInfo isNullable
+    desc = mkDescriptionWith descM $ "columns and relationships of " <>> tn
 
 {-
 type table_aggregate {
@@ -181,8 +183,8 @@ type table_aggregate_fields{
 -}
 mkTableAggFldsObj
   :: QualifiedTable
-  -> ([PGCol], [G.Name])
-  -> ([PGCol], [G.Name])
+  -> ([PGColumnInfo], [G.Name])
+  -> ([PGColumnInfo], [G.Name])
   -> ObjTyInfo
 mkTableAggFldsObj tn (numCols, numAggOps) (compCols, compAggOps) =
   mkHsraObjTyInfo (Just desc) (mkTableAggFldsTy tn) Set.empty $ mapFromL _fiName $
@@ -226,8 +228,8 @@ mkTableColAggFldsObj tn op f cols =
   where
     desc = G.Description $ "aggregate " <> G.unName op <> " on columns"
 
-    mkColObjFld c = mkHsraObjFldInfo Nothing (G.Name $ getPGColTxt $ pgiName c)
-                    Map.empty $ G.toGT $ f $ pgiType c
+    mkColObjFld ci = mkHsraObjFldInfo Nothing (pgiName ci) Map.empty $
+                     G.toGT $ f $ pgiType ci
 
 {-
 
@@ -238,14 +240,12 @@ table(
 ):  [table!]!
 
 -}
-mkSelFld
-  :: QualifiedTable
-  -> ObjFldInfo
-mkSelFld tn =
+mkSelFld :: Maybe G.Name -> QualifiedTable -> ObjFldInfo
+mkSelFld mCustomName tn =
   mkHsraObjFldInfo (Just desc) fldName args ty
   where
     desc    = G.Description $ "fetch data from the table: " <>> tn
-    fldName = qualObjectToName tn
+    fldName = fromMaybe (qualObjectToName tn) mCustomName
     args    = fromInpValL $ mkSelArgs tn
     ty      = G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy tn
 
@@ -257,19 +257,18 @@ table_by_pk(
   coln: valuen!
 ): table
 -}
-mkSelFldPKey
-  :: QualifiedTable -> [PGColumnInfo]
-  -> ObjFldInfo
-mkSelFldPKey tn cols =
+mkSelFldPKey :: Maybe G.Name -> QualifiedTable -> [PGColumnInfo] -> ObjFldInfo
+mkSelFldPKey mCustomName tn cols =
   mkHsraObjFldInfo (Just desc) fldName args ty
   where
     desc = G.Description $ "fetch data from the table: " <> tn
            <<> " using primary key columns"
-    fldName = mkTableByPkName tn
+    fldName = fromMaybe (mkTableByPkName tn) mCustomName
     args = fromInpValL $ map colInpVal cols
     ty = G.toGT $ mkTableTy tn
-    colInpVal (PGColumnInfo n typ _) =
-      InpValInfo Nothing (mkColName n) Nothing $ G.toGT $ G.toNT $ mkColumnType typ
+    colInpVal ci =
+      InpValInfo (mkDescription <$> pgiDescription ci) (pgiName ci)
+      Nothing $ G.toGT $ G.toNT $ mkColumnType $ pgiType ci
 
 {-
 
@@ -281,13 +280,13 @@ table_aggregate(
 
 -}
 mkAggSelFld
-  :: QualifiedTable
-  -> ObjFldInfo
-mkAggSelFld tn =
+  :: Maybe G.Name -> QualifiedTable -> ObjFldInfo
+mkAggSelFld mCustomName tn =
   mkHsraObjFldInfo (Just desc) fldName args ty
   where
     desc = G.Description $ "fetch aggregated fields from the table: "
            <>> tn
-    fldName = qualObjectToName tn <> "_aggregate"
+    defFldName = qualObjectToName tn <> "_aggregate"
+    fldName = fromMaybe defFldName mCustomName
     args = fromInpValL $ mkSelArgs tn
     ty = G.toGT $ G.toNT $ mkTableAggTy tn

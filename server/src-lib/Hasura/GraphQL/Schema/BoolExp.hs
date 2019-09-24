@@ -1,5 +1,6 @@
 module Hasura.GraphQL.Schema.BoolExp
   ( geoInputTypes
+  , rasterIntersectsInputTypes
   , mkCompExpInp
 
   , mkBoolExpTy
@@ -67,16 +68,18 @@ mkCastExpressionInputType sourceType targetTypes =
 mkCompExpInp :: PGColumnType -> InpObjTyInfo
 mkCompExpInp colTy =
   InpObjTyInfo (Just tyDesc) (mkCompExpTy colTy) (fromInpValL $ concat
-  [ map (mk colGqlType) typedOps
+  [ map (mk colGqlType) eqOps
+  , guard (isScalarWhere (/= PGRaster)) *> map (mk colGqlType) compOps
   , map (mk $ G.toLT $ G.toNT colGqlType) listOps
   , guard (isScalarWhere isStringType) *> map (mk $ mkScalarTy PGText) stringOps
-  , guard (isScalarWhere (== PGJSONB)) *> map jsonbOpToInpVal jsonbOps
+  , guard (isScalarWhere (== PGJSONB)) *> map opToInpVal jsonbOps
   , guard (isScalarWhere (== PGGeometry)) *>
       (stDWithinGeoOpInpVal stDWithinGeometryInpTy : map geoOpToInpVal (geoOps ++ geomOps))
   , guard (isScalarWhere (== PGGeography)) *>
       (stDWithinGeoOpInpVal stDWithinGeographyInpTy : map geoOpToInpVal geoOps)
   , [InpValInfo Nothing "_is_null" Nothing $ G.TypeNamed (G.Nullability True) $ G.NamedType "Boolean"]
   , castOpInputValues
+  , guard (isScalarWhere (== PGRaster)) *> map opToInpVal rasterOps
   ]) TLHasuraType
   where
     colGqlType = mkColumnType colTy
@@ -87,8 +90,12 @@ mkCompExpInp colTy =
     isScalarWhere = flip isScalarColumnWhere colTy
     mk t n = InpValInfo Nothing n Nothing $ G.toGT t
 
-    typedOps =
-       ["_eq", "_neq", "_gt", "_lt", "_gte", "_lte"]
+    -- colScalarListTy = GA.GTList colGTy
+    eqOps =
+       ["_eq", "_neq"]
+    compOps =
+      ["_gt", "_lt", "_gte", "_lte"]
+
     listOps =
       [ "_in", "_nin" ]
     -- TODO
@@ -99,7 +106,8 @@ mkCompExpInp colTy =
       , "_similar", "_nsimilar"
       ]
 
-    jsonbOpToInpVal (opName, ty, desc) = InpValInfo (Just desc) opName Nothing ty
+    opToInpVal (opName, ty, desc) = InpValInfo (Just desc) opName Nothing ty
+
     jsonbOps =
       [ ( "_contains"
         , G.toGT $ mkScalarTy PGJSONB
@@ -168,6 +176,25 @@ mkCompExpInp colTy =
         )
       ]
 
+    -- raster related operators
+    rasterOps =
+      [
+        ( "_st_intersects_rast"
+        , G.toGT $ mkScalarTy PGRaster
+        , boolFnMsg <> "ST_Intersects(raster <raster-col>, raster <raster-input>)"
+        )
+      , ( "_st_intersects_nband_geom"
+        , G.toGT stIntersectsNbandGeomInputTy
+        , boolFnMsg <> "ST_Intersects(raster <raster-col>, integer nband, geometry geommin)"
+        )
+      , ( "_st_intersects_geom_nband"
+        , G.toGT stIntersectsGeomNbandInputTy
+        , boolFnMsg <> "ST_Intersects(raster <raster-col> , geometry geommin, integer nband=NULL)"
+        )
+      ]
+
+    boolFnMsg = "evaluates the following boolean Postgres function; "
+
 geoInputTypes :: [InpObjTyInfo]
 geoInputTypes =
   [ stDWithinGeometryInputType
@@ -187,6 +214,34 @@ geoInputTypes =
       , InpValInfo Nothing "distance" Nothing $ G.toNT $ mkScalarTy PGFloat
       , InpValInfo
         Nothing "use_spheroid" (Just $ G.VCBoolean True) $ G.toGT $ mkScalarTy PGBoolean
+      ]
+
+stIntersectsNbandGeomInputTy :: G.NamedType
+stIntersectsNbandGeomInputTy = G.NamedType "st_intersects_nband_geom_input"
+
+stIntersectsGeomNbandInputTy :: G.NamedType
+stIntersectsGeomNbandInputTy = G.NamedType "st_intersects_geom_nband_input"
+
+rasterIntersectsInputTypes :: [InpObjTyInfo]
+rasterIntersectsInputTypes =
+  [ stIntersectsNbandGeomInput
+  , stIntersectsGeomNbandInput
+  ]
+  where
+    stIntersectsNbandGeomInput =
+      mkHsraInpTyInfo Nothing stIntersectsNbandGeomInputTy $ fromInpValL
+      [ InpValInfo Nothing "nband" Nothing $
+        G.toGT $ G.toNT $ mkScalarTy PGInteger
+      , InpValInfo Nothing "geommin" Nothing $
+        G.toGT $ G.toNT $ mkScalarTy PGGeometry
+      ]
+
+    stIntersectsGeomNbandInput =
+      mkHsraInpTyInfo Nothing stIntersectsGeomNbandInputTy $ fromInpValL
+      [ InpValInfo Nothing "geommin" Nothing $
+        G.toGT $ G.toNT $ mkScalarTy PGGeometry
+      , InpValInfo Nothing "nband" Nothing $
+        G.toGT $ mkScalarTy PGInteger
       ]
 
 mkBoolExpName :: QualifiedTable -> G.Name
@@ -228,7 +283,9 @@ mkBoolExpInp tn fields =
       ]
 
     mkFldExpInp = \case
-      Left (PGColumnInfo colName colTy _) ->
-        mk (mkColName colName) (mkCompExpTy colTy)
-      Right (RelInfo relName _ _ remTab _, _, _, _, _) ->
-        mk (mkRelName relName) (mkBoolExpTy remTab)
+      Left (PGColumnInfo _ name colTy _ _) ->
+        mk name (mkCompExpTy colTy)
+      Right relationshipField ->
+        let relationshipName = riName $ _rfiInfo relationshipField
+            remoteTable = riRTable $  _rfiInfo relationshipField
+        in mk (mkRelName relationshipName) (mkBoolExpTy remoteTable)

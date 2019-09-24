@@ -27,12 +27,12 @@ Auto-generated delete mutation schema
 
 As you can see from the schema:
 
-- ``where`` argument is compulsory to filter rows to be deleted. See :doc:`Filter queries <../queries/query-filters>`
+- The ``where`` argument is compulsory to filter rows to be deleted. See :doc:`Filter queries <../queries/query-filters>`
   for filtering options. Objects can be deleted based on filters on their own fields or those in their nested objects.
   The ``{}`` expression can be used to delete all rows.
 - You can return the number of affected rows and the affected objects (with nested objects) in the response.
 
-See the :ref:`delete mutation API reference <delete_syntax>` for the full specifications
+See the :ref:`delete mutation API reference <delete_syntax>` for the full specifications.
 
 .. note::
 
@@ -90,7 +90,7 @@ Delete all objects
 ------------------
 
 You can delete all objects in a table using the ``{}`` expression as the ``where`` argument. ``{}`` basically
-evaluates to ``true`` for all objects
+evaluates to ``true`` for all objects.
 
 **Example:** Delete all articles:
 

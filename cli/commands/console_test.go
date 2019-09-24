@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -19,7 +20,7 @@ func TestConsoleCmd(t *testing.T) {
 	ec.Spinner = spinner.New(spinner.CharSets[7], 100*time.Millisecond)
 	ec.ServerConfig = &cli.ServerConfig{
 		Endpoint:    "http://localhost:8080",
-		AdminSecret: "",
+		AdminSecret: os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET"),
 	}
 	ec.MetadataFile = []string{"metadata.yaml"}
 
@@ -33,7 +34,6 @@ func TestConsoleCmd(t *testing.T) {
 	if err != nil {
 		t.Fatalf("prepare failed: %v", err)
 	}
-
 	opts := &consoleOptions{
 		EC:              ec,
 		APIPort:         "9693",

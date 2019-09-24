@@ -15,7 +15,7 @@ dependencies:
   http: ^0.12.0+2
   toast: ^0.1.3
   shared_preferences: ^0.5.3+1
-+ graphql_flutter: ^1.0.1
++ graphql_flutter: 1.0.1
 ```
 
 Lets first create GraphQl client which we will need to configure our app. Our app requires both http link for queries, mutations and websocket link for subscriptions.
@@ -24,7 +24,7 @@ To do this create a file named `client.dart` inside `lib/config` folder and add 
 
 ```dart
 + import 'package:flutter/material.dart';
-+ import 'package:app_final/services/shared_preferences_service.dart';
++ import 'package:app_boilerplate/services/shared_preferences_service.dart';
 + import 'package:graphql_flutter/graphql_flutter.dart';
 + class Config {
 +   static final HttpLink httpLink = HttpLink(

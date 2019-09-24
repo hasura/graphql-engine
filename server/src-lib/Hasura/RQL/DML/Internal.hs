@@ -45,7 +45,7 @@ mkAdminRolePermInfo :: TableInfo PGColumnInfo -> RolePermInfo
 mkAdminRolePermInfo ti =
   RolePermInfo (Just i) (Just s) (Just u) (Just d)
   where
-    pgCols = map pgiName $ getCols $ _tiFieldInfoMap ti
+    pgCols = map pgiColumn $ getCols $ _tiFieldInfoMap ti
 
     tn = _tiName ti
     i = InsPermInfo (HS.fromList pgCols) tn annBoolExpTrue M.empty []
@@ -188,7 +188,8 @@ checkOnColExp
   -> AnnBoolExpFldSQL
   -> m AnnBoolExpFldSQL
 checkOnColExp spi sessVarBldr annFld = case annFld of
-  AVCol (PGColumnInfo cn _ _) _ -> do
+  AVCol colInfo _ -> do
+    let cn = pgiColumn colInfo
     checkSelOnCol spi cn
     return annFld
   AVRel relInfo nesAnn -> do
@@ -223,7 +224,7 @@ sessVarFromCurrentSetting' :: PGType PGScalarType -> SessVar -> S.SQLExp
 sessVarFromCurrentSetting' ty sessVar =
   flip S.SETyAnn (S.mkTypeAnn ty) $
   case ty of
-    PGTypeScalar baseTy -> withGeoVal baseTy sessVarVal
+    PGTypeScalar baseTy -> withConstructorFn baseTy sessVarVal
     PGTypeArray _       -> sessVarVal
   where
     curSess = S.SEUnsafe "current_setting('hasura.user')::json"
@@ -248,7 +249,7 @@ convBoolExp
   -> (PGColumnType -> Value -> m S.SQLExp)
   -> m AnnBoolExpSQL
 convBoolExp cim spi be sessVarBldr prepValBldr = do
-  abe <- annBoolExp rhsParser cim be
+  abe <- annBoolExp rhsParser cim $ unBoolExp be
   checkSelPerm spi sessVarBldr abe
   where
     rhsParser pgType val = case pgType of

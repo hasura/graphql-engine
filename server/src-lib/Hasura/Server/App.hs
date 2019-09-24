@@ -49,6 +49,7 @@ import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                     (AuthMode (..),
                                                          getUserInfo)
+import           Hasura.Server.Compression
 import           Hasura.Server.Config                   (runGetConfig)
 import           Hasura.Server.Context
 import           Hasura.Server.Cors
@@ -137,11 +138,6 @@ data APIResp
   = JSONResp !(HttpResponse EncJSON)
   | RawResp  !(HttpResponse BL.ByteString)
 
-apiRespToLBS :: APIResp -> BL.ByteString
-apiRespToLBS = \case
-  JSONResp (HttpResponse j _) -> encJToLBS j
-  RawResp (HttpResponse b _)  -> b
-
 data APIHandler a
   = AHGet !(Handler APIResp)
   | AHPost !(a -> Handler APIResp)
@@ -191,22 +187,6 @@ buildQCtx = do
   sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
   return $ QCtx userInfo cache sqlGenCtx
 
-logResult
-  :: (MonadIO m)
-  => L.Logger
-  -> Maybe UserInfo
-  -> RequestId
-  -> Wai.Request
-  -> Maybe Value
-  -> Either QErr BL.ByteString
-  -> Maybe (UTCTime, UTCTime)
-  -> m ()
-logResult logger userInfoM reqId httpReq req res qTime = do
-  let logline = case res of
-        Right res' -> mkHttpAccessLog userInfoM reqId httpReq res' qTime
-        Left e     -> mkHttpErrorLog userInfoM reqId httpReq e req qTime
-  liftIO $ L.unLogger logger logline
-
 logSuccess
   :: (MonadIO m)
   => L.Logger
@@ -215,9 +195,11 @@ logSuccess
   -> Wai.Request
   -> BL.ByteString
   -> Maybe (UTCTime, UTCTime)
+  -> Maybe CompressionType
   -> m ()
-logSuccess logger userInfoM reqId httpReq res qTime =
-  liftIO $ L.unLogger logger $ mkHttpAccessLog userInfoM reqId httpReq res qTime
+logSuccess logger userInfoM reqId httpReq res qTime cType =
+  liftIO $ L.unLogger logger $
+  mkHttpAccessLog userInfoM reqId httpReq res qTime cType
 
 logError
   :: (MonadIO m)
@@ -228,7 +210,8 @@ logError
   -> Maybe Value
   -> QErr -> m ()
 logError logger userInfoM reqId httpReq req qErr =
-  liftIO $ L.unLogger logger $ mkHttpErrorLog userInfoM reqId httpReq qErr req Nothing
+  liftIO $ L.unLogger logger $
+  mkHttpErrorLog userInfoM reqId httpReq qErr req Nothing Nothing
 
 mkSpockAction
   :: (MonadIO m, FromJSON a, ToJSON a)
@@ -287,18 +270,25 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
       setStatus $ qeStatus qErr
       json $ qErrEncoder includeInternal qErr
 
-    logSuccessAndResp userInfo reqId req result qTime = do
-      logSuccess logger userInfo reqId req (apiRespToLBS result) qTime
+    logSuccessAndResp userInfo reqId req result qTime =
       case result of
-        JSONResp (HttpResponse j h) -> do
-          uncurry setHeader jsonHeader
-          uncurry setHeader (requestIdHeader, unRequestId reqId)
-          mapM_ (mapM_ (uncurry setHeader . unHeader)) h
-          lazyBytes $ encJToLBS j
-        RawResp (HttpResponse b h) -> do
-          uncurry setHeader (requestIdHeader, unRequestId reqId)
-          mapM_ (mapM_ (uncurry setHeader . unHeader)) h
-          lazyBytes b
+        JSONResp (HttpResponse encJson h) ->
+          possiblyCompressedLazyBytes userInfo reqId req qTime (encJToLBS encJson) $
+            pure jsonHeader <> mkHeaders h
+        RawResp (HttpResponse rawBytes h) ->
+          possiblyCompressedLazyBytes userInfo reqId req qTime rawBytes $ mkHeaders h
+
+    possiblyCompressedLazyBytes userInfo reqId req qTime respBytes respHeaders = do
+      let (compressedResp, mEncodingHeader, mCompressionType) =
+            compressResponse (requestHeaders req) respBytes
+          encodingHeader = maybe [] pure mEncodingHeader
+          reqIdHeader = (requestIdHeader, unRequestId reqId)
+          allRespHeaders = pure reqIdHeader <> encodingHeader <> respHeaders
+      logSuccess logger userInfo reqId req compressedResp qTime mCompressionType
+      mapM_ (uncurry setHeader) allRespHeaders
+      lazyBytes compressedResp
+
+    mkHeaders = maybe [] (map unHeader)
 
 v1QueryHandler :: RQLQuery -> Handler (HttpResponse EncJSON)
 v1QueryHandler query = do
@@ -399,22 +389,22 @@ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
     errMsg = "console template rendering failed: " ++ show errs
 
 
-newtype QueryParser
-  = QueryParser
-  { getQueryParser :: QualifiedTable -> Object -> Handler RQLQuery }
+newtype LegacyQueryParser
+  = LegacyQueryParser
+  { getLegacyQueryParser :: QualifiedTable -> Object -> Handler RQLQueryV1 }
 
-queryParsers :: M.HashMap T.Text QueryParser
+queryParsers :: M.HashMap T.Text LegacyQueryParser
 queryParsers =
   M.fromList
-  [ ("select", mkQueryParser RQSelect)
-  , ("insert", mkQueryParser RQInsert)
-  , ("update", mkQueryParser RQUpdate)
-  , ("delete", mkQueryParser RQDelete)
-  , ("count", mkQueryParser RQCount)
+  [ ("select", mkLegacyQueryParser RQSelect)
+  , ("insert", mkLegacyQueryParser RQInsert)
+  , ("update", mkLegacyQueryParser RQUpdate)
+  , ("delete", mkLegacyQueryParser RQDelete)
+  , ("count", mkLegacyQueryParser RQCount)
   ]
   where
-    mkQueryParser f =
-      QueryParser $ \qt obj -> do
+    mkLegacyQueryParser f =
+      LegacyQueryParser $ \qt obj -> do
       let val = Object $ M.insert "table" (toJSON qt) obj
       q <- decodeValue val
       return $ f q
@@ -423,7 +413,7 @@ legacyQueryHandler :: TableName -> T.Text -> Object
                    -> Handler (HttpResponse EncJSON)
 legacyQueryHandler tn queryType req =
   case M.lookup queryType queryParsers of
-    Just queryParser -> getQueryParser queryParser qt req >>= v1QueryHandler
+    Just queryParser -> getLegacyQueryParser queryParser qt req >>= (v1QueryHandler . RQV1)
     Nothing          -> throw404 "No such resource exists"
   where
     qt = QualifiedObject publicSchema tn
@@ -434,6 +424,14 @@ initErrExit e = do
     "failed to build schema-cache because of inconsistent metadata: "
     <> T.unpack (qeError e)
   exitFailure
+
+data HasuraApp
+  = HasuraApp
+  { _hapApplication    :: !Wai.Application
+  , _hapSchemaRef      :: !SchemaCacheRef
+  , _hapCacheBuildTime :: !(Maybe UTCTime)
+  , _hapShutdown       :: !(IO ())
+  }
 
 mkWaiApp
   :: Q.TxIsolation
@@ -450,10 +448,11 @@ mkWaiApp
   -> Bool
   -> InstanceId
   -> S.HashSet API
-  -> EL.LQOpts
-  -> IO (Wai.Application, SchemaCacheRef, Maybe UTCTime)
-mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
-         enableConsole consoleAssetsDir enableTelemetry instanceId apis lqOpts = do
+  -> EL.LiveQueriesOptions
+  -> IO HasuraApp
+mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode
+         corsCfg enableConsole consoleAssetsDir enableTelemetry
+         instanceId apis lqOpts = do
 
     let pgExecCtx = PGExecCtx pool isoLevel
         pgExecCtxSer = PGExecCtx pool Q.Serializable
@@ -494,10 +493,13 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
                   consoleAssetsDir enableTelemetry
 
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
-    return ( WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp
-           , schemaCacheRef
-           , cacheBuiltTime
-           )
+        stopWSServer = WS.stopWSServerApp wsServerEnv
+
+    return $ HasuraApp
+      (WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp)
+      schemaCacheRef
+      cacheBuiltTime
+      stopWSServer
   where
     getTimeMs :: IO Int64
     getTimeMs = (round . (* 1000)) `fmap` getPOSIXTime
