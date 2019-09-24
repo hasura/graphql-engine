@@ -4,6 +4,7 @@ import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSele
 import CustomInputAutoSuggest from '../../../Common/CustomInputAutoSuggest/CustomInputAutoSuggest';
 
 import { getValidAlterOptions } from './utils';
+import { SUPPORT_ALIASING } from './ModifyActions';
 
 const ColumnEditor = ({
   onSubmit,
@@ -70,6 +71,9 @@ const ColumnEditor = ({
   const toggleColumnUnique = e => {
     dispatch(editColumn(colName, 'isUnique', e.target.value === 'true'));
   };
+  const updateColumnAlias = e => {
+    dispatch(editColumn(colName, 'alias', e.target.value));
+  };
 
   const getColumnDefaultInput = () => {
     const theme = require('../../../Common/CustomInputAutoSuggest/CustomThemes/EditColumnDefault.scss');
@@ -85,6 +89,24 @@ const ColumnEditor = ({
         data-test="edit-col-default"
         theme={theme}
       />
+    );
+  };
+
+  const getAliasInput = () => {
+    if (!SUPPORT_ALIASING) return null;
+    return (
+      <div className={`${styles.display_flex} form-group`}>
+        <label className="col-xs-2">GraphQL Alias</label>
+        <div className="col-xs-6">
+          <input
+            className="input-sm form-control"
+            value={selectedProperties[colName].alias}
+            onChange={updateColumnAlias}
+            type="text"
+            data-test="edit-col-alias"
+          />
+        </div>
+      </div>
     );
   };
 
@@ -117,6 +139,7 @@ const ColumnEditor = ({
             />
           </div>
         </div>
+        {getAliasInput()}
         <div className={`${styles.display_flex} form-group`}>
           <label className="col-xs-2">Nullable</label>
           <div className="col-xs-6">

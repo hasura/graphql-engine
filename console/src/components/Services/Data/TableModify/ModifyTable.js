@@ -140,6 +140,7 @@ class ModifyTable extends React.Component {
 
     const getRootFieldAliasesSection = () => {
       if (!SUPPORT_ALIASING) return null;
+
       const tableAliasEdit = {
         select: aliasEdit.select || '',
         select_by_pk: aliasEdit.select_by_pk || '',
