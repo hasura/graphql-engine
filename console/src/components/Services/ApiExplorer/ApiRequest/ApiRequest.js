@@ -9,13 +9,6 @@ import Tooltip from 'react-bootstrap/lib/Tooltip';
 import Modal from '../../../Common/Modal/Modal';
 
 import {
-  getGraphiQLHeadersFromLocalStorage,
-  parseAuthHeader,
-  getDefaultGraphiqlHeaders,
-  getAdminSecret,
-} from './utils';
-
-import {
   changeRequestHeader,
   removeRequestHeader,
   focusHeaderTextbox,
@@ -33,7 +26,13 @@ import {
   setEndPointSectionIsOpen,
   getHeadersSectionIsOpen,
   setHeadersSectionIsOpen,
-  setGraphiQLHeadersInLocalStorage,
+  persistGraphiQLHeaders,
+  getPersistedGraphiQLHeaders,
+  parseAuthHeader,
+  getDefaultGraphiqlHeaders,
+  getAdminSecret,
+  getPersistedAdminSecretHeaderWasAdded,
+  persistAdminSecretHeaderWasAdded,
 } from './utils';
 
 import styles from '../ApiExplorer.scss';
@@ -83,21 +82,26 @@ class ApiRequest extends Component {
   componentDidMount() {
     const handleHeaderInit = () => {
       const graphiqlHeaders =
-        getGraphiQLHeadersFromLocalStorage() || getDefaultGraphiqlHeaders();
+        getPersistedGraphiQLHeaders() || getDefaultGraphiqlHeaders();
 
-      // add inactive admin secret header if not already present
+      // if admin secret is set and admin secret header was ever added to headers, add admin secret header if not already present
       const adminSecret = getAdminSecret();
-      if (adminSecret) {
+      const adminSecretHeaderWasAdded = getPersistedAdminSecretHeaderWasAdded();
+      if (adminSecret && !adminSecretHeaderWasAdded) {
         const headerKeys = graphiqlHeaders.map(h => h.key);
+
         if (!headerKeys.includes(ADMIN_SECRET_HEADER_KEY)) {
           graphiqlHeaders.push({
             key: ADMIN_SECRET_HEADER_KEY,
             value: adminSecret,
-            isActive: false,
+            isActive: true,
             isNewHeader: false,
-            isDisabled: false,
+            isDisabled: true,
           });
         }
+
+        // set in local storage that admin secret header has been automatically added
+        persistAdminSecretHeaderWasAdded();
       }
 
       // add an empty placeholder header
@@ -110,7 +114,7 @@ class ApiRequest extends Component {
       });
 
       // persist headers to local storage
-      setGraphiQLHeadersInLocalStorage(graphiqlHeaders);
+      persistGraphiQLHeaders(graphiqlHeaders);
 
       // set headers in redux
       this.props.dispatch(setHeadersBulk(graphiqlHeaders));
@@ -268,7 +272,7 @@ class ApiRequest extends Component {
           const index = parseInt(e.target.getAttribute('data-header-id'), 10);
           this.props
             .dispatch(removeRequestHeader(index))
-            .then(r => setGraphiQLHeadersInLocalStorage(r));
+            .then(r => persistGraphiQLHeaders(r));
         };
 
         const onHeaderValueChanged = e => {
@@ -277,7 +281,7 @@ class ApiRequest extends Component {
           const newValue = e.target.value;
           this.props
             .dispatch(changeRequestHeader(index, key, newValue, false))
-            .then(r => setGraphiQLHeadersInLocalStorage(r));
+            .then(r => persistGraphiQLHeaders(r));
         };
 
         const onShowAdminSecretClicked = () => {
@@ -639,8 +643,8 @@ class ApiRequest extends Component {
             claimData =
               claimFormat === 'stringified_json'
                 ? generateValidNameSpaceData(
-                    JSON.parse(payload[claimNameSpace])
-                  )
+                  JSON.parse(payload[claimNameSpace])
+                )
                 : generateValidNameSpaceData(payload[claimNameSpace]);
           } catch (e) {
             console.error(e);

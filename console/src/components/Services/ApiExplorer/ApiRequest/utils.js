@@ -47,7 +47,21 @@ export const getAdminSecret = () => {
   return adminSecret;
 };
 
-export const setGraphiQLHeadersInLocalStorage = headers => {
+export const persistAdminSecretHeaderWasAdded = () => {
+  window.localStorage.setItem('ApiExplorer:AdminSecretHeaderWasAdded', true);
+};
+
+export const getPersistedAdminSecretHeaderWasAdded = () => {
+  const defaultIsSet = false;
+
+  const isSet = window.localStorage.getItem(
+    'ApiExplorer:AdminSecretHeaderWasAdded'
+  );
+
+  return isSet ? isSet === 'true' : defaultIsSet;
+};
+
+export const persistGraphiQLHeaders = headers => {
   // filter empty headers
   const validHeaders = headers.filter(h => h.key);
 
@@ -68,7 +82,7 @@ export const setGraphiQLHeadersInLocalStorage = headers => {
   );
 };
 
-export const getGraphiQLHeadersFromLocalStorage = () => {
+export const getPersistedGraphiQLHeaders = () => {
   const headersString = window.localStorage.getItem(
     'HASURA_CONSOLE_GRAPHIQL_HEADERS'
   );
