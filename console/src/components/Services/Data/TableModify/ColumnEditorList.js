@@ -77,9 +77,6 @@ const ColumnEditorList = ({
       // uniqueConstraint: columnUniqueConstraints[colName],
       default: col.column_default || '',
       comment: col.comment || '',
-      alias: tableSchema.configuration
-        ? tableSchema.configuration.custom_column_names[colName] || ''
-        : '',
     };
 
     const onSubmit = toggleEditor => {

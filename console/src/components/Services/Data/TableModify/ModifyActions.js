@@ -40,8 +40,6 @@ import {
 import globals from '../../../../Globals';
 import { GRAPHQL_ALIASING_SUPPORT } from '../../../../helpers/versionUtils';
 
-import { generateAliasingQuery } from './ModifyActions.bs';
-
 export const SUPPORT_ALIASING =
   globals.featuresCompatibility &&
   globals.featuresCompatibility[GRAPHQL_ALIASING_SUPPORT];
@@ -1443,18 +1441,11 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     const colType = columnEdit.type;
     const nullable = columnEdit.isNullable;
     const unique = columnEdit.isUnique;
-    const alias = columnEdit.alias;
     const def = columnEdit.default || '';
     const comment = columnEdit.comment || '';
     const newName = columnEdit.name;
     const currentSchema = columnEdit.schemaName;
     const checkIfFunctionFormat = isPostgresFunction(def);
-
-    const tableSchema = getState().tables.allSchemas.find(
-      table =>
-        table.table_name === tableName && table.table_schema === currentSchema
-    );
-
     // ALTER TABLE <table> ALTER COLUMN <column> TYPE <column_type>;
     let defWithQuotes;
     if (colType === 'text' && !checkIfFunctionFormat) {
@@ -1467,10 +1458,13 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     const originalColDefault = column.column_default; // null or "value"
     const originalColComment = column.comment; // null or "value"
     const originalColNullable = column.is_nullable; // "YES" or "NO"
-    const originalColAlias =
-      tableSchema.configuration &&
-      tableSchema.configuration.custom_column_names[colName];
-    const originalColUnique = isColumnUnique(tableSchema, colName);
+    const originalColUnique = isColumnUnique(
+      getState().tables.allSchemas.find(
+        table =>
+          table.table_name === tableName && table.table_schema === currentSchema
+      ),
+      colName
+    );
 
     /* column type up/down migration */
     const columnChangesUpQuery =
@@ -1956,37 +1950,6 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
           sql: `alter table "${currentSchema}"."${tableName}" rename column "${newName}" to "${colName}";`,
         },
       });
-    }
-
-    if (SUPPORT_ALIASING) {
-      const newCustomColnames = {
-        ...tableSchema.configuration.custom_column_names,
-      };
-      const oldCustomColNames = {
-        ...tableSchema.configuration.custom_column_names,
-      };
-      let aliasChange = false;
-      if (alias) {
-        if (originalColAlias !== alias) {
-          newCustomColnames[colName] = alias;
-          aliasChange = true;
-        }
-      } else {
-        if (originalColAlias) {
-          delete newCustomColnames[colName];
-          aliasChange = true;
-        }
-      }
-      if (aliasChange) {
-        const [aliasQueryUp, aliasQueryDown] = generateAliasingQuery(
-          tableSchema.configuration.custom_root_fields,
-          newCustomColnames,
-          tableSchema.configuration.custom_root_fields,
-          oldCustomColNames
-        );
-        schemaChangesUp.push(aliasQueryUp);
-        schemaChangesDown.push(aliasQueryDown);
-      }
     }
 
     // Apply migrations
