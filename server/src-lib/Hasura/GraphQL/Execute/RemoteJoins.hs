@@ -522,30 +522,37 @@ extractRemoteRelArguments hasuraJson rels =
         OJ.Object hasuraRespObj -> do
           remotesRows :: RemoteRelKeyMap [(G.Variable, G.ValueConst)] <-
             foldM
-              (\remoteRows (key, remotes) ->
-                 case OJ.lookup key hasuraRespObj of
-                   Just subvalue -> do
-                     let (remoteRelKeys, unfinishedKeyedRemotes) =
-                           partitionEithers remotes
-                     go biCardinality unfinishedKeyedRemotes subvalue
-                     pure
-                       (foldl'
-                          (\remoteRows' remoteRelKey ->
-                             insertWithConsI remoteRows' remoteRelKey
-                               -- TODO: Pay attention to variable naming wrt. aliasing.
-                               (G.Variable (G.Name key), valueToValueConst subvalue)
-                          )
-                          remoteRows
-                          remoteRelKeys)
-                   Nothing -> throwError $ fromString $
-                     "Expected key " <> T.unpack key <> " at this position: " <> 
-                     show (OJ.toEncJSON hasuraResp)
+              (\remoteRows (mbKey, remotes) ->
+                 case (mbKey, partitionEithers remotes) of
+                   (Just key, (remoteRelKeys, unfinishedKeyedRemotes)) -> 
+                     case OJ.lookup key hasuraRespObj of
+                       Just subvalue -> do
+                         go biCardinality unfinishedKeyedRemotes subvalue
+                         pure
+                           (foldl'
+                              (\remoteRows' remoteRelKey ->
+                                 insertWithConsI remoteRows' remoteRelKey
+                                   -- TODO: Pay attention to variable naming wrt. aliasing.
+                                   (G.Variable (G.Name key), valueToValueConst subvalue)
+                              )
+                              remoteRows
+                              remoteRelKeys)
+                       Nothing -> throwError $ fromString $
+                         "Expected key " <> T.unpack key <> " at this position: " <> 
+                         show (OJ.toEncJSON hasuraResp)
+
+                   -- for remotes not closed over any hasura values, return empty bindings list:
+                   (Nothing,  (remoteRelKeys, [])) ->
+                      pure $ IntMap.unionWith (<>) remoteRows $
+                        IntMap.fromList $ zip remoteRelKeys (repeat [])
+
+                   (Nothing, _) -> error "impossible: fix peelRemoteKeys"
               )
               mempty
               (Map.toList $ foldCandidates keyedRemotes)
 
           modify $ IntMap.unionWith (flip (<>)) $
-            fmap ((\biRows -> BatchInputs{..}) . pure . Map.fromList) remotesRows
+            (\biRows -> BatchInputs{..}) . Seq.singleton . Map.fromList <$> remotesRows
 
         -- scalar values are the base case; assert no remotes left:
         -- NOTE: keyedRemotes may be non-empty here when permissions have filtered hasura results:
@@ -560,7 +567,8 @@ extractRemoteRelArguments hasuraJson rels =
     -- way that's convenient for our `partitionEithers` above:
     foldCandidates
       :: [(remoteRelKey, (RelFieldPath, Set FieldName))]
-      -> Map.HashMap Text [Either remoteRelKey (remoteRelKey, (RelFieldPath, Set FieldName))]
+      -> Map.HashMap (Maybe Text) [Either remoteRelKey (remoteRelKey, (RelFieldPath, Set FieldName))]
+      -- ^ The 'Nothing' key is for remotes closed over no fields (the value will be all Lefts)
     foldCandidates =
       foldl' (uncurry . insertWithCons) mempty . concatMap peelRemoteKeys
 
@@ -568,15 +576,20 @@ extractRemoteRelArguments hasuraJson rels =
     -- current level of the result object.
     peelRemoteKeys 
       :: (remoteRelKey, (RelFieldPath, Set FieldName)) 
-      -> [(Text, Either remoteRelKey (remoteRelKey, (RelFieldPath, Set FieldName)))]
+      -> [(Maybe Text, Either remoteRelKey (remoteRelKey, (RelFieldPath, Set FieldName)))]
     peelRemoteKeys (remoteRelKey, (relFieldPath, hasuraFields)) =
       case relFieldPath of
-        -- ...if we've reached the end of the path, associate each hasura field with the remote:
-        RelFieldPath Seq.Empty -> 
-          map (\fn -> (getFieldNameTxt fn, Left remoteRelKey)) $ toList hasuraFields
+        -- ...if we've reached the end of the path...
+        RelFieldPath Seq.Empty 
+          | Set.null hasuraFields -> 
+              -- special case for when we're closed over no hasura fields:
+              pure (Nothing, Left remoteRelKey)
+          | otherwise -> 
+              -- ...associate each hasura field with the remote: 
+              map (\fn -> (Just $ getFieldNameTxt fn, Left remoteRelKey)) $ toList hasuraFields
         -- ...otherwise peel off path layer and return unfinished keyed remotes:
         RelFieldPath ((_, G.Alias (G.Name key)) Seq.:<| xs) -> 
-          pure (key, Right (remoteRelKey, (RelFieldPath xs, hasuraFields)))
+          pure (Just key, Right (remoteRelKey, (RelFieldPath xs, hasuraFields)))
 
 
 data BatchInputs =

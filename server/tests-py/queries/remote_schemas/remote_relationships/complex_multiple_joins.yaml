@@ -2,7 +2,11 @@
 
 # TODO map to multiple (different?) remote fields in first query (so rtrRemoteFields > 1)
 
-  # Adapted from server/tests-py/queries/remote_schemas/remote_relationships/basic_array.yaml, etc
+# This is mostly just a bigger more complex test case useful for seeing how
+# everything fits together, but a few things we specifically want to excercise:
+#  - returning > 1 BatchInputs from `extractRemoteRelArguments`.
+#  - empty hasura_fields (remote not closed over any hasura fields)
+#
 - description: Many remote fields, etc
   url: /v1/graphql
   status: 200
@@ -15,6 +19,7 @@
           user_id: 1
       profiles:
         - some_constant_text: constant text
+          some_more_constant_text: more constant text
           messagesNestedArr:
             - name: alice
               msg: You win!
@@ -24,6 +29,7 @@
           r_user:
             user_id: 1
         - some_constant_text: constant text
+          some_more_constant_text: more constant text
           messagesNestedArr:
             - name: bob
               msg: You lose!
@@ -31,6 +37,7 @@
           r_user:
             user_id: 2
         - some_constant_text: constant text
+          some_more_constant_text: more constant text
           messagesNestedArr:
             - name: alice
               msg: You win!
@@ -55,9 +62,11 @@
             user_id
           }
         }
+        # NOTE: ordering is somewhat important and intentional here (e.g. placement of some_more_constant_text)
         profiles {
           # no `id`, so becomes rrPhantomFields
           some_constant_text
+          some_more_constant_text
           messagesNestedArr {
             name
             msg
@@ -188,5 +197,36 @@
           remoteUser {
             user_id
           }
+        }
+      }
+- description: Empty hasura_fields bug
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      profiles:
+        - some_constant_text: constant text
+          some_more_constant_text: more constant text
+          id: 1
+        - some_constant_text: constant text
+          some_more_constant_text: more constant text
+          id: 2
+        - some_constant_text: constant text
+          some_more_constant_text: more constant text
+          id: 3
+      p_1:
+        # some_constant_text: constant text
+        some_more_constant_text: more constant text
+  query:
+    query: |
+      query {
+        profiles {
+          some_constant_text
+          some_more_constant_text
+          id
+        }
+        p_1: profiles_by_pk(id: 1) {
+          # some_constant_text
+          some_more_constant_text
         }
       }

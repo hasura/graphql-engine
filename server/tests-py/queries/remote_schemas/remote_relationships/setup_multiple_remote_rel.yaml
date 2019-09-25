@@ -45,4 +45,23 @@ args:
             arguments:
               text: constant text
 
+# Note: purposely closed over no hasura fields to make sure our mapping isn't
+# off in code that resolves/reassembles.
+- type: create_remote_relationship
+  args:
+    name: some_more_constant_text
+    table: profiles
+    hasura_fields: []
+    # hasura_fields:
+    # - id
+    remote_schema: my-remote-schema
+    remote_field:
+      user:
+        arguments:
+          user_id: 999
+        field:
+          gimmeText:
+            arguments:
+              text: more constant text
+
 # TODO add top-level thang with NO arguments (hello:)
