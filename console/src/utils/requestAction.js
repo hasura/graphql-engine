@@ -55,7 +55,7 @@ const requestAction = (
                 });
               }
               if (msg.code && msg.code === 'access-denied') {
-                if (window.location.pathname !== '/login') {
+                if (window.location.pathname !== globals.urlPrefix + '/login') {
                   dispatch(push(globals.urlPrefix + '/login'));
                 }
               }
