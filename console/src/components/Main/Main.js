@@ -23,7 +23,7 @@ import { loadConsoleTelemetryOpts } from '../../telemetry/Actions.js';
 import {
   loadInconsistentObjects,
   redirectToMetadataStatus,
-} from '../Services/Metadata/Actions';
+} from '../Services/Settings/Actions';
 
 import {
   getLoveConsentState,
@@ -196,17 +196,17 @@ class Main extends React.Component {
       return mainContent;
     };
 
-    const getMetadataSelectedMarker = () => {
+    const getSettingsSelectedMarker = () => {
       let metadataSelectedMarker = null;
 
-      if (currentActiveBlock === 'metadata') {
+      if (currentActiveBlock === 'settings') {
         metadataSelectedMarker = <span className={styles.selected} />;
       }
 
       return metadataSelectedMarker;
     };
 
-    const getMetadataIcon = () => {
+    const getMetadataStatusIcon = () => {
       if (metadata.inconsistentObjects.length === 0) {
         return <i className={styles.question + ' fa fa-cog'} />;
       }
@@ -504,10 +504,10 @@ class Main extends React.Component {
             <div id="dropdown_wrapper" className={styles.clusterInfoWrapper}>
               {getAdminSecretSection()}
 
-              <Link to="/metadata">
+              <Link to="/settings">
                 <div className={styles.helpSection + ' ' + styles.settingsIcon}>
-                  {getMetadataIcon()}
-                  {getMetadataSelectedMarker()}
+                  {getMetadataStatusIcon()}
+                  {getSettingsSelectedMarker()}
                 </div>
               </Link>
               <div className={styles.supportSection}>

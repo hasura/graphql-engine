@@ -1,16 +1,20 @@
 import React from 'react';
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import { Link } from 'react-router';
-import styles from '../../Common/TableCommon/Table.scss';
 import CheckIcon from '../../Common/Icons/Check';
 import CrossIcon from '../../Common/Icons/Cross';
+import globals from '../../../Globals';
+import { CLI_CONSOLE_MODE } from '../../../constants';
+import { getAdminSecret } from '../ApiExplorer/ApiRequest/utils';
+
+import styles from '../../Common/TableCommon/Table.scss';
 
 const Sidebar = ({ location, metadata }) => {
   const sectionsData = [];
 
   sectionsData.push({
     key: 'actions',
-    link: '/metadata/actions',
+    link: '/settings/metadata-actions',
     dataTestVal: 'metadata-actions-link',
     title: 'Metadata Actions',
   });
@@ -20,7 +24,7 @@ const Sidebar = ({ location, metadata }) => {
 
   sectionsData.push({
     key: 'status',
-    link: '/metadata/status',
+    link: '/settings/metadata-status',
     dataTestVal: 'metadata-status-link',
     title: (
       <div className={styles.display_flex}>
@@ -32,10 +36,22 @@ const Sidebar = ({ location, metadata }) => {
 
   sectionsData.push({
     key: 'allowed-queries',
-    link: '/metadata/allowed-queries',
+    link: '/settings/allowed-queries',
     dataTestVal: 'allowed-queries-link',
     title: 'Allowed Queries',
   });
+
+
+  const adminSecret = getAdminSecret();
+
+  if (adminSecret && globals.consoleMode !== CLI_CONSOLE_MODE) {
+    sectionsData.push({
+      key: 'logout',
+      link: '/settings/logout',
+      dataTestVal: 'logout-page-link',
+      title: 'Logout (clear admin-secret)',
+    });
+  }
 
   const currentLocation = location.pathname;
 

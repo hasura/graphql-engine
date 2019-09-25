@@ -41,7 +41,7 @@ class ClearAdminSecret extends Component {
             this.props.router.push('/login');
           }}
         >
-          {isClearing ? 'Clearing...' : 'Clear admin-secret (logout)'}
+          {isClearing ? 'Clearing...' : 'Logout (clear admin-secret)'}
         </Button>
       </div>
     );

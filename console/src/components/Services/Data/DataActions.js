@@ -16,8 +16,8 @@ import {
 import dataHeaders from './Common/Headers';
 import { loadMigrationStatus } from '../../Main/Actions';
 import returnMigrateUrl from './Common/getMigrateUrl';
-import { loadInconsistentObjects } from '../Metadata/Actions';
-import { filterInconsistentMetadataObjects } from '../Metadata/utils';
+import { loadInconsistentObjects } from '../Settings/Actions';
+import { filterInconsistentMetadataObjects } from '../Settings/utils';
 import globals from '../../../Globals';
 
 import {

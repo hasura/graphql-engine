@@ -222,13 +222,13 @@ export const dropInconsistentObjects = () => {
 };
 
 export const isMetadataStatusPage = () => {
-  return window.location.pathname.includes('/metadata/status');
+  return window.location.pathname.includes('/setting/metadata-status');
 };
 
 export const redirectToMetadataStatus = () => {
   return dispatch => {
     return dispatch(
-      push(globals.urlPrefix + '/metadata/status?is_redirected=true')
+      push(globals.urlPrefix + '/settings/metadata-status?is_redirected=true')
     );
   };
 };

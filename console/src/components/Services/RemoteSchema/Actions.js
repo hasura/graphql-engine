@@ -12,7 +12,7 @@ import { loadMigrationStatus } from '../../Main/Actions';
 import { handleMigrationErrors } from '../EventTrigger/EventActions';
 
 import { showSuccessNotification } from '../Common/Notification';
-import { filterInconsistentMetadataObjects } from '../Metadata/utils';
+import { filterInconsistentMetadataObjects } from '../Settings/utils';
 
 /* Action constants */
 
