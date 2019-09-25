@@ -32,7 +32,7 @@ import { fetchColumnTypesQuery, fetchColumnDefaultFunctions } from './utils';
 
 import { fetchColumnCastsQuery, convertArrayToJson } from './TableModify/utils';
 
-import { SERVER_CONSOLE_MODE } from '../../../constants';
+import { CLI_CONSOLE_MODE, SERVER_CONSOLE_MODE } from '../../../constants';
 
 const SET_TABLE = 'Data/SET_TABLE';
 const LOAD_FUNCTIONS = 'Data/LOAD_FUNCTIONS';
@@ -492,7 +492,7 @@ const makeMigrationCall = (
   let finalReqBody;
   if (globals.consoleMode === SERVER_CONSOLE_MODE) {
     finalReqBody = upQuery;
-  } else if (globals.consoleMode === 'cli') {
+  } else if (globals.consoleMode === CLI_CONSOLE_MODE) {
     finalReqBody = migrationBody;
   }
   const url = migrateUrl;
@@ -505,7 +505,7 @@ const makeMigrationCall = (
 
   const onSuccess = data => {
     if (!shouldSkipSchemaReload) {
-      if (globals.consoleMode === 'cli') {
+      if (globals.consoleMode === CLI_CONSOLE_MODE) {
         dispatch(loadMigrationStatus()); // don't call for server mode
       }
       dispatch(updateSchemaInfo());
