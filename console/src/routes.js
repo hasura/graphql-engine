@@ -32,30 +32,21 @@ import metadataOptionsContainer from './components/Services/Metadata/MetadataOpt
 import metadataStatusContainer from './components/Services/Metadata/MetadataStatus/MetadataStatus';
 import allowedQueriesContainer from './components/Services/Metadata/AllowedQueries/AllowedQueries';
 import { showErrorNotification } from './components/Services/Common/Notification';
+import { CLI_CONSOLE_MODE } from './constants';
 
 const routes = store => {
   // load hasuractl migration status
   const requireMigrationStatus = (nextState, replaceState, cb) => {
     const { dispatch } = store;
 
-    if (globals.consoleMode === 'cli') {
+    if (globals.consoleMode === CLI_CONSOLE_MODE) {
       dispatch(loadMigrationStatus()).then(
         () => {
           cb();
         },
         r => {
           if (r.code === 'data_api_error') {
-            if (globals.adminSecret) {
-              dispatch(showErrorNotification('Error', null, r));
-            } else {
-              dispatch(
-                showErrorNotification(
-                  'Missing admin-secret',
-                  'Seems like your Hasura GraphQL engine instance has an admin-secret configured. Run console with ' +
-                    'the admin-secret using: "hasura console --admin-secret=<your-admin-secret>"'
-                )
-              );
-            }
+            dispatch(showErrorNotification('Error', null, r));
           } else {
             dispatch(
               showErrorNotification(

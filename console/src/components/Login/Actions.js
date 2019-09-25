@@ -1,7 +1,7 @@
 import Endpoints, { globalCookiePolicy } from '../../Endpoints';
 import { UPDATE_DATA_HEADERS } from '../Services/Data/DataActions';
 import { saveAdminSecretState } from '../AppState';
-import { ADMIN_SECRET_HEADER_KEY } from '../../constants';
+import { ADMIN_SECRET_HEADER_KEY, CLI_CONSOLE_MODE } from '../../constants';
 import requestAction from '../../utils/requestAction';
 import globals from '../../Globals';
 
@@ -37,13 +37,15 @@ export const verifyLogin = ({
   dispatch(requestAction(url, requestOptions)).then(
     () => {
       if (adminSecret) {
-        // set admin secret to local storage
-        if (shouldPersist) {
-          saveAdminSecretState(adminSecret);
-        }
+        if (globals.consoleMode !== CLI_CONSOLE_MODE) {
+          // set admin secret to local storage
+          if (shouldPersist) {
+            saveAdminSecretState(adminSecret);
+          }
 
-        // set admin secret in globals
-        globals.adminSecret = adminSecret;
+          // set admin secret in globals
+          globals.adminSecret = adminSecret;
+        }
 
         // set data headers in redux
         dispatch({

@@ -5,6 +5,8 @@ import ReloadMetadata from './ReloadMetadata';
 import ResetMetadata from './ResetMetadata';
 import ClearAdminSecret from './ClearAdminSecret';
 import { getAdminSecret } from '../../ApiExplorer/ApiRequest/utils';
+import globals from '../../../../Globals';
+import { CLI_CONSOLE_MODE } from '../../../../constants';
 
 const MetadataOptions = props => {
   const styles = require('../Metadata.scss');
@@ -66,7 +68,7 @@ const MetadataOptions = props => {
 
     const adminSecret = getAdminSecret();
 
-    if (adminSecret) {
+    if (adminSecret && globals.consoleMode !== CLI_CONSOLE_MODE) {
       clearSecretSection = (
         <div>
           <div key="access_key_reset_1" className={styles.intro_note}>
