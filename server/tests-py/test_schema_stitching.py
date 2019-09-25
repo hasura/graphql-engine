@@ -455,8 +455,8 @@ class TestRemoteSchemaTimeout:
     dir = 'queries/remote_schemas'
 
     @pytest.fixture(autouse=True)
-    def transact(self, hge_ctx):
-        q = mk_add_remote_q('simple 1', 'http://localhost:5000/hello-graphql', timeout = 5)
+    def transact(self, hge_ctx, remote_get_url):
+        q = mk_add_remote_q('simple 1', remote_get_url('/hello-graphql'), timeout = 5)
         st_code, resp = hge_ctx.v1q(q)
         assert st_code == 200, resp
         yield
