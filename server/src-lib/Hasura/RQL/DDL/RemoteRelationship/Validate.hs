@@ -5,10 +5,8 @@
 -- | Validate input queries against remote schemas.
 
 module Hasura.RQL.DDL.RemoteRelationship.Validate
-  ( getCreateRemoteRelationshipValidation
-  , validateRelationship
-  , validateRemoteArguments
-  , ValidationError(..)
+  ( validateRelationship
+  , fromValidationError
   ) where
 
 import           Data.Bifunctor
@@ -46,22 +44,10 @@ data ValidationError
   | UnsupportedEnum
   deriving (Show, Eq)
 
--- Get a validation for the remote relationship proposal.
--- Success returns (RemoteField, TypeMap) where TypeMap is a map of additional types needed for the RemoteField
-getCreateRemoteRelationshipValidation ::
-     (QErrM m)
-  => RemoteRelationship
-  -> RemoteSchemaCtx
-  -> TableInfo PGColumnInfo
-  -> m (Either (NonEmpty ValidationError) RemoteField)
-getCreateRemoteRelationshipValidation remoteRel rsCtx tableInfo = do
-  pure
-    (validateRelationship
-       remoteRel
-       (rscGCtx rsCtx)
-       tableInfo)
+fromValidationError :: (QErrM m) => NonEmpty ValidationError -> m a
+fromValidationError err = throw400 RemoteSchemaError (T.pack (show err))
 
--- | Validate a remote relationship given a context.
+-- | Validate a remote relationship given a context and return a RemoteField
 validateRelationship ::
      RemoteRelationship
   -> GC.RemoteGCtx
