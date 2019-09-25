@@ -118,7 +118,18 @@ export const parseRemoteRelPermDefinition = (
 };
 
 // get the current expanded types based on the allowed types and the type of selected role and quer type
-export const getExpandedTypes = (allowedTypes, rootTypes, editType) => {
+export const getExpandedTypes = (
+  allowedTypes,
+  rootTypes,
+  editType,
+  allowNesting
+) => {
+  if (!allowNesting) {
+    return {
+      [rootTypes[editType]]: true,
+    };
+  }
+
   const expandedTypes = {};
 
   const expandTypes = currentTypeName => {

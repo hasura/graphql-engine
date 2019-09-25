@@ -257,7 +257,11 @@ const reducer = (state = permissionState, action) => {
         ...state,
         isFetching: false,
       };
-
+    case CREATE_REMOTE_SCHEMA_PERMISSION_FAILURE:
+      return {
+        ...state,
+        isFetching: false,
+      };
     case DROP_REMOTE_SCHEMA_PERMISSION:
       return {
         ...state,

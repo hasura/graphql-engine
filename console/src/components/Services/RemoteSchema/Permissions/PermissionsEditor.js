@@ -84,21 +84,22 @@ const PermissionsEditor = ({
   const allowedTypes = Object.keys(editState.allowedTypes).map(at => {
     // on field toggle
     const fieldToggleCallback = (fieldName, isChecked, allowNested) => {
-      if (!allowNested) return;
       const newAllowedTypes = JSON.parse(
         JSON.stringify(editState.allowedTypes)
       );
       newAllowedTypes[at][fieldName].isChecked = isChecked;
-      if (!newAllowedTypes[at][fieldName].isScalar) {
-        if (!newAllowedTypes[newAllowedTypes[at][fieldName].typeName]) {
-          const childFields = getTypeFields(
-            newAllowedTypes[at][fieldName].typeName,
-            objectTypes,
-            nonObjectTypes
-          );
-          newAllowedTypes[
-            newAllowedTypes[at][fieldName].typeName
-          ] = childFields;
+      if (allowNested) {
+        if (!newAllowedTypes[at][fieldName].isScalar) {
+          if (!newAllowedTypes[newAllowedTypes[at][fieldName].typeName]) {
+            const childFields = getTypeFields(
+              newAllowedTypes[at][fieldName].typeName,
+              objectTypes,
+              nonObjectTypes
+            );
+            newAllowedTypes[
+              newAllowedTypes[at][fieldName].typeName
+            ] = childFields;
+          }
         }
       }
       dispatch(setPermissionTypes(newAllowedTypes));

@@ -48,7 +48,7 @@ export const useIntrospectionSchema = (remoteSchemaName, headers) => {
     })
       .then(r => r.json())
       .then(response => {
-        const clientSchema = buildClientSchema(response.data);
+        const clientSchema = buildClientSchema({ __schema: response });
         setSchema(clientSchema);
         introspectionSchemaCache[remoteSchemaName] = clientSchema;
         setLoading(false);
