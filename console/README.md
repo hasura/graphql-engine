@@ -46,17 +46,18 @@ Hasura console can be developed in two modes (`server` or `cli` mode). Both mode
 
 Hasura GraphQL engine should be running to develop console in this mode. If you have set it up on Heroku, your url will look like `<app-name>.herokuapp.com`, if it's on your local machine, it's probably `http://localhost:8080`.
 
-[Dotenv](https://github.com/motdotla/dotenv) is used for setting environment variables for development. Create a `.env` file in the root directory for console (wherever package.json is). Here's a `.env` file with some environment variable examples :
+[Dotenv](https://github.com/motdotla/dotenv) is used for setting environment variables for development. In production, these environment variables are templated by the server or CLI. Here's an example `.env` file with some environment variable:
 
 ```bash
 PORT=3000
 NODE_ENV=development
 DATA_API_URL=http://localhost:8080
-ADMIN_SECRET=xyz
 IS_ADMIN_SECRET_SET=true
 CONSOLE_MODE=server
 URL_PREFIX=/
+ENABLE_TELEMETRY=true
 ASSETS_PATH=https://graphql-engine-cdn.hasura.io/console/assets
+SERVER_VERSION=v1.0.0-beta.6
 ASSETS_VERSION=channel/beta/v1.0
 CDN_ASSETS=true
 ```
@@ -65,12 +66,31 @@ Note that `CONSOLE_MODE` is set to `server`. In this mode, **migrations** will b
 
 Environment variables accepted in `server` mode:
 
-1. `PORT`: Configure the port where Hasura console will run locally.
-2. `NODE_ENV`: `development`
-3. `DATA_API_URL`: Configure it with the Hasura GraphQL Engine url. If you are running it on Heroku, your url will look like <app-name>.herokuapp.com.
-4. `ADMIN_SECRET`: Set admin secret if Hasura GraphQL engine is configured to run with ADMIN_SECRET.
-5. `CONSOLE_MODE`: `server`
-6. `URL_PREFIX`: `/` (forward slash)
+1. `DATA_API_URL`: Configure it with the Hasura GraphQL Engine url. If you are running it on Heroku, your url will look like <app-name>.herokuapp.com, if you are running locally, it will look like http://localhost:<port>
+2. `IS_ADMIN_SECRET_SET`: A boolean flag denoting if the server is configured with admin secret,
+3. `PORT`: Configure the port where Hasura console will run locally,
+4. `CONSOLE_MODE`: In server mode, it should be `server`,
+5. `SERVER_VERSION`: Hasura GraphQL Engine server version,
+6. `URL_PREFIX`: If your server is running at some path other than `/`, you can optionally provide this path,
+7. `ENABLE_TELEMETRY`: Whether to enable telemetry,
+8. `ASSETS_PATH`: Path to console assets,
+9. `ASSETS_VERSION`: Console assets version,
+10. `CDN_ASSETS`: Should assets be loaded from CDN
+11. `NODE_ENV`: `development`,
+
+Environment variables accepted in CLI Mode are:
+
+1. `DATA_API_URL`: Configure it with the Hasura GraphQL Engine url. If you are running it on Heroku, your url will look like <app-name>.herokuapp.com, if you are running locally, it will look like http://localhost:<port>
+2. `ADMIN_SECRET`: the admin secret of your server,
+3. `PORT`: Configure the port where Hasura console will run locally,
+4. `CONSOLE_MODE`: In CLI mode, it should be `cli`,
+5. `SERVER_VERSION`: Hasura GraphQL Engine server version,
+7. `ENABLE_TELEMETRY`: Whether to enable telemetry,
+8. `ASSETS_PATH`: Path to console assets,
+9. `ASSETS_VERSION`: Console assets version,
+10. `CDN_ASSETS`: Should assets be loaded from CDN
+11. `NODE_ENV`: `development`,
+
 
 > The server also templates `consolePath` in `window.__env` which is the relative path of the current page (something like `/console/data/schema/public`). Using this path, the console determines the DATA_API_URL. You do not need to worry about this in development since you are hardcoding the value of DATA_API_URL in `.env`.
 
@@ -93,6 +113,11 @@ API_PORT=9693
 ADMIN_SECRET=xyz
 CONSOLE_MODE=cli
 URL_PREFIX=/
+ENABLE_TELEMETRY=true
+ASSETS_PATH=https://graphql-engine-cdn.hasura.io/console/assets
+SERVER_VERSION=v1.0.0-beta.6
+ASSETS_VERSION=channel/beta/v1.0
+CDN_ASSETS=true
 ```
 Environment variables accepted in `cli` mode:
 
@@ -104,6 +129,11 @@ Environment variables accepted in `cli` mode:
 6. `ADMIN_SECRET`: Set admin secret if Hasura GraphQL engine is configured to run with ADMIN_SECRET
 7. `CONSOLE_MODE`: `cli`
 8. `URL_PREFIX`: ‘/’ (forward slash)
+9. `SERVER_VERSION`: Hasura GraphQL Engine server version,
+10. `ENABLE_TELEMETRY`: Whether to enable telemetry,
+11. `ASSETS_PATH`: Path to console assets,
+12. `ASSETS_VERSION`: Console assets version,
+13. `CDN_ASSETS`: Should assets be loaded from CDN
 
 #### Run Development Server:
 
