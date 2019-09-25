@@ -4,6 +4,7 @@ import globals from '../Globals';
 import { verifyLogin } from '../components/Login/Actions';
 
 import { getAdminSecret } from '../components/Services/ApiExplorer/ApiRequest/utils';
+import { CLI_CONSOLE_MODE } from '../constants';
 
 const validateLogin = ({ dispatch }) => {
   return (nextState, replaceState, cb) => {
@@ -17,7 +18,9 @@ const validateLogin = ({ dispatch }) => {
       };
 
       const validationFailureCallback = () => {
-        clearAdminSecretState();
+        if (globals.consoleMode !== CLI_CONSOLE_MODE) {
+          clearAdminSecretState();
+        }
 
         if (nextState.location.pathname !== '/login') {
           replaceState('/login');
