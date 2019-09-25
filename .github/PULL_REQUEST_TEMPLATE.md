@@ -26,20 +26,30 @@
 <!-- How is this issue solved/fixed? What is the design? -->
 <!-- It's better if we elaborate -->
 
-### Catalog upgrade
+### Server checklist
+<!-- A checklist for server code -->
+
+#### Catalog upgrade
 <!-- Is hdb_catalog version bumped? -->
 Is Hasura catalogue version bumped?
 - [ ] Yes
   - [ ] Update docs with down SQL script
 - [ ] No
 
+#### Metadata
+<!-- Hasura metadata changes -->
 
-### Breaking changes
-<!-- A checklist for breaking changes -->
+Any new metadata feature is added?
+
+- [ ] Yes;
+   Does `run_sql` auto manages the new metadata through schema diffing?
+  - [ ] Yes
+  - [ ] Not required
+- [ ] No
+
+#### Breaking changes
 
 - [ ] No Breaking changes
-
-#### Server breaking changes checklist
 
 1. Metadata API
 
@@ -52,7 +62,7 @@ Is Hasura catalogue version bumped?
 
 2. GraphQL API
 
-   Schema generation:-
+   Schema Generation:-
    <!-- Any changes in schema auto-generation logic -->
    <!-- All GraphQL schema names are case sensitive -->
    - [ ] Change in any `NamedType`
@@ -66,9 +76,8 @@ Is Hasura catalogue version bumped?
 
 3. Logging
 
-   Change in log:-
-   - [ ] JSON schema
-   - [ ] `type` names
+   - [ ] Log `JSON` schema
+   - [ ] Log `type` names
    <!-- Add if anything not listed above -->
 
 <!-- Add any other breaking change not mentioned above -->
