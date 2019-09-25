@@ -21,8 +21,8 @@ const Login = ({ dispatch }) => {
   // input handler
   const [adminSecretInput, setAdminSecretInput] = useState('');
 
-  const getloginForm = () => {
-    const getLoginButtontext = () => {
+  const getLoginForm = () => {
+    const getLoginButtonText = () => {
       // login button text
       let loginText = 'Enter';
       if (loading) {
@@ -90,7 +90,7 @@ const Login = ({ dispatch }) => {
             className="form-control"
             disabled={loading}
           >
-            {getLoginButtontext()}
+            {getLoginButtonText()}
           </Button>
         </div>
         <div className={styles.add_pad_left}>
@@ -146,7 +146,7 @@ const Login = ({ dispatch }) => {
           </div>
           <div className={styles.loginWrapper}>
             {globals.consoleMode !== CLI_CONSOLE_MODE
-              ? getloginForm()
+              ? getLoginForm()
               : getCLIAdminSecretErrorMessage()}
           </div>
         </div>
