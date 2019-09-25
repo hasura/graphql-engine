@@ -11,7 +11,7 @@ const MetadataOptions = props => {
     return (
       <div>
         <div className={styles.intro_note}>
-          <h4>Import/Export</h4>
+          <h4>Import/Export metadata</h4>
           <div className={styles.content_width}>
             Get Hasura metadata as JSON.
           </div>
@@ -44,7 +44,7 @@ const MetadataOptions = props => {
         </div>
 
         <div key="meta_data_3" className={styles.intro_note}>
-          <h4>Reset Metadata</h4>
+          <h4>Reset metadata</h4>
           <div className={styles.content_width}>
             Permanently clear GraphQL Engine's metadata and configure it from
             scratch (tracking relevant tables and relationships). This process
