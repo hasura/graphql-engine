@@ -5,7 +5,7 @@ import ReloadMetadata from './ReloadMetadata';
 import ResetMetadata from './ResetMetadata';
 
 const MetadataOptions = props => {
-  const styles = require('../Metadata.scss');
+  const styles = require('../Settings.scss');
 
   const getMetadataImportExportSection = () => {
     return (

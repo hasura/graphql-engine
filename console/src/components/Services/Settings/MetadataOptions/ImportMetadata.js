@@ -83,7 +83,7 @@ class ImportMetadata extends Component {
       });
   }
   render() {
-    const metaDataStyles = require('../Metadata.scss');
+    const metaDataStyles = require('../Settings.scss');
     return (
       <div className={metaDataStyles.display_inline}>
         <Button

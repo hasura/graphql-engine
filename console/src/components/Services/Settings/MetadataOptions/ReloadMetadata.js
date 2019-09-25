@@ -21,7 +21,7 @@ class ReloadMetadata extends Component {
     const { dispatch } = this.props;
     const { isReloading } = this.state;
 
-    const metaDataStyles = require('../Metadata.scss');
+    const metaDataStyles = require('../Settings.scss');
 
     const reloadMetadataAndLoadInconsistentMetadata = e => {
       e.preventDefault();

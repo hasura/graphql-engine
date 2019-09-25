@@ -15,7 +15,7 @@ class ClearAdminSecret extends Component {
   }
 
   render() {
-    const metaDataStyles = require('../Metadata.scss');
+    const metaDataStyles = require('../Settings.scss');
 
     const { dispatch } = this.props;
     const { isClearing } = this.state;

@@ -2,7 +2,7 @@ import React from 'react';
 import ClearAdminSecret from './ClearAdminSecret';
 
 const Logout = props => {
-  const styles = require('../Metadata.scss');
+  const styles = require('../Settings.scss');
 
   return (
     <div

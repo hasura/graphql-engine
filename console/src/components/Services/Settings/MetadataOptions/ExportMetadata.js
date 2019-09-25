@@ -15,7 +15,7 @@ class ExportMetadata extends Component {
     this.state.isExporting = false;
   }
   render() {
-    const metaDataStyles = require('../Metadata.scss');
+    const metaDataStyles = require('../Settings.scss');
     return (
       <div className={metaDataStyles.display_inline}>
         <Button
