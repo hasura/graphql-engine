@@ -1,13 +1,15 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 -- | Construction of multiplexed live query plans; see "Hasura.GraphQL.Execute.LiveQuery" for
 -- details.
 module Hasura.GraphQL.Execute.LiveQuery.Plan
   ( MultiplexedQuery
   , mkMultiplexedQuery
-  , toMultiplexedQueryVar
+  , resolveMultiplexedValue
 
   , CohortId
   , newCohortId
-  , CohortVariables(..)
+  , CohortVariables
   , executeMultiplexedQuery
 
   , LiveQueryPlan(..)
@@ -79,21 +81,23 @@ mkMultiplexedQuery baseQuery =
             ) _fld_resp ON ('true')
         |]
 
--- | converts the partial unresolved value containing
--- variables, session variables to an SQL expression
--- referring correctly to the values from '_subs' temporary table
--- The variables are at _subs.result_vars.variables and
--- session variables at _subs.result_vars.user
-toMultiplexedQueryVar :: (MonadState GV.ReusableVariableValues m) => GR.UnresolvedVal -> m S.SQLExp
-toMultiplexedQueryVar = \case
-  GR.UVPG annPGVal ->
+-- | Resolves an 'GR.UnresolvedVal' by converting 'GR.UVPG' values to SQL expressions that refer to
+-- the @result_vars@ input object, collecting variable values along the way.
+resolveMultiplexedValue
+  :: (MonadState (GV.ReusableVariableValues, Seq (WithScalarType PGScalarValue)) m)
+  => GR.UnresolvedVal -> m S.SQLExp
+resolveMultiplexedValue = \case
+  GR.UVPG annPGVal -> do
     let GR.AnnPGVal varM _ colVal = annPGVal
-    in case varM of
-      Just var -> do
-        modify $ Map.insert var colVal
-        pure $ fromResVars (PGTypeScalar $ pstType colVal)
-          ["variables", G.unName $ G.unVariable var]
-      Nothing -> return $ toTxtValue colVal
+    varJsonPath <- case varM of
+      Just varName -> do
+        modifying _1 $ Map.insert varName colVal
+        pure ["variables", G.unName $ G.unVariable varName]
+      Nothing -> do
+        syntheticVarIndex <- gets (length . snd)
+        modifying _2 (|> colVal)
+        pure ["synthetic", T.pack $ show syntheticVarIndex]
+    pure $ fromResVars (PGTypeScalar $ pstType colVal) varJsonPath
   GR.UVSessVar ty sessVar -> pure $ fromResVars ty ["user", T.toLower sessVar]
   GR.UVSQL sqlExp -> pure sqlExp
   where
@@ -111,14 +115,34 @@ newCohortId = CohortId <$> liftIO UUID.nextRandom
 
 data CohortVariables
   = CohortVariables
-  { _cvSessionVariables :: !UserVars
-  , _cvQueryVariables   :: !ValidatedQueryVariables
+  { _cvSessionVariables   :: !UserVars
+  , _cvQueryVariables     :: !ValidatedQueryVariables
+  , _cvSyntheticVariables :: !ValidatedSyntheticVariables
+  -- ^ To allow more queries to be multiplexed together, we introduce “synthetic” variables for
+  -- /all/ SQL literals in a query, even if they don’t correspond to any GraphQL variable. For
+  -- example, the query
+  --
+  -- > subscription latest_tracks($condition: tracks_bool_exp!) {
+  -- >   tracks(where: $tracks_bool_exp) {
+  -- >     id
+  -- >     title
+  -- >   }
+  -- > }
+  --
+  -- might be executed with similar values for @$condition@, such as @{"album_id": {"_eq": "1"}}@
+  -- and @{"album_id": {"_eq": "2"}}@.
+  --
+  -- Normally, we wouldn’t bother parameterizing over the @1@ and @2@ literals in the resulting
+  -- query because we can’t cache that query plan (since different @$condition@ values could lead to
+  -- different SQL). However, for live queries, we can still take advantage of the similarity
+  -- between the two queries by multiplexing them together, so we replace them with references to
+  -- synthetic variables.
   } deriving (Show, Eq, Generic)
 instance Hashable CohortVariables
 
 instance J.ToJSON CohortVariables where
-  toJSON (CohortVariables sessionVars queryVars) =
-    J.object ["user" J..= sessionVars, "variables" J..= queryVars]
+  toJSON (CohortVariables sessionVars queryVars syntheticVars) =
+    J.object ["session" J..= sessionVars, "query" J..= queryVars, "synthetic" J..= syntheticVars]
 
 -- These types exist only to use the Postgres array encoding.
 newtype CohortIdArray = CohortIdArray { unCohortIdArray :: [CohortId] }
@@ -157,21 +181,27 @@ executeQuery query cohorts =
 -- > SELECT 'v1'::t1, 'v2'::t2, ..., 'vn'::tn
 --
 -- so if any variable values are invalid, the error will be caught early.
-newtype ValidatedQueryVariables = ValidatedQueryVariables (Map.HashMap G.Variable TxtEncodedPGVal)
-  deriving (Show, Eq, Hashable, J.ToJSON)
+newtype ValidatedVariables f = ValidatedVariables (f TxtEncodedPGVal)
+deriving instance (Show (f TxtEncodedPGVal)) => Show (ValidatedVariables f)
+deriving instance (Eq (f TxtEncodedPGVal)) => Eq (ValidatedVariables f)
+deriving instance (Hashable (f TxtEncodedPGVal)) => Hashable (ValidatedVariables f)
+deriving instance (J.ToJSON (f TxtEncodedPGVal)) => J.ToJSON (ValidatedVariables f)
+
+type ValidatedQueryVariables = ValidatedVariables (Map.HashMap G.Variable)
+type ValidatedSyntheticVariables = ValidatedVariables []
 
 -- | Checks if the provided arguments are valid values for their corresponding types.
 -- Generates SQL of the format "select 'v1'::t1, 'v2'::t2 ..."
-validateQueryVariables
-  :: (MonadError QErr m, MonadIO m)
+validateVariables
+  :: (Traversable f, MonadError QErr m, MonadIO m)
   => PGExecCtx
-  -> GV.ReusableVariableValues
-  -> m ValidatedQueryVariables
-validateQueryVariables pgExecCtx annVarVals = do
-  let valSel = mkValidationSel $ Map.elems annVarVals
+  -> f (WithScalarType PGScalarValue)
+  -> m (ValidatedVariables f)
+validateVariables pgExecCtx variableValues = do
+  let valSel = mkValidationSel $ toList variableValues
   Q.Discard () <- runTx' $ liftTx $
     Q.rawQE dataExnErrHandler (Q.fromBuilder $ toSQL valSel) [] False
-  pure . ValidatedQueryVariables $ fmap (txtEncodedPGVal . pstValue) annVarVals
+  pure . ValidatedVariables $ fmap (txtEncodedPGVal . pstValue) variableValues
   where
     mkExtrs = map (flip S.Extractor Nothing . toTxtValue)
     mkValidationSel vars =
@@ -205,8 +235,9 @@ $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ParameterizedLiveQueryPlan)
 
 data ReusableLiveQueryPlan
   = ReusableLiveQueryPlan
-  { _rlqpParameterizedPlan  :: !ParameterizedLiveQueryPlan
-  , _rlqpQueryVariableTypes :: !GV.ReusableVariableTypes
+  { _rlqpParameterizedPlan       :: !ParameterizedLiveQueryPlan
+  , _rlqpSyntheticVariableValues :: !ValidatedSyntheticVariables
+  , _rlqpQueryVariableTypes      :: !GV.ReusableVariableTypes
   } deriving (Show)
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ReusableLiveQueryPlan)
 
@@ -226,8 +257,8 @@ buildLiveQueryPlan
 buildLiveQueryPlan pgExecCtx fieldAlias astUnresolved varTypes = do
   userInfo <- asks getter
 
-  (astResolved, annVarVals) <- flip runStateT mempty $
-    GR.traverseQueryRootFldAST toMultiplexedQueryVar astUnresolved
+  (astResolved, (queryVariableValues, syntheticVariableValues)) <- flip runStateT mempty $
+    GR.traverseQueryRootFldAST resolveMultiplexedValue astUnresolved
   let pgQuery = mkMultiplexedQuery $ GR.toPGQuery astResolved
       parameterizedPlan = ParameterizedLiveQueryPlan (userRole userInfo) fieldAlias pgQuery
 
@@ -235,9 +266,11 @@ buildLiveQueryPlan pgExecCtx fieldAlias astUnresolved varTypes = do
   -- are correct according to Postgres. Without this check
   -- an invalid value for a variable for one instance of the
   -- subscription will take down the entire multiplexed query
-  validatedVars <- validateQueryVariables pgExecCtx annVarVals
-  let plan = LiveQueryPlan parameterizedPlan (CohortVariables (userVars userInfo) validatedVars)
-      reusablePlan = ReusableLiveQueryPlan parameterizedPlan <$> varTypes
+  validatedQueryVars <- validateVariables pgExecCtx queryVariableValues
+  validatedSyntheticVars <- validateVariables pgExecCtx (toList syntheticVariableValues)
+  let cohortVariables = CohortVariables (userVars userInfo) validatedQueryVars validatedSyntheticVars
+      plan = LiveQueryPlan parameterizedPlan cohortVariables
+      reusablePlan = ReusableLiveQueryPlan parameterizedPlan validatedSyntheticVars <$> varTypes
   pure (plan, reusablePlan)
 
 reuseLiveQueryPlan
@@ -248,10 +281,10 @@ reuseLiveQueryPlan
   -> ReusableLiveQueryPlan
   -> m LiveQueryPlan
 reuseLiveQueryPlan pgExecCtx sessionVars queryVars reusablePlan = do
-  let ReusableLiveQueryPlan parameterizedPlan varTypes = reusablePlan
-  annVarVals <- GV.validateVariablesForReuse varTypes queryVars
-  validatedVars <- validateQueryVariables pgExecCtx annVarVals
-  pure $ LiveQueryPlan parameterizedPlan (CohortVariables sessionVars validatedVars)
+  let ReusableLiveQueryPlan parameterizedPlan syntheticVars queryVarTypes = reusablePlan
+  annVarVals <- GV.validateVariablesForReuse queryVarTypes queryVars
+  validatedVars <- validateVariables pgExecCtx annVarVals
+  pure $ LiveQueryPlan parameterizedPlan (CohortVariables sessionVars validatedVars syntheticVars)
 
 data LiveQueryPlanExplanation
   = LiveQueryPlanExplanation

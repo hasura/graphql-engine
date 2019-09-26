@@ -16,7 +16,7 @@ module Hasura.GraphQL.Execute.LiveQuery.Poll (
   , Cohort(..)
   , CohortId
   , newCohortId
-  , CohortVariables(..)
+  , CohortVariables
   , CohortKey
   , CohortMap
 
@@ -121,11 +121,10 @@ type CohortMap = TMap.TMap CohortKey Cohort
 dumpCohortMap :: CohortMap -> IO J.Value
 dumpCohortMap cohortMap = do
   cohorts <- STM.atomically $ TMap.toList cohortMap
-  fmap J.toJSON . forM cohorts $ \(CohortVariables usrVars varVals, cohort) -> do
+  fmap J.toJSON . forM cohorts $ \(variableValues, cohort) -> do
     cohortJ <- dumpCohort cohort
     return $ J.object
-      [ "session_vars" J..= usrVars
-      , "variable_values" J..= varVals
+      [ "variables" J..= variableValues
       , "cohort" J..= cohortJ
       ]
   where
