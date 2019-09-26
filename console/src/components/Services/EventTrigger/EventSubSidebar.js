@@ -67,7 +67,7 @@ const EventSubSidebar = ({
             trigger === currentTrigger &&
             currentLocation.indexOf(currentTrigger) !== -1
           ) {
-            activeTableClass = styles.activeTable;
+            activeTableClass = styles.activeLink;
           }
 
           return (

@@ -37,9 +37,22 @@ export const isEqual = (value1, value2) => {
 
   if (typeof value1 === typeof value2) {
     if (isArray(value1)) {
-      // TODO
-    } else if (isObject(value2)) {
       _isEqual = JSON.stringify(value1) === JSON.stringify(value2);
+    } else if (isObject(value2)) {
+      const value1Keys = Object.keys(value1);
+      const value2Keys = Object.keys(value2);
+
+      if (value1Keys.length === value2Keys.length) {
+        _isEqual = true;
+
+        for (let i = 0; i < value1Keys.length; i++) {
+          const key = value1Keys[i];
+          if (!isEqual(value1[key], value2[key])) {
+            _isEqual = false;
+            break;
+          }
+        }
+      }
     } else {
       _isEqual = value1 === value2;
     }
@@ -47,6 +60,54 @@ export const isEqual = (value1, value2) => {
 
   return _isEqual;
 };
+
+export function isJsonString(str) {
+  try {
+    JSON.parse(str);
+  } catch (e) {
+    return false;
+  }
+
+  return true;
+}
+
+export function getAllJsonPaths(json, leafKeys = [], prefix = '') {
+  const _paths = [];
+
+  const addPrefix = subPath => {
+    return prefix + (prefix && subPath ? '.' : '') + subPath;
+  };
+
+  const handleSubJson = (subJson, newPrefix) => {
+    const subPaths = getAllJsonPaths(subJson, leafKeys, newPrefix);
+
+    subPaths.forEach(subPath => {
+      _paths.push(subPath);
+    });
+
+    if (!subPaths.length) {
+      _paths.push(newPrefix);
+    }
+  };
+
+  if (isArray(json)) {
+    json.forEach((subJson, i) => {
+      handleSubJson(subJson, addPrefix(i.toString()));
+    });
+  } else if (isObject(json)) {
+    Object.keys(json).forEach(key => {
+      if (leafKeys.includes(key)) {
+        _paths.push({ [addPrefix(key)]: json[key] });
+      } else {
+        handleSubJson(json[key], addPrefix(key));
+      }
+    });
+  } else {
+    _paths.push(addPrefix(json));
+  }
+
+  return _paths;
+}
 
 // use browser confirm and prompt to get user confirmation for actions
 export const getConfirmation = (

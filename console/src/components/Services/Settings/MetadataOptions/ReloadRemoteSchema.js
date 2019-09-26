@@ -17,7 +17,7 @@ class ReloadRemoteSchema extends Component {
   render() {
     const { dispatch, remoteSchemaName } = this.props;
     const { isReloading } = this.state;
-    const metaDataStyles = require('../Metadata.scss');
+    const metaDataStyles = require('../Settings.scss');
     const reloadRemoteMetadataHandler = () => {
       this.setState({ isReloading: true });
       dispatch(

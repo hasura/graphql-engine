@@ -1,20 +1,17 @@
-import globals from '../../../../Globals';
 import React from 'react';
 import ExportMetadata from './ExportMetadata';
 import ImportMetadata from './ImportMetadata';
 import ReloadMetadata from './ReloadMetadata';
 import ResetMetadata from './ResetMetadata';
-import ClearAdminSecret from './ClearAdminSecret';
-import { CONSOLE_ADMIN_SECRET } from '../../../AppState';
 
 const MetadataOptions = props => {
-  const styles = require('../Metadata.scss');
+  const styles = require('../Settings.scss');
 
   const getMetadataImportExportSection = () => {
     return (
       <div>
         <div className={styles.intro_note}>
-          <h4>Import/Export</h4>
+          <h4>Import/Export metadata</h4>
           <div className={styles.content_width}>
             Get Hasura metadata as JSON.
           </div>
@@ -47,7 +44,7 @@ const MetadataOptions = props => {
         </div>
 
         <div key="meta_data_3" className={styles.intro_note}>
-          <h4>Reset Metadata</h4>
+          <h4>Reset metadata</h4>
           <div className={styles.content_width}>
             Permanently clear GraphQL Engine's metadata and configure it from
             scratch (tracking relevant tables and relationships). This process
@@ -60,36 +57,6 @@ const MetadataOptions = props => {
         </div>
       </div>
     );
-  };
-
-  const getClearSecretSection = () => {
-    let clearSecretSection = null;
-
-    if (window.localStorage[CONSOLE_ADMIN_SECRET]) {
-      clearSecretSection = (
-        <div>
-          <div key="access_key_reset_1" className={styles.intro_note}>
-            <h4>Clear {globals.adminSecretLabel} (logout)</h4>
-
-            <div className={styles.content_width}>
-              The console caches the {globals.adminSecretLabel} (
-              {globals.adminSecretLabel === 'access-key'
-                ? 'HASURA_GRAPHQL_ACCESS_KEY'
-                : 'HASURA_GRAPHQL_ADMIN_SECRET'}
-              ) in the browser. You can clear this cache to force a prompt for
-              the {globals.adminSecretLabel} when the console is accessed next
-              using this browser.
-            </div>
-          </div>
-
-          <div key="access_key_reset_2">
-            <ClearAdminSecret {...props} />
-          </div>
-        </div>
-      );
-    }
-
-    return clearSecretSection;
   };
 
   return (
@@ -120,8 +87,6 @@ const MetadataOptions = props => {
       {getMetadataImportExportSection()}
 
       {getMetadataUpdateSection()}
-
-      {getClearSecretSection()}
     </div>
   );
 };

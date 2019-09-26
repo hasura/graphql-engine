@@ -8,11 +8,11 @@ import DataSubSidebar from './DataSubSidebar';
 
 import { updateCurrentSchema } from './DataActions';
 import { NotFoundError } from '../../Error/PageNotFound';
+import { CLI_CONSOLE_MODE } from '../../../constants';
 
 const sectionPrefix = '/data';
 
 const DataPageContainer = ({
-  schema,
   currentSchema,
   schemaList,
   children,
@@ -31,7 +31,7 @@ const DataPageContainer = ({
   const currentLocation = location.pathname;
 
   let migrationTab = null;
-  if (globals.consoleMode === 'cli') {
+  if (globals.consoleMode === CLI_CONSOLE_MODE) {
     migrationTab = (
       <li
         role="presentation"
@@ -81,12 +81,7 @@ const DataPageContainer = ({
             </div>
           </div>
         </Link>
-        <DataSubSidebar
-          location={location}
-          schema={schema}
-          currentSchema={currentSchema}
-          dispatch={dispatch}
-        />
+        <DataSubSidebar location={location} />
       </li>
       <li
         role="presentation"
@@ -117,7 +112,6 @@ const DataPageContainer = ({
 
 const mapStateToProps = state => {
   return {
-    schema: state.tables.allSchemas,
     schemaList: state.tables.schemaList,
     currentSchema: state.tables.currentSchema,
   };
