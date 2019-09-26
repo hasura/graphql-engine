@@ -420,7 +420,7 @@ updateColMap fromQT toQT rnCol colMap =
 possiblyUpdateCustomColumnNames
   :: MonadTx m => QualifiedTable -> PGCol -> PGCol -> m ()
 possiblyUpdateCustomColumnNames qt oCol nCol = do
-  TableConfig customRootFields customColumns <- liftTx $ getTableConfig qt
+  TableConfig customRootFields customColumns <- getTableConfig qt
   let updatedCustomColumns =
         M.fromList $ flip map (M.toList customColumns) $
         \(dbCol, val) -> (, val) $ if dbCol == oCol then nCol else dbCol
@@ -446,11 +446,3 @@ updateRel (QualifiedObject sn tn) rn relDef =
               AND table_name = $3
               AND rel_name = $4
                 |] (Q.AltJ relDef, sn , tn, rn) True
-
-getTableConfig :: QualifiedTable -> Q.TxE QErr TableConfig
-getTableConfig (QualifiedObject sn tn) =
-  Q.getAltJ . runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
-    [Q.sql|
-       SELECT configuration::json FROM hdb_catalog.hdb_table
-        WHERE table_schema = $1 AND table_name = $2
-    |] (sn, tn) True

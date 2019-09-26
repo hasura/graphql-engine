@@ -286,7 +286,7 @@ processTableChanges ti tableDiff = do
 
     possiblyDropCustomColumnNames tn = do
       let TableConfig customFields customColumnNames = _tiCustomConfig ti
-          modifiedCustomColumnNames = foldl (flip M.delete) customColumnNames droppedCols
+          modifiedCustomColumnNames = foldl' (flip M.delete) customColumnNames droppedCols
       if modifiedCustomColumnNames == customColumnNames then
         pure customColumnNames
       else do
