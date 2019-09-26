@@ -8,6 +8,7 @@ import DataSubSidebar from './DataSubSidebar';
 
 import { updateCurrentSchema } from './DataActions';
 import { NotFoundError } from '../../Error/PageNotFound';
+import { CLI_CONSOLE_MODE } from '../../../constants';
 
 const sectionPrefix = '/data';
 
@@ -30,7 +31,7 @@ const DataPageContainer = ({
   const currentLocation = location.pathname;
 
   let migrationTab = null;
-  if (globals.consoleMode === 'cli') {
+  if (globals.consoleMode === CLI_CONSOLE_MODE) {
     migrationTab = (
       <li
         role="presentation"
