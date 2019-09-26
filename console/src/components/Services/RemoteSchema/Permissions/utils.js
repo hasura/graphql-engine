@@ -1,8 +1,6 @@
 import globals from '../../../../Globals';
-import { permissionState } from '../state';
 import { getUnderlyingType } from '../graphqlUtils';
 import { isObjectType } from 'graphql';
-import { getTypeFields } from '../graphqlUtils';
 
 // generate the query to drop a remote schema permission
 export const generateDropPermQuery = (role, remoteSchemaName) => {
@@ -13,6 +11,16 @@ export const generateDropPermQuery = (role, remoteSchemaName) => {
       role,
     },
   };
+};
+
+// get all object types with their fields
+export const getAllObjectTypes = objectTypes => {
+  return Object.values(objectTypes).map(t => {
+    return {
+      type: t.name,
+      fields: Object.keys(t._fields),
+    };
+  });
 };
 
 // generate the query to create a remote schema permission
@@ -61,35 +69,31 @@ export const parseRemoteRelPermDefinition = (
   rootTypes,
   objectTypes,
   nonObjectTypes,
-  roleName
+  roleName,
+  isNew
 ) => {
   if (!payload) {
-    const newAllowedTypes = {};
-    Object.keys(rootTypes).forEach(rt => {
-      newAllowedTypes[rootTypes[rt]] = getTypeFields(
-        rootTypes[rt],
-        objectTypes,
-        nonObjectTypes
-      );
-    });
-    const parsedDef = {
-      ...permissionState.editState,
-      allowedTypes: newAllowedTypes,
-      isNew: true,
+    const mockPayload = {
+      role: roleName,
+      definition: {
+        allowed_objects: getAllObjectTypes(objectTypes),
+      },
     };
-    if (payload === null) {
-      parsedDef.newRole = roleName;
-    } else {
-      parsedDef.role = roleName;
-    }
-    return parsedDef;
+    return parseRemoteRelPermDefinition(
+      mockPayload,
+      rootTypes,
+      objectTypes,
+      nonObjectTypes,
+      roleName,
+      true
+    );
   }
 
   const { definition, role } = payload;
 
   const allowedTypes = {};
 
-  definition.forEach(allowedType => {
+  definition.allowed_objects.forEach(allowedType => {
     const allowedTypeName = allowedType.type;
     const fieldMetaData = {};
     const selectedFields = {};
@@ -113,7 +117,7 @@ export const parseRemoteRelPermDefinition = (
   return {
     role,
     allowedTypes,
-    isNew: false,
+    isNew: !!isNew,
   };
 };
 

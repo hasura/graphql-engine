@@ -126,18 +126,21 @@ const PermissionsEditor = ({
       dispatch(setPermissionTypes(newAllowedTypes));
     };
 
-    return (
-      <div className={styles.add_mar_bottom_mid} key={at} id={at}>
-        <GraphQLType
-          typeName={at}
-          fields={editState.allowedTypes[at]}
-          fieldToggleCallback={fieldToggleCallback}
-          isRootType={isRootType}
-          isTypeExpanded={!!expandedTypes[at]}
-          typeRemovalCallback={typeRemovalCallback}
-        />
-      </div>
-    );
+    if (isRootType) {
+      return (
+        <div className={styles.add_mar_bottom_mid} key={at} id={at}>
+          <GraphQLType
+            typeName={at}
+            fields={editState.allowedTypes[at]}
+            fieldToggleCallback={fieldToggleCallback}
+            isRootType={isRootType}
+            isTypeExpanded={!!expandedTypes[at]}
+            typeRemovalCallback={typeRemovalCallback}
+          />
+        </div>
+      );
+    }
+    return null;
   });
 
   const permSelector = (
