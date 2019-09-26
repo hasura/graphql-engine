@@ -37,6 +37,8 @@ module Hasura.RQL.Types
        , HeaderObj
 
        , liftMaybe
+
+       , APIVersion(..)
        , module R
        ) where
 
@@ -59,11 +61,14 @@ import           Hasura.SQL.Types
 
 import qualified Hasura.GraphQL.Context            as GC
 
+import qualified Data.Aeson                        as J
 import qualified Data.Aeson.Casing                 as J
 import qualified Data.Aeson.TH                     as J
 import qualified Data.HashMap.Strict               as M
 import qualified Data.Text                         as T
 import qualified Network.HTTP.Client               as HTTP
+
+import           Language.Haskell.TH.Syntax (Lift)
 
 getFieldInfoMap
   :: QualifiedTable
@@ -268,3 +273,21 @@ successMsg :: EncJSON
 successMsg = "{\"message\":\"success\"}"
 
 type HeaderObj = M.HashMap T.Text T.Text
+
+-- | The version integer
+data APIVersion
+  = VIVersion1
+  | VIVersion2
+  deriving (Show, Eq, Lift)
+
+instance J.ToJSON APIVersion where
+  toJSON VIVersion1 = J.toJSON @Int 1
+  toJSON VIVersion2 = J.toJSON @Int 2
+
+instance J.FromJSON APIVersion where
+  parseJSON v = do
+    verInt :: Int <- J.parseJSON v
+    case verInt of
+      1 -> return VIVersion1
+      2 -> return VIVersion2
+      i -> fail $ "expected 1 or 2, encountered " ++ show i

@@ -1,15 +1,48 @@
-type: add_remote_schema_permissions
+type: bulk
 args:
-  remote_schema: simple
-  role: user
-  definition:
-    allowed_objects:
-    - type: UserQuery
-      fields:
-        - user
-    - type: User
-      fields:
-        - id
-        - username
+  - type: add_remote_schema
+    args:
+      name: simple
+      definition:
+        url: http://localhost:5000/user-graphql
+        forward_client_headers: false
 
+  - type: add_remote_schema_permissions
+    args:
+      remote_schema: simple
+      role: user
+      definition:
+        allowed_objects:
+        - type: UserQuery
+          fields:
+            - user
+        - type: User
+          fields:
+            - id
+            - username
+  - type: add_remote_schema_permissions
+    args:
+      remote_schema: simple
+      role: noaccess
+      definition: {}
 
+  - type: add_remote_schema_permissions
+    args:
+      remote_schema: simple
+      role: developer
+      definition:
+        allowed_objects:
+          - type: UserMutation
+            fields:
+              - createUserFromObj
+          - type: User
+            fields:
+              - id
+              - username
+          - type: CreateUserFromObj
+            fields:
+              - user
+        allowed_input_objects:
+          - type: UserInput
+            fields:
+              - username

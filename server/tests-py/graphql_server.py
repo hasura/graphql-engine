@@ -74,18 +74,36 @@ all_users = [
     User(3, 'joe'),
 ]
 
+class UserInput(graphene.InputObjectType):
+    id = graphene.Int(required=False)
+    username = graphene.String(required=True)
+
+class CreateUserFromObj(graphene.Mutation):
+    class Arguments:
+        user_input = UserInput(required=True)
+
+    user = graphene.Field(lambda: User)
+
+    @staticmethod
+    def mutate(root, info, user_input):
+        user_id = user_input.id or 4
+        user = User(
+            user_id,
+            user_input.username
+        )
+        return CreateUserFromObj(user=user)
+
 class CreateUser(graphene.Mutation):
     class Arguments:
         id = graphene.Int(required=True)
         username = graphene.String(required=True)
 
-    ok = graphene.Boolean()
     user = graphene.Field(lambda: User)
 
     def mutate(self, info, id, username):
         user = User(id, username)
         all_users.append(user)
-        return CreateUser(ok=True, user=user)
+        return CreateUser(user=user)
 
 class UserQuery(graphene.ObjectType):
     user = graphene.Field(User, id=graphene.Int(required=True))
@@ -99,6 +117,8 @@ class UserQuery(graphene.ObjectType):
 
 class UserMutation(graphene.ObjectType):
     createUser = CreateUser.Field()
+    createUserFromObj = CreateUserFromObj.Field()
+
 user_schema = graphene.Schema(query=UserQuery, mutation=UserMutation)
 
 class UserGraphQL(RequestHandler):

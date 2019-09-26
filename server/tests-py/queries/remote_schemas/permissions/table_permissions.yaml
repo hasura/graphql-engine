@@ -1,0 +1,38 @@
+- description: Simple GraphQL query
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: developer
+  response:
+    data:
+      developer: []
+  query:
+    query: |
+      query {
+        developer {
+          id
+          name
+        }
+      }
+
+- description: Simple GraphQL mutation
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: developer
+  response:
+    errors:
+    - message: "field \"insert_developer\" not found in type: 'mutation_root'"
+      extensions:
+        code: validation-failed
+        path: $.selectionSet.insert_developer
+  query:
+    query: |
+      mutation {
+        insert_developer(objects: [{name: "random"}]) {
+          returning {
+            id
+            name
+          }
+        }
+      }

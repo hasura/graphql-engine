@@ -160,13 +160,13 @@ func (h *HasuraDB) GetSetting(name string) (value string, err error) {
 		return value, fmt.Errorf("Invalid result Type %s", hres.ResultType)
 	}
 
-	if len(hres.Result) == 0 {
+	if len(hres.Result) < 2 {
 		for _, setting := range h.settings {
 			if setting.GetName() == name {
 				return setting.GetDefaultValue(), nil
 			}
 		}
-		return "", nil
+		return value, fmt.Errorf("Invalid setting name: %s", name)
 	}
 
 	return hres.Result[1][0], nil

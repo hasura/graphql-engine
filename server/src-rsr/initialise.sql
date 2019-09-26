@@ -13,6 +13,7 @@ CREATE TABLE hdb_catalog.hdb_table
 (
     table_schema TEXT,
     table_name TEXT,
+    configuration JSONB,
     is_system_defined boolean default false,
     is_enum boolean NOT NULL DEFAULT false,
 
@@ -46,6 +47,17 @@ CREATE TABLE hdb_catalog.hdb_permission
     PRIMARY KEY (table_schema, table_name, role_name, perm_type),
     FOREIGN KEY (table_schema, table_name) REFERENCES hdb_catalog.hdb_table(table_schema, table_name) ON UPDATE CASCADE
 );
+
+CREATE VIEW hdb_catalog.hdb_permission_agg AS
+  SELECT
+    table_schema,
+    table_name,
+    role_name,
+    json_object_agg(perm_type, perm_def) as permissions
+    FROM
+        hdb_catalog.hdb_permission
+   GROUP BY
+    table_schema, table_name, role_name;
 
 CREATE VIEW hdb_catalog.hdb_foreign_key_constraint AS
 SELECT
@@ -302,6 +314,7 @@ CREATE VIEW hdb_catalog.hdb_function_agg AS
 SELECT
   p.proname::text AS function_name,
   pn.nspname::text AS function_schema,
+  pd.description,
 
   CASE
     WHEN (p.provariadic = (0) :: oid) THEN false
@@ -332,7 +345,7 @@ SELECT
     WHEN ((rt.typtype) :: text = ('d' :: character(1)) :: text) THEN 'DOMAIN' :: text
     WHEN ((rt.typtype) :: text = ('e' :: character(1)) :: text) THEN 'ENUM' :: text
     WHEN ((rt.typtype) :: text = ('r' :: character(1)) :: text) THEN 'RANGE' :: text
-    WHEN ((rt.typtype) :: text = ('p' :: character(1)) :: text) THEN 'PSUEDO' :: text
+    WHEN ((rt.typtype) :: text = ('p' :: character(1)) :: text) THEN 'PSEUDO' :: text
     ELSE NULL :: text
   END AS return_type_type,
   p.proretset AS returns_set,
@@ -358,6 +371,7 @@ FROM
   JOIN pg_namespace pn ON (pn.oid = p.pronamespace)
   JOIN pg_type rt ON (rt.oid = p.prorettype)
   JOIN pg_namespace rtn ON (rtn.oid = rt.typnamespace)
+  LEFT JOIN pg_description pd ON p.oid = pd.objoid
 WHERE
   pn.nspname :: text NOT LIKE 'pg_%'
   AND pn.nspname :: text NOT IN ('information_schema', 'hdb_catalog', 'hdb_views')
@@ -434,16 +448,21 @@ CREATE VIEW hdb_catalog.hdb_column AS
         , columns.is_nullable
         , columns.ordinal_position
         , coalesce(pkey_refs.ref_tables, '[]') AS primary_key_references
+        , col_description(pg_class.oid, columns.ordinal_position) AS description
      FROM information_schema.columns
 LEFT JOIN primary_key_references AS pkey_refs
            ON columns.table_schema = pkey_refs.src_table_schema
           AND columns.table_name   = pkey_refs.src_table_name
-          AND columns.column_name  = pkey_refs.src_column_name;
+          AND columns.column_name  = pkey_refs.src_column_name
+LEFT JOIN pg_class ON pg_class.relname = columns.table_name
+LEFT JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
+          AND pg_namespace.nspname = columns.table_schema;
 
 CREATE VIEW hdb_catalog.hdb_table_info_agg AS (
 select
   tables.table_name as table_name,
   tables.table_schema as table_schema,
+  descriptions.description,
   coalesce(columns.columns, '[]') as columns,
   coalesce(pk.columns, '[]') as primary_key_columns,
   coalesce(constraints.constraints, '[]') as constraints,
@@ -459,7 +478,8 @@ from
           'name', name,
           'type', type,
           'is_nullable', is_nullable :: boolean,
-          'references', primary_key_references
+          'references', primary_key_references,
+          'description', description
         )
       ) as columns
     from
@@ -512,6 +532,19 @@ from
     tables.table_schema = views.table_schema
     AND tables.table_name = views.table_name
   )
+  left outer join (
+    select
+        pc.relname as table_name,
+        pn.nspname as table_schema,
+        pd.description
+    from pg_class pc
+        left join pg_namespace pn on pn.oid = pc.relnamespace
+        left join pg_description pd on pd.objoid = pc.oid
+    where pd.objsubid = 0
+  ) descriptions on (
+    tables.table_schema = descriptions.table_schema
+    AND tables.table_name = descriptions.table_name
+  )
 );
 
 CREATE VIEW hdb_catalog.hdb_function_info_agg AS (
@@ -525,6 +558,7 @@ CREATE VIEW hdb_catalog.hdb_function_info_agg AS (
           FROM
               (
                 SELECT
+                  description,
                   has_variadic,
                   function_type,
                   return_type_schema,
@@ -597,34 +631,16 @@ CREATE TABLE hdb_catalog.hdb_allowlist
     REFERENCES hdb_catalog.hdb_query_collection(collection_name)
 );
 
-CREATE TABLE hdb_catalog.remote_schema_permissions
+CREATE TABLE hdb_catalog.hdb_remote_schema_permission
 (
   remote_schema TEXT,
-  role TEXT,
+  role_name TEXT,
   definition JSONB NOT NULL,
-  PRIMARY KEY (remote_schema, role),
+  PRIMARY KEY (remote_schema, role_name),
   FOREIGN KEY (remote_schema) REFERENCES hdb_catalog.remote_schemas(name) ON UPDATE CASCADE
 );
 
-CREATE VIEW hdb_catalog.hdb_permission_agg AS
-( SELECT
-    table_schema,
-    table_name,
-    null as remote_schema,
-    role_name,
-    json_object_agg(perm_type, perm_def) as permissions
-  FROM
-    hdb_catalog.hdb_permission
-  GROUP BY
-    table_schema, table_name, role_name
-)
-UNION ALL
-( SELECT
-    null as table_schema,
-    null as table_name,
-    remote_schema,
-    role as role_name,
-    definition::json as permissions
-  FROM
-    hdb_catalog.remote_schema_permissions
-);
+CREATE VIEW hdb_catalog.hdb_roles AS
+  (SELECT DISTINCT(role_name) FROM hdb_catalog.hdb_permission_agg)
+  UNION
+  (SELECT DISTINCT(role_name) FROM hdb_catalog.hdb_remote_schema_permission);

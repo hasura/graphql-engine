@@ -5,14 +5,14 @@ headers:
   X-Hasura-Role: user
 response:
   errors:
-    - message: "field \"allUsers\" not found in type: 'query_root'"
+    - message: "field \"user\" not found in type: 'query_root'"
       extensions:
         code: validation-failed
-        path: $.selectionSet.allUsers
+        path: $.selectionSet.user
 query:
   query: |
     query {
-      allUsers {
+      user(id: 1) {
         id
         username
       }

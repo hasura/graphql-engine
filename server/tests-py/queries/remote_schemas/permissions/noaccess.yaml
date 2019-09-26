@@ -1,0 +1,39 @@
+- description: Simple GraphQL query
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: noaccess
+  response:
+    errors:
+      - message: "field \"user\" not found in type: 'query_root'"
+        extensions:
+          code: validation-failed
+          path: $.selectionSet.user
+  query:
+    query: |
+      query {
+        user(id: 1) {
+          id
+          username
+        }
+      }
+
+- description: Simple GraphQL mutation
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: noaccess
+  response:
+    errors:
+      - message: "field \"createUser\" not found in type: 'mutation_root'"
+        extensions:
+          code: validation-failed
+          path: $.selectionSet.createUser
+  query:
+    query: |
+      mutation {
+        createUser(id: 1, username: "abc") {
+          id
+          username
+        }
+      }

@@ -1,4 +1,5 @@
-type: drop_remote_schema_permissions
+type: bulk
 args:
-  remote_schema: simple
-  role: user
+  - type: remove_remote_schema
+    args:
+      name: simple

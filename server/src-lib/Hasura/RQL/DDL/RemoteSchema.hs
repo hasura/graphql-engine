@@ -1,4 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ViewPatterns    #-}
 
 module Hasura.RQL.DDL.RemoteSchema
   ( runAddRemoteSchema
@@ -18,26 +19,31 @@ module Hasura.RQL.DDL.RemoteSchema
   , runDropRemoteSchemaPermissions
   , fetchRemoteSchemaPerms
   , dropRemoteSchemaPermissionsFromCatalog
+  , runIntrospectRemoteSchema
   ) where
 
 import           Hasura.EncJSON
+import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
 
-import qualified Data.Aeson                    as J
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.List                     as List
-import qualified Data.Text                     as T
-import qualified Database.PG.Query             as Q
-import qualified Hasura.GraphQL.Validate.Types as VT
+import qualified Data.Aeson                             as J
+import qualified Data.HashMap.Strict                    as Map
+import qualified Data.List                              as List
+import qualified Data.Sequence                          as Seq
+import qualified Data.Text                              as T
+import qualified Database.PG.Query                      as Q
 
 import           Control.Monad.Validate
 import           Hasura.GraphQL.RemoteServer
-import           Hasura.GraphQL.Utils
+import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Hasura.GraphQL.Context        as GC
-import qualified Hasura.GraphQL.Schema         as GS
+import qualified Hasura.GraphQL.Context                 as GC
+import qualified Hasura.GraphQL.Resolve.Introspect      as RI
+import qualified Hasura.GraphQL.Schema                  as GS
+import qualified Hasura.GraphQL.Validate                as VQ
+import qualified Hasura.GraphQL.Validate.Types          as VT
 
 runAddRemoteSchema
   :: ( QErrM m, UserInfoM m
@@ -266,7 +272,7 @@ runAddRemoteSchemaPermissionsP2Setup (RemoteSchemaPermissions rsName role _def) 
         (Map.lookup rsName remoteSchemas)
         (throw400
            NotFound
-           ("remote schema " <> remoteSchemaNameToText rsName <> " not found"))
+           ("remote schema " <> remoteSchemaNameToTxt rsName <> " not found"))
     newPerms <-
       case rscPerms rsCtx of
         Nothing      -> throw500 ("remote schema permissions are disabled")
@@ -294,8 +300,8 @@ validateRemoteSchemaPermissions remoteSchemaPerm = do
       updateRemoteGCtxFromTypes newTypes (rscGCtx remoteSchemaCtx)
   where
     assertUniqueTypes RemoteSchemaPermDef {..} =
-      checkDuplicateTypes rspdAllowedObjects >>
-      checkDuplicateTypes rspdAllowedInputObjects
+      checkDuplicateTypes rspdAllowedObjects
+      -- checkDuplicateTypes rspdAllowedInputObjects
 
 checkDuplicateTypes :: (QErrM m) => [RemoteAllowedFields] -> m ()
 checkDuplicateTypes typePerms = do
@@ -313,7 +319,9 @@ validateTypes permDef allTypes = do
   eitherTypeMap <-
     runValidateT $ do
       modTypeMap <- validateObjectTypes allTypes (rspdAllowedObjects permDef)
-      validateInputObjectTypes modTypeMap (rspdAllowedInputObjects permDef)
+      pure modTypeMap
+      -- TODO: Uncomment after remote schema validation in RJ
+      -- validateInputObjectTypes modTypeMap (rspdAllowedInputObjects permDef)
   case eitherTypeMap of
     Left errs     -> throw400 Unexpected (mconcat errs)
     Right typeMap -> pure typeMap
@@ -339,12 +347,12 @@ validateTypes permDef allTypes = do
                      VT.TIObj objTy {VT._otiFields = Map.fromList newFields}
              otherType -> pure otherType)
         initTypes
-    validateInputObjectTypes ::
+    _validateInputObjectTypes ::
          (MonadValidate [Text] m)
       => VT.TypeMap
       -> [RemoteAllowedFields]
       -> m VT.TypeMap
-    validateInputObjectTypes initTypes allowedFields = do
+    _validateInputObjectTypes initTypes allowedFields = do
       Map.traverseWithKey
         (\namedType typeInfo ->
            case typeInfo of
@@ -394,8 +402,8 @@ addRemoteSchemaPermissionsToCatalog
   -> Q.TxE QErr ()
 addRemoteSchemaPermissionsToCatalog (RemoteSchemaPermissions rsName rsRole rsDef) =
   Q.unitQE defaultTxErrorHandler [Q.sql|
-    INSERT into hdb_catalog.remote_schema_permissions
-      (remote_schema, role, definition)
+    INSERT into hdb_catalog.hdb_remote_schema_permission
+      (remote_schema, role_name, definition)
       VALUES ($1, $2, $3)
   |] (rsName, rsRole, Q.AltJ $ J.toJSON rsDef) True
 
@@ -423,7 +431,7 @@ dropRemoteSchemaPermissionsP1 (DropRemoteSchemaPermissions rsName role) = do
       (Map.lookup rsName remoteSchemas)
       (throw400
          NotFound
-         ("remote schema " <> remoteSchemaNameToText rsName <> " not found"))
+         ("remote schema " <> remoteSchemaNameToTxt rsName <> " not found"))
   case rscPerms rsCtx of
     Nothing -> throw400 Disabled ("remote schema permissions are disabled")
     Just roleMap ->
@@ -433,7 +441,7 @@ dropRemoteSchemaPermissionsP1 (DropRemoteSchemaPermissions rsName role) = do
         (throw400
            NotFound
            ("role: " <> roleNameToTxt role <> " not found for remote schema " <>
-            remoteSchemaNameToText rsName))
+            remoteSchemaNameToTxt rsName))
 
 dropRemoteSchemaPermissionsP2 ::
      (QErrM m, CacheRWM m, MonadTx m, HasFeatureFlags m) => DropRemoteSchemaPermissions -> m ()
@@ -451,7 +459,7 @@ dropRemoteSchemaPermissionsP2Setup (DropRemoteSchemaPermissions rsName role) = w
       (Map.lookup rsName remoteSchemas)
       (throw400
          NotFound
-         ("remote schema " <> remoteSchemaNameToText rsName <> " not found"))
+         ("remote schema " <> remoteSchemaNameToTxt rsName <> " not found"))
   newPerms <- case rscPerms rsCtx of
     Nothing      -> throw500 ("remote schema permissions are disabled")
     Just roleMap -> pure $ Map.delete role roleMap
@@ -462,16 +470,46 @@ dropRemoteSchemaPermissionsFromCatalog ::
      (MonadTx m) => RemoteSchemaName -> RoleName -> m ()
 dropRemoteSchemaPermissionsFromCatalog rsName role = do
   liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
-    DELETE FROM hdb_catalog.remote_schema_permissions
-      WHERE remote_schema = $1 AND role = $2
+    DELETE FROM hdb_catalog.hdb_remote_schema_permission
+      WHERE remote_schema = $1 AND role_name = $2
   |] (rsName, role) True
 
 fetchRemoteSchemaPerms :: Q.TxE QErr [RemoteSchemaPermissions]
 fetchRemoteSchemaPerms =
   map uncurryRow <$> Q.listQE defaultTxErrorHandler
     [Q.sql|
-     SELECT remote_schema, role, definition::json
-       FROM hdb_catalog.remote_schema_permissions
+     SELECT remote_schema, role_name, definition::json
+       FROM hdb_catalog.hdb_remote_schema_permission
      |] () True
   where
     uncurryRow (name, role, Q.AltJ def) = RemoteSchemaPermissions name role def
+
+runIntrospectRemoteSchema :: (UserInfoM m, CacheRM m, QErrM m) => RemoteSchemaNameQuery -> m EncJSON
+runIntrospectRemoteSchema (RemoteSchemaNameQuery rsName) = do
+  adminOnly
+  sc <- askSchemaCache
+  introspectionReq <-
+    onNothing (J.decode introspectionQuery) $
+    throw500 "could not decode introspection query"
+  req <- toParsed introspectionReq
+  rGCtx <-
+    case Map.lookup rsName (scRemoteSchemas sc) of
+      Nothing ->
+        throw400 NotExists $
+        "remote schema: " <> remoteSchemaNameToTxt rsName <> " not found"
+      Just rCtx -> mergeGCtx (convRemoteGCtx $ rscGCtx rCtx) GC.emptyGCtx
+      -- ^ merge with emptyGCtx to get default query fields
+  queryParts <- flip runReaderT rGCtx $ VQ.getQueryParts req
+  rootSelSet <- flip runReaderT rGCtx $ VQ.validateGQ queryParts
+  schemaField <-
+    case rootSelSet of
+      VQ.RQuery (Seq.viewl -> selSet) -> getSchemaField selSet
+      _ -> throw500 "expected query for introspection"
+  introRes <- flip runReaderT rGCtx $ RI.schemaR schemaField
+  pure $ encJFromJValue introRes
+  where
+    getSchemaField =
+      \case
+        Seq.EmptyL -> throw500 "found empty when looking for __schema field"
+        (f Seq.:< Seq.Empty) -> pure f
+        _ -> throw500 "expected __schema field, found many fields"

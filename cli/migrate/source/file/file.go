@@ -59,12 +59,6 @@ func (f *File) Open(url string, logger *log.Logger) (source.Driver, error) {
 		p = strings.TrimPrefix(p, "/")
 	}
 
-	// scan directory
-	files, err := ioutil.ReadDir(p)
-	if err != nil {
-		return nil, err
-	}
-
 	nf := &File{
 		url:        url,
 		logger:     logger,
@@ -72,30 +66,44 @@ func (f *File) Open(url string, logger *log.Logger) (source.Driver, error) {
 		migrations: source.NewMigrations(),
 	}
 
-	for _, fi := range files {
-		if !fi.IsDir() {
-			m, err := source.DefaultParse(fi.Name(), p)
-			if err != nil {
-				continue // ignore files that we can't parse
-			}
-			ok, err := source.IsEmptyFile(m, p)
-			if err != nil {
-				return nil, err
-			}
-			if !ok {
-				continue
-			}
-			err = nf.migrations.Append(m)
-			if err != nil {
-				return nil, err
-			}
-		}
+	err = nf.Scan()
+	if err != nil {
+		return nil, err
 	}
 	return nf, nil
 }
 
 func (f *File) Close() error {
 	// nothing do to here
+	return nil
+}
+
+func (f *File) Scan() error {
+	f.migrations = source.NewMigrations()
+	files, err := ioutil.ReadDir(f.path)
+	if err != nil {
+		return err
+	}
+
+	for _, fi := range files {
+		if !fi.IsDir() {
+			m, err := source.DefaultParse(fi.Name(), f.path)
+			if err != nil {
+				continue // ignore files that we can't parse
+			}
+			ok, err := source.IsEmptyFile(m, f.path)
+			if err != nil {
+				return err
+			}
+			if !ok {
+				continue
+			}
+			err = f.migrations.Append(m)
+			if err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
 

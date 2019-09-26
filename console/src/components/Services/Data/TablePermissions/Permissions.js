@@ -11,7 +11,6 @@ import { RESET } from '../TableModify/ModifyActions';
 import {
   permChangeTypes,
   permOpenEdit,
-  permAddTableSchemas,
   permSetFilter,
   permSetFilterSameAs,
   permToggleColumn,
@@ -45,7 +44,7 @@ import PermTableBody from '../../../Common/Permissions/TableBody';
 import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbols';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
 
-import { setTable, fetchRoleList } from '../DataActions';
+import { setTable, fetchRoleList, updateSchemaInfo } from '../DataActions';
 import { getIngForm, getEdForm, escapeRegExp } from '../utils';
 import { allOperators, getLegacyOperator } from './PermissionBuilder/utils';
 import {
@@ -59,6 +58,7 @@ import { defaultPresetsState } from '../DataState';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { generateTableDef } from '../../../Common/utils/pgUtils';
 
 class Permissions extends Component {
   constructor() {
@@ -114,6 +114,7 @@ class Permissions extends Component {
       tableName,
       tableType,
       allSchemas,
+      schemaList,
       ongoingRequest,
       lastError,
       lastFormError,
@@ -652,8 +653,9 @@ class Permissions extends Component {
             const dispatchFuncSetFilter = filter =>
               permSetFilter(JSON.parse(filter));
 
-            const dispatchFuncAddTableSchemas = schemaNames =>
-              permAddTableSchemas(schemaNames);
+            const loadSchemasFunc = schemaNames => {
+              dispatch(updateSchemaInfo({ schemas: schemaNames }));
+            };
 
             const isUniqueFilter =
               filterString !== '' &&
@@ -694,10 +696,10 @@ class Permissions extends Component {
               _filterOptionsSection.push(
                 <PermissionBuilder
                   dispatchFuncSetFilter={dispatchFuncSetFilter}
-                  dispatchFuncAddTableSchemas={dispatchFuncAddTableSchemas}
-                  tableName={tableName}
-                  schemaName={currentSchema}
-                  allTableSchemas={permissionsState.tableSchemas}
+                  loadSchemasFunc={loadSchemasFunc}
+                  tableDef={generateTableDef(tableName, currentSchema)}
+                  allTableSchemas={allSchemas}
+                  schemaList={schemaList}
                   filter={filterString}
                   dispatch={dispatch}
                   key={-4}
@@ -1753,6 +1755,7 @@ const mapStateToProps = (state, ownProps) => ({
   tableType: ownProps.route.tableType,
   allSchemas: state.tables.allSchemas,
   allRoles: state.tables.allRoles,
+  schemaList: state.tables.schemaList,
   migrationMode: state.main.migrationMode,
   currentSchema: state.tables.currentSchema,
   serverVersion: state.main.serverVersion ? state.main.serverVersion : '',

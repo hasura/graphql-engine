@@ -54,6 +54,7 @@ data TableMeta
   = TableMeta
   { _tmTable               :: !QualifiedTable
   , _tmIsEnum              :: !Bool
+  , _tmConfiguration       :: !(TableConfig)
   , _tmObjectRelationships :: ![DR.ObjRelDef]
   , _tmArrayRelationships  :: ![DR.ArrRelDef]
   , _tmInsertPermissions   :: ![DP.InsPermDef]
@@ -63,9 +64,9 @@ data TableMeta
   , _tmEventTriggers       :: ![DTS.EventTriggerConf]
   } deriving (Show, Eq, Lift)
 
-mkTableMeta :: QualifiedTable -> Bool -> TableMeta
-mkTableMeta qt isEnum =
-  TableMeta qt isEnum [] [] [] [] [] [] []
+mkTableMeta :: QualifiedTable -> Bool -> TableConfig -> TableMeta
+mkTableMeta qt isEnum config =
+  TableMeta qt isEnum config [] [] [] [] [] [] []
 
 makeLenses ''TableMeta
 
@@ -78,6 +79,7 @@ instance FromJSON TableMeta where
     TableMeta
      <$> o .: tableKey
      <*> o .:? isEnumKey .!= False
+     <*> o .:? configKey .!= emptyTableConfig
      <*> o .:? orKey .!= []
      <*> o .:? arKey .!= []
      <*> o .:? ipKey .!= []
@@ -89,6 +91,7 @@ instance FromJSON TableMeta where
     where
       tableKey = "table"
       isEnumKey = "is_enum"
+      configKey = "configuration"
       orKey = "object_relationships"
       arKey = "array_relationships"
       ipKey = "insert_permissions"
@@ -101,8 +104,8 @@ instance FromJSON TableMeta where
         HS.fromList (M.keys o) `HS.difference` expectedKeySet
 
       expectedKeySet =
-        HS.fromList [ tableKey, isEnumKey, orKey, arKey
-                    , ipKey, spKey, upKey, dpKey, etKey
+        HS.fromList [ tableKey, isEnumKey, configKey, orKey
+                    , arKey , ipKey, spKey, upKey, dpKey, etKey
                     ]
 
   parseJSON _ =
@@ -143,7 +146,7 @@ clearMetadata = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "DELETE FROM hdb_catalog.hdb_relationship WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.event_triggers" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_table WHERE is_system_defined <> 'true'" () False
-  Q.unitQ "DELETE FROM hdb_catalog.remote_schema_permissions" () False
+  Q.unitQ "DELETE FROM hdb_catalog.hdb_remote_schema_permission" () False
   Q.unitQ "DELETE FROM hdb_catalog.remote_schemas" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_allowlist" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_query_collection WHERE is_system_defined <> 'true'" () False
@@ -238,10 +241,10 @@ applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = 
 
     -- tables and views
     indexedForM_ tables $ \tableMeta -> do
-      let trackQuery = DS.TrackTable
-            { DS.tName = tableMeta ^. tmTable
-            , DS.tIsEnum = tableMeta ^. tmIsEnum }
-      void $ DS.trackExistingTableOrViewP2 trackQuery
+      let tableName = tableMeta ^. tmTable
+          isEnum = tableMeta ^. tmIsEnum
+          config = tableMeta ^. tmConfiguration
+      void $ DS.trackExistingTableOrViewP2 tableName isEnum config
 
     -- Relationships
     indexedForM_ tables $ \table -> do
@@ -333,9 +336,11 @@ $(deriveToJSON defaultOptions ''ExportMetadata)
 fetchMetadata :: Q.TxE QErr ReplaceMetadata
 fetchMetadata = do
   tables <- Q.catchE defaultTxErrorHandler fetchTables
-  let tableMetaMap = M.fromList . flip map tables $ \(schema, name, isEnum) ->
-        let qualifiedName = QualifiedObject schema name
-        in (qualifiedName, mkTableMeta qualifiedName isEnum)
+  let tableMetaMap = M.fromList . flip map tables $
+        \(schema, name, isEnum, maybeConfig) ->
+          let qualifiedName = QualifiedObject schema name
+              configuration = maybe emptyTableConfig Q.getAltJ maybeConfig
+          in (qualifiedName, mkTableMeta qualifiedName isEnum configuration)
 
   -- Fetch all the relationships
   relationships <- Q.catchE defaultTxErrorHandler fetchRelationships
@@ -408,7 +413,8 @@ fetchMetadata = do
 
     fetchTables =
       Q.listQ [Q.sql|
-                SELECT table_schema, table_name, is_enum from hdb_catalog.hdb_table
+                SELECT table_schema, table_name, is_enum, configuration::json
+                FROM hdb_catalog.hdb_table
                  WHERE is_system_defined = 'false'
                     |] () False
 
@@ -445,8 +451,8 @@ fetchMetadata = do
        SELECT rs.name, rs.definition::json, rs.comment, rsp.perms::json
         FROM hdb_catalog.remote_schemas rs
         LEFT JOIN (
-          SELECT remote_schema, json_agg(json_build_object ('role', role, 'definition', definition)) as perms
-          FROM hdb_catalog.remote_schema_permissions rsp
+          SELECT remote_schema, json_agg(json_build_object ('role', role_name, 'definition', definition)) as perms
+          FROM hdb_catalog.hdb_remote_schema_permission rsp
           GROUP BY remote_schema
           ) rsp
         ON rs.name = rsp.remote_schema

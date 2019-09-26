@@ -15,6 +15,7 @@ module Hasura.RQL.Types.Common
        , ColVals
        , MutateResp(..)
        , ForeignKey(..)
+       , CustomColumnNames
 
        , NonEmptyText
        , mkNonEmptyText
@@ -32,13 +33,14 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
-import qualified Data.HashMap.Strict        as HM
-import qualified Data.Text                  as T
-import qualified Database.PG.Query          as Q
-import           Instances.TH.Lift          ()
-import           Language.Haskell.TH.Syntax (Lift)
-import qualified PostgreSQL.Binary.Decoding as PD
-import qualified Web.Internal.HttpApiData   as W
+import           Instances.TH.Lift             ()
+import           Language.Haskell.TH.Syntax    (Lift)
+
+import qualified Data.HashMap.Strict           as HM
+import qualified Data.Text                     as T
+import qualified Database.PG.Query             as Q
+import qualified Language.GraphQL.Draft.Syntax as G
+import qualified PostgreSQL.Binary.Decoding    as PD
 
 newtype NonEmptyText = NonEmptyText {unNonEmptyText :: T.Text}
   deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg, DQuote)
@@ -61,9 +63,6 @@ instance FromJSONKey NonEmptyText where
 instance Q.FromCol NonEmptyText where
   fromCol bs = mkNonEmptyText <$> Q.fromCol bs
     >>= maybe (Left "empty string not allowed") Right
-
-instance W.FromHttpApiData NonEmptyText where
-  parseUrlPiece txt = maybe (Left "found empty text") Right $ mkNonEmptyText txt
 
 adminText :: NonEmptyText
 adminText = NonEmptyText "admin"
@@ -134,7 +133,7 @@ instance DQuote FieldName where
   dquoteTxt (FieldName c) = c
 
 fromPGCol :: PGCol -> FieldName
-fromPGCol (PGCol c) = FieldName c
+fromPGCol c = FieldName $ getPGColTxt c
 
 fromRel :: RelName -> FieldName
 fromRel = FieldName . relNameToTxt
@@ -184,3 +183,5 @@ instance Hashable ForeignKey
 newtype FunctionArgName =
   FunctionArgName { getFuncArgNameTxt :: T.Text}
   deriving (Show, Eq, ToJSON)
+
+type CustomColumnNames = HM.HashMap PGCol G.Name
