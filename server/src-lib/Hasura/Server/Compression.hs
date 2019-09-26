@@ -24,14 +24,6 @@ compressionTypeToTxt :: CompressionType -> T.Text
 compressionTypeToTxt CTGZip   = "gzip"
 compressionTypeToTxt CTBrotli = "brotli"
 
-brotliCompressionParams :: BR.CompressParams
-brotliCompressionParams =
-  BR.defaultCompressParams{BR.compressLevel = BR.CompressionLevel4}
-
-gzipCompressionParams :: GZ.CompressParams
-gzipCompressionParams =
-  GZ.defaultCompressParams{GZ.compressLevel = GZ.compressionLevel 1}
-
 compressResponse
   :: NH.RequestHeaders
   -> BL.ByteString
@@ -39,10 +31,15 @@ compressResponse
 compressResponse reqHeaders unCompressedResp =
   let compressionTypeM = getRequestedCompression reqHeaders
       appendCompressionType (res, headerM) = (res, headerM, compressionTypeM)
+      brotliCompressionParams =
+        BR.defaultCompressParams{BR.compressLevel = BR.CompressionLevel4}
+      gzipCompressionParams =
+        GZ.defaultCompressParams{GZ.compressLevel = GZ.compressionLevel 1}
   in appendCompressionType $ case compressionTypeM of
        Just CTBrotli -> (BR.compressWith brotliCompressionParams unCompressedResp, Just brHeader)
        Just CTGZip   -> (GZ.compressWith gzipCompressionParams unCompressedResp, Just gzipHeader)
        Nothing       -> (unCompressedResp, Nothing)
+
 
 getRequestedCompression :: NH.RequestHeaders -> Maybe CompressionType
 getRequestedCompression reqHeaders
