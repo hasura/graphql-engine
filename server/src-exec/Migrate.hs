@@ -9,7 +9,6 @@ module Migrate
 where
 
 import           Data.Time.Clock            (UTCTime)
-import           Language.Haskell.TH.Syntax (Q, TExp, unTypeQ)
 
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema
@@ -21,6 +20,8 @@ import qualified Data.Text                  as T
 import qualified Data.Yaml.TH               as Y
 
 import qualified Database.PG.Query          as Q
+
+import Debug.Trace
 
 
 type Migration m =
@@ -82,12 +83,16 @@ migrateCatalog migrationTime = migrateFrom =<< getCatalogVersion
           ]
 
     postMigrate = do
+      liftIO $ traceIO "postMigrate"
       -- update the catalog version
       updateVersion
       -- replace system metadata
+      liftIO $ traceIO "clearSystemMetadata"
       clearSystemMetadata
+      liftIO $ traceIO "createSystemMetadata"
       createSystemMetadata
       -- try building the schema cache
+      liftIO $ traceIO "buildSchemaCacheStrict"
       buildSchemaCacheStrict
       return $ "successfully migrated to " ++ show curCatalogVer
 
@@ -105,9 +110,7 @@ clearSystemMetadata :: MonadTx m => m ()
 clearSystemMetadata = runTx $(Q.sqlFromFile "src-rsr/clear_system_metadata.sql")
 
 createSystemMetadata :: Migration m => m ()
-createSystemMetadata = void $ runQueryM rqlQuery
-  where
-    rqlQuery = $(unTypeQ (Y.decodeFile "src-rsr/hdb_metadata.yaml" :: Q (TExp RQLQuery)))
+createSystemMetadata = void $ runQueryM $$(Y.decodeFile "src-rsr/hdb_metadata.yaml")
 
 from08To1 :: MonadTx m => m ()
 from08To1 = runTx $(Q.sqlFromFile "src-rsr/migrate_from_08_to_1.sql")
