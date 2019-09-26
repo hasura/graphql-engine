@@ -458,7 +458,7 @@ fetchMetadata = do
         ON rs.name = rsp.remote_schema
         |] () False
       where
-        uncurryRSMeta (name, Q.AltJ def, comment, Q.AltJ perms) = RemoteSchemaMeta name def comment perms
+        uncurryRSMeta (name, Q.AltJ def, comment, perms) = RemoteSchemaMeta name def comment (Q.getAltJ <$> perms)
 
 runExportMetadata
   :: (QErrM m, UserInfoM m, MonadTx m)
