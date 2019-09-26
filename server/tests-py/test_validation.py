@@ -3,10 +3,7 @@ import yaml
 from validate import check_query_f
 from super_classes import GraphQLEngineTest
 
-# @pytest.mark.parametrize("transport", ['http', 'websocket'])
-# graphql parser can't seem to parse {where: null}, disabling
-# websocket till then
-@pytest.mark.parametrize("transport", ['http'])
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphQLValidation(GraphQLEngineTest):
 
     def test_null_value(self, hge_ctx, transport):

@@ -102,24 +102,21 @@ class TestGraphQLQueryAggPerm(DefaultTestSelectQueries):
         return 'queries/graphql_query/agg_perm'
 
 
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphQLQueryLimits(DefaultTestSelectQueries):
 
-    @pytest.mark.parametrize("transport", ['http', 'websocket'])
     def test_limit_1(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_article_limit_1.yaml', transport)
 
-    @pytest.mark.parametrize("transport", ['http', 'websocket'])
     def test_limit_2(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_article_limit_2.yaml', transport)
 
-    def test_limit_null(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/select_query_article_limit_null.yaml')
+    def test_limit_null(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_article_limit_null.yaml', transport)
 
-    @pytest.mark.parametrize("transport", ['http', 'websocket'])
     def test_err_str_limit_error(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_article_string_limit_error.yaml', transport)
 
-    @pytest.mark.parametrize("transport", ['http', 'websocket'])
     def test_err_neg_limit_error(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_article_neg_limit_error.yaml', transport)
 
