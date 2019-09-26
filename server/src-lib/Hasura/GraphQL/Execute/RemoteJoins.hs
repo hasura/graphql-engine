@@ -57,12 +57,14 @@ import           Hasura.SQL.Value
 
 -- | Like a 'VQ.Field' but with a path indicating where its response should be
 -- spliced back into the hasura result.
+--
+-- We parameterise this 
 data RemoteRelField =
   RemoteRelField
-    { rrRemoteField   :: !RemoteField
+    { rrRemoteRelationship   :: !RemoteRelationship
     -- ^ The hasura to remote schema field mapping.
     , rrArguments     :: !ArgsMap
-    -- ^ See '_fArguments'.
+    -- ^ User-provided arguments. See '_fArguments'.
     , rrSelSet        :: !SelSet
     -- ^ Selection set of 'rrAlias' (may be empty)
     , rrRelFieldPath  :: !RelFieldPath
@@ -87,6 +89,18 @@ newtype RelFieldPath =
     unRelFieldPath :: (Seq.Seq (Int, G.Alias))
   } deriving (Show, Monoid, Semigroup, Eq)
 
+-- | Boilerplate constructor for a 'Field' suitable for use in remote joins.
+bareNamedField :: G.Name -> Field
+bareNamedField _fName = 
+  let _fAlias = G.Alias _fName
+      (_fArguments, _fSelSet, _fRemoteRel) = (mempty, mempty, Nothing)
+      -- we are constructing a nested query and we don't have the "named type"
+      -- of the parent fields. A stub is okay since Field is more annotated
+      -- than required for constructing a remote query:
+      _fType = G.NamedType "unknown_type"
+   in Field{..}
+
+
 -- | Rebuild the query tree, returning a new tree with remote relationships
 -- removed, along with a list of paths that point back to them.
 --
@@ -109,26 +123,18 @@ rebuildFieldStrippingRemoteRels =
           \idx subfield ->
              case _fRemoteRel subfield of
                Nothing -> Seq.singleton <$> rebuild idx thisPath subfield
-               Just remoteField -> do
+               -- NOTE: I think _fRemoteRel can become RemoteRelationship too.
+               Just RemoteField{rmfRemoteRelationship} -> do
 
                  modify (remoteRelField :)
                  -- NOTE: this may result in redundant fields in the SELECT, but this seems fine.
                  -- NOTE: this sub-sequence is in arbitrary order, since coming from Set.
                  pure $ Seq.fromList $
-                   map (\name ->
-                       Field
-                         { _fAlias = G.Alias name
-                         , _fName = name
-                         , _fType = G.NamedType (G.Name "unknown3")
-                         , _fArguments = mempty
-                         , _fSelSet = mempty
-                         , _fRemoteRel = Nothing
-                         })
-                     $ toList hasuraFieldNames
+                   map bareNamedField $ toList hasuraFieldNames
 
                  where remoteRelField =
                          RemoteRelField
-                           { rrRemoteField = remoteField
+                           { rrRemoteRelationship = rmfRemoteRelationship
                            , rrArguments = _fArguments subfield
                            , rrSelSet = _fSelSet subfield
                            , rrRelFieldPath = thisPath
@@ -139,7 +145,7 @@ rebuildFieldStrippingRemoteRels =
                                  hasuraFieldNames `Set.difference` siblingSelections
                            }
                        hasuraFieldNames = 
-                         coerceSet $ rtrHasuraFields $ rmfRemoteRelationship remoteField
+                         coerceSet $ rtrHasuraFields rmfRemoteRelationship
       where
         thisPath = parentPath <> RelFieldPath (pure (idx0, _fAlias field0))
         siblingSelections = Set.fromList $ toList $ fmap _fName $ _fSelSet field0
@@ -338,10 +344,7 @@ produceBatch RemoteRelField{..} batchCardinality =
   where
     batchRelationshipKeyToMake = G.unName (G.unAlias rrAlias)
     batchNestedFields =
-      fmap
-        fcName
-        (rtrRemoteFields
-           (rmfRemoteRelationship rrRemoteField))
+      fmap fcName $ rtrRemoteFields rrRemoteRelationship
     -- TODO These might be good candidates for reusing names with DuplicateRecordFields if they have the same semantics:
     batchRelationshipKeyIndex = rrAliasIndex
     batchPhantoms = rrPhantomFields
@@ -382,16 +385,13 @@ fieldCallsToField ::
   -> G.Alias
   -> NonEmpty FieldCall
   -> Field
-fieldCallsToField userProvidedArguments variables finalSelSet topAlias = 
+fieldCallsToField rrArguments variables finalSelSet topAlias = 
   set fAlias topAlias . nest
   where
     -- almost: `foldr nest finalSelSet`
     nest (FieldCall{..} :| rest) =
-      Field
-        { _fAlias = G.Alias fcName
-        , _fName = fcName
-        , _fType = G.NamedType (G.Name "unknown_type")
-        , _fArguments =
+      (bareNamedField fcName)
+        { _fArguments =
             let templatedArguments =
                   createArguments variables fcArguments
              in case NE.nonEmpty rest of
@@ -399,10 +399,9 @@ fieldCallsToField userProvidedArguments variables finalSelSet topAlias =
                   Nothing ->
                     Map.unionWith
                       mergeAnnInpVal
-                      userProvidedArguments
+                      rrArguments
                       templatedArguments
         , _fSelSet = maybe finalSelSet (pure . nest) $ NE.nonEmpty rest
-        , _fRemoteRel = Nothing
         }
 
 -- This is a kind of "deep merge".
@@ -506,7 +505,7 @@ extractRemoteRelArguments hasuraJson rels =
   where
     keyRemotes = 
       zip [(0::RemoteRelKey) ..] .
-        map (\r-> (rrRelFieldPath r, rtrHasuraFields $ rmfRemoteRelationship $ rrRemoteField r))
+        map (rrRelFieldPath &&& rtrHasuraFields . rrRemoteRelationship)
 
     -- insert into map, accumulating from the left on duplicates
     insertWithCons  m k v =    Map.insertWith (<>) k (pure v) m

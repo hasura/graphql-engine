@@ -111,7 +111,7 @@ runHasuraGQ reqId query userInfo resolvedOp = do
   resp <- liftEither respE
   return $ encodeGQResp $ GQSuccess resp
 
-
+-- | See 'mergeResponseData'.
 getMergedGQResp :: Traversable t=> t EncJSON -> Either String GQRespValue
 getMergedGQResp =
   mergeGQResp <=< traverse E.parseGQRespValue
@@ -119,6 +119,8 @@ getMergedGQResp =
           respAcc & E.gqRespErrors <>~ _gqRespErrors
                   & mapMOf E.gqRespData (OJ.safeUnion _gqRespData)
 
+-- | Union several graphql responses, with the ordering of the top-level fields
+-- determined by the input list.
 mergeResponseData :: Traversable t=> t EncJSON -> Either String EncJSON
 mergeResponseData =
   fmap E.encodeGQRespValue . getMergedGQResp

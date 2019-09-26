@@ -58,7 +58,6 @@ data Field
   { _fAlias     :: !G.Alias
   , _fName      :: !G.Name
   , _fType      :: !G.NamedType
-  -- ^ TODO: this seems to get initialized to "unknown.."; how is this used? Document or improve.
   , _fArguments :: !ArgsMap
   , _fSelSet    :: !SelSet
   , _fRemoteRel :: !(Maybe RemoteField)

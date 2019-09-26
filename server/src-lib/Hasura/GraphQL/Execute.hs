@@ -94,7 +94,7 @@ mkQuery rtqOperationType BatchInputs{..} QExecPlanUnresolved{..}  =
              variables
              rrSelSet
              alias
-             (rtrRemoteFields $ rmfRemoteRelationship rrRemoteField)
+             (rtrRemoteFields rrRemoteRelationship)
    in (produceBatch remoteRelField biCardinality, VQ.RemoteTopField{..})
     
 
@@ -255,8 +255,7 @@ getExecPlan pgExecCtx planCache userInfo@UserInfo{..} sqlGenCtx enableAL sc scVe
         getRsi remoteRel =
           case Map.lookup
                  (rtrRemoteSchema
-                    (rmfRemoteRelationship
-                       (rrRemoteField remoteRel)))
+                    (rrRemoteRelationship remoteRel))
                  (scRemoteSchemas sc) of
             Just remoteSchemaCtx -> pure $ rscInfo remoteSchemaCtx
             Nothing -> throw500 "could not find remote schema info"

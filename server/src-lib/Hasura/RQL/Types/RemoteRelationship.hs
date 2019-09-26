@@ -34,6 +34,8 @@ data RemoteField =
     -- can reference multiple remote field calls, no?
     , rmfGType              :: !G.GType
     , rmfParamMap           :: !(HashMap G.Name InpValInfo)
+    -- ^ Fully resolved arguments (no variable references, since this uses
+    -- 'G.ValueConst' not 'G.Value').
     }
   deriving (Show, Eq, Lift)
 
@@ -45,11 +47,10 @@ data RemoteRelationship =
     , rtrTable        :: QualifiedTable
     , rtrHasuraFields :: Set FieldName -- TODO? change to PGCol
     -- ^ The hasura fields from 'rtrTable' that will be in scope when resolving
-    -- the remote object.
+    -- the remote objects in 'rtrRemoteFields'.
     , rtrRemoteSchema :: RemoteSchemaName
     -- ^ Identifier for this mapping.
     , rtrRemoteFields :: NonEmpty FieldCall
-    -- ^ In these remote field calls
     }  deriving (Show, Eq, Lift)
 
 -- Parsing GraphQL input arguments from JSON
