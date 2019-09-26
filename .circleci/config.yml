@@ -150,7 +150,7 @@ jobs:
     - checkout
     - run:
         name: check build worthiness
-        command: .circleci/ciignore.sh
+        command: mkdir -p /build/ciignore
     - persist_to_workspace:
         root: /build
         paths:
