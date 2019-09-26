@@ -6,8 +6,8 @@ module Hasura.GraphQL.Schema.Mutation.Insert
   , mkOnConflictTypes
   ) where
 
-import qualified Data.HashMap.Strict                  as Map
-import qualified Language.GraphQL.Draft.Syntax        as G
+import qualified Data.HashMap.Strict                   as Map
+import qualified Language.GraphQL.Draft.Syntax         as G
 
 import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Schema.Common
@@ -154,9 +154,8 @@ insert_table(
   ): table_mutation_response!
 -}
 
-mkInsMutFld
-  :: QualifiedTable -> Bool -> ObjFldInfo
-mkInsMutFld tn isUpsertable =
+mkInsMutFld :: Maybe G.Name -> QualifiedTable -> Bool -> ObjFldInfo
+mkInsMutFld mCustomName tn isUpsertable =
   mkHsraObjFldInfo (Just desc) fldName (fromInpValL inputVals) $
     G.toGT $ mkMutRespTy tn
   where
@@ -164,7 +163,8 @@ mkInsMutFld tn isUpsertable =
     desc = G.Description $
       "insert data into the table: " <>> tn
 
-    fldName = "insert_" <> qualObjectToName tn
+    defFldName = "insert_" <> qualObjectToName tn
+    fldName = fromMaybe defFldName mCustomName
 
     objsArgDesc = "the rows to be inserted"
     objectsArg =
@@ -174,8 +174,8 @@ mkInsMutFld tn isUpsertable =
     onConflictInpVal = bool Nothing (Just onConflictArg) isUpsertable
 
     onConflictDesc = "on conflict condition"
-    onConflictArg =
-      InpValInfo (Just onConflictDesc) "on_conflict" Nothing $ G.toGT $ mkOnConflictInpTy tn
+    onConflictArg = InpValInfo (Just onConflictDesc) "on_conflict"
+                    Nothing $ G.toGT $ mkOnConflictInpTy tn
 
 mkConstraintTy :: QualifiedTable -> [ConstraintName] -> EnumTyInfo
 mkConstraintTy tn cons = enumTyInfo
@@ -190,7 +190,7 @@ mkConstraintTy tn cons = enumTyInfo
       EnumValInfo (Just "unique or primary key constraint")
       (G.EnumValue $ G.Name n) False
 
-mkUpdColumnTy :: QualifiedTable -> [PGCol] -> EnumTyInfo
+mkUpdColumnTy :: QualifiedTable -> [G.Name] -> EnumTyInfo
 mkUpdColumnTy tn cols = enumTyInfo
   where
     enumTyInfo = mkHsraEnumTyInfo (Just desc) (mkUpdColumnInpTy tn) $
@@ -211,7 +211,7 @@ mkConflictActionTy updAllowed =
                     (G.EnumValue "update") False
 
 mkOnConflictTypes
-  :: QualifiedTable -> [ConstraintName] -> [PGCol] -> Bool -> [TypeInfo]
+  :: QualifiedTable -> [ConstraintName] -> [G.Name] -> Bool -> [TypeInfo]
 mkOnConflictTypes tn uniqueOrPrimaryCons cols =
   bool [] tyInfos
   where

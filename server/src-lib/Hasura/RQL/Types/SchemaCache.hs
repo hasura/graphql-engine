@@ -7,6 +7,8 @@ module Hasura.RQL.Types.SchemaCache
        , initSchemaCacheVer
        , incSchemaCacheVer
        , emptySchemaCache
+       , TableConfig(..)
+       , emptyTableConfig
 
        , TableCache
        , modTableCache
@@ -16,6 +18,7 @@ module Hasura.RQL.Types.SchemaCache
 
        , TableInfo(..)
        , tiName
+       , tiDescription
        , tiSystemDefined
        , tiFieldInfoMap
        , tiRolePermInfoMap
@@ -24,10 +27,12 @@ module Hasura.RQL.Types.SchemaCache
        , tiViewInfo
        , tiEventTriggerInfoMap
        , tiEnumValues
+       , tiCustomConfig
 
        , TableConstraint(..)
        , ConstraintType(..)
        , ViewInfo(..)
+       , checkForFieldConflict
        , isMutable
        , mutableView
        , isUniqueOrPrimary
@@ -107,6 +112,7 @@ module Hasura.RQL.Types.SchemaCache
        , addFunctionToCache
        , askFunctionInfo
        , delFunctionFromCache
+       , updateFunctionDescription
 
        , replaceAllowlist
        ) where
@@ -130,6 +136,7 @@ import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Language.Haskell.TH.Syntax        (Lift)
 
 import qualified Data.HashMap.Strict               as M
 import qualified Data.HashSet                      as HS
@@ -325,9 +332,27 @@ mutableView qt f mVI operation =
   unless (isMutable f mVI) $ throw400 NotSupported $
   "view " <> qt <<> " is not " <> operation
 
+data TableConfig
+  = TableConfig
+  { _tcCustomRootFields  :: !GC.TableCustomRootFields
+  , _tcCustomColumnNames :: !CustomColumnNames
+  } deriving (Show, Eq, Lift)
+$(deriveToJSON (aesonDrop 3 snakeCase) ''TableConfig)
+
+emptyTableConfig :: TableConfig
+emptyTableConfig =
+  TableConfig GC.emptyCustomRootFields M.empty
+
+instance FromJSON TableConfig where
+  parseJSON = withObject "TableConfig" $ \obj ->
+    TableConfig
+    <$> obj .:? "custom_root_fields" .!= GC.emptyCustomRootFields
+    <*> obj .:? "custom_column_names" .!= M.empty
+
 data TableInfo columnInfo
   = TableInfo
   { _tiName                  :: !QualifiedTable
+  , _tiDescription           :: !(Maybe PGDescription)
   , _tiSystemDefined         :: !Bool
   , _tiFieldInfoMap          :: !(FieldInfoMap columnInfo)
   , _tiRolePermInfoMap       :: !RolePermInfoMap
@@ -336,9 +361,24 @@ data TableInfo columnInfo
   , _tiViewInfo              :: !(Maybe ViewInfo)
   , _tiEventTriggerInfoMap   :: !EventTriggerInfoMap
   , _tiEnumValues            :: !(Maybe EnumValues)
+  , _tiCustomConfig          :: !TableConfig
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
 $(makeLenses ''TableInfo)
+
+checkForFieldConflict
+  :: (MonadError QErr m)
+  => TableInfo a
+  -> FieldName
+  -> m ()
+checkForFieldConflict tabInfo f =
+  case M.lookup f (_tiFieldInfoMap tabInfo) of
+    Just _ -> throw400 AlreadyExists $ mconcat
+      [ "column/relationship " <>> f
+      , " of table " <>> _tiName tabInfo
+      , " already exists"
+      ]
+    Nothing -> return ()
 
 data FunctionType
   = FTVOLATILE
@@ -373,6 +413,7 @@ data FunctionInfo
   , fiInputArgs     :: !(Seq.Seq FunctionArg)
   , fiReturnType    :: !QualifiedTable
   , fiDeps          :: ![SchemaDependency]
+  , fiDescription   :: !(Maybe PGDescription)
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionInfo)
@@ -397,13 +438,6 @@ type DepMap = M.HashMap SchemaObjId (HS.HashSet SchemaDependency)
 addToDepMap :: SchemaObjId -> [SchemaDependency] -> DepMap -> DepMap
 addToDepMap schObj deps =
   M.insert schObj (HS.fromList deps)
-
-  -- M.unionWith HS.union objDepMap
-  -- where
-  --   objDepMap = M.fromList
-  --     [ (dep, HS.singleton $ SchemaDependency schObj reason)
-  --     | (SchemaDependency dep reason) <- deps
-  --     ]
 
 removeFromDepMap :: SchemaObjId -> DepMap -> DepMap
 removeFromDepMap =
@@ -663,16 +697,24 @@ delFunctionFromCache
   :: (QErrM m, CacheRWM m)
   => QualifiedFunction -> m ()
 delFunctionFromCache qf = do
+  void $ askFunctionInfo qf
   sc <- askSchemaCache
   let functionCache = scFunctions sc
-  case M.lookup qf functionCache of
-    Nothing -> throw500 $ "function does not exist in cache " <>> qf
-    Just _ -> do
-      let newFunctionCache = M.delete qf functionCache
-      writeSchemaCache $ sc {scFunctions = newFunctionCache}
+      newFunctionCache = M.delete qf functionCache
+  writeSchemaCache $ sc {scFunctions = newFunctionCache}
   modDepMapInCache (removeFromDepMap objId)
   where
     objId = SOFunction qf
+
+updateFunctionDescription
+  :: (QErrM m, CacheRWM m)
+  => QualifiedFunction -> Maybe PGDescription -> m ()
+updateFunctionDescription qf descM = do
+  fi <- askFunctionInfo qf
+  sc <- askSchemaCache
+  let newFuncInfo = fi{fiDescription = descM}
+      newFuncCache = M.insert qf newFuncInfo $ scFunctions sc
+  writeSchemaCache sc{scFunctions = newFuncCache}
 
 addPermToCache
   :: (QErrM m, CacheRWM m)

@@ -155,7 +155,7 @@ ObjRelUsing
 .. note::
 
    There has to be at least one and only one of ``foreign_key_constraint_on``
-   and ``manual_mapping``. 
+   and ``manual_configuration``. 
 
 
 ObjRelUsingManualMapping
@@ -304,7 +304,7 @@ ArrRelUsing
      - false
      - ArrRelUsingFKeyOn_
      - The column with foreign key constraint
-   * - manual_mapping
+   * - manual_configuration
      - false
      - ArrRelUsingManualMapping_
      - Manual mapping of table and columns

@@ -1,0 +1,77 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      -- create tables
+      CREATE TABLE author(
+        id SERIAL PRIMARY KEY,
+        name TEXT UNIQUE
+      );
+      CREATE TABLE article(
+        id SERIAL PRIMARY KEY,
+        title TEXT,
+        content TEXT,
+        author_id INTEGER REFERENCES author(id)
+      );
+
+      -- insert data
+      INSERT INTO author (name)
+        VALUES ('Author 1'), ('Author 2')
+      ;
+      INSERT INTO article (title, content, author_id)
+        VALUES
+        ( 'Article 1'
+        , 'Content for Article 1'
+        , 1
+        ),
+        ( 'Article 2'
+        , 'Content for Article 2'
+        , 1
+        ),
+        ( 'Article 3'
+        , 'Content for Article 3'
+        , 2
+        )
+      ;
+
+- type: track_table
+  version: 2
+  args:
+    table: author
+    configuration:
+      custom_root_fields:
+        select: Authors
+        select_by_pk: Author
+        select_aggregate: AuthorAgg
+      custom_column_names:
+        id: AuthorId
+
+- type: track_table
+  version: 2
+  args:
+    table: article
+    configuration:
+      custom_root_fields:
+        select: Articles
+        select_by_pk: Article
+        select_aggregate: ArticleAgg
+      custom_column_names:
+        id: ArticleId
+        author_id: AuthorId
+
+- type: create_object_relationship
+  args:
+    table: article
+    name: author
+    using:
+      foreign_key_constraint_on: author_id
+
+- type: create_array_relationship
+  args:
+    table: author
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: author_id
