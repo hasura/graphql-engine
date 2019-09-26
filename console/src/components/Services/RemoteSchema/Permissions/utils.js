@@ -29,7 +29,9 @@ export const generateCreatePermQuery = (
   remoteSchemaName,
   isExisting
 ) => {
-  const { role, allowedTypes, newRole } = state;
+  console.log(state);
+  const { allowedTypes, newRole } = state;
+  const role = state.role || state.role_name;
 
   if (isExisting) {
     return {
@@ -74,7 +76,7 @@ export const parseRemoteRelPermDefinition = (
 ) => {
   if (!payload) {
     const mockPayload = {
-      role: roleName,
+      role_name: roleName,
       definition: {
         allowed_objects: getAllObjectTypes(objectTypes),
       },
@@ -89,7 +91,7 @@ export const parseRemoteRelPermDefinition = (
     );
   }
 
-  const { definition, role } = payload;
+  const { definition, role_name } = payload;
 
   const allowedTypes = {};
 
@@ -115,7 +117,7 @@ export const parseRemoteRelPermDefinition = (
   });
 
   return {
-    role,
+    role: role_name,
     allowedTypes,
     isNew: !!isNew,
   };

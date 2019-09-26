@@ -63,7 +63,7 @@ export const deleteRemoteSchemaPermission = (successCb, failureCb) => {
       r => r.name === currentRemoteSchemaName
     );
     const existingRolePerm = existingPermissions.permissions.find(
-      p => p.role === editState.role
+      p => p.role_name === editState.role
     );
 
     // generate permissions down query (create the permission)

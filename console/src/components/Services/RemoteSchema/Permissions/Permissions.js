@@ -140,7 +140,7 @@ const Permissions = props => {
               dispatch(setCurrentPermissionEdit(perm, rt));
             } else if (role) {
               const perm = parseRemoteRelPermDefinition(
-                existingPermissions.find(p => p.role === role),
+                existingPermissions.find(p => p.role_name === role),
                 rootTypes,
                 objectTypes,
                 nonObjectTypes,
@@ -185,7 +185,7 @@ const Permissions = props => {
               _permission = permissionsSymbols.noAccess;
             } else {
               const existingPerm = existingPermissions.find(
-                p => p.role === role
+                p => p.role_name === role
               );
               if (!existingPerm) {
                 _permission = permissionsSymbols.noAccess;
