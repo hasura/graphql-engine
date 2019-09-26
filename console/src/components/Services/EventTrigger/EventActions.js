@@ -14,12 +14,12 @@ import { loadMigrationStatus } from '../../Main/Actions';
 import returnMigrateUrl from './Common/getMigrateUrl';
 import globals from '../../../Globals';
 import push from './push';
-import { loadInconsistentObjects } from '../Metadata/Actions';
-import { filterInconsistentMetadataObjects } from '../Metadata/utils';
+import { loadInconsistentObjects } from '../Settings/Actions';
+import { filterInconsistentMetadataObjects } from '../Settings/utils';
 import { replace } from 'react-router-redux';
 import { getEventTriggersQuery } from './utils';
 
-import { SERVER_CONSOLE_MODE } from '../../../constants';
+import { CLI_CONSOLE_MODE, SERVER_CONSOLE_MODE } from '../../../constants';
 import { REQUEST_COMPLETE, REQUEST_ONGOING } from './Modify/Actions';
 
 const SET_TRIGGER = 'Event/SET_TRIGGER';
@@ -372,7 +372,7 @@ const makeMigrationCall = (
   let finalReqBody;
   if (globals.consoleMode === SERVER_CONSOLE_MODE) {
     finalReqBody = upQuery;
-  } else if (globals.consoleMode === 'cli') {
+  } else if (globals.consoleMode === CLI_CONSOLE_MODE) {
     finalReqBody = migrationBody;
   }
   const url = migrateUrl;
@@ -384,7 +384,7 @@ const makeMigrationCall = (
   };
 
   const onSuccess = () => {
-    if (globals.consoleMode === 'cli') {
+    if (globals.consoleMode === CLI_CONSOLE_MODE) {
       dispatch(loadMigrationStatus()); // don't call for server mode
     }
     customOnSuccess();
