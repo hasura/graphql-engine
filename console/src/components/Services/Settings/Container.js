@@ -3,7 +3,7 @@ import Sidebar from './Sidebar';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 
 const Container = ({ location, children, metadata }) => {
-  const helmet = 'Metadata | Hasura';
+  const helmet = 'Settings | Hasura';
 
   const sidebar = <Sidebar location={location} metadata={metadata} />;
 

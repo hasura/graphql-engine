@@ -6,7 +6,7 @@ import {
   showSuccessNotification,
   showErrorNotification,
 } from '../../Common/Notification';
-import metaDataStyles from '../Metadata.scss';
+import metaDataStyles from '../Settings.scss';
 import styles from '../../../Common/TableCommon/Table.scss';
 import CheckIcon from '../../../Common/Icons/Check';
 import CrossIcon from '../../../Common/Icons/Cross';
