@@ -59,16 +59,18 @@ addComputedColumnP1
   => AddComputedColumn -> m ()
 addComputedColumnP1 q = do
   adminOnly
-  tableInfo <- askTabInfo tableName
-  checkForFieldConflict tableInfo $ fromComputedColumn computedColumnName
+  tableInfo <- withPathK "table" $ askTabInfo tableName
+  withPathK "name" $ checkForFieldConflict tableInfo $
+    fromComputedColumn computedColumnName
   where
     AddComputedColumn tableName computedColumnName _ _ = q
 
 addComputedColumnP2
   :: (QErrM m, CacheRWM m, MonadTx m)
   => AddComputedColumn -> m EncJSON
-addComputedColumnP2 q = do
-  rawFunctionInfo <- fetchRawFunctioInfo $ _ccdFunction definition
+addComputedColumnP2 q = withPathK "definition" $ do
+  rawFunctionInfo <- withPathK "function" $
+    fetchRawFunctioInfo $ _ccdFunction definition
   addComputedColumnP2Setup table computedColumn definition rawFunctionInfo comment
   addComputedColumnToCatalog q
   return successMsg
@@ -175,7 +177,7 @@ addComputedColumnP2Setup table computedColumn definition rawFunctionInfo comment
               MV.refute $ pure $ CCVEInvalidTableArgument $ ITANotFound argName
         Nothing -> do
           case inputArgs of
-            [] -> MV.dispute $ pure CCVENoInputArguments
+            []           -> MV.dispute $ pure CCVENoInputArguments
             (firstArg:_) ->
               validateTableArgumentType FTAFirstArgument $ faType firstArg
           pure FTAFirstArgument
@@ -236,8 +238,8 @@ runDropComputedColumn
   => DropComputedColumn -> m EncJSON
 runDropComputedColumn (DropComputedColumn table computedColumn) = do
   adminOnly
-  fields <- _tiFieldInfoMap <$> askTabInfo table
-  void $ askComputedColumnInfo fields computedColumn
+  fields <- withPathK "table" $ _tiFieldInfoMap <$> askTabInfo table
+  void $ withPathK "name" $ askComputedColumnInfo fields computedColumn
 
   deleteComputedColumnFromCache table computedColumn
   dropComputedColumnFromCatalog table computedColumn

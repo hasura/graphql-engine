@@ -1,0 +1,50 @@
+- description: Add a computed column for author table
+  url: /v1/query
+  status: 200
+  query:
+    type: add_computed_column
+    args:
+      table: author
+      name: get_articles
+      definition:
+        function: fetch_articles
+        table_argument: author_row
+  response:
+    message: success
+
+- description: Drop computed column of a non existed table
+  url: /v1/query
+  status: 400
+  query:
+    type: drop_computed_column
+    args:
+      table: random
+      name: get_articles
+  response:
+    path: "$.args.table"
+    error: table "random" does not exist
+    code: not-exists
+
+- description: Drop a non existed computed column
+  url: /v1/query
+  status: 400
+  query:
+    type: drop_computed_column
+    args:
+      table: author
+      name: random
+  response:
+    path: "$.args.name"
+    error: computed column "random" does not exist
+    code: not-exists
+
+- description: Drop a valid computed column
+  url: /v1/query
+  status: 200
+  query:
+    type: drop_computed_column
+    args:
+      table: author
+      name: get_articles
+  response:
+    message: success

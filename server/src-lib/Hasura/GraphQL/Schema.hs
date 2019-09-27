@@ -115,14 +115,6 @@ mkFuncArgSeq inputArgs =
     Seq.fromList $ procFuncArgs inputArgs $
     \fa t -> FuncArgItem (G.Name t) (faName fa) (faHasDefault fa)
 
-functionArgsWithoutTableArg
-  :: FunctionTableArgument -> Seq.Seq FunctionArg -> Seq.Seq FunctionArg
-functionArgsWithoutTableArg tableArg inputArgs = Seq.fromList $
-  case tableArg of
-    FTAFirstArgument -> tail $ toList inputArgs
-    FTAName argName  ->
-      filter ((/=) (Just argName) . faName) $ toList inputArgs
-
 mkGCtxRole'
   :: QualifiedTable
   -- Postgres description

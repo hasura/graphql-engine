@@ -22,7 +22,6 @@ import qualified Data.HashMap.Strict           as M
 import qualified Data.Sequence                 as Seq
 import qualified Database.PG.Query             as Q
 
-
 data RawFunctionInfo
   = RawFunctionInfo
   { rfiHasVariadic      :: !Bool
@@ -43,7 +42,7 @@ mkFunctionArgs :: Int -> [QualifiedPGType] -> [FunctionArgName] -> [FunctionArg]
 mkFunctionArgs defArgsNo tys argNames =
   bool withNames withNoNames $ null argNames
   where
-    hasDefaultBoolSeq = replicate (length argNames - defArgsNo) False
+    hasDefaultBoolSeq = replicate (length tys - defArgsNo) False
                         -- only last arguments can have default expression
                         <> replicate defArgsNo True
 

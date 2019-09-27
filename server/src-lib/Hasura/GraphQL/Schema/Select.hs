@@ -5,6 +5,8 @@ module Hasura.GraphQL.Schema.Select
   , mkTableAggFldsObj
   , mkTableColAggFldsObj
 
+  , functionArgsWithoutTableArg
+
   , mkSelFld
   , mkAggSelFld
   , mkSelFldPKey
@@ -14,6 +16,7 @@ module Hasura.GraphQL.Schema.Select
 
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashSet                  as Set
+import qualified Data.Sequence                 as Seq
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Hasura.GraphQL.Resolve.Types
@@ -69,16 +72,24 @@ mkPGColFld colInfo =
     notNullTy = G.toGT $ G.toNT columnType
     nullTy = G.toGT columnType
 
+functionArgsWithoutTableArg
+  :: FunctionTableArgument -> Seq.Seq FunctionArg -> Seq.Seq FunctionArg
+functionArgsWithoutTableArg tableArg inputArgs = Seq.fromList $
+  case tableArg of
+    FTAFirstArgument -> tail $ toList inputArgs
+    FTAName argName  ->
+      filter ((/=) (Just argName) . faName) $ toList inputArgs
+
 mkComputedColFld :: ComputedColumnFieldInfo -> ObjFldInfo
 mkComputedColFld fieldInfo =
   uncurry (mkHsraObjFldInfo (Just desc) fieldName) $ case field of
     CCTScalar scalarTy    ->
       let inputParams = mkPGColParams (PGColumnScalar scalarTy)
-                        <> fromInpValL [funcInpArg]
+                        <> fromInpValL (maybeToList maybeFunctionInputArg)
       in (inputParams, G.toGT $ mkScalarTy scalarTy)
     CCTTable compColtable ->
       let table = _cctTable compColtable
-      in ( fromInpValL $ funcInpArg:mkSelArgs table
+      in ( fromInpValL $ maybeToList maybeFunctionInputArg <> mkSelArgs table
          , G.toGT $ G.toLT $ G.toNT $ mkTableTy table
          )
   where
@@ -88,9 +99,15 @@ mkComputedColFld fieldInfo =
     ComputedColumnFieldInfo name function _ field = fieldInfo
     qf = _ccfName function
 
-    funcArgDesc = G.Description $ "input parameters for function " <>> qf
-    funcInpArg = InpValInfo (Just funcArgDesc) "args" Nothing $
-                 G.toGT $ G.toNT $ mkFuncArgsTy qf
+    maybeFunctionInputArg =
+      let funcArgDesc = G.Description $ "input parameters for function " <>> qf
+          inputValue = InpValInfo (Just funcArgDesc) "args" Nothing $
+                       G.toGT $ G.toNT $ mkFuncArgsTy qf
+          inputArgs = _ccfInputArgs function
+          tableArgument = _ccfTableArgument function
+          withoutTableArgs = functionArgsWithoutTableArg tableArgument inputArgs
+      in bool (Just inputValue) Nothing $ null withoutTableArgs
+
 
 -- where: table_bool_exp
 -- limit: Int

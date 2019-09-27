@@ -646,3 +646,17 @@ class TestSetTableCustomFields(DefaultTestQueries):
 
     def test_set_invalid_table(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/set_invalid_table.yaml')
+
+class TestComputedColumns(DefaultTestQueries):
+    @classmethod
+    def dir(cls):
+        return 'queries/v1/computed_columns'
+
+    def test_add_computed_columns_errors(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/add_computed_column_errors.yaml')
+
+    def test_add_and_drop(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/add_and_drop.yaml')
+
+    def test_create_permissions(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/create_permissions.yaml')
