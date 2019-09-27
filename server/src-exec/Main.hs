@@ -19,20 +19,20 @@ main =  do
   (HGEOptionsG rci hgeCmd) <- parseArgs
   case hgeCmd of
     HCServe serveOptions -> do
-      initCtx <- initialiseCtx hgeCmd rci Nothing mkHttpLog
+      initCtx <- initialiseCtx hgeCmd rci Nothing mkHttpLog Nothing
       runHGEServer serveOptions initCtx Nothing Nothing Nothing
     HCExport -> do
-      initCtx <- initialiseCtx hgeCmd rci Nothing mkHttpLog
+      initCtx <- initialiseCtx hgeCmd rci Nothing mkHttpLog Nothing
       res <- runTx' initCtx fetchMetadata
       either printErrJExit printJSON res
 
     HCClean -> do
-      initCtx <- initialiseCtx hgeCmd rci Nothing mkHttpLog
+      initCtx <- initialiseCtx hgeCmd rci Nothing mkHttpLog Nothing
       res <- runTx' initCtx cleanCatalog
       either printErrJExit (const cleanSuccess) res
 
     HCExecute -> do
-      initCtx <- initialiseCtx hgeCmd rci Nothing mkHttpLog
+      initCtx <- initialiseCtx hgeCmd rci Nothing mkHttpLog Nothing
       queryBs <- BL.getContents
       let sqlGenCtx = SQLGenCtx False
       res <- runAsAdmin (_icPgPool initCtx) sqlGenCtx $ execQuery queryBs

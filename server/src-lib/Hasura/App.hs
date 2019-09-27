@@ -136,19 +136,27 @@ data Loggers a
   , _lsLogger     :: !Logger
   , _lsPgLogger   :: !Q.PGLogger
   , _lsHttpLogger :: !(HttpLogger a)
+  , _lsRespLogger :: !(Maybe HttpResponseLogger)
   }
 
 -- | a separate function to create the initialization context because some of
 -- these contexts might be used by external functions
-initialiseCtx :: (ToEngineLog a) => HGECommand -> RawConnInfo -> Maybe LogCallbackFunction -> (HttpLogger a) -> IO (InitCtx a)
-initialiseCtx hgeCmd rci logCallback httpLogger = do
+initialiseCtx
+  :: (ToEngineLog a)
+  => HGECommand
+  -> RawConnInfo
+  -> Maybe LogCallbackFunction
+  -> (HttpLogger a)
+  -> (Maybe HttpResponseLogger)
+  -> IO (InitCtx a)
+initialiseCtx hgeCmd rci logCallback httpLogger respLogger = do
   -- global http manager
   httpManager <- HTTP.newManager HTTP.tlsManagerSettings
   instanceId <- generateInstanceId
   connInfo <- procConnInfo
   (loggers, pool) <- case hgeCmd of
     HCServe ServeOptions{..} -> do
-      l@(Loggers _ logger pgLogger _) <- mkLoggers soEnabledLogTypes soLogLevel
+      l@(Loggers _ logger pgLogger _ _) <- mkLoggers soEnabledLogTypes soLogLevel
       let sqlGenCtx = SQLGenCtx soStringifyNum
       -- log postgres connection info
       unLogger logger $ connInfoToLog connInfo
@@ -160,7 +168,7 @@ initialiseCtx hgeCmd rci logCallback httpLogger = do
       return (l, pool)
 
     _ -> do
-      l@(Loggers _ _ pgLogger _) <- mkLoggers defaultEnabledLogTypes LevelInfo
+      l@(Loggers _ _ pgLogger _ _) <- mkLoggers defaultEnabledLogTypes LevelInfo
       pool <- getMinimalPool pgLogger connInfo
       return (l, pool)
 
@@ -191,14 +199,14 @@ initialiseCtx hgeCmd rci logCallback httpLogger = do
       loggerCtx <- mkLoggerCtx (defaultLoggerSettings True logLevel) enabledLogs logCallback
       let logger = mkLogger loggerCtx
           pgLogger = mkPGLogger logger
-      return $ Loggers loggerCtx logger pgLogger httpLogger
+      return $ Loggers loggerCtx logger pgLogger httpLogger respLogger
 
 
 runHGEServer :: (ToEngineLog a) => ServeOptions -> InitCtx a -> Maybe UserAuthMiddleware -> Maybe (HasuraMiddleware RQLQuery) -> Maybe ConsoleRenderer -> IO ()
 runHGEServer so@(ServeOptions port host _ isoL mAdminSecret mAuthHook mJwtSecret mUnAuthRole corsCfg enableConsole consoleAssetsDir enableTelemetry strfyNum enabledAPIs lqOpts enableAL _ _) (InitCtx httpManager instanceId dbId loggers connInfo pgPool) authMiddleware metadataMiddleware renderConsole = do
   let sqlGenCtx = SQLGenCtx strfyNum
 
-  let Loggers loggerCtx logger _ httpLogger = loggers
+  let Loggers loggerCtx logger _ httpLogger respLogger = loggers
 
   initTime <- Clock.getCurrentTime
   -- log serve options
@@ -212,7 +220,7 @@ runHGEServer so@(ServeOptions port host _ isoL mAdminSecret mAuthHook mJwtSecret
 
 
   (app, cacheRef, cacheInitTime) <-
-    mkWaiApp isoL loggerCtx httpLogger sqlGenCtx enableAL pgPool connInfo httpManager
+    mkWaiApp isoL loggerCtx httpLogger respLogger sqlGenCtx enableAL pgPool connInfo httpManager
       authMode corsCfg enableConsole consoleAssetsDir enableTelemetry
       instanceId enabledAPIs lqOpts authMiddleware metadataMiddleware renderConsole
 

@@ -238,15 +238,16 @@ mkSpockAction
   :: (MonadIO m, FromJSON a, ToJSON a, L.ToEngineLog b)
   => ServerCtx
   -> HttpLogger b
+  -> Maybe HttpResponseLogger
   -> Maybe UserAuthMiddleware
-  -- -> Maybe (HasuraMiddleware RQLQuery)
+  -- ^ temp. TODO: make @mkSpockAction@ a typeclass instead of passing hooks
   -> (Bool -> QErr -> Value)
   -- ^ `QErr` JSON encoder function
   -> (QErr -> QErr)
   -- ^ `QErr` modifier
   -> APIHandler a
   -> ActionT m ()
-mkSpockAction serverCtx httpLogger userAuthMiddleware qErrEncoder qErrModifier apiHandler = do
+mkSpockAction serverCtx httpLogger respLogger userAuthMiddleware qErrEncoder qErrModifier apiHandler = do
   req <- request
   reqBody <- liftIO $ strictRequestBody req
   let headers = requestHeaders req
@@ -299,6 +300,8 @@ mkSpockAction serverCtx httpLogger userAuthMiddleware qErrEncoder qErrModifier a
     logErrorAndResp userInfo reqId req reqBody includeInternal headers qErr = do
       logError logger httpLogger userInfo reqId req reqBody qErr headers
       setStatus $ qeStatus qErr
+      let responseByteString = encode $ qErrEncoder includeInternal qErr
+      forM_ respLogger $ \rLogger -> liftIO $ rLogger logger responseByteString
       json $ qErrEncoder includeInternal qErr
 
     logSuccessAndResp userInfo reqId req result qTime headers = do
@@ -308,7 +311,9 @@ mkSpockAction serverCtx httpLogger userAuthMiddleware qErrEncoder qErrModifier a
           uncurry setHeader jsonHeader
           uncurry setHeader (requestIdHeader, unRequestId reqId)
           mapM_ (mapM_ (uncurry setHeader . unHeader)) h
-          lazyBytes $ encJToLBS j
+          let responseByteString = encJToLBS j
+          forM_ respLogger $ \rLogger -> liftIO $ rLogger logger responseByteString
+          lazyBytes responseByteString
         RawResp (HttpResponse b h) -> do
           uncurry setHeader (requestIdHeader, unRequestId reqId)
           mapM_ (mapM_ (uncurry setHeader . unHeader)) h
@@ -469,6 +474,7 @@ mkWaiApp
   => Q.TxIsolation
   -> L.LoggerCtx
   -> HttpLogger a
+  -> Maybe HttpResponseLogger
   -> SQLGenCtx
   -> Bool
   -> Q.PGPool
@@ -486,7 +492,7 @@ mkWaiApp
   -> Maybe (HasuraMiddleware RQLQuery)
   -> Maybe ConsoleRenderer
   -> IO (Wai.Application, SchemaCacheRef, Maybe UTCTime)
-mkWaiApp isoLevel loggerCtx httpLogger sqlGenCtx enableAL pool ci httpManager mode corsCfg
+mkWaiApp isoLevel loggerCtx httpLogger respLogger sqlGenCtx enableAL pool ci httpManager mode corsCfg
          enableConsole consoleAssetsDir enableTelemetry instanceId apis
          lqOpts authMiddleware metadataMiddleware renderConsole = do
     let pgExecCtx = PGExecCtx pool isoLevel
@@ -524,7 +530,7 @@ mkWaiApp isoLevel loggerCtx httpLogger sqlGenCtx enableAL pool ci httpManager mo
       EKG.registerCounter "ekg.server_timestamp_ms" getTimeMs ekgStore
 
     spockApp <- spockAsApp $ spockT id $
-                httpApp corsCfg serverCtx httpLogger enableConsole
+                httpApp corsCfg serverCtx httpLogger respLogger enableConsole
                   consoleAssetsDir enableTelemetry authMiddleware metadataMiddleware renderConsole
 
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
@@ -541,6 +547,7 @@ httpApp
   => CorsConfig
   -> ServerCtx
   -> HttpLogger a
+  -> Maybe HttpResponseLogger
   -> Bool
   -> Maybe Text
   -> Bool
@@ -550,8 +557,9 @@ httpApp
   -- this can be extended to take a `HashMap (HttpMethod, Path) (HasuraMiddleware a)`
   -> Maybe ConsoleRenderer
   -> SpockT IO ()
-httpApp corsCfg serverCtx httpLogger enableConsole consoleAssetsDir enableTelemetry
+httpApp corsCfg serverCtx httpLogger respLogger enableConsole consoleAssetsDir enableTelemetry
         authMiddleware metadataMiddleware consoleRenderer = do
+
 
     -- cors middleware
     unless (isCorsDisabled corsCfg) $
@@ -577,7 +585,7 @@ httpApp corsCfg serverCtx httpLogger enableConsole consoleAssetsDir enableTeleme
         mkPostHandler $ mkAPIRespHandler (v1QueryHandler metadataMiddleware)
 
       post ("api/1/table" <//> var <//> var) $ \tableName queryType ->
-        mkSpockAction serverCtx httpLogger authMiddleware encodeQErr id $ mkPostHandler $
+        mkSpockAction serverCtx httpLogger respLogger authMiddleware encodeQErr id $ mkPostHandler $
           mkAPIRespHandler $ legacyQueryHandler metadataMiddleware (TableName tableName) queryType
 
     when enablePGDump $
@@ -634,7 +642,7 @@ httpApp corsCfg serverCtx httpLogger enableConsole consoleAssetsDir enableTeleme
     logger = scLogger serverCtx
 
     spockAction :: (FromJSON a, ToJSON a) => (Bool -> QErr -> Value) -> (QErr -> QErr) -> APIHandler a -> ActionT IO ()
-    spockAction = mkSpockAction serverCtx httpLogger authMiddleware
+    spockAction = mkSpockAction serverCtx httpLogger respLogger authMiddleware
 
     -- all graphql errors should be of type 200
     allMod200 qe = qe { qeStatus = N.status200 }
