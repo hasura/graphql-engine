@@ -15,7 +15,7 @@ module Hasura.RQL.DDL.ComputedColumn
 import           Hasura.Prelude
 
 import           Hasura.EncJSON
-import           Hasura.RQL.DDL.Schema.Function (RawFuncInfo (..),
+import           Hasura.RQL.DDL.Schema.Function (RawFunctionInfo (..),
                                                  fetchRawFunctioInfo,
                                                  mkFunctionArgs)
 import           Hasura.RQL.Types
@@ -121,7 +121,7 @@ addComputedColumnP2Setup
   => QualifiedTable
   -> ComputedColumnName
   -> ComputedColumnDefinition
-  -> RawFuncInfo
+  -> RawFunctionInfo
   -> Maybe Text
   -> m ()
 addComputedColumnP2Setup table computedColumn definition rawFunctionInfo comment = do
@@ -136,7 +136,7 @@ addComputedColumnP2Setup table computedColumn definition rawFunctionInfo comment
                          (rfiReturnTypeName rawFunctionInfo)
                          (rfiReturnTypeType rawFunctionInfo)
 
-    computedColumnGraphQLName = G.Name $ unComputedColumnName computedColumn
+    computedColumnGraphQLName = G.Name $ computedColumnNameToText computedColumn
 
     mkComputedColumnInfo :: (MV.MonadValidate [ComputedColumnValidateError] m)
                           => SchemaCache -> m ComputedColumnInfo

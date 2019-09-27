@@ -73,7 +73,7 @@ $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogPermission)
 data CatalogComputedColumn
   = CatalogComputedColumn
   { _cccComputedColumn :: !AddComputedColumn
-  , _cccFunctionInfo   :: ![RawFuncInfo] -- multiple functions with same name
+  , _cccFunctionInfo   :: ![RawFunctionInfo] -- multiple functions with same name
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 4 snakeCase) ''CatalogComputedColumn)
 
@@ -88,7 +88,7 @@ $(deriveJSON (aesonDrop 4 snakeCase) ''CatalogEventTrigger)
 data CatalogFunction
   = CatalogFunction
   { _cfFunction :: !QualifiedFunction
-  , _cfInfo     :: ![RawFuncInfo] -- multiple functions with same name
+  , _cfInfo     :: ![RawFunctionInfo] -- multiple functions with same name
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogFunction)
 

@@ -189,20 +189,20 @@ from
     from
       (
         select json_build_object(
-          'table', jsonb_build_object('name', table_name,'schema', table_schema),
-          'name', computed_column_name,
-          'definition', definition,
-          'comment', comment
+          'table', jsonb_build_object('name', hcc.table_name,'schema', hcc.table_schema),
+          'name', hcc.computed_column_name,
+          'definition', hcc.definition,
+          'comment', hcc.comment
         ) as computed_column,
-          case
-            when (definition::jsonb -> 'function')::jsonb ->> 'name' is null then definition::jsonb ->> 'function'
-            else (definition::jsonb -> 'function')::jsonb ->> 'name'
-          end as function_name,
-          case
-            when (definition::jsonb -> 'function')::jsonb ->> 'schema' is null then 'public'
-            else (definition::jsonb -> 'function')::jsonb ->> 'schema'
-          end as function_schema
-        from hdb_catalog.hdb_computed_column
+        hccf.function_name,
+        hccf.function_schema
+        from hdb_catalog.hdb_computed_column hcc
+        left outer join
+             hdb_catalog.hdb_computed_column_function hccf
+             on ( hcc.table_name = hccf.table_name
+                 and hcc.table_schema = hccf.table_schema
+                 and hcc.computed_column_name = hccf.computed_column_name
+                )
       ) cc
     left join lateral
       (

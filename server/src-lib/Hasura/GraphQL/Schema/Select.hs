@@ -71,7 +71,7 @@ mkPGColFld colInfo =
 
 mkComputedColFld :: ComputedColumnFieldInfo -> ObjFldInfo
 mkComputedColFld fieldInfo =
-  uncurry (mkHsraObjFldInfo desc fieldName) $ case field of
+  uncurry (mkHsraObjFldInfo (Just desc) fieldName) $ case field of
     CCTScalar scalarTy    ->
       let inputParams = mkPGColParams (PGColumnScalar scalarTy)
                         <> fromInpValL [funcInpArg]
@@ -82,7 +82,8 @@ mkComputedColFld fieldInfo =
          , G.toGT $ G.toLT $ G.toNT $ mkTableTy table
          )
   where
-    desc = Just $ G.Description $ "evaluating computed column " <>> name
+    columnDescription = "A computed column, executes function " <>> qf
+    desc = mkDescriptionWith (_ccfDescription function) columnDescription
     fieldName = mkComputedColumnName name
     ComputedColumnFieldInfo name function _ field = fieldInfo
     qf = _ccfName function

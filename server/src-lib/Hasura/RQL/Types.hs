@@ -31,6 +31,8 @@ module Hasura.RQL.Types
        , askEventTriggerInfo
        , askTabInfoFromTrigger
 
+       , updateComputedColumnFunctionDescription
+
        , adminOnly
 
        , HeaderObj
@@ -226,6 +228,19 @@ askComputedColumnInfo fields computedColumn = do
       [ "expecting a computed column; but, "
       , computedColumn <<> " is a " <> fieldType <> "; "
       ]
+
+updateComputedColumnFunctionDescription
+  :: (QErrM m, CacheRWM m)
+  => QualifiedTable -> ComputedColumnName -> Maybe PGDescription -> m ()
+updateComputedColumnFunctionDescription table computedColumn description = do
+  fields <- _tiFieldInfoMap <$> askTabInfo table
+  computedColumnInfo <- askComputedColumnInfo fields computedColumn
+  deleteComputedColumnFromCache table computedColumn
+  let updatedComputedColumnInfo = computedColumnInfo
+                                  { _cciFunction = (_cciFunction computedColumnInfo)
+                                                   {_ccfDescription = description}
+                                  }
+  addComputedColumnToCache table updatedComputedColumnInfo
 
 assertPGCol :: (MonadError QErr m)
             => FieldInfoMap columnInfo

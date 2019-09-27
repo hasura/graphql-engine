@@ -268,10 +268,13 @@ processTableChanges ti tableDiff = do
         renameTableInCatalog newTN tn
         return True
 
+  -- Process computed column diff
+  processComputedColumnDiff tn
   maybe withOldTabName withNewTabName mNewName
 
   where
-    TableDiff mNewName droppedCols addedCols alteredCols _ constraints descM = tableDiff
+    TableDiff mNewName droppedCols addedCols alteredCols _
+              computedColDiff constraints descM = tableDiff
     customFields = _tcCustomColumnNames $ _tiCustomConfig ti
     replaceConstraints tn = flip modTableInCache tn $ \tInfo ->
       return $ tInfo {_tiUniqOrPrimConstraints = constraints}
@@ -327,6 +330,24 @@ processTableChanges ti tableDiff = do
 
            | otherwise -> performColumnUpdate $> False
 
+    processComputedColumnDiff table  = do
+      let ComputedColumnDiff _ altered overloaded = computedColDiff
+          getFunction = fmFunction . ccmFunctionMeta
+          getFunctionDescription = fmDescription . ccmFunctionMeta
+      forM_ overloaded $ \(columnName, function) ->
+        throw400 NotSupported $ "The function " <> function
+        <<> " associated with computed column" <> columnName
+        <<> " of table " <> table <<> " is being overloaded"
+      forM_ altered $ \(old, new) ->
+        if | (fmType . ccmFunctionMeta) new == FTVOLATILE ->
+             throw400 NotSupported $ "The type of function " <> getFunction old
+             <<> " associated with computed column " <> ccmName old
+             <<> " of table " <> table <<> " is being altered to \"VOLATILE\""
+           | getFunctionDescription old /= getFunctionDescription new ->
+             updateComputedColumnFunctionDescription table (ccmName old)
+               (getFunctionDescription new)
+           | otherwise -> pure ()
+
 delTableAndDirectDeps
   :: (QErrM m, CacheRWM m, MonadTx m) => QualifiedTable -> m ()
 delTableAndDirectDeps qtn@(QualifiedObject sn tn) = do
@@ -342,6 +363,10 @@ delTableAndDirectDeps qtn@(QualifiedObject sn tn) = do
     Q.unitQ [Q.sql|
              DELETE FROM "hdb_catalog"."event_triggers"
              WHERE schema_name = $1 AND table_name = $2
+              |] (sn, tn) False
+    Q.unitQ [Q.sql|
+             DELETE FROM "hdb_catalog"."hdb_computed_column"
+             WHERE table_schema = $1 AND table_name = $2
               |] (sn, tn) False
   deleteTableFromCatalog qtn
   delTableFromCache qtn

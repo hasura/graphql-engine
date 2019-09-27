@@ -80,7 +80,7 @@ mkAggRelName :: RelName -> G.Name
 mkAggRelName rn = G.Name $ relNameToTxt rn <> "_aggregate"
 
 mkComputedColumnName :: ComputedColumnName -> G.Name
-mkComputedColumnName = G.Name . unComputedColumnName
+mkComputedColumnName = G.Name . computedColumnNameToText
 
 mkColumnType :: PGColumnType -> G.NamedType
 mkColumnType = \case

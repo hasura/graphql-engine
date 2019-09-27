@@ -27,6 +27,7 @@ module Hasura.RQL.Types.Common
        , FunctionArg(..)
 
        , ComputedColumnName(..)
+       , computedColumnNameToText
        , fromComputedColumn
        , FunctionTableArgument(..)
        , ComputedColumnReturn(..)
@@ -204,11 +205,14 @@ data FunctionArg
 $(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionArg)
 
 newtype ComputedColumnName =
-  ComputedColumnName { unComputedColumnName :: Text}
+  ComputedColumnName { unComputedColumnName :: NonEmptyText}
   deriving (Show, Eq, Lift, FromJSON, ToJSON, Q.ToPrepArg, DQuote, Hashable)
 
+computedColumnNameToText :: ComputedColumnName -> Text
+computedColumnNameToText = unNonEmptyText . unComputedColumnName
+
 fromComputedColumn :: ComputedColumnName -> FieldName
-fromComputedColumn = FieldName . unComputedColumnName
+fromComputedColumn = FieldName . computedColumnNameToText
 
 data FunctionTableArgument
   = FTAFirstArgument

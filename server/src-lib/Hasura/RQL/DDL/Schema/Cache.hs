@@ -242,7 +242,7 @@ withMetadataCheck cascade action = do
       oldMeta = flip filter oldMetaU $ \tm -> tmTable tm `elem` existingTables
       schemaDiff = getSchemaDiff oldMeta newMeta
       existingFuncs = M.keys $ scFunctions sc
-      oldFuncMeta = flip filter oldFuncMetaU $ \fm -> funcFromMeta fm `elem` existingFuncs
+      oldFuncMeta = flip filter oldFuncMetaU $ \fm -> fmFunction fm `elem` existingFuncs
       FunctionDiff droppedFuncs alteredFuncs = getFuncDiff oldFuncMeta newFuncMeta
       overloadedFuncs = getOverloadedFuncs existingFuncs newFuncMeta
 
@@ -349,6 +349,10 @@ purgeDependentObject schemaObjId = case schemaObjId of
   (SOTableObj qt (TOTrigger trn)) -> do
     liftTx $ delEventTriggerFromCatalog trn
     delEventTriggerFromCache qt trn
+
+  (SOTableObj qt (TOComputedColumn ccn)) -> do
+    deleteComputedColumnFromCache qt ccn
+    dropComputedColumnFromCatalog qt ccn
 
   _ -> throw500 $
     "unexpected dependent object : " <> reportSchemaObj schemaObjId

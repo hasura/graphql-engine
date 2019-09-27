@@ -23,8 +23,8 @@ import qualified Data.Sequence                 as Seq
 import qualified Database.PG.Query             as Q
 
 
-data RawFuncInfo
-  = RawFuncInfo
+data RawFunctionInfo
+  = RawFunctionInfo
   { rfiHasVariadic      :: !Bool
   , rfiFunctionType     :: !FunctionType
   , rfiReturnTypeSchema :: !SchemaName
@@ -37,7 +37,7 @@ data RawFuncInfo
   , rfiReturnsTable     :: !Bool
   , rfiDescription      :: !(Maybe PGDescription)
   } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 3 snakeCase) ''RawFuncInfo)
+$(deriveJSON (aesonDrop 3 snakeCase) ''RawFunctionInfo)
 
 mkFunctionArgs :: Int -> [QualifiedPGType] -> [FunctionArgName] -> [FunctionArg]
 mkFunctionArgs defArgsNo tys argNames =
@@ -66,7 +66,7 @@ validateFuncArgs args =
     invalidArgs = filter (not . G.isValidName) $ map G.Name funcArgsText
 
 mkFunctionInfo
-  :: QErrM m => QualifiedFunction -> RawFuncInfo -> m FunctionInfo
+  :: QErrM m => QualifiedFunction -> RawFunctionInfo -> m FunctionInfo
 mkFunctionInfo qf rawFuncInfo = do
   -- throw error if function has variadic arguments
   when hasVariadic $ throw400 NotSupported "function with \"VARIADIC\" parameters are not supported"
@@ -87,7 +87,7 @@ mkFunctionInfo qf rawFuncInfo = do
       retTable = typeToTable returnType
   return $ FunctionInfo qf False funTy funcArgsSeq retTable [dep] descM
   where
-    RawFuncInfo hasVariadic funTy rtSN retN retTyType retSet
+    RawFunctionInfo hasVariadic funTy rtSN retN retTyType retSet
                 inpArgTyps inpArgNames defArgsNo returnsTab descM
                 = rawFuncInfo
     returnType = QualifiedPGType rtSN retN retTyType
@@ -126,7 +126,7 @@ trackFunctionP1 (TrackFunction qf) = do
     throw400 NotSupported $ "table with name " <> qf <<> " already exists"
 
 trackFunctionP2Setup :: (QErrM m, CacheRWM m, MonadTx m)
-                     => QualifiedFunction -> RawFuncInfo -> m ()
+                     => QualifiedFunction -> RawFunctionInfo -> m ()
 trackFunctionP2Setup qf rawfi = do
   fi <- mkFunctionInfo qf rawfi
   let retTable = fiReturnType fi
@@ -162,7 +162,7 @@ handleMultipleFunctions qf = \case
     throw400 NotSupported $
     "function " <> qf <<> " is overloaded. Overloaded functions are not supported"
 
-fetchRawFunctioInfo :: MonadTx m => QualifiedFunction -> m RawFuncInfo
+fetchRawFunctioInfo :: MonadTx m => QualifiedFunction -> m RawFunctionInfo
 fetchRawFunctioInfo qf@(QualifiedObject sn fn) = do
   handleMultipleFunctions qf =<< map (Q.getAltJ . runIdentity) <$> fetchFromDatabase
   where

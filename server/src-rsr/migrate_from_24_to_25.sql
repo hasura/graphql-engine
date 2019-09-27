@@ -10,6 +10,23 @@ PRIMARY KEY (table_schema, table_name, computed_column_name),
 FOREIGN KEY (table_schema, table_name) REFERENCES hdb_catalog.hdb_table(table_schema, table_name) ON UPDATE CASCADE
   );
 
+CREATE VIEW hdb_catalog.hdb_computed_column_function AS
+(
+  SELECT
+    table_schema,
+    table_name,
+    computed_column_name,
+    CASE
+      WHEN (definition::jsonb -> 'function')::jsonb ->> 'name' IS NULL THEN definition::jsonb ->> 'function'
+      ELSE (definition::jsonb -> 'function')::jsonb ->> 'name'
+    END AS function_name,
+    CASE
+      WHEN (definition::jsonb -> 'function')::jsonb ->> 'schema' IS NULL THEN 'public'
+      ELSE (definition::jsonb -> 'function')::jsonb ->> 'schema'
+    END AS function_schema
+  FROM hdb_catalog.hdb_computed_column
+);
+
 CREATE OR REPLACE VIEW hdb_catalog.hdb_function_agg AS
 (
 SELECT
@@ -66,7 +83,8 @@ SELECT
       ) q
    ) AS input_arg_types,
   to_json(COALESCE(p.proargnames, ARRAY [] :: text [])) AS input_arg_names,
-  p.pronargdefaults AS default_args
+  p.pronargdefaults AS default_args,
+  p.oid::integer AS function_oid
 FROM
   pg_proc p
   JOIN pg_namespace pn ON (pn.oid = p.pronamespace)
