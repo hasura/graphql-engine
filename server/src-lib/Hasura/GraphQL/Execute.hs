@@ -1,11 +1,11 @@
 {-# LANGUAGE DisambiguateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns           #-}
+{-# LANGUAGE DataKinds                #-}
 module Hasura.GraphQL.Execute
   ( QExecPlanResolved(..)
   , QExecPlanUnresolved(..)
   , QExecPlanPartial(..)
   , QExecPlan(..)
-  , Batch(..)
   , getExecPlanPartial
   , getOpTypeFromExecOp
 
@@ -79,30 +79,31 @@ data QExecPlanCore a
 data QExecPlanResolved
   = ExPHasura !ExecOp
   | ExPRemote !VQ.RemoteTopField
-  -- | ExPMixed !ExecOp (NonEmpty RemoteRelField)
+  -- | ExPMixed !ExecOp (NonEmpty RemoteRelBranch)
   deriving Show
 
 
-mkQuery :: G.OperationType -> BatchInputs -> QExecPlanUnresolved -> (Batch, VQ.RemoteTopField)
-mkQuery rtqOperationType BatchInputs{..} QExecPlanUnresolved{..}  =
-  let RemoteRelField{..} = remoteRelField
-      indexedRows = enumerateRowAliases $ toList biRows
+-- | Split the 'rrSelSet' from the 'RemoteRelBranch'
+mkQuery :: G.OperationType -> JoinArguments -> QExecPlanUnresolved -> (RemoteRelBranch 'RRF_Splice, VQ.RemoteTopField)
+mkQuery rtqOperationType JoinArguments{..} QExecPlanUnresolved{..}  =
+  let RemoteRelBranch{..} = remoteRelField
+      indexedRows = enumerateRowAliases $ toList joinArguments
       rtqFields =
-        flip map indexedRows $ \(alias, variables) ->
+        flip map indexedRows $ \(alias, varArgs) ->
            fieldCallsToField
              rrArguments
-             variables
+             varArgs
              rrSelSet
              alias
              (rtrRemoteFields rrRemoteRelationship)
-   in (produceBatch remoteRelField biCardinality, VQ.RemoteTopField{..})
-    
+   in (rrFieldToSplice remoteRelField, VQ.RemoteTopField{..})
+
 
 data QExecPlan = Leaf QExecPlanResolved | Tree QExecPlanResolved (NonEmpty QExecPlanUnresolved)
   deriving Show
 data QExecPlanUnresolved 
   = QExecPlanUnresolved 
-  { remoteRelField      :: RemoteRelField
+  { remoteRelField      :: RemoteRelBranch 'RRF_Tree
   , rtqRemoteSchemaInfo :: RemoteSchemaInfo
   } deriving Show
 
@@ -249,7 +250,7 @@ getExecPlan pgExecCtx planCache userInfo@UserInfo{..} sqlGenCtx enableAL sc scVe
                 -- mapM_ (addPlanToCache . EP.RPSubs) planM
                 pure $ Leaf . ExPHasura $ ExOpSubs lqOp
 
-    mkUnresolvedPlans :: MonadError QErr m => NonEmpty RemoteRelField -> m (NonEmpty QExecPlanUnresolved)
+    mkUnresolvedPlans :: MonadError QErr m => NonEmpty (RemoteRelBranch 'RRF_Tree) -> m (NonEmpty QExecPlanUnresolved)
     mkUnresolvedPlans = traverse (\remoteRelField -> QExecPlanUnresolved remoteRelField <$> getRsi remoteRelField)
       where
         getRsi remoteRel =

@@ -108,8 +108,8 @@ parseRemoteArguments j =
     _                -> fail "Remote arguments should be an object of keys."
 
 -- | For some 'FieldCall', for instance, associates a field argument name with
--- either a scalar value or some 'G.Variable' we are closed over (brought into
--- scope, e.g. in 'rtrHasuraFields'.
+-- either a list of either scalar values or some 'G.Variable' we are closed
+-- over (brought into scope, e.g. in 'rtrHasuraFields'.
 newtype RemoteArguments =
   RemoteArguments
     { getRemoteArguments :: [G.ObjectFieldG G.Value]
@@ -121,7 +121,9 @@ instance ToJSON RemoteArguments where
 instance FromJSON RemoteArguments where
   parseJSON = parseRemoteArguments
 
--- | https://graphql.github.io/graphql-spec/June2018/#sec-Language.Arguments 
+-- | Associates a field name with the arguments it will be passed in the query.
+--
+-- https://graphql.github.io/graphql-spec/June2018/#sec-Language.Arguments 
 --
 -- TODO we don't seem to support empty RemoteArguments (like 'hello'), but this seems arbitrary:
 data FieldCall =

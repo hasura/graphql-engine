@@ -33,10 +33,11 @@ runGQ
   -> m (HttpResponse EncJSON)
 runGQ reqId userInfo reqHdrs req = do
   E.ExecutionCtx _ sqlGenCtx pgExecCtx planCache sc scVer _ enableAL <- ask
+  -- One for each top-level field in the client's query:
   execPlans <-
     E.getExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
-  results <-
-    forM execPlans $ \execPlan ->
+  topLevelResults <-
+    forM execPlans $ \execPlan -> do
       case execPlan of
         E.Leaf plan -> runLeafPlan plan
         E.Tree resolvedPlan unresolvedPlansNE -> do
@@ -62,14 +63,14 @@ runGQ reqId userInfo reqHdrs req = do
                  (E.encodeGQRespValue
                     (E.joinResults initValue results))
               Nothing
-  let mergedRespResult = mergeResponseData (fmap _hrBody results)
+  let mergedRespResult = mergeResponseData (fmap _hrBody topLevelResults)
   case mergedRespResult of
     Left e ->
       throw400
         UnexpectedPayload
         ("could not merge data from results: " <> T.pack e)
     Right mergedResp ->
-      pure (HttpResponse mergedResp (foldMap _hrHeaders results))
+      pure (HttpResponse mergedResp (foldMap _hrHeaders topLevelResults))
   where
     runLeafPlan = \case
       E.ExPHasura resolvedOp -> do

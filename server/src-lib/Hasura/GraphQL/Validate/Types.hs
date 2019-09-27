@@ -658,6 +658,7 @@ type FragDefMap = Map.HashMap G.Name FragDef
 type AnnVarVals =
   Map.HashMap G.Variable AnnInpVal
 
+-- TODO document me
 data AnnInpVal
   = AnnInpVal
   { _aivType     :: !G.GType

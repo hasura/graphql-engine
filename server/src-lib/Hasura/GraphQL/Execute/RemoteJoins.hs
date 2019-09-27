@@ -1,16 +1,17 @@
 {-# LANGUAGE DisambiguateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns           #-}
 {-# LANGUAGE ViewPatterns             #-}
+{-# LANGUAGE PolyKinds                #-}
+{-# LANGUAGE DataKinds                #-}
+{-# LANGUAGE StandaloneDeriving       #-}
 
 module Hasura.GraphQL.Execute.RemoteJoins
-  ( Batch(..)
-  , BatchInputs(..)
-  , RemoteRelField(..)
+  ( JoinArguments(..)
+  , RemoteRelBranch(..), RRF_P(..), rrFieldToSplice
   , GQRespValue(..), gqRespData, gqRespErrors
   , encodeGQRespValue
   , parseGQRespValue
   , extractRemoteRelArguments
-  , produceBatch
   , joinResults
   , emptyResp
   , rebuildFieldStrippingRemoteRels
@@ -41,7 +42,6 @@ import qualified Data.HashMap.Strict.InsOrd             as OHM
 import qualified Data.IntMap.Strict                     as IntMap
 import qualified Data.List.NonEmpty                     as NE
 import qualified Data.Sequence                          as Seq
-import qualified Data.String.Conversions                as CS
 import qualified Data.Text                              as T
 import qualified Data.Vector                            as Vec
 import qualified Hasura.GraphQL.Validate                as VQ
@@ -55,17 +55,18 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Value
 
--- | Like a 'VQ.Field' but with a path indicating where its response should be
--- spliced back into the hasura result.
+-- | When parameterised by 'RRF_Tree' this is like a 'VQ.Field' but with a path
+-- indicating where its response should be spliced back into the hasura result.
 --
--- We parameterise this 
-data RemoteRelField =
-  RemoteRelField
-    { rrRemoteRelationship   :: !RemoteRelationship
+-- When parameterised by 'RRF_Splice' this represents just the metadata needed to
+-- splice our remote result.
+data RemoteRelBranch (p :: RRF_P) =
+  RemoteRelBranch
+    { rrRemoteRelationship :: !RemoteRelationship
     -- ^ The hasura to remote schema field mapping.
-    , rrArguments     :: !ArgsMap
+    , rrArguments     :: !(Param p ArgsMap)
     -- ^ User-provided arguments. See '_fArguments'.
-    , rrSelSet        :: !SelSet
+    , rrSelSet        :: !(Param p SelSet)
     -- ^ Selection set of 'rrAlias' (may be empty)
     , rrRelFieldPath  :: !RelFieldPath
     -- ^ Splice path.
@@ -80,7 +81,31 @@ data RemoteRelField =
     -- ^ Hasura fields which are not in the selection set, but are required as
     -- parameters to satisfy the remote join.
     }
-  deriving (Show)
+deriving instance Show (RemoteRelBranch 'RRF_Tree)
+deriving instance Show (RemoteRelBranch 'RRF_Splice)
+
+-- Trying out this pattern in a low-stakes setting: this lets us express
+-- variations of a data type but with less friction or boilerplate than if the
+-- parameter were a 'Functor' directly, say. Concretely e.g. code does not need
+-- to unwrap an Identity when accessing rrSelSet.
+--
+-- Related or complimentary:
+--   https://hackage.haskell.org/package/higgledy 
+--   https://reasonablypolymorphic.com/blog/higher-kinded-data/ 
+--   https://hackage.haskell.org/package/barbies
+
+-- | This could live in "Hasura.Prelude" if we want to do this elsewhere.
+type family Param (p :: k) x
+-- DataKinds:
+data RRF_P = RRF_Tree | RRF_Splice
+-- Use the special parameter to determine whether to keep or drop fields (when
+-- used just as a splice):
+type instance Param 'RRF_Tree   a = a
+type instance Param 'RRF_Splice a = () -- or Void? But then we can't derive Show etc.
+-- Maybe barbie takes care of some boilerplate here?
+rrFieldToSplice :: RemoteRelBranch 'RRF_Tree -> RemoteRelBranch 'RRF_Splice
+rrFieldToSplice RemoteRelBranch{..} = RemoteRelBranch{rrArguments = (), rrSelSet = (), ..}
+
 
 -- | A path of ordered keys (suitable for 'OJ.insert') allowing us to splice a
 -- remote result at a nested location.
@@ -110,13 +135,13 @@ bareNamedField _fName =
 -- 'getExecPlan', and finally executed in 'runGQ'.
 rebuildFieldStrippingRemoteRels
   :: VQ.Field 
-  -> Maybe (VQ.Field, NonEmpty RemoteRelField)
+  -> Maybe (VQ.Field, NonEmpty (RemoteRelBranch 'RRF_Tree))
   -- ^ NOTE: the ordering of the _fSelSet fields in the result 'VQ.Field' seems not to matter at 
   -- all for correctness here (based on experimentation)... I haven't puzzled out why yet.
 rebuildFieldStrippingRemoteRels =
   traverse NE.nonEmpty . flip runState mempty . rebuild 0 mempty
   where
-    rebuild :: Int -> RelFieldPath -> Field -> State [RemoteRelField] Field
+    rebuild :: Int -> RelFieldPath -> Field -> State [RemoteRelBranch 'RRF_Tree] Field
     rebuild idx0 parentPath field0 = do
       forMOf fSelSet field0 $ \ss0 ->
         fmap join $ flip Seq.traverseWithIndex ss0 $
@@ -130,10 +155,10 @@ rebuildFieldStrippingRemoteRels =
                  -- NOTE: this may result in redundant fields in the SELECT, but this seems fine.
                  -- NOTE: this sub-sequence is in arbitrary order, since coming from Set.
                  pure $ Seq.fromList $
-                   map bareNamedField $ toList hasuraFieldNames
+                   map bareNamedField $ toList requiredHasuraFields
 
                  where remoteRelField =
-                         RemoteRelField
+                         RemoteRelBranch
                            { rrRemoteRelationship = rmfRemoteRelationship
                            , rrArguments = _fArguments subfield
                            , rrSelSet = _fSelSet subfield
@@ -142,20 +167,19 @@ rebuildFieldStrippingRemoteRels =
                            , rrAliasIndex = idx
                            , rrPhantomFields =
                                coerce $ toList $
-                                 hasuraFieldNames `Set.difference` siblingSelections
+                                 requiredHasuraFields `Set.difference` siblingSelSetFields
                            }
-                       hasuraFieldNames = 
+                       requiredHasuraFields = 
                          coerceSet $ rtrHasuraFields rmfRemoteRelationship
       where
         thisPath = parentPath <> RelFieldPath (pure (idx0, _fAlias field0))
-        siblingSelections = Set.fromList $ toList $ fmap _fName $ _fSelSet field0
+        siblingSelSetFields = Set.fromList $ toList $ fmap _fName $ _fSelSet field0
 
 
 -- | Join the data returned from the original hasura request with the remote values.
-joinResults :: GQRespValue -> [(Batch, EncJSON)] -> GQRespValue
+joinResults :: GQRespValue -> [(RemoteRelBranch 'RRF_Splice, EncJSON)] -> GQRespValue
 joinResults hasuraValue0 =
   foldl' (uncurry . insertBatchResults) hasuraValue0 . map (fmap jsonToGQRespVal)
-
   where
     jsonToGQRespVal = either mkErr id . parseGQRespValue
     mkErr = appendJoinError emptyResp . ("joinResults: eitherDecode: " <>) . fromString
@@ -167,13 +191,13 @@ emptyResp = GQRespValue OJ.empty VB.empty
 -- | Insert at path, index the value in the larger structure.
 insertBatchResults ::
      GQRespValue
-  -- ^ Original hasura response
-  -> Batch
+  -- ^ Original hasura response, and accumulated/spliced remote responses
+  -> RemoteRelBranch 'RRF_Splice
   -> GQRespValue
   -- ^ Remote response
   -> GQRespValue
   -- ^ Original hasura response with accumulated remote responses and errors
-insertBatchResults accumResp Batch{..} remoteResp =
+insertBatchResults accumResp RemoteRelBranch{..} remoteResp =
   -- It's not clear what to do about errors here, or when to short-circuit so
   -- try to do as much computation as possible for now:
   case orderedTopLevelRemoteSelections of
@@ -181,38 +205,39 @@ insertBatchResults accumResp Batch{..} remoteResp =
       "did not find expected hasura alias prefex in all remote results: " <>
       fromString (show $ _gqRespData remoteResp)
     Just remoteData0 -> do
-      case inHashmap batchRelFieldPath accumData0 remoteData0 of
+      case inHashmap rrRelFieldPath accumData0 remoteData0 of
         Left err -> appendJoinError accumRespWithRemoteErrs err
-        -- TODO assert something about _remainingRemote?
-        Right (val, _remainingRemote) -> set gqRespData val accumRespWithRemoteErrs
+        Right (val, remainingRemotes) -> 
+          let finalRespVal = set gqRespData val accumRespWithRemoteErrs
+           in if null remainingRemotes
+                 then finalRespVal
+                 else appendJoinError finalRespVal $
+                        "Some remote fields unexpectedly remain after joining: " <>
+                        fromString (show remainingRemotes)
   where
     accumRespWithRemoteErrs = gqRespErrors <>~ _gqRespErrors remoteResp $ accumResp
     accumData0 = _gqRespData accumResp
     -- Re-sort expected aliases to account for naughty remotes that don't
     -- respect the ordering parts of spec. See 'enumerateRowAliases':
-    orderedTopLevelRemoteSelections = unEnumerateRowAliases $ OJ.toList $ _gqRespData remoteResp
+    orderedTopLevelRemoteSelections = 
+      unEnumerateRowAliases $ OJ.toList $ _gqRespData remoteResp
 
     inHashmap ::
          RelFieldPath
       -> OJ.Object
       -> [OJ.Value]
-      -- ^ The top-level selection set of remote result, sorted.
+      -- ^ Initially: the top-level selection set of remote result, ordered.
       -> Either GQJoinError (OJ.Object, [OJ.Value])
       -- ^ Accumulated joined response JSON, along with remaining remote top-level field responses
     inHashmap (RelFieldPath p) accumData remoteDataVals = case p of
+      -- we've reached the end of the path, so expect to splice
+      -- NOTE: this is the ONLY base case for mutually-recursive inHashmap/inValue:
       Seq.Empty ->
         case remoteDataVals of
-          [] -> Left $ err <> showHashO accumData
-            where err = case batchCardinality of
-                          One -> "Expected one remote object but got none, while traversing "
-                          Many -> "Expected many objects but got none, while traversing "
-
-          (remoteDataVal:rest)
-            | batchCardinality == One && not (null rest) ->
-                Left $
-                  "Expected one remote object but got many, while traversing " <> showHashO accumData
-            | otherwise ->
-                (, rest) <$> spliceRemote remoteDataVal accumData
+          [] -> Left $ "Expected one or more remote object but got none, while traversing " 
+                    <> showHashO accumData
+          (remoteDataVal:rest) -> 
+            (, rest) <$> spliceRemote remoteDataVal accumData
 
       ((idx, G.Alias (G.Name key)) Seq.:<| rest) ->
         case OJ.lookup key accumData of
@@ -251,19 +276,17 @@ insertBatchResults accumResp Batch{..} remoteResp =
                 -- do we need to assert something about the Right.snd of the result here?
                 -- the remainingRemotes tail (xs) is tossed away (I think?) in caller
                 Seq.Empty ->
-                  case batchCardinality of
-                    Many -> foldHasuraRowObjs $
-                      \(hasuraRowsSoFar, remainingRemotes) accumData ->
-                         case remainingRemotes of
-                           [] ->
-                             Left $
-                               "no remote objects left for joining at " <> showHashO accumData
-                           (remoteDataVal:rest) -> do
-                             spliced <- spliceRemote remoteDataVal accumData
-                             pure
-                               (OJ.Object spliced : hasuraRowsSoFar , rest)
-                    One ->
-                      Left "Cardinality mismatch: found array in hasura value, but expected object"
+                  -- Since we've reached the end of the path in an Array, we
+                  -- assume this splice has cardinality > 1 (i.e. we map it)
+                  foldHasuraRowObjs $ \(hasuraRowsSoFar, remainingRemotes) accumData ->
+                     case remainingRemotes of
+                       [] ->
+                         Left $
+                           "no remote objects left for joining at " <> showHashO accumData
+                       (remoteDataVal:rest) -> do
+                         spliced <- spliceRemote remoteDataVal accumData
+                         pure
+                           (OJ.Object spliced : hasuraRowsSoFar , rest)
 
                 nonEmptyPath -> foldHasuraRowObjs $
                   \(hasuraRowsSoFar, remainingRemotes) accumData ->
@@ -282,7 +305,8 @@ insertBatchResults accumResp Batch{..} remoteResp =
     -- at the right index), removing phantom fields
     spliceRemote :: OJ.Value -> OJ.Object -> Either GQJoinError OJ.Object 
     spliceRemote remoteDataVal accumData = do
-      peeledValue <- peelOffNestedFields batchNestedFields remoteDataVal
+      let nestedFields = fmap fcName $ rtrRemoteFields rrRemoteRelationship
+      peeledValue <- peelOffNestedFields nestedFields remoteDataVal
       pure $
         -- Strip phantom fields
         foldl' (flip OJ.delete)
@@ -291,10 +315,10 @@ insertBatchResults accumResp Batch{..} remoteResp =
                 -- TODO Brandon note:
                 -- should we delete first? how do we know batchRelationshipKeyToMake isn't in batchPhantoms? Document.
                (OJ.insert
-                  (batchRelationshipKeyIndex, batchRelationshipKeyToMake)
+                  (rrAliasIndex, coerce rrAlias)
                   peeledValue
                   accumData)
-               batchPhantoms
+               rrPhantomFields
 
     -- logging helpers:
     showHash = fromString . show . OJ.toEncJSON
@@ -317,40 +341,7 @@ peelOffNestedFields topNames topValue = foldM peel topValue (NE.drop 1 topNames)
             show topValue <> " with " <> show topNames
 
 
--- TODO In what sense is this a "batch"?
-data Batch =
-  Batch
-    { batchRelFieldPath          :: !RelFieldPath
-    -- ^ See 'rrRelFieldPath'.
-    , batchRelationshipKeyToMake :: !Text
-    -- ^ See 'rrAlias'
-    , batchRelationshipKeyIndex  :: !Int
-    -- ^ Insertion index in target object. See 'rrAliasIndex'.
-    , batchCardinality           :: !Cardinality
-    -- ^ See 'biCardinality'
-    , batchNestedFields          :: !(NonEmpty G.Name)
-    -- ^ See 'rtrRemoteFields'.
-    , batchPhantoms              :: ![Text]
-    -- ^ See 'rrPhantomFields'.
-    } deriving (Show)
-
--- | Produce batch queries for a given remote relationship.
-produceBatch ::
-     RemoteRelField
-  -> Cardinality
-  -> Batch
-produceBatch RemoteRelField{..} batchCardinality =
-  Batch{..}
-  where
-    batchRelationshipKeyToMake = G.unName (G.unAlias rrAlias)
-    batchNestedFields =
-      fmap fcName $ rtrRemoteFields rrRemoteRelationship
-    -- TODO These might be good candidates for reusing names with DuplicateRecordFields if they have the same semantics:
-    batchRelationshipKeyIndex = rrAliasIndex
-    batchPhantoms = rrPhantomFields
-    batchRelFieldPath = rrRelFieldPath
-
--- | Tag 'biRows' list with enumerated aliases we can use to recover the
+-- | Tag 'joinArguments' list with enumerated aliases we can use to recover the
 -- original order of the input list here, from the remote results (even if the
 -- remote is not well-behaved wrt ordering.
 --
@@ -377,12 +368,15 @@ unEnumerateRowAliases = fmap (map snd . sortOn fst) . mapM (mapMOf _1 toInt)
 hasuraAliasTag :: Text
 hasuraAliasTag = "hasura_array_idx_"
 
--- | Produce a field from the nested field calls.
+-- | Fold nested 'FieldCall's into a bare 'Field', inserting the passed
+-- selection set at the leaf of the tree we construct.
 fieldCallsToField ::
      Map.HashMap G.Name AnnInpVal
   -> Map.HashMap G.Variable G.ValueConst
   -> SelSet
+  -- ^ Inserted at leaf of nested FieldCalls
   -> G.Alias
+  -- ^ Top-level name to set for this Field
   -> NonEmpty FieldCall
   -> Field
 fieldCallsToField rrArguments variables finalSelSet topAlias = 
@@ -480,25 +474,25 @@ toAnnGValue =
                  keys)))
 
 -- | We use this in 'extractRemoteRelArguments' for bookkeeping while
--- preserving the order of the @[RemoteRelField]@ input.
+-- preserving the order of the @[RemoteRelBranch]@ input.
 type RemoteRelKey = Int
 type RemoteRelKeyMap = IntMap.IntMap
 
 -- | Extract from the Hasura results the remote relationship arguments.
 extractRemoteRelArguments ::
      EncJSON
-  -> [RemoteRelField]
+  -> [RemoteRelBranch 'RRF_Tree]
   -- ^ NOTE: This function only makes use of rrRelFieldPath, and 
-  -- (rtrHasuraFields . rmfRemoteRelationship . rrRemoteField); maybe refactor.
-  -> ( GQRespValue , [ BatchInputs ])
-  -- ^ Errors are accumulated in GQRespValue. [BatchInputs] may be empty.
+  -- (rtrHasuraFields . rrRemoteRelationship); maybe refactor.
+  -> ( GQRespValue , [ JoinArguments ])
+  -- ^ Errors are accumulated in GQRespValue. [JoinArguments] may be empty.
 extractRemoteRelArguments hasuraJson rels =
   case parseGQRespValue hasuraJson of
     Left (fromString-> err) ->
       (appendJoinError emptyResp $ "decode error: " <> err, [])
     Right gqResp@GQRespValue{..} -> do
       let bisE = IntMap.elems <$> -- N.B. elems in ascending RemoteRelKey order
-            execStateT (go One (keyRemotes rels) (OJ.Object _gqRespData)) mempty
+            execStateT (go (keyRemotes rels) (OJ.Object _gqRespData)) mempty
       case bisE of
         Left err  -> (appendJoinError gqResp err, [])
         Right bis -> (gqResp, bis)
@@ -511,13 +505,12 @@ extractRemoteRelArguments hasuraJson rels =
     insertWithCons  m k v =    Map.insertWith (<>) k (pure v) m
     insertWithConsI m k v = IntMap.insertWith (<>) k (pure v) m
 
-    go :: Cardinality
-       -> [(RemoteRelKey, (RelFieldPath, Set FieldName))]
+    go :: [(RemoteRelKey, (RelFieldPath, Set FieldName))]
        -> OJ.Value
-       -> StateT (RemoteRelKeyMap BatchInputs) (Either GQJoinError) ()
-    go biCardinality keyedRemotes hasuraResp =
+       -> StateT (RemoteRelKeyMap JoinArguments) (Either GQJoinError) ()
+    go keyedRemotes hasuraResp =
       case hasuraResp of
-        OJ.Array values -> mapM_ (go Many keyedRemotes) values
+        OJ.Array values -> mapM_ (go keyedRemotes) values
         OJ.Object hasuraRespObj -> do
           remotesRows :: RemoteRelKeyMap [(G.Variable, G.ValueConst)] <-
             foldM
@@ -526,7 +519,7 @@ extractRemoteRelArguments hasuraJson rels =
                    (Just key, (remoteRelKeys, unfinishedKeyedRemotes)) -> 
                      case OJ.lookup key hasuraRespObj of
                        Just subvalue -> do
-                         go biCardinality unfinishedKeyedRemotes subvalue
+                         go unfinishedKeyedRemotes subvalue
                          pure
                            (foldl'
                               (\remoteRows' remoteRelKey ->
@@ -550,8 +543,13 @@ extractRemoteRelArguments hasuraJson rels =
               mempty
               (Map.toList $ foldCandidates keyedRemotes)
 
+          -- TODO The way we use State but still for some reason need to thread
+          -- the map through a pile of nested folds is really confusing. This
+          -- can be cleaned up if we can just use mapM_s and stateful ops
+          -- directly at leaves, but maybe this tortured code is to get the
+          -- ordering we need...
           modify $ IntMap.unionWith (flip (<>)) $
-            (\biRows -> BatchInputs{..}) . Seq.singleton . Map.fromList <$> remotesRows
+            JoinArguments . Seq.singleton . Map.fromList <$> remotesRows
 
         -- scalar values are the base case; assert no remotes left:
         -- NOTE: keyedRemotes may be non-empty here when permissions have filtered hasura results:
@@ -591,33 +589,16 @@ extractRemoteRelArguments hasuraJson rels =
           pure (Just key, Right (remoteRelKey, (RelFieldPath xs, hasuraFields)))
 
 
-data BatchInputs =
-  BatchInputs
-    { biRows        :: !(Seq.Seq (Map.HashMap G.Variable G.ValueConst))
-      -- ^ The results from hasura that are required to make the requests to
-      -- satisfy the remote joins. 
-      --
-      -- Each element of the 'Seq' corresponds to an ordered top-level
-      -- selection in the remote query. The map key corresponds to the
-      -- @hasura_fields@ from the @create_remote_relationship@ configuration.
-    , biCardinality :: Cardinality
-    -- ^ Used for validation in 'insertBatchResults'.
-    --
-    -- TODO how exactly does this work...?
-    } deriving (Show)
+-- | The results from hasura as variable bindings that are required to make the
+-- remote requests to satisfy the remote joins. 
+--
+-- Each element of the 'Seq' corresponds to an ordered top-level selection in
+-- the remote query. The map key corresponds to the @hasura_fields@ from the
+-- @create_remote_relationship@ configuration.
+newtype JoinArguments = 
+  JoinArguments { joinArguments :: Seq.Seq (Map.HashMap G.Variable G.ValueConst) } 
+  deriving (Show, Semigroup)
 
--- See 'extractFromResult':
-instance Semigroup BatchInputs where
-  (<>) (BatchInputs r1 c1) (BatchInputs r2 c2) =
-    BatchInputs (r1 <> r2) (c1 <> c2)
-
-data Cardinality = Many | One
- deriving (Eq, Show)
-
-instance Semigroup Cardinality where
-    (<>) _ Many  = Many
-    (<>) Many _  = Many
-    (<>) One One = One
 
 
 -- | Convert a JSON value to a GraphQL value.
