@@ -53,11 +53,12 @@ convWildcard
   -> SelPermInfo
   -> Wildcard
   -> m [ExtCol]
-convWildcard fieldInfoMap (SelPermInfo cols _ _ _ _ _) wildcard =
+convWildcard fieldInfoMap selPermInfo wildcard =
   case wildcard of
   Star         -> return simpleCols
   (StarDot wc) -> (simpleCols ++) <$> (catMaybes <$> relExtCols wc)
   where
+    cols = spiCols selPermInfo
     pgCols = map pgiColumn $ getCols fieldInfoMap
     relColInfos = getRels fieldInfoMap
 

@@ -196,6 +196,7 @@ $(deriveToJSON (aesonDrop 3 snakeCase) ''InsPermInfo)
 data SelPermInfo
   = SelPermInfo
   { spiCols            :: !(HS.HashSet PGCol)
+  , spiComputedCols    :: !(HS.HashSet ComputedColumnName)
   , spiTable           :: !QualifiedTable
   , spiFilter          :: !AnnBoolExpPartialSQL
   , spiLimit           :: !(Maybe Int)

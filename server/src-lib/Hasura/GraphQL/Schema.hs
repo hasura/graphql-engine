@@ -453,7 +453,7 @@ getSelPerm tableCache fields role selPermInfo = do
                              , _rfiIsNullable = isRelNullable fields relInfo
                              }
 
-  computedColFlds <- fmap catMaybes $ forM computedCols $ \info -> do
+  computedColFlds <- fmap catMaybes $ forM computedColumns $ \info -> do
     let ComputedColumnInfo name function returnTy _ = info
         ComputedColumnFunction _ inputArgs tableArg _ = function
         inputArgSeq = mkFuncArgSeq $ functionArgsWithoutTableArg tableArg inputArgs
@@ -478,12 +478,12 @@ getSelPerm tableCache fields role selPermInfo = do
   where
     validRels = getValidRels fields
     validCols = getValidCols fields
-    computedCols = getComputedCols fields
-    cols = catMaybes $ flip map validCols $
-              \colInfo -> fmap SFPGColumn $ bool Nothing (Just colInfo) $
-                          Set.member (pgiColumn colInfo) allowedCols
+    cols = map SFPGColumn $ getColInfos (toList allowedCols) validCols
+    computedColumns = flip filter (getComputedCols fields) $
+                      \info -> _cciName info `Set.member` allowedComputedCols
 
     allowedCols = spiCols selPermInfo
+    allowedComputedCols = spiComputedCols selPermInfo
 
 mkInsCtx
   :: MonadError QErr m
