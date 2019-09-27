@@ -34,6 +34,7 @@ dataApisContent.push({
     method: 'POST',
     url: getUrl('/v1/graphql'),
     headers: defaultHeader,
+    headersInitialised: false,
     bodyType: 'graphql',
     params: JSON.stringify({}, null, 4),
   },

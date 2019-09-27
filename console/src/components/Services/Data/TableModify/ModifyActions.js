@@ -36,6 +36,7 @@ import {
   getCreatePkSql,
   getDropPkSql,
 } from './utils';
+import { CLI_CONSOLE_MODE } from '../../../../constants';
 
 const DELETE_PK_WARNING =
   'Without a primary key there is no way to uniquely identify a row of a table';
@@ -1047,7 +1048,7 @@ const deleteColumnSql = (column, tableSchema) => {
     const errorMsg = 'Deleting column failed';
 
     const customOnSuccess = (data, consoleMode, migrationMode) => {
-      if (consoleMode === 'cli' && migrationMode) {
+      if (consoleMode === CLI_CONSOLE_MODE && migrationMode) {
         // show warning information
         dispatch(
           showWarningNotification(

@@ -1,3 +1,5 @@
+import { ADMIN_SECRET_HEADER_KEY } from '../../src/constants';
+
 export const baseUrl = Cypress.config('baseUrl');
 export const dataTypes = [
   'serial',
@@ -41,7 +43,7 @@ export const makeDataAPIOptions = (dataApiUrl, key, body) => ({
   method: 'POST',
   url: makeDataAPIUrl(dataApiUrl),
   headers: {
-    'x-hasura-admin-secret': key,
+    [ADMIN_SECRET_HEADER_KEY]: key,
   },
   body,
   failOnStatusCode: false,
