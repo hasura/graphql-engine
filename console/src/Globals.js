@@ -2,6 +2,7 @@ import { SERVER_CONSOLE_MODE } from './constants';
 import { getFeaturesCompatibility } from './helpers/versionUtils';
 import { stripTrailingSlash } from './components/Common/utils/urlUtils';
 
+// TODO: move this section to a more appropriate location
 /* set helper tools into window */
 
 import sqlFormatter from './helpers/sql-formatter.min';
@@ -25,10 +26,11 @@ const globals = {
   dataApiUrl: stripTrailingSlash(window.__env.dataApiUrl),
   devDataApiUrl: window.__env.devDataApiUrl,
   nodeEnv: window.__env.nodeEnv,
-  adminSecret: window.__env.adminSecret || null, // will be updated after login/logout
-  isAdminSecretSet: window.__env.isAdminSecretSet || false,
+  adminSecret: window.__env.adminSecret || null, // gets updated after login/logout in server mode
+  isAdminSecretSet:
+    window.__env.isAdminSecretSet || window.__env.adminSecret || false,
   consoleMode: window.__env.consoleMode || SERVER_CONSOLE_MODE,
-  urlPrefix: stripTrailingSlash(window.__env.urlPrefix) || '',
+  urlPrefix: stripTrailingSlash(window.__env.urlPrefix || '/'),
   enableTelemetry: window.__env.enableTelemetry,
   telemetryTopic:
     window.__env.nodeEnv !== 'development' ? 'console' : 'console_test',
@@ -45,12 +47,13 @@ if (globals.consoleMode === SERVER_CONSOLE_MODE) {
     const consolePath = window.__env.consolePath;
     if (consolePath) {
       const currentUrl = stripTrailingSlash(window.location.href);
+      const currentPath = stripTrailingSlash(window.location.pathname);
+
       globals.dataApiUrl = currentUrl.slice(
         0,
         currentUrl.lastIndexOf(consolePath)
       );
 
-      const currentPath = stripTrailingSlash(window.location.pathname);
       globals.urlPrefix =
         currentPath.slice(0, currentPath.lastIndexOf(consolePath)) + '/console';
     } else {
