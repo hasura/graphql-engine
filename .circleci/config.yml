@@ -118,7 +118,8 @@ refs:
     - run:
         name: Run Python tests
         environment:
-          # circleci allocates 2 cpus per test container
+          # Setting default number of threads to 2
+          # since circleci allocates 2 cpus per test container
           GHCRTS: -N2
           HASURA_GRAPHQL_DATABASE_URL: 'postgres://gql_test:@localhost:5432/gql_test'
           HASURA_GRAPHQL_DATABASE_URL_2: 'postgres://gql_test:@localhost:5432/gql_test2'
@@ -150,7 +151,7 @@ jobs:
     - checkout
     - run:
         name: check build worthiness
-        command: mkdir -p /build/ciignore
+        command: .circleci/ciignore.sh
     - persist_to_workspace:
         root: /build
         paths:
