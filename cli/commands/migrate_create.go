@@ -56,6 +56,7 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	opts.flags = f
 	f.BoolVar(&opts.fromServer, "from-server", false, "get SQL statements and hasura metadata from the server")
 	f.StringVar(&opts.sqlFile, "sql-from-file", "", "path to an sql file which contains the SQL statements")
+	f.BoolVar(&opts.sqlFormat, "sql", false, "create up and down sql files")
 	f.BoolVar(&opts.sqlServer, "sql-from-server", false, "take pg_dump from server and save it as a migration")
 	f.StringArrayVar(&opts.schemaNames, "schema", []string{"public"}, "name of Postgres schema to export as migration")
 	f.StringVar(&opts.metaDataFile, "metadata-from-file", "", "path to a hasura metadata file to be used for up actions")
@@ -89,6 +90,7 @@ type migrateCreateOptions struct {
 	metaDataFile   string
 	metaDataServer bool
 	schemaNames    []string
+	sqlFormat      bool
 }
 
 func (o *migrateCreateOptions) run() (version int64, err error) {
@@ -172,6 +174,11 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 		// Set empty data for [up|down].yaml
 		createOptions.MetaUp = []byte(`[]`)
 		createOptions.MetaDown = []byte(`[]`)
+
+		if o.sqlFormat {
+			createOptions.SQLUp = []byte(``)
+			createOptions.SQLDown = []byte(``)
+		}
 	}
 
 	defer func() {
