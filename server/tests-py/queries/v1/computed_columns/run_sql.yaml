@@ -19,7 +19,7 @@
     type: run_sql
     args:
       sql: |
-        ALTER FUNCTION fetch_articles RENAME TO fetch_articles_renamed
+        ALTER FUNCTION fetch_articles(text, author) RENAME TO fetch_articles_renamed
   response:
     path: "$.args"
     error: 'cannot drop due to the following dependent objects : computed column author.get_articles'
@@ -32,7 +32,7 @@
     type: run_sql
     args:
       sql: |
-        ALTER FUNCTION fetch_articles VOLATILE
+        ALTER FUNCTION fetch_articles(text, author) VOLATILE
   response:
     path: "$.args"
     error: The type of function "fetch_articles" associated with computed column "get_articles"
