@@ -261,41 +261,6 @@ func (h *HasuraDB) Run(migration io.Reader, fileType, fileName string) error {
 	return nil
 }
 
-func (h *HasuraDB) Squash(migration io.Reader, fileType string, ret chan<- interface{}) error {
-	migr, err := ioutil.ReadAll(migration)
-	if err != nil {
-		return err
-	}
-	body := string(migr[:])
-	switch fileType {
-	case "sql":
-		if body == "" {
-			break
-		}
-		var t interface{}
-		t = HasuraInterfaceQuery{
-			Type: "run_sql",
-			Args: HasuraArgs{
-				SQL: string(body),
-			},
-		}
-		ret <- t
-		return nil
-
-	case "meta":
-		var t []interface{}
-		err := yaml.Unmarshal(migr, &t)
-		if err != nil {
-			return err
-		}
-		for _, v := range t {
-			ret <- v
-		}
-		return nil
-	}
-	return fmt.Errorf("Invalid migration file type")
-}
-
 func (h *HasuraDB) ResetQuery() {
 	h.migrationQuery.ResetArgs()
 }

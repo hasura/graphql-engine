@@ -104,7 +104,9 @@ type Driver interface {
 
 	Read(version uint64) (ok bool)
 
-	Squash(migration io.Reader, fileType string, ret chan<- interface{}) error
+	PushToList(migration io.Reader, fileType string, list *CustomList) error
+
+	Squash(list *CustomList, ret chan<- interface{})
 
 	SettingsDriver
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/qor/transition"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -23,8 +24,8 @@ func (h *HasuraInterfaceBulk) ResetArgs() {
 }
 
 type HasuraInterfaceQuery struct {
-	Type string      `json:"type" yaml:"type"`
-	Args interface{} `json:"args" yaml:"args"`
+	Type requestTypes `json:"type" yaml:"type"`
+	Args interface{}  `json:"args" yaml:"args"`
 }
 
 type HasuraQuery struct {
@@ -135,4 +136,241 @@ func (h *HasuraError) Error(isCMD bool) error {
 type HasuraSQLRes struct {
 	ResultType string     `json:"result_type"`
 	Result     [][]string `json:"result"`
+}
+
+type requestTypes string
+
+const (
+	trackTable                  requestTypes = "track_table"
+	addExistingTableOrView                   = "add_existing_table_or_view"
+	untrackTable                             = "untrack_table"
+	trackFunction                            = "track_function"
+	unTrackFunction                          = "untrack_function"
+	createObjectRelationship                 = "create_object_relationship"
+	createArrayRelationship                  = "create_array_relationship"
+	dropRelationship                         = "drop_relationship"
+	setRelationshipComment                   = "set_relationship_comment"
+	createInsertPermission                   = "create_insert_permission"
+	dropInsertPermission                     = "drop_insert_permission"
+	createSelectPermission                   = "create_select_permission"
+	dropSelectPermission                     = "drop_select_permission"
+	createUpdatePermission                   = "create_update_permission"
+	dropUpdatePermission                     = "drop_update_permission"
+	createDeletePermission                   = "create_delete_permission"
+	dropDeletePermission                     = "drop_delete_permission"
+	createEventTrigger                       = "create_event_trigger"
+	deleteEventTrigger                       = "delete_event_trigger"
+	addRemoteSchema                          = "add_remote_schema"
+	removeRemoteSchema                       = "remove_remote_schema"
+	createQueryCollection                    = "create_query_collection"
+	dropQueryCollection                      = "drop_query_collection"
+	addQueryToCollection                     = "add_query_to_collection"
+	dropQueryFromCollection                  = "drop_query_from_collection"
+	addCollectionToAllowList                 = "add_collection_to_allowlist"
+	dropCollectionFromAllowList              = "drop_collection_from_allowlist"
+	runSQL                                   = "run_sql"
+)
+
+type tableMap struct {
+	name, schema string
+}
+
+type relationshipMap struct {
+	tableName, schemaName, name string
+}
+
+type permissionMap struct {
+	tableName, schemaName, permType, Role string
+}
+
+type tableSchema struct {
+	Name   string `json:"name" yaml:"name"`
+	Schema string `json:"schema" yaml:"schema"`
+}
+
+type trackTableInput struct {
+	Schema string `json:"schema" yaml:"schema"`
+	Name   string `json:"name" yaml:"name"`
+	IsEnum bool   `json:"is_enum" yaml:"is_enum"`
+}
+
+type unTrackTableInput struct {
+	Table tableSchema `json:"table" yaml:"table"`
+}
+
+type trackFunctionInput struct {
+	Schema string `json:"schema" yaml:"schema"`
+	Name   string `json:"name" yaml:"name"`
+}
+
+type unTrackFunctionInput struct {
+	Schema string `json:"schema" yaml:"schema"`
+	Name   string `json:"name" yaml:"name"`
+}
+
+type createObjectRelationshipInput struct {
+	Name  string      `json:"name" yaml:"name"`
+	Table tableSchema `json:"table" yaml:"table"`
+	Using interface{} `json:"using" yaml:"using"`
+}
+
+type createArrayRelationshipInput struct {
+	Name  string      `json:"name" yaml:"name"`
+	Table tableSchema `json:"table" yaml:"table"`
+	Using interface{} `json:"using" yaml:"using"`
+}
+
+type setRelationshipCommentInput struct {
+	Name    string      `json:"name" yaml:"name"`
+	Table   tableSchema `json:"table" yaml:"table"`
+	Comment string      `json:"comment" yaml:"comment"`
+}
+
+type dropRelationshipInput struct {
+	RelationShip string      `json:"relationship" yaml:"relationship"`
+	Table        tableSchema `json:"table" yaml:"table"`
+}
+
+type createInsertPermissionInput struct {
+	Table      tableSchema `json:"table" yaml:"table"`
+	Role       string      `json:"role" yaml:"role"`
+	Permission interface{} `json:"permission" yaml:"permission"`
+}
+
+type dropInsertPermissionInput struct {
+	Table tableSchema `json:"table" yaml:"table"`
+	Role  string      `json:"role" yaml:"role"`
+}
+
+type createSelectPermissionInput struct {
+	Table      tableSchema `json:"table" yaml:"table"`
+	Role       string      `json:"role" yaml:"role"`
+	Permission interface{} `json:"permission" yaml:"permission"`
+}
+
+type dropSelectPermissionInput struct {
+	Table tableSchema `json:"table" yaml:"table"`
+	Role  string      `json:"role" yaml:"role"`
+}
+
+type createUpdatePermissionInput struct {
+	Table      tableSchema `json:"table" yaml:"table"`
+	Role       string      `json:"role" yaml:"role"`
+	Permission interface{} `json:"permission" yaml:"permission"`
+}
+
+type dropUpdatePermissionInput struct {
+	Table tableSchema `json:"table" yaml:"table"`
+	Role  string      `json:"role" yaml:"role"`
+}
+
+type createDeletePermissionInput struct {
+	Table      tableSchema `json:"table" yaml:"table"`
+	Role       string      `json:"role" yaml:"role"`
+	Permission interface{} `json:"permission" yaml:"permission"`
+}
+
+type dropDeletePermissionInput struct {
+	Table tableSchema `json:"table" yaml:"table"`
+	Role  string      `json:"role" yaml:"role"`
+}
+
+type createEventTriggerInput struct {
+	Name    string      `json:"name" yaml:"name"`
+	Table   tableSchema `json:"table" yaml:"table"`
+	Webhook string      `json:"webhook" yaml:"webhook"`
+	Insert  interface{} `json:"insert" yaml:"insert"`
+	Update  interface{} `json:"update" yaml:"update"`
+	Delete  interface{} `json:"delete" yaml:"delete"`
+	Headers interface{} `json:"headers" yaml:"headers"`
+	Replace bool        `json:"replace" yaml:"replace"`
+}
+
+type deleteEventTriggerInput struct {
+	Name string `json:"name" yaml:"name"`
+}
+
+type addRemoteSchemaInput struct {
+	Name       string      `json:"name" yaml:"name"`
+	Definition interface{} `json:"definition" yaml:"definition"`
+	Comment    string      `json:"comment" yaml:"comment"`
+}
+
+type removeRemoteSchemaInput struct {
+	Name string `json:"name" yaml:"name"`
+}
+
+type createQueryCollectionInput struct {
+	Name       string      `json:"name" yaml:"name"`
+	Comment    string      `json:"comment" yaml:"comment"`
+	Definition interface{} `json:"definition" yaml:"definition"`
+}
+
+type dropQueryCollectionInput struct {
+	Collection string `json:"name" yaml:"name"`
+	Cascade    bool   `json:"cascade" yaml:"cascade"`
+}
+
+type addQueryToCollectionInput struct {
+	CollectionName string `json:"collection_name" yaml:"collection_name"`
+	QueryName      string `json:"query_name" yaml:"query_name"`
+	Query          string `json:"query" yaml:"query"`
+}
+
+type dropQueryFromCollectionInput struct {
+	CollectionName string `json:"collection_name" yaml:"collection_name"`
+	QueryName      string `json:"query_name" yaml:"query_name"`
+}
+
+type addCollectionToAllowListInput struct {
+	Collection string `json:"collection" yaml:"collection"`
+}
+
+type dropCollectionFromAllowListInput struct {
+	Collection string `json:"collection" yaml:"collection"`
+}
+
+type runSQLInput struct {
+	SQL string `json:"sql" yaml:"sql"`
+}
+
+type tableConfig struct {
+	name, schema string
+	transition.Transition
+}
+
+type relationshipConfig struct {
+	tableName, schemaName, name string
+	transition.Transition
+}
+
+type permissionConfig struct {
+	tableName, schemaName, permType, role string
+	transition.Transition
+}
+
+type functionConfig struct {
+	name, schema string
+	transition.Transition
+}
+
+type eventTriggerConfig struct {
+	name string
+	transition.Transition
+}
+
+type remoteSchemaConfig struct {
+	name string
+	transition.Transition
+}
+
+type queryCollectionConfig struct {
+	name      string
+	allowList bool
+	transition.Transition
+}
+
+type allowListConfig struct {
+	collection string
+	transition.Transition
 }

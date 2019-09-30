@@ -6,6 +6,7 @@
 package migrate
 
 import (
+	"container/list"
 	"fmt"
 	"os"
 	"sync"
@@ -1031,6 +1032,12 @@ func (m *Migrate) squashMigrations(retUp <-chan interface{}, retDown <-chan inte
 		defer close(dataUp)
 		defer close(versions)
 
+		squashList := database.CustomList{
+			list.New(),
+		}
+
+		defer m.databaseDrv.Squash(&squashList, dataUp)
+
 		for r := range retUp {
 			if m.stop() {
 				return
@@ -1041,7 +1048,7 @@ func (m *Migrate) squashMigrations(retUp <-chan interface{}, retDown <-chan inte
 			case *Migration:
 				migr := r.(*Migration)
 				if migr.Body != nil {
-					if err := m.databaseDrv.Squash(migr.BufferedBody, migr.FileType, dataUp); err != nil {
+					if err := m.databaseDrv.PushToList(migr.BufferedBody, migr.FileType, &squashList); err != nil {
 						dataUp <- err
 					}
 				}
@@ -1058,6 +1065,12 @@ func (m *Migrate) squashMigrations(retUp <-chan interface{}, retDown <-chan inte
 	go func() {
 		defer close(dataDown)
 
+		squashList := database.CustomList{
+			list.New(),
+		}
+
+		defer m.databaseDrv.Squash(&squashList, dataDown)
+
 		for r := range retDown {
 			if m.stop() {
 				return
@@ -1068,7 +1081,7 @@ func (m *Migrate) squashMigrations(retUp <-chan interface{}, retDown <-chan inte
 			case *Migration:
 				migr := r.(*Migration)
 				if migr.Body != nil {
-					if err := m.databaseDrv.Squash(migr.BufferedBody, migr.FileType, dataDown); err != nil {
+					if err := m.databaseDrv.PushToList(migr.BufferedBody, migr.FileType, &squashList); err != nil {
 						dataDown <- err
 					}
 				}
