@@ -8,6 +8,7 @@ module Hasura.GraphQL.Execute
   , ExecPlanResolved
   , getResolvedExecPlan
   , execRemoteGQ
+  , getSubsOp
 
   , EP.PlanCache
   , EP.initPlanCache
