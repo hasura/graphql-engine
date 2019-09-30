@@ -39,8 +39,11 @@ let generateAliasingQuery = (
     }
   };
 
-  let upQuery = [| generateQuery(newRootFields, newColumnNames) |];
-  let downQuery = [| generateQuery(oldRootFields, oldColumnNames) |];
+  let upQuery = generateQuery(newRootFields, newColumnNames);
+  let downQuery = generateQuery(oldRootFields, oldColumnNames);
+
+  Js.log(upQuery);
+  Js.log(downQuery);
 
   (upQuery, downQuery);
 

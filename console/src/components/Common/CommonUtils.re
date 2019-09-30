@@ -24,5 +24,6 @@ let fromOptionString = (optionVal) => switch(optionVal) {
   | None => ""
 };
 
-let isUndefined: 'a => bool = (value) => [%raw "value === undefined"];
-let isNull: 'a => bool = (value) => [%raw "value === null"];
+let isUndefined : 'a => bool = (value) => {
+  Js.Nullable.isNullable(value)
+};

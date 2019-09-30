@@ -603,7 +603,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         ...modifyState,
         aliasEdit: {
           ...modifyState.aliasEdit,
-          [action.field]: action.alias.trim(),
+          [action.field]: action.alias ? action.alias.trim() : '',
         },
       };
     default:

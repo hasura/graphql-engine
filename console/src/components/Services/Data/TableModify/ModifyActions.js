@@ -137,8 +137,8 @@ const resetPrimaryKeys = () => ({
 });
 
 export const saveTableRootFields = (
-  upQueries,
-  downQueries,
+  upQuery,
+  downQuery,
   successCb,
   failuerCb
 ) => (dispatch, getState) => {
@@ -162,8 +162,8 @@ export const saveTableRootFields = (
   makeMigrationCall(
     dispatch,
     getState,
-    upQueries,
-    downQueries,
+    [upQuery],
+    [downQuery],
     migrationName,
     customOnSuccess,
     customOnError,
@@ -1468,7 +1468,7 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     const originalColComment = column.comment; // null or "value"
     const originalColNullable = column.is_nullable; // "YES" or "NO"
     const originalColAlias =
-      tableSchema.configuration &&
+      tableSchema.configuration.custom_column_names &&
       tableSchema.configuration.custom_column_names[colName];
     const originalColUnique = isColumnUnique(tableSchema, colName);
 
@@ -1934,7 +1934,8 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     }
 
     /* rename column */
-    if (newName && colName !== newName) {
+    const isColNameChange = newName && colName !== newName;
+    if (isColNameChange) {
       if (!gqlPattern.test(newName)) {
         return dispatch(
           showErrorNotification(
@@ -1969,6 +1970,10 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
       if (alias) {
         if (originalColAlias !== alias) {
           newCustomColnames[colName] = alias;
+          if (isColNameChange) {
+            newCustomColnames[newName] = alias;
+            delete newCustomColnames[colName];
+          }
           aliasChange = true;
         }
       } else {
@@ -1982,7 +1987,9 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
           tableSchema.configuration.custom_root_fields,
           newCustomColnames,
           tableSchema.configuration.custom_root_fields,
-          oldCustomColNames
+          oldCustomColNames,
+          tableName,
+          currentSchema
         );
         schemaChangesUp.push(aliasQueryUp);
         schemaChangesDown.push(aliasQueryDown);

@@ -159,8 +159,8 @@ class ModifyTable extends React.Component {
           tableName={tableName}
           schemaName={currentSchema}
           newAliases={tableAliasEdit}
-          existingAliases={tableSchema.configuration.custom_root_fields}
-          existingColNames={tableSchema.configuration.custom_column_names}
+          existingAliases={tableSchema.configuration.custom_root_fields || {}}
+          existingColNames={tableSchema.configuration.custom_column_names || {}}
           dispatch={dispatch}
           save={save}
         />

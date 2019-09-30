@@ -59,6 +59,10 @@ const ColumnEditorList = ({
   return columns.map((col, i) => {
     const colName = col.column_name;
 
+    const existingColumnAlias = tableSchema.configuration.custom_column_names
+      ? tableSchema.configuration.custom_column_names[colName] || ''
+      : '';
+
     const columnProperties = {
       name: colName,
       tableName: col.table_name,
@@ -77,9 +81,7 @@ const ColumnEditorList = ({
       // uniqueConstraint: columnUniqueConstraints[colName],
       default: col.column_default || '',
       comment: col.comment || '',
-      alias: tableSchema.configuration
-        ? tableSchema.configuration.custom_column_names[colName] || ''
-        : '',
+      alias: existingColumnAlias,
     };
 
     const onSubmit = toggleEditor => {
@@ -151,7 +153,10 @@ const ColumnEditorList = ({
     const collapsedLabel = () => {
       return (
         <div key={colName}>
-          <b>{colName}</b> {gqlCompatibilityWarning()} - {keyProperties()}
+          <b>
+            {colName} {existingColumnAlias && `(${existingColumnAlias})`}
+          </b>{' '}
+          {gqlCompatibilityWarning()} - {keyProperties()}
         </div>
       );
     };
