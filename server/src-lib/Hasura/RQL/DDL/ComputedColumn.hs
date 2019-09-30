@@ -15,21 +15,24 @@ module Hasura.RQL.DDL.ComputedColumn
 import           Hasura.Prelude
 
 import           Hasura.EncJSON
-import           Hasura.RQL.DDL.Schema.Function (RawFunctionInfo (..),
-                                                 fetchRawFunctioInfo,
-                                                 mkFunctionArgs)
+import           Hasura.RQL.DDL.Deps
+import           Hasura.RQL.DDL.Permission.Internal
+import           Hasura.RQL.DDL.Schema.Function     (RawFunctionInfo (..),
+                                                     fetchRawFunctioInfo,
+                                                     mkFunctionArgs)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
+import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax     (Lift)
+import           Language.Haskell.TH.Syntax         (Lift)
 
-import qualified Control.Monad.Validate         as MV
-import qualified Data.Sequence                  as Seq
-import qualified Data.Text                      as T
-import qualified Database.PG.Query              as Q
-import qualified Language.GraphQL.Draft.Syntax  as G
+import qualified Control.Monad.Validate             as MV
+import qualified Data.Sequence                      as Seq
+import qualified Data.Text                          as T
+import qualified Database.PG.Query                  as Q
+import qualified Language.GraphQL.Draft.Syntax      as G
 
 data ComputedColumnDefinition
   = ComputedColumnDefinition
@@ -228,22 +231,44 @@ addComputedColumnToCatalog q =
 
 data DropComputedColumn
   = DropComputedColumn
-  { _dccTable :: !QualifiedTable
-  , _dccName  :: !ComputedColumnName
+  { _dccTable   :: !QualifiedTable
+  , _dccName    :: !ComputedColumnName
+  , _dccCascade :: !Bool
   } deriving (Show, Eq, Lift)
-$(deriveJSON (aesonDrop 4 snakeCase) ''DropComputedColumn)
+$(deriveToJSON (aesonDrop 4 snakeCase) ''DropComputedColumn)
+
+instance FromJSON DropComputedColumn where
+  parseJSON = withObject "Object" $ \o ->
+    DropComputedColumn
+      <$> o .: "table"
+      <*> o .: "name"
+      <*> o .:? "cascade" .!= False
 
 runDropComputedColumn
   :: (UserInfoM m, CacheRWM m, MonadTx m)
   => DropComputedColumn -> m EncJSON
-runDropComputedColumn (DropComputedColumn table computedColumn) = do
+runDropComputedColumn (DropComputedColumn table computedColumn cascade) = do
+  -- Validation
   adminOnly
   fields <- withPathK "table" $ _tiFieldInfoMap <$> askTabInfo table
   void $ withPathK "name" $ askComputedColumnInfo fields computedColumn
 
+  -- Dependencies check
+  sc <- askSchemaCache
+  let deps = getDependentObjs sc $ SOTableObj table $ TOComputedColumn computedColumn
+  when (not cascade && not (null deps)) $ reportDeps deps
+  mapM_ purgeComputedColumnDependency deps
+
   deleteComputedColumnFromCache table computedColumn
   dropComputedColumnFromCatalog table computedColumn
   pure successMsg
+  where
+    purgeComputedColumnDependency = \case
+      SOTableObj qt (TOPerm role permType) | qt == table -> do
+        liftTx $ dropPermFromCatalog qt role permType
+        withPermType permType delPermFromCache role qt
+      d -> throw500 $ "unexpected dependency for computed column "
+           <> computedColumn <<> "; " <> reportSchemaObj d
 
 dropComputedColumnFromCatalog
   :: MonadTx m

@@ -9,6 +9,8 @@
       definition:
         function: fetch_articles
         table_argument: author_row
+  response:
+    message: success
 
 - description: Add a computed column full_name to author table
   url: /v1/query
@@ -20,6 +22,8 @@
       name: full_name
       definition:
         function: full_name
+  response:
+    message: success
 
 - description: Create select permission with non existed computed columns
   url: /v1/query
@@ -89,5 +93,41 @@
         - full_name
         - get_articles
         filter: {}
+  response:
+    message: success
+
+- description: Try to drop a computed column defined in permission
+  url: /v1/query
+  status: 400
+  query:
+    type: drop_computed_column
+    args:
+      table: author
+      name: get_articles
+  response:
+    path: "$.args"
+    error: 'cannot drop due to the following dependent objects : permission author.user.select'
+    code: dependency-error
+
+- description: Drop a computed column with cascade
+  url: /v1/query
+  status: 200
+  query:
+    type: drop_computed_column
+    args:
+      table: author
+      name: get_articles
+      cascade: true
+  response:
+    message: success
+
+- description: Drop a computed column
+  url: /v1/query
+  status: 200
+  query:
+    type: drop_computed_column
+    args:
+      table: author
+      name: full_name
   response:
     message: success

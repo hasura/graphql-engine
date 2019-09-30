@@ -99,6 +99,7 @@ module Hasura.RQL.Types.SchemaCache
        , SchemaDependency(..)
        , mkParentDep
        , mkColDep
+       , mkComputedColumnDep
        , getDependentObjs
        , getDependentObjsWith
 
@@ -152,6 +153,11 @@ mkParentDep tn = SchemaDependency (SOTable tn) DRTable
 mkColDep :: DependencyReason -> QualifiedTable -> PGCol -> SchemaDependency
 mkColDep reason tn col =
   flip SchemaDependency reason . SOTableObj tn $ TOCol col
+
+mkComputedColumnDep
+  :: DependencyReason -> QualifiedTable -> ComputedColumnName -> SchemaDependency
+mkComputedColumnDep reason tn computedColumn =
+  flip SchemaDependency reason . SOTableObj tn $ TOComputedColumn computedColumn
 
 type WithDeps a = (a, [SchemaDependency])
 

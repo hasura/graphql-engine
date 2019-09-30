@@ -249,6 +249,7 @@ buildSelPermInfo role tabInfo sp = do
         void $ modifyErr errModifier $ askPermInfo returnTableInfo role PASelect
 
   let deps = mkParentDep tn : beDeps ++ map (mkColDep DRUntyped tn) pgCols
+             ++ map (mkComputedColumnDep DRUntyped tn) computedColumns
       depHeaders = getDependentHeaders $ spFilter sp
       mLimit = spLimit sp
 

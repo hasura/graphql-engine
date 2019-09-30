@@ -660,3 +660,6 @@ class TestComputedColumns(DefaultTestQueries):
 
     def test_create_permissions(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/create_permissions.yaml')
+
+    def test_run_sql(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/run_sql.yaml')
