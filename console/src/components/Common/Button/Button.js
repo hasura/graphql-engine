@@ -2,10 +2,11 @@ import React from 'react';
 import styles from '../Common.scss';
 
 /*
-  This is a Button HOC that takes al the props supported by <button> and also
-  - color: (default: white) color of the button; currently supports yellow, red, green, gray, white
+  This is a Button HOC that takes all the props supported by <button>
+  - color(default: white): color of the button; currently supports yellow, red, green, gray and white
   - size: size of the button; currently supports xs (extra small), sm(small)
-  - className: although you can provide any CSS classname, it is recommended to use only the positioning related classes and not the ones that change the appearance (color, font, size) of the button
+  - className: although you can provide any CSS classname, it is recommended to use only the positioning related classes
+               and not the ones that change the appearance (color, font, size) of the button
 */
 
 const Button = props => {

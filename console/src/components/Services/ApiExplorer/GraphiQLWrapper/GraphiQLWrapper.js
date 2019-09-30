@@ -33,7 +33,6 @@ class GraphiQLWrapper extends Component {
 
     const { numberOfTables, urlParams, headerFocus } = this.props;
     const graphqlNetworkData = this.props.data;
-
     const graphQLFetcher = graphQLParams => {
       if (headerFocus) {
         return null;
@@ -78,6 +77,7 @@ class GraphiQLWrapper extends Component {
             renderGraphiql={renderGraphiql}
             endpoint={graphqlNetworkData.url}
             headers={graphqlNetworkData.headers}
+            headersInitialised={graphqlNetworkData.headersInitialised}
             headerFocus={headerFocus}
             urlParams={urlParams}
             numberOfTables={numberOfTables}
