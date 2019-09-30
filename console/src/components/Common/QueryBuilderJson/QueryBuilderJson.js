@@ -36,7 +36,7 @@ class QueryBuilderJson extends React.Component {
     };
 
     const isCustomJsonObject = object => {
-      // check if is array
+      // check if it is an array
       if (object instanceof Array) {
         // if empty array
         if (object.length === 0) {
@@ -68,7 +68,7 @@ class QueryBuilderJson extends React.Component {
         return true;
       }
 
-      // check if is object and not a React element
+      // check if it is an object and not a React element
       return object instanceof Object && !React.isValidElement(object);
     };
 
