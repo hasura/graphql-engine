@@ -3,11 +3,10 @@ Restrict access to certain fields
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 2
+  :depth: 1
   :local:
 
-If you want to restrict access to sensitive fields in a table, you can either use views to expose only the safe fields
-or :ref:`restrict access via permissions <col-level-permissions>`.
+If you want to restrict access to sensitive fields in a table, you can either :ref:`restrict access via permissions <col-level-permissions>` or use views to expose only the safe fields.
 
 The following section describes setting up a view for this purpose.
 

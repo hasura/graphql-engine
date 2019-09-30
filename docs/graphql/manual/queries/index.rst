@@ -60,6 +60,5 @@ based on a typical author/article schema for reference.
   multiple-queries
   custom-functions
   derived-data
-  control-access
   variables-aliases-fragments-directives
 
