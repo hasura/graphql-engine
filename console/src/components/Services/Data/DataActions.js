@@ -119,7 +119,7 @@ const initQueries = {
         has_variadic: false,
         returns_set: true,
         return_type_type: {
-          $ilike: '%composite%',
+          $ilike: 'c', // COMPOSITE type
         },
         $or: [
           {

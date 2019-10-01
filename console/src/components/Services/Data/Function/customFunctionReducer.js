@@ -181,7 +181,7 @@ const deleteFunctionSql = () => {
       let functionString = '(';
       inputArgTypes.forEach((i, index) => {
         functionString +=
-          i + ' ' + (index === inputArgTypes.length - 1 ? ')' : ',');
+          i.schema + '.' + i.name + ' ' + (index === inputArgTypes.length - 1 ? ')' : ',');
       });
       functionWSchemaName += functionString;
     }
