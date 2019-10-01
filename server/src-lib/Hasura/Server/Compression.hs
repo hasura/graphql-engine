@@ -7,9 +7,10 @@ where
 
 import           Hasura.Prelude
 
-import           Hasura.Server.Utils       (brHeader, gzipHeader)
+-- import           Hasura.Server.Utils       (brHeader, gzipHeader)
+import           Hasura.Server.Utils       (gzipHeader)
 
-import qualified Codec.Compression.Brotli  as BR
+-- import qualified Codec.Compression.Brotli  as BR
 import qualified Codec.Compression.GZip    as GZ
 import qualified Data.ByteString.Lazy      as BL
 import qualified Data.Text                 as T
@@ -17,12 +18,12 @@ import qualified Network.HTTP.Types.Header as NH
 
 data CompressionType
   = CTGZip
-  | CTBrotli
+  -- | CTBrotli
   deriving (Show, Eq)
 
 compressionTypeToTxt :: CompressionType -> T.Text
 compressionTypeToTxt CTGZip   = "gzip"
-compressionTypeToTxt CTBrotli = "brotli"
+-- compressionTypeToTxt CTBrotli = "brotli"
 
 compressResponse
   :: NH.RequestHeaders
@@ -31,14 +32,18 @@ compressResponse
 compressResponse reqHeaders unCompressedResp =
   let compressionTypeM = getRequestedCompression reqHeaders
       appendCompressionType (res, headerM) = (res, headerM, compressionTypeM)
+      -- brotliCompressionParams =
+      --   BR.defaultCompressParams{BR.compressLevel = BR.CompressionLevel4}
+      gzipCompressionParams =
+        GZ.defaultCompressParams{GZ.compressLevel = GZ.compressionLevel 1}
   in appendCompressionType $ case compressionTypeM of
-       Just CTBrotli -> (BR.compress unCompressedResp, Just brHeader)
-       Just CTGZip   -> (GZ.compress unCompressedResp, Just gzipHeader)
-       Nothing       -> (unCompressedResp, Nothing)
+       -- Just CTBrotli -> (BR.compressWith brotliCompressionParams unCompressedResp, Just brHeader)
+       Just CTGZip -> (GZ.compressWith gzipCompressionParams unCompressedResp, Just gzipHeader)
+       Nothing     -> (unCompressedResp, Nothing)
 
 getRequestedCompression :: NH.RequestHeaders -> Maybe CompressionType
 getRequestedCompression reqHeaders
-  | "br" `elem` acceptEncodingVals   = Just CTBrotli
+  -- | "br" `elem` acceptEncodingVals   = Just CTBrotli
   | "gzip" `elem` acceptEncodingVals = Just CTGZip
   | otherwise                        = Nothing
   where

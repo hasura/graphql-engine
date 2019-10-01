@@ -148,7 +148,6 @@ library
 
                      -- HTTP compression
                      , zlib
-                     , brotli
 
   exposed-modules:     Hasura.Prelude
                      , Hasura.Logging
