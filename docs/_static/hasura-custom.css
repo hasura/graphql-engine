@@ -6,11 +6,11 @@ html {
 }
 
 ::-moz-selection { /* Code for Firefox */
-  background: #b2d7fe !important;
+  background-color: #b2d7fe !important;
 }
 
 ::selection {
-  background: #b2d7fe !important;
+  background-color: #b2d7fe !important;
 }
 
 body {
@@ -157,7 +157,7 @@ ul {
 #docs-content .note,
 #docs-content .admonition,
 #docs-content .help-block {
-  background: #f1f9ff;
+  background-color: #f1f9ff;
   border: 1px solid #c9e0f0;
 }
 
@@ -419,7 +419,7 @@ article ol ol {
 #table-of-contents {
   padding: 0 20px;
   border-radius: 4px;
-  background: #F8F8F9;
+  background-color: #F8F8F9;
   border: 1px solid #EAEAEC;
 }
 
