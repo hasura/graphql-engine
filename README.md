@@ -165,7 +165,7 @@ The documentation and community will help you troubleshoot most issues. If you h
 * Follow product updates: [@HasuraHQ](https://twitter.com/hasurahq)
 * Talk to us on our [website chat](https://hasura.io)
 
-We are committed to fostering an open and welcoming environment in the community. Please see the [Code of Conduct](code-of-conduct.md).
+We are committed to fostering an open and welcoming environment in the community. Please see our [Code of Conduct](code-of-conduct.md).
 
 If you want to report a security issue, please [read this](SECURITY.md).
 
