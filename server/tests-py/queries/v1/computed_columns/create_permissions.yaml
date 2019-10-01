@@ -61,7 +61,7 @@
   response:
     path: "$.args.computed_columns[1]"
     error: computed column "get_articles" executes function "fetch_articles" which returns
-      set of table "article"; select permisison on "article" for role "user" does not
+      set of table "article"; select permission on "article" for role "user" does not
       exist
     code: permission-denied
 
