@@ -23,6 +23,7 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 		newMetadataClearCmd(ec),
 		newMetadataReloadCmd(ec),
 		newMetadataApplyCmd(ec),
+		newMetadataDropInconsistencyCmd(ec),
 	)
 	return metadataCmd
 }
@@ -97,6 +98,12 @@ func executeMetadata(cmd string, t *migrate.Migrate, ec *cli.ExecutionContext) e
 			return errors.Wrap(err, "cannot apply metadata on the database")
 		}
 		return nil
+
+	case "dropInconsistency":
+		err := t.DropInconsistentMetadata()
+		if err != nil {
+			return errors.Wrap(err, "cannot reload Metadata")
+		}
 	}
 	return nil
 }

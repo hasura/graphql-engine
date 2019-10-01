@@ -91,6 +91,31 @@ func (h *HasuraDB) ReloadMetadata() error {
 	return nil
 }
 
+func(h *HasuraDB) DropInconsistentMetadata() error {
+	query := HasuraInterfaceQuery{
+		Type: "drop_inconsistent_metadata",
+		Args: HasuraArgs{},
+	}
+
+	resp, body, err := h.sendv1Query(query)
+	if err != nil {
+		h.logger.Debug(err)
+		return err
+	}
+	h.logger.Debug("response: ", string(body))
+
+	var horror HasuraError
+	if resp.StatusCode != http.StatusOK {
+		err = json.Unmarshal(body, &horror)
+		if err != nil {
+			h.logger.Debug(err)
+			return err
+		}
+		return horror.Error(h.config.isCMD)
+	}
+	return nil
+}
+
 func (h *HasuraDB) ApplyMetadata(data interface{}) error {
 	query := HasuraInterfaceBulk{
 		Type: "bulk",
