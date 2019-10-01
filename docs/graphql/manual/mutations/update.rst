@@ -268,7 +268,7 @@ In order to update a many-to-many relationship, it's required to use two mutatio
 .. graphiql::
   :view_only:
   :query:
-    mutation updateAddress {
+    mutation updateArticleTags {
       delete_article_tags(
         where: {tag_id: {_eq: 21}}
       ) {
