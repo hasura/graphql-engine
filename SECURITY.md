@@ -28,7 +28,7 @@ The reporter will be kept updated at every stage of the issue's analysis and res
 A public disclosure date is negotiated by the Hasura product security team and the bug submitter. We prefer to fully disclose the bug as soon as possible once a user mitigation is available. It is reasonable to delay disclosure when the bug or the fix is not yet fully understood, the solution is not well-tested, or for vendor coordination. The timeframe for disclosure is from immediate (especially if it's already publicly known) to a few weeks. We expect the time-frame between a report to a public disclosure to typically be in the order of 7 days. The Hasura GraphQL Engine maintainers and the security team will take the final call on setting a disclosure date.
 
 
-(Some sections have been inspired and adapted from [https://github.com/kubernetes/website/blob/master/content/en/docs/reference/issues-security/security.md](https://github.com/kubernetes/website/blob/master/content/en/docs/reference/issues-security/security.md))
+(Some sections have been inspired and adapted from [Kubernetes Security Issues](https://github.com/kubernetes/website/blob/master/content/en/docs/reference/issues-security/security.md))
 
 ## Translations
 
