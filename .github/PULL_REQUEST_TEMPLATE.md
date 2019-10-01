@@ -71,7 +71,7 @@ Any new metadata feature is added?
 
    Schema Resolve:-
    <!-- Any change in logic of resolving input request -->
-   - [ ] Change in treatment of `null` value for input fields
+   - [ ] Change in treatment of `null` value for any input fields <!-- Explain them below -->
      <!-- Add if anything not listed above -->
 
 3. Logging
