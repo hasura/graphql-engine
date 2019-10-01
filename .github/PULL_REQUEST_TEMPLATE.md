@@ -32,5 +32,3 @@
 
 ### Limitations, known bugs & workarounds
 <!-- Limitations of the PR, known bugs and suggested workarounds -->
-
-<!-- Feel free to delete these comment lines -->
