@@ -1,5 +1,5 @@
 import React from 'react';
-import ReloadEnumMetadata from '../../../Metadata/MetadataOptions/ReloadMetadata';
+import ReloadEnumMetadata from '../../../Settings/MetadataOptions/ReloadMetadata';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
 import styles from '../../../../Common/Common.scss';

@@ -13,7 +13,7 @@ import {
 } from '../Add/addRemoteSchemaReducer';
 
 import { VIEW_REMOTE_SCHEMA } from '../Actions';
-import ReloadRemoteSchema from '../../Metadata/MetadataOptions/ReloadRemoteSchema';
+import ReloadRemoteSchema from '../../Settings/MetadataOptions/ReloadRemoteSchema';
 
 import { appPrefix } from '../constants';
 
