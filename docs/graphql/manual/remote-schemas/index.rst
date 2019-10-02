@@ -80,9 +80,10 @@ You need to enter the following information:
 
   .. note::
 
-    During **local development** using Docker and a localhost server, ensure the Hasura Docker container can reach
-    the server endpoint on the host, i.e. use ``host.docker.internal`` on Mac or ``docker.for.win.localhost`` on
-    Windows. Example ``-e REMOTE_SCHEMA_ENDPOINT=host.docker.internal:4000/graphql``
+    During **local development** with the remote schema server on localhost, ensure that the Hasura Docker container can reach
+    the server endpoint on the host. A common way to do this is to use the base domain ``host.docker.internal`` (Mac) or ``docker.for.win.localhost`` (Windows) instead of ``127.0.0.1``. 
+    
+    Similarly, if you are adding the URL using env variable, then run the Hasura docker container with the env variable added during `docker run`. Example ``-e REMOTE_SCHEMA_ENDPOINT=http://host.docker.internal:4000/mycustomgraphql``
 
 - **Headers**: configure the headers to be sent to your custom GraphQL server:
 
