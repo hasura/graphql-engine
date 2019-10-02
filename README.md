@@ -26,9 +26,9 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
 
 ## Features
 
-* **Make powerful queries**: Built-in filtering, pagination, pattern search, bulk insert, update, delete mutations
-* **Realtime**: Convert any GraphQL query to a live query by using subscriptions
-* **Merge remote schemas**: Access custom GraphQL schemas for business logic via a single GraphQL Engine endpoint. [**Read more**](remote-schemas.md).
+* **Make powerful queries**: Built-in filtering, pagination, pattern search, bulk insert, update, delete mutations.
+* **Realtime**: Convert any GraphQL query to a live query by using subscriptions.
+* **Merge remote schemas**: Access custom GraphQL schemes for business logic via a single GraphQL Engine endpoint. [**Read more**](remote-schemas.md).
 * **Trigger webhooks or serverless functions**: On Postgres insert/update/delete events ([read more](event-triggers.md))
 * **Works with existing, live databases**: Point it to an existing Postgres database to instantly get a ready-to-use GraphQL API
 * **Fine-grained access control**: Dynamic access control that integrates with your auth system (eg: auth0, firebase-auth)
@@ -98,7 +98,7 @@ guides](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) or
 
 The Hasura GraphQL Engine fronts a Postgres database instance and can accept GraphQL requests from your client apps. It can be configured to work with your existing auth system and can handle access control using field-level rules with dynamic variables from your auth system.
 
-You can also merge remote GraphQL schemas and provide a unified GraphQL API.
+You can also merge remote GraphQL schemes and provide a unified GraphQL API.
 
 ![Hasura GraphQL Engine architecture](assets/hasura-arch.svg)
 
@@ -108,7 +108,7 @@ Hasura works with any GraphQL client. We recommend using [Apollo Client](https:/
 
 ## Add business logic
 
-GraphQL Engine provides easy-to-reason, scalable and performant methods for adding custom business logic to your backend:
+GraphQL Engine provides easy-to-reason, scalable and performable methods for adding custom business logic to your backend:
 
 ### Remote schemas
 
