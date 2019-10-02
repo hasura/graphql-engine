@@ -49,16 +49,15 @@ class TestLogging():
 
         # make an unthorized metadata request where admin secret/access token is empty
         q = {
-            'query': {
-                'type': 'sekect',
-                'args': {
-                        "table": {
-                            "name": "hdb_function",
-                            "schema": "hdb_catalog"
-                        },
-                        "columns": ["function_name", "function_schema", "is_system_defined"],
-                        "where": { "function_schema": "public" }
-                    }
+        'query': {
+            'type': 'select',
+            'args': {
+                    "table": {
+                        "name": "hdb_function",
+                        "schema": "hdb_catalog"
+                    },
+                    "columns": ["function_name", "function_schema", "is_system_defined"],
+                    "where": { "function_schema": "public" }
                 }
             }
         }
@@ -181,7 +180,7 @@ class TestLogging():
         assert http_logs[0]['detail']['operation']['query']['variables'] == None
         assert http_logs[0]['detail']['operation']['query']['query'] != ''
 
-    def test_http_unthorized_query(self, hge_ctx):
+    def test_http_unthorized_metadata(self, hge_ctx):
         def _get_failed_logs(x):
             return x['type'] == 'http-log' and \
                 x['detail']['operation']['request_id'] == 'unauthorized-metadata-test'
