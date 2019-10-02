@@ -37,32 +37,30 @@ runGQ reqId userInfo reqHdrs req = do
   execPlans <-
     E.getExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
   topLevelResults <-
-    forM execPlans $ \execPlan -> do
-      case execPlan of
-        E.Leaf plan -> runLeafPlan plan
-        E.Tree resolvedPlan unresolvedPlansNE -> do
-          let unresolvedPlans = toList unresolvedPlansNE -- it's safe to convert here
-          HttpResponse initJson _ <- runLeafPlan resolvedPlan
-          let (initValue, remoteBatchInputs) =
-                E.extractRemoteRelArguments initJson $
-                  map E.remoteRelField unresolvedPlans
+    forM execPlans $ \(unresolvedPlans, resolvedPlan) -> do
+      HttpResponse initJson initHeaders <- runLeafPlan resolvedPlan
+      let (initValue, remoteBatchInputs) =
+            E.extractRemoteRelArguments initJson $
+              map E.remoteRelField unresolvedPlans
 
-          -- TODO This zip may discard some unresolvedPlans when permissions
-          -- come into play. It's not totally clear to me if this is correct,
-          -- or how it works. Can use Data.Align for safer zips, but it seems like 
-          -- 'extractRemoteRelArguments' should be returning the zipped data.
-          let batchesRemotePlans =
-                -- TODO pass 'G.OperationType' properly when we support mutations, etc.
-                zipWith (E.mkQuery G.OperationTypeQuery) remoteBatchInputs unresolvedPlans 
+      -- TODO This zip may discard some unresolvedPlans when permissions
+      -- come into play. It's not totally clear to me if this is correct,
+      -- or how it works. Can use Data.Align for safer zips, but it seems like 
+      -- 'extractRemoteRelArguments' should be returning the zipped data.
+      let batchesRemotePlans =
+            -- TODO pass 'G.OperationType' properly when we support mutations, etc.
+            zipWith (E.mkQuery G.OperationTypeQuery) remoteBatchInputs unresolvedPlans 
 
-          results <- forM batchesRemotePlans $
-            traverse (fmap _hrBody . runLeafPlan . E.ExPRemote)
+      results <- forM batchesRemotePlans $
+        -- NOTE: discard remote headers (for now):
+        traverse (fmap _hrBody . runLeafPlan . E.ExPRemote)
 
-          pure $
-            HttpResponse
-                 (E.encodeGQRespValue
-                    (E.joinResults initValue results))
-              Nothing
+      pure $
+        -- NOTE: preserve headers (see test_response_headers_from_remote)
+        HttpResponse
+          (E.encodeGQRespValue
+             (E.joinResults initValue results))
+          initHeaders
   let mergedRespResult = mergeResponseData (fmap _hrBody topLevelResults)
   case mergedRespResult of
     Left e ->

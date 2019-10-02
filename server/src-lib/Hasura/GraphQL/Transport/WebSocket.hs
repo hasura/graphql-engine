@@ -304,7 +304,7 @@ onStart serverEnv wsConn (StartMsg opId q) =
           runExceptT $ do
             flip mapM execPlans $ \execPlan ->
               case execPlan of
-                E.Leaf plan ->
+                ([], plan) ->
                   case plan of
                     E.ExPHasura operation ->
                       case operation of
@@ -323,7 +323,7 @@ onStart serverEnv wsConn (StartMsg opId q) =
                                "did not expect subscription operation here")
                     E.ExPRemote rtf ->
                       runRemoteGQ execCtx requestId userInfo reqHdrs rtf
-                E.Tree {} ->
+                _ ->
                   throwError
                     (err400
                        NotSupported
@@ -357,7 +357,7 @@ onStart serverEnv wsConn (StartMsg opId q) =
       where
         getLeafPlan =
           \case
-            E.Leaf resolvedPlan ->
+            ([], resolvedPlan) ->
               case resolvedPlan of
                 E.ExPHasura operation -> Just operation
                 E.ExPRemote _         -> Nothing

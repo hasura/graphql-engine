@@ -127,19 +127,17 @@ bareNamedField _fName =
 
 
 -- | Rebuild the query tree, returning a new tree with remote relationships
--- removed, along with a list of paths that point back to them.
---
--- 'Nothing' means there were no remote fields.
+-- removed, along with a (possibly empty) list of paths that point back to them.
 --
 -- Output here is eventually assembled into a 'QExecPlan' 'Tree' in
 -- 'getExecPlan', and finally executed in 'runGQ'.
 rebuildFieldStrippingRemoteRels
   :: VQ.Field 
-  -> Maybe (VQ.Field, NonEmpty (RemoteRelBranch 'RRF_Tree))
-  -- ^ NOTE: the ordering of the _fSelSet fields in the result 'VQ.Field' seems not to matter at 
+  -> (VQ.Field, [RemoteRelBranch 'RRF_Tree])
+  -- NOTE: the ordering of the _fSelSet fields in the result 'VQ.Field' seems not to matter at 
   -- all for correctness here (based on experimentation)... I haven't puzzled out why yet.
 rebuildFieldStrippingRemoteRels =
-  traverse NE.nonEmpty . flip runState mempty . rebuild 0 mempty
+  flip runState mempty . rebuild 0 mempty
   where
     rebuild :: Int -> RelFieldPath -> Field -> State [RemoteRelBranch 'RRF_Tree] Field
     rebuild idx0 parentPath field0 = do
