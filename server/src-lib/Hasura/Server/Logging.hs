@@ -239,7 +239,7 @@ mkHttpErrorLog userInfoM reqId req err query mTimeT compressTypeM =
                         (decodeStrict $ T.encodeUtf8 s)
       v -> toJSON v
       where
-        -- validate if query is nested
+        -- try to parse nested query field
         parseQuery :: Value -> Parser Value
         parseQuery value = do
           qry <- withObject "operation" (.: "query") value
@@ -248,7 +248,7 @@ mkHttpErrorLog userInfoM reqId req err query mTimeT compressTypeM =
             _        -> value
 
         toQuery :: Value -> Value
-        toQuery o = fromMaybe (String "failed") $ parseMaybe parseQuery o
+        toQuery o = fromMaybe o $ parseMaybe parseQuery o
 
 computeTimeDiff :: Maybe (UTCTime, UTCTime) -> Maybe Double
 computeTimeDiff = fmap (realToFrac . uncurry (flip diffUTCTime))
