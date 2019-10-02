@@ -1,1 +1,0 @@
-ReactDOMRe.renderToElementWithId(<Router />, "index");
