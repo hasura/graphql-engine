@@ -183,3 +183,5 @@ and articles.
       }
     }
 
+Fetch aggregated data - Advanced example
+----------------------------------------
