@@ -14,6 +14,7 @@ module Hasura.Server.Logging
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.Aeson.Types
 import           Data.Bits                 (shift, (.&.))
 import           Data.ByteString.Char8     (ByteString)
 import           Data.Int                  (Int64)
@@ -27,6 +28,7 @@ import           Text.Printf               (printf)
 import qualified Data.ByteString.Char8     as BS
 import qualified Data.ByteString.Lazy      as BL
 import qualified Data.Text                 as T
+import qualified Data.Text.Encoding        as T
 import qualified Network.HTTP.Types        as N
 import qualified Network.Wai               as Wai
 
@@ -221,7 +223,7 @@ mkHttpErrorLog userInfoM reqId req err query mTimeT compressTypeM =
            , olUserVars     = userVars <$> userInfoM
            , olResponseSize = respSize
            , olQueryExecutionTime = respTime
-           , olQuery = toJSON <$> query
+           , olQuery = convJSON <$> query
            , olError = Just $ toJSON err
            }
   in HttpLog L.LevelError $ HttpAccessLog http op
@@ -229,6 +231,24 @@ mkHttpErrorLog userInfoM reqId req err query mTimeT compressTypeM =
     status = qeStatus err
     respSize = Just $ BL.length $ encode err
     respTime = computeTimeDiff mTimeT
+    convJSON = \case
+      String s -> maybe (object [ "query" .= s
+                                , "variables" .= Null
+                                ])
+                        toQuery
+                        (decodeStrict $ T.encodeUtf8 s)
+      v -> toJSON v
+      where
+        -- validate if query is nested
+        parseQuery :: Value -> Parser Value
+        parseQuery value = do
+          qry <- withObject "operation" (.: "query") value
+          return $ case qry of
+            Object _ -> qry
+            _        -> value
+
+        toQuery :: Value -> Value
+        toQuery o = fromMaybe (String "failed") $ parseMaybe parseQuery o
 
 computeTimeDiff :: Maybe (UTCTime, UTCTime) -> Maybe Double
 computeTimeDiff = fmap (realToFrac . uncurry (flip diffUTCTime))
