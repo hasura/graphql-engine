@@ -100,5 +100,13 @@ Fetch a list of authors along with their average article rating:
 
 This example can be easily extended to cover any use-case involving a complicated SQL query that you may want to use.
 
-Flattening a relationship
+De-normalize data with joins
+----------------------------
+
+**Example:** let’s flatten a relationship by joining data:
+
+Using GROUP BY with joins
 -------------------------
+
+**Example:** group data in a joins:
+

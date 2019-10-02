@@ -18,7 +18,7 @@ These kinds of use cases can be supported using database views.
 
 Please see the following pages for details about the above use cases:
 
-- :doc:`../queries/control-access`
+- :doc:`../auth/authorization/control-access`
 - :doc:`../queries/derived-data`
 
 Creating views
