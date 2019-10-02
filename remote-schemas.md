@@ -1,5 +1,9 @@
 # Remote schemas
 
+Hasura gives you CRUD + realtime GraphQL APIs with authorization & access control. However, in many cases, you will need to write APIs (queries, mutations) that contain custom logic. For example, implementing a payment API, or querying data that is not in your database.
+
+Hasura has the ability to merge remote GraphQL schemas and provide a unified GraphQL API. Think of it like automated schema stitching. All you need to do is build your own GraphQL service and then provide the HTTP endpoint to Hasura. Your GraphQL service can be written in any language or framework.
+
 Merge remote GraphQL schemas with GraphQL Engine's Postgres-based schema to query all your GraphQL types from the same endpoint. Remote schemas are ideal for use cases such as:
 
 * Customizing mutations (*e.g. running validations before inserts*)
@@ -15,6 +19,8 @@ To support custom business logic, you'll need to create a custom GraphQL server 
 [![video demo of merging remote schemas](https://img.youtube.com/vi/eY4n9aPsi0M/0.jpg)](https://www.youtube.com/watch?v=eY4n9aPsi0M)
 
 [Merge remote GraphQL schemas (YouTube link)](https://youtu.be/eY4n9aPsi0M)
+
+[Adding a remote schema ](https://youtu.be/01t4t2t4q1c)
 
 ## Quickstart
 
