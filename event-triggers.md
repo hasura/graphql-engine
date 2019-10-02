@@ -79,7 +79,7 @@ Convert complex, long-running business logic to be event-driven, asynchronous an
 
 * [Watch demo](https://some-youtube-demo.com) (*10:00 mins*)
 * [Try it out](https://some-link/)
-* [Tutorial](https://some-other-link)
+* [Tutorial](https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/serverless-push)
 
 -->
 
@@ -89,7 +89,7 @@ Transform and load data into external data-stores. Check out this demo and tutor
 
 * [Watch demo](https://youtu.be/kWVEBWdEVAA)
 * [Try it out](https://shahidh.in/hasura-serverless-etl)
-* [Tutorial](community/examples/serverless-etl)
+* [Tutorial](https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/serverless-etl)
 
 ### Building reactive UX for your async backend with realtime GraphQL
 
