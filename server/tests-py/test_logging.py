@@ -193,4 +193,4 @@ class TestLogging():
         assert http_logs[0]['detail']['operation']['error']['code'] == 'access-denied'
         assert http_logs[0]['detail']['operation']['query']['args'] is not None 
         assert http_logs[0]['detail']['operation']['query']['args']['where'] is not None 
-        assert http_logs[0]['detail']['operation']['query']['columns'] is not None 
+        assert http_logs[0]['detail']['operation']['query']['args']['columns'] is not None 
