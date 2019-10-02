@@ -62,7 +62,8 @@ class TestLogging():
             }
         }
         headers = {'x-request-id': 'unauthorized-metadata-test'}
-        resp = hge_ctx.http.post(hge_ctx.hge_url + '/v1/query', json=q)
+        resp = hge_ctx.http.post(hge_ctx.hge_url + '/v1/query', json=q,
+                                 headers=headers)
         assert resp.status_code == 401 and 'error' in resp.json()
 
         # gather and parse the logs now
