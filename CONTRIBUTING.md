@@ -10,11 +10,11 @@ can quickly merge or address your contributions will increase.
 [hasura/graphql-engine](https://github.com/hasura/graphql-engine) is a mono-repo
 consisting of 3 components. Each has their own contributing guides:
 
-1. [Server (Haskell)](server/CONTRIBUTING.md)
+1. [Server (Haskell)](server/CONTRIBUTING.md).
 
-2. [CLI (Go)](cli/CONTRIBUTING.md)
+2. [CLI (Go)](cli/CONTRIBUTING.md).
 
-3. [Console (JavaScript)](console/README.md#contributing-to-hasura-console)
+3. [Console (JavaScript)](console/README.md#contributing-to-hasura-console).
 
 All of the three components have a single version, denoted by either the git tag or a combination of branch name and git commit SHA.
 
@@ -34,11 +34,11 @@ Of course, we appreciate contributions to all components of Hasura. However, we 
 
 Our goal is to keep our docs comprehensive and updated. If you would like to help us in doing so, we are greatful for any kind of contribution:
 
-- Report missing content
+- Report missing content.
 
-- Fix errors in existing docs
+- Fix errors in existing docs.
 
-- Help us in adding to the docs
+- Help us in adding to the docs.
 
 The contributing guide for docs can be found at [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md).
 
@@ -47,11 +47,11 @@ The contributing guide for docs can be found at [docs/CONTRIBUTING.md](docs/CONT
 
 We have identified three other ways of contributing with community content:
 
-- [boilerplates](community/boilerplates)
+- [boilerplates](community/boilerplates).
 
-- [sample-apps](community/sample-apps) 
+- [sample-apps](community/sample-apps).
 
-- [tools](community/tools) 
+- [tools](community/tools).
 
 Feel free to submit a pull request if you have something to add even if it's not related to the three sections above.
 

@@ -2,9 +2,9 @@
 
 Merge remote GraphQL schemas with GraphQL Engine's Postgres-based schema to query all your GraphQL types from the same endpoint. Remote schemas are ideal for use cases such as:
 
-* Customizing mutations (*e.g. running validations before inserts*)
-* Supporting features like payments, etc. and providing a consistent interface to access them i.e. behind the GraphQL Engine's API
-* Fetching disparate data from other sources (*e.g. from a weather API or another database*)
+* Customizing mutations (*e.g. running validations before inserts*).
+* Supporting features like payments, etc. and providing a consistent interface to access them i.e. behind the GraphQL Engine's API.
+* Fetching disparate data from other sources (*e.g. from a weather API or another database*).
 
 To support custom business logic, you'll need to create a custom GraphQL server (see [boilerplates](community/boilerplates/remote-schemas)) and merge its schema with GraphQL Engine's.
 
@@ -24,11 +24,11 @@ The fastest way to try remote schema out is via Heroku.
 
     [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
 
-2. Open the Hasura console
+2. Open the Hasura console:
 
    Visit `https://<app-name>.herokuapp.com` (*replace \<app-name\> with your app name*) to open the admin console.
 
-3. Merge your first remote schema and query it
+3. Merge your first remote schema and query it:
 
    In the admin console, open the ``Remote Schemas`` tab and click on the ``Add`` button. Fill in the following details:
    * Remote Schema name: ``countries`` (*an alias for this remote schema*).

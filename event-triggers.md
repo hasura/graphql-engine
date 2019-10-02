@@ -27,11 +27,11 @@ The fastest way to try event triggers out is via Heroku.
 
     [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
 
-2. Open the Hasura console
+2. Open the Hasura console:
 
    Visit `https://<app-name>.herokuapp.com` (*replace \<app-name\> with your app name*) to open the admin console.
 
-3. Configure your first event trigger and webhook
+3. Configure your first event trigger and webhook:
 
    Create a table, configure the database update you want to use as a trigger and instantly invoke a webhook by adding a new row in your table. Follow this [simple guide](https://docs.hasura.io/1.0/graphql/manual/getting-started/first-event-trigger.html).
 

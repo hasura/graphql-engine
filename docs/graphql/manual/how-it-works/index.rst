@@ -20,21 +20,21 @@ Tables
 
 When you track a Postgres table in the Hasura GraphQL engine, it automatically generates the following for it:
 
-- A GraphQL type definition for the table
-- A query field with ``where``, ``order_by``, ``limit`` and ``offset`` arguments
-- A subscription field with ``where``, ``order_by``, ``limit`` and ``offset`` arguments
-- An insert mutation field with ``on_conflict`` argument that supports upsert and bulk inserts
-- An update mutation field with ``where`` argument that supports bulk updates
-- A delete mutation field with ``where`` argument that supports bulk deletes
+- A GraphQL type definition for the table.
+- A query field with ``where``, ``order_by``, ``limit`` and ``offset`` arguments.
+- A subscription field with ``where``, ``order_by``, ``limit`` and ``offset`` arguments.
+- An insert mutation field with ``on_conflict`` argument that supports upsert and bulk inserts.
+- An update mutation field with ``where`` argument that supports bulk updates.
+- A delete mutation field with ``where`` argument that supports bulk deletes.
 
 Views
 ^^^^^
 
 When you track a Postgres view in Hasura GraphQL engine, it automatically generates the following for it:
 
-- A GraphQL type definition for the view
-- A query field with ``where``, ``order_by``, ``limit`` and ``offset`` arguments
-- A subscription field with ``where``, ``order_by``, ``limit`` and ``offset`` arguments
+- A GraphQL type definition for the view.
+- A query field with ``where``, ``order_by``, ``limit`` and ``offset`` arguments.
+- A subscription field with ``where``, ``order_by``, ``limit`` and ``offset`` arguments.
 
 Essentially the Hasura GraphQL engine does the same thing it would do for a table, but without creating the insert, update
 and delete mutations.
