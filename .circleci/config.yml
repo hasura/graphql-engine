@@ -118,8 +118,9 @@ refs:
     - run:
         name: Run Python tests
         environment:
-          # hpc report seems to fail with the default -N
-          GHCRTS: -N1
+          # Setting default number of threads to 2
+          # since circleci allocates 2 cpus per test container
+          GHCRTS: -N2
           HASURA_GRAPHQL_DATABASE_URL: 'postgres://gql_test:@localhost:5432/gql_test'
           HASURA_GRAPHQL_DATABASE_URL_2: 'postgres://gql_test:@localhost:5432/gql_test2'
           GRAPHQL_ENGINE: '/build/_server_output/graphql-engine'
