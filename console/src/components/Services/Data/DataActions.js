@@ -118,9 +118,7 @@ const initQueries = {
         function_schema: '',
         has_variadic: false,
         returns_set: true,
-        return_type_type: {
-          $ilike: 'c', // COMPOSITE type
-        },
+        return_type_type: 'c', // COMPOSITE type
         $or: [
           {
             function_type: {
@@ -159,9 +157,7 @@ const initQueries = {
         function_schema: '',
         has_variadic: false,
         returns_set: true,
-        return_type_type: {
-          $ilike: '%composite%',
-        },
+        return_type_type: 'c', // COMPOSITE type
         function_type: {
           $ilike: '%volatile%',
         },
