@@ -69,7 +69,7 @@ const dropInconsistentObjectsQuery = {
   args: {},
 };
 
-const exportMetadata = (successCb, errorCb) => (dispatch, getState) => {
+export const exportMetadata = (successCb, errorCb) => (dispatch, getState) => {
   const { dataHeaders } = getState().tables;
   const query = {
     type: 'export_metadata',

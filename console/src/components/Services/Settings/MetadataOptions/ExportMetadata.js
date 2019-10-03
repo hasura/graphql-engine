@@ -1,12 +1,12 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import Button from '../../../Common/Button/Button';
 
 import {
   showSuccessNotification,
   showErrorNotification,
 } from '../../Common/Notification';
+import { exportMetadata } from '../Actions';
 
 class ExportMetadata extends Component {
   constructor() {
@@ -26,61 +26,36 @@ class ExportMetadata extends Component {
           onClick={e => {
             e.preventDefault();
             this.setState({ isExporting: true });
-            const url = Endpoints.query;
-            const requestBody = {
-              type: 'export_metadata',
-              args: null,
+            const successCallback = data => {
+              const dataStr =
+                'data:text/json;charset=utf-8,' +
+                encodeURIComponent(JSON.stringify(data));
+              const anchorElem = document.createElement('a');
+              anchorElem.setAttribute('href', dataStr);
+              anchorElem.setAttribute('download', 'metadata.json');
+              // The following fixes the download issue on firefox
+              document.body.appendChild(anchorElem);
+              anchorElem.click();
+              anchorElem.remove();
+              this.setState({ isExporting: false });
+              this.props.dispatch(
+                showSuccessNotification('Metadata exported successfully!')
+              );
             };
-            const options = {
-              method: 'POST',
-              credentials: globalCookiePolicy,
-              headers: {
-                ...this.props.dataHeaders,
-              },
-              body: JSON.stringify(requestBody),
+            const errorCallback = data => {
+              this.setState({ isExporting: false });
+              const parsedErrorMsg = data;
+              this.props.dispatch(
+                showErrorNotification(
+                  'Metadata export failed',
+                  'Something is wrong.',
+                  parsedErrorMsg
+                )
+              );
+              console.error('Error with response', parsedErrorMsg);
+              this.setState({ isExporting: false });
             };
-            fetch(url, options)
-              .then(response => {
-                response.json().then(data => {
-                  if (response.ok) {
-                    const dataStr =
-                      'data:text/json;charset=utf-8,' +
-                      encodeURIComponent(JSON.stringify(data));
-                    const anchorElem = document.createElement('a');
-                    anchorElem.setAttribute('href', dataStr);
-                    anchorElem.setAttribute('download', 'metadata.json');
-                    // The following fixes the download issue on firefox
-                    document.body.appendChild(anchorElem);
-                    anchorElem.click();
-                    anchorElem.remove();
-                    this.setState({ isExporting: false });
-                    this.props.dispatch(
-                      showSuccessNotification('Metadata exported successfully!')
-                    );
-                  } else {
-                    const parsedErrorMsg = data;
-                    this.props.dispatch(
-                      showErrorNotification(
-                        'Metadata export failed',
-                        'Something is wrong.',
-                        parsedErrorMsg
-                      )
-                    );
-                    console.error('Error with response', parsedErrorMsg);
-                    this.setState({ isExporting: false });
-                  }
-                });
-              })
-              .catch(error => {
-                console.error(error);
-                this.props.dispatch(
-                  showErrorNotification(
-                    'Metadata export failed',
-                    'Cannot connect to server'
-                  )
-                );
-                this.setState({ isExporting: false });
-              });
+            this.props.dispatch(exportMetadata(successCallback, errorCallback));
           }}
         >
           {this.state.isExporting ? 'Exporting...' : 'Export metadata'}
