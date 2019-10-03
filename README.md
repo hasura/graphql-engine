@@ -65,7 +65,7 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
 
 ### One-click deployment on Heroku
 
-The fastest way to try Hasura out is via Heroku.
+The fastest way to try out Hasura is via Heroku.
 
 1. Click on the following button to deploy GraphQL Engine on Heroku with the free Postgres add-on:
 
@@ -77,7 +77,7 @@ The fastest way to try Hasura out is via Heroku.
 
 3. Make your first GraphQL query
 
-   Create a table and instantly run your first query. Follow this [simple guide](https://docs.hasura.io/1.0/graphql/manual/getting-started/first-graphql-query.html).
+   Create a table and run your first query instantly. Follow this [simple guide](https://docs.hasura.io/1.0/graphql/manual/getting-started/first-graphql-query.html).
 
 ### Other one-click deployment options
 
@@ -131,7 +131,7 @@ Check out all the example applications in the
 
 ### Realtime applications
 
-- Group Chat application built with React, includes a typing indicator, online users & new
+- Group Chat application built with React, which includes a typing indicator, online users & new
   message notifications.
   - [Try it out](https://realtime-chat.demo.hasura.app/)
   - [Tutorial](community/sample-apps/realtime-chat)
@@ -158,7 +158,7 @@ Check out all the example applications in the
 
 ## Support & Troubleshooting
 
-The documentation and community will help you troubleshoot most issues. If you have encountered a bug or need to get in touch with us, you can contact us using one of the following channels:
+The documentation and community will help you troubleshoot most issues. If you have encountered a bug or need to get in touch with us, feel free to contact us using one of the following channels:
 
 * Support & feedback: [Discord](https://discord.gg/vBPpJkS)
 * Issue & bug tracking: [GitHub issues](https://github.com/hasura/graphql-engine/issues)
