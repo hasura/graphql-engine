@@ -57,6 +57,7 @@ var testMetadataCurrent = map[string][]byte{
 	"metadata": []byte(`allowlist: []
 functions: []
 query_collections: []
+remote_relationships: []
 remote_schemas: []
 tables:
 - array_relationships: []
@@ -72,6 +73,7 @@ tables:
 	"empty-metadata": []byte(`allowlist: []
 functions: []
 query_collections: []
+remote_relationships: []
 remote_schemas: []
 tables: []
 `),
