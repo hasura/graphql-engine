@@ -8,23 +8,16 @@ Using psql
 
 Using psql with Heroku
 ----------------------
-Start a psql session on the Heroku CLI.
+
+.. note::
+   Make sure you have `Heroku CLI <https://devcenter.heroku.com/articles/heroku-cli>`__ and `Heroku Postgres <https://devcenter.heroku.com/articles/heroku-postgresql>`__ installed.
+
+Get database details
+^^^^^^^^^^^^^^^^^^^^
 
 ::
 
-  $ heroku pg:psql
-
-Connect to your database and access the PostgreSQL terminal. 
-
-::
-
-  $ heroku pg:psql DATABASE
-
-If you want to check on your databases details:
-
-::
-
-   $ heroku pg:info
+   $ heroku pg:info -a <app-name>
 
 You´ll get something like this:
 
@@ -42,7 +35,14 @@ You´ll get something like this:
 	Status       available
 	Data Size    50 GB
 
-That´s basically it! Now you´re good to go and run your SQL queries.
+Start psql
+^^^^^^^^^^
+
+::
+
+  $ heroku pg:psql -a <app-name>
+
+You can now do database operations directly on your Postgres instance.
 
 Using psql with Digital Ocean
 -----------------------------
