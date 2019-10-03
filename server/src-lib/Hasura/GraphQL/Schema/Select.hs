@@ -80,31 +80,31 @@ functionArgsWithoutTableArg tableArg inputArgs = Seq.fromList $
     FTAName argName  ->
       filter ((/=) (Just argName) . faName) $ toList inputArgs
 
-mkComputedColFld :: ComputedColumnFieldInfo -> ObjFldInfo
-mkComputedColFld fieldInfo =
-  uncurry (mkHsraObjFldInfo (Just desc) fieldName) $ case field of
-    CCTScalar scalarTy    ->
+mkComputedFieldFld :: ComputedField -> ObjFldInfo
+mkComputedFieldFld field =
+  uncurry (mkHsraObjFldInfo (Just desc) fieldName) $ case fieldType of
+    CFTScalar scalarTy    ->
       let inputParams = mkPGColParams (PGColumnScalar scalarTy)
                         <> fromInpValL (maybeToList maybeFunctionInputArg)
       in (inputParams, G.toGT $ mkScalarTy scalarTy)
-    CCTTable compColtable ->
-      let table = _cctTable compColtable
+    CFTTable computedFieldtable ->
+      let table = _cftTable computedFieldtable
       in ( fromInpValL $ maybeToList maybeFunctionInputArg <> mkSelArgs table
          , G.toGT $ G.toLT $ G.toNT $ mkTableTy table
          )
   where
-    columnDescription = "A computed column, executes function " <>> qf
-    desc = mkDescriptionWith (_ccfDescription function) columnDescription
-    fieldName = mkComputedColumnName name
-    ComputedColumnFieldInfo name function _ field = fieldInfo
-    qf = _ccfName function
+    columnDescription = "A computed field, executes function " <>> qf
+    desc = mkDescriptionWith (_cffDescription function) columnDescription
+    fieldName = mkComputedFieldName name
+    ComputedField name function _ fieldType = field
+    qf = _cffName function
 
     maybeFunctionInputArg =
       let funcArgDesc = G.Description $ "input parameters for function " <>> qf
           inputValue = InpValInfo (Just funcArgDesc) "args" Nothing $
                        G.toGT $ G.toNT $ mkFuncArgsTy qf
-          inputArgs = _ccfInputArgs function
-          tableArgument = _ccfTableArgument function
+          inputArgs = _cffInputArgs function
+          tableArgument = _cffTableArgument function
           withoutTableArgs = functionArgsWithoutTableArg tableArgument inputArgs
       in bool (Just inputValue) Nothing $ null withoutTableArgs
 
@@ -184,10 +184,10 @@ mkTableObj
 mkTableObj tn descM allowedFlds =
   mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) TLHasuraType
   where
-    flds = pgColFlds <> relFlds <> compColFlds
+    flds = pgColFlds <> relFlds <> computedFlds
     pgColFlds = map mkPGColFld $ getPGColumnFields allowedFlds
     relFlds = concatMap mkRelationshipField' $ getRelationshipFields allowedFlds
-    compColFlds = map mkComputedColFld $ getComputedColumnFields allowedFlds
+    computedFlds = map mkComputedFieldFld $ getComputedFields allowedFlds
     mkRelationshipField' (RelationshipFieldInfo relInfo allowAgg _ _ _ isNullable) =
       mkRelationshipField allowAgg relInfo isNullable
     desc = mkDescriptionWith descM $ "columns and relationships of " <>> tn

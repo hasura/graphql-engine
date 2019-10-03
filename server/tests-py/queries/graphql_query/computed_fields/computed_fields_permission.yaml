@@ -1,4 +1,4 @@
-description: Query author with computed columns as user role
+description: Query author with computed fields as user role
 url: /v1/graphql
 status: 200
 headers:

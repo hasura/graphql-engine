@@ -1,8 +1,8 @@
-- description: Add a computed column for author table
+- description: Add a computed field for author table
   url: /v1/query
   status: 200
   query:
-    type: add_computed_column
+    type: add_computed_field
     args:
       table: author
       name: get_articles
@@ -12,11 +12,11 @@
   response:
     message: success
 
-- description: Drop computed column of a non existed table
+- description: Drop computed field of a non existed table
   url: /v1/query
   status: 400
   query:
-    type: drop_computed_column
+    type: drop_computed_field
     args:
       table: random
       name: get_articles
@@ -25,24 +25,24 @@
     error: table "random" does not exist
     code: not-exists
 
-- description: Drop a non existed computed column
+- description: Drop a non existed computed field
   url: /v1/query
   status: 400
   query:
-    type: drop_computed_column
+    type: drop_computed_field
     args:
       table: author
       name: random
   response:
     path: "$.args.name"
-    error: computed column "random" does not exist
+    error: computed field "random" does not exist
     code: not-exists
 
-- description: Drop a valid computed column
+- description: Drop a valid computed field
   url: /v1/query
   status: 200
   query:
-    type: drop_computed_column
+    type: drop_computed_field
     args:
       table: author
       name: get_articles

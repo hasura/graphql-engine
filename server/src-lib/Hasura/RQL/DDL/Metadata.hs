@@ -41,7 +41,7 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query                  as Q
-import qualified Hasura.RQL.DDL.ComputedColumn      as DCC
+import qualified Hasura.RQL.DDL.ComputedField       as DCC
 import qualified Hasura.RQL.DDL.EventTrigger        as DE
 import qualified Hasura.RQL.DDL.Permission          as DP
 import qualified Hasura.RQL.DDL.Permission.Internal as DP
@@ -518,4 +518,4 @@ purgeMetadataObj = liftTx . \case
   (MOTableObj qt (MTORel rn _))           -> DR.delRelFromCatalog qt rn
   (MOTableObj qt (MTOPerm rn pt))         -> DP.dropPermFromCatalog qt rn pt
   (MOTableObj _ (MTOTrigger trn))         -> DE.delEventTriggerFromCatalog trn
-  (MOTableObj qt (MTOComputedColumn ccn)) -> DCC.dropComputedColumnFromCatalog qt ccn
+  (MOTableObj qt (MTOComputedField ccn)) -> DCC.dropComputedFieldFromCatalog qt ccn

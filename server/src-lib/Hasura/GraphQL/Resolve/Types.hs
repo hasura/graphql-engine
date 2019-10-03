@@ -114,31 +114,31 @@ data RelationshipField
   , _rfPermLimit  :: !(Maybe Int)
   } deriving (Show, Eq)
 
-data ComputedColumnTable
-  = ComputedColumnTable
-  { _cctTable      :: !QualifiedTable
-  , _cctCols       :: !PGColGNameMap
-  , _cctPermFilter :: !AnnBoolExpPartialSQL
-  , _cctPermLimit  :: !(Maybe Int)
+data ComputedFieldTable
+  = ComputedFieldTable
+  { _cftTable      :: !QualifiedTable
+  , _cftCols       :: !PGColGNameMap
+  , _cftPermFilter :: !AnnBoolExpPartialSQL
+  , _cftPermLimit  :: !(Maybe Int)
   } deriving (Show, Eq)
 
-data ComputedColumnField
-  = CCTScalar !PGScalarType
-  | CCTTable !ComputedColumnTable
+data ComputedFieldType
+  = CFTScalar !PGScalarType
+  | CFTTable !ComputedFieldTable
   deriving (Show, Eq)
 
-data ComputedColumnFieldInfo
-  = ComputedColumnFieldInfo
-  { _ccfinfoName     :: !ComputedColumnName
-  , _ccfinfoFunction :: !ComputedColumnFunction
-  , _ccfinfoArgSeq   :: !FuncArgSeq
-  , _ccfinfoField    :: !ComputedColumnField
+data ComputedField
+  = ComputedField
+  { _cfName     :: !ComputedFieldName
+  , _cfFunction :: !ComputedFieldFunction
+  , _cfArgSeq   :: !FuncArgSeq
+  , _cfType     :: !ComputedFieldType
   } deriving (Show, Eq)
 
 data ResolveField
   = RFPGColumn !PGColumnInfo
   | RFRelationship !RelationshipField
-  | RFComputedColumn !ComputedColumnFieldInfo
+  | RFComputedField !ComputedField
   deriving (Show, Eq)
 
 type FieldMap = Map.HashMap (G.NamedType, G.Name) ResolveField

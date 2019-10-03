@@ -1,4 +1,4 @@
-Schema/Metadata API Reference: Computed Columns
+Schema/Metadata API Reference: Computed Fields
 ===============================================
 
 .. contents:: Table of contents
@@ -6,23 +6,23 @@ Schema/Metadata API Reference: Computed Columns
   :depth: 1
   :local:
 
-**Computed column** is an extra field added to a table, its value is
+**computed field** is an extra field added to a table, its value is
 computed via an SQL function which has the table row type as an input argument.
 Currenty, the Hasura GraphQL Engine supports functions returning
 `Base types <https://www.postgresql.org/docs/current/extend-type-system.html#id-1.8.3.5.9>`__ or
 `Table row types <https://www.postgresql.org/docs/current/rowtypes.html#ROWTYPES-DECLARING>`__
-as computed columns.
+as computed fields.
 
-.. _add_computed_column:
+.. _add_computed_field:
 
-add_computed_column
+add_computed_field
 -------------------
 
-``add_computed_column`` is used to define a computed column in a table.
-There cannot be an existing column or relationship or computed column with
+``add_computed_field`` is used to define a computed field in a table.
+There cannot be an existing column or relationship or computed field with
 the same name.
 
-Create a ``computed column`` ``get_articles`` on ``author`` *table*, using
+Create a ``computed field`` ``get_articles`` on ``author`` *table*, using
 SQL function ``fetch_articles``:
 
 .. code-block:: http
@@ -32,7 +32,7 @@ SQL function ``fetch_articles``:
    X-Hasura-Role: admin
 
    {
-       "type":"add_computed_column",
+       "type":"add_computed_field",
        "args":{
            "table":{
                "name":"author",
@@ -49,7 +49,7 @@ SQL function ``fetch_articles``:
        }
    }
 
-.. _add_computed_column_syntax:
+.. _add_computed_field_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -67,12 +67,12 @@ Args syntax
      - Name of the table
    * - name
      - true
-     - :ref:`ComputedColumnName <ComputedColumnName>`
-     - Name of the new computed column
+     - :ref:`ComputedFieldName <ComputedFieldName>`
+     - Name of the new computed field
    * - definition
      - true
      - Definition_
-     - The computed column definition
+     - The computed field definition
    * - comment
      - false
      - text
@@ -100,18 +100,18 @@ Definition
      - Name of argument which accepts table row type. If omitted the first
        argument is considered as table argument
 
-.. _drop_computed_column:
+.. _drop_computed_field:
 
-drop_computed_column
+drop_computed_field
 --------------------
 
-``drop_computed_column`` is used to drop a computed column of a table. If
-there are other objects dependent on this computed column like permissions
+``drop_computed_field`` is used to drop a computed field of a table. If
+there are other objects dependent on this computed field like permissions
 etc., the query will fail and report the dependencies unless ``cascade`` is
 set to ``true``. If ``cascade`` is set to ``true``, the dependent objects
 are also dropped.
 
-Drop a computed column ``get_articles`` from a table ``author``:
+Drop a computed field ``get_articles`` from a table ``author``:
 
 .. code-block:: http
 
@@ -120,7 +120,7 @@ Drop a computed column ``get_articles`` from a table ``author``:
    X-Hasura-Role: admin
 
    {
-       "type":"drop_computed_column",
+       "type":"drop_computed_field",
        "args":{
            "table":{
                "name":"author",
@@ -131,7 +131,7 @@ Drop a computed column ``get_articles`` from a table ``author``:
        }
    }
 
-.. _drop_computed_column_syntax:
+.. _drop_computed_field_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -149,9 +149,9 @@ Args syntax
      - Name of the table
    * - name
      - true
-     - :ref:`ComputedColumnName <ComputedColumnName>`
-     - Name of the computed column
+     - :ref:`ComputedFieldName <ComputedFieldName>`
+     - Name of the computed field
    * - cascade
      - false
      - Boolean
-     - When set to ``true``, all the dependent items (if any) on this computed columns also dropped
+     - When set to ``true``, all the dependent items (if any) on this computed fields also dropped

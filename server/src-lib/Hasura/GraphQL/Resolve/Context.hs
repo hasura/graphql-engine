@@ -68,7 +68,7 @@ getPGColInfo nt n = do
   case fldInfo of
     RFPGColumn pgColInfo -> return pgColInfo
     RFRelationship _     -> throw500 $ mkErrMsg "relation"
-    RFComputedColumn _   -> throw500 $ mkErrMsg "computed column"
+    RFComputedField _    -> throw500 $ mkErrMsg "computed field"
   where
     mkErrMsg ty =
       "found " <> ty <> " when expecting pgcolinfo for "

@@ -8,7 +8,7 @@ select
     'functions', functions.items,
     'foreign_keys', foreign_keys.items,
     'allowlist_collections', allowlist.item,
-    'computed_columns', computed_column.items
+    'computed_fields', computed_field.items
   )
 from
   (
@@ -182,7 +182,7 @@ from
   (
     select
       coalesce(json_agg(
-        json_build_object('computed_column', cc.computed_column,
+        json_build_object('computed_field', cc.computed_field,
                           'function_info', fi.function_info
                          )
       ), '[]') as items
@@ -190,18 +190,18 @@ from
       (
         select json_build_object(
           'table', jsonb_build_object('name', hcc.table_name,'schema', hcc.table_schema),
-          'name', hcc.computed_column_name,
+          'name', hcc.computed_field_name,
           'definition', hcc.definition,
           'comment', hcc.comment
-        ) as computed_column,
+        ) as computed_field,
         hccf.function_name,
         hccf.function_schema
-        from hdb_catalog.hdb_computed_column hcc
+        from hdb_catalog.hdb_computed_field hcc
         left outer join
-             hdb_catalog.hdb_computed_column_function hccf
+             hdb_catalog.hdb_computed_field_function hccf
              on ( hcc.table_name = hccf.table_name
                  and hcc.table_schema = hccf.table_schema
-                 and hcc.computed_column_name = hccf.computed_column_name
+                 and hcc.computed_field_name = hccf.computed_field_name
                 )
       ) cc
     left join lateral
@@ -210,4 +210,4 @@ from
         from hdb_catalog.hdb_function_info_agg
         where function_name = cc.function_name and function_schema = cc.function_schema
       ) fi on 'true'
-  ) as computed_column
+  ) as computed_field

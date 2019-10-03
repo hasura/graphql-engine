@@ -47,7 +47,7 @@ mkAdminRolePermInfo ti =
   where
     fields = _tiFieldInfoMap ti
     pgCols = map pgiColumn $ getCols fields
-    computedCols = map _cciName $ getComputedCols fields
+    computedCols = map _cfiName $ getComputedFieldInfos fields
 
     tn = _tiName ti
     i = InsPermInfo (HS.fromList pgCols) tn annBoolExpTrue M.empty []

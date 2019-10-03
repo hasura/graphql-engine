@@ -26,13 +26,13 @@ module Hasura.RQL.Types.Common
        , FunctionArgName(..)
        , FunctionArg(..)
 
-       , ComputedColumnName(..)
-       , computedColumnNameToText
-       , fromComputedColumn
+       , ComputedFieldName(..)
+       , computedFieldNameToText
+       , fromComputedField
        , FunctionTableArgument(..)
-       , ComputedColumnReturn(..)
-       , ComputedColumnFunction(..)
-       , ComputedColumnInfo(..)
+       , ComputedFieldReturn(..)
+       , ComputedFieldFunction(..)
+       , ComputedFieldInfo(..)
        ) where
 
 import           Hasura.Prelude
@@ -204,15 +204,15 @@ data FunctionArg
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionArg)
 
-newtype ComputedColumnName =
-  ComputedColumnName { unComputedColumnName :: NonEmptyText}
+newtype ComputedFieldName =
+  ComputedFieldName { unComputedFieldName :: NonEmptyText}
   deriving (Show, Eq, Lift, FromJSON, ToJSON, Q.ToPrepArg, DQuote, Hashable)
 
-computedColumnNameToText :: ComputedColumnName -> Text
-computedColumnNameToText = unNonEmptyText . unComputedColumnName
+computedFieldNameToText :: ComputedFieldName -> Text
+computedFieldNameToText = unNonEmptyText . unComputedFieldName
 
-fromComputedColumn :: ComputedColumnName -> FieldName
-fromComputedColumn = FieldName . computedColumnNameToText
+fromComputedField :: ComputedFieldName -> FieldName
+fromComputedField = FieldName . computedFieldNameToText
 
 data FunctionTableArgument
   = FTAFirstArgument
@@ -223,30 +223,30 @@ instance ToJSON FunctionTableArgument where
   toJSON FTAFirstArgument  = String "first_argument"
   toJSON (FTAName argName) = object ["name" .= argName]
 
-data ComputedColumnReturn
-  = CCRScalar !PGScalarType
-  | CCRSetofTable !QualifiedTable
+data ComputedFieldReturn
+  = CFRScalar !PGScalarType
+  | CFRSetofTable !QualifiedTable
   deriving (Show, Eq)
 $(deriveToJSON defaultOptions { constructorTagModifier = snakeCase . drop 3
                               , sumEncoding = TaggedObject "type" "info"
                               }
-   ''ComputedColumnReturn
+   ''ComputedFieldReturn
  )
 
-data ComputedColumnFunction
-  = ComputedColumnFunction
-  { _ccfName          :: !QualifiedFunction
-  , _ccfInputArgs     :: !(Seq.Seq FunctionArg)
-  , _ccfTableArgument :: !FunctionTableArgument
-  , _ccfDescription   :: !(Maybe PGDescription)
+data ComputedFieldFunction
+  = ComputedFieldFunction
+  { _cffName          :: !QualifiedFunction
+  , _cffInputArgs     :: !(Seq.Seq FunctionArg)
+  , _cffTableArgument :: !FunctionTableArgument
+  , _cffDescription   :: !(Maybe PGDescription)
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 4 snakeCase) ''ComputedColumnFunction)
+$(deriveToJSON (aesonDrop 4 snakeCase) ''ComputedFieldFunction)
 
-data ComputedColumnInfo
-  = ComputedColumnInfo
-  { _cciName       :: !ComputedColumnName
-  , _cciFunction   :: !ComputedColumnFunction
-  , _cciReturnType :: !ComputedColumnReturn
-  , _cciComment    :: !(Maybe T.Text)
+data ComputedFieldInfo
+  = ComputedFieldInfo
+  { _cfiName       :: !ComputedFieldName
+  , _cfiFunction   :: !ComputedFieldFunction
+  , _cfiReturnType :: !ComputedFieldReturn
+  , _cfiComment    :: !(Maybe T.Text)
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 4 snakeCase) ''ComputedColumnInfo)
+$(deriveToJSON (aesonDrop 4 snakeCase) ''ComputedFieldInfo)

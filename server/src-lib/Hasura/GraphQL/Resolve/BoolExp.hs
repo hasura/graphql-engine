@@ -165,8 +165,8 @@ parseColExp nt n val = do
       relBoolExp <- parseBoolExp val
       return $ AVRel relInfo $ andAnnBoolExps relBoolExp $
         fmapAnnBoolExp partialSQLExpToUnresolvedVal permExp
-    RFComputedColumn _ -> throw500
-          "computed columns are not allowed in bool_exp"
+    RFComputedField _ -> throw500
+          "computed fields are not allowed in bool_exp"
 
 parseBoolExp
   :: ( MonadResolve m

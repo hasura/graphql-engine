@@ -94,26 +94,26 @@ type ArrRelG v = AnnRelG (AnnSimpleSelG v)
 type ArrRelAggG v = AnnRelG (AnnAggSelG v)
 type ArrRelAgg = ArrRelAggG S.SQLExp
 
-data ComputedColScalarSel v
-  = ComputedColScalarSel
-  { _ccssFunction  :: !QualifiedFunction
-  , _ccssArguments :: !(FunctionArgsExpTableRow v)
-  , _ccssType      :: !PGScalarType
-  , _ccssColumnOp  :: !(Maybe ColOp)
+data ComputedFieldScalarSel v
+  = ComputedFieldScalarSel
+  { _cfssFunction  :: !QualifiedFunction
+  , _cfssArguments :: !(FunctionArgsExpTableRow v)
+  , _cfssType      :: !PGScalarType
+  , _cfssColumnOp  :: !(Maybe ColOp)
   } deriving (Show, Eq, Functor, Foldable, Traversable)
 
-data ComputedColSel v
-  = CCSScalar !(ComputedColScalarSel v)
-  | CCSTable !(AnnSimpleSelG v)
+data ComputedFieldSel v
+  = CFSScalar !(ComputedFieldScalarSel v)
+  | CFSTable !(AnnSimpleSelG v)
   deriving (Show, Eq)
 
-traverseComputedColSel
+traverseComputedFieldSel
   :: (Applicative f)
   => (v -> f w)
-  -> ComputedColSel v -> f (ComputedColSel w)
-traverseComputedColSel fv = \case
-  CCSScalar scalarSel -> CCSScalar <$> traverse fv scalarSel
-  CCSTable tableSel   -> CCSTable <$> traverseAnnSimpleSel fv tableSel
+  -> ComputedFieldSel v -> f (ComputedFieldSel w)
+traverseComputedFieldSel fv = \case
+  CFSScalar scalarSel -> CFSScalar <$> traverse fv scalarSel
+  CFSTable tableSel   -> CFSTable <$> traverseAnnSimpleSel fv tableSel
 
 type Fields a = [(FieldName, a)]
 
@@ -145,7 +145,7 @@ data AnnFldG v
   = FCol !PGColumnInfo !(Maybe ColOp)
   | FObj !(ObjSelG v)
   | FArr !(ArrSelG v)
-  | FComputedCol !(ComputedColSel v)
+  | FComputedField !(ComputedFieldSel v)
   | FExp !T.Text
   deriving (Show, Eq)
 
@@ -156,7 +156,7 @@ traverseAnnFld f = \case
   FCol pgColInfo colOpM -> pure $ FCol pgColInfo colOpM
   FObj sel -> FObj <$> traverse (traverseAnnSimpleSel f) sel
   FArr sel -> FArr <$> traverseArrSel f sel
-  FComputedCol sel -> FComputedCol <$> traverseComputedColSel f sel
+  FComputedField sel -> FComputedField <$> traverseComputedFieldSel f sel
   FExp t -> FExp <$> pure t
 
 type AnnFld = AnnFldG S.SQLExp
@@ -354,18 +354,18 @@ traverseAnnFnAgg f =
 
 data BaseNode
   = BaseNode
-  { _bnPrefix            :: !Iden
-  , _bnDistinct          :: !(Maybe S.DistinctExpr)
-  , _bnFrom              :: !S.FromItem
-  , _bnWhere             :: !S.BoolExp
-  , _bnOrderBy           :: !(Maybe S.OrderByExp)
-  , _bnLimit             :: !(Maybe Int)
-  , _bnOffset            :: !(Maybe S.SQLExp)
+  { _bnPrefix              :: !Iden
+  , _bnDistinct            :: !(Maybe S.DistinctExpr)
+  , _bnFrom                :: !S.FromItem
+  , _bnWhere               :: !S.BoolExp
+  , _bnOrderBy             :: !(Maybe S.OrderByExp)
+  , _bnLimit               :: !(Maybe Int)
+  , _bnOffset              :: !(Maybe S.SQLExp)
 
-  , _bnExtrs             :: !(HM.HashMap S.Alias S.SQLExp)
-  , _bnObjs              :: !(HM.HashMap RelName ObjNode)
-  , _bnArrs              :: !(HM.HashMap S.Alias ArrNode)
-  , _bnComputedColTables :: !(HM.HashMap FieldName BaseNode)
+  , _bnExtrs               :: !(HM.HashMap S.Alias S.SQLExp)
+  , _bnObjs                :: !(HM.HashMap RelName ObjNode)
+  , _bnArrs                :: !(HM.HashMap S.Alias ArrNode)
+  , _bnComputedFieldTables :: !(HM.HashMap FieldName BaseNode)
   } deriving (Show, Eq)
 
 mergeBaseNodes :: BaseNode -> BaseNode -> BaseNode
@@ -445,5 +445,5 @@ data ArrNodeInfo
 data Prefixes
   = Prefixes
   { _pfThis :: !Iden -- Current node prefix
-  , _pfBase :: !Iden -- Base table row identifier for computed column function
+  , _pfBase :: !Iden -- Base table row identifier for computed field function
   } deriving (Show, Eq)

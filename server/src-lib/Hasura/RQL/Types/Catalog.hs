@@ -7,7 +7,7 @@ module Hasura.RQL.Types.Catalog
   , CatalogTableInfo(..)
 
   , CatalogRelation(..)
-  , CatalogComputedColumn(..)
+  , CatalogComputedField(..)
   , CatalogPermission(..)
   , CatalogEventTrigger(..)
   , CatalogFunction(..)
@@ -19,7 +19,7 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
-import           Hasura.RQL.DDL.ComputedColumn
+import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
@@ -70,12 +70,12 @@ data CatalogPermission
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogPermission)
 
-data CatalogComputedColumn
-  = CatalogComputedColumn
-  { _cccComputedColumn :: !AddComputedColumn
-  , _cccFunctionInfo   :: ![RawFunctionInfo] -- multiple functions with same name
+data CatalogComputedField
+  = CatalogComputedField
+  { _cccComputedField :: !AddComputedField
+  , _cccFunctionInfo  :: ![RawFunctionInfo] -- multiple functions with same name
   } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 4 snakeCase) ''CatalogComputedColumn)
+$(deriveJSON (aesonDrop 4 snakeCase) ''CatalogComputedField)
 
 data CatalogEventTrigger
   = CatalogEventTrigger
@@ -102,6 +102,6 @@ data CatalogMetadata
   , _cmFunctions            :: ![CatalogFunction]
   , _cmForeignKeys          :: ![ForeignKey]
   , _cmAllowlistCollections :: ![CollectionDef]
-  , _cmComputedColumns      :: ![CatalogComputedColumn]
+  , _cmComputedFields       :: ![CatalogComputedField]
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogMetadata)

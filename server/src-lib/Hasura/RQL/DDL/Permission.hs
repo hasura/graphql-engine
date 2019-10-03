@@ -202,11 +202,11 @@ instance IsPerm InsPerm where
 -- Select constraint
 data SelPerm
   = SelPerm
-  { spColumns           :: !PermColSpec       -- Allowed columns
-  , spFilter            :: !BoolExp   -- Filter expression
-  , spLimit             :: !(Maybe Int) -- Limit value
-  , spAllowAggregations :: !Bool -- Allow aggregation
-  , spComputedColumns   :: ![ComputedColumnName]
+  { spColumns           :: !PermColSpec         -- ^ Allowed columns
+  , spFilter            :: !BoolExp             -- ^ Filter expression
+  , spLimit             :: !(Maybe Int)         -- ^ Limit value
+  , spAllowAggregations :: !Bool                -- ^ Allow aggregation
+  , spComputedFields    :: ![ComputedFieldName] -- ^ Allowed computed fields
   } deriving (Show, Eq, Lift)
 $(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''SelPerm)
 
@@ -217,7 +217,7 @@ instance FromJSON SelPerm where
     <*> o .: "filter"
     <*> o .:? "limit"
     <*> o .:? "allow_aggregations" .!= False
-    <*> o .:? "computed_columns" .!= []
+    <*> o .:? "computed_fields" .!= []
 
 buildSelPermInfo
   :: (QErrM m, CacheRM m)
@@ -235,27 +235,27 @@ buildSelPermInfo role tabInfo sp = do
   void $ withPathK "columns" $ indexedForM pgCols $ \pgCol ->
     askPGType fieldInfoMap pgCol autoInferredErr
 
-  -- validate computed columns
-  withPathK "computed_columns" $ indexedForM_ computedColumns $ \name -> do
-    computedColumnInfo <- askComputedColumnInfo fieldInfoMap name
-    case _cciReturnType computedColumnInfo of
-      CCRScalar _ -> pure ()
-      CCRSetofTable returnTable -> do
+  -- validate computed fields
+  withPathK "computed_fields" $ indexedForM_ computedFields $ \name -> do
+    computedFieldInfo <- askComputedFieldInfo fieldInfoMap name
+    case _cfiReturnType computedFieldInfo of
+      CFRScalar _ -> pure ()
+      CFRSetofTable returnTable -> do
         returnTableInfo <- askTabInfo returnTable
-        let function = _ccfName $ _cciFunction $ computedColumnInfo
-            errModifier e = "computed column " <> name <<> " executes function "
+        let function = _cffName $ _cfiFunction $ computedFieldInfo
+            errModifier e = "computed field " <> name <<> " executes function "
                              <> function <<> " which returns set of table "
                              <> returnTable <<> "; " <> e
         void $ modifyErr errModifier $ askPermInfo returnTableInfo role PASelect
 
   let deps = mkParentDep tn : beDeps ++ map (mkColDep DRUntyped tn) pgCols
-             ++ map (mkComputedColumnDep DRUntyped tn) computedColumns
+             ++ map (mkComputedFieldDep DRUntyped tn) computedFields
       depHeaders = getDependentHeaders $ spFilter sp
       mLimit = spLimit sp
 
   withPathK "limit" $ mapM_ onlyPositiveInt mLimit
 
-  return ( SelPermInfo (HS.fromList pgCols) (HS.fromList computedColumns)
+  return ( SelPermInfo (HS.fromList pgCols) (HS.fromList computedFields)
                         tn be mLimit allowAgg depHeaders
          , deps
          )
@@ -263,7 +263,7 @@ buildSelPermInfo role tabInfo sp = do
     tn = _tiName tabInfo
     fieldInfoMap = _tiFieldInfoMap tabInfo
     allowAgg = spAllowAggregations sp
-    computedColumns = spComputedColumns sp
+    computedFields = spComputedFields sp
     autoInferredErr = "permissions for relationships are automatically inferred"
 
 type SelPermDef = PermDef SelPerm

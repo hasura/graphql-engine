@@ -7,12 +7,12 @@ module Hasura.GraphQL.Schema.Common
   , SelField(..)
   , getPGColumnFields
   , getRelationshipFields
-  , getComputedColumnFields
+  , getComputedFields
 
   , mkColumnType
   , mkRelName
   , mkAggRelName
-  , mkComputedColumnName
+  , mkComputedFieldName
 
   , mkTableTy
   , mkTableEnumType
@@ -51,7 +51,7 @@ data RelationshipFieldInfo
 data SelField
   = SFPGColumn !PGColumnInfo
   | SFRelationship !RelationshipFieldInfo
-  | SFComputedColumn !ComputedColumnFieldInfo
+  | SFComputedField !ComputedField
   deriving (Show, Eq)
 $(makePrisms ''SelField)
 
@@ -61,8 +61,8 @@ getPGColumnFields = mapMaybe (^? _SFPGColumn)
 getRelationshipFields :: [SelField] -> [RelationshipFieldInfo]
 getRelationshipFields = mapMaybe (^? _SFRelationship)
 
-getComputedColumnFields :: [SelField] -> [ComputedColumnFieldInfo]
-getComputedColumnFields = mapMaybe (^? _SFComputedColumn)
+getComputedFields :: [SelField] -> [ComputedField]
+getComputedFields = mapMaybe (^? _SFComputedField)
 
 qualObjectToName :: (ToTxt a) => QualifiedObject a -> G.Name
 qualObjectToName = G.Name . snakeCaseQualObject
@@ -79,8 +79,8 @@ mkRelName rn = G.Name $ relNameToTxt rn
 mkAggRelName :: RelName -> G.Name
 mkAggRelName rn = G.Name $ relNameToTxt rn <> "_aggregate"
 
-mkComputedColumnName :: ComputedColumnName -> G.Name
-mkComputedColumnName = G.Name . computedColumnNameToText
+mkComputedFieldName :: ComputedFieldName -> G.Name
+mkComputedFieldName = G.Name . computedFieldNameToText
 
 mkColumnType :: PGColumnType -> G.NamedType
 mkColumnType = \case

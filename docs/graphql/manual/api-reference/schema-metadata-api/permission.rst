@@ -273,10 +273,10 @@ SelectPermission
      - true
      - :ref:`PGColumn` array (or) ``'*'``
      - Only these columns are selectable (or all when ``'*'`` is specified)
-   * - computed_columns
+   * - computed_fields
      - false
-     - :ref:`ComputedColumnName` array
-     - Only these computed columns are selectable
+     - :ref:`ComputedFieldName` array
+     - Only these computed fields are selectable
    * - filter
      - true
      - :ref:`BoolExp`

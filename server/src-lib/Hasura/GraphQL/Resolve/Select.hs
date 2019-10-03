@@ -55,26 +55,26 @@ argsToColOp args = maybe (return Nothing) toOp $ Map.lookup "path" args
 
 type AnnFlds = RS.AnnFldsG UnresolvedVal
 
-fromComputedColumnField
+resolveComputedField
   :: ( MonadResolve m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )
-  => ComputedColumnFieldInfo -> Field -> m (RS.ComputedColSel UnresolvedVal)
-fromComputedColumnField fieldInfo fld = fieldAsPath fld $ do
+  => ComputedField -> Field -> m (RS.ComputedFieldSel UnresolvedVal)
+resolveComputedField computedField fld = fieldAsPath fld $ do
   funcArgsM <- withArgM (_fArguments fld) "args" $ parseFunctionArgs argSeq
   let funcArgs = fromMaybe RS.emptyFunctionArgsExp funcArgsM
       argsWithTableArgument = withTableArgument funcArgs
-  case returnField of
-    CCTScalar scalarTy -> do
+  case fieldType of
+    CFTScalar scalarTy -> do
       colOpM <- argsToColOp $ _fArguments fld
-      pure $ RS.CCSScalar $
-        RS.ComputedColScalarSel qf argsWithTableArgument scalarTy colOpM
-    CCTTable (ComputedColumnTable _ cols permFilter permLimit) -> do
+      pure $ RS.CFSScalar $
+        RS.ComputedFieldScalarSel qf argsWithTableArgument scalarTy colOpM
+    CFTTable (ComputedFieldTable _ cols permFilter permLimit) -> do
       let functionFrom = RS.FromFunction qf argsWithTableArgument
-      RS.CCSTable <$> fromField functionFrom cols permFilter permLimit fld
+      RS.CFSTable <$> fromField functionFrom cols permFilter permLimit fld
   where
-    ComputedColumnFieldInfo _ function argSeq returnField = fieldInfo
-    ComputedColumnFunction qf _ tableArg _ = function
+    ComputedField _ function argSeq fieldType = computedField
+    ComputedFieldFunction qf _ tableArg _ = function
     withTableArgument resolvedArgs =
       let RS.FunctionArgsExp positional named = RS.AEInput <$> resolvedArgs
       in case tableArg of
@@ -99,8 +99,8 @@ fromSelSet fldTy flds =
         case fldInfo of
           RFPGColumn colInfo ->
             RS.FCol colInfo <$> argsToColOp (_fArguments fld)
-          RFComputedColumn fieldInfo ->
-            RS.FComputedCol <$> fromComputedColumnField fieldInfo fld
+          RFComputedField computedField ->
+            RS.FComputedField <$> resolveComputedField computedField fld
           RFRelationship (RelationshipField relInfo isAgg colGNameMap tableFilter tableLimit) -> do
             let relTN = riRTable relInfo
                 colMapping = riMapping relInfo

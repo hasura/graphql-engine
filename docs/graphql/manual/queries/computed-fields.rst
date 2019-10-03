@@ -1,4 +1,4 @@
-Computed Columns
+Computed Fields
 ================
 
 .. contents:: Table of contents
@@ -6,34 +6,34 @@ Computed Columns
   :depth: 2
   :local:
 
-What are computed columns?
+What are computed fields?
 --------------------------
 
-Computed columns are extra fields added to a table whose value is computed from other columns.
+Computed fields are extra fields added to a table whose value is computed from other columns.
 It facilitates users to define an additional field to an existing table whose
-return value is computed via an SQL function. Computed columns are exposed only over the GraphQL API. The server
-does not modify the database schema to define a computed column. Computed columns are added as a part of
+return value is computed via an SQL function. computed fields are exposed only over the GraphQL API. The server
+does not modify the database schema to define a computed field. computed fields are added as a part of
 metadata.
 
 Supported SQL functions
 ***********************
 
-Only functions which satisfy the following constraints can be added as a computed column to a table.
+Only functions which satisfy the following constraints can be added as a computed field to a table.
 
 - **Function behaviour**: ONLY ``STABLE`` or ``IMMUTABLE``
 - **Argument modes**: ONLY ``IN``
 - **Table Argument**: One input argument with table row type
 - **Return type**: Either ``SETOF <table-name>`` or ``BASE`` type
 
-Defining computed columns
+Defining computed fields
 -------------------------
 
-Based on the SQL function return type we can define two types of computed columns
+Based on the SQL function return type we can define two types of computed fields
 
-1. Scalar computed columns
+1. Scalar computed fields
 **************************
 
-Computed columns whose associated SQL function returns
+computed fields whose associated SQL function returns
 `Base type <https://www.postgresql.org/docs/current/extend-type-system.html#id-1.8.3.5.9>`__ like *Integer*,
 *Boolean*, *Geography* etc.
 
@@ -48,7 +48,7 @@ Computed columns whose associated SQL function returns
     SELECT author_row.first_name || ' ' || author_row.last_name
   $$ LANGUAGE sql STABLE;
 
-Add a computed column ``full_name`` to ``author`` table using the SQL function above.
+Add a computed field ``full_name`` to ``author`` table using the SQL function above.
 See :doc:`API Reference <../api-reference/schema-metadata-api/computed-column>`
 
 Query data from ``author`` table
@@ -78,16 +78,16 @@ Query data from ``author`` table
       }
     }
 
-2. Table computed columns
+2. Table computed fields
 *************************
 
-Computed columns whose associated SQL functions returns ``SETOF <table-name>`` are table computed columns.
-Return table must be tracked to define such computed column.
+Computed fields whose associated SQL functions returns ``SETOF <table-name>`` are table computed fields.
+Return table must be tracked to define such computed field.
 
 **Example:-**
 
 In a simple ``author <-> article`` schema we can define :doc:`relationship <../schema/relationships/index>` on ``author``
-table to fetch authors along with their articles. We can make use of computed columns to fetch author's articles
+table to fetch authors along with their articles. We can make use of computed fields to fetch author's articles
 with search.
 
 Define ``fetch_articles`` SQL function.
@@ -104,7 +104,7 @@ Define ``fetch_articles`` SQL function.
        ) AND author_id = author_row.id
    $$ LANGUAGE sql STABLE;
 
-Add a computed column ``get_articles`` to ``author`` table using the SQL function above.
+Add a computed field ``get_articles`` to ``author`` table using the SQL function above.
 See :doc:`API Reference <../api-reference/schema-metadata-api/computed-column>`
 
 Query data from ``author`` table
@@ -135,8 +135,8 @@ Query data from ``author`` table
             "get_articles": [
               {
                 "id": 1,
-                "title": "Computed columns in Hasura",
-                "content": "Some content related to computed columns"
+                "title": "computed fields in Hasura",
+                "content": "Some content related to computed fields"
               }
             ]
           }
@@ -144,11 +144,11 @@ Query data from ``author`` table
       }
     }
 
-How a computed column is different from Postgres generated column?
+How a computed field is different from Postgres generated column?
 ---------------------------------------------------------------
 
 Postgres, from version ``12``, is introducing `Generated Columns <https://www.postgresql.org/docs/12/ddl-generated-columns.html>`__.
 The value of generated columns is also computed from other columns of a table. Postgres' generated columns
-come with its own limitations. Hasura's computed columns are defined via an SQL function, which allows users
-to define any complex business logic in a function. Generated columns will go together with computed columns where
+come with its own limitations. Hasura's computed fields are defined via an SQL function, which allows users
+to define any complex business logic in a function. Generated columns will go together with computed fields where
 Hasura treats generated columns as normal postgres columns.

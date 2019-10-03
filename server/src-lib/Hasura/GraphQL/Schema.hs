@@ -238,9 +238,9 @@ mkGCtxRole' tn descM insPermM selPermM updColsM
         in case riType relInfo of
           ObjRel -> [relFld]
           ArrRel -> bool [relFld] [relFld, aggRelFld] allowAgg
-      SFComputedColumn cci -> pure
-        ( (ty, mkComputedColumnName $ _ccfinfoName cci)
-        , RFComputedColumn cci
+      SFComputedField cf -> pure
+        ( (ty, mkComputedFieldName $ _cfName cf)
+        , RFComputedField cf
         )
 
     -- the fields used in bool exp
@@ -301,15 +301,15 @@ mkGCtxRole' tn descM insPermM selPermM updColsM
       mkHsraEnumTyInfo Nothing (mkTableEnumType tn) $
         EnumValuesReference (EnumReference tn enumValues)
 
-    -- computed columns function args input objects
-    mkComputedColFuncArgsInp computedColInfo =
-      let ComputedColumnFunction qf inputArgs tableArg _ =
-            _ccfinfoFunction computedColInfo
+    -- computed fields function args input objects
+    mkComputedFieldFuncArgsInp computedColInfo =
+      let ComputedFieldFunction qf inputArgs tableArg _ =
+            _cfFunction computedColInfo
           withoutTableArg = functionArgsWithoutTableArg tableArg inputArgs
       in mkFuncArgsInp qf withoutTableArg
 
     computedColFuncArgsInps = map TIInpObj $ catMaybes $
-      maybe [] (map mkComputedColFuncArgsInp . getComputedColumnFields) selFldsM
+      maybe [] (map mkComputedFieldFuncArgsInp . getComputedFields) selFldsM
 
 getRootFldsRole'
   :: QualifiedTable
@@ -445,25 +445,25 @@ getSelPerm tableCache fields role selPermInfo = do
                              , _rfiIsNullable = isRelNullable fields relInfo
                              }
 
-  computedColFlds <- fmap catMaybes $ forM computedColumns $ \info -> do
-    let ComputedColumnInfo name function returnTy _ = info
-        ComputedColumnFunction _ inputArgs tableArg _ = function
+  computedColFlds <- fmap catMaybes $ forM computedFields $ \info -> do
+    let ComputedFieldInfo name function returnTy _ = info
+        ComputedFieldFunction _ inputArgs tableArg _ = function
         inputArgSeq = mkFuncArgSeq $ functionArgsWithoutTableArg tableArg inputArgs
-    fmap (SFComputedColumn . ComputedColumnFieldInfo name function inputArgSeq) <$>
+    fmap (SFComputedField . ComputedField name function inputArgSeq) <$>
       case returnTy of
-        CCRScalar scalarTy  -> pure $ Just $ CCTScalar scalarTy
-        CCRSetofTable retTable -> do
+        CFRScalar scalarTy  -> pure $ Just $ CFTScalar scalarTy
+        CFRSetofTable retTable -> do
           retTableInfo <- getTabInfo tableCache retTable
           let retTableSelPermM = getSelPermission retTableInfo role
               retTableFlds = _tiFieldInfoMap retTableInfo
               retTableColGNameMap =
                 mkPGColGNameMap $ getValidCols retTableFlds
           pure $ flip fmap retTableSelPermM $
-            \selPerm -> CCTTable ComputedColumnTable
-                        { _cctTable = retTable
-                        , _cctCols = retTableColGNameMap
-                        , _cctPermFilter = spiFilter selPerm
-                        , _cctPermLimit = spiLimit selPerm
+            \selPerm -> CFTTable ComputedFieldTable
+                        { _cftTable = retTable
+                        , _cftCols = retTableColGNameMap
+                        , _cftPermFilter = spiFilter selPerm
+                        , _cftPermLimit = spiLimit selPerm
                         }
 
   return (spiAllowAgg selPermInfo, cols <> relFlds <> computedColFlds)
@@ -471,11 +471,11 @@ getSelPerm tableCache fields role selPermInfo = do
     validRels = getValidRels fields
     validCols = getValidCols fields
     cols = map SFPGColumn $ getColInfos (toList allowedCols) validCols
-    computedColumns = flip filter (getComputedCols fields) $
-                      \info -> _cciName info `Set.member` allowedComputedCols
+    computedFields = flip filter (getComputedFieldInfos fields) $
+                      \info -> _cfiName info `Set.member` allowedComputedFields
 
     allowedCols = spiCols selPermInfo
-    allowedComputedCols = spiComputedCols selPermInfo
+    allowedComputedFields = spiComputedFields selPermInfo
 
 mkInsCtx
   :: MonadError QErr m
@@ -557,22 +557,22 @@ mkAdminSelFlds fields tableCache = do
                    }
 
   computedColFlds <- forM computedCols $ \info -> do
-    let ComputedColumnInfo name function returnTy _ = info
-        ComputedColumnFunction _ inputArgs tableArg _ = function
+    let ComputedFieldInfo name function returnTy _ = info
+        ComputedFieldFunction _ inputArgs tableArg _ = function
         inputArgSeq = mkFuncArgSeq $ functionArgsWithoutTableArg tableArg inputArgs
-    (SFComputedColumn . ComputedColumnFieldInfo name function inputArgSeq) <$>
+    (SFComputedField . ComputedField name function inputArgSeq) <$>
       case returnTy of
-        CCRScalar scalarTy  -> pure $ CCTScalar scalarTy
-        CCRSetofTable retTable -> do
+        CFRScalar scalarTy  -> pure $ CFTScalar scalarTy
+        CFRSetofTable retTable -> do
           retTableInfo <- getTabInfo tableCache retTable
           let retTableFlds = _tiFieldInfoMap retTableInfo
               retTableColGNameMap =
                 mkPGColGNameMap $ getValidCols retTableFlds
-          pure $ CCTTable ComputedColumnTable
-                        { _cctTable = retTable
-                        , _cctCols = retTableColGNameMap
-                        , _cctPermFilter = noFilter
-                        , _cctPermLimit = Nothing
+          pure $ CFTTable ComputedFieldTable
+                        { _cftTable = retTable
+                        , _cftCols = retTableColGNameMap
+                        , _cftPermFilter = noFilter
+                        , _cftPermLimit = Nothing
                         }
 
   return $ colSelFlds <> relSelFlds <> computedColFlds
@@ -580,7 +580,7 @@ mkAdminSelFlds fields tableCache = do
     cols = getValidCols fields
     colSelFlds = map SFPGColumn cols
     validRels = getValidRels fields
-    computedCols = getComputedCols fields
+    computedCols = getComputedFieldInfos fields
 
 mkGCtxRole
   :: (MonadError QErr m)

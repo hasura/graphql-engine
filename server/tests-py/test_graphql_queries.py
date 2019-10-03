@@ -500,13 +500,13 @@ class TestGraphQLQueryEnums(DefaultTestSelectQueries):
         check_query_f(hge_ctx, self.dir() + '/select_where_enum_eq_variable_bad_value.yaml', transport)
 
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
-class TestGraphQLQueryComputedColumns(DefaultTestSelectQueries):
+class TestGraphQLQueryComputedFields(DefaultTestSelectQueries):
     @classmethod
     def dir(cls):
-        return 'queries/graphql_query/computed_columns'
+        return 'queries/graphql_query/computed_fields'
 
-    def test_computed_columns(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/computed_columns.yaml', transport)
+    def test_computed_fields(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/computed_fields.yaml', transport)
 
-    def test_computed_columns_permission(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/computed_columns_permission.yaml', transport)
+    def test_computed_fields_permission(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/computed_fields_permission.yaml', transport)

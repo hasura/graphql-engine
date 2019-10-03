@@ -1,8 +1,8 @@
-- description: Try adding a computed column for invalid table
+- description: Try adding a computed field for invalid table
   url: /v1/query
   status: 400
   query:
-    type: add_computed_column
+    type: add_computed_field
     args:
       table: random
       name: full_name
@@ -13,11 +13,11 @@
     error: table "random" does not exist
     code: not-exists
 
-- description: Try adding computed column with existing column name
+- description: Try adding computed field with existing column name
   url: /v1/query
   status: 400
   query:
-    type: add_computed_column
+    type: add_computed_field
     args:
       table: author
       name: first_name
@@ -28,11 +28,11 @@
     error: column/relationship "first_name" of table "author" already exists
     code: already-exists
 
-- description: Try adding computed column with invalid function
+- description: Try adding computed field with invalid function
   url: /v1/query
   status: 400
   query:
-    type: add_computed_column
+    type: add_computed_field
     args:
       table: author
       name: full_name
@@ -43,11 +43,11 @@
     error: 'no such function exists in postgres : "random_function"'
     code: not-exists
 
-- description: Try adding computed column with invalid table argument name
+- description: Try adding computed field with invalid table argument name
   url: /v1/query
   status: 400
   query:
-    type: add_computed_column
+    type: add_computed_field
     args:
       table: author
       name: full_name
@@ -56,15 +56,15 @@
         table_argument: random
   response:
     path: "$.args.definition"
-    error: the computed column "full_name" cannot be added to table "author" because "random"
+    error: the computed field "full_name" cannot be added to table "author" because "random"
       is not an input argument of "full_name" function
     code: not-supported
 
-- description: Try adding computed column with a volatile function
+- description: Try adding computed field with a volatile function
   url: /v1/query
   status: 400
   query:
-    type: add_computed_column
+    type: add_computed_field
     args:
       table: author
       name: get_articles
@@ -73,17 +73,17 @@
         table_argument: random
   response:
     path: "$.args.definition"
-    error: "the computed column \"get_articles\" cannot be added to table \"author\" for
+    error: "the computed field \"get_articles\" cannot be added to table \"author\" for
       the following reasons: \n  • the function \"fetch_articles_volatile\" is of type
-      VOLATILE; cannot be added as a computed column\n  • \"random\" is not an input argument
+      VOLATILE; cannot be added as a computed field\n  • \"random\" is not an input argument
       of \"fetch_articles_volatile\" function\n"
     code: not-supported
 
-- description: Try adding a computed column with a function with no input arguments
+- description: Try adding a computed field with a function with no input arguments
   url: /v1/query
   status: 400
   query:
-    type: add_computed_column
+    type: add_computed_field
     args:
       table: author
       name: hello_world
@@ -91,15 +91,15 @@
         function: hello_world
   response:
     path: "$.args.definition"
-    error: the computed column "hello_world" cannot be added to table "author" because
+    error: the computed field "hello_world" cannot be added to table "author" because
       the function "hello_world" has no input arguments
     code: not-supported
 
-- description: Try adding a computed column with first argument as table argument
+- description: Try adding a computed field with first argument as table argument
   url: /v1/query
   status: 400
   query:
-    type: add_computed_column
+    type: add_computed_field
     args:
       table: author
       name: get_articles
@@ -107,8 +107,8 @@
         function: fetch_articles
   response:
     path: "$.args.definition"
-    error: "the computed column \"get_articles\" cannot be added to table \"author\" for
+    error: "the computed field \"get_articles\" cannot be added to table \"author\" for
       the following reasons: \n  • first argument of the function \"fetch_articles\" is
       not COMPOSITE type\n  • first argument of the function \"fetch_articles\" of type
-      \"pg_catalog.text\" is not the table to which the computed column is being added\n"
+      \"pg_catalog.text\" is not the table to which the computed field is being added\n"
     code: not-supported

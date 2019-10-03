@@ -125,9 +125,9 @@ convOrderByElem sessVarBldr (flds, spi) = \case
         [ fldName <<> " is a"
         , " relationship and should be expanded"
         ]
-      FIComputedColumn _ -> throw400 UnexpectedPayload $ mconcat
+      FIComputedField _ -> throw400 UnexpectedPayload $ mconcat
         [ fldName <<> " is a"
-        , " computed column and can't be used in 'order_by'"
+        , " computed field and can't be used in 'order_by'"
         ]
   OCRel fldName rest -> do
     fldInfo <- askFieldInfo flds fldName
@@ -136,9 +136,9 @@ convOrderByElem sessVarBldr (flds, spi) = \case
         [ fldName <<> " is a Postgres column"
         , " and cannot be chained further"
         ]
-      FIComputedColumn _ -> throw400 UnexpectedPayload $ mconcat
+      FIComputedField _ -> throw400 UnexpectedPayload $ mconcat
         [ fldName <<> " is a"
-        , " computed column and can't be used in 'order_by'"
+        , " computed field and can't be used in 'order_by'"
         ]
       FIRelationship relInfo -> do
         when (riType relInfo == ArrRel) $

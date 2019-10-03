@@ -59,7 +59,7 @@ based on a typical author/article schema for reference.
   Using multiple arguments <multiple-arguments>
   multiple-queries
   custom-functions
-  computed-columns
+  computed-fields
   derived-data
   control-access
   variables-aliases-fragments-directives

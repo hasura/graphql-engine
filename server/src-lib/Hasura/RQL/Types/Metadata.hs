@@ -18,18 +18,18 @@ data MetadataObjType
   | MOTEventTrigger
   | MOTFunction
   | MOTRemoteSchema
-  | MOTComputedColumn
+  | MOTComputedField
   deriving (Eq, Generic)
 instance Hashable MetadataObjType
 
 instance Show MetadataObjType where
-  show MOTTable          = "table"
-  show (MOTRel ty)       = T.unpack (relTypeToTxt ty) <> "_relation"
-  show (MOTPerm ty)      = show ty <> "_permission"
-  show MOTEventTrigger   = "event_trigger"
-  show MOTFunction       = "function"
-  show MOTRemoteSchema   = "remote_schema"
-  show MOTComputedColumn = "computed_column"
+  show MOTTable         = "table"
+  show (MOTRel ty)      = T.unpack (relTypeToTxt ty) <> "_relation"
+  show (MOTPerm ty)     = show ty <> "_permission"
+  show MOTEventTrigger  = "event_trigger"
+  show MOTFunction      = "function"
+  show MOTRemoteSchema  = "remote_schema"
+  show MOTComputedField = "computed_field"
 
 instance ToJSON MetadataObjType where
   toJSON = String . T.pack . show
@@ -38,7 +38,7 @@ data TableMetadataObjId
   = MTORel !RelName !RelType
   | MTOPerm !RoleName !PermType
   | MTOTrigger !TriggerName
-  | MTOComputedColumn !ComputedColumnName
+  | MTOComputedField !ComputedFieldName
   deriving (Show, Eq, Generic)
 instance Hashable TableMetadataObjId
 

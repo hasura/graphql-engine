@@ -62,7 +62,7 @@ args:
     name: article
     schema: public
 
-- type: add_computed_column
+- type: add_computed_field
   args:
     table: author
     name: get_articles
@@ -70,7 +70,7 @@ args:
       function: fetch_articles
       table_argument: author_row
 
-- type: add_computed_column
+- type: add_computed_field
   args:
     table: author
     name: full_name
@@ -92,6 +92,6 @@ args:
       columns: []
       filter:
         id: X-Hasura-User-Id
-      computed_columns:
+      computed_fields:
       - full_name
       - get_articles

@@ -6,7 +6,7 @@ SELECT
   coalesce(c.columns, '[]') as columns,
   coalesce(f.constraints, '[]') as constraints,
   coalesce(fk.fkeys, '[]') as foreign_keys,
-  coalesce(cc.computed_columns, '[]') as computed_columns
+  coalesce(cc.computed_fields, '[]') as computed_fields
 FROM
   (
     SELECT
@@ -109,7 +109,7 @@ FROM
       c.table_name,
       json_agg(
         json_build_object(
-          'name', c.computed_column_name,
+          'name', c.computed_field_name,
           'function_meta',
           json_build_object(
             'function', json_build_object('name', c.function_name, 'schema', c.function_schema),
@@ -118,9 +118,9 @@ FROM
             'description', hf_agg.description
           )
         )
-      ) as computed_columns
+      ) as computed_fields
      FROM hdb_catalog.hdb_function_agg hf_agg
-     LEFT OUTER JOIN  hdb_catalog.hdb_computed_column_function c
+     LEFT OUTER JOIN  hdb_catalog.hdb_computed_field_function c
        ON ( hf_agg.function_name = c.function_name
            AND hf_agg.function_schema = c.function_schema
           )

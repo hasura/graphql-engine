@@ -311,7 +311,7 @@ annColExp rhsParser colInfoMap (ColExp fieldName colVal) = do
       annRelBoolExp   <- annBoolExp rhsParser relFieldInfoMap $
                          unBoolExp relBoolExp
       return $ AVRel relInfo annRelBoolExp
-    FIComputedColumn _ ->
+    FIComputedField _ ->
       throw400 UnexpectedPayload "Computed columns can not be part of the where clause"
 
 toSQLBoolExp

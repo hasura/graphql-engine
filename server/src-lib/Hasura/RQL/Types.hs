@@ -26,12 +26,12 @@ module Hasura.RQL.Types
        , askRelType
        , askFieldInfo
        , askPGColInfo
-       , askComputedColumnInfo
+       , askComputedFieldInfo
        , askCurRole
        , askEventTriggerInfo
        , askTabInfoFromTrigger
 
-       , updateComputedColumnFunctionDescription
+       , updateComputedFieldFunctionDescription
 
        , adminOnly
 
@@ -201,7 +201,7 @@ askPGColInfo m c msg = do
   case fieldInfo of
     (FIColumn pgColInfo) -> pure pgColInfo
     (FIRelationship   _) -> throwErr "relationship"
-    (FIComputedColumn _) -> throwErr "computed column"
+    (FIComputedField _)  -> throwErr "computed field"
   where
     throwErr fieldType =
       throwError $ err400 UnexpectedPayload $ mconcat
@@ -210,37 +210,37 @@ askPGColInfo m c msg = do
       , msg
       ]
 
-askComputedColumnInfo
+askComputedFieldInfo
   :: (MonadError QErr m)
   => FieldInfoMap columnInfo
-  -> ComputedColumnName
-  -> m ComputedColumnInfo
-askComputedColumnInfo fields computedColumn = do
-  fieldInfo <- modifyErr ("computed column " <>) $
-               askFieldInfo fields $ fromComputedColumn computedColumn
+  -> ComputedFieldName
+  -> m ComputedFieldInfo
+askComputedFieldInfo fields computedField = do
+  fieldInfo <- modifyErr ("computed field " <>) $
+               askFieldInfo fields $ fromComputedField computedField
   case fieldInfo of
     (FIColumn           _) -> throwErr "column"
     (FIRelationship     _) -> throwErr "relationship"
-    (FIComputedColumn cci) -> pure cci
+    (FIComputedField cci)  -> pure cci
   where
     throwErr fieldType =
       throwError $ err400 UnexpectedPayload $ mconcat
-      [ "expecting a computed column; but, "
-      , computedColumn <<> " is a " <> fieldType <> "; "
+      [ "expecting a computed field; but, "
+      , computedField <<> " is a " <> fieldType <> "; "
       ]
 
-updateComputedColumnFunctionDescription
+updateComputedFieldFunctionDescription
   :: (QErrM m, CacheRWM m)
-  => QualifiedTable -> ComputedColumnName -> Maybe PGDescription -> m ()
-updateComputedColumnFunctionDescription table computedColumn description = do
+  => QualifiedTable -> ComputedFieldName -> Maybe PGDescription -> m ()
+updateComputedFieldFunctionDescription table computedField description = do
   fields <- _tiFieldInfoMap <$> askTabInfo table
-  computedColumnInfo <- askComputedColumnInfo fields computedColumn
-  deleteComputedColumnFromCache table computedColumn
-  let updatedComputedColumnInfo = computedColumnInfo
-                                  { _cciFunction = (_cciFunction computedColumnInfo)
-                                                   {_ccfDescription = description}
+  computedFieldInfo <- askComputedFieldInfo fields computedField
+  deleteComputedFieldFromCache table computedField
+  let updatedComputedFieldInfo = computedFieldInfo
+                                  { _cfiFunction = (_cfiFunction computedFieldInfo)
+                                                   {_cffDescription = description}
                                   }
-  addComputedColumnToCache table updatedComputedColumnInfo
+  addComputedFieldToCache table updatedComputedFieldInfo
 
 assertPGCol :: (MonadError QErr m)
             => FieldInfoMap columnInfo

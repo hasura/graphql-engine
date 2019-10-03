@@ -631,24 +631,24 @@ CREATE TABLE hdb_catalog.hdb_allowlist
     REFERENCES hdb_catalog.hdb_query_collection(collection_name)
 );
 
-CREATE TABLE hdb_catalog.hdb_computed_column
+CREATE TABLE hdb_catalog.hdb_computed_field
 (
   table_schema TEXT,
   table_name TEXT,
-  computed_column_name TEXT,
+  computed_field_name TEXT,
   definition JSONB NOT NULL,
   comment TEXT NULL,
 
-  PRIMARY KEY (table_schema, table_name, computed_column_name),
+  PRIMARY KEY (table_schema, table_name, computed_field_name),
   FOREIGN KEY (table_schema, table_name) REFERENCES hdb_catalog.hdb_table(table_schema, table_name) ON UPDATE CASCADE
 );
 
-CREATE VIEW hdb_catalog.hdb_computed_column_function AS
+CREATE VIEW hdb_catalog.hdb_computed_field_function AS
 (
   SELECT
     table_schema,
     table_name,
-    computed_column_name,
+    computed_field_name,
     CASE
       WHEN (definition::jsonb -> 'function')::jsonb ->> 'name' IS NULL THEN definition::jsonb ->> 'function'
       ELSE (definition::jsonb -> 'function')::jsonb ->> 'name'
@@ -657,5 +657,5 @@ CREATE VIEW hdb_catalog.hdb_computed_column_function AS
       WHEN (definition::jsonb -> 'function')::jsonb ->> 'schema' IS NULL THEN 'public'
       ELSE (definition::jsonb -> 'function')::jsonb ->> 'schema'
     END AS function_schema
-  FROM hdb_catalog.hdb_computed_column
+  FROM hdb_catalog.hdb_computed_field
 );

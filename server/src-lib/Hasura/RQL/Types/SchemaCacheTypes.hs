@@ -19,7 +19,7 @@ data TableObjId
   | TOCons !ConstraintName
   | TOPerm !RoleName !PermType
   | TOTrigger !TriggerName
-  | TOComputedColumn !ComputedColumnName
+  | TOComputedField !ComputedFieldName
   deriving (Show, Eq, Generic)
 
 instance Hashable TableObjId
@@ -46,8 +46,8 @@ reportSchemaObj (SOTableObj tn (TOPerm rn pt)) =
   <> "." <> permTypeToCode pt
 reportSchemaObj (SOTableObj tn (TOTrigger trn )) =
   "event-trigger " <> qualObjectToText tn <> "." <> triggerNameToTxt trn
-reportSchemaObj (SOTableObj tn (TOComputedColumn ccn)) =
-  "computed column " <> qualObjectToText tn <> "." <> computedColumnNameToText ccn
+reportSchemaObj (SOTableObj tn (TOComputedField ccn)) =
+  "computed field " <> qualObjectToText tn <> "." <> computedFieldNameToText ccn
 
 instance Show SchemaObjId where
   show soi = T.unpack $ reportSchemaObj soi

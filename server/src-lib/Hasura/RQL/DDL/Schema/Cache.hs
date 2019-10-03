@@ -33,7 +33,7 @@ import qualified Hasura.GraphQL.Schema              as GS
 
 import           Hasura.Db
 import           Hasura.GraphQL.RemoteServer
-import           Hasura.RQL.DDL.ComputedColumn
+import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Permission
@@ -69,7 +69,7 @@ buildSchemaCacheWithOptions withSetup = do
   -- fetch all catalog metadata
   CatalogMetadata tables relationships permissions
     eventTriggers remoteSchemas functions fkeys' allowlistDefs
-    computedColumns
+    computedFields
     <- liftTx fetchCatalogData
 
   let fkeys = HS.fromList fkeys'
@@ -134,17 +134,17 @@ buildSchemaCacheWithOptions withSetup = do
   -- allow list
   replaceAllowlist $ concatMap _cdQueries allowlistDefs
 
-  -- computedColumns
-  forM_ computedColumns $ \(CatalogComputedColumn column funcDefs) -> do
-    let AddComputedColumn qt name def comment = column
-        qf = _ccdFunction def
+  -- computedFields
+  forM_ computedFields $ \(CatalogComputedField column funcDefs) -> do
+    let AddComputedField qt name def comment = column
+        qf = _cfdFunction def
         mkInconsObj =
-          InconsistentMetadataObj (MOTableObj qt $ MTOComputedColumn name)
-          MOTComputedColumn $ toJSON column
-    modifyErr (\e -> "computed column " <> name <<> "; " <> e) $
+          InconsistentMetadataObj (MOTableObj qt $ MTOComputedField name)
+          MOTComputedField $ toJSON column
+    modifyErr (\e -> "computed field " <> name <<> "; " <> e) $
       withSchemaObject_ mkInconsObj $ do
       rawfi <- handleMultipleFunctions qf funcDefs
-      addComputedColumnP2Setup qt name def rawfi comment
+      addComputedFieldP2Setup qt name def rawfi comment
 
 
   -- build GraphQL context with tables and functions
@@ -350,9 +350,9 @@ purgeDependentObject schemaObjId = case schemaObjId of
     liftTx $ delEventTriggerFromCatalog trn
     delEventTriggerFromCache qt trn
 
-  (SOTableObj qt (TOComputedColumn ccn)) -> do
-    deleteComputedColumnFromCache qt ccn
-    dropComputedColumnFromCatalog qt ccn
+  (SOTableObj qt (TOComputedField ccn)) -> do
+    deleteComputedFieldFromCache qt ccn
+    dropComputedFieldFromCatalog qt ccn
 
   _ -> throw500 $
     "unexpected dependent object : " <> reportSchemaObj schemaObjId

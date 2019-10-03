@@ -54,18 +54,18 @@ module Hasura.RQL.Types.SchemaCache
        , _FIRelationship
        , getCols
        , getRels
-       , getComputedCols
+       , getComputedFieldInfos
 
        , isPGColInfo
        , RelInfo(..)
        , addColToCache
        , addRelToCache
-       , addComputedColumnToCache
+       , addComputedFieldToCache
 
        , delColFromCache
        , updColInCache
        , delRelFromCache
-       , deleteComputedColumnFromCache
+       , deleteComputedFieldFromCache
 
        , RolePermInfo(..)
        , permIns
@@ -99,7 +99,7 @@ module Hasura.RQL.Types.SchemaCache
        , SchemaDependency(..)
        , mkParentDep
        , mkColDep
-       , mkComputedColumnDep
+       , mkComputedFieldDep
        , getDependentObjs
        , getDependentObjsWith
 
@@ -154,17 +154,17 @@ mkColDep :: DependencyReason -> QualifiedTable -> PGCol -> SchemaDependency
 mkColDep reason tn col =
   flip SchemaDependency reason . SOTableObj tn $ TOCol col
 
-mkComputedColumnDep
-  :: DependencyReason -> QualifiedTable -> ComputedColumnName -> SchemaDependency
-mkComputedColumnDep reason tn computedColumn =
-  flip SchemaDependency reason . SOTableObj tn $ TOComputedColumn computedColumn
+mkComputedFieldDep
+  :: DependencyReason -> QualifiedTable -> ComputedFieldName -> SchemaDependency
+mkComputedFieldDep reason tn computedField =
+  flip SchemaDependency reason . SOTableObj tn $ TOComputedField computedField
 
 type WithDeps a = (a, [SchemaDependency])
 
 data FieldInfo columnInfo
   = FIColumn !columnInfo
   | FIRelationship !RelInfo
-  | FIComputedColumn !ComputedColumnInfo
+  | FIComputedField !ComputedFieldInfo
   deriving (Show, Eq)
 $(deriveToJSON
   defaultOptions { constructorTagModifier = snakeCase . drop 2
@@ -181,8 +181,8 @@ getCols = mapMaybe (^? _FIColumn) . M.elems
 getRels :: FieldInfoMap columnInfo -> [RelInfo]
 getRels = mapMaybe (^? _FIRelationship) . M.elems
 
-getComputedCols :: FieldInfoMap columnInfo -> [ComputedColumnInfo]
-getComputedCols = mapMaybe (^? _FIComputedColumn) . M.elems
+getComputedFieldInfos :: FieldInfoMap columnInfo -> [ComputedFieldInfo]
+getComputedFieldInfos = mapMaybe (^? _FIComputedField) . M.elems
 
 isPGColInfo :: FieldInfo columnInfo -> Bool
 isPGColInfo (FIColumn _) = True
@@ -202,7 +202,7 @@ $(deriveToJSON (aesonDrop 3 snakeCase) ''InsPermInfo)
 data SelPermInfo
   = SelPermInfo
   { spiCols            :: !(HS.HashSet PGCol)
-  , spiComputedCols    :: !(HS.HashSet ComputedColumnName)
+  , spiComputedFields  :: !(HS.HashSet ComputedFieldName)
   , spiTable           :: !QualifiedTable
   , spiFilter          :: !AnnBoolExpPartialSQL
   , spiLimit           :: !(Maybe Int)
@@ -553,13 +553,13 @@ addRelToCache rn ri deps tn = do
   where
     schObjId = SOTableObj tn $ TORel $ riName ri
 
-addComputedColumnToCache
+addComputedFieldToCache
   :: (QErrM m, CacheRWM m)
-  => QualifiedTable -> ComputedColumnInfo -> m ()
-addComputedColumnToCache table computedColumnInfo =
-  addFldToCache computedColumnField (FIComputedColumn computedColumnInfo) table
+  => QualifiedTable -> ComputedFieldInfo -> m ()
+addComputedFieldToCache table computedFieldInfo =
+  addFldToCache computedField (FIComputedField computedFieldInfo) table
   where
-    computedColumnField = fromComputedColumn $ _cciName computedColumnInfo
+    computedField = fromComputedField $ _cfiName computedFieldInfo
 
 addFldToCache
   :: (QErrM m, CacheRWM m)
@@ -600,11 +600,11 @@ delRelFromCache rn tn = do
   where
     schObjId = SOTableObj tn $ TORel rn
 
-deleteComputedColumnFromCache
+deleteComputedFieldFromCache
   :: (QErrM m, CacheRWM m)
-  => QualifiedTable -> ComputedColumnName -> m ()
-deleteComputedColumnFromCache table computedColumn =
-  delFldFromCache (fromComputedColumn computedColumn) table
+  => QualifiedTable -> ComputedFieldName -> m ()
+deleteComputedFieldFromCache table computedField =
+  delFldFromCache (fromComputedField computedField) table
 
 updColInCache
   :: (QErrM m, CacheRWM m)

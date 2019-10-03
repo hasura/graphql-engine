@@ -3,14 +3,14 @@ module Hasura.RQL.DDL.Schema.Diff
   , PGColMeta(..)
   , ConstraintMeta(..)
   , fetchTableMeta
-  , ComputedColumnMeta(..)
+  , ComputedFieldMeta(..)
 
   , getDifference
 
   , TableDiff(..)
   , getTableDiff
   , getTableChangeDeps
-  , ComputedColumnDiff(..)
+  , ComputedFieldDiff(..)
 
   , SchemaDiff(..)
   , getSchemaDiff
@@ -66,22 +66,22 @@ data FunctionMeta
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 2 snakeCase) ''FunctionMeta)
 
-data ComputedColumnMeta
-  = ComputedColumnMeta
-  { ccmName         :: !ComputedColumnName
+data ComputedFieldMeta
+  = ComputedFieldMeta
+  { ccmName         :: !ComputedFieldName
   , ccmFunctionMeta :: !FunctionMeta
   } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''ComputedColumnMeta)
+$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''ComputedFieldMeta)
 
 data TableMeta
   = TableMeta
-  { tmOid             :: !Int
-  , tmTable           :: !QualifiedTable
-  , tmDescription     :: !(Maybe PGDescription)
-  , tmColumns         :: ![PGColMeta]
-  , tmConstraints     :: ![ConstraintMeta]
-  , tmForeignKeys     :: ![ForeignKey]
-  , tmComputedColumns :: ![ComputedColumnMeta]
+  { tmOid            :: !Int
+  , tmTable          :: !QualifiedTable
+  , tmDescription    :: !(Maybe PGDescription)
+  , tmColumns        :: ![PGColMeta]
+  , tmConstraints    :: ![ConstraintMeta]
+  , tmForeignKeys    :: ![ForeignKey]
+  , tmComputedFields :: ![ComputedFieldMeta]
   } deriving (Show, Eq)
 
 fetchTableMeta :: Q.Tx [TableMeta]
@@ -103,11 +103,11 @@ getDifference getKey left right =
   where
     mkMap = M.fromList . map (\v -> (getKey v, v))
 
-data ComputedColumnDiff
-  = ComputedColumnDiff
-  { _ccdDropped    :: [ComputedColumnName]
-  , _ccdAltered    :: [(ComputedColumnMeta, ComputedColumnMeta)]
-  , _ccdOverloaded :: [(ComputedColumnName, QualifiedFunction)]
+data ComputedFieldDiff
+  = ComputedFieldDiff
+  { _cfdDropped    :: [ComputedFieldName]
+  , _cfdAltered    :: [(ComputedFieldMeta, ComputedFieldMeta)]
+  , _cfdOverloaded :: [(ComputedFieldName, QualifiedFunction)]
   } deriving (Show, Eq)
 
 data TableDiff
@@ -117,7 +117,7 @@ data TableDiff
   , _tdAddedCols       :: ![PGRawColumnInfo]
   , _tdAlteredCols     :: ![(PGRawColumnInfo, PGRawColumnInfo)]
   , _tdDroppedFKeyCons :: ![ConstraintName]
-  , _tdComputedColumns :: !ComputedColumnDiff
+  , _tdComputedFields  :: !ComputedFieldDiff
   -- The final list of uniq/primary constraint names
   -- used for generating types on_conflict clauses
   -- TODO: this ideally should't be part of TableDiff
@@ -166,25 +166,25 @@ getTableDiff oldtm newtm =
 
     mkFKeyUniqId (ForeignKey _ reftn _ _ colMap) = (reftn, colMap)
 
-    -- calculate computed column diff
-    oldComputedColMeta = tmComputedColumns oldtm
-    newComputedColMeta = tmComputedColumns newtm
+    -- calculate computed field diff
+    oldComputedFieldMeta = tmComputedFields oldtm
+    newComputedFieldMeta = tmComputedFields newtm
 
-    droppedComputedCols = map ccmName $
-      getDifference (fmOid . ccmFunctionMeta) oldComputedColMeta newComputedColMeta
+    droppedComputedFields = map ccmName $
+      getDifference (fmOid . ccmFunctionMeta) oldComputedFieldMeta newComputedFieldMeta
 
-    alteredComputedCols =
-      getOverlap (fmOid . ccmFunctionMeta) oldComputedColMeta newComputedColMeta
+    alteredComputedFields =
+      getOverlap (fmOid . ccmFunctionMeta) oldComputedFieldMeta newComputedFieldMeta
 
-    overloadedComputedColFunctions =
+    overloadedComputedFieldFunctions =
       let getFunction = fmFunction . ccmFunctionMeta
           getSecondElement (_ NE.:| list) = listToMaybe list
       in mapMaybe (fmap ((&&&) ccmName getFunction) . getSecondElement) $
-         flip NE.groupBy newComputedColMeta $ \l r ->
+         flip NE.groupBy newComputedFieldMeta $ \l r ->
          ccmName l == ccmName r && getFunction l == getFunction r
 
-    computedColDiff = ComputedColumnDiff droppedComputedCols alteredComputedCols
-                      overloadedComputedColFunctions
+    computedColDiff = ComputedFieldDiff droppedComputedFields alteredComputedFields
+                      overloadedComputedFieldFunctions
 
 getTableChangeDeps
   :: (QErrM m, CacheRWM m)
@@ -199,11 +199,11 @@ getTableChangeDeps ti tableDiff = do
   droppedConsDeps <- fmap concat $ forM droppedFKeyConstraints $ \droppedCons -> do
     let objId = SOTableObj tn $ TOCons droppedCons
     return $ getDependentObjs sc objId
-  return $ droppedConsDeps <> droppedColDeps <> droppedComputedColDeps
+  return $ droppedConsDeps <> droppedColDeps <> droppedComputedFieldDeps
   where
     tn = _tiName ti
     TableDiff _ droppedCols _ _ droppedFKeyConstraints computedColDiff _ _ = tableDiff
-    droppedComputedColDeps = map (SOTableObj tn . TOComputedColumn) $ _ccdDropped computedColDiff
+    droppedComputedFieldDeps = map (SOTableObj tn . TOComputedField) $ _cfdDropped computedColDiff
 
 data SchemaDiff
   = SchemaDiff

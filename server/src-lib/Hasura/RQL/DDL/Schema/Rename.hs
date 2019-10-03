@@ -314,7 +314,7 @@ updateColExp qt rf (ColExp fld val) =
       fi <- askFieldInfo fim fld
       case fi of
         FIColumn _         -> return val
-        FIComputedColumn _ -> return val
+        FIComputedField _ -> return val
         FIRelationship ri  -> do
           let remTable = riRTable ri
           be <- decodeValue val

@@ -58,9 +58,9 @@ RoleName
 
   String
 
-.. _ComputedColumnName:
+.. _ComputedFieldName:
 
-ComputedColumnName
+ComputedFieldName
 ^^^^^^^^^^^^^^^^^^
 
 .. parsed-literal::

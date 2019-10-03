@@ -12,7 +12,7 @@ import qualified Network.HTTP.Client                as HTTP
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.ComputedColumn
+import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
@@ -47,10 +47,10 @@ data RQLQueryV1
   | RQSetRelationshipComment !SetRelComment
   | RQRenameRelationship !RenameRel
 
-  -- computed columns related
+  -- computed fields related
 
-  | RQAddComputedColumn !AddComputedColumn
-  | RQDropComputedColumn !DropComputedColumn
+  | RQAddComputedField !AddComputedField
+  | RQDropComputedField !DropComputedField
 
   | RQCreateInsertPermission !CreateInsPerm
   | RQCreateSelectPermission !CreateSelPerm
@@ -227,8 +227,8 @@ queryNeedsReload (RQV1 qi) = case qi of
   RQSetRelationshipComment  _     -> False
   RQRenameRelationship _          -> True
 
-  RQAddComputedColumn _           -> True
-  RQDropComputedColumn _          -> True
+  RQAddComputedField _            -> True
+  RQDropComputedField _           -> True
 
   RQCreateInsertPermission _      -> True
   RQCreateSelectPermission _      -> True
@@ -310,8 +310,8 @@ runQueryM rq =
       RQSetRelationshipComment  q  -> runSetRelComment q
       RQRenameRelationship q       -> runRenameRel q
 
-      RQAddComputedColumn q        -> runAddComputedColumn q
-      RQDropComputedColumn q       -> runDropComputedColumn q
+      RQAddComputedField q        -> runAddComputedField q
+      RQDropComputedField q       -> runDropComputedField q
 
       RQCreateInsertPermission q   -> runCreatePerm q
       RQCreateSelectPermission q   -> runCreatePerm q

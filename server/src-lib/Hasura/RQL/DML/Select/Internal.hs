@@ -164,9 +164,9 @@ mkObjRelTableAls :: Iden -> RelName -> Iden
 mkObjRelTableAls pfx relName =
   pfx <> Iden ".or." <> toIden relName
 
-mkComputedColTableAls :: Iden -> FieldName -> Iden
-mkComputedColTableAls pfx fldAls =
-  pfx <> Iden ".cc." <> toIden fldAls
+mkComputedFieldTableAls :: Iden -> FieldName -> Iden
+mkComputedFieldTableAls pfx fldAls =
+  pfx <> Iden ".cf." <> toIden fldAls
 
 mkBaseTableAls :: Iden -> Iden
 mkBaseTableAls pfx =
@@ -221,10 +221,10 @@ buildJsonObject pfx parAls arrRelCtx strfyNum flds =
         let arrPfx = _aniPrefix $ mkArrNodeInfo pfx parAls arrRelCtx $
                                   ANIField (fldAls, arrSel)
         in S.mkQIdenExp arrPfx fldAls
-      FComputedCol (CCSScalar compColScalar) ->
-        fromScalarCompCol compColScalar
-      FComputedCol (CCSTable _) ->
-        let ccPfx = mkComputedColTableAls pfx fldAls
+      FComputedField (CFSScalar computedFieldScalar) ->
+        fromScalarComputedField computedFieldScalar
+      FComputedField (CFSTable _) ->
+        let ccPfx = mkComputedFieldTableAls pfx fldAls
         in S.mkQIdenExp ccPfx fldAls
 
     toSQLCol :: PGColumnInfo -> Maybe ColOp -> S.SQLExp
@@ -232,12 +232,12 @@ buildJsonObject pfx parAls arrRelCtx strfyNum flds =
       toJSONableExp strfyNum (pgiType col) $ withColOp colOpM $
       S.mkQIdenExp (mkBaseTableAls pfx) $ pgiColumn col
 
-    fromScalarCompCol :: ComputedColScalarSel S.SQLExp -> S.SQLExp
-    fromScalarCompCol compColScalar =
+    fromScalarComputedField :: ComputedFieldScalarSel S.SQLExp -> S.SQLExp
+    fromScalarComputedField computedFieldScalar =
       toJSONableExp strfyNum (PGColumnScalar ty) $ withColOp colOpM $
       S.SEFunction $ S.FunctionExp fn (fromTableRowArgs pfx args) Nothing
       where
-        ComputedColScalarSel fn args ty colOpM = compColScalar
+        ComputedFieldScalarSel fn args ty colOpM = computedFieldScalar
 
     withColOp :: Maybe ColOp -> S.SQLExp -> S.SQLExp
     withColOp colOpM sqlExp = case colOpM of
@@ -527,7 +527,7 @@ mkBaseNode
 mkBaseNode subQueryReq pfxs fldAls annSelFlds selectFrom
            tablePerm tableArgs strfyNum =
   BaseNode thisPfx distExprM fromItem finalWhere ordByExpM finalLimit offsetM
-  allExtrs allObjsWithOb allArrsWithOb compCols
+  allExtrs allObjsWithOb allArrsWithOb computedFields
   where
     Prefixes thisPfx baseTablepfx = pfxs
     TablePerm permFilter permLimit = tablePerm
@@ -549,7 +549,7 @@ mkBaseNode subQueryReq pfxs fldAls annSelFlds selectFrom
 
     aggOrdByRelNames = fetchOrdByAggRels orderByM
 
-    (allExtrs, allObjsWithOb, allArrsWithOb, compCols, ordByExpM) =
+    (allExtrs, allObjsWithOb, allArrsWithOb, computedFields, ordByExpM) =
       case annSelFlds of
         TAFNodes flds ->
           let arrFlds = mapMaybe getAnnArr flds
@@ -561,9 +561,9 @@ mkBaseNode subQueryReq pfxs fldAls annSelFlds selectFrom
               -- all array items (array relationships + aggregates)
               arrNodes = HM.fromListWith mergeArrNodes $
                          map (mkArrItem arrRelCtx) arrFlds
-              -- all computed columns with table returns
-              compColNodes = HM.fromList $ map mkCompColTable $
-                             mapMaybe getCompColTable flds
+              -- all computed fields with table returns
+              computedFieldNodes = HM.fromList $ map mkComputedFieldTable $
+                             mapMaybe getComputedFieldTable flds
 
               (obExtrs, ordByObjs, ordByArrs, obeM)
                       = mkOrdByItems' arrRelCtx
@@ -573,7 +573,7 @@ mkBaseNode subQueryReq pfxs fldAls annSelFlds selectFrom
           in ( HM.fromList $ selExtr:obExtrs <> distExtrs
              , allObjs
              , allArrs
-             , compColNodes
+             , computedFieldNodes
              , obeM
              )
         TAFAgg tabAggs ->
@@ -636,9 +636,9 @@ mkBaseNode subQueryReq pfxs fldAls annSelFlds selectFrom
           arrNode = mkArrNode subQReq (Prefixes arrPfx thisPfx) (fld, arrSel)
       in (arrAls, arrNode)
 
-    -- process a computed column, which returns a table
-    mkCompColTable (fld, sel) =
-      let prefixes = Prefixes (mkComputedColTableAls thisPfx fld) thisPfx
+    -- process a computed field, which returns a table
+    mkComputedFieldTable (fld, sel) =
+      let prefixes = Prefixes (mkComputedFieldTableAls thisPfx fld) thisPfx
           baseNode = annSelToBaseNode False prefixes fld sel
       in (fld, baseNode)
 
@@ -650,9 +650,9 @@ mkBaseNode subQueryReq pfxs fldAls annSelFlds selectFrom
       FArr ar -> Just (f, ar)
       _       -> Nothing
 
-    getCompColTable (f, annFld) = case annFld of
-      FComputedCol (CCSTable sel) -> Just (f, sel)
-      _                           -> Nothing
+    getComputedFieldTable (f, annFld) = case annFld of
+      FComputedField (CFSTable sel) -> Just (f, sel)
+      _                             -> Nothing
 
 annSelToBaseNode :: Bool -> Prefixes -> FieldName -> AnnSimpleSel -> BaseNode
 annSelToBaseNode subQueryReq pfxs fldAls annSel =
@@ -699,7 +699,7 @@ baseNodeToSel joinCond baseNode =
   }
   where
     BaseNode pfx dExp fromItem whr ordByM limitM
-             offsetM extrs objRels arrRels compCols
+             offsetM extrs objRels arrRels computedFields
              = baseNode
     -- this is the table which is aliased as "pfx.base"
     baseSel = S.mkSelect
@@ -720,7 +720,7 @@ baseNodeToSel joinCond baseNode =
     joinedFrom = foldl' leftOuterJoin baseFromItem $
                  map objNodeToFromItem (HM.elems objRels) <>
                  map arrNodeToFromItem (HM.elems arrRels) <>
-                 map compColNodeToFromItem (HM.toList compCols)
+                 map computedFieldNodeToFromItem (HM.toList computedFields)
 
     objNodeToFromItem :: ObjNode -> S.FromItem
     objNodeToFromItem (ObjNode relMapn relBaseNode) =
@@ -734,8 +734,8 @@ baseNodeToSel joinCond baseNode =
           als = S.Alias $ _bnPrefix bn
       in S.mkLateralFromItem sel als
 
-    compColNodeToFromItem :: (FieldName, BaseNode) -> S.FromItem
-    compColNodeToFromItem (fld, bn) =
+    computedFieldNodeToFromItem :: (FieldName, BaseNode) -> S.FromItem
+    computedFieldNodeToFromItem (fld, bn) =
       let internalSel = baseNodeToSel (S.BELit True) bn
           als = S.Alias $ _bnPrefix bn
           extr = asJsonAggExtr False (S.toAlias fld) False Nothing $
