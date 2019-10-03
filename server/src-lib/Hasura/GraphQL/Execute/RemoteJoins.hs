@@ -499,9 +499,6 @@ extractRemoteRelArguments hasuraJson rels =
       zip [(0::RemoteRelKey) ..] .
         map (rrRelFieldPath &&& rtrHasuraFields . rrRemoteRelationship)
 
-    -- insert into map, accumulating from the left on duplicates
-    insertWithCons  m k v =    Map.insertWith (<>) k (pure v) m
-    insertWithConsI m k v = IntMap.insertWith (<>) k (pure v) m
 
     go :: [(RemoteRelKey, (RelFieldPath, Set FieldName))]
        -> OJ.Value
@@ -510,7 +507,7 @@ extractRemoteRelArguments hasuraJson rels =
       case hasuraResp of
         OJ.Array values -> mapM_ (go keyedRemotes) values
         OJ.Object hasuraRespObj -> do
-          remotesRows :: RemoteRelKeyMap [(G.Variable, G.ValueConst)] <-
+          remotesRows :: RemoteRelKeyMap (Map.HashMap G.Variable G.ValueConst) <-
             foldM
               (\remoteRows (mbKey, remotes) ->
                  case (mbKey, partitionEithers remotes) of
@@ -521,9 +518,10 @@ extractRemoteRelArguments hasuraJson rels =
                          pure
                            (foldl'
                               (\remoteRows' remoteRelKey ->
-                                 insertWithConsI remoteRows' remoteRelKey
+                                  IntMap.insertWith (<>) remoteRelKey 
                                    -- TODO: Pay attention to variable naming wrt. aliasing.
-                                   (G.Variable (G.Name key), valueToValueConst subvalue)
+                                   (Map.singleton (coerce key) (valueToValueConst subvalue))
+                                   remoteRows'
                               )
                               remoteRows
                               remoteRelKeys)
@@ -534,20 +532,15 @@ extractRemoteRelArguments hasuraJson rels =
                    -- for remotes not closed over any hasura values, return empty bindings list:
                    (Nothing,  (remoteRelKeys, [])) ->
                       pure $ IntMap.unionWith (<>) remoteRows $
-                        IntMap.fromList $ zip remoteRelKeys (repeat [])
+                        IntMap.fromList $ zip remoteRelKeys (repeat mempty)
 
                    (Nothing, _) -> error "impossible: fix peelRemoteKeys"
               )
               mempty
               (Map.toList $ foldCandidates keyedRemotes)
 
-          -- TODO The way we use State but still for some reason need to thread
-          -- the map through a pile of nested folds is really confusing. This
-          -- can be cleaned up if we can just use mapM_s and stateful ops
-          -- directly at leaves, but maybe this tortured code is to get the
-          -- ordering we need...
           modify $ IntMap.unionWith (flip (<>)) $
-            JoinArguments . Seq.singleton . Map.fromList <$> remotesRows
+            JoinArguments . Seq.singleton <$> remotesRows
 
         -- scalar values are the base case; assert no remotes left:
         -- NOTE: keyedRemotes may be non-empty here when permissions have filtered hasura results:
@@ -566,6 +559,7 @@ extractRemoteRelArguments hasuraJson rels =
       -- ^ The 'Nothing' key is for remotes closed over no fields (the value will be all Lefts)
     foldCandidates =
       foldl' (uncurry . insertWithCons) mempty . concatMap peelRemoteKeys
+      where insertWithCons m k v = Map.insertWith (<>) k (pure v) m
 
     -- Peel one layer of expected keys from the remote to be looked up at the
     -- current level of the result object.
