@@ -646,3 +646,6 @@ class TestSetTableCustomFields(DefaultTestQueries):
 
     def test_set_invalid_table(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/set_invalid_table.yaml')
+
+    def test_alter_column(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/alter_column.yaml')
