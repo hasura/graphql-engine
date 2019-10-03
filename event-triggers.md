@@ -88,8 +88,8 @@ Convert complex, long-running business logic to be event-driven, asynchronous an
 Transform and load data into external data-stores. Check out this demo and tutorial below to see how Postgres data is transformed to build and populate an Algolia index:
 
 * [Watch demo](https://youtu.be/kWVEBWdEVAA)
-* [Tutorial](https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/serverless-etl)
 * [Try it out](https://serverless-etl.demo.hasura.app/)
+* [Tutorial](https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/serverless-etl)
 
 ### Building reactive UX for your async backend with realtime GraphQL
 
