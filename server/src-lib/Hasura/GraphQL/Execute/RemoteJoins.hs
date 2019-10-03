@@ -476,29 +476,43 @@ toAnnGValue =
 type RemoteRelKey = Int
 type RemoteRelKeyMap = IntMap.IntMap
 
--- | Extract from the Hasura results the remote relationship arguments.
+-- | Extract from the Hasura results the remote relationship arguments,
+-- returning them with their associated RemoteRelBranch.
 extractRemoteRelArguments ::
      EncJSON
   -> [RemoteRelBranch 'RRF_Tree]
-  -- ^ NOTE: This function only makes use of rrRelFieldPath, and 
-  -- (rtrHasuraFields . rrRemoteRelationship); maybe refactor.
-  -> ( GQRespValue , [ JoinArguments ])
-  -- ^ Errors are accumulated in GQRespValue. [JoinArguments] may be empty.
+  -- ^ NOTE: This function only internally makes use of rrRelFieldPath, and
+  -- (rtrHasuraFields . rrRemoteRelationship).
+  -> (GQRespValue , [Maybe JoinArguments])
+  -- ^ A 'JoinArguments' for each input rel, if we could extract them. If
+  -- permissions filtered hasura results, some of these may be Nothing. 
+  -- TODO audit this.
+  --
+  -- The output list will always be the same length as the input @rels@, so
+  -- they can be zipped. 
+  -- TODO consider refactoring so we can avoid zipping at call site.
+  --
+  -- Errors are accumulated in GQRespValue.
 extractRemoteRelArguments hasuraJson rels =
   case parseGQRespValue hasuraJson of
     Left (fromString-> err) ->
       (appendJoinError emptyResp $ "decode error: " <> err, [])
     Right gqResp@GQRespValue{..} -> do
-      let bisE = IntMap.elems <$> -- N.B. elems in ascending RemoteRelKey order
-            execStateT (go (keyRemotes rels) (OJ.Object _gqRespData)) mempty
+      let bisE = 
+            IntMap.elems . -- N.B. elems in ascending RemoteRelKey order
+            reassociateRels
+            <$> execStateT (go keyedRemotes0 (OJ.Object _gqRespData)) mempty
       case bisE of
         Left err  -> (appendJoinError gqResp err, [])
         Right bis -> (gqResp, bis)
   where
-    keyRemotes = 
-      zip [(0::RemoteRelKey) ..] .
-        map (rrRelFieldPath &&& rtrHasuraFields . rrRemoteRelationship)
+    reassociateRels joinArgs = 
+      (Just <$> joinArgs) `IntMap.union` -- NOTE: left biased
+      (Nothing <$ IntMap.fromList (zip [(0::RemoteRelKey) ..] rels))
 
+    keyedRemotes0 = 
+      zip [(0::RemoteRelKey) ..] $
+        map (rrRelFieldPath &&& rtrHasuraFields . rrRemoteRelationship) rels
 
     go :: [(RemoteRelKey, (RelFieldPath, Set FieldName))]
        -> OJ.Value

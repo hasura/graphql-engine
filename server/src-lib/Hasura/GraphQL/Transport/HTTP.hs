@@ -39,17 +39,14 @@ runGQ reqId userInfo reqHdrs req = do
   topLevelResults <-
     forM execPlans $ \(unresolvedPlans, resolvedPlan) -> do
       HttpResponse initJson initHeaders <- runLeafPlan resolvedPlan
-      let (initValue, remoteBatchInputs) =
+      let (initValue, joinInputs) =
             E.extractRemoteRelArguments initJson $
               map E.remoteRelField unresolvedPlans
 
-      -- TODO This zip may discard some unresolvedPlans when permissions
-      -- come into play. It's not totally clear to me if this is correct,
-      -- or how it works. Can use Data.Align for safer zips, but it seems like 
-      -- 'extractRemoteRelArguments' should be returning the zipped data.
       let batchesRemotePlans =
             -- TODO pass 'G.OperationType' properly when we support mutations, etc.
-            zipWith (E.mkQuery G.OperationTypeQuery) remoteBatchInputs unresolvedPlans 
+            map (uncurry $ E.mkQuery G.OperationTypeQuery) $ catMaybes $
+            map sequence $ zip unresolvedPlans joinInputs 
 
       results <- forM batchesRemotePlans $
         -- NOTE: discard remote headers (for now):

@@ -76,8 +76,8 @@ data QExecPlanResolved
 
 
 -- | Split the 'rrSelSet' from the 'RemoteRelBranch'
-mkQuery :: G.OperationType -> JoinArguments -> QExecPlanUnresolved -> (RemoteRelBranch 'RRF_Splice, VQ.RemoteTopField)
-mkQuery rtqOperationType JoinArguments{..} QExecPlanUnresolved{..}  =
+mkQuery :: G.OperationType -> QExecPlanUnresolved -> JoinArguments -> (RemoteRelBranch 'RRF_Splice, VQ.RemoteTopField)
+mkQuery rtqOperationType QExecPlanUnresolved{..} JoinArguments{..} =
   let RemoteRelBranch{..} = remoteRelField
       indexedRows = enumerateRowAliases $ toList joinArguments
       rtqFields =
