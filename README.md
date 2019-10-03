@@ -200,6 +200,7 @@ badge to your applications built using Hasura. ❤️
 ## License
 
 The core GraphQL Engine is available under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) (Apache-2.0).
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 All **other contents** (except those in [`server`](server), [`cli`](cli) and
 [`console`](console) directories) are available under the [MIT License](LICENSE-community).
