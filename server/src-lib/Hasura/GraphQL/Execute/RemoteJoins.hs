@@ -56,10 +56,13 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Value
 
 -- | When parameterised by 'RRF_Tree' this is like a 'VQ.Field' but with a path
--- indicating where its response should be spliced back into the hasura result.
+-- indicating where its response should be spliced back into the hasura result
+-- (it's a branch in the sense that it's cut off from its trunk).
 --
--- When parameterised by 'RRF_Splice' this represents just the metadata needed to
--- splice our remote result.
+-- When parameterised by 'RRF_Splice' this represents just the path and
+-- metadata needed to splice our remote result.
+--
+-- TODO give this a better name.
 data RemoteRelBranch (p :: RRF_P) =
   RemoteRelBranch
     { rrRemoteRelationship :: !RemoteRelationship
@@ -77,7 +80,7 @@ data RemoteRelBranch (p :: RRF_P) =
     , rrAliasIndex    :: !Int
     -- ^ index of selection set at 'rrRelFieldPath' at which this remote field should be spliced.
     -- This is morally the last component of 'rrRelFieldPath'.
-    , rrPhantomFields :: ![Text]
+    , rrPhantomFields :: ![G.Name]
     -- ^ Hasura fields which are not in the selection set, but are required as
     -- parameters to satisfy the remote join.
     }
@@ -164,7 +167,7 @@ rebuildFieldStrippingRemoteRels =
                            , rrAlias = _fAlias subfield
                            , rrAliasIndex = idx
                            , rrPhantomFields =
-                               coerce $ toList $
+                               toList $
                                  requiredHasuraFields `Set.difference` siblingSelSetFields
                            }
                        requiredHasuraFields = 
@@ -316,7 +319,7 @@ insertBatchResults accumResp RemoteRelBranch{..} remoteResp =
                   (rrAliasIndex, coerce rrAlias)
                   peeledValue
                   accumData)
-               rrPhantomFields
+               (map coerce rrPhantomFields)
 
     -- logging helpers:
     showHash = fromString . show . OJ.toEncJSON
