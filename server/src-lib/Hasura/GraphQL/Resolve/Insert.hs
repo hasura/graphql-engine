@@ -21,6 +21,7 @@ import qualified Hasura.RQL.DML.Returning          as RR
 
 import qualified Hasura.SQL.DML                    as S
 
+import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Resolve.Mutation
@@ -85,7 +86,7 @@ data AnnInsObj
   } deriving (Show, Eq)
 
 mkAnnInsObj
-  :: (MonadResolve m, Has InsCtxMap r, MonadReader r m)
+  :: (MonadResolve m, Has InsCtxMap r, MonadReader r m, Has FieldMap r)
   => RelationInfoMap
   -> PGColGNameMap
   -> AnnGObject
@@ -96,7 +97,7 @@ mkAnnInsObj relInfoMap allColMap annObj =
     emptyInsObj = AnnInsObj [] [] []
 
 traverseInsObj
-  :: (MonadResolve m, Has InsCtxMap r, MonadReader r m)
+  :: (MonadResolve m, Has InsCtxMap r, MonadReader r m, Has FieldMap r)
   => RelationInfoMap
   -> PGColGNameMap
   -> (G.Name, AnnInpVal)
@@ -159,7 +160,7 @@ traverseInsObj rim allColMap (gName, annVal) defVal@(AnnInsObj cols objRels arrR
             bool withNonEmptyArrData (return defVal) $ null arrDataVals
 
 parseOnConflict
-  :: (MonadResolve m)
+  :: (MonadResolve m, MonadReader r m, Has FieldMap r)
   => QualifiedTable
   -> Maybe UpdPermForIns
   -> PGColGNameMap
@@ -178,8 +179,10 @@ parseOnConflict tn updFiltrM allColMap val = withPathK "on_conflict" $
           updFltrRes <- traverseAnnBoolExp
                         (convPartialSQLExp sessVarFromCurrentSetting)
                         updFiltr
-          return $ RI.CP1Update constraint updCols preSetRes $
-            toSQLBoolExp (S.mkQual tn) updFltrRes
+          whereExp <- parseWhereExp obj
+          let updateBoolExp = toSQLBoolExp (S.mkQual tn) updFltrRes
+              whereCondition = S.BEBin S.AndOp updateBoolExp whereExp
+          return $ RI.CP1Update constraint updCols preSetRes whereCondition
 
   where
     getUpdCols o = do
@@ -192,6 +195,12 @@ parseOnConflict tn updFiltrM allColMap val = withPathK "on_conflict" $
            "\"constraint\" is expected, but not found"
       (_, enumVal) <- asEnumVal v
       return $ ConstraintName $ G.unName $ G.unEnumValue enumVal
+
+    parseWhereExp o = do
+      whereExpM <- forM (OMap.lookup "where" o) $ \v -> do
+        unresolved <- parseBoolExp v
+        traverse (traverse resolveValTxt) unresolved
+      pure $ maybe (S.BELit True) (toSQLBoolExp (S.mkQual tn)) whereExpM
 
 toSQLExps
   :: (MonadError QErr m, MonadState PrepArgs m)
