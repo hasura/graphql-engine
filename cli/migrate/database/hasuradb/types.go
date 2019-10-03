@@ -158,6 +158,7 @@ const (
 	dropUpdatePermission                     = "drop_update_permission"
 	createDeletePermission                   = "create_delete_permission"
 	dropDeletePermission                     = "drop_delete_permission"
+	setPermissionComment                     = "set_permission_comment"
 	createEventTrigger                       = "create_event_trigger"
 	deleteEventTrigger                       = "delete_event_trigger"
 	addRemoteSchema                          = "add_remote_schema"
@@ -181,6 +182,10 @@ type relationshipMap struct {
 
 type permissionMap struct {
 	tableName, schemaName, permType, Role string
+}
+
+type queryInCollectionMap struct {
+	collectionName, queryName string
 }
 
 type tableSchema struct {
@@ -275,6 +280,13 @@ type dropDeletePermissionInput struct {
 	Role  string      `json:"role" yaml:"role"`
 }
 
+type setPermissionCommentInput struct {
+	Table   tableSchema `json:"table" yaml:"table"`
+	Role    string      `json:"role" yaml:"role"`
+	Type    string      `json:"type" yaml:"type"`
+	Comment string      `json:"comment" yaml:"comment"`
+}
+
 type createEventTriggerInput struct {
 	Name    string      `json:"name" yaml:"name"`
 	Table   tableSchema `json:"table" yaml:"table"`
@@ -367,6 +379,12 @@ type remoteSchemaConfig struct {
 type queryCollectionConfig struct {
 	name      string
 	allowList bool
+	transition.Transition
+}
+
+type queryInCollectionConfig struct {
+	collectionName string
+	queryName      string
 	transition.Transition
 }
 

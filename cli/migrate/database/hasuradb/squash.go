@@ -101,6 +101,8 @@ func (q CustomQuery) MergeRelationships(squashList *database.CustomList) error {
 					return err
 				}
 				prevElems = append(prevElems, element)
+			case *setRelationshipCommentInput:
+				prevElems = append(prevElems, element)
 			case *dropRelationshipInput:
 				if relCfg.GetState() == "created" {
 					prevElems = append(prevElems, element)
@@ -151,6 +153,8 @@ func (q CustomQuery) MergePermissions(squashList *database.CustomList) error {
 				if err != nil {
 					return err
 				}
+				prevElems = append(prevElems, element)
+			case *setPermissionCommentInput:
 				prevElems = append(prevElems, element)
 			case *dropInsertPermissionInput, *dropSelectPermissionInput, *dropUpdatePermissionInput, *dropDeletePermissionInput:
 				if permCfg.GetState() == "created" {
@@ -230,6 +234,8 @@ func (q CustomQuery) MergeTables(squashList *database.CustomList) error {
 					return fmt.Errorf("cannot create array relationship %s when table %s on schema %s is untracked", args.Name, tblCfg.name, tblCfg.schema)
 				}
 				prevElems = append(prevElems, element)
+			case *setRelationshipCommentInput:
+				prevElems = append(prevElems, element)
 			case *dropRelationshipInput:
 				if tblCfg.GetState() == "untracked" {
 					return fmt.Errorf("cannot drop relationship %s when table %s on schema %s is untracked", args.RelationShip, tblCfg.name, tblCfg.schema)
@@ -254,6 +260,8 @@ func (q CustomQuery) MergeTables(squashList *database.CustomList) error {
 				if tblCfg.GetState() == "untracked" {
 					return fmt.Errorf("cannot create delete permission for %s role when table %s on schema %s is untracked", args.Role, tblCfg.name, tblCfg.schema)
 				}
+				prevElems = append(prevElems, element)
+			case *setPermissionCommentInput:
 				prevElems = append(prevElems, element)
 			case *dropInsertPermissionInput:
 				if tblCfg.GetState() == "untracked" {
@@ -378,14 +386,14 @@ func (q CustomQuery) MergeRemoteSchemas(squashList *database.CustomList) error {
 	return nil
 }
 
-func (q CustomQuery) MergeQueryCollections(squashList *database.CustomList) error {
-	queryCollectionTransition := transition.New(&queryCollectionConfig{})
-	queryCollectionTransition.Initial("new")
-	queryCollectionTransition.State("created")
-	queryCollectionTransition.State("dropped")
+func (q CustomQuery) MergeQueryInCollections(squashList *database.CustomList) error {
+	queryInCollectionTransition := transition.New(&queryInCollectionConfig{})
+	queryInCollectionTransition.Initial("new")
+	queryInCollectionTransition.State("added")
+	queryInCollectionTransition.State("dropped")
 
-	queryCollectionTransition.Event("create_query_collection").To("created").From("new", "dropped")
-	queryCollectionTransition.Event("drop_query_collection").To("dropped").From("new", "created")
+	queryInCollectionTransition.Event("add_query_to_collection").To("added").From("new", "dropped")
+	queryInCollectionTransition.Event("drop_query_from_collection").To("dropped").From("new", "added")
 
 	next := q.Iterate()
 
@@ -394,46 +402,33 @@ func (q CustomQuery) MergeQueryCollections(squashList *database.CustomList) erro
 		if g.Key == nil {
 			continue
 		}
-		queryCollectionKey := g.Key.(string)
-		qcCfg := queryCollectionConfig{
-			name: queryCollectionKey,
+		queryInCollectionKey := g.Key.(*queryInCollectionMap)
+		qicCfg := queryInCollectionConfig{
+			collectionName: queryInCollectionKey.collectionName,
+			queryName:      queryInCollectionKey.queryName,
 		}
 		prevElems := make([]*list.Element, 0)
 		for _, val := range g.Group {
 			element := val.(*list.Element)
-			switch args := element.Value.(type) {
-			case *createQueryCollectionInput:
-				err := queryCollectionTransition.Trigger("create_query_collection", &qcCfg, nil)
+			switch element.Value.(type) {
+			case *addQueryToCollectionInput:
+				err := queryInCollectionTransition.Trigger("add_query_to_collection", &qicCfg, nil)
 				if err != nil {
 					return err
 				}
 				prevElems = append(prevElems, element)
-			case *dropQueryCollectionInput:
-				if !args.Cascade && qcCfg.allowList {
-					// return error stating that without cascade set allow list wont be dropped
-					return fmt.Errorf("cannot drop collection %s from allowlist when cascade is not set to true", qcCfg.name)
-				}
-				if qcCfg.GetState() == "created" {
+			case *dropQueryFromCollectionInput:
+				if qicCfg.GetState() == "added" {
 					prevElems = append(prevElems, element)
 				}
-				err := queryCollectionTransition.Trigger("drop_query_collection", &qcCfg, nil)
+				err := queryInCollectionTransition.Trigger("drop_query_from_collection", &qicCfg, nil)
 				if err != nil {
 					return err
 				}
-				prevElems = append(prevElems, element)
 				// drop previous elements
 				for _, e := range prevElems {
 					squashList.Remove(e)
 				}
-			case *addCollectionToAllowListInput:
-				if qcCfg.GetState() == "dropped" {
-					return fmt.Errorf("cannot add collection %s to allowlist when it is dropped", qcCfg.name)
-				}
-				qcCfg.allowList = true
-				prevElems = append(prevElems, element)
-			case *dropCollectionFromAllowListInput:
-				qcCfg.allowList = false
-				prevElems = append(prevElems, element)
 			}
 		}
 	}
@@ -446,8 +441,8 @@ func (q CustomQuery) MergeAllowLists(squashList *database.CustomList) error {
 	allowListTransition.State("added")
 	allowListTransition.State("removed")
 
-	allowListTransition.Event("add_collection_to_allowlist").To("added").From("new", "dropped")
-	allowListTransition.Event("drop_collection_from_allowlist").To("dropped").From("new", "added")
+	allowListTransition.Event("add_collection_to_allowlist").To("added").From("new", "removed")
+	allowListTransition.Event("drop_collection_from_allowlist").To("removed").From("new", "added")
 
 	next := q.Iterate()
 
@@ -478,6 +473,75 @@ func (q CustomQuery) MergeAllowLists(squashList *database.CustomList) error {
 				if err != nil {
 					return err
 				}
+				// drop previous elements
+				for _, e := range prevElems {
+					squashList.Remove(e)
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (q CustomQuery) MergeQueryCollections(squashList *database.CustomList) error {
+	queryCollectionTransition := transition.New(&queryCollectionConfig{})
+	queryCollectionTransition.Initial("new")
+	queryCollectionTransition.State("created")
+	queryCollectionTransition.State("dropped")
+
+	queryCollectionTransition.Event("create_query_collection").To("created").From("new", "dropped")
+	queryCollectionTransition.Event("drop_query_collection").To("dropped").From("new", "created")
+
+	next := q.Iterate()
+
+	for item, ok := next(); ok; item, ok = next() {
+		g := item.(linq.Group)
+		if g.Key == nil {
+			continue
+		}
+		queryCollectionKey := g.Key.(string)
+		qcCfg := queryCollectionConfig{
+			name: queryCollectionKey,
+		}
+		prevElems := make([]*list.Element, 0)
+		for _, val := range g.Group {
+			element := val.(*list.Element)
+			switch args := element.Value.(type) {
+			case *createQueryCollectionInput:
+				err := queryCollectionTransition.Trigger("create_query_collection", &qcCfg, nil)
+				if err != nil {
+					return err
+				}
+				prevElems = append(prevElems, element)
+			case *addQueryToCollectionInput:
+				if qcCfg.GetState() == "dropped" {
+					return fmt.Errorf("cannot add query %s to a collection %s when it is dropped", args.QueryName, qcCfg.name)
+				}
+				prevElems = append(prevElems, element)
+			case *dropQueryFromCollectionInput:
+				prevElems = append(prevElems, element)
+			case *addCollectionToAllowListInput:
+				if qcCfg.GetState() == "dropped" {
+					return fmt.Errorf("cannot add collection %s to allowlist when it is dropped", qcCfg.name)
+				}
+				qcCfg.allowList = true
+				prevElems = append(prevElems, element)
+			case *dropCollectionFromAllowListInput:
+				qcCfg.allowList = false
+				prevElems = append(prevElems, element)
+			case *dropQueryCollectionInput:
+				if !args.Cascade && qcCfg.allowList {
+					// return error stating that without cascade set allow list wont be dropped
+					return fmt.Errorf("cannot drop collection %s from allowlist when cascade is not set to true", qcCfg.name)
+				}
+				if qcCfg.GetState() == "created" {
+					prevElems = append(prevElems, element)
+				}
+				err := queryCollectionTransition.Trigger("drop_query_collection", &qcCfg, nil)
+				if err != nil {
+					return err
+				}
+				prevElems = append(prevElems, element)
 				// drop previous elements
 				for _, e := range prevElems {
 					squashList.Remove(e)
@@ -560,6 +624,13 @@ func (h *HasuraDB) PushToList(migration io.Reader, fileType string, l *database.
 				l.PushBack(utt)
 			case createArrayRelationship:
 				utt := &createArrayRelationshipInput{}
+				err := mapstructure.Decode(v.Args, utt)
+				if err != nil {
+					return err
+				}
+				l.PushBack(utt)
+			case setRelationshipComment:
+				utt := &setRelationshipCommentInput{}
 				err := mapstructure.Decode(v.Args, utt)
 				if err != nil {
 					return err
@@ -684,6 +755,20 @@ func (h *HasuraDB) PushToList(migration io.Reader, fileType string, l *database.
 					return err
 				}
 				l.PushBack(utt)
+			case addQueryToCollection:
+				utt := &addQueryToCollectionInput{}
+				err := mapstructure.Decode(v.Args, utt)
+				if err != nil {
+					return err
+				}
+				l.PushBack(utt)
+			case dropQueryFromCollection:
+				utt := &dropQueryFromCollectionInput{}
+				err := mapstructure.Decode(v.Args, utt)
+				if err != nil {
+					return err
+				}
+				l.PushBack(utt)
 			case addCollectionToAllowList:
 				utt := &addCollectionToAllowListInput{}
 				err := mapstructure.Decode(v.Args, utt)
@@ -746,6 +831,12 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 					args.Name,
 				}
 			case *createArrayRelationshipInput:
+				return relationshipMap{
+					args.Table.Name,
+					args.Table.Schema,
+					args.Name,
+				}
+			case *setRelationshipCommentInput:
 				return relationshipMap{
 					args.Table.Name,
 					args.Table.Schema,
@@ -825,6 +916,13 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 					args.Table.Name,
 					args.Table.Schema,
 					"delete",
+					args.Role,
+				}
+			case *setPermissionCommentInput:
+				return permissionMap{
+					args.Table.Name,
+					args.Table.Schema,
+					args.Type,
 					args.Role,
 				}
 			}
@@ -982,16 +1080,44 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 		ret <- err
 	}
 
+	queryInCollectionGroups := CustomQuery(query.GroupByT(
+		func(element *list.Element) *queryInCollectionMap {
+			switch args := element.Value.(type) {
+			case *addQueryToCollectionInput:
+				return &queryInCollectionMap{
+					collectionName: args.CollectionName,
+					queryName:      args.QueryName,
+				}
+			case *dropQueryFromCollectionInput:
+				return &queryInCollectionMap{
+					collectionName: args.CollectionName,
+					queryName:      args.QueryName,
+				}
+			}
+			return nil
+		}, func(element *list.Element) *list.Element {
+			return element
+		},
+	))
+	err = queryInCollectionGroups.MergeQueryInCollections(l)
+	if err != nil {
+		ret <- err
+	}
+
 	queryCollectionGroups := CustomQuery(query.GroupByT(
 		func(element *list.Element) string {
 			switch args := element.Value.(type) {
 			case *createQueryCollectionInput:
 				return args.Name
-			case *dropQueryCollectionInput:
-				return args.Collection
+			case *addQueryToCollectionInput:
+				return args.CollectionName
+			case *dropQueryFromCollectionInput:
+				return args.CollectionName
 			case *addCollectionToAllowListInput:
 				return args.Collection
 			case *dropCollectionFromAllowListInput:
+				return args.Collection
+			case *dropQueryCollectionInput:
 				return args.Collection
 			}
 			return ""
