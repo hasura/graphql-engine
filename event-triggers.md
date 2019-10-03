@@ -69,7 +69,7 @@ Trigger push notifications and emails based on database events. Try the demo and
 
 * [Watch demo](https://www.youtube.com/watch?v=nuSHkzE2-zo)
 * [Try it out](https://serverless-push.demo.hasura.app/)
-* [Tutorial](community/examples/serverless-push)
+* [Tutorial](https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/serverless-push)
 
 
 <!--
@@ -79,7 +79,7 @@ Convert complex, long-running business logic to be event-driven, asynchronous an
 
 * [Watch demo](https://some-youtube-demo.com) (*10:00 mins*)
 * [Try it out](https://some-link/)
-* [Tutorial](https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/serverless-push)
+* [Tutorial](https://some-other-link)
 
 -->
 
