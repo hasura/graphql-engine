@@ -6,10 +6,8 @@ args:
     table:
       schema: hge_tests
       name: test_t1
-    insert:
-      columns: ["c1"]
     update:
-      columns: ["c2"]
+      columns: ["c1", "c3"]
     delete:
       columns: "*"
     webhook: http://127.0.0.1:5592/new
@@ -17,3 +15,11 @@ args:
       num_retries: 5
       interval_sec: 5
     replace: true
+- type: select
+  args:
+    table:
+      schema: hdb_catalog
+      name: event_triggers
+    columns: ["configuration"]
+    where:
+      name: t1_cols

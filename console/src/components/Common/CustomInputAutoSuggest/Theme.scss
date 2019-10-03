@@ -1,0 +1,91 @@
+$suggestion-width: 280px;
+$set-top: 34px;
+$suggestion-padding: 6px 12px;
+
+.container { 
+  position: relative;
+}
+.input { 
+  border: 1px solid #aaa;
+  border-radius: 4px;
+}
+
+.inputFocussed {
+  outline: none;
+}
+
+.inputOpen {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.suggestionsContainer {
+  display: none;
+}
+
+.suggestionsContainerOpen {
+  display: block;
+  position: absolute;
+  top: $set-top;
+  min-width: 100%;
+  width: $suggestion-width;
+  border: 1px solid #aaa;
+  background-color: #fff;
+  border-radius: 4px;
+  z-index: 4;
+}
+
+.suggestionsList {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+
+.suggestion {
+  cursor: pointer;
+  word-break: break-word;
+  // padding: $suggestion-padding;
+
+  background-color: transparent;
+  color: inherit;
+  cursor: default;
+  display: block;
+  font-size: inherit;
+  padding: 8px 12px;
+  width: 100%;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+  box-sizing: border-box;
+
+  &:hover {
+    background-color: #DEEBFF;
+  }
+}
+
+.suggestionHighlighted {
+  background-color: #DEEBFF;
+}
+
+.sectionTitle {
+  color: #999;
+  cursor: default;
+  display: block;
+  font-size: 75%;
+  font-weight: 500;
+  margin-bottom: 0.25em;
+  padding-left: 12px;
+  padding-right: 12px;
+  text-transform: uppercase;
+  box-sizing: border-box;
+}
+
+.sectionContainer {
+  margin-bottom: 5px;
+}
+
+.sectionContainerFirst {
+  margin-top: 10px;
+}

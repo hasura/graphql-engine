@@ -1,5 +1,5 @@
 description: Nested select on article with offset 2 and limit 1
-url: /v1alpha1/graphql
+url: /v1/graphql
 status: 200
 response:
   data:
@@ -13,7 +13,7 @@ response:
 query:
   query: |
     query {
-      article(limit: 1, offset: 2, order_by: id_desc) {
+      article(limit: 1, offset: 2, order_by: {id: desc}) {
         id
         title
         content

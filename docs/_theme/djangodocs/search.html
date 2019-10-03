@@ -1,1 +1,23 @@
+{% extends "layout.html" %}
 
+{% block extrafooter %}
+  <!-- handle search query -->
+  <script>
+    const handleQueryParams = function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const searchTerm = urlParams.get('query');
+
+      if (searchTerm) {
+        const searchInput = document.getElementById('search_element');
+
+        searchInput.value = searchTerm;
+        searchInput.dispatchEvent(new Event('input'));
+      }
+    };
+
+    if (window.location.search.length > 0) {
+      handleQueryParams();
+    }
+
+  </script>
+{% endblock %}

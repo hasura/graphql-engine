@@ -1,0 +1,19 @@
+description: Passing null value for non nullable type
+url: /v1/graphql
+status: 200
+response:
+  errors:
+  - extensions:
+      path: "$.selectionSet.update_author.args.where"
+      code: "validation-failed"
+    message: "null value found for non-nullable type: author_bool_exp!"
+query:
+  query: |
+    mutation update_author {
+      update_author(where: null _set: {name: ""}) {
+        returning {
+          id
+          name
+        }
+      }
+    }

@@ -1,6 +1,6 @@
 import { defaultViewState } from '../EventState';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
-import requestAction from 'utils/requestAction';
+import requestAction from '../../../../utils/requestAction';
 import pendingFilterReducer from './FilterActions';
 import { findTableFromRel } from '../utils';
 import dataHeaders from '../Common/Headers';
@@ -13,7 +13,6 @@ const V_EXPAND_REL = 'PendingEvents/V_EXPAND_REL';
 const V_CLOSE_REL = 'PendingEvents/V_CLOSE_REL';
 const V_SET_ACTIVE = 'PendingEvents/V_SET_ACTIVE';
 const V_SET_QUERY_OPTS = 'PendingEvents/V_SET_QUERY_OPTS';
-const V_REQUEST_PROGRESS = 'PendingEvents/V_REQUEST_PROGRESS';
 const V_EXPAND_ROW = 'PendingEvents/V_EXPAND_ROW';
 const V_COLLAPSE_ROW = 'PendingEvents/V_COLLAPSE_ROW';
 
@@ -35,10 +34,6 @@ const vMakeRequest = () => {
     const state = getState();
     const url = Endpoints.query;
     const originalTrigger = getState().triggers.currentTrigger;
-    const triggerList = getState().triggers.triggerList;
-    const triggerSchema = triggerList.filter(t => t.name === originalTrigger);
-    const triggerId = triggerSchema[0].id;
-    dispatch({ type: V_REQUEST_PROGRESS, data: true });
     const currentQuery = JSON.parse(JSON.stringify(state.triggers.view.query));
     // count query
     const countQuery = JSON.parse(JSON.stringify(state.triggers.view.query));
@@ -52,17 +47,15 @@ const vMakeRequest = () => {
       const finalAndClause = currentQuery.where.$and;
       finalAndClause.push({ delivered: false });
       finalAndClause.push({ error: false });
-      finalAndClause.push({ tries: 0 });
       currentQuery.columns[1].where = { $and: finalAndClause };
       currentQuery.where = { name: state.triggers.currentTrigger };
-      countQuery.where.$and.push({ trigger_id: triggerId });
+      countQuery.where.$and.push({ trigger_name: originalTrigger });
     } else {
       // reset where for events
       if (currentQuery.columns[1]) {
         currentQuery.columns[1].where = {
           delivered: false,
           error: false,
-          tries: 0,
         };
       }
       currentQuery.where = { name: state.triggers.currentTrigger };
@@ -70,7 +63,6 @@ const vMakeRequest = () => {
         trigger_name: state.triggers.currentTrigger,
         delivered: false,
         error: false,
-        tries: 0,
       };
     }
 
@@ -142,7 +134,6 @@ const vMakeRequest = () => {
               data: data[0],
               count: data[1].count,
             }),
-            dispatch({ type: V_REQUEST_PROGRESS, data: false }),
           ]);
         }
       },
@@ -445,8 +436,6 @@ const pendingEventsReducer = (triggerName, triggerList, viewState, action) => {
       };
     case V_REQUEST_SUCCESS:
       return { ...viewState, rows: action.data, count: action.count };
-    case V_REQUEST_PROGRESS:
-      return { ...viewState, isProgressing: action.data };
     case V_EXPAND_ROW:
       return {
         ...viewState,

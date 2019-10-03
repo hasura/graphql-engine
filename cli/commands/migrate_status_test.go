@@ -12,6 +12,7 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/migrate"
+	"github.com/hasura/graphql-engine/cli/version"
 	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
 )
@@ -23,13 +24,20 @@ func testMigrateStatus(t *testing.T, endpoint *url.URL, migrationsDir string, ex
 			Logger:       logger,
 			Spinner:      spinner.New(spinner.CharSets[7], 100*time.Millisecond),
 			MigrationDir: migrationsDir,
-			Config: &cli.HasuraGraphQLConfig{
+			ServerConfig: &cli.ServerConfig{
 				Endpoint:       endpoint.String(),
-				AccessKey:      os.Getenv("HASURA_GRAPHQL_TEST_ACCESS_KEY"),
+				AdminSecret:    os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET"),
 				ParsedEndpoint: endpoint,
 			},
 		},
 	}
+
+	opts.EC.Version = version.New()
+	v, err := version.FetchServerVersion(opts.EC.ServerConfig.Endpoint)
+	if err != nil {
+		t.Fatalf("getting server version failed: %v", err)
+	}
+	opts.EC.Version.SetServerVersion(v)
 
 	status, err := opts.run()
 	if err != nil {
@@ -45,14 +53,16 @@ func TestMigrateStatusWithInvalidEndpoint(t *testing.T) {
 			Logger:       logger,
 			Spinner:      spinner.New(spinner.CharSets[7], 100*time.Millisecond),
 			MigrationDir: filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000))),
-			Config: &cli.HasuraGraphQLConfig{
+			ServerConfig: &cli.ServerConfig{
 				Endpoint:       ":",
-				AccessKey:      "",
+				AdminSecret:    "",
 				ParsedEndpoint: &url.URL{},
 			},
 		},
 	}
 
+	opts.EC.Version = version.New()
+	opts.EC.Version.SetServerVersion("")
 	_, err := opts.run()
 	if err == nil {
 		t.Fatalf("expected err not to be nil")

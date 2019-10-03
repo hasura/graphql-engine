@@ -1,0 +1,16 @@
+description: Add a remote schema with a argument of a field of an object not having the same type as the same argument of the same field in interface
+url: /v1/query
+status: 400
+response:
+  path: $.args
+  error: |-
+    Interface field argument 'Character'."id"("ifaceArg":) expects type Int!, but 'Human'."id"("ifaceArg":) has type String!
+  code: remote-schema-error
+query:
+  type: add_remote_schema
+  args:
+    name: err-missing-arg
+    definition:
+      url: http://localhost:5000/iface-graphql-err-wrong-arg-type
+      headers: []
+      forward_client_headers: true

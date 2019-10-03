@@ -4,12 +4,12 @@ const colors = require('colors/safe');
 
 const complexQuery = `
 query {
-  f2g_test_Authors (order_by: Name_asc) {
+  f2g_test_Authors (order_by: {Name:asc}) {
     _id
     Name
-    f2g_Articles (order_by: Title_asc, where: { IsUnpublished: { _eq: true}}) {
+    f2g_Articles (order_by: {Title:asc}, where: { IsUnpublished: { _eq: true}}) {
       Title
-      f2g_test_Comments (order_by: Date_asc) {
+      f2g_test_Comments (order_by: {Date:asc}) {
         Body
         Date
       }
@@ -21,8 +21,8 @@ query {
 const verifyDataImport = () => {
   query({
     query: complexQuery,
-    endpoint: `${process.env.TEST_HGE_URL}/v1alpha1/graphql`,
-    headers: {'x-hasura-access-key': process.env.TEST_X_HASURA_ACCESS_KEY},
+    endpoint: `${process.env.TEST_HGE_URL}/v1/graphql`,
+    headers: {'x-hasura-admin-secret': process.env.TEST_X_HASURA_ADMIN_SECRET},
   }).then(response => {
     if (
       response.data &&
@@ -37,7 +37,7 @@ const verifyDataImport = () => {
         `${process.env.TEST_HGE_URL}/v1/query`,
         {
           method: 'POST',
-          headers: {'x-hasura-access-key': process.env.TEST_X_HASURA_ACCESS_KEY},
+          headers: {'x-hasura-admin-secret': process.env.TEST_X_HASURA_ADMIN_SECRET},
           body: JSON.stringify({
             type: 'run_sql',
             args: {

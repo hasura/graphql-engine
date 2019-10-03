@@ -19,6 +19,8 @@ json,,textual JSON data,JSON_
 jsonb,,"binary JSON data, decomposed",JSONB_
 line,,infinite line on a plane,Implicit_
 lseg,,line segment on a plane, Implicit_
+geometry,,PostGIS Geometry type, Geometry_
+geography,,PostGIS Geography type, Geography_
 macaddr,,MAC (Media Access Control) address, Implicit_
 macaddr8,,MAC (Media Access Control) address (EUI-64 format), Implicit_
 money,,currency amount,Implicit_

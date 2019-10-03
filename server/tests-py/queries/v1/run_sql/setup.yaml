@@ -6,18 +6,118 @@ args:
   args:
     sql: |
       create table author(
-          id serial primary key, 
+          id serial primary key,
           name text unique
       );
+      insert into author (name) values ('Author 1'), ('Author 2');
+      create table article(
+          id serial primary key,
+          title text not null,
+          content text not null,
+          author_id integer not null references author(id)
+      );
+      insert into article (title, content, author_id) values
+        ('article 1 by author 1', 'content for article 1', 1),
+        ('article 2 by author 1', 'content for article 2', 1),
+        ('article 1 by author 2', 'content for article 3', 2);
+      create table test(
+        id serial primary key,
+        name text not null,
+        bool_col boolean not null default false
+      );
+      insert into test (name) values ('name_1'), ('name_2');
+
 - type: track_table
   args:
     schema: public
     name: author
+- type: track_table
+  args:
+    schema: public
+    name: article
 
-#Insert Author table data
-- type: insert
+#Object relationship
+- type: create_object_relationship
+  args:
+    table: article
+    name: author
+    using:
+      foreign_key_constraint_on: author_id
+
+#Array relationship
+- type: create_array_relationship
   args:
     table: author
-    objects:
-      - name: Author 1
-      - name: Author 2
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: author_id
+
+#Article select permission for user
+- type: create_select_permission
+  args:
+    table: article
+    role: user
+    permission:
+      columns:
+      - id
+      - title
+      - content
+      - author_id
+      filter:
+        author:
+          id: X-Hasura-User-Id
+
+#Article insert permission for user
+- type: create_insert_permission
+  args:
+    table: article
+    role: user
+    permission:
+      check:
+        author_id: X-Hasura-User-Id
+
+#Article insert permission for user2
+- type: create_insert_permission
+  args:
+    table: article
+    role: user2
+    permission:
+      columns:
+      - id
+      - title
+      - content
+      - author_id
+      check: {}
+
+#test table
+- type: track_table
+  args:
+    name: test
+    schema: public
+
+- type: create_select_permission
+  args:
+    table: test
+    role: user
+    permission:
+      columns:
+      - id
+      - name
+      filter:
+        id: X-Hasura-User-Id
+        bool_col: true
+
+- type: create_insert_permission
+  args:
+    table: test
+    role: user
+    permission:
+      columns:
+      - id
+      - name
+      check:
+        id: X-Hasura-User-Id
+      set:
+        bool_col: true

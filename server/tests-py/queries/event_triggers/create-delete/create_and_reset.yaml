@@ -1,0 +1,26 @@
+description: create an event trigger and then reset metadata
+url: /v1/query
+status: 200
+query:
+  type: bulk
+  args:
+  - type: track_table
+    args:
+      schema: hge_tests
+      name: test_t1
+  - type: create_event_trigger
+    args: &def_args
+      name: t1_1
+      table:
+        schema: hge_tests
+        name: test_t1
+      insert:
+        columns: "*"
+      update:
+        columns: "*"
+      delete:
+        columns: "*"
+      webhook: http://127.0.0.1:5592
+
+  - type: clear_metadata
+    args: {}

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="11.207" height="11.207" viewBox="0 0 11.207 11.207">
+    <defs>
+        <style>
+            .cls-1{fill:none;stroke:#505050;stroke-linecap:round;stroke-linejoin:round}
+        </style>
+    </defs>
+    <g id="external-link" transform="translate(-2.5 -2.293)">
+        <path id="Path_41" d="M11.263 9.856v3.3a1.1 1.1 0 0 1-1.1 1.1H4.1a1.1 1.1 0 0 1-1.1-1.1V7.1A1.1 1.1 0 0 1 4.1 6h3.307" class="cls-1" data-name="Path 41" transform="translate(0 -1.262)"/>
+        <path id="Path_42" d="M15 3h3.305v3.3" class="cls-1" data-name="Path 42" transform="translate(-5.305)"/>
+        <path id="Line_33" d="M0 6.059L6.059 0" class="cls-1" data-name="Line 33" transform="translate(6.941 3)"/>
+    </g>
+</svg>

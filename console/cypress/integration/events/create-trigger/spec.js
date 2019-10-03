@@ -5,15 +5,20 @@ import {
   getWebhookURL,
   getNoOfRetries,
   getIntervalSeconds,
+  getTimeoutSeconds,
   baseUrl,
 } from '../../../helpers/eventHelpers';
-import { getColName } from '../../../helpers/dataHelpers';
+import {
+  getColName,
+  tableColumnTypeSelector,
+} from '../../../helpers/dataHelpers';
 import {
   setMetaData,
   validateCT,
   validateCTrigger,
   validateInsert,
 } from '../../validators/validators';
+import { setPromptValue } from '../../../helpers/common';
 
 const testName = 'ctr'; // create trigger
 
@@ -30,13 +35,26 @@ export const passPTCreateTable = () => {
   cy.get(getElementFromAlias('tableName')).type(getTableName(0, testName));
   // Set first column
   cy.get(getElementFromAlias('column-0')).type(getColName(0));
-  cy.get(getElementFromAlias('col-type-0')).select('serial');
+  tableColumnTypeSelector('col-type-0');
+  cy.get(getElementFromAlias('data_test_column_type_value_serial'))
+    .first()
+    .click();
+  // cy.get(getElementFromAlias('col-type-0')).select('serial');
   // Set second column
   cy.get(getElementFromAlias('column-1')).type(getColName(1));
-  cy.get(getElementFromAlias('col-type-1')).select('integer');
+  tableColumnTypeSelector('col-type-1');
+  cy.get(getElementFromAlias('data_test_column_type_value_integer'))
+    .first()
+    .click();
+
+  // cy.get(getElementFromAlias('col-type-1')).select('integer');
   // Set third column
   cy.get(getElementFromAlias('column-2')).type(getColName(2));
-  cy.get(getElementFromAlias('col-type-2')).select('text');
+  tableColumnTypeSelector('col-type-2');
+  cy.get(getElementFromAlias('data_test_column_type_value_text'))
+    .first()
+    .click();
+  // cy.get(getElementFromAlias('col-type-2')).select('text');
   // Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
   // Create
@@ -81,7 +99,7 @@ export const passCT = () => {
   cy.get(getElementFromAlias('delete-operation')).check();
 
   // webhook url
-  cy.get(getElementFromAlias('webhook'))
+  cy.get(getElementFromAlias('webhook-input'))
     .clear()
     .type(getWebhookURL());
 
@@ -91,6 +109,7 @@ export const passCT = () => {
   // retry configuration
   cy.get(getElementFromAlias('no-of-retries')).type(getNoOfRetries());
   cy.get(getElementFromAlias('interval-seconds')).type(getIntervalSeconds());
+  cy.get(getElementFromAlias('timeout-seconds')).type(getTimeoutSeconds());
 
   //  Click on create
   cy.get(getElementFromAlias('trigger-create')).click();
@@ -120,7 +139,7 @@ export const failCTDuplicateTrigger = () => {
   cy.get(getElementFromAlias('delete-operation')).check();
 
   // webhook url
-  cy.get(getElementFromAlias('webhook'))
+  cy.get(getElementFromAlias('webhook-input'))
     .clear()
     .type(getWebhookURL());
 
@@ -151,31 +170,32 @@ export const deleteCTTestTrigger = () => {
   //  Go to the settings section of the trigger
   cy.visit(`/events/manage/triggers/${getTriggerName(0, testName)}/processed`);
   //  click on settings tab
-  cy.get(getElementFromAlias('trigger-settings')).click();
+  cy.get(getElementFromAlias('trigger-modify')).click();
+  setPromptValue(getTriggerName(0, testName));
   //  Click on delete
   cy.get(getElementFromAlias('delete-trigger')).click();
   //  Confirm
-  cy.on('window:confirm', str => {
-    expect(str === 'Are you sure?').to.be.true;
-    return true;
-  });
+  cy.window()
+    .its('prompt')
+    .should('be.called');
   cy.wait(7000);
   //  Match the URL
   cy.url().should('eq', `${baseUrl}/events/manage/triggers`);
   //  Validate
-  validateCTrigger(getTriggerName(0, testName), 'success');
+  validateCTrigger(getTriggerName(0, testName), 'failure');
 };
 
 export const deleteCTTestTable = () => {
   //   Go to the modify section of the table
-  cy.visit(`/data/schema/public/tables/${getTableName(0, testName)}/modify`);
+  cy.visit(`/data/schema/public/tables/${getTableName(0, testName)}/browse`);
+  cy.get(getElementFromAlias('table-modify')).click();
   //   Click on delete
+  setPromptValue(getTableName(0, testName));
   cy.get(getElementFromAlias('delete-table')).click();
   //   Confirm
-  cy.on('window:confirm', str => {
-    expect(str === 'Are you sure?').to.be.true;
-    return true;
-  });
+  cy.window()
+    .its('prompt')
+    .should('be.called');
   cy.wait(7000);
   //   Match the URL
   cy.url().should('eq', `${baseUrl}/data/schema/public`);

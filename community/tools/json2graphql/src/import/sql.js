@@ -33,7 +33,7 @@ const generateCreateTableSql = metadata => {
     let columnSql = '(';
     table.columns.forEach((column, i) => {
       if (column.name === 'id') {
-        columnSql += '"id" int not null primary key';
+        columnSql += `"id" ${column.type} not null primary key`;
       } else {
         columnSql += `"${column.name}" ${column.type}`;
       }

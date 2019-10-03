@@ -1,0 +1,12 @@
+kind: pipeline
+name: application
+steps:
+  - name: build-app
+    image: plugins/docker
+    settings:
+      repo: platyplus/authentication
+      tags: latest
+      username:
+        from_secret: DH_USER
+      password:
+        from_secret: DH_PASSWORD

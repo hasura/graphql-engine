@@ -1,0 +1,16 @@
+type: bulk
+args:
+- type: drop_collection_from_allowlist
+  args:
+    collection: collection_1
+
+- type: drop_query_collection
+  args:
+    collection: collection_1
+    cascade: False
+
+- type: run_sql
+  args:
+    sql: |
+      DROP TABLE "user";
+    cascade: true

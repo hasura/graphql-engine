@@ -1,0 +1,12 @@
+description: Count articles of registered authors
+url: /v1/query
+status: 200
+response:
+  count: 2
+query:
+  type: count
+  args:
+    table: article
+    where:
+      author:
+        is_registered: false

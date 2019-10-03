@@ -1,11 +1,12 @@
 Subscriptions sample use cases
 ==============================
 
-The following are a few use cases for using subscriptions:
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
 
-- :ref:`subscribe_field`
-- :ref:`subscribe_table`
-- :ref:`subscribe_derived`
+The following are a few use cases for using subscriptions:
 
 .. _subscribe_field:
 
@@ -13,7 +14,7 @@ Subscribe to the latest value of a particular field
 ---------------------------------------------------
 
 In case you are interested only in the latest value of a particular field, you can use subscriptions to fetch the
-field and get updated with it's latest value whenever it changes.
+field and get updated with its latest value whenever it changes.
 
 Example: Live location tracking
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -47,7 +48,7 @@ Now we can use the following subscription to fetch the latest location of a vehi
       vehicle(where: {id: {_eq: $vehicleId}}) {
         id
         vehicle_number
-        locations(order_by: timestamp_desc, limit: 1) {
+        locations(order_by: {timestamp: desc}, limit: 1) {
           location
           timestamp
         }
@@ -72,8 +73,8 @@ Now we can use the following subscription to fetch the latest location of a vehi
     }
 
 
-Check this `sample app <https://hasura.github.io/realtime-location-app/>`__ for a working demo
-(`source code <https://github.com/hasura/graphql-engine/tree/master/community/examples/realtime-location-tracking>`__).
+Check this `sample app <https://realtime-location-tracking.demo.hasura.app/>`__ for a working demo
+(`source code <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/realtime-location-tracking>`__).
 
 .. _subscribe_table:
 
@@ -111,7 +112,7 @@ Now we can use the following subscription to display the latest messages in a ch
   :view_only:
   :query:
     subscription getMessages {
-      message(order_by: timestamp_desc) {
+      message(order_by: {timestamp: desc}) {
         text
         timestamp
         author {
@@ -148,16 +149,16 @@ Now we can use the following subscription to display the latest messages in a ch
       }
     }
 
-Check this `sample app <https://chat-example-trial-roar.herokuapp.com/>`__ for a working demo
-(`source code <https://github.com/hasura/graphql-engine/tree/master/community/examples/realtime-chat>`__).
+Check this `sample app <https://realtime-chat.demo.hasura.app/>`__ for a working demo
+(`source code <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/realtime-chat>`__).
 
 .. _subscribe_derived:
 
-Subscribe to latest value of some derived data
-----------------------------------------------
+Subscribe to the latest value of some derived data
+--------------------------------------------------
 
 In case you are interested in the latest value of some derived data, you can :doc:`create a view to query the derived
-data <../queries/aggregations>` and then use subscriptions to fetch the derived value and get its latest value
+data <../queries/derived-data>` and then use subscriptions to fetch the derived value and get its latest value
 whenever it updates.
 
 Example: A poll dashboard
@@ -214,7 +215,7 @@ First, create a view ``poll_results`` to give the result of the poll:
         )
     GROUP BY poll.question, o.option_id, poll.id;
 
-This view will have the fields: ``poll_id``, ``option_id`` and ``votes``. i.e. it gives the number of votes
+This view will have the following fields: ``poll_id``, ``option_id`` and ``votes``, i.e. it gives the number of votes
 received by each option for a poll.
 
 Next, :doc:`setup relationships <../schema/relationships/index>` ``poll`` and ``option`` between the ``poll_results`` view
@@ -280,5 +281,5 @@ Now we can use the following subscription to display the latest poll result:
       }
     }
 
-Check this `sample app <https://shahidh.in/hasura-realtime-poll/>`__ for a working demo
-(`source code <https://github.com/hasura/graphql-engine/tree/master/community/examples/realtime-poll>`__).
+Check this `sample app <https://realtime-poll.demo.hasura.app/>`__ for a working demo
+(`source code <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/realtime-poll>`__).

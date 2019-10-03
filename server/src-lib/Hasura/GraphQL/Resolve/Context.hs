@@ -1,21 +1,14 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE MultiWayIf            #-}
-{-# LANGUAGE NoImplicitPrelude     #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TemplateHaskell       #-}
-
 module Hasura.GraphQL.Resolve.Context
-  ( InsResp(..)
-  , FieldMap
-  , OrdByResolveCtx
-  , OrdByResolveCtxElem
-  , NullsOrder(..)
-  , OrdTy(..)
-  , RelationInfoMap
+  ( FuncArgItem(..)
+  , OrdByItem(..)
+  , UpdPermForIns(..)
   , InsCtx(..)
-  , InsCtxMap
   , RespTx
+  , LazyRespTx
+  , AnnPGVal(..)
+  , UnresolvedVal(..)
+  , resolveValPrep
+  , resolveValTxt
   , InsertTxConflictCtx(..)
   , getFldInfo
   , getPGColInfo
@@ -23,79 +16,44 @@ module Hasura.GraphQL.Resolve.Context
   , withArg
   , withArgM
   , nameAsPath
+
   , PrepArgs
-  , Convert
-  , runConvert
   , prepare
+  , prepareColVal
+  , withPrepArgs
+
+  , txtConverter
+
+  , withSelSet
+  , fieldAsPath
+  , resolvePGCol
   , module Hasura.GraphQL.Utils
+  , module Hasura.GraphQL.Resolve.Types
   ) where
 
 import           Data.Has
 import           Hasura.Prelude
 
-import qualified Data.Aeson                    as J
-import qualified Data.Aeson.Casing             as J
-import qualified Data.Aeson.TH                 as J
-import qualified Data.ByteString.Lazy          as BL
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.Sequence                 as Seq
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 
+import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Utils
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
+import           Hasura.RQL.DML.Internal       (sessVarFromCurrentSetting)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-import qualified Hasura.RQL.DML.Select         as RS
 import qualified Hasura.SQL.DML                as S
-
-data InsResp
-  = InsResp
-  { _irAffectedRows :: !Int
-  , _irResponse     :: !(Maybe J.Object)
-  } deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''InsResp)
-
-type FieldMap
-  = Map.HashMap (G.NamedType, G.Name)
-    (Either PGColInfo (RelInfo, S.BoolExp, Maybe Int, Bool))
-
-data OrdTy
-  = OAsc
-  | ODesc
-  deriving (Show, Eq)
-
-data NullsOrder
-  = NFirst
-  | NLast
-  deriving (Show, Eq)
-
-type RespTx = Q.TxE QErr BL.ByteString
-
--- context needed for sql generation
-type OrdByResolveCtxElem = RS.AnnOrderByItem
-
-type OrdByResolveCtx
-  = Map.HashMap (G.NamedType, G.EnumValue) OrdByResolveCtxElem
-
--- insert context
-type RelationInfoMap = Map.HashMap RelName RelInfo
-
-data InsCtx
-  = InsCtx
-  { icView      :: !QualifiedTable
-  , icColumns   :: ![PGColInfo]
-  , icRelations :: !RelationInfoMap
-  } deriving (Show, Eq)
-
-type InsCtxMap = Map.HashMap QualifiedTable InsCtx
 
 getFldInfo
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
-  => G.NamedType -> G.Name -> m (Either PGColInfo (RelInfo, S.BoolExp, Maybe Int, Bool))
+  => G.NamedType -> G.Name
+  -> m (Either PGColumnInfo RelationshipField)
 getFldInfo nt n = do
   fldMap <- asks getter
   onNothing (Map.lookup (nt,n) fldMap) $
@@ -104,7 +62,7 @@ getFldInfo nt n = do
 
 getPGColInfo
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
-  => G.NamedType -> G.Name -> m PGColInfo
+  => G.NamedType -> G.Name -> m PGColumnInfo
 getPGColInfo nt n = do
   fldInfo <- getFldInfo nt n
   case fldInfo of
@@ -117,7 +75,7 @@ getArg
   :: (MonadError QErr m)
   => ArgsMap
   -> G.Name
-  -> m AnnGValue
+  -> m AnnInpVal
 getArg args arg =
   onNothing (Map.lookup arg args) $
   throw500 $ "missing argument: " <> showName arg
@@ -136,36 +94,67 @@ withArg
   :: (MonadError QErr m)
   => ArgsMap
   -> G.Name
-  -> (AnnGValue -> m a)
+  -> (AnnInpVal -> m a)
   -> m a
 withArg args arg f = prependArgsInPath $ nameAsPath arg $
   getArg args arg >>= f
 
 withArgM
-  :: (MonadError QErr m)
+  :: (MonadResolve m)
   => ArgsMap
   -> G.Name
-  -> (AnnGValue -> m a)
+  -> (AnnInpVal -> m a)
   -> m (Maybe a)
-withArgM args arg f = prependArgsInPath $ nameAsPath arg $
-  mapM f $ Map.lookup arg args
+withArgM args argName f = do
+  wrappedArg <- for (Map.lookup argName args) $ \arg -> do
+    when (isJust (_aivVariable arg) && G.isNullable (_aivType arg)) markNotReusable
+    pure . bool (Just arg) Nothing $ hasNullVal (_aivValue arg)
+  prependArgsInPath . nameAsPath argName $ traverse f (join wrappedArg)
 
 type PrepArgs = Seq.Seq Q.PrepArg
 
-type Convert =
-  StateT PrepArgs (ReaderT (FieldMap, OrdByResolveCtx, InsCtxMap) (Except QErr))
+prepare :: (MonadState PrepArgs m) => AnnPGVal -> m S.SQLExp
+prepare (AnnPGVal _ _ scalarValue) = prepareColVal scalarValue
 
-prepare
+resolveValPrep
   :: (MonadState PrepArgs m)
-  => (PGColType, PGColValue) -> m S.SQLExp
-prepare (colTy, colVal) = do
+  => UnresolvedVal -> m S.SQLExp
+resolveValPrep = \case
+  UVPG annPGVal -> prepare annPGVal
+  UVSessVar colTy sessVar -> sessVarFromCurrentSetting colTy sessVar
+  UVSQL sqlExp -> return sqlExp
+
+resolveValTxt :: (Applicative f) => UnresolvedVal -> f S.SQLExp
+resolveValTxt = \case
+  UVPG annPGVal -> txtConverter annPGVal
+  UVSessVar colTy sessVar -> sessVarFromCurrentSetting colTy sessVar
+  UVSQL sqlExp -> pure sqlExp
+
+withPrepArgs :: StateT PrepArgs m a -> m (a, PrepArgs)
+withPrepArgs m = runStateT m Seq.empty
+
+prepareColVal
+  :: (MonadState PrepArgs m)
+  => WithScalarType PGScalarValue -> m S.SQLExp
+prepareColVal (WithScalarType scalarType colVal) = do
   preparedArgs <- get
   put (preparedArgs Seq.|> binEncoder colVal)
-  return $ toPrepParam (Seq.length preparedArgs + 1) colTy
+  return $ toPrepParam (Seq.length preparedArgs + 1) scalarType
 
-runConvert
-  :: (MonadError QErr m)
-  => (FieldMap, OrdByResolveCtx, InsCtxMap) -> Convert a -> m (a, PrepArgs)
-runConvert ctx m =
-  either throwError return $
-  runExcept $ runReaderT (runStateT m Seq.empty) ctx
+txtConverter :: Applicative f => AnnPGVal -> f S.SQLExp
+txtConverter (AnnPGVal _ _ scalarValue) = pure $ toTxtValue scalarValue
+
+withSelSet :: (Monad m) => SelSet -> (Field -> m a) -> m [(Text, a)]
+withSelSet selSet f =
+  forM (toList selSet) $ \fld -> do
+    res <- f fld
+    return (G.unName $ G.unAlias $ _fAlias fld, res)
+
+fieldAsPath :: (MonadError QErr m) => Field -> m a -> m a
+fieldAsPath = nameAsPath . _fName
+
+resolvePGCol :: (MonadError QErr m)
+             => PGColGNameMap -> G.Name -> m PGColumnInfo
+resolvePGCol colFldMap fldName =
+  onNothing (Map.lookup fldName colFldMap) $ throw500 $
+  "no column associated with name " <> G.unName fldName

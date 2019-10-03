@@ -1,34 +1,27 @@
 import React from 'react';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
 
-export const dataAPI = (
-  <Tooltip id="tooltip-data-service">
-    To use Data APIs for complex joins/queries, create a view and then add the
-    view here.
-  </Tooltip>
-);
-
-export const untrackedTip = (
-  <Tooltip id="tooltip-data-service">
-    Tables or views that are not exposed over GraphQL
+export const untrackedTablesTip = (
+  <Tooltip id="tooltip-tables-untracked">
+    Tables or views that are not exposed over the GraphQL API
   </Tooltip>
 );
 
 export const untrackedRelTip = (
-  <Tooltip id="tooltip-data-rel-service">
-    Foreign keys between tracked tables that are not relationships
+  <Tooltip id="tooltip-relationships-untracked">
+    Relationships inferred via foreign-keys that are not exposed over the
+    GraphQL API
   </Tooltip>
 );
 
-export const quickDefaultPublic = (
-  <Tooltip id="tooltip-permission-public">
-    The selected role can perform select, insert, update and delete on all rows
-    of the table.
+export const trackableFunctionsTip = (
+  <Tooltip id="tooltip-functions-untracked">
+    Custom functions that are not exposed over the GraphQL API
   </Tooltip>
 );
 
-export const quickDefaultReadOnly = (
-  <Tooltip id="tooltip-permission-read">
-    The selected role can perform select on all rows of the table.
+export const nonTrackableFunctionsTip = (
+  <Tooltip id="tooltip-functions-untrackable">
+    Custom functions that do not conform to Hasura requirements
   </Tooltip>
 );

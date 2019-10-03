@@ -1,8 +1,3 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE OverloadedStrings #-}
-
 module Hasura.RQL.DML.Returning where
 
 import           Hasura.Prelude
@@ -11,64 +6,98 @@ import           Hasura.RQL.DML.Select
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Data.ByteString.Builder as BB
 import qualified Data.Text               as T
-import qualified Data.Vector             as V
 import qualified Hasura.SQL.DML          as S
 
-data MutFld
+data MutFldG v
   = MCount
   | MExp !T.Text
-  | MRet !AnnSel
+  | MRet ![(FieldName, AnnFldG v)]
   deriving (Show, Eq)
 
-type MutFlds = [(T.Text, MutFld)]
+traverseMutFld
+  :: (Applicative f)
+  => (a -> f b)
+  -> MutFldG a
+  -> f (MutFldG b)
+traverseMutFld f = \case
+  MCount    -> pure MCount
+  MExp t    -> pure $ MExp t
+  MRet flds -> MRet <$> traverse (traverse (traverseAnnFld f)) flds
 
-pgColsFromMutFld :: MutFld -> [(PGCol, PGColType)]
+type MutFld = MutFldG S.SQLExp
+
+type MutFldsG v = [(T.Text, MutFldG v)]
+
+traverseMutFlds
+  :: (Applicative f)
+  => (a -> f b)
+  -> MutFldsG a
+  -> f (MutFldsG b)
+traverseMutFlds f =
+  traverse (traverse (traverseMutFld f))
+
+type MutFlds = MutFldsG S.SQLExp
+
+hasNestedFld :: MutFlds -> Bool
+hasNestedFld = any isNestedMutFld
+  where
+    isNestedMutFld (_, mutFld) = case mutFld of
+      MRet annFlds -> any isNestedAnnFld annFlds
+      _            -> False
+    isNestedAnnFld (_, annFld) = case annFld of
+      FObj _ -> True
+      FArr _ -> True
+      _      -> False
+
+pgColsFromMutFld :: MutFld -> [(PGCol, PGColumnType)]
 pgColsFromMutFld = \case
   MCount -> []
   MExp _ -> []
-  MRet selData ->
-    flip mapMaybe (_asFields selData) $ \(_, annFld) -> case annFld of
-    FCol (PGColInfo col colTy _) -> Just (col, colTy)
-    _                            -> Nothing
+  MRet selFlds ->
+    flip mapMaybe selFlds $ \(_, annFld) -> case annFld of
+    FCol (PGColumnInfo col _ colTy _ _) _ -> Just (col, colTy)
+    _                                     -> Nothing
 
-pgColsToSelData :: QualifiedTable -> [PGColInfo] -> AnnSel
-pgColsToSelData qt cols =
-  AnnSel flds qt (Just frmItem) (S.BELit True) Nothing noTableArgs
-  where
-    flds = flip map cols $ \pgColInfo ->
-      (fromPGCol $ pgiName pgColInfo, FCol pgColInfo)
-    frmItem = S.FIIden $ qualTableToAliasIden qt
-
-pgColsFromMutFlds :: MutFlds -> [(PGCol, PGColType)]
+pgColsFromMutFlds :: MutFlds -> [(PGCol, PGColumnType)]
 pgColsFromMutFlds = concatMap (pgColsFromMutFld . snd)
 
-mkDefaultMutFlds :: QualifiedTable -> Maybe [PGColInfo] -> MutFlds
-mkDefaultMutFlds qt = \case
+pgColsToSelFlds :: [PGColumnInfo] -> [(FieldName, AnnFld)]
+pgColsToSelFlds cols =
+  flip map cols $
+  \pgColInfo -> (fromPGCol $ pgiColumn pgColInfo, FCol pgColInfo Nothing)
+
+mkDefaultMutFlds :: Maybe [PGColumnInfo] -> MutFlds
+mkDefaultMutFlds = \case
   Nothing   -> mutFlds
-  Just cols -> ("returning", (MRet $ pgColsToSelData qt cols)):mutFlds
+  Just cols -> ("returning", MRet $ pgColsToSelFlds cols):mutFlds
   where
     mutFlds = [("affected_rows", MCount)]
 
 qualTableToAliasIden :: QualifiedTable -> Iden
-qualTableToAliasIden (QualifiedTable sn tn) =
-  Iden $ getSchemaTxt sn <> "_" <> getTableTxt tn
-  <> "__mutation_result_alias"
+qualTableToAliasIden qt =
+  Iden $ snakeCaseTable qt <> "__mutation_result_alias"
 
-mkMutFldExp :: QualifiedTable -> MutFld -> S.SQLExp
-mkMutFldExp qt = \case
+mkMutFldExp :: QualifiedTable -> Bool -> Bool -> MutFld -> S.SQLExp
+mkMutFldExp qt singleObj strfyNum = \case
   MCount -> S.SESelect $
     S.mkSelect
-    { S.selExtr = [S.Extractor (S.SEUnsafe "count(*)") Nothing]
-    , S.selFrom = Just $ S.FromExp $ pure $
-                  S.FIIden $ qualTableToAliasIden qt
+    { S.selExtr = [S.Extractor S.countStar Nothing]
+    , S.selFrom = Just $ S.FromExp $ pure frmItem
     }
   MExp t -> S.SELit t
-  MRet selData -> S.SESelect $ mkSQLSelect False selData
+  MRet selFlds ->
+    -- let tabFrom = TableFrom qt $ Just frmItem
+    let tabFrom = TableFrom qt $ Just  $ qualTableToAliasIden qt
+        tabPerm = TablePerm annBoolExpTrue Nothing
+    in S.SESelect $ mkSQLSelect singleObj $
+       AnnSelG selFlds tabFrom tabPerm noTableArgs strfyNum
+  where
+    frmItem = S.FIIden $ qualTableToAliasIden qt
 
-mkSelWith :: QualifiedTable -> S.CTE -> MutFlds -> S.SelectWith
-mkSelWith qt cte mutFlds =
+mkSelWith
+  :: QualifiedTable -> S.CTE -> MutFlds -> Bool -> Bool -> S.SelectWith
+mkSelWith qt cte mutFlds singleObj strfyNum =
   S.SelectWith [(alias, cte)] sel
   where
     alias = S.Alias $ qualTableToAliasIden qt
@@ -78,21 +107,14 @@ mkSelWith qt cte mutFlds =
 
     jsonBuildObjArgs =
       flip concatMap mutFlds $
-      \(k, mutFld) -> [S.SELit k, mkMutFldExp qt mutFld]
-
-encodeJSONVector :: (a -> BB.Builder) -> V.Vector a -> BB.Builder
-encodeJSONVector builder xs
-  | V.null xs = BB.char7 '[' <> BB.char7 ']'
-  | otherwise = BB.char7 '[' <> builder (V.unsafeHead xs) <>
-                V.foldr go (BB.char7 ']') (V.unsafeTail xs)
-    where go v b  = BB.char7 ',' <> builder v <> b
+      \(k, mutFld) -> [S.SELit k, mkMutFldExp qt singleObj strfyNum mutFld]
 
 checkRetCols
-  :: (P1C m)
-  => FieldInfoMap
+  :: (UserInfoM m, QErrM m)
+  => FieldInfoMap PGColumnInfo
   -> SelPermInfo
   -> [PGCol]
-  -> m [PGColInfo]
+  -> m [PGColumnInfo]
 checkRetCols fieldInfoMap selPermInfo cols = do
   mapM_ (checkSelOnCol selPermInfo) cols
   forM cols $ \col -> askPGColInfo fieldInfoMap col relInRetErr

@@ -1,16 +1,16 @@
-<div class="noprojects_overley hide">
+<div class="loading_overlay hide">
   <div class="loader"></div>
-  <div class="subhead_wrapper_loader body_content_position"></div>
-  <div class="overley_wrapper"></div>
+  <div class="subhead_wrapper_loader body_content_position">Loading...</div>
+  <div class="overlay_wrapper"></div>
 </div>
 
 
 <script type="text/javascript">
   const showLoading = function() {
-    $('.noprojects_overley').removeClass('hide');
+    $('.loading_overlay').removeClass('hide');
   };
 
   const hideLoading = function() {
-    $('.noprojects_overley').addClass('hide');
+    $('.loading_overlay').addClass('hide');
   };
 </script>

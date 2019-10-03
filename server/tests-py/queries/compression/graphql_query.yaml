@@ -1,0 +1,18 @@
+url: /v1/graphql
+query:
+  query: |
+    query {
+      test {
+        id
+        name
+      }
+    }
+response:
+  data:
+    test:
+    - id: 1
+      name: Gzip
+    - id: 2
+      name: Brotli
+    - id: 3
+      name: Nothing

@@ -1,0 +1,80 @@
+- description: Track tables and relationships
+  url: /v1/query
+  status: 200
+  response:
+  - message: success
+  - message: success
+  - message: success
+  - message: success
+  query:
+    type: bulk
+    args:
+    - type: track_table
+      args:
+        name: author
+    - type: track_table
+      args:
+        name: article
+    - type: create_object_relationship
+      args:
+        name: author
+        table: article
+        using:
+          foreign_key_constraint_on: author_id
+    - type: create_array_relationship
+      args:
+        name: articles
+        table: author
+        using:
+          foreign_key_constraint_on:
+            table: article
+            column: author_id
+
+- description: untrack author
+  url: /v1/query
+  status: 400
+  response:
+    path: "$.args"
+    error: "cannot drop due to the following dependent objects : relationship article.author"
+    code: "dependency-error"
+  query:
+    type: untrack_table
+    args:
+      table:
+        name: author
+
+- description: untrack article
+  url: /v1/query
+  status: 400
+  response:
+    path: "$.args"
+    error: "cannot drop due to the following dependent objects : relationship author.articles"
+    code: "dependency-error"
+  query:
+    type: untrack_table
+    args:
+      table:
+        name: article
+
+- description: untrack author with cascade
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: untrack_table
+    args:
+      table:
+        name: author
+      cascade: true
+
+- description: untrack article
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: untrack_table
+    args:
+      table:
+        name: article

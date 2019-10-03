@@ -1,0 +1,185 @@
+@import "../Common.scss";
+
+.container {
+  padding: 0;
+}
+
+.tableContainer {
+  overflow: auto;
+  width: 95%;
+  padding-right: 5px; // removes scrollbar if width is enough
+}
+
+.schemaWrapper {
+  width: 100%;
+
+  .schemaSidebarSection {
+    display: inline-block;
+    width: 100%;
+
+    a {
+      display: inline-block !important;
+      font-weight: bold;
+    }
+
+    .changeSchema {
+      width: 50%;
+      margin-left: 10px;
+      display: inline-block;
+      font-weight: bold;
+    }
+  }
+}
+
+.viewRowsContainer {
+  border-left: 1px solid #ddd;
+}
+
+.tableHeaderCell i {
+  font-size: 12px;
+  position: absolute;
+  top: calc(50% - 5px);
+  right: 8px;
+}
+
+.insertContainer {
+  button {
+    margin: 0 10px;
+  }
+
+  label.radioLabel {
+    padding-top: 0;
+
+    input[type="radio"] {
+      margin-top: 10px;
+    }
+  }
+
+  span.radioSpan {
+    line-height: 34px;
+  }
+}
+
+.table {
+  width: auto;
+
+  tr:nth-child(even) {
+    background: #f4f4f4
+  }
+
+  th {
+    //min-width: 100px;
+    font-weight: 300;
+  }
+
+  tbody > tr > td {
+    padding: 4px 8px;
+    max-width: 600px;
+    white-space: pre;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.expandable {
+  color: #779ecb;
+  text-decoration: underline;
+}
+
+a.expanded {
+  color: red;
+}
+
+.expandable:hover {
+  background: #eee;
+  transition: 0.2s;
+  cursor: pointer;
+}
+
+.tableNameInput {
+  width: 300px;
+}
+
+.select {
+  width: 300px;
+  display: inline-block;
+  height: 30px;
+  padding-bottom: 5px;
+  padding-top: 5px;
+}
+
+.addCol {
+  .input {
+    width: 300px;
+    display: inline-block;
+  }
+
+  .inputCheckbox {
+    width: auto;
+    display: inline-block;
+    padding-left: 20px;
+    margin: 0px 20px;
+    box-shadow: none;
+  }
+
+  .inputDefault {
+    width: 150px;
+    margin: 0px 20px;
+    display: inline-block;
+  }
+
+  .select {
+    display: inline-block;
+    width: 300px;
+    height: 34px;
+  }
+
+  .defaultWidth {
+    width: 200px;
+    margin-right: 0px;
+  }
+}
+
+.insertBox {
+  min-width: 270px;
+}
+
+.insertBoxLabel {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sqlBody {
+}
+
+.tablesBody {
+  padding-top: 20px;
+}
+
+.count {
+  margin-top: 15px;
+}
+
+.addTablesBody {
+  padding-top: 20px;
+  padding-bottom: 30px;
+}
+
+.dataBreadCrumb {
+  padding-bottom: 10px;
+}
+
+.tableCellCenterAligned {
+  text-align: center;
+  overflow: unset !important;
+}
+
+.tableCellCenterAlignedOverflow {
+  text-align: center;
+  overflow: hidden !important;
+}
+
+.tableCellExpanded {
+  white-space: pre-wrap;
+}

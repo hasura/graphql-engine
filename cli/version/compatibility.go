@@ -6,12 +6,17 @@ const (
 	noServerVersion = "server with no version treated as pre-release build"
 	noCLIVersion    = "cli version is empty, indicates a broken build"
 	untaggedCLI     = "untagged cli build can work with tagged server build"
+	devCLI          = "dev version of cli, compatible with all servers"
 )
 
 // CheckCLIServerCompatibility compares server and cli for compatibility,
 // subject to certain conditions. compatible boolean is returned along with
 // a message which states the reason for the result.
 func (v *Version) CheckCLIServerCompatibility() (compatible bool, reason string) {
+	// mark dev builds as compatible
+	if v.CLI == "dev" {
+		return true, devCLI
+	}
 	// empty cli version
 	if v.CLI == "" {
 		return false, noCLIVersion

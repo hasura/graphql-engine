@@ -1,38 +1,31 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Hasura.RQL.DDL.Utils
   ( clearHdbViews
   ) where
 
-import qualified Data.ByteString.Builder as BB
-import qualified Database.PG.Query       as Q
-import           Hasura.Prelude          ((<>))
+import qualified Database.PG.Query as Q
+
+import           Hasura.Prelude
 
 clearHdbViews :: Q.Tx ()
-clearHdbViews = Q.multiQ (Q.fromBuilder (clearHdbOnlyViews <> clearHdbViewsFunc))
+clearHdbViews = Q.multiQ (Q.fromText (clearHdbOnlyViews <> clearHdbViewsFunc))
 
-clearHdbOnlyViews :: BB.Builder
+clearHdbOnlyViews :: Text
 clearHdbOnlyViews =
   "DO $$ DECLARE \
    \ r RECORD; \
    \ BEGIN \
-   \   FOR r IN (SELECT viewname FROM pg_views WHERE schemaname = 'hdb_views') LOOP \
+   \   FOR r IN (SELECT viewname FROM pg_views WHERE schemaname = 'hdb_views' ORDER BY viewname) LOOP \
    \     EXECUTE 'DROP VIEW IF EXISTS hdb_views.' || quote_ident(r.viewname) || ' CASCADE'; \
    \   END LOOP; \
    \ END $$; "
 
 
-clearHdbViewsFunc :: BB.Builder
+clearHdbViewsFunc :: Text
 clearHdbViewsFunc =
   "DO $$ DECLARE \
-  \ _sql text; \
-  \ BEGIN \
-  \ SELECT INTO _sql \
-  \        string_agg('DROP FUNCTION hdb_views.' || quote_ident(r.routine_name) || '() CASCADE;' \
-  \                 , E'\n') \
-  \ FROM   information_schema.routines r \
-  \ WHERE  r.specific_schema = 'hdb_views'; \
-  \ IF _sql IS NOT NULL THEN \
-  \    EXECUTE _sql; \
-  \ END IF; \
-  \ END $$; "
+   \ r RECORD; \
+   \ BEGIN \
+   \   FOR r IN (SELECT routine_name FROM information_schema.routines WHERE specific_schema = 'hdb_views' ORDER BY routine_name) LOOP \
+   \     EXECUTE 'DROP FUNCTION hdb_views.' || quote_ident(r.routine_name) || '() CASCADE'; \
+   \   END LOOP; \
+   \ END $$; "

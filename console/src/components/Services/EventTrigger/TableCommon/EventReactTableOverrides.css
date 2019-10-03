@@ -1,0 +1,165 @@
+@import '../../../Common/TableCommon/ReactTableOverrides.css';
+
+.eventsTableBody .ReactTable .rt-table .rt-thead .rt-tr .rt-th:first-child {
+  min-width: 75px;
+}
+
+.eventsTableBody
+  .ReactTable
+  .rt-table
+  .rt-tbody
+  .rt-tr-group
+  .rt-tr.-odd
+  .rt-td:first-child {
+  min-width: 75px;
+}
+
+.eventsTableBody
+  .ReactTable
+  .rt-table
+  .rt-tbody
+  .rt-tr-group
+  .rt-tr.-even
+  .rt-td:first-child {
+  min-width: 75px;
+}
+
+.invocationsSection .ReactTable .rt-tbody .rt-td {
+  text-align: center;
+}
+
+.invocationsSection .ReactTable .rt-table .rt-thead .rt-tr .rt-th:nth-child(2) {
+  width: 100px;
+  max-width: 100px;
+}
+.invocationsSection .ReactTable .rt-table .rt-td:nth-child(2) {
+  width: 100px;
+  max-width: 100px;
+}
+
+.invocationsSection .ReactTable {
+  width: 70%;
+}
+.invocationsSection .ReactTable .rt-thead.-header {
+  display: none;
+}
+
+.processedEventsTable .invocationsSuccess {
+  color: #28a745;
+}
+.processedEventsTable .invocationsFailure {
+  color: red;
+}
+.streamingLogs .ReactTable .rt-table .rt-thead .rt-tr .rt-th:nth-child(2) {
+  width: 100px;
+  max-width: 100px;
+}
+.streamingLogs .ReactTable .rt-table .rt-td:nth-child(2) {
+  width: 100px;
+  max-width: 100px;
+}
+.streamingLogs .ReactTable .rt-table .rt-thead .rt-tr .rt-th:nth-child(3) {
+  max-width: 100px;
+}
+.streamingLogs .ReactTable .rt-table .rt-td:nth-child(3) {
+  width: 100px;
+  max-width: 100px;
+}
+.streamingLogs .ReactTable .rt-table .rt-thead .rt-tr .rt-th:first-child {
+  flex: 24 0 auto !important;
+  min-width: 50px;
+  max-width: 50px;
+}
+
+.streamingLogs
+  .ReactTable
+  .rt-table
+  .rt-tbody
+  .rt-tr-group
+  .rt-tr.-odd
+  .rt-td:first-child {
+  flex: 24 0 auto !important;
+  min-width: 50px;
+  max-width: 50px;
+}
+
+.streamingLogs
+  .ReactTable
+  .rt-table
+  .rt-tbody
+  .rt-tr-group
+  .rt-tr.-even
+  .rt-td:first-child {
+  flex: 24 0 auto !important;
+  min-width: 50px;
+  max-width: 50px;
+}
+
+.redeliverEventSection
+  .ReactTable
+  .rt-table
+  .rt-thead
+  .rt-tr
+  .rt-th:first-child {
+  flex: 24 0 auto !important;
+  min-width: 50px;
+  max-width: 50px;
+}
+
+.redeliverEventSection
+  .ReactTable
+  .rt-table
+  .rt-tbody
+  .rt-tr-group
+  .rt-tr.-odd
+  .rt-td:first-child {
+  flex: 24 0 auto !important;
+  min-width: 50px;
+  max-width: 50px;
+}
+
+.redeliverEventSection
+  .ReactTable
+  .rt-table
+  .rt-tbody
+  .rt-tr-group
+  .rt-tr.-even
+  .rt-td:first-child {
+  flex: 24 0 auto !important;
+  min-width: 50px;
+  max-width: 50px;
+}
+
+.redeliverEventSection .invocationsSuccess {
+  color: #28a745;
+}
+.redeliverEventSection .invocationsFailure {
+  color: red;
+}
+.redeliverEventSection .ReactTable .rt-thead.-header {
+  display: none;
+}
+.redeliverEventSection
+  .ReactTable
+  .rt-table
+  .rt-thead
+  .rt-tr
+  .rt-th:nth-child(2) {
+  width: 50px;
+  max-width: 50px;
+}
+.redeliverEventSection .ReactTable .rt-table .rt-td:nth-child(2) {
+  width: 50px;
+  max-width: 50px;
+}
+
+#requestResponseTab ul li a {
+  color: black;
+}
+
+#eventPayload {
+  background-color: #fdf9ed;
+}
+#eventResponse {
+  background-color: #fdf9ed;
+}

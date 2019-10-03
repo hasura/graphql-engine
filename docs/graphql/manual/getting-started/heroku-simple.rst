@@ -1,8 +1,13 @@
 Quickstart with Heroku
 ======================
 
-This guide will help you get Hasura GraphQL engine and Postgres running on `Heroku's free tier <https://www.heroku.com/free>`_.
-It is the easiest and fastest way of trying Hasura out.
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
+This guide will help you get the Hasura GraphQL engine and Postgres running on `Heroku's free tier <https://www.heroku.com/free>`_.
+It is the easiest and fastest way of trying out Hasura.
 
 If you'd like to link this to an existing database, please head to this guide instead:
 :doc:`Using an existing database on Heroku <../deployment/heroku/using-existing-heroku-database>`.
@@ -22,7 +27,7 @@ Click the button below to deploy to Heroku:
    If you don't have an account on Heroku, you need to sign up on Heroku. You won't need a credit card, and once you
    sign up you'll be redirected to your Heroku app creation page automatically.
 
-.. image:: ../../../img/graphql/manual/getting-started/heroku-app.png
+.. thumbnail:: ../../../img/graphql/manual/getting-started/heroku-app.png
 
 Note that **Heroku's free Postgres add-on** is also automatically provisioned!
 
@@ -32,10 +37,10 @@ Open the Hasura console
 That's it!  Head to ``https://<YOUR_HEROKU_APP>.herokuapp.com`` and open your app.
 You should see the Hasura console.
 
-.. image:: ../../../img/graphql/manual/getting-started/heroku-app-deployed.png
+.. thumbnail:: ../../../img/graphql/manual/getting-started/heroku-app-deployed.png
 
-Next: Try Hasura out!
----------------------
+Hello World (GraphQL or event triggers)
+---------------------------------------
 
 Make your :doc:`first graphql query <first-graphql-query>`
 
@@ -43,8 +48,8 @@ OR
 
 Set up your :doc:`first event trigger <first-event-trigger>`
 
-Advanced:
----------
+Advanced
+--------
 
 This was a quickstart guide to get the Hasura GraphQL engine up and running quickly. For more detailed instructions
 on deploying using Heroku, check out :doc:`../deployment/heroku/index`.

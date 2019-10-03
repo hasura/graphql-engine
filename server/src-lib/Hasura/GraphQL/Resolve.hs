@@ -1,95 +1,123 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
-
 module Hasura.GraphQL.Resolve
-  ( resolveSelSet
+  ( mutFldToTx
+  , queryFldToPGAST
+  , RS.traverseQueryRootFldAST
+  , RS.toPGQuery
+  , UnresolvedVal(..)
+
+  , AnnPGVal(..)
+  , txtConverter
+
+  , RS.QueryRootFldUnresolved
+  , resolveValPrep
+  , queryFldToSQL
+  , RIntro.schemaR
+  , RIntro.typeR
   ) where
 
-import           Hasura.Prelude
+import           Data.Has
 
-import qualified Data.Aeson                             as J
-import qualified Data.ByteString.Lazy                   as BL
-import qualified Data.HashMap.Strict                    as Map
-import qualified Database.PG.Query                      as Q
-import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Data.HashMap.Strict               as Map
+import qualified Database.PG.Query                 as Q
+import qualified Language.GraphQL.Draft.Syntax     as G
 
 import           Hasura.GraphQL.Resolve.Context
-import           Hasura.GraphQL.Resolve.Introspect
-import           Hasura.GraphQL.Schema
-import           Hasura.GraphQL.Transport.HTTP.Protocol
-import           Hasura.GraphQL.Validate.Field
+import           Hasura.Prelude
+import           Hasura.RQL.DML.Internal           (sessVarFromCurrentSetting)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Hasura.GraphQL.Resolve.Insert          as RI
-import qualified Hasura.GraphQL.Resolve.Mutation        as RM
-import qualified Hasura.GraphQL.Resolve.Select          as RS
+import qualified Hasura.GraphQL.Resolve.Insert     as RI
+import qualified Hasura.GraphQL.Resolve.Introspect as RIntro
+import qualified Hasura.GraphQL.Resolve.Mutation   as RM
+import qualified Hasura.GraphQL.Resolve.Select     as RS
+import qualified Hasura.GraphQL.Validate           as V
 
--- {-# SCC buildTx #-}
-buildTx :: UserInfo -> GCtx -> Field -> Q.TxE QErr BL.ByteString
-buildTx userInfo gCtx fld = do
-  opCxt <- getOpCtx $ _fName fld
-  join $ fmap fst $ runConvert (fldMap, orderByCtx, insCtxMap) $ case opCxt of
+validateHdrs
+  :: (Foldable t, QErrM m) => UserInfo -> t Text -> m ()
+validateHdrs userInfo hdrs = do
+  let receivedVars = userVars userInfo
+  forM_ hdrs $ \hdr ->
+    unless (isJust $ getVarVal hdr receivedVars) $
+    throw400 NotFound $ hdr <<> " header is expected but not found"
 
-    OCSelect tn permFilter permLimit hdrs ->
-      validateHdrs hdrs >> RS.convertSelect tn permFilter permLimit fld
+queryFldToPGAST
+  :: ( MonadResolve m, MonadReader r m, Has FieldMap r
+     , Has OrdByCtx r, Has SQLGenCtx r, Has UserInfo r
+     , Has QueryCtxMap r
+     )
+  => V.Field
+  -> m RS.QueryRootFldUnresolved
+queryFldToPGAST fld = do
+  opCtx <- getOpCtx $ V._fName fld
+  userInfo <- asks getter
+  case opCtx of
+    QCSelect ctx -> do
+      validateHdrs userInfo (_socHeaders ctx)
+      RS.convertSelect ctx fld
+    QCSelectPkey ctx -> do
+      validateHdrs userInfo (_spocHeaders ctx)
+      RS.convertSelectByPKey ctx fld
+    QCSelectAgg ctx -> do
+      validateHdrs userInfo (_socHeaders ctx)
+      RS.convertAggSelect ctx fld
+    QCFuncQuery ctx -> do
+      validateHdrs userInfo (_fqocHeaders ctx)
+      RS.convertFuncQuerySimple ctx fld
+    QCFuncAggQuery ctx -> do
+      validateHdrs userInfo (_fqocHeaders ctx)
+      RS.convertFuncQueryAgg ctx fld
 
-    OCSelectPkey tn permFilter hdrs ->
-      validateHdrs hdrs >> RS.convertSelectByPKey tn permFilter fld
-      -- RS.convertSelect tn permFilter fld
-    OCInsert tn hdrs    ->
-      validateHdrs hdrs >> RI.convertInsert roleName tn fld
-      -- RM.convertInsert (tn, vn) cols fld
-    OCUpdate tn permFilter hdrs ->
-      validateHdrs hdrs >> RM.convertUpdate tn permFilter fld
-      -- RM.convertUpdate tn permFilter fld
-    OCDelete tn permFilter hdrs ->
-      validateHdrs hdrs >> RM.convertDelete tn permFilter fld
-      -- RM.convertDelete tn permFilter fld
-  where
-    roleName = userRole userInfo
-    opCtxMap = _gOpCtxMap gCtx
-    fldMap = _gFields gCtx
-    orderByCtx = _gOrdByEnums gCtx
-    insCtxMap = _gInsCtxMap gCtx
+queryFldToSQL
+  :: ( MonadResolve m, MonadReader r m, Has FieldMap r
+     , Has OrdByCtx r, Has SQLGenCtx r, Has UserInfo r
+     , Has QueryCtxMap r
+     )
+  => PrepFn m
+  -> V.Field
+  -> m Q.Query
+queryFldToSQL fn fld = do
+  pgAST <- queryFldToPGAST fld
+  resolvedAST <- flip RS.traverseQueryRootFldAST pgAST $ \case
+    UVPG annPGVal -> fn annPGVal
+    UVSQL sqlExp  -> return sqlExp
+    UVSessVar colTy sessVar -> sessVarFromCurrentSetting colTy sessVar
+  return $ RS.toPGQuery resolvedAST
 
-    getOpCtx f =
-      onNothing (Map.lookup f opCtxMap) $ throw500 $
-      "lookup failed: opctx: " <> showName f
+mutFldToTx
+  :: ( MonadResolve m
+     , MonadReader r m
+     , Has UserInfo r
+     , Has MutationCtxMap r
+     , Has FieldMap r
+     , Has OrdByCtx r
+     , Has SQLGenCtx r
+     , Has InsCtxMap r
+     )
+  => V.Field
+  -> m RespTx
+mutFldToTx fld = do
+  userInfo <- asks getter
+  opCtx <- getOpCtx $ V._fName fld
+  case opCtx of
+    MCInsert ctx -> do
+      let roleName = userRole userInfo
+      validateHdrs userInfo (_iocHeaders ctx)
+      RI.convertInsert roleName (_iocTable ctx) fld
+    MCUpdate ctx -> do
+      validateHdrs userInfo (_uocHeaders ctx)
+      RM.convertUpdate ctx fld
+    MCDelete ctx -> do
+      validateHdrs userInfo (_docHeaders ctx)
+      RM.convertDelete ctx fld
 
-    validateHdrs hdrs = do
-      let receivedHdrs = userHeaders userInfo
-      forM_ hdrs $ \hdr ->
-        unless (Map.member hdr receivedHdrs) $
-        throw400 NotFound $ hdr <<> " header is expected but not found"
-
--- {-# SCC resolveFld #-}
-resolveFld
-  :: UserInfo -> GCtx
-  -> G.OperationType
-  -> Field
-  -> Q.TxE QErr BL.ByteString
-resolveFld userInfo gCtx opTy fld =
-  case _fName fld of
-    "__type"     -> J.encode <$> runReaderT (typeR fld) gCtx
-    "__schema"   -> J.encode <$> runReaderT (schemaR fld) gCtx
-    "__typename" -> return $ J.encode $ mkRootTypeName opTy
-    _            -> buildTx userInfo gCtx fld
-  where
-    mkRootTypeName :: G.OperationType -> Text
-    mkRootTypeName = \case
-      G.OperationTypeQuery        -> "query_root"
-      G.OperationTypeMutation     -> "mutation_root"
-      G.OperationTypeSubscription -> "subscription_root"
-
-resolveSelSet
-  :: UserInfo -> GCtx
-  -> G.OperationType
-  -> SelSet
-  -> Q.TxE QErr BL.ByteString
-resolveSelSet userInfo gCtx opTy fields =
-  fmap mkJSONObj $ forM (toList fields) $ \fld -> do
-    fldResp <- resolveFld userInfo gCtx opTy fld
-    return (G.unName $ G.unAlias $ _fAlias fld, fldResp)
+getOpCtx
+  :: ( MonadResolve m
+     , MonadReader r m
+     , Has (OpCtxMap a) r
+     )
+  => G.Name -> m a
+getOpCtx f = do
+  opCtxMap <- asks getter
+  onNothing (Map.lookup f opCtxMap) $ throw500 $
+    "lookup failed: opctx: " <> showName f

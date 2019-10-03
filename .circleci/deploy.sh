@@ -68,19 +68,56 @@ send_pr_to_repo() {
 
 deploy_console() {
     echo "deploying console"
-    echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
-    gcloud auth activate-service-account --key-file=${HOME}/gcloud-service-key.json
-    gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
 
     cd "$ROOT/console"
-    export VERSION=$(../scripts/get-version-circleci.sh)
+    export VERSION=$(../scripts/get-console-assets-version.sh)
     export DIST_PATH="/build/_console_output"
-    make gzip-assets
-    make gcloud-cp-stable
-    make gcloud-set-metadata
+    local GS_BUCKET_ROOT="gs://graphql-engine-cdn.hasura.io/console/assets/$VERSION"
+    # assets are at /build/_console_output/assets/versioned, already gzipped
+    gsutil cp "$DIST_PATH/assets/versioned/main.js.gz" "$GS_BUCKET_ROOT/main.js.gz"
+    gsutil cp "$DIST_PATH/assets/versioned/main.css.gz" "$GS_BUCKET_ROOT/main.css.gz"
+    gsutil cp "$DIST_PATH/assets/versioned/vendor.js.gz" "$GS_BUCKET_ROOT/vendor.js.gz"
+    gsutil setmeta -h "Content-Encoding: gzip" "$GS_BUCKET_ROOT/*"
+
     unset VERSION
     unset DIST_PATH
 }
+
+# build and push container for auto-migrations
+build_and_push_cli_migrations_image() {
+    IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations"
+    LATEST_IMAGE_TAG="hasura/graphql-engine:latest.cli-migrations"
+    cd "$ROOT/scripts/cli-migrations"
+    cp /build/_cli_output/binaries/cli-hasura-linux-amd64 .
+    docker build -t "$IMAGE_TAG" .
+    docker push "$IMAGE_TAG"
+
+    # push latest.cli-migrations tag
+    docker tag "$IMAGE_TAG" "$LATEST_IMAGE_TAG"
+    docker push "$LATEST_IMAGE_TAG"
+}
+
+# copy docker-compose-https manifests to gcr for digital ocean one-click app
+deploy_do_manifests() {
+    gsutil cp "$ROOT/install-manifests/docker-compose-https/docker-compose.yaml" \
+           gs://graphql-engine-cdn.hasura.io/install-manifests/do-one-click/docker-compose.yaml
+    gsutil cp "$ROOT/install-manifests/docker-compose-https/Caddyfile" \
+           gs://graphql-engine-cdn.hasura.io/install-manifests/do-one-click/Caddyfile
+}
+
+# setup gcloud cli tool
+setup_gcloud() {
+    echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
+    gcloud auth activate-service-account --key-file=${HOME}/gcloud-service-key.json
+    gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
+}
+
+# push the server binary to google cloud storage
+push_server_binary() {
+    gsutil cp /build/_server_output/graphql-engine \
+              gs://graphql-engine-cdn.hasura.io/server/latest/linux-amd64
+}
+
 # skip deploy for pull requests
 if [[ -n "${CIRCLE_PR_NUMBER:-}" ]]; then
     echo "not deploying for PRs"
@@ -98,6 +135,8 @@ fi
 # CIRCLE_PR_NUMBER
 # CIRCLE_BRANCH
 
+setup_gcloud
+
 RELEASE_BRANCH_REGEX="^release-v(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
 if [[ "$CIRCLE_BRANCH" =~ $RELEASE_BRANCH_REGEX ]]; then
     # release branch, only update console
@@ -110,6 +149,8 @@ deploy_console
 deploy_server
 if [[ ! -z "$CIRCLE_TAG" ]]; then
     deploy_server_latest
+    push_server_binary
+    build_and_push_cli_migrations_image
     CHANGELOG_TEXT=$(changelog server)
     CHANGELOG_TEXT+=$(changelog cli)
     CHANGELOG_TEXT+=$(changelog console)
@@ -120,4 +161,5 @@ EOF
     draft_github_release
     configure_git
     send_pr_to_repo graphql-engine-heroku
+    deploy_do_manifests
 fi

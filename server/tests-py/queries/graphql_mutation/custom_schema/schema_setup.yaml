@@ -1,0 +1,58 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      -- create tables
+      CREATE TABLE author(
+        id SERIAL PRIMARY KEY,
+        name TEXT UNIQUE
+      );
+      CREATE TABLE article(
+        id SERIAL PRIMARY KEY,
+        title TEXT,
+        content TEXT,
+        author_id INTEGER REFERENCES author(id)
+      );
+
+
+- type: track_table
+  version: 2
+  args:
+    table: author
+    configuration:
+      custom_root_fields:
+        insert: AddAuthors
+        update: UpdateAuthors
+        delete: DeleteAuthors
+      custom_column_names:
+        id: AuthorId
+
+- type: track_table
+  version: 2
+  args:
+    table: article
+    configuration:
+      custom_root_fields:
+        insert: AddArticles
+        update: UpdateArticles
+        delete: DeleteArticles
+      custom_column_names:
+        id: ArticleId
+        author_id: AuthorId
+
+- type: create_object_relationship
+  args:
+    table: article
+    name: author
+    using:
+      foreign_key_constraint_on: author_id
+
+- type: create_array_relationship
+  args:
+    table: author
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: author_id

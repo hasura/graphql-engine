@@ -1,0 +1,32 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      create table hge_tests.test_t1(
+          c1 int,
+          c2 text
+      );
+- type: track_table
+  args:
+    schema: hge_tests
+    name: test_t1
+- type: create_event_trigger
+  args:
+    name: t1_payload
+    table:
+      schema: hge_tests
+      name: test_t1
+    insert:
+      columns: "*"
+      payload: "*"
+    update:
+      columns: "*"
+      payload: ["c1"]
+    delete:
+      columns: "*"
+      payload: ["c2"]
+    webhook: http://127.0.0.1:5592
+    retry_conf:
+      num_retries: 10
+      interval_sec: 100

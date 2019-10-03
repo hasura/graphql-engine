@@ -1,0 +1,93 @@
+-
+  operation:
+    server: '1'
+    query:
+      type: bulk
+      args:
+        - type: run_sql
+          args:
+            sql: |
+              create table test_t1(
+                t1_c1 int,
+                t1_c2 text,
+                PRIMARY KEY (t1_c1)
+              );
+        - type: track_table
+          args:
+            schema: public
+            name: test_t1
+        - type: run_sql
+          args:
+            sql: |
+              insert into test_t1(t1_c1, t1_c2) VALUES(1, 'table1');
+  validate:
+    server: '2'
+    response:
+      data:
+        test_t1:
+          - t1_c1: 1
+            t1_c2: table1
+    query:
+      query: |
+        query {
+          test_t1 {
+            t1_c1
+            t1_c2
+          }
+        }
+-
+  operation:
+    server: '2'
+    query:
+      type: bulk
+      args:
+        - type: run_sql
+          args:
+            sql: |
+              create table test_t2(
+                t2_c1 int,
+                t2_c2 text,
+                PRIMARY KEY (t2_c1)
+              );
+        - type: run_sql
+          args:
+            sql: |
+              ALTER TABLE test_t2 ADD FOREIGN KEY (t2_c1) REFERENCES test_t1 (t1_c1);
+        - type: track_table
+          args:
+            schema: public
+            name: test_t2
+        - type: create_object_relationship
+          args:
+            name: testT1Byc1
+            table:
+              name: test_t2
+              schema: public
+            using:
+              foreign_key_constraint_on: t2_c1
+        - type: run_sql
+          args:
+            sql: |
+              insert into test_t2(t2_c1, t2_c2) VALUES(1, 'table2');
+  validate:
+    server: '1'
+    query:
+      query: |
+        query {
+          test_t2 {
+            t2_c1
+            t2_c2
+            testT1Byc1 {
+              t1_c1
+              t1_c2
+            }
+          }
+        }
+    response:
+      data:
+        test_t2:
+          - t2_c1: 1
+            t2_c2: table2
+            testT1Byc1:
+              t1_c1: 1
+              t1_c2: table1

@@ -1,0 +1,12 @@
+type: bulk
+args:
+- type: clear_metadata
+  args: {}
+- type: run_sql
+  args:
+    sql: |
+      drop table test_t2;
+- type: run_sql
+  args:
+    sql: |
+      drop table test_t1;

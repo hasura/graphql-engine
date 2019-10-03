@@ -1,0 +1,61 @@
+- description: Alter column id of user table to integer
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        ALTER TABLE "user" ALTER COLUMN id set data type integer;
+
+- description: Query data from user table
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      user:
+      - id: 1
+        name: User 1
+        number: '123456789'
+      - id: 2
+        name: User 2
+        number: '123456780'
+  query:
+    query: |
+      query {
+        user{
+          id
+          name
+          number
+        }
+      }
+
+- description: Alter column id of user table to bigint
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        ALTER TABLE "user" ALTER COLUMN id set data type bigint;
+
+- description: Query data from user table
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      user:
+      - id: '1'
+        name: User 1
+        number: '123456789'
+      - id: '2'
+        name: User 2
+        number: '123456780'
+  query:
+    query: |
+      query {
+        user{
+          id
+          name
+          number
+        }
+      }

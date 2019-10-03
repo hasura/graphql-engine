@@ -5,7 +5,6 @@ import Tabs from 'react-bootstrap/lib/Tabs';
 import Tab from 'react-bootstrap/lib/Tab';
 import 'brace/mode/json';
 import 'react-table/react-table.css';
-import { deleteItem, vExpandRow, vCollapseRow } from './ViewActions'; // eslint-disable-line no-unused-vars
 import FilterQuery from './FilterQuery';
 import {
   setOrderCol,
@@ -16,9 +15,15 @@ import {
   setLimit,
   addOrder,
 } from './FilterActions';
-import { ordinalColSort } from '../utils';
-import Spinner from '../../../Common/Spinner/Spinner';
-import '../TableCommon/ReactTableFix.css';
+import {
+  ordinalColSort,
+  convertDateTimeToLocale,
+  verifySuccessStatus,
+  parseRowData,
+} from '../utils';
+import '../TableCommon/EventReactTableOverrides.css';
+import * as tooltip from '../Common/Tooltips';
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 
 const ViewRows = ({
   curTriggerName,
@@ -28,15 +33,13 @@ const ViewRows = ({
   curPath,
   curDepth,
   activePath,
-  triggerList,
+  currentTrigger,
   dispatch,
-  isProgressing,
   isView,
   count,
   expandedRow,
 }) => {
-  const styles = require('../TableCommon/Table.scss');
-  const triggerSchema = triggerList.find(x => x.name === curTriggerName);
+  const styles = require('../TableCommon/EventTable.scss');
   const curRelName = curPath.length > 0 ? curPath.slice(-1)[0] : null;
 
   // Am I a single row display
@@ -70,7 +73,7 @@ const ViewRows = ({
       if (!isView && hasPrimaryKeys) {
         pkClause.id = row.id;
       } else {
-        triggerSchema.map(k => {
+        currentTrigger.map(k => {
           pkClause[k] = row[k];
         });
       }
@@ -100,10 +103,10 @@ const ViewRows = ({
       // Insert cells corresponding to all rows
       sortedColumns.forEach(col => {
         const getCellContent = () => {
-          let conditionalClassname = styles.tableCellCenterAligned;
+          let conditionalClassname = styles.tableCellCenterAlignedOverflow;
           const cellIndex = `${curTriggerName}-${col}-${rowIndex}`;
           if (expandedRow === cellIndex) {
-            conditionalClassname = styles.tableCellCenterAlignedExpanded;
+            conditionalClassname = styles.tableCellExpanded;
           }
           if (row[col] === null) {
             return (
@@ -114,7 +117,7 @@ const ViewRows = ({
           }
           let content = row[col] === undefined ? 'NULL' : row[col].toString();
           if (col === 'created_at') {
-            content = new Date(row[col]).toUTCString();
+            content = convertDateTimeToLocale(row[col]);
           }
           if (col === 'event_id') {
             content = row.id.toString();
@@ -171,7 +174,7 @@ const ViewRows = ({
         <FilterQuery
           curQuery={curQuery}
           whereAnd={wheres}
-          triggerSchema={triggerSchema}
+          triggerSchema={currentTrigger}
           orderBy={orderBy}
           limit={limit}
           dispatch={dispatch}
@@ -202,7 +205,7 @@ const ViewRows = ({
     } else {
       dispatch(setOrderType('asc', 0));
     }
-    dispatch(runQuery(triggerSchema));
+    dispatch(runQuery());
     // Add a new empty filter
     dispatch(addOrder());
   };
@@ -210,19 +213,27 @@ const ViewRows = ({
   const changePage = page => {
     if (curFilter.offset !== page * curFilter.limit) {
       dispatch(setOffset(page * curFilter.limit));
-      dispatch(runQuery(triggerSchema));
+      dispatch(runQuery());
     }
   };
 
   const changePageSize = size => {
     if (curFilter.size !== size) {
       dispatch(setLimit(size));
-      dispatch(runQuery(triggerSchema));
+      dispatch(runQuery());
     }
   };
 
+  const successIcon = (
+    <i className={styles.invocationSuccess + ' fa fa-check'} />
+  );
+
+  const failureIcon = (
+    <i className={styles.invocationFailure + ' fa fa-times'} />
+  );
+
   const renderTableBody = () => {
-    if (count === 0) {
+    if (newCurRows.length === 0) {
       return <div> No rows found. </div>;
     }
     let shouldSortColumn = true;
@@ -271,22 +282,24 @@ const ViewRows = ({
           const currentIndex = row.index;
           const currentRow = curRows[0].events[currentIndex];
           const invocationRowsData = [];
+          const requestData = [];
+          const responseData = [];
           currentRow.logs.map((r, rowIndex) => {
             const newRow = {};
-            const status =
-              r.status === 200 ? (
-                <i className={styles.invocationSuccess + ' fa fa-check'} />
-              ) : (
-                <i className={styles.invocationFailure + ' fa fa-times'} />
-              );
+            const status = verifySuccessStatus(r.status)
+              ? successIcon
+              : failureIcon;
 
+            requestData.push(parseRowData(r, 'request'));
+            responseData.push(parseRowData(r, 'response'));
             // Insert cells corresponding to all rows
             invocationColumns.forEach(col => {
               const getCellContent = () => {
-                let conditionalClassname = styles.tableCellCenterAligned;
+                let conditionalClassname =
+                  styles.tableCellCenterAlignedOverflow;
                 const cellIndex = `${curTriggerName}-${col}-${rowIndex}`;
                 if (expandedRow === cellIndex) {
-                  conditionalClassname = styles.tableCellCenterAlignedExpanded;
+                  conditionalClassname = styles.tableCellExpanded;
                 }
                 if (r[col] === null) {
                   return (
@@ -299,8 +312,10 @@ const ViewRows = ({
                   return status;
                 }
                 if (col === 'created_at') {
-                  const formattedDate = new Date(r.created_at).toUTCString();
-                  return formattedDate;
+                  const formattedDate = convertDateTimeToLocale(r.created_at);
+                  return (
+                    <div className={conditionalClassname}>{formattedDate}</div>
+                  );
                 }
                 const content =
                   r[col] === undefined ? 'NULL' : r[col].toString();
@@ -321,23 +336,12 @@ const ViewRows = ({
                     data={invocationRowsData}
                     columns={invocationGridHeadings}
                     defaultPageSize={currentRow.logs.length}
+                    minRows={0}
                     showPagination={false}
                     SubComponent={logRow => {
                       const finalIndex = logRow.index;
-                      const finalRow = currentRow.logs[finalIndex];
-                      const currentPayload = JSON.stringify(
-                        finalRow.request,
-                        null,
-                        4
-                      );
-                      // check if response is type JSON
-                      let finalResponse = finalRow.response;
-                      try {
-                        finalResponse = JSON.parse(finalRow.response);
-                        finalResponse = JSON.stringify(finalResponse, null, 4);
-                      } catch (e) {
-                        console.error(e);
-                      }
+                      const finalRequest = requestData[finalIndex];
+                      const finalResponse = responseData[finalIndex];
                       return (
                         <div style={{ padding: '20px' }}>
                           <Tabs
@@ -346,15 +350,41 @@ const ViewRows = ({
                             id="requestResponseTab"
                           >
                             <Tab eventKey={1} title="Request">
+                              {finalRequest.headers ? (
+                                <div className={styles.add_mar_top}>
+                                  <div className={styles.subheading_text}>
+                                    Headers
+                                  </div>
+                                  <AceEditor
+                                    mode="json"
+                                    theme="github"
+                                    name="payload"
+                                    value={JSON.stringify(
+                                      finalRequest.headers,
+                                      null,
+                                      4
+                                    )}
+                                    minLines={4}
+                                    maxLines={20}
+                                    width="100%"
+                                    showPrintMargin={false}
+                                    showGutter={false}
+                                  />
+                                </div>
+                              ) : null}
                               <div className={styles.add_mar_top}>
                                 <div className={styles.subheading_text}>
-                                  Request
+                                  Payload
                                 </div>
                                 <AceEditor
                                   mode="json"
                                   theme="github"
                                   name="payload"
-                                  value={currentPayload}
+                                  value={JSON.stringify(
+                                    finalRequest.data,
+                                    null,
+                                    4
+                                  )}
                                   minLines={4}
                                   maxLines={100}
                                   width="100%"
@@ -364,15 +394,80 @@ const ViewRows = ({
                               </div>
                             </Tab>
                             <Tab eventKey={2} title="Response">
+                              {finalResponse.headers ? (
+                                <div className={styles.add_mar_top}>
+                                  <div className={styles.subheading_text}>
+                                    Headers
+                                  </div>
+                                  <AceEditor
+                                    mode="json"
+                                    theme="github"
+                                    name="response"
+                                    value={JSON.stringify(
+                                      finalResponse.headers,
+                                      null,
+                                      4
+                                    )}
+                                    minLines={4}
+                                    maxLines={20}
+                                    width="100%"
+                                    showPrintMargin={false}
+                                    showGutter={false}
+                                  />
+                                </div>
+                              ) : null}
                               <div className={styles.add_mar_top}>
-                                <div className={styles.subheading_text}>
-                                  Response
+                                <div
+                                  className={
+                                    styles.subheading_text +
+                                    ' col-md-6 ' +
+                                    styles.padd_remove
+                                  }
+                                >
+                                  {finalResponse.status_code
+                                    ? 'Payload'
+                                    : 'Error'}
+                                </div>
+                                <div
+                                  className={
+                                    styles.status_code_right +
+                                    ' col-md-6 ' +
+                                    styles.padd_remove
+                                  }
+                                >
+                                  {finalResponse.status_code
+                                    ? [
+                                      'Status Code: ',
+                                      verifySuccessStatus(
+                                        finalResponse.status_code
+                                      )
+                                        ? successIcon
+                                        : failureIcon,
+                                      finalResponse.status_code,
+                                      ' ',
+                                      <OverlayTrigger
+                                        placement="top"
+                                        overlay={
+                                          tooltip.statusCodeDescription
+                                        }
+                                      >
+                                        <i
+                                          className="fa fa-question-circle"
+                                          aria-hidden="true"
+                                        />
+                                      </OverlayTrigger>,
+                                    ]
+                                    : null}
                                 </div>
                                 <AceEditor
                                   mode="json"
                                   theme="github"
                                   name="response"
-                                  value={finalResponse}
+                                  value={JSON.stringify(
+                                    finalResponse.data,
+                                    null,
+                                    4
+                                  )}
                                   minLines={4}
                                   maxLines={100}
                                   width="100%"
@@ -406,12 +501,6 @@ const ViewRows = ({
       <div className="row">
         <div className="col-xs-12">
           <div className={styles.tableContainer + ' eventsTableBody'}>
-            {isProgressing ? (
-              <div>
-                {' '}
-                <Spinner />{' '}
-              </div>
-            ) : null}
             {renderTableBody()}
           </div>
           <br />

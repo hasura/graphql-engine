@@ -1,18 +1,19 @@
 description: Insert article while upserting (do nothing) it's author (Error)
-url: /v1alpha1/graphql
-status: 400
+url: /v1/graphql
+status: 200
 query:
   query: |
    mutation article_author{
      insert_article(
        objects: [
          {
-           title: "Article 1 by Author 2",
-           content: "Article content for Article 1 by Author 2",
+           title: "Article 1 by Author 1",
+           content: "Article content for Article 1 by Author 1",
            is_published: true
            author: {
              data: {
-               name: "Author 2"
+               id: 1
+               name: "Author 1"
              }
              on_conflict: {
                constraint: author_pkey,

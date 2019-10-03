@@ -1,0 +1,14 @@
+url: /v1/query
+status: 400
+response:
+ code: not-exists
+ error: table "foobar" does not exist
+ path: $.args.table
+query:
+  type: select
+  args:
+    table: foobar
+    columns:
+      - id
+      - name
+      - user

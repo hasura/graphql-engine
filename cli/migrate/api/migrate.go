@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -31,14 +32,12 @@ type Request struct {
 }
 
 func MigrateAPI(c *gin.Context) {
-	// Get File url
-	sourcePtr, ok := c.Get("filedir")
+	migratePtr, ok := c.Get("migrate")
 	if !ok {
 		return
 	}
-
-	// Get hasuradb url
-	databasePtr, ok := c.Get("dbpath")
+	// Get File url
+	sourcePtr, ok := c.Get("filedir")
 	if !ok {
 		return
 	}
@@ -50,20 +49,9 @@ func MigrateAPI(c *gin.Context) {
 	}
 
 	// Convert to url.URL
-	databaseURL := databasePtr.(*url.URL)
+	t := migratePtr.(*migrate.Migrate)
 	sourceURL := sourcePtr.(*url.URL)
 	logger := loggerPtr.(*logrus.Logger)
-
-	// Create new migrate
-	t, err := migrate.New(sourceURL.String(), databaseURL.String(), false, logger)
-	if err != nil {
-		if strings.HasPrefix(err.Error(), DataAPIError) {
-			c.JSON(http.StatusInternalServerError, &Response{Code: "data_api_error", Message: err.Error()})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
-		return
-	}
 
 	// Switch on request method
 	switch c.Request.Method {
@@ -81,7 +69,7 @@ func MigrateAPI(c *gin.Context) {
 		timestamp := startTime.UnixNano() / int64(time.Millisecond)
 
 		createOptions := cmd.New(timestamp, request.Name, sourceURL.Path)
-		err = createOptions.SetMetaUp(request.Up)
+		err := createOptions.SetMetaUp(request.Up)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
 			return
@@ -98,25 +86,23 @@ func MigrateAPI(c *gin.Context) {
 			return
 		}
 
+		defer func() {
+			if err != nil {
+				err = createOptions.Delete()
+				if err != nil {
+					logger.Debug(err)
+				}
+			}
+		}()
+
 		// Rescan file system
 		err = t.ReScan()
 		if err != nil {
-			deleteErr := createOptions.Delete()
-			if deleteErr != nil {
-				c.JSON(http.StatusInternalServerError, &Response{Code: "delete_file_error", Message: deleteErr.Error()})
-				return
-			}
 			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 			return
 		}
 
 		if err = t.Migrate(uint64(timestamp), "up"); err != nil {
-			deleteErr := createOptions.Delete()
-			if deleteErr != nil {
-				c.JSON(http.StatusInternalServerError, &Response{Code: "delete_file_error", Message: deleteErr.Error()})
-				return
-			}
-
 			if strings.HasPrefix(err.Error(), DataAPIError) {
 				c.JSON(http.StatusBadRequest, &Response{Code: "data_api_error", Message: strings.TrimPrefix(err.Error(), DataAPIError)})
 				return
@@ -130,7 +116,7 @@ func MigrateAPI(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, &Response{Name: request.Name})
+		c.JSON(http.StatusOK, &Response{Name: fmt.Sprintf("%d_%s", timestamp, request.Name)})
 	default:
 		c.JSON(http.StatusMethodNotAllowed, &gin.H{"message": "Method not allowed"})
 	}

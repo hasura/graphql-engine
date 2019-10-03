@@ -42,12 +42,6 @@ app.get('/simple/webhook', (request, response) => {
 var firebaseRouter = require('./firebase/firebaseHandler');
 app.use('/firebase', firebaseRouter);
 
-// Auth0 handler
-var auth0Router = require('./auth0/auth0Handler');
-app.use('/auth0', auth0Router);
-
-
-
 // listen for requests :)
 var listener = app.listen(port, function () {
   console.log('Your app is listening on port ' + port);

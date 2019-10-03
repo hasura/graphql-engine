@@ -1,0 +1,33 @@
+{
+  "name": "realtime-group-chat",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "apollo-boost": "^0.1.10",
+    "apollo-client-preset": "^1.0.8",
+    "apollo-link-schema": "^1.1.0",
+    "apollo-link-ws": "^1.0.8",
+    "apollo-utilities": "^1.0.16",
+    "graphql": "^0.13.2",
+    "graphql-tag": "^2.9.2",
+    "graphql-tools": "^3.0.5",
+    "moment": "^2.22.2",
+    "react": "^16.4.1",
+    "react-apollo": "^2.1.9",
+    "react-dom": "^16.4.1",
+    "react-router-dom": "^4.3.1",
+    "react-scripts": "^1.1.1",
+    "subscriptions-transport-ws": "^0.9.12"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  },
+  "devDependencies": {
+    "eslint-plugin-graphql": "^1.5.0",
+    "eslint": "^5.1.0",
+    "eslint-plugin-react": "^7.10.0"
+  }
+}

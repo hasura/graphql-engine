@@ -1,0 +1,125 @@
+type: bulk
+args:
+
+- type: run_sql
+  args:
+    sql: |
+     CREATE EXTENSION IF NOT EXISTS postgis;
+
+- type: run_sql
+  args:
+    sql: |
+     CREATE EXTENSION IF NOT EXISTS postgis_topology;
+
+#User location table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE drone_3d_location (
+        drone_id INTEGER PRIMARY KEY,
+        location GEOGRAPHY(Pointz)
+      );
+- type: track_table
+  args:
+    schema: public
+    name: drone_3d_location
+
+#landmark table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE landmark (
+        id SERIAL PRIMARY KEY,
+        name TEXT,
+        type TEXT,
+        location GEOGRAPHY(Point)
+      );
+- type: track_table
+  args:
+    schema: public
+    name: landmark
+
+#straight_road table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE road (
+        id SERIAL PRIMARY KEY,
+        name TEXT,
+        path GEOGRAPHY(LINESTRING)
+      );
+- type: track_table
+  args:
+    schema: public
+    name: road
+
+#curved_road table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE service_locations (
+        id SERIAL PRIMARY KEY,
+        service TEXT,
+        locations GEOGRAPHY(MULTIPOINT)
+      );
+- type: track_table
+  args:
+    schema: public
+    name: service_locations
+
+
+#route table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE route (
+        id SERIAL PRIMARY KEY,
+        name TEXT,
+        route GEOGRAPHY(MULTILINESTRING)
+      );
+- type: track_table
+  args:
+    schema: public
+    name: route
+
+#Area table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE area (
+        id SERIAL PRIMARY KEY,
+        name TEXT,
+        area GEOGRAPHY(POLYGON)
+      );
+- type: track_table
+  args:
+    schema: public
+    name: area
+
+#Compounds table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE compounds (
+        user_id integer PRIMARY KEY,
+        name TEXT,
+        areas GEOGRAPHY(MULTIPOLYGON)
+      );
+- type: track_table
+  args:
+    schema: public
+    name: compounds
+
+#Generic geometry table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE geometry_collection (
+        id SERIAL PRIMARY KEY,
+        geometries GEOGRAPHY(GEOMETRYCOLLECTION)
+      );
+- type: track_table
+  args:
+    schema: public
+    name: geometry_collection
+

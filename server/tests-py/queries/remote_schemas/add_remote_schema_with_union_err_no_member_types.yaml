@@ -1,0 +1,16 @@
+description: Add a remote schema with a union which has unknown object types 
+url: /v1/query
+status: 400
+response:
+  path: $.args
+  error: |-
+    List of member types cannot be empty for union type 'CharacterSearchResult'
+  code: remote-schema-error
+query:
+  type: add_remote_schema
+  args:
+    name: err-no-mem-types
+    definition:
+      url: http://localhost:5000/union-graphql-err-no-member-types
+      headers: []
+      forward_client_headers: true

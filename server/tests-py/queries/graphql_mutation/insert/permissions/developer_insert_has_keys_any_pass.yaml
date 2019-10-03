@@ -1,0 +1,36 @@
+description: Inserts computer specs with atleast one of the required keys
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    insert_computer:
+      affected_rows: 1
+      returning:
+      - name: Computer1
+        spec:
+          processor: AMD
+headers:
+  X-Hasura-Role: developer
+  X-Hasura-Spec-Keys: |-
+    {processor,display,memory,warranty}
+query:
+  variables:
+    spec:
+      processor: AMD
+  query: |
+    mutation insert_computer($spec: jsonb) {
+      insert_computer (
+        objects: [
+          {
+            name: "Computer1",
+            spec: $spec
+          },
+          ],
+      ) {
+        affected_rows
+        returning {
+          name
+          spec
+          }
+        }
+    }

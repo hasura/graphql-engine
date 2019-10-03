@@ -1,16 +1,27 @@
 Guides: Deployment
 ==================
 
-- :doc:`Deploy on Digital Ocean using Docker <digital-ocean>`
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
+- :doc:`Digital Ocean One-click App on Marketplace <digital-ocean-one-click>`
+- :doc:`Azure Container Instances with Postgres <azure-container-instances-postgres>`
+- :doc:`Google Cloud Platform with Kubernetes engine and Cloud SQL <google-kubernetes-engine-cloud-sql>`
+- `Blog: Instant GraphQL on AWS RDS <https://blog.hasura.io/instant-graphql-on-aws-rds-1edfb85b5985>`__
 
 .. note::
-   The above are guides to deploy Hasura GraphQL engine on some specific platforms.
+   The above are guides to deploy the Hasura GraphQL engine on some specific platforms.
 
-   For more generic guides, see :doc:`../../deployment/index`
+   For more generic guides, see :doc:`../../deployment/index`.
 
 .. toctree::
    :maxdepth: 1
    :titlesonly:
    :hidden:
 
-   On Digital Ocean using Docker <digital-ocean>
+   DigitalOcean One-click App on Marketplace <digital-ocean-one-click>
+   Azure Container Instances with Postgres <azure-container-instances-postgres>
+   Google Cloud Platform with Kubernetes engine and Cloud SQL <google-kubernetes-engine-cloud-sql>
+   

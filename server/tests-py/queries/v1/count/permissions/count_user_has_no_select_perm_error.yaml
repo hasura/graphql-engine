@@ -1,0 +1,16 @@
+description: Count number of authors
+url: /v1/query
+status: 400
+headers:
+  X-Hasura-Role: contractor
+response:
+  path: $.args
+  error: select on "article" for role "contractor" is not allowed. ; "count" is only
+    allowed if the role has "select" permissions on the table
+  code: permission-denied
+query:
+  type: count
+  args:
+    table: article
+    where:
+      is_published: false

@@ -15,28 +15,22 @@ const createTables = async (tables, url, headers, overwrite, runSql, sql) => {
           method: 'POST',
           headers,
           body: JSON.stringify({
-            type: 'select',
+            type: 'run_sql',
             args: {
-              table: {
-                name: 'hdb_table',
-                schema: 'hdb_catalog',
-              },
-              columns: ['*.*'],
-              where: {
-                table_schema: 'public',
-              },
+              sql: "select * from information_schema.tables where table_schema = 'public';",
             },
           }),
         }
       );
       const dbTables = await resp.json();
+      const tableIndex = dbTables.result[0].indexOf('table_name');
       let found = false;
-      tables.forEach(table => {
-        if (dbTables.find(dbTable => dbTable.table_name === table.name)) {
+      for (let i = dbTables.result.length - 1; i > 0; i--) {
+        if (tables.find(t => t.name === dbTables.result[i][tableIndex])) {
           found = true;
-          throwError('Message: Your JSON database contains tables that already exist in Postgres. Please use the flag "--overwrite" to overwrite them.');
+          throwError('Message: Your JSON database contains tables that already exist in Postgres public schema. Please use the flag "--overwrite" to overwrite them.');
         }
-      });
+      }
       if (!found) {
         cli.action.stop('Done!');
         cli.action.start('Creating tables');

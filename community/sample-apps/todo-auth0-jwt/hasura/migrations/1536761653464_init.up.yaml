@@ -1,0 +1,54 @@
+- type: replace_metadata
+  args:
+    functions: []
+    remote_schemas: []
+    query_collections: []
+    allowlist: []
+    tables:
+    - table: todo
+      object_relationships: []
+      array_relationships: []
+      insert_permissions:
+      - role: user
+        comment: 
+        permission:
+          set: {}
+          check:
+            user_id:
+              _eq: X-HASURA-USER-ID
+          columns:
+          - id
+          - task
+          - completed
+          - user_id
+      select_permissions:
+      - role: user
+        comment: 
+        permission:
+          columns:
+          - task
+          - completed
+          - user_id
+          - id
+          filter:
+            user_id:
+              _eq: X-HASURA-USER-ID
+      update_permissions:
+      - role: user
+        comment: 
+        permission:
+          columns:
+          - completed
+          filter:
+            user_id:
+              _eq: X-HASURA-USER-ID
+      delete_permissions:
+      - role: user
+        comment: 
+        permission:
+          filter:
+            user_id:
+              _eq: X-HASURA-USER-ID
+      event_triggers: []
+
+    

@@ -1,0 +1,16 @@
+description: Add a remote schema with an interface with field list empty
+url: /v1/query
+status: 400
+response:
+  path: $.args
+  error: |-
+    List of fields cannot be empty for interface 'Character'
+  code: remote-schema-error
+query:
+  type: add_remote_schema
+  args:
+    name: err-unknown-types
+    definition:
+      url: http://localhost:5000/iface-graphql-err-empty-field-list
+      headers: []
+      forward_client_headers: true

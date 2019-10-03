@@ -1,0 +1,11 @@
+.env
+node_modules
+static/dist
+webpack-assets.json
+webpack-stats.json
+npm-debug.log
+*.swp
+coverage
+.idea/*
+test
+**/.tern-port

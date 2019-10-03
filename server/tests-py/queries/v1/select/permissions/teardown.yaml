@@ -1,14 +1,12 @@
 type: bulk
 args:
-
 - type: run_sql
   args:
     sql: |
-      drop table article
-    cascade: true
-
-- type: run_sql
-  args:
-    sql: |
-      drop table author
+      DROP TABLE article;
+      DROP TABLE author;
+      DROP TABLE geom_table;
+      DROP TABLE geog_table;
+      DROP TABLE jsonb_table;
+      DROP TABLE auction;
     cascade: true

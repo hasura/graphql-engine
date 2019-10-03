@@ -1,0 +1,149 @@
+/**
+ * Override Bootstrap styles that you can't modify via variables here.
+ *
+ */
+
+// react select overrides: start
+.modify_select__control {
+  min-height: 30px !important;
+  max-height: 30px !important;
+}
+
+.add_table_column_selector__control, .add_table_default_value_selector__control  {
+  min-height: 34px !important;
+  max-height: 34px !important;
+}
+
+.react-selectable__single-value, .react-selectable__placeholder, .react-selectable__indicator.react-selectable__dropdown-indicator {
+  margin-top: -2px;
+}
+// react select overrides: end
+
+input[type="radio"], input[type="checkbox"] {
+  margin: 0 5px 0px 0px;
+}
+
+.dropdown.input-group-btn {
+  button {
+    min-height: 34px;
+  }
+}
+
+.form-group .input-group {
+  min-width: 300px;
+}
+
+label {
+  margin-bottom: 0 !important;
+}
+
+.navbar-brand {
+  position: relative;
+  padding-left: 50px;
+}
+
+.graphiql-container .topBar {
+  height: auto !important;
+}
+
+.navbar-default .navbar-nav > .active > a,
+.navbar-default .navbar-nav > .active > a:hover,
+.navbar-default .navbar-nav > .active > a:focus {
+  color: #33e0ff;
+  background-color: transparent;
+}
+
+.control-label {
+  padding-top: 0;
+}
+
+form {
+    margin-bottom: 0em;
+}
+
+.form-control:focus {
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 0px rgba(102, 175, 233, 0.6);
+}
+
+.form-control {
+  // border-radius: 0;
+  height: auto;
+}
+
+select.form-control {
+  border-radius: 0;
+  -webkit-border-radius: 0px;
+}
+
+.btn {
+  // border-radius: 0;
+  outline: none;
+}
+
+.btn:active, .btn.active {
+  box-shadow: none !important;
+}
+
+.btn:focus, .btn.focus, .btn:active:focus, .btn:active.focus, .btn.active:focus, .btn.active.focus {
+  outline: none !important;
+}
+
+.btn:focus {
+  outline: none !important;
+}
+
+.alert {
+	word-wrap: break-word;
+}
+
+.btn-warning {
+  background-color: #FEC53D !important;
+  border-color: #FEC53D !important;
+  color: #000 !important;
+  padding: 5px 10px !important;
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+}
+
+.btn-warning:hover {
+  color: #000;
+  background-color: #F2B130 !important;
+  border-color: #F2B130 !important;
+}
+
+.btn-warning:focus {
+  background-color: #F2B130 !important;
+}
+// Generate Code modal
+.padd_remove {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.invocationClass
+{
+  clear: both;
+  .rt-table
+  {
+    .rt-tbody
+    {
+      .rt-tr-group
+      {
+        .rt-tr
+        {
+          .rt-td
+          {
+            .rt-expander
+            {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              height: 21px;
+              width: 13px;
+            }
+          }
+        }
+      }
+    }
+  }
+}

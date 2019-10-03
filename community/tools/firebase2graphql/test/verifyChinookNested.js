@@ -4,18 +4,18 @@ const colors = require('colors/safe');
 
 const complexQuery = `
 query {
-  f2gt_Album (order_by:_id_asc){
+  f2gt_Album (order_by:{_id:asc}){
     _id
-    f2gt_Track (order_by: _id_asc) {
+    f2gt_Track (order_by: {_id:asc}) {
       _id
-      Name 
+      Name
     }
     f2gt_Artist {
       Name
-      f2gt_Album (order_by: _id_desc){
+      f2gt_Album (order_by: {_id:desc}){
         _id
         Title
-        f2gt_Track (order_by: Name_asc){
+        f2gt_Track (order_by: {Name:asc}){
           Name
           Composer
         }
@@ -28,8 +28,8 @@ query {
 const verifyDataImport = () => {
   query({
     query: complexQuery,
-    endpoint: `${process.env.TEST_HGE_URL}/v1alpha1/graphql`,
-    headers: {'x-hasura-access-key': process.env.TEST_X_HASURA_ACCESS_KEY},
+    endpoint: `${process.env.TEST_HGE_URL}/v1/graphql`,
+    headers: {'x-hasura-admin-secret': process.env.TEST_X_HASURA_ADMIN_SECRET},
   }).then(response => {
     if (
       response.data.f2gt_Album[0]._id === '1' &&
@@ -46,7 +46,7 @@ const verifyDataImport = () => {
         `${process.env.TEST_HGE_URL}/v1/query`,
         {
           method: 'POST',
-          headers: {'x-hasura-access-key': process.env.TEST_X_HASURA_ACCESS_KEY},
+          headers: {'x-hasura-admin-secret': process.env.TEST_X_HASURA_ADMIN_SECRET},
           body: JSON.stringify({
             type: 'run_sql',
             args: {

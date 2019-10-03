@@ -1,0 +1,11 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      drop table hello
+
+- type: remove_remote_schema
+  args:
+    name: simple2-graphql
+ 

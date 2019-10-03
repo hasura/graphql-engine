@@ -1,0 +1,88 @@
+functions: []
+query_templates: []
+remote_schemas: []
+tables:
+- array_relationships: []
+  delete_permissions: []
+  event_triggers: []
+  insert_permissions: []
+  object_relationships: []
+  select_permissions:
+  - comment: null
+    permission:
+      allow_aggregations: true
+      columns:
+      - id
+      - title
+      - content
+      - created_at
+      - user_id
+      filter:
+        user_id:
+          _eq: X-Hasura-User-Id
+    role: user
+  table: article
+  update_permissions: []
+- array_relationships: []
+  delete_permissions: []
+  event_triggers: []
+  insert_permissions: []
+  object_relationships: []
+  select_permissions: []
+  table: role
+  update_permissions: []
+- array_relationships: []
+  delete_permissions: []
+  event_triggers: []
+  insert_permissions:
+  - comment: null
+    permission:
+      check:
+        id:
+          _eq: X-Hasura-User-Id
+      columns:
+      - active
+      - created_at
+      - id
+      - password
+      - username
+      set: {}
+    role: user
+  object_relationships: []
+  select_permissions:
+  - comment: null
+    permission:
+      allow_aggregations: false
+      columns:
+      - id
+      - username
+      - password
+      - created_at
+      - active
+      filter:
+        id:
+          _eq: X-Hasura-User-Id
+    role: user
+  table: user
+  update_permissions:
+  - comment: null
+    permission:
+      columns:
+      - active
+      - created_at
+      - id
+      - password
+      - username
+      filter:
+        id:
+          _eq: X-Hasura-User-Id
+      set: {}
+    role: user
+- array_relationships: []
+  delete_permissions: []
+  event_triggers: []
+  insert_permissions: []
+  object_relationships: []
+  select_permissions: []
+  table: user_role
+  update_permissions: []

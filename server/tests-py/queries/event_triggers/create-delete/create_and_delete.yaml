@@ -1,0 +1,34 @@
+description: create and then drop an event trigger
+url: /v1/query
+status: 200
+query:
+  type: bulk
+  args:
+  - type: track_table
+    args:
+      schema: hge_tests
+      name: test_t1
+
+  - type: create_event_trigger
+    args: &def_args
+      name: t1_1
+      table:
+        schema: hge_tests
+        name: test_t1
+      insert:
+        columns: "*"
+      update:
+        columns: "*"
+      delete:
+        columns: "*"
+      webhook: http://127.0.0.1:5592
+
+  - type: delete_event_trigger
+    args:
+      name: t1_1
+
+  - type: untrack_table
+    args:
+      table:
+        schema: hge_tests
+        name: test_t1

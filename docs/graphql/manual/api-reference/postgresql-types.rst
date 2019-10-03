@@ -1,6 +1,11 @@
 API Reference - Supported PostgreSQL Types
 ==========================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 .. _types_table:
 
 List of PostgreSQL types supported by the Hasura GraphQL engine with their equivalent Hasura types:
@@ -212,7 +217,7 @@ E.g.
      }
    }
 
-variable:
+variables:
 
 .. code-block:: json
 
@@ -222,12 +227,85 @@ variable:
      }
    }
 
+.. _Geometry:
+
+Geometry
+--------
+
+GraphQL custom scalar type ``geometry`` is generated for a ``GEOMETRY`` column
+on a PostGIS enabled Postgres instance. Value should be given as GeoJSON.
+
+E.g.
+
+.. code-block:: graphql
+
+   mutation insertGeometry($point: geometry!) {
+     insert_test(
+       objects: [{
+         geometry_col: $point
+       }]
+     ) {
+       affected_rows
+       returning {
+         geometry_col
+       }
+     }
+   }
+
+variables:
+
+.. code-block:: json
+
+   {
+     "point": {
+       "type": "Point",
+       "coordinates": [0, 0]
+     }
+   }
+
+
+.. _Geography:
+
+Geography
+---------
+
+GraphQL custom scalar type ``geography`` is generated for a ``GEOGRAPHY`` column
+on a PostGIS enabled Postgres instance. Value should be given as GeoJSON.
+
+E.g.
+
+.. code-block:: graphql
+
+   mutation insertGeography($point: geography!) {
+     insert_test(
+       objects: [{
+         geography_col: $point
+       }]
+     ) {
+       affected_rows
+       returning {
+         geography_col
+       }
+     }
+   }
+
+variables:
+
+.. code-block:: json
+
+   {
+     "point": {
+       "type": "Point",
+       "coordinates": [0, 0]
+     }
+   }
+
 .. _Implicit:
 
 Implicitly Supported types
 --------------------------
-All ``Implicit`` types in the :ref:`above table <types_table>` are implicitly supported by GraphQL Engine. You have to
-provide the value in **String**.
+All ``Implicit`` types in the :ref:`above table <types_table>` are implicitly supported by the GraphQL engine. You have to
+provide the value as a **String**.
 
 
 E.g. For time without time zone type
@@ -256,6 +334,6 @@ E.g. For macaddr type
 
 .. Note::
 
-   You can learn more about PostgreSQL data types `here <https://www.postgresql.org/docs/current/static/datatype.html>`__
+   You can learn more about PostgreSQL data types `here <https://www.postgresql.org/docs/current/static/datatype.html>`__.
 
 

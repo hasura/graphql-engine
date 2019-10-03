@@ -7,10 +7,26 @@ args:
           c1 int,
           c2 text
       );
+      create table hge_tests.test_t2(
+          c1 int,
+          c2 text
+      );
+      create table hge_tests.test_t3(
+          c1 int,
+          c2 text
+      );
 - type: track_table
   args:
     schema: hge_tests
     name: test_t1
+- type: track_table
+  args:
+    schema: hge_tests
+    name: test_t2
+- type: track_table
+  args:
+    schema: hge_tests
+    name: test_t3
 - type: create_event_trigger
   args:
     name: t1_retry
@@ -27,3 +43,37 @@ args:
     retry_conf:
       num_retries: 4
       interval_sec: 2
+- type: create_event_trigger
+  args:
+    name: t2_timeout_short
+    table:
+      schema: hge_tests
+      name: test_t2
+    insert:
+      columns: "*"
+    update:
+      columns: "*"
+    delete:
+      columns: "*"
+    webhook: http://127.0.0.1:5592/timeout_short
+    retry_conf:
+      num_retries: 2
+      interval_sec: 2
+      timeout_sec: 2
+- type: create_event_trigger
+  args:
+    name: t3_timeout_long
+    table:
+      schema: hge_tests
+      name: test_t3
+    insert:
+      columns: "*"
+    update:
+      columns: "*"
+    delete:
+      columns: "*"
+    webhook: http://127.0.0.1:5592/timeout_long
+    retry_conf:
+      num_retries: 0
+      interval_sec: 2
+      timeout_sec: 10

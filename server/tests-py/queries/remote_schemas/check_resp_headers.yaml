@@ -1,0 +1,13 @@
+description: Check response headers from remote
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    hello: Hello me
+response_headers:
+  'Set-Cookie': abcd
+query:
+  query: |
+    query {
+      hello(arg: "me")
+    }

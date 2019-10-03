@@ -1,6 +1,11 @@
 Event trigger payload
 =====================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 The following is the payload and delivery mechanism of an event to the webhook when an event trigger is invoked.
 
 HTTP request method
@@ -18,17 +23,17 @@ JSON payload
 
     {
       "event": {
+          "session_variables": <session-variables>,
           "op": "<op-name>",
           "data": {
-            "old": <column-values>,
-            "new": <column-values>
+              "old": <column-values>,
+              "new": <column-values>
           }
       },
       "created_at": "<timestamp>",
       "id": "<uuid>",
       "trigger": {
-          "name": "<name-of-trigger>",
-          "id": "<uuid>"
+          "name": "<name-of-trigger>"
       },
       "table":  {
           "schema": "<schema-name>",
@@ -43,24 +48,27 @@ JSON payload
    * - Key
      - Type
      - Description
+   * - session-variables
+     - Object_ or NULL
+     - Key-value pairs of session variables (i.e. "x-hasura-\*" variables) and their values (NULL if no session variables found)
    * - op-name
      - OpName_
-     - Name of the operation. Can only be "INSERT", "UPDATE" or "DELETE"
+     - Name of the operation. Can only be "INSERT", "UPDATE", "DELETE", "MANUAL"
    * - column-values
      - Object_
      - Key-value pairs of column name and their values of the table
    * - timestamp
      - String
-     - Timestamp value
+     - Timestamp at which event was created
    * - uuid
      - String
-     - A UUID value
+     - UUID identifier for the event
    * - name-of-trigger
      - String
      - Name of the trigger
    * - schema-name
      - String
-     - Name of the postgres schema where the table is
+     - Name of the schema for the table
    * - table-name
      - String
      - Name of the table
@@ -83,6 +91,18 @@ JSON payload
   - ``event.data.old`` will contain the row that is deleted
   - ``event.data.new`` will be ``null``
 
+- MANUAL
+
+  - ``event.data.old`` will be ``null``
+  - ``event.data.new`` will contain the current row
+
+.. note::
+
+   In case of ``UPDATE``, the events are delivered only if new data is distinct from
+   old data. The `composite type comparison <https://www.postgresql.org/docs/current/functions-comparisons.html#COMPOSITE-TYPE-COMPARISON>`__
+   is used to compare the old and new rows. If rows contain columns, which cannot be
+   compared using ``<>`` operator, then internal binary representation of rows by Postgres is compared.
+
 **For example**:
 
 .. code-block:: json
@@ -91,14 +111,18 @@ JSON payload
       "id": "85558393-c75d-4d2f-9c15-e80591b83894",
       "created_at": "2018-09-05T07:14:21.601701Z",
       "trigger": {
-          "name": "test_trigger",
-          "id": "37b7f91a-b3a5-4b85-be59-e5920d72f6aa"
+          "name": "test_trigger"
       },
       "table": {
           "schema": "public",
           "name": "users"
       },
       "event": {
+          "session_variables": {
+              "x-hasura-role": "admin",
+              "x-hasura-allowed-roles": "['user', 'boo', 'admin']",
+              "x-hasura-user-id": "1"
+          },
           "op": "INSERT",
           "data": {
             "old": null,
@@ -115,8 +139,6 @@ JSON payload
 Syntax definitions
 ------------------
 
-.. _Object:
-
 Object
 ^^^^^^
 
@@ -129,19 +151,24 @@ Object
   }
 
 
-.. _OpName:
-
 OpName
 ^^^^^^
 
 .. parsed-literal::
 
-   "INSERT" | "UPDATE" | "DELETE"
+   "INSERT" | "UPDATE" | "DELETE" | "MANUAL"
 
 Webhook response structure
 --------------------------
 
 A ``2xx`` response status code is deemed to be a successful invocation of the webhook. Any other response status will be
-deemed as an unsuccessful invocation which may cause retries as per the retry configuration.
+deemed as an unsuccessful invocation which will cause retries as per the retry configuration.
 
 It is also recommended that you return a JSON object in your webhook response.
+
+Retry-After header
+^^^^^^^^^^^^^^^^^^
+
+If the webhook response contains a ``Retry-After`` header, then the event will be redelivered once more after the duration (in seconds) found in the header. Note that the header will be respected only if the response status code is ``non-2xx``.
+
+The ``Retry-After`` header can be used for retrying/rate-limiting/debouncing your webhook triggers.

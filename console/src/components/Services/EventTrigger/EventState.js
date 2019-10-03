@@ -74,9 +74,9 @@ const defaultState = {
   eventLogs: [],
   schemaList: ['public'],
   currentSchema: 'public',
-  accessKeyError: false,
+  adminSecretError: false,
   dataHeaders: {
-    'Content-Type': 'application/json',
+    'content-type': 'application/json',
   },
 };
 

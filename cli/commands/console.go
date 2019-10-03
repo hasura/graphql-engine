@@ -3,7 +3,6 @@ package commands
 import (
 	"fmt"
 	"net/http"
-	"net/url"
 	"sync"
 
 	"github.com/fatih/color"
@@ -11,6 +10,7 @@ import (
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/migrate"
 	"github.com/hasura/graphql-engine/cli/migrate/api"
 	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
@@ -20,6 +20,7 @@ import (
 	"github.com/spf13/viper"
 )
 
+// NewConsoleCmd returns the console command
 func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
 	opts := &consoleOptions{
@@ -47,15 +48,18 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	f.StringVar(&opts.APIPort, "api-port", "9693", "port for serving migrate api")
 	f.StringVar(&opts.ConsolePort, "console-port", "9695", "port for serving console")
-	f.StringVar(&opts.Address, "address", "localhost", "address to use")
+	f.StringVar(&opts.Address, "address", "localhost", "address to serve console and migration API from")
 	f.BoolVar(&opts.DontOpenBrowser, "no-browser", false, "do not automatically open console in browser")
 	f.StringVar(&opts.StaticDir, "static-dir", "", "directory where static assets mentioned in the console html template can be served from")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
+	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
 	f.String("access-key", "", "access key for Hasura GraphQL Engine")
+	f.MarkDeprecated("access-key", "use --admin-secret instead")
 
 	// need to create a new viper because https://github.com/spf13/viper/issues/233
 	v.BindPFlag("endpoint", f.Lookup("endpoint"))
+	v.BindPFlag("admin_secret", f.Lookup("admin-secret"))
 	v.BindPFlag("access_key", f.Lookup("access-key"))
 	return consoleCmd
 }
@@ -80,33 +84,51 @@ func (o *consoleOptions) run() error {
 	gin.SetMode(gin.ReleaseMode)
 
 	// An Engine instance with the Logger and Recovery middleware already attached.
-	r := gin.New()
+	g := gin.New()
 
-	r.Use(allowCors())
-
-	// My Router struct
-	router := &cRouter{
-		r,
-	}
-
-	router.setRoutes(o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey, o.EC.MigrationDir, o.EC.MetadataFile, o.EC.Logger)
+	g.Use(allowCors())
 
 	if o.EC.Version == nil {
 		return errors.New("cannot validate version, object is nil")
 	}
+
+	metadataPath, err := o.EC.GetMetadataFilePath("yaml")
+	if err != nil {
+		return err
+	}
+
+	t, err := newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version, false)
+	if err != nil {
+		return err
+	}
+
+	// My Router struct
+	r := &cRouter{
+		g,
+		t,
+	}
+
+	r.setRoutes(o.EC.MigrationDir, metadataPath, o.EC.Logger)
+
 	consoleTemplateVersion := o.EC.Version.GetConsoleTemplateVersion()
 	consoleAssetsVersion := o.EC.Version.GetConsoleAssetsVersion()
 
 	o.EC.Logger.Debugf("rendering console template [%s] with assets [%s]", consoleTemplateVersion, consoleAssetsVersion)
 
+	adminSecretHeader := getAdminSecretHeaderName(o.EC.Version)
+
 	consoleRouter, err := serveConsole(consoleTemplateVersion, o.StaticDir, gin.H{
-		"apiHost":        "http://" + o.Address,
-		"apiPort":        o.APIPort,
-		"cliVersion":     o.EC.Version.GetCLIVersion(),
-		"dataApiUrl":     o.EC.Config.ParsedEndpoint.String(),
-		"dataApiVersion": "",
-		"accessKey":      o.EC.Config.AccessKey,
-		"assetsVersion":  consoleAssetsVersion,
+		"apiHost":         "http://" + o.Address,
+		"apiPort":         o.APIPort,
+		"cliVersion":      o.EC.Version.GetCLIVersion(),
+		"serverVersion":   o.EC.Version.GetServerVersion(),
+		"dataApiUrl":      o.EC.ServerConfig.ParsedEndpoint.String(),
+		"dataApiVersion":  "",
+		"hasAccessKey":    adminSecretHeader == XHasuraAccessKey,
+		"adminSecret":     o.EC.ServerConfig.AdminSecret,
+		"assetsVersion":   consoleAssetsVersion,
+		"enableTelemetry": o.EC.GlobalConfig.EnableTelemetry,
+		"cliUUID":         o.EC.GlobalConfig.UUID,
 	})
 	if err != nil {
 		return errors.Wrap(err, "error serving console")
@@ -117,7 +139,7 @@ func (o *consoleOptions) run() error {
 	o.WG = wg
 	wg.Add(1)
 	go func() {
-		err = router.Run(o.Address + ":" + o.APIPort)
+		err = r.router.Run(o.Address + ":" + o.APIPort)
 		if err != nil {
 			o.EC.Logger.WithError(err).Errorf("error listening on port %s", o.APIPort)
 		}
@@ -147,20 +169,23 @@ func (o *consoleOptions) run() error {
 	o.EC.Spinner.Stop()
 	log.Infof("console running at: %s", consoleURL)
 
+	o.EC.Telemetry.Beam()
+
 	wg.Wait()
 	return nil
 }
 
 type cRouter struct {
-	*gin.Engine
+	router  *gin.Engine
+	migrate *migrate.Migrate
 }
 
-func (router *cRouter) setRoutes(nurl *url.URL, accessKey, migrationDir, metadataFile string, logger *logrus.Logger) {
-	apis := router.Group("/apis")
+func (r *cRouter) setRoutes(migrationDir, metadataFile string, logger *logrus.Logger) {
+	apis := r.router.Group("/apis")
 	{
 		apis.Use(setLogger(logger))
 		apis.Use(setFilePath(migrationDir))
-		apis.Use(setDataPath(nurl, accessKey))
+		apis.Use(setMigrate(r.migrate))
 		// Migrate api endpoints and middleware
 		migrateAPIs := apis.Group("/migrate")
 		{
@@ -179,11 +204,9 @@ func (router *cRouter) setRoutes(nurl *url.URL, accessKey, migrationDir, metadat
 	}
 }
 
-func setDataPath(nurl *url.URL, accessKey string) gin.HandlerFunc {
+func setMigrate(t *migrate.Migrate) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		host := getDataPath(nurl, accessKey)
-
-		c.Set("dbpath", host)
+		c.Set("migrate", t)
 		c.Next()
 	}
 }
@@ -213,7 +236,8 @@ func setLogger(logger *logrus.Logger) gin.HandlerFunc {
 func allowCors() gin.HandlerFunc {
 	config := cors.DefaultConfig()
 	config.AddAllowHeaders("X-Hasura-User-Id")
-	config.AddAllowHeaders("X-Hasura-Access-Key")
+	config.AddAllowHeaders(XHasuraAccessKey)
+	config.AddAllowHeaders(XHasuraAdminSecret)
 	config.AddAllowHeaders("X-Hasura-Role")
 	config.AddAllowHeaders("X-Hasura-Allowed-Roles")
 	config.AddAllowMethods("DELETE")

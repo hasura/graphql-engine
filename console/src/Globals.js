@@ -1,58 +1,64 @@
 import { SERVER_CONSOLE_MODE } from './constants';
+import { getFeaturesCompatibility } from './helpers/versionUtils';
+import { stripTrailingSlash } from './components/Common/utils/urlUtils';
 
-const checkExtraSlashes = url => {
-  if (!url) {
-    return url;
-  }
-  if (url[url.length - 1] === '/') {
-    return url.slice(0, url.length - 1);
-  }
-  return url;
-};
+/* set helper tools into window */
+
+import sqlFormatter from './helpers/sql-formatter.min';
+import hljs from './helpers/highlight.min';
+
+if (
+  window &&
+  typeof window === 'object' &&
+  !window.sqlFormatter &&
+  !window.hljs
+) {
+  window.sqlFormatter = sqlFormatter;
+  window.hljs = hljs;
+}
+
+/* initialize globals */
 
 const globals = {
   apiHost: window.__env.apiHost,
   apiPort: window.__env.apiPort,
-  dataApiUrl: checkExtraSlashes(window.__env.dataApiUrl),
+  dataApiUrl: stripTrailingSlash(window.__env.dataApiUrl),
   devDataApiUrl: window.__env.devDataApiUrl,
   nodeEnv: window.__env.nodeEnv,
-  accessKey: window.__env.accessKey,
-  isAccessKeySet: window.__env.isAccessKeySet,
-  consoleMode:
-    window.__env.consoleMode === 'hasuradb'
-      ? 'server'
-      : window.__env.consoleMode,
-  urlPrefix: checkExtraSlashes(window.__env.urlPrefix),
+  adminSecret: window.__env.adminSecret || null, // will be updated after login/logout
+  isAdminSecretSet: window.__env.isAdminSecretSet || false,
+  consoleMode: window.__env.consoleMode || SERVER_CONSOLE_MODE,
+  urlPrefix: stripTrailingSlash(window.__env.urlPrefix) || '',
+  enableTelemetry: window.__env.enableTelemetry,
+  telemetryTopic:
+    window.__env.nodeEnv !== 'development' ? 'console' : 'console_test',
+  assetsPath: window.__env.assetsPath,
+  serverVersion: window.__env.serverVersion,
+  consoleAssetVersion: CONSOLE_ASSET_VERSION, // set during console build
+  featuresCompatibility: window.__env.serverVersion
+    ? getFeaturesCompatibility(window.__env.serverVersion)
+    : null,
 };
-
-// set defaults
-if (!window.__env.urlPrefix) {
-  globals.urlPrefix = '/';
-}
-
-if (!window.__env.consoleMode) {
-  globals.consoleMode = SERVER_CONSOLE_MODE;
-}
-
-if (!window.__env.accessKey) {
-  globals.accessKey = null;
-}
-
-if (!window.__env.isAccessKeySet) {
-  globals.isAccessKeySet = false;
-}
 
 if (globals.consoleMode === SERVER_CONSOLE_MODE) {
   if (globals.nodeEnv !== 'development') {
-    const windowUrl = window.location.protocol + '//' + window.location.host;
-    globals.dataApiUrl = windowUrl;
+    const consolePath = window.__env.consolePath;
+    if (consolePath) {
+      const currentUrl = stripTrailingSlash(window.location.href);
+      globals.dataApiUrl = currentUrl.slice(
+        0,
+        currentUrl.lastIndexOf(consolePath)
+      );
+
+      const currentPath = stripTrailingSlash(window.location.pathname);
+      globals.urlPrefix =
+        currentPath.slice(0, currentPath.lastIndexOf(consolePath)) + '/console';
+    } else {
+      const windowUrl = window.location.protocol + '//' + window.location.host;
+
+      globals.dataApiUrl = windowUrl;
+    }
   }
-  /*
-   * Require the exact usecase
-  if (globals.nodeEnv === 'development') {
-    globals.dataApiUrl = globals.devDataApiUrl;
-  }
-  */
 }
 
 export default globals;

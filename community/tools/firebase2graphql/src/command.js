@@ -15,6 +15,11 @@ class Firebase2GraphQL extends Command {
     }
     const {db, overwrite, normalize} = flags;
     const key = flags['access-key'];
+    const secret = flags['admin-secret'];
+
+    if (secret !== undefined && key !== undefined) {
+      throw new CLIError('cannot use both flags "access-key" and "admin-secret"', 'use "admin-secret" for versions greater than v1.0.0-alpha37 and "access-key" otherwise');
+    }
 
     if (!url) {
       throw new CLIError('endpoint is required: \'firebase2graphql <url> -d ./db.js\'');
@@ -24,7 +29,9 @@ class Firebase2GraphQL extends Command {
       throw new CLIError('path to firebase JSON database is required: \'firebase2graphql <url> -d ./db.js\'');
     }
     const dbJson = this.getDbJson(db);
-    const headers = key ? {'x-hasura-access-key': key} : {};
+    const headers = {
+      [secret ? 'x-hasura-admin-secret' : 'x-hasura-access-key']: secret || key,
+    };
     const urlVerification = await this.verifyUrl(safeUrl, headers);
     if (urlVerification.error) {
       throwError(`Message: ${urlVerification.message}`);
@@ -59,7 +66,7 @@ class Firebase2GraphQL extends Command {
           }),
         }
       );
-      return resp.status === 200 ? {error: false} : {error: true, message: 'invalid access key'};
+      return resp.status === 200 ? {error: false} : {error: true, message: 'invalid access-key or admin-secret'};
     } catch (e) {
       return  {error: true, message: 'invalid URL'};
     }
@@ -69,17 +76,17 @@ class Firebase2GraphQL extends Command {
 Firebase2GraphQL.description = `firebase2graphql: Import JSON data to Hasura GraphQL Engine
 # Examples:
 
-# Import data from a Firebase JSON database to Hasura GraphQL Engine without access key
-json2graphql https://hge.herokuapp.com --db=./path/to/db.json
+# Import data from a Firebase JSON database to Hasura GraphQL Engine without admin secret
+firebase2graphql https://hge.herokuapp.com --db=./path/to/db.json
 
-# Import data from a Firebase JSON database to Hasura GraphQL Engine with access key
-json2graphql https://hge.herokuapp.com --db=./path/to/db.json -k <access-key>
+# Import data from a Firebase JSON database to Hasura GraphQL Engine with admin secret
+firebase2graphql https://hge.herokuapp.com --db=./path/to/db.json -s <admin-secret>
 
 # Import data from a Firebase JSON database to Hasura GraphQL Engine while normalizing it
-json2graphql https://hge.herokuapp.com --db=./path/to/db.json -n
+firebase2graphql https://hge.herokuapp.com --db=./path/to/db.json -n
 `;
 
-Firebase2GraphQL.usage = 'URL [-k KEY]';
+Firebase2GraphQL.usage = 'URL [-s SECRET]';
 
 Firebase2GraphQL.flags = {
   // add --version flag to show CLI version
@@ -88,15 +95,21 @@ Firebase2GraphQL.flags = {
   // add --help flag to show CLI version
   help: flags.help({char: 'h'}),
 
+  // Admin secret to Hasura GraphQL Engine
+  'admin-secret': flags.string({
+    char: 's',
+    description: 'Admin secret to Hasura GraphQL Engine (X-Hasura-Admin-Secret). Use the flag --access-key if GraphQL Engine version is older than v1.0.0-alpha38',
+  }),
+
   // Access key to Hasura GraphQL Engine
   'access-key': flags.string({
     char: 'k',
-    description: 'Access key to Hasura GraphQL Engine (X-Hasura-Access-Key)',
+    description: 'Access key to Hasura GraphQL Engine (X-Hasura-Access-Key). Use the flag --admin-secret if GraphQL Engine version is greater than v1.0.0-alpha37',
   }),
 
   db: flags.string({
     char: 'd',
-    description: 'Path to the .js files that exports a JSON database',
+    description: 'Path to the .js files that exports a firebase JSON database',
   }),
 
   normalize: flags.boolean({

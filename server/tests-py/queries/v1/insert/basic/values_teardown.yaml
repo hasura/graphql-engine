@@ -1,0 +1,15 @@
+type: bulk
+args:
+
+- type: run_sql
+  args:
+    sql: |
+      delete from article;
+      select setval('article_id_seq', 1, false);
+
+      delete from author;
+      select setval('author_id_seq', 1, false);
+
+      delete from orders;
+      select setval('orders_id_seq', 1, false);
+    cascade: true

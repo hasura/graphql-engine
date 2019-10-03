@@ -1,0 +1,33 @@
+- description: Inserts persons data via GraphQL mutation (without variables)
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      insert_person:
+        returning:
+        - details:
+          - name:
+              last: jaha
+              first: thelonious
+          - name:
+              last: griffin
+              first: clarke
+
+  query:
+    query: |
+      mutation insert_person{
+        insert_person(
+          objects: [
+            {
+              details: [
+                  {name: {first: thelonious last: jaha}},
+                  {name: {first: clarke last: griffin}}
+                ]
+            }
+          ]
+        ) {
+          returning {
+            details
+          }
+        }
+      }

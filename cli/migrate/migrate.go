@@ -91,6 +91,8 @@ type Migrate struct {
 	isCMD bool
 
 	status *Status
+
+	SkipExecution bool
 }
 
 // New returns a new Migrate instance from a source URL and a database URL.
@@ -117,6 +119,7 @@ func New(sourceUrl string, databaseUrl string, cmd bool, logger *log.Logger) (*M
 	if logger == nil {
 		logger = log.New()
 	}
+	m.Logger = logger
 
 	sourceDrv, err := source.Open(sourceUrl, logger)
 	if err != nil {
@@ -148,19 +151,17 @@ func newCommon(cmd bool) *Migrate {
 }
 
 func (m *Migrate) ReScan() error {
-	sourceDrv, err := source.Open(m.sourceURL, m.Logger)
+	err := m.sourceDrv.Scan()
 	if err != nil {
 		m.Logger.Debug(err)
 		return err
 	}
-	m.sourceDrv = sourceDrv
 
-	databaseDrv, err := database.Open(m.databaseURL, m.isCMD, m.Logger)
+	err = m.databaseDrv.Scan()
 	if err != nil {
 		m.Logger.Debug(err)
 		return err
 	}
-	m.databaseDrv = databaseDrv
 
 	err = m.calculateStatus()
 	if err != nil {
@@ -318,6 +319,10 @@ func (m *Migrate) ReloadMetadata() error {
 
 func (m *Migrate) ApplyMetadata(data interface{}) error {
 	return m.databaseDrv.ApplyMetadata(data)
+}
+
+func (m *Migrate) ExportSchemaDump(schemName []string) ([]byte, error) {
+	return m.databaseDrv.ExportSchemaDump(schemName)
 }
 
 func (m *Migrate) Query(data []interface{}) error {
@@ -801,8 +806,10 @@ func (m *Migrate) runMigrations(ret <-chan interface{}) error {
 		case *Migration:
 			migr := r.(*Migration)
 			if migr.Body != nil {
-				if err := m.databaseDrv.Run(migr.BufferedBody, migr.FileType); err != nil {
-					return err
+				if !m.SkipExecution {
+					if err := m.databaseDrv.Run(migr.BufferedBody, migr.FileType, migr.FileName); err != nil {
+						return err
+					}
 				}
 
 				version := int64(migr.Version)
@@ -1088,11 +1095,13 @@ func (m *Migrate) unlock() error {
 	m.isLockedMu.Lock()
 	defer m.isLockedMu.Unlock()
 
+	defer func() {
+		m.isLocked = false
+	}()
+
 	if err := m.databaseDrv.UnLock(); err != nil {
 		return err
 	}
-
-	m.isLocked = false
 	return nil
 }
 

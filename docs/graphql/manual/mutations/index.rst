@@ -1,30 +1,23 @@
 Mutations
 =========
-GraphQL mutations are used to modify server-side data (i.e. write, update or delete data). As with queries, mutation
-fields are auto-generated based on the Postgres schema. Here’s a sample mutation field from our reference
-author/article schema:
 
-.. code-block:: graphql
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
 
-  insert_article (
-    objects: [article_insert_input!]!
-    on_conflict: article_on_conflict
-  ): article_mutation_response
+GraphQL mutations are used to modify data on the server (i.e. write, update or delete data).
 
-  # response of any mutation on the table "article"
-  type article_mutation_response {
-    # number of affected rows by the mutation
-    affected_rows: Int!
-    #data of the affected rows by the mutation
-    returning: [author!]!
-  }
+Hasura GraphQL engine auto-generates mutations as part of the GraphQL schema from your Postgres schema model.
 
-As you can see from the schema, you can:
+Data of all tables in the database tracked by the GraphQL engine can be modified over the GraphQL endpoint.
+If you have a tracked table in your database, its insert/update/delete mutation fields are added as nested
+fields under the  ``mutation_root`` root level type.
 
-#. Pass multiple objects to the mutation.
-#. Return objects (with nested objects) from the affected rows in the response.
+Types of mutation requests
+--------------------------
 
-Let's use this reference author/article schema to look at different types of mutations.
+The following types of mutation requests are possible:
 
 .. toctree::
   :maxdepth: 1

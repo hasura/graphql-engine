@@ -32,10 +32,15 @@ if [ -z "$MESSAGE" ]; then
 fi
 
 # replace the image version with latest tag for all references in install-manifests
-find "$ROOT/install-manifests" -type f -exec sed -i -E 's#(hasura/graphql-engine:)v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(\-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?( \\)*$#\1'"${TAG}"'\9#' {} \;
+find "$ROOT/install-manifests" \
+     "$ROOT/scripts/cli-migrations" \
+     -type f -exec sed -i -E \
+     's#(hasura/graphql-engine:)v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(\-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(.*)*$#\1'"${TAG}"'\9#' {} \;
 
-git add "$ROOT/install-manifests"
-git commit -m "update installation manifests to $TAG"
+git add "$ROOT/install-manifests" \
+        "$ROOT/scripts/cli-migrations"
+
+git commit -m "update manifests to $TAG"
 
 git tag -a "$TAG" -m "$MESSAGE"
 

@@ -1,12 +1,13 @@
 description: Upsert author (do nothing) and it's articles (Error)
-url: /v1alpha1/graphql
-status: 400
+url: /v1/graphql
+status: 200
 query:
   query: |
    mutation nested_author_insert {
       insert_author(
         objects: [
           {
+            id: 1,
             name: "Author 1", 
             articles: {
               data: [

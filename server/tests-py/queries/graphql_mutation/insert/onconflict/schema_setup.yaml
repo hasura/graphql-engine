@@ -1,0 +1,79 @@
+type: bulk
+args:
+
+#Author table
+- type: run_sql
+  args:
+    sql: |
+      create table author(
+          id serial primary key,
+          name text unique
+      );
+- type: track_table
+  args:
+    schema: public
+    name: author
+
+#Article table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE article (
+        id SERIAL PRIMARY KEY,
+        title TEXT,
+        content TEXT,
+        author_id INTEGER REFERENCES author(id),
+        is_published BOOLEAN,
+        published_on TIMESTAMP
+      )
+- type: track_table
+  args:
+    schema: public
+    name: article
+
+#Person table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE person (
+        id SERIAL PRIMARY KEY,
+        details JSONB NOT NULL
+      )
+- type: track_table
+  args:
+    schema: public
+    name: person
+
+#Order table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE orders (
+        id SERIAL PRIMARY KEY,
+        placed TIMESTAMPTZ NOT NULL,
+        shipped TIMESTAMPTZ
+      )
+- type: track_table
+  args:
+    schema: public
+    name: orders
+
+
+#Object relationship
+- type: create_object_relationship
+  args:
+    table: article
+    name: author
+    using:
+      foreign_key_constraint_on: author_id
+
+#Array relationship
+- type: create_array_relationship
+  args:
+    table: author
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: author_id
+

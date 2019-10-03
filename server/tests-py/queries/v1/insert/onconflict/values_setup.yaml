@@ -1,0 +1,23 @@
+type: bulk
+args:
+
+#Insert Author table data
+- type: insert
+  args:
+    table: author
+    objects:
+      - name: Author 1
+      - name: Author 2
+
+#Insert aticle table data
+- type: insert
+  args:
+    table: article
+    objects:
+    - content: Sample article content
+      title: Article 1
+    - content: Sample article content
+      title: Article 2
+    - content: Sample article content
+      title: Article 3
+

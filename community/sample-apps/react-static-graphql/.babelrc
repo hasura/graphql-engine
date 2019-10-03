@@ -1,0 +1,3 @@
+{
+  "presets": ["react-static/babel-preset.js"]
+}

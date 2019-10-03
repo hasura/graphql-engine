@@ -1,0 +1,31 @@
+type: bulk
+args:
+
+#Insert Author table data
+- type: insert
+  args:
+    table: author
+    objects:
+      - name: Author 1
+      - name: Author 2
+
+#Insert Person table data
+- type: insert
+  args:
+    table: person
+    objects:
+    - details:
+        name:
+          first: foo
+          last: bar
+        address: foobar
+
+#Insert Products table data
+- type: insert
+  args:
+    table: products
+    objects:
+      - name: Product 1
+        price: 5
+      - name: Product 2
+        price: 15

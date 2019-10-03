@@ -49,6 +49,8 @@ type Driver interface {
 	// Migrate will call this function only once per instance.
 	Close() error
 
+	Scan() error
+
 	// Lock should acquire a database lock so that only one migration process
 	// can run at a time. Migrate will call this function before Run is called.
 	// If the implementation can't provide this functionality, return nil.
@@ -60,7 +62,7 @@ type Driver interface {
 	UnLock() error
 
 	// Run applies a migration to the database. migration is garantueed to be not nil.
-	Run(migration io.Reader, fileType string) error
+	Run(migration io.Reader, fileType, fileName string) error
 
 	// Reset Migration Query Args
 	ResetQuery()
@@ -105,6 +107,8 @@ type Driver interface {
 	SettingsDriver
 
 	MetadataDriver
+
+	SchemaDriver
 }
 
 // Open returns a new driver instance.

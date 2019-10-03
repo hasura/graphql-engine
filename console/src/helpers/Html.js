@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
+import { env } from './localDev';
 /**
  * Wrapper component containing HTML metadata and boilerplate tags.
  * Used in server-side code only to wrap the string output of the
@@ -20,12 +21,10 @@ export default class Html extends Component {
   render() {
     const { assets } = this.props;
     const head = Helmet.rewind();
-
     return (
       <html lang="en-us">
         <head>
-          <link rel="icon" type="image/png" href="/rstatic/favicon.png" />
-
+          <link rel="icon" type="image/png" href="/rstatic/favicon_green.png" />
           {Object.keys(assets.styles).map((style, key) => (
             <link
               href={assets.styles[style]}
@@ -39,17 +38,7 @@ export default class Html extends Component {
 
           <script
             dangerouslySetInnerHTML={{
-              __html: `window.__env={
-                apiHost: '${process.env.API_HOST}',
-                apiPort: '${process.env.API_PORT}',
-                dataApiUrl: '${process.env.DATA_API_URL}',
-                devDataApiUrl: '${process.env.DEV_DATA_API_URL}',
-                accessKey: '${process.env.ACCESS_KEY}',
-                isAccessKeySet: ${process.env.IS_ACCESS_KEY_SET},
-                consoleMode: '${process.env.CONSOLE_MODE}',
-                nodeEnv: '${process.env.NODE_ENV}',
-                urlPrefix: '${process.env.URL_PREFIX}'
-              };`,
+              __html: env,
             }}
           />
         </head>
@@ -94,6 +83,10 @@ export default class Html extends Component {
 
           <div id="content" className="content" />
           <script src={assets.javascript.main} charSet="UTF-8" />
+          {/*
+          <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.13.1/build/highlight.min.js" />
+          <script type="text/javascript" src="https://unpkg.com/sql-formatter@latest/dist/sql-formatter.min.js" />
+          */}
         </body>
       </html>
     );

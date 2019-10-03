@@ -1,8 +1,3 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
-
 module Hasura.GraphQL.Validate.Field
   ( ArgsMap
   , Field(..)
@@ -31,7 +26,7 @@ import           Hasura.SQL.Value
 
 -- data ScalarInfo
 --   = SIBuiltin !GBuiltin
---   | SICustom !PGColType
+--   | SICustom !PGScalarType
 --   deriving (Show, Eq)
 
 -- data GBuiltin
@@ -48,7 +43,7 @@ data TypedOperation
   , _toSelectionSet :: ![Field]
   } deriving (Show, Eq)
 
-type ArgsMap = Map.HashMap G.Name AnnGValue
+type ArgsMap = Map.HashMap G.Name AnnInpVal
 
 type SelSet = Seq.Seq Field
 
@@ -145,7 +140,7 @@ withDirectives dirs act = do
     getIfArg m = do
       val <- onNothing (Map.lookup "if" m) $ throw500
               "missing if argument in the directive"
-      case val of
+      case _aivValue val of
         AGScalar _ (Just (PGValBoolean v)) -> return v
         _ -> throw500 "did not find boolean scalar for if argument"
 
@@ -174,7 +169,7 @@ processArgs
      , MonadError QErr m)
   => ParamMap
   -> [G.Argument]
-  -> m (Map.HashMap G.Name AnnGValue)
+  -> m ArgsMap
 processArgs fldParams argsL = do
 
   args <- onLeft (mkMapWith G._aName argsL) $ \dups ->

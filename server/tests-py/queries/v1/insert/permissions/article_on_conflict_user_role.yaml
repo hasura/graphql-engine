@@ -1,9 +1,9 @@
 description: Upserts article data via GraphQL mutation as User role
 url: /v1/query
 status: 200
-header:
+headers:
   X-Hasura-Role: user
-  X-Hasura-User-Id: 1
+  X-Hasura-User-Id: '1'
 response:
   affected_rows: 1
   returning:
@@ -16,9 +16,9 @@ query:
     objects:
     - content: Updated Article 1 content
       id: 1
+      author_id: 1
     on_conflict:
-      constraint_on:
-      - id
+      constraint: article_pkey
       action: update
     returning:
     - content

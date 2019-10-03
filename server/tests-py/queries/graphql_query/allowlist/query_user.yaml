@@ -1,0 +1,23 @@
+description: Query data from user table
+url: /v1/graphql
+status: 200
+headers:
+  X-Hasura-Role: user
+response:
+  data:
+    user:
+    - id: 1
+      name: clarke
+      company: Symons
+    - id: 2
+      name: reckler
+      company:
+query:
+  query: |
+    query {
+      user{
+        id
+        name
+        company
+      }
+    }

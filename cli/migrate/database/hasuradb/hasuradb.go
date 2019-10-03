@@ -14,6 +14,7 @@ import (
 
 	yaml "github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli/migrate/database"
+	"github.com/oliveagle/jsonpath"
 	"github.com/parnurzeal/gorequest"
 	log "github.com/sirupsen/logrus"
 )
@@ -38,7 +39,8 @@ var (
 type Config struct {
 	MigrationsTable string
 	SettingsTable   string
-	URL             *nurl.URL
+	v1URL           *nurl.URL
+	schemDumpURL    *nurl.URL
 	Headers         map[string]string
 	isCMD           bool
 }
@@ -48,6 +50,7 @@ type HasuraDB struct {
 	settings       []database.Setting
 	migrations     *database.Migrations
 	migrationQuery HasuraInterfaceBulk
+	jsonPath       map[string]string
 	isLocked       bool
 	logger         *log.Logger
 }
@@ -75,7 +78,7 @@ func WithInstance(config *Config, logger *log.Logger) (database.Driver, error) {
 		return nil, err
 	}
 
-	err := hx.getVersions()
+	err := hx.Scan()
 	if err != nil {
 		return nil, err
 	}
@@ -115,10 +118,15 @@ func (h *HasuraDB) Open(url string, isCMD bool, logger *log.Logger) (database.Dr
 	hx, err := WithInstance(&Config{
 		MigrationsTable: DefaultMigrationsTable,
 		SettingsTable:   DefaultSettingsTable,
-		URL: &nurl.URL{
+		v1URL: &nurl.URL{
 			Scheme: scheme,
 			Host:   hurl.Host,
 			Path:   path.Join(hurl.Path, "v1/query"),
+		},
+		schemDumpURL: &nurl.URL{
+			Scheme: scheme,
+			Host:   hurl.Host,
+			Path:   path.Join(hurl.Path, "v1alpha1/pg_dump"),
 		},
 		isCMD:   isCMD,
 		Headers: headers,
@@ -137,6 +145,11 @@ func (h *HasuraDB) Close() error {
 	return nil
 }
 
+func (h *HasuraDB) Scan() error {
+	h.migrations = database.NewMigrations()
+	return h.getVersions()
+}
+
 func (h *HasuraDB) Lock() error {
 	if h.isLocked {
 		return database.ErrLocked
@@ -146,6 +159,7 @@ func (h *HasuraDB) Lock() error {
 		Type: "bulk",
 		Args: make([]interface{}, 0),
 	}
+	h.jsonPath = make(map[string]string)
 	h.isLocked = true
 	return nil
 }
@@ -155,11 +169,15 @@ func (h *HasuraDB) UnLock() error {
 		return nil
 	}
 
+	defer func() {
+		h.isLocked = false
+	}()
+
 	if len(h.migrationQuery.Args) == 0 {
 		return nil
 	}
 
-	resp, body, err := h.sendQuery(h.migrationQuery)
+	resp, body, err := h.sendv1Query(h.migrationQuery)
 	if err != nil {
 		return err
 	}
@@ -173,23 +191,41 @@ func (h *HasuraDB) UnLock() error {
 
 		// Handle migration version here
 		if horror.Path != "" {
+			jsonData, err := json.Marshal(h.migrationQuery)
+			if err != nil {
+				return err
+			}
+			var migrationQuery interface{}
+			err = json.Unmarshal(jsonData, &migrationQuery)
+			if err != nil {
+				return err
+			}
+			res, err := jsonpath.JsonPathLookup(migrationQuery, horror.Path)
+			if err == nil {
+				queryData, err := json.MarshalIndent(res, "", "    ")
+				if err != nil {
+					return err
+				}
+				horror.migrationQuery = string(queryData)
+			}
 			re1, err := regexp.Compile(`\$.args\[([0-9]+)\]*`)
 			if err != nil {
 				return err
 			}
-
 			result := re1.FindAllStringSubmatch(horror.Path, -1)
 			if len(result) != 0 {
-
+				migrationNumber, ok := h.jsonPath[result[0][1]]
+				if ok {
+					horror.migrationFile = migrationNumber
+				}
 			}
 		}
 		return horror.Error(h.config.isCMD)
 	}
-	h.isLocked = false
 	return nil
 }
 
-func (h *HasuraDB) Run(migration io.Reader, fileType string) error {
+func (h *HasuraDB) Run(migration io.Reader, fileType, fileName string) error {
 	migr, err := ioutil.ReadAll(migration)
 	if err != nil {
 		return err
@@ -207,6 +243,7 @@ func (h *HasuraDB) Run(migration io.Reader, fileType string) error {
 			},
 		}
 		h.migrationQuery.Args = append(h.migrationQuery.Args, t)
+		h.jsonPath[fmt.Sprintf("%d", len(h.migrationQuery.Args)-1)] = fileName
 
 	case "meta":
 		var t []interface{}
@@ -218,6 +255,7 @@ func (h *HasuraDB) Run(migration io.Reader, fileType string) error {
 
 		for _, v := range t {
 			h.migrationQuery.Args = append(h.migrationQuery.Args, v)
+			h.jsonPath[fmt.Sprintf("%d", len(h.migrationQuery.Args)-1)] = fileName
 		}
 	}
 	return nil
@@ -259,7 +297,7 @@ func (h *HasuraDB) getVersions() (err error) {
 	}
 
 	// Send Query
-	resp, body, err := h.sendQuery(query)
+	resp, body, err := h.sendv1Query(query)
 	if err != nil {
 		return err
 	}
@@ -344,7 +382,7 @@ func (h *HasuraDB) Reset() error {
 		},
 	}
 
-	resp, body, err := h.sendQuery(query)
+	resp, body, err := h.sendv1Query(query)
 	if err != nil {
 		return err
 	}
@@ -377,7 +415,7 @@ func (h *HasuraDB) ensureVersionTable() error {
 		},
 	}
 
-	resp, body, err := h.sendQuery(query)
+	resp, body, err := h.sendv1Query(query)
 	if err != nil {
 		h.logger.Debug(err)
 		return err
@@ -419,7 +457,7 @@ func (h *HasuraDB) ensureVersionTable() error {
 		},
 	}
 
-	resp, body, err = h.sendQuery(query)
+	resp, body, err = h.sendv1Query(query)
 	if err != nil {
 		return err
 	}
@@ -445,10 +483,30 @@ func (h *HasuraDB) ensureVersionTable() error {
 	return nil
 }
 
-func (h *HasuraDB) sendQuery(m interface{}) (resp *http.Response, body []byte, err error) {
+func (h *HasuraDB) sendv1Query(m interface{}) (resp *http.Response, body []byte, err error) {
 	request := gorequest.New()
 
-	request = request.Post(h.config.URL.String()).Send(m)
+	request = request.Post(h.config.v1URL.String()).Send(m)
+
+	for headerName, headerValue := range h.config.Headers {
+		request.Set(headerName, headerValue)
+	}
+
+	resp, body, errs := request.EndBytes()
+
+	if len(errs) == 0 {
+		err = nil
+	} else {
+		err = errs[0]
+	}
+
+	return resp, body, err
+}
+
+func (h *HasuraDB) sendSchemaDumpQuery(m interface{}) (resp *http.Response, body []byte, err error) {
+	request := gorequest.New()
+
+	request = request.Post(h.config.schemDumpURL.String()).Send(m)
 
 	for headerName, headerValue := range h.config.Headers {
 		request.Set(headerName, headerValue)

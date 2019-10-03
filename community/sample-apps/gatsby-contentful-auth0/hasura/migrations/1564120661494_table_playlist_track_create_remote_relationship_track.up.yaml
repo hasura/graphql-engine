@@ -1,0 +1,14 @@
+- args:
+    hasura_fields:
+    - track_id
+    name: track
+    remote_field:
+      tracksCollection:
+        arguments:
+          where:
+            id: $track_id
+    remote_schema: contentful
+    table:
+      name: playlist_track
+      schema: public
+  type: create_remote_relationship

@@ -6,8 +6,9 @@ import { findTableFromRel } from '../utils';
 import {
   showSuccessNotification,
   showErrorNotification,
-} from '../Notification';
+} from '../../Common/Notification';
 import dataHeaders from '../Common/Headers';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 /* ****************** View actions *************/
 const V_SET_DEFAULTS = 'ProcessedEvents/V_SET_DEFAULTS';
@@ -17,7 +18,6 @@ const V_EXPAND_REL = 'ProcessedEvents/V_EXPAND_REL';
 const V_CLOSE_REL = 'ProcessedEvents/V_CLOSE_REL';
 const V_SET_ACTIVE = 'ProcessedEvents/V_SET_ACTIVE';
 const V_SET_QUERY_OPTS = 'ProcessedEvents/V_SET_QUERY_OPTS';
-const V_REQUEST_PROGRESS = 'ProcessedEvents/V_REQUEST_PROGRESS';
 const V_EXPAND_ROW = 'ProcessedEvents/V_EXPAND_ROW';
 const V_COLLAPSE_ROW = 'ProcessedEvents/V_COLLAPSE_ROW';
 // const V_ADD_WHERE;
@@ -45,10 +45,6 @@ const vMakeRequest = () => {
     const state = getState();
     const url = Endpoints.query;
     const originalTrigger = getState().triggers.currentTrigger;
-    const triggerList = getState().triggers.triggerList;
-    const triggerSchema = triggerList.filter(t => t.name === originalTrigger);
-    const triggerId = triggerSchema[0].id;
-    dispatch({ type: V_REQUEST_PROGRESS, data: true });
     const currentQuery = JSON.parse(JSON.stringify(state.triggers.view.query));
     // count query
     const countQuery = JSON.parse(JSON.stringify(state.triggers.view.query));
@@ -66,7 +62,7 @@ const vMakeRequest = () => {
       currentQuery.columns[1].where = { $and: finalAndClause };
       currentQuery.where = { name: state.triggers.currentTrigger };
       countQuery.where.$and.push({
-        trigger_name: state.triggers.currentTrigger,
+        trigger_name: originalTrigger,
       });
     } else {
       // reset where for events
@@ -78,7 +74,7 @@ const vMakeRequest = () => {
       currentQuery.where = { name: state.triggers.currentTrigger };
       countQuery.where = {
         $and: [
-          { trigger_id: triggerId },
+          { trigger_name: state.triggers.currentTrigger },
           { $or: [{ delivered: { $eq: true } }, { error: { $eq: true } }] },
         ],
       };
@@ -152,7 +148,6 @@ const vMakeRequest = () => {
               data: data[0],
               count: data[1].count,
             }),
-            dispatch({ type: V_REQUEST_PROGRESS, data: false }),
           ]);
         }
       },
@@ -165,10 +160,12 @@ const vMakeRequest = () => {
 
 const deleteItem = pkClause => {
   return (dispatch, getState) => {
-    const isOk = confirm('Permanently delete this row?');
+    const confirmMessage = 'This will permanently delete this row';
+    const isOk = getConfirmation(confirmMessage);
     if (!isOk) {
       return;
     }
+
     const state = getState();
     const url = Endpoints.query;
     const reqBody = {
@@ -198,9 +195,7 @@ const deleteItem = pkClause => {
         );
       },
       err => {
-        dispatch(
-          showErrorNotification('Deleting row failed!', err.error, reqBody, err)
-        );
+        dispatch(showErrorNotification('Deleting row failed!', err.error, err));
       }
     );
   };
@@ -513,8 +508,6 @@ const processedEventsReducer = (
       };
     case V_REQUEST_SUCCESS:
       return { ...viewState, rows: action.data, count: action.count };
-    case V_REQUEST_PROGRESS:
-      return { ...viewState, isProgressing: action.data };
     case V_EXPAND_ROW:
       return {
         ...viewState,

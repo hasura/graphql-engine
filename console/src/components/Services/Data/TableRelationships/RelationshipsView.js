@@ -1,96 +1,23 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import ViewHeader from '../TableBrowseRows/ViewHeader';
+import TableHeader from '../TableCommon/TableHeader';
 import { RESET } from '../TableModify/ModifyActions';
-import { deleteRelMigrate, addNewRelClicked } from './Actions';
 import { findAllFromRel } from '../utils';
+import { getObjArrRelList } from './utils';
 import { setTable, UPDATE_REMOTE_SCHEMA_MANUAL_REL } from '../DataActions';
-
-import AddRelationship from './AddManualRelationship';
-
-/* Gets the complete list of relationships and converts it to a list of object, which looks like so :
-{
-objRel: {objectRelationship},
-arrRel: {arrayRelationship}
-} */
-const getObjArrayRelationshipList = relationships => {
-  const objRels = relationships.filter(r => r.rel_type === 'object');
-  const arrRels = relationships.filter(r => r.rel_type !== 'object');
-  const requiredList = [];
-  const length =
-    objRels.length > arrRels.length ? objRels.length : arrRels.length;
-  for (let i = 0; i < length; i++) {
-    const objRel = objRels[i] ? objRels[i] : null;
-    const arrRel = arrRels[i] ? arrRels[i] : null;
-    requiredList.push({
-      objRel,
-      arrRel,
-    });
-  }
-  return requiredList;
-};
-
-/* This function sets the styling to the way the relationship looks, for eg: id -> user::user_id */
-const getRelationshipLine = (isObjRel, lcol, rcol, rTable) => {
-  const getGrayText = value => <i>{value}</i>;
-  return isObjRel ? (
-    <span>
-      &nbsp;
-      {getGrayText(lcol)}
-      &nbsp;&nbsp;&rarr;&nbsp;&nbsp;
-      {rTable} :: {rcol}
-    </span>
-  ) : (
-    <span>
-      &nbsp;
-      {rTable.name} :: {rcol}
-      &nbsp;&nbsp;&rarr;&nbsp;&nbsp;
-      {getGrayText(lcol)}
-    </span>
-  );
-};
-
-const relationshipView = (
-  dispatch,
-  tableName,
-  relName,
-  { lcol, rtable, rcol },
-  isObjRel,
-  tableStyles
-) => {
-  const onDelete = e => {
-    e.preventDefault();
-    const isOk = confirm('Are you sure?');
-    if (isOk) {
-      dispatch(
-        deleteRelMigrate(tableName, relName, lcol, rtable, rcol, isObjRel)
-      );
-    }
-  };
-  return (
-    <td>
-      <div>
-        <button className="btn btn-sm btn-danger" onClick={onDelete}>
-          Remove
-        </button>
-        &nbsp;
-        <b>{relName}</b>
-        <div className={tableStyles.relationshipTopPadding}>
-          {getRelationshipLine(isObjRel, lcol, rcol, rtable)}
-        </div>
-      </div>
-    </td>
-  );
-};
+import AddManualRelationship from './AddManualRelationship';
+import RelationshipEditor from './RelationshipEditor';
+import { NotFoundError } from '../../../Error/PageNotFound';
 
 class RelationshipsView extends Component {
   componentDidMount() {
-    this.props.dispatch({ type: RESET });
-    this.props.dispatch(setTable(this.props.tableName));
+    const { dispatch, currentSchema, tableName } = this.props;
+    dispatch({ type: RESET });
+    dispatch(setTable(tableName));
     // Sourcing the current schema into manual relationship
-    this.props.dispatch({
+    dispatch({
       type: UPDATE_REMOTE_SCHEMA_MANUAL_REL,
-      data: this.props.currentSchema,
+      data: currentSchema,
     });
   }
 
@@ -103,15 +30,23 @@ class RelationshipsView extends Component {
       lastFormError,
       lastSuccess,
       dispatch,
-      relAdd,
+      manualRelAdd,
       currentSchema,
       migrationMode,
       schemaList,
     } = this.props;
-    const styles = require('../TableModify/Modify.scss');
-    const tableStyles = require('../TableCommon/TableStyles.scss');
+    const styles = require('../TableModify/ModifyTable.scss');
+    const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
 
-    const tableSchema = allSchemas.find(t => t.table_name === tableName);
+    const tableSchema = allSchemas.find(
+      t => t.table_name === tableName && t.table_schema === currentSchema
+    );
+
+    if (!tableSchema) {
+      // throw a 404 exception
+      throw new NotFoundError();
+    }
+
     let alert = null;
     if (ongoingRequest) {
       alert = (
@@ -139,8 +74,11 @@ class RelationshipsView extends Component {
       );
     }
 
-    const addedRelationshipsView =
-      getObjArrayRelationshipList(tableSchema.relationships).length > 0 ? (
+    const objArrRelList = getObjArrRelList(tableSchema.relationships);
+
+    let addedRelationshipsView = null;
+    if (objArrRelList.length > 0) {
+      addedRelationshipsView = (
         <div className={tableStyles.tableContainer}>
           <table
             className={`${
@@ -155,53 +93,52 @@ class RelationshipsView extends Component {
               </tr>
             </thead>
             <tbody>
-              {getObjArrayRelationshipList(tableSchema.relationships).map(
-                (rel, i) => {
-                  const column1 = rel.objRel ? (
-                    relationshipView(
-                      dispatch,
-                      tableName,
-                      rel.objRel.rel_name,
-                      findAllFromRel(allSchemas, tableSchema, rel.objRel),
-                      true,
-                      tableStyles
-                    )
-                  ) : (
-                    <td />
-                  );
-                  const column2 = rel.arrRel ? (
-                    relationshipView(
-                      dispatch,
-                      tableName,
-                      rel.arrRel.rel_name,
-                      findAllFromRel(allSchemas, tableSchema, rel.arrRel),
-                      false,
-                      tableStyles
-                    )
-                  ) : (
-                    <td />
-                  );
-                  return (
-                    <tr key={i}>
-                      {column1}
-                      {column2}
-                    </tr>
-                  );
-                }
-              )}
+              {objArrRelList.map(rel => {
+                const column1 = rel.objRel ? (
+                  <RelationshipEditor
+                    dispatch={dispatch}
+                    key={rel.objRel.rel_name}
+                    relConfig={findAllFromRel(
+                      allSchemas,
+                      tableSchema,
+                      rel.objRel
+                    )}
+                  />
+                ) : (
+                  <td />
+                );
+                const column2 = rel.arrRel ? (
+                  <RelationshipEditor
+                    key={rel.arrRel.rel_name}
+                    dispatch={dispatch}
+                    relConfig={findAllFromRel(
+                      allSchemas,
+                      tableSchema,
+                      rel.arrRel
+                    )}
+                  />
+                ) : (
+                  <td />
+                );
+                return (
+                  <tr>
+                    {column1}
+                    {column2}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
-      ) : null;
+      );
+    }
 
-    // if (tableSchema.primary_key.columns > 0) {}
     return (
       <div className={`${styles.container} container-fluid`}>
-        <ViewHeader
+        <TableHeader
           dispatch={dispatch}
-          tableName={tableName}
+          table={tableSchema}
           tabName="relationships"
-          currentSchema={currentSchema}
           migrationMode={migrationMode}
         />
         <br />
@@ -210,36 +147,13 @@ class RelationshipsView extends Component {
             <h4 className={styles.subheading_text}>Relationships</h4>
             {addedRelationshipsView}
             <br />
-            {relAdd.isActive ? (
-              <div className={styles.activeEdit}>
-                <AddRelationship
-                  tableName={tableName}
-                  isObjRel={relAdd.isObjRel}
-                  rTable={relAdd.rTable}
-                  dispatch={dispatch}
-                  lcol={relAdd.lcol}
-                  rcol={relAdd.rcol}
-                  allSchemas={allSchemas}
-                  schemaList={schemaList}
-                  manualRelInfo={relAdd.manualRelInfo}
-                  manualColumns={relAdd.manualColumns}
-                  titleInfo={'Add new relationship'}
-                  currentSchema={currentSchema}
-                  showClose={false}
-                  dataTestVal={'view-add-relationship'}
-                />
-              </div>
-            ) : (
-              <button
-                type="submit"
-                className="btn btn-sm btn-default"
-                onClick={() => {
-                  dispatch(addNewRelClicked());
-                }}
-              >
-                + Add relationship
-              </button>
-            )}
+            <AddManualRelationship
+              tableSchema={tableSchema}
+              allSchemas={allSchemas}
+              schemaList={schemaList}
+              relAdd={manualRelAdd}
+              dispatch={dispatch}
+            />
             <hr />
           </div>
         </div>
@@ -254,13 +168,13 @@ RelationshipsView.propTypes = {
   allSchemas: PropTypes.array.isRequired,
   currentSchema: PropTypes.string.isRequired,
   activeEdit: PropTypes.object.isRequired,
-  fkAdd: PropTypes.object.isRequired,
-  relAdd: PropTypes.object.isRequired,
+  manualRelAdd: PropTypes.object.isRequired,
   ongoingRequest: PropTypes.bool.isRequired,
   lastError: PropTypes.object,
   lastFormError: PropTypes.object,
   lastSuccess: PropTypes.bool,
   dispatch: PropTypes.func.isRequired,
+  serverVersion: PropTypes.string,
 };
 
 const mapStateToProps = (state, ownProps) => ({
@@ -268,6 +182,7 @@ const mapStateToProps = (state, ownProps) => ({
   allSchemas: state.tables.allSchemas,
   currentSchema: state.tables.currentSchema,
   migrationMode: state.main.migrationMode,
+  serverVersion: state.main.serverVersion,
   schemaList: state.tables.schemaList,
   ...state.tables.modify,
 });

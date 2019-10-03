@@ -1,6 +1,6 @@
 description: Insert into order table as user role (Check Constraint Error)
-url: /v1alpha1/graphql
-status: 400
+url: /v1/graphql
+status: 200
 headers:
   X-Hasura-Role: merchant
 query:
@@ -10,8 +10,10 @@ query:
         affected_rows
       }
     }
+
 response:
   errors:
-  - code: validation-failed
-    error: no mutations exist 
-    path: $
+  - extensions:
+      path: $
+      code: validation-failed
+    message: no mutations exist 

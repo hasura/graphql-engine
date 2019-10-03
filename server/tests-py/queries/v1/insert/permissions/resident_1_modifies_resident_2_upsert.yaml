@@ -1,0 +1,26 @@
+description: Resident 1 trying to update Resident 2 age
+url: /v1/query
+status: 200
+headers:
+  X-Hasura-Role: resident
+  X-Hasura-Resident-Id: '1'
+# affects zero rows
+response:
+  returning: []
+  affected_rows: 0
+
+query:
+  type: insert
+  args:
+    table: resident
+    objects:
+    - id: 1
+      name: Resident 2
+      age: 23
+    on_conflict:
+      constraint: resident_name_key
+      action: update
+    returning:
+    - id
+    - name
+    - age

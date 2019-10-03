@@ -1,0 +1,26 @@
+type: bulk
+args:
+
+#Insert Person table data
+- type: insert
+  args:
+    table: person
+    objects:
+    - details:
+        name:
+          first: John
+          last: Taylor
+    - details:
+        - address:
+            city: Copenhagen
+            country: Denmark
+        - address:
+            city: Canterbury
+            country: United Kingdom
+    - details:
+        address:
+          city: Copenhagen
+          country: Denmark
+        name:
+          first: Robert
+          last: Wilson

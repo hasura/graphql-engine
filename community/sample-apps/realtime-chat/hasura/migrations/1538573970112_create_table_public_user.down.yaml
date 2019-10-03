@@ -1,0 +1,3 @@
+- args:
+    sql: DROP TABLE public."user"
+  type: run_sql

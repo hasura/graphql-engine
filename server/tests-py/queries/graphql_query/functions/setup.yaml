@@ -1,0 +1,138 @@
+type: bulk
+args:
+
+#Article table
+- type: run_sql
+  args:
+    sql: |
+      create table post (
+        id serial PRIMARY KEY,
+        title TEXT,
+        content TEXT
+      )
+- type: track_table
+  args:
+    schema: public
+    name: post
+
+#Search post function
+- type: run_sql
+  args:
+    sql: |
+      create function search_posts(search text)
+      returns setof post as $$
+          select *
+          from post
+          where
+          title ilike ('%' || search || '%') or
+          content ilike ('%' || search || '%')
+      $$ language sql stable;
+- type: track_function
+  args:
+    name: search_posts
+    schema: public
+
+#Insert values
+- type: run_sql
+  args:
+    sql: |
+      insert into post (title, content)
+      values
+      ('post by hasura', 'content for post'),
+      ('post by another', 'content for another post')
+
+# Table with uuid column
+- type: run_sql
+  args:
+    sql: |
+      create table test(
+        id serial primary key,
+        name text not null,
+        uuid_col uuid not null
+      );
+
+      insert into test (name, uuid_col) values
+       ('clarke', '8e3e4a14-c831-45a2-9e78-8e86028d1ee5')
+      ,('michael', '8e3e4a14-c831-45a2-9e78-8e86028d1ee5')
+      ,('fitch', '8e3e4a14-c831-45a2-9e78-8e86028d1ee6') ;
+
+      create function get_test(uuid_arg uuid, name_arg text)
+      returns setof test as $$
+      select * from test where uuid_col = uuid_arg and name = name_arg
+      $$ language sql stable;
+
+- type: track_table
+  args:
+    name: test
+    schema: public
+
+- type: track_function
+  args:
+    name: get_test
+    schema: public
+
+# custom add sql function
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE integer_column
+      (
+        result integer
+      );
+
+      CREATE FUNCTION my_add (first integer, second integer DEFAULT 10)
+      RETURNS SETOF integer_column as $$
+        SELECT q.* FROM (VALUES (first + second)) as q
+      $$ LANGUAGE SQL STABLE;
+
+- type: track_table
+  args:
+    name: integer_column
+    schema: public
+
+- type: track_function
+  args:
+    name: my_add
+    schema: public
+
+# test functions having multiple defaults
+- type: run_sql
+  args:
+    sql: |
+       CREATE TABLE "user" (
+         id SERIAL PRIMARY KEY,
+         name TEXT NOT NULL,
+         is_admin BOOLEAN DEFAULT FALSE
+       );
+
+- type: run_sql
+  args:
+    sql: |
+       INSERT INTO "user" (name, is_admin) VALUES
+         ('Starke Blake', true)
+       , ('Bellamy Blake', true)
+       , ('Dora Blake', true)
+       ;
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE FUNCTION get_users(search text, integer default 10, boolean default false)
+      RETURNS SETOF "user" AS $$
+          SELECT *
+          FROM "user"
+          WHERE
+            name ilike ('%' || search || '%')
+            AND is_admin = $3
+          LIMIT $2
+      $$ LANGUAGE sql STABLE;
+
+- type: track_table
+  args:
+    name: user
+    schema: public
+
+- type: track_function
+  args:
+    name: get_users
+    schema: public

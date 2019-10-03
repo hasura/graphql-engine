@@ -1,0 +1,11 @@
+description: Count number of authors
+url: /v1/query
+status: 400
+response:
+  path: $
+  error: expected Object, encountered String
+  code: parse-failed
+query: |
+  type: count
+  args:
+    table: author

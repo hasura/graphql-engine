@@ -1,0 +1,9 @@
+- args:
+    sql: CREATE TABLE public."user"("id" serial NOT NULL, "username" text NOT NULL
+      UNIQUE, "last_typed" timestamptz , "last_seen" timestamptz , PRIMARY KEY ("id")
+      ); COMMENT ON TABLE public."user" IS 'This table stores user data'
+  type: run_sql
+- args:
+    name: user
+    schema: public
+  type: add_existing_table_or_view

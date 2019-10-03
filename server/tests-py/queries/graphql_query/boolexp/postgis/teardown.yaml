@@ -1,0 +1,14 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      DROP TABLE geom_table;
+- type: run_sql
+  args:
+    sql: |
+      DROP TABLE geog_table;
+- type: run_sql
+  args:
+    sql: |
+      DROP TABLE geog_as_geom_table;

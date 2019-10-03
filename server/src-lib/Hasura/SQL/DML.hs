@@ -1,27 +1,23 @@
-{-# LANGUAGE DeriveLift                 #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase                 #-}
-{-# LANGUAGE MultiWayIf                 #-}
-{-# LANGUAGE OverloadedStrings          #-}
-
 module Hasura.SQL.DML where
 
 import           Hasura.Prelude
 import           Hasura.SQL.Types
 
+import           Data.String                (fromString)
 import           Language.Haskell.TH.Syntax (Lift)
 
-import qualified Data.ByteString.Builder    as BB
-import qualified Data.Text.Encoding         as TE
+import qualified Data.Aeson                 as J
+import qualified Data.HashMap.Strict        as HM
 import qualified Data.Text.Extended         as T
+import qualified Text.Builder               as TB
 
 infixr 6 <->
-(<->) :: BB.Builder -> BB.Builder -> BB.Builder
-(<->) l r = l <> BB.char7 ' ' <> r
+(<->) :: TB.Builder -> TB.Builder -> TB.Builder
+(<->) l r = l <> TB.char ' ' <> r
 {-# INLINE (<->) #-}
 
-paren :: BB.Builder -> BB.Builder
-paren t = BB.char7 '(' <> t <> BB.char7 ')'
+paren :: TB.Builder -> TB.Builder
+paren t = TB.char '(' <> t <> TB.char ')'
 {-# INLINE paren #-}
 
 data Select
@@ -35,7 +31,7 @@ data Select
     , selOrderBy  :: !(Maybe OrderByExp)
     , selLimit    :: !(Maybe LimitExp)
     , selOffset   :: !(Maybe OffsetExp)
-    } deriving (Show, Eq)
+    } deriving (Show, Eq, Data)
 
 mkSelect :: Select
 mkSelect = Select Nothing [] Nothing
@@ -44,30 +40,30 @@ mkSelect = Select Nothing [] Nothing
 
 newtype LimitExp
   = LimitExp SQLExp
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data)
 
 instance ToSQL LimitExp where
   toSQL (LimitExp se) =
-    BB.string7 "LIMIT" <-> toSQL se
+    "LIMIT" <-> toSQL se
 
 newtype OffsetExp
   = OffsetExp SQLExp
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data)
 
 instance ToSQL OffsetExp where
   toSQL (OffsetExp se) =
-    BB.string7 "OFFSET" <-> toSQL se
+    "OFFSET" <-> toSQL se
 
 newtype OrderByExp
   = OrderByExp [OrderByItem]
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data)
 
 data OrderByItem
   = OrderByItem
     { oColumn :: !SQLExp
     , oType   :: !(Maybe OrderType)
     , oNulls  :: !(Maybe NullsOrder)
-    } deriving (Show, Eq)
+    } deriving (Show, Eq, Data)
 
 instance ToSQL OrderByItem where
   toSQL (OrderByItem e ot no) =
@@ -75,40 +71,40 @@ instance ToSQL OrderByItem where
 
 data OrderType = OTAsc
                | OTDesc
-               deriving (Show, Eq, Lift)
+               deriving (Show, Eq, Lift, Data)
 
 instance ToSQL OrderType where
-  toSQL OTAsc  = BB.string7 "ASC"
-  toSQL OTDesc = BB.string7 "DESC"
+  toSQL OTAsc  = "ASC"
+  toSQL OTDesc = "DESC"
 
 data NullsOrder
   = NFirst
   | NLast
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq, Lift, Data)
 
 instance ToSQL NullsOrder where
-  toSQL NFirst = BB.string7 "NULLS FIRST"
-  toSQL NLast  = BB.string7 "NULLS LAST"
+  toSQL NFirst = "NULLS FIRST"
+  toSQL NLast  = "NULLS LAST"
 
 instance ToSQL OrderByExp where
   toSQL (OrderByExp l) =
-    BB.string7 "ORDER BY" <-> (", " <+> l)
+    "ORDER BY" <-> (", " <+> l)
 
 newtype GroupByExp
   = GroupByExp [SQLExp]
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data)
 
 instance ToSQL GroupByExp where
   toSQL (GroupByExp idens) =
-    BB.string7 "GROUP BY" <-> (", " <+> idens)
+    "GROUP BY" <-> (", " <+> idens)
 
 newtype FromExp
   = FromExp [FromItem]
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data)
 
 instance ToSQL FromExp where
   toSQL (FromExp items) =
-    BB.string7 "FROM" <-> (", " <+> items)
+    "FROM" <-> (", " <+> items)
 
 mkIdenFromExp :: (IsIden a) => a -> FromExp
 mkIdenFromExp a =
@@ -123,6 +119,9 @@ mkSelFromExp isLateral sel tn =
   FISelect (Lateral isLateral) sel alias
   where
     alias = Alias $ toIden tn
+
+mkFuncFromItem :: QualifiedFunction -> FunctionArgs -> FromItem
+mkFuncFromItem qf args = FIFunc qf args Nothing
 
 mkRowExp :: [Extractor] -> SQLExp
 mkRowExp extrs = let
@@ -141,23 +140,23 @@ mkRowExp extrs = let
 
 newtype HavingExp
   = HavingExp BoolExp
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data)
 
 instance ToSQL HavingExp where
   toSQL (HavingExp be) =
-    BB.string7 "HAVING" <-> toSQL be
+    "HAVING" <-> toSQL be
 
 newtype WhereFrag
   = WhereFrag { getWFBoolExp :: BoolExp }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data)
 
 instance ToSQL WhereFrag where
   toSQL (WhereFrag be) =
-    BB.string7 "WHERE" <-> paren (toSQL be)
+    "WHERE" <-> paren (toSQL be)
 
 instance ToSQL Select where
   toSQL sel =
-    BB.string7 "SELECT"
+    "SELECT"
     <-> toSQL (selDistinct sel)
     <-> (", " <+> selExtr sel)
     <-> toSQL (selFrom sel)
@@ -178,37 +177,39 @@ data Qual
   = QualIden !Iden
   | QualTable !QualifiedTable
   | QualVar !T.Text
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data)
 
 mkQual :: QualifiedTable -> Qual
 mkQual = QualTable
 
 instance ToSQL Qual where
-  toSQL (QualIden i) = toSQL i
+  toSQL (QualIden i)   = toSQL i
   toSQL (QualTable qt) = toSQL qt
-  toSQL (QualVar v)  =
-    TE.encodeUtf8Builder v
+  toSQL (QualVar v)    = TB.text v
 
 mkQIden :: (IsIden a, IsIden b) => a -> b -> QIden
 mkQIden q t = QIden (QualIden (toIden q)) (toIden t)
 
 data QIden
   = QIden !Qual !Iden
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data)
 
 instance ToSQL QIden where
   toSQL (QIden qual iden) =
-    mconcat [toSQL qual, BB.char7 '.', toSQL iden]
+    mconcat [toSQL qual, TB.char '.', toSQL iden]
 
 newtype SQLOp
   = SQLOp {sqlOpTxt :: T.Text}
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data)
 
 incOp :: SQLOp
 incOp = SQLOp "+"
 
 mulOp :: SQLOp
 mulOp = SQLOp "*"
+
+jsonbPathOp :: SQLOp
+jsonbPathOp = SQLOp "#>"
 
 jsonbConcatOp :: SQLOp
 jsonbConcatOp = SQLOp "||"
@@ -219,27 +220,52 @@ jsonbDeleteOp = SQLOp "-"
 jsonbDeleteAtPathOp :: SQLOp
 jsonbDeleteAtPathOp = SQLOp "#-"
 
-newtype AnnType
-  = AnnType {unAnnType :: T.Text}
-  deriving (Show, Eq)
+newtype TypeAnn
+  = TypeAnn {unTypeAnn :: T.Text}
+  deriving (Show, Eq, Data)
 
-intType :: AnnType
-intType = AnnType "int"
+mkTypeAnn :: PGType PGScalarType -> TypeAnn
+mkTypeAnn = TypeAnn . toSQLTxt
 
-textType :: AnnType
-textType = AnnType "text"
+intTypeAnn :: TypeAnn
+intTypeAnn = mkTypeAnn $ PGTypeScalar PGInteger
 
-textArrType :: AnnType
-textArrType = AnnType "text[]"
+textTypeAnn :: TypeAnn
+textTypeAnn = mkTypeAnn $ PGTypeScalar PGText
 
-jsonType :: AnnType
-jsonType = AnnType "json"
+textArrTypeAnn :: TypeAnn
+textArrTypeAnn = mkTypeAnn $ PGTypeArray PGText
 
-jsonbType :: AnnType
-jsonbType = AnnType "jsonb"
+jsonTypeAnn :: TypeAnn
+jsonTypeAnn = mkTypeAnn $ PGTypeScalar PGJSON
+
+jsonbTypeAnn :: TypeAnn
+jsonbTypeAnn = mkTypeAnn $ PGTypeScalar PGJSONB
+
+data CountType
+  = CTStar
+  | CTSimple ![PGCol]
+  | CTDistinct ![PGCol]
+  deriving(Show, Eq, Data)
+
+instance ToSQL CountType where
+  toSQL CTStar            = "*"
+  toSQL (CTSimple cols)   =
+    paren $ ", " <+> cols
+  toSQL (CTDistinct cols) =
+    "DISTINCT" <-> paren (", " <+> cols)
+
+newtype TupleExp
+  = TupleExp [SQLExp]
+  deriving (Show, Eq, Data)
+
+instance ToSQL TupleExp where
+  toSQL (TupleExp exps) =
+    paren $ ", " <+> exps
 
 data SQLExp
   = SEPrep !Int
+  | SENull
   | SELit !T.Text
   | SEUnsafe !T.Text
   | SESelect !Select
@@ -250,16 +276,25 @@ data SQLExp
   | SEQIden !QIden
   | SEFnApp !T.Text ![SQLExp] !(Maybe OrderByExp)
   | SEOpApp !SQLOp ![SQLExp]
-  | SETyAnn !SQLExp !AnnType
+  | SETyAnn !SQLExp !TypeAnn
   | SECond !BoolExp !SQLExp !SQLExp
   | SEBool !BoolExp
-  | SEExcluded !T.Text
+  | SEExcluded !Iden
   | SEArray ![SQLExp]
-  deriving (Show, Eq)
+  | SETuple !TupleExp
+  | SECount !CountType
+  | SENamedArg !Iden !SQLExp
+  deriving (Show, Eq, Data)
+
+withTyAnn :: PGScalarType -> SQLExp -> SQLExp
+withTyAnn colTy v = SETyAnn v . mkTypeAnn $ PGTypeScalar colTy
+
+instance J.ToJSON SQLExp where
+  toJSON = J.toJSON . toSQLTxt
 
 newtype Alias
   = Alias { getAlias :: Iden }
-  deriving (Show, Eq, Hashable)
+  deriving (Show, Eq, Hashable, Data)
 
 instance IsIden Alias where
   toIden (Alias iden) = iden
@@ -270,17 +305,22 @@ instance ToSQL Alias where
 toAlias :: (IsIden a) => a -> Alias
 toAlias = Alias . toIden
 
+countStar :: SQLExp
+countStar = SECount CTStar
+
 instance ToSQL SQLExp where
   toSQL (SEPrep argNumber) =
-    BB.char7 '$' <> BB.intDec argNumber
+    TB.char '$' <> fromString (show argNumber)
+  toSQL SENull =
+    TB.text "NULL"
   toSQL (SELit tv) =
-    TE.encodeUtf8Builder $ pgFmtLit tv
+    TB.text $ pgFmtLit tv
   toSQL (SEUnsafe t) =
-    TE.encodeUtf8Builder t
+    TB.text t
   toSQL (SESelect se) =
     paren $ toSQL se
   toSQL SEStar =
-    BB.char7 '*'
+    TB.char '*'
   toSQL (SEIden iden) =
     toSQL iden
   toSQL (SERowIden iden) =
@@ -289,29 +329,32 @@ instance ToSQL SQLExp where
     toSQL qIden
   -- https://www.postgresql.org/docs/10/static/sql-expressions.html#SYNTAX-AGGREGATES
   toSQL (SEFnApp name args mObe) =
-    TE.encodeUtf8Builder name <> paren ((", " <+> args)  <-> toSQL mObe)
+    TB.text name <> paren ((", " <+> args)  <-> toSQL mObe)
   toSQL (SEOpApp op args) =
      paren (sqlOpTxt op <+> args)
   toSQL (SETyAnn e ty) =
-     paren (toSQL e) <> BB.string7 "::"
-     <> TE.encodeUtf8Builder (unAnnType ty)
+     paren (toSQL e) <> "::" <> TB.text (unTypeAnn ty)
   toSQL (SECond cond te fe) =
-    BB.string7 "CASE WHEN" <-> toSQL cond <->
-    BB.string7 "THEN" <-> toSQL te <->
-    BB.string7 "ELSE" <-> toSQL fe <->
-    BB.string7 "END"
+    "CASE WHEN" <-> toSQL cond <->
+    "THEN" <-> toSQL te <->
+    "ELSE" <-> toSQL fe <->
+    "END"
   toSQL (SEBool be) = toSQL be
-  toSQL (SEExcluded t) = BB.string7 "EXCLUDED."
-                         <> toSQL (PGCol t)
-  toSQL (SEArray exps) = BB.string7 "ARRAY" <> BB.char7 '['
-                         <> (", " <+> exps) <> BB.char7 ']'
+  toSQL (SEExcluded i) = "EXCLUDED."
+                         <> toSQL i
+  toSQL (SEArray exps) = "ARRAY" <> TB.char '['
+                         <> (", " <+> exps) <> TB.char ']'
+  toSQL (SETuple tup) = toSQL tup
+  toSQL (SECount ty) = "COUNT" <> paren (toSQL ty)
+  -- https://www.postgresql.org/docs/current/sql-syntax-calling-funcs.html
+  toSQL (SENamedArg arg val) = toSQL arg <-> "=>" <-> toSQL val
 
 intToSQLExp :: Int -> SQLExp
 intToSQLExp =
   SEUnsafe . T.pack . show
 
 data Extractor = Extractor !SQLExp !(Maybe Alias)
-               deriving (Show, Eq)
+               deriving (Show, Eq, Data)
 
 mkSQLOpExp
   :: SQLOp
@@ -320,8 +363,20 @@ mkSQLOpExp
   -> SQLExp -- result
 mkSQLOpExp op lhs rhs = SEOpApp op [lhs, rhs]
 
+mkColDefValMap :: [PGCol] -> HM.HashMap PGCol SQLExp
+mkColDefValMap cols =
+  HM.fromList $ zip cols (repeat $ SEUnsafe "DEFAULT")
+
 handleIfNull :: SQLExp -> SQLExp -> SQLExp
 handleIfNull l e = SEFnApp "coalesce" [e, l] Nothing
+
+applyJsonBuildObj :: [SQLExp] -> SQLExp
+applyJsonBuildObj args =
+  SEFnApp "json_build_object" args Nothing
+
+applyRowToJson :: [Extractor] -> SQLExp
+applyRowToJson extrs =
+  SEFnApp "row_to_json" [mkRowExp extrs] Nothing
 
 getExtrAlias :: Extractor -> Maybe Alias
 getExtrAlias (Extractor _ ma) = ma
@@ -344,19 +399,34 @@ instance ToSQL Extractor where
 data DistinctExpr
   = DistinctSimple
   | DistinctOn ![SQLExp]
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data)
 
 instance ToSQL DistinctExpr where
-  toSQL DistinctSimple    = BB.string7 "DISTINCT"
+  toSQL DistinctSimple    = "DISTINCT"
   toSQL (DistinctOn exps) =
-    BB.string7 "DISTINCT ON" <-> paren ("," <+> exps)
+    "DISTINCT ON" <-> paren ("," <+> exps)
+
+data FunctionArgs
+  = FunctionArgs
+  { fasPostional :: ![SQLExp]
+  , fasNamed     :: !(HM.HashMap Text SQLExp)
+  } deriving (Show, Eq, Data)
+
+instance ToSQL FunctionArgs where
+  toSQL (FunctionArgs positionalArgs namedArgsMap) =
+    let namedArgs = flip map (HM.toList namedArgsMap) $
+                    \(argName, argVal) -> SENamedArg (Iden argName) argVal
+    in paren $ ", " <+> (positionalArgs <> namedArgs)
 
 data FromItem
   = FISimple !QualifiedTable !(Maybe Alias)
   | FIIden !Iden
+  | FIFunc !QualifiedFunction !FunctionArgs !(Maybe Alias)
+  | FIUnnest ![SQLExp] !Alias ![SQLExp]
   | FISelect !Lateral !Select !Alias
+  | FIValues !ValuesExp !Alias !(Maybe [PGCol])
   | FIJoin !JoinExpr
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data)
 
 mkSelFromItem :: Select -> Alias -> FromItem
 mkSelFromItem = FISelect (Lateral False)
@@ -364,21 +434,33 @@ mkSelFromItem = FISelect (Lateral False)
 mkLateralFromItem :: Select -> Alias -> FromItem
 mkLateralFromItem = FISelect (Lateral True)
 
+toColTupExp :: [PGCol] -> SQLExp
+toColTupExp =
+  SETuple . TupleExp . map (SEIden . Iden . getPGColTxt)
+
 instance ToSQL FromItem where
   toSQL (FISimple qt mal) =
     toSQL qt <-> toSQL mal
   toSQL (FIIden iden) =
     toSQL iden
+  toSQL (FIFunc qf args mal) =
+    toSQL qf <> toSQL args <-> toSQL mal
+  -- unnest(expressions) alias(columns)
+  toSQL (FIUnnest args als cols) =
+    "UNNEST" <> paren (", " <+> args) <-> toSQL als <> paren (", " <+> cols)
   toSQL (FISelect mla sel al) =
     toSQL mla <-> paren (toSQL sel) <-> toSQL al
+  toSQL (FIValues valsExp al mCols) =
+    paren (toSQL valsExp) <-> toSQL al
+    <-> toSQL (toColTupExp <$> mCols)
   toSQL (FIJoin je) =
     toSQL je
 
 newtype Lateral = Lateral Bool
-             deriving (Show, Eq)
+             deriving (Show, Eq, Data)
 
 instance ToSQL Lateral where
-  toSQL (Lateral True)  = BB.string7 "LATERAL"
+  toSQL (Lateral True)  = "LATERAL"
   toSQL (Lateral False) = mempty
 
 data JoinExpr
@@ -387,7 +469,7 @@ data JoinExpr
   , tjeType  :: !JoinType
   , tjeRight :: !FromItem
   , tjeJC    :: !JoinCond
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Data)
 
 instance ToSQL JoinExpr where
   toSQL je =
@@ -401,34 +483,39 @@ data JoinType
   | LeftOuter
   | RightOuter
   | FullOuter
-  deriving (Eq, Show)
+  deriving (Eq, Show, Data)
 
 instance ToSQL JoinType where
-  toSQL Inner      = BB.string7 "INNER JOIN"
-  toSQL LeftOuter  = BB.string7 "LEFT OUTER JOIN"
-  toSQL RightOuter = BB.string7 "RIGHT OUTER JOIN"
-  toSQL FullOuter  = BB.string7 "FULL OUTER JOIN"
+  toSQL Inner      = "INNER JOIN"
+  toSQL LeftOuter  = "LEFT OUTER JOIN"
+  toSQL RightOuter = "RIGHT OUTER JOIN"
+  toSQL FullOuter  = "FULL OUTER JOIN"
 
 data JoinCond
   = JoinOn !BoolExp
   | JoinUsing ![PGCol]
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data)
 
 instance ToSQL JoinCond where
   toSQL (JoinOn be) =
-    BB.string7 "ON" <-> paren (toSQL be)
+    "ON" <-> paren (toSQL be)
   toSQL (JoinUsing cols) =
-    BB.string7 "USING" <-> paren (","  <+> cols)
+    "USING" <-> paren (","  <+> cols)
 
 data BoolExp
   = BELit !Bool
   | BEBin !BinOp !BoolExp !BoolExp
   | BENot !BoolExp
   | BECompare !CompareOp !SQLExp !SQLExp
+  -- this is because l = (ANY (e)) is not valid
+  -- i.e, (ANY(e)) is not same as ANY(e)
+  | BECompareAny !CompareOp !SQLExp !SQLExp
   | BENull !SQLExp
   | BENotNull !SQLExp
   | BEExists !Select
-  deriving (Show, Eq)
+  | BEIN !SQLExp ![SQLExp]
+  | BEExp !SQLExp
+  deriving (Show, Eq, Data)
 
 -- removes extraneous 'AND true's
 simplifyBoolExp :: BoolExp -> BoolExp
@@ -449,37 +536,44 @@ simplifyBoolExp be = case be of
       | otherwise -> BEBin OrOp e1s e2s
   e                          -> e
 
-mkExists :: QualifiedTable -> BoolExp -> BoolExp
-mkExists qt whereFrag =
-  BEExists mkSelect {
-    selExtr  = [Extractor (SEUnsafe "1") Nothing],
-    selFrom  = Just $ mkSimpleFromExp qt,
-    selWhere = Just $ WhereFrag whereFrag
+mkExists :: FromItem -> BoolExp -> BoolExp
+mkExists fromItem whereFrag =
+  BEExists mkSelect
+  { selExtr  = [Extractor (SEUnsafe "1") Nothing]
+  , selFrom  = Just $ FromExp $ pure fromItem
+  , selWhere = Just $ WhereFrag whereFrag
   }
 
 instance ToSQL BoolExp where
-  toSQL (BELit True)  = TE.encodeUtf8Builder $ T.squote "true"
-  toSQL (BELit False) = TE.encodeUtf8Builder $ T.squote "false"
+  toSQL (BELit True)  = TB.text $ T.squote "true"
+  toSQL (BELit False) = TB.text $ T.squote "false"
   toSQL (BEBin bo bel ber) =
     paren (toSQL bel) <-> toSQL bo <-> paren (toSQL ber)
   toSQL (BENot be) =
-    BB.string7 "NOT" <-> paren (toSQL be)
+    "NOT" <-> paren (toSQL be)
   toSQL (BECompare co vl vr) =
     paren (toSQL vl) <-> toSQL co <-> paren (toSQL vr)
+  toSQL (BECompareAny co vl vr) =
+    paren (toSQL vl) <-> toSQL co <-> "ANY" <> paren (toSQL vr)
   toSQL (BENull v) =
-    paren (toSQL v) <-> BB.string7 "IS NULL"
+    paren (toSQL v) <-> "IS NULL"
   toSQL (BENotNull v) =
-    paren (toSQL v) <-> BB.string7 "IS NOT NULL"
+    paren (toSQL v) <-> "IS NOT NULL"
   toSQL (BEExists sel) =
-    BB.string7 "EXISTS " <-> paren (toSQL sel)
+    "EXISTS " <-> paren (toSQL sel)
+  -- special case to handle lhs IN (exp1, exp2)
+  toSQL (BEIN vl exps) =
+    paren (toSQL vl) <-> toSQL SIN <-> paren (", " <+> exps)
+  -- Any SQL expression which evaluates to bool value
+  toSQL (BEExp e) = paren $ toSQL e
 
 data BinOp = AndOp
            | OrOp
-           deriving (Show, Eq)
+           deriving (Show, Eq, Data)
 
 instance ToSQL BinOp where
-  toSQL AndOp = BB.string7 "AND"
-  toSQL OrOp  = BB.string7 "OR"
+  toSQL AndOp = "AND"
+  toSQL OrOp  = "OR"
 
 data CompareOp
   = SEQ
@@ -501,7 +595,7 @@ data CompareOp
   | SHasKey
   | SHasKeysAny
   | SHasKeysAll
-  deriving (Eq)
+  deriving (Eq, Data)
 
 instance Show CompareOp where
   show = \case
@@ -526,7 +620,7 @@ instance Show CompareOp where
     SHasKeysAll  -> "?&"
 
 instance ToSQL CompareOp where
-  toSQL = BB.string7 . show
+  toSQL = fromString . show
 
 buildInsVal :: PGCol -> Int -> (PGCol, SQLExp)
 buildInsVal colName argNumber =
@@ -559,16 +653,24 @@ buildSEI :: PGCol -> Int -> SetExpItem
 buildSEI colName argNumber =
   SetExpItem (colName, SEPrep argNumber)
 
-buildSEWithExcluded :: [PGCol] -> SetExp
-buildSEWithExcluded cols = SetExp $ flip map cols $
-  \col -> SetExpItem (col, SEExcluded $ getPGColTxt col)
+buildUpsertSetExp
+  :: [PGCol]
+  -> HM.HashMap PGCol SQLExp
+  -> SetExp
+buildUpsertSetExp cols preSet =
+  SetExp $ map SetExpItem $ HM.toList setExps
+  where
+    setExps = HM.union preSet $ HM.fromList $
+      flip map cols $ \col ->
+        (col, SEExcluded $ toIden col)
+
 
 newtype UsingExp = UsingExp [TableName]
                   deriving (Show, Eq)
 
 instance ToSQL UsingExp where
   toSQL (UsingExp tables)
-    = BB.string7 "USING" <-> "," <+> tables
+    = "USING" <-> "," <+> tables
 
 newtype RetExp = RetExp [Extractor]
                   deriving (Show, Eq)
@@ -583,17 +685,17 @@ instance ToSQL RetExp where
   toSQL (RetExp [])
     = mempty
   toSQL (RetExp exps)
-    = BB.string7 "RETURNING" <-> (", " <+> exps)
+    = "RETURNING" <-> (", " <+> exps)
 
 instance ToSQL SQLDelete where
-  toSQL sd = BB.string7 "DELETE FROM"
+  toSQL sd = "DELETE FROM"
              <-> toSQL (delTable sd)
              <-> toSQL (delUsing sd)
              <-> toSQL (delWhere sd)
              <-> toSQL (delRet sd)
 
 instance ToSQL SQLUpdate where
-  toSQL a = BB.string7 "UPDATE"
+  toSQL a = "UPDATE"
             <-> toSQL (upTable a)
             <-> toSQL (upSet a)
             <-> toSQL (upFrom a)
@@ -602,7 +704,7 @@ instance ToSQL SQLUpdate where
 
 instance ToSQL SetExp where
   toSQL (SetExp cvs) =
-    BB.string7 "SET" <-> ("," <+> cvs)
+    "SET" <-> ("," <+> cvs)
 
 instance ToSQL SetExpItem where
   toSQL (SetExpItem (col, val)) =
@@ -615,45 +717,51 @@ data SQLConflictTarget
   deriving (Show, Eq)
 
 instance ToSQL SQLConflictTarget where
-  toSQL (SQLColumn cols)      = BB.string7 "("
+  toSQL (SQLColumn cols)      = "("
                                 <-> ("," <+> cols)
-                                <-> BB.string7 ")"
+                                <-> ")"
 
-  toSQL (SQLConstraint cons) = BB.string7 "ON CONSTRAINT" <-> toSQL cons
+  toSQL (SQLConstraint cons) = "ON CONSTRAINT" <-> toSQL cons
 
 data SQLConflict
   = DoNothing !(Maybe SQLConflictTarget)
-  | Update !SQLConflictTarget !SetExp
+  | Update !SQLConflictTarget !SetExp !(Maybe WhereFrag)
   deriving (Show, Eq)
 
 instance ToSQL SQLConflict where
-  toSQL (DoNothing Nothing)   = BB.string7 "ON CONFLICT DO NOTHING"
-  toSQL (DoNothing (Just ct)) = BB.string7 "ON CONFLICT"
+  toSQL (DoNothing Nothing)   = "ON CONFLICT DO NOTHING"
+  toSQL (DoNothing (Just ct)) = "ON CONFLICT"
                                 <-> toSQL ct
-                                <-> BB.string7 "DO NOTHING"
-  toSQL (Update ct ex)        = BB.string7 "ON CONFLICT"
+                                <-> "DO NOTHING"
+  toSQL (Update ct set whr)   = "ON CONFLICT"
                                 <-> toSQL ct <-> "DO UPDATE"
-                                <-> toSQL ex
+                                <-> toSQL set <-> toSQL whr
+
+newtype ValuesExp
+  = ValuesExp [TupleExp]
+  deriving (Show, Eq, Data)
+
+instance ToSQL ValuesExp where
+  toSQL (ValuesExp tuples) =
+    "VALUES" <-> (", " <+> tuples)
 
 data SQLInsert = SQLInsert
     { siTable    :: !QualifiedTable
     , siCols     :: ![PGCol]
-    , siTuples   :: ![[SQLExp]]
+    , siValues   :: !ValuesExp
     , siConflict :: !(Maybe SQLConflict)
     , siRet      :: !(Maybe RetExp)
     } deriving (Show, Eq)
 
 instance ToSQL SQLInsert where
   toSQL si =
-    let insTuples   = flip map (siTuples si) $ \tupVals ->
-          BB.string7 "(" <-> (", " <+> tupVals) <-> BB.string7 ")"
-        insConflict = maybe (BB.string7 "") toSQL
+    let insConflict = maybe "" toSQL
     in "INSERT INTO"
        <-> toSQL (siTable si)
-       <-> BB.string7 "("
+       <-> "("
        <-> (", " <+> siCols si)
-       <-> BB.string7 ") VALUES"
-       <-> (", " <+> insTuples)
+       <-> ")"
+       <-> toSQL (siValues si)
        <-> insConflict (siConflict si)
        <-> toSQL (siRet si)
 

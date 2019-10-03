@@ -1,5 +1,5 @@
 description: Updated person data using _set operator
-url: /v1alpha1/graphql
+url: /v1/graphql
 status: 200
 response:
   data:

@@ -6,7 +6,7 @@ response:
   returning:
   - product_id:  1
     name: Product 1
-    price: 10
+    price: '10'
 query:
   type: update
   args:

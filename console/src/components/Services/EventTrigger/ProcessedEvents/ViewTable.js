@@ -4,7 +4,7 @@ import { vSetDefaults, vMakeRequest, vExpandHeading } from './ViewActions'; // e
 import { setTrigger } from '../EventActions';
 import TableHeader from '../TableCommon/TableHeader';
 import ViewRows from './ViewRows';
-import { replace } from 'react-router-redux';
+import { NotFoundError } from '../../../Error/PageNotFound';
 
 const genHeadings = headings => {
   if (headings.length === 0) {
@@ -133,9 +133,7 @@ class ViewTable extends Component {
       rows,
       count, // eslint-disable-line no-unused-vars
       activePath,
-      migrationMode,
       ongoingRequest,
-      isProgressing,
       lastError,
       lastSuccess,
       dispatch,
@@ -145,8 +143,8 @@ class ViewTable extends Component {
     // check if table exists
     const currentTrigger = triggerList.find(s => s.name === triggerName);
     if (!currentTrigger) {
-      // dispatch a 404 route
-      dispatch(replace('/404'));
+      // throw a 404 exception
+      throw new NotFoundError();
     }
     // Is this a view
     const isView = false;
@@ -163,10 +161,9 @@ class ViewTable extends Component {
         parentTableName={null}
         activePath={activePath}
         ongoingRequest={ongoingRequest}
-        isProgressing={isProgressing}
         lastError={lastError}
         lastSuccess={lastSuccess}
-        triggerList={triggerList}
+        currentTrigger={currentTrigger}
         curDepth={0}
         count={count}
         dispatch={dispatch}
@@ -181,13 +178,13 @@ class ViewTable extends Component {
         dispatch={dispatch}
         triggerName={triggerName}
         tabName="processed"
-        migrationMode={migrationMode}
       />
     );
 
     return (
       <div>
         {header}
+        <br />
         <div>{viewRows}</div>
       </div>
     );
@@ -200,9 +197,7 @@ ViewTable.propTypes = {
   activePath: PropTypes.array.isRequired,
   query: PropTypes.object.isRequired,
   curFilter: PropTypes.object.isRequired,
-  migrationMode: PropTypes.bool.isRequired,
   ongoingRequest: PropTypes.bool.isRequired,
-  isProgressing: PropTypes.bool.isRequired,
   rows: PropTypes.array.isRequired,
   expandedRow: PropTypes.string.isRequired,
   count: PropTypes.number,
@@ -214,8 +209,7 @@ ViewTable.propTypes = {
 const mapStateToProps = (state, ownProps) => {
   return {
     triggerName: ownProps.params.trigger,
-    triggerList: state.triggers.processedEvents,
-    migrationMode: state.main.migrationMode,
+    triggerList: state.triggers.triggerList,
     ...state.triggers.view,
   };
 };

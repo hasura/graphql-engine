@@ -1,7 +1,7 @@
 // import Endpoints, {globalCookiePolicy} from '../../Endpoints';
 import { defaultCurFilter } from '../DataState';
 import { vMakeRequest } from './ViewActions';
-import { Integers, Reals } from '../Types';
+import { Integers, Reals } from '../constants';
 
 const LOADING = 'ViewTable/FilterQuery/LOADING';
 
@@ -72,7 +72,11 @@ const runQuery = tableSchema => {
         return w;
       }
       if (colType === 'boolean') {
-        w[colName][opName] = val === 'true' ? true : false;
+        if (val === 'true') {
+          w[colName][opName] = true;
+        } else if (val === 'false') {
+          w[colName][opName] = false;
+        }
       }
       return w;
     });
