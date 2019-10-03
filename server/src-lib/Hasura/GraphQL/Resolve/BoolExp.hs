@@ -143,7 +143,7 @@ parseCastExpression
 parseCastExpression =
   withObjectM $ \_ objM -> forM objM $ \obj -> do
     targetExps <- forM (OMap.toList obj) $ \(targetTypeName, castedComparisonExpressionInput) -> do
-      let targetType = textToPGScalarTy $ G.unName targetTypeName
+      let targetType = textToPGScalarType $ G.unName targetTypeName
       castedComparisonExpressions <- parseOpExps (PGColumnScalar targetType) castedComparisonExpressionInput
       return (targetType, castedComparisonExpressions)
     return $ Map.fromList targetExps

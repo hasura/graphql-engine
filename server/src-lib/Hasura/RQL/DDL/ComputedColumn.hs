@@ -199,7 +199,7 @@ addComputedColumnP2Setup table computedColumn definition rawFunctionInfo comment
                               -> QualifiedPGType
                               -> m ()
     validateTableArgumentType tableArg qpt = do
-      when (_qptType qpt /= PTCOMPOSITE) $
+      when (_qptType qpt /= PGKindCOMPOSITE) $
         MV.dispute $ pure $ CCVEInvalidTableArgument $ ITANotComposite tableArg
       let typeTable = typeToTable qpt
       unless (table == typeTable) $

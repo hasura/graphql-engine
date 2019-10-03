@@ -132,7 +132,7 @@ computeMetrics sc =
   let nTables = countUserTables (isNothing . _tiViewInfo)
       nViews = countUserTables (isJust . _tiViewInfo)
       nEnumTables = countUserTables (isJust . _tiEnumValues)
-      allRels = join $ Map.elems $ Map.map relsOfTbl userTables
+      allRels = join $ Map.elems $ Map.map (getRels . _tiFieldInfoMap) userTables
       (manualRels, autoRels) = partition riIsManual allRels
       relMetrics = RelationshipMetric (length manualRels) (length autoRels)
       rolePerms = join $ Map.elems $ Map.map permsOfTbl userTables
@@ -157,9 +157,6 @@ computeMetrics sc =
 
     calcPerms :: (RolePermInfo -> Maybe a) -> [RolePermInfo] -> Int
     calcPerms fn perms = length $ catMaybes $ map fn perms
-
-    relsOfTbl :: TableInfo PGColumnInfo -> [RelInfo]
-    relsOfTbl = getRels . _tiFieldInfoMap
 
     permsOfTbl :: TableInfo PGColumnInfo -> [(RoleName, RolePermInfo)]
     permsOfTbl = Map.toList . _tiRolePermInfoMap

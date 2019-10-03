@@ -157,13 +157,13 @@ newtype Run a
            )
 
 instance UserInfoM Run where
-  askUserInfo = asks (^. _1)
+  askUserInfo = view _1
 
 instance HasHttpManager Run where
-  askHttpManager = asks (^. _2)
+  askHttpManager = view _2
 
 instance HasSQLGenCtx Run where
-  askSQLGenCtx = asks (^. _3)
+  askSQLGenCtx = view _3
 
 fetchLastUpdate :: Q.TxE QErr (Maybe (InstanceId, UTCTime))
 fetchLastUpdate = do

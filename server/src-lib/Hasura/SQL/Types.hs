@@ -53,10 +53,10 @@ module Hasura.SQL.Types
   , PGScalarType(..)
   , WithScalarType(..)
   , PGType(..)
-  , textToPGScalarTy
+  , textToPGScalarType
   , pgTypeOid
 
-  , PGTypType(..)
+  , PGTypeKind(..)
   , QualifiedPGType(..)
   , isBaseType
   , typeToTable
@@ -374,8 +374,8 @@ instance ToJSONKey PGScalarType where
 instance DQuote PGScalarType where
   dquoteTxt = toSQLTxt
 
-textToPGScalarTy :: Text -> PGScalarType
-textToPGScalarTy t = case t of
+textToPGScalarType :: Text -> PGScalarType
+textToPGScalarType t = case t of
   "serial"                   -> PGSerial
   "bigserial"                -> PGBigSerial
 
@@ -427,7 +427,7 @@ textToPGScalarTy t = case t of
 
 
 instance FromJSON PGScalarType where
-  parseJSON (String t) = return $ textToPGScalarTy t
+  parseJSON (String t) = return $ textToPGScalarType t
   parseJSON _          = fail "Expecting a string for PGScalarType"
 
 pgTypeOid :: PGScalarType -> PQ.Oid
@@ -527,43 +527,43 @@ instance (ToSQL a) => ToSQL (PGType a) where
     -- typename array is an sql standard way of declaring types
     PGTypeArray ty -> toSQL ty <> " array"
 
-data PGTypType
-  = PTBASE
-  | PTCOMPOSITE
-  | PTDOMAIN
-  | PTENUM
-  | PTRANGE
-  | PTPSEUDO
-  | PTUnknown !T.Text
+data PGTypeKind
+  = PGKindBASE
+  | PGKindCOMPOSITE
+  | PGKindDOMAIN
+  | PGKindENUM
+  | PGKindRANGE
+  | PGKindPSEUDO
+  | PGKindUnknown !T.Text
   deriving (Show, Eq)
 
-instance FromJSON PGTypType where
-  parseJSON = withText "postgresTypeType" $
+instance FromJSON PGTypeKind where
+  parseJSON = withText "postgresTypeKind" $
     \t -> pure $ case t of
-      "b" -> PTBASE
-      "c" -> PTCOMPOSITE
-      "d" -> PTDOMAIN
-      "e" -> PTENUM
-      "r" -> PTRANGE
-      "p" -> PTPSEUDO
-      _   -> PTUnknown t
+      "b" -> PGKindBASE
+      "c" -> PGKindCOMPOSITE
+      "d" -> PGKindDOMAIN
+      "e" -> PGKindENUM
+      "r" -> PGKindRANGE
+      "p" -> PGKindPSEUDO
+      _   -> PGKindUnknown t
 
 $(deriveToJSON
-  defaultOptions{constructorTagModifier = drop 2}
-  ''PGTypType
+  defaultOptions{constructorTagModifier = drop 6}
+  ''PGTypeKind
  )
 
 data QualifiedPGType
   = QualifiedPGType
   { _qptSchema :: !SchemaName
   , _qptName   :: !PGScalarType
-  , _qptType   :: !PGTypType
+  , _qptType   :: !PGTypeKind
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 4 snakeCase) ''QualifiedPGType)
 
 isBaseType :: QualifiedPGType -> Bool
 isBaseType (QualifiedPGType _ n ty) =
-  notUnknown && (ty == PTBASE)
+  notUnknown && (ty == PGKindBASE)
   where
     notUnknown = case n of
       PGUnknown _ -> False

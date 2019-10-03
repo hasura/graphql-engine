@@ -194,7 +194,7 @@ parseOperationsExpression rhsParser fim columnInfo =
           castOperations <- parseVal
           parsedCastOperations <-
             forM (M.toList castOperations) $ \(targetTypeName, castedComparisons) -> do
-              let targetType = textToPGScalarTy targetTypeName
+              let targetType = textToPGScalarType targetTypeName
                   castedColumn = ColumnReferenceCast column (PGColumnScalar targetType)
               checkValidCast targetType
               parsedCastedComparisons <- withPathK targetTypeName $
