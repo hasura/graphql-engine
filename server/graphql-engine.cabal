@@ -150,11 +150,16 @@ library
                      , zlib
                      , brotli
 
+                     -- caching
+                     , psqueues >= 0.2
+
   exposed-modules:     Hasura.Prelude
                      , Hasura.Logging
                      , Hasura.EncJSON
                      , Hasura.Db
                      , Hasura.Cache
+                     , Hasura.Cache.Bounded
+                     , Hasura.Cache.Unbounded
 
                      , Hasura.Server.App
                      , Hasura.Server.Auth

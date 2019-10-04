@@ -11,6 +11,8 @@ module Hasura.GraphQL.Execute
   , getSubsOp
 
   , EP.PlanCache
+  , EP.mkPlanCacheOptions
+  , EP.PlanCacheOptions
   , EP.initPlanCache
   , EP.clearPlanCache
   , EP.dumpPlanCache
