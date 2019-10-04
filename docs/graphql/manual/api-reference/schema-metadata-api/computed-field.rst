@@ -1,5 +1,5 @@
 Schema/Metadata API Reference: Computed Fields
-===============================================
+==============================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -8,22 +8,22 @@ Schema/Metadata API Reference: Computed Fields
 
 **computed field** is an extra field added to a table, its value is
 computed via an SQL function which has the table row type as an input argument.
-Currenty, the Hasura GraphQL Engine supports functions returning
-`Base types <https://www.postgresql.org/docs/current/extend-type-system.html#id-1.8.3.5.9>`__ or
-`Table row types <https://www.postgresql.org/docs/current/rowtypes.html#ROWTYPES-DECLARING>`__
+Currenty, the Hasura GraphQL engine supports functions returning
+`base types <https://www.postgresql.org/docs/current/extend-type-system.html#id-1.8.3.5.9>`__ or
+`table row types <https://www.postgresql.org/docs/current/rowtypes.html#ROWTYPES-DECLARING>`__
 as computed fields.
 
 .. _add_computed_field:
 
 add_computed_field
--------------------
+------------------
 
 ``add_computed_field`` is used to define a computed field in a table.
 There cannot be an existing column or relationship or computed field with
 the same name.
 
-Create a ``computed field`` ``get_articles`` on ``author`` *table*, using
-SQL function ``fetch_articles``:
+Create a ``computed field`` called ``get_articles`` on an ``author`` *table*, using
+an SQL function called ``fetch_articles``:
 
 .. code-block:: http
 
@@ -97,17 +97,16 @@ Definition
    * - table_argument
      - false
      - String
-     - Name of argument which accepts table row type. If omitted the first
-       argument is considered as table argument
+     - Name of the argument which accepts a table row type. If omitted, the first
+       argument is considered a table argument
 
 .. _drop_computed_field:
 
 drop_computed_field
---------------------
+-------------------
 
 ``drop_computed_field`` is used to drop a computed field of a table. If
-there are other objects dependent on this computed field like permissions
-etc., the query will fail and report the dependencies unless ``cascade`` is
+there are other objects dependent on this computed field, like permissions, the query will fail and report the dependencies unless ``cascade`` is
 set to ``true``. If ``cascade`` is set to ``true``, the dependent objects
 are also dropped.
 
@@ -154,4 +153,4 @@ Args syntax
    * - cascade
      - false
      - Boolean
-     - When set to ``true``, all the dependent items (if any) on this computed fields also dropped
+     - When set to ``true``, all the dependent items (if any) on this computed fields are also dropped

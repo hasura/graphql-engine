@@ -1,5 +1,5 @@
 Computed Fields
-================
+===============
 
 .. contents:: Table of contents
   :backlinks: none
@@ -7,12 +7,12 @@ Computed Fields
   :local:
 
 What are computed fields?
---------------------------
+-------------------------
 
 Computed fields are extra fields added to a table whose value is computed from other columns.
 It facilitates users to define an additional field to an existing table whose
-return value is computed via an SQL function. computed fields are exposed only over the GraphQL API. The server
-does not modify the database schema to define a computed field. computed fields are added as a part of
+return value is computed via an SQL function. Computed fields are exposed only over the GraphQL API. The server
+does not modify the database schema to define a computed field. Computed fields are added as a part of
 metadata.
 
 Supported SQL functions
@@ -22,24 +22,24 @@ Only functions which satisfy the following constraints can be added as a compute
 
 - **Function behaviour**: ONLY ``STABLE`` or ``IMMUTABLE``
 - **Argument modes**: ONLY ``IN``
-- **Table Argument**: One input argument with table row type
+- **Table Argument**: One input argument with a table row type
 - **Return type**: Either ``SETOF <table-name>`` or ``BASE`` type
 
 Defining computed fields
--------------------------
+------------------------
 
-Based on the SQL function return type we can define two types of computed fields
+Based on the SQL function's return type, we can define two types of computed fields:
 
 1. Scalar computed fields
-**************************
+*************************
 
-computed fields whose associated SQL function returns
-`Base type <https://www.postgresql.org/docs/current/extend-type-system.html#id-1.8.3.5.9>`__ like *Integer*,
+Computed fields whose associated SQL function returns a
+`base type <https://www.postgresql.org/docs/current/extend-type-system.html#id-1.8.3.5.9>`__ like *Integer*,
 *Boolean*, *Geography* etc.
 
-**Example:-**
+**Example:**
 
-``author`` table has two ``text`` columns, ``first_name`` and ``last_name``. Define an SQL function ``author_full_name``.
+The ``author`` table has two ``text`` columns: ``first_name`` and ``last_name``. Define an SQL function called ``author_full_name``:
 
 .. code-block:: plpgsql
 
@@ -48,10 +48,10 @@ computed fields whose associated SQL function returns
     SELECT author_row.first_name || ' ' || author_row.last_name
   $$ LANGUAGE sql STABLE;
 
-Add a computed field ``full_name`` to ``author`` table using the SQL function above.
-See :doc:`API Reference <../api-reference/schema-metadata-api/computed-column>`
+Add a computed field called ``full_name`` to the ``author`` table using the SQL function above.
+See :doc:`API Reference <../api-reference/schema-metadata-api/computed-field>`.
 
-Query data from ``author`` table
+Query data from the ``author`` table:
 
 .. graphiql::
   :view_only:
@@ -79,18 +79,18 @@ Query data from ``author`` table
     }
 
 2. Table computed fields
-*************************
+************************
 
-Computed fields whose associated SQL functions returns ``SETOF <table-name>`` are table computed fields.
-Return table must be tracked to define such computed field.
+Computed fields whose associated SQL function returns ``SETOF <table-name>`` are table computed fields.
+The return table must be tracked to define such a computed field.
 
-**Example:-**
+**Example:**
 
-In a simple ``author <-> article`` schema we can define :doc:`relationship <../schema/relationships/index>` on ``author``
-table to fetch authors along with their articles. We can make use of computed fields to fetch author's articles
-with search.
+In a simple ``author <-> article`` schema, we can define a :doc:`relationship <../schema/relationships/index>` on the ``author``
+table to fetch authors along with their articles. We can make use of computed fields to fetch the author's articles
+by search.
 
-Define ``fetch_articles`` SQL function.
+Define an SQL function called ``fetch_articles``:
 
 .. code-block:: plpgsql
 
@@ -104,10 +104,10 @@ Define ``fetch_articles`` SQL function.
        ) AND author_id = author_row.id
    $$ LANGUAGE sql STABLE;
 
-Add a computed field ``get_articles`` to ``author`` table using the SQL function above.
-See :doc:`API Reference <../api-reference/schema-metadata-api/computed-column>`
+Add a computed field called ``get_articles`` to the ``author`` table using the SQL function above.
+See :doc:`API Reference <../api-reference/schema-metadata-api/computed-field>`.
 
-Query data from ``author`` table
+Query data from the ``author`` table:
 
 .. graphiql::
   :view_only:
@@ -144,11 +144,11 @@ Query data from ``author`` table
       }
     }
 
-How a computed field is different from Postgres generated column?
----------------------------------------------------------------
+Computed field vs. Postgres generated column
+--------------------------------------------
 
 Postgres, from version ``12``, is introducing `Generated Columns <https://www.postgresql.org/docs/12/ddl-generated-columns.html>`__.
 The value of generated columns is also computed from other columns of a table. Postgres' generated columns
 come with its own limitations. Hasura's computed fields are defined via an SQL function, which allows users
 to define any complex business logic in a function. Generated columns will go together with computed fields where
-Hasura treats generated columns as normal postgres columns.
+Hasura treats generated columns as normal Postgres columns.
