@@ -213,7 +213,7 @@ Isso inclui tudo nos diretórios [`docs`](docs) e [`community`](community).
 
 Esse readme está disponível nas seguintes linguagens:
 
-- [English :uk:](.../README.md) (:pray: [@moksahero](https://github.com/moksahero))
+- [English :uk:](.../README.md)
 - [Japanese :jp:](translations/README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
 - [French :fr:](translations/README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
 
