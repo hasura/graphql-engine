@@ -15,6 +15,7 @@ Blogposts
 - `Build a todo App with Hasura GraphQL Engine using Angular 6 <https://medium.com/@harshsrivastav123/todo-app-with-hasura-graphql-engine-using-angular-6-aa49957fac19>`__
 - `Build a Login app using React-native and Hasura without Redux <https://codeburst.io/making-a-login-app-using-react-native-and-hasura-without-redux-bb31d102038d>`__
 - `Build file upload and download for your Hasura app with S3 <https://blog.hasura.io/building-file-upload-downloads-for-your-hasura-app/>`__
+- `Public GraphQL queries with Hasura (unauthenticated users) <https://dev.to/mikewheaton/public-graphql-queries-with-hasura-2n06>`__
 
 Repositories
 ------------
