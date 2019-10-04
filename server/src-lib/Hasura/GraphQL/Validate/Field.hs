@@ -1,6 +1,6 @@
 module Hasura.GraphQL.Validate.Field
   ( ArgsMap
-  , Field(..)
+  , Field(..), fAlias, fName, fType, fArguments, fSelSet, fRemoteRel
   , SelSet
   , Located(..)
   , denormSelSet
@@ -8,6 +8,7 @@ module Hasura.GraphQL.Validate.Field
 
 import           Hasura.Prelude
 
+import           Control.Lens
 import qualified Data.Aeson                          as J
 import qualified Data.Aeson.Casing                   as J
 import qualified Data.Aeson.TH                       as J
@@ -49,8 +50,9 @@ type ArgsMap = Map.HashMap G.Name AnnInpVal
 
 type SelSet = Seq.Seq Field
 
--- N.B. This is a tree via 'SelSet'
 -- | https://graphql.github.io/graphql-spec/June2018/#sec-Language.Fields 
+--
+-- N.B. This is a tree via 'SelSet'
 data Field
   = Field
   { _fAlias     :: !G.Alias
@@ -64,6 +66,7 @@ data Field
 $(J.deriveToJSON (J.aesonDrop 2 J.camelCase){J.omitNothingFields=True}
   ''Field
  )
+makeLenses ''Field
 
 -- newtype FieldMapAlias
 --   = FieldMapAlias

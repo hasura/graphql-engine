@@ -33,64 +33,52 @@ runGQ
   -> m (HttpResponse EncJSON)
 runGQ reqId userInfo reqHdrs req = do
   E.ExecutionCtx _ sqlGenCtx pgExecCtx planCache sc scVer _ enableAL <- ask
+  -- One for each top-level field in the client's query:
   execPlans <-
     E.getExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
-  results <-
-    forM execPlans $ \execPlan ->
-      case execPlan of
-        E.Leaf plan -> runLeafPlan plan
-        E.Tree resolvedPlan unresolvedPlansNE -> do
-          let unresolvedPlans = toList unresolvedPlansNE -- it's safe to convert here
-          HttpResponse initJson _ <- runLeafPlan resolvedPlan
-          let remoteRels =
-                map
-                  (\(E.QExecPlanUnresolved remoteRelField _) -> remoteRelField)
-                  unresolvedPlans
-          let (initValue, remoteBatchInputs) =
-                E.extractRemoteRelArguments
-                  initJson
-                  remoteRels
+  topLevelResults <-
+    forM execPlans $ \(unresolvedPlans, resolvedPlan) -> do
+      HttpResponse initJson initHeaders <- runLeafPlan resolvedPlan
+      let (initValue, joinInputs) =
+            E.extractRemoteRelArguments initJson $
+              map E.remoteRelField unresolvedPlans
 
-          let joinParamsPartial = E.JoinParams G.OperationTypeQuery -- TODO: getOpType
-              resolvedPlansWithBatches =
-                zipWith (E.mkQuery . joinParamsPartial) remoteBatchInputs unresolvedPlans 
-                  -- TODO ^ can we be sure we're not throwing away a tail of either of these lists?
-          results <-
-            traverse
-              (\(batch, resolvedSubPlan) -> do
-                 HttpResponse res _ <- runLeafPlan resolvedSubPlan
-                 pure (batch, res))
-              resolvedPlansWithBatches
-          pure $
-            HttpResponse
-                 (E.encodeGQRespValue
-                    (E.joinResults initValue $ toList results))
-              Nothing
-  let mergedRespResult = mergeResponseData (toList (fmap _hrBody results))
+      let batchesRemotePlans =
+            -- TODO pass 'G.OperationType' properly when we support mutations, etc.
+            map (uncurry $ E.mkQuery G.OperationTypeQuery) $ catMaybes $
+            map sequence $ zip unresolvedPlans joinInputs 
+
+      results <- forM batchesRemotePlans $
+        -- NOTE: discard remote headers (for now):
+        traverse (fmap _hrBody . runLeafPlan . E.ExPRemote)
+
+      pure $
+        -- NOTE: preserve headers (see test_response_headers_from_remote)
+        HttpResponse
+          (E.encodeGQRespValue
+             (E.joinResults initValue results))
+          initHeaders
+  let mergedRespResult = mergeResponseData (fmap _hrBody topLevelResults)
   case mergedRespResult of
     Left e ->
       throw400
         UnexpectedPayload
         ("could not merge data from results: " <> T.pack e)
     Right mergedResp ->
-      pure (HttpResponse mergedResp (foldMap _hrHeaders results))
+      pure (HttpResponse mergedResp (foldMap _hrHeaders topLevelResults))
   where
-    runLeafPlan plan =
-      case plan of
-        E.ExPHasura resolvedOp -> do
-          hasuraJson <- runHasuraGQ reqId req userInfo resolvedOp
-          pure (HttpResponse hasuraJson Nothing)
-        E.ExPRemote rt -> do
-          let (rsi, fields) = remoteTopQueryEither rt
-          resp@(HttpResponse _res _) <-
-            E.execRemoteGQ
-              reqId
-              userInfo
-              reqHdrs
-              (rtqOperationType rt)
-              rsi
-              fields
-          return resp
+    runLeafPlan = \case
+      E.ExPHasura resolvedOp -> do
+        hasuraJson <- runHasuraGQ reqId req userInfo resolvedOp
+        pure (HttpResponse hasuraJson Nothing)
+      E.ExPRemote RemoteTopField{..} ->
+        E.execRemoteGQ
+          reqId
+          userInfo
+          reqHdrs
+          rtqOperationType
+          rtqRemoteSchemaInfo
+          (Right rtqFields)
 
 runHasuraGQ
   :: ( MonadIO m
@@ -119,14 +107,16 @@ runHasuraGQ reqId query userInfo resolvedOp = do
   resp <- liftEither respE
   return $ encodeGQResp $ GQSuccess resp
 
-
-getMergedGQResp :: [EncJSON] -> Either String GQRespValue
+-- | See 'mergeResponseData'.
+getMergedGQResp :: Traversable t=> t EncJSON -> Either String GQRespValue
 getMergedGQResp =
   mergeGQResp <=< traverse E.parseGQRespValue
   where mergeGQResp = flip foldM E.emptyResp $ \respAcc E.GQRespValue{..} ->
           respAcc & E.gqRespErrors <>~ _gqRespErrors
                   & mapMOf E.gqRespData (OJ.safeUnion _gqRespData)
 
-mergeResponseData :: [EncJSON] -> Either String EncJSON
+-- | Union several graphql responses, with the ordering of the top-level fields
+-- determined by the input list.
+mergeResponseData :: Traversable t=> t EncJSON -> Either String EncJSON
 mergeResponseData =
   fmap E.encodeGQRespValue . getMergedGQResp

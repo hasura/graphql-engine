@@ -1,6 +1,5 @@
 module Hasura.GraphQL.Validate
   ( validateGQ
-  , remoteTopQueryEither
   , showVars
   , LocatedTopField(..)
   , HasuraTopField(..)
@@ -170,9 +169,6 @@ data HasuraTopField
   | HasuraTopMutation !Field
   | HasuraTopSubscription !Field
   deriving (Show, Eq)
-
-remoteTopQueryEither :: RemoteTopField -> (RemoteSchemaInfo, Either a [Field])
-remoteTopQueryEither (RemoteTopField remoteSchemaInfo fields _op) = (remoteSchemaInfo, pure fields)
 
 data RemoteTopField =
   RemoteTopField
