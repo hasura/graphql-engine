@@ -31,12 +31,12 @@ Leia mais em [hasura.io](https://hasura.io) e as [docs](https://docs.hasura.io).
 * **Combine esquemas remotos**: Acesse esquemas GraphQL específcos para a sua lógica de negócio por um único endpoint do GraphQL Engine [**Leia mais**](remote-schemas.md).
 * **Ative webhooks e funções serverless**: No Postgres eventos de insert/update/delete  ([leia mais](event-triggers.md))
 * **Funciona com bancos de dados em produção**: Aponte o GraphQL Engine para uma instância Postgres existente e obtenha instantâneamente uma API GraphQL pronta para uso.
-* **Controle de acesso classe A**: Dynamic access control that integrates with your auth system (eg: auth0, firebase-auth)
-* **High-performance & low-footprint**: ~15MB docker image; ~50MB RAM @ 1000 req/s; multi-core aware
-* **Admin UI & Migrations**: Admin UI & Rails-inspired schema migrations
-* **Postgres** ❤️: Supports Postgres types (PostGIS/geo-location, etc.), turns views to *graphs*, trigger stored functions or procedures with mutations
+* **Controle de acesso classe A**: Controle de cesso dinâmico que se integra com seu sistema de autenticação (ex: auth0, firebase-auth)
+* **Alta performance e baixo impacto**: Imagem docker com ~15MB; ~50MB RAM @ 1000 req/s; compatível com multi-core
+* **Painel de Admin e Migrations**: Painle de Admin e esquema de migrations inspirado no Rails
+* **Postgres** ❤️: Suporta os tipos do Postgress (PostGIS/geo-location, etc.), transforma views em *graphs*, gatilhos e funções em mutations
 
-Leia mais at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.io).
+Leia mais em [hasura.io](https://hasura.io) e nas [docs](https://docs.hasura.io).
 
 ## Table of contents
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
@@ -46,15 +46,15 @@ Leia mais at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
   - [Features](#features)
   - [Table of contents](#table-of-contents)
   - [Quickstart:](#quickstart)
-    - [One-click deployment on Heroku](#one-click-deployment-on-heroku)
-    - [Other one-click deployment options](#other-one-click-deployment-options)
-    - [Other deployment methods](#other-deployment-methods)
-  - [Architecture](#architecture)
-  - [Client-side tooling](#client-side-tooling)
-  - [Add business logic](#add-business-logic)
-    - [Remote schemas](#remote-schemas)
-    - [Trigger webhooks on database events](#trigger-webhooks-on-database-events)
-    - [Derived data or data transformations](#derived-data-or-data-transformations)
+    - [Deploy com um click na Heroku](#deploy-com-um-click-na-heroku)
+    - [Outras opções de deploy com um clique](#outras-op%c3%a7%c3%b5es-de-deploy-com-um-clique)
+    - [Outros métodos de deploy](#outros-m%c3%a9todos-de-deploy)
+  - [Arquitetura](#arquitetura)
+  - [Ferramentas para o client-side](#ferramentas-para-o-client-side)
+  - [E lógica de negócio](#e-l%c3%b3gica-de-neg%c3%b3cio)
+    - [Esquemas remotos](#esquemas-remotos)
+    - [Acione webhooks em eventos do banco de dados](#acione-webhooks-em-eventos-do-banco-de-dados)
+    - [Dado derivado ou transformação do dado](#dado-derivado-ou-transforma%c3%a7%c3%a3o-do-dado)
   - [Demos](#demos)
     - [Realtime applications](#realtime-applications)
     - [Videos](#videos)
@@ -68,9 +68,9 @@ Leia mais at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
 
 ## Quickstart:
 
-### One-click deployment on Heroku
+### Deploy com um click na Heroku
 
-The a maneira mais rápida de usar o Hasura é pelo Heroku: 
+A maneira mais rápida de usar o Hasura é pela Heroku: 
 
 1. Click no botão abaixo para fazer deploy do GraphQL Engine no Heroku com o add-on grátis do Postgress:
 2. 
@@ -82,57 +82,56 @@ The a maneira mais rápida de usar o Hasura é pelo Heroku:
 
 4. Faça sua primeira query GraphQL
 
-   Crie uma table e instantâneamente rode sua primeira query. Siga esse [guia simples](https://docs.hasura.io/1.0/graphql/manual/getting-started/first-graphql-query.html).
+   Crie uma tabela e rode sua primeira query instantâneamente. Siga esse [guia simples](https://docs.hasura.io/1.0/graphql/manual/getting-started/first-graphql-query.html).
 
-### Other one-click deployment options
+### Outras opções de deploy com um clique
 
-Check out the instructions for the following one-click deployment options:
+Confira as instruções para as seguintas opções de deploy com clique:
 
-| **Infra provider** |                                                                                                                         **One-click link**                                                                                                                         |                                                            **Additional information**                                                             |
-| :----------------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------------------: |
-|    DigitalOcean    |                  [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme)                  | [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
-|       Azure        | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) |                    [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html)                    |
+| **Provedor** |                                                                                                                         **One-click link**                                                                                                                         |                                                            **Informações adicionais**                                                             |
+| :----------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------------------: |
+| DigitalOcean |                  [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme)                  | [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
+|    Azure     | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) |                    [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html)                    |
 
-### Other deployment methods
+### Outros métodos de deploy
 
-For Docker-based deployment and advanced configuration options, see [deployment
-guides](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) or
+Para aplicações baseadas no docker e configurações avançadas, veja [guias de deploy](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) ou
 [install manifests](install-manifests).
 
-## Architecture
+## Arquitetura
 
-The Hasura GraphQL Engine fronts a Postgres database instance and can accept GraphQL requests from your client apps. It can be configured to work with your existing auth system and can handle access control using field-level rules with dynamic variables from your auth system.
+O Hasura GraphQL Engine expõe uma instância Postgress e pode aceitar requests GraphQL dos seus apps clientes. Ele pode ser configurado para funcionar com seu sistema de autenticação existente e pode gerenciar o controle de acesso usando regras a nível de campo com variáveis dinâmicas do seu sistema de autenticação.
 
-You can also merge remote GraphQL schemas and provide a unified GraphQL API.
+Vocês também pode combinar esquemas remotos do GraphQL e prover uma API unificada.
 
-![Hasura GraphQL Engine architecture](../assets/hasura-arch.svg)
+![Arquitetura do Hasura GraphQL Engine](../assets/hasura-arch.svg)
 
-## Client-side tooling
+## Ferramentas para o client-side
 
-Hasura works with any GraphQL client. We recommend using [Apollo Client](https://github.com/apollographql/apollo-client). See [awesome-graphql](https://github.com/chentsulin/awesome-graphql) for a list of clients.
+O Hasura funciona com qualquer cliente GraphQL. Nóes recomendamos o uso do [Apollo Client](https://github.com/apollographql/apollo-client). Veja [awesome-graphql](https://github.com/chentsulin/awesome-graphql) para uma lista de clientes.
 
-## Add business logic
+## E lógica de negócio
 
-GraphQL Engine provides easy-to-reason, scalable and performant methods for adding custom business logic to your backend:
+O GraphQL Engine provê métodos fáceis de esquematizar, escaláveis e performáticos para a adição de lógicas de negócio customizadas ao seu backend.
 
-### Remote schemas
+### Esquemas remotos
 
-Add custom resolvers in a remote schema in addition to Hasura's Postgres-based GraphQL schema. Ideal for use-cases like implementing a payment API, or querying data that is not in your database - [leia mais](remote-schemas.md).
+Adicione resolvedores customizados em um esquema remoto em adição ao esquema GraphQL da Hasure baseado em Postgres. Ideal para casos como a implementação de uma API de pagamentos, or busca de dados que não está no seu banco de dados - [leia mais](remote-schemas.md).
 
-### Trigger webhooks on database events
+### Acione webhooks em eventos do banco de dados
 
 Add asynchronous business logic that is triggered based on database events.
 Ideal for notifications, data-pipelines from Postgres or asynchronous
 processing - [leia mais](event-triggers.md).
 
-### Derived data or data transformations
+### Dado derivado ou transformação do dado
 
 Transform data in Postgres or run business logic on it to derive another dataset that can be queried using GraphQL Engine - [leia mais](https://docs.hasura.io/1.0/graphql/manual/queries/derived-data.html).
 
 ## Demos
 
-Check out all the example applications in the
-[community/examples](community/examples) directory.
+Confira todas as aplicações de exemplo no diretório
+[community/examples](community/examples).
 
 ### Realtime applications
 
