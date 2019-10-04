@@ -146,7 +146,7 @@ data OperationLog
   , olResponseSize       :: !(Maybe Int64)
   , olQueryExecutionTime :: !(Maybe Double)
   , olQuery              :: !(Maybe Value)
-  , olRawQuery :: !(Maybe Value)
+  , olRawQuery           :: !(Maybe Value)
   , olError              :: !(Maybe Value)
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 2 snakeCase) ''OperationLog)
@@ -234,8 +234,8 @@ mkHttpErrorLog userInfoM reqId req err query mTimeT compressTypeM =
     respTime = computeTimeDiff mTimeT
     query' = query >>= \q -> case q of
       Object _ -> Just q
-      Array _ -> Just q
-      _ -> Nothing
+      Array _  -> Just q
+      _        -> Nothing
     rawQuery = maybe query (const Nothing) query'
 
 computeTimeDiff :: Maybe (UTCTime, UTCTime) -> Maybe Double
