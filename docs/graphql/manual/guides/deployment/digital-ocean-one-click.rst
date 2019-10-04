@@ -302,13 +302,12 @@ database.
   connection string with DO Managed Postgres).
 
 Connection pooling
-------------------
-
+~~~~~~~~~~~~~~~~~~
 Connection pooling is a built-in feature of graphql-engine. The default connection pool size is 50.
 If you need to configure the pool size or the timeout, you can use the below environment variables.
 
-``HASURA_GRAPHQL_PG_CONNECTIONS``: Number of connections per stripe that need to be opened to Postgres (default: 50)
-``HASURA_GRAPHQL_PG_TIMEOUT``: Each connection’s idle time before it is closed (default: 180 sec)
+- ``HASURA_GRAPHQL_PG_CONNECTIONS``: Number of connections per stripe that need to be opened to Postgres (default: 50)
+- ``HASURA_GRAPHQL_PG_TIMEOUT``: Each connection’s idle time before it is closed (default: 180 sec)
 
 .. note::
 
