@@ -16,11 +16,11 @@ Leia mais em [hasura.io](https://hasura.io) e as [docs](https://docs.hasura.io).
 
 ------------------
 
-![Hasura GraphQL Engine Demo](assets/demo.gif)
+![Hasura GraphQL Engine Demo](../assets/demo.gif)
 
 ------------------
 
-![Hasura GraphQL Engine Realtime Demo](assets/realtime.gif)
+![Hasura GraphQL Engine Realtime Demo](../assets/realtime.gif)
 
 -------------------
 
