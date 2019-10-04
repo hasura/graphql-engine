@@ -783,6 +783,24 @@ func (h *HasuraDB) PushToList(migration io.Reader, fileType string, l *database.
 					return err
 				}
 				l.PushBack(utt)
+			case replaceMetadata:
+				utt := &replaceMetadataInput{}
+				err := mapstructure.Decode(v.Args, utt)
+				if err != nil {
+					return err
+				}
+				// Remove previous metadata actions
+				var next *list.Element
+				for e := l.Front(); e != nil; e = next {
+					next = e.Next()
+					switch e.Value.(type) {
+					case *runSQLInput:
+						// do nothing
+					default:
+						l.Remove(e)
+					}
+				}
+				utt.convertToMetadataActions(l)
 			case runSQL:
 				utt := &runSQLInput{}
 				err := mapstructure.Decode(v.Args, utt)
@@ -941,8 +959,8 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 			switch args := element.Value.(type) {
 			case *trackTableInput:
 				return tableMap{
-					args.Name,
-					args.Schema,
+					args.Table.Name,
+					args.Table.Schema,
 				}
 			case *unTrackTableInput:
 				return tableMap{
@@ -1081,15 +1099,15 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 	}
 
 	queryInCollectionGroups := CustomQuery(query.GroupByT(
-		func(element *list.Element) *queryInCollectionMap {
+		func(element *list.Element) interface{} {
 			switch args := element.Value.(type) {
-			case *addQueryToCollectionInput:
-				return &queryInCollectionMap{
+			case addQueryToCollectionInput:
+				return queryInCollectionMap{
 					collectionName: args.CollectionName,
 					queryName:      args.QueryName,
 				}
-			case *dropQueryFromCollectionInput:
-				return &queryInCollectionMap{
+			case dropQueryFromCollectionInput:
+				return queryInCollectionMap{
 					collectionName: args.CollectionName,
 					queryName:      args.QueryName,
 				}

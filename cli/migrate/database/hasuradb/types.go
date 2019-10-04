@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/hasura/graphql-engine/cli/migrate/database"
+
 	"github.com/qor/transition"
 	log "github.com/sirupsen/logrus"
 )
@@ -169,7 +171,9 @@ const (
 	dropQueryFromCollection                  = "drop_query_from_collection"
 	addCollectionToAllowList                 = "add_collection_to_allowlist"
 	dropCollectionFromAllowList              = "drop_collection_from_allowlist"
+	replaceMetadata                          = "replace_metadata"
 	runSQL                                   = "run_sql"
+	bulkQuery                                = "bulk"
 )
 
 type tableMap struct {
@@ -194,9 +198,8 @@ type tableSchema struct {
 }
 
 type trackTableInput struct {
-	Schema string `json:"schema" yaml:"schema"`
-	Name   string `json:"name" yaml:"name"`
-	IsEnum bool   `json:"is_enum" yaml:"is_enum"`
+	Table  tableSchema `json:"table" yaml:"table"`
+	IsEnum bool        `json:"is_enum" yaml:"is_enum"`
 }
 
 type unTrackTableInput struct {
@@ -340,6 +343,92 @@ type addCollectionToAllowListInput struct {
 
 type dropCollectionFromAllowListInput struct {
 	Collection string `json:"collection" yaml:"collection"`
+}
+
+type replaceMetadataInput struct {
+	Tables []struct {
+		Table               tableSchema                     `json:"table" yaml:"table"`
+		ArrayRelationships  []createArrayRelationshipInput  `json:"array_relationships" yaml:"array_relationships"`
+		ObjectRelationships []createObjectRelationshipInput `json:"object_relationship" yaml:"object_relationship"`
+		InsertPermissions   []createInsertPermissionInput   `json:"insert_permissions" yaml:"insert_permissions"`
+		SelectPermissions   []createSelectPermissionInput   `json:"select_permissions" yaml:"select_permissions"`
+		UpdatePermissions   []createUpdatePermissionInput   `json:"update_permissions" yaml:"update_permissions"`
+		DeletePermissions   []createDeletePermissionInput   `json:"delete_permissions" yaml:"delete_permissions"`
+		EventTriggers       []createEventTriggerInput       `json:"event_triggers" yaml:"event_triggers"`
+	} `json:"tables" yaml:"tables"`
+	Functions        []tableSchema                   `json:"functions" yaml:"functions"`
+	QueryCollections []createQueryCollectionInput    `json:"query_collections" yaml:"query_collections"`
+	AllowList        []addCollectionToAllowListInput `json:"allowlist" yaml:"allowlist"`
+	RemoteSchemas    []addRemoteSchemaInput          `json:"remote_schemas" yaml:"remote_schemas"`
+}
+
+func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList) {
+	// track tables
+	for _, table := range rmi.Tables {
+		t := &trackTableInput{
+			Table: tableSchema{
+				Name:   table.Table.Name,
+				Schema: table.Table.Schema,
+			},
+		}
+
+		l.PushBack(t)
+	}
+
+	for _, table := range rmi.Tables {
+		for _, objRel := range table.ObjectRelationships {
+			l.PushBack(&objRel)
+		}
+	}
+
+	for _, table := range rmi.Tables {
+		for _, arrayRel := range table.ArrayRelationships {
+			l.PushBack(&arrayRel)
+		}
+	}
+
+	for _, table := range rmi.Tables {
+		for _, insertPerm := range table.InsertPermissions {
+			l.PushBack(&insertPerm)
+		}
+	}
+
+	for _, table := range rmi.Tables {
+		for _, selectPerm := range table.SelectPermissions {
+			l.PushBack(&selectPerm)
+		}
+	}
+
+	for _, table := range rmi.Tables {
+		for _, updatePerm := range table.UpdatePermissions {
+			l.PushBack(&updatePerm)
+		}
+	}
+
+	for _, table := range rmi.Tables {
+		for _, deletePerm := range table.DeletePermissions {
+			l.PushBack(&deletePerm)
+		}
+	}
+	// track functions
+	for _, function := range rmi.Functions {
+		l.PushBack(&function)
+	}
+
+	// track query collections
+	for _, qc := range rmi.QueryCollections {
+		l.PushBack(&qc)
+	}
+
+	// track allow list
+	for _, al := range rmi.AllowList {
+		l.PushBack(&al)
+	}
+
+	// track remote schemas
+	for _, rs := range rmi.RemoteSchemas {
+		l.PushBack(&rs)
+	}
 }
 
 type runSQLInput struct {
