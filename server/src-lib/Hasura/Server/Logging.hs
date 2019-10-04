@@ -146,6 +146,7 @@ data OperationLog
   , olResponseSize       :: !(Maybe Int64)
   , olQueryExecutionTime :: !(Maybe Double)
   , olQuery              :: !(Maybe Value)
+  , olRawQuery :: !(Maybe Value)
   , olError              :: !(Maybe Value)
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 2 snakeCase) ''OperationLog)
@@ -190,6 +191,7 @@ mkHttpAccessLog userInfoM reqId req res mTimeT compressTypeM =
            , olResponseSize = respSize
            , olQueryExecutionTime = respTime
            , olQuery = Nothing
+           , olRawQuery = Nothing
            , olError = Nothing
            }
   in HttpLog L.LevelInfo $ HttpAccessLog http op
@@ -221,7 +223,8 @@ mkHttpErrorLog userInfoM reqId req err query mTimeT compressTypeM =
            , olUserVars     = userVars <$> userInfoM
            , olResponseSize = respSize
            , olQueryExecutionTime = respTime
-           , olQuery = toJSON <$> query
+           , olQuery = toJSON <$> query'
+           , olRawQuery = toJSON <$> rawQuery
            , olError = Just $ toJSON err
            }
   in HttpLog L.LevelError $ HttpAccessLog http op
@@ -229,6 +232,11 @@ mkHttpErrorLog userInfoM reqId req err query mTimeT compressTypeM =
     status = qeStatus err
     respSize = Just $ BL.length $ encode err
     respTime = computeTimeDiff mTimeT
+    query' = query >>= \q -> case q of
+      Object _ -> Just q
+      Array _ -> Just q
+      _ -> Nothing
+    rawQuery = maybe query (const Nothing) query'
 
 computeTimeDiff :: Maybe (UTCTime, UTCTime) -> Maybe Double
 computeTimeDiff = fmap (realToFrac . uncurry (flip diffUTCTime))

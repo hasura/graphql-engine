@@ -21,7 +21,7 @@ packages:
 - completed:
     cabal-file:
       size: 3364
-      sha256: 09bad175e8ccb1fec5ddbc94d95d18b4206ac4481cf3749e42ffbaac90bc4a37
+      sha256: 80e8d405c6c57f8e450e55f5c43b7f8d9135b8b36c1ae0424afd058f4eb596b3
     name: graphql-parser
     version: 0.1.0.0
     git: https://github.com/hasura/graphql-parser-hs.git
@@ -35,7 +35,7 @@ packages:
 - completed:
     cabal-file:
       size: 1253
-      sha256: d0356b65cbe17a2fecf9334aa133de238161ef9c22af015d67ab622e08eb8ed1
+      sha256: d878a89d953cea6e914073c0eb9e21280369042a0054cb81e0b9fddf215231a5
     name: ci-info
     version: 0.1.0.0
     git: https://github.com/hasura/ci-info-hs.git
@@ -103,10 +103,10 @@ packages:
   original:
     hackage: monad-validate-1.2.0.0
 - completed:
-    hackage: brotli-0.0.0.0@sha256:0a8232f028dbc6a1f9db291ef996a5abe74aa00c7c3dc00a741c41f3da75a4dc,2873
+    hackage: brotli-0.0.0.0@sha256:448061ceabdcaa752bbaf208f255bbb7e90bbcf8ea8a913d26ffa7887636823b,2887
     pantry-tree:
       size: 407
-      sha256: f4c2e742f10ca010554aeb0037294f118be4f35228acca98c0df97e1093bca33
+      sha256: 5ad2a6b25c8145f58c43b10f1b60a1e1b5bf57f0e33e4a203f9671b361fb03c0
   original:
     hackage: brotli-0.0.0.0
 snapshots:
