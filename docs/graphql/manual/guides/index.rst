@@ -10,7 +10,6 @@ Guides / Tutorials / Resources
    :maxdepth: 2
    :titlesonly:
 
-   Basic database operations <basic-db-operations/index>
    Deployment guides <deployment/index>
    Sample apps & boilerplates <sample-apps/index>
    Integration/migration tutorials <integrations/index>

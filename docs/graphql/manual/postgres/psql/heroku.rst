@@ -1,13 +1,10 @@
-Using psql
-==========
+Using psql usning Heroku
+========================
 
 .. contents:: Table of contents
   :backlinks: none
   :depth: 1
   :local:
-
-Using psql with Heroku
-----------------------
 
 .. note::
    Make sure you have `Heroku CLI <https://devcenter.heroku.com/articles/heroku-cli>`__ and `Heroku Postgres <https://devcenter.heroku.com/articles/heroku-postgresql>`__ installed.
@@ -43,6 +40,3 @@ Start psql
   $ heroku pg:psql -a <app-name>
 
 You can now do database operations directly on your Postgres instance.
-
-Using psql with Digital Ocean
------------------------------
