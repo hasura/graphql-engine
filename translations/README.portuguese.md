@@ -45,7 +45,7 @@ Leia mais em [hasura.io](https://hasura.io) e nas [docs](https://docs.hasura.io)
 - [Hasura GraphQL Engine](#hasura-graphql-engine)
   - [Features](#features)
   - [Table of contents](#table-of-contents)
-  - [Quickstart:](#quickstart)
+  - [Inicio rápido:](#inicio-r%c3%a1pido)
     - [Deploy com um click na Heroku](#deploy-com-um-click-na-heroku)
     - [Outras opções de deploy com um clique](#outras-op%c3%a7%c3%b5es-de-deploy-com-um-clique)
     - [Outros métodos de deploy](#outros-m%c3%a9todos-de-deploy)
@@ -66,7 +66,7 @@ Leia mais em [hasura.io](https://hasura.io) e nas [docs](https://docs.hasura.io)
 
 <!-- markdown-toc end -->
 
-## Quickstart:
+## Inicio rápido:
 
 ### Deploy com um click na Heroku
 
@@ -120,13 +120,13 @@ Adicione resolvedores customizados em um esquema remoto em adição ao esquema G
 
 ### Acione webhooks em eventos do banco de dados
 
-Add asynchronous business logic that is triggered based on database events.
-Ideal for notifications, data-pipelines from Postgres or asynchronous
-processing - [leia mais](event-triggers.md).
+Adicione lógicas de negócio que são ativadas baseadas em eventos no banco de dados.
+Ideal para notificações, pipelines de dados do Postgres ou processamento 
+assincrono - [leia mais](event-triggers.md).
 
 ### Dado derivado ou transformação do dado
 
-Transform data in Postgres or run business logic on it to derive another dataset that can be queried using GraphQL Engine - [leia mais](https://docs.hasura.io/1.0/graphql/manual/queries/derived-data.html).
+Transforme dados no Postgres ou rode lógicas de negócio neles para criar um novo dataset que pode ser buscado usando o GraphQL Engine - [leia mais](https://docs.hasura.io/1.0/graphql/manual/queries/derived-data.html).
 
 ## Demos
 
@@ -135,22 +135,22 @@ Confira todas as aplicações de exemplo no diretório
 
 ### Realtime applications
 
-- Group Chat application built with React, includes a typing indicator, online users & new
-  message notifications.
-  - [Try it out](https://realtime-chat.demo.hasura.app/)
+- Aplicação de Chat em grupo com React, incluindo indicação de digitação, usuários online e 
+- notificação de novas mensagens.
+  - [Testar agora](https://realtime-chat.demo.hasura.app/)
   - [Tutorial](community/sample-apps/realtime-chat)
-  - [Browse APIs](https://realtime-chat.demo.hasura.app/console)
+  - [Ver APIs](https://realtime-chat.demo.hasura.app/console)
 
-- Live location tracking app that shows a running vehicle changing current GPS
-  coordinates moving on a map.
-  - [Try it out](https://realtime-location-tracking.demo.hasura.app/)
+- App de localização em tempo real que mostra um carro em movimento alterando
+- as coordenadas de GPS enquanto se move em um mapa
+  - [Testar agora](https://realtime-location-tracking.demo.hasura.app/)
   - [Tutorial](community/sample-apps/realtime-location-tracking)
-  - [Browse APIs](https://realtime-location-tracking.demo.hasura.app/console)
+  - [Ver APIs](https://realtime-location-tracking.demo.hasura.app/console)
 
-- A realtime dashboard for data aggregations on continuously changing data.
-  - [Try it out](https://realtime-poll.demo.hasura.app/)
+- Uma dashboard em tempo real para agregação de dados em uma base em continua mudança.
+  - [Testar agora](https://realtime-poll.demo.hasura.app/)
   - [Tutorial](community/sample-apps/realtime-poll)
-  - [Browse APIs](https://realtime-poll.demo.hasura.app/console)
+  - [Ver APIs](https://realtime-poll.demo.hasura.app/console)
 
 ### Videos
 
@@ -165,7 +165,7 @@ Confira todas as aplicações de exemplo no diretório
 A documentação e comunidade irão ajudá-lo a solucionar a maioria dos problemas. Se você encontrou um bug ou necessita de entrar em contato conosco, você pode nos contatar usando um dos seguintes canais:
 
 * Suporte e feedback: [Discord](https://discord.gg/vBPpJkS)
-* Issue e traqueamento de bugs: [GitHub issues](https://github.com/hasura/graphql-engine/issues)
+* Issues e traqueamento de bugs: [GitHub issues](https://github.com/hasura/graphql-engine/issues)
 * Sigua as atualizações do produto: [@HasuraHQ](https://twitter.com/hasurahq)
 * Fale conosco em nosso [chat](https://hasura.io)
 
