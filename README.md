@@ -42,22 +42,27 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Table of Contents**
 
-- [Quickstart:](#quickstart)
+- [Hasura GraphQL Engine](#hasura-graphql-engine)
+  - [Features](#features)
+  - [Table of contents](#table-of-contents)
+  - [Quickstart:](#quickstart)
     - [One-click deployment on Heroku](#one-click-deployment-on-heroku)
+    - [Other one-click deployment options](#other-one-click-deployment-options)
     - [Other deployment methods](#other-deployment-methods)
-- [Architecture](#architecture)
-- [Client-side tooling](#client-side-tooling)
-- [Add business logic](#add-business-logic)
+  - [Architecture](#architecture)
+  - [Client-side tooling](#client-side-tooling)
+  - [Add business logic](#add-business-logic)
     - [Remote schemas](#remote-schemas)
     - [Trigger webhooks on database events](#trigger-webhooks-on-database-events)
-- [Demos](#demos)
+    - [Derived data or data transformations](#derived-data-or-data-transformations)
+  - [Demos](#demos)
     - [Realtime applications](#realtime-applications)
     - [Videos](#videos)
-- [Support & Troubleshooting](#support--troubleshooting)
-- [Contributing](#contributing)
-- [Brand assets](#brand-assets)
-- [License](#license)
-- [Translations](#translations)
+  - [Support & Troubleshooting](#support--troubleshooting)
+  - [Contributing](#contributing)
+  - [Brand assets](#brand-assets)
+  - [License](#license)
+  - [Translations](#translations)
 
 <!-- markdown-toc end -->
 
@@ -83,10 +88,10 @@ The fastest way to try Hasura out is via Heroku.
 
 Check out the instructions for the following one-click deployment options:
 
-| **Infra provider** | **One-click link** | **Additional information** |
-|:------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------:|
-| DigitalOcean | [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme) | [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
-| Azure | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html) |
+| **Infra provider** |                                                                                                                         **One-click link**                                                                                                                         |                                                            **Additional information**                                                             |
+| :----------------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------------------: |
+|    DigitalOcean    |                  [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme)                  | [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
+|       Azure        | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) |                    [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html)                    |
 
 ### Other deployment methods
 
@@ -212,5 +217,6 @@ This readme is available in the following translations:
 
 - [Japanese :jp:](translations/README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
 - [French :fr:](translations/README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
+- [Portuguese :brazil:](translations/README.portuguese.md) (:pray: [@kelvinCS](https://github.com/kelvinCS))
 
 Translations for other files can be found [here](translations).
