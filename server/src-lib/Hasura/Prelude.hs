@@ -40,6 +40,7 @@ import           Data.Maybe                 as M (catMaybes, fromMaybe, isJust,
                                                   mapMaybe, maybeToList)
 import           Data.Ord                   as M (comparing)
 import           Data.Semigroup             as M (Semigroup (..))
+import           Data.Sequence              as M (Seq)
 import           Data.String                as M (IsString)
 import           Data.Text                  as M (Text)
 import           Data.Traversable           as M (for)

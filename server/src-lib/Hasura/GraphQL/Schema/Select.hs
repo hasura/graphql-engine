@@ -24,7 +24,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-mkSelColumnTy :: QualifiedTable -> [PGCol] -> EnumTyInfo
+mkSelColumnTy :: QualifiedTable -> [G.Name] -> EnumTyInfo
 mkSelColumnTy tn cols = enumTyInfo
   where
     enumTyInfo = mkHsraEnumTyInfo (Just desc) (mkSelColumnInpTy tn) $
@@ -58,10 +58,11 @@ mkPGColParams colType
   | otherwise = Map.empty
 
 mkPGColFld :: PGColumnInfo -> ObjFldInfo
-mkPGColFld (PGColumnInfo colName colTy isNullable) =
-  mkHsraObjFldInfo Nothing n (mkPGColParams colTy) ty
+mkPGColFld colInfo =
+  mkHsraObjFldInfo desc name (mkPGColParams colTy) ty
   where
-    n  = G.Name $ getPGColTxt colName
+    PGColumnInfo _ name colTy isNullable pgDesc = colInfo
+    desc = (G.Description . getPGDescription) <$> pgDesc
     ty = bool notNullTy nullTy isNullable
     columnType = mkColumnType colTy
     notNullTy = G.toGT $ G.toNT columnType
@@ -103,12 +104,12 @@ array_relationship_aggregate(
 object_relationship: remote_table
 
 -}
-mkRelFld
+mkRelationshipField
   :: Bool
   -> RelInfo
   -> Bool
   -> [ObjFldInfo]
-mkRelFld allowAgg (RelInfo rn rTy _ remTab isManual) isNullable = case rTy of
+mkRelationshipField allowAgg (RelInfo rn rTy _ remTab isManual) isNullable = case rTy of
   ArrRel -> bool [arrRelFld] [arrRelFld, aggArrRelFld] allowAgg
   ObjRel -> [objRelFld]
   where
@@ -136,25 +137,26 @@ type table {
 -}
 mkTableObj
   :: QualifiedTable
+  -> Maybe PGDescription
   -> [SelField]
   -> ObjTyInfo
-mkTableObj tn allowedFlds =
+mkTableObj tn descM allowedFlds =
   mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) TLHasuraType
   where
     flds =
       concatMap
         (\case
             SelFldCol pgColInfo -> pure (mkPGColFld pgColInfo)
-            SelFldRel selFldRel -> mkRelFld' selFldRel
+            SelFldRel selFldRel -> mkRelationshipField' selFldRel
             SelFldRemote remoteField ->
-              pure (mkRemoteFld remoteField))
+              pure (mkRemoteRelationshipFld remoteField))
         allowedFlds
-    mkRelFld' (relInfo, allowAgg, _, _, isNullable) =
-      mkRelFld allowAgg relInfo isNullable
-    desc = G.Description $ "columns and relationships of " <>> tn
+    mkRelationshipField' (RelationshipFieldInfo relInfo allowAgg _ _ _ isNullable) =
+      mkRelationshipField allowAgg relInfo isNullable
+    desc = mkDescriptionWith descM $ "columns and relationships of " <>> tn
 
-mkRemoteFld :: RemoteField -> ObjFldInfo
-mkRemoteFld remoteField = mkHsraObjFldInfo description fieldName paramMap gType
+mkRemoteRelationshipFld :: RemoteField -> ObjFldInfo
+mkRemoteRelationshipFld remoteField = mkHsraObjFldInfo description fieldName paramMap gType
   where
     description = Just "Remote relationship field"
     fieldName =
@@ -198,8 +200,8 @@ type table_aggregate_fields{
 -}
 mkTableAggFldsObj
   :: QualifiedTable
-  -> ([PGCol], [G.Name])
-  -> ([PGCol], [G.Name])
+  -> ([PGColumnInfo], [G.Name])
+  -> ([PGColumnInfo], [G.Name])
   -> ObjTyInfo
 mkTableAggFldsObj tn (numCols, numAggOps) (compCols, compAggOps) =
   mkHsraObjTyInfo (Just desc) (mkTableAggFldsTy tn) Set.empty $ mapFromL _fiName $
@@ -243,8 +245,8 @@ mkTableColAggFldsObj tn op f cols =
   where
     desc = G.Description $ "aggregate " <> G.unName op <> " on columns"
 
-    mkColObjFld c = mkHsraObjFldInfo Nothing (G.Name $ getPGColTxt $ pgiName c)
-                    Map.empty $ G.toGT $ f $ pgiType c
+    mkColObjFld ci = mkHsraObjFldInfo Nothing (pgiName ci) Map.empty $
+                     G.toGT $ f $ pgiType ci
 
 {-
 
@@ -255,14 +257,12 @@ table(
 ):  [table!]!
 
 -}
-mkSelFld
-  :: QualifiedTable
-  -> ObjFldInfo
-mkSelFld tn =
+mkSelFld :: Maybe G.Name -> QualifiedTable -> ObjFldInfo
+mkSelFld mCustomName tn =
   mkHsraObjFldInfo (Just desc) fldName args ty
   where
     desc    = G.Description $ "fetch data from the table: " <>> tn
-    fldName = qualObjectToName tn
+    fldName = fromMaybe (qualObjectToName tn) mCustomName
     args    = fromInpValL $ mkSelArgs tn
     ty      = G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy tn
 
@@ -274,19 +274,18 @@ table_by_pk(
   coln: valuen!
 ): table
 -}
-mkSelFldPKey
-  :: QualifiedTable -> [PGColumnInfo]
-  -> ObjFldInfo
-mkSelFldPKey tn cols =
+mkSelFldPKey :: Maybe G.Name -> QualifiedTable -> [PGColumnInfo] -> ObjFldInfo
+mkSelFldPKey mCustomName tn cols =
   mkHsraObjFldInfo (Just desc) fldName args ty
   where
     desc = G.Description $ "fetch data from the table: " <> tn
            <<> " using primary key columns"
-    fldName = mkTableByPkName tn
+    fldName = fromMaybe (mkTableByPkName tn) mCustomName
     args = fromInpValL $ map colInpVal cols
     ty = G.toGT $ mkTableTy tn
-    colInpVal (PGColumnInfo n typ _) =
-      InpValInfo Nothing (mkColName n) Nothing $ G.toGT $ G.toNT $ mkColumnType typ
+    colInpVal ci =
+      InpValInfo (mkDescription <$> pgiDescription ci) (pgiName ci)
+      Nothing $ G.toGT $ G.toNT $ mkColumnType $ pgiType ci
 
 {-
 
@@ -298,13 +297,13 @@ table_aggregate(
 
 -}
 mkAggSelFld
-  :: QualifiedTable
-  -> ObjFldInfo
-mkAggSelFld tn =
+  :: Maybe G.Name -> QualifiedTable -> ObjFldInfo
+mkAggSelFld mCustomName tn =
   mkHsraObjFldInfo (Just desc) fldName args ty
   where
     desc = G.Description $ "fetch aggregated fields from the table: "
            <>> tn
-    fldName = qualObjectToName tn <> "_aggregate"
+    defFldName = qualObjectToName tn <> "_aggregate"
+    fldName = fromMaybe defFldName mCustomName
     args = fromInpValL $ mkSelArgs tn
     ty = G.toGT $ G.toNT $ mkTableAggTy tn

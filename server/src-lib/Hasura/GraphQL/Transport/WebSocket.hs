@@ -281,7 +281,7 @@ onStart serverEnv wsConn (StartMsg opId q) =
     (sc, scVer) <- liftIO $ IORef.readIORef gCtxMapRef
     execPlanE <-
       runExceptT $
-      E.getExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer q
+      E.getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer q
     execPlans <-
       either (withComplete . preExecErr requestId) (return . toList) execPlanE
     let execCtx =
@@ -309,11 +309,11 @@ onStart serverEnv wsConn (StartMsg opId q) =
                     E.ExPHasura operation ->
                       case operation of
                         E.ExOpQuery opTx genSql ->
-                          fmap (encodeGQResp . GQSuccess) $
+                          fmap (encodeGQResp . GQSuccess . encJToLBS) $
                           execQueryOrMut requestId q genSql $
                           runLazyTx' pgExecCtx opTx
                         E.ExOpMutation opTx ->
-                          fmap (encodeGQResp . GQSuccess) $
+                          fmap (encodeGQResp . GQSuccess . encJToLBS) $
                           execQueryOrMut requestId q Nothing $
                           runLazyTx pgExecCtx $ withUserInfo userInfo opTx
                         E.ExOpSubs {} ->
@@ -367,7 +367,7 @@ onStart serverEnv wsConn (StartMsg opId q) =
             Just (E.ExOpSubs p) -> Just p
             _ -> Nothing
     execSubscription ::
-         RequestId -> GQLReqUnparsed -> LQ.LiveQueryOp -> ExceptT () IO ()
+         RequestId -> GQLReqUnparsed -> LQ.LiveQueryPlan -> ExceptT () IO ()
     execSubscription reqId query lqOp = do
       liftIO $ logGraphqlQuery logger $ QueryLog query Nothing reqId
       lqId <- liftIO $ LQ.addLiveQuery lqMap lqOp liveQOnChange

@@ -101,7 +101,7 @@ getTriggerSql op trn qt allCols strfyNum spec =
     applyRow e = S.SEFnApp "row" [e] Nothing
     toExtr = flip S.Extractor Nothing
     mkQId opVar colInfo = toJSONableExp strfyNum (pgiType colInfo) $
-      S.SEQIden $ S.QIden (opToQual opVar) $ toIden $ pgiName colInfo
+      S.SEQIden $ S.QIden (opToQual opVar) $ toIden $ pgiColumn colInfo
 
     opToQual = S.QualVar . opToTxt
     opToTxt = T.pack . show

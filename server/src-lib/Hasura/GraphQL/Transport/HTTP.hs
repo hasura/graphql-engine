@@ -35,7 +35,7 @@ runGQ reqId userInfo reqHdrs req = do
   E.ExecutionCtx _ sqlGenCtx pgExecCtx planCache sc scVer _ enableAL <- ask
   -- One for each top-level field in the client's query:
   execPlans <-
-    E.getExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
+    E.getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
   topLevelResults <-
     forM execPlans $ \(unresolvedPlans, resolvedPlan) -> do
       HttpResponse initJson initHeaders <- runLeafPlan resolvedPlan
@@ -105,7 +105,7 @@ runHasuraGQ reqId query userInfo resolvedOp = do
       throw400 UnexpectedPayload
       "subscriptions are not supported over HTTP, use websockets instead"
   resp <- liftEither respE
-  return $ encodeGQResp $ GQSuccess resp
+  return $ encodeGQResp $ GQSuccess $ encJToLBS resp
 
 -- | See 'mergeResponseData'.
 getMergedGQResp :: Traversable t=> t EncJSON -> Either String GQRespValue

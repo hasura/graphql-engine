@@ -1,4 +1,61 @@
-module Hasura.SQL.Types where
+module Hasura.SQL.Types
+  ( ToSQL(..)
+  , toSQLTxt
+
+  , (<+>)
+  , (<<>)
+  , (<>>)
+
+  , pgFmtLit
+  , pgFmtIden
+  , isView
+
+  , QualifiedTable
+  , snakeCaseTable
+  , QualifiedFunction
+
+  , PGDescription(..)
+
+  , PGCol(..)
+  , showPGCols
+
+  , isIntegerType
+  , isNumType
+  , stringTypes
+  , isStringType
+  , isJSONType
+  , isComparableType
+  , isBigNum
+  , geoTypes
+  , isGeoType
+
+  , DQuote(..)
+  , dquote
+
+  , IsIden(..)
+  , Iden(..)
+
+  , ToTxt(..)
+
+  , SchemaName(..)
+  , publicSchema
+  , hdbViewsSchema
+
+  , TableName(..)
+  , FunctionName(..)
+  , ConstraintName(..)
+
+  , QualifiedObject(..)
+  , qualObjectToText
+  , snakeCaseQualObject
+
+  , PGScalarType(..)
+  , WithScalarType(..)
+  , PGType(..)
+  , txtToPgColTy
+  , pgTypeOid
+  )
+where
 
 import qualified Database.PG.Query          as Q
 import qualified Database.PG.Query.PTI      as PTI
@@ -230,6 +287,10 @@ snakeCaseTable (QualifiedObject sn tn) =
 
 type QualifiedFunction = QualifiedObject FunctionName
 
+newtype PGDescription
+  = PGDescription { getPGDescription :: T.Text }
+  deriving (Show, Eq, FromJSON, ToJSON, Q.FromCol)
+
 newtype PGCol
   = PGCol { getPGColTxt :: T.Text }
   deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, ToJSONKey, FromJSONKey, Lift, Data)
@@ -406,6 +467,7 @@ isStringType = (`elem` stringTypes)
 
 jsonTypes :: [PGScalarType]
 jsonTypes = [PGJSON, PGJSONB]
+
 isJSONType :: PGScalarType -> Bool
 isJSONType = (`elem` jsonTypes)
 
@@ -428,6 +490,7 @@ isBigNum = \case
 
 geoTypes :: [PGScalarType]
 geoTypes = [PGGeometry, PGGeography]
+
 isGeoType :: PGScalarType -> Bool
 isGeoType = (`elem` geoTypes)
 

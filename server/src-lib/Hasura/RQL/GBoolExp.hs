@@ -34,8 +34,7 @@ columnReferenceType = \case
 
 instance DQuote ColumnReference where
   dquoteTxt = \case
-    ColumnReferenceColumn column ->
-      getPGColTxt $ pgiName column
+    ColumnReferenceColumn column -> dquoteTxt $ pgiColumn column
     ColumnReferenceCast reference targetType ->
       dquoteTxt reference <> "::" <> dquoteTxt targetType
 
@@ -48,7 +47,7 @@ parseOperationsExpression
   -> Value
   -> m [OpExpG v]
 parseOperationsExpression rhsParser fim columnInfo =
-  withPathK (getPGColTxt $ pgiName columnInfo) .
+  withPathK (getPGColTxt $ pgiColumn columnInfo) .
     parseOperations (ColumnReferenceColumn columnInfo)
   where
     parseOperations :: ColumnReference -> Value -> m [OpExpG v]
@@ -302,7 +301,7 @@ annColExp
 annColExp rhsParser colInfoMap (ColExp fieldName colVal) = do
   colInfo <- askFieldInfo colInfoMap fieldName
   case colInfo of
-    FIColumn (PGColumnInfo _ (PGColumnScalar PGJSON) _) ->
+    FIColumn (PGColumnInfo _ _ (PGColumnScalar PGJSON) _ _) ->
       throwError (err400 UnexpectedPayload "JSON column can not be part of where clause")
     FIColumn pgi ->
       AVCol pgi <$> parseOperationsExpression rhsParser colInfoMap pgi colVal
@@ -328,8 +327,9 @@ convBoolRhs' tq =
 convColRhs
   :: S.Qual -> AnnBoolExpFldSQL -> State Word64 S.BoolExp
 convColRhs tableQual = \case
-  AVCol (PGColumnInfo cn _ _) opExps -> do
-    let bExps = map (mkColCompExp tableQual cn) opExps
+  AVCol colInfo opExps -> do
+    let cn = pgiColumn colInfo
+        bExps = map (mkColCompExp tableQual cn) opExps
     return $ foldr (S.BEBin S.AndOp) (S.BELit True) bExps
 
   AVRel (RelInfo _ _ colMapping relTN _) nesAnn -> do
@@ -456,7 +456,7 @@ getColExpDeps
   :: QualifiedTable -> AnnBoolExpFldPartialSQL -> [SchemaDependency]
 getColExpDeps tn = \case
   AVCol colInfo opExps ->
-    let cn = pgiName colInfo
+    let cn = pgiColumn colInfo
         colDepReason = bool DRSessionVariable DROnType $ any hasStaticExp opExps
         colDep = mkColDep colDepReason tn cn
         depColsInOpExp = mapMaybe opExpDepCol opExps

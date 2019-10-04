@@ -14,7 +14,6 @@ where
 import           Data.Aeson.Types
 import           Instances.TH.Lift              ()
 
-import qualified Data.HashMap.Strict            as HM
 import qualified Data.HashSet                   as HS
 import qualified Data.List.NonEmpty             as NE
 import qualified Data.Sequence                  as DS
@@ -59,9 +58,8 @@ convWildcard fieldInfoMap (SelPermInfo cols _ _ _ _ _) wildcard =
   Star         -> return simpleCols
   (StarDot wc) -> (simpleCols ++) <$> (catMaybes <$> relExtCols wc)
   where
-    (pgCols, relColInfos) = partitionFieldInfosWith (pgiName, id) $
-                            HM.elems fieldInfoMap
-
+    pgCols = map pgiColumn $ getCols fieldInfoMap
+    relColInfos = getRels fieldInfoMap
     simpleCols = map ECSimple $ filter (`HS.member` cols) pgCols
 
     mkRelCol wc relInfo = do
@@ -113,7 +111,7 @@ convOrderByElem sessVarBldr (flds, spi) = \case
     fldInfo <- askFieldInfo flds fldName
     case fldInfo of
       FIColumn colInfo -> do
-        checkSelOnCol spi (pgiName colInfo)
+        checkSelOnCol spi (pgiColumn colInfo)
         let ty = pgiType colInfo
         if isScalarColumnWhere isGeoType ty
           then throw400 UnexpectedPayload $ mconcat

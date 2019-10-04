@@ -35,8 +35,8 @@ instance FromJSON ExtCol where
     <$> o .:  "name"
     <*> o .:? "alias"
     <*> parseJSON v
-  parseJSON (String s) =
-    return $ ECSimple $ PGCol s
+  parseJSON v@(String _) =
+    ECSimple <$> parseJSON v
   parseJSON _ =
     fail $ mconcat
     [ "A column should either be a string or an "

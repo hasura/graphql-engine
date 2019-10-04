@@ -5,6 +5,8 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Time                          (UTCTime)
 import           Language.Haskell.TH.Syntax         (Lift)
+
+import qualified Data.HashMap.Strict                as HM
 import qualified Network.HTTP.Client                as HTTP
 
 import           Hasura.EncJSON
@@ -28,7 +30,7 @@ import           Hasura.Server.Utils
 
 import qualified Database.PG.Query                  as Q
 
-data RQLQuery
+data RQLQueryV1
   = RQAddExistingTableOrView !TrackTable
   | RQTrackTable !TrackTable
   | RQUntrackTable !UntrackTable
@@ -96,11 +98,48 @@ data RQLQuery
   | RQDumpInternalState !DumpInternalState
   deriving (Show, Eq, Lift)
 
+data RQLQueryV2
+  = RQV2TrackTable !TrackTableV2
+  | RQV2SetTableCustomFields !SetTableCustomFields
+  deriving (Show, Eq, Lift)
+
+data RQLQuery
+  = RQV1 !RQLQueryV1
+  | RQV2 !RQLQueryV2
+  deriving (Show, Eq, Lift)
+
+instance FromJSON RQLQuery where
+  parseJSON = withObject "Object" $ \o -> do
+    mVersion <- o .:? "version"
+    let version = fromMaybe VIVersion1 mVersion
+        val = Object o
+    case version of
+      VIVersion1 -> RQV1 <$> parseJSON val
+      VIVersion2 -> RQV2 <$> parseJSON val
+
+instance ToJSON RQLQuery where
+  toJSON = \case
+    RQV1 q -> embedVersion VIVersion1 $ toJSON q
+    RQV2 q -> embedVersion VIVersion2 $ toJSON q
+    where
+      embedVersion version (Object o) =
+        Object $ HM.insert "version" (toJSON version) o
+      -- never happens since JSON value of RQL queries are always objects
+      embedVersion _ _ = error "Unexpected: toJSON of RQL queries are not objects"
+
 $(deriveJSON
   defaultOptions { constructorTagModifier = snakeCase . drop 2
                  , sumEncoding = TaggedObject "type" "args"
                  }
-  ''RQLQuery)
+  ''RQLQueryV1)
+
+$(deriveJSON
+  defaultOptions { constructorTagModifier = snakeCase . drop 4
+                 , sumEncoding = TaggedObject "type" "args"
+                 , tagSingleConstructors = True
+                 }
+  ''RQLQueryV2
+ )
 
 newtype Run a
   = Run {unRun :: StateT SchemaCache (ReaderT (UserInfo, HTTP.Manager, SQLGenCtx) (LazyTx QErr)) a}
@@ -171,7 +210,7 @@ runQuery pgExecCtx instanceId userInfo sc hMgr sqlGenCtx query = do
       return r
 
 queryNeedsReload :: RQLQuery -> Bool
-queryNeedsReload qi = case qi of
+queryNeedsReload (RQV1 qi) = case qi of
   RQAddExistingTableOrView _      -> True
   RQTrackTable _                  -> True
   RQUntrackTable _                -> True
@@ -235,6 +274,9 @@ queryNeedsReload qi = case qi of
   RQDumpInternalState _           -> False
 
   RQBulk qs                       -> any queryNeedsReload qs
+queryNeedsReload (RQV2 qi) = case qi of
+  RQV2TrackTable _           -> True
+  RQV2SetTableCustomFields _ -> True
 
 runQueryM
   :: ( QErrM m, CacheRWM m, UserInfoM m, MonadTx m
@@ -248,6 +290,10 @@ runQueryM rq =
     rebuildGCtx = when (queryNeedsReload rq) buildGCtxMap
 
     runQueryM' = case rq of
+      RQV1 q -> runQueryV1M q
+      RQV2 q -> runQueryV2M q
+
+    runQueryV1M = \case
       RQAddExistingTableOrView q   -> runTrackTableQ q
       RQTrackTable q               -> runTrackTableQ q
       RQUntrackTable q             -> runUntrackTableQ q
@@ -312,3 +358,7 @@ runQueryM rq =
       RQRunSql q                   -> runRunSQL q
 
       RQBulk qs                    -> encJFromList <$> indexedMapM runQueryM qs
+
+    runQueryV2M = \case
+      RQV2TrackTable q           -> runTrackTableV2Q q
+      RQV2SetTableCustomFields q -> runSetTableCustomFieldsQV2 q

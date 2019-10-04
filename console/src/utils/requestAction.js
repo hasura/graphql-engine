@@ -1,17 +1,13 @@
 import fetch from 'isomorphic-fetch';
 import { push } from 'react-router-redux';
 import globals from 'Globals';
-import { UPDATE_DATA_HEADERS } from 'components/Services/Data/DataActions';
 
 import {
   LOAD_REQUEST,
   DONE_REQUEST,
   FAILED_REQUEST,
   ERROR_REQUEST,
-  CONNECTION_FAILED,
 } from 'components/App/Actions';
-
-import { LOGIN_IN_PROGRESS, LOGIN_ERROR } from 'components/Main/Actions';
 
 const requestAction = (
   url,
@@ -25,7 +21,7 @@ const requestAction = (
   }
 
   return dispatch => {
-    const p1 = new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       dispatch({ type: LOAD_REQUEST });
       fetch(url, options).then(
         response => {
@@ -59,18 +55,9 @@ const requestAction = (
                 });
               }
               if (msg.code && msg.code === 'access-denied') {
-                dispatch({
-                  type: UPDATE_DATA_HEADERS,
-                  data: {
-                    'content-type': 'application/json',
-                    [`x-hasura-${
-                      globals.adminSecretLabel
-                    }`]: globals.adminSecret,
-                  },
-                });
-                dispatch({ type: LOGIN_IN_PROGRESS, data: false });
-                dispatch({ type: LOGIN_ERROR, data: false });
-                dispatch(push(globals.urlPrefix + '/login'));
+                if (window.location.pathname !== globals.urlPrefix + '/login') {
+                  dispatch(push(globals.urlPrefix + '/login'));
+                }
               }
               reject(msg);
             });
@@ -84,13 +71,11 @@ const requestAction = (
           });
         },
         error => {
-          console.error(error);
+          console.error('Request error: ', error);
           dispatch({ type: FAILED_REQUEST });
-          dispatch({ type: CONNECTION_FAILED });
           if (ERROR) {
             dispatch({
               type: ERROR,
-              code: 'server-connection-failed',
               message: error.message,
               data: error.message,
             });
@@ -99,7 +84,6 @@ const requestAction = (
         }
       );
     });
-    return p1;
   };
 };
 
