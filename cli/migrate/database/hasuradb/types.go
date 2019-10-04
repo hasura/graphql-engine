@@ -349,7 +349,7 @@ type replaceMetadataInput struct {
 	Tables []struct {
 		Table               tableSchema                     `json:"table" yaml:"table"`
 		ArrayRelationships  []createArrayRelationshipInput  `json:"array_relationships" yaml:"array_relationships"`
-		ObjectRelationships []createObjectRelationshipInput `json:"object_relationship" yaml:"object_relationship"`
+		ObjectRelationships []createObjectRelationshipInput `json:"object_relationships" yaml:"object_relationships"`
 		InsertPermissions   []createInsertPermissionInput   `json:"insert_permissions" yaml:"insert_permissions"`
 		SelectPermissions   []createSelectPermissionInput   `json:"select_permissions" yaml:"select_permissions"`
 		UpdatePermissions   []createUpdatePermissionInput   `json:"update_permissions" yaml:"update_permissions"`
@@ -377,37 +377,71 @@ func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList
 
 	for _, table := range rmi.Tables {
 		for _, objRel := range table.ObjectRelationships {
+			objRel.Table = tableSchema{
+				table.Table.Name,
+				table.Table.Schema,
+			}
 			l.PushBack(&objRel)
 		}
 	}
 
 	for _, table := range rmi.Tables {
 		for _, arrayRel := range table.ArrayRelationships {
+			arrayRel.Table = tableSchema{
+				table.Table.Name,
+				table.Table.Schema,
+			}
 			l.PushBack(&arrayRel)
 		}
 	}
 
 	for _, table := range rmi.Tables {
 		for _, insertPerm := range table.InsertPermissions {
+			insertPerm.Table = tableSchema{
+				table.Table.Name,
+				table.Table.Schema,
+			}
 			l.PushBack(&insertPerm)
 		}
 	}
 
 	for _, table := range rmi.Tables {
 		for _, selectPerm := range table.SelectPermissions {
+			selectPerm.Table = tableSchema{
+				table.Table.Name,
+				table.Table.Schema,
+			}
 			l.PushBack(&selectPerm)
 		}
 	}
 
 	for _, table := range rmi.Tables {
 		for _, updatePerm := range table.UpdatePermissions {
+			updatePerm.Table = tableSchema{
+				table.Table.Name,
+				table.Table.Schema,
+			}
 			l.PushBack(&updatePerm)
 		}
 	}
 
 	for _, table := range rmi.Tables {
 		for _, deletePerm := range table.DeletePermissions {
+			deletePerm.Table = tableSchema{
+				table.Table.Name,
+				table.Table.Schema,
+			}
 			l.PushBack(&deletePerm)
+		}
+	}
+
+	for _, table := range rmi.Tables {
+		for _, et := range table.EventTriggers {
+			et.Table = tableSchema{
+				table.Table.Name,
+				table.Table.Schema,
+			}
+			l.PushBack(&et)
 		}
 	}
 	// track functions

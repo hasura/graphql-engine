@@ -603,189 +603,378 @@ func (h *HasuraDB) PushToList(migration io.Reader, fileType string, l *database.
 			switch actionType := v.Type; actionType {
 			case trackTable, addExistingTableOrView:
 				tt := &trackTableInput{}
-				err := mapstructure.Decode(v.Args, tt)
+				decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+					TagName: "yaml",
+					Result:  tt,
+				})
+				if err != nil {
+					return err
+				}
+				err = decoder.Decode(v.Args)
 				if err != nil {
 					return err
 				}
 				l.PushBack(tt)
 			case untrackTable:
 				utt := &unTrackTableInput{}
-				err := mapstructure.Decode(v.Args, utt)
+				decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+					TagName: "yaml",
+					Result:  utt,
+				})
+				if err != nil {
+					return err
+				}
+				err = decoder.Decode(v.Args)
 				if err != nil {
 					return err
 				}
 				l.PushBack(utt)
 			case createObjectRelationship:
 				utt := &createObjectRelationshipInput{}
-				err := mapstructure.Decode(v.Args, utt)
+				decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+					TagName: "yaml",
+					Result:  utt,
+				})
+				if err != nil {
+					return err
+				}
+				err = decoder.Decode(v.Args)
 				if err != nil {
 					return err
 				}
 				l.PushBack(utt)
 			case createArrayRelationship:
 				utt := &createArrayRelationshipInput{}
-				err := mapstructure.Decode(v.Args, utt)
+				decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+					TagName: "yaml",
+					Result:  utt,
+				})
+				if err != nil {
+					return err
+				}
+				err = decoder.Decode(v.Args)
 				if err != nil {
 					return err
 				}
 				l.PushBack(utt)
 			case setRelationshipComment:
 				utt := &setRelationshipCommentInput{}
-				err := mapstructure.Decode(v.Args, utt)
+				decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+					TagName: "yaml",
+					Result:  utt,
+				})
+				if err != nil {
+					return err
+				}
+				err = decoder.Decode(v.Args)
 				if err != nil {
 					return err
 				}
 				l.PushBack(utt)
 			case dropRelationship:
 				utt := &dropRelationshipInput{}
-				err := mapstructure.Decode(v.Args, utt)
+				decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+					TagName: "yaml",
+					Result:  utt,
+				})
+				if err != nil {
+					return err
+				}
+				err = decoder.Decode(v.Args)
 				if err != nil {
 					return err
 				}
 				l.PushBack(utt)
 			case createInsertPermission:
 				utt := &createInsertPermissionInput{}
-				err := mapstructure.Decode(v.Args, utt)
+				decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+					TagName: "yaml",
+					Result:  utt,
+				})
+				if err != nil {
+					return err
+				}
+				err = decoder.Decode(v.Args)
 				if err != nil {
 					return err
 				}
 				l.PushBack(utt)
 			case dropInsertPermission:
 				utt := &dropInsertPermissionInput{}
-				err := mapstructure.Decode(v.Args, utt)
+				decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+					TagName: "yaml",
+					Result:  utt,
+				})
+				if err != nil {
+					return err
+				}
+				err = decoder.Decode(v.Args)
 				if err != nil {
 					return err
 				}
 				l.PushBack(utt)
 			case createSelectPermission:
 				utt := &createSelectPermissionInput{}
-				err := mapstructure.Decode(v.Args, utt)
+				decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+					TagName: "yaml",
+					Result:  utt,
+				})
+				if err != nil {
+					return err
+				}
+				err = decoder.Decode(v.Args)
 				if err != nil {
 					return err
 				}
 				l.PushBack(utt)
 			case dropSelectPermission:
 				utt := &dropSelectPermissionInput{}
-				err := mapstructure.Decode(v.Args, utt)
+				decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+					TagName: "yaml",
+					Result:  utt,
+				})
+				if err != nil {
+					return err
+				}
+				err = decoder.Decode(v.Args)
 				if err != nil {
 					return err
 				}
 				l.PushBack(utt)
 			case createUpdatePermission:
 				utt := &createUpdatePermissionInput{}
-				err := mapstructure.Decode(v.Args, utt)
+				decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+					TagName: "yaml",
+					Result:  utt,
+				})
+				if err != nil {
+					return err
+				}
+				err = decoder.Decode(v.Args)
 				if err != nil {
 					return err
 				}
 				l.PushBack(utt)
 			case dropUpdatePermission:
 				utt := &dropUpdatePermissionInput{}
-				err := mapstructure.Decode(v.Args, utt)
+				decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+					TagName: "yaml",
+					Result:  utt,
+				})
+				if err != nil {
+					return err
+				}
+				err = decoder.Decode(v.Args)
 				if err != nil {
 					return err
 				}
 				l.PushBack(utt)
 			case createDeletePermission:
 				utt := &createDeletePermissionInput{}
-				err := mapstructure.Decode(v.Args, utt)
+				decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+					TagName: "yaml",
+					Result:  utt,
+				})
+				if err != nil {
+					return err
+				}
+				err = decoder.Decode(v.Args)
 				if err != nil {
 					return err
 				}
 				l.PushBack(utt)
 			case dropDeletePermission:
 				utt := &dropDeletePermissionInput{}
-				err := mapstructure.Decode(v.Args, utt)
+				decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+					TagName: "yaml",
+					Result:  utt,
+				})
+				if err != nil {
+					return err
+				}
+				err = decoder.Decode(v.Args)
 				if err != nil {
 					return err
 				}
 				l.PushBack(utt)
 			case trackFunction:
 				utt := &trackFunctionInput{}
-				err := mapstructure.Decode(v.Args, utt)
+				decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+					TagName: "yaml",
+					Result:  utt,
+				})
+				if err != nil {
+					return err
+				}
+				err = decoder.Decode(v.Args)
 				if err != nil {
 					return err
 				}
 				l.PushBack(utt)
 			case unTrackFunction:
 				utt := &unTrackFunctionInput{}
-				err := mapstructure.Decode(v.Args, utt)
+				decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+					TagName: "yaml",
+					Result:  utt,
+				})
+				if err != nil {
+					return err
+				}
+				err = decoder.Decode(v.Args)
 				if err != nil {
 					return err
 				}
 				l.PushBack(utt)
 			case createEventTrigger:
 				utt := &createEventTriggerInput{}
-				err := mapstructure.Decode(v.Args, utt)
+				decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+					TagName: "yaml",
+					Result:  utt,
+				})
+				if err != nil {
+					return err
+				}
+				err = decoder.Decode(v.Args)
 				if err != nil {
 					return err
 				}
 				l.PushBack(utt)
 			case deleteEventTrigger:
 				utt := &deleteEventTriggerInput{}
-				err := mapstructure.Decode(v.Args, utt)
+				decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+					TagName: "yaml",
+					Result:  utt,
+				})
+				if err != nil {
+					return err
+				}
+				err = decoder.Decode(v.Args)
 				if err != nil {
 					return err
 				}
 				l.PushBack(utt)
 			case addRemoteSchema:
 				utt := &addRemoteSchemaInput{}
-				err := mapstructure.Decode(v.Args, utt)
+				decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+					TagName: "yaml",
+					Result:  utt,
+				})
+				if err != nil {
+					return err
+				}
+				err = decoder.Decode(v.Args)
 				if err != nil {
 					return err
 				}
 				l.PushBack(utt)
 			case removeRemoteSchema:
 				utt := &removeRemoteSchemaInput{}
-				err := mapstructure.Decode(v.Args, utt)
+				decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+					TagName: "yaml",
+					Result:  utt,
+				})
+				if err != nil {
+					return err
+				}
+				err = decoder.Decode(v.Args)
 				if err != nil {
 					return err
 				}
 				l.PushBack(utt)
 			case createQueryCollection:
 				utt := &createQueryCollectionInput{}
-				err := mapstructure.Decode(v.Args, utt)
+				decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+					TagName: "yaml",
+					Result:  utt,
+				})
+				if err != nil {
+					return err
+				}
+				err = decoder.Decode(v.Args)
 				if err != nil {
 					return err
 				}
 				l.PushBack(utt)
 			case dropQueryCollection:
 				utt := &dropQueryCollectionInput{}
-				err := mapstructure.Decode(v.Args, utt)
+				decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+					TagName: "yaml",
+					Result:  utt,
+				})
+				if err != nil {
+					return err
+				}
+				err = decoder.Decode(v.Args)
 				if err != nil {
 					return err
 				}
 				l.PushBack(utt)
 			case addQueryToCollection:
 				utt := &addQueryToCollectionInput{}
-				err := mapstructure.Decode(v.Args, utt)
+				decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+					TagName: "yaml",
+					Result:  utt,
+				})
+				if err != nil {
+					return err
+				}
+				err = decoder.Decode(v.Args)
 				if err != nil {
 					return err
 				}
 				l.PushBack(utt)
 			case dropQueryFromCollection:
 				utt := &dropQueryFromCollectionInput{}
-				err := mapstructure.Decode(v.Args, utt)
+				decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+					TagName: "yaml",
+					Result:  utt,
+				})
+				if err != nil {
+					return err
+				}
+				err = decoder.Decode(v.Args)
 				if err != nil {
 					return err
 				}
 				l.PushBack(utt)
 			case addCollectionToAllowList:
 				utt := &addCollectionToAllowListInput{}
-				err := mapstructure.Decode(v.Args, utt)
+				decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+					TagName: "yaml",
+					Result:  utt,
+				})
+				if err != nil {
+					return err
+				}
+				err = decoder.Decode(v.Args)
 				if err != nil {
 					return err
 				}
 				l.PushBack(utt)
 			case dropCollectionFromAllowList:
 				utt := &dropCollectionFromAllowListInput{}
-				err := mapstructure.Decode(v.Args, utt)
+				decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+					TagName: "yaml",
+					Result:  utt,
+				})
+				if err != nil {
+					return err
+				}
+				err = decoder.Decode(v.Args)
 				if err != nil {
 					return err
 				}
 				l.PushBack(utt)
 			case replaceMetadata:
 				utt := &replaceMetadataInput{}
-				err := mapstructure.Decode(v.Args, utt)
+				decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+					TagName: "yaml",
+					Result:  utt,
+				})
+				if err != nil {
+					return err
+				}
+				err = decoder.Decode(v.Args)
 				if err != nil {
 					return err
 				}
@@ -803,7 +992,14 @@ func (h *HasuraDB) PushToList(migration io.Reader, fileType string, l *database.
 				utt.convertToMetadataActions(l)
 			case runSQL:
 				utt := &runSQLInput{}
-				err := mapstructure.Decode(v.Args, utt)
+				decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+					TagName: "yaml",
+					Result:  utt,
+				})
+				if err != nil {
+					return err
+				}
+				err = decoder.Decode(v.Args)
 				if err != nil {
 					return err
 				}
