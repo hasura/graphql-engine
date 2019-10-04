@@ -63,7 +63,7 @@ const existingUsersQuery = gql`
 `;
 
 const remainingUsersQuery = gql`
-  query RemainingUsers($existingUsersId: [Int]) {
+  query RemainingUsers($existingUsersId: [Int!]) {
     users(order_by:[{id:desc}],where:{id:{_nin:$existingUsersId}}){
       ...user
     }
@@ -72,7 +72,7 @@ const remainingUsersQuery = gql`
 `;
 
 const remainingUsersSubscription = gql`
-  subscription RemainingUsersSub($existingUsersId: [Int]) {
+  subscription RemainingUsersSub($existingUsersId: [Int!]) {
     users(order_by:[{id:desc}],where:{id:{_nin:$existingUsersId}}){
       ...user
     }

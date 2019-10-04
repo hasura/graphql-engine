@@ -6,6 +6,7 @@ module Hasura.RQL.DDL.Schema.Catalog
   , updateTableIsEnumInCatalog
   , updateTableConfig
   , deleteTableFromCatalog
+  , getTableConfig
   ) where
 
 import           Hasura.Prelude
@@ -56,3 +57,11 @@ deleteTableFromCatalog (QualifiedObject sn tn) = liftTx $ Q.unitQE defaultTxErro
     DELETE FROM "hdb_catalog"."hdb_table"
     WHERE table_schema = $1 AND table_name = $2
   |] (sn, tn) False
+
+getTableConfig :: MonadTx m => QualifiedTable -> m TableConfig
+getTableConfig (QualifiedObject sn tn) = liftTx $
+  Q.getAltJ . runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
+    [Q.sql|
+       SELECT configuration::json FROM hdb_catalog.hdb_table
+        WHERE table_schema = $1 AND table_name = $2
+    |] (sn, tn) True

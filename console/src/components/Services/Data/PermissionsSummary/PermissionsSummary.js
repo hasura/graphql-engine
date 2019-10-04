@@ -262,7 +262,7 @@ class PermissionsSummary extends Component {
                   ...copyState,
                   copyFromRole: role,
                   copyFromTable: currTable
-                    ? getTableNameWithSchema(null, false, currTable)
+                    ? getTableNameWithSchema(currTable)
                     : 'all',
                   copyFromAction: currRole ? 'all' : currAction,
                 },
@@ -803,7 +803,7 @@ class PermissionsSummary extends Component {
       const getFromTableOptions = () => {
         return currSchemaTrackedTables.map(table => {
           const tableName = getTableName(table);
-          const tableValue = getTableNameWithSchema(table, false);
+          const tableValue = getTableNameWithSchema(getTableDef(table));
 
           return (
             <option key={tableValue} value={tableValue}>
