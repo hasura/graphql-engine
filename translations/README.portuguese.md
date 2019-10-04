@@ -8,9 +8,9 @@
 <a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
 <a href="https://eepurl.com/dBUfJ5"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
 
-Hasura GraphQL Engine é um servidor GraphQL extremamente rápido that gives you **instant, realtime GraphQL APIs over Postgres**, com [**gatilhos webhook**](event-triggers.md) em eventos de banco de dados, e [**esquemas remotos**](remote-schemas.md) para lógicas de negócio.
+Hasura GraphQL Engine é um servidor GraphQL extremamente rápido que lhe permite criar **instantâneamente, desde APIs GraphQL realtime com Postgres**, até [**gatilhos webhook**](event-triggers.md) em eventos de banco de dados, e [**esquemas remotos**](remote-schemas.md) para lógicas de negócio.
 
-Hashura te ajuda a criar apps com GraphQL e Postgres ou incrementalmente mudar uma aplicação existente que já usar Postgres.
+Hashura te ajuda a criar apps com GraphQL e Postgres ou incrementalmente mudar uma aplicação existente que use Postgres.
 
 Leia mais em [hasura.io](https://hasura.io) e as [docs](https://docs.hasura.io).
 
@@ -105,7 +105,7 @@ The Hasura GraphQL Engine fronts a Postgres database instance and can accept Gra
 
 You can also merge remote GraphQL schemas and provide a unified GraphQL API.
 
-![Hasura GraphQL Engine architecture](assets/hasura-arch.svg)
+![Hasura GraphQL Engine architecture](../assets/hasura-arch.svg)
 
 ## Client-side tooling
 
@@ -181,13 +181,13 @@ Confira o [guia de contribuição](CONTRIBUTING.md) para mais.
 ## Recursos da marca
 
 Os recursos da marca Hasura (logos, o mascote da Hasura, badges de 'powered by' etc.) podem
-ser encontrados na pasta [assets/brand](assets/brand). Sinta-se livre para usá-los na sua 
+ser encontrados na pasta [assets/brand](../assets/brand). Sinta-se livre para usá-los na sua 
 aplicação/website etc. Nós ficariamos contentes se você adicionasse o badge "Powered by Hasura"
 na sua aplicação feita usando Hasusa. ❤️
 
 <div style="display: flex;">
-  <img src="assets/brand/powered_by_hasura_blue.svg" width="150px"/>
-  <img src="assets/brand/powered_by_hasura_white.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_blue.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_white.svg" width="150px"/>
 </div>
 
 ```html
