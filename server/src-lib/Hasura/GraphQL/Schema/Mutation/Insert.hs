@@ -43,10 +43,6 @@ mkConstraintInpTy :: QualifiedTable -> G.NamedType
 mkConstraintInpTy tn =
   G.NamedType $ qualObjectToName tn <> "_constraint"
 
--- conflict_action
-conflictActionTy :: G.NamedType
-conflictActionTy = G.NamedType "conflict_action"
-
 -- table_update_column
 mkUpdColumnInpTy :: QualifiedTable -> G.NamedType
 mkUpdColumnInpTy tn =
@@ -126,7 +122,6 @@ mkInsInp tn insCols relInfoMap =
 {-
 
 input table_on_conflict {
-  action: conflict_action
   constraint: table_constraint!
   update_columns: [table_column!]
 }
@@ -199,25 +194,12 @@ mkUpdColumnTy tn cols = enumTyInfo
     desc = G.Description $
       "update columns of table " <>> tn
 
-mkConflictActionTy :: Bool -> EnumTyInfo
-mkConflictActionTy updAllowed =
-  mkHsraEnumTyInfo (Just desc) conflictActionTy $
-    EnumValuesSynthetic . mapFromL _eviVal $ [enumValIgnore] <> bool [] [enumValUpdate] updAllowed
-  where
-    desc = G.Description "conflict action"
-    enumValIgnore = EnumValInfo (Just "ignore the insert on this row")
-                    (G.EnumValue "ignore") False
-    enumValUpdate = EnumValInfo (Just "update the row with the given values")
-                    (G.EnumValue "update") False
-
 mkOnConflictTypes
   :: QualifiedTable -> [ConstraintName] -> [G.Name] -> Bool -> [TypeInfo]
 mkOnConflictTypes tn uniqueOrPrimaryCons cols =
   bool [] tyInfos
   where
-    tyInfos = [ TIEnum $ mkConflictActionTy isUpdAllowed
-              , TIEnum $ mkConstraintTy tn uniqueOrPrimaryCons
+    tyInfos = [ TIEnum $ mkConstraintTy tn uniqueOrPrimaryCons
               , TIEnum $ mkUpdColumnTy tn cols
               , TIInpObj $ mkOnConflictInp tn
               ]
-    isUpdAllowed = not $ null cols
