@@ -65,7 +65,7 @@ Serverless/cloud-function platforms covered by boilerplates:
 
 ### Notifications
 
-Trigger push notifications and emails based on database events. Try the demo and tutorial below to see how browser push notifications are triggered when the user inserts some data:
+Triggers push notifications and emails based on database events. Try the demo and tutorial below to see how browser push notifications are triggered when the user inserts some data:
 
 * [Watch demo](https://www.youtube.com/watch?v=nuSHkzE2-zo)
 * [Try it out](https://serverless-push.demo.hasura.app/)
