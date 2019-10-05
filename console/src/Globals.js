@@ -8,8 +8,6 @@ import hljs from './helpers/highlight.min';
 import { getFeaturesCompatibility } from './helpers/versionUtils';
 /* eslint-enable */
 
-/* */
-
 const checkExtraSlashes = url => {
   if (!url) {
     return url;
