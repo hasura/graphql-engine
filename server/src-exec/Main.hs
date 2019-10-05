@@ -85,7 +85,6 @@ parseHGECommand =
                 <*> parseEnabledAPIs
                 <*> parseMxRefetchInt
                 <*> parseMxBatchSize
-                <*> parseFallbackRefetchInt
                 <*> parseEnableAllowlist
                 <*> parseEnabledLogs
                 <*> parseLogLevel

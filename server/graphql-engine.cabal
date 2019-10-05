@@ -148,7 +148,6 @@ library
 
                      -- HTTP compression
                      , zlib
-                     , brotli
 
   exposed-modules:     Hasura.Prelude
                      , Hasura.Logging
@@ -319,6 +318,7 @@ library
                       QuasiQuotes
                       RankNTypes
                       ScopedTypeVariables
+                      StandaloneDeriving
                       TemplateHaskell
                       TupleSections
                       TypeApplications
@@ -363,6 +363,7 @@ executable graphql-engine
                       QuasiQuotes
                       RankNTypes
                       ScopedTypeVariables
+                      StandaloneDeriving
                       TemplateHaskell
                       TupleSections
                       TypeApplications
