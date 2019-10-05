@@ -161,11 +161,6 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
      - Comma separated list of APIs (options: ``metadata``, ``graphql``, ``pgdump``) to be enabled.
        (default: ``metadata,graphql,pgdump``)
 
-   * - ``--live-queries-fallback-refetch-interval``
-     - ``HASURA_GRAPHQL_LIVE_QUERIES_FALLBACK_REFETCH_INTERVAL``
-     - Updated results (if any) will be sent at most once in this interval (in milliseconds) for live queries
-       which cannot be multiplexed. Default: 1000 (1sec)
-
    * - ``--live-queries-multiplexed-refetch-interval``
      - ``HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL``
      - Updated results (if any) will be sent at most once in this interval (in milliseconds) for live queries
