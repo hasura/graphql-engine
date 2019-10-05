@@ -13,10 +13,10 @@ Issues also marked as `help wanted`
 (see [list](https://github.com/hasura/graphql-engine/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen++label%3Ac%2Fdocs+label%3A%22help+wanted%22)) 
 are those that require community contributions.
 
-Please note that some of these issues, labelled with both `c/docs` and `c/console`/`c/server`, are part of a 
+Please note that some of these issues labelled with both `c/docs` and `c/console`/`c/server` are part of a 
 change/task that requires modifications in some component of GraphQL engine and the docs.
 
-Feel free to open pull requests to address these issues or to add/fix  docs features/content, even if a 
+Please Feel free to open pull requests to address these issues or to add/fix  docs features/content, even if a 
 corresponding issue doesn't exist. If you are unsure about whether to go ahead and work on something like 
 the latter, please get in touch with the maintainers in the `GraphQL engine`->`contrib` channel in the 
 community [Discord](https://discord.gg/vBPpJkS).
@@ -68,7 +68,7 @@ community [Discord](https://discord.gg/vBPpJkS).
 ## Some guidelines while adding docs
 
 ### Header section
-- Page titles should be self sufficient. Users might not have the context of the hierarchy of the page in the 
+- Titles of the pages should be self sufficient. Users might not have the context of the hierarchy of the page in the 
 docs tree. A user can land on a page via search as well. e.g. Say you are adding a new deployment guide for AWS under 
 `Guides -> Deployment -> AWS`. The title of this page should not be just `AWS` but instead `AWS deployment guide for 
 Hasura GraphQL engine`. It's ok to alias it to just `AWS` in the sidebar as there the user has the context of the 
@@ -102,8 +102,7 @@ without losing any visible quality.
 ### Syntax
 - Ensure heading underlines are the same length as the headings. Short underlines will throw warnings during builds.
 - Use bold in headings in place of string literals for aesthetics (i.e. ** in place of ``)
-- While adding code blocks ensure the right language type is set. Sometimes adding placeholders breaks the language's
-syntax in which case you'll have to set the language type to `none` to avoid warnings during builds.
+- While adding code blocks ensure the right language type is set. Sometimes adding placeholders breaks the syntax of language in which case you'll have to set the language type to `none` to avoid warnings during builds.
 
 ### Pre-commit checks
 - Just before committing your changes, delete your local `_build` folder completely and then build docs again. Scan 
