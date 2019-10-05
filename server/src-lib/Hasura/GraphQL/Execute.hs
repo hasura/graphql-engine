@@ -195,7 +195,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
     Nothing -> noExistingPlan
   where
     GQLReq opNameM queryStr queryVars = reqUnparsed
-    addPlanToCache plan =
+    _addPlanToCache plan =
       EP.addPlan scVer (userRole userInfo)
       opNameM queryStr plan planCache
     noExistingPlan = do
