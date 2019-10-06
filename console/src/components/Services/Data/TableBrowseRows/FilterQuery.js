@@ -186,6 +186,21 @@ class FilterQuery extends Component {
         return { [col]: { [op]: value } };
       }),
     };
+
+    let urlSorts = [];
+    if (typeof this.props.urlQuery.sort === 'string') {
+      urlSorts = [this.props.urlQuery.sort];
+    } else if (Array.isArray(this.props.urlQuery.sort)) {
+      urlSorts = this.props.urlQuery.sort;
+    }
+    this.props.curQuery.order_by = urlSorts.map(sort => {
+      const parts = sort.split(';');
+      const column = parts[0];
+      const type = parts[1];
+      const nulls = 'last';
+      return { column, type, nulls };
+    });
+
     dispatch(setDefaultQuery(this.props.curQuery));
   }
 
