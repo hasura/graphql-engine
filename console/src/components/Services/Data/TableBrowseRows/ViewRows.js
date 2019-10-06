@@ -59,6 +59,7 @@ const ViewRows = ({
   updateInvocationFunction,
   triggeredRow,
   triggeredFunction,
+  location,
 }) => {
   const styles = require('../../../Common/TableCommon/Table.scss');
 
@@ -612,6 +613,7 @@ const ViewRows = ({
             count={count}
             tableName={curTableName}
             offset={offset}
+            urlQuery={location.query}
           />
         );
       }

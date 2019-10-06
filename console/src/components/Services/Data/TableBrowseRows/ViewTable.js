@@ -201,6 +201,7 @@ class ViewTable extends Component {
         updateInvocationFunction={this.updateInvocationFunction.bind(this)}
         triggeredRow={triggeredRow}
         triggeredFunction={triggeredFunction}
+        location={this.props.location}
       />
     );
 

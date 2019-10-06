@@ -171,6 +171,21 @@ const renderSorts = (orderBy, tableSchema, dispatch) => {
 class FilterQuery extends Component {
   componentDidMount() {
     const dispatch = this.props.dispatch;
+    let urlFilters = [];
+    if (typeof this.props.urlQuery.filter === 'string') {
+      urlFilters = [this.props.urlQuery.filter];
+    } else if (Array.isArray(this.props.urlQuery.filter)) {
+      urlFilters = this.props.urlQuery.filter;
+    }
+    this.props.curQuery.where = {
+      $and: urlFilters.map(filter => {
+        const parts = filter.split(';');
+        const col = parts[0];
+        const op = parts[1];
+        const value = parts[2];
+        return { [col]: { [op]: value } };
+      }),
+    };
     dispatch(setDefaultQuery(this.props.curQuery));
   }
 
