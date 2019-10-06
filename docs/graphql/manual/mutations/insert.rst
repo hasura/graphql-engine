@@ -371,6 +371,59 @@ Insert an object with a JSONB column
       }
     }
 
+Insert an object with an array column
+-------------------------------------
+**Example:** Insert new objects with the provided column as an array
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation m {
+      insert_foo(objects: [{ a: [1, 3, 5, 7, 9] }]) {
+        affected_rows
+        returning {
+          a
+          id
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "insert_foo": {
+          "affected_rows": [
+            1,
+            3,
+            5,
+            7,
+            9
+          ],
+          "returning": [
+            {
+              "a": {},
+              "id": 1
+            },
+            {
+              "a": {},
+              "id": 3
+            },
+            {
+              "a": {},
+              "id": 5
+            },
+            {
+              "a": {},
+              "id": 7
+            },
+            {
+              "a": {},
+              "id": 9
+            }
+          ]
+        }
+      }
+    }
+
 Set a field to its default value during insert
 ----------------------------------------------
 
