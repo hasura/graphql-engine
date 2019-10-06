@@ -110,6 +110,9 @@ syntax in which case you'll have to set the language type to `none` to avoid war
 the output and look for any syntax warnings (e.g. title underline too short, could not lex literal block, etc.). 
 Ideally there should not be any syntax warnings that are being thrown.
 
+### Nomad Installation
+- Here is the link for [Nomad Installation](https://www.nomadproject.io/guides/install/production/deployment-guide.html)
+
 ## Notes
 - Docs are currently deployed manually. Changes will not reflect immediately after a PR gets merged.
 - The search is powered by [Algolia](https://www.algolia.com/) and is updated everyday. Your local changes 
