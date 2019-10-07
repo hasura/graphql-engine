@@ -5,7 +5,6 @@ module Hasura.RQL.DML.Delete
   , traverseAnnDel
   , AnnDel
   , deleteQueryToTx
-  , getDeleteDeps
   , runDelete
   ) where
 
@@ -31,7 +30,7 @@ data AnnDelG v
   { dqp1Table   :: !QualifiedTable
   , dqp1Where   :: !(AnnBoolExp v, AnnBoolExp v)
   , dqp1MutFlds :: !(MutFldsG v)
-  , dqp1AllCols :: ![PGColInfo]
+  , dqp1AllCols :: ![PGColumnInfo]
   } deriving (Show, Eq)
 
 traverseAnnDel
@@ -58,20 +57,10 @@ mkDeleteCTE (AnnDel tn (fltr, wc) _ _) =
     tableFltr = Just $ S.WhereFrag $
                 toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps fltr wc
 
-getDeleteDeps
-  :: AnnDel -> [SchemaDependency]
-getDeleteDeps (AnnDel tn (_, wc) mutFlds allCols) =
-  mkParentDep tn : allColDeps <> whereDeps <> retDeps
-  where
-    whereDeps = getBoolExpDeps tn wc
-    allColDeps = map (mkColDep "on_type" tn . pgiName) allCols
-    retDeps   = map (mkColDep "untyped" tn . fst) $
-                pgColsFromMutFlds mutFlds
-
 validateDeleteQWith
   :: (UserInfoM m, QErrM m, CacheRM m)
   => SessVarBldr m
-  -> (PGColType -> Value -> m S.SQLExp)
+  -> (PGColumnType -> Value -> m S.SQLExp)
   -> DeleteQuery
   -> m AnnDel
 validateDeleteQWith sessVarBldr prepValBldr
@@ -80,7 +69,7 @@ validateDeleteQWith sessVarBldr prepValBldr
 
   -- If table is view then check if it deletable
   mutableView tableName viIsDeletable
-    (tiViewInfo tableInfo) "deletable"
+    (_tiViewInfo tableInfo) "deletable"
 
   -- Check if the role has delete permissions
   delPerm <- askDelPermInfo tableInfo
@@ -92,7 +81,7 @@ validateDeleteQWith sessVarBldr prepValBldr
   selPerm <- modifyErr (<> selNecessaryMsg) $
              askSelPermInfo tableInfo
 
-  let fieldInfoMap = tiFieldInfoMap tableInfo
+  let fieldInfoMap = _tiFieldInfoMap tableInfo
       allCols = getCols fieldInfoMap
 
   -- convert the returning cols into sql returing exp

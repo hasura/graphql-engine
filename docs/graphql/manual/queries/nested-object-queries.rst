@@ -3,7 +3,7 @@ Nested object queries
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
 You can use the object (one-to-one) or array (one-to-many) :doc:`relationships <../schema/relationships/index>` defined
@@ -141,4 +141,4 @@ articles.
 .. note::
 
     You can also :ref:`filter <nested_filter>`, :ref:`sort <nested_sort>`, :ref:`aggregate <nested_aggregate>`
-    and :ref:`paginate <nested_paginate>` nested objects in case of array relationships
+    and :ref:`paginate <nested_paginate>` nested objects in case of array relationships.

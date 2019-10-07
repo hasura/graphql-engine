@@ -7,7 +7,7 @@ args:
       schema: hge_tests
       name: test_t1
     update:
-      columns: ["c1"]
+      columns: ["c1", "c3"]
     delete:
       columns: "*"
     webhook: http://127.0.0.1:5592/new

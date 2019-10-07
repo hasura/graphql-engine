@@ -20,7 +20,7 @@ timestamp whenever a new row is added to the table:
 Step 1: Modify the table
 ------------------------
 
-Edit the ``created_at`` field and set its Default value as the SQL function ``now()``.
+Edit the ``created_at`` field and set its default value as the SQL function ``now()``.
 
 Open the console and head to ``Data -> article -> Modify``:
 

@@ -29,7 +29,6 @@ import           Hasura.SQL.Types
 
 import qualified Database.PG.Query   as Q
 
-import           Control.Arrow       ((***))
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
@@ -40,8 +39,10 @@ data PGColMeta
   = PGColMeta
   { pcmColumnName      :: !PGCol
   , pcmOrdinalPosition :: !Int
-  , pcmDataType        :: !PGColType
+  , pcmDataType        :: !PGScalarType
   , pcmIsNullable      :: !Bool
+  , pcmReferences      :: ![QualifiedTable]
+  , pcmDescription     :: !(Maybe PGDescription)
   } deriving (Show, Eq)
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''PGColMeta)
@@ -59,6 +60,7 @@ data TableMeta
   = TableMeta
   { tmOid         :: !Int
   , tmTable       :: !QualifiedTable
+  , tmDescription :: !(Maybe PGDescription)
   , tmColumns     :: ![PGColMeta]
   , tmConstraints :: ![ConstraintMeta]
   , tmForeignKeys :: ![ForeignKey]
@@ -67,8 +69,8 @@ data TableMeta
 fetchTableMeta :: Q.Tx [TableMeta]
 fetchTableMeta = do
   res <- Q.listQ $(Q.sqlFromFile "src-rsr/table_meta.sql") () False
-  forM res $ \(ts, tn, toid, cols, constrnts, fkeys) ->
-    return $ TableMeta toid (QualifiedObject ts tn) (Q.getAltJ cols)
+  forM res $ \(ts, tn, toid, descM, cols, constrnts, fkeys) ->
+    return $ TableMeta toid (QualifiedObject ts tn) descM (Q.getAltJ cols)
              (Q.getAltJ constrnts) (Q.getAltJ fkeys)
 
 getOverlap :: (Eq k, Hashable k) => (v -> k) -> [v] -> [v] -> [(v, v)]
@@ -87,19 +89,20 @@ data TableDiff
   = TableDiff
   { _tdNewName         :: !(Maybe QualifiedTable)
   , _tdDroppedCols     :: ![PGCol]
-  , _tdAddedCols       :: ![PGColInfo]
-  , _tdAlteredCols     :: ![(PGColInfo, PGColInfo)]
+  , _tdAddedCols       :: ![PGRawColumnInfo]
+  , _tdAlteredCols     :: ![(PGRawColumnInfo, PGRawColumnInfo)]
   , _tdDroppedFKeyCons :: ![ConstraintName]
   -- The final list of uniq/primary constraint names
   -- used for generating types on_conflict clauses
   -- TODO: this ideally should't be part of TableDiff
   , _tdUniqOrPriCons   :: ![ConstraintName]
+  , _tdNewDescription  :: !(Maybe PGDescription)
   } deriving (Show, Eq)
 
 getTableDiff :: TableMeta -> TableMeta -> TableDiff
 getTableDiff oldtm newtm =
   TableDiff mNewName droppedCols addedCols alteredCols
-  droppedFKeyConstraints uniqueOrPrimaryCons
+  droppedFKeyConstraints uniqueOrPrimaryCons mNewDesc
   where
     mNewName = bool (Just $ tmTable newtm) Nothing $ tmTable oldtm == tmTable newtm
     oldCols = tmColumns oldtm
@@ -107,6 +110,8 @@ getTableDiff oldtm newtm =
 
     uniqueOrPrimaryCons =
       [cmName cm | cm <- tmConstraints newtm, isUniqueOrPrimary (cmType cm)]
+
+    mNewDesc = tmDescription newtm
 
     droppedCols =
       map pcmColumnName $ getDifference pcmOrdinalPosition oldCols newCols
@@ -116,8 +121,8 @@ getTableDiff oldtm newtm =
 
     existingCols = getOverlap pcmOrdinalPosition oldCols newCols
 
-    pcmToPci (PGColMeta colName _ colType isNullable)
-      = PGColInfo colName colType isNullable
+    pcmToPci (PGColMeta colName _ colType isNullable references descM)
+      = PGRawColumnInfo colName colType isNullable references descM
 
     alteredCols =
       flip map (filter (uncurry (/=)) existingCols) $ pcmToPci *** pcmToPci
@@ -137,7 +142,7 @@ getTableDiff oldtm newtm =
 
 getTableChangeDeps
   :: (QErrM m, CacheRWM m)
-  => TableInfo -> TableDiff -> m [SchemaObjId]
+  => TableInfo PGColumnInfo -> TableDiff -> m [SchemaObjId]
 getTableChangeDeps ti tableDiff = do
   sc <- askSchemaCache
   -- for all the dropped columns
@@ -150,8 +155,8 @@ getTableChangeDeps ti tableDiff = do
     return $ getDependentObjs sc objId
   return $ droppedConsDeps <> droppedColDeps
   where
-    tn = tiName ti
-    TableDiff _ droppedCols _ _ droppedFKeyConstraints _ = tableDiff
+    tn = _tiName ti
+    TableDiff _ droppedCols _ _ droppedFKeyConstraints _ _ = tableDiff
 
 data SchemaDiff
   = SchemaDiff
@@ -192,10 +197,11 @@ getSchemaChangeDeps schemaDiff = do
 
 data FunctionMeta
   = FunctionMeta
-  { fmOid    :: !Int
-  , fmSchema :: !SchemaName
-  , fmName   :: !FunctionName
-  , fmType   :: !FunctionType
+  { fmOid         :: !Int
+  , fmSchema      :: !SchemaName
+  , fmName        :: !FunctionName
+  , fmType        :: !FunctionType
+  , fmDescription :: !(Maybe PGDescription)
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 2 snakeCase) ''FunctionMeta)
 
@@ -210,7 +216,8 @@ fetchFunctionMeta =
         'oid', p.oid :: integer,
         'schema', f.function_schema,
         'name', f.function_name,
-        'type', f.function_type
+        'type', f.function_type,
+        'description', f.description
       ) AS function_meta
     FROM
       hdb_catalog.hdb_function_agg f
@@ -221,13 +228,13 @@ fetchFunctionMeta =
       )
     WHERE
       f.function_schema <> 'hdb_catalog'
-    GROUP BY p.oid, f.function_schema, f.function_name, f.function_type
+    GROUP BY p.oid, f.function_schema, f.function_name, f.function_type, f.description
     |] () False
 
 data FunctionDiff
   = FunctionDiff
   { fdDropped :: ![QualifiedFunction]
-  , fdAltered :: ![(QualifiedFunction, FunctionType)]
+  , fdAltered :: ![(QualifiedFunction, FunctionType, Maybe PGDescription)]
   } deriving (Show, Eq)
 
 getFuncDiff :: [FunctionMeta] -> [FunctionMeta] -> FunctionDiff
@@ -238,8 +245,9 @@ getFuncDiff oldMeta newMeta =
     alteredFuncs = mapMaybe mkAltered $ getOverlap fmOid oldMeta newMeta
     mkAltered (oldfm, newfm) =
       let isTypeAltered = fmType oldfm /= fmType newfm
-          alteredFunc = (funcFromMeta oldfm, fmType newfm)
-      in bool Nothing (Just alteredFunc) isTypeAltered
+          isDescriptionAltered = fmDescription oldfm /= fmDescription newfm
+          alteredFunc = (funcFromMeta oldfm, fmType newfm, fmDescription newfm)
+      in bool Nothing (Just alteredFunc) $ isTypeAltered || isDescriptionAltered
 
 getOverloadedFuncs
   :: [QualifiedFunction] -> [FunctionMeta] -> [QualifiedFunction]

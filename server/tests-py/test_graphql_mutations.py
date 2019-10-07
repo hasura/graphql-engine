@@ -141,6 +141,12 @@ class TestGraphqlInsertPermission(DefaultTestMutations):
     def test_developer_insert_computer_json_has_keys_any_err(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/developer_insert_has_keys_any_fail.yaml")
 
+    def test_user_insert_account_success(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/user_insert_account_success.yaml")
+
+    def test_user_insert_account_fail(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/user_insert_account_fail.yaml")
+
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/insert/permissions"
@@ -332,6 +338,11 @@ class TestGraphqlUpdatePermissions(DefaultTestMutations):
     def test_user_update_resident_preset_session_var(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/user_update_resident_preset_session_var.yaml', transport)
 
+    def test_user_account_update_success(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/user_account_update_success.yaml')
+
+    def test_user_account_update_no_rows(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/user_account_update_no_rows.yaml')
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/update/permissions"
@@ -382,6 +393,51 @@ class TestGraphqlDeletePermissions(DefaultTestMutations):
     def test_agent_delete_perm_arr_sess_var_fail(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/agent_delete_perm_arr_sess_var_fail.yaml")
 
+    def test_user_delete_account_success(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/user_delete_account_success.yaml")
+
+    def test_user_delete_account_no_rows(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/user_delete_account_no_rows.yaml")
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/delete/permissions"
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+class TestGraphqlMutationCustomSchema(DefaultTestMutations):
+
+    def test_insert_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/insert_author.yaml', transport)
+
+    def test_insert_article_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/insert_article_author.yaml', transport)
+
+    def test_update_article(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/update_article.yaml', transport)
+
+    def test_delete_article(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/delete_article.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return "queries/graphql_mutation/custom_schema"
+
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+class TestGraphQLMutateEnums(DefaultTestMutations):
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_mutation/enums'
+
+    def test_insert_enum_field(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/insert_enum_field.yaml', transport)
+
+    def test_insert_enum_field_bad_value(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/insert_enum_field_bad_value.yaml', transport)
+
+    def test_update_enum_field(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/update_enum_field.yaml', transport)
+
+    def test_update_where_enum_field(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/update_where_enum_field.yaml', transport)
+
+    def test_delete_where_enum_field(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/delete_where_enum_field.yaml', transport)

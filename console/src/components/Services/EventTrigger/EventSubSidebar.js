@@ -67,7 +67,7 @@ const EventSubSidebar = ({
             trigger === currentTrigger &&
             currentLocation.indexOf(currentTrigger) !== -1
           ) {
-            activeTableClass = styles.activeTable;
+            activeTableClass = styles.activeLink;
           }
 
           return (
@@ -77,7 +77,7 @@ const EventSubSidebar = ({
                 data-test={trigger}
               >
                 <i
-                  className={styles.tableIcon + ' fa fa-table'}
+                  className={styles.tableIcon + ' fa fa-send-o'}
                   aria-hidden="true"
                 />
                 {trigger}

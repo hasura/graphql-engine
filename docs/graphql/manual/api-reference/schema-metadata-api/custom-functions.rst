@@ -6,7 +6,7 @@ Schema/Metadata API Reference: Custom Functions
   :depth: 1
   :local:
 
-Track/untrack a custom SQL function in Hasura GraphQL engine.
+Track/untrack a custom SQL function in the Hasura GraphQL engine.
 
 Only tracked custom functions are available for querying/mutating/subscribing data over the GraphQL API.
 
@@ -24,7 +24,7 @@ Currently, only functions which satisfy the following constraints can be exposed
 - **Return type**: MUST be ``SETOF <table-name>``
 - **Argument modes**: ONLY ``IN``
 
-Add a SQL function ``search_articles``:
+Add an SQL function ``search_articles``:
 
 .. code-block:: http
 
@@ -47,7 +47,7 @@ untrack_function
 
 ``untrack_function`` is used to remove a SQL function from the GraphQL schema.
 
-Remove a SQL function ``search_articles``:
+Remove an SQL function ``search_articles``:
 
 .. code-block:: http
 

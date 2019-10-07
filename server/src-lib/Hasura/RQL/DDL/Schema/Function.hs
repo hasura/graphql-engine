@@ -5,7 +5,7 @@ Description: Create/delete SQL functions to/from Hasura metadata.
 module Hasura.RQL.DDL.Schema.Function where
 
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Utils          (isValidName, showNames)
+import           Hasura.GraphQL.Utils          (showNames)
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -30,7 +30,7 @@ data PGTypType
   | PTDOMAIN
   | PTENUM
   | PTRANGE
-  | PTPSUEDO
+  | PTPSEUDO
   deriving (Show, Eq)
 $(deriveJSON defaultOptions{constructorTagModifier = drop 2} ''PGTypType)
 
@@ -42,21 +42,30 @@ data RawFuncInfo
   , rfiReturnTypeName   :: !T.Text
   , rfiReturnTypeType   :: !PGTypType
   , rfiReturnsSet       :: !Bool
-  , rfiInputArgTypes    :: ![PGColType]
+  , rfiInputArgTypes    :: ![PGScalarType]
   , rfiInputArgNames    :: ![T.Text]
+  , rfiDefaultArgs      :: !Int
   , rfiReturnsTable     :: !Bool
+  , rfiDescription      :: !(Maybe PGDescription)
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''RawFuncInfo)
 
-mkFunctionArgs :: [PGColType] -> [T.Text] -> [FunctionArg]
-mkFunctionArgs tys argNames =
+mkFunctionArgs :: Int -> [PGScalarType] -> [T.Text] -> [FunctionArg]
+mkFunctionArgs defArgsNo tys argNames =
   bool withNames withNoNames $ null argNames
   where
-    withNoNames = flip map tys $ \ty -> FunctionArg Nothing ty
-    withNames = zipWith mkArg argNames tys
+    hasDefaultBoolSeq = replicate (length argNames - defArgsNo) False
+                        -- only last arguments can have default expression
+                        <> replicate defArgsNo True
 
-    mkArg "" ty = FunctionArg Nothing ty
-    mkArg n  ty = flip FunctionArg ty $ Just $ FunctionArgName n
+    tysWithHasDefault = zip tys hasDefaultBoolSeq
+
+    withNoNames = flip map tysWithHasDefault $
+                  \(ty, hasDef) -> FunctionArg Nothing ty hasDef
+    withNames = zipWith mkArg argNames tysWithHasDefault
+
+    mkArg "" (ty, hasDef) = FunctionArg Nothing ty hasDef
+    mkArg n  (ty, hasDef) = FunctionArg (Just $ FunctionArgName n) ty hasDef
 
 validateFuncArgs :: MonadError QErr m => [FunctionArg] -> m ()
 validateFuncArgs args =
@@ -65,7 +74,7 @@ validateFuncArgs args =
     <> " are not in compliance with GraphQL spec"
   where
     funcArgsText = mapMaybe (fmap getFuncArgNameTxt . faName) args
-    invalidArgs = filter (not . isValidName) $ map G.Name funcArgsText
+    invalidArgs = filter (not . G.isValidName) $ map G.Name funcArgsText
 
 mkFunctionInfo
   :: QErrM m => QualifiedFunction -> RawFuncInfo -> m FunctionInfo
@@ -81,16 +90,16 @@ mkFunctionInfo qf rawFuncInfo = do
   -- throw error if function type is VOLATILE
   when (funTy == FTVOLATILE) $ throw400 NotSupported "function of type \"VOLATILE\" is not supported now"
 
-  let funcArgs = mkFunctionArgs inpArgTyps inpArgNames
+  let funcArgs = mkFunctionArgs defArgsNo inpArgTyps inpArgNames
   validateFuncArgs funcArgs
 
   let funcArgsSeq = Seq.fromList funcArgs
-      dep = SchemaDependency (SOTable retTable) "table"
+      dep = SchemaDependency (SOTable retTable) DRTable
       retTable = QualifiedObject retSn (TableName retN)
-  return $ FunctionInfo qf False funTy funcArgsSeq retTable [dep]
+  return $ FunctionInfo qf False funTy funcArgsSeq retTable [dep] descM
   where
-    RawFuncInfo hasVariadic funTy retSn retN retTyTyp
-                retSet inpArgTyps inpArgNames returnsTab
+    RawFuncInfo hasVariadic funTy retSn retN retTyTyp retSet
+                inpArgTyps inpArgNames defArgsNo returnsTab descM
                 = rawFuncInfo
 
 saveFunctionToCatalog :: QualifiedFunction -> Bool -> Q.TxE QErr ()
@@ -143,7 +152,7 @@ trackFunctionP2 qf = do
   let defGCtx = scDefaultRemoteGCtx sc
       funcNameGQL = GS.qualObjectToName qf
   -- check function name is in compliance with GraphQL spec
-  unless (isValidName funcNameGQL) $ throw400 NotSupported $
+  unless (G.isValidName funcNameGQL) $ throw400 NotSupported $
     "function name " <> qf <<> " is not in compliance with GraphQL spec"
   -- check for conflicts in remote schema
   GS.checkConflictingNode defGCtx funcNameGQL

@@ -1,7 +1,7 @@
 Authorization modes
 ===================
 
-You can run Hasura's GraphQL Engine in three modes:
+You can run Hasura's GraphQL engine in three modes:
 
 1. No Authentication mode
 ^^^^^^^^^^^^^^^^^^^^^^^^^

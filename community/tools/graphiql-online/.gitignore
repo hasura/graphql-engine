@@ -1,7 +1,4 @@
 .env
-cypress/videos
-cypress/screenshots
-.nyc_output
 node_modules
 static/dist
 webpack-assets.json
@@ -10,3 +7,5 @@ npm-debug.log
 *.swp
 coverage
 .idea/*
+test
+**/.tern-port

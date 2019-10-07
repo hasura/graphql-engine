@@ -1,0 +1,21 @@
+description: Test updating a record that references an enum table
+url: /v1/graphql
+status: 200
+response:
+  data:
+    update_users:
+      affected_rows: 1
+      returning:
+      - name: Alyssa
+        favorite_color: blue
+query:
+  query: |
+    mutation {
+      update_users(where: {id: {_eq: 1}}, _set: {favorite_color: blue}) {
+        affected_rows
+        returning {
+          name
+          favorite_color
+        }
+      }
+    }

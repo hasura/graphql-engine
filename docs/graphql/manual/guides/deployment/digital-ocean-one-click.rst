@@ -1,4 +1,4 @@
-Hasura GraphQL Engine One-click App on DigitalOcean Marketplace
+Hasura GraphQL engine One-click App on DigitalOcean Marketplace
 ===============================================================
 
 .. contents:: Table of contents
@@ -6,7 +6,7 @@ Hasura GraphQL Engine One-click App on DigitalOcean Marketplace
   :depth: 1
   :local:
 
-Hasura GraphQL Engine is available as a One-click app on the DigitalOcean
+The Hasura GraphQL engine is available as a One-click app on the DigitalOcean
 Marketplace. It is packed with a `Postgres <https://www.postgresql.org/>`__
 database and `Caddy <https://caddyserver.com/>`__ webserver for easy and
 automatic HTTPS using `Let's Encrypt <https://letsencrypt.org/>`__.
@@ -17,8 +17,8 @@ Quickstart
 1. Create a Hasura One-click Droplet
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Click the button below to create a new Hasura GraphQL Engine Droplet through
-DigitalOcean Marketplace. For first time users, the link also contains a
+Click the button below to create a new Hasura GraphQL engine Droplet through
+the DigitalOcean Marketplace. For first time users, the link also contains a
 referral code with gives you $100 over days. A $5 droplet is good enough to
 support most workloads. (``Ctrl+Click`` to open in a new tab)
 
@@ -31,7 +31,7 @@ support most workloads. (``Ctrl+Click`` to open in a new tab)
 2. Open console
 ~~~~~~~~~~~~~~~
 
-Once Hasura GraphQL Engine Droplet is ready, you can visit the Droplet IP to
+Once the Hasura GraphQL engine Droplet is ready, you can visit the Droplet IP to
 open the Hasura console, where you can create tables, explore GraphQL APIs etc.
 Note that it might take 1 or 2 minutes for everything to start running.
 
@@ -42,7 +42,7 @@ The Hasura console will be at:
    http://<your_droplet_ip>/console
 
 
-The GraphQL Endpoint will be:
+The GraphQL endpoint will be:
 
 .. code-block:: bash
 
@@ -119,7 +119,7 @@ to your database using GraphQL. When deploying to production, you should secure
 the endpoint by adding an admin secret key and then setting up permission rules on
 tables.
 
-To add an admin secret key, follow the steps given below:
+To add an admin secret key, follow the steps described below:
 
 1. Connect to the Droplet via SSH:
 
@@ -128,7 +128,7 @@ To add an admin secret key, follow the steps given below:
       ssh root@<your_droplet_ip>
 
 
-2. Goto ``/etc/hasura`` directory:
+2. Go to the ``/etc/hasura`` directory:
 
    .. code-block:: bash
 
@@ -166,7 +166,7 @@ following header:
    X-Hasura-Admin-Secret: myadminsecretkey
 
 
-Adding a domain & Enabling HTTPS
+Adding a domain & enabling HTTPS
 --------------------------------
 
 If you own a domain, you can enable HTTPS on this Droplet by mapping the domain
@@ -181,14 +181,14 @@ HTTP/2 web server with automatic HTTPS using Let's Encrypt.
       ssh root@<your_droplet_ip>
 
 
-3. Goto ``/etc/hasura`` directory:
+3. Go to the ``/etc/hasura`` directory:
 
    .. code-block:: bash
 
       cd /etc/hasura
 
 
-4. Edit ``Caddyfile`` and change ``:80`` to your domain:
+4. Edit the ``Caddyfile`` and change ``:80`` to your domain:
 
    .. code-block:: bash
 
@@ -212,13 +212,13 @@ HTTP/2 web server with automatic HTTPS using Let's Encrypt.
       docker-compose restart caddy
 
 
-Visit ``https://<your_domain>/console`` to visit the Hasura console.
+Go to ``https://<your_domain>/console`` to visit the Hasura console.
 
 Updating to the latest version
 ------------------------------
 
-When a new version of GraphQL Engine is released, you can upgrade to it by just
-changing the version tag in docker-compose.yaml. You can find the latest
+When a new version of the GraphQL engine is released, you can upgrade to it by just
+changing the version tag in ``docker-compose.yaml``. You can find the latest
 releases on the `GitHub releases page
 <https://github.com/hasura/graphql-engine/releases>`__.
 
@@ -229,7 +229,7 @@ releases on the `GitHub releases page
       ssh root@<your_droplet_ip>
 
 
-2. Goto ``/etc/hasura`` directory:
+2. Go to the ``/etc/hasura`` directory:
 
    .. code-block:: bash
 
@@ -260,11 +260,11 @@ releases on the `GitHub releases page
 Using DigitalOcean Managed Postgres Database
 --------------------------------------------
 
-1. Create a new Postgres Database from DigitalOcean Console, preferably in the
+1. Create a new Postgres Database from the DigitalOcean Console, preferably in the
    same region as the Droplet.
 2. Once the database is created, under the "Overview" tab, from the "Connection
    Details" section, choose "Connection string" from the dropdown.
-3. "Connection string" is the "Database URL" - copy it.
+3. "Connection string" is the "Database URL". Copy it.
 4. Connect to the Droplet via SSH:
 
    .. code-block:: bash
@@ -272,7 +272,7 @@ Using DigitalOcean Managed Postgres Database
       ssh root@<your_droplet_ip>
 
 
-5. Goto ``/etc/hasura`` directory:
+5. Go to the ``/etc/hasura`` directory:
 
    .. code-block:: bash
 
@@ -291,15 +291,28 @@ Using DigitalOcean Managed Postgres Database
 
       # type ESC followed by :wq to save and quit
 
-Similarly, database URL can be changed to connect to any other Postgres
+Similarly, the database URL can be changed to connect to any other Postgres
 database.
 
 .. note::
 
   If you're using Hasura with a restricted database user, make sure you go
   through :doc:`Postgres permissions <../../deployment/postgres-permissions>`
-  to configure all required permissions. (Not applicable with the default
-  connection string with DO Managed Postgres)
+  to configure all required permissions (not applicable with the default
+  connection string with DO Managed Postgres).
+
+Connection pooling
+~~~~~~~~~~~~~~~~~~
+Connection pooling is a built-in feature of graphql-engine. The default connection pool size is 50.
+If you need to configure the pool size or the timeout, you can use the below environment variables.
+
+- ``HASURA_GRAPHQL_PG_CONNECTIONS``: Number of connections per stripe that need to be opened to Postgres (default: 50)
+- ``HASURA_GRAPHQL_PG_TIMEOUT``: Each connection’s idle time before it is closed (default: 180 sec)
+
+.. note::
+
+  If you still want to enable connection pooling on your managed database on DigitalOcean, you should do so in the ``session`` mode.
+
 
 Logs
 ----
@@ -312,7 +325,7 @@ Logs
       ssh root@<your_droplet_ip>
 
 
-2. Goto ``/etc/hasura`` directory:
+2. Go to the ``/etc/hasura`` directory:
 
    .. code-block:: bash
 

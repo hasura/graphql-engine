@@ -5,6 +5,8 @@ import json
 import queue
 import yaml
 
+from super_classes import GraphQLEngineTest
+
 '''
     Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_init
 '''
@@ -26,6 +28,11 @@ def init_ws_conn(hge_ctx, ws_client, payload = None):
     ws_client.send(init_msg)
     ev = ws_client.get_ws_event(3)
     assert ev['type'] == 'connection_ack', ev
+
+class DefaultTestSubscriptions(GraphQLEngineTest):
+    @pytest.fixture(scope='class', autouse=True)
+    def ws_conn_init(self, transact, hge_ctx, ws_client):
+        init_ws_conn(hge_ctx, ws_client)
 
 class TestSubscriptionCtrl(object):
 
@@ -59,20 +66,10 @@ class TestSubscriptionCtrl(object):
         with pytest.raises(queue.Empty):
             ev = ws_client.get_ws_event(3)
 
-class TestSubscriptionBasic(object):
-
-    @pytest.fixture(scope='class')
-    def transact(self, request, hge_ctx):
-        self.dir = 'queries/subscriptions/basic'
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
-        assert st_code == 200, resp
-        yield
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
-        assert st_code == 200, resp
-
-    @pytest.fixture(autouse=True)
-    def ws_conn_init(self, transact, hge_ctx, ws_client):
-        init_ws_conn(hge_ctx, ws_client)
+class TestSubscriptionBasic(DefaultTestSubscriptions):
+    @classmethod
+    def dir(cls):
+        return 'queries/subscriptions/basic'
 
     '''
         Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_error
@@ -171,16 +168,10 @@ class TestSubscriptionBasic(object):
         assert ev['type'] == 'complete' and ev['id'] == '2', ev
 
 
-class TestSubscriptionLiveQueries(object):
-
-    @pytest.fixture(scope='class', autouse=True)
-    def transact(self, request, hge_ctx, ws_client):
-        st_code, resp = hge_ctx.v1q_f(self.dir() + '/setup.yaml')
-        assert st_code == 200, resp
-        init_ws_conn(hge_ctx, ws_client)
-        yield
-        st_code, resp = hge_ctx.v1q_f(self.dir() + '/teardown.yaml')
-        assert st_code == 200, resp
+class TestSubscriptionLiveQueries(DefaultTestSubscriptions):
+    @classmethod
+    def dir(cls):
+        return 'queries/subscriptions/live_queries'
 
     def test_live_queries(self, hge_ctx, ws_client):
         '''
@@ -192,21 +183,22 @@ class TestSubscriptionLiveQueries(object):
             conf = yaml.safe_load(c)
 
         queryTmplt = """
-        subscription {
-          hge_tests_live_query_{0}: hge_tests_test_t2(order_by: {c1: desc}, limit: 1) {
+        subscription ($result_limit: Int!) {
+          hge_tests_live_query_{0}: hge_tests_test_t2(order_by: {c1: asc}, limit: $result_limit) {
             c1,
             c2
           }
         }
         """
 
+        queries = [(0, 1), (1, 2), (2, 2)]
         liveQs = []
-        for i in [0,1,2]:
+        for i, resultLimit in queries:
             query = queryTmplt.replace('{0}',str(i))
             headers={}
             if hge_ctx.hge_key is not None:
                 headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
-            subscrPayload = { 'query': query }
+            subscrPayload = { 'query': query, 'variables': { 'result_limit': resultLimit } }
             respLive = ws_client.send_query(subscrPayload, query_id='live_'+str(i), headers=headers, timeout=15)
             liveQs.append(respLive)
             ev = next(respLive)
@@ -230,16 +222,22 @@ class TestSubscriptionLiveQueries(object):
             ev = next(mutResp)
             assert ev['type'] == 'complete' and ev['id'] == 'mutation_'+str(index), ev
 
-            for i, respLive in enumerate(liveQs):
+            for (i, resultLimit), respLive in zip(queries, liveQs):
                 ev = next(respLive)
                 assert ev['type'] == 'data', ev
                 assert ev['id'] == 'live_' + str(i), ev
-                assert ev['payload']['data'] == {
-                    'hge_tests_live_query_'+str(i): expected_resp[step['name']]['returning'] if 'returning' in expected_resp[
-                        step['name']] else []
-                }, ev['payload']['data']
 
-        for i in [0,1,2]:
+                expectedReturnedResponse = []
+                if 'live_response' in step:
+                    expectedReturnedResponse = json.loads(step['live_response'])
+                elif 'returning' in expected_resp[step['name']]:
+                    expectedReturnedResponse = expected_resp[step['name']]['returning']
+                expectedLimitedResponse = expectedReturnedResponse[:resultLimit]
+                expectedLiveResponse = { 'hge_tests_live_query_'+str(i): expectedLimitedResponse }
+
+                assert ev['payload']['data'] == expectedLiveResponse, ev['payload']['data']
+
+        for i, _ in queries:
             # stop live operation
             frame = {
                 'id': 'live_'+str(i),
@@ -250,6 +248,36 @@ class TestSubscriptionLiveQueries(object):
         with pytest.raises(queue.Empty):
             ev = ws_client.get_ws_event(3)
 
+class TestSubscriptionMultiplexing(GraphQLEngineTest):
     @classmethod
     def dir(cls):
-        return 'queries/subscriptions/live_queries'
+        return 'queries/subscriptions/multiplexing'
+
+    def test_query_parameterization(self, hge_ctx):
+        with open(self.dir() + '/query.yaml') as c:
+            config = yaml.safe_load(c)
+
+        query = config['query']
+        representative_sql = self.get_parameterized_sql(hge_ctx, query, config['variables_representative'])
+
+        for vars in config['variables_same']:
+            same_sql = self.get_parameterized_sql(hge_ctx, query, vars)
+            assert same_sql == representative_sql, (representative_sql, same_sql)
+
+        for vars in config['variables_different']:
+            different_sql = self.get_parameterized_sql(hge_ctx, query, vars)
+            assert different_sql != representative_sql, (representative_sql, different_sql)
+
+    def get_parameterized_sql(self, hge_ctx, query, variables):
+        admin_secret = hge_ctx.hge_key
+        headers = {}
+        if admin_secret is not None:
+            headers['X-Hasura-Admin-Secret'] = admin_secret
+
+        request = { 'query': { 'query': query, 'variables': variables }, 'user': {} }
+        status_code, response = hge_ctx.anyq('/v1/graphql/explain', request, headers)
+        assert status_code == 200, (request, status_code, response)
+
+        sql = response['sql']
+        assert isinstance(sql, str), response
+        return sql

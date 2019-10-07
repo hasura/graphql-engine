@@ -11,7 +11,7 @@ Overview
 
 Hasura supports **role-based** authorization where access control is done by creating rules for each role,
 table and operation (*insert*, *update*, etc.). These access control rules use dynamic session
-variables that are passed to GraphQL engine from your :doc:`authentication service <../authentication/index>`
+variables that are passed to the GraphQL engine from your :doc:`authentication service <../authentication/index>`
 with every request. Role information is inferred from the ``X-Hasura-Role`` and ``X-Hasura-Allowed-Roles``
 session variables. Other session variables can be passed by your auth service as per your requirements.
 
@@ -20,11 +20,11 @@ session variables. Other session variables can be passed by your auth service as
 .. thumbnail:: ../../../../img/graphql/manual/auth/hasura-perms.png
    :width: 80 %
 
-Trying access control out
+Trying out access control
 -------------------------
 
 If you just want to see role-based access control in action, you need not set up or integrate your
-auth service with GraphQL Engine. You can just:
+auth service with GraphQL engine. You can just:
 
 * Define permission rules for a table for a role.
 

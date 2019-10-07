@@ -125,7 +125,7 @@ Args syntax
    * - using
      - true
      - ObjRelUsing_
-     - Use one of the available ways to define object relationship
+     - Use one of the available ways to define an object relationship
    * - comment
      - false
      - text
@@ -155,7 +155,7 @@ ObjRelUsing
 .. note::
 
    There has to be at least one and only one of ``foreign_key_constraint_on``
-   and ``manual_mapping``. 
+   and ``manual_configuration``. 
 
 
 ObjRelUsingManualMapping
@@ -255,7 +255,7 @@ follows:
    It is easy to make mistakes while using ``manual_configuration``.
    One simple check is to ensure that foreign key constraint semantics are valid
    on the columns being used in ``column_mapping``. In the previous example, if
-   it was allowed, a foreign key constraint could have been defined on
+   it was allowed, a foreign key constraint could have been defined on the
    ``author`` table's ``id`` column to ``article_detail`` view's ``author_id``
    column.
 
@@ -282,7 +282,7 @@ Args syntax
    * - using
      - true
      - ArrRelUsing_
-     - Use one of the available ways to define array relationship
+     - Use one of the available ways to define an array relationship
    * - comment
      - false
      - text
@@ -304,7 +304,7 @@ ArrRelUsing
      - false
      - ArrRelUsingFKeyOn_
      - The column with foreign key constraint
-   * - manual_mapping
+   * - manual_configuration
      - false
      - ArrRelUsingManualMapping_
      - Manual mapping of table and columns
@@ -452,4 +452,4 @@ Args syntax
    * - comment
      - false
      - Text
-     - comment
+     - Comment

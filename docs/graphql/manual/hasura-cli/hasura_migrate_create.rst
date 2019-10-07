@@ -3,13 +3,13 @@
 Hasura CLI: hasura migrate create
 ---------------------------------
 
-Create files required for a migration
+Create files required for a migration.
 
 Synopsis
 ~~~~~~~~
 
 
-Create sql and yaml files required for a migration
+Create ``sql`` and ``yaml`` files required for a migration.
 
 ::
 
@@ -20,8 +20,8 @@ Options
 
 ::
 
-      --admin-secret string         admin secret for Hasura GraphQL Engine
-      --endpoint string             http(s) endpoint for Hasura GraphQL Engine
+      --admin-secret string         admin secret for Hasura GraphQL engine
+      --endpoint string             http(s) endpoint for Hasura GraphQL engine
   -h, --help                        help for create
       --metadata-from-file string   path to a hasura metadata file to be used for up actions
       --metadata-from-server        take metadata from the server and write it as an up migration file

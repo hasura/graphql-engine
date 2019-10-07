@@ -4,9 +4,9 @@ set -euo pipefail
 ### Functions
 
 stop_services() {
-   kill -INT $HGE_PIDS || true
+   kill -s INT $HGE_PIDS || true
    kill $WH_PID || true
-   kill -INT $WHC_PID || true
+   kill -s INT $WHC_PID || true
 }
 
 time_elapsed(){
@@ -86,7 +86,12 @@ combine_all_hpc_reports() {
 			continue
 		fi
 		if [ -f "$combined_file" ]  ; then
+			GHCRTS_PREV="$GHCRTS"
+			# Unsetting GHCRTS as hpc combine fails if GCHRTS=-N2 is present
+			unset GHCRTS
 			(set -x && stack --allow-different-user exec -- hpc combine "$combined_file" "$tix_file" --union --output="$combined_file_intermediate" && set +x && mv "$combined_file_intermediate" "$combined_file" && rm "$tix_file" ) || true
+			# Restoring GHCRTS
+			export GHCRTS="$GHCRTS_PREV"
 		else
 			mv "$tix_file" "$combined_file" || true
 		fi
@@ -94,7 +99,7 @@ combine_all_hpc_reports() {
 }
 
 kill_hge_servers() {
-	kill -INT $HGE_PIDS || true
+	kill -s INT $HGE_PIDS || true
 	wait $HGE_PIDS || true
 	HGE_PIDS=""
 }

@@ -11,6 +11,7 @@ export viewTableConnector from './TableBrowseRows/ViewTable';
 export addExistingTableViewConnector from './Add/AddExistingTableView';
 export addTableConnector from './Add/AddTable';
 export rawSQLConnector from './RawSQL/RawSQL';
+export permissionsSummaryConnector from './PermissionsSummary/PermissionsSummary';
 export insertItemConnector from './TableInsertItem/InsertItem';
 export editItemConnector from './TableBrowseRows/EditItem';
 export modifyTableConnector from './TableModify/ModifyTable';

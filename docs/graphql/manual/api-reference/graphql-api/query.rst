@@ -6,8 +6,8 @@ API Reference - Query / Subscription
   :depth: 3
   :local:
 
-Query/Subscription syntax
--------------------------
+Query / subscription syntax
+---------------------------
 
 .. code-block:: none
 
@@ -75,7 +75,7 @@ Object
 
 .. _SimpleObject:
 
-Simple Object
+Simple object
 *************
 
 .. code-block:: none
@@ -133,7 +133,7 @@ E.g.
 
 .. _AggregateObject:
 
-Aggregate Object
+Aggregate object
 ****************
 
 .. code-block:: none
@@ -192,7 +192,7 @@ Aggregate Object
     }
   }
 
-(For more details on aggregate functions, refer to `Postgres docs <https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE>`__.)
+(For more details on aggregate functions, refer to the `Postgres docs <https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE>`__).
 
 E.g.
 
@@ -393,7 +393,7 @@ Operator
    * - ``_has_keys_all``
      - ``?&``
 
-(For more details on what these operators do, refer to `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`__.)
+(For more details on what these operators do, refer to the `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`__).
 
 **PostGIS related operators on GEOMETRY columns:**
 
@@ -419,18 +419,52 @@ Operator
    * - ``_st_d_within``
      - ``ST_DWithin``
 
-(For more details on what these operators do, refer to `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__.)
+(For more details on what these operators do, refer to the `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__).
 
 .. note::
 
    - All operators take a JSON representation of ``geometry/geography`` values as input value.
-   - Input value for ``_st_d_within`` operator is an object:
+   - The input value for ``_st_d_within`` operator is an object:
 
      .. parsed-literal::
 
        {
          field-name : {_st_d_within: {distance: Float, from: Value} }
        }
+
+**Intersect Operators on RASTER columns:**
+
+- ``_st_intersects_rast``
+
+Executes ``boolean ST_Intersects( raster <raster-column> , raster <input-raster> )``
+
+.. parsed-literal ::
+
+   { _st_intersects_rast: raster }
+
+
+- ``_st_intersects_nband_geom``
+
+Executes ``boolean ST_Intersects( raster <raster-column> , integer nband , geometry geommin )``
+
+This accepts ``st_intersects_nband_geom_input`` input object
+
+.. parsed-literal ::
+
+   { _st_intersects_nband_geom: {nband: Integer! geommin: geometry!}
+
+
+
+- ``_st_intersects_geom_nband``
+
+Executes ``boolean ST_Intersects( raster <raster-column> , geometry geommin , integer nband = NULL )``
+
+This accepts ``st_intersects_geom_nband_input`` input object
+
+.. parsed-literal ::
+
+   { _st_intersects_geom_nband: {geommin: geometry! nband: Integer }
+
 
 .. _CastExp:
 
@@ -544,7 +578,7 @@ Operation aggregate
    {op_name: TableAggOpOrderBy_}
 
 Available operations are ``sum``, ``avg``, ``max``, ``min``, ``stddev``, ``stddev_samp``,
-``stddev_pop``, ``variance``, ``var_samp`` and ``var_pop``
+``stddev_pop``, ``variance``, ``var_samp`` and ``var_pop``.
 
 TableAggOpOrderBy
 &&&&&&&&&&&&&&&&&

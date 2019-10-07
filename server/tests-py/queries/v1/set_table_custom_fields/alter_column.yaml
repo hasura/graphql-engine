@@ -1,0 +1,47 @@
+- description: Set custom column names
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: set_table_custom_fields
+    version: 2
+    args:
+      table: author
+      custom_root_fields:
+        select: Authors
+      custom_column_names:
+        id: AuthorId
+        name: AuthorName
+
+- description: "Rename column 'id' and drop column 'name'"
+  url: /v1/query
+  status: 200
+  response:
+    result_type: CommandOk
+    result: null
+  query:
+    type: run_sql
+    args:
+      sql: |
+        ALTER TABLE author DROP COLUMN name;
+        ALTER TABLE author RENAME COLUMN id to author_id;
+
+- description: Test if custom column names are updated
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      Authors:
+      - AuthorId: 1
+        age: 23
+      - AuthorId: 2
+        age: null
+  query:
+    query: |
+      query {
+        Authors{
+          AuthorId
+          age
+        }
+      }
