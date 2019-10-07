@@ -26,6 +26,7 @@ import qualified Hasura.GraphQL.Context        as GC
 import qualified Hasura.GraphQL.Schema         as GS
 import qualified Language.GraphQL.Draft.Syntax as G
 
+-- TODO pretty-print readable errors:
 -- | An error validating the remote relationship.
 data ValidationError
   = CouldntFindRemoteField G.Name ObjTyInfo

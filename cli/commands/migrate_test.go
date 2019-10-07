@@ -40,6 +40,7 @@ tables:
   delete_permissions: []
   event_triggers: []
   insert_permissions: []
+  is_enum: false
   object_relationships: []
   select_permissions: []
   table: test
@@ -61,6 +62,15 @@ remote_relationships: []
 remote_schemas: []
 tables:
 - array_relationships: []
+  configuration:
+    custom_column_names: {}
+    custom_root_fields:
+      delete: null
+      insert: null
+      select: null
+      select_aggregate: null
+      select_by_pk: null
+      update: null
   delete_permissions: []
   event_triggers: []
   insert_permissions: []

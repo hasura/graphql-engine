@@ -30,9 +30,9 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
 import           Hasura.RQL.Types           (SQLGenCtx (..), SchemaCache (..),
                                              adminUserInfo, emptySchemaCache)
-import           Hasura.Server.App          (HasuraApp(..), SchemaCacheRef (..),
-                                             getSCFromRef, logInconsObjs,
-                                             mkWaiApp)
+import           Hasura.Server.App          (HasuraApp (..),
+                                             SchemaCacheRef (..), getSCFromRef,
+                                             logInconsObjs, mkWaiApp)
 import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates (checkForUpdates)
 import           Hasura.Server.Init
@@ -85,7 +85,6 @@ parseHGECommand =
                 <*> parseEnabledAPIs
                 <*> parseMxRefetchInt
                 <*> parseMxBatchSize
-                <*> parseFallbackRefetchInt
                 <*> parseEnableAllowlist
                 <*> parseEnabledLogs
                 <*> parseLogLevel

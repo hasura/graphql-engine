@@ -1,17 +1,18 @@
 {-# LANGUAGE DisambiguateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns           #-}
+{-# LANGUAGE DataKinds                #-}
 module Hasura.GraphQL.Execute
   ( QExecPlanResolved(..)
   , QExecPlanUnresolved(..)
   , QExecPlanPartial(..)
-  , QExecPlan(..)
-  , Batch(..)
+  , QExecPlan
   , getExecPlanPartial
   , getOpTypeFromExecOp
 
   , ExecOp(..)
-  , getExecPlan
+  , getResolvedExecPlan
   , execRemoteGQ
+  , getSubsOp
 
   , EP.PlanCache
   , EP.initPlanCache
@@ -20,8 +21,6 @@ module Hasura.GraphQL.Execute
 
   , ExecutionCtx(..)
 
-  , JoinParams(..)
-  , Joinable
   , mkQuery
   ) where
 
@@ -29,7 +28,6 @@ import           Control.Exception                      (try)
 import           Control.Lens
 import           Data.Has
 import           Data.List
-import           Data.List.NonEmpty                     (NonEmpty (..))
 import           Hasura.GraphQL.Validate.Field
 
 import qualified Data.Aeson                             as J
@@ -68,39 +66,39 @@ import qualified Hasura.Logging                         as L
 data QExecPlanPartial
   = ExPHasuraPartial !(GCtx, VQ.HasuraTopField, [G.VariableDefinition])
   | ExPRemotePartial !VQ.RemoteTopField
---
--- The 'a' is parameterised so this AST can represent
--- intermediate passes
-data QExecPlanCore a
-  = ExPCoreHasura !a
-  | ExPCoreRemote !RemoteSchemaInfo !G.TypedOperationDefinition
-  deriving (Functor, Foldable, Traversable)
 
--- The current execution plan of a graphql operation, it is
--- currently, either local pg execution or a remote execution
+-- | The current execution plan of a graphql operation, it is currently, either
+-- local pg execution or a remote execution
 data QExecPlanResolved
   = ExPHasura !ExecOp
   | ExPRemote !VQ.RemoteTopField
-  -- | ExPMixed !ExecOp (NonEmpty RemoteRelField)
+  -- | ExPMixed !ExecOp (NonEmpty RemoteRelBranch)
+  deriving Show
 
-class Joinable a where
-  mkQuery :: JoinParams -> a -> (Batch, QExecPlanResolved)
 
-instance Joinable QExecPlanUnresolved where
-  mkQuery joinParams unresolvedPlan
-    = let batch = produceBatch opType remoteSchemaInfo remoteRelField rows
-          batchQuery = batchRemoteTopQuery batch
-      in (batch, ExPRemote batchQuery)
-    where
-      JoinParams opType rows = joinParams
-      QExecPlanUnresolved remoteRelField remoteSchemaInfo = unresolvedPlan
+-- | Split the 'rrSelSet' from the 'RemoteRelBranch'
+mkQuery :: G.OperationType -> QExecPlanUnresolved -> JoinArguments -> (RemoteRelBranch 'RRF_Splice, VQ.RemoteTopField)
+mkQuery rtqOperationType QExecPlanUnresolved{..} JoinArguments{..} =
+  let RemoteRelBranch{..} = remoteRelField
+      indexedRows = enumerateRowAliases $ toList joinArguments
+      rtqFields =
+        flip map indexedRows $ \(alias, varArgs) ->
+           fieldCallsToField
+             rrArguments
+             varArgs
+             rrSelSet
+             alias
+             (rtrRemoteFields rrRemoteRelationship)
+   in (rrFieldToSplice remoteRelField, VQ.RemoteTopField{..})
 
--- data JoinConfiguration = JoinConfiguration
+-- | A 'QExecPlanResolved' and any unresolved remote plans on which it depends.
+type QExecPlan = ([QExecPlanUnresolved], QExecPlanResolved)
 
-data JoinParams = JoinParams G.OperationType BatchInputs
-
-data QExecPlan = Leaf QExecPlanResolved | Tree QExecPlanResolved (NonEmpty QExecPlanUnresolved)
-data QExecPlanUnresolved = QExecPlanUnresolved RemoteRelField RemoteSchemaInfo
+data QExecPlanUnresolved 
+  = QExecPlanUnresolved 
+  { remoteRelField      :: RemoteRelBranch 'RRF_Tree
+  , rtqRemoteSchemaInfo :: RemoteSchemaInfo
+  } deriving Show
 
 -- | Execution context
 data ExecutionCtx
@@ -137,7 +135,8 @@ getExecPlanPartial UserInfo{userRole} sc enableAL req = do
       (\case
           VQ.HasuraLocatedTopField hasuraTopField ->
             ExPHasuraPartial (gCtx, hasuraTopField, varDefs)
-          VQ.RemoteLocatedTopField remoteTopField -> ExPRemotePartial remoteTopField)
+          VQ.RemoteLocatedTopField remoteTopField -> 
+            ExPRemotePartial remoteTopField)
       topFields
   where
     gCtxRoleMap = scGCtxMap sc
@@ -159,7 +158,8 @@ getExecPlanPartial UserInfo{userRole} sc enableAL req = do
 data ExecOp
   = ExOpQuery !LazyRespTx !(Maybe EQ.GeneratedSqlMap)
   | ExOpMutation !LazyRespTx
-  | ExOpSubs !EL.LiveQueryOp
+  | ExOpSubs !EL.LiveQueryPlan
+  deriving Show
 
 getOpTypeFromExecOp :: ExecOp -> G.OperationType
 getOpTypeFromExecOp = \case
@@ -167,7 +167,7 @@ getOpTypeFromExecOp = \case
   ExOpMutation _ -> G.OperationTypeMutation
   ExOpSubs _ -> G.OperationTypeSubscription
 
-getExecPlan
+getResolvedExecPlan
   :: (MonadError QErr m, MonadIO m)
   => PGExecCtx
   -> EP.PlanCache
@@ -178,80 +178,65 @@ getExecPlan
   -> SchemaCacheVer
   -> GQLReqUnparsed
   -> m (Seq.Seq QExecPlan)
-getExecPlan pgExecCtx planCache userInfo@UserInfo{..} sqlGenCtx enableAL sc scVer reqUnparsed@GQLReq{..} = do
-  liftIO (EP.getPlan scVer userRole _grOperationName _grQuery planCache) >>= \case
-    Just plan ->
-      -- pure $ pure $ Leaf (ExPHasura <$>
-      case plan of
-        -- plans are only for queries and subscriptions
-        EP.RPQuery queryPlan -> do
-          (tx, genSql) <- EQ.queryOpFromPlan userVars _grVariables queryPlan
-          pure $ Seq.singleton (Leaf (ExPHasura (ExOpQuery tx (Just genSql))))
-        EP.RPSubs subsPlan -> do
-          liveQueryOp <- EL.subsOpFromPlan pgExecCtx userVars _grVariables subsPlan
-          pure $ Seq.singleton (Leaf (ExPHasura (ExOpSubs liveQueryOp)))
+getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
+  enableAL sc scVer reqUnparsed = do
+  planM <- liftIO $ EP.getPlan scVer (userRole userInfo)
+           opNameM queryStr planCache
+  let usrVars = userVars userInfo
+  case planM of
+    -- plans are only for queries and subscriptions
+    Just plan -> case plan of
+      EP.RPQuery queryPlan -> do
+        (tx, genSql) <- EQ.queryOpFromPlan usrVars queryVars queryPlan
+        pure $ Seq.singleton $ plainHasura (ExOpQuery tx (Just genSql))
+      EP.RPSubs subsPlan -> do
+        liveQueryOp <- EL.reuseLiveQueryPlan pgExecCtx usrVars queryVars subsPlan
+        pure $ Seq.singleton $ plainHasura (ExOpSubs liveQueryOp)
     Nothing -> noExistingPlan
   where
-    addPlanToCache plan =
-      -- liftIO $
-      EP.addPlan scVer userRole _grOperationName _grQuery plan planCache
+    GQLReq opNameM queryStr queryVars = reqUnparsed
+    _addPlanToCache plan =
+      EP.addPlan scVer (userRole userInfo)
+      opNameM queryStr plan planCache
     noExistingPlan = do
       req <- toParsed reqUnparsed
       partialExecPlans <- getExecPlanPartial userInfo sc enableAL req
       forM partialExecPlans $ \partialExecPlan ->
         case partialExecPlan of
-          ExPRemotePartial r -> pure (Leaf $ ExPRemote r)
-          ExPHasuraPartial (gCtx, rootSelSet, varDefs) -> do
-            -- let runE' :: (MonadError QErr m) => E m a -> m a
-            --     runE' action = do
-            --       res <- runExceptT $ runReaderT action
-            --         (userInfo, _gQueryCtxMap, _gTypes, _gFields, _gOrdByCtx, _gInsCtxMap)
-            --       either throwError return res
-
-                -- getQueryOp = runE' . EQ.convertQuerySelSet varDefs . pure
-
+          ExPRemotePartial r -> pure $ pure $ ExPRemote r
+          ExPHasuraPartial (gCtx, rootSelSet, _varDefs) -> do
             case rootSelSet of
               VQ.HasuraTopMutation field ->
-                Leaf . ExPHasura . ExOpMutation <$>
-                (getMutOp gCtx sqlGenCtx userInfo (Seq.singleton field))
+                plainHasura . ExOpMutation <$>
+                getMutOp gCtx sqlGenCtx userInfo (Seq.singleton field)
 
               VQ.HasuraTopQuery originalField -> do
-                case rebuildFieldStrippingRemoteRels originalField of
-                  Nothing -> do
-                    (queryTx, _planM, genSql) <- getQueryOp gCtx sqlGenCtx
-                                                 userInfo (Seq.singleton originalField) varDefs
+                let (newHasuraField, remoteRelFields) = rebuildFieldStrippingRemoteRels originalField
+                (queryTx, _planM, genSql) <- getQueryOp gCtx sqlGenCtx
+                                             userInfo (Seq.singleton newHasuraField)
 
-                    -- TODO: How to cache query for each field?
-                    -- mapM_ (addPlanToCache . EP.RPQuery) planM
-                    pure $ Leaf . ExPHasura $ ExOpQuery queryTx (Just genSql)
-                  Just (newHasuraField, remoteRelFields) -> do
-                    -- trace
-                    --   (unlines
-                    --      [ "originalField = " ++ show originalField
-                    --      , "newField = " ++ show newField
-                    --      , "cursors = " ++ show (fmap rrRelFieldPath cursors)
-                    --      ])
-                    (queryTx, _planM, genSql) <- getQueryOp gCtx sqlGenCtx
-                                                 userInfo (Seq.singleton newHasuraField) varDefs
-
-                    Tree (ExPHasura $ ExOpQuery queryTx (Just genSql)) <$>
-                      mkUnresolvedPlans remoteRelFields
+                -- TODO: How to cache query for each field?
+                -- mapM_ (addPlanToCache . EP.RPQuery) planM
+                (, ExPHasura $ ExOpQuery queryTx $ Just genSql) <$>
+                  mkUnresolvedPlans remoteRelFields
               VQ.HasuraTopSubscription fld -> do
                 (lqOp, _planM) <- getSubsOp pgExecCtx gCtx sqlGenCtx
-                                  userInfo reqUnparsed varDefs fld
+                                  userInfo fld
 
                 -- TODO: How to cache query for each field?
                 -- mapM_ (addPlanToCache . EP.RPSubs) planM
-                pure $ Leaf . ExPHasura $ ExOpSubs lqOp
+                pure $ plainHasura $ ExOpSubs lqOp
 
-    mkUnresolvedPlans :: MonadError QErr m => NonEmpty RemoteRelField -> m (NonEmpty QExecPlanUnresolved)
+    plainHasura :: ExecOp -> QExecPlan
+    plainHasura = pure . ExPHasura
+
+    mkUnresolvedPlans :: MonadError QErr m => [RemoteRelBranch 'RRF_Tree] -> m [QExecPlanUnresolved]
     mkUnresolvedPlans = traverse (\remoteRelField -> QExecPlanUnresolved remoteRelField <$> getRsi remoteRelField)
       where
         getRsi remoteRel =
           case Map.lookup
                  (rtrRemoteSchema
-                    (rmfRemoteRelationship
-                       (rrRemoteField remoteRel)))
+                    (rrRemoteRelationship remoteRel))
                  (scRemoteSchemas sc) of
             Just remoteSchemaCtx -> pure $ rscInfo remoteSchemaCtx
             Nothing -> throw500 "could not find remote schema info"
@@ -293,10 +278,9 @@ getQueryOp
   -> SQLGenCtx
   -> UserInfo
   -> VQ.SelSet
-  -> [G.VariableDefinition]
   -> m (LazyRespTx, Maybe EQ.ReusableQueryPlan, EQ.GeneratedSqlMap)
-getQueryOp gCtx sqlGenCtx userInfo fields varDefs =
-  runE gCtx sqlGenCtx userInfo $ EQ.convertQuerySelSet varDefs fields
+getQueryOp gCtx sqlGenCtx userInfo fields =
+  runE gCtx sqlGenCtx userInfo $ EQ.convertQuerySelSet fields
 
 mutationRootName :: Text
 mutationRootName = "mutation_root"
@@ -317,7 +301,7 @@ resolveMutSelSet fields = do
   aliasedTxs <- forM (toList fields) $ \fld -> do
     fldRespTx <- case VQ._fName fld of
       "__typename" -> return $ return $ encJFromJValue mutationRootName
-      _            -> liftTx <$> GR.mutFldToTx fld
+      _            -> fmap liftTx . evalResolveT $ GR.mutFldToTx fld
     return (G.unName $ G.unAlias $ VQ._fAlias fld, fldRespTx)
 
   -- combines all transactions into a single transaction
@@ -353,17 +337,15 @@ getSubsOpM
      , MonadIO m
      )
   => PGExecCtx
-  -> GQLReqUnparsed
-  -> [G.VariableDefinition]
   -> VQ.Field
-  -> m (EL.LiveQueryOp, Maybe EL.SubsPlan)
-getSubsOpM pgExecCtx req varDefs fld =
+  -> m (EL.LiveQueryPlan, Maybe EL.ReusableLiveQueryPlan)
+getSubsOpM pgExecCtx fld =
   case VQ._fName fld of
     "__typename" ->
       throwVE "you cannot create a subscription on '__typename' field"
     _            -> do
-      astUnresolved <- GR.queryFldToPGAST fld
-      EL.subsOpFromPGAST pgExecCtx req varDefs (VQ._fAlias fld, astUnresolved)
+      (astUnresolved, varTypes) <- runResolveT $ GR.queryFldToPGAST fld
+      EL.buildLiveQueryPlan pgExecCtx (VQ._fAlias fld) astUnresolved varTypes
 
 getSubsOp
   :: ( MonadError QErr m
@@ -373,12 +355,10 @@ getSubsOp
   -> GCtx
   -> SQLGenCtx
   -> UserInfo
-  -> GQLReqUnparsed
-  -> [G.VariableDefinition]
   -> VQ.Field
-  -> m (EL.LiveQueryOp, Maybe EL.SubsPlan)
-getSubsOp pgExecCtx gCtx sqlGenCtx userInfo req varDefs fld =
-  runE gCtx sqlGenCtx userInfo $ getSubsOpM pgExecCtx req varDefs fld
+  -> m (EL.LiveQueryPlan, Maybe EL.ReusableLiveQueryPlan)
+getSubsOp pgExecCtx gCtx sqlGenCtx userInfo fld =
+  runE gCtx sqlGenCtx userInfo $ getSubsOpM pgExecCtx fld
 
 execRemoteGQ
   :: ( MonadIO m

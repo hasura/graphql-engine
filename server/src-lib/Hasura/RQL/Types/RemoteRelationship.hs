@@ -26,20 +26,30 @@ import           Language.Haskell.TH.Syntax    (Lift)
 
 import           Hasura.RQL.Types.RemoteSchema
 
+-- | The metadata necessary to make a well-typed field call to a remote graphQL schema.
 data RemoteField =
   RemoteField
     { rmfRemoteRelationship :: !RemoteRelationship
+    -- ^ TODO This relationship is a bit strange, since 'RemoteRelationship'
+    -- can reference multiple remote field calls, no?
     , rmfGType              :: !G.GType
     , rmfParamMap           :: !(HashMap G.Name InpValInfo)
+    -- ^ Fully resolved arguments (no variable references, since this uses
+    -- 'G.ValueConst' not 'G.Value').
     }
   deriving (Show, Eq, Lift)
 
 data RemoteRelationship =
   RemoteRelationship
     { rtrName         :: RemoteRelationshipName
+    -- ^ Field name to which we'll map the remote in hasura; this becomes part
+    -- of the hasura schema.
     , rtrTable        :: QualifiedTable
-    , rtrHasuraFields :: Set FieldName -- change to PGCol
+    , rtrHasuraFields :: Set FieldName -- TODO? change to PGCol
+    -- ^ The hasura fields from 'rtrTable' that will be in scope when resolving
+    -- the remote objects in 'rtrRemoteFields'.
     , rtrRemoteSchema :: RemoteSchemaName
+    -- ^ Identifier for this mapping.
     , rtrRemoteFields :: NonEmpty FieldCall
     }  deriving (Show, Eq, Lift)
 
@@ -97,6 +107,9 @@ parseRemoteArguments j =
     A.Object hashMap -> fmap RemoteArguments (parseObjectFieldsToGValue hashMap)
     _                -> fail "Remote arguments should be an object of keys."
 
+-- | For some 'FieldCall', for instance, associates a field argument name with
+-- either a list of either scalar values or some 'G.Variable' we are closed
+-- over (brought into scope, e.g. in 'rtrHasuraFields'.
 newtype RemoteArguments =
   RemoteArguments
     { getRemoteArguments :: [G.ObjectFieldG G.Value]
@@ -108,6 +121,11 @@ instance ToJSON RemoteArguments where
 instance FromJSON RemoteArguments where
   parseJSON = parseRemoteArguments
 
+-- | Associates a field name with the arguments it will be passed in the query.
+--
+-- https://graphql.github.io/graphql-spec/June2018/#sec-Language.Arguments 
+--
+-- TODO we don't seem to support empty RemoteArguments (like 'hello'), but this seems arbitrary:
 data FieldCall =
   FieldCall
     { fcName      :: !G.Name

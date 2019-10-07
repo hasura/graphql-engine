@@ -10,7 +10,8 @@ module Hasura.GraphQL.Transport.HTTP.Protocol
   , VariableValues
   , encodeGQErr
   , encodeGQResp
-  , GQResp(..)
+  , GQResult(..)
+  , GQResponse
   , isExecError
   , RemoteGqlResp(..)
   , GraphqlResponse(..)
@@ -39,6 +40,7 @@ import qualified Language.GraphQL.Draft.Parser    as G
 import qualified Language.GraphQL.Draft.Syntax    as G
 import qualified VectorBuilder.Builder            as VB
 import qualified VectorBuilder.Vector             as VB
+import qualified Data.ByteString.Lazy as BL
 
 newtype GQLExecDoc
   = GQLExecDoc { unGQLExecDoc :: [G.ExecutableDefinition] }
@@ -156,24 +158,26 @@ gqJoinErrorToValue :: GQJoinError -> OJ.Value
 gqJoinErrorToValue (GQJoinError msg) =
   OJ.Object (OJ.fromList [("message", OJ.String msg)])
 
-data GQResp
-  = GQSuccess !EncJSON
+data GQResult a
+  = GQSuccess !a
   | GQPreExecError ![J.Value]
   | GQExecError ![J.Value]
   | GQGeneric  !GQRespValue
+  deriving (Functor, Foldable, Traversable)
 
-isExecError :: GQResp -> Bool
+type GQResponse = GQResult BL.ByteString
+
+isExecError :: GQResult a -> Bool
 isExecError = \case
   GQExecError _ -> True
   _             -> False
 
-encodeGQResp :: GQResp -> EncJSON
+encodeGQResp :: GQResponse -> EncJSON
 encodeGQResp = \case
-  GQSuccess r      -> encJFromAssocList [("data", r)]
+  GQSuccess r      -> encJFromAssocList [("data", encJFromLBS r)]
   GQPreExecError e -> encJFromAssocList [("errors", encJFromJValue e)]
   GQExecError e    -> encJFromAssocList [("data", "null"), ("errors", encJFromJValue e)]
   GQGeneric v -> encodeGQRespValue v
-
 
 -- | Represents GraphQL response from a remote server
 data RemoteGqlResp
@@ -193,7 +197,7 @@ encodeRemoteGqlResp (RemoteGqlResp d e ex) =
 
 -- | Represents a proper GraphQL response
 data GraphqlResponse
-  = GRHasura !GQResp
+  = GRHasura !GQResponse
   | GRRemote !RemoteGqlResp
 
 encodeGraphqlResponse :: GraphqlResponse -> EncJSON

@@ -635,3 +635,17 @@ class TestSetTableIsEnum(DefaultTestQueries):
 
     def test_add_invalid(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/add_invalid.yaml')
+
+class TestSetTableCustomFields(DefaultTestQueries):
+    @classmethod
+    def dir(cls):
+        return 'queries/v1/set_table_custom_fields'
+
+    def test_set_and_unset(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/set_and_unset.yaml')
+
+    def test_set_invalid_table(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/set_invalid_table.yaml')
+
+    def test_alter_column(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/alter_column.yaml')

@@ -26,6 +26,7 @@ where
 import qualified Database.PG.Query                          as Q
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.SchemaCacheTypes
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
@@ -80,20 +81,6 @@ persistRel (QualifiedObject sn tn) rn relType relDef comment =
            VALUES ($1, $2, $3, $4, $5 :: jsonb, $6)
                 |] (sn, tn, rn, relTypeToTxt relType, Q.AltJ relDef, comment) True
 
-checkForFldConfilct
-  :: (MonadError QErr m)
-  => TableInfo PGColumnInfo
-  -> FieldName
-  -> m ()
-checkForFldConfilct tabInfo f =
-  case HM.lookup f (_tiFieldInfoMap tabInfo) of
-    Just _ -> throw400 AlreadyExists $ mconcat
-      [ "column/relationship " <>> f
-      , " of table " <>> _tiName tabInfo
-      , " already exists"
-      ]
-    Nothing -> return ()
-
 validateObjRel
   :: (QErrM m, CacheRM m)
   => QualifiedTable
@@ -101,7 +88,7 @@ validateObjRel
   -> m ()
 validateObjRel qt (RelDef rn ru _) = do
   tabInfo <- askTabInfo qt
-  checkForFldConfilct tabInfo (fromRel rn)
+  checkForFieldConflict tabInfo (fromRel rn)
   let fim = _tiFieldInfoMap tabInfo
   case ru of
     RUFKeyOn cn                      -> assertPGCol fim "" cn
@@ -301,7 +288,7 @@ validateArrRel
   => QualifiedTable -> ArrRelDef -> m ()
 validateArrRel qt (RelDef rn ru _) = do
   tabInfo <- askTabInfo qt
-  checkForFldConfilct tabInfo (fromRel rn)
+  checkForFieldConflict tabInfo (fromRel rn)
   let fim = _tiFieldInfoMap tabInfo
   case ru of
     RUFKeyOn (ArrRelUsingFKeyOn remoteQt rcn) -> do

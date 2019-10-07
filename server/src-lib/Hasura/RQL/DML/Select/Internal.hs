@@ -209,7 +209,7 @@ buildJsonObject pfx parAls arrRelCtx strfyNum flds =
         Nothing              -> colNameExp
         Just (ColOp op cExp) -> S.mkSQLOpExp op colNameExp cExp
       where
-        colNameExp = S.mkQIdenExp (mkBaseTableAls pfx) $ pgiName col
+        colNameExp = S.mkQIdenExp (mkBaseTableAls pfx) $ pgiColumn col
 
 -- uses row_to_json to build a json object
 withRowToJSON
@@ -286,8 +286,8 @@ processAnnOrderByCol
 processAnnOrderByCol pfx parAls arrRelCtx strfyNum = \case
   AOCPG colInfo ->
     let
-      qualCol  = S.mkQIdenExp (mkBaseTableAls pfx) (toIden $ pgiName colInfo)
-      obColAls = mkBaseTableColAls pfx $ pgiName colInfo
+      qualCol  = S.mkQIdenExp (mkBaseTableAls pfx) (toIden $ pgiColumn colInfo)
+      obColAls = mkBaseTableColAls pfx $ pgiColumn colInfo
     in ( (S.Alias obColAls, qualCol)
        , OBNNothing
        )

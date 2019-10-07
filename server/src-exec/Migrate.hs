@@ -19,7 +19,7 @@ import qualified Data.Yaml.TH               as Y
 import qualified Database.PG.Query          as Q
 
 curCatalogVer :: T.Text
-curCatalogVer = "23"
+curCatalogVer = "25"
 
 migrateMetadata
   :: ( MonadTx m
@@ -103,8 +103,8 @@ setAsSystemDefinedFor16 =
              AND  table_name = 'hdb_query_collection';
            |]
 
-setAsSystemDefinedFor23 :: MonadTx m => m ()
-setAsSystemDefinedFor23 =
+setAsSystemDefinedFor25 :: MonadTx m => m ()
+setAsSystemDefinedFor25 =
   liftTx $ Q.catchE defaultTxErrorHandler $
   Q.multiQ [Q.sql|
             UPDATE hdb_catalog.hdb_table
@@ -370,7 +370,21 @@ from21To22 = do
     $(Q.sqlFromFile "src-rsr/migrate_from_21_to_22.sql")
   pure ()
 
-from22To23
+from22To23 :: (MonadTx m) => m ()
+from22To23 = do
+  Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
+    $(Q.sqlFromFile "src-rsr/migrate_from_22_to_23.sql")
+  pure ()
+
+from23To24 :: MonadTx m => m ()
+from23To24 =
+  liftTx $ Q.catchE defaultTxErrorHandler $
+  Q.multiQ [Q.sql|
+            ALTER TABLE hdb_catalog.hdb_table
+            ADD COLUMN configuration JSONB NOT NULL DEFAULT '{}'::jsonb;
+           |]
+
+from24To25
   :: ( MonadTx m
     , HasHttpManager m
     , HasSQLGenCtx m
@@ -379,14 +393,14 @@ from22To23
     , MonadIO m
     )
   => m ()
-from22To23 = do
+from24To25 = do
   Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
-    $(Q.sqlFromFile "src-rsr/migrate_from_22_to_23.sql")
+    $(Q.sqlFromFile "src-rsr/migrate_from_24_to_25.sql")
   migrateMetadata True migrateMetadataFromFile
-  setAsSystemDefinedFor23
+  setAsSystemDefinedFor25
   where
     migrateMetadataFromFile =
-      $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_22_to_23.yaml" :: Q (TExp RQLQuery)))
+      $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_24_to_25.yaml" :: Q (TExp RQLQuery)))
 
 migrateCatalog
   :: ( MonadTx m
@@ -432,6 +446,8 @@ migrateCatalog migrationTime = migrateFrom =<< getCatalogVersion
           , ("20", from20To21)
           , ("21", from21To22)
           , ("22", from22To23)
+          , ("23", from23To24)
+          , ("24", from24To25)
           ]
 
     postMigrate = do

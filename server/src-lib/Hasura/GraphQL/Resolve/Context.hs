@@ -26,6 +26,7 @@ module Hasura.GraphQL.Resolve.Context
 
   , withSelSet
   , fieldAsPath
+  , resolvePGCol
   , module Hasura.GraphQL.Utils
   , module Hasura.GraphQL.Resolve.Types
   ) where
@@ -99,21 +100,21 @@ withArg args arg f = prependArgsInPath $ nameAsPath arg $
   getArg args arg >>= f
 
 withArgM
-  :: (MonadError QErr m)
+  :: (MonadResolve m)
   => ArgsMap
   -> G.Name
   -> (AnnInpVal -> m a)
   -> m (Maybe a)
-withArgM args arg f = prependArgsInPath $ nameAsPath arg $
-  mapM f $ handleNull =<< Map.lookup arg args
-  where
-    handleNull v = bool (Just v) Nothing $
-                   hasNullVal $ _aivValue v
+withArgM args argName f = do
+  wrappedArg <- for (Map.lookup argName args) $ \arg -> do
+    when (isJust (_aivVariable arg) && G.isNullable (_aivType arg)) markNotReusable
+    pure . bool (Just arg) Nothing $ hasNullVal (_aivValue arg)
+  prependArgsInPath . nameAsPath argName $ traverse f (join wrappedArg)
 
 type PrepArgs = Seq.Seq Q.PrepArg
 
 prepare :: (MonadState PrepArgs m) => AnnPGVal -> m S.SQLExp
-prepare (AnnPGVal _ _ _ scalarValue) = prepareColVal scalarValue
+prepare (AnnPGVal _ _ scalarValue) = prepareColVal scalarValue
 
 resolveValPrep
   :: (MonadState PrepArgs m)
@@ -141,7 +142,7 @@ prepareColVal (WithScalarType scalarType colVal) = do
   return $ toPrepParam (Seq.length preparedArgs + 1) scalarType
 
 txtConverter :: Applicative f => AnnPGVal -> f S.SQLExp
-txtConverter (AnnPGVal _ _ _ scalarValue) = pure $ toTxtValue scalarValue
+txtConverter (AnnPGVal _ _ scalarValue) = pure $ toTxtValue scalarValue
 
 withSelSet :: (Monad m) => SelSet -> (Field -> m a) -> m [(Text, a)]
 withSelSet selSet f =
@@ -151,3 +152,9 @@ withSelSet selSet f =
 
 fieldAsPath :: (MonadError QErr m) => Field -> m a -> m a
 fieldAsPath = nameAsPath . _fName
+
+resolvePGCol :: (MonadError QErr m)
+             => PGColGNameMap -> G.Name -> m PGColumnInfo
+resolvePGCol colFldMap fldName =
+  onNothing (Map.lookup fldName colFldMap) $ throw500 $
+  "no column associated with name " <> G.unName fldName

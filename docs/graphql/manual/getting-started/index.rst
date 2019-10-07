@@ -36,7 +36,7 @@ Get started using an existing database
 
 .. admonition:: Supported Postgres versions
 
-  Hasura GraphQL engine supports **Postgres 9.6 and above**
+  Hasura GraphQL engine supports **Postgres 9.5 and above**
 
 .. toctree::
    :maxdepth: 2

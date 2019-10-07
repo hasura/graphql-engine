@@ -281,7 +281,7 @@ onStart serverEnv wsConn (StartMsg opId q) =
     (sc, scVer) <- liftIO $ IORef.readIORef gCtxMapRef
     execPlanE <-
       runExceptT $
-      E.getExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer q
+      E.getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer q
     execPlans <-
       either (withComplete . preExecErr requestId) (return . toList) execPlanE
     let execCtx =
@@ -304,16 +304,16 @@ onStart serverEnv wsConn (StartMsg opId q) =
           runExceptT $ do
             flip mapM execPlans $ \execPlan ->
               case execPlan of
-                E.Leaf plan ->
+                ([], plan) ->
                   case plan of
                     E.ExPHasura operation ->
                       case operation of
                         E.ExOpQuery opTx genSql ->
-                          fmap (encodeGQResp . GQSuccess) $
+                          fmap (encodeGQResp . GQSuccess . encJToLBS) $
                           execQueryOrMut requestId q genSql $
                           runLazyTx' pgExecCtx opTx
                         E.ExOpMutation opTx ->
-                          fmap (encodeGQResp . GQSuccess) $
+                          fmap (encodeGQResp . GQSuccess . encJToLBS) $
                           execQueryOrMut requestId q Nothing $
                           runLazyTx pgExecCtx $ withUserInfo userInfo opTx
                         E.ExOpSubs {} ->
@@ -323,7 +323,7 @@ onStart serverEnv wsConn (StartMsg opId q) =
                                "did not expect subscription operation here")
                     E.ExPRemote rtf ->
                       runRemoteGQ execCtx requestId userInfo reqHdrs rtf
-                E.Tree {} ->
+                _ ->
                   throwError
                     (err400
                        NotSupported
@@ -357,7 +357,7 @@ onStart serverEnv wsConn (StartMsg opId q) =
       where
         getLeafPlan =
           \case
-            E.Leaf resolvedPlan ->
+            ([], resolvedPlan) ->
               case resolvedPlan of
                 E.ExPHasura operation -> Just operation
                 E.ExPRemote _         -> Nothing
@@ -367,7 +367,7 @@ onStart serverEnv wsConn (StartMsg opId q) =
             Just (E.ExOpSubs p) -> Just p
             _ -> Nothing
     execSubscription ::
-         RequestId -> GQLReqUnparsed -> LQ.LiveQueryOp -> ExceptT () IO ()
+         RequestId -> GQLReqUnparsed -> LQ.LiveQueryPlan -> ExceptT () IO ()
     execSubscription reqId query lqOp = do
       liftIO $ logGraphqlQuery logger $ QueryLog query Nothing reqId
       lqId <- liftIO $ LQ.addLiveQuery lqMap lqOp liveQOnChange
@@ -392,26 +392,24 @@ onStart serverEnv wsConn (StartMsg opId q) =
       -> [H.Header]
       -> VQ.RemoteTopField
       -> m EncJSON
-    runRemoteGQ execCtx reqId userInfo reqHdrs topField
+    runRemoteGQ execCtx reqId userInfo reqHdrs RemoteTopField{..}
       -- if it's not a subscription, use HTTP to execute the query on the remote
       -- server
       -- try to parse the (apollo protocol) websocket frame and get only the
       -- payload
      = do
-      when (rtqOperationType topField == G.OperationTypeSubscription) $
+      when (rtqOperationType == G.OperationTypeSubscription) $
         throwError $
         err400 NotSupported "subscription to remote server is not supported"
-      resp <-
-        let (rsi, fields) = remoteTopQueryEither topField
-         in runExceptT $
-            flip runReaderT execCtx $
-            E.execRemoteGQ
-              reqId
-              userInfo
-              reqHdrs
-              (rtqOperationType topField)
-              rsi
-              fields
+      resp <- runExceptT $
+              flip runReaderT execCtx $
+              E.execRemoteGQ
+                reqId
+                userInfo
+                reqHdrs
+                rtqOperationType
+                rtqRemoteSchemaInfo
+                (Right rtqFields)
       liftEither (fmap _hrBody resp)
     WSServerEnv logger pgExecCtx lqMap gCtxMapRef httpMgr _ sqlGenCtx planCache _ enableAL =
       serverEnv

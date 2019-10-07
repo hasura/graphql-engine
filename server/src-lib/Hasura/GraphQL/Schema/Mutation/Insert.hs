@@ -6,8 +6,8 @@ module Hasura.GraphQL.Schema.Mutation.Insert
   , mkOnConflictTypes
   ) where
 
-import qualified Data.HashMap.Strict                  as Map
-import qualified Language.GraphQL.Draft.Syntax        as G
+import qualified Data.HashMap.Strict                   as Map
+import qualified Language.GraphQL.Draft.Syntax         as G
 
 import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Schema.Common
@@ -42,10 +42,6 @@ mkOnConflictInpTy tn =
 mkConstraintInpTy :: QualifiedTable -> G.NamedType
 mkConstraintInpTy tn =
   G.NamedType $ qualObjectToName tn <> "_constraint"
-
--- conflict_action
-conflictActionTy :: G.NamedType
-conflictActionTy = G.NamedType "conflict_action"
 
 -- table_update_column
 mkUpdColumnInpTy :: QualifiedTable -> G.NamedType
@@ -126,7 +122,6 @@ mkInsInp tn insCols relInfoMap =
 {-
 
 input table_on_conflict {
-  action: conflict_action
   constraint: table_constraint!
   update_columns: [table_column!]
 }
@@ -154,9 +149,8 @@ insert_table(
   ): table_mutation_response!
 -}
 
-mkInsMutFld
-  :: QualifiedTable -> Bool -> ObjFldInfo
-mkInsMutFld tn isUpsertable =
+mkInsMutFld :: Maybe G.Name -> QualifiedTable -> Bool -> ObjFldInfo
+mkInsMutFld mCustomName tn isUpsertable =
   mkHsraObjFldInfo (Just desc) fldName (fromInpValL inputVals) $
     G.toGT $ mkMutRespTy tn
   where
@@ -164,7 +158,8 @@ mkInsMutFld tn isUpsertable =
     desc = G.Description $
       "insert data into the table: " <>> tn
 
-    fldName = "insert_" <> qualObjectToName tn
+    defFldName = "insert_" <> qualObjectToName tn
+    fldName = fromMaybe defFldName mCustomName
 
     objsArgDesc = "the rows to be inserted"
     objectsArg =
@@ -174,8 +169,8 @@ mkInsMutFld tn isUpsertable =
     onConflictInpVal = bool Nothing (Just onConflictArg) isUpsertable
 
     onConflictDesc = "on conflict condition"
-    onConflictArg =
-      InpValInfo (Just onConflictDesc) "on_conflict" Nothing $ G.toGT $ mkOnConflictInpTy tn
+    onConflictArg = InpValInfo (Just onConflictDesc) "on_conflict"
+                    Nothing $ G.toGT $ mkOnConflictInpTy tn
 
 mkConstraintTy :: QualifiedTable -> [ConstraintName] -> EnumTyInfo
 mkConstraintTy tn cons = enumTyInfo
@@ -190,7 +185,7 @@ mkConstraintTy tn cons = enumTyInfo
       EnumValInfo (Just "unique or primary key constraint")
       (G.EnumValue $ G.Name n) False
 
-mkUpdColumnTy :: QualifiedTable -> [PGCol] -> EnumTyInfo
+mkUpdColumnTy :: QualifiedTable -> [G.Name] -> EnumTyInfo
 mkUpdColumnTy tn cols = enumTyInfo
   where
     enumTyInfo = mkHsraEnumTyInfo (Just desc) (mkUpdColumnInpTy tn) $
@@ -199,25 +194,12 @@ mkUpdColumnTy tn cols = enumTyInfo
     desc = G.Description $
       "update columns of table " <>> tn
 
-mkConflictActionTy :: Bool -> EnumTyInfo
-mkConflictActionTy updAllowed =
-  mkHsraEnumTyInfo (Just desc) conflictActionTy $
-    EnumValuesSynthetic . mapFromL _eviVal $ [enumValIgnore] <> bool [] [enumValUpdate] updAllowed
-  where
-    desc = G.Description "conflict action"
-    enumValIgnore = EnumValInfo (Just "ignore the insert on this row")
-                    (G.EnumValue "ignore") False
-    enumValUpdate = EnumValInfo (Just "update the row with the given values")
-                    (G.EnumValue "update") False
-
 mkOnConflictTypes
-  :: QualifiedTable -> [ConstraintName] -> [PGCol] -> Bool -> [TypeInfo]
+  :: QualifiedTable -> [ConstraintName] -> [G.Name] -> Bool -> [TypeInfo]
 mkOnConflictTypes tn uniqueOrPrimaryCons cols =
   bool [] tyInfos
   where
-    tyInfos = [ TIEnum $ mkConflictActionTy isUpdAllowed
-              , TIEnum $ mkConstraintTy tn uniqueOrPrimaryCons
+    tyInfos = [ TIEnum $ mkConstraintTy tn uniqueOrPrimaryCons
               , TIEnum $ mkUpdColumnTy tn cols
               , TIInpObj $ mkOnConflictInp tn
               ]
-    isUpdAllowed = not $ null cols

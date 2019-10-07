@@ -12,13 +12,16 @@ import qualified Language.GraphQL.Draft.Syntax          as G
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
+import           Hasura.GraphQL.Resolve.Types
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
+import qualified Data.Sequence                          as Seq
 import qualified Hasura.GraphQL.Execute                 as E
+import qualified Hasura.GraphQL.Execute.LiveQuery       as E
 import qualified Hasura.GraphQL.Resolve                 as RS
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
@@ -88,7 +91,7 @@ explainField userInfo gCtx sqlGenCtx fld =
     _            -> do
       unresolvedAST <-
         runExplain (queryCtxMap, userInfo, fldMap, orderByCtx, sqlGenCtx) $
-        RS.queryFldToPGAST fld
+          evalResolveT $ RS.queryFldToPGAST fld
       resolvedAST <- RS.traverseQueryRootFldAST (resolveVal userInfo)
                      unresolvedAST
       let txtSQL = Q.getQueryText $ RS.toPGQuery resolvedAST
@@ -111,29 +114,37 @@ explainGQLQuery
   -> Bool
   -> GQLExplain
   -> m EncJSON
-explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw)= do
+explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw) = do
+  opDef <- GV.getTypedOp opNameM selSets opDefs
   execPlans <- E.getExecPlanPartial userInfo sc enableAL query
-  mresults <- forM (toList execPlans) $ \execPlan -> do
-    case execPlan of
-      E.ExPHasuraPartial (gCtx, rootSelSets, _) ->
-        return (Just (gCtx, rootSelSets))
-      E.ExPRemotePartial{}  ->
-        return Nothing
-  case catMaybes mresults of
-    [] -> throw400 InvalidParams "only hasura queries can be explained"
-    results@((gCtx, _):_) -> do
-     let rootSelSets = map snd results
-     plans :: [[FieldPlan]] <- forM rootSelSets $ \rootSelSet -> do
-      case rootSelSet of
-       GV.HasuraTopQuery field -> do
-         let tx = mapM (explainField userInfo gCtx sqlGenCtx) (pure field)
-         plans <- liftIO (runExceptT $ runLazyTx pgExecCtx tx) >>= liftEither
-         return $ plans
-       GV.HasuraTopMutation _ ->
-         throw400 InvalidParams "only queries can be explained"
-       GV.HasuraTopSubscription _ ->
-         throw400 InvalidParams "only queries can be explained"
-     pure (encJFromJValue (foldMap toList plans))
+  let mRootSelSet =
+        foldl'
+          (\accumSelSetM execPlan ->
+             case execPlan of
+               E.ExPHasuraPartial (gCtx, topField, _) -> case topField of
+                 GV.HasuraTopQuery field -> fmap (\(gctx, fields) -> (gctx, (Seq.|>) fields field)) accumSelSetM
+                 GV.HasuraTopMutation field -> fmap (\(gctx, fields) -> (gctx, (Seq.|>) fields field)) accumSelSetM
+                 GV.HasuraTopSubscription field -> pure $ (gCtx, Seq.singleton field)
+               E.ExPRemotePartial {} -> Nothing)
+          (pure (emptyGCtx, Seq.empty))
+          execPlans
+  rootSelSet <- onNothing mRootSelSet $ throw400 InvalidParams "only hasura queries can be explained"
+  case (G._todType opDef, rootSelSet) of
+    (G.OperationTypeQuery, (gCtx, selSet)) ->
+      runInTx $ encJFromJValue <$> traverse (explainField userInfo gCtx sqlGenCtx) (toList selSet)
+    (G.OperationTypeMutation, _) ->
+      throw400 InvalidParams "only queries can be explained"
+    (G.OperationTypeSubscription, (gCtx, selSet)) -> do
+      rootField <- getRootField selSet
+      (plan, _) <- E.getSubsOp pgExecCtx gCtx sqlGenCtx userInfo rootField
+      runInTx $ encJFromJValue <$> E.explainLiveQueryPlan plan
   where
-    usrVars  = mkUserVars $ maybe [] Map.toList userVarsRaw
+    usrVars = mkUserVars $ maybe [] Map.toList userVarsRaw
     userInfo = mkUserInfo (fromMaybe adminRole $ roleFromVars usrVars) usrVars
+    runInTx = liftEither <=< liftIO . runExceptT . runLazyTx pgExecCtx
+    (GH.GQLReq opNameM q _) = query
+    (selSets, opDefs, _) = G.partitionExDefs $ GH.unGQLExecDoc q
+    getRootField = \case
+      Seq.Empty -> throw400 InvalidParams "expected one top field in subscription"
+      (fld Seq.:<| Seq.Empty) -> pure fld
+      _ -> throw400 InvalidParams "expected only one top field in subscription"

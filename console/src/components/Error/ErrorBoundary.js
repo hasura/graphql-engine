@@ -4,7 +4,7 @@ import {
   loadInconsistentObjects,
   redirectToMetadataStatus,
   isMetadataStatusPage,
-} from '../Services/Metadata/Actions';
+} from '../Services/Settings/Actions';
 import Spinner from '../Common/Spinner/Spinner';
 
 import PageNotFound, { NotFoundError } from './PageNotFound';
