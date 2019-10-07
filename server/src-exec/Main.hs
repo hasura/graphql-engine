@@ -257,7 +257,7 @@ main =  do
       -- migrate catalog if necessary
       migRes <- runAsAdmin pool sqlGenCtx httpMgr $
                 migrateCatalog currentTime
-      either printErrJExit (logger . mkGenericStrLog LevelInfo "db_migrate") migRes
+      either printErrJExit (logger . mkGenericLog LevelInfo "db_migrate") migRes
 
       -- retrieve database id
       eDbId <- runTx pool getDbId

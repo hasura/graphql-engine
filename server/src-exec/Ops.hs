@@ -6,7 +6,7 @@ module Ops
 
 import           Data.Time.Clock              (UTCTime)
 import           Language.Haskell.TH.Syntax   (Q, TExp, unTypeQ)
-import           Migrate                      (curCatalogVer)
+import           Migrate                      (latestCatalogVersion)
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
@@ -107,7 +107,7 @@ initCatalogStrict createSchema initTime =  do
       Q.unitQ [Q.sql|
                 INSERT INTO "hdb_catalog"."hdb_version"
                 (version, upgraded_on) VALUES ($1, $2)
-                |] (curCatalogVer, modTime) False
+                |] (T.pack $ show latestCatalogVersion, modTime) False
 
     isExtAvailable :: T.Text -> Q.Tx Bool
     isExtAvailable sn =
