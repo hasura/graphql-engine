@@ -208,7 +208,7 @@ logError
   -> Maybe UserInfo
   -> RequestId
   -> Wai.Request
-  -> Either BS.ByteString Value
+  -> Either Text Value
   -> QErr -> m ()
 logError logger userInfoM reqId httpReq req qErr =
   liftIO $ L.unLogger logger $
@@ -228,11 +228,11 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
       authMode = scAuthMode serverCtx
       manager = scManager serverCtx
       -- convert ByteString to Maybe Value for logging
-      reqTxt = Just $ String $ bsToTxt $ BL.toStrict reqBody
+      reqTxt = bsToTxt $ BL.toStrict reqBody
 
   requestId <- getRequestId headers
   userInfoE <- liftIO $ runExceptT $ getUserInfo logger manager headers authMode
-  userInfo  <- either (logErrorAndResp Nothing requestId req reqTxt False . qErrModifier)
+  userInfo  <- either (logErrorAndResp Nothing requestId req (Left reqTxt) False . qErrModifier)
                return userInfoE
 
   let handlerState = HandlerCtx serverCtx userInfo headers requestId
@@ -246,7 +246,8 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
       return (res, Nothing)
     AHPost handler -> do
       parsedReqE <- runExceptT $ parseBody reqBody
-      parsedReq  <- either (logErrorAndResp (Just userInfo) requestId req reqTxt (isAdmin curRole) . qErrModifier) return parsedReqE
+      parsedReq  <- either (logErrorAndResp (Just userInfo) requestId req (Left reqTxt) (isAdmin curRole) . qErrModifier)
+                    return parsedReqE
       res <- liftIO $ runReaderT (runExceptT $ handler parsedReq) handlerState
       return (res, Just parsedReq)
 
@@ -257,7 +258,8 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
 
   -- log and return result
   case modResult of
-    Left err  -> logErrorAndResp (Just userInfo) requestId req (toJSON <$> q) (isAdmin curRole) err
+    Left err  -> let jErr = maybe (Left T.empty) (Right . toJSON) q
+                 in logErrorAndResp (Just userInfo) requestId req jErr (isAdmin curRole) err
     Right res -> logSuccessAndResp (Just userInfo) requestId req res (Just (t1, t2))
 
   where
@@ -265,10 +267,15 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
 
     logErrorAndResp
       :: (MonadIO m)
-      => Maybe UserInfo -> RequestId -> Wai.Request -> Maybe Value -> Bool -> QErr -> ActionCtxT ctx m a
+      => Maybe UserInfo
+      -> RequestId
+      -> Wai.Request
+      -> Either Text Value
+      -> Bool
+      -> QErr
+      -> ActionCtxT ctx m a
     logErrorAndResp userInfo reqId req reqBody includeInternal qErr = do
-      let reqBody' = maybe (Left BS.empty) Right reqBody
-      logError logger userInfo reqId req reqBody' qErr
+      logError logger userInfo reqId req reqBody qErr
       setStatus $ qeStatus qErr
       json $ qErrEncoder includeInternal qErr
 
@@ -616,7 +623,7 @@ raiseGenericApiError :: L.Logger -> QErr -> ActionT IO ()
 raiseGenericApiError logger qErr = do
   req <- request
   reqBody <- liftIO $ strictRequestBody req
-  let reqTxt = Left $ BL.toStrict reqBody
+  let reqTxt = Left $ bsToTxt (BL.toStrict reqBody)
   reqId <- getRequestId $ requestHeaders req
   logError logger Nothing reqId req reqTxt qErr
   uncurry setHeader jsonHeader

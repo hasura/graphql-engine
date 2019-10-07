@@ -149,7 +149,9 @@ data OperationLog
   , olRawQuery           :: !(Maybe Text)
   , olError              :: !(Maybe QErr)
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 2 snakeCase) ''OperationLog)
+$(deriveToJSON (aesonDrop 2 snakeCase)
+  { omitNothingFields = True
+  } ''OperationLog)
 
 data HttpAccessLog
   = HttpAccessLog
@@ -205,7 +207,7 @@ mkHttpErrorLog
   -> RequestId
   -> Wai.Request
   -> QErr
-  -> Either ByteString Value
+  -> Either Text Value
   -> Maybe (UTCTime, UTCTime)
   -> Maybe CompressionType
   -> HttpLog
@@ -232,11 +234,8 @@ mkHttpErrorLog userInfoM reqId req err query mTimeT compressTypeM =
     status = qeStatus err
     respSize = Just $ BL.length $ encode err
     respTime = computeTimeDiff mTimeT
-    query' = either (const Nothing) (Just . toJSON) query
-    rawQuery = either bsToRawQuery (const Nothing) query
-      where
-        bsToRawQuery bs | BS.null bs = Nothing
-                        | otherwise = Just $ bsToTxt bs
+    query' = either (const Nothing) Just query
+    rawQuery = either (\txt -> bool (Just txt) Nothing $ T.null txt) (const Nothing) query
 
 computeTimeDiff :: Maybe (UTCTime, UTCTime) -> Maybe Double
 computeTimeDiff = fmap (realToFrac . uncurry (flip diffUTCTime))
