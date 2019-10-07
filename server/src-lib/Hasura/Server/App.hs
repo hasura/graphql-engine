@@ -19,7 +19,6 @@ import           System.Exit                            (exitFailure)
 import           System.FilePath                        (joinPath, takeFileName)
 import           Web.Spock.Core
 
-import qualified Data.ByteString.Char8                  as BS
 import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.HashMap.Strict                    as M
 import qualified Data.HashSet                           as S
