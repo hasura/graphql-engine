@@ -213,7 +213,7 @@ mkHttpErrorLog
   -> HttpLog
 mkHttpErrorLog userInfoM reqId req err query mTimeT compressTypeM =
   let http = HttpInfoLog
-             { hlStatus       = status
+             { hlStatus       = qeStatus err
              , hlMethod       = bsToTxt $ Wai.requestMethod req
              , hlSource       = bsToTxt $ getSourceFromFallback req
              , hlPath         = bsToTxt $ Wai.rawPathInfo req
@@ -223,19 +223,13 @@ mkHttpErrorLog userInfoM reqId req err query mTimeT compressTypeM =
       op = OperationLog
            { olRequestId          = reqId
            , olUserVars           = userVars <$> userInfoM
-           , olResponseSize       = respSize
-           , olQueryExecutionTime = respTime
-           , olQuery              = query'
-           , olRawQuery           = rawQuery
+           , olResponseSize       = Just $ BL.length $ encode err
+           , olQueryExecutionTime = computeTimeDiff mTimeT
+           , olQuery              = either (const Nothing) Just query
+           , olRawQuery           = either Just (const Nothing) query
            , olError              = Just err
            }
   in HttpLog L.LevelError $ HttpAccessLog http op
-  where
-    status = qeStatus err
-    respSize = Just $ BL.length $ encode err
-    respTime = computeTimeDiff mTimeT
-    query' = either (const Nothing) Just query
-    rawQuery = either (\txt -> bool (Just txt) Nothing $ T.null txt) (const Nothing) query
 
 computeTimeDiff :: Maybe (UTCTime, UTCTime) -> Maybe Double
 computeTimeDiff = fmap (realToFrac . uncurry (flip diffUTCTime))
