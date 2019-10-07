@@ -71,11 +71,11 @@ that, you will need a billing account added to the project to enable the API.
    https://console.cloud.google.com/apis/api/container.googleapis.com/overview?project=hasura
 
 Once the API is enabled, create a new Kubernetes cluster called ``hasura-k8s``
-in the ``us-west2`` zone with 1 node.
+in the ``us-west2-a`` zone with 1 node.
 
 .. code-block:: bash
 
-   gcloud container clusters create hasura-k8s --zone us-west2 \
+   gcloud container clusters create hasura-k8s --zone us-west2-a \
           --num-nodes 1 --project hasura
 
 Set up Cloud SQL Proxy Credentials
