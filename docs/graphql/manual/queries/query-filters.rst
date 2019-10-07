@@ -188,7 +188,7 @@ Fetch a list of articles that were published on a certain date (``published_on``
     }
 
 Example: Column
-^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^
 Fetch a list of ``price`` *(a column)* rows that equal the configured value for the category ``max_category_price`` *(a column in the same table)*:
 
 .. graphiql::
@@ -210,6 +210,16 @@ Fetch a list of ``price`` *(a column)* rows that equal the configured value for 
           {
             "price": 12,
             "item": "fruit",
+            "max_category_price": 12
+          },
+          {
+            "price": 12,
+            "item": "toy",
+            "max_category_price": 12
+          },
+          {
+            "price": 12,
+            "item": "shoe",
             "max_category_price": 12
           }
         ]
