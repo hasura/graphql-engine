@@ -207,7 +207,7 @@ mkHttpErrorLog
   -> RequestId
   -> Wai.Request
   -> QErr
-  -> Either Text Value
+  -> Either BL.ByteString Value
   -> Maybe (UTCTime, UTCTime)
   -> Maybe CompressionType
   -> HttpLog
@@ -226,7 +226,7 @@ mkHttpErrorLog userInfoM reqId req err query mTimeT compressTypeM =
            , olResponseSize       = Just $ BL.length $ encode err
            , olQueryExecutionTime = computeTimeDiff mTimeT
            , olQuery              = either (const Nothing) Just query
-           , olRawQuery           = either Just (const Nothing) query
+           , olRawQuery           = either (Just . bsToTxt . BL.toStrict) (const Nothing) query
            , olError              = Just err
            }
   in HttpLog L.LevelError $ HttpAccessLog http op

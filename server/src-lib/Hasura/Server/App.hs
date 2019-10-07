@@ -207,7 +207,7 @@ logError
   -> Maybe UserInfo
   -> RequestId
   -> Wai.Request
-  -> Either Text Value
+  -> Either BL.ByteString Value
   -> QErr -> m ()
 logError logger userInfoM reqId httpReq req qErr =
   liftIO $ L.unLogger logger $
@@ -226,12 +226,10 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
   let headers = requestHeaders req
       authMode = scAuthMode serverCtx
       manager = scManager serverCtx
-      -- convert ByteString to Text for logging
-      reqTxt = bsToTxt $ BL.toStrict reqBody
 
   requestId <- getRequestId headers
   userInfoE <- liftIO $ runExceptT $ getUserInfo logger manager headers authMode
-  userInfo  <- either (logErrorAndResp Nothing requestId req (Left reqTxt) False . qErrModifier)
+  userInfo  <- either (logErrorAndResp Nothing requestId req (Left reqBody) False . qErrModifier)
                return userInfoE
 
   let handlerState = HandlerCtx serverCtx userInfo headers requestId
@@ -245,7 +243,7 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
       return (res, Nothing)
     AHPost handler -> do
       parsedReqE <- runExceptT $ parseBody reqBody
-      parsedReq  <- either (logErrorAndResp (Just userInfo) requestId req (Left reqTxt) (isAdmin curRole) . qErrModifier)
+      parsedReq  <- either (logErrorAndResp (Just userInfo) requestId req (Left reqBody) (isAdmin curRole) . qErrModifier)
                     return parsedReqE
       res <- liftIO $ runReaderT (runExceptT $ handler parsedReq) handlerState
       return (res, Just parsedReq)
@@ -257,7 +255,7 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
 
   -- log and return result
   case modResult of
-    Left err  -> let jErr = maybe (Left T.empty) (Right . toJSON) q
+    Left err  -> let jErr = maybe (Left reqBody) (Right . toJSON) q
                  in logErrorAndResp (Just userInfo) requestId req jErr (isAdmin curRole) err
     Right res -> logSuccessAndResp (Just userInfo) requestId req res (Just (t1, t2))
 
@@ -269,7 +267,7 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
       => Maybe UserInfo
       -> RequestId
       -> Wai.Request
-      -> Either Text Value
+      -> Either BL.ByteString Value
       -> Bool
       -> QErr
       -> ActionCtxT ctx m a
@@ -622,9 +620,8 @@ raiseGenericApiError :: L.Logger -> QErr -> ActionT IO ()
 raiseGenericApiError logger qErr = do
   req <- request
   reqBody <- liftIO $ strictRequestBody req
-  let reqTxt = Left $ bsToTxt (BL.toStrict reqBody)
   reqId <- getRequestId $ requestHeaders req
-  logError logger Nothing reqId req reqTxt qErr
+  logError logger Nothing reqId req (Left reqBody) qErr
   uncurry setHeader jsonHeader
   setStatus $ qeStatus qErr
   lazyBytes $ encode qErr
