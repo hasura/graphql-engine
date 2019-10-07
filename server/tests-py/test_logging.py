@@ -178,7 +178,7 @@ class TestLogging():
         print(http_logs[0])
         assert 'error' in http_logs[0]['detail']['operation']
         assert http_logs[0]['detail']['operation']['error']['code'] == 'access-denied'
-        assert http_logs[0]['detail']['operation']['query'] is None
+        assert http_logs[0]['detail']['operation'].get('query') is None
         assert http_logs[0]['detail']['operation']['raw_query'] is not None
 
     def test_http_unthorized_metadata(self, hge_ctx):
@@ -192,5 +192,5 @@ class TestLogging():
         print(http_logs[0])
         assert 'error' in http_logs[0]['detail']['operation']
         assert http_logs[0]['detail']['operation']['error']['code'] == 'access-denied'
-        assert http_logs[0]['detail']['operation']['query'] is None
+        assert http_logs[0]['detail']['operation'].get('query') is None
         assert http_logs[0]['detail']['operation']['raw_query'] is not None
