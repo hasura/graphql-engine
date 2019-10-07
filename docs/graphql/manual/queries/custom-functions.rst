@@ -6,7 +6,7 @@ Query custom SQL Functions
   :depth: 2
   :local:
 
-What are the custom SQL functions?
+What are custom SQL functions?
 ------------------------------
 
 Custom SQL functions are user-defined SQL functions that can be used to either encapsulate some custom business
