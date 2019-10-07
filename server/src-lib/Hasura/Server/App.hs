@@ -19,6 +19,7 @@ import           System.Exit                            (exitFailure)
 import           System.FilePath                        (joinPath, takeFileName)
 import           Web.Spock.Core
 
+import qualified Data.ByteString.Char8                  as BS
 import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.HashMap.Strict                    as M
 import qualified Data.HashSet                           as S
@@ -207,7 +208,7 @@ logError
   -> Maybe UserInfo
   -> RequestId
   -> Wai.Request
-  -> Maybe Value
+  -> Either BS.ByteString Value
   -> QErr -> m ()
 logError logger userInfoM reqId httpReq req qErr =
   liftIO $ L.unLogger logger $
@@ -266,7 +267,8 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
       :: (MonadIO m)
       => Maybe UserInfo -> RequestId -> Wai.Request -> Maybe Value -> Bool -> QErr -> ActionCtxT ctx m a
     logErrorAndResp userInfo reqId req reqBody includeInternal qErr = do
-      logError logger userInfo reqId req reqBody qErr
+      let reqBody' = maybe (Left BS.empty) Right reqBody
+      logError logger userInfo reqId req reqBody' qErr
       setStatus $ qeStatus qErr
       json $ qErrEncoder includeInternal qErr
 
@@ -614,9 +616,9 @@ raiseGenericApiError :: L.Logger -> QErr -> ActionT IO ()
 raiseGenericApiError logger qErr = do
   req <- request
   reqBody <- liftIO $ strictRequestBody req
-  let reqTxt = toJSON $ String $ bsToTxt $ BL.toStrict reqBody
+  let reqTxt = Left $ BL.toStrict reqBody
   reqId <- getRequestId $ requestHeaders req
-  logError logger Nothing reqId req (Just reqTxt) qErr
+  logError logger Nothing reqId req reqTxt qErr
   uncurry setHeader jsonHeader
   setStatus $ qeStatus qErr
   lazyBytes $ encode qErr

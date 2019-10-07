@@ -146,8 +146,8 @@ data OperationLog
   , olResponseSize       :: !(Maybe Int64)
   , olQueryExecutionTime :: !(Maybe Double)
   , olQuery              :: !(Maybe Value)
-  , olRawQuery           :: !(Maybe Value)
-  , olError              :: !(Maybe Value)
+  , olRawQuery           :: !(Maybe Text)
+  , olError              :: !(Maybe QErr)
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 2 snakeCase) ''OperationLog)
 
@@ -205,7 +205,7 @@ mkHttpErrorLog
   -> RequestId
   -> Wai.Request
   -> QErr
-  -> Maybe Value
+  -> Either ByteString Value
   -> Maybe (UTCTime, UTCTime)
   -> Maybe CompressionType
   -> HttpLog
@@ -219,24 +219,24 @@ mkHttpErrorLog userInfoM reqId req err query mTimeT compressTypeM =
              , hlCompression  = compressTypeM
              }
       op = OperationLog
-           { olRequestId    = reqId
-           , olUserVars     = userVars <$> userInfoM
-           , olResponseSize = respSize
+           { olRequestId          = reqId
+           , olUserVars           = userVars <$> userInfoM
+           , olResponseSize       = respSize
            , olQueryExecutionTime = respTime
-           , olQuery = toJSON <$> query'
-           , olRawQuery = toJSON <$> rawQuery
-           , olError = Just $ toJSON err
+           , olQuery              = query'
+           , olRawQuery           = rawQuery
+           , olError              = Just err
            }
   in HttpLog L.LevelError $ HttpAccessLog http op
   where
     status = qeStatus err
     respSize = Just $ BL.length $ encode err
     respTime = computeTimeDiff mTimeT
-    query' = query >>= \q -> case q of
-      Object _ -> Just q
-      Array _  -> Just q
-      _        -> Nothing
-    rawQuery = maybe query (const Nothing) query'
+    query' = either (const Nothing) (Just . toJSON) query
+    rawQuery = either bsToRawQuery (const Nothing) query
+      where
+        bsToRawQuery bs | BS.null bs = Nothing
+                        | otherwise = Just $ bsToTxt bs
 
 computeTimeDiff :: Maybe (UTCTime, UTCTime) -> Maybe Double
 computeTimeDiff = fmap (realToFrac . uncurry (flip diffUTCTime))
