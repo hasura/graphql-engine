@@ -226,7 +226,7 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
   let headers = requestHeaders req
       authMode = scAuthMode serverCtx
       manager = scManager serverCtx
-      -- convert ByteString to Maybe Value for logging
+      -- convert ByteString to Text for logging
       reqTxt = bsToTxt $ BL.toStrict reqBody
 
   requestId <- getRequestId headers
