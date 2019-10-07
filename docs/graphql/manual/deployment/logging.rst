@@ -20,7 +20,7 @@ Based on your deployment method, the Hasura GraphQL engine logs can be accessed 
 Different log-types
 -------------------
 
-The Hasura GraphQL engine has a different kind of log-types depending on the sub-system or the layer. A log-type is simply the ``type`` field in a logline, which indicates which sub-system the log comes from.
+The Hasura GraphQL engine has different kind of log-types depending on the sub-system or the layer. A log-type is simply the ``type`` field in a log line, which indicates which sub-system the log comes from.
 
 For example, the HTTP webserver logs incoming requests as an access log and is called ``http-log``. Similarly logs from the websocket layer are called ``websocket-log``, logs from the event trigger system are called ``event-trigger`` etc.
 
