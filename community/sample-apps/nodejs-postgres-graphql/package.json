@@ -1,0 +1,17 @@
+{
+  "name": "hasura-to-node-be",
+  "version": "1.0.0",
+  "description": "hasura on existing node be",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "nodemon src/index.js localhost 8080"
+  },
+  "dependencies": {
+    "express": "4.17.1",
+    "pg": "7.12.1"
+  },
+  "devDependencies": {
+    "nodemon": "1.18.4"
+  },
+  "keywords": []
+}
