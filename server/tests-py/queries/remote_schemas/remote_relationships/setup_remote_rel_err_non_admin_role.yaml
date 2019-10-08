@@ -13,8 +13,6 @@ query:
   args:
     name: userBasic
     table: profiles
-    hasura_fields:
-      - id
     remote_schema: user
     remote_field:
       user:

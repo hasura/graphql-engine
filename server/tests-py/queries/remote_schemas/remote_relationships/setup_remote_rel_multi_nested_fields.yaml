@@ -26,6 +26,3 @@ args:
                   field:
                     profile:
                       arguments: {}
-  hasura_fields:
-  - author_id
-  - id

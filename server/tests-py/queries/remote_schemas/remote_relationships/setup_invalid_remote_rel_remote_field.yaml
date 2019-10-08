@@ -2,8 +2,6 @@ type: create_remote_relationship
 args:
   name: invalideRemoteFld
   table: profiles
-  hasura_fields:
-  - id
   remote_schema: user
   remote_field:
     user_wrong:

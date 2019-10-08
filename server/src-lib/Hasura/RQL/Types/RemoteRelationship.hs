@@ -15,7 +15,6 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Hasura.Prelude
 import           Hasura.RQL.Instances          ()
-import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Types
 
 import           Data.Aeson                    as A
@@ -24,7 +23,6 @@ import           Data.HashMap.Strict           (HashMap)
 import qualified Data.HashMap.Strict           as HM
 import           Data.List.NonEmpty            (NonEmpty (..))
 import           Data.Scientific
-import           Data.Set                      (Set)
 
 import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
@@ -48,7 +46,6 @@ data RemoteRelationship =
   RemoteRelationship
     { rrName         :: RemoteRelationshipName
     , rrTable        :: QualifiedTable
-    , rrHasuraFields :: Set FieldName -- change to PGCol
     , rrRemoteSchema :: RemoteSchemaName
     , rrRemoteFields :: NonEmpty FieldCall
     }  deriving (Show, Eq, Lift)
@@ -107,9 +104,11 @@ parseRemoteArguments j =
     A.Object hashMap -> fmap RemoteArguments (parseObjectFieldsToGValue hashMap)
     _                -> fail "Remote arguments should be an object of keys."
 
+
+-- G.ObjectField has the right representation but may not be the best name for this type as RemoteArgument might be scalar
 newtype RemoteArguments =
   RemoteArguments
-    { getRemoteArguments :: [G.ObjectFieldG G.Value]
+    { getRemoteArguments :: [G.ObjectField]
     } deriving (Show, Eq, Lift)
 
 instance ToJSON RemoteArguments where
@@ -143,7 +142,6 @@ instance ToJSON RemoteRelationship where
     object
       [ "name" .= rrName
       , "table" .= rrTable
-      , "hasura_fields" .= rrHasuraFields
       , "remote_schema" .= rrRemoteSchema
       , "remote_field" .= remoteFieldsJson rrRemoteFields
       ]
@@ -153,7 +151,6 @@ instance FromJSON RemoteRelationship where
     o <- parseJSON value
     rrName <- o .: "name"
     rrTable <- o .: "table"
-    rrHasuraFields <- o .: "hasura_fields"
     rrRemoteSchema <- o .: "remote_schema"
     rrRemoteFields <- o .: "remote_field" >>= parseRemoteFields
     pure RemoteRelationship {..}

@@ -1,5 +1,7 @@
 {-# LANGUAGE ApplicativeDo         #-}
+{-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE PartialTypeSignatures #-}
+{-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE ViewPatterns          #-}
 
 -- | Validate input queries against remote schemas.
@@ -21,6 +23,7 @@ import           Hasura.SQL.Types
 
 import qualified Data.HashMap.Strict           as HM
 import qualified Data.List.NonEmpty            as NE
+import qualified Data.Set                      as Set
 import qualified Data.Text                     as T
 import qualified Hasura.GraphQL.Context        as GC
 import qualified Language.GraphQL.Draft.Syntax as G
@@ -57,7 +60,7 @@ validateRelationship remoteRel rGCtx tableInfo = do
   fieldInfos <-
     fmap
       HM.fromList
-      (flip traverse (toList (rrHasuraFields remoteRel)) $ \fieldName ->
+      (flip traverse (Set.toList $ extractVariables remoteRel) $ \fieldName ->
          case HM.lookup fieldName (_tiFieldInfoMap tableInfo) of
            Nothing -> Left . pure $ TableFieldNotFound tableName fieldName
            Just fieldInfo -> pure (fieldName, fieldInfo))
@@ -128,6 +131,28 @@ validateRelationship remoteRel rGCtx tableInfo = do
                     providedArguments)
                  typeMap)
           pure (objFldInfo, (newParamMap, newTypeMap))
+
+extractVariables :: RemoteRelationship -> Set.Set FieldName
+extractVariables RemoteRelationship {rrRemoteFields} =
+  foldl' accumVariables Set.empty rrRemoteFields
+  where
+    accumVariables accumSet FieldCall {..} =
+      let tableFields =
+            map
+              (getVariablesFromValue . G._ofValue)
+              (getRemoteArguments fcArguments)
+          tableFieldSet = Set.fromList $ concat tableFields
+       in Set.union accumSet tableFieldSet
+    getVariablesFromValue :: G.Value -> [FieldName]
+    getVariablesFromValue gValue =
+      case gValue of
+        G.VVariable (G.Variable v) -> [fromName v]
+        G.VList (G.ListValueG list) -> concat $ map getVariablesFromValue list
+        G.VObject (G.ObjectValueG kv) ->
+          concat $ map (getVariablesFromValue . G._ofValue) kv
+        _ -> []
+      where
+        fromName (G.Name name) = FieldName name
 
 -- Return a new param map with keys deleted from join arguments
 stripInMap ::
