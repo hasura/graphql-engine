@@ -1,6 +1,8 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 
+const db = require("./queries");
+
 const app = express();
 const port = 8080;
 
@@ -10,9 +12,7 @@ app.use(
     extended: true
   })
 );
-app.get("/", (request, response) => {
-  response.json({ message: "Hello from express+postgres" });
-});
+app.get("/", db.testDB);
 
 app.listen(port, () => {
   console.log(`App running on port ${port}.`);
