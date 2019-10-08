@@ -54,6 +54,7 @@ data Field
   , _fType      :: !G.NamedType
   , _fArguments :: !ArgsMap
   , _fSelSet    :: !SelSet
+  , _fSource    :: !TypeLoc
   } deriving (Eq, Show)
 
 $(J.deriveToJSON (J.aesonDrop 2 J.camelCase){J.omitNothingFields=True}
@@ -233,7 +234,7 @@ denormFld visFrags fldInfo (G.Field aliasM name args dirs selSet) = do
       <> "selection since type " <> G.showGT fldTy <> " has no subfields"
 
   withPathK "directives" $ withDirectives dirs $ return $
-    Field (fromMaybe (G.Alias name) aliasM) name fldBaseTy argMap fields
+    Field (fromMaybe (G.Alias name) aliasM) name fldBaseTy argMap fields undefined
 
 denormInlnFrag
   :: ( MonadReader ValidationCtx m

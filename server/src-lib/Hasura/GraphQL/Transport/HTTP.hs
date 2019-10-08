@@ -31,8 +31,9 @@ runGQ reqId userInfo reqHdrs req = do
   case execPlan of
     E.GExPHasura resolvedOp ->
       flip HttpResponse Nothing <$> runHasuraGQ reqId req userInfo resolvedOp
-    E.GExPRemote rsi opDef  ->
-      E.execRemoteGQ reqId userInfo reqHdrs req rsi opDef
+    E.GExPRemote rsi rootSelSet ->
+      E.execRemoteGQ reqId userInfo reqHdrs req rsi undefined
+    E.GExPMixed fieldPlans -> undefined
 
 runHasuraGQ
   :: ( MonadIO m

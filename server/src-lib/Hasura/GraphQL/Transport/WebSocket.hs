@@ -285,8 +285,8 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   case execPlan of
     E.GExPHasura resolvedOp ->
       runHasuraGQ requestId q userInfo resolvedOp
-    E.GExPRemote rsi opDef  ->
-      runRemoteGQ execCtx requestId userInfo reqHdrs opDef rsi
+    E.GExPRemote rsi rootSelSet ->
+      runRemoteGQ execCtx requestId userInfo reqHdrs undefined rsi
   where
     runHasuraGQ :: RequestId -> GQLReqUnparsed -> UserInfo -> E.ExecOp
                 -> ExceptT () IO ()
