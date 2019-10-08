@@ -20,20 +20,19 @@ if (
 
 /* initialize globals */
 
+const isProduction = window.__env.nodeEnv === 'production';
+
 const globals = {
   apiHost: window.__env.apiHost,
   apiPort: window.__env.apiPort,
-  dataApiUrl: stripTrailingSlash(window.__env.dataApiUrl),
-  devDataApiUrl: window.__env.devDataApiUrl,
-  nodeEnv: window.__env.nodeEnv,
+  dataApiUrl: stripTrailingSlash(window.__env.dataApiUrl), // overridden below if server mode
+  urlPrefix: stripTrailingSlash(window.__env.urlPrefix || '/'), // overridden below if server mode in production
   adminSecret: window.__env.adminSecret || null, // gets updated after login/logout in server mode
   isAdminSecretSet:
     window.__env.isAdminSecretSet || window.__env.adminSecret || false,
   consoleMode: window.__env.consoleMode || SERVER_CONSOLE_MODE,
-  urlPrefix: stripTrailingSlash(window.__env.urlPrefix || '/'),
   enableTelemetry: window.__env.enableTelemetry,
-  telemetryTopic:
-    window.__env.nodeEnv !== 'development' ? 'console' : 'console_test',
+  telemetryTopic: isProduction ? 'console' : 'console_test',
   assetsPath: window.__env.assetsPath,
   serverVersion: window.__env.serverVersion,
   consoleAssetVersion: CONSOLE_ASSET_VERSION, // set during console build
@@ -43,7 +42,7 @@ const globals = {
 };
 
 if (globals.consoleMode === SERVER_CONSOLE_MODE) {
-  if (globals.nodeEnv !== 'development') {
+  if (isProduction) {
     const consolePath = window.__env.consolePath;
     if (consolePath) {
       const currentUrl = stripTrailingSlash(window.location.href);
@@ -57,9 +56,10 @@ if (globals.consoleMode === SERVER_CONSOLE_MODE) {
       globals.urlPrefix =
         currentPath.slice(0, currentPath.lastIndexOf(consolePath)) + '/console';
     } else {
-      const windowUrl = window.location.protocol + '//' + window.location.host;
+      const windowHostUrl =
+        window.location.protocol + '//' + window.location.host;
 
-      globals.dataApiUrl = windowUrl;
+      globals.dataApiUrl = windowHostUrl;
     }
   }
 }

@@ -1,4 +1,6 @@
-const serverFlags = `
+import { CLI_CONSOLE_MODE } from '../constants';
+
+const serverEnvVars = `
   dataApiUrl: '${process.env.DATA_API_URL}',
   isAdminSecretSet: '${process.env.IS_ADMIN_SECRET_SET}',
   consoleMode: '${process.env.CONSOLE_MODE}',
@@ -12,7 +14,7 @@ const serverFlags = `
   cdnAssets: ${process.env.CDN_ASSETS}
 `;
 
-const cliFlags = `
+const cliEnvVars = `
   apiPort: '${process.env.API_PORT}',
   apiHost: '${process.env.API_HOST}',
   dataApiUrl: '${process.env.DATA_API_URL}',
@@ -26,11 +28,9 @@ const cliFlags = `
   cdnAssets: ${process.env.CDN_ASSETS},
 `;
 
-const flags = process.env.CONSOLE_MODE === 'cli' ? cliFlags : serverFlags;
+const envVars =
+  process.env.CONSOLE_MODE === CLI_CONSOLE_MODE ? cliEnvVars : serverEnvVars;
 
-const env = `
-    window.__env={\n\t\t${flags}
-    };
+export const env = `
+  window.__env = {${envVars}};
 `;
-
-export { env };
