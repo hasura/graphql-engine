@@ -226,7 +226,7 @@ logError
   -> Maybe UserInfo
   -> RequestId
   -> Wai.Request
-  -> Maybe Value
+  -> Either BL.ByteString Value
   -> QErr
   -> [N.Header]
   -> m ()
@@ -253,15 +253,13 @@ mkSpockAction serverCtx httpLogger respLogger userAuthMiddleware qErrEncoder qEr
   let headers = requestHeaders req
       authMode = scAuthMode serverCtx
       manager = scManager serverCtx
-      -- convert ByteString to Maybe Value for logging
-      reqTxt = Just $ String $ bsToTxt $ BL.toStrict reqBody
 
   requestId <- getRequestId headers
 
   -- default to @getUserInfo@ if no user-auth middleware is passed
   let resolveUserInfo = fromMaybe getUserInfo userAuthMiddleware
   userInfoE <- liftIO $ runExceptT $ resolveUserInfo logger manager headers authMode
-  userInfo  <- either (logErrorAndResp Nothing requestId req reqTxt False headers . qErrModifier)
+  userInfo  <- either (logErrorAndResp Nothing requestId req (Left reqBody) False headers . qErrModifier)
                return userInfoE
 
   let handlerState = HandlerCtx serverCtx userInfo headers requestId
@@ -275,8 +273,8 @@ mkSpockAction serverCtx httpLogger respLogger userAuthMiddleware qErrEncoder qEr
       return (res, Nothing)
     AHPost handler -> do
       parsedReqE <- runExceptT $ parseBody reqBody
-      parsedReq  <- onLeft parsedReqE $
-                    (logErrorAndResp (Just userInfo) requestId req reqTxt (isAdmin curRole) headers . qErrModifier)
+      parsedReq  <- either (logErrorAndResp (Just userInfo) requestId req (Left reqBody) (isAdmin curRole) headers . qErrModifier)
+                    return parsedReqE
       res <- liftIO $ runReaderT (runExceptT $ handler parsedReq) handlerState
       return (res, Just parsedReq)
 
@@ -287,7 +285,8 @@ mkSpockAction serverCtx httpLogger respLogger userAuthMiddleware qErrEncoder qEr
 
   -- log and return result
   case modResult of
-    Left err  -> logErrorAndResp (Just userInfo) requestId req (toJSON <$> q) (isAdmin curRole) headers err
+    Left err  -> let jErr = maybe (Left reqBody) (Right . toJSON) q
+                 in logErrorAndResp (Just userInfo) requestId req jErr (isAdmin curRole) headers err
     Right res -> logSuccessAndResp (Just userInfo) requestId req res (Just (t1, t2)) headers
 
   where
@@ -295,8 +294,14 @@ mkSpockAction serverCtx httpLogger respLogger userAuthMiddleware qErrEncoder qEr
 
     logErrorAndResp
       :: (MonadIO m)
-      => Maybe UserInfo -> RequestId -> Wai.Request -> Maybe Value -> Bool
-      -> [N.Header] -> QErr -> ActionCtxT ctx m a
+      => Maybe UserInfo
+      -> RequestId
+      -> Wai.Request
+      -> Either BL.ByteString Value
+      -> Bool
+      -> [N.Header]
+      -> QErr
+      -> ActionCtxT ctx m a
     logErrorAndResp userInfo reqId req reqBody includeInternal headers qErr = do
       logError logger httpLogger userInfo reqId req reqBody qErr headers
       setStatus $ qeStatus qErr
@@ -679,9 +684,8 @@ raiseGenericApiError :: (L.ToEngineLog a) => L.Logger -> HttpLogger a -> [N.Head
 raiseGenericApiError logger httpLogger headers qErr = do
   req <- request
   reqBody <- liftIO $ strictRequestBody req
-  let reqTxt = toJSON $ String $ bsToTxt $ BL.toStrict reqBody
   reqId <- getRequestId $ requestHeaders req
-  logError logger httpLogger Nothing reqId req (Just reqTxt) qErr headers
+  logError logger httpLogger Nothing reqId req (Left reqBody) qErr headers
   uncurry setHeader jsonHeader
   setStatus $ qeStatus qErr
   lazyBytes $ encode qErr

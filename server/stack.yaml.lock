@@ -21,7 +21,7 @@ packages:
 - completed:
     cabal-file:
       size: 3295
-      sha256: 5c53f2e67996f9e3f85002f95a929a04b85a44e00ffbf1b7a8c034c5098aa630
+      sha256: f2ad56e750fb3ebef83d89d3c3008900c0a81ce19f71a8372b496daf3f03a83e
     name: graphql-parser
     version: 0.1.0.0
     git: https://github.com/hasura/graphql-parser-hs.git
@@ -35,7 +35,7 @@ packages:
 - completed:
     cabal-file:
       size: 1253
-      sha256: d0356b65cbe17a2fecf9334aa133de238161ef9c22af015d67ab622e08eb8ed1
+      sha256: d878a89d953cea6e914073c0eb9e21280369042a0054cb81e0b9fddf215231a5
     name: ci-info
     version: 0.1.0.0
     git: https://github.com/hasura/ci-info-hs.git

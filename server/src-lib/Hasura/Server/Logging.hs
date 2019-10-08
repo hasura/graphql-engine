@@ -150,9 +150,12 @@ data OperationLog
   , olResponseSize       :: !(Maybe Int64)
   , olQueryExecutionTime :: !(Maybe Double)
   , olQuery              :: !(Maybe Value)
-  , olError              :: !(Maybe Value)
+  , olRawQuery           :: !(Maybe Text)
+  , olError              :: !(Maybe QErr)
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 2 snakeCase) ''OperationLog)
+$(deriveToJSON (aesonDrop 2 snakeCase)
+  { omitNothingFields = True
+  } ''OperationLog)
 
 data HttpLogContext
   = HttpLogContext
@@ -185,6 +188,7 @@ mkHttpAccessLogContext userInfoM reqId req res mTimeT headers =
            , olResponseSize = respSize
            , olQueryExecutionTime = respTime
            , olQuery = Nothing
+           , olRawQuery = Nothing
            , olError = Nothing
            }
   in HttpLogContext http op
@@ -199,13 +203,13 @@ mkHttpErrorLogContext
   -> RequestId
   -> Wai.Request
   -> QErr
-  -> Maybe Value
+  -> Either BL.ByteString Value
   -> Maybe (UTCTime, UTCTime)
   -> [N.Header]
   -> HttpLogContext
 mkHttpErrorLogContext userInfoM reqId req err query mTimeT headers =
   let http = HttpInfoLog
-             { hlStatus      = status
+             { hlStatus      = qeStatus err
              , hlMethod      = bsToTxt $ Wai.requestMethod req
              , hlSource      = bsToTxt $ getSourceFromFallback req
              , hlPath        = bsToTxt $ Wai.rawPathInfo req
@@ -213,18 +217,15 @@ mkHttpErrorLogContext userInfoM reqId req err query mTimeT headers =
              , hlHeaders     = headers
              }
       op = OperationLog
-           { olRequestId    = reqId
-           , olUserVars     = userVars <$> userInfoM
-           , olResponseSize = respSize
-           , olQueryExecutionTime = respTime
-           , olQuery = toJSON <$> query
-           , olError = Just $ toJSON err
+           { olRequestId          = reqId
+           , olUserVars           = userVars <$> userInfoM
+           , olResponseSize       = Just $ BL.length $ encode err
+           , olQueryExecutionTime = computeTimeDiff mTimeT
+           , olQuery              = either (const Nothing) Just query
+           , olRawQuery           = either (Just . bsToTxt . BL.toStrict) (const Nothing) query
+           , olError              = Just err
            }
   in HttpLogContext http op
-  where
-    status = qeStatus err
-    respSize = Just $ BL.length $ encode err
-    respTime = computeTimeDiff mTimeT
 
 type HttpLogger a = (L.ToEngineLog a) => HttpLogContext -> a
 
