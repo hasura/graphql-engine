@@ -85,35 +85,47 @@ class GraphiQLWrapper extends Component {
       });
     };
 
-    // get toolbar buttons
-    const getGraphiqlButtons = () => {
-      const buttons = [];
-      buttons.push({
-        label: 'Prettify',
-        title: 'Prettify Query (Shift-Ctrl-P)',
-        onClick: handleClickPrettifyButton,
-      });
-      buttons.push({
-        label: 'History',
-        title: 'Show History',
-        onClick: handleToggleHistory,
-      });
-      buttons.push({
-        label: 'Copy',
-        title: 'Copy Query',
-        onClick: handleCopyQuery,
-      });
-      return buttons.map(b => {
-        return <GraphiQL.Button key={b.label} {...b} />;
-      });
-    };
-
     const renderGraphiql = graphiqlProps => {
       const voyagerUrl = graphqlNetworkData.consoleUrl + '/voyager-view';
       let analyzerProps = {};
       if (graphiqlContext) {
         analyzerProps = { ...graphiqlContext.state };
       }
+
+      // get toolbar buttons
+      const getGraphiqlButtons = () => {
+        const buttons = [];
+        buttons.push({
+          label: 'Prettify',
+          title: 'Prettify Query (Shift-Ctrl-P)',
+          onClick: handleClickPrettifyButton,
+        });
+        buttons.push({
+          label: 'History',
+          title: 'Show History',
+          onClick: handleToggleHistory,
+        });
+        buttons.push({
+          label: 'Copy',
+          title: 'Copy Query',
+          onClick: handleCopyQuery,
+        });
+        buttons.push({
+          label: 'Explorer',
+          title: 'Toggle Explorer',
+          onClick: graphiqlProps.toggleExplorer,
+        });
+        buttons.push({
+          label: 'Voyager',
+          title: 'GraphQL Voyager',
+          onClick: () => window.open(voyagerUrl, '_blank'),
+          icon: <i className="fa fa-external-link" aria-hidden="true" />
+        });
+        return buttons.map(b => {
+          return <GraphiQL.Button key={b.label} {...b} />;
+        });
+      };
+
       return (
         <GraphiQL
           ref={c => {
