@@ -7,7 +7,7 @@ import { getDataOptions, inferDefaultValues } from '../Common/utils';
 
 import TableColumnDefault from './TableColumnDefault';
 
-import { make as TableColumnAlias } from './TableColumnAlias.bs';
+// import { make as TableColumnAlias } from './TableColumnAlias.bs';
 
 /* Custom style object for searchable select box */
 const customSelectBoxStyles = {
@@ -38,8 +38,8 @@ const TableColumn = props => {
     columnDefaultFunctions,
     columnTypeCasts,
     uniqueKeys,
-    dispatch,
-    supportAliasing,
+    //    dispatch,
+    //    supportAliasing,
   } = props;
 
   let isColumnUnique = false;
@@ -113,12 +113,14 @@ const TableColumn = props => {
           placeholder="column_type"
         />
       </span>
+      {/*
       <TableColumnAlias
         alias={column.alias}
         index={i}
         dispatch={dispatch}
         support={!!supportAliasing}
       />
+        */}
       <span className={`${styles.inputDefault} ${styles.defaultWidth}`}>
         <TableColumnDefault
           onChange={setColDefaultValue}

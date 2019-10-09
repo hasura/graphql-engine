@@ -1,3 +1,5 @@
+open CommonUtils;
+
 let _MODIFY_ROOT_FIELD_ALIASES = "ModifyTable/MODIFY_ROOT_FIELD_ALIASES";
 
 type _MODIFY_ROOT_FIELD_ALIASES_ACTION = {
@@ -14,6 +16,17 @@ let modifyRootFields = (field, alias) => {
     "alias": alias
   }
 };
+
+let sanitiseRootFields = (rootFields) => {
+  {
+    "select": stringToOption(rootFields##select),
+    "select_by_pk": stringToOption(rootFields##select_by_pk),
+    "select_aggregate": stringToOption(rootFields##select_aggregate),
+    "insert": stringToOption(rootFields##insert),
+    "update": stringToOption(rootFields##update),
+    "delete": stringToOption(rootFields##delete)
+  }
+}
 
 let generateAliasingQuery = (
   newRootFields,
@@ -33,7 +46,7 @@ let generateAliasingQuery = (
           "name": tableName,
           "schema": schemaName
         },
-        "custom_root_fields": cRootFields,
+        "custom_root_fields": sanitiseRootFields(cRootFields),
         "custom_column_names": cColumnNames
       }
     }
@@ -41,9 +54,6 @@ let generateAliasingQuery = (
 
   let upQuery = generateQuery(newRootFields, newColumnNames);
   let downQuery = generateQuery(oldRootFields, oldColumnNames);
-
-  Js.log(upQuery);
-  Js.log(downQuery);
 
   (upQuery, downQuery);
 

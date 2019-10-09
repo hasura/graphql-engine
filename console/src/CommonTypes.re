@@ -6,12 +6,12 @@ type qualifiedTable = {
 
 type customRootFields = {
   .
-  "select": string,
-  "select_by_pk": string,
-  "select_aggregate": string,
-  "insert": string,
-  "update": string,
-  "delete": string
+  "select": option(string),
+  "select_by_pk": option(string),
+  "select_aggregate": option(string),
+  "insert": option(string),
+  "update": option(string),
+  "delete": option(string),
 };
 
 type _argsSetCustomRootFields = {

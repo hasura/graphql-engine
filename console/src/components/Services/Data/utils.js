@@ -1,5 +1,8 @@
 import globals from '../../../Globals';
-import { TABLE_ENUMS_SUPPORT, GRAPHQL_ALIASING_SUPPORT } from '../../../helpers/versionUtils';
+import {
+  TABLE_ENUMS_SUPPORT,
+  GRAPHQL_ALIASING_SUPPORT,
+} from '../../../helpers/versionUtils';
 
 export const INTEGER = 'integer';
 export const SERIAL = 'serial';
@@ -498,7 +501,7 @@ export const mergeLoadSchemaData = (
       _permissions = trackedTableInfo.permissions;
       _uniqueConstraints = trackedTableInfo.unique_constraints;
       _isEnum = trackedTableInfo.is_enum;
-      _configuration = trackedTableInfo.configuration;
+      _configuration = trackedTableInfo.configuration || {};
 
       _fkConstraints = fkData.filter(
         fk => fk.table_schema === _tableSchema && fk.table_name === _tableName
@@ -527,7 +530,7 @@ export const mergeLoadSchemaData = (
       opp_foreign_key_constraints: _refFkConstraints,
       view_info: _viewInfo,
       is_enum: _isEnum,
-      configuration: _configuration
+      configuration: _configuration,
     };
 
     _mergedTableData.push(_mergedInfo);

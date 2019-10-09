@@ -150,20 +150,26 @@ class ModifyTable extends React.Component {
         delete: aliasEdit.delete || '',
       };
 
-      const save = (upQueries, downQueries, successCb) => {
-        dispatch(saveTableRootFields(upQueries, downQueries, successCb));
+      const save = (upQuery, downQuery, successCb) => {
+        dispatch(saveTableRootFields(upQuery, downQuery, successCb));
       };
 
       return (
-        <AliasEditor
-          tableName={tableName}
-          schemaName={currentSchema}
-          newAliases={tableAliasEdit}
-          existingAliases={tableSchema.configuration.custom_root_fields || {}}
-          existingColNames={tableSchema.configuration.custom_column_names || {}}
-          dispatch={dispatch}
-          save={save}
-        />
+        <div>
+          <h4 className={styles.subheading_text}>GraphQL Aliases</h4>
+          <AliasEditor
+            tableName={tableName}
+            schemaName={currentSchema}
+            newAliases={tableAliasEdit}
+            existingAliases={tableSchema.configuration.custom_root_fields || {}}
+            existingColNames={
+              tableSchema.configuration.custom_column_names || {}
+            }
+            dispatch={dispatch}
+            save={save}
+          />
+          <hr />
+        </div>
       );
     };
 
@@ -212,7 +218,6 @@ class ModifyTable extends React.Component {
               columnDefaultFunctions={columnDefaultFunctions}
             />
             <hr />
-            <h4 className={styles.subheading_text}>GraphQL Aliases</h4>
             {getRootFieldAliasesSection()}
             <h4 className={styles.subheading_text}>Primary Key</h4>
             <PrimaryKeyEditor

@@ -24,6 +24,11 @@ let fromOptionString = (optionVal) => switch(optionVal) {
   | None => ""
 };
 
+let stringToOption = (stringVal) => switch(stringVal) {
+  | "" => None
+  | _ => Some(stringVal)
+};
+
 let isUndefined : 'a => bool = (value) => {
   Js.Nullable.isNullable(value)
 };

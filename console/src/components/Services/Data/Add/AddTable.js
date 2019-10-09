@@ -18,7 +18,7 @@ import TableComment from './TableComment';
 import * as tooltip from './Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 
-import { make as TableAlias } from './TableAliasWrapper.bs';
+// import { make as TableAlias } from './TableAliasWrapper.bs';
 
 import {
   setTableName,
@@ -405,7 +405,7 @@ class AddTable extends Component {
       schemaList,
       columnDefaultFunctions,
       columnTypeCasts,
-      aliases,
+      //      aliases,
     } = this.props;
     const getCreateBtnText = () => {
       let createBtnText = 'Add Table';
@@ -423,6 +423,8 @@ class AddTable extends Component {
 
     const getAliasingSection = () => {
       if (!SUPPORT_ALIASING) return null;
+      return;
+      /*
       return (
         <div>
           <h4 className={styles.subheading_text}>
@@ -448,6 +450,8 @@ class AddTable extends Component {
           <hr />
         </div>
       );
+
+      */
     };
 
     return (

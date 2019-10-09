@@ -17,6 +17,7 @@ let make = (
     dispatch(modifyRootFields(field, alias));
   };
 
+
   let content = (cRootFieldAliases, disabled) => {
     <TableAlias
       select={cRootFieldAliases##select}
@@ -73,7 +74,7 @@ let make = (
   };
 
   let saveFunc = (toggle) => {
-    let (upQueries, downQueries) = generateAliasingQuery(
+    let (upQuery, downQuery) = generateAliasingQuery(
       newAliases,
       existingColNames,
       existingAliases,
@@ -81,7 +82,7 @@ let make = (
       tableName,
       schemaName
     );
-    save(upQueries, downQueries, toggle);
+    save(upQuery, downQuery, toggle);
   };
 
   <div>

@@ -759,4 +759,5 @@ export {
   fetchColumnTypeInfo,
   RESET_COLUMN_TYPE_INFO,
   setUntrackedRelations,
+  loadSchema,
 };
