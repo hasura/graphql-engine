@@ -26,14 +26,13 @@ runGQ
   -> m (HttpResponse EncJSON)
 runGQ reqId userInfo reqHdrs req = do
   E.ExecutionCtx _ sqlGenCtx pgExecCtx planCache sc scVer _ enableAL <- ask
-  execPlan <- E.getResolvedExecPlan pgExecCtx planCache
+  fieldPlans <- E.getResolvedExecPlan pgExecCtx planCache
               userInfo sqlGenCtx enableAL sc scVer req
-  case execPlan of
+  forM fieldPlans (\execPlan ->  case execPlan of
     E.GExPHasura resolvedOp ->
       flip HttpResponse Nothing <$> runHasuraGQ reqId req userInfo resolvedOp
     E.GExPRemote rsi rootSelSet ->
-      E.execRemoteGQ reqId userInfo reqHdrs req rsi undefined
-    E.GExPMixed fieldPlans -> undefined
+      E.execRemoteGQ reqId userInfo reqHdrs req rsi undefined)
 
 runHasuraGQ
   :: ( MonadIO m

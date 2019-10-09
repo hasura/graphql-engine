@@ -1,5 +1,6 @@
 module Hasura.GraphQL.Execute
   ( GQExecPlan(..)
+  , GQFieldExecPlan(..)
 
   , ExecPlanPartial
   , getExecPlanPartial
@@ -60,11 +61,12 @@ import qualified Hasura.Logging                         as L
 --
 -- The 'a' is parameterised so this AST can represent
 -- intermediate passes
-data GQExecPlan a
+data GQFieldExecPlan a
   = GExPHasura !a
-  | GExPRemote !RemoteSchemaInfo !VQ.RootSelSet
-  | GExPMixed (Seq.Seq (Either (RemoteSchemaInfo, VQ.RootSelSet) a))
+  | GExPRemote !RemoteSchemaInfo !VQ.Field
   deriving (Functor, Foldable, Traversable)
+
+type GQExecPlan a = [GQFieldExecPlan a]
 
 -- | Execution context
 data ExecutionCtx
@@ -80,7 +82,7 @@ data ExecutionCtx
   }
 
 -- This is for when the graphql query is validated
-type ExecPlanPartial = GQExecPlan (GCtx, VQ.RootSelSet)
+type ExecPlanPartial = [GQFieldExecPlan (GCtx, VQ.Field)]
 
 getExecPlanPartial
   :: (MonadError QErr m)
