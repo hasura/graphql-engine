@@ -1,12 +1,18 @@
 import React, { Component } from 'react';
-import GraphiQL from 'hasura-console-graphiql';
+import GraphiQL from 'graphiql';
 import PropTypes from 'prop-types';
 import GraphiQLErrorBoundary from './GraphiQLErrorBoundary';
 import OneGraphExplorer from '../OneGraphExplorer/OneGraphExplorer';
+import AnalyzeButton from '../Analyzer/AnalyzeButton';
 
-import { clearCodeMirrorHints, setQueryVariableSectionHeight } from './utils';
+import {
+  clearCodeMirrorHints,
+  setQueryVariableSectionHeight,
+  copyToClipboard,
+} from './utils';
 import { analyzeFetcher, graphQLFetcherFinal } from '../Actions';
 
+import 'graphiql/graphiql.css';
 import './GraphiQL.css';
 
 class GraphiQLWrapper extends Component {
@@ -50,16 +56,84 @@ class GraphiQLWrapper extends Component {
       graphqlNetworkData.headers
     );
 
+    let graphiqlContext;
+
+    // handle prettify
+    const handleClickPrettifyButton = () => {
+      const editor = graphiqlContext.getQueryEditor();
+      const currentText = editor.getValue();
+      const { parse, print } = require('graphql');
+      const prettyText = print(parse(currentText));
+      editor.setValue(prettyText);
+    };
+
+    // handle copy
+    const handleCopyQuery = () => {
+      const editor = graphiqlContext.getQueryEditor();
+      const query = editor.getValue();
+
+      if (!query) {
+        return;
+      }
+      copyToClipboard(query);
+    };
+
+    // handle history toggle
+    const handleToggleHistory = () => {
+      graphiqlContext.setState({
+        historyPaneOpen: !graphiqlContext.state.historyPaneOpen,
+      });
+    };
+
+    // get toolbar buttons
+    const getGraphiqlButtons = () => {
+      const buttons = [];
+      buttons.push({
+        label: 'Prettify',
+        title: 'Prettify Query (Shift-Ctrl-P)',
+        onClick: handleClickPrettifyButton,
+      });
+      buttons.push({
+        label: 'History',
+        title: 'Show History',
+        onClick: handleToggleHistory,
+      });
+      buttons.push({
+        label: 'Copy',
+        title: 'Copy Query',
+        onClick: handleCopyQuery,
+      });
+      return buttons.map(b => {
+        return <GraphiQL.Button key={b.label} {...b} />;
+      });
+    };
+
     const renderGraphiql = graphiqlProps => {
       const voyagerUrl = graphqlNetworkData.consoleUrl + '/voyager-view';
+      let analyzerProps = {};
+      if (graphiqlContext) {
+        analyzerProps = { ...graphiqlContext.state };
+      }
       return (
         <GraphiQL
+          ref={c => {
+            graphiqlContext = c;
+          }}
           fetcher={graphQLFetcher}
-          supportAnalyze
           voyagerUrl={voyagerUrl}
           analyzeFetcher={analyzeFetcherInstance}
           {...graphiqlProps}
-        />
+        >
+          <GraphiQL.Logo>MyGraphiQL</GraphiQL.Logo>
+          <GraphiQL.Toolbar>
+            {getGraphiqlButtons()}
+            <AnalyzeButton
+              operations={graphiqlContext && graphiqlContext.state.operations}
+              analyzeFetcher={analyzeFetcherInstance}
+              {...analyzerProps}
+            />
+          </GraphiQL.Toolbar>
+        </GraphiQL>
       );
     };
 
