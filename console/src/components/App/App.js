@@ -53,7 +53,10 @@ class App extends Component {
       );
     }
 
-    if (telemetry.console_opts && !telemetry.console_opts.telemetryNotificationShown) {
+    if (
+      telemetry.console_opts &&
+      !telemetry.console_opts.telemetryNotificationShown
+    ) {
       dispatch(showTelemetryNotification());
       dispatch(telemetryNotificationShown());
     }
@@ -82,27 +85,28 @@ App.propTypes = {
   reqURL: PropTypes.string,
   reqData: PropTypes.object,
   statusCode: PropTypes.number,
-
   error: PropTypes.object,
   ongoingRequest: PropTypes.bool,
   requestError: PropTypes.bool,
   connectionFailed: PropTypes.bool,
-
   intervalTime: PropTypes.number,
   percent: PropTypes.number,
-
   children: PropTypes.element,
   dispatch: PropTypes.func.isRequired,
-
   notifications: PropTypes.array,
 };
 
-const mapStateToProps = state => {
+const mapStateToProps = ({
+  progressBar,
+  notifications,
+  telemetry,
+  metadata,
+}) => {
   return {
-    ...state.progressBar,
-    notifications: state.notifications,
-    telemetry: state.telemetry,
-    metadata: state.metadata,
+    ...progressBar,
+    notifications,
+    telemetry,
+    metadata,
   };
 };
 

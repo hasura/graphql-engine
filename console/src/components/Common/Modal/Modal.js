@@ -21,9 +21,7 @@ const Modal = ({
     );
   };
 
-  const getBody = () => {
-    return <BootstrapModal.Body>{children}</BootstrapModal.Body>;
-  };
+  const getBody = () => <BootstrapModal.Body>{children}</BootstrapModal.Body>;
 
   const getFooter = () => {
     if (!onSubmit) {

@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router';
 
+const styles = require('./ReusableTabs.scss');
+
 const Tabs = ({
   appPrefix,
   tabsInfo,
@@ -14,7 +16,7 @@ const Tabs = ({
   if (!(count === null || count === undefined)) {
     showCount = '(' + count + ')';
   }
-  const styles = require('./ReusableTabs.scss');
+
   const dataLoader = () => {
     return (
       <span className={styles.loader_ml}>

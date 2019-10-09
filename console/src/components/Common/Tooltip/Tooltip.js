@@ -3,9 +3,7 @@ import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
 import styles from './Tooltip.scss';
 
-const tooltipGen = message => {
-  return <Tooltip id={message}>{message}</Tooltip>;
-};
+const tooltipGen = message => <Tooltip id={message}>{message}</Tooltip>;
 
 const ToolTip = ({ message }) => (
   <OverlayTrigger placement="right" overlay={tooltipGen(message)}>
