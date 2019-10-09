@@ -4,7 +4,7 @@
 -- "Migrate".
 module Migrate.Version (latestCatalogVersion) where
 
-import Hasura.Prelude
+import           Hasura.Prelude
 
 latestCatalogVersion :: Integer
 latestCatalogVersion = 24

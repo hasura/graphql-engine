@@ -17,8 +17,8 @@ import           Data.Aeson
 
 import           Hasura.Db
 import           Hasura.RQL.Types.Catalog
-import           Hasura.RQL.Types.SchemaCache
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.SchemaCache
 import           Hasura.SQL.Types
 
 fetchCatalogData :: (MonadTx m) => m CatalogMetadata

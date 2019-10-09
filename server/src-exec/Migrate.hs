@@ -27,7 +27,7 @@ import qualified Database.PG.Query          as Q
 import qualified Language.Haskell.TH.Lib    as TH
 import qualified Language.Haskell.TH.Syntax as TH
 
-import Migrate.Version (latestCatalogVersion)
+import           Migrate.Version            (latestCatalogVersion)
 
 migrateCatalog
   :: forall m

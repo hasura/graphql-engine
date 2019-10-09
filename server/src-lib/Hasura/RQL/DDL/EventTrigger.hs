@@ -28,9 +28,9 @@ import           System.Environment      (lookupEnv)
 import qualified Hasura.SQL.DML          as S
 
 import qualified Data.Text               as T
+import qualified Data.Text.Lazy          as TL
 import qualified Database.PG.Query       as Q
-import qualified Data.Text.Lazy as TL
-import qualified Text.Shakespeare.Text as ST
+import qualified Text.Shakespeare.Text   as ST
 
 
 data OpVar = OLD | NEW deriving (Show)

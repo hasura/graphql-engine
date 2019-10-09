@@ -29,7 +29,8 @@ import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
 import           Hasura.RQL.Types           (SQLGenCtx (..), SchemaCache (..),
-                                             adminUserInfo, emptySchemaCache, SystemDefined(..))
+                                             SystemDefined (..), adminUserInfo,
+                                             emptySchemaCache)
 import           Hasura.Server.App          (HasuraApp (..),
                                              SchemaCacheRef (..), getSCFromRef,
                                              logInconsObjs, mkWaiApp)

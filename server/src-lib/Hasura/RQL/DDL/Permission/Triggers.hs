@@ -7,10 +7,10 @@ module Hasura.RQL.DDL.Permission.Triggers
 import           Hasura.Prelude
 import           Hasura.SQL.Types
 
-import qualified Database.PG.Query   as Q
-import qualified Hasura.SQL.DML      as S
+import qualified Database.PG.Query     as Q
+import qualified Hasura.SQL.DML        as S
 
-import qualified Data.Text.Lazy as TL
+import qualified Data.Text.Lazy        as TL
 import qualified Text.Shakespeare.Text as ST
 
 buildInsTrig :: QualifiedTable -> Q.Query
