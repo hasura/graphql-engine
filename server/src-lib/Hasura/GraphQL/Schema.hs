@@ -647,6 +647,7 @@ mkGCtxMap tableCache functionCache = do
       return $ Map.keys query <> Map.keys mutation
 
 -- | build GraphQL schema from postgres tables and functions
+{-# SCC buildGCtxMapPG #-}
 buildGCtxMapPG
   :: (QErrM m, CacheRWM m)
   => m ()

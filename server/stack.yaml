@@ -22,7 +22,10 @@ extra-deps:
   commit: f3d9b645efd9adb143e2ad4c6b73bded1578a4e9
 - git: https://github.com/hasura/ci-info-hs.git
   commit: ad6df731584dc89b72a6e131687d37ef01714fe8
-- ginger-0.8.4.0
+
+# waiting on PR yesodweb/shakespeare#240
+- git: https://github.com/lexi-lambda/shakespeare.git
+  commit: afa3df51b018ab30ae6a12a51896ddf5d14daaa0
 
 # extra dep for pg-client-hs
 - select-0.4.0.1

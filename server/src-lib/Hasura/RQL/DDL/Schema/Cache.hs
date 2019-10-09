@@ -58,6 +58,7 @@ buildSchemaCache = buildSchemaCacheWithOptions True
 buildSchemaCacheWithoutSetup :: (CacheBuildM m) => m ()
 buildSchemaCacheWithoutSetup = buildSchemaCacheWithOptions False
 
+{-# SCC buildSchemaCacheWithOptions #-}
 buildSchemaCacheWithOptions :: (CacheBuildM m) => Bool -> m ()
 buildSchemaCacheWithOptions withSetup = do
   -- clean hdb_views

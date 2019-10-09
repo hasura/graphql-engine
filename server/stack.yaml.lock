@@ -47,12 +47,19 @@ packages:
     git: https://github.com/hasura/ci-info-hs.git
     commit: ad6df731584dc89b72a6e131687d37ef01714fe8
 - completed:
-    hackage: ginger-0.8.4.0@sha256:21c3051af3c90af39c40a50400c9a1a0fcccb544528e37cde30bdd30048437d8,3151
+    cabal-file:
+      size: 4674
+      sha256: ef416f21e34db04be7920c0be5df12535f019ba4b4ccd06bed865fe58c7ec05c
+    name: shakespeare
+    version: 2.0.21
+    git: https://github.com/lexi-lambda/shakespeare.git
     pantry-tree:
-      size: 1375
-      sha256: f8a7cb091ea4d8011bd530f83a22941a009d97ee7ccd4c93d0528aa72f3636ea
+      size: 4129
+      sha256: 62553f7c1b0705228a2526aef38c55dbdc0d28fcb5dd7956b592dc2dc5cb56aa
+    commit: afa3df51b018ab30ae6a12a51896ddf5d14daaa0
   original:
-    hackage: ginger-0.8.4.0
+    git: https://github.com/lexi-lambda/shakespeare.git
+    commit: afa3df51b018ab30ae6a12a51896ddf5d14daaa0
 - completed:
     hackage: select-0.4.0.1@sha256:d409315752a069693bdd4169fa9a8ea7777d814da77cd8604f367cf0741de295,2492
     pantry-tree:

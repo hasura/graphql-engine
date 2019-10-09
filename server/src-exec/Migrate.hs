@@ -31,6 +31,7 @@ import Migrate.Version (latestCatalogVersion)
 
 import Debug.Trace
 
+{-# SCC migrateCatalog #-}
 migrateCatalog
   :: forall m
    . ( MonadTx m
@@ -95,9 +96,9 @@ migrateCatalog migrationTime = migrateFrom =<< getCatalogVersion
 
     replaceSystemMetadata = do
       liftIO $ traceIO "clearSystemMetadata"
-      runTx $(Q.sqlFromFile "src-rsr/clear_system_metadata.sql")
+      {-# SCC clearSystemMetadata #-} runTx $(Q.sqlFromFile "src-rsr/clear_system_metadata.sql")
       liftIO $ traceIO "createSystemMetadata"
-      void $ runQueryM $$(Y.decodeFile "src-rsr/hdb_metadata.yaml")
+      {-# SCC createSystemMetadata #-} void $ runQueryM $$(Y.decodeFile "src-rsr/hdb_metadata.yaml")
 
     from3To4 = liftTx $ Q.catchE defaultTxErrorHandler $ do
       Q.unitQ [Q.sql|

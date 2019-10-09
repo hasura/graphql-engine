@@ -107,8 +107,8 @@ library
 
                      -- Templating
                      , mustache
-                     , ginger
                      , file-embed
+                     , shakespeare
 
                      --
                      , data-has
