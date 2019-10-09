@@ -361,30 +361,49 @@ func (m *Migrate) Squash(version uint64) (versions []int64, up []interface{}, do
 	retVersions := make(chan int64, m.PrefetchMigrations)
 	go m.squashMigrations(retUp, retDown, dataUp, dataDown, retVersions)
 
-	for r := range dataUp {
-		switch r.(type) {
-		case error:
-			err = r.(error)
-			return
-		case interface{}:
-			up = append(up, r)
+	errChn := make(chan error)
+	var wg sync.WaitGroup
+	wg.Add(3)
+	go func() {
+		defer wg.Done()
+		for r := range dataUp {
+			switch r.(type) {
+			case error:
+				err = r.(error)
+				return
+			case interface{}:
+				up = append(up, r)
+			}
 		}
-	}
+	}()
 
-	for r := range dataDown {
-		switch r.(type) {
-		case error:
-			err = r.(error)
-			return
-		case interface{}:
-			down = append(down, r)
+	go func() {
+		defer wg.Done()
+		for r := range dataDown {
+			switch r.(type) {
+			case error:
+				err = r.(error)
+				return
+			case interface{}:
+				down = append(down, r)
+			}
 		}
-	}
+	}()
 
-	for r := range retVersions {
-		versions = append(versions, r)
+	go func() {
+		defer wg.Done()
+		for r := range retVersions {
+			versions = append(versions, r)
+		}
+	}()
+
+	wg.Wait()
+	select {
+	case err = <-errChn:
+		return
+	default:
+		return
 	}
-	return
 }
 
 // Migrate looks at the currently active migration version,
