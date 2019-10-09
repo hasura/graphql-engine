@@ -176,8 +176,9 @@ mkBaseTableColAls :: Iden -> PGCol -> Iden
 mkBaseTableColAls pfx pgCol =
   pfx <> Iden ".pg." <> toIden pgCol
 
-ordByFldName :: FieldName
-ordByFldName = FieldName "order_by"
+mkOrderByFieldName :: RelName -> FieldName
+mkOrderByFieldName relName =
+  FieldName $ relNameToTxt relName <> "." <> "order_by"
 
 fromTableRowArgs
   :: Iden -> FunctionArgsExpTableRow S.SQLExp -> S.FunctionArgs
@@ -327,6 +328,7 @@ processAnnOrderByCol pfx parAls arrRelCtx strfyNum = \case
   -- "pfx.or.relname"."pfx.ob.or.relname.rest" AS "pfx.ob.or.relname.rest"
   AOCObj (RelInfo rn _ colMapping relTab _) relFltr rest ->
     let relPfx  = mkObjRelTableAls pfx rn
+        ordByFldName = mkOrderByFieldName rn
         ((nesAls, nesCol), ordByNode) =
           processAnnOrderByCol relPfx ordByFldName emptyArrRelCtx strfyNum rest
         (objNodeM, arrNodeM) = case ordByNode of
@@ -438,6 +440,7 @@ mkArrNodeInfo pfx parAls (ArrRelCtx arrFlds obRels) = \case
         similarFlds = getSimilarAggFlds rn tabArgs $ delete aggFld
         similarFldNames = map fst similarFlds
         similarOrdByFound = rn `elem` obRels && tabArgs == noTableArgs
+        ordByFldName = mkOrderByFieldName rn
         extraOrdByFlds = bool [] [ordByFldName] similarOrdByFound
         sortedFlds = sort $ fld : (similarFldNames <> extraOrdByFlds)
         alias = S.Alias $ mkUniqArrRelAls parAls sortedFlds
@@ -446,6 +449,7 @@ mkArrNodeInfo pfx parAls (ArrRelCtx arrFlds obRels) = \case
        subQueryRequired similarFlds similarOrdByFound
   ANIAggOrdBy rn ->
     let similarFlds = map fst $ getSimilarAggFlds rn noTableArgs id
+        ordByFldName = mkOrderByFieldName rn
         sortedFlds = sort $ ordByFldName:similarFlds
         alias = S.Alias $ mkUniqArrRelAls parAls sortedFlds
         prefix = mkArrRelTableAls pfx parAls sortedFlds
