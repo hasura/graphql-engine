@@ -6,9 +6,10 @@ import           Data.Aeson.TH
 import           Data.Aeson.Types
 import           Hasura.Prelude
 
-import qualified Data.Text                     as T
+import qualified Data.Text                      as T
 
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
 import           Hasura.SQL.Types

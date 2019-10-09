@@ -198,7 +198,7 @@ addComputedFieldP2Setup table computedField definition rawFunctionInfo comment =
                               -> QualifiedPGType
                               -> m ()
     validateTableArgumentType tableArg qpt = do
-      when (_qptType qpt /= PGKindCOMPOSITE) $
+      when (_qptType qpt /= PGKindComposite) $
         MV.dispute $ pure $ CFVEInvalidTableArgument $ ITANotComposite tableArg
       let typeTable = typeToTable qpt
       unless (table == typeTable) $

@@ -528,30 +528,35 @@ instance (ToSQL a) => ToSQL (PGType a) where
     PGTypeArray ty -> toSQL ty <> " array"
 
 data PGTypeKind
-  = PGKindBASE
-  | PGKindCOMPOSITE
-  | PGKindDOMAIN
-  | PGKindENUM
-  | PGKindRANGE
-  | PGKindPSEUDO
+  = PGKindBase
+  | PGKindComposite
+  | PGKindDomain
+  | PGKindEnum
+  | PGKindRange
+  | PGKindPseudo
   | PGKindUnknown !T.Text
   deriving (Show, Eq)
 
 instance FromJSON PGTypeKind where
   parseJSON = withText "postgresTypeKind" $
     \t -> pure $ case t of
-      "b" -> PGKindBASE
-      "c" -> PGKindCOMPOSITE
-      "d" -> PGKindDOMAIN
-      "e" -> PGKindENUM
-      "r" -> PGKindRANGE
-      "p" -> PGKindPSEUDO
+      "b" -> PGKindBase
+      "c" -> PGKindComposite
+      "d" -> PGKindDomain
+      "e" -> PGKindEnum
+      "r" -> PGKindRange
+      "p" -> PGKindPseudo
       _   -> PGKindUnknown t
 
-$(deriveToJSON
-  defaultOptions{constructorTagModifier = drop 6}
-  ''PGTypeKind
- )
+instance ToJSON PGTypeKind where
+  toJSON = \case
+    PGKindBase      -> "b"
+    PGKindComposite -> "c"
+    PGKindDomain    -> "d"
+    PGKindEnum      -> "e"
+    PGKindRange     -> "r"
+    PGKindPseudo    -> "p"
+    PGKindUnknown t -> String t
 
 data QualifiedPGType
   = QualifiedPGType
@@ -563,7 +568,7 @@ $(deriveJSON (aesonDrop 4 snakeCase) ''QualifiedPGType)
 
 isBaseType :: QualifiedPGType -> Bool
 isBaseType (QualifiedPGType _ n ty) =
-  notUnknown && (ty == PGKindBASE)
+  notUnknown && (ty == PGKindBase)
   where
     notUnknown = case n of
       PGUnknown _ -> False

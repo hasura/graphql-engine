@@ -182,6 +182,7 @@ library
                      , Hasura.RQL.Types.Catalog
                      , Hasura.RQL.Types.Column
                      , Hasura.RQL.Types.Common
+                     , Hasura.RQL.Types.ComputedField
                      , Hasura.RQL.Types.DML
                      , Hasura.RQL.Types.Error
                      , Hasura.RQL.Types.EventTrigger

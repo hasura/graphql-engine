@@ -5,21 +5,22 @@ module Hasura.GraphQL.Resolve.Types where
 import           Control.Lens.TH
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.Sequence                 as Seq
-import qualified Data.Text                     as T
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.HashMap.Strict            as Map
+import qualified Data.Sequence                  as Seq
+import qualified Data.Text                      as T
+import qualified Language.GraphQL.Draft.Syntax  as G
 
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Permission
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-import qualified Hasura.SQL.DML                as S
+import qualified Hasura.SQL.DML                 as S
 
 data QueryCtx
   = QCSelect !SelOpCtx

@@ -70,7 +70,7 @@ mkFunctionInfo qf rawFuncInfo = do
   -- throw error if function has variadic arguments
   when hasVariadic $ throw400 NotSupported "function with \"VARIADIC\" parameters are not supported"
   -- throw error if return type is not composite type
-  when (retTyType /= PGKindCOMPOSITE) $ throw400 NotSupported "function does not return a \"COMPOSITE\" type"
+  when (retTyType /= PGKindComposite) $ throw400 NotSupported "function does not return a \"COMPOSITE\" type"
   -- throw error if function do not returns SETOF
   unless retSet $ throw400 NotSupported "function does not return a SETOF"
   -- throw error if return type is not a valid table
