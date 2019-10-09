@@ -259,6 +259,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         ...modifyState,
         permissionsState: {
           ...permState,
+          isEditing: true,
         },
         prevPermissionState: {
           ...permState,
@@ -396,10 +397,14 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       };
 
     case PERM_SET_ROLE_NAME:
+      const _permissionsState = { ...modifyState.permissionsState };
+      if (_permissionsState.isEditing) {
+        _permissionsState.role = action.data;
+      }
       return {
         ...modifyState,
         permissionsState: {
-          ...modifyState.permissionsState,
+          ..._permissionsState,
           newRole: action.data,
         },
       };
