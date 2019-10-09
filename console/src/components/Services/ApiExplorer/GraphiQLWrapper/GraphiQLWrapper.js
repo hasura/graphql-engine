@@ -119,7 +119,7 @@ class GraphiQLWrapper extends Component {
           label: 'Voyager',
           title: 'GraphQL Voyager',
           onClick: () => window.open(voyagerUrl, '_blank'),
-          icon: <i className="fa fa-external-link" aria-hidden="true" />
+          icon: <i className="fa fa-external-link" aria-hidden="true" />,
         });
         return buttons.map(b => {
           return <GraphiQL.Button key={b.label} {...b} />;
@@ -136,7 +136,7 @@ class GraphiQLWrapper extends Component {
           analyzeFetcher={analyzeFetcherInstance}
           {...graphiqlProps}
         >
-          <GraphiQL.Logo>MyGraphiQL</GraphiQL.Logo>
+          <GraphiQL.Logo>GraphiQL</GraphiQL.Logo>
           <GraphiQL.Toolbar>
             {getGraphiqlButtons()}
             <AnalyzeButton
