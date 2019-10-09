@@ -37,7 +37,7 @@ const MULTILINE_KEY = 1;
 const createInitialState = data => {
   const initialState = {
     editorType: NORMAL_KEY,
-    data: data,
+    data,
   };
   return initialState;
 };

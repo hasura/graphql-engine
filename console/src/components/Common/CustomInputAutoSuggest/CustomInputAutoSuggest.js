@@ -22,24 +22,21 @@ const CustomInputAutoSuggest = props => {
     };
     return inputLength === 0 ? [...options] : filterResults();
   };
-  const onSuggestionsFetchRequested = ob => {
-    const { value } = ob;
+  const onSuggestionsFetchRequested = ({ value }) => {
     setSuggestions(getSuggestions(value));
   };
   const getSuggestionValue = suggestion => suggestion.value;
   const onSuggestionsClearRequested = () => {
     setSuggestions([]);
   };
-  const renderSuggestion = suggestion => <div>{suggestion.value}</div>;
+  const renderSuggestion = ({ value }) => <div>{value}</div>;
 
   /* Don't render the section when there are no suggestions in it */
   const renderSectionTitle = section => {
     return section.suggestions.length > 0 ? section.title : null;
   };
 
-  const getSectionSuggestions = section => {
-    return section.suggestions;
-  };
+  const getSectionSuggestions = section => section.suggestions;
 
   return (
     <Autosuggest

@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { Component } from 'react';
+
+const styles = require('./CollapsibleToggle.scss');
 
 /**
  *  Accepts following props
@@ -9,7 +11,7 @@ import React from 'react';
  *    `children, react-element`: The content which needs to be toggled
  */
 
-class CollapsibleToggle extends React.Component {
+class CollapsibleToggle extends Component {
   constructor(props) {
     super(props);
 
@@ -24,31 +26,25 @@ class CollapsibleToggle extends React.Component {
     this.setState({ isOpen: !this.state.isOpen });
   }
 
-  componentWillReceiveProps(nextProps) {
-    const { isOpen, toggleHandler } = nextProps;
-
+  componentWillReceiveProps({ isOpen, toggleHandler }) {
     if (toggleHandler) {
-      this.setState({ isOpen: isOpen, toggleHandler: toggleHandler });
+      this.setState({
+        isOpen,
+        toggleHandler,
+      });
     }
   }
 
   render() {
-    const styles = require('./CollapsibleToggle.scss');
-
     const { title, children, testId, useDefaultTitleStyle } = this.props;
 
     const { isOpen, toggleHandler } = this.state;
 
     const getTitle = () => {
-      let _title;
-
       if (useDefaultTitleStyle) {
-        _title = <div className={styles.defaultCollapsibleTitle}>{title}</div>;
-      } else {
-        _title = title;
+        return <div className={styles.defaultCollapsibleTitle}>{title}</div>;
       }
-
-      return _title;
+      return title;
     };
 
     const getChildren = () => {
