@@ -108,23 +108,16 @@ Solution
   mentioned in the error and the column ``perm_def`` involves the missing column.
 - Restart the GraphQL engine to verify.
 
-.. toctree::
-  :maxdepth: 1
-  :hidden:
-
-  Catalogue versions <catalogue-versions>
-
 Error: cannot continue due to new inconsistent metadata
 -------------------------------------------------------
 
-Any updates to the server may have catalogue version bumps. The server automatically migrates the catalogue to the latest version on startup. 
-The migration may fail if the previous state is inconsistent. 
+Some updates to the Hasura GraphQL engine may have :ref:`Hasura catalogue <hasura_metadata_schema>` version bumps. The GraphQL engine server
+automatically migrates the catalogue to the latest version on startup. This migration may fail if the previous metadata state is inconsistent.
 
 Solution
 ^^^^^^^^
 
-- Start the older version of the server
-- Clear inconsistencies
-- Start the newer version
-
-Read :doc:`here <../troubleshooting/catalogue-versions>` about what catalogue versions are and how it's possible to downgrade across them.
+- Start the older version of the GraphQL engine.
+- Open the Hasura console to find the inconsistencies.
+- Clear the inconsistencies.
+- Start the newer version.
