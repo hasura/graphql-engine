@@ -8,6 +8,7 @@
 
 module Hasura.RQL.DDL.RemoteRelationship.Validate
   ( validateRelationship
+  , extractVariables
   , fromValidationError
   ) where
 
@@ -246,7 +247,7 @@ renameNamedType remoteRel (G.NamedType (G.Name origName)) =
     renameTypeForRelationship :: Text -> Text
     renameTypeForRelationship text = text <> "_remote_rel_" <> name
       where
-        name = schema <> "_" <> table <> "_" <> relName
+        name = schema <> "_" <> table <> "_" <> unNonEmptyText relName
         QualifiedObject (SchemaName schema) (TableName table) =
           rrTable remoteRel
         RemoteRelationshipName relName = rrName remoteRel

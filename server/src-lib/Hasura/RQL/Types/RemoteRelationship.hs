@@ -8,30 +8,30 @@ module Hasura.RQL.Types.RemoteRelationship
   , RemoteRelationshipName(..)
   , FieldCall(..)
   , RemoteArguments(..)
+  , remoteRelationshipNameToTxt
   )
 where
 
+import           Data.Aeson                    as A
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Hasura.Prelude
-import           Hasura.RQL.Instances          ()
-import           Hasura.SQL.Types
-
-import           Data.Aeson                    as A
-import qualified Data.Aeson.Types              as AT
 import           Data.HashMap.Strict           (HashMap)
-import qualified Data.HashMap.Strict           as HM
 import           Data.List.NonEmpty            (NonEmpty (..))
 import           Data.Scientific
-
-import qualified Data.Text                     as T
-import qualified Database.PG.Query             as Q
+import           Hasura.Prelude
+import           Hasura.RQL.Instances          ()
+import           Hasura.RQL.Types.Common       (NonEmptyText (..))
+import           Hasura.RQL.Types.RemoteSchema
+import           Hasura.SQL.Types
 import           Instances.TH.Lift             ()
-import qualified Language.GraphQL.Draft.Syntax as G
 import           Language.Haskell.TH.Syntax    (Lift)
 
+import qualified Data.Aeson.Types              as AT
+import qualified Data.HashMap.Strict           as HM
+import qualified Data.Text                     as T
+import qualified Database.PG.Query             as Q
 import qualified Hasura.GraphQL.Validate.Types as VT
-import           Hasura.RQL.Types.RemoteSchema
+import qualified Language.GraphQL.Draft.Syntax as G
 
 data RemoteField =
   RemoteField
@@ -126,8 +126,11 @@ data FieldCall =
 
 newtype RemoteRelationshipName
   = RemoteRelationshipName
-  { unRemoteRelationshipName :: Text}
+  { unRemoteRelationshipName :: NonEmptyText}
   deriving (Show, Eq, Lift, Hashable, ToJSON, ToJSONKey, FromJSON, Q.ToPrepArg, Q.FromCol)
+
+remoteRelationshipNameToTxt :: RemoteRelationshipName -> Text
+remoteRelationshipNameToTxt = unNonEmptyText . unRemoteRelationshipName
 
 data DeleteRemoteRelationship =
   DeleteRemoteRelationship

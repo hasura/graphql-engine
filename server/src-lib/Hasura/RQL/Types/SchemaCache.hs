@@ -109,9 +109,11 @@ module Hasura.RQL.Types.SchemaCache
        , delFunctionFromCache
 
        , replaceAllowlist
+
+       , addRemoteRelToCache
        ) where
 
-import qualified Hasura.GraphQL.Context            as GC
+import qualified Hasura.GraphQL.Context              as GC
 
 import           Hasura.Prelude
 import           Hasura.RQL.Types.BoolExp
@@ -122,6 +124,7 @@ import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Metadata
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
+import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.SQL.Types
@@ -131,10 +134,10 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
-import qualified Data.HashMap.Strict               as M
-import qualified Data.HashSet                      as HS
-import qualified Data.Sequence                     as Seq
-import qualified Data.Text                         as T
+import qualified Data.HashMap.Strict                 as M
+import qualified Data.HashSet                        as HS
+import qualified Data.Sequence                       as Seq
+import qualified Data.Text                           as T
 
 reportSchemaObjs :: [SchemaObjId] -> T.Text
 reportSchemaObjs = T.intercalate ", " . map reportSchemaObj
@@ -779,3 +782,10 @@ getDependentObjsWith f sc objId =
     induces (SOTable tn1) (SOTableObj tn2 _) = tn1 == tn2
     induces objId1 objId2                    = objId1 == objId2
     -- allDeps = toList $ fromMaybe HS.empty $ M.lookup objId $ scDepMap sc
+
+addRemoteRelToCache ::
+     (QErrM m, CacheRWM m)
+  => RemoteField
+  -> [SchemaDependency]
+  -> m ()
+addRemoteRelToCache remoteField deps = undefined
