@@ -88,12 +88,10 @@ const Dropdown = ({ keyPrefix, testId, children, options, position }) => {
      * */
     updateState(!isOpen);
 
-    switch (isOpen) {
-      case true:
-        removeEventListener(cb(false));
-        break;
-      default:
-        attachEventListener(cb(true));
+    if (isOpen) {
+      removeEventListener(cb(false));
+    } else {
+      attachEventListener(cb(true));
     }
   };
 
