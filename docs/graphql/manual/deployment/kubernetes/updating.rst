@@ -52,9 +52,9 @@ Step 3: Rollout the change
 
 
 .. note::
-  Updates to the server may result in catalogue version bumps. In this case, it's required to
-  downgrade to an older version and fix inconsistencies. Read :doc:`here <../../troubleshooting/catalogue-versions>`
-  more about catalogue versions and how to downgrade across them.
+
+  If you are downgrading to an older version of the GraphQL engine you might need to downgrade your metadata catalogue version
+  as described in :doc:`../downgrading`
 
 
 

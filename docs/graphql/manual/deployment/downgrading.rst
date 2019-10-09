@@ -6,6 +6,10 @@ Downgrading Hasura GraphQL engine
   :depth: 2
   :local:
 
+
+Steps to downgrade
+------------------
+
 The Hasura GraphQL engine runs off a Docker image and downgrades are as simple as changing the image tag to the version you want.
 
 Based on your deployment method, follow the appropriate guide to downgrade the GraphQL engine version you're running:
@@ -14,12 +18,17 @@ Based on your deployment method, follow the appropriate guide to downgrade the G
 - :doc:`Updating on Docker <docker/updating>`
 - :doc:`Updating on Kubernetes <kubernetes/updating>`
 
+If the GraphQL engine version you are downgrading to has a different catalogue version than your current you will have to downgrade the catalogue
+version manually as described below.
+
 Catalogue versions
 ------------------
 
 The Hasura GraphQL engine maintains its metadata state in a "catalogue" as described :ref:`here <hasura_metadata_schema>`.
 The schema of the catalog is versioned. Updates to the Hasura GraphQL engine may have hasura catalogue version bumps. The server automatically
 migrates the catalogue to the latest version on startup.
+
+But downgrades to the catalogue need to be carried out manually in case you are attempting to downgrade to a lower Hasura GraphQL engine version.
 
 Hasura GraphQL engine versions - Catalogue version mapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
