@@ -69,7 +69,7 @@ mkTriggerQ
   -> SubscribeOpSpec
   -> Q.TxE QErr ()
 mkTriggerQ trn qt allCols strfyNum op (SubscribeOpSpec columns payload) =
-  Q.multiQE defaultTxErrorHandler $ {-# SCC getTriggerSql #-} Q.fromText . TL.toStrict $
+  Q.multiQE defaultTxErrorHandler $ Q.fromText . TL.toStrict $
     let name = triggerNameToTxt trn
         qualifiedTriggerName = pgIdenTrigger op trn
         qualifiedTable = toSQLTxt qt

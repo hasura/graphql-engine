@@ -29,9 +29,6 @@ import qualified Language.Haskell.TH.Syntax as TH
 
 import Migrate.Version (latestCatalogVersion)
 
-import Debug.Trace
-
-{-# SCC migrateCatalog #-}
 migrateCatalog
   :: forall m
    . ( MonadTx m
@@ -81,10 +78,8 @@ migrateCatalog migrationTime = migrateFrom =<< getCatalogVersion
               :  migrationsFromFile [5..latestCatalogVersion])
 
     postMigrate = do
-      liftIO $ traceIO "postMigrate"
       updateCatalogVersion
       replaceSystemMetadata
-      liftIO $ traceIO "buildSchemaCacheStrict"
       buildSchemaCacheStrict
       pure $ "successfully migrated to " <> latestCatalogVersionString
 
@@ -95,10 +90,8 @@ migrateCatalog migrationTime = migrateFrom =<< getCatalogVersion
       |] (latestCatalogVersionString, migrationTime) False
 
     replaceSystemMetadata = do
-      liftIO $ traceIO "clearSystemMetadata"
-      {-# SCC clearSystemMetadata #-} runTx $(Q.sqlFromFile "src-rsr/clear_system_metadata.sql")
-      liftIO $ traceIO "createSystemMetadata"
-      {-# SCC createSystemMetadata #-} void $ runQueryM $$(Y.decodeFile "src-rsr/hdb_metadata.yaml")
+      runTx $(Q.sqlFromFile "src-rsr/clear_system_metadata.sql")
+      void $ runQueryM $$(Y.decodeFile "src-rsr/hdb_metadata.yaml")
 
     from3To4 = liftTx $ Q.catchE defaultTxErrorHandler $ do
       Q.unitQ [Q.sql|

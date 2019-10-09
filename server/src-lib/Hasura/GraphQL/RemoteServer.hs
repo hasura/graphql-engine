@@ -31,7 +31,6 @@ import qualified Hasura.GraphQL.Validate.Types as VT
 introspectionQuery :: BL.ByteString
 introspectionQuery = $(embedStringFile "src-rsr/introspection.json")
 
-{-# SCC fetchRemoteSchema #-}
 fetchRemoteSchema
   :: (MonadIO m, MonadError QErr m)
   => HTTP.Manager
@@ -52,7 +51,7 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _ timeout) =
            , HTTP.requestBody = HTTP.RequestBodyLBS introspectionQuery
            , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
            }
-  res  <- {-# SCC "fetchRemoteSchema/HTTP" #-} liftIO $ try $ HTTP.httpLbs req manager
+  res  <- liftIO $ try $ HTTP.httpLbs req manager
   resp <- either throwHttpErr return res
 
   let respData = resp ^. Wreq.responseBody
@@ -60,7 +59,7 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _ timeout) =
   when (statusCode /= 200) $ throwNon200 statusCode respData
 
   introspectRes :: (FromIntrospection IntrospectionResult) <-
-    either (remoteSchemaErr . T.pack) return $ {-# SCC "fetchRemoteSchema/decodeJSON" #-} J.eitherDecode respData
+    either (remoteSchemaErr . T.pack) return $ J.eitherDecode respData
   let (sDoc, qRootN, mRootN, sRootN) =
         fromIntrospection introspectRes
   typMap <- either remoteSchemaErr return $ VT.fromSchemaDoc sDoc $

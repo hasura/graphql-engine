@@ -26,7 +26,6 @@ dropInsTrigFn :: QualifiedTable -> Q.Query
 dropInsTrigFn fn =
   Q.fromBuilder $ "DROP FUNCTION " <> toSQL fn <> "()"
 
-{-# SCC buildInsTrigFn #-}
 buildInsTrigFn :: QualifiedTable -> QualifiedTable -> S.BoolExp -> Q.Query
 buildInsTrigFn fn tn be = Q.fromText . TL.toStrict $
   let functionName = toSQLTxt fn

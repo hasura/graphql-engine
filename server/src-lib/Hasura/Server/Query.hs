@@ -198,7 +198,6 @@ peelRun sc runCtx@(RunCtx userInfo _ _ _) pgExecCtx (Run m) =
   where
     lazyTx = runReaderT (runStateT m sc) runCtx
 
-{-# SCC runQuery #-}
 runQuery
   :: (MonadIO m, MonadError QErr m)
   => PGExecCtx -> InstanceId
@@ -281,7 +280,6 @@ queryNeedsReload (RQV2 qi) = case qi of
   RQV2TrackTable _           -> True
   RQV2SetTableCustomFields _ -> True
 
-{-# SCC runQueryM #-}
 runQueryM
   :: ( QErrM m, CacheRWM m, UserInfoM m, MonadTx m
      , MonadIO m, HasHttpManager m, HasSQLGenCtx m

@@ -116,7 +116,6 @@ runReloadRemoteSchema (RemoteSchemaNameQuery name) = do
   return successMsg
 
 -- | build GraphQL schema
-{-# SCC buildGCtxMap #-}
 buildGCtxMap
   :: (QErrM m, CacheRWM m) => m ()
 buildGCtxMap = do
