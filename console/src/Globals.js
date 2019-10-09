@@ -20,7 +20,7 @@ if (
 
 /* initialize globals */
 
-const isProduction = window.__env.nodeEnv === 'production';
+const isProduction = window.__env.nodeEnv !== 'development';
 
 const globals = {
   apiHost: window.__env.apiHost,
