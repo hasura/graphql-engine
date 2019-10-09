@@ -92,7 +92,7 @@ askPermInfo tabInfo roleName pa =
   case M.lookup roleName rpim >>= (^. paL) of
     Just c  -> return c
     Nothing -> throw400 PermissionDenied $ mconcat
-               [ pt <> " permisison on " <>> _tiName tabInfo
+               [ pt <> " permission on " <>> _tiName tabInfo
                , " for role " <>> roleName
                , " does not exist"
                ]

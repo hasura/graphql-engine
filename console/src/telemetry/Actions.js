@@ -2,6 +2,7 @@ import Endpoints, { globalCookiePolicy } from '../Endpoints';
 import requestAction from '../utils/requestAction';
 import dataHeaders from '../components/Services/Data/Common/Headers';
 import defaultTelemetryState from './State';
+import globals from '../Globals';
 
 const SET_CONSOLE_OPTS = 'Telemetry/SET_CONSOLE_OPTS';
 const SET_NOTIFICATION_SHOWN = 'Telemetry/SET_NOTIFICATION_SHOWN';
@@ -43,7 +44,7 @@ const setNotificationShownInDB = () => (dispatch, getState) => {
 
 const loadConsoleTelemetryOpts = () => {
   return (dispatch, getState) => {
-    if (window.__env.enableTelemetry === undefined) {
+    if (globals.enableTelemetry === undefined) {
       return dispatch({ type: SET_TELEMETRY_DISABLED });
     }
 
