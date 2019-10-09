@@ -2,6 +2,7 @@ module Hasura.GraphQL.Resolve.Insert
   (convertInsert)
 where
 
+import           Control.Arrow                     ((>>>))
 import           Data.Has
 import           Hasura.EncJSON
 import           Hasura.Prelude
@@ -196,11 +197,10 @@ parseOnConflict tn updFiltrM allColMap val = withPathK "on_conflict" $
       (_, enumVal) <- asEnumVal v
       return $ ConstraintName $ G.unName $ G.unEnumValue enumVal
 
-    parseWhereExp o = do
-      whereExpM <- forM (OMap.lookup "where" o) $ \v -> do
-        unresolved <- parseBoolExp v
-        traverse (traverse resolveValTxt) unresolved
-      pure $ maybe (S.BELit True) (toSQLBoolExp (S.mkQual tn)) whereExpM
+    parseWhereExp =
+          OMap.lookup "where"
+      >>> traverse (parseBoolExp >=> traverse (traverse resolveValTxt))
+      >>> fmap (maybe (S.BELit True) (toSQLBoolExp (S.mkQual tn)))
 
 toSQLExps
   :: (MonadError QErr m, MonadState PrepArgs m)

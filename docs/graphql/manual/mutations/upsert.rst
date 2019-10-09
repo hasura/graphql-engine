@@ -106,8 +106,8 @@ The ``published_on`` column is left unchanged as it wasn't present in ``update_c
 
 Update selected columns on conflict using a filter
 --------------------------------------------------
-Insert a new object in the ``article`` table or, if the primary key constraint ``article_pkey`` is violated, update
-the columns specified in ``update_columns`` only if provided ``where`` condition is met:
+Insert a new object in the ``article`` table, or if the primary key constraint ``article_pkey`` is violated, update
+the columns specified in ``update_columns`` only if provided the ``where`` condition is met:
 
 
 .. graphiql::
@@ -149,7 +149,7 @@ the columns specified in ``update_columns`` only if provided ``where`` condition
       }
     }
 
-The ``published_on`` column is updated only if the new value is greater than old value.
+The ``published_on`` column is updated only if the new value is greater than the old value.
 
 Ignore request on conflict
 --------------------------
