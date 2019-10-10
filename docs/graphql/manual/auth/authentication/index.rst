@@ -33,7 +33,7 @@ Hasura supports two modes of authentication configuration:
 
    .. thumbnail:: ../../../../img/graphql/manual/auth/auth-jwt-overview.png
 
-**See more details about these, at:**
+**See more details about these at:**
 
 .. toctree::
   :maxdepth: 1
