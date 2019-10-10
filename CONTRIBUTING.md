@@ -58,7 +58,7 @@ Feel free to submit a pull request if you have something to add even if it's not
 ### Hasura CLI
 
 We have some issues on the CLI that are suitable for open source contributions. If you know Go or if you would like to learn it by doing, check out the following [issues](https://github.com/hasura/graphql-engine/issues?q=is%3Aopen+is%3Aissue+label%3Ac%2Fcli+label%3A%22help+wanted%22).
-
+If you solve any of the listed issues, you will get goodies.
 The README of the CLI repository can be found [here](https://github.com/hasura/graphql-engine/tree/master/cli).
 
 ## Ways of contributing
