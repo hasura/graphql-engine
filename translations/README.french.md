@@ -195,3 +195,12 @@ Tous les **autres contenus** (à l'exception de ceux dans les répertoires
 [`server`](../server), [`cli`](../cli) et [`console`](../console)) sont
 disponibles sous [Licence MIT](../LICENSE-community). Cela inclut tout le
 contenu des répertoires [`docs`](../docs) et [`community`](../community).
+
+## Traductions
+
+Ceci readme est disponible dans les traductions suivantes:
+
+- [Japanese :jp:](translations/README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
+- [English :en:](README.md)
+
+Les traductions d'autres fichiers sont disponibles ici [here](translations).
