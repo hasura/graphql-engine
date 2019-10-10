@@ -108,7 +108,7 @@ library
                      -- Templating
                      , mustache
                      , file-embed
-                     , shakespeare
+                     , shakespeare >= 2.0.22
 
                      --
                      , data-has
