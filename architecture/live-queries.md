@@ -100,7 +100,7 @@ GraphQL query → GraphQL AST → Internal AST with authorization rules → SQL 
 
 #### Idea #3: Batch multiple live-queries into one SQL query
 
-With only ideas [#1](Idea-#1), [#2](Idea-#2) implemented we would still result in the situation where a 100k connected clients could result in a proportional load of 100k postgres queries to fetch the latest data (let’s say if 100k updates happen, 1 update relevant to each client).
+With only ideas [#1](https://github.com/hasura/graphql-engine/blob/master/architecture/live-queries.md#idea-1-compile-a-graphql-query-to-a-single-sql-query), [#2](https://github.com/hasura/graphql-engine/blob/master/architecture/live-queries.md#idea-2-make-authorization-declarative) implemented we would still result in the situation where a 100k connected clients could result in a proportional load of 100k postgres queries to fetch the latest data (let’s say if 100k updates happen, 1 update relevant to each client).
 
 However, considering that we have all the application-user level session variables available at the API layer, we can actually create a single SQL query to re-fetch data for a number of clients all at once!
 
