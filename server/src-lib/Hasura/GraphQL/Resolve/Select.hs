@@ -20,7 +20,6 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict               as Map
 import qualified Data.HashMap.Strict.InsOrd        as OMap
 import qualified Data.List.NonEmpty                as NE
-import qualified Data.Sequence                     as Seq
 import qualified Data.Text                         as T
 import qualified Language.GraphQL.Draft.Syntax     as G
 
@@ -77,20 +76,12 @@ resolveComputedField computedField fld = fieldAsPath fld $ do
     ComputedField _ function argSeq fieldType = computedField
     ComputedFieldFunction qf _ tableArg _ = function
     withTableArgument resolvedArgs =
-      let RS.FunctionArgsExp positional named = RS.AEInput <$> resolvedArgs
+      let argsExp@(RS.FunctionArgsExp positional named) = RS.AEInput <$> resolvedArgs
       in case tableArg of
-        FTAFirstArgument -> RS.FunctionArgsExp
-                            (RS.AETableRow:positional) named
+        FTAFirstArgument      ->
+          RS.FunctionArgsExp (RS.AETableRow:positional) named
         FTAName argName index ->
-          let insertAt i a = toList . Seq.insertAt i a . Seq.fromList
-          -- If table argument positional index is less than or equal to
-          -- length of 'positional' arguments then insert the table row
-          -- value in 'positional' arguments else insert the table row
-          -- value with argument name in 'named' arguments
-          in if (index + 1) <= length positional then
-               RS.FunctionArgsExp (insertAt index RS.AETableRow positional) named
-             else RS.FunctionArgsExp positional $
-                  Map.insert (getFuncArgNameTxt argName) RS.AETableRow named
+          RS.insertFunctionArg argName index RS.AETableRow argsExp
 
 fromSelSet
   :: ( MonadResolve m, MonadReader r m, Has FieldMap r
