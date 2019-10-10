@@ -14,7 +14,7 @@
   "scripts": {
     "start": "concurrently --kill-others \"npm run start-prod\"",
     "start-prod": "better-npm-run start-prod",
-    "build": "npm run bs-build && webpack --progress -p --colors --display-error-details --config webpack/prod.config.js",
+    "build": "webpack --progress -p --colors --display-error-details --config webpack/prod.config.js",
     "server-build": "npm run build && mkdir -p static/dist/versioned && cp static/dist/*.js static/dist/*.css static/dist/versioned/ && rm static/dist/versioned/*.gz && gzip -r -f static/dist/versioned",
     "build-unused": "webpack --verbose --colors --display-error-details --config webpack/prod.config.js --json | webpack-unused -s src",
     "postinstall": "npm run bs-build && webpack --display-error-details --config webpack/prod.config.js",
@@ -29,6 +29,7 @@
     "test": "npm run bs-build && cypress run --spec 'cypress/integration/**/**/test.js' --key $CYPRESS_KEY --parallel --record"
   },
   "lint-staged": {
+    "*.bs.js": [],
     "*.js": [
       "eslint --fix",
       "git add"
@@ -36,8 +37,7 @@
     "*.{js,json,css,md}": [
       "prettier --single-quote --trailing-comma es5 --write",
       "git add"
-    ],
-    "*.bs.js": []
+    ]
   },
   "betterScripts": {
     "start-prod": {
