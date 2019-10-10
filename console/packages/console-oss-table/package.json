@@ -1,0 +1,20 @@
+{
+  "name": "@vksci123/console-oss-table",
+  "version": "0.0.3",
+  "description": "Contains custom react table used in hasura-oss",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hasura/graphql-engine/console/packages/console-oss"
+  },
+  "keywords": [
+    "Console",
+    "Hasura"
+  ],
+  "author": "Karthik V",
+  "license": "ISC",
+  "dependencies": {}
+}

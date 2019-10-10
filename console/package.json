@@ -19,6 +19,7 @@
     "build": "webpack --progress -p --colors --display-error-details --config webpack/prod.config.js",
     "build-lib": "webpack --progress -p --colors --display-error-details --config webpack/bundle.config.js",
     "server-build": "make server-build",
+    "build-lib-table": "webpack --progress -p --colors --display-error-details --config webpack/bundle-table.config.js",
     "build-unused": "webpack --verbose --colors --display-error-details --config webpack/prod.config.js --json | webpack-unused -s src",
     "cypress": "cypress open",
     "test": "cypress run --spec 'cypress/integration/**/**/test.ts' --key $CYPRESS_KEY --parallel --record",
