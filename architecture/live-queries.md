@@ -100,7 +100,7 @@ GraphQL query → GraphQL AST → Internal AST with authorization rules → SQL 
 
 #### Idea #3: Batch multiple live-queries into one SQL query
 
-With only ideas #1(Idea #1), #2(Idea #2) implemented we would still result in the situation where a 100k connected clients could result in a proportional load of 100k postgres queries to fetch the latest data (let’s say if 100k updates happen, 1 update relevant to each client).
+With only ideas #1(Idea-#1), #2(Idea-#2) implemented we would still result in the situation where a 100k connected clients could result in a proportional load of 100k postgres queries to fetch the latest data (let’s say if 100k updates happen, 1 update relevant to each client).
 
 However, considering that we have all the application-user level session variables available at the API layer, we can actually create a single SQL query to re-fetch data for a number of clients all at once!
 
@@ -142,12 +142,12 @@ Testing scalability & reliability for live-queries with websockets has been a ch
 ## Benefits of this approach
 Hasura makes live-queries easy and accessible. The notion of queries is easily extended to live-queries without any extra effort on the part of the developer using GraphQL queries. This is the most important thing for us.
 
-1. Expressive/featureful live queries with full support for Postgres operators/aggregations/views/functions etc
-1. Predictable performance
-1. Vertical & Horizontal scaling
-1. Works on all cloud/database vendors
+1. Expressive/featureful live queries with full support for Postgres operators/aggregations/views/functions etc.
+1. Predictable performance.
+1. Vertical & Horizontal scaling.
+1. Works on all cloud/database vendors.
 
 ## Future work:
 Reduce load on Postgres by:
-1. Mapping events to active live queries
-1. Incremental computation of result set
+1. Mapping events to active live queries.
+1. Incremental computation of result set.
