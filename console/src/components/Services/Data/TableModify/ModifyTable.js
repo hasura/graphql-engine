@@ -30,6 +30,7 @@ import EnumsSection, {
 import ForeignKeyEditor from './ForeignKeyEditor';
 import UniqueKeyEditor from './UniqueKeyEditor';
 import TriggerEditorList from './TriggerEditorList';
+import CheckConstraints from './CheckConstraints';
 import styles from './ModifyTable.scss';
 import { NotFoundError } from '../../../Error/PageNotFound';
 
@@ -75,6 +76,7 @@ class ModifyTable extends React.Component {
       // throw a 404 exception
       throw new NotFoundError();
     }
+
     const tableComment = tableSchema.comment;
 
     const untrackBtn = (
@@ -209,6 +211,12 @@ class ModifyTable extends React.Component {
             <hr />
             <h4 className={styles.subheading_text}>Triggers</h4>
             <TriggerEditorList tableSchema={tableSchema} dispatch={dispatch} />
+            <hr />
+            <h4 className={styles.subheading_text}>Check Constraints</h4>
+            <CheckConstraints
+              constraints={tableSchema.check_constraints}
+              dispatch={dispatch}
+            />
             <hr />
             {getEnumsSection()}
             {untrackBtn}

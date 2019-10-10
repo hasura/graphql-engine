@@ -128,6 +128,57 @@ const resetPrimaryKeys = () => ({
   type: RESET_PRIMARY_KEY,
 });
 
+export const removeCheckConstraint = constraintName => (dispatch, getState) => {
+  const isOk = window.confirm('Are you absolutely sure?');
+  if (!isOk) return;
+
+  const { currentTable: tableName, currentSchema } = getState().tables;
+
+  const tableSchema = getState().tables.allSchemas.find(s => {
+    return s.table_name === tableName && s.table_schema === currentSchema;
+  });
+
+  const constraint = tableSchema.check_constraints.find(
+    cc => cc.constraint_name === constraintName
+  );
+  const upQuery = {
+    type: 'run_sql',
+    args: {
+      sql: `alter table "${currentSchema}"."${tableName}" drop constraint "${constraintName}"`,
+    },
+  };
+  const downQuery = {
+    type: 'run_sql',
+    args: {
+      sql: `alter table "${currentSchema}"."${tableName}" add constraint "${constraintName}" ${
+        constraint.check
+      };`,
+    },
+  };
+
+  const migrationName = `drop_check_constraint_${currentSchema}_${tableName}_${constraintName}`;
+  const requestMsg = 'Deleting check constraint...';
+  const successMsg = 'Check constraint deleted';
+  const errorMsg = 'Deleting check constraint failed';
+  const customOnSuccess = () => {};
+  const customOnError = err => {
+    dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
+  };
+
+  makeMigrationCall(
+    dispatch,
+    getState,
+    [upQuery],
+    [downQuery],
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg
+  );
+};
+
 const savePrimaryKeys = (tableName, schemaName, constraintName) => {
   return (dispatch, getState) => {
     dispatch({ type: SAVE_FOREIGN_KEY });
