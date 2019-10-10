@@ -77,7 +77,7 @@ functionArgsWithoutTableArg
 functionArgsWithoutTableArg tableArg inputArgs = Seq.fromList $
   case tableArg of
     FTAFirst  -> tail $ toList inputArgs
-    FTAName argName _ ->
+    FTANamed argName _ ->
       filter ((/=) (Just argName) . faName) $ toList inputArgs
 
 mkComputedFieldFld :: ComputedField -> ObjFldInfo

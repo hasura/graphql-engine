@@ -80,7 +80,7 @@ resolveComputedField computedField fld = fieldAsPath fld $ do
       in case tableArg of
         FTAFirst      ->
           RS.FunctionArgsExp (RS.AETableRow:positional) named
-        FTAName argName index ->
+        FTANamed argName index ->
           RS.insertFunctionArg argName index RS.AETableRow argsExp
 
 fromSelSet

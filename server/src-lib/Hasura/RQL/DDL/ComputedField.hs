@@ -118,7 +118,7 @@ showError qf = \case
   where
     showFunctionTableArgument = \case
       FTAFirst          -> "first argument of the function " <>> qf
-      FTAName argName _ -> argName <<> " argument of the function " <>> qf
+      FTANamed argName _ -> argName <<> " argument of the function " <>> qf
 
 addComputedFieldP2Setup
   :: (QErrM m, CacheRWM m)
@@ -173,7 +173,7 @@ addComputedFieldP2Setup table computedField definition rawFunctionInfo comment =
         Just argName ->
           case findWithIndex (maybe False (argName ==) . faName) inputArgs of
             Just (tableArg, index) -> do
-              let functionTableArg = FTAName argName index
+              let functionTableArg = FTANamed argName index
               validateTableArgumentType functionTableArg $ faType tableArg
               pure functionTableArg
             Nothing ->
