@@ -317,10 +317,8 @@ data FunctionArgsExpG a
 emptyFunctionArgsExp :: FunctionArgsExpG a
 emptyFunctionArgsExp = FunctionArgsExp [] HM.empty
 
--- If argument positional index is less than or equal to
--- length of 'positional' arguments then insert the value in
--- 'positional' arguments else insert the value with
--- argument name in 'named' arguments
+-- | If argument positional index is less than or equal to length of 'positional' arguments then
+-- insert the value in 'positional' arguments else insert the value with argument name in 'named' arguments
 insertFunctionArg
   :: FunctionArgName
   -> Int

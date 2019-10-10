@@ -27,10 +27,8 @@ computedFieldNameToText = unNonEmptyText . unComputedFieldName
 fromComputedField :: ComputedFieldName -> FieldName
 fromComputedField = FieldName . computedFieldNameToText
 
--- The function table argument is either
--- the very first argument or the named
--- argument with an index. The index is 0
--- if the named argument is the first.
+-- | The function table argument is either the very first argument or the named
+-- argument with an index. The index is 0 if the named argument is the first.
 data FunctionTableArgument
   = FTAFirst
   | FTAName
