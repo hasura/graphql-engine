@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 import { generateHeaderSyms } from './HeaderReducer';
 import DropdownButton from '../../DropdownButton/DropdownButton';
@@ -199,6 +200,12 @@ class Header extends React.Component {
   }
 }
 
-// Add proptypes
+Header.propTypes = {
+  headers: PropTypes.array,
+  isDisabled: PropTypes.bool,
+  typeOptions: PropTypes.array,
+  placeHolderText: PropTypes.string,
+  keyInputPlaceholder: PropTypes.string,
+};
 
 export default Header;

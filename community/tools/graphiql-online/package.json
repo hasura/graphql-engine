@@ -43,7 +43,7 @@
     "apollo-link": "^1.2.2",
     "apollo-link-ws": "^1.0.8",
     "graphiql": "^0.13.2",
-    "graphiql-explorer-hasura": "0.0.7",
+    "graphiql-explorer": "0.4.4",
     "graphql": "^14.3.0",
     "graphql-voyager": "^1.0.0-rc.27",
     "hasura-console-graphiql": "0.1.0-alpha.1",

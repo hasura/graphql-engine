@@ -39,6 +39,32 @@ class TestLogging():
         resp = hge_ctx.http.post(hge_ctx.hge_url + '/v1/graphql', json=q,
                                  headers=headers)
         assert resp.status_code == 200 and 'errors' in resp.json()
+        
+        # make an unthorized query where admin secret/access token is empty
+        q = {'query': 'query { hello {code name} }'}
+        headers = {'x-request-id': 'unauthorized-query-test'}
+        resp = hge_ctx.http.post(hge_ctx.hge_url + '/v1/graphql', json=q,
+                                 headers=headers)
+        assert resp.status_code == 200 and 'errors' in resp.json()
+
+        # make an unthorized metadata request where admin secret/access token is empty
+        q = {
+        'query': {
+            'type': 'select',
+            'args': {
+                    "table": {
+                        "name": "hdb_function",
+                        "schema": "hdb_catalog"
+                    },
+                    "columns": ["function_name", "function_schema", "is_system_defined"],
+                    "where": { "function_schema": "public" }
+                }
+            }
+        }
+        headers = {'x-request-id': 'unauthorized-metadata-test'}
+        resp = hge_ctx.http.post(hge_ctx.hge_url + '/v1/query', json=q,
+                                 headers=headers)
+        assert resp.status_code == 401 and 'error' in resp.json()
 
         # gather and parse the logs now
         self.logs = self._parse_logs(hge_ctx)
@@ -140,3 +166,31 @@ class TestLogging():
         print(http_logs[0])
         assert 'error' in http_logs[0]['detail']['operation']
         assert http_logs[0]['detail']['operation']['error']['code'] == 'parse-failed'
+
+    def test_http_unthorized_query(self, hge_ctx):
+        def _get_failed_logs(x):
+            return x['type'] == 'http-log' and \
+                x['detail']['operation']['request_id'] == 'unauthorized-query-test'
+
+        http_logs = list(filter(_get_failed_logs, self.logs))
+        print('unauthorized failed logs', http_logs)
+        assert len(http_logs) > 0
+        print(http_logs[0])
+        assert 'error' in http_logs[0]['detail']['operation']
+        assert http_logs[0]['detail']['operation']['error']['code'] == 'access-denied'
+        assert http_logs[0]['detail']['operation'].get('query') is None
+        assert http_logs[0]['detail']['operation']['raw_query'] is not None
+
+    def test_http_unthorized_metadata(self, hge_ctx):
+        def _get_failed_logs(x):
+            return x['type'] == 'http-log' and \
+                x['detail']['operation']['request_id'] == 'unauthorized-metadata-test'
+
+        http_logs = list(filter(_get_failed_logs, self.logs))
+        print('unauthorized failed logs', http_logs)
+        assert len(http_logs) > 0
+        print(http_logs[0])
+        assert 'error' in http_logs[0]['detail']['operation']
+        assert http_logs[0]['detail']['operation']['error']['code'] == 'access-denied'
+        assert http_logs[0]['detail']['operation'].get('query') is None
+        assert http_logs[0]['detail']['operation']['raw_query'] is not None

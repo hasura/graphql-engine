@@ -332,7 +332,7 @@ export const dropInconsistentObjects = () => {
 };
 
 export const isMetadataStatusPage = () => {
-  return window.location.pathname.includes('/setting/metadata-status');
+  return window.location.pathname.includes('/settings/metadata-status');
 };
 
 export const redirectToMetadataStatus = () => {
@@ -645,7 +645,7 @@ export const metadataReducer = (state = defaultState, action) => {
         ...state,
         allowedQueries: [
           ...state.allowedQueries.map(q =>
-            (q.name === action.data.queryName ? action.data.newQuery : q)
+            q.name === action.data.queryName ? action.data.newQuery : q
           ),
         ],
       };
