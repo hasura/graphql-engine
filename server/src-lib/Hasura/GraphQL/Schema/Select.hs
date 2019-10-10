@@ -76,7 +76,7 @@ functionArgsWithoutTableArg
   :: FunctionTableArgument -> Seq.Seq FunctionArg -> Seq.Seq FunctionArg
 functionArgsWithoutTableArg tableArg inputArgs = Seq.fromList $
   case tableArg of
-    FTAFirstArgument  -> tail $ toList inputArgs
+    FTAFirst  -> tail $ toList inputArgs
     FTAName argName _ ->
       filter ((/=) (Just argName) . faName) $ toList inputArgs
 

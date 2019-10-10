@@ -27,15 +27,19 @@ computedFieldNameToText = unNonEmptyText . unComputedFieldName
 fromComputedField :: ComputedFieldName -> FieldName
 fromComputedField = FieldName . computedFieldNameToText
 
+-- The function table argument is either
+-- the very first argument or the named
+-- argument with an index. The index is 0
+-- if the named argument is the first.
 data FunctionTableArgument
-  = FTAFirstArgument
+  = FTAFirst
   | FTAName
     !FunctionArgName -- ^ argument name
     !Int -- ^ argument index
   deriving (Show, Eq)
 
 instance ToJSON FunctionTableArgument where
-  toJSON FTAFirstArgument    = String "first_argument"
+  toJSON FTAFirst            = String "first_argument"
   toJSON (FTAName argName _) = object ["name" .= argName]
 
 data ComputedFieldReturn

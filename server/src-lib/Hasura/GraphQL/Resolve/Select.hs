@@ -78,7 +78,7 @@ resolveComputedField computedField fld = fieldAsPath fld $ do
     withTableArgument resolvedArgs =
       let argsExp@(RS.FunctionArgsExp positional named) = RS.AEInput <$> resolvedArgs
       in case tableArg of
-        FTAFirstArgument      ->
+        FTAFirst      ->
           RS.FunctionArgsExp (RS.AETableRow:positional) named
         FTAName argName index ->
           RS.insertFunctionArg argName index RS.AETableRow argsExp

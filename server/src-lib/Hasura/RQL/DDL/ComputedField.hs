@@ -117,7 +117,7 @@ showError qf = \case
     "the function " <> qf <<> " is of type VOLATILE; cannot be added as a computed field"
   where
     showFunctionTableArgument = \case
-      FTAFirstArgument  -> "first argument of the function " <>> qf
+      FTAFirst          -> "first argument of the function " <>> qf
       FTAName argName _ -> argName <<> " argument of the function " <>> qf
 
 addComputedFieldP2Setup
@@ -182,8 +182,8 @@ addComputedFieldP2Setup table computedField definition rawFunctionInfo comment =
           case inputArgs of
             []           -> MV.dispute $ pure CFVENoInputArguments
             (firstArg:_) ->
-              validateTableArgumentType FTAFirstArgument $ faType firstArg
-          pure FTAFirstArgument
+              validateTableArgumentType FTAFirst $ faType firstArg
+          pure FTAFirst
 
 
       let computedFieldFunction =
