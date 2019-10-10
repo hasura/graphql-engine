@@ -42,7 +42,7 @@ npm install
 
 ### Run console development server
 
-Hasura console can be developed in two modes, `server` or `cli` mode. If you are looking to add/tweak functionality related to migrations, check out [Development with Hasura CLI](#development-with-hasura-cli-cli-mode), otherwise check out [Development with Hasura GraphQL engine](#development-with-hasura-graphql-engine-server-mode).
+Hasura console can be developed in two modes, `server` or `cli` mode. If you are looking to add/tweak functionality related to migrations, check out [Develop with Hasura CLI](#develop-with-hasura-cli-cli-mode), otherwise check out [Develop with Hasura GraphQL engine](#develop-with-hasura-graphql-engine-server-mode).
 
 Both modes require a running instance of GraphQL Engine. The easiest way to get Hasura GraphQL engine instance is by Heroku. You can get it by following the steps given in [this](https://docs.hasura.io/1.0/graphql/manual/getting-started/heroku-simple.html) link. Other methods to install Hasura GraphQL engine are documented [here](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html).
 
@@ -62,7 +62,7 @@ Environment variables accepted in `server` mode:
 - `ASSETS_VERSION`: Version of console assets being served 
 - `ENABLE_TELEMETRY`: Whether to enable telemetry (`true`/`false`)
 - `URL_PREFIX`: Path at which the console is running
-- `DATA_API_URL`: The Hasura GraphQL engine url. (If you are running it on Heroku, it will look like <app-name>.herokuapp.com, if you are running locally, it will look like http://localhost:<port>)
+- `DATA_API_URL`: The Hasura GraphQL engine url. (If you are running it on Heroku, it will look like <app-name\>.herokuapp.com, if you are running locally, it will look like http://localhost:<port\>)
 - `SERVER_VERSION`: Hasura GraphQL Engine server version
 - `CONSOLE_MODE`: In server mode, it should be `server`
 - `IS_ADMIN_SECRET_SET`: Is GraphQl engine configured with an admin secret (`true`/`false`)
@@ -106,7 +106,7 @@ Environment variables accepted in `cli` mode:
 - `ASSETS_VERSION`: Version of console assets being served 
 - `ENABLE_TELEMETRY`: Whether to enable telemetry (`true`/`false`)
 - `URL_PREFIX`: Path at which the console is running
-- `DATA_API_URL`: The Hasura GraphQL engine url. (If you are running it on Heroku, it will look like <app-name>.herokuapp.com, if you are running locally, it will look like http://localhost:<port>)
+- `DATA_API_URL`: The Hasura GraphQL engine url. (If you are running it on Heroku, it will look like <app-name\>.herokuapp.com, if you are running locally, it will look like http://localhost:<port\>)
 - `SERVER_VERSION`: Hasura GraphQL Engine server version
 - `CONSOLE_MODE`: In cli mode, it should be `cli`
 - `ADMIN_SECRET`: the admin secret passed via the CLI

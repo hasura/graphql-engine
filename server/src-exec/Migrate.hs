@@ -19,7 +19,7 @@ import qualified Data.Yaml.TH               as Y
 import qualified Database.PG.Query          as Q
 
 curCatalogVer :: T.Text
-curCatalogVer = "24"
+curCatalogVer = "25"
 
 migrateMetadata
   :: ( MonadTx m
@@ -373,6 +373,13 @@ from23To24 =
             ALTER TABLE hdb_catalog.hdb_table
             ADD COLUMN configuration JSONB NOT NULL DEFAULT '{}'::jsonb;
            |]
+
+from24To25 :: MonadTx m => m ()
+from24To25 = do
+  Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
+    $(Q.sqlFromFile "src-rsr/migrate_from_24_to_25.sql")
+  pure ()
+
 migrateCatalog
   :: ( MonadTx m
      , CacheRWM m
@@ -418,6 +425,7 @@ migrateCatalog migrationTime = migrateFrom =<< getCatalogVersion
           , ("21", from21To22)
           , ("22", from22To23)
           , ("23", from23To24)
+          , ("24", from24To25)
           ]
 
     postMigrate = do

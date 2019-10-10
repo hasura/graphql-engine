@@ -636,6 +636,9 @@ class TestSetTableIsEnum(DefaultTestQueries):
     def test_add_invalid(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/add_invalid.yaml')
 
+    def test_add_test_schema_enum_table(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/add_test_schema_enum_table.yaml')
+
 class TestSetTableCustomFields(DefaultTestQueries):
     @classmethod
     def dir(cls):
