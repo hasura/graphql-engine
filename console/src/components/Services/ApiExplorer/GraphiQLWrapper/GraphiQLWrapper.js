@@ -23,6 +23,7 @@ class GraphiQLWrapper extends Component {
       error: false,
       noSchema: false,
       onBoardingEnabled: false,
+      copyButtonText: 'Copy'
     };
   }
 
@@ -76,6 +77,11 @@ class GraphiQLWrapper extends Component {
         return;
       }
       copyToClipboard(query);
+      this.setState({ copyButtonText: 'Copied' });
+      setTimeout(
+        () => { this.setState({ copyButtonText: 'Copy' }); },
+        1500
+      );
     };
 
     // handle history toggle
@@ -106,7 +112,7 @@ class GraphiQLWrapper extends Component {
           onClick: handleToggleHistory,
         });
         buttons.push({
-          label: 'Copy',
+          label: this.state.copyButtonText,
           title: 'Copy Query',
           onClick: handleCopyQuery,
         });
