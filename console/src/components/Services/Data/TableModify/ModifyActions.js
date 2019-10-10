@@ -36,6 +36,7 @@ import {
   getCreatePkSql,
   getDropPkSql,
 } from './utils';
+import { CLI_CONSOLE_MODE } from '../../../../constants';
 
 import globals from '../../../../Globals';
 import { GRAPHQL_ALIASING_SUPPORT } from '../../../../helpers/versionUtils';
@@ -313,9 +314,7 @@ const saveForeignKeys = (index, tableSchema, columns) => {
           return dispatch(
             showErrorNotification(
               'Failed setting foreign key',
-              `The column "${
-                columns[cm.column].name
-              }" seems to be referencing multiple foreign columns`
+              `The column "${columns[cm.column].name}" seems to be referencing multiple foreign columns`
             )
           );
         }
@@ -469,9 +468,7 @@ const removeForeignKey = (index, tableSchema) => {
       {
         type: 'run_sql',
         args: {
-          sql: `alter table "${schemaName}"."${tableName}" drop constraint "${
-            oldConstraint.constraint_name
-          }";`,
+          sql: `alter table "${schemaName}"."${tableName}" drop constraint "${oldConstraint.constraint_name}";`,
         },
       },
     ];
@@ -495,9 +492,7 @@ const removeForeignKey = (index, tableSchema) => {
         },
       },
     ];
-    const migrationName = `delete_fk_${schemaName}_${tableName}_${
-      oldConstraint.constraint_name
-    }`;
+    const migrationName = `delete_fk_${schemaName}_${tableName}_${oldConstraint.constraint_name}`;
     const requestMsg = 'Deleting foreign key...';
     const successMsg = 'Foreign key deleted';
     const errorMsg = 'Deleting foreign key failed';
@@ -641,9 +636,7 @@ const deleteTrigger = (trigger, table) => {
     let downMigrationSql = '';
 
     downMigrationSql += `CREATE TRIGGER "${triggerName}"
-${trigger.action_timing} ${
-  trigger.event_manipulation
-} ON "${tableSchema}"."${tableName}"
+${trigger.action_timing} ${trigger.event_manipulation} ON "${tableSchema}"."${tableName}"
 FOR EACH ${trigger.action_orientation} ${trigger.action_statement};`;
 
     if (trigger.comment) {
@@ -1093,7 +1086,7 @@ const deleteColumnSql = (column, tableSchema) => {
     const errorMsg = 'Deleting column failed';
 
     const customOnSuccess = (data, consoleMode, migrationMode) => {
-      if (consoleMode === 'cli' && migrationMode) {
+      if (consoleMode === CLI_CONSOLE_MODE && migrationMode) {
         // show warning information
         dispatch(
           showWarningNotification(
@@ -2088,9 +2081,7 @@ const removeUniqueKey = (index, tableName, existingConstraints, callback) => {
       {
         type: 'run_sql',
         args: {
-          sql: `alter table "${currentSchema}"."${tableName}" drop constraint "${
-            existingConstraint.constraint_name
-          }";`,
+          sql: `alter table "${currentSchema}"."${tableName}" drop constraint "${existingConstraint.constraint_name}";`,
         },
       },
     ];
@@ -2296,9 +2287,7 @@ const saveUniqueKey = (
       upMigration.push({
         type: 'run_sql',
         args: {
-          sql: `alter table "${currentSchema}"."${tableName}" drop constraint "${
-            existingConstraint.constraint_name
-          }";`,
+          sql: `alter table "${currentSchema}"."${tableName}" drop constraint "${existingConstraint.constraint_name}";`,
         },
       });
     }

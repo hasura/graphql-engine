@@ -68,7 +68,7 @@ addLiveQuery lqState plan onResultAction = do
     handlerM <- STMMap.lookup handlerId lqMap
     case handlerM of
       Just handler -> do
-        cohortM <- TMap.lookup cohortId $ _pCohorts handler
+        cohortM <- TMap.lookup cohortKey $ _pCohorts handler
         case cohortM of
           Just cohort -> addToCohort sinkId cohort
           Nothing     -> addToPoller sinkId responseId handler
@@ -88,14 +88,13 @@ addLiveQuery lqState plan onResultAction = do
       threadDelay $ unRefetchInterval refetchInterval
     STM.atomically $ STM.putTMVar (_pIOState handler) (PollerIOState threadRef metrics)
 
-  pure $ LiveQueryId handlerId cohortId sinkId
+  pure $ LiveQueryId handlerId cohortKey sinkId
   where
     LiveQueriesState lqOpts pgExecCtx lqMap = lqState
     LiveQueriesOptions batchSize refetchInterval = lqOpts
-    LiveQueryPlan (ParameterizedLiveQueryPlan role alias query) sessionVars queryVars = plan
+    LiveQueryPlan (ParameterizedLiveQueryPlan role alias query) cohortKey = plan
 
     handlerId = PollerKey role query
-    cohortId = CohortVariables sessionVars queryVars
 
     addToCohort sinkId handlerC =
       TMap.insert (Subscriber alias onResultAction) sinkId $ _cNewSubscribers handlerC
@@ -103,7 +102,7 @@ addLiveQuery lqState plan onResultAction = do
     addToPoller sinkId responseId handler = do
       newCohort <- Cohort responseId <$> STM.newTVar Nothing <*> TMap.new <*> TMap.new
       addToCohort sinkId newCohort
-      TMap.insert newCohort cohortId $ _pCohorts handler
+      TMap.insert newCohort cohortKey $ _pCohorts handler
 
     newPoller = Poller <$> TMap.new <*> STM.newEmptyTMVar
 
