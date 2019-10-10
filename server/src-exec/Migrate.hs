@@ -9,8 +9,9 @@
 -- The Template Haskell code in this module will automatically compile the new migration script into
 -- the @graphql-engine@ executable.
 module Migrate
-  ( latestCatalogVersion
+  ( MigrationResult(..)
   , migrateCatalog
+  , latestCatalogVersion
   ) where
 
 import           Data.Time.Clock            (UTCTime)
@@ -27,7 +28,27 @@ import qualified Database.PG.Query          as Q
 import qualified Language.Haskell.TH.Lib    as TH
 import qualified Language.Haskell.TH.Syntax as TH
 
-import           Migrate.Version            (latestCatalogVersion)
+import Hasura.Logging (ToEngineLog(..), LogLevel(..))
+import Hasura.Server.Logging (StartupLog(..))
+import           Migrate.Version            (latestCatalogVersion, latestCatalogVersionString)
+
+data MigrationResult
+  = MRNothingToDo
+  | MRMigratedSuccessfully T.Text -- ^ old catalog version
+  deriving (Show, Eq)
+
+instance ToEngineLog MigrationResult where
+  toEngineLog result = toEngineLog $ StartupLog
+    { slLogLevel = LevelInfo
+    , slKind = "db_migrate"
+    , slInfo = A.toJSON $ case result of
+        MRNothingToDo ->
+          "Already at the latest catalog version (" <> latestCatalogVersionString
+            <> "); nothing to do."
+        MRMigratedSuccessfully oldVersion ->
+          "Successfully migrated from catalog version " <> oldVersion <> " to version "
+            <> latestCatalogVersionString <> "."
+    }
 
 migrateCatalog
   :: forall m
@@ -39,21 +60,22 @@ migrateCatalog
      , MonadIO m
      , HasSQLGenCtx m
      )
-  => UTCTime -> m T.Text
+  => UTCTime -> m MigrationResult
 migrateCatalog migrationTime = migrateFrom =<< getCatalogVersion
   where
     -- the old 0.8 catalog version is non-integral, so we store it in the database as a string
-    latestCatalogVersionString = T.pack $ show latestCatalogVersion
-
     getCatalogVersion = liftTx $ runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
       [Q.sql| SELECT version FROM hdb_catalog.hdb_version |] () False
 
-    migrateFrom :: T.Text -> m T.Text
+    migrateFrom :: T.Text -> m MigrationResult
     migrateFrom previousVersion
-      | previousVersion == latestCatalogVersionString = pure $
-          "already at the latest version. current version: " <> latestCatalogVersionString
-      | [] <- neededMigrations = throw400 NotSupported $ "unsupported version : " <> previousVersion
-      | otherwise = traverse_ snd neededMigrations *> postMigrate
+      | previousVersion == latestCatalogVersionString = pure MRNothingToDo
+      | [] <- neededMigrations = throw400 NotSupported $
+          "Cannot use database previously used with a newer version of graphql-engine (expected"
+            <> " a catalog version <=" <> latestCatalogVersionString <> ", but the current version"
+            <> " is " <> previousVersion <> ")."
+      | otherwise =
+          traverse_ snd neededMigrations *> postMigrate $> MRMigratedSuccessfully previousVersion
       where
         neededMigrations = dropWhile ((/= previousVersion) . fst) migrations
 
@@ -77,21 +99,17 @@ migrateCatalog migrationTime = migrateFrom =<< getCatalogVersion
               ++ [| ("3", from3To4) |]
               :  migrationsFromFile [5..latestCatalogVersion])
 
-    postMigrate = do
-      updateCatalogVersion
-      replaceSystemMetadata
-      buildSchemaCacheStrict
-      pure $ "successfully migrated to " <> latestCatalogVersionString
+    postMigrate = updateCatalogVersion *> replaceSystemMetadata *> buildSchemaCacheStrict
+      where
+        updateCatalogVersion = liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
+          UPDATE "hdb_catalog"."hdb_version"
+             SET "version" = $1,
+                 "upgraded_on" = $2
+          |] (latestCatalogVersionString, migrationTime) False
 
-    updateCatalogVersion = liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
-      UPDATE "hdb_catalog"."hdb_version"
-         SET "version" = $1,
-             "upgraded_on" = $2
-      |] (latestCatalogVersionString, migrationTime) False
-
-    replaceSystemMetadata = do
-      runTx $(Q.sqlFromFile "src-rsr/clear_system_metadata.sql")
-      void $ runQueryM $$(Y.decodeFile "src-rsr/hdb_metadata.yaml")
+        replaceSystemMetadata = do
+          runTx $(Q.sqlFromFile "src-rsr/clear_system_metadata.sql")
+          void $ runQueryM $$(Y.decodeFile "src-rsr/hdb_metadata.yaml")
 
     from3To4 = liftTx $ Q.catchE defaultTxErrorHandler $ do
       Q.unitQ [Q.sql|

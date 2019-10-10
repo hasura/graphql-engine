@@ -256,9 +256,8 @@ main =  do
       either printErrJExit (logger . mkGenericStrLog LevelInfo "db_init") initRes
 
       -- migrate catalog if necessary
-      migRes <- runAsAdmin pool sqlGenCtx httpMgr $
-                migrateCatalog currentTime
-      either printErrJExit (logger . mkGenericLog LevelInfo "db_migrate") migRes
+      migRes <- runAsAdmin pool sqlGenCtx httpMgr $ migrateCatalog currentTime
+      either printErrJExit logger migRes
 
       -- retrieve database id
       eDbId <- runTx pool getDbId

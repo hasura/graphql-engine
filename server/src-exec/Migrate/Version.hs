@@ -2,9 +2,17 @@
 -- circumvent the unfortunate “GHC stage restriction,” which prevents us from using a binding in a
 -- compile-time splice unless it is defined in a different module. The actual migration code is in
 -- "Migrate".
-module Migrate.Version (latestCatalogVersion) where
+module Migrate.Version
+  ( latestCatalogVersion
+  , latestCatalogVersionString
+  ) where
 
 import           Hasura.Prelude
 
+import qualified Data.Text as T
+
 latestCatalogVersion :: Integer
 latestCatalogVersion = 24
+
+latestCatalogVersionString :: T.Text
+latestCatalogVersionString = T.pack $ show latestCatalogVersion
