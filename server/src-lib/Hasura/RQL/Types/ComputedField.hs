@@ -29,12 +29,12 @@ fromComputedField = FieldName . computedFieldNameToText
 
 data FunctionTableArgument
   = FTAFirstArgument
-  | FTAName !FunctionArgName
+  | FTAName !FunctionArgName !Int -- ^ argument name and index
   deriving (Show, Eq)
 
 instance ToJSON FunctionTableArgument where
-  toJSON FTAFirstArgument  = String "first_argument"
-  toJSON (FTAName argName) = object ["name" .= argName]
+  toJSON FTAFirstArgument    = String "first_argument"
+  toJSON (FTAName argName _) = object ["name" .= argName]
 
 data ComputedFieldReturn
   = CFRScalar !PGScalarType

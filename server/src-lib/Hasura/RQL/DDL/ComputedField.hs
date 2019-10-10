@@ -117,8 +117,8 @@ showError qf = \case
     "the function " <> qf <<> " is of type VOLATILE; cannot be added as a computed field"
   where
     showFunctionTableArgument = \case
-      FTAFirstArgument -> "first argument of the function " <>> qf
-      FTAName argName  -> argName <<> " argument of the function " <>> qf
+      FTAFirstArgument  -> "first argument of the function " <>> qf
+      FTAName argName _ -> argName <<> " argument of the function " <>> qf
 
 addComputedFieldP2Setup
   :: (QErrM m, CacheRWM m)
@@ -171,10 +171,11 @@ addComputedFieldP2Setup table computedField definition rawFunctionInfo comment =
                          (rfiInputArgTypes rawFunctionInfo) inputArgNames
       tableArgument <- case maybeTableArg of
         Just argName ->
-          case find (maybe False (argName ==) . faName) inputArgs of
-            Just tableArg -> do
-              validateTableArgumentType (FTAName argName) $ faType tableArg
-              pure $ FTAName argName
+          case findWithIndex (maybe False (argName ==) . faName) inputArgs of
+            Just (tableArg, index) -> do
+              let functionTableArg = FTAName argName index
+              validateTableArgumentType functionTableArg $ faType tableArg
+              pure functionTableArg
             Nothing ->
               MV.refute $ pure $ CFVEInvalidTableArgument $ ITANotFound argName
         Nothing -> do
@@ -185,10 +186,8 @@ addComputedFieldP2Setup table computedField definition rawFunctionInfo comment =
           pure FTAFirstArgument
 
 
-      let functionArgs = Seq.fromList $ mkFunctionArgs (rfiDefaultArgs rawFunctionInfo)
-                         (rfiInputArgTypes rawFunctionInfo) inputArgNames
-          computedFieldFunction =
-            ComputedFieldFunction function functionArgs tableArgument $
+      let computedFieldFunction =
+            ComputedFieldFunction function (Seq.fromList inputArgs) tableArgument $
             rfiDescription rawFunctionInfo
 
       pure $ ComputedFieldInfo computedField computedFieldFunction returnType comment
