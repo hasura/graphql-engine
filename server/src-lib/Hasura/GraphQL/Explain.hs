@@ -20,6 +20,7 @@ import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
 import qualified Hasura.GraphQL.Execute                 as E
+import qualified Hasura.GraphQL.Execute.LiveQuery       as E
 import qualified Hasura.GraphQL.Resolve                 as RS
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
@@ -120,15 +121,14 @@ explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw) =
     E.GExPRemote _ _  ->
       throw400 InvalidParams "only hasura queries can be explained"
   case rootSelSet of
-    GV.RQuery selSet -> do
-      let tx = mapM (explainField userInfo gCtx sqlGenCtx) (toList selSet)
-      plans <- liftIO (runExceptT $ runLazyTx pgExecCtx tx) >>= liftEither
-      return $ encJFromJValue plans
+    GV.RQuery selSet ->
+      runInTx $ encJFromJValue <$> traverse (explainField userInfo gCtx sqlGenCtx) (toList selSet)
     GV.RMutation _ ->
       throw400 InvalidParams "only queries can be explained"
-    GV.RSubscription _ ->
-      throw400 InvalidParams "only queries can be explained"
-
+    GV.RSubscription rootField -> do
+      (plan, _) <- E.getSubsOp pgExecCtx gCtx sqlGenCtx userInfo rootField
+      runInTx $ encJFromJValue <$> E.explainLiveQueryPlan plan
   where
-    usrVars  = mkUserVars $ maybe [] Map.toList userVarsRaw
+    usrVars = mkUserVars $ maybe [] Map.toList userVarsRaw
     userInfo = mkUserInfo (fromMaybe adminRole $ roleFromVars usrVars) usrVars
+    runInTx = liftEither <=< liftIO . runExceptT . runLazyTx pgExecCtx

@@ -1,0 +1,14 @@
+query: |
+  subscription ($condition: test_bool_exp) {
+    test(where: $condition) {
+      id
+    }
+  }
+variables_representative:
+  condition: {id: {_eq: 1}}
+variables_same:
+- condition: {id: {_eq: 1}}
+- condition: {id: {_eq: 2}}
+variables_different:
+- condition: {id: {_gt: 1}}
+- condition: null

@@ -1,8 +1,6 @@
-/**
- *  Export component modules
- */
+import App from './App/App';
+import Main from './Main/Main';
+import PageNotFound from './Error/PageNotFound';
+import Login from './Login/Login';
 
-export App from './App/App';
-export Main from './Main/Main';
-export PageNotFound from './Error/PageNotFound';
-export Login from './Login/Login';
+export { App, Main, PageNotFound, Login };
