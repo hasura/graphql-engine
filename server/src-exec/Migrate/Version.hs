@@ -9,7 +9,7 @@ module Migrate.Version
 
 import           Hasura.Prelude
 
-import qualified Data.Text as T
+import qualified Data.Text      as T
 
 latestCatalogVersion :: Integer
 latestCatalogVersion = 24

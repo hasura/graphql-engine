@@ -28,9 +28,10 @@ import qualified Database.PG.Query          as Q
 import qualified Language.Haskell.TH.Lib    as TH
 import qualified Language.Haskell.TH.Syntax as TH
 
-import Hasura.Logging (ToEngineLog(..), LogLevel(..))
-import Hasura.Server.Logging (StartupLog(..))
-import           Migrate.Version            (latestCatalogVersion, latestCatalogVersionString)
+import           Hasura.Logging             (LogLevel (..), ToEngineLog (..))
+import           Hasura.Server.Logging      (StartupLog (..))
+import           Migrate.Version            (latestCatalogVersion,
+                                             latestCatalogVersionString)
 
 data MigrationResult
   = MRNothingToDo
