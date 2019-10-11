@@ -1,0 +1,22 @@
+url: /v1/query
+status: 200
+response:
+  affected_rows: 3
+  returning:
+  - title: Post 1
+    custom_color: blue
+  - title: Post 2
+    custom_color: null
+  - title: Post 3
+    custom_color: null
+query:
+  type: insert
+  args:
+    table: posts
+    objects:
+    - title: Post 1
+      custom_color: blue
+    - title: Post 2
+    - title: Post 3
+      custom_color: null
+    returning: [title, custom_color]
