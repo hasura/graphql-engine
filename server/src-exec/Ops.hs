@@ -6,7 +6,7 @@ module Ops
 
 import           Data.Time.Clock              (UTCTime)
 import           Language.Haskell.TH.Syntax   (Q, TExp, unTypeQ)
-import           Migrate                      (curCatalogVer)
+import           Migrate                      (latestCatalogVersion)
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
@@ -26,6 +26,7 @@ import qualified Database.PG.Query.Connection as Q
 initCatalogSafe
   :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
      , MonadIO m, HasHttpManager m, HasSQLGenCtx m
+     , HasSystemDefined m
      )
   => UTCTime -> m String
 initCatalogSafe initTime =  do
@@ -61,6 +62,7 @@ initCatalogSafe initTime =  do
 initCatalogStrict
   :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
      , MonadIO m, HasHttpManager m, HasSQLGenCtx m
+     , HasSystemDefined m
      )
   => Bool -> UTCTime -> m String
 initCatalogStrict createSchema initTime =  do
@@ -105,7 +107,7 @@ initCatalogStrict createSchema initTime =  do
       Q.unitQ [Q.sql|
                 INSERT INTO "hdb_catalog"."hdb_version"
                 (version, upgraded_on) VALUES ($1, $2)
-                |] (curCatalogVer, modTime) False
+                |] (T.pack $ show latestCatalogVersion, modTime) False
 
     isExtAvailable :: T.Text -> Q.Tx Bool
     isExtAvailable sn =
@@ -131,8 +133,8 @@ cleanCatalog = liftTx $ Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "DROP SCHEMA hdb_catalog CASCADE" () False
 
 execQuery
-  :: ( MonadTx m, CacheRWM m, MonadIO m
-     , UserInfoM m, HasHttpManager m, HasSQLGenCtx m
+  :: ( MonadTx m, CacheRWM m, MonadIO m, UserInfoM m
+     , HasHttpManager m, HasSQLGenCtx m, HasSystemDefined m
      )
   => BL.ByteString -> m BL.ByteString
 execQuery queryBs = do
