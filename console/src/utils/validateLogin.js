@@ -9,7 +9,7 @@ import { CLI_CONSOLE_MODE } from '../constants';
 const validateLogin = ({ dispatch }) => {
   return (nextState, replaceState, cb) => {
     // care about admin secret only if it is set
-    if (globals.isAdminSecretSet || globals.adminSecret) {
+    if (globals.isAdminSecretSet) {
       const validationSuccessCallback = () => {
         if (nextState.location.pathname === '/login') {
           replaceState('/');

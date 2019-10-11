@@ -58,6 +58,9 @@ class TestGraphqlInsertOnConflict(DefaultTestMutations):
     def test_err_unexpected_constraint(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/article_unexpected_on_conflict_constraint_error.yaml")
 
+    def test_order_on_conflict_where(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/order_on_conflict_where.yaml')
+
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/insert/onconflict"
@@ -119,6 +122,9 @@ class TestGraphqlInsertPermission(DefaultTestMutations):
 
     def test_resident_5_modifies_resident_6_upsert(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/resident_5_modifies_resident_6_upsert.yaml")
+
+    def test_resident_on_conflict_where(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/resident_on_conflict_where.yaml")
 
     def test_blog_on_conflict_update_preset(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/blog_on_conflict_update_preset.yaml")
@@ -429,6 +435,9 @@ class TestGraphQLMutateEnums(DefaultTestMutations):
 
     def test_insert_enum_field(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/insert_enum_field.yaml', transport)
+
+    def test_insert_enum_field(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/insert_nullable_enum_field.yaml', transport)
 
     def test_insert_enum_field_bad_value(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/insert_enum_field_bad_value.yaml', transport)
