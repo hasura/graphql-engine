@@ -353,16 +353,17 @@ execRemoteGQ
   -> [N.Header]
   -> RemoteSchemaInfo
   -> G.OperationType
-  -> VQ.SelSet
+  -> VQ.Field
+  -- ^ Field of the top-level selection set.
   -> m (HttpResponse EncJSON)
-execRemoteGQ reqId userInfo reqHdrs rsi opType selSet = do
+execRemoteGQ reqId userInfo reqHdrs rsi opType field = do
   execCtx <- ask
   let logger  = _ecxLogger execCtx
       manager = _ecxHttpManager execCtx
   when (opType == G.OperationTypeSubscription) $
     throw400 NotSupported "subscription to remote server is not supported"
   hdrs <- getHeadersFromConf hdrConf
-  gqlReq <- fieldsToRequest opType selSet
+  gqlReq <- fieldToRequest opType field
   let body = encJToLBS (encJFromJValue gqlReq)
   let confHdrs   = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
       clientHdrs = bool [] filteredHeaders fwdClientHdrs
@@ -412,9 +413,11 @@ execRemoteGQ reqId userInfo reqHdrs rsi opType selSet = do
       map (\(k, v) -> Header (bsToTxt $ CI.original k, bsToTxt v)) hdrs
 
 
-fieldsToRequest
+fieldToRequest
   :: (MonadIO m, MonadError QErr m)
   => G.OperationType
-  -> Seq.Seq VQ.Field
+  -> VQ.Field
   -> m GQLReqParsed
-fieldsToRequest = undefined
+fieldToRequest = 
+  -- Hm, this seems weird since we produce a GQLReqParsed in getResolvedExecPlan 
+  undefined
