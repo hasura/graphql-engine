@@ -44,7 +44,7 @@ For example, here is the schema for the ``article`` table in this interface:
 
 .. thumbnail:: ../../../img/graphql/manual/schema/create-table-graphql.png
 
-The following object type and query/mutation fields are generated for the ``article`` table we just created:
+The following object type and query/mutation fields are generated for the ``article`` table that  we just created:
 
 .. code-block:: graphql
 
