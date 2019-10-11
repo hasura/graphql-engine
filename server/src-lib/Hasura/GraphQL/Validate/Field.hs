@@ -207,6 +207,7 @@ denormFld visFrags fldInfo (G.Field aliasM name args dirs selSet) = do
 
   let fldTy = _fiTy fldInfo
       fldBaseTy = getBaseTy fldTy
+      fldSource = _fiLoc fldInfo
 
   fldTyInfo <- getTyInfo fldBaseTy
 
@@ -234,7 +235,7 @@ denormFld visFrags fldInfo (G.Field aliasM name args dirs selSet) = do
       <> "selection since type " <> G.showGT fldTy <> " has no subfields"
 
   withPathK "directives" $ withDirectives dirs $ return $
-    Field (fromMaybe (G.Alias name) aliasM) name fldBaseTy argMap fields undefined
+    Field (fromMaybe (G.Alias name) aliasM) name fldBaseTy argMap fields fldSource
 
 denormInlnFrag
   :: ( MonadReader ValidationCtx m

@@ -1,12 +1,11 @@
 module Hasura.GraphQL.Execute
-  ( GQExecPlan(..)
-  , GQFieldExecPlan(..)
+  ( GQExecPlanPartial(..)
+  , GQFieldPartialPlan(..)
+  , GQFieldResolvedPlan(..)
 
-  , ExecPlanPartial
   , getExecPlanPartial
 
   , ExecOp(..)
-  , ExecPlanResolved
   , getResolvedExecPlan
   , execRemoteGQ
   , getSubsOp
@@ -61,12 +60,19 @@ import qualified Hasura.Logging                         as L
 --
 -- The 'a' is parameterised so this AST can represent
 -- intermediate passes
-data GQFieldExecPlan a
-  = GExPHasura !a
-  | GExPRemote !RemoteSchemaInfo !VQ.Field
-  deriving (Functor, Foldable, Traversable)
+data GQFieldPartialPlan
+  = GQFieldPartialHasura !(GCtx, VQ.Field)
+  | GQFieldPartialRemote !RemoteSchemaInfo !VQ.Field
 
-type GQExecPlan a = [GQFieldExecPlan a]
+data GQFieldResolvedPlan
+  = GQFieldResolvedHasura !ExecOp
+  | GQFieldResolvedRemote !RemoteSchemaInfo !G.OperationType !VQ.Field
+
+data GQExecPlanPartial
+  = GQExecPlanPartial
+  { execOpType     :: G.OperationType
+  , execFieldPlans :: Seq.Seq GQFieldPartialPlan
+  }
 
 -- | Execution context
 data ExecutionCtx
@@ -81,41 +87,65 @@ data ExecutionCtx
   , _ecxEnableAllowList :: !Bool
   }
 
--- This is for when the graphql query is validated
-type ExecPlanPartial = [GQFieldExecPlan (GCtx, VQ.Field)]
-
 getExecPlanPartial
   :: (MonadError QErr m)
   => UserInfo
   -> SchemaCache
   -> Bool
   -> GQLReqParsed
-  -> m ExecPlanPartial
-getExecPlanPartial userInfo sc enableAL req = do
-
+  -> m GQExecPlanPartial
+getExecPlanPartial userInfo sc enableAL req
   -- check if query is in allowlist
+ = do
   when enableAL checkQueryInAllowlist
-
-  (gCtx, _)  <- flip runStateT sc $ getGCtx role gCtxRoleMap
+  (gCtx, _) <- flip runStateT sc $ getGCtx role gCtxRoleMap
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
-
+  let remoteSchemas = scRemoteSchemas sc
   rootSelSet <- runReaderT (VQ.validateGQ queryParts) gCtx
-  generatePlan rootSelSet
+  runReaderT (generatePlan rootSelSet) (gCtx, remoteSchemas)
   where
-    generatePlan = undefined
+    generatePlan ::
+         (MonadError QErr m, MonadReader (GCtx, RemoteSchemaMap) m)
+      => VQ.RootSelSet
+      -> m GQExecPlanPartial
+    generatePlan =
+      \case
+        VQ.RQuery selSet ->
+          (GQExecPlanPartial G.OperationTypeQuery) <$>
+          (mapM generateFieldPlan selSet)
+        VQ.RMutation selSet ->
+          (GQExecPlanPartial G.OperationTypeMutation) <$>
+          (mapM generateFieldPlan selSet)
+        VQ.RSubscription field ->
+          (GQExecPlanPartial G.OperationTypeMutation) <$>
+          (mapM generateFieldPlan (Seq.singleton field))
+    generateFieldPlan ::
+         (MonadError QErr m, MonadReader (GCtx, RemoteSchemaMap) m)
+      => VQ.Field
+      -> m GQFieldPartialPlan
+    generateFieldPlan field =
+      case VQ._fSource field of
+        TLHasuraType -> do
+          (gCtx, _) <- ask
+          pure $ GQFieldPartialHasura (gCtx, field)
+        TLRemoteType rsName -> do
+          (_, rsMap) <- ask
+          rsCtx <-
+            onNothing (Map.lookup rsName rsMap) $
+            throw500 "remote schema not found"
+          pure $ GQFieldPartialRemote (rscInfo rsCtx) field
     role = userRole userInfo
     gCtxRoleMap = scGCtxMap sc
-
-    checkQueryInAllowlist =
+    checkQueryInAllowlist
       -- only for non-admin roles
+     =
       when (role /= adminRole) $ do
         let notInAllowlist =
               not $ VQ.isQueryInAllowlist (_grQuery req) (scAllowlist sc)
         when notInAllowlist $ modifyQErr modErr $ throwVE "query is not allowed"
-
     modErr e =
       let msg = "query is not in any of the allowlists"
-      in e{qeInternal = Just $ J.object [ "message" J..= J.String msg]}
+       in e {qeInternal = Just $ J.object ["message" J..= J.String msg]}
 
 
 -- An execution operation, in case of
@@ -125,10 +155,6 @@ data ExecOp
   = ExOpQuery !LazyRespTx !(Maybe EQ.GeneratedSqlMap)
   | ExOpMutation !LazyRespTx
   | ExOpSubs !EL.LiveQueryPlan
-
--- The graphql query is resolved into an execution operation
-type ExecPlanResolved
-  = GQExecPlan ExecOp
 
 getResolvedExecPlan
   :: (MonadError QErr m, MonadIO m)
@@ -140,41 +166,63 @@ getResolvedExecPlan
   -> SchemaCache
   -> SchemaCacheVer
   -> GQLReqUnparsed
-  -> m ExecPlanResolved
-getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
-  enableAL sc scVer reqUnparsed = do
-  planM <- liftIO $ EP.getPlan scVer (userRole userInfo)
-           opNameM queryStr planCache
+  -> m (Seq.Seq GQFieldResolvedPlan)
+getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer reqUnparsed = do
+  planM <-
+    liftIO $ EP.getPlan scVer (userRole userInfo) opNameM queryStr planCache
   let usrVars = userVars userInfo
-  case planM of
+  case planM
     -- plans are only for queries and subscriptions
-    Just plan -> GExPHasura <$> case plan of
-      EP.RPQuery queryPlan -> do
-        (tx, genSql) <- EQ.queryOpFromPlan usrVars queryVars queryPlan
-        return $ ExOpQuery tx (Just genSql)
-      EP.RPSubs subsPlan ->
-        ExOpSubs <$> EL.reuseLiveQueryPlan pgExecCtx usrVars queryVars subsPlan
+        of
+    Just plan ->
+      case plan of
+        EP.RPQuery queryPlan -> do
+          (tx, genSql) <- EQ.queryOpFromPlan usrVars queryVars queryPlan
+          let queryOp = ExOpQuery tx (Just genSql)
+          pure $ pure $ GQFieldResolvedHasura queryOp
+        EP.RPSubs subsPlan -> do
+          subOp <-
+            ExOpSubs <$>
+            EL.reuseLiveQueryPlan pgExecCtx usrVars queryVars subsPlan
+          pure $ pure $ GQFieldResolvedHasura subOp
     Nothing -> noExistingPlan
   where
     GQLReq opNameM queryStr queryVars = reqUnparsed
     addPlanToCache plan =
-      liftIO $ EP.addPlan scVer (userRole userInfo)
-      opNameM queryStr plan planCache
+      liftIO $
+      EP.addPlan scVer (userRole userInfo) opNameM queryStr plan planCache
     noExistingPlan = do
       req <- toParsed reqUnparsed
-      partialExecPlan <- getExecPlanPartial userInfo sc enableAL req
-      forM partialExecPlan $ \(gCtx, rootSelSet) ->
-        case rootSelSet of
-          VQ.RMutation selSet ->
-            ExOpMutation <$> getMutOp gCtx sqlGenCtx userInfo selSet
-          VQ.RQuery selSet -> do
-            (queryTx, plan, genSql) <- getQueryOp gCtx sqlGenCtx userInfo selSet
-            traverse_ (addPlanToCache . EP.RPQuery) plan
-            return $ ExOpQuery queryTx (Just genSql)
-          VQ.RSubscription fld -> do
-            (lqOp, plan) <- getSubsOp pgExecCtx gCtx sqlGenCtx userInfo fld
-            traverse_ (addPlanToCache . EP.RPSubs) plan
-            return $ ExOpSubs lqOp
+      (GQExecPlanPartial opType fieldPlans) <-
+        getExecPlanPartial userInfo sc enableAL req
+      case opType of
+        G.OperationTypeQuery ->
+          forM fieldPlans $ \case
+            GQFieldPartialHasura (gCtx, field) -> do
+              (queryTx, plan, genSql) <-
+                getQueryOp gCtx sqlGenCtx userInfo (Seq.singleton field)
+              traverse_ (addPlanToCache . EP.RPQuery) plan
+              (return . GQFieldResolvedHasura) $ ExOpQuery queryTx (Just genSql)
+            GQFieldPartialRemote rsInfo field ->
+              return $ GQFieldResolvedRemote rsInfo G.OperationTypeQuery field
+        G.OperationTypeMutation ->
+          forM fieldPlans $ \case
+            GQFieldPartialHasura (gCtx, field) -> do
+              mutationTx <-
+                getMutOp gCtx sqlGenCtx userInfo (Seq.singleton field)
+              (return . GQFieldResolvedHasura) $ ExOpMutation mutationTx
+            GQFieldPartialRemote rsInfo field ->
+              return $
+              GQFieldResolvedRemote rsInfo G.OperationTypeMutation field
+        G.OperationTypeSubscription ->
+          forM fieldPlans $ \case
+            GQFieldPartialHasura (gCtx, field) -> do
+              (lqOp, plan) <- getSubsOp pgExecCtx gCtx sqlGenCtx userInfo field
+              traverse_ (addPlanToCache . EP.RPSubs) plan
+              (return . GQFieldResolvedHasura) $ ExOpSubs lqOp
+            GQFieldPartialRemote rsInfo field ->
+              return $
+              GQFieldResolvedRemote rsInfo G.OperationTypeSubscription field
 
 -- Monad for resolving a hasura query/mutation
 type E m =
@@ -303,18 +351,19 @@ execRemoteGQ
   => RequestId
   -> UserInfo
   -> [N.Header]
-  -> GQLReqUnparsed
   -> RemoteSchemaInfo
-  -> G.TypedOperationDefinition
+  -> G.OperationType
+  -> VQ.SelSet
   -> m (HttpResponse EncJSON)
-execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
+execRemoteGQ reqId userInfo reqHdrs rsi opType selSet = do
   execCtx <- ask
   let logger  = _ecxLogger execCtx
       manager = _ecxHttpManager execCtx
-      opTy    = G._todType opDef
-  when (opTy == G.OperationTypeSubscription) $
+  when (opType == G.OperationTypeSubscription) $
     throw400 NotSupported "subscription to remote server is not supported"
   hdrs <- getHeadersFromConf hdrConf
+  gqlReq <- fieldsToRequest opType selSet
+  let body = encJToLBS (encJFromJValue gqlReq)
   let confHdrs   = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
       clientHdrs = bool [] filteredHeaders fwdClientHdrs
       -- filter out duplicate headers
@@ -330,11 +379,11 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
   let req = initReq
            { HTTP.method = "POST"
            , HTTP.requestHeaders = finalHeaders
-           , HTTP.requestBody = HTTP.RequestBodyLBS (J.encode q)
+           , HTTP.requestBody = HTTP.RequestBodyLBS body
            , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
            }
 
-  liftIO $ logGraphqlQuery logger $ QueryLog q Nothing reqId
+  -- liftIO $ logGraphqlQuery logger $ QueryLog q Nothing reqId
   res  <- liftIO $ try $ HTTP.httpLbs req manager
   resp <- either httpThrow return res
   let cookieHdrs = getCookieHdr (resp ^.. Wreq.responseHeader "Set-Cookie")
@@ -361,3 +410,11 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
 
     mkRespHeaders hdrs =
       map (\(k, v) -> Header (bsToTxt $ CI.original k, bsToTxt v)) hdrs
+
+
+fieldsToRequest
+  :: (MonadIO m, MonadError QErr m)
+  => G.OperationType
+  -> Seq.Seq VQ.Field
+  -> m GQLReqParsed
+fieldsToRequest = undefined

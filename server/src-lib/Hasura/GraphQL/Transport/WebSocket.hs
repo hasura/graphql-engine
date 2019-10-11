@@ -17,6 +17,7 @@ import qualified Data.ByteString.Lazy                        as BL
 import qualified Data.CaseInsensitive                        as CI
 import qualified Data.HashMap.Strict                         as Map
 import qualified Data.IORef                                  as IORef
+import qualified Data.Sequence                               as Seq
 import qualified Data.Text                                   as T
 import qualified Data.Text.Encoding                          as TE
 import qualified Data.Time.Clock                             as TC
@@ -46,6 +47,7 @@ import           Hasura.Server.Utils                         (RequestId,
 import qualified Hasura.GraphQL.Execute                      as E
 import qualified Hasura.GraphQL.Execute.LiveQuery            as LQ
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
+import qualified Hasura.GraphQL.Validate                     as VQ
 import qualified Hasura.Logging                              as L
 
 
@@ -282,11 +284,11 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx
                 planCache sc scVer httpMgr enableAL
 
-  case execPlan of
-    E.GExPHasura resolvedOp ->
+  forM_ execPlan $ \case
+    E.GQFieldResolvedHasura resolvedOp ->
       runHasuraGQ requestId q userInfo resolvedOp
-    E.GExPRemote rsi rootSelSet ->
-      runRemoteGQ execCtx requestId userInfo reqHdrs undefined rsi
+    E.GQFieldResolvedRemote rsi opType field ->
+      runRemoteGQ execCtx requestId userInfo reqHdrs rsi opType (Seq.singleton field)
   where
     runHasuraGQ :: RequestId -> GQLReqUnparsed -> UserInfo -> E.ExecOp
                 -> ExceptT () IO ()
@@ -313,16 +315,16 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       sendCompleted (Just reqId)
 
     runRemoteGQ :: E.ExecutionCtx -> RequestId -> UserInfo -> [H.Header]
-                -> G.TypedOperationDefinition -> RemoteSchemaInfo
+                -> RemoteSchemaInfo -> G.OperationType -> VQ.SelSet
                 -> ExceptT () IO ()
-    runRemoteGQ execCtx reqId userInfo reqHdrs opDef rsi = do
-      when (G._todType opDef == G.OperationTypeSubscription) $
+    runRemoteGQ execCtx reqId userInfo reqHdrs rsi opType selSet = do
+      when (opType == G.OperationTypeSubscription) $
         withComplete $ preExecErr reqId $
         err400 NotSupported "subscription to remote server is not supported"
 
       -- if it's not a subscription, use HTTP to execute the query on the remote
       resp <- runExceptT $ flip runReaderT execCtx $
-              E.execRemoteGQ reqId userInfo reqHdrs q rsi opDef
+              E.execRemoteGQ reqId userInfo reqHdrs rsi opType selSet
       either (postExecErr reqId) (sendRemoteResp reqId . _hrBody) resp
       sendCompleted (Just reqId)
 
