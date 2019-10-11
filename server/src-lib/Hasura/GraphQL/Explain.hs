@@ -146,4 +146,4 @@ explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw) =
         [] -> throw400 InvalidParams "no field found in subscription"
         [fld] -> pure fld
         _ ->
-          throw400 InvalidParams "expected only one top field in subscription"
+          throw400 InvalidParams "expected only one field in subscription"

@@ -19,6 +19,7 @@ module Hasura.GraphQL.Transport.HTTP.Protocol
   , GraphqlResponse(..)
   , encodeGraphqlResponse
   , mergeResponses
+  , getMergedGQResp
   ) where
 
 import           Control.Lens
@@ -95,11 +96,33 @@ encodeGQErr :: Bool -> QErr -> J.Value
 encodeGQErr includeInternal qErr =
   J.object [ "errors" J..= [encodeGQLErr includeInternal qErr]]
 
+
+-- | https://graphql.github.io/graphql-spec/June2018/#sec-Response-Format
+--
+-- NOTE: this type and parseGQRespValue are a lax representation of the spec,
+-- since...
+--   - remote GraphQL servers may not conform strictly, and...
+--   - we use this type as an accumulator.
+--
+-- Ideally we'd have something correct by construction for hasura results
+-- someplace.
+data GQRespValue =
+  GQRespValue
+  { _gqRespData   :: OJ.Object
+  -- ^ 'OJ.empty' (corresponding to the invalid `"data": {}`) indicates an error.
+  , _gqRespErrors :: VB.Builder OJ.Value
+  -- ^ An 'OJ.Array', but with efficient cons and concatenation. Null indicates
+  -- query success.
+  }
+
+makeLenses ''GQRespValue
+
 data GQResult a
   = GQSuccess !a
   | GQPreExecError ![J.Value]
   | GQExecError ![J.Value]
-  deriving (Show, Eq, Functor, Foldable, Traversable)
+  | GQGeneric  !GQRespValue
+  deriving (Functor, Foldable, Traversable)
 
 type GQResponse = GQResult BL.ByteString
 
@@ -107,13 +130,6 @@ isExecError :: GQResult a -> Bool
 isExecError = \case
   GQExecError _ -> True
   _             -> False
-
-encodeGQResp :: GQResponse -> EncJSON
-encodeGQResp gqResp =
-  encJFromAssocList $ case gqResp of
-    GQSuccess r      -> [("data", encJFromLBS r)]
-    GQPreExecError e -> [("errors", encJFromJValue e)]
-    GQExecError e    -> [("data", "null"), ("errors", encJFromJValue e)]
 
 -- | Represents GraphQL response from a remote server
 data RemoteGqlResp
@@ -140,27 +156,6 @@ encodeGraphqlResponse :: GraphqlResponse -> EncJSON
 encodeGraphqlResponse = \case
   GRHasura resp -> encodeGQResp resp
   GRRemote resp -> encodeRemoteGqlResp resp
-
-
--- | https://graphql.github.io/graphql-spec/June2018/#sec-Response-Format
---
--- NOTE: this type and parseGQRespValue are a lax representation of the spec,
--- since...
---   - remote GraphQL servers may not conform strictly, and...
---   - we use this type as an accumulator.
---
--- Ideally we'd have something correct by construction for hasura results
--- someplace.
-data GQRespValue =
-  GQRespValue
-  { _gqRespData   :: OJ.Object
-  -- ^ 'OJ.empty' (corresponding to the invalid `"data": {}`) indicates an error.
-  , _gqRespErrors :: VB.Builder OJ.Value
-  -- ^ An 'OJ.Array', but with efficient cons and concatenation. Null indicates
-  -- query success.
-  }
-
-makeLenses ''GQRespValue
 
 emptyResp :: GQRespValue
 emptyResp = GQRespValue OJ.empty VB.empty
@@ -201,6 +196,13 @@ encodeGQRespValue GQRespValue{..} = OJ.toEncJSON $ OJ.Object $ OJ.fromList $
   where
     gqRespErrorsV = VB.build _gqRespErrors
     anyErrors = not $ V.null gqRespErrorsV
+
+encodeGQResp :: GQResponse -> EncJSON
+encodeGQResp = \case
+  GQSuccess r      -> encJFromAssocList [("data", encJFromLBS r)]
+  GQPreExecError e -> encJFromAssocList [("errors", encJFromJValue e)]
+  GQExecError e    -> encJFromAssocList [("data", "null"), ("errors", encJFromJValue e)]
+  GQGeneric v -> encodeGQRespValue v
 
 -- | See 'mergeResponseData'.
 getMergedGQResp :: Traversable t=> t EncJSON -> Either String GQRespValue
