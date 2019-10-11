@@ -89,4 +89,4 @@ It uses the provided CORS configuration (as per :ref:`configure-cors`).
   :maxdepth: 1
   :hidden:
 
-  Sample use cases <use-cases>
+  Sample use cases <use-cases> 
