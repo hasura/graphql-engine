@@ -17,7 +17,7 @@ You can turn any query into a subscription by simply replacing ``query`` with ``
 
 .. admonition:: Caveat
 
-  Hasura follows the `GraphQL spec <http://facebook.github.io/graphql/June2018/#sec-Single-root-field>`_ which 
+  Hasura follows the `GraphQL spec <https://graphql.github.io/graphql-spec/June2018/#sec-Single-root-field>`_ which
   allows for only one root field in a subscription.
 
 Use cases
@@ -38,7 +38,7 @@ for sending and receiving events.
 .. admonition:: Setting headers for subscriptions with Apollo client
 
   If you are using Apollo Client, headers can be passed to a subscription by setting ``connectionParams`` while
-  `creating the wsLink <https://www.apollographql.com/docs/react/advanced/subscriptions.html#subscriptions-client>`_:
+  `creating the wsLink <https://www.apollographql.com/docs/react/data/subscriptions/#client-setup>`_:
 
   .. code-block:: js
     :emphasize-lines: 6-8
@@ -54,7 +54,7 @@ for sending and receiving events.
       }
     });
 
-  See `this <https://www.apollographql.com/docs/react/advanced/subscriptions.html#authentication>`_ for more info on
+  See `this <https://www.apollographql.com/docs/react/data/subscriptions/#authentication-over-websocket>`_ for more info on
   using ``connectionParams``.
 
 
