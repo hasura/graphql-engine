@@ -65,6 +65,7 @@ library
                      -- Encoder related
                      , uuid
                      , vector
+                     , vector-builder
 
                      -- Logging related
                      , network
@@ -274,6 +275,7 @@ library
                      , Control.Concurrent.Extended
                      , Control.Lens.Extended
                      , Data.Aeson.Extended
+                     , Data.Aeson.Ordered
                      , Data.HashMap.Strict.InsOrd.Extended
                      , Data.Parser.JSONPath
                      , Data.Sequence.NonEmpty
