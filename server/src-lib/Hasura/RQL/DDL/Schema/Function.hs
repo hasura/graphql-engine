@@ -77,7 +77,7 @@ validateFuncArgs args =
     invalidArgs = filter (not . G.isValidName) $ map G.Name funcArgsText
 
 mkFunctionInfo
-  :: QErrM m => QualifiedFunction -> RawFuncInfo -> m FunctionInfo
+  :: (QErrM m, HasSystemDefined m) => QualifiedFunction -> RawFuncInfo -> m FunctionInfo
 mkFunctionInfo qf rawFuncInfo = do
   -- throw error if function has variadic arguments
   when hasVariadic $ throw400 NotSupported "function with \"VARIADIC\" parameters are not supported"
@@ -93,20 +93,21 @@ mkFunctionInfo qf rawFuncInfo = do
   let funcArgs = mkFunctionArgs defArgsNo inpArgTyps inpArgNames
   validateFuncArgs funcArgs
 
+  systemDefined <- askSystemDefined
   let funcArgsSeq = Seq.fromList funcArgs
       dep = SchemaDependency (SOTable retTable) DRTable
       retTable = QualifiedObject retSn (TableName retN)
-  return $ FunctionInfo qf False funTy funcArgsSeq retTable [dep] descM
+  return $ FunctionInfo qf systemDefined funTy funcArgsSeq retTable [dep] descM
   where
     RawFuncInfo hasVariadic funTy retSn retN retTyTyp retSet
                 inpArgTyps inpArgNames defArgsNo returnsTab descM
                 = rawFuncInfo
 
-saveFunctionToCatalog :: QualifiedFunction -> Bool -> Q.TxE QErr ()
-saveFunctionToCatalog (QualifiedObject sn fn) isSystemDefined =
+saveFunctionToCatalog :: QualifiedFunction -> SystemDefined -> Q.TxE QErr ()
+saveFunctionToCatalog (QualifiedObject sn fn) systemDefined =
   Q.unitQE defaultTxErrorHandler [Q.sql|
          INSERT INTO "hdb_catalog"."hdb_function" VALUES ($1, $2, $3)
-                 |] (sn, fn, isSystemDefined) False
+                 |] (sn, fn, systemDefined) False
 
 delFunctionFromCatalog :: QualifiedFunction -> Q.TxE QErr ()
 delFunctionFromCatalog (QualifiedObject sn fn) =
@@ -135,7 +136,7 @@ trackFunctionP1 (TrackFunction qf) = do
   when (M.member qt $ scTables rawSchemaCache) $
     throw400 NotSupported $ "table with name " <> qf <<> " already exists"
 
-trackFunctionP2Setup :: (QErrM m, CacheRWM m, MonadTx m)
+trackFunctionP2Setup :: (QErrM m, CacheRWM m, HasSystemDefined m, MonadTx m)
                      => QualifiedFunction -> RawFuncInfo -> m ()
 trackFunctionP2Setup qf rawfi = do
   fi <- mkFunctionInfo qf rawfi
@@ -145,7 +146,7 @@ trackFunctionP2Setup qf rawfi = do
   void $ liftMaybe err $ M.lookup retTable $ scTables sc
   addFunctionToCache fi
 
-trackFunctionP2 :: (QErrM m, CacheRWM m, MonadTx m)
+trackFunctionP2 :: (QErrM m, CacheRWM m, HasSystemDefined m, MonadTx m)
                 => QualifiedFunction -> m EncJSON
 trackFunctionP2 qf = do
   sc <- askSchemaCache
@@ -167,7 +168,8 @@ trackFunctionP2 qf = do
       throw400 NotSupported $
       "function " <> qf <<> " is overloaded. Overloaded functions are not supported"
   trackFunctionP2Setup qf rawfi
-  liftTx $ saveFunctionToCatalog qf False
+  systemDefined <- askSystemDefined
+  liftTx $ saveFunctionToCatalog qf systemDefined
   return successMsg
   where
     QualifiedObject sn fn = qf
@@ -180,8 +182,8 @@ trackFunctionP2 qf = do
            |] (sn, fn) True
 
 runTrackFunc
-  :: ( QErrM m, CacheRWM m, MonadTx m
-     , UserInfoM m
+  :: ( QErrM m, CacheRWM m, HasSystemDefined m
+     , MonadTx m, UserInfoM m
      )
   => TrackFunction -> m EncJSON
 runTrackFunc q = do

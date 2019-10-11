@@ -51,6 +51,7 @@ import qualified Hasura.RQL.DDL.Schema              as DS
 import qualified Hasura.RQL.Types.EventTrigger      as DTS
 import qualified Hasura.RQL.Types.RemoteSchema      as TRS
 
+
 data TableMeta
   = TableMeta
   { _tmTable               :: !QualifiedTable
@@ -134,8 +135,8 @@ clearMetadata = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "DELETE FROM hdb_catalog.hdb_query_collection WHERE is_system_defined <> 'true'" () False
 
 runClearMetadata
-  :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
-     , MonadIO m, HasHttpManager m, HasSQLGenCtx m
+  :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m
+     , HasHttpManager m, HasSystemDefined m, HasSQLGenCtx m
      )
   => ClearMetadata -> m EncJSON
 runClearMetadata _ = do
@@ -219,6 +220,7 @@ applyQP2
      , MonadIO m
      , HasHttpManager m
      , HasSQLGenCtx m
+     , HasSystemDefined m
      )
   => ReplaceMetadata
   -> m EncJSON
@@ -228,7 +230,6 @@ applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = 
   DS.buildSchemaCacheStrict
 
   withPathK "tables" $ do
-
     -- tables and views
     indexedForM_ tables $ \tableMeta -> do
       let tableName = tableMeta ^. tmTable
@@ -301,6 +302,7 @@ applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = 
 runReplaceMetadata
   :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
      , MonadIO m, HasHttpManager m, HasSQLGenCtx m
+     , HasSystemDefined m
      )
   => ReplaceMetadata -> m EncJSON
 runReplaceMetadata q = do
@@ -443,8 +445,8 @@ instance FromJSON ReloadMetadata where
 $(deriveToJSON defaultOptions ''ReloadMetadata)
 
 runReloadMetadata
-  :: ( QErrM m, UserInfoM m, CacheRWM m
-     , MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m
+  :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m
+     , HasHttpManager m, HasSystemDefined m, HasSQLGenCtx m
      )
   => ReloadMetadata -> m EncJSON
 runReloadMetadata _ = do
