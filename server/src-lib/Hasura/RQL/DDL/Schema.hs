@@ -61,9 +61,7 @@ data RunSQL
   } deriving (Show, Eq, Lift)
 $(deriveJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''RunSQL)
 
-runRunSQL
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
-  => RunSQL -> m EncJSON
+runRunSQL :: (CacheBuildM m, UserInfoM m) => RunSQL -> m EncJSON
 runRunSQL (RunSQL t cascade mChkMDCnstcy) = do
   adminOnly
   isMDChkNeeded <- maybe (isAltrDropReplace t) return mChkMDCnstcy
@@ -71,8 +69,7 @@ runRunSQL (RunSQL t cascade mChkMDCnstcy) = do
   where
     execRawSQL :: (MonadTx m) => Text -> m EncJSON
     execRawSQL =
-      fmap (encJFromJValue @RunSQLRes) .
-      liftTx . Q.multiQE rawSqlErrHandler . Q.fromText
+      fmap (encJFromJValue @RunSQLRes) . liftTx . Q.multiQE rawSqlErrHandler . Q.fromText
       where
         rawSqlErrHandler txe =
           let e = err400 PostgresError "query execution failed"
