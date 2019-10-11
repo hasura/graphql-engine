@@ -143,7 +143,7 @@ explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw) =
         _ -> Nothing
     getRootField =
       \case
-        [] -> throw400 InvalidParams "no field found in subscription"
+        [] -> throw500 "no field found in subscription"
         [fld] -> pure fld
         _ ->
-          throw400 InvalidParams "expected only one field in subscription"
+          throw500 "expected only one field in subscription"

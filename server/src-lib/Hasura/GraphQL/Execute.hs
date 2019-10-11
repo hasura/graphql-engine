@@ -117,8 +117,8 @@ getExecPlanPartial userInfo sc enableAL req
           (GQExecPlanPartial G.OperationTypeMutation) <$>
           (mapM generateFieldPlan selSet)
         VQ.RSubscription field ->
-          (GQExecPlanPartial G.OperationTypeMutation) <$>
-          (mapM generateFieldPlan (Seq.singleton field))
+          (GQExecPlanPartial G.OperationTypeSubscription) <$>
+          (fmap Seq.singleton $ generateFieldPlan field)
     generateFieldPlan ::
          (MonadError QErr m, MonadReader (GCtx, RemoteSchemaMap) m)
       => VQ.Field
@@ -189,7 +189,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
   where
     GQLReq opNameM queryStr queryVars = reqUnparsed
     addPlanToCache plan =
-      liftIO $
+      -- liftIO $
       EP.addPlan scVer (userRole userInfo) opNameM queryStr plan planCache
     noExistingPlan = do
       req <- toParsed reqUnparsed
@@ -201,7 +201,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
             GQFieldPartialHasura (gCtx, field) -> do
               (queryTx, plan, genSql) <-
                 getQueryOp gCtx sqlGenCtx userInfo (Seq.singleton field)
-              traverse_ (addPlanToCache . EP.RPQuery) plan
+              -- traverse_ (addPlanToCache . EP.RPQuery) plan
               (return . GQFieldResolvedHasura) $ ExOpQuery queryTx (Just genSql)
             GQFieldPartialRemote rsInfo field ->
               return $ GQFieldResolvedRemote rsInfo G.OperationTypeQuery field
@@ -218,7 +218,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
           forM fieldPlans $ \case
             GQFieldPartialHasura (gCtx, field) -> do
               (lqOp, plan) <- getSubsOp pgExecCtx gCtx sqlGenCtx userInfo field
-              traverse_ (addPlanToCache . EP.RPSubs) plan
+              -- traverse_ (addPlanToCache . EP.RPSubs) plan
               (return . GQFieldResolvedHasura) $ ExOpSubs lqOp
             GQFieldPartialRemote rsInfo field ->
               return $
