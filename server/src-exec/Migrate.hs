@@ -90,9 +90,10 @@ migrateCatalog migrationTime = migrateFrom =<< getCatalogVersion
                   let path = "src-rsr/migrations/" <> from <> "_to_" <> to <> ".sql"
                   in [| runTx $(Q.sqlFromFile path) |]
                 migrationsFromFile = map $ \(to :: Integer) ->
-                  [| ( $(TH.lift $ T.pack (show to))
-                     , $(migrationFromFile (show (to - 1)) (show to))
-                     ) |]
+                  let from = to - 1
+                  in [| ( $(TH.lift $ T.pack (show from))
+                        , $(migrationFromFile (show from) (show to))
+                        ) |]
             in TH.listE
               -- version 0.8 is the only non-integral catalog version
               $  [| ("0.8", $(migrationFromFile "08" "1")) |]
