@@ -19,6 +19,7 @@ import {
 } from './Actions';
 
 import { loadConsoleTelemetryOpts } from '../../telemetry/Actions.js';
+import { showVersionUpdate } from './utils';
 
 import {
   loadInconsistentObjects,
@@ -93,7 +94,7 @@ class Main extends React.Component {
       if (isClosedBefore !== 'true') {
         const isUpdateAvailable = versionGT(latestServerVersion, serverVersion);
 
-        if (isUpdateAvailable) {
+        if (isUpdateAvailable && showVersionUpdate(latestServerVersion)) {
           this.setState({
             showUpdateNotification: true,
           });
