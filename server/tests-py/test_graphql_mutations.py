@@ -436,6 +436,9 @@ class TestGraphQLMutateEnums(DefaultTestMutations):
     def test_insert_enum_field(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/insert_enum_field.yaml', transport)
 
+    def test_insert_enum_field(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/insert_nullable_enum_field.yaml', transport)
+
     def test_insert_enum_field_bad_value(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/insert_enum_field_bad_value.yaml', transport)
 
