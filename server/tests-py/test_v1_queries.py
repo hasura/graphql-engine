@@ -276,6 +276,9 @@ class TestV1InsertBasic(DefaultTestMutations):
     def test_insert_null_col_value(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/order_col_shipped_null.yaml")
 
+    def test_insert_nullable_enum_field(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/insert_nullable_enum_field.yaml")
+
     @classmethod
     def dir(cls):
         return "queries/v1/insert/basic"
