@@ -10,14 +10,16 @@ Subscriptions
 What is a subscription?
 ---------------------------------
 
-A GraphQL subscription is essentially a query where the client receives an event whenever the value of any field changes
-upstream. The Hasura GraphQL engine supports subscriptions for all kinds of queries. All the concepts of
-:doc:`queries <../queries/index>` hold true for subscriptions as well.
+A GraphQL subscription is essentially a query where the client receives an event whenever the value of any field changes upstream. Hasura allows 'live queries' for clients (over GraphQL subscriptions). For example, a food ordering app can use a live query to show the live-status of an order for a particular user. The Hasura GraphQL engine supports subscriptions for all kinds of queries. All the concepts of :doc:`queries <../queries/index>` hold true for subscriptions as well. 
 
 How do subscriptions work?
 ---------------------------------
 
-//TODO Adding info. here...
+If we think about our food ordering app example, for an app screen showing a “order status” for the current user for their order, a GraphQL query would fetch the latest order status and the location of the agent delivering the order. Underneath it, this query is sent as a string to a webserver that parses it, applies authorization rules and makes appropriate calls to things like databases to fetch the data for the app. It sends this data, in the exact shape that was requested, as a JSON.
+
+Enter live-queries: Live queries is the idea of being able to subscribe to the latest result of a particular query. As the underlying data changes, the server should push the latest result to the client. 
+
+For more details on Hasura's architecture and how subscriptions work, please `see here <https://github.com/hasura/graphql-engine/blob/master/architecture/live-queries.md>`_ . 
 
 Convert a query to a subscription
 ---------------------------------
