@@ -108,7 +108,7 @@ refs:
         command: |
           mkdir -p /usr/share/man/man{1,7}
           apt-get update
-          apt install --yes pgbouncer jq curl postgresql-client
+          apt install --yes pgbouncer jq curl postgresql-client-12
     - run:
         name: Ensure databases are present
         environment:
