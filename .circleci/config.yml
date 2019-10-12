@@ -178,7 +178,7 @@ jobs:
         name: Install latest postgresql client tools
         command: |
           apt-get -y update
-          apt-get -y install postgresql-client-11
+          apt-get -y install postgresql-client-12
     - run:
         name: Build the binary
         working_directory: ./server
