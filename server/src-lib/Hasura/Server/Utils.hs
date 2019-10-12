@@ -21,7 +21,6 @@ import qualified Data.UUID.V4               as UUID
 import qualified Language.Haskell.TH.Syntax as TH
 import qualified Network.HTTP.Client        as HC
 import qualified Network.HTTP.Types         as HTTP
-import qualified Text.Ginger                as TG
 import qualified Text.Regex.TDFA            as TDFA
 import qualified Text.Regex.TDFA.ByteString as TDFA
 
@@ -92,20 +91,6 @@ runScript fp = do
     "Running shell script " ++ fp ++ " failed with exit code : "
     ++ show exitCode ++ " and with error : " ++ stdErr
   TH.lift stdOut
-
--- Ginger Templating
-type GingerTmplt = TG.Template TG.SourcePos
-
-parseGingerTmplt :: TG.Source -> Either String GingerTmplt
-parseGingerTmplt src = either parseE Right res
-  where
-    res = runIdentity $ TG.parseGinger' parserOptions src
-    parserOptions = TG.mkParserOptions resolver
-    resolver = const $ return Nothing
-    parseE e = Left $ TG.formatParserError (Just "") e
-
-renderGingerTmplt :: (ToJSON a) => a -> GingerTmplt -> T.Text
-renderGingerTmplt v = TG.easyRender (toJSON v)
 
 -- find duplicates
 duplicates :: Ord a => [a] -> [a]

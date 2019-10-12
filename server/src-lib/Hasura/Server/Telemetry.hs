@@ -147,12 +147,12 @@ computeMetrics sc =
       evtTriggers = Map.size $ Map.filter (not . Map.null)
                     $ Map.map _tiEventTriggerInfoMap userTables
       rmSchemas   = Map.size $ scRemoteSchemas sc
-      funcs = Map.size $ Map.filter (not . fiSystemDefined) $ scFunctions sc
+      funcs = Map.size $ Map.filter (not . isSystemDefined . fiSystemDefined) $ scFunctions sc
 
   in Metrics nTables nViews nEnumTables relMetrics permMetrics evtTriggers rmSchemas funcs
 
   where
-    userTables = Map.filter (not . _tiSystemDefined) $ scTables sc
+    userTables = Map.filter (not . isSystemDefined . _tiSystemDefined) $ scTables sc
     countUserTables predicate = length . filter predicate $ Map.elems userTables
 
     calcPerms :: (RolePermInfo -> Maybe a) -> [RolePermInfo] -> Int

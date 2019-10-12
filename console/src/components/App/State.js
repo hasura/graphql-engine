@@ -6,4 +6,5 @@ const defaultState = {
   requestError: null,
   error: null,
 };
+
 export default defaultState;

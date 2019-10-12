@@ -96,19 +96,22 @@ unsafePGColumnToRepresentation = \case
   PGColumnScalar scalarType -> scalarType
   PGColumnEnumReference _ -> PGText
 
-parsePGScalarValue :: (MonadError QErr m) => PGColumnType -> Value -> m (WithScalarType PGScalarValue)
+-- | Note: Unconditionally accepts null values and returns 'PGNull'.
+parsePGScalarValue
+  :: forall m. (MonadError QErr m) => PGColumnType -> Value -> m (WithScalarType PGScalarValue)
 parsePGScalarValue columnType value = case columnType of
   PGColumnScalar scalarType ->
     WithScalarType scalarType <$> runAesonParser (parsePGValue scalarType) value
-  PGColumnEnumReference (EnumReference tableName enumValues) -> do
-    let typeName = snakeCaseQualObject tableName
-    flip runAesonParser value . withText (T.unpack typeName) $ \textValue -> do
-      let enumTextValues = map getEnumValue $ M.keys enumValues
-      unless (textValue `elem` enumTextValues) $
-        fail . T.unpack
+  PGColumnEnumReference (EnumReference tableName enumValues) ->
+    WithScalarType PGText <$> (maybe (pure $ PGNull PGText) parseEnumValue =<< decodeValue value)
+    where
+      parseEnumValue :: Text -> m PGScalarValue
+      parseEnumValue textValue = do
+        let enumTextValues = map getEnumValue $ M.keys enumValues
+        unless (textValue `elem` enumTextValues) $ fail . T.unpack
           $ "expected one of the values " <> T.intercalate ", " (map dquote enumTextValues)
-          <> " for type " <> typeName <<> ", given " <>> textValue
-      pure $ WithScalarType PGText (PGValText textValue)
+          <> " for type " <> snakeCaseQualObject tableName <<> ", given " <>> textValue
+        pure $ PGValText textValue
 
 parsePGScalarValues
   :: (MonadError QErr m)

@@ -15,8 +15,8 @@ const environment = {
 
 module.exports = Object.assign(
   {
-    host: host,
-    port: port,
+    host,
+    port,
   },
   environment
 );

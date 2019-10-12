@@ -1,15 +1,17 @@
-import React from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
 import { inputChecker } from './utils';
 
-export default class InputChecker extends React.Component {
+class InputChecker extends Component {
   constructor() {
     super();
     this.state = {
       isError: false,
       errorMessage: '',
     };
+
+    this.onBlur = this.onBlur.bind(this);
   }
   onBlur(e) {
     const val = e.target.value;
@@ -55,7 +57,7 @@ export default class InputChecker extends React.Component {
         placeholder={placeholder || 'new input'}
         value={value}
         onChange={onChange}
-        onBlur={this.onBlur.bind(this)}
+        onBlur={this.onBlur}
         data-index-id={indexId || 0}
         disabled={disabled}
         title={this.state.errorMessage || title}
@@ -74,3 +76,5 @@ InputChecker.propTypes = {
   indexId: PropTypes.number,
   disabled: PropTypes.bool,
 };
+
+export default InputChecker;
