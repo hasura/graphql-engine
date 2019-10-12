@@ -231,6 +231,15 @@ jobs:
         command: echo 'all server tests passed!'
 
   # pytest the server with postgres versions >= 9.5
+  pytest_server_pg_12:
+    <<: *pytest_server
+    environment:
+      PG_VERSION: "12"
+    docker:
+    - image: hasura/graphql-engine-server-builder:20190826
+    - image: circleci/postgres:12-alpine-postgis
+      <<: *test_pg_env
+ 
   pytest_server_pg_11.1:
     <<: *pytest_server
     environment:
@@ -483,6 +492,10 @@ workflows:
         <<: *filter_only_vtags
         requires:
         - build_console
+    - pytest_server_pg_12:
+        <<: *filter_only_vtags
+        requires:
+        - build_server
     - pytest_server_pg_11.1:
         <<: *filter_only_vtags
         requires:
@@ -506,6 +519,7 @@ workflows:
     - all_server_tests_pass:
         <<: *filter_only_vtags
         requires:
+        - pytest_server_pg_12
         - pytest_server_pg_11.1
         - pytest_server_pg_10.6
         - pytest_server_pg_9.6
