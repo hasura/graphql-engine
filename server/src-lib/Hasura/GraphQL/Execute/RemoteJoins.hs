@@ -15,7 +15,6 @@ module Hasura.GraphQL.Execute.RemoteJoins
   , joinResults
   , emptyResp
   , rebuildFieldStrippingRemoteRels
-  , fieldsToRequest
   , fieldCallsToField
   , enumerateRowAliases
   , unEnumerateRowAliases
@@ -29,10 +28,8 @@ import           Data.Scientific
 import           Data.Set                               (Set)
 import qualified Data.Set                               as Set
 import           Data.String
-import           Data.Time
 import           Data.Validation
 import           Hasura.GraphQL.Validate.Field
-import           Hasura.SQL.Time
 import           Hasura.SQL.Types
 
 import qualified Data.Aeson.Ordered                     as OJ
@@ -126,6 +123,7 @@ bareNamedField _fName =
       -- of the parent fields. A stub is okay since Field is more annotated
       -- than required for constructing a remote query:
       _fType = G.NamedType "unknown_type"
+      _fSource = TLHasuraType
    in Field{..}
 
 
@@ -147,10 +145,9 @@ rebuildFieldStrippingRemoteRels =
       forMOf fSelSet field0 $ \ss0 ->
         fmap join $ flip Seq.traverseWithIndex ss0 $
           \idx subfield ->
-             case _fRemoteRel subfield of
-               Nothing -> Seq.singleton <$> rebuild idx thisPath subfield
+             case _fSource subfield of
                -- NOTE: I think _fRemoteRel can become RemoteRelationship too.
-               Just RemoteField{rmfRemoteRelationship} -> do
+               TLRemoteRelType remoteRelationship -> do
 
                  modify (remoteRelField :)
                  -- NOTE: this may result in redundant fields in the SELECT, but this seems fine.
@@ -160,7 +157,7 @@ rebuildFieldStrippingRemoteRels =
 
                  where remoteRelField =
                          RemoteRelBranch
-                           { rrRemoteRelationship = rmfRemoteRelationship
+                           { rrRemoteRelationship = remoteRelationship
                            , rrArguments = _fArguments subfield
                            , rrSelSet = _fSelSet subfield
                            , rrRelFieldPath = thisPath
@@ -171,7 +168,8 @@ rebuildFieldStrippingRemoteRels =
                                  requiredHasuraFields `Set.difference` siblingSelSetFields
                            }
                        requiredHasuraFields = 
-                         coerceSet $ rtrHasuraFields rmfRemoteRelationship
+                         coerceSet $ rtrHasuraFields remoteRelationship
+               _ -> Seq.singleton <$> rebuild idx thisPath subfield
       where
         thisPath = parentPath <> RelFieldPath (pure (idx0, _fAlias field0))
         siblingSelSetFields = Set.fromList $ toList $ fmap _fName $ _fSelSet field0
@@ -627,100 +625,6 @@ valueToValueConst =
               (\(key, value) ->
                  G.ObjectFieldG (G.Name key) (valueToValueConst value))
               (OJ.toList hashmap)))
-
-fieldsToRequest
-  :: (MonadIO m, MonadError QErr m)
-  => G.OperationType
-  -> [VQ.Field]
-  -> m GQLReqParsed
-fieldsToRequest opType fields = do
-  case traverse fieldToField fields of
-    Right gfields ->
-      pure
-        (GQLReq
-           { _grOperationName = Nothing
-           , _grQuery =
-               GQLExecDoc
-                 [ G.ExecutableDefinitionOperation
-                     (G.OperationDefinitionTyped
-                       (emptyOperationDefinition {
-                         G._todSelectionSet = (map G.SelectionField gfields)
-                         } )
-                       )
-                 ]
-           , _grVariables = Nothing -- TODO: Put variables in here?
-           })
-    Left err -> throw500 ("While converting remote field: " <> err)
-    where
-      emptyOperationDefinition =
-        G.TypedOperationDefinition {
-          G._todType = opType
-        , G._todName = Nothing
-        , G._todVariableDefinitions = []
-        , G._todDirectives = []
-        , G._todSelectionSet = [] }
-
-fieldToField :: VQ.Field -> Either Text G.Field
-fieldToField VQ.Field{..} = do
-  _fArguments <- traverse makeArgument (Map.toList _fArguments)
-  _fSelectionSet <- fmap G.SelectionField . toList <$>
-    traverse fieldToField _fSelSet
-  _fDirectives <- pure []
-  _fAlias      <- pure (Just _fAlias)
-  pure $
-    G.Field{..}
-
-makeArgument :: (G.Name, AnnInpVal) -> Either Text G.Argument
-makeArgument (_aName, annInpVal) =
-  do _aValue <- annInpValToValue annInpVal
-     pure $ G.Argument {..}
-
-annInpValToValue :: AnnInpVal -> Either Text G.Value
-annInpValToValue = annGValueToValue . _aivValue
-
-annGValueToValue :: AnnGValue -> Either Text G.Value
-annGValueToValue = fromMaybe (pure G.VNull) .
-  \case
-    AGScalar _ty mv ->
-      pgcolvalueToGValue <$> mv
-    AGEnum _ _enumVal ->
-      pure (Left "enum not supported")
-    AGObject _ mobj ->
-      flip fmap mobj $ \obj -> do
-        fields <-
-          traverse
-            (\(_ofName, av) -> do
-               _ofValue <- annInpValToValue av
-               pure (G.ObjectFieldG {..}))
-            (OHM.toList obj)
-        pure (G.VObject (G.ObjectValueG fields))
-    AGArray _ mvs ->
-      fmap (G.VList . G.ListValueG) . traverse annInpValToValue <$> mvs
-
-pgcolvalueToGValue :: PGScalarValue -> Either Text G.Value
-pgcolvalueToGValue colVal = case colVal of
-  PGValInteger i  -> pure $ G.VInt $ fromIntegral i
-  PGValSmallInt i -> pure $ G.VInt $ fromIntegral i
-  PGValBigInt i   -> pure $ G.VInt $ fromIntegral i
-  PGValFloat f    -> pure $ G.VFloat $ realToFrac f
-  PGValDouble d   -> pure $ G.VFloat $ realToFrac d
-  -- TODO: Scientific is a danger zone; use its safe conv function.
-  PGValNumeric sc -> pure $ G.VFloat $ realToFrac sc
-  PGValBoolean b  -> pure $ G.VBoolean b
-  PGValChar t     -> pure $ G.VString (G.StringValue (T.singleton t))
-  PGValVarchar t  -> pure $ G.VString (G.StringValue t)
-  PGValText t     -> pure $ G.VString (G.StringValue t)
-  PGValDate d     -> pure $ G.VString $ G.StringValue $ T.pack $ showGregorian d
-  PGValTimeStampTZ u -> pure $
-    G.VString $ G.StringValue $   T.pack $ formatTime defaultTimeLocale "%FT%T%QZ" u
-  PGValTimeTZ (ZonedTimeOfDay tod tz) -> pure $
-    G.VString $ G.StringValue $   T.pack (show tod ++ timeZoneOffsetString tz)
-  PGNull _ -> pure G.VNull
-  PGValJSON {}    -> Left "PGValJSON: cannot convert"
-  PGValJSONB {}  -> Left "PGValJSONB: cannot convert"
-  PGValGeo {}    -> Left "PGValGeo: cannot convert"
-  PGValRaster {} -> Left "PGValRaster: cannot convert"
-  PGValUnknown t -> pure $ G.VString $ G.StringValue t
 
 appendJoinError :: GQRespValue -> GQJoinError -> GQRespValue
 appendJoinError resp err =

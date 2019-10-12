@@ -70,6 +70,7 @@ library
                      -- Encoder related
                      , uuid
                      , vector
+                     , vector-builder
 
                      -- Logging related
                      , network
@@ -153,7 +154,6 @@ library
 
                      -- HTTP compression
                      , zlib
-                     , brotli
 
   exposed-modules:     Hasura.Prelude
                      , Hasura.Logging

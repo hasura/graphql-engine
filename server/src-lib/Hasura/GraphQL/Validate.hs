@@ -1,9 +1,7 @@
 module Hasura.GraphQL.Validate
   ( validateGQ
   , showVars
-  , LocatedTopField(..)
-  , HasuraTopField(..)
-  , RemoteTopField(..)
+  , RootSelSet(..)
   , SelSet
   , Field(..)
   , getTypedOp
@@ -144,29 +142,13 @@ validateFrag (G.FragmentDefinition n onTy dirs selSet) = do
     "fragments can only be defined on object types"
   return $ FragDef n objTyInfo selSet
 
-data LocatedTopField
-  = HasuraLocatedTopField !HasuraTopField
-  | RemoteLocatedTopField !RemoteTopField
+data RootSelSet
+  = RQuery !SelSet
+  | RMutation !SelSet
+  | RSubscription !Field
   deriving (Show, Eq)
 
-data HasuraTopField
-  = HasuraTopQuery !Field
-  | HasuraTopMutation !Field
-  | HasuraTopSubscription !Field
-  deriving (Show, Eq)
-
-data RemoteTopField =
-  RemoteTopField
-    { rtqRemoteSchemaInfo :: !RemoteSchemaInfo
-    , rtqFields           :: ![Field]
-    , rtqOperationType    :: !G.OperationType
-    }
-  deriving (Show, Eq)
-
-validateGQ
-  :: (MonadError QErr m, MonadReader GCtx m)
-  => QueryParts
-  -> m (Seq.Seq LocatedTopField)
+validateGQ :: (MonadError QErr m, MonadReader GCtx m) => QueryParts -> m RootSelSet
 validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
   ctx <- ask
 
@@ -180,41 +162,21 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
   annFragDefs <- mapM validateFrag fragDefs
 
   -- build a validation ctx
-  let valCtx = ValidationCtx (_gTypes ctx) annVarVals annFragDefs (_gFields ctx)
+  let valCtx = ValidationCtx (_gTypes ctx) annVarVals annFragDefs
 
   selSet <- flip runReaderT valCtx $ denormSelSet [] opRoot $
             G._todSelectionSet opDef
 
   case G._todType opDef of
-    G.OperationTypeQuery -> mapM makeTopQuery selSet
-    G.OperationTypeMutation -> mapM makeTopMutation selSet
+    G.OperationTypeQuery -> return $ RQuery selSet
+    G.OperationTypeMutation -> return $ RMutation selSet
     G.OperationTypeSubscription ->
       case Seq.viewl selSet of
         Seq.EmptyL     -> throw500 "empty selset for subscription"
         fld Seq.:< rst -> do
           unless (null rst) $
             throwVE "subscription must select only one top level field"
-          fmap pure (makeTopSubscription fld)
-  where
-    makeTopQuery =
-      \case
-         HasuraLocated field ->
-           pure (HasuraLocatedTopField (HasuraTopQuery field))
-         RemoteLocated remoteSchemaInfo field ->
-           -- TODO: Insert variables.
-           pure (RemoteLocatedTopField (RemoteTopField remoteSchemaInfo (pure field) G.OperationTypeQuery))
-    makeTopMutation =
-      \case
-         HasuraLocated field ->
-           pure (HasuraLocatedTopField (HasuraTopMutation field))
-         RemoteLocated remoteSchemaInfo field ->
-           -- TODO: Insert variables.
-           pure (RemoteLocatedTopField (RemoteTopField remoteSchemaInfo (pure field) G.OperationTypeMutation))
-    makeTopSubscription =
-      \case
-        HasuraLocated field ->
-          pure (HasuraLocatedTopField (HasuraTopSubscription field))
-        _ -> throw400 NotSupported "subscription to remote server is not supported"
+          return $ RSubscription fld
 
 isQueryInAllowlist :: GQLExecDoc -> HS.HashSet GQLQuery -> Bool
 isQueryInAllowlist q = HS.member gqlQuery

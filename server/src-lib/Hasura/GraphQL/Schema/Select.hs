@@ -156,12 +156,13 @@ mkTableObj tn descM allowedFlds =
     desc = mkDescriptionWith descM $ "columns and relationships of " <>> tn
 
 mkRemoteRelationshipFld :: RemoteField -> ObjFldInfo
-mkRemoteRelationshipFld remoteField = mkHsraObjFldInfo description fieldName paramMap gType
+mkRemoteRelationshipFld remoteField = ObjFldInfo description fieldName paramMap gType (TLRemoteRelType remoteRelationship)
   where
     description = Just "Remote relationship field"
+    remoteRelationship = rmfRemoteRelationship remoteField
     fieldName =
       G.Name
-        (unRemoteRelationshipName (rtrName (rmfRemoteRelationship remoteField)))
+        (unRemoteRelationshipName $ rtrName remoteRelationship)
     paramMap = rmfParamMap remoteField
     gType = rmfGType remoteField
 

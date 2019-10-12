@@ -61,8 +61,6 @@ import           Hasura.Server.Utils
 import           Hasura.Server.Version
 import           Hasura.SQL.Types
 
-import qualified Language.GraphQL.Draft.Syntax          as G
-
 consoleTmplt :: M.Template
 consoleTmplt = $(M.embedSingleTemplate "src-rsr/console.html")
 
@@ -209,7 +207,7 @@ logError
   -> Maybe UserInfo
   -> RequestId
   -> Wai.Request
-  -> Maybe Value
+  -> Either BL.ByteString Value
   -> QErr -> m ()
 logError logger userInfoM reqId httpReq req qErr =
   liftIO $ L.unLogger logger $
@@ -228,12 +226,10 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
   let headers = requestHeaders req
       authMode = scAuthMode serverCtx
       manager = scManager serverCtx
-      -- convert ByteString to Maybe Value for logging
-      reqTxt = Just $ String $ bsToTxt $ BL.toStrict reqBody
 
   requestId <- getRequestId headers
   userInfoE <- liftIO $ runExceptT $ getUserInfo logger manager headers authMode
-  userInfo  <- either (logErrorAndResp Nothing requestId req reqTxt False . qErrModifier)
+  userInfo  <- either (logErrorAndResp Nothing requestId req (Left reqBody) False . qErrModifier)
                return userInfoE
 
   let handlerState = HandlerCtx serverCtx userInfo headers requestId
@@ -247,7 +243,8 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
       return (res, Nothing)
     AHPost handler -> do
       parsedReqE <- runExceptT $ parseBody reqBody
-      parsedReq  <- either (logErrorAndResp (Just userInfo) requestId req reqTxt (isAdmin curRole) . qErrModifier) return parsedReqE
+      parsedReq  <- either (logErrorAndResp (Just userInfo) requestId req (Left reqBody) (isAdmin curRole) . qErrModifier)
+                    return parsedReqE
       res <- liftIO $ runReaderT (runExceptT $ handler parsedReq) handlerState
       return (res, Just parsedReq)
 
@@ -258,7 +255,8 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
 
   -- log and return result
   case modResult of
-    Left err  -> logErrorAndResp (Just userInfo) requestId req (toJSON <$> q) (isAdmin curRole) err
+    Left err  -> let jErr = maybe (Left reqBody) (Right . toJSON) q
+                 in logErrorAndResp (Just userInfo) requestId req jErr (isAdmin curRole) err
     Right res -> logSuccessAndResp (Just userInfo) requestId req res (Just (t1, t2))
 
   where
@@ -266,7 +264,13 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
 
     logErrorAndResp
       :: (MonadIO m)
-      => Maybe UserInfo -> RequestId -> Wai.Request -> Maybe Value -> Bool -> QErr -> ActionCtxT ctx m a
+      => Maybe UserInfo
+      -> RequestId
+      -> Wai.Request
+      -> Either BL.ByteString Value
+      -> Bool
+      -> QErr
+      -> ActionCtxT ctx m a
     logErrorAndResp userInfo reqId req reqBody includeInternal qErr = do
       logError logger userInfo reqId req reqBody qErr
       setStatus $ qeStatus qErr
@@ -350,46 +354,6 @@ v1Alpha1PGDumpHandler b = do
   ci <- scConnInfo . hcServerCtx <$> ask
   output <- PGD.execPGDump b ci
   return $ RawResp $ HttpResponse output (Just [Header sqlHeader])
-
-remoteSchemaProxyHandler :: Text -> GH.GQLReqUnparsed ->  Handler (HttpResponse EncJSON)
-remoteSchemaProxyHandler remoteSchemaNameTxt query = do
-  userInfo <- asks hcUser
-  reqHeaders <- asks hcReqHeaders
-  manager <- scManager . hcServerCtx <$> ask
-  scRef <- scCacheRef . hcServerCtx <$> ask
-  (sc, scVer) <- liftIO $ readIORef $ _scrCache scRef
-  pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
-  sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
-  planCache <- scPlanCache . hcServerCtx <$> ask
-  enableAL <- scEnableAllowlist . hcServerCtx <$> ask
-  logger <- scLogger . hcServerCtx <$> ask
-  requestId <- asks hcRequestId
-  let remoteSchemaInfoM =
-        join $
-        fmap
-          (\rsName -> M.lookup rsName (scRemoteSchemas sc))
-          (RemoteSchemaName <$> mkNonEmptyText remoteSchemaNameTxt)
-  case remoteSchemaInfoM of
-    Nothing -> throw400 NotFound "remote schema not found"
-    Just rsCtx -> do
-      let execCtx =
-            E.ExecutionCtx
-              logger
-              sqlGenCtx
-              pgExecCtx
-              planCache
-              sc
-              scVer
-              manager
-              enableAL
-      flip runReaderT execCtx $
-        E.execRemoteGQ
-          requestId
-          userInfo
-          reqHeaders
-          G.OperationTypeQuery
-          (rscInfo rsCtx)
-          (Left query)
 
 consoleAssetsHandler :: L.Logger -> Text -> FilePath -> ActionT IO ()
 consoleAssetsHandler logger dir path = do
@@ -597,11 +561,6 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       post "v1/graphql" $ mkSpockAction GH.encodeGQErr allMod200 serverCtx $
         mkPostHandler $ mkAPIRespHandler v1GQHandler
 
-      post ("v1/graphql/proxy" <//> var) $ \remoteSchemaName ->  mkSpockAction GH.encodeGQErr id serverCtx $
-        mkPostHandler $ mkAPIRespHandler (\query -> do
-          onlyAdmin
-          remoteSchemaProxyHandler remoteSchemaName query)
-
     when (isDeveloperAPIEnabled serverCtx) $ do
       get "dev/ekg" $ mkSpockAction encodeQErr id serverCtx $
         mkGetHandler $ do
@@ -661,9 +620,8 @@ raiseGenericApiError :: L.Logger -> QErr -> ActionT IO ()
 raiseGenericApiError logger qErr = do
   req <- request
   reqBody <- liftIO $ strictRequestBody req
-  let reqTxt = toJSON $ String $ bsToTxt $ BL.toStrict reqBody
   reqId <- getRequestId $ requestHeaders req
-  logError logger Nothing reqId req (Just reqTxt) qErr
+  logError logger Nothing reqId req (Left reqBody) qErr
   uncurry setHeader jsonHeader
   setStatus $ qeStatus qErr
   lazyBytes $ encode qErr

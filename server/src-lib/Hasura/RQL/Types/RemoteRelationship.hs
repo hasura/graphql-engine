@@ -1,5 +1,6 @@
 {-# LANGUAGE DisambiguateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns           #-}
+
 module Hasura.RQL.Types.RemoteRelationship where
 
 import           Data.Aeson.Casing
@@ -54,7 +55,6 @@ data RemoteRelationship =
     }  deriving (Show, Eq, Lift)
 
 -- Parsing GraphQL input arguments from JSON
-
 parseObjectFieldsToGValue :: HashMap Text A.Value -> AT.Parser [G.ObjectFieldG G.Value]
 parseObjectFieldsToGValue hashMap =
   traverse
@@ -131,7 +131,7 @@ data FieldCall =
     { fcName      :: !G.Name
     , fcArguments :: !RemoteArguments
     }
-  deriving (Show, Eq, Lift, Generic)
+  deriving (Show, Eq, Lift)
 
 newtype RemoteRelationshipName
   = RemoteRelationshipName
