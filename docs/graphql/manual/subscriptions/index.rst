@@ -19,7 +19,7 @@ If we think about our food ordering app example, for an app screen showing a “
 
 Enter live-queries: Live queries is the idea of being able to subscribe to the latest result of a particular query. As the underlying data changes, the server should push the latest result to the client. 
 
-For more details on Hasura's architecture and how subscriptions work, please `see here <https://github.com/hasura/graphql-engine/blob/master/architecture/live-queries.md>`_ . 
+For more details on subscriptions, please `see here <https://github.com/hasura/graphql-engine/blob/master/architecture/live-queries.md>`_ . 
 
 Convert a query to a subscription
 ---------------------------------
