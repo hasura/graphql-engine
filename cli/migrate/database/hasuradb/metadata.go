@@ -2,6 +2,7 @@ package hasuradb
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/oliveagle/jsonpath"
@@ -25,7 +26,7 @@ func (h *HasuraDB) ExportMetadata() (interface{}, error) {
 		err = json.Unmarshal(body, &horror)
 		if err != nil {
 			h.logger.Debug(err)
-			return nil, err
+			return nil, fmt.Errorf("failed parsing json: %v; response from API: %s", err, string(body))
 		}
 		return nil, horror.Error(h.config.isCMD)
 	}
@@ -58,7 +59,7 @@ func (h *HasuraDB) ResetMetadata() error {
 		err = json.Unmarshal(body, &horror)
 		if err != nil {
 			h.logger.Debug(err)
-			return err
+			return fmt.Errorf("failed parsing json: %v; response from API: %s", err, string(body))
 		}
 		return horror.Error(h.config.isCMD)
 	}
@@ -84,7 +85,7 @@ func (h *HasuraDB) ReloadMetadata() error {
 		err = json.Unmarshal(body, &horror)
 		if err != nil {
 			h.logger.Debug(err)
-			return err
+			return fmt.Errorf("failed parsing json: %v; response from API: %s", err, string(body))
 		}
 		return horror.Error(h.config.isCMD)
 	}
@@ -118,7 +119,7 @@ func (h *HasuraDB) ApplyMetadata(data interface{}) error {
 		err = json.Unmarshal(body, &horror)
 		if err != nil {
 			h.logger.Debug(err)
-			return err
+			return fmt.Errorf("failed parsing json: %v; response from API: %s", err, string(body))
 		}
 
 		if horror.Path != "" {
@@ -163,7 +164,7 @@ func (h *HasuraDB) Query(data []interface{}) error {
 		err = json.Unmarshal(body, &horror)
 		if err != nil {
 			h.logger.Debug(err)
-			return err
+			return fmt.Errorf("failed parsing json: %v; response from API: %s", err, string(body))
 		}
 		return horror.Error(h.config.isCMD)
 	}
