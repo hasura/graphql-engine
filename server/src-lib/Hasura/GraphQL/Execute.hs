@@ -1,3 +1,5 @@
+{-# LANGUAGE RecordWildCards #-}
+
 module Hasura.GraphQL.Execute
   ( GQExecPlanPartial(..)
   , GQFieldPartialPlan(..)
@@ -21,10 +23,12 @@ module Hasura.GraphQL.Execute
 import           Control.Exception                      (try)
 import           Control.Lens
 import           Data.Has
+import           Data.Time
 
 import qualified Data.Aeson                             as J
 import qualified Data.CaseInsensitive                   as CI
 import qualified Data.HashMap.Strict                    as Map
+import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Data.Sequence                          as Seq
 import qualified Data.String.Conversions                as CS
 import qualified Data.Text                              as T
@@ -32,6 +36,7 @@ import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
 import qualified Network.Wreq                           as Wreq
+
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
@@ -47,6 +52,8 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Context
 import           Hasura.Server.Utils                    (RequestId,
                                                          filterRequestHeaders)
+import           Hasura.SQL.Time
+import           Hasura.SQL.Value
 
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Plan            as EP
@@ -362,7 +369,7 @@ execRemoteGQ reqId userInfo reqHdrs rsi opType selSet = do
   when (opType == G.OperationTypeSubscription) $
     throw400 NotSupported "subscription to remote server is not supported"
   hdrs <- getHeadersFromConf hdrConf
-  gqlReq <- fieldsToRequest opType selSet
+  gqlReq <- fieldsToRequest opType (toList selSet)
   let body = encJToLBS (encJFromJValue gqlReq)
   let confHdrs   = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
       clientHdrs = bool [] filteredHeaders fwdClientHdrs
@@ -415,6 +422,94 @@ execRemoteGQ reqId userInfo reqHdrs rsi opType selSet = do
 fieldsToRequest
   :: (MonadIO m, MonadError QErr m)
   => G.OperationType
-  -> Seq.Seq VQ.Field
+  -> [VQ.Field]
   -> m GQLReqParsed
-fieldsToRequest = undefined
+fieldsToRequest opType fields = do
+  case traverse fieldToField fields of
+    Right gfields ->
+      pure
+        (GQLReq
+           { _grOperationName = Nothing
+           , _grQuery =
+               GQLExecDoc
+                 [ G.ExecutableDefinitionOperation
+                     (G.OperationDefinitionTyped
+                       (emptyOperationDefinition {
+                         G._todSelectionSet = (map G.SelectionField gfields)
+                         } )
+                       )
+                 ]
+           , _grVariables = Nothing -- TODO: Put variables in here?
+           })
+    Left err -> throw500 ("While converting remote field: " <> err)
+    where
+      emptyOperationDefinition =
+        G.TypedOperationDefinition {
+          G._todType = opType
+        , G._todName = Nothing
+        , G._todVariableDefinitions = []
+        , G._todDirectives = []
+        , G._todSelectionSet = [] }
+
+
+fieldToField :: VQ.Field -> Either Text G.Field
+fieldToField VQ.Field{..} = do
+  _fArguments <- traverse makeArgument (Map.toList _fArguments)
+  _fSelectionSet <- fmap G.SelectionField . toList <$>
+    traverse fieldToField _fSelSet
+  _fDirectives <- pure []
+  _fAlias      <- pure (Just _fAlias)
+  pure $
+    G.Field{..}
+
+makeArgument :: (G.Name, AnnInpVal) -> Either Text G.Argument
+makeArgument (_aName, annInpVal) =
+  do _aValue <- annInpValToValue annInpVal
+     pure $ G.Argument {..}
+
+annInpValToValue :: AnnInpVal -> Either Text G.Value
+annInpValToValue = annGValueToValue . _aivValue
+
+annGValueToValue :: AnnGValue -> Either Text G.Value
+annGValueToValue = fromMaybe (pure G.VNull) .
+  \case
+    AGScalar _ty mv ->
+      pgcolvalueToGValue <$> mv
+    AGEnum _ _enumVal ->
+      pure (Left "enum not supported")
+    AGObject _ mobj ->
+      flip fmap mobj $ \obj -> do
+        fields <-
+          traverse
+            (\(_ofName, av) -> do
+               _ofValue <- annInpValToValue av
+               pure (G.ObjectFieldG {..}))
+            (OMap.toList obj)
+        pure (G.VObject (G.ObjectValueG fields))
+    AGArray _ mvs ->
+      fmap (G.VList . G.ListValueG) . traverse annInpValToValue <$> mvs
+
+pgcolvalueToGValue :: PGScalarValue -> Either Text G.Value
+pgcolvalueToGValue colVal = case colVal of
+  PGValInteger i  -> pure $ G.VInt $ fromIntegral i
+  PGValSmallInt i -> pure $ G.VInt $ fromIntegral i
+  PGValBigInt i   -> pure $ G.VInt $ fromIntegral i
+  PGValFloat f    -> pure $ G.VFloat $ realToFrac f
+  PGValDouble d   -> pure $ G.VFloat $ realToFrac d
+  -- TODO: Scientific is a danger zone; use its safe conv function.
+  PGValNumeric sc -> pure $ G.VFloat $ realToFrac sc
+  PGValBoolean b  -> pure $ G.VBoolean b
+  PGValChar t     -> pure $ G.VString (G.StringValue (T.singleton t))
+  PGValVarchar t  -> pure $ G.VString (G.StringValue t)
+  PGValText t     -> pure $ G.VString (G.StringValue t)
+  PGValDate d     -> pure $ G.VString $ G.StringValue $ T.pack $ showGregorian d
+  PGValTimeStampTZ u -> pure $
+    G.VString $ G.StringValue $   T.pack $ formatTime defaultTimeLocale "%FT%T%QZ" u
+  PGValTimeTZ (ZonedTimeOfDay tod tz) -> pure $
+    G.VString $ G.StringValue $   T.pack (show tod ++ timeZoneOffsetString tz)
+  PGNull _ -> pure G.VNull
+  PGValJSON {}    -> Left "PGValJSON: cannot convert"
+  PGValJSONB {}  -> Left "PGValJSONB: cannot convert"
+  PGValGeo {}    -> Left "PGValGeo: cannot convert"
+  PGValRaster {} -> Left "PGValRaster: cannot convert"
+  PGValUnknown t -> pure $ G.VString $ G.StringValue t
