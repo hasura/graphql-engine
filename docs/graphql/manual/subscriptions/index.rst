@@ -27,6 +27,15 @@ Use cases
 - :ref:`subscribe_table`
 - :ref:`subscribe_derived`
 
+How subscriptions work
+---------
+
+Hasura allows 'live queries' for clients (over GraphQL subscriptions). For example, a food ordering app can use a
+live query to show the live-status of an order for a particular user.
+
+- :doc:`graphql-subscriptions`
+- :doc:`graphql-live-queries/index`
+
 Communication protocol
 ----------------------
 
