@@ -20,7 +20,7 @@ Refetching results for a GraphQL query
 
 To understand why refetching a GraphQL query is hard, let’s look at how a GraphQL query is typically processed:
 
-.. thumbnail:: ../../../img/graphql/manual/subscriptions/graphql-resolvers.png
+.. thumbnail:: ../../../../img/graphql/manual/subscriptions/graphql-resolvers.png
   :width: 70%
   :alt: graphql resolvers
 

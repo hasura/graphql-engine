@@ -15,5 +15,5 @@ function (if the function returns SETOF) it is possible to create a single SQL q
 
 GraphQL query → GraphQL AST → Internal AST with authorization rules → SQL AST → SQL
 
-.. thumbnail:: ../../../img/graphql/manual/subscriptions/graphql-2-sql-auth.png
+.. thumbnail:: ../../../../img/graphql/manual/subscriptions/graphql-2-sql-auth.png
   :alt: graphql to sql with authorization

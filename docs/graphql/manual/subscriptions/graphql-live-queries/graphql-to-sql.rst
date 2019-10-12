@@ -11,7 +11,7 @@ to “compile” GraphQL queries to the SQL queries to fetch data from the datab
 
 GraphQL query → GraphQL AST → SQL AST → SQL
 
-.. thumbnail:: ../../../img/graphql/manual/subscriptions/graphql-2-sql.png
+.. thumbnail:: ../../../../img/graphql/manual/subscriptions/graphql-2-sql.png
   :alt: graphql to sql
 
 This gets rid of the N+1 query problem and allows the database to optimise data-fetching now that it can see the entire

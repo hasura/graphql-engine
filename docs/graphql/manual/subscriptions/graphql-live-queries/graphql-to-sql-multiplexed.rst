@@ -20,5 +20,5 @@ that we get the latest data for multiple clients in a single response. Each row 
 result for each user. This will allow fetching the latest result for multiple users at the same time, even though the
 parameters and the session variables that they provide are completely dynamic and available only at query-time.
 
-.. thumbnail:: ../../../img/graphql/manual/subscriptions/graphql-2-sql-multiplexed.png
+.. thumbnail:: ../../../../img/graphql/manual/subscriptions/graphql-2-sql-multiplexed.png
   :alt: graphql to sql multiplexed
