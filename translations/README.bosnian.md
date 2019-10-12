@@ -206,6 +206,6 @@ Ova stranica je dostupna u sljedecim jezicima:
 
 - [Japanski :jp:](translations/README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
 - [Francuski :fr:](translations/README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
-- [Engleski :en:](translations/README.md)
+- [Engleski :uk:](translations/README.md)
 
 Prijevodi za ostale fajlove mogu biti pronadjeni [ovdje](translations).
