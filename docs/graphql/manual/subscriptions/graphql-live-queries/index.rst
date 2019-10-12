@@ -44,9 +44,9 @@ nodes in the GraphQL query are large.
 .. toctree::
   :maxdepth: 1
 
-  Idea #1: graphql-to-sql
-  Idea #2: graphql-to-sql-multiplexed
-  Idea #3: graphql-to-sql-with-authorization
+  Idea #1: “Compile” a GraphQL query to a single SQL query <graphql-to-sql>
+  Idea #2: Batch multiple live-queries into one SQL query <graphql-to-sql-multiplexed>
+  Idea #3: Make authorization declarative <graphql-to-sql-with-authorization>
 
 Benefits of this approach
 ^^^^^^^^^^^^^^^^^^^^^^^^^
