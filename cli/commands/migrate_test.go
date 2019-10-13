@@ -207,14 +207,16 @@ func testMigrate(t *testing.T, endpoint *url.URL, migrationsDir string) {
 	// Check Migration status
 	expectedStatus = migrate.NewStatus()
 	expectedStatus.Append(&migrate.MigrationStatus{
-		Version:   1,
-		IsApplied: true,
-		IsPresent: true,
+		Version:    1,
+		IsApplied:  true,
+		IsPresent:  true,
+		Identifier: "create_table_test",
 	})
 	expectedStatus.Append(&migrate.MigrationStatus{
-		Version:   2,
-		IsApplied: true,
-		IsPresent: true,
+		Version:    2,
+		IsApplied:  true,
+		IsPresent:  true,
+		Identifier: "add_table_test",
 	})
 	testMigrateStatus(t, endpoint, migrationsDir, expectedStatus)
 
@@ -224,14 +226,16 @@ func testMigrate(t *testing.T, endpoint *url.URL, migrationsDir string) {
 	// Check Migration status
 	expectedStatus = migrate.NewStatus()
 	expectedStatus.Append(&migrate.MigrationStatus{
-		Version:   1,
-		IsApplied: true,
-		IsPresent: true,
+		Version:    1,
+		IsApplied:  true,
+		IsPresent:  true,
+		Identifier: "create_table_test",
 	})
 	expectedStatus.Append(&migrate.MigrationStatus{
-		Version:   2,
-		IsApplied: false,
-		IsPresent: true,
+		Version:    2,
+		IsApplied:  false,
+		IsPresent:  true,
+		Identifier: "add_table_test",
 	})
 	testMigrateStatus(t, endpoint, migrationsDir, expectedStatus)
 
@@ -241,14 +245,16 @@ func testMigrate(t *testing.T, endpoint *url.URL, migrationsDir string) {
 	// Check Migration status
 	expectedStatus = migrate.NewStatus()
 	expectedStatus.Append(&migrate.MigrationStatus{
-		Version:   1,
-		IsApplied: false,
-		IsPresent: true,
+		Version:    1,
+		IsApplied:  false,
+		IsPresent:  true,
+		Identifier: "create_table_test",
 	})
 	expectedStatus.Append(&migrate.MigrationStatus{
-		Version:   2,
-		IsApplied: false,
-		IsPresent: true,
+		Version:    2,
+		IsApplied:  false,
+		IsPresent:  true,
+		Identifier: "add_table_test",
 	})
 	testMigrateStatus(t, endpoint, migrationsDir, expectedStatus)
 

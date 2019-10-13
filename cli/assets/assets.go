@@ -85,7 +85,7 @@ func assetsUnversionedConsoleHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "assets/unversioned/console.html", size: 2208, mode: os.FileMode(436), modTime: time.Unix(1561990529, 0)}
+	info := bindataFileInfo{name: "assets/unversioned/console.html", size: 2208, mode: os.FileMode(436), modTime: time.Unix(1570828286, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -105,7 +105,7 @@ func assetsV10AlphaConsoleHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "assets/v1.0-alpha/console.html", size: 1928, mode: os.FileMode(436), modTime: time.Unix(1561987511, 0)}
+	info := bindataFileInfo{name: "assets/v1.0-alpha/console.html", size: 1928, mode: os.FileMode(436), modTime: time.Unix(1570828286, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -125,7 +125,7 @@ func assetsV10ConsoleHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "assets/v1.0/console.html", size: 2208, mode: os.FileMode(436), modTime: time.Unix(1561990530, 0)}
+	info := bindataFileInfo{name: "assets/v1.0/console.html", size: 2208, mode: os.FileMode(436), modTime: time.Unix(1570828286, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
