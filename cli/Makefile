@@ -1,9 +1,8 @@
 PWD := $(shell pwd)
 PARENT_DIR := $(shell dirname $(PWD))
 VERSION ?= $(shell ../scripts/get-version.sh)
-OS ?= linux
+OS ?= linux darwin windows
 OUTPUT_DIR := _output
-# export GOPATH := /home/euler/repos/graphql-engine/:$(GOPATH)
 
 # compile assets
 .PHONY: assets
@@ -24,7 +23,7 @@ ifndef HAS_GOX
 	go get github.com/mitchellh/gox
 endif
 ifndef HAS_BINDATA
-	'
+	go get github.com/hasura/go-bindata/go-bindata
 endif
 	if [ ! -d "vendor" ]; then dep ensure -v -vendor-only; fi
 
@@ -65,8 +64,8 @@ all: deps assets test build
 
 # build cli inside a docker container
 all-in-docker:
-	# docker build -t hasura-graphql-cli-builder -f build/builder.dockerfile build
+	docker build -t hasura-graphql-cli-builder -f build/builder.dockerfile build
 	docker run --rm -it \
 	-v $(PARENT_DIR):/go/src/github.com/hasura/graphql-engine \
 	hasura-graphql-cli-builder \
-	make assets test
+	make all

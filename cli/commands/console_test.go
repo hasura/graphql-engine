@@ -19,7 +19,7 @@ func TestConsoleCmd(t *testing.T) {
 	ec.Logger = logger
 	ec.Spinner = spinner.New(spinner.CharSets[7], 100*time.Millisecond)
 	ec.ServerConfig = &cli.ServerConfig{
-		Endpoint:    "http://172.17.0.4:8080",
+		Endpoint:    "http://localhost:8080",
 		AdminSecret: os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET"),
 	}
 	ec.MetadataFile = []string{"metadata.yaml"}
