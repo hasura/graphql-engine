@@ -4,9 +4,9 @@
 [![CircleCI](https://circleci.com/gh/hasura/graphql-engine.svg?style=shield)](https://circleci.com/gh/hasura/graphql-engine)
 
 
-<img src="https://img.shields.io/badge/chat-discord-brightgreen.svg?logo=discord&style=flat">
-HasuraHQ">
-<img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat">
+<a href="https://discord.gg/vBPpJkS"><img src="https://img.shields.io/badge/chat-discord-brightgreen.svg?logo=discord&style=flat"></a>
+<a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
+<a href="https://eepurl.com/dBUfJ5"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
 
 Hasura GraphQL Engine is a blazing-fast GraphQL server that gives you **instant, realtime GraphQL APIs over Postgres**, with [**webhook triggers**](event-triggers.md) on database events, and [**remote schemas**](remote-schemas.md) for business logic.
 
@@ -39,7 +39,7 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
 Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.io).
 
 ## Table of contents
-
+<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Table of Contents**
 
 - [Quickstart:](#quickstart)
