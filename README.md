@@ -59,7 +59,7 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
 - [License](#license)
 - [Translations](#translations)
 
-
+<!-- markdown-toc end -->
 
 ## Quickstart:
 
