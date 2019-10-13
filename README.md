@@ -20,6 +20,7 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
 
 ------------------
 
+
 ![Hasura GraphQL Engine Realtime Demo](assets/realtime.gif)
 
 -------------------
