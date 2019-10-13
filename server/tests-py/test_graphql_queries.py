@@ -417,6 +417,9 @@ class TestGraphQLQueryOrderBy(DefaultTestSelectQueries):
     def test_employee_distinct_fail(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/employee_distinct_fail.yaml', transport)
 
+    def test_album_order_by_tracks_tags(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/album_order_by_tracks_tags.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/order_by'
@@ -498,3 +501,6 @@ class TestGraphQLQueryEnums(DefaultTestSelectQueries):
 
     def test_select_where_enum_eq_variable_bad_value(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_where_enum_eq_variable_bad_value.yaml', transport)
+
+    def test_select_where_enum_eq_without_enum_table_visibility(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_where_enum_eq_without_enum_table_visibility.yaml', transport)

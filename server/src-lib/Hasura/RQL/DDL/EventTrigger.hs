@@ -22,24 +22,18 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils
 import           Hasura.SQL.Types
 import           System.Environment      (lookupEnv)
 
 import qualified Hasura.SQL.DML          as S
 
-import qualified Data.FileEmbed          as FE
-import qualified Data.HashMap.Strict     as HashMap
 import qualified Data.Text               as T
+import qualified Data.Text.Lazy          as TL
 import qualified Database.PG.Query       as Q
+import qualified Text.Shakespeare.Text   as ST
 
 
 data OpVar = OLD | NEW deriving (Show)
-
-triggerTmplt :: Maybe GingerTmplt
-triggerTmplt = case parseGingerTmplt $(FE.embedStringFile "src-rsr/trigger.sql.j2") of
-  Left _      -> Nothing
-  Right tmplt -> Just tmplt
 
 pgIdenTrigger:: Ops -> TriggerName -> T.Text
 pgIdenTrigger op trn = pgFmtIden . qualifyTriggerName op $ triggerNameToTxt trn
@@ -51,33 +45,42 @@ getDropFuncSql op trn = "DROP FUNCTION IF EXISTS"
                         <> " hdb_views." <> pgIdenTrigger op trn <> "()"
                         <> " CASCADE"
 
-getTriggerSql
-  :: Ops
-  -> TriggerName
+mkAllTriggersQ
+  :: TriggerName
   -> QualifiedTable
   -> [PGColumnInfo]
   -> Bool
+  -> TriggerOpsDef
+  -> Q.TxE QErr ()
+mkAllTriggersQ trn qt allCols strfyNum fullspec = do
+  let insertDef = tdInsert fullspec
+      updateDef = tdUpdate fullspec
+      deleteDef = tdDelete fullspec
+  onJust insertDef (mkTriggerQ trn qt allCols strfyNum INSERT)
+  onJust updateDef (mkTriggerQ trn qt allCols strfyNum UPDATE)
+  onJust deleteDef (mkTriggerQ trn qt allCols strfyNum DELETE)
+
+mkTriggerQ
+  :: TriggerName
+  -> QualifiedTable
+  -> [PGColumnInfo]
+  -> Bool
+  -> Ops
   -> SubscribeOpSpec
-  -> Maybe T.Text
-getTriggerSql op trn qt allCols strfyNum spec =
-  let globalCtx =  HashMap.fromList
-                   [ (T.pack "NAME", triggerNameToTxt trn)
-                   , (T.pack "QUALIFIED_TRIGGER_NAME", pgIdenTrigger op trn)
-                   , (T.pack "QUALIFIED_TABLE", toSQLTxt qt)
-                   ]
-      opCtx = createOpCtx op spec
-      context = HashMap.union globalCtx opCtx
-  in
-      renderGingerTmplt context <$> triggerTmplt
+  -> Q.TxE QErr ()
+mkTriggerQ trn qt allCols strfyNum op (SubscribeOpSpec columns payload) =
+  Q.multiQE defaultTxErrorHandler $ Q.fromText . TL.toStrict $
+    let name = triggerNameToTxt trn
+        qualifiedTriggerName = pgIdenTrigger op trn
+        qualifiedTable = toSQLTxt qt
+
+        operation = T.pack $ show op
+        oldRow = toSQLTxt $ renderRow OLD columns
+        newRow = toSQLTxt $ renderRow NEW columns
+        oldPayloadExpression = toSQLTxt . renderOldDataExp op $ fromMaybePayload payload
+        newPayloadExpression = toSQLTxt . renderNewDataExp op $ fromMaybePayload payload
+    in $(ST.stextFile "src-rsr/trigger.sql.shakespeare")
   where
-    createOpCtx op1 (SubscribeOpSpec columns payload) =
-      HashMap.fromList
-      [ (T.pack "OPERATION", T.pack $ show op1)
-      , (T.pack "OLD_ROW", toSQLTxt $ renderRow OLD columns )
-      , (T.pack "NEW_ROW", toSQLTxt $ renderRow NEW columns )
-      , (T.pack "OLD_PAYLOAD_EXPRESSION", toSQLTxt $ renderOldDataExp op1 $ fromMaybePayload payload )
-      , (T.pack "NEW_PAYLOAD_EXPRESSION", toSQLTxt $ renderNewDataExp op1 $ fromMaybePayload payload )
-      ]
     renderOldDataExp op2 scs =
       case op2 of
         INSERT -> S.SENull
@@ -114,35 +117,6 @@ getTriggerSql op trn qt allCols strfyNum spec =
           getColInfos cols allCols
 
     fromMaybePayload = fromMaybe SubCStar
-
-mkAllTriggersQ
-  :: TriggerName
-  -> QualifiedTable
-  -> [PGColumnInfo]
-  -> Bool
-  -> TriggerOpsDef
-  -> Q.TxE QErr ()
-mkAllTriggersQ trn qt allCols strfyNum fullspec = do
-  let insertDef = tdInsert fullspec
-      updateDef = tdUpdate fullspec
-      deleteDef = tdDelete fullspec
-  onJust insertDef (mkTriggerQ trn qt allCols strfyNum INSERT)
-  onJust updateDef (mkTriggerQ trn qt allCols strfyNum UPDATE)
-  onJust deleteDef (mkTriggerQ trn qt allCols strfyNum DELETE)
-
-mkTriggerQ
-  :: TriggerName
-  -> QualifiedTable
-  -> [PGColumnInfo]
-  -> Bool
-  -> Ops
-  -> SubscribeOpSpec
-  -> Q.TxE QErr ()
-mkTriggerQ trn qt allCols strfyNum op spec = do
-  let mTriggerSql = getTriggerSql op trn qt allCols strfyNum spec
-  case mTriggerSql of
-    Just sql -> Q.multiQE defaultTxErrorHandler (Q.fromText sql)
-    Nothing  -> throw500 "no trigger sql generated"
 
 delTriggerQ :: TriggerName -> Q.TxE QErr ()
 delTriggerQ trn = mapM_ (\op -> Q.unitQE

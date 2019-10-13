@@ -1,16 +1,17 @@
-module Hasura.RQL.DDL.Permission.Triggers where
+module Hasura.RQL.DDL.Permission.Triggers
+  ( buildInsTrig
+  , dropInsTrigFn
+  , buildInsTrigFn
+  ) where
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types
-import           Hasura.Server.Utils
 import           Hasura.SQL.Types
 
-import qualified Database.PG.Query   as Q
-import qualified Hasura.SQL.DML      as S
+import qualified Database.PG.Query     as Q
+import qualified Hasura.SQL.DML        as S
 
-import qualified Data.Aeson          as J
-import qualified Data.FileEmbed      as FE
-import qualified Data.Text           as T
+import qualified Data.Text.Lazy        as TL
+import qualified Text.Shakespeare.Text as ST
 
 buildInsTrig :: QualifiedTable -> Q.Query
 buildInsTrig qt@(QualifiedObject _ tn) =
@@ -25,23 +26,9 @@ dropInsTrigFn :: QualifiedTable -> Q.Query
 dropInsTrigFn fn =
   Q.fromBuilder $ "DROP FUNCTION " <> toSQL fn <> "()"
 
-getInsTrigTmplt :: (MonadError QErr m) => m GingerTmplt
-getInsTrigTmplt =
-  either throwErr return $ parseGingerTmplt trigFnSrc
-  where
-    trigFnSrc = $(FE.embedStringFile "src-rsr/insert_trigger.sql.j2")
-
-    throwErr e = throw500 $ "cannot render insert trigger function template: "
-                 <> T.pack e
-
-buildInsTrigFn
-  :: (MonadError QErr m)
-  => QualifiedTable -> QualifiedTable -> S.BoolExp -> m Q.Query
-buildInsTrigFn fn tn be = do
-  insTmplt <- getInsTrigTmplt
-  return $ Q.fromText $ renderGingerTmplt tmpltVals insTmplt
-  where
-    tmpltVals = J.object [ "function_name" J..= toSQLTxt fn
-                         , "table_name" J..= toSQLTxt tn
-                         , "check_expression" J..= toSQLTxt be
-                         ]
+buildInsTrigFn :: QualifiedTable -> QualifiedTable -> S.BoolExp -> Q.Query
+buildInsTrigFn fn tn be = Q.fromText . TL.toStrict $
+  let functionName = toSQLTxt fn
+      tableName = toSQLTxt tn
+      checkExpression = toSQLTxt be
+  in $(ST.stextFile "src-rsr/insert_trigger.sql.shakespeare")
