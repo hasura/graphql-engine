@@ -8,7 +8,7 @@ can quickly merge or address your contributions will increase.
 ## Overview
 
 [hasura/graphql-engine](https://github.com/hasura/graphql-engine) is a mono-repo
-consisting of 3 components. Each has their own contributing guides:
+consisting of 3 components. Each has its own contributing guides:
 
 1. [Server (Haskell)](server/CONTRIBUTING.md)
 
@@ -16,15 +16,15 @@ consisting of 3 components. Each has their own contributing guides:
 
 3. [Console (JavaScript)](console/README.md#contributing-to-hasura-console)
 
-All of the three components have a single version, denoted by either the git tag or a combination of branch name and git commit SHA.
+All of the three components have a single version, denoted by either the git tag or a combination of the branch name and git commit SHA.
 
 For all contributions, a CLA (Contributor License Agreement) needs to be signed [here](https://cla-assistant.io/hasura/graphql-engine) before (or after) the pull request has been submitted. A bot will prompt contributors to sign the CLA via a pull request comment, if necessary.
 
-## First time contributors welcome!
+## First-time contributors welcome!
 
-We appreciate first time contributors and we are happy to assist you in getting started. In case of questions, just reach out to us!
+We appreciate first-time contributors and we are happy to assist you in getting started. In case of questions, just reach out to us!
 
-You find all issues suitable for first time contributors [here](https://github.com/hasura/graphql-engine/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22).
+You find all issues suitable for first-time contributors [here](https://github.com/hasura/graphql-engine/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22).
 
 ## Areas for contributing
 
@@ -32,7 +32,7 @@ Of course, we appreciate contributions to all components of Hasura. However, we 
 
 ### Docs
 
-Our goal is to keep our docs comprehensive and updated. If you would like to help us in doing so, we are greatful for any kind of contribution:
+Our goal is to keep our docs comprehensive and updated. If you would like to help us in doing so, we are grateful for any kind of contribution:
 
 - Report missing content
 
@@ -45,7 +45,7 @@ The contributing guide for docs can be found at [docs/CONTRIBUTING.md](docs/CONT
 
 ### Community content
 
-We have identified three other ways of contributing with community content:
+We have identified three other ways of contributing to community content:
 
 - [boilerplates](community/boilerplates)
 
@@ -87,8 +87,7 @@ The README of the CLI repository can be found [here](https://github.com/hasura/g
 ## Commit messages
 
 - The first line should be a summary of the changes, not exceeding 50
-  characters, followed by an optional body which has more details about the
-  changes. Refer to [this link](https://github.com/erlang/otp/wiki/writing-good-commit-messages)
+  characters, followed by an optional body which has more details about the changes. Refer to [this link](https://github.com/erlang/otp/wiki/writing-good-commit-messages)
   for more information on writing good commit messages.
 
 - Use the imperative present tense: "add/fix/change", not "added/fixed/changed" nor "adds/fixes/changes".
