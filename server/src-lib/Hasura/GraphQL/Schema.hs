@@ -641,8 +641,7 @@ mkGCtxMap tableCache functionCache = do
   return $ flip Map.map typesMap $ \(ty, flds, insCtxMap) ->
     mkGCtx ty flds insCtxMap
   where
-    tableFltr ti = not (_tiSystemDefined ti)
-                   && isValidObjectName (_tiName ti)
+    tableFltr ti = not (isSystemDefined $ _tiSystemDefined ti) && isValidObjectName (_tiName ti)
 
     getRootFlds roleMap = do
       (_, RootFields query mutation, _) <- onNothing
