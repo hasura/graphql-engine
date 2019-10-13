@@ -167,10 +167,8 @@ func (i *Migrations) MetaDown(version uint64) (m *Migration, ok bool) {
 }
 
 func (i *Migrations) ReadIdentifier(version uint64) (identifier string) {
-	if _, ok := i.migrations[version]; ok {
-		for k := range i.migrations[version] {
-			return i.migrations[version][k].Identifier
-		}
+	for k := range i.migrations[version] {
+		return i.migrations[version][k].Identifier
 	}
 	return "-"
 }
