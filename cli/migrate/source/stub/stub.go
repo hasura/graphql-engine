@@ -110,5 +110,5 @@ func (s *Stub) ReadMetaDown(version uint64) (r io.ReadCloser, identifier string,
 }
 
 func (f *Stub) ReadIdentifier(version uint64) (identifier string) {
-	return f.migrations.ReadIdentifier(version)
+	return f.Migrations.ReadIdentifier(version)
 }
