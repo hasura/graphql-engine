@@ -69,7 +69,7 @@ Trigger push notifications and emails based on database events. Try the demo and
 
 * [Watch demo](https://www.youtube.com/watch?v=nuSHkzE2-zo)
 * [Try it out](https://serverless-push.demo.hasura.app/)
-* [Tutorial](https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/serverless-push)
+* [Tutorial](community/sample-apps/serverless-push)
 
 
 <!--
