@@ -4,9 +4,9 @@
 [![CircleCI](https://circleci.com/gh/hasura/graphql-engine.svg?style=shield)](https://circleci.com/gh/hasura/graphql-engine)
 
 
-<a href="https://discord.gg/vBPpJkS"><img src="https://img.shields.io/badge/chat-discord-brightgreen.svg?logo=discord&style=flat"></a>
-<a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
-<a href="https://eepurl.com/dBUfJ5"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
+<img src="https://img.shields.io/badge/chat-discord-brightgreen.svg?logo=discord&style=flat">
+HasuraHQ">
+<img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat">
 
 Hasura GraphQL Engine is a blazing-fast GraphQL server that gives you **instant, realtime GraphQL APIs over Postgres**, with [**webhook triggers**](event-triggers.md) on database events, and [**remote schemas**](remote-schemas.md) for business logic.
 
@@ -39,7 +39,7 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
 Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.io).
 
 ## Table of contents
-<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
+
 **Table of Contents**
 
 - [Quickstart:](#quickstart)
@@ -59,7 +59,7 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
 - [License](#license)
 - [Translations](#translations)
 
-<!-- markdown-toc end -->
+
 
 ## Quickstart:
 
@@ -153,12 +153,12 @@ Check out all the example applications in the
 * [Add GraphQL to a self-hosted GitLab instance](https://www.youtube.com/watch?v=a2AhxKqd82Q) (*3:44 mins*)
 * [Todo app with Auth0 and GraphQL backend](https://www.youtube.com/watch?v=15ITBYnccgc) (*4:00 mins*)
 * [GraphQL on GitLab integrated with GitLab auth](https://www.youtube.com/watch?v=m1ChRhRLq7o) (*4:05 mins*)
-* [Dashboard for 10million rides with geo-location (PostGIS, Timescale)](https://www.youtube.com/watch?v=tsY573yyGWA) (*3:06 mins*)
+* [Dashboard for 10 million rides with geo-location (PostGIS, Timescale)](https://www.youtube.com/watch?v=tsY573yyGWA) (*3:06 mins*)
 
 
 ## Support & Troubleshooting
 
-The documentation and community will help you troubleshoot most issues. If you have encountered a bug or need to get in touch with us, you can contact us using one of the following channels:
+The documentation and community will help you troubleshoot most issues. If you have met a bug or need to get in touch with us, you can contact us using one of the following channels:
 
 * Support & feedback: [Discord](https://discord.gg/vBPpJkS)
 * Issue & bug tracking: [GitHub issues](https://github.com/hasura/graphql-engine/issues)
@@ -208,7 +208,7 @@ directories.
 
 ## Translations
 
-This readme is available in the following translations:
+This Readme is available in the following translations:
 
 - [Japanese :jp:](translations/README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
 - [French :fr:](translations/README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
