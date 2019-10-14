@@ -5,6 +5,7 @@ module Hasura.GraphQL.Schema.Common
 
   , RelationshipFieldInfo(..)
   , SelField(..)
+  , _SFPGColumn
   , getPGColumnFields
   , getRelationshipFields
   , getComputedFields

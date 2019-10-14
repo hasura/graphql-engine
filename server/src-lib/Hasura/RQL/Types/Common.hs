@@ -25,6 +25,9 @@ module Hasura.RQL.Types.Common
 
        , FunctionArgName(..)
        , FunctionArg(..)
+
+       , SystemDefined(..)
+       , isSystemDefined
        ) where
 
 import           Hasura.Prelude
@@ -194,3 +197,9 @@ data FunctionArg
   , faHasDefault :: !Bool
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionArg)
+
+newtype SystemDefined = SystemDefined { unSystemDefined :: Bool }
+  deriving (Show, Eq, FromJSON, ToJSON, Q.ToPrepArg)
+
+isSystemDefined :: SystemDefined -> Bool
+isSystemDefined = unSystemDefined

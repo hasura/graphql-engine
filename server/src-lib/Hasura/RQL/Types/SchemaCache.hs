@@ -351,7 +351,7 @@ data TableInfo columnInfo
   = TableInfo
   { _tiName                  :: !QualifiedTable
   , _tiDescription           :: !(Maybe PGDescription)
-  , _tiSystemDefined         :: !Bool
+  , _tiSystemDefined         :: !SystemDefined
   , _tiFieldInfoMap          :: !(FieldInfoMap columnInfo)
   , _tiRolePermInfoMap       :: !RolePermInfoMap
   , _tiUniqOrPrimConstraints :: ![ConstraintName]
@@ -397,7 +397,7 @@ instance Show FunctionType where
 data FunctionInfo
   = FunctionInfo
   { fiName          :: !QualifiedFunction
-  , fiSystemDefined :: !Bool
+  , fiSystemDefined :: !SystemDefined
   , fiType          :: !FunctionType
   , fiInputArgs     :: !(Seq.Seq FunctionArg)
   , fiReturnType    :: !QualifiedTable

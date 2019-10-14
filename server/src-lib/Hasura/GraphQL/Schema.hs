@@ -117,15 +117,14 @@ mkFuncArgSeq inputArgs =
 
 mkGCtxRole'
   :: QualifiedTable
-  -- Postgres description
   -> Maybe PGDescription
-  -- insert permission
+  -- ^ Postgres description
   -> Maybe ([PGColumnInfo], RelationInfoMap)
-  -- select permission
+  -- ^ insert permission
   -> Maybe (Bool, [SelField])
-  -- update cols
+  -- ^ select permission
   -> Maybe [PGColumnInfo]
-  -- delete cols
+  -- ^ update cols
   -> Maybe ()
   -- ^ delete cols
   -> [PGColumnInfo]
@@ -135,12 +134,8 @@ mkGCtxRole'
   -> Maybe ViewInfo
   -> [FunctionInfo]
   -- ^ all functions
-  -> Maybe EnumValues
-  -- ^ present iff this table is an enum table (see "Hasura.RQL.Schema.Enum")
   -> TyAgg
-mkGCtxRole' tn descM insPermM selPermM updColsM
-            delPermM pkeyCols constraints viM funcs enumValuesM =
-
+mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints viM funcs =
   TyAgg (mkTyInfoMap allTypes) fieldMap scalars ordByCtx
   where
 
@@ -157,7 +152,7 @@ mkGCtxRole' tn descM insPermM selPermM updColsM
 
     allTypes = relInsInpObjTys <> onConflictTypes <> jsonOpTys
                <> queryTypes <> aggQueryTypes <> mutationTypes
-               <> funcInpArgTys <> computedColFuncArgsInps
+               <> funcInpArgTys <> referencedEnumTypes <> computedColFuncArgsInps
 
     queryTypes = catMaybes
       [ TIInpObj <$> boolExpInpObjM
@@ -172,7 +167,6 @@ mkGCtxRole' tn descM insPermM selPermM updColsM
       , TIInpObj <$> mutHelper viIsUpdatable updIncInpObjM
       , TIObj <$> mutRespObjM
       , TIEnum <$> selColInpTyM
-      , TIEnum <$> tableEnumTypeM
       ]
 
     mutHelper :: (ViewInfo -> Bool) -> Maybe a -> Maybe a
@@ -297,9 +291,19 @@ mkGCtxRole' tn descM insPermM selPermM updColsM
       Just (a, b) -> (Just a, Just b)
       Nothing     -> (Nothing, Nothing)
 
-    tableEnumTypeM = enumValuesM <&> \enumValues ->
-      mkHsraEnumTyInfo Nothing (mkTableEnumType tn) $
-        EnumValuesReference (EnumReference tn enumValues)
+    -- the types for all enums that are /referenced/ by this table (not /defined/ by this table;
+    -- there isn’t actually any need to generate a GraphQL enum type for an enum table if it’s
+    -- never referenced anywhere else)
+    referencedEnumTypes =
+      let allColumnInfos =
+               (selPermM ^.. _Just._2.traverse._SFPGColumn)
+            <> (insPermM ^. _Just._1)
+            <> (updColsM ^. _Just)
+          allEnumReferences = allColumnInfos ^.. traverse.to pgiType._PGColumnEnumReference
+      in flip map allEnumReferences $ \enumReference@(EnumReference referencedTableName _) ->
+           let typeName = mkTableEnumType referencedTableName
+           in TIEnum $ mkHsraEnumTyInfo Nothing typeName (EnumValuesReference enumReference)
+
 
     -- computed fields function args input objects
     mkComputedFieldFuncArgsInp computedColInfo =
@@ -592,13 +596,11 @@ mkGCtxRole
   -> [ConstraintName]
   -> [FunctionInfo]
   -> Maybe ViewInfo
-  -> Maybe EnumValues
   -> TableConfig
   -> RoleName
   -> RolePermInfo
   -> m (TyAgg, RootFields, InsCtxMap)
-mkGCtxRole tableCache tn descM fields pColInfos constraints funcs viM
-           enumValuesM tabConfigM role permInfo = do
+mkGCtxRole tableCache tn descM fields pColInfos constraints funcs viM tabConfigM role permInfo = do
   selPermM <- mapM (getSelPerm tableCache fields role) $ _permSel permInfo
   tabInsInfoM <- forM (_permIns permInfo) $ \ipi -> do
     ctx <- mkInsCtx role tableCache fields ipi $ _permUpd permInfo
@@ -608,7 +610,7 @@ mkGCtxRole tableCache tn descM fields pColInfos constraints funcs viM
       insCtxM = fst <$> tabInsInfoM
       updColsM = filterColFlds . upiCols <$> _permUpd permInfo
       tyAgg = mkGCtxRole' tn descM insPermM selPermM updColsM
-              (void $ _permDel permInfo) pColInfos constraints viM funcs enumValuesM
+              (void $ _permDel permInfo) pColInfos constraints viM funcs
       rootFlds = getRootFldsRole tn pColInfos constraints fields funcs
                  viM permInfo tabConfigM
       insCtxMap = maybe Map.empty (Map.singleton tn) insCtxM
@@ -656,17 +658,17 @@ mkGCtxMapTable
 mkGCtxMapTable tableCache funcCache tabInfo = do
   m <- flip Map.traverseWithKey rolePerms $
        mkGCtxRole tableCache tn descM fields pkeyColInfos validConstraints
-                  tabFuncs viewInfo enumValues customConfig
+                  tabFuncs viewInfo customConfig
   adminInsCtx <- mkAdminInsCtx tn tableCache fields
   adminSelFlds <- mkAdminSelFlds fields tableCache
   let adminCtx = mkGCtxRole' tn descM (Just (cols, icRelations adminInsCtx))
                  (Just (True, adminSelFlds)) (Just cols) (Just ())
-                 pkeyColInfos validConstraints viewInfo tabFuncs enumValues
+                 pkeyColInfos validConstraints viewInfo tabFuncs
       adminInsCtxMap = Map.singleton tn adminInsCtx
   return $ Map.insert adminRole (adminCtx, adminRootFlds, adminInsCtxMap) m
   where
     TableInfo tn descM _ fields rolePerms constraints
-              pkeyCols viewInfo _ enumValues customConfig = tabInfo
+              pkeyCols viewInfo _ _ customConfig = tabInfo
     validConstraints = mkValidConstraints constraints
     cols = getValidCols fields
     colInfos = getCols fields
@@ -698,8 +700,7 @@ mkGCtxMap tableCache functionCache = do
   return $ flip Map.map typesMap $ \(ty, flds, insCtxMap) ->
     mkGCtx ty flds insCtxMap
   where
-    tableFltr ti = not (_tiSystemDefined ti)
-                   && isValidObjectName (_tiName ti)
+    tableFltr ti = not (isSystemDefined $ _tiSystemDefined ti) && isValidObjectName (_tiName ti)
 
     getRootFlds roleMap = do
       (_, RootFields query mutation, _) <- onNothing
@@ -761,7 +762,6 @@ instance Semigroup TyAgg where
 
 instance Monoid TyAgg where
   mempty = TyAgg Map.empty Map.empty Set.empty Map.empty
-  mappend = (<>)
 
 -- | A role-specific mapping from root field names to allowed operations.
 data RootFields
@@ -776,7 +776,6 @@ instance Semigroup RootFields where
 
 instance Monoid RootFields where
   mempty = RootFields Map.empty Map.empty
-  mappend  = (<>)
 
 mkGCtx :: TyAgg -> RootFields -> InsCtxMap -> GCtx
 mkGCtx tyAgg (RootFields queryFields mutationFields) insCtxMap =

@@ -156,8 +156,7 @@ buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) =
 buildInsInfra :: QualifiedTable -> InsPermInfo -> Q.TxE QErr ()
 buildInsInfra tn (InsPermInfo _ vn be _ _) = do
   resolvedBoolExp <- convAnnBoolExpPartialSQL sessVarFromCurrentSetting be
-  trigFnQ <- buildInsTrigFn vn tn $
-    toSQLBoolExp (S.QualVar "NEW") resolvedBoolExp
+  let trigFnQ = buildInsTrigFn vn tn $ toSQLBoolExp (S.QualVar "NEW") resolvedBoolExp
   Q.catchE defaultTxErrorHandler $ do
     -- Create the view
     Q.unitQ (buildView tn vn) () False
