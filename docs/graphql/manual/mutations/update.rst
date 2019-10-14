@@ -205,59 +205,6 @@ Update based on a nested object's fields
 Update relationships
 --------------------
 
-One-to-one relationship
-^^^^^^^^^^^^^^^^^^^^^^^
-
-**Example:** Update an author's address:
-
-.. graphiql::
-  :view_only:
-  :query:
-    mutation updateAddress {
-      update_addresses(
-        where: {authors: {id: {_eq: 1}}},
-        _set: {location: "Berlin"}
-      )	{
-        returning {
-          id
-          location
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "update_addresses": {
-          "affected_rows": 1
-        }
-      }
-    }
-
-One-to-many relationship
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-**Example:** Update an author's articles:
-
-.. graphiql::
-  :view_only:
-  :query:
-    mutation updateArticle {
-      update_articles(
-        where: {author_id: {_eq: 2}},
-        _set: {is_published: true}
-      ) {
-        affected_rows
-      }
-    }
-  :response:
-    {
-      "data": {
-        "update_articles": {
-          "affected_rows": 4
-        }
-      }
-    }
-
 Many-to-many relationship
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
