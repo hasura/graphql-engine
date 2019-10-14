@@ -38,4 +38,5 @@ security/security.md](https://github.com/kubernetes/website/blob/master/content/
 
 ## 翻訳
 このドキュメントは、次の翻訳版で入手できます:
+- [English :gb:](https://github.com/hasura/graphql-engine/blob/master/SECURITY.md)
 - [French :fr:](translations/SECURITY.french.md)
