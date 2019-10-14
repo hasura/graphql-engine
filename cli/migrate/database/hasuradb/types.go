@@ -30,6 +30,171 @@ type HasuraInterfaceQuery struct {
 	Args interface{}  `json:"args" yaml:"args"`
 }
 
+type newHasuraIntefaceQuery struct {
+	Type requestTypes `json:"type" yaml:"type"`
+	Args interface{}  `json:"args" yaml:"args"`
+}
+
+func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
+	var q struct {
+		Type requestTypes `json:"type"`
+		Args interface{}  `json:"args"`
+	}
+	if err := json.Unmarshal(b, &q); err != nil {
+		return err
+	}
+	h.Type = q.Type
+	argBody, err := json.Marshal(q.Args)
+	if err != nil {
+		return err
+	}
+	switch h.Type {
+	case trackTable, addExistingTableOrView:
+		h.Args = &trackTableInput{}
+		if err := json.Unmarshal(argBody, &h.Args); err != nil {
+			return err
+		}
+	case untrackTable:
+		h.Args = &unTrackTableInput{}
+		if err := json.Unmarshal(argBody, &h.Args); err != nil {
+			return err
+		}
+	case createObjectRelationship:
+		h.Args = &createObjectRelationshipInput{}
+		if err := json.Unmarshal(argBody, &h.Args); err != nil {
+			return err
+		}
+	case createArrayRelationship:
+		h.Args = &createArrayRelationshipInput{}
+		if err := json.Unmarshal(argBody, &h.Args); err != nil {
+			return err
+		}
+	case setRelationshipComment:
+		h.Args = &setRelationshipCommentInput{}
+		if err := json.Unmarshal(argBody, &h.Args); err != nil {
+			return err
+		}
+	case dropRelationship:
+		h.Args = &dropRelationshipInput{}
+		if err := json.Unmarshal(argBody, &h.Args); err != nil {
+			return err
+		}
+	case createInsertPermission:
+		h.Args = &createInsertPermissionInput{}
+		if err := json.Unmarshal(argBody, &h.Args); err != nil {
+			return err
+		}
+	case dropInsertPermission:
+		h.Args = &dropInsertPermissionInput{}
+		if err := json.Unmarshal(argBody, &h.Args); err != nil {
+			return err
+		}
+	case createSelectPermission:
+		h.Args = &createSelectPermissionInput{}
+		if err := json.Unmarshal(argBody, &h.Args); err != nil {
+			return err
+		}
+	case dropSelectPermission:
+		h.Args = &dropSelectPermissionInput{}
+		if err := json.Unmarshal(argBody, &h.Args); err != nil {
+			return err
+		}
+	case createUpdatePermission:
+		h.Args = &createUpdatePermissionInput{}
+		if err := json.Unmarshal(argBody, &h.Args); err != nil {
+			return err
+		}
+	case dropUpdatePermission:
+		h.Args = &dropUpdatePermissionInput{}
+		if err := json.Unmarshal(argBody, &h.Args); err != nil {
+			return err
+		}
+	case createDeletePermission:
+		h.Args = &createDeletePermissionInput{}
+		if err := json.Unmarshal(argBody, &h.Args); err != nil {
+			return err
+		}
+	case dropDeletePermission:
+		h.Args = &dropDeletePermissionInput{}
+		if err := json.Unmarshal(argBody, &h.Args); err != nil {
+			return err
+		}
+	case trackFunction:
+		h.Args = &trackFunctionInput{}
+		if err := json.Unmarshal(argBody, &h.Args); err != nil {
+			return err
+		}
+	case unTrackFunction:
+		h.Args = &unTrackFunctionInput{}
+		if err := json.Unmarshal(argBody, &h.Args); err != nil {
+			return err
+		}
+	case createEventTrigger:
+		h.Args = &createEventTriggerInput{}
+		if err := json.Unmarshal(argBody, &h.Args); err != nil {
+			return err
+		}
+	case deleteEventTrigger:
+		h.Args = &deleteEventTriggerInput{}
+		if err := json.Unmarshal(argBody, &h.Args); err != nil {
+			return err
+		}
+	case addRemoteSchema:
+		h.Args = &addRemoteSchemaInput{}
+		if err := json.Unmarshal(argBody, &h.Args); err != nil {
+			return err
+		}
+	case removeRemoteSchema:
+		h.Args = &removeRemoteSchemaInput{}
+		if err := json.Unmarshal(argBody, &h.Args); err != nil {
+			return err
+		}
+	case createQueryCollection:
+		h.Args = &createQueryCollectionInput{}
+		if err := json.Unmarshal(argBody, &h.Args); err != nil {
+			return err
+		}
+	case dropQueryCollection:
+		h.Args = &dropQueryCollectionInput{}
+		if err := json.Unmarshal(argBody, &h.Args); err != nil {
+			return err
+		}
+	case addQueryToCollection:
+		h.Args = &addQueryToCollectionInput{}
+		if err := json.Unmarshal(argBody, &h.Args); err != nil {
+			return err
+		}
+	case dropQueryFromCollection:
+		h.Args = &dropQueryFromCollectionInput{}
+		if err := json.Unmarshal(argBody, &h.Args); err != nil {
+			return err
+		}
+	case addCollectionToAllowList:
+		h.Args = &addCollectionToAllowListInput{}
+		if err := json.Unmarshal(argBody, &h.Args); err != nil {
+			return err
+		}
+	case dropCollectionFromAllowList:
+		h.Args = &dropCollectionFromAllowListInput{}
+		if err := json.Unmarshal(argBody, &h.Args); err != nil {
+			return err
+		}
+	case replaceMetadata:
+		h.Args = &replaceMetadataInput{}
+		if err := json.Unmarshal(argBody, &h.Args); err != nil {
+			return err
+		}
+	case runSQL:
+		h.Args = &runSQLInput{}
+		if err := json.Unmarshal(argBody, &h.Args); err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("cannot squash type %s", h.Type)
+	}
+	return nil
+}
+
 type HasuraQuery struct {
 	Type string     `json:"type" yaml:"type"`
 	Args HasuraArgs `json:"args" yaml:"args"`
@@ -197,9 +362,58 @@ type tableSchema struct {
 	Schema string `json:"schema" yaml:"schema"`
 }
 
+func (t *tableSchema) UnmarshalJSON(b []byte) error {
+	var table string
+	if err := json.Unmarshal(b, &table); err != nil {
+		var ts struct {
+			Name   string `json:"name"`
+			Schema string `json:"schema"`
+		}
+		if err := json.Unmarshal(b, &ts); err != nil {
+			return err
+		}
+		t.Name = ts.Name
+		t.Schema = ts.Schema
+		return nil
+	}
+	t.Name = table
+	t.Schema = "public"
+	return nil
+}
+
 type trackTableInput struct {
 	Table  tableSchema `json:"table" yaml:"table"`
 	IsEnum bool        `json:"is_enum" yaml:"is_enum"`
+}
+
+func (t *trackTableInput) UnmarshalJSON(b []byte) error {
+	var ts struct {
+		Name   string
+		Schema string
+		IsEnum bool `json:"is_enum"`
+	}
+	if err := json.Unmarshal(b, &ts); err != nil {
+		return err
+	}
+	t.IsEnum = ts.IsEnum
+	if ts.Name == "" {
+		var ts struct {
+			Table tableSchema
+		}
+		if err := json.Unmarshal(b, &ts); err != nil {
+			return err
+		}
+		t.Table = ts.Table
+		return nil
+	}
+	if ts.Schema == "" {
+		ts.Schema = "public"
+	}
+	t.Table = tableSchema{
+		Name:   ts.Name,
+		Schema: ts.Schema,
+	}
+	return nil
 }
 
 type unTrackTableInput struct {
