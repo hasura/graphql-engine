@@ -158,7 +158,7 @@ Check out all the example applications in the
 
 ## Support & Troubleshooting
 
-The documentation and community will help you troubleshoot most issues. If you have met a bug or need to get in touch with us, you can contact us using one of the following channels:
+The documentation and community will help you troubleshoot most issues. If you have encountered a bug or need to get in touch with us, you can contact us using one of the following channels:
 
 * Support & feedback: [Discord](https://discord.gg/vBPpJkS)
 * Issue & bug tracking: [GitHub issues](https://github.com/hasura/graphql-engine/issues)
