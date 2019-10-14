@@ -13,7 +13,6 @@ import { replace } from 'react-router-redux';
 import globals from '../../../../Globals';
 import { E_ONGOING_REQ, editItem } from './EditActions';
 import { findTable, generateTableDef } from '../../../Common/utils/pgUtils';
-import { showErrorNotification } from '../../Common/Notification';
 
 class EditItem extends Component {
   constructor() {
@@ -228,7 +227,7 @@ class EditItem extends Component {
           inputValues[colName] = null;
         } else if (refs[colName].defaultNode.checked) {
           // default
-          return;
+          inputValues[colName] = { default: true };
         } else if (refs[colName].valueNode.checked) {
           inputValues[colName] =
             refs[colName].valueInput.props !== undefined
@@ -237,13 +236,9 @@ class EditItem extends Component {
         }
       });
 
-      if (Object.keys(inputValues).length) {
-        dispatch({ type: E_ONGOING_REQ });
+      dispatch({ type: E_ONGOING_REQ });
 
-        dispatch(editItem(tableName, inputValues));
-      } else {
-        dispatch(showErrorNotification('Edit failed!', 'No fields updated'));
-      }
+      dispatch(editItem(tableName, inputValues));
     };
 
     return (
