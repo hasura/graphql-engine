@@ -26,7 +26,7 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
 
 ## Features
 
-* **Make powerful queries**: Built-in filtering, pagination, pattern search, bulk insert, update, delete mutations
+* **Make powerful queries**: Built-in filtering, pagination, pattern search, bulk insert, update and delete mutations
 * **Realtime**: Convert any GraphQL query to a live query by using subscriptions
 * **Merge remote schemas**: Access custom GraphQL schemas for business logic via a single GraphQL Engine endpoint. [**Read more**](remote-schemas.md).
 * **Trigger webhooks or serverless functions**: On Postgres insert/update/delete events ([read more](event-triggers.md))
@@ -108,7 +108,7 @@ Hasura works with any GraphQL client. We recommend using [Apollo Client](https:/
 
 ## Add business logic
 
-GraphQL Engine provides easy-to-reason, scalable and performant methods for adding custom business logic to your backend:
+GraphQL Engine provides easy-to-reason, scalable and performance effective methods for adding custom business logic to your backend:
 
 ### Remote schemas
 
@@ -137,7 +137,7 @@ Check out all the example applications in the
   - [Tutorial](community/sample-apps/realtime-chat)
   - [Browse APIs](https://realtime-chat.demo.hasura.app/console)
 
-- Live location tracking app that shows a running vehicle changing current GPS
+- Live location tracking app that shows a running vehicle with current GPS
   coordinates moving on a map.
   - [Try it out](https://realtime-location-tracking.demo.hasura.app/)
   - [Tutorial](community/sample-apps/realtime-location-tracking)
@@ -158,7 +158,7 @@ Check out all the example applications in the
 
 ## Support & Troubleshooting
 
-The documentation and community will help you troubleshoot most issues. If you have encountered a bug or need to get in touch with us, you can contact us using one of the following channels:
+The documentation and community will help you troubleshoot most of the issues. If you have encountered a bug or need to get in touch with us, you can contact us using one of the following channels:
 
 * Support & feedback: [Discord](https://discord.gg/vBPpJkS)
 * Issue & bug tracking: [GitHub issues](https://github.com/hasura/graphql-engine/issues)
