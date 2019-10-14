@@ -104,5 +104,4 @@ Esse documento está disponível em:
 - [French :fr:](translations/CONTRIBUTING.french.md)
 - [English :gb:](/CONTRIBUTING.md)
 
-
 (Creditos: Algumas seções estão adaptadas do https://github.com/PostgREST/postgrest/blob/master/.github/CONTRIBUTING.md)
