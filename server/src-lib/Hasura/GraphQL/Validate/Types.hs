@@ -67,23 +67,24 @@ module Hasura.GraphQL.Validate.Types
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                    as J
-import qualified Data.Aeson.Casing             as J
-import qualified Data.Aeson.TH                 as J
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.HashMap.Strict.InsOrd    as OMap
-import qualified Data.HashSet                  as Set
-import qualified Data.Text                     as T
-import qualified Language.GraphQL.Draft.Syntax as G
-import qualified Language.GraphQL.Draft.TH     as G
-import qualified Language.Haskell.TH.Syntax    as TH
+import qualified Data.Aeson                          as J
+import qualified Data.Aeson.Casing                   as J
+import qualified Data.Aeson.TH                       as J
+import qualified Data.HashMap.Strict                 as Map
+import qualified Data.HashMap.Strict.InsOrd          as OMap
+import qualified Data.HashSet                        as Set
+import qualified Data.Text                           as T
+import qualified Language.GraphQL.Draft.Syntax       as G
+import qualified Language.GraphQL.Draft.TH           as G
+import qualified Language.Haskell.TH.Syntax          as TH
 
-import qualified Hasura.RQL.Types.Column       as RQL
+import qualified Hasura.RQL.Types.Column             as RQL
 
 import           Hasura.GraphQL.Utils
-import           Hasura.RQL.Instances          ()
+import           Hasura.RQL.Instances                ()
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.RemoteSchema
+import           Hasura.RQL.Types.RemoteRelationship (RemoteRelationship)
+import           Hasura.RQL.Types.RemoteSchema       (RemoteSchemaName)
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
@@ -155,10 +156,11 @@ type ParamMap = Map.HashMap G.Name InpValInfo
 -- | location of the type: a hasura type or a remote type
 data TypeLoc
   = TLHasuraType
-  | TLRemoteType !RemoteSchemaName !RemoteSchemaInfo
+  | TLRemoteType !RemoteSchemaName
+  | TLRemoteRelType !RemoteRelationship
   deriving (Show, Eq, TH.Lift, Generic)
 
-instance Hashable TypeLoc
+$(J.deriveToJSON (J.aesonDrop 2 J.camelCase){J.omitNothingFields=True} ''TypeLoc)
 
 data ObjFldInfo
   = ObjFldInfo

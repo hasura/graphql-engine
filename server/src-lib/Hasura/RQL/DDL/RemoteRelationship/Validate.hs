@@ -92,6 +92,9 @@ validateRelationship remoteRelationship gctx tables = do
                    TLHasuraType ->
                      Left
                        (pure (FieldNotFoundInRemoteSchema (fcName fieldCall)))
+                   TLRemoteRelType {} ->
+                     Left
+                       (pure (FieldNotFoundInRemoteSchema (fcName fieldCall)))
                    TLRemoteType {} -> do
                      let providedArguments =
                            remoteArgumentsToMap (fcArguments fieldCall)
@@ -116,10 +119,14 @@ validateRelationship remoteRelationship gctx tables = do
                             typeMap)
                      innerObjTyInfo <-
                        if isObjType (GS._gTypes gctx) objFldInfo
-                       then getTyInfoFromField (GS._gTypes gctx) objFldInfo
-                       else if isScalarType (GS._gTypes gctx) objFldInfo
-                       then pure objTyInfo
-                       else (Left (pure (InvalidType (_fiTy objFldInfo) "only objects or scalar types expected")))
+                         then getTyInfoFromField (GS._gTypes gctx) objFldInfo
+                         else if isScalarType (GS._gTypes gctx) objFldInfo
+                                then pure objTyInfo
+                                else (Left
+                                        (pure
+                                           (InvalidType
+                                              (_fiTy objFldInfo)
+                                              "only objects or scalar types expected")))
                      pure
                        ( innerObjTyInfo
                        , _fiTy objFldInfo
@@ -148,15 +155,15 @@ validateRelationship remoteRelationship gctx tables = do
     isObjType types field =
       let baseTy = getBaseTy (_fiTy field)
           typeInfo = HM.lookup baseTy types
-      in case typeInfo of
-           Just (TIObj _) -> True
-           _              -> False
+       in case typeInfo of
+            Just (TIObj _) -> True
+            _              -> False
     isScalarType types field =
       let baseTy = getBaseTy (_fiTy field)
           typeInfo = HM.lookup baseTy types
-      in case typeInfo of
-           Just (TIScalar _) -> True
-           _                 -> False
+       in case typeInfo of
+            Just (TIScalar _) -> True
+            _                 -> False
 
 -- | Return a map with keys deleted whose template argument is
 -- specified as an atomic (variable, constant), keys which are kept

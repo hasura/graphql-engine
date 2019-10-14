@@ -19,7 +19,6 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-import qualified Data.Sequence                          as Seq
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.LiveQuery       as E
 import qualified Hasura.GraphQL.Resolve                 as RS
@@ -115,36 +114,36 @@ explainGQLQuery
   -> GQLExplain
   -> m EncJSON
 explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw) = do
-  opDef <- GV.getTypedOp opNameM selSets opDefs
-  execPlans <- E.getExecPlanPartial userInfo sc enableAL query
-  let mRootSelSet =
-        foldl'
-          (\accumSelSetM execPlan ->
-             case execPlan of
-               E.ExPHasuraPartial (gCtx, topField, _) -> case topField of
-                 GV.HasuraTopQuery field -> fmap (\(gctx, fields) -> (gctx, (Seq.|>) fields field)) accumSelSetM
-                 GV.HasuraTopMutation field -> fmap (\(gctx, fields) -> (gctx, (Seq.|>) fields field)) accumSelSetM
-                 GV.HasuraTopSubscription field -> pure $ (gCtx, Seq.singleton field)
-               E.ExPRemotePartial {} -> Nothing)
-          (pure (emptyGCtx, Seq.empty))
-          execPlans
-  rootSelSet <- onNothing mRootSelSet $ throw400 InvalidParams "only hasura queries can be explained"
-  case (G._todType opDef, rootSelSet) of
-    (G.OperationTypeQuery, (gCtx, selSet)) ->
-      runInTx $ encJFromJValue <$> traverse (explainField userInfo gCtx sqlGenCtx) (toList selSet)
-    (G.OperationTypeMutation, _) ->
+  E.GQExecPlanPartial opType fieldPlans <-
+    E.getExecPlanPartial userInfo sc enableAL query
+  let hasuraFieldPlans = mapMaybe getHasuraField (toList fieldPlans)
+  if null hasuraFieldPlans
+    then throw400 InvalidParams "only hasura queries can be explained"
+    else pure ()
+  case opType of
+    G.OperationTypeQuery ->
+      runInTx $
+      encJFromJValue <$>
+      traverse
+        (\(gCtx, field) -> explainField userInfo gCtx sqlGenCtx field)
+        hasuraFieldPlans
+    G.OperationTypeMutation ->
       throw400 InvalidParams "only queries can be explained"
-    (G.OperationTypeSubscription, (gCtx, selSet)) -> do
-      rootField <- getRootField selSet
+    G.OperationTypeSubscription -> do
+      (gCtx, rootField) <- getRootField hasuraFieldPlans
       (plan, _) <- E.getSubsOp pgExecCtx gCtx sqlGenCtx userInfo rootField
       runInTx $ encJFromJValue <$> E.explainLiveQueryPlan plan
   where
     usrVars = mkUserVars $ maybe [] Map.toList userVarsRaw
     userInfo = mkUserInfo (fromMaybe adminRole $ roleFromVars usrVars) usrVars
     runInTx = liftEither <=< liftIO . runExceptT . runLazyTx pgExecCtx
-    (GH.GQLReq opNameM q _) = query
-    (selSets, opDefs, _) = G.partitionExDefs $ GH.unGQLExecDoc q
-    getRootField = \case
-      Seq.Empty -> throw400 InvalidParams "expected one top field in subscription"
-      (fld Seq.:<| Seq.Empty) -> pure fld
-      _ -> throw400 InvalidParams "expected only one top field in subscription"
+    getHasuraField =
+      \case
+        E.GQFieldPartialHasura a -> Just a
+        _ -> Nothing
+    getRootField =
+      \case
+        [] -> throw500 "no field found in subscription"
+        [fld] -> pure fld
+        _ ->
+          throw500 "expected only one field in subscription"

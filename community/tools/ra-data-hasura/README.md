@@ -31,6 +31,7 @@ import UserIcon from '@material-ui/icons/Group';
 import { Admin, Resource, ListGuesser } from 'react-admin';
 import hasuraDataProvider from 'ra-data-hasura';
 
+// The following components are created when following the react-admin tutorial
 import { PostList, PostEdit, PostCreate, PostShow } from './posts';
 import { UserList } from './users';
 import Dashboard from './Dashboard';

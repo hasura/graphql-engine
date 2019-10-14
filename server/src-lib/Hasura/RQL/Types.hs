@@ -1,5 +1,3 @@
-{-# LANGUAGE ConstraintKinds #-}
-
 module Hasura.RQL.Types
        ( P1
        , liftP1
@@ -14,6 +12,8 @@ module Hasura.RQL.Types
 
        , SQLGenCtx(..)
        , HasSQLGenCtx(..)
+
+       , HasSystemDefined(..)
 
        , QCtx(..)
        , HasQCtx(..)
@@ -54,7 +54,6 @@ import           Hasura.RQL.Types.Permission         as R
 import           Hasura.RQL.Types.RemoteRelationship as R
 import           Hasura.RQL.Types.RemoteSchema       as R
 import           Hasura.RQL.Types.SchemaCache        as R
-
 import           Hasura.SQL.Types
 
 import qualified Hasura.GraphQL.Context              as GC
@@ -140,6 +139,9 @@ newtype SQLGenCtx
 
 class (Monad m) => HasSQLGenCtx m where
   askSQLGenCtx :: m SQLGenCtx
+
+class (Monad m) => HasSystemDefined m where
+  askSystemDefined :: m SystemDefined
 
 type ER e r = ExceptT e (Reader r)
 type P1 = ER QErr QCtx

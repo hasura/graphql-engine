@@ -229,7 +229,7 @@ export const dropInconsistentObjects = () => {
 };
 
 export const isMetadataStatusPage = () => {
-  return window.location.pathname.includes('/setting/metadata-status');
+  return window.location.pathname.includes('/settings/metadata-status');
 };
 
 export const redirectToMetadataStatus = () => {

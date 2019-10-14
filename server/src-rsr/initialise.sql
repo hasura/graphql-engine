@@ -461,13 +461,13 @@ CREATE VIEW hdb_catalog.hdb_column AS
         , coalesce(pkey_refs.ref_tables, '[]') AS primary_key_references
         , col_description(pg_class.oid, columns.ordinal_position) AS description
      FROM information_schema.columns
+JOIN pg_class ON pg_class.relname = columns.table_name
+JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
+     AND pg_namespace.nspname = columns.table_schema
 LEFT JOIN primary_key_references AS pkey_refs
            ON columns.table_schema = pkey_refs.src_table_schema
           AND columns.table_name   = pkey_refs.src_table_name
-          AND columns.column_name  = pkey_refs.src_column_name
-LEFT JOIN pg_class ON pg_class.relname = columns.table_name
-LEFT JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
-          AND pg_namespace.nspname = columns.table_schema;
+          AND columns.column_name  = pkey_refs.src_column_name;
 
 CREATE VIEW hdb_catalog.hdb_table_info_agg AS (
 select

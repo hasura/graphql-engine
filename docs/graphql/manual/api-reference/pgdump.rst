@@ -54,8 +54,6 @@ Request
   -  Postgres triggers created by Hasura for event triggers.
 
 
-Source code for the script that is executed can be found `here <https://github.com/hasura/graphql-engine/tree/master/server/src-rsr/run_pg_dump.sh>`_.
-
 Sample response
 ^^^^^^^^^^^^^^^
 

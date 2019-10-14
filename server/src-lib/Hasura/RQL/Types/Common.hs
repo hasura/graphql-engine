@@ -26,6 +26,8 @@ module Hasura.RQL.Types.Common
        , rootText
 
        , FunctionArgName(..)
+       , SystemDefined(..)
+       , isSystemDefined
        ) where
 
 import           Hasura.Prelude
@@ -205,3 +207,9 @@ class EquatableGType a where
   getEqProps :: a -> EqProps a
 
 type CustomColumnNames = HM.HashMap PGCol G.Name
+
+newtype SystemDefined = SystemDefined { unSystemDefined :: Bool }
+  deriving (Show, Eq, FromJSON, ToJSON, Q.ToPrepArg)
+
+isSystemDefined :: SystemDefined -> Bool
+isSystemDefined = unSystemDefined

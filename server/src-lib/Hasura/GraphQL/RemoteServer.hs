@@ -37,7 +37,7 @@ fetchRemoteSchema
   -> RemoteSchemaName
   -> RemoteSchemaInfo
   -> m GC.RemoteGCtx
-fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _ timeout) = do
+fetchRemoteSchema manager name (RemoteSchemaInfo url headerConf _ timeout) = do
   headers <- getHeadersFromConf headerConf
   let hdrs = flip map headers $
              \(hn, hv) -> (CI.mk . T.encodeUtf8 $ hn, T.encodeUtf8 hv)
@@ -63,7 +63,7 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _ timeout) =
   let (sDoc, qRootN, mRootN, sRootN) =
         fromIntrospection introspectRes
   typMap <- either remoteSchemaErr return $ VT.fromSchemaDoc sDoc $
-     VT.TLRemoteType name def
+     VT.TLRemoteType name
   let mQrTyp = Map.lookup qRootN typMap
       mMrTyp = maybe Nothing (`Map.lookup` typMap) mRootN
       mSrTyp = maybe Nothing (`Map.lookup` typMap) sRootN
