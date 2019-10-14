@@ -29,7 +29,6 @@ flag profile
 
 library
   hs-source-dirs:      src-lib
-                     , src-exec
   default-language:    Haskell2010
   build-depends:       base
                      , these
@@ -114,8 +113,8 @@ library
 
                      -- Templating
                      , mustache
-                     , ginger
                      , file-embed
+                     , shakespeare >= 2.0.22
 
                      --
                      , data-has
@@ -299,8 +298,6 @@ library
                      , Hasura.SQL.Types
                      , Hasura.SQL.Value
                      , Network.URI.Extended
-                     , Ops
-                     , Migrate
 
   other-modules:       Hasura.Server.Auth.JWT.Internal
                      , Hasura.Server.Auth.JWT.Logging
@@ -407,6 +404,7 @@ executable graphql-engine
 
   other-modules:       Ops
                      , Migrate
+                     , Migrate.Version
 
   if flag(developer)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries
