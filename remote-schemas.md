@@ -81,3 +81,4 @@ Read the complete [documentation](https://docs.hasura.io/1.0/graphql/manual/remo
 This document is available in the following translations:
 
 - [French :fr:](translations/remote-schemas.french.md)
+- [Portuguese :pt:](translations/remote-schemas.portuguese.md)
