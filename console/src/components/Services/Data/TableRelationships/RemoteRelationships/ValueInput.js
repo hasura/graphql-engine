@@ -55,7 +55,7 @@ const ValueInput = ({
         type="text"
         value={staticValue || ''}
         placeholder="Value"
-        className={styles.argValue}
+        className={`form-control ${styles.argValue}`}
         onChange={handleInputChange}
       />
     );
