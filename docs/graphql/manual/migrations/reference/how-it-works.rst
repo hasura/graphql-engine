@@ -13,7 +13,7 @@ Metadata
 --------
 
 Let's first talk about metadata. Whenever you do certain actions on the console
-or via the API, Hasura will record it in the :doc:`metadata catalogue <../../how-it-works/metadata-schema>`
+or via the API, Hasura records it in the :doc:`metadata catalogue <../../how-it-works/metadata-schema>`
 which is a schema called ``hdb_catalog`` in your Postgres database. For example, if you track
 a table, a new entry is created in the ``hdb_catalog.hdb_table`` table in Postgres.
 Similarly, there are more tables in this schema to track relationships, event triggers,

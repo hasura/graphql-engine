@@ -167,5 +167,5 @@ Catalogue versioning
 Whenever the schema of the catalogue is modified *(typically to support new features)* a new version of the
 catalogue is generated.
 
-The Hasura GraphQL engine automatically upgrades the catalogue version on startup whenever a new version is
-available.
+The catalogue version is upgraded automatically on startup if a new version is available during Hasura GraphQL engine
+updates.
