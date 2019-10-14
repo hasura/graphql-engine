@@ -68,4 +68,3 @@ disponível em https://www.contributor-covenant.org/version/1/4/code-of-conduct.
 Esse documento está disponível nas seguintes traduções:
 
 - [French :fr:](translations/code-of-conduct.french.md)
-- [Portuguese :pt:](translations/code-of-conduct.portuguese.md)
