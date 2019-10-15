@@ -35,7 +35,7 @@ nginx
 Caddy
 ~~~~~
 
-`Here <https://caddyserver.com/docs/proxy>`_ is how to configure a Caddy proxy.
+`Here <https://caddyserver.com/docs/proxy>`_ is how you can configure a Caddy proxy.
 
 
 .. note::
