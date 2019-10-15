@@ -38,10 +38,6 @@ Caddy
 `Here <https://caddyserver.com/docs/proxy>`_ is how to configure a Caddy proxy.
 
 
-.. note::
-
-  ``gzip`` compression is enabled by default if the client supports it.
-
 CORS domains
 ^^^^^^^^^^^^
 
@@ -74,3 +70,7 @@ Logging
 -------
 
 :doc:`This page <../deployment/logging>` describes the different types of server logs, as well as how to access them.
+
+.. note::
+
+  While PII data is not captured, it is recommended that telemetry be disabled for production instances. The relevant environment variable can be found :doc:`here <../deployment/graphql-engine-flags/reference>`.
