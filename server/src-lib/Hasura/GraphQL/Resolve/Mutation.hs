@@ -24,7 +24,7 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
-import           Hasura.GraphQL.Resolve.Select     (fromSelSet)
+import           Hasura.GraphQL.Resolve.Select     (processTableSelectionSet)
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
@@ -41,7 +41,7 @@ convertMutResp ty selSet =
     "__typename"    -> return $ RR.MExp $ G.unName $ G.unNamedType ty
     "affected_rows" -> return RR.MCount
     "returning"     -> do
-      annFlds <- fromSelSet (_fType fld) $ _fSelSet fld
+      annFlds <- processTableSelectionSet (_fType fld) $ _fSelSet fld
       annFldsResolved <- traverse
         (traverse (RS.traverseAnnFld convertUnresolvedVal)) annFlds
       return $ RR.MRet annFldsResolved

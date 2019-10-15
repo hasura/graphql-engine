@@ -1,16 +1,18 @@
 module Hasura.GraphQL.Resolve
   ( mutFldToTx
   , queryFldToPGAST
-  , RS.traverseQueryRootFldAST
-  , RS.toPGQuery
+  , traverseQueryRootFldAST
   , UnresolvedVal(..)
 
   , AnnPGVal(..)
   , txtConverter
 
-  , RS.QueryRootFldUnresolved
+  , QueryRootFldAST(..)
+  , QueryRootFldUnresolved
+  , QueryRootFldResolved
+  , toPGQuery
+
   , resolveValPrep
-  , queryFldToSQL
   , RIntro.schemaR
   , RIntro.typeR
   ) where
@@ -23,15 +25,51 @@ import qualified Language.GraphQL.Draft.Syntax     as G
 
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.Prelude
-import           Hasura.RQL.DML.Internal           (sessVarFromCurrentSetting)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
+import qualified Hasura.GraphQL.Resolve.Action     as RA
 import qualified Hasura.GraphQL.Resolve.Insert     as RI
 import qualified Hasura.GraphQL.Resolve.Introspect as RIntro
 import qualified Hasura.GraphQL.Resolve.Mutation   as RM
 import qualified Hasura.GraphQL.Resolve.Select     as RS
 import qualified Hasura.GraphQL.Validate           as V
+import qualified Hasura.RQL.DML.Select             as DS
+import qualified Hasura.SQL.DML                    as S
+
+data QueryRootFldAST v
+  = QRFPk !(DS.AnnSimpleSelG v)
+  | QRFSimple !(DS.AnnSimpleSelG v)
+  | QRFAgg !(DS.AnnAggSelG v)
+  | QRFFnSimple !(DS.AnnFnSelSimpleG v)
+  | QRFFnAgg !(DS.AnnFnSelAggG v)
+  | QRFActionSelect !(RA.ActionSelect v)
+  deriving (Show, Eq)
+
+type QueryRootFldUnresolved = QueryRootFldAST UnresolvedVal
+type QueryRootFldResolved = QueryRootFldAST S.SQLExp
+
+traverseQueryRootFldAST
+  :: (Applicative f)
+  => (a -> f b)
+  -> QueryRootFldAST a
+  -> f (QueryRootFldAST b)
+traverseQueryRootFldAST f = \case
+  QRFPk s           -> QRFPk <$> DS.traverseAnnSimpleSel f s
+  QRFSimple s       -> QRFSimple <$> DS.traverseAnnSimpleSel f s
+  QRFAgg s          -> QRFAgg <$> DS.traverseAnnAggSel f s
+  QRFFnSimple s     -> QRFFnSimple <$> DS.traverseAnnFnSimple f s
+  QRFFnAgg s        -> QRFFnAgg <$> DS.traverseAnnFnAgg f s
+  QRFActionSelect s -> QRFActionSelect <$> RA.traverseActionSelect f s
+
+toPGQuery :: QueryRootFldResolved -> Q.Query
+toPGQuery = \case
+  QRFPk s           -> DS.selectQuerySQL True s
+  QRFSimple s       -> DS.selectQuerySQL False s
+  QRFAgg s          -> DS.selectAggQuerySQL s
+  QRFFnSimple s     -> DS.mkFuncSelectSimple s
+  QRFFnAgg s        -> DS.mkFuncSelectAgg s
+  QRFActionSelect s -> RA.actionSelectToSql s
 
 validateHdrs
   :: (Foldable t, QErrM m) => UserInfo -> t Text -> m ()
@@ -47,42 +85,28 @@ queryFldToPGAST
      , Has QueryCtxMap r
      )
   => V.Field
-  -> m RS.QueryRootFldUnresolved
+  -> m QueryRootFldUnresolved
 queryFldToPGAST fld = do
   opCtx <- getOpCtx $ V._fName fld
   userInfo <- asks getter
   case opCtx of
     QCSelect ctx -> do
       validateHdrs userInfo (_socHeaders ctx)
-      RS.convertSelect ctx fld
+      QRFSimple <$> RS.convertSelect ctx fld
     QCSelectPkey ctx -> do
       validateHdrs userInfo (_spocHeaders ctx)
-      RS.convertSelectByPKey ctx fld
+      QRFPk <$> RS.convertSelectByPKey ctx fld
     QCSelectAgg ctx -> do
       validateHdrs userInfo (_socHeaders ctx)
-      RS.convertAggSelect ctx fld
+      QRFAgg <$> RS.convertAggSelect ctx fld
     QCFuncQuery ctx -> do
       validateHdrs userInfo (_fqocHeaders ctx)
-      RS.convertFuncQuerySimple ctx fld
+      QRFFnSimple <$> RS.convertFuncQuerySimple ctx fld
     QCFuncAggQuery ctx -> do
       validateHdrs userInfo (_fqocHeaders ctx)
-      RS.convertFuncQueryAgg ctx fld
-
-queryFldToSQL
-  :: ( MonadResolve m, MonadReader r m, Has FieldMap r
-     , Has OrdByCtx r, Has SQLGenCtx r, Has UserInfo r
-     , Has QueryCtxMap r
-     )
-  => PrepFn m
-  -> V.Field
-  -> m Q.Query
-queryFldToSQL fn fld = do
-  pgAST <- queryFldToPGAST fld
-  resolvedAST <- flip RS.traverseQueryRootFldAST pgAST $ \case
-    UVPG annPGVal -> fn annPGVal
-    UVSQL sqlExp  -> return sqlExp
-    UVSessVar colTy sessVar -> sessVarFromCurrentSetting colTy sessVar
-  return $ RS.toPGQuery resolvedAST
+      QRFFnAgg <$> RS.convertFuncQueryAgg ctx fld
+    QCActionFetch ctx ->
+      QRFActionSelect <$> RA.resolveActionSelect ctx fld
 
 mutFldToTx
   :: ( MonadResolve m
@@ -110,6 +134,8 @@ mutFldToTx fld = do
     MCDelete ctx -> do
       validateHdrs userInfo (_docHeaders ctx)
       RM.convertDelete ctx fld
+    MCAction ctx ->
+      RA.resolveActionInsert fld ctx (userVars userInfo)
 
 getOpCtx
   :: ( MonadResolve m

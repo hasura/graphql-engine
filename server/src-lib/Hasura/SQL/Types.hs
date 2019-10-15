@@ -16,8 +16,8 @@ module Hasura.SQL.Types
 
   , PGDescription(..)
 
-  , PGCol
-  , getPGColTxt
+  , PGCol(..)
+  -- , getPGColTxt
   , showPGCols
 
   , isIntegerType
@@ -58,22 +58,23 @@ module Hasura.SQL.Types
   )
 where
 
-import qualified Database.PG.Query          as Q
-import qualified Database.PG.Query.PTI      as PTI
+import qualified Database.PG.Query             as Q
+import qualified Database.PG.Query.PTI         as PTI
 
 import           Hasura.Prelude
 
 import           Data.Aeson
-import           Data.Aeson.Encoding        (text)
 import           Data.Aeson.TH
-import           Data.Aeson.Types           (toJSONKeyText)
-import           Instances.TH.Lift          ()
-import           Language.Haskell.TH.Syntax (Lift)
+import           Data.Aeson.Encoding           (text)
+import           Data.Aeson.Types              (toJSONKeyText)
+import           Instances.TH.Lift             ()
+import           Language.Haskell.TH.Syntax    (Lift)
 
-import qualified Data.Text.Extended         as T
-import qualified Database.PostgreSQL.LibPQ  as PQ
-import qualified PostgreSQL.Binary.Decoding as PD
-import qualified Text.Builder               as TB
+import qualified Data.Text.Extended            as T
+import qualified Database.PostgreSQL.LibPQ     as PQ
+import qualified Language.GraphQL.Draft.Syntax as G
+import qualified PostgreSQL.Binary.Decoding    as PD
+import qualified Text.Builder                  as TB
 
 class ToSQL a where
   toSQL :: a -> TB.Builder
@@ -125,6 +126,9 @@ infixr 6 <<>
 (<<>) :: (DQuote a) => a -> T.Text -> T.Text
 (<<>) a rTxt = dquote a <> rTxt
 {-# INLINE (<<>) #-}
+
+instance DQuote G.Name where
+  dquoteTxt = G.unName
 
 pgFmtIden :: T.Text -> T.Text
 pgFmtIden x =
@@ -330,6 +334,7 @@ data PGScalarType
   | PGGeometry
   | PGGeography
   | PGRaster
+  | PGUUID
   | PGUnknown !T.Text
   deriving (Show, Eq, Lift, Generic, Data)
 
@@ -357,6 +362,7 @@ instance ToSQL PGScalarType where
     PGGeometry    -> "geometry"
     PGGeography   -> "geography"
     PGRaster      -> "raster"
+    PGUUID        -> "uuid"
     PGUnknown t   -> TB.text t
 
 instance ToJSON PGScalarType where
@@ -417,6 +423,7 @@ txtToPgColTy t = case t of
   "geography"                -> PGGeography
 
   "raster"                   -> PGRaster
+  "uuid"                     -> PGUUID
   _                          -> PGUnknown t
 
 
@@ -447,6 +454,7 @@ pgTypeOid PGGeometry    = PTI.text
 pgTypeOid PGGeography   = PTI.text
 -- we are using the ST_RastFromHexWKB($i) instead of $i
 pgTypeOid PGRaster      = PTI.text
+pgTypeOid PGUUID        = PTI.uuid
 pgTypeOid (PGUnknown _) = PTI.auto
 
 isIntegerType :: PGScalarType -> Bool

@@ -53,6 +53,15 @@ instance ToJSON GCtx where
 
 type GCtxMap = Map.HashMap RoleName GCtx
 
+-- data GCtxMap
+--   = GCtxMap
+--   { _gcmAdminCtx :: !GCtx
+--   , _gcmRoles :: !(Map.HashMap RoleName GCtx)
+--   } deriving (Show, Eq)
+
+-- getAdminGCtx :: GCtxMap -> GCtx
+-- getAdminGCtx = _gcmAdminCtx
+
 mkQueryRootTyInfo :: [ObjFldInfo] -> ObjTyInfo
 mkQueryRootTyInfo flds =
   mkHsraObjTyInfo (Just "query root")

@@ -35,7 +35,9 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Utils                   (duplicates)
 import           Hasura.SQL.Types
 
+import           Hasura.GraphQL.Schema.Action
 import           Hasura.GraphQL.Schema.BoolExp
+import           Hasura.GraphQL.Schema.Builder
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Function
 import           Hasura.GraphQL.Schema.Merge
@@ -313,7 +315,7 @@ getRootFldsRole'
 getRootFldsRole' tn primCols constraints fields funcs insM
                  selM updM delM viM tableConfig =
   RootFields
-    { rootQueryFields = makeFieldMap
+    { _rootQueryFields = makeFieldMap
         $  funcQueries
         <> funcAggQueries
         <> catMaybes
@@ -321,7 +323,7 @@ getRootFldsRole' tn primCols constraints fields funcs insM
           , getSelAggDet selM
           , getPKeySelDet selM primCols
           ]
-    , rootMutationFields = makeFieldMap $ catMaybes
+    , _rootMutationFields = makeFieldMap $ catMaybes
         [ mutHelper viIsInsertable getInsDet insM
         , mutHelper viIsUpdatable getUpdDet updM
         , mutHelper viIsDeletable getDelDet delM
@@ -627,19 +629,25 @@ noFilter = annBoolExpTrue
 
 mkGCtxMap
   :: (MonadError QErr m)
-  => TableCache PGColumnInfo -> FunctionCache -> m GCtxMap
-mkGCtxMap tableCache functionCache = do
+  => TableCache PGColumnInfo -> FunctionCache -> ActionCache -> m GCtxMap
+mkGCtxMap tableCache functionCache actionCache = do
   typesMapL <- mapM (mkGCtxMapTable tableCache functionCache) $
                filter tableFltr $ Map.elems tableCache
   -- since root field names are customisable, we need to check for
   -- duplicate root field names across all tables
-  duplicateRootFlds <- (duplicates . concat) <$> forM typesMapL getRootFlds
+  duplicateRootFlds <- duplicates . concat <$> forM typesMapL getRootFlds
   unless (null duplicateRootFlds) $
     throw400 Unexpected $ "following root fields are duplicated: "
     <> showNames duplicateRootFlds
-  let typesMap = foldr (Map.unionWith mappend) Map.empty typesMapL
-  return $ flip Map.map typesMap $ \(ty, flds, insCtxMap) ->
-    mkGCtx ty flds insCtxMap
+
+  let actionsSchema = mkActionsSchema actionCache
+  -- TODO: clean this up
+  let typesMap = foldr (Map.unionWith mappend)
+                 (fmap (\(rootFields, tyAgg) -> (tyAgg, rootFields, mempty))
+                   actionsSchema) typesMapL
+      gCtxMap  = flip Map.map typesMap $
+                 \(ty, flds, insCtxMap) -> mkGCtx ty flds insCtxMap
+  return gCtxMap
   where
     tableFltr ti = not (isSystemDefined $ _tiSystemDefined ti) && isValidObjectName (_tiName ti)
 
@@ -648,13 +656,14 @@ mkGCtxMap tableCache functionCache = do
         (Map.lookup adminRole roleMap) $ throw500 "admin schema not found"
       return $ Map.keys query <> Map.keys mutation
 
+
 -- | build GraphQL schema from postgres tables and functions
 buildGCtxMapPG
   :: (QErrM m, CacheRWM m)
   => m ()
 buildGCtxMapPG = do
   sc <- askSchemaCache
-  gCtxMap <- mkGCtxMap (scTables sc) (scFunctions sc)
+  gCtxMap <- mkGCtxMap (scTables sc) (scFunctions sc) (scActions sc)
   writeSchemaCache sc {scGCtxMap = gCtxMap}
 
 getGCtx :: (CacheRM m) => RoleName -> GCtxMap -> m GCtx
@@ -683,40 +692,6 @@ ppGCtx gCtx =
     qRootO = _gQueryRoot gCtx
     mRootO = _gMutRoot gCtx
     sRootO = _gSubRoot gCtx
-
--- | A /types aggregate/, which holds role-specific information about visible GraphQL types.
--- Importantly, it holds more than just the information needed by GraphQL: it also includes how the
--- GraphQL types relate to Postgres types, which is used to validate literals provided for
--- Postgres-specific scalars.
-data TyAgg
-  = TyAgg
-  { _taTypes   :: !TypeMap
-  , _taFields  :: !FieldMap
-  , _taScalars :: !(Set.HashSet PGScalarType)
-  , _taOrdBy   :: !OrdByCtx
-  } deriving (Show, Eq)
-
-instance Semigroup TyAgg where
-  (TyAgg t1 f1 s1 o1) <> (TyAgg t2 f2 s2 o2) =
-    TyAgg (Map.union t1 t2) (Map.union f1 f2)
-          (Set.union s1 s2) (Map.union o1 o2)
-
-instance Monoid TyAgg where
-  mempty = TyAgg Map.empty Map.empty Set.empty Map.empty
-
--- | A role-specific mapping from root field names to allowed operations.
-data RootFields
-  = RootFields
-  { rootQueryFields    :: !(Map.HashMap G.Name (QueryCtx, ObjFldInfo))
-  , rootMutationFields :: !(Map.HashMap G.Name (MutationCtx, ObjFldInfo))
-  } deriving (Show, Eq)
-
-instance Semigroup RootFields where
-  RootFields a1 b1 <> RootFields a2 b2
-    = RootFields (Map.union a1 a2) (Map.union b1 b2)
-
-instance Monoid RootFields where
-  mempty = RootFields Map.empty Map.empty
 
 mkGCtx :: TyAgg -> RootFields -> InsCtxMap -> GCtx
 mkGCtx tyAgg (RootFields queryFields mutationFields) insCtxMap =

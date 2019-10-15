@@ -7,7 +7,10 @@ select
     'remote_schemas', remote_schemas.items,
     'functions', functions.items,
     'foreign_keys', foreign_keys.items,
-    'allowlist_collections', allowlist.item
+    'allowlist_collections', allowlist.item,
+    'custom_types', coalesce((select custom_types from hdb_catalog.hdb_custom_graphql_types), '{}'),
+    'actions', actions.items,
+    'action_permissions', action_permissions.items
   )
 from
   (
@@ -175,4 +178,39 @@ from
     left outer join
          hdb_catalog.hdb_query_collection hqc
          on (hqc.collection_name = ha.collection_name)
-  ) as allowlist
+
+  ) as allowlist,
+  (
+    select
+      coalesce(
+        json_agg(
+          json_build_object(
+            'name',
+            action_name,
+            'definition', action_defn :: json,
+            'comment', comment
+          )
+        ),
+        '[]'
+      ) as items
+    from
+      hdb_catalog.hdb_action
+  ) as actions,
+  (
+    select
+      coalesce(
+        json_agg(
+          json_build_object(
+            'name',
+            action_name,
+            'role',
+            role_name,
+            'definition', definition :: json,
+            'comment', comment
+          )
+        ),
+        '[]'
+      ) as items
+    from
+      hdb_catalog.hdb_action_permission
+  ) as action_permissions

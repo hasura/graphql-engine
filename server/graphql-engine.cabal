@@ -186,7 +186,9 @@ library
                      , Hasura.RQL.Types.Metadata
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.QueryCollection
+                     , Hasura.RQL.Types.Action
                      , Hasura.RQL.Types.RemoteSchema
+                     , Hasura.RQL.Types.CustomTypes
                      , Hasura.RQL.DDL.Deps
                      , Hasura.RQL.DDL.Permission.Internal
                      , Hasura.RQL.DDL.Permission.Triggers
@@ -208,6 +210,8 @@ library
                      , Hasura.RQL.DDL.Headers
                      , Hasura.RQL.DDL.RemoteSchema
                      , Hasura.RQL.DDL.QueryCollection
+                     , Hasura.RQL.DDL.Action
+                     , Hasura.RQL.DDL.CustomTypes
                      , Hasura.RQL.DML.Delete
                      , Hasura.RQL.DML.Internal
                      , Hasura.RQL.DML.Insert
@@ -227,6 +231,8 @@ library
                      , Hasura.GraphQL.Transport.WebSocket
                      , Hasura.GraphQL.Schema.BoolExp
                      , Hasura.GraphQL.Schema.Common
+                     , Hasura.GraphQL.Schema.Builder
+                     , Hasura.GraphQL.Schema.Action
                      , Hasura.GraphQL.Schema.Function
                      , Hasura.GraphQL.Schema.OrderBy
                      , Hasura.GraphQL.Schema.Select
@@ -253,6 +259,7 @@ library
                      , Hasura.GraphQL.Execute.LiveQuery.State
                      , Hasura.GraphQL.Execute.LiveQuery.TMap
                      , Hasura.GraphQL.Resolve
+                     , Hasura.GraphQL.Resolve.Action
                      , Hasura.GraphQL.Resolve.Types
                      , Hasura.GraphQL.Resolve.Context
                      , Hasura.GraphQL.Resolve.BoolExp
@@ -273,6 +280,7 @@ library
                      , Control.Concurrent.Extended
                      , Control.Lens.Extended
                      , Data.Aeson.Extended
+                     , Data.List.Extended
                      , Data.HashMap.Strict.InsOrd.Extended
                      , Data.Parser.JSONPath
                      , Data.Sequence.NonEmpty

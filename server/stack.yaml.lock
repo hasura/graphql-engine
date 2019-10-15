@@ -20,20 +20,6 @@ packages:
     commit: de5c023ed7d2f75a77972ff52b6e5ed19d010ca2
 - completed:
     cabal-file:
-      size: 3364
-      sha256: 09bad175e8ccb1fec5ddbc94d95d18b4206ac4481cf3749e42ffbaac90bc4a37
-    name: graphql-parser
-    version: 0.1.0.0
-    git: https://github.com/hasura/graphql-parser-hs.git
-    pantry-tree:
-      size: 1826
-      sha256: 4ac0632e9f0e2c386b056ac078cf04fd4c211f683c0fee51e767da913d7d4764
-    commit: f3d9b645efd9adb143e2ad4c6b73bded1578a4e9
-  original:
-    git: https://github.com/hasura/graphql-parser-hs.git
-    commit: f3d9b645efd9adb143e2ad4c6b73bded1578a4e9
-- completed:
-    cabal-file:
       size: 1253
       sha256: d0356b65cbe17a2fecf9334aa133de238161ef9c22af015d67ab622e08eb8ed1
     name: ci-info
@@ -46,13 +32,6 @@ packages:
   original:
     git: https://github.com/hasura/ci-info-hs.git
     commit: ad6df731584dc89b72a6e131687d37ef01714fe8
-- completed:
-    hackage: select-0.4.0.1@sha256:d409315752a069693bdd4169fa9a8ea7777d814da77cd8604f367cf0741de295,2492
-    pantry-tree:
-      size: 1256
-      sha256: b6ae36ccba2a7cdd1ad130575931364002682e532d7043da62771e58294ddb7a
-  original:
-    hackage: select-0.4.0.1
 - completed:
     hackage: primitive-extras-0.7.1@sha256:23905c57089418b1a2d324cfee3e81bbd5a344a0fa56a827867b2dce275fdb5e,2945
     pantry-tree:
@@ -102,16 +81,9 @@ packages:
       sha256: 3561f4c3121d05e5390c2b32f9e0a58b6408ecb5cfb74f234f3b8ca37b467a5e
   original:
     hackage: shakespeare-2.0.22
-- completed:
-    hackage: brotli-0.0.0.0@sha256:0a8232f028dbc6a1f9db291ef996a5abe74aa00c7c3dc00a741c41f3da75a4dc,2873
-    pantry-tree:
-      size: 407
-      sha256: f4c2e742f10ca010554aeb0037294f118be4f35228acca98c0df97e1093bca33
-  original:
-    hackage: brotli-0.0.0.0
 snapshots:
 - completed:
-    size: 498167
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/13/20.yaml
-    sha256: cda928d57b257a5f17bcad796843c9daa674fef47d600dbea3aa7b0e49d64a11
-  original: lts-13.20
+    size: 524789
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/14/8.yaml
+    sha256: 8af5eb80734f02621d37e82cc0cde614af2ddc9c320610acb0b1b6d9ac162930
+  original: lts-14.8

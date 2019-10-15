@@ -5,12 +5,7 @@ module Hasura.GraphQL.Resolve.Select
   , convertFuncQuerySimple
   , convertFuncQueryAgg
   , parseColumns
-  , fromSelSet
-  , QueryRootFldAST(..)
-  , traverseQueryRootFldAST
-  , QueryRootFldUnresolved
-  , QueryRootFldResolved
-  , toPGQuery
+  , processTableSelectionSet
   ) where
 
 import           Data.Has
@@ -23,7 +18,6 @@ import qualified Data.List.NonEmpty                as NE
 import qualified Data.Text                         as T
 import qualified Language.GraphQL.Draft.Syntax     as G
 
-import qualified Database.PG.Query                 as Q
 import qualified Hasura.RQL.DML.Select             as RS
 import qualified Hasura.SQL.DML                    as S
 
@@ -55,12 +49,12 @@ argsToColOp args = maybe (return Nothing) toOp $ Map.lookup "path" args
 
 type AnnFlds = RS.AnnFldsG UnresolvedVal
 
-fromSelSet
+processTableSelectionSet
   :: ( MonadResolve m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )
   => G.NamedType -> SelSet -> m AnnFlds
-fromSelSet fldTy flds =
+processTableSelectionSet fldTy flds =
   forM (toList flds) $ \fld -> do
     let fldName = _fName fld
     let rqlFldName = FieldName $ G.unName $ G.unAlias $ _fAlias fld
@@ -99,7 +93,7 @@ fromAggSelSet colGNameMap fldTy selSet = fmap toFields $
     case _fName f of
       "__typename" -> return $ RS.TAFExp $ G.unName $ G.unNamedType fldTy
       "aggregate"  -> RS.TAFAgg <$> convertAggFld colGNameMap fTy fSelSet
-      "nodes"      -> RS.TAFNodes <$> fromSelSet fTy fSelSet
+      "nodes"      -> RS.TAFNodes <$> processTableSelectionSet fTy fSelSet
       G.Name t     -> throw500 $ "unexpected field in _agg node: " <> t
 
 type TableArgs = RS.TableArgsG UnresolvedVal
@@ -147,7 +141,7 @@ fromField
   -> Field -> m AnnSimpleSelect
 fromField tn colGNameMap permFilter permLimitM fld = fieldAsPath fld $ do
   tableArgs <- parseTableArgs colGNameMap args
-  annFlds   <- fromSelSet (_fType fld) $ _fSelSet fld
+  annFlds   <- processTableSelectionSet (_fType fld) $ _fSelSet fld
   let unresolvedPermFltr = fmapAnnBoolExp partialSQLExpToUnresolvedVal permFilter
   let tabFrom = RS.TableFrom tn Nothing
       tabPerm = RS.TablePerm unresolvedPermFltr permLimitM
@@ -295,7 +289,7 @@ fromFieldByPKey
   -> AnnBoolExpPartialSQL -> Field -> m AnnSimpleSel
 fromFieldByPKey tn colArgMap permFilter fld = fieldAsPath fld $ do
   boolExp <- pgColValToBoolExp colArgMap $ _fArguments fld
-  annFlds <- fromSelSet fldTy $ _fSelSet fld
+  annFlds <- processTableSelectionSet fldTy $ _fSelSet fld
   let tabFrom = RS.TableFrom tn Nothing
       unresolvedPermFltr = fmapAnnBoolExp partialSQLExpToUnresolvedVal
                            permFilter
@@ -310,9 +304,9 @@ convertSelect
   :: ( MonadResolve m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )
-  => SelOpCtx -> Field -> m QueryRootFldUnresolved
+  => SelOpCtx -> Field -> m (RS.AnnSimpleSelG UnresolvedVal)
 convertSelect opCtx fld =
-  withPathK "selectionSet" $ QRFSimple <$>
+  withPathK "selectionSet" $
   fromField qt colGNameMap permFilter permLimit fld
   where
     SelOpCtx qt _ colGNameMap permFilter permLimit = opCtx
@@ -321,9 +315,9 @@ convertSelectByPKey
   :: ( MonadResolve m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )
-  => SelPkOpCtx -> Field -> m QueryRootFldUnresolved
+  => SelPkOpCtx -> Field -> m (RS.AnnSimpleSelG UnresolvedVal)
 convertSelectByPKey opCtx fld =
-  withPathK "selectionSet" $ QRFPk <$>
+  withPathK "selectionSet" $
     fromFieldByPKey qt colArgMap permFilter fld
   where
     SelPkOpCtx qt _ permFilter colArgMap = opCtx
@@ -409,11 +403,10 @@ convertAggSelect
   :: ( MonadResolve m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )
-  => SelOpCtx -> Field -> m QueryRootFldUnresolved
+  => SelOpCtx -> Field -> m (RS.AnnAggSelG UnresolvedVal)
 convertAggSelect opCtx fld =
-  withPathK "selectionSet" $ QRFAgg <$>
+  withPathK "selectionSet" $
   fromAggField qt colGNameMap permFilter permLimit fld
-  -- return $ RS.selectAggQuerySQL selData
   where
     SelOpCtx qt _ colGNameMap permFilter permLimit = opCtx
 
@@ -460,9 +453,9 @@ convertFuncQuerySimple
      , Has OrdByCtx r
      , Has SQLGenCtx r
      )
-  => FuncQOpCtx -> Field -> m QueryRootFldUnresolved
+  => FuncQOpCtx -> Field -> m (RS.AnnFnSelSimpleG UnresolvedVal)
 convertFuncQuerySimple funcOpCtx fld =
-  withPathK "selectionSet" $ QRFFnSimple <$>
+  withPathK "selectionSet" $
     fromFuncQueryField (fromField qt colGNameMap permFilter permLimit) qf argSeq fld
   where
     FuncQOpCtx qt _ colGNameMap permFilter permLimit qf argSeq = funcOpCtx
@@ -474,40 +467,9 @@ convertFuncQueryAgg
      , Has OrdByCtx r
      , Has SQLGenCtx r
      )
-  => FuncQOpCtx -> Field -> m QueryRootFldUnresolved
+  => FuncQOpCtx -> Field -> m (RS.AnnFnSelAggG UnresolvedVal)
 convertFuncQueryAgg funcOpCtx fld =
-  withPathK "selectionSet" $ QRFFnAgg <$>
+  withPathK "selectionSet" $
     fromFuncQueryField (fromAggField qt colGNameMap permFilter permLimit) qf argSeq fld
   where
     FuncQOpCtx qt _ colGNameMap permFilter permLimit qf argSeq = funcOpCtx
-
-data QueryRootFldAST v
-  = QRFPk !(RS.AnnSimpleSelG v)
-  | QRFSimple !(RS.AnnSimpleSelG v)
-  | QRFAgg !(RS.AnnAggSelG v)
-  | QRFFnSimple !(RS.AnnFnSelSimpleG v)
-  | QRFFnAgg !(RS.AnnFnSelAggG v)
-  deriving (Show, Eq)
-
-type QueryRootFldUnresolved = QueryRootFldAST UnresolvedVal
-type QueryRootFldResolved = QueryRootFldAST S.SQLExp
-
-traverseQueryRootFldAST
-  :: (Applicative f)
-  => (a -> f b)
-  -> QueryRootFldAST a
-  -> f (QueryRootFldAST b)
-traverseQueryRootFldAST f = \case
-  QRFPk s       -> QRFPk <$> RS.traverseAnnSimpleSel f s
-  QRFSimple s   -> QRFSimple <$> RS.traverseAnnSimpleSel f s
-  QRFAgg s      -> QRFAgg <$> RS.traverseAnnAggSel f s
-  QRFFnSimple s -> QRFFnSimple <$> RS.traverseAnnFnSimple f s
-  QRFFnAgg s    -> QRFFnAgg <$> RS.traverseAnnFnAgg f s
-
-toPGQuery :: QueryRootFldResolved -> Q.Query
-toPGQuery = \case
-  QRFPk s       -> RS.selectQuerySQL True s
-  QRFSimple s   -> RS.selectQuerySQL False s
-  QRFAgg s      -> RS.selectAggQuerySQL s
-  QRFFnSimple s -> RS.mkFuncSelectSimple s
-  QRFFnAgg s    -> RS.mkFuncSelectAgg s

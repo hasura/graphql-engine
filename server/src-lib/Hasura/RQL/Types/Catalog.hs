@@ -26,6 +26,8 @@ import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCache
+import           Hasura.RQL.Types.CustomTypes
+import           Hasura.RQL.Types.Action
 import           Hasura.SQL.Types
 
 data CatalogTableInfo
@@ -93,5 +95,8 @@ data CatalogMetadata
   , _cmFunctions            :: ![CatalogFunction]
   , _cmForeignKeys          :: ![ForeignKey]
   , _cmAllowlistCollections :: ![CollectionDef]
+  , _cmCustomTypes          :: !CustomTypes
+  , _cmActions              :: ![CreateAction]
+  , _cmActionPermissions    :: ![CreateActionPermission]
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogMetadata)

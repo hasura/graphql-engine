@@ -26,12 +26,14 @@ data QueryCtx
   | QCSelectAgg !SelOpCtx
   | QCFuncQuery !FuncQOpCtx
   | QCFuncAggQuery !FuncQOpCtx
+  | QCActionFetch !ActionSelectOpContext
   deriving (Show, Eq)
 
 data MutationCtx
   = MCInsert !InsOpCtx
   | MCUpdate !UpdOpCtx
   | MCDelete !DelOpCtx
+  | MCAction !ActionExecutionContext
   deriving (Show, Eq)
 
 type OpCtxMap a = Map.HashMap G.Name a
@@ -89,16 +91,15 @@ data DelOpCtx
   , _docAllCols :: ![PGColumnInfo]
   } deriving (Show, Eq)
 
-data OpCtx
-  = OCSelect !SelOpCtx
-  | OCSelectPkey !SelPkOpCtx
-  | OCSelectAgg !SelOpCtx
-  | OCFuncQuery !FuncQOpCtx
-  | OCFuncAggQuery !FuncQOpCtx
-  | OCInsert !InsOpCtx
-  | OCUpdate !UpdOpCtx
-  | OCDelete !DelOpCtx
+data ActionExecutionContext
+  = ActionExecutionSyncWebhook !Text
+  | ActionExecutionAsync !AnnBoolExpPartialSQL
   deriving (Show, Eq)
+
+newtype ActionSelectOpContext
+  = ActionSelectOpContext
+  { _asocFilter :: AnnBoolExpPartialSQL
+  } deriving (Show, Eq)
 
 -- (custom name | generated name) -> PG column info
 -- used in resolvers

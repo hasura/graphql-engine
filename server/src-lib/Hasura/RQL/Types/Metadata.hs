@@ -18,6 +18,7 @@ data MetadataObjType
   | MOTEventTrigger
   | MOTFunction
   | MOTRemoteSchema
+  | MOTCustomTypes
   deriving (Eq, Generic)
 instance Hashable MetadataObjType
 
@@ -28,6 +29,7 @@ instance Show MetadataObjType where
   show MOTEventTrigger = "event_trigger"
   show MOTFunction     = "function"
   show MOTRemoteSchema = "remote_schema"
+  show MOTCustomTypes  = "custom_types"
 
 instance ToJSON MetadataObjType where
   toJSON = String . T.pack . show
@@ -44,6 +46,7 @@ data MetadataObjId
   | MOFunction !QualifiedFunction
   | MORemoteSchema !RemoteSchemaName
   | MOTableObj !QualifiedTable !TableMetadataObjId
+  | MOCustomTypes
   deriving (Show, Eq, Generic)
 instance Hashable MetadataObjId
 

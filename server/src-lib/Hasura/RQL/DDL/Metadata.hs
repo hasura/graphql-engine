@@ -41,6 +41,7 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query                  as Q
+import qualified Hasura.RQL.DDL.CustomTypes         as DC
 import qualified Hasura.RQL.DDL.EventTrigger        as DE
 import qualified Hasura.RQL.DDL.Permission          as DP
 import qualified Hasura.RQL.DDL.Permission.Internal as DP
@@ -286,7 +287,7 @@ applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = 
       indexedMapM_ (void . DRS.addRemoteSchemaP2) schemas
 
   -- build GraphQL Context with Remote schemas
-  DRS.buildGCtxMap
+  DS.buildGCtxMap
 
   return successMsg
 
@@ -516,6 +517,7 @@ purgeMetadataObj = liftTx . \case
   (MOTable qt)                    -> DS.deleteTableFromCatalog qt
   (MOFunction qf)                 -> DS.delFunctionFromCatalog qf
   (MORemoteSchema rsn)            -> DRS.removeRemoteSchemaFromCatalog rsn
+  (MOCustomTypes)                 -> DC.clearCustomTypes
   (MOTableObj qt (MTORel rn _))   -> DR.delRelFromCatalog qt rn
   (MOTableObj qt (MTOPerm rn pt)) -> DP.dropPermFromCatalog qt rn pt
   (MOTableObj _ (MTOTrigger trn)) -> DE.delEventTriggerFromCatalog trn

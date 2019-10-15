@@ -29,6 +29,7 @@ module Hasura.GraphQL.Validate.Types
   , mkHsraInpTyInfo
 
   , ScalarTyInfo(..)
+  , fromScalarTyDef
   , mkHsraScalarTyInfo
 
   , DirectiveInfo(..)
@@ -172,7 +173,14 @@ type ParamMap = Map.HashMap G.Name InpValInfo
 data TypeLoc
   = TLHasuraType
   | TLRemoteType !RemoteSchemaName !RemoteSchemaInfo
+  | TLCustom
   deriving (Show, Eq, TH.Lift, Generic)
+
+$(J.deriveJSON
+  J.defaultOptions { J.constructorTagModifier = J.snakeCase . drop 2
+                   , J.sumEncoding = J.TaggedObject "type" "detail"
+                   }
+  ''TypeLoc)
 
 instance Hashable TypeLoc
 
@@ -348,12 +356,14 @@ mkHsraInpTyInfo descM ty flds =
 data ScalarTyInfo
   = ScalarTyInfo
   { _stiDesc :: !(Maybe G.Description)
+  , _stiName :: !G.Name
   , _stiType :: !PGScalarType
   , _stiLoc  :: !TypeLoc
   } deriving (Show, Eq, TH.Lift)
 
 mkHsraScalarTyInfo :: PGScalarType -> ScalarTyInfo
-mkHsraScalarTyInfo ty = ScalarTyInfo Nothing ty TLHasuraType
+mkHsraScalarTyInfo ty =
+  ScalarTyInfo Nothing (G.Name $ pgColTyToScalar ty) ty TLHasuraType
 
 instance EquatableGType ScalarTyInfo where
   type EqProps ScalarTyInfo = PGScalarType
@@ -362,16 +372,17 @@ instance EquatableGType ScalarTyInfo where
 fromScalarTyDef
   :: G.ScalarTypeDefinition
   -> TypeLoc
-  -> Either Text ScalarTyInfo
-fromScalarTyDef (G.ScalarTypeDefinition descM n _) loc =
-  ScalarTyInfo descM <$> ty <*> pure loc
+  -> ScalarTyInfo
+fromScalarTyDef (G.ScalarTypeDefinition descM n _) =
+  ScalarTyInfo descM n ty
   where
     ty = case n of
-      "Int"     -> return PGInteger
-      "Float"   -> return PGFloat
-      "String"  -> return PGText
-      "Boolean" -> return PGBoolean
-      _         -> return $ txtToPgColTy $ G.unName n
+      "Int"     -> PGInteger
+      "Float"   -> PGFloat
+      "String"  -> PGText
+      "Boolean" -> PGBoolean
+      "ID"      -> PGText
+      _         -> txtToPgColTy $ G.unName n
 
 data TypeInfo
   = TIScalar !ScalarTyInfo
@@ -381,6 +392,18 @@ data TypeInfo
   | TIIFace !IFaceTyInfo
   | TIUnion !UnionTyInfo
   deriving (Show, Eq, TH.Lift)
+
+instance J.ToJSON TypeInfo where
+  toJSON typeInfo = J.String "toJSON not implemented for TypeInfo"
+
+instance J.FromJSON TypeInfo where
+  parseJSON value = fail "FromJSON not implemented for TypeInfo"
+
+-- $(J.deriveJSON
+--   J.defaultOptions { J.constructorTagModifier = J.snakeCase . drop 2
+--                    , J.sumEncoding = J.TaggedObject "type" "detail"
+--                    }
+--   ''TypeInfo)
 
 data AsObjType
   = AOTObj ObjTyInfo
@@ -585,7 +608,7 @@ mkScalarTy =
 
 getNamedTy :: TypeInfo -> G.NamedType
 getNamedTy = \case
-  TIScalar t -> mkScalarTy $ _stiType t
+  TIScalar t -> G.NamedType $ _stiName t
   TIObj t -> _otiName t
   TIIFace i -> _ifName i
   TIEnum t -> _etiName t
@@ -598,7 +621,7 @@ mkTyInfoMap tyInfos =
 
 fromTyDef :: G.TypeDefinition -> TypeLoc -> Either Text TypeInfo
 fromTyDef tyDef loc = case tyDef of
-  G.TypeDefinitionScalar t -> TIScalar <$> fromScalarTyDef t loc
+  G.TypeDefinitionScalar t -> return $ TIScalar $ fromScalarTyDef t loc
   G.TypeDefinitionObject t -> return $ TIObj $ fromObjTyDef t loc
   G.TypeDefinitionInterface t ->
     return $ TIIFace $ fromIFaceDef t loc

@@ -144,6 +144,8 @@ getExecPlanPartial userInfo sc enableAL req = do
       return $ GExPHasura (gCtx, rootSelSet)
     VT.TLRemoteType _ rsi ->
       return $ GExPRemote rsi opDef
+    VT.TLCustom ->
+      throw500 "unexpected custom type for top level field"
   where
     role = userRole userInfo
     gCtxRoleMap = scGCtxMap sc

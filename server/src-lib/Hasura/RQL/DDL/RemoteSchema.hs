@@ -3,7 +3,6 @@ module Hasura.RQL.DDL.RemoteSchema
   , runRemoveRemoteSchema
   , removeRemoteSchemaFromCatalog
   , runReloadRemoteSchema
-  , buildGCtxMap
   , fetchRemoteSchemas
   , addRemoteSchemaP1
   , addRemoteSchemaP2Setup
@@ -20,8 +19,6 @@ import qualified Database.PG.Query           as Q
 import           Hasura.GraphQL.RemoteServer
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-
-import qualified Hasura.GraphQL.Schema       as GS
 
 runAddRemoteSchema
   :: ( QErrM m, UserInfoM m
@@ -114,20 +111,6 @@ runReloadRemoteSchema (RemoteSchemaNameQuery name) = do
   delRemoteSchemaFromCache name
   addRemoteSchemaToCache $ RemoteSchemaCtx name gCtx rsi
   return successMsg
-
--- | build GraphQL schema
-buildGCtxMap
-  :: (QErrM m, CacheRWM m) => m ()
-buildGCtxMap = do
-  -- build GraphQL Context with Hasura schema
-  GS.buildGCtxMapPG
-  sc <- askSchemaCache
-  let gCtxMap = scGCtxMap sc
-  -- Stitch remote schemas
-  (mergedGCtxMap, defGCtx) <- mergeSchemas (scRemoteSchemas sc) gCtxMap
-  writeSchemaCache sc { scGCtxMap = mergedGCtxMap
-                      , scDefaultRemoteGCtx = defGCtx
-                      }
 
 addRemoteSchemaToCatalog
   :: AddRemoteSchemaQuery

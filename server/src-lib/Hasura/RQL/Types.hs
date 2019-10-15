@@ -40,6 +40,7 @@ module Hasura.RQL.Types
 import           Hasura.Db                     as R
 import           Hasura.EncJSON
 import           Hasura.Prelude
+import           Hasura.RQL.Types.Action       as R
 import           Hasura.RQL.Types.BoolExp      as R
 import           Hasura.RQL.Types.Column       as R
 import           Hasura.RQL.Types.Common       as R
@@ -50,6 +51,7 @@ import           Hasura.RQL.Types.Metadata     as R
 import           Hasura.RQL.Types.Permission   as R
 import           Hasura.RQL.Types.RemoteSchema as R
 import           Hasura.RQL.Types.SchemaCache  as R
+import           Hasura.RQL.Types.CustomTypes  as R
 import           Hasura.SQL.Types
 
 import qualified Hasura.GraphQL.Context        as GC

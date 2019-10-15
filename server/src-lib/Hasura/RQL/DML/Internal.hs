@@ -213,7 +213,7 @@ convPartialSQLExp
   -> f S.SQLExp
 convPartialSQLExp f = \case
   PSESQLExp sqlExp -> pure sqlExp
-  PSESessVar colTy sessVar -> f colTy sessVar
+  PSESessVar colTy sessionVariable -> f colTy sessionVariable
 
 sessVarFromCurrentSetting
   :: (Applicative f) => PGType PGScalarType -> SessVar -> f S.SQLExp
@@ -228,8 +228,8 @@ sessVarFromCurrentSetting' ty sessVar =
     PGTypeArray _       -> sessVarVal
   where
     curSess = S.SEUnsafe "current_setting('hasura.user')::json"
-    sessVarVal = S.SEOpApp (S.SQLOp "->>")
-                 [curSess, S.SELit $ T.toLower sessVar]
+    sessVarVal =
+      S.SEOpApp (S.SQLOp "->>") [curSess, S.SELit $ T.toLower sessVar]
 
 checkSelPerm
   :: (UserInfoM m, QErrM m, CacheRM m)
