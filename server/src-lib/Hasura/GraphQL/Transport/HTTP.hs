@@ -34,7 +34,7 @@ runGQ reqId userInfo reqHdrs req = do
     E.GQFieldResolvedHasura resolvedOp ->
       flip HttpResponse Nothing <$> runHasuraGQ reqId req userInfo resolvedOp
     E.GQFieldResolvedRemote rsi opType field ->
-      E.execRemoteGQ reqId userInfo reqHdrs rsi opType field
+      E.execRemoteGQ reqId userInfo reqHdrs rsi opType (Seq.singleton field)
 
   let mergedResp = mergeResponses (fmap _hrBody fieldResps)
   case mergedResp of

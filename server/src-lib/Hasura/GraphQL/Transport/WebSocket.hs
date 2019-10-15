@@ -315,7 +315,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
                      Unexpected
                      "did not expect subscription field here")
           E.GQFieldResolvedRemote rsi opType field ->
-            runRemoteGQ execCtx requestId userInfo reqHdrs rsi opType field
+            runRemoteGQ execCtx requestId userInfo reqHdrs rsi opType (Seq.singleton field)
       case fieldRespsE of
         Left err -> postExecErr requestId err
         Right fieldResps -> do
@@ -351,16 +351,16 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
     runRemoteGQ :: (MonadError QErr m, MonadIO m)
       => E.ExecutionCtx -> RequestId -> UserInfo -> [H.Header]
-      -> RemoteSchemaInfo -> G.OperationType -> VQ.Field
+      -> RemoteSchemaInfo -> G.OperationType -> VQ.SelSet
       -> m EncJSON
-    runRemoteGQ execCtx reqId userInfo reqHdrs rsi opType field = do
+    runRemoteGQ execCtx reqId userInfo reqHdrs rsi opType selSet = do
       when (opType == G.OperationTypeSubscription) $
         throwError $
         err400 NotSupported "subscription to remote server is not supported"
 
       -- if it's not a subscription, use HTTP to execute the query on the remote
       resp <- runExceptT $ flip runReaderT execCtx $
-              E.execRemoteGQ reqId userInfo reqHdrs rsi opType field
+              E.execRemoteGQ reqId userInfo reqHdrs rsi opType selSet
       liftEither (fmap _hrBody resp)
 
     WSServerEnv logger pgExecCtx lqMap gCtxMapRef httpMgr _ sqlGenCtx planCache

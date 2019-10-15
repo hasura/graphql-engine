@@ -188,7 +188,8 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
   where
     GQLReq opNameM queryStr queryVars = reqUnparsed
     -- We only cache when the query is pure hasura. This could all be changed or
-    -- improved in the future.
+    -- improved in the future. See discussion here, e.g.:
+    --    https://github.com/hasura/graphql-engine-internal/issues/291 
     tryCaching m = do
       (resolvedPlans, mbReusablePlans) <- Seq.unzip <$> m
       for_ (sequence mbReusablePlans) $ \plans ->
@@ -362,17 +363,16 @@ execRemoteGQ
   -> [N.Header]
   -> RemoteSchemaInfo
   -> G.OperationType
-  -> VQ.Field
-  -- ^ Field of the top-level selection set.
+  -> VQ.SelSet
   -> m (HttpResponse EncJSON)
-execRemoteGQ reqId userInfo reqHdrs rsi opType field = do
+execRemoteGQ reqId userInfo reqHdrs rsi opType selSet = do
   execCtx <- ask
   let logger  = _ecxLogger execCtx
       manager = _ecxHttpManager execCtx
   when (opType == G.OperationTypeSubscription) $
     throw400 NotSupported "subscription to remote server is not supported"
   hdrs <- getHeadersFromConf hdrConf
-  gqlReq <- fieldToRequest opType field
+  gqlReq <- fieldsToRequest opType selSet
   let body = encJToLBS (encJFromJValue gqlReq)
   let confHdrs   = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
       clientHdrs = bool [] filteredHeaders fwdClientHdrs
@@ -422,11 +422,9 @@ execRemoteGQ reqId userInfo reqHdrs rsi opType field = do
       map (\(k, v) -> Header (bsToTxt $ CI.original k, bsToTxt v)) hdrs
 
 
-fieldToRequest
+fieldsToRequest
   :: (MonadIO m, MonadError QErr m)
   => G.OperationType
-  -> VQ.Field
+  -> Seq.Seq VQ.Field
   -> m GQLReqParsed
-fieldToRequest = 
-  -- Hm, this seems weird since we produce a GQLReqParsed in getResolvedExecPlan 
-  undefined
+fieldsToRequest = undefined
