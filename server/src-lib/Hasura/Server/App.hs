@@ -313,7 +313,7 @@ v1QueryHandler query = do
       sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
       pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
       instanceId <- scInstanceId . hcServerCtx <$> ask
-      runQuery pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx query
+      runQuery pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx (SystemDefined False) query
 
 v1Alpha1GQHandler :: GH.GQLReqUnparsed -> Handler (HttpResponse EncJSON)
 v1Alpha1GQHandler query = do
@@ -462,11 +462,11 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode
 
     let pgExecCtx = PGExecCtx pool isoLevel
         pgExecCtxSer = PGExecCtx pool Q.Serializable
+        runCtx = RunCtx adminUserInfo httpManager sqlGenCtx $ SystemDefined False
     (cacheRef, cacheBuiltTime) <- do
-      pgResp <- runExceptT $ peelRun emptySchemaCache adminUserInfo
-                httpManager sqlGenCtx pgExecCtxSer $ do
-                  buildSchemaCache
-                  liftTx fetchLastUpdate
+      pgResp <- runExceptT $ peelRun emptySchemaCache runCtx pgExecCtxSer $ do
+        buildSchemaCache
+        liftTx fetchLastUpdate
       (time, sc) <- either initErrExit return pgResp
       scRef <- newIORef (sc, initSchemaCacheVer)
       return (scRef, snd <$> time)

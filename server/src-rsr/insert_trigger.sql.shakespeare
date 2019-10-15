@@ -1,14 +1,14 @@
-CREATE OR REPLACE FUNCTION {{function_name}}() RETURNS trigger LANGUAGE plpgsql AS $$
-  DECLARE r {{table_name}}%ROWTYPE;
+CREATE OR REPLACE FUNCTION #{functionName}() RETURNS trigger LANGUAGE plpgsql AS $$
+  DECLARE r #{tableName}%ROWTYPE;
   DECLARE conflict_clause jsonb;
   DECLARE action text;
   DECLARE constraint_name text;
   DECLARE set_expression text;
   BEGIN
     conflict_clause = current_setting('hasura.conflict_clause')::jsonb;
-    IF ({{check_expression}}) THEN
+    IF (#{checkExpression}) THEN
       CASE
-        WHEN conflict_clause = 'null'::jsonb THEN INSERT INTO {{table_name}} VALUES (NEW.*) RETURNING * INTO r;
+        WHEN conflict_clause = 'null'::jsonb THEN INSERT INTO #{tableName} VALUES (NEW.*) RETURNING * INTO r;
         ELSE
           action = conflict_clause ->> 'action';
           constraint_name = quote_ident(conflict_clause ->> 'constraint');
@@ -16,12 +16,12 @@ CREATE OR REPLACE FUNCTION {{function_name}}() RETURNS trigger LANGUAGE plpgsql 
           IF action is NOT NULL THEN
             CASE
               WHEN action = 'ignore'::text AND constraint_name IS NULL THEN
-                INSERT INTO {{table_name}} VALUES (NEW.*) ON CONFLICT DO NOTHING RETURNING * INTO r;
+                INSERT INTO #{tableName} VALUES (NEW.*) ON CONFLICT DO NOTHING RETURNING * INTO r;
               WHEN action = 'ignore'::text AND constraint_name is NOT NULL THEN
-                EXECUTE 'INSERT INTO {{table_name}} VALUES ($1.*) ON CONFLICT ON CONSTRAINT ' || constraint_name ||
+                EXECUTE 'INSERT INTO #{tableName} VALUES ($1.*) ON CONFLICT ON CONSTRAINT ' || constraint_name ||
                            ' DO NOTHING RETURNING *' INTO r USING NEW;
               ELSE
-                EXECUTE 'INSERT INTO {{table_name}} VALUES ($1.*) ON CONFLICT ON CONSTRAINT ' || constraint_name ||
+                EXECUTE 'INSERT INTO #{tableName} VALUES ($1.*) ON CONFLICT ON CONSTRAINT ' || constraint_name ||
                            ' DO UPDATE ' || set_expression || ' RETURNING *' INTO r USING NEW;
             END CASE;
             ELSE

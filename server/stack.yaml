@@ -22,7 +22,6 @@ extra-deps:
   commit: f3d9b645efd9adb143e2ad4c6b73bded1578a4e9
 - git: https://github.com/hasura/ci-info-hs.git
   commit: ad6df731584dc89b72a6e131687d37ef01714fe8
-- ginger-0.8.4.0
 
 # extra dep for pg-client-hs
 - select-0.4.0.1
@@ -33,6 +32,8 @@ extra-deps:
 - reroute-0.5.0.0
 - Spock-core-0.13.0.0
 - monad-validate-1.2.0.0
+# needed for Text.Shakespeare.Text.stextFile; can be removed once the newer version is in stackage
+- shakespeare-2.0.22
 
 - brotli-0.0.0.0
 
