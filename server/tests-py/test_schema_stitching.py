@@ -186,6 +186,8 @@ class TestRemoteSchemaBasic:
         st_code, resp = hge_ctx.v1q_f(self.dir + '/basic_bulk_remove_add.yaml')
         assert st_code == 200, resp
 
+    def test_remote_query_variables(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/basic_query_with_variables.yaml')
 
 class TestAddRemoteSchemaTbls:
     """ tests with adding a table in hasura """

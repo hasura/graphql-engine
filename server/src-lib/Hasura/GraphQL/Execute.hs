@@ -1,3 +1,4 @@
+{-# LANGUAGE NamedFieldPuns  #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module Hasura.GraphQL.Execute
@@ -23,6 +24,7 @@ module Hasura.GraphQL.Execute
 import           Control.Exception                      (try)
 import           Control.Lens
 import           Data.Has
+import           Data.List                              (nub)
 import           Data.Time
 
 import qualified Data.Aeson                             as J
@@ -370,7 +372,7 @@ execRemoteGQ reqId userInfo reqHdrs rsi opType selSet = do
     throw400 NotSupported "subscription to remote server is not supported"
   hdrs <- getHeadersFromConf hdrConf
   gqlReq <- fieldsToRequest opType (toList selSet)
-  let body = encJToLBS (encJFromJValue gqlReq)
+  let body = encJToLBS $ encJFromJValue gqlReq
   let confHdrs   = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
       clientHdrs = bool [] filteredHeaders fwdClientHdrs
       -- filter out duplicate headers
@@ -426,7 +428,13 @@ fieldsToRequest
   -> m GQLReqParsed
 fieldsToRequest opType fields = do
   case traverse fieldToField fields of
-    Right gfields ->
+    Right gfields -> do
+      let variableTups = nub (concat $ map getVariables fields)
+          variableDefinitions = map fst variableTups
+          variableValues =
+            Just $
+            Map.fromList
+              (map (\(varDef, val) -> (G._vdVariable varDef, val)) variableTups)
       pure
         (GQLReq
            { _grOperationName = Nothing
@@ -434,23 +442,37 @@ fieldsToRequest opType fields = do
                GQLExecDoc
                  [ G.ExecutableDefinitionOperation
                      (G.OperationDefinitionTyped
-                       (emptyOperationDefinition {
-                         G._todSelectionSet = (map G.SelectionField gfields)
-                         } )
-                       )
+                        (emptyOperationDefinition
+                           { G._todVariableDefinitions = variableDefinitions
+                           , G._todSelectionSet = (map G.SelectionField gfields)
+                           }))
                  ]
-           , _grVariables = Nothing -- TODO: Put variables in here?
+           , _grVariables = variableValues
            })
     Left err -> throw500 ("While converting remote field: " <> err)
-    where
-      emptyOperationDefinition =
-        G.TypedOperationDefinition {
-          G._todType = opType
+  where
+    emptyOperationDefinition =
+      G.TypedOperationDefinition
+        { G._todType = opType
         , G._todName = Nothing
         , G._todVariableDefinitions = []
         , G._todDirectives = []
-        , G._todSelectionSet = [] }
-
+        , G._todSelectionSet = []
+        }
+    getVariables :: VQ.Field -> [(G.VariableDefinition, J.Value)]
+    getVariables VQ.Field {_fArguments} =
+      flip mapMaybe (Map.toList _fArguments) $ \(_name, a@AnnInpVal {..}) ->
+        let varDefM =
+              G.VariableDefinition <$> _aivVariable <*> Just _aivType <*>
+              Just Nothing
+            valueM =
+              rightToMaybe (fmap gValueConstToValue $ annInpValToGValueConst a)
+         in (,) <$> varDefM <*> valueM
+      where
+        rightToMaybe =
+          \case
+            Left _ -> Nothing
+            Right b -> Just b
 
 fieldToField :: VQ.Field -> Either Text G.Field
 fieldToField VQ.Field{..} = do
@@ -464,15 +486,13 @@ fieldToField VQ.Field{..} = do
 
 makeArgument :: (G.Name, AnnInpVal) -> Either Text G.Argument
 makeArgument (_aName, annInpVal) =
-  do _aValue <- annInpValToValue annInpVal
+  do _aValue <- annInpValToGValue annInpVal
      pure $ G.Argument {..}
 
-annInpValToValue :: AnnInpVal -> Either Text G.Value
-annInpValToValue = annGValueToValue . _aivValue
-
-annGValueToValue :: AnnGValue -> Either Text G.Value
-annGValueToValue = fromMaybe (pure G.VNull) .
-  \case
+annInpValToGValue :: AnnInpVal -> Either Text G.Value
+annInpValToGValue AnnInpVal{..} = do
+ fromMaybe (pure G.VNull) $ case _aivVariable of
+   Nothing -> case _aivValue of
     AGScalar _ty mv ->
       pgcolvalueToGValue <$> mv
     AGEnum _ _enumVal ->
@@ -482,12 +502,33 @@ annGValueToValue = fromMaybe (pure G.VNull) .
         fields <-
           traverse
             (\(_ofName, av) -> do
-               _ofValue <- annInpValToValue av
+               _ofValue <- annInpValToGValue av
                pure (G.ObjectFieldG {..}))
             (OMap.toList obj)
         pure (G.VObject (G.ObjectValueG fields))
     AGArray _ mvs ->
-      fmap (G.VList . G.ListValueG) . traverse annInpValToValue <$> mvs
+      fmap (G.VList . G.ListValueG) . traverse annInpValToGValue <$> mvs
+   Just variable -> pure . pure $ G.VVariable variable
+
+annInpValToGValueConst :: AnnInpVal -> Either Text G.ValueConst
+annInpValToGValueConst AnnInpVal{..} = do
+ fromMaybe (pure G.VCNull) $
+   case _aivValue of
+    AGScalar _ty mv ->
+      pgcolvalueToGValueConst <$> mv
+    AGEnum _ _enumVal ->
+      pure (Left "enum not supported")
+    AGObject _ mobj ->
+      flip fmap mobj $ \obj -> do
+        fields <-
+          traverse
+            (\(_ofName, av) -> do
+               _ofValue <- annInpValToGValueConst av
+               pure (G.ObjectFieldG {..}))
+            (OMap.toList obj)
+        pure (G.VCObject (G.ObjectValueG fields))
+    AGArray _ mvs ->
+      fmap (G.VCList . G.ListValueG) . traverse annInpValToGValueConst <$> mvs
 
 pgcolvalueToGValue :: PGScalarValue -> Either Text G.Value
 pgcolvalueToGValue colVal = case colVal of
@@ -513,3 +554,47 @@ pgcolvalueToGValue colVal = case colVal of
   PGValGeo {}    -> Left "PGValGeo: cannot convert"
   PGValRaster {} -> Left "PGValRaster: cannot convert"
   PGValUnknown t -> pure $ G.VString $ G.StringValue t
+
+pgcolvalueToGValueConst :: PGScalarValue -> Either Text G.ValueConst
+pgcolvalueToGValueConst colVal = case colVal of
+  PGValInteger i  -> pure $ G.VCInt $ fromIntegral i
+  PGValSmallInt i -> pure $ G.VCInt $ fromIntegral i
+  PGValBigInt i   -> pure $ G.VCInt $ fromIntegral i
+  PGValFloat f    -> pure $ G.VCFloat $ realToFrac f
+  PGValDouble d   -> pure $ G.VCFloat $ realToFrac d
+  -- TODO: Scientific is a danger zone; use its safe conv function.
+  PGValNumeric sc -> pure $ G.VCFloat $ realToFrac sc
+  PGValBoolean b  -> pure $ G.VCBoolean b
+  PGValChar t     -> pure $ G.VCString (G.StringValue (T.singleton t))
+  PGValVarchar t  -> pure $ G.VCString (G.StringValue t)
+  PGValText t     -> pure $ G.VCString (G.StringValue t)
+  PGValDate d     -> pure $ G.VCString $ G.StringValue $ T.pack $ showGregorian d
+  PGValTimeStampTZ u -> pure $
+    G.VCString $ G.StringValue $   T.pack $ formatTime defaultTimeLocale "%FT%T%QZ" u
+  PGValTimeTZ (ZonedTimeOfDay tod tz) -> pure $
+    G.VCString $ G.StringValue $   T.pack (show tod ++ timeZoneOffsetString tz)
+  PGNull _ -> pure G.VCNull
+  PGValJSON {}    -> Left "PGValJSON: cannot convert"
+  PGValJSONB {}  -> Left "PGValJSONB: cannot convert"
+  PGValGeo {}    -> Left "PGValGeo: cannot convert"
+  PGValRaster {} -> Left "PGValRaster: cannot convert"
+  PGValUnknown t -> pure $ G.VCString $ G.StringValue t
+
+gValueConstToValue :: G.ValueConst -> J.Value
+gValueConstToValue =
+  \case
+    (G.VCInt i) -> J.toJSON i
+    (G.VCFloat f) -> J.toJSON f
+    (G.VCString (G.StringValue s)) -> J.toJSON s
+    (G.VCBoolean b) -> J.toJSON b
+    G.VCNull -> J.Null
+    (G.VCEnum s) -> J.toJSON s
+    (G.VCList (G.ListValueG list)) -> J.toJSON (map gValueConstToValue list)
+    (G.VCObject (G.ObjectValueG xs)) -> fieldsToObject xs
+  where
+    fieldsToObject =
+      J.Object .
+      Map.fromList .
+      map
+        (\(G.ObjectFieldG {_ofName = G.Name name, _ofValue}) ->
+           (name, gValueConstToValue _ofValue))

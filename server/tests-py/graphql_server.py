@@ -45,7 +45,7 @@ class HelloGraphQL(RequestHandler):
     def post(self, request):
         if not request.json:
             return Response(HTTPStatus.BAD_REQUEST)
-        res = hello_schema.execute(request.json['query'])
+        res = hello_schema.execute(request.json['query'], variables = request.json['variables'])
         return mkJSONResp(res)
 
 class User(graphene.ObjectType):
