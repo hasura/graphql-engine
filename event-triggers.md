@@ -89,7 +89,7 @@ Transform and load data into external data-stores. Check out this demo and tutor
 
 * [Watch demo](https://youtu.be/kWVEBWdEVAA)
 * [Try it out](https://serverless-etl.demo.hasura.app/)
-* [Tutorial](https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/serverless-etl)
+* [Tutorial](community/sample-apps/serverless-etl)
 
 ### Building reactive UX for your async backend with realtime GraphQL
 
