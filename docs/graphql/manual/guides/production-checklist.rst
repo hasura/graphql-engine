@@ -8,7 +8,7 @@ Production checklist
   :depth: 1
   :local:
 
-This guide is a checklist that helps to be aware of potential vulnerabilities before deploying Hasura GraphQL engine to production. It also suggests solutions to reduce the risk of these vulnerabilities.
+This guide is a checklist for configuring and securing GraphQL engine for a production deployment.
 
 Security
 --------
