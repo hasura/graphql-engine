@@ -8,12 +8,12 @@ Production checklist
   :depth: 1
   :local:
 
-This guide is a checklist that helps to be aware of potential vulnerabilities before deploying Hasura GraphQL engine to production. It also suggests solutions to reduce the risk of these vulnerabilities.
+This guide is a checklist for configuring and securing GraphQL engine for a production deployment.
 
 Security
 --------
 
-In order to increase the security of your GraphQL engine, the following steps are recommended.
+The following steps are recommended to better secure your production GraphQL engine instance:
 
 Admin secret
 ^^^^^^^^^^^^
@@ -30,12 +30,12 @@ NOTE: SHAHIDH WILL ADD MORE INFO HERE INCLUDING CONFIGURATION
 nginx
 ~~~~~
 
-`Here <https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/>`_ is how to configure a nginx reverse proxy.
+`Here <https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/>`_ is how you can configure an NGINX reverse proxy.
 
 Caddy
 ~~~~~
 
-`Here <https://caddyserver.com/docs/proxy>`_ is how to configure a Caddy proxy.
+`Here <https://caddyserver.com/docs/proxy>`_ is how you can configure a Caddy proxy.
 
 
 CORS domains
