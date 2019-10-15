@@ -214,14 +214,44 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
                 return ( GQFieldResolvedRemote rsInfo G.OperationTypeQuery field
                        , Nothing)
         G.OperationTypeMutation ->
-          forM fieldPlans $ \case
-            GQFieldPartialHasura (gCtx, field) -> do
-              mutationTx <-
-                getMutOp gCtx sqlGenCtx userInfo (Seq.singleton field)
-              (return . GQFieldResolvedHasura) $ ExOpMutation mutationTx
-            GQFieldPartialRemote rsInfo field ->
-              return $
-              GQFieldResolvedRemote rsInfo G.OperationTypeMutation field
+          -- TODO 
+          --   This is all pretty bad: we make a special case for pure hasura
+          --   transactions to keep them in the same transaction (as they were
+          --   before). If there are any remote schemas we just do everything
+          --   separately.
+          --
+          --   Further made ugly because 'fieldPlans' contains a copy of the
+          --   same gCtx for each field. TODO refactor I guess
+          --
+          --   I think if we're offering this functionality we should be doing
+          --   it in grown-up way using some kind of 2pc scheme, or just
+          --   keeping the local transaction open while we run the remotes. I'm
+          --   not sure the best way forward.
+          let allHasuraFields = case fieldPlans of
+                GQFieldPartialHasura (gCtx, _) Seq.:<| _ ->
+                  (gCtx,) <$> go mempty fieldPlans
+                _ -> Nothing
+                where go fs Seq.Empty = Just fs
+                      go hFields (GQFieldPartialHasura (_, field) Seq.:<| fps ) = 
+                        go (hFields Seq.|> field) fps
+                      go _ _ = Nothing
+           in case allHasuraFields of
+                -- TODO there are no tests for multiple top-level mutations of any sort:
+                Just (gCtx, hFields) -> do
+                  mutationTx <-
+                    getMutOp gCtx sqlGenCtx userInfo hFields
+                  return $ Seq.singleton $ GQFieldResolvedHasura $
+                    ExOpMutation mutationTx
+                -- TODO there are no tests for remote mutations at all:
+                Nothing ->
+                  forM fieldPlans $ \case
+                    GQFieldPartialHasura (gCtx, field) -> do
+                      mutationTx <-
+                        getMutOp gCtx sqlGenCtx userInfo (Seq.singleton field)
+                      (return . GQFieldResolvedHasura) $ ExOpMutation mutationTx
+                    GQFieldPartialRemote rsInfo field ->
+                      return $
+                      GQFieldResolvedRemote rsInfo G.OperationTypeMutation field
         G.OperationTypeSubscription ->
           tryCaching $
             forM fieldPlans $ \case
