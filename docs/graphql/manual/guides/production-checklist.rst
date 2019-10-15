@@ -11,14 +11,19 @@ Production checklist
 Security
 --------
 
-In order to increase the security of your GraphQL engine, some steps are necessary.
+In order to increase the security of your GraphQL engine, the following steps are recommended.
 
-Reverse proxy
-^^^^^^^^^^^^^
+Admin secret
+^^^^^^^^^^^^
+
+Configure an admin secret as described :doc:`here <../deployment/securing-graphql-endpoint>`.
+
+Reverse proxy & API gateway
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You might want to set up Hasura behind a load balancer to improve performance, reliability and security.
 
-Both nginx and Caddy work well with Hasura.
+NOTE: SHAHIDH WILL ADD MORE INFO HERE INCLUDING CONFIGURATION
 
 nginx
 ~~~~~
@@ -30,10 +35,10 @@ Caddy
 
 `Here <https://caddyserver.com/docs/proxy>`_ is how to configure a Caddy proxy.
 
-Admin secret
-^^^^^^^^^^^^
 
-Configure an admin secret like described :doc:`here <../deployment/securing-graphql-endpoint>`.
+.. note::
+
+  ``gzip`` compression is enabled by default if the client supports it.
 
 CORS domains
 ^^^^^^^^^^^^
@@ -48,31 +53,20 @@ Allow-list
 
 White-list safe queries (GraphQL queries, mutations, subscriptions) by creating an :doc:`allow-list <../deployment/allow-list>`.
 
-Limit rows
-^^^^^^^^^^
-
-Enable/disable API endpoints
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 Console availability
 ^^^^^^^^^^^^^^^^^^^^
 
-Gateway
--------
+It is recommended to `disable the console <https://docs.hasura.io/1.0/graphql/manual/migrations/existing-database.html#step-0-disable-console-on-the-server>`_ for the production instance.
 
-Gzip responses
-^^^^^^^^^^^^^^
+Limit rows
+^^^^^^^^^^
 
-If you are not using HTTP2, you can do :doc:`HTTP compression <../deployment/compression>` in order to increase speed.
+You can `limit the number of rows <https://docs.hasura.io/1.0/graphql/manual/auth/authorization/permission-rules.html#row-fetch-limit>`_ that can be accessed with one request.
 
-Load balancing
-^^^^^^^^^^^^^^
+Enable/disable admin endpoints
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Logging
 -------
 
-Optimisations
--------------
-
-Subscriptions
-^^^^^^^^^^^^^
+:doc:`This page <../deployment/logging>` describes the different types of server logs, as well as how to access them.
