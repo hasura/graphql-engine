@@ -47,5 +47,5 @@
     type: run_sql
     args:
       sql: |
-        DROP FUNCTION get_session_var_value;
+        DROP FUNCTION get_session_var_value(json, text);
       cascade: true
