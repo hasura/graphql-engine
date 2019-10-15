@@ -2,7 +2,7 @@
 
 @font-face {
   font-family: 'Gudea';
-  src: local('Gudea Regular'), local('Gudea-Regular'), local('Gudea'), url('Fonts/Gudea-Regular.ttf') format('truetype'), url('gudea-regular-webfont.woff2') format('woff2'), url('gudea-regular-webfont.woff') format('woff');
+  src: local('Gudea Regular'), local('Gudea-Regular'), local('Gudea'), url('console/src/components/Common/Fonts/Gudea-Regular.ttf') format('truetype'), url('console/src/components/Common/Fonts/gudea-regular-webfont.woff2') format('woff2'), url('console/src/components/Common/Fonts/gudea-regular-webfont.woff') format('woff');
   font-style: normal;
   font-weight: 400;
   font-display: swap;
@@ -10,7 +10,7 @@
 
 @font-face {
   font-family: 'Gudea';
-  src: local('Gudea Bold'), local('Gudea-Bold'), url('Fonts/Gudea-Bold.ttf') format('truetype'), url('gudea-bold-webfont.woff2') format('woff2'), url('gudea-bold-webfont.woff') format('woff');
+  src: local('Gudea Bold'), local('Gudea-Bold'), url('console/src/components/Common/Fonts/Gudea-Bold.ttf') format('truetype'), url('console/src/components/Common/Fonts/gudea-bold-webfont.woff2') format('woff2'), url('console/src/components/Common/Fonts/gudea-bold-webfont.woff') format('woff');
   font-style: normal;
   font-weight: 700;
   font-display: swap;
