@@ -8,6 +8,8 @@ Production checklist
   :depth: 1
   :local:
 
+This guide is a checklist that helps to be aware of potential vulnerabilities before deploying Hasura GraphQL engine to production. It also suggests solutions to reduce the risk of these vulnerabilities.
+
 Security
 --------
 
@@ -63,8 +65,10 @@ Limit rows
 
 You can `limit the number of rows <https://docs.hasura.io/1.0/graphql/manual/auth/authorization/permission-rules.html#row-fetch-limit>`_ that can be accessed with one request.
 
-Enable/disable admin endpoints
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Disable admin endpoints
+^^^^^^^^^^^^^^^^^^^^^^^
+
+It is recommended to `disable access to the schema / metadata API <https://docs.hasura.io/1.0/graphql/manual/api-reference/schema-metadata-api/index.html#disabling-schema-metadata-api>`_ for the production instance.
 
 Logging
 -------
