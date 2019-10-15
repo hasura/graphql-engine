@@ -250,10 +250,12 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         },
       };
     case PERM_OPEN_EDIT:
+      const isNewRole = modifyState.permissionsState.newRole === action.role;
       const permState = getBasePermissionsState(
         action.tableSchema,
         action.role,
-        action.query
+        action.query,
+        isNewRole
       );
       return {
         ...modifyState,
@@ -397,12 +399,16 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       };
 
     case PERM_SET_ROLE_NAME:
+      const role = modifyState.permissionsState.isEditing
+        ? action.data
+        : modifyState.permissionsState.role;
+
       return {
         ...modifyState,
         permissionsState: {
           ...modifyState.permissionsState,
           newRole: action.data,
-          role: action.data,
+          role: role,
         },
       };
 
