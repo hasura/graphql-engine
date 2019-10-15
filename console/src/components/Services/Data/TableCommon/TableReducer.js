@@ -399,15 +399,16 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       };
 
     case PERM_SET_ROLE_NAME:
+      const newRole = action.data;
       const role = modifyState.permissionsState.isEditing
-        ? action.data
+        ? newRole
         : modifyState.permissionsState.role;
 
       return {
         ...modifyState,
         permissionsState: {
           ...modifyState.permissionsState,
-          newRole: action.data,
+          newRole: newRole,
           role: role,
         },
       };
