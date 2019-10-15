@@ -6,6 +6,7 @@
 package migrate
 
 import (
+	"bytes"
 	"container/list"
 	"fmt"
 	"os"
@@ -339,7 +340,7 @@ func (m *Migrate) Query(data []interface{}) error {
 	return m.databaseDrv.Query(data)
 }
 
-func (m *Migrate) Squash(version uint64) (versions []int64, up []interface{}, down []interface{}, err error) {
+func (m *Migrate) Squash(version uint64) (versions []int64, upMeta []interface{}, upSql []byte, downMeta []interface{}, downSql []byte, err error) {
 	mode, err := m.databaseDrv.GetSetting("migration_mode")
 	if err != nil {
 		return
@@ -366,28 +367,36 @@ func (m *Migrate) Squash(version uint64) (versions []int64, up []interface{}, do
 	wg.Add(3)
 	go func() {
 		defer wg.Done()
+		buf := &bytes.Buffer{}
 		for r := range dataUp {
-			switch r.(type) {
+			switch data := r.(type) {
 			case error:
 				err = r.(error)
 				return
+			case []byte:
+				buf.Write(data)
 			case interface{}:
-				up = append(up, r)
+				upMeta = append(upMeta, data)
 			}
 		}
+		upSql = buf.Bytes()
 	}()
 
 	go func() {
 		defer wg.Done()
+		buf := &bytes.Buffer{}
 		for r := range dataDown {
-			switch r.(type) {
+			switch data := r.(type) {
 			case error:
-				err = r.(error)
+				err = data
 				return
+			case []byte:
+				buf.Write(data)
 			case interface{}:
-				down = append(down, r)
+				downMeta = append(downMeta, data)
 			}
 		}
+		downSql = buf.Bytes()
 	}()
 
 	go func() {

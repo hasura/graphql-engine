@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 
 	"github.com/hasura/graphql-engine/cli/migrate/database"
+	"github.com/pkg/errors"
 
 	"github.com/ahmetb/go-linq"
 
@@ -87,17 +88,17 @@ func (q CustomQuery) MergeRelationships(squashList *database.CustomList) error {
 		prevElems := make([]*list.Element, 0)
 		for _, val := range g.Group {
 			element := val.(*list.Element)
-			switch element.Value.(type) {
+			switch obj := element.Value.(type) {
 			case *createObjectRelationshipInput:
 				err := relationshipTransition.Trigger("create_relationship", &relCfg, nil)
 				if err != nil {
-					return err
+					return errors.Wrap(err, fmt.Sprintf("relationship %s %s", obj.Name, relKey.name))
 				}
 				prevElems = append(prevElems, element)
 			case *createArrayRelationshipInput:
 				err := relationshipTransition.Trigger("create_relationship", &relCfg, nil)
 				if err != nil {
-					return err
+					return errors.Wrap(err, fmt.Sprintf("relationship %s %s", obj.Name, relKey.name))
 				}
 				prevElems = append(prevElems, element)
 			case *setRelationshipCommentInput:
@@ -612,7 +613,24 @@ func (h *HasuraDB) PushToList(migration io.Reader, fileType string, l *database.
 						l.Remove(e)
 					}
 				}
+				// add clear Metadata
+				cm := &clearMetadataInput{}
+				l.PushBack(cm)
+				// convert replace metadata to actions
 				actionType.convertToMetadataActions(l)
+			case *clearMetadataInput:
+				// Remove previous metadata actions
+				var next *list.Element
+				for e := l.Front(); e != nil; e = next {
+					next = e.Next()
+					switch e.Value.(type) {
+					case *runSQLInput:
+						// do nothing
+					default:
+						l.Remove(e)
+					}
+				}
+				l.PushBack(actionType)
 			default:
 				l.PushBack(actionType)
 			}
@@ -957,7 +975,7 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 		q := HasuraInterfaceQuery{
 			Args: e.Value,
 		}
-		switch e.Value.(type) {
+		switch args := e.Value.(type) {
 		case *trackTableInput:
 			q.Type = trackTable
 		case *unTrackTableInput:
@@ -1004,8 +1022,11 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 			q.Type = addCollectionToAllowList
 		case *dropCollectionFromAllowListInput:
 			q.Type = dropCollectionFromAllowList
+		case *clearMetadataInput:
+			q.Type = clearMetadata
 		case *runSQLInput:
-			q.Type = runSQL
+			ret <- []byte(args.SQL)
+			continue
 		default:
 			ret <- fmt.Errorf("invalid metadata action")
 			return

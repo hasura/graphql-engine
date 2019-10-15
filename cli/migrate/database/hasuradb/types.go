@@ -103,6 +103,8 @@ func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
 		h.Args = &dropCollectionFromAllowListInput{}
 	case replaceMetadata:
 		h.Args = &replaceMetadataInput{}
+	case clearMetadata:
+		h.Args = &clearMetadataInput{}
 	case runSQL:
 		h.Args = &runSQLInput{}
 	default:
@@ -256,6 +258,7 @@ const (
 	addCollectionToAllowList                 = "add_collection_to_allowlist"
 	dropCollectionFromAllowList              = "drop_collection_from_allowlist"
 	replaceMetadata                          = "replace_metadata"
+	clearMetadata                            = "clear_metadata"
 	runSQL                                   = "run_sql"
 	bulkQuery                                = "bulk"
 )
@@ -305,6 +308,18 @@ type trackTableInput struct {
 	IsEnum bool        `json:"is_enum" yaml:"is_enum"`
 }
 
+func (t trackTableInput) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		Name   string `json:"name" yaml:"name"`
+		Schema string `json:"schema" yaml:"schema"`
+		IsEnum bool   `json:"is_enum" yaml:"is_enum"`
+	}{
+		Name:   t.Table.Name,
+		Schema: t.Table.Schema,
+		IsEnum: t.IsEnum,
+	})
+}
+
 func (t *trackTableInput) UnmarshalJSON(b []byte) error {
 	var ts struct {
 		Name   string
@@ -340,8 +355,7 @@ type unTrackTableInput struct {
 }
 
 type trackFunctionInput struct {
-	Schema string `json:"schema" yaml:"schema"`
-	Name   string `json:"name" yaml:"name"`
+	tableSchema
 }
 
 type unTrackFunctionInput struct {
@@ -424,14 +438,51 @@ type setPermissionCommentInput struct {
 }
 
 type createEventTriggerInput struct {
-	Name    string      `json:"name" yaml:"name"`
-	Table   tableSchema `json:"table" yaml:"table"`
-	Webhook string      `json:"webhook" yaml:"webhook"`
-	Insert  interface{} `json:"insert" yaml:"insert"`
-	Update  interface{} `json:"update" yaml:"update"`
-	Delete  interface{} `json:"delete" yaml:"delete"`
-	Headers interface{} `json:"headers" yaml:"headers"`
-	Replace bool        `json:"replace" yaml:"replace"`
+	Name           string                            `json:"name" yaml:"name"`
+	Table          tableSchema                       `json:"table" yaml:"table"`
+	Webhook        string                            `json:"webhook,omitempty" yaml:"webhook,omitempty"`
+	WebhookFromEnv string                            `json:"webhook_from_env,omitempty" yaml:"webhook_from_env,omitempty"`
+	Definition     *createEventTriggerOperationInput `json:"definition,omitempty" yaml:"definition,omitempty"`
+	Headers        interface{}                       `json:"headers" yaml:"headers"`
+	Replace        bool                              `json:"replace" yaml:"replace"`
+
+	createEventTriggerOperationInput
+}
+
+type createEventTriggerOperationInput struct {
+	Insert interface{} `json:"insert,omitempty" yaml:"insert,omitempty"`
+	Update interface{} `json:"update,omitempty" yaml:"update,omitempty"`
+	Delete interface{} `json:"delete,omitempty" yaml:"delete,omitempty"`
+}
+
+func (c *createEventTriggerInput) MarshalJSON() ([]byte, error) {
+	if c.Definition != nil {
+		c.Insert = c.Definition.Insert
+		c.Update = c.Definition.Update
+		c.Delete = c.Definition.Delete
+		c.Definition = nil
+	}
+	return json.Marshal(&struct {
+		Name           string      `json:"name" yaml:"name"`
+		Table          tableSchema `json:"table" yaml:"table"`
+		Webhook        string      `json:"webhook,omitempty" yaml:"webhook,omitempty"`
+		WebhookFromEnv string      `json:"webhook_from_env,omitempty" yaml:"webhook_from_env,omitempty"`
+		Headers        interface{} `json:"headers" yaml:"headers"`
+		Replace        bool        `json:"replace" yaml:"replace"`
+		Insert         interface{} `json:"insert,omitempty" yaml:"insert,omitempty"`
+		Update         interface{} `json:"update,omitempty" yaml:"update,omitempty"`
+		Delete         interface{} `json:"delete,omitempty" yaml:"delete,omitempty"`
+	}{
+		Name:           c.Name,
+		Table:          c.Table,
+		Webhook:        c.Webhook,
+		WebhookFromEnv: c.WebhookFromEnv,
+		Headers:        c.Headers,
+		Replace:        c.Replace,
+		Insert:         c.Insert,
+		Update:         c.Update,
+		Delete:         c.Delete,
+	})
 }
 
 type deleteEventTriggerInput struct {
@@ -478,21 +529,24 @@ type dropCollectionFromAllowListInput struct {
 	Collection string `json:"collection" yaml:"collection"`
 }
 
+type clearMetadataInput struct {
+}
+
 type replaceMetadataInput struct {
 	Tables []struct {
-		Table               tableSchema                     `json:"table" yaml:"table"`
-		ArrayRelationships  []createArrayRelationshipInput  `json:"array_relationships" yaml:"array_relationships"`
-		ObjectRelationships []createObjectRelationshipInput `json:"object_relationships" yaml:"object_relationships"`
-		InsertPermissions   []createInsertPermissionInput   `json:"insert_permissions" yaml:"insert_permissions"`
-		SelectPermissions   []createSelectPermissionInput   `json:"select_permissions" yaml:"select_permissions"`
-		UpdatePermissions   []createUpdatePermissionInput   `json:"update_permissions" yaml:"update_permissions"`
-		DeletePermissions   []createDeletePermissionInput   `json:"delete_permissions" yaml:"delete_permissions"`
-		EventTriggers       []createEventTriggerInput       `json:"event_triggers" yaml:"event_triggers"`
+		Table               tableSchema                      `json:"table" yaml:"table"`
+		ArrayRelationships  []*createArrayRelationshipInput  `json:"array_relationships" yaml:"array_relationships"`
+		ObjectRelationships []*createObjectRelationshipInput `json:"object_relationships" yaml:"object_relationships"`
+		InsertPermissions   []*createInsertPermissionInput   `json:"insert_permissions" yaml:"insert_permissions"`
+		SelectPermissions   []*createSelectPermissionInput   `json:"select_permissions" yaml:"select_permissions"`
+		UpdatePermissions   []*createUpdatePermissionInput   `json:"update_permissions" yaml:"update_permissions"`
+		DeletePermissions   []*createDeletePermissionInput   `json:"delete_permissions" yaml:"delete_permissions"`
+		EventTriggers       []*createEventTriggerInput       `json:"event_triggers" yaml:"event_triggers"`
 	} `json:"tables" yaml:"tables"`
-	Functions        []tableSchema                   `json:"functions" yaml:"functions"`
-	QueryCollections []createQueryCollectionInput    `json:"query_collections" yaml:"query_collections"`
-	AllowList        []addCollectionToAllowListInput `json:"allowlist" yaml:"allowlist"`
-	RemoteSchemas    []addRemoteSchemaInput          `json:"remote_schemas" yaml:"remote_schemas"`
+	Functions        []*trackFunctionInput            `json:"functions" yaml:"functions"`
+	QueryCollections []*createQueryCollectionInput    `json:"query_collections" yaml:"query_collections"`
+	AllowList        []*addCollectionToAllowListInput `json:"allowlist" yaml:"allowlist"`
+	RemoteSchemas    []*addRemoteSchemaInput          `json:"remote_schemas" yaml:"remote_schemas"`
 }
 
 func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList) {
@@ -514,7 +568,7 @@ func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList
 				table.Table.Name,
 				table.Table.Schema,
 			}
-			l.PushBack(&objRel)
+			l.PushBack(objRel)
 		}
 	}
 
@@ -524,7 +578,7 @@ func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList
 				table.Table.Name,
 				table.Table.Schema,
 			}
-			l.PushBack(&arrayRel)
+			l.PushBack(arrayRel)
 		}
 	}
 
@@ -534,7 +588,7 @@ func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList
 				table.Table.Name,
 				table.Table.Schema,
 			}
-			l.PushBack(&insertPerm)
+			l.PushBack(insertPerm)
 		}
 	}
 
@@ -544,7 +598,7 @@ func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList
 				table.Table.Name,
 				table.Table.Schema,
 			}
-			l.PushBack(&selectPerm)
+			l.PushBack(selectPerm)
 		}
 	}
 
@@ -554,7 +608,7 @@ func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList
 				table.Table.Name,
 				table.Table.Schema,
 			}
-			l.PushBack(&updatePerm)
+			l.PushBack(updatePerm)
 		}
 	}
 
@@ -564,7 +618,7 @@ func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList
 				table.Table.Name,
 				table.Table.Schema,
 			}
-			l.PushBack(&deletePerm)
+			l.PushBack(deletePerm)
 		}
 	}
 
@@ -574,27 +628,27 @@ func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList
 				table.Table.Name,
 				table.Table.Schema,
 			}
-			l.PushBack(&et)
+			l.PushBack(et)
 		}
 	}
 	// track functions
 	for _, function := range rmi.Functions {
-		l.PushBack(&function)
+		l.PushBack(function)
 	}
 
 	// track query collections
 	for _, qc := range rmi.QueryCollections {
-		l.PushBack(&qc)
+		l.PushBack(qc)
 	}
 
 	// track allow list
 	for _, al := range rmi.AllowList {
-		l.PushBack(&al)
+		l.PushBack(al)
 	}
 
 	// track remote schemas
 	for _, rs := range rmi.RemoteSchemas {
-		l.PushBack(&rs)
+		l.PushBack(rs)
 	}
 }
 

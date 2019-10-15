@@ -225,23 +225,28 @@ func ResetCmd(m *migrate.Migrate) error {
 }
 
 func SquashCmd(m *migrate.Migrate, from uint64, version int64, name, directory string) (versions []int64, err error) {
-	versions, up, down, err := m.Squash(from)
+	versions, upMeta, upSql, downMeta, downSql, err := m.Squash(from)
 	if err != nil {
 		return
 	}
 
-	byteUp, err := yaml.Marshal(up)
-	if err != nil {
-		return versions, errors.Wrap(err, "cannot unmarshall up query")
-	}
-
-	byteDown, err := yaml.Marshal(down)
-	if err != nil {
-		return versions, errors.Wrap(err, "cannot unmarshall down query")
-	}
 	createOptions := New(version, name, directory)
-	createOptions.MetaUp = byteUp
-	createOptions.MetaDown = byteDown
+	if len(upMeta) != 0 {
+		byteUp, err := yaml.Marshal(upMeta)
+		if err != nil {
+			return versions, errors.Wrap(err, "cannot unmarshall up query")
+		}
+		createOptions.MetaUp = byteUp
+	}
+	if len(downMeta) != 0 {
+		byteDown, err := yaml.Marshal(downMeta)
+		if err != nil {
+			return versions, errors.Wrap(err, "cannot unmarshall down query")
+		}
+		createOptions.MetaDown = byteDown
+	}
+	createOptions.SQLUp = upSql
+	createOptions.SQLDown = downSql
 
 	err = createOptions.Create()
 	if err != nil {
