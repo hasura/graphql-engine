@@ -13,7 +13,7 @@ This guide is a checklist for configuring and securing GraphQL engine for a prod
 Security
 --------
 
-In order to increase the security of your GraphQL engine, the following steps are recommended.
+The following steps are recommended to better secure your production GraphQL engine instance:
 
 Admin secret
 ^^^^^^^^^^^^
