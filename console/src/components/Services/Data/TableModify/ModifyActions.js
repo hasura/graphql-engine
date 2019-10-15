@@ -29,6 +29,12 @@ import {
 import { isPostgresFunction } from '../utils';
 import { sqlEscapeText } from '../../../Common/utils/sqlUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import {
+  findTable,
+  generateTableDef,
+  getTableCheckConstraints,
+  findTableCheckConstraint,
+} from '../../../Common/utils/pgUtils';
 
 import {
   fetchColumnCastsQuery,
@@ -129,18 +135,21 @@ const resetPrimaryKeys = () => ({
 });
 
 export const removeCheckConstraint = constraintName => (dispatch, getState) => {
-  const isOk = window.confirm('Are you absolutely sure?');
+  const isOk = getConfirmation();
   if (!isOk) return;
 
   const { currentTable: tableName, currentSchema } = getState().tables;
 
-  const tableSchema = getState().tables.allSchemas.find(s => {
-    return s.table_name === tableName && s.table_schema === currentSchema;
-  });
-
-  const constraint = tableSchema.check_constraints.find(
-    cc => cc.constraint_name === constraintName
+  const table = findTable(
+    getState().tables.allSchemas,
+    generateTableDef(tableName, currentSchema)
   );
+
+  const constraint = findTableCheckConstraint(
+    getTableCheckConstraints(table),
+    constraintName
+  );
+
   const upQuery = {
     type: 'run_sql',
     args: {
