@@ -30,7 +30,7 @@ NOTE: SHAHIDH WILL ADD MORE INFO HERE INCLUDING CONFIGURATION
 nginx
 ~~~~~
 
-`Here <https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/>`_ is how to configure a nginx reverse proxy.
+`Here <https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/>`_ is how you can configure an NGINX reverse proxy.
 
 Caddy
 ~~~~~
