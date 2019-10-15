@@ -165,8 +165,6 @@ const getBasePermissionsState = (tableSchema, role, query) => {
         }
       }
     });
-  } else {
-    _permissions.newRole = role;
   }
 
   return _permissions;
