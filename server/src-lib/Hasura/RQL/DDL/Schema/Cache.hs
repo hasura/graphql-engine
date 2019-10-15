@@ -121,7 +121,7 @@ buildSchemaCacheWithOptions withSetup = do
         mkAllTriggersQ trn qt allCols (stringifyNum sqlGenCtx) (etcDefinition etc)
 
   -- sql functions
-  forM_ functions $ \(CatalogFunction qf rawfiM) -> do
+  forM_ functions $ \(CatalogFunction qf config rawfiM) -> do
     let def = toJSON $ TrackFunction qf
         mkInconsObj =
           InconsistentMetadataObj (MOFunction qf) MOTFunction def
@@ -129,7 +129,7 @@ buildSchemaCacheWithOptions withSetup = do
       withSchemaObject_ mkInconsObj $ do
       rawfi <- onNothing rawfiM $
         throw400 NotExists $ "no such function exists in postgres : " <>> qf
-      trackFunctionP2Setup qf rawfi
+      trackFunctionP2Setup qf config rawfi
 
   -- allow list
   replaceAllowlist $ concatMap _cdQueries allowlistDefs

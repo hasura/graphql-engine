@@ -304,6 +304,7 @@ CREATE TABLE hdb_catalog.hdb_function
 (
     function_schema TEXT,
     function_name TEXT,
+    configuration JSONB NOT NULL DEFAULT '{}'::jsonb,
     is_system_defined boolean default false,
 
     PRIMARY KEY (function_schema, function_name)

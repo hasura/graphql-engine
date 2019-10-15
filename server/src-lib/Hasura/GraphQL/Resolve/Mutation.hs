@@ -51,6 +51,7 @@ convertMutResp ty selSet =
       UVPG annPGVal -> UVSQL <$> txtConverter annPGVal
       UVSessVar colTy sessVar -> pure $ UVSessVar colTy sessVar
       UVSQL sqlExp -> pure $ UVSQL sqlExp
+      UVSession -> pure UVSession
 
 convertRowObj
   :: (MonadReusability m, MonadError QErr m)

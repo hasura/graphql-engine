@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeApplications #-}
 module Hasura.RQL.DDL.Metadata
   ( TableMeta
 
@@ -51,12 +52,28 @@ import qualified Hasura.RQL.DDL.Schema              as DS
 import qualified Hasura.RQL.Types.EventTrigger      as DTS
 import qualified Hasura.RQL.Types.RemoteSchema      as TRS
 
+data MetadataVersion
+  = MVVersion1
+  | MVVersion2
+  deriving (Show, Eq, Lift)
+
+instance ToJSON MetadataVersion where
+  toJSON MVVersion1 = toJSON @Int 1
+  toJSON MVVersion2 = toJSON @Int 2
+
+instance FromJSON MetadataVersion where
+  parseJSON v = do
+    version :: Int <- parseJSON v
+    case version of
+      1 -> pure MVVersion1
+      2 -> pure MVVersion2
+      i -> fail $ "expected 1 or 2, encountered " ++ show i
 
 data TableMeta
   = TableMeta
   { _tmTable               :: !QualifiedTable
   , _tmIsEnum              :: !Bool
-  , _tmConfiguration       :: !(TableConfig)
+  , _tmConfiguration       :: !TableConfig
   , _tmObjectRelationships :: ![DR.ObjRelDef]
   , _tmArrayRelationships  :: ![DR.ArrRelDef]
   , _tmInsertPermissions   :: ![DP.InsPermDef]
@@ -147,8 +164,9 @@ runClearMetadata _ = do
 
 data ReplaceMetadata
   = ReplaceMetadata
-  { aqTables           :: ![TableMeta]
-  , aqFunctions        :: !(Maybe [QualifiedFunction])
+  { aqVersion          :: !(Maybe MetadataVersion)
+  , aqTables           :: ![TableMeta]
+  , aqFunctions        :: !(Maybe [Value])
   , aqRemoteSchemas    :: !(Maybe [TRS.AddRemoteSchemaQuery])
   , aqQueryCollections :: !(Maybe [DQC.CreateCollection])
   , aqAllowlist        :: !(Maybe [DQC.CollectionReq])
@@ -159,7 +177,7 @@ $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ReplaceMetadata)
 applyQP1
   :: (QErrM m, UserInfoM m)
   => ReplaceMetadata -> m ()
-applyQP1 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = do
+applyQP1 (ReplaceMetadata _ tables mFunctions mSchemas mCollections mAllowlist) = do
 
   adminOnly
 
@@ -224,7 +242,7 @@ applyQP2
      )
   => ReplaceMetadata
   -> m EncJSON
-applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = do
+applyQP2 (ReplaceMetadata maybeVersion tables mFunctions mSchemas mCollections mAllowlist) = do
 
   liftTx clearMetadata
   DS.buildSchemaCacheStrict
@@ -266,17 +284,20 @@ applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = 
 
   -- sql functions
   withPathK "functions" $
-    indexedMapM_ (void . DS.trackFunctionP2) functions
+    case version of
+      MVVersion1 -> traverse decodeValue functions >>=
+                    indexedMapM_ (void . flip DS.trackFunctionP2 DS.emptyFunctionConfig)
+      MVVersion2 -> traverse decodeValue functions >>=
+                    indexedMapM_ (\(DS.TrackFunctionV2 qf config) -> void $ DS.trackFunctionP2 qf config)
 
   -- query collections
   withPathK "query_collections" $
-    indexedForM_ collections $ \c -> do
-    liftTx $ DQC.addCollectionToCatalog c
+    indexedForM_ collections $ \c -> liftTx $ DQC.addCollectionToCatalog c
 
   -- allow list
   withPathK "allowlist" $ do
-    indexedForM_ allowlist $ \(DQC.CollectionReq name) -> do
-      liftTx $ DQC.addCollectionToAllowlistCatalog name
+    indexedForM_ allowlist $
+      \(DQC.CollectionReq name) -> liftTx $ DQC.addCollectionToAllowlistCatalog name
     -- add to cache
     DQC.refreshAllowlist
 
@@ -291,6 +312,7 @@ applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = 
   return successMsg
 
   where
+    version = fromMaybe MVVersion1 maybeVersion
     functions = fromMaybe [] mFunctions
     collections = fromMaybe [] mCollections
     allowlist = fromMaybe [] mAllowlist
@@ -356,8 +378,7 @@ fetchMetadata = do
         modMetaMap tmEventTriggers triggerMetaDefs
 
   -- fetch all functions
-  functions <- map (uncurry QualifiedObject) <$>
-    Q.catchE defaultTxErrorHandler fetchFunctions
+  functions <- map toJSON <$> Q.catchE defaultTxErrorHandler fetchFunctions
 
   -- fetch all custom resolvers
   schemas <- DRS.fetchRemoteSchemas
@@ -368,7 +389,7 @@ fetchMetadata = do
   -- fetch allow list
   allowlist <- map DQC.CollectionReq <$> DQC.fetchAllowlist
 
-  return $ ReplaceMetadata (M.elems postRelMap) (Just functions)
+  return $ ReplaceMetadata (Just MVVersion2) (M.elems postRelMap) (Just functions)
                            (Just schemas) (Just collections) (Just allowlist)
 
   where
@@ -421,12 +442,15 @@ fetchMetadata = do
               SELECT e.schema_name, e.table_name, e.configuration::json
                FROM hdb_catalog.event_triggers e
               |] () False
-    fetchFunctions =
-      Q.listQ [Q.sql|
-                SELECT function_schema, function_name
+
+    fetchFunctions = do
+      l <- Q.listQ [Q.sql|
+                SELECT function_schema, function_name, configuration::json
                 FROM hdb_catalog.hdb_function
                 WHERE is_system_defined = 'false'
                     |] () False
+      pure $ flip map l $ \(sn, fn, Q.AltJ config) ->
+                            DS.TrackFunctionV2 (QualifiedObject sn fn) config
 
 runExportMetadata
   :: (QErrM m, UserInfoM m, MonadTx m)

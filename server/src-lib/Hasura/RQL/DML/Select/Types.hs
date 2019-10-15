@@ -8,6 +8,7 @@ import           Language.Haskell.TH.Syntax (Lift)
 
 import qualified Data.HashMap.Strict        as HM
 import qualified Data.List.NonEmpty         as NE
+import qualified Data.Sequence              as Seq
 import qualified Data.Text                  as T
 
 import           Hasura.Prelude
@@ -285,6 +286,22 @@ emptyFunctionArgsExp :: FunctionArgsExpG a
 emptyFunctionArgsExp = FunctionArgsExp [] HM.empty
 
 type FunctionArgExp = FunctionArgsExpG S.SQLExp
+
+-- | If argument positional index is less than or equal to length of 'positional' arguments then
+-- insert the value in 'positional' arguments else insert the value with argument name in 'named' arguments
+insertFunctionArg
+  :: FunctionArgName
+  -> Int
+  -> a
+  -> FunctionArgsExpG a
+  -> FunctionArgsExpG a
+insertFunctionArg argName index value (FunctionArgsExp positional named) =
+  if (index + 1) <= length positional then
+    FunctionArgsExp (insertAt index value positional) named
+  else FunctionArgsExp positional $
+    HM.insert (getFuncArgNameTxt argName) value named
+  where
+    insertAt i a = toList . Seq.insertAt i a . Seq.fromList
 
 data AnnFnSelG s v
   = AnnFnSel

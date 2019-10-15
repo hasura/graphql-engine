@@ -449,13 +449,18 @@ parseFunctionArgs argSeq val = flip withObject val $ \_ obj -> do
 fromFuncQueryField
   :: (MonadReusability m, MonadError QErr m)
   => (Field -> m s)
-  -> QualifiedFunction -> FuncArgSeq
+  -> QualifiedFunction
+  -> FuncArgSeq
+  -> Maybe SessionVariableArgument
   -> Field
   -> m (RS.AnnFnSelG s UnresolvedVal)
-fromFuncQueryField fn qf argSeq fld = fieldAsPath fld $ do
+fromFuncQueryField fn qf argSeq maybeSessVarArg fld = fieldAsPath fld $ do
   funcArgsM <- withArgM (_fArguments fld) "args" $ parseFunctionArgs argSeq
   let funcArgs = fromMaybe RS.emptyFunctionArgsExp funcArgsM
-  RS.AnnFnSel qf funcArgs <$> fn fld
+      insertSessVarArg sessVarArg = RS.insertFunctionArg (svaName sessVarArg)
+                                    (svaIndex sessVarArg) UVSession funcArgs
+      funcArgsWithSession = maybe funcArgs insertSessVarArg maybeSessVarArg
+  RS.AnnFnSel qf funcArgsWithSession <$> fn fld
 
 convertFuncQuerySimple
   :: ( MonadReusability m
@@ -467,10 +472,10 @@ convertFuncQuerySimple
      )
   => FuncQOpCtx -> Field -> m QueryRootFldUnresolved
 convertFuncQuerySimple funcOpCtx fld =
-  withPathK "selectionSet" $ QRFFnSimple <$>
-    fromFuncQueryField (fromField qt colGNameMap permFilter permLimit) qf argSeq fld
+  withPathK "selectionSet" $ QRFFnSimple <$> fromFuncQueryField
+    (fromField qt colGNameMap permFilter permLimit) qf argSeq sessVarArg fld
   where
-    FuncQOpCtx qt _ colGNameMap permFilter permLimit qf argSeq = funcOpCtx
+    FuncQOpCtx qt _ colGNameMap permFilter permLimit qf argSeq sessVarArg = funcOpCtx
 
 convertFuncQueryAgg
   :: ( MonadReusability m
@@ -482,10 +487,10 @@ convertFuncQueryAgg
      )
   => FuncQOpCtx -> Field -> m QueryRootFldUnresolved
 convertFuncQueryAgg funcOpCtx fld =
-  withPathK "selectionSet" $ QRFFnAgg <$>
-    fromFuncQueryField (fromAggField qt colGNameMap permFilter permLimit) qf argSeq fld
+  withPathK "selectionSet" $ QRFFnAgg <$> fromFuncQueryField
+    (fromAggField qt colGNameMap permFilter permLimit) qf argSeq sessVarArg fld
   where
-    FuncQOpCtx qt _ colGNameMap permFilter permLimit qf argSeq = funcOpCtx
+    FuncQOpCtx qt _ colGNameMap permFilter permLimit qf argSeq sessVarArg = funcOpCtx
 
 data QueryRootFldAST v
   = QRFPk !(RS.AnnSimpleSelG v)

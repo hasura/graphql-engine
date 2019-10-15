@@ -128,6 +128,7 @@ from
               'schema', hf.function_schema,
               'name', hf.function_name
             ),
+            'configuration', hf.configuration,
             'info', function_info
           ) as info
         from

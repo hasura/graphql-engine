@@ -394,12 +394,16 @@ getRootFldsRole' tn primCols constraints fields funcs insM
 
     funcFldHelper f g pFltr pLimit hdrs =
       flip map funcs $ \fi ->
-      ( f . FuncQOpCtx tn hdrs colGNameMap pFltr pLimit (fiName fi) $ mkFuncArgItemSeq fi
+      ( f $ FuncQOpCtx tn hdrs colGNameMap pFltr pLimit (fiName fi)
+            (mkFuncArgItemSeq fi) (fiSessionVarArg fi)
       , g fi $ fiDescription fi
       )
 
-    mkFuncArgItemSeq fi = Seq.fromList $ procFuncArgs (fiInputArgs fi)
-                          $ \fa t -> FuncArgItem (G.Name t) (faName fa) (faHasDefault fa)
+    mkFuncArgItemSeq fi =
+      let functionInputArgs = argsWithoutSessionVariableArgument
+                              (fiSessionVarArg fi) (fiInputArgs fi)
+      in Seq.fromList $  procFuncArgs functionInputArgs
+         $ \fa t -> FuncArgItem (G.Name t) (faName fa) (faHasDefault fa)
 
 
 getSelPermission :: TableInfo PGColumnInfo -> RoleName -> Maybe SelPermInfo

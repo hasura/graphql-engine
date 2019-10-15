@@ -2,8 +2,10 @@ description: Export schema cache (metadata)
 url: /v1/query
 status: 200
 response:
+  version: 2
   functions:
-  - search_articles
+  - function: search_articles
+    configuration: {}
   remote_schemas: []
   query_collections: []
   allowlist: []

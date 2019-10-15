@@ -15,6 +15,7 @@ import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Permission
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
@@ -64,13 +65,14 @@ data SelPkOpCtx
 
 data FuncQOpCtx
   = FuncQOpCtx
-  { _fqocTable    :: !QualifiedTable
-  , _fqocHeaders  :: ![T.Text]
-  , _fqocAllCols  :: !PGColGNameMap
-  , _fqocFilter   :: !AnnBoolExpPartialSQL
-  , _fqocLimit    :: !(Maybe Int)
-  , _fqocFunction :: !QualifiedFunction
-  , _fqocArgs     :: !FuncArgSeq
+  { _fqocTable      :: !QualifiedTable
+  , _fqocHeaders    :: ![T.Text]
+  , _fqocAllCols    :: !PGColGNameMap
+  , _fqocFilter     :: !AnnBoolExpPartialSQL
+  , _fqocLimit      :: !(Maybe Int)
+  , _fqocFunction   :: !QualifiedFunction
+  , _fqocArgs       :: !FuncArgSeq
+  , _fqocSessVarArg :: !(Maybe SessionVariableArgument)
   } deriving (Show, Eq)
 
 data UpdOpCtx
@@ -183,6 +185,8 @@ data UnresolvedVal
   | UVPG !AnnPGVal
   -- | an arbitrary SQL expression, which /cannot/ be parameterized over
   | UVSQL !S.SQLExp
+  -- ! an entire session variables JSON object
+  | UVSession
   deriving (Show, Eq)
 
 type AnnBoolExpUnresolved = AnnBoolExp UnresolvedVal
