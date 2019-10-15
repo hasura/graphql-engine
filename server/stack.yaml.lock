@@ -20,6 +20,20 @@ packages:
     commit: de5c023ed7d2f75a77972ff52b6e5ed19d010ca2
 - completed:
     cabal-file:
+      size: 3364
+      sha256: 09bad175e8ccb1fec5ddbc94d95d18b4206ac4481cf3749e42ffbaac90bc4a37
+    name: graphql-parser
+    version: 0.1.0.0
+    git: https://github.com/0x777/graphql-parser-hs.git
+    pantry-tree:
+      size: 1826
+      sha256: 819c622940b2d66331116fea4ea013edf039bbd88c482676a6da1244e46b3fc0
+    commit: bf9781312d49af6168d97d5374bc4df72f72c1d5
+  original:
+    git: https://github.com/0x777/graphql-parser-hs.git
+    commit: bf9781312d49af6168d97d5374bc4df72f72c1d5
+- completed:
+    cabal-file:
       size: 1253
       sha256: d0356b65cbe17a2fecf9334aa133de238161ef9c22af015d67ab622e08eb8ed1
     name: ci-info
