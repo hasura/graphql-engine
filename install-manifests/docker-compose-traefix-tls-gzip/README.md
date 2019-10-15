@@ -13,6 +13,7 @@ The platypus and Hasura engine will be both serving with TLS enabled behind _Tra
 
 - Clone this repo on a machine where you'd like to deploy graphql engine
 - Edit the environment variables in the `.env` file.
+  - **NOTE**: Your public key and private key have to be formatted with newlines. This can be achieved with `awk -v ORS='\\n' '1' public_key.pem`.
 - Add an `acme.json` in your home directory (`~`) and leave it empty. This can be done with `touch ~/acme.json`. Feel free to move this volume elsewhere to your liking.
 - `docker-compose up -d`
 
