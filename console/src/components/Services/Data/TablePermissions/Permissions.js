@@ -11,7 +11,6 @@ import { RESET } from '../TableModify/ModifyActions';
 import {
   permChangeTypes,
   permOpenEdit,
-  permAddTableSchemas,
   permSetFilter,
   permSetFilterSameAs,
   permToggleColumn,
@@ -41,7 +40,7 @@ import TableHeader from '../TableCommon/TableHeader';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 import EnhancedInput from '../../../Common/InputChecker/InputChecker';
 
-import { setTable } from '../DataActions';
+import { setTable, updateSchemaInfo } from '../DataActions';
 import { getIngForm, getEdForm, escapeRegExp } from '../utils';
 import { allOperators, getLegacyOperator } from './PermissionBuilder/utils';
 import {
@@ -57,6 +56,7 @@ import { defaultPresetsState } from '../DataState';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { generateTableDef } from '../../../Common/utils/pgUtils';
 
 class Permissions extends Component {
   constructor() {
@@ -111,6 +111,7 @@ class Permissions extends Component {
       tableName,
       tableType,
       allSchemas,
+      schemaList,
       ongoingRequest,
       lastError,
       lastFormError,
@@ -511,7 +512,7 @@ class Permissions extends Component {
     };
 
     const getEditSection = (tableSchema, queryTypes, roleList) => {
-      if (!permissionsState.role || !permissionsState.query) {
+      if (!permissionsState.isEditing) {
         return;
       }
 
@@ -711,8 +712,9 @@ class Permissions extends Component {
             const dispatchFuncSetFilter = filter =>
               permSetFilter(JSON.parse(filter));
 
-            const dispatchFuncAddTableSchemas = schemaNames =>
-              permAddTableSchemas(schemaNames);
+            const loadSchemasFunc = schemaNames => {
+              dispatch(updateSchemaInfo({ schemas: schemaNames }));
+            };
 
             const isUniqueFilter =
               filterString !== '' &&
@@ -753,10 +755,10 @@ class Permissions extends Component {
               _filterOptionsSection.push(
                 <PermissionBuilder
                   dispatchFuncSetFilter={dispatchFuncSetFilter}
-                  dispatchFuncAddTableSchemas={dispatchFuncAddTableSchemas}
-                  tableName={tableName}
-                  schemaName={currentSchema}
-                  allTableSchemas={permissionsState.tableSchemas}
+                  loadSchemasFunc={loadSchemasFunc}
+                  tableDef={generateTableDef(tableName, currentSchema)}
+                  allTableSchemas={allSchemas}
+                  schemaList={schemaList}
                   filter={filterString}
                   dispatch={dispatch}
                   key={-4}
@@ -1811,6 +1813,7 @@ const mapStateToProps = (state, ownProps) => ({
   tableName: ownProps.params.table,
   tableType: ownProps.route.tableType,
   allSchemas: state.tables.allSchemas,
+  schemaList: state.tables.schemaList,
   migrationMode: state.main.migrationMode,
   currentSchema: state.tables.currentSchema,
   serverVersion: state.main.serverVersion ? state.main.serverVersion : '',

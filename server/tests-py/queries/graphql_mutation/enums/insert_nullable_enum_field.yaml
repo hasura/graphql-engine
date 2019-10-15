@@ -1,0 +1,36 @@
+description: Test inserting records with null enum values
+url: /v1/graphql
+status: 200
+response:
+  data:
+    insert_posts:
+      returning:
+      - title: Post 1
+        custom_color: blue
+      - title: Post 2
+        custom_color: null
+      - title: Post 3
+        custom_color: red
+      - title: Post 4
+        custom_color: null
+      - title: Post 5
+        custom_color: null
+query:
+  query: |
+    mutation ($post_3_color: colors_enum, $post_4_color: colors_enum, $post_5_color: colors_enum) {
+      insert_posts(objects: [
+        { title: "Post 1", custom_color: blue },
+        { title: "Post 2" },
+        { title: "Post 3", custom_color: $post_3_color },
+        { title: "Post 4", custom_color: $post_4_color },
+        { title: "Post 5", custom_color: $post_5_color }
+      ]) {
+        returning {
+          title
+          custom_color
+        }
+      }
+    }
+  variables:
+    post_3_color: red
+    post_5_color: null

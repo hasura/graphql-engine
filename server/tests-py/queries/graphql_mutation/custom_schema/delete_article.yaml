@@ -1,0 +1,14 @@
+description: Delete articles
+url: /v1/graphql
+status: 200
+response:
+  data:
+    DeleteArticles:
+      affected_rows: 1
+query:
+  query: |
+    mutation {
+      DeleteArticles(where: {ArticleId: {_eq: 1}}){
+        affected_rows
+      }
+    }
