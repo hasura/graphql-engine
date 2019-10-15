@@ -168,43 +168,50 @@ getResolvedExecPlan
   -> GQLReqUnparsed
   -> m (Seq.Seq GQFieldResolvedPlan)
 getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer reqUnparsed = do
-  planM <-
-    liftIO $ EP.getPlan scVer (userRole userInfo) opNameM queryStr planCache
+  plansM <-
+    liftIO $ EP.getPlans scVer (userRole userInfo) opNameM queryStr planCache
   let usrVars = userVars userInfo
-  case planM
+  case plansM
     -- plans are only for queries and subscriptions
         of
-    Just plan ->
-      case plan of
-        EP.RPQuery queryPlan -> do
-          (tx, genSql) <- EQ.queryOpFromPlan usrVars queryVars queryPlan
-          let queryOp = ExOpQuery tx (Just genSql)
-          pure $ pure $ GQFieldResolvedHasura queryOp
-        EP.RPSubs subsPlan -> do
-          subOp <-
-            ExOpSubs <$>
-            EL.reuseLiveQueryPlan pgExecCtx usrVars queryVars subsPlan
-          pure $ pure $ GQFieldResolvedHasura subOp
+    Just plans -> forM plans $ \case
+      EP.RPQuery queryPlan -> do
+        (tx, genSql) <- EQ.queryOpFromPlan usrVars queryVars queryPlan
+        let queryOp = ExOpQuery tx (Just genSql)
+        pure $ GQFieldResolvedHasura queryOp
+      EP.RPSubs subsPlan -> do
+        subOp <-
+          ExOpSubs <$>
+          EL.reuseLiveQueryPlan pgExecCtx usrVars queryVars subsPlan
+        pure $ GQFieldResolvedHasura subOp
     Nothing -> noExistingPlan
   where
     GQLReq opNameM queryStr queryVars = reqUnparsed
-    addPlanToCache plan =
-      -- liftIO $
-      EP.addPlan scVer (userRole userInfo) opNameM queryStr plan planCache
+    -- We only cache when the query is pure hasura. This could all be changed or
+    -- improved in the future.
+    tryCaching m = do
+      (resolvedPlans, mbReusablePlans) <- Seq.unzip <$> m
+      for_ (sequence mbReusablePlans) $ \plans ->
+        -- all top-level were pure hasura:
+        liftIO $ EP.addPlans scVer (userRole userInfo) opNameM queryStr plans planCache
+      return resolvedPlans
+
     noExistingPlan = do
       req <- toParsed reqUnparsed
       (GQExecPlanPartial opType fieldPlans) <-
         getExecPlanPartial userInfo sc enableAL req
       case opType of
         G.OperationTypeQuery ->
-          forM fieldPlans $ \case
-            GQFieldPartialHasura (gCtx, field) -> do
-              (queryTx, plan, genSql) <-
-                getQueryOp gCtx sqlGenCtx userInfo (Seq.singleton field)
-              -- traverse_ (addPlanToCache . EP.RPQuery) plan
-              (return . GQFieldResolvedHasura) $ ExOpQuery queryTx (Just genSql)
-            GQFieldPartialRemote rsInfo field ->
-              return $ GQFieldResolvedRemote rsInfo G.OperationTypeQuery field
+          tryCaching $
+            forM fieldPlans $ \case
+              GQFieldPartialHasura (gCtx, field) -> do
+                (queryTx, plan, genSql) <-
+                  getQueryOp gCtx sqlGenCtx userInfo field
+                return ( GQFieldResolvedHasura $ ExOpQuery queryTx (Just genSql)
+                       , EP.RPQuery <$> plan)
+              GQFieldPartialRemote rsInfo field ->
+                return ( GQFieldResolvedRemote rsInfo G.OperationTypeQuery field
+                       , Nothing)
         G.OperationTypeMutation ->
           forM fieldPlans $ \case
             GQFieldPartialHasura (gCtx, field) -> do
@@ -215,14 +222,15 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
               return $
               GQFieldResolvedRemote rsInfo G.OperationTypeMutation field
         G.OperationTypeSubscription ->
-          forM fieldPlans $ \case
-            GQFieldPartialHasura (gCtx, field) -> do
-              (lqOp, plan) <- getSubsOp pgExecCtx gCtx sqlGenCtx userInfo field
-              -- traverse_ (addPlanToCache . EP.RPSubs) plan
-              (return . GQFieldResolvedHasura) $ ExOpSubs lqOp
-            GQFieldPartialRemote rsInfo field ->
-              return $
-              GQFieldResolvedRemote rsInfo G.OperationTypeSubscription field
+          tryCaching $
+            forM fieldPlans $ \case
+              GQFieldPartialHasura (gCtx, field) -> do
+                (lqOp, plan) <- getSubsOp pgExecCtx gCtx sqlGenCtx userInfo field
+                return ( GQFieldResolvedHasura $ ExOpSubs lqOp
+                       , EP.RPSubs <$> plan)
+              GQFieldPartialRemote rsInfo field ->
+                return ( GQFieldResolvedRemote rsInfo G.OperationTypeSubscription field
+                       , Nothing)
 
 -- Monad for resolving a hasura query/mutation
 type E m =
@@ -260,10 +268,11 @@ getQueryOp
   => GCtx
   -> SQLGenCtx
   -> UserInfo
-  -> VQ.SelSet
+  -> VQ.Field
+  -- ^ Field of top-level selection set
   -> m (LazyRespTx, Maybe EQ.ReusableQueryPlan, EQ.GeneratedSqlMap)
-getQueryOp gCtx sqlGenCtx userInfo fields =
-  runE gCtx sqlGenCtx userInfo $ EQ.convertQuerySelSet fields
+getQueryOp gCtx sqlGenCtx userInfo field =
+  runE gCtx sqlGenCtx userInfo $ EQ.convertQuerySelSet field
 
 mutationRootName :: Text
 mutationRootName = "mutation_root"
