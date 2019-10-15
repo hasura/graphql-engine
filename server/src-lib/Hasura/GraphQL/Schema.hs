@@ -399,11 +399,8 @@ getRootFldsRole' tn primCols constraints fields funcs insM
       , g fi $ fiDescription fi
       )
 
-    mkFuncArgItemSeq fi =
-      let functionInputArgs = argsWithoutSessionArgument
-                              (fiSessionVarArg fi) (fiInputArgs fi)
-      in Seq.fromList $  procFuncArgs functionInputArgs
-         $ \fa t -> FuncArgItem (G.Name t) (faName fa) (faHasDefault fa)
+    mkFuncArgItemSeq fi = Seq.fromList $  procFuncArgs (fiInputArgs fi)
+                          $ \fa t -> FuncArgItem (G.Name t) (faName fa) (faHasDefault fa)
 
 
 getSelPermission :: TableInfo PGColumnInfo -> RoleName -> Maybe SelPermInfo

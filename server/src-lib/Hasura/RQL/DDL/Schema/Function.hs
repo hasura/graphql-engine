@@ -120,9 +120,12 @@ mkFunctionInfo qf config rawFuncInfo = do
       maybeSessArg <- resolveSessionArgument
 
       let funcArgsSeq = Seq.fromList functionArgs
+          removeSessArg sessArg = flip Seq.filter funcArgsSeq $
+                                  \arg -> Just (saName sessArg) /= faName arg
+          funcArgsSeqWithoutSessArg = maybe funcArgsSeq removeSessArg maybeSessArg
           dep = SchemaDependency (SOTable retTable) DRTable
           retTable = QualifiedObject retSn (TableName retN)
-      return $ FunctionInfo qf systemDefined funTy funcArgsSeq maybeSessArg retTable [dep] descM
+      pure $ FunctionInfo qf systemDefined funTy funcArgsSeqWithoutSessArg maybeSessArg retTable [dep] descM
 
     validateFunctionArgNames = do
       let argNames = mapMaybe faName functionArgs
