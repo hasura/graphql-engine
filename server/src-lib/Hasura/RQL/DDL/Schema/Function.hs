@@ -82,8 +82,8 @@ data FunctionIntegrityError
   | FunctionReturnNotSetof
   | FunctionReturnNotSetofTable
   | FunctionVolatile
-  | FunctionSessionVariableArgumentNotJSON !FunctionArgName
-  | FunctionInvalidSessionVariableArgument !FunctionArgName
+  | FunctionSessionArgumentNotJSON !FunctionArgName
+  | FunctionInvalidSessionArgument !FunctionArgName
   | FunctionInvalidArgumentNames [FunctionArgName]
   deriving (Show, Eq)
 
@@ -117,12 +117,12 @@ mkFunctionInfo qf config rawFuncInfo = do
       -- validate function argument names
       validateFunctionArgNames
 
-      maybeSessVarArg <- resolveSessionVariableArgument
+      maybeSessArg <- resolveSessionArgument
 
       let funcArgsSeq = Seq.fromList functionArgs
           dep = SchemaDependency (SOTable retTable) DRTable
           retTable = QualifiedObject retSn (TableName retN)
-      return $ FunctionInfo qf systemDefined funTy funcArgsSeq maybeSessVarArg retTable [dep] descM
+      return $ FunctionInfo qf systemDefined funTy funcArgsSeq maybeSessArg retTable [dep] descM
 
     validateFunctionArgNames = do
       let argNames = mapMaybe faName functionArgs
@@ -130,14 +130,14 @@ mkFunctionInfo qf config rawFuncInfo = do
       when (not $ null invalidArgs) $
         throwValidateError $ FunctionInvalidArgumentNames invalidArgs
 
-    resolveSessionVariableArgument =
-      forM (_fcSessionVariableArgument config) $ \argName ->
+    resolveSessionArgument =
+      forM (_fcSessionArgument config) $ \argName ->
         case findWithIndex (maybe False (argName ==) . faName) functionArgs of
-          Nothing -> MV.refute $ pure $ FunctionInvalidSessionVariableArgument argName
+          Nothing -> MV.refute $ pure $ FunctionInvalidSessionArgument argName
           Just (arg, index) -> do
             let ty = faType arg
-            when (ty /= PGJSON) $ throwValidateError $ FunctionSessionVariableArgumentNotJSON argName
-            pure $ SessionVariableArgument argName index
+            when (ty /= PGJSON) $ throwValidateError $ FunctionSessionArgumentNotJSON argName
+            pure $ SessionArgument argName index
 
     showErrors allErrors =
       let reasonMessage = case allErrors of
@@ -152,10 +152,10 @@ mkFunctionInfo qf config rawFuncInfo = do
       FunctionReturnNotSetof -> "the function does not return a SETOF"
       FunctionReturnNotSetofTable -> "the function does not return a SETOF table"
       FunctionVolatile -> "function of type \"VOLATILE\" is not supported now"
-      FunctionSessionVariableArgumentNotJSON argName ->
-        "given session variable argument " <> argName <<> " is not of type json"
-      FunctionInvalidSessionVariableArgument argName ->
-        "given session variable argument " <> argName <<> " not the input argument of the function"
+      FunctionSessionArgumentNotJSON argName ->
+        "given session argument " <> argName <<> " is not of type json"
+      FunctionInvalidSessionArgument argName ->
+        "given session argument " <> argName <<> " not the input argument of the function"
       FunctionInvalidArgumentNames args ->
         let argsText = T.intercalate "," $ map getFuncArgNameTxt args
         in "the function arguments " <> argsText <> " are not in compliance with GraphQL spec"
@@ -183,7 +183,7 @@ newtype TrackFunction
 
 data FunctionConfig
   = FunctionConfig
-  { _fcSessionVariableArgument :: !(Maybe FunctionArgName)
+  { _fcSessionArgument :: !(Maybe FunctionArgName)
   } deriving (Show, Eq, Lift)
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields = True} ''FunctionConfig)
 

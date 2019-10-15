@@ -451,15 +451,15 @@ fromFuncQueryField
   => (Field -> m s)
   -> QualifiedFunction
   -> FuncArgSeq
-  -> Maybe SessionVariableArgument
+  -> Maybe SessionArgument
   -> Field
   -> m (RS.AnnFnSelG s UnresolvedVal)
-fromFuncQueryField fn qf argSeq maybeSessVarArg fld = fieldAsPath fld $ do
+fromFuncQueryField fn qf argSeq maybeSessArg fld = fieldAsPath fld $ do
   funcArgsM <- withArgM (_fArguments fld) "args" $ parseFunctionArgs argSeq
   let funcArgs = fromMaybe RS.emptyFunctionArgsExp funcArgsM
-      insertSessVarArg sessVarArg = RS.insertFunctionArg (svaName sessVarArg)
-                                    (svaIndex sessVarArg) UVSession funcArgs
-      funcArgsWithSession = maybe funcArgs insertSessVarArg maybeSessVarArg
+      insertSessArg sessVarArg = RS.insertFunctionArg (saName sessVarArg)
+                                    (saIndex sessVarArg) UVSession funcArgs
+      funcArgsWithSession = maybe funcArgs insertSessArg maybeSessArg
   RS.AnnFnSel qf funcArgsWithSession <$> fn fld
 
 convertFuncQuerySimple

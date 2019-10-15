@@ -42,12 +42,12 @@ data FunctionArg
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionArg)
 
-data SessionVariableArgument
-  = SessionVariableArgument
-  { svaName  :: !FunctionArgName
-  , svaIndex :: !Int
+data SessionArgument
+  = SessionArgument
+  { saName  :: !FunctionArgName
+  , saIndex :: !Int
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 3 snakeCase) ''SessionVariableArgument)
+$(deriveToJSON (aesonDrop 2 snakeCase) ''SessionArgument)
 
 data FunctionInfo
   = FunctionInfo
@@ -55,7 +55,7 @@ data FunctionInfo
   , fiSystemDefined :: !SystemDefined
   , fiType          :: !FunctionType
   , fiInputArgs     :: !(Seq.Seq FunctionArg)
-  , fiSessionVarArg :: !(Maybe SessionVariableArgument)
+  , fiSessionVarArg :: !(Maybe SessionArgument)
   , fiReturnType    :: !QualifiedTable
   , fiDeps          :: ![SchemaDependency]
   , fiDescription   :: !(Maybe PGDescription)

@@ -10,12 +10,12 @@
             SELECT q.* FROM (VALUES (hasura_session ->> session_var)) q
         $$ LANGUAGE sql STABLE;
 
-- description: Track function v2 with invalid session variable argument
+- description: Track function v2 with invalid session argument
   url: /v1/query
   status: 400
   response:
     path: "$.args"
-    error: the function "get_session_var_value" cannot be tracked because given session variable argument "random" not the input argument of the function
+    error: the function "get_session_var_value" cannot be tracked because given session argument "random" not the input argument of the function
     code: not-supported
   query:
     version: 2
@@ -23,14 +23,14 @@
     args:
       function: get_session_var_value
       configuration:
-        session_variable_argument: random
+        session_argument: random
 
-- description: Track function v2 with non json session variable argument
+- description: Track function v2 with non json session argument
   url: /v1/query
   status: 400
   response:
     path: "$.args"
-    error: the function "get_session_var_value" cannot be tracked because given session variable argument "session_var" is not of type json
+    error: the function "get_session_var_value" cannot be tracked because given session argument "session_var" is not of type json
     code: not-supported
   query:
     version: 2
@@ -38,7 +38,7 @@
     args:
       function: get_session_var_value
       configuration:
-        session_variable_argument: session_var
+        session_argument: session_var
 
 - description: teardown function
   url: /v1/query

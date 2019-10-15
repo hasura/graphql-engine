@@ -42,7 +42,7 @@ track_function v2
 Version 2 of ``track_function`` is used to add a custom SQL function to the GraphQL schema with configuration.
 Also refer a note :ref:`here <note>`.
 
-Add a SQL function ``search_articles`` with hasura session variable argument.
+Add a SQL function ``search_articles`` with hasura session argument.
 
 .. code-block:: http
 
@@ -59,7 +59,7 @@ Add a SQL function ``search_articles`` with hasura session variable argument.
                "name": "search_articles"
            },
            "configuration": {
-               "session_variable_argument": "hasura_session"
+               "session_argument": "hasura_session"
            }
        }
    }
@@ -97,7 +97,7 @@ Function Configuration
      - Required
      - Schema
      - Description
-   * - session_variable_argument
+   * - session_argument
      - false
      - `String`
      - Function argument which accepts session info JSON

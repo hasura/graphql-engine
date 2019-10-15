@@ -162,4 +162,4 @@ args:
       schema: public
       name: get_session_var
     configuration:
-      session_variable_argument: hasura_session
+      session_argument: hasura_session

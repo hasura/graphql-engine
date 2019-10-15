@@ -106,7 +106,7 @@ module Hasura.RQL.Types.SchemaCache
        , FunctionArg(..)
        , FunctionArgName(..)
        , FunctionName(..)
-       , SessionVariableArgument(..)
+       , SessionArgument(..)
        , FunctionInfo(..)
        , FunctionCache
        , getFuncsOfTable
@@ -142,7 +142,6 @@ import           Language.Haskell.TH.Syntax        (Lift)
 
 import qualified Data.HashMap.Strict               as M
 import qualified Data.HashSet                      as HS
-import qualified Data.Sequence                     as Seq
 import qualified Data.Text                         as T
 
 reportSchemaObjs :: [SchemaObjId] -> T.Text

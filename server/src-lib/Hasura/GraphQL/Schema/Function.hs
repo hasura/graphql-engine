@@ -3,7 +3,7 @@ module Hasura.GraphQL.Schema.Function
   , mkFuncArgsInp
   , mkFuncQueryFld
   , mkFuncAggQueryFld
-  , argsWithoutSessionVariableArgument
+  , argsWithoutSessionArgument
   ) where
 
 import qualified Data.Sequence                 as Seq
@@ -35,13 +35,13 @@ input function_args {
 }
 -}
 
-argsWithoutSessionVariableArgument
-  :: Maybe SessionVariableArgument
+argsWithoutSessionArgument
+  :: Maybe SessionArgument
   -> Seq.Seq FunctionArg
   -> Seq.Seq FunctionArg
-argsWithoutSessionVariableArgument Nothing        = id
-argsWithoutSessionVariableArgument (Just sessArg) =
-  Seq.filter (\arg -> Just (svaName sessArg) /= faName arg)
+argsWithoutSessionArgument Nothing        = id
+argsWithoutSessionArgument (Just sessArg) =
+  Seq.filter (\arg -> Just (saName sessArg) /= faName arg)
 
 procFuncArgs
   :: Seq.Seq FunctionArg
@@ -63,7 +63,7 @@ mkFuncArgsInp funcInfo =
   bool (Just inpObj) Nothing $ null funcArgs
   where
     funcName = fiName funcInfo
-    funcArgs = argsWithoutSessionVariableArgument (fiSessionVarArg funcInfo)
+    funcArgs = argsWithoutSessionArgument (fiSessionVarArg funcInfo)
                (fiInputArgs funcInfo)
     funcArgsTy = mkFuncArgsTy funcName
 

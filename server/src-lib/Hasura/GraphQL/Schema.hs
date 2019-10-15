@@ -400,7 +400,7 @@ getRootFldsRole' tn primCols constraints fields funcs insM
       )
 
     mkFuncArgItemSeq fi =
-      let functionInputArgs = argsWithoutSessionVariableArgument
+      let functionInputArgs = argsWithoutSessionArgument
                               (fiSessionVarArg fi) (fiInputArgs fi)
       in Seq.fromList $  procFuncArgs functionInputArgs
          $ \fa t -> FuncArgItem (G.Name t) (faName fa) (faHasDefault fa)

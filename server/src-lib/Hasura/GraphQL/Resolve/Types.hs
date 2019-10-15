@@ -65,14 +65,14 @@ data SelPkOpCtx
 
 data FuncQOpCtx
   = FuncQOpCtx
-  { _fqocTable      :: !QualifiedTable
-  , _fqocHeaders    :: ![T.Text]
-  , _fqocAllCols    :: !PGColGNameMap
-  , _fqocFilter     :: !AnnBoolExpPartialSQL
-  , _fqocLimit      :: !(Maybe Int)
-  , _fqocFunction   :: !QualifiedFunction
-  , _fqocArgs       :: !FuncArgSeq
-  , _fqocSessVarArg :: !(Maybe SessionVariableArgument)
+  { _fqocTable    :: !QualifiedTable
+  , _fqocHeaders  :: ![T.Text]
+  , _fqocAllCols  :: !PGColGNameMap
+  , _fqocFilter   :: !AnnBoolExpPartialSQL
+  , _fqocLimit    :: !(Maybe Int)
+  , _fqocFunction :: !QualifiedFunction
+  , _fqocArgs     :: !FuncArgSeq
+  , _fqocSessArg  :: !(Maybe SessionArgument)
   } deriving (Show, Eq)
 
 data UpdOpCtx
