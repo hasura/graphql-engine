@@ -9,9 +9,9 @@ Async Actions
 
 WORK IN PROGRESS
 
-Sometimes you may not want to wait for an action to complete (say if the business logic takes a long time). In such cases you can create an "asynchronous" action, which returns an ``action_id`` immediately to the client before contacting the webhook.
+Sometimes you may not want to wait for an action to complete (say if the business logic takes a long time). In such cases you can create an **asynchronous** action, which returns an ``action_id`` immediately to the client before contacting the webhook.
 
-If you mark an action as "asynchronous", graphql-engine also generates a query and a subscription field for the action so that you can query/subscribe to its status. In the above example, let's say ``place_order`` is an asnychronous action, your client code looks something like this:
+If you mark an action as **asynchronous**, graphql-engine also generates a query and a subscription field for the action so that you can query/subscribe to its status. In the above example, let's say ``place_order`` is an asnychronous action, your client code looks something like this:
 
 .. code-block:: graphql
 
@@ -33,4 +33,3 @@ If you mark an action as "asynchronous", graphql-engine also generates a query a
        }
      }
    }
-

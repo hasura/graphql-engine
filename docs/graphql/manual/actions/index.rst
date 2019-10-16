@@ -9,15 +9,15 @@ Actions
 
 WORK IN PROGRESS
 
-Actions are user defined mutations with custom business logic. Actions can be added to Hasura to handle various use cases such as validation, data enrichment and other complex business logic.
+Actions are user defined mutations with custom business logic. Actions can be added to Hasura to handle various use cases such as data validation, data enrichment and other complex business logic.
 
-When the permissions system isn't enough to specify the required constraints, you would typically add such mutation through a remote schema, however actions can handle these use cases better because of the following reasons:
+When the permissions system isn't enough to specify the required constraints, you would typically add such mutation through a remote schema. However actions can handle these use cases better because of the following reasons:
 
-1. No need to write a graphql server.
+1. No need to write a remote schema. Actions can be executed in ordinary webhooks or postgres itself.
 
-2. Return graphql-engine's types without writing any extra code
+2. Return graphql-engine's types without writing any extra code. You might want to return the new "state" after a mutation.
 
-3. Gives a powerful model for mutations which should enable building event-driven apps easily
+3. Can be executed asynchronously for building powerful event-driven apps.
 
 Architecture Diagram
 --------------------
