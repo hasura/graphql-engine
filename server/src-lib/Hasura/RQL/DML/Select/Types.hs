@@ -142,19 +142,34 @@ data ColOp
   , _colExp :: S.SQLExp
   } deriving (Show, Eq)
 
+data AnnColField
+  = AnnColField
+  { _acfInfo   :: !PGColumnInfo
+  , _acfAsText :: !Bool
+  , _acfOp     :: !(Maybe ColOp)
+  } deriving (Show, Eq)
+
 data AnnFldG v
-  = FCol !PGColumnInfo !(Maybe ColOp)
+  = FCol !AnnColField
   | FObj !(ObjSelG v)
   | FArr !(ArrSelG v)
   | FComputedField !(ComputedFieldSel v)
   | FExp !T.Text
   deriving (Show, Eq)
 
+mkAnnColField :: PGColumnInfo -> Maybe ColOp -> AnnFldG v
+mkAnnColField ci colOpM =
+  FCol $ AnnColField ci False colOpM
+
+mkAnnColFieldAsText :: PGColumnInfo -> AnnFldG v
+mkAnnColFieldAsText ci =
+  FCol $ AnnColField ci True Nothing
+
 traverseAnnFld
   :: (Applicative f)
   => (a -> f b) -> AnnFldG a -> f (AnnFldG b)
 traverseAnnFld f = \case
-  FCol pgColInfo colOpM -> pure $ FCol pgColInfo colOpM
+  FCol colFld -> pure $ FCol colFld
   FObj sel -> FObj <$> traverse (traverseAnnSimpleSel f) sel
   FArr sel -> FArr <$> traverseArrSel f sel
   FComputedField sel -> FComputedField <$> traverseComputedFieldSel f sel
