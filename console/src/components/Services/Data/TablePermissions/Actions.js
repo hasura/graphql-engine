@@ -120,7 +120,7 @@ const getFilterKey = query => {
   return query === 'insert' ? 'check' : 'filter';
 };
 
-const getBasePermissionsState = (tableSchema, role, query) => {
+const getBasePermissionsState = (tableSchema, role, query, isNewRole) => {
   const _permissions = JSON.parse(JSON.stringify(defaultPermissionsState));
 
   _permissions.table = tableSchema.table_name;
@@ -165,7 +165,9 @@ const getBasePermissionsState = (tableSchema, role, query) => {
         }
       }
     });
-  } else {
+  }
+
+  if (isNewRole) {
     _permissions.newRole = role;
   }
 
