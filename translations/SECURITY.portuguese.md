@@ -37,3 +37,4 @@ Os mantenedores do Hasura GraphQL Engine e o time de segurança dão a última p
 Esse documento está disponível nas seguintes traduções:
 
 - [French :fr:](translations/SECURITY.french.md)
+- [English :gb:](SECURITY.md)
