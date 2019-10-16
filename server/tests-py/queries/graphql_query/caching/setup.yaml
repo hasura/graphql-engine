@@ -1,0 +1,9 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE users (id serial PRIMARY KEY, name text NOT NULL);
+      INSERT INTO users (name) VALUES ('Alyssa'), ('Ben');
+- type: track_table
+  args: users
