@@ -11,7 +11,6 @@ Guides / Tutorials / Resources
    :titlesonly:
 
    Deployment guides <deployment/index>
-   Production checklist <production-checklist>
    Sample apps & boilerplates <sample-apps/index>
    Integration/migration tutorials <integrations/index>
    Integrating with monitoring frameworks <monitoring/index>

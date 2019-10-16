@@ -1,3 +1,5 @@
+.. _hge_flags:
+
 GraphQL engine server configuration
 ===================================
 
