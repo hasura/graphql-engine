@@ -24,7 +24,7 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
 
 -------------------
 
-## Features
+### Features
 
 * **Make powerful queries**: Built-in filtering, pagination, pattern search, bulk insert, update, delete mutations
 * **Realtime**: Convert any GraphQL query to a live query by using subscriptions
@@ -65,7 +65,7 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
 
 ### One-click deployment on Heroku
 
-The fastest way to try Hasura out is via Heroku.
+The fastest way to try out Hasura  is via Heroku.
 
 1. Click on the following button to deploy GraphQL Engine on Heroku with the free Postgres add-on:
 
