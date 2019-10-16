@@ -24,6 +24,8 @@ module Hasura.RQL.Types.Common
        , rootText
 
        , FunctionArgName(..)
+       , SystemDefined(..)
+       , isSystemDefined
        ) where
 
 import           Hasura.Prelude
@@ -185,3 +187,9 @@ newtype FunctionArgName =
   deriving (Show, Eq, ToJSON)
 
 type CustomColumnNames = HM.HashMap PGCol G.Name
+
+newtype SystemDefined = SystemDefined { unSystemDefined :: Bool }
+  deriving (Show, Eq, FromJSON, ToJSON, Q.ToPrepArg)
+
+isSystemDefined :: SystemDefined -> Bool
+isSystemDefined = unSystemDefined
