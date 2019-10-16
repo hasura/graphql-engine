@@ -19,6 +19,9 @@ module Hasura.GraphQL.Execute
   , EP.dumpPlanCache
 
   , ExecutionCtx(..)
+
+  , addToLog
+  , toEmptySqlMap
   ) where
 
 import           Control.Exception                      (try)
@@ -52,8 +55,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.Server.Context
-import           Hasura.Server.Utils                    (RequestId,
-                                                         filterRequestHeaders)
+import           Hasura.Server.Utils                    (filterRequestHeaders)
 import           Hasura.SQL.Time
 import           Hasura.SQL.Value
 
@@ -161,7 +163,7 @@ getExecPlanPartial userInfo sc enableAL req
 -- queries and mutations it is just a transaction
 -- to be executed
 data ExecOp
-  = ExOpQuery !LazyRespTx !(Maybe EQ.GeneratedSqlMap)
+  = ExOpQuery !LazyRespTx !EQ.GeneratedSqlMap
   | ExOpMutation !LazyRespTx
   | ExOpSubs !EL.LiveQueryPlan
 
@@ -186,7 +188,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
     Just plans -> forM plans $ \case
       EP.RPQuery queryPlan -> do
         (tx, genSql) <- EQ.queryOpFromPlan usrVars queryVars queryPlan
-        let queryOp = ExOpQuery tx (Just genSql)
+        let queryOp = ExOpQuery tx genSql
         pure $ GQFieldResolvedHasura queryOp
       EP.RPSubs subsPlan -> do
         subOp <-
@@ -216,7 +218,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
               GQFieldPartialHasura (gCtx, field) -> do
                 (queryTx, plan, genSql) <-
                   getQueryOp gCtx sqlGenCtx userInfo field
-                return ( GQFieldResolvedHasura $ ExOpQuery queryTx (Just genSql)
+                return ( GQFieldResolvedHasura $ ExOpQuery queryTx genSql
                        , EP.RPQuery <$> plan)
               GQFieldPartialRemote rsInfo field ->
                 return ( GQFieldResolvedRemote rsInfo G.OperationTypeQuery field
@@ -391,67 +393,65 @@ execRemoteGQ
   :: ( MonadIO m
      , MonadError QErr m
      , MonadReader ExecutionCtx m
+     , MonadState QueryLog m
      )
-  => RequestId
-  -> UserInfo
+  => UserInfo
   -> [N.Header]
   -> RemoteSchemaInfo
   -> G.OperationType
   -> VQ.SelSet
   -> m (HttpResponse EncJSON)
-execRemoteGQ reqId userInfo reqHdrs rsi opType selSet = do
+execRemoteGQ userInfo reqHdrs rsi opType selSet = do
   execCtx <- ask
-  let logger  = _ecxLogger execCtx
-      manager = _ecxHttpManager execCtx
+  let manager = _ecxHttpManager execCtx
   when (opType == G.OperationTypeSubscription) $
     throw400 NotSupported "subscription to remote server is not supported"
   hdrs <- getHeadersFromConf hdrConf
   gqlReq <- fieldsToRequest opType (toList selSet)
   let body = encJToLBS $ encJFromJValue gqlReq
-  let confHdrs   = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
+  let confHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
       clientHdrs = bool [] filteredHeaders fwdClientHdrs
       -- filter out duplicate headers
       -- priority: conf headers > resolved userinfo vars > client headers
-      hdrMaps    = [ Map.fromList confHdrs
-                   , Map.fromList userInfoToHdrs
-                   , Map.fromList clientHdrs
-                   ]
-      headers  = Map.toList $ foldr Map.union Map.empty hdrMaps
+      hdrMaps =
+        [ Map.fromList confHdrs
+        , Map.fromList userInfoToHdrs
+        , Map.fromList clientHdrs
+        ]
+      headers = Map.toList $ foldr Map.union Map.empty hdrMaps
       finalHeaders = addDefaultHeaders headers
   initReqE <- liftIO $ try $ HTTP.parseRequest (show url)
   initReq <- either httpThrow pure initReqE
-  let req = initReq
-           { HTTP.method = "POST"
-           , HTTP.requestHeaders = finalHeaders
-           , HTTP.requestBody = HTTP.RequestBodyLBS body
-           , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
-           }
-
-  -- liftIO $ logGraphqlQuery logger $ QueryLog q Nothing reqId
-  res  <- liftIO $ try $ HTTP.httpLbs req manager
+  let req =
+        initReq
+          { HTTP.method = "POST"
+          , HTTP.requestHeaders = finalHeaders
+          , HTTP.requestBody = HTTP.RequestBodyLBS body
+          , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
+          }
+  addToLog (toEmptySqlMap selSet)
+  res <- liftIO $ try $ HTTP.httpLbs req manager
   resp <- either httpThrow return res
   let cookieHdrs = getCookieHdr (resp ^.. Wreq.responseHeader "Set-Cookie")
-      respHdrs  = Just $ mkRespHeaders cookieHdrs
+      respHdrs = Just $ mkRespHeaders cookieHdrs
   return $ HttpResponse (encJFromLBS $ resp ^. Wreq.responseBody) respHdrs
-
   where
     RemoteSchemaInfo url hdrConf fwdClientHdrs timeout = rsi
     httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
-    httpThrow = \case
-      HTTP.HttpExceptionRequest _req content -> throw500 $ T.pack . show $ content
-      HTTP.InvalidUrlException _url reason -> throw500 $ T.pack . show $ reason
-
-    userInfoToHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
-                     userInfoToList userInfo
+    httpThrow =
+      \case
+        HTTP.HttpExceptionRequest _req content ->
+          throw500 $ T.pack . show $ content
+        HTTP.InvalidUrlException _url reason ->
+          throw500 $ T.pack . show $ reason
+    userInfoToHdrs =
+      map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $ userInfoToList userInfo
     filteredHeaders = filterUserVars $ filterRequestHeaders reqHdrs
-
     filterUserVars hdrs =
       let txHdrs = map (\(n, v) -> (bsToTxt $ CI.original n, bsToTxt v)) hdrs
-      in map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
-         filter (not . isUserVar . fst) txHdrs
-
+       in map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
+          filter (not . isUserVar . fst) txHdrs
     getCookieHdr = fmap (\h -> ("Set-Cookie", h))
-
     mkRespHeaders hdrs =
       map (\(k, v) -> Header (bsToTxt $ CI.original k, bsToTxt v)) hdrs
 
@@ -633,3 +633,17 @@ gValueConstToValue =
       map
         (\(G.ObjectFieldG {_ofName = G.Name name, _ofValue}) ->
            (name, gValueConstToValue _ofValue))
+
+-- For each field in the sel set, generate an empty sql
+-- Useful for created QueryLog for mutations, remote-schemas
+toEmptySqlMap :: VQ.SelSet -> EQ.GeneratedSqlMap
+toEmptySqlMap fields = map ((, Nothing) . VQ._fAlias) (toList fields)
+
+-- Modify the QueryLog by appending the given GeneratedSqlMap
+addToLog :: (MonadState QueryLog m) => EQ.GeneratedSqlMap -> m ()
+addToLog genSqlMap =
+  modify
+    (\ql@QueryLog {_qlGeneratedSqlMap} ->
+       let _qlGeneratedSqlMap' =
+             _qlGeneratedSqlMap ++ genSqlMap
+        in ql{_qlGeneratedSqlMap = _qlGeneratedSqlMap'})
