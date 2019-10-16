@@ -10,6 +10,7 @@ import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Hasura.GraphQL.Validate.Types
+import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
@@ -65,8 +66,7 @@ data SelPkOpCtx
 
 data FuncQOpCtx
   = FuncQOpCtx
-  { _fqocTable    :: !QualifiedTable
-  , _fqocHeaders  :: ![T.Text]
+  { _fqocHeaders  :: ![T.Text]
   , _fqocAllCols  :: !PGColGNameMap
   , _fqocFilter   :: !AnnBoolExpPartialSQL
   , _fqocLimit    :: !(Maybe Int)
@@ -92,7 +92,7 @@ data DelOpCtx
   } deriving (Show, Eq)
 
 data ActionExecutionContext
-  = ActionExecutionSyncWebhook !Text
+  = ActionExecutionSyncWebhook !ResolvedWebhook !ActionOutputTypeInfo
   | ActionExecutionAsync !AnnBoolExpPartialSQL
   deriving (Show, Eq)
 

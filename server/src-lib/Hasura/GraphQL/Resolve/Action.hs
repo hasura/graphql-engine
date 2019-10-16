@@ -8,27 +8,39 @@ module Hasura.GraphQL.Resolve.Action
   , actionSelectToSql
   ) where
 
-import           Data.Has
 import           Hasura.Prelude
 
+import           Control.Exception                 (try)
+import           Control.Lens
+import           Data.Has
+
 import qualified Data.Aeson                        as J
+import qualified Data.Aeson.Casing                 as J
+import qualified Data.Aeson.TH                     as J
+import qualified Data.HashMap.Strict               as Map
+import qualified Data.Text                         as T
 import qualified Data.UUID                         as UUID
 import qualified Database.PG.Query                 as Q
 import qualified Language.GraphQL.Draft.Syntax     as G
+import qualified Network.HTTP.Client               as HTTP
+import qualified Network.Wreq                      as Wreq
 
+import qualified Hasura.RQL.DML.Select             as RS
 import qualified Hasura.SQL.DML                    as S
 
-import           Hasura.RQL.DML.Internal           (dmlTxErrorHandler)
-
-import           Hasura.RQL.DML.Select             (asSingleRowJsonResp)
-
+import           Hasura.EncJSON
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
+import           Hasura.HTTP
+import           Hasura.RQL.DML.Internal           (dmlTxErrorHandler)
+import           Hasura.RQL.DML.Select             (asSingleRowJsonResp)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import           Hasura.SQL.Value                  (pgScalarValueToJson)
+import           Hasura.SQL.Value                  (PGScalarValue (..),
+                                                    pgScalarValueToJson,
+                                                    toTxtValue)
 
 data InputFieldResolved
   = InputFieldSimple !Text
@@ -51,10 +63,11 @@ resolveOutputSelectionSet
   :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )
-  => G.NamedType
+  => ObjTyInfo
+  -> G.NamedType
   -> SelSet
   -> m [(Text, OutputFieldResolved)]
-resolveOutputSelectionSet ty selSet =
+resolveOutputSelectionSet objTyInfo ty selSet =
   withSelSet selSet $ \fld -> case _fName fld of
     "__typename" -> return $ OutputFieldTypename ty
     G.Name t     -> return $ OutputFieldSimple t
@@ -72,14 +85,14 @@ resolveResponseSelectionSet ty selSet =
 
     "output"     ->
       ResponseFieldOutput <$>
-      resolveOutputSelectionSet (_fType fld) (_fSelSet fld)
+      resolveOutputSelectionSet undefined (_fType fld) (_fSelSet fld)
 
     -- the metadata columns
     "id"         -> return $ mkMetadataField "id"
     "created_at" -> return $ mkMetadataField "created_at"
     "status"     -> return $ mkMetadataField "status"
 
-    G.Name t     -> throw500 $ "unexpected field in actions' response : " <> t
+    G.Name t     -> throw500 $ "unexpected field in actions' httpResponse : " <> t
 
   where
     mkMetadataField = ResponseFieldMetadata . PGCol
@@ -103,7 +116,7 @@ type ActionSelectResolved = ActionSelect S.SQLExp
 type ActionSelectUnresolved = ActionSelect UnresolvedVal
 
 actionSelectToSql :: ActionSelectResolved -> Q.Query
-actionSelectToSql (ActionSelect actionIdExp selection filter) =
+actionSelectToSql (ActionSelect actionIdExp selection actionFilter) =
   Q.fromBuilder $ toSQL selectAST
   where
     selectAST =
@@ -172,21 +185,104 @@ actionSelectToTx :: ActionSelectResolved -> RespTx
 actionSelectToTx actionSelect =
   asSingleRowJsonResp (actionSelectToSql actionSelect) []
 
+
+data ActionWebhookPayload
+  = ActionWebhookPayload
+  { _awpSessionVariables :: !UserVars
+  , _awpInput            :: !J.Value
+  } deriving (Show, Eq)
+$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ActionWebhookPayload)
+
+data ActionWebhookResponse
+  = ActionWebhookResponse
+  { _awrData   :: !(Maybe J.Value)
+  , _awrErrors :: !(Maybe J.Value)
+  } deriving (Show, Eq)
+$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ActionWebhookResponse)
+
+data ResolvePlan
+  = ResolveReturn
+  | ResolvePostgres [(PGCol, PGScalarType)] ![(Text, OutputFieldResolved)]
+  deriving (Show, Eq)
+
 resolveActionInsertSync
   :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
+     , Has HTTP.Manager r
      )
   => Field
-  -> Text
-  -- We need the sesion variables for column presets
+  -> ResolvedWebhook
+  -> ActionOutputTypeInfo
   -> UserVars
   -> m RespTx
-resolveActionInsertSync field executionContext sessionVariables =
-  throw500 "sync actions not yet implemented"
+resolveActionInsertSync field resolvedWebhook outputTypeInfo sessionVariables = do
+  inputArgs <- withArg (_fArguments field) "input" (return . annInpValueToJson)
+  resolvePlan <- case outputTypeInfo of
+    ActionOutputScalar _ -> return ResolveReturn
+    ActionOutputEnum _ -> return ResolveReturn
+    ActionOutputObject objTyInfo -> do
+      let definitionList =
+            flip zip (repeat PGJSON) $
+            map (PGCol . G.unName . _fiName) $ Map.elems $ _otiFields objTyInfo
+      ResolvePostgres definitionList <$>
+        resolveOutputSelectionSet objTyInfo (_fType field) (_fSelSet field)
+  manager <- asks getter
+  stringifyNumerics <- stringifyNum <$> asks getter
+  return $ do
+    webhookRes <- callWebhook manager inputArgs
+    returnResponse stringifyNumerics webhookRes resolvePlan
+  where
+    returnResponse stringifyNumerics webhookData = \case
+      ResolveReturn -> return $ encJFromJValue webhookData
+      ResolvePostgres definitionList selSet -> do
+        let functionName = QualifiedObject (SchemaName "pg_catalog") $
+                           FunctionName "json_to_record"
+            functionArgs = RS.FunctionArgsExp
+                           (pure $ toTxtValue $ WithScalarType PGJSON $
+                            PGValJSON $ Q.JSON webhookData)
+                           mempty
+            fromExpression =
+              RS.FromExpressionFunction functionName functionArgs
+              (Just definitionList)
+            annFields = flip map selSet $ \(alias, outputField) ->
+              (FieldName alias,) $ case outputField of
+              OutputFieldSimple fieldName ->
+                -- TODO:
+                RS.FCol ( PGCol fieldName
+                        , PGColumnScalar PGJSON
+                        ) Nothing
+              OutputFieldTypename typeName ->
+                RS.FExp $ G.unName $ G.unNamedType typeName
+              OutputFieldRelationship -> undefined
+        let selectAst = RS.AnnSelG annFields fromExpression
+                        RS.noTablePermissions RS.noTableArgs stringifyNumerics
+        asSingleRowJsonResp (RS.selectQuerySQL True selectAst) []
+
+    callWebhook manager actionInput = do
+      let options = wreqOptions manager [contentType]
+          contentType = ("Content-Type", "application/json")
+          postPayload = J.toJSON $ ActionWebhookPayload
+                        sessionVariables actionInput
+          url = (T.unpack $ unResolvedWebhook resolvedWebhook)
+      httpResponse <- liftIO $ try $
+                      Wreq.asJSON =<< Wreq.postWith options url postPayload
+      case (^. Wreq.responseBody) <$> httpResponse of
+        Left e ->
+          throw500WithDetail "http exception when calling webhook" $
+          J.toJSON $ HttpException e
+        Right response -> case (_awrData response, _awrErrors response) of
+          (Nothing, Nothing) ->
+            throw500WithDetail "internal error" $
+            J.String "webhook response has neither 'data' nor 'errors'"
+          (Just _, Just _) ->
+            throw500WithDetail "internal error" $
+            J.String "webhook response cannot have both 'data' and 'errors'"
+          (Just d, Nothing) -> return d
+          (Nothing, Just e) -> throwVE $ T.pack $ show e
 
 resolveActionInsert
   :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
-     , Has OrdByCtx r, Has SQLGenCtx r
+     , Has OrdByCtx r, Has SQLGenCtx r, Has HTTP.Manager r
      )
   => Field
   -> ActionExecutionContext
@@ -195,8 +291,8 @@ resolveActionInsert
   -> m RespTx
 resolveActionInsert field executionContext sessionVariables =
   case executionContext of
-    ActionExecutionSyncWebhook webhook ->
-      resolveActionInsertSync field webhook sessionVariables
+    ActionExecutionSyncWebhook webhook outputTypeInfo ->
+      resolveActionInsertSync field webhook outputTypeInfo sessionVariables
     ActionExecutionAsync actionFilter ->
       resolveActionInsertAsync field actionFilter sessionVariables
 

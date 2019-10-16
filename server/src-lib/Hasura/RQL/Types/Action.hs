@@ -1,5 +1,6 @@
 module Hasura.RQL.Types.Action
-  ( ActionInfo(..)
+  ( ActionOutputTypeInfo(..)
+  , ActionInfo(..)
   , ActionName(..)
 
   , ActionKind(..)
@@ -8,6 +9,7 @@ module Hasura.RQL.Types.Action
   , CreateAction(..)
   , ActionDefinitionInput
 
+  , ResolvedWebhook(..)
   , ResolvedActionDefinition
 
   , ActionPermissionInfo(..)
@@ -28,6 +30,8 @@ import           Hasura.RQL.Types.Permission
 import           Hasura.SQL.Types
 import           Language.Haskell.TH.Syntax    (Lift)
 
+import qualified Hasura.GraphQL.Validate.Types as VT
+
 import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
 import qualified Data.Aeson.TH                 as J
@@ -46,7 +50,9 @@ instance Q.FromCol ActionName where
 instance Q.ToPrepArg ActionName where
   toPrepVal = Q.toPrepVal . G.unName . unActionName
 
-type ResolvedWebhook = Text
+newtype ResolvedWebhook
+  = ResolvedWebhook { unResolvedWebhook :: Text}
+  deriving ( Show, Eq, J.FromJSON, J.ToJSON, Hashable, DQuote, Lift)
 
 data ActionKind
   = ActionSynchronous
@@ -62,7 +68,7 @@ data ActionDefinition a
   , _adOutputType :: !GraphQLType
   , _adKind       :: !(Maybe ActionKind)
   , _adWebhook    :: !a
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Functor)
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''ActionDefinition)
 
 getActionKind :: ActionDefinition a -> ActionKind
@@ -86,11 +92,22 @@ data ActionMetadataField
   | ActionMetadataFieldStatus
   deriving (Show, Eq)
 
+data ActionOutputTypeInfo
+  = ActionOutputScalar !VT.ScalarTyInfo
+  | ActionOutputEnum !VT.EnumTyInfo
+  | ActionOutputObject !VT.ObjTyInfo
+  deriving (Show, Eq)
+
+-- TODO: this is terrible
+instance J.ToJSON ActionOutputTypeInfo where
+  toJSON = J.toJSON . show
+
 data ActionInfo
   = ActionInfo
-  { _aiName        :: !ActionName
-  , _aiDefintion   :: !ResolvedActionDefinition
-  , _aiPermissions :: !ActionPermissionMap
+  { _aiName           :: !ActionName
+  , _aiDefintion      :: !ResolvedActionDefinition
+  , _aiOutputTypeInfo :: !ActionOutputTypeInfo
+  , _aiPermissions    :: !ActionPermissionMap
   } deriving (Show, Eq)
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''ActionInfo)
 

@@ -22,6 +22,7 @@ import           Data.Has
 import qualified Data.HashMap.Strict               as Map
 import qualified Database.PG.Query                 as Q
 import qualified Language.GraphQL.Draft.Syntax     as G
+import qualified Network.HTTP.Client               as HTTP
 
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.Prelude
@@ -41,8 +42,8 @@ data QueryRootFldAST v
   = QRFPk !(DS.AnnSimpleSelG v)
   | QRFSimple !(DS.AnnSimpleSelG v)
   | QRFAgg !(DS.AnnAggSelG v)
-  | QRFFnSimple !(DS.AnnFnSelSimpleG v)
-  | QRFFnAgg !(DS.AnnFnSelAggG v)
+  | QRFFnSimple !(DS.AnnSimpleSelG v)
+  | QRFFnAgg !(DS.AnnAggSelG v)
   | QRFActionSelect !(RA.ActionSelect v)
   deriving (Show, Eq)
 
@@ -58,8 +59,8 @@ traverseQueryRootFldAST f = \case
   QRFPk s           -> QRFPk <$> DS.traverseAnnSimpleSel f s
   QRFSimple s       -> QRFSimple <$> DS.traverseAnnSimpleSel f s
   QRFAgg s          -> QRFAgg <$> DS.traverseAnnAggSel f s
-  QRFFnSimple s     -> QRFFnSimple <$> DS.traverseAnnFnSimple f s
-  QRFFnAgg s        -> QRFFnAgg <$> DS.traverseAnnFnAgg f s
+  QRFFnSimple s     -> QRFFnSimple <$> DS.traverseAnnSimpleSel f s
+  QRFFnAgg s        -> QRFFnAgg <$> DS.traverseAnnAggSel f s
   QRFActionSelect s -> QRFActionSelect <$> RA.traverseActionSelect f s
 
 toPGQuery :: QueryRootFldResolved -> Q.Query
@@ -67,8 +68,8 @@ toPGQuery = \case
   QRFPk s           -> DS.selectQuerySQL True s
   QRFSimple s       -> DS.selectQuerySQL False s
   QRFAgg s          -> DS.selectAggQuerySQL s
-  QRFFnSimple s     -> DS.mkFuncSelectSimple s
-  QRFFnAgg s        -> DS.mkFuncSelectAgg s
+  QRFFnSimple s     -> DS.selectQuerySQL False s
+  QRFFnAgg s        -> DS.selectAggQuerySQL s
   QRFActionSelect s -> RA.actionSelectToSql s
 
 validateHdrs
@@ -117,6 +118,7 @@ mutFldToTx
      , Has OrdByCtx r
      , Has SQLGenCtx r
      , Has InsCtxMap r
+     , Has HTTP.Manager r
      )
   => V.Field
   -> m RespTx

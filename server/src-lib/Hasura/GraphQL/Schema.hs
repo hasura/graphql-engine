@@ -396,7 +396,7 @@ getRootFldsRole' tn primCols constraints fields funcs insM
 
     funcFldHelper f g pFltr pLimit hdrs =
       flip map funcs $ \fi ->
-      ( f . FuncQOpCtx tn hdrs colGNameMap pFltr pLimit (fiName fi) $ mkFuncArgItemSeq fi
+      ( f . FuncQOpCtx hdrs colGNameMap pFltr pLimit (fiName fi) $ mkFuncArgItemSeq fi
       , g fi $ fiDescription fi
       )
 

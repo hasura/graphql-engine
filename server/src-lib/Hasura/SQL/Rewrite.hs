@@ -81,6 +81,10 @@ uFromExp :: S.FromExp -> Uniq S.FromExp
 uFromExp (S.FromExp fromItems) =
   S.FromExp <$> mapM uFromItem fromItems
 
+uFunctionAlias :: S.FunctionAlias -> Uniq S.FunctionAlias
+uFunctionAlias (S.FunctionAlias alias definitionList) =
+  S.FunctionAlias <$> addAlias alias <*> pure definitionList
+
 uFromItem :: S.FromItem -> Uniq S.FromItem
 uFromItem fromItem = case fromItem of
   S.FISimple t alM ->
@@ -88,7 +92,7 @@ uFromItem fromItem = case fromItem of
   S.FIIden iden ->
     S.FIIden <$> return iden
   S.FIFunc f args alM ->
-    S.FIFunc f args <$> mapM addAlias alM
+    S.FIFunc f args <$> mapM uFunctionAlias alM
   S.FIUnnest args als cols ->
     S.FIUnnest <$> mapM uSqlExp args <*> addAlias als <*> mapM uSqlExp cols
   S.FISelect isLateral sel al -> do

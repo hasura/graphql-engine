@@ -25,9 +25,9 @@ runGQ
   -> GQLReqUnparsed
   -> m (HttpResponse EncJSON)
 runGQ reqId userInfo reqHdrs req = do
-  E.ExecutionCtx _ sqlGenCtx pgExecCtx planCache sc scVer _ enableAL <- ask
+  E.ExecutionCtx _ sqlGenCtx pgExecCtx planCache sc scVer httpManager enableAL <- ask
   execPlan <- E.getResolvedExecPlan pgExecCtx planCache
-              userInfo sqlGenCtx enableAL sc scVer req
+              userInfo sqlGenCtx enableAL sc scVer httpManager req
   case execPlan of
     E.GExPHasura resolvedOp ->
       flip HttpResponse Nothing <$> runHasuraGQ reqId req userInfo resolvedOp

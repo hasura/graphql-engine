@@ -183,10 +183,11 @@ getResolvedExecPlan
   -> Bool
   -> SchemaCache
   -> SchemaCacheVer
+  -> HTTP.Manager
   -> GQLReqUnparsed
   -> m ExecPlanResolved
 getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
-  enableAL sc scVer reqUnparsed = do
+  enableAL sc scVer httpManager reqUnparsed = do
   planM <- liftIO $ EP.getPlan scVer (userRole userInfo)
            opNameM queryStr planCache
   let usrVars = userVars userInfo
@@ -210,7 +211,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
       forM partialExecPlan $ \(gCtx, rootSelSet) ->
         case rootSelSet of
           VQ.RMutation selSet ->
-            ExOpMutation <$> getMutOp gCtx sqlGenCtx userInfo selSet
+            ExOpMutation <$> getMutOp gCtx sqlGenCtx userInfo httpManager selSet
           VQ.RQuery selSet -> do
             (queryTx, plan, genSql) <- getQueryOp gCtx sqlGenCtx userInfo selSet
             traverse_ (addPlanToCache . EP.RPQuery) plan
@@ -273,6 +274,7 @@ resolveMutSelSet
      , Has OrdByCtx r
      , Has SQLGenCtx r
      , Has InsCtxMap r
+     , Has HTTP.Manager r
      )
   => VQ.SelSet
   -> m LazyRespTx
@@ -300,10 +302,26 @@ getMutOp
   => GCtx
   -> SQLGenCtx
   -> UserInfo
+  -> HTTP.Manager
   -> VQ.SelSet
   -> m LazyRespTx
-getMutOp ctx sqlGenCtx userInfo selSet =
-  runE ctx sqlGenCtx userInfo $ resolveMutSelSet selSet
+getMutOp ctx sqlGenCtx userInfo manager selSet =
+  runE_ $ resolveMutSelSet selSet
+  where
+    runE_ action = do
+      res <- runExceptT $ runReaderT action
+        ( userInfo, queryCtxMap, mutationCtxMap
+        , typeMap, fldMap, ordByCtx, insCtxMap, sqlGenCtx
+        , manager
+        )
+      either throwError return res
+      where
+        queryCtxMap = _gQueryCtxMap ctx
+        mutationCtxMap = _gMutationCtxMap ctx
+        typeMap = _gTypes ctx
+        fldMap = _gFields ctx
+        ordByCtx = _gOrdByCtx ctx
+        insCtxMap = _gInsCtxMap ctx
 
 getSubsOpM
   :: ( MonadError QErr m

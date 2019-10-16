@@ -150,17 +150,21 @@ mkActionResponseTypeInfo actionName outputType =
 
 mkMutationField
   :: ActionName
-  -> ResolvedActionDefinition
+  -> ActionInfo
   -> ActionPermissionInfo
   -> (ActionExecutionContext, ObjFldInfo)
-mkMutationField actionName definition permission =
+mkMutationField actionName actionInfo permission =
   ( actionExecutionContext
   , fieldInfo
   )
   where
+    definition = _aiDefintion actionInfo
     actionExecutionContext =
       case getActionKind definition of
-        ActionSynchronous  -> ActionExecutionSyncWebhook $ _adWebhook definition
+        ActionSynchronous  ->
+          ActionExecutionSyncWebhook
+          (_adWebhook definition)
+          (_aiOutputTypeInfo actionInfo)
         ActionAsynchronous -> ActionExecutionAsync $ _apiFilter permission
 
     -- TODO: we need to capture the comment from action definition
@@ -221,16 +225,18 @@ mkQueryField actionName definition permission =
 
 mkActionFieldsAndTypes
   :: ActionName
-  -> ResolvedActionDefinition
+  -> ActionInfo
   -> ActionPermissionInfo
   -> ( Maybe (ActionSelectOpContext, ObjFldInfo, TypeInfo)
        -- context, field, response type info
      , (ActionExecutionContext, ObjFldInfo) -- mutation field
      )
-mkActionFieldsAndTypes actionName definition permission =
+mkActionFieldsAndTypes actionName actionInfo permission =
   ( mkQueryField actionName definition permission
-  , mkMutationField actionName definition permission
+  , mkMutationField actionName actionInfo permission
   )
+  where
+    definition = _aiDefintion actionInfo
 
 mkActionSchemaOne
   :: ActionInfo
@@ -240,7 +246,7 @@ mkActionSchemaOne
   )
 mkActionSchemaOne actionInfo =
   flip fmap permissions $ \permission ->
-  mkActionFieldsAndTypes (_aiName actionInfo) (_aiDefintion actionInfo) permission
+  mkActionFieldsAndTypes (_aiName actionInfo) actionInfo permission
   where
     adminPermission = ActionPermissionInfo adminRole annBoolExpTrue
     permissions = Map.insert adminRole adminPermission $ _aiPermissions actionInfo

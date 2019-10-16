@@ -49,7 +49,7 @@ data AnnAggOrdBy
   deriving (Show, Eq)
 
 data AnnObColG v
-  = AOCPG !PGColumnInfo
+  = AOCPG !PGCol
   | AOCObj !RelInfo !(AnnBoolExp v) !(AnnObColG v)
   | AOCAgg !RelInfo !(AnnBoolExp v) !AnnAggOrdBy
   deriving (Show, Eq)
@@ -121,7 +121,7 @@ data ColOp
   } deriving (Show, Eq)
 
 data AnnFldG v
-  = FCol !PGColumnInfo !(Maybe ColOp)
+  = FCol !(PGCol, PGColumnType) !(Maybe ColOp)
   | FObj !(ObjSelG v)
   | FArr !(ArrSelG v)
   | FExp !T.Text
@@ -207,17 +207,15 @@ type TableAggFld = TableAggFldG S.SQLExp
 type TableAggFldsG v = Fields (TableAggFldG v)
 type TableAggFlds = TableAggFldsG S.SQLExp
 
-data TableFrom
-  = TableFrom
-  { _tfTable :: !QualifiedTable
-  , _tfIden  :: !(Maybe Iden)
-  } deriving (Show, Eq)
-
-data TablePermG v
-  = TablePerm
-  { _tpFilter :: !(AnnBoolExp v)
-  , _tpLimit  :: !(Maybe Int)
-  } deriving (Eq, Show)
+data FromExpression v
+  = FromExpressionTable !QualifiedTable
+  | FromExpressionIdentifier !Iden
+  | FromExpressionFunction
+    !QualifiedFunction
+    !(FunctionArgsExpG v)
+    -- definition list of this function
+    (Maybe [(PGCol, PGScalarType)])
+  deriving (Show, Eq)
 
 traverseTablePerm
   :: (Applicative f)
@@ -229,12 +227,37 @@ traverseTablePerm f (TablePerm boolExp limit) =
   <$> traverseAnnBoolExp f boolExp
   <*> pure limit
 
+data TablePermG v
+  = TablePerm
+  { _tpFilter :: !(AnnBoolExp v)
+  , _tpLimit  :: !(Maybe Int)
+  } deriving (Eq, Show)
+
+noTablePermissions :: TablePermG v
+noTablePermissions =
+  TablePerm annBoolExpTrue Nothing
+
+traverseTableFrom
+  :: (Applicative f)
+  => (a -> f b)
+  -> FromExpression a
+  -> f (FromExpression b)
+traverseTableFrom f = \case
+  FromExpressionTable tn ->
+    pure $ FromExpressionTable tn
+  FromExpressionIdentifier identifier ->
+    pure $ FromExpressionIdentifier identifier
+  FromExpressionFunction functionName functionArgs definitionListM ->
+    FromExpressionFunction functionName <$>
+    traverse f functionArgs <*>
+    pure definitionListM
+
 type TablePerm = TablePermG S.SQLExp
 
 data AnnSelG a v
   = AnnSelG
   { _asnFields   :: !a
-  , _asnFrom     :: !TableFrom
+  , _asnFrom     :: !(FromExpression v)
   , _asnPerm     :: !(TablePermG v)
   , _asnArgs     :: !(TableArgsG v)
   , _asnStrfyNum :: !Bool
@@ -264,7 +287,7 @@ traverseAnnSel
 traverseAnnSel f1 f2 (AnnSelG flds tabFrom perm args strfyNum) =
   AnnSelG
   <$> f1 flds
-  <*> pure tabFrom
+  <*> traverseTableFrom f2 tabFrom
   <*> traverseTablePerm f2 perm
   <*> traverseTableArgs f2 args
   <*> pure strfyNum
@@ -285,40 +308,6 @@ emptyFunctionArgsExp :: FunctionArgsExpG a
 emptyFunctionArgsExp = FunctionArgsExp [] HM.empty
 
 type FunctionArgExp = FunctionArgsExpG S.SQLExp
-
-data AnnFnSelG s v
-  = AnnFnSel
-  { _afFn     :: !QualifiedFunction
-  , _afFnArgs :: !(FunctionArgsExpG v)
-  , _afSelect :: !s
-  } deriving (Show, Eq)
-
-traverseAnnFnSel
-  :: (Applicative f)
-  => (a -> f b) -> (v -> f w)
-  -> AnnFnSelG a v -> f (AnnFnSelG b w)
-traverseAnnFnSel fs fv (AnnFnSel fn fnArgs s) =
-  AnnFnSel fn <$> traverse fv fnArgs <*> fs s
-
-type AnnFnSelSimpleG v = AnnFnSelG (AnnSimpleSelG v) v
-type AnnFnSelSimple = AnnFnSelSimpleG S.SQLExp
-
-traverseAnnFnSimple
-  :: (Applicative f)
-  => (a -> f b)
-  -> AnnFnSelSimpleG a -> f (AnnFnSelSimpleG b)
-traverseAnnFnSimple f =
-  traverseAnnFnSel (traverseAnnSimpleSel f) f
-
-type AnnFnSelAggG v = AnnFnSelG (AnnAggSelG v) v
-type AnnFnSelAgg = AnnFnSelAggG S.SQLExp
-
-traverseAnnFnAgg
-  :: (Applicative f)
-  => (a -> f b)
-  -> AnnFnSelAggG a -> f (AnnFnSelAggG b)
-traverseAnnFnAgg f =
-  traverseAnnFnSel (traverseAnnAggSel f) f
 
 data BaseNode
   = BaseNode

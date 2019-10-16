@@ -120,8 +120,9 @@ mkSelFromExp isLateral sel tn =
   where
     alias = Alias $ toIden tn
 
-mkFuncFromItem :: QualifiedFunction -> FunctionArgs -> FromItem
-mkFuncFromItem qf args = FIFunc qf args Nothing
+mkFuncFromItem :: QualifiedFunction -> FunctionArgs -> FunctionAlias -> FromItem
+mkFuncFromItem qf args alias =
+  FIFunc qf args $ Just alias
 
 mkRowExp :: [Extractor] -> SQLExp
 mkRowExp extrs = let
@@ -418,10 +419,41 @@ instance ToSQL FunctionArgs where
                     \(argName, argVal) -> SENamedArg (Iden argName) argVal
     in paren $ ", " <+> (positionalArgs <> namedArgs)
 
+data DefinitionListItem
+  = DefinitionListItem
+  { _dliColumn :: !PGCol
+  , _dliType :: !PGScalarType
+  } deriving (Show, Eq, Data)
+
+instance ToSQL DefinitionListItem where
+  toSQL (DefinitionListItem column columnType) =
+    toSQL column <-> toSQL columnType
+
+data FunctionAlias
+  = FunctionAlias
+  { _faIden           :: !Alias
+  , _faDefinitionList :: !(Maybe [DefinitionListItem])
+  } deriving (Show, Eq, Data)
+
+mkSimpleFunctionAlias :: Iden -> FunctionAlias
+mkSimpleFunctionAlias identifier =
+  FunctionAlias (toAlias identifier) Nothing
+
+mkFunctionAlias :: Iden -> Maybe [(PGCol, PGScalarType)] -> FunctionAlias
+mkFunctionAlias identifier listM =
+  FunctionAlias (toAlias identifier) $
+  fmap (map (uncurry DefinitionListItem)) listM
+
+instance ToSQL FunctionAlias where
+  toSQL (FunctionAlias iden (Just definitionList)) =
+    toSQL iden <> paren ( ", " <+> definitionList)
+  toSQL (FunctionAlias iden Nothing) =
+    toSQL iden
+
 data FromItem
   = FISimple !QualifiedTable !(Maybe Alias)
   | FIIden !Iden
-  | FIFunc !QualifiedFunction !FunctionArgs !(Maybe Alias)
+  | FIFunc !QualifiedFunction !FunctionArgs !(Maybe FunctionAlias)
   | FIUnnest ![SQLExp] !Alias ![SQLExp]
   | FISelect !Lateral !Select !Alias
   | FIValues !ValuesExp !Alias !(Maybe [PGCol])

@@ -117,14 +117,15 @@ buildActionInfo q = do
   when (hasList responseType) $ throw400 InvalidParams $
     "the output type: " <> G.showGT responseType <> " cannot be a list"
   responseTypeInfo <- getCustomTypeInfo responseBaseType
-  case responseTypeInfo of
-    VT.TIScalar _ -> return ()
-    VT.TIEnum _   -> return ()
-    VT.TIObj _    -> return ()
+  outputTypeInfo <- case responseTypeInfo of
+    VT.TIScalar typeInfo -> return $ ActionOutputScalar typeInfo
+    VT.TIEnum typeInfo   -> return $ ActionOutputEnum typeInfo
+    VT.TIObj typeInfo    -> return $ ActionOutputObject typeInfo
     _ -> throw400 InvalidParams $ "the output type: " <>
          showNamedTy responseBaseType <>
          " should be a scalar/enum/object"
-  return $ ActionInfo actionName actionDefinition mempty
+  return $ ActionInfo actionName
+    (fmap ResolvedWebhook actionDefinition) outputTypeInfo mempty
   where
     getCustomTypeInfo typeName = do
       customTypes <- scCustomTypes <$> askSchemaCache

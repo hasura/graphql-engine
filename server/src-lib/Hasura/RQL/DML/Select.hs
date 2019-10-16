@@ -2,8 +2,6 @@ module Hasura.RQL.DML.Select
   ( selectP2
   , selectQuerySQL
   , selectAggQuerySQL
-  , mkFuncSelectSimple
-  , mkFuncSelectAgg
   , convSelectQuery
   , asSingleRowJsonResp
   , module Hasura.RQL.DML.Select.Internal
@@ -120,7 +118,7 @@ convOrderByElem sessVarBldr (flds, spi) = \case
            [ fldName <<> " has type 'geometry'"
            , " and cannot be used in order_by"
            ]
-          else return $ AOCPG colInfo
+          else return $ AOCPG $ pgiColumn colInfo
       FIRelationship _ -> throw400 UnexpectedPayload $ mconcat
         [ fldName <<> " is a"
         , " relationship and should be expanded"
@@ -157,7 +155,7 @@ convSelectQ fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
     indexedForM (sqColumns selQ) $ \case
     (ECSimple pgCol) -> do
       colInfo <- convExtSimple fieldInfoMap selPermInfo pgCol
-      return (fromPGCol pgCol, FCol colInfo Nothing)
+      return (fromPGCol pgCol, FCol (pgiColumn colInfo, pgiType colInfo) Nothing)
     (ECRel relName mAlias relSelQ) -> do
       annRel <- convExtRel fieldInfoMap relName mAlias
                 relSelQ sessVarBldr prepValBldr
@@ -185,7 +183,7 @@ convSelectQ fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
   resolvedSelFltr <- convAnnBoolExpPartialSQL sessVarBldr $
                      spiFilter selPermInfo
 
-  let tabFrom = TableFrom (spiTable selPermInfo) Nothing
+  let tabFrom = FromExpressionTable (spiTable selPermInfo)
       tabPerm = TablePerm resolvedSelFltr mPermLimit
       tabArgs = TableArgs wClause annOrdByM mQueryLimit
                 (S.intToSQLExp <$> mQueryOffset) Nothing
@@ -260,20 +258,6 @@ convSelectQuery sessVarBldr prepArgBuilder (DMLQuery qt selQ) = do
   validateHeaders $ spiRequiredHeaders selPermInfo
   convSelectQ (_tiFieldInfoMap tabInfo) selPermInfo
     extSelQ sessVarBldr prepArgBuilder
-
-mkFuncSelectSimple
-  :: AnnFnSelSimple
-  -> Q.Query
-mkFuncSelectSimple annFnSel =
-  Q.fromBuilder $ toSQL $
-  mkFuncSelectWith (mkSQLSelect False) annFnSel
-
-mkFuncSelectAgg
-  :: AnnFnSelAgg
-  -> Q.Query
-mkFuncSelectAgg annFnSel =
-  Q.fromBuilder $ toSQL $
-  mkFuncSelectWith mkAggSelect annFnSel
 
 selectP2 :: Bool -> (AnnSimpleSel, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 selectP2 asSingleObject (sel, p) =
