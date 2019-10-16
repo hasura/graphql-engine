@@ -197,6 +197,16 @@ export const getTablePermissions = (table, role = null, action = null) => {
   return tablePermissions;
 };
 
+/*** Table/View Check Constraints utils ***/
+
+export const getTableCheckConstraints = table => {
+  return table.check_constraints;
+};
+
+export const findTableCheckConstraint = (checkConstraints, constraintName) => {
+  return checkConstraints.find(c => c.constraint_name === constraintName);
+};
+
 /*** Function utils ***/
 
 export const getFunctionSchema = pgFunction => {
