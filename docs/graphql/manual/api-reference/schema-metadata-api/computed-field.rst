@@ -71,17 +71,17 @@ Args syntax
      - Name of the new computed field
    * - definition
      - true
-     - Definition_
+     - ComputedFieldDefinition_
      - The computed field definition
    * - comment
      - false
      - text
      - comment
 
-.. _Definition:
+.. _ComputedFieldDefinition:
 
-Definition
-&&&&&&&&&&
+ComputedFieldDefinition
+&&&&&&&&&&&&&&&&&&&&&&&
 
 .. list-table::
    :header-rows: 1
