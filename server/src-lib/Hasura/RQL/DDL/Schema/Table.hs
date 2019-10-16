@@ -98,37 +98,37 @@ trackExistingTableOrViewP1 qt = do
   when (M.member qf $ scFunctions rawSchemaCache) $
     throw400 NotSupported $ "function with name " <> qt <<> " already exists"
 
-validateCustomRootFlds
-  :: (MonadError QErr m)
-  => GS.GCtx
-  -> GC.TableCustomRootFields
-  -> m ()
-validateCustomRootFlds defRemoteGCtx rootFlds =
-  forM_ rootFldNames $ GS.checkConflictingNode defRemoteGCtx
-  where
-    GC.TableCustomRootFields sel selByPk selAgg ins upd del = rootFlds
-    rootFldNames = catMaybes [sel, selByPk, selAgg, ins, upd, del]
-
 validateTableConfig
   :: (QErrM m, CacheRM m)
-  => TableInfo a -> TableConfig -> m ()
-validateTableConfig tableInfo (TableConfig rootFlds colFlds) = do
+  => TableInfo PGRawColumnInfo -> TableConfig -> m ()
+validateTableConfig tableInfo (TableConfig customRootFlds customColumnNames) = do
     withPathK "custom_root_fields" $ do
       sc <- askSchemaCache
       let defRemoteGCtx = scDefaultRemoteGCtx sc
-      validateCustomRootFlds defRemoteGCtx rootFlds
-    withPathK "custom_column_names" $
-      forM_ (M.toList colFlds) $ \(col, customName) -> do
-        void $ askPGColInfo (_tiFieldInfoMap tableInfo) col ""
-        withPathK (getPGColTxt col) $ do
-          let columnField = fromPGCol col
-              customField = FieldName $ G.unName customName
-          if columnField == customField then pure ()
-          else checkForFieldConflict tableInfo customField
-        when (not $ null duplicateNames) $ throw400 NotSupported $
-          "the following names are duplicated: " <> showNames duplicateNames
-  where
-    duplicateNames = duplicates $ M.elems colFlds
+          GC.TableCustomRootFields sel selByPk selAgg ins upd del = customRootFlds
+          rootFldNames = catMaybes [sel, selByPk, selAgg, ins, upd, del]
+          duplicateRootFldNames = duplicates rootFldNames
+
+      when (not $ null duplicateRootFldNames) $ throw400 NotSupported $
+        "the following custom root field names are duplicated: " <> showNames duplicateRootFldNames
+
+      forM_ rootFldNames $ GS.checkConflictingNode defRemoteGCtx
+
+    withPathK "custom_column_names" $ do
+      let fieldInfoMap = _tiFieldInfoMap tableInfo
+      -- Check all keys are valid columns
+      forM_ (M.keys customColumnNames) $ \col -> void $ askPGColInfo fieldInfoMap col ""
+      let columns = getCols fieldInfoMap
+          defaultNameMap = M.fromList $ flip map columns $
+            \col -> ( prciName col
+                    , G.Name $ getPGColTxt $ prciName col
+                    )
+          customNames = M.elems $ defaultNameMap `M.union` customColumnNames
+          conflictingCustomNames = duplicates customNames
+
+      when (not $ null conflictingCustomNames) $ throw400 NotSupported $
+        "the following custom column names are conflicting: " <> showNames conflictingCustomNames
+
 
 trackExistingTableOrViewP2 :: (CacheBuildM m) => QualifiedTable -> Bool -> TableConfig -> m EncJSON
 trackExistingTableOrViewP2 tableName isEnum config = do
@@ -183,11 +183,26 @@ instance FromJSON SetTableCustomFields where
 runSetTableCustomFieldsQV2 :: (CacheBuildM m, UserInfoM m) => SetTableCustomFields -> m EncJSON
 runSetTableCustomFieldsQV2 (SetTableCustomFields tableName rootFields columnNames) = do
   adminOnly
-  void $ askTabInfo tableName
+  fieldInfoMap <- _tiFieldInfoMap <$> askTabInfo tableName
+  validateWithExistingRelationships fieldInfoMap
   let tableConfig = TableConfig rootFields columnNames
   updateTableConfig tableName tableConfig
   buildSchemaCacheFor (MOTable tableName)
   return successMsg
+  where
+    validateWithExistingRelationships fields = do
+      let customNames = M.elems columnNames
+          relationships = getRels fields
+          relationshipGraphQLFields =
+            flip concatMap relationships $ \relationship ->
+            let relationshipName = G.Name $ relNameToTxt $ riName relationship
+            in case riType relationship of
+              ObjRel -> [relationshipName]
+              ArrRel -> [relationshipName, relationshipName <> "_aggregate"]
+          conflictingNames = customNames `intersect` relationshipGraphQLFields
+      when (not $ null conflictingNames) $ throw400 NotSupported $
+        "the following custom column names conflict with existing relationship fields: "
+        <> showNames conflictingNames
 
 unTrackExistingTableOrViewP1
   :: (CacheRM m, UserInfoM m, QErrM m) => UntrackTable -> m ()
