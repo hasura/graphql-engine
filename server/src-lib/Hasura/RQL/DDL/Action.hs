@@ -2,18 +2,22 @@ module Hasura.RQL.DDL.Action
   ( CreateAction
   , validateAndCacheAction
   , runCreateAction
+  , runCreateAction_
 
   , DropAction
   , runDropAction
+  , deleteActionFromCatalog
 
   , fetchActions
 
   , CreateActionPermission
   , validateAndCacheActionPermission
   , runCreateActionPermission
+  , runCreateActionPermission_
 
   , DropActionPermission
   , runDropActionPermission
+  , deleteActionPermissionFromCatalog
   ) where
 
 import           Hasura.EncJSON
@@ -62,11 +66,17 @@ runCreateAction
      , CacheRWM m, MonadTx m
      )
   => CreateAction -> m EncJSON
-runCreateAction q@(CreateAction actionName actionDefinition comment) = do
+runCreateAction q = do
   adminOnly
+  runCreateAction_ q
+  return successMsg
+
+runCreateAction_
+  :: (QErrM m , CacheRWM m, MonadTx m)
+  => CreateAction -> m ()
+runCreateAction_ q@(CreateAction actionName actionDefinition comment) = do
   validateAndCacheAction q
   persistCreateAction
-  return successMsg
   where
     persistCreateAction :: (MonadTx m) => m ()
     persistCreateAction = do
@@ -127,10 +137,20 @@ buildActionInfo q = do
       G.TypeList _ _  -> True
       G.TypeNamed _ _ -> False
 
+newtype ClearActionData
+  = ClearActionData { unClearActionData :: Bool }
+  deriving (Show, Eq, Lift, J.FromJSON, J.ToJSON)
+
+shouldClearActionData :: ClearActionData -> Bool
+shouldClearActionData = unClearActionData
+
+defaultClearActionData :: ClearActionData
+defaultClearActionData = ClearActionData True
+
 data DropAction
   = DropAction
   { _daName      :: !ActionName
-  , _daClearData :: !(Maybe Bool)
+  , _daClearData :: !(Maybe ClearActionData)
   } deriving (Show, Eq, Lift)
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''DropAction)
 
@@ -141,28 +161,31 @@ runDropAction (DropAction actionName clearDataM)= do
   adminOnly
   void $ getActionInfo actionName
   delActionFromCache actionName
-  liftTx $ do
-    deleteActionFromCatalog
-    when clearData clearActionData
+  liftTx $ deleteActionFromCatalog actionName clearDataM
   return successMsg
+
+deleteActionFromCatalog
+  :: ActionName
+  -> Maybe ClearActionData
+  -> Q.TxE QErr ()
+deleteActionFromCatalog actionName clearDataM = do
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+      DELETE FROM hdb_catalog.hdb_action
+        WHERE action_name = $1
+      |] (Identity actionName) True
+  when (shouldClearActionData clearData) $
+    clearActionDataFromCatalog actionName
   where
     -- When clearData is not present we assume that
     -- the data needs to be retained
-    clearData = fromMaybe False clearDataM
+    clearData = fromMaybe defaultClearActionData clearDataM
 
-    deleteActionFromCatalog :: Q.TxE QErr ()
-    deleteActionFromCatalog =
-      Q.unitQE defaultTxErrorHandler [Q.sql|
-          DELETE FROM hdb_catalog.hdb_action
-            WHERE action_name = $1
-          |] (Identity actionName) True
-
-    clearActionData :: Q.TxE QErr ()
-    clearActionData =
-      Q.unitQE defaultTxErrorHandler [Q.sql|
-          DELETE FROM hdb_catalog.hdb_action_log
-            WHERE action_name = $1
-          |] (Identity actionName) True
+clearActionDataFromCatalog :: ActionName -> Q.TxE QErr ()
+clearActionDataFromCatalog actionName =
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+      DELETE FROM hdb_catalog.hdb_action_log
+        WHERE action_name = $1
+      |] (Identity actionName) True
 
 fetchActions :: Q.TxE QErr [CreateAction]
 fetchActions =
@@ -202,16 +225,12 @@ validateAndCacheActionPermission createActionPermission = do
       -> m AnnBoolExpPartialSQL
     buildActionFilter permission = undefined
 
-runCreateActionPermission
-  :: ( QErrM m, UserInfoM m
-     , CacheRWM m, MonadTx m
-     )
-  => CreateActionPermission -> m EncJSON
-runCreateActionPermission createActionPermission = do
-  adminOnly
+runCreateActionPermission_
+  :: ( QErrM m , CacheRWM m, MonadTx m)
+  => CreateActionPermission -> m ()
+runCreateActionPermission_ createActionPermission = do
   validateAndCacheActionPermission createActionPermission
   persistCreateActionPermission
-  return successMsg
   where
     actionName = _capAction createActionPermission
     role = _capRole createActionPermission
@@ -225,6 +244,16 @@ runCreateActionPermission createActionPermission = do
           (action_name, role_name, definition, comment)
           VALUES ($1, $2, $3)
       |] (actionName, role, Q.AltJ permissionDefinition, comment) True
+
+runCreateActionPermission
+  :: ( QErrM m, UserInfoM m
+     , CacheRWM m, MonadTx m
+     )
+  => CreateActionPermission -> m EncJSON
+runCreateActionPermission createActionPermission = do
+  adminOnly
+  runCreateActionPermission_ createActionPermission
+  return successMsg
 
 data DropActionPermission
   = DropActionPermission
@@ -246,16 +275,16 @@ runDropActionPermission dropActionPermission = do
     throw400 NotExists $
     "permission for role: " <> role <<> " is not defined on " <>> actionName
   delActionPermissionFromCache actionName role
-  liftTx deleteActionPermissionFromCatalog
+  liftTx $ deleteActionPermissionFromCatalog actionName role
   return successMsg
   where
     actionName = _dapAction dropActionPermission
     role = _dapRole dropActionPermission
 
-    deleteActionPermissionFromCatalog :: Q.TxE QErr ()
-    deleteActionPermissionFromCatalog =
-      Q.unitQE defaultTxErrorHandler [Q.sql|
-          DELETE FROM hdb_catalog.hdb_action_permission
-            WHERE action_name = $1
-              AND role_name = $2
-          |] (actionName, role) True
+deleteActionPermissionFromCatalog :: ActionName -> RoleName -> Q.TxE QErr ()
+deleteActionPermissionFromCatalog actionName role =
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+      DELETE FROM hdb_catalog.hdb_action_permission
+        WHERE action_name = $1
+          AND role_name = $2
+      |] (actionName, role) True

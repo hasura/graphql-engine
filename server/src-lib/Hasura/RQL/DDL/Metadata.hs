@@ -41,6 +41,7 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query                  as Q
+import qualified Hasura.RQL.DDL.Action              as DA
 import qualified Hasura.RQL.DDL.CustomTypes         as DC
 import qualified Hasura.RQL.DDL.EventTrigger        as DE
 import qualified Hasura.RQL.DDL.Permission          as DP
@@ -134,6 +135,9 @@ clearMetadata = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "DELETE FROM hdb_catalog.remote_schemas" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_allowlist" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_query_collection WHERE is_system_defined <> 'true'" () False
+  Q.unitQ "DELETE FROM hdb_catalog.hdb_custom_graphql_types" () False
+  Q.unitQ "DELETE FROM hdb_catalog.hdb_action_permission" () False
+  Q.unitQ "DELETE FROM hdb_catalog.hdb_action WHERE is_system_defined <> 'true'" () False
 
 runClearMetadata
   :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m
@@ -146,6 +150,31 @@ runClearMetadata _ = do
   DS.buildSchemaCacheStrict
   return successMsg
 
+-- representation of action permission metadata
+data ActionPermissionMetadata
+  = ActionPermissionMetadata
+  { _apmRole       :: !RoleName
+  , _apmComment    :: !(Maybe Text)
+  , _apmDefinition :: !ActionPermissionDefinition
+  } deriving (Show, Eq, Lift)
+
+$(deriveJSON
+  (aesonDrop 4 snakeCase){omitNothingFields=True}
+  ''ActionPermissionMetadata)
+
+-- representation of action metadata
+data ActionMetadata
+  = ActionMetadata
+  { _amName        :: !ActionName
+  , _amComment     :: !(Maybe Text)
+  , _amDefinition  :: !ActionDefinitionInput
+  , _amPermissions :: ![ActionPermissionMetadata]
+  } deriving (Show, Eq, Lift)
+
+$(deriveJSON
+  (aesonDrop 3 snakeCase){omitNothingFields=True}
+  ''ActionMetadata)
+
 data ReplaceMetadata
   = ReplaceMetadata
   { aqTables           :: ![TableMeta]
@@ -153,6 +182,8 @@ data ReplaceMetadata
   , aqRemoteSchemas    :: !(Maybe [TRS.AddRemoteSchemaQuery])
   , aqQueryCollections :: !(Maybe [DQC.CreateCollection])
   , aqAllowlist        :: !(Maybe [DQC.CollectionReq])
+  , aqCustomTypes      :: !(Maybe CustomTypes)
+  , aqActions          :: !(Maybe [ActionMetadata])
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ReplaceMetadata)
@@ -160,7 +191,8 @@ $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ReplaceMetadata)
 applyQP1
   :: (QErrM m, UserInfoM m)
   => ReplaceMetadata -> m ()
-applyQP1 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = do
+applyQP1 (ReplaceMetadata tables mFunctions mSchemas
+          mCollections mAllowlist _ mActions) = do
 
   adminOnly
 
@@ -189,17 +221,21 @@ applyQP1 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = 
   withPathK "functions" $
     checkMultipleDecls "functions" functions
 
-  onJust mSchemas $ \schemas ->
+  for_ mSchemas $ \schemas ->
       withPathK "remote_schemas" $
         checkMultipleDecls "remote schemas" $ map TRS._arsqName schemas
 
-  onJust mCollections $ \collections ->
+  for_ mCollections $ \collections ->
     withPathK "query_collections" $
         checkMultipleDecls "query collections" $ map DQC._ccName collections
 
-  onJust mAllowlist $ \allowlist ->
+  for_ mAllowlist $ \allowlist ->
     withPathK "allowlist" $
         checkMultipleDecls "allow list" $ map DQC._crCollection allowlist
+
+  withPathK "actions" $
+    for_ mActions $ \actions ->
+    checkMultipleDecls "actions" $ map _amName actions
 
   where
     withTableName qt = withPathK (qualObjectToText qt)
@@ -225,7 +261,8 @@ applyQP2
      )
   => ReplaceMetadata
   -> m EncJSON
-applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = do
+applyQP2 (ReplaceMetadata tables mFunctions
+          mSchemas mCollections mAllowlist mCustomTypes mActions) = do
 
   liftTx clearMetadata
   DS.buildSchemaCacheStrict
@@ -287,6 +324,20 @@ applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = 
       indexedMapM_ (void . DRS.addRemoteSchemaP2) schemas
 
   -- build GraphQL Context with Remote schemas
+  DS.buildGCtxMap
+
+  traverse_ DC.runSetCustomTypes_ mCustomTypes
+  for_ mActions $ \actions -> for_ actions $ \action -> do
+    let createAction =
+          CreateAction (_amName action) (_amDefinition action) (_amComment action)
+    DA.runCreateAction_ createAction
+    for_ (_amPermissions action) $ \permission -> do
+      let createActionPermission = CreateActionPermission (_amName action)
+                                   (_apmRole permission) (_apmDefinition permission)
+                                   (_apmComment permission)
+      DA.runCreateActionPermission_ createActionPermission
+
+  -- build the gctx map again after adding custom types and
   DS.buildGCtxMap
 
   return successMsg
@@ -369,8 +420,16 @@ fetchMetadata = do
   -- fetch allow list
   allowlist <- map DQC.CollectionReq <$> DQC.fetchAllowlist
 
-  return $ ReplaceMetadata (M.elems postRelMap) (Just functions)
-                           (Just schemas) (Just collections) (Just allowlist)
+  mCustomTypes <- fetchCustomTypes
+
+  -- fetch actions
+  actions <- fetchActions
+
+  return $ ReplaceMetadata
+    (M.elems postRelMap) (Just functions)
+    (Just schemas) (Just collections) (Just allowlist)
+    mCustomTypes
+    (if null actions then Nothing else actions)
 
   where
 
@@ -428,6 +487,54 @@ fetchMetadata = do
                 FROM hdb_catalog.hdb_function
                 WHERE is_system_defined = 'false'
                     |] () False
+
+    fetchCustomTypes :: Q.TxE QErr (Maybe CustomTypes)
+    fetchCustomTypes =
+      fmap (Q.getAltJ . runIdentity) <$>
+      Q.rawQE defaultTxErrorHandler [Q.sql|
+         select custom_types::json from hdb_catalog.hdb_custom_graphql_types
+                                          |] [] False
+    fetchActions =
+      Q.getAltJ . runIdentity . Q.getRow <$> Q.rawQE defaultTxErrorHandler [Q.sql|
+        select
+          coalesce(
+            json_agg(
+              json_build_object(
+                'name',
+                a.action_name,
+                'definition',
+                a.action_defn,
+                'comment',
+                a.comment,
+                'permissions',
+                ap.permissions
+              )
+            ),
+            '[]'
+          )
+        from
+          hdb_catalog.hdb_action as a
+          left outer join lateral (
+            select
+              coalesce(
+                json_agg(
+                  json_build_object(
+                    'role',
+                    ap.role_name,
+                    'definition',
+                    ap.definition,
+                    'comment',
+                    ap.comment
+                  )
+                ),
+                '[]'
+              ) as permissions
+            from
+              hdb_catalog.hdb_action_permission ap
+            where
+              ap.action_name = a.action_name
+          ) ap on true;
+                            |] [] False
 
 runExportMetadata
   :: (QErrM m, UserInfoM m, MonadTx m)
@@ -514,10 +621,12 @@ runDropInconsistentMetadata _ = do
 
 purgeMetadataObj :: MonadTx m => MetadataObjId -> m ()
 purgeMetadataObj = liftTx . \case
-  (MOTable qt)                    -> DS.deleteTableFromCatalog qt
-  (MOFunction qf)                 -> DS.delFunctionFromCatalog qf
-  (MORemoteSchema rsn)            -> DRS.removeRemoteSchemaFromCatalog rsn
-  (MOCustomTypes)                 -> DC.clearCustomTypes
-  (MOTableObj qt (MTORel rn _))   -> DR.delRelFromCatalog qt rn
-  (MOTableObj qt (MTOPerm rn pt)) -> DP.dropPermFromCatalog qt rn pt
-  (MOTableObj _ (MTOTrigger trn)) -> DE.delEventTriggerFromCatalog trn
+  (MOTable qt)                     -> DS.deleteTableFromCatalog qt
+  (MOFunction qf)                  -> DS.delFunctionFromCatalog qf
+  (MORemoteSchema rsn)             -> DRS.removeRemoteSchemaFromCatalog rsn
+  (MOCustomTypes)                  -> DC.clearCustomTypes
+  (MOTableObj qt (MTORel rn _))    -> DR.delRelFromCatalog qt rn
+  (MOTableObj qt (MTOPerm rn pt))  -> DP.dropPermFromCatalog qt rn pt
+  (MOTableObj _ (MTOTrigger trn))  -> DE.delEventTriggerFromCatalog trn
+  (MOAction action)                -> DA.deleteActionFromCatalog action Nothing
+  (MOActionPermission action role) -> DA.deleteActionPermissionFromCatalog action role

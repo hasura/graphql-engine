@@ -1,5 +1,6 @@
 module Hasura.RQL.DDL.CustomTypes
   ( runSetCustomTypes
+  , runSetCustomTypes_
   , clearCustomTypes
   , validateCustomTypesAndAddToCache
   ) where
@@ -155,18 +156,27 @@ runSetCustomTypes
   => CustomTypes -> m EncJSON
 runSetCustomTypes customTypes = do
   adminOnly
-  validateCustomTypesAndAddToCache customTypes
-  persistCustomTypes
+  runSetCustomTypes_ customTypes
   return successMsg
-  where
-    persistCustomTypes :: (MonadTx m) => m ()
-    persistCustomTypes = liftTx $ do
-      clearCustomTypes
-      Q.unitQE defaultTxErrorHandler [Q.sql|
-        INSERT into hdb_catalog.hdb_custom_graphql_types
-          (custom_types)
-          VALUES ($1)
-      |] (Identity $ Q.AltJ customTypes) False
+
+runSetCustomTypes_
+  :: ( MonadError QErr m
+     , CacheRWM m
+     , MonadTx m
+     )
+  => CustomTypes -> m ()
+runSetCustomTypes_ customTypes = do
+  validateCustomTypesAndAddToCache customTypes
+  liftTx $ persistCustomTypes customTypes
+
+persistCustomTypes :: CustomTypes -> Q.TxE QErr ()
+persistCustomTypes customTypes = do
+  clearCustomTypes
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+    INSERT into hdb_catalog.hdb_custom_graphql_types
+      (custom_types)
+      VALUES ($1)
+  |] (Identity $ Q.AltJ customTypes) False
 
 clearCustomTypes :: Q.TxE QErr ()
 clearCustomTypes = do

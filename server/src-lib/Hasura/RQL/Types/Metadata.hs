@@ -5,6 +5,7 @@ import           Hasura.Prelude
 
 import qualified Data.Text                     as T
 
+import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
@@ -47,6 +48,8 @@ data MetadataObjId
   | MORemoteSchema !RemoteSchemaName
   | MOTableObj !QualifiedTable !TableMetadataObjId
   | MOCustomTypes
+  | MOAction !ActionName
+  | MOActionPermission !ActionName !RoleName
   deriving (Show, Eq, Generic)
 instance Hashable MetadataObjId
 
