@@ -50,6 +50,7 @@ const CheckConstraints = ({ constraints, dispatch }) => {
 
     return (
       <ExpandableEditor
+        key={constraint_name}
         editorExpanded={expandedContent}
         expandedLabel={label}
         collapsedLabel={label}
