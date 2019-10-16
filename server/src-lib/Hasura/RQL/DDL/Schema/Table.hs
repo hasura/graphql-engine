@@ -120,8 +120,11 @@ validateTableConfig tableInfo (TableConfig rootFlds colFlds) = do
     withPathK "custom_column_names" $
       forM_ (M.toList colFlds) $ \(col, customName) -> do
         void $ askPGColInfo (_tiFieldInfoMap tableInfo) col ""
-        withPathK (getPGColTxt col) $
-          checkForFieldConflict tableInfo $ FieldName $ G.unName customName
+        withPathK (getPGColTxt col) $ do
+          let columnField = fromPGCol col
+              customField = FieldName $ G.unName customName
+          if columnField == customField then pure ()
+          else checkForFieldConflict tableInfo customField
         when (not $ null duplicateNames) $ throw400 NotSupported $
           "the following names are duplicated: " <> showNames duplicateNames
   where
