@@ -114,21 +114,36 @@ explainGQLQuery
   -> GQLExplain
   -> m EncJSON
 explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw) = do
-  execPlan <- E.getExecPlanPartial userInfo sc enableAL query
-  (gCtx, rootSelSet) <- case execPlan of
-    E.GExPHasura (gCtx, rootSelSet) ->
-      return (gCtx, rootSelSet)
-    E.GExPRemote _ _  ->
-      throw400 InvalidParams "only hasura queries can be explained"
-  case rootSelSet of
-    GV.RQuery selSet ->
-      runInTx $ encJFromJValue <$> traverse (explainField userInfo gCtx sqlGenCtx) (toList selSet)
-    GV.RMutation _ ->
+  E.GQExecPlanPartial opType fieldPlans <-
+    E.getExecPlanPartial userInfo sc enableAL query
+  let hasuraFieldPlans = mapMaybe getHasuraField (toList fieldPlans)
+  if null hasuraFieldPlans
+    then throw400 InvalidParams "only hasura queries can be explained"
+    else pure ()
+  case opType of
+    G.OperationTypeQuery ->
+      runInTx $
+      encJFromJValue <$>
+      traverse
+        (\(gCtx, field) -> explainField userInfo gCtx sqlGenCtx field)
+        hasuraFieldPlans
+    G.OperationTypeMutation ->
       throw400 InvalidParams "only queries can be explained"
-    GV.RSubscription rootField -> do
+    G.OperationTypeSubscription -> do
+      (gCtx, rootField) <- getRootField hasuraFieldPlans
       (plan, _) <- E.getSubsOp pgExecCtx gCtx sqlGenCtx userInfo rootField
       runInTx $ encJFromJValue <$> E.explainLiveQueryPlan plan
   where
     usrVars = mkUserVars $ maybe [] Map.toList userVarsRaw
     userInfo = mkUserInfo (fromMaybe adminRole $ roleFromVars usrVars) usrVars
     runInTx = liftEither <=< liftIO . runExceptT . runLazyTx pgExecCtx
+    getHasuraField =
+      \case
+        E.GQFieldPartialHasura a -> Just a
+        _ -> Nothing
+    getRootField =
+      \case
+        [] -> throw500 "no field found in subscription"
+        [fld] -> pure fld
+        _ ->
+          throw500 "expected only one field in subscription"

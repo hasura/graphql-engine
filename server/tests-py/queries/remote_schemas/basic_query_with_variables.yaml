@@ -1,0 +1,14 @@
+description: Simple GraphQL query with variables
+url: /v1/graphql
+status: 200
+response:
+  data:
+    hello: Hello i am a variable
+query:
+  query: |
+    query ($myArg: String) {
+      hello(arg: $myArg)
+    }
+
+  variables:
+    myArg: i am a variable

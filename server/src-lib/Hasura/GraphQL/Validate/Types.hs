@@ -171,10 +171,12 @@ type ParamMap = Map.HashMap G.Name InpValInfo
 -- | location of the type: a hasura type or a remote type
 data TypeLoc
   = TLHasuraType
-  | TLRemoteType !RemoteSchemaName !RemoteSchemaInfo
+  | TLRemoteType !RemoteSchemaName
   deriving (Show, Eq, TH.Lift, Generic)
 
 instance Hashable TypeLoc
+
+$(J.deriveToJSON (J.aesonDrop 2 J.camelCase){J.omitNothingFields=True} ''TypeLoc)
 
 data ObjFldInfo
   = ObjFldInfo

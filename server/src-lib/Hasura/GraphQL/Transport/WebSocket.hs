@@ -17,6 +17,7 @@ import qualified Data.ByteString.Lazy                        as BL
 import qualified Data.CaseInsensitive                        as CI
 import qualified Data.HashMap.Strict                         as Map
 import qualified Data.IORef                                  as IORef
+import qualified Data.Sequence                               as Seq
 import qualified Data.Text                                   as T
 import qualified Data.Text.Encoding                          as TE
 import qualified Data.Time.Clock                             as TC
@@ -46,6 +47,7 @@ import           Hasura.Server.Utils                         (RequestId,
 import qualified Hasura.GraphQL.Execute                      as E
 import qualified Hasura.GraphQL.Execute.LiveQuery            as LQ
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
+import qualified Hasura.GraphQL.Validate                     as VQ
 import qualified Hasura.Logging                              as L
 
 
@@ -281,58 +283,85 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   execPlan <- either (withComplete . preExecErr requestId) return execPlanE
   let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx
                 planCache sc scVer httpMgr enableAL
+  splitExecPlansE <- runExceptT $ splitExecPlan execPlan
+  splitExecPlans <- either (withComplete . preExecErr requestId) return splitExecPlansE
+  case splitExecPlans of
+    Left lqOp -> do
+      -- log the graphql query
+      liftIO $ logGraphqlQuery logger $ QueryLog q Nothing requestId
+      lqId <- liftIO $ LQ.addLiveQuery lqMap lqOp liveQOnChange
+      liftIO $ STM.atomically $
+        STMMap.insert (lqId, _grOperationName q) opId opMap
+      logOpEv ODStarted (Just requestId)
 
-  case execPlan of
-    E.GExPHasura resolvedOp ->
-      runHasuraGQ requestId q userInfo resolvedOp
-    E.GExPRemote rsi opDef  ->
-      runRemoteGQ execCtx requestId userInfo reqHdrs opDef rsi
+    Right queryOrMutPlans -> do
+      logOpEv ODStarted (Just requestId)
+      fieldRespsE <- liftIO $
+        runExceptT $ do
+        flip mapM queryOrMutPlans $ \case
+          E.GQFieldResolvedHasura execOp ->
+            case execOp of
+              E.ExOpQuery opTx genSql ->
+                fmap (encodeGQResp . GQSuccess . encJToLBS) $
+                execQueryOrMut requestId q genSql $
+                runLazyTx' pgExecCtx opTx
+              E.ExOpMutation opTx ->
+                fmap (encodeGQResp . GQSuccess . encJToLBS) $
+                execQueryOrMut requestId q Nothing $
+                runLazyTx pgExecCtx $ withUserInfo userInfo opTx
+              E.ExOpSubs {} ->
+                throwError
+                  (err500
+                     Unexpected
+                     "did not expect subscription field here")
+          E.GQFieldResolvedRemote rsi opType field ->
+            runRemoteGQ execCtx requestId userInfo reqHdrs rsi opType (Seq.singleton field)
+      case fieldRespsE of
+        Left err -> postExecErr requestId err
+        Right fieldResps -> do
+          let mergedResponse = getMergedGQResp fieldResps
+          case mergedResponse of
+            Left e ->
+              postExecErr requestId $
+              err500
+                UnexpectedPayload
+                ("could not merge data from results: " <> T.pack e)
+            Right resp -> do
+              sendGenericResp resp
+      sendCompleted (Just requestId)
   where
-    runHasuraGQ :: RequestId -> GQLReqUnparsed -> UserInfo -> E.ExecOp
-                -> ExceptT () IO ()
-    runHasuraGQ reqId query userInfo = \case
-      E.ExOpQuery opTx genSql ->
-        execQueryOrMut reqId query genSql $ runLazyTx' pgExecCtx opTx
-      E.ExOpMutation opTx ->
-        execQueryOrMut reqId query Nothing $
-          runLazyTx pgExecCtx $ withUserInfo userInfo opTx
-      E.ExOpSubs lqOp -> do
-        -- log the graphql query
-        liftIO $ logGraphqlQuery logger $ QueryLog query Nothing reqId
-        lqId <- liftIO $ LQ.addLiveQuery lqMap lqOp liveQOnChange
-        liftIO $ STM.atomically $
-          STMMap.insert (lqId, _grOperationName q) opId opMap
-        logOpEv ODStarted (Just reqId)
+    -- This function breaks the execution plan as Left subscription or Right queryOrMut
+    splitExecPlan :: (QErrM m) => Seq.Seq E.GQFieldResolvedPlan -> m (Either LQ.LiveQueryPlan (Seq.Seq E.GQFieldResolvedPlan))
+    splitExecPlan fieldPlans = do
+      let subscriptionFields = mapMaybe getSubscriptionOps (toList fieldPlans)
+      case subscriptionFields of
+        []      -> pure $ Right fieldPlans
+        [field] -> pure $ Left field
+        _       -> throw500 "expected only one field in subscription"
+
+    getSubscriptionOps = \case
+      E.GQFieldResolvedHasura (E.ExOpSubs lqOp) -> Just lqOp
+      _ -> Nothing
 
     execQueryOrMut reqId query genSql action = do
-      logOpEv ODStarted (Just reqId)
       -- log the generated SQL and the graphql query
-      liftIO $ logGraphqlQuery logger $ QueryLog query genSql reqId
+      -- liftIO $ logGraphqlQuery logger $ QueryLog query genSql reqId
       resp <- liftIO $ runExceptT action
-      either (postExecErr reqId) sendSuccResp resp
-      sendCompleted (Just reqId)
+      liftEither resp
 
-    runRemoteGQ :: E.ExecutionCtx -> RequestId -> UserInfo -> [H.Header]
-                -> G.TypedOperationDefinition -> RemoteSchemaInfo
-                -> ExceptT () IO ()
-    runRemoteGQ execCtx reqId userInfo reqHdrs opDef rsi = do
-      when (G._todType opDef == G.OperationTypeSubscription) $
-        withComplete $ preExecErr reqId $
+    runRemoteGQ :: (MonadError QErr m, MonadIO m)
+      => E.ExecutionCtx -> RequestId -> UserInfo -> [H.Header]
+      -> RemoteSchemaInfo -> G.OperationType -> VQ.SelSet
+      -> m EncJSON
+    runRemoteGQ execCtx reqId userInfo reqHdrs rsi opType selSet = do
+      when (opType == G.OperationTypeSubscription) $
+        throwError $
         err400 NotSupported "subscription to remote server is not supported"
 
       -- if it's not a subscription, use HTTP to execute the query on the remote
       resp <- runExceptT $ flip runReaderT execCtx $
-              E.execRemoteGQ reqId userInfo reqHdrs q rsi opDef
-      either (postExecErr reqId) (sendRemoteResp reqId . _hrBody) resp
-      sendCompleted (Just reqId)
-
-    sendRemoteResp reqId resp =
-      case J.eitherDecodeStrict (encJToBS resp) of
-        Left e    -> postExecErr reqId $ invalidGqlErr $ T.pack e
-        Right res -> sendMsg wsConn $ SMData $ DataMsg opId (GRRemote res)
-
-    invalidGqlErr err = err500 Unexpected $
-      "Failed parsing GraphQL response from remote: " <> err
+              E.execRemoteGQ reqId userInfo reqHdrs rsi opType selSet
+      liftEither (fmap _hrBody resp)
 
     WSServerEnv logger pgExecCtx lqMap gCtxMapRef httpMgr _ sqlGenCtx planCache
       _ enableAL = serverEnv
@@ -378,9 +407,8 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
             ERTGraphqlCompliant -> J.object ["errors" J..= [errFn False qErr]]
       sendMsg wsConn $ SMErr $ ErrorMsg opId err
 
-    sendSuccResp encJson =
-      sendMsg wsConn $ SMData $ DataMsg opId $
-        GRHasura $ GQSuccess $ encJToLBS encJson
+    sendGenericResp gqResp =
+      sendMsg wsConn $ SMData $ DataMsg opId $ GRHasura $ GQGeneric gqResp
 
     withComplete :: ExceptT () IO () -> ExceptT () IO a
     withComplete action = do

@@ -1,0 +1,23 @@
+description: "#1371 Mixing one top-level remote and one top level hasura table"
+url: /v1/graphql
+status: 200
+response:
+  data:
+    hello:
+      - name: World
+    user:
+      username: john
+      id: 2
+query:
+  query: |
+    query {
+      # hasura:
+      hello(where: {id: {_eq: 0}}){
+        name
+      }
+      # remote:
+      user(id: 2) {
+        id
+        username
+      }
+    }

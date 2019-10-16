@@ -8,7 +8,8 @@ args:
         code TEXT,
         name TEXT
       );
-
+      INSERT INTO hello (id, code, name)
+      VALUES (0, 'world', 'World');
 - type: track_table
   args:
     schema: public

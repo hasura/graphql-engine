@@ -2,6 +2,8 @@ module Hasura.GraphQL.Transport.HTTP
   ( runGQ
   ) where
 
+import qualified Data.Sequence                          as Seq
+import qualified Data.Text                              as T
 import qualified Network.HTTP.Types                     as N
 
 import           Hasura.EncJSON
@@ -26,13 +28,22 @@ runGQ
   -> m (HttpResponse EncJSON)
 runGQ reqId userInfo reqHdrs req = do
   E.ExecutionCtx _ sqlGenCtx pgExecCtx planCache sc scVer _ enableAL <- ask
-  execPlan <- E.getResolvedExecPlan pgExecCtx planCache
+  fieldPlans <- E.getResolvedExecPlan pgExecCtx planCache
               userInfo sqlGenCtx enableAL sc scVer req
-  case execPlan of
-    E.GExPHasura resolvedOp ->
+  fieldResps <- forM fieldPlans $ \case
+    E.GQFieldResolvedHasura resolvedOp ->
       flip HttpResponse Nothing <$> runHasuraGQ reqId req userInfo resolvedOp
-    E.GExPRemote rsi opDef  ->
-      E.execRemoteGQ reqId userInfo reqHdrs req rsi opDef
+    E.GQFieldResolvedRemote rsi opType field ->
+      E.execRemoteGQ reqId userInfo reqHdrs rsi opType (Seq.singleton field)
+
+  let mergedResp = mergeResponses (fmap _hrBody fieldResps)
+  case mergedResp of
+    Left e ->
+      throw400
+        UnexpectedPayload
+        ("could not merge data from results: " <> T.pack e)
+    Right mergedGQResp ->
+      pure (HttpResponse mergedGQResp (foldMap _hrHeaders fieldResps))
 
 runHasuraGQ
   :: ( MonadIO m

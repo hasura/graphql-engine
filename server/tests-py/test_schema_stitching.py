@@ -186,6 +186,8 @@ class TestRemoteSchemaBasic:
         st_code, resp = hge_ctx.v1q_f(self.dir + '/basic_bulk_remove_add.yaml')
         assert st_code == 200, resp
 
+    def test_remote_query_variables(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/basic_query_with_variables.yaml')
 
 class TestAddRemoteSchemaTbls:
     """ tests with adding a table in hasura """
@@ -223,6 +225,10 @@ class TestAddRemoteSchemaTbls:
 
     def test_remote_query(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/simple2_query.yaml')
+
+    # https://github.com/hasura/graphql-engine/issues/1371
+    def test_heterogeneous_query(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/simple2_heterogeneous_query.yaml')
 
     def test_remote_mutation(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/simple2_mutation.yaml')
@@ -347,10 +353,10 @@ class TestRemoteSchemaQueriesOverWebsocket:
         try:
             ev = next(resp)
             print(ev)
-            assert ev['type'] == 'data' and ev['id'] == query_id, ev
+            assert ev['type'] == 'error' and ev['id'] == query_id, ev
             assert 'errors' in ev['payload']
             assert ev['payload']['errors'][0]['message'] == \
-                'Cannot query field "blah" on type "User".'
+                'field "blah" not found in type: \'User\''
         finally:
             ws_client.stop(query_id)
 
