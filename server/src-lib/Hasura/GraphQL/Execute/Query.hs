@@ -62,12 +62,12 @@ instance J.ToJSON RootFieldPlan where
     RFPRaw encJson     -> J.toJSON $ TBS.fromBS encJson
     RFPPostgres pgPlan -> J.toJSON pgPlan
 
-type FieldPlans = [(G.Alias, RootFieldPlan)]
+type FieldPlan = (G.Alias, RootFieldPlan)
 
 data ReusableQueryPlan
   = ReusableQueryPlan
   { _rqpVariableTypes :: !ReusableVariableTypes
-  , _rqpFldPlans      :: !FieldPlans
+  , _rqpFldPlan       :: !FieldPlan
   }
 
 instance J.ToJSON ReusableQueryPlan where
@@ -95,18 +95,18 @@ withPlan usrVars (PGPlan q reqVars prepMap) annVars = do
 mkCurPlanTx
   :: (MonadError QErr m)
   => UserVars
-  -> FieldPlans
+  -> FieldPlan
   -> m (LazyRespTx, GeneratedSqlMap)
-mkCurPlanTx usrVars fldPlans = do
+mkCurPlanTx usrVars (alias, fldPlan) = do
   -- generate the SQL and prepared vars or the bytestring
-  resolved <- forM fldPlans $ \(alias, fldPlan) -> do
-    fldResp <- case fldPlan of
-      RFPRaw resp                      -> return $ RRRaw resp
-      RFPPostgres (PGPlan q _ prepMap) -> do
-        let args = withUserVars usrVars $ IntMap.elems prepMap
-        return $ RRSql $ PreparedSql q args
-    return (alias, fldResp)
+  fldResp <- case fldPlan of
+    RFPRaw resp                      -> return $ RRRaw resp
+    RFPPostgres (PGPlan q _ prepMap) -> do
+      let args = withUserVars usrVars $ IntMap.elems prepMap
+      return $ RRSql $ PreparedSql q args
+  let resolved = [(alias, fldResp)]
 
+  -- TODO maybe continue refactoring so these two functions take a tuple:
   return (mkLazyRespTx resolved, mkGeneratedSqlMap resolved)
 
 withUserVars :: UserVars -> [Q.PrepArg] -> [Q.PrepArg]
@@ -167,6 +167,7 @@ prepareWithPlan = \case
 queryRootName :: Text
 queryRootName = "query_root"
 
+-- TODO rename this:
 convertQuerySelSet
   :: ( MonadError QErr m
      , MonadReader r m
@@ -177,23 +178,25 @@ convertQuerySelSet
      , Has SQLGenCtx r
      , Has UserInfo r
      )
-  => V.SelSet
+  => V.Field
+  -- ^ Field of top-level selection set
   -> m (LazyRespTx, Maybe ReusableQueryPlan, GeneratedSqlMap)
-convertQuerySelSet fields = do
+convertQuerySelSet field = do
   usrVars <- asks (userVars . getter)
-  (fldPlans, varTypes) <- runResolveT . forM (toList fields) $ \fld -> do
-    fldPlan <- case V._fName fld of
-      "__type"     -> fldPlanFromJ <$> R.typeR fld
-      "__schema"   -> fldPlanFromJ <$> R.schemaR fld
+  (fieldPlan, varTypes) <- runResolveT $ do
+    fldPlan <- case V._fName field of
+      "__type"     -> fldPlanFromJ <$> R.typeR field
+      "__schema"   -> fldPlanFromJ <$> R.schemaR field
       "__typename" -> pure $ fldPlanFromJ queryRootName
       _            -> do
-        unresolvedAst <- R.queryFldToPGAST fld
+        unresolvedAst <- R.queryFldToPGAST field
         (q, PlanningSt _ vars prepped) <- flip runStateT initPlanningSt $
           R.traverseQueryRootFldAST prepareWithPlan unresolvedAst
         pure . RFPPostgres $ PGPlan (R.toPGQuery q) vars prepped
-    pure (V._fAlias fld, fldPlan)
-  let reusablePlan = ReusableQueryPlan <$> varTypes <*> pure fldPlans
-  (tx, sql) <- mkCurPlanTx usrVars fldPlans
+    pure (V._fAlias field, fldPlan)
+  -- TODO so this latter can become a singleton (G.Alias, RootFieldPlan) ?
+  let reusablePlan = ReusableQueryPlan <$> varTypes <*> pure fieldPlan
+  (tx, sql) <- mkCurPlanTx usrVars fieldPlan
   pure (tx, reusablePlan, sql)
 
 -- use the existing plan and new variables to create a pg query
@@ -203,10 +206,10 @@ queryOpFromPlan
   -> Maybe GH.VariableValues
   -> ReusableQueryPlan
   -> m (LazyRespTx, GeneratedSqlMap)
-queryOpFromPlan usrVars varValsM (ReusableQueryPlan varTypes fldPlans) = do
+queryOpFromPlan usrVars varValsM (ReusableQueryPlan varTypes (alias, fldPlan)) = do
   validatedVars <- GV.validateVariablesForReuse varTypes varValsM
   -- generate the SQL and prepared vars or the bytestring
-  resolved <- forM fldPlans $ \(alias, fldPlan) ->
+  resolved <- pure <$>
     (alias,) <$> case fldPlan of
       RFPRaw resp        -> return $ RRRaw resp
       RFPPostgres pgPlan -> RRSql <$> withPlan usrVars pgPlan validatedVars

@@ -226,6 +226,10 @@ class TestAddRemoteSchemaTbls:
     def test_remote_query(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/simple2_query.yaml')
 
+    # https://github.com/hasura/graphql-engine/issues/1371
+    def test_heterogeneous_query(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/simple2_heterogeneous_query.yaml')
+
     def test_remote_mutation(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/simple2_mutation.yaml')
 

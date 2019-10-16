@@ -1,8 +1,8 @@
 module Hasura.GraphQL.Execute.Plan
   ( ReusablePlan(..)
   , PlanCache
-  , getPlan
-  , addPlan
+  , getPlans
+  , addPlans
   , initPlanCache
   , clearPlanCache
   , dumpPlanCache
@@ -12,6 +12,7 @@ import qualified Hasura.Cache                           as Cache
 import           Hasura.Prelude
 
 import qualified Data.Aeson                             as J
+import qualified Data.Sequence                          as Seq
 
 import qualified Hasura.GraphQL.Execute.LiveQuery       as LQ
 import qualified Hasura.GraphQL.Execute.Query           as EQ
@@ -39,7 +40,17 @@ instance J.ToJSON PlanId where
 
 newtype PlanCache
   = PlanCache
-  { _unPlanCache :: Cache.UnboundedCache PlanId ReusablePlan
+  { _unPlanCache :: Cache.UnboundedCache PlanId (Seq.Seq ReusablePlan)
+  -- ^ We cache resusable plan for each top-level field, using a hash key
+  -- that represents the entire query. This is pretty weird; I think we'd
+  -- prefer if the cache were more granular as long as we're already using
+  -- separate plans for top-level fields.
+  --
+  -- We would need to at least parse the query again to do that. Without
+  -- benchmarks I can't tell how much more work is acceptable to do before we
+  -- lose the benefits of having the cache.
+  --
+  -- The cache payload should be non-empty.
   }
 
 data ReusablePlan
@@ -54,18 +65,18 @@ instance J.ToJSON ReusablePlan where
 initPlanCache :: IO PlanCache
 initPlanCache = PlanCache <$> Cache.initCache
 
-getPlan
+getPlans
   :: SchemaCacheVer -> RoleName -> Maybe GH.OperationName -> GH.GQLQueryText
-  -> PlanCache -> IO (Maybe ReusablePlan)
-getPlan schemaVer rn opNameM q (PlanCache planCache) =
+  -> PlanCache -> IO (Maybe (Seq.Seq ReusablePlan))
+getPlans schemaVer rn opNameM q (PlanCache planCache) =
   Cache.lookup planCache planId
   where
     planId = PlanId schemaVer rn opNameM q
 
-addPlan
+addPlans
   :: SchemaCacheVer -> RoleName -> Maybe GH.OperationName -> GH.GQLQueryText
-  -> ReusablePlan -> PlanCache -> IO ()
-addPlan schemaVer rn opNameM q queryPlan (PlanCache planCache) =
+  -> Seq.Seq ReusablePlan -> PlanCache -> IO ()
+addPlans schemaVer rn opNameM q queryPlan (PlanCache planCache) =
   Cache.insert planCache planId queryPlan
   where
     planId = PlanId schemaVer rn opNameM q
