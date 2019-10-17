@@ -1,3 +1,6 @@
+{-# LANGUAGE NamedFieldPuns  #-}
+{-# LANGUAGE RecordWildCards #-}
+
 module Hasura.GraphQL.Transport.HTTP
   ( runGQ
   ) where
@@ -27,14 +30,18 @@ runGQ
   -> GQLReqUnparsed
   -> m (HttpResponse EncJSON)
 runGQ reqId userInfo reqHdrs req = do
-  E.ExecutionCtx _ sqlGenCtx pgExecCtx planCache sc scVer _ enableAL <- ask
+  E.ExecutionCtx logger sqlGenCtx pgExecCtx planCache sc scVer _ enableAL <- ask
   fieldPlans <- E.getResolvedExecPlan pgExecCtx planCache
               userInfo sqlGenCtx enableAL sc scVer req
-  fieldResps <- forM fieldPlans $ \case
+  (fieldResps, qLog) <- flip runStateT (QueryLog req [] reqId) $
+    forM fieldPlans $ \case
     E.GQFieldResolvedHasura resolvedOp ->
-      flip HttpResponse Nothing <$> runHasuraGQ reqId req userInfo resolvedOp
+      flip HttpResponse Nothing <$> runHasuraGQ userInfo resolvedOp
     E.GQFieldResolvedRemote rsi opType field ->
-      E.execRemoteGQ reqId userInfo reqHdrs rsi opType (Seq.singleton field)
+      E.execRemoteGQ userInfo reqHdrs rsi opType (Seq.singleton field)
+
+  -- log the generated SQL and the graphql query
+  liftIO $ logGraphqlQuery logger qLog
 
   let mergedResp = mergeResponses (fmap _hrBody fieldResps)
   case mergedResp of
@@ -49,23 +56,21 @@ runHasuraGQ
   :: ( MonadIO m
      , MonadError QErr m
      , MonadReader E.ExecutionCtx m
+     , MonadState QueryLog m
      )
-  => RequestId
-  -> GQLReqUnparsed
-  -> UserInfo
+  => UserInfo
   -> E.ExecOp
   -> m EncJSON
-runHasuraGQ reqId query userInfo resolvedOp = do
-  E.ExecutionCtx logger _ pgExecCtx _ _ _ _ _ <- ask
-  respE <- liftIO $ runExceptT $ case resolvedOp of
+runHasuraGQ userInfo resolvedOp = do
+  E.ExecutionCtx{_ecxPgExecCtx} <- ask
+  respE <- case resolvedOp of
     E.ExOpQuery tx genSql  -> do
-      -- log the generated SQL and the graphql query
-      liftIO $ logGraphqlQuery logger $ QueryLog query genSql reqId
-      runLazyTx' pgExecCtx tx
+      E.addToLog genSql
+      liftIO $ runExceptT $ runLazyTx' _ecxPgExecCtx tx
     E.ExOpMutation tx -> do
-      -- log the graphql query
-      liftIO $ logGraphqlQuery logger $ QueryLog query Nothing reqId
-      runLazyTx pgExecCtx $ withUserInfo userInfo tx
+      -- mutations do not have a GeneratedSqlMap hence no logging done here
+      -- TODO: try to add (field, empty) here
+      liftIO $ runExceptT $ runLazyTx _ecxPgExecCtx $ withUserInfo userInfo tx
     E.ExOpSubs _ ->
       throw400 UnexpectedPayload
       "subscriptions are not supported over HTTP, use websockets instead"

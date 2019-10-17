@@ -23,15 +23,15 @@ import qualified Hasura.Logging                         as L
 -- | 'QueryLog'
 data QueryLog
   = QueryLog
-  { _qlQuery        :: !GQLReqUnparsed
-  , _qlGeneratedSql :: !(Maybe EQ.GeneratedSqlMap)
-  , _qlRequestId    :: !RequestId
+  { _qlQuery           :: !GQLReqUnparsed
+  , _qlGeneratedSqlMap :: !EQ.GeneratedSqlMap
+  , _qlRequestId       :: !RequestId
   }
 
 instance J.ToJSON QueryLog where
   toJSON (QueryLog q sql reqId) =
     J.object [ "query" J..= q
-             , "generated_sql" J..= (encodeSql <$> sql)
+             , "generated_sql" J..= (encodeSql sql)
              , "request_id" J..= reqId
              ]
 

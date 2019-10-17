@@ -1,4 +1,6 @@
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE NamedFieldPuns  #-}
+{-# LANGUAGE RankNTypes      #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Hasura.GraphQL.Transport.WebSocket
   ( createWSServerApp
@@ -287,8 +289,8 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   splitExecPlans <- either (withComplete . preExecErr requestId) return splitExecPlansE
   case splitExecPlans of
     Left lqOp -> do
-      -- log the graphql query
-      liftIO $ logGraphqlQuery logger $ QueryLog q Nothing requestId
+      -- log the graphql subscription query
+      liftIO $ logGraphqlQuery logger $ QueryLog q [] requestId
       lqId <- liftIO $ LQ.addLiveQuery lqMap lqOp liveQOnChange
       liftIO $ STM.atomically $
         STMMap.insert (lqId, _grOperationName q) opId opMap
@@ -296,18 +298,20 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
     Right queryOrMutPlans -> do
       logOpEv ODStarted (Just requestId)
-      fieldRespsE <- liftIO $
+      (fieldRespsE, qLog) <- flip runStateT (QueryLog q [] requestId) $
         runExceptT $ do
         flip mapM queryOrMutPlans $ \case
           E.GQFieldResolvedHasura execOp ->
             case execOp of
               E.ExOpQuery opTx genSql ->
                 fmap (encodeGQResp . GQSuccess . encJToLBS) $
-                execQueryOrMut requestId q genSql $
+                execQueryOrMut genSql $
                 runLazyTx' pgExecCtx opTx
               E.ExOpMutation opTx ->
                 fmap (encodeGQResp . GQSuccess . encJToLBS) $
-                execQueryOrMut requestId q Nothing $
+                -- mutations do not have a GeneratedSqlMap hence pass []
+                -- TODO: try to add (field, empty) here
+                execQueryOrMut [] $
                 runLazyTx pgExecCtx $ withUserInfo userInfo opTx
               E.ExOpSubs {} ->
                 throwError
@@ -315,7 +319,9 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
                      Unexpected
                      "did not expect subscription field here")
           E.GQFieldResolvedRemote rsi opType field ->
-            runRemoteGQ execCtx requestId userInfo reqHdrs rsi opType (Seq.singleton field)
+            runRemoteGQ execCtx userInfo reqHdrs rsi opType (Seq.singleton field)
+      -- log the generated SQL and the graphql query
+      liftIO $ logGraphqlQuery logger qLog
       case fieldRespsE of
         Left err -> postExecErr requestId err
         Right fieldResps -> do
@@ -331,7 +337,10 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       sendCompleted (Just requestId)
   where
     -- This function breaks the execution plan as Left subscription or Right queryOrMut
-    splitExecPlan :: (QErrM m) => Seq.Seq E.GQFieldResolvedPlan -> m (Either LQ.LiveQueryPlan (Seq.Seq E.GQFieldResolvedPlan))
+    splitExecPlan
+      :: (QErrM m)
+      => Seq.Seq E.GQFieldResolvedPlan
+      -> m (Either LQ.LiveQueryPlan (Seq.Seq E.GQFieldResolvedPlan))
     splitExecPlan fieldPlans = do
       let subscriptionFields = mapMaybe getSubscriptionOps (toList fieldPlans)
       case subscriptionFields of
@@ -343,25 +352,25 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       E.GQFieldResolvedHasura (E.ExOpSubs lqOp) -> Just lqOp
       _ -> Nothing
 
-    execQueryOrMut reqId query genSql action = do
-      -- log the generated SQL and the graphql query
-      -- liftIO $ logGraphqlQuery logger $ QueryLog query genSql reqId
+    execQueryOrMut genSql action = do
+      E.addToLog genSql
       resp <- liftIO $ runExceptT action
       liftEither resp
 
-    runRemoteGQ :: (MonadError QErr m, MonadIO m)
-      => E.ExecutionCtx -> RequestId -> UserInfo -> [H.Header]
+    runRemoteGQ :: (MonadError QErr m, MonadIO m, MonadState QueryLog m)
+      => E.ExecutionCtx -> UserInfo -> [H.Header]
       -> RemoteSchemaInfo -> G.OperationType -> VQ.SelSet
       -> m EncJSON
-    runRemoteGQ execCtx reqId userInfo reqHdrs rsi opType selSet = do
+    runRemoteGQ execCtx userInfo reqHdrs rsi opType selSet = do
       when (opType == G.OperationTypeSubscription) $
         throwError $
         err400 NotSupported "subscription to remote server is not supported"
 
-      -- if it's not a subscription, use HTTP to execute the query on the remote
-      resp <- runExceptT $ flip runReaderT execCtx $
-              E.execRemoteGQ reqId userInfo reqHdrs rsi opType selSet
-      liftEither (fmap _hrBody resp)
+      E.addToLog (E.toEmptySqlMap selSet)
+      respE <- runExceptT $ flip runReaderT execCtx $
+              E.execRemoteGQ userInfo reqHdrs rsi opType selSet
+      resp <- liftEither $ fmap _hrBody respE
+      pure resp
 
     WSServerEnv logger pgExecCtx lqMap gCtxMapRef httpMgr _ sqlGenCtx planCache
       _ enableAL = serverEnv
