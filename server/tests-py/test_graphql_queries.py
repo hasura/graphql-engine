@@ -516,3 +516,12 @@ class TestGraphQLQueryComputedFields(DefaultTestSelectQueries):
 
     def test_computed_fields_permission(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/computed_fields_permission.yaml', transport)
+
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+class TestGraphQLQueryCaching(DefaultTestSelectQueries):
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/caching'
+
+    def test_include_directive(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/include_directive.yaml', transport)

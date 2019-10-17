@@ -20,7 +20,7 @@ import qualified Hasura.SQL.DML                    as S
 
 type OpExp = OpExpG UnresolvedVal
 
-parseOpExps :: (MonadResolve m) => PGColumnType -> AnnInpVal -> m [OpExp]
+parseOpExps :: (MonadReusability m, MonadError QErr m) => PGColumnType -> AnnInpVal -> m [OpExp]
 parseOpExps colTy annVal = do
   opExpsM <- flip withObjectM annVal $ \nt objM -> forM objM $ \obj ->
     forM (OMap.toList obj) $ \(k, v) ->
@@ -138,7 +138,7 @@ parseOpExps colTy annVal = do
       mkParameterizablePGValue <$> asPGColumnValue geomminVal
 
 parseCastExpression
-  :: (MonadResolve m)
+  :: (MonadReusability m, MonadError QErr m)
   => AnnInpVal -> m (Maybe (CastExp UnresolvedVal))
 parseCastExpression =
   withObjectM $ \_ objM -> forM objM $ \obj -> do
@@ -149,7 +149,8 @@ parseCastExpression =
     return $ Map.fromList targetExps
 
 parseColExp
-  :: ( MonadResolve m
+  :: ( MonadReusability m
+     , MonadError QErr m
      , MonadReader r m
      , Has FieldMap r
      )
@@ -169,7 +170,8 @@ parseColExp nt n val = do
           "computed fields are not allowed in bool_exp"
 
 parseBoolExp
-  :: ( MonadResolve m
+  :: ( MonadReusability m
+     , MonadError QErr m
      , MonadReader r m
      , Has FieldMap r
      )

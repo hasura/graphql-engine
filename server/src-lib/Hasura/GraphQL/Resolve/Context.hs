@@ -103,7 +103,7 @@ withArg args arg f = prependArgsInPath $ nameAsPath arg $
   getArg args arg >>= f
 
 withArgM
-  :: (MonadResolve m)
+  :: (MonadReusability m, MonadError QErr m)
   => ArgsMap
   -> G.Name
   -> (AnnInpVal -> m a)

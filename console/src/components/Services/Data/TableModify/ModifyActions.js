@@ -29,6 +29,12 @@ import {
 import { isPostgresFunction } from '../utils';
 import { sqlEscapeText } from '../../../Common/utils/sqlUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import {
+  findTable,
+  generateTableDef,
+  getTableCheckConstraints,
+  findTableCheckConstraint,
+} from '../../../Common/utils/pgUtils';
 
 import {
   fetchColumnCastsQuery,
@@ -127,6 +133,61 @@ const removePrimaryKey = pkIndex => ({
 const resetPrimaryKeys = () => ({
   type: RESET_PRIMARY_KEY,
 });
+
+export const removeCheckConstraint = constraintName => (dispatch, getState) => {
+  const confirmMessage = `This will permanently delete the check constraint "${constraintName}" from this table`;
+  const isOk = getConfirmation(confirmMessage, true, constraintName);
+  if (!isOk) return;
+
+  const { currentTable: tableName, currentSchema } = getState().tables;
+
+  const table = findTable(
+    getState().tables.allSchemas,
+    generateTableDef(tableName, currentSchema)
+  );
+
+  const constraint = findTableCheckConstraint(
+    getTableCheckConstraints(table),
+    constraintName
+  );
+
+  const upQuery = {
+    type: 'run_sql',
+    args: {
+      sql: `alter table "${currentSchema}"."${tableName}" drop constraint "${constraintName}"`,
+    },
+  };
+  const downQuery = {
+    type: 'run_sql',
+    args: {
+      sql: `alter table "${currentSchema}"."${tableName}" add constraint "${constraintName}" ${
+        constraint.check
+      };`,
+    },
+  };
+
+  const migrationName = `drop_check_constraint_${currentSchema}_${tableName}_${constraintName}`;
+  const requestMsg = 'Deleting check constraint...';
+  const successMsg = 'Check constraint deleted';
+  const errorMsg = 'Deleting check constraint failed';
+  const customOnSuccess = () => {};
+  const customOnError = err => {
+    dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
+  };
+
+  makeMigrationCall(
+    dispatch,
+    getState,
+    [upQuery],
+    [downQuery],
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg
+  );
+};
 
 const savePrimaryKeys = (tableName, schemaName, constraintName) => {
   return (dispatch, getState) => {
@@ -332,14 +393,14 @@ const saveForeignKeys = (index, tableSchema, columns) => {
           alter table "${schemaName}"."${tableName}" drop constraint "${generatedConstraintName}",
           add constraint "${constraintName}" 
           foreign key (${Object.keys(oldConstraint.column_mapping)
-    .map(lc => `"${lc}"`)
-    .join(', ')}) 
+            .map(lc => `"${lc}"`)
+            .join(', ')}) 
           references "${oldConstraint.ref_table_table_schema}"."${
-  oldConstraint.ref_table
-}"
+        oldConstraint.ref_table
+      }"
           (${Object.values(oldConstraint.column_mapping)
-    .map(rc => `"${rc}"`)
-    .join(', ')}) 
+            .map(rc => `"${rc}"`)
+            .join(', ')}) 
           on update ${pgConfTypes[oldConstraint.on_update]}
           on delete ${pgConfTypes[oldConstraint.on_delete]};
         `;
@@ -597,8 +658,8 @@ const deleteTrigger = (trigger, table) => {
 
     downMigrationSql += `CREATE TRIGGER "${triggerName}"
 ${trigger.action_timing} ${
-  trigger.event_manipulation
-} ON "${tableSchema}"."${tableName}"
+      trigger.event_manipulation
+    } ON "${tableSchema}"."${tableName}"
 FOR EACH ${trigger.action_orientation} ${trigger.action_statement};`;
 
     if (trigger.comment) {
@@ -1459,24 +1520,24 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     const schemaChangesUp =
       originalColType !== colType
         ? [
-          {
-            type: 'run_sql',
-            args: {
-              sql: columnChangesUpQuery,
+            {
+              type: 'run_sql',
+              args: {
+                sql: columnChangesUpQuery,
+              },
             },
-          },
-        ]
+          ]
         : [];
     const schemaChangesDown =
       originalColType !== colType
         ? [
-          {
-            type: 'run_sql',
-            args: {
-              sql: columnChangesDownQuery,
+            {
+              type: 'run_sql',
+              args: {
+                sql: columnChangesDownQuery,
+              },
             },
-          },
-        ]
+          ]
         : [];
 
     /* column default up/down migration */
