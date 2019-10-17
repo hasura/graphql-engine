@@ -111,40 +111,43 @@ class ApiRequest extends Component {
       10
     );
 
-    this.setState({
+    this.setState((prevState) => ({
+      ...prevState,
       isAnalyzingToken: true,
       analyzingHeaderRow,
       tokenInfo: {
-        ...this.state.tokenInfo,
+        ...prevState.tokenInfo,
         serverResp: {},
         error: null,
       },
-    });
+    }));
 
     const decodeAndSetState = serverResp => {
       const decoded = jwt.decode(token, { complete: true });
 
       if (decoded) {
-        this.setState({
+        this.setState((prevState) => ({
+          ...prevState,
           tokenInfo: {
-            ...this.state.tokenInfo,
+            ...prevState.tokenInfo,
             header: decoded.header,
             payload: decoded.payload,
             error: null,
             serverResp: serverResp,
           },
-        });
+        }));
       } else {
         const message =
           'This JWT seems to be invalid. Please check the token value and try again!';
 
-        this.setState({
+        this.setState((prevState) => ({
+          ...prevState,
           tokenInfo: {
             ...this.state.tokenInfo,
             error: message,
             serverResp: serverResp,
           },
-        });
+        }));
       }
     };
 
