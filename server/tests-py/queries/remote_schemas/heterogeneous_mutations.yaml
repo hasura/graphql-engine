@@ -1,0 +1,107 @@
+# We want to ensure:
+#   - mixing hasura and remote actually works at all
+#   - mutations are executed serially
+description: Mixing multiple local hasura and remote mutations
+url: /v1/graphql
+status: 200
+response:
+  data:
+    a:
+      user:
+        username: foobar2
+        id: 124
+    b:
+      returning:
+      - name: A1
+        code: 1
+    ua:
+      affected_rows: 1
+      returning:
+      # This row was already in the DB; we might like 
+      - name: A1
+        code: 2
+    c:
+      returning:
+      - name: B1
+        code: 1
+    ub:
+      affected_rows: 2
+      returning:
+      - name: A1
+        code: 5
+      - name: B1
+        code: 4
+    a2:
+      user:
+        id: 124
+        username: foobar2
+query:
+  query: |
+    mutation {
+      # Remote
+      a: createUser(id: 124, username: "foobar2") {
+        user {
+          id
+          username
+        }
+      }
+      # Hasura
+      b: insert_hello(
+        objects: [
+          { name: "A1"
+          , code: 1
+          }
+        ]
+      ) {
+          returning {
+            code
+            name
+          }
+        }
+      ua: update_hello(
+        # all rows:
+        where: {id: {_neq: 0}},
+        _inc: {
+          code: 1
+        }
+      ){
+        affected_rows
+        returning{
+          name
+          code
+        }
+      }
+      # Hasura
+      c: insert_hello(
+        objects: [
+          { name: "B1"
+          , code: 1
+          }
+        ]
+      ) {
+          returning {
+            code
+            name
+          }
+        }
+      ub: update_hello(
+        # all rows:
+       where: {id: {_neq: 0}},
+        _inc: {
+          code: 3
+        }
+      ){
+        affected_rows
+        returning{
+          name
+          code
+        }
+      }
+      # query (disguised as mutation) for user created above
+      a2: noopUsername(id: 124) {
+        user {
+          username
+          id
+        }
+      }
+    }

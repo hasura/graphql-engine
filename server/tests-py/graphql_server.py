@@ -87,6 +87,18 @@ class CreateUser(graphene.Mutation):
         all_users.append(user)
         return CreateUser(ok=True, user=user)
 
+# Just UserQuery.resolve_user but as a mutation, for testing
+class NoopUsername(graphene.Mutation):
+    class Arguments:
+        id = graphene.Int(required=True)
+
+    ok = graphene.Boolean()
+    user = graphene.Field(lambda: User)
+
+    def mutate(self, info, id):
+        user = User.get_by_id(id)
+        return NoopUsername(ok=True, user=user)
+
 class UserQuery(graphene.ObjectType):
     user = graphene.Field(User, id=graphene.Int(required=True))
     allUsers = graphene.List(User)
@@ -99,6 +111,7 @@ class UserQuery(graphene.ObjectType):
 
 class UserMutation(graphene.ObjectType):
     createUser = CreateUser.Field()
+    noopUsername = NoopUsername.Field()
 user_schema = graphene.Schema(query=UserQuery, mutation=UserMutation)
 
 class UserGraphQL(RequestHandler):

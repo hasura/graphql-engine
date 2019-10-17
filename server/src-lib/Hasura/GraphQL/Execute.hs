@@ -240,13 +240,11 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
                         go (hFields Seq.|> field) fps
                       go _ _ = Nothing
            in case allHasuraFields of
-                -- TODO there are no tests for multiple top-level mutations of any sort:
                 Just (gCtx, hFields) -> do
                   mutationTx <-
                     getMutOp gCtx sqlGenCtx userInfo hFields
                   return $ Seq.singleton $ GQFieldResolvedHasura $
                     ExOpMutation mutationTx
-                -- TODO there are no tests for remote mutations at all:
                 Nothing ->
                   forM fieldPlans $ \case
                     GQFieldPartialHasura (gCtx, field) -> do

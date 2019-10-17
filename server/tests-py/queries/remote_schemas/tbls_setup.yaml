@@ -5,11 +5,11 @@ args:
     sql: |
       CREATE TABLE hello (
         id SERIAL PRIMARY KEY,
-        code TEXT,
+        code INT,
         name TEXT
       );
       INSERT INTO hello (id, code, name)
-      VALUES (0, 'world', 'World');
+      VALUES (0, 0, 'World');
 - type: track_table
   args:
     schema: public
