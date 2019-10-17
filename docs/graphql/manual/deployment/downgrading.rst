@@ -82,15 +82,16 @@ Downgrading across catalogue versions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can downgrade the catalogue from a particular version to its previous version by executing the appropriate SQL statements provided below.
-Running these SQL statements on the GraphQL Engine console or via :doc:`Run SQL <../api-reference/schema-metadata-api/run-sql>` metadata API
-may or may not work. It is always recommended to run the SQL statements using external Postgres client (like ``psql``).
 
 .. note::
 
-  Catalogue version downgrades need to be done sequentially.
+  - Running these SQL statements while Hasura GraphQL engine is running might lead to unexpected results. It is recommended to first bring down any running
+    Hasura GraphQL engine instances and then run the SQL statements using an external Postgres client (like ``psql``).
 
-  For example, if you need to downgrade the catalogue version from, say, version 10 to version 8, you need to first run the SQL statements to
-  downgrade from version 10 to version 9 and then the ones for version 9 to version 8
+  - Catalogue version downgrades need to be done sequentially.
+
+    i.e. if you need to downgrade the catalogue version from, say, version 10 to version 8, you need to first run the SQL statements to
+    downgrade from version 10 to version 9 and then the ones for version 9 to version 8
 
 .. contents:: Downgrading
   :backlinks: none
