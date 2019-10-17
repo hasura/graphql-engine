@@ -2,7 +2,6 @@ import inflection from 'inflection';
 
 import { makeMigrationCall, updateSchemaInfo } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
-import { getIntrospectionQuery } from 'graphql';
 import { showErrorNotification } from '../../Common/Notification';
 import endpoints from '../../../../Endpoints';
 import requestAction from '../../../../utils/requestAction';
@@ -41,11 +40,14 @@ export const introspectRemoteSchema = (schemaName, introspectionCallback) => {
     const headers = getState().tables.dataHeaders;
     dispatch({ type: INTROSPECTING_REMOTE_SCHEMA });
     return dispatch(
-      requestAction(`${endpoints.graphQLUrl}/proxy/${schemaName}`, {
+      requestAction(`${endpoints.query}`, {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          query: getIntrospectionQuery(),
+          type: 'introspect_remote_schema',
+          args: {
+            name: schemaName,
+          },
         }),
       })
     ).then(
