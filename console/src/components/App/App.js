@@ -23,8 +23,8 @@ class App extends Component {
       telemetry.console_opts &&
       !telemetry.console_opts.telemetryNotificationShown
     ) {
-      dispatch(showTelemetryNotification());
       dispatch(telemetryNotificationShown());
+      dispatch(showTelemetryNotification());
     }
   }
 
