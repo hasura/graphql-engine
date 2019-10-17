@@ -310,6 +310,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
               E.ExOpMutation opTx ->
                 fmap (encodeGQResp . GQSuccess . encJToLBS) $
                 -- mutations do not have a GeneratedSqlMap hence pass []
+                -- TODO: try to add (field, empty) here
                 execQueryOrMut [] $
                 runLazyTx pgExecCtx $ withUserInfo userInfo opTx
               E.ExOpSubs {} ->

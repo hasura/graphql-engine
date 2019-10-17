@@ -68,6 +68,8 @@ runHasuraGQ userInfo resolvedOp = do
       E.addToLog genSql
       liftIO $ runExceptT $ runLazyTx' _ecxPgExecCtx tx
     E.ExOpMutation tx -> do
+      -- mutations do not have a GeneratedSqlMap hence no logging done here
+      -- TODO: try to add (field, empty) here
       liftIO $ runExceptT $ runLazyTx _ecxPgExecCtx $ withUserInfo userInfo tx
     E.ExOpSubs _ ->
       throw400 UnexpectedPayload
