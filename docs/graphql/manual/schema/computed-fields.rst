@@ -1,4 +1,4 @@
-Computed Fields
+Computed fields
 ===============
 
 .. contents:: Table of contents
@@ -9,16 +9,18 @@ Computed Fields
 What are computed fields?
 -------------------------
 
-Computed fields are extra fields added to a table whose value is computed from other columns.
-It facilitates users to define an additional field to an existing table whose
-return value is computed via an SQL function. Computed fields are exposed only over the GraphQL API. The server
-does not modify the database schema to define a computed field. Computed fields are added as a part of
-metadata.
+Computed fields are virtual values or objects that are dynamically computed and can be queried along with a table's columns.
+Computed fields are computed when requested for via SQL functions using other columns of the table and other custom inputs if needed.
+
+.. note::
+
+  Computed fields are only exposed over the GraphQL API and the database schema is not modified on addition of a computed field.
 
 Supported SQL functions
 ***********************
 
 Only functions which satisfy the following constraints can be added as a computed field to a table.
+(*terminology from* `Postgres docs <https://www.postgresql.org/docs/current/sql-createfunction.html>`__):
 
 - **Function behaviour**: ONLY ``STABLE`` or ``IMMUTABLE``
 - **Argument modes**: ONLY ``IN``
@@ -39,7 +41,9 @@ Computed fields whose associated SQL function returns a
 
 **Example:**
 
-The ``author`` table has two ``text`` columns: ``first_name`` and ``last_name``. Define an SQL function called ``author_full_name``:
+The ``author`` table has two ``text`` columns: ``first_name`` and ``last_name``.
+
+Define an SQL function called ``author_full_name``:
 
 .. code-block:: plpgsql
 
@@ -56,8 +60,8 @@ Query data from the ``author`` table:
 .. graphiql::
   :view_only:
   :query:
-    {
-      author{
+    query {
+      author {
         id
         first_name
         last_name
@@ -112,8 +116,8 @@ Query data from the ``author`` table:
 .. graphiql::
   :view_only:
   :query:
-    {
-      author{
+    query {
+      author {
         id
         first_name
         last_name
@@ -135,8 +139,8 @@ Query data from the ``author`` table:
             "get_articles": [
               {
                 "id": 1,
-                "title": "computed fields in Hasura",
-                "content": "Some content related to computed fields"
+                "title": "Computed fields in Hasura",
+                "content": "lorem ipsum dolor sit amet"
               }
             ]
           }
@@ -144,11 +148,11 @@ Query data from the ``author`` table:
       }
     }
 
-Computed field vs. Postgres generated column
---------------------------------------------
+Computed fields vs. Postgres generated columns
+----------------------------------------------
 
 Postgres, from version ``12``, is introducing `Generated Columns <https://www.postgresql.org/docs/12/ddl-generated-columns.html>`__.
 The value of generated columns is also computed from other columns of a table. Postgres' generated columns
-come with its own limitations. Hasura's computed fields are defined via an SQL function, which allows users
+come with their own limitations. Hasura's computed fields are defined via an SQL function, which allows users
 to define any complex business logic in a function. Generated columns will go together with computed fields where
 Hasura treats generated columns as normal Postgres columns.
