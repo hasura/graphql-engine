@@ -80,6 +80,8 @@ Downgrading across catalogue versions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can downgrade the catalogue from a particular version to its previous version by executing the appropriate SQL statements provided below.
+Running these SQL statements on the GraphQL Engine console or via :doc:`Run SQL <../api-reference/schema-metadata-api/run-sql>` metadata API
+may or may not work. It is always recommended to run the SQL statements using external Postgres client (like ``psql``).
 
 .. note::
 
@@ -1108,4 +1110,3 @@ From 2 to 1
   UPDATE hdb_catalog.hdb_version
     SET version = '1'
   WHERE version = '2';
-
