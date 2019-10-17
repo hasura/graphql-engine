@@ -65,8 +65,13 @@ class EditItem extends Component {
 
       const prevValue = oldItem[colName];
 
-      refs[colName] = { valueNode: null, nullNode: null, defaultNode: null };
-      const inputRef = node => (refs[colName].valueNode = node);
+      refs[colName] = {
+        valueNode: null,
+        valueInput: null,
+        nullNode: null,
+        defaultNode: null,
+      };
+      const inputRef = node => (refs[colName].valueInput = node);
 
       const clicker = e => {
         e.target
@@ -149,7 +154,14 @@ class EditItem extends Component {
             {colName}
           </label>
           <label className={styles.radioLabel + ' radio-inline'}>
-            <input type="radio" name={colName + '-value'} value="option1" />
+            <input
+              type="radio"
+              ref={node => {
+                refs[colName].valueNode = node;
+              }}
+              name={colName + '-value'}
+              value="option1"
+            />
             {typedInput}
           </label>
           <label className={styles.radioLabel + ' radio-inline'}>
@@ -205,6 +217,30 @@ class EditItem extends Component {
       );
     }
 
+    const handleSaveClick = e => {
+      e.preventDefault();
+
+      const inputValues = {};
+      Object.keys(refs).map(colName => {
+        if (refs[colName].nullNode.checked) {
+          // null
+          inputValues[colName] = null;
+        } else if (refs[colName].defaultNode.checked) {
+          // default
+          inputValues[colName] = { default: true };
+        } else if (refs[colName].valueNode.checked) {
+          inputValues[colName] =
+            refs[colName].valueInput.props !== undefined
+              ? refs[colName].valueInput.props.value
+              : refs[colName].valueInput.value;
+        }
+      });
+
+      dispatch({ type: E_ONGOING_REQ });
+
+      dispatch(editItem(tableName, inputValues));
+    };
+
     return (
       <div className={styles.container + ' container-fluid'}>
         <TableHeader
@@ -223,26 +259,7 @@ class EditItem extends Component {
                 type="submit"
                 color="yellow"
                 size="sm"
-                onClick={e => {
-                  e.preventDefault();
-                  dispatch({ type: E_ONGOING_REQ });
-                  const inputValues = {};
-                  Object.keys(refs).map(colName => {
-                    if (refs[colName].nullNode.checked) {
-                      // null
-                      inputValues[colName] = null;
-                    } else if (refs[colName].defaultNode.checked) {
-                      // default
-                      return;
-                    } else {
-                      inputValues[colName] =
-                        refs[colName].valueNode.props !== undefined
-                          ? refs[colName].valueNode.props.value
-                          : refs[colName].valueNode.value;
-                    }
-                  });
-                  dispatch(editItem(tableName, inputValues));
-                }}
+                onClick={handleSaveClick}
                 data-test="edit-save-button"
               >
                 {buttonText}
