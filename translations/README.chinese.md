@@ -16,11 +16,11 @@ Hasura可帮助您构建由Postgres支持的GraphQL应用程序，或使用Postg
 
 ------------------
 
-![Hasura GraphQL引擎演示](assets/demo.gif)
+![Hasura GraphQL 引擎演示](../assets/demo.gif)
 
 ------------------
 
-![Hasura GraphQL引擎实时演示](assets/realtime.gif)
+![Hasura GraphQL 引擎实时演示](../assets/realtime.gif)
 
 -------------------
 
@@ -42,23 +42,21 @@ Hasura可帮助您构建由Postgres支持的GraphQL应用程序，或使用Postg
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **目录**
 
-- [快速入门：]（＃快速开始）
-	- [Heroku上的一键式部署]（#一键部署Heroku）
-	- [其他部署方法]（＃其他部署方法）
-- [架构]（＃建筑）
-- [客户端工具]（＃客户端工具）
-- [添加业务逻辑]（＃添加业务逻辑）
-	- [远程模式]（＃远程方案）
-	- [触发数据库事件的Webhooks]（＃在数据库事件上触发webhooks）
-- [Demos]（＃演示）
-	- [实时应用]（＃实时应用）
-	- [视频]（＃影片）
-- [支持和故障排除]（#支持- 故障排除）
-- [贡献]（＃贡献）
-- [品牌资产]（＃品牌资产）
-- [许可证]（＃执照）
-- [翻译]（＃翻译）
-
+- [快速上手:](#quickstart)
+    - [一键式部署到Heroku](#one-click-deployment-on-heroku)
+    - [其他部署方法](#other-deployment-methods)
+- [建筑学](#architecture)
+- [客户端工具](#client-side-tooling)
+- [添加业务逻辑](#add-business-logic)
+    - [远程模式](#remote-schemas)
+    - [通过数据库事件调用Webhook](#trigger-webhooks-on-database-events)
+- [演示版](#demos)
+    - [实时应用](#realtime-applications)
+    - [影片](#videos)
+- [支持与故障排除](#support--troubleshooting)
+- [参与发展](#contributing)
+- [品牌资产](#brand-assets)
+- [执照](#license)
 
 <!-- markdown-toc end -->
 
@@ -210,7 +208,7 @@ GraphQL Engine提供了易于使用，可扩展和高性能的方法，用于向
 
 - [Japanese :jp:](translations/README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
 - [French :fr:](translations/README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
-- [Chinese :zh:](translations/README.chinese.md) (:pray: [@jagreetdg](https://github.com/jagreetdg))
+- [Chinese :cn:](translations/README.chinese.md) (:pray: [@jagreetdg](https://github.com/jagreetdg))
 
 
 可以找到其他文件的翻译 [这里](translations).
