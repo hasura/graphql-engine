@@ -114,7 +114,7 @@ explainGQLQuery
   -> GQLExplain
   -> m EncJSON
 explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw) = do
-  E.GQExecPlanPartial opType fieldPlans <-
+  E.GQExecPlanPartial gCtx opType fieldPlans <-
     E.getExecPlanPartial userInfo sc enableAL query
   let hasuraFieldPlans = mapMaybe getHasuraField (toList fieldPlans)
   if null hasuraFieldPlans
@@ -125,12 +125,12 @@ explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw) =
       runInTx $
       encJFromJValue <$>
       traverse
-        (\(gCtx, field) -> explainField userInfo gCtx sqlGenCtx field)
+        (explainField userInfo gCtx sqlGenCtx)
         hasuraFieldPlans
     G.OperationTypeMutation ->
       throw400 InvalidParams "only queries can be explained"
     G.OperationTypeSubscription -> do
-      (gCtx, rootField) <- getRootField hasuraFieldPlans
+      rootField <- getRootField hasuraFieldPlans
       (plan, _) <- E.getSubsOp pgExecCtx gCtx sqlGenCtx userInfo rootField
       runInTx $ encJFromJValue <$> E.explainLiveQueryPlan plan
   where
