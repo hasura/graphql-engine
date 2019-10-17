@@ -55,5 +55,6 @@ For access to Hasura GraphQL engine logs, check the below page for details:
    securing-graphql-endpoint
    allow-list
    postgres-permissions
-   Updating GraphQL engine <updating>
    HTTP Compression <compression>
+   Updating GraphQL engine <updating>
+   Downgrading GraphQL engine <downgrading>
