@@ -12,7 +12,7 @@ import qualified Database.PG.Query          as Q
 import qualified Network.URI.Extended       as N
 
 import           Hasura.RQL.DDL.Headers     (HeaderConf (..))
-import           Hasura.RQL.Types.Common    (NonEmptyText)
+import           Hasura.RQL.Types.Common    (NonEmptyText (..))
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Types
 
@@ -22,6 +22,9 @@ newtype RemoteSchemaName
   = RemoteSchemaName
   { unRemoteSchemaName :: NonEmptyText}
   deriving (Show, Eq, Lift, Hashable, ToJSON, ToJSONKey, FromJSON, Q.ToPrepArg, Q.FromCol, DQuote)
+
+remoteSchemaNameToTxt :: RemoteSchemaName -> Text
+remoteSchemaNameToTxt = unNonEmptyText . unRemoteSchemaName
 
 data RemoteSchemaInfo
   = RemoteSchemaInfo
