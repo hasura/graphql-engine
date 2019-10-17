@@ -1,3 +1,5 @@
+{-# LANGUAGE ViewPatterns #-}
+
 module Hasura.RQL.DDL.RemoteSchema
   ( runAddRemoteSchema
   , runRemoveRemoteSchema
@@ -8,22 +10,29 @@ module Hasura.RQL.DDL.RemoteSchema
   , addRemoteSchemaP1
   , addRemoteSchemaP2Setup
   , addRemoteSchemaP2
+  , runIntrospectRemoteSchema
   ) where
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Deps
 
-import qualified Data.Aeson                   as J
-import qualified Data.HashMap.Strict          as Map
-import qualified Database.PG.Query            as Q
+import qualified Data.Aeson                             as J
+import qualified Data.HashMap.Strict                    as Map
+import qualified Data.Sequence                          as Seq
+import qualified Data.Text                              as T
+import qualified Database.PG.Query                      as Q
 
 import           Hasura.GraphQL.RemoteServer
+import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Hasura.GraphQL.Schema        as GS
-import qualified Hasura.RQL.Types.SchemaCache as SC
+import qualified Hasura.GraphQL.Context                 as GC
+import qualified Hasura.GraphQL.Resolve.Introspect      as RI
+import qualified Hasura.GraphQL.Schema                  as GS
+import qualified Hasura.GraphQL.Validate                as VQ
+import qualified Hasura.RQL.Types.SchemaCache           as SC
 
 runAddRemoteSchema
   :: ( QErrM m, UserInfoM m
@@ -169,3 +178,38 @@ fetchRemoteSchemas =
      |] () True
   where
     fromRow (n, Q.AltJ def, comm) = AddRemoteSchemaQuery n def comm
+
+runIntrospectRemoteSchema :: (UserInfoM m, CacheRM m, QErrM m) => RemoteSchemaNameQuery -> m EncJSON
+runIntrospectRemoteSchema (RemoteSchemaNameQuery rsName) = do
+  adminOnly
+  sc <- askSchemaCache
+  introspectionReq <-
+    onNothing (J.decode introspectionQuery) $
+    throw500 "could not decode introspection query"
+  req <- toParsed introspectionReq
+  rGCtx <-
+    case Map.lookup rsName (scRemoteSchemas sc) of
+      Nothing ->
+        throw400 NotExists $
+        "remote schema: " <> remoteSchemaNameToTxt rsName <> " not found"
+      Just rCtx -> mergeGCtx (convRemoteGCtx $ rscGCtx rCtx) GC.emptyGCtx
+      -- ^ merge with emptyGCtx to get default query fields
+  queryParts <- flip runReaderT rGCtx $ VQ.getQueryParts req
+  rootSelSet <- flip runReaderT rGCtx $ VQ.validateGQ queryParts
+  schemaField <-
+    case rootSelSet of
+      VQ.RQuery (Seq.viewl -> selSet) -> getSchemaField selSet
+      _ -> throw500 "expected query for introspection"
+  introRes <- flip runReaderT rGCtx $ RI.schemaR schemaField
+  pure $ wrapInSpecKeys introRes
+  where
+    wrapInSpecKeys introObj =
+      encJFromAssocList
+        [ ( T.pack "data"
+          , encJFromAssocList [(T.pack "__schema", encJFromJValue introObj)])
+        ]
+    getSchemaField =
+      \case
+        Seq.EmptyL -> throw500 "found empty when looking for __schema field"
+        (f Seq.:< Seq.Empty) -> pure f
+        _ -> throw500 "expected __schema field, found many fields"
