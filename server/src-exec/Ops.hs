@@ -88,7 +88,7 @@ initCatalogStrict createSchema initTime =  do
   -- add default metadata
   void $ runQueryM metadataQuery
 
-  setAllAsSystemDefined >> addVersion initTime
+  addVersion initTime
   return "successfully initialised"
 
   where
@@ -119,12 +119,6 @@ initCatalogStrict createSchema initTime =  do
            )
                     |] (Identity sn) False
 
-
-setAllAsSystemDefined :: (MonadTx m) => m ()
-setAllAsSystemDefined = liftTx $ Q.catchE defaultTxErrorHandler $ do
-  Q.unitQ "UPDATE hdb_catalog.hdb_table SET is_system_defined = 'true'" () False
-  Q.unitQ "UPDATE hdb_catalog.hdb_relationship SET is_system_defined = 'true'" () False
-  Q.unitQ "UPDATE hdb_catalog.hdb_permission SET is_system_defined = 'true'" () False
 
 cleanCatalog :: (MonadTx m) => m ()
 cleanCatalog = liftTx $ Q.catchE defaultTxErrorHandler $ do

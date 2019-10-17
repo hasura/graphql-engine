@@ -229,6 +229,7 @@ applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = 
   liftTx clearMetadata
   DS.buildSchemaCacheStrict
 
+  systemDefined <- askSystemDefined
   withPathK "tables" $ do
     -- tables and views
     indexedForM_ tables $ \tableMeta -> do
@@ -271,7 +272,7 @@ applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = 
   -- query collections
   withPathK "query_collections" $
     indexedForM_ collections $ \c -> do
-    liftTx $ DQC.addCollectionToCatalog c
+    liftTx $ DQC.addCollectionToCatalog c systemDefined
 
   -- allow list
   withPathK "allowlist" $ do
@@ -363,7 +364,7 @@ fetchMetadata = do
   schemas <- DRS.fetchRemoteSchemas
 
   -- fetch all collections
-  collections <- DQC.fetchAllCollections
+  collections <- fetchCollections
 
   -- fetch allow list
   allowlist <- map DQC.CollectionReq <$> DQC.fetchAllowlist
@@ -421,12 +422,22 @@ fetchMetadata = do
               SELECT e.schema_name, e.table_name, e.configuration::json
                FROM hdb_catalog.event_triggers e
               |] () False
+
     fetchFunctions =
       Q.listQ [Q.sql|
                 SELECT function_schema, function_name
                 FROM hdb_catalog.hdb_function
                 WHERE is_system_defined = 'false'
                     |] () False
+
+    fetchCollections = do
+      r <- Q.listQE defaultTxErrorHandler [Q.sql|
+               SELECT collection_name, collection_defn::json, comment
+                 FROM hdb_catalog.hdb_query_collection
+                 WHERE is_system_defined = 'false'
+              |] () False
+      return $ flip map r $ \(name, Q.AltJ defn, mComment)
+                            -> DQC.CreateCollection name defn mComment
 
 runExportMetadata
   :: (QErrM m, UserInfoM m, MonadTx m)
