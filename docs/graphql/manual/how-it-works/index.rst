@@ -59,11 +59,13 @@ queries via GraphQL.
 Metadata
 --------
 
-All the information required for schema generation is stored by the Hasura GraphQL engine as metadata in a specific
-Postgres schema in the database. See :doc:`metadata schema <metadata-schema>` for more details.
+All the information required for schema generation is stored by the Hasura GraphQL engine as metadata in its "catalogue"
+which is essentially a special Postgres schema in the database.
+
+See :doc:`metadata catalogue <metadata-schema>` for more details.
 
 .. toctree::
   :maxdepth: 1
   :hidden:
 
-  Metadata schema <metadata-schema>
+  Metadata catalogue <metadata-schema>
