@@ -26,6 +26,17 @@ class App extends Component {
     this.props.dispatch({ type: NOTIF_EXPANDED, data: false });
   };
 
+  componentDidUpdate() {
+    const { telemetry, dispatch } = this.props;
+    if (
+      telemetry.console_opts &&
+      !telemetry.console_opts.telemetryNotificationShown
+    ) {
+      dispatch(telemetryNotificationShown());
+      dispatch(showTelemetryNotification());
+    }
+  }
+
   render() {
     const styles = require('./progress-bar.scss');
     const {
@@ -39,7 +50,6 @@ class App extends Component {
       connectionFailed,
       isNotifExpanded,
       notifMsg,
-      telemetry,
       dispatch,
       metadata,
     } = this.props;
@@ -82,13 +92,6 @@ class App extends Component {
           </strong>
         </div>
       );
-    }
-
-    if (telemetry.console_opts) {
-      if (!telemetry.console_opts.telemetryNotificationShown) {
-        dispatch(showTelemetryNotification());
-        dispatch(telemetryNotificationShown());
-      }
     }
 
     return (
