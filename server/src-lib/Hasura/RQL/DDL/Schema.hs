@@ -58,18 +58,20 @@ data RunSQL
   { rSql                      :: Text
   , rCascade                  :: !(Maybe Bool)
   , rCheckMetadataConsistency :: !(Maybe Bool)
+  , rReadOnly                 :: !(Maybe Bool)
   } deriving (Show, Eq, Lift)
 $(deriveJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''RunSQL)
 
 runRunSQL :: (CacheBuildM m, UserInfoM m) => RunSQL -> m EncJSON
-runRunSQL (RunSQL t cascade mChkMDCnstcy) = do
+runRunSQL (RunSQL t cascade mChkMDCnstcy mReadOnly) = do
   adminOnly
+  let txAccessMode = fmap boolToAccessMode mReadOnly
   isMDChkNeeded <- maybe (isAltrDropReplace t) return mChkMDCnstcy
-  bool (execRawSQL t) (withMetadataCheck (or cascade) $ execRawSQL t) isMDChkNeeded
+  bool (execRawSQL t txAccessMode) (withMetadataCheck (or cascade) $ execRawSQL t txAccessMode) isMDChkNeeded
   where
-    execRawSQL :: (MonadTx m) => Text -> m EncJSON
-    execRawSQL =
-      fmap (encJFromJValue @RunSQLRes) . liftTx . Q.multiQE rawSqlErrHandler . Q.fromText
+    execRawSQL :: (MonadTx m) => Text -> Maybe Q.TxAccess -> m EncJSON
+    execRawSQL q txMode =
+      fmap (encJFromJValue @RunSQLRes) . (flip liftTxWith txMode) . Q.multiQE rawSqlErrHandler . Q.fromText $ q
       where
         rawSqlErrHandler txe =
           let e = err400 PostgresError "query execution failed"
@@ -80,6 +82,9 @@ runRunSQL (RunSQL t cascade mChkMDCnstcy) = do
       where
         throwErr s = throw500 $ "compiling regex failed: " <> T.pack s
         regex = "alter|drop|replace|create function|comment on"
+    boolToAccessMode = \case
+      True -> Q.ReadOnly
+      False -> Q.ReadWrite
 
 data RunSQLRes
   = RunSQLRes

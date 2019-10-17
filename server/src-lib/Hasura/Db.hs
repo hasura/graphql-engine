@@ -36,14 +36,16 @@ data PGExecCtx
   }
 
 class (MonadError QErr m) => MonadTx m where
+  liftTxWith :: Q.TxE QErr a -> Maybe Q.TxAccess -> m a
   liftTx :: Q.TxE QErr a -> m a
+  liftTx = flip liftTxWith Nothing
 
 instance (MonadTx m) => MonadTx (StateT s m) where
-  liftTx = lift . liftTx
+  liftTxWith tx txaM = lift $ liftTxWith tx txaM
 instance (MonadTx m) => MonadTx (ReaderT s m) where
-  liftTx = lift . liftTx
+  liftTxWith tx txaM = lift $ liftTxWith tx txaM
 instance (MonadTx m) => MonadTx (ValidateT e m) where
-  liftTx = lift . liftTx
+  liftTxWith tx txaM = lift $ liftTxWith tx txaM
 
 -- | Like 'Q.TxE', but defers acquiring a Postgres connection until the first execution of 'liftTx'.
 -- If no call to 'liftTx' is ever reached (i.e. a successful result is returned or an error is
@@ -56,13 +58,13 @@ instance (MonadTx m) => MonadTx (ValidateT e m) where
 data LazyTx e a
   = LTErr !e
   | LTNoTx !a
-  | LTTx !(Q.TxE e a)
+  | LTTx !(Q.TxE e a) !(Maybe Q.TxAccess)
 
 lazyTxToQTx :: LazyTx e a -> Q.TxE e a
 lazyTxToQTx = \case
   LTErr e  -> throwError e
   LTNoTx r -> return r
-  LTTx tx  -> tx
+  LTTx tx _txaM -> tx
 
 runLazyTx
   :: PGExecCtx
@@ -70,14 +72,14 @@ runLazyTx
 runLazyTx (PGExecCtx pgPool txIso) = \case
   LTErr e  -> throwError e
   LTNoTx a -> return a
-  LTTx tx  -> Q.runTx pgPool (txIso, Nothing) tx
+  LTTx tx txaM -> Q.runTx pgPool (txIso, txaM) tx
 
 runLazyTx'
   :: PGExecCtx -> LazyTx QErr a -> ExceptT QErr IO a
 runLazyTx' (PGExecCtx pgPool _) = \case
   LTErr e  -> throwError e
   LTNoTx a -> return a
-  LTTx tx  -> Q.runTx' pgPool tx
+  LTTx tx _ -> Q.runTx' pgPool tx
 
 type RespTx = Q.TxE QErr EncJSON
 type LazyRespTx = LazyTx QErr EncJSON
@@ -129,41 +131,44 @@ withUserInfo :: UserInfo -> LazyTx QErr a -> LazyTx QErr a
 withUserInfo uInfo = \case
   LTErr e  -> LTErr e
   LTNoTx a -> LTNoTx a
-  LTTx tx  -> LTTx $ setHeadersTx (userVars uInfo) >> tx
+  LTTx tx txaM -> LTTx (setHeadersTx (userVars uInfo) >> tx) txaM
 
 instance Functor (LazyTx e) where
   fmap f = \case
     LTErr e  -> LTErr e
     LTNoTx a -> LTNoTx $ f a
-    LTTx tx  -> LTTx $ fmap f tx
+    LTTx tx txaM -> LTTx (fmap f tx) txaM
 
 instance Applicative (LazyTx e) where
   pure = LTNoTx
 
   LTErr e   <*> _         = LTErr e
   LTNoTx f  <*> r         = fmap f r
-  LTTx _    <*> LTErr e   = LTErr e
-  LTTx txf  <*> LTNoTx a  = LTTx $ txf <*> pure a
-  LTTx txf  <*> LTTx tx   = LTTx $ txf <*> tx
+  LTTx _  _  <*> LTErr e   = LTErr e
+  LTTx txf txaM <*> LTNoTx a  = LTTx (txf <*> pure a) txaM
+  -- Is this right?
+  LTTx txf txaM <*> LTTx tx _  = LTTx (txf <*> tx) txaM
 
 instance Monad (LazyTx e) where
   LTErr e >>= _  = LTErr e
   LTNoTx a >>= f = f a
-  LTTx txa >>= f =
-    LTTx $ txa >>= lazyTxToQTx . f
+  -- Is this right?
+  LTTx tx txaM >>= f =
+    LTTx (tx >>= lazyTxToQTx . f) txaM
 
 instance MonadError e (LazyTx e) where
   throwError = LTErr
   LTErr e  `catchError` f = f e
   LTNoTx a `catchError` _ = LTNoTx a
-  LTTx txe `catchError` f =
-    LTTx $ txe `catchError` (lazyTxToQTx . f)
+  LTTx txe txaM `catchError` f =
+    LTTx (txe `catchError` (lazyTxToQTx . f)) txaM
 
 instance MonadTx (LazyTx QErr) where
-  liftTx = LTTx
+  liftTxWith = LTTx
 
 instance MonadTx (Q.TxE QErr) where
-  liftTx = id
+  liftTxWith tx _ = tx
 
+-- BREAK!
 instance MonadIO (LazyTx QErr) where
-  liftIO = LTTx . liftIO
+  liftIO = (flip LTTx Nothing) . liftIO
