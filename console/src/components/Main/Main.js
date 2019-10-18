@@ -23,7 +23,7 @@ import { loadConsoleTelemetryOpts } from '../../telemetry/Actions.js';
 import {
   loadInconsistentObjects,
   redirectToMetadataStatus,
-} from '../Services/Metadata/Actions';
+} from '../Services/Settings/Actions';
 
 import {
   getLoveConsentState,
@@ -111,14 +111,17 @@ class Main extends React.Component {
   }
 
   handleBodyClick(e) {
+    const heartDropDown = document.getElementById('dropdown_wrapper');
     const heartDropDownOpen = document.querySelectorAll(
       '#dropdown_wrapper.open'
     );
+
     if (
-      !document.getElementById('dropdown_wrapper').contains(e.target) &&
+      heartDropDown &&
+      !heartDropDown.contains(e.target) &&
       heartDropDownOpen.length !== 0
     ) {
-      document.getElementById('dropdown_wrapper').classList.remove('open');
+      heartDropDown.classList.remove('open');
     }
   }
 
@@ -193,17 +196,17 @@ class Main extends React.Component {
       return mainContent;
     };
 
-    const getMetadataSelectedMarker = () => {
+    const getSettingsSelectedMarker = () => {
       let metadataSelectedMarker = null;
 
-      if (currentActiveBlock === 'metadata') {
+      if (currentActiveBlock === 'settings') {
         metadataSelectedMarker = <span className={styles.selected} />;
       }
 
       return metadataSelectedMarker;
     };
 
-    const getMetadataIcon = () => {
+    const getMetadataStatusIcon = () => {
       if (metadata.inconsistentObjects.length === 0) {
         return <i className={styles.question + ' fa fa-cog'} />;
       }
@@ -223,10 +226,7 @@ class Main extends React.Component {
     const getAdminSecretSection = () => {
       let adminSecretHtml = null;
 
-      if (
-        !globals.isAdminSecretSet &&
-        (globals.adminSecret === '' || globals.adminSecret === null)
-      ) {
+      if (!globals.isAdminSecretSet) {
         adminSecretHtml = (
           <div className={styles.secureSection}>
             <a
@@ -430,7 +430,7 @@ class Main extends React.Component {
       path,
       isDefault = false
     ) => {
-      const itemTooltip = <Tooltip>{tooltipText}</Tooltip>;
+      const itemTooltip = <Tooltip id={tooltipText}>{tooltipText}</Tooltip>;
 
       const block = getPathRoot(path);
 
@@ -504,10 +504,10 @@ class Main extends React.Component {
             <div id="dropdown_wrapper" className={styles.clusterInfoWrapper}>
               {getAdminSecretSection()}
 
-              <Link to="/metadata">
+              <Link to="/settings">
                 <div className={styles.helpSection + ' ' + styles.settingsIcon}>
-                  {getMetadataIcon()}
-                  {getMetadataSelectedMarker()}
+                  {getMetadataStatusIcon()}
+                  {getSettingsSelectedMarker()}
                 </div>
               </Link>
               <div className={styles.supportSection}>

@@ -6,7 +6,7 @@ module Hasura.GraphQL.Schema.Mutation.Update
   , mkUpdMutFld
   ) where
 
-import qualified Language.GraphQL.Draft.Syntax        as G
+import qualified Language.GraphQL.Draft.Syntax         as G
 
 import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
@@ -30,7 +30,7 @@ input table_set_input {
 }
 -}
 mkUpdSetInp
-  :: QualifiedTable -> [PGColInfo] -> InpObjTyInfo
+  :: QualifiedTable -> [PGColumnInfo] -> InpObjTyInfo
 mkUpdSetInp tn cols  =
   mkHsraInpTyInfo (Just desc) (mkUpdSetTy tn) $
     fromInpValL $ map mkPGColInp cols
@@ -53,7 +53,7 @@ input table_inc_input {
 -}
 
 mkUpdIncInp
-  :: QualifiedTable -> Maybe [PGColInfo] -> Maybe InpObjTyInfo
+  :: QualifiedTable -> Maybe [PGColumnInfo] -> Maybe InpObjTyInfo
 mkUpdIncInp tn = maybe Nothing mkType
   where
     mkType cols = let intCols = onlyIntCols cols
@@ -141,7 +141,7 @@ deleteAtPathDesc = "delete the field or element with specified path"
                    <> " (for JSON arrays, negative integers count from the end)"
 
 mkUpdJSONOpInp
-  :: QualifiedTable -> [PGColInfo] -> [InpObjTyInfo]
+  :: QualifiedTable -> [PGColumnInfo] -> [InpObjTyInfo]
 mkUpdJSONOpInp tn cols = bool inpObjs [] $ null jsonbCols
   where
     jsonbCols = onlyJSONBCols cols
@@ -162,20 +162,20 @@ mkUpdJSONOpInp tn cols = bool inpObjs [] $ null jsonbCols
     deleteKeyInpObj =
       mkHsraInpTyInfo (Just deleteKeyDesc) (mkJSONOpTy tn deleteKeyOp) $
       fromInpValL $ map deleteKeyInpVal jsonbColNames
-    deleteKeyInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) Nothing $
-      G.toGT $ G.NamedType "String"
+    deleteKeyInpVal n =
+      InpValInfo Nothing n Nothing $ G.toGT $ G.NamedType "String"
 
     deleteElemInpObj =
       mkHsraInpTyInfo (Just deleteElemDesc) (mkJSONOpTy tn deleteElemOp) $
       fromInpValL $ map deleteElemInpVal jsonbColNames
-    deleteElemInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) Nothing $
-      G.toGT $ G.NamedType "Int"
+    deleteElemInpVal n =
+      InpValInfo Nothing n Nothing $ G.toGT $ G.NamedType "Int"
 
     deleteAtPathInpObj =
       mkHsraInpTyInfo (Just deleteAtPathDesc) (mkJSONOpTy tn deleteAtPathOp) $
       fromInpValL $ map deleteAtPathInpVal jsonbColNames
-    deleteAtPathInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) Nothing $
-      G.toGT $ G.toLT $ G.NamedType "String"
+    deleteAtPathInpVal n =
+      InpValInfo Nothing n Nothing $ G.toGT $ G.toLT $ G.NamedType "String"
 
 {-
 
@@ -191,7 +191,7 @@ update_table(
 
 -}
 
-mkIncInpVal :: QualifiedTable -> [PGColInfo] -> Maybe InpValInfo
+mkIncInpVal :: QualifiedTable -> [PGColumnInfo] -> Maybe InpValInfo
 mkIncInpVal tn cols = bool (Just incArg) Nothing $ null intCols
   where
     intCols = onlyIntCols cols
@@ -199,7 +199,7 @@ mkIncInpVal tn cols = bool (Just incArg) Nothing $ null intCols
     incArg =
       InpValInfo (Just incArgDesc) "_inc" Nothing $ G.toGT $ mkUpdIncTy tn
 
-mkJSONOpInpVals :: QualifiedTable -> [PGColInfo] -> [InpValInfo]
+mkJSONOpInpVals :: QualifiedTable -> [PGColumnInfo] -> [InpValInfo]
 mkJSONOpInpVals tn cols = bool jsonbOpArgs [] $ null jsonbCols
   where
     jsonbCols = onlyJSONBCols cols
@@ -223,9 +223,8 @@ mkJSONOpInpVals tn cols = bool jsonbOpArgs [] $ null jsonbCols
       InpValInfo (Just deleteAtPathDesc) deleteAtPathOp Nothing $
       G.toGT $ mkJSONOpTy tn deleteAtPathOp
 
-mkUpdMutFld
-  :: QualifiedTable -> [PGColInfo] -> ObjFldInfo
-mkUpdMutFld tn cols =
+mkUpdMutFld :: Maybe G.Name -> QualifiedTable -> [PGColumnInfo] -> ObjFldInfo
+mkUpdMutFld mCustomName tn cols =
   mkHsraObjFldInfo (Just desc) fldName (fromInpValL inputValues) $
     G.toGT $ mkMutRespTy tn
   where
@@ -233,7 +232,8 @@ mkUpdMutFld tn cols =
                   <> mkJSONOpInpVals tn cols
     desc = G.Description $ "update data of the table: " <>> tn
 
-    fldName = "update_" <> qualObjectToName tn
+    defFldName = "update_" <> qualObjectToName tn
+    fldName = fromMaybe defFldName mCustomName
 
     filterArgDesc = "filter the rows which have to be updated"
     filterArg =

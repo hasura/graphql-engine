@@ -1,31 +1,28 @@
+{-# LANGUAGE TypeApplications #-}
 module Hasura.Server.Utils where
-
-import qualified Database.PG.Query.Connection as Q
 
 import           Data.Aeson
 import           Data.Char
-import           Data.List                    (find)
-import           Data.List.Split
+import           Data.List                  (find)
 import           Data.Time.Clock
-import           Network.URI
+import           Language.Haskell.TH.Syntax (Lift)
 import           System.Environment
 import           System.Exit
 import           System.Process
 
-import qualified Data.ByteString              as B
-import qualified Data.CaseInsensitive         as CI
-import qualified Data.HashSet                 as Set
-import qualified Data.Text                    as T
-import qualified Data.Text.Encoding           as TE
-import qualified Data.Text.IO                 as TI
-import qualified Data.UUID                    as UUID
-import qualified Data.UUID.V4                 as UUID
-import qualified Language.Haskell.TH.Syntax   as TH
-import qualified Network.HTTP.Client          as HC
-import qualified Network.HTTP.Types           as HTTP
-import qualified Text.Ginger                  as TG
-import qualified Text.Regex.TDFA              as TDFA
-import qualified Text.Regex.TDFA.ByteString   as TDFA
+import qualified Data.ByteString            as B
+import qualified Data.CaseInsensitive       as CI
+import qualified Data.HashSet               as Set
+import qualified Data.Text                  as T
+import qualified Data.Text.Encoding         as TE
+import qualified Data.Text.IO               as TI
+import qualified Data.UUID                  as UUID
+import qualified Data.UUID.V4               as UUID
+import qualified Language.Haskell.TH.Syntax as TH
+import qualified Network.HTTP.Client        as HC
+import qualified Network.HTTP.Types         as HTTP
+import qualified Text.Regex.TDFA            as TDFA
+import qualified Text.Regex.TDFA.ByteString as TDFA
 
 import           Hasura.Prelude
 
@@ -44,6 +41,9 @@ htmlHeader = ("Content-Type", "text/html; charset=utf-8")
 
 gzipHeader :: (T.Text, T.Text)
 gzipHeader = ("Content-Encoding", "gzip")
+
+brHeader :: (T.Text, T.Text)
+brHeader = ("Content-Encoding", "br")
 
 userRoleHeader :: T.Text
 userRoleHeader = "x-hasura-role"
@@ -72,44 +72,6 @@ getRequestId headers =
     Nothing    -> RequestId <$> liftIO generateFingerprint
     Just reqId -> return $ RequestId $ bsToTxt reqId
 
--- Parsing postgres database url
--- from: https://github.com/futurice/postgresql-simple-url/
-parseDatabaseUrl :: String -> Maybe String -> Maybe Q.ConnInfo
-parseDatabaseUrl databaseUrl opts = parseURI databaseUrl >>= uriToConnectInfo opts
-
-uriToConnectInfo :: Maybe String -> URI -> Maybe Q.ConnInfo
-uriToConnectInfo opts uri
-  | uriScheme uri /= "postgres:" && uriScheme uri /= "postgresql:" = Nothing
-  | otherwise = ($ Q.defaultConnInfo {Q.connOptions = opts}) <$> mkConnectInfo uri
-
-type ConnectInfoChange = Q.ConnInfo -> Q.ConnInfo
-
-mkConnectInfo :: URI -> Maybe ConnectInfoChange
-mkConnectInfo uri = case uriPath uri of
-                           ('/' : rest) | not (null rest) -> Just $ uriParameters uri
-                           _                              -> Nothing
-
-uriParameters :: URI -> ConnectInfoChange
-uriParameters uri = (\info -> info { Q.connDatabase = tail $ uriPath uri }) . maybe id uriAuthParameters (uriAuthority uri)
-
-dropLast :: [a] -> [a]
-dropLast []     = []
-dropLast [_]    = []
-dropLast (x:xs) = x : dropLast xs
-
-uriAuthParameters :: URIAuth -> ConnectInfoChange
-uriAuthParameters uriAuth = port . host . auth
-  where port = case uriPort uriAuth of
-                 (':' : p) -> \info -> info { Q.connPort = read p }
-                 _         -> id
-        host = case uriRegName uriAuth of
-                 h  -> \info -> info { Q.connHost = unEscapeString h }
-        auth = case splitOn ":" (uriUserInfo uriAuth) of
-                 [""]   -> id
-                 [u]    -> \info -> info { Q.connUser = unEscapeString $ dropLast u }
-                 [u, p] -> \info -> info { Q.connUser = unEscapeString u, Q.connPassword = unEscapeString $ dropLast p }
-                 _      -> id
-
 -- Get an env var during compile time
 getValFromEnvOrScript :: String -> String -> TH.Q TH.Exp
 getValFromEnvOrScript n s = do
@@ -130,34 +92,11 @@ runScript fp = do
     ++ show exitCode ++ " and with error : " ++ stdErr
   TH.lift stdOut
 
--- Ginger Templating
-type GingerTmplt = TG.Template TG.SourcePos
-
-parseGingerTmplt :: TG.Source -> Either String GingerTmplt
-parseGingerTmplt src = either parseE Right res
-  where
-    res = runIdentity $ TG.parseGinger' parserOptions src
-    parserOptions = TG.mkParserOptions resolver
-    resolver = const $ return Nothing
-    parseE e = Left $ TG.formatParserError (Just "") e
-
-renderGingerTmplt :: (ToJSON a) => a -> GingerTmplt -> T.Text
-renderGingerTmplt v = TG.easyRender (toJSON v)
-
 -- find duplicates
 duplicates :: Ord a => [a] -> [a]
 duplicates = mapMaybe greaterThanOne . group . sort
   where
     greaterThanOne l = bool Nothing (Just $ head l) $ length l > 1
-
-_1 :: (a, b, c) -> a
-_1 (x, _, _) = x
-
-_2 :: (a, b, c) -> b
-_2 (_, y, _) = y
-
-_3 :: (a, b, c) -> c
-_3 (_, _, z) = z
 
 -- regex related
 matchRegex :: B.ByteString -> Bool -> T.Text -> Either String Bool
@@ -240,7 +179,6 @@ filterResponseHeaders =
 filterHeaders :: Set.HashSet HTTP.HeaderName -> [HTTP.Header] -> [HTTP.Header]
 filterHeaders list = filter (\(n, _) -> not $ n `Set.member` list)
 
-
 hyphenate :: String -> String
 hyphenate = u . applyFirst toLower
     where u []                 = []
@@ -251,3 +189,21 @@ applyFirst :: (Char -> Char) -> String -> String
 applyFirst _ []     = []
 applyFirst f [x]    = [f x]
 applyFirst f (x:xs) = f x: xs
+
+-- | The version integer
+data APIVersion
+  = VIVersion1
+  | VIVersion2
+  deriving (Show, Eq, Lift)
+
+instance ToJSON APIVersion where
+  toJSON VIVersion1 = toJSON @Int 1
+  toJSON VIVersion2 = toJSON @Int 2
+
+instance FromJSON APIVersion where
+  parseJSON v = do
+    verInt :: Int <- parseJSON v
+    case verInt of
+      1 -> return VIVersion1
+      2 -> return VIVersion2
+      i -> fail $ "expected 1 or 2, encountered " ++ show i

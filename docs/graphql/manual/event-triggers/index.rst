@@ -17,7 +17,7 @@ Events can be of the following types:
 - INSERT: When a row is inserted into a table
 - UPDATE: When a row is updated in a table
 - DELETE: When a row is deleted from a table
-- MANUAL: Using the console or API, an event can be triggered manually on a row.
+- MANUAL: Using the console or API, an event can be triggered manually on a row
 
 **See:**
 
@@ -30,4 +30,4 @@ Events can be of the following types:
    serverless
    samples
    Invoke trigger via console <invoke-trigger-console>
-   Clean-up event data <clean-up>
+   clean-up

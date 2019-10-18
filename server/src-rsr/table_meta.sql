@@ -2,39 +2,39 @@ SELECT
   t.table_schema,
   t.table_name,
   t.table_oid,
+  t.description,
   coalesce(c.columns, '[]') as columns,
   coalesce(f.constraints, '[]') as constraints,
-  coalesce(fk.fkeys, '[]') as foreign_keys
+  coalesce(fk.fkeys, '[]') as foreign_keys,
+  coalesce(cc.computed_fields, '[]') as computed_fields
 FROM
   (
     SELECT
       c.oid as table_oid,
       c.relname as table_name,
-      n.nspname as table_schema
+      n.nspname as table_schema,
+      pd.description as description
     FROM
       pg_catalog.pg_class c
       JOIN pg_catalog.pg_namespace as n ON c.relnamespace = n.oid
+      LEFT JOIN pg_catalog.pg_description pd on (c.oid = pd.objoid and pd.objsubid = 0)
   ) t
   LEFT OUTER JOIN (
     SELECT
       table_schema,
       table_name,
       json_agg(
-        (
-          SELECT
-            r
-          FROM
-            (
-              SELECT
-                column_name,
-                udt_name AS data_type,
-                ordinal_position,
-                is_nullable :: boolean
-            ) r
+        json_build_object(
+          'column_name', name,
+          'data_type', type,
+          'is_nullable', is_nullable :: boolean,
+          'ordinal_position', ordinal_position,
+          'references', primary_key_references,
+          'description', description
         )
       ) as columns
     FROM
-      information_schema.columns
+      hdb_catalog.hdb_column
     GROUP BY
       table_schema,
       table_name
@@ -102,6 +102,34 @@ FROM
   ) fk ON (
     fk.table_schema = t.table_schema
     AND fk.table_name = t.table_name
+  )
+  LEFT OUTER JOIN (
+    SELECT
+      c.table_schema,
+      c.table_name,
+      json_agg(
+        json_build_object(
+          'name', c.computed_field_name,
+          'function_meta',
+          json_build_object(
+            'function', json_build_object('name', c.function_name, 'schema', c.function_schema),
+            'oid', hf_agg.function_oid,
+            'type', hf_agg.function_type,
+            'description', hf_agg.description
+          )
+        )
+      ) as computed_fields
+     FROM hdb_catalog.hdb_function_agg hf_agg
+     LEFT OUTER JOIN  hdb_catalog.hdb_computed_field_function c
+       ON ( hf_agg.function_name = c.function_name
+           AND hf_agg.function_schema = c.function_schema
+          )
+     GROUP BY
+       c.table_schema,
+       c.table_name
+  ) cc ON (
+    cc.table_schema = t.table_schema
+    AND cc.table_name = t.table_name
   )
 WHERE
   t.table_schema NOT LIKE 'pg_%'

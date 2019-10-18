@@ -29,10 +29,10 @@ Auto-generated insert mutation schema
 As you can see from the schema:
 
 - ``objects`` argument is necessary and you can pass multiple ``objects`` to the mutation.
-- You can pass an ``on_conflict`` argument to convert the mutation to an :doc:`upsert mutation <upsert>`
+- You can pass an ``on_conflict`` argument to convert the mutation to an :doc:`upsert mutation <upsert>`.
 - You can return the number of affected rows and the affected objects (with nested objects) in the response.
 
-See the :ref:`insert mutation API reference <insert_upsert_syntax>` for the full specifications
+See the :ref:`insert mutation API reference <insert_upsert_syntax>` for the full specifications.
 
 .. note::
 
@@ -41,7 +41,7 @@ See the :ref:`insert mutation API reference <insert_upsert_syntax>` for the full
 
 Insert a single object
 ----------------------
-**Example:** Insert a new ``article`` object and return the inserted article object in the response
+**Example:** Insert a new ``article`` object and return the inserted article object in the response:
 
 .. graphiql::
   :view_only:
@@ -119,7 +119,7 @@ Using variables:
 
 Insert multiple objects of the same type in the same mutation
 -------------------------------------------------------------
-**Example:** Insert 2 new ``article`` objects and return both the article objects in the response
+**Example:** Insert 2 new ``article`` objects and return both the article objects in the response:
 
 .. graphiql::
   :view_only:
@@ -168,7 +168,7 @@ Insert multiple objects of the same type in the same mutation
 
 Insert an object and get a nested object in response
 ----------------------------------------------------
-**Example:** Insert a new ``article`` object and return the inserted article object with its author in the response
+**Example:** Insert a new ``article`` object and return the inserted article object with its author in the response:
 
 .. graphiql::
   :view_only:
@@ -213,27 +213,42 @@ Insert an object and get a nested object in response
       }
     }
 
+.. _nested_inserts:
 
-Insert an object and its nested object in the same mutation
------------------------------------------------------------
-**Example:** Insert a new ``article`` object with its ``author`` and return the inserted article object with its author
-in the response
+Insert an object along with its related objects through relationships
+---------------------------------------------------------------------
+**Example:** Insert an ``author`` along with their ``address`` and a few ``articles``.
+
+Let's say an ``author`` has an ``object relationship`` called ``address`` to the ``addresses`` table and an ``array relationship`` called ``articles`` to the ``articles`` table.
 
 .. graphiql::
   :view_only:
   :query:
-    mutation insert_article {
-      insert_article(
-        objects: [
+    mutation insertData {
+      insert_authors
+        (objects: [
           {
-            id: 21,
-            title: "Article 1",
-            content: "Sample article content",
-            author: {
+            id: 26,
+            name: "John",
+            address: {
               data: {
-                id: 11,
-                name: "Cory"
+                id: 27,
+                location: "San Francisco"
               }
+            },
+            articles: {
+              data: [
+                {
+                  id: 28,
+                  title: "GraphQL Guide",
+                  content: "Let's see what we can do with GraphQL"
+                },
+                {
+                  id: 29,
+                  title: "Authentication Guide",
+                  content: "Let's look at best practices for authentication"
+                }
+              ]
             }
           }
         ]
@@ -241,10 +256,16 @@ in the response
         affected_rows
         returning {
           id
-          title
-          author {
+          name
+          address_id
+          address {
             id
-            name
+            location
+          }
+          articles {
+            id
+            title
+            author_id
           }
         }
       }
@@ -252,25 +273,50 @@ in the response
   :response:
     {
       "data": {
-        "insert_article": {
-          "affected_rows": 2,
+        "insert_authors": {
+          "affected_rows": 4,
           "returning": [
             {
-              "id": 21,
-              "title": "Article 1",
-              "author": {
-                "id": 11,
-                "name": "Cory"
-              }
+              "id": 26,
+              "name": "John",
+              "address_id": 27,
+              "address": {
+                "id": 27,
+                "location": "San Francisco"
+              },            
+              "articles": [
+                {
+                  "id": 28,
+                  "title": "GraphQL Guide",
+                  "author_id": 26
+                },
+                {
+                  "id": 29,
+                  "title": "Authentication Guide",
+                  "author_id": 26,
+                }
+              ]
             }
           ]
         }
       }
     }
 
+**How it works**
+
+A nested insert mutation is processed as follows:
+
+1. The object relationships are inserted first, i.e. in this case, the address is inserted and its ``id`` is collected in     this step. 
+
+2. The parent object is inserted next. i.e. in this case, the author is now inserted with the ``address_id`` being set to the ``id`` of the address that was inserted. Because of this, it is not allowed to pass ``address_id`` in the author object if you are also providing data for the address relationship. 
+
+   The ``id`` of the author is collected in this step.
+
+3. The array relationships are inserted at the end. i.e. in this case, the articles are now inserted with their ``author_id`` set to the author's ``id`` collected in the step 2. Hence, it's not possible to specify ``author_id`` in the data for the articles relationship.
+
 Insert an object with a JSONB column
 ------------------------------------
-**Example:** Insert a new ``author`` object with a JSONB ``address`` column
+**Example:** Insert a new ``author`` object with a JSONB ``address`` column:
 
 .. graphiql::
   :view_only:
@@ -331,7 +377,7 @@ Set a field to its default value during insert
 To set a field to its ``default`` value, just omit it from the input object, irrespective of the
 :doc:`default value configuration <../schema/default-values/index>` i.e. via Postgres defaults or using column presets.
 
-**Example:** if default value of ``id`` is set to auto-incrementing integer, no need to pass ``id`` field in input object
+**Example:** If the default value of ``id`` is set to auto-incrementing integer, there's no need to pass the ``id`` field to the input object:
 
 .. graphiql::
   :view_only:
@@ -373,8 +419,8 @@ Set a field to NULL during insert
 If a field is ``nullable`` in the database, to set its value to ``null``, either pass its value as ``null`` or
 just omit it from the input object.
 
-**Example:** if ``age`` is a nullable field, either don't pass ``age`` field in input object or pass it as ``null``
-to set it to ``null``
+**Example:** If ``age`` is a nullable field, to set it to ``null``, either don't pass the age field to the input object
+or pass it as ``null``:
 
 .. graphiql::
   :view_only:

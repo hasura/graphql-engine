@@ -5,7 +5,8 @@ args:
     sql: |
       create table hge_tests.test_t1(
           c1 int,
-          c2 text
+          c2 text,
+          c3 json
       );
 - type: track_table
   args:
@@ -20,5 +21,5 @@ args:
     insert:
       columns: "*"
     update:
-      columns: ["c2"]
+      columns: ["c2", "c3"]
     webhook: http://127.0.0.1:5592

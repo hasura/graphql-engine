@@ -5,6 +5,8 @@ module Hasura.GraphQL.Schema.Select
   , mkTableAggFldsObj
   , mkTableColAggFldsObj
 
+  , functionArgsWithoutTableArg
+
   , mkSelFld
   , mkAggSelFld
   , mkSelFldPKey
@@ -14,21 +16,23 @@ module Hasura.GraphQL.Schema.Select
 
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashSet                  as Set
+import qualified Data.Sequence                 as Seq
 import qualified Language.GraphQL.Draft.Syntax as G
 
-import           Hasura.GraphQL.Schema.Common
+import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Schema.BoolExp
+import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.OrderBy
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-mkSelColumnTy :: QualifiedTable -> [PGCol] -> EnumTyInfo
+mkSelColumnTy :: QualifiedTable -> [G.Name] -> EnumTyInfo
 mkSelColumnTy tn cols = enumTyInfo
   where
     enumTyInfo = mkHsraEnumTyInfo (Just desc) (mkSelColumnInpTy tn) $
-                 mapFromL _eviVal $ map mkColumnEnumVal cols
+      EnumValuesSynthetic . mapFromL _eviVal $ map mkColumnEnumVal cols
 
     desc = G.Description $
       "select columns of table " <>> tn
@@ -39,8 +43,7 @@ mkSelColumnInpTy tn =
   G.NamedType $ qualObjectToName tn <> "_select_column"
 
 mkTableAggFldsTy :: QualifiedTable -> G.NamedType
-mkTableAggFldsTy tn =
-  G.NamedType $ qualObjectToName tn <> "_aggregate_fields"
+mkTableAggFldsTy = addTypeSuffix "_aggregate_fields" . mkTableTy
 
 mkTableColAggFldsTy :: G.Name -> QualifiedTable -> G.NamedType
 mkTableColAggFldsTy op tn =
@@ -50,27 +53,61 @@ mkTableByPkName :: QualifiedTable -> G.Name
 mkTableByPkName tn = qualObjectToName tn <> "_by_pk"
 
 -- Support argument params for PG columns
-mkPGColParams :: PGColType -> ParamMap
-mkPGColParams = \case
-  PGJSONB -> jsonParams
-  PGJSON  -> jsonParams
-  _       -> Map.empty
-  where
-    pathDesc = "JSON select path"
-    jsonParams = Map.fromList
-      [ (G.Name "path", InpValInfo (Just pathDesc) "path" Nothing $
-          G.toGT $ mkScalarTy PGText)
-      ]
+mkPGColParams :: PGColumnType -> ParamMap
+mkPGColParams colType
+  | isScalarColumnWhere isJSONType colType =
+    let pathDesc = "JSON select path"
+    in Map.fromList
+      [ (G.Name "path", InpValInfo (Just pathDesc) "path" Nothing $ G.toGT $ mkScalarTy PGText) ]
+  | otherwise = Map.empty
 
-mkPGColFld :: PGColInfo -> ObjFldInfo
-mkPGColFld (PGColInfo colName colTy isNullable) =
-  mkHsraObjFldInfo Nothing n (mkPGColParams colTy) ty
+mkPGColFld :: PGColumnInfo -> ObjFldInfo
+mkPGColFld colInfo =
+  mkHsraObjFldInfo desc name (mkPGColParams colTy) ty
   where
-    n  = G.Name $ getPGColTxt colName
+    PGColumnInfo _ name colTy isNullable pgDesc = colInfo
+    desc = (G.Description . getPGDescription) <$> pgDesc
     ty = bool notNullTy nullTy isNullable
-    scalarTy = mkScalarTy colTy
-    notNullTy = G.toGT $ G.toNT scalarTy
-    nullTy = G.toGT scalarTy
+    columnType = mkColumnType colTy
+    notNullTy = G.toGT $ G.toNT columnType
+    nullTy = G.toGT columnType
+
+functionArgsWithoutTableArg
+  :: FunctionTableArgument -> Seq.Seq FunctionArg -> Seq.Seq FunctionArg
+functionArgsWithoutTableArg tableArg inputArgs = Seq.fromList $
+  case tableArg of
+    FTAFirst  -> tail $ toList inputArgs
+    FTANamed argName _ ->
+      filter ((/=) (Just argName) . faName) $ toList inputArgs
+
+mkComputedFieldFld :: ComputedField -> ObjFldInfo
+mkComputedFieldFld field =
+  uncurry (mkHsraObjFldInfo (Just desc) fieldName) $ case fieldType of
+    CFTScalar scalarTy    ->
+      let inputParams = mkPGColParams (PGColumnScalar scalarTy)
+                        <> fromInpValL (maybeToList maybeFunctionInputArg)
+      in (inputParams, G.toGT $ mkScalarTy scalarTy)
+    CFTTable computedFieldtable ->
+      let table = _cftTable computedFieldtable
+      in ( fromInpValL $ maybeToList maybeFunctionInputArg <> mkSelArgs table
+         , G.toGT $ G.toLT $ G.toNT $ mkTableTy table
+         )
+  where
+    columnDescription = "A computed field, executes function " <>> qf
+    desc = mkDescriptionWith (_cffDescription function) columnDescription
+    fieldName = mkComputedFieldName name
+    ComputedField name function _ fieldType = field
+    qf = _cffName function
+
+    maybeFunctionInputArg =
+      let funcArgDesc = G.Description $ "input parameters for function " <>> qf
+          inputValue = InpValInfo (Just funcArgDesc) "args" Nothing $
+                       G.toGT $ G.toNT $ mkFuncArgsTy qf
+          inputArgs = _cffInputArgs function
+          tableArgument = _cffTableArgument function
+          withoutTableArgs = functionArgsWithoutTableArg tableArgument inputArgs
+      in bool (Just inputValue) Nothing $ null withoutTableArgs
+
 
 -- where: table_bool_exp
 -- limit: Int
@@ -88,7 +125,7 @@ mkSelArgs tn =
   ]
   where
     whereDesc   = "filter the rows returned"
-    limitDesc   = "limit the nuber of rows returned"
+    limitDesc   = "limit the number of rows returned"
     offsetDesc  = "skip the first n rows. Use only with order_by"
     orderByDesc = "sort the rows by one or more columns"
     distinctDesc = "distinct select on columns"
@@ -108,12 +145,12 @@ array_relationship_aggregate(
 object_relationship: remote_table
 
 -}
-mkRelFld
+mkRelationshipField
   :: Bool
   -> RelInfo
   -> Bool
   -> [ObjFldInfo]
-mkRelFld allowAgg (RelInfo rn rTy _ remTab isManual) isNullable = case rTy of
+mkRelationshipField allowAgg (RelInfo rn rTy _ remTab isManual) isNullable = case rTy of
   ArrRel -> bool [arrRelFld] [arrRelFld, aggArrRelFld] allowAgg
   ObjRel -> [objRelFld]
   where
@@ -141,15 +178,19 @@ type table {
 -}
 mkTableObj
   :: QualifiedTable
+  -> Maybe PGDescription
   -> [SelField]
   -> ObjTyInfo
-mkTableObj tn allowedFlds =
+mkTableObj tn descM allowedFlds =
   mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) TLHasuraType
   where
-    flds = concatMap (either (pure . mkPGColFld) mkRelFld') allowedFlds
-    mkRelFld' (relInfo, allowAgg, _, _, isNullable) =
-      mkRelFld allowAgg relInfo isNullable
-    desc = G.Description $ "columns and relationships of " <>> tn
+    flds = pgColFlds <> relFlds <> computedFlds
+    pgColFlds = map mkPGColFld $ getPGColumnFields allowedFlds
+    relFlds = concatMap mkRelationshipField' $ getRelationshipFields allowedFlds
+    computedFlds = map mkComputedFieldFld $ getComputedFields allowedFlds
+    mkRelationshipField' (RelationshipFieldInfo relInfo allowAgg _ _ _ isNullable) =
+      mkRelationshipField allowAgg relInfo isNullable
+    desc = mkDescriptionWith descM $ "columns and relationships of " <>> tn
 
 {-
 type table_aggregate {
@@ -186,8 +227,8 @@ type table_aggregate_fields{
 -}
 mkTableAggFldsObj
   :: QualifiedTable
-  -> ([PGCol], [G.Name])
-  -> ([PGCol], [G.Name])
+  -> ([PGColumnInfo], [G.Name])
+  -> ([PGColumnInfo], [G.Name])
   -> ObjTyInfo
 mkTableAggFldsObj tn (numCols, numAggOps) (compCols, compAggOps) =
   mkHsraObjTyInfo (Just desc) (mkTableAggFldsTy tn) Set.empty $ mapFromL _fiName $
@@ -222,8 +263,8 @@ type table_<agg-op>_fields{
 mkTableColAggFldsObj
   :: QualifiedTable
   -> G.Name
-  -> (PGColType -> G.NamedType)
-  -> [PGColInfo]
+  -> (PGColumnType -> G.NamedType)
+  -> [PGColumnInfo]
   -> ObjTyInfo
 mkTableColAggFldsObj tn op f cols =
   mkHsraObjTyInfo (Just desc) (mkTableColAggFldsTy op tn) Set.empty $ mapFromL _fiName $
@@ -231,8 +272,8 @@ mkTableColAggFldsObj tn op f cols =
   where
     desc = G.Description $ "aggregate " <> G.unName op <> " on columns"
 
-    mkColObjFld c = mkHsraObjFldInfo Nothing (G.Name $ getPGColTxt $ pgiName c)
-                    Map.empty $ G.toGT $ f $ pgiType c
+    mkColObjFld ci = mkHsraObjFldInfo Nothing (pgiName ci) Map.empty $
+                     G.toGT $ f $ pgiType ci
 
 {-
 
@@ -243,14 +284,12 @@ table(
 ):  [table!]!
 
 -}
-mkSelFld
-  :: QualifiedTable
-  -> ObjFldInfo
-mkSelFld tn =
+mkSelFld :: Maybe G.Name -> QualifiedTable -> ObjFldInfo
+mkSelFld mCustomName tn =
   mkHsraObjFldInfo (Just desc) fldName args ty
   where
     desc    = G.Description $ "fetch data from the table: " <>> tn
-    fldName = qualObjectToName tn
+    fldName = fromMaybe (qualObjectToName tn) mCustomName
     args    = fromInpValL $ mkSelArgs tn
     ty      = G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy tn
 
@@ -262,19 +301,18 @@ table_by_pk(
   coln: valuen!
 ): table
 -}
-mkSelFldPKey
-  :: QualifiedTable -> [PGColInfo]
-  -> ObjFldInfo
-mkSelFldPKey tn cols =
+mkSelFldPKey :: Maybe G.Name -> QualifiedTable -> [PGColumnInfo] -> ObjFldInfo
+mkSelFldPKey mCustomName tn cols =
   mkHsraObjFldInfo (Just desc) fldName args ty
   where
     desc = G.Description $ "fetch data from the table: " <> tn
            <<> " using primary key columns"
-    fldName = mkTableByPkName tn
+    fldName = fromMaybe (mkTableByPkName tn) mCustomName
     args = fromInpValL $ map colInpVal cols
     ty = G.toGT $ mkTableTy tn
-    colInpVal (PGColInfo n typ _) =
-      InpValInfo Nothing (mkColName n) Nothing $ G.toGT $ G.toNT $ mkScalarTy typ
+    colInpVal ci =
+      InpValInfo (mkDescription <$> pgiDescription ci) (pgiName ci)
+      Nothing $ G.toGT $ G.toNT $ mkColumnType $ pgiType ci
 
 {-
 
@@ -286,13 +324,13 @@ table_aggregate(
 
 -}
 mkAggSelFld
-  :: QualifiedTable
-  -> ObjFldInfo
-mkAggSelFld tn =
+  :: Maybe G.Name -> QualifiedTable -> ObjFldInfo
+mkAggSelFld mCustomName tn =
   mkHsraObjFldInfo (Just desc) fldName args ty
   where
     desc = G.Description $ "fetch aggregated fields from the table: "
            <>> tn
-    fldName = qualObjectToName tn <> "_aggregate"
+    defFldName = qualObjectToName tn <> "_aggregate"
+    fldName = fromMaybe defFldName mCustomName
     args = fromInpValL $ mkSelArgs tn
     ty = G.toGT $ G.toNT $ mkTableAggTy tn

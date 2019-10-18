@@ -6,10 +6,15 @@ module Hasura.RQL.DML.Mutation
   )
 where
 
+import           Hasura.Prelude
+
+import qualified Data.HashMap.Strict      as Map
 import qualified Data.Sequence            as DS
+import qualified Database.PG.Query        as Q
+
+import qualified Hasura.SQL.DML           as S
 
 import           Hasura.EncJSON
-import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Returning
 import           Hasura.RQL.DML.Select
@@ -18,16 +23,12 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-import qualified Data.HashMap.Strict      as Map
-import qualified Database.PG.Query        as Q
-import qualified Hasura.SQL.DML           as S
-
 data Mutation
   = Mutation
   { _mTable    :: !QualifiedTable
   , _mQuery    :: !(S.CTE, DS.Seq Q.PrepArg)
   , _mFields   :: !MutFlds
-  , _mCols     :: ![PGColInfo]
+  , _mCols     :: ![PGColumnInfo]
   , _mStrfyNum :: !Bool
   } deriving (Show, Eq)
 
@@ -57,7 +58,7 @@ mutateAndSel (Mutation qt q mutFlds allCols strfyNum) = do
 
 mutateAndFetchCols
   :: QualifiedTable
-  -> [PGColInfo]
+  -> [PGColumnInfo]
   -> (S.CTE, DS.Seq Q.PrepArg)
   -> Bool
   -> Q.TxE QErr MutateResp
@@ -66,10 +67,10 @@ mutateAndFetchCols qt cols (cte, p) strfyNum =
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sql) (toList p) True
   where
     aliasIden = Iden $ qualObjectToText qt <> "__mutation_result"
-    tabFrom = TableFrom qt $ Just aliasIden
+    tabFrom = FromIden aliasIden
     tabPerm = TablePerm annBoolExpTrue Nothing
     selFlds = flip map cols $
-              \ci -> (fromPGCol $ pgiName ci, FCol ci Nothing)
+              \ci -> (fromPGCol $ pgiColumn ci, FCol ci Nothing)
 
     sql = toSQL selectWith
     selectWith = S.SelectWith [(S.Alias aliasIden, cte)] select
@@ -88,8 +89,8 @@ mutateAndFetchCols qt cols (cte, p) strfyNum =
              AnnSelG selFlds tabFrom tabPerm noTableArgs strfyNum
 
 mkSelCTEFromColVals
-  :: MonadError QErr m
-  => QualifiedTable -> [PGColInfo] -> [ColVals] -> m S.CTE
+  :: (MonadError QErr m)
+  => QualifiedTable -> [PGColumnInfo] -> [ColVals] -> m S.CTE
 mkSelCTEFromColVals qt allCols colVals =
   S.CTESelect <$> case colVals of
     [] -> return selNoRows
@@ -102,13 +103,13 @@ mkSelCTEFromColVals qt allCols colVals =
         }
   where
     tableAls = S.Alias $ Iden $ snakeCaseQualObject qt
-    colNames = map pgiName allCols
+    colNames = map pgiColumn allCols
     mkTupsFromColVal colVal =
       fmap S.TupleExp $ forM allCols $ \ci -> do
-        let pgCol = pgiName ci
+        let pgCol = pgiColumn ci
         val <- onNothing (Map.lookup pgCol colVal) $
           throw500 $ "column " <> pgCol <<> " not found in returning values"
-        runAesonParser (convToTxt (pgiType ci)) val
+        toTxtValue <$> parsePGScalarValue (pgiType ci) val
 
     selNoRows =
       S.mkSelect { S.selExtr = [S.selectStar]

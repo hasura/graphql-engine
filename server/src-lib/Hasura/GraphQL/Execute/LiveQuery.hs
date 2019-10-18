@@ -1,322 +1,121 @@
+{-# LANGUAGE CPP #-}
+
+{-|
+= Reasonably efficient PostgreSQL live queries
+
+The module implements /query multiplexing/, which is our implementation strategy for live queries
+(i.e. GraphQL subscriptions) made against Postgres. Fundamentally, our implementation is built
+around polling, which is never ideal, but it’s a lot easier to implement than trying to do something
+event-based. To minimize the resource cost of polling, we use /multiplexing/, which is essentially
+a two-tier batching strategy.
+
+== The high-level idea
+
+The objective is to minimize the number of concurrent polling workers to reduce database load as
+much as possible. A very naïve strategy would be to group identical queries together so we only have
+one poller per /unique/ active subscription. That’s a good start, but of course, in practice, most
+queries differ slightly. However, it happens that they very frequently /only differ in their
+variables/ (that is, GraphQL query variables and session variables), and in those cases, we try to
+generated parameterized SQL. This means that the same prepared SQL query can be reused, just with a
+different set of variables.
+
+To give a concrete example, consider the following query:
+
+> subscription vote_count($post_id: Int!) {
+>   vote_count(where: {post_id: {_eq: $post_id}}) {
+>     votes
+>   }
+> }
+
+No matter what the client provides for @$post_id@, we will always generate the same SQL:
+
+> SELECT votes FROM vote_count WHERE post_id = $1
+
+If multiple clients subscribe to @vote_count@, we can certainly reuse the same prepared query. For
+example, imagine we had 10 concurrent subscribers, each listening on a distinct @$post_id@:
+
+> let postIds = [3, 11, 32, 56, 13, 97, 24, 43, 109, 48]
+
+We could iterate over @postIds@ in Haskell, executing the same prepared query 10 times:
+
+> for postIds $ \postId ->
+>   Q.listQE defaultTxErrorHandler preparedQuery (Identity postId) True
+
+Sadly, that on its own isn’t good enough. The overhead of running each query is large enough that
+Postgres becomes overwhelmed if we have to serve lots of concurrent subscribers. Therefore, what we
+want to be able to do is somehow make one query instead of ten.
+
+=== Multiplexing
+
+This is where multiplexing comes in. By taking advantage of Postgres
+<https://www.postgresql.org/docs/11/queries-table-expressions.html#QUERIES-LATERAL lateral joins>,
+we can do the iteration in Postgres rather than in Haskell, allowing us to pay the query overhead
+just once for all ten subscribers. Essentially, lateral joins add 'map'-like functionality to SQL,
+so we can run our query once per @$post_id@:
+
+> SELECT results.votes
+> FROM unnest($1::integer[]) query_variables (post_id)
+> LEFT JOIN LATERAL (
+>   SELECT coalesce(json_agg(votes), '[]')
+>   FROM vote_count WHERE vote_count.post_id = query_variables.post_id
+> ) results ON true
+
+If we generalize this approach just a little bit more, we can apply this transformation to arbitrary
+queries parameterized over arbitrary session and query variables!
+
+== Implementation overview
+
+To support query multiplexing, we maintain a tree of the following types, where @>@ should be read
+as “contains”:
+
+@
+'LiveQueriesState' > 'Poller' > 'Cohort' > 'Subscriber'
+@
+
+Here’s a brief summary of each type’s role:
+
+  * A 'Subscriber' is an actual client with an open websocket connection.
+
+  * A 'Cohort' is a set of 'Subscriber's that are all subscribed to the same query /with the exact
+    same variables/. (By batching these together, we can do better than multiplexing, since we can
+    just query the data once.)
+
+  * A 'Poller' is a worker thread for a single, multiplexed query. It fetches data for a set of
+    'Cohort's that all use the same parameterized query, but have different sets of variables.
+
+  * Finally, the 'LiveQueriesState' is the top-level container that holds all the active 'Poller's.
+
+Additional details are provided by the documentation for individual bindings.
+-}
 module Hasura.GraphQL.Execute.LiveQuery
-  ( RefetchInterval
-  , refetchIntervalFromMilli
-  , LQM.BatchSize
-  , LQM.mkBatchSize
-  , LQM.MxOpts
-  , LQM.mkMxOpts
-  , LQF.FallbackOpts
-  , LQF.mkFallbackOpts
-  , LQOpts
-  , mkLQOpts
+  ( LiveQueryPlan
+  , ReusableLiveQueryPlan
+  , reuseLiveQueryPlan
+  , buildLiveQueryPlan
+
+  , LiveQueryPlanExplanation
+  , explainLiveQueryPlan
 
   , LiveQueriesState
   , initLiveQueriesState
   , dumpLiveQueriesState
 
-  , LiveQueryOp
+  , LiveQueriesOptions(..)
+  , BatchSize(..)
+  , RefetchInterval(..)
+  , mkLiveQueriesOptions
+
   , LiveQueryId
   , addLiveQuery
   , removeLiveQuery
-
-  , SubsPlan
-  , subsOpFromPlan
-  , subsOpFromPGAST
   ) where
 
-import           Data.Has
+import           Hasura.GraphQL.Execute.LiveQuery.Options
+import           Hasura.GraphQL.Execute.LiveQuery.Plan
+import           Hasura.GraphQL.Execute.LiveQuery.State
 
-import qualified Control.Concurrent.STM                       as STM
-import qualified Data.Aeson                                   as J
-import qualified Data.HashMap.Strict                          as Map
-import qualified Data.HashSet                                 as Set
-import qualified Data.Text                                    as T
-import qualified Database.PG.Query                            as Q
-import qualified Database.PG.Query.Connection                 as Q
-import qualified Language.GraphQL.Draft.Syntax                as G
-
-import qualified Hasura.GraphQL.Execute.LiveQuery.Fallback    as LQF
-import qualified Hasura.GraphQL.Execute.LiveQuery.Multiplexed as LQM
-import qualified Hasura.GraphQL.Resolve                       as GR
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol       as GH
-import qualified Hasura.GraphQL.Validate                      as GV
-import qualified Hasura.SQL.DML                               as S
-
-import           Hasura.Db
-import           Hasura.EncJSON
-import           Hasura.GraphQL.Execute.LiveQuery.Types
+#ifdef __HADDOCK_VERSION__
 import           Hasura.Prelude
-import           Hasura.RQL.DML.Select                        (asSingleRowJsonResp)
-import           Hasura.RQL.Types
 
-import           Hasura.SQL.Types
-import           Hasura.SQL.Value
-
-data LQOpts
-  = LQOpts
-  { _loMxOpts       :: LQM.MxOpts
-  , _loFallbackOpts :: LQF.FallbackOpts
-  } deriving (Show, Eq)
-
--- | Required for logging server configuration on startup
-instance J.ToJSON LQOpts where
-  toJSON (LQOpts mxOpts fbOpts) =
-    J.object [ "multiplexed_options" J..= mxOpts
-             , "fallback_options" J..= fbOpts
-             ]
-
-mkLQOpts :: LQM.MxOpts -> LQF.FallbackOpts -> LQOpts
-mkLQOpts = LQOpts
-
-data LiveQueriesState
-  = LiveQueriesState
-  { _lqsMultiplexed :: !LQM.LiveQueriesState
-  , _lqsFallback    :: !LQF.LiveQueriesState
-  , _lqsPGExecTx    :: !PGExecCtx
-  }
-
-dumpLiveQueriesState
-  :: Bool -> LiveQueriesState -> IO J.Value
-dumpLiveQueriesState extended (LiveQueriesState mx fallback _) = do
-  mxJ <- LQM.dumpLiveQueriesState extended mx
-  fallbackJ <- LQF.dumpLiveQueriesState fallback
-  return $ J.object
-    [ "fallback" J..= fallbackJ
-    , "multiplexed" J..= mxJ
-    ]
-
-initLiveQueriesState
-  :: LQOpts
-  -> PGExecCtx
-  -> IO LiveQueriesState
-initLiveQueriesState (LQOpts mxOpts fallbackOpts) pgExecCtx = do
-  (mxMap, fallbackMap) <- STM.atomically $
-    (,) <$> LQM.initLiveQueriesState mxOpts
-        <*> LQF.initLiveQueriesState fallbackOpts
-  return $ LiveQueriesState mxMap fallbackMap pgExecCtx
-
-data LiveQueryOp
-  = LQMultiplexed !LQM.MxOp
-  | LQFallback !LQF.FallbackOp
-
-data LiveQueryId
-  = LQIMultiplexed !LQM.LiveQueryId
-  | LQIFallback !LQF.LiveQueryId
-
-addLiveQuery
-  :: LiveQueriesState
-  -> LiveQueryOp
-  -- the action to be executed when result changes
-  -> OnChange
-  -> IO LiveQueryId
-addLiveQuery lqState liveQOp onResultAction =
-  case liveQOp of
-    LQMultiplexed mxOp ->
-      LQIMultiplexed <$> LQM.addLiveQuery pgExecCtx mxMap mxOp onResultAction
-    LQFallback fallbackOp ->
-      LQIFallback <$> LQF.addLiveQuery
-      pgExecCtx fallbackMap fallbackOp onResultAction
-  where
-    LiveQueriesState mxMap fallbackMap pgExecCtx = lqState
-
-removeLiveQuery
-  :: LiveQueriesState
-  -- the query and the associated operation
-  -> LiveQueryId
-  -> IO ()
-removeLiveQuery lqState = \case
-  LQIMultiplexed lqId -> LQM.removeLiveQuery mxMap lqId
-  LQIFallback lqId -> LQF.removeLiveQuery fallbackMap lqId
-  where
-    LiveQueriesState mxMap fallbackMap _ = lqState
-
-data SubsPlan
-  = SubsPlan
-  { _sfMxOpCtx       :: !LQM.MxOpCtx
-  , _sfVariableTypes :: !GV.VarPGTypes
-  }
-
-instance J.ToJSON SubsPlan where
-  toJSON (SubsPlan opCtx varTypes) =
-    J.object [ "mx_op_ctx"      J..= opCtx
-             , "variable_types" J..= varTypes
-             ]
-
-collectNonNullableVars
-  :: (MonadState GV.VarPGTypes m)
-  => GR.UnresolvedVal -> m ()
-collectNonNullableVars = \case
-  GR.UVPG annPGVal -> do
-    let GR.AnnPGVal varM isNullable colTy _ = annPGVal
-    case (varM, isNullable) of
-      (Just var, False) -> modify (Map.insert var colTy)
-      _                 -> return ()
-  _             -> return ()
-
-type TextEncodedVariables
-  = Map.HashMap G.Variable TxtEncodedPGVal
-
--- | converts the partial unresolved value containing
--- variables, session variables to an SQL expression
--- referring correctly to the values from '_subs' temporary table
--- The variables are at _subs.result_vars.variables and
--- session variables at _subs.result_vars.user
-toMultiplexedQueryVar
-  :: (MonadState GV.AnnPGVarVals m)
-  => GR.UnresolvedVal -> m S.SQLExp
-toMultiplexedQueryVar = \case
-  GR.UVPG annPGVal ->
-    let GR.AnnPGVal varM isNullable colTy colVal = annPGVal
-    in case (varM, isNullable) of
-      -- we don't check for nullability as
-      -- this is only used for reusable plans
-      -- the check has to be made before this
-      (Just var, _) -> do
-        modify $ Map.insert var (colTy, colVal)
-        return $ fromResVars (PgTypeSimple colTy)
-          [ "variables"
-          , G.unName $ G.unVariable var
-          ]
-      _             -> return $ toTxtValue colTy colVal
-  GR.UVSessVar ty sessVar ->
-    return $ fromResVars ty [ "user", T.toLower sessVar]
-  GR.UVSQL sqlExp -> return sqlExp
-  where
-    fromResVars ty jPath =
-      flip S.SETyAnn (S.mkTypeAnn ty) $ S.SEOpApp (S.SQLOp "#>>")
-      [ S.SEQIden $ S.QIden (S.QualIden $ Iden "_subs")
-        (Iden "result_vars")
-      , S.SEArray $ map S.SELit jPath
-      ]
-
--- | Creates a live query operation and if possible, a reusable plan
---
-subsOpFromPGAST
-  :: ( MonadError QErr m
-     , MonadReader r m
-     , Has UserInfo r
-     , MonadIO m
-     )
-
-  -- | to validate arguments
-  => PGExecCtx
-
-  -- | used as part of an identifier in the underlying live query systems
-  -- to avoid unnecessary load on Postgres where possible
-  -> GH.GQLReqUnparsed
-
-  -- | variable definitions as seen in the subscription, needed in
-  -- checking whether the subscription can be multiplexed or not
-  -> [G.VariableDefinition]
-
-  -- | The alias and the partially processed live query field
-  -> (G.Alias, GR.QueryRootFldUnresolved)
-
-  -> m (LiveQueryOp, Maybe SubsPlan)
-subsOpFromPGAST pgExecCtx reqUnparsed varDefs (fldAls, astUnresolved) = do
-  userInfo <- asks getter
-
-  -- collect the variables (with their types) used inside the subscription
-  (_, varTypes) <- flip runStateT mempty $ GR.traverseQueryRootFldAST
-                   collectNonNullableVars astUnresolved
-
-  -- Can the subscription be multiplexed?
-  -- Only if all variables are non null and can be prepared
-  if Set.fromList (Map.keys varTypes) == allVars
-    then mkMultiplexedOp userInfo varTypes
-    else mkFallbackOp userInfo
-  where
-    allVars = Set.fromList $ map G._vdVariable varDefs
-
-    -- multiplexed subscription
-    mkMultiplexedOp userInfo varTypes = do
-      (astResolved, annVarVals) <-
-        flip runStateT mempty $ GR.traverseQueryRootFldAST
-        toMultiplexedQueryVar astUnresolved
-      let mxOpCtx = LQM.mkMxOpCtx (userRole userInfo)
-                    (GH._grQuery reqUnparsed) fldAls $
-                    GR.toPGQuery astResolved
-
-      -- We need to ensure that the values provided for variables
-      -- are correct according to Postgres. Without this check
-      -- an invalid value for a variable for one instance of the
-      -- subscription will take down the entire multiplexed query
-      txtEncodedVars <- validateAnnVarValsOnPg pgExecCtx annVarVals
-      let mxOp = (mxOpCtx, userVars userInfo, txtEncodedVars)
-      return (LQMultiplexed mxOp, Just $ SubsPlan mxOpCtx varTypes)
-
-    -- fallback tx subscription
-    mkFallbackOp userInfo = do
-      (astResolved, prepArgs) <-
-        flip runStateT mempty $ GR.traverseQueryRootFldAST
-        GR.resolveValPrep astUnresolved
-      let tx = withUserInfo userInfo $ liftTx $
-               asSingleRowJsonResp (GR.toPGQuery astResolved) $ toList prepArgs
-          fallbackOp = LQF.mkFallbackOp userInfo reqUnparsed $ withAlias tx
-      return (LQFallback fallbackOp, Nothing)
-
-    fldAlsT = G.unName $ G.unAlias fldAls
-    withAlias tx =
-      encJFromAssocList . pure . (,) fldAlsT <$> tx
-
--- | Checks if the provided arguments are valid values for their corresponding types.
--- Generates SQL of the format "select 'v1'::t1, 'v2'::t2 ..."
-validateAnnVarValsOnPg
-  :: ( MonadError QErr m
-     , MonadIO m
-     )
-  => PGExecCtx
-  -> GV.AnnPGVarVals
-  -> m TextEncodedVariables
-validateAnnVarValsOnPg pgExecCtx annVarVals = do
-  let valSel = mkValidationSel $ Map.elems annVarVals
-
-  Q.Discard _ <- runTx' $ liftTx $
-    Q.rawQE valPgErrHandler (Q.fromBuilder $ toSQL valSel) [] False
-  return $ fmap (txtEncodedPGVal . snd) annVarVals
-
-  where
-    mkExtrs = map (flip S.Extractor Nothing . uncurry toTxtValue)
-    mkValidationSel vars =
-      S.mkSelect { S.selExtr = mkExtrs vars }
-    runTx' tx = do
-      res <- liftIO $ runExceptT (runLazyTx' pgExecCtx tx)
-      liftEither res
-
--- | The error handler that is used to errors in the validation SQL.
--- It tries to specifically read few PG error codes which indicate
--- that the format of the value provided for a type is incorrect
-valPgErrHandler :: Q.PGTxErr -> QErr
-valPgErrHandler txErr =
-  fromMaybe (defaultTxErrorHandler txErr) $ do
-    stmtErr <- Q.getPGStmtErr txErr
-    codeMsg <- getPGCodeMsg stmtErr
-    (qErrCode, qErrMsg) <- extractError codeMsg
-    return $ err400 qErrCode qErrMsg
-  where
-    getPGCodeMsg pged =
-      (,) <$> Q.edStatusCode pged <*> Q.edMessage pged
-    extractError = \case
-      -- invalid text representation
-      ("22P02", msg) -> return (DataException, msg)
-      -- invalid parameter value
-      ("22023", msg) -> return (DataException, msg)
-      -- invalid input values
-      ("22007", msg) -> return (DataException, msg)
-      _              -> Nothing
-
--- | Use the existing plan with new variables and session variables
--- to create a live query operation
-subsOpFromPlan
-  :: ( MonadError QErr m
-     , MonadIO m
-     )
-  => PGExecCtx
-  -> UserVars
-  -> Maybe GH.VariableValues
-  -> SubsPlan
-  -> m LiveQueryOp
-subsOpFromPlan pgExecCtx usrVars varValsM (SubsPlan mxOpCtx varTypes) = do
-  annVarVals <- GV.getAnnPGVarVals varTypes varValsM
-  txtEncodedVars <- validateAnnVarValsOnPg pgExecCtx annVarVals
-  return $ LQMultiplexed (mxOpCtx, usrVars, txtEncodedVars)
+import           Hasura.GraphQL.Execute.LiveQuery.Poll
+#endif

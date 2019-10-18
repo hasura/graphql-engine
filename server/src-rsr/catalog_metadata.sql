@@ -7,45 +7,38 @@ select
     'remote_schemas', remote_schemas.items,
     'functions', functions.items,
     'foreign_keys', foreign_keys.items,
-    'allowlist_collections', allowlist.item
+    'allowlist_collections', allowlist.item,
+    'computed_fields', computed_field.items
   )
 from
   (
     select
       coalesce(json_agg(
         json_build_object(
-          'table',
-          json_build_object(
+          'name', json_build_object(
             'name', ht.table_name,
             'schema', ht.table_schema
           ),
-          'system_defined', ht.is_system_defined,
-          'info', tables.info
+          'is_enum', ht.is_enum,
+          'is_system_defined', ht.is_system_defined,
+          'configuration', ht.configuration,
+          'info', t.info
         )
       ), '[]') as items
-    from
-      hdb_catalog.hdb_table as ht
-      left outer join (
-        select
-          table_schema,
-          table_name,
-          json_build_object(
-            'name',
-            json_build_object(
-              'schema', table_schema,
-              'name', table_name
-            ),
-            'columns', columns,
-            'primary_key_columns', primary_key_columns,
-            'constraints', constraints,
-            'view_info', view_info
-          ) as info
-        from
-          hdb_catalog.hdb_table_info_agg
-      ) as tables on (
-        tables.table_schema = ht.table_schema
-        and tables.table_name = ht.table_name
-      )
+    from hdb_catalog.hdb_table as ht
+    left outer join (
+      select
+        table_schema,
+        table_name,
+        jsonb_build_object(
+          'description', description,
+          'columns', columns,
+          'primary_key_columns', primary_key_columns,
+          'constraints', constraints,
+          'view_info', view_info
+        ) as info
+      from hdb_catalog.hdb_table_info_agg
+    ) as t using (table_schema, table_name)
   ) as tables,
   (
     select
@@ -136,15 +129,17 @@ from
               'schema', hf.function_schema,
               'name', hf.function_name
             ),
-            'info', function_info
+            'info', hf_agg.function_info
           ) as info
         from
           hdb_catalog.hdb_function hf
-        left outer join
-            hdb_catalog.hdb_function_info_agg hf_agg on
-            ( hf_agg.function_name = hf.function_name
-              and hf_agg.function_schema = hf.function_schema
-            )
+        left join lateral
+            (
+              select coalesce(json_agg(function_info), '[]') as function_info
+              from hdb_catalog.hdb_function_info_agg
+               where function_name = hf.function_name
+                     and function_schema = hf.function_schema
+            ) hf_agg on 'true'
       ) as q
    ) as functions,
   (
@@ -183,4 +178,36 @@ from
     left outer join
          hdb_catalog.hdb_query_collection hqc
          on (hqc.collection_name = ha.collection_name)
-  ) as allowlist
+  ) as allowlist,
+  (
+    select
+      coalesce(json_agg(
+        json_build_object('computed_field', cc.computed_field,
+                          'function_info', fi.function_info
+                         )
+      ), '[]') as items
+    from
+      (
+        select json_build_object(
+          'table', jsonb_build_object('name', hcc.table_name,'schema', hcc.table_schema),
+          'name', hcc.computed_field_name,
+          'definition', hcc.definition,
+          'comment', hcc.comment
+        ) as computed_field,
+        hccf.function_name,
+        hccf.function_schema
+        from hdb_catalog.hdb_computed_field hcc
+        left outer join
+             hdb_catalog.hdb_computed_field_function hccf
+             on ( hcc.table_name = hccf.table_name
+                 and hcc.table_schema = hccf.table_schema
+                 and hcc.computed_field_name = hccf.computed_field_name
+                )
+      ) cc
+    left join lateral
+      (
+        select coalesce(json_agg(function_info), '[]') as function_info
+        from hdb_catalog.hdb_function_info_agg
+        where function_name = cc.function_name and function_schema = cc.function_schema
+      ) fi on 'true'
+  ) as computed_field

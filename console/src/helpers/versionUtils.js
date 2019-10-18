@@ -4,6 +4,8 @@ export const FT_JWT_ANALYZER = 'JWTAnalyzer';
 export const RELOAD_METADATA_API_CHANGE = 'reloadMetaDataApiChange';
 export const REMOTE_SCHEMA_TIMEOUT_CONF_SUPPORT =
   'remoteSchemaTimeoutConfSupport';
+export const TABLE_ENUMS_SUPPORT = 'tableEnumsSupport';
+export const EXISTS_PERMISSION_SUPPORT = 'existsPermissionSupport';
 
 // list of feature launch versions
 const featureLaunchVersions = {
@@ -11,6 +13,8 @@ const featureLaunchVersions = {
   [RELOAD_METADATA_API_CHANGE]: 'v1.0.0-beta.3',
   [FT_JWT_ANALYZER]: 'v1.0.0-beta.3',
   [REMOTE_SCHEMA_TIMEOUT_CONF_SUPPORT]: 'v1.0.0-beta.5',
+  [TABLE_ENUMS_SUPPORT]: 'v1.0.0-beta.6',
+  [EXISTS_PERMISSION_SUPPORT]: 'v1.0.0-beta.7',
 };
 
 export const getFeaturesCompatibility = serverVersion => {

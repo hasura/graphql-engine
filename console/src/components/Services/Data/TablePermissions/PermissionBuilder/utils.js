@@ -7,9 +7,11 @@ export const PGTypes = {
   dateTime: [
     'timestamp',
     'timestamp with time zone',
+    'timestamp without time zone',
     'date',
     'time',
     'time with time zone',
+    'time without time zone',
     'interval',
   ],
   geometry: ['geometry'],
@@ -214,12 +216,23 @@ export const boolOperators = Object.keys(boolOperatorsInfo);
 
 const columnOperators = Object.keys(columnOperatorsInfo);
 
-export const allOperators = boolOperators.concat(columnOperators);
+export const existOperators = ['_exists'];
+
+export const allOperators = boolOperators
+  .concat(columnOperators)
+  .concat(existOperators);
+
+export const TABLE_KEY = '_table';
+export const WHERE_KEY = '_where';
 
 /* Util functions */
 
 export const isBoolOperator = operator => {
   return boolOperators.includes(operator);
+};
+
+export const isExistOperator = operator => {
+  return existOperators.includes(operator);
 };
 
 export const isArrayBoolOperator = operator => {
@@ -281,148 +294,4 @@ export function addToPrefix(prefix, value) {
   }
 
   return _newPrefix;
-}
-
-export function getTableSchema(allSchemas, table) {
-  return allSchemas.find(
-    tableSchema =>
-      tableSchema.table_name === table.name &&
-      tableSchema.table_schema === table.schema
-  );
-}
-
-export function getTableColumnNames(tableSchema) {
-  if (!tableSchema) {
-    return [];
-  }
-
-  return tableSchema.columns.map(c => c.column_name);
-}
-
-export function getTableRelationshipNames(tableSchema) {
-  if (!tableSchema) {
-    return [];
-  }
-
-  return tableSchema.relationships.map(r => r.rel_name);
-}
-
-export function getTableRelationship(tableSchema, relName) {
-  if (!tableSchema) {
-    return {};
-  }
-
-  const relIndex = getTableRelationshipNames(tableSchema).indexOf(relName);
-
-  return tableSchema.relationships[relIndex];
-}
-
-export function getTableDef(tableName, schema) {
-  return { name: tableName, schema: schema };
-}
-
-export function getRefTable(rel, tableSchema) {
-  let _refTable = null;
-
-  // if manual relationship
-  if (rel.rel_def.manual_configuration) {
-    _refTable = rel.rel_def.manual_configuration.remote_table;
-  }
-
-  // if foreign-key based relationship
-  if (rel.rel_def.foreign_key_constraint_on) {
-    // if array relationship
-    if (rel.rel_type === 'array') {
-      _refTable = rel.rel_def.foreign_key_constraint_on.table;
-    }
-
-    // if object relationship
-    if (rel.rel_type === 'object') {
-      const fkCol = rel.rel_def.foreign_key_constraint_on;
-
-      for (let i = 0; i < tableSchema.foreign_key_constraints.length; i++) {
-        const fkConstraint = tableSchema.foreign_key_constraints[i];
-        const fkConstraintCol = Object.keys(fkConstraint.column_mapping)[0];
-        if (fkCol === fkConstraintCol) {
-          _refTable = getTableDef(
-            fkConstraint.ref_table,
-            fkConstraint.ref_table_table_schema
-          );
-          break;
-        }
-      }
-    }
-  }
-
-  if (typeof _refTable === 'string') {
-    _refTable = getTableDef(_refTable, 'public');
-  }
-
-  return _refTable;
-}
-
-export function getColumnType(columnName, tableSchema) {
-  let _columnType = '';
-
-  if (!tableSchema || !columnName) {
-    return _columnType;
-  }
-
-  const columnSchema = tableSchema.columns.find(
-    _columnSchema => _columnSchema.column_name === columnName
-  );
-
-  if (columnSchema) {
-    _columnType = columnSchema.data_type;
-
-    if (_columnType === 'USER-DEFINED') {
-      _columnType = columnSchema.udt_name;
-    }
-  }
-
-  return _columnType;
-}
-
-export function isJsonString(str) {
-  try {
-    JSON.parse(str);
-  } catch (e) {
-    return false;
-  }
-
-  return true;
-}
-
-export function getAllJsonPaths(json, prefix = '') {
-  const _paths = [];
-
-  const addPrefix = subPath => {
-    return prefix + (prefix && subPath ? '.' : '') + subPath;
-  };
-
-  const handleSubJson = (subJson, newPrefix) => {
-    const subPaths = getAllJsonPaths(subJson, newPrefix);
-
-    subPaths.forEach(subPath => {
-      _paths.push(subPath);
-    });
-
-    if (!subPaths.length) {
-      _paths.push(newPrefix);
-    }
-  };
-
-  if (json instanceof Array) {
-    json.forEach((subJson, i) => {
-      handleSubJson(subJson, addPrefix(i.toString()));
-    });
-  } else if (json instanceof Object) {
-    Object.keys(json).forEach(key => {
-      handleSubJson(json[key], addPrefix(key));
-    });
-  } else {
-    _paths.push(addPrefix(json));
-  }
-
-  return _paths;
 }

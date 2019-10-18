@@ -11,10 +11,21 @@ import { showTelemetryNotification } from '../../telemetry/Notifications';
 class App extends Component {
   componentDidMount() {
     // Hide the loader once the react component is ready.
-    // NOTE: This will execute only onces (since this is parent component for all other component).
+    // NOTE: This will execute only once (since this is the parent component for all other components).
     const className = document.getElementById('content').className;
     document.getElementById('content').className = className + ' show';
     document.getElementById('loading').style.display = 'none';
+  }
+
+  componentDidUpdate() {
+    const { telemetry, dispatch } = this.props;
+    if (
+      telemetry.console_opts &&
+      !telemetry.console_opts.telemetryNotificationShown
+    ) {
+      dispatch(telemetryNotificationShown());
+      dispatch(showTelemetryNotification());
+    }
   }
 
   render() {
@@ -28,7 +39,6 @@ class App extends Component {
       children,
       notifications,
       connectionFailed,
-      telemetry,
       dispatch,
       metadata,
     } = this.props;
@@ -51,13 +61,6 @@ class App extends Component {
           </strong>
         </div>
       );
-    }
-
-    if (telemetry.console_opts) {
-      if (!telemetry.console_opts.telemetryNotificationShown) {
-        dispatch(showTelemetryNotification());
-        dispatch(telemetryNotificationShown());
-      }
     }
 
     return (

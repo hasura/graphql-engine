@@ -6,9 +6,9 @@ import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Relationship       (validateRelP1)
 import           Hasura.RQL.DDL.Relationship.Types
-import           Hasura.RQL.DDL.Schema.Rename      (renameRelInCatalog)
-import           Hasura.RQL.DDL.Schema.Table       (buildSchemaCache,
-                                                    checkNewInconsistentMeta)
+import           Hasura.RQL.DDL.Schema             (buildSchemaCache,
+                                                    renameRelInCatalog,
+                                                    withNewInconsistentObjsCheck)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -20,14 +20,14 @@ renameRelP2
      , CacheRWM m
      , MonadIO m
      , HasHttpManager m
+     , HasSystemDefined m
      , HasSQLGenCtx m
      )
   => QualifiedTable -> RelName -> RelInfo -> m ()
-renameRelP2 qt newRN relInfo = do
-  oldSC <- askSchemaCache
+renameRelP2 qt newRN relInfo = withNewInconsistentObjsCheck $ do
   tabInfo <- askTabInfo qt
   -- check for conflicts in fieldInfoMap
-  case HM.lookup (fromRel newRN) $ tiFieldInfoMap tabInfo of
+  case HM.lookup (fromRel newRN) $ _tiFieldInfoMap tabInfo of
     Nothing -> return ()
     Just _  ->
       throw400 AlreadyExists $ "cannot rename relationship " <> oldRN
@@ -37,9 +37,6 @@ renameRelP2 qt newRN relInfo = do
   renameRelInCatalog qt oldRN newRN
   -- update schema cache
   buildSchemaCache
-  newSC <- askSchemaCache
-  -- check for new inconsistency
-  checkNewInconsistentMeta oldSC newSC
   where
     oldRN = riName relInfo
 
@@ -50,6 +47,7 @@ runRenameRel
      , UserInfoM m
      , MonadIO m
      , HasHttpManager m
+     , HasSystemDefined m
      , HasSQLGenCtx m
      )
   => RenameRel -> m EncJSON

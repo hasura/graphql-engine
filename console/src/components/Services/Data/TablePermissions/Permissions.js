@@ -11,7 +11,6 @@ import { RESET } from '../TableModify/ModifyActions';
 import {
   permChangeTypes,
   permOpenEdit,
-  permAddTableSchemas,
   permSetFilter,
   permSetFilterSameAs,
   permToggleColumn,
@@ -38,11 +37,10 @@ import {
 
 import PermissionBuilder from './PermissionBuilder/PermissionBuilder';
 import TableHeader from '../TableCommon/TableHeader';
-import ViewHeader from '../TableBrowseRows/ViewHeader';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 import EnhancedInput from '../../../Common/InputChecker/InputChecker';
 
-import { setTable } from '../DataActions';
+import { setTable, updateSchemaInfo } from '../DataActions';
 import { getIngForm, getEdForm, escapeRegExp } from '../utils';
 import { allOperators, getLegacyOperator } from './PermissionBuilder/utils';
 import {
@@ -57,6 +55,8 @@ import Button from '../../../Common/Button/Button';
 import { defaultPresetsState } from '../DataState';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { generateTableDef } from '../../../Common/utils/pgUtils';
 
 class Permissions extends Component {
   constructor() {
@@ -111,6 +111,7 @@ class Permissions extends Component {
       tableName,
       tableType,
       allSchemas,
+      schemaList,
       ongoingRequest,
       lastError,
       lastFormError,
@@ -176,33 +177,14 @@ class Permissions extends Component {
     };
 
     const getHeader = tableSchema => {
-      const getViewHeader = () => {
-        return (
-          <ViewHeader
-            dispatch={dispatch}
-            tableName={tableName}
-            tabName="permissions"
-            migrationMode={migrationMode}
-            currentSchema={currentSchema}
-          />
-        );
-      };
-
-      const getTableHeader = () => {
-        return (
-          <TableHeader
-            dispatch={dispatch}
-            tableName={tableName}
-            tabName="permissions"
-            migrationMode={migrationMode}
-            currentSchema={currentSchema}
-          />
-        );
-      };
-
-      const isView = tableSchema.view_info;
-
-      return isView ? getViewHeader() : getTableHeader();
+      return (
+        <TableHeader
+          dispatch={dispatch}
+          table={tableSchema}
+          tabName="permissions"
+          migrationMode={migrationMode}
+        />
+      );
     };
 
     const getPermissionsTable = (tableSchema, queryTypes, roleList) => {
@@ -277,23 +259,15 @@ class Permissions extends Component {
 
         const getPermissionsTableRow = (role, newPermRow = null) => {
           const dispatchOpenEdit = queryType => () => {
-            if (newPermRow && permissionsState.newRole !== '') {
-              dispatch(
-                permOpenEdit(tableSchema, permissionsState.newRole, queryType)
-              );
-            } else if (role !== '') {
-              dispatch(permOpenEdit(tableSchema, role, queryType));
-            } else {
+            if (role === '') {
               document.getElementById('new-role-input').focus();
+            } else {
+              dispatch(permOpenEdit(tableSchema, role, queryType));
             }
           };
 
           const dispatchCloseEdit = () => {
             dispatch(permCloseEdit());
-          };
-
-          const dispatchRoleNameChange = e => {
-            dispatch(permSetRoleName(e.target.value));
           };
 
           const dispatchBulkSelect = e => {
@@ -303,10 +277,9 @@ class Permissions extends Component {
           };
 
           // const dispatchDeletePermission = () => {
-          //   const isConfirm = window.confirm(
-          //     'Are you sure you want to delete the permission for role ' + role + '?'
-          //   );
-          //   if (isConfirm) {
+          //   const confirmMessage = `This will delete the currently set permissions for role "${role}"`;
+          //   const isOk = getConfirmation(confirmMessage);
+          //   if (isOk) {
           //     dispatch(permRemoveRole(tableSchema, role));
           //   }
           // };
@@ -372,8 +345,12 @@ class Permissions extends Component {
           const _permissionsRowHtml = [];
 
           // push role value
-          if (newPermRow) {
-            const isNewRole = !roleList.includes(permissionsState.newRole);
+          if (!newPermRow) {
+            _permissionsRowHtml.push(<th key={-2}>{role}</th>);
+          } else {
+            const dispatchRoleNameChange = e => {
+              dispatch(permSetRoleName(e.target.value));
+            };
 
             _permissionsRowHtml.push(
               <th key={-2}>
@@ -383,13 +360,11 @@ class Permissions extends Component {
                   onChange={dispatchRoleNameChange}
                   type="text"
                   placeholder="Enter new role"
-                  value={isNewRole ? permissionsState.newRole : ''}
+                  value={role}
                   data-test="role-textbox"
                 />
               </th>
             );
-          } else {
-            _permissionsRowHtml.push(<th key={-2}>{role}</th>);
           }
 
           // push action permission value
@@ -474,7 +449,9 @@ class Permissions extends Component {
 
         // add new role row
         _permissionsRowsHtml.push(
-          <tr key="newPerm">{getPermissionsTableRow('', true)}</tr>
+          <tr key="newPerm">
+            {getPermissionsTableRow(permissionsState.newRole, true)}
+          </tr>
         );
 
         return <tbody>{_permissionsRowsHtml}</tbody>;
@@ -493,14 +470,14 @@ class Permissions extends Component {
     };
 
     const getBulkSection = tableSchema => {
-      if (!permissionsState.bulkSelect.length) {
+      const bulkSelectedRoles = permissionsState.bulkSelect;
+
+      if (!bulkSelectedRoles.length) {
         return;
       }
 
       const getSelectedRoles = () => {
-        const bulkSelect = permissionsState.bulkSelect;
-
-        return bulkSelect.map(r => {
+        return bulkSelectedRoles.map(r => {
           return (
             <span key={r} className={styles.add_pad_right}>
               <b>{r}</b>{' '}
@@ -510,7 +487,10 @@ class Permissions extends Component {
       };
 
       const handleBulkRemoveClick = () => {
-        if (window.confirm('Are you sure?')) {
+        const confirmMessage =
+          'This will remove all currently set permissions for the selected role(s)';
+        const isOk = getConfirmation(confirmMessage);
+        if (isOk) {
           dispatch(permRemoveMultipleRoles(tableSchema));
         }
       };
@@ -532,7 +512,7 @@ class Permissions extends Component {
     };
 
     const getEditSection = (tableSchema, queryTypes, roleList) => {
-      if (!permissionsState.role || !permissionsState.query) {
+      if (!permissionsState.isEditing) {
         return;
       }
 
@@ -709,7 +689,7 @@ class Permissions extends Component {
               const queries = filterQueries[filter].join(', ');
               const queryLabel = (
                 <span data-test="mutual-check">
-                  With same custom checks as <b>{queries}</b>
+                  With same custom check as <b>{queries}</b>
                 </span>
               );
               _filterOptionsSection.push(
@@ -732,8 +712,9 @@ class Permissions extends Component {
             const dispatchFuncSetFilter = filter =>
               permSetFilter(JSON.parse(filter));
 
-            const dispatchFuncAddTableSchemas = schemaNames =>
-              permAddTableSchemas(schemaNames);
+            const loadSchemasFunc = schemaNames => {
+              dispatch(updateSchemaInfo({ schemas: schemaNames }));
+            };
 
             const isUniqueFilter =
               filterString !== '' &&
@@ -774,10 +755,10 @@ class Permissions extends Component {
               _filterOptionsSection.push(
                 <PermissionBuilder
                   dispatchFuncSetFilter={dispatchFuncSetFilter}
-                  dispatchFuncAddTableSchemas={dispatchFuncAddTableSchemas}
-                  tableName={tableName}
-                  schemaName={currentSchema}
-                  allTableSchemas={permissionsState.tableSchemas}
+                  loadSchemasFunc={loadSchemasFunc}
+                  tableDef={generateTableDef(tableName, currentSchema)}
+                  allTableSchemas={allSchemas}
+                  schemaList={schemaList}
                   filter={filterString}
                   dispatch={dispatch}
                   key={-4}
@@ -1487,7 +1468,9 @@ class Permissions extends Component {
         // };
 
         const applySameBulk = () => {
-          if (window.confirm('Are you sure?')) {
+          const confirmMessage = 'This will overwrite any existing permissions';
+          const isOk = getConfirmation(confirmMessage);
+          if (isOk) {
             dispatch(applySamePermissionsBulk(tableSchema));
           }
         };
@@ -1642,7 +1625,9 @@ class Permissions extends Component {
         };
 
         const dispatchRemoveAccess = () => {
-          const isOk = confirm('Are you sure?');
+          const confirmMessage =
+            'This will permanently delete the currently set permissions';
+          const isOk = getConfirmation(confirmMessage);
           if (isOk) {
             dispatch(permChangePermissions(permChangeTypes.delete));
           }
@@ -1828,6 +1813,7 @@ const mapStateToProps = (state, ownProps) => ({
   tableName: ownProps.params.table,
   tableType: ownProps.route.tableType,
   allSchemas: state.tables.allSchemas,
+  schemaList: state.tables.schemaList,
   migrationMode: state.main.migrationMode,
   currentSchema: state.tables.currentSchema,
   serverVersion: state.main.serverVersion ? state.main.serverVersion : '',

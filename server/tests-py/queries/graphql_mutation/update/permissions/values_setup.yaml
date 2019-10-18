@@ -44,3 +44,12 @@ args:
             , ('george', 26, 'sydney')
             , ('clarke', 21, 'perth')
       ;
+
+#Insert users and accounts
+- type: run_sql
+  args:
+    sql: |
+      insert into "user" (name, is_admin)
+        values ('user_1', false), ('user_2', true)
+      ;
+      insert into account (account_no) values (1), (2) ;

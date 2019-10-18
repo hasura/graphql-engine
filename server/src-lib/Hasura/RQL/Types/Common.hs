@@ -1,6 +1,5 @@
 module Hasura.RQL.Types.Common
-       ( PGColInfo(..)
-       , RelName(..)
+       ( RelName(..)
        , relNameToTxt
        , RelType(..)
        , rootRelName
@@ -16,12 +15,19 @@ module Hasura.RQL.Types.Common
        , ColVals
        , MutateResp(..)
        , ForeignKey(..)
+       , CustomColumnNames
 
        , NonEmptyText
        , mkNonEmptyText
        , unNonEmptyText
        , adminText
        , rootText
+
+       , FunctionArgName(..)
+       , FunctionArg(..)
+
+       , SystemDefined(..)
+       , isSystemDefined
        ) where
 
 import           Hasura.Prelude
@@ -31,21 +37,14 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
-import qualified Data.HashMap.Strict        as HM
-import qualified Data.Text                  as T
-import qualified Database.PG.Query          as Q
-import           Instances.TH.Lift          ()
-import           Language.Haskell.TH.Syntax (Lift)
-import qualified PostgreSQL.Binary.Decoding as PD
+import           Instances.TH.Lift             ()
+import           Language.Haskell.TH.Syntax    (Lift)
 
-data PGColInfo
-  = PGColInfo
-  { pgiName       :: !PGCol
-  , pgiType       :: !PGColType
-  , pgiIsNullable :: !Bool
-  } deriving (Show, Eq)
-
-$(deriveJSON (aesonDrop 3 snakeCase) ''PGColInfo)
+import qualified Data.HashMap.Strict           as HM
+import qualified Data.Text                     as T
+import qualified Database.PG.Query             as Q
+import qualified Language.GraphQL.Draft.Syntax as G
+import qualified PostgreSQL.Binary.Decoding    as PD
 
 newtype NonEmptyText = NonEmptyText {unNonEmptyText :: T.Text}
   deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg, DQuote)
@@ -129,7 +128,7 @@ $(deriveToJSON (aesonDrop 2 snakeCase) ''RelInfo)
 
 newtype FieldName
   = FieldName { getFieldNameTxt :: T.Text }
-  deriving (Show, Eq, Ord, Hashable, FromJSON, ToJSON, FromJSONKey, ToJSONKey, Lift)
+  deriving (Show, Eq, Ord, Hashable, FromJSON, ToJSON, FromJSONKey, ToJSONKey, Lift, Data)
 
 instance IsIden FieldName where
   toIden (FieldName f) = Iden f
@@ -138,7 +137,7 @@ instance DQuote FieldName where
   dquoteTxt (FieldName c) = c
 
 fromPGCol :: PGCol -> FieldName
-fromPGCol (PGCol c) = FieldName c
+fromPGCol c = FieldName $ getPGColTxt c
 
 fromRel :: RelName -> FieldName
 fromRel = FieldName . relNameToTxt
@@ -184,3 +183,23 @@ data ForeignKey
 $(deriveJSON (aesonDrop 3 snakeCase) ''ForeignKey)
 
 instance Hashable ForeignKey
+
+newtype FunctionArgName =
+  FunctionArgName { getFuncArgNameTxt :: T.Text}
+  deriving (Show, Eq, ToJSON, FromJSON, Lift, DQuote, IsString)
+
+type CustomColumnNames = HM.HashMap PGCol G.Name
+
+data FunctionArg
+  = FunctionArg
+  { faName       :: !(Maybe FunctionArgName)
+  , faType       :: !QualifiedPGType
+  , faHasDefault :: !Bool
+  } deriving (Show, Eq)
+$(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionArg)
+
+newtype SystemDefined = SystemDefined { unSystemDefined :: Bool }
+  deriving (Show, Eq, FromJSON, ToJSON, Q.ToPrepArg)
+
+isSystemDefined :: SystemDefined -> Bool
+isSystemDefined = unSystemDefined

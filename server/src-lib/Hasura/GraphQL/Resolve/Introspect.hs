@@ -6,20 +6,19 @@ module Hasura.GraphQL.Resolve.Introspect
 import           Data.Has
 import           Hasura.Prelude
 
-import qualified Data.Aeson                        as J
-import qualified Data.HashMap.Strict               as Map
-import qualified Data.HashSet                      as Set
-import qualified Data.Text                         as T
-import qualified Language.GraphQL.Draft.Syntax     as G
+import qualified Data.Aeson                         as J
+import qualified Data.HashMap.Strict                as Map
+import qualified Data.HashSet                       as Set
+import qualified Data.Text                          as T
+import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
-import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Context
 import           Hasura.GraphQL.Validate.Field
+import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
-import           Hasura.SQL.Value
 
 data TypeKind
   = TKSCALAR
@@ -163,7 +162,7 @@ enumTypeR (EnumTyInfo descM n vals _) fld =
     "name"        -> retJ $ namedTyToTxt n
     "description" -> retJ $ fmap G.unDescription descM
     "enumValues"  -> fmap J.toJSON $ mapM (enumValueR subFld) $
-                     sortOn _eviVal $ Map.elems vals
+                     sortOn _eviVal $ Map.elems (normalizeEnumValues vals)
     _             -> return J.Null
 
 -- 4.5.2.6
@@ -334,22 +333,16 @@ schemaR fld =
     _              -> return J.Null
 
 typeR
-  :: ( MonadReader r m, Has TypeMap r
-     , MonadError QErr m)
+  :: (MonadReusability m, MonadError QErr m, MonadReader r m, Has TypeMap r)
   => Field -> m J.Value
 typeR fld = do
-  name <- withArg args "name" $ \arg -> do
-    pgColVal <- _apvValue <$> asPGColVal arg
-    case pgColVal of
-      PGValText t -> return t
-      _           -> throw500 "expecting string for name arg of __type"
+  name <- asPGColText =<< getArg args "name"
   typeR' (G.Name name) fld
   where
     args = _fArguments fld
 
 typeR'
-  :: ( MonadReader r m, Has TypeMap r
-     , MonadError QErr m)
+  :: (MonadReader r m, Has TypeMap r, MonadError QErr m)
   => G.Name -> Field -> m J.Value
 typeR' n fld = do
   tyMap <- asks getter

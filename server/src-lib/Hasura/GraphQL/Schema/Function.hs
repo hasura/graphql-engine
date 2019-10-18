@@ -3,6 +3,7 @@ module Hasura.GraphQL.Schema.Function
   , mkFuncArgsInp
   , mkFuncQueryFld
   , mkFuncAggQueryFld
+  , mkFuncArgsTy
   ) where
 
 import qualified Data.Sequence                 as Seq
@@ -16,15 +17,6 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-mkFuncArgsName :: QualifiedFunction -> G.Name
-mkFuncArgsName fn =
-  qualObjectToName fn <> "_args"
-
-mkFuncArgsTy :: QualifiedFunction -> G.NamedType
-mkFuncArgsTy =
-  G.NamedType . mkFuncArgsName
-
-
 {-
 input function_args {
   arg1: arg-type1!
@@ -36,25 +28,23 @@ input function_args {
 
 procFuncArgs
   :: Seq.Seq FunctionArg
-  -> (PGColType -> Text -> a) -> [a]
+  -> (FunctionArg -> Text -> a) -> [a]
 procFuncArgs argSeq f =
   fst $ foldl mkItem ([], 1::Int) argSeq
   where
-    mkItem (items, argNo) (FunctionArg nameM ty) =
-      case nameM of
+    mkItem (items, argNo) fa =
+      case faName fa of
         Just argName ->
           let argT = getFuncArgNameTxt argName
-          in (items <> pure (f ty argT), argNo)
+          in (items <> pure (f fa argT), argNo)
         Nothing ->
           let argT = "arg_" <> T.pack (show argNo)
-          in (items <> pure (f ty argT), argNo + 1)
+          in (items <> pure (f fa argT), argNo + 1)
 
-mkFuncArgsInp :: FunctionInfo -> Maybe InpObjTyInfo
-mkFuncArgsInp funcInfo =
+mkFuncArgsInp :: QualifiedFunction -> Seq.Seq FunctionArg -> Maybe InpObjTyInfo
+mkFuncArgsInp funcName funcArgs =
   bool (Just inpObj) Nothing $ null funcArgs
   where
-    funcName = fiName funcInfo
-    funcArgs = fiInputArgs funcInfo
     funcArgsTy = mkFuncArgsTy funcName
 
     inpObj = mkHsraInpTyInfo Nothing funcArgsTy $
@@ -62,9 +52,9 @@ mkFuncArgsInp funcInfo =
 
     argInps = procFuncArgs funcArgs mkInpVal
 
-    mkInpVal ty t =
+    mkInpVal fa t =
       InpValInfo Nothing (G.Name t) Nothing $
-      G.toGT $ mkScalarTy ty
+      G.toGT $ mkScalarTy $ _qptName $ faType fa
 
 {-
 
@@ -91,14 +81,14 @@ mkFuncArgs funInfo =
     funcInpArgs = bool [funcInpArg] [] $ null funcArgs
 
 mkFuncQueryFld
-  :: FunctionInfo -> ObjFldInfo
-mkFuncQueryFld funInfo =
+  :: FunctionInfo -> Maybe PGDescription -> ObjFldInfo
+mkFuncQueryFld funInfo descM =
   mkHsraObjFldInfo (Just desc) fldName (mkFuncArgs funInfo) ty
   where
     retTable = fiReturnType funInfo
     funcName = fiName funInfo
 
-    desc = G.Description $ "execute function " <> funcName
+    desc = mkDescriptionWith descM $ "execute function " <> funcName
            <<> " which returns " <>> retTable
     fldName = qualObjectToName funcName
 
@@ -116,14 +106,14 @@ function_aggregate(
 -}
 
 mkFuncAggQueryFld
-  :: FunctionInfo -> ObjFldInfo
-mkFuncAggQueryFld funInfo =
+  :: FunctionInfo -> Maybe PGDescription -> ObjFldInfo
+mkFuncAggQueryFld funInfo descM =
   mkHsraObjFldInfo (Just desc) fldName (mkFuncArgs funInfo) ty
   where
     funcName = fiName funInfo
     retTable = fiReturnType funInfo
 
-    desc = G.Description $ "execute function " <> funcName
+    desc = mkDescriptionWith descM $ "execute function " <> funcName
            <<> " and query aggregates on result of table type "
            <>> retTable
 

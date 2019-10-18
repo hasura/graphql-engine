@@ -12,26 +12,26 @@ packages:
     version: 0.1.0
     git: https://github.com/hasura/pg-client-hs.git
     pantry-tree:
-      size: 1051
-      sha256: fbab919039158f3714c3f0ac3d605d3fb9c85061517b4b9fc67147403b0b9975
-    commit: 16f27a134f12c4f24fee19d57f0ca179bdb4135b
+      size: 1107
+      sha256: e008d56e5b0535223b856be94a8e71e31d7dabe10b2951a38447df5089de1876
+    commit: de5c023ed7d2f75a77972ff52b6e5ed19d010ca2
   original:
     git: https://github.com/hasura/pg-client-hs.git
-    commit: 16f27a134f12c4f24fee19d57f0ca179bdb4135b
+    commit: de5c023ed7d2f75a77972ff52b6e5ed19d010ca2
 - completed:
     cabal-file:
-      size: 3295
-      sha256: 5c53f2e67996f9e3f85002f95a929a04b85a44e00ffbf1b7a8c034c5098aa630
+      size: 3364
+      sha256: 09bad175e8ccb1fec5ddbc94d95d18b4206ac4481cf3749e42ffbaac90bc4a37
     name: graphql-parser
     version: 0.1.0.0
     git: https://github.com/hasura/graphql-parser-hs.git
     pantry-tree:
-      size: 1771
-      sha256: 6e506a5dbf965325c515efc523e63bbc15640c994a5dbe21448d328c7ba619a1
-    commit: 1ccdbb4c4d743b679f3141992df39feaee971640
+      size: 1826
+      sha256: 4ac0632e9f0e2c386b056ac078cf04fd4c211f683c0fee51e767da913d7d4764
+    commit: f3d9b645efd9adb143e2ad4c6b73bded1578a4e9
   original:
     git: https://github.com/hasura/graphql-parser-hs.git
-    commit: 1ccdbb4c4d743b679f3141992df39feaee971640
+    commit: f3d9b645efd9adb143e2ad4c6b73bded1578a4e9
 - completed:
     cabal-file:
       size: 1253
@@ -46,13 +46,6 @@ packages:
   original:
     git: https://github.com/hasura/ci-info-hs.git
     commit: ad6df731584dc89b72a6e131687d37ef01714fe8
-- completed:
-    hackage: ginger-0.8.4.0@sha256:21c3051af3c90af39c40a50400c9a1a0fcccb544528e37cde30bdd30048437d8,3151
-    pantry-tree:
-      size: 1375
-      sha256: f8a7cb091ea4d8011bd530f83a22941a009d97ee7ccd4c93d0528aa72f3636ea
-  original:
-    hackage: ginger-0.8.4.0
 - completed:
     hackage: select-0.4.0.1@sha256:d409315752a069693bdd4169fa9a8ea7777d814da77cd8604f367cf0741de295,2492
     pantry-tree:
@@ -95,6 +88,27 @@ packages:
       sha256: 86140298020f68bb09d07b26a6a6f1666fc3a02715d7986b09150727247a1a84
   original:
     hackage: Spock-core-0.13.0.0
+- completed:
+    hackage: monad-validate-1.2.0.0@sha256:9850f408431098b28806dd464b6825a88a0b56c84f380d7fe0454c1df9d6f881,3505
+    pantry-tree:
+      size: 713
+      sha256: 8e049bd12ce2bd470909578f2ee8eb80b89d5ff88860afa30e29dd4eafecfa3e
+  original:
+    hackage: monad-validate-1.2.0.0
+- completed:
+    hackage: shakespeare-2.0.22@sha256:d6b154e21e3307d7ca30ae505bad865d0408efe317ec47eb81f559e6ae57ae81,4674
+    pantry-tree:
+      size: 3585
+      sha256: 3561f4c3121d05e5390c2b32f9e0a58b6408ecb5cfb74f234f3b8ca37b467a5e
+  original:
+    hackage: shakespeare-2.0.22
+- completed:
+    hackage: brotli-0.0.0.0@sha256:0a8232f028dbc6a1f9db291ef996a5abe74aa00c7c3dc00a741c41f3da75a4dc,2873
+    pantry-tree:
+      size: 407
+      sha256: f4c2e742f10ca010554aeb0037294f118be4f35228acca98c0df97e1093bca33
+  original:
+    hackage: brotli-0.0.0.0
 snapshots:
 - completed:
     size: 498167

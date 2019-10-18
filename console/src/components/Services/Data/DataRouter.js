@@ -34,7 +34,6 @@ import {
   fetchFunctionInit,
   UPDATE_CURRENT_SCHEMA,
   updateSchemaInfo,
-  // UPDATE_DATA_HEADERS,
   // ADMIN_SECRET_ERROR,
 } from './DataActions';
 

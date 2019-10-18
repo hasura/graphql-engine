@@ -12,15 +12,21 @@ module Hasura.Db
   , RespTx
   , LazyRespTx
   , defaultTxErrorHandler
+  , mkTxErrorHandler
   ) where
 
-import qualified Data.Aeson.Extended         as J
-import qualified Database.PG.Query           as Q
+import           Control.Lens
+import           Control.Monad.Validate
+
+import qualified Data.Aeson.Extended          as J
+import qualified Database.PG.Query            as Q
+import qualified Database.PG.Query.Connection as Q
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Permission
+import           Hasura.SQL.Error
 import           Hasura.SQL.Types
 
 data PGExecCtx
@@ -34,10 +40,19 @@ class (MonadError QErr m) => MonadTx m where
 
 instance (MonadTx m) => MonadTx (StateT s m) where
   liftTx = lift . liftTx
-
 instance (MonadTx m) => MonadTx (ReaderT s m) where
   liftTx = lift . liftTx
+instance (MonadTx m) => MonadTx (ValidateT e m) where
+  liftTx = lift . liftTx
 
+-- | Like 'Q.TxE', but defers acquiring a Postgres connection until the first execution of 'liftTx'.
+-- If no call to 'liftTx' is ever reached (i.e. a successful result is returned or an error is
+-- raised before ever executing a query), no connection is ever acquired.
+--
+-- This is useful for certain code paths that only conditionally need database access. For example,
+-- although most queries will eventually hit Postgres, introspection queries or queries that
+-- exclusively use remote schemas never will; using 'LazyTx' keeps those branches from unnecessarily
+-- allocating a connection.
 data LazyTx e a
   = LTErr !e
   | LTNoTx !a
@@ -76,9 +91,39 @@ setHeadersTx uVars =
       pgFmtLit (J.encodeToStrictText uVars)
 
 defaultTxErrorHandler :: Q.PGTxErr -> QErr
-defaultTxErrorHandler txe =
-  let e = internalError "postgres query error"
-  in e {qeInternal = Just $ J.toJSON txe}
+defaultTxErrorHandler = mkTxErrorHandler (const False)
+
+-- | Constructs a transaction error handler given a predicate that determines which errors are
+-- expected and should be reported to the user. All other errors are considered internal errors.
+mkTxErrorHandler :: (PGErrorType -> Bool) -> Q.PGTxErr -> QErr
+mkTxErrorHandler isExpectedError txe = fromMaybe unexpectedError expectedError
+  where
+    unexpectedError = (internalError "postgres query error") { qeInternal = Just $ J.toJSON txe }
+    expectedError = uncurry err400 <$> do
+      errorDetail <- Q.getPGStmtErr txe
+      message <- Q.edMessage errorDetail
+      errorType <- pgErrorType errorDetail
+      guard $ isExpectedError errorType
+      pure $ case errorType of
+        PGIntegrityConstraintViolation code ->
+          let cv = (ConstraintViolation,)
+              customMessage = (code ^? _Just._PGErrorSpecific) <&> \case
+                PGRestrictViolation -> cv "Can not delete or update due to data being referred. "
+                PGNotNullViolation -> cv "Not-NULL violation. "
+                PGForeignKeyViolation -> cv "Foreign key violation. "
+                PGUniqueViolation -> cv "Uniqueness violation. "
+                PGCheckViolation -> (PermissionError, "Check constraint violation. ")
+                PGExclusionViolation -> cv "Exclusion violation. "
+          in maybe (ConstraintViolation, message) (fmap (<> message)) customMessage
+
+        PGDataException code -> case code of
+          Just (PGErrorSpecific PGInvalidEscapeSequence) -> (BadRequest, message)
+          _ -> (DataException, message)
+
+        PGSyntaxErrorOrAccessRuleViolation code -> (ConstraintError,) $ case code of
+          Just (PGErrorSpecific PGInvalidColumnReference) ->
+            "there is no unique or exclusion constraint on target column(s)"
+          _ -> message
 
 withUserInfo :: UserInfo -> LazyTx QErr a -> LazyTx QErr a
 withUserInfo uInfo = \case

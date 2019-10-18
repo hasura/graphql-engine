@@ -19,6 +19,7 @@ import {
 import { modalOpen, modalClose } from './Actions';
 import globals from '../../../../Globals';
 import './AceEditorFix.css';
+import { CLI_CONSOLE_MODE } from '../../../../constants';
 
 const RawSQL = ({
   sql,
@@ -81,10 +82,9 @@ const RawSQL = ({
       if (isMigration && migrationName.length === 0) {
         migrationName = 'run_sql_migration';
       }
-      if (!isMigration && globals.consoleMode === 'cli') {
+      if (!isMigration && globals.consoleMode === CLI_CONSOLE_MODE) {
         // if migration is not checked, check if is schema modification
         if (isSchemaModification(sql)) {
-          // const confirmation = window.confirm('Your SQL Statement has a schema modifying command. Are you sure its not a migration?');
           dispatch(modalOpen());
           const confirmation = false;
           if (confirmation) {
@@ -302,19 +302,21 @@ const RawSQL = ({
   const getMetadataCascadeSection = () => {
     return (
       <div className={styles.add_mar_top_small}>
-        <input
-          checked={isCascadeChecked}
-          className={styles.add_mar_right_small}
-          id="cascade-checkbox"
-          type="checkbox"
-          onChange={() => {
-            dispatch({
-              type: SET_CASCADE_CHECKED,
-              data: !isCascadeChecked,
-            });
-          }}
-        />
-        Cascade metadata
+        <label>
+          <input
+            checked={isCascadeChecked}
+            className={styles.add_mar_right_small}
+            id="cascade-checkbox"
+            type="checkbox"
+            onChange={() => {
+              dispatch({
+                type: SET_CASCADE_CHECKED,
+                data: !isCascadeChecked,
+              });
+            }}
+          />
+          Cascade metadata
+        </label>
         <OverlayTrigger placement="right" overlay={cascadeTip}>
           <i
             className={`${styles.add_mar_left_small} fa fa-info-circle`}
@@ -369,15 +371,17 @@ const RawSQL = ({
 
       return (
         <div>
-          <input
-            checked={isMigrationChecked}
-            className={styles.add_mar_right_small}
-            id="migration-checkbox"
-            type="checkbox"
-            onChange={dispatchIsMigration}
-            data-test="raw-sql-migration-check"
-          />
-          This is a migration
+          <label>
+            <input
+              checked={isMigrationChecked}
+              className={styles.add_mar_right_small}
+              id="migration-checkbox"
+              type="checkbox"
+              onChange={dispatchIsMigration}
+              data-test="raw-sql-migration-check"
+            />
+            This is a migration
+          </label>
           <OverlayTrigger placement="right" overlay={migrationTip}>
             <i
               className={`${styles.add_mar_left_small} fa fa-info-circle`}
@@ -432,7 +436,7 @@ const RawSQL = ({
       return migrationNameSection;
     };
 
-    if (migrationMode && globals.consoleMode === 'cli') {
+    if (migrationMode && globals.consoleMode === CLI_CONSOLE_MODE) {
       migrationSection = (
         <div className={styles.add_mar_top_small}>
           {getIsMigrationSection()}
