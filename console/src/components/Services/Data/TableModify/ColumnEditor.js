@@ -79,7 +79,7 @@ const ColumnEditor = ({
     if (!supportAliasing) return;
     return (
       <div className={`${styles.display_flex} form-group`}>
-        <label className="col-xs-2">GraphQL Alias</label>
+        <label className="col-xs-2">Custom GraphQL field</label>
         <div className="col-xs-6">
           <input
             className="input-sm form-control"
@@ -89,6 +89,7 @@ const ColumnEditor = ({
             data-test="edit-col-alias"
           />
         </div>
+        <div className="col-xs-2" />
       </div>
     );
   };
