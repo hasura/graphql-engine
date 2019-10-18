@@ -1,24 +1,26 @@
 module Main (main) where
 
-import Hasura.Prelude
+import           Hasura.Prelude
 
+import           Data.Time.Clock         (getCurrentTime)
 import           Options.Applicative
-import           System.Environment         (getEnvironment)
-import           System.Exit                (exitFailure)
-import Test.Hspec
-import           Data.Time.Clock            (getCurrentTime)
+import           System.Environment      (getEnvironment)
+import           System.Exit             (exitFailure)
+import           Test.Hspec
 
-import qualified Test.Hspec.Core.Runner as Hspec
-import qualified Database.PG.Query            as Q
-import qualified Network.HTTP.Client        as HTTP
-import qualified Network.HTTP.Client.TLS    as HTTP
+import qualified Database.PG.Query       as Q
+import qualified Network.HTTP.Client     as HTTP
+import qualified Network.HTTP.Client.TLS as HTTP
+import qualified Test.Hspec.Core.Runner  as Hspec
 
-import Hasura.Db (PGExecCtx(..))
-import           Hasura.Server.Init (parseRawConnInfo, runWithEnv, mkConnInfo, mkRawConnInfo)
+import           Hasura.Db               (PGExecCtx (..))
+import           Hasura.RQL.Types        (QErr, SQLGenCtx (..), adminUserInfo,
+                                          emptySchemaCache)
+import           Hasura.Server.Init      (mkConnInfo, mkRawConnInfo,
+                                          parseRawConnInfo, runWithEnv)
 import           Hasura.Server.Migrate
-import Hasura.RQL.Types (QErr, SQLGenCtx(..), adminUserInfo, emptySchemaCache)
-import Hasura.Server.Query (Run, RunCtx(..), peelRun)
-import Hasura.Server.PGDump
+import           Hasura.Server.PGDump
+import           Hasura.Server.Query     (Run, RunCtx (..), peelRun)
 
 main :: IO ()
 main = do

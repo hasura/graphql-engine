@@ -16,24 +16,24 @@ module Hasura.Server.Migrate
   , dropCatalog
   ) where
 
-import           Data.Time.Clock            (UTCTime)
+import           Data.Time.Clock               (UTCTime)
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                 as A
-import qualified Data.Text                  as T
-import qualified Data.Yaml.TH               as Y
-import qualified Database.PG.Query          as Q
-import qualified Database.PG.Query.Connection as Q
-import qualified Language.Haskell.TH.Lib    as TH
-import qualified Language.Haskell.TH.Syntax as TH
+import qualified Data.Aeson                    as A
+import qualified Data.Text                     as T
+import qualified Data.Yaml.TH                  as Y
+import qualified Database.PG.Query             as Q
+import qualified Database.PG.Query.Connection  as Q
+import qualified Language.Haskell.TH.Lib       as TH
+import qualified Language.Haskell.TH.Syntax    as TH
 
-import           Hasura.Logging             (LogLevel (..), ToEngineLog (..))
-import           Hasura.Server.Logging      (StartupLog (..))
-import           Hasura.Server.Migrate.Version            (latestCatalogVersion,
-                                             latestCatalogVersionString)
+import           Hasura.Logging                (LogLevel (..), ToEngineLog (..))
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
+import           Hasura.Server.Logging         (StartupLog (..))
+import           Hasura.Server.Migrate.Version (latestCatalogVersion,
+                                                latestCatalogVersionString)
 import           Hasura.Server.Query
 import           Hasura.SQL.Types
 
@@ -108,7 +108,7 @@ migrateCatalog migrationTime = do
             Q.PGIUnexpected _ -> requiredError
             Q.PGIStatement pgErr -> case Q.edStatusCode pgErr of
               Just "42501" -> err500 PostgresError permissionsMessage
-              _ -> requiredError
+              _            -> requiredError
           where
             requiredError =
               (err500 PostgresError requiredMessage) { qeInternal = Just $ A.toJSON e }

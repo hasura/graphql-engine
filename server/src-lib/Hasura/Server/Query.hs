@@ -139,9 +139,9 @@ $(deriveJSON
 
 data RunCtx
   = RunCtx
-  { _rcUserInfo      :: !UserInfo
-  , _rcHttpMgr       :: !HTTP.Manager
-  , _rcSqlGenCtx     :: !SQLGenCtx
+  { _rcUserInfo  :: !UserInfo
+  , _rcHttpMgr   :: !HTTP.Manager
+  , _rcSqlGenCtx :: !SQLGenCtx
   }
 
 newtype Run a

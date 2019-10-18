@@ -15,17 +15,20 @@ import qualified Data.ByteString.Lazy.Char8 as BLC
 import qualified Data.Text                  as T
 import qualified Data.Time.Clock            as Clock
 import qualified Data.Yaml                  as Y
+import qualified Database.PG.Query          as Q
 import qualified Network.HTTP.Client        as HTTP
 import qualified Network.HTTP.Client.TLS    as HTTP
 import qualified Network.Wai.Handler.Warp   as Warp
 import qualified System.Posix.Signals       as Signals
-import qualified Database.PG.Query          as Q
 
 import           Hasura.Db
+import           Hasura.EncJSON
 import           Hasura.Events.Lib
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
+import           Hasura.RQL.DDL.Schema
+import           Hasura.RQL.Types
 import           Hasura.Server.App          (HasuraApp (..),
                                              SchemaCacheRef (..), getSCFromRef,
                                              logInconsObjs, mkWaiApp)
@@ -33,15 +36,12 @@ import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates (checkForUpdates)
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
+import           Hasura.Server.Migrate      (dropCatalog, migrateCatalog)
 import           Hasura.Server.Query        (RunCtx (..), peelRun)
+import           Hasura.Server.Query
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
 import           Hasura.Server.Version      (currentVersion)
-import           Hasura.EncJSON
-import           Hasura.RQL.DDL.Schema
-import           Hasura.RQL.Types
-import           Hasura.Server.Query
-import           Hasura.Server.Migrate                    (migrateCatalog, dropCatalog)
 
 printErrExit :: forall a . String -> IO a
 printErrExit = (>> exitFailure) . putStrLn
