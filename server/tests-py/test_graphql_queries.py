@@ -504,3 +504,12 @@ class TestGraphQLQueryEnums(DefaultTestSelectQueries):
 
     def test_select_where_enum_eq_without_enum_table_visibility(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_where_enum_eq_without_enum_table_visibility.yaml', transport)
+
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+class TestGraphQLQueryCaching(DefaultTestSelectQueries):
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/caching'
+
+    def test_include_directive(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/include_directive.yaml', transport)
