@@ -135,9 +135,7 @@ clearMetadata = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "DELETE FROM hdb_catalog.hdb_query_collection WHERE is_system_defined <> 'true'" () False
 
 runClearMetadata
-  :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m
-     , HasHttpManager m, HasSystemDefined m, HasSQLGenCtx m
-     )
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
   => ClearMetadata -> m EncJSON
 runClearMetadata _ = do
   adminOnly
@@ -236,7 +234,7 @@ applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = 
       let tableName = tableMeta ^. tmTable
           isEnum = tableMeta ^. tmIsEnum
           config = tableMeta ^. tmConfiguration
-      void $ DS.trackExistingTableOrViewP2 tableName isEnum config
+      void $ DS.trackExistingTableOrViewP2 tableName systemDefined isEnum config
 
     -- Relationships
     indexedForM_ tables $ \table -> do
@@ -456,9 +454,7 @@ instance FromJSON ReloadMetadata where
 $(deriveToJSON defaultOptions ''ReloadMetadata)
 
 runReloadMetadata
-  :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m
-     , HasHttpManager m, HasSystemDefined m, HasSQLGenCtx m
-     )
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
   => ReloadMetadata -> m EncJSON
 runReloadMetadata _ = do
   adminOnly

@@ -50,7 +50,7 @@ import           Hasura.RQL.Types.QueryCollection
 import           Hasura.SQL.Types
 
 type CacheBuildM m
-  = (CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m, HasSystemDefined m)
+  = (CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
 
 buildSchemaCache :: (CacheBuildM m) => m ()
 buildSchemaCache = buildSchemaCacheWithOptions True
@@ -121,7 +121,7 @@ buildSchemaCacheWithOptions withSetup = do
         mkAllTriggersQ trn qt allCols (stringifyNum sqlGenCtx) (etcDefinition etc)
 
   -- sql functions
-  forM_ functions $ \(CatalogFunction qf rawfiM) -> do
+  forM_ functions $ \(CatalogFunction qf systemDefined rawfiM) -> do
     let def = toJSON $ TrackFunction qf
         mkInconsObj =
           InconsistentMetadataObj (MOFunction qf) MOTFunction def
@@ -129,7 +129,7 @@ buildSchemaCacheWithOptions withSetup = do
       withSchemaObject_ mkInconsObj $ do
       rawfi <- onNothing rawfiM $
         throw400 NotExists $ "no such function exists in postgres : " <>> qf
-      trackFunctionP2Setup qf rawfi
+      trackFunctionP2Setup qf systemDefined rawfi
 
   -- allow list
   replaceAllowlist $ concatMap _cdQueries allowlistDefs

@@ -197,6 +197,8 @@ library
                      , Hasura.Server.PGDump
                      , Hasura.Server.Config
                      , Hasura.Server.Compression
+                     , Hasura.Server.Migrate
+                     , Hasura.Server.Migrate.Version
 
                      , Hasura.RQL.Types
                      , Hasura.RQL.Instances
@@ -343,6 +345,3 @@ executable graphql-engine
                      , uuid
                      , unix
 
-  other-modules:       Ops
-                     , Migrate
-                     , Migrate.Version
