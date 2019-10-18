@@ -1,4 +1,4 @@
-Clean-up event data
+Clean up event data
 ===================
 .. contents:: Table of contents
   :backlinks: none
@@ -8,8 +8,8 @@ Clean-up event data
 
 Hasura stores event data associated with Event Triggers in the metadata schema. If there are lots of events, the metadata tables can get huge and you may want to prune them. You can use any of the following options to prune your event data depending on your need.
 
-Tables
-------
+Tables involved
+---------------
 
 Event Triggers have 2 tables managed by Hasura:
 
