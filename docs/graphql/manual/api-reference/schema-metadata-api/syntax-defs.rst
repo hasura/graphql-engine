@@ -58,6 +58,15 @@ RoleName
 
   String
 
+.. _ComputedFieldName:
+
+ComputedFieldName
+^^^^^^^^^^^^^^^^^^
+
+.. parsed-literal::
+
+  String
+
 .. _PGColumnType:
 
 PGColumnType
