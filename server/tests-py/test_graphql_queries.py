@@ -501,3 +501,27 @@ class TestGraphQLQueryEnums(DefaultTestSelectQueries):
 
     def test_select_where_enum_eq_variable_bad_value(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_where_enum_eq_variable_bad_value.yaml', transport)
+
+    def test_select_where_enum_eq_without_enum_table_visibility(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_where_enum_eq_without_enum_table_visibility.yaml', transport)
+
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+class TestGraphQLQueryComputedFields(DefaultTestSelectQueries):
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/computed_fields'
+
+    def test_computed_fields(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/computed_fields.yaml', transport)
+
+    def test_computed_fields_permission(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/computed_fields_permission.yaml', transport)
+
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+class TestGraphQLQueryCaching(DefaultTestSelectQueries):
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/caching'
+
+    def test_include_directive(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/include_directive.yaml', transport)
