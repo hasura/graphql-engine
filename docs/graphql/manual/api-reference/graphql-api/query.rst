@@ -1320,6 +1320,87 @@ Columns of type ``geography`` are more accurate, but they don’t support as man
 
 (For more details on what these operators do, refer to the `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`__).
 
+*Example: _contains*
+
+Fetch all authors living within a particular pincode (present in ``address`` JSONB column):
+
+.. graphiql::
+  :view_only:
+  :query:
+    query get_authors_in_pincode ($jsonFilter: jsonb){
+      author(
+        where: {
+          address: {_contains: $jsonFilter }
+        }
+      ) {
+        id
+        name
+        address
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 1,
+            "name": "Ash",
+            "address": {
+              "street_address": "161, 19th Main Road, Koramangala 6th Block",
+              "city": "Bengaluru",
+              "state": "Karnataka",
+              "pincode": 560095,
+              "phone": "9090909090",
+            }
+          }
+        ]
+      }
+    }
+  :variables:
+    {
+      "jsonFilter": {
+        "pincode": 560095
+      }
+    }
+
+*Example: _has_key*
+
+Fetch authors if the ``phone`` key is present in their JSONB ``address`` column:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query get_authors_if_phone {
+      author(
+        where: {
+          address: {_has_key: "phone" }
+        }
+      ) {
+        id
+        name
+        address
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 1,
+            "name": "Ash",
+            "address": {
+              "street_address": "161, 19th Main Road, Koramangala 6th Block",
+              "city": "Bengaluru",
+              "state": "Karnataka",
+              "pincode": 560095,
+              "phone": "9090909090"
+            }
+          }
+        ]
+      }
+    }
+
+
 **PostGIS related operators on GEOMETRY columns:**
 
 .. list-table::
@@ -1346,6 +1427,117 @@ Columns of type ``geography`` are more accurate, but they don’t support as man
 
 (For more details on what these operators do, refer to the `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__).
 
+The ``_st_contains``, ``_st_crosses``, ``_st_equals``, ``_st_intersects``, ``_st_overlaps``, ``_st_touches``,
+``_st_within`` and ``_st_d_within`` operators are used to filter based on ``geometry`` like columns.
+
+``_st_d_within`` and ``_st_intersects`` can be used on ``geography`` columns also.
+
+For more details on what these operators do, refer to
+`PostGIS spatial relationship docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`_.
+
+Use JSON representation (see `GeoJSON <https://tools.ietf.org/html/rfc7946>`_) of ``geometry`` and ``geography`` values in
+``variables`` as shown in the following examples:
+
+
+*Example: _st_within*
+
+Fetch a list of geometry values which are within the given ``polygon`` value:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query geom_table($polygon: geometry){
+      geom_table(
+        where: {geom_col: {_st_within: $polygon}}
+      ){
+        id
+        geom_col
+      }
+    }
+  :response:
+    {
+      "data": {
+        "geom_table": [
+          {
+            "id": 1,
+            "geom_col": {
+              "type": "Point",
+              "coordinates": [
+                1,
+                2
+              ]
+            }
+          }
+        ]
+      }
+    }
+  :variables:
+    {
+      "polygon": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [ 0, 0 ],
+            [ 0, 2 ],
+            [ 2, 2 ],
+            [ 2, 0 ],
+            [ 0, 0 ]
+          ]
+        ]
+      }
+    }
+
+*Example: _st_d_within*
+
+Fetch a list of ``geometry`` values which are 3 units from given ``point`` value:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query geom_table($point: geometry){
+      geom_table(
+        where: {geom_col: {_st_d_within: {distance: 3, from: $point}}}
+      ){
+        id
+        geom_col
+      }
+    }
+  :response:
+    {
+      "data": {
+        "geom_table": [
+          {
+            "id": 1,
+            "geom_col": {
+              "type": "Point",
+              "coordinates": [
+                1,
+                2
+              ]
+            }
+          },
+          {
+            "id": 2,
+            "geom_col": {
+              "type": "Point",
+              "coordinates": [
+                3,
+                0
+              ]
+            }
+          }
+        ]
+      }
+    }
+  :variables:
+    {
+      "point": {
+        "type": "Point",
+        "coordinates": [ 0, 0 ]
+      }
+    }
+
+
 .. note::
 
    - All operators take a JSON representation of ``geometry/geography`` values as input value.
@@ -1363,6 +1555,46 @@ Columns of type ``geography`` are more accurate, but they don’t support as man
 
 Executes ``boolean ST_Intersects( raster <raster-column> , raster <input-raster> )``
 
+*Example: _st_intersects_rast*
+
+Filter the raster values which intersect the input raster value.
+
+Executes the following SQL function:
+
+.. code-block:: sql
+
+   boolean ST_Intersects( raster <raster-col> , raster <raster-value> );
+
+
+.. graphiql::
+  :view_only:
+  :query:
+   query getIntersectingValues ($rast: raster){
+     dummy_rast(where: {rast: {_st_intersects_rast: $rast}}){
+       rid
+       rast
+     }
+   }
+  :response:
+   {
+     "data": {
+       "dummy_rast": [
+         {
+           "rid": 1,
+           "rast": "01000001009A9999999999E93F9A9999999999E9BF000000000000F0BF000000000000104000000000000000000000000000000000E610000005000500440000010101000101010101010101010101010101010001010100"
+         },
+         {
+           "rid": 2,
+           "rast": "0100000100166C8E335B91F13FE2385B00285EF6BF360EE40064EBFFBF8D033900D9FA134000000000000000000000000000000000E610000005000500440000000101010001010101010101010101010101000101010000"
+         }
+       ]
+     }
+   }
+  :variables:
+   {
+     "rast": "0100000100000000000000004000000000000000C00000000000000000000000000000084000000000000000000000000000000000E610000001000100440001"
+   }
+
 .. parsed-literal ::
 
    { _st_intersects_rast: raster }
@@ -1378,7 +1610,57 @@ This accepts ``st_intersects_nband_geom_input`` input object
 
    { _st_intersects_nband_geom: {nband: Integer! geommin: geometry!}
 
+*Example: _st_intersects_nband_geom*
 
+Filter the raster values (with specified band number) which intersect the input geometry value.
+
+Executes the following SQL function:
+
+.. code-block:: sql
+
+   boolean ST_Intersects( raster <raster-col> , integer nband , geometry geommin );
+
+
+.. graphiql::
+  :view_only:
+  :query:
+    query getIntersectingValues ($point: geometry!){
+      dummy_rast(where: {rast: {_st_intersects_nband_geom: {nband: 5 geommin: $point}}}){
+        rid
+        rast
+      }
+    }
+  :response:
+   {
+     "data": {
+       "dummy_rast": [
+         {
+           "rid": 1,
+           "rast": "01000001009A9999999999E93F9A9999999999E9BF000000000000F0BF000000000000104000000000000000000000000000000000E610000005000500440000010101000101010101010101010101010101010001010100"
+         },
+         {
+           "rid": 2,
+           "rast": "0100000100166C8E335B91F13FE2385B00285EF6BF360EE40064EBFFBF8D033900D9FA134000000000000000000000000000000000E610000005000500440000000101010001010101010101010101010101000101010000"
+         }
+       ]
+     }
+   }
+  :variables:
+   {
+     "point": {
+       "type": "Point",
+       "coordinates": [
+         1,
+         2
+       ],
+       "crs": {
+         "type": "name",
+         "properties": {
+           "name": "urn:ogc:def:crs:EPSG::4326"
+         }
+       }
+     }
+   }
 
 - ``_st_intersects_geom_nband``
 
@@ -1390,6 +1672,57 @@ This accepts ``st_intersects_geom_nband_input`` input object
 
    { _st_intersects_geom_nband: {geommin: geometry! nband: Integer }
 
+*Example: _st_intersects_geom_nband*
+
+Filter the raster values which intersect the input geometry value and optional band number.
+
+Executes the following SQL function:
+
+.. code-block:: sql
+
+   boolean ST_Intersects( raster <raster-col> , geometry geommin , integer nband=NULL );
+
+
+.. graphiql::
+  :view_only:
+  :query:
+    query getIntersectingValues ($point: geometry!){
+      dummy_rast(where: {rast: {_st_intersects_geom_nband: {geommin: $point}}}){
+        rid
+        rast
+      }
+    }
+  :response:
+   {
+     "data": {
+       "dummy_rast": [
+         {
+           "rid": 1,
+           "rast": "01000001009A9999999999E93F9A9999999999E9BF000000000000F0BF000000000000104000000000000000000000000000000000E610000005000500440000010101000101010101010101010101010101010001010100"
+         },
+         {
+           "rid": 2,
+           "rast": "0100000100166C8E335B91F13FE2385B00285EF6BF360EE40064EBFFBF8D033900D9FA134000000000000000000000000000000000E610000005000500440000000101010001010101010101010101010101000101010000"
+         }
+       ]
+     }
+   }
+  :variables:
+   {
+     "point": {
+       "type": "Point",
+       "coordinates": [
+         1,
+         2
+       ],
+       "crs": {
+         "type": "name",
+         "properties": {
+           "name": "urn:ogc:def:crs:EPSG::4326"
+         }
+       }
+     }
+   }
 
 .. _CastExp:
 
