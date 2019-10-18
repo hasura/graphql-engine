@@ -5,6 +5,8 @@ module Hasura.GraphQL.Schema.Select
   , mkTableAggFldsObj
   , mkTableColAggFldsObj
 
+  , functionArgsWithoutTableArg
+
   , mkSelFld
   , mkAggSelFld
   , mkSelFldPKey
@@ -14,8 +16,10 @@ module Hasura.GraphQL.Schema.Select
 
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashSet                  as Set
+import qualified Data.Sequence                 as Seq
 import qualified Language.GraphQL.Draft.Syntax as G
 
+import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.OrderBy
@@ -67,6 +71,43 @@ mkPGColFld colInfo =
     columnType = mkColumnType colTy
     notNullTy = G.toGT $ G.toNT columnType
     nullTy = G.toGT columnType
+
+functionArgsWithoutTableArg
+  :: FunctionTableArgument -> Seq.Seq FunctionArg -> Seq.Seq FunctionArg
+functionArgsWithoutTableArg tableArg inputArgs = Seq.fromList $
+  case tableArg of
+    FTAFirst  -> tail $ toList inputArgs
+    FTANamed argName _ ->
+      filter ((/=) (Just argName) . faName) $ toList inputArgs
+
+mkComputedFieldFld :: ComputedField -> ObjFldInfo
+mkComputedFieldFld field =
+  uncurry (mkHsraObjFldInfo (Just desc) fieldName) $ case fieldType of
+    CFTScalar scalarTy    ->
+      let inputParams = mkPGColParams (PGColumnScalar scalarTy)
+                        <> fromInpValL (maybeToList maybeFunctionInputArg)
+      in (inputParams, G.toGT $ mkScalarTy scalarTy)
+    CFTTable computedFieldtable ->
+      let table = _cftTable computedFieldtable
+      in ( fromInpValL $ maybeToList maybeFunctionInputArg <> mkSelArgs table
+         , G.toGT $ G.toLT $ G.toNT $ mkTableTy table
+         )
+  where
+    columnDescription = "A computed field, executes function " <>> qf
+    desc = mkDescriptionWith (_cffDescription function) columnDescription
+    fieldName = mkComputedFieldName name
+    ComputedField name function _ fieldType = field
+    qf = _cffName function
+
+    maybeFunctionInputArg =
+      let funcArgDesc = G.Description $ "input parameters for function " <>> qf
+          inputValue = InpValInfo (Just funcArgDesc) "args" Nothing $
+                       G.toGT $ G.toNT $ mkFuncArgsTy qf
+          inputArgs = _cffInputArgs function
+          tableArgument = _cffTableArgument function
+          withoutTableArgs = functionArgsWithoutTableArg tableArgument inputArgs
+      in bool (Just inputValue) Nothing $ null withoutTableArgs
+
 
 -- where: table_bool_exp
 -- limit: Int
@@ -143,7 +184,10 @@ mkTableObj
 mkTableObj tn descM allowedFlds =
   mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) TLHasuraType
   where
-    flds = concatMap (either (pure . mkPGColFld) mkRelationshipField') allowedFlds
+    flds = pgColFlds <> relFlds <> computedFlds
+    pgColFlds = map mkPGColFld $ getPGColumnFields allowedFlds
+    relFlds = concatMap mkRelationshipField' $ getRelationshipFields allowedFlds
+    computedFlds = map mkComputedFieldFld $ getComputedFields allowedFlds
     mkRelationshipField' (RelationshipFieldInfo relInfo allowAgg _ _ _ isNullable) =
       mkRelationshipField allowAgg relInfo isNullable
     desc = mkDescriptionWith descM $ "columns and relationships of " <>> tn

@@ -180,6 +180,7 @@ library
                      , Hasura.RQL.Types.Catalog
                      , Hasura.RQL.Types.Column
                      , Hasura.RQL.Types.Common
+                     , Hasura.RQL.Types.ComputedField
                      , Hasura.RQL.Types.DML
                      , Hasura.RQL.Types.Error
                      , Hasura.RQL.Types.EventTrigger
@@ -187,11 +188,12 @@ library
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.QueryCollection
                      , Hasura.RQL.Types.RemoteSchema
+                     , Hasura.RQL.DDL.ComputedField
+                     , Hasura.RQL.DDL.Relationship
                      , Hasura.RQL.DDL.Deps
                      , Hasura.RQL.DDL.Permission.Internal
                      , Hasura.RQL.DDL.Permission.Triggers
                      , Hasura.RQL.DDL.Permission
-                     , Hasura.RQL.DDL.Relationship
                      , Hasura.RQL.DDL.Relationship.Rename
                      , Hasura.RQL.DDL.Relationship.Types
                      , Hasura.RQL.DDL.Schema

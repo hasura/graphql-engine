@@ -52,20 +52,20 @@ module Hasura.RQL.Types.SchemaCache
        , FieldInfo(..)
        , _FIColumn
        , _FIRelationship
-       , fieldInfoToEither
-       , partitionFieldInfos
-       , partitionFieldInfosWith
        , getCols
        , getRels
+       , getComputedFieldInfos
 
        , isPGColInfo
        , RelInfo(..)
        , addColToCache
        , addRelToCache
+       , addComputedFieldToCache
 
        , delColFromCache
        , updColInCache
        , delRelFromCache
+       , deleteComputedFieldFromCache
 
        , RolePermInfo(..)
        , permIns
@@ -99,6 +99,7 @@ module Hasura.RQL.Types.SchemaCache
        , SchemaDependency(..)
        , mkParentDep
        , mkColDep
+       , mkComputedFieldDep
        , getDependentObjs
        , getDependentObjsWith
 
@@ -123,6 +124,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Metadata
@@ -153,11 +155,17 @@ mkColDep :: DependencyReason -> QualifiedTable -> PGCol -> SchemaDependency
 mkColDep reason tn col =
   flip SchemaDependency reason . SOTableObj tn $ TOCol col
 
+mkComputedFieldDep
+  :: DependencyReason -> QualifiedTable -> ComputedFieldName -> SchemaDependency
+mkComputedFieldDep reason tn computedField =
+  flip SchemaDependency reason . SOTableObj tn $ TOComputedField computedField
+
 type WithDeps a = (a, [SchemaDependency])
 
 data FieldInfo columnInfo
   = FIColumn !columnInfo
   | FIRelationship !RelInfo
+  | FIComputedField !ComputedFieldInfo
   deriving (Show, Eq)
 $(deriveToJSON
   defaultOptions { constructorTagModifier = snakeCase . drop 2
@@ -166,27 +174,16 @@ $(deriveToJSON
   ''FieldInfo)
 $(makePrisms ''FieldInfo)
 
-fieldInfoToEither :: FieldInfo columnInfo -> Either columnInfo RelInfo
-fieldInfoToEither (FIColumn l)       = Left l
-fieldInfoToEither (FIRelationship r) = Right r
-
-partitionFieldInfos :: [FieldInfo columnInfo] -> ([columnInfo], [RelInfo])
-partitionFieldInfos = partitionFieldInfosWith (id, id)
-
-partitionFieldInfosWith :: (columnInfo -> a, RelInfo -> b)
-                        -> [FieldInfo columnInfo] -> ([a], [b])
-partitionFieldInfosWith fns =
-  partitionEithers . map (biMapEither fns . fieldInfoToEither)
-  where
-    biMapEither (f1, f2) = either (Left . f1) (Right . f2)
-
 type FieldInfoMap columnInfo = M.HashMap FieldName (FieldInfo columnInfo)
 
 getCols :: FieldInfoMap columnInfo -> [columnInfo]
-getCols fim = lefts $ map fieldInfoToEither $ M.elems fim
+getCols = mapMaybe (^? _FIColumn) . M.elems
 
 getRels :: FieldInfoMap columnInfo -> [RelInfo]
-getRels fim = rights $ map fieldInfoToEither $ M.elems fim
+getRels = mapMaybe (^? _FIRelationship) . M.elems
+
+getComputedFieldInfos :: FieldInfoMap columnInfo -> [ComputedFieldInfo]
+getComputedFieldInfos = mapMaybe (^? _FIComputedField) . M.elems
 
 isPGColInfo :: FieldInfo columnInfo -> Bool
 isPGColInfo (FIColumn _) = True
@@ -206,6 +203,7 @@ $(deriveToJSON (aesonDrop 3 snakeCase) ''InsPermInfo)
 data SelPermInfo
   = SelPermInfo
   { spiCols            :: !(HS.HashSet PGCol)
+  , spiComputedFields  :: !(HS.HashSet ComputedFieldName)
   , spiTable           :: !QualifiedTable
   , spiFilter          :: !AnnBoolExpPartialSQL
   , spiLimit           :: !(Maybe Int)
@@ -363,7 +361,7 @@ data TableInfo columnInfo
   , _tiEnumValues            :: !(Maybe EnumValues)
   , _tiCustomConfig          :: !TableConfig
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
+$(deriveToJSON (aesonDrop 3 snakeCase) ''TableInfo)
 $(makeLenses ''TableInfo)
 
 checkForFieldConflict
@@ -395,15 +393,6 @@ funcTypToTxt FTSTABLE    = "STABLE"
 
 instance Show FunctionType where
   show = T.unpack . funcTypToTxt
-
-data FunctionArg
-  = FunctionArg
-  { faName       :: !(Maybe FunctionArgName)
-  , faType       :: !PGScalarType
-  , faHasDefault :: !Bool
-  } deriving (Show, Eq)
-
-$(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionArg)
 
 data FunctionInfo
   = FunctionInfo
@@ -565,6 +554,14 @@ addRelToCache rn ri deps tn = do
   where
     schObjId = SOTableObj tn $ TORel $ riName ri
 
+addComputedFieldToCache
+  :: (QErrM m, CacheRWM m)
+  => QualifiedTable -> ComputedFieldInfo -> m ()
+addComputedFieldToCache table computedFieldInfo =
+  addFldToCache computedField (FIComputedField computedFieldInfo) table
+  where
+    computedField = fromComputedField $ _cfiName computedFieldInfo
+
 addFldToCache
   :: (QErrM m, CacheRWM m)
   => FieldName -> FieldInfo PGColumnInfo
@@ -603,6 +600,12 @@ delRelFromCache rn tn = do
   modDepMapInCache (removeFromDepMap schObjId)
   where
     schObjId = SOTableObj tn $ TORel rn
+
+deleteComputedFieldFromCache
+  :: (QErrM m, CacheRWM m)
+  => QualifiedTable -> ComputedFieldName -> m ()
+deleteComputedFieldFromCache table computedField =
+  delFldFromCache (fromComputedField computedField) table
 
 updColInCache
   :: (QErrM m, CacheRWM m)
