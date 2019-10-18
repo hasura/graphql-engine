@@ -24,38 +24,27 @@ import qualified Data.Sequence                 as Seq
 import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 
-
-data PGTypType
-  = PTBASE
-  | PTCOMPOSITE
-  | PTDOMAIN
-  | PTENUM
-  | PTRANGE
-  | PTPSEUDO
-  deriving (Show, Eq)
-$(deriveJSON defaultOptions{constructorTagModifier = drop 2} ''PGTypType)
-
-data RawFuncInfo
-  = RawFuncInfo
+data RawFunctionInfo
+  = RawFunctionInfo
   { rfiHasVariadic      :: !Bool
   , rfiFunctionType     :: !FunctionType
   , rfiReturnTypeSchema :: !SchemaName
-  , rfiReturnTypeName   :: !T.Text
-  , rfiReturnTypeType   :: !PGTypType
+  , rfiReturnTypeName   :: !PGScalarType
+  , rfiReturnTypeType   :: !PGTypeKind
   , rfiReturnsSet       :: !Bool
-  , rfiInputArgTypes    :: ![PGScalarType]
-  , rfiInputArgNames    :: ![T.Text]
+  , rfiInputArgTypes    :: ![QualifiedPGType]
+  , rfiInputArgNames    :: ![FunctionArgName]
   , rfiDefaultArgs      :: !Int
   , rfiReturnsTable     :: !Bool
   , rfiDescription      :: !(Maybe PGDescription)
   } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 3 snakeCase) ''RawFuncInfo)
+$(deriveJSON (aesonDrop 3 snakeCase) ''RawFunctionInfo)
 
-mkFunctionArgs :: Int -> [PGScalarType] -> [T.Text] -> [FunctionArg]
+mkFunctionArgs :: Int -> [QualifiedPGType] -> [FunctionArgName] -> [FunctionArg]
 mkFunctionArgs defArgsNo tys argNames =
   bool withNames withNoNames $ null argNames
   where
-    hasDefaultBoolSeq = replicate (length argNames - defArgsNo) False
+    hasDefaultBoolSeq = replicate (length tys - defArgsNo) False
                         -- only last arguments can have default expression
                         <> replicate defArgsNo True
 
@@ -65,7 +54,7 @@ mkFunctionArgs defArgsNo tys argNames =
     withNames = zipWith mkArg argNames tysWithHasDefault
 
     mkArg "" (ty, hasDef) = FunctionArg Nothing ty hasDef
-    mkArg n  (ty, hasDef) = FunctionArg (Just $ FunctionArgName n) ty hasDef
+    mkArg n  (ty, hasDef) = FunctionArg (Just n) ty hasDef
 
 validateFuncArgs :: MonadError QErr m => [FunctionArg] -> m ()
 validateFuncArgs args =
@@ -89,16 +78,20 @@ data FunctionIntegrityError
 
 mkFunctionInfo
   :: (QErrM m, HasSystemDefined m)
-  => QualifiedFunction -> FunctionConfig -> RawFuncInfo -> m FunctionInfo
+  => QualifiedFunction
+  -> FunctionConfig
+  -> RawFunctionInfo
+  -> m (FunctionInfo, SchemaDependency)
 mkFunctionInfo qf config rawFuncInfo = do
   systemDefined <- askSystemDefined
   either (throw400 NotSupported . showErrors) pure
     =<< MV.runValidateT (validateFunction systemDefined)
   where
     functionArgs = mkFunctionArgs defArgsNo inpArgTyps inpArgNames
-    RawFuncInfo hasVariadic funTy retSn retN retTyTyp retSet
+    RawFunctionInfo hasVariadic funTy retSn retN retTyTyp retSet
                 inpArgTyps inpArgNames defArgsNo returnsTab descM
                 = rawFuncInfo
+    returnType = QualifiedPGType retSn retN retTyTyp
 
     throwValidateError = MV.dispute . pure
 
@@ -106,7 +99,7 @@ mkFunctionInfo qf config rawFuncInfo = do
       -- throw error if function has variadic arguments
       when hasVariadic $ throwValidateError FunctionVariadic
       -- throw error if return type is not composite type
-      when (retTyTyp /= PTCOMPOSITE) $ throwValidateError FunctionReturnNotCompositeType
+      when (retTyTyp /= PGKindComposite) $ throwValidateError FunctionReturnNotCompositeType
       -- throw error if function do not returns SETOF
       unless retSet $ throwValidateError FunctionReturnNotSetof
       -- throw error if return type is not a valid table
@@ -124,8 +117,10 @@ mkFunctionInfo qf config rawFuncInfo = do
                                   \arg -> Just (saName sessArg) /= faName arg
           funcArgsSeqWithoutSessArg = maybe funcArgsSeq removeSessArg maybeSessArg
           dep = SchemaDependency (SOTable retTable) DRTable
-          retTable = QualifiedObject retSn (TableName retN)
-      pure $ FunctionInfo qf systemDefined funTy funcArgsSeqWithoutSessArg maybeSessArg retTable [dep] descM
+          retTable = typeToTable returnType
+      pure $ (, dep) $
+           FunctionInfo qf systemDefined funTy funcArgsSeqWithoutSessArg
+                        maybeSessArg retTable descM
 
     validateFunctionArgNames = do
       let argNames = mapMaybe faName functionArgs
@@ -138,7 +133,7 @@ mkFunctionInfo qf config rawFuncInfo = do
         case findWithIndex (maybe False (argName ==) . faName) functionArgs of
           Nothing -> MV.refute $ pure $ FunctionInvalidSessionArgument argName
           Just (arg, index) -> do
-            let ty = faType arg
+            let ty = _qptName $ faType arg
             when (ty /= PGJSON) $ throwValidateError $ FunctionSessionArgumentNotJSON argName
             pure $ SessionArgument argName index
 
@@ -208,14 +203,14 @@ trackFunctionP1 qf = do
     throw400 NotSupported $ "table with name " <> qf <<> " already exists"
 
 trackFunctionP2Setup :: (QErrM m, CacheRWM m, HasSystemDefined m, MonadTx m)
-                     => QualifiedFunction -> FunctionConfig -> RawFuncInfo -> m ()
+                     => QualifiedFunction -> FunctionConfig -> RawFunctionInfo -> m ()
 trackFunctionP2Setup qf config rawfi = do
-  fi <- mkFunctionInfo qf config rawfi
+  (fi, dep) <- mkFunctionInfo qf config rawfi
   let retTable = fiReturnType fi
       err = err400 NotExists $ "table " <> retTable <<> " is not tracked"
   sc <- askSchemaCache
   void $ liftMaybe err $ M.lookup retTable $ scTables sc
-  addFunctionToCache fi
+  addFunctionToCache fi [dep]
 
 trackFunctionP2 :: (QErrM m, CacheRWM m, HasSystemDefined m, MonadTx m)
                 => QualifiedFunction -> FunctionConfig -> m EncJSON
@@ -230,27 +225,32 @@ trackFunctionP2 qf config = do
   GS.checkConflictingNode defGCtx funcNameGQL
 
   -- fetch function info
-  functionInfos <- liftTx fetchFuncDets
-  rawfi <- case functionInfos of
-    []      ->
-      throw400 NotExists $ "no such function exists in postgres : " <>> qf
-    [rawfi] -> return rawfi
-    _       ->
-      throw400 NotSupported $
-      "function " <> qf <<> " is overloaded. Overloaded functions are not supported"
+  rawfi <- fetchRawFunctioInfo qf
   trackFunctionP2Setup qf config rawfi
   systemDefined <- askSystemDefined
   liftTx $ saveFunctionToCatalog qf config systemDefined
   return successMsg
+
+handleMultipleFunctions :: (QErrM m) => QualifiedFunction -> [a] -> m a
+handleMultipleFunctions qf = \case
+  []      ->
+    throw400 NotExists $ "no such function exists in postgres : " <>> qf
+  [fi] -> return fi
+  _       ->
+    throw400 NotSupported $
+    "function " <> qf <<> " is overloaded. Overloaded functions are not supported"
+
+fetchRawFunctioInfo :: MonadTx m => QualifiedFunction -> m RawFunctionInfo
+fetchRawFunctioInfo qf@(QualifiedObject sn fn) = do
+  handleMultipleFunctions qf =<< map (Q.getAltJ . runIdentity) <$> fetchFromDatabase
   where
-    QualifiedObject sn fn = qf
-    fetchFuncDets = map (Q.getAltJ . runIdentity) <$>
+    fetchFromDatabase = liftTx $
       Q.listQE defaultTxErrorHandler [Q.sql|
-            SELECT function_info
-              FROM hdb_catalog.hdb_function_info_agg
-             WHERE function_schema = $1
-               AND function_name = $2
-           |] (sn, fn) True
+           SELECT function_info
+             FROM hdb_catalog.hdb_function_info_agg
+            WHERE function_schema = $1
+              AND function_name = $2
+          |] (sn, fn) True
 
 runTrackFunc
   :: ( QErrM m, CacheRWM m, HasSystemDefined m

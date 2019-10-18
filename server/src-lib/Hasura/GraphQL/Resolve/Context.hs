@@ -54,7 +54,7 @@ import qualified Hasura.SQL.DML                as S
 getFldInfo
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
   => G.NamedType -> G.Name
-  -> m (Either PGColumnInfo RelationshipField)
+  -> m ResolveField
 getFldInfo nt n = do
   fldMap <- asks getter
   onNothing (Map.lookup (nt,n) fldMap) $
@@ -67,9 +67,12 @@ getPGColInfo
 getPGColInfo nt n = do
   fldInfo <- getFldInfo nt n
   case fldInfo of
-    Left pgColInfo -> return pgColInfo
-    Right _        -> throw500 $
-      "found relinfo when expecting pgcolinfo for "
+    RFPGColumn pgColInfo -> return pgColInfo
+    RFRelationship _     -> throw500 $ mkErrMsg "relation"
+    RFComputedField _    -> throw500 $ mkErrMsg "computed field"
+  where
+    mkErrMsg ty =
+      "found " <> ty <> " when expecting pgcolinfo for "
       <> showNamedTy nt <> ":" <> showName n
 
 getArg

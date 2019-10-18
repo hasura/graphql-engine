@@ -1,5 +1,6 @@
 module Hasura.Server.Query where
 
+import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -11,6 +12,7 @@ import qualified Network.HTTP.Client                as HTTP
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
+import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
@@ -44,6 +46,11 @@ data RQLQueryV1
   | RQDropRelationship !DropRel
   | RQSetRelationshipComment !SetRelComment
   | RQRenameRelationship !RenameRel
+
+  -- computed fields related
+
+  | RQAddComputedField !AddComputedField
+  | RQDropComputedField !DropComputedField
 
   | RQCreateInsertPermission !CreateInsPerm
   | RQCreateSelectPermission !CreateSelPerm
@@ -231,6 +238,9 @@ queryNeedsReload (RQV1 qi) = case qi of
   RQSetRelationshipComment  _     -> False
   RQRenameRelationship _          -> True
 
+  RQAddComputedField _            -> True
+  RQDropComputedField _           -> True
+
   RQCreateInsertPermission _      -> True
   RQCreateSelectPermission _      -> True
   RQCreateUpdatePermission _      -> True
@@ -312,6 +322,9 @@ runQueryM rq =
       RQDropRelationship  q        -> runDropRel q
       RQSetRelationshipComment  q  -> runSetRelComment q
       RQRenameRelationship q       -> runRenameRel q
+
+      RQAddComputedField q        -> runAddComputedField q
+      RQDropComputedField q       -> runDropComputedField q
 
       RQCreateInsertPermission q   -> runCreatePerm q
       RQCreateSelectPermission q   -> runCreatePerm q

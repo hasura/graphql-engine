@@ -19,15 +19,19 @@ module Hasura.RQL.Types
        , HasQCtx(..)
        , mkAdminQCtx
        , askTabInfo
+       , isTableTracked
        , askFieldInfoMap
        , askPGType
        , assertPGCol
        , askRelType
        , askFieldInfo
        , askPGColInfo
+       , askComputedFieldInfo
        , askCurRole
        , askEventTriggerInfo
        , askTabInfoFromTrigger
+
+       , updateComputedFieldFunctionDescription
 
        , adminOnly
 
@@ -37,26 +41,28 @@ module Hasura.RQL.Types
        , module R
        ) where
 
-import           Hasura.Db                     as R
 import           Hasura.EncJSON
 import           Hasura.Prelude
-import           Hasura.RQL.Types.BoolExp      as R
-import           Hasura.RQL.Types.Column       as R
-import           Hasura.RQL.Types.Common       as R
-import           Hasura.RQL.Types.DML          as R
-import           Hasura.RQL.Types.Error        as R
-import           Hasura.RQL.Types.EventTrigger as R
-import           Hasura.RQL.Types.Metadata     as R
-import           Hasura.RQL.Types.Permission   as R
-import           Hasura.RQL.Types.RemoteSchema as R
-import           Hasura.RQL.Types.SchemaCache  as R
 import           Hasura.SQL.Types
 
-import qualified Hasura.GraphQL.Context        as GC
+import           Hasura.Db                      as R
+import           Hasura.RQL.Types.BoolExp       as R
+import           Hasura.RQL.Types.Column        as R
+import           Hasura.RQL.Types.Common        as R
+import           Hasura.RQL.Types.ComputedField as R
+import           Hasura.RQL.Types.DML           as R
+import           Hasura.RQL.Types.Error         as R
+import           Hasura.RQL.Types.EventTrigger  as R
+import           Hasura.RQL.Types.Metadata      as R
+import           Hasura.RQL.Types.Permission    as R
+import           Hasura.RQL.Types.RemoteSchema  as R
+import           Hasura.RQL.Types.SchemaCache   as R
 
-import qualified Data.HashMap.Strict           as M
-import qualified Data.Text                     as T
-import qualified Network.HTTP.Client           as HTTP
+import qualified Hasura.GraphQL.Context         as GC
+
+import qualified Data.HashMap.Strict            as M
+import qualified Data.Text                      as T
+import qualified Network.HTTP.Client            as HTTP
 
 getFieldInfoMap
   :: QualifiedTable
@@ -91,6 +97,10 @@ askTabInfo tabName = do
   liftMaybe (err400 NotExists errMsg) $ M.lookup tabName $ scTables rawSchemaCache
   where
     errMsg = "table " <> tabName <<> " does not exist"
+
+isTableTracked :: SchemaCache -> QualifiedTable -> Bool
+isTableTracked sc qt =
+  isJust $ M.lookup qt $ scTables sc
 
 askTabInfoFromTrigger
   :: (QErrM m, CacheRM m)
@@ -190,17 +200,51 @@ askPGColInfo
   -> T.Text
   -> m columnInfo
 askPGColInfo m c msg = do
-  colInfo <- modifyErr ("column " <>) $
+  fieldInfo <- modifyErr ("column " <>) $
              askFieldInfo m (fromPGCol c)
-  case colInfo of
-    (FIColumn pgColInfo) ->
-      return pgColInfo
-    _                      ->
+  case fieldInfo of
+    (FIColumn pgColInfo) -> pure pgColInfo
+    (FIRelationship   _) -> throwErr "relationship"
+    (FIComputedField _)  -> throwErr "computed field"
+  where
+    throwErr fieldType =
       throwError $ err400 UnexpectedPayload $ mconcat
       [ "expecting a postgres column; but, "
-      , c <<> " is a relationship; "
+      , c <<> " is a " <> fieldType <> "; "
       , msg
       ]
+
+askComputedFieldInfo
+  :: (MonadError QErr m)
+  => FieldInfoMap columnInfo
+  -> ComputedFieldName
+  -> m ComputedFieldInfo
+askComputedFieldInfo fields computedField = do
+  fieldInfo <- modifyErr ("computed field " <>) $
+               askFieldInfo fields $ fromComputedField computedField
+  case fieldInfo of
+    (FIColumn           _) -> throwErr "column"
+    (FIRelationship     _) -> throwErr "relationship"
+    (FIComputedField cci)  -> pure cci
+  where
+    throwErr fieldType =
+      throwError $ err400 UnexpectedPayload $ mconcat
+      [ "expecting a computed field; but, "
+      , computedField <<> " is a " <> fieldType <> "; "
+      ]
+
+updateComputedFieldFunctionDescription
+  :: (QErrM m, CacheRWM m)
+  => QualifiedTable -> ComputedFieldName -> Maybe PGDescription -> m ()
+updateComputedFieldFunctionDescription table computedField description = do
+  fields <- _tiFieldInfoMap <$> askTabInfo table
+  computedFieldInfo <- askComputedFieldInfo fields computedField
+  deleteComputedFieldFromCache table computedField
+  let updatedComputedFieldInfo = computedFieldInfo
+                                  { _cfiFunction = (_cfiFunction computedFieldInfo)
+                                                   {_cffDescription = description}
+                                  }
+  addComputedFieldToCache table updatedComputedFieldInfo
 
 assertPGCol :: (MonadError QErr m)
             => FieldInfoMap columnInfo

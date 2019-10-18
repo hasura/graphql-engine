@@ -2,16 +2,15 @@ module Hasura.RQL.Types.Function where
 
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.SQL.Types
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax        (Lift)
+import           Language.Haskell.TH.Syntax (Lift)
 
-import qualified Data.Sequence                     as Seq
-import qualified Data.Text                         as T
+import qualified Data.Sequence              as Seq
+import qualified Data.Text                  as T
 
 data FunctionType
   = FTVOLATILE
@@ -31,12 +30,12 @@ instance Show FunctionType where
 
 newtype FunctionArgName =
   FunctionArgName { getFuncArgNameTxt :: T.Text}
-  deriving (Show, Eq, ToJSON, FromJSON, Lift, DQuote)
+  deriving (Show, Eq, ToJSON, FromJSON, Lift, DQuote, IsString)
 
 data FunctionArg
   = FunctionArg
   { faName       :: !(Maybe FunctionArgName)
-  , faType       :: !PGScalarType
+  , faType       :: !QualifiedPGType
   , faHasDefault :: !Bool
   } deriving (Show, Eq)
 
@@ -57,7 +56,6 @@ data FunctionInfo
   , fiInputArgs     :: !(Seq.Seq FunctionArg)
   , fiSessionVarArg :: !(Maybe SessionArgument)
   , fiReturnType    :: !QualifiedTable
-  , fiDeps          :: ![SchemaDependency]
   , fiDescription   :: !(Maybe PGDescription)
   } deriving (Show, Eq)
 
