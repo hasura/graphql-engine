@@ -2,27 +2,23 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Button from '../../../Common/Button/Button';
 
-import { replaceMetadataFile } from '../Actions';
+import { replaceMetadataFromFile } from '../Actions';
+import { getFileUpload } from '../../../Common/utils/jsUtils';
 
 class ImportMetadata extends Component {
   constructor() {
     super();
-    this.state = {};
-    this.state.isImporting = false;
-  }
-  mockFileInput(c) {
-    const element = document.createElement('div');
-    element.innerHTML = '<input style="display:none" type="file">';
-    document.body.appendChild(element);
-    const fileInput = element.firstChild;
 
-    fileInput.addEventListener('change', () => {
-      c(element, fileInput);
-    });
+    this.state = {
+      isImporting: false,
+    };
 
-    fileInput.click();
+    this.importMetadata = this.importMetadata.bind(this);
   }
+
   importMetadata(fileContent) {
+    const { dispatch } = this.props;
+
     const successCb = () => {
       this.setState({ isImporting: false });
     };
@@ -31,38 +27,31 @@ class ImportMetadata extends Component {
       this.setState({ isImporting: false });
     };
 
-    this.props.dispatch(replaceMetadataFile(fileContent, successCb, errorCb));
+    dispatch(replaceMetadataFromFile(fileContent, successCb, errorCb));
   }
+
   render() {
-    const metaDataStyles = require('../Settings.scss');
+    const styles = require('../Settings.scss');
+
+    const { dispatch } = this.props;
+
+    const { isImporting } = this.state;
+
+    const handleImport = e => {
+      e.preventDefault();
+
+      dispatch(getFileUpload(this.importMetadata, 'json'));
+    };
+
     return (
-      <div className={metaDataStyles.display_inline}>
+      <div className={styles.display_inline}>
         <Button
           data-test="data-import-metadata"
           size="sm"
           color="white"
-          onClick={e => {
-            e.preventDefault();
-            const currThis = this;
-            const processInputFile = (nodeElem, fileInput) => {
-              const file = fileInput.files[0];
-              if (file.name.match(/\.(json)$/)) {
-                const reader = new FileReader();
-                // Will execute this function once the reader has successfully read the file
-                reader.onload = () => {
-                  nodeElem.remove();
-                  currThis.importMetadata(reader.result);
-                };
-                reader.readAsText(file);
-              } else {
-                alert('Please upload a .json file only.');
-                nodeElem.remove();
-              }
-            };
-            this.mockFileInput(processInputFile);
-          }}
+          onClick={handleImport}
         >
-          {this.state.isImporting ? 'Importing...' : 'Import metadata'}
+          {isImporting ? 'Importing...' : 'Import metadata'}
         </Button>
       </div>
     );

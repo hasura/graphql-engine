@@ -153,17 +153,19 @@ export const replaceMetadata = (json, successCb, errorCb) => (
   dispatch(exportMetadata(exportSuccessCb, exportErrorCb));
 };
 
-export const replaceMetadataFile = (
+export const replaceMetadataFromFile = (
   fileContent,
   successCb,
   errorCb
 ) => dispatch => {
-  let jsonContent;
+  let parsedFileContent;
   try {
-    jsonContent = JSON.parse(fileContent);
+    parsedFileContent = JSON.parse(fileContent);
   } catch (e) {
-    alert('Error parsing JSON' + e.toString());
+    dispatch(showErrorNotification('Error parsing metadata', e.toString()));
+
     if (errorCb) errorCb();
+
     return;
   }
 
@@ -175,7 +177,7 @@ export const replaceMetadataFile = (
     if (errorCb) errorCb();
   };
 
-  dispatch(replaceMetadata(jsonContent, onSuccess, onError));
+  dispatch(replaceMetadata(parsedFileContent, onSuccess, onError));
 };
 
 const handleInconsistentObjects = inconsistentObjects => {
@@ -645,7 +647,7 @@ export const metadataReducer = (state = defaultState, action) => {
         ...state,
         allowedQueries: [
           ...state.allowedQueries.map(q =>
-            q.name === action.data.queryName ? action.data.newQuery : q
+            (q.name === action.data.queryName ? action.data.newQuery : q)
           ),
         ],
       };
