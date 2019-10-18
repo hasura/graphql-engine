@@ -109,7 +109,7 @@ export const replaceMetadata = (newMetadata, successCb, errorCb) => (
     const upQuery = generateReplaceMetadataQuery(newMetadata);
     const downQuery = generateReplaceMetadataQuery(oldMetadata);
 
-    const migrationName = `replace_metadata_${Date.now()}`;
+    const migrationName = 'replace_metadata';
 
     const requestMsg = 'Importing metadata...';
     const successMsg = 'Metadata imported';
@@ -646,7 +646,7 @@ export const metadataReducer = (state = defaultState, action) => {
         ...state,
         allowedQueries: [
           ...state.allowedQueries.map(q =>
-            q.name === action.data.queryName ? action.data.newQuery : q
+            (q.name === action.data.queryName ? action.data.newQuery : q)
           ),
         ],
       };
