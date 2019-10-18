@@ -40,6 +40,8 @@ class ImportMetadata extends Component {
     const handleImport = e => {
       e.preventDefault();
 
+      this.setState({ isImporting: true });
+
       dispatch(getFileUpload(this.importMetadata, 'json'));
     };
 

@@ -71,10 +71,12 @@ const dropInconsistentObjectsQuery = {
 
 export const exportMetadata = (successCb, errorCb) => (dispatch, getState) => {
   const { dataHeaders } = getState().tables;
+
   const query = {
     type: 'export_metadata',
     args: {},
   };
+
   const options = {
     method: 'POST',
     headers: {
@@ -83,15 +85,9 @@ export const exportMetadata = (successCb, errorCb) => (dispatch, getState) => {
     body: JSON.stringify(query),
   };
 
-  fetch(endpoints.query, options)
+  dispatch(requestAction(endpoints.query, options))
     .then(response => {
-      response.json().then(responseBody => {
-        if (response.status === 200) {
-          successCb(responseBody);
-        } else {
-          errorCb(responseBody);
-        }
-      });
+      successCb(response);
     })
     .catch(err => {
       errorCb(err);
@@ -162,7 +158,9 @@ export const replaceMetadataFromFile = (
   try {
     parsedFileContent = JSON.parse(fileContent);
   } catch (e) {
-    dispatch(showErrorNotification('Error parsing metadata', e.toString()));
+    dispatch(
+      showErrorNotification('Error parsing metadata file', e.toString())
+    );
 
     if (errorCb) errorCb();
 

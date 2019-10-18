@@ -202,3 +202,19 @@ export const getFileUpload = (
 
   fileInput.click();
 };
+
+export const downloadJsonFile = (fileName, data) => {
+  const dataStr =
+    'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(data));
+
+  const anchorElem = document.createElement('a');
+  anchorElem.setAttribute('href', dataStr);
+  anchorElem.setAttribute('download', fileName);
+
+  // The following fixes the download issue on firefox
+  document.body.appendChild(anchorElem);
+
+  anchorElem.click();
+
+  anchorElem.remove();
+};
