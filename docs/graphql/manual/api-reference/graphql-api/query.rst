@@ -350,7 +350,7 @@ Operator
 **Generic operators (all column types except json, jsonb):**
 
 - ``_eq``
-The ``_eq`` (equal to) operator are compatible with any Postgres type other than
+The ``_eq`` (equal to) operator is compatible with any Postgres type other than
 ``json`` or ``jsonB`` (like ``Integer``, ``Float``, ``Double``, ``Text``, ``Boolean``,
 ``Date``/``Time``/``Timestamp``, etc.).
 
@@ -484,7 +484,7 @@ Fetch a list of articles that were published on a certain date (``published_on``
       }
     }
 - ``_neq``
-The ``_neq`` (not equal to) operator are compatible with any Postgres type other than
+The ``_neq`` (not equal to) operator is compatible with any Postgres type other than
 ``json`` or ``jsonB`` (like ``Integer``, ``Float``, ``Double``, ``Text``, ``Boolean``,
 ``Date``/``Time``/``Timestamp``, etc.).
 
@@ -1196,7 +1196,7 @@ between PostGIS ``geometry`` and ``geography`` types is supported.
 Casting using ``_cast`` corresponds directly to
 `SQL type casts <https://www.postgresql.org/docs/current/sql-expressions.html#SQL-SYNTAX-TYPE-CASTS>`__.
 
-*Example: cast ``geometry`` to ``geography``*
+*Example: cast geometry to geography*
 
 
 Filtering using ``_st_d_within`` over large distances can be inaccurate for location data stored in
@@ -1238,7 +1238,7 @@ Filtering using ``_st_d_within`` over large distances can be inaccurate for loca
       "distance": 1000000
     }
 
-*Example: cast ``geography`` to ``geometry``*
+*Example: cast geography to geometry*
 
 
 Columns of type ``geography`` are more accurate, but they don’t support as many operations as
