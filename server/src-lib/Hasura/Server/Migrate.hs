@@ -161,7 +161,7 @@ migrateCatalog migrationTime = do
 
     updateCatalogVersion = liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
         INSERT INTO hdb_catalog.hdb_version (version, upgraded_on) VALUES ($1, $2)
-        ON CONFLICT ON CONSTRAINT hdb_version_one_row
+        ON CONFLICT ((version IS NOT NULL))
         DO UPDATE SET version = $1, upgraded_on = $2
       |] (latestCatalogVersionString, migrationTime) False
 

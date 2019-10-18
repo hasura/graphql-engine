@@ -345,3 +345,18 @@ executable graphql-engine
                      , uuid
                      , unix
 
+test-suite graphql-engine-tests
+  import: common-all, common-exe
+  type: exitcode-stdio-1.0
+  hs-source-dirs: src-test
+  main-is: Main.hs
+  build-depends:
+    , base
+    , graphql-engine
+    , hspec
+    , hspec-core
+    , http-client
+    , http-client-tls
+    , optparse-applicative
+    , pg-client
+    , time
