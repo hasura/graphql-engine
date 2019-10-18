@@ -1,5 +1,5 @@
 import requestAction from '../../../utils/requestAction';
-import { clearRemoteSchemaCache } from '../../../utils/cache';
+import { clearIntrospectionSchemaCache } from '../RemoteSchema/graphqlUtils';
 import { push } from 'react-router-redux';
 import globals from '../../../Globals';
 import endpoints from '../../../Endpoints';
@@ -135,7 +135,7 @@ export const loadInconsistentObjects = (
           successCb();
         }
         if (shouldReloadCache) {
-          clearRemoteSchemaCache();
+          clearIntrospectionSchemaCache();
         }
       },
       error => {
@@ -173,7 +173,7 @@ export const reloadRemoteSchema = (remoteSchemaName, successCb, failureCb) => {
 
         dispatch(handleInconsistentObjects(inconsistentObjects));
 
-        clearRemoteSchemaCache();
+        clearIntrospectionSchemaCache();
 
         if (successCb) {
           successCb();
@@ -211,7 +211,7 @@ export const dropInconsistentObjects = () => {
         dispatch({ type: DROPPED_INCONSISTENT_METADATA });
         dispatch(showSuccessNotification('Dropped inconsistent metadata'));
         dispatch(loadInconsistentObjects(false));
-        clearRemoteSchemaCache();
+        clearIntrospectionSchemaCache();
       },
       error => {
         console.error(error);
@@ -542,7 +542,7 @@ export const metadataReducer = (state = defaultState, action) => {
         ...state,
         allowedQueries: [
           ...state.allowedQueries.map(q =>
-            (q.name === action.data.queryName ? action.data.newQuery : q)
+            q.name === action.data.queryName ? action.data.newQuery : q
           ),
         ],
       };

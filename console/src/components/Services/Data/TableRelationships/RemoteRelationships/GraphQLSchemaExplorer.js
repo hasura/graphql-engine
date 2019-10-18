@@ -1,14 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { buildClientSchema } from 'graphql';
+import React from 'react';
 import styles from './SchemaExplorer.scss';
 import { getSchemaTree } from '../utils';
 import ExplorerItem from './ExplorerItem';
 import { NoRemoteSchemaPlaceholder, LoadingSkeleton } from './Placeholders';
-import { introspectRemoteSchema } from '../Actions';
-import {
-  remoteSchemaCache,
-  cacheRemoteSchema,
-} from '../../../../../utils/cache';
+import { useIntrospectionSchema } from '../../../RemoteSchema/graphqlUtils';
 
 const SchemaExplorer = ({
   relationship,
@@ -16,33 +11,14 @@ const SchemaExplorer = ({
   handleArgValueChange,
   handleRemoteFieldChange,
   tableSchema,
-  loading,
-  dispatch,
+  adminHeaders,
 }) => {
   // introspect selected remote schema
-  const [schema, setRemoteSchema] = useState(null);
-  useEffect(() => {
-    if (relationship.remoteSchema) {
-      if (!remoteSchemaCache[relationship.remoteSchema]) {
-        const introspectionCallback = introspectionResult => {
-          const clientSchema = buildClientSchema(introspectionResult.data);
-          cacheRemoteSchema(relationship.remoteSchema, clientSchema);
-          setRemoteSchema(clientSchema);
-        };
-        dispatch(
-          introspectRemoteSchema(
-            relationship.remoteSchema,
-            introspectionCallback
-          )
-        );
-      } else {
-        setRemoteSchema(remoteSchemaCache[relationship.remoteSchema]);
-      }
-    }
-    return () => {
-      setRemoteSchema(null);
-    };
-  }, [relationship.remoteSchema]);
+
+  const { schema, loading, error, introspect } = useIntrospectionSchema(
+    relationship.remoteSchema,
+    adminHeaders
+  );
 
   // When remote schema is not selected
   if (!relationship.remoteSchema) {
@@ -50,8 +26,17 @@ const SchemaExplorer = ({
   }
 
   // While introspecting remote schema or when introspection fails
-  if (loading || !schema) {
+  if (loading) {
     return <LoadingSkeleton />;
+  }
+
+  if (error) {
+    return (
+      <div>
+        Error introspecting remote schema.{' '}
+        <a onClick={introspect}> Try again </a>
+      </div>
+    );
   }
 
   // generate a list of selected/unselected checkboxes from the graphql schema and the relationship

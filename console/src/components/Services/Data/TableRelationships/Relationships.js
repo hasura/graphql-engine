@@ -518,6 +518,7 @@ const mapStateToProps = (state, ownProps) => ({
   featuresCompatibility: state.main.featuresCompatibility,
   schemaList: state.tables.schemaList,
   remoteSchemas: state.remoteSchemas.listData.remoteSchemas.map(r => r.name),
+  adminHeaders: state.tables.dataHeaders,
   ...state.tables.modify,
 });
 
