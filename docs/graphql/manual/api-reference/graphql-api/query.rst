@@ -350,30 +350,955 @@ Operator
 **Generic operators (all column types except json, jsonb):**
 
 - ``_eq``
-- ``_neq``
-- ``_in``
-- ``_nin``
-- ``_gt``
-- ``_lt``
-- ``_gte``
-- ``_lte``
+The ``_eq`` (equal to) operator are compatible with any Postgres type other than
+``json`` or ``jsonB`` (like ``Integer``, ``Float``, ``Double``, ``Text``, ``Boolean``,
+``Date``/``Time``/``Timestamp``, etc.).
 
-**Text related operators:**
+The following are examples of using the equality operators on different types.
+
+Example: Integer (works with Double, Float, Numeric, etc.)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Fetch data about author whose ``id`` *(an integer field)* is equal to 3:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      author(
+        where: {id: {_eq: 3}}
+      ) {
+        id
+        name
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 3,
+            "name": "Sidney"
+          }
+        ]
+      }
+    }
+
+Example: String or Text
+^^^^^^^^^^^^^^^^^^^^^^^
+Fetch a list of authors with ``name`` *(a text field)* as "Sidney":
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      author(
+        where: {name: {_eq: "Sidney"}}
+      ) {
+        id
+        name
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 3,
+            "name": "Sidney"
+          }
+        ]
+      }
+    }
+
+Example: Boolean
+^^^^^^^^^^^^^^^^
+Fetch a list of articles that have not been published (``is_published`` is a boolean field):
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      article(
+        where: {is_published: {_eq: false}}
+      ) {
+        id
+        title
+        is_published
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "id": 5,
+            "title": "ut blandit",
+            "is_published": false
+          },
+          {
+            "id": 8,
+            "title": "donec semper sapien",
+            "is_published": false
+          },
+          {
+            "id": 10,
+            "title": "dui proin leo",
+            "is_published": false
+          },
+          {
+            "id": 14,
+            "title": "congue etiam justo",
+            "is_published": false
+          }
+        ]
+      }
+    }
+
+
+Example: Date (works with Time, Timezone, etc.)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Fetch a list of articles that were published on a certain date (``published_on`` is a Date field):
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      article(
+        where: {published_on: {_eq: "2017-05-26"}}
+      ) {
+        id
+        title
+        published_on
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "id": 3,
+            "title": "amet justo morbi",
+            "published_on": "2017-05-26"
+          }
+        ]
+      }
+    }
+- ``_neq``
+The ``_neq`` (not equal to) operator are compatible with any Postgres type other than
+``json`` or ``jsonB`` (like ``Integer``, ``Float``, ``Double``, ``Text``, ``Boolean``,
+``Date``/``Time``/``Timestamp``, etc.).
+
+The following are examples of using the equality operators on different types.
+
+Example: Integer (works with Double, Float, Numeric, etc.)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Fetch data about author whose ``id`` *(an integer field)* is not equal to 3:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      author(
+        where: {id: {_neq: 3}}
+      ) {
+        id
+        name
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 2,
+            "name": "Thanos"
+          }
+        ]
+      }
+    }
+
+Example: String or Text
+^^^^^^^^^^^^^^^^^^^^^^^
+Fetch a list of authors with ``name`` *(a text field)* not "Sidney":
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      author(
+        where: {name: {_neq: "Sidney"}}
+      ) {
+        id
+        name
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 1,
+            "name": "Iron Man"
+          }
+{
+            "id": 2,
+            "name": "Thanos"
+          }
+        ]
+      }
+    }
+
+Example: Boolean
+^^^^^^^^^^^^^^^^
+Fetch a list of articles that have been published (``is_published`` is a boolean field):
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      article(
+        where: {is_published: {_neq: false}}
+      ) {
+        id
+        title
+        is_published
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "id": 26,
+            "title": "The Kite Runner",
+            "is_published": true
+          },
+          {
+            "id": 41,
+            "title": "Harry Potter",
+            "is_published": true
+          },
+        ]
+      }
+    }
+
+
+Example: Date (works with Time, Timezone, etc.)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Fetch a list of articles that were not published on a certain date (``published_on`` is a Date field):
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      article(
+        where: {published_on: {_neq: "2017-05-26"}}
+      ) {
+        id
+        title
+        published_on
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "id": 6,
+            "title": "George Orwell",
+            "published_on": "2017-05-26"
+          }
+        ]
+      }
+    }
+
+- ``_in``
+
+The ``_in`` (in a list) operator is used to compare field values to a list of values.
+They are compatible with any Postgres type other than ``json`` or ``jsonB`` (like ``Integer``, ``Float``, ``Double``,
+``Text``, ``Boolean``, ``Date``/``Time``/``Timestamp``, etc.).
+
+
+Example: Integer (works with Double, Float, etc.)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Fetch a list of articles rated 1, 3 or 5:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      article(
+        where: {rating: {_in: [1,3,5]}}
+      ) {
+        id
+        title
+        rating
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "id": 1,
+            "title": "sit amet",
+            "rating": 1
+          },
+          {
+            "id": 2,
+            "title": "a nibh",
+            "rating": 3
+          },
+          {
+            "id": 6,
+            "title": "sapien ut",
+            "rating": 1
+          },
+          {
+            "id": 17,
+            "title": "montes nascetur ridiculus",
+            "rating": 5
+          }
+        ]
+      }
+    }
+- ``_nin``
+
+The ``_nin`` (not in list) operator is used to compare field values to a list of values.
+They are compatible with any Postgres type other than ``json`` or ``jsonB`` (like ``Integer``, ``Float``, ``Double``,
+``Text``, ``Boolean``, ``Date``/``Time``/``Timestamp``, etc.).
+
+Example: String or Text
+^^^^^^^^^^^^^^^^^^^^^^^
+Fetch a list of those authors whose names are NOT part of a list:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      author(
+        where: {name: {_nin: ["Justin","Sidney","April"]}}
+      ) {
+        id
+        name
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 2,
+            "name": "Beltran"
+          },
+          {
+            "id": 4,
+            "name": "Anjela"
+          },
+          {
+            "id": 5,
+            "name": "Amii"
+          },
+          {
+            "id": 6,
+            "name": "Corny"
+          }
+        ]
+      }
+    }
+
+- ``_gt``
+The ``_gt`` (greater than) operator is compatible with any Postgres type other than ``json`` or ``jsonB``
+(like ``Integer``, ``Float``, ``Double``, ``Text``, ``Boolean``, ``Date``/``Time``/``Timestamp``, etc.).
+
+Example: String or Text
+^^^^^^^^^^^^^^^^^^^^^^^
+Fetch a list of authors whose names begin with M or any letter that follows M *(essentially, a filter based on a
+dictionary sort)*:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      author(
+        where: {name: {_gt: "M"}}
+      ) {
+        id
+        name
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 3,
+            "name": "Sidney"
+          },
+          {
+            "id": 9,
+            "name": "Ninnetta"
+          }
+        ]
+      }
+    }
+
+- ``_lt``
+The ``_lt`` (less than) operators is compatible with any Postgres type other than ``json`` or ``jsonB``
+(like ``Integer``, ``Float``, ``Double``, ``Text``, ``Boolean``, ``Date``/``Time``/``Timestamp``, etc.).
+
+Example: Integer (works with Double, Float, etc.)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Fetch a list of articles rated less than 4 (``rating`` is an integer field):
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      article(
+        where: {rating: {_lt: 4}}
+      ) {
+        id
+        title
+        rating
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "id": 3,
+            "title": "amet justo morbi",
+            "rating": 3
+          },
+          {
+            "id": 7,
+            "title": "nisl duis ac",
+            "rating": 1
+          },
+          {
+            "id": 17,
+            "title": "montes nascetur ridiculus",
+            "rating": 2
+          }
+        ]
+      }
+    }
+
+
+- ``_gte``
+The ``_gte`` (greater than or equal to) operator is compatible with any Postgres type other than ``json`` or ``jsonB``
+(like ``Integer``, ``Float``, ``Double``, ``Text``, ``Boolean``, ``Date``/``Time``/``Timestamp``, etc.).
+
+Example: Date (works with Time, Timezone, etc.)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Fetch a list of articles that were published on or after date "01/01/2018":
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      article(
+        where: {published_on: {_gte: "2018-01-01"}}
+      ) {
+        id
+        title
+        published_on
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "id": 2,
+            "title": "a nibh",
+            "published_on": "2018-06-10"
+          },
+          {
+            "id": 6,
+            "title": "sapien ut",
+            "published_on": "2018-01-08"
+          },
+          {
+            "id": 13,
+            "title": "vulputate elementum",
+            "published_on": "2018-03-10"
+          },
+          {
+            "id": 15,
+            "title": "vel dapibus at",
+            "published_on": "2018-01-02"
+          }
+        ]
+      }
+    }
+
+
+- ``_lte``
+The ``_lte`` (less than or equal to) operator is compatible with any Postgres type other than ``json`` or ``jsonB``
+(like ``Integer``, ``Float``, ``Double``, ``Text``, ``Boolean``, ``Date``/``Time``/``Timestamp``, etc.).
+
+Example: Date (works with Time, Timezone, etc.)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Fetch a list of articles that were published on or before date "01/01/2018":
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      article(
+        where: {published_on: {_lte: "2018-01-01"}}
+      ) {
+        id
+        title
+        published_on
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "id": 2,
+            "title": "a nibh",
+            "published_on": "2017-06-26"
+          },
+          {
+            "id": 6,
+            "title": "sapien ut",
+            "published_on": "2017-04-30"
+          },
+          {
+            "id": 13,
+            "title": "vulputate elementum",
+            "published_on": "2016-03-10"
+          },
+          {
+            "id": 15,
+            "title": "vel dapibus at",
+            "published_on": "2016-01-08"
+          }
+        ]
+      }
+    }
 
 - ``_like``
+
+The ``_like`` operators are used forpattern matching on string/text fields.
+
+These operator behaves exactly like their `SQL counterparts <https://www.postgresql.org/docs/current/static/functions-matching.html>`__
+
+Fetch a list of articles whose titles contain the word “amet”:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      article(
+        where: {title: {_like: "%amet%"}}
+      ) {
+        id
+        title
+      }
+    }
+  :response:
+    {
+    "data": {
+      "article": [
+        {
+          "id": 1,
+          "title": "sit amet"
+        },
+        {
+          "id": 3,
+          "title": "amet justo morbi"
+        },
+        {
+          "id": 9,
+          "title": "sit amet"
+        }
+      ]
+
+.. note::
+
+  ``_like`` is case-sensitive. Use ``_ilike`` for case-insensitive search.
+
+
 - ``_nlike``
+
+The ``_nlike`` operators are used for pattern matching on string/text fields.
+
+These operator behaves exactly like their `SQL counterparts <https://www.postgresql.org/docs/current/static/functions-matching.html>`__
+
+Fetch all articles whose titles do not contain the word "amet" (case sensitive):
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      article(
+        where: {
+          title: {_nlike: "%amet%"}
+        }
+      ) {
+        id
+        title
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "id": 11,
+            "title": "si muet"
+          },
+          {
+            "id": 8,
+            "title": "norce karpe sin"
+          },
+        ]
+      }
+    }
+
 - ``_ilike``
+
+The ``_ilike`` operators are used forpattern matching on string/text fields.
+
+These operator behaves exactly like their `SQL counterparts <https://www.postgresql.org/docs/current/static/functions-matching.html>`__
+
+Fetch all articles whose titles contain the word "amet" (case insensitive):
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      article(
+        where: {
+          title: {_ilike: "%amet%"}
+        }
+      ) {
+        id
+        title
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "id": 1,
+            "title": "sit amet"
+          },
+          {
+            "id": 3,
+            "title": "amet justo morbi"
+          },
+          {
+            "id": 9,
+            "title": "sit amet"
+          },
+          {
+            "id": 22,
+            "title": "sit Amet"
+          }
+        ]
+      }
+    }
+
 - ``_nilike``
+
+The ``_nilike`` operators are used for pattern matching on string/text fields.
+
+These operator behaves exactly like their `SQL counterparts <https://www.postgresql.org/docs/current/static/functions-matching.html>`__
+
+Fetch all articles whose titles do not contain the word "amet" (case insensitive)
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      article(
+        where: {
+          title: {_nilike: "%amet%"}
+        }
+      ) {
+        id
+        title
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "id": 5,
+            "title": "ut blandit"
+          },
+          {
+            "id": 8,
+            "title": "donec semper sapien"
+          },
+          {
+            "id": 10,
+            "title": "dui proin leo"
+          },
+          {
+            "id": 14,
+            "title": "congue etiam justo"
+          }
+        ]
+      }
+    }
+
 - ``_similar``
+
+The ``_similar`` operators are used for pattern matching on string/text fields.
+
+These operator behaves exactly like their `SQL counterparts <https://www.postgresql.org/docs/current/static/functions-matching.html>`__
+
+Fetch a list of authors whose names begin with A or C:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      author(
+        where: {name: {_similar: "(A|C)%"}}
+      ) {
+        id
+        name
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 4,
+            "name": "Anjela"
+          },
+          {
+            "id": 5,
+            "name": "Amii"
+          },
+          {
+            "id": 6,
+            "name": "Corny"
+          },
+          {
+            "id": 8,
+            "name": "April"
+          }
+        ]
+      }
+    }
+
+.. note::
+
+  ``_similar`` is case-sensitive
+
 - ``_nsimilar``
+
+The ``_nsimilar`` operators are used for pattern matching on string/text fields.
+
+These operator behaves exactly like their `SQL counterparts <https://www.postgresql.org/docs/current/static/functions-matching.html>`__
+
+Fetch all authors whose names don't begin with A or C:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      author(
+        where: {
+          name: {_nsimilar: "(A|C)%"}
+        }
+      ) {
+        id
+        name
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 3,
+            "name": "Sidney"
+          }
+        ]
+      }
+    }
 
 **Checking for NULL values:**
 
 - ``_is_null`` (takes true/false as values)
 
+Checking for null values can be achieved using the ``_is_null`` operator.
+
+Example: Filter null values in a field
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Fetch a list of articles that have a value in the ``published_on`` field:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      article(
+        where: {published_on: {_is_null: false}}
+      ) {
+        id
+        title
+        published_on
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "id": 1,
+            "title": "sit amet",
+            "published_on": "2017-08-09"
+          },
+          {
+            "id": 2,
+            "title": "a nibh",
+            "published_on": "2018-06-10"
+          },
+          {
+            "id": 3,
+            "title": "amet justo morbi",
+            "published_on": "2017-05-26"
+          },
+          {
+            "id": 4,
+            "title": "vestibulum ac est",
+            "published_on": "2017-03-05"
+          }
+        ]
+      }
+    }
+
+
+
 **Type casting:**
 
 - ``_cast`` (takes a CastExp_ as a value)
+
+The ``_cast`` operator can be used to cast a field to a different type, which allows type-specific
+operators to be used on fields that otherwise would not support them. Currently, only casting
+between PostGIS ``geometry`` and ``geography`` types is supported.
+
+Casting using ``_cast`` corresponds directly to
+`SQL type casts <https://www.postgresql.org/docs/current/sql-expressions.html#SQL-SYNTAX-TYPE-CASTS>`__.
+
+Example: cast ``geometry`` to ``geography``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Filtering using ``_st_d_within`` over large distances can be inaccurate for location data stored in
+``geometry`` columns. For accurate queries, cast the field to ``geography`` before comparing:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query cities_near($point: geography!, $distance: Float!) {
+      cities(
+        where: {location: {
+          _cast: {geography: {
+            _st_d_within: {from: $point, distance: $distance}
+          }}
+        }}
+      ) {
+        name
+      }
+    }
+  :response:
+    {
+      "data": {
+        "cities": [
+          {
+            "name": "London"
+          },
+          {
+            "name": "Paris"
+          }
+        ]
+      }
+    }
+  :variables:
+    {
+      "point": {
+        "type": "Point",
+        "coordinates": [1, 50]
+      },
+      "distance": 1000000
+    }
+
+Example: cast ``geography`` to ``geometry``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Columns of type ``geography`` are more accurate, but they don’t support as many operations as
+``geometry``. Cast to ``geometry`` to use those operations in a filter:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query cities_inside($polygon: geometry) {
+      cities(
+        where: {location: {
+          _cast: {geometry: {
+            _st_within: $polygon
+          }}
+        }}
+      ) {
+        name
+      }
+    }
+  :response:
+    {
+      "data": {
+        "cities": [
+          {
+            "name": "New York"
+          }
+        ]
+      }
+    }
+  :variables:
+    {
+      "polygon": {
+        "type": "Polygon",
+        "crs": {
+          "type": "name",
+          "properties": { "name": "EPSG:4326" }
+        },
+        "coordinates": [
+          [
+            [-75, 40],
+            [-74, 40],
+            [-74, 41],
+            [-75, 41],
+            [-75, 40]
+          ]
+        ]
+      }
+    }
+
+.. note::
+
+  For performant queries that filter on casted fields, create an
+  `expression index <https://www.postgresql.org/docs/current/indexes-expressional.html>`__
+  on the casted column. For example, if you frequently perform queries on a field ``location`` of
+  type ``geometry`` casted to type ``geography``, you should create an index like the following:
+
+  .. code-block:: sql
+
+    CREATE INDEX cities_location_geography ON cities USING GIST ((location::geography));
+
 
 **JSONB operators:**
 
