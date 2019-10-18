@@ -4,22 +4,24 @@ module Hasura.GraphQL.Resolve.Types
   , MonadReusability(..)
   ) where
 
+import           Control.Lens.TH
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.Sequence                 as Seq
-import qualified Data.Text                     as T
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.HashMap.Strict            as Map
+import qualified Data.Sequence                  as Seq
+import qualified Data.Text                      as T
+import qualified Language.GraphQL.Draft.Syntax  as G
 
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.Permission
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-import qualified Hasura.SQL.DML                as S
+import qualified Hasura.SQL.DML                 as S
 
 data QueryCtx
   = QCSelect !SelOpCtx
@@ -114,9 +116,34 @@ data RelationshipField
   , _rfPermLimit  :: !(Maybe Int)
   } deriving (Show, Eq)
 
-type FieldMap =
-  Map.HashMap (G.NamedType, G.Name)
-  (Either PGColumnInfo RelationshipField)
+data ComputedFieldTable
+  = ComputedFieldTable
+  { _cftTable      :: !QualifiedTable
+  , _cftCols       :: !PGColGNameMap
+  , _cftPermFilter :: !AnnBoolExpPartialSQL
+  , _cftPermLimit  :: !(Maybe Int)
+  } deriving (Show, Eq)
+
+data ComputedFieldType
+  = CFTScalar !PGScalarType
+  | CFTTable !ComputedFieldTable
+  deriving (Show, Eq)
+
+data ComputedField
+  = ComputedField
+  { _cfName     :: !ComputedFieldName
+  , _cfFunction :: !ComputedFieldFunction
+  , _cfArgSeq   :: !FuncArgSeq
+  , _cfType     :: !ComputedFieldType
+  } deriving (Show, Eq)
+
+data ResolveField
+  = RFPGColumn !PGColumnInfo
+  | RFRelationship !RelationshipField
+  | RFComputedField !ComputedField
+  deriving (Show, Eq)
+
+type FieldMap = Map.HashMap (G.NamedType, G.Name) ResolveField
 
 -- order by context
 data OrdByItem
@@ -186,3 +213,6 @@ data UnresolvedVal
   deriving (Show, Eq)
 
 type AnnBoolExpUnresolved = AnnBoolExp UnresolvedVal
+
+-- template haskell related
+$(makePrisms ''ResolveField)

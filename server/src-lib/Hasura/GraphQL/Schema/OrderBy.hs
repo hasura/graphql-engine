@@ -141,8 +141,8 @@ mkOrdByInpObj tn selFlds = (inpObjTy, ordByCtx)
     desc = G.Description $
       "ordering options when selecting data from " <>> tn
 
-    pgColFlds = lefts selFlds
-    relFltr ty = flip filter (rights selFlds) $
+    pgColFlds = getPGColumnFields selFlds
+    relFltr ty = flip filter (getRelationshipFields selFlds) $
                  \rf -> riType (_rfiInfo rf) == ty
     objRels = relFltr ObjRel
     arrRels = relFltr ArrRel
