@@ -94,19 +94,19 @@ export const exportMetadata = (successCb, errorCb) => (dispatch, getState) => {
     });
 };
 
-export const replaceMetadata = (json, successCb, errorCb) => (
+export const replaceMetadata = (newMetadata, successCb, errorCb) => (
   dispatch,
   getState
 ) => {
   const exportSuccessCb = oldMetadata => {
-    const generateReplaceMetadataQuery = m => {
+    const generateReplaceMetadataQuery = metadataJson => {
       return {
         type: 'replace_metadata',
-        args: m,
+        args: metadataJson,
       };
     };
 
-    const upQuery = generateReplaceMetadataQuery(json);
+    const upQuery = generateReplaceMetadataQuery(newMetadata);
     const downQuery = generateReplaceMetadataQuery(oldMetadata);
 
     const migrationName = `replace_metadata_${Date.now()}`;
@@ -138,6 +138,7 @@ export const replaceMetadata = (json, successCb, errorCb) => (
 
   const exportErrorCb = () => {
     if (errorCb) errorCb();
+
     dispatch(
       showErrorNotification(
         'Metadata import failed',
@@ -645,7 +646,7 @@ export const metadataReducer = (state = defaultState, action) => {
         ...state,
         allowedQueries: [
           ...state.allowedQueries.map(q =>
-            (q.name === action.data.queryName ? action.data.newQuery : q)
+            q.name === action.data.queryName ? action.data.newQuery : q
           ),
         ],
       };
