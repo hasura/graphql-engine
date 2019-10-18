@@ -13,6 +13,7 @@ const ColumnEditor = ({
   editColumn,
   alterTypeOptions,
   defaultOptions,
+  supportAliasing,
 }) => {
   const colName = columnProperties.name;
 
@@ -57,6 +58,9 @@ const ColumnEditor = ({
   const updateColumnType = selected => {
     dispatch(editColumn(colName, 'type', selected.value));
   };
+  const updateColumnAlias = e => {
+    dispatch(editColumn(colName, 'alias', e.target.value));
+  };
   const updateColumnDef = (e, data) => {
     const { newValue } = data;
     dispatch(editColumn(colName, 'default', newValue));
@@ -69,6 +73,24 @@ const ColumnEditor = ({
   };
   const toggleColumnUnique = e => {
     dispatch(editColumn(colName, 'isUnique', e.target.value === 'true'));
+  };
+
+  const getColumnAliasInput = () => {
+    if (!supportAliasing) return;
+    return (
+      <div className={`${styles.display_flex} form-group`}>
+        <label className="col-xs-2">GraphQL Alias</label>
+        <div className="col-xs-6">
+          <input
+            className="input-sm form-control"
+            value={selectedProperties[colName].alias}
+            onChange={updateColumnAlias}
+            type="text"
+            data-test="edit-col-alias"
+          />
+        </div>
+      </div>
+    );
   };
 
   const getColumnDefaultInput = () => {
@@ -117,6 +139,7 @@ const ColumnEditor = ({
             />
           </div>
         </div>
+        {getColumnAliasInput()}
         <div className={`${styles.display_flex} form-group`}>
           <label className="col-xs-2">Nullable</label>
           <div className="col-xs-6">

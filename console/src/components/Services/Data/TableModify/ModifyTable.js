@@ -42,6 +42,7 @@ import {
   findTable,
   generateTableDef,
   getTableCustomRootFields,
+  getTableCustomColumnNames,
 } from '../../../Common/utils/pgUtils';
 
 class ModifyTable extends React.Component {
@@ -201,6 +202,7 @@ class ModifyTable extends React.Component {
               dispatch={dispatch}
               currentSchema={currentSchema}
               columnDefaultFunctions={columnDefaultFunctions}
+              customColumnNames={getTableCustomColumnNames(table)}
             />
             <hr />
             <h4 className={styles.subheading_text}>Add a new column</h4>

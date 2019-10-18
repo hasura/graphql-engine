@@ -167,17 +167,17 @@ export const setCustomRootFields = successCb => (dispatch, getState) => {
   const table = findTable(allTables, tableDef);
 
   const existingRootFields = getTableCustomRootFields(table);
-  const existingCustomColumNames = getTableCustomColumnNames(table);
+  const existingCustomColumnNames = getTableCustomColumnNames(table);
 
   const upQuery = getCustomRootFieldsQuery(
     tableDef,
     sanitiseRootFields(newRootFields),
-    existingCustomColumNames
+    existingCustomColumnNames
   );
   const downQuery = getCustomRootFieldsQuery(
     tableDef,
     existingRootFields,
-    existingCustomColumNames
+    existingCustomColumnNames
   );
 
   const migrationName = `set_custom_root_fields_${tableName}_${schemaName}`;
@@ -1536,6 +1536,7 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     const comment = columnEdit.comment || '';
     const newName = columnEdit.name;
     const currentSchema = columnEdit.schemaName;
+    const alias = columnEdit.alias;
     const checkIfFunctionFormat = isPostgresFunction(def);
     // ALTER TABLE <table> ALTER COLUMN <column> TYPE <column_type>;
     let defWithQuotes;
@@ -1544,18 +1545,16 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     } else {
       defWithQuotes = def;
     }
+
+    const tableDef = generateTableDef(tableName, currentSchema);
+    const table = findTable(getState().tables.allSchemas, tableDef);
+
     // check if column type has changed before making it part of the migration
     const originalColType = column.data_type; // "value"
     const originalColDefault = column.column_default; // null or "value"
     const originalColComment = column.comment; // null or "value"
     const originalColNullable = column.is_nullable; // "YES" or "NO"
-    const originalColUnique = isColumnUnique(
-      getState().tables.allSchemas.find(
-        table =>
-          table.table_name === tableName && table.table_schema === currentSchema
-      ),
-      colName
-    );
+    const originalColUnique = isColumnUnique(table, colName);
 
     /* column type up/down migration */
     const columnChangesUpQuery =
@@ -1612,6 +1611,41 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
           },
         ]
         : [];
+
+    /* column alias up/down migration*/
+    if (SUPPORT_GRAPHQL_ALIASING) {
+      const existingCustomColumnNames = getTableCustomColumnNames(table);
+      const existingRootFields = getTableCustomRootFields(table);
+      const newCustomColumnNames = { ...existingCustomColumnNames };
+      let isAliasChanged = false;
+      if (alias) {
+        if (alias !== existingCustomColumnNames[alias]) {
+          isAliasChanged = true;
+          newCustomColumnNames[colName] = alias;
+        }
+      } else {
+        if (existingCustomColumnNames[colName]) {
+          isAliasChanged = true;
+          delete newCustomColumnNames[colName];
+        }
+      }
+      if (isAliasChanged) {
+        schemaChangesUp.push(
+          getCustomRootFieldsQuery(
+            tableDef,
+            existingRootFields,
+            newCustomColumnNames
+          )
+        );
+        schemaChangesDown.push(
+          getCustomRootFieldsQuery(
+            tableDef,
+            existingRootFields,
+            existingCustomColumnNames
+          )
+        );
+      }
+    }
 
     /* column default up/down migration */
     if (def.trim() !== '') {

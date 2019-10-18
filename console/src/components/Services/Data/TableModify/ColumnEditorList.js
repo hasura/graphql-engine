@@ -22,6 +22,7 @@ import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/Gql
 
 import styles from './ModifyTable.scss';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { SUPPORT_GRAPHQL_ALIASING } from './ModifyActions';
 
 const ColumnEditorList = ({
   tableSchema,
@@ -31,6 +32,7 @@ const ColumnEditorList = ({
   validTypeCasts,
   dataTypeIndexMap,
   columnDefaultFunctions,
+  customColumnNames,
 }) => {
   const tableName = tableSchema.table_name;
 
@@ -78,6 +80,10 @@ const ColumnEditorList = ({
       default: col.column_default || '',
       comment: col.comment || '',
     };
+
+    if (SUPPORT_GRAPHQL_ALIASING) {
+      columnProperties.alias = customColumnNames[colName] || '';
+    }
 
     const onSubmit = toggleEditor => {
       dispatch(saveColumnChangesSql(colName, col, toggleEditor));
@@ -148,7 +154,11 @@ const ColumnEditorList = ({
     const collapsedLabel = () => {
       return (
         <div key={colName}>
-          <b>{colName}</b> {gqlCompatibilityWarning()} - {keyProperties()}
+          <b>
+            {colName}
+            {customColumnNames[colName] && ` (${customColumnNames[colName]})`}
+          </b>{' '}
+          {gqlCompatibilityWarning()} - {keyProperties()}
         </div>
       );
     };
@@ -217,6 +227,7 @@ const ColumnEditorList = ({
           currentSchema={currentSchema}
           columnProperties={columnProperties}
           selectedProperties={columnEdit}
+          supportAliasing={SUPPORT_GRAPHQL_ALIASING}
           editColumn={editColumn}
         />
       );
