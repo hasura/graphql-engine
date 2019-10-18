@@ -573,7 +573,7 @@ class Schema extends Component {
             className={styles.add_mar_top}
             key={'non-trackable-custom-functions'}
           >
-            <CollapsibleToggle title={heading} isOpen>
+            <CollapsibleToggle title={heading} isOpen={false}>
               <div className={`${styles.padd_left_remove} col-xs-12`}>
                 {nonTrackableFunctions.map((p, i) => (
                   <div
@@ -627,7 +627,7 @@ class Schema extends Component {
           {getUntrackedTablesSection()}
           {getUntrackedRelationsSection()}
           {getUntrackedFunctionsSection()}
-          {false && getNonTrackableFunctionsSection()}
+          {getNonTrackableFunctionsSection()}
           <hr />
           {getPermissionsSummaryLink()}
         </div>

@@ -156,63 +156,27 @@ const initQueries = {
           columns: ['table_schema', 'table_name'],
         },
       ],
-      // this tacky hack is because, after much toil
-      // I find no way to definitively distinguish a built
-      // in PostGreSQL function from a user defined one.
-      // So resorting to a list of the built-ins
       where: {
-        $and: [
-          {
-            function_name: {
-              $nin: [
-                'digest',
-                'hmac',
-                'crypt',
-                'gen_salt',
-                'encrypt',
-                'decrypt',
-                'encrypt_iv',
-                'decrypt_iv',
-                'gen_random_bytes',
-                'gen_random_uuid',
-                'pgp_sym_encrypt',
-                'pgp_sym_encrypt_bytea',
-                'pgp_sym_decrypt',
-                'pgp_sym_decrypt_bytea',
-                'pgp_pub_encrypt',
-                'pgp_pub_encrypt_bytea',
-                'pgp_pub_decrypt',
-                'pgp_pub_decrypt_bytea',
-                'pgp_key_id',
-                'armor',
-                'dearmor',
-                'pgp_armor_headers',
-              ],
-            },
+        $not: {
+          function_schema: '',
+          has_variadic: false,
+          returns_set: true,
+          return_type_type: {
+            $ilike: '%composite%',
           },
-          {
-            $not: {
-              function_schema: '',
-              has_variadic: false,
-              returns_set: true,
-              return_type_type: {
-                $ilike: '%composite%',
+          $or: [
+            {
+              function_type: {
+                $ilike: '%stable%',
               },
-              $or: [
-                {
-                  function_type: {
-                    $ilike: '%stable%',
-                  },
-                },
-                {
-                  function_type: {
-                    $ilike: '%immutable%',
-                  },
-                },
-              ],
             },
-          },
-        ],
+            {
+              function_type: {
+                $ilike: '%immutable%',
+              },
+            },
+          ],
+        },
       },
     },
   },
