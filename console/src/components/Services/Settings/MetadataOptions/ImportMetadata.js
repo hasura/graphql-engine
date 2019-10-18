@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import Button from '../../../Common/Button/Button';
 
 import { replaceMetadataFromFile } from '../Actions';
-import { getFileUpload } from '../../../Common/utils/jsUtils';
+import { uploadFile } from '../../../Common/utils/jsUtils';
 
 class ImportMetadata extends Component {
   constructor() {
@@ -42,7 +42,7 @@ class ImportMetadata extends Component {
 
       this.setState({ isImporting: true });
 
-      dispatch(getFileUpload(this.importMetadata, 'json'));
+      dispatch(uploadFile(this.importMetadata, 'json'));
     };
 
     return (

@@ -147,16 +147,15 @@ export const getConfirmation = (
   return isConfirmed;
 };
 
-export const getFileUpload = (
+export const uploadFile = (
   fileHandler,
   fileFormat = null,
   invalidFileHandler = null
 ) => dispatch => {
   const fileInputElement = document.createElement('div');
   fileInputElement.innerHTML = '<input style="display:none" type="file">';
-  document.body.appendChild(fileInputElement);
-
   const fileInput = fileInputElement.firstChild;
+  document.body.appendChild(fileInputElement);
 
   const onFileUpload = () => {
     const file = fileInput.files[0];
@@ -198,23 +197,35 @@ export const getFileUpload = (
     }
   };
 
+  // attach file upload handler
   fileInput.addEventListener('change', onFileUpload);
 
+  // trigger file upload window
   fileInput.click();
 };
 
-export const downloadJsonFile = (fileName, data) => {
-  const dataStr =
-    'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(data));
+export const downloadFile = (fileName, dataString) => {
+  const downloadLinkElem = document.createElement('a');
+  downloadLinkElem.setAttribute('href', dataString);
+  downloadLinkElem.setAttribute('download', fileName);
+  document.body.appendChild(downloadLinkElem);
 
-  const anchorElem = document.createElement('a');
-  anchorElem.setAttribute('href', dataStr);
-  anchorElem.setAttribute('download', fileName);
+  // trigger download
+  downloadLinkElem.click();
 
-  // The following fixes the download issue on firefox
-  document.body.appendChild(anchorElem);
+  downloadLinkElem.remove();
+};
 
-  anchorElem.click();
+export const downloadObjectAsJsonFile = (fileName, object) => {
+  const contentType = 'application/json;charset=utf-8;';
 
-  anchorElem.remove();
+  const jsonSuffix = '.json';
+  const fileNameWithSuffix = fileName.endsWith(jsonSuffix)
+    ? fileName
+    : fileName + jsonSuffix;
+
+  const dataString =
+    'data:' + contentType + ',' + encodeURIComponent(JSON.stringify(object));
+
+  downloadFile(fileNameWithSuffix, dataString);
 };

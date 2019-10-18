@@ -7,7 +7,7 @@ import {
   showErrorNotification,
 } from '../../Common/Notification';
 import { exportMetadata } from '../Actions';
-import { downloadJsonFile } from '../../../Common/utils/jsUtils';
+import { downloadObjectAsJsonFile } from '../../../Common/utils/jsUtils';
 
 class ExportMetadata extends Component {
   constructor() {
@@ -31,7 +31,7 @@ class ExportMetadata extends Component {
       this.setState({ isExporting: true });
 
       const successCallback = data => {
-        downloadJsonFile('metadata.json', data);
+        downloadObjectAsJsonFile('metadata', data);
 
         this.setState({ isExporting: false });
 
