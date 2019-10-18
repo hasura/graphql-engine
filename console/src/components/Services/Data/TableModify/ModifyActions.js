@@ -1,5 +1,7 @@
 import requestAction from '../../../../utils/requestAction';
+import globals from '../../../../Globals';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
+import { CLI_CONSOLE_MODE } from '../../../../constants';
 import {
   updateSchemaInfo,
   handleMigrationErrors,
@@ -34,15 +36,23 @@ import {
   generateTableDef,
   getTableCheckConstraints,
   findTableCheckConstraint,
+  getTableCustomRootFields,
+  getTableCustomColumnNames,
 } from '../../../Common/utils/pgUtils';
+import { getCustomRootFieldsQuery } from '../../../Common/utils/v1QueryUtils';
 
 import {
   fetchColumnCastsQuery,
   convertArrayToJson,
   getCreatePkSql,
   getDropPkSql,
+  sanitiseRootFields,
 } from './utils';
-import { CLI_CONSOLE_MODE } from '../../../../constants';
+import { GRAPHQL_ALIASING_SUPPORT } from '../../../../helpers/versionUtils';
+
+export const SUPPORT_GRAPHQL_ALIASING =
+  globals.featuresCompatibility &&
+  globals.featuresCompatibility[GRAPHQL_ALIASING_SUPPORT];
 
 const DELETE_PK_WARNING =
   'Without a primary key there is no way to uniquely identify a row of a table';
@@ -77,6 +87,9 @@ const TOGGLE_ENUM = 'ModifyTable/TOGGLE_ENUM';
 const TOGGLE_ENUM_SUCCESS = 'ModifyTable/TOGGLE_ENUM_SUCCESS';
 const TOGGLE_ENUM_FAILURE = 'ModifyTable/TOGGLE_ENUM_FAILURE';
 
+export const MODIFY_ROOT_FIELD = 'ModifyTable/MODIFY_ROOT_FIELD';
+const SET_CUSTOM_ROOT_FIELDS = 'ModifyTable/SET_CUSTOM_ROOT_FIELDS';
+
 const RESET = 'ModifyTable/RESET';
 
 const toggleEnumSuccess = () => ({
@@ -90,6 +103,11 @@ const toggleEnumFailure = () => ({
 const setForeignKeys = fks => ({
   type: SET_FOREIGN_KEYS,
   fks,
+});
+
+const modifyRootFields = rootFields => ({
+  type: MODIFY_ROOT_FIELD,
+  data: rootFields,
 });
 
 const editColumn = (column, key, value) => ({
@@ -133,6 +151,61 @@ const removePrimaryKey = pkIndex => ({
 const resetPrimaryKeys = () => ({
   type: RESET_PRIMARY_KEY,
 });
+
+export const setCustomRootFields = successCb => (dispatch, getState) => {
+  const {
+    allSchemas: allTables,
+    currentTable: tableName,
+    currentSchema: schemaName,
+    modify: { rootFieldsEdit: newRootFields },
+  } = getState().tables;
+
+  dispatch({ type: SET_CUSTOM_ROOT_FIELDS });
+
+  const tableDef = generateTableDef(tableName, schemaName);
+
+  const table = findTable(allTables, tableDef);
+
+  const existingRootFields = getTableCustomRootFields(table);
+  const existingCustomColumNames = getTableCustomColumnNames(table);
+
+  const upQuery = getCustomRootFieldsQuery(
+    tableDef,
+    sanitiseRootFields(newRootFields),
+    existingCustomColumNames
+  );
+  const downQuery = getCustomRootFieldsQuery(
+    tableDef,
+    existingRootFields,
+    existingCustomColumNames
+  );
+
+  const migrationName = `set_custom_root_fields_${tableName}_${schemaName}`;
+  const requestMsg = 'Setting custom root fields...';
+  const successMsg = 'Setting custom root fields successful';
+  const errorMsg = 'Setting custom root fields failed';
+  const customOnSuccess = () => {
+    if (successCb) {
+      successCb();
+    }
+  };
+  const customOnError = err => {
+    dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
+  };
+
+  makeMigrationCall(
+    dispatch,
+    getState,
+    [upQuery],
+    [downQuery],
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg
+  );
+};
 
 export const removeCheckConstraint = constraintName => (dispatch, getState) => {
   const confirmMessage = `This will permanently delete the check constraint "${constraintName}" from this table`;
@@ -393,14 +466,14 @@ const saveForeignKeys = (index, tableSchema, columns) => {
           alter table "${schemaName}"."${tableName}" drop constraint "${generatedConstraintName}",
           add constraint "${constraintName}" 
           foreign key (${Object.keys(oldConstraint.column_mapping)
-            .map(lc => `"${lc}"`)
-            .join(', ')}) 
+    .map(lc => `"${lc}"`)
+    .join(', ')}) 
           references "${oldConstraint.ref_table_table_schema}"."${
-        oldConstraint.ref_table
-      }"
+  oldConstraint.ref_table
+}"
           (${Object.values(oldConstraint.column_mapping)
-            .map(rc => `"${rc}"`)
-            .join(', ')}) 
+    .map(rc => `"${rc}"`)
+    .join(', ')}) 
           on update ${pgConfTypes[oldConstraint.on_update]}
           on delete ${pgConfTypes[oldConstraint.on_delete]};
         `;
@@ -658,8 +731,8 @@ const deleteTrigger = (trigger, table) => {
 
     downMigrationSql += `CREATE TRIGGER "${triggerName}"
 ${trigger.action_timing} ${
-      trigger.event_manipulation
-    } ON "${tableSchema}"."${tableName}"
+  trigger.event_manipulation
+} ON "${tableSchema}"."${tableName}"
 FOR EACH ${trigger.action_orientation} ${trigger.action_statement};`;
 
     if (trigger.comment) {
@@ -1520,24 +1593,24 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     const schemaChangesUp =
       originalColType !== colType
         ? [
-            {
-              type: 'run_sql',
-              args: {
-                sql: columnChangesUpQuery,
-              },
+          {
+            type: 'run_sql',
+            args: {
+              sql: columnChangesUpQuery,
             },
-          ]
+          },
+        ]
         : [];
     const schemaChangesDown =
       originalColType !== colType
         ? [
-            {
-              type: 'run_sql',
-              args: {
-                sql: columnChangesDownQuery,
-              },
+          {
+            type: 'run_sql',
+            args: {
+              sql: columnChangesDownQuery,
             },
-          ]
+          },
+        ]
         : [];
 
     /* column default up/down migration */
@@ -2381,4 +2454,5 @@ export {
   deleteTrigger,
   toggleEnumSuccess,
   toggleEnumFailure,
+  modifyRootFields,
 };

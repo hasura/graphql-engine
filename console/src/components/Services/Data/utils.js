@@ -1,5 +1,8 @@
 import globals from '../../../Globals';
-import { TABLE_ENUMS_SUPPORT } from '../../../helpers/versionUtils';
+import {
+  TABLE_ENUMS_SUPPORT,
+  GRAPHQL_ALIASING_SUPPORT,
+} from '../../../helpers/versionUtils';
 
 export const INTEGER = 'integer';
 export const SERIAL = 'serial';
@@ -233,9 +236,9 @@ export const fetchTrackedTableListQuery = options => {
           columns: ['*'],
           order_by: {
             column: 'constraint_name',
-            type: 'asc'
-          }
-        }
+            type: 'asc',
+          },
+        },
       ],
       order_by: [{ column: 'table_name', type: 'asc' }],
     },
@@ -244,8 +247,17 @@ export const fetchTrackedTableListQuery = options => {
   const supportEnums =
     globals.featuresCompatibility &&
     globals.featuresCompatibility[TABLE_ENUMS_SUPPORT];
+
+  const supportAliasing =
+    globals.featuresCompatibility &&
+    globals.featuresCompatibility[GRAPHQL_ALIASING_SUPPORT];
+
   if (supportEnums) {
     query.args.columns.push('is_enum');
+  }
+
+  if (supportAliasing) {
+    query.args.columns.push('configuration');
   }
 
   if (
@@ -490,6 +502,7 @@ export const mergeLoadSchemaData = (
     let _refFkConstraints = [];
     let _isEnum = false;
     let _checkConstraints = [];
+    let _configuration = {};
 
     if (_isTableTracked) {
       _primaryKey = trackedTableInfo.primary_key;
@@ -498,6 +511,7 @@ export const mergeLoadSchemaData = (
       _uniqueConstraints = trackedTableInfo.unique_constraints;
       _isEnum = trackedTableInfo.is_enum;
       _checkConstraints = trackedTableInfo.check_constraints;
+      _configuration = trackedTableInfo.configuration;
 
       _fkConstraints = fkData.filter(
         fk => fk.table_schema === _tableSchema && fk.table_name === _tableName
@@ -527,6 +541,7 @@ export const mergeLoadSchemaData = (
       opp_foreign_key_constraints: _refFkConstraints,
       view_info: _viewInfo,
       is_enum: _isEnum,
+      configuration: _configuration,
     };
 
     _mergedTableData.push(_mergedInfo);

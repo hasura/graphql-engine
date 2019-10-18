@@ -13,6 +13,7 @@ import {
   RESET,
   setUniqueKeys,
   toggleTableAsEnum,
+  SUPPORT_GRAPHQL_ALIASING,
 } from '../TableModify/ModifyActions';
 import {
   setTable,
@@ -31,6 +32,7 @@ import ForeignKeyEditor from './ForeignKeyEditor';
 import UniqueKeyEditor from './UniqueKeyEditor';
 import TriggerEditorList from './TriggerEditorList';
 import CheckConstraints from './CheckConstraints';
+import RootFields from './RootFields';
 import styles from './ModifyTable.scss';
 import { NotFoundError } from '../../../Error/PageNotFound';
 
@@ -39,6 +41,7 @@ import {
   getTableCheckConstraints,
   findTable,
   generateTableDef,
+  getTableCustomRootFields,
 } from '../../../Common/utils/pgUtils';
 
 class ModifyTable extends React.Component {
@@ -70,6 +73,7 @@ class ModifyTable extends React.Component {
       columnDefaultFunctions,
       schemaList,
       tableEnum,
+      rootFieldsEdit,
     } = this.props;
 
     const dataTypeIndexMap = getAllDataTypeMap(dataTypes);
@@ -144,6 +148,26 @@ class ModifyTable extends React.Component {
     };
 
     // if (table.primary_key.columns > 0) {}
+    const getTableRootFieldsSection = () => {
+      if (!SUPPORT_GRAPHQL_ALIASING) return null;
+
+      const existingRootFields = getTableCustomRootFields(table);
+
+      return (
+        <React.Fragment>
+          <h4 className={styles.subheading_text}>GraphQL Root Fields</h4>
+          <RootFields
+            existingAliases={existingRootFields}
+            existingRootFields={existingRootFields}
+            rootFieldsEdit={rootFieldsEdit}
+            dispatch={dispatch}
+          />
+          <hr />
+        </React.Fragment>
+      );
+    };
+
+    // if (tableSchema.primary_key.columns > 0) {}
     return (
       <div className={`${styles.container} container-fluid`}>
         <TableHeader
@@ -188,6 +212,7 @@ class ModifyTable extends React.Component {
               columnDefaultFunctions={columnDefaultFunctions}
             />
             <hr />
+            {getTableRootFieldsSection()}
             <h4 className={styles.subheading_text}>Primary Key</h4>
             <PrimaryKeyEditor
               tableSchema={table}

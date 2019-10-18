@@ -85,6 +85,18 @@ const getDropPkSql = ({ schemaName, tableName, constraintName }) => {
   return `alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}";`;
 };
 
+export const sanitiseRootFields = rootFields => {
+  const santisedRootFields = {};
+  Object.keys(rootFields).forEach(rootFieldType => {
+    let rootField = rootFields[rootFieldType];
+    if (rootField !== null) {
+      rootField = rootField.trim() || null;
+    }
+    santisedRootFields[rootFieldType] = rootField;
+  });
+  return santisedRootFields;
+};
+
 export {
   convertArrayToJson,
   getValidAlterOptions,
