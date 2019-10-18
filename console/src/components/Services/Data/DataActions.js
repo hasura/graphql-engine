@@ -368,25 +368,6 @@ const fetchDataInit = () => (dispatch, getState) => {
   );
 };
 
-const functionSetDifference = (a, b) => {
-  let i;
-  let j;
-
-  const diff = [];
-
-  for (i = 0; i < a.length; i++) {
-    let omit = false;
-    for (j = 0; j < b.length; j++) {
-      if (a[i].function_name === b[j].function_name) {
-        omit = true;
-        break;
-      }
-    }
-    if (!omit) diff.push(a[i]);
-  }
-  return diff;
-};
-
 const fetchFunctionInit = () => (dispatch, getState) => {
   const url = Endpoints.getSchema;
   const body = {
@@ -413,9 +394,9 @@ const fetchFunctionInit = () => (dispatch, getState) => {
 
   return dispatch(requestAction(url, options)).then(
     data => {
-      const cleaned = functionSetDifference(data[1], data[0]);
       dispatch({ type: LOAD_FUNCTIONS, data: data[0] });
-      dispatch({ type: LOAD_NON_TRACKABLE_FUNCTIONS, data: cleaned });
+      dispatch({ type: LOAD_NON_TRACKABLE_FUNCTIONS, data: data[1] });
+
       let consistentFunctions = data[2];
       const { inconsistentObjects } = getState().metadata;
       if (inconsistentObjects.length > 0) {
