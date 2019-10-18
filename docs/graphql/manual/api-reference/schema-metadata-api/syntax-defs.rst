@@ -58,6 +58,15 @@ RoleName
 
   String
 
+.. _ComputedFieldName:
+
+ComputedFieldName
+^^^^^^^^^^^^^^^^^^
+
+.. parsed-literal::
+
+  String
+
 .. _PGColumnType:
 
 PGColumnType
@@ -478,4 +487,19 @@ CollectionQuery
    {
        "name": String,
        "query": String
+   }
+
+.. _CustomColumnNames:
+
+CustomColumnNames
+^^^^^^^^^^^^^^^^^^
+A JSONObject_ of Postgres column name to GraphQL name mapping
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   {
+      "column1" : String,
+      "column2" : String,
+      ..
    }

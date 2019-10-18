@@ -79,13 +79,17 @@ Boilerplate to get started with Nextjs, Hasura GraphQL engine as CMS and postgre
           query={ query }
           fetchPolicy={ 'cache-and-network' }
         >
-          {({ loading, data: { author:authors }}) => {
+          {({ loading, data, error }) => {
+            if(error) {
+              return (<div>Error..</div>);
+            }
             return (
               <div>
-                <AuthorList authors={authors} />
+                <h1>My Authors </h1>
+                <AuthorList authors={data ? data.author: []} />
               </div>
             );
-          }}
+        }}
         </Query>
 
       ```

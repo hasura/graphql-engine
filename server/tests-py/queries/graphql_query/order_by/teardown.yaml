@@ -1,46 +1,13 @@
 type: bulk
 args:
-#Drop relationship first
-- type: drop_relationship
-  args:
-    relationship: articles
-    table:
-      schema: public
-      name: author
-    
 - type: run_sql
   args:
     sql: |
-      drop table article
-
-- type: run_sql
-  args:
-    sql: |
-      drop table author
-
-- type: run_sql
-  args:
-    sql: |
-      drop table contact
-
-- type: drop_relationship
-  args:
-    relationship: Tracks
-    table:
-      schema: public
-      name: Album
-
-- type: run_sql
-  args:
-    sql: |
-      drop table "Track"
-
-- type: run_sql
-  args:
-    sql: |
-      drop table "Album"
-
-- type: run_sql
-  args:
-    sql: |
-      drop table employee
+      DROP TABLE article;
+      DROP TABLE author;
+      DROP TABLE contact;
+      DROP TABLE "Track";
+      DROP TABLE "Tag";
+      DROP TABLE "Album";
+      DROP TABLE employee;
+    cascade: true

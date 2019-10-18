@@ -1,20 +1,27 @@
-module Hasura.GraphQL.Resolve.Types where
+module Hasura.GraphQL.Resolve.Types
+  ( module Hasura.GraphQL.Resolve.Types
+  -- * Re-exports
+  , MonadReusability(..)
+  ) where
 
+import           Control.Lens.TH
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.Sequence                 as Seq
-import qualified Data.Text                     as T
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.HashMap.Strict            as Map
+import qualified Data.Sequence                  as Seq
+import qualified Data.Text                      as T
+import qualified Language.GraphQL.Draft.Syntax  as G
 
+import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.Permission
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-import qualified Hasura.SQL.DML                as S
+import qualified Hasura.SQL.DML                 as S
 
 data QueryCtx
   = QCSelect !SelOpCtx
@@ -44,6 +51,7 @@ data SelOpCtx
   = SelOpCtx
   { _socTable   :: !QualifiedTable
   , _socHeaders :: ![T.Text]
+  , _socAllCols :: !PGColGNameMap
   , _socFilter  :: !AnnBoolExpPartialSQL
   , _socLimit   :: !(Maybe Int)
   } deriving (Show, Eq)
@@ -60,6 +68,7 @@ data FuncQOpCtx
   = FuncQOpCtx
   { _fqocTable    :: !QualifiedTable
   , _fqocHeaders  :: ![T.Text]
+  , _fqocAllCols  :: !PGColGNameMap
   , _fqocFilter   :: !AnnBoolExpPartialSQL
   , _fqocLimit    :: !(Maybe Int)
   , _fqocFunction :: !QualifiedFunction
@@ -70,9 +79,9 @@ data UpdOpCtx
   = UpdOpCtx
   { _uocTable      :: !QualifiedTable
   , _uocHeaders    :: ![T.Text]
+  , _uocAllCols    :: !PGColGNameMap
   , _uocFilter     :: !AnnBoolExpPartialSQL
   , _uocPresetCols :: !PreSetColsPartial
-  , _uocAllCols    :: ![PGColumnInfo]
   } deriving (Show, Eq)
 
 data DelOpCtx
@@ -94,15 +103,53 @@ data OpCtx
   | OCDelete !DelOpCtx
   deriving (Show, Eq)
 
-type FieldMap
-  = Map.HashMap (G.NamedType, G.Name)
-    (Either PGColumnInfo (RelInfo, Bool, AnnBoolExpPartialSQL, Maybe Int))
+-- (custom name | generated name) -> PG column info
+-- used in resolvers
+type PGColGNameMap = Map.HashMap G.Name PGColumnInfo
+
+data RelationshipField
+  = RelationshipField
+  { _rfInfo       :: !RelInfo
+  , _rfIsAgg      :: !Bool
+  , _rfCols       :: !PGColGNameMap
+  , _rfPermFilter :: !AnnBoolExpPartialSQL
+  , _rfPermLimit  :: !(Maybe Int)
+  } deriving (Show, Eq)
+
+data ComputedFieldTable
+  = ComputedFieldTable
+  { _cftTable      :: !QualifiedTable
+  , _cftCols       :: !PGColGNameMap
+  , _cftPermFilter :: !AnnBoolExpPartialSQL
+  , _cftPermLimit  :: !(Maybe Int)
+  } deriving (Show, Eq)
+
+data ComputedFieldType
+  = CFTScalar !PGScalarType
+  | CFTTable !ComputedFieldTable
+  deriving (Show, Eq)
+
+data ComputedField
+  = ComputedField
+  { _cfName     :: !ComputedFieldName
+  , _cfFunction :: !ComputedFieldFunction
+  , _cfArgSeq   :: !FuncArgSeq
+  , _cfType     :: !ComputedFieldType
+  } deriving (Show, Eq)
+
+data ResolveField
+  = RFPGColumn !PGColumnInfo
+  | RFRelationship !RelationshipField
+  | RFComputedField !ComputedField
+  deriving (Show, Eq)
+
+type FieldMap = Map.HashMap (G.NamedType, G.Name) ResolveField
 
 -- order by context
 data OrdByItem
   = OBIPGCol !PGColumnInfo
   | OBIRel !RelInfo !AnnBoolExpPartialSQL
-  | OBIAgg !RelInfo !AnnBoolExpPartialSQL
+  | OBIAgg !RelInfo !PGColGNameMap !AnnBoolExpPartialSQL
   deriving (Show, Eq)
 
 type OrdByItemMap = Map.HashMap G.Name OrdByItem
@@ -131,7 +178,7 @@ data UpdPermForIns
 data InsCtx
   = InsCtx
   { icView      :: !QualifiedTable
-  , icAllCols   :: ![PGColumnInfo]
+  , icAllCols   :: !PGColGNameMap
   , icSet       :: !PreSetColsPartial
   , icRelations :: !RelationInfoMap
   , icUpdPerm   :: !(Maybe UpdPermForIns)
@@ -145,11 +192,6 @@ data AnnPGVal
   = AnnPGVal
   { _apvVariable   :: !(Maybe G.Variable)
   , _apvIsNullable :: !Bool
-  , _apvType       :: !PGColumnType
-  -- ^ Note: '_apvValue' is a @'WithScalarType' 'PGScalarValue'@, so it includes its type as a
-  -- 'PGScalarType'. However, we /also/ need to keep the original 'PGColumnType' information around
-  -- in case we need to re-parse a new value with its type because we’re reusing a cached query
-  -- plan.
   , _apvValue      :: !(WithScalarType PGScalarValue)
   } deriving (Show, Eq)
 
@@ -161,14 +203,16 @@ partialSQLExpToUnresolvedVal = \case
   PSESessVar ty sessVar -> UVSessVar ty sessVar
   PSESQLExp s           -> UVSQL s
 
--- A value that will be converted to an sql expression eventually
+-- | A value that will be converted to an sql expression eventually
 data UnresolvedVal
-  -- From a session variable
   = UVSessVar !(PGType PGScalarType) !SessVar
-  -- This is postgres
+  -- | a SQL value literal that can be parameterized over
   | UVPG !AnnPGVal
-  -- This is a full resolved sql expression
+  -- | an arbitrary SQL expression, which /cannot/ be parameterized over
   | UVSQL !S.SQLExp
   deriving (Show, Eq)
 
 type AnnBoolExpUnresolved = AnnBoolExp UnresolvedVal
+
+-- template haskell related
+$(makePrisms ''ResolveField)

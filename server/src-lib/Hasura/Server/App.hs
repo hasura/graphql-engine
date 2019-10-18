@@ -49,6 +49,7 @@ import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                     (AuthMode (..),
                                                          getUserInfo)
+import           Hasura.Server.Compression
 import           Hasura.Server.Config                   (runGetConfig)
 import           Hasura.Server.Context
 import           Hasura.Server.Cors
@@ -137,11 +138,6 @@ data APIResp
   = JSONResp !(HttpResponse EncJSON)
   | RawResp  !(HttpResponse BL.ByteString)
 
-apiRespToLBS :: APIResp -> BL.ByteString
-apiRespToLBS = \case
-  JSONResp (HttpResponse j _) -> encJToLBS j
-  RawResp (HttpResponse b _)  -> b
-
 data APIHandler a
   = AHGet !(Handler APIResp)
   | AHPost !(a -> Handler APIResp)
@@ -191,22 +187,6 @@ buildQCtx = do
   sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
   return $ QCtx userInfo cache sqlGenCtx
 
-logResult
-  :: (MonadIO m)
-  => L.Logger
-  -> Maybe UserInfo
-  -> RequestId
-  -> Wai.Request
-  -> Maybe Value
-  -> Either QErr BL.ByteString
-  -> Maybe (UTCTime, UTCTime)
-  -> m ()
-logResult logger userInfoM reqId httpReq req res qTime = do
-  let logline = case res of
-        Right res' -> mkHttpAccessLog userInfoM reqId httpReq res' qTime
-        Left e     -> mkHttpErrorLog userInfoM reqId httpReq e req qTime
-  liftIO $ L.unLogger logger logline
-
 logSuccess
   :: (MonadIO m)
   => L.Logger
@@ -215,9 +195,11 @@ logSuccess
   -> Wai.Request
   -> BL.ByteString
   -> Maybe (UTCTime, UTCTime)
+  -> Maybe CompressionType
   -> m ()
-logSuccess logger userInfoM reqId httpReq res qTime =
-  liftIO $ L.unLogger logger $ mkHttpAccessLog userInfoM reqId httpReq res qTime
+logSuccess logger userInfoM reqId httpReq res qTime cType =
+  liftIO $ L.unLogger logger $
+  mkHttpAccessLog userInfoM reqId httpReq res qTime cType
 
 logError
   :: (MonadIO m)
@@ -225,10 +207,11 @@ logError
   -> Maybe UserInfo
   -> RequestId
   -> Wai.Request
-  -> Maybe Value
+  -> Either BL.ByteString Value
   -> QErr -> m ()
 logError logger userInfoM reqId httpReq req qErr =
-  liftIO $ L.unLogger logger $ mkHttpErrorLog userInfoM reqId httpReq qErr req Nothing
+  liftIO $ L.unLogger logger $
+  mkHttpErrorLog userInfoM reqId httpReq qErr req Nothing Nothing
 
 mkSpockAction
   :: (MonadIO m, FromJSON a, ToJSON a)
@@ -243,12 +226,10 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
   let headers = requestHeaders req
       authMode = scAuthMode serverCtx
       manager = scManager serverCtx
-      -- convert ByteString to Maybe Value for logging
-      reqTxt = Just $ String $ bsToTxt $ BL.toStrict reqBody
 
   requestId <- getRequestId headers
   userInfoE <- liftIO $ runExceptT $ getUserInfo logger manager headers authMode
-  userInfo  <- either (logErrorAndResp Nothing requestId req reqTxt False . qErrModifier)
+  userInfo  <- either (logErrorAndResp Nothing requestId req (Left reqBody) False . qErrModifier)
                return userInfoE
 
   let handlerState = HandlerCtx serverCtx userInfo headers requestId
@@ -262,7 +243,8 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
       return (res, Nothing)
     AHPost handler -> do
       parsedReqE <- runExceptT $ parseBody reqBody
-      parsedReq  <- either (logErrorAndResp (Just userInfo) requestId req reqTxt (isAdmin curRole) . qErrModifier) return parsedReqE
+      parsedReq  <- either (logErrorAndResp (Just userInfo) requestId req (Left reqBody) (isAdmin curRole) . qErrModifier)
+                    return parsedReqE
       res <- liftIO $ runReaderT (runExceptT $ handler parsedReq) handlerState
       return (res, Just parsedReq)
 
@@ -273,7 +255,8 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
 
   -- log and return result
   case modResult of
-    Left err  -> logErrorAndResp (Just userInfo) requestId req (toJSON <$> q) (isAdmin curRole) err
+    Left err  -> let jErr = maybe (Left reqBody) (Right . toJSON) q
+                 in logErrorAndResp (Just userInfo) requestId req jErr (isAdmin curRole) err
     Right res -> logSuccessAndResp (Just userInfo) requestId req res (Just (t1, t2))
 
   where
@@ -281,24 +264,37 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
 
     logErrorAndResp
       :: (MonadIO m)
-      => Maybe UserInfo -> RequestId -> Wai.Request -> Maybe Value -> Bool -> QErr -> ActionCtxT ctx m a
+      => Maybe UserInfo
+      -> RequestId
+      -> Wai.Request
+      -> Either BL.ByteString Value
+      -> Bool
+      -> QErr
+      -> ActionCtxT ctx m a
     logErrorAndResp userInfo reqId req reqBody includeInternal qErr = do
       logError logger userInfo reqId req reqBody qErr
       setStatus $ qeStatus qErr
       json $ qErrEncoder includeInternal qErr
 
-    logSuccessAndResp userInfo reqId req result qTime = do
-      logSuccess logger userInfo reqId req (apiRespToLBS result) qTime
+    logSuccessAndResp userInfo reqId req result qTime =
       case result of
-        JSONResp (HttpResponse j h) -> do
-          uncurry setHeader jsonHeader
-          uncurry setHeader (requestIdHeader, unRequestId reqId)
-          mapM_ (mapM_ (uncurry setHeader . unHeader)) h
-          lazyBytes $ encJToLBS j
-        RawResp (HttpResponse b h) -> do
-          uncurry setHeader (requestIdHeader, unRequestId reqId)
-          mapM_ (mapM_ (uncurry setHeader . unHeader)) h
-          lazyBytes b
+        JSONResp (HttpResponse encJson h) ->
+          possiblyCompressedLazyBytes userInfo reqId req qTime (encJToLBS encJson) $
+            pure jsonHeader <> mkHeaders h
+        RawResp (HttpResponse rawBytes h) ->
+          possiblyCompressedLazyBytes userInfo reqId req qTime rawBytes $ mkHeaders h
+
+    possiblyCompressedLazyBytes userInfo reqId req qTime respBytes respHeaders = do
+      let (compressedResp, mEncodingHeader, mCompressionType) =
+            compressResponse (requestHeaders req) respBytes
+          encodingHeader = maybe [] pure mEncodingHeader
+          reqIdHeader = (requestIdHeader, unRequestId reqId)
+          allRespHeaders = pure reqIdHeader <> encodingHeader <> respHeaders
+      logSuccess logger userInfo reqId req compressedResp qTime mCompressionType
+      mapM_ (uncurry setHeader) allRespHeaders
+      lazyBytes compressedResp
+
+    mkHeaders = maybe [] (map unHeader)
 
 v1QueryHandler :: RQLQuery -> Handler (HttpResponse EncJSON)
 v1QueryHandler query = do
@@ -317,7 +313,7 @@ v1QueryHandler query = do
       sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
       pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
       instanceId <- scInstanceId . hcServerCtx <$> ask
-      runQuery pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx query
+      runQuery pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx (SystemDefined False) query
 
 v1Alpha1GQHandler :: GH.GQLReqUnparsed -> Handler (HttpResponse EncJSON)
 v1Alpha1GQHandler query = do
@@ -399,22 +395,22 @@ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
     errMsg = "console template rendering failed: " ++ show errs
 
 
-newtype QueryParser
-  = QueryParser
-  { getQueryParser :: QualifiedTable -> Object -> Handler RQLQuery }
+newtype LegacyQueryParser
+  = LegacyQueryParser
+  { getLegacyQueryParser :: QualifiedTable -> Object -> Handler RQLQueryV1 }
 
-queryParsers :: M.HashMap T.Text QueryParser
+queryParsers :: M.HashMap T.Text LegacyQueryParser
 queryParsers =
   M.fromList
-  [ ("select", mkQueryParser RQSelect)
-  , ("insert", mkQueryParser RQInsert)
-  , ("update", mkQueryParser RQUpdate)
-  , ("delete", mkQueryParser RQDelete)
-  , ("count", mkQueryParser RQCount)
+  [ ("select", mkLegacyQueryParser RQSelect)
+  , ("insert", mkLegacyQueryParser RQInsert)
+  , ("update", mkLegacyQueryParser RQUpdate)
+  , ("delete", mkLegacyQueryParser RQDelete)
+  , ("count", mkLegacyQueryParser RQCount)
   ]
   where
-    mkQueryParser f =
-      QueryParser $ \qt obj -> do
+    mkLegacyQueryParser f =
+      LegacyQueryParser $ \qt obj -> do
       let val = Object $ M.insert "table" (toJSON qt) obj
       q <- decodeValue val
       return $ f q
@@ -423,7 +419,7 @@ legacyQueryHandler :: TableName -> T.Text -> Object
                    -> Handler (HttpResponse EncJSON)
 legacyQueryHandler tn queryType req =
   case M.lookup queryType queryParsers of
-    Just queryParser -> getQueryParser queryParser qt req >>= v1QueryHandler
+    Just queryParser -> getLegacyQueryParser queryParser qt req >>= (v1QueryHandler . RQV1)
     Nothing          -> throw404 "No such resource exists"
   where
     qt = QualifiedObject publicSchema tn
@@ -458,18 +454,19 @@ mkWaiApp
   -> Bool
   -> InstanceId
   -> S.HashSet API
-  -> EL.LQOpts
+  -> EL.LiveQueriesOptions
   -> IO HasuraApp
-mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
-         enableConsole consoleAssetsDir enableTelemetry instanceId apis lqOpts = do
+mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode
+         corsCfg enableConsole consoleAssetsDir enableTelemetry
+         instanceId apis lqOpts = do
 
     let pgExecCtx = PGExecCtx pool isoLevel
         pgExecCtxSer = PGExecCtx pool Q.Serializable
+        runCtx = RunCtx adminUserInfo httpManager sqlGenCtx $ SystemDefined False
     (cacheRef, cacheBuiltTime) <- do
-      pgResp <- runExceptT $ peelRun emptySchemaCache adminUserInfo
-                httpManager sqlGenCtx pgExecCtxSer $ do
-                  buildSchemaCache
-                  liftTx fetchLastUpdate
+      pgResp <- runExceptT $ peelRun emptySchemaCache runCtx pgExecCtxSer $ do
+        buildSchemaCache
+        liftTx fetchLastUpdate
       (time, sc) <- either initErrExit return pgResp
       scRef <- newIORef (sc, initSchemaCacheVer)
       return (scRef, snd <$> time)
@@ -623,9 +620,8 @@ raiseGenericApiError :: L.Logger -> QErr -> ActionT IO ()
 raiseGenericApiError logger qErr = do
   req <- request
   reqBody <- liftIO $ strictRequestBody req
-  let reqTxt = toJSON $ String $ bsToTxt $ BL.toStrict reqBody
   reqId <- getRequestId $ requestHeaders req
-  logError logger Nothing reqId req (Just reqTxt) qErr
+  logError logger Nothing reqId req (Left reqBody) qErr
   uncurry setHeader jsonHeader
   setStatus $ qeStatus qErr
   lazyBytes $ encode qErr

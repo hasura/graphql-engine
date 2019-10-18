@@ -19,8 +19,6 @@ import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
-import           Hasura.SQL.Value
 
 data TypeKind
   = TKSCALAR
@@ -335,22 +333,16 @@ schemaR fld =
     _              -> return J.Null
 
 typeR
-  :: ( MonadReader r m, Has TypeMap r
-     , MonadError QErr m)
+  :: (MonadReusability m, MonadError QErr m, MonadReader r m, Has TypeMap r)
   => Field -> m J.Value
 typeR fld = do
-  name <- withArg args "name" $ \arg -> do
-    pgColVal <- pstValue . _apvValue <$> asPGColumnValue arg
-    case pgColVal of
-      PGValText t -> return t
-      _           -> throw500 "expecting string for name arg of __type"
+  name <- asPGColText =<< getArg args "name"
   typeR' (G.Name name) fld
   where
     args = _fArguments fld
 
 typeR'
-  :: ( MonadReader r m, Has TypeMap r
-     , MonadError QErr m)
+  :: (MonadReader r m, Has TypeMap r, MonadError QErr m)
   => G.Name -> Field -> m J.Value
 typeR' n fld = do
   tyMap <- asks getter

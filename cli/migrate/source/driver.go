@@ -40,6 +40,8 @@ type Driver interface {
 	// Migrate will call this function only once per instance.
 	Close() error
 
+	Scan() error
+
 	// First returns the very first migration version available to the driver.
 	// Migrate will call this function multiple times.
 	// If there is no version available, it must return os.ErrNotExist.

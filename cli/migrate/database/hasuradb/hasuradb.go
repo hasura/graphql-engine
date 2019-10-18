@@ -78,7 +78,7 @@ func WithInstance(config *Config, logger *log.Logger) (database.Driver, error) {
 		return nil, err
 	}
 
-	err := hx.getVersions()
+	err := hx.Scan()
 	if err != nil {
 		return nil, err
 	}
@@ -145,6 +145,11 @@ func (h *HasuraDB) Close() error {
 	return nil
 }
 
+func (h *HasuraDB) Scan() error {
+	h.migrations = database.NewMigrations()
+	return h.getVersions()
+}
+
 func (h *HasuraDB) Lock() error {
 	if h.isLocked {
 		return database.ErrLocked
@@ -163,6 +168,10 @@ func (h *HasuraDB) UnLock() error {
 	if !h.isLocked {
 		return nil
 	}
+
+	defer func() {
+		h.isLocked = false
+	}()
 
 	if len(h.migrationQuery.Args) == 0 {
 		return nil
@@ -213,7 +222,6 @@ func (h *HasuraDB) UnLock() error {
 		}
 		return horror.Error(h.config.isCMD)
 	}
-	h.isLocked = false
 	return nil
 }
 

@@ -13,6 +13,7 @@ CREATE TABLE hdb_catalog.hdb_table
 (
     table_schema TEXT,
     table_name TEXT,
+    configuration JSONB,
     is_system_defined boolean default false,
     is_enum boolean NOT NULL DEFAULT false,
 
@@ -313,6 +314,7 @@ CREATE VIEW hdb_catalog.hdb_function_agg AS
 SELECT
   p.proname::text AS function_name,
   pn.nspname::text AS function_schema,
+  pd.description,
 
   CASE
     WHEN (p.provariadic = (0) :: oid) THEN false
@@ -334,41 +336,42 @@ SELECT
 
   pg_get_functiondef(p.oid) AS function_definition,
 
-  rtn.nspname::text AS return_type_schema,
-  rt.typname::text AS return_type_name,
-
-  CASE
-    WHEN ((rt.typtype) :: text = ('b' :: character(1)) :: text) THEN 'BASE' :: text
-    WHEN ((rt.typtype) :: text = ('c' :: character(1)) :: text) THEN 'COMPOSITE' :: text
-    WHEN ((rt.typtype) :: text = ('d' :: character(1)) :: text) THEN 'DOMAIN' :: text
-    WHEN ((rt.typtype) :: text = ('e' :: character(1)) :: text) THEN 'ENUM' :: text
-    WHEN ((rt.typtype) :: text = ('r' :: character(1)) :: text) THEN 'RANGE' :: text
-    WHEN ((rt.typtype) :: text = ('p' :: character(1)) :: text) THEN 'PSUEDO' :: text
-    ELSE NULL :: text
-  END AS return_type_type,
+  rtn.nspname::text as return_type_schema,
+  rt.typname::text as return_type_name,
+  rt.typtype::text as return_type_type,
   p.proretset AS returns_set,
   ( SELECT
-      COALESCE(json_agg(q.type_name), '[]')
+      COALESCE(json_agg(
+        json_build_object('schema', q."schema",
+                          'name', q."name",
+                          'type', q."type"
+                         )
+      ), '[]')
     FROM
       (
         SELECT
-          pt.typname AS type_name,
+          pt.typname AS "name",
+          pns.nspname AS "schema",
+          pt.typtype AS "type",
           pat.ordinality
         FROM
           unnest(
             COALESCE(p.proallargtypes, (p.proargtypes) :: oid [])
           ) WITH ORDINALITY pat(oid, ordinality)
           LEFT JOIN pg_type pt ON ((pt.oid = pat.oid))
+          LEFT JOIN pg_namespace pns ON (pt.typnamespace = pns.oid)
         ORDER BY pat.ordinality ASC
       ) q
    ) AS input_arg_types,
   to_json(COALESCE(p.proargnames, ARRAY [] :: text [])) AS input_arg_names,
-  p.pronargdefaults AS default_args
+  p.pronargdefaults AS default_args,
+  p.oid::integer AS function_oid
 FROM
   pg_proc p
   JOIN pg_namespace pn ON (pn.oid = p.pronamespace)
   JOIN pg_type rt ON (rt.oid = p.prorettype)
   JOIN pg_namespace rtn ON (rtn.oid = rt.typnamespace)
+  LEFT JOIN pg_description pd ON p.oid = pd.objoid
 WHERE
   pn.nspname :: text NOT LIKE 'pg_%'
   AND pn.nspname :: text NOT IN ('information_schema', 'hdb_catalog', 'hdb_views')
@@ -445,7 +448,11 @@ CREATE VIEW hdb_catalog.hdb_column AS
         , columns.is_nullable
         , columns.ordinal_position
         , coalesce(pkey_refs.ref_tables, '[]') AS primary_key_references
+        , col_description(pg_class.oid, columns.ordinal_position) AS description
      FROM information_schema.columns
+JOIN pg_class ON pg_class.relname = columns.table_name
+JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
+     AND pg_namespace.nspname = columns.table_schema
 LEFT JOIN primary_key_references AS pkey_refs
            ON columns.table_schema = pkey_refs.src_table_schema
           AND columns.table_name   = pkey_refs.src_table_name
@@ -455,6 +462,7 @@ CREATE VIEW hdb_catalog.hdb_table_info_agg AS (
 select
   tables.table_name as table_name,
   tables.table_schema as table_schema,
+  descriptions.description,
   coalesce(columns.columns, '[]') as columns,
   coalesce(pk.columns, '[]') as primary_key_columns,
   coalesce(constraints.constraints, '[]') as constraints,
@@ -470,7 +478,8 @@ from
           'name', name,
           'type', type,
           'is_nullable', is_nullable :: boolean,
-          'references', primary_key_references
+          'references', primary_key_references,
+          'description', description
         )
       ) as columns
     from
@@ -523,6 +532,19 @@ from
     tables.table_schema = views.table_schema
     AND tables.table_name = views.table_name
   )
+  left outer join (
+    select
+        pc.relname as table_name,
+        pn.nspname as table_schema,
+        pd.description
+    from pg_class pc
+        left join pg_namespace pn on pn.oid = pc.relnamespace
+        left join pg_description pd on pd.objoid = pc.oid
+    where pd.objsubid = 0
+  ) descriptions on (
+    tables.table_schema = descriptions.table_schema
+    AND tables.table_name = descriptions.table_name
+  )
 );
 
 CREATE VIEW hdb_catalog.hdb_function_info_agg AS (
@@ -536,6 +558,7 @@ CREATE VIEW hdb_catalog.hdb_function_info_agg AS (
           FROM
               (
                 SELECT
+                  description,
                   has_variadic,
                   function_type,
                   return_type_schema,
@@ -606,4 +629,33 @@ CREATE TABLE hdb_catalog.hdb_allowlist
 (
   collection_name TEXT UNIQUE
     REFERENCES hdb_catalog.hdb_query_collection(collection_name)
+);
+
+CREATE TABLE hdb_catalog.hdb_computed_field
+(
+  table_schema TEXT,
+  table_name TEXT,
+  computed_field_name TEXT,
+  definition JSONB NOT NULL,
+  comment TEXT NULL,
+
+  PRIMARY KEY (table_schema, table_name, computed_field_name),
+  FOREIGN KEY (table_schema, table_name) REFERENCES hdb_catalog.hdb_table(table_schema, table_name) ON UPDATE CASCADE
+);
+
+CREATE VIEW hdb_catalog.hdb_computed_field_function AS
+(
+  SELECT
+    table_schema,
+    table_name,
+    computed_field_name,
+    CASE
+      WHEN (definition::jsonb -> 'function')::jsonb ->> 'name' IS NULL THEN definition::jsonb ->> 'function'
+      ELSE (definition::jsonb -> 'function')::jsonb ->> 'name'
+    END AS function_name,
+    CASE
+      WHEN (definition::jsonb -> 'function')::jsonb ->> 'schema' IS NULL THEN 'public'
+      ELSE (definition::jsonb -> 'function')::jsonb ->> 'schema'
+    END AS function_schema
+  FROM hdb_catalog.hdb_computed_field
 );

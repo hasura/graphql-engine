@@ -1,1 +1,3 @@
-export rightContainerConnector from './RightContainer/RightContainer';
+import rightContainerConnector from './RightContainer/RightContainer';
+
+export { rightContainerConnector };

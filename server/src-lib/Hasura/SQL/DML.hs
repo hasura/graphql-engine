@@ -121,7 +121,7 @@ mkSelFromExp isLateral sel tn =
     alias = Alias $ toIden tn
 
 mkFuncFromItem :: QualifiedFunction -> FunctionArgs -> FromItem
-mkFuncFromItem qf args = FIFunc qf args Nothing
+mkFuncFromItem qf args = FIFunc $ FunctionExp qf args Nothing
 
 mkRowExp :: [Extractor] -> SQLExp
 mkRowExp extrs = let
@@ -279,11 +279,12 @@ data SQLExp
   | SETyAnn !SQLExp !TypeAnn
   | SECond !BoolExp !SQLExp !SQLExp
   | SEBool !BoolExp
-  | SEExcluded !T.Text
+  | SEExcluded !Iden
   | SEArray ![SQLExp]
   | SETuple !TupleExp
   | SECount !CountType
   | SENamedArg !Iden !SQLExp
+  | SEFunction !FunctionExp
   deriving (Show, Eq, Data)
 
 withTyAnn :: PGScalarType -> SQLExp -> SQLExp
@@ -340,14 +341,15 @@ instance ToSQL SQLExp where
     "ELSE" <-> toSQL fe <->
     "END"
   toSQL (SEBool be) = toSQL be
-  toSQL (SEExcluded t) = "EXCLUDED."
-                         <> toSQL (PGCol t)
+  toSQL (SEExcluded i) = "EXCLUDED."
+                         <> toSQL i
   toSQL (SEArray exps) = "ARRAY" <> TB.char '['
                          <> (", " <+> exps) <> TB.char ']'
   toSQL (SETuple tup) = toSQL tup
   toSQL (SECount ty) = "COUNT" <> paren (toSQL ty)
   -- https://www.postgresql.org/docs/current/sql-syntax-calling-funcs.html
   toSQL (SENamedArg arg val) = toSQL arg <-> "=>" <-> toSQL val
+  toSQL (SEFunction funcExp) = toSQL funcExp
 
 intToSQLExp :: Int -> SQLExp
 intToSQLExp =
@@ -418,10 +420,21 @@ instance ToSQL FunctionArgs where
                     \(argName, argVal) -> SENamedArg (Iden argName) argVal
     in paren $ ", " <+> (positionalArgs <> namedArgs)
 
+data FunctionExp
+  = FunctionExp
+  { feName  :: !QualifiedFunction
+  , feArgs  :: !FunctionArgs
+  , feAlias :: !(Maybe Alias)
+  } deriving (Show, Eq, Data)
+
+instance ToSQL FunctionExp where
+  toSQL (FunctionExp qf args alsM) =
+    toSQL qf <> toSQL args <-> toSQL alsM
+
 data FromItem
   = FISimple !QualifiedTable !(Maybe Alias)
   | FIIden !Iden
-  | FIFunc !QualifiedFunction !FunctionArgs !(Maybe Alias)
+  | FIFunc !FunctionExp
   | FIUnnest ![SQLExp] !Alias ![SQLExp]
   | FISelect !Lateral !Select !Alias
   | FIValues !ValuesExp !Alias !(Maybe [PGCol])
@@ -443,8 +456,7 @@ instance ToSQL FromItem where
     toSQL qt <-> toSQL mal
   toSQL (FIIden iden) =
     toSQL iden
-  toSQL (FIFunc qf args mal) =
-    toSQL qf <> toSQL args <-> toSQL mal
+  toSQL (FIFunc funcExp) = toSQL funcExp
   -- unnest(expressions) alias(columns)
   toSQL (FIUnnest args als cols) =
     "UNNEST" <> paren (", " <+> args) <-> toSQL als <> paren (", " <+> cols)
@@ -662,7 +674,7 @@ buildUpsertSetExp cols preSet =
   where
     setExps = HM.union preSet $ HM.fromList $
       flip map cols $ \col ->
-        (col, SEExcluded $ getPGColTxt col)
+        (col, SEExcluded $ toIden col)
 
 
 newtype UsingExp = UsingExp [TableName]

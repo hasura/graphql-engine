@@ -44,11 +44,11 @@ The upsert functionality is sometimes confused with the update functionality. Ho
 differently. An upsert mutation is used in the case when it's not clear if the respective row is already present
 in the database. If it's known that the row is present in the database, ``update`` is the functionality to use.
 
-For an upsert, **all columns need to be passed**. 
+For an upsert, **all columns need to be passed**.
 
 **How it works**
 
-1. Postgres tries to insert a row (hence all the columns need to be present) 
+1. Postgres tries to insert a row (hence all the columns need to be present)
 
 2. If this fails because of some constraint, it updates the specified columns
 
@@ -103,6 +103,53 @@ the columns specified in ``update_columns``:
     }
 
 The ``published_on`` column is left unchanged as it wasn't present in ``update_columns``.
+
+Update selected columns on conflict using a filter
+--------------------------------------------------
+Insert a new object in the ``article`` table, or if the primary key constraint ``article_pkey`` is violated, update
+the columns specified in ``update_columns`` only if the provided ``where`` condition is met:
+
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation upsert_article {
+      insert_article (
+        objects: [
+          {
+            id: 2,
+            published_on: "2018-10-12"
+          }
+        ],
+        on_conflict: {
+          constraint: article_pkey,
+          update_columns: [published_on],
+          where: {
+            published_on: {_lt: "2018-10-12"}
+          }
+        }
+      ) {
+        returning {
+          id
+          published_on
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "insert_article": {
+          "returning": [
+            {
+              "id": 2,
+              "published_on": "2018-10-12"
+            }
+          ]
+        }
+      }
+    }
+
+The ``published_on`` column is updated only if the new value is greater than the old value.
 
 Ignore request on conflict
 --------------------------

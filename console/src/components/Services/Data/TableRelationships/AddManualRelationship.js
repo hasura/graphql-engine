@@ -3,6 +3,15 @@ import { ordinalColSort } from '../utils';
 import { addRelViewMigrate, resetManualRelationshipForm } from './Actions';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import ManualRelationshipSelector from './ManualRelationshipSelector';
+import {
+  getColumnName,
+  getSchemaName,
+  getSchemaTables,
+  getTableColumnNames,
+  getTableName,
+  getTableSchema,
+  getTrackedTables,
+} from '../../../Common/utils/pgUtils';
 
 const AddManualRelationship = ({
   tableSchema,
@@ -17,20 +26,21 @@ const AddManualRelationship = ({
 
   // columns in the right order with their indices
   const orderedColumns = columns.map((c, i) => ({
-    name: c.column_name,
+    name: getColumnName(c),
     index: i,
   }));
 
-  relAdd.rSchema = relAdd.rSchema || tableSchema.table_schema;
+  relAdd.rSchema = relAdd.rSchema || getTableSchema(tableSchema);
 
   const refTables = {};
-  allSchemas.forEach(ts => {
-    if (ts.table_schema === relAdd.rSchema) {
-      refTables[ts.table_name] = ts.columns.map(c => c.column_name);
-    }
-  });
+  const trackedSchemaTables = getTrackedTables(
+    getSchemaTables(allSchemas, relAdd.rSchema)
+  );
+  trackedSchemaTables.forEach(
+    ts => (refTables[getTableName(ts)] = getTableColumnNames(ts))
+  );
 
-  const orderedSchemaList = schemaList.map(s => s.schema_name).sort();
+  const orderedSchemaList = schemaList.map(s => getSchemaName(s)).sort();
 
   const resetManualRel = () => {
     dispatch(resetManualRelationshipForm());

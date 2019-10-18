@@ -16,8 +16,8 @@ import {
 import dataHeaders from './Common/Headers';
 import { loadMigrationStatus } from '../../Main/Actions';
 import returnMigrateUrl from './Common/getMigrateUrl';
-import { loadInconsistentObjects } from '../Metadata/Actions';
-import { filterInconsistentMetadataObjects } from '../Metadata/utils';
+import { loadInconsistentObjects } from '../Settings/Actions';
+import { filterInconsistentMetadataObjects } from '../Settings/utils';
 import globals from '../../../Globals';
 
 import {
@@ -32,7 +32,7 @@ import { fetchColumnTypesQuery, fetchColumnDefaultFunctions } from './utils';
 
 import { fetchColumnCastsQuery, convertArrayToJson } from './TableModify/utils';
 
-import { SERVER_CONSOLE_MODE } from '../../../constants';
+import { CLI_CONSOLE_MODE, SERVER_CONSOLE_MODE } from '../../../constants';
 
 const SET_TABLE = 'Data/SET_TABLE';
 const LOAD_FUNCTIONS = 'Data/LOAD_FUNCTIONS';
@@ -43,10 +43,11 @@ const LOAD_UNTRACKED_RELATIONS = 'Data/LOAD_UNTRACKED_RELATIONS';
 const FETCH_SCHEMA_LIST = 'Data/FETCH_SCHEMA_LIST';
 const UPDATE_CURRENT_SCHEMA = 'Data/UPDATE_CURRENT_SCHEMA';
 const ADMIN_SECRET_ERROR = 'Data/ADMIN_SECRET_ERROR';
-const UPDATE_DATA_HEADERS = 'Data/UPDATE_DATA_HEADERS';
 const UPDATE_REMOTE_SCHEMA_MANUAL_REL = 'Data/UPDATE_SCHEMA_MANUAL_REL';
 const SET_CONSISTENT_SCHEMA = 'Data/SET_CONSISTENT_SCHEMA';
 const SET_CONSISTENT_FUNCTIONS = 'Data/SET_CONSISTENT_FUNCTIONS';
+
+const UPDATE_DATA_HEADERS = 'Data/UPDATE_DATA_HEADERS';
 
 const FETCH_COLUMN_TYPE_INFO = 'Data/FETCH_COLUMN_TYPE_INFO';
 const FETCH_COLUMN_TYPE_INFO_FAIL = 'Data/FETCH_COLUMN_TYPE_INFO_FAIL';
@@ -117,9 +118,7 @@ const initQueries = {
         function_schema: '',
         has_variadic: false,
         returns_set: true,
-        return_type_type: {
-          $ilike: '%composite%',
-        },
+        return_type_type: 'c', // COMPOSITE type
         $or: [
           {
             function_type: {
@@ -158,9 +157,7 @@ const initQueries = {
         function_schema: '',
         has_variadic: false,
         returns_set: true,
-        return_type_type: {
-          $ilike: '%composite%',
-        },
+        return_type_type: 'c', // COMPOSITE type
         function_type: {
           $ilike: '%volatile%',
         },
@@ -491,7 +488,7 @@ const makeMigrationCall = (
   let finalReqBody;
   if (globals.consoleMode === SERVER_CONSOLE_MODE) {
     finalReqBody = upQuery;
-  } else if (globals.consoleMode === 'cli') {
+  } else if (globals.consoleMode === CLI_CONSOLE_MODE) {
     finalReqBody = migrationBody;
   }
   const url = migrateUrl;
@@ -504,7 +501,7 @@ const makeMigrationCall = (
 
   const onSuccess = data => {
     if (!shouldSkipSchemaReload) {
-      if (globals.consoleMode === 'cli') {
+      if (globals.consoleMode === CLI_CONSOLE_MODE) {
         dispatch(loadMigrationStatus()); // don't call for server mode
       }
       dispatch(updateSchemaInfo());

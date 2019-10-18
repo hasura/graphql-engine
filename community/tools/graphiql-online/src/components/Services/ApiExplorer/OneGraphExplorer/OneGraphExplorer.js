@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { getIntrospectionQuery, buildClientSchema } from 'graphql';
-import GraphiQLExplorer from 'graphiql-explorer-hasura';
+import GraphiQLExplorer from 'graphiql-explorer';
 
 import {
   makeDefaultArg,
