@@ -564,8 +564,18 @@ class Schema extends Component {
 
       if (nonTrackableFunctions.length > 0) {
         const heading = getSectionHeading(
-          'Non trackable custom functions',
+          'Non trackable functions',
           nonTrackableFunctionsTip
+        );
+
+        const customFunctionsDocsLink = (
+          <a
+            href="https://docs.hasura.io/1.0/graphql/manual/queries/custom-functions.html#supported-sql-functions"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            function requirements
+          </a>
         );
 
         nonTrackableFuncList = (
@@ -575,6 +585,12 @@ class Schema extends Component {
           >
             <CollapsibleToggle title={heading} isOpen={false}>
               <div className={`${styles.padd_left_remove} col-xs-12`}>
+                <div className={styles.add_mar_bottom}>
+                  <i>
+                    See {customFunctionsDocsLink} to be exposed over the GraphQL
+                    API
+                  </i>
+                </div>
                 {nonTrackableFunctions.map((p, i) => (
                   <div
                     className={styles.padd_bottom}
