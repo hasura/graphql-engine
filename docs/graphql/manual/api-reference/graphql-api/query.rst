@@ -356,8 +356,8 @@ The ``_eq`` (equal to) operator are compatible with any Postgres type other than
 
 The following are examples of using the equality operators on different types.
 
-Example: Integer (works with Double, Float, Numeric, etc.)
-**********************************************************
+*Example: Integer (works with Double, Float, Numeric, etc.)*
+
 Fetch data about author whose ``id`` *(an integer field)* is equal to 3:
 
 .. graphiql::
@@ -383,8 +383,8 @@ Fetch data about author whose ``id`` *(an integer field)* is equal to 3:
       }
     }
 
-Example: String or Text
-***********************
+*Example: String or Text*
+
 Fetch a list of authors with ``name`` *(a text field)* as "Sidney":
 
 .. graphiql::
@@ -410,8 +410,8 @@ Fetch a list of authors with ``name`` *(a text field)* as "Sidney":
       }
     }
 
-Example: Boolean
-****************
+*Example: Boolean*
+
 Fetch a list of articles that have not been published (``is_published`` is a boolean field):
 
 .. graphiql::
@@ -455,8 +455,8 @@ Fetch a list of articles that have not been published (``is_published`` is a boo
     }
 
 
-Example: Date (works with Time, Timezone, etc.)
-***********************************************
+*Example: Date (works with Time, Timezone, etc.)*
+
 Fetch a list of articles that were published on a certain date (``published_on`` is a Date field):
 
 .. graphiql::
@@ -490,8 +490,8 @@ The ``_neq`` (not equal to) operator are compatible with any Postgres type other
 
 The following are examples of using the equality operators on different types.
 
-Example: Integer (works with Double, Float, Numeric, etc.)
-**********************************************************
+*Example: Integer (works with Double, Float, Numeric, etc.)*
+
 Fetch data about author whose ``id`` *(an integer field)* is not equal to 3:
 
 .. graphiql::
@@ -517,8 +517,8 @@ Fetch data about author whose ``id`` *(an integer field)* is not equal to 3:
       }
     }
 
-Example: String or Text
-***********************
+*Example: String or Text*
+
 Fetch a list of authors with ``name`` *(a text field)* not "Sidney":
 
 .. graphiql::
@@ -548,8 +548,8 @@ Fetch a list of authors with ``name`` *(a text field)* not "Sidney":
       }
     }
 
-Example: Boolean
-****************
+*Example: Boolean*
+
 Fetch a list of articles that have been published (``is_published`` is a boolean field):
 
 .. graphiql::
@@ -583,8 +583,8 @@ Fetch a list of articles that have been published (``is_published`` is a boolean
     }
 
 
-Example: Date (works with Time, Timezone, etc.)
-***********************************************
+*Example: Date (works with Time, Timezone, etc.)*
+
 Fetch a list of articles that were not published on a certain date (``published_on`` is a Date field):
 
 .. graphiql::
@@ -619,8 +619,8 @@ They are compatible with any Postgres type other than ``json`` or ``jsonB`` (lik
 ``Text``, ``Boolean``, ``Date``/``Time``/``Timestamp``, etc.).
 
 
-Example: Integer (works with Double, Float, etc.)
-**********************************************
+*Example: Integer (works with Double, Float, etc.)*
+
 Fetch a list of articles rated 1, 3 or 5:
 
 .. graphiql::
@@ -668,8 +668,8 @@ The ``_nin`` (not in list) operator is used to compare field values to a list of
 They are compatible with any Postgres type other than ``json`` or ``jsonB`` (like ``Integer``, ``Float``, ``Double``,
 ``Text``, ``Boolean``, ``Date``/``Time``/``Timestamp``, etc.).
 
-Example: String or Text
-*********************
+*Example: String or Text*
+
 Fetch a list of those authors whose names are NOT part of a list:
 
 .. graphiql::
@@ -711,8 +711,8 @@ Fetch a list of those authors whose names are NOT part of a list:
 The ``_gt`` (greater than) operator is compatible with any Postgres type other than ``json`` or ``jsonB``
 (like ``Integer``, ``Float``, ``Double``, ``Text``, ``Boolean``, ``Date``/``Time``/``Timestamp``, etc.).
 
-Example: String or Text
-***********************
+*Example: String or Text*
+
 Fetch a list of authors whose names begin with M or any letter that follows M *(essentially, a filter based on a
 dictionary sort)*:
 
@@ -747,8 +747,8 @@ dictionary sort)*:
 The ``_lt`` (less than) operators is compatible with any Postgres type other than ``json`` or ``jsonB``
 (like ``Integer``, ``Float``, ``Double``, ``Text``, ``Boolean``, ``Date``/``Time``/``Timestamp``, etc.).
 
-Example: Integer (works with Double, Float, etc.)
-**********************************************
+*Example: Integer (works with Double, Float, etc.)*
+
 Fetch a list of articles rated less than 4 (``rating`` is an integer field):
 
 .. graphiql::
@@ -791,8 +791,8 @@ Fetch a list of articles rated less than 4 (``rating`` is an integer field):
 The ``_gte`` (greater than or equal to) operator is compatible with any Postgres type other than ``json`` or ``jsonB``
 (like ``Integer``, ``Float``, ``Double``, ``Text``, ``Boolean``, ``Date``/``Time``/``Timestamp``, etc.).
 
-Example: Date (works with Time, Timezone, etc.)
-*********************************************
+*Example: Date (works with Time, Timezone, etc.)*
+
 Fetch a list of articles that were published on or after date "01/01/2018":
 
 .. graphiql::
@@ -840,8 +840,8 @@ Fetch a list of articles that were published on or after date "01/01/2018":
 The ``_lte`` (less than or equal to) operator is compatible with any Postgres type other than ``json`` or ``jsonB``
 (like ``Integer``, ``Float``, ``Double``, ``Text``, ``Boolean``, ``Date``/``Time``/``Timestamp``, etc.).
 
-Example: Date (works with Time, Timezone, etc.)
-*********************************************
+*Example: Date (works with Time, Timezone, etc.)*
+
 Fetch a list of articles that were published on or before date "01/01/2018":
 
 .. graphiql::
@@ -890,7 +890,7 @@ The ``_like`` operators are used forpattern matching on string/text fields.
 
 These operator behaves exactly like their `SQL counterparts <https://www.postgresql.org/docs/current/static/functions-matching.html>`__
 
-Fetch a list of articles whose titles contain the word “amet”:
+Fetch a list of articles whose titles contain the word “amet”:S
 
 .. graphiql::
   :view_only:
