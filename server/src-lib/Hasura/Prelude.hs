@@ -7,6 +7,7 @@ module Hasura.Prelude
   , bsToTxt
   , txtToBs
   , spanMaybeM
+  , findWithIndex
   ) where
 
 import           Control.Applicative        as M (Alternative (..))
@@ -27,8 +28,8 @@ import           Data.Foldable              as M (asum, foldrM, for_, toList,
 import           Data.Function              as M (on, (&))
 import           Data.Functor               as M (($>), (<&>))
 import           Data.Hashable              as M (Hashable)
-import           Data.List                  as M (find, foldl', group,
-                                                  intercalate, intersect,
+import           Data.List                  as M (find, findIndex, foldl',
+                                                  group, intercalate, intersect,
                                                   lookup, sort, sortBy, sortOn,
                                                   union, unionBy, (\\))
 import           Data.Maybe                 as M (catMaybes, fromMaybe, isJust,
@@ -77,3 +78,9 @@ spanMaybeM f = go . toList
     go l@(x:xs) = f x >>= \case
       Just y  -> first (y:) <$> go xs
       Nothing -> pure ([], l)
+
+findWithIndex :: (a -> Bool) -> [a] -> Maybe (a, Int)
+findWithIndex p l = do
+  v <- find p l
+  i <- findIndex p l
+  pure (v, i)

@@ -143,7 +143,7 @@ parseCastExpression
 parseCastExpression =
   withObjectM $ \_ objM -> forM objM $ \obj -> do
     targetExps <- forM (OMap.toList obj) $ \(targetTypeName, castedComparisonExpressionInput) -> do
-      let targetType = txtToPgColTy $ G.unName targetTypeName
+      let targetType = textToPGScalarType $ G.unName targetTypeName
       castedComparisonExpressions <- parseOpExps (PGColumnScalar targetType) castedComparisonExpressionInput
       return (targetType, castedComparisonExpressions)
     return $ Map.fromList targetExps
@@ -159,13 +159,15 @@ parseColExp
 parseColExp nt n val = do
   fldInfo <- getFldInfo nt n
   case fldInfo of
-    Left pgColInfo -> do
+    RFPGColumn pgColInfo -> do
       opExps <- parseOpExps (pgiType pgColInfo) val
       return $ AVCol pgColInfo opExps
-    Right (RelationshipField relInfo _ _ permExp _)-> do
+    RFRelationship (RelationshipField relInfo _ _ permExp _)-> do
       relBoolExp <- parseBoolExp val
       return $ AVRel relInfo $ andAnnBoolExps relBoolExp $
         fmapAnnBoolExp partialSQLExpToUnresolvedVal permExp
+    RFComputedField _ -> throw500
+          "computed fields are not allowed in bool_exp"
 
 parseBoolExp
   :: ( MonadReusability m
