@@ -34,3 +34,14 @@
 <!-- Limitations of the PR, known bugs and suggested workarounds -->
 
 <!-- Feel free to delete these comment lines -->
+
+### Checklist:
+
+<!--- Put an `x` in all the boxes that apply. -->
+
+- [ ] I have signed the [Hasura Open Source CLA](https://cla-assistant.io/hasura/graphql-engine.
+- [ ] My code follows the code style of this project.
+- [ ] My change requires a change to the documentation.
+- [ ] I have updated the documentation accordingly.
+- [ ] I have read the guidelines in **`CONTRIBUTING.MD`** document.
+- [ ] All new and existing tests have passed.
