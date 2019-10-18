@@ -3,7 +3,7 @@ url: /v1/query
 status: 400
 response:
   path: "$.args"
-  error: 'the following custom column names conflict with existing relationship fields:
+  error: 'the following custom column names conflict with existing non-column fields:
     articles_aggregate, articles'
   code: not-supported
 query:

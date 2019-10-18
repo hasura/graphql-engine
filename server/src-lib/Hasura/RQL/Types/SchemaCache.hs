@@ -57,6 +57,7 @@ module Hasura.RQL.Types.SchemaCache
        , partitionFieldInfosWith
        , getCols
        , getRels
+       , possibleNonColumnGraphQLFields
 
        , isPGColInfo
        , RelInfo(..)
@@ -142,6 +143,7 @@ import qualified Data.HashMap.Strict               as M
 import qualified Data.HashSet                      as HS
 import qualified Data.Sequence                     as Seq
 import qualified Data.Text                         as T
+import qualified Language.GraphQL.Draft.Syntax     as G
 
 reportSchemaObjs :: [SchemaObjId] -> T.Text
 reportSchemaObjs = T.intercalate ", " . map reportSchemaObj
@@ -181,6 +183,16 @@ partitionFieldInfosWith fns =
     biMapEither (f1, f2) = either (Left . f1) (Right . f2)
 
 type FieldInfoMap columnInfo = M.HashMap FieldName (FieldInfo columnInfo)
+
+possibleNonColumnGraphQLFields :: FieldInfoMap PGColumnInfo -> [G.Name]
+possibleNonColumnGraphQLFields fields =
+  flip concatMap (M.toList fields) $ \case
+    (_, FIColumn _)             -> []
+    (_, FIRelationship relInfo) ->
+      let relationshipName = G.Name $ relNameToTxt $ riName relInfo
+      in case riType relInfo of
+           ObjRel -> [relationshipName]
+           ArrRel -> [relationshipName, relationshipName <> "_aggregate"]
 
 getCols :: FieldInfoMap columnInfo -> [columnInfo]
 getCols fim = lefts $ map fieldInfoToEither $ M.elems fim
@@ -368,17 +380,25 @@ $(makeLenses ''TableInfo)
 
 checkForFieldConflict
   :: (MonadError QErr m)
-  => TableInfo a
+  => TableInfo PGColumnInfo
   -> FieldName
   -> m ()
-checkForFieldConflict tabInfo f =
-  case M.lookup f (_tiFieldInfoMap tabInfo) of
+checkForFieldConflict tableInfo f = do
+  case M.lookup f fieldInfoMap of
     Just _ -> throw400 AlreadyExists $ mconcat
       [ "column/relationship " <>> f
-      , " of table " <>> _tiName tabInfo
+      , " of table " <>> tableName
       , " already exists"
       ]
     Nothing -> return ()
+  when (f `elem` customColumnFields) $
+    throw400 AlreadyExists $
+    "custom column name " <> f <<> " of table " <> tableName <<> " already exists"
+  where
+    tableName = _tiName tableInfo
+    fieldInfoMap = _tiFieldInfoMap tableInfo
+    customColumnFields =
+      map (FieldName . G.unName . pgiName) $ getCols fieldInfoMap
 
 data FunctionType
   = FTVOLATILE

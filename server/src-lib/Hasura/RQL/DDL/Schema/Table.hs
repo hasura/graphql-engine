@@ -184,24 +184,18 @@ runSetTableCustomFieldsQV2 :: (CacheBuildM m, UserInfoM m) => SetTableCustomFiel
 runSetTableCustomFieldsQV2 (SetTableCustomFields tableName rootFields columnNames) = do
   adminOnly
   fieldInfoMap <- _tiFieldInfoMap <$> askTabInfo tableName
-  validateWithExistingRelationships fieldInfoMap
+  validateWithNonColumnFields fieldInfoMap
   let tableConfig = TableConfig rootFields columnNames
   updateTableConfig tableName tableConfig
   buildSchemaCacheFor (MOTable tableName)
   return successMsg
   where
-    validateWithExistingRelationships fields = do
+    validateWithNonColumnFields fields = do
       let customNames = M.elems columnNames
-          relationships = getRels fields
-          relationshipGraphQLFields =
-            flip concatMap relationships $ \relationship ->
-            let relationshipName = G.Name $ relNameToTxt $ riName relationship
-            in case riType relationship of
-              ObjRel -> [relationshipName]
-              ArrRel -> [relationshipName, relationshipName <> "_aggregate"]
-          conflictingNames = customNames `intersect` relationshipGraphQLFields
+          nonColumnFields = possibleNonColumnGraphQLFields fields
+          conflictingNames = customNames `intersect` nonColumnFields
       when (not $ null conflictingNames) $ throw400 NotSupported $
-        "the following custom column names conflict with existing relationship fields: "
+        "the following custom column names conflict with existing non-column fields: "
         <> showNames conflictingNames
 
 unTrackExistingTableOrViewP1

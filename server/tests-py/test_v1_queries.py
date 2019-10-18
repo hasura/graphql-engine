@@ -661,3 +661,6 @@ class TestSetTableCustomFields(DefaultTestQueries):
 
     def test_column_field_swap(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/column_field_swap.yaml")
+
+    def test_relationship_conflict_with_custom_column(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/relationship_conflict_with_custom_column.yaml")
