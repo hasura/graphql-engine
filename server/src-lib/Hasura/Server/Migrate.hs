@@ -41,7 +41,7 @@ dropCatalog :: (MonadTx m) => m ()
 dropCatalog = liftTx $ Q.catchE defaultTxErrorHandler $ do
   -- This is where the generated views and triggers are stored
   Q.unitQ "DROP SCHEMA IF EXISTS hdb_views CASCADE" () False
-  Q.unitQ "DROP SCHEMA hdb_catalog CASCADE" () False
+  Q.unitQ "DROP SCHEMA IF EXISTS hdb_catalog CASCADE" () False
 
 data MigrationResult
   = MRNothingToDo
