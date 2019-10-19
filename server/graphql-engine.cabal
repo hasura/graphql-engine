@@ -354,7 +354,6 @@ test-suite graphql-engine-tests
     , base
     , graphql-engine
     , hspec
-    , hspec-core
     , http-client
     , http-client-tls
     , optparse-applicative

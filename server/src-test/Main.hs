@@ -2,6 +2,7 @@ module Main (main) where
 
 import           Hasura.Prelude
 
+import           Data.Either             (isRight)
 import           Data.Time.Clock         (getCurrentTime)
 import           Options.Applicative
 import           System.Environment      (getEnvironment)
@@ -11,11 +12,12 @@ import           Test.Hspec
 import qualified Database.PG.Query       as Q
 import qualified Network.HTTP.Client     as HTTP
 import qualified Network.HTTP.Client.TLS as HTTP
-import qualified Test.Hspec.Core.Runner  as Hspec
+import qualified Test.Hspec.Runner       as Hspec
 
 import           Hasura.Db               (PGExecCtx (..))
+import           Hasura.RQL.DDL.Metadata (ClearMetadata (..), runClearMetadata)
 import           Hasura.RQL.Types        (QErr, SQLGenCtx (..), adminUserInfo,
-                                          emptySchemaCache)
+                                          emptySchemaCache, successMsg)
 import           Hasura.Server.Init      (mkConnInfo, mkRawConnInfo,
                                           parseRawConnInfo, runWithEnv)
 import           Hasura.Server.Migrate
@@ -53,23 +55,36 @@ main = do
           time <- getCurrentTime
           dropAndInit time `shouldReturn` Right MRInitialized
           firstDump <- dumpSchema
+          firstDump `shouldSatisfy` isRight
           dropAndInit time `shouldReturn` Right MRInitialized
           secondDump <- dumpSchema
-          firstDump `shouldBe` secondDump
+          secondDump `shouldBe` firstDump
 
       describe "recreateSystemMetadata" $ do
+        let dumpMetadata = runAsAdmin $
+              execPGDump (PGDumpReqBody ["--schema=hdb_catalog"] (Just False)) pgConnInfo
+
         it "is idempotent" $ do
-          let dumpMetadata = runAsAdmin $
-                execPGDump (PGDumpReqBody ["--schema=hdb_catalog"] (Just False)) pgConnInfo
           (dropAndInit =<< getCurrentTime) `shouldReturn` Right MRInitialized
           firstDump <- dumpMetadata
+          firstDump `shouldSatisfy` isRight
           runAsAdmin recreateSystemMetadata `shouldReturn` Right ()
           secondDump <- dumpMetadata
-          firstDump `shouldBe` secondDump
+          secondDump `shouldBe` firstDump
+
+        it "does not create any objects affected by ClearMetadata" $ do
+          (dropAndInit =<< getCurrentTime) `shouldReturn` Right MRInitialized
+          firstDump <- dumpMetadata
+          firstDump `shouldSatisfy` isRight
+          runAsAdmin (runClearMetadata ClearMetadata) `shouldReturn` Right successMsg
+          secondDump <- dumpMetadata
+          secondDump `shouldBe` firstDump
 
   where
     runHspec :: Spec -> IO ()
-    runHspec = Hspec.evaluateSummary <=< flip Hspec.runSpec Hspec.defaultConfig
+    runHspec m = do
+      config <- Hspec.readConfig Hspec.defaultConfig []
+      Hspec.evaluateSummary =<< Hspec.runSpec m config
 
     printErrExit :: String -> IO a
     printErrExit = (*> exitFailure) . putStrLn
