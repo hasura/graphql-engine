@@ -63,7 +63,7 @@ main = do
                 execPGDump (PGDumpReqBody ["--schema=hdb_catalog"] (Just False)) pgConnInfo
           (dropAndInit =<< getCurrentTime) `shouldReturn` Right MRInitialized
           firstDump <- dumpMetadata
-          runAsAdmin recreateSystemMetadata
+          runAsAdmin recreateSystemMetadata `shouldReturn` Right ()
           secondDump <- dumpMetadata
           firstDump `shouldBe` secondDump
 
