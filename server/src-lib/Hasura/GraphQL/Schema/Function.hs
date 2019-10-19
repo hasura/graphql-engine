@@ -3,6 +3,7 @@ module Hasura.GraphQL.Schema.Function
   , mkFuncArgsInp
   , mkFuncQueryFld
   , mkFuncAggQueryFld
+  , mkFuncArgsTy
   ) where
 
 import qualified Data.Sequence                 as Seq
@@ -15,15 +16,6 @@ import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-
-mkFuncArgsName :: QualifiedFunction -> G.Name
-mkFuncArgsName fn =
-  qualObjectToName fn <> "_args"
-
-mkFuncArgsTy :: QualifiedFunction -> G.NamedType
-mkFuncArgsTy =
-  G.NamedType . mkFuncArgsName
-
 
 {-
 input function_args {
@@ -49,12 +41,10 @@ procFuncArgs argSeq f =
           let argT = "arg_" <> T.pack (show argNo)
           in (items <> pure (f fa argT), argNo + 1)
 
-mkFuncArgsInp :: FunctionInfo -> Maybe InpObjTyInfo
-mkFuncArgsInp funcInfo =
+mkFuncArgsInp :: QualifiedFunction -> Seq.Seq FunctionArg -> Maybe InpObjTyInfo
+mkFuncArgsInp funcName funcArgs =
   bool (Just inpObj) Nothing $ null funcArgs
   where
-    funcName = fiName funcInfo
-    funcArgs = fiInputArgs funcInfo
     funcArgsTy = mkFuncArgsTy funcName
 
     inpObj = mkHsraInpTyInfo Nothing funcArgsTy $
@@ -64,7 +54,7 @@ mkFuncArgsInp funcInfo =
 
     mkInpVal fa t =
       InpValInfo Nothing (G.Name t) Nothing $
-      G.toGT $ mkScalarTy $ faType fa
+      G.toGT $ mkScalarTy $ _qptName $ faType fa
 
 {-
 
