@@ -87,7 +87,7 @@ data AnnInsObj
   } deriving (Show, Eq)
 
 mkAnnInsObj
-  :: (MonadResolve m, Has InsCtxMap r, MonadReader r m, Has FieldMap r)
+  :: (MonadReusability m, MonadError QErr m, Has InsCtxMap r, MonadReader r m, Has FieldMap r)
   => RelationInfoMap
   -> PGColGNameMap
   -> AnnGObject
@@ -98,7 +98,7 @@ mkAnnInsObj relInfoMap allColMap annObj =
     emptyInsObj = AnnInsObj [] [] []
 
 traverseInsObj
-  :: (MonadResolve m, Has InsCtxMap r, MonadReader r m, Has FieldMap r)
+  :: (MonadReusability m, MonadError QErr m, Has InsCtxMap r, MonadReader r m, Has FieldMap r)
   => RelationInfoMap
   -> PGColGNameMap
   -> (G.Name, AnnInpVal)
@@ -161,7 +161,7 @@ traverseInsObj rim allColMap (gName, annVal) defVal@(AnnInsObj cols objRels arrR
             bool withNonEmptyArrData (return defVal) $ null arrDataVals
 
 parseOnConflict
-  :: (MonadResolve m, MonadReader r m, Has FieldMap r)
+  :: (MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r)
   => QualifiedTable
   -> Maybe UpdPermForIns
   -> PGColGNameMap
@@ -495,7 +495,7 @@ prefixErrPath fld =
   withPathK "selectionSet" . fieldAsPath fld . withPathK "args"
 
 convertInsert
-  :: ( MonadResolve m, MonadReader r m, Has FieldMap r
+  :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r, Has InsCtxMap r
      )
   => RoleName

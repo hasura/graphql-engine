@@ -107,3 +107,17 @@ Solution
 - Delete the row from the ``hdb_permission`` table where the column ``table_name`` has the same value as the table
   mentioned in the error and the column ``perm_def`` involves the missing column.
 - Restart the GraphQL engine to verify.
+
+Error: cannot continue due to new inconsistent metadata
+-------------------------------------------------------
+
+Some updates to the Hasura GraphQL engine may have :ref:`Hasura catalogue <hasura_metadata_schema>` version bumps. The GraphQL engine server
+automatically migrates the catalogue to the latest version on startup. This migration may fail if the previous metadata state is inconsistent.
+
+Solution
+^^^^^^^^
+
+- Start the older version of the GraphQL engine.
+- Open the Hasura console to find the inconsistencies.
+- Clear the inconsistencies.
+- Start the newer version.
