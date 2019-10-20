@@ -215,15 +215,15 @@ updateInsPermFlds refQT rename rn (InsPerm chk preset cols) = do
 updateSelPermFlds
   :: (MonadTx m, CacheRM m)
   => QualifiedTable -> Rename -> RoleName -> SelPerm -> m ()
-updateSelPermFlds refQT rename rn (SelPerm cols fltr limit aggAllwd) = do
+updateSelPermFlds refQT rename rn (SelPerm cols fltr limit aggAllwd computedCols) = do
   updatedPerm <- case rename of
     RTable rt -> do
       let updFltr = updateTableInBoolExp rt fltr
-      return $ SelPerm cols updFltr limit aggAllwd
+      return $ SelPerm cols updFltr limit aggAllwd computedCols
     RField rf -> do
       updFltr <- updateFieldInBoolExp refQT rf fltr
       let updCols = updateCols refQT rf cols
-      return $ SelPerm updCols updFltr limit aggAllwd
+      return $ SelPerm updCols updFltr limit aggAllwd computedCols
   liftTx $ updatePermDefInCatalog PTSelect refQT rn updatedPerm
 
 updateUpdPermFlds
@@ -316,8 +316,9 @@ updateColExp qt rf (ColExp fld val) =
       fim <- askFieldInfoMap qt
       fi <- askFieldInfo fim fld
       case fi of
-        FIColumn _ -> return val
-        FIRelationship ri -> do
+        FIColumn _         -> return val
+        FIComputedField _ -> return val
+        FIRelationship ri  -> do
           let remTable = riRTable ri
           be <- decodeValue val
           ube <- updateFieldInBoolExp remTable rf be
