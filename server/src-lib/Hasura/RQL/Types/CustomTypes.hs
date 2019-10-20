@@ -11,8 +11,18 @@ module Hasura.RQL.Types.CustomTypes
   , InputObjectTypeDefinition(..)
   , ObjectFieldName(..)
   , ObjectFieldDefinition(..)
+  , ObjectRelationshipName(..)
+  , ObjectRelationshipDefinition(..)
   , ObjectTypeName(..)
   , ObjectTypeDefinition(..)
+  , CustomTypeName
+  , CustomTypeDefinition(..)
+  , CustomTypeDefinitionMap
+  , OutputFieldTypeInfo(..)
+  , AnnotatedObjectType(..)
+  , AnnotatedObjects
+  , AnnotatedRelationship(..)
+  , NonObjectTypeMap(..)
   ) where
 
 import           Language.Haskell.TH.Syntax          (Lift)
@@ -22,13 +32,21 @@ import qualified Data.Aeson.Casing                   as J
 import qualified Data.Aeson.TH                       as J
 import qualified Data.Text                           as T
 
+import qualified Data.HashMap.Strict                 as Map
 import qualified Data.List.NonEmpty                  as NEList
+import           Instances.TH.Lift                   ()
 import qualified Language.GraphQL.Draft.Parser       as GParse
 import qualified Language.GraphQL.Draft.Printer      as GPrint
 import qualified Language.GraphQL.Draft.Printer.Text as GPrintText
 import qualified Language.GraphQL.Draft.Syntax       as G
 
+import qualified Hasura.GraphQL.Validate.Types       as VT
+
 import           Hasura.Prelude
+import           Hasura.RQL.Instances                ()
+import           Hasura.RQL.Types.Column
+import           Hasura.RQL.Types.Table
+import           Hasura.SQL.Types
 
 newtype GraphQLType
   = GraphQLType { unGraphQLType :: G.GType }
@@ -71,7 +89,8 @@ $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''InputObjectTypeDefinition)
 
 newtype ObjectFieldName
   = ObjectFieldName { unObjectFieldName :: G.Name }
-  deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, Lift)
+  deriving ( Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON
+           , J.FromJSONKey, J.ToJSONKey, Lift)
 
 data ObjectFieldDefinition
   = ObjectFieldDefinition
@@ -86,15 +105,29 @@ data ObjectFieldDefinition
   } deriving (Show, Eq, Lift)
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ObjectFieldDefinition)
 
+newtype ObjectRelationshipName
+  = ObjectRelationshipName { unObjectRelationshipName :: G.Name }
+  deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, Lift)
+
+data ObjectRelationshipDefinition
+  = ObjectRelationshipDefinition
+  { _ordName         :: !ObjectRelationshipName
+  , _ordRemoteTable  :: !QualifiedTable
+  , _ordFieldMapping :: !(Map.HashMap ObjectFieldName PGCol)
+  } deriving (Show, Eq, Lift)
+$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ObjectRelationshipDefinition)
+
 newtype ObjectTypeName
   = ObjectTypeName { unObjectTypeName :: G.NamedType }
-  deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, Lift)
+  deriving ( Show, Eq, Ord, Hashable, J.FromJSON, J.FromJSONKey
+           , J.ToJSONKey, J.ToJSON, Lift)
 
 data ObjectTypeDefinition
   = ObjectTypeDefinition
-  { _otdName        :: !ObjectTypeName
-  , _otdDescription :: !(Maybe G.Description)
-  , _otdFields      :: !(NEList.NonEmpty ObjectFieldDefinition)
+  { _otdName          :: !ObjectTypeName
+  , _otdDescription   :: !(Maybe G.Description)
+  , _otdFields        :: !(NEList.NonEmpty ObjectFieldDefinition)
+  , _otdRelationships :: !(Maybe [ObjectRelationshipDefinition])
   } deriving (Show, Eq, Lift)
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ObjectTypeDefinition)
 
@@ -125,6 +158,19 @@ data EnumTypeDefinition
   } deriving (Show, Eq, Lift)
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''EnumTypeDefinition)
 
+data CustomTypeDefinition
+  = CustomTypeScalar !ScalarTypeDefinition
+  | CustomTypeEnum !EnumTypeDefinition
+  | CustomTypeInputObject !InputObjectTypeDefinition
+  | CustomTypeObject !ObjectTypeDefinition
+  deriving (Show, Eq, Lift)
+$(J.deriveJSON J.defaultOptions ''CustomTypeDefinition)
+
+type CustomTypeDefinitionMap = Map.HashMap G.NamedType CustomTypeDefinition
+newtype CustomTypeName
+  = CustomTypeName { unCustomTypeName :: G.NamedType }
+  deriving (Show, Eq, Hashable, J.ToJSONKey, J.FromJSONKey)
+
 data CustomTypes
   = CustomTypes
   { _ctInputObjects :: !(Maybe [InputObjectTypeDefinition])
@@ -133,3 +179,38 @@ data CustomTypes
   , _ctEnums        :: !(Maybe [EnumTypeDefinition])
   } deriving (Show, Eq, Lift)
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''CustomTypes)
+
+-- TODO: parameterise the ObjectRelationshipDefinition type
+-- instead of doing this
+data AnnotatedRelationship
+  = AnnotatedRelationship
+  { _arDefinition      :: !ObjectRelationshipDefinition
+  , _arRemoteTableInfo :: !(TableInfo PGColumnInfo)
+  } deriving (Show, Eq)
+
+data OutputFieldTypeInfo
+  = OutputFieldScalar !VT.ScalarTyInfo
+  | OutputFieldEnum !VT.EnumTyInfo
+  deriving (Show, Eq)
+
+-- instance ToJSON OutputFieldTypeInfo where
+--   toJSON = toJSON . show
+
+data AnnotatedObjectType
+  = AnnotatedObjectType
+  { _aotDefinition      :: !ObjectTypeDefinition
+  , _aotAnnotatedFields :: !(Map.HashMap ObjectFieldName (G.GType, OutputFieldTypeInfo))
+  , _aotRelationships   :: !(Map.HashMap ObjectRelationshipName AnnotatedRelationship)
+  } deriving (Show, Eq)
+
+instance J.ToJSON AnnotatedObjectType where
+  toJSON = J.toJSON . show
+
+type AnnotatedObjects = Map.HashMap ObjectTypeName AnnotatedObjectType
+
+newtype NonObjectTypeMap
+  = NonObjectTypeMap { unNonObjectTypeMap :: VT.TypeMap }
+  deriving (Show, Eq, Semigroup, Monoid)
+
+instance J.ToJSON NonObjectTypeMap where
+  toJSON = J.toJSON . show

@@ -32,6 +32,7 @@ import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal               (mkAdminRolePermInfo)
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Table
 import           Hasura.Server.Utils                   (duplicates)
 import           Hasura.SQL.Types
 
@@ -629,8 +630,8 @@ noFilter = annBoolExpTrue
 
 mkGCtxMap
   :: (MonadError QErr m)
-  => TableCache PGColumnInfo -> FunctionCache -> ActionCache -> m GCtxMap
-mkGCtxMap tableCache functionCache actionCache = do
+  => AnnotatedObjects -> TableCache PGColumnInfo -> FunctionCache -> ActionCache -> m GCtxMap
+mkGCtxMap annotatedObjects tableCache functionCache actionCache = do
   typesMapL <- mapM (mkGCtxMapTable tableCache functionCache) $
                filter tableFltr $ Map.elems tableCache
   -- since root field names are customisable, we need to check for
@@ -640,7 +641,7 @@ mkGCtxMap tableCache functionCache actionCache = do
     throw400 Unexpected $ "following root fields are duplicated: "
     <> showNames duplicateRootFlds
 
-  let actionsSchema = mkActionsSchema actionCache
+  actionsSchema <- mkActionsSchema annotatedObjects actionCache
   -- TODO: clean this up
   let typesMap = foldr (Map.unionWith mappend)
                  (fmap (\(rootFields, tyAgg) -> (tyAgg, rootFields, mempty))
@@ -663,7 +664,8 @@ buildGCtxMapPG
   => m ()
 buildGCtxMapPG = do
   sc <- askSchemaCache
-  gCtxMap <- mkGCtxMap (scTables sc) (scFunctions sc) (scActions sc)
+  let annotatedObjects = snd $ scCustomTypes sc
+  gCtxMap <- mkGCtxMap annotatedObjects (scTables sc) (scFunctions sc) (scActions sc)
   writeSchemaCache sc {scGCtxMap = gCtxMap}
 
 getGCtx :: (CacheRM m) => RoleName -> GCtxMap -> m GCtx

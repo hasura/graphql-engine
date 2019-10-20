@@ -16,7 +16,13 @@ module Hasura.RQL.Types.SchemaCache
        , modTableInCache
        , delTableFromCache
 
+       , OutputFieldTypeInfo(..)
+       , AnnotatedObjectType(..)
+       , AnnotatedObjects
+       , AnnotatedRelationship(..)
+       , NonObjectTypeMap(..)
        , TableInfo(..)
+       , askTabInfoM
        , tiName
        , tiDescription
        , tiSystemDefined
@@ -52,6 +58,8 @@ module Hasura.RQL.Types.SchemaCache
        , FieldInfo(..)
        , _FIColumn
        , _FIRelationship
+       , getFieldInfoM
+       , getPGColumnInfoM
        , fieldInfoToEither
        , partitionFieldInfos
        , partitionFieldInfosWith
@@ -80,6 +88,7 @@ module Hasura.RQL.Types.SchemaCache
 
        , InsPermInfo(..)
        , SelPermInfo(..)
+       , getSelectPermissionInfoM
        , UpdPermInfo(..)
        , DelPermInfo(..)
        , addPermToCache
@@ -126,16 +135,17 @@ module Hasura.RQL.Types.SchemaCache
        ) where
 
 import qualified Hasura.GraphQL.Context            as GC
-import qualified Hasura.GraphQL.Validate.Types     as RT
 
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Metadata
+import           Hasura.RQL.Types.Table
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
@@ -146,7 +156,6 @@ import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax        (Lift)
 
 import qualified Data.HashMap.Strict               as M
 import qualified Data.HashSet                      as HS
@@ -164,116 +173,6 @@ mkColDep reason tn col =
   flip SchemaDependency reason . SOTableObj tn $ TOCol col
 
 type WithDeps a = (a, [SchemaDependency])
-
-data FieldInfo columnInfo
-  = FIColumn !columnInfo
-  | FIRelationship !RelInfo
-  deriving (Show, Eq)
-$(deriveToJSON
-  defaultOptions { constructorTagModifier = snakeCase . drop 2
-                 , sumEncoding = TaggedObject "type" "detail"
-                 }
-  ''FieldInfo)
-$(makePrisms ''FieldInfo)
-
-fieldInfoToEither :: FieldInfo columnInfo -> Either columnInfo RelInfo
-fieldInfoToEither (FIColumn l)       = Left l
-fieldInfoToEither (FIRelationship r) = Right r
-
-partitionFieldInfos :: [FieldInfo columnInfo] -> ([columnInfo], [RelInfo])
-partitionFieldInfos = partitionFieldInfosWith (id, id)
-
-partitionFieldInfosWith :: (columnInfo -> a, RelInfo -> b)
-                        -> [FieldInfo columnInfo] -> ([a], [b])
-partitionFieldInfosWith fns =
-  partitionEithers . map (biMapEither fns . fieldInfoToEither)
-  where
-    biMapEither (f1, f2) = either (Left . f1) (Right . f2)
-
-type FieldInfoMap columnInfo = M.HashMap FieldName (FieldInfo columnInfo)
-
-getCols :: FieldInfoMap columnInfo -> [columnInfo]
-getCols fim = lefts $ map fieldInfoToEither $ M.elems fim
-
-getRels :: FieldInfoMap columnInfo -> [RelInfo]
-getRels fim = rights $ map fieldInfoToEither $ M.elems fim
-
-isPGColInfo :: FieldInfo columnInfo -> Bool
-isPGColInfo (FIColumn _) = True
-isPGColInfo _            = False
-
-data InsPermInfo
-  = InsPermInfo
-  { ipiCols            :: !(HS.HashSet PGCol)
-  , ipiView            :: !QualifiedTable
-  , ipiCheck           :: !AnnBoolExpPartialSQL
-  , ipiSet             :: !PreSetColsPartial
-  , ipiRequiredHeaders :: ![T.Text]
-  } deriving (Show, Eq)
-
-$(deriveToJSON (aesonDrop 3 snakeCase) ''InsPermInfo)
-
-data SelPermInfo
-  = SelPermInfo
-  { spiCols            :: !(HS.HashSet PGCol)
-  , spiTable           :: !QualifiedTable
-  , spiFilter          :: !AnnBoolExpPartialSQL
-  , spiLimit           :: !(Maybe Int)
-  , spiAllowAgg        :: !Bool
-  , spiRequiredHeaders :: ![T.Text]
-  } deriving (Show, Eq)
-
-$(deriveToJSON (aesonDrop 3 snakeCase) ''SelPermInfo)
-
-data UpdPermInfo
-  = UpdPermInfo
-  { upiCols            :: !(HS.HashSet PGCol)
-  , upiTable           :: !QualifiedTable
-  , upiFilter          :: !AnnBoolExpPartialSQL
-  , upiSet             :: !PreSetColsPartial
-  , upiRequiredHeaders :: ![T.Text]
-  } deriving (Show, Eq)
-
-$(deriveToJSON (aesonDrop 3 snakeCase) ''UpdPermInfo)
-
-data DelPermInfo
-  = DelPermInfo
-  { dpiTable           :: !QualifiedTable
-  , dpiFilter          :: !AnnBoolExpPartialSQL
-  , dpiRequiredHeaders :: ![T.Text]
-  } deriving (Show, Eq)
-
-$(deriveToJSON (aesonDrop 3 snakeCase) ''DelPermInfo)
-
-mkRolePermInfo :: RolePermInfo
-mkRolePermInfo = RolePermInfo Nothing Nothing Nothing Nothing
-
-data RolePermInfo
-  = RolePermInfo
-  { _permIns :: !(Maybe InsPermInfo)
-  , _permSel :: !(Maybe SelPermInfo)
-  , _permUpd :: !(Maybe UpdPermInfo)
-  , _permDel :: !(Maybe DelPermInfo)
-  } deriving (Show, Eq)
-
-$(deriveToJSON (aesonDrop 5 snakeCase) ''RolePermInfo)
-
-makeLenses ''RolePermInfo
-
-type RolePermInfoMap = M.HashMap RoleName RolePermInfo
-
-data EventTriggerInfo
- = EventTriggerInfo
-   { etiName        :: !TriggerName
-   , etiOpsDef      :: !TriggerOpsDef
-   , etiRetryConf   :: !RetryConf
-   , etiWebhookInfo :: !WebhookConfInfo
-   , etiHeaders     :: ![EventHeaderInfo]
-   } deriving (Show, Eq)
-
-$(deriveToJSON (aesonDrop 3 snakeCase) ''EventTriggerInfo)
-
-type EventTriggerInfoMap = M.HashMap TriggerName EventTriggerInfo
 
 data ConstraintType
   = CTCHECK
@@ -321,60 +220,6 @@ data TableConstraint
   } deriving (Show, Eq)
 
 $(deriveJSON (aesonDrop 2 snakeCase) ''TableConstraint)
-
-data ViewInfo
-  = ViewInfo
-  { viIsUpdatable  :: !Bool
-  , viIsDeletable  :: !Bool
-  , viIsInsertable :: !Bool
-  } deriving (Show, Eq)
-
-$(deriveJSON (aesonDrop 2 snakeCase) ''ViewInfo)
-
-isMutable :: (ViewInfo -> Bool) -> Maybe ViewInfo -> Bool
-isMutable _ Nothing   = True
-isMutable f (Just vi) = f vi
-
-mutableView :: (MonadError QErr m) => QualifiedTable
-            -> (ViewInfo -> Bool) -> Maybe ViewInfo
-            -> T.Text -> m ()
-mutableView qt f mVI operation =
-  unless (isMutable f mVI) $ throw400 NotSupported $
-  "view " <> qt <<> " is not " <> operation
-
-data TableConfig
-  = TableConfig
-  { _tcCustomRootFields  :: !GC.TableCustomRootFields
-  , _tcCustomColumnNames :: !CustomColumnNames
-  } deriving (Show, Eq, Lift)
-$(deriveToJSON (aesonDrop 3 snakeCase) ''TableConfig)
-
-emptyTableConfig :: TableConfig
-emptyTableConfig =
-  TableConfig GC.emptyCustomRootFields M.empty
-
-instance FromJSON TableConfig where
-  parseJSON = withObject "TableConfig" $ \obj ->
-    TableConfig
-    <$> obj .:? "custom_root_fields" .!= GC.emptyCustomRootFields
-    <*> obj .:? "custom_column_names" .!= M.empty
-
-data TableInfo columnInfo
-  = TableInfo
-  { _tiName                  :: !QualifiedTable
-  , _tiDescription           :: !(Maybe PGDescription)
-  , _tiSystemDefined         :: !SystemDefined
-  , _tiFieldInfoMap          :: !(FieldInfoMap columnInfo)
-  , _tiRolePermInfoMap       :: !RolePermInfoMap
-  , _tiUniqOrPrimConstraints :: ![ConstraintName]
-  , _tiPrimaryKeyCols        :: ![PGCol]
-  , _tiViewInfo              :: !(Maybe ViewInfo)
-  , _tiEventTriggerInfoMap   :: !EventTriggerInfoMap
-  , _tiEnumValues            :: !(Maybe EnumValues)
-  , _tiCustomConfig          :: !TableConfig
-  } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
-$(makeLenses ''TableInfo)
 
 checkForFieldConflict
   :: (MonadError QErr m)
@@ -428,7 +273,6 @@ data FunctionInfo
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionInfo)
 
-type TableCache columnInfo = M.HashMap QualifiedTable (TableInfo columnInfo) -- info of all tables
 type FunctionCache = M.HashMap QualifiedFunction FunctionInfo -- info of all functions
 
 data RemoteSchemaCtx
@@ -464,6 +308,12 @@ incSchemaCacheVer :: SchemaCacheVer -> SchemaCacheVer
 incSchemaCacheVer (SchemaCacheVer prev) =
   SchemaCacheVer $ prev + 1
 
+-- data CustomTypesState
+--   = CustomTypeState
+--   { _ctsTypes         :: !RT.TypeMap
+--   , _ctsRelationships :: !(M.HashMap G.NamedType )
+--   }
+
 type ActionCache =
   M.HashMap ActionName ActionInfo
 
@@ -474,7 +324,7 @@ data SchemaCache
   , scFunctions         :: !FunctionCache
   , scRemoteSchemas     :: !RemoteSchemaMap
   , scAllowlist         :: !(HS.HashSet GQLQuery)
-  , scCustomTypes       :: !RT.TypeMap
+  , scCustomTypes       :: !(NonObjectTypeMap, AnnotatedObjects)
   , scGCtxMap           :: !GC.GCtxMap
   , scDefaultRemoteGCtx :: !GC.GCtx
   , scDepMap            :: !DepMap
@@ -488,6 +338,16 @@ class (Monad m) => CacheRM m where
 
 instance (Monad m) => CacheRM (StateT SchemaCache m) where
   askSchemaCache = get
+
+instance (Monad m) => CacheRM (ReaderT SchemaCache m) where
+  askSchemaCache = ask
+
+askTabInfoM
+  :: (CacheRM m)
+  => QualifiedTable -> m (Maybe (TableInfo PGColumnInfo))
+askTabInfoM tabName = do
+  rawSchemaCache <- askSchemaCache
+  return $ M.lookup tabName $ scTables rawSchemaCache
 
 class (CacheRM m) => CacheRWM m where
   writeSchemaCache :: SchemaCache -> m ()
@@ -598,7 +458,7 @@ delFldFromCache fn =
 
 setCustomTypesInCache
   :: (QErrM m, CacheRWM m)
-  => RT.TypeMap
+  => (NonObjectTypeMap, AnnotatedObjects)
   -> m ()
 setCustomTypesInCache customTypes = do
   sc <- askSchemaCache
@@ -641,30 +501,6 @@ updColInCache
 updColInCache cn ci tn = do
   delColFromCache cn tn
   addColToCache cn ci tn
-
-data PermAccessor a where
-  PAInsert :: PermAccessor InsPermInfo
-  PASelect :: PermAccessor SelPermInfo
-  PAUpdate :: PermAccessor UpdPermInfo
-  PADelete :: PermAccessor DelPermInfo
-
-permAccToLens :: PermAccessor a -> Lens' RolePermInfo (Maybe a)
-permAccToLens PAInsert = permIns
-permAccToLens PASelect = permSel
-permAccToLens PAUpdate = permUpd
-permAccToLens PADelete = permDel
-
-permAccToType :: PermAccessor a -> PermType
-permAccToType PAInsert = PTInsert
-permAccToType PASelect = PTSelect
-permAccToType PAUpdate = PTUpdate
-permAccToType PADelete = PTDelete
-
-withPermType :: PermType -> (forall a. PermAccessor a -> b) -> b
-withPermType PTInsert f = f PAInsert
-withPermType PTSelect f = f PASelect
-withPermType PTUpdate f = f PAUpdate
-withPermType PTDelete f = f PADelete
 
 addPermToCache
   :: (QErrM m, CacheRWM m)

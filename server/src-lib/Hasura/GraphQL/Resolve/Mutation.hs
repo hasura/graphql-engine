@@ -27,6 +27,7 @@ import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Resolve.Select     (processTableSelectionSet)
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
+import           Hasura.RQL.DML.Internal           (sessVarFromCurrentSetting)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
@@ -215,3 +216,11 @@ buildEmptyMutResp = mkTx
       RR.MCount -> J.toJSON (0 :: Int)
       RR.MExp e -> J.toJSON e
       RR.MRet _ -> J.toJSON ([] :: [J.Value])
+
+resolveValPrep
+  :: (MonadState PrepArgs m)
+  => UnresolvedVal -> m S.SQLExp
+resolveValPrep = \case
+  UVPG annPGVal -> prepare annPGVal
+  UVSessVar colTy sessVar -> sessVarFromCurrentSetting colTy sessVar
+  UVSQL sqlExp -> return sqlExp

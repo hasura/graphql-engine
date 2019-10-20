@@ -91,8 +91,19 @@ data DelOpCtx
   , _docAllCols :: ![PGColumnInfo]
   } deriving (Show, Eq)
 
+data SyncReturnStrategy
+  = ReturnJson
+  | ExecOnPostgres [(PGCol, PGScalarType)]
+  deriving (Show, Eq)
+
+data SyncActionExecutionContext
+  = SyncActionExecutionContext
+  { _saecStrategy   :: !SyncReturnStrategy
+  , _saecWebhook    :: !ResolvedWebhook
+  } deriving (Show, Eq)
+
 data ActionExecutionContext
-  = ActionExecutionSyncWebhook !ResolvedWebhook !ActionOutputTypeInfo
+  = ActionExecutionSyncWebhook !SyncActionExecutionContext
   | ActionExecutionAsync !AnnBoolExpPartialSQL
   deriving (Show, Eq)
 
@@ -221,7 +232,7 @@ class (MonadError QErr m) => MonadResolve m where
   markNotReusable :: m ()
 
 newtype ResolveT m a = ResolveT { unResolveT :: StateT QueryReusability m a }
-  deriving (Functor, Applicative, Monad, MonadError e, MonadReader r)
+  deriving (Functor, Applicative, Monad, MonadError e, MonadReader r, MonadIO)
 
 instance (MonadError QErr m) => MonadResolve (ResolveT m) where
   recordVariableUse varName varType = ResolveT $

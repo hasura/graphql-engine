@@ -26,11 +26,13 @@ import qualified Network.HTTP.Client               as HTTP
 import qualified Network.Wreq                      as Wreq
 
 import qualified Hasura.RQL.DML.Select             as RS
+import qualified Hasura.GraphQL.Resolve.Select     as GRS
 import qualified Hasura.SQL.DML                    as S
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
+import           Hasura.GraphQL.Resolve.Select     (processTableSelectionSet)
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.HTTP
@@ -178,13 +180,10 @@ resolveActionSelect selectContext field = do
       _asocFilter selectContext
     parseActionId annInpValue = do
       mkParameterizablePGValue <$> asPGColumnValue annInpValue
-      -- onNothing (UUID.fromText idText) $
-      --   throwVE $ "invalid value for uuid: " <> idText
 
 actionSelectToTx :: ActionSelectResolved -> RespTx
 actionSelectToTx actionSelect =
   asSingleRowJsonResp (actionSelectToSql actionSelect) []
-
 
 data ActionWebhookPayload
   = ActionWebhookPayload
@@ -205,58 +204,58 @@ data ResolvePlan
   | ResolvePostgres [(PGCol, PGScalarType)] ![(Text, OutputFieldResolved)]
   deriving (Show, Eq)
 
+processOutputSelectionSet
+  :: ( MonadResolve m, MonadReader r m, Has FieldMap r
+     , Has OrdByCtx r, Has SQLGenCtx r
+     )
+  => RS.FromExpression UnresolvedVal
+  -> G.NamedType -> SelSet -> m GRS.AnnSimpleSelect
+processOutputSelectionSet fromExpression fldTy flds = do
+  stringifyNumerics <- stringifyNum <$> asks getter
+  annotatedFields <- processTableSelectionSet fldTy flds
+  let selectAst = RS.AnnSelG annotatedFields fromExpression
+                  RS.noTablePermissions RS.noTableArgs stringifyNumerics
+  return selectAst
+
 resolveActionInsertSync
   :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
+     , MonadResolve m
      , Has OrdByCtx r, Has SQLGenCtx r
      , Has HTTP.Manager r
+     , MonadIO m
      )
   => Field
-  -> ResolvedWebhook
-  -> ActionOutputTypeInfo
+  -> SyncActionExecutionContext
   -> UserVars
   -> m RespTx
-resolveActionInsertSync field resolvedWebhook outputTypeInfo sessionVariables = do
+resolveActionInsertSync field executionContext sessionVariables = do
   inputArgs <- withArg (_fArguments field) "input" (return . annInpValueToJson)
-  resolvePlan <- case outputTypeInfo of
-    ActionOutputScalar _ -> return ResolveReturn
-    ActionOutputEnum _ -> return ResolveReturn
-    ActionOutputObject objTyInfo -> do
-      let definitionList =
-            flip zip (repeat PGJSON) $
-            map (PGCol . G.unName . _fiName) $ Map.elems $ _otiFields objTyInfo
-      ResolvePostgres definitionList <$>
-        resolveOutputSelectionSet objTyInfo (_fType field) (_fSelSet field)
   manager <- asks getter
-  stringifyNumerics <- stringifyNum <$> asks getter
-  return $ do
-    webhookRes <- callWebhook manager inputArgs
-    returnResponse stringifyNumerics webhookRes resolvePlan
+  webhookRes <- callWebhook manager inputArgs
+  case returnStrategy of
+    ReturnJson -> return $ return $ encJFromJValue webhookRes
+    ExecOnPostgres definitionList -> do
+      selectAstUnresolved <-
+        processOutputSelectionSet
+        (mkSyncFromExpression definitionList webhookRes)
+        (_fType field) $ _fSelSet field
+      astResolved <- RS.traverseAnnSimpleSel resolveValTxt selectAstUnresolved
+      return $ asSingleRowJsonResp (RS.selectQuerySQL True astResolved) []
+
   where
-    returnResponse stringifyNumerics webhookData = \case
-      ResolveReturn -> return $ encJFromJValue webhookData
-      ResolvePostgres definitionList selSet -> do
-        let functionName = QualifiedObject (SchemaName "pg_catalog") $
-                           FunctionName "json_to_record"
-            functionArgs = RS.FunctionArgsExp
-                           (pure $ toTxtValue $ WithScalarType PGJSON $
-                            PGValJSON $ Q.JSON webhookData)
-                           mempty
-            fromExpression =
-              RS.FromExpressionFunction functionName functionArgs
-              (Just definitionList)
-            annFields = flip map selSet $ \(alias, outputField) ->
-              (FieldName alias,) $ case outputField of
-              OutputFieldSimple fieldName ->
-                -- TODO:
-                RS.FCol ( PGCol fieldName
-                        , PGColumnScalar PGJSON
-                        ) Nothing
-              OutputFieldTypename typeName ->
-                RS.FExp $ G.unName $ G.unNamedType typeName
-              OutputFieldRelationship -> undefined
-        let selectAst = RS.AnnSelG annFields fromExpression
-                        RS.noTablePermissions RS.noTableArgs stringifyNumerics
-        asSingleRowJsonResp (RS.selectQuerySQL True selectAst) []
+
+    mkSyncFromExpression definitionList webhookData =
+      let functionName = QualifiedObject (SchemaName "pg_catalog") $
+                         FunctionName "json_to_record"
+          functionArgs = RS.FunctionArgsExp
+                         (pure $ UVSQL $ toTxtValue $ WithScalarType PGJSON $
+                          PGValJSON $ Q.JSON webhookData)
+                         mempty
+      in RS.FromExpressionFunction functionName functionArgs
+            (Just definitionList)
+
+    resolvedWebhook = _saecWebhook executionContext
+    returnStrategy = _saecStrategy executionContext
 
     callWebhook manager actionInput = do
       let options = wreqOptions manager [contentType]
@@ -264,13 +263,19 @@ resolveActionInsertSync field resolvedWebhook outputTypeInfo sessionVariables = 
           postPayload = J.toJSON $ ActionWebhookPayload
                         sessionVariables actionInput
           url = (T.unpack $ unResolvedWebhook resolvedWebhook)
-      httpResponse <- liftIO $ try $
+      httpResponse <- liftIO $ try $ try $
                       Wreq.asJSON =<< Wreq.postWith options url postPayload
-      case (^. Wreq.responseBody) <$> httpResponse of
+      -- case (^. Wreq.responseBody) <$> httpResponse of
+      case httpResponse of
         Left e ->
           throw500WithDetail "http exception when calling webhook" $
           J.toJSON $ HttpException e
-        Right response -> case (_awrData response, _awrErrors response) of
+        Right (Left (Wreq.JSONError e)) ->
+          throw500WithDetail "not a valid json response from webhook" $
+          J.toJSON e
+        Right (Right responseWreq) ->
+          let response = responseWreq ^. Wreq.responseBody
+          in case (_awrData response, _awrErrors response) of
           (Nothing, Nothing) ->
             throw500WithDetail "internal error" $
             J.String "webhook response has neither 'data' nor 'errors'"
@@ -283,6 +288,8 @@ resolveActionInsertSync field resolvedWebhook outputTypeInfo sessionVariables = 
 resolveActionInsert
   :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r, Has HTTP.Manager r
+     , MonadIO m
+     , MonadResolve m
      )
   => Field
   -> ActionExecutionContext
@@ -291,8 +298,8 @@ resolveActionInsert
   -> m RespTx
 resolveActionInsert field executionContext sessionVariables =
   case executionContext of
-    ActionExecutionSyncWebhook webhook outputTypeInfo ->
-      resolveActionInsertSync field webhook outputTypeInfo sessionVariables
+    ActionExecutionSyncWebhook executionContextSync ->
+      resolveActionInsertSync field executionContextSync sessionVariables
     ActionExecutionAsync actionFilter ->
       resolveActionInsertAsync field actionFilter sessionVariables
 

@@ -33,11 +33,11 @@ import           Hasura.RQL.DDL.Schema.Enum
 import           Hasura.RQL.DDL.Schema.Rename
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
+import           Hasura.RQL.Types.Table
 import           Hasura.Server.Utils           (duplicates)
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query             as Q
-import qualified Hasura.GraphQL.Context        as GC
 import qualified Hasura.GraphQL.Schema         as GS
 import qualified Language.GraphQL.Draft.Syntax as G
 
@@ -101,12 +101,12 @@ trackExistingTableOrViewP1 qt = do
 validateCustomRootFlds
   :: (MonadError QErr m)
   => GS.GCtx
-  -> GC.TableCustomRootFields
+  -> TableCustomRootFields
   -> m ()
 validateCustomRootFlds defRemoteGCtx rootFlds =
   forM_ rootFldNames $ GS.checkConflictingNode defRemoteGCtx
   where
-    GC.TableCustomRootFields sel selByPk selAgg ins upd del = rootFlds
+    TableCustomRootFields sel selByPk selAgg ins upd del = rootFlds
     rootFldNames = catMaybes [sel, selByPk, selAgg, ins, upd, del]
 
 validateTableConfig
@@ -165,7 +165,7 @@ runSetExistingTableIsEnumQ (SetTableIsEnum tableName isEnum) = do
 data SetTableCustomFields
   = SetTableCustomFields
   { _stcfTable             :: !QualifiedTable
-  , _stcfCustomRootFields  :: !GC.TableCustomRootFields
+  , _stcfCustomRootFields  :: !TableCustomRootFields
   , _stcfCustomColumnNames :: !CustomColumnNames
   } deriving (Show, Eq, Lift)
 $(deriveToJSON (aesonDrop 5 snakeCase) ''SetTableCustomFields)
@@ -174,7 +174,7 @@ instance FromJSON SetTableCustomFields where
   parseJSON = withObject "SetTableCustomFields" $ \o ->
     SetTableCustomFields
     <$> o .: "table"
-    <*> o .:? "custom_root_fields" .!= GC.emptyCustomRootFields
+    <*> o .:? "custom_root_fields" .!= emptyCustomRootFields
     <*> o .:? "custom_column_names" .!= M.empty
 
 runSetTableCustomFieldsQV2 :: (CacheBuildM m, UserInfoM m) => SetTableCustomFields -> m EncJSON

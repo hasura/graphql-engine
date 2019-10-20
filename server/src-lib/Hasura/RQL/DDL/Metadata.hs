@@ -323,10 +323,10 @@ applyQP2 (ReplaceMetadata tables mFunctions
     withPathK "remote_schemas" $
       indexedMapM_ (void . DRS.addRemoteSchemaP2) schemas
 
+  traverse_ DC.runSetCustomTypes_ mCustomTypes
   -- build GraphQL Context with Remote schemas
   DS.buildGCtxMap
 
-  traverse_ DC.runSetCustomTypes_ mCustomTypes
   for_ mActions $ \actions -> for_ actions $ \action -> do
     let createAction =
           CreateAction (_amName action) (_amDefinition action) (_amComment action)

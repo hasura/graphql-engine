@@ -2,83 +2,19 @@ module Hasura.GraphQL.Schema.Action
   ( mkActionsSchema
   ) where
 
-import qualified Data.HashMap.Strict           as Map
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.HashMap.Strict               as Map
+import qualified Language.GraphQL.Draft.Syntax     as G
+
+import           Data.Coerce                       (coerce)
 
 import           Hasura.GraphQL.Schema.Builder
--- import qualified Data.HashSet                as Set
 
 import           Hasura.GraphQL.Resolve.Types
+import           Hasura.GraphQL.Schema.CustomTypes
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-
--- mkOutputSelectionTypeName :: ActionName -> G.Name
--- mkOutputSelectionTypeName actionName =
---   unActionName actionName <> "_output_selection"
-
--- mkOutputSelectionType :: ActionName -> G.NamedType
--- mkOutputSelectionType =
---   G.NamedType . mkOutputSelectionTypeName
-
--- mkOutputSelectionTypeInfo
---   :: ActionName
---   -- Name of the action
---   -> ActionOutputFieldTypes
---   -- allowed response columns
---   -> ObjTyInfo
--- mkOutputSelectionTypeInfo actionName allowedOutputFields =
---   mkHsraObjTyInfo
---   (Just description)
---   (mkOutputSelectionType actionName) -- "(action_name)_output"
---   mempty -- no arguments
---   (mapFromL _fiName outputFieldDefinitions)
---   where
---     description = G.Description $ "output fields of action: " <>> actionName
---     outputFieldDefinitions =
---       map (uncurry outputFieldToGqlField) $ Map.toList allowedOutputFields
-
-    -- outputFieldToGqlField :: ActionOutputField -> PGColType -> ObjFldInfo
-    -- outputFieldToGqlField fieldName fieldType =
-    --   mkHsraObjFldInfo
-    --   Nothing
-    --   (unActionOutputField fieldName)
-    --   mempty
-    --   (G.toGT $ mkScalarTy fieldType)
-
--- mkInputSelectionTypeName :: ActionName -> G.Name
--- mkInputSelectionTypeName actionName =
---   unActionName actionName <> "_input_selection"
-
--- mkInputSelectionType :: ActionName -> G.NamedType
--- mkInputSelectionType =
---   G.NamedType . mkInputSelectionTypeName
-
--- mkInputSelectionTypeInfo
---   :: ActionName
---   -- Name of the action
---   -> ActionInputFieldTypes
---   -- input columns that are allowed to be read
---   -> ObjTyInfo
--- mkInputSelectionTypeInfo actionName allowedInputFields =
---   mkHsraObjTyInfo
---   (Just description)
---   (mkInputSelectionType actionName) -- "(action_name)_input"
---   mempty -- no arguments
---   (mapFromL _fiName inputFieldDefinitions)
---   where
---     description = G.Description $ "input fields of action: " <>> actionName
---     inputFieldDefinitions =
---       map (uncurry inputFieldToGqlField) $ Map.toList allowedInputFields
-
---     inputFieldToGqlField :: ActionInputField -> PGColType -> ObjFldInfo
---     inputFieldToGqlField fieldName fieldType =
---       mkHsraObjFldInfo
---       Nothing
---       (unActionInputField fieldName)
---       mempty
---       (G.toGT $ mkScalarTy fieldType)
 
 mkActionSelectionType :: ActionName -> G.NamedType
 mkActionSelectionType =
@@ -117,43 +53,13 @@ mkActionResponseTypeInfo actionName outputType =
         , unGraphQLType outputType)
       ]
 
--- mkActionInputType :: ActionName -> G.NamedType
--- mkActionInputType actionName =
---   G.NamedType $ unActionName actionName <> "_input"
-
--- makes the input type for the allowed fields
--- mkInputTypeInfo
---   :: ActionName
---   -- Name of the action
---   -> ActionInputFieldTypes
---   -> InpObjTyInfo
--- mkInputTypeInfo actionName allowedInputFields =
---   mkHsraInpTyInfo
---   (Just description)
---   (mkActionInputType actionName)
---   inputFields
---   where
---     description =
---       G.Description $ "input arguments for action: " <>> actionName
-
---     inputFields =
---       mapFromL _iviName $
---       map (uncurry mkInputField) $ Map.toList allowedInputFields
-
---     mkInputField :: ActionInputField -> PGColType -> InpValInfo
---     mkInputField inputField ty =
---       InpValInfo
---       Nothing
---       (unActionInputField inputField)
---       Nothing -- no default value
---       (G.toGT $ mkScalarTy ty)
-
 mkMutationField
   :: ActionName
   -> ActionInfo
   -> ActionPermissionInfo
+  -> [(PGCol, PGScalarType)]
   -> (ActionExecutionContext, ObjFldInfo)
-mkMutationField actionName actionInfo permission =
+mkMutationField actionName actionInfo permission definitionList =
   ( actionExecutionContext
   , fieldInfo
   )
@@ -162,9 +68,10 @@ mkMutationField actionName actionInfo permission =
     actionExecutionContext =
       case getActionKind definition of
         ActionSynchronous  ->
-          ActionExecutionSyncWebhook
+          ActionExecutionSyncWebhook $ SyncActionExecutionContext
+  -- TODO: only covers object types
+          (ExecOnPostgres definitionList)
           (_adWebhook definition)
-          (_aiOutputTypeInfo actionInfo)
         ActionAsynchronous -> ActionExecutionAsync $ _apiFilter permission
 
     -- TODO: we need to capture the comment from action definition
@@ -224,45 +131,132 @@ mkQueryField actionName definition permission =
       (actionFieldResponseType actionName definition)
 
 mkActionFieldsAndTypes
-  :: ActionName
-  -> ActionInfo
+  :: (QErrM m)
+  => ActionInfo
+  -> AnnotatedObjectType
   -> ActionPermissionInfo
-  -> ( Maybe (ActionSelectOpContext, ObjFldInfo, TypeInfo)
+  -> m ( Maybe (ActionSelectOpContext, ObjFldInfo, TypeInfo)
        -- context, field, response type info
      , (ActionExecutionContext, ObjFldInfo) -- mutation field
+     , FieldMap
      )
-mkActionFieldsAndTypes actionName actionInfo permission =
-  ( mkQueryField actionName definition permission
-  , mkMutationField actionName actionInfo permission
-  )
+mkActionFieldsAndTypes actionInfo annotatedOutputType permission =
+  return ( mkQueryField actionName definition permission
+         , mkMutationField actionName actionInfo permission definitionList
+         -- , maybe mempty mkFieldMap annotatedOutputTypeM
+         , fieldMap
+         )
   where
+    actionName = _aiName actionInfo
     definition = _aiDefintion actionInfo
+    roleName = _apiRole permission
+    mkPGFieldType (fieldType, fieldTypeInfo) =
+      case (G.isListType fieldType, fieldTypeInfo) of
+        -- for scalar lists, we treat them as json columns
+        (True, _) -> PGJSON
+        -- enums the same
+        (False, OutputFieldEnum _) -> PGJSON
+        -- specific scalars
+        (False, OutputFieldScalar scalarTypeInfo) ->
+          namedTypeToPGScalar $ G.NamedType $ _stiName scalarTypeInfo
+    definitionList =
+      [ (coerce k, mkPGFieldType v)
+      | (k, v) <- Map.toList $ _aotAnnotatedFields annotatedOutputType
+      ]
+    -- mkFieldMap annotatedOutputType =
+    fieldMap =
+      Map.fromList $ fields <> catMaybes relationships
+      where
+        fields =
+          flip map (Map.toList $ _aotAnnotatedFields annotatedOutputType) $
+          \(fieldName, (fieldType, fieldTypeInfo)) ->
+            ( (actionOutputBaseType, unObjectFieldName fieldName)
+            , Left $ PGColumnInfo
+              (PGCol $ coerce fieldName)
+              (coerce fieldName)
+              (PGColumnScalar $ mkPGFieldType (fieldType, fieldTypeInfo))
+              (G.isNullable fieldType)
+              Nothing
+            )
+        relationships =
+          flip map (Map.toList $ _aotRelationships annotatedOutputType) $
+          \(relationshipName, relationship) ->
+            let remoteTableInfo = _arRemoteTableInfo relationship
+                remoteTable = _tiName remoteTableInfo
+                filterAndLimitM = getFilterAndLimit remoteTableInfo
+                columnMapping =
+                  [ (PGCol $ coerce k, v)
+                  | (k, v) <- Map.toList $
+                    _ordFieldMapping $ _arDefinition relationship
+                  ]
+            in case filterAndLimitM of
+              Just (tableFilter, tableLimit) ->
+                Just ( ( actionOutputBaseType
+                       , unObjectRelationshipName relationshipName
+                       )
+                     , Right $ RelationshipField
+                       (RelInfo
+                        (RelName $ mkNonEmptyTextUnsafe $ coerce relationshipName)
+                        ObjRel
+                        columnMapping remoteTable True)
+                       False mempty
+                       tableFilter
+                       tableLimit
+                     )
+              Nothing -> Nothing
+    getFilterAndLimit remoteTableInfo =
+      if roleName == adminRole
+      then Just (annBoolExpTrue, Nothing)
+      else do
+        selectPermisisonInfo <-
+          getSelectPermissionInfoM remoteTableInfo roleName
+        return (spiFilter selectPermisisonInfo, spiLimit selectPermisisonInfo)
+    actionOutputBaseType =
+      G.getBaseType $ unGraphQLType $ _adOutputType $ _aiDefintion actionInfo
 
 mkActionSchemaOne
-  :: ActionInfo
-  -> Map.HashMap RoleName
-  ( Maybe (ActionSelectOpContext, ObjFldInfo, TypeInfo)
-  , (ActionExecutionContext, ObjFldInfo)
-  )
-mkActionSchemaOne actionInfo =
-  flip fmap permissions $ \permission ->
-  mkActionFieldsAndTypes (_aiName actionInfo) actionInfo permission
+  :: (QErrM m)
+  => AnnotatedObjects
+  -> ActionInfo
+  -> m (Map.HashMap RoleName
+         ( Maybe (ActionSelectOpContext, ObjFldInfo, TypeInfo)
+         , (ActionExecutionContext, ObjFldInfo)
+         , FieldMap
+         )
+       )
+mkActionSchemaOne annotatedObjects actionInfo = do
+  -- annotatedOutputTypeM <- case _aiOutputTypeInfo actionInfo of
+  --   ActionOutputObject _ ->
+  -- annotatedOutputTypeM <- fmap Just $ onNothing
+  annotatedOutputType <- onNothing
+      (Map.lookup (ObjectTypeName actionOutputBaseType) annotatedObjects) $
+      throw500 $ "missing annotated type for: " <> showNamedTy actionOutputBaseType
+    -- _ -> return Nothing
+  forM permissions $ \permission ->
+    mkActionFieldsAndTypes actionInfo annotatedOutputType permission
   where
     adminPermission = ActionPermissionInfo adminRole annBoolExpTrue
     permissions = Map.insert adminRole adminPermission $ _aiPermissions actionInfo
+    actionOutputBaseType =
+      G.getBaseType $ unGraphQLType $ _adOutputType $ _aiDefintion actionInfo
 
 mkActionsSchema
-  :: ActionCache
-  -> Map.HashMap RoleName (RootFields, TyAgg)
-mkActionsSchema =
-  foldr (\actionInfo aggregate ->
-           Map.foldrWithKey f aggregate $ mkActionSchemaOne actionInfo)
+  :: (QErrM m)
+  => AnnotatedObjects
+  -> ActionCache
+  -> m (Map.HashMap RoleName (RootFields, TyAgg))
+mkActionsSchema annotatedObjects =
+  foldM
+  (\aggregate actionInfo ->
+     Map.foldrWithKey f aggregate <$>
+     mkActionSchemaOne annotatedObjects actionInfo
+  )
   mempty
   where
     -- we'll need to add uuid and timestamptz for actions
     newRoleState = (mempty, addScalarToTyAgg PGTimeStampTZ $
                             addScalarToTyAgg PGUUID mempty)
-    f roleName (queryFieldM, mutationField) =
+    f roleName (queryFieldM, mutationField, fields) =
       Map.alter (Just . addToState . fromMaybe newRoleState) roleName
       where
         addToState = case queryFieldM of
@@ -271,12 +265,13 @@ mkActionsSchema =
           Nothing -> addToStateSync
         addToStateSync (rootFields, tyAgg) =
           ( addMutationField (first MCAction mutationField) rootFields
-          , tyAgg
+          , addFieldsToTyAgg fields tyAgg
           )
         addToStateAsync queryField responseTypeInfo (rootFields, tyAgg) =
           ( addMutationField (first MCAction mutationField) $
             addQueryField
             (first QCActionFetch queryField)
             rootFields
-          , addTypeInfoToTyAgg responseTypeInfo tyAgg
+          , addTypeInfoToTyAgg responseTypeInfo $
+            addFieldsToTyAgg fields tyAgg
           )

@@ -6,6 +6,7 @@ module Hasura.GraphQL.Resolve.Select
   , convertFuncQueryAgg
   , parseColumns
   , processTableSelectionSet
+  , AnnSimpleSelect
   ) where
 
 import           Data.Has

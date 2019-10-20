@@ -275,6 +275,7 @@ resolveMutSelSet
      , Has SQLGenCtx r
      , Has InsCtxMap r
      , Has HTTP.Manager r
+     , MonadIO m
      )
   => VQ.SelSet
   -> m LazyRespTx
@@ -282,23 +283,23 @@ resolveMutSelSet fields = do
   aliasedTxs <- forM (toList fields) $ \fld -> do
     fldRespTx <- case VQ._fName fld of
       "__typename" -> return $ return $ encJFromJValue mutationRootName
-      _            -> fmap liftTx . evalResolveT $ GR.mutFldToTx fld
+      _            -> evalResolveT $ GR.mutFldToTx fld
     return (G.unName $ G.unAlias $ VQ._fAlias fld, fldRespTx)
 
   -- combines all transactions into a single transaction
-  return $ toSingleTx aliasedTxs
+  return $ liftTx $ toSingleTx aliasedTxs
   where
     -- A list of aliased transactions for eg
     -- [("f1", Tx r1), ("f2", Tx r2)]
     -- are converted into a single transaction as follows
     -- Tx {"f1": r1, "f2": r2}
-    toSingleTx :: [(Text, LazyRespTx)] -> LazyRespTx
+    -- toSingleTx :: [(Text, LazyRespTx)] -> LazyRespTx
     toSingleTx aliasedTxs =
       fmap encJFromAssocList $
       forM aliasedTxs $ \(al, tx) -> (,) al <$> tx
 
 getMutOp
-  :: (MonadError QErr m)
+  :: (MonadError QErr m, MonadIO m)
   => GCtx
   -> SQLGenCtx
   -> UserInfo

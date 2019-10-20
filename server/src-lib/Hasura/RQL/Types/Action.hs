@@ -1,6 +1,5 @@
 module Hasura.RQL.Types.Action
-  ( ActionOutputTypeInfo(..)
-  , ActionInfo(..)
+  ( ActionInfo(..)
   , ActionName(..)
 
   , ActionKind(..)
@@ -19,6 +18,7 @@ module Hasura.RQL.Types.Action
   , ActionPermissionSelect(..)
   , ActionPermissionDefinition(..)
   , CreateActionPermission(..)
+
   ) where
 
 
@@ -29,8 +29,6 @@ import           Hasura.RQL.Types.DML
 import           Hasura.RQL.Types.Permission
 import           Hasura.SQL.Types
 import           Language.Haskell.TH.Syntax    (Lift)
-
-import qualified Hasura.GraphQL.Validate.Types as VT
 
 import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
@@ -86,27 +84,26 @@ $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ActionPermissionInfo)
 type ActionPermissionMap
   = Map.HashMap RoleName ActionPermissionInfo
 
-data ActionMetadataField
-  = ActionMetadataFieldId
-  | ActionMetadataFieldCreatedAt
-  | ActionMetadataFieldStatus
-  deriving (Show, Eq)
+-- data ActionMetadataField
+--   = ActionMetadataFieldId
+--   | ActionMetadataFieldCreatedAt
+--   | ActionMetadataFieldStatus
+--   deriving (Show, Eq)
 
-data ActionOutputTypeInfo
-  = ActionOutputScalar !VT.ScalarTyInfo
-  | ActionOutputEnum !VT.EnumTyInfo
-  | ActionOutputObject !VT.ObjTyInfo
-  deriving (Show, Eq)
+-- data ActionOutputTypeInfo
+--   = ActionOutputScalar !VT.ScalarTyInfo
+--   | ActionOutputEnum !VT.EnumTyInfo
+--   | ActionOutputObject !VT.ObjTyInfo
+--   deriving (Show, Eq)
 
 -- TODO: this is terrible
-instance J.ToJSON ActionOutputTypeInfo where
-  toJSON = J.toJSON . show
+-- instance J.ToJSON ActionOutputTypeInfo where
+--   toJSON = J.toJSON . show
 
 data ActionInfo
   = ActionInfo
   { _aiName           :: !ActionName
   , _aiDefintion      :: !ResolvedActionDefinition
-  , _aiOutputTypeInfo :: !ActionOutputTypeInfo
   , _aiPermissions    :: !ActionPermissionMap
   } deriving (Show, Eq)
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''ActionInfo)

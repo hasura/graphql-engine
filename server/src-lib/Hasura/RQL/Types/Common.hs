@@ -18,6 +18,7 @@ module Hasura.RQL.Types.Common
        , CustomColumnNames
 
        , NonEmptyText
+       , mkNonEmptyTextUnsafe
        , mkNonEmptyText
        , unNonEmptyText
        , adminText
@@ -50,6 +51,9 @@ newtype NonEmptyText = NonEmptyText {unNonEmptyText :: T.Text}
 mkNonEmptyText :: T.Text -> Maybe NonEmptyText
 mkNonEmptyText ""   = Nothing
 mkNonEmptyText text = Just $ NonEmptyText text
+
+mkNonEmptyTextUnsafe :: T.Text -> NonEmptyText
+mkNonEmptyTextUnsafe = NonEmptyText
 
 parseNonEmptyText :: T.Text -> Parser NonEmptyText
 parseNonEmptyText text = case mkNonEmptyText text of

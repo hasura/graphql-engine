@@ -1,9 +1,11 @@
 module Hasura.GraphQL.Schema.Builder
   ( TyAgg(..)
+  , FieldMap
   , taTypes
   , taFields
   , taScalars
   , taOrdBy
+  , addFieldsToTyAgg
   , addTypeInfoToTyAgg
   , addScalarToTyAgg
   , RootFields(..)
@@ -34,6 +36,10 @@ data TyAgg
   , _taOrdBy   :: !OrdByCtx
   } deriving (Show, Eq)
 $(makeLenses ''TyAgg)
+
+addFieldsToTyAgg :: FieldMap -> TyAgg -> TyAgg
+addFieldsToTyAgg fields =
+  over taFields (Map.union fields)
 
 addTypeInfoToTyAgg :: TypeInfo -> TyAgg -> TyAgg
 addTypeInfoToTyAgg typeInfo tyAgg =

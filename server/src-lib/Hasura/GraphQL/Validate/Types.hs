@@ -28,6 +28,7 @@ module Hasura.GraphQL.Validate.Types
   , InpObjTyInfo(..)
   , mkHsraInpTyInfo
 
+  , namedTypeToPGScalar
   , ScalarTyInfo(..)
   , fromScalarTyDef
   , mkHsraScalarTyInfo
@@ -374,15 +375,17 @@ fromScalarTyDef
   -> TypeLoc
   -> ScalarTyInfo
 fromScalarTyDef (G.ScalarTypeDefinition descM n _) =
-  ScalarTyInfo descM n ty
-  where
-    ty = case n of
-      "Int"     -> PGInteger
-      "Float"   -> PGFloat
-      "String"  -> PGText
-      "Boolean" -> PGBoolean
-      "ID"      -> PGText
-      _         -> txtToPgColTy $ G.unName n
+  ScalarTyInfo descM n $ namedTypeToPGScalar $ G.NamedType n
+
+namedTypeToPGScalar :: G.NamedType -> PGScalarType
+namedTypeToPGScalar namedType =
+  case G.unNamedType namedType of
+  "Int"     -> PGInteger
+  "Float"   -> PGFloat
+  "String"  -> PGText
+  "Boolean" -> PGBoolean
+  "ID"      -> PGText
+  n         -> txtToPgColTy $ G.unName n
 
 data TypeInfo
   = TIScalar !ScalarTyInfo

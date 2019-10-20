@@ -12,7 +12,6 @@ module Hasura.GraphQL.Resolve
   , QueryRootFldResolved
   , toPGQuery
 
-  , resolveValPrep
   , RIntro.schemaR
   , RIntro.typeR
   ) where
@@ -119,6 +118,7 @@ mutFldToTx
      , Has SQLGenCtx r
      , Has InsCtxMap r
      , Has HTTP.Manager r
+     , MonadIO m
      )
   => V.Field
   -> m RespTx

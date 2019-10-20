@@ -175,6 +175,7 @@ library
                      , Hasura.RQL.Types
                      , Hasura.RQL.Instances
                      , Hasura.RQL.Types.SchemaCache
+                     , Hasura.RQL.Types.Table
                      , Hasura.RQL.Types.SchemaCacheTypes
                      , Hasura.RQL.Types.BoolExp
                      , Hasura.RQL.Types.Catalog
@@ -231,6 +232,7 @@ library
                      , Hasura.GraphQL.Transport.WebSocket
                      , Hasura.GraphQL.Schema.BoolExp
                      , Hasura.GraphQL.Schema.Common
+                     , Hasura.GraphQL.Schema.CustomTypes
                      , Hasura.GraphQL.Schema.Builder
                      , Hasura.GraphQL.Schema.Action
                      , Hasura.GraphQL.Schema.Function

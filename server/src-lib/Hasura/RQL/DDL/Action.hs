@@ -106,7 +106,7 @@ buildActionInfo q = do
   let inputBaseType = G.getBaseType $ unGraphQLType $ _adInputType actionDefinition
       responseType = unGraphQLType $ _adOutputType actionDefinition
       responseBaseType = G.getBaseType responseType
-  inputTypeInfo <- getCustomTypeInfo inputBaseType
+  inputTypeInfo <- getNonObjectTypeInfo inputBaseType
   case inputTypeInfo of
     VT.TIScalar _ -> return ()
     VT.TIEnum _   -> return ()
@@ -116,22 +116,31 @@ buildActionInfo q = do
          " should be a scalar/enum/input_object"
   when (hasList responseType) $ throw400 InvalidParams $
     "the output type: " <> G.showGT responseType <> " cannot be a list"
-  responseTypeInfo <- getCustomTypeInfo responseBaseType
-  outputTypeInfo <- case responseTypeInfo of
-    VT.TIScalar typeInfo -> return $ ActionOutputScalar typeInfo
-    VT.TIEnum typeInfo   -> return $ ActionOutputEnum typeInfo
-    VT.TIObj typeInfo    -> return $ ActionOutputObject typeInfo
-    _ -> throw400 InvalidParams $ "the output type: " <>
-         showNamedTy responseBaseType <>
-         " should be a scalar/enum/object"
+
+  getObjectTypeInfo responseBaseType
+  -- TODO: validate the output type
+  -- responseTypeInfo <- getNonObjectTypeInfo responseBaseType
+  -- case responseTypeInfo of
+  --   VT.TIScalar typeInfo -> return $ ActionOutputScalar typeInfo
+  --   VT.TIEnum typeInfo   -> return $ ActionOutputEnum typeInfo
+  --   VT.TIObj typeInfo    -> return $ ActionOutputObject typeInfo
+  --   _ -> throw400 InvalidParams $ "the output type: " <>
+  --        showNamedTy responseBaseType <>
+  --        " should be a scalar/enum/object"
   return $ ActionInfo actionName
-    (fmap ResolvedWebhook actionDefinition) outputTypeInfo mempty
+    (fmap ResolvedWebhook actionDefinition) mempty
   where
-    getCustomTypeInfo typeName = do
-      customTypes <- scCustomTypes <$> askSchemaCache
+    getNonObjectTypeInfo typeName = do
+      customTypes <- (unNonObjectTypeMap . fst . scCustomTypes) <$> askSchemaCache
       onNothing (Map.lookup typeName customTypes) $
         throw400 NotExists $ "the type: " <> showNamedTy typeName <>
         " is not defined in custom types"
+    getObjectTypeInfo typeName = do
+      customTypes <- (snd . scCustomTypes) <$> askSchemaCache
+      onNothing (Map.lookup (ObjectTypeName typeName) customTypes) $
+        throw400 NotExists $ "the type: "
+        <> showNamedTy typeName <>
+        " is not an object type defined in custom types"
     CreateAction actionName actionDefinition _ = q
 
     hasList = \case
