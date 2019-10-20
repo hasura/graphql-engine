@@ -10,6 +10,12 @@ class TestGraphQLQueryBasic(DefaultTestSelectQueries):
     def test_select_query_author(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_author.yaml', transport)
 
+    def test_select_query_author_with_skip_directive(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_skip_directive.yaml', transport)
+
+    def test_select_query_author_with_include_directive(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_include_directive.yaml', transport)
+
     def test_select_various_postgres_types(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_test_types.yaml', transport)
 
@@ -58,6 +64,22 @@ class TestGraphQLQueryBasic(DefaultTestSelectQueries):
     def dir(cls):
         return 'queries/graphql_query/basic'
 
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+class TestGraphQLQueryFragments(DefaultTestSelectQueries):
+
+    def test_select_query_top_level_fragment(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_top_level_fragment.yaml', transport)
+
+    def test_select_query_nested_fragment(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_nested_fragment.yaml', transport)
+
+    def test_select_query_fragment_cycles(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_fragment_cycles.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/basic'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphQLQueryAgg(DefaultTestSelectQueries):
