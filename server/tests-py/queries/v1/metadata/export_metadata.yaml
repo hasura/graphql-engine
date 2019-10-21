@@ -1,4 +1,4 @@
-description: Export schema cache (metadata)
+description: Export metadata
 url: /v1/query
 status: 200
 response:
@@ -7,6 +7,8 @@ response:
   remote_schemas: []
   query_collections: []
   allowlist: []
+  actions: []
+  custom_types: null
   tables:
   - table: author
     is_enum: false

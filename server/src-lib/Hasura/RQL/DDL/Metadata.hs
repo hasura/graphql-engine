@@ -186,7 +186,7 @@ data ReplaceMetadata
   , aqActions          :: !(Maybe [ActionMetadata])
   } deriving (Show, Eq, Lift)
 
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ReplaceMetadata)
+$(deriveJSON (aesonDrop 2 snakeCase) ''ReplaceMetadata)
 
 applyQP1
   :: (QErrM m, UserInfoM m)
