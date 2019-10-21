@@ -156,6 +156,7 @@ const initQueries = {
           columns: ['table_schema', 'table_name'],
         },
       ],
+      order_by: [{ column: 'function_name', type: 'asc', nulls: 'last' }],
       where: {
         $not: {
           function_schema: '',
