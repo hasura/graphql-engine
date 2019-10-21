@@ -22,17 +22,13 @@ const featureLaunchVersions = {
 export const getFeaturesCompatibility = serverVersion => {
   const featuresCompatibility = {};
 
-  const isPullRequest = serverVersion.startsWith('pull');
+  const isValidServerVersion = semver.valid(serverVersion) !== null;
 
-  try {
-    Object.keys(featureLaunchVersions).forEach(feature => {
-      featuresCompatibility[feature] =
-        isPullRequest ||
-        semver.satisfies(featureLaunchVersions[feature], '<=' + serverVersion);
-    });
-  } catch (e) {
-    console.error(e);
-  }
+  Object.keys(featureLaunchVersions).forEach(feature => {
+    featuresCompatibility[feature] = isValidServerVersion
+      ? semver.satisfies(featureLaunchVersions[feature], '<=' + serverVersion)
+      : true;
+  });
 
   return featuresCompatibility;
 };
