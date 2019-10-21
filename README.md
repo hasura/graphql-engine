@@ -26,15 +26,15 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
 
 ## Features
 
-* **Make powerful queries**: Built-in filtering, pagination, pattern search, bulk insert, update, delete mutations
-* **Realtime**: Convert any GraphQL query to a live query by using subscriptions
+* **Make powerful queries**: Built-in filtering, pagination, pattern search, bulk insert, update, delete mutations.
+* **Realtime**: Convert any GraphQL query to a live query by using subscriptions.
 * **Merge remote schemas**: Access custom GraphQL schemas for business logic via a single GraphQL Engine endpoint. [**Read more**](remote-schemas.md).
-* **Trigger webhooks or serverless functions**: On Postgres insert/update/delete events ([read more](event-triggers.md))
-* **Works with existing, live databases**: Point it to an existing Postgres database to instantly get a ready-to-use GraphQL API
-* **Fine-grained access control**: Dynamic access control that integrates with your auth system (eg: auth0, firebase-auth)
-* **High-performance & low-footprint**: ~15MB docker image; ~50MB RAM @ 1000 req/s; multi-core aware
-* **Admin UI & Migrations**: Admin UI & Rails-inspired schema migrations
-* **Postgres** ❤️: Supports Postgres types (PostGIS/geo-location, etc.), turns views to *graphs*, trigger stored functions or procedures with mutations
+* **Trigger webhooks or serverless functions**: On Postgres insert/update/delete events. ([**Read more**](event-triggers.md)).
+* **Works with existing, live databases**: Point it to an existing Postgres database to instantly get a ready-to-use GraphQL API.
+* **Fine-grained access control**: Dynamic access control that integrates with your auth system. (eg: auth0, firebase-auth)
+* **High-performance & low-footprint**: ~15MB docker image; ~50MB RAM @ 1000 req/s; multi-core aware.
+* **Admin UI & Migrations**: Admin UI & Rails-inspired schema migrations.
+* **Postgres** ❤️: Supports Postgres types (PostGIS/geo-location, etc.), turns views to *graphs*, trigger stored functions or procedures with mutations.
 
 Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.io).
 
@@ -71,11 +71,11 @@ The fastest way to try Hasura out is via Heroku.
 
     [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
 
-2. Open the Hasura console
+2. Open the Hasura console.
 
    Visit `https://<app-name>.herokuapp.com` (*replace \<app-name\> with your app name*) to open the admin console.
 
-3. Make your first GraphQL query
+3. Make your first GraphQL query.
 
    Create a table and instantly run your first query. Follow this [simple guide](https://docs.hasura.io/1.0/graphql/manual/getting-started/first-graphql-query.html).
 
@@ -108,7 +108,7 @@ Hasura works with any GraphQL client. We recommend using [Apollo Client](https:/
 
 ## Add business logic
 
-GraphQL Engine provides easy-to-reason, scalable and performant methods for adding custom business logic to your backend:
+GraphQL Engine provides easy-to-reason, scalable and performant methods for adding custom business logic to your backend.
 
 ### Remote schemas
 
@@ -118,11 +118,11 @@ Add custom resolvers in a remote schema in addition to Hasura's Postgres-based G
 
 Add asynchronous business logic that is triggered based on database events.
 Ideal for notifications, data-pipelines from Postgres or asynchronous
-processing - [read more](event-triggers.md).
+processing - [**Read more**](event-triggers.md).
 
 ### Derived data or data transformations
 
-Transform data in Postgres or run business logic on it to derive another dataset that can be queried using GraphQL Engine - [read more](https://docs.hasura.io/1.0/graphql/manual/queries/derived-data.html).
+Transform data in Postgres or run business logic on it to derive another dataset that can be queried using GraphQL Engine - [**Read more**](https://docs.hasura.io/1.0/graphql/manual/queries/derived-data.html).
 
 ## Demos
 
