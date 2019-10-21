@@ -488,6 +488,12 @@ class Main extends React.Component {
                   '/data/schema/' + currentSchema
                 )}
                 {getSidebarItem(
+                  'Actions',
+                  'fa-industry',
+                  tooltips.actions,
+                  '/actions/manage/actions'
+                )}
+                {getSidebarItem(
                   'Remote Schemas',
                   'fa-plug',
                   tooltips.remoteSchema,
