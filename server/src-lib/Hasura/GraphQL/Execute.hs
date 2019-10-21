@@ -3,7 +3,6 @@
 
 module Hasura.GraphQL.Execute
   ( GQExecPlanPartial(..)
-  , GQFieldPartialPlan(..)
   , GQFieldResolvedPlan(..)
 
   , getExecPlanPartial
@@ -64,25 +63,19 @@ import qualified Hasura.GraphQL.Resolve                 as GR
 import qualified Hasura.GraphQL.Validate                as VQ
 import qualified Hasura.Logging                         as L
 
--- The current execution plan of a graphql operation, it is
--- currently, either local pg execution or a remote execution
---
--- The 'a' is parameterised so this AST can represent
--- intermediate passes
-data GQFieldPartialPlan
-  = GQFieldPartialHasura !VQ.Field
-  | GQFieldPartialRemote !RemoteSchemaInfo !VQ.Field
 
 data GQFieldResolvedPlan
   = GQFieldResolvedHasura !ExecOp
   | GQFieldResolvedRemote !RemoteSchemaInfo !G.OperationType !VQ.Field
+  -- ^ TODO: this isn't ideal, since Field already has the _fSource tag; might
+  -- be better to parameterize Field.
 
 data GQExecPlanPartial
   = GQExecPlanPartial
   { execGCtx       :: !GCtx
   -- ^ For executing any 'GQFieldResolvedHasura'
   , execOpType     :: !G.OperationType
-  , execFieldPlans :: Seq.Seq GQFieldPartialPlan
+  , execFieldPlans :: Seq.Seq VQ.Field
   }
 
 -- | Execution context
@@ -111,39 +104,17 @@ getExecPlanPartial userInfo sc enableAL req
   when enableAL checkQueryInAllowlist
   (gCtx, _) <- flip runStateT sc $ getGCtx role gCtxRoleMap
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
-  let remoteSchemas = scRemoteSchemas sc
   rootSelSet <- runReaderT (VQ.validateGQ queryParts) gCtx
-  runReaderT (uncurry (GQExecPlanPartial gCtx) <$> generatePlan rootSelSet) remoteSchemas
+  return $ uncurry (GQExecPlanPartial gCtx) $ generatePlan rootSelSet
   where
-    generatePlan ::
-         (MonadError QErr m, MonadReader RemoteSchemaMap m)
-      => VQ.RootSelSet
-      -> m (G.OperationType, Seq.Seq GQFieldPartialPlan)
     generatePlan =
       \case
         VQ.RQuery selSet ->
-          (G.OperationTypeQuery ,) <$>
-          (mapM generateFieldPlan selSet)
+          (G.OperationTypeQuery, selSet)
         VQ.RMutation selSet ->
-          (G.OperationTypeMutation ,) <$>
-          (mapM generateFieldPlan selSet)
+          (G.OperationTypeMutation, selSet)
         VQ.RSubscription field ->
-          (G.OperationTypeSubscription ,) <$>
-          (fmap Seq.singleton $ generateFieldPlan field)
-    generateFieldPlan ::
-         (MonadError QErr m, MonadReader RemoteSchemaMap m)
-      => VQ.Field
-      -> m GQFieldPartialPlan
-    generateFieldPlan field =
-      case VQ._fSource field of
-        TLHasuraType ->
-          pure $ GQFieldPartialHasura field
-        TLRemoteType rsName -> do
-          rsMap <- ask
-          rsCtx <-
-            onNothing (Map.lookup rsName rsMap) $
-            throw500 "remote schema not found"
-          pure $ GQFieldPartialRemote (rscInfo rsCtx) field
+          (G.OperationTypeSubscription, Seq.singleton field)
     role = userRole userInfo
     gCtxRoleMap = scGCtxMap sc
     checkQueryInAllowlist
@@ -206,6 +177,12 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
         liftIO $ EP.addPlans scVer (userRole userInfo) opNameM queryStr plans planCache
       return resolvedPlans
 
+    lookupRSInfo =
+      let rsMap = rscInfo <$> scRemoteSchemas sc
+       in \rsName ->
+            onNothing (Map.lookup rsName rsMap) $
+              throw500 "remote schema not found"
+
     noExistingPlan = do
       req <- toParsed reqUnparsed
       (GQExecPlanPartial gCtx opType fieldPlans) <-
@@ -213,16 +190,17 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
       case opType of
         G.OperationTypeQuery ->
           tryCaching $
-            forM fieldPlans $ \case
-              GQFieldPartialHasura field -> do
+            forM fieldPlans $ \field -> case VQ._fSource field of
+              TLHasuraType -> do
                 (queryTx, plan, genSql) <-
                   getQueryOp gCtx sqlGenCtx userInfo field
                 return ( GQFieldResolvedHasura $ ExOpQuery queryTx (Just genSql)
                        , EP.RPQuery <$> plan)
-              GQFieldPartialRemote rsInfo field ->
+              TLRemoteType rsName -> do
+                rsInfo <- lookupRSInfo rsName
                 return ( GQFieldResolvedRemote rsInfo G.OperationTypeQuery field
                        , Nothing)
-        G.OperationTypeMutation ->
+        G.OperationTypeMutation
           -- TODO
           --   This is pretty hacky: we make a special case for pure hasura
           --   transactions to keep them in the same transaction (as they were
@@ -231,33 +209,31 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
           --
           --   See discussion here re. consistency and performance:
           --     https://github.com/hasura/graphql-engine-internal/issues/291 
-          let onlyHasuraFields = mapM hField fieldPlans where
-                hField (GQFieldPartialHasura field) = Just field
-                hField _ = Nothing
-           in case onlyHasuraFields of
-                Just hFields -> do
-                  mutationTx <-
-                    getMutOp gCtx sqlGenCtx userInfo hFields
-                  return $ Seq.singleton $ GQFieldResolvedHasura $
-                    ExOpMutation mutationTx
-                -- Query consists of some or all remote top-level fields:
-                Nothing ->
-                  forM fieldPlans $ \case
-                    GQFieldPartialHasura field -> do
-                      mutationTx <-
-                        getMutOp gCtx sqlGenCtx userInfo (Seq.singleton field)
-                      (return . GQFieldResolvedHasura) $ ExOpMutation mutationTx
-                    GQFieldPartialRemote rsInfo field ->
-                      return $
-                      GQFieldResolvedRemote rsInfo G.OperationTypeMutation field
+           | all ((== TLHasuraType) . VQ._fSource) fieldPlans -> do
+               mutationTx <-
+                 getMutOp gCtx sqlGenCtx userInfo fieldPlans
+               return $ Seq.singleton $ GQFieldResolvedHasura $
+                 ExOpMutation mutationTx
+           -- Query consists of some or all remote top-level fields:
+           | otherwise ->
+               forM fieldPlans $ \field -> case VQ._fSource field of
+                 TLHasuraType -> do
+                   mutationTx <-
+                     getMutOp gCtx sqlGenCtx userInfo (Seq.singleton field)
+                   (return . GQFieldResolvedHasura) $ ExOpMutation mutationTx
+                 TLRemoteType rsName -> do
+                   rsInfo <- lookupRSInfo rsName
+                   return $
+                     GQFieldResolvedRemote rsInfo G.OperationTypeMutation field
         G.OperationTypeSubscription ->
           tryCaching $
-            forM fieldPlans $ \case
-              GQFieldPartialHasura field -> do
+            forM fieldPlans $ \field -> case VQ._fSource field of
+              TLHasuraType -> do
                 (lqOp, plan) <- getSubsOp pgExecCtx gCtx sqlGenCtx userInfo field
                 return ( GQFieldResolvedHasura $ ExOpSubs lqOp
                        , EP.RPSubs <$> plan)
-              GQFieldPartialRemote rsInfo field ->
+              TLRemoteType rsName -> do
+                rsInfo <- lookupRSInfo rsName
                 return ( GQFieldResolvedRemote rsInfo G.OperationTypeSubscription field
                        , Nothing)
 

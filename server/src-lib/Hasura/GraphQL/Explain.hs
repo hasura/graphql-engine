@@ -24,6 +24,7 @@ import qualified Hasura.GraphQL.Execute.LiveQuery       as E
 import qualified Hasura.GraphQL.Resolve                 as RS
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
+import qualified Hasura.GraphQL.Validate.Types          as GV
 import qualified Hasura.SQL.DML                         as S
 
 data GQLExplain
@@ -137,10 +138,8 @@ explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw) =
     usrVars = mkUserVars $ maybe [] Map.toList userVarsRaw
     userInfo = mkUserInfo (fromMaybe adminRole $ roleFromVars usrVars) usrVars
     runInTx = liftEither <=< liftIO . runExceptT . runLazyTx pgExecCtx
-    getHasuraField =
-      \case
-        E.GQFieldPartialHasura a -> Just a
-        _ -> Nothing
+    getHasuraField field =
+      guard (GV._fSource field == GV.TLHasuraType) $> field
     getRootField =
       \case
         [] -> throw500 "no field found in subscription"
