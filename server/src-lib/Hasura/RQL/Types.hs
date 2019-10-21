@@ -14,6 +14,8 @@ module Hasura.RQL.Types
        , HasSQLGenCtx(..)
 
        , HasSystemDefined(..)
+       , HasSystemDefinedT
+       , runHasSystemDefinedT
 
        , QCtx(..)
        , HasQCtx(..)
@@ -89,6 +91,9 @@ mkAdminQCtx soc sc = QCtx adminUserInfo sc soc
 class (Monad m) => UserInfoM m where
   askUserInfo :: m UserInfo
 
+instance (UserInfoM m) => UserInfoM (ReaderT r m) where
+  askUserInfo = lift askUserInfo
+
 askTabInfo
   :: (QErrM m, CacheRM m)
   => QualifiedTable -> m (TableInfo PGColumnInfo)
@@ -134,8 +139,14 @@ instance HasSQLGenCtx P1 where
 class (Monad m) => HasHttpManager m where
   askHttpManager :: m HTTP.Manager
 
+instance (HasHttpManager m) => HasHttpManager (ReaderT r m) where
+  askHttpManager = lift askHttpManager
+
 class (Monad m) => HasGCtxMap m where
   askGCtxMap :: m GC.GCtxMap
+
+instance (HasGCtxMap m) => HasGCtxMap (ReaderT r m) where
+  askGCtxMap = lift askGCtxMap
 
 newtype SQLGenCtx
   = SQLGenCtx
@@ -145,8 +156,25 @@ newtype SQLGenCtx
 class (Monad m) => HasSQLGenCtx m where
   askSQLGenCtx :: m SQLGenCtx
 
+instance (HasSQLGenCtx m) => HasSQLGenCtx (ReaderT r m) where
+  askSQLGenCtx = lift askSQLGenCtx
+
 class (Monad m) => HasSystemDefined m where
   askSystemDefined :: m SystemDefined
+
+instance (HasSystemDefined m) => HasSystemDefined (ReaderT r m) where
+  askSystemDefined = lift askSystemDefined
+
+newtype HasSystemDefinedT m a
+  = HasSystemDefinedT { unHasSystemDefinedT :: ReaderT SystemDefined m a }
+  deriving ( Functor, Applicative, Monad, MonadTrans, MonadIO, MonadError e, MonadTx
+           , HasHttpManager, HasSQLGenCtx, CacheRM, CacheRWM, UserInfoM )
+
+runHasSystemDefinedT :: SystemDefined -> HasSystemDefinedT m a -> m a
+runHasSystemDefinedT systemDefined = flip runReaderT systemDefined . unHasSystemDefinedT
+
+instance (Monad m) => HasSystemDefined (HasSystemDefinedT m) where
+  askSystemDefined = HasSystemDefinedT ask
 
 type ER e r = ExceptT e (Reader r)
 type P1 = ER QErr QCtx

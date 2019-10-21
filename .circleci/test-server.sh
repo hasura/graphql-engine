@@ -218,6 +218,9 @@ run_pytest_parallel() {
 	fi
 }
 
+echo -e "\n$(time_elapsed): <########## RUN GRAPHQL-ENGINE HASKELL TESTS ###########################################>\n"
+"${GRAPHQL_ENGINE_TESTS:?}"
+
 echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITHOUT ADMIN SECRET ###########################################>\n"
 TEST_TYPE="no-auth"
 

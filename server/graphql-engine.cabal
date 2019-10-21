@@ -1,17 +1,15 @@
+cabal-version:       2.2
+
 name:                graphql-engine
 version:             1.0.0
 synopsis:            GraphQL API over Postgres
--- description:
 homepage:            https://www.hasura.io
 license:             Apache-2.0
--- license-file:        LICENSE.md
 author:              Vamshi Surabhi
 maintainer:          vamshi@hasura.io
 copyright:           Hasura Inc.
 category:            Database
 build-type:          Simple
--- extra-source-files:  README.md
-cabal-version:       >=1.10
 
 source-repository head
   type:     git
@@ -27,9 +25,37 @@ flag profile
   default: False
   manual: True
 
+common common-all
+  ghc-options:
+    -O2 -foptimal-applicative-do
+    -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
+    -fdefer-typed-holes
+
+  if flag(profile)
+    ghc-prof-options: -fprof-auto -fno-prof-count-entries
+  if flag(developer)
+    cpp-options: -DDeveloperAPIs
+
+  default-language: Haskell2010
+  default-extensions:
+    ApplicativeDo BangPatterns ConstraintKinds DeriveDataTypeable DeriveFoldable DeriveFunctor
+    DeriveGeneric DeriveLift DeriveTraversable EmptyCase FlexibleContexts FlexibleInstances
+    FunctionalDependencies GeneralizedNewtypeDeriving InstanceSigs LambdaCase MultiParamTypeClasses
+    MultiWayIf NoImplicitPrelude OverloadedStrings QuasiQuotes RankNTypes ScopedTypeVariables
+    StandaloneDeriving TemplateHaskell TupleSections TypeApplications TypeFamilies
+
+common common-exe
+  ghc-options:
+    -threaded -rtsopts
+    -- Re. `-I2` see #2565
+    "-with-rtsopts=-N -I2"
+
+  if flag(profile)
+    ghc-prof-options: -rtsopts
+
 library
+  import: common-all
   hs-source-dirs:      src-lib
-  default-language:    Haskell2010
   build-depends:       base
                      , pg-client
                      , text
@@ -171,6 +197,8 @@ library
                      , Hasura.Server.PGDump
                      , Hasura.Server.Config
                      , Hasura.Server.Compression
+                     , Hasura.Server.Migrate
+                     , Hasura.Server.Migrate.Version
 
                      , Hasura.RQL.Types
                      , Hasura.RQL.Instances
@@ -294,82 +322,9 @@ library
   other-modules:       Hasura.Server.Auth.JWT.Internal
                      , Hasura.Server.Auth.JWT.Logging
 
-  default-extensions: ApplicativeDo
-                      BangPatterns
-                      ConstraintKinds
-                      DeriveDataTypeable
-                      DeriveFoldable
-                      DeriveFunctor
-                      DeriveGeneric
-                      DeriveLift
-                      DeriveTraversable
-                      EmptyCase
-                      FlexibleContexts
-                      FlexibleInstances
-                      FunctionalDependencies
-                      GeneralizedNewtypeDeriving
-                      InstanceSigs
-                      LambdaCase
-                      MultiParamTypeClasses
-                      MultiWayIf
-                      NoImplicitPrelude
-                      OverloadedStrings
-                      QuasiQuotes
-                      RankNTypes
-                      ScopedTypeVariables
-                      StandaloneDeriving
-                      TemplateHaskell
-                      TupleSections
-                      TypeApplications
-                      TypeFamilies
-
-
-  if flag(profile)
-    ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries
-  if flag(developer)
-    cpp-options: -DDeveloperAPIs
-
-  ghc-options: -O2
-               -foptimal-applicative-do
-               -fdefer-typed-holes
-               -Wall
-               -Wcompat
-               -Wincomplete-record-updates
-               -Wincomplete-uni-patterns
-               -Wredundant-constraints
-
 executable graphql-engine
-  default-extensions: ApplicativeDo
-                      BangPatterns
-                      ConstraintKinds
-                      DeriveDataTypeable
-                      DeriveFoldable
-                      DeriveFunctor
-                      DeriveGeneric
-                      DeriveLift
-                      DeriveTraversable
-                      EmptyCase
-                      FlexibleContexts
-                      FlexibleInstances
-                      FunctionalDependencies
-                      GeneralizedNewtypeDeriving
-                      InstanceSigs
-                      LambdaCase
-                      MultiParamTypeClasses
-                      MultiWayIf
-                      NoImplicitPrelude
-                      OverloadedStrings
-                      QuasiQuotes
-                      RankNTypes
-                      ScopedTypeVariables
-                      StandaloneDeriving
-                      TemplateHaskell
-                      TupleSections
-                      TypeApplications
-                      TypeFamilies
-
+  import: common-all, common-exe
   main-is:           Main.hs
-  default-language:  Haskell2010
   hs-source-dirs:    src-exec
   build-depends:       base
                      , warp >= 3.2
@@ -392,21 +347,17 @@ executable graphql-engine
                      , uuid
                      , unix
 
-  other-modules:       Ops
-                     , Migrate
-                     , Migrate.Version
-
-  if flag(developer)
-    ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries
-
-  ghc-options: -O2
-               -foptimal-applicative-do
-               -fdefer-typed-holes
-               -Wall
-               -Wcompat
-               -Wincomplete-record-updates
-               -Wincomplete-uni-patterns
-               -Wredundant-constraints
-               -threaded -rtsopts
-               -- Re. `-I2` see #2565
-               "-with-rtsopts=-N -I2"
+test-suite graphql-engine-tests
+  import: common-all, common-exe
+  type: exitcode-stdio-1.0
+  hs-source-dirs: src-test
+  main-is: Main.hs
+  build-depends:
+    , base
+    , graphql-engine
+    , hspec
+    , http-client
+    , http-client-tls
+    , optparse-applicative
+    , pg-client
+    , time

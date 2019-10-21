@@ -146,10 +146,9 @@ $(deriveJSON
 
 data RunCtx
   = RunCtx
-  { _rcUserInfo      :: !UserInfo
-  , _rcHttpMgr       :: !HTTP.Manager
-  , _rcSqlGenCtx     :: !SQLGenCtx
-  , _rcSystemDefined :: !SystemDefined
+  { _rcUserInfo  :: !UserInfo
+  , _rcHttpMgr   :: !HTTP.Manager
+  , _rcSqlGenCtx :: !SQLGenCtx
   }
 
 newtype Run a
@@ -172,9 +171,6 @@ instance HasHttpManager Run where
 
 instance HasSQLGenCtx Run where
   askSQLGenCtx = asks _rcSqlGenCtx
-
-instance HasSystemDefined Run where
-  askSystemDefined = asks _rcSystemDefined
 
 fetchLastUpdate :: Q.TxE QErr (Maybe (InstanceId, UTCTime))
 fetchLastUpdate = do
@@ -200,7 +196,7 @@ peelRun
   -> PGExecCtx
   -> Run a
   -> ExceptT QErr IO (a, SchemaCache)
-peelRun sc runCtx@(RunCtx userInfo _ _ _) pgExecCtx (Run m) =
+peelRun sc runCtx@(RunCtx userInfo _ _) pgExecCtx (Run m) =
   runLazyTx pgExecCtx $ withUserInfo userInfo lazyTx
   where
     lazyTx = runReaderT (runStateT m sc) runCtx
@@ -211,10 +207,14 @@ runQuery
   -> UserInfo -> SchemaCache -> HTTP.Manager
   -> SQLGenCtx -> SystemDefined -> RQLQuery -> m (EncJSON, SchemaCache)
 runQuery pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined query = do
-  resE <- liftIO $ runExceptT $ peelRun sc runCtx pgExecCtx $ runQueryM query
+  resE <- runQueryM query
+    & runHasSystemDefinedT systemDefined
+    & peelRun sc runCtx pgExecCtx
+    & runExceptT
+    & liftIO
   either throwError withReload resE
   where
-    runCtx = RunCtx userInfo hMgr sqlGenCtx systemDefined
+    runCtx = RunCtx userInfo hMgr sqlGenCtx
     withReload r = do
       when (queryNeedsReload query) $ do
         e <- liftIO $ runExceptT $ runLazyTx pgExecCtx
