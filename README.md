@@ -212,5 +212,6 @@ This readme is available in the following translations:
 
 - [Japanese :jp:](translations/README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
 - [French :fr:](translations/README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
+- [Spanish :es:](translations/README.spanish.md) (:pray: [@parammittal16](https://github.com/parammittal16))
 
 Translations for other files can be found [here](translations).
