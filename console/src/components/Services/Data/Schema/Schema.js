@@ -38,6 +38,8 @@ import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleTogg
 import gqlPattern from '../Common/GraphQLValidation';
 import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
 import { displayTableName } from '../../../Common/utils/pgUtils';
+import { SET_SQL } from '../RawSQL/Actions';
+import _push from '../push';
 
 class Schema extends Component {
   constructor(props) {
@@ -508,55 +510,58 @@ class Schema extends Component {
     };
 
     const getUntrackedFunctionsSection = () => {
-      let trackableFunctionList = null;
+      const getTrackableFunctionsList = () => {
+        const trackableFunctionList = [];
 
-      if (trackableFuncs.length > 0) {
-        const heading = getSectionHeading(
-          'Untracked custom functions',
-          trackableFunctionsTip
-        );
+        trackableFuncs.forEach((p, i) => {
+          trackableFunctionList.push(
+            <div className={styles.padd_bottom} key={`untracked-function-${i}`}>
+              <div
+                className={`${styles.display_inline} ${styles.add_mar_right}`}
+              >
+                <Button
+                  data-test={`add-track-function-${p.function_name}`}
+                  className={`${styles.display_inline} btn btn-xs btn-default`}
+                  onClick={e => {
+                    e.preventDefault();
 
-        trackableFunctionList = (
-          <div className={styles.add_mar_top} key={'custom-functions-content'}>
-            <CollapsibleToggle title={heading} isOpen>
-              <div className={`${styles.padd_left_remove} col-xs-12`}>
-                {trackableFuncs.map((p, i) => (
-                  <div
-                    className={styles.padd_bottom}
-                    key={`${i}untracked-function`}
-                  >
-                    <div
-                      className={`${styles.display_inline} ${
-                        styles.add_mar_right
-                      }`}
-                    >
-                      <Button
-                        data-test={`add-track-function-${p.function_name}`}
-                        className={`${
-                          styles.display_inline
-                        } btn btn-xs btn-default`}
-                        onClick={e => {
-                          e.preventDefault();
-
-                          dispatch(addExistingFunction(p.function_name));
-                        }}
-                      >
-                        Track
-                      </Button>
-                    </div>
-                    <div className={styles.display_inline}>
-                      <span>{p.function_name}</span>
-                    </div>
-                  </div>
-                ))}
+                    dispatch(addExistingFunction(p.function_name));
+                  }}
+                >
+                  Track
+                </Button>
               </div>
-              <div className={styles.clear_fix} />
-            </CollapsibleToggle>
-          </div>
-        );
-      }
+              <div className={styles.display_inline}>
+                <span>{p.function_name}</span>
+              </div>
+            </div>
+          );
+        });
 
-      return trackableFunctionList;
+        if (!trackableFuncs.length) {
+          trackableFunctionList.push(
+            <div key="no-untracked-fns">There are no untracked functions</div>
+          );
+        }
+
+        return trackableFunctionList;
+      };
+
+      const heading = getSectionHeading(
+        'Untracked custom functions',
+        trackableFunctionsTip
+      );
+
+      return (
+        <div className={styles.add_mar_top} key={'custom-functions-content'}>
+          <CollapsibleToggle title={heading} isOpen>
+            <div className={`${styles.padd_left_remove} col-xs-12`}>
+              {getTrackableFunctionsList()}
+            </div>
+            <div className={styles.clear_fix} />
+          </CollapsibleToggle>
+        </div>
+      );
     };
 
     const getNonTrackableFunctionsSection = () => {
@@ -568,13 +573,13 @@ class Schema extends Component {
           nonTrackableFunctionsTip
         );
 
-        const customFunctionsDocsLink = (
+        const customFunctionsRequirementsLink = (
           <a
             href="https://docs.hasura.io/1.0/graphql/manual/queries/custom-functions.html#supported-sql-functions"
             target="_blank"
             rel="noopener noreferrer"
           >
-            function requirements
+            requirements
           </a>
         );
 
@@ -587,20 +592,40 @@ class Schema extends Component {
               <div className={`${styles.padd_left_remove} col-xs-12`}>
                 <div className={styles.add_mar_bottom}>
                   <i>
-                    See {customFunctionsDocsLink} to be exposed over the GraphQL
-                    API
+                    See {customFunctionsRequirementsLink} for functions to be
+                    exposed over the GraphQL API
                   </i>
                 </div>
                 {nonTrackableFunctions.map((p, i) => (
                   <div
                     className={styles.padd_bottom}
-                    key={`${i}untracked-function`}
+                    key={`untracked-function-${i}`}
                   >
                     <div
-                      className={`${styles.padd_right} ${
-                        styles.display_inline
+                      className={`${styles.display_inline} ${
+                        styles.add_mar_right
                       }`}
                     >
+                      <Button
+                        data-test={`view-function-${p.function_name}`}
+                        className={`${
+                          styles.display_inline
+                        } btn btn-xs btn-default`}
+                        onClick={e => {
+                          e.preventDefault();
+
+                          dispatch(_push('/sql'));
+
+                          dispatch({
+                            type: SET_SQL,
+                            data: p.function_definition,
+                          });
+                        }}
+                      >
+                        View
+                      </Button>
+                    </div>
+                    <div className={styles.display_inline}>
                       {p.function_name}
                     </div>
                   </div>
