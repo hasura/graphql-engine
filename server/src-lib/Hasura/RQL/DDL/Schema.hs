@@ -20,6 +20,9 @@ load and modify the Hasura catalog and schema cache.
     cache, but to avoid rebuilding the entire schema cache on every change to the catalog, various
     functions incrementally update the cache when they modify the catalog.
 -}
+
+{-# LANGUAGE ViewPatterns #-}
+
 module Hasura.RQL.DDL.Schema
  ( module Hasura.RQL.DDL.Schema.Cache
  , module Hasura.RQL.DDL.Schema.Catalog
@@ -58,22 +61,26 @@ data RunSQL
   { rSql                      :: Text
   , rCascade                  :: !(Maybe Bool)
   , rCheckMetadataConsistency :: !(Maybe Bool)
+  , rReadOnly                 :: !(Maybe Bool)
   } deriving (Show, Eq, Lift)
 $(deriveJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''RunSQL)
 
 runRunSQL :: (CacheBuildM m, UserInfoM m) => RunSQL -> m EncJSON
-runRunSQL (RunSQL t cascade mChkMDCnstcy) = do
+runRunSQL (RunSQL sql cascade mChkMDCnstcy (fromMaybe False -> isReadOnly)) = do
   adminOnly
-  isMDChkNeeded <- maybe (isAltrDropReplace t) return mChkMDCnstcy
-  bool (execRawSQL t) (withMetadataCheck (or cascade) $ execRawSQL t) isMDChkNeeded
+  isMDChkNeeded <- maybe (if isReadOnly then pure False else isAltrDropReplace sql) return mChkMDCnstcy
+  bool (execRawSQL sql) (withMetadataCheck (or cascade) $ execRawSQL sql) isMDChkNeeded
   where
     execRawSQL :: (MonadTx m) => Text -> m EncJSON
     execRawSQL =
-      fmap (encJFromJValue @RunSQLRes) . liftTx . Q.multiQE rawSqlErrHandler . Q.fromText
+      fmap (encJFromJValue @RunSQLRes) . liftTx . setTransactionAccess . Q.multiQE rawSqlErrHandler . Q.fromText
       where
         rawSqlErrHandler txe =
           let e = err400 PostgresError "query execution failed"
           in e {qeInternal = Just $ toJSON txe}
+    setTransactionAccess tx = if isReadOnly then setReadOnly >> tx else tx
+
+    setReadOnly =  Q.unitQE defaultTxErrorHandler "SET TRANSACTION READ ONLY" () False
 
     isAltrDropReplace :: QErrM m => T.Text -> m Bool
     isAltrDropReplace = either throwErr return . matchRegex regex False

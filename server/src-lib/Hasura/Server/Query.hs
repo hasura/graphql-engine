@@ -1,3 +1,5 @@
+{-# LANGUAGE NamedFieldPuns #-}
+
 module Hasura.Server.Query where
 
 import           Control.Lens
@@ -276,7 +278,8 @@ queryNeedsReload (RQV1 qi) = case qi of
   RQAddCollectionToAllowlist _    -> True
   RQDropCollectionFromAllowlist _ -> True
 
-  RQRunSql _                      -> True
+  -- | If run_sql is not read only then reload cache, defaults to reload
+  RQRunSql RunSQL{rReadOnly}      -> maybe True not rReadOnly
 
   RQReplaceMetadata _             -> True
   RQExportMetadata _              -> False
