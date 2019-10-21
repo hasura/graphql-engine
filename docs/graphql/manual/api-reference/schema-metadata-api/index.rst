@@ -137,6 +137,16 @@ The various types of queries are listed in the following table:
      - 1
      - Set comment on an existing relationship
 
+   * - :ref:`add_computed_field`
+     - :ref:`add_computed_field_args <add_computed_field_syntax>`
+     - 1
+     - Add a computed field
+
+   * - :ref:`drop_computed_field`
+     - :ref:`drop_computed_field_args <drop_computed_field_syntax>`
+     - 1
+     - Drop a computed field
+
    * - :ref:`create_insert_permission`
      - :ref:`create_insert_permission_args <create_insert_permission_syntax>`
      - 1
@@ -278,6 +288,7 @@ The various types of queries are listed in the following table:
 - :doc:`Tables/Views <table-view>`
 - :doc:`Custom SQL Functions <custom-functions>`
 - :doc:`Relationships <relationship>`
+- :doc:`Computed Fields <computed-field>`
 - :doc:`Permissions <permission>`
 - :doc:`Event Triggers <event-triggers>`
 - :doc:`Remote Schemas <remote-schemas>`
@@ -362,6 +373,7 @@ See :doc:`../../deployment/graphql-engine-flags/reference` for info on setting t
   Custom Functions <custom-functions>
   Relationships <relationship>
   Permissions <permission>
+  Computed Fields <computed-field>
   Event Triggers <event-triggers>
   Remote Schemas <remote-schemas>
   Query Collections <query-collections>
