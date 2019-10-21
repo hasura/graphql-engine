@@ -99,8 +99,9 @@ const initQueries = {
         schema: 'hdb_catalog',
       },
       columns: ['function_name', 'function_schema', 'is_system_defined'],
+      order_by: [{ column: 'function_name', type: 'asc', nulls: 'last' }],
       where: {
-        function_schema: '',
+        function_schema: '', // needs to be set later
       },
     },
   },
@@ -126,8 +127,9 @@ const initQueries = {
           columns: ['table_schema', 'table_name'],
         },
       ],
+      order_by: [{ column: 'function_name', type: 'asc', nulls: 'last' }],
       where: {
-        function_schema: '',
+        function_schema: '', // needs to be set later
         has_variadic: false,
         returns_set: true,
         return_type_type: compositeFnCheck, // COMPOSITE type
@@ -171,7 +173,7 @@ const initQueries = {
       order_by: [{ column: 'function_name', type: 'asc', nulls: 'last' }],
       where: {
         $not: {
-          function_schema: '',
+          function_schema: '', // needs to be set later
           has_variadic: false,
           returns_set: true,
           return_type_type: compositeFnCheck, // COMPOSITE type
@@ -393,7 +395,7 @@ const fetchFunctionInit = () => (dispatch, getState) => {
   // set schema in queries
   const currentSchema = getState().tables.currentSchema;
   body.args[0].args.where.function_schema = currentSchema;
-  body.args[1].args.where.function_schema = currentSchema;
+  body.args[1].args.where.$not.function_schema = currentSchema;
   body.args[2].args.where.function_schema = currentSchema;
 
   const options = {

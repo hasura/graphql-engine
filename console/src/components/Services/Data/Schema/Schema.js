@@ -37,7 +37,12 @@ import { createNewSchema, deleteCurrentSchema } from './Actions';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 import gqlPattern from '../Common/GraphQLValidation';
 import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
-import { displayTableName } from '../../../Common/utils/pgUtils';
+import {
+  displayTableName,
+  getFunctionName,
+  getSchemaTables,
+  getUntrackedTables,
+} from '../../../Common/utils/pgUtils';
 import { SET_SQL } from '../RawSQL/Actions';
 import _push from '../push';
 
@@ -78,39 +83,20 @@ class Schema extends Component {
 
     /***********/
 
-    const getTrackableFunctions = () => {
-      const trackedFuncNames = trackedFunctions.map(t => t.function_name);
+    const _getTrackableFunctions = () => {
+      const trackedFuncNames = trackedFunctions.map(fn => getFunctionName(fn));
 
       // Assuming schema for both function and tables are same
       // return function which are tracked && function name whose
       // set of tables are tracked
       const filterCondition = func => {
         return (
-          !trackedFuncNames.includes(func.function_name) &&
+          !trackedFuncNames.includes(getFunctionName(func)) &&
           !!func.return_table_info
         );
       };
 
       return functionsList.filter(filterCondition);
-    };
-
-    const getUntrackedTables = () => {
-      const tableSortFunc = (a, b) => {
-        return a.table_name === b.table_name
-          ? 0
-          : +(a.table_name > b.table_name) || -1;
-      };
-
-      const _untrackedTables = schema.filter(
-        table => !table.is_table_tracked && table.table_schema === currentSchema
-      );
-
-      // update tableInfo with graphql compatibility
-      _untrackedTables.forEach(t => {
-        t.isGQLCompatible = gqlPattern.test(t.table_name);
-      });
-
-      return _untrackedTables.sort(tableSortFunc);
     };
 
     const getSectionHeading = (headingText, tooltip, actionBtn = null) => {
@@ -133,8 +119,10 @@ class Schema extends Component {
 
     /***********/
 
-    const allUntrackedTables = getUntrackedTables();
-    const trackableFuncs = getTrackableFunctions();
+    const allUntrackedTables = getUntrackedTables(
+      getSchemaTables(schema, currentSchema)
+    );
+    const trackableFuncs = _getTrackableFunctions();
 
     const getCreateBtn = () => {
       let createBtn = null;
@@ -353,7 +341,8 @@ class Schema extends Component {
             dispatch(addExistingTableSql());
           };
 
-          const gqlCompatibilityWarning = !table.isGQLCompatible ? (
+          const isGQLCompatible = gqlPattern.test(table.table_name);
+          const gqlCompatibilityWarning = !isGQLCompatible ? (
             <span className={styles.add_mar_left_mid}>
               <GqlCompatibilityWarning />
             </span>
