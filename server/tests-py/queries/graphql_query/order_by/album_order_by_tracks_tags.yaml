@@ -1,0 +1,32 @@
+description: Fetch Albums order by their tracks and tags aggregate fields
+url: /v1/graphql
+status: 200
+response:
+  data:
+    Album:
+    - album_id: 1
+    - album_id: 2
+query:
+  query: |
+    query {
+      Album(
+        order_by: [
+          {
+            Tracks_aggregate: {
+               max: {
+                track_id: asc
+              }
+            }
+          },
+          {
+            Tags_aggregate:{
+              max: {
+                id:asc
+              }
+            }
+          }
+        ]
+      ){
+        album_id
+      }
+    }
