@@ -19,10 +19,14 @@ const featureLaunchVersions = {
   [COMPUTED_COLUMNS_SUPPORT]: 'v1.0.0-beta.8',
 };
 
+export const checkValidServerVersion = version => {
+  return semver.valid(version) !== null;
+};
+
 export const getFeaturesCompatibility = serverVersion => {
   const featuresCompatibility = {};
 
-  const isValidServerVersion = semver.valid(serverVersion) !== null;
+  const isValidServerVersion = checkValidServerVersion(serverVersion);
 
   Object.keys(featureLaunchVersions).forEach(feature => {
     featuresCompatibility[feature] = isValidServerVersion
