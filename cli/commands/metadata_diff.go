@@ -59,7 +59,7 @@ By default, shows changes between exported metadata file and server metadata.`,
 				// no args, diff exported metadata and metadata on server
 				filename, err := ec.GetExistingMetadataFile()
 				if err != nil {
-					return err
+					return errors.Wrap(err, "failed getting metadata file")
 				}
 				opts.metadata[0] = filename
 				message = fmt.Sprintf(messageFormat, filename, "the server")
