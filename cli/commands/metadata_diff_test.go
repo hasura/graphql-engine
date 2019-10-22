@@ -70,7 +70,12 @@ func TestMetadataDiffCmd(t *testing.T) {
 	defer os.RemoveAll(migrationsDir)
 
 	metadataFile := filepath.Join(migrationsDir, "metadata.yaml")
+	testMetadataFile1 := filepath.Join(migrationsDir, "testmetadata1.yaml")
+	testMetadataFile2 := filepath.Join(migrationsDir, "testmetadata2.yaml")
+
 	mustWriteFile(t, "", metadataFile, testMetadata1)
+	mustWriteFile(t, "", testMetadataFile1, testMetadata1)
+	mustWriteFile(t, "", testMetadataFile2, testMetadata2)
 
 	logger, _ := test.NewNullLogger()
 	outputFile := new(bytes.Buffer)
@@ -103,8 +108,7 @@ func TestMetadataDiffCmd(t *testing.T) {
 	}
 
 	// Run with one arg
-	opts.metadata = [2]string{"testmetadata1.yaml", ""}
-	mustWriteFile(t, "", "testmetadata1.yaml", testMetadata1)
+	opts.metadata = [2]string{testMetadataFile1, ""}
 
 	err = opts.run()
 	if err != nil {
@@ -112,8 +116,7 @@ func TestMetadataDiffCmd(t *testing.T) {
 	}
 
 	// Run with two args
-	opts.metadata = [2]string{"testmetadata1.yaml", "testmetadata2.yaml"}
-	mustWriteFile(t, "", "testmetadata2.yaml", testMetadata2)
+	opts.metadata = [2]string{testMetadataFile1, testMetadataFile2}
 
 	err = opts.run()
 	if err != nil {
