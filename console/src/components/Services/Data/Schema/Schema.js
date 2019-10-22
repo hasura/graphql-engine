@@ -124,6 +124,25 @@ class Schema extends Component {
     );
     const trackableFuncs = _getTrackableFunctions();
 
+    const getTrackableFunctionsRequirementsMessage = () => {
+      const requirementsLink = (
+        <a
+          href="https://docs.hasura.io/1.0/graphql/manual/queries/custom-functions.html#supported-sql-functions"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          requirements
+        </a>
+      );
+
+      return (
+        <i>
+          See {requirementsLink} for functions to be exposed over the GraphQL
+          API
+        </i>
+      );
+    };
+
     const getCreateBtn = () => {
       let createBtn = null;
 
@@ -529,7 +548,12 @@ class Schema extends Component {
 
         if (!trackableFuncs.length) {
           trackableFunctionList.push(
-            <div key="no-untracked-fns">There are no untracked functions</div>
+            <div key="no-untracked-fns">
+              <div>There are no untracked functions</div>
+              <div className={styles.add_mar_top}>
+                {getTrackableFunctionsRequirementsMessage()}
+              </div>
+            </div>
           );
         }
 
@@ -562,16 +586,6 @@ class Schema extends Component {
           nonTrackableFunctionsTip
         );
 
-        const customFunctionsRequirementsLink = (
-          <a
-            href="https://docs.hasura.io/1.0/graphql/manual/queries/custom-functions.html#supported-sql-functions"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            requirements
-          </a>
-        );
-
         nonTrackableFuncList = (
           <div
             className={styles.add_mar_top}
@@ -580,10 +594,7 @@ class Schema extends Component {
             <CollapsibleToggle title={heading} isOpen={false}>
               <div className={`${styles.padd_left_remove} col-xs-12`}>
                 <div className={styles.add_mar_bottom}>
-                  <i>
-                    See {customFunctionsRequirementsLink} for functions to be
-                    exposed over the GraphQL API
-                  </i>
+                  {getTrackableFunctionsRequirementsMessage()}
                 </div>
                 {nonTrackableFunctions.map((p, i) => (
                   <div
