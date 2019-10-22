@@ -19,20 +19,20 @@ const featureLaunchVersions = {
   [COMPUTED_COLUMNS_SUPPORT]: 'v1.0.0-beta.8',
 };
 
+export const checkValidServerVersion = version => {
+  return semver.valid(version) !== null;
+};
+
 export const getFeaturesCompatibility = serverVersion => {
   const featuresCompatibility = {};
 
-  const isPullRequest = serverVersion.startsWith('pull');
+  const isValidServerVersion = checkValidServerVersion(serverVersion);
 
-  try {
-    Object.keys(featureLaunchVersions).forEach(feature => {
-      featuresCompatibility[feature] =
-        isPullRequest ||
-        semver.satisfies(featureLaunchVersions[feature], '<=' + serverVersion);
-    });
-  } catch (e) {
-    console.error(e);
-  }
+  Object.keys(featureLaunchVersions).forEach(feature => {
+    featuresCompatibility[feature] = isValidServerVersion
+      ? semver.satisfies(featureLaunchVersions[feature], '<=' + serverVersion)
+      : true;
+  });
 
   return featuresCompatibility;
 };
