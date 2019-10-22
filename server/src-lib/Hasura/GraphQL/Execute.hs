@@ -75,7 +75,8 @@ data GQExecPlanPartial
   { execGCtx       :: !GCtx
   -- ^ For executing any 'GQFieldResolvedHasura'
   , execOpType     :: !G.OperationType
-  , execFieldPlans :: Seq.Seq VQ.Field
+  , execSelSet :: Seq.Seq VQ.Field
+  -- ^ The top-level selection set.
   }
 
 -- | Execution context
@@ -185,12 +186,12 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
 
     noExistingPlan = do
       req <- toParsed reqUnparsed
-      (GQExecPlanPartial gCtx opType fieldPlans) <-
+      (GQExecPlanPartial gCtx opType selSet) <-
         getExecPlanPartial userInfo sc enableAL req
       case opType of
         G.OperationTypeQuery ->
           tryCaching $
-            forM fieldPlans $ \field -> case VQ._fSource field of
+            forM selSet $ \field -> case VQ._fSource field of
               TLHasuraType -> do
                 (queryTx, plan, genSql) <-
                   getQueryOp gCtx sqlGenCtx userInfo field
@@ -209,14 +210,14 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
           --
           --   See discussion here re. consistency and performance:
           --     https://github.com/hasura/graphql-engine-internal/issues/291 
-           | all ((== TLHasuraType) . VQ._fSource) fieldPlans -> do
+           | all ((== TLHasuraType) . VQ._fSource) selSet -> do
                mutationTx <-
-                 getMutOp gCtx sqlGenCtx userInfo fieldPlans
+                 getMutOp gCtx sqlGenCtx userInfo selSet
                return $ Seq.singleton $ GQFieldResolvedHasura $
                  ExOpMutation mutationTx
            -- Query consists of some or all remote top-level fields:
            | otherwise ->
-               forM fieldPlans $ \field -> case VQ._fSource field of
+               forM selSet $ \field -> case VQ._fSource field of
                  TLHasuraType -> do
                    mutationTx <-
                      getMutOp gCtx sqlGenCtx userInfo (Seq.singleton field)
@@ -227,7 +228,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer req
                      GQFieldResolvedRemote rsInfo G.OperationTypeMutation field
         G.OperationTypeSubscription ->
           tryCaching $
-            forM fieldPlans $ \field -> case VQ._fSource field of
+            forM selSet $ \field -> case VQ._fSource field of
               TLHasuraType -> do
                 (lqOp, plan) <- getSubsOp pgExecCtx gCtx sqlGenCtx userInfo field
                 return ( GQFieldResolvedHasura $ ExOpSubs lqOp
