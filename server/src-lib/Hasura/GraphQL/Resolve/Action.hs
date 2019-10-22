@@ -65,11 +65,10 @@ resolveOutputSelectionSet
   :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )
-  => ObjTyInfo
-  -> G.NamedType
+  => G.NamedType
   -> SelSet
   -> m [(Text, OutputFieldResolved)]
-resolveOutputSelectionSet objTyInfo ty selSet =
+resolveOutputSelectionSet ty selSet =
   withSelSet selSet $ \fld -> case _fName fld of
     "__typename" -> return $ OutputFieldTypename ty
     G.Name t     -> return $ OutputFieldSimple t
@@ -87,7 +86,7 @@ resolveResponseSelectionSet ty selSet =
 
     "output"     ->
       ResponseFieldOutput <$>
-      resolveOutputSelectionSet undefined (_fType fld) (_fSelSet fld)
+      resolveOutputSelectionSet (_fType fld) (_fSelSet fld)
 
     -- the metadata columns
     "id"         -> return $ mkMetadataField "id"
@@ -229,7 +228,7 @@ resolveActionInsertSync
   -> UserVars
   -> m RespTx
 resolveActionInsertSync field executionContext sessionVariables = do
-  inputArgs <- withArg (_fArguments field) "input" (return . annInpValueToJson)
+  let inputArgs = J.toJSON $ fmap annInpValueToJson $ _fArguments field
   manager <- asks getter
   webhookRes <- callWebhook manager inputArgs
   case returnStrategy of
@@ -315,8 +314,7 @@ resolveActionInsertAsync
 resolveActionInsertAsync field actionFilter sessionVariables = do
 
   responseSelectionSet <- resolveResponseSelectionSet (_fType field) $ _fSelSet field
-
-  inputArgs <- withArg (_fArguments field) "input" (return . annInpValueToJson)
+  let inputArgs = J.toJSON $ fmap annInpValueToJson $ _fArguments field
 
   -- resolvedPresetFields <- resolvePresetFields
 

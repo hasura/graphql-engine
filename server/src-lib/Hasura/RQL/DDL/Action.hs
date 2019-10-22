@@ -21,6 +21,7 @@ module Hasura.RQL.DDL.Action
   ) where
 
 import           Hasura.EncJSON
+import           Hasura.GraphQL.Context        (defaultTypes)
 import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
 import           Hasura.RQL.Types
@@ -103,17 +104,18 @@ buildActionInfo
   :: (QErrM m, CacheRM m)
   => CreateAction -> m ActionInfo
 buildActionInfo q = do
-  let inputBaseType = G.getBaseType $ unGraphQLType $ _adInputType actionDefinition
-      responseType = unGraphQLType $ _adOutputType actionDefinition
+  let responseType = unGraphQLType $ _adOutputType actionDefinition
       responseBaseType = G.getBaseType responseType
-  inputTypeInfo <- getNonObjectTypeInfo inputBaseType
-  case inputTypeInfo of
-    VT.TIScalar _ -> return ()
-    VT.TIEnum _   -> return ()
-    VT.TIInpObj _ -> return ()
-    _ -> throw400 InvalidParams $ "the input type: "
-         <> showNamedTy inputBaseType <>
-         " should be a scalar/enum/input_object"
+  forM (_adArguments actionDefinition) $ \argument -> do
+    let argumentBaseType = G.getBaseType $ unGraphQLType $ _argType argument
+    argTypeInfo <- getNonObjectTypeInfo argumentBaseType
+    case argTypeInfo of
+      VT.TIScalar _ -> return ()
+      VT.TIEnum _   -> return ()
+      VT.TIInpObj _ -> return ()
+      _ -> throw400 InvalidParams $ "the argument's base type: "
+          <> showNamedTy argumentBaseType <>
+          " should be a scalar/enum/input_object"
   when (hasList responseType) $ throw400 InvalidParams $
     "the output type: " <> G.showGT responseType <> " cannot be a list"
 
@@ -131,10 +133,12 @@ buildActionInfo q = do
     (fmap ResolvedWebhook actionDefinition) mempty
   where
     getNonObjectTypeInfo typeName = do
-      customTypes <- (unNonObjectTypeMap . fst . scCustomTypes) <$> askSchemaCache
-      onNothing (Map.lookup typeName customTypes) $
+      nonObjectTypeMap <- (unNonObjectTypeMap . fst . scCustomTypes) <$> askSchemaCache
+      let inputTypeInfos = nonObjectTypeMap <> VT.mapFromL VT.getNamedTy defaultTypes
+      onNothing (Map.lookup typeName inputTypeInfos) $
         throw400 NotExists $ "the type: " <> showNamedTy typeName <>
         " is not defined in custom types"
+
     getObjectTypeInfo typeName = do
       customTypes <- (snd . scCustomTypes) <$> askSchemaCache
       onNothing (Map.lookup (ObjectTypeName typeName) customTypes) $

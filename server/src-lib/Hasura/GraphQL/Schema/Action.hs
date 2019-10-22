@@ -78,20 +78,16 @@ mkMutationField actionName actionInfo permission definitionList =
     description =
       G.Description $ "perform the action: " <>> actionName
 
-    inputType = _adInputType definition
-
     fieldInfo =
       mkHsraObjFldInfo
       (Just description)
       (unActionName actionName)
-      (mapFromL _iviName [inputArgument]) $
+      (mapFromL _iviName $ map mkActionArgument $ _adArguments definition) $
       actionFieldResponseType actionName definition
 
-    inputArgument =
-      InpValInfo (Just inputDescription) "input" Nothing $
-      unGraphQLType inputType
-      where
-        inputDescription = G.Description $ "input for action: " <>> actionName
+    mkActionArgument argument =
+      InpValInfo (_argDescription argument) (unArgumentName $ _argName argument)
+      Nothing $ unGraphQLType $ _argType argument
 
 actionFieldResponseType :: ActionName -> ActionDefinition a -> G.GType
 actionFieldResponseType actionName definition =

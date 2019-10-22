@@ -1,7 +1,8 @@
 module Hasura.RQL.Types.Action
-  ( ActionInfo(..)
-  , ActionName(..)
+  ( ArgumentName(..)
+  , ArgumentDefinition(..)
 
+  , ActionName(..)
   , ActionKind(..)
   , ActionDefinition(..)
   , getActionKind
@@ -11,6 +12,7 @@ module Hasura.RQL.Types.Action
   , ResolvedWebhook(..)
   , ResolvedActionDefinition
 
+  , ActionInfo(..)
   , ActionPermissionInfo(..)
 
   , ActionPermissionMap
@@ -60,9 +62,22 @@ $(J.deriveJSON
   J.defaultOptions { J.constructorTagModifier = J.snakeCase . drop 6}
   ''ActionKind)
 
+newtype ArgumentName
+  = ArgumentName { unArgumentName :: G.Name }
+  deriving ( Show, Eq, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey
+           , Hashable, DQuote, Lift)
+
+data ArgumentDefinition
+  = ArgumentDefinition
+  { _argName        :: !ArgumentName
+  , _argType        :: !GraphQLType
+  , _argDescription :: !(Maybe G.Description)
+  } deriving (Show, Eq, Lift)
+$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ArgumentDefinition)
+
 data ActionDefinition a
   = ActionDefinition
-  { _adInputType  :: !GraphQLType
+  { _adArguments  :: ![ArgumentDefinition]
   , _adOutputType :: !GraphQLType
   , _adKind       :: !(Maybe ActionKind)
   , _adWebhook    :: !a
@@ -102,9 +117,9 @@ type ActionPermissionMap
 
 data ActionInfo
   = ActionInfo
-  { _aiName           :: !ActionName
-  , _aiDefintion      :: !ResolvedActionDefinition
-  , _aiPermissions    :: !ActionPermissionMap
+  { _aiName        :: !ActionName
+  , _aiDefintion   :: !ResolvedActionDefinition
+  , _aiPermissions :: !ActionPermissionMap
   } deriving (Show, Eq)
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''ActionInfo)
 
