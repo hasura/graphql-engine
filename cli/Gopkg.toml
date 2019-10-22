@@ -95,7 +95,3 @@
 [[constraint]]
   branch = "master"
   name = "github.com/kardianos/osext"
-
-[[override]]
-  name = "github.com/russross/blackfriday"
-  version = "1.5.2"
