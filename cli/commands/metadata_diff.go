@@ -1,11 +1,11 @@
 package commands
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
+	"reflect"
 	"strings"
 
 	"github.com/aryann/difflib"
@@ -17,48 +17,64 @@ import (
 	"github.com/spf13/viper"
 )
 
+type metadataDiffOptions struct {
+	EC     *cli.ExecutionContext
+	output io.Writer
+
+	// two metadata to diff, 2nd is server if it's empty
+	metadata [2]string
+}
+
 func newMetadataDiffCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
 	opts := &metadataDiffOptions{
-		EC:         ec,
-		output:     os.Stdout,
+		EC:     ec,
+		output: os.Stdout,
 	}
 
 	metadataDiffCmd := &cobra.Command{
 		Use:   "diff [file1] [file2]",
-		Short: "Show changes between local and serverside Hasura metadata",
+		Short: "Show a highlighted diff of Hasura metadata",
 		Long: `Show changes between two different sets of Hasura metadata.
-By default, shows changes between migrations/metadata.[yaml|json] and server metadata.`,
-		Example: `  # Show changes between server metadata and that in migrations/metadata.[yaml|json]:
-    hasura metadata diff
-	
+By default, shows changes between exported metadata file and server metadata.`,
+		Example: `  # Show changes between server metadata and the exported metadata file:
+  hasura metadata diff
+
   # Show changes between server metadata and that in local_metadata.yaml:
-    hasura metadata diff local_metadata.yaml
-	
+  hasura metadata diff local_metadata.yaml
+
   # Show changes between metadata from metadata.yaml and metadata_old.yaml:
-    hasura metadata diff metadata.yaml metadata_old.yaml`,
+  hasura metadata diff metadata.yaml metadata_old.yaml`,
 		Args: cobra.MaximumNArgs(2),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var yamlFileNames [2]string
-			if len(args) >= 1 {
-				opts.metaDataFiles[0] = args[0]
-				yamlFileNames[0] = args[0]
-			} else {
-				yamlFileNames[0] = "migrations/metadata.yaml"
-			}
-			if len(args) >= 2 {
-				opts.metaDataFiles[1] = args[1]
-				yamlFileNames[1] = args[1]
-			} else {
-				yamlFileNames[1] = "metadata from the server"
+			messageFormat := "Showing diff between %s and %s..."
+			message := ""
+
+			switch len(args) {
+			case 0:
+				// no args, diff exported metadata and metadata on server
+				filename, err := ec.GetExistingMetadataFile()
+				if err != nil {
+					return err
+				}
+				opts.metadata[0] = filename
+				message = fmt.Sprintf(messageFormat, filename, "the server")
+			case 1:
+				// 1 arg, diff given filename and the metadata on server
+				opts.metadata[0] = args[0]
+				message = fmt.Sprintf(messageFormat, args[0], "the server")
+			case 2:
+				// 2 args, diff given filenames
+				opts.metadata[0] = args[0]
+				opts.metadata[1] = args[1]
+				message = fmt.Sprintf(messageFormat, args[0], args[1])
 			}
 
-
-			ec.Logger.Info(fmt.Sprintf("Showing diff between %s and %s...\n", yamlFileNames[0], yamlFileNames[1]))
+			opts.EC.Logger.Info(message)
 			err := opts.run()
 			if err != nil {
 				return errors.Wrap(err, "failed to show metadata diff")
@@ -81,69 +97,37 @@ By default, shows changes between migrations/metadata.[yaml|json] and server met
 	return metadataDiffCmd
 }
 
-type metadataDiffOptions struct {
-	EC *cli.ExecutionContext
-	output io.Writer
-
-	// Args
-	metaDataFiles [2]string
-}
-
 func (o *metadataDiffOptions) run() error {
 	var oldYaml, newYaml []byte
+	var err error
 	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version, true)
 	if err != nil {
 		return err
 	}
 
-	if o.metaDataFiles[0] == "" {
-		for _, format := range []string{"yaml", "json"} {
-			metadataPath, err := ec.GetMetadataFilePath(format)
-			if err != nil {
-				return errors.Wrap(err, "cannot diff metadata")
-			}
-
-			oldYaml, err = ioutil.ReadFile(metadataPath)
-			if err != nil {
-				if os.IsNotExist(err) {
-					continue
-				}
-				return err
-			}
-			break
-		}
-
-		if oldYaml == nil {
-			return errors.New("Unable to locate metadata.[yaml|json] file under migrations directory")
-		}
-	} else {
-		oldYaml, err = ioutil.ReadFile(o.metaDataFiles[0])
-		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("cannot read from file %s", o.metaDataFiles[0]))
-		}
-	}
-
-	if o.metaDataFiles[1] == "" {
-		metaData, err := migrateDrv.ExportMetadata()
+	if o.metadata[1] == "" {
+		// get metadata from server
+		m, err := migrateDrv.ExportMetadata()
 		if err != nil {
 			return errors.Wrap(err, "cannot fetch metadata from server")
 		}
 
-		t, err := json.Marshal(metaData)
+		newYaml, err = yaml.Marshal(m)
 		if err != nil {
-			return errors.Wrap(err, "cannot Marshal metadata")
-		}
-
-		newYaml, err = yaml.JSONToYAML(t)
-		if err != nil {
-			return err
+			return errors.Wrap(err, "cannot convert metadata from server to yaml")
 		}
 	} else {
-		newYaml, err = ioutil.ReadFile(o.metaDataFiles[1])
+		newYaml, err = ioutil.ReadFile(o.metadata[1])
 		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("cannot read from file %s", o.metaDataFiles[1]))
+			return errors.Wrap(err, "cannot read file")
 		}
 	}
+
+	oldYaml, err = ioutil.ReadFile(o.metadata[0])
+	if err != nil {
+		return errors.Wrap(err, "cannot read file")
+	}
+
 	return diffYaml(oldYaml, newYaml, o.output)
 }
 
@@ -172,6 +156,10 @@ func diffYaml(oldYaml, newYaml []byte, to io.Writer) error {
 	newIndex, err := yamlToMap(newYaml)
 	if err != nil {
 		return err
+	}
+	if reflect.DeepEqual(oldIndex, newIndex) {
+		fmt.Fprintf(to, "There are no changes.")
+		return nil
 	}
 	for key, oldContent := range oldIndex {
 		if newContent, ok := newIndex[key]; ok {
@@ -209,7 +197,8 @@ func printDiff(before, after string, to io.Writer) {
 		case difflib.LeftOnly:
 			fmt.Fprintf(to, "%s\n", ansi.Color("- "+text, "red"))
 		case difflib.Common:
-			fmt.Fprintf(to, "%s\n", "  "+text)
+			// don't print common
+			// fmt.Fprintf(to, "%s\n", "  "+text)
 		}
 	}
 }

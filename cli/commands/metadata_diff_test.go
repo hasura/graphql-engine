@@ -2,8 +2,8 @@ package commands
 
 import (
 	"bytes"
-	"net/url"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"path/filepath"
 	"testing"
@@ -61,15 +61,16 @@ func TestMetadataDiffCmd(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	
+
 	// Create migration Dir
 	migrationsDir, err := ioutil.TempDir("", "")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(migrationsDir)
-	
+
 	metadataFile := filepath.Join(migrationsDir, "metadata.yaml")
+	mustWriteFile(t, "", metadataFile, testMetadata1)
 
 	logger, _ := test.NewNullLogger()
 	outputFile := new(bytes.Buffer)
@@ -95,24 +96,25 @@ func TestMetadataDiffCmd(t *testing.T) {
 	opts.EC.Version.SetServerVersion(v)
 
 	// Run without args
+	opts.metadata[0] = metadataFile
 	err = opts.run()
 	if err != nil {
 		t.Fatalf("failed diffing metadata: %v", err)
 	}
-
-	opts.metaDataFiles = [2]string{"testmetadata1.yaml", ""}
-	mustWriteFile(t, "", "testmetadata1.yaml", testMetadata1)
 
 	// Run with one arg
+	opts.metadata = [2]string{"testmetadata1.yaml", ""}
+	mustWriteFile(t, "", "testmetadata1.yaml", testMetadata1)
+
 	err = opts.run()
 	if err != nil {
 		t.Fatalf("failed diffing metadata: %v", err)
 	}
 
-	opts.metaDataFiles = [2]string{"testmetadata1.yaml", "testmetadata2.yaml"}
+	// Run with two args
+	opts.metadata = [2]string{"testmetadata1.yaml", "testmetadata2.yaml"}
 	mustWriteFile(t, "", "testmetadata2.yaml", testMetadata2)
 
-	// Run with two args
 	err = opts.run()
 	if err != nil {
 		t.Fatalf("failed diffing metadata: %v", err)
