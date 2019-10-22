@@ -20,7 +20,6 @@ renameRelP2
      , CacheRWM m
      , MonadIO m
      , HasHttpManager m
-     , HasSystemDefined m
      , HasSQLGenCtx m
      )
   => QualifiedTable -> RelName -> RelInfo -> m ()
@@ -47,7 +46,6 @@ runRenameRel
      , UserInfoM m
      , MonadIO m
      , HasHttpManager m
-     , HasSystemDefined m
      , HasSQLGenCtx m
      )
   => RenameRel -> m EncJSON
