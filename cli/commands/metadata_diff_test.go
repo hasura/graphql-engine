@@ -3,7 +3,9 @@ package commands
 import (
 	"bytes"
 	"net/url"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -54,90 +56,64 @@ tables:
   update_permissions: []
 `
 
-func testMetadataDiff(t *testing.T, metadataFile string, endpoint *url.URL) {
+func TestMetadataDiffCmd(t *testing.T) {
+	endpointURL, err := url.Parse(os.Getenv("HASURA_GRAPHQL_TEST_ENDPOINT"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	
+	// Create migration Dir
+	migrationsDir, err := ioutil.TempDir("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(migrationsDir)
+	
+	metadataFile := filepath.Join(migrationsDir, "metadata.yaml")
+
 	logger, _ := test.NewNullLogger()
 	outputFile := new(bytes.Buffer)
-	optsNoArgs := &metadataDiffOptions{
+	opts := &metadataDiffOptions{
 		EC: &cli.ExecutionContext{
 			Logger:       logger,
 			Spinner:      spinner.New(spinner.CharSets[7], 100*time.Millisecond),
 			MetadataFile: []string{metadataFile},
 			ServerConfig: &cli.ServerConfig{
-				Endpoint:       endpoint.String(),
+				Endpoint:       endpointURL.String(),
 				AdminSecret:    os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET"),
-				ParsedEndpoint: endpoint,
+				ParsedEndpoint: endpointURL,
 			},
 		},
 		output: outputFile,
 	}
 
-	optsNoArgs.EC.Version = version.New()
-	v, err := version.FetchServerVersion(optsNoArgs.EC.ServerConfig.Endpoint)
+	opts.EC.Version = version.New()
+	v, err := version.FetchServerVersion(opts.EC.ServerConfig.Endpoint)
 	if err != nil {
 		t.Fatalf("getting server version failed: %v", err)
 	}
-	optsNoArgs.EC.Version.SetServerVersion(v)
+	opts.EC.Version.SetServerVersion(v)
 
 	// Run without args
-	err = optsNoArgs.run()
+	err = opts.run()
 	if err != nil {
 		t.Fatalf("failed diffing metadata: %v", err)
 	}
 
-	optsOneArg := &metadataDiffOptions{
-		EC: &cli.ExecutionContext{
-			Logger:       logger,
-			Spinner:      spinner.New(spinner.CharSets[7], 100*time.Millisecond),
-			MetadataFile: []string{metadataFile},
-			ServerConfig: &cli.ServerConfig{
-				Endpoint:       endpoint.String(),
-				AdminSecret:    os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET"),
-				ParsedEndpoint: endpoint,
-			},
-		},
-		output: outputFile,
-		metaDataFiles: [2]string{"testmetadata1.yaml", ""},
-	}
+	opts.metaDataFiles = [2]string{"testmetadata1.yaml", ""}
 	mustWriteFile(t, "", "testmetadata1.yaml", testMetadata1)
 
-	optsOneArg.EC.Version = version.New()
-	v, err = version.FetchServerVersion(optsOneArg.EC.ServerConfig.Endpoint)
-	if err != nil {
-		t.Fatalf("getting server version failed: %v", err)
-	}
-	optsOneArg.EC.Version.SetServerVersion(v)
-
 	// Run with one arg
-	err = optsOneArg.run()
+	err = opts.run()
 	if err != nil {
 		t.Fatalf("failed diffing metadata: %v", err)
 	}
 
-	optsTwoArgs := &metadataDiffOptions{
-		EC: &cli.ExecutionContext{
-			Logger:       logger,
-			Spinner:      spinner.New(spinner.CharSets[7], 100*time.Millisecond),
-			MetadataFile: []string{metadataFile},
-			ServerConfig: &cli.ServerConfig{
-				Endpoint:       endpoint.String(),
-				AdminSecret:    os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET"),
-				ParsedEndpoint: endpoint,
-			},
-		},
-		output: outputFile,
-		metaDataFiles: [2]string{"testmetadata1.yaml", "testmetadata2.yaml"},
-	}
+	opts.metaDataFiles = [2]string{"testmetadata1.yaml", "testmetadata2.yaml"}
 	mustWriteFile(t, "", "testmetadata2.yaml", testMetadata2)
 
-	optsOneArg.EC.Version = version.New()
-	v, err = version.FetchServerVersion(optsOneArg.EC.ServerConfig.Endpoint)
-	if err != nil {
-		t.Fatalf("getting server version failed: %v", err)
-	}
-	optsOneArg.EC.Version.SetServerVersion(v)
-
 	// Run with two args
-	err = optsTwoArgs.run()
+	err = opts.run()
 	if err != nil {
 		t.Fatalf("failed diffing metadata: %v", err)
 	}
