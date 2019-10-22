@@ -20,7 +20,7 @@ import { loadInconsistentObjects } from '../Settings/Actions';
 import { filterInconsistentMetadataObjects } from '../Settings/utils';
 import globals from '../../../Globals';
 
-import { COMPUTED_COLUMNS_SUPPORT } from '../../../helpers/versionUtils';
+import { COMPUTED_FIELDS_SUPPORT } from '../../../helpers/versionUtils';
 
 import {
   fetchTrackedTableReferencedFkQuery,
@@ -61,7 +61,7 @@ const REQUEST_ERROR = 'ModifyTable/REQUEST_ERROR';
 
 const useCompositeFnsNewCheck =
   globals.featuresCompatibility &&
-  globals.featuresCompatibility[COMPUTED_COLUMNS_SUPPORT];
+  globals.featuresCompatibility[COMPUTED_FIELDS_SUPPORT];
 
 const compositeFnCheck = useCompositeFnsNewCheck
   ? 'c'

@@ -208,7 +208,7 @@ refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef threadType msg = d
     Left e  -> logError logger threadType $ TEQueryError e
     Right _ -> logInfo logger threadType $ object ["message" .= msg]
  where
-  runCtx = RunCtx adminUserInfo httpManager sqlGenCtx $ SystemDefined False
+  runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
   pgCtx = PGExecCtx pool PG.Serializable
 
 logInfo :: Logger -> ThreadType -> Value -> IO ()
