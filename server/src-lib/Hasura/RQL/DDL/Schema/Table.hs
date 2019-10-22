@@ -98,37 +98,21 @@ trackExistingTableOrViewP1 qt = do
   when (M.member qf $ scFunctions rawSchemaCache) $
     throw400 NotSupported $ "function with name " <> qt <<> " already exists"
 
-validateTableConfig
+validateCustomRootFields
   :: (QErrM m, CacheRM m)
-  => TableInfo PGRawColumnInfo -> TableConfig -> m ()
-validateTableConfig tableInfo (TableConfig customRootFlds customColumnNames) = do
-    withPathK "custom_root_fields" $ do
-      sc <- askSchemaCache
-      let defRemoteGCtx = scDefaultRemoteGCtx sc
-          GC.TableCustomRootFields sel selByPk selAgg ins upd del = customRootFlds
-          rootFldNames = catMaybes [sel, selByPk, selAgg, ins, upd, del]
-          duplicateRootFldNames = duplicates rootFldNames
+  => GC.TableCustomRootFields -> m ()
+validateCustomRootFields customRootFields = do
+  withPathK "custom_root_fields" $ do
+    sc <- askSchemaCache
+    let defRemoteGCtx = scDefaultRemoteGCtx sc
+        GC.TableCustomRootFields sel selByPk selAgg ins upd del = customRootFields
+        rootFldNames = catMaybes [sel, selByPk, selAgg, ins, upd, del]
+        duplicateRootFldNames = duplicates rootFldNames
 
-      when (not $ null duplicateRootFldNames) $ throw400 NotSupported $
-        "the following custom root field names are duplicated: " <> showNames duplicateRootFldNames
+    when (not $ null duplicateRootFldNames) $ throw400 NotSupported $
+      "the following custom root field names are duplicated: " <> showNames duplicateRootFldNames
 
-      forM_ rootFldNames $ GS.checkConflictingNode defRemoteGCtx
-
-    withPathK "custom_column_names" $ do
-      let fieldInfoMap = _tiFieldInfoMap tableInfo
-      -- Check all keys are valid columns
-      forM_ (M.keys customColumnNames) $ \col -> void $ askPGColInfo fieldInfoMap col ""
-      let columns = getCols fieldInfoMap
-          defaultNameMap = M.fromList $ flip map columns $
-            \col -> ( prciName col
-                    , G.Name $ getPGColTxt $ prciName col
-                    )
-          customNames = M.elems $ defaultNameMap `M.union` customColumnNames
-          conflictingCustomNames = duplicates customNames
-
-      when (not $ null conflictingCustomNames) $ throw400 NotSupported $
-        "the following custom column names are conflicting: " <> showNames conflictingCustomNames
-
+    forM_ rootFldNames $ GS.checkConflictingNode defRemoteGCtx
 
 trackExistingTableOrViewP2
   :: (CacheBuildM m) => QualifiedTable -> SystemDefined -> Bool -> TableConfig -> m EncJSON
@@ -136,6 +120,7 @@ trackExistingTableOrViewP2 tableName systemDefined isEnum config = do
   sc <- askSchemaCache
   let defGCtx = scDefaultRemoteGCtx sc
   GS.checkConflictingNode defGCtx $ GS.qualObjectToName tableName
+  validateCustomRootFields $ _tcCustomRootFields config
   saveTableToCatalog tableName systemDefined isEnum config
   buildSchemaCacheFor (MOTable tableName)
   return successMsg
@@ -186,7 +171,8 @@ runSetTableCustomFieldsQV2 :: (CacheBuildM m, UserInfoM m) => SetTableCustomFiel
 runSetTableCustomFieldsQV2 (SetTableCustomFields tableName rootFields columnNames) = do
   adminOnly
   fieldInfoMap <- _tiFieldInfoMap <$> askTabInfo tableName
-  validateWithNonColumnFields fieldInfoMap
+  withPathK "custom_root_fields" $ validateCustomRootFields rootFields
+  withPathK "custom_column_names" $ validateWithNonColumnFields fieldInfoMap
   let tableConfig = TableConfig rootFields columnNames
   updateTableConfig tableName tableConfig
   buildSchemaCacheFor (MOTable tableName)
@@ -431,8 +417,9 @@ buildTableCache = processTableCache <=< buildRawTableCache
               , _tiDescription = maybeDesc
               }
 
-        -- validate tableConfig
-        withPathK "configuration" $ validateTableConfig info config
+        -- validate custom column names with existing columns
+        withPathK "configuration" $
+          validateWithExistingColumns columnFields $ _tcCustomColumnNames config
         pure (name, info)
 
     -- Step 2: Process the raw table cache to replace Postgres column types with logical column
@@ -446,6 +433,23 @@ buildTableCache = processTableCache <=< buildRawTableCache
           processColumnInfo enumTables customFields tableName
       where
         enumTables = M.mapMaybe _tiEnumValues rawTables
+
+    validateWithExistingColumns :: FieldInfoMap PGRawColumnInfo -> CustomColumnNames -> m ()
+    validateWithExistingColumns columnFields customColumnNames = do
+      withPathK "custom_column_names" $ do
+        -- Check all keys are valid columns
+        forM_ (M.keys customColumnNames) $ \col -> void $ askPGColInfo columnFields col ""
+        let columns = getCols columnFields
+            defaultNameMap = M.fromList $ flip map columns $
+              \col -> ( prciName col
+                      , G.Name $ getPGColTxt $ prciName col
+                      )
+            customNames = M.elems $ defaultNameMap `M.union` customColumnNames
+            conflictingCustomNames = duplicates customNames
+
+        when (not $ null conflictingCustomNames) $ throw400 NotSupported $
+          "the following custom column names are conflicting: " <> showNames conflictingCustomNames
+
 
 
 -- | “Processes” a 'PGRawColumnInfo' into a 'PGColumnInfo' by resolving its type using a map of known

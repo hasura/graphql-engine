@@ -2,7 +2,7 @@ description: Set custom column names conflicting with existing relationship
 url: /v1/query
 status: 400
 response:
-  path: "$.args"
+  path: "$.args.custom_column_names"
   error: 'the following custom column names conflict with existing non-column fields:
     articles_aggregate, articles'
   code: not-supported
