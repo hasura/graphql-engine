@@ -45,6 +45,7 @@ import {
 } from '../../../Common/utils/pgUtils';
 import { SET_SQL } from '../RawSQL/Actions';
 import _push from '../push';
+import { isEmpty } from '../../../Common/utils/jsUtils';
 
 class Schema extends Component {
   constructor(props) {
@@ -518,6 +519,8 @@ class Schema extends Component {
     };
 
     const getUntrackedFunctionsSection = () => {
+      const noTrackableFunctions = isEmpty(trackableFuncs);
+
       const getTrackableFunctionsList = () => {
         const trackableFunctionList = [];
 
@@ -546,7 +549,7 @@ class Schema extends Component {
           );
         });
 
-        if (!trackableFuncs.length) {
+        if (noTrackableFunctions) {
           trackableFunctionList.push(
             <div key="no-untracked-fns">
               <div>There are no untracked functions</div>
@@ -567,7 +570,7 @@ class Schema extends Component {
 
       return (
         <div className={styles.add_mar_top} key={'custom-functions-content'}>
-          <CollapsibleToggle title={heading} isOpen>
+          <CollapsibleToggle title={heading} isOpen={!noTrackableFunctions}>
             <div className={`${styles.padd_left_remove} col-xs-12`}>
               {getTrackableFunctionsList()}
             </div>
