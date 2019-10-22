@@ -20,6 +20,7 @@ import           Hasura.RQL.DDL.Schema.Function     (RawFunctionInfo (..),
                                                      fetchRawFunctioInfo,
                                                      mkFunctionArgs)
 import           Hasura.RQL.Types
+import           Hasura.Server.Utils                (makeReasonMessage)
 import           Hasura.SQL.Types
 
 import           Data.Aeson
@@ -29,7 +30,6 @@ import           Language.Haskell.TH.Syntax         (Lift)
 
 import qualified Control.Monad.Validate             as MV
 import qualified Data.Sequence                      as Seq
-import qualified Data.Text                          as T
 import qualified Database.PG.Query                  as Q
 import qualified Language.GraphQL.Draft.Syntax      as G
 
@@ -206,12 +206,9 @@ addComputedFieldP2Setup table computedField definition rawFunctionInfo comment =
     showErrors :: [ComputedFieldValidateError] -> Text
     showErrors allErrors =
       "the computed field " <> computedField <<> " cannot be added to table "
-      <> table <<> reasonMessage
+      <> table <<> " " <> reasonMessage
       where
-        reasonMessage = case allErrors of
-          [singleError] -> " because " <> showError function singleError
-          _ -> " for the following reasons: \n" <> T.unlines
-               (map (("  • " <>) . showError function) allErrors)
+        reasonMessage = makeReasonMessage allErrors (showError function)
 
 addComputedFieldToCatalog
   :: MonadTx m

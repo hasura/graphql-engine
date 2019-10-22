@@ -8,6 +8,7 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.Utils          (showNames)
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import           Hasura.Server.Utils           (makeReasonMessage)
 import           Hasura.SQL.Types
 
 import           Data.Aeson
@@ -138,11 +139,8 @@ mkFunctionInfo qf systemDefined config rawFuncInfo = do
             pure $ SessionArgument argName index
 
     showErrors allErrors =
-      let reasonMessage = case allErrors of
-            [singleError] -> "because " <> showOneError singleError
-            _ -> "for the following reasons:\n" <> T.unlines
-              (map (("  • " <>) . showOneError) allErrors)
-      in "the function " <> qf <<> " cannot be tracked " <> reasonMessage
+      "the function " <> qf <<> " cannot be tracked "
+      <> makeReasonMessage allErrors showOneError
 
     showOneError = \case
       FunctionVariadic -> "function with \"VARIADIC\" parameters are not supported"
