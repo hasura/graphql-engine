@@ -127,20 +127,21 @@ validateTableConfig tableInfo (TableConfig rootFlds colFlds) = do
   where
     duplicateNames = duplicates $ M.elems colFlds
 
-trackExistingTableOrViewP2 :: (CacheBuildM m) => QualifiedTable -> Bool -> TableConfig -> m EncJSON
-trackExistingTableOrViewP2 tableName isEnum config = do
+trackExistingTableOrViewP2
+  :: (CacheBuildM m) => QualifiedTable -> SystemDefined -> Bool -> TableConfig -> m EncJSON
+trackExistingTableOrViewP2 tableName systemDefined isEnum config = do
   sc <- askSchemaCache
   let defGCtx = scDefaultRemoteGCtx sc
   GS.checkConflictingNode defGCtx $ GS.qualObjectToName tableName
-  systemDefined <- askSystemDefined
   saveTableToCatalog tableName systemDefined isEnum config
   buildSchemaCacheFor (MOTable tableName)
   return successMsg
 
-runTrackTableQ :: (CacheBuildM m, UserInfoM m) => TrackTable -> m EncJSON
+runTrackTableQ :: (CacheBuildM m, UserInfoM m, HasSystemDefined m) => TrackTable -> m EncJSON
 runTrackTableQ (TrackTable qt isEnum) = do
   trackExistingTableOrViewP1 qt
-  trackExistingTableOrViewP2 qt isEnum emptyTableConfig
+  systemDefined <- askSystemDefined
+  trackExistingTableOrViewP2 qt systemDefined isEnum emptyTableConfig
 
 data TrackTableV2
   = TrackTableV2
@@ -149,10 +150,11 @@ data TrackTableV2
   } deriving (Show, Eq, Lift)
 $(deriveJSON (aesonDrop 4 snakeCase) ''TrackTableV2)
 
-runTrackTableV2Q :: (CacheBuildM m, UserInfoM m) => TrackTableV2 -> m EncJSON
+runTrackTableV2Q :: (CacheBuildM m, UserInfoM m, HasSystemDefined m) => TrackTableV2 -> m EncJSON
 runTrackTableV2Q (TrackTableV2 (TrackTable qt isEnum) config) = do
   trackExistingTableOrViewP1 qt
-  trackExistingTableOrViewP2 qt isEnum config
+  systemDefined <- askSystemDefined
+  trackExistingTableOrViewP2 qt systemDefined isEnum config
 
 runSetExistingTableIsEnumQ :: (CacheBuildM m, UserInfoM m) => SetTableIsEnum -> m EncJSON
 runSetExistingTableIsEnumQ (SetTableIsEnum tableName isEnum) = do
@@ -257,12 +259,16 @@ processTableChanges ti tableDiff = do
         renameTableInCatalog newTN tn
         return True
 
+  -- Process computed field diff
+  processComputedFieldDiff tn
   -- Drop custom column names for dropped columns
   customColumnNames <- possiblyDropCustomColumnNames tn
   maybe (withOldTabName customColumnNames) (withNewTabName customColumnNames) mNewName
 
   where
-    TableDiff mNewName droppedCols addedCols alteredCols _ constraints descM = tableDiff
+    TableDiff mNewName droppedCols addedCols alteredCols _
+              computedColDiff constraints descM = tableDiff
+
     replaceConstraints tn = flip modTableInCache tn $ \tInfo ->
       return $ tInfo {_tiUniqOrPrimConstraints = constraints}
 
@@ -330,6 +336,24 @@ processTableChanges ti tableDiff = do
 
            | otherwise -> performColumnUpdate $> False
 
+    processComputedFieldDiff table  = do
+      let ComputedFieldDiff _ altered overloaded = computedColDiff
+          getFunction = fmFunction . ccmFunctionMeta
+          getFunctionDescription = fmDescription . ccmFunctionMeta
+      forM_ overloaded $ \(columnName, function) ->
+        throw400 NotSupported $ "The function " <> function
+        <<> " associated with computed field" <> columnName
+        <<> " of table " <> table <<> " is being overloaded"
+      forM_ altered $ \(old, new) ->
+        if | (fmType . ccmFunctionMeta) new == FTVOLATILE ->
+             throw400 NotSupported $ "The type of function " <> getFunction old
+             <<> " associated with computed field " <> ccmName old
+             <<> " of table " <> table <<> " is being altered to \"VOLATILE\""
+           | getFunctionDescription old /= getFunctionDescription new ->
+             updateComputedFieldFunctionDescription table (ccmName old)
+               (getFunctionDescription new)
+           | otherwise -> pure ()
+
 delTableAndDirectDeps
   :: (QErrM m, CacheRWM m, MonadTx m) => QualifiedTable -> m ()
 delTableAndDirectDeps qtn@(QualifiedObject sn tn) = do
@@ -345,6 +369,10 @@ delTableAndDirectDeps qtn@(QualifiedObject sn tn) = do
     Q.unitQ [Q.sql|
              DELETE FROM "hdb_catalog"."event_triggers"
              WHERE schema_name = $1 AND table_name = $2
+              |] (sn, tn) False
+    Q.unitQ [Q.sql|
+             DELETE FROM "hdb_catalog"."hdb_computed_field"
+             WHERE table_schema = $1 AND table_name = $2
               |] (sn, tn) False
   deleteTableFromCatalog qtn
   delTableFromCache qtn

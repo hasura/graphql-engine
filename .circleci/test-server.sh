@@ -218,6 +218,9 @@ run_pytest_parallel() {
 	fi
 }
 
+echo -e "\n$(time_elapsed): <########## RUN GRAPHQL-ENGINE HASKELL TESTS ###########################################>\n"
+"${GRAPHQL_ENGINE_TESTS:?}"
+
 echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITHOUT ADMIN SECRET ###########################################>\n"
 TEST_TYPE="no-auth"
 
@@ -412,6 +415,15 @@ wait_for_port 8080
 
 pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-metadata-disabled test_apis_disabled.py
 
+kill_hge_servers
+
+echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE QUERY CACHING #####################################>\n"
+TEST_TYPE="query-caching"
+
+# use only one capability to disable cache striping
+run_hge_with_args +RTS -N1 -RTS serve
+wait_for_port 8080
+pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" test_graphql_queries.py::TestGraphQLQueryCaching
 kill_hge_servers
 
 # verbose logging tests

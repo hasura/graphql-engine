@@ -4,6 +4,7 @@ import { showNotification } from '../../App/Actions';
 import Button from '../../Common/Button/Button';
 
 import './Notification/NotificationOverrides.css';
+import { isString } from '../../Common/utils/jsUtils';
 
 const styles = require('./Notification/Notification.scss');
 
@@ -51,6 +52,8 @@ const showErrorNotification = (title, message, error) => {
         } else {
           notificationMessage = error.message;
         }
+      } else if (error && error.message && isString(error.message)) {
+        notificationMessage = error.message;
       } else if (error && error.message && 'code' in error.message) {
         notificationMessage = error.message.code + ' : ' + message;
       } else {
@@ -103,7 +106,7 @@ const showErrorNotification = (title, message, error) => {
       errorJson = error.action;
     } else if (error && 'internal' in error) {
       errorJson = error.internal;
-    } else if (error && 'message' in error) {
+    } else if (error && 'message' in error && !isString(error.message)) {
       errorJson = error.message;
     }
 
