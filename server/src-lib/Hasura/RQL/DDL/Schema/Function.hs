@@ -77,15 +77,15 @@ data FunctionIntegrityError
   deriving (Show, Eq)
 
 mkFunctionInfo
-  :: (QErrM m, HasSystemDefined m)
+  :: (QErrM m)
   => QualifiedFunction
+  -> SystemDefined
   -> FunctionConfig
   -> RawFunctionInfo
   -> m (FunctionInfo, SchemaDependency)
-mkFunctionInfo qf config rawFuncInfo = do
-  systemDefined <- askSystemDefined
+mkFunctionInfo qf systemDefined config rawFuncInfo = do
   either (throw400 NotSupported . showErrors) pure
-    =<< MV.runValidateT (validateFunction systemDefined)
+    =<< MV.runValidateT validateFunction
   where
     functionArgs = mkFunctionArgs defArgsNo inpArgTyps inpArgNames
     RawFunctionInfo hasVariadic funTy retSn retN retTyTyp retSet
@@ -95,7 +95,7 @@ mkFunctionInfo qf config rawFuncInfo = do
 
     throwValidateError = MV.dispute . pure
 
-    validateFunction systemDefined = do
+    validateFunction = do
       -- throw error if function has variadic arguments
       when hasVariadic $ throwValidateError FunctionVariadic
       -- throw error if return type is not composite type
@@ -202,10 +202,11 @@ trackFunctionP1 qf = do
   when (M.member qt $ scTables rawSchemaCache) $
     throw400 NotSupported $ "table with name " <> qf <<> " already exists"
 
-trackFunctionP2Setup :: (QErrM m, CacheRWM m, HasSystemDefined m, MonadTx m)
-                     => QualifiedFunction -> FunctionConfig -> RawFunctionInfo -> m ()
-trackFunctionP2Setup qf config rawfi = do
-  (fi, dep) <- mkFunctionInfo qf config rawfi
+trackFunctionP2Setup
+  :: (QErrM m, CacheRWM m, MonadTx m)
+  => QualifiedFunction -> SystemDefined -> FunctionConfig -> RawFunctionInfo -> m ()
+trackFunctionP2Setup qf systemDefined config rawfi = do
+  (fi, dep) <- mkFunctionInfo qf systemDefined config rawfi
   let retTable = fiReturnType fi
       err = err400 NotExists $ "table " <> retTable <<> " is not tracked"
   sc <- askSchemaCache
@@ -226,8 +227,8 @@ trackFunctionP2 qf config = do
 
   -- fetch function info
   rawfi <- fetchRawFunctioInfo qf
-  trackFunctionP2Setup qf config rawfi
   systemDefined <- askSystemDefined
+  trackFunctionP2Setup qf systemDefined config rawfi
   liftTx $ saveFunctionToCatalog qf config systemDefined
   return successMsg
 

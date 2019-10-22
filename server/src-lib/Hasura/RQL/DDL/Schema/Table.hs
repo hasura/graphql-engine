@@ -127,20 +127,21 @@ validateTableConfig tableInfo (TableConfig rootFlds colFlds) = do
   where
     duplicateNames = duplicates $ M.elems colFlds
 
-trackExistingTableOrViewP2 :: (CacheBuildM m) => QualifiedTable -> Bool -> TableConfig -> m EncJSON
-trackExistingTableOrViewP2 tableName isEnum config = do
+trackExistingTableOrViewP2
+  :: (CacheBuildM m) => QualifiedTable -> SystemDefined -> Bool -> TableConfig -> m EncJSON
+trackExistingTableOrViewP2 tableName systemDefined isEnum config = do
   sc <- askSchemaCache
   let defGCtx = scDefaultRemoteGCtx sc
   GS.checkConflictingNode defGCtx $ GS.qualObjectToName tableName
-  systemDefined <- askSystemDefined
   saveTableToCatalog tableName systemDefined isEnum config
   buildSchemaCacheFor (MOTable tableName)
   return successMsg
 
-runTrackTableQ :: (CacheBuildM m, UserInfoM m) => TrackTable -> m EncJSON
+runTrackTableQ :: (CacheBuildM m, UserInfoM m, HasSystemDefined m) => TrackTable -> m EncJSON
 runTrackTableQ (TrackTable qt isEnum) = do
   trackExistingTableOrViewP1 qt
-  trackExistingTableOrViewP2 qt isEnum emptyTableConfig
+  systemDefined <- askSystemDefined
+  trackExistingTableOrViewP2 qt systemDefined isEnum emptyTableConfig
 
 data TrackTableV2
   = TrackTableV2
@@ -149,10 +150,11 @@ data TrackTableV2
   } deriving (Show, Eq, Lift)
 $(deriveJSON (aesonDrop 4 snakeCase) ''TrackTableV2)
 
-runTrackTableV2Q :: (CacheBuildM m, UserInfoM m) => TrackTableV2 -> m EncJSON
+runTrackTableV2Q :: (CacheBuildM m, UserInfoM m, HasSystemDefined m) => TrackTableV2 -> m EncJSON
 runTrackTableV2Q (TrackTableV2 (TrackTable qt isEnum) config) = do
   trackExistingTableOrViewP1 qt
-  trackExistingTableOrViewP2 qt isEnum config
+  systemDefined <- askSystemDefined
+  trackExistingTableOrViewP2 qt systemDefined isEnum config
 
 runSetExistingTableIsEnumQ :: (CacheBuildM m, UserInfoM m) => SetTableIsEnum -> m EncJSON
 runSetExistingTableIsEnumQ (SetTableIsEnum tableName isEnum) = do

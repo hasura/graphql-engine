@@ -130,6 +130,7 @@ from
               'name', hf.function_name
             ),
             'configuration', hf.configuration,
+            'is_system_defined', hf.is_system_defined,
             'info', hf_agg.function_info
           ) as info
         from
