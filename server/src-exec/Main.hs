@@ -1,8 +1,5 @@
 module Main where
 
-import           Migrate                    (migrateCatalog)
-import           Ops
-
 import           Control.Monad.STM          (atomically)
 import           Data.Time.Clock            (getCurrentTime)
 import           Options.Applicative
@@ -18,19 +15,20 @@ import qualified Data.ByteString.Lazy.Char8 as BLC
 import qualified Data.Text                  as T
 import qualified Data.Time.Clock            as Clock
 import qualified Data.Yaml                  as Y
+import qualified Database.PG.Query          as Q
 import qualified Network.HTTP.Client        as HTTP
 import qualified Network.HTTP.Client.TLS    as HTTP
 import qualified Network.Wai.Handler.Warp   as Warp
 import qualified System.Posix.Signals       as Signals
 
 import           Hasura.Db
+import           Hasura.EncJSON
 import           Hasura.Events.Lib
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
-import           Hasura.RQL.Types           (SQLGenCtx (..), SchemaCache (..),
-                                             SystemDefined (..), adminUserInfo,
-                                             emptySchemaCache)
+import           Hasura.RQL.DDL.Schema
+import           Hasura.RQL.Types
 import           Hasura.Server.App          (HasuraApp (..),
                                              SchemaCacheRef (..), getSCFromRef,
                                              logInconsObjs, mkWaiApp)
@@ -38,12 +36,12 @@ import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates (checkForUpdates)
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
+import           Hasura.Server.Migrate      (dropCatalog, migrateCatalog)
 import           Hasura.Server.Query        (RunCtx (..), peelRun)
+import           Hasura.Server.Query
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
 import           Hasura.Server.Version      (currentVersion)
-
-import qualified Database.PG.Query          as Q
 
 printErrExit :: forall a . String -> IO a
 printErrExit = (>> exitFailure) . putStrLn
@@ -206,7 +204,7 @@ main =  do
     HCClean -> do
       (_, _, pgLogger) <- mkLoggers defaultEnabledLogTypes LevelInfo
       ci <- procConnInfo rci
-      res <- runTx' pgLogger ci cleanCatalog
+      res <- runTx' pgLogger ci dropCatalog
       either printErrJExit (const cleanSuccess) res
 
     HCExecute -> do
@@ -215,7 +213,9 @@ main =  do
       ci <- procConnInfo rci
       let sqlGenCtx = SQLGenCtx False
       pool <- getMinimalPool pgLogger ci
-      res <- runAsAdmin pool sqlGenCtx httpManager $ execQuery queryBs
+      res <- execQuery queryBs
+        & runHasSystemDefinedT (SystemDefined False)
+        & runAsAdmin pool sqlGenCtx httpManager
       either printErrJExit BLC.putStrLn res
 
     HCVersion -> putStrLn $ "Hasura GraphQL Engine: " ++ T.unpack currentVersion
@@ -235,8 +235,8 @@ main =  do
       runExceptT $ Q.runTx pool (Q.Serializable, Nothing) tx
 
     runAsAdmin pool sqlGenCtx httpManager m = do
-      res  <- runExceptT $ peelRun emptySchemaCache
-       (RunCtx adminUserInfo httpManager sqlGenCtx $ SystemDefined True)
+      res <- runExceptT $ peelRun emptySchemaCache
+       (RunCtx adminUserInfo httpManager sqlGenCtx)
        (PGExecCtx pool Q.Serializable) m
       return $ fmap fst res
 
@@ -250,11 +250,6 @@ main =  do
 
     initialise pool sqlGenCtx (Logger logger) httpMgr = do
       currentTime <- getCurrentTime
-      -- initialise the catalog
-      initRes <- runAsAdmin pool sqlGenCtx httpMgr $
-                 initCatalogSafe currentTime
-      either printErrJExit (logger . mkGenericStrLog LevelInfo "db_init") initRes
-
       -- migrate catalog if necessary
       migRes <- runAsAdmin pool sqlGenCtx httpMgr $ migrateCatalog currentTime
       either printErrJExit logger migRes
@@ -267,6 +262,13 @@ main =  do
       logger $ mkGenericStrLog LevelInfo "event_triggers" "preparing data"
       res <- runTx pool unlockAllEvents
       either printErrJExit return res
+
+    execQuery queryBs = do
+      query <- case A.decode queryBs of
+        Just jVal -> decodeValue jVal
+        Nothing   -> throw400 InvalidJSON "invalid json"
+      buildSchemaCacheStrict
+      encJToLBS <$> runQueryM query
 
     getFromEnv :: (Read a) => a -> String -> IO a
     getFromEnv defaults env = do

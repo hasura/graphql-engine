@@ -65,8 +65,8 @@ validateFuncArgs args =
     invalidArgs = filter (not . G.isValidName) $ map G.Name funcArgsText
 
 mkFunctionInfo
-  :: (QErrM m, HasSystemDefined m) => QualifiedFunction -> RawFunctionInfo -> m FunctionInfo
-mkFunctionInfo qf rawFuncInfo = do
+  :: (QErrM m) => QualifiedFunction -> SystemDefined -> RawFunctionInfo -> m FunctionInfo
+mkFunctionInfo qf systemDefined rawFuncInfo = do
   -- throw error if function has variadic arguments
   when hasVariadic $ throw400 NotSupported "function with \"VARIADIC\" parameters are not supported"
   -- throw error if return type is not composite type
@@ -81,7 +81,6 @@ mkFunctionInfo qf rawFuncInfo = do
   let funcArgs = mkFunctionArgs defArgsNo inpArgTyps inpArgNames
   validateFuncArgs funcArgs
 
-  systemDefined <- askSystemDefined
   let funcArgsSeq = Seq.fromList funcArgs
       dep = SchemaDependency (SOTable retTable) DRTable
       retTable = typeToTable returnType
@@ -125,10 +124,10 @@ trackFunctionP1 (TrackFunction qf) = do
   when (M.member qt $ scTables rawSchemaCache) $
     throw400 NotSupported $ "table with name " <> qf <<> " already exists"
 
-trackFunctionP2Setup :: (QErrM m, CacheRWM m, HasSystemDefined m, MonadTx m)
-                     => QualifiedFunction -> RawFunctionInfo -> m ()
-trackFunctionP2Setup qf rawfi = do
-  fi <- mkFunctionInfo qf rawfi
+trackFunctionP2Setup :: (QErrM m, CacheRWM m, MonadTx m)
+                     => QualifiedFunction -> SystemDefined -> RawFunctionInfo -> m ()
+trackFunctionP2Setup qf systemDefined rawfi = do
+  fi <- mkFunctionInfo qf systemDefined rawfi
   let retTable = fiReturnType fi
       err = err400 NotExists $ "table " <> retTable <<> " is not tracked"
   sc <- askSchemaCache
@@ -149,8 +148,8 @@ trackFunctionP2 qf = do
 
   -- fetch function info
   rawfi <- fetchRawFunctioInfo qf
-  trackFunctionP2Setup qf rawfi
   systemDefined <- askSystemDefined
+  trackFunctionP2Setup qf systemDefined rawfi
   liftTx $ saveFunctionToCatalog qf systemDefined
   return successMsg
 
