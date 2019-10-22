@@ -233,6 +233,9 @@ class TestAddRemoteSchemaTbls:
     def test_remote_mutation(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/simple2_mutation.yaml')
 
+    def test_heterogeneous_mutations(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/heterogeneous_mutations.yaml')
+
     def test_add_conflicting_table(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f(self.dir + '/create_conflicting_table.yaml')
         assert st_code == 400
