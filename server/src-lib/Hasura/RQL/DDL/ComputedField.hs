@@ -5,6 +5,7 @@ module Hasura.RQL.DDL.ComputedField
   ( AddComputedField(..)
   , ComputedFieldDefinition(..)
   , runAddComputedField
+  , addComputedFieldP2
   , addComputedFieldP2Setup
   , DropComputedField
   , dropComputedFieldFromCatalog

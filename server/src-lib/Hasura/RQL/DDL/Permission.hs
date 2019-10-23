@@ -220,11 +220,10 @@ instance FromJSON SelPerm where
 
 buildSelPermInfo
   :: (QErrM m, CacheRM m)
-  => RoleName
-  -> TableInfo PGColumnInfo
+  => TableInfo PGColumnInfo
   -> SelPerm
   -> m (WithDeps SelPermInfo)
-buildSelPermInfo role tabInfo sp = do
+buildSelPermInfo tabInfo sp = do
   let pgCols     = convColSpec fieldInfoMap $ spColumns sp
 
   (be, beDeps) <- withPathK "filter" $
@@ -236,16 +235,7 @@ buildSelPermInfo role tabInfo sp = do
 
   -- validate computed fields
   withPathK "computed_fields" $ indexedForM_ computedFields $ \name -> do
-    computedFieldInfo <- askComputedFieldInfo fieldInfoMap name
-    case _cfiReturnType computedFieldInfo of
-      CFRScalar _ -> pure ()
-      CFRSetofTable returnTable -> do
-        returnTableInfo <- askTabInfo returnTable
-        let function = _cffName $ _cfiFunction $ computedFieldInfo
-            errModifier e = "computed field " <> name <<> " executes function "
-                             <> function <<> " which returns set of table "
-                             <> returnTable <<> "; " <> e
-        void $ modifyErr errModifier $ askPermInfo returnTableInfo role PASelect
+    void $ askComputedFieldInfo fieldInfoMap name
 
   let deps = mkParentDep tn : beDeps ++ map (mkColDep DRUntyped tn) pgCols
              ++ map (mkComputedFieldDep DRUntyped tn) computedFields
@@ -283,8 +273,8 @@ instance IsPerm SelPerm where
 
   permAccessor = PASelect
 
-  buildPermInfo ti (PermDef rn a _) =
-    buildSelPermInfo rn ti a
+  buildPermInfo ti (PermDef _ a _) =
+    buildSelPermInfo ti a
 
   buildDropPermP1Res =
     void . dropPermP1

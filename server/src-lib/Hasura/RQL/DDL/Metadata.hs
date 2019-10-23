@@ -41,7 +41,7 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query                  as Q
-import qualified Hasura.RQL.DDL.ComputedField       as DCC
+import qualified Hasura.RQL.DDL.ComputedField       as DCF
 import qualified Hasura.RQL.DDL.EventTrigger        as DE
 import qualified Hasura.RQL.DDL.Permission          as DP
 import qualified Hasura.RQL.DDL.Permission.Internal as DP
@@ -52,6 +52,13 @@ import qualified Hasura.RQL.DDL.Schema              as DS
 import qualified Hasura.RQL.Types.EventTrigger      as DTS
 import qualified Hasura.RQL.Types.RemoteSchema      as TRS
 
+data ComputedFieldMeta
+  = ComputedFieldMeta
+  { _cfmName       :: !ComputedFieldName
+  , _cfmDefinition :: !DCF.ComputedFieldDefinition
+  , _cfmComment    :: !(Maybe Text)
+  } deriving (Show, Eq, Lift)
+$(deriveJSON (aesonDrop 4 snakeCase) ''ComputedFieldMeta)
 
 data TableMeta
   = TableMeta
@@ -65,11 +72,12 @@ data TableMeta
   , _tmUpdatePermissions   :: ![DP.UpdPermDef]
   , _tmDeletePermissions   :: ![DP.DelPermDef]
   , _tmEventTriggers       :: ![DTS.EventTriggerConf]
+  , _tmComputedFields      :: ![ComputedFieldMeta]
   } deriving (Show, Eq, Lift)
 
 mkTableMeta :: QualifiedTable -> Bool -> TableConfig -> TableMeta
 mkTableMeta qt isEnum config =
-  TableMeta qt isEnum config [] [] [] [] [] [] []
+  TableMeta qt isEnum config [] [] [] [] [] [] [] []
 
 makeLenses ''TableMeta
 
@@ -90,6 +98,7 @@ instance FromJSON TableMeta where
      <*> o .:? upKey .!= []
      <*> o .:? dpKey .!= []
      <*> o .:? etKey .!= []
+     <*> o .:? cfKey .!= []
 
     where
       tableKey = "table"
@@ -102,6 +111,7 @@ instance FromJSON TableMeta where
       upKey = "update_permissions"
       dpKey = "delete_permissions"
       etKey = "event_triggers"
+      cfKey = "computed_fields"
 
       unexpectedKeys =
         HS.fromList (M.keys o) `HS.difference` expectedKeySet
@@ -109,6 +119,7 @@ instance FromJSON TableMeta where
       expectedKeySet =
         HS.fromList [ tableKey, isEnumKey, configKey, orKey
                     , arKey , ipKey, spKey, upKey, dpKey, etKey
+                    , cfKey
                     ]
 
   parseJSON _ =
@@ -130,6 +141,7 @@ clearMetadata = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "DELETE FROM hdb_catalog.hdb_permission WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_relationship WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.event_triggers" () False
+  Q.unitQ "DELETE FROM hdb_catalog.hdb_computed_field" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_table WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.remote_schemas" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_allowlist" () False
@@ -176,6 +188,7 @@ applyQP1 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = 
           updPerms = map DP.pdRole $ table ^. tmUpdatePermissions
           delPerms = map DP.pdRole $ table ^. tmDeletePermissions
           eventTriggers = map DTS.etcName $ table ^. tmEventTriggers
+          computedFields = map _cfmName $ table ^. tmComputedFields
 
       checkMultipleDecls "relationships" allRels
       checkMultipleDecls "insert permissions" insPerms
@@ -183,6 +196,7 @@ applyQP1 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = 
       checkMultipleDecls "update permissions" updPerms
       checkMultipleDecls "delete permissions" delPerms
       checkMultipleDecls "event triggers" eventTriggers
+      checkMultipleDecls "computed fields" computedFields
 
   withPathK "functions" $
     checkMultipleDecls "functions" functions
@@ -237,14 +251,20 @@ applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = 
           config = tableMeta ^. tmConfiguration
       void $ DS.trackExistingTableOrViewP2 tableName systemDefined isEnum config
 
-    -- Relationships
     indexedForM_ tables $ \table -> do
+      -- Relationships
       withPathK "object_relationships" $
         indexedForM_ (table ^. tmObjectRelationships) $ \objRel ->
         DR.objRelP2 (table ^. tmTable) objRel
       withPathK "array_relationships" $
         indexedForM_ (table ^. tmArrayRelationships) $ \arrRel ->
         DR.arrRelP2 (table ^. tmTable) arrRel
+      -- Computed Fields
+      withPathK "computed_fields" $
+        indexedForM_ (table ^. tmComputedFields) $
+          \(ComputedFieldMeta name definition comment) ->
+            void $ DCF.addComputedFieldP2 $
+              DCF.AddComputedField (table ^. tmTable) name definition comment
 
     -- Permissions
     indexedForM_ tables $ \table -> do
@@ -346,6 +366,9 @@ fetchMetadata = do
   eventTriggers <- Q.catchE defaultTxErrorHandler fetchEventTriggers
   triggerMetaDefs <- mkTriggerMetaDefs eventTriggers
 
+  -- Fetch all computed fields
+  computedFields <- fetchComputedFields
+
   let (_, postRelMap) = flip runState tableMetaMap $ do
         modMetaMap tmObjectRelationships objRelDefs
         modMetaMap tmArrayRelationships arrRelDefs
@@ -354,6 +377,7 @@ fetchMetadata = do
         modMetaMap tmUpdatePermissions updPermDefs
         modMetaMap tmDeletePermissions delPermDefs
         modMetaMap tmEventTriggers triggerMetaDefs
+        modMetaMap tmComputedFields computedFields
 
   -- fetch all functions
   functions <- map (uncurry QualifiedObject) <$>
@@ -437,6 +461,17 @@ fetchMetadata = do
               |] () False
       return $ flip map r $ \(name, Q.AltJ defn, mComment)
                             -> DQC.CreateCollection name defn mComment
+
+    fetchComputedFields = do
+      r <- Q.listQE defaultTxErrorHandler [Q.sql|
+              SELECT table_schema, table_name, computed_field_name,
+                     definition::json, comment
+                FROM hdb_catalog.hdb_computed_field
+             |] () False
+      pure $ flip map r $ \(schema, table, name, Q.AltJ definition, comment) ->
+                          ( QualifiedObject schema table
+                          , ComputedFieldMeta name definition comment
+                          )
 
 runExportMetadata
   :: (QErrM m, UserInfoM m, MonadTx m)
@@ -527,4 +562,4 @@ purgeMetadataObj = liftTx . \case
   (MOTableObj qt (MTORel rn _))           -> DR.delRelFromCatalog qt rn
   (MOTableObj qt (MTOPerm rn pt))         -> DP.dropPermFromCatalog qt rn pt
   (MOTableObj _ (MTOTrigger trn))         -> DE.delEventTriggerFromCatalog trn
-  (MOTableObj qt (MTOComputedField ccn)) -> DCC.dropComputedFieldFromCatalog qt ccn
+  (MOTableObj qt (MTOComputedField ccn))  -> DCF.dropComputedFieldFromCatalog qt ccn
