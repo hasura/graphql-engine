@@ -1,3 +1,5 @@
+.. _securing-graphql-endpoint:
+
 Securing the GraphQL endpoint
 =============================
 

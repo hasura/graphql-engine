@@ -30,10 +30,16 @@ import EnumsSection, {
 import ForeignKeyEditor from './ForeignKeyEditor';
 import UniqueKeyEditor from './UniqueKeyEditor';
 import TriggerEditorList from './TriggerEditorList';
+import CheckConstraints from './CheckConstraints';
 import styles from './ModifyTable.scss';
 import { NotFoundError } from '../../../Error/PageNotFound';
 
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import {
+  getTableCheckConstraints,
+  findTable,
+  generateTableDef,
+} from '../../../Common/utils/pgUtils';
 
 class ModifyTable extends React.Component {
   componentDidMount() {
@@ -50,7 +56,7 @@ class ModifyTable extends React.Component {
   render() {
     const {
       tableName,
-      allSchemas,
+      allTables,
       dispatch,
       migrationMode,
       currentSchema,
@@ -68,14 +74,17 @@ class ModifyTable extends React.Component {
 
     const dataTypeIndexMap = getAllDataTypeMap(dataTypes);
 
-    const tableSchema = allSchemas.find(
-      t => t.table_name === tableName && t.table_schema === currentSchema
+    const table = findTable(
+      allTables,
+      generateTableDef(tableName, currentSchema)
     );
-    if (!tableSchema) {
+
+    if (!table) {
       // throw a 404 exception
       throw new NotFoundError();
     }
-    const tableComment = tableSchema.comment;
+
+    const tableComment = table.comment;
 
     const untrackBtn = (
       <Button
@@ -105,7 +114,7 @@ class ModifyTable extends React.Component {
           const confirmMessage = `This will permanently delete the table "${tableName}" from the database`;
           const isOk = getConfirmation(confirmMessage, true, tableName);
           if (isOk) {
-            dispatch(deleteTableSql(tableName, tableSchema));
+            dispatch(deleteTableSql(tableName, table));
           }
         }}
         data-test="delete-table"
@@ -120,12 +129,12 @@ class ModifyTable extends React.Component {
         globals.featuresCompatibility[TABLE_ENUMS_SUPPORT];
       if (!supportEnums) return null;
 
-      const toggleEnum = () => dispatch(toggleTableAsEnum(tableSchema.is_enum));
+      const toggleEnum = () => dispatch(toggleTableAsEnum(table.is_enum));
 
       return (
         <React.Fragment>
           <EnumsSection
-            isEnum={tableSchema.is_enum}
+            isEnum={table.is_enum}
             toggleEnum={toggleEnum}
             loading={tableEnum.loading}
           />
@@ -134,12 +143,12 @@ class ModifyTable extends React.Component {
       );
     };
 
-    // if (tableSchema.primary_key.columns > 0) {}
+    // if (table.primary_key.columns > 0) {}
     return (
       <div className={`${styles.container} container-fluid`}>
         <TableHeader
           dispatch={dispatch}
-          table={tableSchema}
+          table={table}
           tabName="modify"
           migrationMode={migrationMode}
         />
@@ -158,12 +167,12 @@ class ModifyTable extends React.Component {
               isTable
               dispatch={dispatch}
             />
-            <EnumTableModifyWarning isEnum={tableSchema.is_enum} />
+            <EnumTableModifyWarning isEnum={table.is_enum} />
             <h4 className={styles.subheading_text}>Columns</h4>
             <ColumnEditorList
               validTypeCasts={validTypeCasts}
               dataTypeIndexMap={dataTypeIndexMap}
-              tableSchema={tableSchema}
+              tableSchema={table}
               columnEdit={columnEdit}
               dispatch={dispatch}
               currentSchema={currentSchema}
@@ -181,7 +190,7 @@ class ModifyTable extends React.Component {
             <hr />
             <h4 className={styles.subheading_text}>Primary Key</h4>
             <PrimaryKeyEditor
-              tableSchema={tableSchema}
+              tableSchema={table}
               pkModify={pkModify}
               dispatch={dispatch}
               currentSchema={currentSchema}
@@ -189,9 +198,9 @@ class ModifyTable extends React.Component {
             <hr />
             <h4 className={styles.subheading_text}>Foreign Keys</h4>
             <ForeignKeyEditor
-              tableSchema={tableSchema}
+              tableSchema={table}
               currentSchema={currentSchema}
-              allSchemas={allSchemas}
+              allSchemas={allTables}
               schemaList={schemaList}
               dispatch={dispatch}
               fkModify={fkModify}
@@ -199,16 +208,22 @@ class ModifyTable extends React.Component {
             <hr />
             <h4 className={styles.subheading_text}>Unique Keys</h4>
             <UniqueKeyEditor
-              tableSchema={tableSchema}
+              tableSchema={table}
               currentSchema={currentSchema}
-              allSchemas={allSchemas}
+              allSchemas={allTables}
               dispatch={dispatch}
               uniqueKeys={uniqueKeyModify}
               setUniqueKeys={setUniqueKeys}
             />
             <hr />
             <h4 className={styles.subheading_text}>Triggers</h4>
-            <TriggerEditorList tableSchema={tableSchema} dispatch={dispatch} />
+            <TriggerEditorList tableSchema={table} dispatch={dispatch} />
+            <hr />
+            <h4 className={styles.subheading_text}>Check Constraints</h4>
+            <CheckConstraints
+              constraints={getTableCheckConstraints(table)}
+              dispatch={dispatch}
+            />
             <hr />
             {getEnumsSection()}
             {untrackBtn}
@@ -225,7 +240,7 @@ class ModifyTable extends React.Component {
 ModifyTable.propTypes = {
   tableName: PropTypes.string.isRequired,
   currentSchema: PropTypes.string.isRequired,
-  allSchemas: PropTypes.array.isRequired,
+  allTables: PropTypes.array.isRequired,
   migrationMode: PropTypes.bool.isRequired,
   activeEdit: PropTypes.object.isRequired,
   fkAdd: PropTypes.object.isRequired,
@@ -243,7 +258,7 @@ ModifyTable.propTypes = {
 
 const mapStateToProps = (state, ownProps) => ({
   tableName: ownProps.params.table,
-  allSchemas: state.tables.allSchemas,
+  allTables: state.tables.allSchemas,
   migrationMode: state.main.migrationMode,
   serverVersion: state.main.serverVersion,
   currentSchema: state.tables.currentSchema,

@@ -43,12 +43,12 @@ Create a Google Cloud SQL Postgres instance
 -------------------------------------------
 
 Create a Cloud SQL Postgres instance called ``hasura-postgres`` in the
-``asia-south1`` region.
+``us-west2`` region.
 
 .. code-block:: bash
 
    gcloud sql instances create hasura-postgres --database-version POSTGRES_9_6 \
-          --cpu 1 --memory 3840MiB --region asia-south1 --project hasura
+          --cpu 1 --memory 3840MiB --region us-west2 --project hasura
 
 Once the instance is created, set a password for the default ``postgres`` user.
 Make sure you substitute ``[PASSWORD]`` with a strong password.
@@ -71,11 +71,11 @@ that, you will need a billing account added to the project to enable the API.
    https://console.cloud.google.com/apis/api/container.googleapis.com/overview?project=hasura
 
 Once the API is enabled, create a new Kubernetes cluster called ``hasura-k8s``
-in the ``asia-south1-a`` zone with 1 node.
+in the ``us-west2-a`` zone with 1 node.
 
 .. code-block:: bash
 
-   gcloud container clusters create hasura-k8s --zone asia-south1-a \
+   gcloud container clusters create hasura-k8s --zone us-west2-a \
           --num-nodes 1 --project hasura
 
 Set up Cloud SQL Proxy Credentials
@@ -133,7 +133,7 @@ down.
           --format="value(connectionName)" --project hasura
 
 Edit ``deployment.yaml`` and replace ``[INSTANCE_CONNECTION_NAME]`` with this
-value. It should look like ``hasura:asia-south1:hasura-postgres`` if you've
+value. It should look like ``hasura:us-west2:hasura-postgres`` if you've
 followed this guide without modifying any names.
 
 Create the deployment:

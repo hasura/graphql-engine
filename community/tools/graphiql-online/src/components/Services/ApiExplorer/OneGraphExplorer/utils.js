@@ -1,4 +1,4 @@
-import GraphiQLExplorer from 'graphiql-explorer-hasura';
+import GraphiQLExplorer from 'graphiql-explorer';
 
 export const makeDefaultArg = () => {
   return false;

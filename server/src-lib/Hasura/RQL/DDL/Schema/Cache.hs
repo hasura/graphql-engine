@@ -33,6 +33,7 @@ import qualified Hasura.GraphQL.Schema              as GS
 
 import           Hasura.Db
 import           Hasura.GraphQL.RemoteServer
+import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Permission
@@ -49,7 +50,8 @@ import           Hasura.RQL.Types.Catalog
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.SQL.Types
 
-type CacheBuildM m = (CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
+type CacheBuildM m
+  = (CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
 
 buildSchemaCache :: (CacheBuildM m) => m ()
 buildSchemaCache = buildSchemaCacheWithOptions True
@@ -68,6 +70,7 @@ buildSchemaCacheWithOptions withSetup = do
   -- fetch all catalog metadata
   CatalogMetadata tables relationships permissions
     eventTriggers remoteSchemas functions fkeys' allowlistDefs
+    computedFields
     <- liftTx fetchCatalogData
 
   let fkeys = HS.fromList fkeys'
@@ -120,18 +123,30 @@ buildSchemaCacheWithOptions withSetup = do
         mkAllTriggersQ trn qt allCols (stringifyNum sqlGenCtx) (etcDefinition etc)
 
   -- sql functions
-  forM_ functions $ \(CatalogFunction qf rawfiM) -> do
+  forM_ functions $ \(CatalogFunction qf systemDefined funcDefs) -> do
     let def = toJSON $ TrackFunction qf
         mkInconsObj =
           InconsistentMetadataObj (MOFunction qf) MOTFunction def
     modifyErr (\e -> "function " <> qf <<> "; " <> e) $
       withSchemaObject_ mkInconsObj $ do
-      rawfi <- onNothing rawfiM $
-        throw400 NotExists $ "no such function exists in postgres : " <>> qf
-      trackFunctionP2Setup qf rawfi
+      rawfi <- handleMultipleFunctions qf funcDefs
+      trackFunctionP2Setup qf systemDefined rawfi
 
   -- allow list
   replaceAllowlist $ concatMap _cdQueries allowlistDefs
+
+  -- computedFields
+  forM_ computedFields $ \(CatalogComputedField column funcDefs) -> do
+    let AddComputedField qt name def comment = column
+        qf = _cfdFunction def
+        mkInconsObj =
+          InconsistentMetadataObj (MOTableObj qt $ MTOComputedField name)
+          MOTComputedField $ toJSON column
+    modifyErr (\e -> "computed field " <> name <<> "; " <> e) $
+      withSchemaObject_ mkInconsObj $ do
+      rawfi <- handleMultipleFunctions qf funcDefs
+      addComputedFieldP2Setup qt name def rawfi comment
+
 
   -- build GraphQL context with tables and functions
   GS.buildGCtxMapPG
@@ -228,7 +243,7 @@ withMetadataCheck cascade action = do
       oldMeta = flip filter oldMetaU $ \tm -> tmTable tm `elem` existingTables
       schemaDiff = getSchemaDiff oldMeta newMeta
       existingFuncs = M.keys $ scFunctions sc
-      oldFuncMeta = flip filter oldFuncMetaU $ \fm -> funcFromMeta fm `elem` existingFuncs
+      oldFuncMeta = flip filter oldFuncMetaU $ \fm -> fmFunction fm `elem` existingFuncs
       FunctionDiff droppedFuncs alteredFuncs = getFuncDiff oldFuncMeta newFuncMeta
       overloadedFuncs = getOverloadedFuncs existingFuncs newFuncMeta
 
@@ -335,6 +350,10 @@ purgeDependentObject schemaObjId = case schemaObjId of
   (SOTableObj qt (TOTrigger trn)) -> do
     liftTx $ delEventTriggerFromCatalog trn
     delEventTriggerFromCache qt trn
+
+  (SOTableObj qt (TOComputedField ccn)) -> do
+    deleteComputedFieldFromCache qt ccn
+    dropComputedFieldFromCatalog qt ccn
 
   _ -> throw500 $
     "unexpected dependent object : " <> reportSchemaObj schemaObjId

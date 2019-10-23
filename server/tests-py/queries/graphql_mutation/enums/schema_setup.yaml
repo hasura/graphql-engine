@@ -20,9 +20,16 @@ args:
         , name text NOT NULL
         , favorite_color text NOT NULL REFERENCES colors );
 
+      CREATE TABLE posts
+        ( id serial PRIMARY KEY
+        , title text NOT NULL
+        , custom_color text REFERENCES colors );
+
 - type: track_table
   args:
     table: colors
     is_enum: true
 - type: track_table
   args: users
+- type: track_table
+  args: posts
