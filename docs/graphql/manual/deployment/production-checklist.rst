@@ -1,6 +1,6 @@
 .. _production-checklist:
 
-Production Checklist
+Production checklist
 ====================
 
 .. contents:: Table of contents
@@ -11,10 +11,10 @@ Production Checklist
 This guide is a checklist for configuring and securing GraphQL engine for a
 production deployment.
 
-Set Admin Secret
-----------------
+Set an admin secret
+-------------------
 
-Set an admin secret to protect the API from unauthrorized access. It is
+Set an admin secret to protect the API from unauthorized access. It is
 recommended to keep this as a long string.
 
 .. code-block:: bash
@@ -23,12 +23,17 @@ recommended to keep this as a long string.
    HASURA_GRAPHQL_ADMIN_SECRET=averylongpasswordstring
 
    # or use the flag
-   graphql-engine --database-url=<database-url> serve --admin-secret=<averylongpasswordstring>
+   graphql-engine --database-url=<database-url> serve --admin-secret=averylongpasswordstring
 
 More details can be found at :ref:`securing-graphql-endpoint`.
 
-Verify Permissions
+Verify permissions
 ------------------
+
+.. contents::
+  :backlinks: none
+  :depth: 1
+  :local:
 
 Review the summary
 ~~~~~~~~~~~~~~~~~~
@@ -37,9 +42,9 @@ Review the authorization/permission rules set on tables. You can make use of the
 permissions set across all tables and roles. Pay extra attention to roles like
 "anonymous" which allow unauthenticated access.
 
-.. image:: https://graphql-engine-cdn.hasura.io/img/schema_permissions_summary.png
-   :class: no-shadow                                                              
+.. thumbnail:: ../../../img/graphql/manual/deployment/schema_permissions_summary.png
    :alt: Hasura console - Schema permissions summary
+   :width: 75%
 
 Limit number of rows returned
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -69,21 +74,20 @@ By setting the above flag or env var, we are disabling the ``metadata``,
 ``pg_dump`` and ``config`` APIs. ``health`` and ``version`` APIs are public and
 cannot be disabled.
 
-Read more at :ref:`api-reference`.
+Read more about all the API types at the :ref:`API reference <api-reference>`.
 
 .. note::
 
    If you're using ``cli-migrations`` image, prior to ``v1.0.0-beta.8``, setting
    enabled APIs to only ``graphql`` can cause the migration apply step to fail.
    Please update to the latest version if you're facing this issue.
-   ``graphql`` can cause the mi
 
 
-Disable Console
+Disable console
 ---------------
 
 It is recommended that you disable the console on production deployments. Also,
-when you disable Metadata APIs, console will stop working.
+when you disable the metadata API, console will stop working.
 
 .. code-block:: bash
 
@@ -98,21 +102,21 @@ when you disable Metadata APIs, console will stop working.
    You can still use the CLI to open a console connected to this instance.
    (Provided ``metadata`` APIs are not disabled).
 
-Set up an Allow List
+Set up an allow-list
 --------------------
 
-An allow-list can be set up to restrict what kind of queries can be made against
+An allow-list can be set up to restrict what kind of requests can be made against
 this particular instance. If your API is meant to serve a frontend client, you
-can only allow those queries used by the client to pass through. Every other
-query will be rejected without even getting validated.
+can only allow those requests used by the client to pass through. Every other
+request will be rejected without even getting validated.
 
 Read more at :ref:`allow-list`.
 
-Restrict CORS Domains
+Restrict CORS domains
 ---------------------
 
-By default, all cross-origin requests are allowed by Hasura. You should restrict
-it to the domains which you trust.
+By default, all cross-origin requests are allowed by Hasura GraphQL engine. You should restrict
+them to the domains which you trust.
 
 .. code-block:: bash
 
@@ -127,20 +131,21 @@ You can read more about this setting at :ref:`configure-cors`.
 Enable HTTPS
 ------------
 
-A detailed guide is available at :ref:`enable-https`.
+Production APIs should be served over HTTPS to be secure over the network.
 
-Configure Logging
+See :ref:`enable-https` for details on achieving this.
+
+Configure logging
 -----------------
 
-
-The :ref:`guide on logs <hge_logs>` describes different log types Hasura uses.
+The :ref:`logs guide <hge_logs>` describes different log types and log levels Hasura GraphQL engine uses.
 You can configure the GraphQL engine to enable/disable certain log-types using
 the the ``--enabled-log-types`` flag or the ``HASURA_GRAPHQL_ENABLED_LOG_TYPES``
 env var.
 
 If you are collecting your logs using an agent and you're interested in
 capturing the request logs along with the SQL that is generated, you should
-enable ``query-log`` (it is not enabled by default).
+enable ``query-log`` *(it is not enabled by default)*.
 
 .. code-block:: bash
 

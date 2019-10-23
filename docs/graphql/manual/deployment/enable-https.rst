@@ -3,13 +3,28 @@
 Enable HTTPS
 ============
 
-Hasura does not handle SSL/TLS for your API. That means, Hasura cannot serve
-your API on a HTTPS URL and you should use a reverse proxy (like Nginx, Caddy,
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 2
+  :local:
+
+Setting up HTTPS
+----------------
+
+Hasura GraphQL engine does not handle SSL/TLS for your API. That means, Hasura GraphQL engine cannot serve
+your API on an HTTPS URL.
+
+You should use a reverse proxy (like Nginx, Caddy,
 Kong, Traefik etc.) or the cloud provider's native load balancer SSL
 termination features to secure your API.
 
+Sample configurations
+---------------------
+
+Here are a few sample configurations for some popular proxies:
+
 `Nginx <https://nginx.org/en/docs/>`__
---------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Here is a sample ``nginx.conf`` to proxy requests to Hasura:
 
@@ -35,7 +50,7 @@ To serve Hasura with a URL prefix instead of a separate subdomain, use
 ``location /hasura/`` or similar.
 
 `Caddy <https://caddyserver.com/>`__
-------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Here is a sample ``Caddyfile`` to proxy requests to Hasura:
 
