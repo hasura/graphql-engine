@@ -194,7 +194,7 @@ parseOperationsExpression rhsParser fim columnInfo =
           castOperations <- parseVal
           parsedCastOperations <-
             forM (M.toList castOperations) $ \(targetTypeName, castedComparisons) -> do
-              let targetType = txtToPgColTy targetTypeName
+              let targetType = textToPGScalarType targetTypeName
                   castedColumn = ColumnReferenceCast column (PGColumnScalar targetType)
               checkValidCast targetType
               parsedCastedComparisons <- withPathK targetTypeName $
@@ -311,6 +311,8 @@ annColExp rhsParser colInfoMap (ColExp fieldName colVal) = do
       annRelBoolExp   <- annBoolExp rhsParser relFieldInfoMap $
                          unBoolExp relBoolExp
       return $ AVRel relInfo annRelBoolExp
+    FIComputedField _ ->
+      throw400 UnexpectedPayload "Computed columns can not be part of the where clause"
 
 toSQLBoolExp
   :: S.Qual -> AnnBoolExpSQL -> S.BoolExp
@@ -326,8 +328,8 @@ convColRhs
   :: S.Qual -> AnnBoolExpFldSQL -> State Word64 S.BoolExp
 convColRhs tableQual = \case
   AVCol colInfo opExps -> do
-    let cn = pgiColumn colInfo
-        bExps = map (mkColCompExp tableQual cn) opExps
+    let colFld = fromPGCol $ pgiColumn colInfo
+        bExps = map (mkFieldCompExp tableQual colFld) opExps
     return $ foldr (S.BEBin S.AndOp) (S.BELit True) bExps
 
   AVRel (RelInfo _ _ colMapping relTN _) nesAnn -> do
@@ -370,11 +372,12 @@ foldBoolExp f = \case
   BoolExists existsExp -> foldExists existsExp
   BoolFld ce           -> f ce
 
-mkColCompExp
-  :: S.Qual -> PGCol -> OpExpG S.SQLExp -> S.BoolExp
-mkColCompExp qual lhsCol = mkCompExp (mkQCol lhsCol)
+mkFieldCompExp
+  :: S.Qual -> FieldName -> OpExpG S.SQLExp -> S.BoolExp
+mkFieldCompExp qual lhsField = mkCompExp (mkQField lhsField)
   where
     mkQCol = S.SEQIden . S.QIden qual . toIden
+    mkQField = S.SEQIden . S.QIden qual . Iden . getFieldNameTxt
 
     mkCompExp :: S.SQLExp -> OpExpG S.SQLExp -> S.BoolExp
     mkCompExp lhs = \case

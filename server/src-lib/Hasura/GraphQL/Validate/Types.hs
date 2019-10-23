@@ -62,6 +62,16 @@ module Hasura.GraphQL.Validate.Types
 
   , ReusableVariableTypes(..)
   , ReusableVariableValues
+
+  , QueryReusability(..)
+  , _Reusable
+  , _NotReusable
+  , MonadReusability(..)
+  , ReusabilityT
+  , runReusabilityT
+  , runReusabilityTWith
+  , evalReusabilityT
+
   , module Hasura.GraphQL.Utils
   ) where
 
@@ -77,6 +87,8 @@ import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Language.GraphQL.Draft.TH     as G
 import qualified Language.Haskell.TH.Syntax    as TH
+
+import           Control.Lens                  (makePrisms)
 
 import qualified Hasura.RQL.Types.Column       as RQL
 
@@ -371,7 +383,7 @@ fromScalarTyDef (G.ScalarTypeDefinition descM n _) loc =
       "Float"   -> return PGFloat
       "String"  -> return PGText
       "Boolean" -> return PGBoolean
-      _         -> return $ txtToPgColTy $ G.unName n
+      _         -> return $ textToPGScalarType $ G.unName n
 
 data TypeInfo
   = TIScalar !ScalarTyInfo
@@ -750,8 +762,64 @@ stripTypenames = map filterExecDef
       _                  -> Just s
 
 -- | Used by 'Hasura.GraphQL.Validate.validateVariablesForReuse' to parse new sets of variables for
--- reusable query plans; see also 'Hasura.GraphQL.Resolve.Types.QueryReusability'.
+-- reusable query plans; see also 'QueryReusability'.
 newtype ReusableVariableTypes
   = ReusableVariableTypes { unReusableVarTypes :: Map.HashMap G.Variable RQL.PGColumnType }
   deriving (Show, Eq, Semigroup, Monoid, J.ToJSON)
 type ReusableVariableValues = Map.HashMap G.Variable (WithScalarType PGScalarValue)
+
+-- | Tracks whether or not a query is /reusable/. Reusable queries are nice, since we can cache
+-- their resolved ASTs and avoid re-resolving them if we receive an identical query. However, we
+-- can’t always safely reuse queries if they have variables, since some variable values can affect
+-- the generated SQL. For example, consider the following query:
+--
+-- > query users_where($condition: users_bool_exp!) {
+-- >   users(where: $condition) {
+-- >     id
+-- >   }
+-- > }
+--
+-- Different values for @$condition@ will produce completely different queries, so we can’t reuse
+-- its plan (unless the variable values were also all identical, of course, but we don’t bother
+-- caching those).
+--
+-- If a query does turn out to be reusable, we build up a 'ReusableVariableTypes' value that maps
+-- variable names to their types so that we can use a fast path for validating new sets of
+-- variables (namely 'Hasura.GraphQL.Validate.validateVariablesForReuse').
+data QueryReusability
+  = Reusable !ReusableVariableTypes
+  | NotReusable
+  deriving (Show, Eq)
+$(makePrisms ''QueryReusability)
+
+instance Semigroup QueryReusability where
+  Reusable a <> Reusable b = Reusable (a <> b)
+  _          <> _          = NotReusable
+instance Monoid QueryReusability where
+  mempty = Reusable mempty
+
+class (Monad m) => MonadReusability m where
+  recordVariableUse :: G.Variable -> RQL.PGColumnType -> m ()
+  markNotReusable :: m ()
+
+instance (MonadReusability m) => MonadReusability (ReaderT r m) where
+  recordVariableUse a b = lift $ recordVariableUse a b
+  markNotReusable = lift markNotReusable
+
+newtype ReusabilityT m a = ReusabilityT { unReusabilityT :: StateT QueryReusability m a }
+  deriving (Functor, Applicative, Monad, MonadError e, MonadReader r)
+
+instance (Monad m) => MonadReusability (ReusabilityT m) where
+  recordVariableUse varName varType = ReusabilityT $
+    modify' (<> Reusable (ReusableVariableTypes $ Map.singleton varName varType))
+  markNotReusable = ReusabilityT $ put NotReusable
+
+runReusabilityT :: ReusabilityT m a -> m (a, QueryReusability)
+runReusabilityT = runReusabilityTWith mempty
+
+-- | Like 'runReusabilityT', but starting from an existing 'QueryReusability' state.
+runReusabilityTWith :: QueryReusability -> ReusabilityT m a -> m (a, QueryReusability)
+runReusabilityTWith initialReusability = flip runStateT initialReusability . unReusabilityT
+
+evalReusabilityT :: (Monad m) => ReusabilityT m a -> m a
+evalReusabilityT = flip evalStateT mempty . unReusabilityT

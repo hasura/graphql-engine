@@ -11,7 +11,7 @@ log() {
 DEFAULT_MIGRATIONS_DIR="/hasura-migrations"
 TEMP_MIGRATIONS_DIR="/tmp/hasura-migrations"
 
-# check server port and ser default as 8080
+# check server port and set default as 8080
 if [ -z ${HASURA_GRAPHQL_SERVER_PORT+x} ]; then
     log "port env var is not set, defaulting to 8080"
     HASURA_GRAPHQL_SERVER_PORT=8080
@@ -35,8 +35,8 @@ wait_for_port() {
 
 log "starting graphql engine temporarily on port $HASURA_GRAPHQL_SERVER_PORT"
 
-# start graphql engine
-graphql-engine serve &
+# start graphql engine with metadata api enabled
+graphql-engine serve --enabled-apis="metadata" &
 # store the pid to kill it later
 PID=$!
 
