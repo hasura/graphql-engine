@@ -5,6 +5,7 @@ import NameEditor from '../Common/UIComponents/NameEditor';
 import WebhookEditor from '../Common/UIComponents/WebhookEditor';
 import ArgumentEditorList from '../Common/UIComponents/ArgumentEditorList';
 import OutputTypesEditor from '../Common/UIComponents/OutputTypesEditor';
+import TypeEditorList from '../Common/UIComponents/TypeEditorList';
 import Button from '../../../Common/Button';
 import {
   setActionName,
@@ -13,6 +14,7 @@ import {
   setActionOutputType,
   setTypes,
 } from './reducer';
+import { defaultScalars } from '../Common/utils';
 
 const AddAction = ({
   name,
@@ -24,13 +26,32 @@ const AddAction = ({
 }) => {
   const nameOnChange = e => dispatch(setActionName(e.target.value));
   const webhookOnChange = e => dispatch(setActionWebhook(e.target.value));
-  const setArguments = a => dispatch(setActionArguments(a));
   const outputTypeOnChange = e => dispatch(setActionOutputType(e.target.value));
-  const setActionTypes = t => dispatch(setTypes(t));
+  const setArguments = a => {
+    const newArgs = [...a];
+    const lastArg = newArgs[newArgs.length - 1];
+    if (lastArg.name && lastArg.type) {
+      newArgs.push({ name: '', type: '', description: '' });
+    }
+    dispatch(setActionArguments(newArgs));
+  };
+  const setActionTypes = t => {
+    const newTypes = [...t];
+    const lastType = newTypes[newTypes.length - 1];
+    if (lastType.name && lastType.kind) {
+      newTypes.push({ name: '', kind: '' });
+    }
+    dispatch(setTypes(newTypes));
+  };
 
   const onSubmit = e => {
     e.preventDefault();
   };
+
+  const typeList = [
+    ...defaultScalars,
+    ...types.filter(t => !!t.name).map(t => t.name),
+  ].sort();
 
   return (
     <div>
@@ -42,6 +63,7 @@ const AddAction = ({
           onChange={nameOnChange}
           placeholder="action name"
           className={styles.add_mar_bottom_mid}
+          service="create-action"
         />
         <hr />
         <WebhookEditor
@@ -49,23 +71,31 @@ const AddAction = ({
           onChange={webhookOnChange}
           placeholder="action webhook"
           className={styles.add_mar_bottom_mid}
+          service="create-action"
+        />
+        <hr />
+        <TypeEditorList
+          types={types}
+          allTypes={typeList}
+          setTypes={setActionTypes}
+          className={styles.add_mar_bottom_mid}
+          service="create-action"
         />
         <hr />
         <ArgumentEditorList
           className={styles.add_mar_bottom_mid}
           args={args}
           setArguments={setArguments}
-          types={types}
-          setTypes={setActionTypes}
+          allTypes={typeList}
           service="create-action"
         />
         <hr />
         <OutputTypesEditor
           className={styles.add_mar_bottom_mid}
           value={outputType}
-          types={types}
-          setTypes={setActionTypes}
+          allTypes={typeList}
           onChange={outputTypeOnChange}
+          service="create-action"
         />
         <hr />
         <Button color="yellow" size="sm">

@@ -8,10 +8,9 @@ const editorTooltip = 'These will be the arguments of the mutation';
 
 const ArgumentsEditorList = ({
   className,
-  types,
+  allTypes,
   args,
   setArguments,
-  setTypes,
   service,
 }) => {
   return (
@@ -31,17 +30,13 @@ const ArgumentsEditorList = ({
         const setArgument = arg => {
           const newArguments = JSON.parse(JSON.stringify(args));
           newArguments[i] = arg;
-          if (isLast && !!arg.name && !!arg.type) {
-            newArguments.push({ name: '', type: '', description: '' });
-          }
           setArguments(newArguments);
         };
         return (
           <ArgumentEditor
             argument={a}
             setArgument={setArgument}
-            types={types}
-            setTypes={setTypes}
+            allTypes={allTypes}
             isLast={isLast}
             index={i}
             service={service}

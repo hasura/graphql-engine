@@ -185,7 +185,7 @@ const handleInconsistentObjects = inconsistentObjects => {
     const allSchemas = getState().tables.allSchemas;
     const functions = getState().tables.trackedFunctions;
     const remoteSchemas = getState().remoteSchemas.listData.remoteSchemas;
-    const actions = getState().actions.listData.actions;
+    const actions = getState().actions.list.actions;
 
     dispatch({
       type: LOAD_INCONSISTENT_OBJECTS,
@@ -654,7 +654,7 @@ export const metadataReducer = (state = defaultState, action) => {
         ...state,
         allowedQueries: [
           ...state.allowedQueries.map(q =>
-            (q.name === action.data.queryName ? action.data.newQuery : q)
+            q.name === action.data.queryName ? action.data.newQuery : q
           ),
         ],
       };

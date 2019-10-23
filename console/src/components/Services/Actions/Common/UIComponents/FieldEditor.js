@@ -1,37 +1,32 @@
 import React from 'react';
 import styles from './Styles.scss';
 
-const ArgumentInput = ({ argument, setArgument, allTypes }) => {
-  const { name, type, description } = argument;
+const FieldEditor = ({ field, setField, allTypes }) => {
+  const { name, type } = field;
 
   const nameOnChange = e => {
-    setArgument({
-      ...argument,
+    setField({
+      ...field,
       name: e.target.value,
     });
   };
+
   const typeOnChange = e => {
-    setArgument({
-      ...argument,
+    setField({
+      ...field,
       type: e.target.value,
-    });
-  };
-  const descriptionOnChange = e => {
-    setArgument({
-      ...argument,
-      description: e.target.value,
     });
   };
 
   const noTypes = allTypes.length === 0;
 
   return (
-    <div className={`${styles.display_flex}`}>
+    <div className={`${styles.display_flex} ${styles.add_mar_bottom_mid}`}>
       <input
         type="text"
         value={name}
         onChange={nameOnChange}
-        placeholder="argument name"
+        placeholder="field name"
         className={`form-control ${styles.inputWidth} ${
           styles.add_mar_right_small
         }`}
@@ -58,17 +53,8 @@ const ArgumentInput = ({ argument, setArgument, allTypes }) => {
           );
         })}
       </select>
-      <input
-        type="text"
-        value={description}
-        onChange={descriptionOnChange}
-        placeholder="description"
-        className={`form-control ${styles.inputWidth} ${
-          styles.add_mar_right_small
-        }`}
-      />
     </div>
   );
 };
 
-export default ArgumentInput;
+export default FieldEditor;
