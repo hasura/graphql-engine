@@ -7,7 +7,14 @@ const editorLabel = 'Custom Types';
 const editorTooltip =
   'You can define GraphQL types for your mutation arguments and mutation returning type';
 
-const Types = ({ types, setTypes, className, argTypes, fieldTypes }) => {
+const Types = ({
+  types,
+  setTypes,
+  className,
+  argTypes,
+  fieldTypes,
+  service,
+}) => {
   return (
     <div className={`${className || ''}`}>
       <h2
@@ -34,6 +41,8 @@ const Types = ({ types, setTypes, className, argTypes, fieldTypes }) => {
             isLast={isLast}
             argTypes={argTypes}
             fieldTypes={fieldTypes}
+            service={service}
+            index={i}
           />
         );
       })}

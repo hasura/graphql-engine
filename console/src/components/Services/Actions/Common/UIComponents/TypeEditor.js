@@ -6,10 +6,10 @@ const TypeEditor = ({
   type,
   setType,
   isLast,
-  property,
   service,
   argTypes,
   fieldTypes,
+  index,
 }) => {
   const editorExpanded = () => {
     return (
@@ -45,7 +45,7 @@ const TypeEditor = ({
       editorExpanded={editorExpanded}
       collapsedLabel={collapsedLabel}
       saveFunc={saveFunc}
-      property={property}
+      property={`type-editor-${index}`}
       service={service}
       expandButtonText={expandButtonText}
       collapseButtonText={collapseButtonText}

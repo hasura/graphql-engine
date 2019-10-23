@@ -115,7 +115,6 @@ const AddAction = ({
           size="sm"
           type="submit"
           onClick={() => {
-            console.log('here');
             onSubmit();
           }}
         >
