@@ -11,8 +11,8 @@ Production Checklist
 This guide is a checklist for configuring and securing GraphQL engine for a
 production deployment.
 
-Admin Secret
-------------
+Set Admin Secret
+----------------
 
 Set an admin secret to protect the API from unauthrorized access. It is
 recommended to keep this as a long string.
@@ -27,8 +27,8 @@ recommended to keep this as a long string.
 
 More details can be found at :ref:`securing-graphql-endpoint`.
 
-Permissions
------------
+Verify Permissions
+------------------
 
 Review the summary
 ~~~~~~~~~~~~~~~~~~
@@ -98,8 +98,8 @@ when you disable Metadata APIs, console will stop working.
    You can still use the CLI to open a console connected to this instance.
    (Provided ``metadata`` APIs are not disabled).
 
-Allow List
-----------
+Set up an Allow List
+--------------------
 
 An allow-list can be set up to restrict what kind of queries can be made against
 this particular instance. If your API is meant to serve a frontend client, you
@@ -108,8 +108,8 @@ query will be rejected without even getting validated.
 
 Read more at :ref:`allow-list`.
 
-CORS Domains
-------------
+Restrict CORS Domains
+---------------------
 
 By default, all cross-origin requests are allowed by Hasura. You should restrict
 it to the domains which you trust.
@@ -127,62 +127,10 @@ You can read more about this setting at :ref:`configure-cors`.
 Enable HTTPS
 ------------
 
-Hasura does not handle SSL/TLS for your API. That means, Hasura cannot serve
-your API on a HTTPS URL and you should use a reverse proxy (like Nginx, Caddy,
-Kong, Traefik etc.) or the cloud provider's native load balancer SSL
-termination features to secure your API.
+A detailed guide is available at :ref:`enable-https`.
 
-`Nginx <https://nginx.org/en/docs/>`__
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Here is a sample ``nginx.conf`` to proxy requests to Hasura:
-
-.. code-block:: nginx
-
-   server {
-     listen 80;
-     server_name hasura.my-domain.com;
-
-     location / {
-       proxy_pass http://localhost:8080/;
-       proxy_http_version 1.1;
-       proxy_set_header Upgrade $http_upgrade;
-       proxy_set_header Connection "upgrade";
-     }
-   }
-
-Please note that setting up SSL is not covered in this guide. You can find more
-information at `Nginx docs
-<https://nginx.org/en/docs/http/configuring_https_servers.html>`__.
-
-To serve Hasura with a URL prefix instead of a separate subdomain, use
-``location /hasura/`` or similar.
-
-`Caddy <https://caddyserver.com/>`__
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Here is a sample ``Caddyfile`` to proxy requests to Hasura:
-
-.. code-block:: bash
-
-   hasura.my-domain.com {
-     proxy / http://localhost:8080
-     websocket
-   }
-
-Caddy has SSL provisioning built-in with Let's Encrypt. You can find the docs at
-`Caddy website <https://caddyserver.com/docs/automatic-https>`__.
-   
-In order to serve at a URL prefix, use the following configuration:
-
-.. code-block:: bash
-
-   my-domain.com {
-     proxy /hasura http://localhost:8080
-     websocket
-     without /hasura
-   }
-
-Logging
--------
+Configure Logging
+-----------------
 
 
 The :ref:`guide on logs <hge_logs>` describes different log types Hasura uses.
