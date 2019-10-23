@@ -43,9 +43,9 @@ Leia mais em [hasura.io](https://hasura.io) e a [documentação](https://docs.ha
 **Conteúdo**
 
 - [Primeiros passos:](#quickstart)
-    - [Deploy no Heroku em um clique](#one-click-deployment-on-heroku)
-    - [Other deployment methods](#other-deployment-methods)
-- [Architecture](#architecture)
+    - [Deploy no Heroku em um único clique](#one-click-deployment-on-heroku)
+    - [Outros métodos de deploy](#other-deployment-methods)
+- [Arquitetura](#architecture)
 - [Client-side tooling](#client-side-tooling)
 - [Add business logic](#add-business-logic)
     - [Remote schemas](#remote-schemas)
@@ -63,122 +63,113 @@ Leia mais em [hasura.io](https://hasura.io) e a [documentação](https://docs.ha
 
 ## Primeiros passos:
 
-### Deploy no Heroku em um clique
+### Deploy no Heroku em um único clique
 
 A maneira mais rápida de experimentar o Hasura é via Heroku.
 
-1. Click on the following button to deploy GraphQL Engine on Heroku with the free Postgres add-on:
+1. Clique no botão abaixo para implantar o GraphQL Engine no Heroku com o add-on gratuito do Postgres:
 
-    [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
+    [![Deploy no Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
 
-2. Open the Hasura console
+2. Abra o Hasura console
 
-   Visit `https://<app-name>.herokuapp.com` (*replace \<app-name\> with your app name*) to open the admin console.
+   Visite `https://<app-name>.herokuapp.com` (*substitua \<app-name\> pelo nome do seu aplicativo*) para abrir o console de administrador.
 
-3. Make your first GraphQL query
+3. Faça sua primeira consulta em GraphQL
 
-   Create a table and instantly run your first query. Follow this [simple guide](https://docs.hasura.io/1.0/graphql/manual/getting-started/first-graphql-query.html).
+   Crie sua tabela e logo em seguida executa sua primeira consulta. Acompanhe este [guia simples](https://docs.hasura.io/1.0/graphql/manual/getting-started/first-graphql-query.html).
 
-### Other one-click deployment options
+### Outras opções de deploy em um único clique
 
 Check out the instructions for the following one-click deployment options:
 
-| **Infra provider** | **One-click link** | **Additional information** |
+| **Provedor da Nuvem** | **Link único-clique** | **Informação Adicional** |
 |:------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------:|
 | DigitalOcean | [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme) | [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
 | Azure | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html) |
 
-### Other deployment methods
+### Outros métodos de deploy
 
-For Docker-based deployment and advanced configuration options, see [deployment
-guides](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) or
-[install manifests](install-manifests).
+Para métodos de implantação baseados no Docker e opções avançadas de configuração, consulte [guias de deploy](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) ou
+[manifestos de instalação](install-manifests).
 
-## Architecture
+## Arquitetura
 
-The Hasura GraphQL Engine fronts a Postgres database instance and can accept GraphQL requests from your client apps. It can be configured to work with your existing auth system and can handle access control using field-level rules with dynamic variables from your auth system.
+O Hasura GraphQL Engine está localizado na frente de um banco de dados Postgres e pode aceitar consultas GraphQL de seus aplicativos clientes. Ele pode ser configurado para funcionar com seu sistema de autenticação existente e pode lidar com o controle de acesso em nível de campo por meio de regras, com variáveis dinâmicas provenientes do sistema de autenticação.
 
-You can also merge remote GraphQL schemas and provide a unified GraphQL API.
+Você também pode mergear esquemas remotos do GraphQL e fornecer uma API GraphQL unificada.
 
 ![Hasura GraphQL Engine architecture](assets/hasura-arch.svg)
 
-## Client-side tooling
+## Ferramentas de Client
 
-Hasura works with any GraphQL client. We recommend using [Apollo Client](https://github.com/apollographql/apollo-client). See [awesome-graphql](https://github.com/chentsulin/awesome-graphql) for a list of clients.
+Hasura funciona com qualquer GraphQL client. Nós recomendamos o uso do [Apollo Client](https://github.com/apollographql/apollo-client). Consulte [awesome-graphql](https://github.com/chentsulin/awesome-graphql) para uma lista de clients disponíveis.
 
-## Add business logic
+## Adicione a regra de negócio
 
-GraphQL Engine provides easy-to-reason, scalable and performant methods for adding custom business logic to your backend:
+O GraphQL Engine fornece várias maneiras claras, escaláveis e poderosas de adicionar sua própria regra de negócios ao seu back-end:
 
-### Remote schemas
+### Schemas remotos
 
-Add custom resolvers in a remote schema in addition to Hasura's Postgres-based GraphQL schema. Ideal for use-cases like implementing a payment API, or querying data that is not in your database - [read more](remote-schemas.md).
+Adicione resolvers personalizados em um esquema remoto, além do esquema GraphQL baseado em Postgres do Hasura. Ideal para casos de uso, como por exemplo implementar uma API de pagamento ou consultar dados que não estão no seu banco de dados - [leia mais](remote-schemas.md).
 
-### Trigger webhooks on database events
+### Acionar webhooks em eventos do banco de dados
 
-Add asynchronous business logic that is triggered based on database events.
-Ideal for notifications, data-pipelines from Postgres or asynchronous
-processing - [read more](event-triggers.md).
+Adicione lógica de negócios assíncrona acionada por eventos do banco de dados. Ideal para notificações, pipelines de dados Postgres ou processamento assíncrono - [leia mais](event-triggers.md).
 
-### Derived data or data transformations
+### Dados derivados ou transformações de dados
 
-Transform data in Postgres or run business logic on it to derive another dataset that can be queried using GraphQL Engine - [read more](https://docs.hasura.io/1.0/graphql/manual/queries/derived-data.html).
+Transforme os dados em Postgres ou execute a regra de negócios para obter outro conjunto de dados que possa ser consultado usando o GraphQL Engine- [leia mais](https://docs.hasura.io/1.0/graphql/manual/queries/derived-data.html).
 
 ## Demos
 
-Check out all the example applications in the
-[community/examples](community/examples) directory.
+Confira todos os exemplos da aplicação na pasta
+[community/examples](community/examples).
 
-### Realtime applications
+### Aplicações em tempo real
 
-- Group Chat application built with React, includes a typing indicator, online users & new
-  message notifications.
-  - [Try it out](https://realtime-chat.demo.hasura.app/)
+- Um aplicativo de mensagens em grupo desenvolvido com o React, incluindo um indicador de digitação, usuários conectados e notificações de novas mensagens.
+  - [Experimente](https://realtime-chat.demo.hasura.app/)
   - [Tutorial](community/sample-apps/realtime-chat)
-  - [Browse APIs](https://realtime-chat.demo.hasura.app/console)
+  - [Explorar APIs](https://realtime-chat.demo.hasura.app/console)
 
-- Live location tracking app that shows a running vehicle changing current GPS
-  coordinates moving on a map.
-  - [Try it out](https://realtime-location-tracking.demo.hasura.app/)
+- Aplicativo de localização em tempo real mostrando um veículo cujas coordenadas GPS estão se movendo em um mapa.
+  - [Experimente](https://realtime-location-tracking.demo.hasura.app/)
   - [Tutorial](community/sample-apps/realtime-location-tracking)
-  - [Browse APIs](https://realtime-location-tracking.demo.hasura.app/console)
+  - [Explorar APIs](https://realtime-location-tracking.demo.hasura.app/console)
 
-- A realtime dashboard for data aggregations on continuously changing data.
-  - [Try it out](https://realtime-poll.demo.hasura.app/)
+- Um dashboard em tempo real de dados em constante mudança.
+  - [Experimente](https://realtime-poll.demo.hasura.app/)
   - [Tutorial](community/sample-apps/realtime-poll)
-  - [Browse APIs](https://realtime-poll.demo.hasura.app/console)
+  - [Explorar APIs](https://realtime-poll.demo.hasura.app/console)
 
 ### Videos
 
-* [Add GraphQL to a self-hosted GitLab instance](https://www.youtube.com/watch?v=a2AhxKqd82Q) (*3:44 mins*)
-* [Todo app with Auth0 and GraphQL backend](https://www.youtube.com/watch?v=15ITBYnccgc) (*4:00 mins*)
-* [GraphQL on GitLab integrated with GitLab auth](https://www.youtube.com/watch?v=m1ChRhRLq7o) (*4:05 mins*)
-* [Dashboard for 10million rides with geo-location (PostGIS, Timescale)](https://www.youtube.com/watch?v=tsY573yyGWA) (*3:06 mins*)
+* [Adicione o GraphQL a uma instância auto-hospedada do GitLab](https://www.youtube.com/watch?v=a2AhxKqd82Q) (*3:44 mins*)
+* [Aplicativo de tarefas utilizando Auth0 e GraphQL backend](https://www.youtube.com/watch?v=15ITBYnccgc) (*4:00 mins*)
+* [API GraphQL no GitLab integrada à autenticação GitLab](https://www.youtube.com/watch?v=m1ChRhRLq7o) (*4:05 mins*)
+* [Dashboard de 10 milhões de trajetos utilizando geo-localização (PostGIS, Timescale)](https://www.youtube.com/watch?v=tsY573yyGWA) (*3:06 mins*)
 
 
-## Support & Troubleshooting
+## Suporte e solução de problemas
 
-The documentation and community will help you troubleshoot most issues. If you have encountered a bug or need to get in touch with us, you can contact us using one of the following channels:
+A documentação e a comunidade ajudarão você a resolver a maioria dos problemas. Se você encontrou um bug ou precisa entrar em contato, pode entrar em contato através dos seguintes canais:
 
-* Support & feedback: [Discord](https://discord.gg/vBPpJkS)
-* Issue & bug tracking: [GitHub issues](https://github.com/hasura/graphql-engine/issues)
-* Follow product updates: [@HasuraHQ](https://twitter.com/hasurahq)
-* Talk to us on our [website chat](https://hasura.io)
+* Suporte e feedback: [Discord](https://discord.gg/vBPpJkS)
+* Problemas e bugs: [GitHub issues](https://github.com/hasura/graphql-engine/issues)
+* Confira atualizações: [@HasuraHQ](https://twitter.com/hasurahq)
+* Fale conosco pelo [website chat](https://hasura.io)
 
-We are committed to fostering an open and welcoming environment in the community. Please see the [Code of Conduct](code-of-conduct.md).
+Estamos envolvidos no desenvolvimento de um ambiente aberto e acolhedor na comunidade. Por favor, consulte o [Código de Conduta](code-of-conduct.md).
 
-If you want to report a security issue, please [read this](SECURITY.md).
+Se você quer reportar um problema de segurança, por favor [leia aqui](SECURITY.md).
 
-## Contributing
+## Contribuindo
+Confira nosso [guia de contribuição](CONTRIBUTING.md) para mais detalhes.
 
-Check out our [contributing guide](CONTRIBUTING.md) for more details.
+## Elementos da marca
 
-## Brand assets
-
-Hasura brand assets (logos, the Hasura mascot, powered by badges etc.) can be
-found in the [assets/brand](assets/brand) folder. Feel free to use them in your
-application/website etc. We'd be thrilled if you add the "Powered by Hasura"
-badge to your applications built using Hasura. ❤️
+Os elementos da marca Hasura (logotipos, o mascote Hasura, emblemas "feito por" etc.) podem ser encontrados no diretório [assets/brand](assets/brand). Sinta-se à vontade para usá-los em seu aplicativo / site, etc. Ficaríamos felizes se você adicionar o selo "Powered by Hasura" ao seu aplicativo desenvolvido com o Hasura. ❤️
 
 <div style="display: flex;">
   <img src="assets/brand/powered_by_hasura_blue.svg" width="150px"/>
@@ -197,21 +188,9 @@ badge to your applications built using Hasura. ❤️
 </a>
 ```
 
-## License
+## Licença
 
-The core GraphQL Engine is available under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) (Apache-2.0).
+O core do GraphQL Engine está disponível sob a [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) (Apache-2.0).
 
-All **other contents** (except those in [`server`](server), [`cli`](cli) and
-[`console`](console) directories) are available under the [MIT License](LICENSE-community).
-This includes everything in the [`docs`](docs) and [`community`](community)
-directories.
-
-## Translations
-
-This readme is available in the following translations:
-
-- [Japanese :jp:](translations/README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
-- [French :fr:](translations/README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
-- [Greek 🇬🇷](translations/README.greek.md) (:pray: [@MIP2000](https://github.com/MIP2000))
-
-Translations for other files can be found [here](translations).
+Todos os **outros conteúdos** (exceto os diretórios [`server`](server), [`cli`](cli) e
+[`console`](console)) estão disponíveis sob licença [MIT License](LICENSE-community). Isso inclui todo o conteúdo dos [`docs`](docs) e [`community`](community).
