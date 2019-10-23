@@ -14,7 +14,12 @@ cd "$ROOT/assets/brand"
 
 README_CONTENT=$(cat <<EOF
 # Hasura Brand Assets
+#new comment
 
+
+
+
+#haha
 All assets are available on a Google Cloud Storage Bucket CDN at \`https://graphql-engine-cdn.hasura.io/img/<name>\`.
 
 *Note: some logos maybe invisible depending on the page background color.*
@@ -26,7 +31,7 @@ EOF
 
 for svg in *.svg; do
   if [[ "$svg" == *"white"* ]]; then
-    BG='style="background-color: black;"'
+    BG='style="background-color: blue;"'
   elif [[ "$svg" == *"black"* ]] || [[ "$svg" == *"blue"* ]]; then
     BG='style="background-color: white;"'
   else
@@ -38,7 +43,13 @@ $README_CONTENT
 EOF
 )"
 done
+#another comment
 
+#hello world
+
+
+
+#hi
 for svg in *.svg; do
   if [[ "$svg" == *"white"* ]] || [[ "$svg" == *"black"* ]] || [[ "$svg" == *"blue"* ]]; then
     continue
