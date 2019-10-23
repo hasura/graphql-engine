@@ -3,7 +3,7 @@ import styles from './Styles.scss';
 import ArgumentEditor from './ArgumentEditor';
 import FieldEditor from './FieldEditor';
 
-const ObjectBuilder = ({ type, setType, allTypes }) => {
+const ObjectBuilder = ({ type, setType, argTypes, fieldTypes }) => {
   const { name, arguments: args, fields, kind } = type;
 
   const init = () => {
@@ -22,6 +22,7 @@ const ObjectBuilder = ({ type, setType, allTypes }) => {
             name: '',
             type: '',
             description: '',
+            optional: false,
           },
         ],
       });
@@ -41,7 +42,7 @@ const ObjectBuilder = ({ type, setType, allTypes }) => {
     const newArgs = [...a];
     const lastArg = newArgs[newArgs.length - 1];
     if (lastArg.name && lastArg.type) {
-      newArgs.push({ name: '', type: '', description: '' });
+      newArgs.push({ name: '', type: '', description: '', optional: false });
     }
     setType({
       ...type,
@@ -104,7 +105,7 @@ const ObjectBuilder = ({ type, setType, allTypes }) => {
             <ArgumentEditor
               argument={a}
               setArgument={setArgument}
-              allTypes={allTypes}
+              allTypes={argTypes}
               isLast={isLast}
               index={i}
             />
@@ -126,7 +127,7 @@ const ObjectBuilder = ({ type, setType, allTypes }) => {
             <FieldEditor
               field={f}
               setField={setField}
-              allTypes={allTypes}
+              allTypes={fieldTypes}
               isLast={isLast}
               index={i}
             />

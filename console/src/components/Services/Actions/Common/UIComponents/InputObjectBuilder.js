@@ -2,7 +2,7 @@ import React from 'react';
 import styles from './Styles.scss';
 import FieldEditor from './FieldEditor';
 
-const InputObjectBuilder = ({ type, setType, allTypes }) => {
+const InputObjectBuilder = ({ type, setType, fieldTypes }) => {
   const { name, fields, kind } = type;
 
   const init = () => {
@@ -83,7 +83,7 @@ const InputObjectBuilder = ({ type, setType, allTypes }) => {
             <FieldEditor
               field={f}
               setField={setField}
-              allTypes={allTypes}
+              allTypes={fieldTypes}
               isLast={isLast}
               index={i}
             />

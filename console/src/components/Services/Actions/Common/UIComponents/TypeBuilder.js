@@ -4,18 +4,21 @@ import ScalarBuilder from './ScalarBuilder';
 import ObjectBuilder from './ObjectBuilder';
 import InputObjectBuilder from './InputObjectBuilder';
 
-const TypeBuilder = ({ type, setType, allTypes }) => {
+const TypeBuilder = ({ type, setType, argTypes, fieldTypes }) => {
   // TODO ENUM
 
-  const scalarBuilder = (
-    <ScalarBuilder type={type} setType={setType} allTypes={allTypes} />
-  );
+  const scalarBuilder = <ScalarBuilder type={type} setType={setType} />;
   // const enumBuilder = <div>Enum Builder</div>;
   const objectBuilder = (
-    <ObjectBuilder type={type} setType={setType} allTypes={allTypes} />
+    <ObjectBuilder
+      type={type}
+      setType={setType}
+      argTypes={argTypes}
+      fieldTypes={fieldTypes}
+    />
   );
   const inputObjectBuilder = (
-    <InputObjectBuilder type={type} setType={setType} allTypes={allTypes} />
+    <InputObjectBuilder type={type} setType={setType} fieldTypes={fieldTypes} />
   );
   const tabs = [
     {

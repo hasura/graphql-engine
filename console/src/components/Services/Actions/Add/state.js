@@ -11,6 +11,7 @@ const state = {
       name: '',
       kind: '',
       description: '',
+      optional: false,
     },
   ],
   arguments: [{ ...defaultArg }],

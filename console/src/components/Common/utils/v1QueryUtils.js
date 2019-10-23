@@ -23,3 +23,29 @@ export const getDropPermissionQuery = (action, tableDef, role) => {
     },
   };
 };
+
+export const generateSetCustomTypesQuery = customTypes => {
+  return {
+    type: 'set_custom_types',
+    args: customTypes,
+  };
+};
+
+export const generateCreateActionQuery = (name, definition) => {
+  return {
+    type: 'create_action',
+    args: {
+      name,
+      definition,
+    },
+  };
+};
+
+export const generateDropActionQuery = name => {
+  return {
+    type: 'drop_action',
+    args: {
+      name,
+    },
+  };
+};

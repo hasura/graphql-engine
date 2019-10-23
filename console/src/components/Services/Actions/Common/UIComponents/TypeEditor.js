@@ -2,9 +2,24 @@ import React from 'react';
 import ExpandableEditor from '../../../../Common/Layout/ExpandableEditor/Editor';
 import TypeBuilder from './TypeBuilder';
 
-const TypeEditor = ({ type, setType, isLast, property, service, allTypes }) => {
+const TypeEditor = ({
+  type,
+  setType,
+  isLast,
+  property,
+  service,
+  argTypes,
+  fieldTypes,
+}) => {
   const editorExpanded = () => {
-    return <TypeBuilder type={type} setType={setType} allTypes={allTypes} />;
+    return (
+      <TypeBuilder
+        type={type}
+        setType={setType}
+        argTypes={argTypes}
+        fieldTypes={fieldTypes}
+      />
+    );
   };
 
   const expandButtonText = isLast ? 'Create a new type' : 'Edit';
@@ -20,10 +35,16 @@ const TypeEditor = ({ type, setType, isLast, property, service, allTypes }) => {
     );
   }
 
+  let saveFunc;
+  if (type.name) {
+    saveFunc = toggle => toggle();
+  }
+
   return (
     <ExpandableEditor
       editorExpanded={editorExpanded}
       collapsedLabel={collapsedLabel}
+      saveFunc={saveFunc}
       property={property}
       service={service}
       expandButtonText={expandButtonText}

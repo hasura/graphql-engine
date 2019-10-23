@@ -15,6 +15,7 @@ import {
   setTypes,
 } from './reducer';
 import { defaultScalars } from '../Common/utils';
+import { createAction } from '../ServerIO';
 
 const AddAction = ({
   name,
@@ -31,7 +32,7 @@ const AddAction = ({
     const newArgs = [...a];
     const lastArg = newArgs[newArgs.length - 1];
     if (lastArg.name && lastArg.type) {
-      newArgs.push({ name: '', type: '', description: '' });
+      newArgs.push({ name: '', type: '', description: '', optional: false });
     }
     dispatch(setActionArguments(newArgs));
   };
@@ -45,12 +46,22 @@ const AddAction = ({
   };
 
   const onSubmit = e => {
-    e.preventDefault();
+    if (e) {
+      e.preventDefault();
+    }
+    dispatch(createAction());
   };
 
-  const typeList = [
+  const argTypes = [
     ...defaultScalars,
-    ...types.filter(t => !!t.name).map(t => t.name),
+    ...types.filter(t => !!t.name && t.kind !== 'object').map(t => t.name),
+  ].sort();
+
+  const fieldTypes = [
+    ...defaultScalars,
+    ...types
+      .filter(t => !!t.name && t.kind !== 'input_object')
+      .map(t => t.name),
   ].sort();
 
   return (
@@ -76,7 +87,8 @@ const AddAction = ({
         <hr />
         <TypeEditorList
           types={types}
-          allTypes={typeList}
+          argTypes={argTypes}
+          fieldTypes={fieldTypes}
           setTypes={setActionTypes}
           className={styles.add_mar_bottom_mid}
           service="create-action"
@@ -86,19 +98,27 @@ const AddAction = ({
           className={styles.add_mar_bottom_mid}
           args={args}
           setArguments={setArguments}
-          allTypes={typeList}
+          allTypes={argTypes}
           service="create-action"
         />
         <hr />
         <OutputTypesEditor
           className={styles.add_mar_bottom_mid}
           value={outputType}
-          allTypes={typeList}
+          allTypes={fieldTypes}
           onChange={outputTypeOnChange}
           service="create-action"
         />
         <hr />
-        <Button color="yellow" size="sm">
+        <Button
+          color="yellow"
+          size="sm"
+          type="submit"
+          onClick={() => {
+            console.log('here');
+            onSubmit();
+          }}
+        >
           Create
         </Button>
       </form>

@@ -2,7 +2,7 @@ import React from 'react';
 import styles from './Styles.scss';
 
 const ArgumentInput = ({ argument, setArgument, allTypes }) => {
-  const { name, type, description } = argument;
+  const { name, type, description, optional } = argument;
 
   const nameOnChange = e => {
     setArgument({
@@ -20,6 +20,13 @@ const ArgumentInput = ({ argument, setArgument, allTypes }) => {
     setArgument({
       ...argument,
       description: e.target.value,
+    });
+  };
+
+  const optionalOnChange = e => {
+    setArgument({
+      ...argument,
+      optional: e.target.checked,
     });
   };
 
@@ -64,9 +71,18 @@ const ArgumentInput = ({ argument, setArgument, allTypes }) => {
         onChange={descriptionOnChange}
         placeholder="description"
         className={`form-control ${styles.inputWidth} ${
-          styles.add_mar_right_small
+          styles.add_mar_right_mid
         }`}
       />
+      <label>
+        <input
+          type="checkbox"
+          value={optional}
+          onChange={optionalOnChange}
+          className={`${styles.add_mar_right_small}`}
+        />
+        Optional
+      </label>
     </div>
   );
 };

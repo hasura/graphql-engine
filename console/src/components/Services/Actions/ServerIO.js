@@ -7,6 +7,18 @@ import {
   LOADING_ACTIONS_FAILURE,
 } from './reducer';
 import { filterInconsistentMetadataObjects } from '../Settings/utils';
+import { makeMigrationCall } from '../Data/DataActions';
+import {
+  generateSetCustomTypesQuery,
+  generateCreateActionQuery,
+  generateDropActionQuery,
+} from '../../Common/utils/v1QueryUtils';
+import {
+  reformCustomTypes,
+  generateActionDefinition,
+  getStateValidationError,
+} from './Common/utils';
+import { showErrorNotification } from '../Common/Notification';
 
 export const fetchActions = () => {
   return (dispatch, getState) => {
@@ -52,4 +64,52 @@ export const fetchActions = () => {
       }
     );
   };
+};
+
+export const createAction = () => (dispatch, getState) => {
+  const { add: state } = getState().actions;
+  const { types: existingTypes } = getState().types;
+
+  // TODO generate down migration for custom types
+
+  const validationError = getStateValidationError(state);
+  if (validationError) {
+    return dispatch(showErrorNotification(validationError));
+  }
+
+  const customFieldsQueryUp = generateSetCustomTypesQuery(
+    reformCustomTypes(state.types)
+  );
+
+  const customFieldsQueryDown = generateSetCustomTypesQuery(existingTypes);
+
+  const actionQueryUp = generateCreateActionQuery(
+    state.name,
+    generateActionDefinition(state)
+  );
+
+  const actionQueryDown = generateDropActionQuery(state.name);
+
+  const upQueries = [customFieldsQueryUp, actionQueryUp];
+  const downQueries = [customFieldsQueryDown, actionQueryDown];
+
+  const migrationName = `create_action_${state.name}`;
+  const requestMsg = 'Creating action...';
+  const successMsg = 'Created action successfully';
+  const errorMsg = 'Creating action failed';
+  const customOnSuccess = () => {};
+  const customOnError = () => {};
+
+  makeMigrationCall(
+    dispatch,
+    getState,
+    upQueries,
+    downQueries,
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg
+  );
 };

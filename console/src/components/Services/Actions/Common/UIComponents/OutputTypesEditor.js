@@ -5,7 +5,7 @@ import Tooltip from './Tooltip';
 const editorLabel = 'Output Type';
 const editorTooltip = 'This is the returning type of the mutation';
 
-const OutputTypesEditor = ({ className, value, onChange }) => {
+const OutputTypesEditor = ({ className, value, onChange, allTypes }) => {
   return (
     <div className={`${className || ''}`}>
       <h2
@@ -23,9 +23,14 @@ const OutputTypesEditor = ({ className, value, onChange }) => {
         value={value || ''}
         onChange={onChange}
       >
-        {!value && <option>--output type--</option>}
-        <option>Type1</option>
-        <option>Type2</option>
+        {!value && <option>--type--</option>}
+        {allTypes.map(t => {
+          return (
+            <option key={t} value={t}>
+              {t}
+            </option>
+          );
+        })}
       </select>
     </div>
   );
