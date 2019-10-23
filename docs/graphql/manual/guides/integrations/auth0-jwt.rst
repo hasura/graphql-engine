@@ -32,7 +32,7 @@ In the dashboard, navigate to ``Rules``. Add the following rules to add our cust
 
     function (user, context, callback) {
       const namespace = "https://hasura.io/jwt/claims";
-      context.idToken[namespace] = 
+      context.accessToken[namespace] = 
         { 
           'x-hasura-default-role': 'user',
           // do some custom logic to decide allowed roles
@@ -44,6 +44,25 @@ In the dashboard, navigate to ``Rules``. Add the following rules to add our cust
 
 
 .. _test-auth0:
+
+Create an Auth0 API
+^^^^^^^^^^^^^^^^^^^
+
+- Navigate to the `Auth0 dashboard <https://manage.auth0.com>`__.
+- Click on the ``API`` menu option on the left and then click the ``+ Create API`` button.
+- In the ``New API`` window, set a name for your API and enter an ``identifier`` (e.g. ``hasura``)
+- In your application code, configure your API ``identifier`` as the ``audience`` when initializing Auth0, e.g.:
+
+.. code-block:: javascript
+
+    <Auth0Provider
+      domain={process.env.AUTH_DOMAIN}
+      client_id={process.env.AUTH_CLIENT_ID}
+      redirect_uri={window.location.origin}
+      onRedirectCallback={() => ..}
+      audience="hasura"
+    >
+
 
 Test auth0 login and generate sample JWTs for testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
