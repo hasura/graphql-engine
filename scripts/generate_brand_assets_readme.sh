@@ -15,6 +15,7 @@ cd "$ROOT/assets/brand"
 README_CONTENT=$(cat <<EOF
 # Hasura Brand Assets
 
+#New comment has been added haha
 All assets are available on a Google Cloud Storage Bucket CDN at \`https://graphql-engine-cdn.hasura.io/img/<name>\`.
 
 *Note: some logos maybe invisible depending on the page background color.*
@@ -37,6 +38,8 @@ $README_CONTENT
 | \`$svg\` | <img src="$svg" width="150px" $BG /> |
 EOF
 )"
+
+#wait to read this comment before doing
 done
 
 for svg in *.svg; do
