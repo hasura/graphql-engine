@@ -8,11 +8,11 @@
 <a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
 <a href="https://eepurl.com/dBUfJ5"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
 
-Hasura GraphQL Engine is a blazing-fast GraphQL server that gives you **instant, realtime GraphQL APIs over Postgres**, with [**webhook triggers**](event-triggers.md) on database events, and [**remote schemas**](remote-schemas.md) for business logic.
+Hasura GraphQL Engine é um servidor extremamente rápido que oferece a você criar **instantâneamente, em tempo real, APIs GraphQL baseadas no Postgres**, com [**webhook triggers**](event-triggers.md) em eventos do banco de dados, e [**remote schemas**](remote-schemas.md) para a regra de negócio.
 
-Hasura helps you build GraphQL apps backed by Postgres or incrementally move to GraphQL for existing applications using Postgres.
+Hasura te ajuda a contruir aplicativos GraphQL suportados pelo Postgres ou migrar uma aplicação já existente, que utiliza Postgres, para GraphQL.
 
-Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.io).
+Leia mais em [hasura.io](https://hasura.io) e na [documentação](https://docs.hasura.io).
 
 ------------------
 
@@ -24,26 +24,26 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
 
 -------------------
 
-## Features
+## Funcionalidades
 
-* **Make powerful queries**: Built-in filtering, pagination, pattern search, bulk insert, update, delete mutations
-* **Realtime**: Convert any GraphQL query to a live query by using subscriptions
-* **Merge remote schemas**: Access custom GraphQL schemas for business logic via a single GraphQL Engine endpoint. [**Read more**](remote-schemas.md).
-* **Trigger webhooks or serverless functions**: On Postgres insert/update/delete events ([read more](event-triggers.md))
-* **Works with existing, live databases**: Point it to an existing Postgres database to instantly get a ready-to-use GraphQL API
-* **Fine-grained access control**: Dynamic access control that integrates with your auth system (eg: auth0, firebase-auth)
-* **High-performance & low-footprint**: ~15MB docker image; ~50MB RAM @ 1000 req/s; multi-core aware
-* **Admin UI & Migrations**: Admin UI & Rails-inspired schema migrations
-* **Postgres** ❤️: Supports Postgres types (PostGIS/geo-location, etc.), turns views to *graphs*, trigger stored functions or procedures with mutations
+* **Realize queries avançadas**: filtragem, paginação, busca de padrões, inserção em massa, atualizações, exclusões
+* **Em Tempo-Real**: Converta qualquer consulta do GraphQL em uma consulta em tempo real usando as assinaturas.
+* **Faça o Merge de Schemas remotos**: Acesse seus próprios esquemas GraphQL para sua lógica de negócios através de um único ponto de acesso GraphQL. [**Leia Mais**](remote-schemas.md).
+* **Disparar webhooks ou funções sem servidor**: Em resposta aos eventos do Postgres, insira / atualize / exclua ([leia mais](event-triggers.md))
+* **Funciona com banco de dados já existentes**: direcione o GraphQL Engine para um banco de dados Postgres existente para obter instantaneamente uma API GraphQL pronta para uso.
+* **Controle de acesso detalhado**: Controle de acesso dinâmico que integra com o seu sistema de autorização (ex: auth0, firebase-auth)
+* **Alto desempenho e baixo impacto**: ~15MB de imagem do Docker; ~50MB RAM @ 1000 req/s; levando em conta o multi-core
+* **Interface de administração e migração**: Interface de administração e migração de schemas inspirados no Rails
+* **Postgres** ❤️: suporta tipos do Postgres (PostGIS / localização geográfica, etc.), transforma visualizações em gráficos, aciona procedimentos ou funções armazenados através de mutações
 
-Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.io).
+Leia mais em [hasura.io](https://hasura.io) e a [documentação](https://docs.hasura.io).
 
-## Table of contents
+## Conteúdo
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
-**Table of Contents**
+**Conteúdo**
 
-- [Quickstart:](#quickstart)
-    - [One-click deployment on Heroku](#one-click-deployment-on-heroku)
+- [Primeiros passos:](#quickstart)
+    - [Deploy no Heroku em um clique](#one-click-deployment-on-heroku)
     - [Other deployment methods](#other-deployment-methods)
 - [Architecture](#architecture)
 - [Client-side tooling](#client-side-tooling)
@@ -61,11 +61,11 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
 
 <!-- markdown-toc end -->
 
-## Quickstart:
+## Primeiros passos:
 
-### One-click deployment on Heroku
+### Deploy no Heroku em um clique
 
-The fastest way to try Hasura out is via Heroku.
+A maneira mais rápida de experimentar o Hasura é via Heroku.
 
 1. Click on the following button to deploy GraphQL Engine on Heroku with the free Postgres add-on:
 
