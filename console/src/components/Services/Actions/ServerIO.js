@@ -6,7 +6,7 @@ import {
   LOADING_ACTIONS_SUCCESS,
   LOADING_ACTIONS_FAILURE,
 } from './reducer';
-import { filterInconsistentMetadataObjects } from '../Settings/Actions';
+import { filterInconsistentMetadataObjects } from '../Settings/utils';
 
 export const fetchActions = () => {
   return (dispatch, getState) => {

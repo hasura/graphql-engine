@@ -1,14 +1,20 @@
+export const defaultArg = {
+  name: '',
+  type: '',
+  description: null,
+};
+
 const state = {
   name: '',
-  webhook: {
-    type: 'static',
-    value: '',
-  },
-  headers: {},
+  webhook: '',
   types: {
-    input: {},
-    output: {},
+    input_objects: [],
+    objects: [],
+    scalars: [],
+    enums: [],
   },
+  arguments: [{ ...defaultArg }],
+  outputType: '',
 };
 
 export default state;

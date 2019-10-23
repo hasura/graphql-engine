@@ -68,8 +68,6 @@ const LeftSidebar = ({ appPrefix, location }) => {
     return childList;
   };
 
-  console.log(appPrefix);
-
   return (
     <LeftSubSidebar
       showAddBtn
