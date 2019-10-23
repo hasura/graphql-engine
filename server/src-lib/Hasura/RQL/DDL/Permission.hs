@@ -150,14 +150,13 @@ buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) =
     fieldInfoMap = _tiFieldInfoMap tabInfo
     tn = _tiName tabInfo
     vn = buildViewName tn rn PTInsert
-    allCols = map pgiName $ getCols fieldInfoMap
+    allCols = map pgiColumn $ getCols fieldInfoMap
     insCols = fromMaybe allCols $ convColSpec fieldInfoMap <$> mCols
 
 buildInsInfra :: QualifiedTable -> InsPermInfo -> Q.TxE QErr ()
 buildInsInfra tn (InsPermInfo _ vn be _ _) = do
   resolvedBoolExp <- convAnnBoolExpPartialSQL sessVarFromCurrentSetting be
-  trigFnQ <- buildInsTrigFn vn tn $
-    toSQLBoolExp (S.QualVar "NEW") resolvedBoolExp
+  let trigFnQ = buildInsTrigFn vn tn $ toSQLBoolExp (S.QualVar "NEW") resolvedBoolExp
   Q.catchE defaultTxErrorHandler $ do
     -- Create the view
     Q.unitQ (buildView tn vn) () False

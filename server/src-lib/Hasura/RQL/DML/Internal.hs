@@ -45,7 +45,7 @@ mkAdminRolePermInfo :: TableInfo PGColumnInfo -> RolePermInfo
 mkAdminRolePermInfo ti =
   RolePermInfo (Just i) (Just s) (Just u) (Just d)
   where
-    pgCols = map pgiName $ getCols $ _tiFieldInfoMap ti
+    pgCols = map pgiColumn $ getCols $ _tiFieldInfoMap ti
 
     tn = _tiName ti
     i = InsPermInfo (HS.fromList pgCols) tn annBoolExpTrue M.empty []
@@ -189,7 +189,7 @@ checkOnColExp
   -> m AnnBoolExpFldSQL
 checkOnColExp spi sessVarBldr annFld = case annFld of
   AVCol colInfo _ -> do
-    let cn = pgiName colInfo
+    let cn = pgiColumn colInfo
     checkSelOnCol spi cn
     return annFld
   AVRel relInfo nesAnn -> do

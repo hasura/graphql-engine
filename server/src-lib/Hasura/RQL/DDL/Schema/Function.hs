@@ -5,7 +5,7 @@ Description: Create/delete SQL functions to/from Hasura metadata.
 module Hasura.RQL.DDL.Schema.Function where
 
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Utils          (isValidName, showNames)
+import           Hasura.GraphQL.Utils          (showNames)
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -74,10 +74,10 @@ validateFuncArgs args =
     <> " are not in compliance with GraphQL spec"
   where
     funcArgsText = mapMaybe (fmap getFuncArgNameTxt . faName) args
-    invalidArgs = filter (not . isValidName) $ map G.Name funcArgsText
+    invalidArgs = filter (not . G.isValidName) $ map G.Name funcArgsText
 
 mkFunctionInfo
-  :: QErrM m => QualifiedFunction -> RawFuncInfo -> m FunctionInfo
+  :: (QErrM m, HasSystemDefined m) => QualifiedFunction -> RawFuncInfo -> m FunctionInfo
 mkFunctionInfo qf rawFuncInfo = do
   -- throw error if function has variadic arguments
   when hasVariadic $ throw400 NotSupported "function with \"VARIADIC\" parameters are not supported"
@@ -93,20 +93,21 @@ mkFunctionInfo qf rawFuncInfo = do
   let funcArgs = mkFunctionArgs defArgsNo inpArgTyps inpArgNames
   validateFuncArgs funcArgs
 
+  systemDefined <- askSystemDefined
   let funcArgsSeq = Seq.fromList funcArgs
       dep = SchemaDependency (SOTable retTable) DRTable
       retTable = QualifiedObject retSn (TableName retN)
-  return $ FunctionInfo qf False funTy funcArgsSeq retTable [dep] descM
+  return $ FunctionInfo qf systemDefined funTy funcArgsSeq retTable [dep] descM
   where
     RawFuncInfo hasVariadic funTy retSn retN retTyTyp retSet
                 inpArgTyps inpArgNames defArgsNo returnsTab descM
                 = rawFuncInfo
 
-saveFunctionToCatalog :: QualifiedFunction -> Bool -> Q.TxE QErr ()
-saveFunctionToCatalog (QualifiedObject sn fn) isSystemDefined =
+saveFunctionToCatalog :: QualifiedFunction -> SystemDefined -> Q.TxE QErr ()
+saveFunctionToCatalog (QualifiedObject sn fn) systemDefined =
   Q.unitQE defaultTxErrorHandler [Q.sql|
          INSERT INTO "hdb_catalog"."hdb_function" VALUES ($1, $2, $3)
-                 |] (sn, fn, isSystemDefined) False
+                 |] (sn, fn, systemDefined) False
 
 delFunctionFromCatalog :: QualifiedFunction -> Q.TxE QErr ()
 delFunctionFromCatalog (QualifiedObject sn fn) =
@@ -135,7 +136,7 @@ trackFunctionP1 (TrackFunction qf) = do
   when (M.member qt $ scTables rawSchemaCache) $
     throw400 NotSupported $ "table with name " <> qf <<> " already exists"
 
-trackFunctionP2Setup :: (QErrM m, CacheRWM m, MonadTx m)
+trackFunctionP2Setup :: (QErrM m, CacheRWM m, HasSystemDefined m, MonadTx m)
                      => QualifiedFunction -> RawFuncInfo -> m ()
 trackFunctionP2Setup qf rawfi = do
   fi <- mkFunctionInfo qf rawfi
@@ -145,14 +146,14 @@ trackFunctionP2Setup qf rawfi = do
   void $ liftMaybe err $ M.lookup retTable $ scTables sc
   addFunctionToCache fi
 
-trackFunctionP2 :: (QErrM m, CacheRWM m, MonadTx m)
+trackFunctionP2 :: (QErrM m, CacheRWM m, HasSystemDefined m, MonadTx m)
                 => QualifiedFunction -> m EncJSON
 trackFunctionP2 qf = do
   sc <- askSchemaCache
   let defGCtx = scDefaultRemoteGCtx sc
       funcNameGQL = GS.qualObjectToName qf
   -- check function name is in compliance with GraphQL spec
-  unless (isValidName funcNameGQL) $ throw400 NotSupported $
+  unless (G.isValidName funcNameGQL) $ throw400 NotSupported $
     "function name " <> qf <<> " is not in compliance with GraphQL spec"
   -- check for conflicts in remote schema
   GS.checkConflictingNode defGCtx funcNameGQL
@@ -167,7 +168,8 @@ trackFunctionP2 qf = do
       throw400 NotSupported $
       "function " <> qf <<> " is overloaded. Overloaded functions are not supported"
   trackFunctionP2Setup qf rawfi
-  liftTx $ saveFunctionToCatalog qf False
+  systemDefined <- askSystemDefined
+  liftTx $ saveFunctionToCatalog qf systemDefined
   return successMsg
   where
     QualifiedObject sn fn = qf
@@ -180,8 +182,8 @@ trackFunctionP2 qf = do
            |] (sn, fn) True
 
 runTrackFunc
-  :: ( QErrM m, CacheRWM m, MonadTx m
-     , UserInfoM m
+  :: ( QErrM m, CacheRWM m, HasSystemDefined m
+     , MonadTx m, UserInfoM m
      )
   => TrackFunction -> m EncJSON
 runTrackFunc q = do

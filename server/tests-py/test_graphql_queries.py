@@ -263,6 +263,7 @@ class TestGraphqlQueryPermissions(DefaultTestSelectQueries):
     def test_user_query_auction(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/user_query_auction.yaml', transport)
 
+    @pytest.mark.xfail(reason="Refer https://github.com/hasura/graphql-engine-internal/issues/252")
     def test_jsonb_has_all(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/jsonb_has_all.yaml', transport)
 
@@ -416,6 +417,9 @@ class TestGraphQLQueryOrderBy(DefaultTestSelectQueries):
     def test_employee_distinct_fail(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/employee_distinct_fail.yaml', transport)
 
+    def test_album_order_by_tracks_tags(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/album_order_by_tracks_tags.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/order_by'
@@ -458,6 +462,19 @@ class TestGraphQLQueryFunctions(DefaultTestSelectQueries):
     def dir(cls):
         return 'queries/graphql_query/functions'
 
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+class TestGraphQLQueryCustomSchema(DefaultTestSelectQueries):
+
+    def test_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/author.yaml', transport)
+
+    def test_article(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/article.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/custom_schema'
+
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 class TestGraphQLQueryEnums(DefaultTestSelectQueries):
     @classmethod
@@ -484,3 +501,6 @@ class TestGraphQLQueryEnums(DefaultTestSelectQueries):
 
     def test_select_where_enum_eq_variable_bad_value(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_where_enum_eq_variable_bad_value.yaml', transport)
+
+    def test_select_where_enum_eq_without_enum_table_visibility(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_where_enum_eq_without_enum_table_visibility.yaml', transport)

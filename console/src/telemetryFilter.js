@@ -58,7 +58,7 @@ const sanitiseUrl = path => {
     return dataHandler(path.slice(DATA_PATH.length));
   }
   if (path.indexOf(API_EXPLORER_PATH) === 0) {
-    return apiExplorerHandler(path.slice(API_EXPLORER_PATH.length));
+    return apiExplorerHandler();
   }
   if (path.indexOf(REMOTE_SCHEMAS_PATH) === 0) {
     return remoteSchemasHandler(path.slice(REMOTE_SCHEMAS_PATH.length));

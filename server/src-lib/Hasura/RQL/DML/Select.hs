@@ -59,7 +59,7 @@ convWildcard fieldInfoMap (SelPermInfo cols _ _ _ _ _) wildcard =
   Star         -> return simpleCols
   (StarDot wc) -> (simpleCols ++) <$> (catMaybes <$> relExtCols wc)
   where
-    (pgCols, relColInfos) = partitionFieldInfosWith (pgiName, id) $
+    (pgCols, relColInfos) = partitionFieldInfosWith (pgiColumn, id) $
                             HM.elems fieldInfoMap
 
     simpleCols = map ECSimple $ filter (`HS.member` cols) pgCols
@@ -113,7 +113,7 @@ convOrderByElem sessVarBldr (flds, spi) = \case
     fldInfo <- askFieldInfo flds fldName
     case fldInfo of
       FIColumn colInfo -> do
-        checkSelOnCol spi (pgiName colInfo)
+        checkSelOnCol spi (pgiColumn colInfo)
         let ty = pgiType colInfo
         if isScalarColumnWhere isGeoType ty
           then throw400 UnexpectedPayload $ mconcat

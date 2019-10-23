@@ -26,6 +26,7 @@ module Hasura.GraphQL.Resolve.Context
 
   , withSelSet
   , fieldAsPath
+  , resolvePGCol
   , module Hasura.GraphQL.Utils
   , module Hasura.GraphQL.Resolve.Types
   ) where
@@ -52,7 +53,7 @@ import qualified Hasura.SQL.DML                as S
 getFldInfo
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
   => G.NamedType -> G.Name
-  -> m (Either PGColumnInfo (RelInfo, Bool, AnnBoolExpPartialSQL, Maybe Int))
+  -> m (Either PGColumnInfo RelationshipField)
 getFldInfo nt n = do
   fldMap <- asks getter
   onNothing (Map.lookup (nt,n) fldMap) $
@@ -151,3 +152,9 @@ withSelSet selSet f =
 
 fieldAsPath :: (MonadError QErr m) => Field -> m a -> m a
 fieldAsPath = nameAsPath . _fName
+
+resolvePGCol :: (MonadError QErr m)
+             => PGColGNameMap -> G.Name -> m PGColumnInfo
+resolvePGCol colFldMap fldName =
+  onNothing (Map.lookup fldName colFldMap) $ throw500 $
+  "no column associated with name " <> G.unName fldName

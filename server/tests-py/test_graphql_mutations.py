@@ -58,6 +58,9 @@ class TestGraphqlInsertOnConflict(DefaultTestMutations):
     def test_err_unexpected_constraint(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/article_unexpected_on_conflict_constraint_error.yaml")
 
+    def test_order_on_conflict_where(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/order_on_conflict_where.yaml')
+
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/insert/onconflict"
@@ -119,6 +122,9 @@ class TestGraphqlInsertPermission(DefaultTestMutations):
 
     def test_resident_5_modifies_resident_6_upsert(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/resident_5_modifies_resident_6_upsert.yaml")
+
+    def test_resident_on_conflict_where(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/resident_on_conflict_where.yaml")
 
     def test_blog_on_conflict_update_preset(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/blog_on_conflict_update_preset.yaml")
@@ -402,6 +408,25 @@ class TestGraphqlDeletePermissions(DefaultTestMutations):
     def dir(cls):
         return "queries/graphql_mutation/delete/permissions"
 
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+class TestGraphqlMutationCustomSchema(DefaultTestMutations):
+
+    def test_insert_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/insert_author.yaml', transport)
+
+    def test_insert_article_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/insert_article_author.yaml', transport)
+
+    def test_update_article(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/update_article.yaml', transport)
+
+    def test_delete_article(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/delete_article.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return "queries/graphql_mutation/custom_schema"
+
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 class TestGraphQLMutateEnums(DefaultTestMutations):
     @classmethod
@@ -410,6 +435,9 @@ class TestGraphQLMutateEnums(DefaultTestMutations):
 
     def test_insert_enum_field(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/insert_enum_field.yaml', transport)
+
+    def test_insert_enum_field(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/insert_nullable_enum_field.yaml', transport)
 
     def test_insert_enum_field_bad_value(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/insert_enum_field_bad_value.yaml', transport)

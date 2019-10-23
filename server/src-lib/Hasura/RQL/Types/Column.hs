@@ -4,16 +4,17 @@ module Hasura.RQL.Types.Column
   , _PGColumnEnumReference
   , isScalarColumnWhere
 
+  , onlyIntCols
+  , onlyNumCols
+  , onlyJSONBCols
+  , onlyComparableCols
+
   , parsePGScalarValue
   , parsePGScalarValues
   , unsafePGColumnToRepresentation
 
   , PGColumnInfo(..)
   , PGRawColumnInfo(..)
-  , onlyIntCols
-  , onlyNumCols
-  , onlyJSONBCols
-  , onlyComparableCols
   , getColInfos
 
   , EnumReference(..)
@@ -24,16 +25,17 @@ module Hasura.RQL.Types.Column
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict        as M
-import qualified Data.Text                  as T
+import qualified Data.HashMap.Strict           as M
+import qualified Data.Text                     as T
+import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Control.Lens.TH
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax (Lift)
+import           Language.Haskell.TH.Syntax    (Lift)
 
-import           Hasura.RQL.Instances       ()
+import           Hasura.RQL.Instances          ()
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
@@ -94,19 +96,22 @@ unsafePGColumnToRepresentation = \case
   PGColumnScalar scalarType -> scalarType
   PGColumnEnumReference _ -> PGText
 
-parsePGScalarValue :: (MonadError QErr m) => PGColumnType -> Value -> m (WithScalarType PGScalarValue)
+-- | Note: Unconditionally accepts null values and returns 'PGNull'.
+parsePGScalarValue
+  :: forall m. (MonadError QErr m) => PGColumnType -> Value -> m (WithScalarType PGScalarValue)
 parsePGScalarValue columnType value = case columnType of
   PGColumnScalar scalarType ->
     WithScalarType scalarType <$> runAesonParser (parsePGValue scalarType) value
-  PGColumnEnumReference (EnumReference tableName enumValues) -> do
-    let typeName = snakeCaseQualObject tableName
-    flip runAesonParser value . withText (T.unpack typeName) $ \textValue -> do
-      let enumTextValues = map getEnumValue $ M.keys enumValues
-      unless (textValue `elem` enumTextValues) $
-        fail . T.unpack
+  PGColumnEnumReference (EnumReference tableName enumValues) ->
+    WithScalarType PGText <$> (maybe (pure $ PGNull PGText) parseEnumValue =<< decodeValue value)
+    where
+      parseEnumValue :: Text -> m PGScalarValue
+      parseEnumValue textValue = do
+        let enumTextValues = map getEnumValue $ M.keys enumValues
+        unless (textValue `elem` enumTextValues) $ fail . T.unpack
           $ "expected one of the values " <> T.intercalate ", " (map dquote enumTextValues)
-          <> " for type " <> typeName <<> ", given " <>> textValue
-      pure $ WithScalarType PGText (PGValText textValue)
+          <> " for type " <> snakeCaseQualObject tableName <<> ", given " <>> textValue
+        pure $ PGValText textValue
 
 parsePGScalarValues
   :: (MonadError QErr m)
@@ -134,7 +139,9 @@ $(deriveJSON (aesonDrop 4 snakeCase) ''PGRawColumnInfo)
 -- schema information to produce a 'PGColumnType'.
 data PGColumnInfo
   = PGColumnInfo
-  { pgiName        :: !PGCol
+  { pgiColumn      :: !PGCol
+  , pgiName        :: !G.Name
+  -- ^ field name exposed in GraphQL interface
   , pgiType        :: !PGColumnType
   , pgiIsNullable  :: !Bool
   , pgiDescription :: !(Maybe PGDescription)
@@ -155,4 +162,4 @@ onlyComparableCols = filter (isScalarColumnWhere isComparableType . pgiType)
 
 getColInfos :: [PGCol] -> [PGColumnInfo] -> [PGColumnInfo]
 getColInfos cols allColInfos =
-  flip filter allColInfos $ \ci -> pgiName ci `elem` cols
+  flip filter allColInfos $ \ci -> pgiColumn ci `elem` cols
