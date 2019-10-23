@@ -18,7 +18,7 @@ import { showSuccessNotification } from '../../Common/Notification';
 
 import { fetchTrackedFunctions } from '../DataActions';
 
-import { COMPUTED_COLUMNS_SUPPORT } from '../../../../helpers/versionUtils';
+import { COMPUTED_FIELDS_SUPPORT } from '../../../../helpers/versionUtils';
 
 import _push from '../push';
 
@@ -187,7 +187,7 @@ const deleteFunctionSql = () => {
 
         if (
           globals.featuresCompatibility &&
-          globals.featuresCompatibility[COMPUTED_COLUMNS_SUPPORT]
+          globals.featuresCompatibility[COMPUTED_FIELDS_SUPPORT]
         ) {
           functionArgString +=
             '"' + inputArg.schema + '"' + '.' + '"' + inputArg.name + '"';
