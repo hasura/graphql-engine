@@ -107,6 +107,10 @@ func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
 		h.Args = &clearMetadataInput{}
 	case runSQL:
 		h.Args = &runSQLInput{}
+	case addComputedField:
+		h.Args = &addComputedFieldInput{}
+	case dropComputedField:
+		h.Args = &dropComputedFieldInput{}
 	default:
 		return fmt.Errorf("cannot squash type %s", h.Type)
 	}
@@ -261,6 +265,8 @@ const (
 	clearMetadata                            = "clear_metadata"
 	runSQL                                   = "run_sql"
 	bulkQuery                                = "bulk"
+	addComputedField                         = "add_computed_field"
+	dropComputedField                        = "drop_computed_field"
 )
 
 type tableMap struct {
@@ -273,6 +279,10 @@ type relationshipMap struct {
 
 type permissionMap struct {
 	tableName, schemaName, permType, Role string
+}
+
+type computedFieldMap struct {
+	tableName, schemaName, name string
 }
 
 type queryInCollectionMap struct {
@@ -529,6 +539,19 @@ type dropCollectionFromAllowListInput struct {
 	Collection string `json:"collection" yaml:"collection"`
 }
 
+type addComputedFieldInput struct {
+	Table      tableSchema `json:"table" yaml:"table"`
+	Name       string      `json:"name" yaml:"name"`
+	Definition interface{} `json:"definition" yaml:"definition"`
+}
+
+type dropComputedFieldInput struct {
+	Table   tableSchema `json:"table" yaml:"table"`
+	Name    string      `json:"name" yaml:"name"`
+	Cascade bool        `json:"cascade" yaml:"cascade"`
+	Comment string      `json:"comment" yaml:"comment"`
+}
+
 type clearMetadataInput struct {
 }
 
@@ -542,6 +565,7 @@ type replaceMetadataInput struct {
 		UpdatePermissions   []*createUpdatePermissionInput   `json:"update_permissions" yaml:"update_permissions"`
 		DeletePermissions   []*createDeletePermissionInput   `json:"delete_permissions" yaml:"delete_permissions"`
 		EventTriggers       []*createEventTriggerInput       `json:"event_triggers" yaml:"event_triggers"`
+		ComputedFields      []*addComputedFieldInput         `json:"computed_fields" yaml:"computed_fields"`
 	} `json:"tables" yaml:"tables"`
 	Functions        []*trackFunctionInput            `json:"functions" yaml:"functions"`
 	QueryCollections []*createQueryCollectionInput    `json:"query_collections" yaml:"query_collections"`
@@ -631,6 +655,16 @@ func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList
 			l.PushBack(et)
 		}
 	}
+
+	for _, table := range rmi.Tables {
+		for _, cf := range table.ComputedFields {
+			cf.Table = tableSchema{
+				table.Table.Name,
+				table.Table.Schema,
+			}
+			l.PushBack(cf)
+		}
+	}
 	// track functions
 	for _, function := range rmi.Functions {
 		l.PushBack(function)
@@ -668,6 +702,11 @@ type relationshipConfig struct {
 
 type permissionConfig struct {
 	tableName, schemaName, permType, role string
+	transition.Transition
+}
+
+type computedFieldConfig struct {
+	tableName, schemaName, name string
 	transition.Transition
 }
 

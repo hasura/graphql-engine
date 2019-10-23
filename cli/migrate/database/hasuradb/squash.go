@@ -174,6 +174,56 @@ func (q CustomQuery) MergePermissions(squashList *database.CustomList) error {
 	return nil
 }
 
+func (q CustomQuery) MergeComputedFields(squashList *database.CustomList) error {
+	computedFieldTransition := transition.New(&computedFieldConfig{})
+	computedFieldTransition.Initial("new")
+	computedFieldTransition.State("added")
+	computedFieldTransition.State("dropped")
+
+	computedFieldTransition.Event("add_computed_field").To("added").From("new", "dropped")
+	computedFieldTransition.Event("drop_computed_field").To("dropped").From("new", "added")
+
+	next := q.Iterate()
+
+	for item, ok := next(); ok; item, ok = next() {
+		g := item.(linq.Group)
+		if g.Key == nil {
+			continue
+		}
+		cfKey := g.Key.(computedFieldMap)
+		cfCfg := computedFieldConfig{
+			tableName:  cfKey.tableName,
+			schemaName: cfKey.schemaName,
+			name:       cfKey.name,
+		}
+		prevElems := make([]*list.Element, 0)
+		for _, val := range g.Group {
+			element := val.(*list.Element)
+			switch obj := element.Value.(type) {
+			case *addComputedFieldInput:
+				err := computedFieldTransition.Trigger("add_computed_field", &cfCfg, nil)
+				if err != nil {
+					return errors.Wrap(err, fmt.Sprintf("computed field %s", obj.Name))
+				}
+				prevElems = append(prevElems, element)
+			case *dropComputedFieldInput:
+				if cfCfg.GetState() == "added" {
+					prevElems = append(prevElems, element)
+				}
+				err := computedFieldTransition.Trigger("drop_computed_field", &cfCfg, nil)
+				if err != nil {
+					return err
+				}
+				// drop previous elements
+				for _, e := range prevElems {
+					squashList.Remove(e)
+				}
+			}
+		}
+	}
+	return nil
+}
+
 func (q CustomQuery) MergeTables(squashList *database.CustomList) error {
 	tableTransition := transition.New(&tableConfig{})
 	tableTransition.Initial("new")
@@ -281,6 +331,16 @@ func (q CustomQuery) MergeTables(squashList *database.CustomList) error {
 			case *dropDeletePermissionInput:
 				if tblCfg.GetState() == "untracked" {
 					return fmt.Errorf("cannot drop delete permission for %s role when table %s on schema %s is untracked", args.Role, tblCfg.name, tblCfg.schema)
+				}
+				prevElems = append(prevElems, element)
+			case *addComputedFieldInput:
+				if tblCfg.GetState() == "untracked" {
+					return fmt.Errorf("cannot add computed field %s when table %s on schema %s is untracked", args.Name, tblCfg.name, tblCfg.schema)
+				}
+				prevElems = append(prevElems, element)
+			case *dropComputedFieldInput:
+				if tblCfg.GetState() == "untracked" {
+					return fmt.Errorf("cannot drop computed field %s when table %s on schema %s is untracked", args.Name, tblCfg.name, tblCfg.schema)
 				}
 				prevElems = append(prevElems, element)
 			}
@@ -777,6 +837,32 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 		ret <- err
 	}
 
+	computedFieldGroup := CustomQuery(query.GroupByT(
+		func(element *list.Element) interface{} {
+			switch args := element.Value.(type) {
+			case *addComputedFieldInput:
+				return computedFieldMap{
+					args.Table.Name,
+					args.Table.Schema,
+					args.Name,
+				}
+			case *dropComputedFieldInput:
+				return computedFieldMap{
+					args.Table.Name,
+					args.Table.Schema,
+					args.Name,
+				}
+			}
+			return nil
+		}, func(element *list.Element) *list.Element {
+			return element
+		},
+	))
+	err = computedFieldGroup.MergeComputedFields(l)
+	if err != nil {
+		ret <- err
+	}
+
 	tableGroups := CustomQuery(query.GroupByT(
 		func(element *list.Element) interface{} {
 			switch args := element.Value.(type) {
@@ -846,6 +932,16 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 					args.Table.Schema,
 				}
 			case *dropDeletePermissionInput:
+				return tableMap{
+					args.Table.Name,
+					args.Table.Schema,
+				}
+			case *addComputedFieldInput:
+				return tableMap{
+					args.Table.Name,
+					args.Table.Schema,
+				}
+			case *dropComputedFieldInput:
 				return tableMap{
 					args.Table.Name,
 					args.Table.Schema,
@@ -1024,6 +1120,10 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 			q.Type = dropCollectionFromAllowList
 		case *clearMetadataInput:
 			q.Type = clearMetadata
+		case *addComputedFieldInput:
+			q.Type = addComputedField
+		case *dropComputedFieldInput:
+			q.Type = dropComputedField
 		case *runSQLInput:
 			ret <- []byte(args.SQL)
 			continue
