@@ -279,7 +279,7 @@ queryNeedsReload (RQV1 qi) = case qi of
   RQDropCollectionFromAllowlist _ -> True
 
   -- | If run_sql is not read only then reload cache, defaults to reload
-  RQRunSql RunSQL{rReadOnly}      -> maybe True not rReadOnly
+  RQRunSql _                      -> False
 
   RQReplaceMetadata _             -> True
   RQExportMetadata _              -> False
