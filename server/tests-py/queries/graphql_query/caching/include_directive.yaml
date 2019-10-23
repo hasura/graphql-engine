@@ -1,0 +1,32 @@
+- description: Test that include directives are properly cached (#3097)
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      users:
+      - name: Alyssa
+      - name: Ben
+  query:
+    query: |
+      query ($flag: Boolean!) {
+        users @include(if: $flag) {
+          name
+        }
+      }
+    variables:
+      flag: true
+
+- description: Test that include directives are properly cached (#3097)
+  url: /v1/graphql
+  status: 200
+  response:
+    data: {}
+  query:
+    query: |
+      query ($flag: Boolean!) {
+        users @include(if: $flag) {
+          name
+        }
+      }
+    variables:
+      flag: false

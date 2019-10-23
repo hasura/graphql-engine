@@ -68,3 +68,8 @@ at https://github.com/hasura/graphql-engine/releases.
    ...
 
 Change ``v1.0.0-alpha01`` to ``v1.0.0-alpha02`` for example, and then ``git push heroku master`` to deploy.
+
+.. note::
+
+  If you are downgrading to an older version of the GraphQL engine you might need to downgrade your metadata catalogue version
+  as described in :doc:`../downgrading`
