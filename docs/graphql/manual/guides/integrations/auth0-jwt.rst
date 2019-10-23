@@ -132,7 +132,7 @@ An easier way to generate the above config is to use the following UI:
 https://hasura.io/jwt-config.
 
 The generated config can be used in env ``HASURA_GRAPHQL_JWT_SECRET`` or ``--jwt-secret`` flag.
-The config generated from this page can be directly pasted in ``yaml`` files and command line arguments as it takes care of
+The config generated from this page can be directly pasted in ``yaml`` files and command-line arguments as it takes care of
 escaping new lines.
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/jwt-config-generated.png
