@@ -374,6 +374,7 @@ func (m *Migrate) Squash(version uint64) (versions []int64, upMeta []interface{}
 				err = r.(error)
 				return
 			case []byte:
+				buf.WriteString("\n")
 				buf.Write(data)
 			case interface{}:
 				upMeta = append(upMeta, data)
@@ -391,6 +392,7 @@ func (m *Migrate) Squash(version uint64) (versions []int64, upMeta []interface{}
 				err = data
 				return
 			case []byte:
+				buf.WriteString("\n")
 				buf.Write(data)
 			case interface{}:
 				downMeta = append(downMeta, data)

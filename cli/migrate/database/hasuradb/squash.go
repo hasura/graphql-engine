@@ -273,6 +273,9 @@ func (q CustomQuery) MergeTables(squashList *database.CustomList) error {
 				}
 				prevElems = append(prevElems, element)
 			case *deleteEventTriggerInput:
+				if tblCfg.GetState() == "untracked" {
+					return fmt.Errorf("cannot delete event trigger %s when table %s on schema %s is untracked", args.Name, tblCfg.name, tblCfg.schema)
+				}
 				prevElems = append(prevElems, element)
 			case *createObjectRelationshipInput:
 				if tblCfg.GetState() == "untracked" {

@@ -364,6 +364,44 @@ type unTrackTableInput struct {
 	Table tableSchema `json:"table" yaml:"table"`
 }
 
+func (t unTrackTableInput) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		Name   string `json:"name" yaml:"name"`
+		Schema string `json:"schema" yaml:"schema"`
+	}{
+		Name:   t.Table.Name,
+		Schema: t.Table.Schema,
+	})
+}
+
+func (t *unTrackTableInput) UnmarshalJSON(b []byte) error {
+	var ts struct {
+		Name   string
+		Schema string
+	}
+	if err := json.Unmarshal(b, &ts); err != nil {
+		return err
+	}
+	if ts.Name == "" {
+		var ts struct {
+			Table tableSchema
+		}
+		if err := json.Unmarshal(b, &ts); err != nil {
+			return err
+		}
+		t.Table = ts.Table
+		return nil
+	}
+	if ts.Schema == "" {
+		ts.Schema = "public"
+	}
+	t.Table = tableSchema{
+		Name:   ts.Name,
+		Schema: ts.Schema,
+	}
+	return nil
+}
+
 type trackFunctionInput struct {
 	tableSchema
 }
