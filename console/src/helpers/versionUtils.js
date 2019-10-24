@@ -7,6 +7,7 @@ export const REMOTE_SCHEMA_TIMEOUT_CONF_SUPPORT =
 export const TABLE_ENUMS_SUPPORT = 'tableEnumsSupport';
 export const EXISTS_PERMISSION_SUPPORT = 'existsPermissionSupport';
 export const GRAPHQL_ALIASING_SUPPORT = 'tableColumnAliasing';
+export const COMPUTED_FIELDS_SUPPORT = 'computedFieldsSupport';
 
 // list of feature launch versions
 const featureLaunchVersions = {
@@ -17,22 +18,23 @@ const featureLaunchVersions = {
   [TABLE_ENUMS_SUPPORT]: 'v1.0.0-beta.6',
   [EXISTS_PERMISSION_SUPPORT]: 'v1.0.0-beta.7',
   [GRAPHQL_ALIASING_SUPPORT]: 'v1.0.0-beta.8',
+  [COMPUTED_FIELDS_SUPPORT]: 'v1.0.0-beta.8',
+};
+
+export const checkValidServerVersion = version => {
+  return semver.valid(version) !== null;
 };
 
 export const getFeaturesCompatibility = serverVersion => {
   const featuresCompatibility = {};
 
-  const isPullRequest = serverVersion.startsWith('pull');
+  const isValidServerVersion = checkValidServerVersion(serverVersion);
 
-  try {
-    Object.keys(featureLaunchVersions).forEach(feature => {
-      featuresCompatibility[feature] =
-        isPullRequest ||
-        semver.satisfies(featureLaunchVersions[feature], '<=' + serverVersion);
-    });
-  } catch (e) {
-    console.error(e);
-  }
+  Object.keys(featureLaunchVersions).forEach(feature => {
+    featuresCompatibility[feature] = isValidServerVersion
+      ? semver.satisfies(featureLaunchVersions[feature], '<=' + serverVersion)
+      : true;
+  });
 
   return featuresCompatibility;
 };

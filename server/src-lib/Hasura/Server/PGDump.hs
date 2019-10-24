@@ -1,5 +1,5 @@
 module Hasura.Server.PGDump
-  ( PGDumpReqBody
+  ( PGDumpReqBody(..)
   , execPGDump
   ) where
 
