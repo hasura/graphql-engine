@@ -1,4 +1,5 @@
 import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
+import globals from '../../../Globals';
 import requestAction from '../../../utils/requestAction';
 import dataHeaders from '../Data/Common/Headers';
 import {
@@ -20,6 +21,8 @@ import {
   getStateValidationError,
 } from './Common/utils';
 import { showErrorNotification } from '../Common/Notification';
+import { appPrefix } from './constants';
+import { push } from 'react-router-redux';
 
 export const fetchActions = () => {
   return (dispatch, getState) => {
@@ -88,7 +91,11 @@ export const createAction = () => (dispatch, getState) => {
   const requestMsg = 'Creating action...';
   const successMsg = 'Created action successfully';
   const errorMsg = 'Creating action failed';
-  const customOnSuccess = () => {};
+  const customOnSuccess = () => {
+    dispatch(fetchActions()).then(() => {
+      dispatch(push(`${globals.urlPrefix}${appPrefix}/manage/add`));
+    });
+  };
   const customOnError = () => {};
 
   makeMigrationCall(
