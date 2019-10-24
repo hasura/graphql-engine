@@ -8,12 +8,14 @@ import (
 	"text/tabwriter"
 
 	"github.com/hasura/graphql-engine/cli"
-	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
 	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
+	log "github.com/sirupsen/logrus"
 )
 
 func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
@@ -22,26 +24,27 @@ func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
 		EC: ec,
 	}
 	migrateSquashCmd := &cobra.Command{
-		Use:          "squash",
-		Short:        "",
+		Use:   "squash",
+		Short: "Squash multiple migrations into a single one",
+		Long:  "Squash multiple migrations leading upto the latest one into a single migration file",
+		Example: `  # squash all migrations from version 123 to the latest one:
+  hasura migrate squash --from 123`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			opts.version = getTime()
-			err := opts.run()
-			if err != nil {
-				return err
-			}
-			return nil
+			opts.newVersion = getTime()
+			return opts.run()
 		},
 	}
 
 	f := migrateSquashCmd.Flags()
-	f.Uint64Var(&opts.from, "from", 0, "squash from this version number")
-	f.StringVar(&opts.name, "name", "default_squash", "name of the migration")
+	f.Uint64Var(&opts.from, "from", 0, "start squashing form this version")
+	f.StringVar(&opts.name, "name", "squashed", "name for the new squashed migration")
+	f.BoolVar(&opts.deleteSource, "delete-source", "delete the source files after squashing without any confirmation")
+
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
 	f.String("access-key", "", "access key for Hasura GraphQL Engine")
@@ -58,33 +61,37 @@ func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
 type migrateSquashOptions struct {
 	EC *cli.ExecutionContext
 
-	from    uint64
-	name    string
-	version int64
+	from       uint64
+	name       string
+	newVersion int64
+
+	deleteSource bool
 }
 
 func (o *migrateSquashOptions) run() error {
-	o.EC.Spin("Squashing migrations...")
+	o.EC.Spin(fmt.Sprintf("Squashing migrations from %d to latest...", o.from))
 	defer o.EC.Spinner.Stop()
 	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version, true)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "unable to initialize migrations driver")
 	}
 
-	versions, err := mig.SquashCmd(migrateDrv, o.from, o.version, o.name, o.EC.MigrationDir)
+	versions, err := mig.SquashCmd(migrateDrv, o.from, o.newVersion, o.name, o.EC.MigrationDir)
 	o.EC.Spinner.Stop()
 	if err != nil {
-		return err
+		return errors.Wrap("unable to squash migrations")
 	}
 
 	o.EC.Logger.WithFields(log.Fields{
-		"version": o.version,
+		"version": o.newVersion,
 		"name":    o.name,
-	}).Info("Migrations files created")
+	}).Infof("Created a new migration after squashing %d till %d", versions[0], versions[len(versions)-1])
 
-	ok := ask2confirmDeleteMigrations(versions, o.EC.Logger)
-	if !ok {
-		return nil
+	if !opts.deleteSource {
+		ok := ask2confirmDeleteMigrations(versions, o.EC.Logger)
+		if !ok {
+			return nil
+		}
 	}
 
 	for _, v := range versions {
@@ -94,7 +101,7 @@ func (o *migrateSquashOptions) run() error {
 		}
 		err = delOptions.Delete()
 		if err != nil {
-			return err
+			return errors.Wrap(err, "unable to delete source file")
 		}
 	}
 	return nil
@@ -115,10 +122,11 @@ func ask2confirmDeleteMigrations(versions []int64, log *logrus.Logger) bool {
 	}
 	out.Flush()
 	fmt.Println(buf.String())
-	log.Infof("Do you want to delete the above list of squashed migrations? (y/N)")
+	log.Infof("These migrations are squashed into a new one. Do you want to delete the source files? (y/N)")
+
 	_, err := fmt.Scan(&s)
 	if err != nil {
-		log.Error("unable to take input, skipping deleting files")
+		log.Error("unable to take user input, skipping deleting files")
 		return false
 	}
 

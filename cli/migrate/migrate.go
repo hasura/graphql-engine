@@ -340,79 +340,123 @@ func (m *Migrate) Query(data []interface{}) error {
 	return m.databaseDrv.Query(data)
 }
 
-func (m *Migrate) Squash(version uint64) (versions []int64, upMeta []interface{}, upSql []byte, downMeta []interface{}, downSql []byte, err error) {
+// Squash migrations from version v into a new migration.
+// Returns a list of migrations that are squashed: vs
+// the squashed metadata for all UP steps: um
+// the squashed SQL for all UP steps: us
+// the squashed metadata for all down steps: dm
+// the squashed SQL for all down steps: ds
+func (m *Migrate) Squash(v uint64) (vs []int64, um []interface{}, us []byte, dm []interface{}, ds []byte, err error) {
+
+	// check the migration mode on the database
 	mode, err := m.databaseDrv.GetSetting("migration_mode")
 	if err != nil {
 		return
 	}
 
+	// if migration_mode is false, set err to ErrNoMigrationMode and return
 	if mode != "true" {
 		err = ErrNoMigrationMode
 		return
 	}
 
+	// concurrently squash all the up migrations
 	retUp := make(chan interface{}, m.PrefetchMigrations)
-	go m.squashUp(version, retUp)
+	go m.squashUp(v, retUp)
 
+	// concurrently squash all down migrations
 	retDown := make(chan interface{}, m.PrefetchMigrations)
-	go m.squashDown(version, retDown)
+	go m.squashDown(v, retDown)
 
+	// combine squashed up and down migrations into a single one when they're ready
 	dataUp := make(chan interface{}, m.PrefetchMigrations)
 	dataDown := make(chan interface{}, m.PrefetchMigrations)
 	retVersions := make(chan int64, m.PrefetchMigrations)
 	go m.squashMigrations(retUp, retDown, dataUp, dataDown, retVersions)
 
+	// make a chan for errors
 	errChn := make(chan error)
+
+	// create a waitgroup to wait for all goroutines to finish execution
 	var wg sync.WaitGroup
+	// add three tasks to waitgroup since we used 3 goroutines above
 	wg.Add(3)
+
+	// read from dataUp chan when all up migrations are squashed and compiled
 	go func() {
+		// defer to mark one task in the waitgroup as complete
 		defer wg.Done()
+
 		buf := &bytes.Buffer{}
 		for r := range dataUp {
+			// check the type of value returned through the chan
 			switch data := r.(type) {
 			case error:
+				// it's an error, set error and return
+				// note: this return is returning the goroutine, not the current function
 				err = r.(error)
 				return
 			case []byte:
+				// it's SQL, concat all of them
 				buf.WriteString("\n")
 				buf.Write(data)
 			case interface{}:
+				// it's metadata, append into the array
 				upMeta = append(upMeta, data)
 			}
 		}
+		// set upSql as the bytes written into buf
 		upSql = buf.Bytes()
 	}()
 
+	// read from dataDown when it is ready:
 	go func() {
+		// defer to mark another task in the waitgroup as complete
 		defer wg.Done()
 		buf := &bytes.Buffer{}
 		for r := range dataDown {
+			// check the type of value returned through the chan
 			switch data := r.(type) {
 			case error:
-				err = data
+				// it's an error, set error and return
+				// note: this return is returning the goroutine, not the current function
+				err = r.(error)
 				return
 			case []byte:
+				// it's SQL, concat all of them
 				buf.WriteString("\n")
 				buf.Write(data)
 			case interface{}:
+				// it's metadata, append into the array
 				downMeta = append(downMeta, data)
 			}
 		}
+		// set downSql as the bytes written into buf
 		downSql = buf.Bytes()
 	}()
 
+	// read retVersions - versions that are squashed
 	go func() {
+		// defer to mark another task in the waitgroup as complete
 		defer wg.Done()
 		for r := range retVersions {
-			versions = append(versions, r)
+			// append each version into the versions array
+			vs = append(vs, r)
 		}
 	}()
 
+	// returns from the above goroutines pass the control here.
+
+	// wait until all tasks (3) in the workgroup are completed
 	wg.Wait()
+
+	// check for errors in the error channel
 	select {
+	// we got an error, set err and return
 	case err = <-errChn:
 		return
 	default:
+		// set nothing and return, all is well
 		return
 	}
 }
