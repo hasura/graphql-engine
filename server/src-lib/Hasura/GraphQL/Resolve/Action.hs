@@ -1,6 +1,7 @@
 module Hasura.GraphQL.Resolve.Action
   ( resolveActionSelect
   , resolveActionInsert
+  , asyncActionsProcessor
   -- , resolveResponseSelectionSet
 
   , ActionSelect(..)
@@ -10,10 +11,13 @@ module Hasura.GraphQL.Resolve.Action
 
 import           Hasura.Prelude
 
+import           Control.Concurrent                (threadDelay)
 import           Control.Exception                 (try)
 import           Control.Lens
 import           Data.Has
+import           Data.IORef
 
+import qualified Control.Concurrent.Async          as A
 import qualified Data.Aeson                        as J
 import qualified Data.Aeson.Casing                 as J
 import qualified Data.Aeson.TH                     as J
@@ -25,8 +29,8 @@ import qualified Language.GraphQL.Draft.Syntax     as G
 import qualified Network.HTTP.Client               as HTTP
 import qualified Network.Wreq                      as Wreq
 
-import qualified Hasura.RQL.DML.Select             as RS
 import qualified Hasura.GraphQL.Resolve.Select     as GRS
+import qualified Hasura.RQL.DML.Select             as RS
 import qualified Hasura.SQL.DML                    as S
 
 import           Hasura.EncJSON
@@ -36,7 +40,6 @@ import           Hasura.GraphQL.Resolve.Select     (processTableSelectionSet)
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.HTTP
-import           Hasura.RQL.DML.Internal           (dmlTxErrorHandler)
 import           Hasura.RQL.DML.Select             (asSingleRowJsonResp)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -92,6 +95,7 @@ resolveResponseSelectionSet ty selSet =
     "id"         -> return $ mkMetadataField "id"
     "created_at" -> return $ mkMetadataField "created_at"
     "status"     -> return $ mkMetadataField "status"
+    "errors"     -> return $ mkMetadataField "errors"
 
     G.Name t     -> throw500 $ "unexpected field in actions' httpResponse : " <> t
 
@@ -229,8 +233,9 @@ resolveActionInsertSync
   -> m RespTx
 resolveActionInsertSync field executionContext sessionVariables = do
   let inputArgs = J.toJSON $ fmap annInpValueToJson $ _fArguments field
+      handlerPayload = ActionWebhookPayload sessionVariables inputArgs
   manager <- asks getter
-  webhookRes <- callWebhook manager inputArgs
+  webhookRes <- callWebhook manager resolvedWebhook handlerPayload
   case returnStrategy of
     ReturnJson -> return $ return $ encJFromJValue webhookRes
     ExecOnPostgres definitionList -> do
@@ -256,33 +261,135 @@ resolveActionInsertSync field executionContext sessionVariables = do
     resolvedWebhook = _saecWebhook executionContext
     returnStrategy = _saecStrategy executionContext
 
-    callWebhook manager actionInput = do
-      let options = wreqOptions manager [contentType]
-          contentType = ("Content-Type", "application/json")
-          postPayload = J.toJSON $ ActionWebhookPayload
-                        sessionVariables actionInput
-          url = (T.unpack $ unResolvedWebhook resolvedWebhook)
-      httpResponse <- liftIO $ try $ try $
-                      Wreq.asJSON =<< Wreq.postWith options url postPayload
-      -- case (^. Wreq.responseBody) <$> httpResponse of
-      case httpResponse of
-        Left e ->
-          throw500WithDetail "http exception when calling webhook" $
-          J.toJSON $ HttpException e
-        Right (Left (Wreq.JSONError e)) ->
-          throw500WithDetail "not a valid json response from webhook" $
-          J.toJSON e
-        Right (Right responseWreq) ->
-          let response = responseWreq ^. Wreq.responseBody
-          in case (_awrData response, _awrErrors response) of
-          (Nothing, Nothing) ->
-            throw500WithDetail "internal error" $
-            J.String "webhook response has neither 'data' nor 'errors'"
-          (Just _, Just _) ->
-            throw500WithDetail "internal error" $
-            J.String "webhook response cannot have both 'data' and 'errors'"
-          (Just d, Nothing) -> return d
-          (Nothing, Just e) -> throwVE $ T.pack $ show e
+callWebhook
+  :: (MonadIO m, MonadError QErr m)
+  => HTTP.Manager -> ResolvedWebhook -> ActionWebhookPayload -> m J.Value
+callWebhook manager resolvedWebhook actionWebhookPayload = do
+  let options = wreqOptions manager [contentType]
+      contentType = ("Content-Type", "application/json")
+      postPayload = J.toJSON actionWebhookPayload
+      url = (T.unpack $ unResolvedWebhook resolvedWebhook)
+  httpResponse <- liftIO $ try $ try $
+                  Wreq.asJSON =<< Wreq.postWith options url postPayload
+  case httpResponse of
+    Left e ->
+      throw500WithDetail "http exception when calling webhook" $
+      J.toJSON $ HttpException e
+    Right (Left (Wreq.JSONError e)) ->
+      throw500WithDetail "not a valid json response from webhook" $
+      J.toJSON e
+    Right (Right responseWreq) ->
+      let response = responseWreq ^. Wreq.responseBody
+      in case (_awrData response, _awrErrors response) of
+      (Nothing, Nothing) ->
+        throw500WithDetail "internal error" $
+        J.String "webhook response has neither 'data' nor 'errors'"
+      (Just _, Just _) ->
+        throw500WithDetail "internal error" $
+        J.String "webhook response cannot have both 'data' and 'errors'"
+      (Just d, Nothing) -> return d
+      (Nothing, Just e) -> throwVE $ T.pack $ show e
+
+data ActionLogItem
+  = ActionLogItem
+  { _aliId               :: !UUID.UUID
+  , _aliActionName       :: !ActionName
+  , _aliSessionVariables :: !UserVars
+  , _aliInputPayload     :: !J.Value
+  } deriving (Show, Eq)
+
+asyncActionsProcessor
+  :: IORef (SchemaCache, SchemaCacheVer)
+  -> Q.PGPool
+  -> HTTP.Manager
+  -> IO ()
+asyncActionsProcessor cacheRef pgPool httpManager = forever $ do
+  asyncInvocations <- getUndeliveredEvents
+  actionCache <- scActions . fst <$> readIORef cacheRef
+  A.mapConcurrently_ (callHandler actionCache) asyncInvocations
+  threadDelay (1 * 1000 * 1000)
+  where
+    getActionWebhook actionCache actionName =
+      _adWebhook . _aiDefinition <$> Map.lookup actionName actionCache
+
+    runTx :: (Monoid a) => Q.TxE QErr a -> IO a
+    runTx q = do
+      res <- runExceptT $ Q.runTx' pgPool q
+      either mempty return res
+
+    callHandler :: ActionCache -> ActionLogItem -> IO ()
+    callHandler actionCache actionLogItem = do
+      let ActionLogItem actionId actionName
+            sessionVariables inputPayload = actionLogItem
+      case getActionWebhook actionCache actionName of
+        Nothing -> return ()
+        Just webhookUrl -> do
+          res <- runExceptT $ callWebhook httpManager webhookUrl $
+            ActionWebhookPayload sessionVariables inputPayload
+          case res of
+            Left e                -> setError actionId e
+            Right responsePayload -> setCompleted actionId responsePayload
+
+    setError :: UUID.UUID -> QErr -> IO ()
+    setError actionId e =
+      runTx $ setErrorQuery actionId e
+
+    setErrorQuery
+      :: UUID.UUID -> QErr -> Q.TxE QErr ()
+    setErrorQuery actionId e =
+      Q.unitQE defaultTxErrorHandler [Q.sql|
+        update hdb_catalog.hdb_action_log
+        set errors = $1, status = 'error'
+        where id = $2
+      |] (Q.AltJ e, actionId) False
+
+    setCompleted :: UUID.UUID -> J.Value -> IO ()
+    setCompleted actionId responsePayload =
+      runTx $ setCompletedQuery actionId responsePayload
+
+    setCompletedQuery
+      :: UUID.UUID -> J.Value -> Q.TxE QErr ()
+    setCompletedQuery actionId responsePayload =
+      Q.unitQE defaultTxErrorHandler [Q.sql|
+        update hdb_catalog.hdb_action_log
+        set response_payload = $1, status = 'completed'
+        where id = $2
+      |] (Q.AltJ responsePayload, actionId) False
+
+    undeliveredEventsQuery
+      :: Q.TxE QErr [ActionLogItem]
+    undeliveredEventsQuery =
+      map mapEvent <$> Q.listQE defaultTxErrorHandler [Q.sql|
+        update hdb_catalog.hdb_action_log set status = 'processing'
+        where
+          id in (
+            select id from hdb_catalog.hdb_action_log
+            where status = 'created'
+            for update skip locked limit 10
+          )
+        returning
+          id, action_name, session_variables::json, input_payload::json
+      |] () False
+     where
+       mapEvent (actionId, actionName,
+                 Q.AltJ sessionVariables, Q.AltJ inputPayload) =
+         ActionLogItem actionId actionName sessionVariables inputPayload
+
+    getUndeliveredEvents = runTx undeliveredEventsQuery
+
+      -- map uncurryEvent <$>
+      --   Q.listQE defaultTxErrorHandler [Q.sql|
+      --     update hdb_catalog.hdb_action_log set status = 'processing'
+      --     where
+      --       id in (
+      --         select id from hdb_catalog.hdb_action_log
+      --         where status = 'created'
+      --         for update skip locked limit 10
+      --       ) returning action_name, session_variables, input_payload
+      --   |]
+
+
+
 
 resolveActionInsert
   :: ( MonadError QErr m, MonadReader r m, Has FieldMap r

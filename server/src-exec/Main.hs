@@ -1,49 +1,52 @@
 module Main where
 
-import           Migrate                    (migrateCatalog)
+import           Migrate                       (migrateCatalog)
 import           Ops
 
-import           Control.Monad.STM          (atomically)
-import           Data.Time.Clock            (getCurrentTime)
+import           Control.Monad.STM             (atomically)
+import           Data.Time.Clock               (getCurrentTime)
 import           Options.Applicative
-import           System.Environment         (getEnvironment, lookupEnv)
-import           System.Exit                (exitFailure)
+import           System.Environment            (getEnvironment, lookupEnv)
+import           System.Exit                   (exitFailure)
 
 
-import qualified Control.Concurrent         as C
-import qualified Data.Aeson                 as A
-import qualified Data.ByteString.Char8      as BC
-import qualified Data.ByteString.Lazy       as BL
-import qualified Data.ByteString.Lazy.Char8 as BLC
-import qualified Data.Text                  as T
-import qualified Data.Time.Clock            as Clock
-import qualified Data.Yaml                  as Y
-import qualified Network.HTTP.Client        as HTTP
-import qualified Network.HTTP.Client.TLS    as HTTP
-import qualified Network.Wai.Handler.Warp   as Warp
-import qualified System.Posix.Signals       as Signals
+import qualified Control.Concurrent            as C
+import qualified Data.Aeson                    as A
+import qualified Data.ByteString.Char8         as BC
+import qualified Data.ByteString.Lazy          as BL
+import qualified Data.ByteString.Lazy.Char8    as BLC
+import qualified Data.Text                     as T
+import qualified Data.Time.Clock               as Clock
+import qualified Data.Yaml                     as Y
+import qualified Network.HTTP.Client           as HTTP
+import qualified Network.HTTP.Client.TLS       as HTTP
+import qualified Network.Wai.Handler.Warp      as Warp
+import qualified System.Posix.Signals          as Signals
 
 import           Hasura.Db
 import           Hasura.Events.Lib
+import           Hasura.GraphQL.Resolve.Action (asyncActionsProcessor)
 import           Hasura.Logging
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
-import           Hasura.RQL.Types           (SQLGenCtx (..), SchemaCache (..),
-                                             SystemDefined (..), adminUserInfo,
-                                             emptySchemaCache)
-import           Hasura.Server.App          (HasuraApp (..),
-                                             SchemaCacheRef (..), getSCFromRef,
-                                             logInconsObjs, mkWaiApp)
+import           Hasura.RQL.DDL.Metadata       (fetchMetadata)
+import           Hasura.RQL.Types              (SQLGenCtx (..),
+                                                SchemaCache (..),
+                                                SystemDefined (..),
+                                                adminUserInfo, emptySchemaCache)
+import           Hasura.Server.App             (HasuraApp (..),
+                                                SchemaCacheRef (..),
+                                                getSCFromRef, logInconsObjs,
+                                                mkWaiApp)
 import           Hasura.Server.Auth
-import           Hasura.Server.CheckUpdates (checkForUpdates)
+import           Hasura.Server.CheckUpdates    (checkForUpdates)
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
-import           Hasura.Server.Query        (RunCtx (..), peelRun)
+import           Hasura.Server.Query           (RunCtx (..), peelRun)
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
-import           Hasura.Server.Version      (currentVersion)
+import           Hasura.Server.Version         (currentVersion)
 
-import qualified Database.PG.Query          as Q
+import qualified Database.PG.Query             as Q
 
 printErrExit :: forall a . String -> IO a
 printErrExit = (>> exitFailure) . putStrLn
@@ -182,6 +185,9 @@ main =  do
         mkGenericStrLog LevelInfo "event_triggers" "starting workers"
       void $ C.forkIO $ processEventQueue hloggerCtx logEnvHeaders
         httpManager pool scRef eventEngineCtx
+
+      void $ C.forkIO $ asyncActionsProcessor (_scrCache cacheRef)
+        pool httpManager
 
       -- start a background thread to check for updates
       void $ C.forkIO $ checkForUpdates loggerCtx httpManager

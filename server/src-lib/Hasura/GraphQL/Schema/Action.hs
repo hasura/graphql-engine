@@ -47,6 +47,8 @@ mkActionResponseTypeInfo actionName outputType =
         , G.toGT $ mkScalarTy PGUUID)
       , ( "created_at", "the time at which this action was created"
         , G.toGT $ mkScalarTy PGTimeStampTZ)
+      , ( "errors", "errors related to the invocation"
+        , G.toGT $ mkScalarTy PGJSON)
       -- , ( "status", "the status of this action, whether it is processed, etc."
       --   , G.toGT $ G.NamedType "action_status")
       , ( "output", "the output fields of this action"
@@ -64,7 +66,7 @@ mkMutationField actionName actionInfo permission definitionList =
   , fieldInfo
   )
   where
-    definition = _aiDefintion actionInfo
+    definition = _aiDefinition actionInfo
     actionExecutionContext =
       case getActionKind definition of
         ActionSynchronous  ->
@@ -144,7 +146,7 @@ mkActionFieldsAndTypes actionInfo annotatedOutputType permission =
          )
   where
     actionName = _aiName actionInfo
-    definition = _aiDefintion actionInfo
+    definition = _aiDefinition actionInfo
     roleName = _apiRole permission
     mkPGFieldType (fieldType, fieldTypeInfo) =
       case (G.isListType fieldType, fieldTypeInfo) of
@@ -208,7 +210,7 @@ mkActionFieldsAndTypes actionInfo annotatedOutputType permission =
           getSelectPermissionInfoM remoteTableInfo roleName
         return (spiFilter selectPermisisonInfo, spiLimit selectPermisisonInfo)
     actionOutputBaseType =
-      G.getBaseType $ unGraphQLType $ _adOutputType $ _aiDefintion actionInfo
+      G.getBaseType $ unGraphQLType $ _adOutputType $ _aiDefinition actionInfo
 
 mkActionSchemaOne
   :: (QErrM m)
@@ -234,7 +236,7 @@ mkActionSchemaOne annotatedObjects actionInfo = do
     adminPermission = ActionPermissionInfo adminRole annBoolExpTrue
     permissions = Map.insert adminRole adminPermission $ _aiPermissions actionInfo
     actionOutputBaseType =
-      G.getBaseType $ unGraphQLType $ _adOutputType $ _aiDefintion actionInfo
+      G.getBaseType $ unGraphQLType $ _adOutputType $ _aiDefinition actionInfo
 
 mkActionsSchema
   :: (QErrM m)
@@ -250,7 +252,8 @@ mkActionsSchema annotatedObjects =
   mempty
   where
     -- we'll need to add uuid and timestamptz for actions
-    newRoleState = (mempty, addScalarToTyAgg PGTimeStampTZ $
+    newRoleState = (mempty, addScalarToTyAgg PGJSON $
+                            addScalarToTyAgg PGTimeStampTZ $
                             addScalarToTyAgg PGUUID mempty)
     f roleName (queryFieldM, mutationField, fields) =
       Map.alter (Just . addToState . fromMaybe newRoleState) roleName

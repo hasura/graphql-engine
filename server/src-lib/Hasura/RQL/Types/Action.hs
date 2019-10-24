@@ -118,7 +118,7 @@ type ActionPermissionMap
 data ActionInfo
   = ActionInfo
   { _aiName        :: !ActionName
-  , _aiDefintion   :: !ResolvedActionDefinition
+  , _aiDefinition   :: !ResolvedActionDefinition
   , _aiPermissions :: !ActionPermissionMap
   } deriving (Show, Eq)
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''ActionInfo)
