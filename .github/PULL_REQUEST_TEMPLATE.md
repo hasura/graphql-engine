@@ -33,19 +33,33 @@
 <!-- Is hdb_catalog version bumped? -->
 Is Hasura catalogue version bumped?
 - [ ] Yes
-  - [ ] Update docs with down SQL script
+  - [ ] Update docs with down SQL script <!-- https://docs.hasura.io/1.0/graphql/manual/deployment/downgrading.html#downgrading-across-catalogue-versions -->
 - [ ] No
 
 #### Metadata
 <!-- Hasura metadata changes -->
 
 Any new metadata feature is added?
-
-- [ ] Yes;
-   Does `run_sql` auto manages the new metadata through schema diffing?
-  - [ ] Yes
-  - [ ] Not required
+- [ ] Yes
+   - Does `run_sql` auto manages the new metadata through schema diffing?
+     - [ ] Yes
+     - [ ] Not required
+   - Does `run_sql` auto manages the definitions of metadata on renaming?
+     - [ ] Yes
+     - [ ] Not required
+   - Does `export_metadata`/`replace_metadata` supports the new metadata added?
+     - [ ] Yes
+     - [ ] Not required
 - [ ] No
+
+#### GraphQL
+- [ ] No new GraphQL schema is generated
+
+If any new GraphQL schema is being generated:-
+
+   - [ ] Ensure the correlation between new types and typenames
+   <!-- No dangling types or typenames with missing types (a potential bug, introspection fails) -->
+   <!-- If you have anything in your mind, which can be added here as a check list item, please submit a PR to update this template :) -->
 
 #### Breaking changes
 
