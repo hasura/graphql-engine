@@ -21,7 +21,7 @@ load and modify the Hasura catalog and schema cache.
     functions incrementally update the cache when they modify the catalog.
 -}
 
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Hasura.RQL.DDL.Schema
  ( module Hasura.RQL.DDL.Schema.Cache
@@ -59,17 +59,29 @@ import           Hasura.Server.Utils            (matchRegex)
 data RunSQL
   = RunSQL
   { rSql                      :: Text
-  , rCascade                  :: !(Maybe Bool)
+  , rCascade                  :: !Bool
   , rCheckMetadataConsistency :: !(Maybe Bool)
-  , rReadOnly                 :: !(Maybe Bool)
+  , rReadOnly                 :: !Bool
   } deriving (Show, Eq, Lift)
-$(deriveJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''RunSQL)
+
+instance FromJSON RunSQL where
+  parseJSON (Object o) = do
+    rSql <- o .: "sql"
+    rCascade <- o .:? "cascade" .!= False
+    rCheckMetadataConsistency <- o .:? "check_metadata_consistency"
+    rReadOnly <- o .:? "read_only" .!= False
+    pure RunSQL{..}
+  parseJSON _ = fail "expecting an object for args"
+
+$(deriveToJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''RunSQL)
 
 runRunSQL :: (CacheBuildM m, UserInfoM m) => RunSQL -> m EncJSON
-runRunSQL (RunSQL sql cascade mChkMDCnstcy (fromMaybe False -> isReadOnly)) = do
+runRunSQL RunSQL{..} = do
   adminOnly
-  isMDChkNeeded <- maybe (if isReadOnly then pure False else isAltrDropReplace sql) return mChkMDCnstcy
-  bool (execRawSQL sql) (withMetadataCheck (or cascade) $ execRawSQL sql) isMDChkNeeded
+  metadataCheckRequired <- case rReadOnly of
+    True -> pure False
+    False -> onNothing rCheckMetadataConsistency $ isAltrDropReplace rSql
+  bool (execRawSQL rSql) (withMetadataCheck rCascade $ execRawSQL rSql) metadataCheckRequired
   where
     execRawSQL :: (MonadTx m) => Text -> m EncJSON
     execRawSQL =

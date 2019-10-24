@@ -278,8 +278,8 @@ queryNeedsReload (RQV1 qi) = case qi of
   RQAddCollectionToAllowlist _    -> True
   RQDropCollectionFromAllowlist _ -> True
 
-  -- | If run_sql is not read only then reload cache, defaults to reload
-  RQRunSql RunSQL{rReadOnly}      -> maybe True not rReadOnly
+  -- | If run_sql is not read only then reload cache
+  RQRunSql RunSQL{rReadOnly}      -> not rReadOnly
 
   RQReplaceMetadata _             -> True
   RQExportMetadata _              -> False
