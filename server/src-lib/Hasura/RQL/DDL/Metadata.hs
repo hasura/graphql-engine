@@ -30,7 +30,8 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Language.Haskell.TH.Syntax         (Lift)
 
-import qualified Data.HashMap.Strict                as M
+import qualified Data.HashMap.Strict                as HM
+import qualified Data.HashMap.Strict.InsOrd         as HMIns
 import qualified Data.HashSet                       as HS
 import qualified Data.List                          as L
 import qualified Data.Text                          as T
@@ -66,12 +67,11 @@ data TableMeta
   , _tmDeletePermissions   :: ![DP.DelPermDef]
   , _tmEventTriggers       :: ![DTS.EventTriggerConf]
   } deriving (Show, Eq, Lift)
+$(makeLenses ''TableMeta)
 
 mkTableMeta :: QualifiedTable -> Bool -> TableConfig -> TableMeta
 mkTableMeta qt isEnum config =
   TableMeta qt isEnum config [] [] [] [] [] [] []
-
-makeLenses ''TableMeta
 
 instance FromJSON TableMeta where
   parseJSON (Object o) = do
@@ -104,7 +104,7 @@ instance FromJSON TableMeta where
       etKey = "event_triggers"
 
       unexpectedKeys =
-        HS.fromList (M.keys o) `HS.difference` expectedKeySet
+        HS.fromList (HM.keys o) `HS.difference` expectedKeySet
 
       expectedKeySet =
         HS.fromList [ tableKey, isEnumKey, configKey, orKey
@@ -321,7 +321,7 @@ $(deriveToJSON defaultOptions ''ExportMetadata)
 fetchMetadata :: Q.TxE QErr ReplaceMetadata
 fetchMetadata = do
   tables <- Q.catchE defaultTxErrorHandler fetchTables
-  let tableMetaMap = M.fromList . flip map tables $
+  let tableMetaMap = HMIns.fromList . flip map tables $
         \(schema, name, isEnum, maybeConfig) ->
           let qualifiedName = QualifiedObject schema name
               configuration = maybe emptyTableConfig Q.getAltJ maybeConfig
@@ -368,7 +368,7 @@ fetchMetadata = do
   -- fetch allow list
   allowlist <- map DQC.CollectionReq <$> DQC.fetchAllowlist
 
-  return $ ReplaceMetadata (M.elems postRelMap) (Just functions)
+  return $ ReplaceMetadata (HMIns.elems postRelMap) (Just functions)
                            (Just schemas) (Just collections) (Just allowlist)
 
   where
@@ -400,6 +400,7 @@ fetchMetadata = do
                 SELECT table_schema, table_name, is_enum, configuration::json
                 FROM hdb_catalog.hdb_table
                  WHERE is_system_defined = 'false'
+                ORDER BY table_schema ASC, table_name ASC
                     |] () False
 
     fetchRelationships =
@@ -407,6 +408,7 @@ fetchMetadata = do
                 SELECT table_schema, table_name, rel_name, rel_type, rel_def::json, comment
                   FROM hdb_catalog.hdb_relationship
                  WHERE is_system_defined = 'false'
+                ORDER BY table_schema ASC, table_name ASC, rel_name ASC
                     |] () False
 
     fetchPermissions =
@@ -414,12 +416,14 @@ fetchMetadata = do
                 SELECT table_schema, table_name, role_name, perm_type, perm_def::json, comment
                   FROM hdb_catalog.hdb_permission
                  WHERE is_system_defined = 'false'
+                ORDER BY table_schema ASC, table_name ASC, role_name ASC, perm_type ASC
                     |] () False
 
     fetchEventTriggers =
      Q.listQ [Q.sql|
               SELECT e.schema_name, e.table_name, e.configuration::json
                FROM hdb_catalog.event_triggers e
+              ORDER BY e.schema_name ASC, e.table_name ASC, e.name ASC
               |] () False
 
     fetchFunctions =
@@ -427,6 +431,7 @@ fetchMetadata = do
                 SELECT function_schema, function_name
                 FROM hdb_catalog.hdb_function
                 WHERE is_system_defined = 'false'
+                ORDER BY function_schema ASC, function_name ASC
                     |] () False
 
     fetchCollections = do
@@ -434,6 +439,7 @@ fetchMetadata = do
                SELECT collection_name, collection_defn::json, comment
                  FROM hdb_catalog.hdb_query_collection
                  WHERE is_system_defined = 'false'
+               ORDER BY collection_name ASC
               |] () False
       return $ flip map r $ \(name, Q.AltJ defn, mComment)
                             -> DQC.CreateCollection name defn mComment

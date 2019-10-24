@@ -8,6 +8,28 @@ response:
   query_collections: []
   allowlist: []
   tables:
+  - table: article
+    is_enum: false
+    configuration:
+      custom_root_fields:
+        select:
+        select_by_pk:
+        select_aggregate:
+        insert:
+        update:
+        delete:
+      custom_column_names: {}
+    object_relationships:
+    - using:
+        foreign_key_constraint_on: author_id
+      name: author
+      comment:
+    array_relationships: []
+    insert_permissions: []
+    select_permissions: []
+    update_permissions: []
+    delete_permissions: []
+    event_triggers: []
   - table: author
     is_enum: false
     configuration:
@@ -27,28 +49,6 @@ response:
           table: article
       name: articles
       comment: List all articles of the author
-    insert_permissions: []
-    select_permissions: []
-    update_permissions: []
-    delete_permissions: []
-    event_triggers: []
-  - table: article
-    is_enum: false
-    configuration:
-      custom_root_fields:
-        select:
-        select_by_pk:
-        select_aggregate:
-        insert:
-        update:
-        delete:
-      custom_column_names: {}
-    object_relationships:
-    - using:
-        foreign_key_constraint_on: author_id
-      name: author
-      comment:
-    array_relationships: []
     insert_permissions: []
     select_permissions: []
     update_permissions: []

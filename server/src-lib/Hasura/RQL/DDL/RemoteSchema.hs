@@ -153,6 +153,7 @@ fetchRemoteSchemas =
     [Q.sql|
      SELECT name, definition, comment
        FROM hdb_catalog.remote_schemas
+     ORDER BY name ASC
      |] () True
   where
     fromRow (n, Q.AltJ def, comm) = AddRemoteSchemaQuery n def comm

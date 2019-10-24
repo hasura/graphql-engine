@@ -9,6 +9,7 @@ import jwt
 import random
 import time
 
+from collections import OrderedDict
 from context import GQLWsClient
 
 def check_keys(keys, obj):
@@ -184,7 +185,7 @@ def check_query(hge_ctx, conf, transport='http', add_auth=True):
     elif transport == 'http':
         print('running on http')
         return validate_http_anyq(hge_ctx, conf['url'], conf['query'], headers,
-                                  conf['status'], conf.get('response'))
+                                  conf['status'], conf.get('response'), conf.get('enforce_keys_order'))
 
 
 
@@ -228,17 +229,22 @@ def validate_gql_ws_q(hge_ctx, endpoint, query, headers, exp_http_response, retr
     return resp['payload']
 
 
-def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response):
+def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response, enforce_keys_order=False):
     code, resp = hge_ctx.anyq(url, query, headers)
     print(headers)
     assert code == exp_code, resp
     print('http resp: ', resp)
+    yaml_dump = yaml.dump({
+        'response': resp,
+        'expected': exp_response,
+        'diff': jsondiff.diff(exp_response, resp)
+    })
+
     if exp_response:
-        assert json_ordered(resp) == json_ordered(exp_response), yaml.dump({
-            'response': resp,
-            'expected': exp_response,
-            'diff': jsondiff.diff(exp_response, resp)
-        })
+        if enforce_keys_order:
+            assert to_orderedDict(resp) == to_orderedDict(exp_response), yaml_dump
+        else:
+            assert json_ordered(resp) == json_ordered(exp_response), yaml_dump
     return resp
 
 def check_query_f(hge_ctx, f, transport='http', add_auth=True):
@@ -261,5 +267,13 @@ def json_ordered(obj):
         return sorted((k, json_ordered(v)) for k, v in obj.items())
     if isinstance(obj, list):
         return list(json_ordered(x) for x in obj)
+    else:
+        return obj
+
+def to_orderedDict(obj):
+    if isinstance(obj, dict):
+        return OrderedDict((k, to_orderedDict(v)) for k, v in obj.items())
+    if isinstance(obj, list):
+        return list(to_orderedDict(x) for x in obj)
     else:
         return obj
