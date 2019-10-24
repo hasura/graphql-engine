@@ -16,6 +16,9 @@ Your authentication service is required to pass a user's **role** information in
 variables like ``X-Hasura-Role``, etc. More often than not, you'll also need to pass user information
 for your access control use cases, like ``X-Hasura-User-Id``, to build permission rules.
 
+You can also configure Hasura to allow access to unauthenticated users by defining a specific role
+which will be set for all unauthenticated requests.
+
 Authentication options
 ----------------------
 
@@ -33,10 +36,7 @@ Hasura supports two modes of authentication configuration:
 
    .. thumbnail:: ../../../../img/graphql/manual/auth/auth-jwt-overview.png
 
-You can also configure Hasura GraphQL engine to allow access to unauthenticated users by defining a specific role
-which will be set for all unauthenticated requests.
-
-**See more details about these at:**
+**See more details at:**
 
 .. toctree::
   :maxdepth: 1
