@@ -4,19 +4,16 @@ import { Link } from 'react-router';
 import LeftSubSidebar from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
 import styles from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
 
-const dataList = [{ name: 'action1' }, { name: 'action2' }];
+const LeftSidebar = ({ appPrefix, common: { actions, currentAction } }) => {
+  const [searchText, setSearchText] = React.useState('');
 
-const LeftSidebar = ({ appPrefix, location }) => {
-  function actionsSearch(e) {
-    const searchTerm = e.target.value;
-    console.log('searching', searchTerm);
-  }
+  const handleSearch = e => setSearchText(e.target.value);
 
   const getSearchInput = () => {
     return (
       <input
         type="text"
-        onChange={actionsSearch}
+        onChange={handleSearch}
         className="form-control"
         placeholder="search actions"
         data-test="search-actions"
@@ -24,11 +21,25 @@ const LeftSidebar = ({ appPrefix, location }) => {
     );
   };
 
-  const getChildList = () => {
-    const _dataList = [{ name: 'action1' }, { name: 'action2' }];
+  // TODO test search
+  let actionsList = [];
+  if (searchText) {
+    const secondaryResults = [];
+    actions.forEach(a => {
+      if (a.action_name.startsWith(searchText)) {
+        actionsList.push(a);
+      } else if (a.action_name.includes(searchText)) {
+        secondaryResults.push(a);
+      }
+    });
+    actionsList = [...actionsList, ...secondaryResults];
+  } else {
+    actionsList = [...actions];
+  }
 
+  const getChildList = () => {
     let childList;
-    if (_dataList.length === 0) {
+    if (actionsList.length === 0) {
       childList = (
         <li
           className={styles.noChildren}
@@ -38,9 +49,9 @@ const LeftSidebar = ({ appPrefix, location }) => {
         </li>
       );
     } else {
-      childList = _dataList.map((d, i) => {
+      childList = actionsList.map((a, i) => {
         let activeTableClass = '';
-        if (d.name === 'action1' && location.pathname.includes('action1')) {
+        if (a.action_name === currentAction) {
           activeTableClass = styles.activeLink;
         }
 
@@ -51,14 +62,14 @@ const LeftSidebar = ({ appPrefix, location }) => {
             data-test={`action-sidebar-links-${i + 1}`}
           >
             <Link
-              to={appPrefix + '/manage/' + d.name + '/details'}
-              data-test={d.name}
+              to={appPrefix + '/manage/' + a.action_name + '/modify'}
+              data-test={a.action_name}
             >
               <i
                 className={styles.tableIcon + ' fa fa-code-fork'}
                 aria-hidden="true"
               />
-              {d.name}
+              {a.action_name}
             </Link>
           </li>
         );
@@ -72,7 +83,7 @@ const LeftSidebar = ({ appPrefix, location }) => {
     <LeftSubSidebar
       showAddBtn
       searchInput={getSearchInput()}
-      heading={`Actions (${dataList.length})`}
+      heading={`Actions (${actionsList.length})`}
       addLink={`${appPrefix}/manage/add`}
       addLabel={'Create'}
       addTestString={'actions-sidebar-add-table'}

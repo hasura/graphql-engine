@@ -5,6 +5,8 @@ const state = {
     scalars: [],
     enums: [],
   },
+  isFetching: false,
+  error: null,
 };
 
 export default state;

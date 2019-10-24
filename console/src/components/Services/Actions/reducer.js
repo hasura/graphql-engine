@@ -4,15 +4,15 @@ import addReducer from './Add/reducer';
 import modifyReducer from './Modify/reducer';
 import permissionsReducer from './Permissions/reducer';
 
-// list state
-const listState = {
+// common state
+const commonState = {
   actions: [],
   currentAction: '',
   isFetching: false,
   error: null,
 };
 
-// list actions
+// common actions
 export const LOADING_ACTIONS = 'Actions/LOAD_ACTIONS';
 export const LOADING_ACTIONS_SUCCESS = 'Actions/LOADING_ACTIONS_SUCCESS';
 export const LOADING_ACTIONS_FAILURE = 'Actions/LOADING_ACTIONS_FAILURE';
@@ -20,9 +20,14 @@ export const setActions = actions => ({
   type: LOADING_ACTIONS_SUCCESS,
   data: actions,
 });
+const SET_CURRENT_ACTION = 'Actions/SET_CURRENT_ACTION';
+export const setCurrentAction = actionName => ({
+  type: SET_CURRENT_ACTION,
+  name: actionName,
+});
 
-// list reducer
-const listingReducer = (state = listState, action) => {
+// common reducer
+const commonReducer = (state = commonState, action) => {
   switch (action.type) {
     case LOADING_ACTIONS:
       return {
@@ -41,6 +46,11 @@ const listingReducer = (state = listState, action) => {
         isFetching: false,
         error: action.error,
       };
+    case SET_CURRENT_ACTION:
+      return {
+        ...state,
+        currentAction: action.name,
+      };
     default:
       return state;
   }
@@ -49,7 +59,7 @@ const listingReducer = (state = listState, action) => {
 // actions root reducer
 const reducer = combineReducers({
   add: addReducer,
-  list: listingReducer,
+  common: commonReducer,
   modify: modifyReducer,
   permissions: permissionsReducer,
 });

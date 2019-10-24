@@ -3,14 +3,23 @@ import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLay
 import tabInfo from './tabs';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { appPrefix } from '../constants';
+import { setCurrentAction } from '../reducer';
 
-const TabContainer = ({ params, children, allActions, tabName }) => {
-  const { actionName } = params;
-  // if action name absent, push to prefixUrl else set action
-  // if changes, change
+const TabContainer = ({
+  params: { actionName },
+  children,
+  allActions,
+  tabName,
+  dispatch,
+}) => {
+  React.useEffect(() => {
+    dispatch(setCurrentAction(actionName));
+  }, []);
 
-  const currentAction = allActions.find(a => a.name === actionName);
+  const currentAction = allActions.find(a => a.action_name === actionName);
+
   if (!currentAction) {
+    dispatch(setCurrentAction(''));
     throw new NotFoundError();
   }
 
@@ -27,7 +36,7 @@ const TabContainer = ({ params, children, allActions, tabName }) => {
     },
     {
       title: actionName,
-      url: `${appPrefix}/manage/${actionName}/details`,
+      url: `${appPrefix}/manage/${actionName}/modify`,
     },
     {
       title: tabName,
@@ -40,13 +49,13 @@ const TabContainer = ({ params, children, allActions, tabName }) => {
     >
       <CommonTabLayout
         appPrefix={appPrefix}
-        currentTab="details"
+        currentTab={tabName}
         heading={actionName}
         tabsInfo={tabInfo}
         breadCrumbs={breadCrumbs}
         baseUrl={`${appPrefix}/manage/${actionName}`}
       />
-      {children}
+      <div className={styles.add_pad_top}>{children}</div>
     </div>
   );
 };

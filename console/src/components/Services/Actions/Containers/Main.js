@@ -26,9 +26,6 @@ class Container extends React.Component {
             Manage
           </Link>
           <LeftSidebar appPrefix={appPrefix} {...this.props} />
-          <Link className={styles.linkBorder} to={appPrefix + '/manage/types'}>
-            Types
-          </Link>
         </li>
       </ul>
     );

@@ -2,7 +2,8 @@ import Modify from './Main';
 
 const mapStateToProps = state => {
   return {
-    ...state.actions.permissions,
+    ...state.actions.modify,
+    allActions: state.actions.common.actions,
   };
 };
 

@@ -2,7 +2,7 @@ import Landing from './Main';
 
 const mapStateToProps = state => {
   return {
-    ...state.actions.list,
+    ...state.actions.common,
   };
 };
 

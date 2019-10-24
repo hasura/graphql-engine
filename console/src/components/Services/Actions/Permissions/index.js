@@ -3,6 +3,7 @@ import Permissions from './Main';
 const mapStateToProps = state => {
   return {
     ...state.actions.permissions,
+    allActions: state.actions.common.actions,
   };
 };
 

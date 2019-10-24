@@ -6,13 +6,19 @@ import { fetchActions } from './ServerIO';
 import globals from '../../../Globals';
 import ActionDetails from './Details';
 import ActionsLandingPage from './Landing';
-//import ActionPermissions from './Permissions';
+import ActionRelationships from './Relationships';
+import ActionPermissions from './Permissions';
 import ModifyAction from './Modify';
 import AddAction from './Add';
+import { fetchCustomTypes } from '../Types/ServerIO';
 
 const fetchInitialData = ({ dispatch }) => {
   return (nextState, replaceState, cb) => {
-    Promise.all([dispatch(fetchActions())]).then(
+    Promise.all([
+      dispatch(fetchCustomTypes()).then(() => {
+        dispatch(fetchActions());
+      }),
+    ]).then(
       () => {
         cb();
       },
@@ -39,6 +45,14 @@ const getActionsRouter = (connect, store, composeOnEnterHooks) => {
         <Route path="add" component={AddAction(connect)} />
         <Route path=":actionName/details" component={ActionDetails(connect)} />
         <Route path=":actionName/modify" component={ModifyAction(connect)} />
+        <Route
+          path=":actionName/relationships"
+          component={ActionRelationships(connect)}
+        />
+        <Route
+          path=":actionName/permissions"
+          component={ActionPermissions(connect)}
+        />
       </Route>
     </Route>
   );

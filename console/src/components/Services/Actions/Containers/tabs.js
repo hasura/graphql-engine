@@ -1,9 +1,12 @@
 const tabInfo = {
-  details: {
-    display_text: 'Details',
-  },
   modify: {
     display_text: 'Modify',
+  },
+  relationships: {
+    display_text: 'Relationships',
+  },
+  permissions: {
+    display_text: 'Permissions',
   },
 };
 

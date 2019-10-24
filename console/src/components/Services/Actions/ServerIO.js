@@ -12,6 +12,7 @@ import {
   generateSetCustomTypesQuery,
   generateCreateActionQuery,
   generateDropActionQuery,
+  getFetchActionsQuery,
 } from '../../Common/utils/v1QueryUtils';
 import {
   reformCustomTypes,
@@ -27,17 +28,7 @@ export const fetchActions = () => {
       credentials: globalCookiePolicy,
       method: 'POST',
       headers: dataHeaders(getState),
-      body: JSON.stringify({
-        type: 'select',
-        args: {
-          table: {
-            name: 'actions',
-            schema: 'hdb_catalog',
-          },
-          columns: ['*'],
-          order_by: [{ column: 'name', type: 'asc', nulls: 'last' }],
-        },
-      }),
+      body: JSON.stringify(getFetchActionsQuery()),
     };
     dispatch({ type: LOADING_ACTIONS });
     return dispatch(requestAction(url, options)).then(
