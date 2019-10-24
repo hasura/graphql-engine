@@ -32,10 +32,18 @@ const ArgumentsEditorList = ({
           newArguments[i] = arg;
           setArguments(newArguments);
         };
+        const removeArgument = () => {
+          const newArguments = JSON.parse(JSON.stringify(args));
+          setArguments([
+            ...newArguments.slice(0, i),
+            newArguments.slice(i + 1),
+          ]);
+        };
         return (
           <ArgumentEditor
             argument={a}
             setArgument={setArgument}
+            removeArgument={removeArgument}
             allTypes={allTypes}
             isLast={isLast}
             index={i}

@@ -2,6 +2,7 @@ import React from 'react';
 import styles from './Styles.scss';
 import ArgumentEditor from './ArgumentEditor';
 import FieldEditor from './FieldEditor';
+import { defaultObjectType, defaultArg, defaultField } from '../stateDefaults';
 
 const ObjectBuilder = ({ type, setType, argTypes, fieldTypes }) => {
   const { name, arguments: args, fields, kind } = type;
@@ -9,22 +10,8 @@ const ObjectBuilder = ({ type, setType, argTypes, fieldTypes }) => {
   const init = () => {
     if (kind !== 'object') {
       setType({
+        ...defaultObjectType,
         name,
-        kind: 'object',
-        fields: [
-          {
-            name: '',
-            type: '',
-          },
-        ],
-        arguments: [
-          {
-            name: '',
-            type: '',
-            description: '',
-            optional: false,
-          },
-        ],
       });
     }
   };
@@ -42,7 +29,7 @@ const ObjectBuilder = ({ type, setType, argTypes, fieldTypes }) => {
     const newArgs = [...a];
     const lastArg = newArgs[newArgs.length - 1];
     if (lastArg.name && lastArg.type) {
-      newArgs.push({ name: '', type: '', description: '', optional: false });
+      newArgs.push({ ...defaultArg });
     }
     setType({
       ...type,
@@ -54,7 +41,7 @@ const ObjectBuilder = ({ type, setType, argTypes, fieldTypes }) => {
     const newFields = [...f];
     const lastField = newFields[newFields.length - 1];
     if (lastField.name && lastField.type) {
-      newFields.push({ name: '', type: '' });
+      newFields.push({ ...defaultField });
     }
     setType({
       ...type,
@@ -101,10 +88,18 @@ const ObjectBuilder = ({ type, setType, argTypes, fieldTypes }) => {
             newArguments[i] = arg;
             setArguments(newArguments);
           };
+          const removeArgument = () => {
+            const newArguments = JSON.parse(JSON.stringify(args));
+            setArguments([
+              ...newArguments.slice(0, i),
+              newArguments.slice(i + 1),
+            ]);
+          };
           return (
             <ArgumentEditor
               argument={a}
               setArgument={setArgument}
+              removeArgument={removeArgument}
               allTypes={argTypes}
               isLast={isLast}
               index={i}
@@ -123,10 +118,15 @@ const ObjectBuilder = ({ type, setType, argTypes, fieldTypes }) => {
             newFields[i] = field;
             setFields(newFields);
           };
+          const removeField = () => {
+            const newFields = JSON.parse(JSON.stringify(fields));
+            setFields([...newFields.slice(0, i), newFields.slice(i + 1)]);
+          };
           return (
             <FieldEditor
               field={f}
               setField={setField}
+              removeField={removeField}
               allTypes={fieldTypes}
               isLast={isLast}
               index={i}

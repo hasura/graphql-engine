@@ -1,7 +1,7 @@
 import React from 'react';
 import styles from './Styles.scss';
 
-const FieldEditor = ({ field, setField, allTypes }) => {
+const FieldEditor = ({ field, setField, allTypes, removeField, isLast }) => {
   const { name, type } = field;
 
   const nameOnChange = e => {
@@ -19,6 +19,17 @@ const FieldEditor = ({ field, setField, allTypes }) => {
   };
 
   const noTypes = allTypes.length === 0;
+
+  // show remove icon for all columns except last
+  let removeIcon = null;
+  if (!isLast) {
+    removeIcon = (
+      <i
+        className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
+        onClick={removeField}
+      />
+    );
+  }
 
   return (
     <div className={`${styles.display_flex} ${styles.add_mar_bottom_mid}`}>
@@ -53,6 +64,7 @@ const FieldEditor = ({ field, setField, allTypes }) => {
           );
         })}
       </select>
+      {removeIcon}
     </div>
   );
 };

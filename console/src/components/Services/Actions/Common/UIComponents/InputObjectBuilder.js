@@ -1,6 +1,7 @@
 import React from 'react';
 import styles from './Styles.scss';
 import FieldEditor from './FieldEditor';
+import { defaultInputObjectType, defaultField } from '../stateDefaults';
 
 const InputObjectBuilder = ({ type, setType, fieldTypes }) => {
   const { name, fields, kind } = type;
@@ -8,14 +9,8 @@ const InputObjectBuilder = ({ type, setType, fieldTypes }) => {
   const init = () => {
     if (type.kind !== 'input_object') {
       setType({
+        ...defaultInputObjectType,
         name,
-        kind: 'input_object',
-        fields: [
-          {
-            name: '',
-            type: '',
-          },
-        ],
       });
     }
   };
@@ -33,7 +28,7 @@ const InputObjectBuilder = ({ type, setType, fieldTypes }) => {
     const newFields = [...f];
     const lastField = newFields[newFields.length - 1];
     if (lastField.name && lastField.type) {
-      newFields.push({ name: '', type: '' });
+      newFields.push({ ...defaultField });
     }
     setType({
       ...type,
@@ -79,10 +74,17 @@ const InputObjectBuilder = ({ type, setType, fieldTypes }) => {
             newFields[i] = field;
             setFields(newFields);
           };
+
+          const removeField = () => {
+            const newFields = JSON.parse(JSON.stringify(fields));
+            setFields([...newFields.slice(0, i), newFields.slice(i + 1)]);
+          };
+
           return (
             <FieldEditor
               field={f}
               setField={setField}
+              removeField={removeField}
               allTypes={fieldTypes}
               isLast={isLast}
               index={i}

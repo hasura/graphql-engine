@@ -1,8 +1,14 @@
 import React from 'react';
 import styles from './Styles.scss';
 
-const ArgumentInput = ({ argument, setArgument, allTypes }) => {
-  const { name, type, description, optional } = argument;
+const ArgumentInput = ({
+  argument,
+  setArgument,
+  removeArgument,
+  allTypes,
+  isLast,
+}) => {
+  const { name, type, description } = argument;
 
   const nameOnChange = e => {
     setArgument({
@@ -23,14 +29,18 @@ const ArgumentInput = ({ argument, setArgument, allTypes }) => {
     });
   };
 
-  const optionalOnChange = e => {
-    setArgument({
-      ...argument,
-      optional: e.target.checked,
-    });
-  };
-
   const noTypes = allTypes.length === 0;
+
+  // show remove icon for all columns except last
+  let removeIcon = null;
+  if (!isLast) {
+    removeIcon = (
+      <i
+        className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
+        onClick={removeArgument}
+      />
+    );
+  }
 
   return (
     <div className={`${styles.display_flex}`}>
@@ -74,15 +84,7 @@ const ArgumentInput = ({ argument, setArgument, allTypes }) => {
           styles.add_mar_right_mid
         }`}
       />
-      <label>
-        <input
-          type="checkbox"
-          value={optional}
-          onChange={optionalOnChange}
-          className={`${styles.add_mar_right_small}`}
-        />
-        Optional
-      </label>
+      {removeIcon}
     </div>
   );
 };

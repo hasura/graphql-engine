@@ -16,6 +16,7 @@ import {
 } from './reducer';
 import { defaultScalars } from '../Common/utils';
 import { createAction } from '../ServerIO';
+import { defaultArg, defaultScalarType } from '../Common/stateDefaults';
 
 const AddAction = ({
   name,
@@ -32,15 +33,16 @@ const AddAction = ({
     const newArgs = [...a];
     const lastArg = newArgs[newArgs.length - 1];
     if (lastArg.name && lastArg.type) {
-      newArgs.push({ name: '', type: '', description: '', optional: false });
+      newArgs.push(defaultArg);
     }
     dispatch(setActionArguments(newArgs));
   };
+
   const setActionTypes = t => {
     const newTypes = [...t];
     const lastType = newTypes[newTypes.length - 1];
     if (lastType.name && lastType.kind) {
-      newTypes.push({ name: '', kind: '' });
+      newTypes.push(defaultScalarType);
     }
     dispatch(setTypes(newTypes));
   };
@@ -68,59 +70,57 @@ const AddAction = ({
     <div>
       <Helmet title={'Add Action - Actions | Hasura'} />
       <div className={styles.heading_text}>Add a new action</div>
-      <form onSubmit={onSubmit}>
-        <NameEditor
-          value={name}
-          onChange={nameOnChange}
-          placeholder="action name"
-          className={styles.add_mar_bottom_mid}
-          service="create-action"
-        />
-        <hr />
-        <WebhookEditor
-          value={webhook}
-          onChange={webhookOnChange}
-          placeholder="action webhook"
-          className={styles.add_mar_bottom_mid}
-          service="create-action"
-        />
-        <hr />
-        <TypeEditorList
-          types={types}
-          argTypes={argTypes}
-          fieldTypes={fieldTypes}
-          setTypes={setActionTypes}
-          className={styles.add_mar_bottom_mid}
-          service="create-action"
-        />
-        <hr />
-        <ArgumentEditorList
-          className={styles.add_mar_bottom_mid}
-          args={args}
-          setArguments={setArguments}
-          allTypes={argTypes}
-          service="create-action"
-        />
-        <hr />
-        <OutputTypesEditor
-          className={styles.add_mar_bottom_mid}
-          value={outputType}
-          allTypes={fieldTypes}
-          onChange={outputTypeOnChange}
-          service="create-action"
-        />
-        <hr />
-        <Button
-          color="yellow"
-          size="sm"
-          type="submit"
-          onClick={() => {
-            onSubmit();
-          }}
-        >
-          Create
-        </Button>
-      </form>
+      <NameEditor
+        value={name}
+        onChange={nameOnChange}
+        placeholder="action name"
+        className={styles.add_mar_bottom_mid}
+        service="create-action"
+      />
+      <hr />
+      <WebhookEditor
+        value={webhook}
+        onChange={webhookOnChange}
+        placeholder="action webhook"
+        className={styles.add_mar_bottom_mid}
+        service="create-action"
+      />
+      <hr />
+      <TypeEditorList
+        types={types}
+        argTypes={argTypes}
+        fieldTypes={fieldTypes}
+        setTypes={setActionTypes}
+        className={styles.add_mar_bottom_mid}
+        service="create-action"
+      />
+      <hr />
+      <ArgumentEditorList
+        className={styles.add_mar_bottom_mid}
+        args={args}
+        setArguments={setArguments}
+        allTypes={argTypes}
+        service="create-action"
+      />
+      <hr />
+      <OutputTypesEditor
+        className={styles.add_mar_bottom_mid}
+        value={outputType}
+        allTypes={fieldTypes}
+        onChange={outputTypeOnChange}
+        service="create-action"
+      />
+      <hr />
+      <Button
+        color="yellow"
+        size="sm"
+        type="submit"
+        onClick={() => {
+          onSubmit();
+        }}
+      >
+        Create
+      </Button>
     </div>
   );
 };
