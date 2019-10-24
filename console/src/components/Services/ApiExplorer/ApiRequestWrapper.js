@@ -61,6 +61,7 @@ class ApiRequestWrapper extends Component {
           method={this.props.request.method}
           url={this.props.request.url}
           headers={this.props.request.headers}
+          headersInitialised={this.props.request.headersInitialised}
           params={this.props.request.params}
           explorerData={this.props.explorerData}
           dispatch={this.props.dispatch}

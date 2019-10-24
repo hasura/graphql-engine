@@ -1,5 +1,6 @@
 module Hasura.Server.Query where
 
+import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -11,6 +12,7 @@ import qualified Network.HTTP.Client                as HTTP
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
+import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
@@ -44,6 +46,11 @@ data RQLQueryV1
   | RQDropRelationship !DropRel
   | RQSetRelationshipComment !SetRelComment
   | RQRenameRelationship !RenameRel
+
+  -- computed fields related
+
+  | RQAddComputedField !AddComputedField
+  | RQDropComputedField !DropComputedField
 
   | RQCreateInsertPermission !CreateInsPerm
   | RQCreateSelectPermission !CreateSelPerm
@@ -137,12 +144,19 @@ $(deriveJSON
   ''RQLQueryV2
  )
 
+data RunCtx
+  = RunCtx
+  { _rcUserInfo  :: !UserInfo
+  , _rcHttpMgr   :: !HTTP.Manager
+  , _rcSqlGenCtx :: !SQLGenCtx
+  }
+
 newtype Run a
-  = Run {unRun :: StateT SchemaCache (ReaderT (UserInfo, HTTP.Manager, SQLGenCtx) (LazyTx QErr)) a}
+  = Run {unRun :: StateT SchemaCache (ReaderT RunCtx (LazyTx QErr)) a}
   deriving ( Functor, Applicative, Monad
            , MonadError QErr
            , MonadState SchemaCache
-           , MonadReader (UserInfo, HTTP.Manager, SQLGenCtx)
+           , MonadReader RunCtx
            , CacheRM
            , CacheRWM
            , MonadTx
@@ -150,13 +164,13 @@ newtype Run a
            )
 
 instance UserInfoM Run where
-  askUserInfo = asks _1
+  askUserInfo = asks _rcUserInfo
 
 instance HasHttpManager Run where
-  askHttpManager = asks _2
+  askHttpManager = asks _rcHttpMgr
 
 instance HasSQLGenCtx Run where
-  askSQLGenCtx = asks _3
+  askSQLGenCtx = asks _rcSqlGenCtx
 
 fetchLastUpdate :: Q.TxE QErr (Maybe (InstanceId, UTCTime))
 fetchLastUpdate = do
@@ -178,26 +192,29 @@ recordSchemaUpdate instanceId =
 
 peelRun
   :: SchemaCache
-  -> UserInfo
-  -> HTTP.Manager
-  -> SQLGenCtx
+  -> RunCtx
   -> PGExecCtx
-  -> Run a -> ExceptT QErr IO (a, SchemaCache)
-peelRun sc userInfo httMgr sqlGenCtx pgExecCtx (Run m) =
+  -> Run a
+  -> ExceptT QErr IO (a, SchemaCache)
+peelRun sc runCtx@(RunCtx userInfo _ _) pgExecCtx (Run m) =
   runLazyTx pgExecCtx $ withUserInfo userInfo lazyTx
   where
-    lazyTx = runReaderT (runStateT m sc) (userInfo, httMgr, sqlGenCtx)
+    lazyTx = runReaderT (runStateT m sc) runCtx
 
 runQuery
   :: (MonadIO m, MonadError QErr m)
   => PGExecCtx -> InstanceId
   -> UserInfo -> SchemaCache -> HTTP.Manager
-  -> SQLGenCtx -> RQLQuery -> m (EncJSON, SchemaCache)
-runQuery pgExecCtx instanceId userInfo sc hMgr sqlGenCtx query = do
-  resE <- liftIO $ runExceptT $
-    peelRun sc userInfo hMgr sqlGenCtx pgExecCtx $ runQueryM query
+  -> SQLGenCtx -> SystemDefined -> RQLQuery -> m (EncJSON, SchemaCache)
+runQuery pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined query = do
+  resE <- runQueryM query
+    & runHasSystemDefinedT systemDefined
+    & peelRun sc runCtx pgExecCtx
+    & runExceptT
+    & liftIO
   either throwError withReload resE
   where
+    runCtx = RunCtx userInfo hMgr sqlGenCtx
     withReload r = do
       when (queryNeedsReload query) $ do
         e <- liftIO $ runExceptT $ runLazyTx pgExecCtx
@@ -219,6 +236,9 @@ queryNeedsReload (RQV1 qi) = case qi of
   RQDropRelationship  _           -> True
   RQSetRelationshipComment  _     -> False
   RQRenameRelationship _          -> True
+
+  RQAddComputedField _            -> True
+  RQDropComputedField _           -> True
 
   RQCreateInsertPermission _      -> True
   RQCreateSelectPermission _      -> True
@@ -273,6 +293,7 @@ queryNeedsReload (RQV2 qi) = case qi of
 runQueryM
   :: ( QErrM m, CacheRWM m, UserInfoM m, MonadTx m
      , MonadIO m, HasHttpManager m, HasSQLGenCtx m
+     , HasSystemDefined m
      )
   => RQLQuery
   -> m EncJSON
@@ -299,6 +320,9 @@ runQueryM rq =
       RQDropRelationship  q        -> runDropRel q
       RQSetRelationshipComment  q  -> runSetRelComment q
       RQRenameRelationship q       -> runRenameRel q
+
+      RQAddComputedField q        -> runAddComputedField q
+      RQDropComputedField q       -> runDropComputedField q
 
       RQCreateInsertPermission q   -> runCreatePerm q
       RQCreateSelectPermission q   -> runCreatePerm q

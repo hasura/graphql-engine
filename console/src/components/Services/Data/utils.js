@@ -228,6 +228,14 @@ export const fetchTrackedTableListQuery = options => {
           name: 'unique_constraints',
           columns: ['*'],
         },
+        {
+          name: 'check_constraints',
+          columns: ['*'],
+          order_by: {
+            column: 'constraint_name',
+            type: 'asc'
+          }
+        }
       ],
       order_by: [{ column: 'table_name', type: 'asc' }],
     },
@@ -481,6 +489,7 @@ export const mergeLoadSchemaData = (
     let _fkConstraints = [];
     let _refFkConstraints = [];
     let _isEnum = false;
+    let _checkConstraints = [];
 
     if (_isTableTracked) {
       _primaryKey = trackedTableInfo.primary_key;
@@ -488,6 +497,7 @@ export const mergeLoadSchemaData = (
       _permissions = trackedTableInfo.permissions;
       _uniqueConstraints = trackedTableInfo.unique_constraints;
       _isEnum = trackedTableInfo.is_enum;
+      _checkConstraints = trackedTableInfo.check_constraints;
 
       _fkConstraints = fkData.filter(
         fk => fk.table_schema === _tableSchema && fk.table_name === _tableName
@@ -512,6 +522,7 @@ export const mergeLoadSchemaData = (
       relationships: _relationships,
       permissions: _permissions,
       unique_constraints: _uniqueConstraints,
+      check_constraints: _checkConstraints,
       foreign_key_constraints: _fkConstraints,
       opp_foreign_key_constraints: _refFkConstraints,
       view_info: _viewInfo,

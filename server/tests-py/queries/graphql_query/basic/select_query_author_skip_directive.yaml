@@ -1,0 +1,36 @@
+- url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query author_with_skip($skipId: Boolean!, $skipName: Boolean!) {
+        author {
+          id @skip(if: $skipId)
+          name @skip(if: $skipName)
+        }
+      }
+    variables:
+      skipId: true
+      skipName: false
+  response:
+    data:
+      author:
+      - name: Author 1
+      - name: Author 2
+- url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query author_with_skip($skipId: Boolean!, $skipName: Boolean!) {
+        author {
+          id @skip(if: $skipId)
+          name @skip(if: $skipName)
+        }
+      }
+    variables:
+      skipId: false
+      skipName: true
+  response:
+    data:
+      author:
+      - id: 1
+      - id: 2

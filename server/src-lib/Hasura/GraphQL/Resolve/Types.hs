@@ -1,24 +1,27 @@
-{-# LANGUAGE UndecidableInstances #-}
+module Hasura.GraphQL.Resolve.Types
+  ( module Hasura.GraphQL.Resolve.Types
+  -- * Re-exports
+  , MonadReusability(..)
+  ) where
 
-module Hasura.GraphQL.Resolve.Types where
-
+import           Control.Lens.TH
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.Sequence                 as Seq
-import qualified Data.Text                     as T
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.HashMap.Strict            as Map
+import qualified Data.Sequence                  as Seq
+import qualified Data.Text                      as T
+import qualified Language.GraphQL.Draft.Syntax  as G
 
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.Error
+import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.Permission
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-import qualified Hasura.SQL.DML                as S
+import qualified Hasura.SQL.DML                 as S
 
 data QueryCtx
   = QCSelect !SelOpCtx
@@ -113,9 +116,34 @@ data RelationshipField
   , _rfPermLimit  :: !(Maybe Int)
   } deriving (Show, Eq)
 
-type FieldMap =
-  Map.HashMap (G.NamedType, G.Name)
-  (Either PGColumnInfo RelationshipField)
+data ComputedFieldTable
+  = ComputedFieldTable
+  { _cftTable      :: !QualifiedTable
+  , _cftCols       :: !PGColGNameMap
+  , _cftPermFilter :: !AnnBoolExpPartialSQL
+  , _cftPermLimit  :: !(Maybe Int)
+  } deriving (Show, Eq)
+
+data ComputedFieldType
+  = CFTScalar !PGScalarType
+  | CFTTable !ComputedFieldTable
+  deriving (Show, Eq)
+
+data ComputedField
+  = ComputedField
+  { _cfName     :: !ComputedFieldName
+  , _cfFunction :: !ComputedFieldFunction
+  , _cfArgSeq   :: !FuncArgSeq
+  , _cfType     :: !ComputedFieldType
+  } deriving (Show, Eq)
+
+data ResolveField
+  = RFPGColumn !PGColumnInfo
+  | RFRelationship !RelationshipField
+  | RFComputedField !ComputedField
+  deriving (Show, Eq)
+
+type FieldMap = Map.HashMap (G.NamedType, G.Name) ResolveField
 
 -- order by context
 data OrdByItem
@@ -186,53 +214,5 @@ data UnresolvedVal
 
 type AnnBoolExpUnresolved = AnnBoolExp UnresolvedVal
 
--- | Tracks whether or not a query is /reusable/. Reusable queries are nice, since we can cache
--- their resolved ASTs and avoid re-resolving them if we receive an identical query. However, we
--- can’t always safely reuse queries if they have variables, since some variable values can affect
--- the generated SQL. For example, consider the following query:
---
--- > query users_where($condition: users_bool_exp!) {
--- >   users(where: $condition) {
--- >     id
--- >   }
--- > }
---
--- Different values for @$condition@ will produce completely different queries, so we can’t reuse
--- its plan (unless the variable values were also all identical, of course, but we don’t bother
--- caching those).
---
--- If a query does turn out to be reusable, we build up a 'ReusableVariableTypes' value that maps
--- variable names to their types so that we can use a fast path for validating new sets of
--- variables (namely 'Hasura.GraphQL.Validate.validateVariablesForReuse').
-data QueryReusability
-  = Reusable !ReusableVariableTypes
-  | NotReusable
-  deriving (Show, Eq)
-
-instance Semigroup QueryReusability where
-  Reusable a <> Reusable b = Reusable (a <> b)
-  _          <> _          = NotReusable
-instance Monoid QueryReusability where
-  mempty = Reusable mempty
-
-class (MonadError QErr m) => MonadResolve m where
-  recordVariableUse :: G.Variable -> PGColumnType -> m ()
-  markNotReusable :: m ()
-
-newtype ResolveT m a = ResolveT { unResolveT :: StateT QueryReusability m a }
-  deriving (Functor, Applicative, Monad, MonadError e, MonadReader r)
-
-instance (MonadError QErr m) => MonadResolve (ResolveT m) where
-  recordVariableUse varName varType = ResolveT $
-    modify' (<> Reusable (ReusableVariableTypes $ Map.singleton varName varType))
-  markNotReusable = ResolveT $ put NotReusable
-
-runResolveT :: (Functor m) => ResolveT m a -> m (a, Maybe ReusableVariableTypes)
-runResolveT = fmap (fmap getVarTypes) . flip runStateT mempty . unResolveT
-  where
-    getVarTypes = \case
-      Reusable varTypes -> Just varTypes
-      NotReusable       -> Nothing
-
-evalResolveT :: (Monad m) => ResolveT m a -> m a
-evalResolveT = flip evalStateT mempty . unResolveT
+-- template haskell related
+$(makePrisms ''ResolveField)

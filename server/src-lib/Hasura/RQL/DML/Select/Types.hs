@@ -8,6 +8,7 @@ import           Language.Haskell.TH.Syntax (Lift)
 
 import qualified Data.HashMap.Strict        as HM
 import qualified Data.List.NonEmpty         as NE
+import qualified Data.Sequence              as Seq
 import qualified Data.Text                  as T
 
 import           Hasura.Prelude
@@ -89,10 +90,31 @@ data AnnRelG a
 
 type ObjSelG v = AnnRelG (AnnSimpleSelG v)
 type ObjSel = ObjSelG S.SQLExp
+
 type ArrRelG v = AnnRelG (AnnSimpleSelG v)
 type ArrRelAggG v = AnnRelG (AnnAggSelG v)
-
 type ArrRelAgg = ArrRelAggG S.SQLExp
+
+data ComputedFieldScalarSel v
+  = ComputedFieldScalarSel
+  { _cfssFunction  :: !QualifiedFunction
+  , _cfssArguments :: !(FunctionArgsExpTableRow v)
+  , _cfssType      :: !PGScalarType
+  , _cfssColumnOp  :: !(Maybe ColOp)
+  } deriving (Show, Eq, Functor, Foldable, Traversable)
+
+data ComputedFieldSel v
+  = CFSScalar !(ComputedFieldScalarSel v)
+  | CFSTable !(AnnSimpleSelG v)
+  deriving (Show, Eq)
+
+traverseComputedFieldSel
+  :: (Applicative f)
+  => (v -> f w)
+  -> ComputedFieldSel v -> f (ComputedFieldSel w)
+traverseComputedFieldSel fv = \case
+  CFSScalar scalarSel -> CFSScalar <$> traverse fv scalarSel
+  CFSTable tableSel   -> CFSTable <$> traverseAnnSimpleSel fv tableSel
 
 type Fields a = [(FieldName, a)]
 
@@ -124,6 +146,7 @@ data AnnFldG v
   = FCol !PGColumnInfo !(Maybe ColOp)
   | FObj !(ObjSelG v)
   | FArr !(ArrSelG v)
+  | FComputedField !(ComputedFieldSel v)
   | FExp !T.Text
   deriving (Show, Eq)
 
@@ -134,6 +157,7 @@ traverseAnnFld f = \case
   FCol pgColInfo colOpM -> pure $ FCol pgColInfo colOpM
   FObj sel -> FObj <$> traverse (traverseAnnSimpleSel f) sel
   FArr sel -> FArr <$> traverseArrSel f sel
+  FComputedField sel -> FComputedField <$> traverseComputedFieldSel f sel
   FExp t -> FExp <$> pure t
 
 type AnnFld = AnnFldG S.SQLExp
@@ -207,11 +231,20 @@ type TableAggFld = TableAggFldG S.SQLExp
 type TableAggFldsG v = Fields (TableAggFldG v)
 type TableAggFlds = TableAggFldsG S.SQLExp
 
-data TableFrom
-  = TableFrom
-  { _tfTable :: !QualifiedTable
-  , _tfIden  :: !(Maybe Iden)
-  } deriving (Show, Eq)
+data ArgumentExp a
+  = AETableRow
+  | AEInput !a
+  deriving (Show, Eq, Functor, Foldable, Traversable)
+
+type FunctionArgsExpTableRow v = FunctionArgsExpG (ArgumentExp v)
+
+data SelectFromG v
+  = FromTable !QualifiedTable
+  | FromIden !Iden
+  | FromFunction !QualifiedFunction !(FunctionArgsExpTableRow v)
+  deriving (Show, Eq, Functor, Foldable, Traversable)
+
+type SelectFrom = SelectFromG S.SQLExp
 
 data TablePermG v
   = TablePerm
@@ -234,7 +267,7 @@ type TablePerm = TablePermG S.SQLExp
 data AnnSelG a v
   = AnnSelG
   { _asnFields   :: !a
-  , _asnFrom     :: !TableFrom
+  , _asnFrom     :: !(SelectFromG v)
   , _asnPerm     :: !(TablePermG v)
   , _asnArgs     :: !(TableArgsG v)
   , _asnStrfyNum :: !Bool
@@ -264,7 +297,7 @@ traverseAnnSel
 traverseAnnSel f1 f2 (AnnSelG flds tabFrom perm args strfyNum) =
   AnnSelG
   <$> f1 flds
-  <*> pure tabFrom
+  <*> traverse f2 tabFrom
   <*> traverseTablePerm f2 perm
   <*> traverseTableArgs f2 args
   <*> pure strfyNum
@@ -283,6 +316,22 @@ data FunctionArgsExpG a
 
 emptyFunctionArgsExp :: FunctionArgsExpG a
 emptyFunctionArgsExp = FunctionArgsExp [] HM.empty
+
+-- | If argument positional index is less than or equal to length of 'positional' arguments then
+-- insert the value in 'positional' arguments else insert the value with argument name in 'named' arguments
+insertFunctionArg
+  :: FunctionArgName
+  -> Int
+  -> a
+  -> FunctionArgsExpG a
+  -> FunctionArgsExpG a
+insertFunctionArg argName index value (FunctionArgsExp positional named) =
+  if (index + 1) <= length positional then
+    FunctionArgsExp (insertAt index value positional) named
+  else FunctionArgsExp positional $
+    HM.insert (getFuncArgNameTxt argName) value named
+  where
+    insertAt i a = toList . Seq.insertAt i a . Seq.fromList
 
 type FunctionArgExp = FunctionArgsExpG S.SQLExp
 
@@ -322,17 +371,18 @@ traverseAnnFnAgg f =
 
 data BaseNode
   = BaseNode
-  { _bnPrefix   :: !Iden
-  , _bnDistinct :: !(Maybe S.DistinctExpr)
-  , _bnFrom     :: !S.FromItem
-  , _bnWhere    :: !S.BoolExp
-  , _bnOrderBy  :: !(Maybe S.OrderByExp)
-  , _bnLimit    :: !(Maybe Int)
-  , _bnOffset   :: !(Maybe S.SQLExp)
+  { _bnPrefix              :: !Iden
+  , _bnDistinct            :: !(Maybe S.DistinctExpr)
+  , _bnFrom                :: !S.FromItem
+  , _bnWhere               :: !S.BoolExp
+  , _bnOrderBy             :: !(Maybe S.OrderByExp)
+  , _bnLimit               :: !(Maybe Int)
+  , _bnOffset              :: !(Maybe S.SQLExp)
 
-  , _bnExtrs    :: !(HM.HashMap S.Alias S.SQLExp)
-  , _bnObjs     :: !(HM.HashMap RelName ObjNode)
-  , _bnArrs     :: !(HM.HashMap S.Alias ArrNode)
+  , _bnExtrs               :: !(HM.HashMap S.Alias S.SQLExp)
+  , _bnObjs                :: !(HM.HashMap RelName ObjNode)
+  , _bnArrs                :: !(HM.HashMap S.Alias ArrNode)
+  , _bnComputedFieldTables :: !(HM.HashMap FieldName BaseNode)
   } deriving (Show, Eq)
 
 mergeBaseNodes :: BaseNode -> BaseNode -> BaseNode
@@ -341,10 +391,11 @@ mergeBaseNodes lNodeDet rNodeDet =
   (HM.union lExtrs rExtrs)
   (HM.unionWith mergeObjNodes lObjs rObjs)
   (HM.unionWith mergeArrNodes lArrs rArrs)
+  (HM.unionWith mergeBaseNodes lCompCols rCompCols)
   where
-    BaseNode pfx dExp f whr ordBy limit offset lExtrs lObjs lArrs
+    BaseNode pfx dExp f whr ordBy limit offset lExtrs lObjs lArrs lCompCols
       = lNodeDet
-    BaseNode _   _    _ _   _     _     _      rExtrs rObjs rArrs
+    BaseNode _   _    _ _   _     _     _      rExtrs rObjs rArrs rCompCols
       = rNodeDet
 
 data OrderByNode
@@ -406,4 +457,10 @@ data ArrNodeInfo
   { _aniAlias            :: !S.Alias
   , _aniPrefix           :: !Iden
   , _aniSubQueryRequired :: !Bool
+  } deriving (Show, Eq)
+
+data Prefixes
+  = Prefixes
+  { _pfThis :: !Iden -- Current node prefix
+  , _pfBase :: !Iden -- Base table row identifier for computed field function
   } deriving (Show, Eq)

@@ -52,7 +52,7 @@ Insert / upsert syntax
 **E.g. INSERT**:
 
 .. code-block:: graphql
-    
+
     mutation insert_article {
       insert_article(
         objects: [
@@ -73,7 +73,7 @@ Insert / upsert syntax
 **E.g. UPSERT**:
 
 .. code-block:: graphql
-    
+
     mutation upsert_author {
       insert_author (
         objects: [
@@ -161,7 +161,7 @@ Update syntax
 **E.g. UPDATE**:
 
 .. code-block:: graphql
-    
+
     mutation update_author{
       update_author(
         where: {id: {_eq: 3}},
@@ -212,7 +212,7 @@ Delete syntax
 **E.g. DELETE**:
 
 .. code-block:: graphql
-    
+
     mutation delete_articles {
       delete_article(
         where: {author: {id: {_eq: 7}}}
@@ -226,7 +226,7 @@ Delete syntax
 
 
 .. note::
-    
+
     For more examples and details of usage, please see :doc:`this <../../mutations/index>`.
 
 Syntax definitions
@@ -287,7 +287,7 @@ E.g.:
 E.g.:
 
 .. code-block:: graphql
-    
+
     objects: [
       {
         title: "Software is eating the world",
@@ -310,10 +310,11 @@ permissions before editing an existing row in case of a conflict. Hence the conf
 table has *update* permissions defined.
 
 .. code-block:: none
-    
+
     on_conflict: {
       constraint: table_constraint!
       update_columns: [table_update_column!]!
+      where: table_bool_exp
     }
 
 E.g.:
@@ -323,6 +324,7 @@ E.g.:
     on_conflict: {
       constraint: author_name_key
       update_columns: [name]
+      where: {id: {_lt: 1}}
     }
 
 .. _whereArgExp:

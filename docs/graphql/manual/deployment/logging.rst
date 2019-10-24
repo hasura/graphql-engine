@@ -1,3 +1,5 @@
+.. _hge_logs:
+
 Hasura GraphQL engine logs
 ==========================
 
