@@ -18,11 +18,15 @@ const reducer = (state = defaultState, action) => {
         error: action.error,
       };
     case LOADING_TYPES_SUCCESS:
-      return {
-        ...state,
-        isFetching: false,
-        types: action.types,
-      };
+      if (action.types) {
+        return {
+          ...state,
+          isFetching: false,
+          types: action.types,
+        };
+      }
+      return state;
+
     default:
       return state;
   }

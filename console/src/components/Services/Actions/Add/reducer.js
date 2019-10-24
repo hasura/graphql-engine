@@ -33,6 +33,15 @@ export const setTypes = types => ({
   types,
 });
 
+// used to set types, args and output types together
+const SET_TYPES_BULK = 'Actions/Add/SET_TYPES_BULK';
+export const setTypesBulk = (types, args, outputType) => ({
+  type: SET_TYPES_BULK,
+  args,
+  types,
+  outputType,
+});
+
 const reducer = (state = defaultState, action) => {
   switch (action.type) {
     case SET_DEFAULTS:
@@ -61,6 +70,13 @@ const reducer = (state = defaultState, action) => {
       return {
         ...state,
         types: action.types,
+      };
+    case SET_TYPES_BULK:
+      return {
+        ...state,
+        types: action.types,
+        arguments: action.args,
+        outputType: action.outputType,
       };
     default:
       return state;

@@ -26,3 +26,40 @@ export const defaultInputObjectType = {
   kind: 'input_object',
   fields: [{ ...defaultField }],
 };
+
+export const defaultEnumType = {
+  name: '',
+  kind: 'enum',
+  value_definition: {
+    values: [
+      {
+        value: '',
+        description: '',
+      },
+    ],
+    is_deprecated: false,
+  },
+};
+
+export const gqlInbuiltTypes = [
+  {
+    name: 'Int',
+    isInbuilt: true,
+  },
+  {
+    name: 'String',
+    isInbuilt: true,
+  },
+  {
+    name: 'Float',
+    isInbuilt: true,
+  },
+  {
+    name: 'Boolean',
+    isInbuilt: true,
+  },
+  {
+    name: 'ID',
+    isInbuilt: true,
+  },
+];

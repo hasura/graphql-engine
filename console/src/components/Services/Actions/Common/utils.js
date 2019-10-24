@@ -1,72 +1,21 @@
 import gqlPattern from '../../Data/Common/GraphQLValidation';
+import { filterNameLessTypeLess } from '../../Types/utils';
 
 // TODO (pull out default arguments, fields and types)
 // TODO (check rare bug where description of an argument disappears)
 
-export const defaultScalars = ['Int', 'String', 'Float', 'Boolean'];
-
-const filterNameLessTypeLess = arr => {
-  return arr.filter(item => !!item.name && item.type);
-};
-
-const reformOptionalArgs = args => {
-  return args.map(a => {
-    const arg = {
-      ...a,
-    };
-    if (!arg.optional) {
-      arg.type = `${arg.type}!`;
-    }
-    delete arg.optional;
-    return arg;
-  });
-};
-
-export const reformCustomTypes = typesFromState => {
-  const sanitisedTypes = [];
-  typesFromState.forEach(t => {
-    if (!t.name) {
-      return;
-    }
-    const sanitisedType = { ...t };
-    if (t.fields) {
-      sanitisedType.fields = filterNameLessTypeLess(t.fields);
-    }
-    if (t.arguments) {
-      sanitisedType.arguments = filterNameLessTypeLess(t.arguments);
-      sanitisedType.arguments = reformOptionalArgs(sanitisedType.arguments);
-    }
-
-    sanitisedTypes.push(sanitisedType);
-  });
-
-  const customTypes = {
-    scalars: [],
-    input_objects: [],
-    objects: [],
-    enums: [],
-  };
-
-  sanitisedTypes.forEach(_type => {
-    const type = JSON.parse(JSON.stringify(_type));
-    delete type.kind;
-    switch (_type.kind) {
-      case 'scalar':
-        customTypes.scalars.push(type);
-        return;
-      case 'object':
-        customTypes.objects.push(type);
-        return;
-      case 'input_object':
-        customTypes.input_objects.push(type);
-        return;
-      default:
-        return;
-    }
-  });
-
-  return customTypes;
-};
+// const reformOptionalArgs = args => {
+//   return args.map(a => {
+//     const arg = {
+//       ...a,
+//     };
+//     if (!arg.optional) {
+//       arg.type = `${arg.type}!`;
+//     }
+//     delete arg.optional;
+//     return arg;
+//   });
+// };
 
 export const generateActionDefinition = ({
   arguments: args,
@@ -75,7 +24,7 @@ export const generateActionDefinition = ({
   webhook,
 }) => {
   return {
-    arguments: reformOptionalArgs(filterNameLessTypeLess(args)),
+    arguments: filterNameLessTypeLess(args),
     kind,
     output_type: outputType,
     webhook,
@@ -98,4 +47,35 @@ export const getStateValidationError = ({ name, outputType, webhook }) => {
   if (!outputType) return 'Please select an output type for the action';
 
   return null;
+};
+
+export const sanitiseState = state => {
+  const newState = JSON.parse(JSON.stringify(state));
+  newState.name = newState.name.trim();
+  newState.webhook = newState.webhook.trim();
+  newState.arguments = filterNameLessTypeLess(newState.arguments).map(a => {
+    return {
+      ...a,
+      type: newState.types[a.type].name,
+    };
+  });
+  newState.outputType = newState.types[newState.outputType]
+    ? newState.types[newState.outputType].name
+    : '';
+  newState.types = newState.types.map(t => {
+    if (t.kind === 'scalar' || t.isInbuilt) return t;
+    const _t = { ...t };
+    if (t.kind === 'object') {
+      _t.arguments = filterNameLessTypeLess(_t.arguments).map(a => ({
+        ...a,
+        type: newState.types[a.type].name,
+      }));
+    }
+    _t.fields = filterNameLessTypeLess(_t.fields).map(f => ({
+      ...f,
+      type: newState.types[f.type].name,
+    }));
+    return _t;
+  });
+  return newState;
 };

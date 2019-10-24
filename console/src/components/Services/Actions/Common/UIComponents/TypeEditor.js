@@ -5,6 +5,7 @@ import TypeBuilder from './TypeBuilder';
 const TypeEditor = ({
   type,
   setType,
+  removeType,
   isLast,
   service,
   argTypes,
@@ -40,11 +41,20 @@ const TypeEditor = ({
     saveFunc = toggle => toggle();
   }
 
+  let removeFunc;
+  if (!isLast) {
+    removeFunc = toggle => {
+      toggle();
+      removeType();
+    };
+  }
+
   return (
     <ExpandableEditor
       editorExpanded={editorExpanded}
       collapsedLabel={collapsedLabel}
       saveFunc={saveFunc}
+      removeFunc={removeFunc}
       property={`type-editor-${index}`}
       service={service}
       expandButtonText={expandButtonText}

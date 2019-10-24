@@ -16,13 +16,14 @@ import {
   getFetchActionsQuery,
 } from '../../Common/utils/v1QueryUtils';
 import {
-  reformCustomTypes,
   generateActionDefinition,
   getStateValidationError,
+  sanitiseState,
 } from './Common/utils';
 import { showErrorNotification } from '../Common/Notification';
 import { appPrefix } from './constants';
 import { push } from 'react-router-redux';
+import { reformCustomTypes, mergeCustomTypes } from '../Types/utils';
 
 export const fetchActions = () => {
   return (dispatch, getState) => {
@@ -61,8 +62,10 @@ export const fetchActions = () => {
 };
 
 export const createAction = () => (dispatch, getState) => {
-  const { add: state } = getState().actions;
-  const { types: existingTypes } = getState().types;
+  const { add: rawState } = getState().actions;
+  const { types: existingTypesList } = getState().types;
+
+  const state = sanitiseState(rawState);
 
   // TODO generate down migration for custom types
 
@@ -71,11 +74,28 @@ export const createAction = () => (dispatch, getState) => {
     return dispatch(showErrorNotification(validationError));
   }
 
-  const customFieldsQueryUp = generateSetCustomTypesQuery(
-    reformCustomTypes(state.types)
+  const { types: mergedTypes, overlappingTypename } = mergeCustomTypes(
+    state.types,
+    existingTypesList
   );
 
-  const customFieldsQueryDown = generateSetCustomTypesQuery(existingTypes);
+  if (overlappingTypename) {
+    return dispatch(
+      showErrorNotification(
+        `A type called "${overlappingTypename}" already exists`
+      )
+    );
+  }
+
+  console.log(mergedTypes);
+
+  const customFieldsQueryUp = generateSetCustomTypesQuery(
+    reformCustomTypes(mergedTypes)
+  );
+
+  const customFieldsQueryDown = generateSetCustomTypesQuery(
+    reformCustomTypes(existingTypesList)
+  );
 
   const actionQueryUp = generateCreateActionQuery(
     state.name,
@@ -93,7 +113,9 @@ export const createAction = () => (dispatch, getState) => {
   const errorMsg = 'Creating action failed';
   const customOnSuccess = () => {
     dispatch(fetchActions()).then(() => {
-      dispatch(push(`${globals.urlPrefix}${appPrefix}/manage/add`));
+      dispatch(
+        push(`${globals.urlPrefix}${appPrefix}/manage/${state.name}/modify`)
+      );
     });
   };
   const customOnError = () => {};

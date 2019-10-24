@@ -6,6 +6,7 @@ import {
   LOADING_TYPES_FAILURE,
   LOADING_TYPES_SUCCESS,
 } from './reducer';
+import { parseCustomTypes } from './utils';
 import { getFetchCustomTypesQuery } from '../../Common/utils/v1QueryUtils';
 
 export const fetchCustomTypes = () => (dispatch, getState) => {
@@ -19,7 +20,14 @@ export const fetchCustomTypes = () => (dispatch, getState) => {
   dispatch({ type: LOADING_TYPES });
   return dispatch(requestAction(url, options)).then(
     data => {
-      dispatch({ type: LOADING_TYPES_SUCCESS, types: data[0].custom_types });
+      if (data.length) {
+        dispatch({
+          type: LOADING_TYPES_SUCCESS,
+          types: parseCustomTypes(data[0].custom_types),
+        });
+      } else {
+        dispatch({ type: LOADING_TYPES_SUCCESS });
+      }
       return Promise.resolve();
     },
     error => {

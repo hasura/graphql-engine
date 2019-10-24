@@ -13,8 +13,8 @@ import {
   setActionArguments,
   setActionOutputType,
   setTypes,
+  setTypesBulk,
 } from './reducer';
-import { defaultScalars } from '../Common/utils';
 import { createAction } from '../ServerIO';
 import { defaultArg, defaultScalarType } from '../Common/stateDefaults';
 
@@ -47,6 +47,28 @@ const AddAction = ({
     dispatch(setTypes(newTypes));
   };
 
+  const removeType = index => {
+    let newArgs = JSON.parse(JSON.stringify(args));
+    let newTypes = JSON.parse(JSON.stringify(types));
+    newArgs = newArgs.filter(a => a.type != index);
+    newTypes = newTypes.map(t => {
+      if (t.kind === 'scalar' || t.isInbuilt) return t;
+      const _t = { ...t };
+      if (t.kind === 'object') {
+        _t.arguments = _t.arguments.filter(a => a.type != index);
+      }
+      _t.fields = _t.fields.filter(f => f.type != index);
+      return _t;
+    });
+    dispatch(
+      setTypesBulk(
+        [...newTypes.slice(0, index), ...newTypes.slice(index + 1)],
+        newArgs,
+        outputType == index ? '' : outputType
+      )
+    );
+  };
+
   const onSubmit = e => {
     if (e) {
       e.preventDefault();
@@ -54,17 +76,11 @@ const AddAction = ({
     dispatch(createAction());
   };
 
-  const argTypes = [
-    ...defaultScalars,
-    ...types.filter(t => !!t.name && t.kind !== 'object').map(t => t.name),
-  ].sort();
+  const argTypes = [...types.filter(t => !!t.name && t.kind !== 'object')];
 
-  const fieldTypes = [
-    ...defaultScalars,
-    ...types
-      .filter(t => !!t.name && t.kind !== 'input_object')
-      .map(t => t.name),
-  ].sort();
+  const objectFieldTypes = [
+    ...types.filter(t => !!t.name && t.kind !== 'input_object'),
+  ];
 
   return (
     <div>
@@ -89,8 +105,9 @@ const AddAction = ({
       <TypeEditorList
         types={types}
         argTypes={argTypes}
-        fieldTypes={fieldTypes}
+        fieldTypes={objectFieldTypes}
         setTypes={setActionTypes}
+        removeType={removeType}
         className={styles.add_mar_bottom_mid}
         service="create-action"
       />
@@ -106,7 +123,7 @@ const AddAction = ({
       <OutputTypesEditor
         className={styles.add_mar_bottom_mid}
         value={outputType}
-        allTypes={fieldTypes}
+        allTypes={objectFieldTypes}
         onChange={outputTypeOnChange}
         service="create-action"
       />

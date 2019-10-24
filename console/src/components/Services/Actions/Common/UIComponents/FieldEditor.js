@@ -56,10 +56,10 @@ const FieldEditor = ({ field, setField, allTypes, removeField, isLast }) => {
             -- type --{' '}
           </option>
         )}
-        {allTypes.map(t => {
+        {allTypes.map((t, i) => {
           return (
-            <option key={t} value={t}>
-              {t}
+            <option key={i} value={i}>
+              {t.name}
             </option>
           );
         })}

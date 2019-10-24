@@ -18,30 +18,36 @@ const TypeBuilder = ({ type, setType, argTypes, fieldTypes }) => {
     />
   );
   const inputObjectBuilder = (
-    <InputObjectBuilder type={type} setType={setType} fieldTypes={fieldTypes} />
+    <InputObjectBuilder type={type} setType={setType} argTypes={argTypes} />
   );
   const tabs = [
     {
       heading: 'Scalar',
       component: scalarBuilder,
+      key: 'scalar',
     },
     {
       heading: 'Object',
       component: objectBuilder,
+      key: 'object',
     },
     {
       heading: 'Input Object',
       component: inputObjectBuilder,
+      key: 'input_object',
     },
     // {
     //   heading: 'Enum',
     //   component: enumBuilder,
     // },
   ];
+
+  const activeTabIndex = tabs.findIndex(t => t.key === type.kind) || 0;
+
   return (
     <Tabs
       tabHeightPx={40}
-      activeTabIndex={0}
+      activeTabIndex={activeTabIndex}
       marginBottomPx={30}
       tabs={tabs}
       minHeightPx={200}

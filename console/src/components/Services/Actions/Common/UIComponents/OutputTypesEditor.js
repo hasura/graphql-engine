@@ -24,10 +24,10 @@ const OutputTypesEditor = ({ className, value, onChange, allTypes }) => {
         onChange={onChange}
       >
         {!value && <option>--type--</option>}
-        {allTypes.map(t => {
+        {allTypes.map((t, i) => {
           return (
-            <option key={t} value={t}>
-              {t}
+            <option key={i} value={i}>
+              {t.name}
             </option>
           );
         })}

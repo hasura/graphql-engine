@@ -36,7 +36,7 @@ const ArgumentsEditorList = ({
           const newArguments = JSON.parse(JSON.stringify(args));
           setArguments([
             ...newArguments.slice(0, i),
-            newArguments.slice(i + 1),
+            ...newArguments.slice(i + 1),
           ]);
         };
         return (

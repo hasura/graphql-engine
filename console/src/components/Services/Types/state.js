@@ -1,10 +1,5 @@
 const state = {
-  types: {
-    input_objects: [],
-    objects: [],
-    scalars: [],
-    enums: [],
-  },
+  types: [],
   isFetching: false,
   error: null,
 };

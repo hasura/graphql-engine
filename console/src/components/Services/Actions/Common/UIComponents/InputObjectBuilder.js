@@ -3,7 +3,7 @@ import styles from './Styles.scss';
 import FieldEditor from './FieldEditor';
 import { defaultInputObjectType, defaultField } from '../stateDefaults';
 
-const InputObjectBuilder = ({ type, setType, fieldTypes }) => {
+const InputObjectBuilder = ({ type, setType, argTypes }) => {
   const { name, fields, kind } = type;
 
   const init = () => {
@@ -77,7 +77,7 @@ const InputObjectBuilder = ({ type, setType, fieldTypes }) => {
 
           const removeField = () => {
             const newFields = JSON.parse(JSON.stringify(fields));
-            setFields([...newFields.slice(0, i), newFields.slice(i + 1)]);
+            setFields([...newFields.slice(0, i), ...newFields.slice(i + 1)]);
           };
 
           return (
@@ -85,7 +85,7 @@ const InputObjectBuilder = ({ type, setType, fieldTypes }) => {
               field={f}
               setField={setField}
               removeField={removeField}
-              allTypes={fieldTypes}
+              allTypes={argTypes}
               isLast={isLast}
               index={i}
             />

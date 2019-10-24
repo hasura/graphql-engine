@@ -92,7 +92,7 @@ const ObjectBuilder = ({ type, setType, argTypes, fieldTypes }) => {
             const newArguments = JSON.parse(JSON.stringify(args));
             setArguments([
               ...newArguments.slice(0, i),
-              newArguments.slice(i + 1),
+              ...newArguments.slice(i + 1),
             ]);
           };
           return (
@@ -120,7 +120,7 @@ const ObjectBuilder = ({ type, setType, argTypes, fieldTypes }) => {
           };
           const removeField = () => {
             const newFields = JSON.parse(JSON.stringify(fields));
-            setFields([...newFields.slice(0, i), newFields.slice(i + 1)]);
+            setFields([...newFields.slice(0, i), ...newFields.slice(i + 1)]);
           };
           return (
             <FieldEditor

@@ -14,6 +14,7 @@ const Types = ({
   argTypes,
   fieldTypes,
   service,
+  removeType,
 }) => {
   return (
     <div className={`${className || ''}`}>
@@ -28,16 +29,21 @@ const Types = ({
         />
       </h2>
       {types.map((type, i) => {
+        if (type.isInbuilt) return null;
         const isLast = i === types.length - 1;
         const setType = t => {
           const newTypes = JSON.parse(JSON.stringify(types));
           newTypes[i] = t;
           setTypes(newTypes);
         };
+        const _removeType = () => {
+          removeType(i);
+        };
         return (
           <TypeEditor
             type={type}
             setType={setType}
+            removeType={_removeType}
             isLast={isLast}
             argTypes={argTypes}
             fieldTypes={fieldTypes}

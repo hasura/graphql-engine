@@ -12,13 +12,23 @@ import ModifyAction from './Modify';
 import AddAction from './Add';
 import { fetchCustomTypes } from '../Types/ServerIO';
 
-const fetchInitialData = ({ dispatch }) => {
+const actionsInit = ({ dispatch }) => {
   return (nextState, replaceState, cb) => {
-    Promise.all([
-      dispatch(fetchCustomTypes()).then(() => {
-        dispatch(fetchActions());
-      }),
-    ]).then(
+    Promise.all([dispatch(fetchActions())]).then(
+      () => {
+        cb();
+      },
+      () => {
+        replaceState(globals.urlPrefix);
+        cb();
+      }
+    );
+  };
+};
+
+const typesInit = ({ dispatch }) => {
+  return (nextState, replaceState, cb) => {
+    Promise.all([dispatch(fetchCustomTypes())]).then(
       () => {
         cb();
       },
@@ -35,8 +45,8 @@ const getActionsRouter = (connect, store, composeOnEnterHooks) => {
     <Route
       path="actions"
       component={Container(connect)}
-      onEnter={composeOnEnterHooks([fetchInitialData(store)])}
-      onChange={fetchInitialData(store)}
+      onEnter={composeOnEnterHooks([typesInit(store), actionsInit(store)])}
+      onChange={actionsInit(store)}
     >
       <IndexRedirect to="manage" />
       <Route path="manage" component={rightContainerConnector(connect)}>

@@ -13,6 +13,7 @@ const Tabs = ({
   borderWidth = 1,
   padding = 20,
 }) => {
+  console.log(activeTabIndex);
   const [currentTab, setCurrentTab] = React.useState(activeTabIndex);
 
   const changeTab = index => {
