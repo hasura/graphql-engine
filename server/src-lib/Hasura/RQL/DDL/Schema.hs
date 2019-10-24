@@ -78,9 +78,11 @@ runRunSQL (RunSQL sql cascade mChkMDCnstcy (fromMaybe False -> isReadOnly)) = do
         rawSqlErrHandler txe =
           let e = err400 PostgresError "query execution failed"
           in e {qeInternal = Just $ toJSON txe}
-    setTransactionAccess tx = if isReadOnly then setReadOnly >> tx else tx
+    setTransactionAccess tx = if rReadOnly then setReadOnly >> tx else setReadWrite >> tx
 
     setReadOnly =  Q.unitQE defaultTxErrorHandler "SET TRANSACTION READ ONLY" () False
+
+    setReadWrite =  Q.unitQE defaultTxErrorHandler "SET TRANSACTION READ WRITE" () False
 
     isAltrDropReplace :: QErrM m => T.Text -> m Bool
     isAltrDropReplace = either throwErr return . matchRegex regex False
