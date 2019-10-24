@@ -8,7 +8,7 @@ select
     'functions', functions.items,
     'foreign_keys', foreign_keys.items,
     'allowlist_collections', allowlist.item,
-    'custom_types', coalesce((select custom_types from hdb_catalog.hdb_custom_graphql_types), '{}'),
+    'custom_types', coalesce((select custom_types from hdb_catalog.hdb_custom_types), '{}'),
     'actions', actions.items,
     'action_permissions', action_permissions.items
   )

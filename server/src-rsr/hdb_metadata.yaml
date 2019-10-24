@@ -284,3 +284,37 @@ args:
   args:
     name: hdb_allowlist
     schema: hdb_catalog
+
+- type: track_table
+  args:
+    name: hdb_custom_types
+    schema: hdb_catalog
+
+- type: track_table
+  args:
+    name: hdb_action
+    schema: hdb_catalog
+
+- type: track_table
+  args:
+    name: hdb_action_permission
+    schema: hdb_catalog
+
+- type: create_array_relationship
+  args:
+    name: permissions
+    table:
+      schema: hdb_catalog
+      name: hdb_action
+    using:
+      manual_configuration:
+        remote_table:
+          schema: hdb_catalog
+          name: hdb_action_permission
+        column_mapping:
+          action_name : action_name
+
+- type: track_table
+  args:
+    name: hdb_action_log
+    schema: hdb_catalog

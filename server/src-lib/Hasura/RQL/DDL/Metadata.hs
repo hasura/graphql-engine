@@ -135,7 +135,7 @@ clearMetadata = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "DELETE FROM hdb_catalog.remote_schemas" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_allowlist" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_query_collection WHERE is_system_defined <> 'true'" () False
-  Q.unitQ "DELETE FROM hdb_catalog.hdb_custom_graphql_types" () False
+  Q.unitQ "DELETE FROM hdb_catalog.hdb_custom_types" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_action_permission" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_action WHERE is_system_defined <> 'true'" () False
 
@@ -492,7 +492,7 @@ fetchMetadata = do
     fetchCustomTypes =
       fmap (Q.getAltJ . runIdentity) <$>
       Q.rawQE defaultTxErrorHandler [Q.sql|
-         select custom_types::json from hdb_catalog.hdb_custom_graphql_types
+         select custom_types::json from hdb_catalog.hdb_custom_types
                                           |] [] False
     fetchActions =
       Q.getAltJ . runIdentity . Q.getRow <$> Q.rawQE defaultTxErrorHandler [Q.sql|

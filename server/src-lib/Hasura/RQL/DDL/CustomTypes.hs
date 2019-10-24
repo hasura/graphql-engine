@@ -230,7 +230,7 @@ persistCustomTypes :: CustomTypes -> Q.TxE QErr ()
 persistCustomTypes customTypes = do
   clearCustomTypes
   Q.unitQE defaultTxErrorHandler [Q.sql|
-    INSERT into hdb_catalog.hdb_custom_graphql_types
+    INSERT into hdb_catalog.hdb_custom_types
       (custom_types)
       VALUES ($1)
   |] (Identity $ Q.AltJ customTypes) False
@@ -238,7 +238,7 @@ persistCustomTypes customTypes = do
 clearCustomTypes :: Q.TxE QErr ()
 clearCustomTypes = do
   Q.unitQE defaultTxErrorHandler [Q.sql|
-    DELETE FROM hdb_catalog.hdb_custom_graphql_types
+    DELETE FROM hdb_catalog.hdb_custom_types
   |] () False
 
 validateCustomTypesAndAddToCache
