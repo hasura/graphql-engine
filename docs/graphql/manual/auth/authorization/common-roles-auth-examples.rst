@@ -12,6 +12,8 @@ that will be referred to throughout this guide.
 
 Here are some examples of common use cases.
 
+.. _anonymous_users_example:
+
 Anonymous (not logged in) users
 -------------------------------
 

@@ -33,6 +33,9 @@ Hasura supports two modes of authentication configuration:
 
    .. thumbnail:: ../../../../img/graphql/manual/auth/auth-jwt-overview.png
 
+You can also configure Hasura GraphQL engine to allow access to unauthenticated users by defining a specific role
+which will be set for all unauthenticated requests.
+
 **See more details about these at:**
 
 .. toctree::
@@ -40,3 +43,4 @@ Hasura supports two modes of authentication configuration:
 
   Using webhooks <webhook>
   Using JWT <jwt>
+  Unauthenticated access <unauthenticated-access>
