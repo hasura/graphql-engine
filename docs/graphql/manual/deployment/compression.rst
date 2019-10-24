@@ -1,3 +1,5 @@
+.. _http-compression:
+
 HTTP Compression
 ================
 
