@@ -331,15 +331,15 @@ getRootFldsRole'
 getRootFldsRole' tn primCols constraints fields funcs insM
                  selM updM delM viM tableConfig =
   RootFields
-    { rootQueryFields = makeFieldMap
-        $  funcQueries
+    { rootQueryFields =
+        funcQueries
         <> funcAggQueries
         <> catMaybes
           [ getSelDet <$> selM
           , getSelAggDet selM
           , getPKeySelDet selM primCols
           ]
-    , rootMutationFields = makeFieldMap $ catMaybes
+    , rootMutationFields = catMaybes
         [ mutHelper viIsInsertable getInsDet insM
         , mutHelper viIsUpdatable getUpdDet updM
         , mutHelper viIsDeletable getDelDet delM
@@ -349,7 +349,6 @@ getRootFldsRole' tn primCols constraints fields funcs insM
     customRootFields = _tcCustomRootFields tableConfig
     colGNameMap = mkPGColGNameMap $ getValidCols fields
 
-    makeFieldMap = mapFromL (_fiName . snd)
     allCols = getCols fields
     funcQueries = maybe [] getFuncQueryFlds selM
     funcAggQueries = maybe [] getFuncAggQueryFlds selM
@@ -690,22 +689,30 @@ mkGCtxMap
 mkGCtxMap tableCache functionCache = do
   typesMapL <- mapM (mkGCtxMapTable tableCache functionCache) $
                filter tableFltr $ Map.elems tableCache
+  let typesMap = foldr (Map.unionWith mappend) Map.empty typesMapL
   -- since root field names are customisable, we need to check for
   -- duplicate root field names across all tables
-  duplicateRootFlds <- (duplicates . concat) <$> forM typesMapL getRootFlds
-  unless (null duplicateRootFlds) $
-    throw400 Unexpected $ "following root fields are duplicated: "
-    <> showNames duplicateRootFlds
-  let typesMap = foldr (Map.unionWith mappend) Map.empty typesMapL
+  validateRootFields typesMap
   return $ flip Map.map typesMap $ \(ty, flds, insCtxMap) ->
     mkGCtx ty flds insCtxMap
   where
     tableFltr ti = not (isSystemDefined $ _tiSystemDefined ti) && isValidObjectName (_tiName ti)
 
-    getRootFlds roleMap = do
-      (_, RootFields query mutation, _) <- onNothing
-        (Map.lookup adminRole roleMap) $ throw500 "admin schema not found"
-      return $ Map.keys query <> Map.keys mutation
+    validateRootFields typesMap =
+      case Map.lookup adminRole typesMap of
+        Nothing                                   -> pure () -- If no tables are tracked
+        Just (_, RootFields queries mutations, _) -> do
+          let getRootFields = map (_fiName . snd)
+              duplicateQueryFields = duplicates $ getRootFields queries
+              duplicateMutationFields = duplicates $ getRootFields mutations
+
+          when (not $ null duplicateQueryFields) $
+            throw400 Unexpected $ "following query root fields are duplicated: "
+            <> showNames duplicateQueryFields
+
+          when (not $ null duplicateMutationFields) $
+            throw400 Unexpected $ "following mutation root fields are duplicated: "
+            <> showNames duplicateMutationFields
 
 -- | build GraphQL schema from postgres tables and functions
 buildGCtxMapPG
@@ -766,19 +773,19 @@ instance Monoid TyAgg where
 -- | A role-specific mapping from root field names to allowed operations.
 data RootFields
   = RootFields
-  { rootQueryFields    :: !(Map.HashMap G.Name (QueryCtx, ObjFldInfo))
-  , rootMutationFields :: !(Map.HashMap G.Name (MutationCtx, ObjFldInfo))
+  { rootQueryFields    :: ![(QueryCtx, ObjFldInfo)]
+  , rootMutationFields :: ![(MutationCtx, ObjFldInfo)]
   } deriving (Show, Eq)
 
 instance Semigroup RootFields where
   RootFields a1 b1 <> RootFields a2 b2
-    = RootFields (Map.union a1 a2) (Map.union b1 b2)
+    = RootFields (a1 ++ a2) (b1 ++ b2)
 
 instance Monoid RootFields where
-  mempty = RootFields Map.empty Map.empty
+  mempty = RootFields [] []
 
 mkGCtx :: TyAgg -> RootFields -> InsCtxMap -> GCtx
-mkGCtx tyAgg (RootFields queryFields mutationFields) insCtxMap =
+mkGCtx tyAgg (RootFields queries mutations) insCtxMap =
   let queryRoot = mkQueryRootTyInfo qFlds
       scalarTys = map (TIScalar . mkHsraScalarTyInfo) (Set.toList allScalarTypes)
       compTys   = map (TIInpObj . mkCompExpInp) (Set.toList allComparableTypes)
@@ -795,6 +802,9 @@ mkGCtx tyAgg (RootFields queryFields mutationFields) insCtxMap =
   in GCtx allTys fldInfos queryRoot mutRootM subRootM ordByEnums
      (Map.map fst queryFields) (Map.map fst mutationFields) insCtxMap
   where
+    queryFields = makeFieldMap queries
+    mutationFields = makeFieldMap mutations
+    makeFieldMap = mapFromL (_fiName . snd)
     TyAgg tyInfos fldInfos scalars ordByEnums = tyAgg
     colTys = Set.fromList $ map pgiType $ mapMaybe (^? _RFPGColumn) $
              Map.elems fldInfos
