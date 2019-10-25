@@ -2,9 +2,11 @@
   "name": "hasura-to-node-be",
   "version": "1.0.0",
   "description": "hasura on existing node be",
+  "author": "Razi",
+  "license": "MIT",
   "main": "src/index.js",
   "scripts": {
-    "start": "nodemon src/index.js localhost 8080"
+    "start": "nodemon -r dotenv/config src/index.js"
   },
   "dependencies": {
     "apollo-cache-inmemory": "1.6.3",
