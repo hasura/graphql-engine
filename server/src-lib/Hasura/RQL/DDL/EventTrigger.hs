@@ -150,6 +150,15 @@ delEventTriggerFromCatalog trn = do
            WHERE name = $1
                 |] (Identity trn) False
   delTriggerQ trn
+  archiveEvents trn
+
+archiveEvents:: TriggerName -> Q.TxE QErr ()
+archiveEvents trn = do
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+           UPDATE hdb_catalog.event_log
+           SET archived = 't'
+           WHERE trigger_name = $1
+                |] (Identity trn) False
 
 updateEventTriggerToCatalog
   :: QualifiedTable
