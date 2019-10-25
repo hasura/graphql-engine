@@ -102,6 +102,17 @@ func (q CustomQuery) MergeRelationships(squashList *database.CustomList) error {
 				}
 				prevElems = append(prevElems, element)
 			case *setRelationshipCommentInput:
+				if len(prevElems) != 0 {
+					if rel, ok := prevElems[0].Value.(*createObjectRelationshipInput); ok {
+						rel.Comment = &obj.Comment
+						continue
+					}
+
+					if rel, ok := prevElems[0].Value.(*createArrayRelationshipInput); ok {
+						rel.Comment = &obj.Comment
+						continue
+					}
+				}
 				prevElems = append(prevElems, element)
 			case *dropRelationshipInput:
 				if relCfg.GetState() == "created" {
@@ -1083,6 +1094,8 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 			q.Type = createObjectRelationship
 		case *createArrayRelationshipInput:
 			q.Type = createArrayRelationship
+		case *setRelationshipCommentInput:
+			q.Type = setRelationshipComment
 		case *dropRelationshipInput:
 			q.Type = dropRelationship
 		case *createInsertPermissionInput:

@@ -412,15 +412,17 @@ type unTrackFunctionInput struct {
 }
 
 type createObjectRelationshipInput struct {
-	Name  string      `json:"name" yaml:"name"`
-	Table tableSchema `json:"table" yaml:"table"`
-	Using interface{} `json:"using" yaml:"using"`
+	Name    string      `json:"name" yaml:"name"`
+	Table   tableSchema `json:"table" yaml:"table"`
+	Using   interface{} `json:"using" yaml:"using"`
+	Comment *string     `json:"comment,omitempty" yaml:"comment,omitempty"`
 }
 
 type createArrayRelationshipInput struct {
-	Name  string      `json:"name" yaml:"name"`
-	Table tableSchema `json:"table" yaml:"table"`
-	Using interface{} `json:"using" yaml:"using"`
+	Name    string      `json:"name" yaml:"name"`
+	Table   tableSchema `json:"table" yaml:"table"`
+	Using   interface{} `json:"using" yaml:"using"`
+	Comment *string     `json:"comment,omitempty" yaml:"comment,omitempty"`
 }
 
 type setRelationshipCommentInput struct {
