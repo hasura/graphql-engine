@@ -177,7 +177,6 @@
 - description: export metadata
   url: /v1/query
   status: 200
-  enforce_keys_order: true
   query:
     type: export_metadata
     args: {}
@@ -547,7 +546,6 @@
 - description: export metadata
   url: /v1/query
   status: 200
-  enforce_keys_order: true
   query:
     type: export_metadata
     args: {}
