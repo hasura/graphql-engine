@@ -7,7 +7,16 @@
     "start": "nodemon src/index.js localhost 8080"
   },
   "dependencies": {
+    "apollo-cache-inmemory": "1.6.3",
+    "apollo-link": "1.2.13",
+    "apollo-link-error": "1.1.12",
+    "apollo-link-http": "1.5.16",
+    "apollo-server-express": "2.9.7",
+    "cors": "2.8.5",
+    "dotenv": "^8.2.0",
     "express": "4.17.1",
+    "graphql-tools": "4.0.6",
+    "node-fetch": "2.6.0",
     "pg": "7.12.1"
   },
   "devDependencies": {
