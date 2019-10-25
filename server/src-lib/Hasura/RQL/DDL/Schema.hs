@@ -90,7 +90,10 @@ runRunSQL RunSQL{..} = do
         rawSqlErrHandler txe =
           let e = err400 PostgresError "query execution failed"
           in e {qeInternal = Just $ toJSON txe}
-    setTransactionAccess tx = if rReadOnly then setReadOnly >> tx else setReadWrite >> tx
+
+    setTransactionAccess tx
+      | rReadOnly = setReadOnly >> tx
+      | otherwise = setReadWrite >> tx
 
     setReadOnly =  Q.unitQE defaultTxErrorHandler "SET TRANSACTION READ ONLY" () False
 
