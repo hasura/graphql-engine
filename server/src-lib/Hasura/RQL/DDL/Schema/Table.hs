@@ -267,7 +267,7 @@ processTableChanges ti tableDiff = do
 
   where
     TableDiff mNewName droppedCols addedCols alteredCols _
-              computedColDiff constraints descM = tableDiff
+              computedFieldDiff constraints descM = tableDiff
 
     replaceConstraints tn = flip modTableInCache tn $ \tInfo ->
       return $ tInfo {_tiUniqOrPrimConstraints = constraints}
@@ -337,7 +337,7 @@ processTableChanges ti tableDiff = do
            | otherwise -> performColumnUpdate $> False
 
     processComputedFieldDiff table  = do
-      let ComputedFieldDiff _ altered overloaded = computedColDiff
+      let ComputedFieldDiff _ altered overloaded = computedFieldDiff
           getFunction = fmFunction . ccmFunctionMeta
           getFunctionDescription = fmDescription . ccmFunctionMeta
       forM_ overloaded $ \(columnName, function) ->
