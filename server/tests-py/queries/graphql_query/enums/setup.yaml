@@ -29,3 +29,12 @@ args:
     is_enum: true
 - type: track_table
   args: users
+
+# Anonymous users can query users, but not colors
+- type: create_select_permission
+  args:
+    table: users
+    role: anonymous
+    permission:
+      columns: [id, name, favorite_color]
+      filter: {}

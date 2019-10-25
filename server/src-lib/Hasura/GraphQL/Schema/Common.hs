@@ -4,11 +4,16 @@ module Hasura.GraphQL.Schema.Common
   , fromInpValL
 
   , RelationshipFieldInfo(..)
-  , SelField
+  , SelField(..)
+  , _SFPGColumn
+  , getPGColumnFields
+  , getRelationshipFields
+  , getComputedFields
 
   , mkColumnType
   , mkRelName
   , mkAggRelName
+  , mkComputedFieldName
 
   , mkTableTy
   , mkTableEnumType
@@ -17,11 +22,16 @@ module Hasura.GraphQL.Schema.Common
   , mkColumnEnumVal
   , mkDescriptionWith
   , mkDescription
+
+  , mkFuncArgsTy
   ) where
 
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
+
+import           Control.Lens
+import           Control.Lens.TH               (makePrisms)
 
 import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Validate.Types
@@ -39,7 +49,21 @@ data RelationshipFieldInfo
   , _rfiIsNullable :: !Bool
   } deriving (Show, Eq)
 
-type SelField = Either PGColumnInfo RelationshipFieldInfo
+data SelField
+  = SFPGColumn !PGColumnInfo
+  | SFRelationship !RelationshipFieldInfo
+  | SFComputedField !ComputedField
+  deriving (Show, Eq)
+$(makePrisms ''SelField)
+
+getPGColumnFields :: [SelField] -> [PGColumnInfo]
+getPGColumnFields = mapMaybe (^? _SFPGColumn)
+
+getRelationshipFields :: [SelField] -> [RelationshipFieldInfo]
+getRelationshipFields = mapMaybe (^? _SFRelationship)
+
+getComputedFields :: [SelField] -> [ComputedField]
+getComputedFields = mapMaybe (^? _SFComputedField)
 
 qualObjectToName :: (ToTxt a) => QualifiedObject a -> G.Name
 qualObjectToName = G.Name . snakeCaseQualObject
@@ -55,6 +79,9 @@ mkRelName rn = G.Name $ relNameToTxt rn
 
 mkAggRelName :: RelName -> G.Name
 mkAggRelName rn = G.Name $ relNameToTxt rn <> "_aggregate"
+
+mkComputedFieldName :: ComputedFieldName -> G.Name
+mkComputedFieldName = G.Name . computedFieldNameToText
 
 mkColumnType :: PGColumnType -> G.NamedType
 mkColumnType = \case
@@ -82,3 +109,11 @@ mkDescriptionWith descM defaultTxt = G.Description $ case descM of
 
 mkDescription :: PGDescription -> G.Description
 mkDescription = G.Description . getPGDescription
+
+mkFuncArgsName :: QualifiedFunction -> G.Name
+mkFuncArgsName fn =
+  qualObjectToName fn <> "_args"
+
+mkFuncArgsTy :: QualifiedFunction -> G.NamedType
+mkFuncArgsTy =
+  G.NamedType . mkFuncArgsName
