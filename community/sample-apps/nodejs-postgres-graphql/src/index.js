@@ -1,27 +1,16 @@
-const express = require("express");
-const bodyParser = require("body-parser");
+const Express = require("express");
+const BodyParser = require("body-parser");
+const Apis = require("./middleware/apis");
+const Graphql = require("./middleware/graphql");
 
-const db = require("./queries");
+const App = Express();
+const port = process.env.PORT;
+const MwBodyParser = BodyParser.json();
 
-const app = express();
-const port = 8080;
+App.use(MwBodyParser);
+App.use(Apis);
+App.use(Graphql);
 
-app.use(bodyParser.json());
-app.use(
-  bodyParser.urlencoded({
-    extended: true
-  })
-);
-app.get("/", (request, response) => {
-  response.json({ message: "Hello from express+postgres" });
-});
-
-app.get("/users", db.getUsers);
-app.get("/users/:id", db.getUserById);
-app.post("/users", db.createUser);
-app.put("/users/:id", db.updateUser);
-app.delete("/users/:id", db.deleteUser);
-
-app.listen(port, () => {
-  console.log(`App running on port ${port}.`);
+App.listen(port, () => {
+  console.log(`🚀 Server running on port ${port}.`);
 });
