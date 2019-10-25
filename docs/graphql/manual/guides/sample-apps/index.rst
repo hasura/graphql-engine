@@ -43,6 +43,7 @@ Repositories
 - `VueJS + Auth0 + GraphQL <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/vuejs-auth0-graphql>`__
 - `Todo app with Vuetify + Vuex + GraphQL <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/vuetify-vuex-todo-graphql>`__
 - `WhatsApp clone with Typescript + React + GraphQL <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/whatsapp-clone-typescript-react>`__
+- `Integrate Hasura into an existing node BE <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/nodejs-postgres-graphql>`__
 
 Working apps
 ------------
