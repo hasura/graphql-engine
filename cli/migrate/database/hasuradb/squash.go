@@ -158,7 +158,7 @@ func (q CustomQuery) MergePermissions(squashList *database.CustomList) error {
 		prevElems := make([]*list.Element, 0)
 		for _, val := range g.Group {
 			element := val.(*list.Element)
-			switch element.Value.(type) {
+			switch obj := element.Value.(type) {
 			case *createInsertPermissionInput, *createSelectPermissionInput, *createUpdatePermissionInput, *createDeletePermissionInput:
 				err := permissionTransition.Trigger("create_permission", &permCfg, nil)
 				if err != nil {
@@ -166,6 +166,27 @@ func (q CustomQuery) MergePermissions(squashList *database.CustomList) error {
 				}
 				prevElems = append(prevElems, element)
 			case *setPermissionCommentInput:
+				if len(prevElems) != 0 {
+					if perm, ok := prevElems[0].Value.(*createInsertPermissionInput); ok {
+						perm.Comment = &obj.Comment
+						continue
+					}
+
+					if perm, ok := prevElems[0].Value.(*createSelectPermissionInput); ok {
+						perm.Comment = &obj.Comment
+						continue
+					}
+
+					if perm, ok := prevElems[0].Value.(*createUpdatePermissionInput); ok {
+						perm.Comment = &obj.Comment
+						continue
+					}
+
+					if perm, ok := prevElems[0].Value.(*createDeletePermissionInput); ok {
+						perm.Comment = &obj.Comment
+						continue
+					}
+				}
 				prevElems = append(prevElems, element)
 			case *dropInsertPermissionInput, *dropSelectPermissionInput, *dropUpdatePermissionInput, *dropDeletePermissionInput:
 				if permCfg.GetState() == "created" {
@@ -1114,6 +1135,8 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 			q.Type = createDeletePermission
 		case *dropDeletePermissionInput:
 			q.Type = dropDeletePermission
+		case *setPermissionCommentInput:
+			q.Type = setPermissionComment
 		case *trackFunctionInput:
 			q.Type = trackFunction
 		case *unTrackFunctionInput:

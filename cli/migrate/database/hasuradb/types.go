@@ -440,6 +440,7 @@ type createInsertPermissionInput struct {
 	Table      tableSchema `json:"table" yaml:"table"`
 	Role       string      `json:"role" yaml:"role"`
 	Permission interface{} `json:"permission" yaml:"permission"`
+	Comment    *string     `json:"comment,omitempty" yaml:"comment,omitempty"`
 }
 
 type dropInsertPermissionInput struct {
@@ -451,6 +452,7 @@ type createSelectPermissionInput struct {
 	Table      tableSchema `json:"table" yaml:"table"`
 	Role       string      `json:"role" yaml:"role"`
 	Permission interface{} `json:"permission" yaml:"permission"`
+	Comment    *string     `json:"comment,omitempty" yaml:"comment,omitempty"`
 }
 
 type dropSelectPermissionInput struct {
@@ -462,6 +464,7 @@ type createUpdatePermissionInput struct {
 	Table      tableSchema `json:"table" yaml:"table"`
 	Role       string      `json:"role" yaml:"role"`
 	Permission interface{} `json:"permission" yaml:"permission"`
+	Comment    *string     `json:"comment,omitempty" yaml:"comment,omitempty"`
 }
 
 type dropUpdatePermissionInput struct {
@@ -473,6 +476,7 @@ type createDeletePermissionInput struct {
 	Table      tableSchema `json:"table" yaml:"table"`
 	Role       string      `json:"role" yaml:"role"`
 	Permission interface{} `json:"permission" yaml:"permission"`
+	Comment    *string     `json:"comment,omitempty" yaml:"comment,omitempty"`
 }
 
 type dropDeletePermissionInput struct {
