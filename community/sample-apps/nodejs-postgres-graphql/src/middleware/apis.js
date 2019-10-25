@@ -1,7 +1,11 @@
+const { Router } = require("express");
 const Pool = require("pg").Pool;
+
+const route = new Router();
 const pool = new Pool({
   connectionString: process.env.DB_URI
 });
+
 const getUsers = (request, response) => {
   pool.query("SELECT * FROM users ORDER BY id ASC", (error, results) => {
     if (error) {
@@ -64,10 +68,18 @@ const deleteUser = (request, response) => {
   });
 };
 
-module.exports = {
-  getUsers,
-  getUserById,
-  createUser,
-  updateUser,
-  deleteUser
-};
+route.get("/", (request, response) => {
+  response.send("Hello from express+postgres");
+});
+
+route.get("/users", getUsers);
+route.get("/users/:id", getUserById);
+route.post("/users", createUser);
+route.put("/users/:id", updateUser);
+route.delete("/users/:id", deleteUser);
+
+module.exports = route;
+
+// Thanks to Tania Rascia & logrocket
+// http://tania.dev
+// https://blog.logrocket.com/setting-up-a-restful-api-with-node-js-and-postgresql-d96d6fc892d8/
