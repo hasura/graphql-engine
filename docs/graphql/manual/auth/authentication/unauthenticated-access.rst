@@ -20,7 +20,8 @@ Configuring unauthenticated access
 
 You can use the env variable ``HASURA_GRAPHQL_UNAUTHORIZED_ROLE`` or ``--unauthorized-role`` flag to set a role
 for unauthenticated (non-logged in) users. The configured unauthorized role will be used whenever an access token is not present
-in a request to the GraphQL API. See :doc:`../../deployment/graphql-engine-flags/reference` for more details on setting this flag/env var.
+in a request to the GraphQL API and any configured webhook / JWT authentication is skipped.
+See :doc:`../../deployment/graphql-engine-flags/reference` for more details on setting this flag/env var.
 
 This role can then be used to define the permissions for unauthenticated users as described in :doc:`../authorization/index`.
 A guide on setting up unauthenticated user permissions can be found :ref:`here <anonymous_users_example>`
