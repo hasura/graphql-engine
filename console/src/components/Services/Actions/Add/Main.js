@@ -14,6 +14,7 @@ import {
   setActionOutputType,
   setTypes,
   setTypesBulk,
+  setDefaults,
 } from './reducer';
 import { createAction } from '../ServerIO';
 import { defaultArg, defaultScalarType } from '../Common/stateDefaults';
@@ -26,6 +27,10 @@ const AddAction = ({
   types,
   dispatch,
 }) => {
+  React.useEffect(() => {
+    dispatch(setDefaults());
+  }, []);
+
   const nameOnChange = e => dispatch(setActionName(e.target.value));
   const webhookOnChange = e => dispatch(setActionWebhook(e.target.value));
   const outputTypeOnChange = e => dispatch(setActionOutputType(e.target.value));

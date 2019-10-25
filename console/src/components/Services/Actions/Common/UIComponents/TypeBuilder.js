@@ -3,12 +3,11 @@ import Tabs from '../../../../Common/Tabs';
 import ScalarBuilder from './ScalarBuilder';
 import ObjectBuilder from './ObjectBuilder';
 import InputObjectBuilder from './InputObjectBuilder';
+import EnumBuilder from './EnumBuilder';
 
 const TypeBuilder = ({ type, setType, argTypes, fieldTypes }) => {
-  // TODO ENUM
-
   const scalarBuilder = <ScalarBuilder type={type} setType={setType} />;
-  // const enumBuilder = <div>Enum Builder</div>;
+  const enumBuilder = <EnumBuilder type={type} setType={setType} />;
   const objectBuilder = (
     <ObjectBuilder
       type={type}
@@ -36,10 +35,11 @@ const TypeBuilder = ({ type, setType, argTypes, fieldTypes }) => {
       component: inputObjectBuilder,
       key: 'input_object',
     },
-    // {
-    //   heading: 'Enum',
-    //   component: enumBuilder,
-    // },
+    {
+      heading: 'Enum',
+      component: enumBuilder,
+      kind: 'enum',
+    },
   ];
 
   const activeTabIndex = tabs.findIndex(t => t.key === type.kind) || 0;

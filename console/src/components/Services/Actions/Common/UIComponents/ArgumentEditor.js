@@ -1,5 +1,6 @@
 import React from 'react';
 import styles from './Styles.scss';
+import RemoveIcon from '../../../../Common/Icons/Remove';
 
 const ArgumentEditor = ({
   argument,
@@ -35,8 +36,8 @@ const ArgumentEditor = ({
   let removeIcon = null;
   if (!isLast) {
     removeIcon = (
-      <i
-        className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
+      <RemoveIcon
+        className={`${styles.cursorPointer}`}
         onClick={removeArgument}
       />
     );

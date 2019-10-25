@@ -27,16 +27,16 @@ export const defaultInputObjectType = {
   fields: [{ ...defaultField }],
 };
 
+export const defaultEnumValue = {
+  value: '',
+  description: '',
+};
+
 export const defaultEnumType = {
   name: '',
   kind: 'enum',
   value_definition: {
-    values: [
-      {
-        value: '',
-        description: '',
-      },
-    ],
+    values: [{ ...defaultEnumValue }],
     is_deprecated: false,
   },
 };

@@ -63,19 +63,40 @@ export const sanitiseState = state => {
     ? newState.types[newState.outputType].name
     : '';
   newState.types = newState.types.map(t => {
-    if (t.kind === 'scalar' || t.isInbuilt) return t;
+    if (t.isInbuilt) return t;
     const _t = { ...t };
-    if (t.kind === 'object') {
-      _t.arguments = filterNameLessTypeLess(_t.arguments).map(a => ({
-        ...a,
-        type: newState.types[a.type].name,
-      }));
+    console.log(_t);
+
+    switch (t.kind) {
+      case 'scalar':
+        return _t;
+
+      case 'object':
+        _t.arguments = filterNameLessTypeLess(_t.arguments).map(a => ({
+          ...a,
+          type: newState.types[a.type].name,
+        }));
+        _t.fields = filterNameLessTypeLess(_t.fields).map(f => ({
+          ...f,
+          type: newState.types[f.type].name,
+        }));
+        return _t;
+
+      case 'input_object':
+        _t.fields = filterNameLessTypeLess(_t.fields).map(f => ({
+          ...f,
+          type: newState.types[f.type].name,
+        }));
+        return _t;
+
+      case 'enum':
+        _t.value_definition.values = _t.value_definition.values.filter(
+          v => !!v.value
+        );
+        return _t;
+      default:
+        return _t;
     }
-    _t.fields = filterNameLessTypeLess(_t.fields).map(f => ({
-      ...f,
-      type: newState.types[f.type].name,
-    }));
-    return _t;
   });
   return newState;
 };

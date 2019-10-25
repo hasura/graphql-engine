@@ -3,7 +3,11 @@ const singularize = kind => {
 };
 
 export const filterNameLessTypeLess = arr => {
-  return arr.filter(item => !!item.name && item.type);
+  return arr.filter(item => !!item.name && !!item.type);
+};
+
+export const filterNameless = arr => {
+  return arr.filter(item => !!item.name);
 };
 
 export const mergeCustomTypes = (newTypesList, existingTypesList) => {
@@ -58,6 +62,9 @@ export const reformCustomTypes = typesFromState => {
         return;
       case 'input_object':
         customTypes.input_objects.push(type);
+        return;
+      case 'enum':
+        customTypes.enums.push(type);
         return;
       default:
         return;

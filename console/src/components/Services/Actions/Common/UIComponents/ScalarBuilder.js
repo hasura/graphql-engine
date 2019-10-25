@@ -1,10 +1,11 @@
 import React from 'react';
 import styles from './Styles.scss';
+import { defaultScalarType } from '../stateDefaults';
 
 const ScalarBuilder = ({ type, setType }) => {
   const init = () => {
     if (type.kind !== 'scalar') {
-      setType({ name: type.name, kind: 'scalar' });
+      setType({ ...defaultScalarType, name: type.name });
     }
   };
 
