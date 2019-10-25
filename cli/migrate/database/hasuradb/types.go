@@ -428,7 +428,7 @@ type createArrayRelationshipInput struct {
 type setRelationshipCommentInput struct {
 	Name    string      `json:"name" yaml:"name"`
 	Table   tableSchema `json:"table" yaml:"table"`
-	Comment string      `json:"comment" yaml:"comment"`
+	Comment *string     `json:"comment" yaml:"comment"`
 }
 
 type dropRelationshipInput struct {
@@ -488,7 +488,7 @@ type setPermissionCommentInput struct {
 	Table   tableSchema `json:"table" yaml:"table"`
 	Role    string      `json:"role" yaml:"role"`
 	Type    string      `json:"type" yaml:"type"`
-	Comment string      `json:"comment" yaml:"comment"`
+	Comment *string     `json:"comment" yaml:"comment"`
 }
 
 type createEventTriggerInput struct {
@@ -546,17 +546,24 @@ type deleteEventTriggerInput struct {
 type addRemoteSchemaInput struct {
 	Name       string      `json:"name" yaml:"name"`
 	Definition interface{} `json:"definition" yaml:"definition"`
-	Comment    string      `json:"comment" yaml:"comment"`
+	Comment    *string     `json:"comment,omitempty" yaml:"comment,omitempty"`
 }
 
 type removeRemoteSchemaInput struct {
 	Name string `json:"name" yaml:"name"`
 }
 
+type collectionQuery struct {
+	Name  string `json:"name" yaml:"name"`
+	Query string `json:"query" yaml:"query"`
+}
+
 type createQueryCollectionInput struct {
-	Name       string      `json:"name" yaml:"name"`
-	Comment    string      `json:"comment" yaml:"comment"`
-	Definition interface{} `json:"definition" yaml:"definition"`
+	Name       string  `json:"name" yaml:"name"`
+	Comment    *string `json:"comment,omitempty" yaml:"comment,omitempty"`
+	Definition struct {
+		Queries []collectionQuery `json:"queries" yaml:"queries"`
+	} `json:"definition" yaml:"definition"`
 }
 
 type dropQueryCollectionInput struct {

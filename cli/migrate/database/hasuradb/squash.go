@@ -104,12 +104,12 @@ func (q CustomQuery) MergeRelationships(squashList *database.CustomList) error {
 			case *setRelationshipCommentInput:
 				if len(prevElems) != 0 {
 					if rel, ok := prevElems[0].Value.(*createObjectRelationshipInput); ok {
-						rel.Comment = &obj.Comment
+						rel.Comment = obj.Comment
 						continue
 					}
 
 					if rel, ok := prevElems[0].Value.(*createArrayRelationshipInput); ok {
-						rel.Comment = &obj.Comment
+						rel.Comment = obj.Comment
 						continue
 					}
 				}
@@ -612,6 +612,17 @@ func (q CustomQuery) MergeQueryCollections(squashList *database.CustomList) erro
 				if qcCfg.GetState() == "dropped" {
 					return fmt.Errorf("cannot add query %s to a collection %s when it is dropped", args.QueryName, qcCfg.name)
 				}
+
+				if len(prevElems) != 0 {
+					if query, ok := prevElems[0].Value.(*createQueryCollectionInput); ok {
+						query.Definition.Queries = append(query.Definition.Queries, collectionQuery{
+							Name:  args.QueryName,
+							Query: args.Query,
+						})
+						squashList.Remove(element)
+						continue
+					}
+				}
 				prevElems = append(prevElems, element)
 			case *dropQueryFromCollectionInput:
 				prevElems = append(prevElems, element)
@@ -737,9 +748,7 @@ func (h *HasuraDB) PushToList(migration io.Reader, fileType string, l *database.
 }
 
 func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
-	query := linq.FromIterable(l)
-
-	eventTriggersGroup := CustomQuery(query.GroupByT(
+	eventTriggersGroup := CustomQuery(linq.FromIterable(l).GroupByT(
 		func(element *list.Element) string {
 			switch args := element.Value.(type) {
 			case *createEventTriggerInput:
@@ -757,7 +766,7 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 		ret <- err
 	}
 
-	relationshipsGroup := CustomQuery(query.GroupByT(
+	relationshipsGroup := CustomQuery(linq.FromIterable(l).GroupByT(
 		func(element *list.Element) interface{} {
 			switch args := element.Value.(type) {
 			case *createObjectRelationshipInput:
@@ -795,7 +804,7 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 		ret <- err
 	}
 
-	permissionsGroup := CustomQuery(query.GroupByT(
+	permissionsGroup := CustomQuery(linq.FromIterable(l).GroupByT(
 		func(element *list.Element) interface{} {
 			switch args := element.Value.(type) {
 			case *createInsertPermissionInput:
@@ -872,7 +881,7 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 		ret <- err
 	}
 
-	computedFieldGroup := CustomQuery(query.GroupByT(
+	computedFieldGroup := CustomQuery(linq.FromIterable(l).GroupByT(
 		func(element *list.Element) interface{} {
 			switch args := element.Value.(type) {
 			case *addComputedFieldInput:
@@ -898,7 +907,7 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 		ret <- err
 	}
 
-	tableGroups := CustomQuery(query.GroupByT(
+	tableGroups := CustomQuery(linq.FromIterable(l).GroupByT(
 		func(element *list.Element) interface{} {
 			switch args := element.Value.(type) {
 			case *trackTableInput:
@@ -992,7 +1001,7 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 		ret <- err
 	}
 
-	functionGroups := CustomQuery(query.GroupByT(
+	functionGroups := CustomQuery(linq.FromIterable(l).GroupByT(
 		func(element *list.Element) interface{} {
 			switch args := element.Value.(type) {
 			case *trackFunctionInput:
@@ -1016,7 +1025,7 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 		ret <- err
 	}
 
-	remoteSchemaGroups := CustomQuery(query.GroupByT(
+	remoteSchemaGroups := CustomQuery(linq.FromIterable(l).GroupByT(
 		func(element *list.Element) string {
 			switch args := element.Value.(type) {
 			case *addRemoteSchemaInput:
@@ -1034,7 +1043,7 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 		ret <- err
 	}
 
-	allowListGroups := CustomQuery(query.GroupByT(
+	allowListGroups := CustomQuery(linq.FromIterable(l).GroupByT(
 		func(element *list.Element) string {
 			switch args := element.Value.(type) {
 			case *addCollectionToAllowListInput:
@@ -1052,7 +1061,7 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 		ret <- err
 	}
 
-	queryInCollectionGroups := CustomQuery(query.GroupByT(
+	queryInCollectionGroups := CustomQuery(linq.FromIterable(l).GroupByT(
 		func(element *list.Element) interface{} {
 			switch args := element.Value.(type) {
 			case addQueryToCollectionInput:
@@ -1076,7 +1085,7 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 		ret <- err
 	}
 
-	queryCollectionGroups := CustomQuery(query.GroupByT(
+	queryCollectionGroups := CustomQuery(linq.FromIterable(l).GroupByT(
 		func(element *list.Element) string {
 			switch args := element.Value.(type) {
 			case *createQueryCollectionInput:
@@ -1153,6 +1162,10 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 			q.Type = createQueryCollection
 		case *dropQueryCollectionInput:
 			q.Type = dropQueryCollection
+		case *addQueryToCollectionInput:
+			q.Type = addQueryToCollection
+		case *dropQueryFromCollectionInput:
+			q.Type = dropQueryFromCollection
 		case *addCollectionToAllowListInput:
 			q.Type = addCollectionToAllowList
 		case *dropCollectionFromAllowListInput:
