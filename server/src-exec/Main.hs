@@ -16,33 +16,36 @@ import qualified Database.PG.Query          as Q
 
 main :: IO ()
 main =  do
-  (HGEOptionsG rci hgeCmd) <- parseArgs
+  args <- parseArgs
+  unAppM $ runApp args
+
+runApp :: HGEOptions -> AppM ()
+runApp (HGEOptionsG rci hgeCmd) =
   case hgeCmd of
     HCServe serveOptions -> do
       initCtx <- initialiseCtx hgeCmd rci Nothing mkHttpLog Nothing
-      runHGEServer serveOptions initCtx Nothing Nothing Nothing
+      runHGEServer serveOptions initCtx Nothing Nothing Nothing unAppM
     HCExport -> do
       initCtx <- initialiseCtx hgeCmd rci Nothing mkHttpLog Nothing
       res <- runTx' initCtx fetchMetadata
-      either printErrJExit printJSON res
+      either (liftIO . printErrJExit) (liftIO . printJSON) res
 
     HCClean -> do
       initCtx <- initialiseCtx hgeCmd rci Nothing mkHttpLog Nothing
       res <- runTx' initCtx cleanCatalog
-      either printErrJExit (const cleanSuccess) res
+      either (liftIO . printErrJExit) (const cleanSuccess) res
 
     HCExecute -> do
       initCtx <- initialiseCtx hgeCmd rci Nothing mkHttpLog Nothing
-      queryBs <- BL.getContents
+      queryBs <- liftIO BL.getContents
       let sqlGenCtx = SQLGenCtx False
       res <- runAsAdmin (_icPgPool initCtx) sqlGenCtx $ execQuery queryBs
-      either printErrJExit BLC.putStrLn res
+      either (liftIO . printErrJExit) (liftIO . BLC.putStrLn) res
 
-    HCVersion -> putStrLn $ "Hasura GraphQL Engine: " ++ T.unpack currentVersion
+    HCVersion -> liftIO $ putStrLn $ "Hasura GraphQL Engine: " ++ T.unpack currentVersion
   where
-    runTx' :: InitCtx b -> Q.TxE QErr a -> IO (Either QErr a)
     runTx' initCtx tx =
-      runExceptT $ Q.runTx (_icPgPool initCtx) (Q.Serializable, Nothing) tx
+      liftIO $ runExceptT $ Q.runTx (_icPgPool initCtx) (Q.Serializable, Nothing) tx
 
     cleanSuccess =
-      putStrLn "successfully cleaned graphql-engine related data"
+      liftIO $ putStrLn "successfully cleaned graphql-engine related data"

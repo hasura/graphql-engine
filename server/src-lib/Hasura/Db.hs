@@ -57,12 +57,15 @@ lazyTxToQTx = \case
   LTTx tx  -> tx
 
 runLazyTx
-  :: PGExecCtx
-  -> LazyTx QErr a -> ExceptT QErr IO a
+  :: (MonadIO m)
+  => PGExecCtx
+  -> LazyTx QErr a -> ExceptT QErr m a
 runLazyTx (PGExecCtx pgPool txIso) = \case
   LTErr e  -> throwError e
   LTNoTx a -> return a
-  LTTx tx  -> Q.runTx pgPool (txIso, Nothing) tx
+  LTTx tx  -> do
+    res <- liftIO $ runExceptT $ Q.runTx pgPool (txIso, Nothing) tx
+    ExceptT $ return res
 
 runLazyTx'
   :: PGExecCtx -> LazyTx QErr a -> ExceptT QErr IO a

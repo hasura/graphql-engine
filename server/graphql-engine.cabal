@@ -164,16 +164,16 @@ library
                      , Hasura.Server.Utils
                      , Hasura.Server.Version
                      , Hasura.Server.Logging
+                     , Hasura.Server.Context
 
                      , Hasura.RQL.Types
                      , Hasura.RQL.DDL.Metadata
+                     , Hasura.EncJSON
 
-  other-modules:       Hasura.EncJSON
-                     , Hasura.Db
+  other-modules:       Hasura.Db
                      , Hasura.Cache
 
                      , Hasura.Server.Auth.JWT
-                     , Hasura.Server.Context
                      , Hasura.Server.Middleware
                      , Hasura.Server.Cors
                      , Hasura.Server.CheckUpdates

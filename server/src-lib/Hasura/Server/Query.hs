@@ -138,12 +138,14 @@ recordSchemaUpdate instanceId =
             |] (Identity instanceId) True
 
 peelRun
-  :: SchemaCache
+  :: (MonadIO m)
+  => SchemaCache
   -> UserInfo
   -> HTTP.Manager
   -> SQLGenCtx
   -> PGExecCtx
-  -> Run a -> ExceptT QErr IO (a, SchemaCache)
+  -> Run a
+  -> ExceptT QErr m (a, SchemaCache)
 peelRun sc userInfo httMgr sqlGenCtx pgExecCtx (Run m) =
   runLazyTx pgExecCtx $ withUserInfo userInfo lazyTx
   where

@@ -72,32 +72,34 @@ $(deriveToJSON
 
 -- | An IO action that enables metadata syncing
 startSchemaSync
-  :: SQLGenCtx
+  :: (MonadIO m)
+  => SQLGenCtx
   -> PG.PGPool
   -> Logger
   -> HTTP.Manager
   -> SchemaCacheRef
   -> InstanceId
-  -> Maybe UTC.UTCTime -> IO ()
+  -> Maybe UTC.UTCTime
+  -> m ()
 startSchemaSync sqlGenCtx pool logger httpMgr cacheRef instanceId cacheInitTime = do
   -- only the latest event is recorded here
   -- we don't want to store and process all the events, only the latest event
-  updateEventRef <- STM.newTVarIO Nothing
+  updateEventRef <- liftIO $ STM.newTVarIO Nothing
 
   -- Start listener thread
-  lTId <- C.forkIO $ listener sqlGenCtx pool
+  lTId <- liftIO $ C.forkIO $ listener sqlGenCtx pool
     logger httpMgr updateEventRef cacheRef instanceId cacheInitTime
   logThreadStarted TTListener lTId
 
   -- Start processor thread
-  pTId <- C.forkIO $ processor sqlGenCtx pool
+  pTId <- liftIO $ C.forkIO $ processor sqlGenCtx pool
     logger httpMgr updateEventRef cacheRef instanceId
   logThreadStarted TTProcessor pTId
 
   where
     logThreadStarted threadType threadId =
       let msg = T.pack (show threadType) <> " thread started"
-      in unLogger logger $
+      in liftIO $ unLogger logger $
          StartupLog LevelInfo "schema-sync" $
            object [ "instance_id" .= getInstanceId instanceId
                   , "thread_id" .= show threadId

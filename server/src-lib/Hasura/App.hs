@@ -13,35 +13,40 @@ import           System.Exit                (exitFailure)
 import qualified Control.Concurrent         as C
 import qualified Data.Aeson                 as A
 import qualified Data.ByteString.Char8      as BC
+import qualified Data.ByteString.Lazy       as BL
 import qualified Data.ByteString.Lazy.Char8 as BLC
 import qualified Data.Text                  as T
 import qualified Data.Time.Clock            as Clock
 import qualified Data.Yaml                  as Y
 import qualified Network.HTTP.Client        as HTTP
 import qualified Network.HTTP.Client.TLS    as HTTP
+import qualified Network.HTTP.Types         as HTTP
+import qualified Network.Wai                as Wai
 import qualified Network.Wai.Handler.Warp   as Warp
 import qualified System.Posix.Signals       as Signals
+import qualified Web.Spock.Core             as Spock
 
 import           Hasura.App.Migrate         (migrateCatalog)
 import           Hasura.App.Ops
 import           Hasura.Db
+import           Hasura.EncJSON
 import           Hasura.Events.Lib
 import           Hasura.Logging
 import           Hasura.Prelude
-import           Hasura.RQL.Types           (QErr, SQLGenCtx (..),
-                                             SchemaCache (..), adminUserInfo,
-                                             emptySchemaCache)
-import           Hasura.Server.App          (ConsoleRenderer, HasuraMiddleware,
-                                             SchemaCacheRef (..),
-                                             UserAuthMiddleware, getSCFromRef,
-                                             logInconsObjs, mkWaiApp)
+import           Hasura.RQL.Types           (QErr (..), SQLGenCtx (..),
+                                             SchemaCache (..), UserInfo,
+                                             adminUserInfo, emptySchemaCache,
+                                             isAdmin, userRole)
+import           Hasura.Server.App
 import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates (checkForUpdates)
+import           Hasura.Server.Context
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
 import           Hasura.Server.Query        (RQLQuery, Run, peelRun)
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
+import           Hasura.Server.Utils
 
 import qualified Database.PG.Query          as Q
 
@@ -139,28 +144,105 @@ data Loggers a
   , _lsRespLogger :: !(Maybe HttpResponseLogger)
   }
 
+newtype AppM a = AppM { unAppM :: IO a }
+  deriving (Functor, Applicative, Monad, MonadIO)
+
+instance HasuraSpockAction AppM where
+  makeSpockAction serverCtx httpLogger qErrEncoder qErrModifier apiHandler = do
+    req <- Spock.request
+    reqBody <- liftIO $ Wai.strictRequestBody req
+    let headers = Wai.requestHeaders req
+        authMode = scAuthMode serverCtx
+        manager = scManager serverCtx
+
+    requestId <- getRequestId headers
+
+    -- default to @getUserInfo@ if no user-auth middleware is passed
+    --let resolveUserInfo = fromMaybe getUserInfo userAuthMiddleware
+    userInfoE <- liftIO $ runExceptT $ getUserInfo logger manager headers authMode
+    userInfo  <- either (logErrorAndResp Nothing requestId req (Left reqBody) False headers . qErrModifier)
+                return userInfoE
+
+    let handlerState = HandlerCtx serverCtx userInfo headers requestId
+        curRole = userRole userInfo
+
+    t1 <- liftIO getCurrentTime -- for measuring response time purposes
+
+    (result, q) <- case apiHandler of
+      AHGet handler -> do
+        res <- liftIO $ runReaderT (runExceptT handler) handlerState
+        return (res, Nothing)
+      AHPost handler -> do
+        parsedReqE <- runExceptT $ parseBody reqBody
+        parsedReq  <- either (logErrorAndResp (Just userInfo) requestId req (Left reqBody) (isAdmin curRole) headers . qErrModifier)
+                      return parsedReqE
+        res <- liftIO $ runReaderT (runExceptT $ handler parsedReq) handlerState
+        return (res, Just parsedReq)
+
+    t2 <- liftIO getCurrentTime -- for measuring response time purposes
+
+    -- apply the error modifier
+    let modResult = fmapL qErrModifier result
+
+    -- log and return result
+    case modResult of
+      Left err  -> let jErr = maybe (Left reqBody) (Right . A.toJSON) q
+                  in logErrorAndResp (Just userInfo) requestId req jErr (isAdmin curRole) headers err
+      Right res -> logSuccessAndResp (Just userInfo) requestId req res (Just (t1, t2)) headers
+
+    where
+      logger = scLogger serverCtx
+
+      logErrorAndResp
+        :: (MonadIO m)
+        => Maybe UserInfo
+        -> RequestId
+        -> Wai.Request
+        -> Either BL.ByteString A.Value
+        -> Bool
+        -> [HTTP.Header]
+        -> QErr
+        -> Spock.ActionCtxT ctx m a
+      logErrorAndResp userInfo reqId req reqBody includeInternal headers qErr = do
+        logError logger httpLogger userInfo reqId req reqBody qErr headers
+        Spock.setStatus $ qeStatus qErr
+        Spock.json $ qErrEncoder includeInternal qErr
+
+      logSuccessAndResp userInfo reqId req result qTime headers = do
+        logSuccess logger httpLogger userInfo reqId req (apiRespToLBS result) qTime headers
+        case result of
+          JSONResp (HttpResponse j h) -> do
+            uncurry Spock.setHeader jsonHeader
+            uncurry Spock.setHeader (requestIdHeader, unRequestId reqId)
+            mapM_ (mapM_ (uncurry Spock.setHeader . unHeader)) h
+            Spock.lazyBytes $ encJToLBS j
+          RawResp (HttpResponse b h) -> do
+            uncurry Spock.setHeader (requestIdHeader, unRequestId reqId)
+            mapM_ (mapM_ (uncurry Spock.setHeader . unHeader)) h
+            Spock.lazyBytes b
+
 -- | a separate function to create the initialization context because some of
 -- these contexts might be used by external functions
 initialiseCtx
-  :: (ToEngineLog a)
+  :: (ToEngineLog a, MonadIO m)
   => HGECommand
   -> RawConnInfo
   -> Maybe LogCallbackFunction
   -> (HttpLogger a)
   -> (Maybe HttpResponseLogger)
-  -> IO (InitCtx a)
+  -> m (InitCtx a)
 initialiseCtx hgeCmd rci logCallback httpLogger respLogger = do
   -- global http manager
-  httpManager <- HTTP.newManager HTTP.tlsManagerSettings
-  instanceId <- generateInstanceId
-  connInfo <- procConnInfo
+  httpManager <- liftIO $ HTTP.newManager HTTP.tlsManagerSettings
+  instanceId <- liftIO generateInstanceId
+  connInfo <- liftIO procConnInfo
   (loggers, pool) <- case hgeCmd of
     HCServe ServeOptions{..} -> do
       l@(Loggers _ logger pgLogger _ _) <- mkLoggers soEnabledLogTypes soLogLevel
       let sqlGenCtx = SQLGenCtx soStringifyNum
       -- log postgres connection info
-      unLogger logger $ connInfoToLog connInfo
-      pool <- Q.initPGPool connInfo soConnParams pgLogger
+      liftIO $ unLogger logger $ connInfoToLog connInfo
+      pool <- liftIO $ Q.initPGPool connInfo soConnParams pgLogger
 
       -- safe init catalog
       initialise pool sqlGenCtx logger
@@ -173,59 +255,67 @@ initialiseCtx hgeCmd rci logCallback httpLogger respLogger = do
       return (l, pool)
 
   -- get the unique db id
-  eDbId <- runExceptT $ Q.runTx pool (Q.Serializable, Nothing) getDbId
-  dbId <- either printErrJExit return eDbId
+  eDbId <- liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) getDbId
+  dbId <- either (liftIO . printErrJExit) return eDbId
 
   return $ InitCtx httpManager instanceId dbId loggers connInfo pool
   where
     initialise pool sqlGenCtx (Logger logger) = do
-      currentTime <- getCurrentTime
+      currentTime <- liftIO getCurrentTime
       -- initialise the catalog
       initRes <- runAsAdmin pool sqlGenCtx $ initCatalogSafe currentTime
-      either printErrJExit (logger . mkGenericStrLog LevelInfo "db_init") initRes
+      either (liftIO . printErrJExit) (liftIO . logger . mkGenericStrLog LevelInfo "db_init") initRes
 
       -- migrate catalog if necessary
       migRes <- runAsAdmin pool sqlGenCtx $ migrateCatalog currentTime
-      either printErrJExit (logger . mkGenericStrLog LevelInfo "db_migrate") migRes
+      either (liftIO . printErrJExit) (liftIO . logger . mkGenericStrLog LevelInfo "db_migrate") migRes
 
     procConnInfo =
       either (printErrExit . connInfoErrModifier) return $ mkConnInfo rci
 
     getMinimalPool pgLogger ci = do
       let connParams = Q.defaultConnParams { Q.cpConns = 1 }
-      Q.initPGPool ci connParams pgLogger
+      liftIO $ Q.initPGPool ci connParams pgLogger
 
     mkLoggers enabledLogs logLevel = do
-      loggerCtx <- mkLoggerCtx (defaultLoggerSettings True logLevel) enabledLogs logCallback
+      loggerCtx <- liftIO $ mkLoggerCtx (defaultLoggerSettings True logLevel) enabledLogs logCallback
       let logger = mkLogger loggerCtx
           pgLogger = mkPGLogger logger
       return $ Loggers loggerCtx logger pgLogger httpLogger respLogger
 
 
-runHGEServer :: (ToEngineLog a) => ServeOptions -> InitCtx a -> Maybe UserAuthMiddleware -> Maybe (HasuraMiddleware RQLQuery) -> Maybe ConsoleRenderer -> IO ()
-runHGEServer so@(ServeOptions port host _ isoL mAdminSecret mAuthHook mJwtSecret mUnAuthRole corsCfg enableConsole consoleAssetsDir enableTelemetry strfyNum enabledAPIs lqOpts enableAL _ _) (InitCtx httpManager instanceId dbId loggers connInfo pgPool) authMiddleware metadataMiddleware renderConsole = do
+runHGEServer
+  :: (MonadIO m, ToEngineLog a, HasuraSpockAction m)
+  => ServeOptions
+  -> InitCtx a
+  -> Maybe UserAuthMiddleware
+  -> Maybe (HasuraMiddleware RQLQuery)
+  -> Maybe ConsoleRenderer
+  -> (forall b. m b -> IO b)
+  -> m ()
+runHGEServer so@(ServeOptions port host _ isoL mAdminSecret mAuthHook mJwtSecret mUnAuthRole corsCfg enableConsole consoleAssetsDir enableTelemetry strfyNum enabledAPIs lqOpts enableAL _ _) (InitCtx httpManager instanceId dbId loggers connInfo pgPool) authMiddleware metadataMiddleware renderConsole liftFn = do
   let sqlGenCtx = SQLGenCtx strfyNum
 
   let Loggers loggerCtx logger _ httpLogger respLogger = loggers
 
-  initTime <- Clock.getCurrentTime
+  initTime <- liftIO Clock.getCurrentTime
   -- log serve options
-  unLogger logger $ serveOptsToLog so
+  liftIO $ unLogger logger $ serveOptsToLog so
   --hloggerCtx  <- mkLoggerCtx (defaultLoggerSettings False serverLogLevel) enabledLogs logCallback
 
-  authModeRes <- runExceptT $ mkAuthMode mAdminSecret mAuthHook mJwtSecret
+  authModeRes <- liftIO $ runExceptT $ mkAuthMode mAdminSecret mAuthHook mJwtSecret
                                           mUnAuthRole httpManager loggerCtx
 
-  authMode <- either (printErrExit . T.unpack) return authModeRes
+  authMode <- either (liftIO . printErrExit . T.unpack) return authModeRes
 
 
   (app, cacheRef, cacheInitTime) <-
     mkWaiApp isoL loggerCtx httpLogger respLogger sqlGenCtx enableAL pgPool connInfo httpManager
       authMode corsCfg enableConsole consoleAssetsDir enableTelemetry
-      instanceId enabledAPIs lqOpts authMiddleware metadataMiddleware renderConsole
+      instanceId enabledAPIs lqOpts authMiddleware metadataMiddleware renderConsole liftFn
 
   -- log inconsistent schema objects
-  inconsObjs <- scInconsistentObjs <$> getSCFromRef cacheRef
+  inconsObjs <- scInconsistentObjs <$> liftIO (getSCFromRef cacheRef)
   logInconsObjs logger inconsObjs
 
   -- start a background thread for schema sync
@@ -238,37 +328,37 @@ runHGEServer so@(ServeOptions port host _ isoL mAdminSecret mAuthHook mJwtSecret
                      . Warp.setInstallShutdownHandler (shutdownHandler logger)
                      $ Warp.defaultSettings
 
-  maxEvThrds <- getFromEnv defaultMaxEventThreads "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
-  evFetchMilliSec  <- getFromEnv defaultFetchIntervalMilliSec "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
-  logEnvHeaders <- getFromEnv False "LOG_HEADERS_FROM_ENV"
+  maxEvThrds <- liftIO $ getFromEnv defaultMaxEventThreads "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
+  evFetchMilliSec  <- liftIO $ getFromEnv defaultFetchIntervalMilliSec "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
+  logEnvHeaders <- liftIO $ getFromEnv False "LOG_HEADERS_FROM_ENV"
 
   -- prepare event triggers data
   prepareEvents pgPool logger
-  eventEngineCtx <- atomically $ initEventEngineCtx maxEvThrds evFetchMilliSec
+  eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds evFetchMilliSec
   let scRef = _scrCache cacheRef
-  unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
-  void $ C.forkIO $ processEventQueue loggerCtx logEnvHeaders
+  liftIO $ unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
+  void $ liftIO $ C.forkIO $ processEventQueue loggerCtx logEnvHeaders
     httpManager pgPool scRef eventEngineCtx
 
   -- start a background thread to check for updates
-  void $ C.forkIO $ checkForUpdates loggerCtx httpManager
+  void $ liftIO $ C.forkIO $ checkForUpdates loggerCtx httpManager
 
   -- start a background thread for telemetry
   when enableTelemetry $ do
-    unLogger logger $ mkGenericStrLog LevelInfo "telemetry" telemetryNotice
-    void $ C.forkIO $ runTelemetry logger httpManager scRef dbId instanceId
+    liftIO $ unLogger logger $ mkGenericStrLog LevelInfo "telemetry" telemetryNotice
+    void $ liftIO $ C.forkIO $ runTelemetry logger httpManager scRef dbId instanceId
 
-  finishTime <- Clock.getCurrentTime
+  finishTime <- liftIO Clock.getCurrentTime
   let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime
-  unLogger logger $ mkGenericLog LevelInfo "server" $
+  liftIO $ unLogger logger $ mkGenericLog LevelInfo "server" $
     StartupTimeInfo "starting API server" apiInitTime
-  Warp.runSettings warpSettings app
+  liftIO $ Warp.runSettings warpSettings app
 
   where
     prepareEvents pool (Logger logger) = do
-      logger $ mkGenericStrLog LevelInfo "event_triggers" "preparing data"
+      liftIO $ logger $ mkGenericStrLog LevelInfo "event_triggers" "preparing data"
       res <- runTx pool unlockAllEvents
-      either printErrJExit return res
+      either (liftIO . printErrJExit) return res
 
     getFromEnv :: (Read a) => a -> String -> IO a
     getFromEnv defaults env = do
@@ -280,7 +370,7 @@ runHGEServer so@(ServeOptions port host _ isoL mAdminSecret mAuthHook mJwtSecret
       either printErrExit return eRes
 
     runTx pool tx =
-      runExceptT $ Q.runTx pool (Q.Serializable, Nothing) tx
+      liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) tx
 
     -- | Catches the SIGTERM signal and initiates a graceful shutdown. Graceful shutdown for regular HTTP
     -- requests is already implemented in Warp, and is triggered by invoking the 'closeSocket' callback.
@@ -293,9 +383,9 @@ runHGEServer so@(ServeOptions port host _ isoL mAdminSecret mAuthHook mJwtSecret
       logShutdown = logger $
         mkGenericStrLog LevelInfo "server" "gracefully shutting down server"
 
-runAsAdmin :: Q.PGPool -> SQLGenCtx -> Run a -> IO (Either QErr a)
+runAsAdmin :: (MonadIO m) => Q.PGPool -> SQLGenCtx -> Run a -> m (Either QErr a)
 runAsAdmin pool sqlGenCtx m = do
-  httpManager <- HTTP.newManager HTTP.tlsManagerSettings
+  httpManager <- liftIO $ HTTP.newManager HTTP.tlsManagerSettings
   res  <- runExceptT $ peelRun emptySchemaCache adminUserInfo
           httpManager sqlGenCtx (PGExecCtx pool Q.Serializable) m
   return $ fmap fst res
