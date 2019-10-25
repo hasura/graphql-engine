@@ -1,5 +1,6 @@
 import React from 'react';
 import styles from '../../../../Common/Common.scss';
+import { getRootFieldLabel } from './utils';
 
 const RootFieldEditor = ({
   aliases,
@@ -10,6 +11,7 @@ const RootFieldEditor = ({
   insertOnChange,
   updateOnChange,
   deleteOnChange,
+  tableName,
 }) => {
   const {
     select,
@@ -23,16 +25,25 @@ const RootFieldEditor = ({
   const [queryExpanded, setQueryExpanded] = React.useState(true);
   const [mutationExpanded, setMutationExpanded] = React.useState(true);
 
-  const getRow = (label, value, onChange) => (
+  const getDefaultRootField = rfType => {
+    if (rfType.includes('select')) {
+      return rfType.replace('select', tableName);
+    }
+    return `${rfType}_${tableName}`;
+  };
+
+  const getRow = (rfType, value, onChange) => (
     <div
       className={`${styles.display_flex} row ${styles.add_mar_bottom_small}`}
     >
-      <div className={`${styles.add_mar_right} col-md-3`}>{label}</div>
-      <div className={'col-md-3'}>
+      <div className={`${styles.add_mar_right} col-md-3`}>
+        {getRootFieldLabel(rfType)}
+      </div>
+      <div className={'col-md-5'}>
         <input
           type="text"
-          value={value}
-          placeholder={disabled ? 'unset' : ''}
+          value={value || ''}
+          placeholder={`${getDefaultRootField(rfType)} (default)`}
           className="form-control"
           onChange={onChange}
           disabled={disabled}
@@ -59,9 +70,9 @@ const RootFieldEditor = ({
         </div>
         {queryExpanded && (
           <div className={`${styles.add_pad_left} ${styles.add_pad_right}`}>
-            {getRow('Select', select, selectOnChange)}
-            {getRow('Select by PK', selectByPk, selectByPkOnChange)}
-            {getRow('Select Aggregate', selectAgg, selectAggOnChange)}
+            {getRow('select', select, selectOnChange)}
+            {getRow('select_by_pk', selectByPk, selectByPkOnChange)}
+            {getRow('select_aggregate', selectAgg, selectAggOnChange)}
           </div>
         )}
       </div>
@@ -86,9 +97,9 @@ const RootFieldEditor = ({
         </div>
         {mutationExpanded && (
           <div className={`${styles.add_pad_left} ${styles.add_pad_right}`}>
-            {getRow('Insert', insert, insertOnChange)}
-            {getRow('Update', update, updateOnChange)}
-            {getRow('Delete', _delete, deleteOnChange)}
+            {getRow('insert', insert, insertOnChange)}
+            {getRow('update', update, updateOnChange)}
+            {getRow('delete', _delete, deleteOnChange)}
           </div>
         )}
       </div>

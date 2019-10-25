@@ -3,7 +3,12 @@ import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import RootFieldEditor from '../Common/ReusableComponents/RootFieldEditor';
 import { modifyRootFields, setCustomRootFields } from './ModifyActions';
 
-const RootFields = ({ existingRootFields, rootFieldsEdit, dispatch }) => {
+const RootFields = ({
+  existingRootFields,
+  rootFieldsEdit,
+  dispatch,
+  tableName,
+}) => {
   const setRootFieldsBulk = rf => {
     dispatch(modifyRootFields(rf));
   };
@@ -15,6 +20,9 @@ const RootFields = ({ existingRootFields, rootFieldsEdit, dispatch }) => {
     };
     dispatch(modifyRootFields(newRootFields));
   };
+
+  const note =
+    'You can customize the GraphQL root fields associated with this table.';
 
   const rootFields = (aliases, disabled) => {
     return (
@@ -39,6 +47,7 @@ const RootFields = ({ existingRootFields, rootFieldsEdit, dispatch }) => {
         deleteOnChange={e => {
           onChange('delete', e.target.value);
         }}
+        tableName={tableName}
       />
     );
   };
@@ -54,11 +63,14 @@ const RootFields = ({ existingRootFields, rootFieldsEdit, dispatch }) => {
     dispatch(setCustomRootFields(toggleEditor));
   };
 
+  const collapsedLabel = () => <i>{note}</i>;
+
   return (
     <ExpandableEditor
       editorExpanded={editorExpanded}
       editorCollapsed={editorCollapsed}
       expandCallback={expandCallback}
+      collapsedLabel={collapsedLabel}
       saveFunc={saveFunc}
       property="root-field-alias"
       service="modify-table"

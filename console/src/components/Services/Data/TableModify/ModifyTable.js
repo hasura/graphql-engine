@@ -156,12 +156,13 @@ class ModifyTable extends React.Component {
 
       return (
         <React.Fragment>
-          <h4 className={styles.subheading_text}>GraphQL Root Fields</h4>
+          <h4 className={styles.subheading_text}>Custom GraphQL Root Fields</h4>
           <RootFields
             existingAliases={existingRootFields}
             existingRootFields={existingRootFields}
             rootFieldsEdit={rootFieldsEdit}
             dispatch={dispatch}
+            tableName={tableName}
           />
           <hr />
         </React.Fragment>
