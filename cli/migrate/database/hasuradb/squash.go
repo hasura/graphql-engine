@@ -168,22 +168,22 @@ func (q CustomQuery) MergePermissions(squashList *database.CustomList) error {
 			case *setPermissionCommentInput:
 				if len(prevElems) != 0 {
 					if perm, ok := prevElems[0].Value.(*createInsertPermissionInput); ok {
-						perm.Comment = &obj.Comment
+						perm.Comment = obj.Comment
 						continue
 					}
 
 					if perm, ok := prevElems[0].Value.(*createSelectPermissionInput); ok {
-						perm.Comment = &obj.Comment
+						perm.Comment = obj.Comment
 						continue
 					}
 
 					if perm, ok := prevElems[0].Value.(*createUpdatePermissionInput); ok {
-						perm.Comment = &obj.Comment
+						perm.Comment = obj.Comment
 						continue
 					}
 
 					if perm, ok := prevElems[0].Value.(*createDeletePermissionInput); ok {
-						perm.Comment = &obj.Comment
+						perm.Comment = obj.Comment
 						continue
 					}
 				}
