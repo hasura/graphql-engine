@@ -77,36 +77,6 @@ const ObjectBuilder = ({ type, setType, argTypes, fieldTypes }) => {
           placeholder="__typeName"
         />
       </div>
-      <div className={`${styles.add_mar_bottom}`}>
-        <div className={`${styles.add_mar_bottom}`}>
-          <b>Arguments:</b>
-        </div>
-        {args.map((a, i) => {
-          const isLast = i === args.length - 1;
-          const setArgument = arg => {
-            const newArguments = JSON.parse(JSON.stringify(args));
-            newArguments[i] = arg;
-            setArguments(newArguments);
-          };
-          const removeArgument = () => {
-            const newArguments = JSON.parse(JSON.stringify(args));
-            setArguments([
-              ...newArguments.slice(0, i),
-              ...newArguments.slice(i + 1),
-            ]);
-          };
-          return (
-            <ArgumentEditor
-              argument={a}
-              setArgument={setArgument}
-              removeArgument={removeArgument}
-              allTypes={argTypes}
-              isLast={isLast}
-              index={i}
-            />
-          );
-        })}
-      </div>
       <div>
         <div className={`${styles.add_mar_bottom}`}>
           <b>Fields:</b>

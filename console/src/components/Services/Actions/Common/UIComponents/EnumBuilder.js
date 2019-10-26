@@ -24,14 +24,11 @@ const EnumBuilder = ({ type, setType }) => {
   const setEnumValues = values => {
     setType({
       ...type,
-      value_definition: {
-        ...type.value_definition,
-        values: values,
-      },
+      values: values,
     });
   };
 
-  const enumValues = type.value_definition.values;
+  const enumValues = type.values;
 
   return (
     <div>

@@ -90,9 +90,7 @@ export const sanitiseState = state => {
         return _t;
 
       case 'enum':
-        _t.value_definition.values = _t.value_definition.values.filter(
-          v => !!v.value
-        );
+        _t.values = _t.values.filter(v => !!v.value);
         return _t;
       default:
         return _t;

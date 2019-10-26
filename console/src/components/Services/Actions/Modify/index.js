@@ -4,6 +4,7 @@ const mapStateToProps = state => {
   return {
     ...state.actions.modify,
     allActions: state.actions.common.actions,
+    allTypes: state.types.types,
   };
 };
 

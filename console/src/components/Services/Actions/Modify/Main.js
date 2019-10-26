@@ -1,8 +1,8 @@
 import React from 'react';
 import TabContainer from '../Containers/TabContainer';
+import ActionEditor from './ActionEditor';
 
-const Modify = ({ params, allActions, dispatch, ...modifyProps }) => {
-  console.log(modifyProps);
+const Modify = ({ params, allActions, allTypes, dispatch, ...modifyProps }) => {
   return (
     <TabContainer
       params={params}
@@ -10,7 +10,13 @@ const Modify = ({ params, allActions, dispatch, ...modifyProps }) => {
       tabName="modify"
       dispatch={dispatch}
     >
-      <div> Hello Modify </div>
+      <ActionEditor
+        allActions={allActions}
+        allTypes={allTypes}
+        dispatch={dispatch}
+        actionName={params.actionName}
+        {...modifyProps}
+      />
     </TabContainer>
   );
 };

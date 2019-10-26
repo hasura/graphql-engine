@@ -14,7 +14,7 @@ const TabContainer = ({
 }) => {
   React.useEffect(() => {
     dispatch(setCurrentAction(actionName));
-  }, []);
+  }, [actionName]);
 
   const currentAction = allActions.find(a => a.action_name === actionName);
 
@@ -43,6 +43,11 @@ const TabContainer = ({
       url: '',
     },
   ];
+
+  const childrenWithProps = React.Children.map(children, child =>
+    React.cloneElement(child, { currentAction })
+  );
+
   return (
     <div
       className={styles.view_stitch_schema_wrapper + ' ' + styles.addWrapper}
@@ -55,7 +60,7 @@ const TabContainer = ({
         breadCrumbs={breadCrumbs}
         baseUrl={`${appPrefix}/manage/${actionName}`}
       />
-      <div className={styles.add_pad_top}>{children}</div>
+      <div className={styles.add_pad_top}>{childrenWithProps}</div>
     </div>
   );
 };

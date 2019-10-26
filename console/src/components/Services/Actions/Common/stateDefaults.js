@@ -35,10 +35,7 @@ export const defaultEnumValue = {
 export const defaultEnumType = {
   name: '',
   kind: 'enum',
-  value_definition: {
-    values: [{ ...defaultEnumValue }],
-    is_deprecated: false,
-  },
+  values: [{ ...defaultEnumValue }],
 };
 
 export const gqlInbuiltTypes = [

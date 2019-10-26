@@ -1,5 +1,6 @@
 import React from 'react';
 import styles from './Styles.scss';
+import RemoveIcon from '../../../../Common/Icons/Remove';
 
 const FieldEditor = ({ field, setField, allTypes, removeField, isLast }) => {
   const { name, type } = field;
@@ -24,10 +25,7 @@ const FieldEditor = ({ field, setField, allTypes, removeField, isLast }) => {
   let removeIcon = null;
   if (!isLast) {
     removeIcon = (
-      <i
-        className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
-        onClick={removeField}
-      />
+      <RemoveIcon className={`${styles.cursorPointer}`} onClick={removeField} />
     );
   }
 

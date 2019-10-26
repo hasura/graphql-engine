@@ -7,29 +7,34 @@ import ArgumentEditorList from '../Common/UIComponents/ArgumentEditorList';
 import OutputTypesEditor from '../Common/UIComponents/OutputTypesEditor';
 import TypeEditorList from '../Common/UIComponents/TypeEditorList';
 import Button from '../../../Common/Button';
+import { getModifyState } from './utils';
 import {
+  setModifyState,
   setActionName,
   setActionWebhook,
-  setActionArguments,
   setActionOutputType,
+  setActionArguments,
   setTypes,
   setTypesBulk,
-  setDefaults,
 } from './reducer';
-import { createAction } from '../ServerIO';
+import { saveAction } from './ServerIO';
 import { defaultArg, defaultScalarType } from '../Common/stateDefaults';
 
-const AddAction = ({
-  name,
-  webhook,
-  arguments: args,
-  outputType,
-  types,
+const ActionEditor = ({
+  currentAction,
+  actionName,
+  allTypes,
   dispatch,
+  ...modifyProps
 }) => {
-  React.useEffect(() => {
-    dispatch(setDefaults());
-  }, []);
+  const { name, webhook, arguments: args, types, outputType } = modifyProps;
+
+  // initialize action state
+  const init = () => {
+    const modifyState = getModifyState(currentAction, allTypes);
+    dispatch(setModifyState(modifyState));
+  };
+  React.useEffect(init, [currentAction]);
 
   const nameOnChange = e => dispatch(setActionName(e.target.value));
   const webhookOnChange = e => dispatch(setActionWebhook(e.target.value));
@@ -78,7 +83,7 @@ const AddAction = ({
     if (e) {
       e.preventDefault();
     }
-    dispatch(createAction());
+    dispatch(saveAction());
   };
 
   const argTypes = [...types.filter(t => !!t.name && t.kind !== 'object')];
@@ -133,18 +138,33 @@ const AddAction = ({
         service="create-action"
       />
       <hr />
-      <Button
-        color="yellow"
-        size="sm"
-        type="submit"
-        onClick={() => {
-          onSubmit();
-        }}
-      >
-        Create
-      </Button>
+      <div className={styles.display_flex}>
+        <Button
+          color="yellow"
+          size="sm"
+          type="submit"
+          onClick={() => {
+            onSubmit();
+          }}
+          disabled
+          className={styles.add_mar_right}
+        >
+          Save
+        </Button>
+        <Button
+          color="red"
+          size="sm"
+          type="submit"
+          onClick={() => {
+            onSubmit();
+          }}
+          disabled
+        >
+          Delete
+        </Button>
+      </div>
     </div>
   );
 };
 
-export default AddAction;
+export default ActionEditor;

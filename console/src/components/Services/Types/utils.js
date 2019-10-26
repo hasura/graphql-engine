@@ -87,3 +87,11 @@ export const parseCustomTypes = customTypesServer => {
   });
   return customTypesClient;
 };
+
+export const getActionTypes = (actionDef, allTypes) => {
+  return allTypes.filter(t => {
+    if (actionDef.arguments.find(a => a.type === t.name)) return true;
+    if (actionDef.output_type === t.name) return true;
+    return false;
+  });
+};

@@ -1,14 +1,18 @@
+import {
+  defaultArg,
+  gqlInbuiltTypes,
+  defaultScalarType,
+} from '../Common/stateDefaults';
+
 const state = {
   name: '',
-  webhook: {
-    type: 'static',
-    value: '',
-  },
-  headers: {},
-  types: {
-    input: {},
-    output: {},
-  },
+  webhook: '',
+  types: [
+    ...JSON.parse(JSON.stringify(gqlInbuiltTypes)),
+    { ...defaultScalarType },
+  ],
+  arguments: [{ ...defaultArg }],
+  outputType: '',
 };
 
 export default state;
