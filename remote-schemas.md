@@ -6,7 +6,7 @@ Merge remote GraphQL schemas with GraphQL Engine's Postgres-based schema to quer
 * Supporting features like payments, etc. and providing a consistent interface to access them i.e. behind the GraphQL Engine's API
 * Fetching disparate data from other sources (*e.g. from a weather API or another database*)
 
-To support custom business logic, you'll need to create a custom GraphQL server (see [boilerplates](community/boilerplates/remote-schemas)) and merge its schema with GraphQL Engine's.
+To support custom business logic, you'll need to create a custom GraphQL server (see [boilerplates](community/boilerplates/remote-schemas)) and merge its schema with GraphQL Engines.
 
 ![remote schems architecture](assets/remote-schemas-arch.png)
 
@@ -31,7 +31,7 @@ The fastest way to try remote schema out is via Heroku.
 3. Merge your first remote schema and query it
 
    In the admin console, open the ``Remote Schemas`` tab and click on the ``Add`` button. Fill in the following details:
-   * Remote Schema name: ``countries`` (*an alias for this remote schema*).
+   * Remote Schema name: ``countries`` (* alias for this remote schema*).
    * GraphQL server URL: ``https://countries.trevorblades.com/`` (*a public GraphQL API that we'll use to quickly check out this feature; maintained by [@trevorblades](https://github.com/trevorblades)*. 
    * Ignore the remaining configuration settings and click on the ``Add Remote Schema`` button.
 
@@ -57,7 +57,7 @@ The fastest way to try remote schema out is via Heroku.
 Boilerplates for custom GraphQL servers in popular languages/frameworks are available.
 
 * [Regular boilerplates](community/boilerplates/graphql-servers) that can be deployed anywhere.
-* [Serverless boilerplates](https://github.com/hasura/graphql-serverless) that can deployed on serverless platforms like AWS Lambda, etc.
+* [Serverless boilerplates](https://github.com/hasura/graphql-serverless) that can be deployed on serverless platforms like AWS Lambda, etc.
 
 Please note that boilerplates for more languages, frameworks, serverless platforms, etc. are being iterated upon and community contributions are very welcome. 
 
@@ -66,9 +66,9 @@ Please note that boilerplates for more languages, frameworks, serverless platfor
 
 **Current limitations**:
 
-* Nomenclature: Type names and node names need to be unique across all merged schemas (case-sensitive match). In the next few iterations, support for merging types with the exact same name and structure will be available.
+* Nomenclature: Type names and node names need to be unique across all merged schemas (case-sensitive match). In the next few iterations, support for merging types with the same name and structure will be available.
 * Nodes from different GraphQL servers cannot be used in the same query/mutation. All top-level nodes have to be from the same GraphQL server.
-* Subscriptions on remote GraphQL server are not supported.
+* Subscriptions on remote GraphQL servers are not supported.
 
 These limitations will be addressed in upcoming versions.
 
