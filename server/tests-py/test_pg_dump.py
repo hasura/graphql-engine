@@ -5,8 +5,9 @@ import os
 resp_pg_version_map = {
     '9_5': 'response_9',
     '9_6': 'response_9',
-    '10_6': 'response_10_11',
-    '11_1': 'response_10_11',
+    '10': 'response_10_11',
+    '11': 'response_10_11',
+    '12': 'response_10_11',
     'latest': 'response_10_11'
 }
 

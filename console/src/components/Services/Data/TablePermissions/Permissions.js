@@ -512,7 +512,7 @@ class Permissions extends Component {
     };
 
     const getEditSection = (tableSchema, queryTypes, roleList) => {
-      if (!permissionsState.role || !permissionsState.query) {
+      if (!permissionsState.isEditing) {
         return;
       }
 

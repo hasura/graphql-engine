@@ -39,7 +39,7 @@ addCollectionP2 (CollectionDef queryList) =
     duplicateNames = duplicates $ map _lqName queryList
 
 runCreateCollection
-  :: (QErrM m, UserInfoM m, MonadTx m)
+  :: (QErrM m, UserInfoM m, MonadTx m, HasSystemDefined m)
   => CreateCollection -> m EncJSON
 runCreateCollection cc = do
   adminOnly
@@ -48,7 +48,8 @@ runCreateCollection cc = do
     onJust collDetM $ const $ throw400 AlreadyExists $
       "query collection with name " <> collName <<> " already exists"
   withPathK "definition" $ addCollectionP2 def
-  liftTx $ addCollectionToCatalog cc
+  systemDefined <- askSystemDefined
+  liftTx $ addCollectionToCatalog cc systemDefined
   return successMsg
   where
     CreateCollection collName def _ = cc
@@ -179,13 +180,13 @@ fetchAllowlist = map runIdentity <$>
         FROM hdb_catalog.hdb_allowlist
      |] () True
 
-addCollectionToCatalog :: CreateCollection -> Q.TxE QErr ()
-addCollectionToCatalog (CreateCollection name defn mComment) =
+addCollectionToCatalog :: CreateCollection -> SystemDefined -> Q.TxE QErr ()
+addCollectionToCatalog (CreateCollection name defn mComment) systemDefined =
   Q.unitQE defaultTxErrorHandler [Q.sql|
     INSERT INTO hdb_catalog.hdb_query_collection
-      (collection_name, collection_defn, comment)
-    VALUES ($1, $2, $3)
-  |] (name, Q.AltJ defn, mComment) True
+      (collection_name, collection_defn, comment, is_system_defined)
+    VALUES ($1, $2, $3, $4)
+  |] (name, Q.AltJ defn, mComment, systemDefined) True
 
 delCollectionFromCatalog :: CollectionName -> Q.TxE QErr ()
 delCollectionFromCatalog name =

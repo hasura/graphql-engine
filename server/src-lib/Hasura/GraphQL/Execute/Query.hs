@@ -6,8 +6,6 @@ module Hasura.GraphQL.Execute.Query
   , PreparedSql(..)
   ) where
 
-import           Data.Has
-
 import qualified Data.Aeson                             as J
 import qualified Data.ByteString                        as B
 import qualified Data.ByteString.Lazy                   as LBS
@@ -17,6 +15,9 @@ import qualified Data.TByteString                       as TBS
 import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
+
+import           Control.Lens                           ((^?))
+import           Data.Has
 
 import qualified Hasura.GraphQL.Resolve                 as R
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
@@ -177,22 +178,25 @@ convertQuerySelSet
      , Has SQLGenCtx r
      , Has UserInfo r
      )
-  => V.SelSet
+  => QueryReusability
+  -> V.SelSet
   -> m (LazyRespTx, Maybe ReusableQueryPlan, GeneratedSqlMap)
-convertQuerySelSet fields = do
+convertQuerySelSet initialReusability fields = do
   usrVars <- asks (userVars . getter)
-  (fldPlans, varTypes) <- runResolveT . forM (toList fields) $ \fld -> do
-    fldPlan <- case V._fName fld of
-      "__type"     -> fldPlanFromJ <$> R.typeR fld
-      "__schema"   -> fldPlanFromJ <$> R.schemaR fld
-      "__typename" -> pure $ fldPlanFromJ queryRootName
-      _            -> do
-        unresolvedAst <- R.queryFldToPGAST fld
-        (q, PlanningSt _ vars prepped) <- flip runStateT initPlanningSt $
-          R.traverseQueryRootFldAST prepareWithPlan unresolvedAst
-        pure . RFPPostgres $ PGPlan (R.toPGQuery q) vars prepped
-    pure (V._fAlias fld, fldPlan)
-  let reusablePlan = ReusableQueryPlan <$> varTypes <*> pure fldPlans
+  (fldPlans, finalReusability) <- runReusabilityTWith initialReusability $
+    forM (toList fields) $ \fld -> do
+      fldPlan <- case V._fName fld of
+        "__type"     -> fldPlanFromJ <$> R.typeR fld
+        "__schema"   -> fldPlanFromJ <$> R.schemaR fld
+        "__typename" -> pure $ fldPlanFromJ queryRootName
+        _            -> do
+          unresolvedAst <- R.queryFldToPGAST fld
+          (q, PlanningSt _ vars prepped) <- flip runStateT initPlanningSt $
+            R.traverseQueryRootFldAST prepareWithPlan unresolvedAst
+          pure . RFPPostgres $ PGPlan (R.toPGQuery q) vars prepped
+      pure (V._fAlias fld, fldPlan)
+  let varTypes = finalReusability ^? _Reusable
+      reusablePlan = ReusableQueryPlan <$> varTypes <*> pure fldPlans
   (tx, sql) <- mkCurPlanTx usrVars fldPlans
   pure (tx, reusablePlan, sql)
 
