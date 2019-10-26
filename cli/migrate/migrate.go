@@ -402,11 +402,11 @@ func (m *Migrate) Squash(v uint64) (vs []int64, um []interface{}, us []byte, dm 
 				buf.Write(data)
 			case interface{}:
 				// it's metadata, append into the array
-				upMeta = append(upMeta, data)
+				um = append(um, data)
 			}
 		}
-		// set upSql as the bytes written into buf
-		upSql = buf.Bytes()
+		// set us as the bytes written into buf
+		us = buf.Bytes()
 	}()
 
 	// read from dataDown when it is ready:
@@ -428,11 +428,11 @@ func (m *Migrate) Squash(v uint64) (vs []int64, um []interface{}, us []byte, dm 
 				buf.Write(data)
 			case interface{}:
 				// it's metadata, append into the array
-				downMeta = append(downMeta, data)
+				dm = append(dm, data)
 			}
 		}
-		// set downSql as the bytes written into buf
-		downSql = buf.Bytes()
+		// set ds as the bytes written into buf
+		ds = buf.Bytes()
 	}()
 
 	// read retVersions - versions that are squashed

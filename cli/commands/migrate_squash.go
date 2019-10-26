@@ -15,7 +15,6 @@ import (
 	"github.com/spf13/viper"
 
 	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
-	log "github.com/sirupsen/logrus"
 )
 
 func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
@@ -25,9 +24,11 @@ func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	migrateSquashCmd := &cobra.Command{
 		Use:   "squash",
-		Short: "Squash multiple migrations into a single one",
-		Long:  "Squash multiple migrations leading upto the latest one into a single migration file",
-		Example: `  # squash all migrations from version 123 to the latest one:
+		Short: "(EXPERIMENTAL) Squash multiple migrations into a single one",
+		Long:  "(EXPERIMENTAL) Squash multiple migrations leading upto the latest one into a single migration file",
+		Example: `  # NOTE: This is an EXPERIMENTAL command, correctness is not guaranteed
+
+  # squash all migrations from version 123 to the latest one:
   hasura migrate squash --from 123`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -43,7 +44,7 @@ func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f := migrateSquashCmd.Flags()
 	f.Uint64Var(&opts.from, "from", 0, "start squashing form this version")
 	f.StringVar(&opts.name, "name", "squashed", "name for the new squashed migration")
-	f.BoolVar(&opts.deleteSource, "delete-source", "delete the source files after squashing without any confirmation")
+	f.BoolVar(&opts.deleteSource, "delete-source", false, "delete the source files after squashing without any confirmation")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
@@ -69,6 +70,7 @@ type migrateSquashOptions struct {
 }
 
 func (o *migrateSquashOptions) run() error {
+	o.EC.Logger.Warnln("This command is currently experimental, correctness of squashed migration is not guaranteed!")
 	o.EC.Spin(fmt.Sprintf("Squashing migrations from %d to latest...", o.from))
 	defer o.EC.Spinner.Stop()
 	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version, true)
@@ -79,15 +81,15 @@ func (o *migrateSquashOptions) run() error {
 	versions, err := mig.SquashCmd(migrateDrv, o.from, o.newVersion, o.name, o.EC.MigrationDir)
 	o.EC.Spinner.Stop()
 	if err != nil {
-		return errors.Wrap("unable to squash migrations")
+		return errors.Wrap(err, "unable to squash migrations")
 	}
 
-	o.EC.Logger.WithFields(log.Fields{
-		"version": o.newVersion,
-		"name":    o.name,
-	}).Infof("Created a new migration after squashing %d till %d", versions[0], versions[len(versions)-1])
+	// squashed migration is generated
+	// TODO: capture keyboard interrupt and offer to delete the squashed migration
 
-	if !opts.deleteSource {
+	o.EC.Logger.Infof("Created '%d_%s' after squashing '%d' till '%d'", o.newVersion, o.name, versions[0], versions[len(versions)-1])
+
+	if !o.deleteSource {
 		ok := ask2confirmDeleteMigrations(versions, o.EC.Logger)
 		if !ok {
 			return nil
@@ -110,19 +112,20 @@ func (o *migrateSquashOptions) run() error {
 func ask2confirmDeleteMigrations(versions []int64, log *logrus.Logger) bool {
 	var s string
 
+	log.Infof("The following migrations are squashed into a new one:")
+
 	out := new(tabwriter.Writer)
 	buf := &bytes.Buffer{}
 	out.Init(buf, 0, 8, 2, ' ', 0)
 	w := util.NewPrefixWriter(out)
-	w.Write(util.LEVEL_0, "VERSION\n")
 	for _, version := range versions {
 		w.Write(util.LEVEL_0, "%d\n",
 			version,
 		)
 	}
-	out.Flush()
+	_ = out.Flush()
 	fmt.Println(buf.String())
-	log.Infof("These migrations are squashed into a new one. Do you want to delete the source files? (y/N)")
+	log.Infof("Do you want to delete these migration source files? (y/N)")
 
 	_, err := fmt.Scan(&s)
 	if err != nil {
