@@ -25,7 +25,7 @@ Available COMMANDs:
     previously built if you have a dirty tree.
 
   postgres
-    Launch a postgres container suitable for use with graphql-engine, watch its logs, 
+    Launch a postgres container suitable for use with graphql-engine, watch its logs,
     clean up nicely after
 
   test [pytest_args...]
@@ -99,6 +99,10 @@ function wait_docker_postgres {
   echo " Ok"
 }
 
+# Starts EKG, fast build without optimizations
+TEST_INVOCATION="stack build --test --fast --flag graphql-engine:developer --ghc-options=-j"
+BUILD_INVOCATION="$TEST_INVOCATION --no-run-tests"
+
 #################################
 ###     Graphql-engine        ###
 #################################
@@ -118,8 +122,6 @@ if [ "$MODE" = "graphql-engine" ]; then
   echo_pretty "or press CTRL-C and invoke graphql-engine manually"
   wait_docker_postgres
 
-  # Starts EKG, fast build without optimizations
-  BUILD_INVOCATION="stack build --fast --flag graphql-engine:developer --ghc-options=-j"
   RUN_INVOCATION="stack exec graphql-engine -- --database-url='$DB_URL' serve --enable-console --console-assets-dir \'$PROJECT_ROOT/console/static/dist\' +RTS -N -T -RTS ${PIPE_JQ-}"
 
   echo_pretty "About to do:"
@@ -145,8 +147,8 @@ if [ "$MODE" = "graphql-engine" ]; then
       sleep 0.2
     done
     sleep 1
-    echo_pretty "▲▲▲ graphql-engine startup logs above ▲▲▲" 
-    echo_pretty "" 
+    echo_pretty "▲▲▲ graphql-engine startup logs above ▲▲▲"
+    echo_pretty ""
     echo_pretty "You can set additional environment vars to tailor 'graphql-engine' next time you"
     echo_pretty "invoke this script, e.g.:"
     echo_pretty "    # Keep polling statements out of logs"
@@ -184,7 +186,7 @@ fi
 #
 # setting 'port' in container is a workaround for the pg_dump endpoint (see tests)
 # log_hostname=off to avoid timeout failures when running offline due to:
-#   https://forums.aws.amazon.com/thread.jspa?threadID=291285 
+#   https://forums.aws.amazon.com/thread.jspa?threadID=291285
 CONF=$(cat <<-EOF
 log_statement=all
 log_connections=on
@@ -214,7 +216,7 @@ cat >"$DEV_SHIM_PATH/pg_dump" <<EOL
 #!/bin/bash
 # Generated from: $0
 if [[ \$@ == *" -f"* ]]; then
-  echo "It looks like we're trying to pg_dump to a file, but that won't work with this shim. See $0" >&2 
+  echo "It looks like we're trying to pg_dump to a file, but that won't work with this shim. See $0" >&2
   exit 1
 fi
 docker exec -u postgres $PG_CONTAINER_NAME pg_dump "\$@"
@@ -239,7 +241,7 @@ function cleanup {
 
       echo_pretty "Removing $PG_CONTAINER_NAME and its volumes in 5 seconds!  PRESS CTRL-C TO ABORT."
       sleep 5
-      docker stop "$PG_CONTAINER_NAME" 
+      docker stop "$PG_CONTAINER_NAME"
       docker rm -v "$PG_CONTAINER_NAME"
     ;;
     graphql-engine)
@@ -248,7 +250,7 @@ function cleanup {
 
   echo_pretty "Done"
 }
-trap cleanup EXIT 
+trap cleanup EXIT
 
 wait_docker_postgres
 
@@ -270,7 +272,7 @@ if [ "$MODE" = "postgres" ]; then
   # Runs continuously until CTRL-C, jumping to cleanup() above:
   docker logs -f --tail=0 "$PG_CONTAINER_NAME"
 
-elif [ "$MODE" = "test" ]; then 
+elif [ "$MODE" = "test" ]; then
   #################################
   ###     Integration tests     ###
   #################################
@@ -280,11 +282,14 @@ elif [ "$MODE" = "test" ]; then
   export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
 
   echo_pretty "Rebuilding for code coverage"
-  stack build --fast --flag graphql-engine:developer --ghc-options=-j --coverage 
+  $BUILD_INVOCATION --coverage
+
+  echo_pretty "Running Haskell test suite"
+  HASURA_GRAPHQL_DATABASE_URL="$DB_URL" $TEST_INVOCATION --coverage
 
   echo_pretty "Starting graphql-engine"
   GRAPHQL_ENGINE_TEST_LOG=/tmp/hasura-dev-test-engine.log
-  export HASURA_GRAPHQL_SERVER_PORT=8088 
+  export HASURA_GRAPHQL_SERVER_PORT=8088
   # stopped in cleanup()
   stack exec graphql-engine -- --database-url="$DB_URL" serve --enable-console --stringify-numeric-types \
     --console-assets-dir ../console/static/dist  &>  $GRAPHQL_ENGINE_TEST_LOG  & GRAPHQL_ENGINE_PID=$!
@@ -314,11 +319,11 @@ elif [ "$MODE" = "test" ]; then
     PASSED=true
   else
     PASSED=false
-    echo_pretty "^^^ graphql-engine logs from failed test run can be inspected at: $GRAPHQL_ENGINE_TEST_LOG" 
+    echo_pretty "^^^ graphql-engine logs from failed test run can be inspected at: $GRAPHQL_ENGINE_TEST_LOG"
   fi
   deactivate  # python venv
   set -u
-  
+
   cd "$PROJECT_ROOT/server"
   # INT so we get hpc report
   kill -INT "$GRAPHQL_ENGINE_PID"
