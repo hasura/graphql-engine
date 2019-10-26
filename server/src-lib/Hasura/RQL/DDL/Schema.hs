@@ -76,28 +76,39 @@ instance FromJSON RunSQL where
 $(deriveToJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''RunSQL)
 
 runRunSQL :: (CacheBuildM m, UserInfoM m) => RunSQL -> m EncJSON
-runRunSQL RunSQL{..} = do
+runRunSQL RunSQL {..} = do
   adminOnly
-  metadataCheckRequired <- case rReadOnly of
-    True -> pure False
-    False -> onNothing rCheckMetadataConsistency $ isAltrDropReplace rSql
+  metadataCheckRequired <-
+    case rReadOnly of
+      True -> pure False
+      False -> onNothing rCheckMetadataConsistency $ isAltrDropReplace rSql
   bool (execRawSQL rSql) (withMetadataCheck rCascade $ execRawSQL rSql) metadataCheckRequired
   where
     execRawSQL :: (MonadTx m) => Text -> m EncJSON
     execRawSQL =
-      fmap (encJFromJValue @RunSQLRes) . liftTx . setTransactionAccess . Q.multiQE rawSqlErrHandler . Q.fromText
+      fmap (encJFromJValue @RunSQLRes) .
+      liftTx .
+      resetTransactionAccess .
+      setTransactionAccess . Q.multiQE rawSqlErrHandler . Q.fromText
       where
         rawSqlErrHandler txe =
           let e = err400 PostgresError "query execution failed"
-          in e {qeInternal = Just $ toJSON txe}
+           in e {qeInternal = Just $ toJSON txe}
 
     setTransactionAccess tx
       | rReadOnly = setReadOnly >> tx
       | otherwise = setReadWrite >> tx
 
-    setReadOnly =  Q.unitQE defaultTxErrorHandler "SET TRANSACTION READ ONLY" () False
+    -- | Set transaction access to Read Write at the end if transaction mode was Read Only
+    resetTransactionAccess tx
+      | rReadOnly = tx <* setReadWrite
+      | otherwise = tx
 
-    setReadWrite =  Q.unitQE defaultTxErrorHandler "SET TRANSACTION READ WRITE" () False
+    setReadOnly =
+      Q.unitQE defaultTxErrorHandler "SET TRANSACTION READ ONLY" () False
+
+    setReadWrite =
+      Q.unitQE defaultTxErrorHandler "SET TRANSACTION READ WRITE" () False
 
     isAltrDropReplace :: QErrM m => T.Text -> m Bool
     isAltrDropReplace = either throwErr return . matchRegex regex False
