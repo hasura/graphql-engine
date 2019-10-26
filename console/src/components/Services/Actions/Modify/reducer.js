@@ -18,6 +18,12 @@ export const setActionWebhook = webhook => ({
   webhook,
 });
 
+const SET_ACTION_KIND = 'Actions/Modify/SET_ACTION_KIND';
+export const setActionKind = kind => ({
+  type: SET_ACTION_KIND,
+  kind,
+});
+
 const SET_ACTION_ARGUMENTS = 'Actions/Modify/SET_ACTION_ARGUMENTS';
 export const setActionArguments = args => ({
   type: SET_ACTION_ARGUMENTS,
@@ -45,11 +51,63 @@ export const setTypesBulk = (types, args, outputType) => ({
   outputType,
 });
 
+const SET_FETCHING = 'Actions/Modify/SET_FETCHING';
+export const setFetching = () => ({ type: SET_FETCHING });
+const UNSET_FETCHING = 'Actions/Modify/UNSET_FETCHING';
+export const unsetFetching = () => ({ type: UNSET_FETCHING });
+
 const reducer = (state = defaultState, action) => {
   switch (action.type) {
     case SET_MODIFY_STATE:
       return {
         ...action.state,
+      };
+    case SET_ACTION_NAME:
+      return {
+        ...state,
+        name: action.name,
+      };
+    case SET_ACTION_WEBHOOK:
+      return {
+        ...state,
+        webhook: action.webhook,
+      };
+    case SET_ACTION_KIND:
+      return {
+        ...state,
+        kind: action.kind,
+      };
+    case SET_ACTION_ARGUMENTS:
+      return {
+        ...state,
+        arguments: action.args,
+      };
+    case SET_ACTION_OUTPUT_TYPE:
+      return {
+        ...state,
+        outputType: action.outputType,
+      };
+    case SET_TYPES:
+      return {
+        ...state,
+        types: action.types,
+      };
+    case SET_TYPES_BULK:
+      return {
+        ...state,
+        types: action.types,
+        arguments: action.args,
+        outputType: action.outputType,
+      };
+    case SET_FETCHING:
+      return {
+        ...state,
+        isFetching: true,
+      };
+    case UNSET_FETCHING:
+      return {
+        ...state,
+        isFetching: false,
       };
     default:
       return state;

@@ -12,7 +12,9 @@ const state = {
     { ...defaultScalarType },
   ],
   arguments: [{ ...defaultArg }],
+  kind: 'synchronous',
   outputType: '',
+  isFetching: false,
 };
 
 export default state;

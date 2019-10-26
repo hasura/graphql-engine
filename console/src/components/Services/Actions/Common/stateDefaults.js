@@ -18,7 +18,6 @@ export const defaultObjectType = {
   name: '',
   kind: 'object',
   fields: [{ ...defaultField }],
-  arguments: [{ ...defaultArg }],
 };
 
 export const defaultInputObjectType = {
@@ -53,10 +52,6 @@ export const gqlInbuiltTypes = [
   },
   {
     name: 'Boolean',
-    isInbuilt: true,
-  },
-  {
-    name: 'ID',
     isInbuilt: true,
   },
 ];

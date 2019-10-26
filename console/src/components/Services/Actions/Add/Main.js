@@ -3,6 +3,7 @@ import styles from './Styles.scss';
 import Helmet from 'react-helmet';
 import NameEditor from '../Common/UIComponents/NameEditor';
 import WebhookEditor from '../Common/UIComponents/WebhookEditor';
+import KindEditor from '../Common/UIComponents/KindEditor';
 import ArgumentEditorList from '../Common/UIComponents/ArgumentEditorList';
 import OutputTypesEditor from '../Common/UIComponents/OutputTypesEditor';
 import TypeEditorList from '../Common/UIComponents/TypeEditorList';
@@ -10,6 +11,7 @@ import Button from '../../../Common/Button';
 import {
   setActionName,
   setActionWebhook,
+  setActionKind,
   setActionArguments,
   setActionOutputType,
   setTypes,
@@ -26,6 +28,8 @@ const AddAction = ({
   outputType,
   types,
   dispatch,
+  kind,
+  isFetching,
 }) => {
   React.useEffect(() => {
     dispatch(setDefaults());
@@ -33,6 +37,7 @@ const AddAction = ({
 
   const nameOnChange = e => dispatch(setActionName(e.target.value));
   const webhookOnChange = e => dispatch(setActionWebhook(e.target.value));
+  const kindOnChange = k => dispatch(setActionKind(k));
   const outputTypeOnChange = e => dispatch(setActionOutputType(e.target.value));
   const setArguments = a => {
     const newArgs = [...a];
@@ -81,12 +86,6 @@ const AddAction = ({
     dispatch(createAction());
   };
 
-  const argTypes = [...types.filter(t => !!t.name && t.kind !== 'object')];
-
-  const objectFieldTypes = [
-    ...types.filter(t => !!t.name && t.kind !== 'input_object'),
-  ];
-
   return (
     <div>
       <Helmet title={'Add Action - Actions | Hasura'} />
@@ -107,10 +106,10 @@ const AddAction = ({
         service="create-action"
       />
       <hr />
+      <KindEditor value={kind} onChange={kindOnChange} />
+      <hr />
       <TypeEditorList
         types={types}
-        argTypes={argTypes}
-        fieldTypes={objectFieldTypes}
         setTypes={setActionTypes}
         removeType={removeType}
         className={styles.add_mar_bottom_mid}
@@ -121,14 +120,14 @@ const AddAction = ({
         className={styles.add_mar_bottom_mid}
         args={args}
         setArguments={setArguments}
-        allTypes={argTypes}
+        allTypes={types}
         service="create-action"
       />
       <hr />
       <OutputTypesEditor
         className={styles.add_mar_bottom_mid}
         value={outputType}
-        allTypes={objectFieldTypes}
+        allTypes={types}
         onChange={outputTypeOnChange}
         service="create-action"
       />
@@ -137,6 +136,7 @@ const AddAction = ({
         color="yellow"
         size="sm"
         type="submit"
+        disabled={isFetching}
         onClick={() => {
           onSubmit();
         }}

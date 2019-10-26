@@ -1,5 +1,5 @@
 import gqlPattern from '../../Data/Common/GraphQLValidation';
-import { filterNameLessTypeLess } from '../../Types/utils';
+import { filterNameLessTypeLess, filterValueLess } from '../../Types/utils';
 
 // TODO (pull out default arguments, fields and types)
 // TODO (check rare bug where description of an argument disappears)
@@ -65,17 +65,12 @@ export const sanitiseState = state => {
   newState.types = newState.types.map(t => {
     if (t.isInbuilt) return t;
     const _t = { ...t };
-    console.log(_t);
 
     switch (t.kind) {
       case 'scalar':
         return _t;
 
       case 'object':
-        _t.arguments = filterNameLessTypeLess(_t.arguments).map(a => ({
-          ...a,
-          type: newState.types[a.type].name,
-        }));
         _t.fields = filterNameLessTypeLess(_t.fields).map(f => ({
           ...f,
           type: newState.types[f.type].name,
@@ -90,7 +85,7 @@ export const sanitiseState = state => {
         return _t;
 
       case 'enum':
-        _t.values = _t.values.filter(v => !!v.value);
+        _t.values = filterValueLess(_t.values).filter(v => !!v.value);
         return _t;
       default:
         return _t;

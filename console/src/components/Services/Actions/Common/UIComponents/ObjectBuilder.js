@@ -1,11 +1,10 @@
 import React from 'react';
 import styles from './Styles.scss';
-import ArgumentEditor from './ArgumentEditor';
 import FieldEditor from './FieldEditor';
-import { defaultObjectType, defaultArg, defaultField } from '../stateDefaults';
+import { defaultObjectType, defaultField } from '../stateDefaults';
 
-const ObjectBuilder = ({ type, setType, argTypes, fieldTypes }) => {
-  const { name, arguments: args, fields, kind } = type;
+const ObjectBuilder = ({ type, setType, allTypes }) => {
+  const { name, fields, kind } = type;
 
   const init = () => {
     if (kind !== 'object') {
@@ -22,18 +21,6 @@ const ObjectBuilder = ({ type, setType, argTypes, fieldTypes }) => {
     setType({
       ...type,
       name: e.target.value,
-    });
-  };
-
-  const setArguments = a => {
-    const newArgs = [...a];
-    const lastArg = newArgs[newArgs.length - 1];
-    if (lastArg.name && lastArg.type) {
-      newArgs.push({ ...defaultArg });
-    }
-    setType({
-      ...type,
-      arguments: newArgs,
     });
   };
 
@@ -97,7 +84,7 @@ const ObjectBuilder = ({ type, setType, argTypes, fieldTypes }) => {
               field={f}
               setField={setField}
               removeField={removeField}
-              allTypes={fieldTypes}
+              allTypes={allTypes}
               isLast={isLast}
               index={i}
             />

@@ -15,6 +15,7 @@ import {
   generateDropActionQuery,
   getFetchActionsQuery,
 } from '../../Common/utils/v1QueryUtils';
+import { getConfirmation } from '../../Common/utils/jsUtils';
 import {
   generateActionDefinition,
   getStateValidationError,
@@ -24,6 +25,14 @@ import { showErrorNotification } from '../Common/Notification';
 import { appPrefix } from './constants';
 import { push } from 'react-router-redux';
 import { reformCustomTypes, mergeCustomTypes } from '../Types/utils';
+import {
+  setFetching as createActionRequestInProgress,
+  unsetFetching as createActionRequestComplete,
+} from './Add/reducer';
+import {
+  setFetching as modifyActionRequestInProgress,
+  unsetFetching as modifyActionRequestComplete,
+} from './Modify/reducer';
 
 export const fetchActions = () => {
   return (dispatch, getState) => {
@@ -87,8 +96,6 @@ export const createAction = () => (dispatch, getState) => {
     );
   }
 
-  console.log(mergedTypes);
-
   const customFieldsQueryUp = generateSetCustomTypesQuery(
     reformCustomTypes(mergedTypes)
   );
@@ -112,19 +119,154 @@ export const createAction = () => (dispatch, getState) => {
   const successMsg = 'Created action successfully';
   const errorMsg = 'Creating action failed';
   const customOnSuccess = () => {
+    dispatch(createActionRequestComplete());
     dispatch(fetchActions()).then(() => {
       dispatch(
         push(`${globals.urlPrefix}${appPrefix}/manage/${state.name}/modify`)
       );
     });
   };
-  const customOnError = () => {};
-
+  const customOnError = () => {
+    dispatch(createActionRequestComplete());
+  };
+  dispatch(createActionRequestInProgress());
   makeMigrationCall(
     dispatch,
     getState,
     upQueries,
     downQueries,
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg
+  );
+};
+
+export const saveAction = currentAction => (dispatch, getState) => {
+  const { modify: rawState } = getState().actions;
+  const { types: existingTypesList } = getState().types;
+
+  const state = sanitiseState(rawState);
+
+  const validationError = getStateValidationError(state);
+  if (validationError) {
+    return dispatch(showErrorNotification(validationError));
+  }
+
+  const { types: mergedTypes, overlappingTypename } = mergeCustomTypes(
+    state.types,
+    existingTypesList
+  );
+
+  if (overlappingTypename) {
+    return dispatch(
+      showErrorNotification(
+        `A type called "${overlappingTypename}" already exists`
+      )
+    );
+  }
+
+  const customFieldsQueryUp = generateSetCustomTypesQuery(
+    reformCustomTypes(mergedTypes)
+  );
+
+  const customFieldsQueryDown = generateSetCustomTypesQuery(
+    reformCustomTypes(existingTypesList)
+  );
+
+  const dropCurrentActionQuery = generateDropActionQuery(
+    currentAction.action_name
+  );
+  const actionQueryUp = generateCreateActionQuery(
+    state.name,
+    generateActionDefinition(state)
+  );
+
+  const actionQueryDown = generateDropActionQuery(state.name);
+  const oldActionQueryUp = generateCreateActionQuery(
+    currentAction.action_name,
+    currentAction.action_defn
+  );
+
+  const upQueries = [
+    customFieldsQueryUp,
+    dropCurrentActionQuery,
+    actionQueryUp,
+  ];
+  const downQueries = [
+    customFieldsQueryDown,
+    actionQueryDown,
+    oldActionQueryUp,
+  ];
+
+  const migrationName = `modify_action_${currentAction.action_name}_to_${
+    state.name
+  }`;
+  const requestMsg = 'Saving action...';
+  const successMsg = 'Action saved successfully';
+  const errorMsg = 'Saving action failed';
+  const customOnSuccess = () => {
+    dispatch(modifyActionRequestComplete());
+    const newHref = window.location.href.replace(
+      `/manage/${currentAction.action_name}/modify`,
+      `/manage/${state.name}/modify`
+    );
+    window.location.replace(newHref);
+  };
+  const customOnError = () => {
+    dispatch(modifyActionRequestComplete());
+  };
+
+  dispatch(modifyActionRequestInProgress());
+  makeMigrationCall(
+    dispatch,
+    getState,
+    upQueries,
+    downQueries,
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg
+  );
+};
+
+export const deleteAction = currentAction => (dispatch, getState) => {
+  const confirmMessage = `This will permanently delete the action "${
+    currentAction.action_name
+  }" from this table`;
+  const isOk = getConfirmation(confirmMessage, true, currentAction.action_name);
+  if (!isOk) {
+    return;
+  }
+  const upQuery = generateDropActionQuery(currentAction.action_name);
+  const downQuery = generateCreateActionQuery(
+    currentAction.action_name,
+    currentAction.action_defn
+  );
+
+  const migrationName = `delete_action_${currentAction.action_name}`;
+  const requestMsg = 'Deleting action...';
+  const successMsg = 'Action deleted successfully';
+  const errorMsg = 'Deleting action failed';
+  const customOnSuccess = () => {
+    dispatch(modifyActionRequestComplete());
+    dispatch(push(`${globals.urlPrefix}${appPrefix}/manage`));
+    dispatch(fetchActions());
+  };
+  const customOnError = () => {
+    dispatch(modifyActionRequestComplete());
+  };
+
+  dispatch(modifyActionRequestInProgress());
+  makeMigrationCall(
+    dispatch,
+    getState,
+    [upQuery],
+    [downQuery],
     migrationName,
     customOnSuccess,
     customOnError,

@@ -15,6 +15,12 @@ export const setActionWebhook = webhook => ({
   webhook,
 });
 
+const SET_ACTION_KIND = 'Actions/Add/SET_ACTION_KIND';
+export const setActionKind = kind => ({
+  type: SET_ACTION_KIND,
+  kind,
+});
+
 const SET_ACTION_ARGUMENTS = 'Actions/Add/SET_ACTION_ARGUMENTS';
 export const setActionArguments = args => ({
   type: SET_ACTION_ARGUMENTS,
@@ -42,6 +48,11 @@ export const setTypesBulk = (types, args, outputType) => ({
   outputType,
 });
 
+const SET_FETCHING = 'Actions/Add/SET_FETCHING';
+export const setFetching = () => ({ type: SET_FETCHING });
+const UNSET_FETCHING = 'Actions/Add/UNSET_FETCHING';
+export const unsetFetching = () => ({ type: UNSET_FETCHING });
+
 const reducer = (state = defaultState, action) => {
   switch (action.type) {
     case SET_DEFAULTS:
@@ -55,6 +66,11 @@ const reducer = (state = defaultState, action) => {
       return {
         ...state,
         webhook: action.webhook,
+      };
+    case SET_ACTION_KIND:
+      return {
+        ...state,
+        kind: action.kind,
       };
     case SET_ACTION_ARGUMENTS:
       return {
@@ -77,6 +93,16 @@ const reducer = (state = defaultState, action) => {
         types: action.types,
         arguments: action.args,
         outputType: action.outputType,
+      };
+    case SET_FETCHING:
+      return {
+        ...state,
+        isFetching: true,
+      };
+    case UNSET_FETCHING:
+      return {
+        ...state,
+        isFetching: false,
       };
     default:
       return state;

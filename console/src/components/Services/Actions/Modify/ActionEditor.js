@@ -3,6 +3,7 @@ import styles from './Styles.scss';
 import Helmet from 'react-helmet';
 import NameEditor from '../Common/UIComponents/NameEditor';
 import WebhookEditor from '../Common/UIComponents/WebhookEditor';
+import KindEditor from '../Common/UIComponents/KindEditor';
 import ArgumentEditorList from '../Common/UIComponents/ArgumentEditorList';
 import OutputTypesEditor from '../Common/UIComponents/OutputTypesEditor';
 import TypeEditorList from '../Common/UIComponents/TypeEditorList';
@@ -12,12 +13,13 @@ import {
   setModifyState,
   setActionName,
   setActionWebhook,
+  setActionKind,
   setActionOutputType,
   setActionArguments,
   setTypes,
   setTypesBulk,
 } from './reducer';
-import { saveAction } from './ServerIO';
+import { saveAction, deleteAction } from '../ServerIO';
 import { defaultArg, defaultScalarType } from '../Common/stateDefaults';
 
 const ActionEditor = ({
@@ -27,7 +29,15 @@ const ActionEditor = ({
   dispatch,
   ...modifyProps
 }) => {
-  const { name, webhook, arguments: args, types, outputType } = modifyProps;
+  const {
+    name,
+    webhook,
+    arguments: args,
+    types,
+    outputType,
+    kind,
+    isFetching,
+  } = modifyProps;
 
   // initialize action state
   const init = () => {
@@ -38,6 +48,7 @@ const ActionEditor = ({
 
   const nameOnChange = e => dispatch(setActionName(e.target.value));
   const webhookOnChange = e => dispatch(setActionWebhook(e.target.value));
+  const kindOnChange = k => dispatch(setActionKind(k));
   const outputTypeOnChange = e => dispatch(setActionOutputType(e.target.value));
   const setArguments = a => {
     const newArgs = [...a];
@@ -79,23 +90,17 @@ const ActionEditor = ({
     );
   };
 
-  const onSubmit = e => {
-    if (e) {
-      e.preventDefault();
-    }
-    dispatch(saveAction());
+  const onSave = () => {
+    dispatch(saveAction(currentAction));
   };
-
-  const argTypes = [...types.filter(t => !!t.name && t.kind !== 'object')];
-
-  const objectFieldTypes = [
-    ...types.filter(t => !!t.name && t.kind !== 'input_object'),
-  ];
+  const onDelete = () => {
+    dispatch(deleteAction(currentAction));
+  };
 
   return (
     <div>
-      <Helmet title={'Add Action - Actions | Hasura'} />
-      <div className={styles.heading_text}>Add a new action</div>
+      <Helmet title={`Modify Action - ${actionName} Actions | Hasura`} />
+      <div className={styles.heading_text}>Modify action</div>
       <NameEditor
         value={name}
         onChange={nameOnChange}
@@ -112,10 +117,10 @@ const ActionEditor = ({
         service="create-action"
       />
       <hr />
+      <KindEditor value={kind} onChange={kindOnChange} />
+      <hr />
       <TypeEditorList
         types={types}
-        argTypes={argTypes}
-        fieldTypes={objectFieldTypes}
         setTypes={setActionTypes}
         removeType={removeType}
         className={styles.add_mar_bottom_mid}
@@ -126,14 +131,14 @@ const ActionEditor = ({
         className={styles.add_mar_bottom_mid}
         args={args}
         setArguments={setArguments}
-        allTypes={argTypes}
+        allTypes={types}
         service="create-action"
       />
       <hr />
       <OutputTypesEditor
         className={styles.add_mar_bottom_mid}
         value={outputType}
-        allTypes={objectFieldTypes}
+        allTypes={types}
         onChange={outputTypeOnChange}
         service="create-action"
       />
@@ -143,10 +148,8 @@ const ActionEditor = ({
           color="yellow"
           size="sm"
           type="submit"
-          onClick={() => {
-            onSubmit();
-          }}
-          disabled
+          onClick={onSave}
+          disabled={isFetching}
           className={styles.add_mar_right}
         >
           Save
@@ -155,10 +158,8 @@ const ActionEditor = ({
           color="red"
           size="sm"
           type="submit"
-          onClick={() => {
-            onSubmit();
-          }}
-          disabled
+          onClick={onDelete}
+          disabled={isFetching}
         >
           Delete
         </Button>

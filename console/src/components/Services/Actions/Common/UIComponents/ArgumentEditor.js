@@ -69,6 +69,7 @@ const ArgumentEditor = ({
           </option>
         )}
         {allTypes.map((t, i) => {
+          if (t.kind === 'object') return null;
           return (
             <option key={i} value={i}>
               {t.name}

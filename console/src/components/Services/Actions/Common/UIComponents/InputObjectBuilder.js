@@ -3,7 +3,7 @@ import styles from './Styles.scss';
 import FieldEditor from './FieldEditor';
 import { defaultInputObjectType, defaultField } from '../stateDefaults';
 
-const InputObjectBuilder = ({ type, setType, argTypes }) => {
+const InputObjectBuilder = ({ type, setType, allTypes }) => {
   const { name, fields, kind } = type;
 
   const init = () => {
@@ -85,7 +85,7 @@ const InputObjectBuilder = ({ type, setType, argTypes }) => {
               field={f}
               setField={setField}
               removeField={removeField}
-              allTypes={argTypes}
+              allTypes={allTypes}
               isLast={isLast}
               index={i}
             />

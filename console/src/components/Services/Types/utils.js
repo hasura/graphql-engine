@@ -10,16 +10,33 @@ export const filterNameless = arr => {
   return arr.filter(item => !!item.name);
 };
 
+export const filterValueLess = arr => {
+  return arr.filter(item => !!item.value);
+};
+
 export const mergeCustomTypes = (newTypesList, existingTypesList) => {
   let mergedTypes = [];
   let overlappingTypename = null;
+  const modifiedTypeIndices = [];
   newTypesList.forEach(nt => {
-    if (existingTypesList.find(et => et.name === nt.name)) {
-      overlappingTypename = nt.name;
+    const modifiedTypeIndex = existingTypesList.findIndex(
+      et => et.name === nt.name
+    );
+    if (modifiedTypeIndex !== -1) {
+      if (!nt.isModifying) {
+        overlappingTypename = nt.name;
+      } else {
+        modifiedTypeIndices.push(modifiedTypeIndex);
+      }
     }
     mergedTypes.push(nt);
   });
-  mergedTypes = [...mergedTypes, ...existingTypesList];
+  mergedTypes = [
+    ...mergedTypes,
+    ...existingTypesList.filter(
+      (t, i) => !modifiedTypeIndices.find(mti => i === mti)
+    ),
+  ];
   return {
     types: mergedTypes,
     overlappingTypename,

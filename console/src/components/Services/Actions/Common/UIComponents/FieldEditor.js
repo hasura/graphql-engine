@@ -55,6 +55,7 @@ const FieldEditor = ({ field, setField, allTypes, removeField, isLast }) => {
           </option>
         )}
         {allTypes.map((t, i) => {
+          if (t.kind !== 'scalar' && !t.isInbuilt) return null;
           return (
             <option key={i} value={i}>
               {t.name}

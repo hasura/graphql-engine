@@ -5,19 +5,14 @@ import ObjectBuilder from './ObjectBuilder';
 import InputObjectBuilder from './InputObjectBuilder';
 import EnumBuilder from './EnumBuilder';
 
-const TypeBuilder = ({ type, setType, argTypes, fieldTypes }) => {
+const TypeBuilder = ({ type, setType, allTypes }) => {
   const scalarBuilder = <ScalarBuilder type={type} setType={setType} />;
   const enumBuilder = <EnumBuilder type={type} setType={setType} />;
   const objectBuilder = (
-    <ObjectBuilder
-      type={type}
-      setType={setType}
-      argTypes={argTypes}
-      fieldTypes={fieldTypes}
-    />
+    <ObjectBuilder type={type} setType={setType} allTypes={allTypes} />
   );
   const inputObjectBuilder = (
-    <InputObjectBuilder type={type} setType={setType} argTypes={argTypes} />
+    <InputObjectBuilder type={type} setType={setType} allTypes={allTypes} />
   );
   const tabs = [
     {
@@ -38,7 +33,7 @@ const TypeBuilder = ({ type, setType, argTypes, fieldTypes }) => {
     {
       heading: 'Enum',
       component: enumBuilder,
-      kind: 'enum',
+      key: 'enum',
     },
   ];
 

@@ -8,19 +8,11 @@ const TypeEditor = ({
   removeType,
   isLast,
   service,
-  argTypes,
-  fieldTypes,
   index,
+  allTypes,
 }) => {
   const editorExpanded = () => {
-    return (
-      <TypeBuilder
-        type={type}
-        setType={setType}
-        argTypes={argTypes}
-        fieldTypes={fieldTypes}
-      />
-    );
+    return <TypeBuilder type={type} setType={setType} allTypes={allTypes} />;
   };
 
   const expandButtonText = isLast ? 'Create a new type' : 'Edit';

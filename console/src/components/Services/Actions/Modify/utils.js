@@ -16,6 +16,7 @@ export const getModifyState = (currentAction, allTypes) => {
   const modifyState = {};
   modifyState.name = currentAction.action_name;
   modifyState.webhook = actionDef.webhook;
+  modifyState.kind = actionDef.kind;
   modifyState.arguments = actionDef.arguments.map(a => {
     a.type = actionTypes.findIndex(t => t.name === a.type).toString();
     return a;
@@ -25,8 +26,8 @@ export const getModifyState = (currentAction, allTypes) => {
     .findIndex(t => t.name === actionDef.output_type)
     .toString();
   modifyState.types = actionTypes.map(t => {
-    if (t.isInbuilt) return t;
-    const _t = { ...t };
+    const _t = { ...t, isModifying: true };
+    if (t.isInbuilt) return _t;
     switch (t.kind) {
       case 'scalar':
         return _t;
@@ -54,7 +55,7 @@ export const getModifyState = (currentAction, allTypes) => {
         _t.values.push(defaultEnumValue);
         return _t;
       default:
-        return t;
+        return _t;
     }
   });
   modifyState.types.push({ ...defaultScalarType });
