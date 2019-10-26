@@ -7,7 +7,7 @@
 <a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
 <a href="https://eepurl.com/dBUfJ5"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
 
-Hasura GraphQL Engine é um servidor GraphQL extremamente rápido que fornece **instantaneamente, e em tempo real APIs GraphQL no Postgres**, com [**webhook triggers**](event-triggers.md) em eventos de banco de dados, e esquemas remotos para lógica de negócios.
+Hasura GraphQL Engine é um servidor GraphQL extremamente rápido que fornece **instantaneamente, e em tempo real APIs GraphQL no Postgres**, com [**webhook triggers**](/event-triggers.md) em eventos de banco de dados, e esquemas remotos para lógica de negócios.
 
 Hasura ajuda a criar GraphQL apps suportados pelo Postgres ou migrar gradualmente para GraphQL apps existentes usando Postgres.
 
@@ -27,8 +27,8 @@ Leia mais em [hasura.io](https://hasura.io) e na [documentação](https://docs.h
 
 - **Faça consultas poderosas**: Filtragem embutida, paginação, pesquisa de padrões, inserção em massa, atualização, exclusão de mutações.
 - **Em tempo real**: Converta qualquer consulta GraphQL em uma consulta ativa usando subscriptions.
-- **Mesclar esquemas remotos**: Acesse esquemas GraphQL personalizados para lógica de negócios por meio de um único GraphQL Engine endpoint. [Leia mais](remote-schemas.md).
-- **Acionar webhooks ou funções sem servidor**: No Postgres insira/atualize/exclua eventos ([leia mais](event-triggers.md))
+- **Mesclar esquemas remotos**: Acesse esquemas GraphQL personalizados para lógica de negócios por meio de um único GraphQL Engine endpoint. [Leia mais](/remote-schemas.md).
+- **Acionar webhooks ou funções sem servidor**: No Postgres insira/atualize/exclua eventos ([leia mais](/event-triggers.md))
 - **Funciona com bando de dados existentes**: Aponte para um banco de dados Postgres existente para obter uma GraphQL API pronto para uso.
 - **Controle de acesso refinado**: Controle de acesso dinâmico que se integra ao seu sistema de autenticação(ex: auth0, firebase-auth)
 - **Alta performance & low-footprint**: ~15MB docker image; ~50MB RAM @ 1000 req/s; multicore aware
@@ -92,7 +92,7 @@ Confira as instruções para as seguintes opções de implantação com um cliqu
 ### Outros métodos de implantação
 
 Para implantação baseada no Docker e opções de configuração avançadas, veja o [guias de implantação](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) ou o
-[manifestos de instalação](install-manifests).
+[manifestos de instalação](/install-manifests).
 
 ## Arquitetura
 
@@ -112,11 +112,11 @@ O GraphQL Engine fornece métodos easy-to-reason, escaláveis e de alto desempen
 
 ### Esquemas remotos
 
-Adicione resolvers personalizados em um esquema remoto, além do esquema GraphQL baseado em Postgres do Hasura. Ideal para casos de uso, como implementar uma API de pagamento ou consultar dados que não estão no seu banco de dados - [leia mais](remote-schemas.md).
+Adicione resolvers personalizados em um esquema remoto, além do esquema GraphQL baseado em Postgres do Hasura. Ideal para casos de uso, como implementar uma API de pagamento ou consultar dados que não estão no seu banco de dados - [leia mais](/remote-schemas.md).
 
 ### Acionar webhooks em eventos de banco de dados
 
-Adicione lógica de negócios assíncrona que é acionada com base nos eventos do banco de dados.Ideal para notificações, pipelines de dados do Postgres ou processamento assíncrono - [leia mais](event-triggers.md).
+Adicione lógica de negócios assíncrona que é acionada com base nos eventos do banco de dados.Ideal para notificações, pipelines de dados do Postgres ou processamento assíncrono - [leia mais](/event-triggers.md).
 
 ### Dados derivados ou transformações de dados
 
@@ -125,25 +125,25 @@ Transforme dados no Postgres ou execute a lógica de negócios para obter outro 
 ## Demos
 
 Confira todos os aplicativos de exemplo no diretório
-[community/examples](community/examples).
+[community/examples](../community/sample-apps).
 
 ### Aplicações em tempo real
 
 - O aplicativo de bate-papo em grupo criado com o React inclui um indicador de digitação, usuários online e notificações de novas mensagens.
 
   - [Experimente](https://realtime-chat.demo.hasura.app/)
-  - [Tutorial](community/sample-apps/realtime-chat)
+  - [Tutorial](../community/sample-apps/realtime-chat)
   - [Browse APIs](https://realtime-chat.demo.hasura.app/console)
 
 - Aplicativo de rastreamento de localização ao vivo que mostra um veículo em movimento alterando as coordenadas atuais do GPS em movimento no mapa.
 
   - [Experimente](https://realtime-location-tracking.demo.hasura.app/)
-  - [Tutorial](community/sample-apps/realtime-location-tracking)
+  - [Tutorial](../community/sample-apps/realtime-location-tracking)
   - [Browse APIs](https://realtime-location-tracking.demo.hasura.app/console)
 
 - Um painel em tempo real para agregações de dados em constante mudança de dados.
   - [Experimente](https://realtime-poll.demo.hasura.app/)
-  - [Tutorial](community/sample-apps/realtime-poll)
+  - [Tutorial](../community/sample-apps/realtime-poll)
   - [Browse APIs](https://realtime-poll.demo.hasura.app/console)
 
 ### Vídeos
@@ -162,17 +162,17 @@ A documentação e a comunidade ajudarão você a solucionar a maioria dos probl
 - Siga a atualizações do produto: [@HasuraHQ](https://twitter.com/hasurahq)
 - Fale conosco em nosso [chat](https://hasura.io)
 
-Estamos comprometidos em promover um ambiente aberto e acolhedor na comunidade. Por favor, consulte o [Código de Conduta](code-of-conduct.md).
+Estamos comprometidos em promover um ambiente aberto e acolhedor na comunidade. Por favor, consulte o [Código de Conduta](/code-of-conduct.md).
 
-Se você deseja relatar um problema de segurança, por favor [leia isto](SECURITY.md).
+Se você deseja relatar um problema de segurança, por favor [leia isto](/SECURITY.md).
 
 ## Contribuindo
 
-Confira nosso [guia de contribuição](CONTRIBUTING.md) para mais detalhes.
+Confira nosso [guia de contribuição](/CONTRIBUTING.md) para mais detalhes.
 
 ## Recursos da marca
 
-Os ativos da marca Hasura (logotipos, o mascote Hasura, powered by badges etc.) podem ser encontrados na pasta [assets/brand](assets/brand). Sinta-se à vontade para usá-los em seu aplicativo / site, etc. Ficaríamos felizes se você adicionar o "Powered by Hasura" badge para seus aplicativos criados usando o Hasura. ❤️
+Os ativos da marca Hasura (logotipos, o mascote Hasura, powered by badges etc.) podem ser encontrados na pasta [assets/brand](../assets/brand). Sinta-se à vontade para usá-los em seu aplicativo / site, etc. Ficaríamos felizes se você adicionar o "Powered by Hasura" badge para seus aplicativos criados usando o Hasura. ❤️
 
 <div style="display: flex;">
   <img src="../assets/brand/powered_by_hasura_blue.svg" width="150px"/>
@@ -201,6 +201,6 @@ Os ativos da marca Hasura (logotipos, o mascote Hasura, powered by badges etc.) 
 
 O core GraphQL Engine está disponível sob o [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) (Apache-2.0).
 
-Todos **os outros conteúdos** (exceto aqueles em [`server`](server), [`cli`](cli) e
-[`console`](console) diretórios) estão disponíveis sob o [MIT License](LICENSE-community).
-Isso inclui tudo nos diretórios [`docs`](docs) e [`community`](community).
+Todos **os outros conteúdos** (exceto aqueles em [`server`](../server), [`cli`](../cli) e
+[`console`](../console) diretórios) estão disponíveis sob o [MIT License](/LICENSE-community).
+Isso inclui tudo nos diretórios [`docs`](../docs) e [`community`](../community).
