@@ -84,14 +84,13 @@ The fastest way to try Hasura out is via Heroku.
 Check out the instructions for the following one-click deployment options:
 
 | **Infra provider** | **One-click link** | **Additional information** |
-|:------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------:|
+|:-------------------------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------:|
 | DigitalOcean | [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme) | [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
 | Azure | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html) |
 
 ### Other deployment methods
 
-For Docker-based deployment and advanced configuration options, see [deployment
-guides](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) or
+For Docker-based deployment and advanced configuration options, see [deploymentguides](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) or
 [install manifests](install-manifests).
 
 ## Architecture
