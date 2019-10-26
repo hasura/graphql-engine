@@ -66,5 +66,7 @@
 ## Attribution
 
 この行動規範は、から適応 [Contributor Covenant][homepage], version 1.4,
-で入手可能 https://www.contributor-covenant.org/version/1/4/code-of-conduct.html
+で入手可能 
+https://www.contributor-covenant.org/version/1/4/code-of-conduct.html
 
+[homepage]: https://www.contributor-covenant.org
