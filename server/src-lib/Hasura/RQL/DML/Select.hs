@@ -14,7 +14,6 @@ where
 import           Data.Aeson.Types
 import           Instances.TH.Lift              ()
 
-import qualified Data.HashMap.Strict            as HM
 import qualified Data.HashSet                   as HS
 import qualified Data.List.NonEmpty             as NE
 import qualified Data.Sequence                  as DS
@@ -54,13 +53,14 @@ convWildcard
   -> SelPermInfo
   -> Wildcard
   -> m [ExtCol]
-convWildcard fieldInfoMap (SelPermInfo cols _ _ _ _ _) wildcard =
+convWildcard fieldInfoMap selPermInfo wildcard =
   case wildcard of
   Star         -> return simpleCols
   (StarDot wc) -> (simpleCols ++) <$> (catMaybes <$> relExtCols wc)
   where
-    (pgCols, relColInfos) = partitionFieldInfosWith (pgiColumn, id) $
-                            HM.elems fieldInfoMap
+    cols = spiCols selPermInfo
+    pgCols = map pgiColumn $ getCols fieldInfoMap
+    relColInfos = getRels fieldInfoMap
 
     simpleCols = map ECSimple $ filter (`HS.member` cols) pgCols
 
@@ -125,12 +125,20 @@ convOrderByElem sessVarBldr (flds, spi) = \case
         [ fldName <<> " is a"
         , " relationship and should be expanded"
         ]
+      FIComputedField _ -> throw400 UnexpectedPayload $ mconcat
+        [ fldName <<> " is a"
+        , " computed field and can't be used in 'order_by'"
+        ]
   OCRel fldName rest -> do
     fldInfo <- askFieldInfo flds fldName
     case fldInfo of
       FIColumn _ -> throw400 UnexpectedPayload $ mconcat
         [ fldName <<> " is a Postgres column"
         , " and cannot be chained further"
+        ]
+      FIComputedField _ -> throw400 UnexpectedPayload $ mconcat
+        [ fldName <<> " is a"
+        , " computed field and can't be used in 'order_by'"
         ]
       FIRelationship relInfo -> do
         when (riType relInfo == ArrRel) $
@@ -185,7 +193,7 @@ convSelectQ fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
   resolvedSelFltr <- convAnnBoolExpPartialSQL sessVarBldr $
                      spiFilter selPermInfo
 
-  let tabFrom = TableFrom (spiTable selPermInfo) Nothing
+  let tabFrom = FromTable $ spiTable selPermInfo
       tabPerm = TablePerm resolvedSelFltr mPermLimit
       tabArgs = TableArgs wClause annOrdByM mQueryLimit
                 (S.intToSQLExp <$> mQueryOffset) Nothing

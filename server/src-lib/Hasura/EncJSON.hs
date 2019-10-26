@@ -31,6 +31,13 @@ newtype EncJSON
   = EncJSON { unEncJSON :: BB.Builder }
   deriving (Semigroup, Monoid, IsString)
 
+instance Show EncJSON where
+  showsPrec d x = showParen (d > 10) $
+    showString "encJFromBS " . showsPrec 11 (encJToLBS x)
+
+instance Eq EncJSON where
+  (==) = (==) `on` encJToLBS
+
 instance Q.FromCol EncJSON where
   fromCol = fmap encJFromBS . Q.fromCol
 
