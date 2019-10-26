@@ -44,6 +44,7 @@ export API_PORT=9693
 export CONSOLE_MODE=cli
 export DEV_DATA_API_URL=http://localhost:8080
 export URL_PREFIX=/
+export SERVER_VERSION=$(cat /build/_server_output/version.txt)
 
 # test console
 npm run dev &

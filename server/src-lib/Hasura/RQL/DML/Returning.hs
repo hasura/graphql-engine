@@ -88,7 +88,7 @@ mkMutFldExp qt singleObj strfyNum = \case
   MExp t -> S.SELit t
   MRet selFlds ->
     -- let tabFrom = TableFrom qt $ Just frmItem
-    let tabFrom = TableFrom qt $ Just  $ qualTableToAliasIden qt
+    let tabFrom = FromIden $ qualTableToAliasIden qt
         tabPerm = TablePerm annBoolExpTrue Nothing
     in S.SESelect $ mkSQLSelect singleObj $
        AnnSelG selFlds tabFrom tabPerm noTableArgs strfyNum
