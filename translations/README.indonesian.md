@@ -107,11 +107,11 @@ Hasura dapat tersambung dengan baik menggunakan kakas klien GraphQL apa saja. Ka
 
 ## Tambahkan logika bisnis
 
-GraphQL Engine menyediakan metode yang mudah masuk akal, terukur, dan andal dalam menambahkan logika bisnis _custom_ pada _backend_ Anda.
+GraphQL Engine menyediakan metode yang gampang masuk akal, terukur, dan andal dalam menambahkan logika bisnis _custom_ pada _backend_ Anda.
 
 ### Skema jarak jauh
 
-Tambahkan _custom resolvers_ pada sebuah skema jarak jauh berdampingan dengan skema GraphQL berbasis Postgres milik Hasura. Hal ini ideal untuk kasus ketika misalnya menambahkan API pembayaran, atau meng-_query_ data yang tidak berada pada basis data Anda - [baca lebih lanjut](../remote-schemas.md).
+Tambahkan _custom resolvers_ pada sebuah skema jarak jauh berdampingan dengan skema GraphQL berbasis Postgres dari Hasura. Hal ini ideal untuk kasus ketika misalnya menambahkan API pembayaran, atau meng-_query_ data yang tidak berada pada basis data Anda - [baca lebih lanjut](../remote-schemas.md).
 
 ### Picu _webhooks_ pada _event_ basis data
 
@@ -123,7 +123,7 @@ Transformasi data di Postgres atau jalankan logika bisnis untuk menghasilkan set
 
 ## Demo
 
-Coba lihat seluruh contoh aplikasi pada direktori [_community/examples_](../community/examples).
+Coba lihat seluruh contoh aplikasi pada direktori [_community/sample-apps_](../community/sample-apps).
 
 ### Aplikasi _realtime_
 
