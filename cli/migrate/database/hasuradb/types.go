@@ -332,49 +332,20 @@ func (t *tableSchema) UnmarshalJSON(b []byte) error {
 }
 
 type trackTableInput struct {
-	Table  tableSchema `json:"table" yaml:"table"`
-	IsEnum bool        `json:"is_enum" yaml:"is_enum"`
-}
-
-func (t trackTableInput) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&struct {
-		Name   string `json:"name" yaml:"name"`
-		Schema string `json:"schema" yaml:"schema"`
-		IsEnum bool   `json:"is_enum" yaml:"is_enum"`
-	}{
-		Name:   t.Table.Name,
-		Schema: t.Table.Schema,
-		IsEnum: t.IsEnum,
-	})
+	tableSchema
+	IsEnum bool `json:"is_enum" yaml:"is_enum"`
 }
 
 func (t *trackTableInput) UnmarshalJSON(b []byte) error {
-	var ts struct {
-		Name   string
-		Schema string
-		IsEnum bool `json:"is_enum"`
-	}
+	type tmpT trackTableInput
+	var ts tmpT
 	if err := json.Unmarshal(b, &ts); err != nil {
 		return err
-	}
-	t.IsEnum = ts.IsEnum
-	if ts.Name == "" {
-		var ts struct {
-			Table tableSchema
-		}
-		if err := json.Unmarshal(b, &ts); err != nil {
-			return err
-		}
-		t.Table = ts.Table
-		return nil
 	}
 	if ts.Schema == "" {
 		ts.Schema = "public"
 	}
-	t.Table = tableSchema{
-		Name:   ts.Name,
-		Schema: ts.Schema,
-	}
+	*t = trackTableInput(ts)
 	return nil
 }
 
@@ -394,44 +365,19 @@ type setTableCustomFieldsV2Input struct {
 }
 
 type unTrackTableInput struct {
-	Table tableSchema `json:"table" yaml:"table"`
-}
-
-func (t unTrackTableInput) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&struct {
-		Name   string `json:"name" yaml:"name"`
-		Schema string `json:"schema" yaml:"schema"`
-	}{
-		Name:   t.Table.Name,
-		Schema: t.Table.Schema,
-	})
+	tableSchema
 }
 
 func (t *unTrackTableInput) UnmarshalJSON(b []byte) error {
-	var ts struct {
-		Name   string
-		Schema string
-	}
+	type tmpT unTrackTableInput
+	var ts tmpT
 	if err := json.Unmarshal(b, &ts); err != nil {
 		return err
-	}
-	if ts.Name == "" {
-		var ts struct {
-			Table tableSchema
-		}
-		if err := json.Unmarshal(b, &ts); err != nil {
-			return err
-		}
-		t.Table = ts.Table
-		return nil
 	}
 	if ts.Schema == "" {
 		ts.Schema = "public"
 	}
-	t.Table = tableSchema{
-		Name:   ts.Name,
-		Schema: ts.Schema,
-	}
+	*t = unTrackTableInput(ts)
 	return nil
 }
 
@@ -663,7 +609,7 @@ func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList
 	for _, table := range rmi.Tables {
 		if table.Configuration == nil {
 			t := &trackTableInput{
-				Table: tableSchema{
+				tableSchema: tableSchema{
 					Name:   table.Table.Name,
 					Schema: table.Table.Schema,
 				},

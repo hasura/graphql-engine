@@ -966,8 +966,8 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 			switch args := element.Value.(type) {
 			case *trackTableInput:
 				return tableMap{
-					args.Table.Name,
-					args.Table.Schema,
+					args.tableSchema.Name,
+					args.tableSchema.Schema,
 				}
 			case *trackTableV2Input:
 				return tableMap{
@@ -976,8 +976,8 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 				}
 			case *unTrackTableInput:
 				return tableMap{
-					args.Table.Name,
-					args.Table.Schema,
+					args.tableSchema.Name,
+					args.tableSchema.Schema,
 				}
 			case *setTableCustomFieldsV2Input:
 				return tableMap{
