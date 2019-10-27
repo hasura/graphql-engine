@@ -141,3 +141,13 @@ Testing scalability & reliability for live-queries with websockets has been a ch
 
 ## Benefits of this approach
 Hasura makes live-queries easy and accessible. The notion of queries is easily extended to live-queries without any extra effort on the part of the developer using GraphQL queries. This is the most important thing for us.
+
+1. Expressive/featureful live queries with full support for Postgres operators/aggregations/views/functions etc
+1. Predictable performance
+1. Vertical & Horizontal scaling
+1. Works on all cloud/database vendors
+
+## Future work:
+Reduce load on Postgres by:
+1. Mapping events to active live queries
+1. Incremental computation of result set
