@@ -22,7 +22,7 @@ Authentication options
 Hasura supports two modes of authentication configuration:
 
 1) **Webhook**: Your auth server exposes a webhook that is used to authenticate all incoming requests
-   to the Hasura GraphQL engine server and to get metadata about the request to evaluate access control
+   to the Hasura GraphQL engine server and to get metadata about the request, to evaluate access control
    rules. Here's how a GraphQL request is processed in webhook mode:
 
    .. thumbnail:: ../../../../img/graphql/manual/auth/auth-webhook-overview.png

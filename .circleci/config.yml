@@ -79,21 +79,6 @@ refs:
         at: /build
     - *skip_job_on_ciignore
     - checkout
-    - *wait_for_postgres
-    - run:
-        name: test the server
-        working_directory: ./server
-        command: |
-          DATABASE_URL="postgres://gql_test:@localhost:5432/gql_test" make ci-test
-
-  # ref pytest server job
-  pytest_server: &pytest_server
-    working_directory: ~/graphql-engine
-    steps:
-    - attach_workspace:
-        at: /build
-    - *skip_job_on_ciignore
-    - checkout
     - restore_cache:
         keys:
         - server-app-cache-{{ .Branch }}-{{ .Revision }}
@@ -108,7 +93,7 @@ refs:
         command: |
           mkdir -p /usr/share/man/man{1,7}
           apt-get update
-          apt install --yes pgbouncer jq curl postgresql-client
+          apt install --yes pgbouncer jq curl postgresql-client-12
     - run:
         name: Ensure databases are present
         environment:
@@ -116,7 +101,7 @@ refs:
         command: |
           psql "$DATABASE_URL" -c "SELECT 1 FROM pg_database WHERE datname = 'gql_test2'" | grep -q -F '(1 row)' || psql "$DATABASE_URL" -c 'CREATE DATABASE gql_test2;'
     - run:
-        name: Run Python tests
+        name: Run tests
         environment:
           # Setting default number of threads to 2
           # since circleci allocates 2 cpus per test container
@@ -124,6 +109,7 @@ refs:
           HASURA_GRAPHQL_DATABASE_URL: 'postgres://gql_test:@localhost:5432/gql_test'
           HASURA_GRAPHQL_DATABASE_URL_2: 'postgres://gql_test:@localhost:5432/gql_test2'
           GRAPHQL_ENGINE: '/build/_server_output/graphql-engine'
+          GRAPHQL_ENGINE_TESTS: '/build/_server_output/graphql-engine-tests'
         command: |
           OUTPUT_FOLDER=/build/_server_test_output/$PG_VERSION .circleci/test-server.sh
     - run:
@@ -178,7 +164,7 @@ jobs:
         name: Install latest postgresql client tools
         command: |
           apt-get -y update
-          apt-get -y install postgresql-client-11
+          apt-get -y install postgresql-client-12
     - run:
         name: Build the binary
         working_directory: ./server
@@ -231,27 +217,35 @@ jobs:
         command: echo 'all server tests passed!'
 
   # pytest the server with postgres versions >= 9.5
-  pytest_server_pg_11.1:
-    <<: *pytest_server
+  test_server_pg_12:
+    <<: *test_server
     environment:
-      PG_VERSION: "11_1"
+      PG_VERSION: "12"
     docker:
     - image: hasura/graphql-engine-server-builder:20190826
-      # TODO: change this to circleci postgis when they have one for pg 11
-    - image: mdillon/postgis:11-alpine
+    - image: circleci/postgres:12-alpine-postgis
       <<: *test_pg_env
-
-  pytest_server_pg_10.6:
-    <<: *pytest_server
+ 
+  test_server_pg_11:
+    <<: *test_server
     environment:
-      PG_VERSION: "10_6"
+      PG_VERSION: "11"
     docker:
     - image: hasura/graphql-engine-server-builder:20190826
-    - image: circleci/postgres:10.6-alpine-postgis
+    - image: circleci/postgres:10-alpine-postgis
       <<: *test_pg_env
 
-  pytest_server_pg_9.6:
-    <<: *pytest_server
+  test_server_pg_10:
+    <<: *test_server
+    environment:
+      PG_VERSION: "10"
+    docker:
+    - image: hasura/graphql-engine-server-builder:20190826
+    - image: circleci/postgres:10-alpine-postgis
+      <<: *test_pg_env
+
+  test_server_pg_9.6:
+    <<: *test_server
     environment:
       PG_VERSION: "9_6"
     docker:
@@ -259,8 +253,8 @@ jobs:
     - image: circleci/postgres:9.6-alpine-postgis
       <<: *test_pg_env
 
-  pytest_server_pg_9.5:
-    <<: *pytest_server
+  test_server_pg_9.5:
+    <<: *test_server
     environment:
       PG_VERSION: "9_5"
     docker:
@@ -483,19 +477,23 @@ workflows:
         <<: *filter_only_vtags
         requires:
         - build_console
-    - pytest_server_pg_11.1:
+    - test_server_pg_12:
         <<: *filter_only_vtags
         requires:
         - build_server
-    - pytest_server_pg_10.6:
+    - test_server_pg_11:
         <<: *filter_only_vtags
         requires:
         - build_server
-    - pytest_server_pg_9.6:
+    - test_server_pg_10:
         <<: *filter_only_vtags
         requires:
         - build_server
-    - pytest_server_pg_9.5:
+    - test_server_pg_9.6:
+        <<: *filter_only_vtags
+        requires:
+        - build_server
+    - test_server_pg_9.5:
         <<: *filter_only_vtags
         requires:
         - build_server
@@ -506,10 +504,11 @@ workflows:
     - all_server_tests_pass:
         <<: *filter_only_vtags
         requires:
-        - pytest_server_pg_11.1
-        - pytest_server_pg_10.6
-        - pytest_server_pg_9.6
-        - pytest_server_pg_9.5
+        - test_server_pg_12
+        - test_server_pg_11
+        - test_server_pg_10
+        - test_server_pg_9.6
+        - test_server_pg_9.5
         - test_server_upgrade
     - test_cli_with_last_release:
         <<: *filter_only_vtags
