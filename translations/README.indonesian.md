@@ -73,7 +73,7 @@ Cara paling cepat untuk mencoba Hasura adalah menggunakan Heroku.
 
 2. Buka konsol Hasura
 
-    Kunjungi `https://<nama-aplikasi>.herokuapp.com` (*ganti \<nama-aplikasi\> dengan nama aplikasi Anda*) untuk membuka konsol Admin.
+    Kunjungi `https://<nama-aplikasi>.herokuapp.com` (*ganti \<nama-aplikasi\> dengan nama aplikasi Anda*) untuk membuka konsol admin.
 
 3. Buat _query_ GraphQL pertama Anda
 
@@ -91,7 +91,7 @@ Coba lihat pilihan lainnya untuk menjalankan aplikasi dengan satu klik:
 ### Metode menjalankan lainnya
 
 Untuk menjalankan berbasis Docker dan konfigurasi lebih lanjut, coba lihat [petunjuk menjalankan](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) atau
-[petunjuk instalasi](../install-manifests).
+[manifestasi instalasi](../install-manifests).
 
 ## Arsitektur
 
@@ -99,7 +99,7 @@ Hasura GrapQL Engine berada didepan sebuah basis data Postgres dan dapat menerim
 
 Anda juga dapat menggabungkan skema GraphQL dan menyediakn sebuah API GraphQL yang terintegrasi.
 
-![Hasura GraphQL Engine architecture](assets/hasura-arch.svg)
+![Hasura GraphQL Engine architecture](../assets/hasura-arch.svg)
 
 ## Kakas pada sisi klien
 
