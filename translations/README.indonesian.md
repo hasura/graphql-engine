@@ -8,11 +8,11 @@
 <a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
 <a href="https://eepurl.com/dBUfJ5"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
 
-Hasura GraphQL Engine adalah sebuah _server_ GraphQL ultra-cepat yang menyediakan **API GraphQL secara instan dan _real-time_ diatas Postgres**, dengan [**pemicu _webhook_**](../event-triggers.md) pada peristiwa basis data, dan [**skema jarak jauh**](../remote-schemas.md) untuk mengimplementasi logika bisnis.
+_Hasura GraphQL Engine_ adalah sebuah _server_ GraphQL ultra-cepat yang menyediakan **API GraphQL instan dan _real-time_ diatas Postgres**, dengan [**pemicu _webhook_**](../event-triggers.md) pada _event_ basis data, dan [**skema jarak jauh**](../remote-schemas.md) untuk mengimplementasi logika bisnis.
 
 Hasura dapat membantu Anda membangun aplikasi berbasis GraphQL dengan Postgres atau membantu aplikasi yang sudah ada untuk berpindah ke GraphQL secara bertahap.
 
-Baca lebih lanjut di [hasura.io](https://hasura.io) dan[dokumentasinya](https://docs.hasura.io).
+Baca lebih lanjut di [hasura.io](https://hasura.io) dan [dokumentasinya](https://docs.hasura.io).
 
 ------------------
 
@@ -27,9 +27,9 @@ Baca lebih lanjut di [hasura.io](https://hasura.io) dan[dokumentasinya](https://
 ## Fitur
 
 * **Buat _query_ yang andal**: Tersedia _query_ bawaan untuk menyaring, mengatur halaman, mencari pola, menyisipkan banyak sekaligus, pembaruan, penghapusan data.
-* **_Realtime_**: Ubah _query_ GraphQL biasa menjadi  _live query_ dengan menggunakan _subscriptions_
-* **Gabungkan skema jarak jauh**: Akses skema _custom_ GraphQL untuk logika bisnis melalui sebuah GraphQL Engine _endpoint_. [**Baca lebih lanjut**](../remote-schemas.md).
-* **Picu _webhooks_ atau fungsi _serverless_**: Pada peristiwa penyisipan/perbaruan/penghapusan data di Postgres ([baca lebih lanjut](event-triggers.md))
+* **_Realtime_**: Ubah _query_ GraphQL biasa menjadi  _live query_ dengan menggunakan _subscriptions_.
+* **Gabungkan skema jarak jauh**: Akses skema _custom_ GraphQL untuk logika bisnis melalui sebuah GraphQL Engine _endpoint_. ([Baca lebih lanjut](../remote-schemas.md)).
+* **Picu _webhooks_ atau fungsi _serverless_**: Pada _event_ penyisipan/perbaruan/penghapusan data di Postgres. ([Baca lebih lanjut](../event-triggers.md))
 * **Dapat bekerja dengan basis data yang telah ada sebelumnya**: Arahkan pada sebuah basis data Postgre yang telah ada sebelumnya untuk mendapatkan API GraphQL yang dapat langsung digunakan. 
 * **Kontrol akses yang sangat terukur**: Kontrol akses yang dinamik yang terintegrasi dengan sistem otentikasi semisal auth0 atau firebase-auth.
 * **Performa tinggi & rekam jejak yang kecil**: _Docker image_ sebesar ~15MB; ~50MB RAM pada 1000 req/detik; sadar _multi-core_
@@ -51,7 +51,7 @@ Baca lebih lanjut di [hasura.io](https://hasura.io) dan[dokumentasinya](https://
 - [Kakas pada sisi klien](#kakas-pada-sisi-klien)
 - [Tambahkan logika bisnis](#tambahkan-logika-bisnis)
   - [Skema jarak jauh](#skema-jarak-jauh)
-  - [Picu _webhooks_ pada peristiwa basis data](#picu-_webhooks_-pada-peristiwa-basis-data)
+  - [Picu _webhooks_ pada _event_ basis data](#picu-_webhooks_-pada-_event_-basis-data)
   - [Data turunan atau transformasi data](#data-turunan-atau-transformasi-data)
 - [Demo](#demo)
   - [Aplikasi _realtime_](#aplikasi-_realtime_)
@@ -115,9 +115,9 @@ GraphQL Engine menyediakan metode yang mudah masuk akal, terukur, dan andal dala
 
 Tambahkan _custom resolvers_ pada sebuah skema jarak jauh berdampingan dengan skema GraphQL berbasis Postgres milik Hasura. Hal ini ideal untuk kasus ketika misalnya menambahkan API pembayaran, atau meng-_query_ data yang tidak berada pada basis data Anda - [baca lebih lanjut](../remote-schemas.md).
 
-### Picu _webhooks_ pada peristiwa basis data
+### Picu _webhooks_ pada _event_ basis data
 
-Tambahkan logika bisnis asinkron yang dipicu oleh peristiwa basis data. Ideal untuk notifikasi, _pipeline_ data dari Postgres, atau pemrosesan secara asinkron - [baca lebih lanjut](../event-triggers.md).
+Tambahkan logika bisnis asinkron yang dipicu oleh _event_ basis data. Ideal untuk notifikasi, _pipeline_ data dari Postgres, atau pemrosesan secara asinkron - [baca lebih lanjut](../event-triggers.md).
 
 ### Data turunan atau transformasi data
 
