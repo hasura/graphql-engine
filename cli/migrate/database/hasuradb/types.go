@@ -650,6 +650,7 @@ type replaceMetadataInput struct {
 		DeletePermissions   []*createDeletePermissionInput   `json:"delete_permissions" yaml:"delete_permissions"`
 		EventTriggers       []*createEventTriggerInput       `json:"event_triggers" yaml:"event_triggers"`
 		ComputedFields      []*addComputedFieldInput         `json:"computed_fields" yaml:"computed_fields"`
+		Configuration       *tableConfiguration              `json:"configuration" yaml:"configuration"`
 	} `json:"tables" yaml:"tables"`
 	Functions        []*trackFunctionInput            `json:"functions" yaml:"functions"`
 	QueryCollections []*createQueryCollectionInput    `json:"query_collections" yaml:"query_collections"`
@@ -660,14 +661,24 @@ type replaceMetadataInput struct {
 func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList) {
 	// track tables
 	for _, table := range rmi.Tables {
-		t := &trackTableInput{
-			Table: tableSchema{
-				Name:   table.Table.Name,
-				Schema: table.Table.Schema,
-			},
+		if table.Configuration == nil {
+			t := &trackTableInput{
+				Table: tableSchema{
+					Name:   table.Table.Name,
+					Schema: table.Table.Schema,
+				},
+			}
+			l.PushBack(t)
+		} else {
+			t := &trackTableV2Input{
+				Table: tableSchema{
+					Name:   table.Table.Name,
+					Schema: table.Table.Schema,
+				},
+				Configuration: *table.Configuration,
+			}
+			l.PushBack(t)
 		}
-
-		l.PushBack(t)
 	}
 
 	for _, table := range rmi.Tables {
