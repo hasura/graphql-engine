@@ -14,6 +14,9 @@ const TabContainer = ({
 }) => {
   React.useEffect(() => {
     dispatch(setCurrentAction(actionName));
+    return () => {
+      dispatch(setCurrentAction(''));
+    };
   }, [actionName]);
 
   const currentAction = allActions.find(a => a.action_name === actionName);
