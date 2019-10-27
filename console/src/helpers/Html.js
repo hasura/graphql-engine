@@ -42,7 +42,7 @@ export default class Html extends Component {
             }}
           />
         </head>
-        <body>
+        <body style={{ margin: '0px' }}>
           <style
             dangerouslySetInnerHTML={{
               __html: `
@@ -70,13 +70,7 @@ export default class Html extends Component {
                 font-family: sans-serif;
                 justify-content: center;
             ">
-            <span class="" style="
-                font-size: 2em;
-                margin-top: -3em;
-                color: #848484;
-            ">
-              Loading...
-              </span>
+              <img style="width: 100%;" src="/rstatic/loading.png" />
             </div>`,
             }}
           />
