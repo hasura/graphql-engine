@@ -45,7 +45,7 @@ Notre objectif est d'avoir une documentation intuitive et à jour. Si vous souha
 
 - Ajouter du contenu à la documentation 
 
-Le guide de contribution pour la documentation peut être trouvé sur [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md).
+Le guide de contribution pour la documentation peut être trouvé sur [docs/CONTRIBUTING.md](../docs/CONTRIBUTING.md).
 
 ### Contenu communautaire
 
