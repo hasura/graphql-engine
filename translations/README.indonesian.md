@@ -127,19 +127,19 @@ Coba lihat seluruh contoh aplikasi pada direktori [_community/sample-apps_](../c
 
 ### Aplikasi _realtime_
 
-- Aplikasi _chat_ untuk grup yang dibuat menggunakan React, termasuk indikator pengetikan, pengguna _online_ & notifikasi pesan baru.
+- Aplikasi _chat_ untuk grup yang dibuat menggunakan React. Termasuk indikator pengetikan, pengguna _online_ & notifikasi pesan baru.
   - [Coba dahulu](https://realtime-chat.demo.hasura.app/)
-  - [Tutorial](community/sample-apps/realtime-chat)
+  - [Tutorial](../community/sample-apps/realtime-chat)
   - [Lihat-lihat API](https://realtime-chat.demo.hasura.app/console)
 
 - Aplikasi pelacak yang menyiarkan lokasi secara langsung dengan memperlihatkan kendaraan berjalan dengan posisi koordinat GPS yang berubah-ubah pada peta.
   - [Coba dahulu](https://realtime-location-tracking.demo.hasura.app/)
-  - [Tutorial](community/sample-apps/realtime-location-tracking)
+  - [Tutorial](../community/sample-apps/realtime-location-tracking)
   - [Lihat-lihat API](https://realtime-location-tracking.demo.hasura.app/console)
 
 - Sebuah dasbor _realtime_ untuk meng-agregasi data yang berubah secara terus menerus.
   - [Coba dahulu](https://realtime-poll.demo.hasura.app/)
-  - [Tutorial](community/sample-apps/realtime-poll)
+  - [Tutorial](../community/sample-apps/realtime-poll)
   - [Lihat-lihat API](https://realtime-poll.demo.hasura.app/console)
 
 ### Video
