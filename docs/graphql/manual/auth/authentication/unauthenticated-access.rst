@@ -23,7 +23,7 @@ for unauthenticated (non-logged in) users. See :doc:`../../deployment/graphql-en
 on setting this flag/env var.
 
 This role can then be used to define the permissions for unauthenticated users as described in :doc:`../authorization/index`.
-A guide on setting up unauthenticated user permissions can be found :ref:`here <anonymous_users_example>`
+A guide on setting up unauthenticated user permissions can be found :ref:`here <anonymous_users_example>`.
 
 How it works
 ------------
@@ -33,7 +33,7 @@ receives.
 
 Based on your authentication setup, an unauthenticated request is any request:
 
-- for which the webhook returns a ``401 Unauthorized`` response in case of :doc:`webhook authentication <./webhook>`
+- for which the webhook returns a ``401 Unauthorized`` response in case of :doc:`webhook authentication <./webhook>`.
 - which does not contain a JWT token in case of :doc:`JWT authentication <./jwt>`.
 
 Once an unauthenticated role is configured, unaunthenticated requests will not be rejected and instead the request will
