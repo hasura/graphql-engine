@@ -30,19 +30,17 @@ Baca lebih lanjut di [hasura.io](https://hasura.io) dan [dokumentasinya](https:/
 * **_Realtime_**: Ubah _query_ GraphQL biasa menjadi  _live query_ dengan menggunakan _subscriptions_.
 * **Gabungkan skema jarak jauh**: Akses skema _custom_ GraphQL untuk logika bisnis melalui sebuah GraphQL Engine _endpoint_. ([Baca lebih lanjut](../remote-schemas.md)).
 * **Picu _webhooks_ atau fungsi _serverless_**: Pada _event_ penyisipan/perbaruan/penghapusan data di Postgres. ([Baca lebih lanjut](../event-triggers.md))
-* **Dapat bekerja dengan basis data yang telah ada sebelumnya**: Arahkan pada sebuah basis data Postgre yang telah ada sebelumnya untuk mendapatkan API GraphQL yang dapat langsung digunakan. 
+* **Dapat bekerja dengan basis data yang telah ada sebelumnya**: Arahkan pada sebuah basis data Postgres yang telah ada sebelumnya untuk mendapatkan API GraphQL yang dapat langsung digunakan. 
 * **Kontrol akses yang sangat terukur**: Kontrol akses yang dinamik yang terintegrasi dengan sistem otentikasi semisal auth0 atau firebase-auth.
-* **Performa tinggi & rekam jejak yang kecil**: _Docker image_ sebesar ~15MB; ~50MB RAM pada 1000 req/detik; sadar _multi-core_
-* **Antarmuka untuk admin & Migrasi**: Antarmuka untuk admin & Migrasi yang terinspirasi dari Rails
+* **Performa tinggi & rekam jejak yang kecil**: Docker _image_ sebesar ~15MB; ~50MB RAM pada 1000 req/detik; sadar _multi-core_.
+* **Antarmuka untuk admin & proses migrasi**: Antarmuka untuk admin & proses migrasi yang terinspirasi dari Rails.
 * **Postgres** ❤️: Mendukung _types_ dari Postgres (PostGIS/geo-location, dll.), ubah _views_ menjadi *graphs*, memicu fungsi tersimpan (_stored functions_) atau prosedur dengan mutasi.
 
-Baca lebih lanjut di [hasura.io](https://hasura.io) dan[dokumentasinya](https://docs.hasura.io).
+Baca lebih lanjut di [hasura.io](https://hasura.io) dan [dokumentasinya](https://docs.hasura.io).
 
 ## Daftar isi
 <!-- markdown-toc **start** - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
-**Table of Contents**
-- [Fitur](#fitur)
-- [Daftar isi](#daftar-isi)
+**Daftar isi**
 - [Mulai dengan cepat:](#mulai-dengan-cepat)
   - [Jalankan dengan satu klik di Heroku](#jalankan-dengan-satu-klik-di-heroku)
   - [Pilihan menjalankan aplikasi dengan satu klik lainnya](#pilihan-menjalankan-aplikasi-dengan-satu-klik-lainnya)
@@ -51,10 +49,10 @@ Baca lebih lanjut di [hasura.io](https://hasura.io) dan[dokumentasinya](https://
 - [Kakas pada sisi klien](#kakas-pada-sisi-klien)
 - [Tambahkan logika bisnis](#tambahkan-logika-bisnis)
   - [Skema jarak jauh](#skema-jarak-jauh)
-  - [Picu _webhooks_ pada _event_ basis data](#picu-_webhooks_-pada-_event_-basis-data)
+  - [Picu _webhooks_ pada _event_ basis data](#picu-webhooks-pada-event-basis-data)
   - [Data turunan atau transformasi data](#data-turunan-atau-transformasi-data)
 - [Demo](#demo)
-  - [Aplikasi _realtime_](#aplikasi-_realtime_)
+  - [Aplikasi _realtime_](#aplikasi-realtime)
   - [Video](#video)
 - [Dukungan & Penyelesaian masalah](#dukungan--penyelesaian-masalah)
 - [Berkontribusi](#berkontribusi)
