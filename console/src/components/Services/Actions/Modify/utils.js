@@ -18,8 +18,15 @@ export const getModifyState = (currentAction, allTypes) => {
   modifyState.webhook = actionDef.webhook;
   modifyState.kind = actionDef.kind;
   modifyState.arguments = actionDef.arguments.map(a => {
-    a.type = actionTypes.findIndex(t => t.name === a.type).toString();
-    return a;
+    const _a = { ...a };
+    let argType = a.type;
+    _a.optional = argType.indexOf('!') === -1;
+    argType = _a.optional ? argType : argType.substring(0, argType.length - 1);
+    const argTypeIndex = actionTypes
+      .findIndex(t => t.name === argType)
+      .toString();
+    _a.type = argTypeIndex;
+    return _a;
   });
   modifyState.arguments.push(defaultArg);
   modifyState.outputType = actionTypes

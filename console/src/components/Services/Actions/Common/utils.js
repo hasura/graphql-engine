@@ -54,10 +54,13 @@ export const sanitiseState = state => {
   newState.name = newState.name.trim();
   newState.webhook = newState.webhook.trim();
   newState.arguments = filterNameLessTypeLess(newState.arguments).map(a => {
-    return {
+    const argType = newState.types[a.type].name;
+    const _arg = {
       ...a,
-      type: newState.types[a.type].name,
+      type: `${argType}${!a.optional ? '!' : ''}`,
     };
+    delete _arg.optional;
+    return _arg;
   });
   newState.outputType = newState.types[newState.outputType]
     ? newState.types[newState.outputType].name

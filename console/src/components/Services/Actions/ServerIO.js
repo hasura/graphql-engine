@@ -14,6 +14,7 @@ import {
   generateCreateActionQuery,
   generateDropActionQuery,
   getFetchActionsQuery,
+  getFetchCustomTypesQuery,
 } from '../../Common/utils/v1QueryUtils';
 import { getConfirmation } from '../../Common/utils/jsUtils';
 import {
@@ -29,6 +30,7 @@ import {
   setFetching as createActionRequestInProgress,
   unsetFetching as createActionRequestComplete,
 } from './Add/reducer';
+import { setCustomTypes } from '../Types/ServerIO';
 import {
   setFetching as modifyActionRequestInProgress,
   unsetFetching as modifyActionRequestComplete,
@@ -41,23 +43,27 @@ export const fetchActions = () => {
       credentials: globalCookiePolicy,
       method: 'POST',
       headers: dataHeaders(getState),
-      body: JSON.stringify(getFetchActionsQuery()),
+      body: JSON.stringify({
+        type: 'bulk',
+        args: [getFetchActionsQuery(), getFetchCustomTypesQuery()],
+      }),
     };
     dispatch({ type: LOADING_ACTIONS });
     return dispatch(requestAction(url, options)).then(
       data => {
-        let consistentActions = data;
+        let consistentActions = data[0];
         const { inconsistentObjects } = getState().metadata;
 
         if (inconsistentObjects.length > 0) {
           consistentActions = filterInconsistentMetadataObjects(
-            data,
+            data[0],
             inconsistentObjects,
             'actions'
           );
         }
 
         dispatch({ type: LOADING_ACTIONS_SUCCESS, data: consistentActions });
+        setCustomTypes(dispatch, data[1]);
 
         return Promise.resolve();
       },

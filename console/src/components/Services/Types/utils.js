@@ -3,6 +3,7 @@ const singularize = kind => {
 };
 
 export const filterNameLessTypeLess = arr => {
+  console.log(arr);
   return arr.filter(item => !!item.name && !!item.type);
 };
 

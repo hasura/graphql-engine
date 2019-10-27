@@ -9,6 +9,13 @@ import {
 import { parseCustomTypes } from './utils';
 import { getFetchCustomTypesQuery } from '../../Common/utils/v1QueryUtils';
 
+export const setCustomTypes = (dispatch, response) => {
+  dispatch({
+    type: LOADING_TYPES_SUCCESS,
+    types: response.length ? parseCustomTypes(response[0].custom_types) : [],
+  });
+};
+
 export const fetchCustomTypes = () => (dispatch, getState) => {
   const url = Endpoints.getSchema;
   const options = {
@@ -20,14 +27,7 @@ export const fetchCustomTypes = () => (dispatch, getState) => {
   dispatch({ type: LOADING_TYPES });
   return dispatch(requestAction(url, options)).then(
     data => {
-      if (data.length) {
-        dispatch({
-          type: LOADING_TYPES_SUCCESS,
-          types: parseCustomTypes(data[0].custom_types),
-        });
-      } else {
-        dispatch({ type: LOADING_TYPES_SUCCESS });
-      }
+      setCustomTypes(dispatch, data);
       return Promise.resolve();
     },
     error => {

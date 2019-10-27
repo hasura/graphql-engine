@@ -2,6 +2,7 @@ export const defaultArg = {
   name: '',
   type: '',
   description: '',
+  optional: false,
 };
 
 export const defaultField = {

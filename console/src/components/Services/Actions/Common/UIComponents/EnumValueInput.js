@@ -14,8 +14,6 @@ const EnumValueInput = ({ value, setValue, removeValue, isLast }) => {
       description: e.target.value,
     });
 
-  console.log(isLast);
-
   const removeIcon = !isLast && (
     <RemoveIcon onClick={removeValue} className={styles.cursorPointer} />
   );

@@ -10,25 +10,10 @@ import ActionRelationships from './Relationships';
 import ActionPermissions from './Permissions';
 import ModifyAction from './Modify';
 import AddAction from './Add';
-import { fetchCustomTypes } from '../Types/ServerIO';
 
 const actionsInit = ({ dispatch }) => {
   return (nextState, replaceState, cb) => {
     Promise.all([dispatch(fetchActions())]).then(
-      () => {
-        cb();
-      },
-      () => {
-        replaceState(globals.urlPrefix);
-        cb();
-      }
-    );
-  };
-};
-
-const typesInit = ({ dispatch }) => {
-  return (nextState, replaceState, cb) => {
-    Promise.all([dispatch(fetchCustomTypes())]).then(
       () => {
         cb();
       },
@@ -45,7 +30,7 @@ const getActionsRouter = (connect, store, composeOnEnterHooks) => {
     <Route
       path="actions"
       component={Container(connect)}
-      onEnter={composeOnEnterHooks([typesInit(store), actionsInit(store)])}
+      onEnter={composeOnEnterHooks([actionsInit(store)])}
       onChange={actionsInit(store)}
     >
       <IndexRedirect to="manage" />

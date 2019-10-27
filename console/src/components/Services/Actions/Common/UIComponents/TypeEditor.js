@@ -28,11 +28,6 @@ const TypeEditor = ({
     );
   }
 
-  let saveFunc;
-  if (type.name) {
-    saveFunc = toggle => toggle();
-  }
-
   let removeFunc;
   if (!isLast) {
     removeFunc = toggle => {
@@ -45,7 +40,6 @@ const TypeEditor = ({
     <ExpandableEditor
       editorExpanded={editorExpanded}
       collapsedLabel={collapsedLabel}
-      saveFunc={saveFunc}
       removeFunc={removeFunc}
       property={`type-editor-${index}`}
       service={service}

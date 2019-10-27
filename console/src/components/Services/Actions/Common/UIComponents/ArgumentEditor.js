@@ -9,7 +9,7 @@ const ArgumentEditor = ({
   allTypes,
   isLast,
 }) => {
-  const { name, type, description } = argument;
+  const { name, type, description, optional } = argument;
 
   const nameOnChange = e => {
     setArgument({
@@ -27,6 +27,13 @@ const ArgumentEditor = ({
     setArgument({
       ...argument,
       description: e.target.value,
+    });
+  };
+
+  const toggleOptional = e => {
+    setArgument({
+      ...argument,
+      optional: e.target.checked,
     });
   };
 
@@ -86,6 +93,15 @@ const ArgumentEditor = ({
           styles.add_mar_right_mid
         }`}
       />
+      <label className={`${styles.add_mar_right_mid} ${styles.cursorPointer}`}>
+        <input
+          type="checkbox"
+          checked={optional}
+          onChange={toggleOptional}
+          className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
+        />
+        Optional
+      </label>
       {removeIcon}
     </div>
   );
