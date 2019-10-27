@@ -22,9 +22,6 @@ const RootFieldEditor = ({
     delete: _delete,
   } = aliases;
 
-  const [queryExpanded, setQueryExpanded] = React.useState(true);
-  const [mutationExpanded, setMutationExpanded] = React.useState(true);
-
   const getDefaultRootField = rfType => {
     if (rfType.includes('select')) {
       return rfType.replace('select', tableName);
@@ -52,50 +49,25 @@ const RootFieldEditor = ({
     </div>
   );
 
-  const getQuerySection = () => {
-    const toggleQueryExpanded = () => setQueryExpanded(!queryExpanded);
-    const chevronClassname = `fa fa-chevron-${
-      queryExpanded ? 'down' : 'right'
-    }`;
+  const getSection = rfType => {
     return (
       <div className={`${styles.add_mar_bottom_mid}`}>
         <div
           className={`${styles.add_mar_bottom_small} ${styles.display_flex} ${
             styles.cursorPointer
           }`}
-          onClick={toggleQueryExpanded}
         >
-          <i className={`${chevronClassname} ${styles.add_mar_right}`} />
-          <b> Query and Subscription </b>
+          <i className={`fa fa-chevron-right ${styles.add_mar_right}`} />
+          <b>{rfType === 'query' ? 'Query and Subscription' : 'Mutation'}</b>
         </div>
-        {queryExpanded && (
+        {rfType === 'query' && (
           <div className={`${styles.add_pad_left} ${styles.add_pad_right}`}>
             {getRow('select', select, selectOnChange)}
             {getRow('select_by_pk', selectByPk, selectByPkOnChange)}
             {getRow('select_aggregate', selectAgg, selectAggOnChange)}
           </div>
         )}
-      </div>
-    );
-  };
-
-  const getMutationSection = () => {
-    const toggleMutationExpanded = () => setMutationExpanded(!mutationExpanded);
-    const chevronClassname = `fa fa-chevron-${
-      mutationExpanded ? 'down' : 'right'
-    }`;
-    return (
-      <div className={`${styles.add_mar_bottom_mid}`}>
-        <div
-          className={`${styles.add_mar_bottom_small} ${styles.display_flex} ${
-            styles.cursorPointer
-          }`}
-          onClick={toggleMutationExpanded}
-        >
-          <i className={`${chevronClassname} ${styles.add_mar_right}`} />
-          <b> Mutation </b>
-        </div>
-        {mutationExpanded && (
+        {rfType === 'mutation' && (
           <div className={`${styles.add_pad_left} ${styles.add_pad_right}`}>
             {getRow('insert', insert, insertOnChange)}
             {getRow('update', update, updateOnChange)}
@@ -109,8 +81,8 @@ const RootFieldEditor = ({
   return (
     <div>
       <div className={styles.add_mar_bottom_mid}>
-        {getQuerySection()}
-        {getMutationSection()}
+        {getSection('query')}
+        {getSection('mutation')}
       </div>
     </div>
   );

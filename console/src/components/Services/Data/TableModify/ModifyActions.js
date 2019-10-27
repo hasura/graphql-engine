@@ -1619,9 +1619,9 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
       const newCustomColumnNames = { ...existingCustomColumnNames };
       let isAliasChanged = false;
       if (alias) {
-        if (alias !== existingCustomColumnNames[alias]) {
+        if (alias !== existingCustomColumnNames[colName]) {
           isAliasChanged = true;
-          newCustomColumnNames[colName] = alias;
+          newCustomColumnNames[colName] = alias.trim();
         }
       } else {
         if (existingCustomColumnNames[colName]) {
