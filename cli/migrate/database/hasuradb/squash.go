@@ -256,6 +256,29 @@ func (q CustomQuery) MergeComputedFields(squashList *database.CustomList) error 
 	return nil
 }
 
+func (q CustomQuery) MergeTableCustomFields(squashList *database.CustomList) error {
+	next := q.Iterate()
+
+	for item, ok := next(); ok; item, ok = next() {
+		g := item.(linq.Group)
+		if g.Key == nil {
+			continue
+		}
+		var prevElem *list.Element
+		for _, val := range g.Group {
+			element := val.(*list.Element)
+			switch element.Value.(type) {
+			case *setTableCustomFieldsV2Input:
+				if prevElem != nil {
+					squashList.Remove(prevElem)
+				}
+				prevElem = element
+			}
+		}
+	}
+	return nil
+}
+
 func (q CustomQuery) MergeTables(squashList *database.CustomList) error {
 	tableTransition := transition.New(&tableConfig{})
 	tableTransition.Initial("new")
@@ -281,7 +304,7 @@ func (q CustomQuery) MergeTables(squashList *database.CustomList) error {
 		for _, val := range g.Group {
 			element := val.(*list.Element)
 			switch args := element.Value.(type) {
-			case *trackTableInput:
+			case *trackTableInput, *trackTableV2Input:
 				err := tableTransition.Trigger("track_table", &tblCfg, nil)
 				if err != nil {
 					return err
@@ -376,6 +399,18 @@ func (q CustomQuery) MergeTables(squashList *database.CustomList) error {
 			case *dropComputedFieldInput:
 				if tblCfg.GetState() == "untracked" {
 					return fmt.Errorf("cannot drop computed field %s when table %s on schema %s is untracked", args.Name, tblCfg.name, tblCfg.schema)
+				}
+				prevElems = append(prevElems, element)
+			case *setTableCustomFieldsV2Input:
+				if tblCfg.GetState() == "untracked" {
+					return fmt.Errorf("cannot set custom fields when table %s on schema %s is untracked", tblCfg.name, tblCfg.schema)
+				}
+				if len(prevElems) != 0 {
+					if track, ok := prevElems[0].Value.(*trackTableV2Input); ok {
+						track.Configuration = args.tableConfiguration
+						squashList.Remove(element)
+						continue
+					}
 				}
 				prevElems = append(prevElems, element)
 			}
@@ -907,6 +942,25 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 		ret <- err
 	}
 
+	tableCustomFieldGroup := CustomQuery(linq.FromIterable(l).GroupByT(
+		func(element *list.Element) interface{} {
+			switch args := element.Value.(type) {
+			case *setTableCustomFieldsV2Input:
+				return tableMap{
+					args.Table.Name,
+					args.Table.Schema,
+				}
+			}
+			return nil
+		}, func(element *list.Element) *list.Element {
+			return element
+		},
+	))
+	err = tableCustomFieldGroup.MergeTableCustomFields(l)
+	if err != nil {
+		ret <- err
+	}
+
 	tableGroups := CustomQuery(linq.FromIterable(l).GroupByT(
 		func(element *list.Element) interface{} {
 			switch args := element.Value.(type) {
@@ -915,7 +969,17 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 					args.Table.Name,
 					args.Table.Schema,
 				}
+			case *trackTableV2Input:
+				return tableMap{
+					args.Table.Name,
+					args.Table.Schema,
+				}
 			case *unTrackTableInput:
+				return tableMap{
+					args.Table.Name,
+					args.Table.Schema,
+				}
+			case *setTableCustomFieldsV2Input:
 				return tableMap{
 					args.Table.Name,
 					args.Table.Schema,
@@ -1118,8 +1182,14 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 		switch args := e.Value.(type) {
 		case *trackTableInput:
 			q.Type = trackTable
+		case *trackTableV2Input:
+			q.Version = v2
+			q.Type = trackTable
 		case *unTrackTableInput:
 			q.Type = untrackTable
+		case *setTableCustomFieldsV2Input:
+			q.Version = v2
+			q.Type = setTableCustomFields
 		case *createObjectRelationshipInput:
 			q.Type = createObjectRelationship
 		case *createArrayRelationshipInput:

@@ -26,97 +26,114 @@ func (h *HasuraInterfaceBulk) ResetArgs() {
 }
 
 type HasuraInterfaceQuery struct {
-	Type requestTypes `json:"type" yaml:"type"`
-	Args interface{}  `json:"args" yaml:"args"`
+	Type    requestTypes    `json:"type" yaml:"type"`
+	Version metadataVersion `json:"version,omitempty" yaml:"version,omitempty"`
+	Args    interface{}     `json:"args" yaml:"args"`
 }
 
+type metadataVersion int
+
+const (
+	v1 metadataVersion = 1
+	v2                 = 2
+)
+
 type newHasuraIntefaceQuery struct {
-	Type requestTypes `json:"type" yaml:"type"`
-	Args interface{}  `json:"args" yaml:"args"`
+	Type    requestTypes    `json:"type" yaml:"type"`
+	Version metadataVersion `json:"version,omitempty" yaml:"version,omitempty"`
+	Args    interface{}     `json:"args" yaml:"args"`
 }
 
 func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
-	var q struct {
-		Type requestTypes `json:"type"`
-		Args interface{}  `json:"args"`
-	}
+	type t newHasuraIntefaceQuery
+	var q t
 	if err := json.Unmarshal(b, &q); err != nil {
 		return err
 	}
-	h.Type = q.Type
+	if q.Version == 0 {
+		q.Version = v1
+	}
 	argBody, err := json.Marshal(q.Args)
 	if err != nil {
 		return err
 	}
-	switch h.Type {
+	switch q.Type {
 	case trackTable, addExistingTableOrView:
-		h.Args = &trackTableInput{}
+		switch q.Version {
+		case v2:
+			q.Args = &trackTableV2Input{}
+		default:
+			q.Args = &trackTableInput{}
+		}
+	case setTableCustomFields:
+		q.Args = &setTableCustomFieldsV2Input{}
 	case untrackTable:
-		h.Args = &unTrackTableInput{}
+		q.Args = &unTrackTableInput{}
 	case createObjectRelationship:
-		h.Args = &createObjectRelationshipInput{}
+		q.Args = &createObjectRelationshipInput{}
 	case createArrayRelationship:
-		h.Args = &createArrayRelationshipInput{}
+		q.Args = &createArrayRelationshipInput{}
 	case setRelationshipComment:
-		h.Args = &setRelationshipCommentInput{}
+		q.Args = &setRelationshipCommentInput{}
 	case dropRelationship:
-		h.Args = &dropRelationshipInput{}
+		q.Args = &dropRelationshipInput{}
 	case createInsertPermission:
-		h.Args = &createInsertPermissionInput{}
+		q.Args = &createInsertPermissionInput{}
 	case dropInsertPermission:
-		h.Args = &dropInsertPermissionInput{}
+		q.Args = &dropInsertPermissionInput{}
 	case createSelectPermission:
-		h.Args = &createSelectPermissionInput{}
+		q.Args = &createSelectPermissionInput{}
 	case dropSelectPermission:
-		h.Args = &dropSelectPermissionInput{}
+		q.Args = &dropSelectPermissionInput{}
 	case createUpdatePermission:
-		h.Args = &createUpdatePermissionInput{}
+		q.Args = &createUpdatePermissionInput{}
 	case dropUpdatePermission:
-		h.Args = &dropUpdatePermissionInput{}
+		q.Args = &dropUpdatePermissionInput{}
 	case createDeletePermission:
-		h.Args = &createDeletePermissionInput{}
+		q.Args = &createDeletePermissionInput{}
 	case dropDeletePermission:
-		h.Args = &dropDeletePermissionInput{}
+		q.Args = &dropDeletePermissionInput{}
 	case trackFunction:
-		h.Args = &trackFunctionInput{}
+		q.Args = &trackFunctionInput{}
 	case unTrackFunction:
-		h.Args = &unTrackFunctionInput{}
+		q.Args = &unTrackFunctionInput{}
 	case createEventTrigger:
-		h.Args = &createEventTriggerInput{}
+		q.Args = &createEventTriggerInput{}
 	case deleteEventTrigger:
-		h.Args = &deleteEventTriggerInput{}
+		q.Args = &deleteEventTriggerInput{}
 	case addRemoteSchema:
-		h.Args = &addRemoteSchemaInput{}
+		q.Args = &addRemoteSchemaInput{}
 	case removeRemoteSchema:
-		h.Args = &removeRemoteSchemaInput{}
+		q.Args = &removeRemoteSchemaInput{}
 	case createQueryCollection:
-		h.Args = &createQueryCollectionInput{}
+		q.Args = &createQueryCollectionInput{}
 	case dropQueryCollection:
-		h.Args = &dropQueryCollectionInput{}
+		q.Args = &dropQueryCollectionInput{}
 	case addQueryToCollection:
-		h.Args = &addQueryToCollectionInput{}
+		q.Args = &addQueryToCollectionInput{}
 	case dropQueryFromCollection:
-		h.Args = &dropQueryFromCollectionInput{}
+		q.Args = &dropQueryFromCollectionInput{}
 	case addCollectionToAllowList:
-		h.Args = &addCollectionToAllowListInput{}
+		q.Args = &addCollectionToAllowListInput{}
 	case dropCollectionFromAllowList:
-		h.Args = &dropCollectionFromAllowListInput{}
+		q.Args = &dropCollectionFromAllowListInput{}
 	case replaceMetadata:
-		h.Args = &replaceMetadataInput{}
+		q.Args = &replaceMetadataInput{}
 	case clearMetadata:
-		h.Args = &clearMetadataInput{}
+		q.Args = &clearMetadataInput{}
 	case runSQL:
-		h.Args = &runSQLInput{}
+		q.Args = &runSQLInput{}
 	case addComputedField:
-		h.Args = &addComputedFieldInput{}
+		q.Args = &addComputedFieldInput{}
 	case dropComputedField:
-		h.Args = &dropComputedFieldInput{}
+		q.Args = &dropComputedFieldInput{}
 	default:
 		return fmt.Errorf("cannot squash type %s", h.Type)
 	}
-	if err := json.Unmarshal(argBody, &h.Args); err != nil {
+	if err := json.Unmarshal(argBody, &q.Args); err != nil {
 		return err
 	}
+	*h = newHasuraIntefaceQuery(q)
 	return nil
 }
 
@@ -235,6 +252,7 @@ type requestTypes string
 const (
 	trackTable                  requestTypes = "track_table"
 	addExistingTableOrView                   = "add_existing_table_or_view"
+	setTableCustomFields                     = "set_table_custom_fields"
 	untrackTable                             = "untrack_table"
 	trackFunction                            = "track_function"
 	unTrackFunction                          = "untrack_function"
@@ -358,6 +376,21 @@ func (t *trackTableInput) UnmarshalJSON(b []byte) error {
 		Schema: ts.Schema,
 	}
 	return nil
+}
+
+type tableConfiguration struct {
+	CustomRootFields  map[string]string `json:"custom_root_fields" yaml:"custom_root_fields"`
+	CustomColumnNames map[string]string `json:"custom_column_names" yaml:"custom_column_names"`
+}
+
+type trackTableV2Input struct {
+	Table         tableSchema        `json:"table" yaml:"table"`
+	Configuration tableConfiguration `json:"configuration" yaml:"configuration"`
+}
+
+type setTableCustomFieldsV2Input struct {
+	Table tableSchema `json:"table" yaml:"table"`
+	tableConfiguration
 }
 
 type unTrackTableInput struct {
