@@ -20,12 +20,18 @@ export const getModifyState = (currentAction, allTypes) => {
   modifyState.arguments = actionDef.arguments.map(a => {
     const _a = { ...a };
     let argType = a.type;
+    console.log('====================');
+    console.log(actionTypes);
+    console.log(argType);
     _a.optional = argType.indexOf('!') === -1;
     argType = _a.optional ? argType : argType.substring(0, argType.length - 1);
+    console.log(argType);
     const argTypeIndex = actionTypes
       .findIndex(t => t.name === argType)
       .toString();
     _a.type = argTypeIndex;
+    console.log(argTypeIndex);
+    console.log('====================');
     return _a;
   });
   modifyState.arguments.push(defaultArg);

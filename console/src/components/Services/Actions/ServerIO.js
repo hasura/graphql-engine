@@ -51,6 +51,8 @@ export const fetchActions = () => {
     dispatch({ type: LOADING_ACTIONS });
     return dispatch(requestAction(url, options)).then(
       data => {
+        setCustomTypes(dispatch, data[1]);
+
         let consistentActions = data[0];
         const { inconsistentObjects } = getState().metadata;
 
@@ -63,7 +65,6 @@ export const fetchActions = () => {
         }
 
         dispatch({ type: LOADING_ACTIONS_SUCCESS, data: consistentActions });
-        setCustomTypes(dispatch, data[1]);
 
         return Promise.resolve();
       },

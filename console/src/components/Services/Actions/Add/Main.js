@@ -64,9 +64,6 @@ const AddAction = ({
     newTypes = newTypes.map(t => {
       if (t.kind === 'scalar' || t.kind === 'enum' || t.isInbuilt) return t;
       const _t = { ...t };
-      if (t.kind === 'object') {
-        _t.arguments = _t.arguments.filter(a => a.type != index);
-      }
       _t.fields = _t.fields.filter(f => f.type != index);
       return _t;
     });

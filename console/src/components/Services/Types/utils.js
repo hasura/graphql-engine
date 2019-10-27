@@ -108,7 +108,9 @@ export const parseCustomTypes = customTypesServer => {
 
 export const getActionTypes = (actionDef, allTypes) => {
   return allTypes.filter(t => {
-    if (actionDef.arguments.find(a => a.type === t.name)) return true;
+    // TODO
+    if (actionDef.arguments.find(a => a.type.indexOf(t.name) === 0))
+      return true;
     if (actionDef.output_type === t.name) return true;
     return false;
   });
