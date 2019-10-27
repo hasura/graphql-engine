@@ -33,6 +33,7 @@ const defaultPermissionsState = {
   limitEnabled: true,
   bulkSelect: [],
   applySamePermissions: [],
+  isEditing: false,
 };
 
 const defaultPresetsState = {

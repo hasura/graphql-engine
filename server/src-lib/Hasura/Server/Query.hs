@@ -1,5 +1,6 @@
 module Hasura.Server.Query where
 
+import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -11,6 +12,7 @@ import qualified Network.HTTP.Client                as HTTP
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
+import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
@@ -44,6 +46,11 @@ data RQLQueryV1
   | RQDropRelationship !DropRel
   | RQSetRelationshipComment !SetRelComment
   | RQRenameRelationship !RenameRel
+
+  -- computed fields related
+
+  | RQAddComputedField !AddComputedField
+  | RQDropComputedField !DropComputedField
 
   | RQCreateInsertPermission !CreateInsPerm
   | RQCreateSelectPermission !CreateSelPerm
@@ -139,10 +146,9 @@ $(deriveJSON
 
 data RunCtx
   = RunCtx
-  { _rcUserInfo      :: !UserInfo
-  , _rcHttpMgr       :: !HTTP.Manager
-  , _rcSqlGenCtx     :: !SQLGenCtx
-  , _rcSystemDefined :: !SystemDefined
+  { _rcUserInfo  :: !UserInfo
+  , _rcHttpMgr   :: !HTTP.Manager
+  , _rcSqlGenCtx :: !SQLGenCtx
   }
 
 newtype Run a
@@ -165,9 +171,6 @@ instance HasHttpManager Run where
 
 instance HasSQLGenCtx Run where
   askSQLGenCtx = asks _rcSqlGenCtx
-
-instance HasSystemDefined Run where
-  askSystemDefined = asks _rcSystemDefined
 
 fetchLastUpdate :: Q.TxE QErr (Maybe (InstanceId, UTCTime))
 fetchLastUpdate = do
@@ -193,7 +196,7 @@ peelRun
   -> PGExecCtx
   -> Run a
   -> ExceptT QErr IO (a, SchemaCache)
-peelRun sc runCtx@(RunCtx userInfo _ _ _) pgExecCtx (Run m) =
+peelRun sc runCtx@(RunCtx userInfo _ _) pgExecCtx (Run m) =
   runLazyTx pgExecCtx $ withUserInfo userInfo lazyTx
   where
     lazyTx = runReaderT (runStateT m sc) runCtx
@@ -204,10 +207,14 @@ runQuery
   -> UserInfo -> SchemaCache -> HTTP.Manager
   -> SQLGenCtx -> SystemDefined -> RQLQuery -> m (EncJSON, SchemaCache)
 runQuery pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined query = do
-  resE <- liftIO $ runExceptT $ peelRun sc runCtx pgExecCtx $ runQueryM query
+  resE <- runQueryM query
+    & runHasSystemDefinedT systemDefined
+    & peelRun sc runCtx pgExecCtx
+    & runExceptT
+    & liftIO
   either throwError withReload resE
   where
-    runCtx = RunCtx userInfo hMgr sqlGenCtx systemDefined
+    runCtx = RunCtx userInfo hMgr sqlGenCtx
     withReload r = do
       when (queryNeedsReload query) $ do
         e <- liftIO $ runExceptT $ runLazyTx pgExecCtx
@@ -229,6 +236,9 @@ queryNeedsReload (RQV1 qi) = case qi of
   RQDropRelationship  _           -> True
   RQSetRelationshipComment  _     -> False
   RQRenameRelationship _          -> True
+
+  RQAddComputedField _            -> True
+  RQDropComputedField _           -> True
 
   RQCreateInsertPermission _      -> True
   RQCreateSelectPermission _      -> True
@@ -310,6 +320,9 @@ runQueryM rq =
       RQDropRelationship  q        -> runDropRel q
       RQSetRelationshipComment  q  -> runSetRelComment q
       RQRenameRelationship q       -> runRenameRel q
+
+      RQAddComputedField q        -> runAddComputedField q
+      RQDropComputedField q       -> runDropComputedField q
 
       RQCreateInsertPermission q   -> runCreatePerm q
       RQCreateSelectPermission q   -> runCreatePerm q
