@@ -1,6 +1,6 @@
 # Contribuer à Hasura graphql-engine
 
-*Premièrement*: Si vous êtes incertain ou avez des craintes au sujet de quoi que ce soit,
+*Premièrement*: si vous êtes incertain ou avez des craintes au sujet de quoi que ce soit,
 n'hésitez pas à nous poser des questions sur le [Serveur Discord](https://discordapp.com/invite/hasura) dans le canal #contrib. Vous pouvez aussi simplement soumettre une issue ou pull request malgré tout.
 Pas d'inquiétude : personne ne vous grondera alors que vous faites de votre mieux.
 La pire chose qui pourrait vous arriver serait que l'on vous demande poliment de modifier quelque chose.
