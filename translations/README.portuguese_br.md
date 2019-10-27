@@ -54,7 +54,7 @@ Leia mais em [hasura.io](https://hasura.io) e na [documentação](https://docs.h
   - [Dados derivados ou transformações de dados](#dados-derivados-ou-transformações-de-dados)
 - [Demos](#demos)
   - [Aplicações em tempo real](#aplicações-em-tempo-real)
-  - [Vídeos](#videos)
+  - [Vídeos](#vídeos)
 - [Suporte e Solução de problemas](#suporte-e-solução-de-problemas)
 - [Contribuindo](#contribuindo)
 - [Recursos da marca](#recursos-da-marca)
@@ -102,7 +102,7 @@ Você também pode mesclar esquemas remotos do GraphQL e fornecer uma API GraphQ
 
 ![Hasura GraphQL Engine architecture](/assets/hasura-arch.svg)
 
-## Ferramentas do cliente
+## Ferramentas do client
 
 Hasura trabalha com qualquer client GraphQL. Recomendamos o uso do [Apollo Client](https://github.com/apollographql/apollo-client). Veja [awesome-graphql](https://github.com/chentsulin/awesome-graphql) para uma lista de clients.
 
