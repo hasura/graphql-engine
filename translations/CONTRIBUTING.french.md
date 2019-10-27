@@ -16,9 +16,9 @@ nous puissions intégrer ou traiter vos contributions augmenteront.
 [hasura/graphql-engine](https://github.com/hasura/graphql-engine) est un mono-repo
 divisé en 3 composants, chacun ayant son propre guide de contribution:
 
-1. [Server (Haskell)](server/CONTRIBUTING.md)
-2. [CLI (Go)](cli/CONTRIBUTING.md)
-3. [Console (JavaScript)](console/README.md#contributing-to-hasura-console)
+1. [Server (Haskell)](../server/CONTRIBUTING.md)
+2. [CLI (Go)](../cli/CONTRIBUTING.md)
+3. [Console (JavaScript)](../console/README.md#contributing-to-hasura-console)
 
 Chacun de ces trois composants possède une version unique, désignée soit par le tag git, soit par une
 combinaison du nom de la branche et du SHA de commit git.
@@ -54,11 +54,11 @@ N'importe quoi pouvant aider la communauté ou les utilisateurs du GraphQL Engin
 peut faire partie de cette section. 
 Nous avons identifié :
 
-- [boilerplates](community/boilerplates)
+- [boilerplates](../community/boilerplates)
 
-- [sample-apps](community/sample-apps) 
+- [sample-apps](../community/sample-apps) 
 
-- [outils](community/tools) 
+- [outils](../community/tools) 
 
 N'hésitez pas à soumettre une pull request si vous avez quelque chose à ajouter, même ce qui n'est pas en rapport avec les trois sections mentionnées.
 
