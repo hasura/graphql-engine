@@ -1,19 +1,18 @@
 # nodejs-postgres-graphql
 
-> Sample app to demonstrate integration of GraphQL to existing node server, with postgres as database, by using Hasura GraphQL engine on the same postgres database.
+> Sample app to demonstrate integration of GraphQL to an existing nodejs backend, with postgres as database, by using the Hasura GraphQL engine over the same postgres database.
 
 [![Edit hasura-to-node-be](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/hasura-to-node-be-nflye?fontsize=14)
 
-**please configure:**
->  `PORT` - port to run the process
+**please configure the following in the process environment variables:**
+>  `PORT` - to run the process
 
-> `HASURA_SECRET` - `HASURA_GRAPHQL_ADMIN_SECRET` configured in Settings of Heroku Console
+> `HASURA_SECRET` - `HASURA_GRAPHQL_ADMIN_SECRET` configured in `Settings` of Heroku console
 
 >  `DB_URI` - existing postgres database URI
 
-> `GQL_URI` - graphql url from Hasura console
+> `GQL_URI` - GraphQL url from Hasura console
 
-**in process environment variables**
 
 ## Running the App
 
@@ -56,7 +55,7 @@ Click on the `Open app` button in heroku console to open the Hasura app console.
 
 
 - Run the app:
-`yarn start`
+>`yarn start`
 
 - Test the app:
 Visit [http://localhost:8000/graphql](http://localhost:8000/graphql) to view the graphql playground
