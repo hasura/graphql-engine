@@ -28,19 +28,19 @@ runApp (HGEOptionsG rci hgeCmd) =
     HCExport -> do
       initCtx <- initialiseCtx hgeCmd rci Nothing mkHttpLog Nothing
       res <- runTx' initCtx fetchMetadata
-      either (liftIO . printErrJExit) (liftIO . printJSON) res
+      either printErrJExit printJSON res
 
     HCClean -> do
       initCtx <- initialiseCtx hgeCmd rci Nothing mkHttpLog Nothing
       res <- runTx' initCtx cleanCatalog
-      either (liftIO . printErrJExit) (const cleanSuccess) res
+      either printErrJExit (const cleanSuccess) res
 
     HCExecute -> do
       initCtx <- initialiseCtx hgeCmd rci Nothing mkHttpLog Nothing
       queryBs <- liftIO BL.getContents
       let sqlGenCtx = SQLGenCtx False
       res <- runAsAdmin (_icPgPool initCtx) sqlGenCtx $ execQuery queryBs
-      either (liftIO . printErrJExit) (liftIO . BLC.putStrLn) res
+      either printErrJExit (liftIO . BLC.putStrLn) res
 
     HCVersion -> liftIO $ putStrLn $ "Hasura GraphQL Engine: " ++ T.unpack currentVersion
   where

@@ -183,14 +183,14 @@ cleanLoggerCtx =
   FL.rmLoggerSet . _lcLoggerSet
 
 newtype Logger =
-  Logger { unLogger :: forall a. (ToEngineLog a) => a -> IO () }
+  Logger { unLogger :: forall a m. (ToEngineLog a, MonadIO m) => a -> m () }
 
 mkLogger :: LoggerCtx -> Logger
 mkLogger (LoggerCtx loggerSet serverLogLevel timeGetter enabledLogTypes callbackFn) = Logger $ \l -> do
-  localTime <- timeGetter
+  localTime <- liftIO timeGetter
   let (logLevel, logTy, logDet) = toEngineLog l
       logStr = EngineLog localTime logLevel logTy logDet
   -- send all logs (log-types and levels) to the callback function
-  forM_ callbackFn $ \func -> func logStr
+  forM_ callbackFn $ \func -> liftIO $ func logStr
   when (logLevel >= serverLogLevel && isLogTypeEnabled enabledLogTypes logTy) $
-    FL.pushLogStrLn loggerSet $ FL.toLogStr (J.encode logStr)
+    liftIO $ FL.pushLogStrLn loggerSet $ FL.toLogStr (J.encode logStr)

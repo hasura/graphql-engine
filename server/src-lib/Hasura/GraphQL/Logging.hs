@@ -56,4 +56,4 @@ logGraphqlQuery
   => L.Logger
   -> QueryLog
   -> m ()
-logGraphqlQuery logger = liftIO . L.unLogger logger
+logGraphqlQuery logger = L.unLogger logger

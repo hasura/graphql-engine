@@ -99,7 +99,7 @@ startSchemaSync sqlGenCtx pool logger httpMgr cacheRef instanceId cacheInitTime 
   where
     logThreadStarted threadType threadId =
       let msg = T.pack (show threadType) <> " thread started"
-      in liftIO $ unLogger logger $
+      in unLogger logger $
          StartupLog LevelInfo "schema-sync" $
            object [ "instance_id" .= getInstanceId instanceId
                   , "thread_id" .= show threadId

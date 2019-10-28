@@ -170,7 +170,7 @@ mkUserInfoFromResp logger url method statusCode respBody
       logWebHookResp L.LevelError $ Just respBody
 
     logWebHookResp logLevel mResp =
-      liftIO $ L.unLogger logger $ WebHookLog logLevel (Just statusCode)
+      L.unLogger logger $ WebHookLog logLevel (Just statusCode)
         url method Nothing $ fmap (bsToTxt . BL.toStrict) mResp
 
 userInfoFromAuthHook
@@ -204,7 +204,7 @@ userInfoFromAuthHook logger manager hook reqHeaders = do
                object ["headers" J..= postHdrsPayload]
 
     logAndThrow err = do
-      liftIO $ L.unLogger logger $
+      L.unLogger logger $
         WebHookLog L.LevelError Nothing urlT method
         (Just $ HttpException err) Nothing
       throw500 "Internal Server Error"

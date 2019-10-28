@@ -51,11 +51,11 @@ import           Hasura.Server.Utils
 import qualified Database.PG.Query          as Q
 
 
-printErrExit :: forall a . String -> IO a
-printErrExit = (>> exitFailure) . putStrLn
+printErrExit :: (MonadIO m) => forall a . String -> m a
+printErrExit = liftIO . (>> exitFailure) . putStrLn
 
-printErrJExit :: A.ToJSON a => forall b . a -> IO b
-printErrJExit = (>> exitFailure) . printJSON
+printErrJExit :: (A.ToJSON a, MonadIO m) => forall b . a -> m b
+printErrJExit = liftIO . (>> exitFailure) . printJSON
 
 parseHGECommand :: Parser RawHGECommand
 parseHGECommand =
@@ -111,11 +111,11 @@ parseArgs = do
            )
     hgeOpts = HGEOptionsG <$> parseRawConnInfo <*> parseHGECommand
 
-printJSON :: (A.ToJSON a) => a -> IO ()
-printJSON = BLC.putStrLn . A.encode
+printJSON :: (A.ToJSON a, MonadIO m) => a -> m ()
+printJSON = liftIO . BLC.putStrLn . A.encode
 
-printYaml :: (A.ToJSON a) => a -> IO ()
-printYaml = BC.putStrLn . Y.encode
+printYaml :: (A.ToJSON a, MonadIO m) => a -> m ()
+printYaml = liftIO . BC.putStrLn . Y.encode
 
 mkPGLogger :: Logger -> Q.PGLogger
 mkPGLogger (Logger logger) (Q.PLERetryMsg msg) =
@@ -241,7 +241,7 @@ initialiseCtx hgeCmd rci logCallback httpLogger respLogger = do
       l@(Loggers _ logger pgLogger _ _) <- mkLoggers soEnabledLogTypes soLogLevel
       let sqlGenCtx = SQLGenCtx soStringifyNum
       -- log postgres connection info
-      liftIO $ unLogger logger $ connInfoToLog connInfo
+      unLogger logger $ connInfoToLog connInfo
       pool <- liftIO $ Q.initPGPool connInfo soConnParams pgLogger
 
       -- safe init catalog
@@ -256,7 +256,7 @@ initialiseCtx hgeCmd rci logCallback httpLogger respLogger = do
 
   -- get the unique db id
   eDbId <- liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) getDbId
-  dbId <- either (liftIO . printErrJExit) return eDbId
+  dbId <- either printErrJExit return eDbId
 
   return $ InitCtx httpManager instanceId dbId loggers connInfo pool
   where
@@ -264,11 +264,11 @@ initialiseCtx hgeCmd rci logCallback httpLogger respLogger = do
       currentTime <- liftIO getCurrentTime
       -- initialise the catalog
       initRes <- runAsAdmin pool sqlGenCtx $ initCatalogSafe currentTime
-      either (liftIO . printErrJExit) (liftIO . logger . mkGenericStrLog LevelInfo "db_init") initRes
+      either printErrJExit (logger . mkGenericStrLog LevelInfo "db_init") initRes
 
       -- migrate catalog if necessary
       migRes <- runAsAdmin pool sqlGenCtx $ migrateCatalog currentTime
-      either (liftIO . printErrJExit) (liftIO . logger . mkGenericStrLog LevelInfo "db_migrate") migRes
+      either printErrJExit (logger . mkGenericStrLog LevelInfo "db_migrate") migRes
 
     procConnInfo =
       either (printErrExit . connInfoErrModifier) return $ mkConnInfo rci
@@ -300,13 +300,13 @@ runHGEServer so@(ServeOptions port host _ isoL mAdminSecret mAuthHook mJwtSecret
 
   initTime <- liftIO Clock.getCurrentTime
   -- log serve options
-  liftIO $ unLogger logger $ serveOptsToLog so
+  unLogger logger $ serveOptsToLog so
   --hloggerCtx  <- mkLoggerCtx (defaultLoggerSettings False serverLogLevel) enabledLogs logCallback
 
-  authModeRes <- liftIO $ runExceptT $ mkAuthMode mAdminSecret mAuthHook mJwtSecret
+  authModeRes <- runExceptT $ mkAuthMode mAdminSecret mAuthHook mJwtSecret
                                           mUnAuthRole httpManager loggerCtx
 
-  authMode <- either (liftIO . printErrExit . T.unpack) return authModeRes
+  authMode <- either (printErrExit . T.unpack) return authModeRes
 
 
   (app, cacheRef, cacheInitTime) <-
@@ -336,7 +336,7 @@ runHGEServer so@(ServeOptions port host _ isoL mAdminSecret mAuthHook mJwtSecret
   prepareEvents pgPool logger
   eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds evFetchMilliSec
   let scRef = _scrCache cacheRef
-  liftIO $ unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
+  unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
   void $ liftIO $ C.forkIO $ processEventQueue loggerCtx logEnvHeaders
     httpManager pgPool scRef eventEngineCtx
 
@@ -345,12 +345,12 @@ runHGEServer so@(ServeOptions port host _ isoL mAdminSecret mAuthHook mJwtSecret
 
   -- start a background thread for telemetry
   when enableTelemetry $ do
-    liftIO $ unLogger logger $ mkGenericStrLog LevelInfo "telemetry" telemetryNotice
+    unLogger logger $ mkGenericStrLog LevelInfo "telemetry" telemetryNotice
     void $ liftIO $ C.forkIO $ runTelemetry logger httpManager scRef dbId instanceId
 
   finishTime <- liftIO Clock.getCurrentTime
   let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime
-  liftIO $ unLogger logger $ mkGenericLog LevelInfo "server" $
+  unLogger logger $ mkGenericLog LevelInfo "server" $
     StartupTimeInfo "starting API server" apiInitTime
   liftIO $ Warp.runSettings warpSettings app
 
@@ -358,7 +358,7 @@ runHGEServer so@(ServeOptions port host _ isoL mAdminSecret mAuthHook mJwtSecret
     prepareEvents pool (Logger logger) = do
       liftIO $ logger $ mkGenericStrLog LevelInfo "event_triggers" "preparing data"
       res <- runTx pool unlockAllEvents
-      either (liftIO . printErrJExit) return res
+      either printErrJExit return res
 
     getFromEnv :: (Read a) => a -> String -> IO a
     getFromEnv defaults env = do

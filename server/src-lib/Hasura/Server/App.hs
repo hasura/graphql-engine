@@ -78,13 +78,12 @@ data SchemaCacheRef
   , _scrOnChange :: IO ()
   }
 
-getSCFromRef :: SchemaCacheRef -> IO SchemaCache
-getSCFromRef scRef = fst <$> readIORef (_scrCache scRef)
+getSCFromRef :: (MonadIO m) => SchemaCacheRef -> m SchemaCache
+getSCFromRef scRef = liftIO (readIORef (_scrCache scRef)) >>= return . fst
 
 logInconsObjs :: (MonadIO m) => L.Logger -> [InconsistentMetadataObj] -> m ()
 logInconsObjs logger objs =
-  unless (null objs) $
-    liftIO $ L.unLogger logger $ mkInconsMetadataLog objs
+  unless (null objs) $ L.unLogger logger $ mkInconsMetadataLog objs
 
 withSCUpdate
   :: (MonadIO m, MonadError e m)
@@ -153,12 +152,6 @@ data APIHandler a
   | AHPost !(a -> Handler APIResp)
 
 
-postGql :: (Text, Text)
-postGql = ("/v1/graphql", "POST")
-
-postV1q :: (Text, Text)
-postV1q = ("/v1/query", "POST")
-
 mkGetHandler :: Handler APIResp -> APIHandler ()
 mkGetHandler = AHGet
 
@@ -217,7 +210,7 @@ logSuccess
   -> [N.Header]
   -> m ()
 logSuccess logger httpLogger userInfoM reqId httpReq res qTime headers =
-  liftIO $ L.unLogger logger $ httpLogger $
+  L.unLogger logger $ httpLogger $
     mkHttpAccessLogContext userInfoM reqId httpReq res qTime headers
 
 logError
@@ -232,7 +225,7 @@ logError
   -> [N.Header]
   -> m ()
 logError logger httpLogger userInfoM reqId httpReq req qErr headers =
-  liftIO $ L.unLogger logger $ httpLogger $
+  L.unLogger logger $ httpLogger $
     mkHttpErrorLogContext userInfoM reqId httpReq qErr req Nothing headers
 
 class (Monad m) => HasuraSpockAction m where
@@ -658,7 +651,6 @@ httpApp
   -> Maybe ConsoleRenderer
   -> SpockT m ()
 httpApp corsCfg serverCtx httpLogger _ enableConsole consoleAssetsDir enableTelemetry _ metadataMiddleware consoleRenderer = do
-
 
     -- cors middleware
     unless (isCorsDisabled corsCfg) $
