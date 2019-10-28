@@ -1,0 +1,78 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE author(
+        id SERIAL PRIMARY KEY,
+        first_name TEXT NOT NULL,
+        last_name TEXT
+      );
+
+      INSERT INTO author (first_name, last_name)
+      VALUES ('Roger', 'Chris'), ('Daniel', NULL);
+
+      CREATE TABLE article(
+        id SERIAL PRIMARY KEY,
+        title TEXT NOT NULL,
+        content TEXT,
+        author_id INTEGER NOT NULL REFERENCES author(id)
+      );
+
+      INSERT INTO article (title, content, author_id)
+      VALUES
+        ('Article 1', 'Content for Article 1', 1),
+        ('Article 2', 'Content for Article 2', 2),
+        ('Article 3', 'Content for Article 3', 2);
+
+      CREATE FUNCTION fetch_articles(search text, author_row author)
+      RETURNS SETOF article AS $$
+        SELECT *
+        FROM article
+        WHERE
+          ( title ilike ('%' || search || '%')
+            OR content ilike ('%' || search || '%')
+          ) AND author_id = author_row.id
+      $$ LANGUAGE sql STABLE;
+
+      CREATE FUNCTION fetch_articles_volatile(search text, author_row author)
+      RETURNS SETOF article AS $$
+        SELECT *
+        FROM article
+        WHERE
+          ( title ilike ('%' || search || '%')
+            OR content ilike ('%' || search || '%')
+          ) AND author_id = author_row.id
+      $$ LANGUAGE sql VOLATILE;
+
+      CREATE FUNCTION full_name(author)
+      RETURNS TEXT AS $$
+        DECLARE
+          first_name text;
+          last_name text;
+          full_name text;
+        BEGIN
+          first_name := $1.first_name;
+          last_name := $1.last_name;
+          IF last_name IS NULL THEN
+            full_name := first_name;
+          ELSE full_name := first_name || ' ' || last_name;
+          END IF;
+          RETURN full_name;
+        END;
+      $$ LANGUAGE plpgsql STABLE;
+
+      CREATE FUNCTION hello_world()
+      RETURNS TEXT AS $$
+        SELECT 'Hello, World!'::text
+      $$ LANGUAGE sql STABLE;
+
+- type: track_table
+  args:
+    name: author
+    schema: public
+
+- type: track_table
+  args:
+    name: article
+    schema: public

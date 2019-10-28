@@ -1,0 +1,10 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      DROP FUNCTION fetch_articles(text, author);
+      DROP FUNCTION full_name(author);
+      DROP TABLE article;
+      DROP TABLE author;
+    cascade: true
