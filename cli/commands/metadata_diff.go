@@ -34,10 +34,12 @@ func newMetadataDiffCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	metadataDiffCmd := &cobra.Command{
 		Use:   "diff [file1] [file2]",
-		Short: "Show a highlighted diff of Hasura metadata",
-		Long: `Show changes between two different sets of Hasura metadata.
+		Short: "(PREVIEW) Show a highlighted diff of Hasura metadata",
+		Long: `(PREVIEW) Show changes between two different sets of Hasura metadata.
 By default, shows changes between exported metadata file and server metadata.`,
-		Example: `  # Show changes between server metadata and the exported metadata file:
+		Example: `  # NOTE: This command is in preview, usage and diff format may change:
+
+  # Show changes between server metadata and the exported metadata file:
   hasura metadata diff
 
   # Show changes between server metadata and that in local_metadata.yaml:
@@ -128,7 +130,9 @@ func (o *metadataDiffOptions) run() error {
 		return errors.Wrap(err, "cannot read file")
 	}
 
-	return diffYaml(oldYaml, newYaml, o.output)
+	// return diffYaml(oldYaml, newYaml, o.output)
+	printDiff(string(oldYaml), string(newYaml), o.output)
+	return nil
 }
 
 func yamlToMap(y []byte) (map[string]string, error) {
@@ -193,12 +197,11 @@ func printDiff(before, after string, to io.Writer) {
 
 		switch diff.Delta {
 		case difflib.RightOnly:
-			fmt.Fprintf(to, "%s\n", ansi.Color("+ "+text, "green"))
+			fmt.Fprintf(to, "%s\n", ansi.Color(text, "green"))
 		case difflib.LeftOnly:
-			fmt.Fprintf(to, "%s\n", ansi.Color("- "+text, "red"))
+			fmt.Fprintf(to, "%s\n", ansi.Color(text, "red"))
 		case difflib.Common:
-			// don't print common
-			// fmt.Fprintf(to, "%s\n", "  "+text)
+			fmt.Fprintf(to, "%s\n", text)
 		}
 	}
 }
