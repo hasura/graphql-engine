@@ -16,11 +16,11 @@ Lee mas en [hasura.io](https://hasura.io) y en [docs](https://docs.hasura.io).
 
 ------------------
 
-![Hasura GraphQL Engine Demo](assets/demo.gif)
+![Hasura GraphQL Engine Demo](../assets/demo.gif)
 
 ------------------
 
-![Hasura GraphQL Engine en tiempo real Demo](assets/realtime.gif)
+![Hasura GraphQL Engine en tiempo real Demo](../assets/realtime.gif)
 
 -------------------
 
@@ -104,7 +104,7 @@ El motor GraphQL de Hasura presenta una instancia de base de datos Postgres y pu
 
 También puedes fusionar esquemas GraphQL remotos y proporcionar una API GraphQL unificada.
 
-![Arquitectura de Hasura GraphQL Engine](assets/hasura-arch.svg)
+![Arquitectura de Hasura GraphQL Engine](../assets/hasura-arch.svg)
 
 ## Herramientas del lado del cliente
 
@@ -176,11 +176,11 @@ Checa nuestra [guía de contribución](CONTRIBUTING.md) para más detalles.
 
 ## Archivos de marca
 
-Los archivos de la marca Hasura (logos, la mascota de Hasura, la insignia: desarrollado con, etc.) pueden encontrarse en el archivo [assets/brand](assets/brand). Sientete libre de usarlos en tu applicación/sitio web etc. Estaremos encantados si agregas el distintivo "Desarrollado con Hasura" en tu aplicación construida usando Hasura. ❤️
+Los archivos de la marca Hasura (logos, la mascota de Hasura, la insignia: desarrollado con, etc.) pueden encontrarse en el archivo [../assets/brand](assets/brand). Sientete libre de usarlos en tu applicación/sitio web etc. Estaremos encantados si agregas el distintivo "Desarrollado con Hasura" en tu aplicación construida usando Hasura. ❤️
 
 <div style="display: flex;">
-  <img src="assets/brand/powered_by_hasura_blue.svg" width="150px"/>
-  <img src="assets/brand/powered_by_hasura_white.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_blue.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_white.svg" width="150px"/>
 </div>
 
 ```html
