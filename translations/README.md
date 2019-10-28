@@ -2,7 +2,7 @@
 
 | File            | Language      |
 |-----------------|---------------|
-| Readme          | [:uk: English](../README.md)          ￨ [:fr: Français](README.french.md)          ￨ [:jp: 日本語](README.japanese.md)                   ￨ [🇬🇷 Ελληνικά](README.greek.md)  |
+| Readme          | [:uk: English](../README.md)          ￨ [:fr: Français](README.french.md)          ￨ [:jp: 日本語](README.japanese.md)                   ￨ [🇬🇷 Ελληνικά](README.greek.md)  | [:es: Español](README.spanish.md)          ￨
 | Event Triggers  | [:uk: English](../event-triggers.md)  ￨ [:fr: Français](event-triggers.french.md)  |
 | Remote Schemas  | [:uk: English](../remote-schemas.md)  ￨ [:fr: Français](remote-schemas.french.md)  |
 | Contributing    | [:uk: English](../CONTRIBUTING.md)    ￨ [:fr: Français](CONTRIBUTING.french.md)    |
