@@ -1,6 +1,0 @@
-- args:
-    sql: CREATE EXTENSION IF NOT EXISTS pgcrypto;
-  type: run_sql
-- args:
-    sql: ALTER TABLE "public"."stocks" ADD COLUMN "uuid" uuid NOT NULL DEFAULT gen_random_uuid()
-  type: run_sql
