@@ -30,7 +30,7 @@ Notes on configuration:
 - RDS Postgres: 16xCPU, 64GB RAM, Postgres 11
 - Hasura running on Fargate (4xCPU, 8GB RAM per instance) with default configurations
 
-## GraphQL and subscriptions
+## GraphQL and subscriptions.
 
 GraphQL makes it easy for app developers to query for precisely the data they want from their API.
 
