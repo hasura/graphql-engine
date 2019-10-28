@@ -24,7 +24,7 @@ Lee mas en [hasura.io](https://hasura.io) y en [docs](https://docs.hasura.io).
 
 -------------------
 
-## Caracteristicas
+## Características
 
 * **Crea consultas poderosas**: Soprte para Filtrado, paginación, búsqueda de patrones, inserción masiva, actualización, eliminación de mutaciones.
 * **En tiempo real**: Convierta cualquier consulta GraphQL en una consulta de datos en tiempo real mediante suscripciones.
@@ -33,7 +33,7 @@ Lee mas en [hasura.io](https://hasura.io) y en [docs](https://docs.hasura.io).
 * **Funciona con base de datos existentes y en uso**: Apúntalo a una base de datos Postgres existente para obtener instantáneamente una API GraphQL lista para usar.
 * **Control de acceso Fino**: Control de acceso dinámico que se integra con su sistema de autenticación (por ejemplo: auth0, firebase-auth).
 * **High-performance & low-footprint**: Imagen de Docker de ~15MB; ~50MB RAM @ 1000 req/s; trabaja en multinúcleo.
-* **UI de administrción & Migraciones**: UI de administrción & Esquemas de migraciones inspirados en rails.
+* **UI de administración & Migraciones**: UI de administración & Esquemas de migraciones inspirados en rails.
 * **Postgres** ❤️: Soporte para los tipos de Postgres (PostGIS / geo-location, etc.), convierte las vistas en * gráficas *, activa funciones almacenadas o procedimientos con mutaciones
 
 Lee mas en [hasura.io](https://hasura.io) y en [docs](https://docs.hasura.io).
@@ -43,7 +43,7 @@ Lee mas en [hasura.io](https://hasura.io) y en [docs](https://docs.hasura.io).
 **Table of Contents**
 
 - [Hasura GraphQL Engine](#hasura-graphql-engine)
-  - [Caracteristicas](#caracteristicas)
+  - [Características](#caracter%c3%adsticas)
   - [Tabla de contenido](#tabla-de-contenido)
   - [Inicio rápido:](#inicio-r%c3%a1pido)
     - [Implementa con un clic en Heroku](#implementa-con-un-clic-en-heroku)
