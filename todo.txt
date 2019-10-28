@@ -1,2 +1,0 @@
-- node BE with postgres DB
-- Hasura on postgres DB
