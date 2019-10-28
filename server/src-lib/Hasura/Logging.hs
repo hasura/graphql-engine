@@ -6,7 +6,6 @@ module Hasura.Logging
   , EngineLog(..)
   , EngineLogType(..)
   , defaultEnabledLogTypes
-  -- , alwaysOnLogTypes
   , userAllowedLogTypes
   , ToEngineLog(..)
   , debugT
@@ -19,6 +18,7 @@ module Hasura.Logging
   , mkLoggerCtx
   , cleanLoggerCtx
   , LogCallbackFunction
+  , eventTriggerLogType
   ) where
 
 import           Hasura.Prelude
@@ -194,3 +194,7 @@ mkLogger (LoggerCtx loggerSet serverLogLevel timeGetter enabledLogTypes callback
   forM_ callbackFn $ \func -> liftIO $ func logStr
   when (logLevel >= serverLogLevel && isLogTypeEnabled enabledLogTypes logTy) $
     liftIO $ FL.pushLogStrLn loggerSet $ FL.toLogStr (J.encode logStr)
+
+
+eventTriggerLogType :: EngineLogType
+eventTriggerLogType = ELTInternal "event-trigger"
