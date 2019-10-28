@@ -128,17 +128,17 @@ Coba lihat seluruh contoh aplikasi pada direktori [_community/sample-apps_](../c
 ### Aplikasi _realtime_
 
 - Aplikasi _chat_ untuk grup yang dibuat menggunakan React. Termasuk indikator pengetikan, pengguna _online_ & notifikasi pesan baru.
-  - [Coba dahulu](https://realtime-chat.demo.hasura.app/)
+  - [Coba aplikasinya](https://realtime-chat.demo.hasura.app/)
   - [Tutorial](../community/sample-apps/realtime-chat)
   - [Lihat-lihat API](https://realtime-chat.demo.hasura.app/console)
 
 - Aplikasi pelacak yang menyiarkan lokasi secara langsung dengan memperlihatkan kendaraan berjalan dengan posisi koordinat GPS yang berubah-ubah pada peta.
-  - [Coba dahulu](https://realtime-location-tracking.demo.hasura.app/)
+  - [Coba aplikasinya](https://realtime-location-tracking.demo.hasura.app/)
   - [Tutorial](../community/sample-apps/realtime-location-tracking)
   - [Lihat-lihat API](https://realtime-location-tracking.demo.hasura.app/console)
 
 - Sebuah dasbor _realtime_ untuk meng-agregasi data yang berubah secara terus menerus.
-  - [Coba dahulu](https://realtime-poll.demo.hasura.app/)
+  - [Coba aplikasinya](https://realtime-poll.demo.hasura.app/)
   - [Tutorial](../community/sample-apps/realtime-poll)
   - [Lihat-lihat API](https://realtime-poll.demo.hasura.app/console)
 
@@ -147,7 +147,7 @@ Coba lihat seluruh contoh aplikasi pada direktori [_community/sample-apps_](../c
 * [Tambahkan GraphQL pada sebuah _instance_ Gitlab yang di-_hosting_ sendiri](https://www.youtube.com/watch?v=a2AhxKqd82Q) (*3:44 menit*)
 * [Aplikasi Todo dengan Auth0 dan _backend_ GraphQL](https://www.youtube.com/watch?v=15ITBYnccgc) (*4:00 menit*)
 * [GraphQL di GitLab yang terintegrasi dengan GitLab auth](https://www.youtube.com/watch?v=m1ChRhRLq7o) (*4:05 menit*)
-* [_Dashboard_ untuk 10 juta kendaraan dengan geolokasi (PostGIS, Timescale)](https://www.youtube.com/watch?v=tsY573yyGWA) (*3:06 menit*)
+* [Dasbor untuk 10 juta kendaraan dengan geolokasi (PostGIS, Timescale)](https://www.youtube.com/watch?v=tsY573yyGWA) (*3:06 menit*)
 
 
 ## Dukungan & Penyelesaian masalah
@@ -193,5 +193,5 @@ Aset merek Hasura (logo, maskot, lencana _powered by_, dll.) dapat ditemukan di 
 Bagian utama dari GraphQL Engine tersedia dengan lisensi [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) (Apache-2.0).
 
 Seluruh **konten lainnya** (selain dari direktori [`server`](../server), [`cli`](../cli) dan
-[`console`](../console)) tersedia dalam lisensi [MIT License](LICENSE-community).
+[`console`](../console)) tersedia dalam lisensi [MIT License](../LICENSE-community).
 Hal ini meliputi seluruh direktori [`docs`](../docs) dan [`community`](../community).
