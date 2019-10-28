@@ -8,7 +8,7 @@
 <a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
 <a href="https://eepurl.com/dBUfJ5"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
 
-Hasura GraphQL引擎是一种快速的GraphQL服务器，可为您提供 **Postgres上的即时，实时GraphQL API**, 与 [**Webhook触发器**](../event-triggers.md) 关于数据库事件，以及 [**远程模式**](../.remote-schemas.md) 用于业务逻辑.
+Hasura GraphQL引擎是一种快速的GraphQL服务器，可为您提供 **Postgres上的即时，实时GraphQL API**, 与 [**Webhook触发器**](../event-triggers.md) 关于数据库事件，以及 [**远程模式**](../remote-schemas.md) 用于业务逻辑.
 
 Hasura可帮助您构建由Postgres支持的GraphQL应用程序，或使用Postgres将其逐步移至GraphQL以用于现有应用程序.
 
@@ -178,8 +178,8 @@ GraphQL Engine提供了易于使用，可扩展和高性能的方法，用于向
 使用Hasura构建的应用程序的徽章。 ❤️
 
 <div style="display: flex;">
-  <img src="assets/brand/powered_by_hasura_blue.svg" width="150px"/>
-  <img src="assets/brand/powered_by_hasura_white.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_blue.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_white.svg" width="150px"/>
 </div>
 
 ```html
