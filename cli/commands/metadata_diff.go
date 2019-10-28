@@ -37,7 +37,7 @@ func newMetadataDiffCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Short: "(PREVIEW) Show a highlighted diff of Hasura metadata",
 		Long: `(PREVIEW) Show changes between two different sets of Hasura metadata.
 By default, shows changes between exported metadata file and server metadata.`,
-		Example: `  # NOTE: This command is in preview, usage and diff format may change:
+		Example: `  # NOTE: This command is in preview, usage and diff format may change.
 
   # Show changes between server metadata and the exported metadata file:
   hasura metadata diff
