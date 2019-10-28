@@ -42,20 +42,20 @@ Pročitaj više na [hasura.io](https://hasura.io) i [dokumentima](https://docs.h
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Tabela sadržaja**
 
-- [Brzi početak:](#brzi-pocetak)
+- [Brzi početak:](#brzi-početak)
     - [Implementacija jednim klikom na Heroku](#implementacija-jednim-klikom-na-heroku)
     - [Ostale metode implementacije](#ostale-medote-implementacije-jednim-klikom)
 - [Arhitektura](#arhitektura)
 - [Klijentski alati](#alati-na-klijentskoj-strani)
 - [Dodavanje poslovne logike](#dodavanje-poslovne-logike)
-    - [Daljinske šeme](#daljinske-seme)
-    - [Pokretanje webhook-ova na dešavanjima u bazi podataka](#pokrenite-webhook-na-desavanja-u-bazi-podataka)
+    - [Daljinske šeme](#daljinske-šeme)
+    - [Pokretanje webhook-ova na dešavanjima u bazi podataka](#pokrenite-webhook-na-dešavanja-u-bazi-podataka)
 - [Demo](#demo)
     - [Aplikacije u stvarnom vremenu](#stvarne-aplikacije)
     - [Video](#video)
-- [Podrška & Rješavanje problema](#podrska--rjesavanje-problema)
+- [Podrška & Rješavanje problema](#podrška--rješavanje-problema)
 - [Doprinos](#doprinos)
-- [Brendirani sadržaj](#brendirani-sadrzaj)
+- [Brendirani sadržaj](#brendirani-sadržaj)
 - [Licenca](#licenca)
 - [Prijevodi](#prijevodi)
 
@@ -126,7 +126,7 @@ Pretvorite podatke u Postgres ili pokrenite poslovnu logiku na njemu da biste do
 ## Demo
 
 Pogledajte sve primjere dostupne u
-[community/examples](../community/examples) mapi.
+[community/sample-apps](../community/sample-apps) mapi.
 
 ### Stvarne aplikacije
 
@@ -206,7 +206,7 @@ Ova stranica je dostupna u sljedećim jezicima:
 
 - [Japanski :jp:](../translations/README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
 - [Francuski :fr:](../translations/README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
-- [Grčki 🇬🇷](translations/README.greek.md) (:pray: [@MIP2000](https://github.com/MIP2000))
+- [Grčki 🇬🇷](../translations/README.greek.md) (:pray: [@MIP2000](https://github.com/MIP2000))
 - [Engleski :uk:](../translations/README.md)
 
 Prijevodi za ostale fajlove mogu biti pronađeni [ovdje](../translations).
