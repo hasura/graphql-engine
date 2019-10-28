@@ -24,9 +24,9 @@ func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	migrateSquashCmd := &cobra.Command{
 		Use:   "squash",
-		Short: "(EXPERIMENTAL) Squash multiple migrations into a single one",
-		Long:  "(EXPERIMENTAL) Squash multiple migrations leading upto the latest one into a single migration file",
-		Example: `  # NOTE: This is an EXPERIMENTAL command, correctness is not guaranteed
+		Short: "(PREVIEW) Squash multiple migrations into a single one",
+		Long:  "(PREVIEW) Squash multiple migrations leading upto the latest one into a single migration file",
+		Example: `  # NOTE: This command is in PREVIEW, correctness is not guaranteed and the usage may change.
 
   # squash all migrations from version 123 to the latest one:
   hasura migrate squash --from 123`,
@@ -70,7 +70,7 @@ type migrateSquashOptions struct {
 }
 
 func (o *migrateSquashOptions) run() error {
-	o.EC.Logger.Warnln("This command is currently experimental, correctness of squashed migration is not guaranteed!")
+	o.EC.Logger.Warnln("This command is currently experimental and hence in preview, correctness of squashed migration is not guaranteed!")
 	o.EC.Spin(fmt.Sprintf("Squashing migrations from %d to latest...", o.from))
 	defer o.EC.Spinner.Stop()
 	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version, true)
