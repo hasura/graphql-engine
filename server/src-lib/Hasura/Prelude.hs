@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-redundant-constraints #-}
 module Hasura.Prelude
   ( module M
   , onNothing
@@ -7,6 +8,9 @@ module Hasura.Prelude
   , bsToTxt
   , txtToBs
   , spanMaybeM
+  -- * Efficient coercions
+  , coerce
+  , coerceSet
   ) where
 
 import           Control.Applicative        as M (Alternative (..))
@@ -36,6 +40,7 @@ import           Data.Maybe                 as M (catMaybes, fromMaybe, isJust,
                                                   mapMaybe, maybeToList)
 import           Data.Ord                   as M (comparing)
 import           Data.Semigroup             as M (Semigroup (..))
+import           Data.Sequence              as M (Seq)
 import           Data.String                as M (IsString)
 import           Data.Text                  as M (Text)
 import           Data.Traversable           as M (for)
@@ -43,8 +48,11 @@ import           Data.Word                  as M (Word64)
 import           GHC.Generics               as M (Generic)
 import           Prelude                    as M hiding (fail, init, lookup)
 import           Text.Read                  as M (readEither, readMaybe)
+import           Unsafe.Coerce
 
 import qualified Data.ByteString            as B
+import           Data.Coerce
+import qualified Data.Set                   as Set
 import qualified Data.Text.Encoding         as TE
 import qualified Data.Text.Encoding.Error   as TE
 
@@ -76,3 +84,13 @@ spanMaybeM f = go . toList
     go l@(x:xs) = f x >>= \case
       Just y  -> first (y:) <$> go xs
       Nothing -> pure ([], l)
+
+-- | Efficiently coerce a set from one type to another.
+--
+-- This has the same safety properties as 'Set.mapMonotonic', and is equivalent
+-- to @Set.mapMonotonic coerce@ but is more efficient. This is safe to use when
+-- both @a@ and @b@ have automatically derived @Ord@ instances.
+--
+-- https://stackoverflow.com/q/57963881/176841
+coerceSet :: Coercible a b=> Set.Set a -> Set.Set b
+coerceSet = unsafeCoerce

@@ -276,6 +276,9 @@ class TestV1InsertBasic(DefaultTestMutations):
     def test_insert_null_col_value(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/order_col_shipped_null.yaml")
 
+    def test_insert_nullable_enum_field(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/insert_nullable_enum_field.yaml")
+
     @classmethod
     def dir(cls):
         return "queries/v1/insert/basic"
@@ -635,3 +638,20 @@ class TestSetTableIsEnum(DefaultTestQueries):
 
     def test_add_invalid(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/add_invalid.yaml')
+
+    def test_add_test_schema_enum_table(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/add_test_schema_enum_table.yaml')
+
+class TestSetTableCustomFields(DefaultTestQueries):
+    @classmethod
+    def dir(cls):
+        return 'queries/v1/set_table_custom_fields'
+
+    def test_set_and_unset(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/set_and_unset.yaml')
+
+    def test_set_invalid_table(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/set_invalid_table.yaml')
+
+    def test_alter_column(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/alter_column.yaml')

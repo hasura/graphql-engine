@@ -6,7 +6,9 @@ module Hasura.GraphQL.Schema.OrderBy
   , mkTabAggOpOrdByInpObjs
   ) where
 
+import           Control.Arrow                 ((&&&))
 import           Control.Lens                  (preview)
+
 import qualified Data.HashMap.Strict           as Map
 import qualified Language.GraphQL.Draft.Syntax as G
 
@@ -63,8 +65,8 @@ input table_<op>_order_by {
 
 mkTabAggOpOrdByInpObjs
   :: QualifiedTable
-  -> ([PGCol], [G.Name])
-  -> ([PGCol], [G.Name])
+  -> ([PGColumnInfo], [G.Name])
+  -> ([PGColumnInfo], [G.Name])
   -> [InpObjTyInfo]
 mkTabAggOpOrdByInpObjs tn (numCols, numAggOps) (compCols, compAggOps) =
   mapMaybe (mkInpObjTyM numCols) numAggOps
@@ -79,7 +81,7 @@ mkTabAggOpOrdByInpObjs tn (numCols, numAggOps) (compCols, compAggOps) =
       mkHsraInpTyInfo (Just $ mkDesc op) (mkTabAggOpOrdByTy tn op) $
       fromInpValL $ map mkColInpVal cols
 
-    mkColInpVal c = InpValInfo Nothing (mkColName c) Nothing $ G.toGT
+    mkColInpVal ci = InpValInfo Nothing (pgiName ci) Nothing $ G.toGT
                     ordByTy
 
 mkTabAggOrdByTy :: QualifiedTable -> G.NamedType
@@ -95,8 +97,8 @@ count: order_by
 
 mkTabAggOrdByInpObj
   :: QualifiedTable
-  -> ([PGCol], [G.Name])
-  -> ([PGCol], [G.Name])
+  -> ([PGColumnInfo], [G.Name])
+  -> ([PGColumnInfo], [G.Name])
   -> InpObjTyInfo
 mkTabAggOrdByInpObj tn (numCols, numAggOps) (compCols, compAggOps) =
   mkHsraInpTyInfo (Just desc) (mkTabAggOrdByTy tn) $ fromInpValL $
@@ -133,43 +135,48 @@ mkOrdByInpObj tn selFlds = (inpObjTy, ordByCtx)
   where
     inpObjTy =
       mkHsraInpTyInfo (Just desc) namedTy $ fromInpValL $
-      map mkColOrdBy pgCols <> map mkObjRelOrdBy objRels
+      map mkColOrdBy pgColFlds <> map mkObjRelOrdBy objRels
       <> mapMaybe mkArrRelAggOrdBy arrRels
 
     namedTy = mkOrdByTy tn
     desc = G.Description $
       "ordering options when selecting data from " <>> tn
 
-    pgCols = lookupPGCols selFlds
-    relFltr ty = flip filter (lookupRels selFlds) $ \(ri, _, _, _, _) ->
-      riType ri == ty
+    pgColFlds = lookupPGCols selFlds
+    relFltr ty = flip filter (lookupRels selFlds) $ \rf ->
+      riType (_rfiInfo rf) == ty
     objRels = relFltr ObjRel
     arrRels = relFltr ArrRel
 
-    mkColOrdBy ci = InpValInfo Nothing (mkColName $ pgiName ci) Nothing $
-                    G.toGT ordByTy
-    mkObjRelOrdBy (ri, _, _, _, _) =
-      InpValInfo Nothing (mkRelName $ riName ri) Nothing $
-      G.toGT $ mkOrdByTy $ riRTable ri
+    mkColOrdBy columnInfo =
+      InpValInfo Nothing (pgiName columnInfo) Nothing $ G.toGT ordByTy
+    mkObjRelOrdBy relationshipField =
+      let ri = _rfiInfo relationshipField
+      in InpValInfo Nothing (mkRelName $ riName ri) Nothing $
+         G.toGT $ mkOrdByTy $ riRTable ri
 
-    mkArrRelAggOrdBy (ri, isAggAllowed, _, _, _) =
-      let ivi = InpValInfo Nothing (mkAggRelName $ riName ri) Nothing $
+    mkArrRelAggOrdBy relationshipField =
+      let ri = _rfiInfo relationshipField
+          isAggAllowed = _rfiAllowAgg relationshipField
+          ivi = InpValInfo Nothing (mkAggRelName $ riName ri) Nothing $
             G.toGT $ mkTabAggOrdByTy $ riRTable ri
       in bool Nothing (Just ivi) isAggAllowed
 
     ordByCtx = Map.singleton namedTy $ Map.fromList $
                colOrdBys <> relOrdBys <> arrRelOrdBys
-    colOrdBys = flip map pgCols $ \ci ->
-                                    ( mkColName $ pgiName ci
-                                    , OBIPGCol ci
-                                    )
-    relOrdBys = flip map objRels $ \(ri, _, fltr, _, _) ->
-                                     ( mkRelName $ riName ri
-                                     , OBIRel ri fltr
-                                     )
-    arrRelOrdBys = flip mapMaybe arrRels $ \(ri, isAggAllowed, fltr, _, _) ->
+    colOrdBys = map (pgiName &&& OBIPGCol) pgColFlds
+    relOrdBys = flip map objRels $
+                \relationshipField ->
+                  let ri = _rfiInfo relationshipField
+                      fltr = _rfiPermFilter relationshipField
+                  in ( mkRelName $ riName ri
+                     , OBIRel ri fltr
+                     )
+
+    arrRelOrdBys = flip mapMaybe arrRels $
+                   \(RelationshipFieldInfo ri isAggAllowed colGNameMap fltr _ _) ->
                      let obItem = ( mkAggRelName $ riName ri
-                                  , OBIAgg ri fltr
+                                  , OBIAgg ri colGNameMap fltr
                                   )
                      in bool Nothing (Just obItem) isAggAllowed
 

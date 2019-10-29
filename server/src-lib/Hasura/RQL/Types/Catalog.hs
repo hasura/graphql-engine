@@ -35,14 +35,16 @@ data CatalogTableInfo
   , _ctiConstraints       :: ![ConstraintName]
   , _ctiPrimaryKeyColumns :: ![PGCol]
   , _ctiViewInfo          :: !(Maybe ViewInfo)
+  , _ctiDescription       :: !(Maybe PGDescription)
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 4 snakeCase) ''CatalogTableInfo)
 
 data CatalogTable
   = CatalogTable
   { _ctName            :: !QualifiedTable
-  , _ctIsSystemDefined :: !Bool
+  , _ctIsSystemDefined :: !SystemDefined
   , _ctIsEnum          :: !Bool
+  , _ctConfiguration   :: !TableConfig
   , _ctInfo            :: !(Maybe CatalogTableInfo)
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogTable)

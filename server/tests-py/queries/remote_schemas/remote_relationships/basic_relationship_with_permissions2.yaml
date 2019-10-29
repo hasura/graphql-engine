@@ -1,4 +1,4 @@
-description: Simple remote relationship GraphQL query
+description: Simple remote relationship query with permissions, unauthorized
 url: /v1/graphql
 status: 200
 headers:

@@ -279,7 +279,7 @@ data SQLExp
   | SETyAnn !SQLExp !TypeAnn
   | SECond !BoolExp !SQLExp !SQLExp
   | SEBool !BoolExp
-  | SEExcluded !T.Text
+  | SEExcluded !Iden
   | SEArray ![SQLExp]
   | SETuple !TupleExp
   | SECount !CountType
@@ -340,8 +340,8 @@ instance ToSQL SQLExp where
     "ELSE" <-> toSQL fe <->
     "END"
   toSQL (SEBool be) = toSQL be
-  toSQL (SEExcluded t) = "EXCLUDED."
-                         <> toSQL (PGCol t)
+  toSQL (SEExcluded i) = "EXCLUDED."
+                         <> toSQL i
   toSQL (SEArray exps) = "ARRAY" <> TB.char '['
                          <> (", " <+> exps) <> TB.char ']'
   toSQL (SETuple tup) = toSQL tup
@@ -662,7 +662,7 @@ buildUpsertSetExp cols preSet =
   where
     setExps = HM.union preSet $ HM.fromList $
       flip map cols $ \col ->
-        (col, SEExcluded $ getPGColTxt col)
+        (col, SEExcluded $ toIden col)
 
 
 newtype UsingExp = UsingExp [TableName]

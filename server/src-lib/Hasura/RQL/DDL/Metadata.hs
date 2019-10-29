@@ -52,10 +52,12 @@ import qualified Hasura.RQL.Types.EventTrigger       as DTS
 import qualified Hasura.RQL.Types.RemoteRelationship as TRR
 import qualified Hasura.RQL.Types.RemoteSchema       as TRS
 
+
 data TableMeta
   = TableMeta
   { _tmTable               :: !QualifiedTable
   , _tmIsEnum              :: !Bool
+  , _tmConfiguration       :: !(TableConfig)
   , _tmObjectRelationships :: ![DR.ObjRelDef]
   , _tmArrayRelationships  :: ![DR.ArrRelDef]
   , _tmInsertPermissions   :: ![DP.InsPermDef]
@@ -65,9 +67,9 @@ data TableMeta
   , _tmEventTriggers       :: ![DTS.EventTriggerConf]
   } deriving (Show, Eq, Lift)
 
-mkTableMeta :: QualifiedTable -> Bool -> TableMeta
-mkTableMeta qt isEnum =
-  TableMeta qt isEnum [] [] [] [] [] [] []
+mkTableMeta :: QualifiedTable -> Bool -> TableConfig -> TableMeta
+mkTableMeta qt isEnum config =
+  TableMeta qt isEnum config [] [] [] [] [] [] []
 
 makeLenses ''TableMeta
 
@@ -80,6 +82,7 @@ instance FromJSON TableMeta where
     TableMeta
      <$> o .: tableKey
      <*> o .:? isEnumKey .!= False
+     <*> o .:? configKey .!= emptyTableConfig
      <*> o .:? orKey .!= []
      <*> o .:? arKey .!= []
      <*> o .:? ipKey .!= []
@@ -91,6 +94,7 @@ instance FromJSON TableMeta where
     where
       tableKey = "table"
       isEnumKey = "is_enum"
+      configKey = "configuration"
       orKey = "object_relationships"
       arKey = "array_relationships"
       ipKey = "insert_permissions"
@@ -103,8 +107,8 @@ instance FromJSON TableMeta where
         HS.fromList (M.keys o) `HS.difference` expectedKeySet
 
       expectedKeySet =
-        HS.fromList [ tableKey, isEnumKey, orKey, arKey
-                    , ipKey, spKey, upKey, dpKey, etKey
+        HS.fromList [ tableKey, isEnumKey, configKey, orKey
+                    , arKey , ipKey, spKey, upKey, dpKey, etKey
                     ]
 
   parseJSON _ =
@@ -133,8 +137,8 @@ clearMetadata = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "DELETE FROM hdb_catalog.hdb_query_collection WHERE is_system_defined <> 'true'" () False
 
 runClearMetadata
-  :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
-     , MonadIO m, HasHttpManager m, HasSQLGenCtx m
+  :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m
+     , HasHttpManager m, HasSystemDefined m, HasSQLGenCtx m
      )
   => ClearMetadata -> m EncJSON
 runClearMetadata _ = do
@@ -224,6 +228,7 @@ applyQP2
      , MonadIO m
      , HasHttpManager m
      , HasSQLGenCtx m
+     , HasSystemDefined m
      )
   => ReplaceMetadata
   -> m EncJSON
@@ -233,13 +238,12 @@ applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist mRe
   DS.buildSchemaCacheStrict
 
   withPathK "tables" $ do
-
     -- tables and views
     indexedForM_ tables $ \tableMeta -> do
-      let trackQuery = DS.TrackTable
-            { DS.tName = tableMeta ^. tmTable
-            , DS.tIsEnum = tableMeta ^. tmIsEnum }
-      void $ DS.trackExistingTableOrViewP2 trackQuery
+      let tableName = tableMeta ^. tmTable
+          isEnum = tableMeta ^. tmIsEnum
+          config = tableMeta ^. tmConfiguration
+      void $ DS.trackExistingTableOrViewP2 tableName isEnum config
 
     -- Relationships
     indexedForM_ tables $ \table -> do
@@ -311,6 +315,7 @@ applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist mRe
 runReplaceMetadata
   :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
      , MonadIO m, HasHttpManager m, HasSQLGenCtx m
+     , HasSystemDefined m
      )
   => ReplaceMetadata -> m EncJSON
 runReplaceMetadata q = do
@@ -329,9 +334,11 @@ $(deriveToJSON defaultOptions ''ExportMetadata)
 fetchMetadata :: Q.TxE QErr ReplaceMetadata
 fetchMetadata = do
   tables <- Q.catchE defaultTxErrorHandler fetchTables
-  let tableMetaMap = M.fromList . flip map tables $ \(schema, name, isEnum) ->
-        let qualifiedName = QualifiedObject schema name
-        in (qualifiedName, mkTableMeta qualifiedName isEnum)
+  let tableMetaMap = M.fromList . flip map tables $
+        \(schema, name, isEnum, maybeConfig) ->
+          let qualifiedName = QualifiedObject schema name
+              configuration = maybe emptyTableConfig Q.getAltJ maybeConfig
+          in (qualifiedName, mkTableMeta qualifiedName isEnum configuration)
 
   -- Fetch all the relationships
   relationships <- Q.catchE defaultTxErrorHandler fetchRelationships
@@ -406,7 +413,8 @@ fetchMetadata = do
 
     fetchTables =
       Q.listQ [Q.sql|
-                SELECT table_schema, table_name, is_enum from hdb_catalog.hdb_table
+                SELECT table_schema, table_name, is_enum, configuration::json
+                FROM hdb_catalog.hdb_table
                  WHERE is_system_defined = 'false'
                     |] () False
 
@@ -460,8 +468,8 @@ instance FromJSON ReloadMetadata where
 $(deriveToJSON defaultOptions ''ReloadMetadata)
 
 runReloadMetadata
-  :: ( QErrM m, UserInfoM m, CacheRWM m
-     , MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m
+  :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m
+     , HasHttpManager m, HasSystemDefined m, HasSQLGenCtx m
      )
   => ReloadMetadata -> m EncJSON
 runReloadMetadata _ = do

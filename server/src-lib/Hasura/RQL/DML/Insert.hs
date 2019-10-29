@@ -194,7 +194,7 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
   let mutFlds = mkDefaultMutFlds mAnnRetCols
 
   let defInsVals = S.mkColDefValMap $
-                   map pgiName $ getCols fieldInfoMap
+                   map pgiColumn $ getCols fieldInfoMap
       allCols    = getCols fieldInfoMap
       insCols    = HM.keys defInsVals
       insView    = ipiView insPerm

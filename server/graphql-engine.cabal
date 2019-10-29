@@ -29,7 +29,6 @@ flag profile
 
 library
   hs-source-dirs:      src-lib
-                     , src-exec
   default-language:    Haskell2010
   build-depends:       base
                      , these
@@ -70,6 +69,7 @@ library
                      -- Encoder related
                      , uuid
                      , vector
+                     , vector-builder
 
                      -- Logging related
                      , network
@@ -113,8 +113,8 @@ library
 
                      -- Templating
                      , mustache
-                     , ginger
                      , file-embed
+                     , shakespeare >= 2.0.22
 
                      --
                      , data-has
@@ -151,6 +151,9 @@ library
                      , filepath >= 1.4
                      , mime-types >= 0.1
 
+                     -- HTTP compression
+                     , zlib
+
   exposed-modules:     Hasura.Prelude
                      , Hasura.Logging
                      , Hasura.EncJSON
@@ -173,6 +176,7 @@ library
                      , Hasura.Server.SchemaUpdate
                      , Hasura.Server.PGDump
                      , Hasura.Server.Config
+                     , Hasura.Server.Compression
 
                      , Hasura.RQL.Types
                      , Hasura.RQL.Instances
@@ -251,9 +255,11 @@ library
                      , Hasura.GraphQL.Execute.Plan
                      , Hasura.GraphQL.Execute.Query
                      , Hasura.GraphQL.Execute.LiveQuery
-                     , Hasura.GraphQL.Execute.LiveQuery.Types
-                     , Hasura.GraphQL.Execute.LiveQuery.Multiplexed
-                     , Hasura.GraphQL.Execute.LiveQuery.Fallback
+                     , Hasura.GraphQL.Execute.LiveQuery.Options
+                     , Hasura.GraphQL.Execute.LiveQuery.Plan
+                     , Hasura.GraphQL.Execute.LiveQuery.Poll
+                     , Hasura.GraphQL.Execute.LiveQuery.State
+                     , Hasura.GraphQL.Execute.LiveQuery.TMap
                      , Hasura.GraphQL.Execute.RemoteJoins
                      , Hasura.GraphQL.Resolve
                      , Hasura.GraphQL.Resolve.Types
@@ -273,14 +279,16 @@ library
 
                      , Hasura.HTTP
 
+                     , Control.Concurrent.Extended
                      , Control.Lens.Extended
-                     , Data.Text.Extended
                      , Data.Aeson.Extended
                      , Data.Aeson.Ordered
-                     , Data.Sequence.NonEmpty
-                     , Data.TByteString
                      , Data.HashMap.Strict.InsOrd.Extended
                      , Data.Parser.JSONPath
+                     , Data.Sequence.NonEmpty
+                     , Data.TByteString
+                     , Data.Text.Extended
+                     , Data.Time.Clock.Units
 
                      , Hasura.SQL.DML
                      , Hasura.SQL.Error
@@ -290,8 +298,6 @@ library
                      , Hasura.SQL.Types
                      , Hasura.SQL.Value
                      , Network.URI.Extended
-                     , Ops
-                     , Migrate
 
   other-modules:       Hasura.Server.Auth.JWT.Internal
                      , Hasura.Server.Auth.JWT.Logging
@@ -308,6 +314,7 @@ library
                       EmptyCase
                       FlexibleContexts
                       FlexibleInstances
+                      FunctionalDependencies
                       GeneralizedNewtypeDeriving
                       InstanceSigs
                       LambdaCase
@@ -315,9 +322,11 @@ library
                       MultiWayIf
                       NoImplicitPrelude
                       OverloadedStrings
-                      RecordWildCards
                       QuasiQuotes
+                      RankNTypes
+                      RecordWildCards
                       ScopedTypeVariables
+                      StandaloneDeriving
                       TemplateHaskell
                       TupleSections
                       TypeApplications
@@ -351,6 +360,7 @@ executable graphql-engine
                       EmptyCase
                       FlexibleContexts
                       FlexibleInstances
+                      FunctionalDependencies
                       GeneralizedNewtypeDeriving
                       InstanceSigs
                       LambdaCase
@@ -359,8 +369,10 @@ executable graphql-engine
                       NoImplicitPrelude
                       OverloadedStrings
                       QuasiQuotes
+                      RankNTypes
                       RecordWildCards
                       ScopedTypeVariables
+                      StandaloneDeriving
                       TemplateHaskell
                       TupleSections
                       TypeApplications
@@ -392,6 +404,7 @@ executable graphql-engine
 
   other-modules:       Ops
                      , Migrate
+                     , Migrate.Version
 
   if flag(developer)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries

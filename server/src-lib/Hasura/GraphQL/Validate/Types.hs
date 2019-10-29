@@ -59,28 +59,32 @@ module Hasura.GraphQL.Validate.Types
   , hasNullVal
   , getAnnInpValKind
   , stripTypenames
+
+  , ReusableVariableTypes(..)
+  , ReusableVariableValues
   , module Hasura.GraphQL.Utils
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                    as J
-import qualified Data.Aeson.Casing             as J
-import qualified Data.Aeson.TH                 as J
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.HashMap.Strict.InsOrd    as OMap
-import qualified Data.HashSet                  as Set
-import qualified Data.Text                     as T
-import qualified Language.GraphQL.Draft.Syntax as G
-import qualified Language.GraphQL.Draft.TH     as G
-import qualified Language.Haskell.TH.Syntax    as TH
+import qualified Data.Aeson                          as J
+import qualified Data.Aeson.Casing                   as J
+import qualified Data.Aeson.TH                       as J
+import qualified Data.HashMap.Strict                 as Map
+import qualified Data.HashMap.Strict.InsOrd          as OMap
+import qualified Data.HashSet                        as Set
+import qualified Data.Text                           as T
+import qualified Language.GraphQL.Draft.Syntax       as G
+import qualified Language.GraphQL.Draft.TH           as G
+import qualified Language.Haskell.TH.Syntax          as TH
 
-import qualified Hasura.RQL.Types.Column       as RQL
+import qualified Hasura.RQL.Types.Column             as RQL
 
 import           Hasura.GraphQL.Utils
-import           Hasura.RQL.Instances          ()
+import           Hasura.RQL.Instances                ()
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.RemoteSchema
+import           Hasura.RQL.Types.RemoteRelationship (RemoteRelationship)
+import           Hasura.RQL.Types.RemoteSchema       (RemoteSchemaName)
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
@@ -152,10 +156,11 @@ type ParamMap = Map.HashMap G.Name InpValInfo
 -- | location of the type: a hasura type or a remote type
 data TypeLoc
   = TLHasuraType
-  | TLRemoteType !RemoteSchemaName !RemoteSchemaInfo
+  | TLRemoteType !RemoteSchemaName
+  | TLRemoteRelType !RemoteRelationship
   deriving (Show, Eq, TH.Lift, Generic)
 
-instance Hashable TypeLoc
+$(J.deriveToJSON (J.aesonDrop 2 J.camelCase){J.omitNothingFields=True} ''TypeLoc)
 
 data ObjFldInfo
   = ObjFldInfo
@@ -639,7 +644,7 @@ defaultDirectives =
   where
     mkDirective n = DirectiveInfo Nothing n args dirLocs
     args = Map.singleton "if" $ InpValInfo Nothing "if" Nothing $
-           G.TypeNamed (G.Nullability False) $ G.NamedType $ G.Name "Boolean"
+           G.TypeNamed (G.Nullability False) $ mkScalarTy PGBoolean
     dirLocs = map G.DLExecutable
               [G.EDLFIELD, G.EDLFRAGMENT_SPREAD, G.EDLINLINE_FRAGMENT]
 
@@ -658,6 +663,7 @@ type FragDefMap = Map.HashMap G.Name FragDef
 type AnnVarVals =
   Map.HashMap G.Variable AnnInpVal
 
+-- TODO document me
 data AnnInpVal
   = AnnInpVal
   { _aivType     :: !G.GType
@@ -732,3 +738,10 @@ stripTypenames = map filterExecDef
           let newSelset = filterSelSet $ G._fSelectionSet f
           in Just $ G.SelectionField  f{G._fSelectionSet = newSelset}
       _                  -> Just s
+
+-- | Used by 'Hasura.GraphQL.Validate.validateVariablesForReuse' to parse new sets of variables for
+-- reusable query plans; see also 'Hasura.GraphQL.Resolve.Types.QueryReusability'.
+newtype ReusableVariableTypes
+  = ReusableVariableTypes { unReusableVarTypes :: Map.HashMap G.Variable RQL.PGColumnType }
+  deriving (Show, Eq, Semigroup, Monoid, J.ToJSON)
+type ReusableVariableValues = Map.HashMap G.Variable (WithScalarType PGScalarValue)

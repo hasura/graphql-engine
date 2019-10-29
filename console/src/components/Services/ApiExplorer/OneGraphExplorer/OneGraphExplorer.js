@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { getIntrospectionQuery, buildClientSchema } from 'graphql';
-import GraphiQLExplorer from 'graphiql-explorer-hasura';
+import GraphiQLExplorer from 'graphiql-explorer';
 
 import {
   makeDefaultArg,
@@ -78,7 +78,10 @@ class OneGraphExplorer extends React.Component {
   }
 
   introspect() {
-    const { endpoint } = this.props;
+    const { endpoint, headersInitialised } = this.props;
+    if (!headersInitialised) {
+      return;
+    }
     const headers = JSON.parse(JSON.stringify(this.props.headers));
     this.setState({ loading: true });
     fetch(endpoint, {

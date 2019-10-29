@@ -149,16 +149,10 @@
       display: initial !important;
 
       .tableIcon, .functionIcon {
+        //display: inline;
         margin-right: 5px;
         font-size: 12px;
-      }
-
-      .functionIcon {
         width: 12px;
-
-        img {
-          width: 100%;
-        }
       }
     }
   }
@@ -174,7 +168,7 @@
   }
 }
 
-.activeTable {
+.activeLink {
   a {
     // border-left: 4px solid #FFC627;
     color: #FD9540!important;

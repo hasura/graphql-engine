@@ -49,7 +49,8 @@ import           Hasura.RQL.Types.Catalog
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.SQL.Types
 
-type CacheBuildM m = (CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
+type CacheBuildM m
+  = (CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m, HasSystemDefined m)
 
 buildSchemaCache :: (CacheBuildM m) => m ()
 buildSchemaCache = buildSchemaCacheWithOptions True
@@ -274,10 +275,12 @@ withMetadataCheck cascade action = do
     delFunctionFromCache qf
 
   -- Process altered functions
-  forM_ alteredFuncs $ \(qf, newTy) ->
+  forM_ alteredFuncs $ \(qf, newTy, newDescM) -> do
     when (newTy == FTVOLATILE) $
       throw400 NotSupported $
       "type of function " <> qf <<> " is altered to \"VOLATILE\" which is not supported now"
+
+    updateFunctionDescription qf newDescM
 
   -- update the schema cache and hdb_catalog with the changes
   reloadRequired <- processSchemaChanges schemaDiff

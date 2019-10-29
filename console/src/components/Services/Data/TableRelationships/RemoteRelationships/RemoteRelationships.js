@@ -9,6 +9,7 @@ const RemoteRelationships = ({
   dispatch,
   tableSchema,
   remoteSchemas,
+  adminHeaders,
 }) => {
   // restructure existing relationships to the state structure
   const existingRemoteRelationships = tableSchema.remote_relationships.map(
@@ -41,12 +42,12 @@ const RemoteRelationships = ({
           dispatch={dispatch}
           tableSchema={tableSchema}
           remoteSchemas={remoteSchemas}
-          loading={remoteRelationships.loading}
           key={
             existingRemoteRelationships[i]
               ? existingRemoteRelationships[i].name
               : 'new-remote-rel'
           }
+          adminHeaders={adminHeaders}
         />
       );
     });

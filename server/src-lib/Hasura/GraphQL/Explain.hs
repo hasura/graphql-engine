@@ -12,6 +12,7 @@ import qualified Language.GraphQL.Draft.Syntax          as G
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
+import           Hasura.GraphQL.Resolve.Types
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
@@ -19,6 +20,7 @@ import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
 import qualified Hasura.GraphQL.Execute                 as E
+import qualified Hasura.GraphQL.Execute.LiveQuery       as E
 import qualified Hasura.GraphQL.Resolve                 as RS
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
@@ -88,7 +90,7 @@ explainField userInfo gCtx sqlGenCtx fld =
     _            -> do
       unresolvedAST <-
         runExplain (queryCtxMap, userInfo, fldMap, orderByCtx, sqlGenCtx) $
-        RS.queryFldToPGAST fld
+          evalResolveT $ RS.queryFldToPGAST fld
       resolvedAST <- RS.traverseQueryRootFldAST (resolveVal userInfo)
                      unresolvedAST
       let txtSQL = Q.getQueryText $ RS.toPGQuery resolvedAST
@@ -111,29 +113,37 @@ explainGQLQuery
   -> Bool
   -> GQLExplain
   -> m EncJSON
-explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw)= do
-  execPlans <- E.getExecPlanPartial userInfo sc enableAL query
-  mresults <- forM (toList execPlans) $ \execPlan -> do
-    case execPlan of
-      E.ExPHasuraPartial (gCtx, rootSelSets, _) ->
-        return (Just (gCtx, rootSelSets))
-      E.ExPRemotePartial{}  ->
-        return Nothing
-  case catMaybes mresults of
-    [] -> throw400 InvalidParams "only hasura queries can be explained"
-    results@((gCtx, _):_) -> do
-     let rootSelSets = map snd results
-     plans :: [[FieldPlan]] <- forM rootSelSets $ \rootSelSet -> do
-      case rootSelSet of
-       GV.HasuraTopQuery field -> do
-         let tx = mapM (explainField userInfo gCtx sqlGenCtx) (pure field)
-         plans <- liftIO (runExceptT $ runLazyTx pgExecCtx tx) >>= liftEither
-         return $ plans
-       GV.HasuraTopMutation _ ->
-         throw400 InvalidParams "only queries can be explained"
-       GV.HasuraTopSubscription _ ->
-         throw400 InvalidParams "only queries can be explained"
-     pure (encJFromJValue (foldMap toList plans))
+explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw) = do
+  E.GQExecPlanPartial opType fieldPlans <-
+    E.getExecPlanPartial userInfo sc enableAL query
+  let hasuraFieldPlans = mapMaybe getHasuraField (toList fieldPlans)
+  if null hasuraFieldPlans
+    then throw400 InvalidParams "only hasura queries can be explained"
+    else pure ()
+  case opType of
+    G.OperationTypeQuery ->
+      runInTx $
+      encJFromJValue <$>
+      traverse
+        (\(gCtx, field) -> explainField userInfo gCtx sqlGenCtx field)
+        hasuraFieldPlans
+    G.OperationTypeMutation ->
+      throw400 InvalidParams "only queries can be explained"
+    G.OperationTypeSubscription -> do
+      (gCtx, rootField) <- getRootField hasuraFieldPlans
+      (plan, _) <- E.getSubsOp pgExecCtx gCtx sqlGenCtx userInfo rootField
+      runInTx $ encJFromJValue <$> E.explainLiveQueryPlan plan
   where
-    usrVars  = mkUserVars $ maybe [] Map.toList userVarsRaw
+    usrVars = mkUserVars $ maybe [] Map.toList userVarsRaw
     userInfo = mkUserInfo (fromMaybe adminRole $ roleFromVars usrVars) usrVars
+    runInTx = liftEither <=< liftIO . runExceptT . runLazyTx pgExecCtx
+    getHasuraField =
+      \case
+        E.GQFieldPartialHasura a -> Just a
+        _ -> Nothing
+    getRootField =
+      \case
+        [] -> throw500 "no field found in subscription"
+        [fld] -> pure fld
+        _ ->
+          throw500 "expected only one field in subscription"

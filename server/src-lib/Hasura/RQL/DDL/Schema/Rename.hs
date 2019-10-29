@@ -16,6 +16,7 @@ import qualified Hasura.RQL.DDL.EventTrigger        as DS
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Relationship.Types
+import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -97,6 +98,8 @@ renameColInCatalog oCol nCol qt ti = do
     SOTableObj _ (TOTrigger triggerName) ->
       updateColInEventTriggerDef triggerName $ RenameItem qt oCol nCol
     d -> otherDeps errMsg d
+  -- Update custom column names
+  possiblyUpdateCustomColumnNames qt oCol nCol
   where
     errMsg = "cannot rename column " <> oCol <<> " to " <>> nCol
     assertFldNotExists =
@@ -415,6 +418,16 @@ updateColMap fromQT toQT rnCol colMap =
   where
     RenameItem qt oCol nCol = rnCol
     modCol colQt col = if colQt == qt && col == oCol then nCol else col
+
+possiblyUpdateCustomColumnNames
+  :: MonadTx m => QualifiedTable -> PGCol -> PGCol -> m ()
+possiblyUpdateCustomColumnNames qt oCol nCol = do
+  TableConfig customRootFields customColumns <- getTableConfig qt
+  let updatedCustomColumns =
+        M.fromList $ flip map (M.toList customColumns) $
+        \(dbCol, val) -> (, val) $ if dbCol == oCol then nCol else dbCol
+  when (updatedCustomColumns /= customColumns) $
+    updateTableConfig qt $ TableConfig customRootFields updatedCustomColumns
 
 -- database functions for relationships
 getRelDef :: QualifiedTable -> RelName -> Q.TxE QErr Value

@@ -24,7 +24,7 @@ const RemoteRelationshipEditor = ({
   existingRelationship,
   tableSchema,
   remoteSchemas,
-  loading,
+  adminHeaders,
 }) => {
   const isLast = index === numRels - 1;
 
@@ -242,7 +242,7 @@ const RemoteRelationshipEditor = ({
       handleRemoteFieldChange={handleRemoteFieldChange}
       handleArgValueChange={handleArgValueChange}
       tableSchema={tableSchema}
-      loading={loading}
+      adminHeaders={adminHeaders}
     />
   );
 

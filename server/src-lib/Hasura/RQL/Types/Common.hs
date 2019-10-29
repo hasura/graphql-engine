@@ -17,6 +17,8 @@ module Hasura.RQL.Types.Common
        , ForeignKey(..)
        , EquatableGType(..)
        , InpValInfo(..)
+       , CustomColumnNames
+
        , NonEmptyText
        , mkNonEmptyText
        , unNonEmptyText
@@ -24,6 +26,8 @@ module Hasura.RQL.Types.Common
        , rootText
 
        , FunctionArgName(..)
+       , SystemDefined(..)
+       , isSystemDefined
        ) where
 
 import           Hasura.Prelude
@@ -33,12 +37,13 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
+import           Instances.TH.Lift             ()
+import           Language.Haskell.TH.Syntax    (Lift)
+
 import qualified Data.HashMap.Strict           as HM
 import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
-import           Instances.TH.Lift             ()
 import qualified Language.GraphQL.Draft.Syntax as G
-import           Language.Haskell.TH.Syntax    (Lift)
 import qualified Language.Haskell.TH.Syntax    as TH
 import qualified PostgreSQL.Binary.Decoding    as PD
 
@@ -133,7 +138,7 @@ instance DQuote FieldName where
   dquoteTxt (FieldName c) = c
 
 fromPGCol :: PGCol -> FieldName
-fromPGCol (PGCol c) = FieldName c
+fromPGCol c = FieldName $ getPGColTxt c
 
 fromRel :: RelName -> FieldName
 fromRel = FieldName . relNameToTxt
@@ -200,3 +205,11 @@ instance EquatableGType InpValInfo where
 class EquatableGType a where
   type EqProps a
   getEqProps :: a -> EqProps a
+
+type CustomColumnNames = HM.HashMap PGCol G.Name
+
+newtype SystemDefined = SystemDefined { unSystemDefined :: Bool }
+  deriving (Show, Eq, FromJSON, ToJSON, Q.ToPrepArg)
+
+isSystemDefined :: SystemDefined -> Bool
+isSystemDefined = unSystemDefined

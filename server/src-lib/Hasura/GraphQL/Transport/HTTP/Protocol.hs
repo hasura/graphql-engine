@@ -1,4 +1,6 @@
 {-# LANGUAGE NamedFieldPuns  #-}
+{-# LANGUAGE RecordWildCards #-}
+
 module Hasura.GraphQL.Transport.HTTP.Protocol
   ( GQLReq(..)
   , GQLReqUnparsed
@@ -10,7 +12,8 @@ module Hasura.GraphQL.Transport.HTTP.Protocol
   , VariableValues
   , encodeGQErr
   , encodeGQResp
-  , GQResp(..)
+  , GQResult(..)
+  , GQResponse
   , isExecError
   , RemoteGqlResp(..)
   , GraphqlResponse(..)
@@ -19,6 +22,8 @@ module Hasura.GraphQL.Transport.HTTP.Protocol
   , encodeGQRespValue
   , parseGQRespValue
   , GQJoinError(..), gqJoinErrorToValue
+  , mergeResponses
+  , getMergedGQResp
   ) where
 
 import           Control.Lens
@@ -27,12 +32,14 @@ import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 
+
 import           Language.GraphQL.Draft.Instances ()
 
 import qualified Data.Aeson                       as J
 import qualified Data.Aeson.Casing                as J
 import qualified Data.Aeson.Ordered               as OJ
 import qualified Data.Aeson.TH                    as J
+import qualified Data.ByteString.Lazy             as BL
 import qualified Data.HashMap.Strict              as Map
 import qualified Data.Vector                      as V
 import qualified Language.GraphQL.Draft.Parser    as G
@@ -111,6 +118,57 @@ data GQRespValue =
 
 makeLenses ''GQRespValue
 
+newtype GQJoinError =  GQJoinError Text
+  deriving (Show, Eq, IsString, Monoid, Semigroup)
+
+-- | https://graphql.github.io/graphql-spec/June2018/#sec-Errors  "Error result format"
+gqJoinErrorToValue :: GQJoinError -> OJ.Value
+gqJoinErrorToValue (GQJoinError msg) =
+  OJ.Object (OJ.fromList [("message", OJ.String msg)])
+
+data GQResult a
+  = GQSuccess !a
+  | GQPreExecError ![J.Value]
+  | GQExecError ![J.Value]
+  | GQGeneric  !GQRespValue
+  deriving (Functor, Foldable, Traversable)
+
+type GQResponse = GQResult BL.ByteString
+
+isExecError :: GQResult a -> Bool
+isExecError = \case
+  GQExecError _ -> True
+  _             -> False
+
+-- | Represents GraphQL response from a remote server
+data RemoteGqlResp
+  = RemoteGqlResp
+  { _rgqrData       :: !(Maybe J.Value)
+  , _rgqrErrors     :: !(Maybe [J.Value])
+  , _rgqrExtensions :: !(Maybe J.Value)
+  } deriving (Show, Eq)
+$(J.deriveFromJSON (J.aesonDrop 5 J.camelCase) ''RemoteGqlResp)
+
+encodeRemoteGqlResp :: RemoteGqlResp -> EncJSON
+encodeRemoteGqlResp (RemoteGqlResp d e ex) =
+  encJFromAssocList [ ("data", encJFromJValue d)
+                    , ("errors", encJFromJValue e)
+                    , ("extensions", encJFromJValue ex)
+                    ]
+
+-- | Represents a proper GraphQL response
+data GraphqlResponse
+  = GRHasura !GQResponse
+  | GRRemote !RemoteGqlResp
+
+encodeGraphqlResponse :: GraphqlResponse -> EncJSON
+encodeGraphqlResponse = \case
+  GRHasura resp -> encodeGQResp resp
+  GRRemote resp -> encodeRemoteGqlResp resp
+
+emptyResp :: GQRespValue
+emptyResp = GQRespValue OJ.empty VB.empty
+
 parseGQRespValue :: EncJSON -> Either String GQRespValue
 parseGQRespValue = OJ.eitherDecode . encJToLBS >=> \case
   OJ.Object obj -> do
@@ -137,7 +195,7 @@ encodeGQRespValue GQRespValue{..} = OJ.toEncJSON $ OJ.Object $ OJ.fromList $
   if _gqRespData == OJ.empty && not anyErrors
     then
       let msg = "Somehow did not accumulate any errors or data from graphql queries"
-       in [("errors", OJ.Array $ V.singleton $ gqJoinErrorToValue msg)]
+       in [("errors", OJ.Array $ V.singleton $ OJ.Object (OJ.fromList [("message", OJ.String msg)]) )]
     else
       -- NOTE: "If an error was encountered during the execution that prevented
       -- a valid response, the data entry in the response should be null."
@@ -148,55 +206,23 @@ encodeGQRespValue GQRespValue{..} = OJ.toEncJSON $ OJ.Object $ OJ.fromList $
     gqRespErrorsV = VB.build _gqRespErrors
     anyErrors = not $ V.null gqRespErrorsV
 
-newtype GQJoinError =  GQJoinError Text
-  deriving (Show, Eq, IsString, Monoid, Semigroup)
-
--- | https://graphql.github.io/graphql-spec/June2018/#sec-Errors  "Error result format"
-gqJoinErrorToValue :: GQJoinError -> OJ.Value
-gqJoinErrorToValue (GQJoinError msg) =
-  OJ.Object (OJ.fromList [("message", OJ.String msg)])
-
-data GQResp
-  = GQSuccess !EncJSON
-  | GQPreExecError ![J.Value]
-  | GQExecError ![J.Value]
-  | GQGeneric  !GQRespValue
-
-isExecError :: GQResp -> Bool
-isExecError = \case
-  GQExecError _ -> True
-  _             -> False
-
-encodeGQResp :: GQResp -> EncJSON
+encodeGQResp :: GQResponse -> EncJSON
 encodeGQResp = \case
-  GQSuccess r      -> encJFromAssocList [("data", r)]
+  GQSuccess r      -> encJFromAssocList [("data", encJFromLBS r)]
   GQPreExecError e -> encJFromAssocList [("errors", encJFromJValue e)]
   GQExecError e    -> encJFromAssocList [("data", "null"), ("errors", encJFromJValue e)]
   GQGeneric v -> encodeGQRespValue v
 
+-- | See 'mergeResponseData'.
+getMergedGQResp :: Traversable t=> t EncJSON -> Either String GQRespValue
+getMergedGQResp =
+  mergeGQResp <=< traverse parseGQRespValue
+  where mergeGQResp = flip foldM emptyResp $ \respAcc GQRespValue{..} ->
+          respAcc & gqRespErrors <>~ _gqRespErrors
+                  & mapMOf gqRespData (OJ.safeUnion _gqRespData)
 
--- | Represents GraphQL response from a remote server
-data RemoteGqlResp
-  = RemoteGqlResp
-  { _rgqrData       :: !(Maybe J.Value)
-  , _rgqrErrors     :: !(Maybe [J.Value])
-  , _rgqrExtensions :: !(Maybe J.Value)
-  } deriving (Show, Eq)
-$(J.deriveFromJSON (J.aesonDrop 5 J.camelCase) ''RemoteGqlResp)
-
-encodeRemoteGqlResp :: RemoteGqlResp -> EncJSON
-encodeRemoteGqlResp (RemoteGqlResp d e ex) =
-  encJFromAssocList [ ("data", encJFromJValue d)
-                    , ("errors", encJFromJValue e)
-                    , ("extensions", encJFromJValue ex)
-                    ]
-
--- | Represents a proper GraphQL response
-data GraphqlResponse
-  = GRHasura !GQResp
-  | GRRemote !RemoteGqlResp
-
-encodeGraphqlResponse :: GraphqlResponse -> EncJSON
-encodeGraphqlResponse = \case
-  GRHasura resp -> encodeGQResp resp
-  GRRemote resp -> encodeRemoteGqlResp resp
+-- | Union several graphql responses, with the ordering of the top-level fields
+-- determined by the input list.
+mergeResponses :: Traversable t=> t EncJSON -> Either String EncJSON
+mergeResponses =
+  fmap encodeGQRespValue . getMergedGQResp
