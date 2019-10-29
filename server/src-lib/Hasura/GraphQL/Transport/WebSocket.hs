@@ -20,6 +20,7 @@ import qualified Data.IORef                                  as IORef
 import qualified Data.Text                                   as T
 import qualified Data.Text.Encoding                          as TE
 import qualified Data.Time.Clock                             as TC
+import qualified Database.PG.Query                           as Q
 import qualified Language.GraphQL.Draft.Syntax               as G
 import qualified Network.HTTP.Client                         as H
 import qualified Network.HTTP.Types                          as H
@@ -295,7 +296,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         execQueryOrMut reqId query genSql $ runLazyTx' pgExecCtx opTx
       E.ExOpMutation opTx ->
         execQueryOrMut reqId query Nothing $
-          runLazyTx pgExecCtx Nothing $ withUserInfo userInfo opTx
+          runLazyTx pgExecCtx (Just Q.ReadWrite) $ withUserInfo userInfo opTx
       E.ExOpSubs lqOp -> do
         -- log the graphql query
         liftIO $ logGraphqlQuery logger $ QueryLog query Nothing reqId

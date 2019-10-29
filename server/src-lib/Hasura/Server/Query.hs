@@ -196,11 +196,11 @@ peelRun
   :: SchemaCache
   -> RunCtx
   -> PGExecCtx
-  -> Maybe Q.TxAccess
+  -> Q.TxAccess
   -> Run a
   -> ExceptT QErr IO (a, SchemaCache)
 peelRun sc runCtx@(RunCtx userInfo _ _) pgExecCtx txAccess (Run m) =
-  runLazyTx pgExecCtx txAccess $ withUserInfo userInfo lazyTx
+  runLazyTx pgExecCtx (Just txAccess) $ withUserInfo userInfo lazyTx
   where
     lazyTx = runReaderT (runStateT m sc) runCtx
 
@@ -295,12 +295,12 @@ queryNeedsReload (RQV2 qi) = case qi of
   RQV2SetTableCustomFields _ -> True
 
 
-getQueryAccessMode :: RQLQuery -> Maybe Q.TxAccess
+getQueryAccessMode :: RQLQuery -> Q.TxAccess
 getQueryAccessMode (RQV1 (RQRunSql RunSQL {rReadOnly})) =
   if rReadOnly
-    then Just Q.ReadOnly
-    else Nothing
-getQueryAccessMode _ = Nothing
+    then Q.ReadOnly
+    else Q.ReadWrite
+getQueryAccessMode _ = Q.ReadWrite
 
 runQueryM
   :: ( QErrM m, CacheRWM m, UserInfoM m, MonadTx m
@@ -387,9 +387,8 @@ runQueryM rq =
         allSameTxAccess qs = allReadWrite qs || allReadOnly qs
         allReadWrite = all isReadWrite
         allReadOnly = all isReadOnly
-        isReadWrite q = getQueryAccessMode q == Just Q.ReadWrite || getQueryAccessMode q == Nothing
-        isReadOnly q = getQueryAccessMode q == Just Q.ReadOnly
-        throwTxMismatch = throw400 BadRequest "bulk query has transaction access mode mismatch"
+        isReadWrite q = getQueryAccessMode q == Q.ReadWrite
+        isReadOnly q = getQueryAccessMode q == Q.ReadOnly
 
     runQueryV2M = \case
       RQV2TrackTable q           -> runTrackTableV2Q q
