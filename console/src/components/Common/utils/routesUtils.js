@@ -4,7 +4,7 @@
 
 export const getSchemaBaseRoute = schemaName => {
   // return `${globals.urlPrefix}/data/schema/${schemaName}`;
-  return `/data/schema/${schemaName}`;
+  return `/data/schema/${encodeURIComponent(schemaName)}`;
 };
 
 export const getSchemaAddTableRoute = schemaName => {
@@ -18,7 +18,7 @@ export const getSchemaPermissionsRoute = schemaName => {
 const getTableBaseRoute = (schemaName, tableName, isTable) => {
   return `${getSchemaBaseRoute(schemaName)}/${
     isTable ? 'tables' : 'views'
-  }/${tableName}`;
+  }/${encodeURIComponent(tableName)}`;
 };
 
 export const getTableBrowseRoute = (schemaName, tableName, isTable) => {
@@ -46,7 +46,9 @@ export const getTablePermissionsRoute = (schemaName, tableName, isTable) => {
 };
 
 export const getFunctionBaseRoute = (schemaName, functionName) => {
-  return `${getSchemaBaseRoute(schemaName)}/functions/${functionName}`;
+  return `${getSchemaBaseRoute(schemaName)}/functions/${encodeURIComponent(
+    functionName
+  )}`;
 };
 
 export const getFunctionModifyRoute = (schemaName, functionName) => {
