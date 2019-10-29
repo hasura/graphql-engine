@@ -233,9 +233,9 @@ export const fetchTrackedTableListQuery = options => {
           columns: ['*'],
           order_by: {
             column: 'constraint_name',
-            type: 'asc'
-          }
-        }
+            type: 'asc',
+          },
+        },
       ],
       order_by: [{ column: 'table_name', type: 'asc' }],
     },

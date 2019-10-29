@@ -1,9 +1,17 @@
 import React from 'react';
 import styles from './Styles.scss';
 import RemoveIcon from '../../../../Common/Icons/Remove';
+import { typeWrappers } from '../stateDefaults';
 
-const FieldEditor = ({ field, setField, allTypes, removeField, isLast }) => {
-  const { name, type } = field;
+const FieldEditor = ({
+  field,
+  setField,
+  allTypes,
+  removeField,
+  isLast,
+  parentTypeKind,
+}) => {
+  const { name, type, typeWrap } = field;
 
   const nameOnChange = e => {
     setField({
@@ -16,6 +24,13 @@ const FieldEditor = ({ field, setField, allTypes, removeField, isLast }) => {
     setField({
       ...field,
       type: e.target.value,
+    });
+  };
+
+  const typeWrapperOnChange = e => {
+    setField({
+      ...field,
+      typeWrap: e.target.value,
     });
   };
 
@@ -55,10 +70,37 @@ const FieldEditor = ({ field, setField, allTypes, removeField, isLast }) => {
           </option>
         )}
         {allTypes.map((t, i) => {
-          if (t.kind !== 'scalar' && !t.isInbuilt) return null;
+          if (
+            (parentTypeKind === 'object' && t.kind === 'input_object') ||
+            (parentTypeKind === 'input_object' && t.kind === 'object')
+          ) {
+            return null;
+          }
           return (
             <option key={i} value={i}>
               {t.name}
+            </option>
+          );
+        })}
+      </select>
+      <select
+        className={`form-control ${styles.inputWidthMid} ${
+          styles.add_mar_right_small
+        }`}
+        value={typeWrap || ''}
+        title={'Type wrapper'}
+        onChange={typeWrapperOnChange}
+      >
+        {!typeWrap && (
+          <option key="" value="">
+            {' '}
+            -- type --{' '}
+          </option>
+        )}
+        {typeWrappers.map((w, i) => {
+          return (
+            <option key={i} value={i}>
+              {w.label}
             </option>
           );
         })}

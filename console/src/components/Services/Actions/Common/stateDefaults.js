@@ -1,13 +1,18 @@
+import { typeWrappers } from '../../Types/wrappingTypeUtils';
+
+export { typeWrappers };
+
 export const defaultArg = {
   name: '',
   type: '',
   description: '',
-  optional: false,
+  typeWrap: '0',
 };
 
 export const defaultField = {
   name: '',
   type: '',
+  typeWrap: '0',
 };
 
 export const defaultScalarType = {

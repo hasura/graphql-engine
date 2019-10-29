@@ -1,4 +1,5 @@
 import { getActionTypes } from '../../Types/utils';
+import { unwrapType } from '../../Types/wrappingTypeUtils';
 import {
   defaultArg,
   defaultField,
@@ -19,19 +20,12 @@ export const getModifyState = (currentAction, allTypes) => {
   modifyState.kind = actionDef.kind;
   modifyState.arguments = actionDef.arguments.map(a => {
     const _a = { ...a };
-    let argType = a.type;
-    console.log('====================');
-    console.log(actionTypes);
-    console.log(argType);
-    _a.optional = argType.indexOf('!') === -1;
-    argType = _a.optional ? argType : argType.substring(0, argType.length - 1);
-    console.log(argType);
+    const { typename: argType, index: typeWrapperIndex } = unwrapType(a.type);
     const argTypeIndex = actionTypes
       .findIndex(t => t.name === argType)
       .toString();
     _a.type = argTypeIndex;
-    console.log(argTypeIndex);
-    console.log('====================');
+    _a.typeWrap = typeWrapperIndex.toString();
     return _a;
   });
   modifyState.arguments.push(defaultArg);
@@ -48,18 +42,26 @@ export const getModifyState = (currentAction, allTypes) => {
         _t.arguments = [];
         _t.arguments.push(defaultArg);
         _t.fields = _t.fields.map(f => {
+          const { typename, index: typeWrap } = unwrapType(f.type);
           return {
             ...f,
-            type: actionTypes.findIndex(__t => __t.name === f.type).toString(),
+            type: actionTypes
+              .findIndex(__t => __t.name === typename)
+              .toString(),
+            typeWrap: typeWrap.toString(),
           };
         });
         _t.fields.push(defaultField);
         return _t;
       case 'input_object':
         _t.fields = _t.fields.map(f => {
+          const { typename, index: typeWrap } = unwrapType(f.type);
           return {
             ...f,
-            type: actionTypes.findIndex(__t => __t.name === f.type).toString(),
+            type: actionTypes
+              .findIndex(__t => __t.name === typename)
+              .toString(),
+            typeWrap: typeWrap.toString(),
           };
         });
         _t.fields.push(defaultField);

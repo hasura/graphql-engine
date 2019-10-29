@@ -1,5 +1,6 @@
 import gqlPattern from '../../Data/Common/GraphQLValidation';
 import { filterNameLessTypeLess, filterValueLess } from '../../Types/utils';
+import { wrapType } from '../../Types/wrappingTypeUtils';
 
 // TODO (pull out default arguments, fields and types)
 // TODO (check rare bug where description of an argument disappears)
@@ -57,9 +58,9 @@ export const sanitiseState = state => {
     const argType = newState.types[a.type].name;
     const _arg = {
       ...a,
-      type: `${argType}${!a.optional ? '!' : ''}`,
+      type: wrapType(argType, a.typeWrap),
     };
-    delete _arg.optional;
+    delete _arg.typeWrap;
     return _arg;
   });
   newState.outputType = newState.types[newState.outputType]
@@ -76,14 +77,14 @@ export const sanitiseState = state => {
       case 'object':
         _t.fields = filterNameLessTypeLess(_t.fields).map(f => ({
           ...f,
-          type: newState.types[f.type].name,
+          type: wrapType(newState.types[f.type].name, f.typeWrap),
         }));
         return _t;
 
       case 'input_object':
         _t.fields = filterNameLessTypeLess(_t.fields).map(f => ({
           ...f,
-          type: newState.types[f.type].name,
+          type: wrapType(newState.types[f.type].name, f.typeWrap),
         }));
         return _t;
 

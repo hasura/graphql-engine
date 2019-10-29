@@ -1,6 +1,7 @@
 import React from 'react';
 import styles from './Styles.scss';
 import RemoveIcon from '../../../../Common/Icons/Remove';
+import { typeWrappers } from '../stateDefaults';
 
 const ArgumentEditor = ({
   argument,
@@ -8,8 +9,9 @@ const ArgumentEditor = ({
   removeArgument,
   allTypes,
   isLast,
+  parentTypeKind,
 }) => {
-  const { name, type, description, optional } = argument;
+  const { name, type, description, typeWrap } = argument;
 
   const nameOnChange = e => {
     setArgument({
@@ -30,14 +32,16 @@ const ArgumentEditor = ({
     });
   };
 
-  const toggleOptional = e => {
+  const settypeWrappers = e => {
     setArgument({
       ...argument,
-      optional: e.target.checked,
+      typeWrap: e.target.value,
     });
   };
 
   const noTypes = allTypes.length === 0;
+
+  const typeWrapTitle = noTypes ? 'Select a type first' : null;
 
   // show remove icon for all columns except last
   let removeIcon = null;
@@ -84,24 +88,28 @@ const ArgumentEditor = ({
           );
         })}
       </select>
-      <input
-        type="text"
-        value={description}
-        onChange={descriptionOnChange}
-        placeholder="description"
-        className={`form-control ${styles.inputWidth} ${
-          styles.add_mar_right_mid
+      <select
+        className={`form-control ${styles.inputWidthMid} ${
+          styles.add_mar_right_small
         }`}
-      />
-      <label className={`${styles.add_mar_right_mid} ${styles.cursorPointer}`}>
-        <input
-          type="checkbox"
-          checked={optional}
-          onChange={toggleOptional}
-          className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
-        />
-        Optional
-      </label>
+        value={typeWrap || ''}
+        title={'Type wrapper'}
+        onChange={settypeWrappers}
+      >
+        {!typeWrap && (
+          <option key="" value="">
+            {' '}
+            -- type --{' '}
+          </option>
+        )}
+        {typeWrappers.map((w, i) => {
+          return (
+            <option key={i} value={i}>
+              {w.label}
+            </option>
+          );
+        })}
+      </select>
       {removeIcon}
     </div>
   );

@@ -2,9 +2,21 @@ import React from 'react';
 import styles from './Styles.scss';
 import FieldEditor from './FieldEditor';
 import { defaultInputObjectType, defaultField } from '../stateDefaults';
+import CopyIcon from '../../../../Common/Icons/Copy';
+import Modal from '../../../../Common/Modal/Modal';
+import DeriveFrom from './DeriveFromModalContent';
 
 const InputObjectBuilder = ({ type, setType, allTypes }) => {
   const { name, fields, kind } = type;
+
+  const [modalOpen, setModalOpen] = React.useState(false);
+  const toggleModal = () => {
+    if (!name) {
+      window.alert('Set a type name first');
+      return;
+    }
+    setModalOpen(!modalOpen);
+  };
 
   const init = () => {
     if (type.kind !== 'input_object') {
@@ -38,11 +50,13 @@ const InputObjectBuilder = ({ type, setType, allTypes }) => {
 
   if (kind !== 'input_object') return null;
 
+  console.log(modalOpen);
+
   return (
     <div>
       <i>
         Note: An input object defines a structured collection of fields which
-        may be supplied to a field argument.&nbsp;
+        may be supplied to an argument.&nbsp;
         <a
           href="https://graphql.org/learn/schema/#input-types"
           rel="noopener noreferrer"
@@ -62,6 +76,22 @@ const InputObjectBuilder = ({ type, setType, allTypes }) => {
           className={`form-control ${styles.inputWidth}`}
           placeholder="__typeName"
         />
+      </div>
+      <div className={`${styles.add_mar_top} ${styles.add_mar_bottom}`}>
+        <div className={`${styles.add_mar_bottom}`}>
+          <a onClick={toggleModal} className={styles.cursorPointer}>
+            <CopyIcon className={styles.add_mar_right_small} />
+            Derive from an existing input object type
+          </a>
+          <Modal
+            show={modalOpen}
+            title={'Derive from an existing type'}
+            onClose={toggleModal}
+            customClass={styles.modal}
+          >
+            <DeriveFrom />
+          </Modal>
+        </div>
       </div>
       <div>
         <div className={`${styles.add_mar_bottom}`}>
@@ -88,6 +118,7 @@ const InputObjectBuilder = ({ type, setType, allTypes }) => {
               allTypes={allTypes}
               isLast={isLast}
               index={i}
+              parentTypeKind={'input_object'}
             />
           );
         })}

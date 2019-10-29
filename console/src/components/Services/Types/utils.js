@@ -1,9 +1,10 @@
+import { wrapType } from './wrappingTypeUtils';
+
 const singularize = kind => {
   return kind.substr(0, kind.length - 1);
 };
 
 export const filterNameLessTypeLess = arr => {
-  console.log(arr);
   return arr.filter(item => !!item.name && !!item.type);
 };
 
@@ -109,9 +110,14 @@ export const parseCustomTypes = customTypesServer => {
 export const getActionTypes = (actionDef, allTypes) => {
   return allTypes.filter(t => {
     // TODO
-    if (actionDef.arguments.find(a => a.type.indexOf(t.name) === 0))
+    if (actionDef.arguments.find(a => a.type.indexOf(t.name) === 0)) {
       return true;
+    }
     if (actionDef.output_type === t.name) return true;
     return false;
   });
+};
+
+export const wrapWrappingTypes = types => {
+  return types.map(t => {});
 };

@@ -86,6 +86,7 @@ const ObjectBuilder = ({ type, setType, allTypes }) => {
               removeField={removeField}
               allTypes={allTypes}
               isLast={isLast}
+              parentTypeKind={'object'}
               index={i}
             />
           );
