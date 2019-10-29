@@ -1,3 +1,5 @@
+import { isWrappingType, isListType, isNonNullType } from 'graphql';
+
 const wrapNonNullable = typename => {
   return `${typename}!`;
 };
@@ -100,4 +102,46 @@ export const unwrapType = wrappedTypename => {
     index: 0,
     typename: wrappedTypename,
   };
+};
+
+export const getTypenameMetadata = graphqlType => {
+  let _type = graphqlType;
+  const wrappers = [];
+
+  while (isWrappingType(_type)) {
+    if (isListType(_type)) {
+      wrappers.push('l');
+    }
+    if (isNonNullType(_type)) {
+      wrappers.push('n');
+    }
+    _type = _type.ofType;
+  }
+
+  const typename = _type.name;
+  let wrappedTypename = typename;
+
+  while (wrappers[0]) {
+    const l = wrappers.length;
+    if (wrappers[l - 1] === 'l') {
+      wrappedTypename = `[${wrappedTypename}]`;
+      wrappers.pop();
+      continue;
+    }
+    if (wrappers[l - 1] === 'n') {
+      wrappedTypename = `${wrappedTypename}!`;
+      wrappers.pop();
+      continue;
+    }
+  }
+
+  return unwrapType(wrappedTypename);
+};
+
+export const getUnderlyingType = graphqlType => {
+  let _type = graphqlType;
+  while (isWrappingType(_type)) {
+    _type = _type.ofType;
+  }
+  return _type;
 };

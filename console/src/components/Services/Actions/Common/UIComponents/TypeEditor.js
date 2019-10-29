@@ -5,6 +5,7 @@ import TypeBuilder from './TypeBuilder';
 const TypeEditor = ({
   type,
   setType,
+  setTypes,
   removeType,
   isLast,
   service,
@@ -12,7 +13,14 @@ const TypeEditor = ({
   allTypes,
 }) => {
   const editorExpanded = () => {
-    return <TypeBuilder type={type} setType={setType} allTypes={allTypes} />;
+    return (
+      <TypeBuilder
+        type={type}
+        setType={setType}
+        setTypes={setTypes}
+        allTypes={allTypes}
+      />
+    );
   };
 
   const expandButtonText = isLast ? 'Create a new type' : 'Edit';

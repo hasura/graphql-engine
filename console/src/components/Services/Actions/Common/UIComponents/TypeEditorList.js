@@ -36,6 +36,7 @@ const Types = ({ types, setTypes, className, service, removeType }) => {
             type={type}
             setType={setType}
             removeType={_removeType}
+            setTypes={setTypes}
             allTypes={types}
             isLast={isLast}
             service={service}

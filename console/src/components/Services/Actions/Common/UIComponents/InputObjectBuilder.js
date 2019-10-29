@@ -6,7 +6,7 @@ import CopyIcon from '../../../../Common/Icons/Copy';
 import Modal from '../../../../Common/Modal/Modal';
 import DeriveFrom from './DeriveFromModalContent';
 
-const InputObjectBuilder = ({ type, setType, allTypes }) => {
+const InputObjectBuilder = ({ type, setType, setTypes, allTypes }) => {
   const { name, fields, kind } = type;
 
   const [modalOpen, setModalOpen] = React.useState(false);
@@ -50,8 +50,6 @@ const InputObjectBuilder = ({ type, setType, allTypes }) => {
 
   if (kind !== 'input_object') return null;
 
-  console.log(modalOpen);
-
   return (
     <div>
       <i>
@@ -89,7 +87,12 @@ const InputObjectBuilder = ({ type, setType, allTypes }) => {
             onClose={toggleModal}
             customClass={styles.modal}
           >
-            <DeriveFrom />
+            <DeriveFrom
+              allTypes={allTypes}
+              setTypes={setTypes}
+              currentTypename={name}
+              toggleModal={toggleModal}
+            />
           </Modal>
         </div>
       </div>
