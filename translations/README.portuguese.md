@@ -123,7 +123,7 @@ Transforme os dados em Postgres ou execute a regra de negócios para obter outro
 ## Demos
 
 Confira todos os exemplos da aplicação na pasta
-[community/examples](../community/examples).
+[community/examples](../community/sample-apps).
 
 ### Aplicações em tempo real
 
