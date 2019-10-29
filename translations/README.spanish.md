@@ -47,7 +47,7 @@ Lea más en [hasura.io](https://hasura.io) y en [docs](https://docs.hasura.io).
     - [Otros métodos de implementación](#otros-métodos-de-implementación)
 - [Arquitectura](#arquitectura)
 - [Herramientas del lado del cliente](#herramientas-del-lado-del-cliente)
-- [Agregar lógica de negocios](#añadir-lógica-de-negocios)
+- [Añadir lógica de negocios](#añadir-lógica-de-negocios)
     - [Esquemas remotos](#esquemas-remotos)
     - [Activar webhooks en eventos de base de datos](#activar-webhooks-en-eventos-de-base-de-datos)
 - [Demos](#demos)
@@ -133,18 +133,18 @@ Directorio [community/examples](../community/examples).
 - La aplicación Group Chat creada con React, incluye un indicador de escritura, usuarios en línea y nuevos
   notificaciones de mensajes.
   - [Pruébalo](https://realtime-chat.demo.hasura.app/)
-  - [Tutorial](community/sample-apps/realtime-chat)
+  - [Tutorial](../community/sample-apps/realtime-chat)
   - [Examinar API](https://realtime-chat.demo.hasura.app/console)
 
 - Aplicación de seguimiento de ubicación en vivo que muestra un vehículo en marcha cambiando el GPS actual
   coordenadas moviéndose en un mapa.
   - [Pruébalo](https://realtime-location-tracking.demo.hasura.app/)
-  - [Tutorial](community/sample-apps/realtime-location-tracking)
+  - [Tutorial](../community/sample-apps/realtime-location-tracking)
   - [Examinar API](https://realtime-location-tracking.demo.hasura.app/console)
  
 - Un panel de control en tiempo real para agregaciones de datos en datos que cambian continuamente.
   - [Pruébalo](https://realtime-poll.demo.hasura.app/)
-  - [Tutorial](community/sample-apps/realtime-poll)
+  - [Tutorial](../community/sample-apps/realtime-poll)
   - [Examinar API](https://realtime-poll.demo.hasura.app/console)
     
 ### Videos
