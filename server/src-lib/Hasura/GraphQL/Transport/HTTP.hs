@@ -54,7 +54,7 @@ runHasuraGQ reqId query userInfo resolvedOp = do
     E.ExOpMutation tx -> do
       -- log the graphql query
       liftIO $ logGraphqlQuery logger $ QueryLog query Nothing reqId
-      runLazyTx pgExecCtx $ withUserInfo userInfo tx
+      runLazyTx pgExecCtx Nothing $ withUserInfo userInfo tx
     E.ExOpSubs _ ->
       throw400 UnexpectedPayload
       "subscriptions are not supported over HTTP, use websockets instead"

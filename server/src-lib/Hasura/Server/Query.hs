@@ -196,10 +196,11 @@ peelRun
   :: SchemaCache
   -> RunCtx
   -> PGExecCtx
+  -> Maybe Q.TxAccess
   -> Run a
   -> ExceptT QErr IO (a, SchemaCache)
-peelRun sc runCtx@(RunCtx userInfo _ _) pgExecCtx (Run m) =
-  runLazyTx pgExecCtx $ withUserInfo userInfo lazyTx
+peelRun sc runCtx@(RunCtx userInfo _ _) pgExecCtx txAccess (Run m) =
+  runLazyTx pgExecCtx txAccess $ withUserInfo userInfo lazyTx
   where
     lazyTx = runReaderT (runStateT m sc) runCtx
 
@@ -211,7 +212,7 @@ runQuery
 runQuery pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined query = do
   resE <- runQueryM query
     & runHasSystemDefinedT systemDefined
-    & peelRun sc runCtx pgExecCtx
+    & peelRun sc runCtx pgExecCtx (getQueryAccessMode query)
     & runExceptT
     & liftIO
   either throwError withReload resE
@@ -219,7 +220,7 @@ runQuery pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined query = d
     runCtx = RunCtx userInfo hMgr sqlGenCtx
     withReload r = do
       when (queryNeedsReload query) $ do
-        e <- liftIO $ runExceptT $ runLazyTx pgExecCtx
+        e <- liftIO $ runExceptT $ runLazyTx pgExecCtx Nothing
              $ liftTx $ recordSchemaUpdate instanceId
         liftEither e
       return r
@@ -292,6 +293,14 @@ queryNeedsReload (RQV1 qi) = case qi of
 queryNeedsReload (RQV2 qi) = case qi of
   RQV2TrackTable _           -> True
   RQV2SetTableCustomFields _ -> True
+
+
+getQueryAccessMode :: RQLQuery -> Maybe Q.TxAccess
+getQueryAccessMode (RQV1 (RQRunSql RunSQL {rReadOnly})) =
+  if rReadOnly
+    then Just Q.ReadOnly
+    else Nothing
+getQueryAccessMode _ = Nothing
 
 runQueryM
   :: ( QErrM m, CacheRWM m, UserInfoM m, MonadTx m
@@ -372,7 +381,15 @@ runQueryM rq =
 
       RQRunSql q                   -> runRunSQL q
 
-      RQBulk qs                    -> encJFromList <$> indexedMapM runQueryM qs
+      RQBulk qs                    -> unless (allSameTxAccess qs) throwTxMismatch >>
+                                      encJFromList <$> indexedMapM  runQueryM qs
+      where
+        allSameTxAccess qs = allReadWrite qs || allReadOnly qs
+        allReadWrite = all isReadWrite
+        allReadOnly = all isReadOnly
+        isReadWrite q = getQueryAccessMode q == Just Q.ReadWrite || getQueryAccessMode q == Nothing
+        isReadOnly q = getQueryAccessMode q == Just Q.ReadOnly
+        throwTxMismatch = throw400 BadRequest "bulk query has transaction access mode mismatch"
 
     runQueryV2M = \case
       RQV2TrackTable q           -> runTrackTableV2Q q

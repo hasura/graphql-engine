@@ -21,13 +21,13 @@ import qualified Data.Text                                   as T
 import qualified Data.Text.Encoding                          as TE
 import qualified Data.Time.Clock                             as TC
 import qualified Language.GraphQL.Draft.Syntax               as G
-import qualified ListT
 import qualified Network.HTTP.Client                         as H
 import qualified Network.HTTP.Types                          as H
 import qualified Network.WebSockets                          as WS
 import qualified StmContainers.Map                           as STMMap
 
 import           Control.Concurrent                          (threadDelay)
+import qualified ListT
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging
@@ -295,7 +295,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         execQueryOrMut reqId query genSql $ runLazyTx' pgExecCtx opTx
       E.ExOpMutation opTx ->
         execQueryOrMut reqId query Nothing $
-          runLazyTx pgExecCtx $ withUserInfo userInfo opTx
+          runLazyTx pgExecCtx Nothing $ withUserInfo userInfo opTx
       E.ExOpSubs lqOp -> do
         -- log the graphql query
         liftIO $ logGraphqlQuery logger $ QueryLog query Nothing reqId

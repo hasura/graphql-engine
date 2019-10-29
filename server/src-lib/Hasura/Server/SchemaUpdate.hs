@@ -203,7 +203,7 @@ refreshSchemaCache
 refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef threadType msg = do
   -- Reload schema cache from catalog
   resE <- liftIO $ runExceptT $ withSCUpdate cacheRef logger $
-    peelRun emptySchemaCache runCtx pgCtx buildSchemaCacheWithoutSetup
+    peelRun emptySchemaCache runCtx pgCtx Nothing buildSchemaCacheWithoutSetup
   case resE of
     Left e  -> logError logger threadType $ TEQueryError e
     Right _ -> logInfo logger threadType $ object ["message" .= msg]
