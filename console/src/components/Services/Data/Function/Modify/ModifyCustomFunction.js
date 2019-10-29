@@ -25,6 +25,7 @@ import {
 import { SET_SQL } from '../../RawSQL/Actions';
 import { NotFoundError } from '../../../../Error/PageNotFound';
 import { getConfirmation } from '../../../../Common/utils/jsUtils';
+import { getFunctionBaseRoute, getSchemaBaseRoute } from '../../../../Common/utils/routesUtils';
 
 class ModifyCustomFunction extends React.Component {
   constructor() {
@@ -83,7 +84,7 @@ class ModifyCustomFunction extends React.Component {
     const { functionDefinition } = this.props.functions;
     Promise.all([
       this.props.dispatch({ type: SET_SQL, data: functionDefinition }),
-      this.props.dispatch(_push('/sql')),
+      this.props.dispatch(_push('/data/sql')),
     ]);
   }
 
@@ -140,7 +141,7 @@ class ModifyCustomFunction extends React.Component {
 
     const { migrationMode } = this.props;
 
-    const baseUrl = `${appPrefix}/schema/${schema}/functions/${functionName}`;
+    const baseUrl = getFunctionBaseRoute(schema, functionName);
 
     const generateMigrateBtns = () => {
       return (
@@ -192,14 +193,14 @@ class ModifyCustomFunction extends React.Component {
       },
       {
         title: schema,
-        url: appPrefix + '/schema/' + schema,
+        url: getSchemaBaseRoute(schema),
       },
     ];
 
     if (functionName) {
       breadCrumbs.push({
         title: functionName,
-        url: appPrefix + '/schema/' + schema + '/functions/' + functionName,
+        url: baseUrl,
       });
       breadCrumbs.push({
         title: 'Modify',

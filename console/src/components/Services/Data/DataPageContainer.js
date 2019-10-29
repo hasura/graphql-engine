@@ -9,6 +9,7 @@ import DataSubSidebar from './DataSubSidebar';
 import { updateCurrentSchema } from './DataActions';
 import { NotFoundError } from '../../Error/PageNotFound';
 import { CLI_CONSOLE_MODE } from '../../../constants';
+import { getSchemaBaseRoute } from '../../Common/utils/routesUtils';
 
 const sectionPrefix = '/data';
 
@@ -66,7 +67,7 @@ const DataPageContainer = ({
       >
         <Link
           className={styles.linkBorder}
-          to={sectionPrefix + '/schema/' + currentSchema}
+          to={getSchemaBaseRoute(currentSchema)}
         >
           <div className={styles.schemaWrapper}>
             <div className={styles.schemaSidebarSection} data-test="schema">
