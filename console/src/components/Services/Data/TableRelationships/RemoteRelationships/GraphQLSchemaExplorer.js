@@ -1,5 +1,6 @@
 import React from 'react';
 import styles from './SchemaExplorer.scss';
+import { connect } from 'react-redux';
 import { getSchemaTree } from '../utils';
 import ExplorerItem from './ExplorerItem';
 import { NoRemoteSchemaPlaceholder, LoadingSkeleton } from './Placeholders';
@@ -11,7 +12,7 @@ const SchemaExplorer = ({
   handleArgValueChange,
   handleRemoteFieldChange,
   tableSchema,
-  adminHeaders,
+  headers: adminHeaders,
 }) => {
   // introspect selected remote schema
 
@@ -93,4 +94,10 @@ const SchemaExplorer = ({
   );
 };
 
-export default SchemaExplorer;
+const mapStateToProps = state => {
+  return {
+    headers: state.tables.dataHeaders,
+  };
+};
+
+export default connect(mapStateToProps)(SchemaExplorer);
