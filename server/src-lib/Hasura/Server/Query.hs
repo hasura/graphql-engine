@@ -10,6 +10,7 @@ import           Data.Time                          (UTCTime)
 import           Language.Haskell.TH.Syntax         (Lift)
 
 import qualified Data.HashMap.Strict                as HM
+import qualified Data.Text                          as T
 import qualified Network.HTTP.Client                as HTTP
 
 import           Hasura.EncJSON
@@ -381,14 +382,18 @@ runQueryM rq =
 
       RQRunSql q                   -> runRunSQL q
 
-      RQBulk qs                    -> unless (allSameTxAccess qs) throwTxMismatch >>
-                                      encJFromList <$> indexedMapM  runQueryM qs
+      RQBulk qs                    -> assertAllTxAccess (zip [0::Integer ..] qs) >>
+                                      encJFromList <$> indexedMapM runQueryM qs
       where
-        allSameTxAccess qs = allReadWrite qs || allReadOnly qs
-        allReadWrite = all isReadWrite
-        allReadOnly = all isReadOnly
-        isReadWrite q = getQueryAccessMode q == Q.ReadWrite
-        isReadOnly q = getQueryAccessMode q == Q.ReadOnly
+        assertAllTxAccess = \case
+          [] -> pure ()
+          (_q:[]) -> pure ()
+          (q1:q2:qs) -> assertSameTxAccess q1 q2 >> assertAllTxAccess (q2:qs)
+
+        assertSameTxAccess (i1, q1) (i2, q2) = unless (getQueryAccessMode q1 == getQueryAccessMode q2) $
+          throw400 BadRequest $ "incompatible access mode requirements in bulk query: "
+          <> "$.query[" <> (T.pack $ show i1) <> "] requires " <> (T.pack $ show $ getQueryAccessMode q1) <> ", "
+          <> "$.query[" <> (T.pack $ show i2) <> "] requires " <> (T.pack $ show $ getQueryAccessMode q2)
 
     runQueryV2M = \case
       RQV2TrackTable q           -> runTrackTableV2Q q
