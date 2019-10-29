@@ -26,7 +26,7 @@ We appreciate first time contributors and we are happy to assist you in getting 
 
 You find all issues suitable for first time contributors [here](https://github.com/hasura/graphql-engine/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22).
 
-## Areas for contributing
+## Where can you contribute
 
 Of course, we appreciate contributions to all components of Hasura. However, we have identified three areas that are particularly suitable for open source contributions.
 
