@@ -8,6 +8,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Types
 
+import           Control.Lens               hiding ((.=))
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -49,6 +50,7 @@ $(deriveToJSON defaultOptions { constructorTagModifier = snakeCase . drop 3
                               }
    ''ComputedFieldReturn
  )
+$(makePrisms ''ComputedFieldReturn)
 
 data ComputedFieldFunction
   = ComputedFieldFunction
@@ -67,3 +69,9 @@ data ComputedFieldInfo
   , _cfiComment    :: !(Maybe Text)
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 4 snakeCase) ''ComputedFieldInfo)
+
+onlyScalarComputedFields :: [ComputedFieldInfo] -> [ComputedFieldInfo]
+onlyScalarComputedFields = filter (isJust . (^? _CFRScalar) . _cfiReturnType)
+
+returnsSetofTable :: ComputedFieldInfo -> Bool
+returnsSetofTable = isJust . (^? _CFRSetofTable) . _cfiReturnType

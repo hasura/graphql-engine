@@ -116,7 +116,6 @@ args:
         id: X-Hasura-User-Id
       computed_fields:
       - full_name
-      - get_articles
 
 - type: track_table
   args:

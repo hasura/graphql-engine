@@ -223,7 +223,7 @@ buildSelPermInfo
   => TableInfo PGColumnInfo
   -> SelPerm
   -> m (WithDeps SelPermInfo)
-buildSelPermInfo tabInfo sp = do
+buildSelPermInfo tabInfo sp = withPathK "permission" $ do
   let pgCols     = convColSpec fieldInfoMap $ spColumns sp
 
   (be, beDeps) <- withPathK "filter" $
@@ -235,12 +235,12 @@ buildSelPermInfo tabInfo sp = do
 
   -- validate computed fields
   scalarComputedFields <-
-    withPathK "computed_fields" $ indexedForM computedFields $ \name -> do
-      computedFieldInfo <- askComputedFieldInfo fieldInfoMap name
+    withPathK "computed_fields" $ indexedForM computedFields $ \fieldName -> do
+      computedFieldInfo <- askComputedFieldInfo fieldInfoMap fieldName
       case _cfiReturnType computedFieldInfo of
-        CFRScalar _               -> pure $ _cfiName computedFieldInfo
+        CFRScalar _               -> pure fieldName
         CFRSetofTable returnTable -> throw400 NotSupported $
-          "select permission on computed field " <> name
+          "select permission on computed field " <> fieldName
           <<> " is auto-derived via the select permission on its returning table "
           <>> returnTable
 

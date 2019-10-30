@@ -40,7 +40,7 @@
         - random
         filter: {}
   response:
-    path: "$.args.computed_fields[1]"
+    path: "$.args.permission.computed_fields[1]"
     error: computed field "random" does not exist
     code: not-exists
 
@@ -59,7 +59,7 @@
         - get_articles
         filter: {}
   response:
-    path: "$.args.computed_fields[1]"
+    path: "$.args.permission.computed_fields[1]"
     error: 'select permission on computed field "get_articles" is auto-derived via the select permission on its returning table "article"'
     code: not-supported
 

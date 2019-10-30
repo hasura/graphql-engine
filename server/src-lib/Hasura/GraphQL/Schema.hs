@@ -475,10 +475,11 @@ getSelPerm tableCache fields role selPermInfo = do
     validCols = getValidCols fields
     cols = map SFPGColumn $ getColInfos (toList allowedCols) validCols
     computedFields = flip filter (getComputedFieldInfos fields) $
-                      \info -> _cfiName info `Set.member` allowedComputedFields
+                      \info -> _cfiName info `Set.member` allowedScalarComputedFields
+                               || returnsSetofTable info
 
     allowedCols = spiCols selPermInfo
-    allowedComputedFields = spiComputedFields selPermInfo
+    allowedScalarComputedFields = spiScalarComputedFields selPermInfo
 
 mkInsCtx
   :: MonadError QErr m
