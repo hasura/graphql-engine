@@ -18,9 +18,6 @@ const Endpoints = {
   hasuractlMigrate: `${hasuractlUrl}/apis/migrate`,
   hasuractlMetadata: `${hasuractlUrl}/apis/metadata`,
   hasuractlMigrateSettings: `${hasuractlUrl}/apis/migrate/settings`,
-  hasuractlMigrateStatus: `${hasuractlUrl}/apis/migrate`,
-  hasuractlMigrateSquash: `${hasuractlUrl}/apis/migrate/squash/create`,
-  hasuractlMigrateDelete: `${hasuractlUrl}/apis/migrate/squash/delete`,
   telemetryServer: 'wss://telemetry.hasura.io/v1/ws',
 };
 
