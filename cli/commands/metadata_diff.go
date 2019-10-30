@@ -5,7 +5,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"reflect"
 	"strings"
 
 	"github.com/aryann/difflib"
@@ -130,62 +129,7 @@ func (o *metadataDiffOptions) run() error {
 		return errors.Wrap(err, "cannot read file")
 	}
 
-	// return diffYaml(oldYaml, newYaml, o.output)
 	printDiff(string(oldYaml), string(newYaml), o.output)
-	return nil
-}
-
-func yamlToMap(y []byte) (map[string]string, error) {
-	var obj map[string]interface{}
-	m := make(map[string]string)
-	err := yaml.Unmarshal(y, &obj)
-	if err != nil {
-		return nil, err
-	}
-	for key, value := range obj {
-		val, err := yaml.Marshal(value)
-		if err != nil {
-			return m, err
-		}
-		m[key] = string(val)
-	}
-	return m, nil
-}
-
-func diffYaml(oldYaml, newYaml []byte, to io.Writer) error {
-	oldIndex, err := yamlToMap(oldYaml)
-	if err != nil {
-		return err
-	}
-	newIndex, err := yamlToMap(newYaml)
-	if err != nil {
-		return err
-	}
-	if reflect.DeepEqual(oldIndex, newIndex) {
-		fmt.Fprintf(to, "There are no changes.")
-		return nil
-	}
-	for key, oldContent := range oldIndex {
-		if newContent, ok := newIndex[key]; ok {
-			if oldContent != newContent {
-				// modified
-				fmt.Fprintf(to, ansi.Color("%s has changed:", "yellow")+"\n", key)
-				printDiff(oldContent, newContent, to)
-			}
-		} else {
-			// removed
-			fmt.Fprintf(to, ansi.Color("%s has been removed:", "yellow")+"\n", key)
-			printDiff(oldContent, "", to)
-		}
-	}
-
-	for key, newContent := range newIndex {
-		if _, ok := oldIndex[key]; !ok {
-			// added
-			fmt.Fprintf(to, ansi.Color("%s has been added:", "yellow")+"\n", key)
-			printDiff("", newContent, to)
-		}
-	}
 	return nil
 }
 
