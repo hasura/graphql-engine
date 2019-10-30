@@ -234,11 +234,18 @@ buildSelPermInfo tabInfo sp = do
     askPGType fieldInfoMap pgCol autoInferredErr
 
   -- validate computed fields
-  withPathK "computed_fields" $ indexedForM_ computedFields $ \name -> do
-    void $ askComputedFieldInfo fieldInfoMap name
+  scalarComputedFields <-
+    withPathK "computed_fields" $ indexedForM computedFields $ \name -> do
+      computedFieldInfo <- askComputedFieldInfo fieldInfoMap name
+      case _cfiReturnType computedFieldInfo of
+        CFRScalar _               -> pure $ _cfiName computedFieldInfo
+        CFRSetofTable returnTable -> throw400 NotSupported $
+          "select permission on computed field " <> name
+          <<> " is auto-derived via the select permission on its returning table "
+          <>> returnTable
 
   let deps = mkParentDep tn : beDeps ++ map (mkColDep DRUntyped tn) pgCols
-             ++ map (mkComputedFieldDep DRUntyped tn) computedFields
+             ++ map (mkComputedFieldDep DRUntyped tn) scalarComputedFields
       depHeaders = getDependentHeaders $ spFilter sp
       mLimit = spLimit sp
 
