@@ -7,6 +7,7 @@ export const REMOTE_SCHEMA_TIMEOUT_CONF_SUPPORT =
 export const TABLE_ENUMS_SUPPORT = 'tableEnumsSupport';
 export const EXISTS_PERMISSION_SUPPORT = 'existsPermissionSupport';
 export const COMPUTED_FIELDS_SUPPORT = 'computedFieldsSupport';
+export const IMPROVED_EVENT_FETCH_QUERY = 'improvedEventFetchQuery';
 
 // list of feature launch versions
 const featureLaunchVersions = {
@@ -17,6 +18,7 @@ const featureLaunchVersions = {
   [TABLE_ENUMS_SUPPORT]: 'v1.0.0-beta.6',
   [EXISTS_PERMISSION_SUPPORT]: 'v1.0.0-beta.7',
   [COMPUTED_FIELDS_SUPPORT]: 'v1.0.0-beta.8',
+  [IMPROVED_EVENT_FETCH_QUERY]: 'v1.0.0-beta.9',
 };
 
 export const checkValidServerVersion = version => {
