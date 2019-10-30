@@ -53,9 +53,7 @@ const RootFieldEditor = ({
     return (
       <div className={`${styles.add_mar_bottom_mid}`}>
         <div
-          className={`${styles.add_mar_bottom_small} ${styles.display_flex} ${
-            styles.cursorPointer
-          }`}
+          className={`${styles.add_mar_bottom_small} ${styles.display_flex}`}
         >
           <i className={`fa fa-chevron-right ${styles.add_mar_right}`} />
           <b>{rfType === 'query' ? 'Query and Subscription' : 'Mutation'}</b>
