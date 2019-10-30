@@ -285,9 +285,11 @@ class TestGraphqlQueryPermissions(DefaultTestSelectQueries):
     def test_user_query_auction(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/user_query_auction.yaml', transport)
 
-    @pytest.mark.xfail(reason="Refer https://github.com/hasura/graphql-engine-internal/issues/252")
-    def test_jsonb_has_all(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/jsonb_has_all.yaml', transport)
+    # FIXME: This test fails nondeterministically: strict=false doesn't seem to
+    # work on CI, so just disable for now:
+    # @pytest.mark.xfail(reason="Refer https://github.com/hasura/graphql-engine-internal/issues/252")
+    # def test_jsonb_has_all(self, hge_ctx, transport):
+    #     check_query_f(hge_ctx, self.dir() + '/jsonb_has_all.yaml', transport)
 
     def test_jsonb_has_any(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/jsonb_has_any.yaml', transport)
