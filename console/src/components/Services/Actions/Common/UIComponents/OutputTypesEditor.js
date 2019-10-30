@@ -6,8 +6,10 @@ const editorLabel = 'Output Type';
 const editorTooltip = 'This is the returning type of the mutation';
 
 const OutputTypesEditor = ({ className, value, onChange, allTypes }) => {
-  const dropdownDisabled = !allTypes.length;
-  const dropdownTitle = dropdownDisabled ? 'Create a custom type first' : null;
+  const dropdownDisabled = !allTypes.filter(t => t.kind === 'object').length;
+  const dropdownTitle = dropdownDisabled
+    ? 'Create a custom object type first'
+    : null;
   return (
     <div className={`${className || ''}`}>
       <h2

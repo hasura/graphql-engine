@@ -9,9 +9,8 @@ const ArgumentEditor = ({
   removeArgument,
   allTypes,
   isLast,
-  parentTypeKind,
 }) => {
-  const { name, type, description, typeWrap } = argument;
+  const { name, type, typeWrap } = argument;
 
   const nameOnChange = e => {
     setArgument({
@@ -25,12 +24,6 @@ const ArgumentEditor = ({
       type: e.target.value,
     });
   };
-  const descriptionOnChange = e => {
-    setArgument({
-      ...argument,
-      description: e.target.value,
-    });
-  };
 
   const settypeWrappers = e => {
     setArgument({
@@ -40,8 +33,6 @@ const ArgumentEditor = ({
   };
 
   const noTypes = allTypes.length === 0;
-
-  const typeWrapTitle = noTypes ? 'Select a type first' : null;
 
   // show remove icon for all columns except last
   let removeIcon = null;
@@ -89,7 +80,7 @@ const ArgumentEditor = ({
         })}
       </select>
       <select
-        className={`form-control ${styles.inputWidthMid} ${
+        className={`form-control ${styles.inputWidth} ${
           styles.add_mar_right_small
         }`}
         value={typeWrap || ''}
@@ -99,7 +90,7 @@ const ArgumentEditor = ({
         {!typeWrap && (
           <option key="" value="">
             {' '}
-            -- type --{' '}
+            -- type wrapper --{' '}
           </option>
         )}
         {typeWrappers.map((w, i) => {

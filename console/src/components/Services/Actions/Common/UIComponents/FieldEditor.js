@@ -85,7 +85,7 @@ const FieldEditor = ({
         })}
       </select>
       <select
-        className={`form-control ${styles.inputWidthMid} ${
+        className={`form-control ${styles.inputWidth} ${
           styles.add_mar_right_small
         }`}
         value={typeWrap || ''}
@@ -95,7 +95,7 @@ const FieldEditor = ({
         {!typeWrap && (
           <option key="" value="">
             {' '}
-            -- type --{' '}
+            -- type wrapper --{' '}
           </option>
         )}
         {typeWrappers.map((w, i) => {
