@@ -18,6 +18,14 @@
   version = "v0.4.7"
 
 [[projects]]
+  branch = "master"
+  digest = "1:67f5c19d64f788aa79a8e612eefa1cc68dca46c3436c93b84af9c95bd7e1a556"
+  name = "github.com/aryann/difflib"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "e206f873d14a916d3d26c40ab667bca123f365a3"
+
+[[projects]]
   digest = "1:889290ee5c1f1888baa7caa2b4cdfa8a6abcfb86dd772fe6470ad7925cc44bff"
   name = "github.com/briandowns/spinner"
   packages = ["."]
@@ -299,6 +307,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:2b32af4d2a529083275afc192d1067d8126b578c7a9613b26600e4df9c735155"
+  name = "github.com/mgutz/ansi"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "9520e82c474b0a04dd04f8a40959027271bab992"
+
+[[projects]]
+  branch = "master"
   digest = "1:8eb17c2ec4df79193ae65b621cd1c0c4697db3bc317fe6afdc76d7f2746abd05"
   name = "github.com/mitchellh/go-homedir"
   packages = ["."]
@@ -535,6 +551,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/Masterminds/semver",
+    "github.com/aryann/difflib",
     "github.com/briandowns/spinner",
     "github.com/docker/docker/api/types",
     "github.com/docker/docker/api/types/container",
@@ -553,6 +570,7 @@
     "github.com/lib/pq",
     "github.com/manifoldco/promptui",
     "github.com/mattn/go-colorable",
+    "github.com/mgutz/ansi",
     "github.com/mitchellh/go-homedir",
     "github.com/oliveagle/jsonpath",
     "github.com/parnurzeal/gorequest",
@@ -562,6 +580,7 @@
     "github.com/skratchdot/open-golang/open",
     "github.com/spf13/cobra",
     "github.com/spf13/cobra/doc",
+    "github.com/spf13/pflag",
     "github.com/spf13/viper",
     "github.com/stretchr/testify/assert",
   ]
