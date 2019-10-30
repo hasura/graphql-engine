@@ -3,29 +3,67 @@ module Hasura.GraphQL.Schema.Common
   , addTypeSuffix
   , fromInpValL
 
-  , mkColName
+  , RelationshipFieldInfo(..)
+  , SelField(..)
+  , _SFPGColumn
+  , getPGColumnFields
+  , getRelationshipFields
+  , getComputedFields
+
   , mkColumnType
   , mkRelName
   , mkAggRelName
-
-  , SelField
+  , mkComputedFieldName
 
   , mkTableTy
   , mkTableEnumType
   , mkTableAggTy
 
   , mkColumnEnumVal
+  , mkDescriptionWith
+  , mkDescription
+
+  , mkFuncArgsTy
   ) where
 
 import qualified Data.HashMap.Strict           as Map
+import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
 
+import           Control.Lens
+import           Control.Lens.TH               (makePrisms)
+
+import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-type SelField = Either PGColumnInfo (RelInfo, Bool, AnnBoolExpPartialSQL, Maybe Int, Bool)
+data RelationshipFieldInfo
+  = RelationshipFieldInfo
+  { _rfiInfo       :: !RelInfo
+  , _rfiAllowAgg   :: !Bool
+  , _rfiColumns    :: !PGColGNameMap
+  , _rfiPermFilter :: !AnnBoolExpPartialSQL
+  , _rfiPermLimit  :: !(Maybe Int)
+  , _rfiIsNullable :: !Bool
+  } deriving (Show, Eq)
+
+data SelField
+  = SFPGColumn !PGColumnInfo
+  | SFRelationship !RelationshipFieldInfo
+  | SFComputedField !ComputedField
+  deriving (Show, Eq)
+$(makePrisms ''SelField)
+
+getPGColumnFields :: [SelField] -> [PGColumnInfo]
+getPGColumnFields = mapMaybe (^? _SFPGColumn)
+
+getRelationshipFields :: [SelField] -> [RelationshipFieldInfo]
+getRelationshipFields = mapMaybe (^? _SFRelationship)
+
+getComputedFields :: [SelField] -> [ComputedField]
+getComputedFields = mapMaybe (^? _SFComputedField)
 
 qualObjectToName :: (ToTxt a) => QualifiedObject a -> G.Name
 qualObjectToName = G.Name . snakeCaseQualObject
@@ -42,8 +80,8 @@ mkRelName rn = G.Name $ relNameToTxt rn
 mkAggRelName :: RelName -> G.Name
 mkAggRelName rn = G.Name $ relNameToTxt rn <> "_aggregate"
 
-mkColName :: PGCol -> G.Name
-mkColName (PGCol n) = G.Name n
+mkComputedFieldName :: ComputedFieldName -> G.Name
+mkComputedFieldName = G.Name . computedFieldNameToText
 
 mkColumnType :: PGColumnType -> G.NamedType
 mkColumnType = \case
@@ -60,6 +98,22 @@ mkTableAggTy :: QualifiedTable -> G.NamedType
 mkTableAggTy = addTypeSuffix "_aggregate" . mkTableTy
 
 -- used for 'distinct_on' in select and upsert's 'update columns'
-mkColumnEnumVal :: PGCol -> EnumValInfo
-mkColumnEnumVal (PGCol col) =
-  EnumValInfo (Just "column name") (G.EnumValue $ G.Name col) False
+mkColumnEnumVal :: G.Name -> EnumValInfo
+mkColumnEnumVal colName =
+  EnumValInfo (Just "column name") (G.EnumValue colName) False
+
+mkDescriptionWith :: Maybe PGDescription -> Text -> G.Description
+mkDescriptionWith descM defaultTxt = G.Description $ case descM of
+  Nothing                      -> defaultTxt
+  Just (PGDescription descTxt) -> T.unlines [descTxt, "\n", defaultTxt]
+
+mkDescription :: PGDescription -> G.Description
+mkDescription = G.Description . getPGDescription
+
+mkFuncArgsName :: QualifiedFunction -> G.Name
+mkFuncArgsName fn =
+  qualObjectToName fn <> "_args"
+
+mkFuncArgsTy :: QualifiedFunction -> G.NamedType
+mkFuncArgsTy =
+  G.NamedType . mkFuncArgsName

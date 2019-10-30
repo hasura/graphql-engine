@@ -431,6 +431,10 @@ input {
   margin: 0 !important;
 }
 
+.remove_margin_top {
+  margin-top: 0 !important;
+}
+
 .display_inline {
   display: inline-block;
 }
@@ -1354,6 +1358,10 @@ code {
 
 .pkEditorExpandedText {
   width: 325px;
+}
+
+.cursorNotAllowed {
+  cursor: not-allowed;
 }
 
 /* container height subtracting top header and bottom scroll bar */

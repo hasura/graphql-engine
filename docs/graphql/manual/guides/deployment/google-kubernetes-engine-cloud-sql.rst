@@ -1,4 +1,4 @@
-Hasura GraphQL Engine on Google Cloud Platform with Kubernetes Engine and Cloud SQL
+Hasura GraphQL engine on Google Cloud Platform with Kubernetes engine and Cloud SQL
 ===================================================================================
 
 .. contents:: Table of contents
@@ -6,8 +6,8 @@ Hasura GraphQL Engine on Google Cloud Platform with Kubernetes Engine and Cloud 
   :depth: 1
   :local:
 
-This is a guide about deploying Hasura GraphQL Engine on `Google Cloud Platform
-<https://cloud.google.com/>`__ using `Kuberentes Engine
+This is a guide on deploying the Hasura GraphQL engine on the `Google Cloud Platform
+<https://cloud.google.com/>`__ using `Kuberentes engine
 <https://cloud.google.com/kubernetes-engine/>`__ to run Hasura and PosgreSQL
 backed by `Cloud SQL <https://cloud.google.com/sql/>`__. 
 
@@ -19,9 +19,9 @@ Prerequisites
 - ``gcloud`` CLI (`install <https://cloud.google.com/sdk/>`__)
 - ``kubectl`` CLI (`install <https://kubernetes.io/docs/tasks/tools/install-kubectl/>`__)
 
-The actions mentioned below can be done using the Google Cloud Console and
+The actions mentioned below can be done using the Google Cloud Console and the
 ``gcloud`` CLI. But, for the sake of simplicity in documentation, we are going
-to use ``gcloud`` CLI, so that commands can be easily copy pasted and executed. 
+to use ``gcloud`` CLI, so that commands can be easily copy-pasted and executed. 
 
 Once the CLI is installed, initialize the SDK:
 
@@ -42,13 +42,13 @@ project called ``hasura`` for this guide.
 Create a Google Cloud SQL Postgres instance
 -------------------------------------------
 
-Create a Cloud SQL Postgres instance called ``hasura-postgres`` at the
-``asia-south1`` region.
+Create a Cloud SQL Postgres instance called ``hasura-postgres`` in the
+``us-west2`` region.
 
 .. code-block:: bash
 
    gcloud sql instances create hasura-postgres --database-version POSTGRES_9_6 \
-          --cpu 1 --memory 3840MiB --region asia-south1 --project hasura
+          --cpu 1 --memory 3840MiB --region us-west2 --project hasura
 
 Once the instance is created, set a password for the default ``postgres`` user.
 Make sure you substitute ``[PASSWORD]`` with a strong password.
@@ -61,8 +61,8 @@ Make sure you substitute ``[PASSWORD]`` with a strong password.
 Create a Kubernetes Cluster
 ---------------------------
 
-Before creating the cluster, we need to enable the Kubernetes Engine API. Visit
-the following link in a browser to enable the API. Replace ``hasura`` at the end
+Before creating the cluster, we need to enable the Kubernetes engine API. Visit
+the below link in a browser to enable the API. Replace ``hasura`` at the end
 of the URL with your project name, in case you're not using the same name. Note
 that, you will need a billing account added to the project to enable the API.
 
@@ -71,19 +71,19 @@ that, you will need a billing account added to the project to enable the API.
    https://console.cloud.google.com/apis/api/container.googleapis.com/overview?project=hasura
 
 Once the API is enabled, create a new Kubernetes cluster called ``hasura-k8s``
-in the ``asia-south1-a`` zone with 1 node.
+in the ``us-west2-a`` zone with 1 node.
 
 .. code-block:: bash
 
-   gcloud container clusters create hasura-k8s --zone asia-south1-a \
+   gcloud container clusters create hasura-k8s --zone us-west2-a \
           --num-nodes 1 --project hasura
 
-Setup Cloud SQL Proxy Credentials
----------------------------------
+Set up Cloud SQL Proxy Credentials
+----------------------------------
 
-Inorder to connect to the Cloud SQL instance, we need to setup a proxy that will
+In order to connect to the Cloud SQL instance, we need to set up a proxy that will
 forward connections from Hasura to the database instance. For that purpose, the
-credentials to access the instance needs to be added to the cluster.
+credentials to access the instance need to be added to the cluster.
 
 Create a service account and download the JSON key file by following `this guide
 <https://cloud.google.com/sql/docs/postgres/sql-proxy#create-service-account>`__.
@@ -99,7 +99,7 @@ Or if you're overwhelmed with that guide, ensure the following:
 4. Click ``Create Key`` to download the JSON file.
 
 Create a Kubernetes secret with this JSON key file; replace
-``[JSON_KEY_FILE_PATH]`` with the filename including complete path of the
+``[JSON_KEY_FILE_PATH]`` with the filename including the complete path of the
 download JSON key file.
 
 .. code-block:: bash
@@ -107,7 +107,7 @@ download JSON key file.
    kubectl create secret generic cloudsql-instance-credentials \
            --from-file=credentials.json=[JSON_KEY_FILE_PATH]
 
-Create another secret with the database username and password (Use the
+Create another secret with the database username and password (use the
 ``[PASSWORD]`` used earlier):
 
 .. code-block:: bash
@@ -115,8 +115,8 @@ Create another secret with the database username and password (Use the
    kubectl create secret generic cloudsql-db-credentials \
            --from-literal=username=postgres --from-literal=password=[PASSWORD]
 
-Deploy Hasura GraphQL Engine
-----------------------------
+Deploy the Hasura GraphQL engine
+--------------------------------
 
 Download the ``deployment.yaml`` file:
 
@@ -133,7 +133,7 @@ down.
           --format="value(connectionName)" --project hasura
 
 Edit ``deployment.yaml`` and replace ``[INSTANCE_CONNECTION_NAME]`` with this
-value. It should look like ``hasura:asia-south1:hasura-postgres`` if you've
+value. It should look like ``hasura:us-west2:hasura-postgres`` if you've
 followed this guide without modifying any names.
 
 Create the deployment:
@@ -148,13 +148,13 @@ Ensure the pods are running:
 
    kubectl get pods
 
-If there are any errors, check the logs for GraphQL Engine:
+If there are any errors, check the logs of the GraphQL engine:
 
 .. code-block:: bash
 
    kubectl logs deployment/hasura -c graphql-engine
 
-Expose GraphQL Engine
+Expose GraphQL engine
 ---------------------
 
 Now that we have Hasura running, let's expose it on an IP using a LoadBalancer.
@@ -166,24 +166,24 @@ Now that we have Hasura running, let's expose it on an IP using a LoadBalancer.
         --type LoadBalancer
 
 
-Open Hasura Console
+Open Hasura console
 -------------------
 
-Wait for the external IP to be allocated, check status using the following
-command. It usually takes a couple of minutes.
+Wait for the external IP to be allocated, check the status using the
+command below. It usually takes a couple of minutes.
 
 .. code-block:: bash
 
    kubectl get service
 
 Once the IP is allocated, visit the IP in a browser and it should open the
-Console.
+console.
 
 Troubleshooting
 ---------------
 
 Check the status for pods to see if they are running. If there are any errors,
-check the logs for GraphQL Engine:
+check the logs of the GraphQL engine:
 
 .. code-block:: bash
 
@@ -195,13 +195,13 @@ You might also want to check the logs for cloudsql-proxy:
 
    kubectl logs deployment/hasura -c cloudsql-proxy
 
-The username password used by Hasura to connect to the database comes from a
+The username and password used by Hasura to connect to the database comes from a
 Kubernetes secret object ``cloudsql-db-credentials`` that we created earlier.
 
 Tearing down
 ------------
 
-To clean-up the resources created, just delete the Google Cloud Project:
+To clean up the resources created, just delete the Google Cloud Project:
 
 .. code-block:: bash
 

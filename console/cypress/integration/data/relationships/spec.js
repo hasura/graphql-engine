@@ -9,6 +9,7 @@ import {
   validateCT,
   validateColumn,
 } from '../../validators/validators';
+import { setPromptValue } from '../../../helpers/common';
 
 const delRel = (table, relname) => {
   cy.get(getElementFromAlias(table)).click();
@@ -107,10 +108,11 @@ export const passRTMoveToTable = () => {
 export const Deletetable = name => {
   cy.get(getElementFromAlias(name)).click();
   cy.get(getElementFromAlias('table-modify')).click();
+  setPromptValue(name);
   cy.get(getElementFromAlias('delete-table')).click();
-  cy.on('window:alert', str => {
-    expect(str === 'Are you sure?').to.be.true;
-  });
+  cy.window()
+    .its('prompt')
+    .should('be.called');
   cy.wait(15000);
   validateCT(name, 'failure');
 };

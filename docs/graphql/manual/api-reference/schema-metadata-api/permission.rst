@@ -9,7 +9,7 @@ Schema/Metadata API Reference: Permissions
 The permission layer is designed to restrict the operations that can be
 performed by various users. Permissions can be defined on various operations
 (insert/select/update/delete) at a role level granularity. By default, the ``admin``
-role has unrestricted access to all operations. 
+role has unrestricted access to all operations.
 
 .. admonition:: Variables in rules
 
@@ -23,11 +23,11 @@ create_insert_permission
 ------------------------
 
 An insert permission is used to enforce constraints on the data that is being
-inserted. 
+inserted.
 
-Let's look at an example, a permission for the ``user`` role to insert into
+Let's look at an example, a permission for the ``user`` role to insert into the
 ``article`` table. What is the constraint that we would like to enforce here? *A
-user can only insert articles for themself* 
+user can only insert articles for themselves* .
 
 .. code-block:: http
 
@@ -52,7 +52,7 @@ user can only insert articles for themself*
        }
    }
 
-This reads as follows - For the ``user`` role:
+This reads as follows - for the ``user`` role:
 
 * For every row that is being inserted into the *article* table, allow insert only if the ``check`` passes i.e. that the ``author_id`` column value is the same as the value in the request header ``X-HASURA-USER-ID``".
 
@@ -61,7 +61,7 @@ This reads as follows - For the ``user`` role:
 * When this insert happens, the value of the column ``id`` will be automatically ``set`` to the value of the resolved session variable ``X-HASURA-USER-ID``.
 
 
-The argument for ``check`` is a boolean expression which has the same syntax as the ``where`` clause in the ``select`` query, making it extremely expressive. For example, 
+The argument for ``check`` is a boolean expression which has the same syntax as the ``where`` clause in the ``select`` query, making it extremely expressive. For example,
 
 .. code-block:: http
 
@@ -93,7 +93,7 @@ The argument for ``check`` is a boolean expression which has the same syntax as 
 
 In the above definition, the row is allowed to be inserted if the ``author_id``
 is the same as the request's user id and ``is_reviewed`` is ``false`` when the
-``category`` is "editorial". 
+``category`` is "editorial".
 
 .. _create_insert_permission_syntax:
 
@@ -122,7 +122,7 @@ Args syntax
    * - comment
      - false
      - text
-     - comment
+     - Comment
 
 .. _InsertPermission:
 
@@ -143,7 +143,7 @@ InsertPermission
    * - set
      - false
      - :ref:`ColumnPresetExp`
-     - Preset values for columns that can sourced from session variables or static values.
+     - Preset values for columns that can be sourced from session variables or static values
    * - columns
      - false
      - :ref:`PGColumn` array (or) ``'*'``
@@ -189,9 +189,9 @@ create_select_permission
 
 A select permission is used to restrict access to only the specified columns and rows.
 
-Let's look at an example, a permission for the ``user`` role to select from
-``article`` table: all columns can be read, and rows that have been published or
-authored by themself. 
+Let's look at an example, a permission for the ``user`` role to select from the
+``article`` table: all columns can be read, as well as the rows that have been published or
+authored by the user themselves.
 
 .. code-block:: http
 
@@ -255,7 +255,7 @@ Args syntax
    * - comment
      - false
      - text
-     - comment
+     - Comment
 
 .. _SelectPermission:
 
@@ -273,6 +273,10 @@ SelectPermission
      - true
      - :ref:`PGColumn` array (or) ``'*'``
      - Only these columns are selectable (or all when ``'*'`` is specified)
+   * - computed_fields
+     - false
+     - :ref:`ComputedFieldName` array
+     - Only these computed fields are selectable
    * - filter
      - true
      - :ref:`BoolExp`
@@ -321,7 +325,7 @@ create_update_permission
 ------------------------
 
 An update permission is used to restrict the columns and rows that can be
-updated. Its structure is quite similar to the select permission. 
+updated. Its structure is quite similar to the select permission.
 
 An example:
 
@@ -348,20 +352,20 @@ An example:
        }
    }
 
-This reads as follows - For the ``user`` role:
+This reads as follows - for the ``user`` role:
 
 * Allow updating only those rows where the ``check`` passes i.e. the value of the ``author_id`` column of a row matches the value of the session variable ``X-HASURA-USER-ID`` value.
 
-* If the above ``check`` passes for a given row, allow updating only the ``title``, ``content`` and ``category`` columns (*as specified in the* ``columns`` *key*)
+* If the above ``check`` passes for a given row, allow updating only the ``title``, ``content`` and ``category`` columns (*as specified in the* ``columns`` *key*).
 
 * When this update happens, the value of the column ``id`` will be automatically ``set`` to the value of the resolved session variable ``X-HASURA-USER-ID``.
 
 .. note::
 
    It is important to deny updates to columns that will determine the row
-   ownership. In the above example, ``author_id`` column determines the
+   ownership. In the above example, the ``author_id`` column determines the
    ownership of a row in the ``article`` table. Columns such as this should
-   never be allowed to be updated. 
+   never be allowed to be updated.
 
 .. _create_update_permission_syntax:
 
@@ -390,7 +394,7 @@ Args syntax
    * - comment
      - false
      - text
-     - comment
+     - Comment
 
 .. _UpdatePermission:
 
@@ -415,8 +419,8 @@ UpdatePermission
    * - set
      - false
      - :ref:`ColumnPresetExp`
-     - Preset values for columns that can sourced from session variables or static values.
-  
+     - Preset values for columns that can be sourced from session variables or static values.
+
 
 .. _drop_update_permission:
 
@@ -476,8 +480,8 @@ An example:
 
 This reads as follows:
 
-"``delete`` for ``user`` role on ``article`` table is allowed on rows where
-``author_id`` is same as the request header ``X-HASURA-USER-ID`` value."
+"``delete`` for the ``user`` role on the ``article`` table is allowed on rows where
+``author_id`` is the same as the request header ``X-HASURA-USER-ID`` value."
 
 .. _create_delete_permission_syntax:
 
@@ -506,7 +510,7 @@ Args syntax
    * - comment
      - false
      - text
-     - comment
+     - Comment
 
 .. _DeletePermission:
 
@@ -559,7 +563,7 @@ set_permission_comment
 ----------------------
 
 ``set_permission_comment`` is used to set/update the comment on a permission.
-Setting the comment to ``null`` removes it. 
+Setting the comment to ``null`` removes it.
 
 An example:
 
@@ -607,4 +611,4 @@ Args syntax
    * - comment
      - false
      - Text
-     - comment
+     - Comment

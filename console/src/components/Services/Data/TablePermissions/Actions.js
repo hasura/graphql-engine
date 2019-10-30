@@ -5,10 +5,6 @@ import {
 } from '../DataState';
 import { getEdForm, getIngForm } from '../utils';
 import { makeMigrationCall } from '../DataActions';
-import dataHeaders from '../Common/Headers';
-import { globalCookiePolicy } from '../../../../Endpoints';
-import requestAction from '../../../../utils/requestAction';
-import Endpoints from '../../../../Endpoints';
 import {
   findTable,
   generateTableDef,
@@ -21,7 +17,6 @@ import {
   getDropPermissionQuery,
 } from '../../../Common/utils/v1QueryUtils';
 
-export const PERM_ADD_TABLE_SCHEMAS = 'ModifyTable/PERM_ADD_TABLE_SCHEMAS';
 export const PERM_OPEN_EDIT = 'ModifyTable/PERM_OPEN_EDIT';
 export const PERM_SET_FILTER = 'ModifyTable/PERM_SET_FILTER';
 export const PERM_SET_FILTER_SAME_AS = 'ModifyTable/PERM_SET_FILTER_SAME_AS';
@@ -125,7 +120,7 @@ const getFilterKey = query => {
   return query === 'insert' ? 'check' : 'filter';
 };
 
-const getBasePermissionsState = (tableSchema, role, query) => {
+const getBasePermissionsState = (tableSchema, role, query, isNewRole) => {
   const _permissions = JSON.parse(JSON.stringify(defaultPermissionsState));
 
   _permissions.table = tableSchema.table_name;
@@ -135,6 +130,7 @@ const getBasePermissionsState = (tableSchema, role, query) => {
   const rolePermissions = tableSchema.permissions.find(
     p => p.role_name === role
   );
+
   if (rolePermissions) {
     Object.keys(rolePermissions.permissions).forEach(q => {
       const localPresets = [];
@@ -169,50 +165,13 @@ const getBasePermissionsState = (tableSchema, role, query) => {
         }
       }
     });
-  } else {
+  }
+
+  if (isNewRole) {
     _permissions.newRole = role;
   }
 
   return _permissions;
-};
-
-const permAddTableSchemas = schemaNames => {
-  return (dispatch, getState) => {
-    const url = Endpoints.getSchema;
-    const options = {
-      credentials: globalCookiePolicy,
-      method: 'POST',
-      headers: dataHeaders(getState),
-      body: JSON.stringify({
-        type: 'select',
-        args: {
-          table: {
-            name: 'hdb_table',
-            schema: 'hdb_catalog',
-          },
-          columns: [
-            '*.*',
-            {
-              name: 'columns',
-              columns: ['*.*'],
-              order_by: [{ column: 'column_name', type: 'asc', nulls: 'last' }],
-            },
-          ],
-          where: { table_schema: { $in: schemaNames } },
-          order_by: [{ column: 'table_name', type: 'asc', nulls: 'last' }],
-        },
-      }),
-    };
-
-    return dispatch(requestAction(url, options)).then(
-      data => {
-        dispatch({ type: PERM_ADD_TABLE_SCHEMAS, schemas: data });
-      },
-      error => {
-        console.error('Failed to load table schemas: ' + JSON.stringify(error));
-      }
-    );
-  };
 };
 
 const updatePermissionsState = (permissions, key, value) => {
@@ -800,7 +759,6 @@ const permChangePermissions = changeType => {
 
 export {
   permChangeTypes,
-  permAddTableSchemas,
   permOpenEdit,
   permSetFilter,
   permSetFilterSameAs,

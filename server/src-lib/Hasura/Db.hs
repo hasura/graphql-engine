@@ -45,6 +45,14 @@ instance (MonadTx m) => MonadTx (ReaderT s m) where
 instance (MonadTx m) => MonadTx (ValidateT e m) where
   liftTx = lift . liftTx
 
+-- | Like 'Q.TxE', but defers acquiring a Postgres connection until the first execution of 'liftTx'.
+-- If no call to 'liftTx' is ever reached (i.e. a successful result is returned or an error is
+-- raised before ever executing a query), no connection is ever acquired.
+--
+-- This is useful for certain code paths that only conditionally need database access. For example,
+-- although most queries will eventually hit Postgres, introspection queries or queries that
+-- exclusively use remote schemas never will; using 'LazyTx' keeps those branches from unnecessarily
+-- allocating a connection.
 data LazyTx e a
   = LTErr !e
   | LTNoTx !a

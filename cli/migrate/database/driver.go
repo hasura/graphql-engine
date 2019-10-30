@@ -49,6 +49,8 @@ type Driver interface {
 	// Migrate will call this function only once per instance.
 	Close() error
 
+	Scan() error
+
 	// Lock should acquire a database lock so that only one migration process
 	// can run at a time. Migrate will call this function before Run is called.
 	// If the implementation can't provide this functionality, return nil.

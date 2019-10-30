@@ -9,19 +9,27 @@ const WarningSymbol = ({
   tooltipPlacement = 'right',
   customStyle = null,
 }) => {
-  const tooltip = <Tooltip>{tooltipText}</Tooltip>;
+  const tooltip = <Tooltip id={tooltipText}>{tooltipText}</Tooltip>;
 
   return (
     <div className={styles.display_inline}>
       <OverlayTrigger placement={tooltipPlacement} overlay={tooltip}>
-        <i
-          className={`fa fa-exclamation-triangle ${styles.warningSymbol} ${
-            customStyle ? customStyle : ''
-          }`}
-          aria-hidden="true"
-        />
+        <span>
+          <WarningIcon customStyle={customStyle} />
+        </span>
       </OverlayTrigger>
     </div>
+  );
+};
+
+export const WarningIcon = ({ customStyle }) => {
+  return (
+    <i
+      className={`fa fa-exclamation-triangle ${styles.warningSymbol} ${
+        customStyle ? customStyle : ''
+      }`}
+      aria-hidden="true"
+    />
   );
 };
 

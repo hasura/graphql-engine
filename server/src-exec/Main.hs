@@ -1,12 +1,13 @@
+{-# LANGUAGE RecordWildCards #-}
 module Main where
 
 import           Hasura.App
-import           Hasura.App.Ops             (cleanCatalog, execQuery)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
 import           Hasura.RQL.Types
 import           Hasura.Server.Init
 import           Hasura.Server.Logging      (mkHttpLog)
+import           Hasura.Server.Migrate      (dropCatalog)
 import           Hasura.Server.Version
 
 import qualified Data.ByteString.Lazy       as BL
@@ -32,14 +33,16 @@ runApp (HGEOptionsG rci hgeCmd) =
 
     HCClean -> do
       initCtx <- initialiseCtx hgeCmd rci Nothing mkHttpLog Nothing
-      res <- runTx' initCtx cleanCatalog
+      res <- runTx' initCtx dropCatalog
       either printErrJExit (const cleanSuccess) res
 
     HCExecute -> do
-      initCtx <- initialiseCtx hgeCmd rci Nothing mkHttpLog Nothing
+      InitCtx{..} <- initialiseCtx hgeCmd rci Nothing mkHttpLog Nothing
       queryBs <- liftIO BL.getContents
       let sqlGenCtx = SQLGenCtx False
-      res <- runAsAdmin (_icPgPool initCtx) sqlGenCtx $ execQuery queryBs
+      res <- execQuery queryBs
+             & runHasSystemDefinedT (SystemDefined False)
+             & runAsAdmin _icPgPool sqlGenCtx _icHttpManager
       either printErrJExit (liftIO . BLC.putStrLn) res
 
     HCVersion -> liftIO $ putStrLn $ "Hasura GraphQL Engine: " ++ T.unpack currentVersion

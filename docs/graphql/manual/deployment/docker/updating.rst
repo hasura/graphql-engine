@@ -6,7 +6,7 @@ Updating Hasura GraphQL engine running with Docker
   :depth: 1
   :local:
 
-This guide will help you update Hasura GraphQL engine running with Docker. This guide assumes that you already have
+This guide will help you update the Hasura GraphQL engine running with Docker. This guide assumes that you already have
 Hasura GraphQL engine running with Docker.
 
 Step 1: Check the latest release version
@@ -37,3 +37,8 @@ you should change it to:
 .. raw:: html
 
    <code>docker run hasura/graphql-engine:<span class="latest-release-tag">latest</span> ...</code>
+
+.. note::
+
+  If you are downgrading to an older version of the GraphQL engine you might need to downgrade your metadata catalogue version
+  as described in :doc:`../downgrading`

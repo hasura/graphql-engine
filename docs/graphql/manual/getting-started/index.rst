@@ -34,6 +34,10 @@ Get started using an existing database
 - :doc:`Using Kubernetes <../deployment/kubernetes/index>`: Run on Kubernetes and connect to an existing Postgres
   database.
 
+.. admonition:: Supported Postgres versions
+
+  Hasura GraphQL engine supports **Postgres 9.5 and above**
+
 .. toctree::
    :maxdepth: 2
    :titlesonly:

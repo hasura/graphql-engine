@@ -20,7 +20,7 @@ args:
   args:
     sql: |
       create table author(
-          id serial primary key, 
+          id serial primary key,
           name text unique,
           contact_id INTEGER REFERENCES contact(id)
       );
@@ -86,7 +86,7 @@ args:
       insert into author (name, contact_id)
       values
       ('Author 1', 2),
-      ('Author 2', 1) 
+      ('Author 2', 1)
 
 - type: run_sql
   args:
@@ -176,6 +176,35 @@ args:
       ( 5, 'Random', 2, 1094732, 6032547) ,
       ( 6, 'Good One', 2, 346208, 6732987) ,
       ( 7, 'Mistress', 2, 420985, 7521946)
+
+# Create Tag table
+- type: run_sql
+  args:
+    sql: |
+      CREATE table "Tag" (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        album_id INTEGER NOT NULL REFERENCES "Album"(album_id)
+      );
+      INSERT INTO "Tag" (name, album_id)
+      VALUES
+      ( 'Rock',    1),
+      ( 'Folk',    1),
+      ( 'Hip Hop', 2);
+
+- type: track_table
+  args:
+    name: Tag
+    schema: public
+
+- type: create_array_relationship
+  args:
+    table: Album
+    name: Tags
+    using:
+      foreign_key_constraint_on:
+        table: Tag
+        column: album_id
 
 # Create employee table
 - type: run_sql

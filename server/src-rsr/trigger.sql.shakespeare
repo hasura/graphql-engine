@@ -1,0 +1,35 @@
+CREATE OR REPLACE function hdb_views.#{qualifiedTriggerName}() RETURNS trigger
+  LANGUAGE plpgsql
+  AS $$
+  DECLARE
+    _old record;
+    _new record;
+    _data json;
+  BEGIN
+    IF TG_OP = 'UPDATE' THEN
+      _old := #{oldRow};
+      _new := #{newRow};
+    ELSE
+    /* initialize _old and _new with dummy values for INSERT and UPDATE events*/
+      _old := row((select 1));
+      _new := row((select 1));
+    END IF;
+    _data := json_build_object(
+      'old', #{oldPayloadExpression},
+      'new', #{newPayloadExpression}
+    );
+    BEGIN
+      IF (TG_OP <> 'UPDATE') OR (_old <> _new) THEN
+        PERFORM hdb_catalog.insert_event_log(CAST(TG_TABLE_SCHEMA AS text), CAST(TG_TABLE_NAME AS text), CAST('#{name}' AS text), TG_OP, _data);
+      END IF;
+      EXCEPTION WHEN undefined_function THEN
+        IF (TG_OP <> 'UPDATE') OR (_old *<> _new) THEN
+          PERFORM hdb_catalog.insert_event_log(CAST(TG_TABLE_SCHEMA AS text), CAST(TG_TABLE_NAME AS text), CAST('#{name}' AS text), TG_OP, _data);
+        END IF;
+    END;
+
+    RETURN NULL;
+  END;
+$$;
+DROP TRIGGER IF EXISTS #{qualifiedTriggerName} ON #{qualifiedTable};
+CREATE TRIGGER #{qualifiedTriggerName} AFTER #{operation} ON #{qualifiedTable} FOR EACH ROW EXECUTE PROCEDURE hdb_views.#{qualifiedTriggerName}();

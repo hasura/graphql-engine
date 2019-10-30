@@ -32,6 +32,14 @@ export const getTableBrowseRoute = table => {
   return `${getTableBaseRoute(table)}/browse`;
 };
 
+export const getTableInsertRowRoute = table => {
+  return `${getTableBaseRoute(table)}/insert`;
+};
+
+export const getTableEditRowRoute = table => {
+  return `${getTableBaseRoute(table)}/edit`;
+};
+
 export const getTableModifyRoute = table => {
   return `${getTableBaseRoute(table)}/modify`;
 };

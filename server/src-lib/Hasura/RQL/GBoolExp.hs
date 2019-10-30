@@ -34,8 +34,7 @@ columnReferenceType = \case
 
 instance DQuote ColumnReference where
   dquoteTxt = \case
-    ColumnReferenceColumn column ->
-      getPGColTxt $ pgiName column
+    ColumnReferenceColumn column -> dquoteTxt $ pgiColumn column
     ColumnReferenceCast reference targetType ->
       dquoteTxt reference <> "::" <> dquoteTxt targetType
 
@@ -48,7 +47,7 @@ parseOperationsExpression
   -> Value
   -> m [OpExpG v]
 parseOperationsExpression rhsParser fim columnInfo =
-  withPathK (getPGColTxt $ pgiName columnInfo) .
+  withPathK (getPGColTxt $ pgiColumn columnInfo) .
     parseOperations (ColumnReferenceColumn columnInfo)
   where
     parseOperations :: ColumnReference -> Value -> m [OpExpG v]
@@ -195,7 +194,7 @@ parseOperationsExpression rhsParser fim columnInfo =
           castOperations <- parseVal
           parsedCastOperations <-
             forM (M.toList castOperations) $ \(targetTypeName, castedComparisons) -> do
-              let targetType = txtToPgColTy targetTypeName
+              let targetType = textToPGScalarType targetTypeName
                   castedColumn = ColumnReferenceCast column (PGColumnScalar targetType)
               checkValidCast targetType
               parsedCastedComparisons <- withPathK targetTypeName $
@@ -276,10 +275,22 @@ annBoolExp
   :: (QErrM m, CacheRM m)
   => OpRhsParser m v
   -> FieldInfoMap PGColumnInfo
-  -> BoolExp
+  -> GBoolExp ColExp
   -> m (AnnBoolExp v)
-annBoolExp rhsParser fim (BoolExp boolExp) =
-  traverse (annColExp rhsParser fim) boolExp
+annBoolExp rhsParser fim boolExp =
+  case boolExp of
+    BoolAnd exps -> BoolAnd <$> procExps exps
+    BoolOr exps  -> BoolOr <$> procExps exps
+    BoolNot e    -> BoolNot <$> annBoolExp rhsParser fim e
+    BoolExists (GExists refqt whereExp) ->
+      withPathK "_exists" $ do
+        refFields <- withPathK "_table" $ askFieldInfoMap refqt
+        annWhereExp <- withPathK "_where" $
+                       annBoolExp rhsParser refFields whereExp
+        return $ BoolExists $ GExists refqt annWhereExp
+    BoolFld fld -> BoolFld <$> annColExp rhsParser fim fld
+  where
+    procExps = mapM (annBoolExp rhsParser fim)
 
 annColExp
   :: (QErrM m, CacheRM m)
@@ -290,15 +301,18 @@ annColExp
 annColExp rhsParser colInfoMap (ColExp fieldName colVal) = do
   colInfo <- askFieldInfo colInfoMap fieldName
   case colInfo of
-    FIColumn (PGColumnInfo _ (PGColumnScalar PGJSON) _) ->
+    FIColumn (PGColumnInfo _ _ (PGColumnScalar PGJSON) _ _) ->
       throwError (err400 UnexpectedPayload "JSON column can not be part of where clause")
     FIColumn pgi ->
       AVCol pgi <$> parseOperationsExpression rhsParser colInfoMap pgi colVal
     FIRelationship relInfo -> do
       relBoolExp      <- decodeValue colVal
       relFieldInfoMap <- askFieldInfoMap $ riRTable relInfo
-      annRelBoolExp   <- annBoolExp rhsParser relFieldInfoMap relBoolExp
+      annRelBoolExp   <- annBoolExp rhsParser relFieldInfoMap $
+                         unBoolExp relBoolExp
       return $ AVRel relInfo annRelBoolExp
+    FIComputedField _ ->
+      throw400 UnexpectedPayload "Computed columns can not be part of the where clause"
 
 toSQLBoolExp
   :: S.Qual -> AnnBoolExpSQL -> S.BoolExp
@@ -313,8 +327,9 @@ convBoolRhs' tq =
 convColRhs
   :: S.Qual -> AnnBoolExpFldSQL -> State Word64 S.BoolExp
 convColRhs tableQual = \case
-  AVCol (PGColumnInfo cn _ _) opExps -> do
-    let bExps = map (mkColCompExp tableQual cn) opExps
+  AVCol colInfo opExps -> do
+    let colFld = fromPGCol $ pgiColumn colInfo
+        bExps = map (mkFieldCompExp tableQual colFld) opExps
     return $ foldr (S.BEBin S.AndOp) (S.BELit True) bExps
 
   AVRel (RelInfo _ _ colMapping relTN _) nesAnn -> do
@@ -335,11 +350,34 @@ convColRhs tableQual = \case
   where
     mkQCol q = S.SEQIden . S.QIden q . toIden
 
-mkColCompExp
-  :: S.Qual -> PGCol -> OpExpG S.SQLExp -> S.BoolExp
-mkColCompExp qual lhsCol = mkCompExp (mkQCol lhsCol)
+foldExists :: GExists AnnBoolExpFldSQL -> State Word64 S.BoolExp
+foldExists (GExists qt wh) = do
+  whereExp <- foldBoolExp (convColRhs (S.QualTable qt)) wh
+  return $ S.mkExists (S.FISimple qt Nothing) whereExp
+
+foldBoolExp
+  :: (AnnBoolExpFldSQL -> State Word64 S.BoolExp)
+  -> AnnBoolExpSQL
+  -> State Word64 S.BoolExp
+foldBoolExp f = \case
+  BoolAnd bes           -> do
+    sqlBExps <- mapM (foldBoolExp f) bes
+    return $ foldr (S.BEBin S.AndOp) (S.BELit True) sqlBExps
+
+  BoolOr bes           -> do
+    sqlBExps <- mapM (foldBoolExp f) bes
+    return $ foldr (S.BEBin S.OrOp) (S.BELit False) sqlBExps
+
+  BoolNot notExp       -> S.BENot <$> foldBoolExp f notExp
+  BoolExists existsExp -> foldExists existsExp
+  BoolFld ce           -> f ce
+
+mkFieldCompExp
+  :: S.Qual -> FieldName -> OpExpG S.SQLExp -> S.BoolExp
+mkFieldCompExp qual lhsField = mkCompExp (mkQField lhsField)
   where
     mkQCol = S.SEQIden . S.QIden qual . toIden
+    mkQField = S.SEQIden . S.QIden qual . Iden . getFieldNameTxt
 
     mkCompExp :: S.SQLExp -> OpExpG S.SQLExp -> S.BoolExp
     mkCompExp lhs = \case
@@ -419,7 +457,7 @@ getColExpDeps
   :: QualifiedTable -> AnnBoolExpFldPartialSQL -> [SchemaDependency]
 getColExpDeps tn = \case
   AVCol colInfo opExps ->
-    let cn = pgiName colInfo
+    let cn = pgiColumn colInfo
         colDepReason = bool DRSessionVariable DROnType $ any hasStaticExp opExps
         colDep = mkColDep colDepReason tn cn
         depColsInOpExp = mapMaybe opExpDepCol opExps
@@ -432,5 +470,13 @@ getColExpDeps tn = \case
     in pd : getBoolExpDeps relTN relBoolExp
 
 getBoolExpDeps :: QualifiedTable -> AnnBoolExpPartialSQL -> [SchemaDependency]
-getBoolExpDeps tn =
-  foldr (\annFld deps -> getColExpDeps tn annFld <> deps) []
+getBoolExpDeps tn = \case
+  BoolAnd exps -> procExps exps
+  BoolOr exps  -> procExps exps
+  BoolNot e    -> getBoolExpDeps tn e
+  BoolExists (GExists refqt whereExp) ->
+    let tableDep = SchemaDependency (SOTable refqt) DRRemoteTable
+    in tableDep:getBoolExpDeps refqt whereExp
+  BoolFld fld  -> getColExpDeps tn fld
+  where
+    procExps = concatMap (getBoolExpDeps tn)

@@ -33,7 +33,7 @@ const defaultPermissionsState = {
   limitEnabled: true,
   bulkSelect: [],
   applySamePermissions: [],
-  tableSchemas: [],
+  isEditing: false,
 };
 
 const defaultPresetsState = {
@@ -89,6 +89,9 @@ const defaultModifyState = {
     index: null,
     rel: null,
     perm: '',
+  },
+  tableEnum: {
+    loading: false,
   },
   columnEdit: {},
   pkEdit: [''],

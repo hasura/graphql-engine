@@ -3,52 +3,60 @@
 {-# LANGUAGE RecordWildCards #-}
 module Hasura.App where
 
-import           Control.Monad.STM          (atomically)
-import           Data.Time.Clock            (getCurrentTime)
+import           Control.Monad.STM           (atomically)
+import           Data.Time.Clock             (getCurrentTime)
 import           Options.Applicative
-import           System.Environment         (getEnvironment, lookupEnv)
-import           System.Exit                (exitFailure)
+import           System.Environment          (getEnvironment, lookupEnv)
+import           System.Exit                 (exitFailure)
 
 
-import qualified Control.Concurrent         as C
-import qualified Data.Aeson                 as A
-import qualified Data.ByteString.Char8      as BC
-import qualified Data.ByteString.Lazy       as BL
-import qualified Data.ByteString.Lazy.Char8 as BLC
-import qualified Data.Text                  as T
-import qualified Data.Time.Clock            as Clock
-import qualified Data.Yaml                  as Y
-import qualified Network.HTTP.Client        as HTTP
-import qualified Network.HTTP.Client.TLS    as HTTP
-import qualified Network.HTTP.Types         as HTTP
-import qualified Network.Wai                as Wai
-import qualified Network.Wai.Handler.Warp   as Warp
-import qualified System.Posix.Signals       as Signals
-import qualified Web.Spock.Core             as Spock
+import qualified Control.Concurrent          as C
+import qualified Data.Aeson                  as A
+import qualified Data.ByteString.Char8       as BC
+import qualified Data.ByteString.Lazy        as BL
+import qualified Data.ByteString.Lazy.Char8  as BLC
+import qualified Data.Text                   as T
+import qualified Data.Time.Clock             as Clock
+import qualified Data.Yaml                   as Y
+import qualified Network.HTTP.Client         as HTTP
+import qualified Network.HTTP.Client.TLS     as HTTP
+import qualified Network.HTTP.Types          as HTTP
+import qualified Network.Wai                 as Wai
+import qualified Network.Wai.Handler.Warp    as Warp
+import qualified System.Posix.Signals        as Signals
+import qualified Web.Spock.Core              as Spock
 
-import           Hasura.App.Migrate         (migrateCatalog)
-import           Hasura.App.Ops
+--import           Hasura.App.Migrate         (migrateCatalog)
+--import           Hasura.App.Ops
 import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.Events.Lib
 import           Hasura.Logging
 import           Hasura.Prelude
-import           Hasura.RQL.Types           (QErr (..), SQLGenCtx (..),
-                                             SchemaCache (..), UserInfo,
-                                             adminUserInfo, emptySchemaCache,
-                                             isAdmin, userRole)
+import           Hasura.RQL.DDL.Schema.Cache
+import           Hasura.RQL.Types            (CacheRWM, Code (..),
+                                              HasHttpManager, HasSQLGenCtx,
+                                              HasSystemDefined, QErr (..),
+                                              SQLGenCtx (..), SchemaCache (..),
+                                              UserInfo, UserInfoM,
+                                              adminUserInfo, decodeValue,
+                                              emptySchemaCache, isAdmin,
+                                              throw400, userRole)
 import           Hasura.Server.App
 import           Hasura.Server.Auth
-import           Hasura.Server.CheckUpdates (checkForUpdates)
+import           Hasura.Server.CheckUpdates  (checkForUpdates)
+import           Hasura.Server.Compression
 import           Hasura.Server.Context
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
-import           Hasura.Server.Query        (RQLQuery, Run, peelRun)
+import           Hasura.Server.Migrate       (migrateCatalog)
+import           Hasura.Server.Query         (RQLQuery, Run, RunCtx (..),
+                                              peelRun, runQueryM)
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
 import           Hasura.Server.Utils
 
-import qualified Database.PG.Query          as Q
+import qualified Database.PG.Query           as Q
 
 
 printErrExit :: (MonadIO m) => forall a . String -> m a
@@ -92,7 +100,7 @@ parseHGECommand =
                 <*> parseEnabledAPIs
                 <*> parseMxRefetchInt
                 <*> parseMxBatchSize
-                <*> parseFallbackRefetchInt
+                -- <*> parseFallbackRefetchInt
                 <*> parseEnableAllowlist
                 <*> parseEnabledLogs
                 <*> parseLogLevel
@@ -157,8 +165,6 @@ instance HasuraSpockAction AppM where
 
     requestId <- getRequestId headers
 
-    -- default to @getUserInfo@ if no user-auth middleware is passed
-    --let resolveUserInfo = fromMaybe getUserInfo userAuthMiddleware
     userInfoE <- liftIO $ runExceptT $ getUserInfo logger manager headers authMode
     userInfo  <- either (logErrorAndResp Nothing requestId req (Left reqBody) False headers . qErrModifier)
                 return userInfoE
@@ -208,18 +214,27 @@ instance HasuraSpockAction AppM where
         Spock.setStatus $ qeStatus qErr
         Spock.json $ qErrEncoder includeInternal qErr
 
-      logSuccessAndResp userInfo reqId req result qTime headers = do
-        logSuccess logger httpLogger userInfo reqId req (apiRespToLBS result) qTime headers
+      logSuccessAndResp userInfo reqId req result qTime reqHeaders =
         case result of
-          JSONResp (HttpResponse j h) -> do
-            uncurry Spock.setHeader jsonHeader
-            uncurry Spock.setHeader (requestIdHeader, unRequestId reqId)
-            mapM_ (mapM_ (uncurry Spock.setHeader . unHeader)) h
-            Spock.lazyBytes $ encJToLBS j
-          RawResp (HttpResponse b h) -> do
-            uncurry Spock.setHeader (requestIdHeader, unRequestId reqId)
-            mapM_ (mapM_ (uncurry Spock.setHeader . unHeader)) h
-            Spock.lazyBytes b
+          JSONResp (HttpResponse encJson h) ->
+            possiblyCompressedLazyBytes userInfo reqId req qTime (encJToLBS encJson)
+              (pure jsonHeader <> mkHeaders h) reqHeaders
+          RawResp (HttpResponse rawBytes h) ->
+            possiblyCompressedLazyBytes userInfo reqId req qTime rawBytes (mkHeaders h) reqHeaders
+
+      possiblyCompressedLazyBytes userInfo reqId req qTime respBytes respHeaders reqHeaders = do
+        let (compressedResp, mEncodingHeader, mCompressionType) =
+              compressResponse (Wai.requestHeaders req) respBytes
+            encodingHeader = maybe [] pure mEncodingHeader
+            reqIdHeader = (requestIdHeader, unRequestId reqId)
+            allRespHeaders = pure reqIdHeader <> encodingHeader <> respHeaders
+        logSuccess logger httpLogger userInfo reqId req compressedResp qTime mCompressionType reqHeaders
+        --forM_ respLogger $ \rLogger -> liftIO $ rLogger logger respBytes
+        mapM_ (uncurry Spock.setHeader) allRespHeaders
+        Spock.lazyBytes compressedResp
+
+      mkHeaders = maybe [] (map unHeader)
+
 
 -- | a separate function to create the initialization context because some of
 -- these contexts might be used by external functions
@@ -245,7 +260,7 @@ initialiseCtx hgeCmd rci logCallback httpLogger respLogger = do
       pool <- liftIO $ Q.initPGPool connInfo soConnParams pgLogger
 
       -- safe init catalog
-      initialise pool sqlGenCtx logger
+      initialise pool sqlGenCtx httpManager logger
 
       return (l, pool)
 
@@ -260,15 +275,11 @@ initialiseCtx hgeCmd rci logCallback httpLogger respLogger = do
 
   return $ InitCtx httpManager instanceId dbId loggers connInfo pool
   where
-    initialise pool sqlGenCtx (Logger logger) = do
+    initialise pool sqlGenCtx httpManager (Logger logger) = do
       currentTime <- liftIO getCurrentTime
       -- initialise the catalog
-      initRes <- runAsAdmin pool sqlGenCtx $ initCatalogSafe currentTime
-      either printErrJExit (logger . mkGenericStrLog LevelInfo "db_init") initRes
-
-      -- migrate catalog if necessary
-      migRes <- runAsAdmin pool sqlGenCtx $ migrateCatalog currentTime
-      either printErrJExit (logger . mkGenericStrLog LevelInfo "db_migrate") migRes
+      initRes <- runAsAdmin pool sqlGenCtx httpManager $ migrateCatalog currentTime
+      either printErrJExit logger initRes
 
     procConnInfo =
       either (printErrExit . connInfoErrModifier) return $ mkConnInfo rci
@@ -301,15 +312,13 @@ runHGEServer so@(ServeOptions port host _ isoL mAdminSecret mAuthHook mJwtSecret
   initTime <- liftIO Clock.getCurrentTime
   -- log serve options
   unLogger logger $ serveOptsToLog so
-  --hloggerCtx  <- mkLoggerCtx (defaultLoggerSettings False serverLogLevel) enabledLogs logCallback
 
   authModeRes <- runExceptT $ mkAuthMode mAdminSecret mAuthHook mJwtSecret
                                           mUnAuthRole httpManager loggerCtx
 
   authMode <- either (printErrExit . T.unpack) return authModeRes
 
-
-  (app, cacheRef, cacheInitTime) <-
+  HasuraApp app cacheRef cacheInitTime shutdownApp <-
     mkWaiApp isoL loggerCtx httpLogger respLogger sqlGenCtx enableAL pgPool connInfo httpManager
       authMode corsCfg enableConsole consoleAssetsDir enableTelemetry
       instanceId enabledAPIs lqOpts authMiddleware metadataMiddleware renderConsole liftFn
@@ -325,7 +334,7 @@ runHGEServer so@(ServeOptions port host _ isoL mAdminSecret mAuthHook mJwtSecret
   let warpSettings = Warp.setPort port
                      . Warp.setHost host
                      . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
-                     . Warp.setInstallShutdownHandler (shutdownHandler logger)
+                     . Warp.setInstallShutdownHandler (shutdownHandler logger shutdownApp)
                      $ Warp.defaultSettings
 
   maxEvThrds <- liftIO $ getFromEnv defaultMaxEventThreads "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
@@ -376,19 +385,51 @@ runHGEServer so@(ServeOptions port host _ isoL mAdminSecret mAuthHook mJwtSecret
     -- requests is already implemented in Warp, and is triggered by invoking the 'closeSocket' callback.
     -- We only catch the SIGTERM signal once, that is, if the user hits CTRL-C once again, we terminate
     -- the process immediately.
-    shutdownHandler :: Logger -> IO () -> IO ()
-    shutdownHandler  (Logger logger) closeSocket =
-      void $ Signals.installHandler Signals.sigTERM (Signals.CatchOnce $ closeSocket >> logShutdown) Nothing
+    shutdownHandler :: Logger -> IO () -> IO () -> IO ()
+    shutdownHandler (Logger logger) shutdownApp closeSocket =
+      void $ Signals.installHandler
+        Signals.sigTERM
+        (Signals.CatchOnce shutdownSequence)
+        Nothing
      where
+      shutdownSequence = do
+        closeSocket
+        shutdownApp
+        logShutdown
+
       logShutdown = logger $
         mkGenericStrLog LevelInfo "server" "gracefully shutting down server"
 
-runAsAdmin :: (MonadIO m) => Q.PGPool -> SQLGenCtx -> Run a -> m (Either QErr a)
-runAsAdmin pool sqlGenCtx m = do
-  httpManager <- liftIO $ HTTP.newManager HTTP.tlsManagerSettings
-  res  <- runExceptT $ peelRun emptySchemaCache adminUserInfo
-          httpManager sqlGenCtx (PGExecCtx pool Q.Serializable) m
+runAsAdmin
+  :: (MonadIO m)
+  => Q.PGPool
+  -> SQLGenCtx
+  -> HTTP.Manager
+  -> Run a
+  -> m (Either QErr a)
+runAsAdmin pool sqlGenCtx httpManager m = do
+  res <- runExceptT $ peelRun emptySchemaCache
+   (RunCtx adminUserInfo httpManager sqlGenCtx)
+   (PGExecCtx pool Q.Serializable) m
   return $ fmap fst res
+
+execQuery
+  :: ( CacheRWM m
+     , MonadTx m
+     , MonadIO m
+     , HasHttpManager m
+     , HasSQLGenCtx m
+     , UserInfoM m
+     , HasSystemDefined m
+     )
+  => BLC.ByteString
+  -> m BLC.ByteString
+execQuery queryBs = do
+  query <- case A.decode queryBs of
+    Just jVal -> decodeValue jVal
+    Nothing   -> throw400 InvalidJSON "invalid json"
+  buildSchemaCacheStrict
+  encJToLBS <$> runQueryM query
 
 telemetryNotice :: String
 telemetryNotice =

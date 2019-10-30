@@ -1,0 +1,8 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: CREATE TABLE test(id serial PRIMARY KEY);
+- type: track_table
+  args:
+    name: test

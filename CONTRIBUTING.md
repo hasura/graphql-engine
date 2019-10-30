@@ -32,7 +32,7 @@ Of course, we appreciate contributions to all components of Hasura. However, we 
 
 ### Docs
 
-Our goal is to keep our docs comprehensive and updated. If you would like to help us in doing so, we are greatful for any kind of contribution:
+Our goal is to keep our docs comprehensive and updated. If you would like to help us in doing so, we are grateful for any kind of contribution:
 
 - Report missing content
 
@@ -45,19 +45,11 @@ The contributing guide for docs can be found at [docs/CONTRIBUTING.md](docs/CONT
 
 ### Community content
 
-Since we launched our [learn page](https://learn.hasura.io/), we are happy about contributions:
-
-- Fix errors in existing learn tutorials
-
-- Add new tutorials (please reach out to us if you have ideas to avoid duplicate word)
-
-The README of the learn repository can be found [here](https://github.com/hasura/graphql-engine/tree/master/community/learn).
-
-Apart from the learn content, we have identified three other ways of contributing with community content:
+We have identified three other ways of contributing with community content:
 
 - [boilerplates](community/boilerplates)
 
-- [examples](community/examples) 
+- [sample-apps](community/sample-apps) 
 
 - [tools](community/tools) 
 

@@ -56,8 +56,8 @@ pgColsFromMutFld = \case
   MExp _ -> []
   MRet selFlds ->
     flip mapMaybe selFlds $ \(_, annFld) -> case annFld of
-    FCol (PGColumnInfo col colTy _) _ -> Just (col, colTy)
-    _                                 -> Nothing
+    FCol (PGColumnInfo col _ colTy _ _) _ -> Just (col, colTy)
+    _                                     -> Nothing
 
 pgColsFromMutFlds :: MutFlds -> [(PGCol, PGColumnType)]
 pgColsFromMutFlds = concatMap (pgColsFromMutFld . snd)
@@ -65,7 +65,7 @@ pgColsFromMutFlds = concatMap (pgColsFromMutFld . snd)
 pgColsToSelFlds :: [PGColumnInfo] -> [(FieldName, AnnFld)]
 pgColsToSelFlds cols =
   flip map cols $
-  \pgColInfo -> (fromPGCol $ pgiName pgColInfo, FCol pgColInfo Nothing)
+  \pgColInfo -> (fromPGCol $ pgiColumn pgColInfo, FCol pgColInfo Nothing)
 
 mkDefaultMutFlds :: Maybe [PGColumnInfo] -> MutFlds
 mkDefaultMutFlds = \case
@@ -88,7 +88,7 @@ mkMutFldExp qt singleObj strfyNum = \case
   MExp t -> S.SELit t
   MRet selFlds ->
     -- let tabFrom = TableFrom qt $ Just frmItem
-    let tabFrom = TableFrom qt $ Just  $ qualTableToAliasIden qt
+    let tabFrom = FromIden $ qualTableToAliasIden qt
         tabPerm = TablePerm annBoolExpTrue Nothing
     in S.SESelect $ mkSQLSelect singleObj $
        AnnSelG selFlds tabFrom tabPerm noTableArgs strfyNum

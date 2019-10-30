@@ -21,29 +21,30 @@ module Hasura.Server.Logging
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.Bits             (shift, (.&.))
-import           Data.ByteString.Char8 (ByteString)
-import           Data.Int              (Int64)
-import           Data.List             (find)
+import           Data.Bits                 (shift, (.&.))
+import           Data.ByteString.Char8     (ByteString)
+import           Data.Int                  (Int64)
+import           Data.List                 (find)
 import           Data.Time.Clock
-import           Data.Word             (Word32)
-import           Network.Socket        (SockAddr (..))
-import           System.ByteOrder      (ByteOrder (..), byteOrder)
-import           Text.Printf           (printf)
+import           Data.Word                 (Word32)
+import           Network.Socket            (SockAddr (..))
+import           System.ByteOrder          (ByteOrder (..), byteOrder)
+import           Text.Printf               (printf)
 
-import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.Lazy  as BL
-import qualified Data.Text             as T
-import qualified Network.HTTP.Types    as N
-import qualified Network.Wai           as Wai
+import qualified Data.ByteString.Char8     as BS
+import qualified Data.ByteString.Lazy      as BL
+import qualified Data.Text                 as T
+import qualified Network.HTTP.Types        as N
+import qualified Network.Wai               as Wai
 
 import           Hasura.HTTP
-import           Hasura.Logging        (EngineLogType (..))
+import           Hasura.Logging            (EngineLogType (..))
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import           Hasura.Server.Compression
 import           Hasura.Server.Utils
 
-import qualified Hasura.Logging        as L
+import qualified Hasura.Logging            as L
 
 data StartupLog
   = StartupLog
@@ -129,17 +130,19 @@ data HttpInfoLog
   , hlSource      :: !T.Text
   , hlPath        :: !T.Text
   , hlHttpVersion :: !N.HttpVersion
+  , hlCompression :: !(Maybe CompressionType)
   , hlHeaders     :: ![N.Header]
   -- ^ all the request headers
   } deriving (Show, Eq)
 
 instance ToJSON HttpInfoLog where
-  toJSON (HttpInfoLog st met src path hv _) =
+  toJSON (HttpInfoLog st met src path hv compressTypeM _) =
     object [ "status" .= N.statusCode st
            , "method" .= met
            , "ip" .= src
            , "url" .= path
            , "http_version" .= show hv
+           , "content_encoding" .= (compressionTypeToTxt <$> compressTypeM)
            ]
 
 -- | Information about a GraphQL/Hasura metadata operation over HTTP
@@ -153,6 +156,7 @@ data OperationLog
   , olRawQuery           :: !(Maybe Text)
   , olError              :: !(Maybe QErr)
   } deriving (Show, Eq)
+
 $(deriveToJSON (aesonDrop 2 snakeCase)
   { omitNothingFields = True
   } ''OperationLog)
@@ -171,15 +175,17 @@ mkHttpAccessLogContext
   -> Wai.Request
   -> BL.ByteString
   -> Maybe (UTCTime, UTCTime)
+  -> Maybe CompressionType
   -> [N.Header]
   -> HttpLogContext
-mkHttpAccessLogContext userInfoM reqId req res mTimeT headers =
+mkHttpAccessLogContext userInfoM reqId req res mTimeT compressTypeM headers =
   let http = HttpInfoLog
              { hlStatus      = status
              , hlMethod      = bsToTxt $ Wai.requestMethod req
              , hlSource      = bsToTxt $ getSourceFromFallback req
              , hlPath        = bsToTxt $ Wai.rawPathInfo req
              , hlHttpVersion = Wai.httpVersion req
+             , hlCompression  = compressTypeM
              , hlHeaders     = headers
              }
       op = OperationLog
@@ -205,15 +211,17 @@ mkHttpErrorLogContext
   -> QErr
   -> Either BL.ByteString Value
   -> Maybe (UTCTime, UTCTime)
+  -> Maybe CompressionType
   -> [N.Header]
   -> HttpLogContext
-mkHttpErrorLogContext userInfoM reqId req err query mTimeT headers =
+mkHttpErrorLogContext userInfoM reqId req err query mTimeT compressTypeM headers =
   let http = HttpInfoLog
              { hlStatus      = qeStatus err
              , hlMethod      = bsToTxt $ Wai.requestMethod req
              , hlSource      = bsToTxt $ getSourceFromFallback req
              , hlPath        = bsToTxt $ Wai.rawPathInfo req
              , hlHttpVersion = Wai.httpVersion req
+             , hlCompression  = compressTypeM
              , hlHeaders     = headers
              }
       op = OperationLog

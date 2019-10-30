@@ -45,11 +45,13 @@ mkAdminRolePermInfo :: TableInfo PGColumnInfo -> RolePermInfo
 mkAdminRolePermInfo ti =
   RolePermInfo (Just i) (Just s) (Just u) (Just d)
   where
-    pgCols = map pgiName $ getCols $ _tiFieldInfoMap ti
+    fields = _tiFieldInfoMap ti
+    pgCols = map pgiColumn $ getCols fields
+    computedCols = map _cfiName $ getComputedFieldInfos fields
 
     tn = _tiName ti
     i = InsPermInfo (HS.fromList pgCols) tn annBoolExpTrue M.empty []
-    s = SelPermInfo (HS.fromList pgCols) tn annBoolExpTrue
+    s = SelPermInfo (HS.fromList pgCols) (HS.fromList computedCols) tn annBoolExpTrue
         Nothing True []
     u = UpdPermInfo (HS.fromList pgCols) tn annBoolExpTrue M.empty []
     d = DelPermInfo tn annBoolExpTrue []
@@ -188,7 +190,8 @@ checkOnColExp
   -> AnnBoolExpFldSQL
   -> m AnnBoolExpFldSQL
 checkOnColExp spi sessVarBldr annFld = case annFld of
-  AVCol (PGColumnInfo cn _ _) _ -> do
+  AVCol colInfo _ -> do
+    let cn = pgiColumn colInfo
     checkSelOnCol spi cn
     return annFld
   AVRel relInfo nesAnn -> do
@@ -248,7 +251,7 @@ convBoolExp
   -> (PGColumnType -> Value -> m S.SQLExp)
   -> m AnnBoolExpSQL
 convBoolExp cim spi be sessVarBldr prepValBldr = do
-  abe <- annBoolExp rhsParser cim be
+  abe <- annBoolExp rhsParser cim $ unBoolExp be
   checkSelPerm spi sessVarBldr abe
   where
     rhsParser pgType val = case pgType of

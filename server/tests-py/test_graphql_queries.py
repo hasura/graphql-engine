@@ -10,6 +10,12 @@ class TestGraphQLQueryBasic(DefaultTestSelectQueries):
     def test_select_query_author(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_author.yaml', transport)
 
+    def test_select_query_author_with_skip_directive(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_skip_directive.yaml', transport)
+
+    def test_select_query_author_with_include_directive(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_include_directive.yaml', transport)
+
     def test_select_various_postgres_types(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_test_types.yaml', transport)
 
@@ -58,6 +64,22 @@ class TestGraphQLQueryBasic(DefaultTestSelectQueries):
     def dir(cls):
         return 'queries/graphql_query/basic'
 
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+class TestGraphQLQueryFragments(DefaultTestSelectQueries):
+
+    def test_select_query_top_level_fragment(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_top_level_fragment.yaml', transport)
+
+    def test_select_query_nested_fragment(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_nested_fragment.yaml', transport)
+
+    def test_select_query_fragment_cycles(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_fragment_cycles.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/basic'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphQLQueryAgg(DefaultTestSelectQueries):
@@ -207,6 +229,12 @@ class TestGraphQLQueryBoolExpBasic(DefaultTestSelectQueries):
     def test_self_referential_relationships(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/self_referential_relationships.yaml', transport)
 
+    def test_query_account_permission_success(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_account_permission_success.yaml', transport)
+
+    def test_query_account_permission_fail(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_account_permission_fail.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/boolexp/basic'
@@ -257,6 +285,7 @@ class TestGraphqlQueryPermissions(DefaultTestSelectQueries):
     def test_user_query_auction(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/user_query_auction.yaml', transport)
 
+    @pytest.mark.xfail(reason="Refer https://github.com/hasura/graphql-engine-internal/issues/252")
     def test_jsonb_has_all(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/jsonb_has_all.yaml', transport)
 
@@ -410,6 +439,9 @@ class TestGraphQLQueryOrderBy(DefaultTestSelectQueries):
     def test_employee_distinct_fail(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/employee_distinct_fail.yaml', transport)
 
+    def test_album_order_by_tracks_tags(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/album_order_by_tracks_tags.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/order_by'
@@ -452,6 +484,19 @@ class TestGraphQLQueryFunctions(DefaultTestSelectQueries):
     def dir(cls):
         return 'queries/graphql_query/functions'
 
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+class TestGraphQLQueryCustomSchema(DefaultTestSelectQueries):
+
+    def test_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/author.yaml', transport)
+
+    def test_article(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/article.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/custom_schema'
+
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 class TestGraphQLQueryEnums(DefaultTestSelectQueries):
     @classmethod
@@ -478,3 +523,27 @@ class TestGraphQLQueryEnums(DefaultTestSelectQueries):
 
     def test_select_where_enum_eq_variable_bad_value(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_where_enum_eq_variable_bad_value.yaml', transport)
+
+    def test_select_where_enum_eq_without_enum_table_visibility(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_where_enum_eq_without_enum_table_visibility.yaml', transport)
+
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+class TestGraphQLQueryComputedFields(DefaultTestSelectQueries):
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/computed_fields'
+
+    def test_computed_fields(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/computed_fields.yaml', transport)
+
+    def test_computed_fields_permission(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/computed_fields_permission.yaml', transport)
+
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+class TestGraphQLQueryCaching(DefaultTestSelectQueries):
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/caching'
+
+    def test_include_directive(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/include_directive.yaml', transport)
