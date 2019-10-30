@@ -20,7 +20,7 @@ Reporting vulnerabilities
 
 We’re extremely grateful for security researchers and users that report vulnerabilities to the Hasura community. All reports are thoroughly investigated by the project's maintainers.
 
-To report a security issue, please email us at build@hasura.io with all the details, attaching all necessary information.
+To report a security issue, please email us at build@hasura.io with all the details, attaching all the necessary information.
 
 When should I report a vulnerability?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
