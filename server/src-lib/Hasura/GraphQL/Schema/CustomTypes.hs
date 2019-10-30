@@ -1,8 +1,9 @@
 module Hasura.GraphQL.Schema.CustomTypes
-  ( AnnotatedRelationship(..)
-  , buildCustomTypesSchemaPartial
+  ( buildCustomTypesSchemaPartial
   , buildCustomTypesSchema
   ) where
+
+import Control.Lens
 
 import qualified Data.HashMap.Strict           as Map
 import qualified Language.GraphQL.Draft.Syntax as G
@@ -28,18 +29,18 @@ buildObjectTypeInfo roleName annotatedObjectType =
 
     relationships =
       flip map (toList $ _aotRelationships annotatedObjectType) $
-      \(AnnotatedRelationship definition remoteTableInfo) ->
+      \(ObjectRelationship name remoteTableInfo _) ->
         if isJust (getSelectPermissionInfoM remoteTableInfo roleName) ||
            roleName == adminRole
-        then Just (relationshipToFieldInfo definition)
+        then Just (relationshipToFieldInfo name $ _tiName remoteTableInfo)
         else Nothing
       where
-        relationshipToFieldInfo relationship =
+        relationshipToFieldInfo name remoteTableName =
           VT.ObjFldInfo
           { VT._fiDesc = Nothing -- TODO
-          , VT._fiName = unObjectRelationshipName $ _ordName relationship
+          , VT._fiName = unObjectRelationshipName name
           , VT._fiParams = mempty
-          , VT._fiTy = G.toGT $ mkTableTy $ _ordRemoteTable relationship
+          , VT._fiTy = G.toGT $ mkTableTy remoteTableName
           , VT._fiLoc = VT.TLCustom
           }
 
@@ -81,13 +82,13 @@ annotateObjectType nonObjectTypeMap objectDefinition = do
   annotatedRelationships <-
     fmap Map.fromList $ forM relationships $
     \relationship -> do
-      let relationshipName = _ordName relationship
-          remoteTable = _ordRemoteTable relationship
+      let relationshipName = _orName relationship
+          remoteTable = _orRemoteTable relationship
       remoteTableInfoM <- askTabInfoM remoteTable
       remoteTableInfo <- onNothing remoteTableInfoM $
         throw500 $ "missing table info for: " <>> remoteTable
       return ( relationshipName
-             , AnnotatedRelationship relationship remoteTableInfo)
+             , relationship & orRemoteTable .~ remoteTableInfo)
   return $ AnnotatedObjectType objectDefinition
     annotatedFields annotatedRelationships
   where

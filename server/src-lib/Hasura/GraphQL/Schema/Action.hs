@@ -2,15 +2,14 @@ module Hasura.GraphQL.Schema.Action
   ( mkActionsSchema
   ) where
 
-import qualified Data.HashMap.Strict               as Map
-import qualified Language.GraphQL.Draft.Syntax     as G
+import qualified Data.HashMap.Strict           as Map
+import qualified Language.GraphQL.Draft.Syntax as G
 
-import           Data.Coerce                       (coerce)
+import           Data.Coerce                   (coerce)
 
 import           Hasura.GraphQL.Schema.Builder
 
 import           Hasura.GraphQL.Resolve.Types
-import           Hasura.GraphQL.Schema.CustomTypes
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
 import           Hasura.RQL.Types
@@ -179,13 +178,12 @@ mkActionFieldsAndTypes actionInfo annotatedOutputType permission =
         relationships =
           flip map (Map.toList $ _aotRelationships annotatedOutputType) $
           \(relationshipName, relationship) ->
-            let remoteTableInfo = _arRemoteTableInfo relationship
+            let remoteTableInfo = _orRemoteTable relationship
                 remoteTable = _tiName remoteTableInfo
                 filterAndLimitM = getFilterAndLimit remoteTableInfo
                 columnMapping =
                   [ (PGCol $ coerce k, v)
-                  | (k, v) <- Map.toList $
-                    _ordFieldMapping $ _arDefinition relationship
+                  | (k, v) <- Map.toList $ _orFieldMapping relationship
                   ]
             in case filterAndLimitM of
               Just (tableFilter, tableLimit) ->

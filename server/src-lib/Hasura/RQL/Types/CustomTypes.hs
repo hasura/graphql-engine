@@ -12,7 +12,9 @@ module Hasura.RQL.Types.CustomTypes
   , ObjectFieldName(..)
   , ObjectFieldDefinition(..)
   , ObjectRelationshipName(..)
-  , ObjectRelationshipDefinition(..)
+  , ObjectRelationship(..)
+  , orName, orRemoteTable, orFieldMapping
+  , ObjectRelationshipDefinition
   , ObjectTypeName(..)
   , ObjectTypeDefinition(..)
   , CustomTypeName
@@ -21,10 +23,11 @@ module Hasura.RQL.Types.CustomTypes
   , OutputFieldTypeInfo(..)
   , AnnotatedObjectType(..)
   , AnnotatedObjects
-  , AnnotatedRelationship(..)
+  , AnnotatedRelationship
   , NonObjectTypeMap(..)
   ) where
 
+import           Control.Lens.TH                     (makeLenses)
 import           Language.Haskell.TH.Syntax          (Lift)
 
 import qualified Data.Aeson                          as J
@@ -109,13 +112,18 @@ newtype ObjectRelationshipName
   = ObjectRelationshipName { unObjectRelationshipName :: G.Name }
   deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, Lift)
 
-data ObjectRelationshipDefinition
-  = ObjectRelationshipDefinition
-  { _ordName         :: !ObjectRelationshipName
-  , _ordRemoteTable  :: !QualifiedTable
-  , _ordFieldMapping :: !(Map.HashMap ObjectFieldName PGCol)
+data ObjectRelationship t
+  = ObjectRelationship
+  { _orName         :: !ObjectRelationshipName
+  , _orRemoteTable  :: !t
+  , _orFieldMapping :: !(Map.HashMap ObjectFieldName PGCol)
   } deriving (Show, Eq, Lift)
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ObjectRelationshipDefinition)
+$(makeLenses ''ObjectRelationship)
+
+type ObjectRelationshipDefinition =
+  ObjectRelationship QualifiedTable
+
+$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ObjectRelationship)
 
 newtype ObjectTypeName
   = ObjectTypeName { unObjectTypeName :: G.NamedType }
@@ -180,21 +188,13 @@ data CustomTypes
   } deriving (Show, Eq, Lift)
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''CustomTypes)
 
--- TODO: parameterise the ObjectRelationshipDefinition type
--- instead of doing this
-data AnnotatedRelationship
-  = AnnotatedRelationship
-  { _arDefinition      :: !ObjectRelationshipDefinition
-  , _arRemoteTableInfo :: !(TableInfo PGColumnInfo)
-  } deriving (Show, Eq)
+type AnnotatedRelationship =
+  ObjectRelationship (TableInfo PGColumnInfo)
 
 data OutputFieldTypeInfo
   = OutputFieldScalar !VT.ScalarTyInfo
   | OutputFieldEnum !VT.EnumTyInfo
   deriving (Show, Eq)
-
--- instance ToJSON OutputFieldTypeInfo where
---   toJSON = toJSON . show
 
 data AnnotatedObjectType
   = AnnotatedObjectType

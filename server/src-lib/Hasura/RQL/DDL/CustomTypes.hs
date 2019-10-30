@@ -99,7 +99,7 @@ validateCustomTypeDefinitions customTypes = do
           fieldNames = map (unObjectFieldName . _ofdName) $
                        toList (_otdFields objectDefinition)
           relationships = fromMaybe [] $ _otdRelationships objectDefinition
-          relNames = map (unObjectRelationshipName . _ordName) relationships
+          relNames = map (unObjectRelationshipName . _orName) relationships
           duplicateFieldNames = L.duplicates $ fieldNames <> relNames
           fields = toList $ _otdFields objectDefinition
 
@@ -138,9 +138,9 @@ validateCustomTypeDefinitions customTypes = do
           else pure Nothing
 
       for_ relationships $ \relationshipField -> do
-        let relationshipName = _ordName relationshipField
-            remoteTable = _ordRemoteTable relationshipField
-            fieldMapping = _ordFieldMapping relationshipField
+        let relationshipName = _orName relationshipField
+            remoteTable = _orRemoteTable relationshipField
+            fieldMapping = _orFieldMapping relationshipField
 
         --check that the table exists
         remoteTableInfoM <- askTabInfoM remoteTable
