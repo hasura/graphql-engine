@@ -59,7 +59,7 @@ class TestGraphqlInsertOnConflict(DefaultTestMutations):
         check_query_f(hge_ctx, self.dir() + "/article_unexpected_on_conflict_constraint_error.yaml", transport)
 
     def test_order_on_conflict_where(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/order_on_conflict_where.yaml')
+        check_query_f(hge_ctx, self.dir() + '/order_on_conflict_where.yaml', transport)
 
     @classmethod
     def dir(cls):
@@ -124,7 +124,7 @@ class TestGraphqlInsertPermission(DefaultTestMutations):
         check_query_f(hge_ctx, self.dir() + "/resident_5_modifies_resident_6_upsert.yaml", transport)
 
     def test_resident_on_conflict_where(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/resident_on_conflict_where.yaml")
+        check_query_f(hge_ctx, self.dir() + "/resident_on_conflict_where.yaml", transport)
 
     def test_blog_on_conflict_update_preset(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/blog_on_conflict_update_preset.yaml", transport)
@@ -148,10 +148,10 @@ class TestGraphqlInsertPermission(DefaultTestMutations):
         check_query_f(hge_ctx, self.dir() + "/developer_insert_has_keys_any_fail.yaml", transport)
 
     def test_user_insert_account_success(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/user_insert_account_success.yaml")
+        check_query_f(hge_ctx, self.dir() + "/user_insert_account_success.yaml", transport)
 
     def test_user_insert_account_fail(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/user_insert_account_fail.yaml")
+        check_query_f(hge_ctx, self.dir() + "/user_insert_account_fail.yaml", transport)
 
     @classmethod
     def dir(cls):
@@ -345,10 +345,10 @@ class TestGraphqlUpdatePermissions(DefaultTestMutations):
         check_query_f(hge_ctx, self.dir() + '/user_update_resident_preset_session_var.yaml', transport)
 
     def test_user_account_update_success(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/user_account_update_success.yaml')
+        check_query_f(hge_ctx, self.dir() + '/user_account_update_success.yaml', transport)
 
     def test_user_account_update_no_rows(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/user_account_update_no_rows.yaml')
+        check_query_f(hge_ctx, self.dir() + '/user_account_update_no_rows.yaml', transport)
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/update/permissions"
@@ -400,10 +400,10 @@ class TestGraphqlDeletePermissions(DefaultTestMutations):
         check_query_f(hge_ctx, self.dir() + "/agent_delete_perm_arr_sess_var_fail.yaml", transport)
 
     def test_user_delete_account_success(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/user_delete_account_success.yaml")
+        check_query_f(hge_ctx, self.dir() + "/user_delete_account_success.yaml", transport)
 
     def test_user_delete_account_no_rows(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/user_delete_account_no_rows.yaml")
+        check_query_f(hge_ctx, self.dir() + "/user_delete_account_no_rows.yaml", transport)
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/delete/permissions"
