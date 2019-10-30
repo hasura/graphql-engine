@@ -158,7 +158,6 @@ class ModifyTable extends React.Component {
         <React.Fragment>
           <h4 className={styles.subheading_text}>Custom GraphQL Root Fields</h4>
           <RootFields
-            existingAliases={existingRootFields}
             existingRootFields={existingRootFields}
             rootFieldsEdit={rootFieldsEdit}
             dispatch={dispatch}
