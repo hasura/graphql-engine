@@ -307,11 +307,9 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
 
     -- computed fields function args input objects
     mkComputedFieldRequiredTypes computedFieldInfo =
-      let ComputedFieldFunction qf inputArgs tableArg _ =
-            _cfFunction computedFieldInfo
-          withoutTableArg = functionArgsWithoutTableArg tableArg inputArgs
-          scalarArgs = map (_qptName . faType) $ toList withoutTableArg
-      in (, scalarArgs) <$> mkFuncArgsInp qf withoutTableArg
+      let ComputedFieldFunction qf inputArgs _ _ = _cfFunction computedFieldInfo
+          scalarArgs = map (_qptName . faType) $ toList inputArgs
+      in (, scalarArgs) <$> mkFuncArgsInp qf inputArgs
 
     (computedFieldFuncArgsInps, computedFieldFuncArgScalars) =
       (map TIInpObj *** (Set.fromList . concat)) $ unzip $ catMaybes $
@@ -453,8 +451,7 @@ getSelPerm tableCache fields role selPermInfo = do
 
   computedSelFields <- fmap catMaybes $ forM computedFields $ \info -> do
     let ComputedFieldInfo name function returnTy _ = info
-        ComputedFieldFunction _ inputArgs tableArg _ = function
-        inputArgSeq = mkFuncArgSeq $ functionArgsWithoutTableArg tableArg inputArgs
+        inputArgSeq = mkFuncArgSeq $ _cffInputArgs function
     fmap (SFComputedField . ComputedField name function inputArgSeq) <$>
       case returnTy of
         CFRScalar scalarTy  -> pure $ Just $ CFTScalar scalarTy
@@ -564,8 +561,7 @@ mkAdminSelFlds fields tableCache = do
 
   computedSelFields <- forM computedFields $ \info -> do
     let ComputedFieldInfo name function returnTy _ = info
-        ComputedFieldFunction _ inputArgs tableArg _ = function
-        inputArgSeq = mkFuncArgSeq $ functionArgsWithoutTableArg tableArg inputArgs
+        inputArgSeq = mkFuncArgSeq $ _cffInputArgs function
     (SFComputedField . ComputedField name function inputArgSeq) <$>
       case returnTy of
         CFRScalar scalarTy  -> pure $ CFTScalar scalarTy

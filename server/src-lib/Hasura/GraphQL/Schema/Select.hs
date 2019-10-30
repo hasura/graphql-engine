@@ -5,8 +5,6 @@ module Hasura.GraphQL.Schema.Select
   , mkTableAggFldsObj
   , mkTableColAggFldsObj
 
-  , functionArgsWithoutTableArg
-
   , mkSelFld
   , mkAggSelFld
   , mkSelFldPKey
@@ -16,7 +14,6 @@ module Hasura.GraphQL.Schema.Select
 
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashSet                  as Set
-import qualified Data.Sequence                 as Seq
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Hasura.GraphQL.Resolve.Types
@@ -72,14 +69,6 @@ mkPGColFld colInfo =
     notNullTy = G.toGT $ G.toNT columnType
     nullTy = G.toGT columnType
 
-functionArgsWithoutTableArg
-  :: FunctionTableArgument -> Seq.Seq FunctionArg -> Seq.Seq FunctionArg
-functionArgsWithoutTableArg tableArg inputArgs = Seq.fromList $
-  case tableArg of
-    FTAFirst  -> tail $ toList inputArgs
-    FTANamed argName _ ->
-      filter ((/=) (Just argName) . faName) $ toList inputArgs
-
 mkComputedFieldFld :: ComputedField -> ObjFldInfo
 mkComputedFieldFld field =
   uncurry (mkHsraObjFldInfo (Just desc) fieldName) $ case fieldType of
@@ -104,9 +93,7 @@ mkComputedFieldFld field =
           inputValue = InpValInfo (Just funcArgDesc) "args" Nothing $
                        G.toGT $ G.toNT $ mkFuncArgsTy qf
           inputArgs = _cffInputArgs function
-          tableArgument = _cffTableArgument function
-          withoutTableArgs = functionArgsWithoutTableArg tableArgument inputArgs
-      in bool (Just inputValue) Nothing $ null withoutTableArgs
+      in bool (Just inputValue) Nothing $ null inputArgs
 
 
 -- where: table_bool_exp
