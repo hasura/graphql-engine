@@ -198,13 +198,13 @@ export const saveAction = currentAction => (dispatch, getState) => {
   );
 
   const upQueries = [
-    customFieldsQueryUp,
     dropCurrentActionQuery,
+    customFieldsQueryUp,
     actionQueryUp,
   ];
   const downQueries = [
-    customFieldsQueryDown,
     actionQueryDown,
+    customFieldsQueryDown,
     oldActionQueryUp,
   ];
 

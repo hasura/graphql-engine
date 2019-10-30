@@ -60,20 +60,64 @@ const AddAction = ({
   const removeType = index => {
     let newArgs = JSON.parse(JSON.stringify(args));
     let newTypes = JSON.parse(JSON.stringify(types));
-    newArgs = newArgs.filter(a => a.type != index);
-    newTypes = newTypes.map(t => {
-      if (t.kind === 'scalar' || t.kind === 'enum' || t.isInbuilt) return t;
-      const _t = { ...t };
-      _t.fields = _t.fields.filter(f => f.type != index);
-      return _t;
-    });
-    dispatch(
-      setTypesBulk(
-        [...newTypes.slice(0, index), ...newTypes.slice(index + 1)],
-        newArgs,
-        outputType == index ? '' : outputType
-      )
-    );
+
+    // purge arguments of the removed type
+    newArgs = newArgs
+      .map(a => {
+        const argTypeIndex = parseInt(a.type, 10);
+        if (argTypeIndex != index) {
+          return {
+            ...a,
+            type:
+              argTypeIndex > index
+                ? (argTypeIndex - 1).toString()
+                : argTypeIndex.toString(),
+          };
+        }
+        return null;
+      })
+      .filter(a => !!a);
+
+    // purge type fields of the removed type
+    newTypes = newTypes
+      .map((t, i) => {
+        if (i == index) return null;
+        if (t.kind === 'scalar' || t.kind === 'enum' || t.isInbuilt) return t;
+        const _t = { ...t };
+        _t.fields = _t.fields
+          .map(f => {
+            if (f.type != index) {
+              const typeIndex = parseInt(f.type, 10);
+              return {
+                ...f,
+                type:
+                  typeIndex > index
+                    ? (typeIndex - 1).toString()
+                    : typeIndex.toString(),
+              };
+            }
+            return null;
+          })
+          .filter(f => !!f);
+        return _t;
+      })
+      .filter(t => !!t);
+
+    // purge output type of the removed index
+    let newOutputType = outputType;
+    if (outputType) {
+      const outputTypeIndex = parseInt(outputType, 10);
+      if (outputTypeIndex == index) {
+        newOutputType = '';
+      } else {
+        newOutputType =
+          outputTypeIndex > index
+            ? (outputTypeIndex - 1).toString()
+            : outputTypeIndex.toString();
+      }
+    }
+
+    dispatch(setTypesBulk([...newTypes], newArgs, newOutputType));
   };
 
   const onSubmit = e => {
