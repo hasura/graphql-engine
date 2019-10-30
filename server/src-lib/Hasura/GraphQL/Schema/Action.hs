@@ -147,17 +147,28 @@ mkActionFieldsAndTypes actionInfo annotatedOutputType permission =
     actionName = _aiName actionInfo
     definition = _aiDefinition actionInfo
     roleName = _apiRole permission
-    mkPGFieldType (fieldType, fieldTypeInfo) =
+
+    -- all the possible field references
+    fieldReferences =
+      Map.unions $ map _orFieldMapping $ Map.elems $
+      _aotRelationships annotatedOutputType
+
+    mkPGFieldType fieldName (fieldType, fieldTypeInfo) =
       case (G.isListType fieldType, fieldTypeInfo) of
         -- for scalar lists, we treat them as json columns
         (True, _) -> PGJSON
         -- enums the same
         (False, OutputFieldEnum _) -> PGJSON
-        -- specific scalars
-        (False, OutputFieldScalar scalarTypeInfo) ->
-          namedTypeToPGScalar $ G.NamedType $ _stiName scalarTypeInfo
+        -- default to PGJSON unless you have to join with a postgres table
+        -- i.e, if this field is specified as part of some relationship's
+        -- mapping, we can cast this column's value as the remote column's type
+        (False, OutputFieldScalar _) ->
+          case Map.lookup fieldName fieldReferences of
+            Just columnInfo -> unsafePGColumnToRepresentation $ pgiType columnInfo
+            Nothing -> PGJSON
+
     definitionList =
-      [ (coerce k, mkPGFieldType v)
+      [ (coerce k, mkPGFieldType k v)
       | (k, v) <- Map.toList $ _aotAnnotatedFields annotatedOutputType
       ]
     -- mkFieldMap annotatedOutputType =
@@ -171,7 +182,7 @@ mkActionFieldsAndTypes actionInfo annotatedOutputType permission =
             , Left $ PGColumnInfo
               (PGCol $ coerce fieldName)
               (coerce fieldName)
-              (PGColumnScalar $ mkPGFieldType (fieldType, fieldTypeInfo))
+              (PGColumnScalar $ mkPGFieldType fieldName (fieldType, fieldTypeInfo))
               (G.isNullable fieldType)
               Nothing
             )
@@ -182,7 +193,7 @@ mkActionFieldsAndTypes actionInfo annotatedOutputType permission =
                 remoteTable = _tiName remoteTableInfo
                 filterAndLimitM = getFilterAndLimit remoteTableInfo
                 columnMapping =
-                  [ (PGCol $ coerce k, v)
+                  [ (PGCol $ coerce k, pgiColumn v)
                   | (k, v) <- Map.toList $ _orFieldMapping relationship
                   ]
             in case filterAndLimitM of

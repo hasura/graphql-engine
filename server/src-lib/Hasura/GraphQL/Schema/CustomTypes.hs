@@ -87,8 +87,15 @@ annotateObjectType nonObjectTypeMap objectDefinition = do
       remoteTableInfoM <- askTabInfoM remoteTable
       remoteTableInfo <- onNothing remoteTableInfoM $
         throw500 $ "missing table info for: " <>> remoteTable
+      annotatedFieldMapping <-
+        forM (_orFieldMapping relationship) $ \remoteTableColumn -> do
+        let fieldName = fromPGCol remoteTableColumn
+        onNothing (getPGColumnInfoM remoteTableInfo fieldName) $
+          throw500 $ "missing column info of " <> fieldName
+          <<> " in table" <>> remoteTable
       return ( relationshipName
-             , relationship & orRemoteTable .~ remoteTableInfo)
+             , relationship & orRemoteTable .~ remoteTableInfo
+               & orFieldMapping .~ annotatedFieldMapping)
   return $ AnnotatedObjectType objectDefinition
     annotatedFields annotatedRelationships
   where

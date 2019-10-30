@@ -112,18 +112,18 @@ newtype ObjectRelationshipName
   = ObjectRelationshipName { unObjectRelationshipName :: G.Name }
   deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, Lift)
 
-data ObjectRelationship t
+data ObjectRelationship t f
   = ObjectRelationship
   { _orName         :: !ObjectRelationshipName
   , _orRemoteTable  :: !t
-  , _orFieldMapping :: !(Map.HashMap ObjectFieldName PGCol)
+  , _orFieldMapping :: !(Map.HashMap ObjectFieldName f)
   } deriving (Show, Eq, Lift)
 $(makeLenses ''ObjectRelationship)
 
 type ObjectRelationshipDefinition =
-  ObjectRelationship QualifiedTable
+  ObjectRelationship QualifiedTable PGCol
 
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ObjectRelationship)
+$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''ObjectRelationship)
 
 newtype ObjectTypeName
   = ObjectTypeName { unObjectTypeName :: G.NamedType }
@@ -189,7 +189,7 @@ data CustomTypes
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''CustomTypes)
 
 type AnnotatedRelationship =
-  ObjectRelationship (TableInfo PGColumnInfo)
+  ObjectRelationship (TableInfo PGColumnInfo) PGColumnInfo
 
 data OutputFieldTypeInfo
   = OutputFieldScalar !VT.ScalarTyInfo
