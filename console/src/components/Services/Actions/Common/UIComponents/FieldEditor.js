@@ -71,7 +71,8 @@ const FieldEditor = ({
         )}
         {allTypes.map((t, i) => {
           if (
-            (parentTypeKind === 'object' && t.kind === 'input_object') ||
+            (parentTypeKind === 'object' &&
+              ['input_object', 'object'].includes(t.kind)) ||
             (parentTypeKind === 'input_object' && t.kind === 'object')
           ) {
             return null;

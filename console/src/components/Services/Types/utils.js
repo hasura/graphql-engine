@@ -1,4 +1,4 @@
-import { wrapType } from './wrappingTypeUtils';
+import { unwrapType } from './wrappingTypeUtils';
 
 const singularize = kind => {
   return kind.substr(0, kind.length - 1);
@@ -108,16 +108,28 @@ export const parseCustomTypes = customTypesServer => {
 };
 
 export const getActionTypes = (actionDef, allTypes) => {
-  return allTypes.filter(t => {
-    // TODO
-    if (actionDef.arguments.find(a => a.type.indexOf(t.name) === 0)) {
-      return true;
+  const usedTypes = {};
+  const actionTypes = [];
+  const getDependentTypes = typename => {
+    if (usedTypes[typename]) return;
+    const type = allTypes.find(t => t.name === typename);
+    if (!type) return;
+    actionTypes.push(type);
+    usedTypes[typename] = true;
+    if (type.kind === 'input_object' || type.kind === 'object') {
+      type.fields.forEach(f => {
+        const { typename: _typename } = unwrapType(f.type);
+        getDependentTypes(_typename);
+      });
     }
-    if (actionDef.output_type === t.name) return true;
-    return false;
-  });
-};
+  };
 
-export const wrapWrappingTypes = types => {
-  return types.map(t => {});
+  actionDef.arguments.forEach(a => {
+    const { typename } = unwrapType(a.type);
+    getDependentTypes(typename);
+  });
+
+  getDependentTypes(actionDef.output_type);
+  console.log(actionTypes);
+  return actionTypes;
 };

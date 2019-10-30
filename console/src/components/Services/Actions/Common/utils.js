@@ -6,21 +6,8 @@ import {
   filterNameless,
   filterValueLess,
 } from '../../Types/utils';
-import {
-  wrapType,
-  unwrapType,
-  getWrappedTypename,
-  getUnderlyingType,
-  getTypenameMetadata,
-} from '../../Types/wrappingTypeUtils';
-import {
-  isWrappingType,
-  isListType,
-  isNonNullType,
-  isInputObjectType,
-  isEnumType,
-  isScalarType,
-} from 'graphql';
+import { wrapType, getTypenameMetadata } from '../../Types/wrappingTypeUtils';
+import { isInputObjectType, isEnumType, isScalarType } from 'graphql';
 import {
   gqlInbuiltTypes,
   defaultScalarType,
@@ -109,20 +96,6 @@ export const sanitiseState = state => {
   return newState;
 };
 
-const stringEqual = (string1, string2) => {
-  const l1 = string1.length;
-  const l2 = string2.length;
-  if (l1 !== l2) {
-    return false;
-  }
-  for (var i = l1 - 1; i >= 0; i--) {
-    const char1 = string1[i];
-    const char2 = string2[i];
-    if (char1 !== char2) return false;
-  }
-  return true;
-};
-
 export const deriveExistingType = (
   currentTypename,
   actionTypes,
@@ -146,9 +119,9 @@ export const deriveExistingType = (
     if (isScalarType(graphqlType)) return 'scalar';
   };
 
-  const newTypes = filterNameless(actionTypes);
+  let newTypes = filterNameless(actionTypes);
 
-  const selectedType = existingTypemap[selectedExistingType];
+  const chosenExistingType = existingTypemap[selectedExistingType];
 
   const usedTypenames = {};
 
@@ -186,22 +159,7 @@ export const deriveExistingType = (
       const namespacedTypename = isInbuiltType({ name: typename })
         ? typename
         : namespaceTypename(typename);
-      const typeIndex = newTypes.findIndex(nt => {
-        if (f.name === '_eq') {
-          console.log('==================================');
-          console.log(newTypes);
-          console.log(namespacedTypename);
-          console.log(nt.name);
-          console.log(namespacedTypename === nt.name);
-          console.log(stringEqual(nt.name, namespacedTypename));
-          console.log('==================================');
-        }
-        return stringEqual(nt.name, namespacedTypename);
-      });
-      console.log(typeIndex);
-      console.log('-----------------------------');
-      _f.type = typeIndex.toString();
-
+      _f.typename = namespacedTypename;
       _t.fields.push(_f);
     });
 
@@ -216,7 +174,22 @@ export const deriveExistingType = (
     }
   };
 
-  generateTypes(selectedType, currentTypename);
+  generateTypes(chosenExistingType, currentTypename);
+
+  newTypes = newTypes.map(nt => {
+    if (nt.kind === 'input_object') {
+      const newType = JSON.parse(JSON.stringify(nt));
+      console.log(newType);
+      newType.fields = newType.fields.map(f => {
+        const _f = { ...f };
+        _f.type = newTypes.findIndex(t => t.name === f.typename).toString();
+        delete _f.typename;
+        return _f;
+      });
+      return newType;
+    }
+    return nt;
+  });
 
   return [...newTypes, defaultScalarType];
 };

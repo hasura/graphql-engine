@@ -79,7 +79,7 @@ const useIntrospectionSchema = headers => {
           setLoading(false);
         } else {
           setLoading(false);
-          setError(e);
+          setError(response);
         }
       })
       .catch(e => {
