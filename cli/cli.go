@@ -396,3 +396,23 @@ func (ec *ExecutionContext) GetMetadataFilePath(format string) (string, error) {
 	}
 	return "", errors.New("unsupported file type")
 }
+
+// GetExistingMetadataFile returns the path to the default metadata file that
+// also exists, json or yaml
+func (ec *ExecutionContext) GetExistingMetadataFile() (string, error) {
+	filename := ""
+	for _, format := range []string{"yaml", "json"} {
+		f, err := ec.GetMetadataFilePath(format)
+		if err != nil {
+			return "", errors.Wrap(err, "cannot get metadata file")
+		}
+
+		filename = f
+		if _, err := os.Stat(filename); os.IsNotExist(err) {
+			continue
+		}
+		break
+	}
+
+	return filename, nil
+}
