@@ -9,6 +9,7 @@ query:
       }
     } 
 response:
+  data: null
   errors:
   - extensions:
       code: constraint-violation

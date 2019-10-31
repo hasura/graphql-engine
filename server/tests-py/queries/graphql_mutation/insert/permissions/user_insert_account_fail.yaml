@@ -5,6 +5,7 @@ headers:
   X-Hasura-Role: user
   X-Hasura-User-Id: '1'
 response:
+  data: null
   errors:
   - extensions:
       path: "$.selectionSet.insert_account.args.objects"
