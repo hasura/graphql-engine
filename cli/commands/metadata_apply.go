@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"os"
+
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -25,6 +27,18 @@ func newMetadataApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if opts.dryRun {
+				o := &metadataDiffOptions{
+					EC:     ec,
+					output: os.Stdout,
+				}
+				filename, err := ec.GetExistingMetadataFile()
+				if err != nil {
+					return errors.Wrap(err, "failed getting metadata file")
+				}
+				o.metadata[0] = filename
+				return o.run()
+			}
 			opts.EC.Spin("Applying metadata...")
 			err := opts.run()
 			opts.EC.Spinner.Stop()
@@ -42,6 +56,8 @@ func newMetadataApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.String("access-key", "", "access key for Hasura GraphQL Engine")
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
 
+	f.BoolVar(&opts.dryRun, "dry-run", false, "show a diff instead of applying the metadata")
+
 	// need to create a new viper because https://github.com/spf13/viper/issues/233
 	v.BindPFlag("endpoint", f.Lookup("endpoint"))
 	v.BindPFlag("admin_secret", f.Lookup("admin-secret"))
@@ -54,6 +70,8 @@ type metadataApplyOptions struct {
 	EC *cli.ExecutionContext
 
 	actionType string
+
+	dryRun bool
 }
 
 func (o *metadataApplyOptions) run() error {
