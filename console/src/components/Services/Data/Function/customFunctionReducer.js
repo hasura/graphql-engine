@@ -15,9 +15,10 @@ import { loadMigrationStatus } from '../../../Main/Actions';
 import { handleMigrationErrors } from '../../EventTrigger/EventActions';
 
 import { showSuccessNotification } from '../../Common/Notification';
-// import { push } from 'react-router-redux';
 
 import { fetchTrackedFunctions } from '../DataActions';
+
+import { COMPUTED_FIELDS_SUPPORT } from '../../../../helpers/versionUtils';
 
 import _push from '../push';
 
@@ -174,19 +175,31 @@ const deleteFunctionSql = () => {
       functionDefinition,
       inputArgTypes,
     } = getState().functions;
-    let functionWSchemaName =
+
+    const functionNameWithSchema =
       '"' + currentSchema + '"' + '.' + '"' + functionName + '"';
 
+    let functionArgString = '';
     if (inputArgTypes.length > 0) {
-      let functionString = '(';
-      inputArgTypes.forEach((i, index) => {
-        functionString +=
-          i + ' ' + (index === inputArgTypes.length - 1 ? ')' : ',');
+      functionArgString += '(';
+      inputArgTypes.forEach((inputArg, i) => {
+        functionArgString += i > 0 ? ', ' : '';
+
+        if (
+          globals.featuresCompatibility &&
+          globals.featuresCompatibility[COMPUTED_FIELDS_SUPPORT]
+        ) {
+          functionArgString +=
+            '"' + inputArg.schema + '"' + '.' + '"' + inputArg.name + '"';
+        } else {
+          functionArgString += inputArg;
+        }
       });
-      functionWSchemaName += functionString;
+      functionArgString += ')';
     }
 
-    const sqlDropFunction = 'DROP FUNCTION ' + functionWSchemaName;
+    const sqlDropFunction =
+      'DROP FUNCTION ' + functionNameWithSchema + functionArgString;
 
     const sqlUpQueries = [
       {
@@ -194,6 +207,7 @@ const deleteFunctionSql = () => {
         args: { sql: sqlDropFunction },
       },
     ];
+
     const sqlDownQueries = [];
     if (functionDefinition && functionDefinition.length > 0) {
       sqlDownQueries.push({

@@ -88,8 +88,7 @@ $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''UntrackTable)
 -- | Track table/view, Phase 1:
 -- Validate table tracking operation. Fails if table is already being tracked,
 -- or if a function with the same name is being tracked.
-trackExistingTableOrViewP1
-  :: (CacheRM m, UserInfoM m, QErrM m) => QualifiedTable -> m ()
+trackExistingTableOrViewP1 :: (CacheBuildM m, UserInfoM m) => QualifiedTable -> m ()
 trackExistingTableOrViewP1 qt = do
   adminOnly
   rawSchemaCache <- askSchemaCache
@@ -129,22 +128,20 @@ validateTableConfig tableInfo (TableConfig rootFlds colFlds) = do
     duplicateNames = duplicates $ M.elems colFlds
 
 trackExistingTableOrViewP2
-  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
-  => QualifiedTable -> Bool -> TableConfig -> m EncJSON
-trackExistingTableOrViewP2 tableName isEnum config = do
+  :: (CacheBuildM m) => QualifiedTable -> SystemDefined -> Bool -> TableConfig -> m EncJSON
+trackExistingTableOrViewP2 tableName systemDefined isEnum config = do
   sc <- askSchemaCache
   let defGCtx = scDefaultRemoteGCtx sc
   GS.checkConflictingNode defGCtx $ GS.qualObjectToName tableName
-  saveTableToCatalog tableName isEnum config
+  saveTableToCatalog tableName systemDefined isEnum config
   buildSchemaCacheFor (MOTable tableName)
   return successMsg
 
-runTrackTableQ
-  :: (QErrM m, CacheRWM m, MonadTx m, UserInfoM m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
-  => TrackTable -> m EncJSON
+runTrackTableQ :: (CacheBuildM m, UserInfoM m, HasSystemDefined m) => TrackTable -> m EncJSON
 runTrackTableQ (TrackTable qt isEnum) = do
   trackExistingTableOrViewP1 qt
-  trackExistingTableOrViewP2 qt isEnum emptyTableConfig
+  systemDefined <- askSystemDefined
+  trackExistingTableOrViewP2 qt systemDefined isEnum emptyTableConfig
 
 data TrackTableV2
   = TrackTableV2
@@ -153,16 +150,13 @@ data TrackTableV2
   } deriving (Show, Eq, Lift)
 $(deriveJSON (aesonDrop 4 snakeCase) ''TrackTableV2)
 
-runTrackTableV2Q
-  :: (QErrM m, CacheRWM m, MonadTx m, UserInfoM m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
-  => TrackTableV2 -> m EncJSON
+runTrackTableV2Q :: (CacheBuildM m, UserInfoM m, HasSystemDefined m) => TrackTableV2 -> m EncJSON
 runTrackTableV2Q (TrackTableV2 (TrackTable qt isEnum) config) = do
   trackExistingTableOrViewP1 qt
-  trackExistingTableOrViewP2 qt isEnum config
+  systemDefined <- askSystemDefined
+  trackExistingTableOrViewP2 qt systemDefined isEnum config
 
-runSetExistingTableIsEnumQ
-  :: (QErrM m, CacheRWM m, MonadTx m, UserInfoM m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
-  => SetTableIsEnum -> m EncJSON
+runSetExistingTableIsEnumQ :: (CacheBuildM m, UserInfoM m) => SetTableIsEnum -> m EncJSON
 runSetExistingTableIsEnumQ (SetTableIsEnum tableName isEnum) = do
   adminOnly
   void $ askTabInfo tableName -- assert that table is tracked
@@ -185,9 +179,7 @@ instance FromJSON SetTableCustomFields where
     <*> o .:? "custom_root_fields" .!= GC.emptyCustomRootFields
     <*> o .:? "custom_column_names" .!= M.empty
 
-runSetTableCustomFieldsQV2
-  :: (QErrM m, CacheRWM m, MonadTx m, UserInfoM m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
-  => SetTableCustomFields -> m EncJSON
+runSetTableCustomFieldsQV2 :: (CacheBuildM m, UserInfoM m) => SetTableCustomFields -> m EncJSON
 runSetTableCustomFieldsQV2 (SetTableCustomFields tableName rootFields columnNames) = do
   adminOnly
   void $ askTabInfo tableName
@@ -204,7 +196,7 @@ unTrackExistingTableOrViewP1 (UntrackTable vn _) = do
   case M.lookup vn (scTables rawSchemaCache) of
     Just ti ->
       -- Check if table/view is system defined
-      when (_tiSystemDefined ti) $ throw400 NotSupported $
+      when (isSystemDefined $ _tiSystemDefined ti) $ throw400 NotSupported $
         vn <<> " is system defined, cannot untrack"
     Nothing -> throw400 AlreadyUntracked $
       "view/table already untracked : " <>> vn
@@ -267,12 +259,16 @@ processTableChanges ti tableDiff = do
         renameTableInCatalog newTN tn
         return True
 
+  -- Process computed field diff
+  processComputedFieldDiff tn
   -- Drop custom column names for dropped columns
   customColumnNames <- possiblyDropCustomColumnNames tn
   maybe (withOldTabName customColumnNames) (withNewTabName customColumnNames) mNewName
 
   where
-    TableDiff mNewName droppedCols addedCols alteredCols _ constraints descM = tableDiff
+    TableDiff mNewName droppedCols addedCols alteredCols _
+              computedColDiff constraints descM = tableDiff
+
     replaceConstraints tn = flip modTableInCache tn $ \tInfo ->
       return $ tInfo {_tiUniqOrPrimConstraints = constraints}
 
@@ -340,6 +336,24 @@ processTableChanges ti tableDiff = do
 
            | otherwise -> performColumnUpdate $> False
 
+    processComputedFieldDiff table  = do
+      let ComputedFieldDiff _ altered overloaded = computedColDiff
+          getFunction = fmFunction . ccmFunctionMeta
+          getFunctionDescription = fmDescription . ccmFunctionMeta
+      forM_ overloaded $ \(columnName, function) ->
+        throw400 NotSupported $ "The function " <> function
+        <<> " associated with computed field" <> columnName
+        <<> " of table " <> table <<> " is being overloaded"
+      forM_ altered $ \(old, new) ->
+        if | (fmType . ccmFunctionMeta) new == FTVOLATILE ->
+             throw400 NotSupported $ "The type of function " <> getFunction old
+             <<> " associated with computed field " <> ccmName old
+             <<> " of table " <> table <<> " is being altered to \"VOLATILE\""
+           | getFunctionDescription old /= getFunctionDescription new ->
+             updateComputedFieldFunctionDescription table (ccmName old)
+               (getFunctionDescription new)
+           | otherwise -> pure ()
+
 delTableAndDirectDeps
   :: (QErrM m, CacheRWM m, MonadTx m) => QualifiedTable -> m ()
 delTableAndDirectDeps qtn@(QualifiedObject sn tn) = do
@@ -355,6 +369,10 @@ delTableAndDirectDeps qtn@(QualifiedObject sn tn) = do
     Q.unitQ [Q.sql|
              DELETE FROM "hdb_catalog"."event_triggers"
              WHERE schema_name = $1 AND table_name = $2
+              |] (sn, tn) False
+    Q.unitQ [Q.sql|
+             DELETE FROM "hdb_catalog"."hdb_computed_field"
+             WHERE table_schema = $1 AND table_name = $2
               |] (sn, tn) False
   deleteTableFromCatalog qtn
   delTableFromCache qtn
@@ -373,7 +391,7 @@ buildTableCache = processTableCache <=< buildRawTableCache
     -- Step 1: Build the raw table cache from metadata information.
     buildRawTableCache :: [CatalogTable] -> m (TableCache PGRawColumnInfo)
     buildRawTableCache catalogTables = fmap (M.fromList . catMaybes) . for catalogTables $
-      \(CatalogTable name isSystemDefined isEnum config maybeInfo) -> withTable name $ do
+      \(CatalogTable name systemDefined isEnum config maybeInfo) -> withTable name $ do
         catalogInfo <- onNothing maybeInfo $
           throw400 NotExists $ "no such table/view exists in postgres: " <>> name
 
@@ -389,7 +407,7 @@ buildTableCache = processTableCache <=< buildRawTableCache
 
         let info = TableInfo
               { _tiName = name
-              , _tiSystemDefined = isSystemDefined
+              , _tiSystemDefined = systemDefined
               , _tiFieldInfoMap = columnFields
               , _tiRolePermInfoMap = mempty
               , _tiUniqOrPrimConstraints = constraints

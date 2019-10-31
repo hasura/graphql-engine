@@ -18,6 +18,30 @@
   version = "v0.4.7"
 
 [[projects]]
+  digest = "1:31bd9d70492aec37a6bf45a42e96ed0f37fab74aa619d539b5acb9477500eb79"
+  name = "github.com/ahmetb/go-linq"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "b1b02a14bd27fab06f03ca1e4eed893f5011c152"
+  version = "v3.1.0"
+
+[[projects]]
+  digest = "1:320e7ead93de9fd2b0e59b50fd92a4d50c1f8ab455d96bc2eb083267453a9709"
+  name = "github.com/asaskevich/govalidator"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "ccb8e960c48f04d6935e72476ae4a51028f9e22f"
+  version = "v9"
+  
+[[projects]]
+  branch = "master"
+  digest = "1:67f5c19d64f788aa79a8e612eefa1cc68dca46c3436c93b84af9c95bd7e1a556"
+  name = "github.com/aryann/difflib"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "e206f873d14a916d3d26c40ab667bca123f365a3"
+
+[[projects]]
   digest = "1:889290ee5c1f1888baa7caa2b4cdfa8a6abcfb86dd772fe6470ad7925cc44bff"
   name = "github.com/briandowns/spinner"
   packages = ["."]
@@ -197,6 +221,38 @@
   revision = "5a0f697c9ed9d68fef0116532c6e05cfeae00e55"
 
 [[projects]]
+  digest = "1:c79fb010be38a59d657c48c6ba1d003a8aa651fa56b579d959d74573b7dff8e1"
+  name = "github.com/gorilla/context"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "08b5f424b9271eedf6f9f0ce86cb9396ed337a42"
+  version = "v1.1.1"
+
+[[projects]]
+  digest = "1:e72d1ebb8d395cf9f346fd9cbc652e5ae222dd85e0ac842dc57f175abed6d195"
+  name = "github.com/gorilla/securecookie"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "e59506cc896acb7f7bf732d4fdf5e25f7ccd8983"
+  version = "v1.1.1"
+
+[[projects]]
+  digest = "1:172c862eabc72e90f461bcef223c49869628bec6d989386dfb03281ae3222148"
+  name = "github.com/gorilla/sessions"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "4355a998706e83fe1d71c31b07af94e34f68d74a"
+  version = "v1.2.0"
+
+[[projects]]
+  digest = "1:17275ec8407e731ae22cc511d52391b2ac31982f23b53b1100265c575dc5cc9f"
+  name = "github.com/gosimple/slug"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "984b6d1a0ae5d1ecf6d718f4e990883d281ba3b8"
+  version = "v1.7.0"
+
+[[projects]]
   branch = "master"
   digest = "1:a361611b8c8c75a1091f00027767f7779b29cb37c456a71b8f2604c88057ab40"
   name = "github.com/hashicorp/hcl"
@@ -224,6 +280,30 @@
   version = "v1.0"
 
 [[projects]]
+  digest = "1:0ba2632215132e946413632241c2f9e67439addbe5f243b86bb81199bd15c8e9"
+  name = "github.com/jinzhu/gorm"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "81c17a7e2529c59efc4e74c5b32c1fb71fb12fa2"
+  version = "v1.9.11"
+
+[[projects]]
+  digest = "1:01ed62f8f4f574d8aff1d88caee113700a2b44c42351943fa73cc1808f736a50"
+  name = "github.com/jinzhu/inflection"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "f5c5f50e6090ae76a29240b61ae2a90dd810112e"
+  version = "v1.0.0"
+
+[[projects]]
+  digest = "1:e668ebc4cec3a084c222b4255a1565ee652614f029a7b2f4b1bc9557565ed473"
+  name = "github.com/jinzhu/now"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "1a6fdd4591d336a897120c50c69ed3c0e8033468"
+  version = "v1.0.1"
+
+[[projects]]
   branch = "master"
   digest = "1:e51f40f0c19b39c1825eadd07d5c0a98a2ad5942b166d9fc4f54750ce9a04810"
   name = "github.com/juju/ansiterm"
@@ -241,6 +321,22 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "ae77be60afb1dcacde03767a8c37337fad28ac14"
+
+[[projects]]
+  digest = "1:ca955a9cd5b50b0f43d2cc3aeb35c951473eeca41b34eb67507f1dbcc0542394"
+  name = "github.com/kr/pretty"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "73f6ac0b30a98e433b289500d779f50c1a6f0712"
+  version = "v0.1.0"
+
+[[projects]]
+  digest = "1:15b5cc79aad436d47019f814fde81a10221c740dc8ddf769221a65097fb6c2e9"
+  name = "github.com/kr/text"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "e2ffdb16a802fe2bb95e2e35ff34f0e53aeef34f"
+  version = "v0.1.0"
 
 [[projects]]
   branch = "master"
@@ -296,6 +392,22 @@
   pruneopts = "UT"
   revision = "0360b2af4f38e8d38c7fce2a9f4e702702d73a39"
   version = "v0.0.3"
+
+[[projects]]
+  digest = "1:6ff1026b8d873d074ddec82ad60bb0eb537dc013f456ef26b63d30beba2f99e7"
+  name = "github.com/microcosm-cc/bluemonday"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "506f3da9b7c86d737e91f16b7431df8635871552"
+  version = "v1.0.2"
+
+[[projects]]
+  branch = "master"
+  digest = "1:2b32af4d2a529083275afc192d1067d8126b578c7a9613b26600e4df9c735155"
+  name = "github.com/mgutz/ansi"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "9520e82c474b0a04dd04f8a40959027271bab992"
 
 [[projects]]
   branch = "master"
@@ -360,6 +472,102 @@
   pruneopts = "UT"
   revision = "792786c7400a136282c1664665ae0a8db921c6c2"
   version = "v1.0.0"
+
+[[projects]]
+  digest = "1:88dfda28c9738dd59becb9bbc449120ecef8b1d54e32e6004654bb66e51ef897"
+  name = "github.com/qor/admin"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "b2f472167d028a04c736b4a2477d7cce1e578b8f"
+  version = "v1.1"
+
+[[projects]]
+  branch = "master"
+  digest = "1:d2bdad175842f83799e02819fa718858ebde6f8704101a7dfa0a4a8e8742e587"
+  name = "github.com/qor/assetfs"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "ff57fdc13a148d39c3e930cb27c7eaf82e376891"
+
+[[projects]]
+  digest = "1:810e030da1090675a7f04c88e6de987dfc8cf1236d502dd0b5fb63cd6cc58481"
+  name = "github.com/qor/audited"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "b52c9c2f0571fc6e56dcdf2b7d3ae36d124602d4"
+  version = "v1.1"
+
+[[projects]]
+  branch = "master"
+  digest = "1:d221e9b7e68759e27735dd1929cc37c916eb814cc5ef5bacf533d47d1ca55ff1"
+  name = "github.com/qor/middlewares"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "781378b69454a545d08058d8154aca40d079e7ab"
+
+[[projects]]
+  digest = "1:7f19097491f6d7e42cf4babafbfbbdb4ed20985a1bbb2c2efa2e98dfa4eee696"
+  name = "github.com/qor/qor"
+  packages = [
+    ".",
+    "resource",
+    "utils",
+  ]
+  pruneopts = "UT"
+  revision = "186b0237364b23ebbe564d0764c5b8523c953575"
+  version = "v1.1"
+
+[[projects]]
+  digest = "1:1b90231d81fce4a2c61be9bbae0e6cc35556ab7bf87e574e9dc334a1985125df"
+  name = "github.com/qor/responder"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "b6def473574f621fee316696ad120d4fbf470826"
+  version = "v1.1"
+
+[[projects]]
+  digest = "1:be8425925ff99bd3fb026add07beb8069fed5c8e199b1cd55a871f832d9f6688"
+  name = "github.com/qor/roles"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "d6375609fe3e5da46ad3a574fae244fb633e79c1"
+  version = "v1.1"
+
+[[projects]]
+  branch = "master"
+  digest = "1:b4e301b2efbd1820b3fcd612e86429ed64e1ddf159cd41ffdcd67947c1235180"
+  name = "github.com/qor/session"
+  packages = [
+    ".",
+    "gorilla",
+    "manager",
+  ]
+  pruneopts = "UT"
+  revision = "8206b0adab706a6ef3ee6fabba2584d34429a26a"
+
+[[projects]]
+  digest = "1:c678ac04f0114299ce7d03817c57470fec0ee23f1f547fcb95a6979e72c7a88f"
+  name = "github.com/qor/transition"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "4015a3eee19c49a63b1d22beab1c0c084e72c53b"
+  version = "v1.1"
+
+[[projects]]
+  digest = "1:85cb5adb402858878704bc087b8f74fb12d1e56bddbba38e3d94693a14ad93f4"
+  name = "github.com/qor/validations"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "f364bca61b46bd48a5e32552a37758864fdf005d"
+  version = "v1.1"
+
+[[projects]]
+  branch = "master"
+  digest = "1:e6a29574542c00bb18adb1bfbe629ff88c468c2af2e2e953d3e58eda07165086"
+  name = "github.com/rainycape/unidecode"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "cb7f23ec59bec0d61b19c56cd88cee3d0cc1870c"
 
 [[projects]]
   digest = "1:8bc629776d035c003c7814d4369521afe67fdb8efc4b5f66540d29343b98cf23"
@@ -451,6 +659,14 @@
   version = "v1.2.2"
 
 [[projects]]
+  branch = "master"
+  digest = "1:4b0666e7398b9b64deee136f063d9caf0a58a7de52a1ab6540664615b38054ec"
+  name = "github.com/theplant/cldr"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "9f76f7ce4ee8058b01f92739cf0d0cceaeda3cb2"
+
+[[projects]]
   digest = "1:c268acaa4a4d94a467980e5e91452eb61c460145765293dc0aed48e5e9919cc6"
   name = "github.com/ugorji/go"
   packages = ["codec"]
@@ -467,11 +683,13 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:aa91545b200c0c8e6cf39bb8eedc86d85d3ed0a208662ed964bef0433839fd3c"
+  digest = "1:bb2e0c5269c54b816dfc046d5c8668bd38a54e8020f688dbabed7e747b00651a"
   name = "golang.org/x/net"
   packages = [
     "context",
     "context/ctxhttp",
+    "html",
+    "html/atom",
     "idna",
     "internal/socks",
     "proxy",
@@ -535,6 +753,8 @@
   analyzer-version = 1
   input-imports = [
     "github.com/Masterminds/semver",
+    "github.com/ahmetb/go-linq",
+    "github.com/aryann/difflib",
     "github.com/briandowns/spinner",
     "github.com/docker/docker/api/types",
     "github.com/docker/docker/api/types/container",
@@ -553,15 +773,18 @@
     "github.com/lib/pq",
     "github.com/manifoldco/promptui",
     "github.com/mattn/go-colorable",
+    "github.com/mgutz/ansi",
     "github.com/mitchellh/go-homedir",
     "github.com/oliveagle/jsonpath",
     "github.com/parnurzeal/gorequest",
     "github.com/pkg/errors",
+    "github.com/qor/transition",
     "github.com/sirupsen/logrus",
     "github.com/sirupsen/logrus/hooks/test",
     "github.com/skratchdot/open-golang/open",
     "github.com/spf13/cobra",
     "github.com/spf13/cobra/doc",
+    "github.com/spf13/pflag",
     "github.com/spf13/viper",
     "github.com/stretchr/testify/assert",
   ]

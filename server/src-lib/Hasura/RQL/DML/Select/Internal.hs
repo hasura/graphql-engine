@@ -6,6 +6,7 @@ module Hasura.RQL.DML.Select.Internal
   )
 where
 
+import           Control.Lens                hiding (op)
 import           Data.List                   (delete, sort)
 import           Instances.TH.Lift           ()
 
@@ -18,7 +19,6 @@ import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Select.Types
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils
 import           Hasura.SQL.Rewrite          (prefixNumToAliases)
 import           Hasura.SQL.Types
 
@@ -28,15 +28,22 @@ import qualified Hasura.SQL.DML              as S
 -- Stage 1 : Convert input query into an annotated AST
 -- Stage 2 : Convert annotated AST to SQL Select
 
-tableFromToFromItem :: TableFrom -> S.FromItem
-tableFromToFromItem = \case
-  TableFrom tn Nothing  -> S.FISimple tn Nothing
-  TableFrom _  (Just i) -> S.FIIden i
+functionToIden :: QualifiedFunction -> Iden
+functionToIden = Iden . qualObjectToText
 
-tableFromToQual :: TableFrom -> S.Qual
-tableFromToQual = \case
-  TableFrom tn Nothing  -> S.QualTable tn
-  TableFrom _  (Just i) -> S.QualIden i
+selFromToFromItem :: Iden -> SelectFrom -> S.FromItem
+selFromToFromItem pfx = \case
+  FromTable tn -> S.FISimple tn Nothing
+  FromIden i   -> S.FIIden i
+  FromFunction qf args ->
+    S.FIFunc $ S.FunctionExp qf (fromTableRowArgs pfx args) $
+    Just $ S.toAlias $ functionToIden qf
+
+selFromToQual :: SelectFrom -> S.Qual
+selFromToQual = \case
+  FromTable tn         -> S.QualTable tn
+  FromIden i           -> S.QualIden i
+  FromFunction qf _    -> S.QualIden $ functionToIden qf
 
 aggFldToExp :: AggFlds -> S.SQLExp
 aggFldToExp aggFlds = jsonRow
@@ -157,6 +164,10 @@ mkObjRelTableAls :: Iden -> RelName -> Iden
 mkObjRelTableAls pfx relName =
   pfx <> Iden ".or." <> toIden relName
 
+mkComputedFieldTableAls :: Iden -> FieldName -> Iden
+mkComputedFieldTableAls pfx fldAls =
+  pfx <> Iden ".cf." <> toIden fldAls
+
 mkBaseTableAls :: Iden -> Iden
 mkBaseTableAls pfx =
   pfx <> Iden ".base"
@@ -165,8 +176,18 @@ mkBaseTableColAls :: Iden -> PGCol -> Iden
 mkBaseTableColAls pfx pgCol =
   pfx <> Iden ".pg." <> toIden pgCol
 
-ordByFldName :: FieldName
-ordByFldName = FieldName "order_by"
+mkOrderByFieldName :: RelName -> FieldName
+mkOrderByFieldName relName =
+  FieldName $ relNameToTxt relName <> "." <> "order_by"
+
+fromTableRowArgs
+  :: Iden -> FunctionArgsExpTableRow S.SQLExp -> S.FunctionArgs
+fromTableRowArgs pfx = toFunctionArgs . fmap toSQLExp
+  where
+    toFunctionArgs (FunctionArgsExp positional named) =
+      S.FunctionArgs positional named
+    toSQLExp AETableRow  = S.SERowIden $ mkBaseTableAls pfx
+    toSQLExp (AEInput s) = s
 
 -- posttgres ignores anything beyond 63 chars for an iden
 -- in this case, we'll need to use json_build_object function
@@ -199,16 +220,30 @@ buildJsonObject pfx parAls arrRelCtx strfyNum flds =
         in S.mkQIdenExp qual fldAls
       FArr arrSel      ->
         let arrPfx = _aniPrefix $ mkArrNodeInfo pfx parAls arrRelCtx $
-                               ANIField (fldAls, arrSel)
+                                  ANIField (fldAls, arrSel)
         in S.mkQIdenExp arrPfx fldAls
+      FComputedField (CFSScalar computedFieldScalar) ->
+        fromScalarComputedField computedFieldScalar
+      FComputedField (CFSTable _) ->
+        let ccPfx = mkComputedFieldTableAls pfx fldAls
+        in S.mkQIdenExp ccPfx fldAls
 
     toSQLCol :: PGColumnInfo -> Maybe ColOp -> S.SQLExp
     toSQLCol col colOpM =
-      toJSONableExp strfyNum (pgiType col) $ case colOpM of
-        Nothing              -> colNameExp
-        Just (ColOp op cExp) -> S.mkSQLOpExp op colNameExp cExp
+      toJSONableExp strfyNum (pgiType col) $ withColOp colOpM $
+      S.mkQIdenExp (mkBaseTableAls pfx) $ pgiColumn col
+
+    fromScalarComputedField :: ComputedFieldScalarSel S.SQLExp -> S.SQLExp
+    fromScalarComputedField computedFieldScalar =
+      toJSONableExp strfyNum (PGColumnScalar ty) $ withColOp colOpM $
+      S.SEFunction $ S.FunctionExp fn (fromTableRowArgs pfx args) Nothing
       where
-        colNameExp = S.mkQIdenExp (mkBaseTableAls pfx) $ pgiColumn col
+        ComputedFieldScalarSel fn args ty colOpM = computedFieldScalar
+
+    withColOp :: Maybe ColOp -> S.SQLExp -> S.SQLExp
+    withColOp colOpM sqlExp = case colOpM of
+      Nothing              -> sqlExp
+      Just (ColOp op cExp) -> S.mkSQLOpExp op sqlExp cExp
 
 -- uses row_to_json to build a json object
 withRowToJSON
@@ -293,6 +328,7 @@ processAnnOrderByCol pfx parAls arrRelCtx strfyNum = \case
   -- "pfx.or.relname"."pfx.ob.or.relname.rest" AS "pfx.ob.or.relname.rest"
   AOCObj (RelInfo rn _ colMapping relTab _) relFltr rest ->
     let relPfx  = mkObjRelTableAls pfx rn
+        ordByFldName = mkOrderByFieldName rn
         ((nesAls, nesCol), ordByNode) =
           processAnnOrderByCol relPfx ordByFldName emptyArrRelCtx strfyNum rest
         (objNodeM, arrNodeM) = case ordByNode of
@@ -307,6 +343,7 @@ processAnnOrderByCol pfx parAls arrRelCtx strfyNum = \case
           (HM.singleton nesAls nesCol)
           (maybe HM.empty (uncurry HM.singleton) objNodeM)
           (maybe HM.empty (uncurry HM.singleton) arrNodeM)
+          HM.empty
         relNode = ObjNode colMapping relBaseNode
     in ( (nesAls, qualCol)
        , OBNObjNode rn relNode
@@ -316,11 +353,11 @@ processAnnOrderByCol pfx parAls arrRelCtx strfyNum = \case
           mkArrNodeInfo pfx parAls arrRelCtx $ ANIAggOrdBy rn
         fldName = mkAggObFld annAggOb
         qOrdBy = S.mkQIdenExp arrPfx $ toIden fldName
-        tabFrom = TableFrom relTab Nothing
+        tabFrom = FromTable relTab
         tabPerm = TablePerm relFltr Nothing
         (extr, arrFlds) = mkAggObExtrAndFlds annAggOb
         selFld = TAFAgg arrFlds
-        bn = mkBaseNode False arrPfx fldName selFld tabFrom
+        bn = mkBaseNode False (Prefixes arrPfx pfx) fldName selFld tabFrom
              tabPerm noTableArgs strfyNum
         aggNode = ArrNode [extr] colMapping $ mergeBaseNodes bn $
                   mkEmptyBaseNode arrPfx tabFrom
@@ -345,16 +382,16 @@ processDistinctOnCol pfx neCols = (distOnExp, colExtrs)
     colExtrs = flip map cols $ mkQColAls &&& mkQCol
 
 
-mkEmptyBaseNode :: Iden -> TableFrom -> BaseNode
-mkEmptyBaseNode pfx tableFrom =
+mkEmptyBaseNode :: Iden -> SelectFrom -> BaseNode
+mkEmptyBaseNode pfx selectFrom =
   BaseNode pfx Nothing fromItem (S.BELit True) Nothing Nothing
-  Nothing selOne HM.empty HM.empty
+  Nothing selOne HM.empty HM.empty HM.empty
   where
     selOne = HM.singleton (S.Alias $ pfx <> Iden "__one") (S.SEUnsafe "1")
-    fromItem = tableFromToFromItem tableFrom
+    fromItem = selFromToFromItem pfx selectFrom
 
-aggSelToArrNode :: Iden -> FieldName -> ArrRelAgg -> ArrNode
-aggSelToArrNode pfx als aggSel =
+aggSelToArrNode :: Prefixes -> FieldName -> ArrRelAgg -> ArrNode
+aggSelToArrNode pfxs als aggSel =
   ArrNode [extr] colMapping mergedBN
   where
     AnnRelG _ colMapping annSel = aggSel
@@ -368,11 +405,11 @@ aggSelToArrNode pfx als aggSel =
     ordBy = _bnOrderBy mergedBN
 
     allBNs = map mkAggBaseNode aggFlds
-    emptyBN = mkEmptyBaseNode pfx tabFrm
+    emptyBN = mkEmptyBaseNode (_pfThis pfxs) tabFrm
     mergedBN = foldr mergeBaseNodes emptyBN allBNs
 
     mkAggBaseNode (fn, selFld) =
-      mkBaseNode subQueryReq pfx fn selFld tabFrm tabPerm tabArgs strfyNum
+      mkBaseNode subQueryReq pfxs fn selFld tabFrm tabPerm tabArgs strfyNum
 
     selFldToExtr (FieldName t, fld) = (:) (S.SELit t) $ pure $ case fld of
       TAFAgg flds -> aggFldToExp flds
@@ -403,6 +440,7 @@ mkArrNodeInfo pfx parAls (ArrRelCtx arrFlds obRels) = \case
         similarFlds = getSimilarAggFlds rn tabArgs $ delete aggFld
         similarFldNames = map fst similarFlds
         similarOrdByFound = rn `elem` obRels && tabArgs == noTableArgs
+        ordByFldName = mkOrderByFieldName rn
         extraOrdByFlds = bool [] [ordByFldName] similarOrdByFound
         sortedFlds = sort $ fld : (similarFldNames <> extraOrdByFlds)
         alias = S.Alias $ mkUniqArrRelAls parAls sortedFlds
@@ -411,6 +449,7 @@ mkArrNodeInfo pfx parAls (ArrRelCtx arrFlds obRels) = \case
        subQueryRequired similarFlds similarOrdByFound
   ANIAggOrdBy rn ->
     let similarFlds = map fst $ getSimilarAggFlds rn noTableArgs id
+        ordByFldName = mkOrderByFieldName rn
         sortedFlds = sort $ ordByFldName:similarFlds
         alias = S.Alias $ mkUniqArrRelAls parAls sortedFlds
         prefix = mkArrRelTableAls pfx parAls sortedFlds
@@ -464,13 +503,13 @@ mkOrdByItems pfx fldAls orderByM strfyNum arrRelCtx =
     procOrdByM =
       unzip3 . map procAnnOrdBy' . toList <$> orderByM
 
-    obExtrs  = maybe [] _1 procOrdByM
-    ordByExpM  = S.OrderByExp . _2 <$> procOrdByM
+    obExtrs  = maybe [] (^. _1) procOrdByM
+    ordByExpM  = S.OrderByExp . (^. _2) <$> procOrdByM
 
-    ordByObjs = mapMaybe getOrdByRelNode $ maybe [] _3 procOrdByM
+    ordByObjs = mapMaybe getOrdByRelNode $ maybe [] (^. _3) procOrdByM
     ordByObjsMap = HM.fromListWith mergeObjNodes ordByObjs
 
-    ordByAggArrs = mapMaybe getOrdByAggNode $ maybe [] _3 procOrdByM
+    ordByAggArrs = mapMaybe getOrdByAggNode $ maybe [] (^. _3) procOrdByM
     ordByArrsMap = HM.fromListWith mergeArrNodes ordByAggArrs
 
     getOrdByRelNode (OBNObjNode name node) = Just (name, node)
@@ -481,19 +520,20 @@ mkOrdByItems pfx fldAls orderByM strfyNum arrRelCtx =
 
 mkBaseNode
   :: Bool
-  -> Iden
+  -> Prefixes
   -> FieldName
   -> TableAggFld
-  -> TableFrom
+  -> SelectFrom
   -> TablePerm
   -> TableArgs
   -> Bool
   -> BaseNode
-mkBaseNode subQueryReq pfx fldAls annSelFlds tableFrom
+mkBaseNode subQueryReq pfxs fldAls annSelFlds selectFrom
            tablePerm tableArgs strfyNum =
-  BaseNode pfx distExprM fromItem finalWhere ordByExpM finalLimit offsetM
-  allExtrs allObjsWithOb allArrsWithOb
+  BaseNode thisPfx distExprM fromItem finalWhere ordByExpM finalLimit offsetM
+  allExtrs allObjsWithOb allArrsWithOb computedFields
   where
+    Prefixes thisPfx baseTablepfx = pfxs
     TablePerm permFilter permLimit = tablePerm
     TableArgs whereM orderByM inpLimitM offsetM distM = tableArgs
 
@@ -513,18 +553,21 @@ mkBaseNode subQueryReq pfx fldAls annSelFlds tableFrom
 
     aggOrdByRelNames = fetchOrdByAggRels orderByM
 
-    (allExtrs, allObjsWithOb, allArrsWithOb, ordByExpM) =
+    (allExtrs, allObjsWithOb, allArrsWithOb, computedFields, ordByExpM) =
       case annSelFlds of
         TAFNodes flds ->
           let arrFlds = mapMaybe getAnnArr flds
               arrRelCtx = mkArrRelCtx arrFlds
-              selExtr = buildJsonObject pfx fldAls arrRelCtx strfyNum flds
+              selExtr = buildJsonObject thisPfx fldAls arrRelCtx strfyNum flds
               -- all object relationships
               objNodes = HM.fromListWith mergeObjNodes $
                         map mkObjItem (mapMaybe getAnnObj flds)
               -- all array items (array relationships + aggregates)
               arrNodes = HM.fromListWith mergeArrNodes $
                          map (mkArrItem arrRelCtx) arrFlds
+              -- all computed fields with table returns
+              computedFieldNodes = HM.fromList $ map mkComputedFieldTable $
+                             mapMaybe getComputedFieldTable flds
 
               (obExtrs, ordByObjs, ordByArrs, obeM)
                       = mkOrdByItems' arrRelCtx
@@ -534,6 +577,7 @@ mkBaseNode subQueryReq pfx fldAls annSelFlds tableFrom
           in ( HM.fromList $ selExtr:obExtrs <> distExtrs
              , allObjs
              , allArrs
+             , computedFieldNodes
              , obeM
              )
         TAFAgg tabAggs ->
@@ -543,12 +587,13 @@ mkBaseNode subQueryReq pfx fldAls annSelFlds tableFrom
           in ( HM.fromList $ extrs <> obExtrs <> distExtrs
              , ordByObjs
              , ordByArrs
+             , HM.empty
              , obeM
              )
         TAFExp _ ->
           let (obExtrs, ordByObjs, ordByArrs, obeM)
                       = mkOrdByItems' emptyArrRelCtx
-          in (HM.fromList obExtrs, ordByObjs, ordByArrs, obeM)
+          in (HM.fromList obExtrs, ordByObjs, ordByArrs, HM.empty, obeM)
 
     fetchExtrFromAggFld (AFCount cty) = countTyToExps cty
     fetchExtrFromAggFld (AFOp aggOp)  = aggOpToExps aggOp
@@ -563,37 +608,43 @@ mkBaseNode subQueryReq pfx fldAls annSelFlds tableFrom
     aggOpToExps = mapMaybe (mkColExp . snd) . _aoFlds
 
     mkColExp (PCFCol c) =
-      let qualCol = S.mkQIdenExp (mkBaseTableAls pfx) (toIden c)
+      let qualCol = S.mkQIdenExp (mkBaseTableAls thisPfx) (toIden c)
           colAls = toIden c
       in Just (S.Alias colAls, qualCol)
     mkColExp _ = Nothing
 
     finalWhere = toSQLBoolExp tableQual $
                  maybe permFilter (andAnnBoolExps permFilter) whereM
-    fromItem = tableFromToFromItem tableFrom
-    tableQual = tableFromToQual tableFrom
+    fromItem = selFromToFromItem baseTablepfx selectFrom
+    tableQual = selFromToQual selectFrom
 
     mkArrRelCtx arrSels = ArrRelCtx arrSels aggOrdByRelNames
 
-    mkOrdByItems' = mkOrdByItems pfx fldAls orderByM strfyNum
+    mkOrdByItems' = mkOrdByItems thisPfx fldAls orderByM strfyNum
 
-    distItemsM = processDistinctOnCol pfx <$> distM
+    distItemsM = processDistinctOnCol thisPfx <$> distM
     distExprM = fst <$> distItemsM
     distExtrs = fromMaybe [] (snd <$> distItemsM)
 
     -- process an object relationship
     mkObjItem (fld, objSel) =
       let relName = aarName objSel
-          objNodePfx = mkObjRelTableAls pfx $ aarName objSel
-          objNode = mkObjNode objNodePfx (fld, objSel)
+          objNodePfx = mkObjRelTableAls thisPfx $ aarName objSel
+          objNode = mkObjNode (Prefixes objNodePfx thisPfx) (fld, objSel)
       in (relName, objNode)
 
     -- process an array/array-aggregate item
     mkArrItem arrRelCtx (fld, arrSel) =
       let ArrNodeInfo arrAls arrPfx subQReq =
-            mkArrNodeInfo pfx fldAls arrRelCtx $ ANIField (fld, arrSel)
-          arrNode = mkArrNode subQReq arrPfx (fld, arrSel)
+            mkArrNodeInfo thisPfx fldAls arrRelCtx $ ANIField (fld, arrSel)
+          arrNode = mkArrNode subQReq (Prefixes arrPfx thisPfx) (fld, arrSel)
       in (arrAls, arrNode)
+
+    -- process a computed field, which returns a table
+    mkComputedFieldTable (fld, sel) =
+      let prefixes = Prefixes (mkComputedFieldTableAls thisPfx fld) thisPfx
+          baseNode = annSelToBaseNode False prefixes fld sel
+      in (fld, baseNode)
 
     getAnnObj (f, annFld) = case annFld of
       FObj ob -> Just (f, ob)
@@ -603,26 +654,30 @@ mkBaseNode subQueryReq pfx fldAls annSelFlds tableFrom
       FArr ar -> Just (f, ar)
       _       -> Nothing
 
-annSelToBaseNode :: Bool -> Iden -> FieldName -> AnnSimpleSel -> BaseNode
-annSelToBaseNode subQueryReq pfx fldAls annSel =
-  mkBaseNode subQueryReq pfx fldAls (TAFNodes selFlds) tabFrm tabPerm tabArgs strfyNum
+    getComputedFieldTable (f, annFld) = case annFld of
+      FComputedField (CFSTable sel) -> Just (f, sel)
+      _                             -> Nothing
+
+annSelToBaseNode :: Bool -> Prefixes -> FieldName -> AnnSimpleSel -> BaseNode
+annSelToBaseNode subQueryReq pfxs fldAls annSel =
+  mkBaseNode subQueryReq pfxs fldAls (TAFNodes selFlds) tabFrm tabPerm tabArgs strfyNum
   where
     AnnSelG selFlds tabFrm tabPerm tabArgs strfyNum = annSel
 
-mkObjNode :: Iden -> (FieldName, ObjSel) -> ObjNode
-mkObjNode pfx (fldName, AnnRelG _ rMapn rAnnSel) =
-  ObjNode rMapn $ annSelToBaseNode False pfx fldName rAnnSel
+mkObjNode :: Prefixes -> (FieldName, ObjSel) -> ObjNode
+mkObjNode pfxs (fldName, AnnRelG _ rMapn rAnnSel) =
+  ObjNode rMapn $ annSelToBaseNode False pfxs fldName rAnnSel
 
-mkArrNode :: Bool -> Iden -> (FieldName, ArrSel) -> ArrNode
-mkArrNode subQueryReq pfx (fldName, annArrSel) = case annArrSel of
+mkArrNode :: Bool -> Prefixes -> (FieldName, ArrSel) -> ArrNode
+mkArrNode subQueryReq pfxs (fldName, annArrSel) = case annArrSel of
   ASSimple annArrRel ->
-    let bn = annSelToBaseNode subQueryReq pfx fldName $ aarAnnSel annArrRel
+    let bn = annSelToBaseNode subQueryReq pfxs fldName $ aarAnnSel annArrRel
         permLimit = getPermLimit $ aarAnnSel annArrRel
         extr = asJsonAggExtr False (S.toAlias fldName) subQueryReq permLimit $
                _bnOrderBy bn
     in ArrNode [extr] (aarMapping annArrRel) bn
 
-  ASAgg annAggSel -> aggSelToArrNode pfx fldName annAggSel
+  ASAgg annAggSel -> aggSelToArrNode pfxs fldName annAggSel
 
 injectJoinCond :: S.BoolExp       -- ^ Join condition
                -> S.BoolExp -- ^ Where condition
@@ -631,10 +686,10 @@ injectJoinCond joinCond whereCond =
   S.WhereFrag $ S.simplifyBoolExp $ S.BEBin S.AndOp joinCond whereCond
 
 mkJoinCond :: S.Alias -> [(PGCol, PGCol)] -> S.BoolExp
-mkJoinCond baseTableAls colMapn =
+mkJoinCond baseTablepfx colMapn =
   foldl' (S.BEBin S.AndOp) (S.BELit True) $ flip map colMapn $
   \(lCol, rCol) ->
-    S.BECompare S.SEQ (S.mkQIdenExp baseTableAls lCol) (S.mkSIdenExp rCol)
+    S.BECompare S.SEQ (S.mkQIdenExp baseTablepfx lCol) (S.mkSIdenExp rCol)
 
 baseNodeToSel :: S.BoolExp -> BaseNode -> S.Select
 baseNodeToSel joinCond baseNode =
@@ -648,7 +703,7 @@ baseNodeToSel joinCond baseNode =
   }
   where
     BaseNode pfx dExp fromItem whr ordByM limitM
-             offsetM extrs objRels arrRels
+             offsetM extrs objRels arrRels computedFields
              = baseNode
     -- this is the table which is aliased as "pfx.base"
     baseSel = S.mkSelect
@@ -668,7 +723,8 @@ baseNodeToSel joinCond baseNode =
     joinedFrom :: S.FromItem
     joinedFrom = foldl' leftOuterJoin baseFromItem $
                  map objNodeToFromItem (HM.elems objRels) <>
-                 map arrNodeToFromItem (HM.elems arrRels)
+                 map arrNodeToFromItem (HM.elems arrRels) <>
+                 map computedFieldNodeToFromItem (HM.toList computedFields)
 
     objNodeToFromItem :: ObjNode -> S.FromItem
     objNodeToFromItem (ObjNode relMapn relBaseNode) =
@@ -682,13 +738,28 @@ baseNodeToSel joinCond baseNode =
           als = S.Alias $ _bnPrefix bn
       in S.mkLateralFromItem sel als
 
+    computedFieldNodeToFromItem :: (FieldName, BaseNode) -> S.FromItem
+    computedFieldNodeToFromItem (fld, bn) =
+      let internalSel = baseNodeToSel (S.BELit True) bn
+          als = S.Alias $ _bnPrefix bn
+          extr = asJsonAggExtr False (S.toAlias fld) False Nothing $
+                 _bnOrderBy bn
+          internalSelFrom = S.mkSelFromItem internalSel als
+          sel = S.mkSelect
+                { S.selExtr = pure extr
+                , S.selFrom = Just $ S.FromExp [internalSelFrom]
+                }
+      in S.mkLateralFromItem sel als
+
 mkAggSelect :: AnnAggSel -> S.Select
 mkAggSelect annAggSel =
   prefixNumToAliases $ arrNodeToSelect bn extr $ S.BELit True
   where
     aggSel = AnnRelG rootRelName [] annAggSel
+    rootIden = Iden "root"
+    rootPrefix = Prefixes rootIden rootIden
     ArrNode extr _ bn =
-      aggSelToArrNode (Iden "root") (FieldName "root") aggSel
+      aggSelToArrNode rootPrefix (FieldName "root") aggSel
 
 mkSQLSelect :: Bool -> AnnSimpleSel -> S.Select
 mkSQLSelect isSingleObject annSel =
@@ -697,7 +768,9 @@ mkSQLSelect isSingleObject annSel =
     permLimit = getPermLimit annSel
     extrs = pure $ asJsonAggExtr isSingleObject rootFldAls False permLimit
             $ _bnOrderBy baseNode
-    baseNode = annSelToBaseNode False (toIden rootFldName) rootFldName annSel
+    rootFldIden = toIden rootFldName
+    rootPrefix = Prefixes rootFldIden rootFldIden
+    baseNode = annSelToBaseNode False rootPrefix rootFldName annSel
     rootFldName = FieldName "root"
     rootFldAls  = S.Alias $ toIden rootFldName
 
@@ -709,7 +782,7 @@ mkFuncSelectWith f annFn =
   S.SelectWith [(funcAls, S.CTESelect funcSel)] $
   -- we'll need to modify the table from of the underlying
   -- select to the alias of the select from function
-  f annSel { _asnFrom = newTabFrom }
+  f annSel { _asnFrom = newSelFrom }
   where
     AnnFnSel qf fnArgs annSel = annFn
 
@@ -722,7 +795,7 @@ mkFuncSelectWith f annFn =
     mkSQLFunctionArgs (FunctionArgsExp positional named) =
       S.FunctionArgs positional named
 
-    newTabFrom = (_asnFrom annSel) {_tfIden = Just $ toIden funcAls}
+    newSelFrom = FromIden $ toIden funcAls
 
     QualifiedObject sn fn = qf
     funcAls = S.Alias $ Iden $

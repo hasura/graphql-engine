@@ -53,7 +53,7 @@ import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Permission.Triggers
-import           Hasura.RQL.DML.Internal
+import           Hasura.RQL.DML.Internal            hiding (askPermInfo)
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -156,8 +156,7 @@ buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) =
 buildInsInfra :: QualifiedTable -> InsPermInfo -> Q.TxE QErr ()
 buildInsInfra tn (InsPermInfo _ vn be _ _) = do
   resolvedBoolExp <- convAnnBoolExpPartialSQL sessVarFromCurrentSetting be
-  trigFnQ <- buildInsTrigFn vn tn $
-    toSQLBoolExp (S.QualVar "NEW") resolvedBoolExp
+  let trigFnQ = buildInsTrigFn vn tn $ toSQLBoolExp (S.QualVar "NEW") resolvedBoolExp
   Q.catchE defaultTxErrorHandler $ do
     -- Create the view
     Q.unitQ (buildView tn vn) () False
@@ -202,20 +201,30 @@ instance IsPerm InsPerm where
 -- Select constraint
 data SelPerm
   = SelPerm
-  { spColumns           :: !PermColSpec       -- Allowed columns
-  , spFilter            :: !BoolExp   -- Filter expression
-  , spLimit             :: !(Maybe Int) -- Limit value
-  , spAllowAggregations :: !(Maybe Bool) -- Allow aggregation
+  { spColumns           :: !PermColSpec         -- ^ Allowed columns
+  , spFilter            :: !BoolExp             -- ^ Filter expression
+  , spLimit             :: !(Maybe Int)         -- ^ Limit value
+  , spAllowAggregations :: !Bool                -- ^ Allow aggregation
+  , spComputedFields    :: ![ComputedFieldName] -- ^ Allowed computed fields
   } deriving (Show, Eq, Lift)
+$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''SelPerm)
 
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''SelPerm)
+instance FromJSON SelPerm where
+  parseJSON = withObject "SelPerm" $ \o ->
+    SelPerm
+    <$> o .: "columns"
+    <*> o .: "filter"
+    <*> o .:? "limit"
+    <*> o .:? "allow_aggregations" .!= False
+    <*> o .:? "computed_fields" .!= []
 
 buildSelPermInfo
   :: (QErrM m, CacheRM m)
-  => TableInfo PGColumnInfo
+  => RoleName
+  -> TableInfo PGColumnInfo
   -> SelPerm
   -> m (WithDeps SelPermInfo)
-buildSelPermInfo tabInfo sp = do
+buildSelPermInfo role tabInfo sp = do
   let pgCols     = convColSpec fieldInfoMap $ spColumns sp
 
   (be, beDeps) <- withPathK "filter" $
@@ -225,18 +234,35 @@ buildSelPermInfo tabInfo sp = do
   void $ withPathK "columns" $ indexedForM pgCols $ \pgCol ->
     askPGType fieldInfoMap pgCol autoInferredErr
 
+  -- validate computed fields
+  withPathK "computed_fields" $ indexedForM_ computedFields $ \name -> do
+    computedFieldInfo <- askComputedFieldInfo fieldInfoMap name
+    case _cfiReturnType computedFieldInfo of
+      CFRScalar _ -> pure ()
+      CFRSetofTable returnTable -> do
+        returnTableInfo <- askTabInfo returnTable
+        let function = _cffName $ _cfiFunction $ computedFieldInfo
+            errModifier e = "computed field " <> name <<> " executes function "
+                             <> function <<> " which returns set of table "
+                             <> returnTable <<> "; " <> e
+        void $ modifyErr errModifier $ askPermInfo returnTableInfo role PASelect
+
   let deps = mkParentDep tn : beDeps ++ map (mkColDep DRUntyped tn) pgCols
+             ++ map (mkComputedFieldDep DRUntyped tn) computedFields
       depHeaders = getDependentHeaders $ spFilter sp
       mLimit = spLimit sp
 
   withPathK "limit" $ mapM_ onlyPositiveInt mLimit
 
-  return (SelPermInfo (HS.fromList pgCols) tn be mLimit allowAgg depHeaders, deps)
-
+  return ( SelPermInfo (HS.fromList pgCols) (HS.fromList computedFields)
+                        tn be mLimit allowAgg depHeaders
+         , deps
+         )
   where
     tn = _tiName tabInfo
     fieldInfoMap = _tiFieldInfoMap tabInfo
-    allowAgg = or $ spAllowAggregations sp
+    allowAgg = spAllowAggregations sp
+    computedFields = spComputedFields sp
     autoInferredErr = "permissions for relationships are automatically inferred"
 
 type SelPermDef = PermDef SelPerm
@@ -257,8 +283,8 @@ instance IsPerm SelPerm where
 
   permAccessor = PASelect
 
-  buildPermInfo ti (PermDef _ a _) =
-    buildSelPermInfo ti a
+  buildPermInfo ti (PermDef rn a _) =
+    buildSelPermInfo rn ti a
 
   buildDropPermP1Res =
     void . dropPermP1
