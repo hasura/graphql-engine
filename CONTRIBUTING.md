@@ -16,7 +16,7 @@ consisting of 3 components. Each has their own contributing guides:
 
 3. [Console (JavaScript)](console/README.md#contributing-to-hasura-console)
 
-All of the three components have a single version, denoted by either the git tag or a combination of branch name and git commit SHA.
+All of the three components have a single version, denoted by either the git tag or a combination of the branch name and git commit SHA.
 
 For all contributions, a CLA (Contributor License Agreement) needs to be signed [here](https://cla-assistant.io/hasura/graphql-engine) before (or after) the pull request has been submitted. A bot will prompt contributors to sign the CLA via a pull request comment, if necessary.
 
