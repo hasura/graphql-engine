@@ -178,7 +178,6 @@ fetchAllowlist = map runIdentity <$>
   Q.listQE defaultTxErrorHandler [Q.sql|
       SELECT collection_name
         FROM hdb_catalog.hdb_allowlist
-      ORDER BY collection_name ASC
      |] () True
 
 addCollectionToCatalog :: CreateCollection -> SystemDefined -> Q.TxE QErr ()
