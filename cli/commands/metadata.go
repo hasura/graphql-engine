@@ -19,6 +19,7 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 		SilenceUsage: true,
 	}
 	metadataCmd.AddCommand(
+		newMetadataDiffCmd(ec),
 		newMetadataExportCmd(ec),
 		newMetadataClearCmd(ec),
 		newMetadataReloadCmd(ec),
