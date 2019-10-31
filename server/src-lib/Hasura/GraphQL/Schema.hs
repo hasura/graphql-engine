@@ -305,15 +305,17 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
            in TIEnum $ mkHsraEnumTyInfo Nothing typeName (EnumValuesReference enumReference)
 
 
-    -- computed fields function args input objects
+    -- computed fields' function args input objects and scalar types
     mkComputedFieldRequiredTypes computedFieldInfo =
       let ComputedFieldFunction qf inputArgs _ _ = _cfFunction computedFieldInfo
           scalarArgs = map (_qptName . faType) $ toList inputArgs
       in (, scalarArgs) <$> mkFuncArgsInp qf inputArgs
 
-    (computedFieldFuncArgsInps, computedFieldFuncArgScalars) =
-      (map TIInpObj *** (Set.fromList . concat)) $ unzip $ catMaybes $
+    computedFieldReqTypes = catMaybes $
       maybe [] (map mkComputedFieldRequiredTypes . getComputedFields) selFldsM
+
+    computedFieldFuncArgsInps = map (TIInpObj . fst) computedFieldReqTypes
+    computedFieldFuncArgScalars = Set.fromList $ concatMap snd computedFieldReqTypes
 
 getRootFldsRole'
   :: QualifiedTable
@@ -475,8 +477,10 @@ getSelPerm tableCache fields role selPermInfo = do
     validCols = getValidCols fields
     cols = map SFPGColumn $ getColInfos (toList allowedCols) validCols
     computedFields = flip filter (getComputedFieldInfos fields) $
-                      \info -> _cfiName info `Set.member` allowedScalarComputedFields
-                               || returnsSetofTable info
+                      \info -> case _cfiReturnType info of
+                        CFRScalar _     ->
+                          _cfiName info `Set.member` allowedScalarComputedFields
+                        CFRSetofTable _ -> True
 
     allowedCols = spiCols selPermInfo
     allowedScalarComputedFields = spiScalarComputedFields selPermInfo

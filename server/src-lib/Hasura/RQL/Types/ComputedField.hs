@@ -69,9 +69,7 @@ data ComputedFieldInfo
   , _cfiComment    :: !(Maybe Text)
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 4 snakeCase) ''ComputedFieldInfo)
+$(makeLenses ''ComputedFieldInfo)
 
 onlyScalarComputedFields :: [ComputedFieldInfo] -> [ComputedFieldInfo]
-onlyScalarComputedFields = filter (isJust . (^? _CFRScalar) . _cfiReturnType)
-
-returnsSetofTable :: ComputedFieldInfo -> Bool
-returnsSetofTable = isJust . (^? _CFRSetofTable) . _cfiReturnType
+onlyScalarComputedFields = filter (has (cfiReturnType._CFRScalar))

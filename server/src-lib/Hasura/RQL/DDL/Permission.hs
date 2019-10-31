@@ -240,9 +240,9 @@ buildSelPermInfo tabInfo sp = withPathK "permission" $ do
       case _cfiReturnType computedFieldInfo of
         CFRScalar _               -> pure fieldName
         CFRSetofTable returnTable -> throw400 NotSupported $
-          "select permission on computed field " <> fieldName
-          <<> " is auto-derived via the select permission on its returning table "
-          <>> returnTable
+          "select permissions on computed field " <> fieldName
+          <<> " are auto-derived from the permissions on its returning table "
+          <> returnTable <<> " and cannot be specified manually"
 
   let deps = mkParentDep tn : beDeps ++ map (mkColDep DRUntyped tn) pgCols
              ++ map (mkComputedFieldDep DRUntyped tn) scalarComputedFields

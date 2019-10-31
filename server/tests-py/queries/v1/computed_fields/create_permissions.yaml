@@ -60,7 +60,7 @@
         filter: {}
   response:
     path: "$.args.permission.computed_fields[1]"
-    error: 'select permission on computed field "get_articles" is auto-derived via the select permission on its returning table "article"'
+    error: select permissions on computed field "get_articles" are auto-derived from the permissions on its returning table "article" and cannot be specified manually
     code: not-supported
 
 - description: Create select permission on article table
