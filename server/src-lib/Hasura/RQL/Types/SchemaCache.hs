@@ -470,11 +470,17 @@ modDepMapInCache f = do
 class (Monad m) => CacheRM m where
   askSchemaCache :: m SchemaCache
 
+instance (CacheRM m) => CacheRM (ReaderT r m) where
+  askSchemaCache = lift askSchemaCache
+
 instance (Monad m) => CacheRM (StateT SchemaCache m) where
   askSchemaCache = get
 
 class (CacheRM m) => CacheRWM m where
   writeSchemaCache :: SchemaCache -> m ()
+
+instance (CacheRWM m) => CacheRWM (ReaderT r m) where
+  writeSchemaCache = lift . writeSchemaCache
 
 instance (Monad m) => CacheRWM (StateT SchemaCache m) where
   writeSchemaCache = put

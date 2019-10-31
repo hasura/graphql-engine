@@ -15,9 +15,10 @@ import { loadMigrationStatus } from '../../../Main/Actions';
 import { handleMigrationErrors } from '../../EventTrigger/EventActions';
 
 import { showSuccessNotification } from '../../Common/Notification';
-// import { push } from 'react-router-redux';
 
 import { fetchTrackedFunctions } from '../DataActions';
+
+import { COMPUTED_FIELDS_SUPPORT } from '../../../../helpers/versionUtils';
 
 import _push from '../push';
 
@@ -184,8 +185,15 @@ const deleteFunctionSql = () => {
       inputArgTypes.forEach((inputArg, i) => {
         functionArgString += i > 0 ? ', ' : '';
 
-        functionArgString +=
-          '"' + inputArg.schema + '"' + '.' + '"' + inputArg.name + '"';
+        if (
+          globals.featuresCompatibility &&
+          globals.featuresCompatibility[COMPUTED_FIELDS_SUPPORT]
+        ) {
+          functionArgString +=
+            '"' + inputArg.schema + '"' + '.' + '"' + inputArg.name + '"';
+        } else {
+          functionArgString += inputArg;
+        }
       });
       functionArgString += ')';
     }
