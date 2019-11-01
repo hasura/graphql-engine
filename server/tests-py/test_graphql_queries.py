@@ -50,7 +50,7 @@ class TestGraphQLQueryBasic(DefaultTestSelectQueries):
         check_query_f(hge_ctx, self.dir() + "/select_query_author_col_not_present_err.yaml", transport)
 
     def test_select_query_user_col_change(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/select_query_user_col_change.yaml")
+        check_query_f(hge_ctx, self.dir() + "/select_query_user_col_change.yaml", transport)
 
     def test_nested_select_with_foreign_key_alter(self, hge_ctx, transport):
         transport = 'http'
@@ -450,11 +450,11 @@ class TestGraphQLQueryFunctions(DefaultTestSelectQueries):
 
     @pytest.mark.parametrize("transport", ['http', 'websocket'])
     def test_search_posts(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/query_search_posts.yaml")
+        check_query_f(hge_ctx, self.dir() + "/query_search_posts.yaml", transport)
 
     @pytest.mark.parametrize("transport", ['http', 'websocket'])
     def test_search_posts_aggregate(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/query_search_posts_aggregate.yaml")
+        check_query_f(hge_ctx, self.dir() + "/query_search_posts_aggregate.yaml", transport)
 
     @pytest.mark.parametrize("transport", ['http', 'websocket'])
     def test_query_get_users(self, hge_ctx, transport):

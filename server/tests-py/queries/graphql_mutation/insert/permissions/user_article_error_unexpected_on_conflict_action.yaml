@@ -18,7 +18,6 @@ query:
             content: "Updated Article 2 content",
             id: 2,
             author_id: 1
-          },
           }
           ],
         on_conflict: {
