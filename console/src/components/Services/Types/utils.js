@@ -17,28 +17,23 @@ export const filterValueLess = arr => {
 };
 
 export const mergeCustomTypes = (newTypesList, existingTypesList) => {
-  let mergedTypes = [];
-  let overlappingTypename = null;
-  const modifiedTypeIndices = [];
-  newTypesList.forEach(nt => {
-    const modifiedTypeIndex = existingTypesList.findIndex(
-      et => et.name === nt.name
-    );
-    if (modifiedTypeIndex !== -1) {
-      if (!nt.isModifying) {
-        overlappingTypename = nt.name;
-      } else {
-        modifiedTypeIndices.push(modifiedTypeIndex);
-      }
-    }
-    mergedTypes.push(nt);
+  const mergedTypes = [...existingTypesList];
+  let overlappingTypename;
+  const existingTypeIndexMap = {};
+  existingTypesList.forEach((et, i) => {
+    existingTypeIndexMap[et.name] = i;
   });
-  mergedTypes = [
-    ...mergedTypes,
-    ...existingTypesList.filter(
-      (t, i) => !modifiedTypeIndices.find(mti => i === mti)
-    ),
-  ];
+  newTypesList.forEach(nt => {
+    if (existingTypeIndexMap[nt.name] !== undefined) {
+      if (nt.isModifying) {
+        mergedTypes[existingTypeIndexMap[nt.name]] = nt;
+      } else {
+        overlappingTypename = nt.name;
+      }
+    } else {
+      mergedTypes.push(nt);
+    }
+  });
   return {
     types: mergedTypes,
     overlappingTypename,
