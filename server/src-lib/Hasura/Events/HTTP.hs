@@ -142,7 +142,7 @@ runHTTP
      )
   => HTTP.Request -> Maybe ExtraContext -> m (Either HTTPErr HTTPResp)
 runHTTP req exLog = do
-  logger :: Logger <- asks getter
+  logger <- asks getter
   manager <- asks getter
   res <- liftIO $ try $ HTTP.httpLbs req manager
   case res of

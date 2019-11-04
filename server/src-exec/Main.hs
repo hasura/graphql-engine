@@ -1,4 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
+
 module Main where
 
 import           Hasura.App
@@ -15,16 +16,15 @@ import qualified Data.Text                  as T
 import qualified Database.PG.Query          as Q
 
 main :: IO ()
-main =  do
-  args <- parseArgs
-  unAppM $ runApp args
+main = parseArgs >>= unAppM . runApp
 
 runApp :: HGEOptions -> AppM ()
 runApp (HGEOptionsG rci hgeCmd) =
   case hgeCmd of
     HCServe serveOptions -> do
       initCtx <- initialiseCtx hgeCmd rci
-      runHGEServer serveOptions initCtx Nothing unAppM
+      runHGEServer serveOptions initCtx unAppM
+
     HCExport -> do
       initCtx <- initialiseCtx hgeCmd rci
       res <- runTx' initCtx fetchMetadata
@@ -45,9 +45,9 @@ runApp (HGEOptionsG rci hgeCmd) =
       either printErrJExit (liftIO . BLC.putStrLn) res
 
     HCVersion -> liftIO $ putStrLn $ "Hasura GraphQL Engine: " ++ T.unpack currentVersion
+
   where
     runTx' initCtx tx =
       liftIO $ runExceptT $ Q.runTx (_icPgPool initCtx) (Q.Serializable, Nothing) tx
 
-    cleanSuccess =
-      liftIO $ putStrLn "successfully cleaned graphql-engine related data"
+    cleanSuccess = liftIO $ putStrLn "successfully cleaned graphql-engine related data"

@@ -134,7 +134,7 @@ getVarArgNum var = do
     Just argNum -> pure argNum
     Nothing     -> do
       put $ PlanningSt (curArgNum + 1) (Map.insert var curArgNum vars) prepped
-      return curArgNum
+      pure curArgNum
 
 addPrepArg
   :: (MonadState PlanningSt m)

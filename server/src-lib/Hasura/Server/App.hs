@@ -22,6 +22,7 @@ import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.HashMap.Strict                    as M
 import qualified Data.HashSet                           as S
 import qualified Data.Text                              as T
+import qualified Database.PG.Query                      as Q
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
 import qualified Network.Wai                            as Wai
@@ -30,17 +31,6 @@ import qualified Network.WebSockets                     as WS
 import qualified System.Metrics                         as EKG
 import qualified System.Metrics.Json                    as EKG
 import qualified Text.Mustache                          as M
-import qualified Text.Mustache.Compile                  as M
-
-import qualified Database.PG.Query                      as Q
-import qualified Hasura.GraphQL.Execute                 as E
-import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
-import qualified Hasura.GraphQL.Explain                 as GE
-import qualified Hasura.GraphQL.Transport.HTTP          as GH
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
-import qualified Hasura.GraphQL.Transport.WebSocket     as WS
-import qualified Hasura.Logging                         as L
-import qualified Hasura.Server.PGDump                   as PGD
 
 import           Hasura.EncJSON
 import           Hasura.Prelude                         hiding (get, put)
@@ -59,15 +49,15 @@ import           Hasura.Server.Utils
 import           Hasura.Server.Version
 import           Hasura.SQL.Types
 
-consoleTmplt :: M.Template
-consoleTmplt = $(M.embedSingleTemplate "src-rsr/console.html")
+import qualified Hasura.GraphQL.Execute                 as E
+import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
+import qualified Hasura.GraphQL.Explain                 as GE
+import qualified Hasura.GraphQL.Transport.HTTP          as GH
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
+import qualified Hasura.GraphQL.Transport.WebSocket     as WS
+import qualified Hasura.Logging                         as L
+import qualified Hasura.Server.PGDump                   as PGD
 
-boolToText :: Bool -> T.Text
-boolToText = bool "false" "true"
-
-isAdminSecretSet :: AuthMode -> T.Text
-isAdminSecretSet AMNoAuth = boolToText False
-isAdminSecretSet _        = boolToText True
 
 data SchemaCacheRef
   = SchemaCacheRef
@@ -76,34 +66,6 @@ data SchemaCacheRef
   -- an action to run when schemacache changes
   , _scrOnChange :: IO ()
   }
-
-getSCFromRef :: (MonadIO m) => SchemaCacheRef -> m SchemaCache
-getSCFromRef scRef = liftIO (readIORef (_scrCache scRef)) >>= return . fst
-
-logInconsObjs :: (MonadIO m) => L.Logger -> [InconsistentMetadataObj] -> m ()
-logInconsObjs logger objs =
-  unless (null objs) $ L.unLogger logger $ mkInconsMetadataLog objs
-
-withSCUpdate
-  :: (MonadIO m, MonadError e m)
-  => SchemaCacheRef -> L.Logger -> m (a, SchemaCache) -> m a
-withSCUpdate scr logger action = do
-  acquireLock
-  (res, newSC) <- action `catchError` onError
-  liftIO $ do
-    -- update schemacache in IO reference
-    modifyIORef' cacheRef $
-      \(_, prevVer) -> (newSC, incSchemaCacheVer prevVer)
-    -- log any inconsistent objects
-    logInconsObjs logger $ scInconsistentObjs newSC
-    onChange
-  releaseLock
-  return res
-  where
-    SchemaCacheRef lk cacheRef onChange = scr
-    onError e   = releaseLock >> throwError e
-    acquireLock = liftIO $ takeMVar lk
-    releaseLock = liftIO $ putMVar lk ()
 
 data ServerCtx
   = ServerCtx
@@ -132,11 +94,6 @@ data HandlerCtx
 
 type Handler = ExceptT QErr (ReaderT HandlerCtx IO)
 
-type HasuraMiddleware a = a -> Handler ()
-
-type UserAuthMiddleware =
-  L.Logger -> HTTP.Manager -> [N.Header] -> AuthMode -> ExceptT QErr IO UserInfo
-
 data APIResp
   = JSONResp !(HttpResponse EncJSON)
   | RawResp  !(HttpResponse BL.ByteString)
@@ -145,6 +102,41 @@ data APIHandler a
   = AHGet !(Handler APIResp)
   | AHPost !(a -> Handler APIResp)
 
+
+boolToText :: Bool -> T.Text
+boolToText = bool "false" "true"
+
+isAdminSecretSet :: AuthMode -> T.Text
+isAdminSecretSet AMNoAuth = boolToText False
+isAdminSecretSet _        = boolToText True
+
+getSCFromRef :: (MonadIO m) => SchemaCacheRef -> m SchemaCache
+getSCFromRef scRef = liftIO (readIORef (_scrCache scRef)) >>= return . fst
+
+logInconsObjs :: (MonadIO m) => L.Logger -> [InconsistentMetadataObj] -> m ()
+logInconsObjs logger objs =
+  unless (null objs) $ L.unLogger logger $ mkInconsMetadataLog objs
+
+withSCUpdate
+  :: (MonadIO m, MonadError e m)
+  => SchemaCacheRef -> L.Logger -> m (a, SchemaCache) -> m a
+withSCUpdate scr logger action = do
+  acquireLock
+  (res, newSC) <- action `catchError` onError
+  liftIO $ do
+    -- update schemacache in IO reference
+    modifyIORef' cacheRef $
+      \(_, prevVer) -> (newSC, incSchemaCacheVer prevVer)
+    -- log any inconsistent objects
+    logInconsObjs logger $ scInconsistentObjs newSC
+    onChange
+  releaseLock
+  return res
+  where
+    SchemaCacheRef lk cacheRef onChange = scr
+    onError e   = releaseLock >> throwError e
+    acquireLock = liftIO $ takeMVar lk
+    releaseLock = liftIO $ putMVar lk ()
 
 mkGetHandler :: Handler APIResp -> APIHandler ()
 mkGetHandler = AHGet
@@ -176,7 +168,6 @@ parseBody reqBody =
   case eitherDecode' reqBody of
     Left e     -> throw400 InvalidJSON (T.pack e)
     Right jVal -> decodeValue jVal
-
 
 onlyAdmin :: Handler ()
 onlyAdmin = do
@@ -234,194 +225,8 @@ class (Monad m) => HasuraSpockAction m where
     -> APIHandler a
     -> ActionT m ()
 
--- instance HasuraSpockAction _ where
---   makeSpockAction serverCtx httpLogger qErrEncoder qErrModifier apiHandler = do
---     req <- request
---     reqBody <- liftIO $ strictRequestBody req
---     let headers = requestHeaders req
---         authMode = scAuthMode serverCtx
---         manager = scManager serverCtx
-
---     requestId <- getRequestId headers
-
---     -- default to @getUserInfo@ if no user-auth middleware is passed
---     --let resolveUserInfo = fromMaybe getUserInfo userAuthMiddleware
---     userInfoE <- liftIO $ runExceptT $ getUserInfo logger manager headers authMode
---     userInfo  <- either (logErrorAndResp Nothing requestId req (Left reqBody) False headers . qErrModifier)
---                 return userInfoE
-
---     let handlerState = HandlerCtx serverCtx userInfo headers requestId
---         curRole = userRole userInfo
-
---     t1 <- liftIO getCurrentTime -- for measuring response time purposes
-
---     (result, q) <- case apiHandler of
---       AHGet handler -> do
---         res <- liftIO $ runReaderT (runExceptT handler) handlerState
---         return (res, Nothing)
---       AHPost handler -> do
---         parsedReqE <- runExceptT $ parseBody reqBody
---         parsedReq  <- either (logErrorAndResp (Just userInfo) requestId req (Left reqBody) (isAdmin curRole) headers . qErrModifier)
---                       return parsedReqE
---         res <- liftIO $ runReaderT (runExceptT $ handler parsedReq) handlerState
---         return (res, Just parsedReq)
-
---     t2 <- liftIO getCurrentTime -- for measuring response time purposes
-
---     -- apply the error modifier
---     let modResult = fmapL qErrModifier result
-
---     -- log and return result
---     case modResult of
---       Left err  -> let jErr = maybe (Left reqBody) (Right . toJSON) q
---                   in logErrorAndResp (Just userInfo) requestId req jErr (isAdmin curRole) headers err
---       Right res -> logSuccessAndResp (Just userInfo) requestId req res (Just (t1, t2)) headers
-
---     where
---       logger = scLogger serverCtx
-
---       logErrorAndResp
---         :: (MonadIO m)
---         => Maybe UserInfo
---         -> RequestId
---         -> Wai.Request
---         -> Either BL.ByteString Value
---         -> Bool
---         -> [N.Header]
---         -> QErr
---         -> ActionCtxT ctx m a
---       logErrorAndResp userInfo reqId req reqBody includeInternal headers qErr = do
---         logError logger httpLogger userInfo reqId req reqBody qErr headers
---         setStatus $ qeStatus qErr
---         json $ qErrEncoder includeInternal qErr
-
---       logSuccessAndResp userInfo reqId req result qTime headers = do
---         logSuccess logger httpLogger userInfo reqId req (apiRespToLBS result) qTime headers
---         case result of
---           JSONResp (HttpResponse j h) -> do
---             uncurry setHeader jsonHeader
---             uncurry setHeader (requestIdHeader, unRequestId reqId)
---             mapM_ (mapM_ (uncurry setHeader . unHeader)) h
---             lazyBytes $ encJToLBS j
---           RawResp (HttpResponse b h) -> do
---             uncurry setHeader (requestIdHeader, unRequestId reqId)
---             mapM_ (mapM_ (uncurry setHeader . unHeader)) h
---             lazyBytes b
-
-
--- mkSpockAction
---   :: (MonadIO m, FromJSON a, ToJSON a)
---   => ServerCtx
---   -> Maybe HttpResponseLogger
---   -> Maybe UserAuthMiddleware
---   -- ^ temp. TODO: make @mkSpockAction@ a typeclass instead of passing hooks
---   -> (Bool -> QErr -> Value)
---   -- ^ `QErr` JSON encoder function
---   -> (QErr -> QErr)
---   -- ^ `QErr` modifier
---   -> APIHandler a
---   -> ActionT m ()
--- mkSpockAction serverCtx respLogger userAuthMiddleware qErrEncoder qErrModifier apiHandler = do
---   req <- request
---   reqBody <- liftIO $ strictRequestBody req
---   let headers = requestHeaders req
---       authMode = scAuthMode serverCtx
---       manager = scManager serverCtx
-
---   requestId <- getRequestId headers
-
---   -- default to @getUserInfo@ if no user-auth middleware is passed
---   let resolveUserInfo = fromMaybe getUserInfo userAuthMiddleware
---   userInfoE <- liftIO $ runExceptT $ resolveUserInfo logger manager headers authMode
---   userInfo  <- either (logErrorAndResp Nothing requestId req (Left reqBody) False headers . qErrModifier)
---                return userInfoE
-
---   let handlerState = HandlerCtx serverCtx userInfo headers requestId
---       curRole = userRole userInfo
-
---   t1 <- liftIO getCurrentTime -- for measuring response time purposes
-
---   (result, q) <- case apiHandler of
---     AHGet handler -> do
---       res <- liftIO $ runReaderT (runExceptT handler) handlerState
---       return (res, Nothing)
---     AHPost handler -> do
---       parsedReqE <- runExceptT $ parseBody reqBody
---       parsedReq  <- either (logErrorAndResp (Just userInfo) requestId req (Left reqBody) (isAdmin curRole) headers . qErrModifier)
---                     return parsedReqE
---       res <- liftIO $ runReaderT (runExceptT $ handler parsedReq) handlerState
---       return (res, Just parsedReq)
-
---   t2 <- liftIO getCurrentTime -- for measuring response time purposes
-
---   -- apply the error modifier
---   let modResult = fmapL qErrModifier result
-
---   -- log and return result
---   case modResult of
---     Left err  -> let jErr = maybe (Left reqBody) (Right . toJSON) q
---                  in logErrorAndResp (Just userInfo) requestId req jErr (isAdmin curRole) headers err
---     Right res -> logSuccessAndResp (Just userInfo) requestId req res (Just (t1, t2)) headers
-
---   where
---     logger = scLogger serverCtx
-
---     logErrorAndResp
---       :: (MonadIO m)
---       => Maybe UserInfo
---       -> RequestId
---       -> Wai.Request
---       -> Either BL.ByteString Value
---       -> Bool
---       -> [N.Header]
---       -> QErr
---       -> ActionCtxT ctx m a
---     logErrorAndResp userInfo reqId req reqBody includeInternal headers qErr = do
---       logError logger mkHttpLog userInfo reqId req reqBody qErr headers
---       setStatus $ qeStatus qErr
---       let responseByteString = encode $ qErrEncoder includeInternal qErr
---       forM_ respLogger $ \rLogger -> liftIO $ rLogger logger responseByteString
---       json $ qErrEncoder includeInternal qErr
-
--- --     logSuccessAndResp userInfo reqId req result qTime headers = do
--- --       logSuccess logger httpLogger userInfo reqId req (apiRespToLBS result) qTime headers
--- --       case result of
--- --         JSONResp (HttpResponse j h) -> do
--- --           uncurry setHeader jsonHeader
--- --           uncurry setHeader (requestIdHeader, unRequestId reqId)
--- --           mapM_ (mapM_ (uncurry setHeader . unHeader)) h
--- --           let responseByteString = encJToLBS j
--- --           forM_ respLogger $ \rLogger -> liftIO $ rLogger logger responseByteString
--- --           lazyBytes responseByteString
--- --         RawResp (HttpResponse b h) -> do
--- --           uncurry setHeader (requestIdHeader, unRequestId reqId)
--- --           mapM_ (mapM_ (uncurry setHeader . unHeader)) h
--- --           lazyBytes b
---     logSuccessAndResp userInfo reqId req result qTime reqHeaders =
---       case result of
---         JSONResp (HttpResponse encJson h) ->
---           possiblyCompressedLazyBytes userInfo reqId req qTime (encJToLBS encJson)
---             (pure jsonHeader <> mkHeaders h) reqHeaders
---         RawResp (HttpResponse rawBytes h) ->
---           possiblyCompressedLazyBytes userInfo reqId req qTime rawBytes (mkHeaders h) reqHeaders
-
---     possiblyCompressedLazyBytes userInfo reqId req qTime respBytes respHeaders reqHeaders = do
---       let (compressedResp, mEncodingHeader, mCompressionType) =
---             compressResponse (requestHeaders req) respBytes
---           encodingHeader = maybe [] pure mEncodingHeader
---           reqIdHeader = (requestIdHeader, unRequestId reqId)
---           allRespHeaders = pure reqIdHeader <> encodingHeader <> respHeaders
---       logSuccess logger mkHttpLog userInfo reqId req compressedResp qTime mCompressionType reqHeaders
---       forM_ respLogger $ \rLogger -> liftIO $ rLogger logger respBytes
---       mapM_ (uncurry setHeader) allRespHeaders
---       lazyBytes compressedResp
-
---     mkHeaders = maybe [] (map unHeader)
-
-v1QueryHandler :: Maybe (HasuraMiddleware RQLQuery) -> RQLQuery -> Handler (HttpResponse EncJSON)
-v1QueryHandler metadataMiddleware query = do
-  -- run any given metadata query middleware
-  maybe (return ()) (\m -> m query) metadataMiddleware
+v1QueryHandler :: RQLQuery -> Handler (HttpResponse EncJSON)
+v1QueryHandler query = do
   scRef <- scCacheRef . hcServerCtx <$> ask
   logger <- scLogger . hcServerCtx <$> ask
   res <- bool (fst <$> dbAction) (withSCUpdate scRef logger dbAction) $
@@ -538,12 +343,11 @@ queryParsers =
       return $ f q
 
 legacyQueryHandler
-  :: Maybe (HasuraMiddleware RQLQuery)
-  -> TableName -> T.Text -> Object
+  :: TableName -> T.Text -> Object
   -> Handler (HttpResponse EncJSON)
-legacyQueryHandler metadataMiddleware tn queryType req =
+legacyQueryHandler tn queryType req =
   case M.lookup queryType queryParsers of
-    Just queryParser -> getLegacyQueryParser queryParser qt req >>= (v1QueryHandler metadataMiddleware . RQV1)
+    Just queryParser -> getLegacyQueryParser queryParser qt req >>= v1QueryHandler . RQV1
     Nothing          -> throw404 "No such resource exists"
   where
     qt = QualifiedObject publicSchema tn
@@ -580,17 +384,16 @@ mkWaiApp
   -> InstanceId
   -> S.HashSet API
   -> EL.LiveQueriesOptions
-  -> Maybe (HasuraMiddleware RQLQuery)
-  -- -> Maybe ConsoleRenderer
   -> (forall b. m b -> IO b)
   -- ^ Lift function for Spock actions taken by @spockT@ (https://hackage.haskell.org/package/Spock-core-0.13.0.0/docs/Web-Spock-Core.html)
   -> m HasuraApp
 mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg enableConsole consoleAssetsDir
-         enableTelemetry instanceId apis lqOpts metadataMiddleware spockLiftFunction = do
+         enableTelemetry instanceId apis lqOpts spockLiftFunction = do
 
     let pgExecCtx = PGExecCtx pool isoLevel
         pgExecCtxSer = PGExecCtx pool Q.Serializable
         runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
+
     (cacheRef, cacheBuiltTime) <- do
       pgResp <- runExceptT $ peelRun emptySchemaCache runCtx pgExecCtxSer $ do
         buildSchemaCache
@@ -633,7 +436,7 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg 
       liftIO $ EKG.registerCounter "ekg.server_timestamp_ms" getTimeMs ekgStore
 
     spockApp <- liftIO $ spockAsApp $ spockT spockLiftFunction $
-                httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry metadataMiddleware
+                httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry
 
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
         stopWSServer = WS.stopWSServerApp wsServerEnv
@@ -655,12 +458,8 @@ httpApp
   -> Bool
   -> Maybe Text
   -> Bool
-  -> Maybe (HasuraMiddleware RQLQuery)
-  -- ^ The current middleware is only for RQLQuery (metadata) queries, in future
-  -- this can be extended to take a `HashMap (HttpMethod, Path) (HasuraMiddleware a)`
-  -- -> Maybe ConsoleRenderer
   -> SpockT m ()
-httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry metadataMiddleware = do
+httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
 
     -- cors middleware
     unless (isCorsDisabled corsCfg) $
@@ -683,11 +482,11 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry metadat
     when enableMetadata $ do
 
       post "v1/query" $ spockAction encodeQErr id $
-        mkPostHandler $ mkAPIRespHandler (v1QueryHandler metadataMiddleware)
+        mkPostHandler $ mkAPIRespHandler v1QueryHandler
 
       post ("api/1/table" <//> var <//> var) $ \tableName queryType ->
         makeSpockAction serverCtx encodeQErr id $ mkPostHandler $
-          mkAPIRespHandler $ legacyQueryHandler metadataMiddleware (TableName tableName) queryType
+          mkAPIRespHandler $ legacyQueryHandler (TableName tableName) queryType
 
     when enablePGDump $
       post "v1alpha1/pg_dump" $ spockAction encodeQErr id $
@@ -775,9 +574,6 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry metadat
         let headers = requestHeaders req
         let authMode = scAuthMode serverCtx
         consoleHtml <- lift $ renderConsole path authMode enableTelemetry consoleAssetsDir
-        -- let consoleHtml = maybe (mkConsoleHTML path authMode enableTelemetry consoleAssetsDir)
-        --                         (\cr -> unConsoleRenderer cr path authMode enableTelemetry consoleAssetsDir)
-        --                         consoleRenderer
         either (raiseGenericApiError logger headers . err500 Unexpected . T.pack) html consoleHtml
 
 raiseGenericApiError

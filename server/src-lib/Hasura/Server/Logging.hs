@@ -15,7 +15,6 @@ module Hasura.Server.Logging
   , HttpLogContext(..)
   , WebHookLog(..)
   , HttpException
-  , HttpResponseLogger
   ) where
 
 import           Data.Aeson
@@ -236,8 +235,6 @@ mkHttpErrorLogContext userInfoM reqId req err query mTimeT compressTypeM headers
   in HttpLogContext http op
 
 type HttpLogger a = (L.ToEngineLog a) => HttpLogContext -> a
-
-type HttpResponseLogger = L.Logger -> BL.ByteString -> IO ()
 
 data HttpLog
   = HttpLog

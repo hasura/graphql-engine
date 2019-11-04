@@ -8,6 +8,7 @@ import           Data.Time                          (UTCTime)
 import           Language.Haskell.TH.Syntax         (Lift)
 
 import qualified Data.HashMap.Strict                as HM
+import qualified Database.PG.Query                  as Q
 import qualified Network.HTTP.Client                as HTTP
 
 import           Hasura.EncJSON
@@ -30,7 +31,6 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Init                 (InstanceId (..))
 import           Hasura.Server.Utils
 
-import qualified Database.PG.Query                  as Q
 
 data RQLQueryV1
   = RQAddExistingTableOrView !TrackTable

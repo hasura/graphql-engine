@@ -179,7 +179,7 @@ library
 
   exposed-modules:     Hasura.Prelude
                      , Hasura.App
-
+                     , Hasura.Db
                      , Hasura.Logging
                      , Hasura.HTTP
 
@@ -193,13 +193,14 @@ library
                      , Hasura.Server.Context
                      , Hasura.Server.Migrate
                      , Hasura.Server.Compression
+                     , Hasura.Server.PGDump
 
                      , Hasura.RQL.Types
                      , Hasura.RQL.DDL.Metadata
                      , Hasura.EncJSON
 
-  other-modules:       Hasura.Db
-                     , Hasura.Cache
+
+  other-modules:       Hasura.Cache
 
                      , Hasura.Server.Auth.JWT
                      , Hasura.Server.Middleware
@@ -207,9 +208,10 @@ library
                      , Hasura.Server.CheckUpdates
                      , Hasura.Server.Telemetry
                      , Hasura.Server.SchemaUpdate
-                     , Hasura.Server.PGDump
                      , Hasura.Server.Config
                      , Hasura.Server.Migrate.Version
+                     , Hasura.Server.Auth.JWT.Internal
+                     , Hasura.Server.Auth.JWT.Logging
 
                      , Hasura.RQL.Instances
                      , Hasura.RQL.Types.SchemaCache
@@ -326,11 +328,6 @@ library
                      , Hasura.SQL.Value
                      , Network.URI.Extended
 
-                     --, Hasura.App.Migrate
-
-  other-modules:       Hasura.Server.Auth.JWT.Internal
-                     , Hasura.Server.Auth.JWT.Logging
-
 executable graphql-engine
   import: common-all, common-exe
   main-is:           Main.hs
@@ -340,28 +337,6 @@ executable graphql-engine
                    , pg-client
                    , text
                    , bytestring
-
--- =======
---   build-depends:       base
---                      , warp >= 3.2
---                      , graphql-engine
---                      , aeson >= 1.0
---                      , bytestring >= 0.10
---                      , mtl
---                      , optparse-applicative >= 0.12
---                      , yaml
---                      , template-haskell >= 2.11 , time >= 1.6
---                      , text
---                      , lens
---                      , unordered-containers >= 0.2
---                      , pg-client
---                      , http-client
---                      , http-client-tls
---                      , stm
---                      , wreq
---                      , string-conversions
---                      , uuid
---                      , unix
 
 test-suite graphql-engine-tests
   import: common-all, common-exe
