@@ -104,6 +104,10 @@ type Driver interface {
 
 	Read(version uint64) (ok bool)
 
+	PushToList(migration io.Reader, fileType string, list *CustomList) error
+
+	Squash(list *CustomList, ret chan<- interface{})
+
 	SettingsDriver
 
 	MetadataDriver
