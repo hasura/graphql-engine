@@ -5,7 +5,6 @@
 
 module Hasura.Server.Telemetry
   ( runTelemetry
-  , getDbId
   , mkTelemetryLog
   )
   where
@@ -31,7 +30,6 @@ import qualified Data.ByteString.Lazy    as BL
 import qualified Data.HashMap.Strict     as Map
 import qualified Data.String.Conversions as CS
 import qualified Data.Text               as T
-import qualified Database.PG.Query       as Q
 import qualified Network.HTTP.Client     as HTTP
 import qualified Network.HTTP.Types      as HTTP
 import qualified Network.Wreq            as Wreq
@@ -160,15 +158,6 @@ computeMetrics sc =
 
     permsOfTbl :: TableInfo PGColumnInfo -> [(RoleName, RolePermInfo)]
     permsOfTbl = Map.toList . _tiRolePermInfoMap
-
-
-getDbId :: Q.TxE QErr Text
-getDbId =
-  (runIdentity . Q.getRow) <$>
-  Q.withQE defaultTxErrorHandler
-  [Q.sql|
-    SELECT (hasura_uuid :: text) FROM hdb_catalog.hdb_version
-  |] () False
 
 
 -- | Logging related

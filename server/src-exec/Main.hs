@@ -6,7 +6,6 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
 import           Hasura.RQL.Types
 import           Hasura.Server.Init
-import           Hasura.Server.Logging      (mkHttpLog)
 import           Hasura.Server.Migrate      (dropCatalog)
 import           Hasura.Server.Version
 
@@ -24,20 +23,20 @@ runApp :: HGEOptions -> AppM ()
 runApp (HGEOptionsG rci hgeCmd) =
   case hgeCmd of
     HCServe serveOptions -> do
-      initCtx <- initialiseCtx hgeCmd rci Nothing mkHttpLog Nothing
-      runHGEServer serveOptions initCtx Nothing Nothing Nothing unAppM
+      initCtx <- initialiseCtx hgeCmd rci
+      runHGEServer serveOptions initCtx Nothing unAppM
     HCExport -> do
-      initCtx <- initialiseCtx hgeCmd rci Nothing mkHttpLog Nothing
+      initCtx <- initialiseCtx hgeCmd rci
       res <- runTx' initCtx fetchMetadata
       either printErrJExit printJSON res
 
     HCClean -> do
-      initCtx <- initialiseCtx hgeCmd rci Nothing mkHttpLog Nothing
+      initCtx <- initialiseCtx hgeCmd rci
       res <- runTx' initCtx dropCatalog
       either printErrJExit (const cleanSuccess) res
 
     HCExecute -> do
-      InitCtx{..} <- initialiseCtx hgeCmd rci Nothing mkHttpLog Nothing
+      InitCtx{..} <- initialiseCtx hgeCmd rci
       queryBs <- liftIO BL.getContents
       let sqlGenCtx = SQLGenCtx False
       res <- execQuery queryBs

@@ -17,8 +17,8 @@ module Hasura.Logging
   , LoggerCtx(..)
   , mkLoggerCtx
   , cleanLoggerCtx
-  , LogCallbackFunction
   , eventTriggerLogType
+  , isLogTypeEnabled
   ) where
 
 import           Hasura.Prelude
@@ -135,7 +135,6 @@ data LoggerCtx
   , _lcLogLevel        :: !LogLevel
   , _lcTimeGetter      :: !(IO FormattedTime)
   , _lcEnabledLogTypes :: !(Set.HashSet EngineLogType)
-  , _lcLogCallback     :: !(Maybe LogCallbackFunction)
   }
 
 data LoggerSettings
@@ -146,7 +145,6 @@ data LoggerSettings
   , _lsLevel           :: !LogLevel
   } deriving (Show, Eq)
 
-type LogCallbackFunction = EngineLog -> IO ()
 
 defaultLoggerSettings :: Bool -> LogLevel -> LoggerSettings
 defaultLoggerSettings isCached =
@@ -166,12 +164,11 @@ getFormattedTime tzM = do
 mkLoggerCtx
   :: LoggerSettings
   -> Set.HashSet EngineLogType
-  -> Maybe LogCallbackFunction
   -> IO LoggerCtx
-mkLoggerCtx (LoggerSettings cacheTime tzM logLevel) enabledLogs logCallback = do
+mkLoggerCtx (LoggerSettings cacheTime tzM logLevel) enabledLogs = do
   loggerSet <- FL.newStdoutLoggerSet FL.defaultBufSize
   timeGetter <- bool (return $ getFormattedTime tzM) cachedTimeGetter cacheTime
-  return $ LoggerCtx loggerSet logLevel timeGetter enabledLogs logCallback
+  return $ LoggerCtx loggerSet logLevel timeGetter enabledLogs
   where
     cachedTimeGetter =
       Auto.mkAutoUpdate Auto.defaultUpdateSettings {
@@ -186,15 +183,11 @@ newtype Logger =
   Logger { unLogger :: forall a m. (ToEngineLog a, MonadIO m) => a -> m () }
 
 mkLogger :: LoggerCtx -> Logger
-mkLogger (LoggerCtx loggerSet serverLogLevel timeGetter enabledLogTypes callbackFn) = Logger $ \l -> do
+mkLogger (LoggerCtx loggerSet serverLogLevel timeGetter enabledLogTypes) = Logger $ \l -> do
   localTime <- liftIO timeGetter
   let (logLevel, logTy, logDet) = toEngineLog l
-      logStr = EngineLog localTime logLevel logTy logDet
-  -- send all logs (log-types and levels) to the callback function
-  forM_ callbackFn $ \func -> liftIO $ func logStr
   when (logLevel >= serverLogLevel && isLogTypeEnabled enabledLogTypes logTy) $
-    liftIO $ FL.pushLogStrLn loggerSet $ FL.toLogStr (J.encode logStr)
-
+    liftIO $ FL.pushLogStrLn loggerSet $ FL.toLogStr (J.encode $ EngineLog localTime logLevel logTy logDet)
 
 eventTriggerLogType :: EngineLogType
 eventTriggerLogType = ELTInternal "event-trigger"

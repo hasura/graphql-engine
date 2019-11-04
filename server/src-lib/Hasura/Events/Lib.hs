@@ -178,22 +178,22 @@ processEventQueue logctx logenv httpMgr pool cacheRef eectx = do
   threads <- mapM async [fetchThread, consumeThread]
   void $ waitAny threads
   where
-    fetchThread = pushEvents (mkHLogger logctx) pool eectx
-    consumeThread = consumeEvents (mkHLogger logctx)
+    fetchThread = pushEvents (L.mkLogger logctx) pool eectx
+    consumeThread = consumeEvents (L.mkLogger logctx)
                     logenv httpMgr pool (CacheRef cacheRef) eectx
 
 pushEvents
-  :: HLogger -> Q.PGPool -> EventEngineCtx -> IO ()
+  :: L.Logger -> Q.PGPool -> EventEngineCtx -> IO ()
 pushEvents logger pool eectx  = forever $ do
   let EventEngineCtx q _ _ fetchI = eectx
   eventsOrError <- runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) fetchEvents
   case eventsOrError of
-    Left err     -> logger $ L.toEngineLog $ EventInternalErr err
+    Left err     -> L.unLogger logger $ EventInternalErr err
     Right events -> atomically $ mapM_ (TQ.writeTQueue q) events
   threadDelay (fetchI * 1000)
 
 consumeEvents
-  :: HLogger -> LogEnvHeaders -> HTTP.Manager -> Q.PGPool -> CacheRef -> EventEngineCtx
+  :: L.Logger -> LogEnvHeaders -> HTTP.Manager -> Q.PGPool -> CacheRef -> EventEngineCtx
   -> IO ()
 consumeEvents logger logenv httpMgr pool cacheRef eectx  = forever $ do
   event <- atomically $ do
@@ -205,7 +205,7 @@ processEvent
   :: ( MonadReader r m
      , MonadIO m
      , Has HTTP.Manager r
-     , Has HLogger r
+     , Has L.Logger r
      , Has CacheRef r
      , Has EventEngineCtx r
      )
@@ -262,7 +262,7 @@ processSuccess pool e decodedHeaders ep resp = do
 processError
   :: ( MonadIO m
      , MonadReader r m
-     , Has HLogger r
+     , Has L.Logger r
      )
   => Q.PGPool -> Event -> RetryConf -> [HeaderConf] -> EventPayload -> HTTPErr
   -> m (Either QErr ())
@@ -378,22 +378,22 @@ mkMaybe :: [a] -> Maybe [a]
 mkMaybe [] = Nothing
 mkMaybe x  = Just x
 
-logQErr :: ( MonadReader r m, MonadIO m,  Has HLogger r) => QErr -> m ()
+logQErr :: ( MonadReader r m, MonadIO m,  Has L.Logger r) => QErr -> m ()
 logQErr err = do
   logger <- asks getter
-  liftIO $ logger $ L.toEngineLog $ EventInternalErr err
+  L.unLogger logger $ EventInternalErr err
 
-logHTTPErr :: ( MonadReader r m, MonadIO m,  Has HLogger r) => HTTPErr -> m ()
+logHTTPErr :: ( MonadReader r m, MonadIO m,  Has L.Logger r) => HTTPErr -> m ()
 logHTTPErr err = do
   logger <- asks getter
-  liftIO $ logger $ L.toEngineLog err
+  L.unLogger logger $ err
 
 tryWebhook
   :: ( MonadReader r m
      , MonadIO m
      , MonadError HTTPErr m
      , Has HTTP.Manager r
-     , Has HLogger r
+     , Has L.Logger r
      , Has EventEngineCtx r
      )
   => [HTTP.Header] -> HTTP.ResponseTimeout -> EventPayload -> String

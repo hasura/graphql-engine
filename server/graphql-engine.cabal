@@ -192,6 +192,7 @@ library
                      , Hasura.Server.Logging
                      , Hasura.Server.Context
                      , Hasura.Server.Migrate
+                     , Hasura.Server.Compression
 
                      , Hasura.RQL.Types
                      , Hasura.RQL.DDL.Metadata
@@ -208,7 +209,6 @@ library
                      , Hasura.Server.SchemaUpdate
                      , Hasura.Server.PGDump
                      , Hasura.Server.Config
-                     , Hasura.Server.Compression
                      , Hasura.Server.Migrate.Version
 
                      , Hasura.RQL.Instances

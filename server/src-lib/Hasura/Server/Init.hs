@@ -1,8 +1,6 @@
 {-# LANGUAGE CPP #-}
 module Hasura.Server.Init where
 
-import qualified Database.PG.Query                as Q
-
 import qualified Data.Aeson                       as J
 import qualified Data.Aeson.Casing                as J
 import qualified Data.Aeson.TH                    as J
@@ -11,6 +9,7 @@ import qualified Data.HashSet                     as Set
 import qualified Data.String                      as DataString
 import qualified Data.Text                        as T
 import qualified Data.Text.Encoding               as TE
+import qualified Database.PG.Query                as Q
 import qualified Text.PrettyPrint.ANSI.Leijen     as PP
 
 import           Data.Char                        (toLower)
@@ -21,8 +20,9 @@ import           Options.Applicative
 import qualified Hasura.GraphQL.Execute.LiveQuery as LQ
 import qualified Hasura.Logging                   as L
 
+import           Hasura.Db
 import           Hasura.Prelude
-import           Hasura.RQL.Types                 (RoleName (..),
+import           Hasura.RQL.Types                 (QErr, RoleName (..),
                                                    SchemaCache (..),
                                                    mkNonEmptyText)
 import           Hasura.Server.Auth
@@ -34,6 +34,15 @@ import           Network.URI                      (parseURI)
 newtype DbUid
   = DbUid { getDbUid :: Text }
   deriving (Show, Eq, J.ToJSON, J.FromJSON)
+
+getDbId :: Q.TxE QErr Text
+getDbId =
+  (runIdentity . Q.getRow) <$>
+  Q.withQE defaultTxErrorHandler
+  [Q.sql|
+    SELECT (hasura_uuid :: text) FROM hdb_catalog.hdb_version
+  |] () False
+
 
 newtype InstanceId
   = InstanceId { getInstanceId :: Text }
@@ -61,26 +70,26 @@ type RawAuthHook = AuthHookG (Maybe T.Text) (Maybe AuthHookType)
 
 data RawServeOptions
   = RawServeOptions
-  { rsoPort               :: !(Maybe Int)
-  , rsoHost               :: !(Maybe HostPreference)
-  , rsoConnParams         :: !RawConnParams
-  , rsoTxIso              :: !(Maybe Q.TxIsolation)
-  , rsoAdminSecret        :: !(Maybe AdminSecret)
-  , rsoAuthHook           :: !RawAuthHook
-  , rsoJwtSecret          :: !(Maybe JWTConfig)
-  , rsoUnAuthRole         :: !(Maybe RoleName)
-  , rsoCorsConfig         :: !(Maybe CorsConfig)
-  , rsoEnableConsole      :: !Bool
-  , rsoConsoleAssetsDir   :: !(Maybe Text)
-  , rsoEnableTelemetry    :: !(Maybe Bool)
-  , rsoWsReadCookie       :: !Bool
-  , rsoStringifyNum       :: !Bool
-  , rsoEnabledAPIs        :: !(Maybe [API])
-  , rsoMxRefetchInt       :: !(Maybe LQ.RefetchInterval)
-  , rsoMxBatchSize        :: !(Maybe LQ.BatchSize)
-  , rsoEnableAllowlist    :: !Bool
-  , rsoEnabledLogTypes    :: !(Maybe [L.EngineLogType])
-  , rsoLogLevel           :: !(Maybe L.LogLevel)
+  { rsoPort             :: !(Maybe Int)
+  , rsoHost             :: !(Maybe HostPreference)
+  , rsoConnParams       :: !RawConnParams
+  , rsoTxIso            :: !(Maybe Q.TxIsolation)
+  , rsoAdminSecret      :: !(Maybe AdminSecret)
+  , rsoAuthHook         :: !RawAuthHook
+  , rsoJwtSecret        :: !(Maybe JWTConfig)
+  , rsoUnAuthRole       :: !(Maybe RoleName)
+  , rsoCorsConfig       :: !(Maybe CorsConfig)
+  , rsoEnableConsole    :: !Bool
+  , rsoConsoleAssetsDir :: !(Maybe Text)
+  , rsoEnableTelemetry  :: !(Maybe Bool)
+  , rsoWsReadCookie     :: !Bool
+  , rsoStringifyNum     :: !Bool
+  , rsoEnabledAPIs      :: !(Maybe [API])
+  , rsoMxRefetchInt     :: !(Maybe LQ.RefetchInterval)
+  , rsoMxBatchSize      :: !(Maybe LQ.BatchSize)
+  , rsoEnableAllowlist  :: !Bool
+  , rsoEnabledLogTypes  :: !(Maybe [L.EngineLogType])
+  , rsoLogLevel         :: !(Maybe L.LogLevel)
   } deriving (Show, Eq)
 
 data ServeOptions
