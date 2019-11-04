@@ -142,6 +142,14 @@ export const deriveExistingType = (
       kind: typeKind,
     };
 
+    if (typeKind === 'enum') {
+      newTypes.push({
+        ..._t,
+        values: selectedType._values,
+      });
+      return;
+    }
+
     if (typeKind !== 'input_object') {
       newTypes.push(_t);
       return;

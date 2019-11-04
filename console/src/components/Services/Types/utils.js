@@ -96,6 +96,7 @@ export const parseCustomTypes = customTypesServer => {
       customTypesClient.push({
         ...t,
         kind: singularize(tk),
+        isExisting: true,
       });
     });
   });
