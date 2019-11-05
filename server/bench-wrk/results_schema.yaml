@@ -1,0 +1,74 @@
+- type: run_sql
+  args:
+    sql: |
+      create schema if not exists hge_bench;
+      
+      create table if not exists hge_bench.gql_query (
+        name text primary key not null,
+        query text not null unique
+      );
+
+      create table if not exists hge_bench.cpu_info (
+        key text primary key not null,
+        info jsonb not null unique
+      );
+
+      create table if not exists hge_bench.results(
+        id serial primary key,
+        cpu_key text references hge_bench.cpu_info (key),
+        query_name text references hge_bench.gql_query (name) not null,
+        docker_image text,
+        version text,
+        postgres_version text,
+        server_shasum text,
+        time timestamptz not null default now(),
+        latency jsonb,
+        requests_per_sec jsonb,
+        constraint should_have_tag CHECK (docker_image is not null or version is not null)
+      );
+
+      create or replace view hge_bench.results_avg  as
+        select
+          avg( (requests_per_sec -> 'mean') :: real) as requests_per_sec,
+          avg ( (latency -> 'mean') :: real)/1000 as latency,
+          version, server_shasum, docker_image, query_name, cpu_key
+        from hge_bench.results
+        group by version, docker_image, query_name, cpu_key, server_shasum;
+
+- type: track_table
+  args:
+     schema: hge_bench
+     name: gql_query
+
+- type: track_table
+  args:
+     schema: hge_bench
+     name: results
+
+- type: track_table
+  args:
+     schema: hge_bench
+     name: cpu_info
+
+- type: track_table
+  args:
+     schema: hge_bench
+     name: results_avg
+
+- type: create_object_relationship
+  args:
+    table:
+      schema: hge_bench
+      name: results
+    name: query
+    using:
+      foreign_key_constraint_on: query_name
+
+- type: create_object_relationship
+  args:
+    table:
+      schema: hge_bench
+      name: results
+    name: cpu
+    using:
+      foreign_key_constraint_on: cpu_key

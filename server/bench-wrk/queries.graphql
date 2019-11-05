@@ -1,0 +1,128 @@
+
+# A query which carries a lot of data
+query rows_50_nesting_level_1 {
+  hge_events(limit: 50){
+    event_status
+    last_update
+    affiliations_events_by_event_id(limit: 2) {
+      affiliation{
+        publisher{
+          publisher_name
+        }
+      }
+    }
+  }
+}
+
+# Simple query which returns one row with its object foreign key relationship
+query one_row_nesting_level_1 {
+  hge_events_by_pk(id: 1) {
+    id
+    attendance
+    duration
+    event_status
+    last_update
+    publisher {
+      id
+      publisher_name
+    }
+  }
+}
+
+# Query with nesting level of 4
+query one_row_nesting_level_4 {
+  hge_baseball_action_plays_by_pk(id: 1) {
+    play_type
+    baseball_event_state {
+      current_state
+      pitcher {
+        person_key
+        publisher {
+          publisher_key
+        }
+      }
+    }
+  }
+}
+
+# Query with nesting level of 7
+query one_row_nesting_level_7 {
+  hge_baseball_action_plays_by_pk(id: 1) {
+    play_type
+    baseball_event_state {
+      current_state
+      pitcher {
+        person_key
+        publisher {
+          publisher_key
+          persons_by_publisher_id(limit: 1){
+            person_key
+            baseball_event_states_by_batter_id {
+              current_state
+              event {
+                event_status
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+# Remote query
+query remote_one_row {
+  remote_hge_events_by_pk(id: 1) {
+    id
+    attendance
+    duration
+    event_status
+    last_update
+    publisher {
+      id
+      publisher_name
+    }
+  }
+}
+
+# Remote query with two top level fields
+query remote_two_fields {
+  events_1: remote_hge_events_by_pk(id: 1) {
+    id
+    attendance
+    duration
+    event_status
+    last_update
+    publisher {
+      id
+      publisher_name
+    }
+  }
+
+  events_2: remote_hge_events_by_pk(id: 2) {
+    id
+    attendance
+    duration
+    event_status
+    last_update
+    publisher {
+      id
+      publisher_name
+    }
+  }
+}
+
+# Remote query lot of data
+query remote_50_rows {
+  remote_hge_events(limit: 50){
+    event_status
+    last_update
+    affiliations_events_by_event_id(limit: 2) {
+      affiliation{
+        publisher{
+          publisher_name
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,4 @@
+FROM alpine:3.10.3
+MAINTAINER nizar@hasura.io
+
+RUN apk add  wrk lua5.1-cjson

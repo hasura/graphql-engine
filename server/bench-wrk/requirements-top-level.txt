@@ -1,0 +1,13 @@
+requests-cache
+ruamel.yaml
+docker
+psycopg2
+colorama
+inflection
+py-cpuinfo
+dash
+dash-renderer
+dash-html-components
+dash-core-components
+plotly
+graphene==3.0.dev20190817210753
