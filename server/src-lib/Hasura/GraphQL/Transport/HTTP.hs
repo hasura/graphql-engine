@@ -30,7 +30,7 @@ runGQ reqId userInfo reqHdrs req = do
               userInfo sqlGenCtx enableAL sc scVer req
   case execPlan of
     E.GExPHasura resolvedOp ->
-      flip HttpResponse Nothing <$> runHasuraGQ reqId req userInfo resolvedOp
+      runHasuraGQ reqId req userInfo resolvedOp
     E.GExPRemote rsi opDef  ->
       E.execRemoteGQ reqId userInfo reqHdrs req rsi opDef
 
@@ -43,7 +43,7 @@ runHasuraGQ
   -> GQLReqUnparsed
   -> UserInfo
   -> E.ExecOp
-  -> m EncJSON
+  -> m (HttpResponse EncJSON)
 runHasuraGQ reqId query userInfo resolvedOp = do
   E.ExecutionCtx logger _ pgExecCtx _ _ _ _ _ <- ask
   respE <- liftIO $ runExceptT $ case resolvedOp of
@@ -59,4 +59,10 @@ runHasuraGQ reqId query userInfo resolvedOp = do
       throw400 UnexpectedPayload
       "subscriptions are not supported over HTTP, use websockets instead"
   resp <- liftEither respE
-  return $ encodeGQResp $ GQSuccess $ encJToLBS resp
+  let encodedResp = encodeGQResp $ GQSuccess $ encJToLBS resp
+  return $ HttpResponse encodedResp Nothing eTagConf
+  where
+    eTagConf = case resolvedOp of
+      E.ExOpQuery _ _  -> ETCUseETag
+      E.ExOpMutation _ -> ETCDonotUseETag
+      E.ExOpSubs _     -> ETCDonotUseETag

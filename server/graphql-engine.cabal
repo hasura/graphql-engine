@@ -183,6 +183,7 @@ library
                      , Hasura.Server.App
                      , Hasura.Server.Auth
                      , Hasura.Server.Auth.JWT
+                     , Hasura.Server.ETag
                      , Hasura.Server.Init
                      , Hasura.Server.Context
                      , Hasura.Server.Middleware

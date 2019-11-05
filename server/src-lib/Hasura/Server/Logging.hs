@@ -35,6 +35,7 @@ import           Hasura.Logging            (EngineLogType (..))
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Compression
+import           Hasura.Server.ETag        (ETag)
 import           Hasura.Server.Utils
 
 import qualified Hasura.Logging            as L
@@ -126,16 +127,18 @@ data HttpInfoLog
   , hlPath        :: !T.Text
   , hlHttpVersion :: !N.HttpVersion
   , hlCompression :: !(Maybe CompressionType)
+  , hlETag        :: !(Maybe ETag)
   } deriving (Show, Eq)
 
 instance ToJSON HttpInfoLog where
-  toJSON (HttpInfoLog st met src path hv compressTypeM) =
+  toJSON (HttpInfoLog st met src path hv compressTypeM eTagM) =
     object [ "status" .= N.statusCode st
            , "method" .= met
            , "ip" .= src
            , "url" .= path
            , "http_version" .= show hv
            , "content_encoding" .= (compressionTypeToTxt <$> compressTypeM)
+           , "e_tag" .= eTagM
            ]
 
 -- | Information about a GraphQL/Hasura metadata operation over HTTP
@@ -174,11 +177,12 @@ mkHttpAccessLog
   :: Maybe UserInfo -- may not have been resolved
   -> RequestId
   -> Wai.Request
-  -> BL.ByteString
+  -> Int64
   -> Maybe (UTCTime, UTCTime)
   -> Maybe CompressionType
+  -> Maybe ETag
   -> HttpLog
-mkHttpAccessLog userInfoM reqId req res mTimeT compressTypeM =
+mkHttpAccessLog userInfoM reqId req respSize mTimeT compressTypeM eTagM =
   let http = HttpInfoLog
              { hlStatus       = status
              , hlMethod       = bsToTxt $ Wai.requestMethod req
@@ -186,11 +190,12 @@ mkHttpAccessLog userInfoM reqId req res mTimeT compressTypeM =
              , hlPath         = bsToTxt $ Wai.rawPathInfo req
              , hlHttpVersion  = Wai.httpVersion req
              , hlCompression  = compressTypeM
+             , hlETag         = eTagM
              }
       op = OperationLog
            { olRequestId    = reqId
            , olUserVars     = userVars <$> userInfoM
-           , olResponseSize = respSize
+           , olResponseSize = Just respSize
            , olQueryExecutionTime = respTime
            , olQuery = Nothing
            , olRawQuery = Nothing
@@ -199,7 +204,6 @@ mkHttpAccessLog userInfoM reqId req res mTimeT compressTypeM =
   in HttpLog L.LevelInfo $ HttpAccessLog http op
   where
     status = N.status200
-    respSize = Just $ BL.length res
     respTime = computeTimeDiff mTimeT
 
 mkHttpErrorLog
@@ -219,6 +223,7 @@ mkHttpErrorLog userInfoM reqId req err query mTimeT compressTypeM =
              , hlPath         = bsToTxt $ Wai.rawPathInfo req
              , hlHttpVersion  = Wai.httpVersion req
              , hlCompression  = compressTypeM
+             , hlETag         = Nothing
              }
       op = OperationLog
            { olRequestId          = reqId

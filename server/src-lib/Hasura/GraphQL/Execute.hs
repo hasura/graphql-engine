@@ -387,7 +387,8 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
   resp <- either httpThrow return res
   let cookieHdrs = getCookieHdr (resp ^.. Wreq.responseHeader "Set-Cookie")
       respHdrs  = Just $ mkRespHeaders cookieHdrs
-  return $ HttpResponse (encJFromLBS $ resp ^. Wreq.responseBody) respHdrs
+      eTagConf = if opTy == G.OperationTypeQuery then ETCUseETag else ETCDonotUseETag
+  return $ HttpResponse (encJFromLBS $ resp ^. Wreq.responseBody) respHdrs eTagConf
 
   where
     RemoteSchemaInfo url hdrConf fwdClientHdrs timeout = rsi

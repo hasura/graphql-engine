@@ -53,6 +53,7 @@ import           Hasura.Server.Compression
 import           Hasura.Server.Config                   (runGetConfig)
 import           Hasura.Server.Context
 import           Hasura.Server.Cors
+import           Hasura.Server.ETag
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
 import           Hasura.Server.Middleware               (corsMiddleware)
@@ -193,13 +194,14 @@ logSuccess
   -> Maybe UserInfo
   -> RequestId
   -> Wai.Request
-  -> BL.ByteString
+  -> Int64
   -> Maybe (UTCTime, UTCTime)
   -> Maybe CompressionType
+  -> Maybe ETag
   -> m ()
-logSuccess logger userInfoM reqId httpReq res qTime cType =
+logSuccess logger userInfoM reqId httpReq respSize qTime cType eTag =
   liftIO $ L.unLogger logger $
-  mkHttpAccessLog userInfoM reqId httpReq res qTime cType
+  mkHttpAccessLog userInfoM reqId httpReq respSize qTime cType eTag
 
 logError
   :: (MonadIO m)
@@ -278,21 +280,42 @@ mkSpockAction qErrEncoder qErrModifier serverCtx apiHandler = do
 
     logSuccessAndResp userInfo reqId req result qTime =
       case result of
-        JSONResp (HttpResponse encJson h) ->
-          possiblyCompressedLazyBytes userInfo reqId req qTime (encJToLBS encJson) $
+        JSONResp (HttpResponse encJson h eTagConfig) ->
+          withETagAndPossibleCompression eTagConfig userInfo reqId req qTime (encJToLBS encJson) $
             pure jsonHeader <> mkHeaders h
-        RawResp (HttpResponse rawBytes h) ->
-          possiblyCompressedLazyBytes userInfo reqId req qTime rawBytes $ mkHeaders h
+        RawResp (HttpResponse rawBytes h eTagConfig) ->
+          withETagAndPossibleCompression eTagConfig userInfo reqId req qTime rawBytes $ mkHeaders h
 
-    possiblyCompressedLazyBytes userInfo reqId req qTime respBytes respHeaders = do
-      let (compressedResp, mEncodingHeader, mCompressionType) =
-            compressResponse (requestHeaders req) respBytes
-          encodingHeader = maybe [] pure mEncodingHeader
-          reqIdHeader = (requestIdHeader, unRequestId reqId)
-          allRespHeaders = pure reqIdHeader <> encodingHeader <> respHeaders
-      logSuccess logger userInfo reqId req compressedResp qTime mCompressionType
-      mapM_ (uncurry setHeader) allRespHeaders
-      lazyBytes compressedResp
+    withETagAndPossibleCompression eTagConfig userInfo reqId req qTime respBytes respHeaders =
+      case eTagConfig of
+        ETCUseETag      -> withETag
+        ETCDonotUseETag -> withPossibleCompression Nothing
+      where
+        reqHeaders = requestHeaders req
+        setETagHeader = setHeader eTagHeader . unETag
+
+        withETag = do
+          let eTag = generateETag respBytes
+          if shouldSendResponse reqHeaders eTag then
+             withPossibleCompression $ Just eTag
+          else do
+            logSuccess logger userInfo reqId req 0 qTime Nothing (Just eTag)
+            setStatus N.status304
+            setETagHeader eTag
+
+        withPossibleCompression mETag = do
+          let  (compressedResp, mEncodingHeader, mCompressionType) =
+                  compressResponse reqHeaders respBytes
+               encodingHeader = maybe [] pure mEncodingHeader
+               reqIdHeader = (requestIdHeader, unRequestId reqId)
+               allRespHeaders = pure reqIdHeader <> encodingHeader <> respHeaders
+               respSize = BL.length compressedResp
+          logSuccess logger userInfo reqId req respSize qTime mCompressionType mETag
+          mapM_ setETagHeader mETag
+          mapM_ (uncurry setHeader) allRespHeaders
+          lazyBytes compressedResp
+
+
 
     mkHeaders = maybe [] (map unHeader)
 
@@ -302,7 +325,7 @@ v1QueryHandler query = do
   logger <- scLogger . hcServerCtx <$> ask
   res <- bool (fst <$> dbAction) (withSCUpdate scRef logger dbAction) $
          queryNeedsReload query
-  return $ HttpResponse res Nothing
+  return $ HttpResponse res Nothing ETCDonotUseETag
   where
     -- Hit postgres
     dbAction = do
@@ -346,14 +369,14 @@ gqlExplainHandler query = do
   sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
   enableAL <- scEnableAllowlist . hcServerCtx <$> ask
   res <- GE.explainGQLQuery pgExecCtx sc sqlGenCtx enableAL query
-  return $ HttpResponse res Nothing
+  return $ HttpResponse res Nothing ETCDonotUseETag
 
 v1Alpha1PGDumpHandler :: PGD.PGDumpReqBody -> Handler APIResp
 v1Alpha1PGDumpHandler b = do
   onlyAdmin
   ci <- scConnInfo . hcServerCtx <$> ask
   output <- PGD.execPGDump b ci
-  return $ RawResp $ HttpResponse output (Just [Header sqlHeader])
+  return $ RawResp $ HttpResponse output (Just [Header sqlHeader]) ETCDonotUseETag
 
 consoleAssetsHandler :: L.Logger -> Text -> FilePath -> ActionT IO ()
 consoleAssetsHandler logger dir path = do
@@ -548,7 +571,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
         mkGetHandler $ do
           onlyAdmin
           let res = encJFromJValue $ runGetConfig (scAuthMode serverCtx)
-          return $ JSONResp $ HttpResponse res Nothing
+          return $ onlyJsonResponse res
 
     when enableGraphQL $ do
       post "v1alpha1/graphql/explain" gqlExplainAction
@@ -566,22 +589,22 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
         mkGetHandler $ do
           onlyAdmin
           respJ <- liftIO $ EKG.sampleAll $ scEkgStore serverCtx
-          return $ JSONResp $ HttpResponse (encJFromJValue $ EKG.sampleToJson respJ) Nothing
+          return $ onlyJsonResponse $ encJFromJValue $ EKG.sampleToJson respJ
       get "dev/plan_cache" $ mkSpockAction encodeQErr id serverCtx $
         mkGetHandler $ do
           onlyAdmin
           respJ <- liftIO $ E.dumpPlanCache $ scPlanCache serverCtx
-          return $ JSONResp $ HttpResponse (encJFromJValue respJ) Nothing
+          return $ onlyJsonResponse $ encJFromJValue respJ
       get "dev/subscriptions" $ mkSpockAction encodeQErr id serverCtx $
         mkGetHandler $ do
           onlyAdmin
           respJ <- liftIO $ EL.dumpLiveQueriesState False $ scLQState serverCtx
-          return $ JSONResp $ HttpResponse (encJFromJValue respJ) Nothing
+          return $ onlyJsonResponse $ encJFromJValue respJ
       get "dev/subscriptions/extended" $ mkSpockAction encodeQErr id serverCtx $
         mkGetHandler $ do
           onlyAdmin
           respJ <- liftIO $ EL.dumpLiveQueriesState True $ scLQState serverCtx
-          return $ JSONResp $ HttpResponse (encJFromJValue respJ) Nothing
+          return $ onlyJsonResponse $ encJFromJValue respJ
 
     forM_ [GET,POST] $ \m -> hookAny m $ \_ -> do
       let qErr = err404 NotFound "resource does not exist"
@@ -589,6 +612,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
 
   where
     logger = scLogger serverCtx
+    onlyJsonResponse bs = JSONResp $ HttpResponse bs Nothing ETCDonotUseETag
 
     -- all graphql errors should be of type 200
     allMod200 qe = qe { qeStatus = N.status200 }
