@@ -19,9 +19,9 @@ export const checkSchemaModification = _sql => {
 
   sqlStatements.forEach(statement => {
     if (
-      statement.startsWith('create') ||
-      statement.startsWith('alter') ||
-      statement.startsWith('drop')
+      statement.startsWith('create ') ||
+      statement.startsWith('alter ') ||
+      statement.startsWith('drop ')
     ) {
       _isSchemaModification = true;
     }
