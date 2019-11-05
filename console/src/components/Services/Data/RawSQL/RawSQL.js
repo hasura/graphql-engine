@@ -62,14 +62,26 @@ const RawSQL = ({
     </Tooltip>
   );
 
-  const isSchemaModification = _sql => {
-    const formattedSQL = _sql.toLowerCase();
+  // detect DDL statements in SQL
+  const checkSchemaModification = _sql => {
+    let _isSchemaModification = false;
 
-    return (
-      formattedSQL.includes('create') ||
-      formattedSQL.includes('alter') ||
-      formattedSQL.includes('drop')
-    );
+    const sqlStatements = _sql
+      .toLowerCase()
+      .split(';')
+      .map(s => s.trim());
+
+    sqlStatements.forEach(statement => {
+      if (
+        statement.startsWith('create') ||
+        statement.startsWith('alter') ||
+        statement.startsWith('drop')
+      ) {
+        _isSchemaModification = true;
+      }
+    });
+
+    return _isSchemaModification;
   };
 
   const submitSQL = () => {
@@ -84,7 +96,7 @@ const RawSQL = ({
       }
       if (!isMigration && globals.consoleMode === CLI_CONSOLE_MODE) {
         // if migration is not checked, check if is schema modification
-        if (isSchemaModification(sql)) {
+        if (checkSchemaModification(sql)) {
           dispatch(modalOpen());
           const confirmation = false;
           if (confirmation) {
@@ -166,7 +178,7 @@ const RawSQL = ({
       dispatch({ type: SET_SQL, data: val });
 
       // set migration checkbox true
-      if (isSchemaModification(val)) {
+      if (checkSchemaModification(val)) {
         dispatch({ type: SET_MIGRATION_CHECKED, data: true });
       } else {
         dispatch({ type: SET_MIGRATION_CHECKED, data: false });
