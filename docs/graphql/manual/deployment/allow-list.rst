@@ -1,3 +1,5 @@
+.. _allow-list:
+
 Allow-list for queries
 ======================
 
