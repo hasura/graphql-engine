@@ -1,3 +1,5 @@
+import globals from '../Globals';
+
 const semver = require('semver');
 
 export const FT_JWT_ANALYZER = 'JWTAnalyzer';
@@ -46,4 +48,10 @@ export const versionGT = (version1, version2) => {
     console.error(e);
     return false;
   }
+};
+
+export const checkFeatureSupport = feature => {
+  return (
+    globals.featuresCompatibility && globals.featuresCompatibility[feature]
+  );
 };

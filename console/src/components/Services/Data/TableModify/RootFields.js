@@ -2,6 +2,7 @@ import React from 'react';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import RootFieldEditor from '../Common/ReusableComponents/RootFieldEditor';
 import { modifyRootFields, setCustomRootFields } from './ModifyActions';
+import { isEmpty } from '../../../Common/utils/jsUtils';
 
 const RootFields = ({
   existingRootFields,
@@ -21,39 +22,50 @@ const RootFields = ({
     dispatch(modifyRootFields(newRootFields));
   };
 
-  const note =
-    'You can customize the GraphQL root fields associated with this table.';
+  const collapsedLabel = () => {
+    const customRootFieldsLabel = [];
 
-  const rootFields = (aliases, disabled) => {
-    return (
-      <RootFieldEditor
-        aliases={aliases}
-        disabled={disabled}
-        selectOnChange={e => {
-          onChange('select', e.target.value);
-        }}
-        selectByPkOnChange={e => {
-          onChange('select_by_pk', e.target.value);
-        }}
-        selectAggOnChange={e => {
-          onChange('select_aggregate', e.target.value);
-        }}
-        insertOnChange={e => {
-          onChange('insert', e.target.value);
-        }}
-        updateOnChange={e => {
-          onChange('update', e.target.value);
-        }}
-        deleteOnChange={e => {
-          onChange('delete', e.target.value);
-        }}
-        tableName={tableName}
-      />
-    );
+    Object.keys(existingRootFields).forEach(rootField => {
+      const customRootField = existingRootFields[rootField];
+      if (customRootField) {
+        customRootFieldsLabel.push(
+          <span key={rootField}>
+            {!isEmpty(customRootFieldsLabel) && ', '}
+            <i>{rootField}</i> &rarr; {customRootField}
+          </span>
+        );
+      }
+    });
+
+    return isEmpty(customRootFieldsLabel)
+      ? 'No root fields changed'
+      : customRootFieldsLabel;
   };
 
-  const editorExpanded = () => rootFields(rootFieldsEdit, false);
-  const editorCollapsed = () => rootFields(existingRootFields, true);
+  const editorExpanded = () => (
+    <RootFieldEditor
+      tableName={tableName}
+      aliases={rootFieldsEdit}
+      selectOnChange={e => {
+        onChange('select', e.target.value);
+      }}
+      selectByPkOnChange={e => {
+        onChange('select_by_pk', e.target.value);
+      }}
+      selectAggOnChange={e => {
+        onChange('select_aggregate', e.target.value);
+      }}
+      insertOnChange={e => {
+        onChange('insert', e.target.value);
+      }}
+      updateOnChange={e => {
+        onChange('update', e.target.value);
+      }}
+      deleteOnChange={e => {
+        onChange('delete', e.target.value);
+      }}
+    />
+  );
 
   const expandCallback = () => {
     setRootFieldsBulk(existingRootFields);
@@ -63,12 +75,9 @@ const RootFields = ({
     dispatch(setCustomRootFields(toggleEditor));
   };
 
-  const collapsedLabel = () => <i>{note}</i>;
-
   return (
     <ExpandableEditor
       editorExpanded={editorExpanded}
-      editorCollapsed={editorCollapsed}
       expandCallback={expandCallback}
       collapsedLabel={collapsedLabel}
       saveFunc={saveFunc}

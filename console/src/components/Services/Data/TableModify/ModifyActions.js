@@ -1,5 +1,4 @@
 import requestAction from '../../../../utils/requestAction';
-import globals from '../../../../Globals';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
 import {
@@ -48,11 +47,10 @@ import {
   getDropPkSql,
   sanitiseRootFields,
 } from './utils';
-import { GRAPHQL_ALIASING_SUPPORT } from '../../../../helpers/versionUtils';
-
-export const SUPPORT_GRAPHQL_ALIASING =
-  globals.featuresCompatibility &&
-  globals.featuresCompatibility[GRAPHQL_ALIASING_SUPPORT];
+import {
+  checkFeatureSupport,
+  GRAPHQL_ALIASING_SUPPORT,
+} from '../../../../helpers/versionUtils';
 
 const DELETE_PK_WARNING =
   'Without a primary key there is no way to uniquely identify a row of a table';
@@ -1613,7 +1611,7 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
         : [];
 
     /* column alias up/down migration*/
-    if (SUPPORT_GRAPHQL_ALIASING) {
+    if (checkFeatureSupport(GRAPHQL_ALIASING_SUPPORT)) {
       const existingCustomColumnNames = getTableCustomColumnNames(table);
       const existingRootFields = getTableCustomRootFields(table);
       const newCustomColumnNames = { ...existingCustomColumnNames };

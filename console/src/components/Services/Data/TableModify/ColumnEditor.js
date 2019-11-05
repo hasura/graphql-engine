@@ -4,6 +4,11 @@ import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSele
 import CustomInputAutoSuggest from '../../../Common/CustomInputAutoSuggest/CustomInputAutoSuggest';
 
 import { getValidAlterOptions } from './utils';
+import Tooltip from '../../../Common/Tooltip/Tooltip';
+import {
+  checkFeatureSupport,
+  GRAPHQL_ALIASING_SUPPORT,
+} from '../../../../helpers/versionUtils';
 
 const ColumnEditor = ({
   onSubmit,
@@ -13,7 +18,6 @@ const ColumnEditor = ({
   editColumn,
   alterTypeOptions,
   defaultOptions,
-  supportAliasing,
 }) => {
   const colName = columnProperties.name;
 
@@ -58,30 +62,36 @@ const ColumnEditor = ({
   const updateColumnType = selected => {
     dispatch(editColumn(colName, 'type', selected.value));
   };
-  const updateColumnAlias = e => {
-    dispatch(editColumn(colName, 'alias', e.target.value));
-  };
-  const updateColumnDef = (e, data) => {
-    const { newValue } = data;
-    dispatch(editColumn(colName, 'default', newValue));
-  };
-  const updateColumnComment = e => {
-    dispatch(editColumn(colName, 'comment', e.target.value));
-  };
   const toggleColumnNullable = e => {
     dispatch(editColumn(colName, 'isNullable', e.target.value === 'true'));
   };
   const toggleColumnUnique = e => {
     dispatch(editColumn(colName, 'isUnique', e.target.value === 'true'));
   };
-
-  const labelClassName = supportAliasing ? 'col-xs-4' : 'col-xs-2';
+  const updateColumnDefault = (e, data) => {
+    const { newValue } = data;
+    dispatch(editColumn(colName, 'default', newValue));
+  };
+  const updateColumnComment = e => {
+    dispatch(editColumn(colName, 'comment', e.target.value));
+  };
+  const updateColumnAlias = e => {
+    dispatch(editColumn(colName, 'alias', e.target.value));
+  };
 
   const getColumnAliasInput = () => {
-    if (!supportAliasing) return;
+    if (!checkFeatureSupport(GRAPHQL_ALIASING_SUPPORT)) return;
+
     return (
       <div className={`${styles.display_flex} form-group`}>
-        <label className={labelClassName}>Custom GraphQL field</label>
+        <label className={'col-xs-4'}>
+          Custom GraphQL field
+          <Tooltip
+            message={
+              'Expose the column with a different name in the GraphQL API'
+            }
+          />
+        </label>
         <div className="col-xs-6">
           <input
             className="input-sm form-control"
@@ -103,7 +113,7 @@ const ColumnEditor = ({
         options={defaultOptions}
         className="input-sm form-control"
         value={selectedProperties[colName].default || ''}
-        onChange={updateColumnDef}
+        onChange={updateColumnDefault}
         type="text"
         disabled={columnProperties.pkConstraint}
         data-test="edit-col-default"
@@ -116,7 +126,7 @@ const ColumnEditor = ({
     <div className={`${styles.colEditor} container-fluid`}>
       <form className="form-horizontal" onSubmit={onSubmit}>
         <div className={`${styles.display_flex} form-group`}>
-          <label className={labelClassName}>Name</label>
+          <label className={'col-xs-4'}>Name</label>
           <div className="col-xs-6">
             <input
               className="input-sm form-control"
@@ -128,7 +138,7 @@ const ColumnEditor = ({
           </div>
         </div>
         <div className={`${styles.display_flex} form-group`}>
-          <label className={labelClassName}>Type</label>
+          <label className={'col-xs-4'}>Type</label>
           <div className="col-xs-6">
             <SearchableSelectBox
               options={alterOptions}
@@ -141,9 +151,8 @@ const ColumnEditor = ({
             />
           </div>
         </div>
-        {getColumnAliasInput()}
         <div className={`${styles.display_flex} form-group`}>
-          <label className={labelClassName}>Nullable</label>
+          <label className={'col-xs-4'}>Nullable</label>
           <div className="col-xs-6">
             <select
               className="input-sm form-control"
@@ -158,7 +167,7 @@ const ColumnEditor = ({
           </div>
         </div>
         <div className={`${styles.display_flex} form-group`}>
-          <label className={labelClassName}>Unique</label>
+          <label className={'col-xs-4'}>Unique</label>
           <div className="col-xs-6">
             <select
               className="input-sm form-control"
@@ -173,11 +182,11 @@ const ColumnEditor = ({
           </div>
         </div>
         <div className={`${styles.display_flex} form-group`}>
-          <label className={labelClassName}>Default</label>
+          <label className={'col-xs-4'}>Default</label>
           <div className="col-xs-6">{getColumnDefaultInput()}</div>
         </div>
         <div className={`${styles.display_flex} form-group`}>
-          <label className={labelClassName}>Comment</label>
+          <label className={'col-xs-4'}>Comment</label>
           <div className="col-xs-6">
             <input
               className="input-sm form-control"
@@ -188,6 +197,7 @@ const ColumnEditor = ({
             />
           </div>
         </div>
+        {getColumnAliasInput()}
       </form>
       <div className="row">
         <br />

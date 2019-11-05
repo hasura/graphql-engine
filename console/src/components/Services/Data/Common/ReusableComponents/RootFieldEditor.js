@@ -1,6 +1,7 @@
 import React from 'react';
 import styles from '../../../../Common/Common.scss';
 import { getRootFieldLabel } from './utils';
+import CollapsibleToggle from '../../../../Common/CollapsibleToggle/CollapsibleToggle';
 
 const RootFieldEditor = ({
   aliases,
@@ -52,26 +53,26 @@ const RootFieldEditor = ({
   const getSection = rfType => {
     return (
       <div className={`${styles.add_mar_bottom_mid}`}>
-        <div
-          className={`${styles.add_mar_bottom_small} ${styles.display_flex}`}
+        <CollapsibleToggle
+          title={rfType === 'query' ? 'Query and Subscription' : 'Mutation'}
+          useDefaultTitleStyle
+          isOpen
         >
-          <i className={`fa fa-chevron-right ${styles.add_mar_right}`} />
-          <b>{rfType === 'query' ? 'Query and Subscription' : 'Mutation'}</b>
-        </div>
-        {rfType === 'query' && (
-          <div className={`${styles.add_pad_left} ${styles.add_pad_right}`}>
-            {getRow('select', select, selectOnChange)}
-            {getRow('select_by_pk', selectByPk, selectByPkOnChange)}
-            {getRow('select_aggregate', selectAgg, selectAggOnChange)}
-          </div>
-        )}
-        {rfType === 'mutation' && (
-          <div className={`${styles.add_pad_left} ${styles.add_pad_right}`}>
-            {getRow('insert', insert, insertOnChange)}
-            {getRow('update', update, updateOnChange)}
-            {getRow('delete', _delete, deleteOnChange)}
-          </div>
-        )}
+          {rfType === 'query' && (
+            <div className={`${styles.add_pad_left} ${styles.add_pad_right}`}>
+              {getRow('select', select, selectOnChange)}
+              {getRow('select_by_pk', selectByPk, selectByPkOnChange)}
+              {getRow('select_aggregate', selectAgg, selectAggOnChange)}
+            </div>
+          )}
+          {rfType === 'mutation' && (
+            <div className={`${styles.add_pad_left} ${styles.add_pad_right}`}>
+              {getRow('insert', insert, insertOnChange)}
+              {getRow('update', update, updateOnChange)}
+              {getRow('delete', _delete, deleteOnChange)}
+            </div>
+          )}
+        </CollapsibleToggle>
       </div>
     );
   };

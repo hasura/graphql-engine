@@ -4,7 +4,11 @@ import TableHeader from '../TableCommon/TableHeader';
 
 import { getAllDataTypeMap } from '../Common/utils';
 
-import { TABLE_ENUMS_SUPPORT } from '../../../../helpers/versionUtils';
+import {
+  checkFeatureSupport,
+  GRAPHQL_ALIASING_SUPPORT,
+  TABLE_ENUMS_SUPPORT,
+} from '../../../../helpers/versionUtils';
 import globals from '../../../../Globals';
 
 import {
@@ -13,7 +17,6 @@ import {
   RESET,
   setUniqueKeys,
   toggleTableAsEnum,
-  SUPPORT_GRAPHQL_ALIASING,
 } from '../TableModify/ModifyActions';
 import {
   setTable,
@@ -44,6 +47,7 @@ import {
   getTableCustomRootFields,
   getTableCustomColumnNames,
 } from '../../../Common/utils/pgUtils';
+import Tooltip from '../../../Common/Tooltip/Tooltip';
 
 class ModifyTable extends React.Component {
   componentDidMount() {
@@ -52,11 +56,13 @@ class ModifyTable extends React.Component {
     dispatch(setTable(this.props.tableName));
     dispatch(fetchColumnTypeInfo());
   }
+
   componentWillUnmount() {
     this.props.dispatch({
       type: RESET_COLUMN_TYPE_INFO,
     });
   }
+
   render() {
     const {
       tableName,
@@ -150,13 +156,20 @@ class ModifyTable extends React.Component {
 
     // if (table.primary_key.columns > 0) {}
     const getTableRootFieldsSection = () => {
-      if (!SUPPORT_GRAPHQL_ALIASING) return null;
+      if (!checkFeatureSupport(GRAPHQL_ALIASING_SUPPORT)) return null;
 
       const existingRootFields = getTableCustomRootFields(table);
 
       return (
         <React.Fragment>
-          <h4 className={styles.subheading_text}>Custom GraphQL Root Fields</h4>
+          <h4 className={styles.subheading_text}>
+            Custom GraphQL Root Fields
+            <Tooltip
+              message={
+                'Change the root fields for the table in the GraphQL API'
+              }
+            />
+          </h4>
           <RootFields
             existingRootFields={existingRootFields}
             rootFieldsEdit={rootFieldsEdit}
@@ -214,7 +227,6 @@ class ModifyTable extends React.Component {
               columnDefaultFunctions={columnDefaultFunctions}
             />
             <hr />
-            {getTableRootFieldsSection()}
             <h4 className={styles.subheading_text}>Primary Key</h4>
             <PrimaryKeyEditor
               tableSchema={table}
@@ -252,6 +264,7 @@ class ModifyTable extends React.Component {
               dispatch={dispatch}
             />
             <hr />
+            {getTableRootFieldsSection()}
             {getEnumsSection()}
             {untrackBtn}
             {deleteBtn}

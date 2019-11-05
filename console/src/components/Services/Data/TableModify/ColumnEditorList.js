@@ -22,7 +22,10 @@ import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/Gql
 
 import styles from './ModifyTable.scss';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
-import { SUPPORT_GRAPHQL_ALIASING } from './ModifyActions';
+import {
+  checkFeatureSupport,
+  GRAPHQL_ALIASING_SUPPORT,
+} from '../../../../helpers/versionUtils';
 
 const ColumnEditorList = ({
   tableSchema,
@@ -81,7 +84,7 @@ const ColumnEditorList = ({
       comment: col.comment || '',
     };
 
-    if (SUPPORT_GRAPHQL_ALIASING) {
+    if (checkFeatureSupport(GRAPHQL_ALIASING_SUPPORT)) {
       columnProperties.alias = customColumnNames[colName] || '';
     }
 
@@ -209,9 +212,9 @@ const ColumnEditorList = ({
      *  "Data type",
      *  "User friendly name of the data type",
      *  "Description of the data type",
-     *  "Comma seperated castable data types",
-     *  "Comma seperated user friendly names of the castable data types",
-     *  "Colon seperated user friendly description of the castable data types"
+     *  "Comma separated castable data types",
+     *  "Comma separated user friendly names of the castable data types",
+     *  "Colon separated user friendly description of the castable data types"
      *  ]
      * */
 
@@ -227,7 +230,6 @@ const ColumnEditorList = ({
           currentSchema={currentSchema}
           columnProperties={columnProperties}
           selectedProperties={columnEdit}
-          supportAliasing={SUPPORT_GRAPHQL_ALIASING}
           editColumn={editColumn}
         />
       );
