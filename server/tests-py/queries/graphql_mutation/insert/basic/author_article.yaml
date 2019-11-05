@@ -60,15 +60,15 @@
     data:
       insert_article:
         returning:
-        - content: Sample article content
-          id: 1
+        - id: 1
           title: Article 1
-        - content: Sample article content
-          id: 2
+          content: Sample article content
+        - id: 2
           title: Article 2
-        - content: Sample article content
-          id: 3
+          content: Sample article content
+        - id: 3
           title: Article 3
+          content: Sample article content
   status: 200
   query:
     query: |

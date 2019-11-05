@@ -1,4 +1,4 @@
-import yaml
+import ruamel.yaml as yaml
 from validate import check_query_f
 from super_classes import DefaultTestSelectQueries, DefaultTestQueries, DefaultTestMutations
 
