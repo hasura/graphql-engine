@@ -42,7 +42,7 @@ track_function v2
 Version 2 of ``track_function`` is used to add a custom SQL function to the GraphQL schema with configuration.
 Also refer a note :ref:`here <note>`.
 
-Add a SQL function ``search_articles`` with hasura session argument.
+Add an SQL function called ``search_articles`` with a Hasura session argument.
 
 .. code-block:: http
 
