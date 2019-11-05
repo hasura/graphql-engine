@@ -6,6 +6,7 @@ import 'brace/mode/sql';
 import Modal from '../../../Common/Modal/Modal';
 import Button from '../../../Common/Button/Button';
 import { parseCreateSQL } from './utils';
+import { checkSchemaModification } from '../../../Common/utils/sqlUtils';
 
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
@@ -61,28 +62,6 @@ const RawSQL = ({
       them over the GraphQL API
     </Tooltip>
   );
-
-  // detect DDL statements in SQL
-  const checkSchemaModification = _sql => {
-    let _isSchemaModification = false;
-
-    const sqlStatements = _sql
-      .toLowerCase()
-      .split(';')
-      .map(s => s.trim());
-
-    sqlStatements.forEach(statement => {
-      if (
-        statement.startsWith('create') ||
-        statement.startsWith('alter') ||
-        statement.startsWith('drop')
-      ) {
-        _isSchemaModification = true;
-      }
-    });
-
-    return _isSchemaModification;
-  };
 
   const submitSQL = () => {
     // check migration mode global
@@ -185,7 +164,7 @@ const RawSQL = ({
       }
 
       // set track this checkbox true
-      const objects = parseCreateSQL(val, true);
+      const objects = parseCreateSQL(val);
       if (objects.length) {
         let allObjectsTrackable = true;
 
