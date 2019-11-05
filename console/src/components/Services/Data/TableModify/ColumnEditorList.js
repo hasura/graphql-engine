@@ -159,7 +159,9 @@ const ColumnEditorList = ({
         <div key={colName}>
           <b>
             {colName}
-            {customColumnNames[colName] && ` (${customColumnNames[colName]})`}
+            <i>
+              {customColumnNames[colName] && ` → ${customColumnNames[colName]}`}
+            </i>
           </b>{' '}
           {gqlCompatibilityWarning()} - {keyProperties()}
         </div>
