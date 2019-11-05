@@ -10,3 +10,5 @@ jsondiff
 cryptography
 graphene
 brotlipy
+ruamel.yaml < 0.15
+graphql-core
