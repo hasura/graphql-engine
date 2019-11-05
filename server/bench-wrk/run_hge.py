@@ -26,7 +26,7 @@ class HGE:
         'HASURA_GRAPHQL_ENABLE_TELEMETRY': 'false',
         'EVENT_WEBHOOK_HEADER': "MyEnvValue",
         'HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES': 'true',
-        'HASURA_GRAPHQL_CONSOLE_ASSETS_DIR' :  '../../../console/static/dist/',
+        'HASURA_GRAPHQL_CONSOLE_ASSETS_DIR' :  '../../console/static/dist/',
         'HASURA_GRAPHQL_ENABLE_CONSOLE' : 'true'
     }
 
