@@ -1,8 +1,10 @@
 // import GraphiQL parts
 import {
-  HASURA_CONSOLE_GRAPHIQL_HEADERS,
-  setGraphiQLHeadersInLocalStorage,
-  getGraphiQLHeadersFromLocalStorage,
+  persistGraphiQLHeaders,
+  getPersistedGraphiQLHeaders,
+  // HASURA_CONSOLE_GRAPHIQL_HEADERS,
+  // setGraphiQLHeadersInLocalStorage,
+  // getGraphiQLHeadersFromLocalStorage,
 } from './src/components/Services/ApiExplorer/ApiRequest/utils';
 
 import GraphiQLWrapper from './src/components/Services/ApiExplorer/GraphiQLWrapper/GraphiQLWrapper';
@@ -45,7 +47,7 @@ import {
 
 // Api Explorer and other exports */
 
-import generatedApiExplorer from './src/components/Services/ApiExplorer/ApiExplorerGenerator';
+import generatedApiExplorer from './src/components/Services/ApiExplorer/ApiExplorer';
 import apiExplorerReducer from './src/components/Services/ApiExplorer/Actions';
 
 import generatedLoginConnector from './src/components/Login/Login';
@@ -67,18 +69,20 @@ export { Spinner, Button, CommonScss };
 
 // Meta data
 
-import metadataContainer from './src/components/Services/Metadata/Container';
-import metadataOptionsContainer from './src/components/Services/Metadata/MetadataOptions/MetadataOptions';
-import metadataStatusContainer from './src/components/Services/Metadata/MetadataStatus/MetadataStatus';
-import allowedQueriesContainer from './src/components/Services/Metadata/AllowedQueries/AllowedQueries';
+import metadataContainer from './src/components/Services/Settings/Container';
+import metadataOptionsContainer from './src/components/Services/Settings/MetadataOptions/MetadataOptions';
+import metadataStatusContainer from './src/components/Services/Settings/MetadataStatus/MetadataStatus';
+import allowedQueriesContainer from './src/components/Services/Settings/AllowedQueries/AllowedQueries';
+import logoutContainer from './src/components/Services/Settings/Logout/Logout';
+import aboutContainer from './src/components/Services/About/About';
 
 import {
   loadInconsistentObjects,
   redirectToMetadataStatus,
   isMetadataStatusPage,
-} from './src/components/Services/Metadata/Actions';
+} from './src/components/Services/Settings/Actions';
 
-import { metadataReducer } from './src/components/Services/Metadata/Actions';
+import { metadataReducer } from './src/components/Services/Settings/Actions';
 
 // import other globals
 // import routes from './src/routes';
@@ -99,9 +103,11 @@ export { telemetryReducer };
 
 // Export APIExplorer and entrypoints
 export {
-  HASURA_CONSOLE_GRAPHIQL_HEADERS,
-  setGraphiQLHeadersInLocalStorage,
-  getGraphiQLHeadersFromLocalStorage,
+  // HASURA_CONSOLE_GRAPHIQL_HEADERS,
+  // setGraphiQLHeadersInLocalStorage,
+  // getGraphiQLHeadersFromLocalStorage,
+  persistGraphiQLHeaders,
+  getPersistedGraphiQLHeaders,
   generatedApiExplorer,
   apiExplorerReducer,
   generatedLoginConnector,
@@ -118,6 +124,8 @@ export {
   loadInconsistentObjects,
   redirectToMetadataStatus,
   isMetadataStatusPage,
+  aboutContainer,
+  logoutContainer,
 };
 
 // export GraphiQL parts
