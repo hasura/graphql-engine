@@ -75,11 +75,11 @@ const ColumnEditor = ({
   const updateColumnComment = e => {
     dispatch(editColumn(colName, 'comment', e.target.value));
   };
-  const updateColumnAlias = e => {
-    dispatch(editColumn(colName, 'alias', e.target.value));
+  const updateColumnCustomField = e => {
+    dispatch(editColumn(colName, 'customFieldName', e.target.value));
   };
 
-  const getColumnAliasInput = () => {
+  const getColumnCustomFieldInput = () => {
     if (!checkFeatureSupport(CUSTOM_GRAPHQL_FIELDS_SUPPORT)) return;
 
     return (
@@ -95,10 +95,10 @@ const ColumnEditor = ({
         <div className="col-xs-6">
           <input
             className="input-sm form-control"
-            value={selectedProperties[colName].alias}
-            onChange={updateColumnAlias}
+            value={selectedProperties[colName].customFieldName}
+            onChange={updateColumnCustomField}
             type="text"
-            data-test="edit-col-alias"
+            data-test="edit-col-custom-field"
           />
         </div>
       </div>
@@ -197,7 +197,7 @@ const ColumnEditor = ({
             />
           </div>
         </div>
-        {getColumnAliasInput()}
+        {getColumnCustomFieldInput()}
       </form>
       <div className="row">
         <br />

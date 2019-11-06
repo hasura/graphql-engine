@@ -1534,7 +1534,7 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     const comment = columnEdit.comment || '';
     const newName = columnEdit.name;
     const currentSchema = columnEdit.schemaName;
-    const alias = columnEdit.alias;
+    const customFieldName = columnEdit.customFieldName;
     const checkIfFunctionFormat = isPostgresFunction(def);
     // ALTER TABLE <table> ALTER COLUMN <column> TYPE <column_type>;
     let defWithQuotes;
@@ -1610,24 +1610,24 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
         ]
         : [];
 
-    /* column alias up/down migration*/
+    /* column custom field up/down migration*/
     if (checkFeatureSupport(CUSTOM_GRAPHQL_FIELDS_SUPPORT)) {
       const existingCustomColumnNames = getTableCustomColumnNames(table);
       const existingRootFields = getTableCustomRootFields(table);
       const newCustomColumnNames = { ...existingCustomColumnNames };
-      let isAliasChanged = false;
-      if (alias) {
-        if (alias !== existingCustomColumnNames[colName]) {
-          isAliasChanged = true;
-          newCustomColumnNames[colName] = alias.trim();
+      let isCustomFieldNameChanged = false;
+      if (customFieldName) {
+        if (customFieldName !== existingCustomColumnNames[colName]) {
+          isCustomFieldNameChanged = true;
+          newCustomColumnNames[colName] = customFieldName.trim();
         }
       } else {
         if (existingCustomColumnNames[colName]) {
-          isAliasChanged = true;
+          isCustomFieldNameChanged = true;
           delete newCustomColumnNames[colName];
         }
       }
-      if (isAliasChanged) {
+      if (isCustomFieldNameChanged) {
         schemaChangesUp.push(
           getSetCustomRootFieldsQuery(
             tableDef,

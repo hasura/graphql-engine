@@ -16,10 +16,10 @@ const RootFields = ({
     dispatch(modifyRootFields(rf));
   };
 
-  const onChange = (field, alias) => {
+  const onChange = (field, customField) => {
     const newRootFields = {
       ...rootFieldsEdit,
-      [field]: alias,
+      [field]: customField,
     };
     dispatch(modifyRootFields(newRootFields));
   };
@@ -51,7 +51,7 @@ const RootFields = ({
   const editorExpanded = () => (
     <RootFieldEditor
       tableName={tableName}
-      aliases={rootFieldsEdit}
+      rootFields={rootFieldsEdit}
       selectOnChange={e => {
         onChange('select', e.target.value);
       }}
@@ -87,7 +87,7 @@ const RootFields = ({
       expandCallback={expandCallback}
       collapsedLabel={collapsedLabel}
       saveFunc={saveFunc}
-      property="root-field-alias"
+      property="custom-root-fields"
       service="modify-table"
       isCollapsable
     />

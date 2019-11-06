@@ -85,7 +85,7 @@ const ColumnEditorList = ({
     };
 
     if (checkFeatureSupport(CUSTOM_GRAPHQL_FIELDS_SUPPORT)) {
-      columnProperties.alias = customColumnNames[colName] || '';
+      columnProperties.customFieldName = customColumnNames[colName] || '';
     }
 
     const onSubmit = toggleEditor => {

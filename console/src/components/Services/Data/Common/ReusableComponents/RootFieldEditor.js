@@ -4,7 +4,7 @@ import { getRootFieldLabel } from './utils';
 import CollapsibleToggle from '../../../../Common/CollapsibleToggle/CollapsibleToggle';
 
 const RootFieldEditor = ({
-  aliases,
+  rootFields,
   disabled,
   selectOnChange,
   selectByPkOnChange,
@@ -21,7 +21,7 @@ const RootFieldEditor = ({
     insert,
     update,
     delete: _delete,
-  } = aliases;
+  } = rootFields;
 
   const getDefaultRootField = rfType => {
     if (rfType.includes('select')) {
