@@ -238,3 +238,19 @@ export const getSchemaTables = (allTables, tableSchema) => {
 export const getSchemaTableNames = (allTables, tableSchema) => {
   return getSchemaTables(allTables, tableSchema).map(t => getTableName(t));
 };
+
+/*** Custom table fields utils ***/
+
+export const getTableCustomRootFields = table => {
+  if (table.configuration) {
+    return table.configuration.custom_root_fields;
+  }
+  return {};
+};
+
+export const getTableCustomColumnNames = table => {
+  if (table.configuration) {
+    return table.configuration.custom_column_names;
+  }
+  return {};
+};
