@@ -146,7 +146,8 @@ jobs:
   # build the server binary, and package into docker image
   build_server:
     docker:
-    - image: hasura/graphql-engine-server-builder:20190826
+    - &server_builder_image
+      image: hasura/graphql-engine-server-builder:20191031
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
@@ -174,8 +175,8 @@ jobs:
             echo "Branch starts with dev or release, or tagged commit starts with v. Optimized build"
             make ci-binary
           else
-            echo "Non-release branch, non-optimized build with coverage"
-            BUILD_FLAGS="--fast --coverage" make ci-binary
+            echo "Non-release branch, build with coverage"
+            BUILD_FLAGS="--coverage" make ci-binary
           fi
     - run:
         name: Build the docker image
@@ -222,7 +223,7 @@ jobs:
     environment:
       PG_VERSION: "12"
     docker:
-    - image: hasura/graphql-engine-server-builder:20190826
+    - *server_builder_image
     - image: circleci/postgres:12-alpine-postgis
       <<: *test_pg_env
  
@@ -231,7 +232,7 @@ jobs:
     environment:
       PG_VERSION: "11"
     docker:
-    - image: hasura/graphql-engine-server-builder:20190826
+    - *server_builder_image
     - image: circleci/postgres:10-alpine-postgis
       <<: *test_pg_env
 
@@ -240,7 +241,7 @@ jobs:
     environment:
       PG_VERSION: "10"
     docker:
-    - image: hasura/graphql-engine-server-builder:20190826
+    - *server_builder_image
     - image: circleci/postgres:10-alpine-postgis
       <<: *test_pg_env
 
@@ -249,7 +250,7 @@ jobs:
     environment:
       PG_VERSION: "9_6"
     docker:
-    - image: hasura/graphql-engine-server-builder:20190826
+    - *server_builder_image
     - image: circleci/postgres:9.6-alpine-postgis
       <<: *test_pg_env
 
@@ -258,7 +259,7 @@ jobs:
     environment:
       PG_VERSION: "9_5"
     docker:
-    - image: hasura/graphql-engine-server-builder:20190826
+    - *server_builder_image
     - image: circleci/postgres:9.5-alpine-postgis
       <<: *test_pg_env
 

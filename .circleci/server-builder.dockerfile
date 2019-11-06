@@ -9,7 +9,7 @@ ARG postgres_ver="11"
 
 # Install GNU make, curl, git and docker client. Required to build the server
 RUN apt-get -y update \
-    && apt-get -y install curl gnupg2 cmake pkgconf \
+    && apt-get -y install curl gnupg2 cmake pkgconf sudo \
     && echo "deb http://apt.postgresql.org/pub/repos/apt/ stretch-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
     && curl -s https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
     && apt-get -y update \
@@ -19,6 +19,19 @@ RUN apt-get -y update \
     && mv /tmp/docker/* /usr/bin \
     && git clone https://github.com/google/brotli.git && cd brotli && mkdir out && cd out && ../configure-cmake \
     && make && make test && make install && ldconfig \
+    # Install Python 3.7.4 \
+    && apt-get install -y build-essential checkinstall \
+    && apt-get install -y libreadline-gplv2-dev libncursesw5-dev libssl-dev \
+         libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev libffi-dev zlib1g-dev \
+    && curl -O https://www.python.org/ftp/python/3.7.4/Python-3.7.4.tar.xz \
+    && tar -xf Python-3.7.4.tar.xz \
+    && cd Python-3.7.4 \
+    && ./configure --enable-optimizations \
+    && make -j 4 \
+    && make altinstall \
+    && python3.7 --version \
+    && rm -rf Python-3.7.4 Python-3.7.4.tar.xz \
+    # Install stack \
     && curl -sL https://github.com/commercialhaskell/stack/releases/download/v${stack_ver}/stack-${stack_ver}-linux-x86_64.tar.gz \
        | tar xz --wildcards --strip-components=1 -C /usr/local/bin '*/stack' \
     && stack --resolver ${resolver} setup \

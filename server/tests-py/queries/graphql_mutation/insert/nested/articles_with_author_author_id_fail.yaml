@@ -44,6 +44,7 @@ query:
    }
 
 response:
+  data: null
   errors:
   - extensions:
       code: validation-failed

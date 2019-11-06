@@ -2,6 +2,7 @@ description: GraphQL query with invalid escape sequence
 url: /v1/graphql
 status: 200
 response:
+  data: null
   errors:
   - extensions:
       code: bad-request

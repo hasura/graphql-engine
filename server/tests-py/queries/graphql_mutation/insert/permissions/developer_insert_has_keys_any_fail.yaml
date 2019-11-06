@@ -1,7 +1,8 @@
 description: Inserts computer specs with atleast one of the required keys
-url: /v1alpha1/graphql
-status: 400
+url: /v1/graphql
+status: 200
 response:
+  data: null
   errors:
   - extensions:
       path: $.selectionSet.insert_computer.args.objects

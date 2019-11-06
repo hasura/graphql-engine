@@ -1,7 +1,11 @@
 import yaml
 import pytest
-from validate import check_query_f
+from validate import check_query_f, check_query
 from super_classes import DefaultTestSelectQueries
+
+def load_yaml_f(f):
+    with open(f) as fd:
+        return yaml.safe_load(fd.read())
 
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
@@ -50,14 +54,23 @@ class TestGraphQLQueryBasic(DefaultTestSelectQueries):
         check_query_f(hge_ctx, self.dir() + "/select_query_author_col_not_present_err.yaml", transport)
 
     def test_select_query_user_col_change(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/select_query_user_col_change.yaml", transport)
+        alter_to_int, user_query_1, alter_to_bigint, user_query_2 = \
+            load_yaml_f(self.dir() + "/select_query_user_col_change.yaml")
+        check_query(hge_ctx, alter_to_int, 'http')
+        try:
+            check_query(hge_ctx, user_query_1, transport)
+        finally:
+            # If the query above fails, the type will remain as int, which may affect other tests
+            # Keeping the query below in finally block ensures that it will execute alter back to bigint
+            check_query(hge_ctx, alter_to_bigint, 'http')
+        check_query(hge_ctx, user_query_2, transport)
 
     def test_nested_select_with_foreign_key_alter(self, hge_ctx, transport):
-        transport = 'http'
-        check_query_f(hge_ctx, self.dir() + "/nested_select_with_foreign_key_alter.yaml", transport)
+        alter_foreign_key, article_query = load_yaml_f(self.dir() + "/nested_select_with_foreign_key_alter.yaml")
+        check_query(hge_ctx, alter_foreign_key, 'http')
+        check_query(hge_ctx, article_query, transport)
 
     def test_select_query_invalid_escape_sequence(self, hge_ctx, transport):
-        transport = 'http'
         check_query_f(hge_ctx, self.dir() + "/select_query_invalid_escape_sequence.yaml", transport)
 
     @classmethod
@@ -124,24 +137,21 @@ class TestGraphQLQueryAggPerm(DefaultTestSelectQueries):
         return 'queries/graphql_query/agg_perm'
 
 
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphQLQueryLimits(DefaultTestSelectQueries):
 
-    @pytest.mark.parametrize("transport", ['http', 'websocket'])
     def test_limit_1(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_article_limit_1.yaml', transport)
 
-    @pytest.mark.parametrize("transport", ['http', 'websocket'])
     def test_limit_2(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_article_limit_2.yaml', transport)
 
-    def test_limit_null(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/select_query_article_limit_null.yaml')
+    def test_limit_null(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_article_limit_null.yaml', transport)
 
-    @pytest.mark.parametrize("transport", ['http', 'websocket'])
     def test_err_str_limit_error(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_article_string_limit_error.yaml', transport)
 
-    @pytest.mark.parametrize("transport", ['http', 'websocket'])
     def test_err_neg_limit_error(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_article_neg_limit_error.yaml', transport)
 
@@ -150,22 +160,20 @@ class TestGraphQLQueryLimits(DefaultTestSelectQueries):
         return 'queries/graphql_query/limits'
 
 
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphQLQueryOffsets(DefaultTestSelectQueries):
 
-    @pytest.mark.parametrize("transport", ['http', 'websocket'])
     def test_offset_1_limit_2(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_article_offset_1_limit_2.yaml', transport)
 
-    @pytest.mark.parametrize("transport", ['http', 'websocket'])
     def test_offset_2_limit_1(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_article_offset_2_limit_1.yaml', transport)
 
-    @pytest.mark.parametrize("transport", ['http', 'websocket'])
     def test_int_as_string_offset(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_article_string_offset.yaml', transport)
 
-    def test_err_neg_offset_error(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/select_query_article_neg_offset_error.yaml')
+    def test_err_neg_offset_error(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_article_neg_offset_error.yaml', transport)
 
     @classmethod
     def dir(cls):
@@ -446,39 +454,29 @@ class TestGraphQLQueryOrderBy(DefaultTestSelectQueries):
     def dir(cls):
         return 'queries/graphql_query/order_by'
 
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphQLQueryFunctions(DefaultTestSelectQueries):
 
-    @pytest.mark.parametrize("transport", ['http', 'websocket'])
     def test_search_posts(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/query_search_posts.yaml", transport)
 
-    @pytest.mark.parametrize("transport", ['http', 'websocket'])
     def test_search_posts_aggregate(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/query_search_posts_aggregate.yaml", transport)
 
-    @pytest.mark.parametrize("transport", ['http', 'websocket'])
     def test_query_get_users(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/query_get_users.yaml", transport)
 
-    @pytest.mark.parametrize("transport", ['http', 'websocket'])
     def test_query_get_users_arguments_error(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/query_get_users_arguments_error.yaml", transport)
 
-    @pytest.mark.parametrize("transport", ['http', 'websocket'])
     def test_query_get_users_default_arguments_error(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/query_get_users_default_arguments_error.yaml", transport)
 
-    def test_alter_function_error(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/alter_function_error.yaml')
+    def test_query_get_test_uuid(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_get_test_uuid.yaml', transport)
 
-    def test_overloading_function_error(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/overloading_function_error.yaml')
-
-    def test_query_get_test_uuid(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/query_get_test_uuid.yaml')
-
-    def test_query_my_add(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/query_my_add.yaml')
+    def test_query_my_add(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_my_add.yaml', transport)
 
     @classmethod
     def dir(cls):

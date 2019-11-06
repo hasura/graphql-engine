@@ -672,3 +672,15 @@ class TestComputedFields(DefaultTestQueries):
 
     def test_run_sql(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/run_sql.yaml')
+
+
+class TestTrackFunctions(DefaultTestQueries):
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/functions'
+
+    def test_alter_function_error(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/alter_function_error.yaml')
+
+    def test_overloading_function_error(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/overloading_function_error.yaml')
