@@ -35,6 +35,9 @@ import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
 type PlanVariables = Map.HashMap G.Variable Int
+
+-- | The value is (Q.PrepArg, PGScalarValue) because we want to log the human-readable value of the
+-- prepared argument and not the binary encoding in PG format
 type PrepArgMap = IntMap.IntMap (Q.PrepArg, PGScalarValue)
 
 data PGPlan
@@ -156,7 +159,7 @@ prepareWithPlan = \case
     argNum <- case varM of
       Just var -> getVarArgNum var
       Nothing  -> getNextArgNum
-    addPrepArg argNum $ (toBinaryValue colVal, pstValue colVal)
+    addPrepArg argNum (toBinaryValue colVal, pstValue colVal)
     return $ toPrepParam argNum (pstType colVal)
 
   R.UVSessVar ty sessVar -> do
@@ -226,6 +229,8 @@ data PreparedSql
   = PreparedSql
   { _psQuery    :: !Q.Query
   , _psPrepArgs :: ![(Q.PrepArg, PGScalarValue)]
+    -- ^ The value is (Q.PrepArg, PGScalarValue) because we want to log the human-readable value of the
+    -- prepared argument (PGScalarValue) and not the binary encoding in PG format (Q.PrepArg)
   }
 
 -- | Required to log in `query-log`

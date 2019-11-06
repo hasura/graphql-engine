@@ -56,4 +56,4 @@ logGraphqlQuery
   => L.Logger
   -> QueryLog
   -> m ()
-logGraphqlQuery logger = L.unLogger logger
+logGraphqlQuery = L.unLogger

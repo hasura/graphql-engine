@@ -15,6 +15,8 @@ module Hasura.Server.Logging
   , HttpLogContext(..)
   , WebHookLog(..)
   , HttpException
+  , getSourceFromFallback
+  , getSource
   ) where
 
 import           Data.Aeson

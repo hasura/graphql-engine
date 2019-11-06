@@ -13,6 +13,7 @@ import           Hasura.Server.Context
 import           Hasura.Server.Utils                    (RequestId)
 
 import qualified Hasura.GraphQL.Execute                 as E
+import qualified Hasura.Logging                         as L
 
 runGQ
   :: ( MonadIO m
@@ -49,11 +50,11 @@ runHasuraGQ reqId query userInfo resolvedOp = do
   respE <- liftIO $ runExceptT $ case resolvedOp of
     E.ExOpQuery tx genSql  -> do
       -- log the generated SQL and the graphql query
-      liftIO $ logGraphqlQuery logger $ QueryLog query genSql reqId
+      L.unLogger logger $ QueryLog query genSql reqId
       runLazyTx' pgExecCtx tx
     E.ExOpMutation tx -> do
       -- log the graphql query
-      liftIO $ logGraphqlQuery logger $ QueryLog query Nothing reqId
+      L.unLogger logger $ QueryLog query Nothing reqId
       runLazyTx pgExecCtx $ withUserInfo userInfo tx
     E.ExOpSubs _ ->
       throw400 UnexpectedPayload
