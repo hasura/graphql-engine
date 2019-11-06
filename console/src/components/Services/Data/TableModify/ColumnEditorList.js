@@ -160,7 +160,8 @@ const ColumnEditorList = ({
           <b>
             {colName}
             <i>
-              {customColumnNames[colName] && ` → ${customColumnNames[colName]}`}
+              {columnProperties.customFieldName &&
+                ` → ${columnProperties.customFieldName}`}
             </i>
           </b>{' '}
           {gqlCompatibilityWarning()} - {keyProperties()}
