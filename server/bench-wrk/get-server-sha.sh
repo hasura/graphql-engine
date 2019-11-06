@@ -3,4 +3,4 @@
 # This is to track whether server directory has changed or not
 dir=$(dirname $0)
 cd $dir/../..
-git ls-files -- ':!tests-py' . ':!packaging' . ':!.*' | sort | xargs cat | shasum | awk '{print $1}' | cut -c 1-8
+git ls-files -- ':!tests-py' . ':!packaging' . ':!.*' . ':!bench-wrk' | sort | xargs cat | shasum | awk '{print $1}' | cut -c 1-8
