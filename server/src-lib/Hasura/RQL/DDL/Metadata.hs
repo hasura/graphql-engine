@@ -31,27 +31,29 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Language.Haskell.TH.Syntax         (Lift)
 
-import qualified Data.HashMap.Strict                as M
+import qualified Data.HashMap.Strict                as HM
+import qualified Data.HashMap.Strict.InsOrd         as HMIns
 import qualified Data.HashSet                       as HS
 import qualified Data.List                          as L
 import qualified Data.Text                          as T
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
+import           Hasura.RQL.DDL.ComputedField       (dropComputedFieldFromCatalog)
+import           Hasura.RQL.DDL.EventTrigger        (delEventTriggerFromCatalog,
+                                                     subTableP2)
+import           Hasura.RQL.DDL.Permission.Internal (dropPermFromCatalog)
+import           Hasura.RQL.DDL.RemoteSchema        (addRemoteSchemaP2,
+                                                     buildGCtxMap,
+                                                     removeRemoteSchemaFromCatalog)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query                  as Q
-import qualified Hasura.RQL.DDL.ComputedField       as DCC
-import qualified Hasura.RQL.DDL.EventTrigger        as DE
-import qualified Hasura.RQL.DDL.Permission          as DP
-import qualified Hasura.RQL.DDL.Permission.Internal as DP
-import qualified Hasura.RQL.DDL.QueryCollection     as DQC
-import qualified Hasura.RQL.DDL.Relationship        as DR
-import qualified Hasura.RQL.DDL.RemoteSchema        as DRS
-import qualified Hasura.RQL.DDL.Schema              as DS
-import qualified Hasura.RQL.Types.EventTrigger      as DTS
-import qualified Hasura.RQL.Types.RemoteSchema      as TRS
+import qualified Hasura.RQL.DDL.Permission          as Permission
+import qualified Hasura.RQL.DDL.QueryCollection     as Collection
+import qualified Hasura.RQL.DDL.Relationship        as Relationship
+import qualified Hasura.RQL.DDL.Schema              as Schema
 
 data MetadataVersion
   = MVVersion1
@@ -75,20 +77,19 @@ data TableMeta
   { _tmTable               :: !QualifiedTable
   , _tmIsEnum              :: !Bool
   , _tmConfiguration       :: !TableConfig
-  , _tmObjectRelationships :: ![DR.ObjRelDef]
-  , _tmArrayRelationships  :: ![DR.ArrRelDef]
-  , _tmInsertPermissions   :: ![DP.InsPermDef]
-  , _tmSelectPermissions   :: ![DP.SelPermDef]
-  , _tmUpdatePermissions   :: ![DP.UpdPermDef]
-  , _tmDeletePermissions   :: ![DP.DelPermDef]
-  , _tmEventTriggers       :: ![DTS.EventTriggerConf]
+  , _tmObjectRelationships :: ![Relationship.ObjRelDef]
+  , _tmArrayRelationships  :: ![Relationship.ArrRelDef]
+  , _tmInsertPermissions   :: ![Permission.InsPermDef]
+  , _tmSelectPermissions   :: ![Permission.SelPermDef]
+  , _tmUpdatePermissions   :: ![Permission.UpdPermDef]
+  , _tmDeletePermissions   :: ![Permission.DelPermDef]
+  , _tmEventTriggers       :: ![EventTriggerConf]
   } deriving (Show, Eq, Lift)
+$(makeLenses ''TableMeta)
 
 mkTableMeta :: QualifiedTable -> Bool -> TableConfig -> TableMeta
 mkTableMeta qt isEnum config =
   TableMeta qt isEnum config [] [] [] [] [] [] []
-
-makeLenses ''TableMeta
 
 instance FromJSON TableMeta where
   parseJSON (Object o) = do
@@ -121,7 +122,7 @@ instance FromJSON TableMeta where
       etKey = "event_triggers"
 
       unexpectedKeys =
-        HS.fromList (M.keys o) `HS.difference` expectedKeySet
+        HS.fromList (HM.keys o) `HS.difference` expectedKeySet
 
       expectedKeySet =
         HS.fromList [ tableKey, isEnumKey, configKey, orKey
@@ -158,7 +159,7 @@ runClearMetadata
 runClearMetadata _ = do
   adminOnly
   liftTx clearMetadata
-  DS.buildSchemaCacheStrict
+  Schema.buildSchemaCacheStrict
   return successMsg
 
 data ReplaceMetadata
@@ -166,9 +167,9 @@ data ReplaceMetadata
   { aqVersion          :: !(Maybe MetadataVersion)
   , aqTables           :: ![TableMeta]
   , aqFunctions        :: !(Maybe [Value])
-  , aqRemoteSchemas    :: !(Maybe [TRS.AddRemoteSchemaQuery])
-  , aqQueryCollections :: !(Maybe [DQC.CreateCollection])
-  , aqAllowlist        :: !(Maybe [DQC.CollectionReq])
+  , aqRemoteSchemas    :: !(Maybe [AddRemoteSchemaQuery])
+  , aqQueryCollections :: !(Maybe [Collection.CreateCollection])
+  , aqAllowlist        :: !(Maybe [Collection.CollectionReq])
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ReplaceMetadata)
@@ -186,14 +187,14 @@ applyQP1 (ReplaceMetadata _ tables mFunctions mSchemas mCollections mAllowlist) 
 
     -- process each table
     void $ indexedForM tables $ \table -> withTableName (table ^. tmTable) $ do
-      let allRels  = map DR.rdName (table ^. tmObjectRelationships) <>
-                     map DR.rdName (table ^. tmArrayRelationships)
+      let allRels  = map Relationship.rdName (table ^. tmObjectRelationships) <>
+                     map Relationship.rdName (table ^. tmArrayRelationships)
 
-          insPerms = map DP.pdRole $ table ^. tmInsertPermissions
-          selPerms = map DP.pdRole $ table ^. tmSelectPermissions
-          updPerms = map DP.pdRole $ table ^. tmUpdatePermissions
-          delPerms = map DP.pdRole $ table ^. tmDeletePermissions
-          eventTriggers = map DTS.etcName $ table ^. tmEventTriggers
+          insPerms = map Permission.pdRole $ table ^. tmInsertPermissions
+          selPerms = map Permission.pdRole $ table ^. tmSelectPermissions
+          updPerms = map Permission.pdRole $ table ^. tmUpdatePermissions
+          delPerms = map Permission.pdRole $ table ^. tmDeletePermissions
+          eventTriggers = map etcName $ table ^. tmEventTriggers
 
       checkMultipleDecls "relationships" allRels
       checkMultipleDecls "insert permissions" insPerms
@@ -207,15 +208,15 @@ applyQP1 (ReplaceMetadata _ tables mFunctions mSchemas mCollections mAllowlist) 
 
   onJust mSchemas $ \schemas ->
       withPathK "remote_schemas" $
-        checkMultipleDecls "remote schemas" $ map TRS._arsqName schemas
+        checkMultipleDecls "remote schemas" $ map _arsqName schemas
 
   onJust mCollections $ \collections ->
     withPathK "query_collections" $
-        checkMultipleDecls "query collections" $ map DQC._ccName collections
+        checkMultipleDecls "query collections" $ map Collection._ccName collections
 
   onJust mAllowlist $ \allowlist ->
     withPathK "allowlist" $
-        checkMultipleDecls "allow list" $ map DQC._crCollection allowlist
+        checkMultipleDecls "allow list" $ map Collection._crCollection allowlist
 
   where
     withTableName qt = withPathK (qualObjectToText qt)
@@ -244,7 +245,7 @@ applyQP2
 applyQP2 (ReplaceMetadata maybeVersion tables mFunctions mSchemas mCollections mAllowlist) = do
 
   liftTx clearMetadata
-  DS.buildSchemaCacheStrict
+  Schema.buildSchemaCacheStrict
 
   systemDefined <- askSystemDefined
   withPathK "tables" $ do
@@ -253,16 +254,16 @@ applyQP2 (ReplaceMetadata maybeVersion tables mFunctions mSchemas mCollections m
       let tableName = tableMeta ^. tmTable
           isEnum = tableMeta ^. tmIsEnum
           config = tableMeta ^. tmConfiguration
-      void $ DS.trackExistingTableOrViewP2 tableName systemDefined isEnum config
+      void $ Schema.trackExistingTableOrViewP2 tableName systemDefined isEnum config
 
     -- Relationships
     indexedForM_ tables $ \table -> do
       withPathK "object_relationships" $
         indexedForM_ (table ^. tmObjectRelationships) $ \objRel ->
-        DR.objRelP2 (table ^. tmTable) objRel
+        Relationship.objRelP2 (table ^. tmTable) objRel
       withPathK "array_relationships" $
         indexedForM_ (table ^. tmArrayRelationships) $ \arrRel ->
-        DR.arrRelP2 (table ^. tmTable) arrRel
+        Relationship.arrRelP2 (table ^. tmTable) arrRel
 
     -- Permissions
     indexedForM_ tables $ \table -> do
@@ -280,34 +281,34 @@ applyQP2 (ReplaceMetadata maybeVersion tables mFunctions mSchemas mCollections m
     indexedForM_ tables $ \table ->
       withPathK "event_triggers" $
         indexedForM_ (table ^. tmEventTriggers) $ \etc ->
-        DE.subTableP2 (table ^. tmTable) False etc
+        subTableP2 (table ^. tmTable) False etc
 
   -- sql functions
   withPathK "functions" $
     case version of
       MVVersion1 -> traverse decodeValue functions >>=
-                    indexedMapM_ (void . flip DS.trackFunctionP2 DS.emptyFunctionConfig)
+                    indexedMapM_ (void . flip Schema.trackFunctionP2 Schema.emptyFunctionConfig)
       MVVersion2 -> traverse decodeValue functions >>=
-                    indexedMapM_ (\(DS.TrackFunctionV2 qf config) -> void $ DS.trackFunctionP2 qf config)
+                    indexedMapM_ (\(Schema.TrackFunctionV2 qf config) -> void $ Schema.trackFunctionP2 qf config)
 
   -- query collections
   withPathK "query_collections" $
-    indexedForM_ collections $ \c -> liftTx $ DQC.addCollectionToCatalog c systemDefined
+    indexedForM_ collections $ \c -> liftTx $ Collection.addCollectionToCatalog c systemDefined
 
   -- allow list
   withPathK "allowlist" $ do
     indexedForM_ allowlist $
-      \(DQC.CollectionReq name) -> liftTx $ DQC.addCollectionToAllowlistCatalog name
+      \(Collection.CollectionReq name) -> liftTx $ Collection.addCollectionToAllowlistCatalog name
     -- add to cache
-    DQC.refreshAllowlist
+    Collection.refreshAllowlist
 
   -- remote schemas
   onJust mSchemas $ \schemas ->
     withPathK "remote_schemas" $
-      indexedMapM_ (void . DRS.addRemoteSchemaP2) schemas
+      indexedMapM_ (void . addRemoteSchemaP2) schemas
 
   -- build GraphQL Context with Remote schemas
-  DRS.buildGCtxMap
+  buildGCtxMap
 
   return successMsg
 
@@ -318,8 +319,8 @@ applyQP2 (ReplaceMetadata maybeVersion tables mFunctions mSchemas mCollections m
     allowlist = fromMaybe [] mAllowlist
     processPerms tabInfo perms =
       indexedForM_ perms $ \permDef -> do
-        permInfo <- DP.addPermP1 tabInfo permDef
-        DP.addPermP2 (_tiName tabInfo) permDef permInfo
+        permInfo <- Permission.addPermP1 tabInfo permDef
+        Permission.addPermP2 (_tiName tabInfo) permDef permInfo
 
 runReplaceMetadata
   :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
@@ -343,7 +344,7 @@ $(deriveToJSON defaultOptions ''ExportMetadata)
 fetchMetadata :: Q.TxE QErr ReplaceMetadata
 fetchMetadata = do
   tables <- Q.catchE defaultTxErrorHandler fetchTables
-  let tableMetaMap = M.fromList . flip map tables $
+  let tableMetaMap = HMIns.fromList . flip map tables $
         \(schema, name, isEnum, maybeConfig) ->
           let qualifiedName = QualifiedObject schema name
               configuration = maybe emptyTableConfig Q.getAltJ maybeConfig
@@ -381,16 +382,16 @@ fetchMetadata = do
   functions <- map toJSON <$> Q.catchE defaultTxErrorHandler fetchFunctions
 
   -- fetch all custom resolvers
-  schemas <- DRS.fetchRemoteSchemas
+  remoteSchemas <- fetchRemoteSchemas
 
   -- fetch all collections
   collections <- fetchCollections
 
   -- fetch allow list
-  allowlist <- map DQC.CollectionReq <$> DQC.fetchAllowlist
+  allowlist <- map Collection.CollectionReq <$> fetchAllowlists
 
-  return $ ReplaceMetadata (Just MVVersion2) (M.elems postRelMap) (Just functions)
-                           (Just schemas) (Just collections) (Just allowlist)
+  return $ ReplaceMetadata (Just MVVersion2) (HMIns.elems postRelMap) (Just functions)
+                           (Just remoteSchemas) (Just collections) (Just allowlist)
 
   where
 
@@ -402,13 +403,13 @@ fetchMetadata = do
 
     permRowToDef (sn, tn, rn, _, Q.AltJ pDef, mComment) = do
       perm <- decodeValue pDef
-      return (QualifiedObject sn tn,  DP.PermDef rn perm mComment)
+      return (QualifiedObject sn tn,  Permission.PermDef rn perm mComment)
 
     mkRelDefs rt = mapM relRowToDef . filter (\rr -> rr ^. _4 == rt)
 
     relRowToDef (sn, tn, rn, _, Q.AltJ rDef, mComment) = do
       using <- decodeValue rDef
-      return (QualifiedObject sn tn, DR.RelDef rn using mComment)
+      return (QualifiedObject sn tn, Relationship.RelDef rn using mComment)
 
     mkTriggerMetaDefs = mapM trigRowToDef
 
@@ -421,6 +422,7 @@ fetchMetadata = do
                 SELECT table_schema, table_name, is_enum, configuration::json
                 FROM hdb_catalog.hdb_table
                  WHERE is_system_defined = 'false'
+                ORDER BY table_schema ASC, table_name ASC
                     |] () False
 
     fetchRelationships =
@@ -428,6 +430,7 @@ fetchMetadata = do
                 SELECT table_schema, table_name, rel_name, rel_type, rel_def::json, comment
                   FROM hdb_catalog.hdb_relationship
                  WHERE is_system_defined = 'false'
+                ORDER BY table_schema ASC, table_name ASC, rel_name ASC
                     |] () False
 
     fetchPermissions =
@@ -435,12 +438,14 @@ fetchMetadata = do
                 SELECT table_schema, table_name, role_name, perm_type, perm_def::json, comment
                   FROM hdb_catalog.hdb_permission
                  WHERE is_system_defined = 'false'
+                ORDER BY table_schema ASC, table_name ASC, role_name ASC, perm_type ASC
                     |] () False
 
     fetchEventTriggers =
      Q.listQ [Q.sql|
               SELECT e.schema_name, e.table_name, e.configuration::json
                FROM hdb_catalog.event_triggers e
+              ORDER BY e.schema_name ASC, e.table_name ASC, e.name ASC
               |] () False
 
     fetchFunctions = do
@@ -448,18 +453,39 @@ fetchMetadata = do
                 SELECT function_schema, function_name, configuration::json
                 FROM hdb_catalog.hdb_function
                 WHERE is_system_defined = 'false'
+                ORDER BY function_schema ASC, function_name ASC
                     |] () False
       pure $ flip map l $ \(sn, fn, Q.AltJ config) ->
-                            DS.TrackFunctionV2 (QualifiedObject sn fn) config
+                            Schema.TrackFunctionV2 (QualifiedObject sn fn) config
 
-    fetchCollections = do
-      r <- Q.listQE defaultTxErrorHandler [Q.sql|
+    fetchCollections =
+      map fromRow <$> Q.listQE defaultTxErrorHandler [Q.sql|
                SELECT collection_name, collection_defn::json, comment
                  FROM hdb_catalog.hdb_query_collection
                  WHERE is_system_defined = 'false'
+               ORDER BY collection_name ASC
               |] () False
-      return $ flip map r $ \(name, Q.AltJ defn, mComment)
-                            -> DQC.CreateCollection name defn mComment
+      where
+        fromRow (name, Q.AltJ defn, mComment) =
+          Collection.CreateCollection name defn mComment
+
+    fetchAllowlists = map runIdentity <$>
+      Q.listQE defaultTxErrorHandler [Q.sql|
+          SELECT collection_name
+            FROM hdb_catalog.hdb_allowlist
+          ORDER BY collection_name ASC
+         |] () False
+
+    fetchRemoteSchemas =
+      map fromRow <$> Q.listQE defaultTxErrorHandler
+        [Q.sql|
+         SELECT name, definition, comment
+           FROM hdb_catalog.remote_schemas
+         ORDER BY name ASC
+         |] () True
+      where
+        fromRow (name, Q.AltJ def, comment) =
+          AddRemoteSchemaQuery name def comment
 
 runExportMetadata
   :: (QErrM m, UserInfoM m, MonadTx m)
@@ -482,7 +508,7 @@ runReloadMetadata
   => ReloadMetadata -> m EncJSON
 runReloadMetadata _ = do
   adminOnly
-  DS.buildSchemaCache
+  Schema.buildSchemaCache
   return successMsg
 
 data DumpInternalState
@@ -544,10 +570,10 @@ runDropInconsistentMetadata _ = do
 
 purgeMetadataObj :: MonadTx m => MetadataObjId -> m ()
 purgeMetadataObj = liftTx . \case
-  (MOTable qt)                            -> DS.deleteTableFromCatalog qt
-  (MOFunction qf)                         -> DS.delFunctionFromCatalog qf
-  (MORemoteSchema rsn)                    -> DRS.removeRemoteSchemaFromCatalog rsn
-  (MOTableObj qt (MTORel rn _))           -> DR.delRelFromCatalog qt rn
-  (MOTableObj qt (MTOPerm rn pt))         -> DP.dropPermFromCatalog qt rn pt
-  (MOTableObj _ (MTOTrigger trn))         -> DE.delEventTriggerFromCatalog trn
-  (MOTableObj qt (MTOComputedField ccn)) -> DCC.dropComputedFieldFromCatalog qt ccn
+  (MOTable qt)                            -> Schema.deleteTableFromCatalog qt
+  (MOFunction qf)                         -> Schema.delFunctionFromCatalog qf
+  (MORemoteSchema rsn)                    -> removeRemoteSchemaFromCatalog rsn
+  (MOTableObj qt (MTORel rn _))           -> Relationship.delRelFromCatalog qt rn
+  (MOTableObj qt (MTOPerm rn pt))         -> dropPermFromCatalog qt rn pt
+  (MOTableObj _ (MTOTrigger trn))         -> delEventTriggerFromCatalog trn
+  (MOTableObj qt (MTOComputedField ccn))  -> dropComputedFieldFromCatalog qt ccn
