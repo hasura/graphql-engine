@@ -145,6 +145,8 @@ data ColOp
 data AnnColField
   = AnnColField
   { _acfInfo   :: !PGColumnInfo
+  -- If `_acfAsText` field is `True` then columns are selected as String values explicitly.
+  -- See https://github.com/hasura/graphql-engine/pull/3198 for more details.
   , _acfAsText :: !Bool
   , _acfOp     :: !(Maybe ColOp)
   } deriving (Show, Eq)
