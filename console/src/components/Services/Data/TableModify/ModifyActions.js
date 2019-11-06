@@ -38,7 +38,7 @@ import {
   getTableCustomRootFields,
   getTableCustomColumnNames,
 } from '../../../Common/utils/pgUtils';
-import { getCustomRootFieldsQuery } from '../../../Common/utils/v1QueryUtils';
+import { getSetCustomRootFieldsQuery } from '../../../Common/utils/v1QueryUtils';
 
 import {
   fetchColumnCastsQuery,
@@ -49,7 +49,7 @@ import {
 } from './utils';
 import {
   checkFeatureSupport,
-  GRAPHQL_ALIASING_SUPPORT,
+  CUSTOM_GRAPHQL_FIELDS_SUPPORT,
 } from '../../../../helpers/versionUtils';
 
 const DELETE_PK_WARNING =
@@ -167,12 +167,12 @@ export const setCustomRootFields = successCb => (dispatch, getState) => {
   const existingRootFields = getTableCustomRootFields(table);
   const existingCustomColumnNames = getTableCustomColumnNames(table);
 
-  const upQuery = getCustomRootFieldsQuery(
+  const upQuery = getSetCustomRootFieldsQuery(
     tableDef,
     sanitiseRootFields(newRootFields),
     existingCustomColumnNames
   );
-  const downQuery = getCustomRootFieldsQuery(
+  const downQuery = getSetCustomRootFieldsQuery(
     tableDef,
     existingRootFields,
     existingCustomColumnNames
@@ -1611,7 +1611,7 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
         : [];
 
     /* column alias up/down migration*/
-    if (checkFeatureSupport(GRAPHQL_ALIASING_SUPPORT)) {
+    if (checkFeatureSupport(CUSTOM_GRAPHQL_FIELDS_SUPPORT)) {
       const existingCustomColumnNames = getTableCustomColumnNames(table);
       const existingRootFields = getTableCustomRootFields(table);
       const newCustomColumnNames = { ...existingCustomColumnNames };
@@ -1629,14 +1629,14 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
       }
       if (isAliasChanged) {
         schemaChangesUp.push(
-          getCustomRootFieldsQuery(
+          getSetCustomRootFieldsQuery(
             tableDef,
             existingRootFields,
             newCustomColumnNames
           )
         );
         schemaChangesDown.push(
-          getCustomRootFieldsQuery(
+          getSetCustomRootFieldsQuery(
             tableDef,
             existingRootFields,
             existingCustomColumnNames

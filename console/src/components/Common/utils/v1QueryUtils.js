@@ -24,7 +24,7 @@ export const getDropPermissionQuery = (action, tableDef, role) => {
   };
 };
 
-export const getCustomRootFieldsQuery = (
+export const getSetCustomRootFieldsQuery = (
   tableDef,
   rootFields,
   customColumnNames

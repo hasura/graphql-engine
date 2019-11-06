@@ -1,7 +1,7 @@
-import globals from '../../../Globals';
 import {
   TABLE_ENUMS_SUPPORT,
-  GRAPHQL_ALIASING_SUPPORT,
+  CUSTOM_GRAPHQL_FIELDS_SUPPORT,
+  checkFeatureSupport,
 } from '../../../helpers/versionUtils';
 
 export const INTEGER = 'integer';
@@ -244,19 +244,11 @@ export const fetchTrackedTableListQuery = options => {
     },
   };
 
-  const supportEnums =
-    globals.featuresCompatibility &&
-    globals.featuresCompatibility[TABLE_ENUMS_SUPPORT];
-
-  const supportAliasing =
-    globals.featuresCompatibility &&
-    globals.featuresCompatibility[GRAPHQL_ALIASING_SUPPORT];
-
-  if (supportEnums) {
+  if (checkFeatureSupport(TABLE_ENUMS_SUPPORT)) {
     query.args.columns.push('is_enum');
   }
 
-  if (supportAliasing) {
+  if (checkFeatureSupport(CUSTOM_GRAPHQL_FIELDS_SUPPORT)) {
     query.args.columns.push('configuration');
   }
 

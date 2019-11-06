@@ -7,7 +7,7 @@ import { getValidAlterOptions } from './utils';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import {
   checkFeatureSupport,
-  GRAPHQL_ALIASING_SUPPORT,
+  CUSTOM_GRAPHQL_FIELDS_SUPPORT,
 } from '../../../../helpers/versionUtils';
 
 const ColumnEditor = ({
@@ -80,7 +80,7 @@ const ColumnEditor = ({
   };
 
   const getColumnAliasInput = () => {
-    if (!checkFeatureSupport(GRAPHQL_ALIASING_SUPPORT)) return;
+    if (!checkFeatureSupport(CUSTOM_GRAPHQL_FIELDS_SUPPORT)) return;
 
     return (
       <div className={`${styles.display_flex} form-group`}>

@@ -24,7 +24,7 @@ import styles from './ModifyTable.scss';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import {
   checkFeatureSupport,
-  GRAPHQL_ALIASING_SUPPORT,
+  CUSTOM_GRAPHQL_FIELDS_SUPPORT,
 } from '../../../../helpers/versionUtils';
 
 const ColumnEditorList = ({
@@ -84,7 +84,7 @@ const ColumnEditorList = ({
       comment: col.comment || '',
     };
 
-    if (checkFeatureSupport(GRAPHQL_ALIASING_SUPPORT)) {
+    if (checkFeatureSupport(CUSTOM_GRAPHQL_FIELDS_SUPPORT)) {
       columnProperties.alias = customColumnNames[colName] || '';
     }
 

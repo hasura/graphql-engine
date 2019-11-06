@@ -38,7 +38,7 @@ const RootFields = ({
     });
 
     return isEmpty(customRootFieldsLabel)
-      ? 'No root fields changed'
+      ? 'No root fields customised'
       : customRootFieldsLabel;
   };
 
