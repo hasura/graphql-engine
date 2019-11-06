@@ -24,6 +24,7 @@
         time timestamptz not null default now(),
         latency jsonb,
         requests_per_sec jsonb,
+        wrk_parameters jsonb
         constraint should_have_tag CHECK (docker_image is not null or version is not null)
       );
 

@@ -48,6 +48,14 @@ class HGEWrkBench(HGETestSetup):
             self.queryNames.append(oper.name.value)
             self.queries.append(oper)
 
+    def get_wrk_params(self):
+        cpu_count = multiprocessing.cpu_count()
+        return {
+            'threads': cpu_count,
+            'connections': self.connections,
+            'duration': self.duration
+        }
+
     def run_test(self, query):
         query_str = graphql.print_ast(query)
         print(Fore.GREEN + "Running benchmark for query\n", query_str + Style.RESET_ALL)
@@ -64,12 +72,12 @@ class HGEWrkBench(HGETestSetup):
                 'mode' : 'ro'
             }
         }
-        cpuCount = multiprocessing.cpu_count()
+        params = self.get_wrk_params()
         wrk_command = [
             'wrk',
-            '-t', str(cpuCount),
-            '-c', str(self.connections),
-            '-d', str(self.duration),
+            '-t', str(params['threads']),
+            '-c', str(params['connections']),
+            '-d', str(params['duration']),
             '--latency',
             '-s', bench_script,
             graphql_url,
@@ -141,6 +149,7 @@ query results {
                     "update_columns": "key"
                 }
             }
+
         def set_query_info():
             insert_var["query"] = {
                 "data": {
@@ -152,6 +161,7 @@ query results {
                     "update_columns": "query"
                 }
             }
+
         def set_version_info():
             if self.hge_docker_image:
                 insert_var["docker_image"] = self.hge_docker_image
@@ -160,11 +170,15 @@ query results {
                 insert_var["server_shasum"] = self.get_server_shasum()
             insert_var['postgres_version'] = self.pg.get_server_version()
 
+        def set_wrk_params():
+            insert_var['wrk_parameters'] = self.get_wrk_params()
+
         insert_var["latency"] = result['latency']
         insert_var["requests_per_sec"] = result['requests']
         set_cpu_info()
         set_query_info()
         set_version_info()
+        set_wrk_params()
         return insert_var
 
     def insert_result(self, query, result):
