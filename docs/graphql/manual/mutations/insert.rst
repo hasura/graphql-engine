@@ -373,7 +373,9 @@ Insert an object with a JSONB column
 
 Insert an object with an array column
 ------------------------------------
-**Example:** Insert a new ``article`` object with a array ``tags`` column:
+If you need to evaluate an array field you can use ``jsonb`` or ``literal strings``.
+
+**Example 1:** Insert a new ``article`` object with a array ``tags`` column using jsonb:
 
 .. graphiql::
   :view_only:
@@ -414,6 +416,44 @@ Insert an object with an array column
   :variables:
     {
       "tags": ["tag1", "tag2"]
+    }
+    
+**Example 2:** Insert a new ``article`` passing tags as literal strings:
+.. graphiql::
+  :view_only:
+  :query:
+    mutation insert_article_with_tags() {
+      insert_article(
+        objects: [
+          {
+            title: "Article 1",
+            content: "Sample article content",
+            author_id: 3,
+            tags: "{Hello, world}"
+          }
+        ]
+      ) {
+        returning {
+          id
+          title
+          tags
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "insert_article": {
+          "affected_rows": 1,
+          "returning": [
+            {
+              "id": 21,
+              "title": "Article 1",
+              "tags": ["Hello", "world"]
+            }
+          ]
+        }
+      }
     }
 
 Set a field to its default value during insert
