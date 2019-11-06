@@ -1,0 +1,12 @@
+url: /v1/graphql
+response:
+  data:
+    insert_author:
+      affected_rows: 1
+query:
+  query: |
+    mutation {
+      insert_author(objects: [{name:"Author 3"}]){
+        affected_rows
+      }
+    }

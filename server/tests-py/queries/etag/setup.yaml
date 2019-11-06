@@ -1,0 +1,17 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE author(
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL
+      );
+      INSERT INTO author (name)
+        VALUES ('Author 1'), ('Author 2')
+      ;
+
+- type: track_table
+  args:
+    schema: public
+    name: author
