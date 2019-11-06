@@ -4,6 +4,8 @@ import RootFieldEditor from '../Common/ReusableComponents/RootFieldEditor';
 import { modifyRootFields, setCustomRootFields } from './ModifyActions';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 
+import styles from './ModifyTable.scss';
+
 const RootFields = ({
   existingRootFields,
   rootFieldsEdit,
@@ -23,23 +25,27 @@ const RootFields = ({
   };
 
   const collapsedLabel = () => {
-    const customRootFieldsLabel = [];
+    const customRootFieldLabels = [];
 
     Object.keys(existingRootFields).forEach(rootField => {
       const customRootField = existingRootFields[rootField];
       if (customRootField) {
-        customRootFieldsLabel.push(
-          <span key={rootField}>
-            {!isEmpty(customRootFieldsLabel) && ', '}
-            <i>{rootField}</i> &rarr; {customRootField}
-          </span>
+        customRootFieldLabels.push(
+          <React.Fragment>
+            {!isEmpty(customRootFieldLabels) && ', '}
+            <span className={styles.display_inline} key={rootField}>
+              <i>{rootField}</i> &rarr; {customRootField}
+            </span>
+          </React.Fragment>
         );
       }
     });
 
-    return isEmpty(customRootFieldsLabel)
-      ? 'No root fields customised'
-      : customRootFieldsLabel;
+    if (isEmpty(customRootFieldLabels)) {
+      customRootFieldLabels.push('No root fields customised');
+    }
+
+    return <span>{customRootFieldLabels}</span>;
   };
 
   const editorExpanded = () => (
