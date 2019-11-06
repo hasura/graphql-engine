@@ -178,7 +178,7 @@ export const setCustomRootFields = successCb => (dispatch, getState) => {
     existingCustomColumnNames
   );
 
-  const migrationName = `set_custom_root_fields_${tableName}_${schemaName}`;
+  const migrationName = `set_custom_root_fields_${schemaName}_${tableName}`;
   const requestMsg = 'Setting custom root fields...';
   const successMsg = 'Setting custom root fields successful';
   const errorMsg = 'Setting custom root fields failed';
@@ -464,14 +464,14 @@ const saveForeignKeys = (index, tableSchema, columns) => {
           alter table "${schemaName}"."${tableName}" drop constraint "${generatedConstraintName}",
           add constraint "${constraintName}" 
           foreign key (${Object.keys(oldConstraint.column_mapping)
-    .map(lc => `"${lc}"`)
-    .join(', ')}) 
+            .map(lc => `"${lc}"`)
+            .join(', ')}) 
           references "${oldConstraint.ref_table_table_schema}"."${
-  oldConstraint.ref_table
-}"
+        oldConstraint.ref_table
+      }"
           (${Object.values(oldConstraint.column_mapping)
-    .map(rc => `"${rc}"`)
-    .join(', ')}) 
+            .map(rc => `"${rc}"`)
+            .join(', ')}) 
           on update ${pgConfTypes[oldConstraint.on_update]}
           on delete ${pgConfTypes[oldConstraint.on_delete]};
         `;
@@ -729,8 +729,8 @@ const deleteTrigger = (trigger, table) => {
 
     downMigrationSql += `CREATE TRIGGER "${triggerName}"
 ${trigger.action_timing} ${
-  trigger.event_manipulation
-} ON "${tableSchema}"."${tableName}"
+      trigger.event_manipulation
+    } ON "${tableSchema}"."${tableName}"
 FOR EACH ${trigger.action_orientation} ${trigger.action_statement};`;
 
     if (trigger.comment) {
@@ -1590,24 +1590,24 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     const schemaChangesUp =
       originalColType !== colType
         ? [
-          {
-            type: 'run_sql',
-            args: {
-              sql: columnChangesUpQuery,
+            {
+              type: 'run_sql',
+              args: {
+                sql: columnChangesUpQuery,
+              },
             },
-          },
-        ]
+          ]
         : [];
     const schemaChangesDown =
       originalColType !== colType
         ? [
-          {
-            type: 'run_sql',
-            args: {
-              sql: columnChangesDownQuery,
+            {
+              type: 'run_sql',
+              args: {
+                sql: columnChangesDownQuery,
+              },
             },
-          },
-        ]
+          ]
         : [];
 
     /* column custom field up/down migration*/
