@@ -243,14 +243,14 @@ export const getSchemaTableNames = (allTables, tableSchema) => {
 
 export const getTableCustomRootFields = table => {
   if (table.configuration) {
-    return table.configuration.custom_root_fields;
+    return table.configuration.custom_root_fields || {};
   }
   return {};
 };
 
 export const getTableCustomColumnNames = table => {
   if (table.configuration) {
-    return table.configuration.custom_column_names;
+    return table.configuration.custom_column_names || {};
   }
   return {};
 };
