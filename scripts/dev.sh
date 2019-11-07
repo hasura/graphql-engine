@@ -305,6 +305,7 @@ elif [ "$MODE" = "test" ]; then
   if [ ! -d "$PY_VENV" ]; then
     python3 -m venv "$PY_VENV"
     source "$PY_VENV/bin/activate"
+    pip3 install wheel
     pip3 install -r requirements.txt
   else
     echo_pretty "It looks like python dependencies have been installed already. Skipping."
