@@ -47,11 +47,12 @@ mkAdminRolePermInfo ti =
   where
     fields = _tiFieldInfoMap ti
     pgCols = map pgiColumn $ getCols fields
-    computedCols = map _cfiName $ getComputedFieldInfos fields
+    scalarComputedFields = map _cfiName $ onlyScalarComputedFields $
+                     getComputedFieldInfos fields
 
     tn = _tiName ti
     i = InsPermInfo (HS.fromList pgCols) tn annBoolExpTrue M.empty []
-    s = SelPermInfo (HS.fromList pgCols) (HS.fromList computedCols) tn annBoolExpTrue
+    s = SelPermInfo (HS.fromList pgCols) (HS.fromList scalarComputedFields) tn annBoolExpTrue
         Nothing True []
     u = UpdPermInfo (HS.fromList pgCols) tn annBoolExpTrue M.empty []
     d = DelPermInfo tn annBoolExpTrue []

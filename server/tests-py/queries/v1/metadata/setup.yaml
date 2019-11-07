@@ -99,3 +99,25 @@ args:
   args:
     name: search_articles
     schema: public
+
+#Create get_articles computed field
+- type: run_sql
+  args:
+    sql: |
+      CREATE FUNCTION fetch_articles(search text, author_row author)
+      RETURNS SETOF article AS $$
+        SELECT *
+        FROM article
+        WHERE
+          ( title ilike ('%' || search || '%')
+            OR content ilike ('%' || search || '%')
+          ) AND author_id = author_row.id
+      $$ LANGUAGE sql STABLE;
+
+- type: add_computed_field
+  args:
+    table: author
+    name: get_articles
+    definition:
+      function: fetch_articles
+      table_argument: author_row
