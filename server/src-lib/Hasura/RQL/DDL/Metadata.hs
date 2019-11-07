@@ -50,6 +50,7 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query                  as Q
+import qualified Hasura.RQL.DDL.ComputedField       as ComputedField
 import qualified Hasura.RQL.DDL.Permission          as Permission
 import qualified Hasura.RQL.DDL.QueryCollection     as Collection
 import qualified Hasura.RQL.DDL.Relationship        as Relationship
@@ -72,6 +73,14 @@ instance FromJSON MetadataVersion where
       2 -> pure MVVersion2
       i -> fail $ "expected 1 or 2, encountered " ++ show i
 
+data ComputedFieldMeta
+  = ComputedFieldMeta
+  { _cfmName       :: !ComputedFieldName
+  , _cfmDefinition :: !ComputedField.ComputedFieldDefinition
+  , _cfmComment    :: !(Maybe Text)
+  } deriving (Show, Eq, Lift)
+$(deriveJSON (aesonDrop 4 snakeCase) ''ComputedFieldMeta)
+
 data TableMeta
   = TableMeta
   { _tmTable               :: !QualifiedTable
@@ -84,12 +93,13 @@ data TableMeta
   , _tmUpdatePermissions   :: ![Permission.UpdPermDef]
   , _tmDeletePermissions   :: ![Permission.DelPermDef]
   , _tmEventTriggers       :: ![EventTriggerConf]
+  , _tmComputedFields      :: ![ComputedFieldMeta]
   } deriving (Show, Eq, Lift)
 $(makeLenses ''TableMeta)
 
 mkTableMeta :: QualifiedTable -> Bool -> TableConfig -> TableMeta
 mkTableMeta qt isEnum config =
-  TableMeta qt isEnum config [] [] [] [] [] [] []
+  TableMeta qt isEnum config [] [] [] [] [] [] [] []
 
 instance FromJSON TableMeta where
   parseJSON (Object o) = do
@@ -108,6 +118,7 @@ instance FromJSON TableMeta where
      <*> o .:? upKey .!= []
      <*> o .:? dpKey .!= []
      <*> o .:? etKey .!= []
+     <*> o .:? cfKey .!= []
 
     where
       tableKey = "table"
@@ -120,6 +131,7 @@ instance FromJSON TableMeta where
       upKey = "update_permissions"
       dpKey = "delete_permissions"
       etKey = "event_triggers"
+      cfKey = "computed_fields"
 
       unexpectedKeys =
         HS.fromList (HM.keys o) `HS.difference` expectedKeySet
@@ -127,6 +139,7 @@ instance FromJSON TableMeta where
       expectedKeySet =
         HS.fromList [ tableKey, isEnumKey, configKey, orKey
                     , arKey , ipKey, spKey, upKey, dpKey, etKey
+                    , cfKey
                     ]
 
   parseJSON _ =
@@ -157,6 +170,7 @@ clearMetadata = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "DELETE FROM hdb_catalog.hdb_permission WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_relationship WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.event_triggers" () False
+  Q.unitQ "DELETE FROM hdb_catalog.hdb_computed_field" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_table WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.remote_schemas" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_allowlist" () False
@@ -218,6 +232,7 @@ applyQP1 (ReplaceMetadata _ tables mFunctionsMeta mSchemas mCollections mAllowli
           updPerms = map Permission.pdRole $ table ^. tmUpdatePermissions
           delPerms = map Permission.pdRole $ table ^. tmDeletePermissions
           eventTriggers = map etcName $ table ^. tmEventTriggers
+          computedFields = map _cfmName $ table ^. tmComputedFields
 
       checkMultipleDecls "relationships" allRels
       checkMultipleDecls "insert permissions" insPerms
@@ -225,6 +240,7 @@ applyQP1 (ReplaceMetadata _ tables mFunctionsMeta mSchemas mCollections mAllowli
       checkMultipleDecls "update permissions" updPerms
       checkMultipleDecls "delete permissions" delPerms
       checkMultipleDecls "event triggers" eventTriggers
+      checkMultipleDecls "computed fields" computedFields
 
   withPathK "functions" $
     case mFunctionsMeta of
@@ -283,14 +299,20 @@ applyQP2 (ReplaceMetadata _ tables mFunctionsMeta mSchemas mCollections mAllowli
           config = tableMeta ^. tmConfiguration
       void $ Schema.trackExistingTableOrViewP2 tableName systemDefined isEnum config
 
-    -- Relationships
     indexedForM_ tables $ \table -> do
+      -- Relationships
       withPathK "object_relationships" $
         indexedForM_ (table ^. tmObjectRelationships) $ \objRel ->
         Relationship.objRelP2 (table ^. tmTable) objRel
       withPathK "array_relationships" $
         indexedForM_ (table ^. tmArrayRelationships) $ \arrRel ->
         Relationship.arrRelP2 (table ^. tmTable) arrRel
+      -- Computed Fields
+      withPathK "computed_fields" $
+        indexedForM_ (table ^. tmComputedFields) $
+          \(ComputedFieldMeta name definition comment) ->
+            void $ ComputedField.addComputedFieldP2 $
+              ComputedField.AddComputedField (table ^. tmTable) name definition comment
 
     -- Permissions
     indexedForM_ tables $ \table -> do
@@ -393,6 +415,9 @@ fetchMetadata = do
   eventTriggers <- Q.catchE defaultTxErrorHandler fetchEventTriggers
   triggerMetaDefs <- mkTriggerMetaDefs eventTriggers
 
+  -- Fetch all computed fields
+  computedFields <- fetchComputedFields
+
   let (_, postRelMap) = flip runState tableMetaMap $ do
         modMetaMap tmObjectRelationships objRelDefs
         modMetaMap tmArrayRelationships arrRelDefs
@@ -401,6 +426,7 @@ fetchMetadata = do
         modMetaMap tmUpdatePermissions updPermDefs
         modMetaMap tmDeletePermissions delPermDefs
         modMetaMap tmEventTriggers triggerMetaDefs
+        modMetaMap tmComputedFields computedFields
 
   -- fetch all functions
   functions <- FMVersion2 <$> Q.catchE defaultTxErrorHandler fetchFunctions
@@ -510,6 +536,17 @@ fetchMetadata = do
       where
         fromRow (name, Q.AltJ def, comment) =
           AddRemoteSchemaQuery name def comment
+
+    fetchComputedFields = do
+      r <- Q.listQE defaultTxErrorHandler [Q.sql|
+              SELECT table_schema, table_name, computed_field_name,
+                     definition::json, comment
+                FROM hdb_catalog.hdb_computed_field
+             |] () False
+      pure $ flip map r $ \(schema, table, name, Q.AltJ definition, comment) ->
+                          ( QualifiedObject schema table
+                          , ComputedFieldMeta name definition comment
+                          )
 
 runExportMetadata
   :: (QErrM m, UserInfoM m, MonadTx m)

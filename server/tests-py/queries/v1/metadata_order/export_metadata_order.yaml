@@ -325,6 +325,7 @@
           timeout_sec: 60
           num_retries: 0
           interval_sec: 10
+      computed_fields: []
     - table: test2
       is_enum: false
       configuration:
@@ -357,6 +358,7 @@
       update_permissions: []
       delete_permissions: []
       event_triggers: []
+      computed_fields: []
 
 - description: Clear metadata
   url: /v1/query
@@ -697,6 +699,7 @@
           timeout_sec: 60
           num_retries: 0
           interval_sec: 10
+      computed_fields: []
     - table: test2
       is_enum: false
       configuration:
@@ -729,6 +732,7 @@
       update_permissions: []
       delete_permissions: []
       event_triggers: []
+      computed_fields: []
 
 - description: Clear metadata
   url: /v1/query

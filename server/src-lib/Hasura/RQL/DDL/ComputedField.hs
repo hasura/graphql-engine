@@ -5,6 +5,7 @@ module Hasura.RQL.DDL.ComputedField
   ( AddComputedField(..)
   , ComputedFieldDefinition(..)
   , runAddComputedField
+  , addComputedFieldP2
   , addComputedFieldP2Setup
   , DropComputedField
   , dropComputedFieldFromCatalog
@@ -186,8 +187,9 @@ addComputedFieldP2Setup table computedField definition rawFunctionInfo comment =
           pure FTAFirst
 
 
-      let computedFieldFunction =
-            ComputedFieldFunction function (Seq.fromList inputArgs) tableArgument $
+      let inputArgSeq = Seq.fromList $ dropTableArgument tableArgument inputArgs
+          computedFieldFunction =
+            ComputedFieldFunction function inputArgSeq tableArgument $
             rfiDescription rawFunctionInfo
 
       pure $ ComputedFieldInfo computedField computedFieldFunction returnType comment
@@ -209,6 +211,13 @@ addComputedFieldP2Setup table computedField definition rawFunctionInfo comment =
       <> table <<> " " <> reasonMessage
       where
         reasonMessage = makeReasonMessage allErrors (showError function)
+
+    dropTableArgument :: FunctionTableArgument -> [FunctionArg] -> [FunctionArg]
+    dropTableArgument tableArg inputArgs =
+      case tableArg of
+        FTAFirst  -> tail inputArgs
+        FTANamed argName _ ->
+          filter ((/=) (Just argName) . faName) inputArgs
 
 addComputedFieldToCatalog
   :: MonadTx m

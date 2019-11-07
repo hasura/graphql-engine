@@ -70,6 +70,7 @@ query_collections: []
 remote_schemas: []
 tables:
 - array_relationships: []
+  computed_fields: []
   configuration:
     custom_column_names: {}
     custom_root_fields:
