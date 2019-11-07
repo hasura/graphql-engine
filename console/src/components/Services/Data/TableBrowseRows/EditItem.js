@@ -13,6 +13,7 @@ import { replace } from 'react-router-redux';
 import globals from '../../../../Globals';
 import { E_ONGOING_REQ, editItem } from './EditActions';
 import { findTable, generateTableDef } from '../../../Common/utils/pgUtils';
+import { getTableBrowseRoute } from '../../../Common/utils/routesUtils';
 
 class EditItem extends Component {
   constructor() {
@@ -38,8 +39,7 @@ class EditItem extends Component {
     if (!oldItem) {
       dispatch(
         replace(
-          `${globals.urlPrefix ||
-            ''}/data/schema/${currentSchema}/tables/${tableName}/browse`
+          `${globals.urlPrefix || ''}${getTableBrowseRoute(currentSchema, tableName, true)}`
         )
       );
       return null;
