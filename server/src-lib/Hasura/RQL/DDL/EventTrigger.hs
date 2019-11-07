@@ -103,7 +103,7 @@ mkTriggerQ trn qt allCols strfyNum op (SubscribeOpSpec columns payload) =
     applyRowToJson e = S.SEFnApp "row_to_json" [e] Nothing
     applyRow e = S.SEFnApp "row" [e] Nothing
     toExtr = flip S.Extractor Nothing
-    mkQId opVar colInfo = toJSONableExp strfyNum (pgiType colInfo) $
+    mkQId opVar colInfo = toJSONableExp strfyNum (pgiType colInfo) False $
       S.SEQIden $ S.QIden (opToQual opVar) $ toIden $ pgiColumn colInfo
 
     opToQual = S.QualVar . opToTxt

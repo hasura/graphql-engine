@@ -127,7 +127,7 @@ Transform data in Postgres or run business logic on it to derive another dataset
 ## Demos
 
 Check out all the example applications in the
-[community/examples](community/examples) directory.
+[community/sample-apps](community/sample-apps) directory.
 
 ### Realtime applications
 
