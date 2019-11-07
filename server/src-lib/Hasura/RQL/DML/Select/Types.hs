@@ -341,16 +341,17 @@ type FunctionArgExp = FunctionArgsExpG S.SQLExp
 -- insert the value in 'positional' arguments else insert the value with argument name in 'named' arguments
 insertFunctionArg
   :: FunctionArgName
-  -> Int
+  -> FunctionArgIndex
   -> a
   -> FunctionArgsExpG a
   -> FunctionArgsExpG a
-insertFunctionArg argName index value (FunctionArgsExp positional named) =
+insertFunctionArg argName argIndex value (FunctionArgsExp positional named) =
   if (index + 1) <= length positional then
     FunctionArgsExp (insertAt index value positional) named
   else FunctionArgsExp positional $
     HM.insert (getFuncArgNameTxt argName) value named
   where
+    index = unFunctionArgIndex argIndex
     insertAt i a = toList . Seq.insertAt i a . Seq.fromList
 
 data AnnFnSelG s v

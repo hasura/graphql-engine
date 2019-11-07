@@ -134,6 +134,15 @@ instance FromJSON TableMeta where
 
 $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''TableMeta)
 
+data FunctionsMetadata
+  = FMVersion1 ![QualifiedFunction]
+  | FMVersion2 ![Schema.TrackFunctionV2]
+  deriving (Show, Eq, Lift)
+
+instance ToJSON FunctionsMetadata where
+  toJSON (FMVersion1 qualifiedFunctions) = toJSON qualifiedFunctions
+  toJSON (FMVersion2 functionsV2)        = toJSON functionsV2
+
 data ClearMetadata
   = ClearMetadata
   deriving (Show, Eq, Lift)
@@ -164,20 +173,34 @@ runClearMetadata _ = do
 
 data ReplaceMetadata
   = ReplaceMetadata
-  { aqVersion          :: !(Maybe MetadataVersion)
+  { aqVersion          :: !MetadataVersion
   , aqTables           :: ![TableMeta]
-  , aqFunctions        :: !(Maybe [Value])
+  , aqFunctions        :: !(Maybe FunctionsMetadata)
   , aqRemoteSchemas    :: !(Maybe [AddRemoteSchemaQuery])
   , aqQueryCollections :: !(Maybe [Collection.CreateCollection])
   , aqAllowlist        :: !(Maybe [Collection.CollectionReq])
   } deriving (Show, Eq, Lift)
 
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ReplaceMetadata)
+$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ReplaceMetadata)
+
+instance FromJSON ReplaceMetadata where
+  parseJSON = withObject "Object" $ \o -> do
+    version <- o .:? "version" .!= MVVersion1
+    ReplaceMetadata version
+      <$> o .: "tables"
+      <*> (o .:? "functions" >>= mapM (parseFunctions version))
+      <*> o .:? "remote_schemas"
+      <*> o .:? "query_collections"
+      <*> o .:? "allow_list"
+    where
+      parseFunctions = \case
+        MVVersion1 -> fmap FMVersion1 . parseJSON
+        MVVersion2 -> fmap FMVersion2 . parseJSON
 
 applyQP1
   :: (QErrM m, UserInfoM m)
   => ReplaceMetadata -> m ()
-applyQP1 (ReplaceMetadata _ tables mFunctions mSchemas mCollections mAllowlist) = do
+applyQP1 (ReplaceMetadata _ tables mFunctionsMeta mSchemas mCollections mAllowlist) = do
 
   adminOnly
 
@@ -204,7 +227,12 @@ applyQP1 (ReplaceMetadata _ tables mFunctions mSchemas mCollections mAllowlist) 
       checkMultipleDecls "event triggers" eventTriggers
 
   withPathK "functions" $
-    checkMultipleDecls "functions" functions
+    case mFunctionsMeta of
+      Nothing -> pure ()
+      Just (FMVersion1 qualifiedFunctions)   ->
+        checkMultipleDecls "functions" qualifiedFunctions
+      Just (FMVersion2 functionsV2) ->
+        checkMultipleDecls "functions" $ map Schema._tfv2Function functionsV2
 
   onJust mSchemas $ \schemas ->
       withPathK "remote_schemas" $
@@ -220,7 +248,6 @@ applyQP1 (ReplaceMetadata _ tables mFunctions mSchemas mCollections mAllowlist) 
 
   where
     withTableName qt = withPathK (qualObjectToText qt)
-    functions = fromMaybe [] mFunctions
 
     checkMultipleDecls t l = do
       let dups = getDups l
@@ -242,7 +269,7 @@ applyQP2
      )
   => ReplaceMetadata
   -> m EncJSON
-applyQP2 (ReplaceMetadata maybeVersion tables mFunctions mSchemas mCollections mAllowlist) = do
+applyQP2 (ReplaceMetadata _ tables mFunctionsMeta mSchemas mCollections mAllowlist) = do
 
   liftTx clearMetadata
   Schema.buildSchemaCacheStrict
@@ -284,12 +311,11 @@ applyQP2 (ReplaceMetadata maybeVersion tables mFunctions mSchemas mCollections m
         subTableP2 (table ^. tmTable) False etc
 
   -- sql functions
-  withPathK "functions" $
-    case version of
-      MVVersion1 -> traverse decodeValue functions >>=
-                    indexedMapM_ (void . flip Schema.trackFunctionP2 Schema.emptyFunctionConfig)
-      MVVersion2 -> traverse decodeValue functions >>=
-                    indexedMapM_ (\(Schema.TrackFunctionV2 qf config) -> void $ Schema.trackFunctionP2 qf config)
+  withPathK "functions" $ forM_ mFunctionsMeta $ \case
+      FMVersion1 qualifiedFunctions -> indexedForM_ qualifiedFunctions $
+        \qf -> void $ Schema.trackFunctionP2 qf Schema.emptyFunctionConfig
+      FMVersion2 functionsV2 -> indexedForM_ functionsV2 $
+        \(Schema.TrackFunctionV2 function config) -> void $ Schema.trackFunctionP2 function config
 
   -- query collections
   withPathK "query_collections" $
@@ -313,8 +339,6 @@ applyQP2 (ReplaceMetadata maybeVersion tables mFunctions mSchemas mCollections m
   return successMsg
 
   where
-    version = fromMaybe MVVersion1 maybeVersion
-    functions = fromMaybe [] mFunctions
     collections = fromMaybe [] mCollections
     allowlist = fromMaybe [] mAllowlist
     processPerms tabInfo perms =
@@ -379,7 +403,7 @@ fetchMetadata = do
         modMetaMap tmEventTriggers triggerMetaDefs
 
   -- fetch all functions
-  functions <- map toJSON <$> Q.catchE defaultTxErrorHandler fetchFunctions
+  functions <- FMVersion2 <$> Q.catchE defaultTxErrorHandler fetchFunctions
 
   -- fetch all custom resolvers
   remoteSchemas <- fetchRemoteSchemas
@@ -390,7 +414,7 @@ fetchMetadata = do
   -- fetch allow list
   allowlist <- map Collection.CollectionReq <$> fetchAllowlists
 
-  return $ ReplaceMetadata (Just MVVersion2) (HMIns.elems postRelMap) (Just functions)
+  return $ ReplaceMetadata MVVersion2 (HMIns.elems postRelMap) (Just functions)
                            (Just remoteSchemas) (Just collections) (Just allowlist)
 
   where

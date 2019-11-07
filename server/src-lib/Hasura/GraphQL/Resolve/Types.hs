@@ -162,7 +162,7 @@ data FuncArgItem
   = FuncArgItem
   { _faiInputArgName :: !G.Name
   , _faiSqlArgName   :: !(Maybe FunctionArgName)
-  , _faiHasDefault   :: !Bool
+  , _faiHasDefault   :: !HasDefault
   } deriving (Show, Eq)
 
 type FuncArgSeq = Seq.Seq FuncArgItem
@@ -207,13 +207,13 @@ partialSQLExpToUnresolvedVal = \case
 
 -- | A value that will be converted to an sql expression eventually
 data UnresolvedVal
-  = UVSessVar !(PGType PGScalarType) !SessVar
+  -- | an entire session variables JSON object
+  = UVSession
+  | UVSessVar !(PGType PGScalarType) !SessVar
   -- | a SQL value literal that can be parameterized over
   | UVPG !AnnPGVal
   -- | an arbitrary SQL expression, which /cannot/ be parameterized over
   | UVSQL !S.SQLExp
-  -- ! an entire session variables JSON object
-  | UVSession
   deriving (Show, Eq)
 
 type AnnBoolExpUnresolved = AnnBoolExp UnresolvedVal

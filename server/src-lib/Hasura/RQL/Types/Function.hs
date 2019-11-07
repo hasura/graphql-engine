@@ -32,31 +32,59 @@ newtype FunctionArgName =
   FunctionArgName { getFuncArgNameTxt :: T.Text}
   deriving (Show, Eq, ToJSON, FromJSON, Lift, DQuote, IsString)
 
+newtype HasDefault = HasDefault { unHasDefault :: Bool }
+  deriving (Show, Eq, ToJSON)
+
 data FunctionArg
   = FunctionArg
   { faName       :: !(Maybe FunctionArgName)
   , faType       :: !QualifiedPGType
-  , faHasDefault :: !Bool
+  , faHasDefault :: !HasDefault
   } deriving (Show, Eq)
-
 $(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionArg)
+
+newtype FunctionArgIndex = FunctionArgIndex {unFunctionArgIndex :: Int}
+  deriving (Show, Eq, ToJSON)
 
 data SessionArgument
   = SessionArgument
   { saName  :: !FunctionArgName
-  , saIndex :: !Int
+  , saIndex :: !FunctionArgIndex
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SessionArgument)
+
+data InputArguments
+  = IAWithSessionArgument !SessionArgument !(Seq.Seq FunctionArg)
+  | IAWithoutSessionArgument !(Seq.Seq FunctionArg)
+  deriving (Show, Eq)
+
+instance ToJSON InputArguments where
+  toJSON (IAWithSessionArgument sessArg inpArgs) =
+    object [ "session_argument" .= sessArg
+           , "arguments" .= inpArgs
+           ]
+  toJSON (IAWithoutSessionArgument inpArgs) =
+    object ["arguments" .= inpArgs]
 
 data FunctionInfo
   = FunctionInfo
   { fiName          :: !QualifiedFunction
   , fiSystemDefined :: !SystemDefined
   , fiType          :: !FunctionType
-  , fiInputArgs     :: !(Seq.Seq FunctionArg)
-  , fiSessionVarArg :: !(Maybe SessionArgument)
+  , fiInputArgs     :: !InputArguments
   , fiReturnType    :: !QualifiedTable
   , fiDescription   :: !(Maybe PGDescription)
   } deriving (Show, Eq)
-
 $(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionInfo)
+
+getInputArgs :: FunctionInfo -> Seq.Seq FunctionArg
+getInputArgs functionInfo =
+  case fiInputArgs functionInfo of
+    IAWithSessionArgument _ args  -> args
+    IAWithoutSessionArgument args -> args
+
+getSessionArg :: FunctionInfo -> Maybe SessionArgument
+getSessionArg functionInfo =
+  case fiInputArgs functionInfo of
+    IAWithSessionArgument sessArg _ -> Just sessArg
+    IAWithoutSessionArgument _      -> Nothing

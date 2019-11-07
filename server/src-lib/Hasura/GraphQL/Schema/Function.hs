@@ -72,7 +72,7 @@ mkFuncArgs funInfo =
   fromInpValL $ funcInpArgs <> mkSelArgs retTable
   where
     funcName = fiName funInfo
-    funcArgs = fiInputArgs funInfo
+    funcArgs = getInputArgs funInfo
     retTable = fiReturnType funInfo
 
     funcArgDesc = G.Description $ "input parameters for function " <>> funcName

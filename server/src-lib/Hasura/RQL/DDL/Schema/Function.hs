@@ -45,9 +45,9 @@ mkFunctionArgs :: Int -> [QualifiedPGType] -> [FunctionArgName] -> [FunctionArg]
 mkFunctionArgs defArgsNo tys argNames =
   bool withNames withNoNames $ null argNames
   where
-    hasDefaultBoolSeq = replicate (length tys - defArgsNo) False
+    hasDefaultBoolSeq = replicate (length tys - defArgsNo) (HasDefault False)
                         -- only last arguments can have default expression
-                        <> replicate defArgsNo True
+                        <> replicate defArgsNo (HasDefault True)
 
     tysWithHasDefault = zip tys hasDefaultBoolSeq
 
@@ -84,7 +84,7 @@ mkFunctionInfo
   -> FunctionConfig
   -> RawFunctionInfo
   -> m (FunctionInfo, SchemaDependency)
-mkFunctionInfo qf systemDefined config rawFuncInfo = do
+mkFunctionInfo qf systemDefined config rawFuncInfo =
   either (throw400 NotSupported . showErrors) pure
     =<< MV.runValidateT validateFunction
   where
@@ -111,17 +111,13 @@ mkFunctionInfo qf systemDefined config rawFuncInfo = do
       -- validate function argument names
       validateFunctionArgNames
 
-      maybeSessArg <- resolveSessionArgument
+      inputArguments <- makeInputArguments
 
-      let funcArgsSeq = Seq.fromList functionArgs
-          removeSessArg sessArg = flip Seq.filter funcArgsSeq $
-                                  \arg -> Just (saName sessArg) /= faName arg
-          funcArgsSeqWithoutSessArg = maybe funcArgsSeq removeSessArg maybeSessArg
-          dep = SchemaDependency (SOTable retTable) DRTable
-          retTable = typeToTable returnType
-      pure $ (, dep) $
-           FunctionInfo qf systemDefined funTy funcArgsSeqWithoutSessArg
-                        maybeSessArg retTable descM
+      let retTable = typeToTable returnType
+
+      pure ( FunctionInfo qf systemDefined funTy inputArguments retTable descM
+           , SchemaDependency (SOTable retTable) DRTable
+           )
 
     validateFunctionArgNames = do
       let argNames = mapMaybe faName functionArgs
@@ -129,14 +125,23 @@ mkFunctionInfo qf systemDefined config rawFuncInfo = do
       when (not $ null invalidArgs) $
         throwValidateError $ FunctionInvalidArgumentNames invalidArgs
 
-    resolveSessionArgument =
-      forM (_fcSessionArgument config) $ \argName ->
-        case findWithIndex (maybe False (argName ==) . faName) functionArgs of
-          Nothing -> MV.refute $ pure $ FunctionInvalidSessionArgument argName
-          Just (arg, index) -> do
-            let ty = _qptName $ faType arg
-            when (ty /= PGJSON) $ throwValidateError $ FunctionSessionArgumentNotJSON argName
-            pure $ SessionArgument argName index
+    makeInputArguments = do
+      let allInputArgSeq = Seq.fromList functionArgs
+      case _fcSessionArgument config of
+        Nothing -> pure $ IAWithoutSessionArgument allInputArgSeq
+        Just sessionArgName -> do
+          sessionArg <- resolveSessionArgument sessionArgName
+          let argSeqWithoutSessArg =
+                flip Seq.filter allInputArgSeq $ \arg -> Just sessionArgName /= faName arg
+          pure $ IAWithSessionArgument sessionArg argSeqWithoutSessArg
+
+    resolveSessionArgument argName =
+      case findWithIndex (maybe False (argName ==) . faName) functionArgs of
+        Nothing -> MV.refute $ pure $ FunctionInvalidSessionArgument argName
+        Just (arg, index) -> do
+          let ty = _qptName $ faType arg
+          when (ty /= PGJSON) $ throwValidateError $ FunctionSessionArgumentNotJSON argName
+          pure $ SessionArgument argName $ FunctionArgIndex index
 
     showErrors allErrors =
       "the function " <> qf <<> " cannot be tracked "
@@ -240,7 +245,7 @@ handleMultipleFunctions qf = \case
     "function " <> qf <<> " is overloaded. Overloaded functions are not supported"
 
 fetchRawFunctioInfo :: MonadTx m => QualifiedFunction -> m RawFunctionInfo
-fetchRawFunctioInfo qf@(QualifiedObject sn fn) = do
+fetchRawFunctioInfo qf@(QualifiedObject sn fn) =
   handleMultipleFunctions qf =<< map (Q.getAltJ . runIdentity) <$> fetchFromDatabase
   where
     fetchFromDatabase = liftTx $

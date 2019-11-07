@@ -213,9 +213,9 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
 
     -- funcargs input type
     funcArgInpObjs = flip mapMaybe funcs $ \func ->
-      mkFuncArgsInp (fiName func) (fiInputArgs func)
+      mkFuncArgsInp (fiName func) (getInputArgs func)
     -- funcArgCtx = Map.unions funcArgCtxs
-    funcArgScalarSet = funcs ^.. folded.to fiInputArgs.folded.to (_qptName.faType)
+    funcArgScalarSet = funcs ^.. folded.to getInputArgs.folded.to (_qptName.faType)
 
     -- helper
     mkFldMap ty = Map.fromList . concatMap (mkFld ty)
@@ -413,11 +413,11 @@ getRootFldsRole' tn primCols constraints fields funcs insM
     funcFldHelper f g pFltr pLimit hdrs =
       flip map funcs $ \fi ->
       ( f $ FuncQOpCtx tn hdrs colGNameMap pFltr pLimit (fiName fi)
-            (mkFuncArgItemSeq fi) (fiSessionVarArg fi)
+            (mkFuncArgItemSeq fi) (getSessionArg fi)
       , g fi $ fiDescription fi
       )
 
-    mkFuncArgItemSeq = mkFuncArgSeq . fiInputArgs
+    mkFuncArgItemSeq = mkFuncArgSeq . getInputArgs
 
 
 getSelPermission :: TableInfo PGColumnInfo -> RoleName -> Maybe SelPermInfo
