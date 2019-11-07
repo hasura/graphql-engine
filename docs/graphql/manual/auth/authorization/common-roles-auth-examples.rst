@@ -283,6 +283,9 @@ Sometimes your data/user model requires that:
 - You have permissions based on a condition on another table
 - The tables have no relationship to each other
 
+Example
+^^^^^^^
+
 There will be one role on the ``account`` table:
 
 ``user``: The permissions are dependent on the ``user`` table.
