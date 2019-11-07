@@ -25,8 +25,8 @@ export const getTableBrowseRoute = (schemaName, tableName, isTable) => {
   return `${getTableBaseRoute(schemaName, tableName, isTable)}/browse`;
 };
 
-export const getTableInsertRowRoute = (schemaName, tableName) => {
-  return `${getTableBaseRoute(schemaName, tableName, true)}/insert`;
+export const getTableInsertRowRoute = (schemaName, tableName, isTable) => {
+  return `${getTableBaseRoute(schemaName, tableName, isTable)}/insert`;
 };
 
 export const getTableEditRowRoute = (schemaName, tableName, isTable) => {

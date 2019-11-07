@@ -100,7 +100,7 @@ const TableHeader = ({ tabName, count, table, migrationMode, dispatch }) => {
             {isTable &&
               getTab(
                 'insert',
-                getTableInsertRowRoute(tableSchema, tableName),
+                getTableInsertRowRoute(tableSchema, tableName, isTable),
                 'Insert Row',
                 'table-insert-rows'
               )}

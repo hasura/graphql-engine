@@ -18,7 +18,11 @@ import {
   setTable,
 } from '../../DataActions';
 import { NotFoundError } from '../../../../Error/PageNotFound';
-import { getSchemaBaseRoute, getFunctionBaseRoute, getTablePermissionsRoute } from '../../../../Common/utils/routesUtils';
+import {
+  getSchemaBaseRoute,
+  getFunctionBaseRoute,
+  getTablePermissionsRoute,
+} from '../../../../Common/utils/routesUtils';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
@@ -62,8 +66,12 @@ class Permission extends React.Component {
 
     const { dispatch } = this.props;
 
-    const baseUrl = getFunctionBaseRoute(schema, functionName);
-    const permissionTableUrl = getTablePermissionsRoute(setOffTableSchema, setOffTable, true);
+    const functionBaseUrl = getFunctionBaseRoute(schema, functionName);
+    const permissionTableUrl = getTablePermissionsRoute(
+      setOffTableSchema,
+      setOffTable,
+      true
+    );
 
     const breadCrumbs = [
       {
@@ -97,7 +105,7 @@ class Permission extends React.Component {
     if (functionName) {
       breadCrumbs.push({
         title: functionName,
-        url: baseUrl,
+        url: functionBaseUrl,
       });
       breadCrumbs.push({
         title: 'Permission',
@@ -115,7 +123,7 @@ class Permission extends React.Component {
           heading={functionName}
           tabsInfo={tabInfo}
           breadCrumbs={breadCrumbs}
-          baseUrl={baseUrl}
+          baseUrl={functionBaseUrl}
           showLoader={false}
           testPrefix={'functions'}
         />

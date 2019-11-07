@@ -48,7 +48,10 @@ import {
   sanitiseRootFields,
 } from './utils';
 
-import { getSchemaBaseRoute, getTableModifyRoute } from '../../../Common/utils/routesUtils';
+import {
+  getSchemaBaseRoute,
+  getTableModifyRoute,
+} from '../../../Common/utils/routesUtils';
 
 import {
   checkFeatureSupport,
@@ -727,7 +730,7 @@ ${trigger.action_timing} ${
 FOR EACH ${trigger.action_orientation} ${trigger.action_statement};`;
 
     if (trigger.comment) {
-      downMigrationSql += `COMMENT ON TRIGGER "${triggerName}" ON "${tableSchema}"."${tableName}"
+      downMigrationSql += `COMMENT ON TRIGGER "${triggerName}" ON "${tableSchema}"."${tableName}" 
 IS ${sqlEscapeText(trigger.comment)};`;
     }
     const migrationDown = [

@@ -11,8 +11,6 @@ import { NotFoundError } from '../../Error/PageNotFound';
 import { CLI_CONSOLE_MODE } from '../../../constants';
 import { getSchemaBaseRoute } from '../../Common/utils/routesUtils';
 
-const sectionPrefix = '/data';
-
 const DataPageContainer = ({
   currentSchema,
   schemaList,
@@ -40,7 +38,7 @@ const DataPageContainer = ({
           currentLocation.includes('data/migrations') ? styles.active : ''
         }
       >
-        <Link className={styles.linkBorder} to={sectionPrefix + '/migrations'}>
+        <Link className={styles.linkBorder} to={'/data/migrations'}>
           Migrations
         </Link>
       </li>
@@ -90,7 +88,7 @@ const DataPageContainer = ({
       >
         <Link
           className={styles.linkBorder}
-          to={sectionPrefix + '/sql'}
+          to={'/data/sql'}
           data-test="sql-link"
         >
           SQL

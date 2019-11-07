@@ -352,7 +352,7 @@ const ViewRows = ({
           const handleCloneClick = () => {
             dispatch({ type: I_SET_CLONE, clone: row });
             dispatch(
-              _push(getTableInsertRowRoute(currentSchema, curTableName))
+              _push(getTableInsertRowRoute(currentSchema, curTableName, true))
             );
           };
 

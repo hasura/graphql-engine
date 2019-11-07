@@ -1,5 +1,4 @@
 import sanitize from 'sanitize-filename';
-import { push } from 'react-router-redux';
 
 import { getSchemaBaseRoute } from '../../Common/utils/routesUtils';
 import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
@@ -30,6 +29,8 @@ import {
   fetchTrackedTableListQuery,
   mergeLoadSchemaData,
 } from './utils';
+
+import _push from './push';
 
 import { fetchColumnTypesQuery, fetchColumnDefaultFunctions } from './utils';
 
@@ -67,8 +68,8 @@ const useCompositeFnsNewCheck =
 const compositeFnCheck = useCompositeFnsNewCheck
   ? 'c'
   : {
-      $ilike: '%composite%',
-    };
+    $ilike: '%composite%',
+  };
 
 const initQueries = {
   schemaList: {
@@ -411,7 +412,7 @@ const fetchFunctionInit = () => (dispatch, getState) => {
 
 const updateCurrentSchema = (schemaName, redirect = true) => dispatch => {
   if (redirect) {
-    dispatch(push(`${globals.urlPrefix}${getSchemaBaseRoute(schemaName)}`));
+    dispatch(_push(getSchemaBaseRoute(schemaName)));
   }
 
   Promise.all([

@@ -25,7 +25,10 @@ import {
 import { SET_SQL } from '../../RawSQL/Actions';
 import { NotFoundError } from '../../../../Error/PageNotFound';
 import { getConfirmation } from '../../../../Common/utils/jsUtils';
-import { getFunctionBaseRoute, getSchemaBaseRoute } from '../../../../Common/utils/routesUtils';
+import {
+  getFunctionBaseRoute,
+  getSchemaBaseRoute,
+} from '../../../../Common/utils/routesUtils';
 
 class ModifyCustomFunction extends React.Component {
   constructor() {
@@ -141,7 +144,7 @@ class ModifyCustomFunction extends React.Component {
 
     const { migrationMode } = this.props;
 
-    const baseUrl = getFunctionBaseRoute(schema, functionName);
+    const functionBaseUrl = getFunctionBaseRoute(schema, functionName);
 
     const generateMigrateBtns = () => {
       return (
@@ -200,7 +203,7 @@ class ModifyCustomFunction extends React.Component {
     if (functionName) {
       breadCrumbs.push({
         title: functionName,
-        url: baseUrl,
+        url: functionBaseUrl,
       });
       breadCrumbs.push({
         title: 'Modify',
@@ -219,7 +222,7 @@ class ModifyCustomFunction extends React.Component {
           heading={functionName}
           tabsInfo={tabInfo}
           breadCrumbs={breadCrumbs}
-          baseUrl={baseUrl}
+          baseUrl={functionBaseUrl}
           showLoader={isFetching}
           testPrefix={'functions'}
         />
