@@ -47,6 +47,12 @@ import {
   getDropPkSql,
   sanitiseRootFields,
 } from './utils';
+
+import {
+  getSchemaBaseRoute,
+  getTableModifyRoute,
+} from '../../../Common/utils/routesUtils';
+
 import {
   checkFeatureSupport,
   CUSTOM_GRAPHQL_FIELDS_SUPPORT,
@@ -425,8 +431,8 @@ const saveForeignKeys = (index, tableSchema, columns) => {
       // foreign key already exists, alter the foreign key
       const migrationUpAlterFKeySql = `
              alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}",
-             add constraint "${generatedConstraintName}" 
-             foreign key (${lcols.join(', ')}) 
+             add constraint "${generatedConstraintName}"
+             foreign key (${lcols.join(', ')})
              references "${refSchemaName}"."${refTableName}"
              (${rcols.join(', ')}) on update ${onUpdate} on delete ${onDelete};
       `;
@@ -441,8 +447,8 @@ const saveForeignKeys = (index, tableSchema, columns) => {
       // foreign key not found, create a new one
       const migrationUpCreateFKeySql = `
            alter table "${schemaName}"."${tableName}"
-           add constraint "${generatedConstraintName}" 
-           foreign key (${lcols.join(', ')}) 
+           add constraint "${generatedConstraintName}"
+           foreign key (${lcols.join(', ')})
            references "${refSchemaName}"."${refTableName}"
            (${rcols.join(', ')}) on update ${onUpdate} on delete ${onDelete};
       `;
@@ -462,16 +468,16 @@ const saveForeignKeys = (index, tableSchema, columns) => {
       const oldConstraint = tableSchema.foreign_key_constraints[index];
       const migrationDownAlterFKeySql = `
           alter table "${schemaName}"."${tableName}" drop constraint "${generatedConstraintName}",
-          add constraint "${constraintName}" 
+          add constraint "${constraintName}"
           foreign key (${Object.keys(oldConstraint.column_mapping)
             .map(lc => `"${lc}"`)
-            .join(', ')}) 
+            .join(', ')})
           references "${oldConstraint.ref_table_table_schema}"."${
         oldConstraint.ref_table
       }"
           (${Object.values(oldConstraint.column_mapping)
             .map(rc => `"${rc}"`)
-            .join(', ')}) 
+            .join(', ')})
           on update ${pgConfTypes[oldConstraint.on_update]}
           on delete ${pgConfTypes[oldConstraint.on_delete]};
         `;
@@ -673,19 +679,9 @@ const changeTableName = (oldName, newName, isTable) => {
     const errorMsg = `Renaming ${property} failed`;
 
     const customOnSuccess = () => {
-      dispatch(_push('/schema/' + currentSchema)); // to avoid 404
+      dispatch(_push(getSchemaBaseRoute(currentSchema))); // to avoid 404
       dispatch(updateSchemaInfo()).then(() => {
-        dispatch(
-          _push(
-            '/schema/' +
-              currentSchema +
-              '/' +
-              property +
-              's/' +
-              newName +
-              '/modify'
-          )
-        );
+        dispatch(_push(getTableModifyRoute(currentSchema, newName, isTable)));
       });
     };
     const customOnError = err => {
@@ -802,7 +798,7 @@ const deleteTableSql = tableName => {
     const customOnSuccess = () => {
       dispatch(updateSchemaInfo());
 
-      dispatch(_push('/'));
+      dispatch(_push('/data/'));
     };
 
     const customOnError = err => {
@@ -886,7 +882,7 @@ const untrackTableSql = tableName => {
           tables: tableData,
         })
       ).then(() => {
-        dispatch(_push('/'));
+        dispatch(_push('/data/'));
       });
     };
     const customOnError = err => {
@@ -943,7 +939,7 @@ const fetchViewDefinition = (viewName, isRedirect) => {
         const finalDef = data.result[1][0];
         // set state and redirect to run_sql
         if (isRedirect) {
-          dispatch(_push('/sql'));
+          dispatch(_push('/data/sql'));
         }
 
         const runSqlDef =
@@ -995,7 +991,7 @@ const deleteViewSql = viewName => {
     const errorMsg = 'Deleting view failed';
 
     const customOnSuccess = () => {
-      dispatch(_push('/'));
+      dispatch(_push('/data/'));
     };
     const customOnError = () => {};
 
