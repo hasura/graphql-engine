@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 
-import yaml
+import pytest
+import ruamel.yaml as yaml
 import json
+import copy
+import graphql
 import os
 import base64
+import json
 import jsondiff
 import jwt
 import random
 import time
+import warnings
 
 from context import GQLWsClient
 
@@ -116,6 +121,8 @@ def test_forbidden_webhook(hge_ctx, conf):
     })
 
 
+# Returns the response received and a bool indicating whether the test passed
+# or not (this will always be True unless we are `--accepting`)
 def check_query(hge_ctx, conf, transport='http', add_auth=True):
     headers = {}
     if 'headers' in conf:
@@ -215,17 +222,11 @@ def validate_gql_ws_q(hge_ctx, endpoint, query, headers, exp_http_response, retr
     else:
         assert resp['type'] == 'data', resp
 
-    exp_ws_response = exp_http_response
-
     assert 'payload' in resp, resp
-    assert resp['payload'] == exp_ws_response, yaml.dump({
-        'response': resp['payload'],
-        'expected': exp_ws_response,
-        'diff': jsondiff.diff(exp_ws_response, resp['payload'])
-    })
     resp_done = next(query_resp)
     assert resp_done['type'] == 'complete'
-    return resp['payload']
+
+    return assert_graphql_resp_expected(resp['payload'], exp_http_response, query)
 
 
 def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response):
@@ -234,32 +235,147 @@ def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response):
     assert code == exp_code, resp
     print('http resp: ', resp)
     if exp_response:
-        assert json_ordered(resp) == json_ordered(exp_response), yaml.dump({
-            'response': resp,
-            'expected': exp_response,
-            'diff': jsondiff.diff(exp_response, resp)
-        })
-    return resp
+        return assert_graphql_resp_expected(resp, exp_response, query)
+    else:
+        return resp, True
+
+# Check the actual graphql response is what we expected, also taking into
+# consideration the ordering of keys that we expect to be preserved, based on
+# 'query'.
+#
+# Returns 'resp' and a bool indicating whether the test passed or not (this
+# will always be True unless we are `--accepting`)
+def assert_graphql_resp_expected(resp_orig, exp_response_orig, query):
+    # Prepare actual and respected responses so comparison takes into
+    # consideration only the ordering that we care about:
+    resp         = collapse_order_not_selset(resp_orig,         query)
+    exp_response = collapse_order_not_selset(exp_response_orig, query)
+    matched = resp == exp_response
+
+    if pytest.config.getoption("--accept"):
+        print('skipping assertion since we chose to --accept new output')
+    else:
+        assert matched, '\n' + yaml.dump({
+            # Keep strict received order when displaying errors:
+            'response': resp_orig,
+            'expected': exp_response_orig,
+            'diff': 
+              (lambda diff: 
+                 "(results differ only in their order of keys)" if diff == {} else diff)
+              (stringify_keys(jsondiff.diff(exp_response, resp)))
+        }, Dumper=yaml.RoundTripDumper )
+    return resp, matched  # matched always True unless --accept
+
 
 def check_query_f(hge_ctx, f, transport='http', add_auth=True):
     print("Test file: " + f)
     hge_ctx.may_skip_test_teardown = False
     print ("transport="+transport)
-    with open(f) as c:
-        conf = yaml.safe_load(c)
+    with open(f, 'r+') as c:
+        # For `--accept`:
+        should_write_back = False
+
+        # ruamel RoundTripLoader will preserve order so that we can test the
+        # JSON ordering property conforms to YAML spec.
+        # It also lets us write back the yaml nicely when we --accept.
+        conf = yaml.load(c, yaml.RoundTripLoader)
         if isinstance(conf, list):
-            for sconf in conf:
-                check_query(hge_ctx, sconf, transport, add_auth)
+            for ix, sconf in enumerate(conf):
+                actual_resp, matched = check_query(hge_ctx, sconf, transport, add_auth)
+                if pytest.config.getoption("--accept") and not matched:
+                    conf[ix]['response'] = actual_resp
+                    should_write_back = True
         else:
             if conf['status'] != 200:
                 hge_ctx.may_skip_test_teardown = True
-            check_query(hge_ctx, conf, transport, add_auth)
+            actual_resp, matched = check_query(hge_ctx, conf, transport, add_auth)
+            # If using `--accept` write the file back out with the new expected
+            # response set to the actual response we got:
+            if pytest.config.getoption("--accept") and not matched:
+                conf['response'] = actual_resp
+                should_write_back = True
+
+        # TODO only write back when this test is not xfail. I'm stumped on how
+        # best to do this. Where the 'request' fixture comes into scope we can
+        # do : `request.node.get_closest_marker("xfail")` but don't want to
+        # require that everywhere...
+        if should_write_back:
+            warnings.warn(
+                "\nRecording formerly failing case as correct in: " + f +
+                "\n   NOTE: if this case was marked 'xfail' this won't be correct!"
+            )
+            c.seek(0)
+            c.write(yaml.dump(conf, Dumper=yaml.RoundTripDumper))
+            c.truncate()
 
 
-def json_ordered(obj):
-    if isinstance(obj, dict):
-        return sorted((k, json_ordered(v)) for k, v in obj.items())
-    if isinstance(obj, list):
-        return list(json_ordered(x) for x in obj)
+# Return a new dict that discards the object key ordering properties of
+# 'result' where the key is not part of the selection set. This lets us compare
+# expected and actual results properly with respect to the graphql spec's
+# ordering requirements.
+def collapse_order_not_selset(result_inp, query):
+  # Collapse to unordered dict recursively by roundtripping through json
+  def collapse(x):
+    return json.loads(json.dumps(x))
+
+  result = copy.deepcopy(result_inp)
+  try:
+    if 'query' in query:
+      gql_query_str = query['query']
+      # We don't support multiple operations in the same query yet:
+      selset0 = graphql.parse(gql_query_str).definitions[0].selection_set
+      def go(result_node, selset):
+          for field in selset.selections:
+            fname = field.name.value
+
+            # If field has no subfields then all its values can be recursively stripped of ordering.
+            # Also if it's an array for some reason (like in 'returning') TODO make this better
+            if field.selection_set is None or not isinstance(result_node[fname], (dict, list)):
+              result_node[fname] = collapse(result_node[fname])
+            elif isinstance(result_node[fname], list):
+                for node in result_node[fname]:
+                    go(node, field.selection_set)
+            else:
+              go(result_node[fname], field.selection_set)
+
+      if 'data' in result:
+          go(result['data'], selset0)
+      # errors is unordered I guess
+      if 'errors' in result:
+        result['errors'] = collapse(result['errors'])
+      # and finally remove ordering at just the topmost level:
+      return dict(result)
     else:
-        return obj
+      # this isn't a graphql query, collapse ordering, I guess:
+      return collapse(result_inp)
+
+  # Bail out here for any number of reasons. TODO improve me
+  except Exception as e:
+    print("Bailing out and collapsing all ordering, due to: ", e)
+    return collapse(result)
+
+
+# Use this since jsondiff seems to produce object/dict structures that can't
+# always be serialized to json.
+# Copy-pasta from: https://stackoverflow.com/q/12734517/176841 
+def stringify_keys(d):
+ """Convert a dict's keys to strings if they are not."""
+ for key in d.keys():
+     # check inner dict
+     if isinstance(d[key], dict):
+         value = stringify_keys(d[key])
+     else:
+         value = d[key]
+     # convert nonstring to string if needed
+     if not isinstance(key, str):
+         try:
+             d[key.decode("utf-8")] = value
+         except Exception:
+             try:
+                 d[repr(key)] = value
+             except Exception:
+                 raise
+
+         # delete old key
+         del d[key]
+ return d
