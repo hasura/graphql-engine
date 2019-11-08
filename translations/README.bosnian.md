@@ -44,7 +44,7 @@ Pročitaj više na [hasura.io](https://hasura.io) i [dokumentima](https://docs.h
 
 - [Brzi početak:](#brzi-početak)
     - [Implementacija jednim klikom na Heroku](#implementacija-jednim-klikom-na-heroku)
-    - [Ostale metode implementacije](#ostale-medote-implementacije-jednim-klikom)
+    - [Ostale metode implementacije](#ostale-metode-implementacije-jednim-klikom)
 - [Arhitektura](#arhitektura)
 - [Klijentski alati](#alati-na-klijentskoj-strani)
 - [Dodavanje poslovne logike](#dodavanje-poslovne-logike)
