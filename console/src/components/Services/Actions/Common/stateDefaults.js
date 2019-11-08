@@ -61,3 +61,13 @@ export const gqlInbuiltTypes = [
     isInbuilt: true,
   },
 ];
+
+export const sdlDefault = `
+type Mutation {
+  ## define your mutation here
+  ## this will be available in mutation_root of Hasura schema
+  userSignup (
+    login: LoginInfo!
+  ): UserInfo
+}
+`;

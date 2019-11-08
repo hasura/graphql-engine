@@ -68,35 +68,11 @@ export const wrapType = (typename, wrapperIndex) => {
 };
 
 export const unwrapType = wrappedTypename => {
-  if (wrappedTypename.includes('!]!')) {
-    return {
-      index: 5,
-      typename: unwrapNullable(unwrapList(unwrapNullable(wrappedTypename))),
-    };
+  if (wrappedTypename.charAt(wrappedTypename.length - 1) === '!') {
+    return unwrapType(unwrapNullable(wrappedTypename));
   }
-  if (wrappedTypename.includes(']!')) {
-    return {
-      index: 4,
-      typename: unwrapList(unwrapNullable(wrappedTypename)),
-    };
-  }
-  if (wrappedTypename.includes('!]')) {
-    return {
-      index: 3,
-      typename: unwrapNullable(unwrapList(wrappedTypename)),
-    };
-  }
-  if (wrappedTypename.includes(']')) {
-    return {
-      index: 2,
-      typename: unwrapList(wrappedTypename),
-    };
-  }
-  if (wrappedTypename.includes('!')) {
-    return {
-      index: 1,
-      typename: unwrapNullable(wrappedTypename),
-    };
+  if (wrappedTypename.charAt(wrappedTypename.length - 1) === ']') {
+    return unwrapType(unwrapList(wrappedTypename));
   }
   return {
     index: 0,

@@ -20,7 +20,8 @@ import { getConfirmation } from '../../Common/utils/jsUtils';
 import {
   generateActionDefinition,
   getStateValidationError,
-  sanitiseState,
+  getActionDefinitionFromSdl,
+  getTypesFromSdl,
 } from './Common/utils';
 import { showErrorNotification } from '../Common/Notification';
 import { appPrefix } from './constants';
@@ -81,11 +82,37 @@ export const createAction = () => (dispatch, getState) => {
   const { add: rawState } = getState().actions;
   const { types: existingTypesList } = getState().types;
 
-  const state = sanitiseState(rawState);
+  const {
+    name: actionName,
+    arguments: args,
+    outputType,
+    error: actionDefError,
+  } = getActionDefinitionFromSdl(rawState.actionDefinition.sdl);
+  if (actionDefError) {
+    return dispatch(
+      showErrorNotification('Invalid Action Definition', actionDefError)
+    );
+  }
 
-  // TODO generate down migration for custom types
+  const { types, error: typeDefError } = getTypesFromSdl(
+    rawState.typeDefinition.sdl
+  );
+  if (typeDefError) {
+    return dispatch(
+      showErrorNotification('Invalid Types Definition', typeDefError)
+    );
+  }
 
-  const validationError = getStateValidationError(state);
+  const state = {
+    webhook: rawState.webhook,
+    kind: rawState.kind,
+    types,
+    name: actionName,
+    arguments: args,
+    outputType,
+  };
+
+  const validationError = getStateValidationError(state, existingTypesList);
   if (validationError) {
     return dispatch(showErrorNotification(validationError));
   }
@@ -155,9 +182,10 @@ export const saveAction = currentAction => (dispatch, getState) => {
   const { modify: rawState } = getState().actions;
   const { types: existingTypesList } = getState().types;
 
-  const state = sanitiseState(rawState);
+  const state = { ...rawState };
 
   const validationError = getStateValidationError(state);
+
   if (validationError) {
     return dispatch(showErrorNotification(validationError));
   }

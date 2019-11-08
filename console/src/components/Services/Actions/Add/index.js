@@ -1,4 +1,4 @@
-import AddAction from './Main';
+import AddAction from './Add';
 
 const mapStateToProps = state => {
   return {

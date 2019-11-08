@@ -19,6 +19,10 @@ import {
 import { modalOpen, modalClose } from './Actions';
 import globals from '../../../../Globals';
 import './AceEditorFix.css';
+import {
+  ACE_EDITOR_THEME,
+  ACE_EDITOR_FONT_SIZE,
+} from '../../../Common/AceEditor/utils';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
 
 const RawSQL = ({
@@ -212,7 +216,8 @@ const RawSQL = ({
         <AceEditor
           data-test="sql-test-editor"
           mode="sql"
-          theme="github"
+          theme={ACE_EDITOR_THEME}
+          fontSize={ACE_EDITOR_FONT_SIZE}
           name="raw_sql"
           value={sql}
           minLines={15}

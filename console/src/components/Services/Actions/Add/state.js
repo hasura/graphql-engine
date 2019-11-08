@@ -1,19 +1,30 @@
-import {
-  defaultArg,
-  gqlInbuiltTypes,
-  defaultScalarType,
-} from '../Common/stateDefaults';
+const defaultActionDefSdl = `
+type ActionDef {
+  userSignup (login: LoginInfo!): UserInfo
+}`;
+
+const defaultTypesDefSdl = `
+type UserInfo {
+  accessToken: String!
+}
+
+input LoginInfo {
+  email: String!
+  password: String!
+}
+`;
 
 const state = {
-  name: '',
   webhook: '',
-  types: [
-    ...JSON.parse(JSON.stringify(gqlInbuiltTypes)),
-    { ...defaultScalarType },
-  ],
-  arguments: [{ ...defaultArg }],
+  actionDefinition: {
+    sdl: defaultActionDefSdl,
+    error: '',
+  },
+  typeDefinition: {
+    sdl: defaultTypesDefSdl,
+    error: '',
+  },
   kind: 'synchronous',
-  outputType: '',
   isFetching: false,
 };
 

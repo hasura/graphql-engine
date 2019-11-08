@@ -87,6 +87,7 @@ export default class Html extends Component {
           <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.13.1/build/highlight.min.js" />
           <script type="text/javascript" src="https://unpkg.com/sql-formatter@latest/dist/sql-formatter.min.js" />
           */}
+          <script src="ace/ext-language_tools.js" />
         </body>
       </html>
     );

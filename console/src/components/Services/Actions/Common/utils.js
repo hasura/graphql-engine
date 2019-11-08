@@ -1,12 +1,8 @@
 import { camelize } from 'inflection';
+import { parse as sdlParse } from 'graphql/language/parser';
 
-import gqlPattern from '../../Data/Common/GraphQLValidation';
-import {
-  filterNameLessTypeLess,
-  filterNameless,
-  filterValueLess,
-} from '../../Types/utils';
-import { wrapType, getTypenameMetadata } from '../../Types/wrappingTypeUtils';
+import { filterNameLessTypeLess, filterNameless } from '../../Types/utils';
+import { getTypenameMetadata } from '../../Types/wrappingTypeUtils';
 import { isInputObjectType, isEnumType, isScalarType } from 'graphql';
 import {
   gqlInbuiltTypes,
@@ -28,72 +24,14 @@ export const generateActionDefinition = ({
   };
 };
 
-export const getStateValidationError = ({ name, outputType, webhook }) => {
-  if (!name) return 'Action name cannot be empty';
-  if (!gqlPattern.test(name)) {
-    return `"${name}" is not a GraphQL compatible name`;
-  }
-
+export const getStateValidationError = ({ webhook }) => {
   if (!webhook) return 'Webhook cannot be empty';
   try {
     new URL(webhook); // eslint-disable-line
   } catch (e) {
     return 'Webhook must be a valid URL';
   }
-
-  if (!outputType) return 'Please select an output type for the action';
-
   return null;
-};
-
-export const sanitiseState = state => {
-  const newState = JSON.parse(JSON.stringify(state));
-  newState.name = newState.name.trim();
-  newState.webhook = newState.webhook.trim();
-  newState.arguments = filterNameLessTypeLess(newState.arguments).map(a => {
-    const argType = newState.types[a.type].name;
-    const _arg = {
-      ...a,
-      type: wrapType(argType, a.typeWrap),
-    };
-    delete _arg.typeWrap;
-    return _arg;
-  });
-  newState.outputType = newState.types[newState.outputType]
-    ? newState.types[newState.outputType].name
-    : '';
-  newState.types = newState.types.map(t => {
-    if (t.isInbuilt) return t;
-    const _t = { ...t };
-
-    switch (t.kind) {
-      case 'scalar':
-        return _t;
-
-      case 'object':
-        _t.fields = filterNameLessTypeLess(_t.fields).map(f => ({
-          ...f,
-          type: wrapType(newState.types[f.type].name, f.typeWrap),
-        }));
-        return _t;
-
-      case 'input_object':
-        console.log(newState.types);
-        console.log(_t);
-        _t.fields = filterNameLessTypeLess(_t.fields).map(f => ({
-          ...f,
-          type: wrapType(newState.types[f.type].name, f.typeWrap),
-        }));
-        return _t;
-
-      case 'enum':
-        _t.values = filterValueLess(_t.values).filter(v => !!v.value);
-        return _t;
-      default:
-        return _t;
-    }
-  });
-  return newState;
 };
 
 export const deriveExistingType = (
@@ -187,7 +125,6 @@ export const deriveExistingType = (
   newTypes = newTypes.map(nt => {
     if (nt.kind === 'input_object') {
       const newType = JSON.parse(JSON.stringify(nt));
-      console.log(newType);
       newType.fields = newType.fields.map(f => {
         const _f = { ...f };
         _f.type = newTypes.findIndex(t => t.name === f.typename).toString();
@@ -200,4 +137,161 @@ export const deriveExistingType = (
   });
 
   return [...newTypes, defaultScalarType];
+};
+
+const getWrappedTypeNameFromAst = type => {
+  let _t = { type };
+  const typewraps = [];
+  while (_t.kind !== 'NamedType') {
+    if (_t.kind === 'ListType') {
+      typewraps.push('l');
+    }
+    if (_t.kind === 'NonNullType') {
+      typewraps.push('n');
+    }
+    _t = _t.type;
+  }
+  let typename = _t.name.value;
+  typewraps.forEach(w => {
+    if (w === 'l') {
+      typename = `[${typename}]`;
+    }
+    if (w === 'n') {
+      typename = `${typename}!`;
+    }
+  });
+
+  return typename;
+};
+
+export const getTypesFromSdl = sdl => {
+  const typeDefinition = {
+    types: [],
+    error: null,
+  };
+
+  if (!sdl) {
+    return typeDefinition;
+  }
+
+  const schemaAst = sdlParse(sdl);
+
+  const handleScalar = def => {
+    typeDefinition.types.push({
+      name: def.name.value,
+      kind: 'scalar',
+    });
+  };
+
+  const handleEnum = def => {
+    typeDefinition.types.push({
+      name: def.name.value,
+      kind: 'enum',
+      values: def.values.map(v => ({
+        value: v.name.value,
+        description: v.description,
+      })),
+    });
+  };
+
+  const handleInputObject = def => {
+    typeDefinition.types.push({
+      name: def.name.value,
+      kind: 'input_object',
+      fields: def.fields.map(f => ({
+        name: f.name.value,
+        type: getWrappedTypeNameFromAst(f.type),
+      })),
+    });
+  };
+
+  const handleObject = def => {
+    typeDefinition.types.push({
+      name: def.name.value,
+      kind: 'object',
+      fields: def.fields.map(f => ({
+        name: f.name.value,
+        type: getWrappedTypeNameFromAst(f.type),
+      })),
+    });
+  };
+
+  schemaAst.definitions.forEach(def => {
+    switch (def.kind) {
+      case 'ScalarTypeDefinition':
+        handleScalar(def);
+        return;
+      case 'EnumTypeDefinition':
+        handleEnum(def);
+        return;
+      case 'InputObjectTypeDefinition':
+        handleInputObject(def);
+        return;
+      case 'ObjectTypeDefinition':
+        handleObject(def);
+        return;
+      case 'SchemaDefinition':
+        typeDefinition.error =
+          'You cannot have schema definitions in Action/Type definitions';
+        return;
+      case 'InterfaceTypeDefinition':
+        typeDefinition.error = 'Interface types are not supported';
+        return;
+      default:
+        return;
+    }
+  });
+
+  console.log(typeDefinition);
+
+  return typeDefinition;
+};
+
+export const getSdlFromDef = () => {};
+
+export const getActionDefinitionFromSdl = sdl => {
+  const schemaAst = sdlParse(sdl);
+  const definition = {
+    name: '',
+    arguments: [],
+    outputType: '',
+    error: null,
+  };
+  if (schemaAst.definitions.length > 1) {
+    definition.error = 'Action must be defined under a single "Mutation" type';
+    return definition;
+  }
+
+  const sdlDef = schemaAst.definitions[0];
+  if (
+    sdlDef.kind !== 'ObjectTypeDefinition' ||
+    sdlDef.name.value !== 'Mutation'
+  ) {
+    definition.error = 'Action must be defined under a "Mutation" type';
+    return definition;
+  }
+
+  if (sdlDef.fields.length > 1) {
+    const definedActions = sdlDef.fields
+      .map(f => `"${f.name.value}"`)
+      .join(', ');
+    definition.error = `You have defined multiple actions (${definedActions}). Please define only one.`;
+    return definition;
+  }
+
+  const actionDef = sdlDef.fields[0];
+
+  definition.name = actionDef.name.value;
+  definition.outputType = getWrappedTypeNameFromAst(actionDef.type);
+  definition.arguments = actionDef.arguments.map(a => {
+    return {
+      name: a.name.value,
+      type: getWrappedTypeNameFromAst(a.type),
+      description: a.description,
+    };
+  });
+
+  console.log(definition);
+
+  return definition;
 };
