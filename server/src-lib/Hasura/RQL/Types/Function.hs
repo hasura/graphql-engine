@@ -4,6 +4,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Types
 
+import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -43,48 +44,31 @@ data FunctionArg
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionArg)
 
-newtype FunctionArgIndex = FunctionArgIndex {unFunctionArgIndex :: Int}
-  deriving (Show, Eq, ToJSON)
+data InputArgument a
+  = IAUserProvided !a
+  | IASessionVariables !FunctionArgName
+  deriving (Show, Eq, Functor)
+$(deriveToJSON defaultOptions
+               { constructorTagModifier = snakeCase . drop 2
+               , sumEncoding = TaggedObject "type" "argument"
+               }
+ ''InputArgument
+ )
+$(makePrisms ''InputArgument)
 
-data SessionArgument
-  = SessionArgument
-  { saName  :: !FunctionArgName
-  , saIndex :: !FunctionArgIndex
-  } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 2 snakeCase) ''SessionArgument)
-
-data InputArguments
-  = IAWithSessionArgument !SessionArgument !(Seq.Seq FunctionArg)
-  | IAWithoutSessionArgument !(Seq.Seq FunctionArg)
-  deriving (Show, Eq)
-
-instance ToJSON InputArguments where
-  toJSON (IAWithSessionArgument sessArg inpArgs) =
-    object [ "session_argument" .= sessArg
-           , "arguments" .= inpArgs
-           ]
-  toJSON (IAWithoutSessionArgument inpArgs) =
-    object ["arguments" .= inpArgs]
+type FunctionInputArgument = InputArgument FunctionArg
 
 data FunctionInfo
   = FunctionInfo
   { fiName          :: !QualifiedFunction
   , fiSystemDefined :: !SystemDefined
   , fiType          :: !FunctionType
-  , fiInputArgs     :: !InputArguments
+  , fiInputArgs     :: !(Seq.Seq FunctionInputArgument)
   , fiReturnType    :: !QualifiedTable
   , fiDescription   :: !(Maybe PGDescription)
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionInfo)
 
 getInputArgs :: FunctionInfo -> Seq.Seq FunctionArg
-getInputArgs functionInfo =
-  case fiInputArgs functionInfo of
-    IAWithSessionArgument _ args  -> args
-    IAWithoutSessionArgument args -> args
-
-getSessionArg :: FunctionInfo -> Maybe SessionArgument
-getSessionArg functionInfo =
-  case fiInputArgs functionInfo of
-    IAWithSessionArgument sessArg _ -> Just sessArg
-    IAWithoutSessionArgument _      -> Nothing
+getInputArgs =
+  Seq.fromList . mapMaybe (^? _IAUserProvided) . toList . fiInputArgs

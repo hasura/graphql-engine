@@ -34,8 +34,8 @@ fromComputedField = FieldName . computedFieldNameToText
 data FunctionTableArgument
   = FTAFirst
   | FTANamed
-    !FunctionArgName  -- ^ argument name
-    !FunctionArgIndex -- ^ argument index
+    !FunctionArgName -- ^ argument name
+    !Int -- ^ argument index
   deriving (Show, Eq)
 
 instance ToJSON FunctionTableArgument where

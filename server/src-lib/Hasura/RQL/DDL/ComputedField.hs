@@ -174,7 +174,7 @@ addComputedFieldP2Setup table computedField definition rawFunctionInfo comment =
         Just argName ->
           case findWithIndex (maybe False (argName ==) . faName) inputArgs of
             Just (tableArg, index) -> do
-              let functionTableArg = FTANamed argName $ FunctionArgIndex index
+              let functionTableArg = FTANamed argName index
               validateTableArgumentType functionTableArg $ faType tableArg
               pure functionTableArg
             Nothing ->

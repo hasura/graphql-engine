@@ -1,5 +1,5 @@
 module Hasura.GraphQL.Resolve.Context
-  ( FuncArgItem(..)
+  ( FunctionArgItem(..)
   , OrdByItem(..)
   , UpdPermForIns(..)
   , InsCtx(..)

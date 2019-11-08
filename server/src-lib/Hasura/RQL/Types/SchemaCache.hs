@@ -107,7 +107,6 @@ module Hasura.RQL.Types.SchemaCache
        , FunctionArg(..)
        , FunctionArgName(..)
        , FunctionName(..)
-       , SessionArgument(..)
        , FunctionInfo(..)
        , FunctionCache
        , getFuncsOfTable

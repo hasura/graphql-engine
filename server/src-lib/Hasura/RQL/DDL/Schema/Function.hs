@@ -125,23 +125,18 @@ mkFunctionInfo qf systemDefined config rawFuncInfo =
       when (not $ null invalidArgs) $
         throwValidateError $ FunctionInvalidArgumentNames invalidArgs
 
-    makeInputArguments = do
-      let allInputArgSeq = Seq.fromList functionArgs
+    makeInputArguments =
       case _fcSessionArgument config of
-        Nothing -> pure $ IAWithoutSessionArgument allInputArgSeq
+        Nothing -> pure $ Seq.fromList $ map IAUserProvided functionArgs
         Just sessionArgName -> do
-          sessionArg <- resolveSessionArgument sessionArgName
-          let argSeqWithoutSessArg =
-                flip Seq.filter allInputArgSeq $ \arg -> Just sessionArgName /= faName arg
-          pure $ IAWithSessionArgument sessionArg argSeqWithoutSessArg
-
-    resolveSessionArgument argName =
-      case findWithIndex (maybe False (argName ==) . faName) functionArgs of
-        Nothing -> MV.refute $ pure $ FunctionInvalidSessionArgument argName
-        Just (arg, index) -> do
-          let ty = _qptName $ faType arg
-          when (ty /= PGJSON) $ throwValidateError $ FunctionSessionArgumentNotJSON argName
-          pure $ SessionArgument argName $ FunctionArgIndex index
+          when (not $ any (\arg -> (Just sessionArgName) == faName arg) functionArgs) $
+            throwValidateError $ FunctionInvalidSessionArgument sessionArgName
+          fmap Seq.fromList $ forM functionArgs $ \arg ->
+            if (Just sessionArgName) == faName arg then do
+              let argTy = _qptName $ faType arg
+              if argTy == PGJSON then pure $ IASessionVariables sessionArgName
+              else MV.refute $ pure $ FunctionSessionArgumentNotJSON sessionArgName
+            else pure $ IAUserProvided arg
 
     showErrors allErrors =
       "the function " <> qf <<> " cannot be tracked "

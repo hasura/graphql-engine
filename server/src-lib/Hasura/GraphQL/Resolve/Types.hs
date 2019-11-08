@@ -65,6 +65,8 @@ data SelPkOpCtx
   , _spocArgMap  :: !PGColArgMap
   } deriving (Show, Eq)
 
+type FunctionArgSeq = Seq.Seq (InputArgument FunctionArgItem)
+
 data FuncQOpCtx
   = FuncQOpCtx
   { _fqocTable    :: !QualifiedTable
@@ -73,8 +75,7 @@ data FuncQOpCtx
   , _fqocFilter   :: !AnnBoolExpPartialSQL
   , _fqocLimit    :: !(Maybe Int)
   , _fqocFunction :: !QualifiedFunction
-  , _fqocArgs     :: !FuncArgSeq
-  , _fqocSessArg  :: !(Maybe SessionArgument)
+  , _fqocArgs     :: !FunctionArgSeq
   } deriving (Show, Eq)
 
 data UpdOpCtx
@@ -131,11 +132,13 @@ data ComputedFieldType
   | CFTTable !ComputedFieldTable
   deriving (Show, Eq)
 
+type ComputedFieldFunctionArgSeq = Seq.Seq FunctionArgItem
+
 data ComputedField
   = ComputedField
   { _cfName     :: !ComputedFieldName
   , _cfFunction :: !ComputedFieldFunction
-  , _cfArgSeq   :: !FuncArgSeq
+  , _cfArgSeq   :: !ComputedFieldFunctionArgSeq
   , _cfType     :: !ComputedFieldType
   } deriving (Show, Eq)
 
@@ -158,14 +161,12 @@ type OrdByItemMap = Map.HashMap G.Name OrdByItem
 
 type OrdByCtx = Map.HashMap G.NamedType OrdByItemMap
 
-data FuncArgItem
-  = FuncArgItem
+data FunctionArgItem
+  = FunctionArgItem
   { _faiInputArgName :: !G.Name
   , _faiSqlArgName   :: !(Maybe FunctionArgName)
   , _faiHasDefault   :: !HasDefault
   } deriving (Show, Eq)
-
-type FuncArgSeq = Seq.Seq FuncArgItem
 
 -- insert context
 type RelationInfoMap = Map.HashMap RelName RelInfo
@@ -220,3 +221,8 @@ type AnnBoolExpUnresolved = AnnBoolExp UnresolvedVal
 
 -- template haskell related
 $(makePrisms ''ResolveField)
+
+data InputFunctionArgument
+  = IFAKnown !FunctionArgName !UnresolvedVal -- ^ Known value
+  | IFAUnknown !FunctionArgItem -- ^ Unknown value, need to be parsed
+  deriving (Show, Eq)
