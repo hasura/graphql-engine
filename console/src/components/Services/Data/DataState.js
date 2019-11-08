@@ -33,6 +33,7 @@ const defaultPermissionsState = {
   limitEnabled: true,
   bulkSelect: [],
   applySamePermissions: [],
+  isEditing: false,
 };
 
 const defaultPresetsState = {
@@ -124,6 +125,14 @@ const defaultModifyState = {
     rTable: '',
     colMappings: [{ column: '', refColumn: '' }],
     isToggled: false,
+  },
+  rootFieldsEdit: {
+    select: '',
+    select_by_pk: '',
+    select_aggregate: '',
+    insert: '',
+    update: '',
+    delete: '',
   },
   permissionsState: { ...defaultPermissionsState },
   prevPermissionState: { ...defaultPermissionsState },

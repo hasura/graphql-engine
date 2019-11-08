@@ -1,4 +1,4 @@
-import yaml
+import ruamel.yaml as yaml
 from validate import check_query_f
 from super_classes import DefaultTestSelectQueries, DefaultTestQueries, DefaultTestMutations
 
@@ -276,6 +276,9 @@ class TestV1InsertBasic(DefaultTestMutations):
     def test_insert_null_col_value(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/order_col_shipped_null.yaml")
 
+    def test_insert_nullable_enum_field(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/insert_nullable_enum_field.yaml")
+
     @classmethod
     def dir(cls):
         return "queries/v1/insert/basic"
@@ -476,11 +479,17 @@ class TestMetadata(DefaultTestQueries):
     def test_dump_internal_state(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/dump_internal_state.yaml')
 
-
     @classmethod
     def dir(cls):
         return "queries/v1/metadata"
 
+class TestMetadataOrder(DefaultTestQueries):
+    @classmethod
+    def dir(cls):
+        return "queries/v1/metadata_order"
+
+    def test_export_metadata_order(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/export_metadata_order.yaml')
 
 class TestRunSQL(DefaultTestQueries):
 
@@ -636,6 +645,9 @@ class TestSetTableIsEnum(DefaultTestQueries):
     def test_add_invalid(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/add_invalid.yaml')
 
+    def test_add_test_schema_enum_table(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/add_test_schema_enum_table.yaml')
+
 class TestSetTableCustomFields(DefaultTestQueries):
     @classmethod
     def dir(cls):
@@ -646,3 +658,23 @@ class TestSetTableCustomFields(DefaultTestQueries):
 
     def test_set_invalid_table(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/set_invalid_table.yaml')
+
+    def test_alter_column(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/alter_column.yaml')
+
+class TestComputedFields(DefaultTestQueries):
+    @classmethod
+    def dir(cls):
+        return 'queries/v1/computed_fields'
+
+    def test_add_computed_fields_errors(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/add_computed_field_errors.yaml')
+
+    def test_add_and_drop(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/add_and_drop.yaml')
+
+    def test_create_permissions(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/create_permissions.yaml')
+
+    def test_run_sql(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/run_sql.yaml')
