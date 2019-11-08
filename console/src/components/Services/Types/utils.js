@@ -106,6 +106,7 @@ export const parseCustomTypes = customTypesServer => {
 export const getActionTypes = (actionDef, allTypes) => {
   const usedTypes = {};
   const actionTypes = [];
+
   const getDependentTypes = typename => {
     if (usedTypes[typename]) return;
     const type = allTypes.find(t => t.name === typename);
@@ -126,6 +127,6 @@ export const getActionTypes = (actionDef, allTypes) => {
   });
 
   getDependentTypes(actionDef.output_type);
-  console.log(actionTypes);
+
   return actionTypes;
 };

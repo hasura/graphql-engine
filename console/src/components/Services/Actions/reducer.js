@@ -3,6 +3,7 @@ import { combineReducers } from 'redux';
 import addReducer from './Add/reducer';
 import modifyReducer from './Modify/reducer';
 import permissionsReducer from './Permissions/reducer';
+import relationshipsReducer from './Relationships/reducer';
 
 // common state
 const commonState = {
@@ -62,6 +63,7 @@ const reducer = combineReducers({
   common: commonReducer,
   modify: modifyReducer,
   permissions: permissionsReducer,
+  relationships: relationshipsReducer,
 });
 
 export default reducer;

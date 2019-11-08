@@ -79,8 +79,6 @@ export const getTypesFromSdl = sdl => {
     }
   });
 
-  console.log(typeDefinition);
-
   return typeDefinition;
 };
 
@@ -143,9 +141,6 @@ const getArgumentsSdl = args => {
 
 const getFieldsSdl = fields => {
   const fieldsSdl = fields.map(f => {
-    console.log('Field ==========');
-    console.log(f);
-    console.log('================');
     return `  ${f.name} ${getArgumentsSdl(f.arguments)}: ${f.type}`;
   });
   return fieldsSdl.join('\n');
