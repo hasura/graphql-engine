@@ -201,7 +201,7 @@ peelRun
   -> Run a
   -> ExceptT QErr IO (a, SchemaCache)
 peelRun sc runCtx@(RunCtx userInfo _ _) pgExecCtx txAccess (Run m) =
-  runLazyTx pgExecCtx (Just txAccess) $ withUserInfo userInfo lazyTx
+  runLazyTx pgExecCtx txAccess $ withUserInfo userInfo lazyTx
   where
     lazyTx = runReaderT (runStateT m sc) runCtx
 
@@ -221,7 +221,7 @@ runQuery pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined query = d
     runCtx = RunCtx userInfo hMgr sqlGenCtx
     withReload r = do
       when (queryNeedsReload query) $ do
-        e <- liftIO $ runExceptT $ runLazyTx pgExecCtx Nothing
+        e <- liftIO $ runExceptT $ runLazyTx pgExecCtx Q.ReadWrite
              $ liftTx $ recordSchemaUpdate instanceId
         liftEither e
       return r

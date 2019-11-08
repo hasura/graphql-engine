@@ -296,7 +296,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         execQueryOrMut reqId query genSql $ runLazyTx' pgExecCtx opTx
       E.ExOpMutation opTx ->
         execQueryOrMut reqId query Nothing $
-          runLazyTx pgExecCtx (Just Q.ReadWrite) $ withUserInfo userInfo opTx
+          runLazyTx pgExecCtx Q.ReadWrite $ withUserInfo userInfo opTx
       E.ExOpSubs lqOp -> do
         -- log the graphql query
         liftIO $ logGraphqlQuery logger $ QueryLog query Nothing reqId

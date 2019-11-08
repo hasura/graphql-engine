@@ -66,12 +66,12 @@ lazyTxToQTx = \case
 
 runLazyTx
   :: PGExecCtx
-  -> Maybe Q.TxAccess
+  -> Q.TxAccess
   -> LazyTx QErr a -> ExceptT QErr IO a
 runLazyTx (PGExecCtx pgPool txIso) txAccess = \case
   LTErr e  -> throwError e
   LTNoTx a -> return a
-  LTTx tx  -> Q.runTx pgPool (txIso, txAccess) tx
+  LTTx tx  -> Q.runTx pgPool (txIso, Just txAccess) tx
 
 runLazyTx'
   :: PGExecCtx -> LazyTx QErr a -> ExceptT QErr IO a
