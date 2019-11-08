@@ -6,6 +6,7 @@ module Hasura.Server.App where
 
 import           Control.Concurrent.MVar
 import           Control.Exception                      (IOException, try)
+import           Control.Monad.Stateless
 import           Data.Aeson                             hiding (json)
 import           Data.Int                               (Int64)
 import           Data.IORef
@@ -368,7 +369,7 @@ data HasuraApp
   }
 
 mkWaiApp
-  :: (MonadIO m, HasuraSpockAction m, ConsoleRenderer m)
+  :: (MonadIO m, MonadStateless IO m, HasuraSpockAction m, ConsoleRenderer m)
   => Q.TxIsolation
   -> L.LoggerCtx
   -> SQLGenCtx
@@ -384,11 +385,9 @@ mkWaiApp
   -> InstanceId
   -> S.HashSet API
   -> EL.LiveQueriesOptions
-  -> (forall b. m b -> IO b)
-  -- ^ Lift function for Spock actions taken by @spockT@ (https://hackage.haskell.org/package/Spock-core-0.13.0.0/docs/Web-Spock-Core.html)
   -> m HasuraApp
 mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg enableConsole consoleAssetsDir
-         enableTelemetry instanceId apis lqOpts spockLiftFunction = do
+         enableTelemetry instanceId apis lqOpts = do
 
     let pgExecCtx = PGExecCtx pool isoLevel
         pgExecCtxSer = PGExecCtx pool Q.Serializable
@@ -435,8 +434,8 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg 
       liftIO $ EKG.registerGcMetrics ekgStore
       liftIO $ EKG.registerCounter "ekg.server_timestamp_ms" getTimeMs ekgStore
 
-    spockApp <- liftIO $ spockAsApp $ spockT spockLiftFunction $
-                httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry
+    spockApp <- liftWithStateless $ \lowerIO ->
+      spockAsApp $ spockT lowerIO $ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry
 
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
         stopWSServer = WS.stopWSServerApp wsServerEnv

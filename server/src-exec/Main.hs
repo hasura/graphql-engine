@@ -23,7 +23,7 @@ runApp (HGEOptionsG rci hgeCmd) =
   case hgeCmd of
     HCServe serveOptions -> do
       initCtx <- initialiseCtx hgeCmd rci
-      runHGEServer serveOptions initCtx unAppM
+      runHGEServer serveOptions initCtx
 
     HCExport -> do
       initCtx <- initialiseCtx hgeCmd rci

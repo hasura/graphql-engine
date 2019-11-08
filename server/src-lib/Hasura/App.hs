@@ -1,9 +1,13 @@
-{-# LANGUAGE Rank2Types      #-}
-{-# LANGUAGE RankNTypes      #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE RankNTypes           #-}
+{-# LANGUAGE RecordWildCards      #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 module Hasura.App where
 
+import           Control.Monad.Base
+import           Control.Monad.Stateless
 import           Control.Monad.STM           (atomically)
+import           Control.Monad.Trans.Control (MonadBaseControl (..))
 import           Data.Aeson                  ((.=))
 import           Data.Time.Clock             (getCurrentTime)
 import           Options.Applicative
@@ -149,7 +153,7 @@ data Loggers
   }
 
 newtype AppM a = AppM { unAppM :: IO a }
-  deriving (Functor, Applicative, Monad, MonadIO)
+  deriving (Functor, Applicative, Monad, MonadIO, MonadBase IO, MonadBaseControl IO)
 
 -- | a separate function to create the initialization context because some of
 -- these contexts might be used by external functions
@@ -206,12 +210,11 @@ initialiseCtx hgeCmd rci = do
 
 
 runHGEServer
-  :: (MonadIO m, HasuraSpockAction m, ConsoleRenderer m)
+  :: (MonadIO m, MonadStateless IO m, HasuraSpockAction m, ConsoleRenderer m)
   => ServeOptions
   -> InitCtx
-  -> (forall b. m b -> IO b)
   -> m ()
-runHGEServer so@ServeOptions{..} InitCtx{..} spockLiftFunction = do
+runHGEServer so@ServeOptions{..} InitCtx{..} = do
   let sqlGenCtx = SQLGenCtx soStringifyNum
       Loggers loggerCtx logger _ = _icLoggers
 
@@ -238,7 +241,6 @@ runHGEServer so@ServeOptions{..} InitCtx{..} spockLiftFunction = do
                                                                _icInstanceId
                                                                soEnabledAPIs
                                                                soLiveQueryOpts
-                                                               spockLiftFunction
 
   -- log inconsistent schema objects
   inconsObjs <- scInconsistentObjs <$> liftIO (getSCFromRef cacheRef)

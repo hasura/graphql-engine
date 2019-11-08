@@ -41,8 +41,9 @@ common common-all
     ApplicativeDo BangPatterns ConstraintKinds DeriveDataTypeable DeriveFoldable DeriveFunctor
     DeriveGeneric DeriveLift DeriveTraversable EmptyCase FlexibleContexts FlexibleInstances
     FunctionalDependencies GeneralizedNewtypeDeriving InstanceSigs LambdaCase MultiParamTypeClasses
-    MultiWayIf NoImplicitPrelude OverloadedStrings QuasiQuotes RankNTypes ScopedTypeVariables
-    StandaloneDeriving TemplateHaskell TupleSections TypeApplications TypeFamilies
+    MultiWayIf NoImplicitPrelude OverloadedStrings QuantifiedConstraints QuasiQuotes RankNTypes
+    ScopedTypeVariables StandaloneDeriving TemplateHaskell TupleSections TypeApplications
+    TypeFamilies TypeOperators
 
 common common-exe
   ghc-options:
@@ -177,7 +178,9 @@ library
                      -- HTTP compression
                      , zlib
 
-  exposed-modules:     Hasura.Prelude
+  exposed-modules:     Control.Monad.Stateless
+
+                     , Hasura.Prelude
                      , Hasura.App
                      , Hasura.Db
                      , Hasura.Logging
