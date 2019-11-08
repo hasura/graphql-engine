@@ -40,10 +40,7 @@ const AddAction = ({
     error: actionDefinitionError,
   } = actionDefinition;
 
-  const onSubmit = e => {
-    if (e) {
-      e.preventDefault();
-    }
+  const onSubmit = () => {
     dispatch(createAction());
   };
 
@@ -91,9 +88,7 @@ const AddAction = ({
         size="sm"
         type="submit"
         disabled={!allowSave}
-        onClick={() => {
-          onSubmit();
-        }}
+        onClick={onSubmit}
       >
         Create
       </Button>

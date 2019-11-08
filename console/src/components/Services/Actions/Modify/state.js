@@ -1,19 +1,14 @@
-import {
-  defaultArg,
-  gqlInbuiltTypes,
-  defaultScalarType,
-} from '../Common/stateDefaults';
-
 const state = {
-  name: '',
   webhook: '',
-  types: [
-    ...JSON.parse(JSON.stringify(gqlInbuiltTypes)),
-    { ...defaultScalarType },
-  ],
-  arguments: [{ ...defaultArg }],
   kind: 'synchronous',
-  outputType: '',
+  actionDefinition: {
+    sdl: '',
+    error: null,
+  },
+  typeDefinition: {
+    sdl: '',
+    error: null,
+  },
   isFetching: false,
 };
 

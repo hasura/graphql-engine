@@ -6,7 +6,8 @@ import CrossIcon from '../../../../Common/Icons/Cross';
 import SDLEditor from '../../../../Common/AceEditor/SDLEditor';
 
 const editorLabel = 'Action definition';
-const editorTooltip = 'Define your action as a GraphQL mutation using SDL';
+const editorTooltip =
+  'Define the action as mutation using GraphQL SDL. You can reuse existing types or define new types in the types definition editor below.';
 
 let parseDebounceTimer = null;
 
@@ -65,10 +66,12 @@ const ActionDefinitionEditor = ({
       </h2>
       {error && (
         <div
-          className={`${styles.display_flex} ${styles.add_mar_bottom_small}`}
+          className={`${styles.display_flex} ${styles.add_mar_bottom_small} ${
+            styles.errorMessage
+          }`}
         >
           <CrossIcon />
-          <i style={{ color: 'red' }}>{errorMessage}</i>
+          <p>{errorMessage}</p>
         </div>
       )}
       <SDLEditor

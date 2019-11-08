@@ -181,7 +181,35 @@ export const saveAction = currentAction => (dispatch, getState) => {
   const { modify: rawState } = getState().actions;
   const { types: existingTypesList } = getState().types;
 
-  const state = { ...rawState };
+  const {
+    name: actionName,
+    arguments: args,
+    outputType,
+    error: actionDefError,
+  } = getActionDefinitionFromSdl(rawState.actionDefinition.sdl);
+  if (actionDefError) {
+    return dispatch(
+      showErrorNotification('Invalid Action Definition', actionDefError)
+    );
+  }
+
+  const { types, error: typeDefError } = getTypesFromSdl(
+    rawState.typeDefinition.sdl
+  );
+  if (typeDefError) {
+    return dispatch(
+      showErrorNotification('Invalid Types Definition', typeDefError)
+    );
+  }
+
+  const state = {
+    webhook: rawState.webhook,
+    kind: rawState.kind,
+    types,
+    name: actionName,
+    arguments: args,
+    outputType,
+  };
 
   const validationError = getStateValidationError(state);
 

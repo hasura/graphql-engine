@@ -6,12 +6,6 @@ export const setModifyState = state => ({
   state,
 });
 
-const SET_ACTION_NAME = 'Actions/Modify/SET_ACTION_NAME';
-export const setActionName = name => ({
-  type: SET_ACTION_NAME,
-  name,
-});
-
 const SET_ACTION_WEBHOOK = 'Actions/Modify/SET_ACTION_WEBHOOK';
 export const setActionWebhook = webhook => ({
   type: SET_ACTION_WEBHOOK,
@@ -24,31 +18,16 @@ export const setActionKind = kind => ({
   kind,
 });
 
-const SET_ACTION_ARGUMENTS = 'Actions/Modify/SET_ACTION_ARGUMENTS';
-export const setActionArguments = args => ({
-  type: SET_ACTION_ARGUMENTS,
-  args,
+const SET_ACTION_DEFINITION = 'Actions/Add/SET_ACTION_DEFINITION';
+export const setActionDefinition = (sdl, error) => ({
+  type: SET_ACTION_DEFINITION,
+  definition: { sdl, error },
 });
 
-const SET_ACTION_OUTPUT_TYPE = 'Actions/Modify/SET_ACTION_OUTPUT_TYPE';
-export const setActionOutputType = outputType => ({
-  type: SET_ACTION_OUTPUT_TYPE,
-  outputType,
-});
-
-const SET_TYPES = 'Actions/Modify/SET_TYPES';
-export const setTypes = types => ({
-  type: SET_TYPES,
-  types,
-});
-
-// used to set types, args and output types together
-const SET_TYPES_BULK = 'Actions/Modify/SET_TYPES_BULK';
-export const setTypesBulk = (types, args, outputType) => ({
-  type: SET_TYPES_BULK,
-  args,
-  types,
-  outputType,
+const SET_TYPE_DEFINITION = 'Actions/Add/SET_TYPE_DEFINITION';
+export const setTypeDefinition = (sdl, error = null) => ({
+  type: SET_TYPE_DEFINITION,
+  definition: { sdl, error },
 });
 
 const SET_FETCHING = 'Actions/Modify/SET_FETCHING';
@@ -62,11 +41,6 @@ const reducer = (state = defaultState, action) => {
       return {
         ...action.state,
       };
-    case SET_ACTION_NAME:
-      return {
-        ...state,
-        name: action.name,
-      };
     case SET_ACTION_WEBHOOK:
       return {
         ...state,
@@ -77,28 +51,6 @@ const reducer = (state = defaultState, action) => {
         ...state,
         kind: action.kind,
       };
-    case SET_ACTION_ARGUMENTS:
-      return {
-        ...state,
-        arguments: action.args,
-      };
-    case SET_ACTION_OUTPUT_TYPE:
-      return {
-        ...state,
-        outputType: action.outputType,
-      };
-    case SET_TYPES:
-      return {
-        ...state,
-        types: action.types,
-      };
-    case SET_TYPES_BULK:
-      return {
-        ...state,
-        types: action.types,
-        arguments: action.args,
-        outputType: action.outputType,
-      };
     case SET_FETCHING:
       return {
         ...state,
@@ -108,6 +60,16 @@ const reducer = (state = defaultState, action) => {
       return {
         ...state,
         isFetching: false,
+      };
+    case SET_ACTION_DEFINITION:
+      return {
+        ...state,
+        actionDefinition: action.definition,
+      };
+    case SET_TYPE_DEFINITION:
+      return {
+        ...state,
+        typeDefinition: action.definition,
       };
     default:
       return state;

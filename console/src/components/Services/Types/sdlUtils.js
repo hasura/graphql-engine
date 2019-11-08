@@ -84,8 +84,6 @@ export const getTypesFromSdl = sdl => {
   return typeDefinition;
 };
 
-export const getSdlFromDef = () => {};
-
 export const getActionDefinitionFromSdl = sdl => {
   const schemaAst = sdlParse(sdl);
   const definition = {
@@ -131,4 +129,85 @@ export const getActionDefinitionFromSdl = sdl => {
   console.log(definition);
 
   return definition;
+};
+
+const getArgumentsSdl = args => {
+  if (!args.length) return '';
+
+  const argsSdl = args.map(a => {
+    return `    ${a.name}: ${a.type}`;
+  });
+
+  return `(\n${argsSdl.join('\n')}\n  )`;
+};
+
+const getFieldsSdl = fields => {
+  const fieldsSdl = fields.map(f => {
+    console.log('Field ==========');
+    console.log(f);
+    console.log('================');
+    return `  ${f.name} ${getArgumentsSdl(f.arguments)}: ${f.type}`;
+  });
+  return fieldsSdl.join('\n');
+};
+
+const getObjectTypeSdl = type => {
+  return `type ${type.name} {
+${getFieldsSdl(type.fields)}
+}\n\n`;
+};
+
+const getInputTypeSdl = type => {
+  return `input ${type.name} {
+${getFieldsSdl(type.fields)}
+}\n\n`;
+};
+
+const getScalarTypeSdl = type => {
+  return `scalar ${type.name}\n\n`;
+};
+
+const getEnumTypeSdl = type => {
+  const enumValuesSdl = type.values.map(v => {
+    return `  ${v.value}`;
+  });
+  return `enum ${type.name} {
+  ${enumValuesSdl.join('\n')}
+}\n\n`;
+};
+
+const getTypeSdl = type => {
+  switch (type.kind) {
+    case 'scalar':
+      return getScalarTypeSdl(type);
+    case 'enum':
+      return getEnumTypeSdl(type);
+    case 'input_object':
+      return getInputTypeSdl(type);
+    case 'object':
+      return getObjectTypeSdl(type);
+    default:
+      return '';
+  }
+};
+
+export const getTypesSdl = types => {
+  let sdl = '';
+  types.forEach(t => {
+    sdl += getTypeSdl(t);
+  });
+  return sdl;
+};
+
+export const getActionDefinitionSdl = (name, args, outputType) => {
+  return getObjectTypeSdl({
+    name: 'Mutation',
+    fields: [
+      {
+        name,
+        arguments: args,
+        type: outputType,
+      },
+    ],
+  });
 };
