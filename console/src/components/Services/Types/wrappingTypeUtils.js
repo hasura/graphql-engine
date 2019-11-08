@@ -121,3 +121,28 @@ export const getUnderlyingType = graphqlType => {
   }
   return _type;
 };
+
+export const getWrappedTypeNameFromAst = type => {
+  let _t = { type };
+  const typewraps = [];
+  while (_t.kind !== 'NamedType') {
+    if (_t.kind === 'ListType') {
+      typewraps.push('l');
+    }
+    if (_t.kind === 'NonNullType') {
+      typewraps.push('n');
+    }
+    _t = _t.type;
+  }
+  let typename = _t.name.value;
+  typewraps.forEach(w => {
+    if (w === 'l') {
+      typename = `[${typename}]`;
+    }
+    if (w === 'n') {
+      typename = `${typename}!`;
+    }
+  });
+
+  return typename;
+};

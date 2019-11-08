@@ -20,13 +20,12 @@ import { getConfirmation } from '../../Common/utils/jsUtils';
 import {
   generateActionDefinition,
   getStateValidationError,
-  getActionDefinitionFromSdl,
-  getTypesFromSdl,
 } from './Common/utils';
 import { showErrorNotification } from '../Common/Notification';
 import { appPrefix } from './constants';
 import { push } from 'react-router-redux';
 import { reformCustomTypes, mergeCustomTypes } from '../Types/utils';
+import { getActionDefinitionFromSdl, getTypesFromSdl } from '../Types/sdlUtils';
 import {
   setFetching as createActionRequestInProgress,
   unsetFetching as createActionRequestComplete,
