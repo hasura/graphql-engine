@@ -17,7 +17,6 @@ import           System.Exit                 (exitFailure)
 import qualified Control.Concurrent          as C
 import qualified Data.Aeson                  as A
 import qualified Data.ByteString.Char8       as BC
-import qualified Data.ByteString.Lazy        as BL
 import qualified Data.ByteString.Lazy.Char8  as BLC
 import qualified Data.Text                   as T
 import qualified Data.Time.Clock             as Clock
@@ -25,12 +24,9 @@ import qualified Data.Yaml                   as Y
 import qualified Database.PG.Query           as Q
 import qualified Network.HTTP.Client         as HTTP
 import qualified Network.HTTP.Client.TLS     as HTTP
-import qualified Network.HTTP.Types          as HTTP
-import qualified Network.Wai                 as Wai
 import qualified Network.Wai.Handler.Warp    as Warp
 import qualified System.Posix.Signals        as Signals
 import qualified Text.Mustache.Compile       as M
-import qualified Web.Spock.Core              as Spock
 
 import           Hasura.Db
 import           Hasura.EncJSON
@@ -42,15 +38,12 @@ import           Hasura.RQL.Types            (CacheRWM, Code (..),
                                               HasHttpManager, HasSQLGenCtx,
                                               HasSystemDefined, QErr (..),
                                               SQLGenCtx (..), SchemaCache (..),
-                                              UserInfo, UserInfoM,
-                                              adminUserInfo, decodeValue,
-                                              emptySchemaCache, isAdmin,
-                                              throw400, userRole)
+                                              UserInfoM, adminUserInfo,
+                                              decodeValue, emptySchemaCache,
+                                              throw400)
 import           Hasura.Server.App
 import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates  (checkForUpdates)
-import           Hasura.Server.Compression
-import           Hasura.Server.Context
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
 import           Hasura.Server.Migrate       (migrateCatalog)
@@ -58,7 +51,6 @@ import           Hasura.Server.Query         (Run, RunCtx (..), peelRun,
                                               runQueryM)
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
-import           Hasura.Server.Utils
 import           Hasura.Server.Version
 
 
@@ -210,7 +202,7 @@ initialiseCtx hgeCmd rci = do
 
 
 runHGEServer
-  :: (MonadIO m, MonadStateless IO m, HasuraSpockAction m, ConsoleRenderer m)
+  :: (MonadIO m, MonadStateless IO m, UserAuthMiddleware m, ConsoleRenderer m, HttpLogger m)
   => ServeOptions
   -> InitCtx
   -> m ()
@@ -222,7 +214,8 @@ runHGEServer so@ServeOptions{..} InitCtx{..} = do
   -- log serve options
   unLogger logger $ serveOptsToLog so
 
-  authModeRes <- runExceptT $ mkAuthMode soAdminSecret soAuthHook soJwtSecret soUnAuthRole _icHttpManager loggerCtx
+  authModeRes <- runExceptT $
+    mkAuthMode soAdminSecret soAuthHook soJwtSecret soUnAuthRole _icHttpManager loggerCtx
 
   authMode <- either (printErrExit . T.unpack) return authModeRes
 
@@ -278,7 +271,8 @@ runHGEServer so@ServeOptions{..} InitCtx{..} = do
 
   finishTime <- liftIO Clock.getCurrentTime
   let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime
-  unLogger logger $ mkGenericLog LevelInfo "server" $ StartupTimeInfo "starting API server" apiInitTime
+  unLogger logger $
+    mkGenericLog LevelInfo "server" $ StartupTimeInfo "starting API server" apiInitTime
   liftIO $ Warp.runSettings warpSettings app
 
   where
@@ -349,84 +343,17 @@ execQuery queryBs = do
   encJToLBS <$> runQueryM query
 
 
-instance HasuraSpockAction AppM where
-  makeSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
-    req <- Spock.request
-    reqBody <- liftIO $ Wai.strictRequestBody req
-    let headers = Wai.requestHeaders req
-        authMode = scAuthMode serverCtx
-        manager = scManager serverCtx
+instance HttpLogger AppM where
+  logHttpError logger userInfoM reqId httpReq req qErr headers =
+    unLogger logger $ mkHttpLog $ mkHttpErrorLogContext userInfoM reqId httpReq qErr req Nothing Nothing headers
 
-    requestId <- getRequestId headers
+  logHttpSuccess logger userInfoM reqId httpReq _ compressedResponse qTime cType headers =
+    unLogger logger $ mkHttpLog $ mkHttpAccessLogContext userInfoM reqId httpReq compressedResponse qTime cType headers
 
-    userInfoE <- liftIO $ runExceptT $ getUserInfo logger manager headers authMode
-    userInfo  <- either (logErrorAndResp Nothing requestId req (Left reqBody) False headers . qErrModifier)
-                return userInfoE
 
-    let handlerState = HandlerCtx serverCtx userInfo headers requestId
-        curRole = userRole userInfo
-
-    t1 <- liftIO getCurrentTime -- for measuring response time purposes
-
-    (result, q) <- case apiHandler of
-      AHGet handler -> do
-        res <- liftIO $ runReaderT (runExceptT handler) handlerState
-        return (res, Nothing)
-      AHPost handler -> do
-        parsedReqE <- runExceptT $ parseBody reqBody
-        parsedReq  <- either (logErrorAndResp (Just userInfo) requestId req (Left reqBody) (isAdmin curRole) headers . qErrModifier)
-                      return parsedReqE
-        res <- liftIO $ runReaderT (runExceptT $ handler parsedReq) handlerState
-        return (res, Just parsedReq)
-
-    t2 <- liftIO getCurrentTime -- for measuring response time purposes
-
-    -- apply the error modifier
-    let modResult = fmapL qErrModifier result
-
-    -- log and return result
-    case modResult of
-      Left err  -> let jErr = maybe (Left reqBody) (Right . A.toJSON) q
-                   in logErrorAndResp (Just userInfo) requestId req jErr (isAdmin curRole) headers err
-      Right res -> logSuccessAndResp (Just userInfo) requestId req res (Just (t1, t2)) headers
-
-    where
-      logger = scLogger serverCtx
-
-      logErrorAndResp
-        :: (MonadIO m)
-        => Maybe UserInfo
-        -> RequestId
-        -> Wai.Request
-        -> Either BL.ByteString A.Value
-        -> Bool
-        -> [HTTP.Header]
-        -> QErr
-        -> Spock.ActionCtxT ctx m a
-      logErrorAndResp userInfo reqId req reqBody includeInternal headers qErr = do
-        logError logger mkHttpLog userInfo reqId req reqBody qErr headers
-        Spock.setStatus $ qeStatus qErr
-        Spock.json $ qErrEncoder includeInternal qErr
-
-      logSuccessAndResp userInfo reqId req result qTime reqHeaders =
-        case result of
-          JSONResp (HttpResponse encJson h) ->
-            possiblyCompressedLazyBytes userInfo reqId req qTime (encJToLBS encJson)
-              (pure jsonHeader <> mkHeaders h) reqHeaders
-          RawResp (HttpResponse rawBytes h) ->
-            possiblyCompressedLazyBytes userInfo reqId req qTime rawBytes (mkHeaders h) reqHeaders
-
-      possiblyCompressedLazyBytes userInfo reqId req qTime respBytes respHeaders reqHeaders = do
-        let (compressedResp, mEncodingHeader, mCompressionType) =
-              compressResponse (Wai.requestHeaders req) respBytes
-            encodingHeader = maybe [] pure mEncodingHeader
-            reqIdHeader = (requestIdHeader, unRequestId reqId)
-            allRespHeaders = pure reqIdHeader <> encodingHeader <> respHeaders
-        logSuccess logger mkHttpLog userInfo reqId req compressedResp qTime mCompressionType reqHeaders
-        mapM_ (uncurry Spock.setHeader) allRespHeaders
-        Spock.lazyBytes compressedResp
-
-      mkHeaders = maybe [] (map unHeader)
+instance UserAuthMiddleware AppM where
+  resolveUserInfo logger manager headers authMode =
+    runExceptT $ getUserInfo logger manager headers authMode
 
 
 instance ConsoleRenderer AppM where

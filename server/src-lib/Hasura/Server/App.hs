@@ -13,25 +13,25 @@ import           Data.IORef
 import           Data.Time.Clock                        (UTCTime)
 import           Data.Time.Clock.POSIX                  (getPOSIXTime)
 import           Network.Mime                           (defaultMimeLookup)
-import           Network.Wai                            (requestHeaders,
-                                                         strictRequestBody)
 import           System.Exit                            (exitFailure)
 import           System.FilePath                        (joinPath, takeFileName)
-import           Web.Spock.Core
+import           Web.Spock.Core                         ((<//>))
 
 import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.HashMap.Strict                    as M
 import qualified Data.HashSet                           as S
 import qualified Data.Text                              as T
+import qualified Data.Time.Clock                        as Clock
 import qualified Database.PG.Query                      as Q
 import qualified Network.HTTP.Client                    as HTTP
-import qualified Network.HTTP.Types                     as N
+import qualified Network.HTTP.Types                     as HTTP
 import qualified Network.Wai                            as Wai
 import qualified Network.Wai.Handler.WebSockets         as WS
 import qualified Network.WebSockets                     as WS
 import qualified System.Metrics                         as EKG
 import qualified System.Metrics.Json                    as EKG
 import qualified Text.Mustache                          as M
+import qualified Web.Spock.Core                         as Spock
 
 import           Hasura.EncJSON
 import           Hasura.Prelude                         hiding (get, put)
@@ -89,7 +89,7 @@ data HandlerCtx
   = HandlerCtx
   { hcServerCtx  :: !ServerCtx
   , hcUser       :: !UserInfo
-  , hcReqHeaders :: ![N.Header]
+  , hcReqHeaders :: ![HTTP.Header]
   , hcRequestId  :: !RequestId
   }
 
@@ -184,36 +184,6 @@ buildQCtx = do
   sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
   return $ QCtx userInfo cache sqlGenCtx
 
-logSuccess
-  :: (MonadIO m, L.ToEngineLog a)
-  => L.Logger
-  -> HttpLogger a
-  -> Maybe UserInfo
-  -> RequestId
-  -> Wai.Request
-  -> BL.ByteString
-  -> Maybe (UTCTime, UTCTime)
-  -> Maybe CompressionType
-  -> [N.Header]
-  -> m ()
-logSuccess logger httpLogger userInfoM reqId httpReq res qTime cType headers =
-  L.unLogger logger $ httpLogger $
-    mkHttpAccessLogContext userInfoM reqId httpReq res qTime cType headers
-
-logError
-  :: (MonadIO m, L.ToEngineLog a)
-  => L.Logger
-  -> HttpLogger a
-  -> Maybe UserInfo
-  -> RequestId
-  -> Wai.Request
-  -> Either BL.ByteString Value
-  -> QErr
-  -> [N.Header]
-  -> m ()
-logError logger httpLogger userInfoM reqId httpReq req qErr headers =
-  L.unLogger logger $ httpLogger $
-    mkHttpErrorLogContext userInfoM reqId httpReq qErr req Nothing Nothing headers
 
 class (Monad m) => HasuraSpockAction m where
   makeSpockAction
@@ -224,7 +194,146 @@ class (Monad m) => HasuraSpockAction m where
     -> (QErr -> QErr)
     -- ^ `QErr` modifier
     -> APIHandler a
-    -> ActionT m ()
+    -> Spock.ActionT m ()
+
+class (Monad m) => UserAuthMiddleware m where
+  resolveUserInfo
+    :: (MonadIO m)
+    => L.Logger
+    -> HTTP.Manager
+    -> [HTTP.Header]
+    -> AuthMode
+    -> m (Either QErr UserInfo)
+
+class (Monad m) => HttpLogger m where
+  logHttpError
+    :: (MonadIO m)
+    => L.Logger
+    -- ^ the logger
+    -> Maybe UserInfo
+    -- ^ user info may or may not be present (error can happen during user resolution)
+    -> RequestId
+    -- ^ request id of the request
+    -> Wai.Request
+    -- ^ the Wai.Request object
+    -> Either BL.ByteString Value
+    -- ^ the actual request body (bytestring if unparsed, Aeson value if parsed)
+    -> QErr
+    -- ^ the error
+    -> [HTTP.Header]
+    -- ^ list of request headers
+    -> m ()
+
+  logHttpSuccess
+    :: (MonadIO m)
+    => L.Logger
+    -- ^ the logger
+    -> Maybe UserInfo
+    -- ^ user info may or may not be present (error can happen during user resolution)
+    -> RequestId
+    -- ^ request id of the request
+    -> Wai.Request
+    -- ^ the Wai.Request object
+    -> BL.ByteString
+    -- ^ the response bytes
+    -> BL.ByteString
+    -- ^ the compressed response bytes
+    -- ^ TODO: make the above two type represented
+    -> Maybe (UTCTime, UTCTime)
+    -- ^ possible execution time
+    -> Maybe CompressionType
+    -- ^ possible compression type
+    -> [HTTP.Header]
+    -- ^ list of request headers
+    -> m ()
+
+
+mkSpockAction
+  :: (MonadIO m, FromJSON a, ToJSON a, UserAuthMiddleware m, HttpLogger m)
+  => ServerCtx
+  -> (Bool -> QErr -> Value)
+  -- ^ `QErr` JSON encoder function
+  -> (QErr -> QErr)
+  -- ^ `QErr` modifier
+  -> APIHandler a
+  -> Spock.ActionT m ()
+mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
+    req <- Spock.request
+    reqBody <- liftIO $ Wai.strictRequestBody req
+    let headers = Wai.requestHeaders req
+        authMode = scAuthMode serverCtx
+        manager = scManager serverCtx
+
+    requestId <- getRequestId headers
+
+    userInfoE <- lift $ resolveUserInfo logger manager headers authMode
+    userInfo  <- either (logErrorAndResp Nothing requestId req (Left reqBody) False headers . qErrModifier)
+                return userInfoE
+
+    let handlerState = HandlerCtx serverCtx userInfo headers requestId
+        curRole = userRole userInfo
+
+    t1 <- liftIO Clock.getCurrentTime -- for measuring response time purposes
+
+    (result, q) <- case apiHandler of
+      AHGet handler -> do
+        res <- liftIO $ runReaderT (runExceptT handler) handlerState
+        return (res, Nothing)
+      AHPost handler -> do
+        parsedReqE <- runExceptT $ parseBody reqBody
+        parsedReq  <- either (logErrorAndResp (Just userInfo) requestId req (Left reqBody) (isAdmin curRole) headers . qErrModifier)
+                      return parsedReqE
+        res <- liftIO $ runReaderT (runExceptT $ handler parsedReq) handlerState
+        return (res, Just parsedReq)
+
+    t2 <- liftIO Clock.getCurrentTime -- for measuring response time purposes
+
+    -- apply the error modifier
+    let modResult = fmapL qErrModifier result
+
+    -- log and return result
+    case modResult of
+      Left err  -> let jErr = maybe (Left reqBody) (Right . toJSON) q
+                   in logErrorAndResp (Just userInfo) requestId req jErr (isAdmin curRole) headers err
+      Right res -> logSuccessAndResp (Just userInfo) requestId req res (Just (t1, t2)) headers
+
+    where
+      logger = scLogger serverCtx
+
+      logErrorAndResp
+        :: (MonadIO m, HttpLogger m)
+        => Maybe UserInfo
+        -> RequestId
+        -> Wai.Request
+        -> Either BL.ByteString Value
+        -> Bool
+        -> [HTTP.Header]
+        -> QErr
+        -> Spock.ActionCtxT ctx m a
+      logErrorAndResp userInfo reqId req reqBody includeInternal headers qErr = do
+        lift $ logHttpError logger userInfo reqId req reqBody qErr headers
+        Spock.setStatus $ qeStatus qErr
+        Spock.json $ qErrEncoder includeInternal qErr
+
+      logSuccessAndResp userInfo reqId req result qTime reqHeaders =
+        case result of
+          JSONResp (HttpResponse encJson h) ->
+            possiblyCompressedLazyBytes userInfo reqId req qTime (encJToLBS encJson)
+              (pure jsonHeader <> mkHeaders h) reqHeaders
+          RawResp (HttpResponse rawBytes h) ->
+            possiblyCompressedLazyBytes userInfo reqId req qTime rawBytes (mkHeaders h) reqHeaders
+
+      possiblyCompressedLazyBytes userInfo reqId req qTime respBytes respHeaders reqHeaders = do
+        let (compressedResp, mEncodingHeader, mCompressionType) =
+              compressResponse (Wai.requestHeaders req) respBytes
+            encodingHeader = maybe [] pure mEncodingHeader
+            reqIdHeader = (requestIdHeader, unRequestId reqId)
+            allRespHeaders = pure reqIdHeader <> encodingHeader <> respHeaders
+        lift $ logHttpSuccess logger userInfo reqId req respBytes compressedResp qTime mCompressionType reqHeaders
+        mapM_ (uncurry Spock.setHeader) allRespHeaders
+        Spock.lazyBytes compressedResp
+
+      mkHeaders = maybe [] (map unHeader)
 
 v1QueryHandler :: RQLQuery -> Handler (HttpResponse EncJSON)
 v1QueryHandler query = do
@@ -286,14 +395,14 @@ v1Alpha1PGDumpHandler b = do
   return $ RawResp $ HttpResponse output (Just [Header sqlHeader])
 
 consoleAssetsHandler
-  :: (MonadIO m)
+  :: (MonadIO m, HttpLogger m)
   => L.Logger
   -> Text
   -> FilePath
-  -> ActionT m ()
+  -> Spock.ActionT m ()
 consoleAssetsHandler logger dir path = do
-  req <- request
-  let reqHeaders = requestHeaders req
+  req <- Spock.request
+  let reqHeaders = Wai.requestHeaders req
   -- '..' in paths need not be handed as it is resolved in the url by
   -- spock's routing. we get the expanded path.
   eFileContents <- liftIO $ try $ BL.readFile $
@@ -301,9 +410,9 @@ consoleAssetsHandler logger dir path = do
   either (onError reqHeaders) onSuccess eFileContents
   where
     onSuccess c = do
-      mapM_ (uncurry setHeader) headers
-      lazyBytes c
-    onError :: (MonadIO m) => [N.Header] -> IOException -> ActionT m ()
+      mapM_ (uncurry Spock.setHeader) headers
+      Spock.lazyBytes c
+    onError :: (MonadIO m, HttpLogger m) => [HTTP.Header] -> IOException -> Spock.ActionT m ()
     onError hdrs = raiseGenericApiError logger hdrs . err404 NotFound . T.pack . show
     fn = T.pack $ takeFileName path
     -- set gzip header if the filename ends with .gz
@@ -369,7 +478,7 @@ data HasuraApp
   }
 
 mkWaiApp
-  :: (MonadIO m, MonadStateless IO m, HasuraSpockAction m, ConsoleRenderer m)
+  :: (MonadIO m, MonadStateless IO m, ConsoleRenderer m, HttpLogger m, UserAuthMiddleware m)
   => Q.TxIsolation
   -> L.LoggerCtx
   -> SQLGenCtx
@@ -435,7 +544,7 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg 
       liftIO $ EKG.registerCounter "ekg.server_timestamp_ms" getTimeMs ekgStore
 
     spockApp <- liftWithStateless $ \lowerIO ->
-      spockAsApp $ spockT lowerIO $ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry
+      Spock.spockAsApp $ Spock.spockT lowerIO $ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry
 
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
         stopWSServer = WS.stopWSServerApp wsServerEnv
@@ -451,89 +560,89 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg 
 
 
 httpApp
-  :: (MonadIO m, HasuraSpockAction m, ConsoleRenderer m)
+  :: (MonadIO m, ConsoleRenderer m, HttpLogger m, UserAuthMiddleware m)
   => CorsConfig
   -> ServerCtx
   -> Bool
   -> Maybe Text
   -> Bool
-  -> SpockT m ()
+  -> Spock.SpockT m ()
 httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
 
     -- cors middleware
     unless (isCorsDisabled corsCfg) $
-      middleware $ corsMiddleware (mkDefaultCorsPolicy corsCfg)
+      Spock.middleware $ corsMiddleware (mkDefaultCorsPolicy corsCfg)
 
     -- API Console and Root Dir
     when (enableConsole && enableMetadata) serveApiConsole
 
     -- Health check endpoint
-    get "healthz" $ do
+    Spock.get "healthz" $ do
       sc <- liftIO $ getSCFromRef $ scCacheRef serverCtx
       if null $ scInconsistentObjs sc
-        then setStatus N.status200 >> lazyBytes "OK"
-        else setStatus N.status500 >> lazyBytes "ERROR"
+        then Spock.setStatus HTTP.status200 >> Spock.lazyBytes "OK"
+        else Spock.setStatus HTTP.status500 >> Spock.lazyBytes "ERROR"
 
-    get "v1/version" $ do
-      uncurry setHeader jsonHeader
-      lazyBytes $ encode $ object [ "version" .= currentVersion ]
+    Spock.get "v1/version" $ do
+      uncurry Spock.setHeader jsonHeader
+      Spock.lazyBytes $ encode $ object [ "version" .= currentVersion ]
 
     when enableMetadata $ do
 
-      post "v1/query" $ spockAction encodeQErr id $
+      Spock.post "v1/query" $ spockAction encodeQErr id $
         mkPostHandler $ mkAPIRespHandler v1QueryHandler
 
-      post ("api/1/table" <//> var <//> var) $ \tableName queryType ->
-        makeSpockAction serverCtx encodeQErr id $ mkPostHandler $
+      Spock.post ("api/1/table" <//> Spock.var <//> Spock.var) $ \tableName queryType ->
+        mkSpockAction serverCtx encodeQErr id $ mkPostHandler $
           mkAPIRespHandler $ legacyQueryHandler (TableName tableName) queryType
 
     when enablePGDump $
-      post "v1alpha1/pg_dump" $ spockAction encodeQErr id $
+      Spock.post "v1alpha1/pg_dump" $ spockAction encodeQErr id $
         mkPostHandler v1Alpha1PGDumpHandler
 
     when enableConfig $
-      get "v1alpha1/config" $ spockAction encodeQErr id $
+      Spock.get "v1alpha1/config" $ spockAction encodeQErr id $
         mkGetHandler $ do
           onlyAdmin
           let res = encJFromJValue $ runGetConfig (scAuthMode serverCtx)
           return $ JSONResp $ HttpResponse res Nothing
 
     when enableGraphQL $ do
-      post "v1alpha1/graphql/explain" gqlExplainAction
+      Spock.post "v1alpha1/graphql/explain" gqlExplainAction
 
-      post "v1alpha1/graphql" $ spockAction GH.encodeGQErr id $
+      Spock.post "v1alpha1/graphql" $ spockAction GH.encodeGQErr id $
         mkPostHandler $ mkAPIRespHandler v1Alpha1GQHandler
 
-      post "v1/graphql/explain" gqlExplainAction
+      Spock.post "v1/graphql/explain" gqlExplainAction
 
-      post "v1/graphql" $ spockAction GH.encodeGQErr allMod200 $
+      Spock.post "v1/graphql" $ spockAction GH.encodeGQErr allMod200 $
         mkPostHandler $ mkAPIRespHandler v1GQHandler
 
     when (isDeveloperAPIEnabled serverCtx) $ do
-      get "dev/ekg" $ spockAction encodeQErr id $
+      Spock.get "dev/ekg" $ spockAction encodeQErr id $
         mkGetHandler $ do
           onlyAdmin
           respJ <- liftIO $ EKG.sampleAll $ scEkgStore serverCtx
           return $ JSONResp $ HttpResponse (encJFromJValue $ EKG.sampleToJson respJ) Nothing
-      get "dev/plan_cache" $ spockAction encodeQErr id $
+      Spock.get "dev/plan_cache" $ spockAction encodeQErr id $
         mkGetHandler $ do
           onlyAdmin
           respJ <- liftIO $ E.dumpPlanCache $ scPlanCache serverCtx
           return $ JSONResp $ HttpResponse (encJFromJValue respJ) Nothing
-      get "dev/subscriptions" $ spockAction encodeQErr id $
+      Spock.get "dev/subscriptions" $ spockAction encodeQErr id $
         mkGetHandler $ do
           onlyAdmin
           respJ <- liftIO $ EL.dumpLiveQueriesState False $ scLQState serverCtx
           return $ JSONResp $ HttpResponse (encJFromJValue respJ) Nothing
-      get "dev/subscriptions/extended" $ spockAction encodeQErr id $
+      Spock.get "dev/subscriptions/extended" $ spockAction encodeQErr id $
         mkGetHandler $ do
           onlyAdmin
           respJ <- liftIO $ EL.dumpLiveQueriesState True $ scLQState serverCtx
           return $ JSONResp $ HttpResponse (encJFromJValue respJ) Nothing
 
-    forM_ [GET,POST] $ \m -> hookAny m $ \_ -> do
-      req <- request
-      let headers = requestHeaders req
+    forM_ [Spock.GET, Spock.POST] $ \m -> Spock.hookAny m $ \_ -> do
+      req <- Spock.request
+      let headers = Wai.requestHeaders req
       let qErr = err404 NotFound "resource does not exist"
       raiseGenericApiError logger headers qErr
 
@@ -541,13 +650,13 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
     logger = scLogger serverCtx
 
     spockAction
-      :: (FromJSON a, ToJSON a, MonadIO m, HasuraSpockAction m)
-      => (Bool -> QErr -> Value) -> (QErr -> QErr) -> APIHandler a -> ActionT m ()
-    spockAction = makeSpockAction serverCtx
+      :: (FromJSON a, ToJSON a, MonadIO m, UserAuthMiddleware m, HttpLogger m)
+      => (Bool -> QErr -> Value) -> (QErr -> QErr) -> APIHandler a -> Spock.ActionT m ()
+    spockAction = mkSpockAction serverCtx
 
 
     -- all graphql errors should be of type 200
-    allMod200 qe = qe { qeStatus = N.status200 }
+    allMod200 qe = qe { qeStatus = HTTP.status200 }
 
     gqlExplainAction =
       spockAction encodeQErr id $ mkPostHandler $
@@ -560,32 +669,32 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
 
     serveApiConsole = do
       -- redirect / to /console
-      get root $ redirect "console"
+      Spock.get Spock.root $ Spock.redirect "console"
 
       -- serve static files if consoleAssetsDir is set
       onJust consoleAssetsDir $ \dir ->
-        get ("console/assets" <//> wildcard) $ \path ->
+        Spock.get ("console/assets" <//> Spock.wildcard) $ \path ->
           consoleAssetsHandler logger dir (T.unpack path)
 
       -- serve console html
-      get ("console" <//> wildcard) $ \path -> do
-        req <- request
-        let headers = requestHeaders req
+      Spock.get ("console" <//> Spock.wildcard) $ \path -> do
+        req <- Spock.request
+        let headers = Wai.requestHeaders req
         let authMode = scAuthMode serverCtx
         consoleHtml <- lift $ renderConsole path authMode enableTelemetry consoleAssetsDir
-        either (raiseGenericApiError logger headers . err500 Unexpected . T.pack) html consoleHtml
+        either (raiseGenericApiError logger headers . err500 Unexpected . T.pack) Spock.html consoleHtml
 
 raiseGenericApiError
-  :: (MonadIO m)
+  :: (MonadIO m, HttpLogger m)
   => L.Logger
-  -> [N.Header]
+  -> [HTTP.Header]
   -> QErr
-  -> ActionT m ()
+  -> Spock.ActionT m ()
 raiseGenericApiError logger headers qErr = do
-  req <- request
-  reqBody <- liftIO $ strictRequestBody req
-  reqId <- getRequestId $ requestHeaders req
-  logError logger mkHttpLog Nothing reqId req (Left reqBody) qErr headers
-  uncurry setHeader jsonHeader
-  setStatus $ qeStatus qErr
-  lazyBytes $ encode qErr
+  req <- Spock.request
+  reqBody <- liftIO $ Wai.strictRequestBody req
+  reqId <- getRequestId $ Wai.requestHeaders req
+  lift $ logHttpError logger Nothing reqId req (Left reqBody) qErr headers
+  uncurry Spock.setHeader jsonHeader
+  Spock.setStatus $ qeStatus qErr
+  Spock.lazyBytes $ encode qErr

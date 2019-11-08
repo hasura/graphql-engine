@@ -9,7 +9,6 @@ module Hasura.Server.Logging
   , mkHttpAccessLogContext
   , mkHttpErrorLogContext
   , mkHttpLog
-  , HttpLogger
   , HttpInfoLog(..)
   , OperationLog(..)
   , HttpLogContext(..)
@@ -235,8 +234,6 @@ mkHttpErrorLogContext userInfoM reqId req err query mTimeT compressTypeM headers
            , olError              = Just err
            }
   in HttpLogContext http op
-
-type HttpLogger a = (L.ToEngineLog a) => HttpLogContext -> a
 
 data HttpLog
   = HttpLog
