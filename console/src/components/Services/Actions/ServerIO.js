@@ -26,11 +26,7 @@ import { showErrorNotification } from '../Common/Notification';
 import { appPrefix } from './constants';
 import { push } from 'react-router-redux';
 import { reformCustomTypes, mergeCustomTypes } from '../Types/utils';
-import {
-  setFetching as createActionRequestInProgress,
-  unsetFetching as createActionRequestComplete,
-} from './Add/reducer';
-import { setCustomTypes } from '../Types/ServerIO';
+import { fetchCustomTypes, setCustomTypes } from '../Types/ServerIO';
 import {
   setFetching as modifyActionRequestInProgress,
   unsetFetching as modifyActionRequestComplete,
@@ -126,7 +122,7 @@ export const createAction = () => (dispatch, getState) => {
   const successMsg = 'Created action successfully';
   const errorMsg = 'Creating action failed';
   const customOnSuccess = () => {
-    dispatch(createActionRequestComplete());
+    // dispatch(createActionRequestComplete());
     dispatch(fetchActions()).then(() => {
       dispatch(
         push(`${globals.urlPrefix}${appPrefix}/manage/${state.name}/modify`)
@@ -134,9 +130,9 @@ export const createAction = () => (dispatch, getState) => {
     });
   };
   const customOnError = () => {
-    dispatch(createActionRequestComplete());
+    // dispatch(createActionRequestComplete());
   };
-  dispatch(createActionRequestInProgress());
+  // dispatch(createActionRequestInProgress());
   makeMigrationCall(
     dispatch,
     getState,
@@ -274,6 +270,48 @@ export const deleteAction = currentAction => (dispatch, getState) => {
     getState,
     [upQuery],
     [downQuery],
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg
+  );
+};
+
+export const addActionRel = (objectType, successCb) => (dispatch, getState) => {
+  const { types } = getState().actions.relationships;
+  const { types: existingTypes } = getState().types;
+
+  const customTypesQueryUp = generateSetCustomTypesQuery(
+    reformCustomTypes(types)
+  );
+
+  const customTypesQueryDown = generateSetCustomTypesQuery(
+    reformCustomTypes(existingTypes)
+  );
+
+  const upQueries = [customTypesQueryUp];
+  const downQueries = [customTypesQueryDown];
+
+  const migrationName = 'add_action_rel'; // TODO: better migration name
+  const requestMsg = 'Adding relationship...';
+  const successMsg = 'Relationship added successfully';
+  const errorMsg = 'Adding relationship failed';
+  const customOnSuccess = () => {
+    // dispatch(createActionRequestComplete());
+    dispatch(fetchCustomTypes());
+    successCb();
+  };
+  const customOnError = () => {
+    // dispatch(createActionRequestComplete());
+  };
+  // dispatch(createActionRequestInProgress());
+  makeMigrationCall(
+    dispatch,
+    getState,
+    upQueries,
+    downQueries,
     migrationName,
     customOnSuccess,
     customOnError,

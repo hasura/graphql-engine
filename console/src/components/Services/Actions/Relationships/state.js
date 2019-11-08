@@ -1,6 +1,5 @@
 const state = {
-  object: [],
-  array: [],
+  types: [],
 };
 
 export default state;
