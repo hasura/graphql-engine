@@ -203,7 +203,13 @@ initialiseCtx hgeCmd rci = do
 
 
 runHGEServer
-  :: (MonadIO m, MonadStateless IO m, UserAuthMiddleware m, ConsoleRenderer m, HttpLogger m, MetadataApiAuthz m)
+  :: ( MonadIO m
+     , MonadStateless IO m
+     , UserAuthMiddleware m
+     , MetadataApiAuthz m
+     , HttpLogger m
+     , ConsoleRenderer m
+     )
   => ServeOptions
   -> InitCtx
   -> m ()
@@ -346,11 +352,12 @@ execQuery queryBs = do
 
 instance HttpLogger AppM where
   logHttpError logger userInfoM reqId httpReq req qErr headers =
-    unLogger logger $ mkHttpLog $ mkHttpErrorLogContext userInfoM reqId httpReq qErr req Nothing Nothing headers
+    unLogger logger $ mkHttpLog $
+      mkHttpErrorLogContext userInfoM reqId httpReq qErr req Nothing Nothing headers
 
   logHttpSuccess logger userInfoM reqId httpReq _ compressedResponse qTime cType headers =
-    unLogger logger $ mkHttpLog $ mkHttpAccessLogContext userInfoM reqId httpReq compressedResponse qTime cType headers
-
+    unLogger logger $ mkHttpLog $
+      mkHttpAccessLogContext userInfoM reqId httpReq compressedResponse qTime cType headers
 
 instance UserAuthMiddleware AppM where
   resolveUserInfo logger manager headers authMode =

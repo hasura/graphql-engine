@@ -474,7 +474,13 @@ data HasuraApp
   }
 
 mkWaiApp
-  :: (MonadIO m, MonadStateless IO m, ConsoleRenderer m, HttpLogger m, UserAuthMiddleware m, MetadataApiAuthz m)
+  :: ( MonadIO m
+     , MonadStateless IO m
+     , ConsoleRenderer m
+     , HttpLogger m
+     , UserAuthMiddleware m
+     , MetadataApiAuthz m
+     )
   => Q.TxIsolation
   -> L.LoggerCtx
   -> SQLGenCtx
