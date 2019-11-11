@@ -24,9 +24,11 @@ import           Hasura.SQL.Types
 import qualified Hasura.GraphQL.Schema       as GS
 
 runAddRemoteSchema
-  :: ( QErrM m, UserInfoM m
-     , CacheRWM m, MonadTx m
-     , MonadIO m, HasHttpManager m
+  :: ( QErrM m
+     , CacheRWM m
+     , MonadTx m
+     , MonadIO m
+     , HasHttpManager m
      )
   => AddRemoteSchemaQuery -> m EncJSON
 runAddRemoteSchema q = do
@@ -35,10 +37,9 @@ runAddRemoteSchema q = do
     name = _arsqName q
 
 addRemoteSchemaP1
-  :: (QErrM m, UserInfoM m, CacheRM m)
+  :: (QErrM m, CacheRM m)
   => RemoteSchemaName -> m ()
 addRemoteSchemaP1 name = do
-  adminOnly
   remoteSchemaMap <- scRemoteSchemas <$> askSchemaCache
   onJust (Map.lookup name remoteSchemaMap) $ const $
     throw400 AlreadyExists $ "remote schema with name "
@@ -81,7 +82,6 @@ removeRemoteSchemaP1
   :: (UserInfoM m, QErrM m, CacheRM m)
   => RemoteSchemaName -> m ()
 removeRemoteSchemaP1 rsn = do
-  adminOnly
   sc <- askSchemaCache
   let rmSchemas = scRemoteSchemas sc
   void $ onNothing (Map.lookup rsn rmSchemas) $
@@ -99,12 +99,11 @@ removeRemoteSchemaP2 rsn = do
   return successMsg
 
 runReloadRemoteSchema
-  :: ( QErrM m, UserInfoM m , CacheRWM m
+  :: ( QErrM m, CacheRWM m
      , MonadIO m, HasHttpManager m
      )
   => RemoteSchemaNameQuery -> m EncJSON
 runReloadRemoteSchema (RemoteSchemaNameQuery name) = do
-  adminOnly
   rmSchemas <- scRemoteSchemas <$> askSchemaCache
   rsi <- fmap rscInfo $ onNothing (Map.lookup name rmSchemas) $
          throw400 NotExists $ "remote schema with name "

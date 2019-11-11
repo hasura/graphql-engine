@@ -197,7 +197,6 @@ markForDelivery eid =
 
 subTableP1 :: (UserInfoM m, QErrM m, CacheRM m) => CreateEventTriggerQuery -> m (QualifiedTable, Bool, EventTriggerConf)
 subTableP1 (CreateEventTriggerQuery name qt insert update delete enableManual retryConf webhook webhookFromEnv mheaders replace) = do
-  adminOnly
   ti <- askTabInfo qt
   -- can only replace for same table
   when replace $ do
@@ -281,7 +280,6 @@ unsubTableP1
   :: (UserInfoM m, QErrM m, CacheRM m)
   => DeleteEventTriggerQuery -> m QualifiedTable
 unsubTableP1 (DeleteEventTriggerQuery name)  = do
-  adminOnly
   ti <- askTabInfoFromTrigger name
   return $ _tiName ti
 
@@ -308,10 +306,9 @@ deliverEvent (RedeliverEventQuery eventId) = do
   return successMsg
 
 runRedeliverEvent
-  :: (QErrM m, UserInfoM m, MonadTx m)
+  :: (MonadTx m)
   => RedeliverEventQuery -> m EncJSON
-runRedeliverEvent q =
-  adminOnly >> deliverEvent q
+runRedeliverEvent = deliverEvent
 
 insertManualEvent
   :: QualifiedTable
@@ -330,10 +327,9 @@ insertManualEvent qt trn rowData = do
     getEid (x:_) = return x
 
 runInvokeEventTrigger
-  :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m)
+  :: (QErrM m, CacheRM m, MonadTx m)
   => InvokeEventTriggerQuery -> m EncJSON
 runInvokeEventTrigger (InvokeEventTriggerQuery name payload) = do
-  adminOnly
   trigInfo <- askEventTriggerInfo name
   assertManual $ etiOpsDef trigInfo
   ti  <- askTabInfoFromTrigger name

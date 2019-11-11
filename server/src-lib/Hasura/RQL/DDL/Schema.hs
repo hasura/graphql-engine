@@ -61,9 +61,8 @@ data RunSQL
   } deriving (Show, Eq, Lift)
 $(deriveJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''RunSQL)
 
-runRunSQL :: (CacheBuildM m, UserInfoM m) => RunSQL -> m EncJSON
+runRunSQL :: (CacheBuildM m) => RunSQL -> m EncJSON
 runRunSQL (RunSQL t cascade mChkMDCnstcy) = do
-  adminOnly
   isMDChkNeeded <- maybe (isAltrDropReplace t) return mChkMDCnstcy
   bool (execRawSQL t) (withMetadataCheck (or cascade) $ execRawSQL t) isMDChkNeeded
   where
