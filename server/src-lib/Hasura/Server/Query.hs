@@ -295,13 +295,16 @@ queryNeedsReload (RQV2 qi) = case qi of
   RQV2TrackTable _           -> True
   RQV2SetTableCustomFields _ -> True
 
-
+-- TODO: add RQSelect after console changes
 getQueryAccessMode :: RQLQuery -> Q.TxAccess
-getQueryAccessMode (RQV1 (RQRunSql RunSQL {rReadOnly})) =
-  if rReadOnly
-    then Q.ReadOnly
-    else Q.ReadWrite
-getQueryAccessMode _ = Q.ReadWrite
+getQueryAccessMode (RQV1 q) =
+  case q of
+    RQRunSql RunSQL{rReadOnly} ->
+      if rReadOnly
+        then Q.ReadOnly
+        else Q.ReadWrite
+    _ -> Q.ReadWrite
+getQueryAccessMode (RQV2 _) = Q.ReadWrite
 
 runQueryM
   :: ( QErrM m, CacheRWM m, UserInfoM m, MonadTx m
