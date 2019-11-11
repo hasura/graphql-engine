@@ -37,6 +37,7 @@ const getActionsRouter = (connect, store, composeOnEnterHooks) => {
       <Route path="manage" component={rightContainerConnector(connect)}>
         <IndexRedirect to="actions" />
         <Route path="actions" component={ActionsLandingPage(connect)} />
+        <Route path="types" component={ActionsLandingPage(connect)} />
         <Route path="add" component={AddAction(connect)} />
         <Route path=":actionName/details" component={ActionDetails(connect)} />
         <Route path=":actionName/modify" component={ModifyAction(connect)} />

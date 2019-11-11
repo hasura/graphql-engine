@@ -4,6 +4,7 @@ import tabInfo from './tabs';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { appPrefix } from '../constants';
 import { setCurrentAction } from '../reducer';
+import { findAction } from '../utils';
 
 const TabContainer = ({
   params: { actionName },
@@ -19,7 +20,7 @@ const TabContainer = ({
     };
   }, [actionName]);
 
-  const currentAction = allActions.find(a => a.action_name === actionName);
+  const currentAction = findAction(allActions, actionName);
 
   if (!currentAction) {
     dispatch(setCurrentAction(''));

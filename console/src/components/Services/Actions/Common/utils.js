@@ -1,12 +1,23 @@
+/* eslint-disable no-use-before-define */
+
 import { camelize } from 'inflection';
-import { filterNameLessTypeLess, filterNameless } from '../../Types/utils';
-import { getTypenameMetadata } from '../../Types/wrappingTypeUtils';
-import { isInputObjectType, isEnumType, isScalarType } from 'graphql';
+import { filterNameLessTypeLess } from '../../Types/utils';
 import {
-  gqlInbuiltTypes,
-  defaultScalarType,
-  defaultField,
-} from './stateDefaults';
+  getSchemaTypeMetadata,
+  wrapTypename,
+} from '../../Types/wrappingTypeUtils';
+import {
+  isInputObjectType,
+  isEnumType,
+  isScalarType,
+  isObjectType,
+} from 'graphql';
+
+import { gqlInbuiltTypes } from './stateDefaults';
+
+export const isInbuiltType = typename => {
+  return !!gqlInbuiltTypes.find(t => t.name === typename);
+};
 
 export const generateActionDefinition = ({
   arguments: args,
@@ -33,106 +44,157 @@ export const getStateValidationError = ({ webhook }) => {
 };
 
 export const deriveExistingType = (
-  currentTypename,
-  actionTypes,
   selectedExistingType,
-  existingTypemap
+  existingTypemap,
+  namespace
 ) => {
-  const currentTypeIndex = actionTypes.findIndex(
-    at => at.name === currentTypename
-  );
-
   const namespaceTypename = name => {
-    if (name === selectedExistingType) {
-      return currentTypename;
+    if (namespace === '_') {
+      return `_${name}`;
     }
-    return camelize(`${currentTypename}_${name}`);
+    return camelize(`${namespace}_${name}`);
   };
 
-  const getTypeKind = graphqlType => {
-    if (isInputObjectType(graphqlType)) return 'input_object';
-    if (isEnumType(graphqlType)) return 'enum';
-    if (isScalarType(graphqlType)) return 'scalar';
+  const types = {};
+
+  const handleScalarType = (type, typename) => {
+    types[type.name] = {
+      name: typename,
+      kind: 'scalar',
+    };
   };
 
-  let newTypes = filterNameless(actionTypes);
-
-  const chosenExistingType = existingTypemap[selectedExistingType];
-
-  const usedTypenames = {};
-
-  const isInbuiltType = _t => {
-    return gqlInbuiltTypes.find(it => it.name === _t.name);
+  const handleEnumType = (type, typename) => {
+    types[typename] = {
+      name: typename,
+      kind: 'enum',
+      values: type._values.map(v => ({
+        value: v.value,
+        description: v.description,
+      })),
+    };
   };
 
-  const generateTypes = (selectedType, enforcedTypename) => {
-    if (isInbuiltType(selectedType)) return;
-
-    const typeKind = getTypeKind(selectedType);
-
-    const _tname = enforcedTypename || namespaceTypename(selectedType.name);
-    if (usedTypenames[_tname]) return;
-    usedTypenames[_tname] = true;
-    const _t = {
-      name: _tname,
-      kind: typeKind,
+  const handleObjectType = (type, typename) => {
+    types[typename] = {
+      name: typename,
+      kind: 'object',
+      fields: [],
     };
 
-    if (typeKind === 'enum') {
-      newTypes.push({
-        ..._t,
-        values: selectedType._values,
-      });
-      return;
-    }
+    const parentTypes = [];
 
-    if (typeKind !== 'input_object') {
-      newTypes.push(_t);
-      return;
-    }
-
-    _t.fields = [];
-
-    Object.values(selectedType._fields).forEach(f => {
+    Object.values(type._fields).forEach(f => {
       const _f = {
         name: f.name,
+        description: f.description,
+        arguments: [],
       };
-      const { index: typeWrap, typename } = getTypenameMetadata(f.type);
-      generateTypes(existingTypemap[typename]);
-      _f.typeWrap = typeWrap.toString();
-      const namespacedTypename = isInbuiltType({ name: typename })
-        ? typename
-        : namespaceTypename(typename);
-      _f.typename = namespacedTypename;
-      _t.fields.push(_f);
+
+      const fieldTypeMetadata = getSchemaTypeMetadata(f.type);
+      if (!isScalarType(existingTypemap[fieldTypeMetadata.typename])) {
+        return;
+      }
+      let namespacedTypename = fieldTypeMetadata.typename;
+      if (!isInbuiltType(fieldTypeMetadata.typename)) {
+        namespacedTypename = namespaceTypename(fieldTypeMetadata.typename);
+        parentTypes.push(fieldTypeMetadata.typename);
+      }
+
+      _f.type = wrapTypename(namespacedTypename, fieldTypeMetadata.stack);
+      _f.arguments = f.arguments
+        ? f.arguments.map(a => {
+          const _a = {
+            name: a.name,
+            description: a.description,
+          };
+
+          const argTypeMetadata = getSchemaTypeMetadata(a.type);
+          let namespacedArgTypename = argTypeMetadata.typename;
+          if (!isInbuiltType(argTypeMetadata.typename)) {
+            namespacedArgTypename = namespaceTypename(
+              argTypeMetadata.typename
+            );
+            parentTypes.push(argTypeMetadata.typename);
+          }
+          _a.type = wrapTypename(
+            namespacedArgTypename,
+            argTypeMetadata.stack
+          );
+          return _a;
+        })
+        : [];
+
+      types[typename].fields.push(_f);
     });
 
-    _t.fields.push({
-      ...defaultField,
+    parentTypes.forEach(t => {
+      handleType(existingTypemap[t], namespaceTypename(t));
+    });
+  };
+
+  const handleInputObjectType = (type, typename) => {
+    const _type = {
+      name: typename,
+      kind: 'input_object',
+      fields: [],
+    };
+
+    const parentTypes = [];
+
+    Object.values(type._fields).forEach(f => {
+      const _f = {
+        name: f.name,
+        description: f.description,
+      };
+
+      const fieldTypeMetadata = getSchemaTypeMetadata(f.type);
+      let namespacedTypename = fieldTypeMetadata.typename;
+      if (!isInbuiltType(fieldTypeMetadata.typename)) {
+        namespacedTypename = namespaceTypename(fieldTypeMetadata.typename);
+        parentTypes.push(fieldTypeMetadata.typename);
+      }
+
+      _f.type = wrapTypename(namespacedTypename, fieldTypeMetadata.stack);
+      _type.fields.push(_f);
     });
 
-    if (enforcedTypename) {
-      newTypes[currentTypeIndex] = _t;
-    } else {
-      newTypes.push(_t);
+    types[typename] = _type;
+
+    parentTypes.forEach(t => {
+      handleType(existingTypemap[t], namespaceTypename(t));
+    });
+  };
+
+  const handleType = (type, typename) => {
+    if (isInbuiltType(type.name)) return;
+
+    if (types[typename]) return;
+
+    if (isScalarType(type)) {
+      handleScalarType(type, typename);
+      return;
+    }
+
+    if (isEnumType(type)) {
+      handleEnumType(type, typename);
+      return;
+    }
+
+    if (isInputObjectType(type)) {
+      handleInputObjectType(type, typename);
+      return;
+    }
+
+    if (isObjectType(type)) {
+      handleObjectType(type, typename);
     }
   };
 
-  generateTypes(chosenExistingType, currentTypename);
+  handleType(
+    existingTypemap[selectedExistingType],
+    namespaceTypename(selectedExistingType)
+  );
 
-  newTypes = newTypes.map(nt => {
-    if (nt.kind === 'input_object') {
-      const newType = JSON.parse(JSON.stringify(nt));
-      newType.fields = newType.fields.map(f => {
-        const _f = { ...f };
-        _f.type = newTypes.findIndex(t => t.name === f.typename).toString();
-        delete _f.typename;
-        return _f;
-      });
-      return newType;
-    }
-    return nt;
-  });
-
-  return [...newTypes, defaultScalarType];
+  return Object.values(types);
 };

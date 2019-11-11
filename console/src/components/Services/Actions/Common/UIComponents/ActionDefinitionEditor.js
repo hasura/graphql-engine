@@ -64,25 +64,27 @@ const ActionDefinitionEditor = ({
           className={styles.add_mar_left_mid}
         />
       </h2>
-      {error && (
+      <div className={styles.sdlEditorContainer}>
         <div
-          className={`${styles.display_flex} ${styles.add_mar_bottom_small} ${
-            styles.errorMessage
-          }`}
+          className={`${styles.display_flex} ${styles.add_mar_bottom_small}`}
         >
-          <CrossIcon />
-          <p>{errorMessage}</p>
+          {error && (
+            <div className={`${styles.display_flex}  ${styles.errorMessage}`}>
+              <CrossIcon className={styles.add_mar_right_small} />
+              <p>{errorMessage}</p>
+            </div>
+          )}
         </div>
-      )}
-      <SDLEditor
-        name="sdl-editor"
-        width={'600px'}
-        height={'200px'}
-        value={value}
-        onChange={onChangeWithError}
-        placeholder={placeholder}
-        markers={markers}
-      />
+        <SDLEditor
+          name="sdl-editor"
+          value={value}
+          onChange={onChangeWithError}
+          placeholder={placeholder}
+          markers={markers}
+          height="200px"
+          width="600px"
+        />
+      </div>
     </div>
   );
 };

@@ -63,10 +63,6 @@ export const typeWrappers = [
   },
 ];
 
-export const wrapType = (typename, wrapperIndex) => {
-  return typeWrappers[wrapperIndex].wrapperFunc(typename);
-};
-
 export const unwrapType = wrappedTypename => {
   if (wrappedTypename.charAt(wrappedTypename.length - 1) === '!') {
     return unwrapType(unwrapNullable(wrappedTypename));
@@ -122,7 +118,7 @@ export const getUnderlyingType = graphqlType => {
   return _type;
 };
 
-export const getWrappedTypeNameFromAst = type => {
+export const getAstTypeMetadata = type => {
   let _t = { type };
   const typewraps = [];
   while (_t.kind !== 'NamedType') {
@@ -134,15 +130,41 @@ export const getWrappedTypeNameFromAst = type => {
     }
     _t = _t.type;
   }
-  let typename = _t.name.value;
-  typewraps.forEach(w => {
+  const typename = _t.name.value;
+  return {
+    typename,
+    stack: typewraps,
+  };
+};
+
+export const getSchemaTypeMetadata = type => {
+  let _t = type;
+  const typewraps = [];
+  while (isWrappingType(_t)) {
+    if (isListType(_t)) {
+      typewraps.push('l');
+    }
+    if (isNonNullType(_t)) {
+      typewraps.push('n');
+    }
+    _t = _t.ofType;
+  }
+
+  return {
+    typename: _t.name,
+    stack: typewraps,
+  };
+};
+
+export const wrapTypename = (name, wrapperStack) => {
+  let wrappedTypename = name;
+  wrapperStack.forEach(w => {
     if (w === 'l') {
-      typename = `[${typename}]`;
+      wrappedTypename = `[${wrappedTypename}]`;
     }
     if (w === 'n') {
-      typename = `${typename}!`;
+      wrappedTypename = `${wrappedTypename}!`;
     }
   });
-
-  return typename;
+  return wrappedTypename;
 };

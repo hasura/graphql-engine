@@ -6,29 +6,25 @@ import KindEditor from '../Common/UIComponents/KindEditor';
 import ActionDefinitionEditor from '../Common/UIComponents/ActionDefinitionEditor';
 import TypeDefinitionEditor from '../Common/UIComponents/TypeDefinitionEditor';
 import Button from '../../../Common/Button';
+import { getModifyState } from './utils';
 import {
+  setModifyState,
   setActionWebhook,
   setActionKind,
-  setDefaults,
   setActionDefinition,
   setTypeDefinition,
 } from './reducer';
-import { createAction } from '../ServerIO';
+import { saveAction, deleteAction } from '../ServerIO';
 
-const AddAction = ({
-  webhook,
+const ActionEditor = ({
+  currentAction,
+  actionName,
+  allTypes,
   dispatch,
-  kind,
-  actionDefinition,
-  typeDefinition,
   isFetching,
+  ...modifyProps
 }) => {
-  React.useEffect(() => {
-    dispatch(setDefaults());
-  }, []);
-
-  const webhookOnChange = e => dispatch(setActionWebhook(e.target.value));
-  const kindOnChange = k => dispatch(setActionKind(k));
+  const { webhook, kind, actionDefinition, typeDefinition } = modifyProps;
 
   const {
     sdl: typesDefinitionSdl,
@@ -40,9 +36,15 @@ const AddAction = ({
     error: actionDefinitionError,
   } = actionDefinition;
 
-  const onSubmit = () => {
-    dispatch(createAction());
+  // initialize action state
+  const init = () => {
+    const modifyState = getModifyState(currentAction, allTypes);
+    dispatch(setModifyState(modifyState));
   };
+  React.useEffect(init, [currentAction]);
+
+  const webhookOnChange = e => dispatch(setActionWebhook(e.target.value));
+  const kindOnChange = k => dispatch(setActionKind(k));
 
   const actionDefinitionOnChange = (value, error) => {
     dispatch(setActionDefinition(value, error));
@@ -52,13 +54,20 @@ const AddAction = ({
     dispatch(setTypeDefinition(value, error));
   };
 
+  const onSave = () => {
+    dispatch(saveAction(currentAction));
+  };
+
+  const onDelete = () => {
+    dispatch(deleteAction(currentAction));
+  };
+
   const allowSave =
     !isFetching && !typesDefinitionError && !actionDefinitionError;
 
   return (
     <div>
-      <Helmet title={'Add Action - Actions | Hasura'} />
-      <div className={styles.heading_text}>Add a new action</div>
+      <Helmet title={`Modify Action - ${actionName} Actions | Hasura`} />
       <WebhookEditor
         value={webhook}
         onChange={webhookOnChange}
@@ -67,11 +76,7 @@ const AddAction = ({
         service="create-action"
       />
       <hr />
-      <KindEditor
-        value={kind}
-        onChange={kindOnChange}
-        className={styles.add_mar_bottom_mid}
-      />
+      <KindEditor value={kind} onChange={kindOnChange} />
       <hr />
       <ActionDefinitionEditor
         value={actionDefinitionSdl}
@@ -87,17 +92,29 @@ const AddAction = ({
         placeholder={''}
       />
       <hr />
-      <Button
-        color="yellow"
-        size="sm"
-        type="submit"
-        disabled={!allowSave}
-        onClick={onSubmit}
-      >
-        Create
-      </Button>
+      <div className={styles.display_flex}>
+        <Button
+          color="yellow"
+          size="sm"
+          type="submit"
+          onClick={onSave}
+          disabled={!allowSave}
+          className={styles.add_mar_right}
+        >
+          Save
+        </Button>
+        <Button
+          color="red"
+          size="sm"
+          type="submit"
+          onClick={onDelete}
+          disabled={isFetching}
+        >
+          Delete
+        </Button>
+      </div>
     </div>
   );
 };
 
-export default AddAction;
+export default ActionEditor;

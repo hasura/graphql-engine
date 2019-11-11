@@ -1,5 +1,5 @@
 import { parse as sdlParse } from 'graphql/language/parser';
-import { getWrappedTypeNameFromAst } from './wrappingTypeUtils';
+import { getAstTypeMetadata, wrapTypename } from './wrappingTypeUtils';
 
 export const getTypesFromSdl = sdl => {
   const typeDefinition = {
@@ -35,10 +35,16 @@ export const getTypesFromSdl = sdl => {
     typeDefinition.types.push({
       name: def.name.value,
       kind: 'input_object',
-      fields: def.fields.map(f => ({
-        name: f.name.value,
-        type: getWrappedTypeNameFromAst(f.type),
-      })),
+      fields: def.fields.map(f => {
+        const fieldTypeMetadata = getAstTypeMetadata(f.type);
+        return {
+          name: f.name.value,
+          type: wrapTypename(
+            fieldTypeMetadata.typename,
+            fieldTypeMetadata.stack
+          ),
+        };
+      }),
     });
   };
 
@@ -46,10 +52,16 @@ export const getTypesFromSdl = sdl => {
     typeDefinition.types.push({
       name: def.name.value,
       kind: 'object',
-      fields: def.fields.map(f => ({
-        name: f.name.value,
-        type: getWrappedTypeNameFromAst(f.type),
-      })),
+      fields: def.fields.map(f => {
+        const fieldTypeMetadata = getAstTypeMetadata(f.type);
+        return {
+          name: f.name.value,
+          type: wrapTypename(
+            fieldTypeMetadata.typename,
+            fieldTypeMetadata.stack
+          ),
+        };
+      }),
     });
   };
 
@@ -115,11 +127,16 @@ export const getActionDefinitionFromSdl = sdl => {
   const actionDef = sdlDef.fields[0];
 
   definition.name = actionDef.name.value;
-  definition.outputType = getWrappedTypeNameFromAst(actionDef.type);
+  const outputTypeMetadata = getAstTypeMetadata(actionDef.type);
+  definition.outputType = wrapTypename(
+    outputTypeMetadata.typename,
+    outputTypeMetadata.stack
+  );
   definition.arguments = actionDef.arguments.map(a => {
+    const argTypeMetadata = getAstTypeMetadata(a.type);
     return {
       name: a.name.value,
-      type: getWrappedTypeNameFromAst(a.type),
+      type: wrapTypename(argTypeMetadata.typename, argTypeMetadata.stack),
       description: a.description,
     };
   });
@@ -141,7 +158,8 @@ const getArgumentsSdl = args => {
 
 const getFieldsSdl = fields => {
   const fieldsSdl = fields.map(f => {
-    return `  ${f.name} ${getArgumentsSdl(f.arguments)}: ${f.type}`;
+    const argSdl = f.arguments ? getArgumentsSdl(f.arguments) : '';
+    return `  ${f.name} ${argSdl}: ${f.type}`;
   });
   return fieldsSdl.join('\n');
 };
