@@ -2,6 +2,7 @@ import React from 'react';
 import CustomTypesContainer from '../../Containers/CustomTypesContainer';
 import TypesEditor from '../../Common/UIComponents/TypeDefinitionEditor';
 import Button from '../../../../Common/Button/Button';
+import styles from '../../Common/UIComponents/Styles.scss';
 import { getTypesSdl, getTypesFromSdl } from '../../../Types/sdlUtils';
 import { setTypeDefinition, setFetching, unsetFetching } from '../reducer';
 import { setCustomGraphQLTypes } from '../../../Types/ServerIO';
@@ -56,8 +57,16 @@ const Manage = ({ allTypes, dispatch, ...manageProps }) => {
         editorHeight="600px"
       />
       <hr />
-      <Button onClick={onSave} disabled={!allowSave} color="yellow">
+      <Button
+        onClick={onSave}
+        disabled={!allowSave}
+        color="yellow"
+        className={styles.add_mar_right}
+      >
         Save
+      </Button>
+      <Button onClick={init} color="white">
+        Reset
       </Button>
     </CustomTypesContainer>
   );
