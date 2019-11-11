@@ -47,11 +47,12 @@ mkAdminRolePermInfo ti =
   where
     fields = _tiFieldInfoMap ti
     pgCols = map pgiColumn $ getCols fields
-    computedCols = map _cfiName $ getComputedFieldInfos fields
+    scalarComputedFields = map _cfiName $ onlyScalarComputedFields $
+                     getComputedFieldInfos fields
 
     tn = _tiName ti
     i = InsPermInfo (HS.fromList pgCols) tn annBoolExpTrue M.empty []
-    s = SelPermInfo (HS.fromList pgCols) (HS.fromList computedCols) tn annBoolExpTrue
+    s = SelPermInfo (HS.fromList pgCols) (HS.fromList scalarComputedFields) tn annBoolExpTrue
         Nothing True []
     u = UpdPermInfo (HS.fromList pgCols) tn annBoolExpTrue M.empty []
     d = DelPermInfo tn annBoolExpTrue []
@@ -273,8 +274,8 @@ dmlTxErrorHandler = mkTxErrorHandler $ \case
     , PGInvalidColumnReference ]
   _ -> False
 
-toJSONableExp :: Bool -> PGColumnType -> S.SQLExp -> S.SQLExp
-toJSONableExp strfyNum colTy expn
+toJSONableExp :: Bool -> PGColumnType -> Bool -> S.SQLExp -> S.SQLExp
+toJSONableExp strfyNum colTy asText expn
   | isScalarColumnWhere isGeoType colTy =
       S.SEFnApp "ST_AsGeoJSON"
       [ expn
@@ -282,8 +283,8 @@ toJSONableExp strfyNum colTy expn
       , S.SEUnsafe "4"  -- to print out crs
       ] Nothing
       `S.SETyAnn` S.jsonTypeAnn
-  | isScalarColumnWhere isBigNum colTy && strfyNum =
-      expn `S.SETyAnn` S.textTypeAnn
+  | asText || (isScalarColumnWhere isBigNum colTy && strfyNum) =
+    expn `S.SETyAnn` S.textTypeAnn
   | otherwise = expn
 
 -- validate headers
