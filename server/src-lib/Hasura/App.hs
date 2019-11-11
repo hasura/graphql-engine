@@ -38,9 +38,10 @@ import           Hasura.RQL.Types            (CacheRWM, Code (..),
                                               HasHttpManager, HasSQLGenCtx,
                                               HasSystemDefined, QErr (..),
                                               SQLGenCtx (..), SchemaCache (..),
-                                              UserInfoM, adminUserInfo,
-                                              decodeValue, emptySchemaCache,
-                                              throw400)
+                                              UserInfoM, adminRole,
+                                              adminUserInfo, decodeValue,
+                                              emptySchemaCache, throw400,
+                                              userRole, withPathK)
 import           Hasura.Server.App
 import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates  (checkForUpdates)
@@ -48,7 +49,7 @@ import           Hasura.Server.Init
 import           Hasura.Server.Logging
 import           Hasura.Server.Migrate       (migrateCatalog)
 import           Hasura.Server.Query         (Run, RunCtx (..), peelRun,
-                                              runQueryM)
+                                              requiresAdmin, runQueryM)
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
 import           Hasura.Server.Version
@@ -202,7 +203,7 @@ initialiseCtx hgeCmd rci = do
 
 
 runHGEServer
-  :: (MonadIO m, MonadStateless IO m, UserAuthMiddleware m, ConsoleRenderer m, HttpLogger m)
+  :: (MonadIO m, MonadStateless IO m, UserAuthMiddleware m, ConsoleRenderer m, HttpLogger m, MetadataApiAuthz m)
   => ServeOptions
   -> InitCtx
   -> m ()
@@ -355,6 +356,13 @@ instance UserAuthMiddleware AppM where
   resolveUserInfo logger manager headers authMode =
     runExceptT $ getUserInfo logger manager headers authMode
 
+instance MetadataApiAuthz AppM where
+  authorizeMetadataApi query userInfo = do
+    let currRole = userRole userInfo
+    when (requiresAdmin query && currRole /= adminRole) $
+      withPathK "args" $ throw400 AccessDenied errMsg
+    where
+      errMsg = "restricted access : admin only"
 
 instance ConsoleRenderer AppM where
   renderConsole path authMode enableTelemetry consoleAssetsDir =

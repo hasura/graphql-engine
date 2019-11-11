@@ -93,15 +93,15 @@ data HandlerCtx
   , hcRequestId  :: !RequestId
   }
 
-type Handler = ExceptT QErr (ReaderT HandlerCtx IO)
+type Handler m a = ExceptT QErr (ReaderT HandlerCtx m) a
 
 data APIResp
   = JSONResp !(HttpResponse EncJSON)
   | RawResp  !(HttpResponse BL.ByteString)
 
-data APIHandler a
-  = AHGet !(Handler APIResp)
-  | AHPost !(a -> Handler APIResp)
+data APIHandler m a
+  = AHGet !(Handler m APIResp)
+  | AHPost !(a -> Handler m APIResp)
 
 
 boolToText :: Bool -> T.Text
@@ -139,13 +139,13 @@ withSCUpdate scr logger action = do
     acquireLock = liftIO $ takeMVar lk
     releaseLock = liftIO $ putMVar lk ()
 
-mkGetHandler :: Handler APIResp -> APIHandler ()
+mkGetHandler :: Handler m APIResp -> APIHandler m ()
 mkGetHandler = AHGet
 
-mkPostHandler :: (a -> Handler APIResp) -> APIHandler a
+mkPostHandler :: (a -> Handler m APIResp) -> APIHandler m a
 mkPostHandler = AHPost
 
-mkAPIRespHandler :: (a -> Handler (HttpResponse EncJSON)) -> (a -> Handler APIResp)
+mkAPIRespHandler :: (Functor m) => (a -> Handler m (HttpResponse EncJSON)) -> (a -> Handler m APIResp)
 mkAPIRespHandler = (fmap . fmap) JSONResp
 
 isMetadataEnabled :: ServerCtx -> Bool
@@ -170,13 +170,13 @@ parseBody reqBody =
     Left e     -> throw400 InvalidJSON (T.pack e)
     Right jVal -> decodeValue jVal
 
-onlyAdmin :: Handler ()
+onlyAdmin :: (Monad m) => Handler m ()
 onlyAdmin = do
   uRole <- asks (userRole . hcUser)
   when (uRole /= adminRole) $
     throw400 AccessDenied "You have to be an admin to access this endpoint"
 
-buildQCtx ::  Handler QCtx
+buildQCtx :: (MonadIO m) => Handler m QCtx
 buildQCtx = do
   scRef    <- scCacheRef . hcServerCtx <$> ask
   userInfo <- asks hcUser
@@ -185,30 +185,23 @@ buildQCtx = do
   return $ QCtx userInfo cache sqlGenCtx
 
 
-class (Monad m) => HasuraSpockAction m where
-  makeSpockAction
-    :: (MonadIO m, FromJSON a, ToJSON a)
-    => ServerCtx
-    -> (Bool -> QErr -> Value)
-    -- ^ `QErr` JSON encoder function
-    -> (QErr -> QErr)
-    -- ^ `QErr` modifier
-    -> APIHandler a
-    -> Spock.ActionT m ()
-
+-- | Typeclass representing the @UserInfo@ authorization and resolving effect
 class (Monad m) => UserAuthMiddleware m where
   resolveUserInfo
-    :: (MonadIO m)
-    => L.Logger
+    :: L.Logger
     -> HTTP.Manager
     -> [HTTP.Header]
+    -- ^ request headers
     -> AuthMode
     -> m (Either QErr UserInfo)
 
+-- | Typeclass representing the metadata API authorization effect
+class MetadataApiAuthz m where
+  authorizeMetadataApi :: RQLQuery -> UserInfo -> Handler m ()
+
 class (Monad m) => HttpLogger m where
   logHttpError
-    :: (MonadIO m)
-    => L.Logger
+    :: L.Logger
     -- ^ the logger
     -> Maybe UserInfo
     -- ^ user info may or may not be present (error can happen during user resolution)
@@ -225,8 +218,7 @@ class (Monad m) => HttpLogger m where
     -> m ()
 
   logHttpSuccess
-    :: (MonadIO m)
-    => L.Logger
+    :: L.Logger
     -- ^ the logger
     -> Maybe UserInfo
     -- ^ user info may or may not be present (error can happen during user resolution)
@@ -255,7 +247,7 @@ mkSpockAction
   -- ^ `QErr` JSON encoder function
   -> (QErr -> QErr)
   -- ^ `QErr` modifier
-  -> APIHandler a
+  -> APIHandler m a
   -> Spock.ActionT m ()
 mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
     req <- Spock.request
@@ -277,13 +269,13 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
 
     (result, q) <- case apiHandler of
       AHGet handler -> do
-        res <- liftIO $ runReaderT (runExceptT handler) handlerState
+        res <- lift $ runReaderT (runExceptT handler) handlerState
         return (res, Nothing)
       AHPost handler -> do
         parsedReqE <- runExceptT $ parseBody reqBody
         parsedReq  <- either (logErrorAndResp (Just userInfo) requestId req (Left reqBody) (isAdmin curRole) headers . qErrModifier)
                       return parsedReqE
-        res <- liftIO $ runReaderT (runExceptT $ handler parsedReq) handlerState
+        res <- lift $ runReaderT (runExceptT $ handler parsedReq) handlerState
         return (res, Just parsedReq)
 
     t2 <- liftIO Clock.getCurrentTime -- for measuring response time purposes
@@ -335,8 +327,10 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
 
       mkHeaders = maybe [] (map unHeader)
 
-v1QueryHandler :: RQLQuery -> Handler (HttpResponse EncJSON)
+v1QueryHandler :: (MonadIO m, MetadataApiAuthz m) => RQLQuery -> Handler m (HttpResponse EncJSON)
 v1QueryHandler query = do
+  userInfo <- asks hcUser
+  authorizeMetadataApi query userInfo
   scRef <- scCacheRef . hcServerCtx <$> ask
   logger <- scLogger . hcServerCtx <$> ask
   res <- bool (fst <$> dbAction) (withSCUpdate scRef logger dbAction) $
@@ -354,7 +348,7 @@ v1QueryHandler query = do
       instanceId <- scInstanceId . hcServerCtx <$> ask
       runQuery pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx (SystemDefined False) query
 
-v1Alpha1GQHandler :: GH.GQLReqUnparsed -> Handler (HttpResponse EncJSON)
+v1Alpha1GQHandler :: (MonadIO m) => GH.GQLReqUnparsed -> Handler m (HttpResponse EncJSON)
 v1Alpha1GQHandler query = do
   userInfo <- asks hcUser
   reqHeaders <- asks hcReqHeaders
@@ -372,11 +366,12 @@ v1Alpha1GQHandler query = do
   flip runReaderT execCtx $ GH.runGQ requestId userInfo reqHeaders query
 
 v1GQHandler
-  :: GH.GQLReqUnparsed
-  -> Handler (HttpResponse EncJSON)
+  :: (MonadIO m)
+  => GH.GQLReqUnparsed
+  -> Handler m (HttpResponse EncJSON)
 v1GQHandler = v1Alpha1GQHandler
 
-gqlExplainHandler :: GE.GQLExplain -> Handler (HttpResponse EncJSON)
+gqlExplainHandler :: (MonadIO m) => GE.GQLExplain -> Handler m (HttpResponse EncJSON)
 gqlExplainHandler query = do
   onlyAdmin
   scRef <- scCacheRef . hcServerCtx <$> ask
@@ -387,7 +382,7 @@ gqlExplainHandler query = do
   res <- GE.explainGQLQuery pgExecCtx sc sqlGenCtx enableAL query
   return $ HttpResponse res Nothing
 
-v1Alpha1PGDumpHandler :: PGD.PGDumpReqBody -> Handler APIResp
+v1Alpha1PGDumpHandler :: (MonadIO m) => PGD.PGDumpReqBody -> Handler m APIResp
 v1Alpha1PGDumpHandler b = do
   onlyAdmin
   ci <- scConnInfo . hcServerCtx <$> ask
@@ -432,11 +427,11 @@ renderHtmlTemplate template jVal =
     errMsg = "template rendering failed: " ++ show errs
     (errs, res) = M.checkedSubstitute template jVal
 
-newtype LegacyQueryParser
+newtype LegacyQueryParser m
   = LegacyQueryParser
-  { getLegacyQueryParser :: QualifiedTable -> Object -> Handler RQLQueryV1 }
+  { getLegacyQueryParser :: QualifiedTable -> Object -> Handler m RQLQueryV1 }
 
-queryParsers :: M.HashMap T.Text LegacyQueryParser
+queryParsers :: (Monad m) => M.HashMap T.Text (LegacyQueryParser m)
 queryParsers =
   M.fromList
   [ ("select", mkLegacyQueryParser RQSelect)
@@ -453,8 +448,9 @@ queryParsers =
       return $ f q
 
 legacyQueryHandler
-  :: TableName -> T.Text -> Object
-  -> Handler (HttpResponse EncJSON)
+  :: (MonadIO m, MetadataApiAuthz m)
+  => TableName -> T.Text -> Object
+  -> Handler m (HttpResponse EncJSON)
 legacyQueryHandler tn queryType req =
   case M.lookup queryType queryParsers of
     Just queryParser -> getLegacyQueryParser queryParser qt req >>= v1QueryHandler . RQV1
@@ -478,7 +474,7 @@ data HasuraApp
   }
 
 mkWaiApp
-  :: (MonadIO m, MonadStateless IO m, ConsoleRenderer m, HttpLogger m, UserAuthMiddleware m)
+  :: (MonadIO m, MonadStateless IO m, ConsoleRenderer m, HttpLogger m, UserAuthMiddleware m, MetadataApiAuthz m)
   => Q.TxIsolation
   -> L.LoggerCtx
   -> SQLGenCtx
@@ -560,7 +556,7 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg 
 
 
 httpApp
-  :: (MonadIO m, ConsoleRenderer m, HttpLogger m, UserAuthMiddleware m)
+  :: (MonadIO m, ConsoleRenderer m, HttpLogger m, UserAuthMiddleware m, MetadataApiAuthz m)
   => CorsConfig
   -> ServerCtx
   -> Bool
@@ -651,7 +647,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
 
     spockAction
       :: (FromJSON a, ToJSON a, MonadIO m, UserAuthMiddleware m, HttpLogger m)
-      => (Bool -> QErr -> Value) -> (QErr -> QErr) -> APIHandler a -> Spock.ActionT m ()
+      => (Bool -> QErr -> Value) -> (QErr -> QErr) -> APIHandler m a -> Spock.ActionT m ()
     spockAction = mkSpockAction serverCtx
 
 
