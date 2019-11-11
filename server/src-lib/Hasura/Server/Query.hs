@@ -392,8 +392,8 @@ runQueryM rq =
 
         assertSameTxAccess (i1, q1) (i2, q2) = unless (getQueryAccessMode q1 == getQueryAccessMode q2) $
           throw400 BadRequest $ "incompatible access mode requirements in bulk query: "
-          <> "$.query[" <> (T.pack $ show i1) <> "] requires " <> (T.pack $ show $ getQueryAccessMode q1) <> ", "
-          <> "$.query[" <> (T.pack $ show i2) <> "] requires " <> (T.pack $ show $ getQueryAccessMode q2)
+          <> "$.args[" <> (T.pack $ show i1) <> "] requires " <> (T.pack $ show $ getQueryAccessMode q1) <> ", "
+          <> "$.args[" <> (T.pack $ show i2) <> "] requires " <> (T.pack $ show $ getQueryAccessMode q2)
 
     runQueryV2M = \case
       RQV2TrackTable q           -> runTrackTableV2Q q
