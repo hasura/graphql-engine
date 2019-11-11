@@ -9,8 +9,9 @@ import Modal from '../../../../Common/Modal/Modal';
 import CloneTypeModal from './CloneTypeModal';
 import { getTypesSdl } from '../../../Types/sdlUtils';
 
-const editorLabel = 'Type Definition';
-const editorTooltip = 'Define your action as a GraphQL mutation using SDL';
+const editorLabel = 'New types definition';
+const editorTooltip =
+  'You can define new GraphQL types that you can use in the action definition above';
 
 let parseDebounceTimer = null;
 
@@ -20,6 +21,10 @@ const ActionDefinitionEditor = ({
   className,
   placeholder,
   error,
+  label = editorLabel,
+  tooltip = editorTooltip,
+  editorHeight = '200px',
+  editorWidth = '600px',
 }) => {
   const [modalOpen, setModalState] = React.useState(false);
   const toggleModal = () => setModalState(!modalOpen);
@@ -67,10 +72,10 @@ const ActionDefinitionEditor = ({
       <h2
         className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
       >
-        {editorLabel}
+        {label}
         <Tooltip
           id="action-name"
-          text={editorTooltip}
+          text={tooltip}
           className={styles.add_mar_left_mid}
         />
       </h2>
@@ -109,8 +114,8 @@ const ActionDefinitionEditor = ({
           onChange={onChangeWithError}
           placeholder={placeholder}
           markers={markers}
-          height="200px"
-          width="600px"
+          height={editorHeight}
+          width={editorWidth}
         />
       </div>
     </div>

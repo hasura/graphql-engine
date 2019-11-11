@@ -4,6 +4,7 @@ import addReducer from './Add/reducer';
 import modifyReducer from './Modify/reducer';
 import permissionsReducer from './Permissions/reducer';
 import relationshipsReducer from './Relationships/reducer';
+import typesReducer from './Types/reducer';
 
 // common state
 const commonState = {
@@ -64,6 +65,7 @@ const reducer = combineReducers({
   modify: modifyReducer,
   permissions: permissionsReducer,
   relationships: relationshipsReducer,
+  types: typesReducer,
 });
 
 export default reducer;

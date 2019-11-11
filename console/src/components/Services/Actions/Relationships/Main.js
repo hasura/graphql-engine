@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from '../Actions.scss';
-import TabContainer from '../Containers/TabContainer';
+import ActionContainer from '../Containers/ActionContainer';
 import AddManualRelationship from './Components/AddManualRelationship';
 import AddedRelationships from './Components/AddedRelationships';
 import { findAction } from '../utils';
@@ -24,10 +24,7 @@ const Relationships = ({
   const actionOutputType = allTypes.find(t => t.name === actionOutputTypeName);
 
   const setRelTypes = (relName, refSchema, refTable, fieldMappings) => {
-    console.log('types');
-    console.log(relName, refSchema, refTable, fieldMappings);
     const types = [...allTypes];
-    console.log(types);
 
     for (let i = 0; i < types.length; i++) {
       const type = types[i];
@@ -56,7 +53,7 @@ const Relationships = ({
   const relationships = actionOutputType.relationships || [];
 
   return (
-    <TabContainer
+    <ActionContainer
       params={params}
       allActions={allActions}
       tabName="relationships"
@@ -78,7 +75,7 @@ const Relationships = ({
         </div>
       </div>
       <div className={`${styles.fixed} hidden`}>{alert}</div>
-    </TabContainer>
+    </ActionContainer>
   );
 };
 

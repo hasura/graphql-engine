@@ -7,7 +7,7 @@ import SDLEditor from '../../../../Common/AceEditor/SDLEditor';
 
 const editorLabel = 'Action definition';
 const editorTooltip =
-  'Define the action as mutation using GraphQL SDL. You can reuse existing types or define new types in the types definition editor below.';
+  'Define the action as mutation using GraphQL SDL. You can reuse existing types or define new types in the new types definition editor below.';
 
 let parseDebounceTimer = null;
 

@@ -1,14 +1,11 @@
 const state = {
-  webhook: '',
-  kind: 'synchronous',
-  actionDefinition: {
-    sdl: '',
-    error: null,
+  manage: {
+    definition: {
+      sdl: '',
+      error: null,
+    },
   },
-  typeDefinition: {
-    sdl: '',
-    error: null,
-  },
+  relationships: {},
   isFetching: false,
 };
 

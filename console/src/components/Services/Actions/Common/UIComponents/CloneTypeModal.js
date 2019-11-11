@@ -28,13 +28,20 @@ const CloneType = ({ headers, toggleModal, handleClonedTypes }) => {
 
   const cloneableTypes = Object.keys(schema._typeMap)
     .filter(t => {
+      if (t.startsWith('__')) return false;
       return (
         isInputObjectType(schema._typeMap[t]) ||
         isObjectType(schema._typeMap[t]) ||
         isEnumType(schema._typeMap[t])
       );
     })
-    .sort((t1, t2) => t1.toLowerCase() > t2.toLowerCase());
+    .sort((t1, t2) => {
+      const _t1 = t1.toLowerCase();
+      const _t2 = t2.toLowerCase();
+      if (_t1 > _t2) return 1;
+      if (_t1 < _t2) return -1;
+      return 0;
+    });
 
   const onSelection = e => {
     const selectedType = e.target.value;
@@ -49,8 +56,6 @@ const CloneType = ({ headers, toggleModal, handleClonedTypes }) => {
   };
 
   const dropdownTitle = nameSpace ? null : 'Please provide a namespace first.';
-
-  console.log(nameSpace === '');
 
   const namespaceTooltipText =
     'Namespace is required so that the type you are cloning does not collide with the existing type in Hasura.';

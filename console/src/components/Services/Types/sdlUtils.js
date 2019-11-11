@@ -141,8 +141,6 @@ export const getActionDefinitionFromSdl = sdl => {
     };
   });
 
-  console.log(definition);
-
   return definition;
 };
 
@@ -185,7 +183,7 @@ const getEnumTypeSdl = type => {
     return `  ${v.value}`;
   });
   return `enum ${type.name} {
-  ${enumValuesSdl.join('\n')}
+${enumValuesSdl.join('\n')}
 }\n\n`;
 };
 

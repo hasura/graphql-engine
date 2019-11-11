@@ -1,13 +1,18 @@
 import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
 import requestAction from '../../../utils/requestAction';
 import dataHeaders from '../Data/Common/Headers';
+import { makeMigrationCall } from '../Data/DataActions';
 import {
   LOADING_TYPES,
   LOADING_TYPES_FAILURE,
   LOADING_TYPES_SUCCESS,
 } from './reducer';
-import { parseCustomTypes } from './utils';
-import { getFetchCustomTypesQuery } from '../../Common/utils/v1QueryUtils';
+import { parseCustomTypes, reformCustomTypes } from './utils';
+import {
+  getFetchCustomTypesQuery,
+  generateSetCustomTypesQuery,
+} from '../../Common/utils/v1QueryUtils';
+import { getConfirmation } from '../../Common/utils/jsUtils';
 
 export const setCustomTypes = (dispatch, response) => {
   dispatch({
@@ -35,5 +40,56 @@ export const fetchCustomTypes = () => (dispatch, getState) => {
       dispatch({ type: LOADING_TYPES_FAILURE, error });
       return Promise.reject();
     }
+  );
+};
+
+export const setCustomGraphQLTypes = (types, successCb, errorCb) => (
+  dispatch,
+  getState
+) => {
+  const isOk = getConfirmation(
+    'This could have an effect on the dependent actions.'
+  );
+  if (!isOk) {
+    successCb();
+    return;
+  }
+
+  const existingTypes = getState().types.types;
+
+  const upQuery = generateSetCustomTypesQuery(reformCustomTypes(types));
+  const downQuery = generateSetCustomTypesQuery(
+    reformCustomTypes(existingTypes)
+  );
+
+  const migrationName = 'set_custom_types';
+  const requestMsg = 'Setting custom types...';
+  const successMsg = 'Setting custom types successfull';
+  const errorMsg = 'Setting custom types failed';
+
+  const customOnSuccess = () => {
+    dispatch(fetchCustomTypes()).then(() => {
+      if (successCb) {
+        successCb();
+      }
+    });
+  };
+  const customOnError = () => {
+    if (errorCb) {
+      errorCb();
+    }
+  };
+
+  makeMigrationCall(
+    dispatch,
+    getState,
+    [upQuery],
+    [downQuery],
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg
   );
 };

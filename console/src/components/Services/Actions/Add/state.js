@@ -1,17 +1,19 @@
 const defaultActionDefSdl = `
-type ActionDef {
-  userSignup (login: LoginInfo!): UserInfo
+type Mutation {
+  ## Define your action as a mutation here
+  actionName (arg1: SampleInput!): SampleOutput
 }`;
 
 const defaultTypesDefSdl = `
-type UserInfo {
+type SampleOutput {
   accessToken: String!
 }
 
-input LoginInfo {
-  email: String!
+input SampleInput {
+  username: String!
   password: String!
 }
+
 `;
 
 const state = {

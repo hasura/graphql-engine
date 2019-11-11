@@ -27,6 +27,16 @@ class Container extends React.Component {
           </Link>
           <LeftSidebar appPrefix={appPrefix} {...this.props} />
         </li>
+        <li
+          role="presentation"
+          className={
+            currentLocation.includes('actions/types') ? styles.active : ''
+          }
+        >
+          <Link className={styles.linkBorder} to={appPrefix + '/types'}>
+            Custom types
+          </Link>
+        </li>
       </ul>
     );
 

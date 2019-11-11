@@ -1,12 +1,12 @@
 import React from 'react';
 import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLayout';
-import tabInfo from './tabs';
+import tabInfo from './actionTabs';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { appPrefix } from '../constants';
 import { setCurrentAction } from '../reducer';
 import { findAction } from '../utils';
 
-const TabContainer = ({
+const ActionContainer = ({
   params: { actionName },
   children,
   allActions,
@@ -69,4 +69,4 @@ const TabContainer = ({
   );
 };
 
-export default TabContainer;
+export default ActionContainer;

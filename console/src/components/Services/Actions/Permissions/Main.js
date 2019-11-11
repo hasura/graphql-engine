@@ -1,17 +1,17 @@
 import React from 'react';
-import TabContainer from '../Containers/TabContainer';
+import ActionContainer from '../Containers/ActionContainer';
 
 const Permissions = ({ params, allActions, dispatch, ...permissionProps }) => {
   console.log(permissionProps);
   return (
-    <TabContainer
+    <ActionContainer
       params={params}
       allActions={allActions}
       tabName="permissions"
       dispatch={dispatch}
     >
       <div> Hello Permissions </div>
-    </TabContainer>
+    </ActionContainer>
   );
 };
 
