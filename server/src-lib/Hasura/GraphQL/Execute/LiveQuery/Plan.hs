@@ -44,12 +44,16 @@ import           Data.Has
 import           Data.UUID                              (UUID)
 
 import qualified Hasura.GraphQL.Resolve                 as GR
+import qualified Hasura.GraphQL.Resolve.Select          as GR
+import qualified Hasura.GraphQL.Resolve.Types           as GR
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
+import qualified Hasura.GraphQL.Validate.Types          as GV
 import qualified Hasura.SQL.DML                         as S
 
 import           Hasura.Db
 import           Hasura.EncJSON
+import           Hasura.GraphQL.Utils
 import           Hasura.RQL.Types
 import           Hasura.SQL.Error
 import           Hasura.SQL.Types
@@ -61,26 +65,39 @@ import           Hasura.SQL.Value
 newtype MultiplexedQuery = MultiplexedQuery { unMultiplexedQuery :: Q.Query }
   deriving (Show, Eq, Hashable, J.ToJSON)
 
-mkMultiplexedQuery :: Q.Query -> MultiplexedQuery
-mkMultiplexedQuery baseQuery =
-  MultiplexedQuery . Q.fromText $ foldMap Q.getQueryText [queryPrefix, baseQuery, querySuffix]
+mkMultiplexedQuery :: Map.HashMap G.Alias GR.QueryRootFldResolved -> MultiplexedQuery
+mkMultiplexedQuery rootFields = MultiplexedQuery . Q.fromBuilder . toSQL $ S.mkSelect
+  { S.selExtr =
+    -- SELECT _subs.result_id, _fld_resp.root AS result
+    [ S.Extractor (mkQualIden (Iden "_subs") (Iden "result_id")) Nothing
+    , S.Extractor (mkQualIden (Iden "_fld_resp") (Iden "root")) (Just . S.Alias $ Iden "result") ]
+  , S.selFrom = Just $ S.FromExp [S.FIJoin $
+      S.JoinExpr subsInputFromItem S.LeftOuter responseLateralFromItem (S.JoinOn $ S.BELit True)]
+  }
   where
-    queryPrefix =
-      [Q.sql|
-        select
-          _subs.result_id, _fld_resp.root as result
-          from
-            unnest(
-              $1::uuid[], $2::json[]
-            ) _subs (result_id, result_vars)
-          left outer join lateral
-            (
-        |]
+    -- FROM unnest($1::uuid[], $2::json[]) _subs (result_id, result_vars)
+    subsInputFromItem = S.FIUnnest
+      [S.SEPrep 1 `S.SETyAnn` S.TypeAnn "uuid[]", S.SEPrep 2 `S.SETyAnn` S.TypeAnn "json[]"]
+      (S.Alias $ Iden "_subs")
+      [S.SEIden $ Iden "result_id", S.SEIden $ Iden "result_vars"]
 
-    querySuffix =
-      [Q.sql|
-            ) _fld_resp ON ('true')
-        |]
+    -- LEFT OUTER JOIN LATERAL ( ... ) _fld_resp
+    responseLateralFromItem = S.mkLateralFromItem selectRootFields (S.Alias $ Iden "_fld_resp")
+    selectRootFields = S.mkSelect
+      { S.selExtr = [S.Extractor rootFieldsJsonAggregate (Just . S.Alias $ Iden "root")]
+      , S.selFrom = Just . S.FromExp $
+          flip map (Map.toList rootFields) $ \(fieldAlias, resolvedAST) ->
+            S.mkSelFromItem (GR.toSQLSelect resolvedAST) (S.Alias $ aliasToIden fieldAlias)
+      }
+
+    -- json_build_object('field1', field1.root, 'field2', field2.root, ...)
+    rootFieldsJsonAggregate = S.SEFnApp "json_build_object" rootFieldsJsonPairs Nothing
+    rootFieldsJsonPairs = flip concatMap (Map.keys rootFields) $ \fieldAlias ->
+      [ S.SELit (G.unName $ G.unAlias fieldAlias)
+      , mkQualIden (aliasToIden fieldAlias) (Iden "root") ]
+
+    mkQualIden prefix = S.SEQIden . S.QIden (S.QualIden prefix)
+    aliasToIden = Iden . G.unName . G.unAlias
 
 -- | Resolves an 'GR.UnresolvedVal' by converting 'GR.UVPG' values to SQL expressions that refer to
 -- the @result_vars@ input object, collecting variable values along the way.
@@ -230,7 +247,6 @@ data LiveQueryPlan
 data ParameterizedLiveQueryPlan
   = ParameterizedLiveQueryPlan
   { _plqpRole  :: !RoleName
-  , _plqpAlias :: !G.Alias
   , _plqpQuery :: !MultiplexedQuery
   } deriving (Show)
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ParameterizedLiveQueryPlan)
@@ -249,30 +265,39 @@ buildLiveQueryPlan
   :: ( MonadError QErr m
      , MonadReader r m
      , Has UserInfo r
+     , Has GR.FieldMap r
+     , Has GR.OrdByCtx r
+     , Has GR.QueryCtxMap r
+     , Has SQLGenCtx r
      , MonadIO m
      )
   => PGExecCtx
-  -> G.Alias
-  -> GR.QueryRootFldUnresolved
-  -> Maybe GV.ReusableVariableTypes
+  -> GV.QueryReusability
+  -> GV.SelSet
   -> m (LiveQueryPlan, Maybe ReusableLiveQueryPlan)
-buildLiveQueryPlan pgExecCtx fieldAlias astUnresolved varTypes = do
+buildLiveQueryPlan pgExecCtx initialReusability fields = do
+  ((resolvedASTs, (queryVariableValues, syntheticVariableValues)), finalReusability) <-
+    GV.runReusabilityTWith initialReusability . flip runStateT mempty $
+      fmap Map.fromList . for (toList fields) $ \field -> case GV._fName field of
+        "__typename" -> throwVE "you cannot create a subscription on '__typename' field"
+        _ -> do
+          unresolvedAST <- GR.queryFldToPGAST field
+          resolvedAST <- GR.traverseQueryRootFldAST resolveMultiplexedValue unresolvedAST
+          pure (GV._fAlias field, resolvedAST)
+
   userInfo <- asks getter
-
-  (astResolved, (queryVariableValues, syntheticVariableValues)) <- flip runStateT mempty $
-    GR.traverseQueryRootFldAST resolveMultiplexedValue astUnresolved
-  let pgQuery = mkMultiplexedQuery $ GR.toPGQuery astResolved
+  let multiplexedQuery = mkMultiplexedQuery resolvedASTs
       roleName = _uiRole userInfo
-      parameterizedPlan = ParameterizedLiveQueryPlan roleName fieldAlias pgQuery
+      parameterizedPlan = ParameterizedLiveQueryPlan roleName multiplexedQuery
 
-  -- We need to ensure that the values provided for variables
-  -- are correct according to Postgres. Without this check
-  -- an invalid value for a variable for one instance of the
-  -- subscription will take down the entire multiplexed query
+  -- We need to ensure that the values provided for variables are correct according to Postgres.
+  -- Without this check an invalid value for a variable for one instance of the subscription will
+  -- take down the entire multiplexed query.
   validatedQueryVars <- validateVariables pgExecCtx queryVariableValues
   validatedSyntheticVars <- validateVariables pgExecCtx (toList syntheticVariableValues)
   let cohortVariables = CohortVariables (_uiSession userInfo) validatedQueryVars validatedSyntheticVars
       plan = LiveQueryPlan parameterizedPlan cohortVariables
+      varTypes = finalReusability ^? GV._Reusable
       reusablePlan = ReusableLiveQueryPlan parameterizedPlan validatedSyntheticVars <$> varTypes
   pure (plan, reusablePlan)
 
