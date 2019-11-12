@@ -53,7 +53,7 @@ Importing Hasura metadata
 You can apply exported metadata from one Hasura GraphQL engine instance to another. You can also apply an older or
 modified version of an instance's metadata onto itself.
 
-Importing completely replaces the metadata on that instance, i.e., you lose any metadata that was already present
+Importing completely replaces the metadata on that instance, i.e. you lose any metadata that was already present
 before.
 
 .. rst-class:: api_tabs
@@ -95,7 +95,7 @@ Reloading Hasura metadata
 -------------------------
 
 In some cases, the metadata can be out of sync with the Postgres schema. For example,
-when a new column has been added or an enum type was extended via ``psql``.
+when a new column has been added to a table via an external tool such as ``psql``.
 
 .. rst-class:: api_tabs
 .. tabs::
@@ -125,8 +125,12 @@ when a new column has been added or an enum type was extended via ``psql``.
    all inconsistent objects manually or delete them. After that, you need to reload
    metadata again.
 
+Managing Hasura metadata in CI/CD
+---------------------------------
 
-The ``curl`` based API calls can be easily integrated with your CI/CD workflows.
+Using tools like ``curl`` you can easily integrate the metadata API requests for the above metadata management
+actions with your CI/CD workflows.
+
 In case you need an automated way of applying/importing the metadata, take a
 look at the :doc:`CLI-Migrations <auto-apply-migrations>` Docker image, which
 can start the GraphQL engine after automatically importing a mounted metadata file.
