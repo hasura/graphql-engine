@@ -120,11 +120,13 @@ resolveMultiplexedValue = \case
   GR.UVSQL sqlExp -> pure sqlExp
   GR.UVSession -> pure $ fromResVars (PGTypeScalar PGJSON) ["session"]
   where
-    fromResVars ty jPath =
-      flip S.SETyAnn (S.mkTypeAnn ty) $ S.SEOpApp (S.SQLOp "#>>")
+    fromResVars pgType jPath = addTypeAnnotation pgType $ S.SEOpApp (S.SQLOp "#>>")
       [ S.SEQIden $ S.QIden (S.QualIden (Iden "_subs") Nothing) (Iden "result_vars")
       , S.SEArray $ map S.SELit jPath
       ]
+    addTypeAnnotation pgType = flip S.SETyAnn (S.mkTypeAnn pgType) . case pgType of
+      PGTypeScalar scalarType -> withConstructorFn scalarType
+      PGTypeArray _           -> id
 
 newtype CohortId = CohortId { unCohortId :: UUID }
   deriving (Show, Eq, Hashable, J.ToJSON, Q.FromCol)
