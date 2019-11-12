@@ -371,7 +371,7 @@ class TestGraphQLQueryBoolExpJsonB(DefaultTestSelectQueries):
     def dir(cls):
         return 'queries/graphql_query/boolexp/jsonb'
 
-@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("transport", ['http', 'websocket', 'subscription'])
 class TestGraphQLQueryBoolExpPostGIS(DefaultTestSelectQueries):
 
     def test_query_using_point(self, hge_ctx, transport):
