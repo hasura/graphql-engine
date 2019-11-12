@@ -8,7 +8,7 @@
 <a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
 <a href="https://eepurl.com/dBUfJ5"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
 
-Hasura GraphQL Engine ist ein blitzschneller GraphQL Server, welcher dir die Moeglichkeit bietet **sofort und in Echtzeit GraphQL APIs in Postgres**, mit [**webhook triggern**](event-triggers.md) fuer Datenbank-events und [**remote schematas**](remote-schemas.md) fuer Businesslogik.
+Hasura GraphQL Engine ist ein blitzschneller GraphQL Server, welcher dir die Moeglichkeit bietet **sofort und in Echtzeit GraphQL APIs in Postgres**, mit [**webhook triggern**](../event-triggers.md) fuer Datenbank-events und [**remote schematas**](../remote-schemas.md) fuer Businesslogik.
 
 Hasura hilft dir GraphQL-Anwendungen basierend auf Postgres zu entwickeln oder schrittweise zu GraphQL zu wechseln fuer schon existierende Anwendungen die Postgres benutzen.
 
@@ -16,11 +16,11 @@ Dazu mehr auf [hasura.io](https://hasura.io) und in den [Docs](https://docs.hasu
 
 ------------------
 
-![Hasura GraphQL Engine Demo](assets/demo.gif)
+![Hasura GraphQL Engine Demo](../assets/demo.gif)
 
 ------------------
 
-![Hasura GraphQL Engine Realtime Demo](assets/realtime.gif)
+![Hasura GraphQL Engine Realtime Demo](../assets/realtime.gif)
 
 -------------------
 
@@ -28,8 +28,8 @@ Dazu mehr auf [hasura.io](https://hasura.io) und in den [Docs](https://docs.hasu
 
 * **Entwickle maechtige Queries**: Built-in Filter, Paginierung, Suchmuster, Bulk-Inserts, Updates, Loeschen von Mutationen
 * **Echtzeit**: Konvertiere jede GraphQL Query zu einer Live-Query mit Hilfe von Subscriptions
-* **Merge Remote Schemas**: Zugriff auf individuelle GraphQL Schemas fuer Businesslogik mit einem einzigen GraphQL-Engine-Endpoint [**Read more**](remote-schemas.md)
-* **Steuere Webhooks oder Severless-Funktionen**: Mit Postgres insert/update/delete Events ([read more](event-triggers.md))
+* **Merge Remote Schemas**: Zugriff auf individuelle GraphQL Schemas fuer Businesslogik mit einem einzigen GraphQL-Engine-Endpoint [**Read more**](../remote-schemas.md)
+* **Steuere Webhooks oder Severless-Funktionen**: Mit Postgres insert/update/delete Events ([read more](../event-triggers.md))
 * **Funktioniert mit bereits existierenden Live-Datenbanken**: Steuere eine bereits existierende Postgres Datenbank an um eine fertige GraphQL API zu erhalten
 * **Detailierte Zugriffssteuerung**: Dynamischer Zugriff der sich muehelos mit deinem Authentifizierungs System verbinden laesst (z.B.: auth0, firebase-auth)
 * **Hochperformant & wenig Speicherbedarf**: ~15MB docker image; ~50MB RAM @ 1000 req/s; multi-core aware
@@ -92,7 +92,7 @@ Probiere die folgenden Guides fuer die One-click Deployment Optionen:
 
 Fuer auf Docker basierende Deployments and erweiterte Konfigurationsmoeglichkeiten: [Deployment
 Guides](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) oder
-[Manifest installieren](install-manifests).
+[Manifest installieren](../install-manifests).
 
 ## Architektur
 
@@ -100,7 +100,7 @@ Die Hasura GraphQL Engine simuliert eine Postgres Datenbank-Instanz and kann Anf
 
 Du kannst dich sonst auch mit Remote-GraphQL Schemas verbinden und so eine vereinheitlichte GraphQL API zu erhalten. 
 
-![Hasura GraphQL Engine Architektur](assets/hasura-arch.svg)
+![Hasura GraphQL Engine Architektur](../assets/hasura-arch.svg)
 
 ## Client-side Tooling
 
@@ -112,12 +112,12 @@ GraphQL Engine bietet einfach zu verstehende, skalierende und performante Moegli
 
 ### Remote Schemas
 
-Fuege zusaetzlich zu Hasuras Postgres-basierenden GraphQL Schma deine individuellen Resolver in einem Remote Schema hinzu. Dies hilft zum Beispiel bei der Implementierung von einer Bezahl-API oder beim Anfragen von Daten die nicht in deiner eigenen Datenbank sind - [mehr dazu](remote-schemas.md).
+Fuege zusaetzlich zu Hasuras Postgres-basierenden GraphQL Schma deine individuellen Resolver in einem Remote Schema hinzu. Dies hilft zum Beispiel bei der Implementierung von einer Bezahl-API oder beim Anfragen von Daten die nicht in deiner eigenen Datenbank sind - [mehr dazu](../remote-schemas.md).
 
 ### Loese Webhooks und Datenbankevents aus
 
 Fuege asynchrone Businesslogik hinzu, welche von Datenbankevents ausgeloest wird.
-Perfekt fuer Benachrichtigungen, Daten-Pipelines von Postgres oder asynchronem Processing - [mehr dazu](event-triggers.md).
+Perfekt fuer Benachrichtigungen, Daten-Pipelines von Postgres oder asynchronem Processing - [mehr dazu](../event-triggers.md).
 
 ### Abgeleitete Daten oder Datentransformation
 
@@ -126,25 +126,25 @@ Transformiere Daten in Postgres oder lasse deine Businesslogik eigene Daten able
 ## Demos
 
 Schaue dir all die Beispiele in dem 
-[community/sample-apps](community/sample-apps) Verzeichnis an.
+[community/sample-apps](../community/sample-apps) Verzeichnis an.
 
 ### Realtime applications
 
 - Gruppenchat gebaut mit React, beinhaltet einen Typenanzeiger, Online Users und Benachrichtigungen bei 
   neuen Nachrichten.
   - [Probiere es aus](https://realtime-chat.demo.hasura.app/)
-  - [Tutorial](community/sample-apps/realtime-chat)
+  - [Tutorial](../community/sample-apps/realtime-chat)
   - [Durchsuche die APIs](https://realtime-chat.demo.hasura.app/console)
 
 - Echtzeit Standort Tracking App welche die Koordinaten von Fahrzeugen 
   verfolgt und auf einer Karte anzeigt. 
   - [Probiere es aus](https://realtime-location-tracking.demo.hasura.app/)
-  - [Tutorial](community/sample-apps/realtime-location-tracking)
+  - [Tutorial](../community/sample-apps/realtime-location-tracking)
   - [Durchsuche die APIs](https://realtime-location-tracking.demo.hasura.app/console)
 
 - Echtzeit Dashboard fuer Datenaggregation von sich konstant aendernden Daten.
   - [Probiere es aus](https://realtime-poll.demo.hasura.app/)
-  - [Tutorial](community/sample-apps/realtime-poll)
+  - [Tutorial](../community/sample-apps/realtime-poll)
   - [Durchsuche die APIs](https://realtime-poll.demo.hasura.app/console)
 
 ### Videos
@@ -164,24 +164,24 @@ Die Dokumentation und die Community wird meistens bei der Fehlersuche und -beheb
 * Folge unseren Updates: [@HasuraHQ](https://twitter.com/hasurahq)
 * Schreibe uns im [Website Chat](https://hasura.io)
 
-Wir sind stehts bemueht einen gepflegten und freundlichen Umgang in der Community zu erhalten. Bitte schaue dazu in den [Code of Conduct](code-of-conduct.md).
+Wir sind stehts bemueht einen gepflegten und freundlichen Umgang in der Community zu erhalten. Bitte schaue dazu in den [Code of Conduct](../code-of-conduct.md).
 
-Wenn du ein Sicherheitsrisiko melden moechtest, bitte [lese folgendes](SECURITY.md).
+Wenn du ein Sicherheitsrisiko melden moechtest, bitte [lese folgendes](../SECURITY.md).
 
 ## Contributing
 
-Schaue hier [Contributing Guide](CONTRIBUTING.md) fuer mehr Details.
+Schaue hier [Contributing Guide](../CONTRIBUTING.md) fuer mehr Details.
 
 ## Marke
 
 Die Marke Hasura (logos, das Hasura Maskottchen, Abzeichen, etc.) kannst du 
-hier finden [assets/brand](assets/brand). Fuehle dich frei sie in deiner App, 
+hier finden [../assets/brand](../assets/brand). Fuehle dich frei sie in deiner App, 
 Webseite, etc. zu benutzen. Wir wuerden uns sehr freuen, wenn du das "Powered by Hasura"
 Abzeichen deiner mit Hasura gebauten App hinzufuegst. ❤️
 
 <div style="display: flex;">
-  <img src="assets/brand/powered_by_hasura_blue.svg" width="150px"/>
-  <img src="assets/brand/powered_by_hasura_white.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_blue.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_white.svg" width="150px"/>
 </div>
 
 ```html
@@ -200,17 +200,17 @@ Abzeichen deiner mit Hasura gebauten App hinzufuegst. ❤️
 
 Die Kern-GraphQL Engine ist verfuegbar unter [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) (Apache-2.0).
 
-Alle **anderen Inhalte** (Ausser die in [`server`](server), [`cli`](cli) und
-[`console`](console) Verzeichnissen) sind verfuegbar unter der [MIT Lizenz](LICENSE-community).
-Dies beinhaltet [`docs`](docs) und [`community`](community)
+Alle **anderen Inhalte** (Ausser die in [`server`](../server), [`cli`](../cli) und
+[`console`](../console) Verzeichnissen) sind verfuegbar unter der [MIT Lizenz](../LICENSE-community).
+Dies beinhaltet [`docs`](../docs) und [`community`](../community)
 Verzeichnisse.
 
 ## Ueberzetzungen
 
 Diese Readme ist under anderem in den folgenden Sprachen verfuegbar:
 
-- [Japanese :jp:](translations/README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
-- [French :fr:](translations/README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
-- [Greek 🇬🇷](translations/README.greek.md) (:pray: [@MIP2000](https://github.com/MIP2000))
+- [Japanese :jp:](README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
+- [French :fr:](README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
+- [Greek 🇬🇷](README.greek.md) (:pray: [@MIP2000](https://github.com/MIP2000))
 
-Uebersetzungen von anderen Dateien kannst du [hier](translations) finden.
+Uebersetzungen von anderen Dateien kannst du [hier](../translations) finden.
