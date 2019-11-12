@@ -11,6 +11,7 @@ import { setTable } from '../DataActions.js';
 
 import { isPostgresFunction } from '../utils';
 import { sqlEscapeText } from '../../../Common/utils/sqlUtils';
+import { getTableModifyRoute } from '../../../Common/utils/routesUtils';
 
 const SET_DEFAULTS = 'AddTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddTable/SET_TABLENAME';
@@ -362,9 +363,7 @@ const createTableSql = () => {
       dispatch({ type: SET_DEFAULTS });
       dispatch(setTable(tableName));
       dispatch(updateSchemaInfo()).then(() =>
-        dispatch(
-          _push('/schema/' + currentSchema + '/tables/' + tableName + '/modify')
-        )
+        dispatch(_push(getTableModifyRoute(currentSchema, tableName, true)))
       );
       return;
     };
