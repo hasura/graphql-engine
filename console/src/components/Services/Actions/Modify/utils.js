@@ -1,19 +1,25 @@
-import { getActionDefinitionSdl } from '../../Types/sdlUtils';
+import { getActionDefinitionSdl, getTypesSdl } from '../../Types/sdlUtils';
+import {
+  getActionArguments,
+  getActionName,
+  getActionOutputType,
+} from '../utils';
+import { getActionTypes } from '../Common/utils';
 
-export const getModifyState = currentAction => {
+export const getModifyState = (currentAction, allTypes) => {
   const { action_defn: actionDef } = currentAction;
   const modifyState = {
     name: currentAction.action_name,
     actionDefinition: {
       sdl: getActionDefinitionSdl(
-        currentAction.action_name,
-        actionDef.arguments,
-        actionDef.output_type
+        getActionName(currentAction),
+        getActionArguments(currentAction),
+        getActionOutputType(currentAction)
       ),
       error: null,
     },
     typeDefinition: {
-      sdl: '',
+      sdl: getTypesSdl(getActionTypes(currentAction, allTypes)),
       error: null,
     },
     webhook: actionDef.webhook,

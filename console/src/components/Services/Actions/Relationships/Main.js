@@ -6,6 +6,7 @@ import AddedRelationships from './Components/AddedRelationships';
 import { findAction } from '../utils';
 import { setTypes } from './reducer';
 import { generateTableDef } from '../../../Common/utils/pgUtils';
+import { unwrapType } from '../../Types/wrappingTypeUtils';
 
 const Relationships = ({
   params,
@@ -19,7 +20,8 @@ const Relationships = ({
 
   const action = findAction(allActions, actionName);
 
-  const actionOutputTypeName = action.action_defn.output_type;
+  const actionOutputTypeName = unwrapType(action.action_defn.output_type)
+    .typename;
 
   const actionOutputType = allTypes.find(t => t.name === actionOutputTypeName);
 

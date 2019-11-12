@@ -7,7 +7,7 @@ export const getTypesFromSdl = sdl => {
     error: null,
   };
 
-  if (!sdl) {
+  if (!sdl || (sdl && sdl.trim() === '')) {
     return typeDefinition;
   }
 

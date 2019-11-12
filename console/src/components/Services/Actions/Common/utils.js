@@ -5,6 +5,7 @@ import { filterNameLessTypeLess } from '../../Types/utils';
 import {
   getSchemaTypeMetadata,
   wrapTypename,
+  unwrapType,
 } from '../../Types/wrappingTypeUtils';
 import {
   isInputObjectType,
@@ -14,6 +15,8 @@ import {
 } from 'graphql';
 
 import { gqlInbuiltTypes } from './stateDefaults';
+import { getActionArguments, getActionOutputType, findType } from '../utils';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 export const isInbuiltType = typename => {
   return !!gqlInbuiltTypes.find(t => t.name === typename);
@@ -197,4 +200,79 @@ export const deriveExistingType = (
   );
 
   return Object.values(types);
+};
+
+export const getActionTypes = (currentAction, allTypes) => {
+  const actionTypes = {};
+  const actionArgs = getActionArguments(currentAction);
+  const actionOutputType = getActionOutputType(currentAction);
+
+  const getDependentTypes = maybeWrappedTypename => {
+    const { typename } = unwrapType(maybeWrappedTypename);
+    if (isInbuiltType(typename)) return;
+    if (actionTypes[typename]) return;
+
+    const type = findType(allTypes, typename);
+    actionTypes[typename] = type;
+
+    if (type.fields) {
+      type.fields.forEach(f => {
+        getDependentTypes(f.type);
+        if (f.arguments) {
+          f.arguments.forEach(a => {
+            getDependentTypes(a.type);
+          });
+        }
+      });
+    }
+  };
+
+  actionArgs.forEach(a => {
+    getDependentTypes(a.type);
+  });
+
+  getDependentTypes(actionOutputType);
+
+  return Object.values(actionTypes);
+};
+
+export const getOverlappingTypeConfirmation = (
+  currentActionName,
+  allActions,
+  allTypes,
+  overlappingTypenames
+) => {
+  const otherActions = allActions.filter(
+    a => a.action_name !== currentActionName
+  );
+
+  const typeCollisionMap = {};
+
+  for (let i = otherActions.length - 1; i >= 0; i--) {
+    const action = otherActions[i];
+    const actionTypes = getActionTypes(action, allTypes);
+    actionTypes.forEach(t => {
+      if (typeCollisionMap[t.name]) return;
+      overlappingTypenames.forEach(ot => {
+        if (ot === t.name) {
+          typeCollisionMap[ot] = true;
+        }
+      });
+    });
+  }
+
+  let isOk = true;
+  const collidingTypes = Object.keys(typeCollisionMap);
+  const numCollidingTypes = collidingTypes.length;
+
+  if (numCollidingTypes) {
+    const types = `${collidingTypes.join(', ')}`;
+    const typeLabel = numCollidingTypes === 1 ? 'type' : 'types';
+    const verb = numCollidingTypes === 1 ? 'is' : 'are';
+    isOk = getConfirmation(
+      `The ${typeLabel} "${types}" ${verb} also used by other actions. Your current type definition will replace the existing type definition. This will impact existing actions`
+    );
+  }
+
+  return isOk;
 };

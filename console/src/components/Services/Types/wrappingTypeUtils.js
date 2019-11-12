@@ -28,7 +28,7 @@ export const isList = wrappedTypename => {
   return wrappedTypename[wrappedTypename.length - 1] === ']';
 };
 
-const unwrapNullable = wrappedTypename => {
+const unwrapNonNullable = wrappedTypename => {
   return wrappedTypename.substring(0, wrappedTypename.length - 1);
 };
 
@@ -64,50 +64,29 @@ export const typeWrappers = [
 ];
 
 export const unwrapType = wrappedTypename => {
-  if (wrappedTypename.charAt(wrappedTypename.length - 1) === '!') {
-    return unwrapType(unwrapNullable(wrappedTypename));
+  let _typename = wrappedTypename;
+  const typeWrapperStack = [];
+
+  while (true) {
+    const _lastChar = _typename.charAt(_typename.length - 1);
+    if (_lastChar === ']') {
+      _typename = unwrapList(_typename);
+      typeWrapperStack.push('l');
+      continue;
+    }
+    if (_lastChar === '!') {
+      _typename = unwrapNonNullable(_typename);
+      typeWrapperStack.push('n');
+      continue;
+    }
+
+    break;
   }
-  if (wrappedTypename.charAt(wrappedTypename.length - 1) === ']') {
-    return unwrapType(unwrapList(wrappedTypename));
-  }
+
   return {
-    index: 0,
-    typename: wrappedTypename,
+    stack: typeWrapperStack,
+    typename: _typename,
   };
-};
-
-export const getTypenameMetadata = graphqlType => {
-  let _type = graphqlType;
-  const wrappers = [];
-
-  while (isWrappingType(_type)) {
-    if (isListType(_type)) {
-      wrappers.push('l');
-    }
-    if (isNonNullType(_type)) {
-      wrappers.push('n');
-    }
-    _type = _type.ofType;
-  }
-
-  const typename = _type.name;
-  let wrappedTypename = typename;
-
-  while (wrappers[0]) {
-    const l = wrappers.length;
-    if (wrappers[l - 1] === 'l') {
-      wrappedTypename = `[${wrappedTypename}]`;
-      wrappers.pop();
-      continue;
-    }
-    if (wrappers[l - 1] === 'n') {
-      wrappedTypename = `${wrappedTypename}!`;
-      wrappers.pop();
-      continue;
-    }
-  }
-
-  return unwrapType(wrappedTypename);
 };
 
 export const getUnderlyingType = graphqlType => {

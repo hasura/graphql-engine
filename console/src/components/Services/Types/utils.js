@@ -18,25 +18,25 @@ export const filterValueLess = arr => {
 
 export const mergeCustomTypes = (newTypesList, existingTypesList) => {
   const mergedTypes = [...existingTypesList];
-  let overlappingTypename;
+  const overlappingTypenames = [];
   const existingTypeIndexMap = {};
+
   existingTypesList.forEach((et, i) => {
     existingTypeIndexMap[et.name] = i;
   });
+
   newTypesList.forEach(nt => {
     if (existingTypeIndexMap[nt.name] !== undefined) {
-      if (nt.isModifying) {
-        mergedTypes[existingTypeIndexMap[nt.name]] = nt;
-      } else {
-        overlappingTypename = nt.name;
-      }
+      mergedTypes[existingTypeIndexMap[nt.name]] = nt;
+      overlappingTypenames.push(nt.name);
     } else {
       mergedTypes.push(nt);
     }
   });
+
   return {
     types: mergedTypes,
-    overlappingTypename,
+    overlappingTypenames,
   };
 };
 

@@ -25,3 +25,11 @@ export const getActionOutputFields = (action, types) => {
 
   return outputType.fields;
 };
+
+export const getActionArguments = action => {
+  return action.action_defn.arguments;
+};
+
+export const getAllActions = getState => {
+  return getState().actions.common.actions;
+};

@@ -20,6 +20,7 @@ import { getConfirmation } from '../../Common/utils/jsUtils';
 import {
   generateActionDefinition,
   getStateValidationError,
+  getOverlappingTypeConfirmation,
 } from './Common/utils';
 import { showErrorNotification } from '../Common/Notification';
 import { appPrefix } from './constants';
@@ -78,7 +79,10 @@ export const fetchActions = () => {
 };
 
 export const createAction = () => (dispatch, getState) => {
-  const { add: rawState } = getState().actions;
+  const {
+    add: rawState,
+    common: { actions: allActions },
+  } = getState().actions;
   const { types: existingTypesList } = getState().types;
 
   const {
@@ -116,17 +120,21 @@ export const createAction = () => (dispatch, getState) => {
     return dispatch(showErrorNotification(validationError));
   }
 
-  const { types: mergedTypes, overlappingTypename } = mergeCustomTypes(
+  const { types: mergedTypes, overlappingTypenames } = mergeCustomTypes(
     state.types,
     existingTypesList
   );
 
-  if (overlappingTypename) {
-    return dispatch(
-      showErrorNotification(
-        `A type called "${overlappingTypename}" already exists`
-      )
+  if (overlappingTypenames) {
+    const isOk = getOverlappingTypeConfirmation(
+      state.name,
+      allActions,
+      existingTypesList,
+      overlappingTypenames
     );
+    if (!isOk) {
+      return;
+    }
   }
 
   const customFieldsQueryUp = generateSetCustomTypesQuery(
@@ -145,7 +153,7 @@ export const createAction = () => (dispatch, getState) => {
   const actionQueryDown = generateDropActionQuery(state.name);
 
   const upQueries = [customFieldsQueryUp, actionQueryUp];
-  const downQueries = [customFieldsQueryDown, actionQueryDown];
+  const downQueries = [actionQueryDown, customFieldsQueryDown];
 
   const migrationName = `create_action_${state.name}`;
   const requestMsg = 'Creating action...';
@@ -178,7 +186,10 @@ export const createAction = () => (dispatch, getState) => {
 };
 
 export const saveAction = currentAction => (dispatch, getState) => {
-  const { modify: rawState } = getState().actions;
+  const {
+    modify: rawState,
+    common: { actions: allActions },
+  } = getState().actions;
   const { types: existingTypesList } = getState().types;
 
   const {
@@ -217,17 +228,21 @@ export const saveAction = currentAction => (dispatch, getState) => {
     return dispatch(showErrorNotification(validationError));
   }
 
-  const { types: mergedTypes, overlappingTypename } = mergeCustomTypes(
+  const { types: mergedTypes, overlappingTypenames } = mergeCustomTypes(
     state.types,
     existingTypesList
   );
 
-  if (overlappingTypename) {
-    return dispatch(
-      showErrorNotification(
-        `A type called "${overlappingTypename}" already exists`
-      )
+  if (overlappingTypenames) {
+    const isOk = getOverlappingTypeConfirmation(
+      state.name,
+      allActions,
+      existingTypesList,
+      overlappingTypenames
     );
+    if (!isOk) {
+      return;
+    }
   }
 
   const customFieldsQueryUp = generateSetCustomTypesQuery(
