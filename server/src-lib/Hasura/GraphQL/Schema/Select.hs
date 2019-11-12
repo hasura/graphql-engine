@@ -214,12 +214,11 @@ type table_aggregate_fields{
 -}
 mkTableAggFldsObj
   :: QualifiedTable
-  -> ([PGColumnInfo], [G.Name])
-  -> ([PGColumnInfo], [G.Name])
+  -> [(G.Name, [PGColumnInfo])] -- ^ operator and applicable columns
   -> ObjTyInfo
-mkTableAggFldsObj tn (numCols, numAggOps) (compCols, compAggOps) =
+mkTableAggFldsObj tn opWithColumns =
   mkHsraObjTyInfo (Just desc) (mkTableAggFldsTy tn) Set.empty $ mapFromL _fiName $
-  countFld : (numFlds <> compFlds)
+  countFld : opFlds
   where
     desc = G.Description $
       "aggregate fields of " <>> tn
@@ -234,8 +233,8 @@ mkTableAggFldsObj tn (numCols, numAggOps) (compCols, compAggOps) =
     distinctInpVal = InpValInfo Nothing "distinct" Nothing $ G.toGT $
                      mkScalarTy PGBoolean
 
-    numFlds = bool (map mkColOpFld numAggOps) [] $ null numCols
-    compFlds = bool (map mkColOpFld compAggOps) [] $ null compCols
+    opFlds = flip mapMaybe opWithColumns $ \(op, cols) ->
+             bool (Just $ mkColOpFld op) Nothing $ null cols
 
     mkColOpFld op = mkHsraObjFldInfo Nothing op Map.empty $ G.toGT $
                     mkTableColAggFldsTy op tn
@@ -250,7 +249,7 @@ type table_<agg-op>_fields{
 mkTableColAggFldsObj
   :: QualifiedTable
   -> G.Name
-  -> (PGColumnType -> G.NamedType)
+  -> (PGColumnType -> G.GType)
   -> [PGColumnInfo]
   -> ObjTyInfo
 mkTableColAggFldsObj tn op f cols =
@@ -260,7 +259,7 @@ mkTableColAggFldsObj tn op f cols =
     desc = G.Description $ "aggregate " <> G.unName op <> " on columns"
 
     mkColObjFld ci = mkHsraObjFldInfo Nothing (pgiName ci) Map.empty $
-                     G.toGT $ f $ pgiType ci
+                     f $ pgiType ci
 
 {-
 

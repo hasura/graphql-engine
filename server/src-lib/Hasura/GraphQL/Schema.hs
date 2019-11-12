@@ -107,8 +107,11 @@ numAggOps = [ "sum", "avg", "stddev", "stddev_samp", "stddev_pop"
 compAggOps :: [G.Name]
 compAggOps = ["max", "min"]
 
+arrayAggOp :: G.Name
+arrayAggOp = "array_agg"
+
 isAggFld :: G.Name -> Bool
-isAggFld = flip elem (numAggOps <> compAggOps)
+isAggFld = flip elem (pure arrayAggOp <> numAggOps <> compAggOps)
 
 mkFuncArgSeq :: Seq.Seq FunctionArg -> Seq.Seq FuncArgItem
 mkFuncArgSeq inputArgs =
@@ -258,11 +261,15 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
         let cols = getPGColumnFields selFlds
             numCols = onlyNumCols cols
             compCols = onlyComparableCols cols
+            mkOpWithCols = flip (,)
+            opWithCols = mkOpWithCols cols arrayAggOp :
+                         map (mkOpWithCols numCols) numAggOps
+                         <> map (mkOpWithCols compCols) compAggOps
             objs = [ mkTableAggObj tn
-                   , mkTableAggFldsObj tn (numCols, numAggOps) (compCols, compAggOps)
+                   , mkTableAggFldsObj tn opWithCols
                    ] <> mkColAggFldsObjs selFlds
-            ordByInps = mkTabAggOrdByInpObj tn (numCols, numAggOps) (compCols, compAggOps)
-                        : mkTabAggOpOrdByInpObjs tn (numCols, numAggOps) (compCols, compAggOps)
+            ordByInps = mkTabAggOrdByInpObj tn opWithCols
+                        : mkTabAggOpOrdByInpObjs tn opWithCols
         in (objs, ordByInps)
       _ -> ([], [])
 
@@ -274,13 +281,16 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
     mkTypeMaker _     = onlyFloat
 
     mkColAggFldsObjs flds =
-      let numCols = getNumericCols flds
+      let cols = getPGColumnFields flds
+          numCols = getNumericCols flds
           compCols = getComparableCols flds
-          mkNumObjFld n = mkTableColAggFldsObj tn n (mkTypeMaker n) numCols
-          mkCompObjFld n = mkTableColAggFldsObj tn n mkColumnType compCols
+          mkNumObjFld n = mkTableColAggFldsObj tn n (G.toGT . mkTypeMaker n) numCols
+          mkCompObjFld n = mkTableColAggFldsObj tn n (G.toGT . mkColumnType) compCols
           numFldsObjs = bool (map mkNumObjFld numAggOps) [] $ null numCols
           compFldsObjs = bool (map mkCompObjFld compAggOps) [] $ null compCols
-      in numFldsObjs <> compFldsObjs
+          arrayAggFldObj = mkTableColAggFldsObj tn arrayAggOp
+                           (G.toGT . G.toLT . mkColumnType) cols
+      in arrayAggFldObj : numFldsObjs <> compFldsObjs
     -- the fields used in table object
     selObjFldsM = mkFldMap (mkTableTy tn) <$> selFldsM
     -- the scalar set for table_by_pk arguments
@@ -365,7 +375,7 @@ getRootFldsRole' tn primCols constraints fields funcs insM
     insCustName = getCustomNameWith _tcrfInsert
     getInsDet (hdrs, upsertPerm) =
       let isUpsertable = upsertable constraints upsertPerm $ isJust viM
-      in ( MCInsert $ InsOpCtx tn $ hdrs `union` maybe [] (\(_, _, _, x) -> x) updM
+      in ( MCInsert $ InsOpCtx tn $ hdrs `union` maybe [] (^. _4) updM
          , mkInsMutFld insCustName tn isUpsertable
          )
 

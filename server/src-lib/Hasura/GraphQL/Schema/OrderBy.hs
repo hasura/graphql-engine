@@ -64,12 +64,10 @@ input table_<op>_order_by {
 
 mkTabAggOpOrdByInpObjs
   :: QualifiedTable
-  -> ([PGColumnInfo], [G.Name])
-  -> ([PGColumnInfo], [G.Name])
+  -> [(G.Name, [PGColumnInfo])] -- ^ operator and applicable columns
   -> [InpObjTyInfo]
-mkTabAggOpOrdByInpObjs tn (numCols, numAggOps) (compCols, compAggOps) =
-  mapMaybe (mkInpObjTyM numCols) numAggOps
-  <> mapMaybe (mkInpObjTyM compCols) compAggOps
+mkTabAggOpOrdByInpObjs tn opWithCols =
+  flip mapMaybe opWithCols $ \(op, cols) -> mkInpObjTyM cols op
   where
 
     mkDesc (G.Name op) =
@@ -96,18 +94,17 @@ count: order_by
 
 mkTabAggOrdByInpObj
   :: QualifiedTable
-  -> ([PGColumnInfo], [G.Name])
-  -> ([PGColumnInfo], [G.Name])
+  -> [(G.Name, [PGColumnInfo])] -- ^ operator and applicable columns
   -> InpObjTyInfo
-mkTabAggOrdByInpObj tn (numCols, numAggOps) (compCols, compAggOps) =
+mkTabAggOrdByInpObj tn opWithColumns =
   mkHsraInpTyInfo (Just desc) (mkTabAggOrdByTy tn) $ fromInpValL $
-  numOpOrdBys <> compOpOrdBys <> [countInpVal]
+  opOrdBys <> [countInpVal]
   where
     desc = G.Description $
       "order by aggregate values of table " <>> tn
 
-    numOpOrdBys = bool (map mkInpValInfo numAggOps) [] $ null numCols
-    compOpOrdBys = bool (map mkInpValInfo compAggOps) [] $ null compCols
+    opOrdBys = catMaybes $ flip map opWithColumns $ \(op, cols) ->
+               bool (Just $ mkInpValInfo op) Nothing $ null cols
     mkInpValInfo op = InpValInfo Nothing op Nothing $ G.toGT $
                      mkTabAggOpOrdByTy tn op
 
