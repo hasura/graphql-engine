@@ -306,30 +306,6 @@ getMutOp
 getMutOp ctx sqlGenCtx userInfo selSet =
   runE ctx sqlGenCtx userInfo $ resolveMutSelSet selSet
 
-getSubsOpM
-  :: ( MonadError QErr m
-     , MonadReader r m
-     , Has QueryCtxMap r
-     , Has FieldMap r
-     , Has OrdByCtx r
-     , Has SQLGenCtx r
-     , Has UserInfo r
-     , MonadIO m
-     )
-  => PGExecCtx
-  -> QueryReusability
-  -> VQ.Field
-  -> m (EL.LiveQueryPlan, Maybe EL.ReusableLiveQueryPlan)
-getSubsOpM pgExecCtx initialReusability fld =
-  case VQ._fName fld of
-    "__typename" ->
-      throwVE "you cannot create a subscription on '__typename' field"
-    _            -> do
-      (astUnresolved, finalReusability) <- runReusabilityTWith initialReusability $
-        GR.queryFldToPGAST fld
-      let varTypes = finalReusability ^? _Reusable
-      EL.buildLiveQueryPlan pgExecCtx (VQ._fAlias fld) astUnresolved varTypes
-
 getSubsOp
   :: ( MonadError QErr m
      , MonadIO m
@@ -339,10 +315,10 @@ getSubsOp
   -> SQLGenCtx
   -> UserInfo
   -> QueryReusability
-  -> VQ.Field
+  -> VQ.SelSet
   -> m (EL.LiveQueryPlan, Maybe EL.ReusableLiveQueryPlan)
-getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability fld =
-  runE gCtx sqlGenCtx userInfo $ getSubsOpM pgExecCtx queryReusability fld
+getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability fields =
+  runE gCtx sqlGenCtx userInfo $ EL.buildLiveQueryPlan pgExecCtx queryReusability fields
 
 execRemoteGQ
   :: ( MonadIO m

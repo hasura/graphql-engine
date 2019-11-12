@@ -21,7 +21,6 @@ import           Data.Has
 
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashSet                           as HS
-import qualified Data.Sequence                          as Seq
 import qualified Language.GraphQL.Draft.Syntax          as G
 
 import           Hasura.GraphQL.Schema
@@ -145,7 +144,7 @@ validateFrag (G.FragmentDefinition n onTy dirs selSet) = do
 data RootSelSet
   = RQuery !SelSet
   | RMutation !SelSet
-  | RSubscription !Field
+  | RSubscription !SelSet
   deriving (Show, Eq)
 
 validateGQ
@@ -171,13 +170,7 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
   case G._todType opDef of
     G.OperationTypeQuery -> return $ RQuery selSet
     G.OperationTypeMutation -> return $ RMutation selSet
-    G.OperationTypeSubscription ->
-      case Seq.viewl selSet of
-        Seq.EmptyL     -> throw500 "empty selset for subscription"
-        fld Seq.:< rst -> do
-          unless (null rst) $
-            throwVE "subscription must select only one top level field"
-          return $ RSubscription fld
+    G.OperationTypeSubscription -> return $ RSubscription selSet
 
 isQueryInAllowlist :: GQLExecDoc -> HS.HashSet GQLQuery -> Bool
 isQueryInAllowlist q = HS.member gqlQuery

@@ -10,6 +10,7 @@ module Hasura.GraphQL.Resolve.Select
   , traverseQueryRootFldAST
   , QueryRootFldUnresolved
   , QueryRootFldResolved
+  , toSQLSelect
   , toPGQuery
   ) where
 
@@ -553,8 +554,11 @@ traverseQueryRootFldAST f = \case
   QRFSimple s   -> QRFSimple <$> RS.traverseAnnSimpleSel f s
   QRFAgg s      -> QRFAgg <$> RS.traverseAnnAggSel f s
 
+toSQLSelect :: QueryRootFldResolved -> S.Select
+toSQLSelect = \case
+  QRFPk s       -> RS.mkSQLSelect True s
+  QRFSimple s   -> RS.mkSQLSelect False s
+  QRFAgg s      -> RS.mkAggSelect s
+
 toPGQuery :: QueryRootFldResolved -> Q.Query
-toPGQuery = \case
-  QRFPk s       -> RS.selectQuerySQL True s
-  QRFSimple s   -> RS.selectQuerySQL False s
-  QRFAgg s      -> RS.selectAggQuerySQL s
+toPGQuery = Q.fromBuilder . toSQL . toSQLSelect

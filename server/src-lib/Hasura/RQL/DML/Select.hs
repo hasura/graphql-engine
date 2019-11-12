@@ -1,7 +1,5 @@
 module Hasura.RQL.DML.Select
   ( selectP2
-  , selectQuerySQL
-  , selectAggQuerySQL
   , convSelectQuery
   , asSingleRowJsonResp
   , module Hasura.RQL.DML.Select.Internal
@@ -274,14 +272,6 @@ selectP2 asSingleObject (sel, p) =
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder selectSQL) (toList p) True
   where
     selectSQL = toSQL $ mkSQLSelect asSingleObject sel
-
-selectQuerySQL :: Bool -> AnnSimpleSel -> Q.Query
-selectQuerySQL asSingleObject sel =
-  Q.fromBuilder $ toSQL $ mkSQLSelect asSingleObject sel
-
-selectAggQuerySQL :: AnnAggSel -> Q.Query
-selectAggQuerySQL =
-  Q.fromBuilder . toSQL . mkAggSelect
 
 asSingleRowJsonResp :: Q.Query -> [Q.PrepArg] -> Q.TxE QErr EncJSON
 asSingleRowJsonResp query args =
