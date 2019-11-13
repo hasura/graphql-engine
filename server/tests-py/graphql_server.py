@@ -12,6 +12,10 @@ from enum import Enum
 
 import time
 
+from urllib.parse import urlparse
+
+HGE_URL = ""
+
 def mkJSONResp(graphql_result):
     return Response(HTTPStatus.OK, graphql_result.to_dict(),
                     {'Content-Type': 'application/json'})
@@ -615,12 +619,14 @@ class HeaderTest(graphene.ObjectType):
 
     def resolve_wassup(self, info, arg):
         headers = info.context
+        o = urlparse(HGE_URL)
+        host = o.netloc
         if not (headers.get_all('x-hasura-test') == ['abcd'] and
                 headers.get_all('x-hasura-role') == ['user'] and
                 headers.get_all('x-hasura-user-id') == ['abcd1234'] and
                 headers.get_all('content-type') == ['application/json'] and
                 headers.get_all('Authorization') == ['Bearer abcdef'] and
-                headers.get_all('x-forwarded-host') == ['localhost:8080'] and
+                headers.get_all('x-forwarded-host') == [host] and
                 headers.get_all('x-forwarded-user-agent') == ['python-requests/2.22.0']):
             raise Exception('headers dont match. Received: ' + str(headers))
 
@@ -664,7 +670,9 @@ handlers = MkHandlers({
 })
 
 
-def create_server(host='127.0.0.1', port=5000):
+def create_server(host='127.0.0.1', port=5000, hge_url=""):
+    global HGE_URL
+    HGE_URL = hge_url
     return WebServer((host, port), handlers)
 
 def stop_server(server):
