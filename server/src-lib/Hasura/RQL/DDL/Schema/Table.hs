@@ -107,10 +107,6 @@ validateCustomRootFields customRootFields = do
     let defRemoteGCtx = scDefaultRemoteGCtx sc
         GC.TableCustomRootFields sel selByPk selAgg ins upd del = customRootFields
         rootFldNames = catMaybes [sel, selByPk, selAgg, ins, upd, del]
-        duplicateRootFldNames = duplicates rootFldNames
-
-    when (not $ null duplicateRootFldNames) $ throw400 NotSupported $
-      "the following custom root field names are duplicated: " <> showNames duplicateRootFldNames
 
     forM_ rootFldNames $ GS.checkConflictingNode defRemoteGCtx
 
