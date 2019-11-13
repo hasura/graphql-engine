@@ -135,7 +135,7 @@ addEventTriggerToCatalog qt allCols strfyNum etc = do
            INSERT into hdb_catalog.event_triggers
                        (name, type, schema_name, table_name, configuration)
            VALUES ($1, 'table', $2, $3, $4)
-         |] (name, sn, tn, Q.AltJ $ toJSON etc) True
+         |] (name, sn, tn, Q.AltJ $ toJSON etc) False
 
   mkAllTriggersQ name qt allCols strfyNum fullspec
   where
@@ -148,8 +148,17 @@ delEventTriggerFromCatalog trn = do
            DELETE FROM
                   hdb_catalog.event_triggers
            WHERE name = $1
-                |] (Identity trn) True
+                |] (Identity trn) False
   delTriggerQ trn
+  archiveEvents trn
+
+archiveEvents:: TriggerName -> Q.TxE QErr ()
+archiveEvents trn = do
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+           UPDATE hdb_catalog.event_log
+           SET archived = 't'
+           WHERE trigger_name = $1
+                |] (Identity trn) False
 
 updateEventTriggerToCatalog
   :: QualifiedTable
