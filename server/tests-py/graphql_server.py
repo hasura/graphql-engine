@@ -619,8 +619,10 @@ class HeaderTest(graphene.ObjectType):
                 headers.get_all('x-hasura-role') == ['user'] and
                 headers.get_all('x-hasura-user-id') == ['abcd1234'] and
                 headers.get_all('content-type') == ['application/json'] and
-                headers.get_all('Authorization') == ['Bearer abcdef']):
-            raise Exception('headers dont match. Received: ' + headers)
+                headers.get_all('Authorization') == ['Bearer abcdef'] and
+                headers.get_all('x-forwarded-host') == ['localhost:8080'] and
+                headers.get_all('x-forwarded-user-agent') == ['python-requests/2.22.0']):
+            raise Exception('headers dont match. Received: ' + str(headers))
 
         return "Hello " + arg
 
