@@ -102,6 +102,7 @@ def pytest_cmdline_preparse(config, args):
 
 def pytest_configure(config):
     if is_master(config):
+        config.hge_ctx_gql_server = HGECtxGQLServer()
         if not config.getoption('--hge-urls'):
             print("hge-urls should be specified")
         if not config.getoption('--pg-urls'):
@@ -119,6 +120,9 @@ def pytest_configure(config):
 def pytest_configure_node(node):
     node.slaveinput["hge-url"] = node.config.hge_url_list.pop()
     node.slaveinput["pg-url"] = node.config.pg_url_list.pop()
+
+def pytest_unconfigure(config):
+        config.hge_ctx_gql_server.teardown()
 
 @pytest.fixture(scope='module')
 def hge_ctx(request):
@@ -155,8 +159,6 @@ def hge_ctx(request):
             metadata_disabled=metadata_disabled,
             hge_scale_url=hge_scale_url,
         )
-
-        hge_ctx_gql_server = HGECtxGQLServer(hge_url)
     except HGECtxError as e:
         assert False, "Error from hge_cxt: " + str(e)
         # TODO this breaks things (https://github.com/pytest-dev/pytest-xdist/issues/86)
@@ -164,8 +166,6 @@ def hge_ctx(request):
         pytest.exit(str(e))
 
     yield hge_ctx  # provide the fixture value
-    hge_ctx_gql_server.teardown()
-    time.sleep(1)
     print("teardown hge_ctx")
     hge_ctx.teardown()
     time.sleep(1)

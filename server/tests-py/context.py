@@ -223,9 +223,9 @@ class EvtsWebhookServer(http.server.HTTPServer):
         self.evt_trggr_web_server.join()
 
 class HGECtxGQLServer:
-    def __init__(self, hge_url):
+    def __init__(self):
         # start the graphql server
-        self.graphql_server = graphql_server.create_server('127.0.0.1', 5000, hge_url)
+        self.graphql_server = graphql_server.create_server('127.0.0.1', 5000)
         self.gql_srvr_thread = threading.Thread(target=self.graphql_server.serve_forever)
         self.gql_srvr_thread.start()
 
