@@ -28,13 +28,13 @@ Dazu mehr auf [hasura.io](https://hasura.io) und in den [Docs](https://docs.hasu
 
 * **Entwickle maechtige Queries**: Built-in Filter, Paginierung, Suchmuster, Bulk-Inserts, Updates, Loeschen von Mutationen
 * **Echtzeit**: Konvertiere jede GraphQL Query zu einer Live-Query mit Hilfe von Subscriptions
-* **Merge Remote Schemas**: Zugriff auf individuelle GraphQL Schemas fuer Businesslogik mit einem einzigen GraphQL-Engine-Endpoint [**Read more**](../remote-schemas.md)
-* **Steuere Webhooks oder Severless-Funktionen**: Mit Postgres insert/update/delete Events ([read more](../event-triggers.md))
-* **Funktioniert mit bereits existierenden Live-Datenbanken**: Steuere eine bereits existierende Postgres Datenbank an um eine fertige GraphQL API zu erhalten
+* **Merge Remote Schemas**: Zugriff auf individuelle GraphQL Schemas fuer Businesslogik mit einem einzigen GraphQL-Engine-Endpoint [**Mehr dazu**](../remote-schemas.md)
+* **Steuere Webhooks oder Severless-Funktionen**: Mit Postgres insert/update/delete Events ([Mehr dazu](../event-triggers.md))
+* **Funktioniert mit bereits existierenden Live-Datenbanken**: Steuere eine bereits existierende Postgres Datenbank an, um eine fertige GraphQL API zu erhalten
 * **Detailierte Zugriffssteuerung**: Dynamischer Zugriff der sich muehelos mit deinem Authentifizierungs System verbinden laesst (z.B.: auth0, firebase-auth)
 * **Hochperformant & wenig Speicherbedarf**: ~15MB docker image; ~50MB RAM @ 1000 req/s; multi-core aware
 * **Admin UI & Migration**: Admin UI & von Rails inspirierte Schemata-integratiomn
-* **Postgres** ❤️: Unterstuertzt Postgres Typen (PostGIS/geo-location, etc.), aendert Views zu *graphen*, loest gespeicherte Funktionen aus oder Prozesse mit Mutationen
+* **Postgres** ❤️: Unterstuetzt Postgres Typen (PostGIS/geo-location, etc.), aendert Views zu *graphen*, loest gespeicherte Funktionen aus oder Prozesse mit Mutationen
 
 Mehr dazu auf [hasura.io](https://hasura.io) und in den [Docs](https://docs.hasura.io).
 
@@ -44,10 +44,10 @@ Mehr dazu auf [hasura.io](https://hasura.io) und in den [Docs](https://docs.hasu
 
 - [Schnellstart:](#schnellstart)
     - [One-click deployment auf Heroku](#one-click-deployment-auf-heroku)
-    - [Andere One-click Deployment Optionen](#andere-one-click-deployment-methoden)
+    - [Andere One-click Deployment Optionen](#andere-one-click-deployment-optionen)
 - [Architektur](#architektur)
 - [Client-side Tooling](#client-side-tooling)
-- [Fuege Businesslogik hinzu](#fuege-bussinesslogik-hinzu)
+- [Fuege Businesslogik hinzu](#fuege-businesslogik-hinzu)
     - [Remote Schemas](#remote-schemas)
     - [Loese Webhooks und Datenbankevents aus](#loese-webhooks-und-datenbankevents-aus)
 - [Demos](#demos)
@@ -157,16 +157,16 @@ Schaue dir all die Beispiele in dem
 
 ## Support & Fehlerbehebung
 
-Die Dokumentation und die Community wird meistens bei der Fehlersuche und -behebung behilflich sein. Wenn du einen Bug gefunden hast oder mit ins in Verbindung treten moechtest kannst du uns hier erreichen:
+Die Dokumentation und die Community wird meistens bei der Fehlersuche und -behebung behilflich sein. Wenn du einen Bug gefunden hast oder mit uns in Verbindung treten moechtest kannst du uns hier erreichen:
 
 * Support & Feedback: [Discord](https://discord.gg/vBPpJkS)
 * Issue & Bug Tracking: [GitHub issues](https://github.com/hasura/graphql-engine/issues)
 * Folge unseren Updates: [@HasuraHQ](https://twitter.com/hasurahq)
-* Schreibe uns im [Website Chat](https://hasura.io)
+* Schreibe uns im [Webseiten Chat](https://hasura.io)
 
-Wir sind stehts bemueht einen gepflegten und freundlichen Umgang in der Community zu erhalten. Bitte schaue dazu in den [Code of Conduct](../code-of-conduct.md).
+Wir sind stehts bemueht einen gepflegten und freundlichen Umgang in der Community zu erhalten. Bitte schaue dir dazu den [Code of Conduct](../code-of-conduct.md) an.
 
-Wenn du ein Sicherheitsrisiko melden moechtest, bitte [lese folgendes](../SECURITY.md).
+Wenn du ein Sicherheitsrisiko melden moechtest, bitte [lese dies](../SECURITY.md).
 
 ## Contributing
 
