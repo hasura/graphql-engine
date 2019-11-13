@@ -22,7 +22,7 @@ const featureLaunchVersions = {
   [EXISTS_PERMISSION_SUPPORT]: 'v1.0.0-beta.7',
   [CUSTOM_GRAPHQL_FIELDS_SUPPORT]: 'v1.0.0-beta.8',
   [COMPUTED_FIELDS_SUPPORT]: 'v1.0.0-beta.8',
-  [IMPROVED_EVENT_FETCH_QUERY]: 'v1.0.0-beta.9',
+  [IMPROVED_EVENT_FETCH_QUERY]: 'v1.0.0-beta.10',
 };
 
 export const checkValidServerVersion = version => {
