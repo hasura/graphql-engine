@@ -4,7 +4,11 @@ import TableHeader from '../TableCommon/TableHeader';
 
 import { getAllDataTypeMap } from '../Common/utils';
 
-import { TABLE_ENUMS_SUPPORT } from '../../../../helpers/versionUtils';
+import {
+  checkFeatureSupport,
+  CUSTOM_GRAPHQL_FIELDS_SUPPORT,
+  TABLE_ENUMS_SUPPORT,
+} from '../../../../helpers/versionUtils';
 import globals from '../../../../Globals';
 
 import {
@@ -31,6 +35,7 @@ import ForeignKeyEditor from './ForeignKeyEditor';
 import UniqueKeyEditor from './UniqueKeyEditor';
 import TriggerEditorList from './TriggerEditorList';
 import CheckConstraints from './CheckConstraints';
+import RootFields from './RootFields';
 import styles from './ModifyTable.scss';
 import { NotFoundError } from '../../../Error/PageNotFound';
 
@@ -39,7 +44,10 @@ import {
   getTableCheckConstraints,
   findTable,
   generateTableDef,
+  getTableCustomRootFields,
+  getTableCustomColumnNames,
 } from '../../../Common/utils/pgUtils';
+import Tooltip from '../../../Common/Tooltip/Tooltip';
 
 class ModifyTable extends React.Component {
   componentDidMount() {
@@ -48,11 +56,13 @@ class ModifyTable extends React.Component {
     dispatch(setTable(this.props.tableName));
     dispatch(fetchColumnTypeInfo());
   }
+
   componentWillUnmount() {
     this.props.dispatch({
       type: RESET_COLUMN_TYPE_INFO,
     });
   }
+
   render() {
     const {
       tableName,
@@ -70,6 +80,7 @@ class ModifyTable extends React.Component {
       columnDefaultFunctions,
       schemaList,
       tableEnum,
+      rootFieldsEdit,
     } = this.props;
 
     const dataTypeIndexMap = getAllDataTypeMap(dataTypes);
@@ -144,6 +155,33 @@ class ModifyTable extends React.Component {
     };
 
     // if (table.primary_key.columns > 0) {}
+    const getTableRootFieldsSection = () => {
+      if (!checkFeatureSupport(CUSTOM_GRAPHQL_FIELDS_SUPPORT)) return null;
+
+      const existingRootFields = getTableCustomRootFields(table);
+
+      return (
+        <React.Fragment>
+          <h4 className={styles.subheading_text}>
+            Custom GraphQL Root Fields
+            <Tooltip
+              message={
+                'Change the root fields for the table in the GraphQL API'
+              }
+            />
+          </h4>
+          <RootFields
+            existingRootFields={existingRootFields}
+            rootFieldsEdit={rootFieldsEdit}
+            dispatch={dispatch}
+            tableName={tableName}
+          />
+          <hr />
+        </React.Fragment>
+      );
+    };
+
+    // if (tableSchema.primary_key.columns > 0) {}
     return (
       <div className={`${styles.container} container-fluid`}>
         <TableHeader
@@ -177,6 +215,7 @@ class ModifyTable extends React.Component {
               dispatch={dispatch}
               currentSchema={currentSchema}
               columnDefaultFunctions={columnDefaultFunctions}
+              customColumnNames={getTableCustomColumnNames(table)}
             />
             <hr />
             <h4 className={styles.subheading_text}>Add a new column</h4>
@@ -225,6 +264,7 @@ class ModifyTable extends React.Component {
               dispatch={dispatch}
             />
             <hr />
+            {getTableRootFieldsSection()}
             {getEnumsSection()}
             {untrackBtn}
             {deleteBtn}

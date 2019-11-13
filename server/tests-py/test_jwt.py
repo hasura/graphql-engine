@@ -3,7 +3,7 @@ import math
 import json
 import time
 
-import yaml
+import ruamel.yaml as yaml
 import pytest
 import jwt
 from test_subscriptions import init_ws_conn

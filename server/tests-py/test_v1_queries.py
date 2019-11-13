@@ -1,4 +1,4 @@
-import yaml
+import ruamel.yaml as yaml
 from validate import check_query_f
 from super_classes import DefaultTestSelectQueries, DefaultTestQueries, DefaultTestMutations
 
@@ -479,11 +479,17 @@ class TestMetadata(DefaultTestQueries):
     def test_dump_internal_state(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/dump_internal_state.yaml')
 
-
     @classmethod
     def dir(cls):
         return "queries/v1/metadata"
 
+class TestMetadataOrder(DefaultTestQueries):
+    @classmethod
+    def dir(cls):
+        return "queries/v1/metadata_order"
+
+    def test_export_metadata_order(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/export_metadata_order.yaml')
 
 class TestRunSQL(DefaultTestQueries):
 
