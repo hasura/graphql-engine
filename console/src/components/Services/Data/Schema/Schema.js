@@ -38,6 +38,7 @@ import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleTogg
 import gqlPattern from '../Common/GraphQLValidation';
 import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
 import { displayTableName } from '../../../Common/utils/pgUtils';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 class Schema extends Component {
   constructor(props) {
@@ -321,6 +322,13 @@ class Schema extends Component {
           e.stopPropagation();
           e.preventDefault();
 
+          const isOk = getConfirmation(
+            'This will expose all the listed tables/views over the GraphQL API'
+          );
+          if (!isOk) {
+            return;
+          }
+
           dispatch(addAllUntrackedTablesSql(allUntrackedTables));
         };
 
@@ -414,6 +422,13 @@ class Schema extends Component {
         const trackAllRelations = e => {
           e.stopPropagation();
           e.preventDefault();
+
+          const isOk = getConfirmation(
+            'This will add all the listed foreign-keys as relationships in the GraphQL schema'
+          );
+          if (!isOk) {
+            return;
+          }
 
           this.props.dispatch(autoTrackRelations(untrackedRelations));
         };

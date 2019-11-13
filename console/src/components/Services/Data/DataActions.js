@@ -1,6 +1,6 @@
 import sanitize from 'sanitize-filename';
-import { push } from 'react-router-redux';
 
+import { getSchemaBaseRoute } from '../../Common/utils/routesUtils';
 import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
 import requestAction from '../../../utils/requestAction';
 import defaultState from './DataState';
@@ -29,6 +29,8 @@ import {
   fetchTrackedTableListQuery,
   mergeLoadSchemaData,
 } from './utils';
+
+import _push from './push';
 
 import { fetchColumnTypesQuery, fetchColumnDefaultFunctions } from './utils';
 
@@ -410,7 +412,7 @@ const fetchFunctionInit = () => (dispatch, getState) => {
 
 const updateCurrentSchema = (schemaName, redirect = true) => dispatch => {
   if (redirect) {
-    dispatch(push(`${globals.urlPrefix}/data/schema/${schemaName}`));
+    dispatch(_push(getSchemaBaseRoute(schemaName)));
   }
 
   Promise.all([

@@ -8,6 +8,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Types
 
+import           Control.Lens               hiding ((.=))
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -19,7 +20,7 @@ import qualified Database.PG.Query          as Q
 
 newtype ComputedFieldName =
   ComputedFieldName { unComputedFieldName :: NonEmptyText}
-  deriving (Show, Eq, Lift, FromJSON, ToJSON, Q.ToPrepArg, DQuote, Hashable)
+  deriving (Show, Eq, Lift, FromJSON, ToJSON, Q.ToPrepArg, DQuote, Hashable, Q.FromCol)
 
 computedFieldNameToText :: ComputedFieldName -> Text
 computedFieldNameToText = unNonEmptyText . unComputedFieldName
@@ -49,6 +50,7 @@ $(deriveToJSON defaultOptions { constructorTagModifier = snakeCase . drop 3
                               }
    ''ComputedFieldReturn
  )
+$(makePrisms ''ComputedFieldReturn)
 
 data ComputedFieldFunction
   = ComputedFieldFunction
@@ -67,3 +69,7 @@ data ComputedFieldInfo
   , _cfiComment    :: !(Maybe Text)
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 4 snakeCase) ''ComputedFieldInfo)
+$(makeLenses ''ComputedFieldInfo)
+
+onlyScalarComputedFields :: [ComputedFieldInfo] -> [ComputedFieldInfo]
+onlyScalarComputedFields = filter (has (cfiReturnType._CFRScalar))

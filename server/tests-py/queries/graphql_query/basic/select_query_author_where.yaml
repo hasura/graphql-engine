@@ -4,8 +4,8 @@ status: 200
 response:
   data:
     author:
-      - name: Author 2
-        id: 2
+    - id: 2
+      name: Author 2
 query:
   query: |
     query {

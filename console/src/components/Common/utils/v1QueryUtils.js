@@ -76,3 +76,19 @@ export const getFetchCustomTypesQuery = () => {
     },
   };
 };
+
+export const getSetCustomRootFieldsQuery = (
+  tableDef,
+  rootFields,
+  customColumnNames
+) => {
+  return {
+    type: 'set_table_custom_fields',
+    version: 2,
+    args: {
+      table: tableDef,
+      custom_root_fields: rootFields,
+      custom_column_names: customColumnNames,
+    },
+  };
+};
