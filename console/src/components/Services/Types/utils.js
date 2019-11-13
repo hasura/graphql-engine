@@ -96,7 +96,6 @@ export const parseCustomTypes = customTypesServer => {
       customTypesClient.push({
         ...t,
         kind: singularize(tk),
-        isExisting: true,
       });
     });
   });
@@ -129,4 +128,22 @@ export const getActionTypes = (actionDef, allTypes) => {
   getDependentTypes(actionDef.output_type);
 
   return actionTypes;
+};
+
+export const hydrateTypeRelationships = (newTypes, existingTypes) => {
+  const typeMap = {};
+  existingTypes.forEach(t => {
+    typeMap[t.name] = t;
+  });
+
+  return newTypes.map(t => {
+    if (t.kind === 'object') {
+      return {
+        ...t,
+        relationships: typeMap[t.name].relationships
+      };
+    }
+
+    return t;
+  });
 };

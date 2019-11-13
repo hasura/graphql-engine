@@ -7,7 +7,11 @@ import {
   LOADING_TYPES_FAILURE,
   LOADING_TYPES_SUCCESS,
 } from './reducer';
-import { parseCustomTypes, reformCustomTypes } from './utils';
+import {
+  parseCustomTypes,
+  reformCustomTypes,
+  hydrateTypeRelationships,
+} from './utils';
 import {
   getFetchCustomTypesQuery,
   generateSetCustomTypesQuery,
@@ -57,7 +61,9 @@ export const setCustomGraphQLTypes = (types, successCb, errorCb) => (
 
   const existingTypes = getState().types.types;
 
-  const upQuery = generateSetCustomTypesQuery(reformCustomTypes(types));
+  const hydratedTypes = hydrateTypeRelationships(types, existingTypes);
+
+  const upQuery = generateSetCustomTypesQuery(reformCustomTypes(hydratedTypes));
   const downQuery = generateSetCustomTypesQuery(
     reformCustomTypes(existingTypes)
   );
