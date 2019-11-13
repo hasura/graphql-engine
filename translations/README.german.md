@@ -42,28 +42,28 @@ Mehr dazu auf [hasura.io](https://hasura.io) und in den [Docs](https://docs.hasu
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Table of Contents**
 
-- [Quickstart:](#quickstart)
-    - [One-click deployment on Heroku](#one-click-deployment-on-heroku)
-    - [Other deployment methods](#other-deployment-methods)
-- [Architecture](#architecture)
-- [Client-side tooling](#client-side-tooling)
-- [Add business logic](#add-business-logic)
-    - [Remote schemas](#remote-schemas)
-    - [Trigger webhooks on database events](#trigger-webhooks-on-database-events)
+- [Schnellstart:](#schnellstart)
+    - [One-click deployment auf Heroku](#one-click-deployment-auf-heroku)
+    - [Andere One-click Deployment Optionen](#andere-one-click-deployment-methoden)
+- [Architektur](#architektur)
+- [Client-side Tooling](#client-side-tooling)
+- [Fuege Businesslogik hinzu](#fuege-bussinesslogik-hinzu)
+    - [Remote Schemas](#remote-schemas)
+    - [Loese Webhooks und Datenbankevents aus](#loese-webhooks-und-datenbankevents-aus)
 - [Demos](#demos)
-    - [Realtime applications](#realtime-applications)
+    - [Realtime Applikationen](#realtime-applikationen)
     - [Videos](#videos)
-- [Support & Troubleshooting](#support--troubleshooting)
+- [Support & Fehlerbehebung](#support--fehlerbehebung)
 - [Contributing](#contributing)
-- [Brand assets](#brand-assets)
-- [License](#license)
-- [Translations](#translations)
+- [Marke](#marke)
+- [Lizenz](#lizenz)
+- [Uebersetzungen](#uebersetzungen)
 
 <!-- markdown-toc end -->
 
 ## Schnellstart:
 
-### One-click Deployment on Heroku
+### One-click Deployment auf Heroku
 
 Der schnellste Weg Hasura auszuprobieren is mit Heroku.
 
@@ -128,7 +128,7 @@ Transformiere Daten in Postgres oder lasse deine Businesslogik eigene Daten able
 Schaue dir all die Beispiele in dem 
 [community/sample-apps](../community/sample-apps) Verzeichnis an.
 
-### Realtime applications
+### Realtime Applikationen
 
 - Gruppenchat gebaut mit React, beinhaltet einen Typenanzeiger, Online Users und Benachrichtigungen bei 
   neuen Nachrichten.
@@ -205,7 +205,7 @@ Alle **anderen Inhalte** (Ausser die in [`server`](../server), [`cli`](../cli) u
 Dies beinhaltet [`docs`](../docs) und [`community`](../community)
 Verzeichnisse.
 
-## Ueberzetzungen
+## Uebersetzungen
 
 Diese Readme ist under anderem in den folgenden Sprachen verfuegbar:
 
