@@ -58,10 +58,10 @@ import           Hasura.Server.Utils            (matchRegex)
 
 data RunSQL
   = RunSQL
-  { rSql                      :: Text
-  , rCascade                  :: !Bool
-  , rCheckMetadataConsistency :: !(Maybe Bool)
-  , rReadOnly                 :: !Bool
+  { rSql                          :: Text
+  , rCascade                      :: !Bool
+  , rCheckMetadataConsistency     :: !(Maybe Bool)
+  , rTxAccessMode                 :: !Q.TxAccess
   } deriving (Show, Eq, Lift)
 
 instance FromJSON RunSQL where
@@ -69,11 +69,22 @@ instance FromJSON RunSQL where
     rSql <- o .: "sql"
     rCascade <- o .:? "cascade" .!= False
     rCheckMetadataConsistency <- o .:? "check_metadata_consistency"
-    rReadOnly <- o .:? "read_only" .!= False
+    isReadOnly <- o .:? "read_only" .!= False
+    let rTxAccessMode = if isReadOnly then Q.ReadOnly else Q.ReadWrite
     pure RunSQL{..}
   parseJSON _ = fail "expecting an object for args"
 
-$(deriveToJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''RunSQL)
+instance ToJSON RunSQL where
+  toJSON RunSQL {..} =
+    object
+      [ "sql" .= rSql
+      , "cascade" .= rCascade
+      , "check_metadata_consistency" .= rCheckMetadataConsistency
+      , "read_only" .=
+        case rTxAccessMode of
+          Q.ReadOnly -> True
+          Q.ReadWrite -> False
+      ]
 
 runRunSQL :: (CacheBuildM m, UserInfoM m) => RunSQL -> m EncJSON
 runRunSQL RunSQL {..} = do

@@ -280,8 +280,10 @@ queryNeedsReload (RQV1 qi) = case qi of
   RQAddCollectionToAllowlist _    -> True
   RQDropCollectionFromAllowlist _ -> True
 
-  -- | If run_sql is not read only then reload cache
-  RQRunSql RunSQL{rReadOnly}      -> not rReadOnly
+  RQRunSql RunSQL{rTxAccessMode}  ->
+    case rTxAccessMode of
+      Q.ReadOnly  -> False
+      Q.ReadWrite -> True
 
   RQReplaceMetadata _             -> True
   RQExportMetadata _              -> False
@@ -299,11 +301,8 @@ queryNeedsReload (RQV2 qi) = case qi of
 getQueryAccessMode :: RQLQuery -> Q.TxAccess
 getQueryAccessMode (RQV1 q) =
   case q of
-    RQRunSql RunSQL{rReadOnly} ->
-      if rReadOnly
-        then Q.ReadOnly
-        else Q.ReadWrite
-    _ -> Q.ReadWrite
+    RQRunSql RunSQL{rTxAccessMode} -> rTxAccessMode
+    _                              -> Q.ReadWrite
 getQueryAccessMode (RQV2 _) = Q.ReadWrite
 
 runQueryM
