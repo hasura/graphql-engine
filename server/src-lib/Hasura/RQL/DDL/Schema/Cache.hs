@@ -97,6 +97,18 @@ buildSchemaCacheWithOptions withSetup = do
           validateArrRel qt relDef
           arrRelP2Setup qt fkeys relDef
 
+  -- computedFields
+  forM_ computedFields $ \(CatalogComputedField column funcDefs) -> do
+    let AddComputedField qt name def comment = column
+        qf = _cfdFunction def
+        mkInconsObj =
+          InconsistentMetadataObj (MOTableObj qt $ MTOComputedField name)
+          MOTComputedField $ toJSON column
+    modifyErr (\e -> "computed field " <> name <<> "; " <> e) $
+      withSchemaObject_ mkInconsObj $ do
+      rawfi <- handleMultipleFunctions qf funcDefs
+      addComputedFieldP2Setup qt name def rawfi comment
+
   -- permissions
   forM_ permissions $ \(CatalogPermission qt rn pt pDef cmnt) -> do
     let objId = MOTableObj qt $ MTOPerm rn pt
@@ -134,19 +146,6 @@ buildSchemaCacheWithOptions withSetup = do
 
   -- allow list
   replaceAllowlist $ concatMap _cdQueries allowlistDefs
-
-  -- computedFields
-  forM_ computedFields $ \(CatalogComputedField column funcDefs) -> do
-    let AddComputedField qt name def comment = column
-        qf = _cfdFunction def
-        mkInconsObj =
-          InconsistentMetadataObj (MOTableObj qt $ MTOComputedField name)
-          MOTComputedField $ toJSON column
-    modifyErr (\e -> "computed field " <> name <<> "; " <> e) $
-      withSchemaObject_ mkInconsObj $ do
-      rawfi <- handleMultipleFunctions qf funcDefs
-      addComputedFieldP2Setup qt name def rawfi comment
-
 
   -- build GraphQL context with tables and functions
   GS.buildGCtxMapPG

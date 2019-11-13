@@ -32,7 +32,7 @@ Of course, we appreciate contributions to all components of Hasura. However, we 
 
 ### Docs
 
-Our goal is to keep our docs comprehensive and updated. If you would like to help us in doing so, we are greatful for any kind of contribution:
+Our goal is to keep our docs comprehensive and updated. If you would like to help us in doing so, we are grateful for any kind of contribution:
 
 - Report missing content
 

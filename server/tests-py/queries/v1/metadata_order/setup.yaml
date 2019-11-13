@@ -1,0 +1,18 @@
+type: bulk
+args:
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE test1 (id serial primary key);
+      CREATE TABLE test2 (id serial primary key);
+
+      CREATE FUNCTION get_test1(int)
+        RETURNS SETOF test1 as $$
+          SELECT * FROM test1 WHERE id = $1
+        $$ LANGUAGE SQL STABLE;
+
+      CREATE FUNCTION get_test2(int)
+        RETURNS SETOF test2 as $$
+          SELECT * FROM test2 WHERE id = $1
+        $$ LANGUAGE SQL STABLE;
