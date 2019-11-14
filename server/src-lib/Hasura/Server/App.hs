@@ -93,7 +93,7 @@ data HandlerCtx
   , hcRequestId  :: !RequestId
   }
 
-type Handler m a = ExceptT QErr (ReaderT HandlerCtx m) a
+type Handler m = ExceptT QErr (ReaderT HandlerCtx m)
 
 data APIResp
   = JSONResp !(HttpResponse EncJSON)
@@ -186,7 +186,7 @@ buildQCtx = do
 
 
 -- | Typeclass representing the @UserInfo@ authorization and resolving effect
-class (Monad m) => UserAuthMiddleware m where
+class (Monad m) => UserAuthentication m where
   resolveUserInfo
     :: L.Logger
     -> HTTP.Manager
@@ -196,7 +196,7 @@ class (Monad m) => UserAuthMiddleware m where
     -> m (Either QErr UserInfo)
 
 -- | Typeclass representing the metadata API authorization effect
-class MetadataApiAuthz m where
+class MetadataApiAuthorization m where
   authorizeMetadataApi :: RQLQuery -> UserInfo -> Handler m ()
 
 class (Monad m) => HttpLogger m where
@@ -241,7 +241,7 @@ class (Monad m) => HttpLogger m where
 
 
 mkSpockAction
-  :: (MonadIO m, FromJSON a, ToJSON a, UserAuthMiddleware m, HttpLogger m)
+  :: (MonadIO m, FromJSON a, ToJSON a, UserAuthentication m, HttpLogger m)
   => ServerCtx
   -> (Bool -> QErr -> Value)
   -- ^ `QErr` JSON encoder function
@@ -327,7 +327,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
 
       mkHeaders = maybe [] (map unHeader)
 
-v1QueryHandler :: (MonadIO m, MetadataApiAuthz m) => RQLQuery -> Handler m (HttpResponse EncJSON)
+v1QueryHandler :: (MonadIO m, MetadataApiAuthorization m) => RQLQuery -> Handler m (HttpResponse EncJSON)
 v1QueryHandler query = do
   userInfo <- asks hcUser
   authorizeMetadataApi query userInfo
@@ -448,7 +448,7 @@ queryParsers =
       return $ f q
 
 legacyQueryHandler
-  :: (MonadIO m, MetadataApiAuthz m)
+  :: (MonadIO m, MetadataApiAuthorization m)
   => TableName -> T.Text -> Object
   -> Handler m (HttpResponse EncJSON)
 legacyQueryHandler tn queryType req =
@@ -478,8 +478,8 @@ mkWaiApp
      , MonadStateless IO m
      , ConsoleRenderer m
      , HttpLogger m
-     , UserAuthMiddleware m
-     , MetadataApiAuthz m
+     , UserAuthentication m
+     , MetadataApiAuthorization m
      )
   => Q.TxIsolation
   -> L.LoggerCtx
@@ -562,7 +562,7 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg 
 
 
 httpApp
-  :: (MonadIO m, ConsoleRenderer m, HttpLogger m, UserAuthMiddleware m, MetadataApiAuthz m)
+  :: (MonadIO m, ConsoleRenderer m, HttpLogger m, UserAuthentication m, MetadataApiAuthorization m)
   => CorsConfig
   -> ServerCtx
   -> Bool
@@ -652,7 +652,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
     logger = scLogger serverCtx
 
     spockAction
-      :: (FromJSON a, ToJSON a, MonadIO m, UserAuthMiddleware m, HttpLogger m)
+      :: (FromJSON a, ToJSON a, MonadIO m, UserAuthentication m, HttpLogger m)
       => (Bool -> QErr -> Value) -> (QErr -> QErr) -> APIHandler m a -> Spock.ActionT m ()
     spockAction = mkSpockAction serverCtx
 

@@ -1,5 +1,3 @@
-{-# LANGUAGE Rank2Types #-}
-{-# LANGUAGE RankNTypes #-}
 -- This is taken from wai-logger and customised for our use
 
 module Hasura.Server.Logging

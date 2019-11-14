@@ -205,8 +205,8 @@ initialiseCtx hgeCmd rci = do
 runHGEServer
   :: ( MonadIO m
      , MonadStateless IO m
-     , UserAuthMiddleware m
-     , MetadataApiAuthz m
+     , UserAuthentication m
+     , MetadataApiAuthorization m
      , HttpLogger m
      , ConsoleRenderer m
      )
@@ -359,11 +359,11 @@ instance HttpLogger AppM where
     unLogger logger $ mkHttpLog $
       mkHttpAccessLogContext userInfoM reqId httpReq compressedResponse qTime cType headers
 
-instance UserAuthMiddleware AppM where
+instance UserAuthentication AppM where
   resolveUserInfo logger manager headers authMode =
     runExceptT $ getUserInfo logger manager headers authMode
 
-instance MetadataApiAuthz AppM where
+instance MetadataApiAuthorization AppM where
   authorizeMetadataApi query userInfo = do
     let currRole = userRole userInfo
     when (requiresAdmin query && currRole /= adminRole) $
