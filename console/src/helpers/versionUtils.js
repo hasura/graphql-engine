@@ -10,6 +10,7 @@ export const TABLE_ENUMS_SUPPORT = 'tableEnumsSupport';
 export const EXISTS_PERMISSION_SUPPORT = 'existsPermissionSupport';
 export const CUSTOM_GRAPHQL_FIELDS_SUPPORT = 'customGraphQLFieldsSupport';
 export const COMPUTED_FIELDS_SUPPORT = 'computedFieldsSupport';
+export const IMPROVED_EVENT_FETCH_QUERY = 'improvedEventFetchQuery';
 
 // list of feature launch versions
 const featureLaunchVersions = {
@@ -21,6 +22,7 @@ const featureLaunchVersions = {
   [EXISTS_PERMISSION_SUPPORT]: 'v1.0.0-beta.7',
   [CUSTOM_GRAPHQL_FIELDS_SUPPORT]: 'v1.0.0-beta.8',
   [COMPUTED_FIELDS_SUPPORT]: 'v1.0.0-beta.8',
+  [IMPROVED_EVENT_FETCH_QUERY]: 'v1.0.0-beta.10',
 };
 
 export const checkValidServerVersion = version => {

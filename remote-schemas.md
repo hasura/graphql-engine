@@ -63,7 +63,7 @@ The fastest way to try remote schema out is via Heroku.
 Boilerplates for custom GraphQL servers in popular languages/frameworks are available.
 
 * [Regular boilerplates](community/boilerplates/graphql-servers) that can be deployed anywhere.
-* [Serverless boilerplates](https://github.com/hasura/graphql-serverless) that can deployed on serverless platforms like AWS Lambda, etc.
+* [Serverless boilerplates](https://github.com/hasura/graphql-serverless) that can be deployed on serverless platforms like AWS Lambda, etc.
 
 Please note that boilerplates for more languages, frameworks, serverless platforms, etc. are being iterated upon and community contributions are very welcome. 
 
@@ -72,7 +72,7 @@ Please note that boilerplates for more languages, frameworks, serverless platfor
 
 **Current limitations**:
 
-* Nomenclature: Type names and node names need to be unique across all merged schemas (case-sensitive match). In the next few iterations, support for merging types with the exact same name and structure will be available.
+* Nomenclature: Type names and node names need to be unique across all merged schemas (case-sensitive match). In the next few iterations, support for merging types with the same name and structure will be available.
 * Nodes from different GraphQL servers cannot be used in the same query/mutation. All top-level nodes have to be from the same GraphQL server.
 * Subscriptions on remote GraphQL server are not supported.
 
