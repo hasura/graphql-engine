@@ -79,7 +79,7 @@ PROJECT_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null 2>&1 && pwd
 cd "$PROJECT_ROOT"
 
 # Use pyenv if available to set an appropriate python version that will work with pytests etc.
-if command -v pyenv ; then
+if command -v pyenv >/dev/null; then
   # For now I guess use the greatest python3 >= 3.5
   v=$(pyenv versions --bare | (grep  '^ *3' || true) | awk '{if($1>=3.5)print$1}' | tail -n1) 
   if [ -z "$v" ]; then
@@ -136,7 +136,7 @@ if [ "$MODE" = "graphql-engine" ]; then
   export HASURA_GRAPHQL_SERVER_PORT=${HASURA_GRAPHQL_SERVER_PORT-8181}
 
   # Prettify JSON output if possible:
-  if command -v jq ; then
+  if command -v jq >/dev/null; then
     PIPE_JQ="| jq --unbuffered -R -r '. as \$line | try fromjson catch \$line'"
   fi
 
@@ -144,7 +144,6 @@ if [ "$MODE" = "graphql-engine" ]; then
   echo_pretty "If you haven't yet, please launch a postgres container in a separate terminal with:"
   echo_pretty "    $ $0 postgres"
   echo_pretty "or press CTRL-C and invoke graphql-engine manually"
-  wait_docker_postgres
 
   RUN_INVOCATION="stack exec graphql-engine -- --database-url='$DB_URL' serve --enable-console --console-assets-dir \'$PROJECT_ROOT/console/static/dist\' +RTS -N -T -RTS ${PIPE_JQ-}"
 
@@ -164,6 +163,7 @@ if [ "$MODE" = "graphql-engine" ]; then
   else
     $BUILD_INVOCATION
   fi
+  wait_docker_postgres
 
   # Print helpful info after startup logs so it's visible:
   {
@@ -205,7 +205,6 @@ fi
 ###     Postgres Container    ###
 #################################
 
-
 # Useful development defaults for postgres (no spaces here, please):
 #
 # setting 'port' in container is a workaround for the pg_dump endpoint (see tests)
@@ -224,18 +223,18 @@ EOF
 # log lines above as -c flag arguments we pass to postgres
 CONF_FLAGS=$(echo "$CONF" | sed  -e 's/^/-c /'  | tr '\n' ' ')
 
+function launch_postgres_container(){
+  echo_pretty "Launching postgres container: $PG_CONTAINER_NAME"
+  docker run --name "$PG_CONTAINER_NAME" -p 127.0.0.1:"$PG_PORT":$PG_PORT --expose="$PG_PORT" \
+    -e POSTGRES_PASSWORD="$PGPASSWORD"  -d circleci/postgres:11.5-alpine-postgis \
+    $CONF_FLAGS
 
-docker run --name "$PG_CONTAINER_NAME" -p 127.0.0.1:"$PG_PORT":$PG_PORT --expose="$PG_PORT" \
-  -e POSTGRES_PASSWORD="$PGPASSWORD"  -d circleci/postgres:11.5-alpine-postgis \
-  $CONF_FLAGS
-
-
-# graphql-engine calls the pg_dump executable. To avoid a version mismatch (and
-# the dependency entirely) we create a shim that executes the pg_dump in the
-# postgres container. Note output to file won't work.
-DEV_SHIM_PATH="/tmp/hasura-dev-shims-$PG_PORT"
-mkdir -p "$DEV_SHIM_PATH"
-cat >"$DEV_SHIM_PATH/pg_dump" <<EOL
+  # graphql-engine calls the pg_dump executable. To avoid a version mismatch (and
+  # the dependency entirely) we create a shim that executes the pg_dump in the
+  # postgres container. Note output to file won't work.
+  DEV_SHIM_PATH="/tmp/hasura-dev-shims-$PG_PORT"
+  mkdir -p "$DEV_SHIM_PATH"
+  cat >"$DEV_SHIM_PATH/pg_dump" <<EOL
 #!/bin/bash
 # Generated from: $0
 if [[ \$@ == *" -f"* ]]; then
@@ -244,42 +243,43 @@ if [[ \$@ == *" -f"* ]]; then
 fi
 docker exec -u postgres $PG_CONTAINER_NAME pg_dump "\$@"
 EOL
-chmod a+x "$DEV_SHIM_PATH/pg_dump"
-export PATH="$DEV_SHIM_PATH":$PATH
+  chmod a+x "$DEV_SHIM_PATH/pg_dump"
+  export PATH="$DEV_SHIM_PATH":$PATH
 
 
-# Since launching the postgres container worked we can set up cleanup routines. This will catch CTRL-C
-function cleanup {
-  echo
+  # Since launching the postgres container worked we can set up cleanup routines. This will catch CTRL-C
+  function cleanup {
+    echo
 
-  if [ ! -z "${GRAPHQL_ENGINE_PID-}" ]; then
-    # This may already have been killed:
-    kill "$GRAPHQL_ENGINE_PID" &>/dev/null || true
-  fi
+    if [ ! -z "${GRAPHQL_ENGINE_PID-}" ]; then
+      # This may already have been killed:
+      kill "$GRAPHQL_ENGINE_PID" &>/dev/null || true
+    fi
 
-  case "$MODE" in
-    test|postgres)
-      # Since scripts here are tailored to the env we've just launched:
-      rm -r "$DEV_SHIM_PATH"
+    case "$MODE" in
+      test|postgres)
+        # Since scripts here are tailored to the env we've just launched:
+        rm -r "$DEV_SHIM_PATH"
 
-      echo_pretty "Removing $PG_CONTAINER_NAME and its volumes in 5 seconds!"
-      echo_pretty "  PRESS CTRL-C TO ABORT removal, or ENTER to clean up right away"
-      read -t5 || true
-      docker stop "$PG_CONTAINER_NAME"
-      docker rm -v "$PG_CONTAINER_NAME"
-    ;;
-    graphql-engine)
-    ;;
-  esac
+        echo_pretty "Removing $PG_CONTAINER_NAME and its volumes in 5 seconds!"
+        echo_pretty "  PRESS CTRL-C TO ABORT removal, or ENTER to clean up right away"
+        read -t5 || true
+        docker stop "$PG_CONTAINER_NAME"
+        docker rm -v "$PG_CONTAINER_NAME"
+      ;;
+      graphql-engine)
+      ;;
+    esac
 
-  echo_pretty "Done"
+    echo_pretty "Done"
+  }
+  trap cleanup EXIT
 }
-trap cleanup EXIT
-
-wait_docker_postgres
 
 
 if [ "$MODE" = "postgres" ]; then
+  launch_postgres_container
+  wait_docker_postgres
   echo_pretty "Postgres logs will start to show up in realtime here. Press CTRL-C to exit and "
   echo_pretty "shutdown this container."
   echo_pretty ""
@@ -307,6 +307,10 @@ elif [ "$MODE" = "test" ]; then
 
   echo_pretty "Rebuilding for code coverage"
   $BUILD_INVOCATION --coverage
+
+  # It's better UX to build first (possibly failing) before trying to launch PG:
+  launch_postgres_container
+  wait_docker_postgres
 
   echo_pretty "Running Haskell test suite"
   HASURA_GRAPHQL_DATABASE_URL="$DB_URL" $TEST_INVOCATION --coverage
