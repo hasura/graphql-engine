@@ -69,10 +69,9 @@ Install a binary globally
 Install through npm
 -------------------
 
-Hasura CLI is available as an npm package as well.
-The package is maintained by the community and not officially supported by Hasura.
-However, it can be beneficial to use the package if you want a version-fixed cli dedicated to your node project.
-You can find usage detail from the `original repository <https://github.com/jjangga0214/hasura-cli>`_.
+Hasura CLI is available as an npm package that is independently maintained by some members of the community.
+It can be beneficial to use the npm package if you want a version-fixed cli dedicated to your node project.
+You can find usage details in  the `original repository <https://github.com/jjangga0214/hasura-cli>`_.
 
 .. code-block:: bash
    
