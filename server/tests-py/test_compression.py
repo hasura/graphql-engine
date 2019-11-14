@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
 import pytest
-import yaml
+import ruamel.yaml as yaml
 import jsondiff
 
 from super_classes import DefaultTestSelectQueries
-from validate import json_ordered
 
 class TestCompression(DefaultTestSelectQueries):
 
@@ -37,7 +36,7 @@ class TestCompression(DefaultTestSelectQueries):
 
     def _assert_resp(self, resp, exp_resp):
         json_resp = resp.json()
-        assert json_ordered(json_resp) == json_ordered(exp_resp), yaml.dump({
+        assert json_resp == exp_resp, yaml.dump({
             'response': json_resp,
             'expected': exp_resp,
             'diff': jsondiff.diff(exp_resp, json_resp)

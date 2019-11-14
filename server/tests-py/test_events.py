@@ -2,7 +2,7 @@
 
 import pytest
 import queue
-import yaml
+import ruamel.yaml as yaml
 import time
 from super_classes import DefaultTestQueries
 from validate import check_query_f, check_query, check_event

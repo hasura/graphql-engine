@@ -8,7 +8,7 @@ def check_post_404(hge_ctx,url):
      'url': url,
      'status': 404,
      'query': {}
-   })
+   })[0]
 
 
 @pytest.mark.skipif(not pytest.config.getoption("--test-metadata-disabled"),

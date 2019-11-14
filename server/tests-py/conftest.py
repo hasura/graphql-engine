@@ -81,6 +81,14 @@ def pytest_addoption(parser):
         help="Run testcases for logging"
     )
 
+    parser.addoption(
+        "--accept",
+        action="store_true",
+        default=False,
+        required=False,
+        help="Accept any failing test cases from YAML files as correct, and write the new files out to disk."
+    )
+
 
 #By default,
 #1) Set default parallelism to one
@@ -94,13 +102,13 @@ def pytest_cmdline_preparse(config, args):
 
 def pytest_configure(config):
     if is_master(config):
-        config.hge_ctx_gql_server = HGECtxGQLServer()
         if not config.getoption('--hge-urls'):
             print("hge-urls should be specified")
         if not config.getoption('--pg-urls'):
             print("pg-urls should be specified")
         config.hge_url_list = config.getoption('--hge-urls')
         config.pg_url_list =  config.getoption('--pg-urls')
+        config.hge_ctx_gql_server = HGECtxGQLServer(config.hge_url_list)
         if config.getoption('-n', default=None):
             xdist_threads = config.getoption('-n')
             assert xdist_threads <= len(config.hge_url_list), "Not enough hge_urls specified, Required " + str(xdist_threads) + ", got " + str(len(config.hge_url_list))
