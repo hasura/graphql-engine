@@ -36,7 +36,8 @@ Available COMMANDs:
 
   test [--integration [pytest_args...] | --unit]
     Run the unit and integration tests, handling spinning up all dependencies.
-    This will force a recompile. A code coverage report will be generated. 
+    This will force a recompile. A combined code coverage report will be
+    generated for all test suites.
         Either integration or unit tests can be run individually with their
     respective flags. With '--integration' any arguments that follow will be
     passed to the pytest invocation
@@ -401,9 +402,15 @@ elif [ "$MODE" = "test" ]; then
     kill -INT "$GRAPHQL_ENGINE_PID"
     wait "$GRAPHQL_ENGINE_PID" || true
     echo
-    stack hpc report graphql-engine.tix
-    rm graphql-engine.tix
+    # Combine any tix from haskell/unit tests:
+    if [ "$RUN_UNIT_TESTS" = true ]; then
+      stack exec hpc -- combine "$(stack path --local-hpc-root)/graphql-engine/graphql-engine-tests/graphql-engine-tests.tix" graphql-engine.tix --union > graphql-engine-combined.tix
+      stack hpc report graphql-engine-combined.tix
+    else
+      stack hpc report graphql-engine.tix
+    fi
   fi
+  rm -f graphql-engine.tix graphql-engine-combined.tix
 
 else
   echo "impossible; fix script."
