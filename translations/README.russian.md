@@ -10,7 +10,7 @@
 
 Hasura GraphQL Engine - это сверхбыстрый графический сервер позволяющий создавать **мгновенный GraphQL API работающий в режиме реального времени в базе данных Postgres**, с [**webhook триггерами**](../event-triggers.md) на основе событий в базе данных, и [**remote schemas**](../remote-schemas.md) для бизнес-логики.
 
-Hasura помогает стройть GraphQL приложения при поддержке Postgres или постепенно перейти на GraphQL для уже существующих приложений, использующих Postgres.
+Hasura помогает строить GraphQL приложения при поддержке Postgres или постепенно перейти на GraphQL для уже существующих приложений, использующих Postgres.
 
 Подробнее на [hasura.io](https://hasura.io) и [docs](https://docs.hasura.io).
 
