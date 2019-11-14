@@ -16,6 +16,7 @@ module Hasura.Server.Auth
   , processJwt
   , updateJwkRef
   , jwkRefreshCtrl
+  , UserAuthentication (..)
   ) where
 
 import           Control.Exception      (try)
@@ -42,6 +43,16 @@ import           Hasura.Server.Utils
 
 import qualified Hasura.Logging         as L
 
+
+-- | Typeclass representing the @UserInfo@ authorization and resolving effect
+class (Monad m) => UserAuthentication m where
+  resolveUserInfo
+    :: L.Logger
+    -> H.Manager
+    -> [N.Header]
+    -- ^ request headers
+    -> AuthMode
+    -> m (Either QErr UserInfo)
 
 newtype AdminSecret
   = AdminSecret { getAdminSecret :: T.Text }

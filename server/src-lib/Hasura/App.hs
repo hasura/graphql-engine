@@ -207,7 +207,7 @@ runHGEServer
      , MonadStateless IO m
      , UserAuthentication m
      , MetadataApiAuthorization m
-     , HttpLogger m
+     , HttpLog m
      , ConsoleRenderer m
      )
   => ServeOptions
@@ -350,7 +350,7 @@ execQuery queryBs = do
   encJToLBS <$> runQueryM query
 
 
-instance HttpLogger AppM where
+instance HttpLog AppM where
   logHttpError logger userInfoM reqId httpReq req qErr headers =
     unLogger logger $ mkHttpLog $
       mkHttpErrorLogContext userInfoM reqId httpReq qErr req Nothing Nothing headers

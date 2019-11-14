@@ -37,7 +37,8 @@ import           Hasura.EncJSON
 import           Hasura.Prelude                         hiding (get, put)
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
-import           Hasura.Server.Auth                     (AuthMode (..))
+import           Hasura.Server.Auth                     (AuthMode (..),
+                                                         UserAuthentication (..))
 import           Hasura.Server.Compression
 import           Hasura.Server.Config                   (runGetConfig)
 import           Hasura.Server.Context
@@ -184,64 +185,12 @@ buildQCtx = do
   sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
   return $ QCtx userInfo cache sqlGenCtx
 
-
--- | Typeclass representing the @UserInfo@ authorization and resolving effect
-class (Monad m) => UserAuthentication m where
-  resolveUserInfo
-    :: L.Logger
-    -> HTTP.Manager
-    -> [HTTP.Header]
-    -- ^ request headers
-    -> AuthMode
-    -> m (Either QErr UserInfo)
-
 -- | Typeclass representing the metadata API authorization effect
 class MetadataApiAuthorization m where
   authorizeMetadataApi :: RQLQuery -> UserInfo -> Handler m ()
 
-class (Monad m) => HttpLogger m where
-  logHttpError
-    :: L.Logger
-    -- ^ the logger
-    -> Maybe UserInfo
-    -- ^ user info may or may not be present (error can happen during user resolution)
-    -> RequestId
-    -- ^ request id of the request
-    -> Wai.Request
-    -- ^ the Wai.Request object
-    -> Either BL.ByteString Value
-    -- ^ the actual request body (bytestring if unparsed, Aeson value if parsed)
-    -> QErr
-    -- ^ the error
-    -> [HTTP.Header]
-    -- ^ list of request headers
-    -> m ()
-
-  logHttpSuccess
-    :: L.Logger
-    -- ^ the logger
-    -> Maybe UserInfo
-    -- ^ user info may or may not be present (error can happen during user resolution)
-    -> RequestId
-    -- ^ request id of the request
-    -> Wai.Request
-    -- ^ the Wai.Request object
-    -> BL.ByteString
-    -- ^ the response bytes
-    -> BL.ByteString
-    -- ^ the compressed response bytes
-    -- ^ TODO: make the above two type represented
-    -> Maybe (UTCTime, UTCTime)
-    -- ^ possible execution time
-    -> Maybe CompressionType
-    -- ^ possible compression type
-    -> [HTTP.Header]
-    -- ^ list of request headers
-    -> m ()
-
-
 mkSpockAction
-  :: (MonadIO m, FromJSON a, ToJSON a, UserAuthentication m, HttpLogger m)
+  :: (MonadIO m, FromJSON a, ToJSON a, UserAuthentication m, HttpLog m)
   => ServerCtx
   -> (Bool -> QErr -> Value)
   -- ^ `QErr` JSON encoder function
@@ -293,7 +242,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
       logger = scLogger serverCtx
 
       logErrorAndResp
-        :: (MonadIO m, HttpLogger m)
+        :: (MonadIO m, HttpLog m)
         => Maybe UserInfo
         -> RequestId
         -> Wai.Request
@@ -390,7 +339,7 @@ v1Alpha1PGDumpHandler b = do
   return $ RawResp $ HttpResponse output (Just [Header sqlHeader])
 
 consoleAssetsHandler
-  :: (MonadIO m, HttpLogger m)
+  :: (MonadIO m, HttpLog m)
   => L.Logger
   -> Text
   -> FilePath
@@ -407,7 +356,7 @@ consoleAssetsHandler logger dir path = do
     onSuccess c = do
       mapM_ (uncurry Spock.setHeader) headers
       Spock.lazyBytes c
-    onError :: (MonadIO m, HttpLogger m) => [HTTP.Header] -> IOException -> Spock.ActionT m ()
+    onError :: (MonadIO m, HttpLog m) => [HTTP.Header] -> IOException -> Spock.ActionT m ()
     onError hdrs = raiseGenericApiError logger hdrs . err404 NotFound . T.pack . show
     fn = T.pack $ takeFileName path
     -- set gzip header if the filename ends with .gz
@@ -477,7 +426,7 @@ mkWaiApp
   :: ( MonadIO m
      , MonadStateless IO m
      , ConsoleRenderer m
-     , HttpLogger m
+     , HttpLog m
      , UserAuthentication m
      , MetadataApiAuthorization m
      )
@@ -562,7 +511,7 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg 
 
 
 httpApp
-  :: (MonadIO m, ConsoleRenderer m, HttpLogger m, UserAuthentication m, MetadataApiAuthorization m)
+  :: (MonadIO m, ConsoleRenderer m, HttpLog m, UserAuthentication m, MetadataApiAuthorization m)
   => CorsConfig
   -> ServerCtx
   -> Bool
@@ -652,7 +601,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
     logger = scLogger serverCtx
 
     spockAction
-      :: (FromJSON a, ToJSON a, MonadIO m, UserAuthentication m, HttpLogger m)
+      :: (FromJSON a, ToJSON a, MonadIO m, UserAuthentication m, HttpLog m)
       => (Bool -> QErr -> Value) -> (QErr -> QErr) -> APIHandler m a -> Spock.ActionT m ()
     spockAction = mkSpockAction serverCtx
 
@@ -687,7 +636,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
         either (raiseGenericApiError logger headers . err500 Unexpected . T.pack) Spock.html consoleHtml
 
 raiseGenericApiError
-  :: (MonadIO m, HttpLogger m)
+  :: (MonadIO m, HttpLog m)
   => L.Logger
   -> [HTTP.Header]
   -> QErr
