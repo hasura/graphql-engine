@@ -225,9 +225,8 @@ EOF
 CONF_FLAGS=$(echo "$CONF" | sed  -e 's/^/-c /'  | tr '\n' ' ')
 
 
-# The unofficial 'mdillon/postgis' comes with postgis installed, needed for tests:
 docker run --name "$PG_CONTAINER_NAME" -p 127.0.0.1:"$PG_PORT":$PG_PORT --expose="$PG_PORT" \
-  -e POSTGRES_PASSWORD="$PGPASSWORD"  -d mdillon/postgis:11 \
+  -e POSTGRES_PASSWORD="$PGPASSWORD"  -d circleci/postgres:11.5-alpine-postgis \
   $CONF_FLAGS
 
 
@@ -263,8 +262,9 @@ function cleanup {
       # Since scripts here are tailored to the env we've just launched:
       rm -r "$DEV_SHIM_PATH"
 
-      echo_pretty "Removing $PG_CONTAINER_NAME and its volumes in 5 seconds!  PRESS CTRL-C TO ABORT."
-      sleep 5
+      echo_pretty "Removing $PG_CONTAINER_NAME and its volumes in 5 seconds!"
+      echo_pretty "  PRESS CTRL-C TO ABORT removal, or ENTER to clean up right away"
+      read -t5 || true
       docker stop "$PG_CONTAINER_NAME"
       docker rm -v "$PG_CONTAINER_NAME"
     ;;
