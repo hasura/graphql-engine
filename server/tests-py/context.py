@@ -309,8 +309,9 @@ class HGECtx:
 
     def v1q_f(self, fn):
         with open(fn) as f:
-            # NOTE: preserve ordering with RoundTripLoader:
-            return self.v1q(yaml.load(f, yaml.RoundTripLoader))
+            # NOTE: preserve ordering with ruamel
+            yml = yaml.YAML()
+            return self.v1q(yml.load(f))
 
     def teardown(self):
         self.http.close()

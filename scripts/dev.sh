@@ -10,6 +10,12 @@ set -euo pipefail
 echo_pretty() {
     echo ">>> $(tput setaf 2)$1$(tput sgr0)"
 }
+echo_error() {
+    echo ">>> $(tput setaf 1)$1$(tput sgr0)"
+}
+echo_warn() {
+    echo ">>> $(tput setaf 3)$1$(tput sgr0)"
+}
 
 die_usage() {
 cat <<EOL
@@ -36,6 +42,10 @@ Available COMMANDs:
 EOL
 exit 1
 }
+
+# Bump this to:
+#  - force a reinstall of dependencies
+DEVSH_VERSION=1.2
 
 case "${1-}" in
   graphql-engine)
@@ -68,6 +78,20 @@ MODE="$1"
 PROJECT_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null 2>&1 && pwd )"   # ... https://stackoverflow.com/a/246128/176841
 cd "$PROJECT_ROOT"
 
+# Use pyenv if available to set an appropriate python version that will work with pytests etc.
+if command -v pyenv ; then
+  # For now I guess use the greatest python3 >= 3.5
+  v=$(pyenv versions --bare | (grep  '^ *3' || true) | awk '{if($1>=3.5)print$1}' | tail -n1) 
+  if [ -z "$v" ]; then
+    echo_error 'Please `pyenv install` a version of python >= 3.5 so we can use it'
+    exit 2
+  fi
+  echo_pretty "Pyenv found. Using python version: $v"
+  export PYENV_VERSION=$v
+  python3 --version
+else
+  echo_warn "Pyenv not installed. Proceeding with system python version: $(python3 --version)"
+fi
 
 ####################################
 ###   Shared environment stuff   ###
@@ -299,14 +323,33 @@ elif [ "$MODE" = "test" ]; then
   done
   echo " Ok"
 
+  ### Check for and install dependencies in venv
   cd "$PROJECT_ROOT/server/tests-py"
   PY_VENV=.hasura-dev-python-venv
+  DEVSH_VERSION_FILE=.devsh_version
+  # Do we need to force reinstall?
+  if [ "$DEVSH_VERSION" = "$(cat $DEVSH_VERSION_FILE 2>/dev/null || true)" ]; then
+    true # ok
+  else
+    echo_warn 'dev.sh version was bumped. Forcing reinstallation of dependencies.'
+    rm -r "$PY_VENV"
+    echo "$DEVSH_VERSION" > "$DEVSH_VERSION_FILE"
+  fi
   set +u  # for venv activate
   if [ ! -d "$PY_VENV" ]; then
     python3 -m venv "$PY_VENV"
     source "$PY_VENV/bin/activate"
     pip3 install wheel
-    pip3 install -r requirements.txt
+    # If the maintainer of this script or pytests needs to change dependencies:
+    #  - alter requirements-top-level.txt as needed
+    #  - delete requirements.txt
+    #  - run this script, then check in the new frozen requirements.txt
+    if [ -f requirements.txt ]; then
+      pip3 install -r requirements.txt
+    else
+      pip3 install -r requirements-top-level.txt
+      pip3 freeze > requirements.txt
+    fi
   else
     echo_pretty "It looks like python dependencies have been installed already. Skipping."
     echo_pretty "If things fail please run this and try again"
@@ -314,6 +357,7 @@ elif [ "$MODE" = "test" ]; then
 
     source "$PY_VENV/bin/activate"
   fi
+
 
   # TODO MAYBE: fix deprecation warnings, make them an error
   if pytest -W ignore::DeprecationWarning --hge-urls http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT --pg-urls "$DB_URL" $PYTEST_ARGS; then

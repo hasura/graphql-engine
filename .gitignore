@@ -1,4 +1,5 @@
 .hasura-dev-python-venv
+server/tests-py/.devsh_version
 npm-debug.log
 *.temp
 *.DS_Store
