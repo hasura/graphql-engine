@@ -34,10 +34,12 @@ Available COMMANDs:
     Launch a postgres container suitable for use with graphql-engine, watch its logs,
     clean up nicely after
 
-  test [pytest_args...]
-    Run the integration tests, handling spinning up all dependencies. This will force
-    a recompile. A code coverage report will be generated. All arguments after 'test'
-    will be passed to the 'pytest' invocation.
+  test [--integration [pytest_args...] | --unit]
+    Run the unit and integration tests, handling spinning up all dependencies.
+    This will force a recompile. A code coverage report will be generated. 
+        Either integration or unit tests can be run individually with their
+    respective flags. With '--integration' any arguments that follow will be
+    passed to the pytest invocation
 
 EOL
 exit 1
@@ -64,7 +66,24 @@ case "${1-}" in
   postgres)
   ;;
   test)
-    PYTEST_ARGS="${@:2}"
+    case "${2-}" in
+      --unit)
+      RUN_INTEGRATION_TESTS=false
+      RUN_UNIT_TESTS=true
+      ;;
+      --integration)
+      PYTEST_ARGS="${@:3}"
+      RUN_INTEGRATION_TESTS=true
+      RUN_UNIT_TESTS=false
+      ;;
+      "")
+      RUN_INTEGRATION_TESTS=true
+      RUN_UNIT_TESTS=true
+      ;;
+      *)
+      die_usage
+      ;;
+    esac
   ;;
   *)
     die_usage
@@ -312,74 +331,79 @@ elif [ "$MODE" = "test" ]; then
   launch_postgres_container
   wait_docker_postgres
 
-  echo_pretty "Running Haskell test suite"
-  HASURA_GRAPHQL_DATABASE_URL="$DB_URL" $TEST_INVOCATION --coverage
-
-  echo_pretty "Starting graphql-engine"
-  GRAPHQL_ENGINE_TEST_LOG=/tmp/hasura-dev-test-engine.log
-  export HASURA_GRAPHQL_SERVER_PORT=8088
-  # stopped in cleanup()
-  stack exec graphql-engine -- --database-url="$DB_URL" serve --enable-console --stringify-numeric-types \
-    --console-assets-dir ../console/static/dist  &>  $GRAPHQL_ENGINE_TEST_LOG  & GRAPHQL_ENGINE_PID=$!
-  echo -n "Waiting for graphql-engine"
-  until curl -s "http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT/v1/query" &>/dev/null; do
-    echo -n '.' && sleep 0.2
-  done
-  echo " Ok"
-
-  ### Check for and install dependencies in venv
-  cd "$PROJECT_ROOT/server/tests-py"
-  PY_VENV=.hasura-dev-python-venv
-  DEVSH_VERSION_FILE=.devsh_version
-  # Do we need to force reinstall?
-  if [ "$DEVSH_VERSION" = "$(cat $DEVSH_VERSION_FILE 2>/dev/null || true)" ]; then
-    true # ok
-  else
-    echo_warn 'dev.sh version was bumped. Forcing reinstallation of dependencies.'
-    rm -r "$PY_VENV"
-    echo "$DEVSH_VERSION" > "$DEVSH_VERSION_FILE"
+  # These also depend on a running DB:
+  if [ "$RUN_UNIT_TESTS" = true ]; then
+    echo_pretty "Running Haskell test suite"
+    HASURA_GRAPHQL_DATABASE_URL="$DB_URL" $TEST_INVOCATION --coverage
   fi
-  set +u  # for venv activate
-  if [ ! -d "$PY_VENV" ]; then
-    python3 -m venv "$PY_VENV"
-    source "$PY_VENV/bin/activate"
-    pip3 install wheel
-    # If the maintainer of this script or pytests needs to change dependencies:
-    #  - alter requirements-top-level.txt as needed
-    #  - delete requirements.txt
-    #  - run this script, then check in the new frozen requirements.txt
-    if [ -f requirements.txt ]; then
-      pip3 install -r requirements.txt
+
+  if [ "$RUN_INTEGRATION_TESTS" = true ]; then
+    echo_pretty "Starting graphql-engine"
+    GRAPHQL_ENGINE_TEST_LOG=/tmp/hasura-dev-test-engine.log
+    export HASURA_GRAPHQL_SERVER_PORT=8088
+    # stopped in cleanup()
+    stack exec graphql-engine -- --database-url="$DB_URL" serve --enable-console --stringify-numeric-types \
+      --console-assets-dir ../console/static/dist  &>  $GRAPHQL_ENGINE_TEST_LOG  & GRAPHQL_ENGINE_PID=$!
+    echo -n "Waiting for graphql-engine"
+    until curl -s "http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT/v1/query" &>/dev/null; do
+      echo -n '.' && sleep 0.2
+    done
+    echo " Ok"
+
+    ### Check for and install dependencies in venv
+    cd "$PROJECT_ROOT/server/tests-py"
+    PY_VENV=.hasura-dev-python-venv
+    DEVSH_VERSION_FILE=.devsh_version
+    # Do we need to force reinstall?
+    if [ "$DEVSH_VERSION" = "$(cat $DEVSH_VERSION_FILE 2>/dev/null || true)" ]; then
+      true # ok
     else
-      pip3 install -r requirements-top-level.txt
-      pip3 freeze > requirements.txt
+      echo_warn 'dev.sh version was bumped. Forcing reinstallation of dependencies.'
+      rm -r "$PY_VENV"
+      echo "$DEVSH_VERSION" > "$DEVSH_VERSION_FILE"
     fi
-  else
-    echo_pretty "It looks like python dependencies have been installed already. Skipping."
-    echo_pretty "If things fail please run this and try again"
-    echo_pretty "  $ rm -r \"$PROJECT_ROOT/server/tests-py/$PY_VENV\""
+    set +u  # for venv activate
+    if [ ! -d "$PY_VENV" ]; then
+      python3 -m venv "$PY_VENV"
+      source "$PY_VENV/bin/activate"
+      pip3 install wheel
+      # If the maintainer of this script or pytests needs to change dependencies:
+      #  - alter requirements-top-level.txt as needed
+      #  - delete requirements.txt
+      #  - run this script, then check in the new frozen requirements.txt
+      if [ -f requirements.txt ]; then
+        pip3 install -r requirements.txt
+      else
+        pip3 install -r requirements-top-level.txt
+        pip3 freeze > requirements.txt
+      fi
+    else
+      echo_pretty "It looks like python dependencies have been installed already. Skipping."
+      echo_pretty "If things fail please run this and try again"
+      echo_pretty "  $ rm -r \"$PROJECT_ROOT/server/tests-py/$PY_VENV\""
 
-    source "$PY_VENV/bin/activate"
+      source "$PY_VENV/bin/activate"
+    fi
+
+
+    # TODO MAYBE: fix deprecation warnings, make them an error
+    if pytest -W ignore::DeprecationWarning --hge-urls http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT --pg-urls "$DB_URL" $PYTEST_ARGS; then
+      PASSED=true
+    else
+      PASSED=false
+      echo_pretty "^^^ graphql-engine logs from failed test run can be inspected at: $GRAPHQL_ENGINE_TEST_LOG"
+    fi
+    deactivate  # python venv
+    set -u
+
+    cd "$PROJECT_ROOT/server"
+    # INT so we get hpc report
+    kill -INT "$GRAPHQL_ENGINE_PID"
+    wait "$GRAPHQL_ENGINE_PID" || true
+    echo
+    stack hpc report graphql-engine.tix
+    rm graphql-engine.tix
   fi
-
-
-  # TODO MAYBE: fix deprecation warnings, make them an error
-  if pytest -W ignore::DeprecationWarning --hge-urls http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT --pg-urls "$DB_URL" $PYTEST_ARGS; then
-    PASSED=true
-  else
-    PASSED=false
-    echo_pretty "^^^ graphql-engine logs from failed test run can be inspected at: $GRAPHQL_ENGINE_TEST_LOG"
-  fi
-  deactivate  # python venv
-  set -u
-
-  cd "$PROJECT_ROOT/server"
-  # INT so we get hpc report
-  kill -INT "$GRAPHQL_ENGINE_PID"
-  wait "$GRAPHQL_ENGINE_PID" || true
-  echo
-  stack hpc report graphql-engine.tix
-  rm graphql-engine.tix
 
 else
   echo "impossible; fix script."
