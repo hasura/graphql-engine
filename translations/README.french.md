@@ -30,12 +30,12 @@ Plus d'informations sur [hasura.io](https://hasura.io) et dans la [documentation
 * **Réalisez des requêtes avancées**: filtrage intégré, pagination, recherche par patterns, mutations d'insertions en masse, mises-à-jour et suppression.
 * **Temps réel**: Convertissez n'importe quelle requête GraphQL en requête temps-réel en uttilisant les `subscriptions`.
 * **Fusionnez des schémas distants**: Accédez à vos propres schémas GraphQL pour votre logique métier, via un point d'accès GraphQL unique. [Plus d'informations](remote-schemas.french.md).
-* **Déclenchez des webhooks ou des fonctions serverless**: En réactions aux évènements Postgres insert/update/delete ([Plus d'informations](event-triggers.french.md))
+* **Déclenchez des webhooks ou des fonctions serverless**: En réactions aux évènements Postgres insert/update/delete ([Plus d'informations](event-triggers.french.md)).
 * **Fonctionne avec les bases de données existantes**: Pointez GraphQL Engine vers une base de données Postgres existante afin d'obtenir instantanément une API GraphQL prête à l'emploi.
-* **Contrôle d'accès détaillé**: Contrôle d'accès dynamique qui s'intègre avec votre système d'authentification (ex: auth0, firebase-auth)
-* **Haute performance & faible impact**: Image Docker de ~15MB; ~50MB RAM @ 1000 req/s; prise en compte du multi-core
-* **Interface d'administration & Migrations**: Interface d'administration & migrations de schéma à la Rails
-* **Postgres** ❤️: Supporte les types Postgres (PostGIS/geo-location, etc.), transforme les vues en *graphs*, déclenche des procédures ou fonctions stockées via les mutations
+* **Contrôle d'accès détaillé**: Contrôle d'accès dynamique qui s'intègre avec votre système d'authentification (ex: auth0, firebase-auth).
+* **Haute performance & faible impact**: Image Docker de ~15MB; ~50MB RAM @ 1000 req/s; prise en compte du multi-core.
+* **Interface d'administration & Migrations**: Interface d'administration & migrations de schéma à la Rails.
+* **Postgres** ❤️: Supporte les types Postgres (PostGIS/geo-location, etc.), transforme les vues en *graphs*, déclenche des procédures ou fonctions stockées via les mutations.
 
 Plus d'informations sur [hasura.io](https://hasura.io) et dans la [documentation](https://docs.hasura.io).
 
@@ -195,3 +195,12 @@ Tous les **autres contenus** (à l'exception de ceux dans les répertoires
 [`server`](../server), [`cli`](../cli) et [`console`](../console)) sont
 disponibles sous [Licence MIT](../LICENSE-community). Cela inclut tout le
 contenu des répertoires [`docs`](../docs) et [`community`](../community).
+
+## Traductions
+
+Ceci readme est disponible dans les traductions suivantes:
+
+- [Japanese :jp:](translations/README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
+- [English](https://github.com/hasura/graphql-engine/blob/master/README.md)
+
+Les traductions d'autres fichiers sont disponibles [ici](translations).
