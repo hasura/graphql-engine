@@ -1,9 +1,7 @@
 import pytest
-import yaml
+import ruamel.yaml as yaml
 import time
 import jsondiff
-
-from validate import json_ordered
 
 
 if not pytest.config.getoption("--test-hge-scale-url"):
@@ -49,7 +47,7 @@ class TestHorizantalScaleBasic():
             assert st_code == 200, resp
 
             if 'response' in step['validate']:
-                assert json_ordered(resp) == json_ordered(step['validate']['response']), yaml.dump({
+                assert resp == step['validate']['response'], yaml.dump({
                     'response': resp,
                     'expected': step['validate']['response'],
                     'diff': jsondiff.diff(step['validate']['response'], resp)

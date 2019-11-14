@@ -1,6 +1,6 @@
 import sanitize from 'sanitize-filename';
-import { push } from 'react-router-redux';
 
+import { getSchemaBaseRoute } from '../../Common/utils/routesUtils';
 import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
 import requestAction from '../../../utils/requestAction';
 import defaultState from './DataState';
@@ -20,6 +20,8 @@ import { loadInconsistentObjects } from '../Settings/Actions';
 import { filterInconsistentMetadataObjects } from '../Settings/utils';
 import globals from '../../../Globals';
 
+import { COMPUTED_FIELDS_SUPPORT } from '../../../helpers/versionUtils';
+
 import {
   fetchTrackedTableReferencedFkQuery,
   fetchTrackedTableFkQuery,
@@ -27,6 +29,8 @@ import {
   fetchTrackedTableListQuery,
   mergeLoadSchemaData,
 } from './utils';
+
+import _push from './push';
 
 import { fetchColumnTypesQuery, fetchColumnDefaultFunctions } from './utils';
 
@@ -56,6 +60,16 @@ const RESET_COLUMN_TYPE_INFO = 'Data/RESET_COLUMN_TYPE_INFO';
 const MAKE_REQUEST = 'ModifyTable/MAKE_REQUEST';
 const REQUEST_SUCCESS = 'ModifyTable/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'ModifyTable/REQUEST_ERROR';
+
+const useCompositeFnsNewCheck =
+  globals.featuresCompatibility &&
+  globals.featuresCompatibility[COMPUTED_FIELDS_SUPPORT];
+
+const compositeFnCheck = useCompositeFnsNewCheck
+  ? 'c'
+  : {
+    $ilike: '%composite%',
+  };
 
 const initQueries = {
   schemaList: {
@@ -118,9 +132,7 @@ const initQueries = {
         function_schema: '',
         has_variadic: false,
         returns_set: true,
-        return_type_type: {
-          $ilike: '%composite%',
-        },
+        return_type_type: compositeFnCheck, // COMPOSITE type
         $or: [
           {
             function_type: {
@@ -159,9 +171,7 @@ const initQueries = {
         function_schema: '',
         has_variadic: false,
         returns_set: true,
-        return_type_type: {
-          $ilike: '%composite%',
-        },
+        return_type_type: compositeFnCheck, // COMPOSITE type
         function_type: {
           $ilike: '%volatile%',
         },
@@ -402,7 +412,7 @@ const fetchFunctionInit = () => (dispatch, getState) => {
 
 const updateCurrentSchema = (schemaName, redirect = true) => dispatch => {
   if (redirect) {
-    dispatch(push(`${globals.urlPrefix}/data/schema/${schemaName}`));
+    dispatch(_push(getSchemaBaseRoute(schemaName)));
   }
 
   Promise.all([

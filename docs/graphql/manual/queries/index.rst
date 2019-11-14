@@ -62,4 +62,3 @@ based on a typical author/article schema for reference.
   derived-data
   control-access
   variables-aliases-fragments-directives
-
