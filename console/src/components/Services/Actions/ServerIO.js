@@ -25,7 +25,11 @@ import {
 import { showErrorNotification } from '../Common/Notification';
 import { appPrefix } from './constants';
 import { push } from 'react-router-redux';
-import { reformCustomTypes, mergeCustomTypes } from '../Types/utils';
+import {
+  reformCustomTypes,
+  mergeCustomTypes,
+  hydrateTypeRelationships,
+} from '../Types/utils';
 import { getActionDefinitionFromSdl, getTypesFromSdl } from '../Types/sdlUtils';
 import {
   setFetching as createActionRequestInProgress,
@@ -120,8 +124,13 @@ export const createAction = () => (dispatch, getState) => {
     return dispatch(showErrorNotification(validationError));
   }
 
-  const { types: mergedTypes, overlappingTypenames } = mergeCustomTypes(
+  const typesWithRelationships = hydrateTypeRelationships(
     state.types,
+    existingTypesList
+  );
+
+  const { types: mergedTypes, overlappingTypenames } = mergeCustomTypes(
+    typesWithRelationships,
     existingTypesList
   );
 
@@ -228,8 +237,13 @@ export const saveAction = currentAction => (dispatch, getState) => {
     return dispatch(showErrorNotification(validationError));
   }
 
-  const { types: mergedTypes, overlappingTypenames } = mergeCustomTypes(
+  const typesWithRelationships = hydrateTypeRelationships(
     state.types,
+    existingTypesList
+  );
+
+  const { types: mergedTypes, overlappingTypenames } = mergeCustomTypes(
+    typesWithRelationships,
     existingTypesList
   );
 
