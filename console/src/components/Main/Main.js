@@ -31,6 +31,7 @@ import {
 } from './loveConsentLocalStorage';
 
 import { versionGT, FT_JWT_ANALYZER } from '../../helpers/versionUtils';
+import { getSchemaBaseRoute } from '../Common/utils/routesUtils';
 
 class Main extends React.Component {
   constructor(props) {
@@ -485,7 +486,7 @@ class Main extends React.Component {
                   'Data',
                   'fa-database',
                   tooltips.data,
-                  '/data/schema/' + currentSchema
+                  getSchemaBaseRoute(currentSchema)
                 )}
                 {getSidebarItem(
                   'Remote Schemas',

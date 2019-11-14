@@ -1,6 +1,6 @@
 import sanitize from 'sanitize-filename';
-import { push } from 'react-router-redux';
 
+import { getSchemaBaseRoute } from '../../Common/utils/routesUtils';
 import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
 import requestAction from '../../../utils/requestAction';
 import defaultState from './DataState';
@@ -29,6 +29,8 @@ import {
   fetchTrackedTableListQuery,
   mergeLoadSchemaData,
 } from './utils';
+
+import _push from './push';
 
 import { fetchColumnTypesQuery, fetchColumnDefaultFunctions } from './utils';
 
@@ -172,8 +174,8 @@ const initQueries = {
       ],
       order_by: [{ column: 'function_name', type: 'asc', nulls: 'last' }],
       where: {
+        function_schema: '', // needs to be set later
         $not: {
-          function_schema: '', // needs to be set later
           has_variadic: false,
           returns_set: true,
           return_type_type: compositeFnCheck, // COMPOSITE type
@@ -395,7 +397,7 @@ const fetchFunctionInit = () => (dispatch, getState) => {
   // set schema in queries
   const currentSchema = getState().tables.currentSchema;
   body.args[0].args.where.function_schema = currentSchema;
-  body.args[1].args.where.$not.function_schema = currentSchema;
+  body.args[1].args.where.function_schema = currentSchema;
   body.args[2].args.where.function_schema = currentSchema;
 
   const options = {
@@ -429,7 +431,7 @@ const fetchFunctionInit = () => (dispatch, getState) => {
 
 const updateCurrentSchema = (schemaName, redirect = true) => dispatch => {
   if (redirect) {
-    dispatch(push(`${globals.urlPrefix}/data/schema/${schemaName}`));
+    dispatch(_push(getSchemaBaseRoute(schemaName)));
   }
 
   Promise.all([

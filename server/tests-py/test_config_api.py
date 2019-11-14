@@ -1,4 +1,4 @@
-import yaml
+import ruamel.yaml as yaml
 import re
 
 class TestConfigAPI():

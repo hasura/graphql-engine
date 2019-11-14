@@ -46,6 +46,7 @@ import {
 import { SET_SQL } from '../RawSQL/Actions';
 import _push from '../push';
 import { isEmpty } from '../../../Common/utils/jsUtils';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 class Schema extends Component {
   constructor(props) {
@@ -331,6 +332,13 @@ class Schema extends Component {
           e.stopPropagation();
           e.preventDefault();
 
+          const isOk = getConfirmation(
+            'This will expose all the listed tables/views over the GraphQL API'
+          );
+          if (!isOk) {
+            return;
+          }
+
           dispatch(addAllUntrackedTablesSql(allUntrackedTables));
         };
 
@@ -425,6 +433,13 @@ class Schema extends Component {
         const trackAllRelations = e => {
           e.stopPropagation();
           e.preventDefault();
+
+          const isOk = getConfirmation(
+            'This will add all the listed foreign-keys as relationships in the GraphQL schema'
+          );
+          if (!isOk) {
+            return;
+          }
 
           this.props.dispatch(autoTrackRelations(untrackedRelations));
         };
@@ -621,7 +636,7 @@ class Schema extends Component {
                         onClick={e => {
                           e.preventDefault();
 
-                          dispatch(_push('/sql'));
+                          dispatch(_push('/data/sql'));
 
                           dispatch({
                             type: SET_SQL,

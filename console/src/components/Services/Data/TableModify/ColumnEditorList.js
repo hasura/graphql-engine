@@ -22,6 +22,10 @@ import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/Gql
 
 import styles from './ModifyTable.scss';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import {
+  checkFeatureSupport,
+  CUSTOM_GRAPHQL_FIELDS_SUPPORT,
+} from '../../../../helpers/versionUtils';
 
 const ColumnEditorList = ({
   tableSchema,
@@ -31,6 +35,7 @@ const ColumnEditorList = ({
   validTypeCasts,
   dataTypeIndexMap,
   columnDefaultFunctions,
+  customColumnNames,
 }) => {
   const tableName = tableSchema.table_name;
 
@@ -78,6 +83,10 @@ const ColumnEditorList = ({
       default: col.column_default || '',
       comment: col.comment || '',
     };
+
+    if (checkFeatureSupport(CUSTOM_GRAPHQL_FIELDS_SUPPORT)) {
+      columnProperties.customFieldName = customColumnNames[colName] || '';
+    }
 
     const onSubmit = toggleEditor => {
       dispatch(saveColumnChangesSql(colName, col, toggleEditor));
@@ -148,7 +157,14 @@ const ColumnEditorList = ({
     const collapsedLabel = () => {
       return (
         <div key={colName}>
-          <b>{colName}</b> {gqlCompatibilityWarning()} - {keyProperties()}
+          <b>
+            {colName}
+            <i>
+              {columnProperties.customFieldName &&
+                ` → ${columnProperties.customFieldName}`}
+            </i>
+          </b>{' '}
+          {gqlCompatibilityWarning()} - {keyProperties()}
         </div>
       );
     };
@@ -199,9 +215,9 @@ const ColumnEditorList = ({
      *  "Data type",
      *  "User friendly name of the data type",
      *  "Description of the data type",
-     *  "Comma seperated castable data types",
-     *  "Comma seperated user friendly names of the castable data types",
-     *  "Colon seperated user friendly description of the castable data types"
+     *  "Comma separated castable data types",
+     *  "Comma separated user friendly names of the castable data types",
+     *  "Colon separated user friendly description of the castable data types"
      *  ]
      * */
 

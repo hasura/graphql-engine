@@ -6,6 +6,8 @@
 package migrate
 
 import (
+	"bytes"
+	"container/list"
 	"fmt"
 	"os"
 	"sync"
@@ -338,6 +340,127 @@ func (m *Migrate) Query(data []interface{}) error {
 	return m.databaseDrv.Query(data)
 }
 
+// Squash migrations from version v into a new migration.
+// Returns a list of migrations that are squashed: vs
+// the squashed metadata for all UP steps: um
+// the squashed SQL for all UP steps: us
+// the squashed metadata for all down steps: dm
+// the squashed SQL for all down steps: ds
+func (m *Migrate) Squash(v uint64) (vs []int64, um []interface{}, us []byte, dm []interface{}, ds []byte, err error) {
+
+	// check the migration mode on the database
+	mode, err := m.databaseDrv.GetSetting("migration_mode")
+	if err != nil {
+		return
+	}
+
+	// if migration_mode is false, set err to ErrNoMigrationMode and return
+	if mode != "true" {
+		err = ErrNoMigrationMode
+		return
+	}
+
+	// concurrently squash all the up migrations
+	retUp := make(chan interface{}, m.PrefetchMigrations)
+	go m.squashUp(v, retUp)
+
+	// concurrently squash all down migrations
+	retDown := make(chan interface{}, m.PrefetchMigrations)
+	go m.squashDown(v, retDown)
+
+	// combine squashed up and down migrations into a single one when they're ready
+	dataUp := make(chan interface{}, m.PrefetchMigrations)
+	dataDown := make(chan interface{}, m.PrefetchMigrations)
+	retVersions := make(chan int64, m.PrefetchMigrations)
+	go m.squashMigrations(retUp, retDown, dataUp, dataDown, retVersions)
+
+	// make a chan for errors
+	errChn := make(chan error)
+
+	// create a waitgroup to wait for all goroutines to finish execution
+	var wg sync.WaitGroup
+	// add three tasks to waitgroup since we used 3 goroutines above
+	wg.Add(3)
+
+	// read from dataUp chan when all up migrations are squashed and compiled
+	go func() {
+		// defer to mark one task in the waitgroup as complete
+		defer wg.Done()
+
+		buf := &bytes.Buffer{}
+		for r := range dataUp {
+			// check the type of value returned through the chan
+			switch data := r.(type) {
+			case error:
+				// it's an error, set error and return
+				// note: this return is returning the goroutine, not the current function
+				err = r.(error)
+				return
+			case []byte:
+				// it's SQL, concat all of them
+				buf.WriteString("\n")
+				buf.Write(data)
+			case interface{}:
+				// it's metadata, append into the array
+				um = append(um, data)
+			}
+		}
+		// set us as the bytes written into buf
+		us = buf.Bytes()
+	}()
+
+	// read from dataDown when it is ready:
+	go func() {
+		// defer to mark another task in the waitgroup as complete
+		defer wg.Done()
+		buf := &bytes.Buffer{}
+		for r := range dataDown {
+			// check the type of value returned through the chan
+			switch data := r.(type) {
+			case error:
+				// it's an error, set error and return
+				// note: this return is returning the goroutine, not the current function
+				err = r.(error)
+				return
+			case []byte:
+				// it's SQL, concat all of them
+				buf.WriteString("\n")
+				buf.Write(data)
+			case interface{}:
+				// it's metadata, append into the array
+				dm = append(dm, data)
+			}
+		}
+		// set ds as the bytes written into buf
+		ds = buf.Bytes()
+	}()
+
+	// read retVersions - versions that are squashed
+	go func() {
+		// defer to mark another task in the waitgroup as complete
+		defer wg.Done()
+		for r := range retVersions {
+			// append each version into the versions array
+			vs = append(vs, r)
+		}
+	}()
+
+	// returns from the above goroutines pass the control here.
+
+	// wait until all tasks (3) in the workgroup are completed
+	wg.Wait()
+
+	// check for errors in the error channel
+	select {
+	// we got an error, set err and return
+	case err = <-errChn:
+		return
+	default:
+		// set nothing and return, all is well
+		return
+	}
+}
+
 // Migrate looks at the currently active migration version,
 // then migrates either up or down to the specified version.
 func (m *Migrate) Migrate(version uint64, direction string) error {
@@ -456,8 +579,152 @@ func (m *Migrate) Down() error {
 
 // Reset resets public schema and hasuradb metadata
 func (m *Migrate) Reset() (err error) {
-	err = m.databaseDrv.Reset()
-	return
+	return m.databaseDrv.Reset()
+}
+
+func (m *Migrate) squashUp(version uint64, ret chan<- interface{}) {
+	defer close(ret)
+	currentVersion := version
+	count := int64(0)
+	limit := int64(-1)
+	if m.stop() {
+		return
+	}
+
+	for limit == -1 {
+		if currentVersion == version {
+			if err := m.versionUpExists(version); err != nil {
+				ret <- err
+				return
+			}
+
+			migr, err := m.newMigration(version, int64(version))
+			if err != nil {
+				ret <- err
+				return
+			}
+			ret <- migr
+			go migr.Buffer()
+
+			migr, err = m.metanewMigration(version, int64(version))
+			if err != nil {
+				ret <- err
+				return
+			}
+			ret <- migr
+			go migr.Buffer()
+			count++
+		}
+
+		// apply next migration
+		next, err := m.sourceDrv.Next(currentVersion)
+		if os.IsNotExist(err) {
+			// no limit, but no migrations applied?
+			if count == 0 {
+				ret <- ErrNoChange
+				return
+			}
+
+			if limit == -1 {
+				return
+			}
+		}
+
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		// Check if next files exists (yaml or sql)
+		if err = m.versionUpExists(next); err != nil {
+			ret <- err
+			return
+		}
+
+		migr, err := m.newMigration(next, int64(next))
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		ret <- migr
+		go migr.Buffer()
+
+		migr, err = m.metanewMigration(next, int64(next))
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		ret <- migr
+		go migr.Buffer()
+		currentVersion = next
+		count++
+	}
+}
+
+func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
+	defer close(ret)
+
+	from, err := m.sourceDrv.GetLocalVersion()
+	if err != nil {
+		ret <- err
+		return
+	}
+
+	for {
+		if m.stop() {
+			return
+		}
+
+		err = m.versionDownExists(from)
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		prev, err := m.sourceDrv.Prev(from)
+		if err != nil {
+			migr, err := m.metanewMigration(from, -1)
+			if err != nil {
+				ret <- err
+				return
+			}
+			ret <- migr
+			go migr.Buffer()
+
+			migr, err = m.newMigration(from, -1)
+			if err != nil {
+				ret <- err
+				return
+			}
+			ret <- migr
+			go migr.Buffer()
+		}
+
+		if from == version {
+			return
+		}
+
+		migr, err := m.metanewMigration(from, int64(prev))
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		ret <- migr
+		go migr.Buffer()
+
+		migr, err = m.newMigration(from, int64(prev))
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		ret <- migr
+		go migr.Buffer()
+		from = prev
+	}
 }
 
 // read reads either up or down migrations from source `from` to `to`.
@@ -479,7 +746,7 @@ func (m *Migrate) read(version uint64, direction string, ret chan<- interface{})
 			return
 		}
 
-		// Check if next version exiss (yaml or sql)
+		// Check if next version exists (yaml or sql)
 		if err := m.versionUpExists(version); err != nil {
 			ret <- err
 			return
@@ -830,6 +1097,71 @@ func (m *Migrate) runMigrations(ret <-chan interface{}) error {
 			}
 		}
 	}
+	return nil
+}
+
+func (m *Migrate) squashMigrations(retUp <-chan interface{}, retDown <-chan interface{}, dataUp chan<- interface{}, dataDown chan<- interface{}, versions chan<- int64) error {
+	var latestVersion int64
+	go func() {
+		defer close(dataUp)
+		defer close(versions)
+
+		squashList := database.CustomList{
+			list.New(),
+		}
+
+		defer m.databaseDrv.Squash(&squashList, dataUp)
+
+		for r := range retUp {
+			if m.stop() {
+				return
+			}
+			switch r.(type) {
+			case error:
+				dataUp <- r.(error)
+			case *Migration:
+				migr := r.(*Migration)
+				if migr.Body != nil {
+					if err := m.databaseDrv.PushToList(migr.BufferedBody, migr.FileType, &squashList); err != nil {
+						dataUp <- err
+					}
+				}
+
+				version := int64(migr.Version)
+				if version == migr.TargetVersion && version != latestVersion {
+					versions <- version
+					latestVersion = version
+				}
+			}
+		}
+	}()
+
+	go func() {
+		defer close(dataDown)
+
+		squashList := database.CustomList{
+			list.New(),
+		}
+
+		defer m.databaseDrv.Squash(&squashList, dataDown)
+
+		for r := range retDown {
+			if m.stop() {
+				return
+			}
+			switch r.(type) {
+			case error:
+				dataDown <- r.(error)
+			case *Migration:
+				migr := r.(*Migration)
+				if migr.Body != nil {
+					if err := m.databaseDrv.PushToList(migr.BufferedBody, migr.FileType, &squashList); err != nil {
+						dataDown <- err
+					}
+				}
+			}
+		}
+	}()
 	return nil
 }
 
