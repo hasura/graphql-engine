@@ -65,14 +65,13 @@ data RunSQL
   } deriving (Show, Eq, Lift)
 
 instance FromJSON RunSQL where
-  parseJSON (Object o) = do
+  parseJSON = withObject "RunSQL" $ \o -> do
     rSql <- o .: "sql"
     rCascade <- o .:? "cascade" .!= False
     rCheckMetadataConsistency <- o .:? "check_metadata_consistency"
     isReadOnly <- o .:? "read_only" .!= False
     let rTxAccessMode = if isReadOnly then Q.ReadOnly else Q.ReadWrite
     pure RunSQL{..}
-  parseJSON _ = fail "expecting an object for args"
 
 instance ToJSON RunSQL where
   toJSON RunSQL {..} =
