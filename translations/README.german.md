@@ -97,7 +97,7 @@ Guides](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) od
 
 ## Architektur
 
-Die Hasura GraphQL Engine simuliert eine Postgres Datenbank-Instanz and kann Anfragen von Client-Apps verarbeiten. Sie kann so konfigueriert werden, dass es mit deinem schon bestehenden Authentifizierungssystem funktioniert und kann dementsprechend Zugriffe via "field-level"-Regeln mit dynamischen Variablen von deinem Autehentifizierungssystem kontrollieren.
+Die Hasura GraphQL Engine simuliert eine Postgres Datenbank-Instanz and kann Anfragen von Client-Apps verarbeiten. Sie kann so konfiguriert werden, dass es mit deinem schon bestehenden Authentifizierungssystem funktioniert und kann dementsprechend Zugriffe via "field-level"-Regeln mit dynamischen Variablen von deinem Autehentifizierungssystem kontrollieren.
 
 Du kannst auch Remote-GraphQL Schemas einbinden und so eine vereinheitlichte GraphQL API benutzen.
 
