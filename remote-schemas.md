@@ -1,41 +1,47 @@
 # Remote schemas
 
-अगर आप एक ही जगह से सभी प्रकार की GraphQL की क्वेरी करना चाहते हैं तो रिमोट GraphQL स्कीमा को GraphQL इंजन के Postgres आधारित स्कीमा के साथ विलय करे। रिमोट स्कीमा कुछ उदाहरण के लिए आदर्श होते हैं जैसे:
+Hasura gives you CRUD + realtime GraphQL APIs with authorization & access control. However, in many cases, you will need to write APIs (queries, mutations) that contain custom logic. For example, implementing a payment API, or querying data that is not in your database.
 
-* म्यूटेशन का अनुकूलन (जैसे इन्सर्ट से पहले वेलिडेशन करना)
-* भुगतान जैसी सुविधाओं का समर्थन करना, आदि और उन्हें एक्सेस करने के लिए एक सुसंगत इंटरफ़ेस प्रदान करना यानि GraphQL Engine के API के पीछे
-* अन्य सूत्रों से डेटा अलग करना (*जैसे मौसम के एपीआई या किसी अन्य डेटाबेस से*)
+Hasura has the ability to merge remote GraphQL schemas and provide a unified GraphQL API. Think of it like automated schema merging. All you need to do is build your own GraphQL service and then provide the HTTP endpoint to Hasura. Your GraphQL service can be written in any language or framework.
 
-कस्टम व्यवसाय तर्क का समर्थन करने के लिए, आपको एक कस्टम GraphQL सर्वर बनाने की आवश्यकता होगी (देखे [boilerplates](community/boilerplates/remote-schemas)) और उसके स्कीमा को GraphQL Engine के साथ विलय करे।
+Remote schemas are ideal for use cases such as:
+
+* Customizing mutations (*e.g. running validations before inserts*)
+* Supporting features like payments, etc. and providing a consistent interface to access them i.e. behind the GraphQL Engine's API
+* Fetching disparate data from other sources (*e.g. from a weather API or another database*)
+
+To support custom business logic, you'll need to create a custom GraphQL server (see [boilerplates](community/boilerplates/remote-schemas)) and merge its schema with GraphQL Engine's.
 
 ![remote schems architecture](assets/remote-schemas-arch.png)
 
-## डेमो (*40 सेकंड*)
+## Demo (*40 seconds*)
 
 [![video demo of merging remote schemas](https://img.youtube.com/vi/eY4n9aPsi0M/0.jpg)](https://www.youtube.com/watch?v=eY4n9aPsi0M)
 
-[रिमोट GraphQL स्कीमा को मर्ज करें (YouTube link)](https://youtu.be/eY4n9aPsi0M)
+[Merge remote GraphQL schemas (YouTube link)](https://youtu.be/eY4n9aPsi0M)
 
-## शुरू करे 
+[Adding a remote schema ](https://youtu.be/01t4t2t4q1c)
 
-रिमोट स्कीमा को आज़माने का सबसे तेज़ तरीका Heroku है।
+## Quickstart
 
-1. मुफ्त Postgres के साथ Heroku पर GraphQL Engine को डेप्लॉय करने के लिए निम्न बटन पर क्लिक करें:
+The fastest way to try remote schema out is via Heroku.
+
+1. Click on the following button to deploy GraphQL Engine on Heroku with the free Postgres add-on:
 
     [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
 
-2. Hasura कंसोल खोलें
+2. Open the Hasura console
 
-   एडमिन कंसोल को खोलने के लिए `https: // <app-name> .herokuapp.com` (* अपने ऐप के नाम के साथ * <app-name \> बदलें) पर जाएँ।
+   Visit `https://<app-name>.herokuapp.com` (*replace \<app-name\> with your app name*) to open the admin console.
 
-3. अपना पहला रिमोट स्कीमा मर्ज करें और इसे क्वेरी करें
+3. Merge your first remote schema and query it
 
-   In the admin console, open the ``Remote Schemas`` tab and click on the ``Add`` button.एडमिन कंसोल में ``Remote Schemas`` टैब खोलें और `` Add`` बटन पर क्लिक करें। निम्नलिखित विवरण भरें:
-   * Remote Schema नाम: ``countries`` (*इस remote schema के लिए एक उपनाम *).
-   * GraphQL server URL: ``https://countries.trevorblades.com/`` (*एक सार्वजनिक GraphQL API जिसे हम इस सुविधा की शीघ्रता से जांच करने के लिए उपयोग करेंगे;[@trevorblades](https://github.com/trevorblades) द्वारा बनाए रखा गया।*
-   * शेष कॉन्फ़िगरेशन सेटिंग्स पर ध्यान न दें और ``Add Remote Schema`` बटन पर क्लिक करें।
+   In the admin console, open the ``Remote Schemas`` tab and click on the ``Add`` button. Fill in the following details:
+   * Remote Schema name: ``countries`` (*an alias for this remote schema*).
+   * GraphQL server URL: ``https://countries.trevorblades.com/`` (*a public GraphQL API that we'll use to quickly check out this feature; maintained by [@trevorblades](https://github.com/trevorblades)*. 
+   * Ignore the remaining configuration settings and click on the ``Add Remote Schema`` button.
 
-   ``GraphiQL` टैब पर जाएं और निम्नलिखित क्वेरी चलाएँ (*बाईं ओर क्वेरी विंडो में पेस्ट करें और * ▶️ *(play) बटन पर क्लिक करें *):
+   Head to the ``GraphiQL` tab and run the following query (*paste it in the query window on the left and click the* ▶️ *(play) button*):
 
    ```graphql
    {
@@ -50,34 +56,35 @@
    }
    ```
 
-   आप ``GraphiQL`` इंटरफ़ेस के शीर्ष दाएं कोने में ``Docs`` एक्सप्लोरर का उपयोग करके रिमोट स्कीमा से GraphQL के प्रकारों का पता लगा सकते हैं।
+   You can explore the GraphQL types from the remote schema using the ``Docs`` explorer in the top right corner of the ``GraphiQL`` interface.
 
 ## Boilerplates
 
-लोकप्रिय भाषाओं / फ़्रेमवर्क्स में कस्टम GraphQL सर्वर के लिए Boilerplates उपलब्ध हैं।
+Boilerplates for custom GraphQL servers in popular languages/frameworks are available.
 
-* [नियमित boilerplates](community/boilerplates/graphql-servers) जिसे कहीं भी deploy किया जा सकता है।
-* [सर्वर रहित boilerplates](https://github.com/hasura/graphql-serverless) जिसे सर्वर रहित प्लेटफार्मों जैसे AWS Lambda, आदि पर deploy किया जा सकता है।
+* [Regular boilerplates](community/boilerplates/graphql-servers) that can be deployed anywhere.
+* [Serverless boilerplates](https://github.com/hasura/graphql-serverless) that can be deployed on serverless platforms like AWS Lambda, etc.
 
-कृपया ध्यान दें कि अधिक भाषाओं, फ्रेमवर्क, सर्वर रहित प्लेटफ़ॉर्म आदि के लिए boilerplates को पुनरावृत्त किया जा रहा है और सामुदायिक योगदान बहुत स्वागत योग्य है।
+Please note that boilerplates for more languages, frameworks, serverless platforms, etc. are being iterated upon and community contributions are very welcome. 
 
 
 ## Caveats
 
-**वर्तमान सीमाएँ**:
+**Current limitations**:
 
-* सभी मर्ज किए गए स्कीमा में टाइप नाम और नोड नाम अद्वितीय होने चाहिए (केस-सेंसिटिव मिलान)। अगले कुछ पुनरावृत्तियों में, सटीक नाम और संरचना के साथ मर्ज करने के तरीको का समर्थन उपलब्ध होगा।
-* एक ही क्वेरी / म्यूटेशन में विभिन्न GraphQL सर्वर से नोड्स का उपयोग नहीं किया जा सकता है। सभी टॉप-लेवल नोड्स को एक ही GraphQL सर्वर से होना चाहिए।
-* Subscriptions on remote GraphQL server are not supported. रिमोट GraphQL सर्वर पर सदस्यता समर्थित नहीं हैं।
+* Nomenclature: Type names and node names need to be unique across all merged schemas (case-sensitive match). In the next few iterations, support for merging types with the same name and structure will be available.
+* Nodes from different GraphQL servers cannot be used in the same query/mutation. All top-level nodes have to be from the same GraphQL server.
+* Subscriptions on remote GraphQL server are not supported.
 
-इन सीमाओं को आने वाले वर्जन्स में संबोधित किया जाएगा।
+These limitations will be addressed in upcoming versions.
 
-## प्रलेखन
+## Documentation
 
-पूरा पढ़ें [प्रलेखन](https://docs.hasura.io/1.0/graphql/manual/remote-schemas/index.html).
+Read the complete [documentation](https://docs.hasura.io/1.0/graphql/manual/remote-schemas/index.html).
 
-## अनुवाद
+## Translations
 
-यह दस्तावेज़ निम्नलिखित अनुवादों में उपलब्ध है:
+This document is available in the following translations:
 
 - [French :fr:](translations/remote-schemas.french.md)
+- [Hindi :in:](translations/remote-schemas.hindi.md)
