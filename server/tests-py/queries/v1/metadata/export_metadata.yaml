@@ -2,10 +2,46 @@ description: Export schema cache (metadata)
 url: /v1/query
 status: 200
 response:
+  functions:
+  - search_articles
   remote_schemas: []
+  query_collections: []
+  allowlist: []
   tables:
+  - table: article
+    is_enum: false
+    configuration:
+      custom_root_fields:
+        select:
+        select_by_pk:
+        select_aggregate:
+        insert:
+        update:
+        delete:
+      custom_column_names: {}
+    object_relationships:
+    - using:
+        foreign_key_constraint_on: author_id
+      name: author
+      comment:
+    array_relationships: []
+    insert_permissions: []
+    select_permissions: []
+    update_permissions: []
+    delete_permissions: []
+    event_triggers: []
+    computed_fields: []
   - table: author
     is_enum: false
+    configuration:
+      custom_root_fields:
+        select:
+        select_by_pk:
+        select_aggregate:
+        insert:
+        update:
+        delete:
+      custom_column_names: {}
     object_relationships: []
     array_relationships:
     - using:
@@ -19,23 +55,12 @@ response:
     update_permissions: []
     delete_permissions: []
     event_triggers: []
-  - table: article
-    is_enum: false
-    object_relationships:
-    - using:
-        foreign_key_constraint_on: author_id
-      name: author
+    computed_fields:
+    - name: get_articles
       comment: null
-    array_relationships: []
-    insert_permissions: []
-    select_permissions: []
-    update_permissions: []
-    delete_permissions: []
-    event_triggers: []
-  query_collections: []
-  allowlist: []
-  functions:
-  - search_articles
+      definition:
+        function: fetch_articles
+        table_argument: author_row
 
 query:
   type: export_metadata

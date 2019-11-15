@@ -21,3 +21,9 @@ args:
     - content: Sample article content
       title: Article 3
 
+#Insert into orders
+- type: insert
+  args:
+    table: orders
+    objects:
+    - placed: '2017-08-19 14:22:11.802755+02'

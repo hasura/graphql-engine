@@ -2,12 +2,12 @@ description: Update mutation on author
 url: /v1/graphql
 response:
   data:
-   update_author:
-     affected_rows: 1
-     returning:
-     - articles: []
-       id: 1
-       name: Jane
+    update_author:
+      affected_rows: 1
+      returning:
+      - id: 1
+        name: Jane
+        articles: []
 status: 200
 query:
   query: |

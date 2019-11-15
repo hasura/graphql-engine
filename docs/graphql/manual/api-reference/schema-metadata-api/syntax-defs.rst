@@ -58,6 +58,15 @@ RoleName
 
   String
 
+.. _ComputedFieldName:
+
+ComputedFieldName
+^^^^^^^^^^^^^^^^^^
+
+.. parsed-literal::
+
+  String
+
 .. _PGColumnType:
 
 PGColumnType
@@ -348,12 +357,12 @@ Operator
    * - ``_st_d_within``
      - ``ST_DWithin``
 
-(For more details on what these operators do, refer to `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__.)
+(For more details on what these operators do, refer to `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__).
 
 .. note::
 
    - All operators take a JSON representation of ``geometry/geography`` values as input value.
-   - Input value for ``_st_d_within`` operator is an object:
+   - The input value for ``_st_d_within`` operator is an object:
 
      .. parsed-literal::
 
@@ -395,7 +404,7 @@ An empty JSONObject_
 
 ColumnPresetsExp
 ^^^^^^^^^^^^^^^^
-A JSONObject_ of Postgres column name to value mapping, where value can be static or derived from a session variable.
+A JSONObject_ of a Postgres column name to value mapping, where the value can be static or derived from a session variable.
 
 .. parsed-literal::
    :class: haskell-pre
@@ -406,7 +415,7 @@ A JSONObject_ of Postgres column name to value mapping, where value can be stati
       ..
    }
 
-E.g. where ``id`` is derived from session variable and ``city`` is a static value.
+E.g. where ``id`` is derived from a session variable and ``city`` is a static value.
 
 .. code-block:: json
 
@@ -478,4 +487,19 @@ CollectionQuery
    {
        "name": String,
        "query": String
+   }
+
+.. _CustomColumnNames:
+
+CustomColumnNames
+^^^^^^^^^^^^^^^^^^
+A JSONObject_ of Postgres column name to GraphQL name mapping
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   {
+      "column1" : String,
+      "column2" : String,
+      ..
    }

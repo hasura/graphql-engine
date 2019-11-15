@@ -18,8 +18,8 @@ This Docker Compose setup runs [Hasura GraphQL Engine](https://github.com/hasura
 - `docker-compose up -d`
 - Navigate to `http://localhost:5050`, login and add a new server with the following parameters:  
   General - Name: Hasura  
-  Connection - Host: `hasura`  
-  Username: `postgres`  
+  Connection - Host: `postgres`
+  Username: `postgres`
   Password: leave empty  
 
 ## Important endpoints

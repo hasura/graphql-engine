@@ -68,6 +68,4 @@ Install
 (Optional) Add shell completion
 -------------------------------
 
-To add command auto completion in the shell
-
-Refer to :ref:`hasura completion <hasura_completion>`
+To add command auto completion in the shell, refer to :ref:`hasura completion <hasura_completion>`.

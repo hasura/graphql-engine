@@ -38,6 +38,7 @@ import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleTogg
 import gqlPattern from '../Common/GraphQLValidation';
 import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
 import { displayTableName } from '../../../Common/utils/pgUtils';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 class Schema extends Component {
   constructor(props) {
@@ -184,6 +185,11 @@ class Schema extends Component {
           const handleCreateClick = () => {
             const schemaName = schemaNameEdit.trim();
 
+            if (!schemaName) {
+              document.getElementById('schema-name-input').focus();
+              return;
+            }
+
             const successCb = () => {
               dispatch(updateCurrentSchema(schemaName));
 
@@ -217,6 +223,7 @@ class Schema extends Component {
             <div className={styles.display_inline + ' ' + styles.add_mar_left}>
               <div className={styles.display_inline}>
                 <input
+                  id="schema-name-input"
                   type="text"
                   value={schemaNameEdit}
                   onChange={handleSchemaNameChange}
@@ -315,6 +322,13 @@ class Schema extends Component {
           e.stopPropagation();
           e.preventDefault();
 
+          const isOk = getConfirmation(
+            'This will expose all the listed tables/views over the GraphQL API'
+          );
+          if (!isOk) {
+            return;
+          }
+
           dispatch(addAllUntrackedTablesSql(allUntrackedTables));
         };
 
@@ -366,7 +380,9 @@ class Schema extends Component {
                   Track
                 </Button>
               </div>
-              <div className={styles.display_inline}>{displayTableName(table)}</div>
+              <div className={styles.display_inline}>
+                {displayTableName(table)}
+              </div>
               {gqlCompatibilityWarning}
             </div>
           );
@@ -406,6 +422,13 @@ class Schema extends Component {
         const trackAllRelations = e => {
           e.stopPropagation();
           e.preventDefault();
+
+          const isOk = getConfirmation(
+            'This will add all the listed foreign-keys as relationships in the GraphQL schema'
+          );
+          if (!isOk) {
+            return;
+          }
 
           this.props.dispatch(autoTrackRelations(untrackedRelations));
         };

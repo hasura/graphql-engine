@@ -6,18 +6,31 @@ const Modal = ({
   show = true,
   title,
   onClose,
-  onSubmit,
+  customClass = '',
+  onSubmit = null,
   onCancel = null,
   submitText = null,
   submitTestId = null,
   children,
 }) => {
-  return (
-    <BootstrapModal show={show} onHide={onClose}>
+  const getHeader = () => {
+    return (
       <BootstrapModal.Header closeButton>
         <BootstrapModal.Title>{title}</BootstrapModal.Title>
       </BootstrapModal.Header>
-      <BootstrapModal.Body>{children}</BootstrapModal.Body>
+    );
+  };
+
+  const getBody = () => {
+    return <BootstrapModal.Body>{children}</BootstrapModal.Body>;
+  };
+
+  const getFooter = () => {
+    if (!onSubmit) {
+      return;
+    }
+
+    return (
       <BootstrapModal.Footer>
         <BootstrapModalButton onClick={onCancel || onClose}>
           Cancel
@@ -30,6 +43,14 @@ const Modal = ({
           {submitText || 'Submit'}
         </BootstrapModalButton>
       </BootstrapModal.Footer>
+    );
+  };
+
+  return (
+    <BootstrapModal show={show} onHide={onClose} dialogClassName={customClass}>
+      {getHeader()}
+      {getBody()}
+      {getFooter()}
     </BootstrapModal>
   );
 };

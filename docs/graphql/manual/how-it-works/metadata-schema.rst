@@ -1,28 +1,31 @@
 .. _hasura_metadata_schema:
 
-Hasura GraphQL engine metadata schema
-=====================================
+Metadata catalogue
+==================
 
 .. contents:: Table of contents
   :backlinks: none
   :depth: 2
   :local:
 
-Hasura GraphQL engine uses a set of internal tables to manage the state of the database and the
-GraphQL schema. It uses the data in these tables to generate the GraphQL API which then can be accessed
-from different clients.
+What is the metadata catalogue?
+-------------------------------
 
-Hasura GraphQL engine when initialized, creates a schema called ``hdb_catalog`` in the Postgres database and
+The Hasura metadata catalogue is a set of internal tables used to manage the state of the database and the
+GraphQL schema. Hasura GraphQL engine uses the data in the catalogue to generate the GraphQL API
+which then can be accessed from different clients.
+
+The Hasura GraphQL engine when initialized, creates a schema called ``hdb_catalog`` in the Postgres database and
 initializes a few tables under it as described below.
 
 **hdb_catalog** schema
 ----------------------
 
-This schema is created by Hasura GraphQL Engine to manage its internal state. Whenever a
-table/permission/relationship is created/updated using the Hasura console or the metadata API. Hasura GraphQL engine
+This schema is created by the Hasura GraphQL engine to manage its internal state. Whenever a
+table/permission/relationship is created/updated using the Hasura console or the metadata API, the Hasura GraphQL engine
 captures that information and stores it in the corresponding tables.
 
-The following tables are used by Hasura GraphQL engine:
+The following tables are used by the Hasura GraphQL engine:
 
 **hdb_table** table
 ^^^^^^^^^^^^^^^^^^^
@@ -146,3 +149,23 @@ Column Definitions
 | is_system_defined   | If it is true, then the permission is created by GraphQL engine for internal purpose. If |
 |                     | it is false, then the permission is created by the end user.                             |
 +---------------------+------------------------------------------------------------------------------------------+
+
+.. note::
+
+  This section is a work in progress. There have been other tables and columns added to the catalogue to
+  support new features since this was last updated.
+
+Exploring the catalogue
+-----------------------
+
+You can check the current schema and contents of the catalogue by exploring the ``hdb_catalog``
+schema through a Postgres client.
+
+Catalogue versioning
+--------------------
+
+Whenever the schema of the catalogue is modified *(typically to support new features)* a new version of the
+catalogue is generated.
+
+The catalogue version is upgraded automatically on startup if a new version is available during Hasura GraphQL engine
+updates.

@@ -117,3 +117,15 @@ export const getKeyDef = (config, constraintName) => {
     </div>
   );
 };
+
+export const getRootFieldLabel = rfType => {
+  const labels = {
+    select: 'Select',
+    select_by_pk: 'Select by PK',
+    select_aggregate: 'Select Aggregate',
+    insert: 'Insert',
+    update: 'Update',
+    delete: 'Delete',
+  };
+  return labels[rfType];
+};

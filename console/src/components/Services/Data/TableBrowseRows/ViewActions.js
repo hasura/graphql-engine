@@ -8,6 +8,7 @@ import {
   showErrorNotification,
 } from '../../Common/Notification';
 import dataHeaders from '../Common/Headers';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 /* ****************** View actions *************/
 const V_SET_DEFAULTS = 'ViewTable/V_SET_DEFAULTS';
@@ -166,18 +167,22 @@ const fetchManualTriggers = tableName => {
 
 const deleteItem = pkClause => {
   return (dispatch, getState) => {
-    const isOk = confirm('Permanently delete this row?');
+    const confirmMessage =
+      'This will permanently delete this row from this table';
+    const isOk = getConfirmation(confirmMessage);
     if (!isOk) {
       return;
     }
+
     const state = getState();
+
     const url = Endpoints.query;
     const reqBody = {
       type: 'delete',
       args: {
         table: {
           name: state.tables.currentTable,
-          schema: getState().tables.currentSchema,
+          schema: state.tables.currentSchema,
         },
         where: pkClause,
       },

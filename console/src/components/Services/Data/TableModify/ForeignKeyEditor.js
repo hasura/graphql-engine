@@ -13,6 +13,8 @@ import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import ForeignKeySelector from '../Common/ReusableComponents/ForeignKeySelector';
 import { updateSchemaInfo } from '../DataActions';
 
+import { getConfirmation } from '../../../Common/utils/jsUtils';
+
 const ForeignKeyEditor = ({
   tableSchema,
   allSchemas,
@@ -138,7 +140,7 @@ const ForeignKeyEditor = ({
     let removeFk;
     if (!isLast) {
       removeFk = () => {
-        const isOk = window.confirm('Are you sure?');
+        const isOk = getConfirmation();
         if (isOk) {
           dispatch(removeForeignKey(i, tableSchema, orderedColumns));
         }

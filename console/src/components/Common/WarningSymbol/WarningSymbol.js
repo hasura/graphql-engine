@@ -9,12 +9,14 @@ const WarningSymbol = ({
   tooltipPlacement = 'right',
   customStyle = null,
 }) => {
-  const tooltip = <Tooltip>{tooltipText}</Tooltip>;
+  const tooltip = <Tooltip id={tooltipText}>{tooltipText}</Tooltip>;
 
   return (
     <div className={styles.display_inline}>
       <OverlayTrigger placement={tooltipPlacement} overlay={tooltip}>
-        <WarningIcon customStyle={customStyle} />
+        <span>
+          <WarningIcon customStyle={customStyle} />
+        </span>
       </OverlayTrigger>
     </div>
   );

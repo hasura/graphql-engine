@@ -49,6 +49,8 @@ type Driver interface {
 	// Migrate will call this function only once per instance.
 	Close() error
 
+	Scan() error
+
 	// Lock should acquire a database lock so that only one migration process
 	// can run at a time. Migrate will call this function before Run is called.
 	// If the implementation can't provide this functionality, return nil.
@@ -101,6 +103,10 @@ type Driver interface {
 	Next(version uint64) (nextVersion uint64, ok bool)
 
 	Read(version uint64) (ok bool)
+
+	PushToList(migration io.Reader, fileType string, list *CustomList) error
+
+	Squash(list *CustomList, ret chan<- interface{})
 
 	SettingsDriver
 

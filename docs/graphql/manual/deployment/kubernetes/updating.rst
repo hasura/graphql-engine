@@ -6,8 +6,8 @@ Updating Hasura GraphQL engine running on Kubernetes
   :depth: 1
   :local:
 
-This guide will help you update Hasura GraphQL engine running on Kubernetes. This guide assumes that you already have
-Hasura GraphQL engine running on Kubernetes.
+This guide will help you update the Hasura GraphQL engine running on Kubernetes. This guide assumes that you already have
+the Hasura GraphQL engine running on Kubernetes.
 
 Step 1: Check the latest release version
 ----------------------------------------
@@ -18,7 +18,7 @@ The current latest version is:
 
    <code>hasura/graphql-engine:<span class="latest-release-tag">latest</span></code>
 
-All the versions can be found at: https://github.com/hasura/graphql-engine/releases
+All the versions can be found at: https://github.com/hasura/graphql-engine/releases.
 
 Step 2: Update the container image
 ----------------------------------
@@ -49,4 +49,12 @@ Step 3: Rollout the change
 .. code-block:: bash
 
   $ kubectl replace -f deployment.yaml
+
+
+.. note::
+
+  If you are downgrading to an older version of the GraphQL engine you might need to downgrade your metadata catalogue version
+  as described in :doc:`../downgrading`
+
+
 

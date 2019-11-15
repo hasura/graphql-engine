@@ -17,7 +17,9 @@ import {
   getTableDef,
   getSchemaTables,
   getTrackedTables,
+  checkIfTable,
 } from '../../../Common/utils/pgUtils';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 import { updateSchemaInfo } from '../DataActions';
 import { copyRolePermissions, permOpenEdit } from '../TablePermissions/Actions';
@@ -228,7 +230,15 @@ class PermissionsSummary extends Component {
 
     const getCellOnClick = (table, role, action) => {
       return () => {
-        dispatch(push(getTablePermissionsRoute(table)));
+        dispatch(
+          push(
+            getTablePermissionsRoute(
+              getTableSchema(table),
+              getTableName(table),
+              checkIfTable(table)
+            )
+          )
+        );
 
         if (role && action) {
           // TODO: fix this. above redirect clears state set by this
@@ -261,7 +271,7 @@ class PermissionsSummary extends Component {
                   ...copyState,
                   copyFromRole: role,
                   copyFromTable: currTable
-                    ? getTableNameWithSchema(null, false, currTable)
+                    ? getTableNameWithSchema(currTable)
                     : 'all',
                   copyFromAction: currRole ? 'all' : currAction,
                 },
@@ -770,7 +780,9 @@ class PermissionsSummary extends Component {
           return;
         }
 
-        if (window.confirm('Are you sure?')) {
+        const confirmMessage = 'This will overwrite any existing permissions';
+        const isOk = getConfirmation(confirmMessage);
+        if (isOk) {
           const onSuccess = () => {
             this.setState({ copyState: { ...this.initState.copyState } });
           };
@@ -800,7 +812,7 @@ class PermissionsSummary extends Component {
       const getFromTableOptions = () => {
         return currSchemaTrackedTables.map(table => {
           const tableName = getTableName(table);
-          const tableValue = getTableNameWithSchema(table, false);
+          const tableValue = getTableNameWithSchema(getTableDef(table));
 
           return (
             <option key={tableValue} value={tableValue}>
