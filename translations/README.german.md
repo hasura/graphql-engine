@@ -7,7 +7,7 @@
 <a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
 <a href="https://eepurl.com/dBUfJ5"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
 
-Hasura GraphQL Engine ist ein blitzschneller GraphQL Server, welcher dir die Möglichkeit bietet, **sofort und in Echtzeit GraphQL APIs in Postgres** zu entwickeln, die du mit mit [**webhook triggern**](../event-triggers.md) für Datenbank-Events und [**remote schematas**](../remote-schemas.md) für Businesslogik erweitern kannst.
+Hasura GraphQL Engine ist ein blitzschneller GraphQL Server, welcher dir die Möglichkeit bietet, **sofort und in Echtzeit GraphQL APIs in Postgres** zu entwickeln, die mit [**webhook triggern**](../event-triggers.md) für Datenbank-Events und [**remote schematas**](../remote-schemas.md) für Businesslogik erweitert werden können.
 
 Hasura hilft dir, GraphQL-Anwendungen basierend auf Postgres zu entwickeln oder schrittweise zu GraphQL zu wechseln für schon existierende Anwendungen, die Postgres benutzen.
 
@@ -48,7 +48,7 @@ Mehr dazu auf [hasura.io](https://hasura.io) und in den [Docs](https://docs.hasu
   - [Andere one-click Deployment Optionen](#andere-one-click-deployment-optionen)
 - [Architektur](#architektur)
 - [Client-side Tooling](#client-side-tooling)
-- [Füge Businesslogik hinzu](#fuege-businesslogik-hinzu)
+- [Füge Businesslogik hinzu](#füge-businesslogik-hinzu)
   - [Remote Schemas](#remote-schemas)
   - [Löse Webhooks und Datenbankevents aus](#löse-webhooks-und-datenbankevents-aus)
 - [Demos](#demos)
