@@ -39,7 +39,11 @@ class EditItem extends Component {
     if (!oldItem) {
       dispatch(
         replace(
-          `${globals.urlPrefix || ''}${getTableBrowseRoute(currentSchema, tableName, true)}`
+          `${globals.urlPrefix || ''}${getTableBrowseRoute(
+            currentSchema,
+            tableName,
+            true
+          )}`
         )
       );
       return null;
