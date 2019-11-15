@@ -7,7 +7,7 @@
 <a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
 <a href="https://eepurl.com/dBUfJ5"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
 
-Hasura GraphQL Engine ist ein blitzschneller GraphQL Server, welcher dir die Möglichkeit, bietet **sofort und in Echtzeit GraphQL APIs in Postgres**, mit [**webhook triggern**](../event-triggers.md) für Datenbank-Events und [**remote schematas**](../remote-schemas.md) für Businesslogik.
+Hasura GraphQL Engine ist ein blitzschneller GraphQL Server, welcher dir die Möglichkeit bietet, **sofort und in Echtzeit GraphQL APIs in Postgres** zu entwickeln, die du mit mit [**webhook triggern**](../event-triggers.md) für Datenbank-Events und [**remote schematas**](../remote-schemas.md) für Businesslogik erweitern kannst.
 
 Hasura hilft dir, GraphQL-Anwendungen basierend auf Postgres zu entwickeln oder schrittweise zu GraphQL zu wechseln für schon existierende Anwendungen, die Postgres benutzen.
 
@@ -25,15 +25,15 @@ Dazu mehr auf [hasura.io](https://hasura.io) und in den [Docs](https://docs.hasu
 
 ## Features
 
-- **Entwickle mächtige Queries**: Built-in Filter, Paginierung, Suchmuster, Bulk-Inserts, Updates, Löschen von Mutationen
+- **Entwickle mächtige Queries**: Built-in Filter, Paginierung, Suchmuster, Bulk-Inserts, Update- und Delete-Mutationen
 - **Echtzeit**: Konvertiere jede GraphQL Query zu einer Live-Query mit Hilfe von Subscriptions
-- **Merge Remote Schemas**: Zugriff auf individuelle GraphQL Schemas für Businesslogik mit einem einzigen GraphQL-Engine-Endpoint. [Mehr dazu](../remote-schemas.md).
+- **Merge Remote Schemas**: Zugriff auf individuelle GraphQL Schemas für Businesslogik mit einem einzigen GraphQL Engine-Endpoint. [Mehr dazu](../remote-schemas.md).
 - **Steuere Webhooks oder Severless-Funktionen**: Mit Postgres insert/update/delete Events. [Mehr dazu](../event-triggers.md).
 - **Funktioniert mit bereits existierenden Live-Datenbanken**: Steuere eine bereits existierende Postgres Datenbank an, um eine fertige GraphQL API zu erhalten
-- **Detailierte Zugriffssteuerung**: Dynamischer Zugriff der sich muehelos mit deinem Authentifizierungssystem verbinden laesst (z.B.: auth0, firebase-auth)
+- **Detailierte Zugriffssteuerung**: Dynamischer Zugriff, der sich mühelos mit deinem Authentifizierungssystem verbinden lässt (z.B.: auth0, firebase-auth)
 - **Hochperformant & wenig Speicherbedarf**: ~15MB docker image; ~50MB RAM @ 1000 req/s; multi-core aware
 - **Admin UI & Migration**: Admin UI & von Rails inspirierte Schemata-Integration
-- **Postgres** ❤️: Unterstuetzt Postgres Typen (PostGIS/geo-location, etc.), ändert Views zu _graphen_, löst gespeicherte Funktionen aus oder Prozesse mit Mutationen
+- **Postgres** ❤️: Unterstützt Postgres Typen (PostGIS/geo-location, etc.), ändert Views zu _Graphen_, löst gespeicherte Funktionen aus oder Prozesse mit Mutationen
 
 Mehr dazu auf [hasura.io](https://hasura.io) und in den [Docs](https://docs.hasura.io).
 
@@ -50,7 +50,7 @@ Mehr dazu auf [hasura.io](https://hasura.io) und in den [Docs](https://docs.hasu
 - [Client-side Tooling](#client-side-tooling)
 - [Füge Businesslogik hinzu](#fuege-businesslogik-hinzu)
   - [Remote Schemas](#remote-schemas)
-  - [Löse Webhooks und Datenbankevents aus](#loese-webhooks-und-datenbankevents-aus)
+  - [Löse Webhooks und Datenbankevents aus](#löse-webhooks-und-datenbankevents-aus)
 - [Demos](#demos)
   - [Realtime Applikationen](#realtime-applikationen)
   - [Videos](#videos)
@@ -66,7 +66,7 @@ Mehr dazu auf [hasura.io](https://hasura.io) und in den [Docs](https://docs.hasu
 
 ### One-click Deployment auf Heroku
 
-Der schnellste Weg, Hasura auszuprobieren ist mit Heroku.
+Der schnellste Weg, Hasura auszuprobieren, ist mit Heroku.
 
 1. Klick auf den folgenden Button, um mit dem kostenlosen Postgress Add-On die GraphQL Engine auf Heroku zu deployen:
 
@@ -84,7 +84,7 @@ Der schnellste Weg, Hasura auszuprobieren ist mit Heroku.
 
 Probiere die folgenden Guides für die one-click Deployment Optionen:
 
-| **Infra Anbieter** |                                                                                                                         **One-click link**                                                                                                                         |                                                            **Zusätzliche Information**                                                            |
+| **Infra Anbieter** |                                                                                                                         **One-click Link**                                                                                                                         |                                                            **Zusätzliche Information**                                                            |
 | :----------------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------------------: |
 |    DigitalOcean    |                  [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme)                  | [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
 |       Azure        | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) |                    [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html)                    |
@@ -97,7 +97,7 @@ Guides](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) od
 
 ## Architektur
 
-Die Hasura GraphQL Engine simuliert eine Postgres Datenbank-Instanz and kann Anfragen von Client-Apps verarbeiten. Es kann so konfigueriert werden, dass es mit deinem schon bestehenden Authentifizierungssystem funktioniert und kann dementsprechend Zugriffe via "field-level"-Regeln mit dynamischen Variablen von deinem Autehentifizierungssystem kontrollieren.
+Die Hasura GraphQL Engine simuliert eine Postgres Datenbank-Instanz and kann Anfragen von Client-Apps verarbeiten. Sie kann so konfigueriert werden, dass es mit deinem schon bestehenden Authentifizierungssystem funktioniert und kann dementsprechend Zugriffe via "field-level"-Regeln mit dynamischen Variablen von deinem Autehentifizierungssystem kontrollieren.
 
 Du kannst auch Remote-GraphQL Schemas einbinden und so eine vereinheitlichte GraphQL API benutzen.
 
@@ -159,7 +159,7 @@ Schaue dir die Beispiele in dem
 
 ## Support & Fehlerbehebung
 
-Die Dokumentation und die Community wird meistens bei der Fehlersuche und -behebung behilflich sein. Wenn du einen Bug gefunden hast oder mit uns in Verbindung treten möchtest, kannst du uns folgendermassen kontaktieren:
+Die Dokumentation und die Community hilft bei der Fehlersuche und -behebung. Wenn du einen Bug gefunden hast oder mit uns in Verbindung treten möchtest, kannst du uns folgendermassen kontaktieren:
 
 - Support & Feedback: [Discord](https://discord.gg/vBPpJkS)
 - Issue & Bug Tracking: [GitHub issues](https://github.com/hasura/graphql-engine/issues)
