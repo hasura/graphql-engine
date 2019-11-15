@@ -431,7 +431,14 @@ FROM
           'comment',
           (
             SELECT description FROM pg_description JOIN pg_trigger ON pg_description.objoid = pg_trigger.oid 
-            WHERE tgname = is_triggers.trigger_name
+            WHERE tgname = is_triggers.trigger_name AND tgrelid = (
+                SELECT 
+                  (
+                    (
+                      quote_ident(is_triggers.event_object_schema) || '.' || quote_ident(is_triggers.event_object_table)
+                    ):: text
+                  ):: regclass :: oid
+              )
           )
         )
       ) FILTER (WHERE is_triggers.trigger_name IS NOT NULL), '[]' :: JSON) AS triggers,
