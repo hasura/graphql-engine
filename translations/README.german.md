@@ -48,7 +48,7 @@ Mehr dazu auf [hasura.io](https://hasura.io) und in den [Docs](https://docs.hasu
   - [Andere one-click Deployment Optionen](#andere-one-click-deployment-optionen)
 - [Architektur](#architektur)
 - [Client-side Tooling](#client-side-tooling)
-- [Fuege Businesslogik hinzu](#fuege-businesslogik-hinzu)
+- [Füge Businesslogik hinzu](#füge-businesslogik-hinzu)
   - [Remote Schemas](#remote-schemas)
   - [Löse Webhooks und Datenbankevents aus](#löse-webhooks-und-datenbankevents-aus)
 - [Demos](#demos)
@@ -107,7 +107,7 @@ Du kannst auch Remote-GraphQL Schemas einbinden und so eine vereinheitlichte Gra
 
 Hasura funktioniert mit jedem GraphQL Client. Wir empfehlen [Apollo Client](https://github.com/apollographql/apollo-client). Andernfalls besuche [awesome-graphql](https://github.com/chentsulin/awesome-graphql) für eine Liste von anderen möglichen Clients.
 
-## Fuege Businesslogik hinzu
+## Füge Businesslogik hinzu
 
 Die GraphQL Engine bietet einfach zu verstehende, skalierende und performante Möglichkeiten, um deinem Backend individuelle Businesslogik hinzuzufügen.
 
