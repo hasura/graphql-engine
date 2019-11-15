@@ -70,7 +70,7 @@ Since we launched our [learn page](https://learn.hasura.io/), we are happy about
 
 - Add new tutorials (please reach out to us if you have ideas to avoid duplicate word)
 
-The README of the learn repository can be found [here](https://github.com/hasura/graphql-engine/tree/master/community/learn).
+The README of the learn repository can be found [here](https://github.com/hasura/learn-graphql).
 
 Apart from the learn content, we have identified three other ways of contributing with technical community content:
 
