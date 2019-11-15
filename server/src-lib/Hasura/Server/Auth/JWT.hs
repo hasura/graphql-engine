@@ -28,7 +28,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
-import           Hasura.Server.Utils             (diffTimeToMicro,
+import           Hasura.Server.Utils             (diffTimeToMicro, fmapL,
                                                   userRoleHeader)
 
 import qualified Control.Concurrent              as C
@@ -36,6 +36,7 @@ import qualified Crypto.JWT                      as Jose
 import qualified Data.Aeson                      as A
 import qualified Data.Aeson.Casing               as A
 import qualified Data.Aeson.TH                   as A
+import qualified Data.Attoparsec.Text            as AT
 import qualified Data.ByteString.Lazy            as BL
 import qualified Data.ByteString.Lazy.Char8      as BLC
 import qualified Data.CaseInsensitive            as CI
@@ -154,18 +155,27 @@ updateJwkRef (Logger logger) manager url jwkRef = do
     logAndThrow errMsg httpErr
 
   let parseErr e = "Error parsing JWK from url (" <> urlT <> "): " <> T.pack e
-  jwkset <- either (\e -> logAndThrow (parseErr e) Nothing) return $
-    A.eitherDecode respBody
+  jwkset <- either (\e -> logAndThrow (parseErr e) Nothing) return $ A.eitherDecode respBody
   liftIO $ modifyIORef jwkRef (const jwkset)
 
-  let mExpiresT = resp ^? Wreq.responseHeader "Expires"
-  forM mExpiresT $ \expiresT -> do
-    let expiresE = parseTimeM True defaultTimeLocale timeFmt $ CS.cs expiresT
-    expires  <- either (`logAndThrow` Nothing) return expiresE
-    currTime <- liftIO getCurrentTime
-    return $ diffUTCTime expires currTime
+  -- first check for Cache-Control header to get max-age, if not found, look for Expires header
+  let maybeCacheCtrl = resp ^? Wreq.responseHeader "Cache-Control"
+  case maybeCacheCtrl of
+    Just cacheCtrl -> do
+      let parseRes = parseCacheControlHeader $ bsToTxt cacheCtrl
+      maxAge <- either (`logAndThrow` Nothing) return parseRes
+      return $ Just $ fromInteger maxAge
+    Nothing -> do
+      let mExpiresT = resp ^? Wreq.responseHeader "Expires"
+      forM mExpiresT $ \expiresT -> do
+        let expiresE = parseTimeM True defaultTimeLocale timeFmt $ CS.cs expiresT
+        expires  <- either (`logAndThrow` Nothing) return expiresE
+        currTime <- liftIO getCurrentTime
+        return $ diffUTCTime expires currTime
 
   where
+    parseCacheControlHeader = runParser cacheControlHeaderParser
+
     logAndThrow
       :: (MonadIO m, MonadError T.Text m)
       => T.Text -> Maybe JwkRefreshHttpError -> m a
@@ -412,3 +422,12 @@ instance A.FromJSON JWTConfig where
 
       runEither = either (invalidJwk . T.unpack) return
       invalidJwk msg = fail ("Invalid JWK: " <> msg)
+
+
+runParser :: AT.Parser a -> Text -> Either Text a
+runParser parser text =
+  fmapL T.pack $ AT.parseOnly parser text
+
+cacheControlHeaderParser :: AT.Parser Integer
+cacheControlHeaderParser =
+  ("s-maxage=" <|> "max-age=") *> AT.decimal
