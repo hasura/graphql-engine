@@ -167,15 +167,10 @@ just like any other role.
 Sync Users from Auth0
 ^^^^^^^^^^^^^^^^^^^^^
 
-Now, that you have created an Auth0 application and can signup/login, you will need a way to sync your users in Postgres as well.
-All you really need is the Auth0 ``user_id`` in something like a "users" table.
+Now that you have created an Auth0 application and can signup/login, you will need a way to sync your users in Postgres as well.
+All you really need is the Auth0 ``user_id`` in something like a ``users`` table.
 
-Using Auth0 Rules again, add the following rule which will insert a new user everytime someone signs-up.
-
-.. note::
-
-   We need to use an ``upsert`` operation here because social logins do not distinguish between sign-up and login. Hence, we need to run this rule everytime a successful login is made and do nothing if the user already exists.
-
+Using Auth0 Rules again, add the following rule which will insert a new user every time someone signs up.
 
 .. code-block:: javascript
 
@@ -202,3 +197,7 @@ Using Auth0 Rules again, add the following rule which will insert a new user eve
    }
 
 That’s it! This rule will be triggered on every successful signup/login and sync your Auth0 user into your postgres database.
+
+.. note::
+
+   We need to use an ``upsert`` operation here because social logins do not distinguish between sign-up and login. Hence, we need to run this rule every time a successful login is made and do nothing if the user already exists.
