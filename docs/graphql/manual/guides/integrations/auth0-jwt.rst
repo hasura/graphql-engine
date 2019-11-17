@@ -26,7 +26,16 @@ Configure Auth0 Rules & Callback URLs
 In the settings of the application, add appropriate (e.g: http://localhost:3000/callback) URLs as ``Allowed Callback
 URLs`` and ``Allowed Web Origins``. Add domain specific URLs as well for production apps (e.g: https://myapp.com/callback).
 
-In the dashboard, navigate to ``Rules``. Add the following rules to add our custom JWT claims:
+Auth0 has multiple versions of its SDK available and unfortunately they have different semantics
+when it comes to JWT handling. If you're using `Auth0.js <https://auth0.com/docs/libraries/auth0js>`__,
+you'll need to add a rule to update the `idToken`. If you're using the `Auth0 Single Page App SDK <https://auth0.com/docs/libraries/auth0-spa-js>`__,
+you'll need to add a rule to update the `accessToken`. If you update the wrong token, the necessary
+Hasura claims will not appear in the generated JWT and your client will not authenticate properly.
+
+In both cases you'll want to open the Auth0 dashboard and then navigate to "Rules". Then add a rule
+to add the custom JWT claims. You can name the rule anything you want.
+
+For Auth0.js:
 
 .. code-block:: javascript
 
@@ -42,6 +51,21 @@ In the dashboard, navigate to ``Rules``. Add the following rules to add our cust
       callback(null, user, context);
     }
 
+For auth0-spa-js:
+
+.. code-block:: javascript
+
+    function (user, context, callback) {
+      const namespace = "https://hasura.io/jwt/claims";
+      context.accessToken[namespace] =
+        {
+          'x-hasura-default-role': 'user',
+          // do some custom logic to decide allowed roles
+          'x-hasura-allowed-roles': ['user'],
+          'x-hasura-user-id': user.user_id
+        };
+      callback(null, user, context);
+    }
 
 .. _test-auth0:
 
