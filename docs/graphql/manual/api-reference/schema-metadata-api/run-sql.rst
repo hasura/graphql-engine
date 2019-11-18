@@ -205,6 +205,10 @@ Args syntax
      - false
      - Boolean
      - When set to ``false``, the sql is executed without checking metadata dependencies.
+   * - read_only
+     - false
+     - Boolean
+     - When set to ``true``, the query will be run in ``READ ONLY`` transaction access mode which means only ``select`` queries will be successful. This flag ensures that the graphql schema is not refreshed and is hence highly performant.
 
 Response
 ^^^^^^^^
