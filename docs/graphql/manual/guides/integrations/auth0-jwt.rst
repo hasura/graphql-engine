@@ -201,3 +201,8 @@ That’s it! This rule will be triggered on every successful signup/login and sy
 .. note::
 
    We need to use an ``upsert`` operation here because social logins do not distinguish between sign-up and login. Hence, we need to run this rule every time a successful login is made and do nothing if the user already exists.
+
+
+.. admonition:: Local dev with Auth0 rules
+
+   The sync step will require a reachable endpoint to Hasura and this is not possible in localhost. You can use ``ngrok`` or similar services to expose your endpoint with a public endpoint temporarily.
