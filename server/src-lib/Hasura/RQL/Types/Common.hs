@@ -12,7 +12,10 @@ module Hasura.RQL.Types.Common
 
        , ToAesonPairs(..)
        , WithTable(..)
+       , ColValsG
        , ColVals
+       , TextOrValue(..)
+       , ColTextVals
        , MutateResp(..)
        , ForeignKey(..)
        , CustomColumnNames
@@ -161,12 +164,25 @@ instance (ToAesonPairs a) => ToJSON (WithTable a) where
   toJSON (WithTable tn rel) =
     object $ ("table" .= tn):toAesonPairs rel
 
-type ColVals = HM.HashMap PGCol Value
+type ColValsG a = HM.HashMap PGCol a
 
-data MutateResp
+type ColVals = ColValsG Value
+
+data TextOrValue
+  = ToVText !Text
+  | ToVValue !Value -- ^ for GeoJSON values
+  deriving (Show, Eq)
+
+instance FromJSON TextOrValue where
+  parseJSON (String t) = pure $ ToVText t
+  parseJSON v          = pure $ ToVValue v
+
+type ColTextVals = ColValsG TextOrValue
+
+data MutateResp a
   = MutateResp
   { _mrAffectedRows     :: !Int
-  , _mrReturningColumns :: ![ColVals]
+  , _mrReturningColumns :: ![ColValsG a]
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''MutateResp)
 
