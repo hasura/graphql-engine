@@ -12,6 +12,7 @@ import Data.Type.Equality
 
 class (MonadBaseControl b m, forall a. StatelessProof m a) => MonadStateless b m | m -> b where
   liftWithStateless :: ((forall a. m a -> b a) -> b c) -> m c
+
 instance (MonadBaseControl b m, forall a. StatelessProof m a) => MonadStateless b m where
   liftWithStateless f = liftBaseWith $ \lowerBase ->
     let lowerBasePure :: forall a. m a -> b a

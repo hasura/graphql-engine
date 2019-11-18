@@ -69,7 +69,7 @@ data GQExecPlan a
 -- | Execution context
 data ExecutionCtx
   = ExecutionCtx
-  { _ecxLogger          :: !L.Logger
+  { _ecxLogger          :: !(L.Logger L.HasuraEngine)
   , _ecxSqlGenCtx       :: !SQLGenCtx
   , _ecxPgExecCtx       :: !PGExecCtx
   , _ecxPlanCache       :: !EP.PlanCache
@@ -407,5 +407,4 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
 
     getCookieHdr = fmap (\h -> ("Set-Cookie", h))
 
-    mkRespHeaders hdrs =
-      map (\(k, v) -> Header (bsToTxt $ CI.original k, bsToTxt v)) hdrs
+    mkRespHeaders = map (\(k, v) -> Header (bsToTxt $ CI.original k, bsToTxt v))

@@ -3,6 +3,7 @@
 module Main where
 
 import           Hasura.App
+import           Hasura.Logging             (HasuraEngine)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
 import           Hasura.RQL.Types
@@ -18,7 +19,7 @@ import qualified Database.PG.Query          as Q
 main :: IO ()
 main = parseArgs >>= unAppM . runApp
 
-runApp :: HGEOptions -> AppM ()
+runApp :: HGEOptions HasuraEngine -> AppM ()
 runApp (HGEOptionsG rci hgeCmd) =
   case hgeCmd of
     HCServe serveOptions -> do

@@ -93,7 +93,7 @@ mkPayload dbId instanceId version metrics = do
   where topic = bool "server" "server_test" isDevVersion
 
 runTelemetry
-  :: Logger
+  :: Logger HasuraEngine
   -> HTTP.Manager
   -> IORef (SchemaCache, SchemaCacheVer)
   -> Text
@@ -194,7 +194,7 @@ instance A.ToJSON TelemetryHttpError where
              ]
 
 
-instance ToEngineLog TelemetryLog where
+instance ToEngineLog TelemetryLog HasuraEngine where
   toEngineLog tl = (_tlLogLevel tl, ELTInternal "telemetry-log", A.toJSON tl)
 
 mkHttpError

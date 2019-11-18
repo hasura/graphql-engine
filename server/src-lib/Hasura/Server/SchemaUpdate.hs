@@ -50,7 +50,7 @@ instance ToJSON SchemaSyncThreadLog where
            , "info" .= info
            ]
 
-instance ToEngineLog SchemaSyncThreadLog where
+instance ToEngineLog SchemaSyncThreadLog HasuraEngine where
   toEngineLog threadLog =
     (suelLogLevel threadLog, ELTInternal "schema-sync-thread", toJSON threadLog)
 
@@ -75,7 +75,7 @@ startSchemaSync
   :: (MonadIO m)
   => SQLGenCtx
   -> PG.PGPool
-  -> Logger
+  -> Logger HasuraEngine
   -> HTTP.Manager
   -> SchemaCacheRef
   -> InstanceId
@@ -110,7 +110,7 @@ startSchemaSync sqlGenCtx pool logger httpMgr cacheRef instanceId cacheInitTime 
 listener
   :: SQLGenCtx
   -> PG.PGPool
-  -> Logger
+  -> Logger HasuraEngine
   -> HTTP.Manager
   -> STM.TVar (Maybe EventPayload)
   -> SchemaCacheRef
@@ -165,7 +165,7 @@ listener sqlGenCtx pool logger httpMgr updateEventRef
 processor
   :: SQLGenCtx
   -> PG.PGPool
-  -> Logger
+  -> Logger HasuraEngine
   -> HTTP.Manager
   -> STM.TVar (Maybe EventPayload)
   -> SchemaCacheRef
@@ -197,7 +197,7 @@ processor sqlGenCtx pool logger httpMgr updateEventRef
 refreshSchemaCache
   :: SQLGenCtx
   -> PG.PGPool
-  -> Logger
+  -> Logger HasuraEngine
   -> HTTP.Manager
   -> SchemaCacheRef
   -> ThreadType
@@ -213,11 +213,11 @@ refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef threadType msg = d
   runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
   pgCtx = PGExecCtx pool PG.Serializable
 
-logInfo :: Logger -> ThreadType -> Value -> IO ()
+logInfo :: Logger HasuraEngine -> ThreadType -> Value -> IO ()
 logInfo logger threadType val = unLogger logger $
   SchemaSyncThreadLog LevelInfo threadType val
 
-logError :: ToJSON a => Logger -> ThreadType -> a -> IO ()
+logError :: ToJSON a => Logger HasuraEngine -> ThreadType -> a -> IO ()
 logError logger threadType err =
   unLogger logger $ SchemaSyncThreadLog LevelError threadType $
     object ["error" .= toJSON err]

@@ -4,7 +4,6 @@ module Hasura.Server.Init where
 import qualified Data.Aeson                       as J
 import qualified Data.Aeson.Casing                as J
 import qualified Data.Aeson.TH                    as J
-import qualified Data.ByteString.Lazy.Char8       as BLC
 import qualified Data.HashSet                     as Set
 import qualified Data.String                      as DataString
 import qualified Data.Text                        as T
@@ -68,7 +67,7 @@ data RawConnParams
 
 type RawAuthHook = AuthHookG (Maybe T.Text) (Maybe AuthHookType)
 
-data RawServeOptions
+data RawServeOptions a
   = RawServeOptions
   { rsoPort             :: !(Maybe Int)
   , rsoHost             :: !(Maybe HostPreference)
@@ -88,11 +87,11 @@ data RawServeOptions
   , rsoMxRefetchInt     :: !(Maybe LQ.RefetchInterval)
   , rsoMxBatchSize      :: !(Maybe LQ.BatchSize)
   , rsoEnableAllowlist  :: !Bool
-  , rsoEnabledLogTypes  :: !(Maybe [L.EngineLogType])
+  , rsoEnabledLogTypes  :: !(Maybe [L.EngineLogType a])
   , rsoLogLevel         :: !(Maybe L.LogLevel)
-  } deriving (Show, Eq)
+  } --deriving (Show, Eq)
 
-data ServeOptions
+data ServeOptions a
   = ServeOptions
   { soPort             :: !Int
   , soHost             :: !HostPreference
@@ -110,9 +109,9 @@ data ServeOptions
   , soEnabledAPIs      :: !(Set.HashSet API)
   , soLiveQueryOpts    :: !LQ.LiveQueriesOptions
   , soEnableAllowlist  :: !Bool
-  , soEnabledLogTypes  :: !(Set.HashSet L.EngineLogType)
+  , soEnabledLogTypes  :: !(Set.HashSet (L.EngineLogType a))
   , soLogLevel         :: !L.LogLevel
-  } deriving (Show, Eq)
+  } --deriving (Show, Eq)
 
 data RawConnInfo =
   RawConnInfo
@@ -146,8 +145,8 @@ $(J.deriveJSON (J.defaultOptions { J.constructorTagModifier = map toLower })
 
 instance Hashable API
 
-type HGECommand = HGECommandG ServeOptions
-type RawHGECommand = HGECommandG RawServeOptions
+type HGECommand a = HGECommandG (ServeOptions a)
+type RawHGECommand a = HGECommandG (RawServeOptions a)
 
 data HGEOptionsG a
   = HGEOptionsG
@@ -155,8 +154,8 @@ data HGEOptionsG a
   , hoCommand  :: !(HGECommandG a)
   } deriving (Show, Eq)
 
-type RawHGEOptions = HGEOptionsG RawServeOptions
-type HGEOptions = HGEOptionsG ServeOptions
+type RawHGEOptions a = HGEOptionsG (RawServeOptions a)
+type HGEOptions a = HGEOptionsG (ServeOptions a)
 
 type Env = [(String, String)]
 
@@ -207,8 +206,8 @@ instance FromEnv LQ.RefetchInterval where
 instance FromEnv JWTConfig where
   fromEnv = readJson
 
-instance FromEnv [L.EngineLogType] where
-  fromEnv = readLogTypes
+instance (L.EnabledLogTypes (L.EngineLogType a)) => FromEnv [L.EngineLogType a] where
+  fromEnv = L.parseEnabledLogTypes
 
 instance FromEnv L.LogLevel where
   fromEnv = readLogLevel
@@ -275,7 +274,7 @@ withEnvJwtConf :: Maybe JWTConfig -> String -> WithEnv (Maybe JWTConfig)
 withEnvJwtConf jVal envVar =
   maybe (considerEnv envVar) returnJust jVal
 
-mkHGEOptions :: RawHGEOptions -> WithEnv HGEOptions
+mkHGEOptions :: (L.EnabledLogTypes (L.EngineLogType a)) => RawHGEOptions a -> WithEnv (HGEOptions a)
 mkHGEOptions (HGEOptionsG rawConnInfo rawCmd) =
   HGEOptionsG <$> connInfo <*> cmd
   where
@@ -298,7 +297,7 @@ mkRawConnInfo rawConnInfo = do
     rawDBUrl = connUrl rawConnInfo
     retries = connRetries rawConnInfo
 
-mkServeOptions :: RawServeOptions -> WithEnv ServeOptions
+mkServeOptions :: (L.EnabledLogTypes (L.EngineLogType a)) => RawServeOptions a -> WithEnv (ServeOptions a)
 mkServeOptions rso = do
   port <- fromMaybe 8080 <$>
           withEnv (rsoPort rso) (fst servePortEnv)
@@ -322,7 +321,7 @@ mkServeOptions rso = do
                      withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
   lqOpts <- mkLQOpts
   enableAL <- withEnvBool (rsoEnableAllowlist rso) $ fst enableAllowlistEnv
-  enabledLogs <- Set.fromList . fromMaybe (Set.toList L.defaultEnabledLogTypes) <$>
+  enabledLogs <- maybe L.defaultEnabledLogTypes (Set.fromList) <$>
                  withEnv (rsoEnabledLogTypes rso) (fst enabledLogsEnv)
   serverLogLevel <- fromMaybe L.LevelInfo <$> withEnv (rsoLogLevel rso) (fst logLevelEnv)
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
@@ -775,16 +774,16 @@ readAPIs = mapM readAPI . T.splitOn "," . T.pack
           "CONFIG"    -> Right CONFIG
           _            -> Left "Only expecting list of comma separated API types metadata,graphql,pgdump,developer,config"
 
-readLogTypes :: String -> Either String [L.EngineLogType]
-readLogTypes = mapM readLogType . T.splitOn "," . T.pack
-  where readLogType si = case T.toLower $ T.strip si of
-          "startup"       -> Right L.ELTStartup
-          "http-log"      -> Right L.ELTHttpLog
-          "webhook-log"   -> Right L.ELTWebhookLog
-          "websocket-log" -> Right L.ELTWebsocketLog
-          "query-log"     -> Right L.ELTQueryLog
-          _               -> Left $ "Valid list of comma-separated log types: "
-                             <> BLC.unpack (J.encode L.userAllowedLogTypes)
+-- readLogTypes :: String -> Either String [L.EngineLogType]
+-- readLogTypes = mapM readLogType . T.splitOn "," . T.pack
+--   where readLogType si = case T.toLower $ T.strip si of
+--           "startup"       -> Right L.ELTStartup
+--           "http-log"      -> Right L.ELTHttpLog
+--           "webhook-log"   -> Right L.ELTWebhookLog
+--           "websocket-log" -> Right L.ELTWebsocketLog
+--           "query-log"     -> Right L.ELTQueryLog
+--           _               -> Left $ "Valid list of comma-separated log types: "
+--                              <> BLC.unpack (J.encode L.userAllowedLogTypes)
 
 readLogLevel :: String -> Either String L.LogLevel
 readLogLevel s = case T.toLower $ T.strip $ T.pack s of
@@ -946,9 +945,9 @@ fallbackRefetchDelayEnv =
   <> "live queries which cannot be multiplexed. Default: 1000 (1sec)"
   )
 
-parseEnabledLogs :: Parser (Maybe [L.EngineLogType])
+parseEnabledLogs :: (L.EnabledLogTypes a) => Parser (Maybe [a])
 parseEnabledLogs = optional $
-  option (eitherReader readLogTypes)
+  option (eitherReader L.parseEnabledLogTypes)
          ( long "enabled-log-types" <>
            help (snd enabledLogsEnv)
          )
@@ -985,7 +984,7 @@ connInfoToLog connInfo =
           , "database_url" J..= s
           ]
 
-serveOptsToLog :: ServeOptions -> StartupLog
+serveOptsToLog :: (J.ToJSON (L.EngineLogType a)) => ServeOptions a -> StartupLog
 serveOptsToLog so =
   StartupLog L.LevelInfo "server_configuration" infoVal
   where

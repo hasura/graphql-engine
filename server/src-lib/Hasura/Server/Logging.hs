@@ -37,17 +37,15 @@ import qualified Network.HTTP.Types        as HTTP
 import qualified Network.Wai               as Wai
 
 import           Hasura.HTTP
-import           Hasura.Logging            (EngineLogType (..))
+import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Compression
 import           Hasura.Server.Utils
 
-import qualified Hasura.Logging            as L
-
 data StartupLog
   = StartupLog
-  { slLogLevel :: !L.LogLevel
+  { slLogLevel :: !LogLevel
   , slKind     :: !T.Text
   , slInfo     :: !Value
   } deriving (Show, Eq)
@@ -58,13 +56,13 @@ instance ToJSON StartupLog where
            , "info" .= info
            ]
 
-instance L.ToEngineLog StartupLog where
+instance ToEngineLog StartupLog HasuraEngine where
   toEngineLog startupLog =
     (slLogLevel startupLog, ELTStartup, toJSON startupLog)
 
 data PGLog
   = PGLog
-  { plLogLevel :: !L.LogLevel
+  { plLogLevel :: !LogLevel
   , plMessage  :: !T.Text
   } deriving (Show, Eq)
 
@@ -72,13 +70,13 @@ instance ToJSON PGLog where
   toJSON (PGLog _ msg) =
     object ["message" .= msg]
 
-instance L.ToEngineLog PGLog where
+instance ToEngineLog PGLog HasuraEngine where
   toEngineLog pgLog =
     (plLogLevel pgLog, ELTInternal "pg-client", toJSON pgLog)
 
 data MetadataLog
   = MetadataLog
-  { mlLogLevel :: !L.LogLevel
+  { mlLogLevel :: !LogLevel
   , mlMessage  :: !T.Text
   , mlInfo     :: !Value
   } deriving (Show, Eq)
@@ -89,18 +87,18 @@ instance ToJSON MetadataLog where
            , "info" .= infoVal
            ]
 
-instance L.ToEngineLog MetadataLog where
+instance ToEngineLog MetadataLog HasuraEngine where
   toEngineLog ml =
     (mlLogLevel ml, ELTInternal "metadata", toJSON ml)
 
 mkInconsMetadataLog :: [InconsistentMetadataObj] -> MetadataLog
 mkInconsMetadataLog objs =
-  MetadataLog L.LevelWarn "Inconsistent Metadata!" $
+  MetadataLog LevelWarn "Inconsistent Metadata!" $
     object [ "objects" .= objs]
 
 data WebHookLog
   = WebHookLog
-  { whlLogLevel   :: !L.LogLevel
+  { whlLogLevel   :: !LogLevel
   , whlStatusCode :: !(Maybe HTTP.Status)
   , whlUrl        :: !T.Text
   , whlMethod     :: !HTTP.StdMethod
@@ -108,7 +106,7 @@ data WebHookLog
   , whlResponse   :: !(Maybe T.Text)
   } deriving (Show)
 
-instance L.ToEngineLog WebHookLog where
+instance ToEngineLog WebHookLog HasuraEngine where
   toEngineLog webHookLog =
     (whlLogLevel webHookLog, ELTWebhookLog, toJSON webHookLog)
 
@@ -124,7 +122,7 @@ instance ToJSON WebHookLog where
 
 class (Monad m) => HttpLog m where
   logHttpError
-    :: L.Logger
+    :: Logger HasuraEngine
     -- ^ the logger
     -> Maybe UserInfo
     -- ^ user info may or may not be present (error can happen during user resolution)
@@ -141,7 +139,7 @@ class (Monad m) => HttpLog m where
     -> m ()
 
   logHttpSuccess
-    :: L.Logger
+    :: Logger HasuraEngine
     -- ^ the logger
     -> Maybe UserInfo
     -- ^ user info may or may not be present (error can happen during user resolution)
@@ -278,18 +276,18 @@ mkHttpErrorLogContext userInfoM reqId req err query mTimeT compressTypeM headers
 
 data HttpLogLine
   = HttpLogLine
-  { _hlLogLevel :: !L.LogLevel
+  { _hlLogLevel :: !LogLevel
   , _hlLogLine  :: !HttpLogContext
   }
 
-instance L.ToEngineLog HttpLogLine where
+instance ToEngineLog HttpLogLine HasuraEngine where
   toEngineLog (HttpLogLine logLevel logLine) =
     (logLevel, ELTHttpLog, toJSON logLine)
 
 mkHttpLog :: HttpLogContext -> HttpLogLine
 mkHttpLog httpLogCtx =
   let isError = isJust $ olError $ hlcOperation httpLogCtx
-      logLevel = bool L.LevelInfo L.LevelError isError
+      logLevel = bool LevelInfo LevelError isError
   in HttpLogLine logLevel httpLogCtx
 
 computeTimeDiff :: Maybe (UTCTime, UTCTime) -> Maybe Double

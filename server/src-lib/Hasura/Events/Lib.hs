@@ -55,7 +55,7 @@ newtype EventInternalErr
   = EventInternalErr QErr
   deriving (Show, Eq)
 
-instance L.ToEngineLog EventInternalErr where
+instance L.ToEngineLog EventInternalErr L.HasuraEngine where
   toEngineLog (EventInternalErr qerr) = (L.LevelError, L.eventTriggerLogType, toJSON qerr)
 
 data TriggerMeta
@@ -171,7 +171,7 @@ initEventEngineCtx maxT fetchI = do
   return $ EventEngineCtx q c maxT fetchI
 
 processEventQueue
-  :: L.LoggerCtx -> LogEnvHeaders -> HTTP.Manager-> Q.PGPool
+  :: L.LoggerCtx L.HasuraEngine -> LogEnvHeaders -> HTTP.Manager-> Q.PGPool
   -> IORef (SchemaCache, SchemaCacheVer) -> EventEngineCtx
   -> IO ()
 processEventQueue logctx logenv httpMgr pool cacheRef eectx = do
@@ -183,7 +183,7 @@ processEventQueue logctx logenv httpMgr pool cacheRef eectx = do
                     logenv httpMgr pool (CacheRef cacheRef) eectx
 
 pushEvents
-  :: L.Logger -> Q.PGPool -> EventEngineCtx -> IO ()
+  :: L.Logger L.HasuraEngine -> Q.PGPool -> EventEngineCtx -> IO ()
 pushEvents logger pool eectx  = forever $ do
   let EventEngineCtx q _ _ fetchI = eectx
   eventsOrError <- runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) fetchEvents
@@ -193,7 +193,7 @@ pushEvents logger pool eectx  = forever $ do
   threadDelay (fetchI * 1000)
 
 consumeEvents
-  :: L.Logger -> LogEnvHeaders -> HTTP.Manager -> Q.PGPool -> CacheRef -> EventEngineCtx
+  :: L.Logger L.HasuraEngine -> LogEnvHeaders -> HTTP.Manager -> Q.PGPool -> CacheRef -> EventEngineCtx
   -> IO ()
 consumeEvents logger logenv httpMgr pool cacheRef eectx  = forever $ do
   event <- atomically $ do
@@ -203,11 +203,11 @@ consumeEvents logger logenv httpMgr pool cacheRef eectx  = forever $ do
 
 processEvent
   :: ( MonadReader r m
-     , MonadIO m
      , Has HTTP.Manager r
-     , Has L.Logger r
+     , Has (L.Logger L.HasuraEngine) r
      , Has CacheRef r
      , Has EventEngineCtx r
+     , MonadIO m
      )
   => LogEnvHeaders -> Q.PGPool -> Event -> m ()
 processEvent logenv pool e = do
@@ -262,7 +262,7 @@ processSuccess pool e decodedHeaders ep resp = do
 processError
   :: ( MonadIO m
      , MonadReader r m
-     , Has L.Logger r
+     , Has (L.Logger L.HasuraEngine) r
      )
   => Q.PGPool -> Event -> RetryConf -> [HeaderConf] -> EventPayload -> HTTPErr
   -> m (Either QErr ())
@@ -378,23 +378,28 @@ mkMaybe :: [a] -> Maybe [a]
 mkMaybe [] = Nothing
 mkMaybe x  = Just x
 
-logQErr :: ( MonadReader r m, MonadIO m,  Has L.Logger r) => QErr -> m ()
+logQErr :: ( MonadReader r m, Has (L.Logger L.HasuraEngine) r, MonadIO m) => QErr -> m ()
 logQErr err = do
-  logger <- asks getter
+  logger :: L.Logger L.HasuraEngine <- asks getter
   L.unLogger logger $ EventInternalErr err
 
-logHTTPErr :: ( MonadReader r m, MonadIO m,  Has L.Logger r) => HTTPErr -> m ()
+logHTTPErr
+  :: ( MonadReader r m
+     , Has (L.Logger L.HasuraEngine) r
+     , MonadIO m
+     )
+  => HTTPErr -> m ()
 logHTTPErr err = do
-  logger <- asks getter
+  logger :: L.Logger L.HasuraEngine <- asks getter
   L.unLogger logger $ err
 
 tryWebhook
-  :: ( MonadReader r m
+  :: ( Has (L.Logger L.HasuraEngine) r
+     , Has HTTP.Manager r
+     , Has EventEngineCtx r
+     , MonadReader r m
      , MonadIO m
      , MonadError HTTPErr m
-     , Has HTTP.Manager r
-     , Has L.Logger r
-     , Has EventEngineCtx r
      )
   => [HTTP.Header] -> HTTP.ResponseTimeout -> EventPayload -> String
   -> m HTTPResp

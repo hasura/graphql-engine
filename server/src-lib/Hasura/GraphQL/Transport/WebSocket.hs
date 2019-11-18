@@ -144,7 +144,8 @@ data WSLog
   { _wslLogLevel :: !L.LogLevel
   , _wslInfo     :: !WSLogInfo
   }
-instance L.ToEngineLog WSLog where
+
+instance L.ToEngineLog WSLog L.HasuraEngine where
   toEngineLog (WSLog logLevel wsLog) =
     (logLevel, L.ELTWebsocketLog, J.toJSON wsLog)
 
@@ -158,7 +159,7 @@ mkWsErrorLog uv ci ev =
 
 data WSServerEnv
   = WSServerEnv
-  { _wseLogger          :: !L.Logger
+  { _wseLogger          :: !(L.Logger L.HasuraEngine)
   , _wseRunTx           :: !PGExecCtx
   , _wseLiveQMap        :: !LQ.LiveQueriesState
   , _wseGCtxMap         :: !(IORef.IORef (SchemaCache, SchemaCacheVer))
@@ -170,7 +171,7 @@ data WSServerEnv
   , _wseEnableAllowlist :: !Bool
   }
 
-onConn :: L.Logger -> CorsPolicy -> WS.OnConnH WSConnData
+onConn :: L.Logger L.HasuraEngine -> CorsPolicy -> WS.OnConnH WSConnData
 onConn (L.Logger logger) corsPolicy wsId requestHead = do
   res <- runExceptT $ do
     errType <- checkPath
@@ -435,7 +436,7 @@ onStop serverEnv wsConn (StopMsg opId) = do
 
 logWSEvent
   :: (MonadIO m)
-  => L.Logger -> WSConn -> WSEvent -> m ()
+  => L.Logger L.HasuraEngine -> WSConn -> WSEvent -> m ()
 logWSEvent (L.Logger logger) wsConn wsEv = do
   userInfoME <- liftIO $ STM.readTVarIO userInfoR
   let (userVarsM, jwtExpM) = case userInfoME of
@@ -462,7 +463,7 @@ logWSEvent (L.Logger logger) wsConn wsEv = do
 
 onConnInit
   :: (MonadIO m)
-  => L.Logger -> H.Manager -> WSConn -> AuthMode -> Maybe ConnParams -> m ()
+  => L.Logger L.HasuraEngine -> H.Manager -> WSConn -> AuthMode -> Maybe ConnParams -> m ()
 onConnInit logger manager wsConn authMode connParamsM = do
   headers <- mkHeaders <$> liftIO (STM.readTVarIO (_wscUser $ WS.getData wsConn))
   res <- runExceptT $ getUserInfoWithExpTime logger manager headers authMode
@@ -494,7 +495,7 @@ onConnInit logger manager wsConn authMode connParamsM = do
       _                  -> []
 
 onClose
-  :: L.Logger
+  :: L.Logger L.HasuraEngine
   -> LQ.LiveQueriesState
   -> WSConn
   -> IO ()
@@ -507,7 +508,7 @@ onClose logger lqMap wsConn = do
     opMap = _wscOpMap $ WS.getData wsConn
 
 createWSServerEnv
-  :: L.Logger
+  :: L.Logger L.HasuraEngine
   -> PGExecCtx
   -> LQ.LiveQueriesState
   -> IORef.IORef (SchemaCache, SchemaCacheVer)
