@@ -41,8 +41,8 @@ common common-all
     ApplicativeDo BangPatterns ConstraintKinds DeriveDataTypeable DeriveFoldable DeriveFunctor
     DeriveGeneric DeriveLift DeriveTraversable EmptyCase FlexibleContexts FlexibleInstances
     FunctionalDependencies GeneralizedNewtypeDeriving InstanceSigs LambdaCase MultiParamTypeClasses
-    MultiWayIf NoImplicitPrelude OverloadedStrings QuantifiedConstraints QuasiQuotes RankNTypes
-    ScopedTypeVariables StandaloneDeriving TemplateHaskell TupleSections TypeApplications
+    MultiWayIf NamedFieldPuns NoImplicitPrelude OverloadedStrings QuantifiedConstraints QuasiQuotes
+    RankNTypes ScopedTypeVariables StandaloneDeriving TemplateHaskell TupleSections TypeApplications
     TypeFamilies TypeOperators
 
 common common-exe
@@ -89,6 +89,7 @@ library
                      , postgresql-binary
                      , process
                      , http-client-tls
+                     , profunctors
 
                      -- Encoder related
                      , uuid
@@ -198,6 +199,7 @@ library
                      , Hasura.Cache
                      , Hasura.Logging
                      , Hasura.HTTP
+                     , Hasura.Incremental
 
                      , Hasura.Server.App
                      , Hasura.Server.Auth
@@ -359,19 +361,25 @@ executable graphql-engine
 test-suite graphql-engine-tests
   import: common-all, common-exe
   type: exitcode-stdio-1.0
-  hs-source-dirs: src-test
-  main-is: Main.hs
   build-depends:
+    , aeson
     , base
     , graphql-engine
     , hspec
     , http-client
     , http-client-tls
+    , mtl
     , optparse-applicative
     , pg-client
-    , time
-    , aeson
     , QuickCheck
+    , time
+    , unordered-containers
+  hs-source-dirs: src-test
+  main-is: Main.hs
+  other-modules:
+    Hasura.IncrementalSpec
+    Hasura.RQL.MetadataSpec
+    Hasura.Server.MigrateSpec
 
 -- Benchmarks related to caching (e.g. the plan cache).
 --
