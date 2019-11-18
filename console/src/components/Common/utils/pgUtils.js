@@ -69,6 +69,10 @@ export const getTrackedTables = tables => {
   return tables.filter(t => t.is_table_tracked);
 };
 
+export const getUntrackedTables = tables => {
+  return tables.filter(t => !t.is_table_tracked);
+};
+
 export const getOnlyTables = tablesOrViews => {
   return tablesOrViews.filter(t => checkIfTable(t));
 };
