@@ -163,3 +163,41 @@ The configured unauthorized role will be used whenever an access token is not pr
 
 This can be useful for data that you would like anyone to be able to access and can be configured and restricted
 just like any other role.
+
+Sync Users from Auth0
+^^^^^^^^^^^^^^^^^^^^^
+
+Now that you have created an Auth0 application and can signup/login, you will need a way to sync your users in Postgres as well.
+All you really need is the Auth0 ``user_id`` in something like a ``users`` table.
+
+Using Auth0 Rules again, add the following rule which will insert a new user every time someone signs up.
+
+.. code-block:: javascript
+
+   function (user, context, callback) {
+     const userId = user.user_id;
+     const hasuraAdminSecret = "xxxx";
+     const url = "https://my-hasura-app.herokuapp.com/v1/graphql";
+     const upsertUserQuery = `
+       mutation($userId: String!){
+         insert_users(objects: [{ id: $userId }], on_conflict: { constraint: users_pkey, update_columns: [] }) {
+           affected_rows
+         }
+       }`
+     const graphqlReq = { "query": upsertUserQuery, "variables": { "id": userId } }
+
+     request.post({
+         headers: {'content-type' : 'application/json', 'x-hasura-admin-secret': hasuraAdminSecret},
+         url:   url,
+         body:  JSON.stringify(graphqlReq)
+     }, function(error, response, body){
+          console.log(body);
+          callback(null, user, context);
+     });
+   }
+
+That’s it! This rule will be triggered on every successful signup/login and sync your Auth0 user into your postgres database.
+
+.. note::
+
+   We need to use an ``upsert`` operation here because social logins do not distinguish between sign-up and login. Hence, we need to run this rule every time a successful login is made and do nothing if the user already exists.

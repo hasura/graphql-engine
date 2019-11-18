@@ -37,7 +37,15 @@ import { createNewSchema, deleteCurrentSchema } from './Actions';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 import gqlPattern from '../Common/GraphQLValidation';
 import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
-import { displayTableName } from '../../../Common/utils/pgUtils';
+import {
+  displayTableName,
+  getFunctionName,
+  getSchemaTables,
+  getUntrackedTables,
+} from '../../../Common/utils/pgUtils';
+import { SET_SQL } from '../RawSQL/Actions';
+import _push from '../push';
+import { isEmpty } from '../../../Common/utils/jsUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 class Schema extends Component {
@@ -77,39 +85,20 @@ class Schema extends Component {
 
     /***********/
 
-    const getTrackableFunctions = () => {
-      const trackedFuncNames = trackedFunctions.map(t => t.function_name);
+    const _getTrackableFunctions = () => {
+      const trackedFuncNames = trackedFunctions.map(fn => getFunctionName(fn));
 
       // Assuming schema for both function and tables are same
       // return function which are tracked && function name whose
       // set of tables are tracked
       const filterCondition = func => {
         return (
-          !trackedFuncNames.includes(func.function_name) &&
+          !trackedFuncNames.includes(getFunctionName(func)) &&
           !!func.return_table_info
         );
       };
 
       return functionsList.filter(filterCondition);
-    };
-
-    const getUntrackedTables = () => {
-      const tableSortFunc = (a, b) => {
-        return a.table_name === b.table_name
-          ? 0
-          : +(a.table_name > b.table_name) || -1;
-      };
-
-      const _untrackedTables = schema.filter(
-        table => !table.is_table_tracked && table.table_schema === currentSchema
-      );
-
-      // update tableInfo with graphql compatibility
-      _untrackedTables.forEach(t => {
-        t.isGQLCompatible = gqlPattern.test(t.table_name);
-      });
-
-      return _untrackedTables.sort(tableSortFunc);
     };
 
     const getSectionHeading = (headingText, tooltip, actionBtn = null) => {
@@ -132,8 +121,29 @@ class Schema extends Component {
 
     /***********/
 
-    const allUntrackedTables = getUntrackedTables();
-    const trackableFuncs = getTrackableFunctions();
+    const allUntrackedTables = getUntrackedTables(
+      getSchemaTables(schema, currentSchema)
+    );
+    const trackableFuncs = _getTrackableFunctions();
+
+    const getTrackableFunctionsRequirementsMessage = () => {
+      const requirementsLink = (
+        <a
+          href="https://docs.hasura.io/1.0/graphql/manual/queries/custom-functions.html#supported-sql-functions"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          requirements
+        </a>
+      );
+
+      return (
+        <i>
+          See {requirementsLink} for functions to be exposed over the GraphQL
+          API
+        </i>
+      );
+    };
 
     const getCreateBtn = () => {
       let createBtn = null;
@@ -359,7 +369,8 @@ class Schema extends Component {
             dispatch(addExistingTableSql());
           };
 
-          const gqlCompatibilityWarning = !table.isGQLCompatible ? (
+          const isGQLCompatible = gqlPattern.test(table.table_name);
+          const gqlCompatibilityWarning = !isGQLCompatible ? (
             <span className={styles.add_mar_left_mid}>
               <GqlCompatibilityWarning />
             </span>
@@ -523,55 +534,69 @@ class Schema extends Component {
     };
 
     const getUntrackedFunctionsSection = () => {
-      let trackableFunctionList = null;
+      const noTrackableFunctions = isEmpty(trackableFuncs);
 
-      if (trackableFuncs.length > 0) {
-        const heading = getSectionHeading(
-          'Untracked custom functions',
-          trackableFunctionsTip
-        );
+      const getTrackableFunctionsList = () => {
+        const trackableFunctionList = [];
 
-        trackableFunctionList = (
-          <div className={styles.add_mar_top} key={'custom-functions-content'}>
-            <CollapsibleToggle title={heading} isOpen>
-              <div className={`${styles.padd_left_remove} col-xs-12`}>
-                {trackableFuncs.map((p, i) => (
-                  <div
-                    className={styles.padd_bottom}
-                    key={`${i}untracked-function`}
-                  >
-                    <div
-                      className={`${styles.display_inline} ${
-                        styles.add_mar_right
-                      }`}
-                    >
-                      <Button
-                        data-test={`add-track-function-${p.function_name}`}
-                        className={`${
-                          styles.display_inline
-                        } btn btn-xs btn-default`}
-                        onClick={e => {
-                          e.preventDefault();
+        trackableFuncs.forEach((p, i) => {
+          trackableFunctionList.push(
+            <div className={styles.padd_bottom} key={`untracked-function-${i}`}>
+              <div
+                className={`${styles.display_inline} ${styles.add_mar_right}`}
+              >
+                <Button
+                  data-test={`add-track-function-${p.function_name}`}
+                  className={`${styles.display_inline} btn btn-xs btn-default`}
+                  onClick={e => {
+                    e.preventDefault();
 
-                          dispatch(addExistingFunction(p.function_name));
-                        }}
-                      >
-                        Track
-                      </Button>
-                    </div>
-                    <div className={styles.display_inline}>
-                      <span>{p.function_name}</span>
-                    </div>
-                  </div>
-                ))}
+                    dispatch(addExistingFunction(p.function_name));
+                  }}
+                >
+                  Track
+                </Button>
               </div>
-              <div className={styles.clear_fix} />
-            </CollapsibleToggle>
-          </div>
-        );
-      }
+              <div className={styles.display_inline}>
+                <span>{p.function_name}</span>
+              </div>
+            </div>
+          );
+        });
 
-      return trackableFunctionList;
+        if (noTrackableFunctions) {
+          trackableFunctionList.push(
+            <div key="no-untracked-fns">
+              <div>There are no untracked functions</div>
+              <div className={styles.add_mar_top}>
+                {getTrackableFunctionsRequirementsMessage()}
+              </div>
+            </div>
+          );
+        }
+
+        return trackableFunctionList;
+      };
+
+      const heading = getSectionHeading(
+        'Untracked custom functions',
+        trackableFunctionsTip
+      );
+
+      return (
+        <div className={styles.add_mar_top} key={'custom-functions-content'}>
+          <CollapsibleToggle
+            title={heading}
+            isOpen={!noTrackableFunctions}
+            testId={'toggle-trackable-functions'}
+          >
+            <div className={`${styles.padd_left_remove} col-xs-12`}>
+              {getTrackableFunctionsList()}
+            </div>
+            <div className={styles.clear_fix} />
+          </CollapsibleToggle>
+        </div>
+      );
     };
 
     const getNonTrackableFunctionsSection = () => {
@@ -579,7 +604,7 @@ class Schema extends Component {
 
       if (nonTrackableFunctions.length > 0) {
         const heading = getSectionHeading(
-          'Non trackable custom functions',
+          'Non trackable functions',
           nonTrackableFunctionsTip
         );
 
@@ -588,18 +613,41 @@ class Schema extends Component {
             className={styles.add_mar_top}
             key={'non-trackable-custom-functions'}
           >
-            <CollapsibleToggle title={heading} isOpen>
+            <CollapsibleToggle title={heading} isOpen={false}>
               <div className={`${styles.padd_left_remove} col-xs-12`}>
+                <div className={styles.add_mar_bottom}>
+                  {getTrackableFunctionsRequirementsMessage()}
+                </div>
                 {nonTrackableFunctions.map((p, i) => (
                   <div
                     className={styles.padd_bottom}
-                    key={`${i}untracked-function`}
+                    key={`untracked-function-${i}`}
                   >
                     <div
-                      className={`${styles.padd_right} ${
-                        styles.display_inline
+                      className={`${styles.display_inline} ${
+                        styles.add_mar_right
                       }`}
                     >
+                      <Button
+                        data-test={`view-function-${p.function_name}`}
+                        className={`${
+                          styles.display_inline
+                        } btn btn-xs btn-default`}
+                        onClick={e => {
+                          e.preventDefault();
+
+                          dispatch(_push('/data/sql'));
+
+                          dispatch({
+                            type: SET_SQL,
+                            data: p.function_definition,
+                          });
+                        }}
+                      >
+                        View
+                      </Button>
+                    </div>
+                    <div className={styles.display_inline}>
                       {p.function_name}
                     </div>
                   </div>
@@ -642,7 +690,7 @@ class Schema extends Component {
           {getUntrackedTablesSection()}
           {getUntrackedRelationsSection()}
           {getUntrackedFunctionsSection()}
-          {false && getNonTrackableFunctionsSection()}
+          {getNonTrackableFunctionsSection()}
           <hr />
           {getPermissionsSummaryLink()}
         </div>

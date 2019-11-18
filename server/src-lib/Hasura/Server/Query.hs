@@ -1,3 +1,5 @@
+{-# LANGUAGE NamedFieldPuns #-}
+
 module Hasura.Server.Query where
 
 import           Control.Lens
@@ -8,6 +10,7 @@ import           Data.Time                          (UTCTime)
 import           Language.Haskell.TH.Syntax         (Lift)
 
 import qualified Data.HashMap.Strict                as HM
+import qualified Data.Text                          as T
 import qualified Network.HTTP.Client                as HTTP
 
 import           Hasura.EncJSON
@@ -195,10 +198,11 @@ peelRun
   :: SchemaCache
   -> RunCtx
   -> PGExecCtx
+  -> Q.TxAccess
   -> Run a
   -> ExceptT QErr IO (a, SchemaCache)
-peelRun sc runCtx@(RunCtx userInfo _ _) pgExecCtx (Run m) =
-  runLazyTx pgExecCtx $ withUserInfo userInfo lazyTx
+peelRun sc runCtx@(RunCtx userInfo _ _) pgExecCtx txAccess (Run m) =
+  runLazyTx pgExecCtx txAccess $ withUserInfo userInfo lazyTx
   where
     lazyTx = runReaderT (runStateT m sc) runCtx
 
@@ -208,9 +212,10 @@ runQuery
   -> UserInfo -> SchemaCache -> HTTP.Manager
   -> SQLGenCtx -> SystemDefined -> RQLQuery -> m (EncJSON, SchemaCache)
 runQuery pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined query = do
+  accessMode <- getQueryAccessMode query
   resE <- runQueryM query
     & runHasSystemDefinedT systemDefined
-    & peelRun sc runCtx pgExecCtx
+    & peelRun sc runCtx pgExecCtx accessMode
     & runExceptT
     & liftIO
   either throwError withReload resE
@@ -218,7 +223,7 @@ runQuery pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined query = d
     runCtx = RunCtx userInfo hMgr sqlGenCtx
     withReload r = do
       when (queryNeedsReload query) $ do
-        e <- liftIO $ runExceptT $ runLazyTx pgExecCtx
+        e <- liftIO $ runExceptT $ runLazyTx pgExecCtx Q.ReadWrite
              $ liftTx $ recordSchemaUpdate instanceId
         liftEither e
       return r
@@ -277,7 +282,10 @@ queryNeedsReload (RQV1 qi) = case qi of
   RQAddCollectionToAllowlist _    -> True
   RQDropCollectionFromAllowlist _ -> True
 
-  RQRunSql _                      -> True
+  RQRunSql RunSQL{rTxAccessMode}  ->
+    case rTxAccessMode of
+      Q.ReadOnly  -> False
+      Q.ReadWrite -> True
 
   RQReplaceMetadata _             -> True
   RQExportMetadata _              -> False
@@ -291,6 +299,32 @@ queryNeedsReload (RQV2 qi) = case qi of
   RQV2TrackTable _           -> True
   RQV2SetTableCustomFields _ -> True
   RQV2TrackFunction _        -> True
+
+-- TODO: RQSelect query should also be run in READ ONLY mode.
+-- But this could be part of console's bulk statement and hence should be added after console changes
+getQueryAccessMode :: (MonadError QErr m) => RQLQuery -> m Q.TxAccess
+getQueryAccessMode (RQV1 q) =
+  case q of
+    RQRunSql RunSQL{rTxAccessMode} -> pure rTxAccessMode
+    RQBulk qs -> assertAllTxAccess (zip [0::Integer ..] qs)
+    _                              -> pure Q.ReadWrite
+  where
+    assertAllTxAccess = \case
+      [] -> throw400 BadRequest "expected atleast one query in bulk"
+      (_i, q1):[] -> getQueryAccessMode q1
+      q1:q2:qs -> assertSameTxAccess q1 q2 >> assertAllTxAccess (q2:qs)
+
+    assertSameTxAccess (i1, q1) (i2, q2) = do
+      accessModeQ1 <- getQueryAccessMode q1
+      accessModeQ2 <- getQueryAccessMode q2
+      if (accessModeQ1 /= accessModeQ2)
+        then
+        throw400 BadRequest $ "incompatible access mode requirements in bulk query: "
+        <> "$.args[" <> (T.pack $ show i1) <> "] requires " <> (T.pack $ show accessModeQ1) <> ", "
+        <> "$.args[" <> (T.pack $ show i2) <> "] requires " <> (T.pack $ show accessModeQ2)
+        else
+        pure accessModeQ1
+getQueryAccessMode (RQV2 _) = pure Q.ReadWrite
 
 runQueryM
   :: ( QErrM m, CacheRWM m, UserInfoM m, MonadTx m
