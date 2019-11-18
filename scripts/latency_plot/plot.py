@@ -13,14 +13,26 @@ import matplotlib.ticker as ticker
 import glob
 import os
 import sys 
+import argparse
 
-usage = 'Usage:\n' +\
-        '  $ plot.py <path_to_data_dir> <y_data_label> <param> <categories_label>\n'+\
-        '\n'+\
-        'See README.md\n'
+
+# Parse script arguments:
+parser = argparse.ArgumentParser(description='Plot latency samples across categories. See README.md')
+parser.add_argument('--log', action='store_true',
+                    help='Use a log scale for the Y axis')
+parser.add_argument('data_dir_path',
+                    help='The path to the directory containing CSV files')
+parser.add_argument('y_label', help='Label for the Y axis (i.e. description of data points)')
+# The remaining arguments correspond to the dot-separated parts of the sample
+# filenames found in data_dir_path.
+parser.add_argument('x_label', help='See README.md')
+parser.add_argument('category_label', help='See README.md')
+args = parser.parse_args()
+
 
 # Can be used to scale number of Y axis tics, while maintaining nice intervals:
 approx_target_y_tics = 20
+
 
 def prettify(ss):
     if type(ss) == type("string"):
@@ -51,24 +63,13 @@ def y_fmt(y, pos):
                 #return y
     return y
 
-
-if not len(sys.argv) == 5:
-    sys.exit(usage)
-else:
-    csv_dir = sys.argv[1]
-    y_label = sys.argv[2]
-
-# The remaining arguments correspond to the dot-separated parts of the sample
-# filenames found in csv_dir.
-dim1_label, dim2_label = prettify(sys.argv[3:])
-
-if not os.path.isdir(csv_dir):
-    sys.exit("can't find directory at path: "+ csv_dir)
+if not os.path.isdir(args.data_dir_path):
+    sys.exit("can't find directory at path: "+ args.data_dir_path)
 
 
-data_files = glob.glob(csv_dir + '/*.csv')
+data_files = glob.glob(args.data_dir_path + '/*.csv')
 if len(data_files) == 0:
-    sys.exit("No .csv files found in " + csv_dir)
+    sys.exit("No .csv files found in " + args.data_dir_path)
 
 data = []
 
@@ -78,9 +79,9 @@ for path in data_files:
     with open(path) as f:
         for val in f:
             try:
-                data.append({y_label: float(val)
-                            ,dim1_label: dim1
-                            ,dim2_label: dim2
+                data.append({args.y_label: float(val)
+                            ,args.x_label: dim1
+                            ,args.category_label: dim2
                             })
             except: 
                 error_cnt = error_cnt + 1
@@ -97,7 +98,7 @@ plt.figure(figsize=(18,10))
 
 # Plot raw points lightly under everything
 # NOTE: this is pretty slow:
-ax = sns.stripplot(x=dim2_label, y=y_label, hue=dim1_label, data=df, palette=sns.color_palette(["#AAAAAA"]), 
+ax = sns.stripplot(x=args.category_label, y=args.y_label, hue=args.x_label, data=df, palette=sns.color_palette(["#AAAAAA"]), 
                    jitter=0.40,
                    size=2.2,
                    dodge=True) 
@@ -118,7 +119,7 @@ percentiles = [(99.9, 'red'), (99, 'blue'), (95, 'green')]
 #     for pctl, color in percentiles:
 #     ...
 for pctl, color in percentiles:
-    ax = sns.boxplot(x=dim2_label, y=y_label, hue=dim1_label, data=df, 
+    ax = sns.boxplot(x=args.category_label, y=args.y_label, hue=args.x_label, data=df, 
            showfliers=False, 
            showbox=False, 
            # Showing bottom percentiles just seemed to add visual noise:
@@ -132,6 +133,7 @@ for pctl, color in percentiles:
     for h in handles:
         h.remove()
 
+# TODO add median value labels (this has been really frustrating)
 
 # This will get overwritten; add back below:
 pctl_legend = plt.legend(title='Percentile markers', loc='upper left', 
@@ -140,7 +142,7 @@ pctl_legend = plt.legend(title='Percentile markers', loc='upper left',
                         )
 
 # See: https://seaborn.pydata.org/generated/seaborn.violinplot.html 
-sns.violinplot(x=dim2_label, y=y_label, hue=dim1_label, data=df, palette="Set1", 
+sns.violinplot(x=args.category_label, y=args.y_label, hue=args.x_label, data=df, palette="Set1", 
                scale_hue=True,
                # All violins get the same area (number of samples may differ):
                scale="area", 
@@ -155,16 +157,18 @@ sns.violinplot(x=dim2_label, y=y_label, hue=dim1_label, data=df, palette="Set1",
 # Add back percentile legend:
 ax.add_artist(pctl_legend)
 
+if args.log:
+    ax.set(yscale="log")
+
 # Get approx number of desired Y tics, while maintining nice (factor of 10)
 # intervals:
 ax.yaxis.set_major_locator(ticker.MaxNLocator(approx_target_y_tics)) 
 # human-readable Y axis labels:
 ax.yaxis.set_major_formatter(ticker.FuncFormatter(y_fmt)) 
 
-plt.ylim(0, None)
-# TODO fix to nearest thousand so we can easily read ms or us, etc.:
-# https://matplotlib.org/api/_as_gen/matplotlib.axes.Axes.ticklabel_format.html#matplotlib.axes.Axes.ticklabel_format 
-# plt.ticklabel_format(style='sci', axis='y')
+if not args.log:
+    plt.ylim(0, None)
+
 
 
 # NOTE: won't work without python3-tk:
