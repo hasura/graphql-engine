@@ -50,9 +50,9 @@ ordByEnumTy =
         )
       ]
 
-mkTabAggOpOrdByTy :: QualifiedTable -> G.Name -> G.NamedType
+mkTabAggOpOrdByTy :: QualifiedTable -> AggregateOp -> G.NamedType
 mkTabAggOpOrdByTy tn op =
-  G.NamedType $ qualObjectToName tn <> "_" <> op <> "_order_by"
+  G.NamedType $ qualObjectToName tn <> "_" <> aggregateOpToName op <> "_order_by"
 
 {-
 input table_<op>_order_by {
@@ -64,13 +64,13 @@ input table_<op>_order_by {
 
 mkTabAggOpOrdByInpObjs
   :: QualifiedTable
-  -> [(G.Name, [PGColumnInfo])] -- ^ operator and applicable columns
+  -> [(AggregateOp, [PGColumnInfo])] -- ^ operator and applicable columns
   -> [InpObjTyInfo]
 mkTabAggOpOrdByInpObjs tn opWithCols =
   flip mapMaybe opWithCols $ \(op, cols) -> mkInpObjTyM cols op
   where
 
-    mkDesc (G.Name op) =
+    mkDesc (AggregateOp op) =
       G.Description $ "order by " <> op <> "() on columns of table " <>> tn
 
     mkInpObjTyM cols op = bool (Just $ mkInpObjTy cols op) Nothing $ null cols
@@ -94,19 +94,18 @@ count: order_by
 
 mkTabAggOrdByInpObj
   :: QualifiedTable
-  -> [(G.Name, [PGColumnInfo])] -- ^ operator and applicable columns
+  -> [(AggregateOp, [PGColumnInfo])] -- ^ operator and applicable columns
   -> InpObjTyInfo
 mkTabAggOrdByInpObj tn opWithColumns =
   mkHsraInpTyInfo (Just desc) (mkTabAggOrdByTy tn) $ fromInpValL $
   opOrdBys <> [countInpVal]
   where
-    desc = G.Description $
-      "order by aggregate values of table " <>> tn
+    desc = G.Description $ "order by aggregate values of table " <>> tn
 
     opOrdBys = catMaybes $ flip map opWithColumns $ \(op, cols) ->
                bool (Just $ mkInpValInfo op) Nothing $ null cols
-    mkInpValInfo op = InpValInfo Nothing op Nothing $ G.toGT $
-                     mkTabAggOpOrdByTy tn op
+    mkInpValInfo op = InpValInfo Nothing (aggregateOpToName op) Nothing $
+                      G.toGT $ mkTabAggOpOrdByTy tn op
 
     countInpVal = InpValInfo Nothing "count" Nothing $ G.toGT ordByTy
 

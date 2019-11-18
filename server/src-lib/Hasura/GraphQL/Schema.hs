@@ -9,7 +9,6 @@ module Hasura.GraphQL.Schema
   , InsCtx(..)
   , InsCtxMap
   , RelationInfoMap
-  , isAggFld
   , qualObjectToName
   , ppGCtx
 
@@ -98,20 +97,6 @@ isRelNullable fim ri = isNullable
 mkPGColGNameMap :: [PGColumnInfo] -> PGColGNameMap
 mkPGColGNameMap cols = Map.fromList $
   flip map cols $ \ci -> (pgiName ci, ci)
-
-numAggOps :: [G.Name]
-numAggOps = [ "sum", "avg", "stddev", "stddev_samp", "stddev_pop"
-            , "variance", "var_samp", "var_pop"
-            ]
-
-compAggOps :: [G.Name]
-compAggOps = ["max", "min"]
-
-arrayAggOp :: G.Name
-arrayAggOp = "array_agg"
-
-isAggFld :: G.Name -> Bool
-isAggFld = flip elem (pure arrayAggOp <> numAggOps <> compAggOps)
 
 mkFuncArgSeq :: Seq.Seq FunctionArg -> Seq.Seq FuncArgItem
 mkFuncArgSeq inputArgs =
@@ -263,8 +248,8 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
             compCols = onlyComparableCols cols
             mkOpWithCols = flip (,)
             opWithCols = mkOpWithCols cols arrayAggOp :
-                         map (mkOpWithCols numCols) numAggOps
-                         <> map (mkOpWithCols compCols) compAggOps
+                         map (mkOpWithCols numCols) numericAggOps
+                         <> map (mkOpWithCols compCols) compareAggOps
             objs = [ mkTableAggObj tn
                    , mkTableAggFldsObj tn opWithCols
                    ] <> mkColAggFldsObjs selFlds
@@ -286,8 +271,8 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
           compCols = getComparableCols flds
           mkNumObjFld n = mkTableColAggFldsObj tn n (G.toGT . mkTypeMaker n) numCols
           mkCompObjFld n = mkTableColAggFldsObj tn n (G.toGT . mkColumnType) compCols
-          numFldsObjs = bool (map mkNumObjFld numAggOps) [] $ null numCols
-          compFldsObjs = bool (map mkCompObjFld compAggOps) [] $ null compCols
+          numFldsObjs = bool (map mkNumObjFld numericAggOps) [] $ null numCols
+          compFldsObjs = bool (map mkCompObjFld compareAggOps) [] $ null compCols
           arrayAggFldObj = mkTableColAggFldsObj tn arrayAggOp
                            (G.toGT . G.toLT . mkColumnType) cols
       in arrayAggFldObj : numFldsObjs <> compFldsObjs

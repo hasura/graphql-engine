@@ -24,6 +24,13 @@ module Hasura.GraphQL.Schema.Common
   , mkDescription
 
   , mkFuncArgsTy
+
+  , AggregateOp(..)
+  , aggregateOpToName
+  , numericAggOps
+  , compareAggOps
+  , arrayAggOp
+  , isAggField
   ) where
 
 import qualified Data.HashMap.Strict           as Map
@@ -117,3 +124,24 @@ mkFuncArgsName fn =
 mkFuncArgsTy :: QualifiedFunction -> G.NamedType
 mkFuncArgsTy =
   G.NamedType . mkFuncArgsName
+
+newtype AggregateOp = AggregateOp {unAggregateOp :: Text}
+  deriving (Show, Eq, IsString)
+
+aggregateOpToName :: AggregateOp -> G.Name
+aggregateOpToName = G.Name . unAggregateOp
+
+numericAggOps :: [AggregateOp]
+numericAggOps = [ "sum", "avg", "stddev", "stddev_samp", "stddev_pop"
+            , "variance", "var_samp", "var_pop"
+            ]
+
+compareAggOps :: [AggregateOp]
+compareAggOps = ["max", "min"]
+
+arrayAggOp :: AggregateOp
+arrayAggOp = "array_agg"
+
+isAggField :: G.Name -> Bool
+isAggField =
+  flip elem (pure arrayAggOp <> numericAggOps <> compareAggOps) . AggregateOp . G.unName

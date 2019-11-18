@@ -30,7 +30,7 @@ import qualified Hasura.SQL.DML                    as S
 import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
-import           Hasura.GraphQL.Schema             (isAggFld)
+import           Hasura.GraphQL.Schema.Common      (isAggField)
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.DML.Internal           (onlyPositiveInt)
@@ -409,7 +409,7 @@ convertAggFld colGNameMap ty selSet = fmap toFields $
       "count"      -> RS.AFCount <$> convertCount colGNameMap (_fArguments fld)
       n            -> do
         colFlds <- convertColFlds colGNameMap fType fSelSet
-        unless (isAggFld n) $ throwInvalidFld n
+        unless (isAggField n) $ throwInvalidFld n
         return $ RS.AFOp $ RS.AggOp (G.unName n) colFlds
   where
       throwInvalidFld (G.Name t) =
