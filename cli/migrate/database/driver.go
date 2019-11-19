@@ -49,6 +49,8 @@ type Driver interface {
 	// Migrate will call this function only once per instance.
 	Close() error
 
+	GetSQL(data []interface{}) (string, error)
+
 	Scan() error
 
 	// Lock should acquire a database lock so that only one migration process
@@ -59,7 +61,7 @@ type Driver interface {
 
 	// Unlock should release the lock. Migrate will call this function after
 	// all migrations have been run.
-	UnLock() error
+	UnLock(options *UnLockOptions) error
 
 	// Run applies a migration to the database. migration is garantueed to be not nil.
 	Run(migration io.Reader, fileType, fileName string) error

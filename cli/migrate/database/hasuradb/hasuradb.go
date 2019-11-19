@@ -1,6 +1,7 @@
 package hasuradb
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -145,6 +146,27 @@ func (h *HasuraDB) Close() error {
 	return nil
 }
 
+func (h *HasuraDB) GetSQL(data []interface{}) (string, error) {
+	migr, err := json.Marshal(data)
+	if err != nil {
+		return "", err
+	}
+	var t []newHasuraIntefaceQuery
+	err = yaml.Unmarshal(migr, &t)
+	if err != nil {
+		return "", err
+	}
+	buf := &bytes.Buffer{}
+	for _, action := range t {
+		switch actionType := action.Args.(type) {
+		case *runSQLInput:
+			buf.WriteString(actionType.SQL)
+			buf.WriteString("\n")
+		}
+	}
+	return buf.String(), nil
+}
+
 func (h *HasuraDB) Scan() error {
 	h.migrations = database.NewMigrations()
 	return h.getVersions()
@@ -164,7 +186,7 @@ func (h *HasuraDB) Lock() error {
 	return nil
 }
 
-func (h *HasuraDB) UnLock() error {
+func (h *HasuraDB) UnLock(opts *database.UnLockOptions) error {
 	if !h.isLocked {
 		return nil
 	}
@@ -175,6 +197,13 @@ func (h *HasuraDB) UnLock() error {
 
 	if len(h.migrationQuery.Args) == 0 {
 		return nil
+	}
+
+	if opts.OnUnLockExportMetadata {
+		h.migrationQuery.Args = append(h.migrationQuery.Args, HasuraInterfaceQuery{
+			Type: exportMetadata,
+			Args: exportMetadataInput{},
+		})
 	}
 
 	resp, body, err := h.sendv1Query(h.migrationQuery)
@@ -221,6 +250,14 @@ func (h *HasuraDB) UnLock() error {
 			}
 		}
 		return horror.Error(h.config.isCMD)
+	}
+	if opts.OnUnLockExportMetadata {
+		var data []interface{}
+		err = json.Unmarshal(body, &data)
+		if err != nil {
+			return err
+		}
+		opts.ExportMetadata = data[len(data)-1]
 	}
 	return nil
 }

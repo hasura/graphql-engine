@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"container/list"
 	"fmt"
+	"io"
 	"os"
 	"sync"
 	"time"
@@ -340,6 +341,10 @@ func (m *Migrate) Query(data []interface{}) error {
 	return m.databaseDrv.Query(data)
 }
 
+func (m *Migrate) GetSQL(data []interface{}) (string, error) {
+	return m.databaseDrv.GetSQL(data)
+}
+
 // Squash migrations from version v into a new migration.
 // Returns a list of migrations that are squashed: vs
 // the squashed metadata for all UP steps: um
@@ -461,6 +466,48 @@ func (m *Migrate) Squash(v uint64) (vs []int64, um []interface{}, us []byte, dm 
 	}
 }
 
+func (m *Migrate) MigrateWithData(version uint64, data io.ReadCloser) (interface{}, error) {
+	mode, err := m.databaseDrv.GetSetting("migration_mode")
+	if err != nil {
+		return nil, err
+	}
+
+	if mode != "true" {
+		return nil, ErrNoMigrationMode
+	}
+
+	if err := m.lock(); err != nil {
+		return nil, err
+	}
+
+	ret := make(chan interface{}, m.PrefetchMigrations)
+	go func() {
+		defer close(ret)
+		ok := m.databaseDrv.Read(version)
+		if ok {
+			ret <- ErrApplied
+			return
+		}
+
+		migr, err := NewMigration(data, "", version, int64(version), "meta", "")
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		ret <- migr
+		go migr.Buffer()
+	}()
+	opts := &database.UnLockOptions{
+		OnUnLockExportMetadata: true,
+	}
+	err = m.unlockErr(m.runMigrations(ret), opts)
+	if err != nil {
+		return nil, err
+	}
+	return opts.ExportMetadata, nil
+}
+
 // Migrate looks at the currently active migration version,
 // then migrates either up or down to the specified version.
 func (m *Migrate) Migrate(version uint64, direction string) error {
@@ -480,7 +527,7 @@ func (m *Migrate) Migrate(version uint64, direction string) error {
 	ret := make(chan interface{}, m.PrefetchMigrations)
 	go m.read(version, direction, ret)
 
-	return m.unlockErr(m.runMigrations(ret))
+	return m.unlockErr(m.runMigrations(ret), nil)
 }
 
 // Steps looks at the currently active migration version.
@@ -511,7 +558,7 @@ func (m *Migrate) Steps(n int64) error {
 		go m.readDown(-n, ret)
 	}
 
-	return m.unlockErr(m.runMigrations(ret))
+	return m.unlockErr(m.runMigrations(ret), nil)
 }
 
 // Up looks at the currently active migration version
@@ -543,7 +590,7 @@ func (m *Migrate) Up() error {
 
 	go m.readUp(-1, ret)
 
-	return m.unlockErr(m.runMigrations(ret))
+	return m.unlockErr(m.runMigrations(ret), nil)
 }
 
 // Down looks at the currently active migration version
@@ -574,7 +621,7 @@ func (m *Migrate) Down() error {
 	ret := make(chan interface{}, m.PrefetchMigrations)
 	go m.readDown(-1, ret)
 
-	return m.unlockErr(m.runMigrations(ret))
+	return m.unlockErr(m.runMigrations(ret), nil)
 }
 
 // Reset resets public schema and hasuradb metadata
@@ -1423,7 +1470,7 @@ func (m *Migrate) lock() error {
 // unlock is a thread safe helper function to unlock the database.
 // It should be called as early as possible when no more migrations are
 // expected to be executed.
-func (m *Migrate) unlock() error {
+func (m *Migrate) unlock(opts *database.UnLockOptions) error {
 	m.isLockedMu.Lock()
 	defer m.isLockedMu.Unlock()
 
@@ -1431,7 +1478,11 @@ func (m *Migrate) unlock() error {
 		m.isLocked = false
 	}()
 
-	if err := m.databaseDrv.UnLock(); err != nil {
+	if opts == nil {
+		opts = &database.UnLockOptions{}
+	}
+
+	if err := m.databaseDrv.UnLock(opts); err != nil {
 		return err
 	}
 	return nil
@@ -1439,8 +1490,8 @@ func (m *Migrate) unlock() error {
 
 // unlockErr calls unlock and returns a combined error
 // if a prevErr is not nil.
-func (m *Migrate) unlockErr(prevErr error) error {
-	if err := m.unlock(); err != nil {
+func (m *Migrate) unlockErr(prevErr error, opts *database.UnLockOptions) error {
+	if err := m.unlock(opts); err != nil {
 		return NewMultiError(prevErr, err)
 	}
 	return prevErr

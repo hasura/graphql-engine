@@ -6,6 +6,11 @@ import (
 	"github.com/ahmetb/go-linq"
 )
 
+type UnLockOptions struct {
+	OnUnLockExportMetadata bool
+	ExportMetadata         interface{}
+}
+
 type CustomList struct {
 	*list.List
 }

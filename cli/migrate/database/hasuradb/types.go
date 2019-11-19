@@ -281,6 +281,7 @@ const (
 	dropCollectionFromAllowList              = "drop_collection_from_allowlist"
 	replaceMetadata                          = "replace_metadata"
 	clearMetadata                            = "clear_metadata"
+	exportMetadata                           = "export_metadata"
 	runSQL                                   = "run_sql"
 	bulkQuery                                = "bulk"
 	addComputedField                         = "add_computed_field"
@@ -580,6 +581,9 @@ type dropComputedFieldInput struct {
 	Name    string      `json:"name" yaml:"name"`
 	Cascade bool        `json:"cascade" yaml:"cascade"`
 	Comment string      `json:"comment" yaml:"comment"`
+}
+
+type exportMetadataInput struct {
 }
 
 type clearMetadataInput struct {

@@ -186,6 +186,7 @@ func (r *cRouter) setRoutes(migrationDir, metadataFile string, logger *logrus.Lo
 		apis.Use(setLogger(logger))
 		apis.Use(setFilePath(migrationDir))
 		apis.Use(setMigrate(r.migrate))
+		apis.Use(setMetadataFile(metadataFile))
 		// Migrate api endpoints and middleware
 		migrateAPIs := apis.Group("/migrate")
 		{
