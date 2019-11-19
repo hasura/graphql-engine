@@ -402,10 +402,6 @@ Use the v2 :ref:`track_function <track_function_v2>` to add a function by defini
 The session argument will be a JSON object where keys are session variable names (in lower case) and values are strings.
 Use the ``->>`` JSON operator to fetch the value of a session variable as shown in the following example.
 
-.. note::
-
-   The specified session argument will not be included in the ``<function-name>_args`` input object in the GraphQL schema.
-
 .. code-block:: plpgsql
 
       -- single text column table
@@ -439,6 +435,10 @@ Use the ``->>`` JSON operator to fetch the value of a session variable as shown 
              ]
         }
     }
+
+.. note::
+
+   The specified session argument will not be included in the ``<function-name>_args`` input object in the GraphQL schema.
 
 Permissions for custom function queries
 ---------------------------------------
