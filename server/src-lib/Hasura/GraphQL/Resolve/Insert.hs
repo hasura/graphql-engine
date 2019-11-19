@@ -271,7 +271,7 @@ mkSelCTE
   -> Maybe ColVals
   -> m CTEExp
 mkSelCTE tn allCols colValM = do
-  selCTE <- mkSelCTEFromColVals tn allCols $ maybe [] pure colValM
+  selCTE <- mkSelCTEFromColVals parsePGScalarValue tn allCols $ maybe [] pure colValM
   return $ CTEExp selCTE Seq.Empty
 
 execCTEExp
