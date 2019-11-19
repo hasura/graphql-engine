@@ -21,10 +21,14 @@ const state = {
   actionDefinition: {
     sdl: defaultActionDefSdl,
     error: '',
+    timer: null,
+    ast: null,
   },
   typeDefinition: {
     sdl: defaultTypesDefSdl,
     error: '',
+    timer: null,
+    ast: null,
   },
   kind: 'synchronous',
   isFetching: false,

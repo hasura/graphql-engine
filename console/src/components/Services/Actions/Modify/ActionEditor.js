@@ -29,11 +29,13 @@ const ActionEditor = ({
   const {
     sdl: typesDefinitionSdl,
     error: typesDefinitionError,
+    timer: typeDefinitionTimer,
   } = typeDefinition;
 
   const {
     sdl: actionDefinitionSdl,
     error: actionDefinitionError,
+    timer: actionDefinitionTimer,
   } = actionDefinition;
 
   // initialize action state
@@ -46,12 +48,12 @@ const ActionEditor = ({
   const webhookOnChange = e => dispatch(setActionWebhook(e.target.value));
   const kindOnChange = k => dispatch(setActionKind(k));
 
-  const actionDefinitionOnChange = (value, error) => {
-    dispatch(setActionDefinition(value, error));
+  const actionDefinitionOnChange = (value, error, timer, ast) => {
+    dispatch(setActionDefinition(value, error, timer, ast));
   };
 
-  const typeDefinitionOnChange = (value, error) => {
-    dispatch(setTypeDefinition(value, error));
+  const typeDefinitionOnChange = (value, error, timer, ast) => {
+    dispatch(setTypeDefinition(value, error, timer, ast));
   };
 
   const onSave = () => {
@@ -63,7 +65,11 @@ const ActionEditor = ({
   };
 
   const allowSave =
-    !isFetching && !typesDefinitionError && !actionDefinitionError;
+    !isFetching &&
+    !typesDefinitionError &&
+    !actionDefinitionError &&
+    !actionDefinitionTimer &&
+    !typeDefinitionTimer;
 
   return (
     <div>
@@ -82,6 +88,7 @@ const ActionEditor = ({
         value={actionDefinitionSdl}
         error={actionDefinitionError}
         onChange={actionDefinitionOnChange}
+        timer={actionDefinitionTimer}
         placeholder={''}
       />
       <hr />
@@ -89,6 +96,7 @@ const ActionEditor = ({
         value={typesDefinitionSdl}
         error={typesDefinitionError}
         onChange={typeDefinitionOnChange}
+        timer={typeDefinitionTimer}
         placeholder={''}
       />
       <hr />

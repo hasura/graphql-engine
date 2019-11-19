@@ -13,14 +13,13 @@ const editorLabel = 'New types definition';
 const editorTooltip =
   'You can define new GraphQL types that you can use in the action definition above';
 
-let parseDebounceTimer = null;
-
 const ActionDefinitionEditor = ({
   value,
   onChange,
   className,
   placeholder,
   error,
+  timer,
   label = editorLabel,
   tooltip = editorTooltip,
   editorHeight = '200px',
@@ -30,23 +29,25 @@ const ActionDefinitionEditor = ({
   const toggleModal = () => setModalState(!modalOpen);
 
   const onChangeWithError = v => {
-    if (parseDebounceTimer) {
-      clearTimeout(parseDebounceTimer);
+    if (timer) {
+      clearTimeout(timer);
     }
-    parseDebounceTimer = setTimeout(() => {
-      if (!v.trim()) return;
+
+    const parseDebounceTimer = setTimeout(() => {
+      if (v === '') {
+        return;
+      }
       let _e = null;
+      let ast = null;
       try {
-        sdlParse(v);
+        ast = sdlParse(v);
       } catch (e) {
         _e = e;
       }
-      if (_e) {
-        onChange(v, _e);
-      }
+      onChange(null, _e, null, ast);
     }, 1000);
 
-    onChange(v);
+    onChange(v, null, parseDebounceTimer, null);
   };
 
   const errorMessage =

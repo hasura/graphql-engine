@@ -33,27 +33,33 @@ const AddAction = ({
   const {
     sdl: typesDefinitionSdl,
     error: typesDefinitionError,
+    timer: typedefParseTimer,
   } = typeDefinition;
 
   const {
     sdl: actionDefinitionSdl,
     error: actionDefinitionError,
+    timer: actionParseTimer,
   } = actionDefinition;
 
   const onSubmit = () => {
     dispatch(createAction());
   };
 
-  const actionDefinitionOnChange = (value, error) => {
-    dispatch(setActionDefinition(value, error));
+  const actionDefinitionOnChange = (value, error, timer, ast) => {
+    dispatch(setActionDefinition(value, error, timer, ast));
   };
 
-  const typeDefinitionOnChange = (value, error) => {
-    dispatch(setTypeDefinition(value, error));
+  const typeDefinitionOnChange = (value, error, timer, ast) => {
+    dispatch(setTypeDefinition(value, error, timer, ast));
   };
 
   const allowSave =
-    !isFetching && !typesDefinitionError && !actionDefinitionError;
+    !isFetching &&
+    !typesDefinitionError &&
+    !actionDefinitionError &&
+    !actionParseTimer &&
+    !typedefParseTimer;
 
   return (
     <div>
@@ -77,12 +83,14 @@ const AddAction = ({
         value={actionDefinitionSdl}
         error={actionDefinitionError}
         onChange={actionDefinitionOnChange}
+        timer={actionParseTimer}
         placeholder={''}
       />
       <hr />
       <TypeDefinitionEditor
         value={typesDefinitionSdl}
         error={typesDefinitionError}
+        timer={typedefParseTimer}
         onChange={typeDefinitionOnChange}
         placeholder={''}
       />

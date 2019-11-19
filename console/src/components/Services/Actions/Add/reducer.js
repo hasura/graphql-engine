@@ -16,15 +16,15 @@ export const setActionKind = kind => ({
 });
 
 const SET_ACTION_DEFINITION = 'Actions/Add/SET_ACTION_DEFINITION';
-export const setActionDefinition = (sdl, error) => ({
+export const setActionDefinition = (sdl, error = null, timer, ast) => ({
   type: SET_ACTION_DEFINITION,
-  definition: { sdl, error },
+  definition: { sdl, error, timer, ast },
 });
 
 const SET_TYPE_DEFINITION = 'Actions/Add/SET_TYPE_DEFINITION';
-export const setTypeDefinition = (sdl, error = null) => ({
+export const setTypeDefinition = (sdl, error = null, timer, ast) => ({
   type: SET_TYPE_DEFINITION,
-  definition: { sdl, error },
+  definition: { sdl, error, timer, ast },
 });
 
 const SET_FETCHING = 'Actions/Add/SET_FETCHING';
@@ -57,14 +57,29 @@ const reducer = (state = defaultState, action) => {
         isFetching: false,
       };
     case SET_ACTION_DEFINITION:
-      return {
-        ...state,
-        actionDefinition: action.definition,
-      };
+      if (action.definition) {
+        return {
+          ...state,
+          actionDefinition: {
+            ...action.definition,
+            sdl:
+              action.definition.sdl !== null
+                ? action.definition.sdl
+                : state.actionDefinition.sdl,
+          },
+        };
+      }
+      return state;
     case SET_TYPE_DEFINITION:
       return {
         ...state,
-        typeDefinition: action.definition,
+        typeDefinition: {
+          ...action.definition,
+          sdl:
+            action.definition.sdl !== null
+              ? action.definition.sdl
+              : state.typeDefinition.sdl,
+        },
       };
     default:
       return state;

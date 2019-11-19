@@ -9,33 +9,31 @@ const editorLabel = 'Action definition';
 const editorTooltip =
   'Define the action as mutation using GraphQL SDL. You can reuse existing types or define new types in the new types definition editor below.';
 
-let parseDebounceTimer = null;
-
 const ActionDefinitionEditor = ({
   value,
   onChange,
   className,
   placeholder,
   error,
+  timer,
 }) => {
   const onChangeWithError = v => {
-    if (parseDebounceTimer) {
-      clearTimeout(parseDebounceTimer);
+    if (timer) {
+      clearTimeout(timer);
     }
 
-    parseDebounceTimer = setTimeout(() => {
+    const parseDebounceTimer = setTimeout(() => {
       let _e = null;
+      let ast = null;
       try {
-        sdlParse(v);
+        ast = sdlParse(v);
       } catch (e) {
         _e = e;
       }
-      if (_e) {
-        onChange(v, _e);
-      }
+      onChange(null, _e, null, ast);
     }, 1000);
 
-    onChange(v);
+    onChange(v, null, parseDebounceTimer, null);
   };
 
   const errorMessage =
