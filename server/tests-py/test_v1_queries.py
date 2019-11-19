@@ -678,3 +678,14 @@ class TestComputedFields(DefaultTestQueries):
 
     def test_run_sql(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/run_sql.yaml')
+
+class TestBulkQuery(DefaultTestQueries):
+    @classmethod
+    def dir(cls):
+        return 'queries/v1/bulk'
+
+    def test_run_bulk(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/basic.yaml')
+
+    def test_run_bulk_mixed_access_mode(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/mixed_access_mode.yaml')

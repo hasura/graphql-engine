@@ -85,7 +85,7 @@ const ColumnEditor = ({
     return (
       <div className={`${styles.display_flex} form-group`}>
         <label className={'col-xs-4'}>
-          Custom GraphQL field
+          GraphQL field name
           <Tooltip
             message={
               'Expose the column with a different name in the GraphQL API'
@@ -97,6 +97,7 @@ const ColumnEditor = ({
             className="input-sm form-control"
             value={selectedProperties[colName].customFieldName}
             onChange={updateColumnCustomField}
+            placeholder={`${colName} (default)`}
             type="text"
             data-test="edit-col-custom-field"
           />
