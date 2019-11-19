@@ -98,25 +98,12 @@ trackExistingTableOrViewP1 qt = do
   when (M.member qf $ scFunctions rawSchemaCache) $
     throw400 NotSupported $ "function with name " <> qt <<> " already exists"
 
-validateCustomRootFields
-  :: (QErrM m, CacheRM m)
-  => GC.TableCustomRootFields -> m ()
-validateCustomRootFields customRootFields = do
-  withPathK "custom_root_fields" $ do
-    sc <- askSchemaCache
-    let defRemoteGCtx = scDefaultRemoteGCtx sc
-        GC.TableCustomRootFields sel selByPk selAgg ins upd del = customRootFields
-        rootFldNames = catMaybes [sel, selByPk, selAgg, ins, upd, del]
-
-    forM_ rootFldNames $ GS.checkConflictingNode defRemoteGCtx
-
 trackExistingTableOrViewP2
   :: (CacheBuildM m) => QualifiedTable -> SystemDefined -> Bool -> TableConfig -> m EncJSON
 trackExistingTableOrViewP2 tableName systemDefined isEnum config = do
   sc <- askSchemaCache
   let defGCtx = scDefaultRemoteGCtx sc
   GS.checkConflictingNode defGCtx $ GS.qualObjectToName tableName
-  validateCustomRootFields $ _tcCustomRootFields config
   saveTableToCatalog tableName systemDefined isEnum config
   buildSchemaCacheFor (MOTable tableName)
   return successMsg
@@ -166,10 +153,9 @@ instance FromJSON SetTableCustomFields where
 runSetTableCustomFieldsQV2 :: (CacheBuildM m, UserInfoM m) => SetTableCustomFields -> m EncJSON
 runSetTableCustomFieldsQV2 (SetTableCustomFields tableName rootFields columnNames) = do
   adminOnly
-  fieldInfoMap <- _tiFieldInfoMap <$> askTabInfo tableName
-  withPathK "custom_root_fields" $ validateCustomRootFields rootFields
-  withPathK "custom_column_names" $ validateWithNonColumnFields fieldInfoMap
+  fields <- _tiFieldInfoMap <$> askTabInfo tableName
   let tableConfig = TableConfig rootFields columnNames
+  withPathK "custom_column_names" $ validateWithNonColumnFields fields
   updateTableConfig tableName tableConfig
   buildSchemaCacheFor (MOTable tableName)
   return successMsg
