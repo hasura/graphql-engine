@@ -208,7 +208,7 @@ Args syntax
    * - read_only
      - false
      - Boolean
-     - When set to ``true``, the query will be run in ``READ ONLY`` transaction access mode which means only ``select`` queries will be successful. This flag ensures that the graphql schema is not refreshed and is hence highly performant.
+     - When set to ``true``, the query will be run in ``READ ONLY`` transaction access mode which means only ``select`` queries will be successful. This flag ensures that the GraphQL schema is not modified and is hence highly performant.
 
 Response
 ^^^^^^^^
