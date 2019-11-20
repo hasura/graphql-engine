@@ -135,14 +135,14 @@ buildSchemaCacheWithOptions withSetup = do
         mkAllTriggersQ trn qt allCols (stringifyNum sqlGenCtx) (etcDefinition etc)
 
   -- sql functions
-  forM_ functions $ \(CatalogFunction qf systemDefined funcDefs) -> do
+  forM_ functions $ \(CatalogFunction qf systemDefined config funcDefs) -> do
     let def = toJSON $ TrackFunction qf
         mkInconsObj =
           InconsistentMetadataObj (MOFunction qf) MOTFunction def
     modifyErr (\e -> "function " <> qf <<> "; " <> e) $
       withSchemaObject_ mkInconsObj $ do
       rawfi <- handleMultipleFunctions qf funcDefs
-      trackFunctionP2Setup qf systemDefined rawfi
+      trackFunctionP2Setup qf systemDefined config rawfi
 
   -- allow list
   replaceAllowlist $ concatMap _cdQueries allowlistDefs
