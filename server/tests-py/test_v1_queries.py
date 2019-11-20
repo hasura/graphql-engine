@@ -686,6 +686,15 @@ class TestSetTableCustomFields(DefaultTestQueries):
     def test_alter_column(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/alter_column.yaml')
 
+    def test_conflict_with_relationship(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/conflict_with_relationship.yaml')
+
+    def test_column_field_swap(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/column_field_swap.yaml")
+
+    def test_relationship_conflict_with_custom_column(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/relationship_conflict_with_custom_column.yaml")
+
 class TestComputedFields(DefaultTestQueries):
     @classmethod
     def dir(cls):

@@ -55,6 +55,7 @@ module Hasura.RQL.Types.SchemaCache
        , getCols
        , getRels
        , getComputedFieldInfos
+       , possibleNonColumnGraphQLFields
 
        , isPGColInfo
        , RelInfo(..)
@@ -144,6 +145,7 @@ import           Language.Haskell.TH.Syntax        (Lift)
 import qualified Data.HashMap.Strict               as M
 import qualified Data.HashSet                      as HS
 import qualified Data.Text                         as T
+import qualified Language.GraphQL.Draft.Syntax     as G
 
 reportSchemaObjs :: [SchemaObjId] -> T.Text
 reportSchemaObjs = T.intercalate ", " . map reportSchemaObj
@@ -175,6 +177,18 @@ $(deriveToJSON
 $(makePrisms ''FieldInfo)
 
 type FieldInfoMap columnInfo = M.HashMap FieldName (FieldInfo columnInfo)
+
+possibleNonColumnGraphQLFields :: FieldInfoMap PGColumnInfo -> [G.Name]
+possibleNonColumnGraphQLFields fields =
+  flip concatMap (M.toList fields) $ \case
+    (_, FIColumn _)             -> []
+    (_, FIRelationship relInfo) ->
+      let relationshipName = G.Name $ relNameToTxt $ riName relInfo
+      in case riType relInfo of
+           ObjRel -> [relationshipName]
+           ArrRel -> [relationshipName, relationshipName <> "_aggregate"]
+    (_, FIComputedField info) ->
+      pure $ G.Name $ computedFieldNameToText $ _cfiName info
 
 getCols :: FieldInfoMap columnInfo -> [columnInfo]
 getCols = mapMaybe (^? _FIColumn) . M.elems
@@ -366,17 +380,25 @@ $(makeLenses ''TableInfo)
 
 checkForFieldConflict
   :: (MonadError QErr m)
-  => TableInfo a
+  => TableInfo PGColumnInfo
   -> FieldName
   -> m ()
-checkForFieldConflict tabInfo f =
-  case M.lookup f (_tiFieldInfoMap tabInfo) of
+checkForFieldConflict tableInfo f = do
+  case M.lookup f fieldInfoMap of
     Just _ -> throw400 AlreadyExists $ mconcat
-      [ "column/relationship " <>> f
-      , " of table " <>> _tiName tabInfo
+      [ "column/relationship/computed field " <>> f
+      , " of table " <>> tableName
       , " already exists"
       ]
     Nothing -> return ()
+  when (f `elem` customColumnFields) $
+    throw400 AlreadyExists $
+    "custom column name " <> f <<> " of table " <> tableName <<> " already exists"
+  where
+    tableName = _tiName tableInfo
+    fieldInfoMap = _tiFieldInfoMap tableInfo
+    customColumnFields =
+      map (FieldName . G.unName . pgiName) $ getCols fieldInfoMap
 
 type TableCache columnInfo = M.HashMap QualifiedTable (TableInfo columnInfo) -- info of all tables
 type FunctionCache = M.HashMap QualifiedFunction FunctionInfo -- info of all functions

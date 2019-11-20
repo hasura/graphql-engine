@@ -25,7 +25,7 @@
         function: full_name
   response:
     path: "$.args.name"
-    error: column/relationship "first_name" of table "author" already exists
+    error: column/relationship/computed field "first_name" of table "author" already exists
     code: already-exists
 
 - description: Try adding computed field with invalid function

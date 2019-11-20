@@ -29,6 +29,7 @@ import qualified Database.PG.Query                  as Q
 
 import           Data.Aeson
 
+import qualified Hasura.GraphQL.Context             as GC
 import qualified Hasura.GraphQL.Schema              as GS
 
 import           Hasura.Db
@@ -153,6 +154,9 @@ buildSchemaCacheWithOptions withSetup = do
   -- remote schemas
   forM_ remoteSchemas resolveSingleRemoteSchema
 
+  -- validate tables' custom root fields
+  validateTablesCustomRootFields
+
   where
     permHelper setup sqlGenCtx qt rn pDef pa = do
       qCtx <- mkAdminQCtx sqlGenCtx <$> askSchemaCache
@@ -179,6 +183,16 @@ buildSchemaCacheWithOptions withSetup = do
         writeSchemaCache sc { scGCtxMap = mergedGCtxMap
                             , scDefaultRemoteGCtx = mergedDefGCtx
                             }
+
+    validateTablesCustomRootFields = do
+      sc <- askSchemaCache
+      let tables = M.elems $ scTables sc
+          defRemoteGCtx = scDefaultRemoteGCtx sc
+      forM_ tables $ \table -> do
+        let GC.TableCustomRootFields sel selByPk selAgg ins upd del =
+              _tcCustomRootFields $ _tiCustomConfig table
+            rootFldNames = catMaybes [sel, selByPk, selAgg, ins, upd, del]
+        forM_ rootFldNames $ GS.checkConflictingNode defRemoteGCtx
 
 -- | Rebuilds the schema cache. If an object with the given object id became newly inconsistent,
 -- raises an error about it specifically. Otherwise, raises a generic metadata inconsistency error.
