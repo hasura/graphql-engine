@@ -75,6 +75,8 @@ func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
 		q.Args = &createArrayRelationshipInput{}
 	case setRelationshipComment:
 		q.Args = &setRelationshipCommentInput{}
+	case renameRelationship:
+		q.Args = &renameRelationshipInput{}
 	case dropRelationship:
 		q.Args = &dropRelationshipInput{}
 	case createInsertPermission:
@@ -259,6 +261,7 @@ const (
 	createObjectRelationship                 = "create_object_relationship"
 	createArrayRelationship                  = "create_array_relationship"
 	dropRelationship                         = "drop_relationship"
+	renameRelationship                       = "rename_relationship"
 	setRelationshipComment                   = "set_relationship_comment"
 	createInsertPermission                   = "create_insert_permission"
 	dropInsertPermission                     = "drop_insert_permission"
@@ -409,6 +412,12 @@ type setRelationshipCommentInput struct {
 	Name    string      `json:"name" yaml:"name"`
 	Table   tableSchema `json:"table" yaml:"table"`
 	Comment *string     `json:"comment" yaml:"comment"`
+}
+
+type renameRelationshipInput struct {
+	Table   tableSchema `json:"table" yaml:"table"`
+	Name    string      `json:"name" yaml:"name"`
+	NewName string      `json:"new_name" yaml:"new_name"`
 }
 
 type dropRelationshipInput struct {
