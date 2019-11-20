@@ -28,7 +28,11 @@ import {
 } from '../Common/ReusableComponents/utils';
 
 import { isPostgresFunction } from '../utils';
-import { sqlEscapeText } from '../../../Common/utils/sqlUtils';
+import {
+  sqlEscapeText,
+  getCreateCheckConstraintSql,
+  getDropConstraintSql,
+} from '../../../Common/utils/sqlUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import {
   findTable,
@@ -38,7 +42,10 @@ import {
   getTableCustomRootFields,
   getTableCustomColumnNames,
 } from '../../../Common/utils/pgUtils';
-import { getSetCustomRootFieldsQuery } from '../../../Common/utils/v1QueryUtils';
+import {
+  getSetCustomRootFieldsQuery,
+  getRunSqlQuery,
+} from '../../../Common/utils/v1QueryUtils';
 
 import {
   fetchColumnCastsQuery,
@@ -91,8 +98,14 @@ const TOGGLE_ENUM = 'ModifyTable/TOGGLE_ENUM';
 const TOGGLE_ENUM_SUCCESS = 'ModifyTable/TOGGLE_ENUM_SUCCESS';
 const TOGGLE_ENUM_FAILURE = 'ModifyTable/TOGGLE_ENUM_FAILURE';
 
-export const MODIFY_ROOT_FIELD = 'ModifyTable/MODIFY_ROOT_FIELD';
+const MODIFY_ROOT_FIELD = 'ModifyTable/MODIFY_ROOT_FIELD';
 const SET_CUSTOM_ROOT_FIELDS = 'ModifyTable/SET_CUSTOM_ROOT_FIELDS';
+
+const SET_CHECK_CONSTRAINTS = 'ModifyTable/SET_CHECK_CONSTRAINTS';
+const setCheckConstraints = constraints => ({
+  type: SET_CHECK_CONSTRAINTS,
+  constraints,
+});
 
 const RESET = 'ModifyTable/RESET';
 
@@ -211,7 +224,10 @@ export const setCustomRootFields = successCb => (dispatch, getState) => {
   );
 };
 
-export const removeCheckConstraint = constraintName => (dispatch, getState) => {
+export const removeCheckConstraint = (constraintName, successCb, errorCb) => (
+  dispatch,
+  getState
+) => {
   const confirmMessage = `This will permanently delete the check constraint "${constraintName}" from this table`;
   const isOk = getConfirmation(confirmMessage, true, constraintName);
   if (!isOk) return;
@@ -247,8 +263,15 @@ export const removeCheckConstraint = constraintName => (dispatch, getState) => {
   const requestMsg = 'Deleting check constraint...';
   const successMsg = 'Check constraint deleted';
   const errorMsg = 'Deleting check constraint failed';
-  const customOnSuccess = () => {};
+  const customOnSuccess = () => {
+    if (successCb) {
+      successCb();
+    }
+  };
   const customOnError = err => {
+    if (errorCb) {
+      errorCb();
+    }
     dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
   };
 
@@ -2321,6 +2344,109 @@ export const toggleTableAsEnum = (isEnum, successCallback, failureCallback) => (
   );
 };
 
+export const saveCheckConstraint = (index, successCb, errorCb) => (
+  dispatch,
+  getState
+) => {
+  const {
+    currentTable,
+    currentSchema,
+    allSchemas: allTables,
+  } = getState().tables;
+  const { checkConstraintsModify } = getState().tables.modify;
+
+  const allConstraints = getTableCheckConstraints(
+    findTable(allTables, generateTableDef(currentTable, currentSchema))
+  );
+
+  const newConstraint = checkConstraintsModify[index];
+
+  const isNew = index === allConstraints.length;
+
+  const existingConstraint = allConstraints[index];
+
+  const upQueries = [];
+  const downQueries = [];
+
+  if (!isNew) {
+    upQueries.push(
+      getRunSqlQuery(
+        getDropConstraintSql(
+          existingConstraint.table_name,
+          existingConstraint.table_schema,
+          existingConstraint.constraint_name
+        )
+      )
+    );
+  }
+  upQueries.push(
+    getRunSqlQuery(
+      getCreateCheckConstraintSql(
+        currentTable,
+        currentSchema,
+        newConstraint.name,
+        newConstraint.check
+      )
+    )
+  );
+
+  downQueries.push(
+    getRunSqlQuery(
+      getDropConstraintSql(currentTable, currentSchema, newConstraint.name)
+    )
+  );
+
+  if (!isNew) {
+    downQueries.push(
+      getRunSqlQuery(
+        getCreateCheckConstraintSql(
+          currentTable,
+          currentSchema,
+          existingConstraint.constraint_name,
+          existingConstraint.check
+        )
+      )
+    );
+  }
+
+  const migrationName =
+    'alter_table_' +
+    currentSchema +
+    '_' +
+    currentTable +
+    'check_constraint_modify';
+  const requestMsg = 'Saving check constraint...';
+  const successMsg = 'Check constraint saved';
+  const errorMsg = 'Saving check constraint failed';
+
+  const customOnSuccess = () => {
+    // success callback
+    if (successCb) {
+      successCb();
+    }
+  };
+
+  const customOnError = () => {
+    // error callback
+    if (errorCb) {
+      errorCb();
+    }
+  };
+
+  makeMigrationCall(
+    dispatch,
+    getState,
+    upQueries,
+    downQueries,
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg
+  );
+};
+
 const saveUniqueKey = (
   index,
   tableName,
@@ -2450,6 +2576,8 @@ export {
   TOGGLE_ENUM,
   TOGGLE_ENUM_SUCCESS,
   TOGGLE_ENUM_FAILURE,
+  MODIFY_ROOT_FIELD,
+  SET_CHECK_CONSTRAINTS,
   changeTableName,
   fetchViewDefinition,
   handleMigrationErrors,
@@ -2483,4 +2611,5 @@ export {
   toggleEnumSuccess,
   toggleEnumFailure,
   modifyRootFields,
+  setCheckConstraints,
 };

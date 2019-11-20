@@ -258,3 +258,7 @@ export const getTableCustomColumnNames = table => {
   }
   return {};
 };
+
+export const getCheckConstraintName = constraint => {
+  return constraint.constraint_name;
+};

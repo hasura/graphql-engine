@@ -97,6 +97,16 @@ export const sanitiseRootFields = rootFields => {
   return santisedRootFields;
 };
 
+export const getCheckConstraintsState = constraints => {
+  return [
+    ...constraints.map(c => ({
+      name: c.constraint_name,
+      check: c.check,
+    })),
+    { name: '', check: '' },
+  ];
+};
+
 export {
   convertArrayToJson,
   getValidAlterOptions,

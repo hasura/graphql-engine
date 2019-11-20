@@ -29,3 +29,16 @@ export const checkSchemaModification = _sql => {
 
   return _isSchemaModification;
 };
+
+export const getCreateCheckConstraintSql = (
+  tableName,
+  schemaName,
+  constraintName,
+  check
+) => {
+  return `alter table "${schemaName}"."${tableName}" add constraint "${constraintName}" ${check}`;
+};
+
+export const getDropConstraintSql = (tableName, schemaName, constraintName) => {
+  return `alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}"`;
+};
