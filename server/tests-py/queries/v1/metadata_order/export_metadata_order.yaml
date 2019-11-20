@@ -181,9 +181,12 @@
     type: export_metadata
     args: {}
   response:
+    version: 2
     functions:
-    - get_test1
-    - get_test2
+    - function: get_test1
+      configuration: {}
+    - function: get_test2
+      configuration: {}
     remote_schemas: []
     query_collections:
     - name: collection_1
@@ -552,9 +555,12 @@
     type: export_metadata
     args: {}
   response:
+    version: 2
     functions:
-    - get_test1
-    - get_test2
+    - function: get_test1
+      configuration: {}
+    - function: get_test2
+      configuration: {}
     remote_schemas: []
     query_collections:
     - name: collection_1

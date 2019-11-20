@@ -110,10 +110,10 @@ compAggOps = ["max", "min"]
 isAggFld :: G.Name -> Bool
 isAggFld = flip elem (numAggOps <> compAggOps)
 
-mkFuncArgSeq :: Seq.Seq FunctionArg -> Seq.Seq FuncArgItem
-mkFuncArgSeq inputArgs =
-    Seq.fromList $ procFuncArgs inputArgs $
-    \fa t -> FuncArgItem (G.Name t) (faName fa) (faHasDefault fa)
+mkComputedFieldFunctionArgSeq :: Seq.Seq FunctionArg -> ComputedFieldFunctionArgSeq
+mkComputedFieldFunctionArgSeq inputArgs =
+    Seq.fromList $ procFuncArgs inputArgs faName $
+    \fa t -> FunctionArgItem (G.Name t) (faName fa) (faHasDefault fa)
 
 mkGCtxRole'
   :: QualifiedTable
@@ -213,9 +213,9 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
 
     -- funcargs input type
     funcArgInpObjs = flip mapMaybe funcs $ \func ->
-      mkFuncArgsInp (fiName func) (fiInputArgs func)
+      mkFuncArgsInp (fiName func) (getInputArgs func)
     -- funcArgCtx = Map.unions funcArgCtxs
-    funcArgScalarSet = funcs ^.. folded.to fiInputArgs.folded.to (_qptName.faType)
+    funcArgScalarSet = funcs ^.. folded.to getInputArgs.folded.to (_qptName.faType)
 
     -- helper
     mkFldMap ty = Map.fromList . concatMap (mkFld ty)
@@ -414,11 +414,20 @@ getRootFldsRole' tn primCols constraints fields funcs insM
 
     funcFldHelper f g pFltr pLimit hdrs =
       flip map funcs $ \fi ->
-      ( f . FuncQOpCtx tn hdrs colGNameMap pFltr pLimit (fiName fi) $ mkFuncArgItemSeq fi
+      ( f $ FuncQOpCtx tn hdrs colGNameMap pFltr pLimit
+              (fiName fi) (mkFuncArgItemSeq fi)
       , g fi $ fiDescription fi
       )
 
-    mkFuncArgItemSeq = mkFuncArgSeq . fiInputArgs
+    mkFuncArgItemSeq functionInfo =
+      let inputArgs = fiInputArgs functionInfo
+      in Seq.fromList $ procFuncArgs inputArgs nameFn resultFn
+      where
+        nameFn = \case
+          IAUserProvided fa       -> faName fa
+          IASessionVariables name -> Just name
+        resultFn arg gName = flip fmap arg $
+          \fa -> FunctionArgItem (G.Name gName) (faName fa) (faHasDefault fa)
 
 
 getSelPermission :: TableInfo PGColumnInfo -> RoleName -> Maybe SelPermInfo
@@ -453,7 +462,7 @@ getSelPerm tableCache fields role selPermInfo = do
 
   computedSelFields <- fmap catMaybes $ forM computedFields $ \info -> do
     let ComputedFieldInfo name function returnTy _ = info
-        inputArgSeq = mkFuncArgSeq $ _cffInputArgs function
+        inputArgSeq = mkComputedFieldFunctionArgSeq $ _cffInputArgs function
     fmap (SFComputedField . ComputedField name function inputArgSeq) <$>
       case returnTy of
         CFRScalar scalarTy  -> pure $ Just $ CFTScalar scalarTy
@@ -566,7 +575,7 @@ mkAdminSelFlds fields tableCache = do
 
   computedSelFields <- forM computedFields $ \info -> do
     let ComputedFieldInfo name function returnTy _ = info
-        inputArgSeq = mkFuncArgSeq $ _cffInputArgs function
+        inputArgSeq = mkComputedFieldFunctionArgSeq $ _cffInputArgs function
     (SFComputedField . ComputedField name function inputArgSeq) <$>
       case returnTy of
         CFRScalar scalarTy  -> pure $ CFTScalar scalarTy

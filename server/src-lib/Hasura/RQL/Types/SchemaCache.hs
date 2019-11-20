@@ -128,6 +128,7 @@ import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
+import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Metadata
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
@@ -143,7 +144,6 @@ import           Language.Haskell.TH.Syntax        (Lift)
 
 import qualified Data.HashMap.Strict               as M
 import qualified Data.HashSet                      as HS
-import qualified Data.Sequence                     as Seq
 import qualified Data.Text                         as T
 import qualified Language.GraphQL.Draft.Syntax     as G
 
@@ -399,35 +399,6 @@ checkForFieldConflict tableInfo f = do
     fieldInfoMap = _tiFieldInfoMap tableInfo
     customColumnFields =
       map (FieldName . G.unName . pgiName) $ getCols fieldInfoMap
-
-data FunctionType
-  = FTVOLATILE
-  | FTIMMUTABLE
-  | FTSTABLE
-  deriving (Eq)
-
-$(deriveJSON defaultOptions{constructorTagModifier = drop 2} ''FunctionType)
-
-funcTypToTxt :: FunctionType -> T.Text
-funcTypToTxt FTVOLATILE  = "VOLATILE"
-funcTypToTxt FTIMMUTABLE = "IMMUTABLE"
-funcTypToTxt FTSTABLE    = "STABLE"
-
-instance Show FunctionType where
-  show = T.unpack . funcTypToTxt
-
-data FunctionInfo
-  = FunctionInfo
-  { fiName          :: !QualifiedFunction
-  , fiSystemDefined :: !SystemDefined
-  , fiType          :: !FunctionType
-  , fiInputArgs     :: !(Seq.Seq FunctionArg)
-  , fiReturnType    :: !QualifiedTable
-  , fiDeps          :: ![SchemaDependency]
-  , fiDescription   :: !(Maybe PGDescription)
-  } deriving (Show, Eq)
-
-$(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionInfo)
 
 type TableCache columnInfo = M.HashMap QualifiedTable (TableInfo columnInfo) -- info of all tables
 type FunctionCache = M.HashMap QualifiedFunction FunctionInfo -- info of all functions
@@ -699,8 +670,8 @@ delEventTriggerFromCache qt trn = do
 
 addFunctionToCache
   :: (QErrM m, CacheRWM m)
-  => FunctionInfo -> m ()
-addFunctionToCache fi = do
+  => FunctionInfo -> [SchemaDependency] -> m ()
+addFunctionToCache fi deps = do
   sc <- askSchemaCache
   let functionCache = scFunctions sc
   case M.lookup fn functionCache of
@@ -712,7 +683,6 @@ addFunctionToCache fi = do
   where
     fn = fiName fi
     objId = SOFunction $ fiName fi
-    deps = fiDeps fi
 
 askFunctionInfo
   :: (CacheRM m, QErrM m)
