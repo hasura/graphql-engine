@@ -107,6 +107,7 @@ data RQLQueryV1
 data RQLQueryV2
   = RQV2TrackTable !TrackTableV2
   | RQV2SetTableCustomFields !SetTableCustomFields
+  | RQV2TrackFunction !TrackFunctionV2
   deriving (Show, Eq, Lift)
 
 data RQLQuery
@@ -297,6 +298,7 @@ queryNeedsReload (RQV1 qi) = case qi of
 queryNeedsReload (RQV2 qi) = case qi of
   RQV2TrackTable _           -> True
   RQV2SetTableCustomFields _ -> True
+  RQV2TrackFunction _        -> True
 
 -- TODO: RQSelect query should also be run in READ ONLY mode.
 -- But this could be part of console's bulk statement and hence should be added after console changes
@@ -408,3 +410,4 @@ runQueryM rq =
     runQueryV2M = \case
       RQV2TrackTable q           -> runTrackTableV2Q q
       RQV2SetTableCustomFields q -> runSetTableCustomFieldsQV2 q
+      RQV2TrackFunction q        -> runTrackFunctionV2 q
