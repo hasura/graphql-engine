@@ -62,6 +62,9 @@ You don't need to integrate your UI with auth0 for testing. You can follow the s
    :class: no-shadow
    :alt: Auth0 login page
 
+.. note::
+   In case the above method gives a callback error (with ``access_denied`` in log), try disabling OIDC Conformant setting (https://auth0.com/docs/api-auth/tutorials/adoption/oidc-conformant) under Advanced Settings -> OAuth.
+
 3. After successfully logging in, you will be redirected to ``https://localhost:3000/callback#xxxxxxxx&id_token=yyyyyyy``. This page may be a 404 if you don't have a UI running on localhost:3000.
 
 .. image:: https://graphql-engine-cdn.hasura.io/img/auth0-localhost-callback-404.png
@@ -82,7 +85,6 @@ You don't need to integrate your UI with auth0 for testing. You can follow the s
 
 **Save this JWT token value so that we can use it later to test authorization using the Hasura console.**
 
-**Note**: In case the above method gives an error, try disabling OIDC Conformant setting (https://auth0.com/docs/api-auth/tutorials/adoption/oidc-conformant) under Advanced Settings -> OAuth.
 
 Configure Hasura to use Auth0 Keys
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
