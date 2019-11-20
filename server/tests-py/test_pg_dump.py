@@ -1,4 +1,4 @@
-import yaml
+import ruamel.yaml as yaml
 from super_classes import DefaultTestSelectQueries
 import os
 

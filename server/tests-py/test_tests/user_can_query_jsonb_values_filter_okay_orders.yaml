@@ -1,0 +1,42 @@
+- description: User can query geometry values which satisfies filter in select permission (valid ordering alternative)
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user1
+  response:
+    data:
+      jsonb_table:
+      - id: 1
+        jsonb_col:
+          name: Hasura
+          age: 7
+  query:
+    query: |
+      query {
+        jsonb_table{
+          id
+          jsonb_col
+        }
+      }
+- description: User can query geometry values which satisfies filter in select permission (valid ordering alternative)
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user1
+  response:
+    data:
+      jsonb_table:
+      - id: 1
+        jsonb_col:
+          # Note, order swapped; this is valid too (for now?):
+          age: 7
+          name: Hasura
+  # Note: same query:
+  query:
+    query: |
+      query {
+        jsonb_table{
+          id
+          jsonb_col
+        }
+      }

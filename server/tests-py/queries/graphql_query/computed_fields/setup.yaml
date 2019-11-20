@@ -52,6 +52,27 @@ args:
         END;
       $$ LANGUAGE plpgsql STABLE;
 
+      CREATE EXTENSION IF NOT EXISTS postgis;
+      CREATE EXTENSION IF NOT EXISTS postgis_topology;
+
+      CREATE TABLE locations
+      (
+          id uuid NOT NULL DEFAULT gen_random_uuid(),
+          location geometry(Point,4326)
+      );
+
+      INSERT INTO locations (location)
+      VALUES (ST_GeomFromText('POINT(0.0 0.0)', 4326)),
+             (ST_GeomFromText('POINT(1.0 0.0)', 4326))
+      ;
+
+      CREATE FUNCTION locations_distance("from" json, locations_row locations)
+       RETURNS INTEGER AS $$
+         SELECT ST_DISTANCE( locations_row.location::geography
+                           , ST_GeomFromGeoJSON("from"::text)::geography
+                           )::integer
+       $$ LANGUAGE sql STABLE;
+
 - type: track_table
   args:
     name: author
@@ -84,6 +105,7 @@ args:
     permission:
       columns: '*'
       filter: {}
+
 - type: create_select_permission
   args:
     table: author
@@ -94,4 +116,15 @@ args:
         id: X-Hasura-User-Id
       computed_fields:
       - full_name
-      - get_articles
+
+- type: track_table
+  args:
+    name: locations
+    schema: public
+- type: add_computed_field
+  args:
+    table: locations
+    name: distance
+    definition:
+      function: locations_distance
+      table_argument: locations_row

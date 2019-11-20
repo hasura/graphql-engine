@@ -152,7 +152,7 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
 
     allTypes = relInsInpObjTys <> onConflictTypes <> jsonOpTys
                <> queryTypes <> aggQueryTypes <> mutationTypes
-               <> funcInpArgTys <> referencedEnumTypes <> computedColFuncArgsInps
+               <> funcInpArgTys <> referencedEnumTypes <> computedFieldFuncArgsInps
 
     queryTypes = catMaybes
       [ TIInpObj <$> boolExpInpObjM
@@ -176,7 +176,7 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
                [ insInpObjFldsM, updSetInpObjFldsM
                , boolExpInpObjFldsM , selObjFldsM
                ]
-    scalars = selByPkScalarSet <> funcArgScalarSet
+    scalars = selByPkScalarSet <> funcArgScalarSet <> computedFieldFuncArgScalars
 
     -- helper
     mkColFldMap ty cols = Map.fromList $ flip map cols $
@@ -305,15 +305,17 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
            in TIEnum $ mkHsraEnumTyInfo Nothing typeName (EnumValuesReference enumReference)
 
 
-    -- computed fields function args input objects
-    mkComputedFieldFuncArgsInp computedColInfo =
-      let ComputedFieldFunction qf inputArgs tableArg _ =
-            _cfFunction computedColInfo
-          withoutTableArg = functionArgsWithoutTableArg tableArg inputArgs
-      in mkFuncArgsInp qf withoutTableArg
+    -- computed fields' function args input objects and scalar types
+    mkComputedFieldRequiredTypes computedFieldInfo =
+      let ComputedFieldFunction qf inputArgs _ _ = _cfFunction computedFieldInfo
+          scalarArgs = map (_qptName . faType) $ toList inputArgs
+      in (, scalarArgs) <$> mkFuncArgsInp qf inputArgs
 
-    computedColFuncArgsInps = map TIInpObj $ catMaybes $
-      maybe [] (map mkComputedFieldFuncArgsInp . getComputedFields) selFldsM
+    computedFieldReqTypes = catMaybes $
+      maybe [] (map mkComputedFieldRequiredTypes . getComputedFields) selFldsM
+
+    computedFieldFuncArgsInps = map (TIInpObj . fst) computedFieldReqTypes
+    computedFieldFuncArgScalars = Set.fromList $ concatMap snd computedFieldReqTypes
 
 getRootFldsRole'
   :: QualifiedTable
@@ -449,10 +451,9 @@ getSelPerm tableCache fields role selPermInfo = do
                              , _rfiIsNullable = isRelNullable fields relInfo
                              }
 
-  computedColFlds <- fmap catMaybes $ forM computedFields $ \info -> do
+  computedSelFields <- fmap catMaybes $ forM computedFields $ \info -> do
     let ComputedFieldInfo name function returnTy _ = info
-        ComputedFieldFunction _ inputArgs tableArg _ = function
-        inputArgSeq = mkFuncArgSeq $ functionArgsWithoutTableArg tableArg inputArgs
+        inputArgSeq = mkFuncArgSeq $ _cffInputArgs function
     fmap (SFComputedField . ComputedField name function inputArgSeq) <$>
       case returnTy of
         CFRScalar scalarTy  -> pure $ Just $ CFTScalar scalarTy
@@ -470,16 +471,19 @@ getSelPerm tableCache fields role selPermInfo = do
                         , _cftPermLimit = spiLimit selPerm
                         }
 
-  return (spiAllowAgg selPermInfo, cols <> relFlds <> computedColFlds)
+  return (spiAllowAgg selPermInfo, cols <> relFlds <> computedSelFields)
   where
     validRels = getValidRels fields
     validCols = getValidCols fields
     cols = map SFPGColumn $ getColInfos (toList allowedCols) validCols
     computedFields = flip filter (getComputedFieldInfos fields) $
-                      \info -> _cfiName info `Set.member` allowedComputedFields
+                      \info -> case _cfiReturnType info of
+                        CFRScalar _     ->
+                          _cfiName info `Set.member` allowedScalarComputedFields
+                        CFRSetofTable _ -> True
 
     allowedCols = spiCols selPermInfo
-    allowedComputedFields = spiComputedFields selPermInfo
+    allowedScalarComputedFields = spiScalarComputedFields selPermInfo
 
 mkInsCtx
   :: MonadError QErr m
@@ -560,10 +564,9 @@ mkAdminSelFlds fields tableCache = do
                    , _rfiIsNullable = isRelNullable fields relInfo
                    }
 
-  computedColFlds <- forM computedCols $ \info -> do
+  computedSelFields <- forM computedFields $ \info -> do
     let ComputedFieldInfo name function returnTy _ = info
-        ComputedFieldFunction _ inputArgs tableArg _ = function
-        inputArgSeq = mkFuncArgSeq $ functionArgsWithoutTableArg tableArg inputArgs
+        inputArgSeq = mkFuncArgSeq $ _cffInputArgs function
     (SFComputedField . ComputedField name function inputArgSeq) <$>
       case returnTy of
         CFRScalar scalarTy  -> pure $ CFTScalar scalarTy
@@ -579,12 +582,12 @@ mkAdminSelFlds fields tableCache = do
                         , _cftPermLimit = Nothing
                         }
 
-  return $ colSelFlds <> relSelFlds <> computedColFlds
+  return $ colSelFlds <> relSelFlds <> computedSelFields
   where
     cols = getValidCols fields
     colSelFlds = map SFPGColumn cols
     validRels = getValidRels fields
-    computedCols = getComputedFieldInfos fields
+    computedFields = getComputedFieldInfos fields
 
 mkGCtxRole
   :: (MonadError QErr m)
