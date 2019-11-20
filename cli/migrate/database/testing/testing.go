@@ -55,7 +55,8 @@ func TestLockAndUnlock(t *testing.T, d database.Driver) {
 	}
 
 	// unlock
-	if err := d.UnLock(); err != nil {
+	opts := &database.UnLockOptions{}
+	if err := d.UnLock(opts); err != nil {
 		t.Fatal(err)
 	}
 
@@ -63,7 +64,7 @@ func TestLockAndUnlock(t *testing.T, d database.Driver) {
 	if err := d.Lock(); err != nil {
 		t.Fatal(err)
 	}
-	if err := d.UnLock(); err != nil {
+	if err := d.UnLock(opts); err != nil {
 		t.Fatal(err)
 	}
 }
