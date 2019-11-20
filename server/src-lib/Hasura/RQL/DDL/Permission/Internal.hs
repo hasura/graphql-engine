@@ -40,21 +40,22 @@ instance ToJSON PermColSpec where
   toJSON (PCCols cols) = toJSON cols
   toJSON PCStar        = "*"
 
-convColSpec :: FieldInfoMap PGColumnInfo -> PermColSpec -> [PGCol]
+convColSpec :: FieldInfoMap FieldInfo -> PermColSpec -> [PGCol]
 convColSpec _ (PCCols cols) = cols
 convColSpec cim PCStar      = map pgiColumn $ getCols cim
 
+-- FIXME: move check into collecting code for addPermP1 (probably buildSchemaCache)
 assertPermNotDefined
   :: (MonadError QErr m)
   => RoleName
   -> PermAccessor a
-  -> TableInfo PGColumnInfo
+  -> TableInfo
   -> m ()
 assertPermNotDefined roleName pa tableInfo =
   when (permissionIsDefined rpi pa || roleName == adminRole)
   $ throw400 AlreadyExists $ mconcat
   [ "'" <> T.pack (show $ permAccToType pa) <> "'"
-  , " permission on " <>> _tiName tableInfo
+  , " permission on " <>> _tciName (_tiCoreInfo tableInfo)
   , " for role " <>> roleName
   , " already exists"
   ]
@@ -70,12 +71,12 @@ assertPermDefined
   :: (MonadError QErr m)
   => RoleName
   -> PermAccessor a
-  -> TableInfo PGColumnInfo
+  -> TableInfo
   -> m ()
 assertPermDefined roleName pa tableInfo =
   unless (permissionIsDefined rpi pa) $ throw400 PermissionDenied $ mconcat
   [ "'" <> T.pack (show $ permAccToType pa) <> "'"
-  , " permission on " <>> _tiName tableInfo
+  , " permission on " <>> _tciName (_tiCoreInfo tableInfo)
   , " for role " <>> roleName
   , " does not exist"
   ]
@@ -84,7 +85,7 @@ assertPermDefined roleName pa tableInfo =
 
 askPermInfo
   :: (MonadError QErr m)
-  => TableInfo PGColumnInfo
+  => TableInfo
   -> RoleName
   -> PermAccessor c
   -> m c
@@ -92,7 +93,7 @@ askPermInfo tabInfo roleName pa =
   case M.lookup roleName rpim >>= (^. paL) of
     Just c  -> return c
     Nothing -> throw400 PermissionDenied $ mconcat
-               [ pt <> " permission on " <>> _tiName tabInfo
+               [ pt <> " permission on " <>> _tciName (_tiCoreInfo tabInfo)
                , " for role " <>> roleName
                , " does not exist"
                ]
@@ -175,8 +176,8 @@ data CreatePermP1Res a
   } deriving (Show, Eq)
 
 procBoolExp
-  :: (QErrM m, CacheRM m)
-  => QualifiedTable -> FieldInfoMap PGColumnInfo -> BoolExp
+  :: (QErrM m, TableCoreInfoRM m)
+  => QualifiedTable -> FieldInfoMap FieldInfo -> BoolExp
   -> m (AnnBoolExpPartialSQL, [SchemaDependency])
 procBoolExp tn fieldInfoMap be = do
   abe <- annBoolExp valueParser fieldInfoMap $ unBoolExp be
@@ -258,8 +259,8 @@ class (ToJSON a) => IsPerm a where
     :: PermAccessor (PermInfo a)
 
   buildPermInfo
-    :: (QErrM m, CacheRM m)
-    => TableInfo PGColumnInfo
+    :: (QErrM m, TableCoreInfoRM m)
+    => TableCoreInfo FieldInfo
     -> PermDef a
     -> m (WithDeps (PermInfo a))
 
@@ -271,8 +272,7 @@ class (ToJSON a) => IsPerm a where
     => DropPerm a
     -> m (DropPermP1Res a)
 
-  dropPermP2Setup
-    :: (CacheRWM m, MonadTx m) => DropPerm a -> DropPermP1Res a -> m ()
+  dropPermP2Setup :: (MonadTx m) => DropPerm a -> DropPermP1Res a -> m ()
 
   getPermAcc1
     :: PermDef a -> PermAccessor (PermInfo a)
@@ -282,8 +282,9 @@ class (ToJSON a) => IsPerm a where
     :: DropPerm a -> PermAccessor (PermInfo a)
   getPermAcc2 _ = permAccessor
 
+-- FIXME: Push into addPermP1
 validateViewPerm
-  :: (IsPerm a, QErrM m) => PermDef a -> TableInfo PGColumnInfo -> m ()
+  :: (IsPerm a, QErrM m) => PermDef a -> TableCoreInfo fieldInfo -> m ()
 validateViewPerm permDef tableInfo =
   case permAcc of
     PASelect -> return ()
@@ -291,48 +292,25 @@ validateViewPerm permDef tableInfo =
     PAUpdate -> mutableView tn viIsUpdatable viewInfo "updatable"
     PADelete -> mutableView tn viIsDeletable viewInfo "deletable"
   where
-    tn = _tiName tableInfo
-    viewInfo = _tiViewInfo tableInfo
+    tn = _tciName tableInfo
+    viewInfo = _tciViewInfo tableInfo
     permAcc = getPermAcc1 permDef
 
-addPermP1
-  :: (QErrM m, CacheRM m, IsPerm a)
-  => TableInfo PGColumnInfo -> PermDef a -> m (WithDeps (PermInfo a))
-addPermP1 tabInfo pd = do
-  assertPermNotDefined (pdRole pd) (getPermAcc1 pd) tabInfo
-  buildPermInfo tabInfo pd
-
-addPermP2 :: (IsPerm a, QErrM m, CacheRWM m, MonadTx m, HasSystemDefined m)
-          => QualifiedTable -> PermDef a -> WithDeps (PermInfo a) -> m ()
-addPermP2 tn pd (permInfo, deps) = do
-  addPermP2Setup tn pd permInfo
-  addPermToCache tn (pdRole pd) pa permInfo deps
+addPermP2 :: (IsPerm a, MonadTx m, HasSystemDefined m) => QualifiedTable -> PermDef a -> m ()
+addPermP2 tn pd = do
+  let pt = permAccToType $ getPermAcc1 pd
   systemDefined <- askSystemDefined
   liftTx $ savePermToCatalog pt tn pd systemDefined
-  where
-    pa = getPermAcc1 pd
-    pt = permAccToType pa
-
-createPermP1
-  :: ( UserInfoM m, MonadError QErr m
-     , CacheRM m, IsPerm a
-     )
-  => WithTable (PermDef a) -> m (WithDeps (PermInfo a))
-createPermP1 (WithTable tn pd) = do
-  tabInfo <- askTabInfo tn
-  validateViewPerm pd tabInfo
-  addPermP1 tabInfo pd
 
 runCreatePerm
-  :: ( UserInfoM m
-     , CacheRWM m, IsPerm a, MonadTx m
-     , HasSystemDefined m
-     )
+  :: (UserInfoM m, CacheRWM m, IsPerm a, MonadTx m, HasSystemDefined m)
   => CreatePerm a -> m EncJSON
-runCreatePerm defn@(WithTable tn pd) = do
-  permInfo <- createPermP1 defn
-  addPermP2 tn pd permInfo
-  return successMsg
+runCreatePerm (WithTable tn pd) = do
+  adminOnly
+  addPermP2 tn pd
+  let pt = permAccToType $ getPermAcc1 pd
+  buildSchemaCacheFor $ MOTableObj tn (MTOPerm (pdRole pd) pt)
+  pure successMsg
 
 dropPermP1
   :: (QErrM m, CacheRM m, IsPerm a)
@@ -341,12 +319,9 @@ dropPermP1 dp@(DropPerm tn rn) = do
   tabInfo <- askTabInfo tn
   askPermInfo tabInfo rn $ getPermAcc2 dp
 
-dropPermP2
-  :: (IsPerm a, QErrM m, CacheRWM m, MonadTx m)
-  => DropPerm a -> DropPermP1Res a -> m ()
+dropPermP2 :: (MonadTx m, IsPerm a) => DropPerm a -> DropPermP1Res a -> m ()
 dropPermP2 dp@(DropPerm tn rn) p1Res = do
   dropPermP2Setup dp p1Res
-  delPermFromCache pa rn tn
   liftTx $ dropPermFromCatalog tn rn pt
   where
     pa = getPermAcc2 dp
@@ -358,4 +333,5 @@ runDropPerm
 runDropPerm defn = do
   permInfo <- buildDropPermP1Res defn
   dropPermP2 defn permInfo
+  withNewInconsistentObjsCheck buildSchemaCache
   return successMsg

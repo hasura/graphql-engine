@@ -21,6 +21,7 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 import qualified Control.Monad.Validate        as MV
 import qualified Data.HashMap.Strict           as M
+import qualified Data.HashSet as S
 import qualified Data.Sequence                 as Seq
 import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
@@ -200,33 +201,37 @@ trackFunctionP1 qf = do
     throw400 NotSupported $ "table with name " <> qf <<> " already exists"
 
 trackFunctionP2Setup
-  :: (QErrM m, CacheRWM m, MonadTx m)
-  => QualifiedFunction -> SystemDefined -> FunctionConfig -> RawFunctionInfo -> m ()
-trackFunctionP2Setup qf systemDefined config rawfi = do
-  (fi, dep) <- mkFunctionInfo qf systemDefined config rawfi
-  let retTable = fiReturnType fi
-      err = err400 NotExists $ "table " <> retTable <<> " is not tracked"
-  sc <- askSchemaCache
-  void $ liftMaybe err $ M.lookup retTable $ scTables sc
-  addFunctionToCache fi [dep]
+  :: (QErrM m)
+  => HashSet QualifiedTable
+  -- ^ the set of all tracked tables
+  -> QualifiedFunction
+  -> SystemDefined
+  -> FunctionConfig
+  -> RawFunctionInfo
+  -> m (FunctionInfo, SchemaDependency)
+trackFunctionP2Setup trackedTableNames qf systemDefined config rawfi = do
+  (fi, deps) <- mkFunctionInfo qf systemDefined config rawfi
+  -- FIXME: eliminate redundant check now handled by dependencies
+  unless (fiReturnType fi `S.member` trackedTableNames) $
+    throw400 NotExists $ "table " <> fiReturnType fi <<> " is not tracked"
+  pure (fi, deps)
 
-trackFunctionP2 :: (QErrM m, CacheRWM m, HasSystemDefined m, MonadTx m)
+trackFunctionP2 :: (MonadTx m, CacheRWM m, HasSystemDefined m)
                 => QualifiedFunction -> FunctionConfig -> m EncJSON
 trackFunctionP2 qf config = do
-  sc <- askSchemaCache
-  let defGCtx = scDefaultRemoteGCtx sc
-      funcNameGQL = GS.qualObjectToName qf
+  let funcNameGQL = GS.qualObjectToName qf
   -- check function name is in compliance with GraphQL spec
+  -- FIXME: move check into trackFunctionP2Setup
   unless (G.isValidName funcNameGQL) $ throw400 NotSupported $
     "function name " <> qf <<> " is not in compliance with GraphQL spec"
   -- check for conflicts in remote schema
-  GS.checkConflictingNode defGCtx funcNameGQL
+  -- FIXME: ensure check is preserved
+  -- GS.checkConflictingNode defGCtx funcNameGQL
 
   -- fetch function info
-  rawfi <- fetchRawFunctioInfo qf
   systemDefined <- askSystemDefined
-  trackFunctionP2Setup qf systemDefined config rawfi
   liftTx $ saveFunctionToCatalog qf config systemDefined
+  buildSchemaCacheFor $ MOFunction qf
   return successMsg
 
 handleMultipleFunctions :: (QErrM m) => QualifiedFunction -> [a] -> m a
@@ -251,11 +256,7 @@ fetchRawFunctioInfo qf@(QualifiedObject sn fn) =
           |] (sn, fn) True
 
 runTrackFunc
-  :: ( QErrM m
-     , CacheRWM m
-     , HasSystemDefined m
-     , MonadTx m
-     )
+  :: (MonadTx m, CacheRWM m, HasSystemDefined m)
   => TrackFunction -> m EncJSON
 runTrackFunc (TrackFunction qf)= do
   trackFunctionP1 qf
@@ -294,5 +295,5 @@ runUntrackFunc
 runUntrackFunc (UnTrackFunction qf) = do
   void $ askFunctionInfo qf
   liftTx $ delFunctionFromCatalog qf
-  delFunctionFromCache qf
+  withNewInconsistentObjsCheck buildSchemaCache
   return successMsg

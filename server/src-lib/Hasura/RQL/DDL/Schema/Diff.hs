@@ -62,7 +62,6 @@ data FunctionMeta
   { fmOid         :: !Int
   , fmFunction    :: !QualifiedFunction
   , fmType        :: !FunctionType
-  , fmDescription :: !(Maybe PGDescription)
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 2 snakeCase) ''FunctionMeta)
 
@@ -187,9 +186,9 @@ getTableDiff oldtm newtm =
                       overloadedComputedFieldFunctions
 
 getTableChangeDeps
-  :: (QErrM m, CacheRWM m)
-  => TableInfo PGColumnInfo -> TableDiff -> m [SchemaObjId]
-getTableChangeDeps ti tableDiff = do
+  :: (QErrM m, CacheRM m)
+  => QualifiedTable -> TableDiff -> m [SchemaObjId]
+getTableChangeDeps tn tableDiff = do
   sc <- askSchemaCache
   -- for all the dropped columns
   droppedColDeps <- fmap concat $ forM droppedCols $ \droppedCol -> do
@@ -201,7 +200,6 @@ getTableChangeDeps ti tableDiff = do
     return $ getDependentObjs sc objId
   return $ droppedConsDeps <> droppedColDeps <> droppedComputedFieldDeps
   where
-    tn = _tiName ti
     TableDiff _ droppedCols _ _ droppedFKeyConstraints computedFieldDiff _ _ = tableDiff
     droppedComputedFieldDeps = map (SOTableObj tn . TOComputedField) $ _cfdDropped computedFieldDiff
 
@@ -221,7 +219,7 @@ getSchemaDiff oldMeta newMeta =
       (tmTable oldtm, getTableDiff oldtm newtm)
 
 getSchemaChangeDeps
-  :: (QErrM m, CacheRWM m)
+  :: (QErrM m, CacheRM m)
   => SchemaDiff -> m [SchemaObjId]
 getSchemaChangeDeps schemaDiff = do
   -- Get schema cache
@@ -229,11 +227,7 @@ getSchemaChangeDeps schemaDiff = do
   let tableIds = map SOTable droppedTables
   -- Get the dependent of the dropped tables
   let tableDropDeps = concatMap (getDependentObjs sc) tableIds
-  tableModDeps <- fmap concat $ forM alteredTables $ \(oldQtn, tableDiff) -> do
-    ti <- case M.lookup oldQtn $ scTables sc of
-      Just ti -> return ti
-      Nothing -> throw500 $ "old table metadata not found in cache : " <>> oldQtn
-    getTableChangeDeps ti tableDiff
+  tableModDeps <- concat <$> traverse (uncurry getTableChangeDeps) alteredTables
   return $ filter (not . isDirectDep) $
     HS.toList $ HS.fromList $ tableDropDeps <> tableModDeps
   where
@@ -249,8 +243,7 @@ fetchFunctionMeta =
       json_build_object(
         'oid', f.function_oid,
         'function', json_build_object('name', f.function_name, 'schema', f.function_schema),
-        'type', f.function_type,
-        'description', f.description
+        'type', f.function_type
       ) AS function_meta
     FROM
       hdb_catalog.hdb_function_agg f
@@ -261,7 +254,7 @@ fetchFunctionMeta =
 data FunctionDiff
   = FunctionDiff
   { fdDropped :: ![QualifiedFunction]
-  , fdAltered :: ![(QualifiedFunction, FunctionType, Maybe PGDescription)]
+  , fdAltered :: ![(QualifiedFunction, FunctionType)]
   } deriving (Show, Eq)
 
 getFuncDiff :: [FunctionMeta] -> [FunctionMeta] -> FunctionDiff
@@ -272,9 +265,8 @@ getFuncDiff oldMeta newMeta =
     alteredFuncs = mapMaybe mkAltered $ getOverlap fmOid oldMeta newMeta
     mkAltered (oldfm, newfm) =
       let isTypeAltered = fmType oldfm /= fmType newfm
-          isDescriptionAltered = fmDescription oldfm /= fmDescription newfm
-          alteredFunc = (fmFunction oldfm, fmType newfm, fmDescription newfm)
-      in bool Nothing (Just alteredFunc) $ isTypeAltered || isDescriptionAltered
+          alteredFunc = (fmFunction oldfm, fmType newfm)
+      in bool Nothing (Just alteredFunc) $ isTypeAltered
 
 getOverloadedFuncs
   :: [QualifiedFunction] -> [FunctionMeta] -> [QualifiedFunction]

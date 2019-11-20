@@ -6,8 +6,14 @@ module Hasura.Incremental
   , rule
   , build
   , rebuild
+  , rebuildRule
   , result
+
+  , mapRule
+  , mapRuleS
+
   , cache
+  , cacheWithWriter
   , keyed
   ) where
 
@@ -48,6 +54,18 @@ newtype Rule m a b
 rule :: (Functor m) => (a -> m b) -> Rule m a b
 rule f = Rule $ \input -> f input <&> \result ->
   Result { rebuild = build (rule f), result }
+
+-- | Modifies a 'Rule' by applying a natural transformation.
+mapRule :: (Functor n) => (forall r. m r -> n r) -> Rule m a b -> Rule n a b
+mapRule f rule' = Rule \input -> f (build rule' input) <&> \result' ->
+  result' { rebuild = build (mapRule f (Rule $ rebuild result')) }
+
+-- | Like 'mapRule', but the transformation can produce an extra piece of state in the result. This
+-- is most useful for running monad transformers like 'runWriterT' that accumulate extra information
+-- during execution (but note the caveats about caching noted in the documentation for 'cache').
+mapRuleS :: (Functor n) => (forall r. m r -> n (r, s)) -> Rule m a b -> Rule n a (b, s)
+mapRuleS f rule' = Rule \input -> f (build rule' input) <&> \(Result { rebuild, result }, s) ->
+  Result { rebuild = build (mapRuleS f (Rule rebuild)), result = (result, s) }
 
 instance (Applicative m) => Applicative (Rule m a) where
   pure a = Rule . const . pure $ pure a
@@ -109,6 +127,9 @@ data Result m a b
   , result  :: !b
   } deriving (Functor)
 
+rebuildRule :: Result m a b -> Rule m a b
+rebuildRule = Rule . rebuild
+
 instance (Applicative m) => Applicative (Result m a) where
   pure a = fix $ \result -> Result
     { rebuild = const $ pure result
@@ -131,14 +152,32 @@ instance (Functor m) => Profunctor (Result m) where
 -- re-executing the rule. Otherwise, the old cached values are discarded, and the rule is
 -- re-executed to produce a new set of cached values.
 --
--- Note that it is important that the given rule does not perform any side-effects (other than
--- perhaps raising an error on invalid input), as they will not be re-executed if the cached result
--- is used!
---
 -- Indescriminate use of 'cache' is likely to have little effect except to increase memory usage,
 -- since the input and result of each rule execution must be retained in memory. Avoid using 'cache'
 -- around rules with large input or output that is likely to change often unless profiling
 -- indicates it is computationally expensive enough to be worth the memory overhead.
+--
+-- __Note that only direct inputs and outputs of a 'Rule' are cached.__ It is extremely important to
+-- take care in your choice of the base monad @m@:
+--
+--   * Monads that provide access to extra information through a side-channel, such as 'ReaderT',
+--     'StateT', or 'IO', will __not__ expose that information to dependency analysis. If that
+--     information changes between builds, but the rule’s direct inputs remain unchanged, the rule
+--     will __not__ be re-executed.
+--
+--   * Dually, monads that perform side-effects as part of execution, such as 'StateT', 'WriterT',
+--     or 'IO', will __not__ have their side-effects automatically replayed if the cached result is
+--     used. If the side effects are only necessary to change some state to bring it in line with
+--     the updated inputs, that is entirely fine (and likely even desirable), but if the
+--     side-effects are necessary to produce each result, caching will lead to incorrect behavior.
+--
+-- The safest monad to use for @m@ is therefore 'Identity', which suffers neither of the above
+-- problems by construction. However, in practice, it is highly desirable to be able to execute
+-- rules that may perform effects such as raising errors, accumulating information, or modifying
+-- external state, so the capability is exposed. See also
+--
+-- See also 'cacheWithWriter' for a variant of 'cache' that cooperates with 'MonadWriter' to allow
+-- safe use of accumulative state.
 cache :: forall a b m. (Eq a, Applicative m) => Rule m a b -> Rule m a b
 cache (Rule build) = Rule $ \input -> cacheResult input <$> build input
   where
@@ -147,6 +186,20 @@ cache (Rule build) = Rule $ \input -> cacheResult input <$> build input
       { rebuild = \newInput -> if
           | oldInput == newInput -> pure cachedBuild
           | otherwise            -> cacheResult newInput <$> rebuild newInput
+      , result
+      }
+
+-- | Like 'cache', but safe to use with 'MonadWriter'. Any uses of 'tell' during the rule execution
+-- will be captured and cached alongside the resulting value, and they will be effectively replayed
+-- whenever the cached value is used.
+cacheWithWriter :: forall a b m w. (Eq a, MonadWriter w m) => Rule m a b -> Rule m a b
+cacheWithWriter (Rule build) = Rule $ \input -> cacheResult input <$> listen (build input)
+  where
+    cacheResult :: a -> (Result m a b, w) -> Result m a b
+    cacheResult oldInput (Result { rebuild, result }, capturedLog) = fix $ \cachedBuild -> Result
+      { rebuild = \newInput -> if
+          | oldInput == newInput -> tell capturedLog $> cachedBuild
+          | otherwise            -> cacheResult newInput <$> listen (rebuild newInput)
       , result
       }
 

@@ -227,13 +227,16 @@ newline: native
 language_extensions:
 - ApplicativeDo
 - BangPatterns
+- BlockArguments
 - ConstraintKinds
+- DefaultSignatures
 - DeriveDataTypeable
 - DeriveFoldable
 - DeriveFunctor
 - DeriveGeneric
 - DeriveLift
 - DeriveTraversable
+- DerivingVia
 - EmptyCase
 - FlexibleContexts
 - FlexibleInstances
@@ -254,3 +257,4 @@ language_extensions:
 - TupleSections
 - TypeApplications
 - TypeFamilies
+- TypeOperators

@@ -81,8 +81,8 @@ renameTableInCatalog newQT oldQT = do
 
 renameColInCatalog
   :: (MonadTx m, CacheRM m)
-  => PGCol -> PGCol -> QualifiedTable -> TableInfo PGColumnInfo -> m ()
-renameColInCatalog oCol nCol qt ti = do
+  => PGCol -> PGCol -> QualifiedTable -> FieldInfoMap FieldInfo -> m ()
+renameColInCatalog oCol nCol qt fieldInfo = do
   sc <- askSchemaCache
   -- Check if any relation exists with new column name
   assertFldNotExists
@@ -103,7 +103,7 @@ renameColInCatalog oCol nCol qt ti = do
   where
     errMsg = "cannot rename column " <> oCol <<> " to " <>> nCol
     assertFldNotExists =
-      case M.lookup (fromPGCol oCol) $ _tiFieldInfoMap ti of
+      case M.lookup (fromPGCol oCol) fieldInfo of
         Just (FIRelationship _) ->
           throw400 AlreadyExists $ "cannot rename column " <> oCol
           <<> " to " <> nCol <<> " in table " <> qt <<>

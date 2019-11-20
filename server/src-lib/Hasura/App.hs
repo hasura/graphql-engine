@@ -33,13 +33,14 @@ import           Hasura.EncJSON
 import           Hasura.Events.Lib
 import           Hasura.Logging
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Schema.Cache
-import           Hasura.RQL.Types                     (CacheRWM, Code (..), HasHttpManager,
-                                                       HasSQLGenCtx, HasSystemDefined, QErr (..),
-                                                       SQLGenCtx (..), SchemaCache (..), UserInfoM,
-                                                       adminRole, adminUserInfo, decodeValue,
-                                                       emptySchemaCache, throw400, userRole,
-                                                       withPathK)
+import           Hasura.RQL.Types            (CacheRWM, Code (..),
+                                              HasHttpManager, HasSQLGenCtx,
+                                              HasSystemDefined, QErr (..),
+                                              SQLGenCtx (..), SchemaCache (..),
+                                              UserInfoM, adminRole,
+                                              adminUserInfo, decodeValue,
+                                              throw400,
+                                              userRole, withPathK, buildSchemaCacheStrict)
 import           Hasura.Server.App
 import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates           (checkForUpdates)
@@ -183,7 +184,7 @@ initialiseCtx hgeCmd rci = do
       currentTime <- liftIO getCurrentTime
       -- initialise the catalog
       initRes <- runAsAdmin pool sqlGenCtx httpManager $ migrateCatalog currentTime
-      either printErrJExit logger initRes
+      either printErrJExit (\(result, schemaCache) -> logger result $> schemaCache) initRes
 
 
 runHGEServer
@@ -228,7 +229,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
 
   -- log inconsistent schema objects
   inconsObjs <- scInconsistentObjs <$> liftIO (getSCFromRef cacheRef)
-  logInconsObjs logger inconsObjs
+  liftIO $ logInconsObjs logger inconsObjs
 
   -- start a background thread for schema sync
   startSchemaSync sqlGenCtx _icPgPool logger _icHttpManager
@@ -247,10 +248,9 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   -- prepare event triggers data
   prepareEvents _icPgPool logger
   eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds evFetchMilliSec
-  let scRef = _scrCache cacheRef
   unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
   void $ liftIO $ C.forkIO $ processEventQueue logger logEnvHeaders
-    _icHttpManager _icPgPool scRef eventEngineCtx
+    _icHttpManager _icPgPool (getSCFromRef cacheRef) eventEngineCtx
 
   -- start a background thread to check for updates
   void $ liftIO $ C.forkIO $ checkForUpdates loggerCtx _icHttpManager
@@ -258,7 +258,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   -- start a background thread for telemetry
   when soEnableTelemetry $ do
     unLogger logger $ mkGenericStrLog LevelInfo "telemetry" telemetryNotice
-    void $ liftIO $ C.forkIO $ runTelemetry logger _icHttpManager scRef _icDbUid _icInstanceId
+    void $ liftIO $ C.forkIO $ runTelemetry logger _icHttpManager (getSCFromRef cacheRef) _icDbUid _icInstanceId
 
   finishTime <- liftIO Clock.getCurrentTime
   let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime
@@ -310,10 +310,9 @@ runAsAdmin
   -> Run a
   -> m (Either QErr a)
 runAsAdmin pool sqlGenCtx httpManager m = do
-  res <- runExceptT $ peelRun emptySchemaCache
-   (RunCtx adminUserInfo httpManager sqlGenCtx)
-   (PGExecCtx pool Q.Serializable) Q.ReadWrite m
-  return $ fmap fst res
+  let runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
+      pgCtx = PGExecCtx pool Q.Serializable
+  runExceptT $ peelRun runCtx pgCtx Q.ReadWrite m
 
 execQuery
   :: ( CacheRWM m

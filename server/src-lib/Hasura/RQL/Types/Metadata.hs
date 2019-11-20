@@ -12,34 +12,11 @@ import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Types
 
-data MetadataObjType
-  = MOTTable
-  | MOTRel !RelType
-  | MOTPerm !PermType
-  | MOTEventTrigger
-  | MOTFunction
-  | MOTRemoteSchema
-  | MOTComputedField
-  deriving (Eq, Generic)
-instance Hashable MetadataObjType
-
-instance Show MetadataObjType where
-  show MOTTable         = "table"
-  show (MOTRel ty)      = T.unpack (relTypeToTxt ty) <> "_relation"
-  show (MOTPerm ty)     = show ty <> "_permission"
-  show MOTEventTrigger  = "event_trigger"
-  show MOTFunction      = "function"
-  show MOTRemoteSchema  = "remote_schema"
-  show MOTComputedField = "computed_field"
-
-instance ToJSON MetadataObjType where
-  toJSON = String . T.pack . show
-
 data TableMetadataObjId
   = MTORel !RelName !RelType
+  | MTOComputedField !ComputedFieldName
   | MTOPerm !RoleName !PermType
   | MTOTrigger !TriggerName
-  | MTOComputedField !ComputedFieldName
   deriving (Show, Eq, Generic)
 instance Hashable TableMetadataObjId
 
@@ -51,18 +28,29 @@ data MetadataObjId
   deriving (Show, Eq, Generic)
 instance Hashable MetadataObjId
 
+data MetadataObject
+  = MetadataObject
+  { _moId :: !MetadataObjId
+  , _moDefinition :: !Value
+  } deriving (Show, Eq)
+
 data InconsistentMetadataObj
   = InconsistentMetadataObj
-  { _moId     :: !MetadataObjId
-  , _moType   :: !MetadataObjType
-  , _moDef    :: !Value
-  , _moReason :: !T.Text
-  } deriving (Show, Eq, Generic)
-instance Hashable InconsistentMetadataObj
+  { _imoObject :: !MetadataObject
+  , _imoReason :: !T.Text
+  } deriving (Show, Eq)
 
 instance ToJSON InconsistentMetadataObj where
-  toJSON (InconsistentMetadataObj _ ty info rsn) =
-    object [ "type" .= ty
-           , "definition" .= info
-           , "reason" .= rsn
-           ]
+  toJSON (InconsistentMetadataObj (MetadataObject objectId info) rsn) = object
+    [ "type" .= String case objectId of
+        MOTable _ -> "table"
+        MOFunction _ -> "function"
+        MORemoteSchema _ -> "remote_schema"
+        MOTableObj _ tableObjectId -> case tableObjectId of
+          MTORel _ relType -> relTypeToTxt relType <> "_relation"
+          MTOPerm _ permType -> permTypeToCode permType <> "_permission"
+          MTOTrigger _ -> "event_trigger"
+          MTOComputedField _ -> "computed_field"
+    , "definition" .= info
+    , "reason" .= rsn
+    ]

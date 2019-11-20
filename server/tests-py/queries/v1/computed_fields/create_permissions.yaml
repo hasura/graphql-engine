@@ -40,9 +40,10 @@
         - random
         filter: {}
   response:
-    path: "$.args.permission.computed_fields[1]"
-    error: computed field "random" does not exist
-    code: not-exists
+    path: "$.args"
+    error: >-
+      in table "author": in permission for role "user": computed field "random" does not exist
+    code: constraint-violation
 
 - description: Create select permission with computed field which returns a set of table
   url: /v1/query
@@ -59,9 +60,12 @@
         - get_articles
         filter: {}
   response:
-    path: "$.args.permission.computed_fields[1]"
-    error: select permissions on computed field "get_articles" are auto-derived from the permissions on its returning table "article" and cannot be specified manually
-    code: not-supported
+    path: "$.args"
+    error: >-
+      in table "author": in permission for role "user": select permissions on computed field
+      "get_articles" are auto-derived from the permissions on its returning table "article" and
+      cannot be specified manually
+    code: constraint-violation
 
 - description: Create select permission on article table
   url: /v1/query

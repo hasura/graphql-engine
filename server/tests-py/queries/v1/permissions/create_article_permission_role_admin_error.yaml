@@ -4,8 +4,8 @@ status: 400
 response:
   path: $.args
   error: >-
-    'select' permission on "author" for role "admin" already exists
-  code: already-exists
+    in table "author": in permission for role "admin": duplicate definition for select permission
+  code: constraint-violation
 query:
   type: create_select_permission
   args:

@@ -17,10 +17,10 @@ import           Hasura.SQL.Types
 data TableObjId
   = TOCol !PGCol
   | TORel !RelName
+  | TOComputedField !ComputedFieldName
   | TOCons !ConstraintName
   | TOPerm !RoleName !PermType
   | TOTrigger !TriggerName
-  | TOComputedField !ComputedFieldName
   deriving (Show, Eq, Generic)
 
 instance Hashable TableObjId
@@ -29,7 +29,7 @@ data SchemaObjId
   = SOTable !QualifiedTable
   | SOTableObj !QualifiedTable !TableObjId
   | SOFunction !QualifiedFunction
-   deriving (Eq, Generic)
+  deriving (Eq, Generic)
 
 instance Hashable SchemaObjId
 

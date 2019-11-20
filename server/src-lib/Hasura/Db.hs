@@ -1,3 +1,6 @@
+{-# OPTIONS_GHC -Wwarn=orphans #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 -- A module for postgres execution related types and operations
 
 module Hasura.Db
@@ -17,7 +20,9 @@ module Hasura.Db
   ) where
 
 import           Control.Lens
+import           Control.Monad.Unique
 import           Control.Monad.Validate
+import           Control.Monad.Trans.Control (MonadBaseControl(..))
 
 import qualified Data.Aeson.Extended          as J
 import qualified Database.PG.Query            as Q
@@ -44,6 +49,8 @@ class (MonadError QErr m) => MonadTx m where
 instance (MonadTx m) => MonadTx (StateT s m) where
   liftTx = lift . liftTx
 instance (MonadTx m) => MonadTx (ReaderT s m) where
+  liftTx = lift . liftTx
+instance (Monoid w, MonadTx m) => MonadTx (WriterT w m) where
   liftTx = lift . liftTx
 instance (MonadTx m) => MonadTx (ValidateT e m) where
   liftTx = lift . liftTx
@@ -172,5 +179,24 @@ instance MonadTx (LazyTx QErr) where
 instance MonadTx (Q.TxE QErr) where
   liftTx = id
 
-instance MonadIO (LazyTx QErr) where
+instance MonadIO (LazyTx e) where
   liftIO = LTTx . liftIO
+
+-- FIXME: move orphans into pg-client package
+instance MonadBase IO (Q.TxE e) where
+  liftBase = liftIO
+instance MonadBaseControl IO (Q.TxE e) where
+  type StM (Q.TxE e) a = StM (ReaderT Q.PGConn (ExceptT e IO)) a
+  liftBaseWith f = Q.TxE $ liftBaseWith \run -> f (run . Q.txHandler)
+  restoreM = Q.TxE . restoreM
+
+instance MonadBase IO (LazyTx e) where
+  liftBase = liftIO
+
+instance MonadBaseControl IO (LazyTx e) where
+  type StM (LazyTx e) a = StM (Q.TxE e) a
+  liftBaseWith f = LTTx $ liftBaseWith \run -> f (run . lazyTxToQTx)
+  restoreM = LTTx . restoreM
+
+instance MonadUnique (LazyTx e) where
+  newUnique = liftIO newUnique

@@ -38,12 +38,12 @@ common common-all
 
   default-language: Haskell2010
   default-extensions:
-    ApplicativeDo BangPatterns ConstraintKinds DeriveDataTypeable DeriveFoldable DeriveFunctor
-    DeriveGeneric DeriveLift DeriveTraversable EmptyCase FlexibleContexts FlexibleInstances
-    FunctionalDependencies GeneralizedNewtypeDeriving InstanceSigs LambdaCase MultiParamTypeClasses
-    MultiWayIf NamedFieldPuns NoImplicitPrelude OverloadedStrings QuantifiedConstraints QuasiQuotes
-    RankNTypes ScopedTypeVariables StandaloneDeriving TemplateHaskell TupleSections TypeApplications
-    TypeFamilies TypeOperators
+    ApplicativeDo BangPatterns BlockArguments ConstraintKinds DefaultSignatures DeriveDataTypeable
+    DeriveFoldable DeriveFunctor DeriveGeneric DeriveLift DeriveTraversable DerivingVia EmptyCase
+    FlexibleContexts FlexibleInstances FunctionalDependencies GeneralizedNewtypeDeriving
+    InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NamedFieldPuns NoImplicitPrelude
+    OverloadedStrings QuantifiedConstraints QuasiQuotes RankNTypes ScopedTypeVariables
+    StandaloneDeriving TemplateHaskell TupleSections TypeApplications TypeFamilies TypeOperators
 
 common common-exe
   ghc-options:
@@ -90,6 +90,11 @@ library
                      , process
                      , http-client-tls
                      , profunctors
+
+                     -- `these >=1` is split into several different packages, but our current stack
+                     -- resolver has `these <1`; when we upgrade we just need to add an extra
+                     -- dependency on `semialign`
+                     , these <1
 
                      -- Encoder related
                      , uuid
@@ -189,6 +194,7 @@ library
                      , generic-arbitrary
 
   exposed-modules:     Control.Monad.Stateless
+                     , Control.Monad.Unique
 
                      , Hasura.Prelude
                      , Hasura.App
@@ -217,6 +223,7 @@ library
                      , Hasura.RQL.DDL.Metadata
                      , Hasura.RQL.DDL.Metadata.Types
                      , Hasura.RQL.DDL.Metadata.Generator
+                     , Hasura.RQL.DDL.Schema
                      , Hasura.EncJSON
 
                      , Data.Aeson.Ordered
@@ -234,6 +241,7 @@ library
 
                      , Hasura.RQL.Instances
                      , Hasura.RQL.Types.SchemaCache
+                     , Hasura.RQL.Types.SchemaCache.Build
                      , Hasura.RQL.Types.SchemaCacheTypes
                      , Hasura.RQL.Types.BoolExp
                      , Hasura.RQL.Types.Function
@@ -256,7 +264,6 @@ library
                      , Hasura.RQL.DDL.Permission
                      , Hasura.RQL.DDL.Relationship.Rename
                      , Hasura.RQL.DDL.Relationship.Types
-                     , Hasura.RQL.DDL.Schema
                      , Hasura.RQL.DDL.Schema.Cache
                      , Hasura.RQL.DDL.Schema.Catalog
                      , Hasura.RQL.DDL.Schema.Diff
@@ -332,6 +339,7 @@ library
                      , Control.Concurrent.Extended
                      , Control.Lens.Extended
                      , Data.Aeson.Extended
+                     , Data.HashMap.Strict.Extended
                      , Data.HashMap.Strict.InsOrd.Extended
                      , Data.Parser.JSONPath
                      , Data.Sequence.NonEmpty
@@ -364,15 +372,22 @@ test-suite graphql-engine-tests
   build-depends:
     , aeson
     , base
+    , bytestring
     , graphql-engine
     , hspec
+    , hspec-core
+    , hspec-expectations-lifted
     , http-client
     , http-client-tls
+    , lifted-base
+    , monad-control
     , mtl
+    , natural-transformation >=0.4 && <0.5
     , optparse-applicative
     , pg-client
     , QuickCheck
     , time
+    , transformers-base
     , unordered-containers
   hs-source-dirs: src-test
   main-is: Main.hs

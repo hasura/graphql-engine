@@ -1,10 +1,11 @@
 description: Create object relationship using foreign key
 url: /v1/query
-status: 400  
+status: 400
 response:
-  error: no foreign constraint exists on the given column 
+  error: >-
+    in table "article": in relationship "author": no foreign constraint exists on the given column
   path: $.args
-  code: constraint-error
+  code: constraint-violation
 query:
   type: create_object_relationship
   args:

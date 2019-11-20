@@ -7,7 +7,6 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict         as M
 import qualified Data.HashSet                as S
 
-import           Control.Monad.Writer.Strict
 import           Test.Hspec
 
 import qualified Hasura.Incremental          as Inc

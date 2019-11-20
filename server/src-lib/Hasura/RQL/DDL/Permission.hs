@@ -35,7 +35,6 @@ module Hasura.RQL.DDL.Permission
     , dropDelPermP2
 
     , IsPerm(..)
-    , addPermP1
     , addPermP2
 
     , dropView
@@ -45,7 +44,6 @@ module Hasura.RQL.DDL.Permission
     , SetPermComment(..)
     , runSetPermComment
 
-    , rebuildPermInfo
     , fetchPermDef
     ) where
 
@@ -111,7 +109,7 @@ dropView vn =
 
 procSetObj
   :: (QErrM m)
-  => TableInfo PGColumnInfo -> Maybe (ColumnValues Value)
+  => TableCoreInfo FieldInfo -> Maybe (ColumnValues Value)
   -> m (PreSetColsPartial, [Text], [SchemaDependency])
 procSetObj ti mObj = do
   (setColTups, deps) <- withPathK "set" $
@@ -123,8 +121,8 @@ procSetObj ti mObj = do
       return ((pgCol, sqlExp), dep)
   return (HM.fromList setColTups, depHeaders, deps)
   where
-    fieldInfoMap = _tiFieldInfoMap ti
-    tn = _tiName ti
+    fieldInfoMap = _tciFieldInfoMap ti
+    tn = _tciName ti
     setObj = fromMaybe mempty mObj
     depHeaders = getDepHeadersFromVal $ Object $
       HM.fromList $ map (first getPGColTxt) $ HM.toList setObj
@@ -132,8 +130,8 @@ procSetObj ti mObj = do
     getDepReason = bool DRSessionVariable DROnType . isStaticValue
 
 buildInsPermInfo
-  :: (QErrM m, CacheRM m)
-  => TableInfo PGColumnInfo
+  :: (QErrM m, TableCoreInfoRM m)
+  => TableCoreInfo FieldInfo
   -> PermDef InsPerm
   -> m (WithDeps InsPermInfo)
 buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) =
@@ -151,8 +149,8 @@ buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) =
       insColsWithoutPresets = insCols \\ HM.keys setColsSQL
   return (InsPermInfo (HS.fromList insColsWithoutPresets) vn be setColsSQL reqHdrs, deps)
   where
-    fieldInfoMap = _tiFieldInfoMap tabInfo
-    tn = _tiName tabInfo
+    fieldInfoMap = _tciFieldInfoMap tabInfo
+    tn = _tciName tabInfo
     vn = buildViewName tn rn PTInsert
     allCols = map pgiColumn $ getCols fieldInfoMap
     insCols = fromMaybe allCols $ convColSpec fieldInfoMap <$> mCols
@@ -179,9 +177,7 @@ clearInsInfra vn =
 
 type DropInsPerm = DropPerm InsPerm
 
-dropInsPermP2
-  :: (CacheRWM m, MonadTx m)
-  => DropInsPerm -> QualifiedTable -> m ()
+dropInsPermP2 :: (MonadTx m) => DropInsPerm -> QualifiedTable -> m ()
 dropInsPermP2 = dropPermP2
 
 type instance PermInfo InsPerm = InsPermInfo
@@ -223,8 +219,8 @@ instance FromJSON SelPerm where
     <*> o .:? "computed_fields" .!= []
 
 buildSelPermInfo
-  :: (QErrM m, CacheRM m)
-  => TableInfo PGColumnInfo
+  :: (QErrM m, TableCoreInfoRM m)
+  => TableCoreInfo FieldInfo
   -> SelPerm
   -> m (WithDeps SelPermInfo)
 buildSelPermInfo tabInfo sp = withPathK "permission" $ do
@@ -260,8 +256,8 @@ buildSelPermInfo tabInfo sp = withPathK "permission" $ do
          , deps
          )
   where
-    tn = _tiName tabInfo
-    fieldInfoMap = _tiFieldInfoMap tabInfo
+    tn = _tciName tabInfo
+    fieldInfoMap = _tciFieldInfoMap tabInfo
     allowAgg = spAllowAggregations sp
     computedFields = spComputedFields sp
     autoInferredErr = "permissions for relationships are automatically inferred"
@@ -272,11 +268,8 @@ type DropSelPerm = DropPerm SelPerm
 
 type instance PermInfo SelPerm = SelPermInfo
 
-dropSelPermP2
-  :: (CacheRWM m, MonadTx m)
-  => DropSelPerm -> m ()
-dropSelPermP2 dp =
-  dropPermP2 dp ()
+dropSelPermP2 :: (MonadTx m) => DropSelPerm -> m ()
+dropSelPermP2 dp = dropPermP2 dp ()
 
 instance IsPerm SelPerm where
 
@@ -309,8 +302,8 @@ type CreateUpdPerm = CreatePerm UpdPerm
 
 
 buildUpdPermInfo
-  :: (QErrM m, CacheRM m)
-  => TableInfo PGColumnInfo
+  :: (QErrM m, TableCoreInfoRM m)
+  => TableCoreInfo FieldInfo
   -> UpdPerm
   -> m (WithDeps UpdPermInfo)
 buildUpdPermInfo tabInfo (UpdPerm colSpec set fltr) = do
@@ -332,8 +325,8 @@ buildUpdPermInfo tabInfo (UpdPerm colSpec set fltr) = do
   return (UpdPermInfo (HS.fromList updColsWithoutPreSets) tn be setColsSQL reqHeaders, deps)
 
   where
-    tn = _tiName tabInfo
-    fieldInfoMap = _tiFieldInfoMap tabInfo
+    tn = _tciName tabInfo
+    fieldInfoMap = _tciFieldInfoMap tabInfo
     updCols     = convColSpec fieldInfoMap colSpec
     relInUpdErr = "relationships can't be used in update"
 
@@ -341,9 +334,7 @@ type instance PermInfo UpdPerm = UpdPermInfo
 
 type DropUpdPerm = DropPerm UpdPerm
 
-dropUpdPermP2
-  :: (CacheRWM m, MonadTx m)
-  => DropUpdPerm -> m ()
+dropUpdPermP2 :: (MonadTx m) => DropUpdPerm -> m ()
 dropUpdPermP2 dp = dropPermP2 dp ()
 
 instance IsPerm UpdPerm where
@@ -373,8 +364,8 @@ type DelPermDef = PermDef DelPerm
 type CreateDelPerm = CreatePerm DelPerm
 
 buildDelPermInfo
-  :: (QErrM m, CacheRM m)
-  => TableInfo PGColumnInfo
+  :: (QErrM m, TableCoreInfoRM m)
+  => TableCoreInfo FieldInfo
   -> DelPerm
   -> m (WithDeps DelPermInfo)
 buildDelPermInfo tabInfo (DelPerm fltr) = do
@@ -384,12 +375,12 @@ buildDelPermInfo tabInfo (DelPerm fltr) = do
       depHeaders = getDependentHeaders fltr
   return (DelPermInfo tn be depHeaders, deps)
   where
-    tn = _tiName tabInfo
-    fieldInfoMap = _tiFieldInfoMap tabInfo
+    tn = _tciName tabInfo
+    fieldInfoMap = _tciFieldInfoMap tabInfo
 
 type DropDelPerm = DropPerm DelPerm
 
-dropDelPermP2 :: (CacheRWM m, MonadTx m) => DropDelPerm -> m ()
+dropDelPermP2 :: (MonadTx m) => DropDelPerm -> m ()
 dropDelPermP2 dp = dropPermP2 dp ()
 
 type instance PermInfo DelPerm = DelPermInfo
@@ -456,9 +447,7 @@ setPermCommentTx (SetPermComment (QualifiedObject sn tn) rn pt comment) =
              AND perm_type = $5
                 |] (comment, sn, tn, rn, permTypeToCode pt) True
 
-purgePerm
-  :: (CacheRWM m, MonadTx m)
-  => QualifiedTable -> RoleName -> PermType -> m ()
+purgePerm :: (MonadTx m) => QualifiedTable -> RoleName -> PermType -> m ()
 purgePerm qt rn pt =
   case pt of
     PTInsert -> dropInsPermP2 dp $ buildViewName qt rn PTInsert
@@ -468,34 +457,6 @@ purgePerm qt rn pt =
   where
     dp :: DropPerm a
     dp = DropPerm qt rn
-
-rebuildPermInfo
-  :: (QErrM m, CacheRWM m, MonadTx m)
-  => QualifiedTable -> RoleName -> PermType -> m ()
-rebuildPermInfo qt rn pt = do
-  (pDef, comment) <- liftTx $ fetchPermDef qt rn pt
-  case pt of
-    PTInsert -> do
-      perm <- decodeValue pDef
-      updatePerm PAInsert $ PermDef rn perm comment
-    PTSelect -> do
-      perm <- decodeValue pDef
-      updatePerm PASelect $ PermDef rn perm comment
-    PTUpdate -> do
-      perm <- decodeValue pDef
-      updatePerm PAUpdate $ PermDef rn perm comment
-    PTDelete -> do
-      perm <- decodeValue pDef
-      updatePerm PADelete $ PermDef rn perm comment
-
-  where
-    updatePerm :: (QErrM m, CacheRWM m, IsPerm a)
-               => PermAccessor (PermInfo a) -> PermDef a -> m ()
-    updatePerm pa perm = do
-      delPermFromCache pa rn qt
-      tabInfo <- askTabInfo qt
-      (permInfo, deps) <- addPermP1 tabInfo perm
-      addPermToCache qt rn pa permInfo deps
 
 fetchPermDef
   :: QualifiedTable

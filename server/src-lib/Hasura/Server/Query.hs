@@ -1,4 +1,5 @@
 {-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.Server.Query where
 
@@ -8,6 +9,8 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Time                          (UTCTime)
 import           Language.Haskell.TH.Syntax         (Lift)
+import Control.Monad.Unique
+import Control.Monad.Trans.Control (MonadBaseControl(..))
 
 import qualified Data.HashMap.Strict                as HM
 import qualified Data.Text                          as T
@@ -156,15 +159,15 @@ data RunCtx
   }
 
 newtype Run a
-  = Run {unRun :: StateT SchemaCache (ReaderT RunCtx (LazyTx QErr)) a}
+  = Run { unRun :: ReaderT RunCtx (LazyTx QErr) a }
   deriving ( Functor, Applicative, Monad
            , MonadError QErr
-           , MonadState SchemaCache
            , MonadReader RunCtx
-           , CacheRM
-           , CacheRWM
            , MonadTx
            , MonadIO
+           , MonadBase IO
+           , MonadBaseControl IO
+           , MonadUnique
            )
 
 instance UserInfoM Run where
@@ -196,27 +199,25 @@ recordSchemaUpdate instanceId =
 
 peelRun
   :: (MonadIO m)
-  => SchemaCache
-  -> RunCtx
+  => RunCtx
   -> PGExecCtx
   -> Q.TxAccess
   -> Run a
-  -> ExceptT QErr m (a, SchemaCache)
-peelRun sc runCtx@(RunCtx userInfo _ _) pgExecCtx txAccess (Run m) =
-  runLazyTx pgExecCtx txAccess $ withUserInfo userInfo lazyTx
-  where
-    lazyTx = runReaderT (runStateT m sc) runCtx
+  -> ExceptT QErr m a
+peelRun runCtx@(RunCtx userInfo _ _) pgExecCtx txAccess (Run m) =
+  runLazyTx pgExecCtx txAccess $ withUserInfo userInfo $ runReaderT m runCtx
 
 runQuery
   :: (MonadIO m, MonadError QErr m)
   => PGExecCtx -> InstanceId
-  -> UserInfo -> SchemaCache -> HTTP.Manager
-  -> SQLGenCtx -> SystemDefined -> RQLQuery -> m (EncJSON, SchemaCache)
+  -> UserInfo -> RebuildableSchemaCache Run -> HTTP.Manager
+  -> SQLGenCtx -> SystemDefined -> RQLQuery -> m (EncJSON, RebuildableSchemaCache Run)
 runQuery pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined query = do
   accessMode <- getQueryAccessMode query
   resE <- runQueryM query
     & runHasSystemDefinedT systemDefined
-    & peelRun sc runCtx pgExecCtx accessMode
+    & runCacheRWT sc
+    & peelRun runCtx pgExecCtx accessMode
     & runExceptT
     & liftIO
   either throwError withReload resE
@@ -346,7 +347,8 @@ runQueryM
 runQueryM rq =
   withPathK "args" $ runQueryM' <* rebuildGCtx
   where
-    rebuildGCtx = when (queryNeedsReload rq) buildGCtxMap
+    -- FIXME: rethink this
+    rebuildGCtx = when (queryNeedsReload rq) buildSchemaCache
 
     runQueryM' = case rq of
       RQV1 q -> runQueryV1M q
@@ -361,8 +363,8 @@ runQueryM rq =
       RQTrackFunction q            -> runTrackFunc q
       RQUntrackFunction q          -> runUntrackFunc q
 
-      RQCreateObjectRelationship q -> runCreateObjRel q
-      RQCreateArrayRelationship  q -> runCreateArrRel q
+      RQCreateObjectRelationship q -> runCreateRelationship ObjRel q
+      RQCreateArrayRelationship  q -> runCreateRelationship ArrRel q
       RQDropRelationship  q        -> runDropRel q
       RQSetRelationshipComment  q  -> runSetRelComment q
       RQRenameRelationship q       -> runRenameRel q

@@ -6,7 +6,12 @@ import           Options.Applicative
 import           System.Environment        (getEnvironment)
 import           System.Exit               (exitFailure)
 import           Test.Hspec
+import Control.Concurrent.MVar
+import           Data.Time.Clock         (getCurrentTime)
+import Control.Natural ((:~>)(..))
 
+import qualified Data.Aeson                 as A
+import qualified Data.ByteString.Lazy.Char8 as BL
 import qualified Database.PG.Query         as Q
 import qualified Network.HTTP.Client       as HTTP
 import qualified Network.HTTP.Client.TLS   as HTTP
@@ -17,7 +22,8 @@ import           Hasura.RQL.Types          (SQLGenCtx (..), adminUserInfo)
 import           Hasura.Server.Init        (RawConnInfo, mkConnInfo,
                                             mkRawConnInfo, parseRawConnInfo,
                                             runWithEnv)
-import           Hasura.Server.Query       (RunCtx (..))
+import           Hasura.Server.Query       (Run, RunCtx (..), peelRun)
+import           Hasura.Server.Migrate
 
 import qualified Hasura.IncrementalSpec    as IncrementalSpec
 import qualified Hasura.RQL.MetadataSpec   as MetadataSpec
@@ -51,13 +57,26 @@ buildPostgresSpecs pgConnOptions = do
 
   rawPGConnInfo <- flip onLeft printErrExit $ runWithEnv env (mkRawConnInfo pgConnOptions)
   pgConnInfo <- flip onLeft printErrExit $ mkConnInfo rawPGConnInfo
-  pgPool <- Q.initPGPool pgConnInfo Q.defaultConnParams { Q.cpConns = 1 } print
 
-  httpManager <- HTTP.newManager HTTP.tlsManagerSettings
-  let runContext = RunCtx adminUserInfo httpManager (SQLGenCtx False)
-      pgContext = PGExecCtx pgPool Q.Serializable
+  let setupCacheRef = do
+        pgPool <- Q.initPGPool pgConnInfo Q.defaultConnParams { Q.cpConns = 1 } print
 
-  pure $ describe "Hasura.Server.Migrate" $ MigrateSpec.spec pgConnInfo runContext pgContext
+        httpManager <- HTTP.newManager HTTP.tlsManagerSettings
+        let runContext = RunCtx adminUserInfo httpManager (SQLGenCtx False)
+            pgContext = PGExecCtx pgPool Q.Serializable
+
+            runAsAdmin :: Run a -> IO a
+            runAsAdmin =
+                  peelRun runContext pgContext Q.ReadWrite
+              >>> runExceptT
+              >=> flip onLeft printErrJExit
+
+        schemaCache <- snd <$> runAsAdmin (migrateCatalog =<< liftIO getCurrentTime)
+        cacheRef <- newMVar schemaCache
+        pure $ NT (runAsAdmin . flip MigrateSpec.runCacheRefT cacheRef)
+
+  pure $ beforeAll setupCacheRef $
+    describe "Hasura.Server.Migrate" $ MigrateSpec.spec pgConnInfo
 
 parseArgs :: IO TestSuites
 parseArgs = execParser $ info (helper <*> (parseNoCommand <|> parseSubCommand)) $
@@ -78,3 +97,6 @@ runHspec m = do
 
 printErrExit :: String -> IO a
 printErrExit = (*> exitFailure) . putStrLn
+
+printErrJExit :: (A.ToJSON a) => a -> IO b
+printErrJExit = (*> exitFailure) . BL.putStrLn . A.encode
