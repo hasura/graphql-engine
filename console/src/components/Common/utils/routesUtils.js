@@ -1,17 +1,10 @@
 // import globals from '../../../Globals';
-import {
-  getTableSchema,
-  getTableName,
-  checkIfTable,
-  getFunctionSchema,
-  getFunctionName,
-} from './pgUtils';
 
 /*** DATA ROUTES ***/
 
 export const getSchemaBaseRoute = schemaName => {
   // return `${globals.urlPrefix}/data/schema/${schemaName}`;
-  return `/data/schema/${schemaName}`;
+  return `/data/schema/${encodeURIComponent(schemaName)}`;
 };
 
 export const getSchemaAddTableRoute = schemaName => {
@@ -22,46 +15,46 @@ export const getSchemaPermissionsRoute = schemaName => {
   return `${getSchemaBaseRoute(schemaName)}/permissions`;
 };
 
-export const getTableBaseRoute = table => {
-  return `${getSchemaBaseRoute(getTableSchema(table))}/${
-    checkIfTable(table) ? 'tables' : 'views'
-  }/${getTableName(table)}`;
+const getTableBaseRoute = (schemaName, tableName, isTable) => {
+  return `${getSchemaBaseRoute(schemaName)}/${
+    isTable ? 'tables' : 'views'
+  }/${encodeURIComponent(tableName)}`;
 };
 
-export const getTableBrowseRoute = table => {
-  return `${getTableBaseRoute(table)}/browse`;
+export const getTableBrowseRoute = (schemaName, tableName, isTable) => {
+  return `${getTableBaseRoute(schemaName, tableName, isTable)}/browse`;
 };
 
-export const getTableInsertRowRoute = table => {
-  return `${getTableBaseRoute(table)}/insert`;
+export const getTableInsertRowRoute = (schemaName, tableName, isTable) => {
+  return `${getTableBaseRoute(schemaName, tableName, isTable)}/insert`;
 };
 
-export const getTableEditRowRoute = table => {
-  return `${getTableBaseRoute(table)}/edit`;
+export const getTableEditRowRoute = (schemaName, tableName, isTable) => {
+  return `${getTableBaseRoute(schemaName, tableName, isTable)}/edit`;
 };
 
-export const getTableModifyRoute = table => {
-  return `${getTableBaseRoute(table)}/modify`;
+export const getTableModifyRoute = (schemaName, tableName, isTable) => {
+  return `${getTableBaseRoute(schemaName, tableName, isTable)}/modify`;
 };
 
-export const getTableRelationshipsRoute = table => {
-  return `${getTableBaseRoute(table)}/relationships`;
+export const getTableRelationshipsRoute = (schemaName, tableName, isTable) => {
+  return `${getTableBaseRoute(schemaName, tableName, isTable)}/relationships`;
 };
 
-export const getTablePermissionsRoute = table => {
-  return `${getTableBaseRoute(table)}/permissions`;
+export const getTablePermissionsRoute = (schemaName, tableName, isTable) => {
+  return `${getTableBaseRoute(schemaName, tableName, isTable)}/permissions`;
 };
 
-export const getFunctionBaseRoute = pgFunction => {
-  return `${getSchemaBaseRoute(
-    getFunctionSchema(pgFunction)
-  )}/functions/${getFunctionName(pgFunction)}`;
+export const getFunctionBaseRoute = (schemaName, functionName) => {
+  return `${getSchemaBaseRoute(schemaName)}/functions/${encodeURIComponent(
+    functionName
+  )}`;
 };
 
-export const getFunctionModifyRoute = pgFunction => {
-  return `${getFunctionBaseRoute(pgFunction)}/modify`;
+export const getFunctionModifyRoute = (schemaName, functionName) => {
+  return `${getFunctionBaseRoute(schemaName, functionName)}/modify`;
 };
 
-export const getFunctionPermissionsRoute = pgFunction => {
-  return `${getFunctionBaseRoute(pgFunction)}/permissions`;
+export const getFunctionPermissionsRoute = (schemaName, functionName) => {
+  return `${getFunctionBaseRoute(schemaName, functionName)}/permissions`;
 };

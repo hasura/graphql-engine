@@ -8,6 +8,7 @@ module Hasura.Db
   , runLazyTx
   , runLazyTx'
   , withUserInfo
+  , sessionInfoJsonExp
 
   , RespTx
   , LazyRespTx
@@ -28,6 +29,8 @@ import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Permission
 import           Hasura.SQL.Error
 import           Hasura.SQL.Types
+
+import qualified Hasura.SQL.DML               as S
 
 data PGExecCtx
   = PGExecCtx
@@ -66,11 +69,12 @@ lazyTxToQTx = \case
 
 runLazyTx
   :: PGExecCtx
+  -> Q.TxAccess
   -> LazyTx QErr a -> ExceptT QErr IO a
-runLazyTx (PGExecCtx pgPool txIso) = \case
+runLazyTx (PGExecCtx pgPool txIso) txAccess = \case
   LTErr e  -> throwError e
   LTNoTx a -> return a
-  LTTx tx  -> Q.runTx pgPool (txIso, Nothing) tx
+  LTTx tx  -> Q.runTx pgPool (txIso, Just txAccess) tx
 
 runLazyTx'
   :: PGExecCtx -> LazyTx QErr a -> ExceptT QErr IO a
@@ -87,8 +91,10 @@ setHeadersTx uVars =
   Q.unitQE defaultTxErrorHandler setSess () False
   where
     setSess = Q.fromText $
-      "SET LOCAL \"hasura.user\" = " <>
-      pgFmtLit (J.encodeToStrictText uVars)
+      "SET LOCAL \"hasura.user\" = " <> toSQLTxt (sessionInfoJsonExp uVars)
+
+sessionInfoJsonExp :: UserVars -> S.SQLExp
+sessionInfoJsonExp = S.SELit . J.encodeToStrictText
 
 defaultTxErrorHandler :: Q.PGTxErr -> QErr
 defaultTxErrorHandler = mkTxErrorHandler (const False)

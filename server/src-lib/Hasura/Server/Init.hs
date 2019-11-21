@@ -74,7 +74,6 @@ data RawServeOptions
   , rsoEnabledAPIs        :: !(Maybe [API])
   , rsoMxRefetchInt       :: !(Maybe LQ.RefetchInterval)
   , rsoMxBatchSize        :: !(Maybe LQ.BatchSize)
-  , rsoFallbackRefetchInt :: !(Maybe LQ.RefetchInterval)
   , rsoEnableAllowlist    :: !Bool
   , rsoEnabledLogTypes    :: !(Maybe [L.EngineLogType])
   , rsoLogLevel           :: !(Maybe L.LogLevel)
@@ -926,15 +925,6 @@ enableAllowlistEnv =
   ( "HASURA_GRAPHQL_ENABLE_ALLOWLIST"
   , "Only accept allowed GraphQL queries"
   )
-
-parseFallbackRefetchInt :: Parser (Maybe LQ.RefetchInterval)
-parseFallbackRefetchInt =
-  optional $
-    option (eitherReader fromEnv)
-    ( long "live-queries-fallback-refetch-interval" <>
-      metavar "<INTERVAL(ms)>" <>
-      help (snd mxRefetchDelayEnv)
-    )
 
 fallbackRefetchDelayEnv :: (String, String)
 fallbackRefetchDelayEnv =

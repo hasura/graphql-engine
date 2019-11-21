@@ -270,7 +270,7 @@ mkBoolExpInp tn fields =
     boolExpTy = mkBoolExpTy tn
 
     -- all the fields of this input object
-    inpValues = combinators <> map mkFldExpInp fields
+    inpValues = combinators <> mapMaybe mkFldExpInp fields
 
     mk n ty = InpValInfo Nothing n Nothing $ G.toGT ty
 
@@ -283,9 +283,10 @@ mkBoolExpInp tn fields =
       ]
 
     mkFldExpInp = \case
-      Left (PGColumnInfo _ name colTy _ _) ->
-        mk name (mkCompExpTy colTy)
-      Right relationshipField ->
+      SFPGColumn (PGColumnInfo _ name colTy _ _) ->
+        Just $ mk name (mkCompExpTy colTy)
+      SFRelationship relationshipField ->
         let relationshipName = riName $ _rfiInfo relationshipField
             remoteTable = riRTable $  _rfiInfo relationshipField
-        in mk (mkRelName relationshipName) (mkBoolExpTy remoteTable)
+        in Just $ mk (mkRelName relationshipName) (mkBoolExpTy remoteTable)
+      SFComputedField _ -> Nothing -- TODO: support computed fields in bool exps
