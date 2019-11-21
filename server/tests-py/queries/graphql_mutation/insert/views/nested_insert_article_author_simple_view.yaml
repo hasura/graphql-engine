@@ -4,6 +4,7 @@ status: 200
 response:
   data:
     insert_article:
+      affected_rows: 4
       returning:
       - author_simple:
           name: Author 1
@@ -17,9 +18,8 @@ response:
         content: Article content for article by author 2
         id: 2
         title: Article by author 2
-      affected_rows: 4
 query:
-  query: |
+  query: |-
     mutation article_author_simple{
       insert_article(
         objects: [

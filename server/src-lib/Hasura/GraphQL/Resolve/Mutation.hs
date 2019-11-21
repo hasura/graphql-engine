@@ -32,7 +32,7 @@ import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
 convertMutResp
-  :: ( MonadResolve m, MonadReader r m, Has FieldMap r
+  :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )
   => G.NamedType -> SelSet -> m (RR.MutFldsG UnresolvedVal)
@@ -43,17 +43,18 @@ convertMutResp ty selSet =
     "returning"     -> do
       annFlds <- fromSelSet (_fType fld) $ _fSelSet fld
       annFldsResolved <- traverse
-        (traverse (RS.traverseAnnFld convertUnresolvedVal)) annFlds
+        (traverse (RS.traverseAnnFld convertPGValueToTextValue)) annFlds
       return $ RR.MRet annFldsResolved
     G.Name t        -> throw500 $ "unexpected field in mutation resp : " <> t
   where
-    convertUnresolvedVal = \case
+    convertPGValueToTextValue = \case
       UVPG annPGVal -> UVSQL <$> txtConverter annPGVal
       UVSessVar colTy sessVar -> pure $ UVSessVar colTy sessVar
       UVSQL sqlExp -> pure $ UVSQL sqlExp
+      UVSession    -> pure UVSession
 
 convertRowObj
-  :: (MonadResolve m)
+  :: (MonadReusability m, MonadError QErr m)
   => PGColGNameMap
   -> AnnInpVal
   -> m [(PGCol, UnresolvedVal)]
@@ -80,7 +81,7 @@ lhsExpOp op annTy (col, e) =
     annExp = S.SETyAnn e annTy
 
 convObjWithOp
-  :: (MonadResolve m)
+  :: (MonadReusability m, MonadError QErr m)
   => PGColGNameMap -> ApplySQLOp -> AnnInpVal -> m [(PGCol, UnresolvedVal)]
 convObjWithOp colGNameMap opFn val =
   flip withObject val $ \_ obj -> forM (OMap.toList obj) $ \(k, v) -> do
@@ -92,7 +93,7 @@ convObjWithOp colGNameMap opFn val =
   return (pgCol, UVSQL sqlExp)
 
 convDeleteAtPathObj
-  :: (MonadResolve m)
+  :: (MonadReusability m, MonadError QErr m)
   => PGColGNameMap -> AnnInpVal -> m [(PGCol, UnresolvedVal)]
 convDeleteAtPathObj colGNameMap val =
   flip withObject val $ \_ obj -> forM (OMap.toList obj) $ \(k, v) -> do
@@ -105,7 +106,7 @@ convDeleteAtPathObj colGNameMap val =
     return (pgCol, UVSQL sqlExp)
 
 convertUpdateP1
-  :: ( MonadResolve m
+  :: ( MonadReusability m, MonadError QErr m
      , MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )
@@ -163,7 +164,7 @@ convertUpdateP1 opCtx fld = do
     args = _fArguments fld
 
 convertUpdate
-  :: ( MonadResolve m
+  :: ( MonadReusability m, MonadError QErr m
      , MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )
@@ -184,7 +185,7 @@ convertUpdate opCtx fld = do
   bool whenNonEmptyItems whenEmptyItems $ null $ RU.uqp1SetExps annUpdResolved
 
 convertDelete
-  :: ( MonadResolve m
+  :: ( MonadReusability m, MonadError QErr m
      , MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )

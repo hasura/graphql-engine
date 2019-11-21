@@ -37,3 +37,8 @@ you should change it to:
 .. raw:: html
 
    <code>docker run hasura/graphql-engine:<span class="latest-release-tag">latest</span> ...</code>
+
+.. note::
+
+  If you are downgrading to an older version of the GraphQL engine you might need to downgrade your metadata catalogue version
+  as described in :doc:`../downgrading`

@@ -188,3 +188,63 @@ Limit results in a nested object
         ]
       }
     }
+
+Fetch limited results along with aggregated data on all results *(e.g. total count)* in the same query
+------------------------------------------------------------------------------------------------------
+
+Sometimes, some aggregated information on all the data is required along with a subset of data.
+
+E.g. the total count of results can be returned along with a page of results. The count can then be used to calculate
+the number of pages based on the limit that is set.
+
+**Example:** Fetch a list of articles where a certain condition is true and get their count. Then limit the number of
+articles to return.
+
+.. graphiql::
+  :view_only:
+  :query:
+    query articles ($where: articles_bool_exp!) {
+      articles_aggregate(where: $where) {
+        aggregate {
+          totalCount: count
+        }
+      }
+      articles (where: $where limit: 4) {
+        id
+        title
+      }
+    }
+  :response:
+    {
+      "data": {
+        "articles_aggregate": {
+          "aggregate": {
+            "totalCount": 8
+          }
+        },
+        "articles": [
+          {
+            "id": 33,
+            "title": "How to make fajitas"
+          },
+          {
+            "id": 31,
+            "title": "How to make fajitas"
+          },
+          {
+            "id": 32,
+            "title": "How to make fajitas"
+          },
+          {
+            "id": 2,
+            "title": "How to climb mount everest"
+          }
+        ]
+      }
+    }
+
+.. admonition:: Caveat
+
+  If this needs to be done over :doc:`subscriptions <../subscriptions/index>`, two subscriptions will need to be run
+  as Hasura follows the `GraphQL spec <https://graphql.github.io/graphql-spec/June2018/#sec-Single-root-field>`_ which
+  allows for only one root field in a subscription.

@@ -11,6 +11,7 @@ own machine and how to contribute.
 - brotli
 - libpq-dev
 - python >= 3.5 with pip3
+- [pyenv](https://github.com/pyenv/pyenv) (Recommended, not required)
 
 The Brotli can be installed from source using `git`, `cmake` and `pkgconf` on Debian with:
 

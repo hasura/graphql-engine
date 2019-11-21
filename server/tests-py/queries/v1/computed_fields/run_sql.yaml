@@ -1,0 +1,116 @@
+- description: Create a computed field get_articles to author table
+  url: /v1/query
+  status: 200
+  query:
+    type: add_computed_field
+    args:
+      table: author
+      name: get_articles
+      definition:
+        function: fetch_articles
+        table_argument: author_row
+  response:
+    message: success
+
+- description: Try to alter the fetch_articles function name
+  url: /v1/query
+  status: 400
+  query:
+    type: run_sql
+    args:
+      sql: |
+        ALTER FUNCTION fetch_articles(text, author) RENAME TO fetch_articles_renamed
+  response:
+    path: "$.args"
+    error: 'cannot drop due to the following dependent objects : computed field author.get_articles'
+    code: dependency-error
+
+- description: Try to alter the fetch_articles function to VOLATILE
+  url: /v1/query
+  status: 400
+  query:
+    type: run_sql
+    args:
+      sql: |
+        ALTER FUNCTION fetch_articles(text, author) VOLATILE
+  response:
+    path: "$.args"
+    error: The type of function "fetch_articles" associated with computed field "get_articles"
+      of table "author" is being altered to "VOLATILE"
+    code: not-supported
+
+- description: Try to create a new function with name fetch_articles (overloading)
+  url: /v1/query
+  status: 400
+  query:
+    type: run_sql
+    args:
+      sql: |
+        CREATE OR REPLACE FUNCTION fetch_articles(search text, author_row author, integer)
+        RETURNS SETOF article AS $$
+          SELECT *
+          FROM article
+          WHERE
+            ( title ilike ('%' || search || '%')
+              OR content ilike ('%' || search || '%')
+            ) AND author_id = author_row.id
+          LIMIT $3
+        $$ LANGUAGE sql STABLE;
+  response:
+    path: "$.args"
+    error: The function "fetch_articles" associated with computed field"get_articles"
+      of table "author" is being overloaded
+    code: not-supported
+
+- description: Drop the function fetch_articles and create a new function with the same name
+  url: /v1/query
+  status: 400
+  query:
+    type: run_sql
+    args:
+      sql: |
+        DROP FUNCTION fetch_articles(text, author);
+        CREATE FUNCTION fetch_articles(search text, author_row author, integer)
+        RETURNS SETOF article AS $$
+          SELECT *
+          FROM article
+          WHERE
+            ( title ilike ('%' || search || '%')
+              OR content ilike ('%' || search || '%')
+            ) AND author_id = author_row.id
+          LIMIT $3
+        $$ LANGUAGE sql STABLE;
+  response:
+    path: "$.args"
+    error: 'cannot drop due to the following dependent objects : computed field author.get_articles'
+    code: dependency-error
+
+- description: Safely alter the definition of function fetch_articles
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        CREATE OR REPLACE FUNCTION fetch_articles(search text, author_row author)
+        RETURNS SETOF article AS $$
+          SELECT *
+          FROM article
+          WHERE
+            content ilike ('%' || search || '%')
+            AND author_id = author_row.id
+        $$ LANGUAGE sql STABLE;
+  response:
+    result_type: CommandOk
+    result: null
+
+- description: Drop computed field get_articles from author table
+  url: /v1/query
+  status: 200
+  query:
+    type: drop_computed_field
+    args:
+      table: author
+      name: get_articles
+  response:
+    message: success
