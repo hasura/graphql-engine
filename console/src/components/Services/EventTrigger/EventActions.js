@@ -14,13 +14,14 @@ import { loadMigrationStatus } from '../../Main/Actions';
 import returnMigrateUrl from './Common/getMigrateUrl';
 import globals from '../../../Globals';
 import push from './push';
-import { loadInconsistentObjects } from '../Metadata/Actions';
-import { filterInconsistentMetadataObjects } from '../Metadata/utils';
+import { loadInconsistentObjects } from '../Settings/Actions';
+import { filterInconsistentMetadataObjects } from '../Settings/utils';
 import { replace } from 'react-router-redux';
 import { getEventTriggersQuery } from './utils';
 
-import { SERVER_CONSOLE_MODE } from '../../../constants';
+import { CLI_CONSOLE_MODE, SERVER_CONSOLE_MODE } from '../../../constants';
 import { REQUEST_COMPLETE, REQUEST_ONGOING } from './Modify/Actions';
+import { IMPROVED_EVENT_FETCH_QUERY } from '../../../helpers/versionUtils';
 
 const SET_TRIGGER = 'Event/SET_TRIGGER';
 const LOAD_TRIGGER_LIST = 'Event/LOAD_TRIGGER_LIST';
@@ -91,32 +92,41 @@ const loadTriggers = triggerNames => (dispatch, getState) => {
 
 const loadPendingEvents = () => (dispatch, getState) => {
   const url = Endpoints.getSchema;
+  const body = {
+    type: 'select',
+    args: {
+      table: {
+        name: 'event_triggers',
+        schema: 'hdb_catalog',
+      },
+      columns: [
+        '*',
+        {
+          name: 'events',
+          columns: [
+            '*',
+            { name: 'logs', columns: ['*'], order_by: ['-created_at'] },
+          ],
+          where: { delivered: false, error: false, tries: 0 },
+          order_by: ['-created_at'],
+          limit: 10,
+        },
+      ],
+    },
+  };
+
+  if (
+    globals.featuresCompatibility &&
+    globals.featuresCompatibility[IMPROVED_EVENT_FETCH_QUERY]
+  ) {
+    body.args.columns[1].where.archived = false;
+  }
+
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
     headers: dataHeaders(getState),
-    body: JSON.stringify({
-      type: 'select',
-      args: {
-        table: {
-          name: 'event_triggers',
-          schema: 'hdb_catalog',
-        },
-        columns: [
-          '*',
-          {
-            name: 'events',
-            columns: [
-              '*',
-              { name: 'logs', columns: ['*'], order_by: ['-created_at'] },
-            ],
-            where: { delivered: false, error: false, tries: 0 },
-            order_by: ['-created_at'],
-            limit: 10,
-          },
-        ],
-      },
-    }),
+    body: JSON.stringify(body),
   };
   return dispatch(requestAction(url, options)).then(
     data => {
@@ -130,32 +140,41 @@ const loadPendingEvents = () => (dispatch, getState) => {
 
 const loadRunningEvents = () => (dispatch, getState) => {
   const url = Endpoints.getSchema;
+  const body = {
+    type: 'select',
+    args: {
+      table: {
+        name: 'event_triggers',
+        schema: 'hdb_catalog',
+      },
+      columns: [
+        '*',
+        {
+          name: 'events',
+          columns: [
+            '*',
+            { name: 'logs', columns: ['*'], order_by: ['-created_at'] },
+          ],
+          where: { delivered: false, error: false, tries: { $gt: 0 } },
+          order_by: ['-created_at'],
+          limit: 10,
+        },
+      ],
+    },
+  };
+
+  if (
+    globals.featuresCompatibility &&
+    globals.featuresCompatibility[IMPROVED_EVENT_FETCH_QUERY]
+  ) {
+    body.args.columns[1].where.archived = false;
+  }
+
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
     headers: dataHeaders(getState),
-    body: JSON.stringify({
-      type: 'select',
-      args: {
-        table: {
-          name: 'event_triggers',
-          schema: 'hdb_catalog',
-        },
-        columns: [
-          '*',
-          {
-            name: 'events',
-            columns: [
-              '*',
-              { name: 'logs', columns: ['*'], order_by: ['-created_at'] },
-            ],
-            where: { delivered: false, error: false, tries: { $gt: 0 } },
-            order_by: ['-created_at'],
-            limit: 10,
-          },
-        ],
-      },
-    }),
+    body: JSON.stringify(body),
   };
   return dispatch(requestAction(url, options)).then(
     data => {
@@ -214,6 +233,14 @@ const loadEventLogs = triggerName => (dispatch, getState) => {
             },
           ],
         };
+
+        if (
+          globals.featuresCompatibility &&
+          globals.featuresCompatibility[IMPROVED_EVENT_FETCH_QUERY]
+        ) {
+          body.args[0].args.where.event.archived = false;
+        }
+
         const logOptions = {
           credentials: globalCookiePolicy,
           method: 'POST',
@@ -372,7 +399,7 @@ const makeMigrationCall = (
   let finalReqBody;
   if (globals.consoleMode === SERVER_CONSOLE_MODE) {
     finalReqBody = upQuery;
-  } else if (globals.consoleMode === 'cli') {
+  } else if (globals.consoleMode === CLI_CONSOLE_MODE) {
     finalReqBody = migrationBody;
   }
   const url = migrateUrl;
@@ -384,7 +411,7 @@ const makeMigrationCall = (
   };
 
   const onSuccess = () => {
-    if (globals.consoleMode === 'cli') {
+    if (globals.consoleMode === CLI_CONSOLE_MODE) {
       dispatch(loadMigrationStatus()); // don't call for server mode
     }
     customOnSuccess();

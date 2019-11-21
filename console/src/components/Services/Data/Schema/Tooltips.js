@@ -22,6 +22,7 @@ export const trackableFunctionsTip = (
 
 export const nonTrackableFunctionsTip = (
   <Tooltip id="tooltip-functions-untrackable">
-    Custom functions that do not conform to Hasura requirements
+    Functions that do not conform to Hasura requirements to be exposed over the
+    GraphQL API.
   </Tooltip>
 );

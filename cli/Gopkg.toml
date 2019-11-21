@@ -95,3 +95,11 @@
 [[constraint]]
   branch = "master"
   name = "github.com/kardianos/osext"
+
+[[constraint]]
+  name = "github.com/ahmetb/go-linq"
+  version = "3.1.0"
+
+[[constraint]]
+  name = "github.com/qor/transition"
+  version = "1.1.0"

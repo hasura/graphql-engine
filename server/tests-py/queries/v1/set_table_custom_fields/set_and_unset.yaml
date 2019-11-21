@@ -1,0 +1,60 @@
+- description: Set select_by_pk root field and customise name column
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: set_table_custom_fields
+    version: 2
+    args:
+      table: author
+      custom_root_fields:
+        select: Authors
+        select_by_pk: Author
+      custom_column_names:
+        id: AuthorId
+        name: AuthorName
+        age: age
+
+- description: Check that above query has changed the schema
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      Author:
+        AuthorName: Clarke
+  query:
+    query: |
+      query {
+          Author(AuthorId: 1){
+            AuthorName
+          }
+      }
+
+- description: Unset select_by_pk root field and remove custom column names
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: set_table_custom_fields
+    version: 2
+    args:
+      table: author
+      custom_root_fields:
+        select: Authors
+
+- description: Check that above query has changed the schema
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      author_by_pk:
+        name: Clarke
+  query:
+    query: |
+      query {
+          author_by_pk(id: 1){
+            name
+          }
+      }

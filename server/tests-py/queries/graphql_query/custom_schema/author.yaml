@@ -1,0 +1,72 @@
+description: Query author table with customised root field names
+url: /v1/graphql
+status: 200
+response:
+  data:
+    Author:
+      AuthorId: 1
+      name: Author 1
+    Authors:
+    - AuthorId: 1
+      name: Author 1
+      articles:
+      - ArticleId: 1
+        title: Article 1
+        content: Content for Article 1
+        AuthorId: 1
+      - ArticleId: 2
+        title: Article 2
+        content: Content for Article 2
+        AuthorId: 1
+    - AuthorId: 2
+      name: Author 2
+      articles:
+      - ArticleId: 3
+        title: Article 3
+        content: Content for Article 3
+        AuthorId: 2
+    AuthorsWhere:
+    - AuthorId: 2
+      name: Author 2
+    AuthorAgg:
+      aggregate:
+        count: 2
+      nodes:
+      - AuthorId: 1
+        name: Author 1
+      - AuthorId: 2
+        name: Author 2
+query:
+  query: |
+    query {
+      Author(AuthorId: 1){
+        AuthorId
+        name
+      }
+
+      Authors{
+        AuthorId
+        name
+        articles{
+          ArticleId
+          title
+          content
+          AuthorId
+        }
+      }
+
+      AuthorsWhere: Authors(where: {AuthorId: {_eq: 2}}){
+        AuthorId
+        name
+      }
+
+      AuthorAgg{
+        aggregate{
+          count
+        }
+        nodes{
+          AuthorId
+          name
+        }
+      }
+    }

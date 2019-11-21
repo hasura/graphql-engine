@@ -3,7 +3,6 @@ package commands
 import (
 	"fmt"
 	"net/http"
-	"net/url"
 	"sync"
 
 	"github.com/fatih/color"
@@ -11,9 +10,9 @@ import (
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/migrate"
 	"github.com/hasura/graphql-engine/cli/migrate/api"
 	"github.com/hasura/graphql-engine/cli/util"
-	"github.com/hasura/graphql-engine/cli/version"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/skratchdot/open-golang/open"
@@ -85,14 +84,9 @@ func (o *consoleOptions) run() error {
 	gin.SetMode(gin.ReleaseMode)
 
 	// An Engine instance with the Logger and Recovery middleware already attached.
-	r := gin.New()
+	g := gin.New()
 
-	r.Use(allowCors())
-
-	// My Router struct
-	router := &cRouter{
-		r,
-	}
+	g.Use(allowCors())
 
 	if o.EC.Version == nil {
 		return errors.New("cannot validate version, object is nil")
@@ -103,7 +97,18 @@ func (o *consoleOptions) run() error {
 		return err
 	}
 
-	router.setRoutes(o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.MigrationDir, metadataPath, o.EC.Logger, o.EC.Version)
+	t, err := newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version, false)
+	if err != nil {
+		return err
+	}
+
+	// My Router struct
+	r := &cRouter{
+		g,
+		t,
+	}
+
+	r.setRoutes(o.EC.MigrationDir, metadataPath, o.EC.Logger)
 
 	consoleTemplateVersion := o.EC.Version.GetConsoleTemplateVersion()
 	consoleAssetsVersion := o.EC.Version.GetConsoleAssetsVersion()
@@ -134,7 +139,7 @@ func (o *consoleOptions) run() error {
 	o.WG = wg
 	wg.Add(1)
 	go func() {
-		err = router.Run(o.Address + ":" + o.APIPort)
+		err = r.router.Run(o.Address + ":" + o.APIPort)
 		if err != nil {
 			o.EC.Logger.WithError(err).Errorf("error listening on port %s", o.APIPort)
 		}
@@ -171,21 +176,27 @@ func (o *consoleOptions) run() error {
 }
 
 type cRouter struct {
-	*gin.Engine
+	router  *gin.Engine
+	migrate *migrate.Migrate
 }
 
-func (router *cRouter) setRoutes(nurl *url.URL, adminSecret, migrationDir, metadataFile string, logger *logrus.Logger, v *version.Version) {
-	apis := router.Group("/apis")
+func (r *cRouter) setRoutes(migrationDir, metadataFile string, logger *logrus.Logger) {
+	apis := r.router.Group("/apis")
 	{
 		apis.Use(setLogger(logger))
 		apis.Use(setFilePath(migrationDir))
-		apis.Use(setDataPath(nurl, getAdminSecretHeaderName(v), adminSecret))
+		apis.Use(setMigrate(r.migrate))
 		// Migrate api endpoints and middleware
 		migrateAPIs := apis.Group("/migrate")
 		{
 			settingsAPIs := migrateAPIs.Group("/settings")
 			{
 				settingsAPIs.Any("", api.SettingsAPI)
+			}
+			squashAPIs := migrateAPIs.Group("/squash")
+			{
+				squashAPIs.POST("/create", api.SquashCreateAPI)
+				squashAPIs.POST("/delete", api.SquashDeleteAPI)
 			}
 			migrateAPIs.Any("", api.MigrateAPI)
 		}
@@ -198,11 +209,9 @@ func (router *cRouter) setRoutes(nurl *url.URL, adminSecret, migrationDir, metad
 	}
 }
 
-func setDataPath(nurl *url.URL, adminSecretHeader, adminSecret string) gin.HandlerFunc {
+func setMigrate(t *migrate.Migrate) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		host := getDataPath(nurl, adminSecretHeader, adminSecret)
-
-		c.Set("dbpath", host)
+		c.Set("migrate", t)
 		c.Next()
 	}
 }

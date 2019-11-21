@@ -8,6 +8,7 @@ module Hasura.Db
   , runLazyTx
   , runLazyTx'
   , withUserInfo
+  , sessionInfoJsonExp
 
   , RespTx
   , LazyRespTx
@@ -29,6 +30,8 @@ import           Hasura.RQL.Types.Permission
 import           Hasura.SQL.Error
 import           Hasura.SQL.Types
 
+import qualified Hasura.SQL.DML               as S
+
 data PGExecCtx
   = PGExecCtx
   { _pecPool        :: !Q.PGPool
@@ -45,6 +48,14 @@ instance (MonadTx m) => MonadTx (ReaderT s m) where
 instance (MonadTx m) => MonadTx (ValidateT e m) where
   liftTx = lift . liftTx
 
+-- | Like 'Q.TxE', but defers acquiring a Postgres connection until the first execution of 'liftTx'.
+-- If no call to 'liftTx' is ever reached (i.e. a successful result is returned or an error is
+-- raised before ever executing a query), no connection is ever acquired.
+--
+-- This is useful for certain code paths that only conditionally need database access. For example,
+-- although most queries will eventually hit Postgres, introspection queries or queries that
+-- exclusively use remote schemas never will; using 'LazyTx' keeps those branches from unnecessarily
+-- allocating a connection.
 data LazyTx e a
   = LTErr !e
   | LTNoTx !a
@@ -58,11 +69,12 @@ lazyTxToQTx = \case
 
 runLazyTx
   :: PGExecCtx
+  -> Q.TxAccess
   -> LazyTx QErr a -> ExceptT QErr IO a
-runLazyTx (PGExecCtx pgPool txIso) = \case
+runLazyTx (PGExecCtx pgPool txIso) txAccess = \case
   LTErr e  -> throwError e
   LTNoTx a -> return a
-  LTTx tx  -> Q.runTx pgPool (txIso, Nothing) tx
+  LTTx tx  -> Q.runTx pgPool (txIso, Just txAccess) tx
 
 runLazyTx'
   :: PGExecCtx -> LazyTx QErr a -> ExceptT QErr IO a
@@ -79,8 +91,10 @@ setHeadersTx uVars =
   Q.unitQE defaultTxErrorHandler setSess () False
   where
     setSess = Q.fromText $
-      "SET LOCAL \"hasura.user\" = " <>
-      pgFmtLit (J.encodeToStrictText uVars)
+      "SET LOCAL \"hasura.user\" = " <> toSQLTxt (sessionInfoJsonExp uVars)
+
+sessionInfoJsonExp :: UserVars -> S.SQLExp
+sessionInfoJsonExp = S.SELit . J.encodeToStrictText
 
 defaultTxErrorHandler :: Q.PGTxErr -> QErr
 defaultTxErrorHandler = mkTxErrorHandler (const False)

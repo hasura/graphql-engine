@@ -1,4 +1,4 @@
-import yaml
+import ruamel.yaml as yaml
 from validate import check_query_f, check_query
 from super_classes import DefaultTestSelectQueries
 
@@ -8,7 +8,7 @@ class TestGraphqlIntrospection(DefaultTestSelectQueries):
     def test_introspection(self, hge_ctx):
         with open(self.dir() + "/introspection.yaml") as c:
             conf = yaml.safe_load(c)
-        resp = check_query(hge_ctx, conf)
+        resp, _ = check_query(hge_ctx, conf)
         hasArticle = False
         hasArticleAuthorFKRel = False
         hasArticleAuthorManualRel = False

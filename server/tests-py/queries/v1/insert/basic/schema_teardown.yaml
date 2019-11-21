@@ -4,6 +4,8 @@ args:
 - type: run_sql
   args:
     sql: |
+      drop table posts;
+      drop table colors;
       drop table article;
       drop table author;
       drop table orders;

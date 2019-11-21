@@ -30,14 +30,15 @@ func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		newMigrateApplyCmd(ec),
 		newMigrateStatusCmd(ec),
 		newMigrateCreateCmd(ec),
+		newMigrateSquashCmd(ec),
 	)
 	return migrateCmd
 }
 
-func newMigrate(dir string, db *url.URL, adminSecretValue string, logger *logrus.Logger, v *version.Version) (*migrate.Migrate, error) {
+func newMigrate(dir string, db *url.URL, adminSecretValue string, logger *logrus.Logger, v *version.Version, isCmd bool) (*migrate.Migrate, error) {
 	dbURL := getDataPath(db, getAdminSecretHeaderName(v), adminSecretValue)
 	fileURL := getFilePath(dir)
-	t, err := migrate.New(fileURL.String(), dbURL.String(), true, logger)
+	t, err := migrate.New(fileURL.String(), dbURL.String(), isCmd, logger)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot create migrate instance")
 	}

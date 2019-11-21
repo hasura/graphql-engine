@@ -11,6 +11,7 @@
   url: /v1/query
   status: 200
   response:
+    version: 2
     allowlist: []
     functions: []
     query_collections: []
