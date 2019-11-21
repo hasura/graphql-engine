@@ -202,15 +202,12 @@ Update based on a nested object's fields
       }
     }
 
-Update relationships
---------------------
+Update all relationships of an object
+-------------------------------------
 
-Many-to-many relationship
-^^^^^^^^^^^^^^^^^^^^^^^^^
+In order to replace all existing relationships of an object, it's required to use two mutations: one to delete all the existing relationships and one to add a list of new relationships. These two mutations will be executed in one transaction.
 
-In order to update a many-to-many relationship, it's required to use two mutations (one to delete the relationship and one to insert a new one) in one transaction.
-
-**Example:** Update an articles's tags:
+**Example:** Replace all tags of an article with a new list:
 
 .. graphiql::
   :view_only:
