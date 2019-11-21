@@ -1,4 +1,5 @@
 .hasura-dev-python-venv
+server/tests-py/.devsh_version
 npm-debug.log
 *.temp
 *.DS_Store
@@ -7,6 +8,9 @@ test-server-output
 test-server-flags-output
 .vscode
 .idea
+
+# Standardize on 'venv' as the name for python venv directories
+venv
 
 # Test artifacts
 *.tix

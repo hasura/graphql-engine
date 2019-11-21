@@ -223,9 +223,10 @@ class EvtsWebhookServer(http.server.HTTPServer):
         self.evt_trggr_web_server.join()
 
 class HGECtxGQLServer:
-    def __init__(self):
+    def __init__(self, hge_urls):
         # start the graphql server
         self.graphql_server = graphql_server.create_server('127.0.0.1', 5000)
+        self.hge_urls = graphql_server.set_hge_urls(hge_urls)
         self.gql_srvr_thread = threading.Thread(target=self.graphql_server.serve_forever)
         self.gql_srvr_thread.start()
 
@@ -308,8 +309,9 @@ class HGECtx:
 
     def v1q_f(self, fn):
         with open(fn) as f:
-            # NOTE: preserve ordering with RoundTripLoader:
-            return self.v1q(yaml.load(f, yaml.RoundTripLoader))
+            # NOTE: preserve ordering with ruamel
+            yml = yaml.YAML()
+            return self.v1q(yml.load(f))
 
     def teardown(self):
         self.http.close()
