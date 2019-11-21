@@ -5,7 +5,8 @@ module Hasura.Logging
   ( LoggerSettings(..)
   , defaultLoggerSettings
   , EngineLogType(..)
-  , HasuraEngine
+  , OSS
+  , InternalLogTypes(..)
   , EngineLog(..)
   , userAllowedLogTypes
   , ToEngineLog(..)
@@ -47,38 +48,38 @@ newtype FormattedTime
 
 -- | Typeclass representing any type which can be parsed into a list of enabled log types, and has a @Set@
 -- of default enabled log types, and can find out if a log type is enabled
-class (Eq a, Hashable a) => EnabledLogTypes a where
-  parseEnabledLogTypes :: String -> Either String [a]
-  defaultEnabledLogTypes :: Set.HashSet a
-  isLogTypeEnabled :: Set.HashSet a -> a -> Bool
+class (Eq (EngineLogType impl), Hashable (EngineLogType impl)) => EnabledLogTypes impl where
+  parseEnabledLogTypes :: String -> Either String [EngineLogType impl]
+  defaultEnabledLogTypes :: Set.HashSet (EngineLogType impl)
+  isLogTypeEnabled :: Set.HashSet (EngineLogType impl) -> EngineLogType impl -> Bool
 
 -- | A family of EngineLogType types
 data family EngineLogType impl
 
-data HasuraEngine
+data OSS
 
-data instance EngineLogType HasuraEngine
+data instance EngineLogType OSS
   = ELTHttpLog
   | ELTWebsocketLog
   | ELTWebhookLog
   | ELTQueryLog
   | ELTStartup
   -- internal log types
-  | ELTInternal !Text
+  | ELTInternal !InternalLogTypes
   deriving (Show, Eq, Generic)
 
-instance Hashable (EngineLogType HasuraEngine)
+instance Hashable (EngineLogType OSS)
 
-instance J.ToJSON (EngineLogType HasuraEngine) where
+instance J.ToJSON (EngineLogType OSS) where
   toJSON = \case
     ELTHttpLog      -> "http-log"
     ELTWebsocketLog -> "websocket-log"
     ELTWebhookLog   -> "webhook-log"
     ELTQueryLog     -> "query-log"
     ELTStartup      -> "startup"
-    ELTInternal t   -> J.String t
+    ELTInternal t   -> J.toJSON t
 
-instance J.FromJSON (EngineLogType HasuraEngine) where
+instance J.FromJSON (EngineLogType OSS) where
   parseJSON = J.withText "log-type" $ \s -> case T.toLower $ T.strip s of
     "startup"       -> return ELTStartup
     "http-log"      -> return ELTHttpLog
@@ -88,28 +89,55 @@ instance J.FromJSON (EngineLogType HasuraEngine) where
     _               -> fail $ "Valid list of comma-separated log types: "
                        <> BLC.unpack (J.encode userAllowedLogTypes)
 
+data InternalLogTypes
+ = ILTUnstructured
+ -- ^ mostly for debug logs - see @debugT@, @debugBS@ and @debugLBS@ functions
+ | ILTEventTrigger
+ | ILTWsServer
+ -- ^ internal logs for the websocket server
+ | ILTPgClient
+ | ILTMetadata
+ -- ^ log type for logging metadata related actions; currently used in logging inconsistent metadata
+ | ILTJwkRefreshLog
+ | ILTTelemetry
+ | ILTSchemaSyncThread
+ deriving (Show, Eq, Generic)
+
+instance Hashable InternalLogTypes
+
+instance J.ToJSON InternalLogTypes where
+  toJSON = \case
+    ILTUnstructured -> "unstructured"
+    ILTEventTrigger -> "event-trigger"
+    ILTWsServer -> "ws-server"
+    ILTPgClient -> "pg-client"
+    ILTMetadata -> "metadata"
+    ILTJwkRefreshLog -> "jwk-refresh-log"
+    ILTTelemetry -> "telemetry-log"
+    ILTSchemaSyncThread -> "schema-sync-thread"
+
 -- the default enabled log-types
-defaultEnabledEngineLogTypes :: Set.HashSet (EngineLogType HasuraEngine)
+defaultEnabledEngineLogTypes :: Set.HashSet (EngineLogType OSS)
 defaultEnabledEngineLogTypes =
   Set.fromList [ELTStartup, ELTHttpLog, ELTWebhookLog, ELTWebsocketLog]
 
-isEngineLogTypeEnabled :: Set.HashSet (EngineLogType HasuraEngine) -> EngineLogType HasuraEngine -> Bool
+isEngineLogTypeEnabled :: Set.HashSet (EngineLogType OSS) -> EngineLogType OSS -> Bool
 isEngineLogTypeEnabled enabledTypes logTy = case logTy of
   ELTInternal _ -> True
   _             -> logTy `Set.member` enabledTypes
 
 
-readLogTypes :: String -> Either String [EngineLogType HasuraEngine]
+readLogTypes :: String -> Either String [EngineLogType OSS]
 readLogTypes = mapM (J.eitherDecodeStrict' . quote . txtToBs) . T.splitOn "," . T.pack
   where quote x = "\"" <> x <> "\""
 
-instance EnabledLogTypes (EngineLogType HasuraEngine) where
+instance EnabledLogTypes OSS where
   parseEnabledLogTypes = readLogTypes
   defaultEnabledLogTypes = defaultEnabledEngineLogTypes
   isLogTypeEnabled = isEngineLogTypeEnabled
 
 -- log types that can be set by the user
-userAllowedLogTypes :: [EngineLogType HasuraEngine]
+userAllowedLogTypes :: [EngineLogType OSS]
 userAllowedLogTypes =
   [ ELTStartup
   , ELTHttpLog
@@ -140,24 +168,25 @@ data EngineLog impl
   , _elLevel     :: !LogLevel
   , _elType      :: !(EngineLogType impl)
   , _elDetail    :: !J.Value
-  } --deriving (Show, Eq)
+  }
 
--- $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''EngineLog)
+deriving instance Show (EngineLogType impl) => Show (EngineLog impl)
+deriving instance Eq (EngineLogType impl) => Eq (EngineLog impl)
 
 instance J.ToJSON (EngineLogType impl) => J.ToJSON (EngineLog impl) where
   toJSON (EngineLog ts level ty detail) =
+    -- error: 'EngineLog' is not in the type environment at a reify
+    -- $(J.mkToJSON (J.aesonDrop 3 J.snakeCase) ''EngineLog)
     J.object [ "timestamp" J..= ts
              , "level" J..= level
              , "type" J..= ty
              , "detail" J..= detail
              ]
 
--- instance Show impl => Show (EngineLog impl)
--- instance Eq impl => Eq (EngineLog impl)
-
-
-class EnabledLogTypes (EngineLogType logtype) => ToEngineLog a logtype where
-  toEngineLog :: a -> (LogLevel, EngineLogType logtype, J.Value)
+-- | Typeclass representing any data type that can be converted to @EngineLog@ for the purpose of
+-- logging
+class EnabledLogTypes impl => ToEngineLog a impl where
+  toEngineLog :: a -> (LogLevel, EngineLogType impl, J.Value)
 
 
 newtype UnstructuredLog
@@ -173,9 +202,9 @@ debugBS = UnstructuredLog . TBS.fromBS
 debugLBS :: BL.ByteString -> UnstructuredLog
 debugLBS = UnstructuredLog . TBS.fromLBS
 
-instance ToEngineLog UnstructuredLog HasuraEngine where
+instance ToEngineLog UnstructuredLog OSS where
   toEngineLog (UnstructuredLog t) =
-    (LevelDebug, ELTInternal "unstructured", J.toJSON t)
+    (LevelDebug, ELTInternal ILTUnstructured, J.toJSON t)
 
 data LoggerCtx impl
   = LoggerCtx
@@ -187,8 +216,8 @@ data LoggerCtx impl
 
 data LoggerSettings
   = LoggerSettings
-  -- should current time be cached (refreshed every sec)
   { _lsCachedTimestamp :: !Bool
+  -- ^ should current time be cached (refreshed every sec)
   , _lsTimeZone        :: !(Maybe Time.TimeZone)
   , _lsLevel           :: !LogLevel
   } deriving (Show, Eq)
@@ -211,8 +240,8 @@ getFormattedTime tzM = do
 
 mkLoggerCtx
   :: LoggerSettings
-  -> Set.HashSet (EngineLogType a)
-  -> IO (LoggerCtx a)
+  -> Set.HashSet (EngineLogType impl)
+  -> IO (LoggerCtx impl)
 mkLoggerCtx (LoggerSettings cacheTime tzM logLevel) enabledLogs = do
   loggerSet <- FL.newStdoutLoggerSet FL.defaultBufSize
   timeGetter <- bool (return $ getFormattedTime tzM) cachedTimeGetter cacheTime
@@ -228,15 +257,15 @@ cleanLoggerCtx =
   FL.rmLoggerSet . _lcLoggerSet
 
 
-newtype Logger logtype
-  = Logger { unLogger :: forall a m. (ToEngineLog a logtype, MonadIO m) => a -> m () }
+newtype Logger impl
+  = Logger { unLogger :: forall a m. (ToEngineLog a impl, MonadIO m) => a -> m () }
 
-mkLogger :: LoggerCtx HasuraEngine -> Logger HasuraEngine
+mkLogger :: LoggerCtx OSS -> Logger OSS
 mkLogger (LoggerCtx loggerSet serverLogLevel timeGetter enabledLogTypes) = Logger $ \l -> do
   localTime <- liftIO timeGetter
   let (logLevel, logTy, logDet) = toEngineLog l
   when (logLevel >= serverLogLevel && isLogTypeEnabled enabledLogTypes logTy) $
     liftIO $ FL.pushLogStrLn loggerSet $ FL.toLogStr (J.encode $ EngineLog localTime logLevel logTy logDet)
 
-eventTriggerLogType :: EngineLogType HasuraEngine
-eventTriggerLogType = ELTInternal "event-trigger"
+eventTriggerLogType :: EngineLogType OSS
+eventTriggerLogType = ELTInternal ILTEventTrigger

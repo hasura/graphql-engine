@@ -69,7 +69,7 @@ data GQExecPlan a
 -- | Execution context
 data ExecutionCtx
   = ExecutionCtx
-  { _ecxLogger          :: !(L.Logger L.HasuraEngine)
+  { _ecxLogger          :: !(L.Logger L.OSS)
   , _ecxSqlGenCtx       :: !SQLGenCtx
   , _ecxPgExecCtx       :: !PGExecCtx
   , _ecxPlanCache       :: !EP.PlanCache

@@ -56,7 +56,7 @@ instance ToJSON StartupLog where
            , "info" .= info
            ]
 
-instance ToEngineLog StartupLog HasuraEngine where
+instance ToEngineLog StartupLog OSS where
   toEngineLog startupLog =
     (slLogLevel startupLog, ELTStartup, toJSON startupLog)
 
@@ -70,9 +70,9 @@ instance ToJSON PGLog where
   toJSON (PGLog _ msg) =
     object ["message" .= msg]
 
-instance ToEngineLog PGLog HasuraEngine where
+instance ToEngineLog PGLog OSS where
   toEngineLog pgLog =
-    (plLogLevel pgLog, ELTInternal "pg-client", toJSON pgLog)
+    (plLogLevel pgLog, ELTInternal ILTPgClient, toJSON pgLog)
 
 data MetadataLog
   = MetadataLog
@@ -87,9 +87,9 @@ instance ToJSON MetadataLog where
            , "info" .= infoVal
            ]
 
-instance ToEngineLog MetadataLog HasuraEngine where
+instance ToEngineLog MetadataLog OSS where
   toEngineLog ml =
-    (mlLogLevel ml, ELTInternal "metadata", toJSON ml)
+    (mlLogLevel ml, ELTInternal ILTMetadata, toJSON ml)
 
 mkInconsMetadataLog :: [InconsistentMetadataObj] -> MetadataLog
 mkInconsMetadataLog objs =
@@ -106,7 +106,7 @@ data WebHookLog
   , whlResponse   :: !(Maybe T.Text)
   } deriving (Show)
 
-instance ToEngineLog WebHookLog HasuraEngine where
+instance ToEngineLog WebHookLog OSS where
   toEngineLog webHookLog =
     (whlLogLevel webHookLog, ELTWebhookLog, toJSON webHookLog)
 
@@ -122,7 +122,7 @@ instance ToJSON WebHookLog where
 
 class (Monad m) => HttpLog m where
   logHttpError
-    :: Logger HasuraEngine
+    :: Logger OSS
     -- ^ the logger
     -> Maybe UserInfo
     -- ^ user info may or may not be present (error can happen during user resolution)
@@ -139,7 +139,7 @@ class (Monad m) => HttpLog m where
     -> m ()
 
   logHttpSuccess
-    :: Logger HasuraEngine
+    :: Logger OSS
     -- ^ the logger
     -> Maybe UserInfo
     -- ^ user info may or may not be present (error can happen during user resolution)
@@ -280,7 +280,7 @@ data HttpLogLine
   , _hlLogLine  :: !HttpLogContext
   }
 
-instance ToEngineLog HttpLogLine HasuraEngine where
+instance ToEngineLog HttpLogLine OSS where
   toEngineLog (HttpLogLine logLevel logLine) =
     (logLevel, ELTHttpLog, toJSON logLine)
 

@@ -73,7 +73,7 @@ data ServerCtx
   = ServerCtx
   { scPGExecCtx       :: !PGExecCtx
   , scConnInfo        :: !Q.ConnInfo
-  , scLogger          :: !(L.Logger L.HasuraEngine)
+  , scLogger          :: !(L.Logger L.OSS)
   , scCacheRef        :: !SchemaCacheRef
   , scAuthMode        :: !AuthMode
   , scManager         :: !HTTP.Manager
@@ -115,13 +115,13 @@ isAdminSecretSet _        = boolToText True
 getSCFromRef :: (MonadIO m) => SchemaCacheRef -> m SchemaCache
 getSCFromRef scRef = liftIO (readIORef (_scrCache scRef)) >>= return . fst
 
-logInconsObjs :: (MonadIO m) => L.Logger L.HasuraEngine -> [InconsistentMetadataObj] -> m ()
+logInconsObjs :: (MonadIO m) => L.Logger L.OSS -> [InconsistentMetadataObj] -> m ()
 logInconsObjs logger objs =
   unless (null objs) $ L.unLogger logger $ mkInconsMetadataLog objs
 
 withSCUpdate
   :: (MonadIO m, MonadError e m)
-  => SchemaCacheRef -> L.Logger L.HasuraEngine -> m (a, SchemaCache) -> m a
+  => SchemaCacheRef -> L.Logger L.OSS -> m (a, SchemaCache) -> m a
 withSCUpdate scr logger action = do
   acquireLock
   (res, newSC) <- action `catchError` onError
@@ -340,7 +340,7 @@ v1Alpha1PGDumpHandler b = do
 
 consoleAssetsHandler
   :: (MonadIO m, HttpLog m)
-  => L.Logger L.HasuraEngine
+  => L.Logger L.OSS
   -> Text
   -> FilePath
   -> Spock.ActionT m ()
@@ -431,7 +431,7 @@ mkWaiApp
      , MetadataApiAuthorization m
      )
   => Q.TxIsolation
-  -> L.LoggerCtx L.HasuraEngine
+  -> L.LoggerCtx L.OSS
   -> SQLGenCtx
   -> Bool
   -> Q.PGPool
@@ -637,7 +637,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
 
 raiseGenericApiError
   :: (MonadIO m, HttpLog m)
-  => L.Logger L.HasuraEngine
+  => L.Logger L.OSS
   -> [HTTP.Header]
   -> QErr
   -> Spock.ActionT m ()

@@ -61,7 +61,7 @@ printErrExit = liftIO . (>> exitFailure) . putStrLn
 printErrJExit :: (A.ToJSON a, MonadIO m) => forall b . a -> m b
 printErrJExit = liftIO . (>> exitFailure) . printJSON
 
-parseHGECommand :: EnabledLogTypes (EngineLogType a) => Parser (RawHGECommand a)
+parseHGECommand :: EnabledLogTypes impl => Parser (RawHGECommand impl)
 parseHGECommand =
   subparser
     ( command "serve" (info (helper <*> (HCServe <$> serveOpts))
@@ -100,7 +100,7 @@ parseHGECommand =
                 <*> parseEnabledLogs
                 <*> parseLogLevel
 
-parseArgs :: EnabledLogTypes (EngineLogType a) => IO (HGEOptions a)
+parseArgs :: EnabledLogTypes impl => IO (HGEOptions impl)
 parseArgs = do
   rawHGEOpts <- execParser opts
   env <- getEnvironment
@@ -120,7 +120,7 @@ printJSON = liftIO . BLC.putStrLn . A.encode
 printYaml :: (A.ToJSON a, MonadIO m) => a -> m ()
 printYaml = liftIO . BC.putStrLn . Y.encode
 
-mkPGLogger :: Logger HasuraEngine -> Q.PGLogger
+mkPGLogger :: Logger OSS -> Q.PGLogger
 mkPGLogger (Logger logger) (Q.PLERetryMsg msg) =
   logger $ PGLog LevelWarn msg
 
@@ -140,8 +140,8 @@ data InitCtx
 -- TODO: better naming?
 data Loggers
   = Loggers
-  { _lsLoggerCtx :: !(LoggerCtx HasuraEngine)
-  , _lsLogger    :: !(Logger HasuraEngine)
+  { _lsLoggerCtx :: !(LoggerCtx OSS)
+  , _lsLogger    :: !(Logger OSS)
   , _lsPgLogger  :: !Q.PGLogger
   }
 
@@ -152,7 +152,7 @@ newtype AppM a = AppM { unAppM :: IO a }
 -- these contexts might be used by external functions
 initialiseCtx
   :: (MonadIO m)
-  => HGECommand (HasuraEngine)
+  => HGECommand OSS
   -> RawConnInfo
   -> m InitCtx
 initialiseCtx hgeCmd rci = do
@@ -209,9 +209,9 @@ runHGEServer
      , MetadataApiAuthorization m
      , HttpLog m
      , ConsoleRenderer m
-     , A.ToJSON (EngineLogType a)
+     , A.ToJSON (EngineLogType impl)
      )
-  => ServeOptions a
+  => ServeOptions impl
   -> InitCtx
   -> m ()
 runHGEServer so@ServeOptions{..} InitCtx{..} = do
@@ -305,7 +305,7 @@ runHGEServer so@ServeOptions{..} InitCtx{..} = do
     -- requests is already implemented in Warp, and is triggered by invoking the 'closeSocket' callback.
     -- We only catch the SIGTERM signal once, that is, if the user hits CTRL-C once again, we terminate
     -- the process immediately.
-    shutdownHandler :: Logger HasuraEngine -> IO () -> IO () -> IO ()
+    shutdownHandler :: Logger OSS -> IO () -> IO () -> IO ()
     shutdownHandler (Logger logger) shutdownApp closeSocket =
       void $ Signals.installHandler
         Signals.sigTERM

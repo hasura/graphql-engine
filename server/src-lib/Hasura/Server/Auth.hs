@@ -44,7 +44,7 @@ import           Hasura.Server.Utils
 -- | Typeclass representing the @UserInfo@ authorization and resolving effect
 class (Monad m) => UserAuthentication m where
   resolveUserInfo
-    :: Logger HasuraEngine
+    :: Logger OSS
     -> H.Manager
     -> [N.Header]
     -- ^ request headers
@@ -88,7 +88,7 @@ mkAuthMode
   -> Maybe JWTConfig
   -> Maybe RoleName
   -> H.Manager
-  -> LoggerCtx HasuraEngine
+  -> LoggerCtx OSS
   -> m AuthMode
 mkAuthMode mAdminSecret mWebHook mJwtSecret mUnAuthRole httpManager lCtx =
   case (mAdminSecret, mWebHook, mJwtSecret) of
@@ -123,7 +123,7 @@ mkJwtCtx
      )
   => JWTConfig
   -> H.Manager
-  -> LoggerCtx HasuraEngine
+  -> LoggerCtx OSS
   -> m JWTCtx
 mkJwtCtx conf httpManager loggerCtx = do
   jwkRef <- case jcKeyOrUrl conf of
@@ -142,7 +142,7 @@ mkJwtCtx conf httpManager loggerCtx = do
 
 mkUserInfoFromResp
   :: (MonadIO m, MonadError QErr m)
-  => Logger HasuraEngine
+  => Logger OSS
   -> T.Text
   -> N.StdMethod
   -> N.Status
@@ -183,7 +183,7 @@ mkUserInfoFromResp logger url method statusCode respBody
 
 userInfoFromAuthHook
   :: (MonadIO m, MonadError QErr m)
-  => Logger HasuraEngine
+  => Logger OSS
   -> H.Manager
   -> AuthHook
   -> [N.Header]
@@ -222,7 +222,7 @@ userInfoFromAuthHook logger manager hook reqHeaders = do
 
 getUserInfo
   :: (MonadIO m, MonadError QErr m)
-  => Logger HasuraEngine
+  => Logger OSS
   -> H.Manager
   -> [N.Header]
   -> AuthMode
@@ -231,7 +231,7 @@ getUserInfo l m r a = fst <$> getUserInfoWithExpTime l m r a
 
 getUserInfoWithExpTime
   :: (MonadIO m, MonadError QErr m)
-  => Logger HasuraEngine
+  => Logger OSS
   -> H.Manager
   -> [N.Header]
   -> AuthMode
