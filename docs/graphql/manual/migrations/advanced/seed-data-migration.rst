@@ -8,14 +8,18 @@ Creating a seed data migration
 
 It can be convenient to add data into tables as part of the DB init process. This section gives instructions as to how to achieve that.
 
+Step 1: Run the console via the Hasura CLI
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Step 1: Navigate to the SQL section
+In order to make sure that the migrations get created, the console needs to be run via the Hasura CLI.
+
+Step 2: Navigate to the SQL section
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 On the Hasura console, click on the ``Data`` tab and then on the ``SQL`` link on the left hand side.
 
 
-Step 2: Write an insert statement
+Step 3: Write an insert statement
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The next step is to write an insert statement that populates the database with seed data, like this:
@@ -33,29 +37,22 @@ The next step is to write an insert statement that populates the database with s
     INSERT INTO articles (id, title, content, author_id) VALUES
     (1, 'How to make fajitas', 'Recipe on making the best fajitas in the world', 1),
     (2, 'How to climb mount everest', 'Guide on successfully climbing the hightest mountain in the world', 3),
-    (3, 'How to be successful on brodway', 'What it takes for you to be a successful performer at broadway', 2);
+    (3, 'How to be successful on broadway', 'What it takes for you to be a successful performer at broadway', 2);
 
-Step 3: Track the statement & create a migration
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Step 4: Mark the insert as a migration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- Check the box labelled ``Track this``, so that the data actually gets inserted into the DB. 
+Check the box ``This is a migration`` and give the migration a name, e.g. ``insert_seed_data``.
 
-- Check the box ``This is a migration`` and give it a migration name, e.g. ``insert_seed_data``.
-
-Step 4: Run the statement
+Step 5: Run the statement
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Hit the ``Run!`` button. 
 
-Step 4: Verify data & migration
+Step 6: Verify data & migration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If the insert statement was successful, the data is now added to the DB. 
 
-On your local machine, navigate into the Hasura project and run ``ls migrations``. The latest migration
+Navigate to the migrations directory in your Hasura project and run ``ls migrations``. The latest migration
 will be the the insert statement that was just run.
-
-.. note::
-
-   In order to check migrations, you need a locally running Hasura instance with migrations set up. 
-   See :doc:`here <../manage-migrations>` how to do the setup.
