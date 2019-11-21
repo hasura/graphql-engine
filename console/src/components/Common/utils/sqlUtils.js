@@ -30,13 +30,20 @@ export const checkSchemaModification = _sql => {
   return _isSchemaModification;
 };
 
+export const getBoolExpFromCheckConstraint = check => {
+  if (check) {
+    return check.substring(7, check.length - 1);
+  }
+  return check;
+};
+
 export const getCreateCheckConstraintSql = (
   tableName,
   schemaName,
   constraintName,
   check
 ) => {
-  return `alter table "${schemaName}"."${tableName}" add constraint "${constraintName}" ${check}`;
+  return `alter table "${schemaName}"."${tableName}" add constraint "${constraintName}" check (${check})`;
 };
 
 export const getDropConstraintSql = (tableName, schemaName, constraintName) => {

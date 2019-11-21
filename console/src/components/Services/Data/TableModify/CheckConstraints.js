@@ -96,11 +96,12 @@ const CheckConstraints = ({
           </div>
           <div>
             <div className={`${styles.add_mar_bottom_mid}`}>
-              <b>Check:</b>
+              <b>Boolean expression:</b>
             </div>
             <AceEditor
               mode="sql"
               theme="github"
+              placeholder="email ~ '^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+[.][A-Za-z]+$'"
               name={existingConstraintName}
               onChange={checkOnChange}
               value={check}

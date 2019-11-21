@@ -1,4 +1,5 @@
 import { getDataTypeInfo } from '../Common/utils';
+import { getBoolExpFromCheckConstraint } from '../../../Common/utils/sqlUtils';
 
 const convertArrayToJson = (arr, keyIndex = 0) => {
   const converted = {};
@@ -101,7 +102,7 @@ export const getCheckConstraintsState = constraints => {
   return [
     ...constraints.map(c => ({
       name: c.constraint_name,
-      check: c.check,
+      check: getBoolExpFromCheckConstraint(c.check),
     })),
     { name: '', check: '' },
   ];
