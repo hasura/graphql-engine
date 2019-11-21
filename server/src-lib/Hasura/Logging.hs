@@ -30,6 +30,8 @@ import           Hasura.Prelude
 
 import qualified Control.AutoUpdate         as Auto
 import qualified Data.Aeson                 as J
+import qualified Data.Aeson.Casing          as J
+import qualified Data.Aeson.TH              as J
 import qualified Data.ByteString            as B
 import qualified Data.ByteString.Lazy       as BL
 import qualified Data.ByteString.Lazy.Char8 as BLC
@@ -173,15 +175,11 @@ data EngineLog impl
 deriving instance Show (EngineLogType impl) => Show (EngineLog impl)
 deriving instance Eq (EngineLogType impl) => Eq (EngineLog impl)
 
+-- empty splice to bring all the above definitions in scope
+$(pure [])
+
 instance J.ToJSON (EngineLogType impl) => J.ToJSON (EngineLog impl) where
-  toJSON (EngineLog ts level ty detail) =
-    -- error: 'EngineLog' is not in the type environment at a reify
-    -- $(J.mkToJSON (J.aesonDrop 3 J.snakeCase) ''EngineLog)
-    J.object [ "timestamp" J..= ts
-             , "level" J..= level
-             , "type" J..= ty
-             , "detail" J..= detail
-             ]
+  toJSON = $(J.mkToJSON (J.aesonDrop 3 J.snakeCase) ''EngineLog)
 
 -- | Typeclass representing any data type that can be converted to @EngineLog@ for the purpose of
 -- logging
