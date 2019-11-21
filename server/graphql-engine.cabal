@@ -234,6 +234,7 @@ library
                      , Hasura.RQL.DDL.Schema.Rename
                      , Hasura.RQL.DDL.Schema.Table
                      , Hasura.RQL.DDL.Metadata
+                     , Hasura.RQL.DDL.Metadata.Types
                      , Hasura.RQL.DDL.Utils
                      , Hasura.RQL.DDL.EventTrigger
                      , Hasura.RQL.DDL.Headers
@@ -304,6 +305,7 @@ library
                      , Control.Concurrent.Extended
                      , Control.Lens.Extended
                      , Data.Aeson.Extended
+                     , Data.Aeson.Ordered
                      , Data.HashMap.Strict.InsOrd.Extended
                      , Data.Parser.JSONPath
                      , Data.Sequence.NonEmpty

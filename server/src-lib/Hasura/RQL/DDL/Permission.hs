@@ -303,6 +303,7 @@ $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''UpdPerm)
 type UpdPermDef = PermDef UpdPerm
 type CreateUpdPerm = CreatePerm UpdPerm
 
+
 buildUpdPermInfo
   :: (QErrM m, CacheRM m)
   => TableInfo PGColumnInfo

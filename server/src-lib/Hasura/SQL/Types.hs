@@ -258,7 +258,6 @@ instance (FromJSON a) => FromJSON (QualifiedObject a) where
     fail "expecting a string/object for QualifiedObject"
 
 instance (ToJSON a) => ToJSON (QualifiedObject a) where
-  toJSON (QualifiedObject (SchemaName "public") o) = toJSON o
   toJSON (QualifiedObject sn o) =
     object [ "schema" .= sn
            , "name"  .= o
