@@ -17,7 +17,7 @@ You can turn any query into a subscription by simply replacing ``query`` with ``
 
 .. admonition:: Caveat
 
-  Hasura follows the `GraphQL spec <http://facebook.github.io/graphql/June2018/#sec-Single-root-field>`_ which 
+  Hasura follows the `GraphQL spec <https://graphql.github.io/graphql-spec/June2018/#sec-Single-root-field>`_ which
   allows for only one root field in a subscription.
 
 Use cases

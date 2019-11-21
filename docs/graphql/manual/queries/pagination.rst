@@ -189,13 +189,16 @@ Limit results in a nested object
       }
     }
 
-Fetch limited results along with aggregated data on all results in the same query
----------------------------------------------------------------------------------
+Fetch limited results along with aggregated data on all results *(e.g. total count)* in the same query
+------------------------------------------------------------------------------------------------------
 
-Sometimes, a subset of data is needed along with some aggregated information on all the data.
-The total count can be returned along with a page of results. The count can then be used to calculate the number of pages based on the limit that is set.
+Sometimes, some aggregated information on all the data is required along with a subset of data.
 
-**Example:** Fetch a list of articles where a certain condition is true and get their count. Then limit the number of articles to display.
+E.g. the total count of results can be returned along with a page of results. The count can then be used to calculate
+the number of pages based on the limit that is set.
+
+**Example:** Fetch a list of articles where a certain condition is true and get their count. Then limit the number of
+articles to return.
 
 .. graphiql::
   :view_only:
@@ -206,7 +209,7 @@ The total count can be returned along with a page of results. The count can then
           totalCount: count
         }
       }
-      articles (where: $where limit: 4 order_by: {rating: desc}) {
+      articles (where: $where limit: 4) {
         id
         title
       }
@@ -240,6 +243,8 @@ The total count can be returned along with a page of results. The count can then
       }
     }
 
-.. note::
+.. admonition:: Caveat
 
-  If this is done with subscriptions, two subscriptions are required, as it's not possible to have two top level fields in the same subscription.
+  If this needs to be done over :doc:`subscriptions <../subscriptions/index>`, two subscriptions will need to be run
+  as Hasura follows the `GraphQL spec <https://graphql.github.io/graphql-spec/June2018/#sec-Single-root-field>`_ which
+  allows for only one root field in a subscription.
