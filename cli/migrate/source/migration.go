@@ -166,9 +166,9 @@ func (i *Migrations) MetaDown(version uint64) (m *Migration, ok bool) {
 	return nil, false
 }
 
-func (i *Migrations) ReadIdentifier(version uint64) (identifier string) {
+func (i *Migrations) ReadName(version uint64) (name string) {
 	for k := range i.migrations[version] {
-		return i.migrations[version][k].Identifier
+		return i.migrations[version][k].Name
 	}
 	return "-"
 }

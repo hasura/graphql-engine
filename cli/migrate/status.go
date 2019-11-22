@@ -14,8 +14,8 @@ type MigrationStatus struct {
 	// Check if the migration is present on the local.
 	IsPresent bool
 
-	// Identifier helps finding this migration in the source folder
-	Identifier string
+	// Name helps finding this migration in the source folder
+	Name string
 }
 
 type Status struct {

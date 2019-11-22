@@ -252,8 +252,8 @@ func (m *Migrate) newMigrationStatus(version uint64, driverType string) *Migrati
 	migrStatus, ok := m.status.Read(version)
 	if !ok {
 		migrStatus = &MigrationStatus{
-			Version:    version,
-			Identifier: m.sourceDrv.ReadIdentifier(version),
+			Version: version,
+			Name:    m.sourceDrv.ReadName(version),
 		}
 	}
 
