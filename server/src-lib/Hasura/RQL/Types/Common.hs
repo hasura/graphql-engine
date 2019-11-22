@@ -23,7 +23,6 @@ module Hasura.RQL.Types.Common
        , adminText
        , rootText
 
-       , FunctionArgName(..)
        , SystemDefined(..)
        , isSystemDefined
        ) where
@@ -181,10 +180,6 @@ data ForeignKey
 $(deriveJSON (aesonDrop 3 snakeCase) ''ForeignKey)
 
 instance Hashable ForeignKey
-
-newtype FunctionArgName =
-  FunctionArgName { getFuncArgNameTxt :: T.Text}
-  deriving (Show, Eq, ToJSON)
 
 type CustomColumnNames = HM.HashMap PGCol G.Name
 

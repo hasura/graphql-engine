@@ -462,9 +462,9 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode
 
     let pgExecCtx = PGExecCtx pool isoLevel
         pgExecCtxSer = PGExecCtx pool Q.Serializable
-        runCtx = RunCtx adminUserInfo httpManager sqlGenCtx $ SystemDefined False
+        runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
     (cacheRef, cacheBuiltTime) <- do
-      pgResp <- runExceptT $ peelRun emptySchemaCache runCtx pgExecCtxSer $ do
+      pgResp <- runExceptT $ peelRun emptySchemaCache runCtx pgExecCtxSer Q.ReadWrite $ do
         buildSchemaCache
         liftTx fetchLastUpdate
       (time, sc) <- either initErrExit return pgResp

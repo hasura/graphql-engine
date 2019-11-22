@@ -75,11 +75,11 @@ type OpaquePGValue = OpaqueValue AnnPGVal
 mkParameterizablePGValue :: OpaquePGValue -> UnresolvedVal
 mkParameterizablePGValue (OpaqueValue v _) = UVPG v
 
-openOpaqueValue :: (MonadResolve m) => OpaqueValue a -> m a
+openOpaqueValue :: (MonadReusability m) => OpaqueValue a -> m a
 openOpaqueValue (OpaqueValue v isVariable) = when isVariable markNotReusable $> v
 
 asPGColumnTypeAndValueM
-  :: (MonadResolve m)
+  :: (MonadReusability m, MonadError QErr m)
   => AnnInpVal
   -> m (PGColumnType, WithScalarType (Maybe (OpaqueValue PGScalarValue)))
 asPGColumnTypeAndValueM v = do
@@ -100,7 +100,8 @@ asPGColumnTypeAndValueM v = do
   let isVariable = isJust $ _aivVariable v
   pure (columnType, fmap (flip OpaqueValue isVariable) <$> scalarValueM)
 
-asPGColumnTypeAndAnnValueM :: (MonadResolve m) => AnnInpVal -> m (PGColumnType, Maybe OpaquePGValue)
+asPGColumnTypeAndAnnValueM
+  :: (MonadReusability m, MonadError QErr m) => AnnInpVal -> m (PGColumnType, Maybe OpaquePGValue)
 asPGColumnTypeAndAnnValueM v = do
   (columnType, scalarValueM) <- asPGColumnTypeAndValueM v
   let mkAnnPGColVal = AnnPGVal (_aivVariable v) (G.isNullable (_aivType v))
@@ -108,31 +109,32 @@ asPGColumnTypeAndAnnValueM v = do
         OpaqueValue (mkAnnPGColVal (WithScalarType scalarType scalarValue)) isVariable
   pure (columnType, replaceOpaqueValue <$> sequence scalarValueM)
 
-asPGColumnValueM :: (MonadResolve m) => AnnInpVal -> m (Maybe OpaquePGValue)
+asPGColumnValueM :: (MonadReusability m, MonadError QErr m) => AnnInpVal -> m (Maybe OpaquePGValue)
 asPGColumnValueM = fmap snd . asPGColumnTypeAndAnnValueM
 
-asPGColumnValue :: (MonadResolve m) => AnnInpVal -> m OpaquePGValue
+asPGColumnValue :: (MonadReusability m, MonadError QErr m) => AnnInpVal -> m OpaquePGValue
 asPGColumnValue v = do
   (columnType, annPGValM) <- asPGColumnTypeAndAnnValueM v
   onNothing annPGValM $ throw500 ("unexpected null for type " <>> columnType)
 
-openInputValue :: (MonadResolve m) => AnnInpVal -> m AnnGValue
+openInputValue :: (MonadReusability m) => AnnInpVal -> m AnnGValue
 openInputValue v = when (isJust $ _aivVariable v) markNotReusable $> _aivValue v
 
 -- | Note: only handles “synthetic” enums (see 'EnumValuesInfo'). Enum table references are handled
 -- by 'asPGColumnType' and its variants.
-asEnumVal :: (MonadResolve m) => AnnInpVal -> m (G.NamedType, G.EnumValue)
+asEnumVal :: (MonadReusability m, MonadError QErr m) => AnnInpVal -> m (G.NamedType, G.EnumValue)
 asEnumVal = asEnumValM >=> \case
   (ty, Just val) -> pure (ty, val)
   (ty, Nothing)  -> throw500 $ "unexpected null for ty " <> showNamedTy ty
 
 -- | Like 'asEnumVal', only handles “synthetic” enums.
-asEnumValM :: (MonadResolve m) => AnnInpVal -> m (G.NamedType, Maybe G.EnumValue)
+asEnumValM :: (MonadReusability m, MonadError QErr m) => AnnInpVal -> m (G.NamedType, Maybe G.EnumValue)
 asEnumValM v = openInputValue v >>= \case
   AGEnum ty (AGESynthetic valM) -> return (ty, valM)
   _                             -> tyMismatch "enum" v
 
-withObject :: (MonadResolve m) => (G.NamedType -> AnnGObject -> m a) -> AnnInpVal -> m a
+withObject
+  :: (MonadReusability m, MonadError QErr m) => (G.NamedType -> AnnGObject -> m a) -> AnnInpVal -> m a
 withObject fn v = openInputValue v >>= \case
   AGObject nt (Just obj) -> fn nt obj
   AGObject _ Nothing     ->
@@ -140,33 +142,40 @@ withObject fn v = openInputValue v >>= \case
     <> G.showGT (_aivType v)
   _                      -> tyMismatch "object" v
 
-asObject :: (MonadResolve m) => AnnInpVal -> m AnnGObject
+asObject :: (MonadReusability m, MonadError QErr m) => AnnInpVal -> m AnnGObject
 asObject = withObject (\_ o -> return o)
 
-withObjectM :: (MonadResolve m) => (G.NamedType -> Maybe AnnGObject -> m a) -> AnnInpVal -> m a
+withObjectM
+  :: (MonadReusability m, MonadError QErr m)
+  => (G.NamedType -> Maybe AnnGObject -> m a) -> AnnInpVal -> m a
 withObjectM fn v = openInputValue v >>= \case
   AGObject nt objM -> fn nt objM
   _                -> tyMismatch "object" v
 
-asObjectM :: (MonadResolve m) => AnnInpVal -> m (Maybe AnnGObject)
+asObjectM :: (MonadReusability m, MonadError QErr m) => AnnInpVal -> m (Maybe AnnGObject)
 asObjectM = withObjectM (\_ o -> return o)
 
-withArrayM :: (MonadResolve m) => (G.ListType -> Maybe [AnnInpVal] -> m a) -> AnnInpVal -> m a
+withArrayM
+  :: (MonadReusability m, MonadError QErr m)
+  => (G.ListType -> Maybe [AnnInpVal] -> m a) -> AnnInpVal -> m a
 withArrayM fn v = openInputValue v >>= \case
   AGArray lt listM -> fn lt listM
   _                -> tyMismatch "array" v
 
-withArray :: (MonadResolve m) => (G.ListType -> [AnnInpVal] -> m a) -> AnnInpVal -> m a
+withArray
+  :: (MonadReusability m, MonadError QErr m)
+  => (G.ListType -> [AnnInpVal] -> m a) -> AnnInpVal -> m a
 withArray fn v = openInputValue v >>= \case
   AGArray lt (Just l) -> fn lt l
   AGArray _ Nothing   -> throw500 $ "unexpected null for ty"
                          <> G.showGT (_aivType v)
   _                   -> tyMismatch "array" v
 
-asArray :: (MonadResolve m) => AnnInpVal -> m [AnnInpVal]
+asArray :: (MonadReusability m, MonadError QErr m) => AnnInpVal -> m [AnnInpVal]
 asArray = withArray (\_ vals -> return vals)
 
-parseMany :: (MonadResolve m) => (AnnInpVal -> m a) -> AnnInpVal -> m (Maybe [a])
+parseMany
+  :: (MonadReusability m, MonadError QErr m) => (AnnInpVal -> m a) -> AnnInpVal -> m (Maybe [a])
 parseMany fn v = openInputValue v >>= \case
   AGArray _ arrM -> mapM (mapM fn) arrM
   _              -> tyMismatch "array" v
@@ -179,12 +188,12 @@ onlyText = \case
   PGValVarchar t -> return t
   _           -> throw500 "expecting text for asPGColText"
 
-asPGColText :: (MonadResolve m) => AnnInpVal -> m Text
+asPGColText :: (MonadReusability m, MonadError QErr m) => AnnInpVal -> m Text
 asPGColText val = do
   pgColVal <- openOpaqueValue =<< asPGColumnValue val
   onlyText (pstValue $ _apvValue pgColVal)
 
-asPGColTextM :: (MonadResolve m) => AnnInpVal -> m (Maybe Text)
+asPGColTextM :: (MonadReusability m, MonadError QErr m) => AnnInpVal -> m (Maybe Text)
 asPGColTextM val = do
   pgColValM <- traverse openOpaqueValue =<< asPGColumnValueM val
   traverse onlyText (pstValue . _apvValue <$> pgColValM)
