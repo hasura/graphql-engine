@@ -23,7 +23,8 @@ module Hasura.RQL.Types.Common
        , adminText
        , rootText
 
-       , FunctionArgName(..)
+       , SystemDefined(..)
+       , isSystemDefined
        ) where
 
 import           Hasura.Prelude
@@ -180,8 +181,10 @@ $(deriveJSON (aesonDrop 3 snakeCase) ''ForeignKey)
 
 instance Hashable ForeignKey
 
-newtype FunctionArgName =
-  FunctionArgName { getFuncArgNameTxt :: T.Text}
-  deriving (Show, Eq, ToJSON)
-
 type CustomColumnNames = HM.HashMap PGCol G.Name
+
+newtype SystemDefined = SystemDefined { unSystemDefined :: Bool }
+  deriving (Show, Eq, FromJSON, ToJSON, Q.ToPrepArg)
+
+isSystemDefined :: SystemDefined -> Bool
+isSystemDefined = unSystemDefined

@@ -1,6 +1,0 @@
-- args:
-    cascade: false
-    sql: |-
-      alter table stocks drop constraint stocks_pkey;
-      alter table stocks add constraint stocks_pkey primary key (uuid)
-  type: run_sql

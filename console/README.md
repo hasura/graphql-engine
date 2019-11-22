@@ -28,7 +28,7 @@ Feel free to open pull requests to address these issues or to add/fix  console f
 - [Hasura GraphQL Engine](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html)
 - [Hasura CLI](https://docs.hasura.io/1.0/graphql/manual/hasura-cli/install-hasura-cli.html) (for working with migrations)
 
-### Setup and Install Dependencies
+### Set up and install dependencies
 
 - Fork the repo on GitHub.
 - Clone your forked repo: `git clone https://github.com/<your-username>/graphql-engine`
@@ -40,88 +40,114 @@ cd console
 npm install
 ```
 
-Hasura console can be developed in two modes (`server` or `cli` mode). Both modes require a running instance of GraphQL Engine. The easiest way to get Hasura GraphQL engine instance is by Heroku. You can get it by following the steps given in [this](https://docs.hasura.io/1.0/graphql/manual/getting-started/heroku-simple.html) link. Other methods to install Hasura GraphQL engine are documented [here](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html).
+### Run console development server
 
-### Development with Hasura GraphQL Engine (`server` mode)
+Hasura console can be developed in two modes, `server` or `cli` mode. If you are looking to add/tweak functionality related to migrations, check out [Develop with Hasura CLI](#develop-with-hasura-cli-cli-mode), otherwise check out [Develop with Hasura GraphQL engine](#develop-with-hasura-graphql-engine-server-mode).
 
-Hasura GraphQL engine should be running to develop console in this mode. If you have set it up on Heroku, your url will look like `<app-name>.herokuapp.com`, if it's on your local machine, it's probably `http://localhost:8080`.
+Both modes require a running instance of GraphQL Engine. The easiest way to get Hasura GraphQL engine instance is by Heroku. You can get it by following the steps given in [this](https://docs.hasura.io/1.0/graphql/manual/getting-started/heroku-simple.html) link. Other methods to install Hasura GraphQL engine are documented [here](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html).
 
-[Dotenv](https://github.com/motdotla/dotenv) is used for setting environment variables for development. Create a `.env` file in the root directory for console (wherever package.json is). Here's a `.env` file with some environment variable examples :
+[Dotenv](https://github.com/motdotla/dotenv) is used for setting environment variables for development. In production, these environment variables are templated by the server or CLI.
 
-```bash
-PORT=3000
-NODE_ENV=development
-DATA_API_URL=http://localhost:8080
-ADMIN_SECRET=xyz
-IS_ADMIN_SECRET_SET=true
-CONSOLE_MODE=server
-URL_PREFIX=/
-ASSETS_PATH=https://graphql-engine-cdn.hasura.io/console/assets
-ASSETS_VERSION=channel/beta/v1.0
-CDN_ASSETS=true
-```
+#### Develop with Hasura GraphQL engine (`server` mode)
 
-Note that `CONSOLE_MODE` is set to `server`. In this mode, **migrations** will be disabled and the corresponding functionality on the console will be hidden. If you are looking to add/tweak functionality related to migrations, check out [Development with Hasura CLI](#development-with-hasura-cli-cli-mode).
+In server mode, **migrations** will be disabled and the corresponding functionality on the console will be hidden.
 
+##### Set up `.env` file
 Environment variables accepted in `server` mode:
 
-1. `PORT`: Configure the port where Hasura console will run locally.
-2. `NODE_ENV`: `development`
-3. `DATA_API_URL`: Configure it with the Hasura GraphQL Engine url. If you are running it on Heroku, your url will look like `<app-name>.herokuapp.com`
-4. `ADMIN_SECRET`: Set admin secret if Hasura GraphQL engine is configured to run with ADMIN_SECRET.
-5. `CONSOLE_MODE`: `server`
-6. `URL_PREFIX`: `/` (forward slash)
+- `NODE_ENV`: Console build environment (`development`/`production`) 
+- `PORT`: The port where Hasura console will run locally
+- `CDN_ASSETS`: Should assets be loaded from CDN (`true`/`false`)
+- `ASSETS_PATH`: Path to console assets
+- `ASSETS_VERSION`: Version of console assets being served 
+- `ENABLE_TELEMETRY`: Whether to enable telemetry (`true`/`false`)
+- `URL_PREFIX`: Path at which the console is running
+- `DATA_API_URL`: The Hasura GraphQL engine url. (If you are running it on Heroku, it will look like <app-name\>.herokuapp.com, if you are running locally, it will look like http://localhost:<port\>)
+- `SERVER_VERSION`: Hasura GraphQL Engine server version
+- `CONSOLE_MODE`: In server mode, it should be `server`
+- `IS_ADMIN_SECRET_SET`: Is GraphQl engine configured with an admin secret (`true`/`false`)
 
-> The server also templates `consolePath` in `window.__env` which is the relative path of the current page (something like `/console/data/schema/public`). Using this path, the console determines the DATA_API_URL. You do not need to worry about this in development since you are hardcoding the value of DATA_API_URL in `.env`.
+Here's an example `.env` file for `server` mode:
 
-#### Run Development Server:
+```bash
+NODE_ENV=development
+PORT=3000
+CDN_ASSETS=true
+ASSETS_PATH=https://graphql-engine-cdn.hasura.io/console/assets
+ASSETS_VERSION=channel/beta/v1.0
+ENABLE_TELEMETRY=true
+URL_PREFIX=/
+DATA_API_URL=http://localhost:8080
+SERVER_VERSION=v1.0.0-beta.6
+CONSOLE_MODE=server
+IS_ADMIN_SECRET_SET=true
+```
+
+> The server also templates `consolePath` in `window.__env` which is the relative path of the current page (something like `/console/data/schema/public`). Using this path, the console determines the DATA_API_URL in production. You do not need to worry about this in development since you are hardcoding the value of DATA_API_URL in `.env`.
+
+##### Run console development server:
 
 ```bash
  npm run dev
 ```
 
-### Development with Hasura CLI (`cli` mode)
+#### Develop with Hasura CLI (`cli` mode)
 
-Configure .env file with appropriate values for the required environment variables, such as the examples below:
+##### Set up `.env` file
 
-```bash
-PORT=3000
-NODE_ENV=development
-DATA_API_URL=http://localhost:8080
-API_HOST=http://localhost
-API_PORT=9693
-ADMIN_SECRET=xyz
-CONSOLE_MODE=cli
-URL_PREFIX=/
-```
 Environment variables accepted in `cli` mode:
 
-1. `PORT`: Configure the port where Hasura console will run locally.
-2. `NODE_ENV`: `development`
-3. `DATA_API_URL`: Configure it with the Hasura GraphQL Engine url. If you are running it on Heroku. Your url will look like <app-name>.herokuapp.com
-4. `API_HOST`: Hasura CLI host. Hasura CLI runs on `http://localhost` by default.
-5. `API_PORT`: Hasura CLI port. Hasura CLI exposes the API at `9693` by default
-6. `ADMIN_SECRET`: Set admin secret if Hasura GraphQL engine is configured to run with ADMIN_SECRET
-7. `CONSOLE_MODE`: `cli`
-8. `URL_PREFIX`: ‘/’ (forward slash)
+- `NODE_ENV`: Console build environment (`development`/`production`) 
+- `PORT`: The port where Hasura console will run locally
+- `API_HOST`: Hasura CLI host. Hasura CLI runs on `http://localhost` by default.
+- `API_PORT`: Hasura CLI port. Hasura CLI exposes the API at `9693` by default
+- `CDN_ASSETS`: Should assets be loaded from CDN (`true`/`false`)
+- `ASSETS_PATH`: Path to console assets
+- `ASSETS_VERSION`: Version of console assets being served 
+- `ENABLE_TELEMETRY`: Whether to enable telemetry (`true`/`false`)
+- `URL_PREFIX`: Path at which the console is running
+- `DATA_API_URL`: The Hasura GraphQL engine url. (If you are running it on Heroku, it will look like <app-name\>.herokuapp.com, if you are running locally, it will look like http://localhost:<port\>)
+- `SERVER_VERSION`: Hasura GraphQL Engine server version
+- `CONSOLE_MODE`: In cli mode, it should be `cli`
+- `ADMIN_SECRET`: the admin secret passed via the CLI
 
-#### Run Development Server:
-
-This setup requires hasura cli to be running in a different window. Start hasura cli with the same Hasura GraphQL engine url as configured for `DATA_API_URL`.
-
-##### Start Hasura CLI server
+Here's an example `.env` file for `cli` mode:
 
 ```bash
-hasura console
+NODE_ENV=development
+PORT=3000
+API_HOST=http://localhost
+API_PORT=9693
+CDN_ASSETS=true
+ASSETS_PATH=https://graphql-engine-cdn.hasura.io/console/assets
+ASSETS_VERSION=channel/beta/v1.0
+ENABLE_TELEMETRY=true
+URL_PREFIX=/
+DATA_API_URL=http://localhost:8080
+SERVER_VERSION=v1.0.0-beta.6
+CONSOLE_MODE=cli
+ADMIN_SECRET=my-admin-secret
 ```
 
-##### Start development server
+##### Run console development server:
+
+This setup requires a Hasura CLI console server to be running.
+
+###### Start Hasura CLI console server
+
+Start Hasura CLI console with the same Hasura GraphQL engine url as configured for `DATA_API_URL`.
+
+```bash
+hasura console --endpoint <DATA_API_URL> --admin-secret <your-admin-secret> (optional)
+```
+
+###### Start development console server
 
 ```bash
 npm run dev
 ```
 
-### Checkout the console
+### Check out the console
 
 Visit [http://localhost:3000](http://localhost:3000) to confirm the setup.
 
@@ -140,7 +166,7 @@ It should automatically connect to the Redux store when started in development m
 By default [redux-logger](https://www.npmjs.com/package/redux-logger) is enabled to assist in development.
 You can disable it if you wish by commenting out the `createLogger` line in `src/client.js`
 
-### Run Tests
+### Run tests
 
 - Run tests: `npm run cypress`
 - Write your tests in the `cypress` directory, integration.

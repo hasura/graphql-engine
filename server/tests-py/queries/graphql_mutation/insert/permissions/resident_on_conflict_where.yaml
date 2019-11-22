@@ -1,0 +1,36 @@
+description: Upsert into resident table only if age is greater
+url: /v1/graphql
+status: 200
+response:
+  data:
+    insert_resident:
+      affected_rows: 1
+      returning:
+      - id: 6
+        age: 23
+query:
+  variables:
+    age: 23
+  query: |
+    mutation ($age:Int){
+      insert_resident(
+        objects: [
+          {
+            id: 6
+            age: $age
+            name: "Resident 6"
+          }
+        ]
+        on_conflict:{
+          constraint: resident_pkey
+          update_columns: [age]
+          where: {age: {_lt: $age}}
+        }
+      ){
+        affected_rows
+        returning{
+          id
+          age
+        }
+      }
+    }

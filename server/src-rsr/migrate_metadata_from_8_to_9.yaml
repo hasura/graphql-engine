@@ -1,4 +1,0 @@
-type: track_table
-args:
-  schema: hdb_catalog
-  name: hdb_version
