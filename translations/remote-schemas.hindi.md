@@ -6,9 +6,9 @@
 * भुगतान जैसी सुविधाओं का समर्थन करना, आदि और उन्हें एक्सेस करने के लिए एक सुसंगत इंटरफ़ेस प्रदान करना यानि GraphQL Engine के API के पीछे
 * अन्य सूत्रों से डेटा अलग करना (*जैसे मौसम के एपीआई या किसी अन्य डेटाबेस से*)
 
-कस्टम व्यवसाय तर्क का समर्थन करने के लिए, आपको एक कस्टम GraphQL सर्वर बनाने की आवश्यकता होगी (देखे [boilerplates](community/boilerplates/remote-schemas)) और उसके स्कीमा को GraphQL Engine के साथ विलय करे।
+कस्टम व्यवसाय तर्क का समर्थन करने के लिए, आपको एक कस्टम GraphQL सर्वर बनाने की आवश्यकता होगी (देखे [boilerplates](../community/boilerplates/remote-schemas)) और उसके स्कीमा को GraphQL Engine के साथ विलय करे।
 
-![remote schems architecture](assets/remote-schemas-arch.png)
+![remote schems architecture](../assets/remote-schemas-arch.png)
 
 ## डेमो (*40 सेकंड*)
 
@@ -56,7 +56,7 @@
 
 लोकप्रिय भाषाओं / फ़्रेमवर्क्स में कस्टम GraphQL सर्वर के लिए Boilerplates उपलब्ध हैं।
 
-* [नियमित boilerplates](community/boilerplates/graphql-servers) जिसे कहीं भी deploy किया जा सकता है।
+* [नियमित boilerplates](../community/boilerplates/graphql-servers) जिसे कहीं भी deploy किया जा सकता है।
 * [सर्वर रहित boilerplates](https://github.com/hasura/graphql-serverless) जिसे सर्वर रहित प्लेटफार्मों जैसे AWS Lambda, आदि पर deploy किया जा सकता है।
 
 कृपया ध्यान दें कि अधिक भाषाओं, फ्रेमवर्क, सर्वर रहित प्लेटफ़ॉर्म आदि के लिए boilerplates को पुनरावृत्त किया जा रहा है और सामुदायिक योगदान बहुत स्वागत योग्य है।
@@ -81,4 +81,4 @@
 यह दस्तावेज़ निम्नलिखित अनुवादों में उपलब्ध है:
 
 - [French :fr:](translations/remote-schemas.french.md)
-- [Hindi :in:](translations/remote-schemas.hindi.md)
+- [Hindi ](translations/remote-schemas.hindi.md)
