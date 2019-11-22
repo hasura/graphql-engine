@@ -321,8 +321,8 @@ There exist **no relationships** between the ``account`` and the ``user`` tables
 Permissions
 ^^^^^^^^^^^
 
-Permissions for role ``user`` for table ``account``
-"""""""""""""""""""""""""""""""""""""""""""""""""""
+Permissions for the role ``user`` for the table ``account``
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 Inside the ``_exists`` operator, you can define the table that holds the condisions of your permissions. The respective table is specified by the ``_table`` operator and the conditions can be defined inside the ``_where`` operator.
 
