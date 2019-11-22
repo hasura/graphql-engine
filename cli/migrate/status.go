@@ -8,14 +8,14 @@ type MigrationStatus struct {
 	// Version is the version of this migration.
 	Version uint64 `json:"-"`
 
+	// Name helps finding this migration in the source folder
+	Name string `json:"-"`
+
 	// Check if the migration is applied on the cluster
 	IsApplied bool `json:"database_status"`
 
 	// Check if the migration is present on the local.
 	IsPresent bool `json:"source_status"`
-
-	// Name helps finding this migration in the source folder
-	Name string
 }
 
 type Status struct {

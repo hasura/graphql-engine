@@ -168,7 +168,7 @@ func (i *Migrations) MetaDown(version uint64) (m *Migration, ok bool) {
 
 func (i *Migrations) ReadName(version uint64) (name string) {
 	for k := range i.migrations[version] {
-		return i.migrations[version][k].Name
+		return i.migrations[version][k].Identifier
 	}
 	return "-"
 }
