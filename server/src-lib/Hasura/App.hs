@@ -329,7 +329,7 @@ runAsAdmin
 runAsAdmin pool sqlGenCtx httpManager m = do
   res <- runExceptT $ peelRun emptySchemaCache
    (RunCtx adminUserInfo httpManager sqlGenCtx)
-   (PGExecCtx pool Q.Serializable) m
+   (PGExecCtx pool Q.Serializable) Q.ReadWrite m
   return $ fmap fst res
 
 execQuery

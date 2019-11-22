@@ -68,7 +68,7 @@ Déclenchez des notifications push et des emails à partir d'évènements de la 
 
 * [Regardez la démo](https://www.youtube.com/watch?v=nuSHkzE2-zo)
 * [Essayez la](https://serverless-push.demo.hasura.app/)
-* [Tutoriel](../community/examples/serverless-push)
+* [Tutoriel](../community/sample-apps/serverless-push)
 
 
 <!--
@@ -88,7 +88,7 @@ Transformez et chargez de la donnée dans des data-stores externes. Allez voir c
 
 * [Regardez la démo](https://youtu.be/kWVEBWdEVAA)
 * [Essayez la](https://serverless-etl.demo.hasura.app/)
-* [Tutoriel](../community/examples/serverless-etl)
+* [Tutoriel](../community/sample-apps/serverless-etl)
 
 ### Construction d'UX réactive pour votre backend asynchrone avec une API GraphQL temps-réel
 

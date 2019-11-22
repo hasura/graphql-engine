@@ -174,8 +174,8 @@ jobs:
             echo "Branch starts with dev or release, or tagged commit starts with v. Optimized build"
             make ci-binary
           else
-            echo "Non-release branch, non-optimized build with coverage"
-            BUILD_FLAGS="--fast --coverage" make ci-binary
+            echo "Non-release branch, build with coverage"
+            BUILD_FLAGS="--coverage" make ci-binary
           fi
     - run:
         name: Build the docker image

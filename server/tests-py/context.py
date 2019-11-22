@@ -2,6 +2,8 @@
 
 from http import HTTPStatus
 from urllib.parse import urlparse
+from ruamel.yaml.comments import CommentedMap as OrderedDict # to avoid '!!omap' in yaml 
+# from collections import OrderedDict
 # import socketserver
 import threading
 import http.server
@@ -15,7 +17,7 @@ import string
 import random
 import os
 
-import yaml
+import ruamel.yaml as yaml
 import requests
 import websocket
 from sqlalchemy import create_engine
@@ -129,7 +131,9 @@ class GQLWsClient():
             self.connected_event.set()
 
     def _on_message(self, message):
-        json_msg = json.loads(message)
+        # NOTE: make sure we preserve key ordering so we can test the ordering
+        # properties in the graphql spec properly
+        json_msg = json.loads(message, object_pairs_hook=OrderedDict)
         if 'id' in json_msg:
             query_id = json_msg['id']
             if json_msg.get('type') == 'stop':
@@ -220,9 +224,10 @@ class EvtsWebhookServer(http.server.HTTPServer):
         self.evt_trggr_web_server.join()
 
 class HGECtxGQLServer:
-    def __init__(self):
+    def __init__(self, hge_urls):
         # start the graphql server
         self.graphql_server = graphql_server.create_server('127.0.0.1', 5000)
+        self.hge_urls = graphql_server.set_hge_urls(hge_urls)
         self.gql_srvr_thread = threading.Thread(target=self.graphql_server.serve_forever)
         self.gql_srvr_thread.start()
 
@@ -281,7 +286,9 @@ class HGECtx:
             json=q,
             headers=h
         )
-        return resp.status_code, resp.json()
+        # NOTE: make sure we preserve key ordering so we can test the ordering
+        # properties in the graphql spec properly
+        return resp.status_code, resp.json(object_pairs_hook=OrderedDict)
 
     def sql(self, q):
         conn = self.engine.connect()
@@ -298,11 +305,15 @@ class HGECtx:
             json=q,
             headers=h
         )
-        return resp.status_code, resp.json()
+        # NOTE: make sure we preserve key ordering so we can test the ordering
+        # properties in the graphql spec properly
+        return resp.status_code, resp.json(object_pairs_hook=OrderedDict)
 
     def v1q_f(self, fn):
         with open(fn) as f:
-            return self.v1q(yaml.safe_load(f))
+            # NOTE: preserve ordering with ruamel
+            yml = yaml.YAML()
+            return self.v1q(yml.load(f))
 
     def teardown(self):
         self.http.close()

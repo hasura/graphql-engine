@@ -20,6 +20,7 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict               as Map
 import qualified Data.HashMap.Strict.InsOrd        as OMap
 import qualified Data.List.NonEmpty                as NE
+import qualified Data.Sequence                     as Seq
 import qualified Data.Text                         as T
 import qualified Language.GraphQL.Draft.Syntax     as G
 
@@ -61,7 +62,7 @@ resolveComputedField
      )
   => ComputedField -> Field -> m (RS.ComputedFieldSel UnresolvedVal)
 resolveComputedField computedField fld = fieldAsPath fld $ do
-  funcArgsM <- withArgM (_fArguments fld) "args" $ parseFunctionArgs argSeq
+  funcArgsM <- withArgM (_fArguments fld) "args" $ parseFunctionArgs argSeq argFn
   let funcArgs = fromMaybe RS.emptyFunctionArgsExp funcArgsM
       argsWithTableArgument = withTableArgument funcArgs
   case fieldType of
@@ -75,6 +76,7 @@ resolveComputedField computedField fld = fieldAsPath fld $ do
   where
     ComputedField _ function argSeq fieldType = computedField
     ComputedFieldFunction qf _ tableArg _ = function
+    argFn = IFAUnknown
     withTableArgument resolvedArgs =
       let argsExp@(RS.FunctionArgsExp positional named) = RS.AEInput <$> resolvedArgs
       in case tableArg of
@@ -98,7 +100,7 @@ fromSelSet fldTy flds =
         fldInfo <- getFldInfo fldTy fldName
         case fldInfo of
           RFPGColumn colInfo ->
-            RS.FCol colInfo <$> argsToColOp (_fArguments fld)
+            RS.mkAnnColField colInfo <$> argsToColOp (_fArguments fld)
           RFComputedField computedField ->
             RS.FComputedField <$> resolveComputedField computedField fld
           RFRelationship (RelationshipField relInfo isAgg colGNameMap tableFilter tableLimit) -> do
@@ -452,39 +454,49 @@ convertAggSelect opCtx fld =
 
 parseFunctionArgs
   :: (MonadReusability m, MonadError QErr m)
-  => FuncArgSeq
+  => Seq.Seq a
+  -> (a -> InputFunctionArgument)
   -> AnnInpVal
   -> m (RS.FunctionArgsExpG UnresolvedVal)
-parseFunctionArgs argSeq val = flip withObject val $ \_ obj -> do
+parseFunctionArgs argSeq argFn val = flip withObject val $ \_ obj -> do
   (positionalArgs, argsLeft) <- spanMaybeM (parsePositionalArg obj) argSeq
   namedArgs <- Map.fromList . catMaybes <$> traverse (parseNamedArg obj) argsLeft
   pure $ RS.FunctionArgsExp positionalArgs namedArgs
   where
-    parsePositionalArg obj (FuncArgItem gqlName _ _) =
-      maybe (pure Nothing) (fmap Just . parseArg) $ OMap.lookup gqlName obj
+    parsePositionalArg obj inputArg = case argFn inputArg of
+      IFAKnown _ resolvedVal -> pure $ Just resolvedVal
+      IFAUnknown (FunctionArgItem gqlName _ _) ->
+        maybe (pure Nothing) (fmap Just . parseArg) $ OMap.lookup gqlName obj
 
     parseArg = fmap (maybe (UVSQL S.SENull) mkParameterizablePGValue) . asPGColumnValueM
 
-    parseNamedArg obj (FuncArgItem gqlName maybeSqlName hasDefault) =
-      case OMap.lookup gqlName obj of
-        Just argInpVal -> case maybeSqlName of
-          Just sqlName -> Just . (getFuncArgNameTxt sqlName,) <$> parseArg argInpVal
-          Nothing -> throw400 NotSupported
-                     "Only last set of positional arguments can be omitted"
-        Nothing -> if not hasDefault then
-                     throw400 NotSupported "Non default arguments cannot be omitted"
-                   else pure Nothing
+    parseNamedArg obj inputArg = case argFn inputArg of
+      IFAKnown argName resolvedVal ->
+        pure $ Just (getFuncArgNameTxt argName, resolvedVal)
+      IFAUnknown (FunctionArgItem gqlName maybeSqlName hasDefault) ->
+        case OMap.lookup gqlName obj of
+          Just argInpVal -> case maybeSqlName of
+            Just sqlName -> Just . (getFuncArgNameTxt sqlName,) <$> parseArg argInpVal
+            Nothing -> throw400 NotSupported
+                       "Only last set of positional arguments can be omitted"
+          Nothing -> if not (unHasDefault hasDefault) then
+                       throw400 NotSupported "Non default arguments cannot be omitted"
+                     else pure Nothing
 
 fromFuncQueryField
   :: (MonadReusability m, MonadError QErr m)
   => (Field -> m s)
-  -> QualifiedFunction -> FuncArgSeq
+  -> QualifiedFunction
+  -> FunctionArgSeq
   -> Field
   -> m (RS.AnnFnSelG s UnresolvedVal)
 fromFuncQueryField fn qf argSeq fld = fieldAsPath fld $ do
-  funcArgsM <- withArgM (_fArguments fld) "args" $ parseFunctionArgs argSeq
+  funcArgsM <- withArgM (_fArguments fld) "args" $ parseFunctionArgs argSeq argFn
   let funcArgs = fromMaybe RS.emptyFunctionArgsExp funcArgsM
   RS.AnnFnSel qf funcArgs <$> fn fld
+  where
+    argFn (IAUserProvided val)         = IFAUnknown val
+    argFn (IASessionVariables argName) = IFAKnown argName UVSession
 
 convertFuncQuerySimple
   :: ( MonadReusability m
@@ -496,8 +508,8 @@ convertFuncQuerySimple
      )
   => FuncQOpCtx -> Field -> m QueryRootFldUnresolved
 convertFuncQuerySimple funcOpCtx fld =
-  withPathK "selectionSet" $ QRFFnSimple <$>
-    fromFuncQueryField (fromField (RS.FromTable qt) colGNameMap permFilter permLimit) qf argSeq fld
+  withPathK "selectionSet" $ QRFFnSimple <$> fromFuncQueryField
+    (fromField (RS.FromTable qt) colGNameMap permFilter permLimit) qf argSeq fld
   where
     FuncQOpCtx qt _ colGNameMap permFilter permLimit qf argSeq = funcOpCtx
 
@@ -511,8 +523,8 @@ convertFuncQueryAgg
      )
   => FuncQOpCtx -> Field -> m QueryRootFldUnresolved
 convertFuncQueryAgg funcOpCtx fld =
-  withPathK "selectionSet" $ QRFFnAgg <$>
-    fromFuncQueryField (fromAggField qt colGNameMap permFilter permLimit) qf argSeq fld
+  withPathK "selectionSet" $ QRFFnAgg <$> fromFuncQueryField
+    (fromAggField qt colGNameMap permFilter permLimit) qf argSeq fld
   where
     FuncQOpCtx qt _ colGNameMap permFilter permLimit qf argSeq = funcOpCtx
 

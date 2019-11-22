@@ -1,6 +1,7 @@
 import React from 'react';
 import Toggle from 'react-toggle';
 import styles from '../../../../Common/Common.scss';
+import ToolTip from '../../../../Common/Tooltip/Tooltip';
 
 const enumCompatibilityDocsUrl =
   'https://docs.hasura.io/1.0/graphql/manual/schema/enums.html#create-enum-table';
@@ -53,15 +54,19 @@ const EnumsSection = ({ isEnum, toggleEnum, loading }) => {
 
   return (
     <div>
-      <h4 className={`${styles.subheading_text}`}>Set table as enum</h4>
+      <h4 className={`${styles.subheading_text}`}>
+        Set table as enum
+        <ToolTip
+          message={
+            'Expose the table values as GraphQL enums in the GraphQL API'
+          }
+        />
+      </h4>
       <div
         className={`${styles.display_flex} ${styles.add_mar_bottom}`}
         title={title}
         data-toggle="tooltip"
       >
-        <span className={styles.add_mar_right_mid}>
-          Expose the table values as GraphQL enums
-        </span>
         <Toggle checked={isEnum} icons={false} onChange={toggleEnum} />
       </div>
       {getCompatibilityNote()}
