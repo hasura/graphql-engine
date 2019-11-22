@@ -189,13 +189,13 @@ func testMigrate(t *testing.T, endpoint *url.URL, migrationsDir string) {
 	expectedStatus := migrate.NewStatus()
 	expectedStatus.Append(&migrate.MigrationStatus{
 		Version:    1,
-		Name:		"create_table_test",
+		Name:       "create_table_test",
 		IsApplied:  true,
 		IsPresent:  true,
 	})
 	expectedStatus.Append(&migrate.MigrationStatus{
 		Version:    2,
-		Name:		"add_table_test",
+		Name:       "add_table_test",
 		IsApplied:  false,
 		IsPresent:  true,
 	})
@@ -208,13 +208,13 @@ func testMigrate(t *testing.T, endpoint *url.URL, migrationsDir string) {
 	expectedStatus = migrate.NewStatus()
 	expectedStatus.Append(&migrate.MigrationStatus{
 		Version:    1,
-		Name:		"create_table_test",
+		Name:       "create_table_test",
 		IsApplied:  true,
 		IsPresent:  true,
 	})
 	expectedStatus.Append(&migrate.MigrationStatus{
 		Version:    2,
-		Name:		"add_table_test",
+		Name:       "add_table_test",
 		IsApplied:  true,
 		IsPresent:  true,
 	})
@@ -227,13 +227,13 @@ func testMigrate(t *testing.T, endpoint *url.URL, migrationsDir string) {
 	expectedStatus = migrate.NewStatus()
 	expectedStatus.Append(&migrate.MigrationStatus{
 		Version:    1,
-		Name:		"create_table_test",
+		Name:       "create_table_test",
 		IsApplied:  true,
 		IsPresent:  true,
 	})
 	expectedStatus.Append(&migrate.MigrationStatus{
 		Version:    2,
-		Name:		"add_table_test",
+		Name:       "add_table_test",
 		IsApplied:  false,
 		IsPresent:  true,
 	})
@@ -246,13 +246,13 @@ func testMigrate(t *testing.T, endpoint *url.URL, migrationsDir string) {
 	expectedStatus = migrate.NewStatus()
 	expectedStatus.Append(&migrate.MigrationStatus{
 		Version:    1,
-		Name:		"create_table_test",
+		Name:       "create_table_test",
 		IsApplied:  false,
 		IsPresent:  true,
 	})
 	expectedStatus.Append(&migrate.MigrationStatus{
 		Version:    2,
-		Name:		"add_table_test"
+		Name:       "add_table_test"
 		IsApplied:  false,
 		IsPresent:  true,
 	})
