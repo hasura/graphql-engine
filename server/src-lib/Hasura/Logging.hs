@@ -1,4 +1,3 @@
-{-# LANGUAGE RankNTypes           #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.Logging

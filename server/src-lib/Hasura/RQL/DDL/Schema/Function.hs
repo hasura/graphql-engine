@@ -276,7 +276,7 @@ instance FromJSON TrackFunctionV2 where
 
 runTrackFunctionV2
   :: ( QErrM m, CacheRWM m, HasSystemDefined m
-     , MonadTx m, UserInfoM m
+     , MonadTx m
      )
   => TrackFunctionV2 -> m EncJSON
 runTrackFunctionV2 (TrackFunctionV2 qf config) = do
