@@ -298,7 +298,7 @@ We create the following two tables:
 .. code-block:: sql
 
   -- user information from your auth system
-
+  
   user (
       id INTEGER PRIMARY KEY,
       name TEXT,
@@ -321,10 +321,12 @@ There exist **no relationships** between the ``account`` and the ``user`` tables
 Permissions
 ^^^^^^^^^^^
 
+Permissions for role ``user`` for table ``account``
+"""""""""""""""""""""""""""""""""""""""""""""""""""
 
+Inside the ``_exists`` operator, you can define the table that holds the condisions of your permissions. The respective table is specified by the ``_table`` operator and the conditions can be defined inside the ``_where`` operator.
 
-Permissions for role ``account``
-""""""""""""""""""""""""""""""""
+.. thumbnail:: ../../../../img/graphql/manual/auth/permissions-conditions-across-table.png
 
 
 
