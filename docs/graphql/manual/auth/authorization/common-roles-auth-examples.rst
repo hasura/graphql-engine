@@ -324,7 +324,7 @@ Permissions
 Permissions for the role ``user`` for the table ``account``
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-Inside the ``_exists`` operator, you can define the table that holds the condisions of your permissions. The respective table is specified by the ``_table`` operator and the conditions can be defined inside the ``_where`` operator.
+Inside the ``_exists`` operator, you can define the table that holds the condisions for the permissions. The respective table is specified by the ``_table`` operator and the conditions can be defined inside the ``_where`` operator.
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/permissions-conditions-across-table.png
 
