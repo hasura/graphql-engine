@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/fatih/color"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
@@ -157,16 +156,18 @@ func (o *consoleOptions) run() error {
 	consoleURL := fmt.Sprintf("http://%s:%s/", o.Address, o.ConsolePort)
 
 	if !o.DontOpenBrowser {
-		o.EC.Spin(color.CyanString("Opening console using default browser..."))
-		defer o.EC.Spinner.Stop()
-
-		err = open.Run(consoleURL)
+		if o.EC.CliDefaultBrowser != "" {
+			log.Infof("opening console using %s", o.EC.CliDefaultBrowser)
+			err = open.RunWith(consoleURL, o.EC.CliDefaultBrowser)
+		} else {
+			log.Info("opening console using default browser")
+			err = open.Run(consoleURL)
+		}
 		if err != nil {
 			o.EC.Logger.WithError(err).Warn("Error opening browser, try to open the url manually?")
 		}
 	}
 
-	o.EC.Spinner.Stop()
 	log.Infof("console running at: %s", consoleURL)
 
 	o.EC.Telemetry.Beam()

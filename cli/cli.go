@@ -182,6 +182,9 @@ type ExecutionContext struct {
 
 	// SkipUpdateCheck will skip the auto update check if set to true
 	SkipUpdateCheck bool
+
+	// CliDefaultBrowser is the browser used by the cli to open the console
+	CliDefaultBrowser string
 }
 
 // NewExecutionContext returns a new instance of execution context
@@ -314,6 +317,7 @@ func (ec *ExecutionContext) readConfig() error {
 	if err != nil {
 		return errors.Wrap(err, "cannot read config from file/env")
 	}
+	ec.CliDefaultBrowser = v.GetString("cli_default_browser")
 	adminSecret := v.GetString("admin_secret")
 	if adminSecret == "" {
 		adminSecret = v.GetString("access_key")
