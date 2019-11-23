@@ -25,6 +25,7 @@ import {
   TOGGLE_ENUM,
   TOGGLE_ENUM_SUCCESS,
   TOGGLE_ENUM_FAILURE,
+  MODIFY_ROOT_FIELD,
 } from '../TableModify/ModifyActions';
 
 // TABLE RELATIONSHIPS
@@ -250,15 +251,18 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         },
       };
     case PERM_OPEN_EDIT:
+      const isNewRole = modifyState.permissionsState.newRole === action.role;
       const permState = getBasePermissionsState(
         action.tableSchema,
         action.role,
-        action.query
+        action.query,
+        isNewRole
       );
       return {
         ...modifyState,
         permissionsState: {
           ...permState,
+          isEditing: true,
         },
         prevPermissionState: {
           ...permState,
@@ -396,11 +400,17 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       };
 
     case PERM_SET_ROLE_NAME:
+      const newRole = action.data;
+      const role = modifyState.permissionsState.isEditing
+        ? newRole
+        : modifyState.permissionsState.role;
+
       return {
         ...modifyState,
         permissionsState: {
           ...modifyState.permissionsState,
-          newRole: action.data,
+          newRole: newRole,
+          role: role,
         },
       };
 
@@ -596,6 +606,11 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         tableEnum: {
           loading: false,
         },
+      };
+    case MODIFY_ROOT_FIELD:
+      return {
+        ...modifyState,
+        rootFieldsEdit: action.data,
       };
     default:
       return modifyState;

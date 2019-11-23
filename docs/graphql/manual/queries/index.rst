@@ -61,4 +61,3 @@ based on a typical author/article schema for reference.
   custom-functions
   derived-data
   variables-aliases-fragments-directives
-

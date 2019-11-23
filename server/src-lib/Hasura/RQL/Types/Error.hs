@@ -1,5 +1,3 @@
-{-# LANGUAGE ConstraintKinds #-}
-
 module Hasura.RQL.Types.Error
        ( Code(..)
        , QErr(..)

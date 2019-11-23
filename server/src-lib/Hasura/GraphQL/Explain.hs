@@ -12,7 +12,8 @@ import qualified Language.GraphQL.Draft.Syntax          as G
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Resolve.Types
+import           Hasura.GraphQL.Validate.Types          (evalReusabilityT,
+                                                         runReusabilityT)
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
@@ -66,6 +67,7 @@ resolveVal userInfo = \case
       PGTypeScalar colTy -> withConstructorFn colTy sessVarVal
       PGTypeArray _      -> sessVarVal
   RS.UVSQL sqlExp -> return sqlExp
+  RS.UVSession -> pure $ sessionInfoJsonExp $ userVars userInfo
 
 getSessVarVal
   :: (MonadError QErr m)
@@ -90,7 +92,7 @@ explainField userInfo gCtx sqlGenCtx fld =
     _            -> do
       unresolvedAST <-
         runExplain (queryCtxMap, userInfo, fldMap, orderByCtx, sqlGenCtx) $
-          evalResolveT $ RS.queryFldToPGAST fld
+          evalReusabilityT $ RS.queryFldToPGAST fld
       resolvedAST <- RS.traverseQueryRootFldAST (resolveVal userInfo)
                      unresolvedAST
       let txtSQL = Q.getQueryText $ RS.toPGQuery resolvedAST
@@ -114,7 +116,8 @@ explainGQLQuery
   -> GQLExplain
   -> m EncJSON
 explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw) = do
-  execPlan <- E.getExecPlanPartial userInfo sc enableAL query
+  (execPlan, queryReusability) <- runReusabilityT $
+    E.getExecPlanPartial userInfo sc enableAL query
   (gCtx, rootSelSet) <- case execPlan of
     E.GExPHasura (gCtx, rootSelSet) ->
       return (gCtx, rootSelSet)
@@ -126,9 +129,9 @@ explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw) =
     GV.RMutation _ ->
       throw400 InvalidParams "only queries can be explained"
     GV.RSubscription rootField -> do
-      (plan, _) <- E.getSubsOp pgExecCtx gCtx sqlGenCtx userInfo rootField
+      (plan, _) <- E.getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability rootField
       runInTx $ encJFromJValue <$> E.explainLiveQueryPlan plan
   where
     usrVars = mkUserVars $ maybe [] Map.toList userVarsRaw
     userInfo = mkUserInfo (fromMaybe adminRole $ roleFromVars usrVars) usrVars
-    runInTx = liftEither <=< liftIO . runExceptT . runLazyTx pgExecCtx
+    runInTx = liftEither <=< liftIO . runExceptT . runLazyTx pgExecCtx Q.ReadOnly

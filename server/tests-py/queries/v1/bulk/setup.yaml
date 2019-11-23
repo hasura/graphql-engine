@@ -1,0 +1,8 @@
+type: run_sql
+args:
+  sql: |
+    create table author(
+        id serial primary key,
+        name text unique,
+        is_registered boolean
+    );
