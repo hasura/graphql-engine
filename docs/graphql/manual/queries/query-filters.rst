@@ -1396,8 +1396,8 @@ Fetch all authors which have at least one article written by them:
       }
     }
 
-Filter based on existence of an object in an array
---------------------------------------------------
+Filter based on existence of a value in an array
+------------------------------------------------
 
 If the array you want to filter is a JSONB array, you can use the ``_contains`` operator.
 
