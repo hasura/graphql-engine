@@ -1396,6 +1396,54 @@ Fetch all authors which have at least one article written by them:
       }
     }
 
+Filter based on existence of an object in an array
+--------------------------------------------------
+
+If the array you want to filter is a JSONB array, you can use the ``_contains`` operator.
+
+Example: 
+^^^^^^^^
+
+Fetch all articles with the tag ``GraphQL``:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query get_articles_with_tag ($tag: jsonb){
+      articles(
+        where: {
+          tags: {_contains: $tag }
+        }
+      ) {
+        id
+        title
+      }
+    }
+  :response:
+    {
+      "data": {
+        "articles": [
+          {
+            "id": 42,
+            "title": "Guide to GraphQL"
+          },
+          {
+            "id": 43,
+            "title": "Getting started with Hasura"
+          }
+        ]
+      }
+    }
+  :variables:
+    {
+      "tag": "GraphQL"
+    }
+
+
+.. note::
+
+  If the array you want to filter is a Postgres array, you can use a :doc:`Postgres function <custom-functions>`.
+
 Cast a field to a different type before filtering (_cast)
 ---------------------------------------------------------
 
