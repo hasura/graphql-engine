@@ -419,6 +419,7 @@ The way to insert an array field depends on its type. If the type is JSONB, you 
     }
     
 **Example 2:** Insert a new ``article`` passing tags as literal strings:
+
 .. graphiql::
   :view_only:
   :query:
