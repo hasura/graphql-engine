@@ -81,4 +81,3 @@
 यह दस्तावेज़ निम्नलिखित अनुवादों में उपलब्ध है:
 
 - [French :fr:](translations/remote-schemas.french.md)
-- [Hindi ](translations/remote-schemas.hindi.md)
