@@ -8,9 +8,9 @@ module Hasura.Server.Auth.JWT.Logging
 import           Data.Aeson
 
 import           Hasura.HTTP
-import           Hasura.Logging        (EngineLogType (..),
+import           Hasura.Logging        (EngineLogType (..), Hasura,
                                         InternalLogTypes (..), LogLevel (..),
-                                        OSS, ToEngineLog (..))
+                                        ToEngineLog (..))
 import           Hasura.Prelude
 import           Hasura.Server.Logging ()
 import           Hasura.Server.Utils   (httpExceptToJSON)
@@ -58,6 +58,6 @@ instance ToJSON JwkRefreshLog where
              , "http_error" .= (toJSON <$> jrlHttpError jrl)
              ]
 
-instance ToEngineLog JwkRefreshLog OSS where
+instance ToEngineLog JwkRefreshLog Hasura where
   toEngineLog jwkRefreshLog =
     (jrlLogLevel jwkRefreshLog, ELTInternal ILTJwkRefreshLog, toJSON jwkRefreshLog)

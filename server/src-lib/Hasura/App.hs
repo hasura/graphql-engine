@@ -120,7 +120,7 @@ printJSON = liftIO . BLC.putStrLn . A.encode
 printYaml :: (A.ToJSON a, MonadIO m) => a -> m ()
 printYaml = liftIO . BC.putStrLn . Y.encode
 
-mkPGLogger :: Logger OSS -> Q.PGLogger
+mkPGLogger :: Logger Hasura -> Q.PGLogger
 mkPGLogger (Logger logger) (Q.PLERetryMsg msg) =
   logger $ PGLog LevelWarn msg
 
@@ -140,8 +140,8 @@ data InitCtx
 -- TODO: better naming?
 data Loggers
   = Loggers
-  { _lsLoggerCtx :: !(LoggerCtx OSS)
-  , _lsLogger    :: !(Logger OSS)
+  { _lsLoggerCtx :: !(LoggerCtx Hasura)
+  , _lsLogger    :: !(Logger Hasura)
   , _lsPgLogger  :: !Q.PGLogger
   }
 
@@ -152,7 +152,7 @@ newtype AppM a = AppM { unAppM :: IO a }
 -- these contexts might be used by external functions
 initialiseCtx
   :: (MonadIO m)
-  => HGECommand OSS
+  => HGECommand Hasura
   -> RawConnInfo
   -> m InitCtx
 initialiseCtx hgeCmd rci = do
@@ -305,7 +305,7 @@ runHGEServer so@ServeOptions{..} InitCtx{..} = do
     -- requests is already implemented in Warp, and is triggered by invoking the 'closeSocket' callback.
     -- We only catch the SIGTERM signal once, that is, if the user hits CTRL-C once again, we terminate
     -- the process immediately.
-    shutdownHandler :: Logger OSS -> IO () -> IO () -> IO ()
+    shutdownHandler :: Logger Hasura -> IO () -> IO () -> IO ()
     shutdownHandler (Logger logger) shutdownApp closeSocket =
       void $ Signals.installHandler
         Signals.sigTERM

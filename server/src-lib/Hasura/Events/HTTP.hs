@@ -48,7 +48,7 @@ data HTTPResp
 
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase){J.omitNothingFields=True} ''HTTPResp)
 
-instance ToEngineLog HTTPResp OSS where
+instance ToEngineLog HTTPResp Hasura where
   toEngineLog resp = (LevelInfo, eventTriggerLogType, J.toJSON resp)
 
 mkHTTPResp :: HTTP.Response B.ByteString -> HTTPResp
@@ -71,7 +71,7 @@ data HTTPRespExtra
 
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''HTTPRespExtra)
 
-instance ToEngineLog HTTPRespExtra OSS where
+instance ToEngineLog HTTPRespExtra Hasura where
   toEngineLog resp = (LevelInfo, eventTriggerLogType, J.toJSON resp)
 
 data HTTPErr
@@ -96,7 +96,7 @@ instance J.ToJSON HTTPErr where
       toObj (k, v) = J.object [ "type" J..= k
                               , "detail" J..= v]
 -- encapsulates a http operation
-instance ToEngineLog HTTPErr OSS where
+instance ToEngineLog HTTPErr Hasura where
   toEngineLog err = (LevelError, eventTriggerLogType, J.toJSON err)
 
 isNetworkError :: HTTPErr -> Bool
@@ -131,18 +131,18 @@ data HTTPReq
 
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''HTTPReq)
 
-instance ToEngineLog HTTPReq OSS where
+instance ToEngineLog HTTPReq Hasura where
   toEngineLog req = (LevelInfo, eventTriggerLogType, J.toJSON req)
 
 runHTTP
   :: ( MonadReader r m
-     , Has (Logger OSS) r
+     , Has (Logger Hasura) r
      , Has HTTP.Manager r
      , MonadIO m
      )
   => HTTP.Request -> Maybe ExtraContext -> m (Either HTTPErr HTTPResp)
 runHTTP req exLog = do
-  logger :: Logger OSS <- asks getter
+  logger :: Logger Hasura <- asks getter
   manager <- asks getter
   res <- liftIO $ try $ HTTP.httpLbs req manager
   case res of

@@ -73,14 +73,14 @@ data WSLog
   } deriving (Show, Eq)
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''WSLog)
 
-instance L.ToEngineLog WSLog L.OSS where
+instance L.ToEngineLog WSLog L.Hasura where
   toEngineLog wsLog =
     (L.LevelDebug, L.ELTInternal L.ILTWsServer, J.toJSON wsLog)
 
 data WSConn a
   = WSConn
   { _wcConnId    :: !WSId
-  , _wcLogger    :: !(L.Logger L.OSS)
+  , _wcLogger    :: !(L.Logger L.Hasura)
   , _wcConnRaw   :: !WS.Connection
   , _wcSendQ     :: !(STM.TQueue BL.ByteString)
   , _wcExtraData :: !a
@@ -119,11 +119,11 @@ data ServerStatus a
 
 data WSServer a
   = WSServer
-  { _wssLogger :: !(L.Logger L.OSS)
+  { _wssLogger :: !(L.Logger L.Hasura)
   , _wssStatus :: !(STM.TVar (ServerStatus a))
   }
 
-createWSServer :: L.Logger L.OSS -> STM.STM (WSServer a)
+createWSServer :: L.Logger L.Hasura -> STM.STM (WSServer a)
 createWSServer logger = do
   connMap <- STMMap.new
   serverStatus <- STM.newTVar (AcceptingConns connMap)

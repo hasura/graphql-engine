@@ -146,7 +146,7 @@ data WSLog
   , _wslInfo     :: !WSLogInfo
   }
 
-instance L.ToEngineLog WSLog L.OSS where
+instance L.ToEngineLog WSLog L.Hasura where
   toEngineLog (WSLog logLevel wsLog) =
     (logLevel, L.ELTWebsocketLog, J.toJSON wsLog)
 
@@ -160,7 +160,7 @@ mkWsErrorLog uv ci ev =
 
 data WSServerEnv
   = WSServerEnv
-  { _wseLogger          :: !(L.Logger L.OSS)
+  { _wseLogger          :: !(L.Logger L.Hasura)
   , _wseRunTx           :: !PGExecCtx
   , _wseLiveQMap        :: !LQ.LiveQueriesState
   , _wseGCtxMap         :: !(IORef.IORef (SchemaCache, SchemaCacheVer))
@@ -172,7 +172,7 @@ data WSServerEnv
   , _wseEnableAllowlist :: !Bool
   }
 
-onConn :: L.Logger L.OSS -> CorsPolicy -> WS.OnConnH WSConnData
+onConn :: L.Logger L.Hasura -> CorsPolicy -> WS.OnConnH WSConnData
 onConn (L.Logger logger) corsPolicy wsId requestHead = do
   res <- runExceptT $ do
     errType <- checkPath
@@ -437,7 +437,7 @@ onStop serverEnv wsConn (StopMsg opId) = do
 
 logWSEvent
   :: (MonadIO m)
-  => L.Logger L.OSS -> WSConn -> WSEvent -> m ()
+  => L.Logger L.Hasura -> WSConn -> WSEvent -> m ()
 logWSEvent (L.Logger logger) wsConn wsEv = do
   userInfoME <- liftIO $ STM.readTVarIO userInfoR
   let (userVarsM, jwtExpM) = case userInfoME of
@@ -464,7 +464,7 @@ logWSEvent (L.Logger logger) wsConn wsEv = do
 
 onConnInit
   :: (MonadIO m)
-  => L.Logger L.OSS -> H.Manager -> WSConn -> AuthMode -> Maybe ConnParams -> m ()
+  => L.Logger L.Hasura -> H.Manager -> WSConn -> AuthMode -> Maybe ConnParams -> m ()
 onConnInit logger manager wsConn authMode connParamsM = do
   headers <- mkHeaders <$> liftIO (STM.readTVarIO (_wscUser $ WS.getData wsConn))
   res <- runExceptT $ getUserInfoWithExpTime logger manager headers authMode
@@ -496,7 +496,7 @@ onConnInit logger manager wsConn authMode connParamsM = do
       _                  -> []
 
 onClose
-  :: L.Logger L.OSS
+  :: L.Logger L.Hasura
   -> LQ.LiveQueriesState
   -> WSConn
   -> IO ()
@@ -509,7 +509,7 @@ onClose logger lqMap wsConn = do
     opMap = _wscOpMap $ WS.getData wsConn
 
 createWSServerEnv
-  :: L.Logger L.OSS
+  :: L.Logger L.Hasura
   -> PGExecCtx
   -> LQ.LiveQueriesState
   -> IORef.IORef (SchemaCache, SchemaCacheVer)

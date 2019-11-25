@@ -28,7 +28,7 @@ import qualified Database.PG.Query.Connection  as Q
 import qualified Language.Haskell.TH.Lib       as TH
 import qualified Language.Haskell.TH.Syntax    as TH
 
-import           Hasura.Logging                (LogLevel (..), OSS,
+import           Hasura.Logging                (Hasura, LogLevel (..),
                                                 ToEngineLog (..))
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
@@ -50,7 +50,7 @@ data MigrationResult
   | MRMigrated T.Text -- ^ old catalog version
   deriving (Show, Eq)
 
-instance ToEngineLog MigrationResult OSS where
+instance ToEngineLog MigrationResult Hasura where
   toEngineLog result = toEngineLog $ StartupLog
     { slLogLevel = LevelInfo
     , slKind = "db_migrate"

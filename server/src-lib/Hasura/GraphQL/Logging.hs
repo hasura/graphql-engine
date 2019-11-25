@@ -34,7 +34,7 @@ instance J.ToJSON QueryLog where
              , "request_id" J..= reqId
              ]
 
-instance L.ToEngineLog QueryLog L.OSS where
+instance L.ToEngineLog QueryLog L.Hasura where
   toEngineLog ql = (L.LevelInfo, L.ELTQueryLog, J.toJSON ql)
 
 -- | Helper function to convert the list of alias to generated SQL into a

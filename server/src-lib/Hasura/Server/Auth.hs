@@ -1,7 +1,6 @@
 module Hasura.Server.Auth
   ( getUserInfo
   , getUserInfoWithExpTime
-  , userInfoFromHeaders
   , AuthMode(..)
   , mkAuthMode
   , AdminSecret (..)
@@ -44,7 +43,7 @@ import           Hasura.Server.Utils
 -- | Typeclass representing the @UserInfo@ authorization and resolving effect
 class (Monad m) => UserAuthentication m where
   resolveUserInfo
-    :: Logger OSS
+    :: Logger Hasura
     -> H.Manager
     -> [N.Header]
     -- ^ request headers
@@ -88,7 +87,7 @@ mkAuthMode
   -> Maybe JWTConfig
   -> Maybe RoleName
   -> H.Manager
-  -> LoggerCtx OSS
+  -> LoggerCtx Hasura
   -> m AuthMode
 mkAuthMode mAdminSecret mWebHook mJwtSecret mUnAuthRole httpManager lCtx =
   case (mAdminSecret, mWebHook, mJwtSecret) of
@@ -123,7 +122,7 @@ mkJwtCtx
      )
   => JWTConfig
   -> H.Manager
-  -> LoggerCtx OSS
+  -> LoggerCtx Hasura
   -> m JWTCtx
 mkJwtCtx conf httpManager loggerCtx = do
   jwkRef <- case jcKeyOrUrl conf of
@@ -142,7 +141,7 @@ mkJwtCtx conf httpManager loggerCtx = do
 
 mkUserInfoFromResp
   :: (MonadIO m, MonadError QErr m)
-  => Logger OSS
+  => Logger Hasura
   -> T.Text
   -> N.StdMethod
   -> N.Status
@@ -183,7 +182,7 @@ mkUserInfoFromResp logger url method statusCode respBody
 
 userInfoFromAuthHook
   :: (MonadIO m, MonadError QErr m)
-  => Logger OSS
+  => Logger Hasura
   -> H.Manager
   -> AuthHook
   -> [N.Header]
@@ -222,7 +221,7 @@ userInfoFromAuthHook logger manager hook reqHeaders = do
 
 getUserInfo
   :: (MonadIO m, MonadError QErr m)
-  => Logger OSS
+  => Logger Hasura
   -> H.Manager
   -> [N.Header]
   -> AuthMode
@@ -231,14 +230,14 @@ getUserInfo l m r a = fst <$> getUserInfoWithExpTime l m r a
 
 getUserInfoWithExpTime
   :: (MonadIO m, MonadError QErr m)
-  => Logger OSS
+  => Logger Hasura
   -> H.Manager
   -> [N.Header]
   -> AuthMode
   -> m (UserInfo, Maybe UTCTime)
 getUserInfoWithExpTime logger manager rawHeaders = \case
 
-  AMNoAuth -> return (userInfoFromHeaders rawHeaders, Nothing)
+  AMNoAuth -> return (userInfoFromHeaders, Nothing)
 
   AMAdminSecret adminScrt unAuthRole ->
     case adminSecretM of
@@ -268,7 +267,7 @@ getUserInfoWithExpTime logger manager rawHeaders = \case
     userInfoWhenAdminSecret key reqKey = do
       when (reqKey /= getAdminSecret key) $ throw401 $
         "invalid " <> adminSecretHeader <> "/" <> deprecatedAccessKeyHeader
-      return $ userInfoFromHeaders rawHeaders
+      return userInfoFromHeaders
 
     userInfoWhenNoAdminSecret = \case
       Nothing -> throw401 $ adminSecretHeader <> "/"
@@ -277,11 +276,7 @@ getUserInfoWithExpTime logger manager rawHeaders = \case
 
     withNoExpTime a = (, Nothing) <$> a
 
-
-userInfoFromHeaders :: [N.Header] -> UserInfo
-userInfoFromHeaders headers =
-  case roleFromVars usrVars of
-    Just rn -> mkUserInfo rn usrVars
-    Nothing -> mkUserInfo adminRole usrVars
-  where
-    usrVars = mkUserVars $ hdrsToText headers
+    userInfoFromHeaders =
+      case roleFromVars usrVars of
+        Just rn -> mkUserInfo rn usrVars
+        Nothing -> mkUserInfo adminRole usrVars
