@@ -230,9 +230,11 @@ sessVarFromCurrentSetting' ty sessVar =
     PGTypeScalar baseTy -> withConstructorFn baseTy sessVarVal
     PGTypeArray _       -> sessVarVal
   where
-    curSess = S.SEUnsafe "current_setting('hasura.user')::json"
     sessVarVal = S.SEOpApp (S.SQLOp "->>")
-                 [curSess, S.SELit $ T.toLower sessVar]
+                 [currentSession, S.SELit $ T.toLower sessVar]
+
+currentSession :: S.SQLExp
+currentSession = S.SEUnsafe "current_setting('hasura.user')::json"
 
 checkSelPerm
   :: (UserInfoM m, QErrM m, CacheRM m)

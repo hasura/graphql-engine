@@ -12,7 +12,7 @@ import           Hasura.Prelude
 import qualified Data.Text      as T
 
 latestCatalogVersion :: Integer
-latestCatalogVersion = 27
+latestCatalogVersion = 28
 
 latestCatalogVersionString :: T.Text
 latestCatalogVersionString = T.pack $ show latestCatalogVersion
