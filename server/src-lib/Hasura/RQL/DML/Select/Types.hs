@@ -335,6 +335,8 @@ data FunctionArgsExpG a
 emptyFunctionArgsExp :: FunctionArgsExpG a
 emptyFunctionArgsExp = FunctionArgsExp [] HM.empty
 
+type FunctionArgExp = FunctionArgsExpG S.SQLExp
+
 -- | If argument positional index is less than or equal to length of 'positional' arguments then
 -- insert the value in 'positional' arguments else insert the value with argument name in 'named' arguments
 insertFunctionArg
@@ -350,8 +352,6 @@ insertFunctionArg argName index value (FunctionArgsExp positional named) =
     HM.insert (getFuncArgNameTxt argName) value named
   where
     insertAt i a = toList . Seq.insertAt i a . Seq.fromList
-
-type FunctionArgExp = FunctionArgsExpG S.SQLExp
 
 data AnnFnSelG s v
   = AnnFnSel
