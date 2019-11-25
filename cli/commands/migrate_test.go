@@ -65,38 +65,13 @@ tables: []
 }
 
 var testMetadataCurrent = map[string][]byte{
-	"metadata": []byte(`allowlist: []
-functions: []
-query_collections: []
-remote_schemas: []
+	"metadata": []byte(`version: 2
 tables:
-- array_relationships: []
-  computed_fields: []
-  configuration:
-    custom_column_names: {}
-    custom_root_fields:
-      delete: null
-      insert: null
-      select: null
-      select_aggregate: null
-      select_by_pk: null
-      update: null
-  delete_permissions: []
-  event_triggers: []
-  insert_permissions: []
-  is_enum: false
-  object_relationships: []
-  select_permissions: []
-  table: test
-  update_permissions: []
-version: 2
+- table:
+    schema: public
+    name: test
 `),
-	"empty-metadata": []byte(`allowlist: []
-functions: []
-query_collections: []
-remote_schemas: []
-tables: []
-version: 2
+	"empty-metadata": []byte(`version: 2
 `),
 }
 
