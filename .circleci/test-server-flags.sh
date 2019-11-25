@@ -83,19 +83,6 @@ key="HGE$RANDOM$RANDOM"
 
 run_hge_with_flags --use-prepared-statements=false --admin-secret="$key"
 
-# first check if the server has started and the db is initialized
-check_db_migrate_retries=0
-while [ $check_db_migrate_retries -lt 5 ]; do
-    if grep -Fq '"kind":"db_migrate"' "$OUTPUT_FOLDER/graphql-engine.log"; then
-        echo "db initialized by hasura"
-        break;
-    else
-        echo "waiting for db to be initialized by hasura"
-        sleep 1
-        check_db_migrate_retries=$((check_db_migrate_retries+1))
-    fi
-done
-
 echoInfo "Test flag --admin-secret=XXXX"
 grep -F '"admin_secret_set":true' "$OUTPUT_FOLDER/graphql-engine.log" >/dev/null
 test_export_metadata_with_admin_secret "$key"

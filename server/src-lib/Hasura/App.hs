@@ -148,8 +148,11 @@ data Loggers
 newtype AppM a = AppM { unAppM :: IO a }
   deriving (Functor, Applicative, Monad, MonadIO, MonadBase IO, MonadBaseControl IO)
 
--- | a separate function to create the initialization context because some of
--- these contexts might be used by external functions
+-- | this function initializes the catalog and returns an @InitCtx@, based on the command given
+-- - for serve command it creates a proper PG connection pool
+-- - for other commands, it creates a minimal pool
+-- this exists as a separate function because the context (logger, http manager, pg pool) can be
+-- used by other functions as well
 initialiseCtx
   :: (MonadIO m)
   => HGECommand Hasura
@@ -161,16 +164,20 @@ initialiseCtx hgeCmd rci = do
   instanceId <- liftIO generateInstanceId
   connInfo <- liftIO procConnInfo
   (loggers, pool) <- case hgeCmd of
-    HCServe ServeOptions{..} -> do
+    -- for server command generate a proper pool
+    HCServe so@ServeOptions{..} -> do
       l@(Loggers _ logger pgLogger) <- mkLoggers soEnabledLogTypes soLogLevel
-      let sqlGenCtx = SQLGenCtx soStringifyNum
+      -- log serve options
+      unLogger logger $ serveOptsToLog so
       -- log postgres connection info
       unLogger logger $ connInfoToLog connInfo
       pool <- liftIO $ Q.initPGPool connInfo soConnParams pgLogger
       -- safe init catalog
-      initialise pool sqlGenCtx httpManager logger
+      initialiseCatalog pool (SQLGenCtx soStringifyNum) httpManager logger
+
       return (l, pool)
 
+    -- for other commands generate a minimal pool
     _ -> do
       l@(Loggers _ _ pgLogger) <- mkLoggers defaultEnabledLogTypes LevelInfo
       pool <- getMinimalPool pgLogger connInfo
@@ -182,12 +189,6 @@ initialiseCtx hgeCmd rci = do
 
   return $ InitCtx httpManager instanceId dbId loggers connInfo pool
   where
-    initialise pool sqlGenCtx httpManager (Logger logger) = do
-      currentTime <- liftIO getCurrentTime
-      -- initialise the catalog
-      initRes <- runAsAdmin pool sqlGenCtx httpManager $ migrateCatalog currentTime
-      either printErrJExit logger initRes
-
     procConnInfo =
       either (printErrExit . connInfoErrModifier) return $ mkConnInfo rci
 
@@ -201,6 +202,12 @@ initialiseCtx hgeCmd rci = do
           pgLogger = mkPGLogger logger
       return $ Loggers loggerCtx logger pgLogger
 
+    initialiseCatalog pool sqlGenCtx httpManager (Logger logger) = do
+      currentTime <- liftIO getCurrentTime
+      -- initialise the catalog
+      initRes <- runAsAdmin pool sqlGenCtx httpManager $ migrateCatalog currentTime
+      either printErrJExit logger initRes
+
 
 runHGEServer
   :: ( MonadIO m
@@ -209,18 +216,15 @@ runHGEServer
      , MetadataApiAuthorization m
      , HttpLog m
      , ConsoleRenderer m
-     , A.ToJSON (EngineLogType impl)
      )
   => ServeOptions impl
   -> InitCtx
   -> m ()
-runHGEServer so@ServeOptions{..} InitCtx{..} = do
+runHGEServer ServeOptions{..} InitCtx{..} = do
   let sqlGenCtx = SQLGenCtx soStringifyNum
       Loggers loggerCtx logger _ = _icLoggers
 
   initTime <- liftIO Clock.getCurrentTime
-  -- log serve options
-  unLogger logger $ serveOptsToLog so
 
   authModeRes <- runExceptT $
     mkAuthMode soAdminSecret soAuthHook soJwtSecret soUnAuthRole _icHttpManager loggerCtx
