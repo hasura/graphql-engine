@@ -3,7 +3,7 @@ Derived data in queries
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
 GraphQL’s "select" query language is designed to be simple yet powerful. But there are certain
@@ -16,13 +16,10 @@ type in the GraphQL query.
 .. note::
   Also see :doc:`aggregation-queries` to fetch aggregation data without creating a view.
 
-Custom join
------------
-
-**Example:** let’s see how to fetch the average article rating for each author in our author/article schema:
+**For example**, let’s see how to fetch the average article rating for each author in our author/article schema:
 
 Step 1: Create a view
-^^^^^^^^^^^^^^^^^^^^^
+---------------------
 Open the Hasura console and head to the ``Data -> SQL`` tab.
 
 A view that averages the rating of articles for each author can be created using the following SQL query:
@@ -36,7 +33,7 @@ A view that averages the rating of articles for each author can be created using
       GROUP BY author.id
 
 Step 2: Add a relationship
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------
 Relationships are generally defined using foreign-key constraints. However, you cannot define foreign-key constraints
 on/to views. So, in these cases, we can define a relationship without using a foreign-key as described
 :doc:`here <../schema/relationships/index>`.
@@ -44,7 +41,7 @@ on/to views. So, in these cases, we can define a relationship without using a fo
 Create an object relationship, ``avg_rating``, by mapping ``author::id -> author_average_rating::id``.
 
 Step 3: Query using the relationship
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------------
 Now that the relationship between the ``author`` table and the ``author_average_rating`` view has been set
 up, we can query the aggregate data in ``author_average_rating`` as with any regular nested object.
 
@@ -99,14 +96,3 @@ Fetch a list of authors along with their average article rating:
     }
 
 This example can be easily extended to cover any use-case involving a complicated SQL query that you may want to use.
-
-De-normalize data with joins
-----------------------------
-
-**Example:** let’s flatten a relationship by joining data:
-
-Using GROUP BY with joins
--------------------------
-
-**Example:** group data in a joins:
-
