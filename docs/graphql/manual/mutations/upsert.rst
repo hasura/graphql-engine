@@ -44,7 +44,7 @@ The upsert functionality is sometimes confused with the update functionality. Ho
 differently. An upsert mutation is used in the case when it's not clear if the respective row is already present
 in the database. If it's known that the row is present in the database, ``update`` is the functionality to use.
 
-For an upsert, **all required columns need to be passed**.
+All columns that are necessary for an insert are required here.
 
 **How it works**
 
