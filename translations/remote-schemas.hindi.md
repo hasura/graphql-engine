@@ -56,7 +56,7 @@
 
 लोकप्रिय भाषाओं / फ़्रेमवर्क्स में कस्टम GraphQL सर्वर के लिए Boilerplates उपलब्ध हैं।
 
-* [नियमित boilerplates](../community/boilerplates/graphql-servers) जिसे कहीं भी deploy किया जा सकता है।
+* [नियमित boilerplates](../community/boilerplates) जिसे कहीं भी deploy किया जा सकता है।
 * [सर्वर रहित boilerplates](https://github.com/hasura/graphql-serverless) जिसे सर्वर रहित प्लेटफार्मों जैसे AWS Lambda, आदि पर deploy किया जा सकता है।
 
 कृपया ध्यान दें कि अधिक भाषाओं, फ्रेमवर्क, सर्वर रहित प्लेटफ़ॉर्म आदि के लिए boilerplates को पुनरावृत्त किया जा रहा है और सामुदायिक योगदान बहुत स्वागत योग्य है।
