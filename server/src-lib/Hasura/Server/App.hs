@@ -547,7 +547,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       get "v1alpha1/config" $ mkSpockAction encodeQErr id serverCtx $
         mkGetHandler $ do
           onlyAdmin
-          let res = encJFromJValue $ runGetConfig (scAuthMode serverCtx)
+          let res = encJFromJValue $ runGetConfig (scAuthMode serverCtx) (scEnableAllowlist serverCtx)
           return $ JSONResp $ HttpResponse res Nothing
 
     when enableGraphQL $ do

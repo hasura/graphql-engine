@@ -21,22 +21,24 @@ $(deriveToJSON (aesonDrop 4 snakeCase) ''JWTInfo)
 
 data ServerConfig
   = ServerConfig
-  { scfgVersion          :: !Text
-  , scfgIsAdminSecretSet :: !Bool
-  , scfgIsAuthHookSet    :: !Bool
-  , scfgIsJwtSet         :: !Bool
-  , scfgJwt              :: !(Maybe JWTInfo)
+  { scfgVersion            :: !Text
+  , scfgIsAdminSecretSet   :: !Bool
+  , scfgIsAuthHookSet      :: !Bool
+  , scfgIsJwtSet           :: !Bool
+  , scfgJwt                :: !(Maybe JWTInfo)
+  , scfgIsAllowListEnabled :: !Bool
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 4 snakeCase) ''ServerConfig)
 
-runGetConfig ::  AuthMode -> ServerConfig
-runGetConfig am = ServerConfig
+runGetConfig ::  AuthMode -> Bool -> ServerConfig
+runGetConfig am isAllowListEnabled = ServerConfig
     V.currentVersion
     (isAdminSecretSet am)
     (isAuthHookSet am)
     (isJWTSet am)
     (getJWTInfo am)
+    isAllowListEnabled
 
 isAdminSecretSet :: AuthMode -> Bool
 isAdminSecretSet = \case
