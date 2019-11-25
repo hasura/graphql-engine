@@ -112,7 +112,7 @@ For the role ``doctor``, create the following permissions for ``select``:
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/define-permissions-role-doctor.png
 
-Step 3: Query the view
+Step 4: Query the view
 ^^^^^^^^^^^^^^^^^^^^^^
 
 Now we can query the view. We have to pass the ``X-Hasura-Role`` (in this case ``doctor``) and a valid ``X-Hasura-User-Id`` (in this case ``1``) as session variables.
