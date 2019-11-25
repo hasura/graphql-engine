@@ -184,4 +184,4 @@ and articles.
     }
 
 .. note::
-  For more advanced use cases, you can use :doc:`custom SQL functions <custom-functions>` in the context of :doc:`views <../schema/views>`.
+  For more advanced use cases, you can use :doc:`custom SQL functions <custom-functions>`.
