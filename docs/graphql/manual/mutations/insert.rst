@@ -373,7 +373,7 @@ Insert an object with a JSONB column
 
 Insert an object with an array column
 ------------------------------------
-If you need to evaluate an array field you can use ``jsonb`` or ``literal strings``.
+The way to insert an array field depends on its type. If the type is JSONB, you can pass a JSONB array as a variable. If it's a Postgres array, you have to pass the array as a string literal.
 
 **Example 1:** Insert a new ``article`` object with a array ``tags`` column using jsonb:
 
