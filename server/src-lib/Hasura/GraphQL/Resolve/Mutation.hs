@@ -43,14 +43,15 @@ convertMutResp ty selSet =
     "returning"     -> do
       annFlds <- fromSelSet (_fType fld) $ _fSelSet fld
       annFldsResolved <- traverse
-        (traverse (RS.traverseAnnFld convertUnresolvedVal)) annFlds
+        (traverse (RS.traverseAnnFld convertPGValueToTextValue)) annFlds
       return $ RR.MRet annFldsResolved
     G.Name t        -> throw500 $ "unexpected field in mutation resp : " <> t
   where
-    convertUnresolvedVal = \case
+    convertPGValueToTextValue = \case
       UVPG annPGVal -> UVSQL <$> txtConverter annPGVal
       UVSessVar colTy sessVar -> pure $ UVSessVar colTy sessVar
       UVSQL sqlExp -> pure $ UVSQL sqlExp
+      UVSession    -> pure UVSession
 
 convertRowObj
   :: (MonadReusability m, MonadError QErr m)

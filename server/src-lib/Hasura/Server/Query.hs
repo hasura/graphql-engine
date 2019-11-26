@@ -11,6 +11,7 @@ import           Language.Haskell.TH.Syntax         (Lift)
 
 import qualified Data.HashMap.Strict                as HM
 import qualified Data.Text                          as T
+import qualified Database.PG.Query                  as Q
 import qualified Network.HTTP.Client                as HTTP
 
 import           Hasura.EncJSON
@@ -33,7 +34,6 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Init                 (InstanceId (..))
 import           Hasura.Server.Utils
 
-import qualified Database.PG.Query                  as Q
 
 data RQLQueryV1
   = RQAddExistingTableOrView !TrackTable
@@ -107,6 +107,7 @@ data RQLQueryV1
 data RQLQueryV2
   = RQV2TrackTable !TrackTableV2
   | RQV2SetTableCustomFields !SetTableCustomFields
+  | RQV2TrackFunction !TrackFunctionV2
   deriving (Show, Eq, Lift)
 
 data RQLQuery
@@ -194,12 +195,13 @@ recordSchemaUpdate instanceId =
             |] (Identity instanceId) True
 
 peelRun
-  :: SchemaCache
+  :: (MonadIO m)
+  => SchemaCache
   -> RunCtx
   -> PGExecCtx
   -> Q.TxAccess
   -> Run a
-  -> ExceptT QErr IO (a, SchemaCache)
+  -> ExceptT QErr m (a, SchemaCache)
 peelRun sc runCtx@(RunCtx userInfo _ _) pgExecCtx txAccess (Run m) =
   runLazyTx pgExecCtx txAccess $ withUserInfo userInfo lazyTx
   where
@@ -297,6 +299,7 @@ queryNeedsReload (RQV1 qi) = case qi of
 queryNeedsReload (RQV2 qi) = case qi of
   RQV2TrackTable _           -> True
   RQV2SetTableCustomFields _ -> True
+  RQV2TrackFunction _        -> True
 
 -- TODO: RQSelect query should also be run in READ ONLY mode.
 -- But this could be part of console's bulk statement and hence should be added after console changes
@@ -408,3 +411,77 @@ runQueryM rq =
     runQueryV2M = \case
       RQV2TrackTable q           -> runTrackTableV2Q q
       RQV2SetTableCustomFields q -> runSetTableCustomFieldsQV2 q
+      RQV2TrackFunction q        -> runTrackFunctionV2 q
+
+
+requiresAdmin :: RQLQuery -> Bool
+requiresAdmin = \case
+  RQV1 q -> case q of
+    RQAddExistingTableOrView _      -> True
+    RQTrackTable _                  -> True
+    RQUntrackTable _                -> True
+    RQSetTableIsEnum _              -> True
+
+    RQTrackFunction _               -> True
+    RQUntrackFunction _             -> True
+
+    RQCreateObjectRelationship _    -> True
+    RQCreateArrayRelationship  _    -> True
+    RQDropRelationship  _           -> True
+    RQSetRelationshipComment  _     -> True
+    RQRenameRelationship _          -> True
+
+    RQAddComputedField _            -> True
+    RQDropComputedField _           -> True
+
+    RQCreateInsertPermission _      -> True
+    RQCreateSelectPermission _      -> True
+    RQCreateUpdatePermission _      -> True
+    RQCreateDeletePermission _      -> True
+
+    RQDropInsertPermission _        -> True
+    RQDropSelectPermission _        -> True
+    RQDropUpdatePermission _        -> True
+    RQDropDeletePermission _        -> True
+    RQSetPermissionComment _        -> True
+
+    RQGetInconsistentMetadata _     -> True
+    RQDropInconsistentMetadata _    -> True
+
+    RQInsert _                      -> False
+    RQSelect _                      -> False
+    RQUpdate _                      -> False
+    RQDelete _                      -> False
+    RQCount  _                      -> False
+
+    RQAddRemoteSchema    _          -> True
+    RQRemoveRemoteSchema _          -> True
+    RQReloadRemoteSchema _          -> True
+
+    RQCreateEventTrigger _          -> True
+    RQDeleteEventTrigger _          -> True
+    RQRedeliverEvent _              -> True
+    RQInvokeEventTrigger _          -> True
+
+    RQCreateQueryCollection _       -> True
+    RQDropQueryCollection _         -> True
+    RQAddQueryToCollection _        -> True
+    RQDropQueryFromCollection _     -> True
+    RQAddCollectionToAllowlist _    -> True
+    RQDropCollectionFromAllowlist _ -> True
+
+    RQReplaceMetadata _             -> True
+    RQClearMetadata _               -> True
+    RQExportMetadata _              -> True
+    RQReloadMetadata _              -> True
+
+    RQDumpInternalState _           -> True
+
+    RQRunSql _                      -> True
+
+    RQBulk qs                       -> any requiresAdmin qs
+
+  RQV2 q -> case q of
+    RQV2TrackTable _           -> True
+    RQV2SetTableCustomFields _ -> True
+    RQV2TrackFunction _        -> True

@@ -14,6 +14,17 @@ args:
         ('Clarke',  23),
         ('Bellamy', NULL);
 
+      CREATE TABLE article (
+        id SERIAL PRIMARY KEY,
+        title TEXT NOT NULL,
+        content TEXT,
+        author_id INTEGER NOT NULL REFERENCES author(id)
+      );
+
+      INSERT INTO article (title, content, author_id) VALUES
+        ('Article 1 title', 'Article 1 content', 1),
+        ('Article 2 title', 'Article 2 content', 2);
+
 - type: track_table
   version: 2
   args:
@@ -21,3 +32,20 @@ args:
     configuration:
       custom_root_fields:
         select: Authors
+      custom_column_names:
+        id: AuthorId
+
+- type: track_table
+  version: 2
+  args:
+    table: article
+    configuration: {}
+
+- type: create_array_relationship
+  args:
+    name: articles
+    table: author
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: author_id
