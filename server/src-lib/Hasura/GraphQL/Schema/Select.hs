@@ -251,12 +251,13 @@ mkTableColAggFldsObj
   -> AggregateOp
   -> (PGColumnType -> G.GType)
   -> [PGColumnInfo]
-  -> ObjTyInfo
+  -> Maybe ObjTyInfo
 mkTableColAggFldsObj tn op f cols =
-  mkHsraObjTyInfo (Just desc) (mkTableColAggFldsTy op tn) Set.empty $ mapFromL _fiName $
-  map mkColObjFld cols
+  if null cols then Nothing
+  else Just $ mkHsraObjTyInfo (Just desc) (mkTableColAggFldsTy op tn) Set.empty $
+       mapFromL _fiName $ map mkColObjFld cols
   where
-    desc = G.Description $ "aggregate " <> unAggregateOp op <> " on columns"
+    desc = G.Description $ "aggregate " <> unAggregateOpName (_aoOpName op) <> " on columns"
 
     mkColObjFld ci = mkHsraObjFldInfo Nothing (pgiName ci) Map.empty $
                      f $ pgiType ci

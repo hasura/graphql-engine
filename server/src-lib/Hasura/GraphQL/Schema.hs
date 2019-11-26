@@ -165,6 +165,7 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
                , boolExpInpObjFldsM , selObjFldsM
                ]
     scalars = selByPkScalarSet <> funcArgScalarSet <> computedFieldFuncArgScalars
+              <> aggregateOpRequiredScalars
 
     -- helper
     mkColFldMap ty cols = Map.fromList $ flip map cols $
@@ -244,38 +245,24 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
     (aggObjs, aggOrdByInps) = case selPermM of
       Just (True, selFlds) ->
         let cols = getPGColumnFields selFlds
-            numCols = onlyNumCols cols
-            compCols = onlyComparableCols cols
-            mkOpWithCols = flip (,)
-            opWithCols = mkOpWithCols cols arrayAggOp :
-                         map (mkOpWithCols numCols) numericAggOps
-                         <> map (mkOpWithCols compCols) compareAggOps
+            opWithCols = flip map allAggregateOps $ \op ->
+                         ( op
+                         , filter (isScalarColumnWhere (_aoArgumentTypeFilter op) . pgiType) cols
+                         )
             objs = [ mkTableAggObj tn
                    , mkTableAggFldsObj tn opWithCols
-                   ] <> mkColAggFldsObjs selFlds
+                   ] <> mkColAggFldsObjs cols
             ordByInps = mkTabAggOrdByInpObj tn opWithCols
                         : mkTabAggOpOrdByInpObjs tn opWithCols
         in (objs, ordByInps)
       _ -> ([], [])
 
-    getNumericCols = onlyNumCols . getPGColumnFields
-    getComparableCols = onlyComparableCols . getPGColumnFields
-    onlyFloat = const $ mkScalarTy PGFloat
+    mkColAggFldsObjs cols =
+      let mkObjField op = mkTableColAggFldsObj tn op
+                          ( aggregateOpReturnTypeToGType $ _aoReturnType op) $
+                          filter (isScalarColumnWhere (_aoArgumentTypeFilter op) . pgiType) cols
+      in mapMaybe mkObjField allAggregateOps
 
-    mkTypeMaker "sum" = mkColumnType
-    mkTypeMaker _     = onlyFloat
-
-    mkColAggFldsObjs flds =
-      let cols = getPGColumnFields flds
-          numCols = getNumericCols flds
-          compCols = getComparableCols flds
-          mkNumObjFld n = mkTableColAggFldsObj tn n (G.toGT . mkTypeMaker n) numCols
-          mkCompObjFld n = mkTableColAggFldsObj tn n (G.toGT . mkColumnType) compCols
-          numFldsObjs = bool (map mkNumObjFld numericAggOps) [] $ null numCols
-          compFldsObjs = bool (map mkCompObjFld compareAggOps) [] $ null compCols
-          arrayAggFldObj = mkTableColAggFldsObj tn arrayAggOp
-                           (G.toGT . G.toLT . mkColumnType) cols
-      in arrayAggFldObj : numFldsObjs <> compFldsObjs
     -- the fields used in table object
     selObjFldsM = mkFldMap (mkTableTy tn) <$> selFldsM
     -- the scalar set for table_by_pk arguments

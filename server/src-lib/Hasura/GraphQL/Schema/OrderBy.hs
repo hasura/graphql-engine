@@ -70,12 +70,12 @@ mkTabAggOpOrdByInpObjs tn opWithCols =
   flip mapMaybe opWithCols $ \(op, cols) -> mkInpObjTyM cols op
   where
 
-    mkDesc (AggregateOp op) =
+    mkDesc (AggregateOpName op) =
       G.Description $ "order by " <> op <> "() on columns of table " <>> tn
 
     mkInpObjTyM cols op = bool (Just $ mkInpObjTy cols op) Nothing $ null cols
     mkInpObjTy cols op =
-      mkHsraInpTyInfo (Just $ mkDesc op) (mkTabAggOpOrdByTy tn op) $
+      mkHsraInpTyInfo (Just $ mkDesc $ _aoOpName op) (mkTabAggOpOrdByTy tn op) $
       fromInpValL $ map mkColInpVal cols
 
     mkColInpVal ci = InpValInfo Nothing (pgiName ci) Nothing $ G.toGT
