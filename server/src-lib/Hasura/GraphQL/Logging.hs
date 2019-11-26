@@ -4,8 +4,7 @@ layer. In contrast with, logging at the HTTP server layer.
 -}
 
 module Hasura.GraphQL.Logging
-  ( logGraphqlQuery
-  , QueryLog(..)
+  ( QueryLog(..)
   ) where
 
 import qualified Data.Aeson                             as J
@@ -35,7 +34,7 @@ instance J.ToJSON QueryLog where
              , "request_id" J..= reqId
              ]
 
-instance L.ToEngineLog QueryLog where
+instance L.ToEngineLog QueryLog L.Hasura where
   toEngineLog ql = (L.LevelInfo, L.ELTQueryLog, J.toJSON ql)
 
 -- | Helper function to convert the list of alias to generated SQL into a
@@ -46,14 +45,3 @@ encodeSql sql =
   where
     alName = G.unName . G.unAlias
     jValFromAssocList xs = J.object $ map (uncurry (J..=)) xs
-
-{-|
-Function to log a 'QueryLog'. This is meant to be used in execution of a
-GraphQL query to log the GraphQL query and optionally the generated SQL.
--}
-logGraphqlQuery
-  :: (MonadIO m)
-  => L.Logger
-  -> QueryLog
-  -> m ()
-logGraphqlQuery logger = liftIO . L.unLogger logger
