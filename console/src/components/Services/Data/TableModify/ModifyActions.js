@@ -32,6 +32,8 @@ import {
   sqlEscapeText,
   getCreateCheckConstraintSql,
   getDropConstraintSql,
+  getDropPkSql,
+  getCreatePkSql,
 } from '../../../Common/utils/sqlUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import {
@@ -50,8 +52,6 @@ import {
 import {
   fetchColumnCastsQuery,
   convertArrayToJson,
-  getCreatePkSql,
-  getDropPkSql,
   sanitiseRootFields,
 } from './utils';
 

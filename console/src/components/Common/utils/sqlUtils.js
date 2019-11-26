@@ -30,12 +30,15 @@ export const checkSchemaModification = _sql => {
   return _isSchemaModification;
 };
 
-export const getBoolExpFromCheckConstraint = check => {
+export const getCheckConstraintBoolExp = check => {
   if (check) {
     return check.substring(7, check.length - 1);
   }
+
   return check;
 };
+
+/* queries */
 
 export const getCreateCheckConstraintSql = (
   tableName,
@@ -48,4 +51,19 @@ export const getCreateCheckConstraintSql = (
 
 export const getDropConstraintSql = (tableName, schemaName, constraintName) => {
   return `alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}"`;
+};
+
+export const getCreatePkSql = ({
+  schemaName,
+  tableName,
+  selectedPkColumns,
+  constraintName,
+}) => {
+  return `alter table "${schemaName}"."${tableName}"
+    add constraint "${constraintName}" 
+    primary key ( ${selectedPkColumns.map(pkc => `"${pkc}"`).join(', ')} );`;
+};
+
+export const getDropPkSql = ({ schemaName, tableName, constraintName }) => {
+  return `alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}";`;
 };

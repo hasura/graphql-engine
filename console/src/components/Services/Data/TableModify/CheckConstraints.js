@@ -9,6 +9,8 @@ import {
   removeCheckConstraint,
 } from './ModifyActions';
 import { getCheckConstraintsState } from './utils';
+import ToolTip from '../../../Common/Tooltip/Tooltip';
+import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 
 const CheckConstraints = ({
   constraints,
@@ -57,14 +59,28 @@ const CheckConstraints = ({
       ? 'new-constraint'
       : getCheckConstraintName(constraints[i]);
 
-    // constraint name as expanded and collapsed label
-    const label = () => {
+    // constraint name as collapsed label
+    const collapsedLabel = () => {
       if (isLast) {
         if (!constraints.length) {
           return <div>No check constraints</div>;
         }
         return null;
       }
+
+      return (
+        <div>
+          <b>{existingConstraintName}</b>
+        </div>
+      );
+    };
+
+    // constraint name as expanded label
+    const expandedLabel = () => {
+      if (isLast) {
+        return null;
+      }
+
       return (
         <div>
           <b>{existingConstraintName}</b>
@@ -73,6 +89,7 @@ const CheckConstraints = ({
     };
 
     // expand button text "View"
+    // eslint-disable-next-line no-nested-ternary
     const expandButtonText = isLast
       ? constraints.length
         ? 'Add a new check constraint'
@@ -96,12 +113,19 @@ const CheckConstraints = ({
           </div>
           <div>
             <div className={`${styles.add_mar_bottom_mid}`}>
-              <b>Boolean expression:</b>
+              <b>Check Expression: </b>
+              <ToolTip
+                message={
+                  'Boolean expression that must be satisfied for all rows in the table. e.g. min_price >= 0 AND max_price >= min_price'
+                }
+              />
+              &nbsp;&nbsp;
+              <KnowMoreLink href="https://www.postgresql.org/docs/current/ddl-constraints.html#DDL-CONSTRAINTS-CHECK-CONSTRAINTS" />
             </div>
             <AceEditor
               mode="sql"
               theme="github"
-              placeholder="email ~ '^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+[.][A-Za-z]+$'"
+              // placeholder="email ~ '^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+[.][A-Za-z]+$'"
               name={existingConstraintName}
               onChange={checkOnChange}
               value={check}
@@ -135,8 +159,8 @@ const CheckConstraints = ({
       <ExpandableEditor
         key={existingConstraintName}
         editorExpanded={expandedContent}
-        expandedLabel={label}
-        collapsedLabel={label}
+        expandedLabel={expandedLabel}
+        collapsedLabel={collapsedLabel}
         property={`check-constraint-${i}`}
         service="modify-table"
         expandButtonText={expandButtonText}

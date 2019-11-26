@@ -1,5 +1,5 @@
 import { getDataTypeInfo } from '../Common/utils';
-import { getBoolExpFromCheckConstraint } from '../../../Common/utils/sqlUtils';
+import { getCheckConstraintBoolExp } from '../../../Common/utils/sqlUtils';
 
 const convertArrayToJson = (arr, keyIndex = 0) => {
   const converted = {};
@@ -71,21 +71,6 @@ ORDER BY 1, 2;
 
 `;
 
-const getCreatePkSql = ({
-  schemaName,
-  tableName,
-  selectedPkColumns,
-  constraintName,
-}) => {
-  return `alter table "${schemaName}"."${tableName}"
-    add constraint "${constraintName}" 
-    primary key ( ${selectedPkColumns.map(pkc => `"${pkc}"`).join(', ')} );`;
-};
-
-const getDropPkSql = ({ schemaName, tableName, constraintName }) => {
-  return `alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}";`;
-};
-
 export const sanitiseRootFields = rootFields => {
   const santisedRootFields = {};
   Object.keys(rootFields).forEach(rootFieldType => {
@@ -102,16 +87,10 @@ export const getCheckConstraintsState = constraints => {
   return [
     ...constraints.map(c => ({
       name: c.constraint_name,
-      check: getBoolExpFromCheckConstraint(c.check),
+      check: getCheckConstraintBoolExp(c.check),
     })),
     { name: '', check: '' },
   ];
 };
 
-export {
-  convertArrayToJson,
-  getValidAlterOptions,
-  fetchColumnCastsQuery,
-  getCreatePkSql,
-  getDropPkSql,
-};
+export { convertArrayToJson, getValidAlterOptions, fetchColumnCastsQuery };
