@@ -6,6 +6,7 @@ import 'brace/mode/sql';
 import Modal from '../../../Common/Modal/Modal';
 import Button from '../../../Common/Button/Button';
 import { parseCreateSQL } from './utils';
+import { checkSchemaModification } from '../../../Common/utils/sqlUtils';
 
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
@@ -62,16 +63,6 @@ const RawSQL = ({
     </Tooltip>
   );
 
-  const isSchemaModification = _sql => {
-    const formattedSQL = _sql.toLowerCase();
-
-    return (
-      formattedSQL.includes('create') ||
-      formattedSQL.includes('alter') ||
-      formattedSQL.includes('drop')
-    );
-  };
-
   const submitSQL = () => {
     // check migration mode global
     if (migrationMode) {
@@ -84,7 +75,7 @@ const RawSQL = ({
       }
       if (!isMigration && globals.consoleMode === CLI_CONSOLE_MODE) {
         // if migration is not checked, check if is schema modification
-        if (isSchemaModification(sql)) {
+        if (checkSchemaModification(sql)) {
           dispatch(modalOpen());
           const confirmation = false;
           if (confirmation) {
@@ -166,14 +157,14 @@ const RawSQL = ({
       dispatch({ type: SET_SQL, data: val });
 
       // set migration checkbox true
-      if (isSchemaModification(val)) {
+      if (checkSchemaModification(val)) {
         dispatch({ type: SET_MIGRATION_CHECKED, data: true });
       } else {
         dispatch({ type: SET_MIGRATION_CHECKED, data: false });
       }
 
       // set track this checkbox true
-      const objects = parseCreateSQL(val, true);
+      const objects = parseCreateSQL(val);
       if (objects.length) {
         let allObjectsTrackable = true;
 
@@ -261,9 +252,7 @@ const RawSQL = ({
           <h4 className={styles.subheading_text}>SQL Result:</h4>
           <div className={styles.tableContainer}>
             <table
-              className={`table table-bordered table-striped table-hover ${
-                styles.table
-              } `}
+              className={`table table-bordered table-striped table-hover ${styles.table} `}
             >
               <thead>
                 <tr>{getTableHeadings()}</tr>
@@ -305,7 +294,7 @@ const RawSQL = ({
         <label>
           <input
             checked={isCascadeChecked}
-            className={styles.add_mar_right_small}
+            className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
             id="cascade-checkbox"
             type="checkbox"
             onChange={() => {
@@ -340,7 +329,7 @@ const RawSQL = ({
         <label>
           <input
             checked={isTableTrackChecked}
-            className={styles.add_mar_right_small}
+            className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
             id="track-checkbox"
             type="checkbox"
             onChange={dispatchTrackThis}
@@ -485,9 +474,7 @@ const RawSQL = ({
           </div>
 
           <div
-            className={`${styles.padd_left_remove} ${
-              styles.add_mar_bottom
-            } col-xs-8`}
+            className={`${styles.padd_left_remove} ${styles.add_mar_bottom} col-xs-8`}
           >
             {getTrackThisSection()}
             {getMetadataCascadeSection()}

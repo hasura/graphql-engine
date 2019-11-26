@@ -1,9 +1,7 @@
 import pytest
-import yaml
+import ruamel.yaml as yaml
 import json
 import jsondiff
-
-from validate import json_ordered
 
 class TestInconsistentObjects():
 
@@ -26,7 +24,7 @@ class TestInconsistentObjects():
 
     def test_inconsistent_objects(self, hge_ctx):
         with open(self.dir() + "/test.yaml") as c:
-            test = yaml.load(c)
+            test = yaml.safe_load(c)
 
         # setup
         st_code, resp = hge_ctx.v1q(json.loads(json.dumps(test['setup'])))
@@ -46,7 +44,7 @@ class TestInconsistentObjects():
         incons_objs_resp = resp['inconsistent_objects']
 
         assert resp['is_consistent'] == False, resp
-        assert json_ordered(incons_objs_resp) == json_ordered(incons_objs_test), yaml.dump({
+        assert incons_objs_resp == incons_objs_test, yaml.dump({
             'response': resp,
             'expected': incons_objs_test,
             'diff': jsondiff.diff(incons_objs_test, resp)

@@ -455,16 +455,17 @@ mkWaiApp
   -> InstanceId
   -> S.HashSet API
   -> EL.LiveQueriesOptions
+  -> E.PlanCacheOptions
   -> IO HasuraApp
 mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode
          corsCfg enableConsole consoleAssetsDir enableTelemetry
-         instanceId apis lqOpts = do
+         instanceId apis lqOpts planCacheOptions = do
 
     let pgExecCtx = PGExecCtx pool isoLevel
         pgExecCtxSer = PGExecCtx pool Q.Serializable
         runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
     (cacheRef, cacheBuiltTime) <- do
-      pgResp <- runExceptT $ peelRun emptySchemaCache runCtx pgExecCtxSer $ do
+      pgResp <- runExceptT $ peelRun emptySchemaCache runCtx pgExecCtxSer Q.ReadWrite $ do
         buildSchemaCache
         liftTx fetchLastUpdate
       (time, sc) <- either initErrExit return pgResp
@@ -472,7 +473,7 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode
       return (scRef, snd <$> time)
 
     cacheLock <- newMVar ()
-    planCache <- E.initPlanCache
+    planCache <- E.initPlanCache planCacheOptions
 
     let corsPolicy = mkDefaultCorsPolicy corsCfg
         logger = L.mkLogger loggerCtx

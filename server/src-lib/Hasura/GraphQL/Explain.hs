@@ -67,6 +67,7 @@ resolveVal userInfo = \case
       PGTypeScalar colTy -> withConstructorFn colTy sessVarVal
       PGTypeArray _      -> sessVarVal
   RS.UVSQL sqlExp -> return sqlExp
+  RS.UVSession -> pure $ sessionInfoJsonExp $ userVars userInfo
 
 getSessVarVal
   :: (MonadError QErr m)
@@ -133,4 +134,4 @@ explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw) =
   where
     usrVars = mkUserVars $ maybe [] Map.toList userVarsRaw
     userInfo = mkUserInfo (fromMaybe adminRole $ roleFromVars usrVars) usrVars
-    runInTx = liftEither <=< liftIO . runExceptT . runLazyTx pgExecCtx
+    runInTx = liftEither <=< liftIO . runExceptT . runLazyTx pgExecCtx Q.ReadOnly

@@ -11,6 +11,8 @@ module Hasura.GraphQL.Execute
   , getSubsOp
 
   , EP.PlanCache
+  , EP.mkPlanCacheOptions
+  , EP.PlanCacheOptions
   , EP.initPlanCache
   , EP.clearPlanCache
   , EP.dumpPlanCache
@@ -366,9 +368,10 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
   let confHdrs   = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
       clientHdrs = bool [] filteredHeaders fwdClientHdrs
       -- filter out duplicate headers
-      -- priority: conf headers > resolved userinfo vars > client headers
+      -- priority: conf headers > resolved userinfo vars > x-forwarded headers > client headers
       hdrMaps    = [ Map.fromList confHdrs
                    , Map.fromList userInfoToHdrs
+                   , Map.fromList xForwardedHeaders
                    , Map.fromList clientHdrs
                    ]
       headers  = Map.toList $ foldr Map.union Map.empty hdrMaps
@@ -399,6 +402,12 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
     userInfoToHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
                      userInfoToList userInfo
     filteredHeaders = filterUserVars $ filterRequestHeaders reqHdrs
+
+    xForwardedHeaders = flip mapMaybe reqHdrs $ \(hdrName, hdrValue) ->
+      case hdrName of
+        "Host"       -> Just ("X-Forwarded-Host", hdrValue)
+        "User-Agent" -> Just ("X-Forwarded-User-Agent", hdrValue)
+        _            -> Nothing
 
     filterUserVars hdrs =
       let txHdrs = map (\(n, v) -> (bsToTxt $ CI.original n, bsToTxt v)) hdrs

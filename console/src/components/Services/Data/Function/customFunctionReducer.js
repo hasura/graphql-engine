@@ -21,6 +21,7 @@ import { fetchTrackedFunctions } from '../DataActions';
 import { COMPUTED_FIELDS_SUPPORT } from '../../../../helpers/versionUtils';
 
 import _push from '../push';
+import { getSchemaBaseRoute } from '../../../Common/utils/routesUtils';
 
 /* Constants */
 
@@ -224,7 +225,7 @@ const deleteFunctionSql = () => {
     const errorMsg = 'Deleting function failed';
 
     const customOnSuccess = () => {
-      dispatch(_push(`/schema/${currentSchema}`));
+      dispatch(_push(getSchemaBaseRoute(currentSchema)));
     };
     const customOnError = () => {
       dispatch({ type: DELETE_CUSTOM_FUNCTION_FAIL });
@@ -289,7 +290,7 @@ const unTrackCustomFunction = () => {
     const errorMsg = 'Delete custom function failed';
 
     const customOnSuccess = () => {
-      dispatch(_push(`/schema/${currentSchema}`));
+      dispatch(_push(getSchemaBaseRoute(currentSchema)));
       dispatch({ type: RESET });
       dispatch(fetchTrackedFunctions());
     };

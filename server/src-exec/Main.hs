@@ -65,29 +65,6 @@ parseHGECommand =
         <> command "version" (info (pure  HCVersion)
           (progDesc "Prints the version of GraphQL Engine"))
     )
-  where
-    serveOpts = RawServeOptions
-                <$> parseServerPort
-                <*> parseServerHost
-                <*> parseConnParams
-                <*> parseTxIsolation
-                <*> (parseAdminSecret <|> parseAccessKey)
-                <*> parseWebHook
-                <*> parseJwtSecret
-                <*> parseUnAuthRole
-                <*> parseCorsConfig
-                <*> parseEnableConsole
-                <*> parseConsoleAssetsDir
-                <*> parseEnableTelemetry
-                <*> parseWsReadCookie
-                <*> parseStringifyNum
-                <*> parseEnabledAPIs
-                <*> parseMxRefetchInt
-                <*> parseMxBatchSize
-                <*> parseEnableAllowlist
-                <*> parseEnabledLogs
-                <*> parseLogLevel
-
 
 parseArgs :: IO HGEOptions
 parseArgs = do
@@ -123,7 +100,7 @@ main =  do
     HCServe so@(ServeOptions port host cp isoL mAdminSecret mAuthHook
                 mJwtSecret mUnAuthRole corsCfg enableConsole consoleAssetsDir
                 enableTelemetry strfyNum enabledAPIs lqOpts enableAL
-                enabledLogs serverLogLevel) -> do
+                enabledLogs serverLogLevel planCacheOptions) -> do
 
       let sqlGenCtx = SQLGenCtx strfyNum
 
@@ -152,7 +129,7 @@ main =  do
       HasuraApp app cacheRef cacheInitTime shutdownApp <-
         mkWaiApp isoL loggerCtx sqlGenCtx enableAL pool ci httpManager am
           corsCfg enableConsole consoleAssetsDir enableTelemetry
-          instanceId enabledAPIs lqOpts
+          instanceId enabledAPIs lqOpts planCacheOptions
 
       -- log inconsistent schema objects
       inconsObjs <- scInconsistentObjs <$> getSCFromRef cacheRef
@@ -237,7 +214,7 @@ main =  do
     runAsAdmin pool sqlGenCtx httpManager m = do
       res <- runExceptT $ peelRun emptySchemaCache
        (RunCtx adminUserInfo httpManager sqlGenCtx)
-       (PGExecCtx pool Q.Serializable) m
+       (PGExecCtx pool Q.Serializable) Q.ReadWrite m
       return $ fmap fst res
 
     procConnInfo rci =

@@ -213,7 +213,7 @@ buildJsonObject pfx parAls arrRelCtx strfyNum flds =
     toSQLFld :: (FieldName -> S.SQLExp -> f)
              -> (FieldName, AnnFld) -> f
     toSQLFld f (fldAls, fld) = f fldAls $ case fld of
-      FCol col args  -> toSQLCol col args
+      FCol c      -> toSQLCol c
       FExp e      -> S.SELit e
       FObj objSel ->
         let qual = mkObjRelTableAls pfx $ aarName objSel
@@ -228,14 +228,14 @@ buildJsonObject pfx parAls arrRelCtx strfyNum flds =
         let ccPfx = mkComputedFieldTableAls pfx fldAls
         in S.mkQIdenExp ccPfx fldAls
 
-    toSQLCol :: PGColumnInfo -> Maybe ColOp -> S.SQLExp
-    toSQLCol col colOpM =
-      toJSONableExp strfyNum (pgiType col) $ withColOp colOpM $
+    toSQLCol :: AnnColField -> S.SQLExp
+    toSQLCol (AnnColField col asText colOpM) =
+      toJSONableExp strfyNum (pgiType col) asText $ withColOp colOpM $
       S.mkQIdenExp (mkBaseTableAls pfx) $ pgiColumn col
 
     fromScalarComputedField :: ComputedFieldScalarSel S.SQLExp -> S.SQLExp
     fromScalarComputedField computedFieldScalar =
-      toJSONableExp strfyNum (PGColumnScalar ty) $ withColOp colOpM $
+      toJSONableExp strfyNum (PGColumnScalar ty) False $ withColOp colOpM $
       S.SEFunction $ S.FunctionExp fn (fromTableRowArgs pfx args) Nothing
       where
         ComputedFieldScalarSel fn args ty colOpM = computedFieldScalar
