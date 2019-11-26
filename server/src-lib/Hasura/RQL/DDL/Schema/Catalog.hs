@@ -11,19 +11,32 @@ module Hasura.RQL.DDL.Schema.Catalog
 
 import           Hasura.Prelude
 
+import qualified Data.Text                    as T
 import qualified Database.PG.Query            as Q
+
+-- import           Data.Time.Clock
 
 import           Data.Aeson
 
 import           Hasura.Db
 import           Hasura.RQL.Types.Catalog
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.SchemaCache
 import           Hasura.SQL.Types
 
 fetchCatalogData :: (MonadTx m) => m CatalogMetadata
-fetchCatalogData = liftTx $ Q.getAltJ . runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
-  $(Q.sqlFromFile "src-rsr/catalog_metadata.sql") () True
+fetchCatalogData = do
+  -- startTime <- liftTx $ liftIO getCurrentTime
+  metadataBytes <- (liftTx $ runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler $(Q.sqlFromFile "src-rsr/catalog_metadata.sql") () True)
+  -- afterFetchTime <- liftTx $ liftIO getCurrentTime
+  -- liftTx $ liftIO $ putStrLn $
+  --   "----> [fetch/query] " <> show (afterFetchTime `diffUTCTime` startTime)
+  let !decodedValue = force (eitherDecodeStrict' metadataBytes)
+  -- afterDecodeTime <- liftTx $ liftIO getCurrentTime
+  -- liftTx $ liftIO $ putStrLn $
+  --   "----> [fetch/decode] " <> show (afterDecodeTime `diffUTCTime` afterFetchTime)
+  decodedValue `onLeft` \err -> throw500 (T.pack err)
 
 saveTableToCatalog :: (MonadTx m) => QualifiedTable -> SystemDefined -> Bool -> TableConfig -> m ()
 saveTableToCatalog (QualifiedObject sn tn) systemDefined isEnum config = liftTx $

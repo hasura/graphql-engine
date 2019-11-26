@@ -2,8 +2,8 @@
 -- warning, so don’t treat it as an error even if -Werror is enabled.
 {-# OPTIONS_GHC -Wwarn=redundant-constraints #-}
 
-{-# LANGUAGE GADTs      #-}
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE GADTs                #-}
+{-# LANGUAGE RankNTypes           #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.Types.SchemaCache
@@ -112,6 +112,7 @@ module Hasura.RQL.Types.SchemaCache
 
 import qualified Hasura.GraphQL.Context            as GC
 
+import           Hasura.Db
 import           Hasura.Prelude
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
@@ -126,7 +127,6 @@ import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.SQL.Types
-import Hasura.Db
 
 import           Control.Lens
 import           Data.Aeson
@@ -281,7 +281,8 @@ data ConstraintType
   | CTFOREIGNKEY
   | CTPRIMARYKEY
   | CTUNIQUE
-  deriving Eq
+  deriving (Eq, Generic)
+instance NFData ConstraintType
 
 constraintTyToTxt :: ConstraintType -> T.Text
 constraintTyToTxt ty = case ty of
@@ -319,7 +320,8 @@ data TableConstraint
   = TableConstraint
   { tcType :: !ConstraintType
   , tcName :: !ConstraintName
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Generic)
+instance NFData TableConstraint
 
 $(deriveJSON (aesonDrop 2 snakeCase) ''TableConstraint)
 
@@ -328,8 +330,8 @@ data ViewInfo
   { viIsUpdatable  :: !Bool
   , viIsDeletable  :: !Bool
   , viIsInsertable :: !Bool
-  } deriving (Show, Eq)
-
+  } deriving (Show, Eq, Generic)
+instance NFData ViewInfo
 $(deriveJSON (aesonDrop 2 snakeCase) ''ViewInfo)
 
 isMutable :: (ViewInfo -> Bool) -> Maybe ViewInfo -> Bool
@@ -348,6 +350,7 @@ data TableConfig
   { _tcCustomRootFields  :: !GC.TableCustomRootFields
   , _tcCustomColumnNames :: !CustomColumnNames
   } deriving (Show, Eq, Lift, Generic)
+instance NFData TableConfig
 $(deriveToJSON (aesonDrop 3 snakeCase) ''TableConfig)
 
 emptyTableConfig :: TableConfig
@@ -362,24 +365,24 @@ instance FromJSON TableConfig where
 
 data TableCoreInfo fieldInfo
   = TableCoreInfo
-  { _tciName :: !QualifiedTable
-  , _tciDescription :: !(Maybe PGDescription)
-  , _tciSystemDefined :: !SystemDefined
-  , _tciFieldInfoMap :: !(FieldInfoMap fieldInfo)
+  { _tciName                          :: !QualifiedTable
+  , _tciDescription                   :: !(Maybe PGDescription)
+  , _tciSystemDefined                 :: !SystemDefined
+  , _tciFieldInfoMap                  :: !(FieldInfoMap fieldInfo)
   , _tciUniqueOrPrimaryKeyConstraints :: ![ConstraintName]
-  , _tciPrimaryKeyColumns :: ![PGCol]
-  , _tciViewInfo :: !(Maybe ViewInfo)
-  , _tciEnumValues :: !(Maybe EnumValues)
-  , _tciCustomConfig :: !TableConfig
+  , _tciPrimaryKeyColumns             :: ![PGCol]
+  , _tciViewInfo                      :: !(Maybe ViewInfo)
+  , _tciEnumValues                    :: !(Maybe EnumValues)
+  , _tciCustomConfig                  :: !TableConfig
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 4 snakeCase) ''TableCoreInfo)
 $(makeLenses ''TableCoreInfo)
 
 data TableInfo
   = TableInfo
-  { _tiCoreInfo :: TableCoreInfo FieldInfo
-  , _tiRolePermInfoMap       :: !RolePermInfoMap
-  , _tiEventTriggerInfoMap   :: !EventTriggerInfoMap
+  { _tiCoreInfo            :: TableCoreInfo FieldInfo
+  , _tiRolePermInfoMap     :: !RolePermInfoMap
+  , _tiEventTriggerInfoMap :: !EventTriggerInfoMap
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 3 snakeCase) ''TableInfo)
 $(makeLenses ''TableInfo)
@@ -436,7 +439,7 @@ data SchemaCache
   , scGCtxMap           :: !GC.GCtxMap
   , scDefaultRemoteGCtx :: !GC.GCtx
   , scDepMap            :: !DepMap
-  , scInconsistentObjs  :: ![InconsistentMetadataObj]
+  , scInconsistentObjs  :: ![InconsistentMetadata]
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
 

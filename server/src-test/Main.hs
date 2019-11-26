@@ -2,32 +2,31 @@ module Main (main) where
 
 import           Hasura.Prelude
 
+import           Control.Concurrent.MVar
+import           Control.Natural            ((:~>) (..))
+import           Data.Time.Clock            (getCurrentTime)
 import           Options.Applicative
-import           System.Environment        (getEnvironment)
-import           System.Exit               (exitFailure)
+import           System.Environment         (getEnvironment)
+import           System.Exit                (exitFailure)
 import           Test.Hspec
-import Control.Concurrent.MVar
-import           Data.Time.Clock         (getCurrentTime)
-import Control.Natural ((:~>)(..))
 
 import qualified Data.Aeson                 as A
 import qualified Data.ByteString.Lazy.Char8 as BL
-import qualified Database.PG.Query         as Q
-import qualified Network.HTTP.Client       as HTTP
-import qualified Network.HTTP.Client.TLS   as HTTP
-import qualified Test.Hspec.Runner         as Hspec
+import qualified Database.PG.Query          as Q
+import qualified Network.HTTP.Client        as HTTP
+import qualified Network.HTTP.Client.TLS    as HTTP
+import qualified Test.Hspec.Runner          as Hspec
 
-import           Hasura.Db                 (PGExecCtx (..))
-import           Hasura.RQL.Types          (SQLGenCtx (..), adminUserInfo)
-import           Hasura.Server.Init        (RawConnInfo, mkConnInfo,
-                                            mkRawConnInfo, parseRawConnInfo,
-                                            runWithEnv)
-import           Hasura.Server.Query       (Run, RunCtx (..), peelRun)
+import           Hasura.Db                  (PGExecCtx (..))
+import           Hasura.RQL.Types           (SQLGenCtx (..), adminUserInfo)
+import           Hasura.Server.Init         (RawConnInfo, mkConnInfo, mkRawConnInfo,
+                                             parseRawConnInfo, runWithEnv)
 import           Hasura.Server.Migrate
+import           Hasura.Server.Query        (Run, RunCtx (..), peelRun)
 
-import qualified Hasura.IncrementalSpec    as IncrementalSpec
-import qualified Hasura.RQL.MetadataSpec   as MetadataSpec
-import qualified Hasura.Server.MigrateSpec as MigrateSpec
+import qualified Hasura.IncrementalSpec     as IncrementalSpec
+import qualified Hasura.RQL.MetadataSpec    as MetadataSpec
+import qualified Hasura.Server.MigrateSpec  as MigrateSpec
 
 data TestSuites
   = AllSuites !RawConnInfo
@@ -43,7 +42,7 @@ main = parseArgs >>= \case
     postgresSpecs <- buildPostgresSpecs pgConnOptions
     runHspec (unitSpecs *> postgresSpecs)
   SingleSuite suite -> case suite of
-    UnitSuite -> runHspec unitSpecs
+    UnitSuite                   -> runHspec unitSpecs
     PostgresSuite pgConnOptions -> runHspec =<< buildPostgresSpecs pgConnOptions
 
 unitSpecs :: Spec

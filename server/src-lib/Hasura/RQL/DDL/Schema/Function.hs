@@ -21,7 +21,7 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 import qualified Control.Monad.Validate        as MV
 import qualified Data.HashMap.Strict           as M
-import qualified Data.HashSet as S
+import qualified Data.HashSet                  as S
 import qualified Data.Sequence                 as Seq
 import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
@@ -39,7 +39,8 @@ data RawFunctionInfo
   , rfiDefaultArgs      :: !Int
   , rfiReturnsTable     :: !Bool
   , rfiDescription      :: !(Maybe PGDescription)
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Generic)
+instance NFData RawFunctionInfo
 $(deriveJSON (aesonDrop 3 snakeCase) ''RawFunctionInfo)
 
 mkFunctionArgs :: Int -> [QualifiedPGType] -> [FunctionArgName] -> [FunctionArg]
@@ -181,7 +182,8 @@ newtype TrackFunction
 data FunctionConfig
   = FunctionConfig
   { _fcSessionArgument :: !(Maybe FunctionArgName)
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic, Lift)
+instance NFData FunctionConfig
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields = True} ''FunctionConfig)
 
 emptyFunctionConfig :: FunctionConfig

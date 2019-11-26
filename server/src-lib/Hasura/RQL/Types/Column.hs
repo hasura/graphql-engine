@@ -132,7 +132,8 @@ data PGRawColumnInfo
   -- ^ only stores single-column references to primary key of foreign tables (used for detecting
   -- references to enum tables)
   , prciDescription :: !(Maybe PGDescription)
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Generic)
+instance NFData PGRawColumnInfo
 $(deriveJSON (aesonDrop 4 snakeCase) ''PGRawColumnInfo)
 
 -- | “Resolved” column info, produced from a 'PGRawColumnInfo' value that has been combined with other

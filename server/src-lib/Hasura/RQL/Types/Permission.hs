@@ -45,7 +45,7 @@ import qualified PostgreSQL.Binary.Decoding as PD
 newtype RoleName
   = RoleName {getRoleTxt :: NonEmptyText}
   deriving ( Show, Eq, Ord, Hashable, FromJSONKey, ToJSONKey, FromJSON
-           , ToJSON, Q.FromCol, Q.ToPrepArg, Lift, Generic, Arbitrary)
+           , ToJSON, Q.FromCol, Q.ToPrepArg, Lift, Generic, Arbitrary, NFData )
 
 instance DQuote RoleName where
   dquoteTxt = roleNameToTxt
@@ -121,7 +121,8 @@ data PermType
   | PTSelect
   | PTUpdate
   | PTDelete
-  deriving (Eq, Lift)
+  deriving (Eq, Lift, Generic)
+instance NFData PermType
 
 instance Q.FromCol PermType where
   fromCol bs = flip Q.fromColHelper bs $ PD.enum $ \case

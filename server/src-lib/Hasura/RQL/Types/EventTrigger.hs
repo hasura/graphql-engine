@@ -38,7 +38,7 @@ import qualified Database.PG.Query          as Q
 import qualified Text.Regex.TDFA            as TDFA
 
 newtype TriggerName = TriggerName { unTriggerName :: NonEmptyText }
-  deriving (Show, Eq, Hashable, Lift, DQuote, FromJSON, ToJSON, ToJSONKey, Q.FromCol, Q.ToPrepArg, Generic, Arbitrary)
+  deriving (Show, Eq, Hashable, Lift, DQuote, FromJSON, ToJSON, ToJSONKey, Q.FromCol, Q.ToPrepArg, Generic, Arbitrary, NFData)
 
 triggerNameToTxt :: TriggerName -> Text
 triggerNameToTxt = unNonEmptyText . unTriggerName

@@ -17,8 +17,8 @@ data FunctionType
   = FTVOLATILE
   | FTIMMUTABLE
   | FTSTABLE
-  deriving (Eq)
-
+  deriving (Eq, Generic)
+instance NFData FunctionType
 $(deriveJSON defaultOptions{constructorTagModifier = drop 2} ''FunctionType)
 
 funcTypToTxt :: FunctionType -> T.Text
@@ -31,7 +31,7 @@ instance Show FunctionType where
 
 newtype FunctionArgName =
   FunctionArgName { getFuncArgNameTxt :: T.Text}
-  deriving (Show, Eq, ToJSON, FromJSON, Lift, DQuote, IsString, Generic, Arbitrary)
+  deriving (Show, Eq, NFData, ToJSON, FromJSON, Lift, DQuote, IsString, Generic, Arbitrary)
 
 newtype HasDefault = HasDefault { unHasDefault :: Bool }
   deriving (Show, Eq, ToJSON)

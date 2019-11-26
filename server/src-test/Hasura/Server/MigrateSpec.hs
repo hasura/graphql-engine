@@ -4,20 +4,21 @@ module Hasura.Server.MigrateSpec (CacheRefT(..), spec) where
 
 import           Hasura.Prelude
 
-import           Data.Time.Clock         (getCurrentTime)
+import           Control.Concurrent.MVar.Lifted
+import           Control.Monad.Trans.Control    (MonadBaseControl)
+import           Control.Monad.Unique
+import           Control.Natural                ((:~>) (..))
+import           Data.Time.Clock                (getCurrentTime)
+import           Data.Tuple                     (swap)
 import           Test.Hspec.Core.Spec
 import           Test.Hspec.Expectations.Lifted
-import Control.Concurrent.MVar.Lifted
-import Control.Monad.Unique
-import Control.Monad.Trans.Control (MonadBaseControl)
-import Data.Tuple (swap)
-import Control.Natural ((:~>)(..))
 
-import qualified Database.PG.Query       as Q
+import qualified Database.PG.Query              as Q
 
-import           Hasura.RQL.DDL.Metadata (ClearMetadata (..), runClearMetadata)
-import           Hasura.RQL.Types
+import           Hasura.RQL.DDL.Metadata        (ClearMetadata (..),
+                                                 runClearMetadata)
 import           Hasura.RQL.DDL.Schema
+import           Hasura.RQL.Types
 import           Hasura.Server.Migrate
 import           Hasura.Server.PGDump
 

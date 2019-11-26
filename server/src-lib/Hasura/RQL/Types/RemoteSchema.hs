@@ -22,7 +22,7 @@ newtype RemoteSchemaName
   = RemoteSchemaName
   { unRemoteSchemaName :: NonEmptyText }
   deriving ( Show, Eq, Lift, Hashable, J.ToJSON, J.ToJSONKey
-           , J.FromJSON, Q.ToPrepArg, Q.FromCol, DQuote
+           , J.FromJSON, Q.ToPrepArg, Q.FromCol, DQuote, NFData
            , Generic, Arbitrary
            )
 
@@ -46,6 +46,7 @@ data RemoteSchemaDef
   , _rsdForwardClientHeaders :: !Bool
   , _rsdTimeoutSeconds       :: !(Maybe Int)
   } deriving (Show, Eq, Lift, Generic)
+instance NFData RemoteSchemaDef
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''RemoteSchemaDef)
 
 instance J.FromJSON RemoteSchemaDef where
@@ -63,6 +64,7 @@ data AddRemoteSchemaQuery
   , _arsqDefinition :: !RemoteSchemaDef
   , _arsqComment    :: !(Maybe Text)
   } deriving (Show, Eq, Lift, Generic)
+instance NFData AddRemoteSchemaQuery
 $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''AddRemoteSchemaQuery)
 
 newtype RemoteSchemaNameQuery

@@ -4,9 +4,9 @@ module Control.Monad.Unique
   , MonadUnique(..)
   ) where
 
-import Hasura.Prelude
+import           Hasura.Prelude
 
-import qualified Data.Unique as U
+import qualified Data.Unique    as U
 
 class (Monad m) => MonadUnique m where
   newUnique :: m U.Unique

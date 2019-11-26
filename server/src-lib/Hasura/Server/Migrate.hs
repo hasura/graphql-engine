@@ -16,8 +16,8 @@ module Hasura.Server.Migrate
   , dropCatalog
   ) where
 
+import           Control.Monad.Unique
 import           Data.Time.Clock               (UTCTime)
-import Control.Monad.Unique
 
 import           Hasura.Prelude
 
@@ -29,15 +29,14 @@ import qualified Database.PG.Query.Connection  as Q
 import qualified Language.Haskell.TH.Lib       as TH
 import qualified Language.Haskell.TH.Syntax    as TH
 
-import           Hasura.Logging                (Hasura, LogLevel (..),
-                                                ToEngineLog (..))
+import           Hasura.Logging                (Hasura, LogLevel (..), ToEngineLog (..))
+import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
 import           Hasura.Server.Logging         (StartupLog (..))
 import           Hasura.Server.Migrate.Version (latestCatalogVersion,
                                                 latestCatalogVersionString)
 import           Hasura.Server.Query
 import           Hasura.SQL.Types
-import Hasura.RQL.DDL.Schema
 
 dropCatalog :: (MonadTx m) => m ()
 dropCatalog = liftTx $ Q.catchE defaultTxErrorHandler $ do
@@ -65,6 +64,9 @@ instance ToEngineLog MigrationResult Hasura where
           "Successfully migrated from catalog version " <> oldVersion <> " to version "
             <> latestCatalogVersionString <> "."
     }
+
+-- see Note [Specialization of buildRebuildableSchemaCache]
+{-# SPECIALIZE migrateCatalog :: UTCTime -> Run (MigrationResult, RebuildableSchemaCache Run) #-}
 
 migrateCatalog
   :: forall m

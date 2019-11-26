@@ -20,9 +20,9 @@ module Hasura.Db
   ) where
 
 import           Control.Lens
+import           Control.Monad.Trans.Control  (MonadBaseControl (..))
 import           Control.Monad.Unique
 import           Control.Monad.Validate
-import           Control.Monad.Trans.Control (MonadBaseControl(..))
 
 import qualified Data.Aeson.Extended          as J
 import qualified Database.PG.Query            as Q

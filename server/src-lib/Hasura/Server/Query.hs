@@ -1,16 +1,16 @@
-{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE NamedFieldPuns       #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.Server.Query where
 
 import           Control.Lens
+import           Control.Monad.Trans.Control        (MonadBaseControl (..))
+import           Control.Monad.Unique
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Time                          (UTCTime)
 import           Language.Haskell.TH.Syntax         (Lift)
-import Control.Monad.Unique
-import Control.Monad.Trans.Control (MonadBaseControl(..))
 
 import qualified Data.HashMap.Strict                as HM
 import qualified Data.Text                          as T
@@ -178,6 +178,9 @@ instance HasHttpManager Run where
 
 instance HasSQLGenCtx Run where
   askSQLGenCtx = asks _rcSqlGenCtx
+
+-- see Note [Specialization of buildRebuildableSchemaCache]
+{-# SPECIALIZE buildRebuildableSchemaCache :: Run (RebuildableSchemaCache Run) #-}
 
 fetchLastUpdate :: Q.TxE QErr (Maybe (InstanceId, UTCTime))
 fetchLastUpdate = do

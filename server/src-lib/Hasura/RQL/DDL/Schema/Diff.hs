@@ -59,9 +59,9 @@ $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ConstraintMeta)
 
 data FunctionMeta
   = FunctionMeta
-  { fmOid         :: !Int
-  , fmFunction    :: !QualifiedFunction
-  , fmType        :: !FunctionType
+  { fmOid      :: !Int
+  , fmFunction :: !QualifiedFunction
+  , fmType     :: !FunctionType
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 2 snakeCase) ''FunctionMeta)
 

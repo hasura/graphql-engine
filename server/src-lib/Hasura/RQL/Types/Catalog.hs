@@ -37,7 +37,8 @@ data CatalogTableInfo
   , _ctiPrimaryKeyColumns :: ![PGCol]
   , _ctiViewInfo          :: !(Maybe ViewInfo)
   , _ctiDescription       :: !(Maybe PGDescription)
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Generic)
+instance NFData CatalogTableInfo
 $(deriveJSON (aesonDrop 4 snakeCase) ''CatalogTableInfo)
 
 data CatalogTable
@@ -47,7 +48,8 @@ data CatalogTable
   , _ctIsEnum          :: !Bool
   , _ctConfiguration   :: !TableConfig
   , _ctInfo            :: !(Maybe CatalogTableInfo)
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Generic)
+instance NFData CatalogTable
 $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogTable)
 
 data CatalogRelation
@@ -57,7 +59,8 @@ data CatalogRelation
   , _crRelType :: !RelType
   , _crDef     :: !Value
   , _crComment :: !(Maybe Text)
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Generic)
+instance NFData CatalogRelation
 $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogRelation)
 
 data CatalogPermission
@@ -67,14 +70,16 @@ data CatalogPermission
   , _cpPermType :: !PermType
   , _cpDef      :: !Value
   , _cpComment  :: !(Maybe Text)
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Generic)
+instance NFData CatalogPermission
 $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogPermission)
 
 data CatalogComputedField
   = CatalogComputedField
   { _cccComputedField :: !AddComputedField
   , _cccFunctionInfo  :: ![RawFunctionInfo] -- ^ multiple functions with same name
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Generic)
+instance NFData CatalogComputedField
 $(deriveJSON (aesonDrop 4 snakeCase) ''CatalogComputedField)
 
 data CatalogEventTrigger
@@ -82,7 +87,8 @@ data CatalogEventTrigger
   { _cetTable :: !QualifiedTable
   , _cetName  :: !TriggerName
   , _cetDef   :: !Value
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Generic)
+instance NFData CatalogEventTrigger
 $(deriveJSON (aesonDrop 4 snakeCase) ''CatalogEventTrigger)
 
 data CatalogFunction
@@ -91,7 +97,8 @@ data CatalogFunction
   , _cfIsSystemDefined :: !SystemDefined
   , _cfConfiguration   :: !FunctionConfig
   , _cfInfo            :: ![RawFunctionInfo] -- ^ multiple functions with same name
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Generic)
+instance NFData CatalogFunction
 $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogFunction)
 
 data CatalogMetadata
@@ -105,5 +112,6 @@ data CatalogMetadata
   , _cmForeignKeys          :: ![ForeignKey]
   , _cmAllowlistCollections :: ![CollectionDef]
   , _cmComputedFields       :: ![CatalogComputedField]
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Generic)
+instance NFData CatalogMetadata
 $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogMetadata)

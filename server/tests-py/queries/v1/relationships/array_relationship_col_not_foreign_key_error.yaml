@@ -6,6 +6,18 @@ response:
   error: >-
     in table "author": in relationship "articles": no foreign constraint exists on the given column
   code: constraint-violation
+  internal:
+  - type: array_relation
+    definition:
+      name: articles
+      table: author
+      using:
+        foreign_key_constraint_on:
+          column: published_on
+          table: article
+      comment:
+    reason: >-
+      in table "author": in relationship "articles": no foreign constraint exists on the given column
 query:
   type: create_array_relationship
   args:

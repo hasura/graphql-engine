@@ -211,7 +211,7 @@ refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef threadType msg = d
       & runCacheRWT rebuildableCache
       & peelRun runCtx pgCtx PG.ReadWrite
   case resE of
-    Left e  -> logError logger threadType $ TEQueryError e
+    Left e   -> logError logger threadType $ TEQueryError e
     Right () -> logInfo logger threadType $ object ["message" .= msg]
  where
   runCtx = RunCtx adminUserInfo httpManager sqlGenCtx

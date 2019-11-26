@@ -4,12 +4,13 @@ module Hasura.IncrementalSpec (spec) where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict         as M
-import qualified Data.HashSet                as S
+import qualified Data.HashMap.Strict as M
+import qualified Data.HashSet        as S
 
+import           Control.Arrow.Extended
 import           Test.Hspec
 
-import qualified Hasura.Incremental          as Inc
+import qualified Hasura.Incremental  as Inc
 
 spec :: Spec
 spec = do
@@ -19,8 +20,8 @@ spec = do
           add1 = modify' (+1)
 
           rule = proc (a, b) -> do
-            Inc.cache $ Inc.rule (\_ -> add1) -< a
-            Inc.cache $ Inc.rule (\_ -> add1 *> add1) -< b
+            Inc.cache $ arrM (\_ -> add1) -< a
+            Inc.cache $ arrM (\_ -> add1 *> add1) -< b
 
       let (result1, state1) = runState (Inc.build rule (False, False)) 0
       state1 `shouldBe` 3
@@ -33,8 +34,11 @@ spec = do
     it "preserves incrementalization when entries don’t change" $ do
       let rule :: MonadWriter (S.HashSet (String, Integer)) m
                => Inc.Rule m (M.HashMap String Integer) (M.HashMap String Integer)
-          rule = Inc.keyed . Inc.cache . Inc.rule $ \(k, v) ->
-            tell (S.singleton (k, v)) $> (v * 2)
+          rule = proc m ->
+            (| Inc.keyed (\k v -> do
+                 Inc.cache $ arrM (tell . S.singleton) -< (k, v)
+                 returnA -< v * 2)
+            |) m
 
       let (result1, log1) = runWriter . Inc.build rule $ M.fromList [("a", 1), ("b", 2)]
       Inc.result result1 `shouldBe` M.fromList [("a", 2), ("b", 4)]

@@ -45,7 +45,7 @@ import qualified PostgreSQL.Binary.Decoding    as PD
 import qualified Test.QuickCheck               as QC
 
 newtype NonEmptyText = NonEmptyText {unNonEmptyText :: T.Text}
-  deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg, DQuote, Generic)
+  deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg, DQuote, Generic, NFData)
 
 instance Arbitrary NonEmptyText where
   arbitrary = NonEmptyText . T.pack <$> QC.listOf1 (QC.elements alphaNumerics)
@@ -76,8 +76,8 @@ rootText :: NonEmptyText
 rootText = NonEmptyText "root"
 
 newtype RelName
-  = RelName {getRelTxt :: NonEmptyText}
-  deriving (Show, Eq, Hashable, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Lift, Generic, Arbitrary)
+  = RelName { getRelTxt :: NonEmptyText }
+  deriving (Show, Eq, Hashable, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Lift, Generic, Arbitrary, NFData)
 
 instance IsIden RelName where
   toIden rn = Iden $ relNameToTxt rn
@@ -99,7 +99,7 @@ data RelType
   = ObjRel
   | ArrRel
   deriving (Show, Eq, Generic)
-
+instance NFData RelType
 instance Hashable RelType
 
 instance ToJSON RelType where
@@ -129,7 +129,7 @@ $(deriveToJSON (aesonDrop 2 snakeCase) ''RelInfo)
 
 newtype FieldName
   = FieldName { getFieldNameTxt :: T.Text }
-  deriving (Show, Eq, Ord, Hashable, FromJSON, ToJSON, FromJSONKey, ToJSONKey, Lift, Data, Generic, Arbitrary)
+  deriving (Show, Eq, Ord, Hashable, FromJSON, ToJSON, FromJSONKey, ToJSONKey, Lift, Data, Generic, Arbitrary, NFData)
 
 instance IsIden FieldName where
   toIden (FieldName f) = Iden f
@@ -181,6 +181,7 @@ data ForeignKey
   , _fkConstraint    :: !ConstraintName
   , _fkColumnMapping :: !ColMapping
   } deriving (Show, Eq, Generic)
+instance NFData ForeignKey
 $(deriveJSON (aesonDrop 3 snakeCase) ''ForeignKey)
 
 instance Hashable ForeignKey
@@ -188,7 +189,7 @@ instance Hashable ForeignKey
 type CustomColumnNames = HM.HashMap PGCol G.Name
 
 newtype SystemDefined = SystemDefined { unSystemDefined :: Bool }
-  deriving (Show, Eq, FromJSON, ToJSON, Q.ToPrepArg)
+  deriving (Show, Eq, FromJSON, ToJSON, Q.ToPrepArg, NFData)
 
 isSystemDefined :: SystemDefined -> Bool
 isSystemDefined = unSystemDefined

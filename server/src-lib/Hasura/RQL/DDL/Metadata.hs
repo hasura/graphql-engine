@@ -28,8 +28,7 @@ import           Hasura.RQL.DDL.EventTrigger        (delEventTriggerFromCatalog,
                                                      subTableP2)
 import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.DDL.Permission.Internal (dropPermFromCatalog)
-import           Hasura.RQL.DDL.RemoteSchema        (addRemoteSchemaP2,
-                                                     removeRemoteSchemaFromCatalog)
+import           Hasura.RQL.DDL.RemoteSchema        (addRemoteSchemaP2, removeRemoteSchemaFromCatalog)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -405,7 +404,7 @@ runDropInconsistentMetadata
   => DropInconsistentMetadata -> m EncJSON
 runDropInconsistentMetadata _ = do
   sc <- askSchemaCache
-  let inconsSchObjs = map (_moId . _imoObject) $ scInconsistentObjs sc
+  let inconsSchObjs = L.nub . concatMap imObjectIds $ scInconsistentObjs sc
   -- Note: when building the schema cache, we try to put dependents after their dependencies in the
   -- list of inconsistent objects, so reverse the list to start with dependents first. This is not
   -- perfect — a completely accurate solution would require performing a topological sort — but it

@@ -115,7 +115,7 @@ isAdminSecretSet _        = boolToText True
 getSCFromRef :: (MonadIO m) => SchemaCacheRef -> m SchemaCache
 getSCFromRef scRef = lastBuiltSchemaCache . fst <$> liftIO (readIORef $ _scrCache scRef)
 
-logInconsObjs :: L.Logger L.Hasura -> [InconsistentMetadataObj] -> IO ()
+logInconsObjs :: L.Logger L.Hasura -> [InconsistentMetadata] -> IO ()
 logInconsObjs logger objs =
   unless (null objs) $ L.unLogger logger $ mkInconsMetadataLog objs
 

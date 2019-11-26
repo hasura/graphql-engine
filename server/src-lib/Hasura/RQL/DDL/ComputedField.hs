@@ -29,16 +29,17 @@ import           Data.Aeson.TH
 import           Language.Haskell.TH.Syntax         (Lift)
 
 import qualified Control.Monad.Validate             as MV
+import qualified Data.HashSet                       as S
 import qualified Data.Sequence                      as Seq
 import qualified Database.PG.Query                  as Q
 import qualified Language.GraphQL.Draft.Syntax      as G
-import qualified Data.HashSet as S
 
 data ComputedFieldDefinition
   = ComputedFieldDefinition
   { _cfdFunction      :: !QualifiedFunction
   , _cfdTableArgument :: !(Maybe FunctionArgName)
   } deriving (Show, Eq, Lift, Generic)
+instance NFData ComputedFieldDefinition
 $(deriveJSON (aesonDrop 4 snakeCase) ''ComputedFieldDefinition)
 
 data AddComputedField
@@ -47,7 +48,8 @@ data AddComputedField
   , _afcName       :: !ComputedFieldName
   , _afcDefinition :: !ComputedFieldDefinition
   , _afcComment    :: !(Maybe Text)
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
+instance NFData AddComputedField
 $(deriveJSON (aesonDrop 4 snakeCase) ''AddComputedField)
 
 runAddComputedField :: (MonadTx m, CacheRWM m) => AddComputedField -> m EncJSON

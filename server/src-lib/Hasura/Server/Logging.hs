@@ -91,7 +91,7 @@ instance ToEngineLog MetadataLog Hasura where
   toEngineLog ml =
     (mlLogLevel ml, ELTInternal ILTMetadata, toJSON ml)
 
-mkInconsMetadataLog :: [InconsistentMetadataObj] -> MetadataLog
+mkInconsMetadataLog :: [InconsistentMetadata] -> MetadataLog
 mkInconsMetadataLog objs =
   MetadataLog LevelWarn "Inconsistent Metadata!" $
     object [ "objects" .= objs]

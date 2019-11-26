@@ -1,3 +1,5 @@
+{-# LANGUAGE Arrows #-}
+
 module Hasura.RQL.Types.Error
        ( Code(..)
        , QErr(..)
@@ -25,6 +27,7 @@ module Hasura.RQL.Types.Error
        , modifyErr
        , modifyErrAndSet500
        , modifyQErr
+       , modifyErrA
 
          -- Attach context
        , withPathK
@@ -36,15 +39,16 @@ module Hasura.RQL.Types.Error
        , indexedMapM_
        ) where
 
+import           Control.Arrow.Extended
 import           Data.Aeson
 import           Data.Aeson.Internal
 import           Data.Aeson.Types
-import qualified Database.PG.Query   as Q
+import qualified Database.PG.Query      as Q
 import           Hasura.Prelude
-import           Text.Show           (Show (..))
+import           Text.Show              (Show (..))
 
-import qualified Data.Text           as T
-import qualified Network.HTTP.Types  as N
+import qualified Data.Text              as T
+import qualified Network.HTTP.Types     as N
 
 data Code
   = PermissionDenied
@@ -237,6 +241,9 @@ modifyErr :: (QErrM m)
           => (T.Text -> T.Text)
           -> m a -> m a
 modifyErr f = modifyQErr (liftTxtMod f)
+
+modifyErrA :: (ArrowError QErr arr) => arr (e, s) a -> arr (e, (Text -> Text, s)) a
+modifyErrA f = proc (e, (g, s)) -> (| mapErrorA (f -< (e, s)) |) (liftTxtMod g)
 
 liftTxtMod :: (T.Text -> T.Text) -> QErr -> QErr
 liftTxtMod f (QErr path st s c i) = QErr path st (f s) c i

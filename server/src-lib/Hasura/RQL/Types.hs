@@ -43,26 +43,26 @@ import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.SQL.Types
 
-import           Hasura.Db                      as R
-import           Hasura.RQL.Types.BoolExp       as R
-import           Hasura.RQL.Types.Column        as R
-import           Hasura.RQL.Types.Common        as R
-import           Hasura.RQL.Types.ComputedField as R
-import           Hasura.RQL.Types.DML           as R
-import           Hasura.RQL.Types.Error         as R
-import           Hasura.RQL.Types.EventTrigger  as R
-import           Hasura.RQL.Types.Function      as R
-import           Hasura.RQL.Types.Metadata      as R
-import           Hasura.RQL.Types.Permission    as R
-import           Hasura.RQL.Types.RemoteSchema  as R
-import           Hasura.RQL.Types.SchemaCache   as R
+import           Hasura.Db                          as R
+import           Hasura.RQL.Types.BoolExp           as R
+import           Hasura.RQL.Types.Column            as R
+import           Hasura.RQL.Types.Common            as R
+import           Hasura.RQL.Types.ComputedField     as R
+import           Hasura.RQL.Types.DML               as R
+import           Hasura.RQL.Types.Error             as R
+import           Hasura.RQL.Types.EventTrigger      as R
+import           Hasura.RQL.Types.Function          as R
+import           Hasura.RQL.Types.Metadata          as R
+import           Hasura.RQL.Types.Permission        as R
+import           Hasura.RQL.Types.RemoteSchema      as R
+import           Hasura.RQL.Types.SchemaCache       as R
 import           Hasura.RQL.Types.SchemaCache.Build as R
 
-import qualified Hasura.GraphQL.Context         as GC
+import qualified Hasura.GraphQL.Context             as GC
 
-import qualified Data.HashMap.Strict            as M
-import qualified Data.Text                      as T
-import qualified Network.HTTP.Client            as HTTP
+import qualified Data.HashMap.Strict                as M
+import qualified Data.Text                          as T
+import qualified Network.HTTP.Client                as HTTP
 
 data QCtx
   = QCtx
@@ -124,6 +124,8 @@ askEventTriggerInfo trn = do
 class (Monad m) => HasHttpManager m where
   askHttpManager :: m HTTP.Manager
 
+instance (HasHttpManager m) => HasHttpManager (ExceptT e m) where
+  askHttpManager = lift askHttpManager
 instance (HasHttpManager m) => HasHttpManager (ReaderT r m) where
   askHttpManager = lift askHttpManager
 instance (HasHttpManager m) => HasHttpManager (StateT s m) where

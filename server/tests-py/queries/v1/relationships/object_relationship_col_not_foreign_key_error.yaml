@@ -6,6 +6,16 @@ response:
     in table "article": in relationship "author": no foreign constraint exists on the given column
   path: $.args
   code: constraint-violation
+  internal:
+  - type: object_relation
+    definition:
+      name: author
+      table: article
+      using:
+        foreign_key_constraint_on: published_on
+      comment:
+    reason: >-
+      in table "article": in relationship "author": no foreign constraint exists on the given column
 query:
   type: create_object_relationship
   args:

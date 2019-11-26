@@ -105,7 +105,7 @@ dropView vn =
   Q.unitQ dropViewS () False
   where
     dropViewS = Q.fromBuilder $
-      "DROP VIEW " <> toSQL vn
+      "DROP VIEW IF EXISTS " <> toSQL vn
 
 procSetObj
   :: (QErrM m)
@@ -161,6 +161,7 @@ buildInsInfra tn (InsPermInfo _ vn be _ _) = do
   let trigFnQ = buildInsTrigFn vn tn $ toSQLBoolExp (S.QualVar "NEW") resolvedBoolExp
   Q.catchE defaultTxErrorHandler $ do
     -- Create the view
+    dropView vn
     Q.unitQ (buildView tn vn) () False
     -- Inject defaults on the view
     Q.discardQ (injectDefaults vn tn) () False
