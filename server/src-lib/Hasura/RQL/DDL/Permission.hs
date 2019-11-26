@@ -417,7 +417,6 @@ $(deriveJSON (aesonDrop 2 snakeCase) ''SetPermComment)
 
 setPermCommentP1 :: (UserInfoM m, QErrM m, CacheRM m) => SetPermComment -> m ()
 setPermCommentP1 (SetPermComment qt rn pt _) = do
-  adminOnly
   tabInfo <- askTabInfo qt
   action tabInfo
   where

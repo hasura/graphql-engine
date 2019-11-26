@@ -177,10 +177,9 @@ clearMetadata = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "DELETE FROM hdb_catalog.hdb_query_collection WHERE is_system_defined <> 'true'" () False
 
 runClearMetadata
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
+  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
   => ClearMetadata -> m EncJSON
 runClearMetadata _ = do
-  adminOnly
   liftTx clearMetadata
   Schema.buildSchemaCacheStrict
   return successMsg
@@ -212,11 +211,9 @@ instance FromJSON ReplaceMetadata where
         MVVersion2 -> fmap FMVersion2 . parseJSON
 
 applyQP1
-  :: (QErrM m, UserInfoM m)
+  :: (QErrM m)
   => ReplaceMetadata -> m ()
 applyQP1 (ReplaceMetadata _ tables mFunctionsMeta mSchemas mCollections mAllowlist) = do
-
-  adminOnly
 
   withPathK "tables" $ do
 
@@ -549,10 +546,9 @@ fetchMetadata = do
                           )
 
 runExportMetadata
-  :: (QErrM m, UserInfoM m, MonadTx m)
+  :: (QErrM m, MonadTx m)
   => ExportMetadata -> m EncJSON
-runExportMetadata _ = do
-  adminOnly
+runExportMetadata _ =
   encJFromJValue <$> liftTx fetchMetadata
 
 data ReloadMetadata
@@ -565,10 +561,9 @@ instance FromJSON ReloadMetadata where
 $(deriveToJSON defaultOptions ''ReloadMetadata)
 
 runReloadMetadata
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
+  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
   => ReloadMetadata -> m EncJSON
 runReloadMetadata _ = do
-  adminOnly
   Schema.buildSchemaCache
   return successMsg
 
@@ -582,10 +577,9 @@ instance FromJSON DumpInternalState where
 $(deriveToJSON defaultOptions ''DumpInternalState)
 
 runDumpInternalState
-  :: (QErrM m, UserInfoM m, CacheRM m)
+  :: (QErrM m, CacheRM m)
   => DumpInternalState -> m EncJSON
-runDumpInternalState _ = do
-  adminOnly
+runDumpInternalState _ =
   encJFromJValue <$> askSchemaCache
 
 
@@ -599,10 +593,9 @@ instance FromJSON GetInconsistentMetadata where
 $(deriveToJSON defaultOptions ''GetInconsistentMetadata)
 
 runGetInconsistentMetadata
-  :: (QErrM m, UserInfoM m, CacheRM m)
+  :: (QErrM m, CacheRM m)
   => GetInconsistentMetadata -> m EncJSON
 runGetInconsistentMetadata _ = do
-  adminOnly
   inconsObjs <- scInconsistentObjs <$> askSchemaCache
   return $ encJFromJValue $ object
                 [ "is_consistent" .= null inconsObjs
@@ -619,10 +612,9 @@ instance FromJSON DropInconsistentMetadata where
 $(deriveToJSON defaultOptions ''DropInconsistentMetadata)
 
 runDropInconsistentMetadata
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
+  :: (QErrM m, CacheRWM m, MonadTx m)
   => DropInconsistentMetadata -> m EncJSON
 runDropInconsistentMetadata _ = do
-  adminOnly
   sc <- askSchemaCache
   let inconsSchObjs = map _moId $ scInconsistentObjs sc
   mapM_ purgeMetadataObj inconsSchObjs

@@ -319,7 +319,6 @@ createPermP1
      )
   => WithTable (PermDef a) -> m (WithDeps (PermInfo a))
 createPermP1 (WithTable tn pd) = do
-  adminOnly
   tabInfo <- askTabInfo tn
   validateViewPerm pd tabInfo
   addPermP1 tabInfo pd
@@ -336,10 +335,9 @@ runCreatePerm defn@(WithTable tn pd) = do
   return successMsg
 
 dropPermP1
-  :: (QErrM m, CacheRM m, UserInfoM m, IsPerm a)
+  :: (QErrM m, CacheRM m, IsPerm a)
   => DropPerm a -> m (PermInfo a)
 dropPermP1 dp@(DropPerm tn rn) = do
-  adminOnly
   tabInfo <- askTabInfo tn
   askPermInfo tabInfo rn $ getPermAcc2 dp
 
