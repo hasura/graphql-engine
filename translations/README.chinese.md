@@ -42,7 +42,7 @@ Hasura可帮助您构建由Postgres支持的GraphQL应用程序，或使用Postg
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **目录**
 
-- [快速上手:](#快速开始：)
+- [快速上手](#快速开始)
     - [一键式部署到Heroku](#one-click-deployment-on-heroku)
     - [其他部署方法](#其他部署方法)
 - [建筑学](#建筑)
@@ -61,7 +61,7 @@ Hasura可帮助您构建由Postgres支持的GraphQL应用程序，或使用Postg
 
 <!-- markdown-toc end -->
 
-## 快速开始：
+## 快速开始
 
 ### One-click deployment on Heroku
 
@@ -125,7 +125,7 @@ GraphQL Engine提供了易于使用，可扩展和高性能的方法，用于向
 ## 演示版
 
 在中查看所有示例应用程序
-[community/examples](../community/examples) 目录.
+[community/sample-apps](../community/sample-apps) 目录.
 
 ### 实时应用
 
