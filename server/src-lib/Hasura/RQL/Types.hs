@@ -55,6 +55,7 @@ import           Hasura.RQL.Types.ComputedField as R
 import           Hasura.RQL.Types.DML           as R
 import           Hasura.RQL.Types.Error         as R
 import           Hasura.RQL.Types.EventTrigger  as R
+import           Hasura.RQL.Types.Function      as R
 import           Hasura.RQL.Types.Metadata      as R
 import           Hasura.RQL.Types.Permission    as R
 import           Hasura.RQL.Types.RemoteSchema  as R

@@ -174,11 +174,16 @@ library
                      -- HTTP compression
                      , zlib
 
+                     -- caching
+                     , psqueues >= 0.2
+
   exposed-modules:     Hasura.Prelude
                      , Hasura.Logging
                      , Hasura.EncJSON
                      , Hasura.Db
                      , Hasura.Cache
+                     , Hasura.Cache.Bounded
+                     , Hasura.Cache.Unbounded
 
                      , Hasura.Server.App
                      , Hasura.Server.Auth
@@ -205,6 +210,7 @@ library
                      , Hasura.RQL.Types.SchemaCache
                      , Hasura.RQL.Types.SchemaCacheTypes
                      , Hasura.RQL.Types.BoolExp
+                     , Hasura.RQL.Types.Function
                      , Hasura.RQL.Types.Catalog
                      , Hasura.RQL.Types.Column
                      , Hasura.RQL.Types.Common

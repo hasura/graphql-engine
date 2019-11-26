@@ -18,6 +18,8 @@ import           Data.Time.Clock.Units            (milliseconds)
 import           Network.Wai.Handler.Warp         (HostPreference)
 import           Options.Applicative
 
+import qualified Hasura.Cache                     as Cache
+import qualified Hasura.GraphQL.Execute           as E
 import qualified Hasura.GraphQL.Execute.LiveQuery as LQ
 import qualified Hasura.Logging                   as L
 
@@ -77,6 +79,7 @@ data RawServeOptions
   , rsoEnableAllowlist    :: !Bool
   , rsoEnabledLogTypes    :: !(Maybe [L.EngineLogType])
   , rsoLogLevel           :: !(Maybe L.LogLevel)
+  , rsoPlanCacheSize      :: !(Maybe Cache.CacheSize)
   } deriving (Show, Eq)
 
 data ServeOptions
@@ -99,6 +102,7 @@ data ServeOptions
   , soEnableAllowlist  :: !Bool
   , soEnabledLogTypes  :: !(Set.HashSet L.EngineLogType)
   , soLogLevel         :: !L.LogLevel
+  , soPlanCacheOptions :: !E.PlanCacheOptions
   } deriving (Show, Eq)
 
 data RawConnInfo =
@@ -199,6 +203,9 @@ instance FromEnv [L.EngineLogType] where
 
 instance FromEnv L.LogLevel where
   fromEnv = readLogLevel
+
+instance FromEnv Cache.CacheSize where
+  fromEnv = Cache.mkCacheSize
 
 parseStrAsBool :: String -> Either String Bool
 parseStrAsBool t
@@ -312,10 +319,11 @@ mkServeOptions rso = do
   enabledLogs <- Set.fromList . fromMaybe (Set.toList L.defaultEnabledLogTypes) <$>
                  withEnv (rsoEnabledLogTypes rso) (fst enabledLogsEnv)
   serverLogLevel <- fromMaybe L.LevelInfo <$> withEnv (rsoLogLevel rso) (fst logLevelEnv)
+  planCacheOptions <- E.mkPlanCacheOptions <$> withEnv (rsoPlanCacheSize rso) (fst planCacheSizeEnv)
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
-                        enabledLogs serverLogLevel
+                        enabledLogs serverLogLevel planCacheOptions
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -926,12 +934,22 @@ enableAllowlistEnv =
   , "Only accept allowed GraphQL queries"
   )
 
-fallbackRefetchDelayEnv :: (String, String)
-fallbackRefetchDelayEnv =
-  ( "HASURA_GRAPHQL_LIVE_QUERIES_FALLBACK_REFETCH_INTERVAL"
-  , "results will only be sent once in this interval (in milliseconds) for "
-  <> "live queries which cannot be multiplexed. Default: 1000 (1sec)"
+planCacheSizeEnv :: (String, String)
+planCacheSizeEnv =
+  ( "HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE"
+  , "The maximum number of query plans that can be cached, allowed values: 0-65535, " <>
+    "0 disables the cache. If this value is not set, there is no limit on the number " <>
+    "of plans that are cached"
   )
+
+parsePlanCacheSize :: Parser (Maybe Cache.CacheSize)
+parsePlanCacheSize =
+  optional $
+    option (eitherReader Cache.mkCacheSize)
+    ( long "query-plan-cache-size" <>
+      metavar "QUERY_PLAN_CACHE_SIZE" <>
+      help (snd planCacheSizeEnv)
+    )
 
 parseEnabledLogs :: Parser (Maybe [L.EngineLogType])
 parseEnabledLogs = optional $
@@ -976,26 +994,29 @@ serveOptsToLog :: ServeOptions -> StartupLog
 serveOptsToLog so =
   StartupLog L.LevelInfo "server_configuration" infoVal
   where
-    infoVal = J.object [ "port" J..= soPort so
-                       , "server_host" J..= show (soHost so)
-                       , "transaction_isolation" J..= show (soTxIso so)
-                       , "admin_secret_set" J..= isJust (soAdminSecret so)
-                       , "auth_hook" J..= (ahUrl <$> soAuthHook so)
-                       , "auth_hook_mode" J..= (show . ahType <$> soAuthHook so)
-                       , "jwt_secret" J..= (J.toJSON <$> soJwtSecret so)
-                       , "unauth_role" J..= soUnAuthRole so
-                       , "cors_config" J..= soCorsConfig so
-                       , "enable_console" J..= soEnableConsole so
-                       , "console_assets_dir" J..= soConsoleAssetsDir so
-                       , "enable_telemetry" J..= soEnableTelemetry so
-                       , "use_prepared_statements" J..= (Q.cpAllowPrepare . soConnParams) so
-                       , "stringify_numeric_types" J..= soStringifyNum so
-                       , "enabled_apis" J..= soEnabledAPIs so
-                       , "live_query_options" J..= soLiveQueryOpts so
-                       , "enable_allowlist" J..= soEnableAllowlist so
-                       , "enabled_log_types" J..= soEnabledLogTypes so
-                       , "log_level" J..= soLogLevel so
-                       ]
+    infoVal =
+      J.object
+      [ "port" J..= soPort so
+      , "server_host" J..= show (soHost so)
+      , "transaction_isolation" J..= show (soTxIso so)
+      , "admin_secret_set" J..= isJust (soAdminSecret so)
+      , "auth_hook" J..= (ahUrl <$> soAuthHook so)
+      , "auth_hook_mode" J..= (show . ahType <$> soAuthHook so)
+      , "jwt_secret" J..= (J.toJSON <$> soJwtSecret so)
+      , "unauth_role" J..= soUnAuthRole so
+      , "cors_config" J..= soCorsConfig so
+      , "enable_console" J..= soEnableConsole so
+      , "console_assets_dir" J..= soConsoleAssetsDir so
+      , "enable_telemetry" J..= soEnableTelemetry so
+      , "use_prepared_statements" J..= (Q.cpAllowPrepare . soConnParams) so
+      , "stringify_numeric_types" J..= soStringifyNum so
+      , "enabled_apis" J..= soEnabledAPIs so
+      , "live_query_options" J..= soLiveQueryOpts so
+      , "enable_allowlist" J..= soEnableAllowlist so
+      , "enabled_log_types" J..= soEnabledLogTypes so
+      , "log_level" J..= soLogLevel so
+      , "plan_cache_options" J..= soPlanCacheOptions so
+      ]
 
 mkGenericStrLog :: L.LogLevel -> T.Text -> String -> StartupLog
 mkGenericStrLog logLevel k msg =
@@ -1010,3 +1031,28 @@ inconsistentMetadataLog sc =
   StartupLog L.LevelWarn "inconsistent_metadata" infoVal
   where
     infoVal = J.object ["objects" J..= scInconsistentObjs sc]
+
+serveOpts :: Parser RawServeOptions
+serveOpts =
+  RawServeOptions
+  <$> parseServerPort
+  <*> parseServerHost
+  <*> parseConnParams
+  <*> parseTxIsolation
+  <*> (parseAdminSecret <|> parseAccessKey)
+  <*> parseWebHook
+  <*> parseJwtSecret
+  <*> parseUnAuthRole
+  <*> parseCorsConfig
+  <*> parseEnableConsole
+  <*> parseConsoleAssetsDir
+  <*> parseEnableTelemetry
+  <*> parseWsReadCookie
+  <*> parseStringifyNum
+  <*> parseEnabledAPIs
+  <*> parseMxRefetchInt
+  <*> parseMxBatchSize
+  <*> parseEnableAllowlist
+  <*> parseEnabledLogs
+  <*> parseLogLevel
+  <*> parsePlanCacheSize
