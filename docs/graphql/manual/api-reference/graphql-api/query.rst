@@ -578,7 +578,7 @@ Operation aggregate
    {op_name: TableAggOpOrderBy_}
 
 Available operations are ``sum``, ``avg``, ``max``, ``min``, ``stddev``, ``stddev_samp``,
-``stddev_pop``, ``variance``, ``var_samp`` and ``var_pop``.
+``stddev_pop``, ``variance``, ``var_samp``, ``var_pop``, ``array_agg``, ``bool_or`` and ``bool_and``.
 
 TableAggOpOrderBy
 &&&&&&&&&&&&&&&&&
