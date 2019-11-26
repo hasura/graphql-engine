@@ -1,19 +1,29 @@
-.. _hasura_migrate_status:
+.. _hasura_migrate_squash:
 
-Hasura CLI: hasura migrate status
+Hasura CLI: hasura migrate squash
 ---------------------------------
 
-Display current status of migrations on a database.
+(PREVIEW) Squash multiple migrations into a single one.
 
 Synopsis
 ~~~~~~~~
 
 
-Display current status of migrations on a database.
+(PREVIEW) Squash multiple migrations leading upto the latest one into a single migration file
 
 ::
 
-  hasura migrate status [flags]
+  hasura migrate squash [flags]
+
+Examples
+~~~~~~~~
+
+::
+
+    # NOTE: This command is in PREVIEW, correctness is not guaranteed and the usage may change.
+
+    # squash all migrations from version 123 to the latest one:
+    hasura migrate squash --from 123
 
 Options
 ~~~~~~~
@@ -21,8 +31,11 @@ Options
 ::
 
       --admin-secret string   admin secret for Hasura GraphQL engine
+      --delete-source         delete the source files after squashing without any confirmation
       --endpoint string       http(s) endpoint for Hasura GraphQL engine
-  -h, --help                  help for status
+      --from uint             start squashing form this version
+  -h, --help                  help for squash
+      --name string           name for the new squashed migration (default "squashed")
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
