@@ -13,6 +13,19 @@
         info jsonb not null unique
       );
 
+      create table if not exists hge_bench.query_max_rps(
+        id serial primary key,
+        cpu_key text references hge_bench.cpu_info (key),
+        query_name text references hge_bench.gql_query (name) not null,
+        docker_image text,
+        version text,
+        postgres_version text,
+        server_shasum text,
+        time timestamptz not null default now(),
+        max_rps integer not null,
+        wrk_parameters jsonb
+      );
+
       create table if not exists hge_bench.results(
         id serial primary key,
         cpu_key text references hge_bench.cpu_info (key),
@@ -22,19 +35,28 @@
         postgres_version text,
         server_shasum text,
         time timestamptz not null default now(),
-        latency jsonb,
-        requests_per_sec jsonb,
-        wrk_parameters jsonb
+        requests_per_sec integer not null,
+        summary jsonb,
+        latencies_uri text,
+        wrk2_parameters jsonb
         constraint should_have_tag CHECK (docker_image is not null or version is not null)
       );
 
-      create or replace view hge_bench.results_avg  as
+      create or replace view hge_bench.latest_results as
         select
-          avg( (requests_per_sec -> 'mean') :: real) as requests_per_sec,
-          avg ( (latency -> 'mean') :: real)/1000 as latency,
-          version, server_shasum, docker_image, query_name, cpu_key
+          distinct on (cpu_key, docker_image, version, query_name, requests_per_sec)
+          id, cpu_key, query_name, docker_image, version,
+          postgres_version, server_shasum, time, requests_per_sec, summary,
+          latencies_uri, wrk2_parameters
         from hge_bench.results
-        group by version, docker_image, query_name, cpu_key, server_shasum;
+        order by cpu_key, docker_image, version, query_name, requests_per_sec, time desc;
+
+      create table if not exists hge_bench.latency_histogram (
+        id integer references hge_bench.results(id),
+        percentile double precision not null,
+        latency double precision not null,
+        total_count integer not null
+      );
 
 - type: track_table
   args:
@@ -49,12 +71,22 @@
 - type: track_table
   args:
      schema: hge_bench
+     name: query_max_rps
+
+- type: track_table
+  args:
+     schema: hge_bench
      name: cpu_info
 
 - type: track_table
   args:
      schema: hge_bench
-     name: results_avg
+     name: latency_histogram
+
+- type: track_table
+  args:
+     schema: hge_bench
+     name: latest_results
 
 - type: create_object_relationship
   args:
@@ -73,3 +105,48 @@
     name: cpu
     using:
       foreign_key_constraint_on: cpu_key
+
+- type: create_object_relationship
+  args:
+    table:
+      schema: hge_bench
+      name: query_max_rps
+    name: query
+    using:
+      foreign_key_constraint_on: query_name
+
+- type: create_object_relationship
+  args:
+    table:
+      schema: hge_bench
+      name: query_max_rps
+    name: cpu
+    using:
+      foreign_key_constraint_on: cpu_key
+
+- type: create_array_relationship
+  args:
+    table:
+      schema: hge_bench
+      name: results
+    name: latency_histogram
+    using:
+      foreign_key_constraint_on:
+        table:
+          schema: hge_bench
+          name: latency_histogram
+        column: id
+
+- type: create_array_relationship
+  args:
+    table:
+      schema: hge_bench
+      name: latest_results
+    name: latency_histogram
+    using:
+      manual_configuration:
+        remote_table:
+          schema: hge_bench
+          name: latency_histogram
+        column_mapping:
+          id: id
