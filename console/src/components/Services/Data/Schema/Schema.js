@@ -600,66 +600,71 @@ class Schema extends Component {
     };
 
     const getNonTrackableFunctionsSection = () => {
-      let nonTrackableFuncList = null;
+      const noNonTrackableFuncs = isEmpty(nonTrackableFunctions);
 
-      if (nonTrackableFunctions.length > 0) {
-        const heading = getSectionHeading(
-          'Non trackable functions',
-          nonTrackableFunctionsTip
-        );
+      const getNonTrackableFuncList = () => {
+        const nonTrackableFunctionList = [];
 
-        nonTrackableFuncList = (
-          <div
-            className={styles.add_mar_top}
-            key={'non-trackable-custom-functions'}
-          >
-            <CollapsibleToggle title={heading} isOpen={false}>
-              <div className={`${styles.padd_left_remove} col-xs-12`}>
-                <div className={styles.add_mar_bottom}>
-                  {getTrackableFunctionsRequirementsMessage()}
-                </div>
-                {nonTrackableFunctions.map((p, i) => (
-                  <div
-                    className={styles.padd_bottom}
-                    key={`untracked-function-${i}`}
-                  >
-                    <div
-                      className={`${styles.display_inline} ${
-                        styles.add_mar_right
-                      }`}
-                    >
-                      <Button
-                        data-test={`view-function-${p.function_name}`}
-                        className={`${
-                          styles.display_inline
-                        } btn btn-xs btn-default`}
-                        onClick={e => {
-                          e.preventDefault();
+        nonTrackableFunctions.forEach((p, i) => {
+          nonTrackableFunctionList.push(
+            <div className={styles.padd_bottom} key={`untracked-function-${i}`}>
+              <div
+                className={`${styles.display_inline} ${styles.add_mar_right}`}
+              >
+                <Button
+                  data-test={`view-function-${p.function_name}`}
+                  className={`${styles.display_inline} btn btn-xs btn-default`}
+                  onClick={e => {
+                    e.preventDefault();
 
-                          dispatch(_push('/data/sql'));
+                    dispatch(_push('/data/sql'));
 
-                          dispatch({
-                            type: SET_SQL,
-                            data: p.function_definition,
-                          });
-                        }}
-                      >
-                        View
-                      </Button>
-                    </div>
-                    <div className={styles.display_inline}>
-                      {p.function_name}
-                    </div>
-                  </div>
-                ))}
+                    dispatch({
+                      type: SET_SQL,
+                      data: p.function_definition,
+                    });
+                  }}
+                >
+                  View
+                </Button>
               </div>
-              <div className={styles.clear_fix} />
-            </CollapsibleToggle>
-          </div>
-        );
-      }
+              <div className={styles.display_inline}>{p.function_name}</div>
+            </div>
+          );
+        });
 
-      return nonTrackableFuncList;
+        if (noNonTrackableFuncs) {
+          nonTrackableFunctionList.push(
+            <div key="no-nontracked-fns">
+              <div>There are no non trackable functions</div>
+            </div>
+          );
+        }
+
+        return nonTrackableFunctionList;
+      };
+
+      const heading = getSectionHeading(
+        'Non trackable functions',
+        nonTrackableFunctionsTip
+      );
+
+      return (
+        <div
+          className={styles.add_mar_top}
+          key={'non-trackable-custom-functions'}
+        >
+          <CollapsibleToggle title={heading} isOpen={false}>
+            <div className={`${styles.padd_left_remove} col-xs-12`}>
+              <div className={styles.add_mar_bottom}>
+                {getTrackableFunctionsRequirementsMessage()}
+              </div>
+              {getNonTrackableFuncList()}
+            </div>
+            <div className={styles.clear_fix} />
+          </CollapsibleToggle>
+        </div>
+      );
     };
 
     const getPermissionsSummaryLink = () => {
