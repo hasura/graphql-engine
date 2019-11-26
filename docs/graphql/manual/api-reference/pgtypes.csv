@@ -1,4 +1,4 @@
-Name,Aliases,Description,Hasura Type
+Name,Aliases,Description,Input type
 bigint,int8,signed eight-byte integer,String_
 bigserial,serial8,autoincrementing eight-byte integer,String_
 bit [ (n) ],,fixed-length bit string,Implicit_
