@@ -23,21 +23,20 @@ runApp :: HGEOptions Hasura -> AppM ()
 runApp (HGEOptionsG rci hgeCmd) =
   case hgeCmd of
     HCServe serveOptions -> do
-      initCtx <- initialiseCtx hgeCmd rci
-      runHGEServer serveOptions initCtx
-
+      (initCtx, initTime) <- initialiseCtx hgeCmd rci
+      runHGEServer serveOptions initCtx initTime
     HCExport -> do
-      initCtx <- initialiseCtx hgeCmd rci
+      (initCtx, _) <- initialiseCtx hgeCmd rci
       res <- runTx' initCtx fetchMetadata
       either printErrJExit printJSON res
 
     HCClean -> do
-      initCtx <- initialiseCtx hgeCmd rci
+      (initCtx, _) <- initialiseCtx hgeCmd rci
       res <- runTx' initCtx dropCatalog
       either printErrJExit (const cleanSuccess) res
 
     HCExecute -> do
-      InitCtx{..} <- initialiseCtx hgeCmd rci
+      (InitCtx{..}, _) <- initialiseCtx hgeCmd rci
       queryBs <- liftIO BL.getContents
       let sqlGenCtx = SQLGenCtx False
       res <- execQuery queryBs

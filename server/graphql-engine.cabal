@@ -178,6 +178,9 @@ library
                      -- HTTP compression
                      , zlib
 
+                     -- caching
+                     , psqueues >= 0.2
+
   exposed-modules:     Control.Monad.Stateless
 
                      , Hasura.Prelude
@@ -202,8 +205,10 @@ library
                      , Hasura.RQL.DDL.Metadata
                      , Hasura.EncJSON
 
-
   other-modules:       Hasura.Cache
+                     , Hasura.Cache
+                     , Hasura.Cache.Bounded
+                     , Hasura.Cache.Unbounded
 
                      , Hasura.Server.Auth.JWT
                      , Hasura.Server.Middleware

@@ -445,9 +445,10 @@ mkWaiApp
   -> InstanceId
   -> S.HashSet API
   -> EL.LiveQueriesOptions
+  -> E.PlanCacheOptions
   -> m HasuraApp
 mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg enableConsole consoleAssetsDir
-         enableTelemetry instanceId apis lqOpts = do
+         enableTelemetry instanceId apis lqOpts planCacheOptions = do
 
     let pgExecCtx = PGExecCtx pool isoLevel
         pgExecCtxSer = PGExecCtx pool Q.Serializable
@@ -462,7 +463,7 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg 
       return (scRef, snd <$> time)
 
     cacheLock <- liftIO $ newMVar ()
-    planCache <- liftIO E.initPlanCache
+    planCache <- liftIO $ E.initPlanCache planCacheOptions
 
     let corsPolicy = mkDefaultCorsPolicy corsCfg
         logger = L.mkLogger loggerCtx

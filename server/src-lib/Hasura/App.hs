@@ -8,7 +8,7 @@ import           Control.Monad.Stateless
 import           Control.Monad.STM           (atomically)
 import           Control.Monad.Trans.Control (MonadBaseControl (..))
 import           Data.Aeson                  ((.=))
-import           Data.Time.Clock             (getCurrentTime)
+import           Data.Time.Clock             (UTCTime, getCurrentTime)
 import           Options.Applicative
 import           System.Environment          (getEnvironment, lookupEnv)
 import           System.Exit                 (exitFailure)
@@ -63,7 +63,7 @@ printErrJExit = liftIO . (>> exitFailure) . printJSON
 parseHGECommand :: EnabledLogTypes impl => Parser (RawHGECommand impl)
 parseHGECommand =
   subparser
-    ( command "serve" (info (helper <*> (HCServe <$> serveOpts))
+    ( command "serve" (info (helper <*> (HCServe <$> serveOptionsParser))
           ( progDesc "Start the GraphQL Engine Server"
             <> footerDoc (Just serveCmdFooter)
           ))
@@ -76,28 +76,6 @@ parseHGECommand =
         <> command "version" (info (pure  HCVersion)
           (progDesc "Prints the version of GraphQL Engine"))
     )
-  where
-    serveOpts = RawServeOptions
-                <$> parseServerPort
-                <*> parseServerHost
-                <*> parseConnParams
-                <*> parseTxIsolation
-                <*> (parseAdminSecret <|> parseAccessKey)
-                <*> parseWebHook
-                <*> parseJwtSecret
-                <*> parseUnAuthRole
-                <*> parseCorsConfig
-                <*> parseEnableConsole
-                <*> parseConsoleAssetsDir
-                <*> parseEnableTelemetry
-                <*> parseWsReadCookie
-                <*> parseStringifyNum
-                <*> parseEnabledAPIs
-                <*> parseMxRefetchInt
-                <*> parseMxBatchSize
-                <*> parseEnableAllowlist
-                <*> parseEnabledLogs
-                <*> parseLogLevel
 
 parseArgs :: EnabledLogTypes impl => IO (HGEOptions impl)
 parseArgs = do
@@ -156,8 +134,9 @@ initialiseCtx
   :: (MonadIO m)
   => HGECommand Hasura
   -> RawConnInfo
-  -> m InitCtx
+  -> m (InitCtx, UTCTime)
 initialiseCtx hgeCmd rci = do
+  initTime <- liftIO Clock.getCurrentTime
   -- global http manager
   httpManager <- liftIO $ HTTP.newManager HTTP.tlsManagerSettings
   instanceId <- liftIO generateInstanceId
@@ -186,7 +165,7 @@ initialiseCtx hgeCmd rci = do
   eDbId <- liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) getDbId
   dbId <- either printErrJExit return eDbId
 
-  return $ InitCtx httpManager instanceId dbId loggers connInfo pool
+  return $ (InitCtx httpManager instanceId dbId loggers connInfo pool, initTime)
   where
     procConnInfo =
       either (printErrExit . connInfoErrModifier) return $ mkConnInfo rci
@@ -218,15 +197,15 @@ runHGEServer
      )
   => ServeOptions impl
   -> InitCtx
+  -> UTCTime
+  -- ^ start time
   -> m ()
-runHGEServer ServeOptions{..} InitCtx{..} = do
+runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   let sqlGenCtx = SQLGenCtx soStringifyNum
       Loggers loggerCtx logger _ = _icLoggers
 
-  initTime <- liftIO Clock.getCurrentTime
-
-  authModeRes <- runExceptT $
-    mkAuthMode soAdminSecret soAuthHook soJwtSecret soUnAuthRole _icHttpManager loggerCtx
+  authModeRes <- runExceptT $ mkAuthMode soAdminSecret soAuthHook soJwtSecret soUnAuthRole
+                             _icHttpManager loggerCtx
 
   authMode <- either (printErrExit . T.unpack) return authModeRes
 
@@ -245,6 +224,7 @@ runHGEServer ServeOptions{..} InitCtx{..} = do
                                                                _icInstanceId
                                                                soEnabledAPIs
                                                                soLiveQueryOpts
+                                                               soPlanCacheOptions
 
   -- log inconsistent schema objects
   inconsObjs <- scInconsistentObjs <$> liftIO (getSCFromRef cacheRef)
