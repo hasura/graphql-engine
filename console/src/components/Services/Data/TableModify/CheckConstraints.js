@@ -8,9 +8,9 @@ import {
   saveCheckConstraint,
   removeCheckConstraint,
 } from './ModifyActions';
-import { getCheckConstraintsState } from './utils';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
+import { getCheckConstraintBoolExp } from '../../../Common/utils/sqlUtils';
 
 const CheckConstraints = ({
   constraints,
@@ -18,7 +18,13 @@ const CheckConstraints = ({
   checkConstraintsModify,
 }) => {
   const init = () => {
-    const checkConstraintsState = getCheckConstraintsState(constraints);
+    const checkConstraintsState = constraints.map(c => ({
+      name: getCheckConstraintName(c),
+      check: getCheckConstraintBoolExp(c.check),
+    }));
+
+    checkConstraintsState.push({ name: '', check: '' });
+
     dispatch(setCheckConstraints(checkConstraintsState));
   };
   React.useEffect(init, [constraints]);

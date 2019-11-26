@@ -1,5 +1,4 @@
 import { getDataTypeInfo } from '../Common/utils';
-import { getCheckConstraintBoolExp } from '../../../Common/utils/sqlUtils';
 
 const convertArrayToJson = (arr, keyIndex = 0) => {
   const converted = {};
@@ -81,16 +80,6 @@ export const sanitiseRootFields = rootFields => {
     santisedRootFields[rootFieldType] = rootField;
   });
   return santisedRootFields;
-};
-
-export const getCheckConstraintsState = constraints => {
-  return [
-    ...constraints.map(c => ({
-      name: c.constraint_name,
-      check: getCheckConstraintBoolExp(c.check),
-    })),
-    { name: '', check: '' },
-  ];
 };
 
 export { convertArrayToJson, getValidAlterOptions, fetchColumnCastsQuery };
