@@ -39,3 +39,13 @@ export const getSetCustomRootFieldsQuery = (
     },
   };
 };
+
+export const getRunSqlQuery = (sql, shouldCascade) => {
+  return {
+    type: 'run_sql',
+    args: {
+      sql,
+      cascade: !!shouldCascade,
+    },
+  };
+};
