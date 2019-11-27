@@ -20,14 +20,15 @@ import qualified Data.IORef                                  as IORef
 import qualified Data.Text                                   as T
 import qualified Data.Text.Encoding                          as TE
 import qualified Data.Time.Clock                             as TC
+import qualified Database.PG.Query                           as Q
 import qualified Language.GraphQL.Draft.Syntax               as G
-import qualified ListT
 import qualified Network.HTTP.Client                         as H
 import qualified Network.HTTP.Types                          as H
 import qualified Network.WebSockets                          as WS
 import qualified StmContainers.Map                           as STMMap
 
 import           Control.Concurrent                          (threadDelay)
+import qualified ListT
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging
@@ -144,7 +145,8 @@ data WSLog
   { _wslLogLevel :: !L.LogLevel
   , _wslInfo     :: !WSLogInfo
   }
-instance L.ToEngineLog WSLog where
+
+instance L.ToEngineLog WSLog L.Hasura where
   toEngineLog (WSLog logLevel wsLog) =
     (logLevel, L.ELTWebsocketLog, J.toJSON wsLog)
 
@@ -158,7 +160,7 @@ mkWsErrorLog uv ci ev =
 
 data WSServerEnv
   = WSServerEnv
-  { _wseLogger          :: !L.Logger
+  { _wseLogger          :: !(L.Logger L.Hasura)
   , _wseRunTx           :: !PGExecCtx
   , _wseLiveQMap        :: !LQ.LiveQueriesState
   , _wseGCtxMap         :: !(IORef.IORef (SchemaCache, SchemaCacheVer))
@@ -170,7 +172,7 @@ data WSServerEnv
   , _wseEnableAllowlist :: !Bool
   }
 
-onConn :: L.Logger -> CorsPolicy -> WS.OnConnH WSConnData
+onConn :: L.Logger L.Hasura -> CorsPolicy -> WS.OnConnH WSConnData
 onConn (L.Logger logger) corsPolicy wsId requestHead = do
   res <- runExceptT $ do
     errType <- checkPath
@@ -295,10 +297,10 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         execQueryOrMut reqId query genSql $ runLazyTx' pgExecCtx opTx
       E.ExOpMutation opTx ->
         execQueryOrMut reqId query Nothing $
-          runLazyTx pgExecCtx $ withUserInfo userInfo opTx
+          runLazyTx pgExecCtx Q.ReadWrite $ withUserInfo userInfo opTx
       E.ExOpSubs lqOp -> do
         -- log the graphql query
-        liftIO $ logGraphqlQuery logger $ QueryLog query Nothing reqId
+        L.unLogger logger $ QueryLog query Nothing reqId
         lqId <- liftIO $ LQ.addLiveQuery lqMap lqOp liveQOnChange
         liftIO $ STM.atomically $
           STMMap.insert (lqId, _grOperationName q) opId opMap
@@ -307,7 +309,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     execQueryOrMut reqId query genSql action = do
       logOpEv ODStarted (Just reqId)
       -- log the generated SQL and the graphql query
-      liftIO $ logGraphqlQuery logger $ QueryLog query genSql reqId
+      L.unLogger logger $ QueryLog query genSql reqId
       resp <- liftIO $ runExceptT action
       either (postExecErr reqId) sendSuccResp resp
       sendCompleted (Just reqId)
@@ -435,7 +437,7 @@ onStop serverEnv wsConn (StopMsg opId) = do
 
 logWSEvent
   :: (MonadIO m)
-  => L.Logger -> WSConn -> WSEvent -> m ()
+  => L.Logger L.Hasura -> WSConn -> WSEvent -> m ()
 logWSEvent (L.Logger logger) wsConn wsEv = do
   userInfoME <- liftIO $ STM.readTVarIO userInfoR
   let (userVarsM, jwtExpM) = case userInfoME of
@@ -462,7 +464,7 @@ logWSEvent (L.Logger logger) wsConn wsEv = do
 
 onConnInit
   :: (MonadIO m)
-  => L.Logger -> H.Manager -> WSConn -> AuthMode -> Maybe ConnParams -> m ()
+  => L.Logger L.Hasura -> H.Manager -> WSConn -> AuthMode -> Maybe ConnParams -> m ()
 onConnInit logger manager wsConn authMode connParamsM = do
   headers <- mkHeaders <$> liftIO (STM.readTVarIO (_wscUser $ WS.getData wsConn))
   res <- runExceptT $ getUserInfoWithExpTime logger manager headers authMode
@@ -494,7 +496,7 @@ onConnInit logger manager wsConn authMode connParamsM = do
       _                  -> []
 
 onClose
-  :: L.Logger
+  :: L.Logger L.Hasura
   -> LQ.LiveQueriesState
   -> WSConn
   -> IO ()
@@ -507,7 +509,7 @@ onClose logger lqMap wsConn = do
     opMap = _wscOpMap $ WS.getData wsConn
 
 createWSServerEnv
-  :: L.Logger
+  :: L.Logger L.Hasura
   -> PGExecCtx
   -> LQ.LiveQueriesState
   -> IORef.IORef (SchemaCache, SchemaCacheVer)

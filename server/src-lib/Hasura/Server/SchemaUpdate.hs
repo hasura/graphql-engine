@@ -50,9 +50,9 @@ instance ToJSON SchemaSyncThreadLog where
            , "info" .= info
            ]
 
-instance ToEngineLog SchemaSyncThreadLog where
+instance ToEngineLog SchemaSyncThreadLog Hasura where
   toEngineLog threadLog =
-    (suelLogLevel threadLog, ELTSchemaSyncThread, toJSON threadLog)
+    (suelLogLevel threadLog, ELTInternal ILTSchemaSyncThread, toJSON threadLog)
 
 data EventPayload
   = EventPayload
@@ -72,25 +72,27 @@ $(deriveToJSON
 
 -- | An IO action that enables metadata syncing
 startSchemaSync
-  :: SQLGenCtx
+  :: (MonadIO m)
+  => SQLGenCtx
   -> PG.PGPool
-  -> Logger
+  -> Logger Hasura
   -> HTTP.Manager
   -> SchemaCacheRef
   -> InstanceId
-  -> Maybe UTC.UTCTime -> IO ()
+  -> Maybe UTC.UTCTime
+  -> m ()
 startSchemaSync sqlGenCtx pool logger httpMgr cacheRef instanceId cacheInitTime = do
   -- only the latest event is recorded here
   -- we don't want to store and process all the events, only the latest event
-  updateEventRef <- STM.newTVarIO Nothing
+  updateEventRef <- liftIO $ STM.newTVarIO Nothing
 
   -- Start listener thread
-  lTId <- C.forkIO $ listener sqlGenCtx pool
+  lTId <- liftIO $ C.forkIO $ listener sqlGenCtx pool
     logger httpMgr updateEventRef cacheRef instanceId cacheInitTime
   logThreadStarted TTListener lTId
 
   -- Start processor thread
-  pTId <- C.forkIO $ processor sqlGenCtx pool
+  pTId <- liftIO $ C.forkIO $ processor sqlGenCtx pool
     logger httpMgr updateEventRef cacheRef instanceId
   logThreadStarted TTProcessor pTId
 
@@ -108,7 +110,7 @@ startSchemaSync sqlGenCtx pool logger httpMgr cacheRef instanceId cacheInitTime 
 listener
   :: SQLGenCtx
   -> PG.PGPool
-  -> Logger
+  -> Logger Hasura
   -> HTTP.Manager
   -> STM.TVar (Maybe EventPayload)
   -> SchemaCacheRef
@@ -163,7 +165,7 @@ listener sqlGenCtx pool logger httpMgr updateEventRef
 processor
   :: SQLGenCtx
   -> PG.PGPool
-  -> Logger
+  -> Logger Hasura
   -> HTTP.Manager
   -> STM.TVar (Maybe EventPayload)
   -> SchemaCacheRef
@@ -195,7 +197,7 @@ processor sqlGenCtx pool logger httpMgr updateEventRef
 refreshSchemaCache
   :: SQLGenCtx
   -> PG.PGPool
-  -> Logger
+  -> Logger Hasura
   -> HTTP.Manager
   -> SchemaCacheRef
   -> ThreadType
@@ -203,7 +205,7 @@ refreshSchemaCache
 refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef threadType msg = do
   -- Reload schema cache from catalog
   resE <- liftIO $ runExceptT $ withSCUpdate cacheRef logger $
-    peelRun emptySchemaCache runCtx pgCtx buildSchemaCacheWithoutSetup
+    peelRun emptySchemaCache runCtx pgCtx PG.ReadWrite buildSchemaCacheWithoutSetup
   case resE of
     Left e  -> logError logger threadType $ TEQueryError e
     Right _ -> logInfo logger threadType $ object ["message" .= msg]
@@ -211,11 +213,11 @@ refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef threadType msg = d
   runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
   pgCtx = PGExecCtx pool PG.Serializable
 
-logInfo :: Logger -> ThreadType -> Value -> IO ()
+logInfo :: Logger Hasura -> ThreadType -> Value -> IO ()
 logInfo logger threadType val = unLogger logger $
   SchemaSyncThreadLog LevelInfo threadType val
 
-logError :: ToJSON a => Logger -> ThreadType -> a -> IO ()
+logError :: ToJSON a => Logger Hasura -> ThreadType -> a -> IO ()
 logError logger threadType err =
   unLogger logger $ SchemaSyncThreadLog LevelError threadType $
     object ["error" .= toJSON err]

@@ -7,4 +7,6 @@ args:
       DROP FUNCTION full_name(author);
       DROP TABLE article;
       DROP TABLE author;
+      DROP FUNCTION locations_distance(json, locations);
+      DROP TABLE locations;
     cascade: true

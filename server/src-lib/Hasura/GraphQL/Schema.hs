@@ -110,10 +110,10 @@ compAggOps = ["max", "min"]
 isAggFld :: G.Name -> Bool
 isAggFld = flip elem (numAggOps <> compAggOps)
 
-mkFuncArgSeq :: Seq.Seq FunctionArg -> Seq.Seq FuncArgItem
-mkFuncArgSeq inputArgs =
-    Seq.fromList $ procFuncArgs inputArgs $
-    \fa t -> FuncArgItem (G.Name t) (faName fa) (faHasDefault fa)
+mkComputedFieldFunctionArgSeq :: Seq.Seq FunctionArg -> ComputedFieldFunctionArgSeq
+mkComputedFieldFunctionArgSeq inputArgs =
+    Seq.fromList $ procFuncArgs inputArgs faName $
+    \fa t -> FunctionArgItem (G.Name t) (faName fa) (faHasDefault fa)
 
 mkGCtxRole'
   :: QualifiedTable
@@ -152,7 +152,7 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
 
     allTypes = relInsInpObjTys <> onConflictTypes <> jsonOpTys
                <> queryTypes <> aggQueryTypes <> mutationTypes
-               <> funcInpArgTys <> referencedEnumTypes <> computedColFuncArgsInps
+               <> funcInpArgTys <> referencedEnumTypes <> computedFieldFuncArgsInps
 
     queryTypes = catMaybes
       [ TIInpObj <$> boolExpInpObjM
@@ -176,7 +176,7 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
                [ insInpObjFldsM, updSetInpObjFldsM
                , boolExpInpObjFldsM , selObjFldsM
                ]
-    scalars = selByPkScalarSet <> funcArgScalarSet
+    scalars = selByPkScalarSet <> funcArgScalarSet <> computedFieldFuncArgScalars
 
     -- helper
     mkColFldMap ty cols = Map.fromList $ flip map cols $
@@ -213,9 +213,9 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
 
     -- funcargs input type
     funcArgInpObjs = flip mapMaybe funcs $ \func ->
-      mkFuncArgsInp (fiName func) (fiInputArgs func)
+      mkFuncArgsInp (fiName func) (getInputArgs func)
     -- funcArgCtx = Map.unions funcArgCtxs
-    funcArgScalarSet = funcs ^.. folded.to fiInputArgs.folded.to (_qptName.faType)
+    funcArgScalarSet = funcs ^.. folded.to getInputArgs.folded.to (_qptName.faType)
 
     -- helper
     mkFldMap ty = Map.fromList . concatMap (mkFld ty)
@@ -305,15 +305,17 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
            in TIEnum $ mkHsraEnumTyInfo Nothing typeName (EnumValuesReference enumReference)
 
 
-    -- computed fields function args input objects
-    mkComputedFieldFuncArgsInp computedColInfo =
-      let ComputedFieldFunction qf inputArgs tableArg _ =
-            _cfFunction computedColInfo
-          withoutTableArg = functionArgsWithoutTableArg tableArg inputArgs
-      in mkFuncArgsInp qf withoutTableArg
+    -- computed fields' function args input objects and scalar types
+    mkComputedFieldRequiredTypes computedFieldInfo =
+      let ComputedFieldFunction qf inputArgs _ _ = _cfFunction computedFieldInfo
+          scalarArgs = map (_qptName . faType) $ toList inputArgs
+      in (, scalarArgs) <$> mkFuncArgsInp qf inputArgs
 
-    computedColFuncArgsInps = map TIInpObj $ catMaybes $
-      maybe [] (map mkComputedFieldFuncArgsInp . getComputedFields) selFldsM
+    computedFieldReqTypes = catMaybes $
+      maybe [] (map mkComputedFieldRequiredTypes . getComputedFields) selFldsM
+
+    computedFieldFuncArgsInps = map (TIInpObj . fst) computedFieldReqTypes
+    computedFieldFuncArgScalars = Set.fromList $ concatMap snd computedFieldReqTypes
 
 getRootFldsRole'
   :: QualifiedTable
@@ -331,8 +333,8 @@ getRootFldsRole'
 getRootFldsRole' tn primCols constraints fields funcs insM
                  selM updM delM viM tableConfig =
   RootFields
-    { rootQueryFields = makeFieldMap
-        $  funcQueries
+    { rootQueryFields = makeFieldMap $
+        funcQueries
         <> funcAggQueries
         <> catMaybes
           [ getSelDet <$> selM
@@ -346,10 +348,10 @@ getRootFldsRole' tn primCols constraints fields funcs insM
         ]
     }
   where
+    makeFieldMap = mapFromL (_fiName . snd)
     customRootFields = _tcCustomRootFields tableConfig
     colGNameMap = mkPGColGNameMap $ getValidCols fields
 
-    makeFieldMap = mapFromL (_fiName . snd)
     allCols = getCols fields
     funcQueries = maybe [] getFuncQueryFlds selM
     funcAggQueries = maybe [] getFuncAggQueryFlds selM
@@ -412,11 +414,20 @@ getRootFldsRole' tn primCols constraints fields funcs insM
 
     funcFldHelper f g pFltr pLimit hdrs =
       flip map funcs $ \fi ->
-      ( f . FuncQOpCtx tn hdrs colGNameMap pFltr pLimit (fiName fi) $ mkFuncArgItemSeq fi
+      ( f $ FuncQOpCtx tn hdrs colGNameMap pFltr pLimit
+              (fiName fi) (mkFuncArgItemSeq fi)
       , g fi $ fiDescription fi
       )
 
-    mkFuncArgItemSeq = mkFuncArgSeq . fiInputArgs
+    mkFuncArgItemSeq functionInfo =
+      let inputArgs = fiInputArgs functionInfo
+      in Seq.fromList $ procFuncArgs inputArgs nameFn resultFn
+      where
+        nameFn = \case
+          IAUserProvided fa       -> faName fa
+          IASessionVariables name -> Just name
+        resultFn arg gName = flip fmap arg $
+          \fa -> FunctionArgItem (G.Name gName) (faName fa) (faHasDefault fa)
 
 
 getSelPermission :: TableInfo PGColumnInfo -> RoleName -> Maybe SelPermInfo
@@ -449,10 +460,9 @@ getSelPerm tableCache fields role selPermInfo = do
                              , _rfiIsNullable = isRelNullable fields relInfo
                              }
 
-  computedColFlds <- fmap catMaybes $ forM computedFields $ \info -> do
+  computedSelFields <- fmap catMaybes $ forM computedFields $ \info -> do
     let ComputedFieldInfo name function returnTy _ = info
-        ComputedFieldFunction _ inputArgs tableArg _ = function
-        inputArgSeq = mkFuncArgSeq $ functionArgsWithoutTableArg tableArg inputArgs
+        inputArgSeq = mkComputedFieldFunctionArgSeq $ _cffInputArgs function
     fmap (SFComputedField . ComputedField name function inputArgSeq) <$>
       case returnTy of
         CFRScalar scalarTy  -> pure $ Just $ CFTScalar scalarTy
@@ -470,16 +480,19 @@ getSelPerm tableCache fields role selPermInfo = do
                         , _cftPermLimit = spiLimit selPerm
                         }
 
-  return (spiAllowAgg selPermInfo, cols <> relFlds <> computedColFlds)
+  return (spiAllowAgg selPermInfo, cols <> relFlds <> computedSelFields)
   where
     validRels = getValidRels fields
     validCols = getValidCols fields
     cols = map SFPGColumn $ getColInfos (toList allowedCols) validCols
     computedFields = flip filter (getComputedFieldInfos fields) $
-                      \info -> _cfiName info `Set.member` allowedComputedFields
+                      \info -> case _cfiReturnType info of
+                        CFRScalar _     ->
+                          _cfiName info `Set.member` allowedScalarComputedFields
+                        CFRSetofTable _ -> True
 
     allowedCols = spiCols selPermInfo
-    allowedComputedFields = spiComputedFields selPermInfo
+    allowedScalarComputedFields = spiScalarComputedFields selPermInfo
 
 mkInsCtx
   :: MonadError QErr m
@@ -560,10 +573,9 @@ mkAdminSelFlds fields tableCache = do
                    , _rfiIsNullable = isRelNullable fields relInfo
                    }
 
-  computedColFlds <- forM computedCols $ \info -> do
+  computedSelFields <- forM computedFields $ \info -> do
     let ComputedFieldInfo name function returnTy _ = info
-        ComputedFieldFunction _ inputArgs tableArg _ = function
-        inputArgSeq = mkFuncArgSeq $ functionArgsWithoutTableArg tableArg inputArgs
+        inputArgSeq = mkComputedFieldFunctionArgSeq $ _cffInputArgs function
     (SFComputedField . ComputedField name function inputArgSeq) <$>
       case returnTy of
         CFRScalar scalarTy  -> pure $ CFTScalar scalarTy
@@ -579,12 +591,12 @@ mkAdminSelFlds fields tableCache = do
                         , _cftPermLimit = Nothing
                         }
 
-  return $ colSelFlds <> relSelFlds <> computedColFlds
+  return $ colSelFlds <> relSelFlds <> computedSelFields
   where
     cols = getValidCols fields
     colSelFlds = map SFPGColumn cols
     validRels = getValidRels fields
-    computedCols = getComputedFieldInfos fields
+    computedFields = getComputedFieldInfos fields
 
 mkGCtxRole
   :: (MonadError QErr m)
@@ -685,27 +697,44 @@ noFilter :: AnnBoolExpPartialSQL
 noFilter = annBoolExpTrue
 
 mkGCtxMap
-  :: (MonadError QErr m)
+  :: forall m. (MonadError QErr m)
   => TableCache PGColumnInfo -> FunctionCache -> m GCtxMap
 mkGCtxMap tableCache functionCache = do
   typesMapL <- mapM (mkGCtxMapTable tableCache functionCache) $
                filter tableFltr $ Map.elems tableCache
-  -- since root field names are customisable, we need to check for
-  -- duplicate root field names across all tables
-  duplicateRootFlds <- (duplicates . concat) <$> forM typesMapL getRootFlds
-  unless (null duplicateRootFlds) $
-    throw400 Unexpected $ "following root fields are duplicated: "
-    <> showNames duplicateRootFlds
-  let typesMap = foldr (Map.unionWith mappend) Map.empty typesMapL
+  typesMap <- combineTypes typesMapL
   return $ flip Map.map typesMap $ \(ty, flds, insCtxMap) ->
     mkGCtx ty flds insCtxMap
   where
     tableFltr ti = not (isSystemDefined $ _tiSystemDefined ti) && isValidObjectName (_tiName ti)
 
-    getRootFlds roleMap = do
-      (_, RootFields query mutation, _) <- onNothing
-        (Map.lookup adminRole roleMap) $ throw500 "admin schema not found"
-      return $ Map.keys query <> Map.keys mutation
+    combineTypes
+      :: [Map.HashMap RoleName (TyAgg, RootFields, InsCtxMap)]
+      -> m (Map.HashMap RoleName (TyAgg, RootFields, InsCtxMap))
+    combineTypes maps = do
+      let listMap = foldr (Map.unionWith (++) . Map.map pure) Map.empty maps
+      flip Map.traverseWithKey listMap $ \_ typeList -> do
+        let tyAgg = mconcat $ map (^. _1) typeList
+            insCtx = mconcat $ map (^. _3) typeList
+        rootFields <- combineRootFields $ map (^. _2) typeList
+        pure (tyAgg, rootFields, insCtx)
+
+    combineRootFields :: [RootFields] -> m RootFields
+    combineRootFields rootFields = do
+      let duplicateQueryFields = duplicates $
+            concatMap (Map.keys . rootQueryFields) rootFields
+          duplicateMutationFields = duplicates $
+            concatMap (Map.keys . rootMutationFields) rootFields
+
+      when (not $ null duplicateQueryFields) $
+        throw400 Unexpected $ "following query root fields are duplicated: "
+        <> showNames duplicateQueryFields
+
+      when (not $ null duplicateMutationFields) $
+        throw400 Unexpected $ "following mutation root fields are duplicated: "
+        <> showNames duplicateMutationFields
+
+      pure $ mconcat rootFields
 
 -- | build GraphQL schema from postgres tables and functions
 buildGCtxMapPG
@@ -772,7 +801,7 @@ data RootFields
 
 instance Semigroup RootFields where
   RootFields a1 b1 <> RootFields a2 b2
-    = RootFields (Map.union a1 a2) (Map.union b1 b2)
+    = RootFields (a1 <> a2) (b1 <> b2)
 
 instance Monoid RootFields where
   mempty = RootFields Map.empty Map.empty

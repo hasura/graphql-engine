@@ -39,10 +39,9 @@ addCollectionP2 (CollectionDef queryList) =
     duplicateNames = duplicates $ map _lqName queryList
 
 runCreateCollection
-  :: (QErrM m, UserInfoM m, MonadTx m, HasSystemDefined m)
+  :: (QErrM m, MonadTx m, HasSystemDefined m)
   => CreateCollection -> m EncJSON
 runCreateCollection cc = do
-  adminOnly
   collDetM <- getCollectionDefM collName
   withPathK "name" $
     onJust collDetM $ const $ throw400 AlreadyExists $
@@ -55,10 +54,9 @@ runCreateCollection cc = do
     CreateCollection collName def _ = cc
 
 runAddQueryToCollection
-  :: (QErrM m, CacheRWM m, UserInfoM m, MonadTx m)
+  :: (QErrM m, CacheRWM m, MonadTx m)
   => AddQueryToCollection -> m EncJSON
 runAddQueryToCollection (AddQueryToCollection collName queryName query) = do
-  adminOnly
   CollectionDef qList <- getCollectionDef collName
   let queryExists = flip any qList $ \q -> _lqName q == queryName
 
@@ -73,10 +71,9 @@ runAddQueryToCollection (AddQueryToCollection collName queryName query) = do
     listQ = ListedQuery queryName query
 
 runDropCollection
-  :: (QErrM m, UserInfoM m, MonadTx m, CacheRWM m)
+  :: (QErrM m, MonadTx m, CacheRWM m)
   => DropCollection -> m EncJSON
 runDropCollection (DropCollection collName cascade) = do
-  adminOnly
   withPathK "collection" $ do
     -- check for query collection
     void $ getCollectionDef collName
@@ -93,10 +90,9 @@ runDropCollection (DropCollection collName cascade) = do
   return successMsg
 
 runDropQueryFromCollection
-  :: (QErrM m, CacheRWM m, UserInfoM m, MonadTx m)
+  :: (QErrM m, CacheRWM m, MonadTx m)
   => DropQueryFromCollection -> m EncJSON
 runDropQueryFromCollection (DropQueryFromCollection collName queryName) = do
-  adminOnly
   CollectionDef qList <- getCollectionDef collName
   let queryExists = flip any qList $ \q -> _lqName q == queryName
   when (not queryExists) $ throw400 NotFound $ "query with name "
@@ -108,20 +104,18 @@ runDropQueryFromCollection (DropQueryFromCollection collName queryName) = do
   return successMsg
 
 runAddCollectionToAllowlist
-  :: (QErrM m, UserInfoM m, MonadTx m, CacheRWM m)
+  :: (QErrM m, MonadTx m, CacheRWM m)
   => CollectionReq -> m EncJSON
 runAddCollectionToAllowlist (CollectionReq collName) = do
-  adminOnly
   void $ withPathK "collection" $ getCollectionDef collName
   liftTx $ addCollectionToAllowlistCatalog collName
   refreshAllowlist
   return successMsg
 
 runDropCollectionFromAllowlist
-  :: (QErrM m, UserInfoM m, MonadTx m, CacheRWM m)
+  :: (QErrM m, MonadTx m, CacheRWM m)
   => CollectionReq -> m EncJSON
 runDropCollectionFromAllowlist (CollectionReq collName) = do
-  adminOnly
   void $ withPathK "collection" $ getCollectionDef collName
   liftTx $ delCollectionFromAllowlistCatalog collName
   refreshAllowlist
