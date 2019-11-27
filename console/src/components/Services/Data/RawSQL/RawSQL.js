@@ -45,7 +45,7 @@ const RawSQL = ({
   // set up sqlRef to use in unmount
   const sqlRef = useRef(sql);
 
-  // set SQL from localStorage on mount and write back to locallStorage on unmount
+  // set SQL from localStorage on mount and write back to localStorage on unmount
   useEffect(() => {
     const LS_RAW_SQL_SQL = 'rawSql:sql';
 
