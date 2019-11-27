@@ -3,7 +3,6 @@ import { connect } from 'react-redux';
 import { Link } from 'react-router';
 
 import LeftSubSidebar from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
-import gqlPattern from './Common/GraphQLValidation';
 import GqlCompatibilityWarning from '../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
 import {
   displayTableName,
@@ -107,14 +106,14 @@ class DataSubSidebar extends React.Component {
           const isActive =
             tableName === currentTable && currentLocation.includes(tableName);
 
-          let gqlCompatibilityWarning = null;
-          if (!gqlPattern.test(tableName)) {
-            gqlCompatibilityWarning = (
-              <span className={styles.add_mar_left_mid}>
-                <GqlCompatibilityWarning />
-              </span>
+          const gqlCompatibilityWarning = () => {
+            return (
+              <GqlCompatibilityWarning
+                identifier={tableName}
+                className={styles.add_mar_left_mid}
+              />
             );
-          }
+          };
 
           return (
             <li
@@ -135,7 +134,7 @@ class DataSubSidebar extends React.Component {
                 />
                 {displayTableName(table)}
               </Link>
-              {gqlCompatibilityWarning}
+              {gqlCompatibilityWarning()}
             </li>
           );
         });

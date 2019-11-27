@@ -35,7 +35,6 @@ import {
 } from '../../../Common/utils/routesUtils';
 import { createNewSchema, deleteCurrentSchema } from './Actions';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
-import gqlPattern from '../Common/GraphQLValidation';
 import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
 import {
   displayTableName,
@@ -295,6 +294,15 @@ class Schema extends Component {
         return deleteSchemaBtn;
       };
 
+      const gqlCompatibilityWarning = () => {
+        return (
+          <GqlCompatibilityWarning
+            identifier={currentSchema}
+            className={styles.add_mar_left_mid}
+          />
+        );
+      };
+
       return (
         <div className={styles.add_mar_top}>
           <div className={styles.display_inline}>Current Postgres schema</div>
@@ -312,6 +320,7 @@ class Schema extends Component {
               {getSchemaOptions()}
             </select>
           </div>
+          {gqlCompatibilityWarning()}
           <div className={styles.display_inline + ' ' + styles.add_mar_left}>
             <div className={styles.display_inline}>{getDeleteSchemaBtn()}</div>
             <div
@@ -362,19 +371,23 @@ class Schema extends Component {
         const untrackedTablesList = [];
 
         allUntrackedTables.forEach((table, i) => {
+          const tableName = table.table_name;
+
           const handleTrackTable = e => {
             e.preventDefault();
 
-            dispatch(setTableName(table.table_name));
+            dispatch(setTableName(tableName));
             dispatch(addExistingTableSql());
           };
 
-          const isGQLCompatible = gqlPattern.test(table.table_name);
-          const gqlCompatibilityWarning = !isGQLCompatible ? (
-            <span className={styles.add_mar_left_mid}>
-              <GqlCompatibilityWarning />
-            </span>
-          ) : null;
+          const gqlCompatibilityWarning = () => {
+            return (
+              <GqlCompatibilityWarning
+                identifier={tableName}
+                className={styles.add_mar_left_mid}
+              />
+            );
+          };
 
           untrackedTablesList.push(
             <div className={styles.padd_bottom} key={`untracked-${i}`}>
@@ -382,7 +395,7 @@ class Schema extends Component {
                 className={`${styles.display_inline} ${styles.add_mar_right}`}
               >
                 <Button
-                  data-test={`add-track-table-${table.table_name}`}
+                  data-test={`add-track-table-${tableName}`}
                   className={`${styles.display_inline}`}
                   color="white"
                   size="xs"
@@ -394,7 +407,7 @@ class Schema extends Component {
               <div className={styles.display_inline}>
                 {displayTableName(table)}
               </div>
-              {gqlCompatibilityWarning}
+              {gqlCompatibilityWarning()}
             </div>
           );
         });
