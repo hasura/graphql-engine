@@ -259,7 +259,6 @@ const loadSchema = configOptions => {
         (!configOptions.tables || configOptions.tables.length === 0))
     ) {
       configOptions = {
-        // schemas: getState().tables.schemaList.map(s => s.schema_name),
         schemas: [getState().tables.currentSchema],
       };
     }
@@ -376,10 +375,7 @@ const fetchDataInit = () => (dispatch, getState) => {
   return dispatch(requestAction(url, options)).then(
     data => {
       dispatch({ type: FETCH_SCHEMA_LIST, schemaList: data[0] });
-      const schemaLoadConfig = {
-        schemas: data[0].map(s => s.schema_name),
-      };
-      dispatch(updateSchemaInfo(schemaLoadConfig));
+      dispatch(updateSchemaInfo());
     },
     error => {
       console.error('Failed to fetch schema ' + JSON.stringify(error));
