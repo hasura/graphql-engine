@@ -27,10 +27,11 @@ newtype ETag = ETag {unETag :: T.Text}
   deriving (Show, Eq, ToJSON)
 
 generateETag :: BL.ByteString -> ETag
-generateETag bytes = ETag $ T.pack $ show eTagHash
+generateETag bytes = ETag $ T.pack $ quoteString <> show eTagHash <> quoteString
   where
     -- Blake2b is fasther than SHA-256
     eTagHash :: CH.Digest CH.Blake2b_256 = CH.hash $ BL.toStrict bytes
+    quoteString = ['"']
 
 shouldSendResponse :: N.RequestHeaders -> ETag -> Bool
 shouldSendResponse reqHeaders eTag =
