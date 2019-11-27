@@ -68,8 +68,8 @@ const useCompositeFnsNewCheck =
 const compositeFnCheck = useCompositeFnsNewCheck
   ? 'c'
   : {
-    $ilike: '%composite%',
-  };
+      $ilike: '%composite%',
+    };
 
 const initQueries = {
   schemaList: {

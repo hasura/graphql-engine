@@ -2,6 +2,7 @@ import React from 'react';
 import Toggle from 'react-toggle';
 import styles from '../../../../Common/Common.scss';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';
+import KnowMoreLink from '../../../../Common/KnowMoreLink/KnowMoreLink';
 
 const enumCompatibilityDocsUrl =
   'https://docs.hasura.io/1.0/graphql/manual/schema/enums.html#create-enum-table';
@@ -35,22 +36,22 @@ const EnumsSection = ({ isEnum, toggleEnum, loading }) => {
     title = 'Please wait...';
   }
 
-  const getCompatibilityNote = () => {
-    return (
-      <div>
-        <i>
-          * The table must meet some requirements for you to set it as an enum.{' '}
-          <a
-            href={enumCompatibilityDocsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            See requirements.
-          </a>
-        </i>
-      </div>
-    );
-  };
+  // const getCompatibilityNote = () => {
+  //   return (
+  //     <div>
+  //       <i>
+  //         * The table must meet some requirements for you to set it as an enum.{' '}
+  //         <a
+  //           href={enumCompatibilityDocsUrl}
+  //           target="_blank"
+  //           rel="noopener noreferrer"
+  //         >
+  //           See requirements.
+  //         </a>
+  //       </i>
+  //     </div>
+  //   );
+  // };
 
   return (
     <div>
@@ -61,6 +62,11 @@ const EnumsSection = ({ isEnum, toggleEnum, loading }) => {
             'Expose the table values as GraphQL enums in the GraphQL API'
           }
         />
+        &nbsp;
+        <KnowMoreLink
+          href={enumCompatibilityDocsUrl}
+          text={'See table requirements'}
+        />
       </h4>
       <div
         className={`${styles.display_flex} ${styles.add_mar_bottom}`}
@@ -69,7 +75,6 @@ const EnumsSection = ({ isEnum, toggleEnum, loading }) => {
       >
         <Toggle checked={isEnum} icons={false} onChange={toggleEnum} />
       </div>
-      {getCompatibilityNote()}
     </div>
   );
 };

@@ -105,6 +105,7 @@ const defaultModifyState = {
       onUpdate: 'restrict',
     },
   ],
+  checkConstraintsModify: [],
   uniqueKeyModify: [[]],
   relAdd: {
     isActive: true,
