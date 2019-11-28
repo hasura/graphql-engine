@@ -27,17 +27,17 @@ The next step is to write an insert statement that populates the database with s
 .. code-block:: SQL
 
     INSERT INTO addresses (id, location) VALUES
-    (1, 'Bangalore'),
-    (2, 'Tel Aviv'),
-    (3, 'Zurich');
+      (1, 'Bangalore'),
+      (2, 'Tel Aviv'),
+      (3, 'Zurich');
     INSERT INTO authors (id, name, address_id) VALUES
-    (1, 'Sarah', 3),
-    (2, 'Joey', 1),
-    (3, 'Rachel', 2);
+      (1, 'Sarah', 3),
+      (2, 'Joey', 1),
+      (3, 'Rachel', 2);
     INSERT INTO articles (id, title, content, author_id) VALUES
-    (1, 'How to make fajitas', 'Recipe on making the best fajitas in the world', 1),
-    (2, 'How to climb mount everest', 'Guide on successfully climbing the hightest mountain in the world', 3),
-    (3, 'How to be successful on broadway', 'What it takes for you to be a successful performer at broadway', 2);
+      (1, 'How to make fajitas', 'Recipe on making the best fajitas in the world', 1),
+      (2, 'How to climb mount everest', 'Guide on successfully climbing the hightest mountain in the world', 3),
+      (3, 'How to be successful on broadway', 'What it takes for you to be a successful performer at broadway', 2);
 
 Step 4: Mark the insert as a migration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
