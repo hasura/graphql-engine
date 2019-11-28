@@ -294,15 +294,6 @@ class Schema extends Component {
         return deleteSchemaBtn;
       };
 
-      const gqlCompatibilityWarning = () => {
-        return (
-          <GqlCompatibilityWarning
-            identifier={currentSchema}
-            className={styles.add_mar_left_mid}
-          />
-        );
-      };
-
       return (
         <div className={styles.add_mar_top}>
           <div className={styles.display_inline}>Current Postgres schema</div>
@@ -320,7 +311,6 @@ class Schema extends Component {
               {getSchemaOptions()}
             </select>
           </div>
-          {gqlCompatibilityWarning()}
           <div className={styles.display_inline + ' ' + styles.add_mar_left}>
             <div className={styles.display_inline}>{getDeleteSchemaBtn()}</div>
             <div
@@ -380,15 +370,6 @@ class Schema extends Component {
             dispatch(addExistingTableSql());
           };
 
-          const gqlCompatibilityWarning = () => {
-            return (
-              <GqlCompatibilityWarning
-                identifier={tableName}
-                className={styles.add_mar_left_mid}
-              />
-            );
-          };
-
           untrackedTablesList.push(
             <div className={styles.padd_bottom} key={`untracked-${i}`}>
               <div
@@ -407,7 +388,10 @@ class Schema extends Component {
               <div className={styles.display_inline}>
                 {displayTableName(table)}
               </div>
-              {gqlCompatibilityWarning()}
+              <GqlCompatibilityWarning
+                identifier={tableName}
+                className={styles.add_mar_left_mid}
+              />
             </div>
           );
         });

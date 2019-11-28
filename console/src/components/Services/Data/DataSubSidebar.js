@@ -106,15 +106,6 @@ class DataSubSidebar extends React.Component {
           const isActive =
             tableName === currentTable && currentLocation.includes(tableName);
 
-          const gqlCompatibilityWarning = () => {
-            return (
-              <GqlCompatibilityWarning
-                identifier={tableName}
-                className={styles.add_mar_left_mid}
-              />
-            );
-          };
-
           return (
             <li
               className={isActive ? styles.activeLink : ''}
@@ -134,7 +125,10 @@ class DataSubSidebar extends React.Component {
                 />
                 {displayTableName(table)}
               </Link>
-              {gqlCompatibilityWarning()}
+              <GqlCompatibilityWarning
+                identifier={tableName}
+                className={styles.add_mar_left_mid}
+              />
             </li>
           );
         });

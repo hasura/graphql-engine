@@ -77,15 +77,6 @@ class RelationshipEditor extends React.Component {
 
     const { relName } = relConfig;
 
-    const gqlCompatibilityWarning = () => {
-      return (
-        <GqlCompatibilityWarning
-          identifier={relName}
-          className={styles.add_mar_left_small}
-        />
-      );
-    };
-
     const onDelete = e => {
       e.preventDefault();
 
@@ -106,7 +97,11 @@ class RelationshipEditor extends React.Component {
           Edit
         </Button>
         &nbsp;
-        <b>{relName}</b> {gqlCompatibilityWarning()}
+        <b>{relName}</b>
+        <GqlCompatibilityWarning
+          identifier={relName}
+          className={styles.add_mar_left_small}
+        />
         <div className={tableStyles.relationshipTopPadding}>
           {getRelDef(relConfig)}
         </div>
