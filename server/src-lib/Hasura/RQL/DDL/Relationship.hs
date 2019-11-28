@@ -59,28 +59,15 @@ persistRel :: QualifiedTable
            -> RelType
            -> Value
            -> Maybe T.Text
+           -> SystemDefined
            -> Q.TxE QErr ()
-persistRel (QualifiedObject sn tn) rn relType relDef comment =
+persistRel (QualifiedObject sn tn) rn relType relDef comment systemDefined =
   Q.unitQE defaultTxErrorHandler [Q.sql|
            INSERT INTO
                   hdb_catalog.hdb_relationship
-                  (table_schema, table_name, rel_name, rel_type, rel_def, comment)
-           VALUES ($1, $2, $3, $4, $5 :: jsonb, $6)
-                |] (sn, tn, rn, relTypeToTxt relType, Q.AltJ relDef, comment) True
-
-checkForFldConfilct
-  :: (MonadError QErr m)
-  => TableInfo PGColumnInfo
-  -> FieldName
-  -> m ()
-checkForFldConfilct tabInfo f =
-  case HM.lookup f (_tiFieldInfoMap tabInfo) of
-    Just _ -> throw400 AlreadyExists $ mconcat
-      [ "column/relationship " <>> f
-      , " of table " <>> _tiName tabInfo
-      , " already exists"
-      ]
-    Nothing -> return ()
+                  (table_schema, table_name, rel_name, rel_type, rel_def, comment, is_system_defined)
+           VALUES ($1, $2, $3, $4, $5 :: jsonb, $6, $7)
+                |] (sn, tn, rn, relTypeToTxt relType, Q.AltJ relDef, comment, systemDefined) True
 
 validateObjRel
   :: (QErrM m, CacheRM m)
@@ -89,18 +76,17 @@ validateObjRel
   -> m ()
 validateObjRel qt (RelDef rn ru _) = do
   tabInfo <- askTabInfo qt
-  checkForFldConfilct tabInfo (fromRel rn)
+  checkForFieldConflict tabInfo (fromRel rn)
   let fim = _tiFieldInfoMap tabInfo
   case ru of
     RUFKeyOn cn                      -> assertPGCol fim "" cn
     RUManual (ObjRelManualConfig rm) -> validateManualConfig fim rm
 
 createObjRelP1
-  :: (UserInfoM m, QErrM m, CacheRM m)
+  :: (QErrM m, CacheRM m)
   => CreateObjRel
   -> m ()
-createObjRelP1 (WithTable qt rd) = do
-  adminOnly
+createObjRelP1 (WithTable qt rd) =
   validateObjRel qt rd
 
 objRelP2Setup
@@ -135,6 +121,7 @@ objRelP2
   :: ( QErrM m
      , CacheRWM m
      , MonadTx m
+     , HasSystemDefined m
      )
   => QualifiedTable
   -> ObjRelDef
@@ -142,24 +129,33 @@ objRelP2
 objRelP2 qt rd@(RelDef rn ru comment) = do
   fkeys <- liftTx $ fetchTableFkeys qt
   objRelP2Setup qt fkeys rd
-  liftTx $ persistRel qt rn ObjRel (toJSON ru) comment
+  systemDefined <- askSystemDefined
+  liftTx $ persistRel qt rn ObjRel (toJSON ru) comment systemDefined
 
 createObjRelP2
-  :: (QErrM m, CacheRWM m, MonadTx m) => CreateObjRel -> m EncJSON
+  :: ( QErrM m
+     , CacheRWM m
+     , MonadTx m
+     , HasSystemDefined m
+     )
+  => CreateObjRel -> m EncJSON
 createObjRelP2 (WithTable qt rd) = do
   objRelP2 qt rd
   return successMsg
 
 runCreateObjRel
-  :: (QErrM m, CacheRWM m, MonadTx m , UserInfoM m)
+  :: ( UserInfoM m
+     , CacheRWM m
+     , MonadTx m
+     , HasSystemDefined m
+     )
   => CreateObjRel -> m EncJSON
 runCreateObjRel defn = do
   createObjRelP1 defn
   createObjRelP2 defn
 
-createArrRelP1 :: (UserInfoM m, QErrM m, CacheRM m) => CreateArrRel -> m ()
-createArrRelP1 (WithTable qt rd) = do
-  adminOnly
+createArrRelP1 :: (QErrM m, CacheRM m) => CreateArrRel -> m ()
+createArrRelP1 (WithTable qt rd) =
   validateArrRel qt rd
 
 validateArrRel
@@ -167,7 +163,7 @@ validateArrRel
   => QualifiedTable -> ArrRelDef -> m ()
 validateArrRel qt (RelDef rn ru _) = do
   tabInfo <- askTabInfo qt
-  checkForFldConfilct tabInfo (fromRel rn)
+  checkForFieldConflict tabInfo (fromRel rn)
   let fim = _tiFieldInfoMap tabInfo
   case ru of
     RUFKeyOn (ArrRelUsingFKeyOn remoteQt rcn) -> do
@@ -205,21 +201,35 @@ arrRelP2Setup qt fkeys (RelDef rn ru _) = do
   addRelToCache rn relInfo deps qt
 
 arrRelP2
-  :: (QErrM m, CacheRWM m, MonadTx m)
+  :: ( QErrM m
+     , CacheRWM m
+     , MonadTx m
+     , HasSystemDefined m
+     )
   => QualifiedTable -> ArrRelDef -> m ()
 arrRelP2 qt rd@(RelDef rn u comment) = do
   fkeys <- liftTx $ fetchFkeysAsRemoteTable qt
   arrRelP2Setup qt fkeys rd
-  liftTx $ persistRel qt rn ArrRel (toJSON u) comment
+  systemDefined <- askSystemDefined
+  liftTx $ persistRel qt rn ArrRel (toJSON u) comment systemDefined
 
 createArrRelP2
-  :: (QErrM m, CacheRWM m, MonadTx m) => CreateArrRel -> m EncJSON
+  :: ( QErrM m
+     , CacheRWM m
+     , MonadTx m
+     , HasSystemDefined m
+     )
+  => CreateArrRel -> m EncJSON
 createArrRelP2 (WithTable qt rd) = do
   arrRelP2 qt rd
   return successMsg
 
 runCreateArrRel
-  :: (QErrM m, CacheRWM m, MonadTx m , UserInfoM m)
+  :: ( UserInfoM m
+     , CacheRWM m
+     , MonadTx m
+     , HasSystemDefined m
+     )
   => CreateArrRel -> m EncJSON
 runCreateArrRel defn = do
   createArrRelP1 defn
@@ -227,7 +237,6 @@ runCreateArrRel defn = do
 
 dropRelP1 :: (UserInfoM m, QErrM m, CacheRM m) => DropRel -> m [SchemaObjId]
 dropRelP1 (DropRel qt rn cascade) = do
-  adminOnly
   tabInfo <- askTabInfo qt
   _       <- askRelType (_tiFieldInfoMap tabInfo) rn ""
   sc      <- askSchemaCache
@@ -277,7 +286,6 @@ validateRelP1
   :: (UserInfoM m, QErrM m, CacheRM m)
   => QualifiedTable -> RelName -> m RelInfo
 validateRelP1 qt rn = do
-  adminOnly
   tabInfo <- askTabInfo qt
   askRelType (_tiFieldInfoMap tabInfo) rn ""
 

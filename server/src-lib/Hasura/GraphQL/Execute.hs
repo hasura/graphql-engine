@@ -8,8 +8,11 @@ module Hasura.GraphQL.Execute
   , ExecPlanResolved
   , getResolvedExecPlan
   , execRemoteGQ
+  , getSubsOp
 
   , EP.PlanCache
+  , EP.mkPlanCacheOptions
+  , EP.PlanCacheOptions
   , EP.initPlanCache
   , EP.clearPlanCache
   , EP.dumpPlanCache
@@ -68,7 +71,7 @@ data GQExecPlan a
 -- | Execution context
 data ExecutionCtx
   = ExecutionCtx
-  { _ecxLogger          :: !L.Logger
+  { _ecxLogger          :: !(L.Logger L.Hasura)
   , _ecxSqlGenCtx       :: !SQLGenCtx
   , _ecxPgExecCtx       :: !PGExecCtx
   , _ecxPlanCache       :: !EP.PlanCache
@@ -112,11 +115,10 @@ gatherTypeLocs gCtx nodes =
       in maybe qr (Map.union qr) mr
 
 -- This is for when the graphql query is validated
-type ExecPlanPartial
-  = GQExecPlan (GCtx, VQ.RootSelSet, [G.VariableDefinition])
+type ExecPlanPartial = GQExecPlan (GCtx, VQ.RootSelSet)
 
 getExecPlanPartial
-  :: (MonadError QErr m)
+  :: (MonadReusability m, MonadError QErr m)
   => UserInfo
   -> SchemaCache
   -> Bool
@@ -141,8 +143,7 @@ getExecPlanPartial userInfo sc enableAL req = do
   case typeLoc of
     VT.TLHasuraType -> do
       rootSelSet <- runReaderT (VQ.validateGQ queryParts) gCtx
-      let varDefs = G._todVariableDefinitions $ VQ.qpOpDef queryParts
-      return $ GExPHasura (gCtx, rootSelSet, varDefs)
+      return $ GExPHasura (gCtx, rootSelSet)
     VT.TLRemoteType _ rsi ->
       return $ GExPRemote rsi opDef
   where
@@ -167,7 +168,7 @@ getExecPlanPartial userInfo sc enableAL req = do
 data ExecOp
   = ExOpQuery !LazyRespTx !(Maybe EQ.GeneratedSqlMap)
   | ExOpMutation !LazyRespTx
-  | ExOpSubs !EL.LiveQueryOp
+  | ExOpSubs !EL.LiveQueryPlan
 
 -- The graphql query is resolved into an execution operation
 type ExecPlanResolved
@@ -196,7 +197,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
         (tx, genSql) <- EQ.queryOpFromPlan usrVars queryVars queryPlan
         return $ ExOpQuery tx (Just genSql)
       EP.RPSubs subsPlan ->
-        ExOpSubs <$> EL.subsOpFromPlan pgExecCtx usrVars queryVars subsPlan
+        ExOpSubs <$> EL.reuseLiveQueryPlan pgExecCtx usrVars queryVars subsPlan
     Nothing -> noExistingPlan
   where
     GQLReq opNameM queryStr queryVars = reqUnparsed
@@ -204,21 +205,20 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
       liftIO $ EP.addPlan scVer (userRole userInfo)
       opNameM queryStr plan planCache
     noExistingPlan = do
-      req      <- toParsed reqUnparsed
-      partialExecPlan <- getExecPlanPartial userInfo sc enableAL req
-      forM partialExecPlan $ \(gCtx, rootSelSet, varDefs) ->
+      req <- toParsed reqUnparsed
+      (partialExecPlan, queryReusability) <- runReusabilityT $
+        getExecPlanPartial userInfo sc enableAL req
+      forM partialExecPlan $ \(gCtx, rootSelSet) ->
         case rootSelSet of
           VQ.RMutation selSet ->
             ExOpMutation <$> getMutOp gCtx sqlGenCtx userInfo selSet
           VQ.RQuery selSet -> do
-            (queryTx, planM, genSql) <- getQueryOp gCtx sqlGenCtx
-                                        userInfo selSet varDefs
-            mapM_ (addPlanToCache . EP.RPQuery) planM
+            (queryTx, plan, genSql) <- getQueryOp gCtx sqlGenCtx userInfo queryReusability selSet
+            traverse_ (addPlanToCache . EP.RPQuery) plan
             return $ ExOpQuery queryTx (Just genSql)
           VQ.RSubscription fld -> do
-            (lqOp, planM) <- getSubsOp pgExecCtx gCtx sqlGenCtx
-                             userInfo reqUnparsed varDefs fld
-            mapM_ (addPlanToCache . EP.RPSubs) planM
+            (lqOp, plan) <- getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability fld
+            traverse_ (addPlanToCache . EP.RPSubs) plan
             return $ ExOpSubs lqOp
 
 -- Monad for resolving a hasura query/mutation
@@ -257,11 +257,11 @@ getQueryOp
   => GCtx
   -> SQLGenCtx
   -> UserInfo
+  -> QueryReusability
   -> VQ.SelSet
-  -> [G.VariableDefinition]
   -> m (LazyRespTx, Maybe EQ.ReusableQueryPlan, EQ.GeneratedSqlMap)
-getQueryOp gCtx sqlGenCtx userInfo fields varDefs =
-  runE gCtx sqlGenCtx userInfo $ EQ.convertQuerySelSet varDefs fields
+getQueryOp gCtx sqlGenCtx userInfo queryReusability fields =
+  runE gCtx sqlGenCtx userInfo $ EQ.convertQuerySelSet queryReusability fields
 
 mutationRootName :: Text
 mutationRootName = "mutation_root"
@@ -282,7 +282,7 @@ resolveMutSelSet fields = do
   aliasedTxs <- forM (toList fields) $ \fld -> do
     fldRespTx <- case VQ._fName fld of
       "__typename" -> return $ return $ encJFromJValue mutationRootName
-      _            -> liftTx <$> GR.mutFldToTx fld
+      _            -> fmap liftTx . evalReusabilityT $ GR.mutFldToTx fld
     return (G.unName $ G.unAlias $ VQ._fAlias fld, fldRespTx)
 
   -- combines all transactions into a single transaction
@@ -318,17 +318,18 @@ getSubsOpM
      , MonadIO m
      )
   => PGExecCtx
-  -> GQLReqUnparsed
-  -> [G.VariableDefinition]
+  -> QueryReusability
   -> VQ.Field
-  -> m (EL.LiveQueryOp, Maybe EL.SubsPlan)
-getSubsOpM pgExecCtx req varDefs fld =
+  -> m (EL.LiveQueryPlan, Maybe EL.ReusableLiveQueryPlan)
+getSubsOpM pgExecCtx initialReusability fld =
   case VQ._fName fld of
     "__typename" ->
       throwVE "you cannot create a subscription on '__typename' field"
     _            -> do
-      astUnresolved <- GR.queryFldToPGAST fld
-      EL.subsOpFromPGAST pgExecCtx req varDefs (VQ._fAlias fld, astUnresolved)
+      (astUnresolved, finalReusability) <- runReusabilityTWith initialReusability $
+        GR.queryFldToPGAST fld
+      let varTypes = finalReusability ^? _Reusable
+      EL.buildLiveQueryPlan pgExecCtx (VQ._fAlias fld) astUnresolved varTypes
 
 getSubsOp
   :: ( MonadError QErr m
@@ -338,12 +339,11 @@ getSubsOp
   -> GCtx
   -> SQLGenCtx
   -> UserInfo
-  -> GQLReqUnparsed
-  -> [G.VariableDefinition]
+  -> QueryReusability
   -> VQ.Field
-  -> m (EL.LiveQueryOp, Maybe EL.SubsPlan)
-getSubsOp pgExecCtx gCtx sqlGenCtx userInfo req varDefs fld =
-  runE gCtx sqlGenCtx userInfo $ getSubsOpM pgExecCtx req varDefs fld
+  -> m (EL.LiveQueryPlan, Maybe EL.ReusableLiveQueryPlan)
+getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability fld =
+  runE gCtx sqlGenCtx userInfo $ getSubsOpM pgExecCtx queryReusability fld
 
 execRemoteGQ
   :: ( MonadIO m
@@ -368,9 +368,10 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
   let confHdrs   = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
       clientHdrs = bool [] filteredHeaders fwdClientHdrs
       -- filter out duplicate headers
-      -- priority: conf headers > resolved userinfo vars > client headers
+      -- priority: conf headers > resolved userinfo vars > x-forwarded headers > client headers
       hdrMaps    = [ Map.fromList confHdrs
                    , Map.fromList userInfoToHdrs
+                   , Map.fromList xForwardedHeaders
                    , Map.fromList clientHdrs
                    ]
       headers  = Map.toList $ foldr Map.union Map.empty hdrMaps
@@ -384,7 +385,7 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
            , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
            }
 
-  liftIO $ logGraphqlQuery logger $ QueryLog q Nothing reqId
+  L.unLogger logger $ QueryLog q Nothing reqId
   res  <- liftIO $ try $ HTTP.httpLbs req manager
   resp <- either httpThrow return res
   let cookieHdrs = getCookieHdr (resp ^.. Wreq.responseHeader "Set-Cookie")
@@ -402,6 +403,12 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
                      userInfoToList userInfo
     filteredHeaders = filterUserVars $ filterRequestHeaders reqHdrs
 
+    xForwardedHeaders = flip mapMaybe reqHdrs $ \(hdrName, hdrValue) ->
+      case hdrName of
+        "Host"       -> Just ("X-Forwarded-Host", hdrValue)
+        "User-Agent" -> Just ("X-Forwarded-User-Agent", hdrValue)
+        _            -> Nothing
+
     filterUserVars hdrs =
       let txHdrs = map (\(n, v) -> (bsToTxt $ CI.original n, bsToTxt v)) hdrs
       in map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
@@ -409,5 +416,4 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
 
     getCookieHdr = fmap (\h -> ("Set-Cookie", h))
 
-    mkRespHeaders hdrs =
-      map (\(k, v) -> Header (bsToTxt $ CI.original k, bsToTxt v)) hdrs
+    mkRespHeaders = map (\(k, v) -> Header (bsToTxt $ CI.original k, bsToTxt v))

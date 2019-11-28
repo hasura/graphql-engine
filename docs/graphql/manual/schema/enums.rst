@@ -239,4 +239,4 @@ Current limitations
 ^^^^^^^^^^^^^^^^^^^
 
 Currently, Hasura does not automatically detect changes to the contents of enum tables, so the GraphQL schema will
-only be updated after manually reloading metadata after inserting, updating, or deleting rows from an enum table.
+only be updated after :ref:`manually reloading metadata <reload_metadata_manual>` after inserting, updating, or deleting rows from an enum table.

@@ -1,3 +1,5 @@
+.. _hge_logs:
+
 Hasura GraphQL engine logs
 ==========================
 
@@ -22,7 +24,7 @@ Different log-types
 
 The Hasura GraphQL engine has different kind of log-types depending on the sub-system or the layer. A log-type is simply the ``type`` field in a log line, which indicates which sub-system the log comes from.
 
-For example, the HTTP webserver logs incoming requests as access log, and is called ``http-log``. Similarly logs from the websocket layer is called ``websocket-log``, logs from the event trigger system is called ``event-trigger`` etc.
+For example, the HTTP webserver logs incoming requests as an access log and is called ``http-log``. Similarly logs from the websocket layer are called ``websocket-log``, logs from the event trigger system are called ``event-trigger`` etc.
 
 
 You can configure the GraphQL engine to enable/disable certain log-types using the the ``--enabled-log-types`` flag or the ``HASURA_GRAPHQL_ENABLED_LOG_TYPES`` env var. See :doc:`../deployment/graphql-engine-flags/reference`
@@ -111,7 +113,7 @@ The default log-level is ``info``.
 
 Setting a log-level will print all logs of priority greater than the set level. The log-level hierarchy is: ``debug > info > warn > error``
 
-For example, setting ``--log-level=warn``, will enable all warn and error level logs only. So even if the you have enabled ``query-log`` it won't be printed as the level of ``query-log`` is ``info``.
+For example, setting ``--log-level=warn``, will enable all warn and error level logs only. So even if you have enabled ``query-log`` it won't be printed as the level of ``query-log`` is ``info``.
 
 See :ref:`log-types <log-types>` for more details on log-level of each log-type.
 

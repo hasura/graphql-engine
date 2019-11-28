@@ -25,6 +25,8 @@ import {
   TOGGLE_ENUM,
   TOGGLE_ENUM_SUCCESS,
   TOGGLE_ENUM_FAILURE,
+  MODIFY_ROOT_FIELD,
+  SET_CHECK_CONSTRAINTS,
 } from '../TableModify/ModifyActions';
 
 // TABLE RELATIONSHIPS
@@ -46,7 +48,6 @@ import {
 
 import {
   PERM_OPEN_EDIT,
-  PERM_ADD_TABLE_SCHEMAS,
   PERM_SET_FILTER,
   PERM_SET_FILTER_SAME_AS,
   PERM_TOGGLE_COLUMN,
@@ -251,31 +252,21 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         },
       };
     case PERM_OPEN_EDIT:
+      const isNewRole = modifyState.permissionsState.newRole === action.role;
       const permState = getBasePermissionsState(
         action.tableSchema,
         action.role,
-        action.query
+        action.query,
+        isNewRole
       );
       return {
         ...modifyState,
         permissionsState: {
           ...permState,
-          tableSchemas: schemas,
+          isEditing: true,
         },
         prevPermissionState: {
           ...permState,
-        },
-      };
-
-    case PERM_ADD_TABLE_SCHEMAS:
-      return {
-        ...modifyState,
-        permissionsState: {
-          ...modifyState.permissionsState,
-          tableSchemas: [
-            ...modifyState.permissionsState.tableSchemas,
-            ...action.schemas,
-          ],
         },
       };
 
@@ -410,11 +401,17 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       };
 
     case PERM_SET_ROLE_NAME:
+      const newRole = action.data;
+      const role = modifyState.permissionsState.isEditing
+        ? newRole
+        : modifyState.permissionsState.role;
+
       return {
         ...modifyState,
         permissionsState: {
           ...modifyState.permissionsState,
-          newRole: action.data,
+          newRole: newRole,
+          role: role,
         },
       };
 
@@ -610,6 +607,16 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         tableEnum: {
           loading: false,
         },
+      };
+    case MODIFY_ROOT_FIELD:
+      return {
+        ...modifyState,
+        rootFieldsEdit: action.data,
+      };
+    case SET_CHECK_CONSTRAINTS:
+      return {
+        ...modifyState,
+        checkConstraintsModify: action.constraints,
       };
     default:
       return modifyState;

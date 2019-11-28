@@ -25,9 +25,9 @@ import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Hasura.Db
-import           Hasura.GraphQL.Utils
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Error
+import           Hasura.Server.Utils           (makeReasonMessage)
 import           Hasura.SQL.Types
 
 import qualified Hasura.SQL.DML                as S
@@ -96,16 +96,13 @@ fetchAndValidateEnumValues tableName primaryKeyColumns columnInfos =
 
         -- https://graphql.github.io/graphql-spec/June2018/#EnumValue
         isValidEnumName name =
-          isValidName name && name `notElem` ["true", "false", "null"]
+          G.isValidName name && name `notElem` ["true", "false", "null"]
 
     showErrors :: [EnumTableIntegrityError] -> T.Text
     showErrors allErrors =
       "the table " <> tableName <<> " cannot be used as an enum " <> reasonsMessage
       where
-        reasonsMessage = case allErrors of
-          [singleError] -> "because " <> showOne singleError
-          _ -> "for the following reasons:\n" <> T.unlines
-            (map (("  • " <>) . showOne) allErrors)
+        reasonsMessage = makeReasonMessage allErrors showOne
 
         showOne :: EnumTableIntegrityError -> T.Text
         showOne = \case

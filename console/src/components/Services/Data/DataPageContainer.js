@@ -8,11 +8,10 @@ import DataSubSidebar from './DataSubSidebar';
 
 import { updateCurrentSchema } from './DataActions';
 import { NotFoundError } from '../../Error/PageNotFound';
-
-const sectionPrefix = '/data';
+import { CLI_CONSOLE_MODE } from '../../../constants';
+import { getSchemaBaseRoute } from '../../Common/utils/routesUtils';
 
 const DataPageContainer = ({
-  schema,
   currentSchema,
   schemaList,
   children,
@@ -31,7 +30,7 @@ const DataPageContainer = ({
   const currentLocation = location.pathname;
 
   let migrationTab = null;
-  if (globals.consoleMode === 'cli') {
+  if (globals.consoleMode === CLI_CONSOLE_MODE) {
     migrationTab = (
       <li
         role="presentation"
@@ -39,7 +38,7 @@ const DataPageContainer = ({
           currentLocation.includes('data/migrations') ? styles.active : ''
         }
       >
-        <Link className={styles.linkBorder} to={sectionPrefix + '/migrations'}>
+        <Link className={styles.linkBorder} to={'/data/migrations'}>
           Migrations
         </Link>
       </li>
@@ -66,7 +65,7 @@ const DataPageContainer = ({
       >
         <Link
           className={styles.linkBorder}
-          to={sectionPrefix + '/schema/' + currentSchema}
+          to={getSchemaBaseRoute(currentSchema)}
         >
           <div className={styles.schemaWrapper}>
             <div className={styles.schemaSidebarSection} data-test="schema">
@@ -81,12 +80,7 @@ const DataPageContainer = ({
             </div>
           </div>
         </Link>
-        <DataSubSidebar
-          location={location}
-          schema={schema}
-          currentSchema={currentSchema}
-          dispatch={dispatch}
-        />
+        <DataSubSidebar location={location} />
       </li>
       <li
         role="presentation"
@@ -94,7 +88,7 @@ const DataPageContainer = ({
       >
         <Link
           className={styles.linkBorder}
-          to={sectionPrefix + '/sql'}
+          to={'/data/sql'}
           data-test="sql-link"
         >
           SQL
@@ -117,7 +111,6 @@ const DataPageContainer = ({
 
 const mapStateToProps = state => {
   return {
-    schema: state.tables.allSchemas,
     schemaList: state.tables.schemaList,
     currentSchema: state.tables.currentSchema,
   };

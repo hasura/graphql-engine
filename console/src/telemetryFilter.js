@@ -5,6 +5,9 @@ const filterEventsBlockList = [
   'App/DONE_REQUEST',
   'App/FAILED_REQUEST',
   'App/ERROR_REQUEST',
+  'RNS_SHOW_NOTIFICATION',
+  'RNS_HIDE_NOTIFICATION',
+  'RNS_REMOVE_ALL_NOTIFICATIONS',
 ];
 
 const filterPayloadAllowList = [];
@@ -18,8 +21,16 @@ const dataHandler = path => {
   return (
     DATA_PATH +
     path
-      .replace(/\/schema\/(\w+)(\/)?/, '/schema/SCHEMA_NAME$2')
-      .replace(/(\/schema\/.*)\/tables\/(\w*)(\/.*)?/, '$1/tables/TABLE_NAME$3')
+      .replace(/\/schema\/([^/]*)(\/)?/, '/schema/SCHEMA_NAME$2')
+      .replace(
+        /(\/schema\/.*)\/tables\/([^/]*)(\/.*)?/,
+        '$1/tables/TABLE_NAME$3'
+      )
+      .replace(/(\/schema\/.*)\/views\/([^/]*)(\/.*)?/, '$1/views/VIEW_NAME$3')
+      .replace(
+        /(\/schema\/.*)\/functions\/([^/]*)(\/.*)?/,
+        '$1/functions/FUNCTION_NAME$3'
+      )
   );
 };
 
@@ -30,14 +41,14 @@ const apiExplorerHandler = () => {
 const remoteSchemasHandler = path => {
   return (
     REMOTE_SCHEMAS_PATH +
-    path.replace(/(\/manage\/).*(\/\w+.*)$/, '$1REMOTE_SCHEMA_NAME$2')
+    path.replace(/(\/manage\/)[^/]*(\/\w+.*)$/, '$1REMOTE_SCHEMA_NAME$2')
   );
 };
 
 const eventsHandler = path => {
   return (
     EVENTS_PATH +
-    path.replace(/(\/manage\/triggers\/).*(\/\w+.*)$/, '$1TRIGGER_NAME$2')
+    path.replace(/(\/manage\/triggers\/)[^/]*(\/\w+.*)$/, '$1TRIGGER_NAME$2')
   );
 };
 
@@ -47,7 +58,7 @@ const sanitiseUrl = path => {
     return dataHandler(path.slice(DATA_PATH.length));
   }
   if (path.indexOf(API_EXPLORER_PATH) === 0) {
-    return apiExplorerHandler(path.slice(API_EXPLORER_PATH.length));
+    return apiExplorerHandler();
   }
   if (path.indexOf(REMOTE_SCHEMAS_PATH) === 0) {
     return remoteSchemasHandler(path.slice(REMOTE_SCHEMAS_PATH.length));

@@ -5,7 +5,6 @@
 
 module Hasura.Server.Telemetry
   ( runTelemetry
-  , getDbId
   , mkTelemetryLog
   )
   where
@@ -31,7 +30,6 @@ import qualified Data.ByteString.Lazy    as BL
 import qualified Data.HashMap.Strict     as Map
 import qualified Data.String.Conversions as CS
 import qualified Data.Text               as T
-import qualified Database.PG.Query       as Q
 import qualified Network.HTTP.Client     as HTTP
 import qualified Network.HTTP.Types      as HTTP
 import qualified Network.Wreq            as Wreq
@@ -95,7 +93,7 @@ mkPayload dbId instanceId version metrics = do
   where topic = bool "server" "server_test" isDevVersion
 
 runTelemetry
-  :: Logger
+  :: Logger Hasura
   -> HTTP.Manager
   -> IORef (SchemaCache, SchemaCacheVer)
   -> Text
@@ -132,7 +130,7 @@ computeMetrics sc =
   let nTables = countUserTables (isNothing . _tiViewInfo)
       nViews = countUserTables (isJust . _tiViewInfo)
       nEnumTables = countUserTables (isJust . _tiEnumValues)
-      allRels = join $ Map.elems $ Map.map relsOfTbl userTables
+      allRels = join $ Map.elems $ Map.map (getRels . _tiFieldInfoMap) userTables
       (manualRels, autoRels) = partition riIsManual allRels
       relMetrics = RelationshipMetric (length manualRels) (length autoRels)
       rolePerms = join $ Map.elems $ Map.map permsOfTbl userTables
@@ -147,31 +145,19 @@ computeMetrics sc =
       evtTriggers = Map.size $ Map.filter (not . Map.null)
                     $ Map.map _tiEventTriggerInfoMap userTables
       rmSchemas   = Map.size $ scRemoteSchemas sc
-      funcs = Map.size $ Map.filter (not . fiSystemDefined) $ scFunctions sc
+      funcs = Map.size $ Map.filter (not . isSystemDefined . fiSystemDefined) $ scFunctions sc
 
   in Metrics nTables nViews nEnumTables relMetrics permMetrics evtTriggers rmSchemas funcs
 
   where
-    userTables = Map.filter (not . _tiSystemDefined) $ scTables sc
+    userTables = Map.filter (not . isSystemDefined . _tiSystemDefined) $ scTables sc
     countUserTables predicate = length . filter predicate $ Map.elems userTables
 
     calcPerms :: (RolePermInfo -> Maybe a) -> [RolePermInfo] -> Int
     calcPerms fn perms = length $ catMaybes $ map fn perms
 
-    relsOfTbl :: TableInfo PGColumnInfo -> [RelInfo]
-    relsOfTbl = rights . Map.elems . Map.map fieldInfoToEither . _tiFieldInfoMap
-
     permsOfTbl :: TableInfo PGColumnInfo -> [(RoleName, RolePermInfo)]
     permsOfTbl = Map.toList . _tiRolePermInfoMap
-
-
-getDbId :: Q.TxE QErr Text
-getDbId =
-  (runIdentity . Q.getRow) <$>
-  Q.withQE defaultTxErrorHandler
-  [Q.sql|
-    SELECT (hasura_uuid :: text) FROM hdb_catalog.hdb_version
-  |] () False
 
 
 -- | Logging related
@@ -208,8 +194,8 @@ instance A.ToJSON TelemetryHttpError where
              ]
 
 
-instance ToEngineLog TelemetryLog where
-  toEngineLog tl = (_tlLogLevel tl, ELTTelemetryLog, A.toJSON tl)
+instance ToEngineLog TelemetryLog Hasura where
+  toEngineLog tl = (_tlLogLevel tl, ELTInternal ILTTelemetry, A.toJSON tl)
 
 mkHttpError
   :: Text

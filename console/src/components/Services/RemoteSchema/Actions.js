@@ -7,12 +7,12 @@ import requestAction from '../../../utils/requestAction';
 import dataHeaders from '../Data/Common/Headers';
 import globals from '../../../Globals';
 import returnMigrateUrl from '../Data/Common/getMigrateUrl';
-import { SERVER_CONSOLE_MODE } from '../../../constants';
+import { CLI_CONSOLE_MODE, SERVER_CONSOLE_MODE } from '../../../constants';
 import { loadMigrationStatus } from '../../Main/Actions';
 import { handleMigrationErrors } from '../EventTrigger/EventActions';
 
 import { showSuccessNotification } from '../Common/Notification';
-import { filterInconsistentMetadataObjects } from '../Metadata/utils';
+import { filterInconsistentMetadataObjects } from '../Settings/utils';
 
 /* Action constants */
 
@@ -167,7 +167,7 @@ const makeRequest = (
     let finalReqBody;
     if (globals.consoleMode === SERVER_CONSOLE_MODE) {
       finalReqBody = upQuery;
-    } else if (globals.consoleMode === 'cli') {
+    } else if (globals.consoleMode === CLI_CONSOLE_MODE) {
       finalReqBody = migrationBody;
     }
     const url = migrateUrl;
@@ -179,7 +179,7 @@ const makeRequest = (
     };
 
     const onSuccess = data => {
-      if (globals.consoleMode === 'cli') {
+      if (globals.consoleMode === CLI_CONSOLE_MODE) {
         dispatch(loadMigrationStatus()); // don't call for server mode
       }
       // dispatch(loadTriggers());

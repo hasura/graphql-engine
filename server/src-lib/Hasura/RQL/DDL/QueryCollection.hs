@@ -39,25 +39,24 @@ addCollectionP2 (CollectionDef queryList) =
     duplicateNames = duplicates $ map _lqName queryList
 
 runCreateCollection
-  :: (QErrM m, UserInfoM m, MonadTx m)
+  :: (QErrM m, MonadTx m, HasSystemDefined m)
   => CreateCollection -> m EncJSON
 runCreateCollection cc = do
-  adminOnly
   collDetM <- getCollectionDefM collName
   withPathK "name" $
     onJust collDetM $ const $ throw400 AlreadyExists $
       "query collection with name " <> collName <<> " already exists"
   withPathK "definition" $ addCollectionP2 def
-  liftTx $ addCollectionToCatalog cc
+  systemDefined <- askSystemDefined
+  liftTx $ addCollectionToCatalog cc systemDefined
   return successMsg
   where
     CreateCollection collName def _ = cc
 
 runAddQueryToCollection
-  :: (QErrM m, CacheRWM m, UserInfoM m, MonadTx m)
+  :: (QErrM m, CacheRWM m, MonadTx m)
   => AddQueryToCollection -> m EncJSON
 runAddQueryToCollection (AddQueryToCollection collName queryName query) = do
-  adminOnly
   CollectionDef qList <- getCollectionDef collName
   let queryExists = flip any qList $ \q -> _lqName q == queryName
 
@@ -72,10 +71,9 @@ runAddQueryToCollection (AddQueryToCollection collName queryName query) = do
     listQ = ListedQuery queryName query
 
 runDropCollection
-  :: (QErrM m, UserInfoM m, MonadTx m, CacheRWM m)
+  :: (QErrM m, MonadTx m, CacheRWM m)
   => DropCollection -> m EncJSON
 runDropCollection (DropCollection collName cascade) = do
-  adminOnly
   withPathK "collection" $ do
     -- check for query collection
     void $ getCollectionDef collName
@@ -92,10 +90,9 @@ runDropCollection (DropCollection collName cascade) = do
   return successMsg
 
 runDropQueryFromCollection
-  :: (QErrM m, CacheRWM m, UserInfoM m, MonadTx m)
+  :: (QErrM m, CacheRWM m, MonadTx m)
   => DropQueryFromCollection -> m EncJSON
 runDropQueryFromCollection (DropQueryFromCollection collName queryName) = do
-  adminOnly
   CollectionDef qList <- getCollectionDef collName
   let queryExists = flip any qList $ \q -> _lqName q == queryName
   when (not queryExists) $ throw400 NotFound $ "query with name "
@@ -107,20 +104,18 @@ runDropQueryFromCollection (DropQueryFromCollection collName queryName) = do
   return successMsg
 
 runAddCollectionToAllowlist
-  :: (QErrM m, UserInfoM m, MonadTx m, CacheRWM m)
+  :: (QErrM m, MonadTx m, CacheRWM m)
   => CollectionReq -> m EncJSON
 runAddCollectionToAllowlist (CollectionReq collName) = do
-  adminOnly
   void $ withPathK "collection" $ getCollectionDef collName
   liftTx $ addCollectionToAllowlistCatalog collName
   refreshAllowlist
   return successMsg
 
 runDropCollectionFromAllowlist
-  :: (QErrM m, UserInfoM m, MonadTx m, CacheRWM m)
+  :: (QErrM m, MonadTx m, CacheRWM m)
   => CollectionReq -> m EncJSON
 runDropCollectionFromAllowlist (CollectionReq collName) = do
-  adminOnly
   void $ withPathK "collection" $ getCollectionDef collName
   liftTx $ delCollectionFromAllowlistCatalog collName
   refreshAllowlist
@@ -179,13 +174,13 @@ fetchAllowlist = map runIdentity <$>
         FROM hdb_catalog.hdb_allowlist
      |] () True
 
-addCollectionToCatalog :: CreateCollection -> Q.TxE QErr ()
-addCollectionToCatalog (CreateCollection name defn mComment) =
+addCollectionToCatalog :: CreateCollection -> SystemDefined -> Q.TxE QErr ()
+addCollectionToCatalog (CreateCollection name defn mComment) systemDefined =
   Q.unitQE defaultTxErrorHandler [Q.sql|
     INSERT INTO hdb_catalog.hdb_query_collection
-      (collection_name, collection_defn, comment)
-    VALUES ($1, $2, $3)
-  |] (name, Q.AltJ defn, mComment) True
+      (collection_name, collection_defn, comment, is_system_defined)
+    VALUES ($1, $2, $3, $4)
+  |] (name, Q.AltJ defn, mComment, systemDefined) True
 
 delCollectionFromCatalog :: CollectionName -> Q.TxE QErr ()
 delCollectionFromCatalog name =
