@@ -4,14 +4,6 @@ import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
 import { Link } from 'react-router';
 
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-
-import {
-  untrackedTablesTip,
-  untrackedRelTip,
-  trackableFunctionsTip,
-  nonTrackableFunctionsTip,
-} from './Tooltips';
 import Button from '../../../Common/Button/Button';
 import {
   setTableName,
@@ -46,6 +38,8 @@ import { SET_SQL } from '../RawSQL/Actions';
 import _push from '../push';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import ToolTip from '../../../Common/Tooltip/Tooltip';
+import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 
 class Schema extends Component {
   constructor(props) {
@@ -100,20 +94,16 @@ class Schema extends Component {
       return functionsList.filter(filterCondition);
     };
 
-    const getSectionHeading = (headingText, tooltip, actionBtn = null) => {
+    const getSectionHeading = (headingText, tooltip, actionElement = null) => {
       return (
         <div>
-          <h4
-            className={`${styles.subheading_text} ${styles.display_inline} ${
-              styles.add_mar_right_mid
-            }`}
-          >
+          <h4 className={`${styles.subheading_text} ${styles.display_inline}`}>
             {headingText}
           </h4>
-          <OverlayTrigger placement="right" overlay={tooltip}>
-            <i className="fa fa-info-circle" aria-hidden="true" />
-          </OverlayTrigger>
-          {actionBtn}
+          <span className={styles.add_mar_left_small}>
+            <ToolTip message={tooltip} />
+          </span>
+          <span className={styles.add_mar_left}>{actionElement}</span>
         </div>
       );
     };
@@ -124,25 +114,6 @@ class Schema extends Component {
       getSchemaTables(schema, currentSchema)
     );
     const trackableFuncs = _getTrackableFunctions();
-
-    const getTrackableFunctionsRequirementsMessage = () => {
-      const requirementsLink = (
-        <a
-          href="https://docs.hasura.io/1.0/graphql/manual/queries/custom-functions.html#supported-sql-functions"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          requirements
-        </a>
-      );
-
-      return (
-        <i>
-          See {requirementsLink} for functions to be exposed over the GraphQL
-          API
-        </i>
-      );
-    };
 
     const getCreateBtn = () => {
       let createBtn = null;
@@ -344,7 +315,7 @@ class Schema extends Component {
         if (allUntrackedTables.length > 0) {
           trackAllBtn = (
             <Button
-              className={`${styles.display_inline} ${styles.add_mar_left}`}
+              className={`${styles.display_inline}`}
               color="white"
               size="xs"
               onClick={trackAllTables}
@@ -360,54 +331,53 @@ class Schema extends Component {
       const getUntrackedTablesList = () => {
         const untrackedTablesList = [];
 
-        allUntrackedTables.forEach((table, i) => {
-          const tableName = table.table_name;
-
-          const handleTrackTable = e => {
-            e.preventDefault();
-
-            dispatch(setTableName(tableName));
-            dispatch(addExistingTableSql());
-          };
-
-          untrackedTablesList.push(
-            <div className={styles.padd_bottom} key={`untracked-${i}`}>
-              <div
-                className={`${styles.display_inline} ${styles.add_mar_right}`}
-              >
-                <Button
-                  data-test={`add-track-table-${tableName}`}
-                  className={`${styles.display_inline}`}
-                  color="white"
-                  size="xs"
-                  onClick={handleTrackTable}
-                >
-                  Track
-                </Button>
-              </div>
-              <div className={styles.display_inline}>
-                {displayTableName(table)}
-              </div>
-              <GqlCompatibilityWarning
-                identifier={tableName}
-                className={styles.add_mar_left_mid}
-              />
-            </div>
-          );
-        });
-
-        if (!untrackedTablesList.length) {
+        if (isEmpty(allUntrackedTables)) {
           untrackedTablesList.push(
             <div key="no-untracked">There are no untracked tables or views</div>
           );
-        }
+        } else {
+          allUntrackedTables.forEach((table, i) => {
+            const tableName = table.table_name;
 
+            const handleTrackTable = e => {
+              e.preventDefault();
+
+              dispatch(setTableName(tableName));
+              dispatch(addExistingTableSql());
+            };
+
+            untrackedTablesList.push(
+              <div className={styles.padd_bottom} key={`untracked-${i}`}>
+                <div
+                  className={`${styles.display_inline} ${styles.add_mar_right}`}
+                >
+                  <Button
+                    data-test={`add-track-table-${tableName}`}
+                    className={`${styles.display_inline}`}
+                    color="white"
+                    size="xs"
+                    onClick={handleTrackTable}
+                  >
+                    Track
+                  </Button>
+                </div>
+                <div className={styles.display_inline}>
+                  {displayTableName(table)}
+                </div>
+                <GqlCompatibilityWarning
+                  identifier={tableName}
+                  className={styles.add_mar_left_mid}
+                />
+              </div>
+            );
+          });
+        }
         return untrackedTablesList;
       };
 
       const heading = getSectionHeading(
         'Untracked tables or views',
-        untrackedTablesTip,
+        'Tables or views that are not exposed over the GraphQL API',
         getTrackAllBtn()
       );
 
@@ -445,7 +415,7 @@ class Schema extends Component {
           trackAllBtn = (
             <Button
               onClick={trackAllRelations}
-              className={`${styles.display_inline} ${styles.add_mar_left}`}
+              className={`${styles.display_inline}`}
               color="white"
               size="xs"
               data-test="track-all-relationships"
@@ -461,52 +431,52 @@ class Schema extends Component {
       const getUntrackedRelList = () => {
         const untrackedRelList = [];
 
-        untrackedRelations.forEach((rel, i) => {
-          const relData = rel.data;
-
-          const handleAddRel = e => {
-            e.preventDefault();
-
-            dispatch(autoAddRelName(rel));
-          };
-
-          const relFrom = <b>{relData.lTable}</b>;
-
-          const relTo = relData.isObjRel ? (
-            <b>{relData.rTable}</b>
-          ) : (
-            <b>[ {relData.rTable} ]</b>
-          );
-
-          untrackedRelList.push(
-            <div className={styles.padd_bottom} key={`untracked-rel-${i}`}>
-              <div
-                className={`${styles.display_inline} ${styles.add_mar_right}`}
-              >
-                <Button
-                  className={styles.display_inline}
-                  color="white"
-                  size="xs"
-                  onClick={handleAddRel}
-                >
-                  Track
-                </Button>
-              </div>
-              <div className={styles.display_inline}>
-                <span>
-                  {relFrom} &rarr; {relTo}
-                </span>
-                &nbsp;&nbsp; - &nbsp;&nbsp;
-                <span>{getRelDef(relData)}</span>
-              </div>
-            </div>
-          );
-        });
-
-        if (!untrackedRelList.length) {
+        if (isEmpty(untrackedRelations)) {
           untrackedRelList.push(
             <div key="no-untracked-rel">There are no untracked relations</div>
           );
+        } else {
+          untrackedRelations.forEach((rel, i) => {
+            const relData = rel.data;
+
+            const handleAddRel = e => {
+              e.preventDefault();
+
+              dispatch(autoAddRelName(rel));
+            };
+
+            const relFrom = <b>{relData.lTable}</b>;
+
+            const relTo = relData.isObjRel ? (
+              <b>{relData.rTable}</b>
+            ) : (
+              <b>[ {relData.rTable} ]</b>
+            );
+
+            untrackedRelList.push(
+              <div className={styles.padd_bottom} key={`untracked-rel-${i}`}>
+                <div
+                  className={`${styles.display_inline} ${styles.add_mar_right}`}
+                >
+                  <Button
+                    className={styles.display_inline}
+                    color="white"
+                    size="xs"
+                    onClick={handleAddRel}
+                  >
+                    Track
+                  </Button>
+                </div>
+                <div className={styles.display_inline}>
+                  <span>
+                    {relFrom} &rarr; {relTo}
+                  </span>
+                  &nbsp;&nbsp; - &nbsp;&nbsp;
+                  <span>{getRelDef(relData)}</span>
+                </div>
+              </div>
+            );
+          });
         }
 
         return untrackedRelList;
@@ -514,7 +484,7 @@ class Schema extends Component {
 
       const heading = getSectionHeading(
         'Untracked foreign-key relations',
-        untrackedRelTip,
+        'Relationships inferred via foreign-keys that are not exposed over the GraphQL API',
         getTrackAllBtn()
       );
 
@@ -536,40 +506,42 @@ class Schema extends Component {
       const getTrackableFunctionsList = () => {
         const trackableFunctionList = [];
 
-        trackableFuncs.forEach((p, i) => {
-          trackableFunctionList.push(
-            <div className={styles.padd_bottom} key={`untracked-function-${i}`}>
-              <div
-                className={`${styles.display_inline} ${styles.add_mar_right}`}
-              >
-                <Button
-                  data-test={`add-track-function-${p.function_name}`}
-                  className={`${styles.display_inline} btn btn-xs btn-default`}
-                  onClick={e => {
-                    e.preventDefault();
-
-                    dispatch(addExistingFunction(p.function_name));
-                  }}
-                >
-                  Track
-                </Button>
-              </div>
-              <div className={styles.display_inline}>
-                <span>{p.function_name}</span>
-              </div>
-            </div>
-          );
-        });
-
         if (noTrackableFunctions) {
           trackableFunctionList.push(
             <div key="no-untracked-fns">
               <div>There are no untracked functions</div>
-              <div className={styles.add_mar_top}>
-                {getTrackableFunctionsRequirementsMessage()}
-              </div>
             </div>
           );
+        } else {
+          trackableFuncs.forEach((p, i) => {
+            trackableFunctionList.push(
+              <div
+                className={styles.padd_bottom}
+                key={`untracked-function-${i}`}
+              >
+                <div
+                  className={`${styles.display_inline} ${styles.add_mar_right}`}
+                >
+                  <Button
+                    data-test={`add-track-function-${p.function_name}`}
+                    className={`${
+                      styles.display_inline
+                    } btn btn-xs btn-default`}
+                    onClick={e => {
+                      e.preventDefault();
+
+                      dispatch(addExistingFunction(p.function_name));
+                    }}
+                  >
+                    Track
+                  </Button>
+                </div>
+                <div className={styles.display_inline}>
+                  <span>{p.function_name}</span>
+                </div>
+              </div>
+            );
+          });
         }
 
         return trackableFunctionList;
@@ -577,7 +549,8 @@ class Schema extends Component {
 
       const heading = getSectionHeading(
         'Untracked custom functions',
-        trackableFunctionsTip
+        'Custom functions that are not exposed over the GraphQL API',
+        <KnowMoreLink href="https://docs.hasura.io/1.0/graphql/manual/queries/custom-functions.html" />
       );
 
       return (
@@ -602,48 +575,52 @@ class Schema extends Component {
       const getNonTrackableFuncList = () => {
         const nonTrackableFunctionList = [];
 
-        nonTrackableFunctions.forEach((p, i) => {
-          nonTrackableFunctionList.push(
-            <div className={styles.padd_bottom} key={`untracked-function-${i}`}>
-              <div
-                className={`${styles.display_inline} ${styles.add_mar_right}`}
-              >
-                <Button
-                  data-test={`view-function-${p.function_name}`}
-                  className={`${styles.display_inline} btn btn-xs btn-default`}
-                  onClick={e => {
-                    e.preventDefault();
-
-                    dispatch(_push('/data/sql'));
-
-                    dispatch({
-                      type: SET_SQL,
-                      data: p.function_definition,
-                    });
-                  }}
-                >
-                  View
-                </Button>
-              </div>
-              <div className={styles.display_inline}>{p.function_name}</div>
-            </div>
-          );
-        });
-
         if (noNonTrackableFuncs) {
           nonTrackableFunctionList.push(
             <div key="no-nontracked-fns">
               <div>There are no non trackable functions</div>
             </div>
           );
-        }
+        } else {
+          nonTrackableFunctions.forEach((p, i) => {
+            nonTrackableFunctionList.push(
+              <div
+                className={styles.padd_bottom}
+                key={`untracked-function-${i}`}
+              >
+                <div
+                  className={`${styles.display_inline} ${styles.add_mar_right}`}
+                >
+                  <Button
+                    data-test={`view-function-${p.function_name}`}
+                    className={`${
+                      styles.display_inline
+                    } btn btn-xs btn-default`}
+                    onClick={e => {
+                      e.preventDefault();
 
+                      dispatch(_push('/data/sql'));
+
+                      dispatch({
+                        type: SET_SQL,
+                        data: p.function_definition,
+                      });
+                    }}
+                  >
+                    View
+                  </Button>
+                </div>
+                <div className={styles.display_inline}>{p.function_name}</div>
+              </div>
+            );
+          });
+        }
         return nonTrackableFunctionList;
       };
 
       const heading = getSectionHeading(
         'Non trackable functions',
-        nonTrackableFunctionsTip
+        'Functions that do not conform to Hasura requirements to be exposed over the GraphQL API'
       );
 
       return (
@@ -653,9 +630,6 @@ class Schema extends Component {
         >
           <CollapsibleToggle title={heading} isOpen={false}>
             <div className={`${styles.padd_left_remove} col-xs-12`}>
-              <div className={styles.add_mar_bottom}>
-                {getTrackableFunctionsRequirementsMessage()}
-              </div>
               {getNonTrackableFuncList()}
             </div>
             <div className={styles.clear_fix} />
