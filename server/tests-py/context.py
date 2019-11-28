@@ -15,6 +15,7 @@ import time
 import uuid
 import string
 import random
+import os
 
 import ruamel.yaml as yaml
 import requests
@@ -266,7 +267,8 @@ class HGECtx:
         self.ws_client = GQLWsClient(self, '/v1/graphql')
 
         result = subprocess.run(['../../scripts/get-version.sh'], shell=False, stdout=subprocess.PIPE, check=True)
-        self.version = result.stdout.decode('utf-8').strip()
+        env_version = os.getenv('VERSION')
+        self.version = env_version if env_version else result.stdout.decode('utf-8').strip()
         if not self.metadata_disabled:
           try:
               st_code, resp = self.v1q_f('queries/clear_db.yaml')

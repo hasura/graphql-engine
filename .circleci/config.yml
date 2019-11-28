@@ -232,7 +232,7 @@ jobs:
       PG_VERSION: "11"
     docker:
     - image: hasura/graphql-engine-server-builder:20190826
-    - image: circleci/postgres:10-alpine-postgis
+    - image: circleci/postgres:11-alpine-postgis
       <<: *test_pg_env
 
   test_server_pg_10:
