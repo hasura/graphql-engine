@@ -104,6 +104,7 @@ def run_dash_server(bench_results):
         dbc.Col([
             html.Label('version(s)/docker_image(s)'),
             dcc.Dropdown(
+                id='ver',
                 multi=True
             )
         ])
