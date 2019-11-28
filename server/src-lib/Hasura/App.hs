@@ -165,7 +165,7 @@ initialiseCtx hgeCmd rci = do
   eDbId <- liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) getDbId
   dbId <- either printErrJExit return eDbId
 
-  return $ (InitCtx httpManager instanceId dbId loggers connInfo pool, initTime)
+  return (InitCtx httpManager instanceId dbId loggers connInfo pool, initTime)
   where
     procConnInfo =
       either (printErrExit . connInfoErrModifier) return $ mkConnInfo rci
@@ -205,12 +205,12 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
       Loggers loggerCtx logger _ = _icLoggers
 
   authModeRes <- runExceptT $ mkAuthMode soAdminSecret soAuthHook soJwtSecret soUnAuthRole
-                             _icHttpManager loggerCtx
+                              _icHttpManager logger
 
   authMode <- either (printErrExit . T.unpack) return authModeRes
 
   HasuraApp app cacheRef cacheInitTime shutdownApp <- mkWaiApp soTxIso
-                                                               loggerCtx
+                                                               logger
                                                                sqlGenCtx
                                                                soEnableAllowlist
                                                                _icPgPool
@@ -249,7 +249,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds evFetchMilliSec
   let scRef = _scrCache cacheRef
   unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
-  void $ liftIO $ C.forkIO $ processEventQueue loggerCtx logEnvHeaders
+  void $ liftIO $ C.forkIO $ processEventQueue logger logEnvHeaders
     _icHttpManager _icPgPool scRef eventEngineCtx
 
   -- start a background thread to check for updates
