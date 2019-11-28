@@ -83,11 +83,10 @@ validateObjRel qt (RelDef rn ru _) = do
     RUManual (ObjRelManualConfig rm) -> validateManualConfig fim rm
 
 createObjRelP1
-  :: (UserInfoM m, QErrM m, CacheRM m)
+  :: (QErrM m, CacheRM m)
   => CreateObjRel
   -> m ()
-createObjRelP1 (WithTable qt rd) = do
-  adminOnly
+createObjRelP1 (WithTable qt rd) =
   validateObjRel qt rd
 
 objRelP2Setup
@@ -155,9 +154,8 @@ runCreateObjRel defn = do
   createObjRelP1 defn
   createObjRelP2 defn
 
-createArrRelP1 :: (UserInfoM m, QErrM m, CacheRM m) => CreateArrRel -> m ()
-createArrRelP1 (WithTable qt rd) = do
-  adminOnly
+createArrRelP1 :: (QErrM m, CacheRM m) => CreateArrRel -> m ()
+createArrRelP1 (WithTable qt rd) =
   validateArrRel qt rd
 
 validateArrRel
@@ -239,7 +237,6 @@ runCreateArrRel defn = do
 
 dropRelP1 :: (UserInfoM m, QErrM m, CacheRM m) => DropRel -> m [SchemaObjId]
 dropRelP1 (DropRel qt rn cascade) = do
-  adminOnly
   tabInfo <- askTabInfo qt
   _       <- askRelType (_tiFieldInfoMap tabInfo) rn ""
   sc      <- askSchemaCache
@@ -289,7 +286,6 @@ validateRelP1
   :: (UserInfoM m, QErrM m, CacheRM m)
   => QualifiedTable -> RelName -> m RelInfo
 validateRelP1 qt rn = do
-  adminOnly
   tabInfo <- askTabInfo qt
   askRelType (_tiFieldInfoMap tabInfo) rn ""
 

@@ -108,3 +108,7 @@ func (s *Stub) ReadMetaDown(version uint64) (r io.ReadCloser, identifier string,
 	}
 	return nil, "", "", &os.PathError{Op: fmt.Sprintf("read down yaml version %v", version), Path: s.Url, Err: os.ErrNotExist}
 }
+
+func (f *Stub) ReadName(version uint64) (name string) {
+	return f.Migrations.ReadName(version)
+}

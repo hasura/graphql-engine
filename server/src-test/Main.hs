@@ -39,7 +39,7 @@ main = do
       pgContext = PGExecCtx pgPool Q.Serializable
 
       runAsAdmin :: Run a -> IO (Either QErr a)
-      runAsAdmin = runExceptT . fmap fst . peelRun emptySchemaCache runContext pgContext
+      runAsAdmin = runExceptT . fmap fst . peelRun emptySchemaCache runContext pgContext Q.ReadWrite
 
   runHspec $ do
     describe "Hasura.Server.Migrate" $ do

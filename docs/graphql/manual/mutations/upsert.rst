@@ -44,15 +44,15 @@ The upsert functionality is sometimes confused with the update functionality. Ho
 differently. An upsert mutation is used in the case when it's not clear if the respective row is already present
 in the database. If it's known that the row is present in the database, ``update`` is the functionality to use.
 
-For an upsert, **all columns need to be passed**.
+**For an upsert, all columns that are necessary for an insert are required**.
 
 **How it works**
 
-1. Postgres tries to insert a row (hence all the columns need to be present)
+1. Postgres tries to insert a row (hence all the required columns need to be present)
 
 2. If this fails because of some constraint, it updates the specified columns
 
-If not all columns are present, an error like ``NULL value unexpected for <not-specified-column>`` can occur.
+If not all required columns are present, an error like ``NULL value unexpected for <not-specified-column>`` can occur.
 
 
 Update selected columns on conflict
