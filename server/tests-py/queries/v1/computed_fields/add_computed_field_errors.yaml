@@ -25,7 +25,7 @@
         function: full_name
   response:
     path: "$.args.name"
-    error: column/relationship "first_name" of table "author" already exists
+    error: column/relationship/computed field "first_name" of table "author" already exists
     code: already-exists
 
 - description: Try adding computed field with invalid function
@@ -74,7 +74,7 @@
   response:
     path: "$.args.definition"
     error: "the computed field \"get_articles\" cannot be added to table \"author\" for
-      the following reasons: \n  • the function \"fetch_articles_volatile\" is of type
+      the following reasons:\n  • the function \"fetch_articles_volatile\" is of type
       VOLATILE; cannot be added as a computed field\n  • \"random\" is not an input argument
       of \"fetch_articles_volatile\" function\n"
     code: not-supported
@@ -108,7 +108,7 @@
   response:
     path: "$.args.definition"
     error: "the computed field \"get_articles\" cannot be added to table \"author\" for
-      the following reasons: \n  • first argument of the function \"fetch_articles\" is
+      the following reasons:\n  • first argument of the function \"fetch_articles\" is
       not COMPOSITE type\n  • first argument of the function \"fetch_articles\" of type
       \"pg_catalog.text\" is not the table to which the computed field is being added\n"
     code: not-supported

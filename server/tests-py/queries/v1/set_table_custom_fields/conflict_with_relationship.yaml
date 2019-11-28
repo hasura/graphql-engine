@@ -1,0 +1,17 @@
+description: Set custom column names conflicting with existing relationship
+url: /v1/query
+status: 400
+response:
+  path: "$.args.custom_column_names"
+  error: 'the following custom column names conflict with existing non-column fields:
+    articles_aggregate, articles'
+  code: not-supported
+query:
+  type: set_table_custom_fields
+  version: 2
+  args:
+    table: author
+    custom_root_fields: {}
+    custom_column_names:
+      name: articles
+      age: articles_aggregate
