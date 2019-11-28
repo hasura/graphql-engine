@@ -214,5 +214,6 @@ This readme is available in the following translations:
 - [French :fr:](translations/README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
 - [Greek 🇬🇷](translations/README.greek.md) (:pray: [@MIP2000](https://github.com/MIP2000))
 - [Brazilian Portuguese :brazil:](translations/README.portuguese_br.md) (:pray: [@rubensmp](https://github.com/rubensmp))
+- [German 🇩🇪](translations/README.german.md) (:pray: [@FynnGrandke](https://github.com/FynnGrandke))
 
 Translations for other files can be found [here](translations).
