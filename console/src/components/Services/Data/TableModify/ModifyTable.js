@@ -74,6 +74,7 @@ class ModifyTable extends React.Component {
       columnEdit,
       pkModify,
       fkModify,
+      checkConstraintsModify,
       dataTypes,
       validTypeCasts,
       uniqueKeyModify,
@@ -261,6 +262,7 @@ class ModifyTable extends React.Component {
             <h4 className={styles.subheading_text}>Check Constraints</h4>
             <CheckConstraints
               constraints={getTableCheckConstraints(table)}
+              checkConstraintsModify={checkConstraintsModify}
               dispatch={dispatch}
             />
             <hr />
