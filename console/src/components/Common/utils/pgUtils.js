@@ -69,6 +69,18 @@ export const getTrackedTables = tables => {
   return tables.filter(t => t.is_table_tracked);
 };
 
+export const getUntrackedTables = tables => {
+  return tables.filter(t => !t.is_table_tracked);
+};
+
+export const getOnlyTables = tablesOrViews => {
+  return tablesOrViews.filter(t => checkIfTable(t));
+};
+
+export const getOnlyViews = tablesOrViews => {
+  return tablesOrViews.filter(t => !checkIfTable(t));
+};
+
 /*** Table/View column utils ***/
 
 export const getTableColumns = table => {
@@ -203,8 +215,14 @@ export const getTableCheckConstraints = table => {
   return table.check_constraints;
 };
 
+export const getCheckConstraintName = constraint => {
+  return constraint.constraint_name;
+};
+
 export const findTableCheckConstraint = (checkConstraints, constraintName) => {
-  return checkConstraints.find(c => c.constraint_name === constraintName);
+  return checkConstraints.find(
+    c => getCheckConstraintName(c) === constraintName
+  );
 };
 
 /*** Function utils ***/
@@ -229,4 +247,20 @@ export const getSchemaTables = (allTables, tableSchema) => {
 
 export const getSchemaTableNames = (allTables, tableSchema) => {
   return getSchemaTables(allTables, tableSchema).map(t => getTableName(t));
+};
+
+/*** Custom table fields utils ***/
+
+export const getTableCustomRootFields = table => {
+  if (table.configuration) {
+    return table.configuration.custom_root_fields || {};
+  }
+  return {};
+};
+
+export const getTableCustomColumnNames = table => {
+  if (table.configuration) {
+    return table.configuration.custom_column_names || {};
+  }
+  return {};
 };

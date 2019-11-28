@@ -4,12 +4,13 @@ import { connect } from 'react-redux';
 
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
+import globals from '../../Globals';
 
 export class NotFoundError extends Error {}
 
 class PageNotFound extends Component {
   render() {
-    const errorImage = require('./hasura_icon_green.png');
+    const errorImage = `${globals.assetsPath}/common/img/hasura_icon_green.svg`;
     const styles = require('./ErrorPage.scss');
 
     const { resetCallback } = this.props;

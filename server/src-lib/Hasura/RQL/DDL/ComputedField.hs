@@ -5,6 +5,7 @@ module Hasura.RQL.DDL.ComputedField
   ( AddComputedField(..)
   , ComputedFieldDefinition(..)
   , runAddComputedField
+  , addComputedFieldP2
   , addComputedFieldP2Setup
   , DropComputedField
   , dropComputedFieldFromCatalog
@@ -20,6 +21,7 @@ import           Hasura.RQL.DDL.Schema.Function     (RawFunctionInfo (..),
                                                      fetchRawFunctioInfo,
                                                      mkFunctionArgs)
 import           Hasura.RQL.Types
+import           Hasura.Server.Utils                (makeReasonMessage)
 import           Hasura.SQL.Types
 
 import           Data.Aeson
@@ -29,7 +31,6 @@ import           Language.Haskell.TH.Syntax         (Lift)
 
 import qualified Control.Monad.Validate             as MV
 import qualified Data.Sequence                      as Seq
-import qualified Data.Text                          as T
 import qualified Database.PG.Query                  as Q
 import qualified Language.GraphQL.Draft.Syntax      as G
 
@@ -60,7 +61,6 @@ addComputedFieldP1
   :: (UserInfoM m, QErrM m, CacheRM m)
   => AddComputedField -> m ()
 addComputedFieldP1 q = do
-  adminOnly
   tableInfo <- withPathK "table" $ askTabInfo tableName
   withPathK "name" $ checkForFieldConflict tableInfo $
     fromComputedField computedFieldName
@@ -186,8 +186,9 @@ addComputedFieldP2Setup table computedField definition rawFunctionInfo comment =
           pure FTAFirst
 
 
-      let computedFieldFunction =
-            ComputedFieldFunction function (Seq.fromList inputArgs) tableArgument $
+      let inputArgSeq = Seq.fromList $ dropTableArgument tableArgument inputArgs
+          computedFieldFunction =
+            ComputedFieldFunction function inputArgSeq tableArgument $
             rfiDescription rawFunctionInfo
 
       pure $ ComputedFieldInfo computedField computedFieldFunction returnType comment
@@ -206,12 +207,16 @@ addComputedFieldP2Setup table computedField definition rawFunctionInfo comment =
     showErrors :: [ComputedFieldValidateError] -> Text
     showErrors allErrors =
       "the computed field " <> computedField <<> " cannot be added to table "
-      <> table <<> reasonMessage
+      <> table <<> " " <> reasonMessage
       where
-        reasonMessage = case allErrors of
-          [singleError] -> " because " <> showError function singleError
-          _ -> " for the following reasons: \n" <> T.unlines
-               (map (("  • " <>) . showError function) allErrors)
+        reasonMessage = makeReasonMessage allErrors (showError function)
+
+    dropTableArgument :: FunctionTableArgument -> [FunctionArg] -> [FunctionArg]
+    dropTableArgument tableArg inputArgs =
+      case tableArg of
+        FTAFirst  -> tail inputArgs
+        FTANamed argName _ ->
+          filter ((/=) (Just argName) . faName) inputArgs
 
 addComputedFieldToCatalog
   :: MonadTx m
@@ -247,7 +252,6 @@ runDropComputedField
   => DropComputedField -> m EncJSON
 runDropComputedField (DropComputedField table computedField cascade) = do
   -- Validation
-  adminOnly
   fields <- withPathK "table" $ _tiFieldInfoMap <$> askTabInfo table
   void $ withPathK "name" $ askComputedFieldInfo fields computedField
 

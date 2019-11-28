@@ -26,20 +26,18 @@ input function_args {
 }
 -}
 
-procFuncArgs
-  :: Seq.Seq FunctionArg
-  -> (FunctionArg -> Text -> a) -> [a]
-procFuncArgs argSeq f =
+procFuncArgs :: Seq.Seq a -> (a -> Maybe FunctionArgName) -> (a -> Text -> b) -> [b]
+procFuncArgs argSeq nameFn resultFn =
   fst $ foldl mkItem ([], 1::Int) argSeq
   where
     mkItem (items, argNo) fa =
-      case faName fa of
+      case nameFn fa of
         Just argName ->
           let argT = getFuncArgNameTxt argName
-          in (items <> pure (f fa argT), argNo)
+          in (items <> pure (resultFn fa argT), argNo)
         Nothing ->
           let argT = "arg_" <> T.pack (show argNo)
-          in (items <> pure (f fa argT), argNo + 1)
+          in (items <> pure (resultFn fa argT), argNo + 1)
 
 mkFuncArgsInp :: QualifiedFunction -> Seq.Seq FunctionArg -> Maybe InpObjTyInfo
 mkFuncArgsInp funcName funcArgs =
@@ -50,7 +48,7 @@ mkFuncArgsInp funcName funcArgs =
     inpObj = mkHsraInpTyInfo Nothing funcArgsTy $
              fromInpValL argInps
 
-    argInps = procFuncArgs funcArgs mkInpVal
+    argInps = procFuncArgs funcArgs faName mkInpVal
 
     mkInpVal fa t =
       InpValInfo Nothing (G.Name t) Nothing $
@@ -72,7 +70,7 @@ mkFuncArgs funInfo =
   fromInpValL $ funcInpArgs <> mkSelArgs retTable
   where
     funcName = fiName funInfo
-    funcArgs = fiInputArgs funInfo
+    funcArgs = getInputArgs funInfo
     retTable = fiReturnType funInfo
 
     funcArgDesc = G.Description $ "input parameters for function " <>> funcName
