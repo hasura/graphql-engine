@@ -5,13 +5,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/migrate"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	v2yaml "gopkg.in/yaml.v2"
 
 	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
 	log "github.com/sirupsen/logrus"
@@ -151,7 +151,7 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 		}
 		defer os.Remove(tmpfile.Name())
 
-		t, err := yaml.Marshal(metaData)
+		t, err := v2yaml.Marshal(metaData)
 		if err != nil {
 			return 0, errors.Wrap(err, "cannot marshal metadata")
 		}

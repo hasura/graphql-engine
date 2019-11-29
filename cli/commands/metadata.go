@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"os"
 
@@ -37,19 +36,7 @@ func executeMetadata(cmd string, t *migrate.Migrate, ec *cli.ExecutionContext) e
 			return errors.Wrap(err, "cannot export metadata")
 		}
 
-		t, err := json.Marshal(metaData)
-		if err != nil {
-			return errors.Wrap(err, "cannot Marshal metadata")
-		}
-
-		var data v2yaml.MapSlice
-
-		err = v2yaml.Unmarshal(t, &data)
-		if err != nil {
-			return err
-		}
-
-		databyt, err := v2yaml.Marshal(data)
+		databyt, err := v2yaml.Marshal(metaData)
 		if err != nil {
 			return err
 		}
