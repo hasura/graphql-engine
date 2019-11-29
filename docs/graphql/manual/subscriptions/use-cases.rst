@@ -283,3 +283,83 @@ Now we can use the following subscription to display the latest poll result:
 
 Check this `sample app <https://realtime-poll.demo.hasura.app/>`__ for a working demo
 (`source code <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/realtime-poll>`__).
+
+How to get diffs via subscriptions
+------------------------------------------
+
+Subscriptions implement the ``live query`` semantics i.e. you can subscribe to any query and get the new result set anytime the underlying data changes. In case you are only interested in the ``diff`` of changes that happened, then you can implement a simple subscribe and fetch pattern. 
+
+Example: Subscribe and fetch pattern
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Suppose you have the following subscription to fetch all active users:
+
+.. graphiql::
+  :view_only:
+  :query:
+    subscription getUsers {
+      users(where: { status: { _eq : "ACTIVE" } }) {
+        id
+        name
+      }
+    }
+  :response:
+    {
+      "data": {
+        "users": [
+          {
+            "id": 1,
+            "name": "Justin"
+          },
+          {
+            "id": 2,
+            "name": "Beltran"
+          },
+          {
+            "id": 3,
+            "name": "Sidney"
+          }
+        ]
+      }
+    }
+
+Now, suppose you recieved an update and want to know the status of users who got removed in the new list. You can implement this with the ``subscribe and fetch`` pattern in 3 steps:
+
+1. Define two variables ``prevActiveUsers`` and ``currentActiveUsers``. Initially both variables are equal to the value of the current subscription.
+
+2. Everytime you recieve an update, set ``prevActiveUsers = currentActiveUsers`` and ``currentActiveUsers = <new value of subscription>``. Perform a diff equivalent to ``diff = prevActiveUsers - currentActiveUsers``
+
+3. Now ``diff`` will have ``id`` s of all rows that were removed in the new update. Fetch their state by performing a query like below:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query inactiveUsers {
+      users(where: { id: { _in: [1, 3] } }) {
+        id
+        name
+        status
+      }
+    }
+  :response:
+    {
+      "data": {
+        "users": [
+          {
+            "id": 1,
+            "name": "Justin",
+            "status": "blocked"
+          },
+          {
+            "id": 3,
+            "name": "Sidney",
+            "status": "deleted"
+          }
+        ]
+      }
+    }
+
+
+.. note::
+
+   The ``subscribe and fetch`` pattern is not an equivalent of getting change events. For e.g. in the above example although you can construct the BEFORE and AFTER state of inactive users, you can only get the CURRENT state of the newly active users.
