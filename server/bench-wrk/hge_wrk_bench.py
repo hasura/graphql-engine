@@ -30,12 +30,18 @@ class HGEWrkBench(HGETestSetup):
 
     def __init__(
             self, pg_urls, pg_docker_image, hge_docker_image=None,
-            hge_admin_secret=None, skip_stack_build=False,
+            hge_args=[], skip_stack_build=False,
             graphql_queries_file='queries.graphql', connections=50,
             duration=300, results_hge_url = None, results_hge_admin_secret = None
     ):
         self.load_queries(graphql_queries_file)
-        super().__init__(pg_urls, pg_docker_image, hge_docker_image, hge_admin_secret, skip_stack_build)
+        super().__init__(
+            pg_urls = pg_urls,
+            pg_docker_image = pg_docker_image,
+            hge_docker_image = hge_docker_image,
+            hge_args = hge_args,
+            skip_stack_build = skip_stack_build
+        )
         self.connections = connections
         self.duration = duration
         self.results_hge_url = results_hge_url
@@ -284,11 +290,23 @@ query results {
 
         insert_var['postgres_version'] = self.pg.get_server_version()
 
+    def set_hge_args_env_vars(self, insert_var):
+        to_hide_env = ['HASURA_GRAPHQL_' + env for env in
+                       [ 'ADMIN_SECRET', 'DATABASE_URL', 'JWT_SECRET']
+        ]
+        env = { k:v for (k,v) in self.hge.get_hge_env().items() if (k.startswith('HASURA_GRAPHQL') and k not in to_hide_env) or k in ['GHCRTS'] }
+        args = self.hge.args
+        insert_var['hge_conf']  = {
+            'env': env,
+            'args': args
+        }
+
     def gen_max_rps_insert_var(self, query, max_rps):
         insert_var = dict()
         self.set_cpu_info(insert_var)
         self.set_query_info(insert_var, query)
         self.set_version_info(insert_var)
+        self.set_hge_args_env_vars(insert_var)
         insert_var['max_rps'] = max_rps
         insert_var['wrk_parameters'] = self.get_wrk2_params()
         return insert_var
@@ -317,6 +335,7 @@ query results {
         self.set_cpu_info(insert_var)
         self.set_query_info(insert_var, query)
         self.set_version_info(insert_var)
+        self.set_hge_args_env_vars(insert_var)
         set_wrk_params()
         set_latencies_uri()
         return insert_var
@@ -346,8 +365,12 @@ mutation insertMaxRps($result: hge_bench_query_max_rps_insert_input!) {
     def setup_results_schema(self):
         if not self.results_hge_url:
             self.results_hge_url = self.hge.url
-            self.results_hge_admin_secret = self.hge.admin_secret
-        self.results_hge = HGE(None, None, admin_secret=self.results_hge_admin_secret, log_file=None, url=self.results_hge_url)
+            self.results_hge_admin_secret = self.hge.admin_secret()
+        if self.results_hge_admin_secret:
+            results_hge_args = ['--admin-secret', self.results_hge_admin_secret]
+        else:
+            results_hge_args = []
+        self.results_hge = HGE(None, None, args=results_hge_args, log_file=None, url=self.results_hge_url)
         results_table = {
             'name' : 'results',
             'schema': 'hge_bench'
@@ -441,7 +464,7 @@ class HGEWrkBenchWithArgs(HGEWrkBenchArgs, HGEWrkBench):
             pg_urls = self.pg_urls,
             pg_docker_image = self.pg_docker_image,
             hge_docker_image = self.hge_docker_image,
-            hge_admin_secret = self.hge_admin_secret,
+            hge_args = self.hge_args,
             skip_stack_build = self.skip_stack_build,
             graphql_queries_file = self.graphql_queries_file,
             connections = self.connections,

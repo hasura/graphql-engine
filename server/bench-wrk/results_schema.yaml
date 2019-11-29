@@ -23,7 +23,9 @@
         server_shasum text,
         time timestamptz not null default now(),
         max_rps integer not null,
-        wrk_parameters jsonb
+        wrk_parameters jsonb,
+        hge_conf jsonb
+        constraint should_have_tag CHECK (docker_image is not null or version is not null)
       );
 
       create table if not exists hge_bench.results(
@@ -38,7 +40,8 @@
         requests_per_sec integer not null,
         summary jsonb,
         latencies_uri text,
-        wrk2_parameters jsonb
+        wrk2_parameters jsonb,
+        hge_conf jsonb
         constraint should_have_tag CHECK (docker_image is not null or version is not null)
       );
 

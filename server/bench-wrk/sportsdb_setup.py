@@ -23,11 +23,11 @@ class HGETestSetup:
 
     previous_work_dir_file = '.previous_work_dir'
 
-    def __init__(self, pg_urls, pg_docker_image, hge_docker_image=None, hge_admin_secret=None, skip_stack_build=False):
+    def __init__(self, pg_urls, pg_docker_image, hge_docker_image=None, hge_args=[], skip_stack_build=False):
         self.pg_url, self.remote_pg_url = pg_urls or (None, None)
         self.pg_docker_image = pg_docker_image
         self.hge_docker_image = hge_docker_image
-        self.hge_admin_secret = hge_admin_secret
+        self.hge_args = hge_args
         self.skip_stack_build = skip_stack_build
         self.port_allocator = PortAllocator()
         self.set_work_dir()
@@ -81,7 +81,7 @@ class HGETestSetup:
         ]
         self.hge, self.remote_hge = [
             HGE(
-                pg=pg, port_allocator=self.port_allocator, admin_secret=self.hge_admin_secret,
+                pg=pg, port_allocator=self.port_allocator, args=self.hge_args,
                 log_file= self.work_dir + '/' + log_file, docker_image=self.hge_docker_image)
             for (pg, log_file) in hge_confs
         ]
@@ -219,11 +219,12 @@ class HGETestSetupArgs:
             self.pg_docker_image = self.pg_docker_image or self.default_pg_docker_image
 
     def set_hge_confs(self):
-        self.hge_docker_image, self.hge_admin_secret = self.get_params([
-            ('hge_docker_image', 'HASURA_BENCH_DOCKER_IMAGE'),
-            ('hge_admin_secret', 'HASURA_BENCH_HGE_ADMIN_SECRET')
-        ])
+        self.hge_docker_image = self.get_param(
+            'hge_docker_image',
+            'HASURA_BENCH_DOCKER_IMAGE'
+        )
         self.skip_stack_build = self.parsed_args.skip_stack_build
+        self.hge_args =  self.parsed_args.hge_args[1:]
 
     def set_pg_options(self):
         pg_opts = self.arg_parser.add_argument_group('Postgres').add_mutually_exclusive_group()
@@ -233,8 +234,8 @@ class HGETestSetupArgs:
     def set_hge_options(self):
         hge_opts = self.arg_parser.add_argument_group('Hasura GraphQL Engine')
         hge_opts.add_argument('--hge-docker-image', metavar='HASURA_BENCH_HGE_DOCKER_IMAGE', help='GraphQl engine docker image to be used for tests', required=False)
-        hge_opts.add_argument('--hge-admin-secret', metavar='HASURA_BENCH_HGE_ADMIN_SECRET', help='Admin secret set for GraphQL engines. By default, no admin secret is set', required=False)
         hge_opts.add_argument('--skip-stack-build', help='Skip stack build if this option is set', action='store_true', required=False)
+        self.arg_parser.add_argument('hge_args', nargs=argparse.REMAINDER)
 
     def get_param(self, attr, env):
         return _first_true([getattr(self.parsed_args, attr), os.getenv(env)])
@@ -256,8 +257,8 @@ class HGETestSetupWithArgs(HGETestSetup, HGETestSetupArgs):
             pg_urls = self.pg_urls,
             pg_docker_image = self.pg_docker_image,
             hge_docker_image = self.hge_docker_image,
-            hge_admin_secret = self.hge_admin_secret,
-            skip_stack_build = self.skip_stack_build
+            skip_stack_build = self.skip_stack_build,
+            hge_args = self.hge_args
         )
 
 if __name__ == "__main__":

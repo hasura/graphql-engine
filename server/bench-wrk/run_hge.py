@@ -6,6 +6,7 @@ import json
 import time
 import signal
 import docker
+import argparse
 from requests.exceptions import ConnectionError
 from colorama import Fore, Style
 import contextlib
@@ -30,10 +31,9 @@ class HGE:
         'HASURA_GRAPHQL_ENABLE_CONSOLE' : 'true'
     }
 
-    def __init__(self, pg, port_allocator, admin_secret=None, docker_image=None, log_file='hge.log', url=None):
+    def __init__(self, pg, port_allocator, docker_image=None, log_file='hge.log', url=None, args=[]):
         self.pg = pg
         self.log_file = log_file
-        self.admin_secret = admin_secret
         self.docker_image = docker_image
         self.introspection = None
         self.obj_fk_rels = set()
@@ -42,6 +42,15 @@ class HGE:
         self.url = url
         self.proc = None
         self.container = None
+        self.args = args
+
+
+    def admin_secret(self):
+        admin_secret_env = os.environ.get('HASURA_GRAPHQL_ADMIN_SECRET')
+        parser = argparse.ArgumentParser()
+        parser.add_argument('--admin-secret', metavar='HASURA_GRAPHQL_ADMIN_SECRET', required=False)
+        admin_secret_arg = parser.parse_known_args(self.args)[0].admin_secret
+        return admin_secret_arg or admin_secret_env
 
     @classmethod
     def do_stack_build(cls):
@@ -57,8 +66,6 @@ class HGE:
             'HASURA_GRAPHQL_SERVER_HOST': '127.0.0.1',
             'HPCTIXFILE' : self.tix_file
         }
-        if self.admin_secret:
-            hge_env['HASURA_GRAPHQL_ADMIN_SECRET'] = self.admin_secret
         return hge_env
 
     def run(self):
@@ -75,11 +82,12 @@ class HGE:
             return
         self.port = self.port_allocator.allocate_port(8080)
         hge_env = self.get_hge_env()
-        process_args = ['graphql-engine', 'serve']
+        process_args = ['graphql-engine', 'serve', *self.args]
         docker_ports = {str(self.port) + '/tcp': ('127.0.0.1', self.port)}
         self.docker_client = docker.from_env()
         print("Running GraphQL Engine docker with image:",
               self.docker_image, '(port:{})'.format(self.port))
+        print(process_args)
         self.container = self.docker_client.containers.run(
             self.docker_image,
             command=process_args,
@@ -100,8 +108,9 @@ class HGE:
         self.port = self.port_allocator.allocate_port(8080)
         rm_file_if_exists(self.tix_file)
         hge_env = self.get_hge_env()
-        process_args = ['stack', 'exec', 'graphql-engine', '--', 'serve']
+        process_args = ['stack', 'exec', 'graphql-engine', '--', 'serve', *self.args]
         print("Running GraphQL with stack exec: (port:{})".format(self.port))
+        print(process_args)
         self.log_fp = open(self.log_file, 'w')
         self.proc = subprocess.Popen(
             process_args,
@@ -174,8 +183,8 @@ class HGE:
 
     def admin_auth_headers(self):
         headers = {}
-        if self.admin_secret:
-            headers['X-Hasura-Admin-Secret'] = self.admin_secret
+        if self.admin_secret():
+            headers['X-Hasura-Admin-Secret'] = self.admin_secret()
         return headers
 
     def v1q(self, q, exp_status=200):
