@@ -70,21 +70,6 @@ ORDER BY 1, 2;
 
 `;
 
-const getCreatePkSql = ({
-  schemaName,
-  tableName,
-  selectedPkColumns,
-  constraintName,
-}) => {
-  return `alter table "${schemaName}"."${tableName}"
-    add constraint "${constraintName}" 
-    primary key ( ${selectedPkColumns.map(pkc => `"${pkc}"`).join(', ')} );`;
-};
-
-const getDropPkSql = ({ schemaName, tableName, constraintName }) => {
-  return `alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}";`;
-};
-
 export const sanitiseRootFields = rootFields => {
   const santisedRootFields = {};
   Object.keys(rootFields).forEach(rootFieldType => {
@@ -97,10 +82,4 @@ export const sanitiseRootFields = rootFields => {
   return santisedRootFields;
 };
 
-export {
-  convertArrayToJson,
-  getValidAlterOptions,
-  fetchColumnCastsQuery,
-  getCreatePkSql,
-  getDropPkSql,
-};
+export { convertArrayToJson, getValidAlterOptions, fetchColumnCastsQuery };
