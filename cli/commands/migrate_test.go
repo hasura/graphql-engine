@@ -31,35 +31,35 @@ var ravenVersions = []mt.Version{
 }
 
 var testMetadataPrev = map[string][]byte{
-	"metadata": []byte(`allowlist: []
-functions: []
-query_collections: []
+	"metadata": []byte(`functions: []
 remote_schemas: []
+query_collections: []
+allowlist: []
 tables:
-- array_relationships: []
-  computed_fields: []
+- table: test
+  is_enum: false
   configuration:
-    custom_column_names: {}
-    custom_root_fields:
+	custom_root_fields:
+	  select: null
+	  select_by_pk: null
+	  select_aggregate: null
+	  insert: null
+	  update: null
       delete: null
-      insert: null
-      select: null
-      select_aggregate: null
-      select_by_pk: null
-      update: null
+    custom_column_names: {}
+  object_relationships: []
+  array_relationships: []
+  insert_permissions: []
+  select_permissions: []
+  update_permissions: []
   delete_permissions: []
   event_triggers: []
-  insert_permissions: []
-  is_enum: false
-  object_relationships: []
-  select_permissions: []
-  table: test
-  update_permissions: []
+  computed_fields: []
 `),
-	"empty-metadata": []byte(`allowlist: []
-functions: []
-query_collections: []
+	"empty-metadata": []byte(`functions: []
 remote_schemas: []
+query_collections: []
+allowlist: []
 tables: []
 `),
 }
