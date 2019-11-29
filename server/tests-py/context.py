@@ -25,6 +25,10 @@ from sqlalchemy.schema import MetaData
 import graphql_server
 import graphql
 
+# pytest has removed the global pytest.config
+# As a solution to this we are going to store it in PyTestConf.config
+class PytestConf():
+    pass
 
 class HGECtxError(Exception):
     pass

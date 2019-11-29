@@ -12,12 +12,13 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 
 from validate import check_query
+from context import PytestConf
 
 
-if not pytest.config.getoption('--hge-jwt-key-file'):
+if not PytestConf.config.getoption('--hge-jwt-key-file'):
     pytest.skip('--hge-jwt-key-file is missing, skipping JWT tests', allow_module_level=True)
 
-if not pytest.config.getoption('--hge-jwt-conf'):
+if not PytestConf.config.getoption('--hge-jwt-conf'):
     pytest.skip('--hge-jwt-key-conf is missing, skipping JWT tests', allow_module_level=True)
 
 def get_claims_fmt(raw_conf):
