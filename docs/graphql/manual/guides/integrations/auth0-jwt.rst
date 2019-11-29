@@ -186,7 +186,7 @@ Using Auth0 Rules again, add the following rule which will insert a new user eve
            affected_rows
          }
        }`
-     const graphqlReq = { "query": upsertUserQuery, "variables": { "id": userId } }
+     const graphqlReq = { "query": upsertUserQuery, "variables": { "userId": userId } }
 
      request.post({
          headers: {'content-type' : 'application/json', 'x-hasura-admin-secret': hasuraAdminSecret},
