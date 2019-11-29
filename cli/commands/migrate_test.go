@@ -40,13 +40,13 @@ tables:
   is_enum: false
   configuration:
     custom_root_fields:
-	  select: null
-	  select_by_pk: null
-	  select_aggregate: null
-	  insert: null
-	  update: null
-	  delete: null
-	custom_column_names: {}
+      select: null
+      select_by_pk: null
+      select_aggregate: null
+      insert: null
+      update: null
+      delete: null
+    custom_column_names: {}
   object_relationships: []
   array_relationships: []
   insert_permissions: []
