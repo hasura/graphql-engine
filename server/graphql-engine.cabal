@@ -30,6 +30,9 @@ common common-all
     -O2 -foptimal-applicative-do
     -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
     -fdefer-typed-holes
+    -- this seem to parallelize building the modules. using stack build -j4 does not have any
+    -- effect, but adding this seems to help
+    -j4
 
   if flag(profile)
     ghc-prof-options: -fprof-auto -fno-prof-count-entries

@@ -115,16 +115,19 @@ jwkRefreshCtrl
   -> IORef Jose.JWKSet
   -> NominalDiffTime
   -> m ()
-jwkRefreshCtrl lggr mngr url ref time =
+jwkRefreshCtrl logger manager url ref time =
   void $ liftIO $ C.forkIO $ do
     C.threadDelay $ diffTimeToMicro time
     forever $ do
-      res <- runExceptT $ updateJwkRef lggr mngr url ref
-      mTime <- either (const $ return Nothing) return res
+      res <- runExceptT $ updateJwkRef logger manager url ref
+      mTime <- either (const $ logNotice >> return Nothing) return res
       -- if can't parse time from header, defaults to 1 min
       let delay = maybe (60 * aSecond) computeDiffTime mTime
       C.threadDelay delay
   where
+    logNotice = do
+      let err = JwkRefreshLog LevelInfo (JLNInfo "retrying again in 60 secs") Nothing
+      liftIO $ unLogger logger err
     aSecond = 1000 * 1000
 
 
@@ -168,13 +171,21 @@ updateJwkRef (Logger logger) manager url jwkRef = do
     Nothing -> do
       let mExpiresT = resp ^? Wreq.responseHeader "Expires"
       forM mExpiresT $ \expiresT -> do
-        let expiresE = parseTimeM True defaultTimeLocale timeFmt $ CS.cs expiresT
-        expires  <- either (`logAndThrow` Nothing) return expiresE
+        let maybeExpires = parseTimeM True defaultTimeLocale timeFmt $ CS.cs expiresT
+        expires  <- maybe (logAndThrow parseTimeErr Nothing) return maybeExpires
         currTime <- liftIO getCurrentTime
         return $ diffUTCTime expires currTime
-
   where
-    parseCacheControlHeader = runParser cacheControlHeaderParser
+    parseCacheControlHeader =
+     fmapL (const parseCacheControlErr) . AT.parseOnly cacheControlHeaderParser
+
+    cacheControlHeaderParser :: AT.Parser Integer
+    cacheControlHeaderParser = ("s-maxage=" <|> "max-age=") *> AT.decimal
+
+    parseCacheControlErr =
+      "Failed parsing Cache-Control header from JWK response. Could not find max-age or s-maxage"
+    parseTimeErr =
+      "Failed parsing Expires header from JWK response. Value of header is not a valid timestamp"
 
     logAndThrow
       :: (MonadIO m, MonadError T.Text m)
@@ -423,11 +434,3 @@ instance A.FromJSON JWTConfig where
       runEither = either (invalidJwk . T.unpack) return
       invalidJwk msg = fail ("Invalid JWK: " <> msg)
 
-
-runParser :: AT.Parser a -> Text -> Either Text a
-runParser parser text =
-  fmapL T.pack $ AT.parseOnly parser text
-
-cacheControlHeaderParser :: AT.Parser Integer
-cacheControlHeaderParser =
-  ("s-maxage=" <|> "max-age=") *> AT.decimal
