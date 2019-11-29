@@ -8,3 +8,4 @@
 | Contributing | [:uk: English](../CONTRIBUTING.md)  [:fr: Français](CONTRIBUTING.french.md) |
 | Security | [:uk: English](../SECURITY.md)  [:fr: Français](SECURITY.french.md) |
 | Code of Conduct | [:uk: English](../code-of-conduct.md)  [:fr: Français](code-of-conduct.french.md) |
+
