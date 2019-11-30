@@ -10,7 +10,7 @@ Synopsis
 
 
 (PREVIEW) Show changes between two different sets of Hasura metadata.
-By default, shows changes between exported metadata file and server metadata.
+By default, it shows changes between the exported metadata file and server metadata.
 
 ::
 
