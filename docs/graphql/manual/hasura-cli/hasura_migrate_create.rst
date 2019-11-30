@@ -20,7 +20,7 @@ Examples
 
 ::
 
-    # Setup migration files for the first time by introspecting a server:
+    # Set up migration files for the first time by introspecting a server:
     hasura migrate create "init" --from-server
 
 Options
