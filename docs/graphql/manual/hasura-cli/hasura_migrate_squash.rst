@@ -9,7 +9,7 @@ Synopsis
 ~~~~~~~~
 
 
-(PREVIEW) Squash multiple migrations leading upto the latest one into a single migration file
+(PREVIEW) Squash multiple migrations leading up to the latest one into a single migration file.
 
 ::
 
