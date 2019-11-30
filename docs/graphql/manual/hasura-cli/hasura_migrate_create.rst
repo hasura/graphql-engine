@@ -35,7 +35,7 @@ Options
       --metadata-from-file string   path to a hasura metadata file to be used for up actions
       --metadata-from-server        take metadata from the server and write it as an up migration file
       --schema stringArray          name of Postgres schema to export as migration (default [public])
-      --sql-from-file string        path to an sql file which contains the SQL statements
+      --sql-from-file string        path to an SQL file which contains the SQL statements
       --sql-from-server             take pg_dump from server and save it as a migration
 
 Options inherited from parent commands
