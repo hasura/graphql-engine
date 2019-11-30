@@ -20,7 +20,7 @@ Examples
 
 ::
 
-    # NOTE: This command is in PREVIEW, correctness is not guaranteed and the usage may change.
+    # NOTE: This command is in PREVIEW. Correctness is not guaranteed and the usage may change.
 
     # squash all migrations from version 123 to the latest one:
     hasura migrate squash --from 123
