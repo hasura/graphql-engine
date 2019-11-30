@@ -30,7 +30,7 @@ Options
 
       --admin-secret string         admin secret for Hasura GraphQL engine
       --endpoint string             http(s) endpoint for Hasura GraphQL engine
-      --from-server                 get SQL statements and hasura metadata from the server
+      --from-server                 get SQL statements and Hasura metadata from the server
   -h, --help                        help for create
       --metadata-from-file string   path to a hasura metadata file to be used for up actions
       --metadata-from-server        take metadata from the server and write it as an up migration file
