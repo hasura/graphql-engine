@@ -174,8 +174,8 @@ Los archivos de marca de Hasura (logotipos, la mascota de Hasura, la insignia: "
 aplicación, sitio web, etc. Estaremos encantados si agregas la insignia "Powered by Hasura" a tus aplicaciones creadas con Hasura. ❤️
 
 <div style="display: flex;">
-  <img src="assets/brand/powered_by_hasura_blue.svg" width="150px"/>
-  <img src="assets/brand/powered_by_hasura_white.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_blue.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_white.svg" width="150px"/>
 </div>
 
 ```html
@@ -206,5 +206,8 @@ Este archivo está disponible en los siguientes idiomas:
 - [Francés :fr:](../translations/README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
 - [Griego 🇬🇷](../translations/README.greek.md) (:pray: [@MIP2000](https://github.com/MIP2000))
 - [Español 🇲🇽](../translations/README.mx_spanish.md)(:pray: [@ferdox2](https://github.com/ferdox2))
+- [Indonesian :indonesia:](translations/README.indonesian.md) (:pray: [@anwari666](https://github.com/anwari666))
+- [Brazilian Portuguese :brazil:](translations/README.portuguese_br.md) (:pray: [@rubensmp](https://github.com/rubensmp))
+- [German 🇩🇪](translations/README.german.md) (:pray: [@FynnGrandke](https://github.com/FynnGrandke))
 
 Las traducciones para otros idiomas se encuentran [aquí](../translations).
