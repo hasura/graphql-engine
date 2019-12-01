@@ -1,4 +1,4 @@
-import yaml
+import ruamel.yaml as yaml
 from validate import check_query_f
 from super_classes import DefaultTestSelectQueries, DefaultTestQueries, DefaultTestMutations
 
@@ -16,6 +16,9 @@ class TestV1General(DefaultTestQueries):
 
     def test_query_args_as_string_err(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/query_args_as_string_err.yaml')
+
+    def test_query_v2_invalid_version(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_v2_invalid_version.yaml')
 
     @classmethod
     def dir(cls):
@@ -476,14 +479,41 @@ class TestMetadata(DefaultTestQueries):
     def test_replace_metadata_wo_remote_schemas(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/replace_metadata_wo_rs.yaml')
 
+    def test_replace_metadata_v2(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/replace_metadata_v2.yaml')
+
     def test_dump_internal_state(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/dump_internal_state.yaml')
 
+    def test_export_replace(self, hge_ctx):
+        url = '/v1/query'
+        export_query = {
+            'type': 'export_metadata',
+            'args': {}
+        }
+        headers = {}
+        if hge_ctx.hge_key is not None:
+            headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
+        export_code, export_resp = hge_ctx.anyq(url, export_query, headers)
+        assert export_code == 200, export_resp
+        replace_query = {
+            'type': 'replace_metadata',
+            'args': export_resp
+        }
+        replace_code, replace_resp = hge_ctx.anyq(url, replace_query, headers)
+        assert replace_code == 200, replace_resp
 
     @classmethod
     def dir(cls):
         return "queries/v1/metadata"
 
+class TestMetadataOrder(DefaultTestQueries):
+    @classmethod
+    def dir(cls):
+        return "queries/v1/metadata_order"
+
+    def test_export_metadata_order(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/export_metadata_order.yaml')
 
 class TestRunSQL(DefaultTestQueries):
 
@@ -656,6 +686,15 @@ class TestSetTableCustomFields(DefaultTestQueries):
     def test_alter_column(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/alter_column.yaml')
 
+    def test_conflict_with_relationship(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/conflict_with_relationship.yaml')
+
+    def test_column_field_swap(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/column_field_swap.yaml")
+
+    def test_relationship_conflict_with_custom_column(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/relationship_conflict_with_custom_column.yaml")
+
 class TestComputedFields(DefaultTestQueries):
     @classmethod
     def dir(cls):
@@ -672,3 +711,14 @@ class TestComputedFields(DefaultTestQueries):
 
     def test_run_sql(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/run_sql.yaml')
+
+class TestBulkQuery(DefaultTestQueries):
+    @classmethod
+    def dir(cls):
+        return 'queries/v1/bulk'
+
+    def test_run_bulk(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/basic.yaml')
+
+    def test_run_bulk_mixed_access_mode(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/mixed_access_mode.yaml')

@@ -73,7 +73,7 @@ $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogPermission)
 data CatalogComputedField
   = CatalogComputedField
   { _cccComputedField :: !AddComputedField
-  , _cccFunctionInfo  :: ![RawFunctionInfo] -- multiple functions with same name
+  , _cccFunctionInfo  :: ![RawFunctionInfo] -- ^ multiple functions with same name
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 4 snakeCase) ''CatalogComputedField)
 
@@ -89,6 +89,7 @@ data CatalogFunction
   = CatalogFunction
   { _cfFunction        :: !QualifiedFunction
   , _cfIsSystemDefined :: !SystemDefined
+  , _cfConfiguration   :: !FunctionConfig
   , _cfInfo            :: ![RawFunctionInfo] -- ^ multiple functions with same name
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogFunction)

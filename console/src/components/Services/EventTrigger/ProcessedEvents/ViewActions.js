@@ -9,6 +9,8 @@ import {
 } from '../../Common/Notification';
 import dataHeaders from '../Common/Headers';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import globals from '../../../../Globals';
+import { IMPROVED_EVENT_FETCH_QUERY } from '../../../../helpers/versionUtils';
 
 /* ****************** View actions *************/
 const V_SET_DEFAULTS = 'ProcessedEvents/V_SET_DEFAULTS';
@@ -78,6 +80,17 @@ const vMakeRequest = () => {
           { $or: [{ delivered: { $eq: true } }, { error: { $eq: true } }] },
         ],
       };
+    }
+
+    if (
+      globals.featuresCompatibility &&
+      globals.featuresCompatibility[IMPROVED_EVENT_FETCH_QUERY]
+    ) {
+      if (currentQuery.columns[1]) {
+        currentQuery.columns[1].where = currentQuery.columns[1].where || {};
+        currentQuery.columns[1].where.archived = false;
+      }
+      countQuery.where.archived = false;
     }
 
     // order_by for relationship

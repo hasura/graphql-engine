@@ -11,6 +11,8 @@ module Hasura.GraphQL.Execute
   , getSubsOp
 
   , EP.PlanCache
+  , EP.mkPlanCacheOptions
+  , EP.PlanCacheOptions
   , EP.initPlanCache
   , EP.clearPlanCache
   , EP.dumpPlanCache
@@ -69,7 +71,7 @@ data GQExecPlan a
 -- | Execution context
 data ExecutionCtx
   = ExecutionCtx
-  { _ecxLogger          :: !L.Logger
+  { _ecxLogger          :: !(L.Logger L.Hasura)
   , _ecxSqlGenCtx       :: !SQLGenCtx
   , _ecxPgExecCtx       :: !PGExecCtx
   , _ecxPlanCache       :: !EP.PlanCache
@@ -366,9 +368,10 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
   let confHdrs   = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
       clientHdrs = bool [] filteredHeaders fwdClientHdrs
       -- filter out duplicate headers
-      -- priority: conf headers > resolved userinfo vars > client headers
+      -- priority: conf headers > resolved userinfo vars > x-forwarded headers > client headers
       hdrMaps    = [ Map.fromList confHdrs
                    , Map.fromList userInfoToHdrs
+                   , Map.fromList xForwardedHeaders
                    , Map.fromList clientHdrs
                    ]
       headers  = Map.toList $ foldr Map.union Map.empty hdrMaps
@@ -382,7 +385,7 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
            , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
            }
 
-  liftIO $ logGraphqlQuery logger $ QueryLog q Nothing reqId
+  L.unLogger logger $ QueryLog q Nothing reqId
   res  <- liftIO $ try $ HTTP.httpLbs req manager
   resp <- either httpThrow return res
   let cookieHdrs = getCookieHdr (resp ^.. Wreq.responseHeader "Set-Cookie")
@@ -400,6 +403,12 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
                      userInfoToList userInfo
     filteredHeaders = filterUserVars $ filterRequestHeaders reqHdrs
 
+    xForwardedHeaders = flip mapMaybe reqHdrs $ \(hdrName, hdrValue) ->
+      case hdrName of
+        "Host"       -> Just ("X-Forwarded-Host", hdrValue)
+        "User-Agent" -> Just ("X-Forwarded-User-Agent", hdrValue)
+        _            -> Nothing
+
     filterUserVars hdrs =
       let txHdrs = map (\(n, v) -> (bsToTxt $ CI.original n, bsToTxt v)) hdrs
       in map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
@@ -407,5 +416,4 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
 
     getCookieHdr = fmap (\h -> ("Set-Cookie", h))
 
-    mkRespHeaders hdrs =
-      map (\(k, v) -> Header (bsToTxt $ CI.original k, bsToTxt v)) hdrs
+    mkRespHeaders = map (\(k, v) -> Header (bsToTxt $ CI.original k, bsToTxt v))
