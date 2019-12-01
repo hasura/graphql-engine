@@ -53,7 +53,7 @@ Leer más en [hasura.io](https://hasura.io) y en [docs](https://docs.hasura.io).
 - [Demos](#demos)
     - [Aplicaciones en tiempo real](#aplicaciones-en-tiempo-real)
     - [Videos](#videos)
-- [Soporte y solución de problemas](#support--troubleshooting)
+- [Soporte y solución de problemas](#soporte-y-solución-de-problemas)
 - [Contribuir](#contribuir)
 - [Archivos de marca](#archivos-de-marca)
 - [Licencia](#licencia)
@@ -124,7 +124,7 @@ Transforma datos en Postgres o ejecuta la lógica de negocio en ellos para deriv
 
 ## Demos
 
-Revisa todos los ejemplos de aplicaciones en la carpeta de [community/examples](../community/examples).
+Revisa todos los ejemplos de aplicaciones en la carpeta de [community/sample-apps](../community/sample-apps).
 
 ### Aplicaciones en tiempo real
 
@@ -205,6 +205,6 @@ Este archivo está disponible en los siguientes idiomas:
 - [Japonés :jp:](../translations/README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
 - [Francés :fr:](../translations/README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
 - [Griego 🇬🇷](../translations/README.greek.md) (:pray: [@MIP2000](https://github.com/MIP2000))
-- [Español :mx:](../translations/README.mx_spanish.md)(:pray: [@ferdox2](https://github.com/ferdox2))
+- [Español 🇲🇽](../translations/README.mx_spanish.md)(:pray: [@ferdox2](https://github.com/ferdox2))
 
 Las traducciones para otros idiomas se encuentran [aquí](../translations).
