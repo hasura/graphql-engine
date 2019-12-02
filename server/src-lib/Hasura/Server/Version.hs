@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fforce-recomp #-}
 module Hasura.Server.Version
   ( currentVersion
   , consoleVersion

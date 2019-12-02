@@ -92,3 +92,15 @@ args:
         true
       )
 
+# Search article functions
+- type: run_sql
+  args:
+    sql: |
+      CREATE FUNCTION search_articles(search text)
+      RETURNS SETOF article AS $$
+            SELECT *
+            FROM article
+            WHERE
+              title ilike ('%' || search || '%')
+              OR content ilike ('%' || search || '%')
+      $$ LANGUAGE sql STABLE;

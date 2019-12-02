@@ -1,0 +1,16 @@
+description: Try to define a relationship with custom column name
+url: /v1/query
+status: 400
+response:
+  path: "$.args"
+  error: custom column name "AuthorId" of table "author" already exists
+  code: already-exists
+query:
+  type: create_array_relationship
+  args:
+    name: AuthorId
+    table: author
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: author_id

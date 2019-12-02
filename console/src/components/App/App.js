@@ -17,6 +17,17 @@ class App extends Component {
     document.getElementById('loading').style.display = 'none';
   }
 
+  componentDidUpdate() {
+    const { telemetry, dispatch } = this.props;
+    if (
+      telemetry.console_opts &&
+      !telemetry.console_opts.telemetryNotificationShown
+    ) {
+      dispatch(telemetryNotificationShown());
+      dispatch(showTelemetryNotification());
+    }
+  }
+
   render() {
     const styles = require('./App.scss');
     const {
@@ -28,7 +39,6 @@ class App extends Component {
       children,
       notifications,
       connectionFailed,
-      telemetry,
       dispatch,
       metadata,
     } = this.props;
@@ -51,11 +61,6 @@ class App extends Component {
           </strong>
         </div>
       );
-    }
-
-    if (telemetry.console_opts && !telemetry.console_opts.telemetryNotificationShown) {
-      dispatch(showTelemetryNotification());
-      dispatch(telemetryNotificationShown());
     }
 
     return (

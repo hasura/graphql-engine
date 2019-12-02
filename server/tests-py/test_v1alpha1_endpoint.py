@@ -1,4 +1,4 @@
-import yaml
+import ruamel.yaml as yaml
 import pytest
 #from validate import check_query, test_forbidden_when_admin_secret_reqd, test_forbidden_webhook
 from validate import check_query

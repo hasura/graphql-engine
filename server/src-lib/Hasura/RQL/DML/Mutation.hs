@@ -67,10 +67,10 @@ mutateAndFetchCols qt cols (cte, p) strfyNum =
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sql) (toList p) True
   where
     aliasIden = Iden $ qualObjectToText qt <> "__mutation_result"
-    tabFrom = TableFrom qt $ Just aliasIden
+    tabFrom = FromIden aliasIden
     tabPerm = TablePerm annBoolExpTrue Nothing
     selFlds = flip map cols $
-              \ci -> (fromPGCol $ pgiColumn ci, FCol ci Nothing)
+              \ci -> (fromPGCol $ pgiColumn ci, mkAnnColFieldAsText ci)
 
     sql = toSQL selectWith
     selectWith = S.SelectWith [(S.Alias aliasIden, cte)] select

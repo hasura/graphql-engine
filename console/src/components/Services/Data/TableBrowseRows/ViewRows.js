@@ -34,6 +34,10 @@ import Button from '../../../Common/Button/Button';
 
 import { E_SET_EDITITEM } from './EditActions';
 import { I_SET_CLONE } from '../TableInsertItem/InsertActions';
+import {
+  getTableInsertRowRoute,
+  getTableEditRowRoute,
+} from '../../../Common/utils/routesUtils';
 
 const ViewRows = ({
   curTableName,
@@ -309,7 +313,7 @@ const ViewRows = ({
           const handleEditClick = () => {
             dispatch({ type: E_SET_EDITITEM, oldItem: row, pkClause });
             dispatch(
-              _push(`/schema/${currentSchema}/tables/${curTableName}/edit`)
+              _push(getTableEditRowRoute(currentSchema, curTableName, true))
             );
           };
 
@@ -348,7 +352,7 @@ const ViewRows = ({
           const handleCloneClick = () => {
             dispatch({ type: I_SET_CLONE, clone: row });
             dispatch(
-              _push(`/schema/${currentSchema}/tables/${curTableName}/insert`)
+              _push(getTableInsertRowRoute(currentSchema, curTableName, true))
             );
           };
 
