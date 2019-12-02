@@ -431,7 +431,7 @@ mkWaiApp
      , MetadataApiAuthorization m
      )
   => Q.TxIsolation
-  -> L.LoggerCtx L.Hasura
+  -> L.Logger L.Hasura
   -> SQLGenCtx
   -> Bool
   -> Q.PGPool
@@ -447,7 +447,7 @@ mkWaiApp
   -> EL.LiveQueriesOptions
   -> E.PlanCacheOptions
   -> m HasuraApp
-mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg enableConsole consoleAssetsDir
+mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg enableConsole consoleAssetsDir
          enableTelemetry instanceId apis lqOpts planCacheOptions = do
 
     let pgExecCtx = PGExecCtx pool isoLevel
@@ -466,7 +466,6 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg 
     planCache <- liftIO $ E.initPlanCache planCacheOptions
 
     let corsPolicy = mkDefaultCorsPolicy corsCfg
-        logger = L.mkLogger loggerCtx
 
     lqState <- liftIO $ EL.initLiveQueriesState lqOpts pgExecCtx
     wsServerEnv <- liftIO $ WS.createWSServerEnv logger pgExecCtx lqState cacheRef httpManager corsPolicy
