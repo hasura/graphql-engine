@@ -245,7 +245,7 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                                            ]
   where
     versionPair = Just ("version", AO.toOrdered version)
-    tablesPair = listToMaybeOrdPair "tables" tableMetaToOrdJSON tables
+    tablesPair = Just ("tables", AO.array $ map tableMetaToOrdJSON tables)
     functionsPair = functions >>= fmap ("functions",) . functionsMetadataToOrdJSON
 
     remoteSchemasPair = remoteSchemas >>=
@@ -415,6 +415,8 @@ createCollectionToOrdJSON (Collection.CreateCollection name definition comment) 
   AO.object $ [ ("name", AO.toOrdered name)
               , ("definition", AO.toOrdered definition)
               ] <> catMaybes [maybeCommentToMaybeOrdPair comment]
+
+-- Utility functions
 
 listToMaybeOrdPair :: Text -> (a -> AO.Value) -> [a] -> Maybe (Text, AO.Value)
 listToMaybeOrdPair name f = \case

@@ -72,6 +72,7 @@ tables:
     name: test
 `),
 	"empty-metadata": []byte(`version: 2
+tables: []
 `),
 }
 
