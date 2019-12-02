@@ -5,10 +5,13 @@ module Data.Sequence.NonEmpty
   , init
   , head
   , toSeq
+  , toList
+  , length
   ) where
 
+import qualified Data.Foldable as F
 import qualified Data.Sequence as Seq
-import           Prelude       (Eq, Show, fst, (.))
+import           Prelude       (Eq, Int, Show, fst, (.))
 
 infixr 5 <|
 infixl 5 |>
@@ -31,3 +34,9 @@ v <| (NESeq (h, l)) = NESeq (v, h Seq.<| l)
 
 toSeq :: NESeq a -> Seq.Seq a
 toSeq (NESeq (v, l)) = v Seq.<| l
+
+toList :: NESeq a -> [a]
+toList = F.toList . toSeq
+
+length :: NESeq a -> Int
+length = Seq.length . toSeq
