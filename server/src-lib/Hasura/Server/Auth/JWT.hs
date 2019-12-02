@@ -162,20 +162,24 @@ updateJwkRef (Logger logger) manager url jwkRef = do
   liftIO $ modifyIORef jwkRef (const jwkset)
 
   -- first check for Cache-Control header to get max-age, if not found, look for Expires header
-  let maybeCacheCtrl = resp ^? Wreq.responseHeader "Cache-Control"
-  case maybeCacheCtrl of
-    Just cacheCtrl -> do
-      let parseRes = parseCacheControlHeader $ bsToTxt cacheCtrl
-      maxAge <- either (`logAndThrow` Nothing) return parseRes
-      return $ Just $ fromInteger maxAge
-    Nothing -> do
-      let mExpiresT = resp ^? Wreq.responseHeader "Expires"
-      forM mExpiresT $ \expiresT -> do
-        let maybeExpires = parseTimeM True defaultTimeLocale timeFmt $ CS.cs expiresT
-        expires  <- maybe (logAndThrow parseTimeErr Nothing) return maybeExpires
-        currTime <- liftIO getCurrentTime
-        return $ diffUTCTime expires currTime
+  let cacheHeader   = resp ^? Wreq.responseHeader "Cache-Control"
+      expiresHeader = resp ^? Wreq.responseHeader "Expires"
+  case cacheHeader of
+    Just header -> getTimeFromCacheControlHeader header
+    Nothing     -> mapM getTimeFromExpiresHeader expiresHeader
+
   where
+    getTimeFromExpiresHeader header = do
+      let maybeExpires = parseTimeM True defaultTimeLocale timeFmt $ CS.cs header
+      expires  <- maybe (logAndThrow parseTimeErr Nothing) return maybeExpires
+      currTime <- liftIO getCurrentTime
+      return $ diffUTCTime expires currTime
+
+    getTimeFromCacheControlHeader header =
+      case parseCacheControlHeader $ bsToTxt header of
+        Left e       -> logAndThrow e Nothing
+        Right maxAge -> return $ Just $ fromInteger maxAge
+
     parseCacheControlHeader =
      fmapL (const parseCacheControlErr) . AT.parseOnly cacheControlHeaderParser
 
