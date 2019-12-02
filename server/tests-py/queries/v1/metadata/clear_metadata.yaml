@@ -12,6 +12,7 @@
   status: 200
   response:
     version: 2
+    tables: []
   query:
     type: export_metadata
     args: {}

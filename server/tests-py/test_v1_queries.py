@@ -485,6 +485,21 @@ class TestMetadata(DefaultTestQueries):
     def test_dump_internal_state(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/dump_internal_state.yaml')
 
+    @classmethod
+    def dir(cls):
+        return "queries/v1/metadata"
+
+class TestMetadataOrder(DefaultTestSelectQueries):
+    @classmethod
+    def dir(cls):
+        return "queries/v1/metadata_order"
+
+    def test_export_metadata(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/export_metadata.yaml')
+
+    def test_clear_export_metadata(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/clear_export_metadata.yaml')
+
     def test_export_replace(self, hge_ctx):
         url = '/v1/query'
         export_query = {
@@ -503,17 +518,6 @@ class TestMetadata(DefaultTestQueries):
         replace_code, replace_resp = hge_ctx.anyq(url, replace_query, headers)
         assert replace_code == 200, replace_resp
 
-    @classmethod
-    def dir(cls):
-        return "queries/v1/metadata"
-
-class TestMetadataOrder(DefaultTestQueries):
-    @classmethod
-    def dir(cls):
-        return "queries/v1/metadata_order"
-
-    def test_export_metadata_order(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/export_metadata_order.yaml')
 
 class TestRunSQL(DefaultTestQueries):
 
