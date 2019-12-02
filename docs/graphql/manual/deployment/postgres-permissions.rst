@@ -65,3 +65,19 @@ Here's a sample SQL block that you can run on your database to create the right 
     -- GRANT USAGE ON SCHEMA <schema-name> TO hasurauser;
     -- GRANT ALL ON ALL TABLES IN SCHEMA <schema-name> TO hasurauser;
     -- GRANT ALL ON ALL SEQUENCES IN SCHEMA <schema-name> TO hasurauser;
+
+Note that some managed database environments may limit your ability to do this. Notably, Amazon's RDS service features a database “master” user that is not a superuser at all, and cannot grant access to all tables in certain schemas. With PostgreSQL 10 under RDS, this affects both ``information_schema`` and ``pg_catalog``; with PostgreSQL 11, only ``pg_catalog``. One workaround is to grant access to only the tables and views that Hasura needs access to. For example, with PostgreSQL 11:
+
+.. code-block:: sql
+
+    -- instead of "GRANT SELECT ON ALL TABLES IN SCHEMA pg_catalog ..."
+    GRANT SELECT ON
+      pg_catalog.pg_constraint,
+      pg_catalog.pg_class,
+      pg_catalog.pg_namespace,
+      pg_catalog.pg_attribute,
+      pg_catalog.pg_proc,
+      pg_catalog.pg_available_extensions,
+      pg_catalog.pg_statio_all_tables,
+      pg_catalog.pg_description
+    TO hasurauser;
