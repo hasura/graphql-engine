@@ -58,6 +58,7 @@ library
   import: common-all
   hs-source-dirs:      src-lib
   build-depends:       base
+                     , lifted-base
                      , pg-client
                      , text
                      , text-builder >= 0.6
@@ -151,6 +152,7 @@ library
                      , stm-containers
                      , list-t
                      , async
+                     , lifted-async
 
                      -- logging related
                      , base64-bytestring >= 1.0
