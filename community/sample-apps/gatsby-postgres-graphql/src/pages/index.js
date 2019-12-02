@@ -12,14 +12,3 @@ const Index = () => (
 );
 
 export default Index;
-
-// export const query = graphql`
-//   query AuthorQuery {
-//     hasura {
-//       author {
-//         id
-//         name
-//       }
-//     }
-//   }
-// `

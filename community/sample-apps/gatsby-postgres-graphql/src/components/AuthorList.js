@@ -29,3 +29,4 @@ const AuthorList = () => {
 };
 
 export default AuthorList;
+export { GET_AUTHORS };
