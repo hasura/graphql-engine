@@ -35,6 +35,7 @@ var testMetadataPrev = map[string][]byte{
 remote_schemas: []
 query_collections: []
 allowlist: []
+version: 2
 tables:
 - table: test
   is_enum: false
@@ -60,6 +61,7 @@ tables:
 remote_schemas: []
 query_collections: []
 allowlist: []
+version: 2
 tables: []
 `),
 }
@@ -270,7 +272,7 @@ func mustWriteFile(t testing.TB, dir, file string, body string) {
 
 func compareMetadata(t testing.TB, metadataFile string, actualType string, serverVersion *semver.Version) {
 	var actualData []byte
-	c, err := semver.NewConstraint("<= v1.0.0-beta.10")
+	c, err := semver.NewConstraint("<= v1.0.0-rc.1")
 	if err != nil {
 		t.Fatal(err)
 	}
