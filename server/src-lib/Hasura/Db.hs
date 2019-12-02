@@ -68,20 +68,21 @@ lazyTxToQTx = \case
   LTTx tx  -> tx
 
 runLazyTx
-  :: PGExecCtx
+  :: (MonadIO m)
+  => PGExecCtx
   -> Q.TxAccess
-  -> LazyTx QErr a -> ExceptT QErr IO a
+  -> LazyTx QErr a -> ExceptT QErr m a
 runLazyTx (PGExecCtx pgPool txIso) txAccess = \case
   LTErr e  -> throwError e
   LTNoTx a -> return a
-  LTTx tx  -> Q.runTx pgPool (txIso, Just txAccess) tx
+  LTTx tx  -> ExceptT <$> liftIO $ runExceptT $ Q.runTx pgPool (txIso, Just txAccess) tx
 
 runLazyTx'
-  :: PGExecCtx -> LazyTx QErr a -> ExceptT QErr IO a
+  :: MonadIO m => PGExecCtx -> LazyTx QErr a -> ExceptT QErr m a
 runLazyTx' (PGExecCtx pgPool _) = \case
   LTErr e  -> throwError e
   LTNoTx a -> return a
-  LTTx tx  -> Q.runTx' pgPool tx
+  LTTx tx  -> ExceptT <$> liftIO $ runExceptT $ Q.runTx' pgPool tx
 
 type RespTx = Q.TxE QErr EncJSON
 type LazyRespTx = LazyTx QErr EncJSON

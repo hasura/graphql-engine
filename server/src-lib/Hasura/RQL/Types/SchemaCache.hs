@@ -427,7 +427,7 @@ removeFromDepMap =
 
 newtype SchemaCacheVer
   = SchemaCacheVer { unSchemaCacheVer :: Word64 }
-  deriving (Show, Eq, Hashable, ToJSON, FromJSON)
+  deriving (Show, Eq, Ord, Hashable, ToJSON, FromJSON)
 
 initSchemaCacheVer :: SchemaCacheVer
 initSchemaCacheVer = SchemaCacheVer 0
