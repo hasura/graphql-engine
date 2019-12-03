@@ -10,6 +10,7 @@ const SET_SERVER_VERSION_SUCCESS = 'Main/SET_SERVER_VERSION_SUCCESS';
 const SET_SERVER_VERSION_ERROR = 'Main/SET_SERVER_VERSION_ERROR';
 const SET_LATEST_SERVER_VERSION_SUCCESS =
   'Main/SET_LATEST_SERVER_VERSION_SUCCESS';
+const SET_READ_ONLY_MODE = 'Main/SET_READ_ONLY_MODE';
 const SET_LATEST_SERVER_VERSION_ERROR = 'Main/SET_LATEST_SERVER_VERSION_ERROR';
 const UPDATE_MIGRATION_STATUS_SUCCESS = 'Main/UPDATE_MIGRATION_STATUS_SUCCESS';
 const UPDATE_MIGRATION_STATUS_ERROR = 'Main/UPDATE_MIGRATION_STATUS_ERROR';
@@ -245,6 +246,12 @@ const mainReducer = (state = defaultState, action) => {
       };
     case UPDATE_MIGRATION_STATUS_ERROR:
       return { ...state, migrationError: action.data };
+    case SET_READ_ONLY_MODE:
+      return {
+        ...state,
+        readOnlyMode: action.data,
+        migrationMode: !action.data, // HACK
+      };
     case HASURACTL_URL_ENV:
       return { ...state, hasuractlEnv: action.data };
     case UPDATE_MIGRATION_MODE:
