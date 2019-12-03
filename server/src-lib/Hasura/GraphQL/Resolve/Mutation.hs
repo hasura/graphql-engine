@@ -8,6 +8,7 @@ module Hasura.GraphQL.Resolve.Mutation
 import           Data.Has
 import           Hasura.Prelude
 
+import qualified Control.Monad.Validate              as MV
 import qualified Data.Aeson                          as J
 import qualified Data.HashMap.Strict                 as Map
 import qualified Data.HashMap.Strict.InsOrd          as OMap
@@ -167,18 +168,20 @@ convertUpdateP1 opCtx fld = do
         throwVE $ "atleast any one of " <> showNames allOperatorNames <> " is expected"
       else do
         let itemsWithOps = concatMap (\(op, items) -> map (second (op,)) items) updateItems
-            itemTuples = OMap.toList $ OMap.groupTuples itemsWithOps
-            columnsWithMultiOps = map (second (map fst . NESeq.toList)) $
-                                  filter ((>1) . NESeq.length . snd) itemTuples
-        -- A column shouldn't be present in more than one operator.
-        -- If present, then generated UPDATE statement throws unexpected query error
-        if null columnsWithMultiOps then
-          pure $ resolvedPreSetItems <> map (second (snd . NESeq.head)) itemTuples
-        else throwVE $ "column found in multiple operators; "
-                       <> T.intercalate ". "
-                          (map (\(col, ops) -> col <<> " in " <> showNames ops)
-                               columnsWithMultiOps)
-
+            validateMultiOps col items = do
+              when (length items > 1) $ MV.dispute [(col, map fst $ toList items)]
+              pure $ snd $ NESeq.head items
+            eitherResult = MV.runValidate $ OMap.traverseWithKey validateMultiOps $
+                           OMap.groupTuples itemsWithOps
+        case eitherResult of
+          -- A column shouldn't be present in more than one operator.
+          -- If present, then generated UPDATE statement throws unexpected query error
+          Left columnsWithMultiOps -> throwVE $
+                                      "column found in multiple operators; "
+                                      <> T.intercalate ". "
+                                      (map (\(col, ops) -> col <<> " in " <> showNames ops)
+                                       columnsWithMultiOps)
+          Right items -> pure $ resolvedPreSetItems <> OMap.toList items
 
 convertUpdate
   :: ( MonadReusability m, MonadError QErr m
