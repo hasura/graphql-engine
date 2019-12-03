@@ -285,9 +285,9 @@ Check this `sample app <https://realtime-poll.demo.hasura.app/>`__ for a working
 (`source code <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/realtime-poll>`__).
 
 How to get diffs via subscriptions
-------------------------------------------
+---------------------------------- 
 
-Subscriptions implement the ``live query`` semantics i.e. you can subscribe to any query and get the new result set anytime the underlying data changes. In case you are only interested in the ``diff`` of changes that happened, then you can implement a simple subscribe and fetch pattern. 
+Subscriptions implement the ``live query`` semantics i.e. you can subscribe to any query and get the new result set any time the underlying data changes. In case you are only interested in the ``diff`` of changes, you can implement a simple subscribe and fetch pattern. 
 
 Example: Subscribe and fetch pattern
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -327,9 +327,9 @@ Now, suppose you recieved an update and want to know the status of users who got
 
 1. Define two variables ``prevActiveUsers`` and ``currentActiveUsers``. Initially both variables are equal to the value of the current subscription.
 
-2. Everytime you recieve an update, set ``prevActiveUsers = currentActiveUsers`` and ``currentActiveUsers = <new value of subscription>``. Perform a diff equivalent to ``diff = prevActiveUsers - currentActiveUsers``
+2. Every time you receive an update, set ``prevActiveUsers = currentActiveUsers`` and ``currentActiveUsers = <new value of subscription>``. Perform a diff equivalent to ``diff = prevActiveUsers - currentActiveUsers``.
 
-3. Now ``diff`` will have ``id`` s of all rows that were removed in the new update. Fetch their state by performing a query like below:
+3. Now ``diff`` will have the ``id``s of all rows that were removed in the new update. Fetch their state by performing a query like below:
 
 .. graphiql::
   :view_only:
@@ -362,4 +362,4 @@ Now, suppose you recieved an update and want to know the status of users who got
 
 .. note::
 
-   The ``subscribe and fetch`` pattern is not an equivalent of getting change events. For e.g. in the above example although you can construct the BEFORE and AFTER state of inactive users, you can only get the CURRENT state of the newly active users.
+   The ``subscribe and fetch`` pattern is not equivalent to getting change events. In the above example you can only get the *current* state of the newly active users by constructing the *before* and *after* state of inactive users.
